@@ -21,7 +21,6 @@ import com.alibaba.graphscope.groot.operation.StoreDataBatch;
 import com.alibaba.maxgraph.common.config.CommonConfig;
 import com.alibaba.maxgraph.common.config.Configs;
 import com.alibaba.maxgraph.common.util.ThreadFactoryUtils;
-import com.alibaba.graphscope.groot.coordinator.SnapshotInfo;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
@@ -46,7 +45,7 @@ public class WriterAgent implements MetricsAgent {
     private static final Logger logger = LoggerFactory.getLogger(WriterAgent.class);
 
     public static final String POLL_LATENCY_MAX_MS = "poll.latency.max.ms";
-    public static final String POLL_LATENCY_AVG_MS = "poll.latency.avg.ms";
+    public static final String POLL_LATENCY_PER_SECOND_MS = "poll.latency.per.second.ms";
     public static final String STORE_BUFFER_BATCH_COUNT = "store.buffer.batch.count";
     public static final String STORE_QUEUE_BATCH_COUNT = "store.queue.batch.count";
     public static final String STORE_WRITE_PER_SECOND = "store.write.per.second";
@@ -77,7 +76,7 @@ public class WriterAgent implements MetricsAgent {
     private volatile long maxPollLatencyMs;
     private volatile long lastUpdatePollLatencyNano;
     private volatile long totalPollLatencyNano;
-    private volatile long pollLatencyAvgMs;
+    private volatile long pollLatencyPerSecondMs;
 
     public WriterAgent(
             Configs configs,
@@ -174,12 +173,6 @@ public class WriterAgent implements MetricsAgent {
                 long afterPollNano = System.nanoTime();
                 long pollNano = afterPollNano - beforePollNano;
                 this.totalPollLatencyNano += pollNano;
-                logger.info(
-                        "pollNano ["
-                                + pollNano
-                                + "], maxPollLatencyNano ["
-                                + this.maxPollLatencyNano.get()
-                                + "]");
                 this.maxPollLatencyNano.updateAndGet(
                         curMax -> (pollNano > curMax) ? pollNano : curMax);
                 if (storeDataBatch == null) {
@@ -289,7 +282,7 @@ public class WriterAgent implements MetricsAgent {
         this.maxPollLatencyMs = 0L;
         this.lastUpdatePollLatencyNano = 0L;
         this.totalPollLatencyNano = 0L;
-        this.pollLatencyAvgMs = 0L;
+        this.pollLatencyPerSecondMs = 0L;
     }
 
     private void updateMetrics() {
@@ -298,9 +291,8 @@ public class WriterAgent implements MetricsAgent {
         long interval = currentTime - this.lastUpdateTime;
         this.writePerSecond = 1000000000 * (write - this.lastUpdateWrite) / interval;
         this.maxPollLatencyMs = this.maxPollLatencyNano.getAndSet(0L) / 1000000;
-        logger.info("update metrics maxPollLatencyMs to [" + this.maxPollLatencyMs + "]");
         long pollLatencyNano = this.totalPollLatencyNano;
-        this.pollLatencyAvgMs =
+        this.pollLatencyPerSecondMs =
                 1000 * (pollLatencyNano - this.lastUpdatePollLatencyNano) / interval;
         this.lastUpdatePollLatencyNano = pollLatencyNano;
         this.lastUpdateWrite = write;
@@ -313,7 +305,7 @@ public class WriterAgent implements MetricsAgent {
             {
                 put(STORE_BUFFER_BATCH_COUNT, String.valueOf(bufferQueue.size()));
                 put(STORE_QUEUE_BATCH_COUNT, String.valueOf(bufferQueue.innerQueueSizes()));
-                put(POLL_LATENCY_AVG_MS, String.valueOf(pollLatencyAvgMs));
+                put(POLL_LATENCY_PER_SECOND_MS, String.valueOf(pollLatencyPerSecondMs));
                 put(POLL_LATENCY_MAX_MS, String.valueOf(maxPollLatencyMs));
                 put(STORE_WRITE_PER_SECOND, String.valueOf(writePerSecond));
                 put(STORE_WRITE_TOTAL, String.valueOf(totalWrite));
@@ -327,7 +319,7 @@ public class WriterAgent implements MetricsAgent {
             STORE_BUFFER_BATCH_COUNT,
             STORE_QUEUE_BATCH_COUNT,
             POLL_LATENCY_MAX_MS,
-            POLL_LATENCY_AVG_MS,
+            POLL_LATENCY_PER_SECOND_MS,
             STORE_WRITE_PER_SECOND,
             STORE_WRITE_TOTAL
         };
