@@ -23,6 +23,7 @@ public class TopKStrategy implements InterOpStrategy {
             if (cur instanceof OrderOp && next != null) {
                 ((OrderOp) cur).setLower(next.getLower().get());
                 ((OrderOp) cur).setUpper(next.getUpper().get());
+                cur.setAlias(next.getAlias().get());
                 opCollection.removeInterOp(i + 1);
             }
         }

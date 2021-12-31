@@ -232,9 +232,6 @@ public class IrPlan implements Closeable {
                 if (lower.isPresent() && upper.isPresent()) {
                     irCoreLib.setOrderbyLimit(ptrOrder, (Integer) lower.get().getArg(), (Integer) upper.get().getArg());
                 }
-                if (baseOp.getAlias().isPresent()) {
-                    throw new InterOpIllegalArgException(baseOp.getClass(), "alias", "unimplemented yet");
-                }
                 return ptrOrder;
             }
         },
