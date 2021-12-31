@@ -175,6 +175,21 @@ impl AsPhysical for pb::Scan {
             if let Some(pred) = &mut params.predicate {
                 *pred = expr_to_suffix_expr(pred.clone())?;
             }
+        } else {
+            if let Some(columns) = plan_meta.get_curr_node_columns() {
+                if !columns.is_empty() {
+                    self.params = Some(pb::QueryParams {
+                        table_names: vec![],
+                        columns: columns
+                            .iter()
+                            .map(|tag| common_pb::NameOrId::from(tag.clone()))
+                            .collect(),
+                        limit: None,
+                        predicate: None,
+                        requirements: vec![],
+                    })
+                }
+            }
         }
 
         Ok(())
