@@ -17,7 +17,7 @@
 syntax = "proto3";
 package common;
 option java_package = "com.alibaba.graphscope.gaia.proto";
-option java_outer_classname = "Expression";
+option java_outer_classname = "OuterExpression";
 
 import "common.proto";
 

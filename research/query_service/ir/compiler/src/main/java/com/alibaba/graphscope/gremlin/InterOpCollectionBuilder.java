@@ -314,33 +314,33 @@ public class InterOpCollectionBuilder {
         // judge by class type instead of instance
         for (Step step : steps) {
             InterOpBase op;
-            if (equalClass(step, GraphStep.class)) {
+            if (Utils.equalClass(step, GraphStep.class)) {
                 op = StepTransformFactory.GRAPH_STEP.apply(step);
-            } else if (equalClass(step, TinkerGraphStep.class)) {
+            } else if (Utils.equalClass(step, TinkerGraphStep.class)) {
                 op = StepTransformFactory.TINKER_GRAPH_STEP.apply(step);
-            } else if (equalClass(step, VertexStep.class)) {
+            } else if (Utils.equalClass(step, VertexStep.class)) {
                 op = StepTransformFactory.VERTEX_STEP.apply(step);
-            } else if (equalClass(step, HasStep.class)) {
+            } else if (Utils.equalClass(step, HasStep.class)) {
                 op = StepTransformFactory.HAS_STEP.apply(step);
-            } else if (equalClass(step, RangeGlobalStep.class)) {
+            } else if (Utils.equalClass(step, RangeGlobalStep.class)) {
                 op = StepTransformFactory.LIMIT_STEP.apply(step);
-            } else if (equalClass(step, SelectStep.class)) {
+            } else if (Utils.equalClass(step, SelectStep.class)) {
                 op = StepTransformFactory.SELECT_BY_STEP.apply(step);
-            } else if (equalClass(step, OrderGlobalStep.class)) {
+            } else if (Utils.equalClass(step, OrderGlobalStep.class)) {
                 op = StepTransformFactory.ORDER_BY_STEP.apply(step);
-            } else if (equalClass(step, PropertyMapStep.class)) {
+            } else if (Utils.equalClass(step, PropertyMapStep.class)) {
                 op = StepTransformFactory.VALUE_MAP_STEP.apply(step);
-            } else if (equalClass(step, GroupStep.class)) {
+            } else if (Utils.equalClass(step, GroupStep.class)) {
                 op = StepTransformFactory.GROUP_STEP.apply(step);
-            } else if (equalClass(step, GroupCountStep.class)) {
+            } else if (Utils.equalClass(step, GroupCountStep.class)) {
                 op = StepTransformFactory.GROUP_COUNT_STEP.apply(step);
-            } else if (equalClass(step, DedupGlobalStep.class)) {
+            } else if (Utils.equalClass(step, DedupGlobalStep.class)) {
                 op = StepTransformFactory.DEDUP_STEP.apply(step);
-            } else if (equalClass(step, SelectOneStep.class)) {
+            } else if (Utils.equalClass(step, SelectOneStep.class)) {
                 op = StepTransformFactory.SELECT_ONE_BY_STEP.apply(step);
-            } else if (equalClass(step, CountGlobalStep.class)) {
+            } else if (Utils.equalClass(step, CountGlobalStep.class)) {
                 op = StepTransformFactory.COUNT_STEP.apply(step);
-            } else if (equalClass(step, PropertiesStep.class)) {
+            } else if (Utils.equalClass(step, PropertiesStep.class)) {
                 op = StepTransformFactory.VALUES_STEP.apply(step);
             } else {
                 throw new UnsupportedStepException(step.getClass(), "unimplemented yet");
@@ -359,7 +359,5 @@ public class InterOpCollectionBuilder {
         return opCollection;
     }
 
-    private boolean equalClass(Step t1, Class<? extends Step> target) {
-        return t1.getClass().equals(target);
-    }
+
 }
