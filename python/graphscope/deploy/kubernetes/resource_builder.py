@@ -812,7 +812,7 @@ class GSEngineBuilder(ReplicaSetBuilder):
         self, name, image, cpu, mem, preemptive, port, scheduler_endpoint
     ):
         # compute n cpu, to avoid mars worker launches too many actors
-        if isinstance(cpu, str) and cpu[-1] == 'm':
+        if isinstance(cpu, str) and cpu[-1] == "m":
             n_cpu = math.ceil(int("200m"[:-1]) / 1000)
         if isinstance(cpu, (int, float)):
             n_cpu = math.ceil(cpu)
