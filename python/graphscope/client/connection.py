@@ -92,10 +92,19 @@ class Connection:
     def __init__(self, addr, gremlin_endpoint=None) -> None:
         self._addr = addr
         self._gremlin_endpoint = gremlin_endpoint
+        self._conn = None
         channel = grpc.insecure_channel(addr)
         self._ddl_service_stub = ddl_service_pb2_grpc.ClientDdlStub(channel)
         self._write_service_stub = write_service_pb2_grpc.ClientWriteStub(channel)
         self._client_id = None
+
+    def close(self):
+        if self._conn is not None:
+            try:
+                self._conn.close()
+            except Exception:
+                pass  # be silent when closing
+            self._conn = None
 
     def submit(self, requests):
         return self._ddl_service_stub.batchSubmit(requests)
@@ -111,7 +120,9 @@ class Connection:
 
     def gremlin(self):
         graph_url = "ws://%s/gremlin" % self._gremlin_endpoint
-        return traversal().withRemote(DriverRemoteConnection(graph_url, "g"))
+        if self._conn is None:
+            self._conn = DriverRemoteConnection(graph_url, "g")
+        return traversal().withRemote(self._conn)
 
     def _get_client_id(self):
         if self._client_id is None:
