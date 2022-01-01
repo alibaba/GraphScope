@@ -350,22 +350,16 @@ impl Evaluator {
         self.stack.borrow_mut().clear();
     }
 
-    /// Return the tag is there is a single tag in the expression.
-    pub fn extract_single_tag(&self) -> Option<NameOrId> {
-        if self.suffix_tree.len() != 1 {
-            return None;
-        } else {
+    /// Return the tag and property is there is a single tag in the expression.
+    pub fn extract_single_tag(&self) -> Option<(Option<NameOrId>, Option<PropKey>)> {
+        if self.suffix_tree.len() == 1 {
             let opr = self.suffix_tree.get(0).unwrap();
             match opr {
-                InnerOpr::Var { tag, prop_key } => {
-                    if prop_key.is_some() {
-                        None
-                    } else {
-                        tag.clone()
-                    }
-                }
+                InnerOpr::Var { tag, prop_key } => Some((tag.clone(), prop_key.clone())),
                 _ => None,
             }
+        } else {
+            None
         }
     }
 

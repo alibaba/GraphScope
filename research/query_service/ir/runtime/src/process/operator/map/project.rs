@@ -23,8 +23,10 @@ use pegasus::api::function::{FnResult, MapFunction};
 
 use crate::error::{FnExecError, FnGenResult};
 use crate::expr::eval::{Evaluate, Evaluator};
+use crate::graph::element::Element;
+use crate::graph::property::Details;
 use crate::process::operator::map::MapFuncGen;
-use crate::process::record::{ObjectElement, Record};
+use crate::process::record::{Entry, ObjectElement, Record, RecordElement};
 
 #[derive(Debug)]
 struct ProjectOperator {
@@ -32,25 +34,49 @@ struct ProjectOperator {
     projected_columns: Vec<(Evaluator, Option<NameOrId>)>,
 }
 
+fn exec_single(input: &Record, evaluator: &Evaluator) -> FnResult<Arc<Entry>> {
+    let entry = if let Some((tag, _prop_key)) = evaluator.extract_single_tag() {
+        let tag_entry = input
+            .get(tag.as_ref())
+            .ok_or(FnExecError::get_tag_error(format!("{:?}", tag).as_str()))?;
+        if let Some(prop_key) = &_prop_key {
+            let graph_entry = tag_entry
+                .as_graph_element()
+                .ok_or(FnExecError::unexpected_data_error("cannot get property from non-graph element"))?;
+            Arc::new(
+                graph_entry
+                    .details()
+                    .ok_or(FnExecError::unexpected_data_error(&format!(
+                        "get empty details from {:?}",
+                        graph_entry
+                    )))?
+                    .get(prop_key)
+                    .and_then(|obj| obj.try_to_owned())
+                    .map_or(ObjectElement::None, |prop| ObjectElement::Prop(prop))
+                    .into(),
+            )
+        } else {
+            tag_entry.clone()
+        }
+    } else {
+        let projected_result = evaluator
+            .eval::<RecordElement, Record>(Some(&input))
+            .map_err(|e| FnExecError::from(e))?;
+        Arc::new(
+            projected_result
+                .map_or(ObjectElement::None, |prop| ObjectElement::Prop(prop))
+                .into(),
+        )
+    };
+
+    Ok(entry)
+}
+
 impl MapFunction<Record, Record> for ProjectOperator {
     fn exec(&self, mut input: Record) -> FnResult<Record> {
         if self.is_append {
             for (evaluator, alias) in self.projected_columns.iter() {
-                let entry = if let Some(single_tag) = evaluator.extract_single_tag() {
-                    input
-                        .get(Some(&single_tag))
-                        .ok_or(FnExecError::get_tag_error(format!("{:?}", single_tag).as_str()))?
-                        .clone()
-                } else {
-                    let projected_result = evaluator
-                        .eval(Some(&input))
-                        .map_err(|e| FnExecError::from(e))?;
-                    Arc::new(
-                        projected_result
-                            .map_or(ObjectElement::None, |prop| ObjectElement::Prop(prop))
-                            .into(),
-                    )
-                };
+                let entry = exec_single(&input, &evaluator)?;
                 input.append_arc_entry(entry, alias.clone());
             }
 
@@ -58,21 +84,7 @@ impl MapFunction<Record, Record> for ProjectOperator {
         } else {
             let mut new_record = Record::default();
             for (evaluator, alias) in self.projected_columns.iter() {
-                let entry = if let Some(single_tag) = evaluator.extract_single_tag() {
-                    input
-                        .get(Some(&single_tag))
-                        .ok_or(FnExecError::get_tag_error(format!("{:?}", single_tag).as_str()))?
-                        .clone()
-                } else {
-                    let projected_result = evaluator
-                        .eval(Some(&input))
-                        .map_err(|e| FnExecError::from(e))?;
-                    Arc::new(
-                        projected_result
-                            .map_or(ObjectElement::None, |prop| ObjectElement::Prop(prop))
-                            .into(),
-                    )
-                };
+                let entry = exec_single(&input, &evaluator)?;
                 new_record.append_arc_entry(entry, alias.clone());
             }
 
