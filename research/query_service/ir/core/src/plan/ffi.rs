@@ -44,7 +44,7 @@
 //! #    append_select_operator(ptr_plan, ptr_select, opr_id, &opr_id);
 //! #    cout << "the id is: " << opr_id << endl;
 //!
-//! #    debug_plan(ptr_plan);
+//! #    write_plan_to_json(ptr_plan, "./plan.json");
 //! #    destroy_logical_plan(ptr_plan);
 //! # }
 //!
@@ -75,8 +75,8 @@ pub enum ResultCode {
     Success = 0,
     /// Parse an expression error
     ParseExprError = 1,
-    /// Query an object that does not exist
-    NotExistError = 2,
+    /// Missing necessary data
+    MissingDataError = 2,
     /// The error while transforming from C-like string, aka char*
     CStringError = 3,
     /// The provided data type is unknown
@@ -87,10 +87,16 @@ pub enum ResultCode {
     NegativeIndexError = 6,
     /// Build Physical Plan Error
     BuildJobError = 7,
-    /// Unsupported
-    UnSupported = 8,
-    /// Unknown
-    Unknown = 9,
+    /// Parse protobuf error
+    ParsePbError = 8,
+    /// The parent of an operator cannot be found
+    ParentNotFoundError = 9,
+    /// A column (property) does not exist in the store
+    ColumnNotExistError = 10,
+    /// A table (label) does not exist in the store
+    TableNotExistError = 11,
+    UnSupported = 12,
+    Unknown = 16,
 }
 
 impl std::fmt::Display for ResultCode {
@@ -98,13 +104,17 @@ impl std::fmt::Display for ResultCode {
         match self {
             ResultCode::Success => write!(f, "success"),
             ResultCode::ParseExprError => write!(f, "parse expression error"),
-            ResultCode::NotExistError => write!(f, "access to non-existed element"),
+            ResultCode::MissingDataError => write!(f, "missing necessary data"),
             ResultCode::CStringError => write!(f, "convert from c-like string error"),
             ResultCode::UnknownTypeError => write!(f, "unknown data type"),
             ResultCode::InvalidRangeError => write!(f, "the range is invalid"),
             ResultCode::NegativeIndexError => write!(f, "the given index is negative"),
             ResultCode::BuildJobError => write!(f, "build physical plan error"),
             ResultCode::UnSupported => write!(f, "unsupported functionality"),
+            ResultCode::ParsePbError => write!(f, "parse pb error"),
+            ResultCode::ParentNotFoundError => write!(f, "the parent of an operator is not found"),
+            ResultCode::ColumnNotExistError => write!(f, "the column (property) does not exist"),
+            ResultCode::TableNotExistError => write!(f, "the table (label) does not exist"),
             ResultCode::Unknown => write!(f, "unknown error"),
         }
     }
@@ -116,7 +126,11 @@ impl From<IrError> for ResultCode {
     fn from(err: IrError) -> Self {
         match err {
             IrError::Unsupported(_) => Self::UnSupported,
-            _ => Self::NotExistError,
+            IrError::ParsePbError(_) => Self::ParsePbError,
+            IrError::ColumnNotExist(_) => Self::ColumnNotExistError,
+            IrError::TableNotExist(_) => Self::TableNotExistError,
+            IrError::MissingDataError => Self::MissingDataError,
+            _ => Self::Unknown,
         }
     }
 }
@@ -258,7 +272,7 @@ impl TryFrom<FfiAlias> for common_pb::NameOrId {
     type Error = ResultCode;
 
     fn try_from(ffi: FfiAlias) -> Result<Self, Self::Error> {
-        Option::<common_pb::NameOrId>::try_from(ffi.alias)?.ok_or(ResultCode::NotExistError)
+        Option::<common_pb::NameOrId>::try_from(ffi.alias)?.ok_or(ResultCode::MissingDataError)
     }
 }
 
@@ -548,7 +562,7 @@ fn append_operator(
             ResultCode::Success
         } else {
             // This must due to the query parent does not present
-            ResultCode::NotExistError
+            ResultCode::ParentNotFoundError
         }
     }
 }

@@ -30,6 +30,9 @@ use crate::error::{IrError, IrResult};
 use crate::plan::meta::{PlanMeta, StoreMeta, STORE_META};
 use crate::JsonIO;
 
+pub static INVALID_TABLE_ID: i32 = i32::MIN;
+pub static INVALID_COLUMN_ID: i32 = i32::MIN;
+
 /// An internal representation of the pb-[`Node`].
 ///
 /// [`Node`]: crate::generated::algebra::logical_plan::Node
@@ -505,7 +508,7 @@ impl AsLogical for common_pb::Property {
                         if plan_meta.is_preprocess() && schema.is_column_id() {
                             *key = schema
                                 .get_column_id_from_pb(key)
-                                .ok_or(IrError::ColumnNotExist(format!("{:?}", key)))?
+                                .unwrap_or(INVALID_COLUMN_ID)
                                 .into();
                         }
                     }
@@ -528,7 +531,7 @@ impl AsLogical for common_pb::Variable {
                             if plan_meta.is_preprocess() && schema.is_column_id() {
                                 *key = schema
                                     .get_column_id_from_pb(key)
-                                    .ok_or(IrError::ColumnNotExist(format!("{:?}", key)))?
+                                    .unwrap_or(INVALID_COLUMN_ID)
                                     .into();
                             }
                         }
@@ -560,7 +563,7 @@ impl AsLogical for common_pb::Value {
                             *item = common_pb::value::Item::I32(
                                 schema
                                     .get_table_id(name)
-                                    .ok_or(IrError::TableNotExist(name.to_string()))?,
+                                    .unwrap_or(INVALID_TABLE_ID),
                             );
                         }
                         _ => {}
@@ -588,7 +591,7 @@ impl AsLogical for common_pb::Expression {
                                             if plan_meta.is_preprocess() && schema.is_column_id() {
                                                 *key = schema
                                                     .get_column_id_from_pb(key)
-                                                    .ok_or(IrError::ColumnNotExist(format!("{:?}", key)))?
+                                                    .unwrap_or(INVALID_COLUMN_ID)
                                                     .into();
                                             }
                                         }
@@ -649,7 +652,7 @@ impl AsLogical for pb::QueryParams {
                 for table in self.table_names.iter_mut() {
                     *table = schema
                         .get_table_id_from_pb(table)
-                        .ok_or(IrError::TableNotExist(format!("{:?}", table)))?
+                        .unwrap_or(INVALID_TABLE_ID)
                         .into();
                 }
             }
@@ -659,7 +662,7 @@ impl AsLogical for pb::QueryParams {
                 if plan_meta.is_preprocess() && schema.is_column_id() {
                     *column = schema
                         .get_column_id_from_pb(column)
-                        .ok_or(IrError::ColumnNotExist(format!("{:?}", column)))?
+                        .unwrap_or(INVALID_COLUMN_ID)
                         .into();
                 }
             }
@@ -760,7 +763,7 @@ impl AsLogical for pb::IndexPredicate {
                                     if plan_meta.is_preprocess() && schema.is_column_id() {
                                         *key = schema
                                             .get_column_id_from_pb(key)
-                                            .ok_or(IrError::ColumnNotExist(format!("{:?}", key)))?
+                                            .unwrap_or(INVALID_COLUMN_ID)
                                             .into();
                                     }
                                 }
