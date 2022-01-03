@@ -21,12 +21,18 @@ import com.alibaba.graphscope.common.jna.IntEnum;
 public enum ResultCode implements IntEnum<ResultCode> {
     Success,
     ParseExprError,
-    NotExistError,
+    MissingDataError,
     CStringError,
     UnknownTypeError,
     InvalidRangeError,
     NegativeIndexError,
-    BuildJobError;
+    BuildJobError,
+    ParsePbError,
+    ParentNotFoundError,
+    ColumnNotExistError,
+    TableNotExistError,
+    UnSupported,
+    Unknown;
 
     @Override
     public int getInt() {

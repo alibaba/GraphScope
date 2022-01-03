@@ -268,11 +268,11 @@ pub struct FfiAlias {
     is_query_given: bool,
 }
 
-impl TryFrom<FfiAlias> for common_pb::NameOrId {
+impl TryFrom<FfiAlias> for Option<common_pb::NameOrId> {
     type Error = ResultCode;
 
     fn try_from(ffi: FfiAlias) -> Result<Self, Self::Error> {
-        Option::<common_pb::NameOrId>::try_from(ffi.alias)?.ok_or(ResultCode::MissingDataError)
+        Self::try_from(ffi.alias)
     }
 }
 
@@ -633,37 +633,37 @@ fn set_range(ptr: *const c_void, lower: i32, upper: i32, opr: Opr) -> ResultCode
 
 fn set_alias(ptr: *const c_void, alias: FfiAlias, opr: Opr) -> ResultCode {
     let mut return_code = ResultCode::Success;
-    let alias_pb: FfiResult<common_pb::NameOrId> = alias.try_into();
+    let alias_pb: FfiResult<Option<common_pb::NameOrId>> = alias.try_into();
     if alias_pb.is_ok() {
         match &opr {
             Opr::Scan => {
                 let mut scan = unsafe { Box::from_raw(ptr as *mut pb::Scan) };
-                scan.alias = alias_pb.ok();
+                scan.alias = alias_pb.unwrap();
                 std::mem::forget(scan);
             }
             Opr::EdgeExpand => {
                 let mut edgexpd = unsafe { Box::from_raw(ptr as *mut pb::EdgeExpand) };
-                edgexpd.alias = alias_pb.ok();
+                edgexpd.alias = alias_pb.unwrap();
                 std::mem::forget(edgexpd);
             }
             Opr::PathExpand => {
                 let mut pathxpd = unsafe { Box::from_raw(ptr as *mut pb::PathExpand) };
-                pathxpd.alias = alias_pb.ok();
+                pathxpd.alias = alias_pb.unwrap();
                 std::mem::forget(pathxpd);
             }
             Opr::GetV => {
                 let mut getv = unsafe { Box::from_raw(ptr as *mut pb::GetV) };
-                getv.alias = alias_pb.ok();
+                getv.alias = alias_pb.unwrap();
                 std::mem::forget(getv);
             }
             Opr::Apply => {
                 let mut apply = unsafe { Box::from_raw(ptr as *mut pb::Apply) };
-                apply.subtask.as_mut().unwrap().alias = alias_pb.ok();
+                apply.subtask.as_mut().unwrap().alias = alias_pb.unwrap();
                 std::mem::forget(apply);
             }
             Opr::As => {
                 let mut as_opr = unsafe { Box::from_raw(ptr as *mut pb::As) };
-                as_opr.alias = alias_pb.ok();
+                as_opr.alias = alias_pb.unwrap();
                 std::mem::forget(as_opr);
             }
             _ => unreachable!(),
@@ -800,14 +800,14 @@ mod project {
         let mut return_code = ResultCode::Success;
         let mut project = unsafe { Box::from_raw(ptr_project as *mut pb::Project) };
         let expr_pb = cstr_to_expr_pb(cstr_expr);
-        let alias_pb = common_pb::NameOrId::try_from(alias);
+        let alias_pb = Option::<common_pb::NameOrId>::try_from(alias);
 
         if !expr_pb.is_ok() {
             return_code = expr_pb.err().unwrap();
         } else if !alias_pb.is_ok() {
             return_code = alias_pb.err().unwrap();
         } else {
-            let attribute = pb::project::ExprAlias { expr: expr_pb.ok(), alias: alias_pb.ok() };
+            let attribute = pb::project::ExprAlias { expr: expr_pb.ok(), alias: alias_pb.unwrap() };
             project.mappings.push(attribute);
         }
         std::mem::forget(project);
@@ -1029,7 +1029,7 @@ mod groupby {
             for var in vars.into_iter() {
                 agg_fn_pb.vars.push(var.try_into()?)
             }
-            agg_fn_pb.alias = Some(alias.try_into()?);
+            agg_fn_pb.alias = alias.try_into()?;
 
             Ok(agg_fn_pb)
         }
@@ -1058,12 +1058,12 @@ mod groupby {
         let mut return_code = ResultCode::Success;
         let mut group = unsafe { Box::from_raw(ptr_groupby as *mut pb::GroupBy) };
         let key_pb: FfiResult<common_pb::Variable> = key.try_into();
-        let alias_pb: FfiResult<common_pb::NameOrId> = alias.try_into();
+        let alias_pb: FfiResult<Option<common_pb::NameOrId>> = alias.try_into();
 
         if key_pb.is_ok() && alias_pb.is_ok() {
             group
                 .mappings
-                .push(pb::group_by::KeyAlias { key: key_pb.ok(), alias: alias_pb.ok() });
+                .push(pb::group_by::KeyAlias { key: key_pb.ok(), alias: alias_pb.unwrap() });
         } else {
             return_code = key_pb.err().unwrap();
         }

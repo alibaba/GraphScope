@@ -26,7 +26,7 @@ use ir_common::generated::algebra as pb;
 use ir_common::generated::common as common_pb;
 use vec_map::VecMap;
 
-use crate::error::{IrError, IrResult};
+use crate::error::IrResult;
 use crate::plan::meta::{PlanMeta, StoreMeta, STORE_META};
 use crate::JsonIO;
 
