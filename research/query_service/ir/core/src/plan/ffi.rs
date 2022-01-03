@@ -89,6 +89,8 @@ pub enum ResultCode {
     BuildJobError = 7,
     /// Unsupported
     UnSupported = 8,
+    /// Unknown
+    Unknown = 9,
 }
 
 impl std::fmt::Display for ResultCode {
@@ -103,6 +105,7 @@ impl std::fmt::Display for ResultCode {
             ResultCode::NegativeIndexError => write!(f, "the given index is negative"),
             ResultCode::BuildJobError => write!(f, "build physical plan error"),
             ResultCode::UnSupported => write!(f, "unsupported functionality"),
+            ResultCode::Unknown => write!(f, "unknown error"),
         }
     }
 }
@@ -785,8 +788,10 @@ mod project {
         let expr_pb = cstr_to_expr_pb(cstr_expr);
         let alias_pb = common_pb::NameOrId::try_from(alias);
 
-        if !expr_pb.is_ok() || !alias_pb.is_ok() {
+        if !expr_pb.is_ok() {
             return_code = expr_pb.err().unwrap();
+        } else if !alias_pb.is_ok() {
+            return_code = alias_pb.err().unwrap();
         } else {
             let attribute = pb::project::ExprAlias { expr: expr_pb.ok(), alias: alias_pb.ok() };
             project.mappings.push(attribute);
