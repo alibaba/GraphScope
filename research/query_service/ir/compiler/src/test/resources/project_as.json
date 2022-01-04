@@ -48,12 +48,9 @@
                   ]
                 },
                 "alias": {
-                  "alias": {
-                    "item": {
-                      "Name": "b"
-                    }
-                  },
-                  "is_query_given": true
+                  "item": {
+                    "Name": "b"
+                  }
                 }
               }
             ],
