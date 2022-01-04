@@ -549,24 +549,20 @@ where
     }
 
     fn get_edge(&self, edge_id: EdgeId<G>) -> Option<LocalEdge<G, I>> {
-        if self.is_vertex_local(edge_id.0) {
-            let ei = edge_index::<I>(edge_id.1);
-            if let Some((src, dst)) = self.graph.edge_endpoints(ei.clone()) {
-                let _src_v = self.index_data.get_global_id(src);
-                let _dst_v = self.index_data.get_global_id(dst);
-                let label = *self.graph.edge_weight(ei).unwrap();
-                if _src_v.is_some() && _dst_v.is_some() {
-                    let mut local_edge = LocalEdge::new(_src_v.unwrap(), _dst_v.unwrap(), label, ei);
-                    if let Some(properties) = self.get_all_edge_property(&ei) {
-                        local_edge = local_edge.with_properties(RowWithSchema::new(
-                            Some(properties),
-                            self.graph_schema.get_edge_schema(label),
-                        ));
-                    }
-                    Some(local_edge)
-                } else {
-                    None
+        let ei = edge_index::<I>(edge_id.1);
+        if let Some((src, dst)) = self.graph.edge_endpoints(ei.clone()) {
+            let _src_v = self.index_data.get_global_id(src);
+            let _dst_v = self.index_data.get_global_id(dst);
+            let label = *self.graph.edge_weight(ei).unwrap();
+            if _src_v.is_some() && _dst_v.is_some() {
+                let mut local_edge = LocalEdge::new(_src_v.unwrap(), _dst_v.unwrap(), label, ei);
+                if let Some(properties) = self.get_all_edge_property(&ei) {
+                    local_edge = local_edge.with_properties(RowWithSchema::new(
+                        Some(properties),
+                        self.graph_schema.get_edge_schema(label),
+                    ));
                 }
+                Some(local_edge)
             } else {
                 None
             }

@@ -22,7 +22,7 @@ use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
 use crate::expr::eval::Context;
 use crate::graph::element::{Element, GraphElement};
 use crate::graph::property::{Details, DynDetails};
-use crate::graph::ID;
+use crate::graph::{read_id, write_id, ID};
 
 #[derive(Clone, Debug)]
 pub struct Edge {
@@ -99,8 +99,8 @@ impl Edge {
 
 impl Encode for Edge {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
-        writer.write_u128(self.src_id)?;
-        writer.write_u128(self.dst_id)?;
+        write_id(writer, self.src_id)?;
+        write_id(writer, self.dst_id)?;
         self.src_label.write_to(writer)?;
         self.dst_label.write_to(writer)?;
         self.from_src.write_to(writer)?;
@@ -111,8 +111,8 @@ impl Encode for Edge {
 
 impl Decode for Edge {
     fn read_from<R: ReadExt>(reader: &mut R) -> io::Result<Self> {
-        let src_id = reader.read_u128()?;
-        let dst_id = reader.read_u128()?;
+        let src_id = read_id(reader)?;
+        let dst_id = read_id(reader)?;
         let src_label = <Option<NameOrId>>::read_from(reader)?;
         let dst_label = <Option<NameOrId>>::read_from(reader)?;
         let from_src = <bool>::read_from(reader)?;

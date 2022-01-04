@@ -18,6 +18,7 @@ pub mod partitioner;
 pub mod property;
 
 use std::convert::{TryFrom, TryInto};
+use std::io;
 use std::sync::atomic::{AtomicPtr, Ordering};
 use std::sync::Arc;
 
@@ -26,11 +27,20 @@ use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::common as common_pb;
 use ir_common::NameOrId;
 use pegasus::api::function::{DynIter, FnResult};
+use pegasus::codec::{ReadExt, WriteExt};
 
 use crate::expr::eval::Evaluator;
 use crate::graph::element::{Edge, Vertex};
 
-pub type ID = u128;
+pub type ID = u64;
+
+pub fn read_id<R: ReadExt>(reader: &mut R) -> io::Result<ID> {
+    reader.read_u64()
+}
+
+pub fn write_id<W: WriteExt>(writer: &mut W, id: ID) -> io::Result<()> {
+    writer.write_u64(id)
+}
 
 /// The number of bits in an `ID`
 pub const ID_BITS: usize = std::mem::size_of::<ID>() * 8;

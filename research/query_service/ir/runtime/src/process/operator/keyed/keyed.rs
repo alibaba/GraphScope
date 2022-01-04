@@ -86,6 +86,7 @@ mod tests {
 
     use crate::graph::element::{GraphElement, Vertex};
     use crate::graph::property::{DefaultDetails, DynDetails};
+    use crate::graph::ID;
     use crate::process::operator::keyed::KeyFunctionGen;
     use crate::process::record::Record;
 
@@ -107,7 +108,7 @@ mod tests {
         Box::new(vec![r1, r2, r3].into_iter())
     }
 
-    fn dedup_test(key_str: String, expected_ids: Vec<u128>) {
+    fn dedup_test(key_str: String, expected_ids: Vec<ID>) {
         let conf = JobConf::new("dedup_test");
         let mut result = pegasus::run(conf, || {
             let key_str = key_str.clone();

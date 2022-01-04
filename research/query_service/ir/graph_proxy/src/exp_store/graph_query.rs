@@ -36,7 +36,6 @@ use runtime::graph::element::{Edge, Vertex};
 use runtime::graph::property::{DefaultDetails, Details, DynDetails};
 use runtime::graph::{register_graph, Direction, GraphProxy, QueryParams, Statement, ID};
 
-use crate::exp_store::{ID_MASK, ID_SHIFT_BITS};
 use crate::from_fn;
 use crate::{filter_limit, limit_n};
 
@@ -470,16 +469,15 @@ fn encode_runtime_v_id(v: &LocalVertex<DefaultId>) -> ID {
     v.get_id() as ID
 }
 
-/// Edge's ID is encoded by the source vertex's `ID`, and its internal index
+/// Edge's ID is encoded by its internal index
 fn encode_runtime_e_id(e: &LocalEdge<DefaultId, InternalId>) -> ID {
     let ei = e.get_edge_id();
-    ((ei.1 as ID) << ID_SHIFT_BITS) | (ei.0 as ID)
+    ei.1 as ID
 }
 
 pub fn encode_store_e_id(e: &ID) -> EdgeId<DefaultId> {
-    let index = (*e >> ID_SHIFT_BITS) as usize;
-    let start_id = (*e & ID_MASK) as DefaultId;
-    (start_id, index)
+    // TODO(longbin) To only use in current partition
+    (0, *e as usize)
 }
 
 fn encode_runtime_v_label(v: &LocalVertex<DefaultId>) -> NameOrId {

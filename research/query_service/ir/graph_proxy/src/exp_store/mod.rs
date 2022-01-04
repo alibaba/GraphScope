@@ -22,11 +22,14 @@ use runtime::graph::{ID, ID_BITS};
 use runtime::IRJobCompiler;
 
 use crate::InitializeJobCompiler;
+
+#[allow(dead_code)]
 pub const ID_SHIFT_BITS: usize = ID_BITS >> 1;
 
 /// Given the encoding of an edge, the `ID_MASK` is used to get the lower half part of an edge, which is
 /// the src_id. As an edge is indiced by its src_id, one can use edge_id & ID_MASK to route to the
 /// machine of the edge.
+#[allow(dead_code)]
 pub const ID_MASK: ID = ((1 as ID) << (ID_SHIFT_BITS as ID)) - (1 as ID);
 
 pub struct QueryExpGraph {

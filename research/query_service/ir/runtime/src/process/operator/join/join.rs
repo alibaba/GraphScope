@@ -51,6 +51,7 @@ mod tests {
 
     use crate::graph::element::{GraphElement, Vertex};
     use crate::graph::property::{DefaultDetails, DynDetails};
+    use crate::graph::ID;
     use crate::process::functions::JoinKeyGen;
     use crate::process::record::{HeadJoinOpt, Record};
 
@@ -70,7 +71,7 @@ mod tests {
         Box::new(vec![r3, r4].into_iter())
     }
 
-    fn join_test(join_kind: i32, expected_ids: Vec<u128>) {
+    fn join_test(join_kind: i32, expected_ids: Vec<ID>) {
         let conf = JobConf::new("join_test");
         let mut result = pegasus::run(conf, || {
             move |input, output| {

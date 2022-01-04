@@ -27,7 +27,7 @@ use ir_common::NameOrId;
 use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
 use pegasus_common::downcast::*;
 
-use crate::graph::ID;
+use crate::graph::{read_id, write_id, ID};
 
 /// The three types of property to get
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -234,7 +234,7 @@ impl Details for DefaultDetails {
 
 impl Encode for DefaultDetails {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
-        writer.write_u128(self.id)?;
+        write_id(writer, self.id)?;
         self.label.write_to(writer)?;
         writer.write_u64(self.inner.len() as u64)?;
         for (k, v) in &self.inner {
@@ -247,7 +247,7 @@ impl Encode for DefaultDetails {
 
 impl Decode for DefaultDetails {
     fn read_from<R: ReadExt>(reader: &mut R) -> io::Result<Self> {
-        let id = reader.read_u128()?;
+        let id = read_id(reader)?;
         let label = <Option<NameOrId>>::read_from(reader)?;
         let len = reader.read_u64()?;
         let mut map = HashMap::with_capacity(len as usize);

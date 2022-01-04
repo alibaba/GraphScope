@@ -17,8 +17,6 @@ use pegasus::api::function::FnResult;
 use runtime::graph::partitioner::Partitioner;
 use runtime::graph::ID;
 
-use crate::exp_store::ID_MASK;
-
 /// A simple partition utility that one server contains a single graph partition
 pub struct SimplePartition {
     pub num_servers: usize,
@@ -26,7 +24,8 @@ pub struct SimplePartition {
 
 impl Partitioner for SimplePartition {
     fn get_partition(&self, id: &ID, workers: usize) -> FnResult<u64> {
-        let id_usize = (*id & (ID_MASK)) as usize;
+        // let id_usize = (*id & (ID_MASK)) as usize;
+        let id_usize = *id as usize;
         let magic_num = id_usize / self.num_servers;
         // The partitioning logics is as follows:
         // 1. `R = id - magic_num * num_servers = id % num_servers` routes a given id
