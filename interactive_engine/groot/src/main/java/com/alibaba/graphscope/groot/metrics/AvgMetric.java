@@ -3,7 +3,7 @@ package com.alibaba.graphscope.groot.metrics;
 public class AvgMetric {
     private volatile long totalVal;
     private volatile long lastUpdateVal;
-    private volatile long metricVal;
+    private volatile double metricVal;
 
     public AvgMetric() {
         this.totalVal = 0L;
@@ -17,11 +17,11 @@ public class AvgMetric {
 
     public void update(long intervalNano) {
         long tmp = this.totalVal;
-        this.metricVal = (tmp - this.lastUpdateVal) / intervalNano;
+        this.metricVal = 1.0 * (tmp - this.lastUpdateVal) / intervalNano;
         this.lastUpdateVal = tmp;
     }
 
-    public long get() {
+    public double get() {
         return this.metricVal;
     }
 }

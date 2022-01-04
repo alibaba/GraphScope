@@ -56,6 +56,7 @@ public class BatchSender implements MetricsAgent {
     public static final String SEND_CALLBACK_LATENCY_PER_SECOND_MS =
             "send.callback.latency.per.second.ms";
     public static final String SEND_BATCH_WAIT_PER_SECOND_MS = "send.batch.wait.per.second.ms";
+    public static final String SEND_BATCH_COUNT_PER_SECOND = "send.batch.count.per.second";
 
     private MetaService metaService;
     private StoreWriter storeWriter;
@@ -78,6 +79,7 @@ public class BatchSender implements MetricsAgent {
     private List<AvgMetric> sendWriteLatencyMetrics;
     private List<AvgMetric> sendCallbackLatencyMetrics;
     private AvgMetric sendBatchWaitLatencyMetric;
+    private AvgMetric sendBatchCountPerSecond;
 
     public BatchSender(
             Configs configs,
@@ -273,6 +275,7 @@ public class BatchSender implements MetricsAgent {
         this.totalBytes += future.get();
         long afterBatchWaitTime = System.nanoTime();
         sendBatchWaitLatencyMetric.add(afterBatchWaitTime - startTime);
+        sendBatchCountPerSecond.add(1);
         if (batchNeedRetry.size() > 0) {
             try {
                 Thread.sleep(1000L);
@@ -297,6 +300,7 @@ public class BatchSender implements MetricsAgent {
             this.sendCallbackLatencyMetrics.add(new AvgMetric());
         }
         this.sendBatchWaitLatencyMetric = new AvgMetric();
+        this.sendBatchCountPerSecond = new AvgMetric();
     }
 
     private void updateMetrics() {
@@ -342,6 +346,7 @@ public class BatchSender implements MetricsAgent {
                 put(
                         SEND_BATCH_WAIT_PER_SECOND_MS,
                         String.valueOf(1000 * sendBatchWaitLatencyMetric.get()));
+                put(SEND_BATCH_COUNT_PER_SECOND, String.valueOf(sendBatchCountPerSecond.get()));
             }
         };
     }
@@ -353,7 +358,11 @@ public class BatchSender implements MetricsAgent {
             SEND_BYTES_TOTAL,
             SEND_RECORDS_PER_SECOND,
             SEND_RECORDS_TOTAL,
-            SEND_BUFFER_TASKS_COUNT
+            SEND_BUFFER_TASKS_COUNT,
+            SEND_WRITE_LATENCY_PER_SECOND_MS,
+            SEND_CALLBACK_LATENCY_PER_SECOND_MS,
+            SEND_BATCH_WAIT_PER_SECOND_MS,
+            SEND_BATCH_COUNT_PER_SECOND
         };
     }
 
