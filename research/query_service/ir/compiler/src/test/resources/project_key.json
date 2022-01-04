@@ -27,11 +27,7 @@
                   ]
                 },
                 "alias": {
-                  "alias": {
-                    "item": {
-                      "Name": "name"
-                    }
-                  },
+                  "alias": null,
                   "is_query_given": false
                 }
               }

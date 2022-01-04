@@ -23,12 +23,9 @@ import com.alibaba.graphscope.common.jna.type.*;
 import com.alibaba.graphscope.common.jna.type.FfiDirection;
 import com.alibaba.graphscope.common.jna.type.FfiNameOrId;
 import com.alibaba.graphscope.common.jna.type.FfiScanOpt;
-import org.apache.tinkerpop.gremlin.process.traversal.Compare;
-import org.apache.tinkerpop.gremlin.process.traversal.Order;
-import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
+import org.apache.tinkerpop.gremlin.process.traversal.*;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.IdentityTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.ValueTraversal;
-import org.apache.tinkerpop.gremlin.process.traversal.Contains;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.*;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.HasContainer;
 import org.apache.tinkerpop.gremlin.process.traversal.util.ConnectiveP;
@@ -144,26 +141,21 @@ public class OpArgTransformFactory {
     public static Function<VertexStep, List<FfiNameOrId.ByValue>> EDGE_LABELS_FROM_STEP = (VertexStep s1) ->
             Arrays.stream(s1.getEdgeLabels()).map(k -> ArgUtils.strAsNameId(k)).collect(Collectors.toList());
 
-    public static Function<Map<String, Traversal.Admin>, List<Pair<String, FfiAlias.ByValue>>>
+    public static Function<Map<String, Traversal.Admin>, String>
             PROJECT_EXPR_FROM_BY_TRAVERSALS = (Map<String, Traversal.Admin> map) -> {
-        // return List<<expr, FfiAlias>>
-        List<Pair<String, FfiAlias.ByValue>> exprWithAlias = new ArrayList<>();
+        StringBuilder builder = new StringBuilder();
         map.forEach((k, v) -> {
-            String expr = "@" + k;
             if (v == null || v instanceof IdentityTraversal) { // select(..)
-                String property = "";
-                exprWithAlias.add(makeProjectPair(expr, getVarAlias(k, property)));
-            } else if (v instanceof ValueTraversal) {
-                String property = ((ValueTraversal) v).getPropertyKey();
-                expr = String.format("@%s.%s", k, property); // select(..).by('name')
-                exprWithAlias.add(makeProjectPair(expr, getVarAlias(k, property)));
+                addProjectExpr(builder, "@" + k, false);
+            } else if (v instanceof ValueTraversal) {  // select(..).by('name')
+                String expr = String.format("@%s.%s", k, ((ValueTraversal) v).getPropertyKey());
+                addProjectExpr(builder, expr, false);
             } else if (v.getSteps().size() == 1 && v.getStartStep() instanceof PropertyMapStep) { // select(..).by(valueMap(''))
                 String[] mapKeys = ((PropertyMapStep) v.getStartStep()).getPropertyKeys();
                 if (mapKeys.length > 0) {
                     for (int i = 0; i < mapKeys.length; ++i) {
                         String e1 = String.format("@%s.%s", k, mapKeys[i]);
-                        String a1 = getVarAlias(k, mapKeys[i]);
-                        exprWithAlias.add(makeProjectPair(e1, a1));
+                        addProjectExpr(builder, e1, true);
                     }
                 } else {
                     throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE, "valueMap() is unsupported");
@@ -177,18 +169,38 @@ public class OpArgTransformFactory {
                     throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
                             "use valueMap(..) instead if there are multiple project keys");
                 }
-                expr = String.format("@%s.%s", k, mapKeys[0]);
-                exprWithAlias.add(makeProjectPair(expr, getVarAlias(k, mapKeys[0])));
+                String expr = String.format("@%s.%s", k, mapKeys[0]);
+                addProjectExpr(builder, expr, false);
             } else {
                 throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
                         "supported pattern is [select(..)] or [selecy(..).by('name')] or [select(..).by(valueMap(..))]");
             }
         });
-        return exprWithAlias;
+        return builder.toString();
     };
 
-    private static Pair<String, FfiAlias.ByValue> makeProjectPair(String expr, String alias) {
-        return Pair.with(expr, ArgUtils.asFfiAlias(alias, false));
+    // append a new expr into projectExpr
+    // format single value into map or not
+    private static void addProjectExpr(StringBuilder builder, String expr, boolean isSingleAsMap) {
+        String left = "{";
+        String right = "}";
+        if (builder.length() == 0) {
+            if (!isSingleAsMap) {
+                builder.append(expr);
+            } else {
+                builder.append("{" + expr + "}");
+            }
+        } else if (builder.charAt(0) != left.charAt(0)) {
+            builder.insert(0, left);
+            builder.append(", " + expr);
+            builder.append(right);
+        } else {
+            int rightEnd = builder.lastIndexOf(right);
+            if (rightEnd == -1) {
+                throw new OpArgIllegalException(OpArgIllegalException.Cause.INVALID_TYPE, "} is not present in a collection expression");
+            }
+            builder.insert(rightEnd, ", " + expr);
+        }
     }
 
     public static Function<List<Pair<Traversal.Admin, Comparator>>, List<Pair<FfiVariable.ByValue, FfiOrderOpt>>>
@@ -323,13 +335,15 @@ public class OpArgTransformFactory {
 
     // keys or keys_a or keys_name or keys_a_name
     private static FfiAlias.ByValue getGroupKeyAlias(FfiVariable.ByValue key) {
-        FfiVariable.ByValue none = ArgUtils.asNoneVar();
+        FfiVariable.ByValue noneVar = ArgUtils.asNoneVar();
+        FfiNameOrId.ByValue head = ArgUtils.asNoneNameOrId();
+        FfiProperty.ByValue noneKey = ArgUtils.asNoneProperty();
         String alias = "";
-        if ((!key.equals(none) && !key.tag.equals(FfiNameOrId.ByValue.getHead()))) {
+        if ((!key.equals(noneVar) && !key.tag.equals(head))) {
             alias = key.tag.name;
         }
         String property = "";
-        if (!key.equals(none) && !key.property.isNone()) {
+        if (!key.equals(noneVar) && !key.property.equals(noneKey)) {
             property = ArgUtils.getPropertyName(key.property);
         }
         String varAlias = getVarAlias(alias, property);

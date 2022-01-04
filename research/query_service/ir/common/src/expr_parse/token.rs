@@ -45,14 +45,16 @@ pub enum Token {
     RBrace, // )
 
     // Values and Variables
-    Identifier(String),    // a string-identifier
-    Boolean(bool),         // a boolean value
-    Int(i64),              // an integer value
-    Float(f64),            // a float value
-    String(String),        // a string value
-    IntArray(Vec<i64>),    // a integer array
-    FloatArray(Vec<f64>),  // a float array
-    StrArray(Vec<String>), // a string array
+    Identifier(String),      // a string-identifier
+    Boolean(bool),           // a boolean value
+    Int(i64),                // an integer value
+    Float(f64),              // a float value
+    String(String),          // a string value
+    IntArray(Vec<i64>),      // a integer array
+    FloatArray(Vec<f64>),    // a float array
+    StrArray(Vec<String>),   // a string array
+    IdentArray(Vec<String>), // an identifier array
+    IdentMap(Vec<String>),   // an identifier map
 }
 
 impl ExprToken for Token {
@@ -61,7 +63,7 @@ impl ExprToken for Token {
         use crate::expr_parse::token::Token::*;
         match self {
             Identifier(_) | Float(_) | Int(_) | Boolean(_) | String(_) | IntArray(_) | FloatArray(_)
-            | StrArray(_) => true,
+            | StrArray(_) | IdentArray(_) | IdentMap(_) => true,
             _ => false,
         }
     }
@@ -122,6 +124,10 @@ pub enum PartialToken {
     LBracket,
     /// To terminate an array, ']'
     RBracket,
+    /// To initiate a map, '{'
+    LCBracket,
+    /// To terminate a map, '}'
+    RCBracket,
 }
 
 #[inline]
@@ -136,6 +142,8 @@ fn char_to_partial_token(c: char) -> PartialToken {
         '-' => PartialToken::Minus,
         '[' => PartialToken::LBracket,
         ']' => PartialToken::RBracket,
+        '{' => PartialToken::LCBracket,
+        '}' => PartialToken::RCBracket,
         '+' => PartialToken::Token(Token::Plus),
         '*' => PartialToken::Token(Token::Star),
         '/' => PartialToken::Token(Token::Slash),
@@ -187,10 +195,10 @@ fn parse_string_literal<Iter: Iterator<Item = char>>(
         let mut has_right_bracket = false;
         // Treat everything as a string
         while let Some(c) = iter.next() {
-            if c == ']' {
+            if c == ']' || c == '}' {
                 has_right_bracket = true;
                 break;
-            } else if c == '[' {
+            } else if c == '[' || c == '{' {
                 return Err(ExprError::unsupported("nested array is not supported".to_string()));
             } else {
                 result.push(c);
@@ -217,6 +225,11 @@ fn str_to_partial_tokens(string: &str) -> ExprResult<Vec<PartialToken>> {
             result.push(parse_string_literal(&mut iter, true)?);
             // must have right bracket to escape from `parse_string_literal()`
             result.push(PartialToken::RBracket);
+        } else if c == '{' {
+            result.push(PartialToken::LCBracket);
+            result.push(parse_string_literal(&mut iter, true)?);
+            // must have right bracket to escape from `parse_string_literal()`
+            result.push(PartialToken::RCBracket);
         } else {
             let partial_token = char_to_partial_token(c);
 
@@ -277,6 +290,18 @@ fn token_array_to_token(token_array: Vec<Token>) -> ExprResult<Token> {
                 }
             }
             Ok(Token::StrArray(vec))
+        }
+        Token::Identifier(_) => {
+            let mut vec = Vec::with_capacity(token_array.len());
+            for t in token_array {
+                match t {
+                    Token::Identifier(s) => vec.push(s),
+                    _ => {
+                        return Err(ExprError::unsupported("array of various type unsupported".to_string()))
+                    }
+                }
+            }
+            Ok(Token::IdentArray(vec))
         }
         _ => Err(ExprError::unsupported(format!("array of this type: {:?} is not supported", pivot))),
     }
@@ -407,9 +432,12 @@ fn partial_tokens_to_tokens(mut tokens: &[PartialToken]) -> ExprResult<Vec<Token
                 Some(PartialToken::VerticalBar) => Some(Token::Or),
                 _ => return Err(ExprError::unmatched_partial_token(first, second)),
             },
-            PartialToken::LBracket => {
+            PartialToken::LBracket | PartialToken::LCBracket => {
+                let is_bracket = first == PartialToken::LBracket;
                 cutoff = 3;
-                if third != Some(PartialToken::RBracket) {
+                if (is_bracket && third != Some(PartialToken::RBracket))
+                    || (!is_bracket && third != Some(PartialToken::RCBracket))
+                {
                     return Err(ExprError::UnmatchedLRBrackets);
                 } else {
                     let mut token_array: Vec<Token> = Vec::new();
@@ -436,7 +464,16 @@ fn partial_tokens_to_tokens(mut tokens: &[PartialToken]) -> ExprResult<Vec<Token
                     if token_array.is_empty() {
                         return Err("empty array is given".into());
                     } else {
-                        Some(token_array_to_token(token_array)?)
+                        let result = token_array_to_token(token_array)?;
+                        if is_bracket {
+                            Some(result)
+                        } else {
+                            if let Token::IdentArray(vec) = result {
+                                Some(Token::IdentMap(vec))
+                            } else {
+                                unreachable!()
+                            }
+                        }
                     }
                 }
             }
@@ -534,6 +571,16 @@ mod tests {
             vec![Token::Float(-4.0), Token::Within, Token::FloatArray(vec![1.0, -2.0, 3.0, -4.0])];
         assert_eq!(case6, expected_case6);
 
+        let case10 = tokenize("[@a, @a.name, @.age]");
+        let expected_case10 =
+            vec![Token::IdentArray(vec!["@a".to_string(), "@a.name".to_string(), "@.age".to_string()])];
+        assert_eq!(case10.unwrap(), expected_case10,);
+
+        let case12 = tokenize("{@a, @a.name, @.age}");
+        let expected_case12 =
+            vec![Token::IdentMap(vec!["@a".to_string(), "@a.name".to_string(), "@.age".to_string()])];
+        assert_eq!(case12.unwrap(), expected_case12,);
+
         let case7 = tokenize("[1, -2, 3, -4");
         assert_eq!(case7.err().unwrap(), ExprError::UnmatchedLRBrackets);
 
@@ -547,15 +594,6 @@ mod tests {
         assert_eq!(
             case9.err().unwrap(),
             ExprError::unsupported("array of various type unsupported".to_string())
-        );
-
-        let case10 = tokenize("[@a]");
-        assert_eq!(
-            case10.err().unwrap(),
-            ExprError::unsupported(format!(
-                "array of this type: {:?} is not supported",
-                Token::Identifier("@a".to_string())
-            ))
         );
 
         let case11 = tokenize("[]");

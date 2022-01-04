@@ -94,10 +94,9 @@ impl Record {
     }
 
     // append without moving curr entry
-    pub fn append_without_moving_curr<E: Into<Entry>>(&mut self, entry: E, alias: Option<NameOrId>) {
+    pub fn append_without_moving_curr(&mut self, entry: Arc<Entry>, alias: Option<NameOrId>) {
         if let Some(alias) = alias {
-            self.columns
-                .insert(alias, Arc::new(entry.into()));
+            self.columns.insert(alias, entry);
         }
     }
 

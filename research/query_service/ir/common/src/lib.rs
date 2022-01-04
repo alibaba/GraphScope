@@ -65,7 +65,7 @@ pub const SPLITTER: &'static str = ".";
 pub const VAR_PREFIX: &'static str = "@";
 
 /// Refer to a key of a relation or a graph element, by either a string-type name or an identifier
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, PartialOrd, Ord)]
 pub enum NameOrId {
     Str(String),
     Id(KeyId),
@@ -164,21 +164,6 @@ impl TryFrom<common_pb::NameOrId> for NameOrId {
     }
 }
 
-// TODO: is_query_given in pb::Alias is not used for now
-impl TryFrom<pb::Alias> for Option<NameOrId> {
-    type Error = ParsePbError;
-
-    fn try_from(alias_pb: pb::Alias) -> ParsePbResult<Self>
-    where
-        Self: Sized,
-    {
-        Ok(alias_pb
-            .alias
-            .map(|alias| NameOrId::try_from(alias))
-            .transpose()?)
-    }
-}
-
 impl From<NameOrId> for common_pb::NameOrId {
     fn from(tag: NameOrId) -> Self {
         let name_or_id = match tag {
@@ -218,6 +203,19 @@ impl From<common_pb::Value> for common_pb::ExprOpr {
 impl From<common_pb::Variable> for common_pb::ExprOpr {
     fn from(var: common_pb::Variable) -> Self {
         common_pb::ExprOpr { item: Some(common_pb::expr_opr::Item::Var(var)) }
+    }
+}
+
+/// An indicator for whether it is a map
+impl From<(common_pb::VariableKeys, bool)> for common_pb::ExprOpr {
+    fn from(vars: (common_pb::VariableKeys, bool)) -> Self {
+        if !vars.1 {
+            // not a map
+            common_pb::ExprOpr { item: Some(common_pb::expr_opr::Item::Vars(vars.0)) }
+        } else {
+            // is a map
+            common_pb::ExprOpr { item: Some(common_pb::expr_opr::Item::VarMap(vars.0)) }
+        }
     }
 }
 
@@ -545,6 +543,12 @@ impl From<pb::Limit> for pb::logical_plan::Operator {
 impl From<pb::Auxilia> for pb::logical_plan::Operator {
     fn from(opr: pb::Auxilia) -> Self {
         pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::Auxilia(opr)) }
+    }
+}
+
+impl From<pb::As> for pb::logical_plan::Operator {
+    fn from(opr: pb::As) -> Self {
+        pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::As(opr)) }
     }
 }
 

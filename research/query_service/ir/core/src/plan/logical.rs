@@ -15,7 +15,7 @@
 
 use std::cell::RefCell;
 use std::collections::{BTreeSet, HashMap};
-use std::convert::TryFrom;
+use std::convert::{TryFrom, TryInto};
 use std::fmt;
 use std::io;
 use std::iter::FromIterator;
@@ -26,30 +26,12 @@ use ir_common::generated::algebra as pb;
 use ir_common::generated::common as common_pb;
 use vec_map::VecMap;
 
-use crate::plan::meta::{MetaData, META_DATA};
+use crate::error::IrResult;
+use crate::plan::meta::{PlanMeta, StoreMeta, STORE_META};
 use crate::JsonIO;
 
-/// Record any error while transforming ir to a pegasus physical plan
-#[derive(Debug, Clone)]
-pub enum LogicalError {
-    TableNotExist(String),
-    ColumnNotExist(String),
-    Unsupported,
-}
-
-pub type LogicalResult<T> = Result<T, LogicalError>;
-
-impl fmt::Display for LogicalError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            LogicalError::TableNotExist(s) => write!(f, "the given table(label): {:?} does not exist", s),
-            LogicalError::ColumnNotExist(s) => write!(f, "the given column: {:?} does not exist", s),
-            LogicalError::Unsupported => write!(f, "the function has not been supported"),
-        }
-    }
-}
-
-impl std::error::Error for LogicalError {}
+pub static INVALID_TABLE_ID: i32 = i32::MIN;
+pub static INVALID_COLUMN_ID: i32 = i32::MIN;
 
 /// An internal representation of the pb-[`Node`].
 ///
@@ -92,8 +74,8 @@ pub(crate) struct LogicalPlan {
     /// To record the total number of operators ever created in the logical plan,
     /// **ignorant of the removed nodes**
     pub total_size: usize,
-    /// Whether to preprocess the nodes before appending.
-    pub is_preprocess: bool,
+    /// The tag data of the logical plan
+    pub plan_meta: PlanMeta,
 }
 
 impl PartialEq for LogicalPlan {
@@ -161,7 +143,7 @@ impl TryFrom<pb::LogicalPlan> for LogicalPlan {
         let plan = LogicalPlan {
             total_size: nodes.len(),
             nodes: VecMap::from_iter(nodes.into_iter().enumerate()),
-            is_preprocess: false,
+            plan_meta: PlanMeta::default(),
         };
 
         Ok(plan)
@@ -247,7 +229,7 @@ impl LogicalPlan {
     pub fn with_root(node: Node) -> Self {
         let mut nodes = VecMap::new();
         nodes.insert(node.id as usize, Rc::new(RefCell::new(node)));
-        Self { nodes, total_size: 1, is_preprocess: false }
+        Self { nodes, total_size: 1, plan_meta: PlanMeta::default() }
     }
 
     /// Get a node reference from the logical plan
@@ -278,8 +260,42 @@ impl LogicalPlan {
                 parent_node.borrow_mut().add_child(id);
             }
         }
-        self.nodes
-            .insert(id as usize, Rc::new(RefCell::new(node)));
+        let node_rc = Rc::new(RefCell::new(node));
+        self.nodes.insert(id as usize, node_rc.clone());
+
+        match &node_rc.borrow().opr.opr {
+            Some(pb::logical_plan::operator::Opr::Scan(scan)) => {
+                if let Some(alias) = &scan.alias {
+                    self.plan_meta
+                        .insert_tag_node(alias.clone().try_into().unwrap(), id);
+                }
+            }
+            Some(pb::logical_plan::operator::Opr::Vertex(vertex)) => {
+                if let Some(alias) = &vertex.alias {
+                    self.plan_meta
+                        .insert_tag_node(alias.clone().try_into().unwrap(), id);
+                }
+            }
+            Some(pb::logical_plan::operator::Opr::Edge(edge)) => {
+                if let Some(alias) = &edge.alias {
+                    self.plan_meta
+                        .insert_tag_node(alias.clone().try_into().unwrap(), id);
+                }
+            }
+            Some(pb::logical_plan::operator::Opr::Path(path)) => {
+                if let Some(alias) = &path.alias {
+                    self.plan_meta
+                        .insert_tag_node(alias.clone().try_into().unwrap(), id);
+                }
+            }
+            Some(pb::logical_plan::operator::Opr::As(as_opr)) => {
+                if let Some(alias) = &as_opr.alias {
+                    self.plan_meta
+                        .insert_tag_node(alias.clone().try_into().unwrap(), self.plan_meta.get_curr_node());
+                }
+            }
+            _ => {}
+        }
         self.total_size = id as usize + 1;
 
         id as i32
@@ -288,13 +304,32 @@ impl LogicalPlan {
     /// Append an operator into the logical plan, as a new node with `self.total_size` as its id.
     pub fn append_operator_as_node(
         &mut self, mut opr: pb::logical_plan::Operator, parent_ids: Vec<u32>,
-    ) -> LogicalResult<i32> {
-        if self.is_preprocess {
-            if let Ok(meta) = META_DATA.read() {
-                opr.preprocess(&meta)?;
+    ) -> IrResult<i32> {
+        let old_curr_node = self.plan_meta.get_curr_node();
+        let mut is_update_curr = false;
+        if let Ok(meta) = STORE_META.read() {
+            match opr.opr {
+                Some(pb::logical_plan::operator::Opr::Edge(_)) => {
+                    self.plan_meta
+                        .set_curr_node(self.total_size as u32);
+                }
+                Some(pb::logical_plan::operator::Opr::As(_))
+                | Some(pb::logical_plan::operator::Opr::Select(_)) => {}
+                _ => is_update_curr = true,
+            }
+            opr.preprocess(&meta, &mut self.plan_meta)?;
+        }
+        let new_curr_node = self.append_node(Node::new(self.total_size as u32, opr), parent_ids);
+        if new_curr_node < 0 {
+            self.plan_meta.set_curr_node(old_curr_node);
+        } else {
+            if is_update_curr {
+                self.plan_meta
+                    .set_curr_node(new_curr_node as u32);
             }
         }
-        Ok(self.append_node(Node::new(self.total_size as u32, opr), parent_ids))
+
+        Ok(new_curr_node)
     }
 
     /// Remove a node from the logical plan, and do the following:
@@ -461,24 +496,25 @@ impl JsonIO for LogicalPlan {
 }
 
 pub trait AsLogical {
-    fn preprocess(&mut self, meta: &MetaData) -> LogicalResult<()>;
+    fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()>;
 }
 
 impl AsLogical for common_pb::Property {
-    fn preprocess(&mut self, meta: &MetaData) -> LogicalResult<()> {
-        if let Some(schema) = &meta.schema {
-            if schema.is_column_id() {
-                if let Some(prop_key) = &mut self.item {
-                    match prop_key {
-                        common_pb::property::Item::Key(key) => {
+    fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
+        if let Some(prop_key) = &mut self.item {
+            match prop_key {
+                common_pb::property::Item::Key(key) => {
+                    if let Some(schema) = &meta.schema {
+                        if plan_meta.is_preprocess() && schema.is_column_id() {
                             *key = schema
                                 .get_column_id_from_pb(key)
-                                .ok_or(LogicalError::ColumnNotExist(format!("{:?}", key)))?
+                                .unwrap_or(INVALID_COLUMN_ID)
                                 .into();
                         }
-                        _ => {}
                     }
+                    plan_meta.insert_tag_columns(None, key.clone().try_into()?)?;
                 }
+                _ => {}
             }
         }
         Ok(())
@@ -486,28 +522,48 @@ impl AsLogical for common_pb::Property {
 }
 
 impl AsLogical for common_pb::Variable {
-    fn preprocess(&mut self, meta: &MetaData) -> LogicalResult<()> {
-        if meta.schema.is_some() {
-            if let Some(prop) = &mut self.property {
-                prop.preprocess(meta)?;
+    fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
+        if let Some(property) = self.property.as_mut() {
+            if let Some(key) = property.item.as_mut() {
+                match key {
+                    common_pb::property::Item::Key(key) => {
+                        if let Some(schema) = &meta.schema {
+                            if plan_meta.is_preprocess() && schema.is_column_id() {
+                                *key = schema
+                                    .get_column_id_from_pb(key)
+                                    .unwrap_or(INVALID_COLUMN_ID)
+                                    .into();
+                            }
+                        }
+                        plan_meta.insert_tag_columns(
+                            self.tag
+                                .clone()
+                                .map(|tag| tag.try_into())
+                                .transpose()?,
+                            key.clone().try_into()?,
+                        )?;
+                    }
+                    _ => {}
+                }
             }
         }
+
         Ok(())
     }
 }
 
 impl AsLogical for common_pb::Value {
-    fn preprocess(&mut self, meta: &MetaData) -> LogicalResult<()> {
+    fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
         if let Some(schema) = &meta.schema {
             // A Const needs to be preprocessed only if it is while comparing a label (table)
-            if schema.is_table_id() {
+            if plan_meta.is_preprocess() && schema.is_table_id() {
                 if let Some(item) = self.item.as_mut() {
                     match item {
                         common_pb::value::Item::Str(name) => {
                             *item = common_pb::value::Item::I32(
                                 schema
                                     .get_table_id(name)
-                                    .ok_or(LogicalError::TableNotExist(name.to_string()))?,
+                                    .unwrap_or(INVALID_TABLE_ID),
                             );
                         }
                         _ => {}
@@ -520,96 +576,107 @@ impl AsLogical for common_pb::Value {
 }
 
 impl AsLogical for common_pb::Expression {
-    fn preprocess(&mut self, meta: &MetaData) -> LogicalResult<()> {
-        if let Some(schema) = &meta.schema {
-            let mut count = 0;
-            for opr in self.operators.iter_mut() {
-                if let Some(item) = opr.item.as_mut() {
-                    match item {
-                        common_pb::expr_opr::Item::Var(var) => {
-                            if let Some(property) = var.property.as_mut() {
-                                if let Some(key) = property.item.as_mut() {
-                                    match key {
-                                        common_pb::property::Item::Key(key) => {
+    fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
+        let mut count = 0;
+        for opr in self.operators.iter_mut() {
+            if let Some(item) = opr.item.as_mut() {
+                match item {
+                    common_pb::expr_opr::Item::Var(var) => {
+                        if let Some(property) = var.property.as_mut() {
+                            if let Some(key) = property.item.as_mut() {
+                                match key {
+                                    common_pb::property::Item::Key(key) => {
+                                        if let Some(schema) = &meta.schema {
                                             count = 0;
-                                            if schema.is_column_id() {
+                                            if plan_meta.is_preprocess() && schema.is_column_id() {
                                                 *key = schema
                                                     .get_column_id_from_pb(key)
-                                                    .ok_or(LogicalError::ColumnNotExist(format!(
-                                                        "{:?}",
-                                                        key
-                                                    )))?
+                                                    .unwrap_or(INVALID_COLUMN_ID)
                                                     .into();
                                             }
                                         }
-                                        common_pb::property::Item::Label(_) => count = 1,
-                                        _ => count = 0,
+                                        plan_meta.insert_tag_columns(
+                                            var.tag
+                                                .clone()
+                                                .map(|tag| tag.try_into())
+                                                .transpose()?,
+                                            key.clone().try_into()?,
+                                        )?;
                                     }
+                                    common_pb::property::Item::Label(_) => count = 1,
+                                    _ => count = 0,
                                 }
                             }
                         }
-                        common_pb::expr_opr::Item::Logical(l) => {
-                            if count == 1 {
-                                // means previous one is LabelKey
-                                // The logical operator of Eq, Ne, Lt, Le, Gt, Ge
-                                if *l >= 0 && *l <= 5 {
-                                    count = 2; // indicates LabelKey <cmp>
-                                }
-                            } else {
-                                count = 0;
+                    }
+                    common_pb::expr_opr::Item::Logical(l) => {
+                        if count == 1 {
+                            // means previous one is LabelKey
+                            // The logical operator of Eq, Ne, Lt, Le, Gt, Ge
+                            if *l >= 0 && *l <= 5 {
+                                count = 2; // indicates LabelKey <cmp>
                             }
-                        }
-                        common_pb::expr_opr::Item::Const(c) => {
-                            if count == 2 {
-                                // indicates LabelKey <cmp> labelValue
-                                c.preprocess(meta)?;
-                            }
+                        } else {
                             count = 0;
                         }
-                        _ => count = 0,
                     }
+                    common_pb::expr_opr::Item::Const(c) => {
+                        if count == 2 {
+                            // indicates LabelKey <cmp> labelValue
+                            c.preprocess(meta, plan_meta)?;
+                        }
+                        count = 0;
+                    }
+                    common_pb::expr_opr::Item::Vars(vars) | common_pb::expr_opr::Item::VarMap(vars) => {
+                        for var in &mut vars.keys {
+                            var.preprocess(meta, plan_meta)?;
+                        }
+                        count = 0;
+                    }
+                    _ => count = 0,
                 }
             }
         }
+
         Ok(())
     }
 }
 
 impl AsLogical for pb::QueryParams {
-    fn preprocess(&mut self, meta: &MetaData) -> LogicalResult<()> {
-        if meta.schema.is_some() {
-            if let Some(pred) = &mut self.predicate {
-                pred.preprocess(meta)?;
-            }
-            let schema = meta.schema.as_ref().unwrap();
-            if schema.is_table_id() {
+    fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
+        if let Some(pred) = &mut self.predicate {
+            pred.preprocess(meta, plan_meta)?;
+        }
+        if let Some(schema) = &meta.schema {
+            if plan_meta.is_preprocess() && schema.is_table_id() {
                 for table in self.table_names.iter_mut() {
                     *table = schema
                         .get_table_id_from_pb(table)
-                        .ok_or(LogicalError::TableNotExist(format!("{:?}", table)))?
+                        .unwrap_or(INVALID_TABLE_ID)
                         .into();
                 }
             }
-            if schema.is_column_id() {
-                for column in self.columns.iter_mut() {
+        }
+        for column in self.columns.iter_mut() {
+            if let Some(schema) = &meta.schema {
+                if plan_meta.is_preprocess() && schema.is_column_id() {
                     *column = schema
                         .get_column_id_from_pb(column)
-                        .ok_or(LogicalError::ColumnNotExist(format!("{:?}", column)))?
+                        .unwrap_or(INVALID_COLUMN_ID)
                         .into();
                 }
             }
+            plan_meta.insert_tag_columns(None, column.clone().try_into()?)?;
         }
         Ok(())
     }
 }
 
 impl AsLogical for pb::Project {
-    fn preprocess(&mut self, meta: &MetaData) -> LogicalResult<()> {
+    fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
         for mapping in self.mappings.iter_mut() {
-            if meta.schema.is_some() {
-                if let Some(expr) = &mut mapping.expr {
-                    expr.preprocess(meta)?;
-                }
+            if let Some(expr) = &mut mapping.expr {
+                expr.preprocess(meta, plan_meta)?;
             }
         }
         Ok(())
@@ -617,87 +684,66 @@ impl AsLogical for pb::Project {
 }
 
 impl AsLogical for pb::Select {
-    fn preprocess(&mut self, meta: &MetaData) -> LogicalResult<()> {
-        if meta.schema.is_some() {
-            if let Some(pred) = self.predicate.as_mut() {
-                pred.preprocess(meta)?;
-            }
+    fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
+        if let Some(pred) = self.predicate.as_mut() {
+            pred.preprocess(meta, plan_meta)?;
         }
         Ok(())
     }
 }
 
 impl AsLogical for pb::Scan {
-    fn preprocess(&mut self, meta: &MetaData) -> LogicalResult<()> {
-        if meta.schema.is_some() {
-            if let Some(params) = self.params.as_mut() {
-                params.preprocess(meta)?;
-            }
-            if let Some(index_pred) = self.idx_predicate.as_mut() {
-                index_pred.preprocess(meta)?;
-            }
+    fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
+        if let Some(params) = self.params.as_mut() {
+            params.preprocess(meta, plan_meta)?;
+        }
+        if let Some(index_pred) = self.idx_predicate.as_mut() {
+            index_pred.preprocess(meta, plan_meta)?;
         }
         Ok(())
     }
 }
 
 impl AsLogical for pb::ExpandBase {
-    fn preprocess(&mut self, meta: &MetaData) -> LogicalResult<()> {
-        if meta.schema.is_some() {
-            if let Some(params) = self.params.as_mut() {
-                params.preprocess(meta)?;
-            }
+    fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
+        if let Some(params) = self.params.as_mut() {
+            params.preprocess(meta, plan_meta)?;
         }
         Ok(())
     }
 }
 
 impl AsLogical for pb::EdgeExpand {
-    fn preprocess(&mut self, meta: &MetaData) -> LogicalResult<()> {
-        if meta.schema.is_some() {
-            if let Some(expand) = self.base.as_mut() {
-                expand.preprocess(meta)?;
-            }
-        }
-        Ok(())
-    }
-}
-
-impl AsLogical for pb::Auxilia {
-    fn preprocess(&mut self, meta: &MetaData) -> LogicalResult<()> {
-        if meta.schema.is_some() {
-            if let Some(params) = self.params.as_mut() {
-                params.preprocess(meta)?;
-            }
+    fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
+        if let Some(expand) = self.base.as_mut() {
+            expand.preprocess(meta, plan_meta)?;
         }
         Ok(())
     }
 }
 
 impl AsLogical for pb::GetV {
-    fn preprocess(&mut self, _meta: &MetaData) -> LogicalResult<()> {
+    fn preprocess(&mut self, _meta: &StoreMeta, _plan_meta: &mut PlanMeta) -> IrResult<()> {
         Ok(())
     }
 }
 
 impl AsLogical for pb::Dedup {
-    fn preprocess(&mut self, _meta: &MetaData) -> LogicalResult<()> {
+    fn preprocess(&mut self, _meta: &StoreMeta, _plan_meta: &mut PlanMeta) -> IrResult<()> {
         Ok(())
     }
 }
 
 impl AsLogical for pb::GroupBy {
-    fn preprocess(&mut self, meta: &MetaData) -> LogicalResult<()> {
-        if meta.schema.is_some() {
-            for mapping in self.mappings.iter_mut() {
-                if let Some(key) = &mut mapping.key {
-                    key.preprocess(meta)?;
-                }
+    fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
+        for mapping in self.mappings.iter_mut() {
+            if let Some(key) = &mut mapping.key {
+                key.preprocess(meta, plan_meta)?;
             }
-            for agg_fn in self.functions.iter_mut() {
-                for var in agg_fn.vars.iter_mut() {
-                    var.preprocess(meta)?;
-                }
+        }
+        for agg_fn in self.functions.iter_mut() {
+            for var in agg_fn.vars.iter_mut() {
+                var.preprocess(meta, plan_meta)?;
             }
         }
 
@@ -706,30 +752,29 @@ impl AsLogical for pb::GroupBy {
 }
 
 impl AsLogical for pb::IndexPredicate {
-    fn preprocess(&mut self, meta: &MetaData) -> LogicalResult<()> {
-        if let Some(schema) = &meta.schema {
-            for and_pred in self.or_predicates.iter_mut() {
-                for pred in and_pred.predicates.iter_mut() {
-                    if let Some(pred_key) = &mut pred.key {
-                        if let Some(key_item) = pred_key.item.as_mut() {
-                            match key_item {
-                                common_pb::property::Item::Key(key) => {
-                                    if schema.is_column_id() {
+    fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
+        for and_pred in self.or_predicates.iter_mut() {
+            for pred in and_pred.predicates.iter_mut() {
+                if let Some(pred_key) = &mut pred.key {
+                    if let Some(key_item) = pred_key.item.as_mut() {
+                        match key_item {
+                            common_pb::property::Item::Key(key) => {
+                                if let Some(schema) = &meta.schema {
+                                    if plan_meta.is_preprocess() && schema.is_column_id() {
                                         *key = schema
                                             .get_column_id_from_pb(key)
-                                            .ok_or(LogicalError::ColumnNotExist(format!("{:?}", key)))?
+                                            .unwrap_or(INVALID_COLUMN_ID)
                                             .into();
                                     }
                                 }
-                                common_pb::property::Item::Label(_) => {
-                                    if schema.is_table_id() {
-                                        if let Some(val) = pred.value.as_mut() {
-                                            val.preprocess(meta)?;
-                                        }
-                                    }
-                                }
-                                _ => {}
+                                plan_meta.insert_tag_columns(None, key.clone().try_into()?)?;
                             }
+                            common_pb::property::Item::Label(_) => {
+                                if let Some(val) = pred.value.as_mut() {
+                                    val.preprocess(meta, plan_meta)?;
+                                }
+                            }
+                            _ => {}
                         }
                     }
                 }
@@ -741,12 +786,10 @@ impl AsLogical for pb::IndexPredicate {
 }
 
 impl AsLogical for pb::OrderBy {
-    fn preprocess(&mut self, meta: &MetaData) -> LogicalResult<()> {
-        if meta.schema.is_some() {
-            for pair in self.pairs.iter_mut() {
-                if let Some(key) = &mut pair.key {
-                    key.preprocess(meta)?;
-                }
+    fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
+        for pair in self.pairs.iter_mut() {
+            if let Some(key) = &mut pair.key {
+                key.preprocess(meta, plan_meta)?;
             }
         }
 
@@ -755,42 +798,39 @@ impl AsLogical for pb::OrderBy {
 }
 
 impl AsLogical for pb::Limit {
-    fn preprocess(&mut self, _meta: &MetaData) -> LogicalResult<()> {
+    fn preprocess(&mut self, _meta: &StoreMeta, _plan_meta: &mut PlanMeta) -> IrResult<()> {
         Ok(())
     }
 }
 
 impl AsLogical for pb::Join {
-    fn preprocess(&mut self, meta: &MetaData) -> LogicalResult<()> {
-        if meta.schema.is_some() {
-            for left_key in self.left_keys.iter_mut() {
-                left_key.preprocess(meta)?
-            }
-            for right_key in self.right_keys.iter_mut() {
-                right_key.preprocess(meta)?
-            }
+    fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
+        for left_key in self.left_keys.iter_mut() {
+            left_key.preprocess(meta, plan_meta)?
+        }
+        for right_key in self.right_keys.iter_mut() {
+            right_key.preprocess(meta, plan_meta)?
         }
         Ok(())
     }
 }
 
 impl AsLogical for pb::logical_plan::Operator {
-    fn preprocess(&mut self, meta: &MetaData) -> LogicalResult<()> {
+    fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
         use pb::logical_plan::operator::Opr;
         if let Some(opr) = self.opr.as_mut() {
             match opr {
-                Opr::Project(opr) => opr.preprocess(meta)?,
-                Opr::Select(opr) => opr.preprocess(meta)?,
-                Opr::Scan(opr) => opr.preprocess(meta)?,
-                Opr::Edge(opr) => opr.preprocess(meta)?,
-                Opr::Auxilia(opr) => opr.preprocess(meta)?,
-                Opr::Vertex(opr) => opr.preprocess(meta)?,
-                Opr::Dedup(opr) => opr.preprocess(meta)?,
-                Opr::GroupBy(opr) => opr.preprocess(meta)?,
-                Opr::OrderBy(opr) => opr.preprocess(meta)?,
-                Opr::Limit(opr) => opr.preprocess(meta)?,
-                Opr::Join(opr) => opr.preprocess(meta)?,
-                _ => return Err(LogicalError::Unsupported),
+                Opr::Project(opr) => opr.preprocess(meta, plan_meta)?,
+                Opr::Select(opr) => opr.preprocess(meta, plan_meta)?,
+                Opr::Scan(opr) => opr.preprocess(meta, plan_meta)?,
+                Opr::Edge(opr) => opr.preprocess(meta, plan_meta)?,
+                Opr::Vertex(opr) => opr.preprocess(meta, plan_meta)?,
+                Opr::Dedup(opr) => opr.preprocess(meta, plan_meta)?,
+                Opr::GroupBy(opr) => opr.preprocess(meta, plan_meta)?,
+                Opr::OrderBy(opr) => opr.preprocess(meta, plan_meta)?,
+                Opr::Limit(opr) => opr.preprocess(meta, plan_meta)?,
+                Opr::Join(opr) => opr.preprocess(meta, plan_meta)?,
+                _ => {}
             }
         }
         Ok(())
@@ -1010,6 +1050,11 @@ mod test {
 
     #[test]
     fn test_preprocess_expression() {
+        let mut plan_meta = PlanMeta::default();
+        plan_meta.set_preprocess(true);
+        plan_meta.insert_tag_node("a".into(), 1);
+        plan_meta.insert_tag_node("b".into(), 2);
+
         set_schema_simple(
             vec![("person".to_string(), 0), ("software".to_string(), 1)],
             vec![("knows".to_string(), 0), ("creates".to_string(), 1)],
@@ -1017,7 +1062,7 @@ mod test {
         );
         let mut expression = str_to_expr_pb("@.~label == \"person\"".to_string()).unwrap();
         expression
-            .preprocess(&META_DATA.read().unwrap())
+            .preprocess(&STORE_META.read().unwrap(), &mut plan_meta)
             .unwrap();
         let opr = expression.operators.get(2).unwrap().clone();
         match opr.item.unwrap() {
@@ -1031,7 +1076,7 @@ mod test {
         let mut expression =
             str_to_expr_pb("(@.name == \"person\") && @a.~label == \"knows\"".to_string()).unwrap();
         expression
-            .preprocess(&META_DATA.read().unwrap())
+            .preprocess(&STORE_META.read().unwrap(), &mut plan_meta)
             .unwrap();
         // person should not be mapped, as name is not a label key
         let opr = expression.operators.get(3).unwrap().clone();
@@ -1052,10 +1097,19 @@ mod test {
             _ => panic!(),
         }
 
+        // Assert whether the columns have been updated in PlanMeta
+        assert_eq!(
+            plan_meta.get_node_columns(0).unwrap(),
+            // has a new column "name", which is mapped to 1
+            &vec![1.into()]
+                .into_iter()
+                .collect::<BTreeSet<_>>()
+        );
+
         // name maps to 1
         let mut expression = str_to_expr_pb("@a.name == \"John\"".to_string()).unwrap();
         expression
-            .preprocess(&META_DATA.read().unwrap())
+            .preprocess(&STORE_META.read().unwrap(), &mut plan_meta)
             .unwrap();
         let opr = expression.operators.get(0).unwrap().clone();
         match opr.item.unwrap() {
@@ -1068,10 +1122,61 @@ mod test {
             }
             _ => panic!(),
         }
+
+        // Assert whether the columns have been updated in PlanMeta
+        assert_eq!(
+            plan_meta.get_node_columns(1).unwrap(),
+            // node1 with tag a has a new column "name", which is mapped to 1
+            &vec![1.into()]
+                .into_iter()
+                .collect::<BTreeSet<_>>()
+        );
+
+        let mut expression = str_to_expr_pb("{@a.name, @b.id}".to_string()).unwrap();
+        expression
+            .preprocess(&STORE_META.read().unwrap(), &mut plan_meta)
+            .unwrap();
+        let opr = expression.operators.get(0).unwrap().clone();
+        match opr.item.unwrap() {
+            common_pb::expr_opr::Item::VarMap(vars) => {
+                let var1 = vars.keys[0].clone();
+                match var1.property.unwrap().item.unwrap() {
+                    Item::Key(key) => assert_eq!(key, 1.into()),
+                    _ => panic!(),
+                }
+                assert_eq!(var1.tag.unwrap(), "a".into());
+                let var2 = vars.keys[1].clone();
+                match var2.property.unwrap().item.unwrap() {
+                    Item::Key(key) => assert_eq!(key, 0.into()),
+                    _ => panic!(),
+                }
+                assert_eq!(var2.tag.unwrap(), "b".into());
+            }
+            _ => panic!(),
+        }
+
+        // Assert whether the columns have been updated in PlanMeta
+        assert_eq!(
+            plan_meta.get_node_columns(0).unwrap(),
+            // node1 with tag a has a new column "name", which is mapped to 1
+            &vec![1.into()]
+                .into_iter()
+                .collect::<BTreeSet<_>>()
+        );
+        assert_eq!(
+            plan_meta.get_node_columns(2).unwrap(),
+            // node2 with tag b has a new column "id", which is mapped to 0
+            &vec![0.into()]
+                .into_iter()
+                .collect::<BTreeSet<_>>()
+        );
     }
 
     #[test]
     fn test_preprocess_scan() {
+        let mut plan_meta = PlanMeta::default();
+        plan_meta.set_preprocess(true);
+        plan_meta.insert_tag_node("a".into(), 1);
         set_schema_simple(
             vec![("person".to_string(), 0), ("software".to_string(), 1)],
             vec![("knows".to_string(), 0), ("creates".to_string(), 1)],
@@ -1082,7 +1187,7 @@ mod test {
             alias: None,
             params: Some(pb::QueryParams {
                 table_names: vec!["person".into()],
-                columns: vec![],
+                columns: vec!["age".into(), "name".into()],
                 limit: None,
                 predicate: Some(
                     str_to_expr_pb("@a.~label > \"person\" && @a.age == 10".to_string()).unwrap(),
@@ -1091,7 +1196,7 @@ mod test {
             }),
             idx_predicate: Some(vec!["software".to_string()].into()),
         };
-        scan.preprocess(&META_DATA.read().unwrap())
+        scan.preprocess(&STORE_META.read().unwrap(), &mut plan_meta)
             .unwrap();
         assert_eq!(scan.clone().params.unwrap().table_names[0], 0.into());
         assert_eq!(
@@ -1128,6 +1233,245 @@ mod test {
             }
             _ => panic!(),
         }
+        // Assert whether the columns have been updated in PlanMeta
+        assert_eq!(
+            plan_meta.get_node_columns(0).unwrap(),
+            &vec![1.into(), 2.into()]
+                .into_iter()
+                .collect::<BTreeSet<_>>()
+        );
+        assert_eq!(
+            plan_meta.get_node_columns(1).unwrap(),
+            &vec![2.into()]
+                .into_iter()
+                .collect::<BTreeSet<_>>()
+        );
+    }
+
+    #[test]
+    fn test_tag_maintain_simple() {
+        let mut plan = LogicalPlan::default();
+        // g.V().hasLabel("person").has("age", 27).valueMap("age", "name", "id")
+
+        // g.V()
+        let scan = pb::Scan {
+            scan_opt: 0,
+            alias: None,
+            params: Some(pb::QueryParams {
+                table_names: vec![],
+                columns: vec![],
+                limit: None,
+                predicate: None,
+                requirements: vec![],
+            }),
+            idx_predicate: None,
+        };
+        plan.append_operator_as_node(scan.into(), vec![])
+            .unwrap();
+        assert_eq!(plan.plan_meta.get_curr_node(), 0);
+
+        // .hasLabel("person")
+        let select = pb::Select { predicate: str_to_expr_pb("@.~label == \"person\"".to_string()).ok() };
+        plan.append_operator_as_node(select.into(), vec![0])
+            .unwrap();
+        assert_eq!(plan.plan_meta.get_curr_node(), 0);
+
+        // .has("age", 27)
+        let select = pb::Select { predicate: str_to_expr_pb("@.age == 27".to_string()).ok() };
+        plan.append_operator_as_node(select.into(), vec![1])
+            .unwrap();
+        assert_eq!(plan.plan_meta.get_curr_node(), 0);
+        assert_eq!(
+            plan.plan_meta.get_node_columns(0).unwrap(),
+            &vec!["age".into()]
+                .into_iter()
+                .collect::<BTreeSet<_>>()
+        );
+
+        // .valueMap("age", "name", "id")
+        let project = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: str_to_expr_pb("{@.name, @.age, @.id}".to_string()).ok(),
+                alias: None,
+            }],
+            is_append: false,
+        };
+        plan.append_operator_as_node(project.into(), vec![2])
+            .unwrap();
+        assert_eq!(plan.plan_meta.get_curr_node(), 3);
+        assert_eq!(
+            plan.plan_meta.get_node_columns(0).unwrap(),
+            &vec!["age".into(), "id".into(), "name".into()]
+                .into_iter()
+                .collect::<BTreeSet<_>>()
+        );
+    }
+
+    #[test]
+    fn test_tag_maintain_complex() {
+        let mut plan = LogicalPlan::default();
+
+        // g.V("person").has("name", "John").as('a').outE("knows").as('b')
+        //  .has("date", 20200101).inV().as('c').has('id', 10)
+        //  .select('a').by(valueMap('age', "name"))
+        //  .select('c').by(valueMap('id', "name"))
+
+        // g.V("person")
+        let scan = pb::Scan {
+            scan_opt: 0,
+            alias: None,
+            params: Some(pb::QueryParams {
+                table_names: vec!["person".into()],
+                columns: vec![],
+                limit: None,
+                predicate: None,
+                requirements: vec![],
+            }),
+            idx_predicate: None,
+        };
+        let mut opr_id = plan
+            .append_operator_as_node(scan.into(), vec![])
+            .unwrap();
+        assert_eq!(plan.plan_meta.get_curr_node(), 0);
+
+        // .has("name", "John")
+        let select = pb::Select { predicate: str_to_expr_pb("@.name == \"John\"".to_string()).ok() };
+        opr_id = plan
+            .append_operator_as_node(select.into(), vec![opr_id as u32])
+            .unwrap();
+        assert_eq!(plan.plan_meta.get_curr_node(), 0);
+        assert_eq!(
+            plan.plan_meta.get_node_columns(0).unwrap(),
+            &vec!["name".into()]
+                .into_iter()
+                .collect::<BTreeSet<_>>()
+        );
+
+        // .as('a')
+        let as_opr = pb::As { alias: Some("a".into()) };
+        opr_id = plan
+            .append_operator_as_node(as_opr.into(), vec![opr_id as u32])
+            .unwrap();
+        assert_eq!(plan.plan_meta.get_curr_node(), 0);
+        assert_eq!(
+            plan.plan_meta
+                .get_tag_node(&"a".into())
+                .unwrap(),
+            0
+        );
+
+        // outE("knows").as('b').has("date", 20200101)
+        let expand = pb::EdgeExpand {
+            base: Some(pb::ExpandBase {
+                v_tag: Some("a".into()),
+                direction: 0,
+                params: Some(pb::QueryParams {
+                    table_names: vec!["knows".into()],
+                    columns: vec![],
+                    limit: None,
+                    predicate: str_to_expr_pb("@.date == 20200101".to_string()).ok(),
+                    requirements: vec![],
+                }),
+            }),
+            is_edge: true,
+            alias: Some("b".into()),
+        };
+        opr_id = plan
+            .append_operator_as_node(expand.into(), vec![opr_id as u32])
+            .unwrap();
+        assert_eq!(plan.plan_meta.get_curr_node(), opr_id as u32);
+        assert_eq!(
+            plan.plan_meta
+                .get_node_columns(opr_id as u32)
+                .unwrap(),
+            &vec!["date".into()]
+                .into_iter()
+                .collect::<BTreeSet<_>>()
+        );
+        assert_eq!(
+            plan.plan_meta
+                .get_tag_node(&"b".into())
+                .unwrap(),
+            opr_id as u32
+        );
+
+        //.inV().as('c')
+        let getv = pb::GetV { tag: None, opt: 2, alias: Some("c".into()) };
+        opr_id = plan
+            .append_operator_as_node(getv.into(), vec![opr_id as u32])
+            .unwrap();
+        assert_eq!(plan.plan_meta.get_curr_node(), opr_id as u32);
+        assert_eq!(
+            plan.plan_meta
+                .get_tag_node(&"c".into())
+                .unwrap(),
+            opr_id as u32
+        );
+
+        // .has("id", 10)
+        let select = pb::Select { predicate: str_to_expr_pb("@.id == 10".to_string()).ok() };
+        opr_id = plan
+            .append_operator_as_node(select.into(), vec![opr_id as u32])
+            .unwrap();
+        assert_eq!(plan.plan_meta.get_curr_node(), opr_id as u32 - 1);
+        assert_eq!(
+            plan.plan_meta
+                .get_node_columns(opr_id as u32 - 1)
+                .unwrap(),
+            &vec!["id".into()]
+                .into_iter()
+                .collect::<BTreeSet<_>>()
+        );
+
+        // .select('a').by(valueMap('age', "name"))
+        let project = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: str_to_expr_pb("{@a.age, @a.name}".to_string()).ok(),
+                alias: None,
+            }],
+            is_append: true,
+        };
+        opr_id = plan
+            .append_operator_as_node(project.into(), vec![opr_id as u32])
+            .unwrap();
+        assert_eq!(plan.plan_meta.get_curr_node(), opr_id as u32);
+        assert_eq!(
+            plan.plan_meta
+                .get_node_columns(
+                    plan.plan_meta
+                        .get_tag_node(&"a".into())
+                        .unwrap()
+                )
+                .unwrap(),
+            &vec!["age".into(), "name".into()]
+                .into_iter()
+                .collect::<BTreeSet<_>>()
+        );
+
+        // .select('c').by(valueMap('age', "name"))
+        let project = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: str_to_expr_pb("{@c.age, @c.name}".to_string()).ok(),
+                alias: None,
+            }],
+            is_append: true,
+        };
+        opr_id = plan
+            .append_operator_as_node(project.into(), vec![opr_id as u32])
+            .unwrap();
+        assert_eq!(plan.plan_meta.get_curr_node(), opr_id as u32);
+        assert_eq!(
+            plan.plan_meta
+                .get_node_columns(
+                    plan.plan_meta
+                        .get_tag_node(&"c".into())
+                        .unwrap()
+                )
+                .unwrap(),
+            &vec!["age".into(), "id".into(), "name".into()]
+                .into_iter()
+                .collect::<BTreeSet<_>>()
+        );
     }
 
     // The plan looks like:

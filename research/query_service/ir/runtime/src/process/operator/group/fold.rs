@@ -15,7 +15,6 @@
 
 use std::convert::TryInto;
 
-use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::NameOrId;
 use pegasus::api::function::{FnResult, MapFunction};
@@ -43,11 +42,11 @@ impl FoldGen<u64, Record> for algebra_pb::GroupBy {
 
     fn gen_fold_map(&self) -> FnGenResult<Box<dyn MapFunction<u64, Record>>> {
         if self.get_accum_kind() == server_pb::AccumKind::Cnt {
-            let count_alias: Option<NameOrId> = self.functions[0]
+            let count_alias = self.functions[0]
                 .alias
                 .clone()
-                .ok_or(ParsePbError::from("accum value alias is missing in fold"))?
-                .try_into()?;
+                .map(|alias| alias.try_into())
+                .transpose()?;
             Ok(Box::new(CountAlias { alias: count_alias }))
         } else {
             Err(FnGenError::unsupported_error("Do not support fold_map except simple count"))
@@ -73,10 +72,8 @@ impl MapFunction<u64, Record> for CountAlias {
 
 #[cfg(test)]
 mod tests {
-
     use ir_common::generated::algebra as pb;
     use ir_common::generated::common as common_pb;
-    use ir_common::NameOrId;
     use pegasus::api::{Count, Sink};
     use pegasus::result::ResultStream;
     use pegasus::JobConf;
@@ -114,7 +111,7 @@ mod tests {
         let function = pb::group_by::AggFunc {
             vars: vec![common_pb::Variable::from("@".to_string())],
             aggregate: 3, // count
-            alias: Some(pb::Alias { alias: None, is_query_given: false }),
+            alias: None,
         };
         let fold_opr_pb = pb::GroupBy { mappings: vec![], functions: vec![function] };
         let mut result = count_test(init_source(), fold_opr_pb);
@@ -138,10 +135,7 @@ mod tests {
         let function = pb::group_by::AggFunc {
             vars: vec![common_pb::Variable::from("@".to_string())],
             aggregate: 3, // count
-            alias: Some(pb::Alias {
-                alias: Some(NameOrId::Str("a".to_string()).into()),
-                is_query_given: false,
-            }),
+            alias: Some("a".into()),
         };
         let fold_opr_pb = pb::GroupBy { mappings: vec![], functions: vec![function] };
         let mut result = count_test(init_source(), fold_opr_pb);

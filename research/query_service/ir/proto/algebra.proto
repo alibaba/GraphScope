@@ -22,21 +22,13 @@ option java_outer_classname = "GraphAlgebra";
 import "common.proto";
 import "expr.proto";
 
-message Alias {
-  // The name/name identifier of the aliased attribute
-  common.NameOrId alias = 1;
-  // An alias may be given by the query or by the compiler/optimizer for functional/optimization purpose.
-  // This indicator is used to differentiate the two cases.
-  bool is_query_given = 2;
-}
-
 // To project a relation on certain attributes or further their properties
 message Project {
   message ExprAlias {
     // The expression to be aliased
     common.Expression expr = 1;
     // The alias that is either given by the query or by the system
-    Alias alias = 2;
+    common.NameOrId alias = 2;
   }
   // A list of [expression -> alias] to be projected from the graph relation.
   // e.g., project_{a.birthday / 100 % 100 as birth_month }
@@ -104,14 +96,14 @@ message GroupBy {
     // The aggregate function
     Aggregate aggregate = 2;
     // The alias for the aggregated value
-    Alias alias = 3;
+    common.NameOrId alias = 3;
   }
   message KeyAlias {
     // The key to perform grouping
     // TODO(longbin) An expression here is a more general form
     common.Variable key = 1;
     // The alias for the key
-    Alias alias = 2;
+    common.NameOrId alias = 2;
   }
   // A collection of key-alias mappings
   repeated KeyAlias mappings = 1;
@@ -249,15 +241,22 @@ message GetV {
   common.NameOrId alias = 3;
 }
 
-// An operator that provides auxiliary functionalities given the current entity, which include:
+// To tag the current data with an alias
+message As {
+  // The alias to give if any, this is especially helpful when the entity now refers to the head of the record
+  common.NameOrId alias = 1;
+}
+
+// An operator that provides auxiliary functionalities given the current entity.
+// Note this operator is not aware to the logical plan, and will be used while processing into logical plan.
+// The functionalities include:
 // * To get certain properties/columns from the entity
 // * To filter out the entity based on the data
 // * To re-name the entity with other alias
 message Auxilia {
   // The details (columns/properties) to be retrieved
   QueryParams params = 1;
-  // The alias to give if any, this is especially helpful when the tag is `None`, and the entity
-  // now refers to the head of the record
+  // The alias to give if any, which is especially helpful when the entity now refers to the head of the record
   common.NameOrId alias = 2;
 }
 
@@ -320,7 +319,7 @@ message Apply {
     int32 subtask = 2;
     // An alias for the result of the subtask. In order for Apply to be semantically intact,
     // the subtask must return a scalar value.
-    Alias alias = 3;
+    common.NameOrId alias = 3;
   }
   // Define how to join the result of the subtask back to the original relation
   Join.JoinKind join_kind = 1;
@@ -355,6 +354,7 @@ message LogicalPlan {
       Scan scan = 11;
       Limit limit = 13;
       Auxilia auxilia = 14;
+      As as = 15;
       // Saving the room for relational operators
       GetV vertex = 20;
       EdgeExpand edge = 21;

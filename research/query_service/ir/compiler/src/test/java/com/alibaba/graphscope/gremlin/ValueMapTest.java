@@ -16,7 +16,6 @@
 
 package com.alibaba.graphscope.gremlin;
 
-import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.intermediate.operator.ProjectOp;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
@@ -24,12 +23,8 @@ import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSo
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
 import com.alibaba.graphscope.gremlin.InterOpCollectionBuilder.StepTransformFactory;
-import org.javatuples.Pair;
 import org.junit.Assert;
 import org.junit.Test;
-
-import java.util.Arrays;
-import java.util.List;
 
 public class ValueMapTest {
     private Graph graph = TinkerFactory.createModern();
@@ -40,11 +35,7 @@ public class ValueMapTest {
         Traversal traversal = g.V().valueMap("name", "id");
         Step valueMapStep = traversal.asAdmin().getEndStep();
         ProjectOp op = (ProjectOp) StepTransformFactory.VALUE_MAP_STEP.apply(valueMapStep);
-
-        List<Pair> expected = Arrays.asList(
-                Pair.with("@.name", ArgUtils.asFfiAlias("name", false)),
-                Pair.with("@.id", ArgUtils.asFfiAlias("id", false)));
-        Assert.assertEquals(expected, op.getProjectExprWithAlias().get().getArg());
+        Assert.assertEquals("{@.name, @.id}", op.getSingleExpr().get().getArg());
     }
 
     @Test
@@ -52,8 +43,6 @@ public class ValueMapTest {
         Traversal traversal = g.V().values("name");
         Step valueMapStep = traversal.asAdmin().getEndStep();
         ProjectOp op = (ProjectOp) StepTransformFactory.VALUES_STEP.apply(valueMapStep);
-
-        List<Pair> expected = Arrays.asList(Pair.with("@.name", ArgUtils.asFfiAlias("name", false)));
-        Assert.assertEquals(expected, op.getProjectExprWithAlias().get().getArg());
+        Assert.assertEquals("@.name", op.getSingleExpr().get().getArg());
     }
 }

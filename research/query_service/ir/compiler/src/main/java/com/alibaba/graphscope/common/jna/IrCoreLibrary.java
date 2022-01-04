@@ -28,7 +28,7 @@ public interface IrCoreLibrary extends Library {
             Library.OPTION_TYPE_MAPPER, IrTypeMapper.INSTANCE,
             Library.OPTION_FUNCTION_MAPPER, IrFunctionMapper.INSTANCE));
 
-    Pointer initLogicalPlan();
+    Pointer initLogicalPlan(boolean isPreprocess);
 
     void write_plan_to_json(Pointer plan, String jsonFile);
 
@@ -91,13 +91,14 @@ public interface IrCoreLibrary extends Library {
 
     ResultCode appendProjectOperator(Pointer plan, Pointer project, int parent, IntByReference oprIdx);
 
-    Pointer initAuxiliaOperator();
+    /// To initialize an As operator
+    Pointer initAsOperator();
 
-    ResultCode addAuxiliaProperty(Pointer auxilia, FfiNameOrId.ByValue property);
+    /// Set the alias of the entity to As
+    ResultCode setAsAlias(Pointer as, FfiAlias.ByValue alias);
 
-    ResultCode setAuxiliaAlias(Pointer auxilia, FfiAlias.ByValue alias);
-
-    ResultCode appendAuxiliaOperator(Pointer plan, Pointer auxilia, int parent, IntByReference oprIdx);
+    /// Append an As operator to the logical plan
+    ResultCode appendAsOperator(Pointer plan, Pointer as, int parent, IntByReference oprIdx);
 
     Pointer initGroupbyOperator();
 
@@ -113,6 +114,8 @@ public interface IrCoreLibrary extends Library {
 
     ResultCode appendDedupOperator(Pointer plan, Pointer dedup, int parent, IntByReference oprIdx);
 
+    FfiNameOrId.ByValue noneNameOrId();
+
     FfiNameOrId.ByValue cstrAsNameOrId(String name);
 
     FfiConst.ByValue cstrAsConst(String value);
@@ -120,6 +123,8 @@ public interface IrCoreLibrary extends Library {
     FfiConst.ByValue int32AsConst(int value);
 
     FfiConst.ByValue int64AsConst(long value);
+
+    FfiProperty.ByValue asNoneKey();
 
     FfiProperty.ByValue asLabelKey();
 

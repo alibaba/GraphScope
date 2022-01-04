@@ -333,7 +333,7 @@ mod test {
                 predicate: str_to_suffix_expr_pb("@.name==\"vadas\"".to_string()).ok(),
                 requirements: vec![],
             }),
-            alias: Some(common_pb::NameOrId::from("a".to_string())),
+            alias: Some("a".to_string().into()),
         };
 
         let conf = JobConf::new("auxilia_alias_test");

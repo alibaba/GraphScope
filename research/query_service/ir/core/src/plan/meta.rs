@@ -13,21 +13,24 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use std::collections::HashMap;
+use std::collections::hash_map::Entry;
+use std::collections::{BTreeSet, HashMap};
 use std::io;
 use std::sync::RwLock;
 
 use ir_common::generated::common as common_pb;
 use ir_common::generated::schema as schema_pb;
+use ir_common::NameOrId;
 
+use crate::error::{IrError, IrResult};
 use crate::JsonIO;
 
 lazy_static! {
-    pub static ref META_DATA: RwLock<MetaData> = RwLock::new(MetaData::default());
+    pub static ref STORE_META: RwLock<StoreMeta> = RwLock::new(StoreMeta::default());
 }
 
 pub fn set_schema_from_json<R: io::Read>(read: R) {
-    if let Ok(mut meta) = META_DATA.write() {
+    if let Ok(mut meta) = STORE_META.write() {
         if let Ok(schema) = Schema::from_json(read) {
             meta.schema = Some(schema);
         }
@@ -38,20 +41,20 @@ pub fn set_schema_from_json<R: io::Read>(read: R) {
 pub fn set_schema_simple(
     entities: Vec<(String, i32)>, relations: Vec<(String, i32)>, columns: Vec<(String, i32)>,
 ) {
-    if let Ok(mut meta) = META_DATA.write() {
+    if let Ok(mut meta) = STORE_META.write() {
         let schema: Schema = (entities, relations, columns).into();
         meta.schema = Some(schema)
     }
 }
 
 pub fn reset_schema() {
-    if let Ok(mut meta) = META_DATA.write() {
+    if let Ok(mut meta) = STORE_META.write() {
         meta.schema = None;
     }
 }
 
 #[derive(Clone, Debug, Default)]
-pub struct MetaData {
+pub struct StoreMeta {
     pub schema: Option<Schema>,
 }
 
@@ -373,37 +376,103 @@ impl JsonIO for Schema {
     }
 }
 
-/*
-#[derive(Clone, Debug, Default)]
-pub struct TagMap {
-    /// A map from tag to its internally encoded id
-    tag_map: HashMap<common_pb::NameOrId, i32>,
-    /// A reversed map of `tag_map`
-    tag_map_rev: Vec<common_pb::NameOrId>,
-    /// The current assigned maximum tag id
+/// To record any tag-related data while processing the logical plan
+#[derive(Default, Clone, Debug)]
+pub struct PlanMeta {
+    /// To record all possible columns of a node, which is typically referred from a tag
+    /// while processing projection, selection, groupby, orderby, and etc. For example, when
+    /// select the record via an expression "a.name == \"John\"", the tag "a" must refer to
+    /// some node in the logical plan, and the node requires the column of \"John\". Such
+    /// information is critical in distributed processing, as the computation may not align
+    /// with the storage to access the required column. Thus, such information can help
+    /// the computation route and fetch columns.
+    node_cols: HashMap<u32, BTreeSet<NameOrId>>,
+    /// The tag must refer to a valid node in the plan.
+    tag_nodes: HashMap<NameOrId, u32>,
+    /// To ease the processing, tag may be transformed to an internal id.
+    /// This maintains the mappings
+    tag_ids: HashMap<NameOrId, NameOrId>,
+    /// To record the current node's id in the logical plan. Note that nodes that have operators that
+    /// of `As` or `Selection` does not alter curr_node.
+    curr_node: u32,
+    /// The maximal tag id that has been assigned, for mapping tag ids.
     max_tag_id: i32,
+    /// Whether to preprocess the operator.
+    is_preprocess: bool,
 }
 
-impl TagMap {
-    pub fn get_tag_id(&self, name: NameOrId) -> Option<i32> {
-        self.tag_map.get(&name).cloned()
+impl PlanMeta {
+    pub fn new(node_id: u32) -> Self {
+        let mut plan_meta = PlanMeta::default();
+        plan_meta.curr_node = node_id;
+        plan_meta.node_cols.entry(node_id).or_default();
+        plan_meta
     }
 
-    pub fn get_tag_name(&self, id: i32) -> Option<NameOrId> {
-        self.tag_map_rev.get(id as usize).cloned()
-    }
+    pub fn insert_tag_columns(&mut self, tag_opt: Option<NameOrId>, column: NameOrId) -> IrResult<u32> {
+        if let Some(tag) = tag_opt {
+            if let Some(&node_id) = self.tag_nodes.get(&tag) {
+                self.node_cols
+                    .entry(node_id)
+                    .or_default()
+                    .insert(column);
 
-    pub fn assign_tag_id(&mut self, tag: NameOrId) -> Option<i32> {
-        let curr_id = self.max_tag_id;
-        if !self.tag_map.contains_key(&tag) {
-            self.tag_map.insert(tag.clone(), curr_id);
-            self.tag_map_rev.push(tag);
-            self.max_tag_id += 1;
-
-            Some(curr_id)
+                Ok(node_id)
+            } else {
+                Err(IrError::TagNotExist(tag))
+            }
         } else {
-            None
+            let curr_node = self.curr_node;
+            self.node_cols
+                .entry(curr_node)
+                .or_default()
+                .insert(column);
+
+            Ok(curr_node)
         }
     }
+
+    pub fn get_node_columns(&self, id: u32) -> Option<&BTreeSet<NameOrId>> {
+        self.node_cols.get(&id)
+    }
+
+    pub fn get_curr_node_columns(&self) -> Option<&BTreeSet<NameOrId>> {
+        self.node_cols.get(&self.curr_node)
+    }
+
+    pub fn insert_tag_node(&mut self, tag: NameOrId, node: u32) {
+        self.tag_nodes.entry(tag).or_insert(node);
+    }
+
+    pub fn get_tag_node(&self, tag: &NameOrId) -> Option<u32> {
+        self.tag_nodes.get(tag).cloned()
+    }
+
+    pub fn get_or_set_tag_id(&mut self, tag: NameOrId) -> NameOrId {
+        let entry = self.tag_ids.entry(tag);
+        match entry {
+            Entry::Occupied(o) => o.into_mut().clone(),
+            Entry::Vacant(v) => {
+                let new_tag_id: NameOrId = self.max_tag_id.into();
+                self.max_tag_id += 1;
+                v.insert(new_tag_id).clone()
+            }
+        }
+    }
+
+    pub fn set_curr_node(&mut self, curr_node: u32) {
+        self.curr_node = curr_node;
+    }
+
+    pub fn get_curr_node(&self) -> u32 {
+        self.curr_node
+    }
+
+    pub fn is_preprocess(&self) -> bool {
+        self.is_preprocess
+    }
+
+    pub fn set_preprocess(&mut self, is_preprocess: bool) {
+        self.is_preprocess = is_preprocess;
+    }
 }
- */

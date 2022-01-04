@@ -3,9 +3,11 @@ package com.alibaba.graphscope.common.intermediate.strategy;
 import com.alibaba.graphscope.common.intermediate.InterOpCollection;
 import com.alibaba.graphscope.common.intermediate.operator.InterOpBase;
 import com.alibaba.graphscope.common.intermediate.operator.LimitOp;
+import com.alibaba.graphscope.common.intermediate.operator.OpArg;
 import com.alibaba.graphscope.common.intermediate.operator.OrderOp;
 
 import java.util.List;
+import java.util.Optional;
 
 // fuse order with the following limit
 public class TopKStrategy implements InterOpStrategy {
@@ -23,6 +25,10 @@ public class TopKStrategy implements InterOpStrategy {
             if (cur instanceof OrderOp && next != null) {
                 ((OrderOp) cur).setLower(next.getLower().get());
                 ((OrderOp) cur).setUpper(next.getUpper().get());
+                Optional<OpArg> nextAlias = next.getAlias();
+                if (nextAlias.isPresent()) {
+                    cur.setAlias(nextAlias.get());
+                }
                 opCollection.removeInterOp(i + 1);
             }
         }

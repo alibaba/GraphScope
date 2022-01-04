@@ -17,6 +17,7 @@ use std::io;
 
 pub use crate::plan::ffi::*;
 
+pub mod error;
 pub mod plan;
 
 #[macro_use]

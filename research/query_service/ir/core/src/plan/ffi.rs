@@ -44,7 +44,7 @@
 //! #    append_select_operator(ptr_plan, ptr_select, opr_id, &opr_id);
 //! #    cout << "the id is: " << opr_id << endl;
 //!
-//! #    debug_plan(ptr_plan);
+//! #    write_plan_to_json(ptr_plan, "./plan.json");
 //! #    destroy_logical_plan(ptr_plan);
 //! # }
 //!
@@ -63,9 +63,10 @@ use pegasus::BuildJobError;
 use pegasus_client::builder::JobBuilder;
 use prost::Message;
 
-use crate::plan::logical::{LogicalError, LogicalPlan};
+use crate::error::IrError;
+use crate::plan::logical::LogicalPlan;
 use crate::plan::meta::set_schema_from_json;
-use crate::plan::physical::{AsPhysical, PhysicalError};
+use crate::plan::physical::AsPhysical;
 use crate::JsonIO;
 
 #[repr(i32)]
@@ -74,8 +75,8 @@ pub enum ResultCode {
     Success = 0,
     /// Parse an expression error
     ParseExprError = 1,
-    /// Query an object that does not exist
-    NotExistError = 2,
+    /// Missing necessary data
+    MissingDataError = 2,
     /// The error while transforming from C-like string, aka char*
     CStringError = 3,
     /// The provided data type is unknown
@@ -86,8 +87,16 @@ pub enum ResultCode {
     NegativeIndexError = 6,
     /// Build Physical Plan Error
     BuildJobError = 7,
-    /// Unsupported
-    UnSupported = 8,
+    /// Parse protobuf error
+    ParsePbError = 8,
+    /// The parent of an operator cannot be found
+    ParentNotFoundError = 9,
+    /// A column (property) does not exist in the store
+    ColumnNotExistError = 10,
+    /// A table (label) does not exist in the store
+    TableNotExistError = 11,
+    UnSupported = 12,
+    Unknown = 16,
 }
 
 impl std::fmt::Display for ResultCode {
@@ -95,24 +104,33 @@ impl std::fmt::Display for ResultCode {
         match self {
             ResultCode::Success => write!(f, "success"),
             ResultCode::ParseExprError => write!(f, "parse expression error"),
-            ResultCode::NotExistError => write!(f, "access to non-existed element"),
+            ResultCode::MissingDataError => write!(f, "missing necessary data"),
             ResultCode::CStringError => write!(f, "convert from c-like string error"),
             ResultCode::UnknownTypeError => write!(f, "unknown data type"),
             ResultCode::InvalidRangeError => write!(f, "the range is invalid"),
             ResultCode::NegativeIndexError => write!(f, "the given index is negative"),
             ResultCode::BuildJobError => write!(f, "build physical plan error"),
             ResultCode::UnSupported => write!(f, "unsupported functionality"),
+            ResultCode::ParsePbError => write!(f, "parse pb error"),
+            ResultCode::ParentNotFoundError => write!(f, "the parent of an operator is not found"),
+            ResultCode::ColumnNotExistError => write!(f, "the column (property) does not exist"),
+            ResultCode::TableNotExistError => write!(f, "the table (label) does not exist"),
+            ResultCode::Unknown => write!(f, "unknown error"),
         }
     }
 }
 
 impl std::error::Error for ResultCode {}
 
-impl From<LogicalError> for ResultCode {
-    fn from(err: LogicalError) -> Self {
+impl From<IrError> for ResultCode {
+    fn from(err: IrError) -> Self {
         match err {
-            LogicalError::Unsupported => Self::UnSupported,
-            _ => Self::NotExistError,
+            IrError::Unsupported(_) => Self::UnSupported,
+            IrError::ParsePbError(_) => Self::ParsePbError,
+            IrError::ColumnNotExist(_) => Self::ColumnNotExistError,
+            IrError::TableNotExist(_) => Self::TableNotExistError,
+            IrError::MissingDataError => Self::MissingDataError,
+            _ => Self::Unknown,
         }
     }
 }
@@ -250,12 +268,11 @@ pub struct FfiAlias {
     is_query_given: bool,
 }
 
-impl TryFrom<FfiAlias> for pb::Alias {
+impl TryFrom<FfiAlias> for Option<common_pb::NameOrId> {
     type Error = ResultCode;
 
     fn try_from(ffi: FfiAlias) -> Result<Self, Self::Error> {
-        let (alias, is_query_given) = (ffi.alias.try_into()?, ffi.is_query_given);
-        Ok(Self { alias, is_query_given })
+        Self::try_from(ffi.alias)
     }
 }
 
@@ -457,7 +474,7 @@ pub extern "C" fn set_schema(cstr_json: *const c_char) -> ResultCode {
 #[no_mangle]
 pub extern "C" fn init_logical_plan(is_preprocess: bool) -> *const c_void {
     let mut plan = Box::new(LogicalPlan::default());
-    plan.is_preprocess = is_preprocess;
+    plan.plan_meta.set_preprocess(is_preprocess);
     Box::into_raw(plan) as *const c_void
 }
 
@@ -481,8 +498,8 @@ pub extern "C" fn destroy_job_buffer(buffer: FfiJobBuffer) {
     }
 }
 
-impl From<PhysicalError> for FfiJobBuffer {
-    fn from(_: PhysicalError) -> Self {
+impl From<IrError> for FfiJobBuffer {
+    fn from(_: IrError) -> Self {
         FfiJobBuffer { ptr: std::ptr::null_mut(), len: 0 }
     }
 }
@@ -497,8 +514,9 @@ impl From<BuildJobError> for FfiJobBuffer {
 #[no_mangle]
 pub extern "C" fn build_physical_plan(ptr_plan: *const c_void) -> FfiJobBuffer {
     let plan = unsafe { Box::from_raw(ptr_plan as *mut LogicalPlan) };
+    let mut plan_meta = plan.plan_meta.clone();
     let mut builder = JobBuilder::default();
-    let build_result = plan.add_job_builder(&mut builder);
+    let build_result = plan.add_job_builder(&mut builder, &mut plan_meta);
     let result = if build_result.is_ok() {
         let req_result = builder.build();
         if let Ok(req) = req_result {
@@ -544,7 +562,7 @@ fn append_operator(
             ResultCode::Success
         } else {
             // This must due to the query parent does not present
-            ResultCode::NotExistError
+            ResultCode::ParentNotFoundError
         }
     }
 }
@@ -570,7 +588,7 @@ enum Opr {
     EdgeExpand,
     PathExpand,
     Limit,
-    Auxilia,
+    As,
     OrderBy,
     Apply,
 }
@@ -581,11 +599,6 @@ fn set_range(ptr: *const c_void, lower: i32, upper: i32, opr: Opr) -> ResultCode
         ResultCode::InvalidRangeError
     } else {
         match opr {
-            Opr::Auxilia => {
-                let mut auxilia = unsafe { Box::from_raw(ptr as *mut pb::Auxilia) };
-                auxilia.params.as_mut().unwrap().limit = Some(pb::Range { lower, upper });
-                std::mem::forget(auxilia);
-            }
             Opr::ExpandBase => {
                 let mut base = unsafe { Box::from_raw(ptr as *mut pb::ExpandBase) };
                 base.params.as_mut().unwrap().limit = Some(pb::Range { lower, upper });
@@ -620,38 +633,38 @@ fn set_range(ptr: *const c_void, lower: i32, upper: i32, opr: Opr) -> ResultCode
 
 fn set_alias(ptr: *const c_void, alias: FfiAlias, opr: Opr) -> ResultCode {
     let mut return_code = ResultCode::Success;
-    let alias_pb: FfiResult<pb::Alias> = alias.try_into();
+    let alias_pb: FfiResult<Option<common_pb::NameOrId>> = alias.try_into();
     if alias_pb.is_ok() {
         match &opr {
             Opr::Scan => {
                 let mut scan = unsafe { Box::from_raw(ptr as *mut pb::Scan) };
-                scan.alias = alias_pb.unwrap().alias;
+                scan.alias = alias_pb.unwrap();
                 std::mem::forget(scan);
             }
             Opr::EdgeExpand => {
                 let mut edgexpd = unsafe { Box::from_raw(ptr as *mut pb::EdgeExpand) };
-                edgexpd.alias = alias_pb.unwrap().alias;
+                edgexpd.alias = alias_pb.unwrap();
                 std::mem::forget(edgexpd);
             }
             Opr::PathExpand => {
                 let mut pathxpd = unsafe { Box::from_raw(ptr as *mut pb::PathExpand) };
-                pathxpd.alias = alias_pb.unwrap().alias;
+                pathxpd.alias = alias_pb.unwrap();
                 std::mem::forget(pathxpd);
             }
             Opr::GetV => {
                 let mut getv = unsafe { Box::from_raw(ptr as *mut pb::GetV) };
-                getv.alias = alias_pb.unwrap().alias;
+                getv.alias = alias_pb.unwrap();
                 std::mem::forget(getv);
             }
             Opr::Apply => {
                 let mut apply = unsafe { Box::from_raw(ptr as *mut pb::Apply) };
-                apply.subtask.as_mut().unwrap().alias = alias_pb.ok();
+                apply.subtask.as_mut().unwrap().alias = alias_pb.unwrap();
                 std::mem::forget(apply);
             }
-            Opr::Auxilia => {
-                let mut auxilia = unsafe { Box::from_raw(ptr as *mut pb::Auxilia) };
-                auxilia.alias = alias_pb.unwrap().alias;
-                std::mem::forget(auxilia);
+            Opr::As => {
+                let mut as_opr = unsafe { Box::from_raw(ptr as *mut pb::As) };
+                as_opr.alias = alias_pb.unwrap();
+                std::mem::forget(as_opr);
             }
             _ => unreachable!(),
         }
@@ -674,11 +687,6 @@ fn set_predicate(ptr: *const c_void, cstr_predicate: *const c_char, opr: Opr) ->
                 let mut select = unsafe { Box::from_raw(ptr as *mut pb::Select) };
                 select.predicate = predicate_pb.ok();
                 std::mem::forget(select);
-            }
-            Opr::Auxilia => {
-                let mut auxilia = unsafe { Box::from_raw(ptr as *mut pb::Auxilia) };
-                auxilia.params.as_mut().unwrap().predicate = predicate_pb.ok();
-                std::mem::forget(auxilia);
             }
             Opr::ExpandBase => {
                 let mut expand = unsafe { Box::from_raw(ptr as *mut pb::ExpandBase) };
@@ -736,33 +744,6 @@ fn process_params(ptr: *const c_void, key: ParamsKey, val: FfiNameOrId, opr: Opr
                 }
                 std::mem::forget(expand);
             }
-            Opr::Auxilia => {
-                let mut auxilia = unsafe { Box::from_raw(ptr as *mut pb::Auxilia) };
-                match key {
-                    ParamsKey::Table => {
-                        if let Some(label) = pb.unwrap() {
-                            auxilia
-                                .params
-                                .as_mut()
-                                .unwrap()
-                                .table_names
-                                .push(label)
-                        }
-                    }
-                    ParamsKey::Column => {
-                        if let Some(ppt) = pb.unwrap() {
-                            auxilia
-                                .params
-                                .as_mut()
-                                .unwrap()
-                                .columns
-                                .push(ppt)
-                        }
-                    }
-                    _ => unreachable!(),
-                }
-                std::mem::forget(auxilia);
-            }
             Opr::Scan => {
                 let mut scan = unsafe { Box::from_raw(ptr as *mut pb::Scan) };
                 match key {
@@ -819,12 +800,14 @@ mod project {
         let mut return_code = ResultCode::Success;
         let mut project = unsafe { Box::from_raw(ptr_project as *mut pb::Project) };
         let expr_pb = cstr_to_expr_pb(cstr_expr);
-        let alias_pb = pb::Alias::try_from(alias);
+        let alias_pb = Option::<common_pb::NameOrId>::try_from(alias);
 
-        if !expr_pb.is_ok() || !alias_pb.is_ok() {
+        if !expr_pb.is_ok() {
             return_code = expr_pb.err().unwrap();
+        } else if !alias_pb.is_ok() {
+            return_code = alias_pb.err().unwrap();
         } else {
-            let attribute = pb::project::ExprAlias { expr: expr_pb.ok(), alias: alias_pb.ok() };
+            let attribute = pb::project::ExprAlias { expr: expr_pb.ok(), alias: alias_pb.unwrap() };
             project.mappings.push(attribute);
         }
         std::mem::forget(project);
@@ -1046,7 +1029,7 @@ mod groupby {
             for var in vars.into_iter() {
                 agg_fn_pb.vars.push(var.try_into()?)
             }
-            agg_fn_pb.alias = Some(alias.try_into()?);
+            agg_fn_pb.alias = alias.try_into()?;
 
             Ok(agg_fn_pb)
         }
@@ -1075,12 +1058,12 @@ mod groupby {
         let mut return_code = ResultCode::Success;
         let mut group = unsafe { Box::from_raw(ptr_groupby as *mut pb::GroupBy) };
         let key_pb: FfiResult<common_pb::Variable> = key.try_into();
-        let alias_pb: FfiResult<pb::Alias> = alias.try_into();
+        let alias_pb: FfiResult<Option<common_pb::NameOrId>> = alias.try_into();
 
         if key_pb.is_ok() && alias_pb.is_ok() {
             group
                 .mappings
-                .push(pb::group_by::KeyAlias { key: key_pb.ok(), alias: alias_pb.ok() });
+                .push(pb::group_by::KeyAlias { key: key_pb.ok(), alias: alias_pb.unwrap() });
         } else {
             return_code = key_pb.err().unwrap();
         }
@@ -1449,65 +1432,35 @@ mod limit {
     }
 }
 
-mod auxilia {
+mod as_opr {
     use super::*;
 
-    /// To initialize an auxilia operator
+    /// To initialize an As operator
     #[no_mangle]
-    pub extern "C" fn init_auxilia_operator() -> *const c_void {
-        let auxilia = Box::new(pb::Auxilia {
-            params: Some(pb::QueryParams {
-                table_names: vec![],
-                columns: vec![],
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
-            alias: None,
-        });
+    pub extern "C" fn init_as_operator() -> *const c_void {
+        let as_opr = Box::new(pb::As { alias: None });
 
-        Box::into_raw(auxilia) as *const c_void
+        Box::into_raw(as_opr) as *const c_void
     }
 
-    /// Set the size range limitation of Auxilia
+    /// Set the alias of the entity to As
     #[no_mangle]
-    pub extern "C" fn set_auxilia_limit(ptr_auxilia: *const c_void, lower: i32, upper: i32) -> ResultCode {
-        set_range(ptr_auxilia, lower, upper, Opr::Auxilia)
+    pub extern "C" fn set_as_alias(ptr_as: *const c_void, alias: FfiAlias) -> ResultCode {
+        set_alias(ptr_as, alias, Opr::As)
     }
 
-    /// Set the predicate of Auxilia
+    /// Append an As operator to the logical plan
     #[no_mangle]
-    pub extern "C" fn set_auxilia_predicate(
-        ptr_auxilia: *const c_void, cstr_predicate: *const c_char,
+    pub extern "C" fn append_as_operator(
+        ptr_plan: *const c_void, ptr_as: *const c_void, parent: i32, id: *mut i32,
     ) -> ResultCode {
-        set_predicate(ptr_auxilia, cstr_predicate, Opr::Auxilia)
+        let as_opr = unsafe { Box::from_raw(ptr_as as *mut pb::As) };
+        append_operator(ptr_plan, as_opr.as_ref().clone().into(), vec![parent], id)
     }
 
     #[no_mangle]
-    pub extern "C" fn add_auxilia_property(
-        ptr_auxilia: *const c_void, property: FfiNameOrId,
-    ) -> ResultCode {
-        process_params(ptr_auxilia, ParamsKey::Column, property, Opr::Auxilia)
-    }
-
-    /// Set the alias of the entity to Auxilia
-    #[no_mangle]
-    pub extern "C" fn set_auxilia_alias(ptr_auxilia: *const c_void, alias: FfiAlias) -> ResultCode {
-        set_alias(ptr_auxilia, alias, Opr::Auxilia)
-    }
-
-    /// Append an Auxilia operator to the logical plan
-    #[no_mangle]
-    pub extern "C" fn append_auxilia_operator(
-        ptr_plan: *const c_void, ptr_auxilia: *const c_void, parent: i32, id: *mut i32,
-    ) -> ResultCode {
-        let auxilia = unsafe { Box::from_raw(ptr_auxilia as *mut pb::Auxilia) };
-        append_operator(ptr_plan, auxilia.as_ref().clone().into(), vec![parent], id)
-    }
-
-    #[no_mangle]
-    pub extern "C" fn destroy_auxilia_operator(ptr: *const c_void) {
-        destroy_ptr::<pb::Auxilia>(ptr)
+    pub extern "C" fn destroy_as_operator(ptr: *const c_void) {
+        destroy_ptr::<pb::As>(ptr)
     }
 }
 

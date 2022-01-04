@@ -28,7 +28,6 @@ import com.alibaba.graphscope.common.jna.type.*;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 import org.apache.commons.io.FileUtils;
-import org.apache.tinkerpop.gremlin.process.traversal.step.map.CountGlobalStep;
 import org.javatuples.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -190,23 +189,21 @@ public class IrPlan implements Closeable {
             @Override
             public Pointer apply(InterOpBase baseOp) {
                 ProjectOp op = (ProjectOp) baseOp;
-                Optional<OpArg> exprWithAlias = op.getProjectExprWithAlias();
-                if (!exprWithAlias.isPresent()) {
-                    throw new InterOpIllegalArgException(baseOp.getClass(), "exprWithAlias", "not present");
+                Optional<OpArg> exprOpt = op.getSingleExpr();
+                if (!exprOpt.isPresent()) {
+                    throw new InterOpIllegalArgException(baseOp.getClass(), "singleExpr", "not present");
                 }
-                List<Pair> exprList = (List<Pair>) exprWithAlias.get().getArg();
-                if (exprList.isEmpty()) {
-                    throw new InterOpIllegalArgException(baseOp.getClass(), "exprWithAlias", "should not be empty");
+                String expr = (String) exprOpt.get().getArg();
+                FfiAlias.ByValue alias = ArgUtils.asNoneAlias();
+                Optional<OpArg> aliasOpt = baseOp.getAlias();
+                if (aliasOpt.isPresent()) {
+                    alias = (FfiAlias.ByValue) aliasOpt.get().getArg();
                 }
                 // append always and sink by parameters
                 Pointer ptrProject = irCoreLib.initProjectOperator(true);
-                exprList.forEach(pair -> {
-                    String expr = (String) pair.getValue0();
-                    FfiAlias.ByValue alias = (FfiAlias.ByValue) pair.getValue1();
-                    irCoreLib.addProjectExprAlias(ptrProject, expr, alias);
-                });
-                if (baseOp.getAlias().isPresent()) {
-                    throw new InterOpIllegalArgException(baseOp.getClass(), "alias", "unimplemented yet");
+                ResultCode resultCode = irCoreLib.addProjectExprAlias(ptrProject, expr, alias);
+                if (resultCode != ResultCode.Success) {
+                    throw new InterOpIllegalArgException(baseOp.getClass(), "singleExpr", "append returns " + resultCode.name());
                 }
                 return ptrProject;
             }
@@ -235,38 +232,7 @@ public class IrPlan implements Closeable {
                 if (lower.isPresent() && upper.isPresent()) {
                     irCoreLib.setOrderbyLimit(ptrOrder, (Integer) lower.get().getArg(), (Integer) upper.get().getArg());
                 }
-                if (baseOp.getAlias().isPresent()) {
-                    throw new InterOpIllegalArgException(baseOp.getClass(), "alias", "unimplemented yet");
-                }
                 return ptrOrder;
-            }
-        },
-        AUXILIA_OP {
-            @Override
-            public Pointer apply(InterOpBase baseOp) {
-                Pointer ptrAuxilia = irCoreLib.initAuxiliaOperator();
-                AuxiliaOp op = (AuxiliaOp) baseOp;
-                Optional<OpArg> propertyDetails = op.getPropertyDetails();
-
-                if (propertyDetails.isPresent()) {
-                    Set<FfiNameOrId.ByValue> properties = (Set<FfiNameOrId.ByValue>) propertyDetails.get().getArg();
-                    if (properties.isEmpty()) {
-                        throw new InterOpIllegalArgException(baseOp.getClass(), "propertyDetails", "should not be empty if present");
-                    }
-                    List<FfiNameOrId.ByValue> propertyList = new ArrayList<>(properties);
-                    // sort in ascending order of name
-                    propertyList.sort(Comparator.comparing(FfiNameOrId::hashCode));
-                    propertyList.forEach(k -> {
-                        irCoreLib.addAuxiliaProperty(ptrAuxilia, k);
-                    });
-                }
-
-                Optional<OpArg> aliasOpt = baseOp.getAlias();
-                if (aliasOpt.isPresent()) {
-                    FfiAlias.ByValue alias = (FfiAlias.ByValue) aliasOpt.get().getArg();
-                    irCoreLib.setAuxiliaAlias(ptrAuxilia, alias);
-                }
-                return ptrAuxilia;
             }
         },
         GROUP_OP {
@@ -323,7 +289,7 @@ public class IrPlan implements Closeable {
     }
 
     public IrPlan() {
-        this.ptrPlan = irCoreLib.initLogicalPlan();
+        this.ptrPlan = irCoreLib.initLogicalPlan(true);
         this.oprIdx = new IntByReference(0);
     }
 
@@ -371,9 +337,6 @@ public class IrPlan implements Closeable {
         } else if (base instanceof OrderOp) {
             Pointer ptrOrder = TransformFactory.ORDER_OP.apply(base);
             resultCode = irCoreLib.appendOrderbyOperator(ptrPlan, ptrOrder, oprIdx.getValue(), oprIdx);
-        } else if (base instanceof AuxiliaOp) {
-            Pointer prtAuxilia = TransformFactory.AUXILIA_OP.apply(base);
-            resultCode = irCoreLib.appendAuxiliaOperator(ptrPlan, prtAuxilia, oprIdx.getValue(), oprIdx);
         } else if (base instanceof GroupOp) {
             Pointer ptrGroup = TransformFactory.GROUP_OP.apply(base);
             resultCode = irCoreLib.appendGroupbyOperator(ptrPlan, ptrGroup, oprIdx.getValue(), oprIdx);
@@ -385,6 +348,23 @@ public class IrPlan implements Closeable {
         }
         if (resultCode != null && resultCode != ResultCode.Success) {
             throw new AppendInterOpException(base.getClass(), resultCode);
+        }
+        // add alias after the op if necessary
+        setPostAlias(base);
+    }
+
+    private void setPostAlias(InterOpBase base) {
+        if (!(base instanceof ScanFusionOp || base instanceof ExpandOp || base instanceof ProjectOp) && base.getAlias().isPresent()) {
+            FfiAlias.ByValue ffiAlias = (FfiAlias.ByValue) base.getAlias().get().getArg();
+            Pointer ptrAs = irCoreLib.initAsOperator();
+            ResultCode asResult = irCoreLib.setAsAlias(ptrAs, ffiAlias);
+            if (asResult != null && asResult != ResultCode.Success) {
+                throw new AppendInterOpException(base.getClass(), asResult);
+            }
+            ResultCode appendResult = irCoreLib.appendAsOperator(ptrPlan, ptrAs, oprIdx.getValue(), oprIdx);
+            if (appendResult != null && appendResult != ResultCode.Success) {
+                throw new AppendInterOpException(base.getClass(), appendResult);
+            }
         }
     }
 

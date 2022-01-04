@@ -250,9 +250,9 @@ mod test {
         assert_eq!(result_ids, expected_ids)
     }
 
-    // g.V().as("a").out()
+    // g.V().as("a").select('a').out("knows")
     #[test]
-    fn expand_outv_from_none_tag_test() {
+    fn expand_outv_from_select_tag_test() {
         let query_param = pb::QueryParams {
             table_names: vec!["knows".into()],
             columns: vec![],
@@ -260,9 +260,31 @@ mod test {
             predicate: None,
             requirements: vec![],
         };
+        let project = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: str_to_suffix_expr_pb("@a".to_string()).ok(),
+                alias: None,
+            }],
+            is_append: false,
+        };
         let edge_expand_base = pb::ExpandBase { v_tag: None, direction: 0, params: Some(query_param) };
-        let expand_opr_pb = pb::EdgeExpand { base: Some(edge_expand_base), is_edge: false, alias: None };
-        let mut result = expand_test_with_source_tag("a".into(), expand_opr_pb);
+        let expand = pb::EdgeExpand { base: Some(edge_expand_base), is_edge: false, alias: None };
+
+        let conf = JobConf::new("expand_test");
+        let mut result = pegasus::run(conf, || {
+            let project = project.clone();
+            let expand = expand.clone();
+            |input, output| {
+                let mut stream = input.input_from(source_gen(Some("a".into())))?;
+                let map_func = project.gen_map().unwrap();
+                stream = stream.map(move |input| map_func.exec(input))?;
+                let flatmap_func = expand.gen_flat_map().unwrap();
+                stream = stream.flat_map(move |input| flatmap_func.exec(input))?;
+                stream.sink_into(output)
+            }
+        })
+        .expect("build job failure");
+
         let mut result_ids = vec![];
         let v2: DefaultId = LDBCVertexParser::to_global_id(2, 0);
         let v4: DefaultId = LDBCVertexParser::to_global_id(4, 0);

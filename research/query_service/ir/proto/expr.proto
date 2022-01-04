@@ -104,8 +104,8 @@ message VariableKeys {
 // An operator of expression is one of Logical, Arithmetic, Const and Variable.
 message ExprOpr {
   enum Brace {
-    LEFT = 0;
-    RIGHT = 1;
+    LEFT_BRACE = 0;  // (
+    RIGHT_BRACE = 1;  // )
   }
   oneof item {
     Logical logical = 2;
@@ -113,6 +113,8 @@ message ExprOpr {
     common.Value const = 4;
     Variable var = 5;
     Brace brace = 6;
+    VariableKeys vars = 7;
+    VariableKeys var_map = 8;
   }
 }
 
