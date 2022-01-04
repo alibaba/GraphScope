@@ -15,6 +15,7 @@ package com.alibaba.graphscope.groot.ingestor;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.meta.MetaService;
+import com.alibaba.graphscope.groot.metrics.AvgMetric;
 import com.alibaba.graphscope.groot.metrics.MetricsAgent;
 import com.alibaba.graphscope.groot.metrics.MetricsCollector;
 import com.alibaba.graphscope.groot.operation.OperationBatch;
@@ -25,6 +26,10 @@ import com.alibaba.maxgraph.common.config.Configs;
 import com.alibaba.maxgraph.common.config.IngestorConfig;
 import com.alibaba.maxgraph.common.util.PartitionUtils;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicLongArray;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,6 +51,11 @@ public class BatchSender implements MetricsAgent {
     public static final String SEND_RECORDS_PER_SECOND = "send.records.per.second";
     public static final String SEND_RECORDS_TOTAL = "send.records.total";
     public static final String SEND_BUFFER_TASKS_COUNT = "send.buffer.tasks.count";
+    public static final String SEND_WRITE_LATENCY_PER_SECOND_MS =
+            "send.write.latency.per.second.ms";
+    public static final String SEND_CALLBACK_LATENCY_PER_SECOND_MS =
+            "send.callback.latency.per.second.ms";
+    public static final String SEND_BATCH_WAIT_PER_SECOND_MS = "send.batch.wait.per.second.ms";
 
     private MetaService metaService;
     private StoreWriter storeWriter;
@@ -64,6 +74,10 @@ public class BatchSender implements MetricsAgent {
     private volatile long totalRecords;
     private volatile long lastUpdateRecords;
     private volatile long sendRecordsPerSecond;
+
+    private List<AvgMetric> sendWriteLatencyMetrics;
+    private List<AvgMetric> sendCallbackLatencyMetrics;
+    private AvgMetric sendBatchWaitLatencyMetric;
 
     public BatchSender(
             Configs configs,
@@ -217,9 +231,11 @@ public class BatchSender implements MetricsAgent {
         AtomicInteger totalSizeBytes = new AtomicInteger(0);
         CompletableFuture<Integer> future = new CompletableFuture<>();
 
+        long startTime = System.nanoTime();
         for (Map.Entry<Integer, StoreDataBatch> entry : storeToBatch.entrySet()) {
             int storeId = entry.getKey();
             StoreDataBatch storeDataBatch = entry.getValue();
+            long beforeWriteTime = System.nanoTime();
             this.storeWriter.write(
                     storeId,
                     storeDataBatch,
@@ -227,6 +243,10 @@ public class BatchSender implements MetricsAgent {
                         @Override
                         public void onCompleted(Integer res) {
                             totalSizeBytes.addAndGet(res);
+                            long storeCallbackTime = System.nanoTime();
+                            sendCallbackLatencyMetrics
+                                    .get(storeId)
+                                    .add(storeCallbackTime - beforeWriteTime);
                             if (counter.decrementAndGet() == 0) {
                                 future.complete(totalSizeBytes.get());
                             }
@@ -247,8 +267,12 @@ public class BatchSender implements MetricsAgent {
                             }
                         }
                     });
+            long afterWriteTime = System.nanoTime();
+            sendWriteLatencyMetrics.get(storeId).add(afterWriteTime - beforeWriteTime);
         }
         this.totalBytes += future.get();
+        long afterBatchWaitTime = System.nanoTime();
+        sendBatchWaitLatencyMetric.add(afterBatchWaitTime - startTime);
         if (batchNeedRetry.size() > 0) {
             try {
                 Thread.sleep(1000L);
@@ -266,6 +290,13 @@ public class BatchSender implements MetricsAgent {
         this.lastUpdateTime = System.nanoTime();
         this.totalRecords = 0L;
         this.lastUpdateRecords = 0L;
+        this.sendWriteLatencyMetrics = new ArrayList<>(this.storeCount);
+        this.sendCallbackLatencyMetrics = new ArrayList<>(this.storeCount);
+        for (int i = 0; i < this.storeCount; i++) {
+            this.sendWriteLatencyMetrics.add(new AvgMetric());
+            this.sendCallbackLatencyMetrics.add(new AvgMetric());
+        }
+        this.sendBatchWaitLatencyMetric = new AvgMetric();
     }
 
     private void updateMetrics() {
@@ -280,6 +311,10 @@ public class BatchSender implements MetricsAgent {
         this.sendRecordsPerSecond = 1000000000 * (sendRecords - this.lastUpdateRecords) / interval;
         this.lastUpdateRecords = sendRecords;
 
+        this.sendWriteLatencyMetrics.forEach(m -> m.update(interval));
+        this.sendCallbackLatencyMetrics.forEach(m -> m.update(interval));
+        this.sendBatchWaitLatencyMetric.update(interval);
+
         this.lastUpdateTime = currentTime;
     }
 
@@ -292,6 +327,21 @@ public class BatchSender implements MetricsAgent {
                 put(SEND_RECORDS_PER_SECOND, String.valueOf(sendRecordsPerSecond));
                 put(SEND_RECORDS_TOTAL, String.valueOf(totalRecords));
                 put(SEND_BUFFER_TASKS_COUNT, String.valueOf(sendBuffer.size()));
+                put(
+                        SEND_WRITE_LATENCY_PER_SECOND_MS,
+                        String.valueOf(
+                                sendWriteLatencyMetrics.stream()
+                                        .map(m -> 1000 * m.get())
+                                        .collect(Collectors.toList())));
+                put(
+                        SEND_CALLBACK_LATENCY_PER_SECOND_MS,
+                        String.valueOf(
+                                sendCallbackLatencyMetrics.stream()
+                                        .map(m -> 1000 * m.get())
+                                        .collect(Collectors.toList())));
+                put(
+                        SEND_BATCH_WAIT_PER_SECOND_MS,
+                        String.valueOf(1000 * sendBatchWaitLatencyMetric.get()));
             }
         };
     }
