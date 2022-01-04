@@ -40,6 +40,9 @@ public abstract class NodeBase implements Closeable {
     }
 
     protected Configs reConfig(Configs configs) {
+        int nettyThreadCount = CommonConfig.NETTY_THREAD_COUNT.get(configs);
+        System.setProperty(
+                "io.grpc.netty.shaded.io.netty.eventLoopThreads", String.valueOf(nettyThreadCount));
         int storeCount = CommonConfig.STORE_NODE_COUNT.get(configs);
         int ingestorCount = CommonConfig.INGESTOR_NODE_COUNT.get(configs);
         return Configs.newBuilder(configs)

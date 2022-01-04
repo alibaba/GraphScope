@@ -28,8 +28,11 @@ public class CommonConfig {
 
     public static final Config<Integer> RPC_THREAD_COUNT =
             Config.intConfig(
-                    "rpc.thread.count",
-                    Math.min(Runtime.getRuntime().availableProcessors() * 2, 64));
+                    "rpc.thread.count", Math.min(Runtime.getRuntime().availableProcessors(), 64));
+
+    public static final Config<Integer> NETTY_THREAD_COUNT =
+            Config.intConfig(
+                    "netty.thread.count", Math.min(Runtime.getRuntime().availableProcessors(), 64));
 
     public static final Config<Integer> RPC_MAX_BYTES_MB = Config.intConfig("rpc.max.bytes.mb", 4);
 

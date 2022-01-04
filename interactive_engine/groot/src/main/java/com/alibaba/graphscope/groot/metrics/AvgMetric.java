@@ -18,6 +18,7 @@ public class AvgMetric {
     public void update(long intervalNano) {
         long tmp = this.totalVal;
         this.metricVal = (tmp - this.lastUpdateVal) / intervalNano;
+        this.lastUpdateVal = tmp;
     }
 
     public long get() {
