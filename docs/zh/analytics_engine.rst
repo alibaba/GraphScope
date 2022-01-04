@@ -333,6 +333,191 @@ GraphScope 支持用户在自定义算法中通过 :code:`context.math` 上的�
     # 在图上运行自己的算法，得到计算结果
     ret = my_app(g, src="6")
 
+运行Java编写的算法
+----------------------------------------------
+
+GraphScope 支持用户编写Java的PIE app，并且运行在图分析引擎上。我们首先通过一个简单的例子来演示如果在GraphScope 
+图分析引擎上运行一个Java的图算法(bfs)，然后我们将展示如果实现并运行自定义的Java图算法。
+
+运行示例的Java算法
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+我们提供了一些经典图分析算法的示例实现，通过下面展示的例子，你可以尝试在GraphScope的图分析引擎上试着运行他们。首先你需要从下载我们提供的示例app的合集
+`grape-demo.jar <https://github.com/GraphScope/gstest/blob/master/jars/graphscope-demo-0.1-shaded.jar>_`，无需任何更改你就可以在
+GraphScope图分析引擎上运行这些示例算法。
+
+然后你需要打开GraphScope的python client，尝试载图并且运行一个简单的bfs的算法。
+
+.. code:: python
+
+    import graphscope
+    from graphscope import JavaApp
+    from graphscope.dataset import load_p2p_network
+
+    """Or lauch session in k8s cluster"""
+    sess = graphscope.session(cluster_type='hosts') 
+
+    graph = load_p2p_network(sess)    
+
+    """This app need to run on simple graph"""
+    graph = graph.project(vertices={"host": ['id']}, edges={"connect": ["dist"]})
+
+    sssp=JavaApp(
+        full_jar_path="grape-demo.jar", # The path to the grape-demo.jar
+        java_app_class="com.alibaba.graphscope.example.bfs.BFS", 
+    )
+    ctx=sssp(graph,src=6)
+
+    """Fetch the result via context"""
+    ctx.to_numpy("r:label0.dist_0")
+
+
+使用Java编写用户自定义的图算法
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+为了编写Java实现的图算法，用户需要借助于 ``grape-jdk``。请参考 :ref:`gae_java_sdk_about` 来将 ``grape-jdk`` 安装到你的本地环境上。
+
+安装完成后，你需要将 ``grape-jdk`` 的依赖添加到你的maven项目依赖中。用户应当注意在 ``grape-jdk`` 的依赖配置上应当添加 classifier *shaded* ，来确保
+所有必要的依赖都被包括到。
+
+.. code:: xml
+
+    <dependency>
+      <groupId>com.alibaba.graphscope</groupId>
+      <artifactId>grape-jdk</artifactId>
+      <version>0.1</version>
+      <classifier>shaded</classifier>
+    </dependency>
+
+用户在开发自己算法的过程中，可能会用到其他的第三方jar包。为了解决依赖jar包的版本问题，用户需要使用确保自己生成的jar包包含所有依赖的jar包。
+例如，用户可以使用maven插件 `maven-shade-pluging`.
+
+.. code:: xml
+
+    <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+    </plugin>
+
+用户在自定义的图算法时，用户需要按照 `PIE <https://dl.acm.org/doi/10.1145/3282488>`_ 来实现自定义算法，
+并且需要根据需要的app类型来实现 ``grape-jdk`` 中相应的接口并且实现接口。
+如果用户期望算法运行在属性图上，那么定义的app应该实现接口 :code:`DefaultPropertyAppBase` 或 :code:`ParallelPropertyAppBase`。
+如果用户期望算法运行在简单图上，那么定义的app应该实现借口 :code:`DefaultAppBase` 或 :code:`ParallelAppBase`
+同时用户需要实现app相应的 `context`，来保存跨SuperStep的数据，其应该是 :code:`DefaultPropertyContextBase` ， :code:`ParallelPropertyContextBase`，
+:code:`DefaultContextBase` 或者 :code:`ParallelContextBase` 的的子类。通过继承 :code:`VertexDataContext` 或者 :code:`VertexPropertyContext`
+用户可以使用到不同类型的context所拥有的特性。通过这两种context提供的借口所存储的数据在程序执行完之后可以被用户访问，用户可以通过在python client中query返回的context
+对象来访问这些数据。
+
+这里我们展示一个简单的app的实现，它所做的事情只是对一个简单图的所有边进行了遍历。
+
+.. code:: java
+
+    public class Traverse implements ParallelAppBase<Long, Long, Double, Long, TraverseContext>,
+        ParallelEngine {
+
+        @Override
+        public void PEval(IFragment<Long, Long, Double, Long> fragment,
+            ParallelContextBase<Long, Long, Double, Long> context,
+            ParallelMessageManager messageManager) {
+            TraverseContext ctx = (TraverseContext) context;
+            for (Vertex<Long> vertex : fragment.innerVertices()) {
+                AdjList<Long, Long> adjList = fragment.getOutgoingAdjList(vertex);
+                for (Nbr<Long, Long> nbr : adjList.iterator()) {
+                    Vertex<Long> dst = nbr.neighbor();
+                    //Update largest distance for current vertex
+                    ctx.vertexArray.setValue(vertex, Math.max(nbr.data(), ctx.vertexArray.get(vertex)));
+                }
+            }
+            messageManager.ForceContinue();
+        }
+
+        @Override
+        public void IncEval(IFragment<Long, Long, Double, Long> fragment,
+            ParallelContextBase<Long, Long, Double, Long> context,
+            ParallelMessageManager messageManager) {
+            TraverseContext ctx = (TraverseContext) context;
+            for (Vertex<Long> vertex : fragment.innerVertices()) {
+                AdjList<Long, Long> adjList = fragment.getOutgoingAdjList(vertex);
+                for (Nbr<Long, Long> nbr : adjList.iterator()) {
+                    Vertex<Long> dst = nbr.neighbor();
+                    //Update largest distance for current vertex
+                    ctx.vertexArray.setValue(vertex, Math.max(nbr.data(), ctx.vertexArray.get(vertex)));
+                }
+            }
+        }
+    }
+
+该app对应的context的实现:
+
+.. code:: java
+    
+    public class TraverseContext extends
+        VertexDataContext<IFragment<Long, Long, Double, Long>, Long> implements ParallelContextBase<Long,Long,Double,Long> {
+
+        public GSVertexArray<Long> vertexArray;
+        public int maxIteration;
+
+        @Override
+        public void Init(IFragment<Long, Long, Double, Long> frag,
+            ParallelMessageManager messageManager, JSONObject jsonObject) {
+            createFFIContext(frag, Long.class, false);
+            //This vertex Array is created by our framework. Data stored in this array will be available
+            //after execution, you can receive them by invoking method provided in Python Context.
+            vertexArray = data();
+            maxIteration = 10;
+            if (jsonObject.containsKey("maxIteration")){
+                maxIteration = jsonObject.getInteger("maxIteration");
+            }
+        }
+
+        @Override
+        public void Output(IFragment<Long, Long, Double, Long> frag) {
+            //You can also write output logic in this function.
+        }
+    }
+
+在实现了自己的算法之后，用户可能会想在提交到GraphScope的图分析引擎运行前，先在本地验证算法实现的正确性。我们提供了一个简单的脚本来满足用户的
+这个需求。为了验证算法实现的正确性，用户只需要运行以下命令:
+
+.. code:: bash
+
+    python3 ${GRAPHSCOPE_REPO}/analytical_engine/java/java-app-runner.py
+                --app=${app_class_name} --java_path=${path_to_your_jar} 
+                --param_str=${params_str}
+
+其中, ``app_class_name`` 是用户自定义的Java app的类的全名，(i.e. com.xxx.Traverse), ``path_to_your_jar`` 指向包含用户想要运行的算法的jar包。
+可以通过 ``param_str`` 来制定context初始化需要的参数，例如对于bfs算法可以使用 ``src=6,threadNum=1`` 来标记初始节点是6，并行线程数为1。例如，可以
+通过如下命令来运行Traverse app。
+
+.. code:: bash
+
+    cd ${GRAPHSCOPE_REPO}/analytical_engine/java/
+    python3 java-app-runner.py --app com.alibaba.graphscope.example.traverse.Traverse 
+                --jar_path /home/graphscope/GraphScope/analytical_engine/java/grape-demo/target/grape-demo-0.1-shaded.jar 
+                --arguments "maxIteration=10"
+
+在本地验证自定义算法的正确性之后，你可以通过GraphScope的python client来提交运行jar包。一个jar包中可以包含不同的app实现，用户可以多次提交相同的jar包但是运行不同
+的app。
+
+.. code:: python
+
+    import graphscope
+    from graphscope import JavaApp
+    from graphscope.dataset import load_p2p_network
+    
+    """Or lauch session in k8s cluster"""
+    sess = graphscope.session(cluster_type='hosts')
+
+    graph = load_p2p_network(sess)
+    graph = graph.project(vertices={"host": ['id']}, edges={"connect": ["dist"]})
+
+    app=JavaApp(
+        full_jar_path="{full/path/to/your/packed/jar}", 
+        java_app_class="{fullly/qualified/class/name/of/your/app}", 
+    )
+    ctx=app(graph, "${param string}")
+
+请耐心等待计算完成，当计算完成后，你可以通过 :ref:`Context` 对象来获取计算结果。
 
 **相关论文**
 

@@ -22,6 +22,7 @@ import sys
 
 import graphscope
 from graphscope import JavaApp
+from graphscope.dataset import load_p2p_network
 
 graphscope.set_option(show_log=True)
 
@@ -61,12 +62,6 @@ def parse_args():
         help="The path where your packed jar resides.",
     )
     parser.add_argument(
-        "--test_dir",
-        type=str,
-        required=True,
-        help="The path where graphscope test data reside(download from https://github.com/GraphScope/gstest.git)",
-    )
-    parser.add_argument(
         "--arguments",
         type=str,
         default="{}",
@@ -76,22 +71,6 @@ def parse_args():
         "--directed", type=bool, default=False, help="Run on directed graph or not"
     )
     return parser.parse_args()
-
-
-def check_test_data(test_dir: str):
-    """
-    Get the gstest data directory. If not found in specified directory, we clone from github.
-    """
-    if os.path.isdir(test_dir):
-        if os.path.exists(
-            os.path.join(test_dir, "property", "p2p-31_property_v_0")
-        ) and os.path.exists(os.path.join(test_dir, "property", "p2p-31_property_e_0")):
-            logger.info("Found desired test data..")
-            return test_dir
-        else:
-            logger.error("Desired evfiles doesn't exists")
-            sys.exit(1)
-    return test_dir
 
 
 def parse_java_app(java_app_class: str, java_jar_full_path: str):
@@ -191,25 +170,16 @@ def run_app(
     edataType: str,
     app_type: str,
     directed: bool,
-    test_dir: str,
     jar_path: str,
     java_app_class: str,
     param_str,
 ):
     sess = graphscope.session(cluster_type="hosts", num_workers=1)
     graph = sess.g(directed=directed)
-    graph = graph.add_vertices(
-        "{}/property/p2p-31_property_v_0".format(test_dir),
-        label="person",
-        properties=[("weight", "{}".format(vdataType))],
-    )
-    graph = graph.add_edges(
-        "{}/property/p2p-31_property_e_0".format(test_dir),
-        label="knows",
-        properties=[("dist", "{}".format(edataType))],
-    )
+    graph = load_p2p_network(sess)
+    
     if "simple" in app_type:
-        graph = graph.project(vertices={"person": ["id"]}, edges={"knows": ["dist"]})
+        graph = graph.project(vertices={"host": ['id']}, edges={"connect": ["dist"]})
     app = JavaApp(full_jar_path=jar_path, java_app_class=java_app_class)
     exec("ctx=app(graph, {})".format(param_str))
     logger.info("Successfully verify app: {}".format(java_app_class))
@@ -224,8 +194,6 @@ if __name__ == "__main__":
     logger.info("Arguments to java context\t\t={}".format(args.arguments))
     logger.info("Directed: \t\t\t\t={}".format(args.directed))
 
-    test_dir = check_test_data(args.test_dir)
-
     app_type, type_params, _ = parse_java_app(args.app, args.jar_path)
     if app_type not in POSSIBLE_APP_TYPES:
         logger.error("Unsupported app type:{}".format(app_type))
@@ -238,7 +206,6 @@ if __name__ == "__main__":
         edataType,
         app_type,
         args.directed,
-        test_dir,
         args.jar_path,
         args.app,
         args.arguments,

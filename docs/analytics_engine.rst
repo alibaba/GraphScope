@@ -367,10 +367,9 @@ Run a Demo Java Algorithm
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 We provide some sample java app implementation, and you can directly run them on Graphscope Analytical Engine. First you 
-need to download a `grape-demo.jar <https://github.com/GraphScope/gstest/blob/master/jars/graphscope-demo-0.1-shaded.jar>`_ 
-and testing data `gstest <https://github.com/GraphScope/gstest>`_.
+need to download a `grape-demo.jar <https://github.com/GraphScope/gstest/blob/master/jars/graphscope-demo-0.1-shaded.jar>`_。
 
-Then open your graphscope python client, try to load a graph, and run the sample sssp algorithm.
+Then open your GraphScope python client, try to load a graph, and run the sample sssp algorithm.
 
 .. code:: python
 
@@ -427,9 +426,11 @@ For the implementation of your algorithm, You shall follow `PIE <https://dl.acm.
 and your app need to inherit :code:`DefaultPropertyAppBase` or :code:`ParallelPropertyAppBase` if it works on a property graph,  
 or :code:`DefaultAppBase` or :code:`ParallelAppBase` in case it works on a simple graph. Meanwhile, you also need to implement 
 the corresponding context for your app, by inheriting :code:`DefaultPropertyContextBase` , :code:`ParallelPropertyContextBase`,
-:code:`DefaultContextBase` or :code:`ParallelContextBase`. 
+:code:`DefaultContextBase` or :code:`ParallelContextBase`. Users can also extends :code:`VertexDataContext` or :code:`VertexPropertyContext`
+to make use of features provided by different types of context. The vertex data or columns in these two context will be available after query. You can access
+the data via the returned context object in python client.
  
-Here we present a simple app which traverse a simple graph with a breadth-first manner.
+Here we present an app which simply traverse a simple graph.
 
 .. code:: java
 
@@ -504,33 +505,20 @@ A simple bash script is provided to address this need. To verfy your algorithm, 
 .. code:: bash
 
     python3 ${GRAPHSCOPE_REPO}/analytical_engine/java/java-app-runner.py
-                --app=${app_class_name} --graph_type=${true/false} --java_path=${path_to_your_jar} 
-                --test_dir=${test_dir} --param_str=${params_str}
+                --app=${app_class_name} --java_path=${path_to_your_jar} 
+                --param_str=${params_str}
 
-``app_class_name`` is the fully-specified name for your algorithm class(i.e. com.xxx.Traverse), ``path_to_your_jar`` should be the place where your packed jar resides, and 
-``test_dir`` points to the path of `gstest data <https://github.com/GraphScope/gstest>`_.
+``app_class_name`` is the fully-specified name for your algorithm class(i.e. com.xxx.Traverse), ``path_to_your_jar`` should be the place where your packed jar resides.
 To pass params to your contex, put them in ``params`` like ``src=6,threadNum=1``, and these params will be provided in ``Context::Init`` as a json string. For example,
 
 .. code:: bash
 
     cd ${GRAPHSCOPE_REPO}/analytical_engine/java/
     python3 java-app-runner.py --app com.alibaba.graphscope.example.traverse.Traverse 
-                --directed False 
                 --jar_path /home/graphscope/GraphScope/analytical_engine/java/grape-demo/target/grape-demo-0.1-shaded.jar 
-                --test_dir /tmp/gstest/ 
                 --arguments "maxIteration=10"
 
-After verifying your algorithm locally, you may try to run your algorithms on GraphScope analytical engine. First you need to pack your algorithms in a ``jar``.
-To address the jar dependencies issue, we need you to pack with dependencies included. For example, you can used maven plugin `maven-shade-plugin`.
-
-.. code:: xml
-
-    <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-shade-plugin</artifactId>
-    </plugin>
-
-
+After verifying your algorithm locally, you may try to run your algorithms on GraphScope analytical engine. 
 You will need ``python client`` to run a java app. A simple jar can contains serveral app implementation,
 and you need to specify the app you want in this run.
 

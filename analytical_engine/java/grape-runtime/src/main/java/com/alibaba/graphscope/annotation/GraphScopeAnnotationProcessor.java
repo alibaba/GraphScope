@@ -1514,7 +1514,7 @@ public class GraphScopeAnnotationProcessor extends javax.annotation.processing.A
         if (isSameType(typeMirror, FFIByteString.class)) {
             return name ? "std::string" : "<string>";
         }
-        if (name) {
+        if (!name) {
             return JNI_HEADER;
         }
 
