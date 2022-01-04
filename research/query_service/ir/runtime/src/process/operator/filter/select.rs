@@ -60,7 +60,7 @@ mod tests {
     use pegasus::JobConf;
 
     use crate::graph::element::{Element, GraphElement};
-    use crate::graph::property::Details;
+    use crate::graph::property::{Details, PropKey};
     use crate::process::operator::filter::FilterFuncGen;
     use crate::process::operator::tests::init_source;
     use crate::process::record::Record;
@@ -140,7 +140,62 @@ mod tests {
                 }
                 count += 1;
             }
-            assert_eq!(count, 1);
         }
+        assert_eq!(count, 1);
+    }
+
+    // g.V().hasId(1)
+    #[test]
+    fn select_id_test() {
+        let select_opr_pb =
+            pb::Select { predicate: Some(str_to_suffix_expr_pb("@.~id == 1".to_string()).unwrap()) };
+        let mut result = select_test(init_source(), select_opr_pb);
+        let mut count = 0;
+        while let Some(Ok(record)) = result.next() {
+            if let Some(element) = record.get(None).unwrap().as_graph_element() {
+                {
+                    assert_eq!(
+                        element
+                            .details()
+                            .unwrap()
+                            .get(&PropKey::Id)
+                            .unwrap()
+                            .try_to_owned()
+                            .unwrap(),
+                        object!(1)
+                    );
+                }
+                count += 1;
+            }
+        }
+        assert_eq!(count, 1);
+    }
+
+    // g.V().hasLabel("person")
+    #[test]
+    fn select_label_test() {
+        let select_opr_pb = pb::Select {
+            predicate: Some(str_to_suffix_expr_pb("@.~label == \"person\"".to_string()).unwrap()),
+        };
+        let mut result = select_test(init_source(), select_opr_pb);
+        let mut count = 0;
+        while let Some(Ok(record)) = result.next() {
+            if let Some(element) = record.get(None).unwrap().as_graph_element() {
+                {
+                    assert_eq!(
+                        element
+                            .details()
+                            .unwrap()
+                            .get(&PropKey::Label)
+                            .unwrap()
+                            .try_to_owned()
+                            .unwrap(),
+                        object!("person")
+                    );
+                }
+                count += 1;
+            }
+        }
+        assert_eq!(count, 2);
     }
 }
