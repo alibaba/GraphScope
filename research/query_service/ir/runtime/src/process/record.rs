@@ -93,6 +93,13 @@ impl Record {
         }
     }
 
+    // append without moving curr entry
+    pub fn append_without_moving_curr(&mut self, entry: Arc<Entry>, alias: Option<NameOrId>) {
+        if let Some(alias) = alias {
+            self.columns.insert(alias, entry);
+        }
+    }
+
     pub fn get(&self, tag: Option<&NameOrId>) -> Option<&Arc<Entry>> {
         if let Some(tag) = tag {
             self.columns.get(tag)
