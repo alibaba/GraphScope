@@ -23,68 +23,52 @@ use pegasus::api::function::{FnResult, MapFunction};
 
 use crate::error::{FnExecError, FnGenResult};
 use crate::expr::eval::{Evaluate, Evaluator};
-use crate::graph::element::Element;
-use crate::graph::property::Details;
 use crate::process::operator::map::MapFuncGen;
+use crate::process::operator::TagKey;
 use crate::process::record::{Entry, ObjectElement, Record, RecordElement};
 
 #[derive(Debug)]
 struct ProjectOperator {
     is_append: bool,
-    projected_columns: Vec<(Evaluator, Option<NameOrId>)>,
+    projected_columns: Vec<(Projector, Option<NameOrId>)>,
 }
 
-fn exec_single(input: &Record, evaluator: &Evaluator) -> FnResult<Arc<Entry>> {
-    let entry = if let Some((tag, _prop_key)) = evaluator.extract_single_tag() {
-        let tag_entry = input
-            .get(tag.as_ref())
-            .ok_or(FnExecError::get_tag_error(format!("{:?}", tag).as_str()))?;
-        if let Some(prop_key) = &_prop_key {
-            let graph_entry = tag_entry
-                .as_graph_element()
-                .ok_or(FnExecError::unexpected_data_error("cannot get property from non-graph element"))?;
+#[derive(Debug)]
+pub enum Projector {
+    ExprProjector(Evaluator),
+    GraphElementProjector(TagKey),
+}
+
+fn exec_projector(input: &Record, projector: &Projector) -> FnResult<Arc<Entry>> {
+    let entry = match projector {
+        Projector::ExprProjector(evaluator) => {
+            let projected_result = evaluator
+                .eval::<RecordElement, Record>(Some(&input))
+                .map_err(|e| FnExecError::from(e))?;
             Arc::new(
-                graph_entry
-                    .details()
-                    .ok_or(FnExecError::unexpected_data_error(&format!(
-                        "get empty details from {:?}",
-                        graph_entry
-                    )))?
-                    .get(prop_key)
-                    .and_then(|obj| obj.try_to_owned())
+                projected_result
                     .map_or(ObjectElement::None, |prop| ObjectElement::Prop(prop))
                     .into(),
             )
-        } else {
-            tag_entry.clone()
         }
-    } else {
-        let projected_result = evaluator
-            .eval::<RecordElement, Record>(Some(&input))
-            .map_err(|e| FnExecError::from(e))?;
-        Arc::new(
-            projected_result
-                .map_or(ObjectElement::None, |prop| ObjectElement::Prop(prop))
-                .into(),
-        )
+        Projector::GraphElementProjector(tag_key) => tag_key.get_entry(input)?,
     };
-
     Ok(entry)
 }
 
 impl MapFunction<Record, Record> for ProjectOperator {
     fn exec(&self, mut input: Record) -> FnResult<Record> {
         if self.is_append {
-            for (evaluator, alias) in self.projected_columns.iter() {
-                let entry = exec_single(&input, &evaluator)?;
+            for (projector, alias) in self.projected_columns.iter() {
+                let entry = exec_projector(&input, &projector)?;
                 input.append_arc_entry(entry, alias.clone());
             }
 
             Ok(input)
         } else {
             let mut new_record = Record::default();
-            for (evaluator, alias) in self.projected_columns.iter() {
-                let entry = exec_single(&input, &evaluator)?;
+            for (projector, alias) in self.projected_columns.iter() {
+                let entry = exec_projector(&input, &projector)?;
                 new_record.append_arc_entry(entry, alias.clone());
             }
 
@@ -106,7 +90,12 @@ impl MapFuncGen for algebra_pb::Project {
                 .expr
                 .ok_or(ParsePbError::from("expr eval is missing in project"))?;
             let evaluator = Evaluator::try_from(expr)?;
-            projected_columns.push((evaluator, alias));
+            let projector = if let Some(prop_key) = evaluator.extract_single_tag() {
+                Projector::GraphElementProjector(TagKey::new(prop_key.0, prop_key.1))
+            } else {
+                Projector::ExprProjector(evaluator)
+            };
+            projected_columns.push((projector, alias));
         }
         let project_operator = ProjectOperator { is_append: self.is_append, projected_columns };
         debug!("Runtime project operator {:?}", project_operator);
