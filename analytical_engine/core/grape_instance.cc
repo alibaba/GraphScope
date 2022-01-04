@@ -261,8 +261,7 @@ bl::result<std::string> GrapeInstance::reportGraph(
   return wrapper->ReportGraph(comm_spec_, params);
 }
 
-bl::result<void> GrapeInstance::modifyVertices(
-    const rpc::GSParams& params, const std::vector<std::string>& vertices) {
+bl::result<void> GrapeInstance::modifyVertices(const rpc::GSParams& params) {
 #ifdef NETWORKX
   BOOST_LEAF_AUTO(modify_type, params.Get<rpc::ModifyType>(rpc::MODIFY_TYPE));
   BOOST_LEAF_AUTO(graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
@@ -280,7 +279,16 @@ bl::result<void> GrapeInstance::modifyVertices(
 
   auto fragment =
       std::static_pointer_cast<DynamicFragment>(wrapper->fragment());
-  fragment->ModifyVertices(vertices, modify_type);
+  BOOST_LEAF_AUTO(attr_json, params.Get<std::string>(rpc::PROPERTIES));
+  auto common_attr = folly::parseJson(attr_json);
+  double start = grape::GetCurrentTime();
+  BOOST_LEAF_AUTO(nodes_json, params.Get<std::string>(rpc::NODES));
+  LOG(INFO) << "Get from rpc time: " << grape::GetCurrentTime() - start;
+  double t2 = grape::GetCurrentTime();
+  folly::dynamic nodes = folly::parseJson(nodes_json);
+  LOG(INFO) << "parse Json time: " << grape::GetCurrentTime() - t2;
+  fragment->ModifyVertices(nodes, common_attr, modify_type);
+  LOG(INFO) << "Total modify nodes time: " << grape::GetCurrentTime() - start;
   return {};
 #else
   RETURN_GS_ERROR(vineyard::ErrorCode::kUnimplementedMethod,
@@ -289,8 +297,7 @@ bl::result<void> GrapeInstance::modifyVertices(
 #endif
 }
 
-bl::result<void> GrapeInstance::modifyEdges(
-    const rpc::GSParams& params, const nlohmann::json& edges) {
+bl::result<void> GrapeInstance::modifyEdges(const rpc::GSParams& params) {
 #ifdef NETWORKX
   BOOST_LEAF_AUTO(modify_type, params.Get<rpc::ModifyType>(rpc::MODIFY_TYPE));
   BOOST_LEAF_AUTO(graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
@@ -307,9 +314,20 @@ bl::result<void> GrapeInstance::modifyEdges(
 
   auto fragment =
       std::static_pointer_cast<DynamicFragment>(wrapper->fragment());
-  BOOST_LEAF_AUTO(attr_json, params.Get<std::string>(rpc::EDGE_KEY));
+  BOOST_LEAF_AUTO(attr_json, params.Get<std::string>(rpc::PROPERTIES));
   auto common_attr = folly::parseJson(attr_json);
-  fragment->ModifyEdges(edges, common_attr, modify_type);
+  std::string weight = "";
+  if (params.HasKey(rpc::EDGE_KEY)) {
+    BOOST_LEAF_AUTO(weight, params.Get<std::string>(rpc::EDGE_KEY));
+  }
+  double start = grape::GetCurrentTime();
+  BOOST_LEAF_AUTO(edges_json, params.Get<std::string>(rpc::EDGES));
+  LOG(INFO) << "Get from rpc time: " << grape::GetCurrentTime() - start;
+  double t2 = grape::GetCurrentTime();
+  folly::dynamic edges = folly::parseJson(edges_json);
+  LOG(INFO) << "parse Json time: " << grape::GetCurrentTime() - t2;
+  fragment->ModifyEdges(edges, common_attr, modify_type, weight);
+  LOG(INFO) << "Total modify edge time: " << grape::GetCurrentTime() - start;
 #else
   RETURN_GS_ERROR(vineyard::ErrorCode::kUnimplementedMethod,
                   "GraphScope is built with NETWORKX=OFF, please recompile it "
@@ -1081,13 +1099,7 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
   }
   case rpc::MODIFY_VERTICES: {
 #ifdef NETWORKX
-    std::vector<std::string> vertices_to_modify;
-    int size = cmd.params.at(rpc::NODES).list().s_size();
-    vertices_to_modify.reserve(size);
-    for (int i = 0; i < size; ++i) {
-      vertices_to_modify.push_back(cmd.params.at(rpc::NODES).list().s(i));
-    }
-    BOOST_LEAF_CHECK(modifyVertices(params, vertices_to_modify));
+    BOOST_LEAF_CHECK(modifyVertices(params));
 #else
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
                     "GraphScope is built with NETWORKX=OFF, please recompile "
@@ -1097,25 +1109,7 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
   }
   case rpc::MODIFY_EDGES: {
 #ifdef NETWORKX
-    double start = grape::GetCurrentTime();
-    /*
-    std::vector<std::string> edges_to_modify;
-    int size = cmd.params.at(rpc::EDGES).list().s_size();
-    edges_to_modify.reserve(size);
-    for (int i = 0; i < size; ++i) {
-      edges_to_modify.push_back(cmd.params.at(rpc::EDGES).list().s(i));
-    }
-    */
-    BOOST_LEAF_AUTO(edges_json, params.Get<std::string>(rpc::EDGES));
-    LOG(INFO) << "Get from rpc time: " << grape::GetCurrentTime() - start;
-    double t = grape::GetCurrentTime();
-    auto edges_to_modify = nlohmann::json::parse(edges_json);
-    LOG(INFO) << "nlohmann parse Json time: " << grape::GetCurrentTime() - t;
-    // double t2 = grape::GetCurrentTime();
-    // folly::dynamic edges_to_modify = folly::parseJson(edges_json);
-    // LOG(INFO) << "parse Json time: " << grape::GetCurrentTime() - t2;
-    BOOST_LEAF_CHECK(modifyEdges(params, edges_to_modify));
-    LOG(INFO) << "Total modify edge time: " << grape::GetCurrentTime() - start;
+    BOOST_LEAF_CHECK(modifyEdges(params));
 #else
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
                     "GraphScope is built with NETWORKX=OFF, please recompile "

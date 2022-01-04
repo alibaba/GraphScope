@@ -1472,37 +1472,16 @@ class DynamicFragment {
     return false;
   }
 
-  folly::dynamic jsonToDynamic(const nlohmann::json& json) {
-    if (json.is_boolean()) {
-      return folly::dynamic(json.get<bool>());
-    } else if (json.is_number()) {
-      return folly::dynamic(json.get<int>());
-    } else if (json.is_array()) {
-      folly::dynamic ret = folly::dynamic::array;
-      for (const auto& item : json) {
-        ret.push_back(jsonToDynamic(item));
-      }
-      return ret;
-    } else if (json.is_string()) {
-      return folly::dynamic(json.get<std::string>());
-    } else if (json.is_object()) {
-      folly::dynamic ret = folly::dynamic::object;
-      for (const auto& el : json.items()) {
-        ret[el.key()] = jsonToDynamic(el.value());
-      }
-      return ret;
-    }
-    return folly::dynamic();
-  }
-
-  void ModifyEdges(const nlohmann::json& edges_to_modify,
+  void ModifyEdges(const folly::dynamic& edges_to_modify,
                    const folly::dynamic& common_attrs,
-                   const rpc::ModifyType modify_type) {
+                   const rpc::ModifyType modify_type,
+                   const std::string weight) {
     double start = grape::GetCurrentTime();
     std::vector<internal_vertex_t> vertices;
     std::vector<edge_t> edges;
 
     edges.reserve(edges_to_modify.size());
+    vertices.reserve(edges_to_modify.size());
     invalidCache();
     {
       edata_t e_data;
@@ -1512,25 +1491,16 @@ class DynamicFragment {
       fid_t src_fid, dst_fid;
       partitioner_t partitioner;
       partitioner.Init(fnum_);
-      /*
-      auto line_parser_ptr = std::make_unique<DynamicLineParser>();
-        for (auto& line : edges_to_modify) {
-        if (line.empty() || line[0] == '#') {
-          continue;
-        }
-        try {
-          line_parser_ptr->LineParserForEFile(line, src, dst, e_data);
-        } catch (std::exception& e) {
-          LOG(ERROR) << e.what() << " line: " << line;
-          continue;
-        }
-      */
       for (const auto& e : edges_to_modify) {
-        src = jsonToDynamic(e[0]);
-        dst = jsonToDynamic(e[1]);
+        src = std::move(e[0]);
+        dst = std::move(e[1]);
         e_data = common_attrs;
         if (e.size() == 3) {
-          e_data.update(jsonToDynamic(e[2]));
+          if (weight.empty()) {
+            e_data.update(std::move(e[2]));
+          } else {
+            e_data.insert(weight, std::move(e[2]));
+          }
         }
         src_fid = partitioner.GetPartitionId(src);
         dst_fid = partitioner.GetPartitionId(dst);
@@ -1574,10 +1544,10 @@ class DynamicFragment {
       CHECK(false);
     }
     LOG(INFO) << "Edge inserting time: " << grape::GetCurrentTime() - start;
-
   }
 
-  void ModifyVertices(const std::vector<std::string>& vertices_to_modify,
+  void ModifyVertices(const folly::dynamic& vertices_to_modify,
+                      const folly::dynamic& common_attrs,
                       const rpc::ModifyType& modify_type) {
     std::vector<internal_vertex_t> vertices;
     std::vector<edge_t> empty_edges;
@@ -1589,18 +1559,15 @@ class DynamicFragment {
       partitioner.Init(fnum_);
       oid_t oid;
       vid_t gid;
-      vdata_t v_data = folly::dynamic::object;
+      vdata_t v_data;
       fid_t v_fid;
-      auto line_parser_ptr = std::make_unique<DynamicLineParser>();
-      for (auto& line : vertices_to_modify) {
-        if (line.empty() || line[0] == '#') {
-          continue;
-        }
-        try {
-          line_parser_ptr->LineParserForVFile(line, oid, v_data);
-        } catch (std::exception& e) {
-          LOG(ERROR) << e.what();
-          continue;
+      for (const auto& v : vertices_to_modify) {
+        v_data = common_attrs;
+        if (v.isArray() && v.size() == 2 && v[1].isObject()) {
+          oid = std::move(v[0]);
+          v_data.update(std::move(v[1]));
+        } else {
+          oid = std::move(v);
         }
         v_fid = partitioner.GetPartitionId(oid);
         if (modify_type == rpc::NX_ADD_NODES) {

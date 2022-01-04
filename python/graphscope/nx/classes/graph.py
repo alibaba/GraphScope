@@ -265,6 +265,8 @@ class Graph(_GraphBase):
     adjlist_dict_factory = AdjDict
     graph_attr_dict_factory = dict
     _graph_type = graph_def_pb2.DYNAMIC_PROPERTY
+    node_cache_capacity = 100000000
+    edge_cache_capacity = 50000000
 
     @patch_docstring(RefGraph.to_directed_class)
     def to_directed_class(self):
@@ -331,13 +333,10 @@ class Graph(_GraphBase):
         self._schema = GraphSchema()
         self._schema.init_nx_schema()
 
-        # cache for add_node and add_edge
-        self._nodes_for_adding = []
-        self._edges_for_adding = [None] * 1000000
-        # self._edges_for_adding = []
-        self._edge_trace_counter = 0
-        self._nodes_for_deling = []
-        self._edges_for_deling = []
+        # caches for add_node and add_edge
+        self._add_node_cache = self._remove_node_cache = [None] * self.node_cache_capacity
+        self._add_edge_cache = self._remove_edge_cache = [None] * self.edge_cache_capacity
+        self._add_node_tracker = self._add_edge_tracker = self._remove_node_tracker = self._remove_edge_tracker = 0
 
         create_empty_in_engine = attr.pop(
             "create_empty_in_engine", True
@@ -620,10 +619,14 @@ class Graph(_GraphBase):
         nx.Graph support int, float, str, tuple or bool object of nodes.
         """
         self._convert_arrow_to_dynamic()
-        if self._schema.add_nx_vertex_properties(attr):
-            self._nodes_for_adding.append(
-                json.dumps([node_for_adding, attr], default=json_encoder)
-            )
+        if attr:
+            # self._schema.add_nx_vertex_properties(attr):
+            self._add_node_cache[self._add_node_tracker] = (node_for_adding, attr)
+        else:
+            self._add_node_cache[self._add_node_tracker] = node_for_adding
+        self._add_node_tracker = self._add_node_tracker + 1
+        if self._add_node_tracker == self.node_cache_capacity:
+            self._clear_adding_cache()
 
     def add_nodes_from(self, nodes_for_adding, **attr):
         """Add multiple nodes.
@@ -672,10 +675,10 @@ class Graph(_GraphBase):
         self._convert_arrow_to_dynamic()
         if nodes_for_adding:
             if isinstance(nodes_for_adding, types.GeneratorType):
-                nodes_json = json.dumps(list(nodes_for_adding), default=json_encoder)
+                nodes = json.dumps(tuple(nodes_for_adding), default=json_encoder)
             else:
-                nodes_json = json.dumps(nodes_for_adding, default=json_encoder)
-        self._op = dag_utils.modify_vertices(self, types_pb2.NX_ADD_NODES, nodes_json, json.dumps(attr, default=json_encoder))
+                nodes = json.dumps(nodes_for_adding, default=json_encoder)
+        self._op = dag_utils.modify_vertices(self, types_pb2.NX_ADD_NODES, nodes, attr=attr)
         self._op.eval()
 
     def remove_node(self, n):
@@ -708,8 +711,11 @@ class Graph(_GraphBase):
         []
 
         """
-        self._clear_adding_cache()
-        self._nodes_for_deling.append(n)
+        self._convert_arrow_to_dynamic()
+        self._remove_node_cache[self._remove_node_tracker] = n
+        self._remove_node_tracker = self._remove_node_tracker + 1
+        if self._remove_node_tracker == self.node_cache_capacity:
+            self._clear_removing_cache()
 
     def remove_nodes_from(self, nodes_for_removing):
         """Remove multiple nodes.
@@ -737,7 +743,6 @@ class Graph(_GraphBase):
 
         """
         self._convert_arrow_to_dynamic()
-        self._clear_adding_cache()
         if nodes_for_removing:
             if isinstance(nodes_for_removing, types.GeneratorType):
                 nodes = json.dumps(list(nodes_for_removing), default=json_encoder)
@@ -858,7 +863,6 @@ class Graph(_GraphBase):
         True
 
         """
-        self._clear_adding_cache()
         try:
             if self.graph_type == graph_def_pb2.ARROW_PROPERTY:
                 n = self._convert_to_label_id_tuple(n)
@@ -920,22 +924,13 @@ class Graph(_GraphBase):
         >>> G.edges[1, 2].update({0: 5})
         """
         # self._schema.add_nx_edge_properties(attr)
-        """
-        for key, value in attr.items():
-            print("empty")
-            try:
-                prop_type = unify_type(type(value))
-                self._edge_labels[0].add_property(key, prop_type)
-            except TypeError:
-                pass
-        """
-        # self._edges_for_adding[self._edge_trace_counter] = json.dumps((u_of_edge, v_of_edge, attr), default=json_encoder)
-        # self._edges_for_adding.append((u_of_edge, v_of_edge, attr))
         if attr:
-            self._edges_for_adding[self._edge_trace_counter] = (u_of_edge, v_of_edge, attr)
+            self._add_edge_cache[self._add_edge_tracker] = (u_of_edge, v_of_edge, attr)
         else:
-            self._edges_for_adding[self._edge_trace_counter] = (u_of_edge, v_of_edge)
+            self._add_edge_cache[self._add_edge_tracker] = (u_of_edge, v_of_edge)
         self._edge_trace_counter = self._edge_trace_counter + 1
+        if self._edge_trace_counter == self.edge_cache_capacity:
+            self._clear_adding_cache()
 
     def add_edges_from(self, ebunch_to_add, **attr):
         """Add all the edges in ebunch_to_add.
@@ -978,39 +973,16 @@ class Graph(_GraphBase):
         self._convert_arrow_to_dynamic()
         # self._clear_adding_cache()
 
-        """
-        edges = []
-        for e in ebunch_to_add:
-            ne = len(e)
-            data = dict(attr)
-            if ne == 3:
-                u, v, dd = e
-                # make attributes specified in ebunch take precedence to attr
-                data.update(dd)
-            elif ne == 2:
-                u, v = e
-            else:
-                raise NetworkXError(
-                    "Edge tuple %s must be a 2-tuple or 3-tuple." % (e,)
-                )
-            if u is None or v is None:
-                raise ValueError("None cannot be a node")
-            # FIXME: support dynamic data type in same property
-            self._schema.add_nx_edge_properties(data)
-            edges.append((u, v, data))
-            # edge = [u, v, data]
-            # edges.append(json.dumps(edge, default=json_encoder))
-        """
         if ebunch_to_add:
             start = timer()
             if isinstance(ebunch_to_add, types.GeneratorType):
-                edges_json = json.dumps(list(ebunch_to_add), default=json_encoder)
+                edges = json.dumps(tuple(ebunch_to_add), default=json_encoder)
             else:
-                edges_json = json.dumps(ebunch_to_add, default=json_encoder)
+                edges = json.dumps(ebunch_to_add, default=json_encoder)
             end = timer()
             print("Dumps time", end - start)
             start = timer()
-            self._op = dag_utils.modify_edges(self, types_pb2.NX_ADD_EDGES, edges_json, json.dumps(attr, default=json_encoder))
+            self._op = dag_utils.modify_edges(self, types_pb2.NX_ADD_EDGES, edges, attr=attr)
             print("Init op", timer() - start)
             start = timer()
             self._op.eval()
@@ -1045,16 +1017,21 @@ class Graph(_GraphBase):
         >>> G = nx.Graph()  # or DiGraph
         >>> G.add_weighted_edges_from([(0, 1, 3.0), (1, 2, 7.5)])
         """
-        return self.add_edges_from(
-            ((u, v, {weight: d}) for u, v, d in ebunch_to_add), **attr
-        )
+        if ebunch_to_add:
+            if isinstance(ebunch_to_add, types.GeneratorType):
+                edges = json.dumps(tuple(ebunch_to_add), default=json_encoder)
+            else:
+                edges = json.dumps(ebunch_to_add, default=json_encoder)
+            self._op = dag_utils.modify_edges(self, types_pb2.NX_ADD_EDGES, edges, attr=weight)
+            self._op.eval()
 
     @patch_docstring(RefGraph.remove_edge)
     def remove_edge(self, u, v):
-        self._clear_adding_cache
-        self._edges_for_deling.append(json.dumps([u, v], default=json_encoder))
-        # self._edges_for_deling.append((u, v))
-        # return self.remove_edges_from([(u, v)])
+        # self._clear_adding_cache
+        self._remove_edge_cache[self._remove_edge_tracker] = (u, v)
+        self._remove_edge_tracker = self._remove_edge_tracker + 1
+        if self._remove_edge_tracker == self.edge_cache_capacity:
+            self._clear_removing_cache()
 
     def remove_edges_from(self, ebunch):
         """Remove all edges specified in ebunch.
@@ -1083,18 +1060,14 @@ class Graph(_GraphBase):
         >>> G.remove_edges_from(ebunch)
         """
         self._convert_arrow_to_dynamic()
-        self._clear_adding_cache()
-
-        edges = []
-        for e in ebunch:
-            ne = len(e)
-            if ne < 2:
-                raise ValueError("Edge tuple %s must be a 2-tuple or 3-tuple." % (e,))
-            edges.append(
-                json.dumps(e[:2], default=json_encoder)
-            )  # ignore edge data if present
-        self._op = dag_utils.modify_edges(self, types_pb2.NX_DEL_EDGES, edges)
-        return self._op.eval()
+        # self._clear_adding_cache()
+        if ebunch:
+            if isinstance(ebunch, types.GeneratorType):
+                edges = json.dumps(tuple(ebunch), default=json_encoder)
+            else:
+                edges = json.dumps(ebunch, default=json_encoder)
+            self._op = dag_utils.modify_edges(self, types_pb2.NX_DEL_EDGES, edges)
+            self._op.eval()
 
     def set_edge_data(self, u, v, data):
         """Set edge data of edge (u, v).
@@ -1127,10 +1100,10 @@ class Graph(_GraphBase):
         self._convert_arrow_to_dynamic()
         self._clear_adding_cache()
 
-        edge = [json.dumps((u, v, data), default=json_encoder)]
-        self._schema.add_nx_edge_properties(data)
+        edge = json.dumps(((u, v, data)), default=json_encoder)
+        # self._schema.add_nx_edge_properties(data)
         self._op = dag_utils.modify_edges(self, types_pb2.NX_UPDATE_EDGES, edge)
-        return self._op.eval()
+        self._op.eval()
 
     def set_node_data(self, n, data):
         """Set data of node.
@@ -1163,9 +1136,9 @@ class Graph(_GraphBase):
         self._convert_arrow_to_dynamic()
         self._clear_adding_cache()
 
-        node = [json.dumps((n, data), default=json_encoder)]
+        node = json.dumps(((n, data)), default=json_encoder)
         self._op = dag_utils.modify_vertices(self, types_pb2.NX_UPDATE_NODES, node)
-        return self._op.eval()
+        self._op.eval()
 
     def update(self, edges=None, nodes=None):
         """Update the graph using nodes/edges/graphs as input.
@@ -2251,14 +2224,16 @@ class Graph(_GraphBase):
 
     def _clear_adding_cache(self):
         self._convert_arrow_to_dynamic()
-        if self._nodes_for_adding:
+        if self._add_node_tracker > 0:
+            nodes_to_modify = json.dumps(self._add_node_cache)
             self._op = dag_utils.modify_vertices(
-                self, types_pb2.NX_ADD_NODES, self._nodes_for_adding
+                self, types_pb2.NX_ADD_NODES, nodes_to_modify
             )
-            # self._op.eval()
+            self._op.eval()
+            self._add_node_tracker = 0
         if self._edge_trace_counter > 0:
             begin = timer()
-            edges_to_modify = json.dumps(self._edges_for_adding)
+            edges_to_modify = json.dumps(self._add_edge_cache)
             end = timer()
             print("json dumps time:", end - begin)
             begin = timer()
@@ -2271,23 +2246,25 @@ class Graph(_GraphBase):
             self._op.eval()
             end = timer()
             print("OP eval time:", end - begin)
-        self._edges_for_adding = [None] * 1000000
-        self._edge_trace_counter = 0
+            self._add_edge_tracker = 0
 
-    def _clear_deling_cache(self):
+    def _clear_removing_cache(self):
         self._convert_arrow_to_dynamic()
-        if self._nodes_for_deling:
+        if self._remove_node_tracker > 0:
+            nodes_to_modify = json.dumps(self._remove_node_cache)
             self._op = dag_utils.modify_vertices(
-                self, types_pb2.NX_DEL_NODES, self._nodes_for_deling
+                self, types_pb2.NX_DEL_NODES, nodes_to_modify
             )
-            # self._op.eval()
-        if self._edges_for_deling:
+            self._op.eval()
+            self._remove_node_tracker = 0
+
+        if self._remove_edge_tracker > 0:
+            edges_to_modify = json.dumps(self._remove_edge_cache)
             self._op = dag_utils.modify_edges(
-                self, types_pb2.NX_DEL_EDGES, self._edges_for_deling
+                self, types_pb2.NX_DEL_EDGES, edges_to_modify
             )
-            # self._op.eval()
-        self._nodes_for_deling.clear()
-        self._edges_for_deling.clear()
+            self._op.eval()
+            self._remove_edge_tracker = 0
 
     def _convert_arrow_to_dynamic(self):
         """Try to convert the hosted graph from arrow_property to dynamic_property.
