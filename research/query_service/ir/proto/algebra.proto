@@ -338,11 +338,9 @@ message SegmentApply {
 
 message Sink {
   // Define the tags of columns to sink
-  repeated common.NameOrId tag = 1;
-  // The flag of sinking all aliased columns
-  bool sink_all = 2;
+  repeated common.NameOrId tags = 1;
   // The flag of sinking current entry
-  bool sink_current = 3;
+  bool sink_current = 2;
 }
 
 // A logical plan of graph relation algebra forms a DAG, where each node is an operator and the

@@ -36,14 +36,12 @@ pub struct RecordSinkEncoder {
     sink_keys: Vec<NameOrId>,
     /// flag of sink head
     is_output_head: bool,
-    /// flag of sink all columns (head excluded)
-    is_output_all: bool,
 }
 
-// By default, we sink both head and all columns (may have a duplicated column if head is aliased)
+// sink head by default
 impl Default for RecordSinkEncoder {
     fn default() -> Self {
-        RecordSinkEncoder { sink_keys: vec![], is_output_head: true, is_output_all: true }
+        RecordSinkEncoder { sink_keys: vec![], is_output_head: true }
     }
 }
 
@@ -63,13 +61,12 @@ impl SinkFunctionGen for algebra_pb::logical_plan::Operator {
 impl SinkFunctionGen for algebra_pb::Sink {
     fn gen_sink(self) -> FnGenResult<Box<dyn MapFunction<Record, result_pb::Results>>> {
         let sink_keys = self
-            .tag
+            .tags
             .into_iter()
             .map(|tag| tag.try_into())
             .collect::<Result<_, _>>()?;
         let is_output_head = self.sink_current;
-        let is_output_all = self.sink_all;
-        Ok(Box::new(RecordSinkEncoder { sink_keys, is_output_head, is_output_all }))
+        Ok(Box::new(RecordSinkEncoder { sink_keys, is_output_head }))
     }
 }
 
@@ -81,17 +78,6 @@ impl MapFunction<Record, result_pb::Results> for RecordSinkEncoder {
             let entry_pb = entry.map(|entry| result_pb::Entry::from(entry.deref()));
             let column_pb = result_pb::Column { name_or_id: None, entry: entry_pb };
             sink_columns.push(column_pb);
-        }
-        if self.is_output_all {
-            let all_entries = input.get_all();
-            for (tag, entry) in all_entries.iter() {
-                let entry_pb = result_pb::Entry::from(entry.deref());
-                let column_pb = result_pb::Column {
-                    name_or_id: Some(common_pb::NameOrId::from(tag.clone())),
-                    entry: Some(entry_pb),
-                };
-                sink_columns.push(column_pb);
-            }
         }
         for sink_key in self.sink_keys.iter() {
             let entry = input.get(Some(sink_key));

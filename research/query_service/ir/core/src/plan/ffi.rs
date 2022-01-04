@@ -1470,8 +1470,8 @@ mod sink {
 
     /// To initialize an Sink operator
     #[no_mangle]
-    pub extern "C" fn init_sink_operator(sink_all: bool, sink_current: bool) -> *const c_void {
-        let sink_opr = Box::new(pb::Sink { tag: vec![], sink_all, sink_current });
+    pub extern "C" fn init_sink_operator(sink_current: bool) -> *const c_void {
+        let sink_opr = Box::new(pb::Sink { tags: vec![], sink_current });
         Box::into_raw(sink_opr) as *const c_void
     }
 
@@ -1483,7 +1483,7 @@ mod sink {
         if tag_pb.is_ok() {
             if let Some(tag) = tag_pb.unwrap() {
                 let mut sink = unsafe { Box::from_raw(ptr_sink as *mut pb::Sink) };
-                sink.tag.push(tag);
+                sink.tags.push(tag);
                 std::mem::forget(sink);
             }
         } else {
