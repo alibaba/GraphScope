@@ -206,7 +206,9 @@ class JavaApp(AppAssets):
             ] = "apps/java_pie/java_pie_projected_parallel_app.h"
             gs_config["app"][0]["class_name"] = "gs::JavaPIEProjectedParallelApp"
         else:
-            raise Exception("Unrecognizable java app type: {}".format(self._java_app_type))
+            raise Exception(
+                "Unrecognizable java app type: {}".format(self._java_app_type)
+            )
 
         gar.append(DEFAULT_GS_CONFIG_FILE, yaml.dump(gs_config))
         super().__init__("java_app", _java_ctx_type, gar.read_bytes())
@@ -307,8 +309,12 @@ class JavaAppDagNode(AppDAGNode):
         self._app_assets = app_assets
         self._session = graph.session
         if not self._app_assets.is_compatible(self._graph):
-            raise Exception("No compactiable app and graph: {} and {}".format(self._app_assets.java_app_type, self._graph.template_str))
-            
+            raise Exception(
+                "No compactiable app and graph: {} and {}".format(
+                    self._app_assets.java_app_type, self._graph.template_str
+                )
+            )
+
         self._op = bind_app(graph, self._app_assets)
         # add op to dag
         self._session.dag.add_op(self._app_assets.op)

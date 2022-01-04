@@ -19,6 +19,7 @@ package com.alibaba.graphscope.parallel;
 import static com.alibaba.graphscope.utils.CppClassName.GRAPE_LONG_VERTEX;
 import static com.alibaba.graphscope.utils.CppClassName.GRAPE_MESSAGE_IN_BUFFER;
 import static com.alibaba.graphscope.utils.CppHeaderName.ARROW_PROJECTED_FRAGMENT_H;
+import static com.alibaba.graphscope.utils.CppHeaderName.CORE_JAVA_JAVA_MESSAGES_H;
 import static com.alibaba.graphscope.utils.CppHeaderName.CORE_JAVA_TYPE_ALIAS_H;
 import static com.alibaba.graphscope.utils.CppHeaderName.GRAPE_FRAGMENT_IMMUTABLE_EDGECUT_FRAGMENT_H;
 import static com.alibaba.graphscope.utils.CppHeaderName.GRAPE_PARALLEL_MESSAGE_IN_BUFFER_H;
@@ -46,7 +47,8 @@ import com.alibaba.graphscope.fragment.adaptor.ImmutableEdgecutFragmentAdaptor;
     GRAPE_PARALLEL_MESSAGE_IN_BUFFER_H,
     GRAPE_FRAGMENT_IMMUTABLE_EDGECUT_FRAGMENT_H,
     ARROW_PROJECTED_FRAGMENT_H,
-    CORE_JAVA_TYPE_ALIAS_H
+    CORE_JAVA_TYPE_ALIAS_H,
+    CORE_JAVA_JAVA_MESSAGES_H
 })
 public interface MessageInBuffer extends FFIPointer {
     default <FRAG_T extends IFragment, MSG_T, @FFISkip VDATA_T> boolean getMessage(

@@ -80,9 +80,7 @@ def test_load_non_existing_jar(
     os.environ.get("RUN_JAVA_TESTS") != "ON",
     reason="Java SDK is disabled, skip this test.",
 )
-def test_load_not_a_jar(
-    not_jar_file, projected_graph_sssp_class, non_exist_java_class
-):
+def test_load_not_a_jar(not_jar_file, projected_graph_sssp_class, non_exist_java_class):
     with pytest.raises(KeyError):
         sssp = JavaApp(not_jar_file, projected_graph_sssp_class)
     with pytest.raises(KeyError):
@@ -93,9 +91,7 @@ def test_load_not_a_jar(
     os.environ.get("RUN_JAVA_TESTS") != "ON",
     reason="Java SDK is disabled, skip this test.",
 )
-def test_load_gar_file(
-    a_gar_file, projected_graph_sssp_class, non_exist_java_class
-):
+def test_load_gar_file(a_gar_file, projected_graph_sssp_class, non_exist_java_class):
     with pytest.raises(KeyError):
         sssp = JavaApp(a_gar_file, projected_graph_sssp_class)
     with pytest.raises(KeyError):
@@ -106,9 +102,7 @@ def test_load_gar_file(
     os.environ.get("RUN_JAVA_TESTS") != "ON",
     reason="Java SDK is disabled, skip this test.",
 )
-def test_load_empty_jar(
-    empty_jar, projected_graph_sssp_class, non_exist_java_class
-):
+def test_load_empty_jar(empty_jar, projected_graph_sssp_class, non_exist_java_class):
     with pytest.raises(KeyError):
         sssp = JavaApp(empty_jar, projected_graph_sssp_class)
     with pytest.raises(KeyError):

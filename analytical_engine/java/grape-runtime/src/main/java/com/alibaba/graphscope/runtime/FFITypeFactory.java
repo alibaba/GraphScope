@@ -26,7 +26,6 @@ import com.alibaba.fastffi.FFITypeAlias;
 import com.alibaba.fastffi.FFIVector;
 import com.alibaba.fastffi.impl.CXXStdString;
 import com.alibaba.fastffi.impl.CXXStdVector;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
