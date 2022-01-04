@@ -620,12 +620,9 @@ class Graph(_GraphBase):
         nx.Graph support int, float, str, tuple or bool object of nodes.
         """
         self._convert_arrow_to_dynamic()
-        if node_for_adding is None:
-            raise ValueError("None cannot be a node")
-        data = dict(attr)
-        if self._schema.add_nx_vertex_properties(data):
+        if self._schema.add_nx_vertex_properties(attr):
             self._nodes_for_adding.append(
-                json.dumps([node_for_adding, data], default=json_encoder)
+                json.dumps([node_for_adding, attr], default=json_encoder)
             )
 
     def add_nodes_from(self, nodes_for_adding, **attr):
@@ -673,21 +670,12 @@ class Graph(_GraphBase):
 
         """
         self._convert_arrow_to_dynamic()
-        # self._clear_adding_cache()
-        nodes = []
-        for n in nodes_for_adding:
-            data = dict(attr)
-            try:
-                nn, dd = n
-                data.update(dd)
-                node = [nn, data]
-            except (TypeError, ValueError):
-                node = [n, data]
-            if node[0] is None:
-                raise ValueError("None cannot be a node")
-            if self._schema.add_nx_vertex_properties(data):
-                nodes.append(json.dumps(node, default=json_encoder))
-        self._op = dag_utils.modify_vertices(self, types_pb2.NX_ADD_NODES, nodes)
+        if nodes_for_adding:
+            if isinstance(nodes_for_adding, types.GeneratorType):
+                nodes_json = json.dumps(list(nodes_for_adding), default=json_encoder)
+            else:
+                nodes_json = json.dumps(nodes_for_adding, default=json_encoder)
+        self._op = dag_utils.modify_vertices(self, types_pb2.NX_ADD_NODES, nodes_json, json.dumps(attr, default=json_encoder))
         self._op.eval()
 
     def remove_node(self, n):
@@ -721,8 +709,7 @@ class Graph(_GraphBase):
 
         """
         self._clear_adding_cache()
-        self._nodes_for_deling.append(json.dumps([n], default=json_encoder))
-        # self._nodes_for_deling.append(n)
+        self._nodes_for_deling.append(n)
 
     def remove_nodes_from(self, nodes_for_removing):
         """Remove multiple nodes.
@@ -751,9 +738,11 @@ class Graph(_GraphBase):
         """
         self._convert_arrow_to_dynamic()
         self._clear_adding_cache()
-        nodes = []
-        for n in nodes_for_removing:
-            nodes.append(json.dumps([n], default=json_encoder))
+        if nodes_for_removing:
+            if isinstance(nodes_for_removing, types.GeneratorType):
+                nodes = json.dumps(list(nodes_for_removing), default=json_encoder)
+            else:
+                nodes = json.dumps(nodes_for_removing, default=json_encoder)
         self._op = dag_utils.modify_vertices(self, types_pb2.NX_DEL_NODES, nodes)
         return self._op.eval()
 

@@ -12,6 +12,8 @@ on:
   pull_request:
     branches:
       - main
+    types:
+      - ready_for_review
     paths:
       - 'research/gaia/**'
       - '.github/workflows/gaia.yml'

@@ -19,6 +19,8 @@ on:
   pull_request:
     branches:
       - main
+    types:
+      - ready_for_review
     paths-ignore:
       - 'CONTRIBUTORS'
       - 'LICENSE'
