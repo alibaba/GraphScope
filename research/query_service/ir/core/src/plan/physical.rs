@@ -398,12 +398,15 @@ impl AsPhysical for LogicalPlan {
             }
 
             let curr_node = curr_node_opt.as_ref().unwrap();
+            // TODO: throw error if last op is not sink
+            if curr_node.borrow().children.is_empty() {
+                // curr_node is sink operator
+                break;
+            }
             curr_node.add_job_builder(builder, plan_meta)?;
             prev_node_opt = curr_node_opt.clone();
 
-            if curr_node.borrow().children.is_empty() {
-                break;
-            } else if curr_node.borrow().children.len() == 1 {
+            if curr_node.borrow().children.len() == 1 {
                 let next_node_id = curr_node.borrow().get_first_child().unwrap();
                 curr_node_opt = self.get_node(next_node_id);
             } else if curr_node.borrow().children.len() >= 2 {
@@ -466,8 +469,10 @@ impl AsPhysical for LogicalPlan {
                 }
             }
         }
-        // TODO(longbin) Shall consider the option of sinking the results.
-        builder.sink(vec![]);
+
+        let curr_node = curr_node_opt.as_ref().unwrap();
+        let bytes = curr_node.borrow().opr.clone().encode_to_vec();
+        builder.sink(bytes);
 
         Ok(())
     }
