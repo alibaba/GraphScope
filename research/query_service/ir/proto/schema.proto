@@ -18,7 +18,7 @@ syntax = "proto3";
 package schema;
 
 option java_package = "com.alibaba.graphscope.gaia.proto";
-option java_outer_classname = "Schema";
+option java_outer_classname = "OuterSchema";
 
 import "common.proto";
 

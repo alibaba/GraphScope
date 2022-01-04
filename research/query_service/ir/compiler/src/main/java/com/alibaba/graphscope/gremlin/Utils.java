@@ -18,6 +18,7 @@ package com.alibaba.graphscope.gremlin;
 
 import com.google.common.base.Preconditions;
 import org.apache.commons.io.FileUtils;
+import org.apache.tinkerpop.gremlin.process.traversal.Step;
 
 import java.io.File;
 import java.io.IOException;
@@ -62,5 +63,9 @@ public class Utils {
 
     public static String readStringFromFile(String filePath) throws IOException {
         return FileUtils.readFileToString(new File(filePath), StandardCharsets.UTF_8);
+    }
+
+    public static boolean equalClass(Step t1, Class<? extends Step> target) {
+        return t1.getClass().equals(target);
     }
 }

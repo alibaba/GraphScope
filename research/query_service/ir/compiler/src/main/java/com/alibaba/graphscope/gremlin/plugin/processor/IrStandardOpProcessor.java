@@ -32,6 +32,8 @@ import com.alibaba.graphscope.common.config.PegasusConfig;
 import com.alibaba.graphscope.common.intermediate.InterOpCollection;
 import com.alibaba.graphscope.gremlin.InterOpCollectionBuilder;
 import com.alibaba.graphscope.gremlin.plugin.script.AntlrToJavaScriptEngineFactory;
+import com.alibaba.graphscope.gremlin.result.GremlinResultAnalyzer;
+import com.alibaba.graphscope.gremlin.result.GremlinResultProcessor;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
 import com.google.protobuf.InvalidProtocolBufferException;
 import org.apache.tinkerpop.gremlin.driver.message.RequestMessage;
@@ -121,7 +123,6 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                         }
                     }
                 }
-
                 return null;
             });
         } catch (RejectedExecutionException var17) {
@@ -176,16 +177,8 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                                     .build();
                             request = request.toBuilder().setConf(jobConfig).build();
 
-                            // todo: process results from pegasus and write to ctx
-                            broadcastProcessor.broadcast(request, new IrResultProcessor(new ResultParser() {
-                                @Override
-                                public List<Object> parseFrom(PegasusClient.JobResponse response) {
-                                    return Collections.singletonList(response.getData());
-                                }
-                            }));
-
-                            ResponseMessage.Builder builder = ResponseMessage.build(msg).code(ResponseStatusCode.SUCCESS);
-                            ctx.writeAndFlush(builder.create());
+                            ResultParser resultParser = GremlinResultAnalyzer.analyze((Traversal) o);
+                            broadcastProcessor.broadcast(request, new GremlinResultProcessor(ctx, resultParser));
                         }
                     } catch (InvalidProtocolBufferException e) {
                         throw new RuntimeException(e);

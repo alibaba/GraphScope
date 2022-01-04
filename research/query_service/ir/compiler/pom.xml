@@ -84,7 +84,68 @@
     </dependencies>
 
     <build>
+        <extensions>
+            <extension>
+                <groupId>kr.motd.maven</groupId>
+                <artifactId>os-maven-plugin</artifactId>
+                <version>${os.maven.version}</version>
+            </extension>
+        </extensions>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-clean-plugin</artifactId>
+                <version>${maven.clean.version}</version>
+                <configuration>
+                    <filesets>
+                        <fileset>
+                            <directory>src/main/generated</directory>
+                            <followSymlinks>false</followSymlinks>
+                        </fileset>
+                    </filesets>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.xolstice.maven.plugins</groupId>
+                <artifactId>protobuf-maven-plugin</artifactId>
+                <version>${protobuf.maven.version}</version>
+                <configuration>
+                    <protocArtifact>com.google.protobuf:protoc:${protobuf.version}:exe:${os.detected.classifier}
+                    </protocArtifact>
+                    <pluginId>grpc-java</pluginId>
+                    <pluginArtifact>io.grpc:protoc-gen-grpc-java:${protoc.grpc.version}:exe:${os.detected.classifier}
+                    </pluginArtifact>
+                    <protoSourceRoot>${project.basedir}/../proto/</protoSourceRoot>
+                    <outputDirectory>src/main/generated/</outputDirectory>
+                    <clearOutputDirectory>false</clearOutputDirectory>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>compile</goal>
+                            <goal>compile-custom</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>${build.helper.version}</version>
+                <executions>
+                    <execution>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>src/main/generated/</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
@@ -134,7 +195,7 @@
                 <version>${maven.surefire.version}</version>
                 <configuration>
                     <argLine>
-                         -Djna.library.path=${project.basedir}/../target/release
+                        -Djna.library.path=${project.basedir}/../target/release
                     </argLine>
                 </configuration>
             </plugin>
@@ -156,7 +217,9 @@
                                 <argument>utf-8</argument>
                             </arguments>
                             <visitor>true</visitor>
-                            <outputDirectory>${project.build.directory}/generated-sources/antlr4/org/apache/tinkerpop/gremlin/language/grammar/</outputDirectory>
+                            <outputDirectory>
+                                ${project.build.directory}/generated-sources/antlr4/org/apache/tinkerpop/gremlin/language/grammar/
+                            </outputDirectory>
                         </configuration>
                     </execution>
                 </executions>
