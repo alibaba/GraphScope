@@ -15,6 +15,7 @@ package com.alibaba.graphscope.groot.store;
 
 import com.alibaba.graphscope.groot.coordinator.SnapshotInfo;
 import com.alibaba.graphscope.groot.meta.MetaService;
+import com.alibaba.graphscope.groot.metrics.AvgMetric;
 import com.alibaba.graphscope.groot.metrics.MetricsAgent;
 import com.alibaba.graphscope.groot.metrics.MetricsCollector;
 import com.alibaba.graphscope.groot.operation.StoreDataBatch;
@@ -50,6 +51,7 @@ public class WriterAgent implements MetricsAgent {
     public static final String STORE_QUEUE_BATCH_COUNT = "store.queue.batch.count";
     public static final String STORE_WRITE_PER_SECOND = "store.write.per.second";
     public static final String STORE_WRITE_TOTAL = "store.write.total";
+    public static final String BUFFER_WRITE_PER_SECOND_MS = "buffer.write.per.second.ms";
 
     private Configs configs;
     private int storeId;
@@ -77,6 +79,7 @@ public class WriterAgent implements MetricsAgent {
     private volatile long lastUpdatePollLatencyNano;
     private volatile long totalPollLatencyNano;
     private volatile long pollLatencyPerSecondMs;
+    private AvgMetric bufferWritePerSecondMetric;
 
     public WriterAgent(
             Configs configs,
@@ -161,7 +164,10 @@ public class WriterAgent implements MetricsAgent {
      */
     public boolean writeStore(StoreDataBatch storeDataBatch) throws InterruptedException {
         int queueId = storeDataBatch.getQueueId();
+        long beforeOfferTime = System.nanoTime();
         boolean suc = this.bufferQueue.offerQueue(queueId, storeDataBatch);
+        long afterOfferTime = System.nanoTime();
+        this.bufferWritePerSecondMetric.add(afterOfferTime - beforeOfferTime);
         return suc;
     }
 
@@ -283,6 +289,7 @@ public class WriterAgent implements MetricsAgent {
         this.lastUpdatePollLatencyNano = 0L;
         this.totalPollLatencyNano = 0L;
         this.pollLatencyPerSecondMs = 0L;
+        this.bufferWritePerSecondMetric = new AvgMetric();
     }
 
     private void updateMetrics() {
@@ -294,6 +301,7 @@ public class WriterAgent implements MetricsAgent {
         long pollLatencyNano = this.totalPollLatencyNano;
         this.pollLatencyPerSecondMs =
                 1000 * (pollLatencyNano - this.lastUpdatePollLatencyNano) / interval;
+        this.bufferWritePerSecondMetric.update(interval);
         this.lastUpdatePollLatencyNano = pollLatencyNano;
         this.lastUpdateWrite = write;
         this.lastUpdateTime = currentTime;
@@ -309,6 +317,9 @@ public class WriterAgent implements MetricsAgent {
                 put(POLL_LATENCY_MAX_MS, String.valueOf(maxPollLatencyMs));
                 put(STORE_WRITE_PER_SECOND, String.valueOf(writePerSecond));
                 put(STORE_WRITE_TOTAL, String.valueOf(totalWrite));
+                put(
+                        BUFFER_WRITE_PER_SECOND_MS,
+                        String.valueOf((int) (1000 * bufferWritePerSecondMetric.get())));
             }
         };
     }
@@ -321,7 +332,8 @@ public class WriterAgent implements MetricsAgent {
             POLL_LATENCY_MAX_MS,
             POLL_LATENCY_PER_SECOND_MS,
             STORE_WRITE_PER_SECOND,
-            STORE_WRITE_TOTAL
+            STORE_WRITE_TOTAL,
+            BUFFER_WRITE_PER_SECOND_MS
         };
     }
 }
