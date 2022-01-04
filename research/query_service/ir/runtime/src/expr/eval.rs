@@ -350,19 +350,6 @@ impl Evaluator {
         self.stack.borrow_mut().clear();
     }
 
-    /// Return the tag and property is there is a single tag in the expression.
-    pub fn extract_single_tag(&self) -> Option<(Option<NameOrId>, Option<PropKey>)> {
-        if self.suffix_tree.len() == 1 {
-            let opr = self.suffix_tree.get(0).unwrap();
-            match opr {
-                InnerOpr::Var { tag, prop_key } => Some((tag.clone(), prop_key.clone())),
-                _ => None,
-            }
-        } else {
-            None
-        }
-    }
-
     pub fn eval_bool<E: Element, C: Context<E>>(&self, context: Option<&C>) -> ExprEvalResult<bool> {
         Ok(self
             .eval(context)

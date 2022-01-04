@@ -18,6 +18,7 @@ use std::sync::Arc;
 
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
+use ir_common::generated::common as common_pb;
 use ir_common::NameOrId;
 use pegasus::api::function::{FnResult, MapFunction};
 
@@ -89,10 +90,18 @@ impl MapFuncGen for algebra_pb::Project {
             let expr = expr_alias
                 .expr
                 .ok_or(ParsePbError::from("expr eval is missing in project"))?;
-            let evaluator = Evaluator::try_from(expr)?;
-            let projector = if let Some(prop_key) = evaluator.extract_single_tag() {
-                Projector::GraphElementProjector(TagKey::new(prop_key.0, prop_key.1))
+            let projector = if expr.operators.len() == 1 {
+                if let Some(common_pb::ExprOpr { item: Some(common_pb::expr_opr::Item::Var(var)) }) =
+                    expr.operators.get(0)
+                {
+                    let tag_key = TagKey::try_from(var.clone())?;
+                    Projector::GraphElementProjector(tag_key)
+                } else {
+                    let evaluator = Evaluator::try_from(expr)?;
+                    Projector::ExprProjector(evaluator)
+                }
             } else {
+                let evaluator = Evaluator::try_from(expr)?;
                 Projector::ExprProjector(evaluator)
             };
             projected_columns.push((projector, alias));
