@@ -54,6 +54,7 @@ enum SimpleOpr {
     Dedup,
     GroupBy,
     Fold,
+    Sink,
 }
 
 fn simple_add_job_builder<M: Message>(
@@ -61,16 +62,37 @@ fn simple_add_job_builder<M: Message>(
 ) -> IrResult<()> {
     let bytes = ir_opr.encode_to_vec();
     match opr {
-        SimpleOpr::Source => builder.add_source(bytes),
-        SimpleOpr::Map => builder.map(bytes),
-        SimpleOpr::FilterMap => builder.filter_map(bytes),
-        SimpleOpr::Flatmap => builder.flat_map(bytes),
-        SimpleOpr::Filter => builder.filter(bytes),
-        SimpleOpr::SortBy => builder.sort_by(bytes),
-        SimpleOpr::Dedup => builder.dedup(bytes),
-        SimpleOpr::GroupBy => builder.group_by(pegasus_server::pb::AccumKind::Custom, bytes),
-        SimpleOpr::Fold => builder.fold_custom(pegasus_server::pb::AccumKind::Custom, bytes),
-    };
+        SimpleOpr::Source => {
+            builder.add_source(bytes);
+        }
+        SimpleOpr::Map => {
+            builder.map(bytes);
+        }
+        SimpleOpr::FilterMap => {
+            builder.filter_map(bytes);
+        }
+        SimpleOpr::Flatmap => {
+            builder.flat_map(bytes);
+        }
+        SimpleOpr::Filter => {
+            builder.filter(bytes);
+        }
+        SimpleOpr::SortBy => {
+            builder.sort_by(bytes);
+        }
+        SimpleOpr::Dedup => {
+            builder.dedup(bytes);
+        }
+        SimpleOpr::GroupBy => {
+            builder.group_by(pegasus_server::pb::AccumKind::Custom, bytes);
+        }
+        SimpleOpr::Fold => {
+            builder.fold_custom(pegasus_server::pb::AccumKind::Custom, bytes);
+        }
+        SimpleOpr::Sink => {
+            builder.sink(bytes);
+        }
+    }
     Ok(())
 }
 
@@ -340,6 +362,12 @@ impl AsPhysical for pb::GroupBy {
     }
 }
 
+impl AsPhysical for pb::Sink {
+    fn add_job_builder(&self, builder: &mut JobBuilder, _plan_meta: &mut PlanMeta) -> IrResult<()> {
+        simple_add_job_builder(builder, &pb::logical_plan::Operator::from(self.clone()), SimpleOpr::Sink)
+    }
+}
+
 impl AsPhysical for pb::logical_plan::Operator {
     fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         use pb::logical_plan::operator::Opr::*;
@@ -398,15 +426,12 @@ impl AsPhysical for LogicalPlan {
             }
 
             let curr_node = curr_node_opt.as_ref().unwrap();
-            // TODO: throw error if last op is not sink
-            if curr_node.borrow().children.is_empty() {
-                // curr_node is sink operator
-                break;
-            }
             curr_node.add_job_builder(builder, plan_meta)?;
             prev_node_opt = curr_node_opt.clone();
 
-            if curr_node.borrow().children.len() == 1 {
+            if curr_node.borrow().children.is_empty() {
+                break;
+            } else if curr_node.borrow().children.len() == 1 {
                 let next_node_id = curr_node.borrow().get_first_child().unwrap();
                 curr_node_opt = self.get_node(next_node_id);
             } else if curr_node.borrow().children.len() >= 2 {
@@ -469,10 +494,6 @@ impl AsPhysical for LogicalPlan {
                 }
             }
         }
-
-        let curr_node = curr_node_opt.as_ref().unwrap();
-        let bytes = curr_node.borrow().opr.clone().encode_to_vec();
-        builder.sink(bytes);
 
         Ok(())
     }
