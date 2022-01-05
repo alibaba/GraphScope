@@ -16,7 +16,6 @@
 
 package com.alibaba.graphscope.gremlin.antlr4;
 
-import com.alibaba.graphscope.gremlin.exception.UnsupportedEvalException;
 import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSBaseVisitor;
 import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSParser;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
@@ -36,17 +35,19 @@ public class TraversalSourceSpawnMethodVisitor extends GremlinGSBaseVisitor<Grap
 
     @Override
     public GraphTraversal visitTraversalSourceSpawnMethod_V(GremlinGSParser.TraversalSourceSpawnMethod_VContext ctx) {
-        if (ctx.getChildCount() != 3) {
-            throw new UnsupportedEvalException(ctx.getClass(), "supported pattern is [g.V()]");
+        if (ctx.genericLiteralList().getChildCount() > 0) {
+            return g.V(GenericLiteralVisitor.getGenericLiteralList(ctx.genericLiteralList()));
+        } else {
+            return g.V();
         }
-        return g.V();
     }
 
     @Override
     public GraphTraversal visitTraversalSourceSpawnMethod_E(GremlinGSParser.TraversalSourceSpawnMethod_EContext ctx) {
-        if (ctx.getChildCount() != 3) {
-            throw new UnsupportedEvalException(ctx.getClass(), "supported pattern is [g.E()]");
+        if (ctx.genericLiteralList().getChildCount() > 0) {
+            return g.E(GenericLiteralVisitor.getGenericLiteralList(ctx.genericLiteralList()));
+        } else {
+            return g.E();
         }
-        return g.E();
     }
 }

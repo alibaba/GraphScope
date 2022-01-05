@@ -68,17 +68,6 @@ public class NegativeEvalTest {
     }
 
     @Test
-    public void g_V_id_test() {
-        try {
-            scriptEngine.eval("g.V(1)", context);
-        } catch (InvalidGremlinScriptException e) {
-            // expected error
-            return;
-        }
-        Assert.fail();
-    }
-
-    @Test
     public void g_V_outX_test() {
         try {
             scriptEngine.eval("g.V().outX()", context);

@@ -72,11 +72,11 @@ traversalMethod
     ;
 
 traversalSourceSpawnMethod_V
-	: 'V' LPAREN RPAREN
+	: 'V' LPAREN genericLiteralList RPAREN
 	;
 
 traversalSourceSpawnMethod_E
-    : 'E' LPAREN RPAREN
+    : 'E' LPAREN genericLiteralList RPAREN
     ;
 
 traversalMethod_as
