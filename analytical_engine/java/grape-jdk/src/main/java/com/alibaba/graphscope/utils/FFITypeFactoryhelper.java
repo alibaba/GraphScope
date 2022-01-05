@@ -37,12 +37,14 @@ import com.alibaba.graphscope.parallel.message.LongMsg;
 import com.alibaba.graphscope.parallel.message.PrimitiveMessage;
 import com.alibaba.graphscope.stdcxx.StdString;
 import com.alibaba.graphscope.stdcxx.StdString.Factory;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.HashMap;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class FFITypeFactoryhelper {
     private static Logger logger = LoggerFactory.getLogger(FFITypeFactoryhelper.class.getName());
@@ -191,7 +193,8 @@ public class FFITypeFactoryhelper {
             return getVertexIntegerFactory().create();
         } else {
             throw new IllegalStateException(
-                    "Grape only support two kind of vertex, 32 bit and 64 bit, your are querying for: "
+                    "Grape only support two kind of vertex, 32 bit and 64 bit, your are querying"
+                            + " for: "
                             + vidClass.getName());
         }
     }

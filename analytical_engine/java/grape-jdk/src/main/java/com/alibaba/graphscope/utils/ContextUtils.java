@@ -21,6 +21,7 @@ import com.alibaba.graphscope.context.LabeledVertexDataContext;
 import com.alibaba.graphscope.context.LabeledVertexPropertyContext;
 import com.alibaba.graphscope.context.VertexDataContext;
 import com.alibaba.graphscope.context.VertexPropertyContext;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
