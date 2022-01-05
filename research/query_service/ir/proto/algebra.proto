@@ -336,6 +336,13 @@ message SegmentApply {
   Apply apply_subtask = 2;
 }
 
+message Sink {
+  // Define the tags of columns to sink
+  repeated common.NameOrId tags = 1;
+  // The flag of sinking current entry
+  bool sink_current = 2;
+}
+
 // A logical plan of graph relation algebra forms a DAG, where each node is an operator and the
 // edge indicates the execution flow.
 message LogicalPlan {
@@ -355,6 +362,7 @@ message LogicalPlan {
       Limit limit = 13;
       Auxilia auxilia = 14;
       As as = 15;
+      Sink sink = 16;
       // Saving the room for relational operators
       GetV vertex = 20;
       EdgeExpand edge = 21;

@@ -19,12 +19,9 @@
                   }
                 },
                 "alias": {
-                  "alias": {
-                    "item": {
-                      "Name": "keys_name"
-                    }
-                  },
-                  "is_query_given": false
+                  "item": {
+                    "Name": "keys_name"
+                  }
                 }
               }
             ],
@@ -33,12 +30,9 @@
                 "vars": [],
                 "aggregate": 3,
                 "alias": {
-                  "alias": {
-                    "item": {
-                      "Name": "values"
-                    }
-                  },
-                  "is_query_given": false
+                  "item": {
+                    "Name": "values"
+                  }
                 }
               }
             ]

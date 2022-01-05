@@ -591,6 +591,7 @@ enum Opr {
     As,
     OrderBy,
     Apply,
+    Sink,
 }
 
 /// Set the size range limitation for certain operators
@@ -1461,6 +1462,49 @@ mod as_opr {
     #[no_mangle]
     pub extern "C" fn destroy_as_operator(ptr: *const c_void) {
         destroy_ptr::<pb::As>(ptr)
+    }
+}
+
+mod sink {
+    use super::*;
+
+    /// To initialize an Sink operator
+    #[no_mangle]
+    pub extern "C" fn init_sink_operator(sink_current: bool) -> *const c_void {
+        let sink_opr = Box::new(pb::Sink { tags: vec![], sink_current });
+        Box::into_raw(sink_opr) as *const c_void
+    }
+
+    /// Add the tag of column to output to Sink
+    #[no_mangle]
+    pub extern "C" fn add_sink_column(ptr_sink: *const c_void, ffi_tag: FfiNameOrId) -> ResultCode {
+        let mut return_code = ResultCode::Success;
+        let tag_pb: FfiResult<Option<common_pb::NameOrId>> = ffi_tag.try_into();
+        if tag_pb.is_ok() {
+            if let Some(tag) = tag_pb.unwrap() {
+                let mut sink = unsafe { Box::from_raw(ptr_sink as *mut pb::Sink) };
+                sink.tags.push(tag);
+                std::mem::forget(sink);
+            }
+        } else {
+            return_code = tag_pb.err().unwrap();
+        }
+
+        return_code
+    }
+
+    /// Append an Sink operator to the logical plan
+    #[no_mangle]
+    pub extern "C" fn append_sink_operator(
+        ptr_plan: *const c_void, ptr_sink: *const c_void, parent: i32, id: *mut i32,
+    ) -> ResultCode {
+        let sink_opr = unsafe { Box::from_raw(ptr_sink as *mut pb::Sink) };
+        append_operator(ptr_plan, sink_opr.as_ref().clone().into(), vec![parent], id)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn destroy_sink_operator(ptr: *const c_void) {
+        destroy_ptr::<pb::Sink>(ptr)
     }
 }
 

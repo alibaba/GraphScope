@@ -55,10 +55,7 @@
                     }
                   ]
                 },
-                "alias": {
-                  "alias": null,
-                  "is_query_given": false
-                }
+                "alias": null
               }
             ],
             "is_append": true

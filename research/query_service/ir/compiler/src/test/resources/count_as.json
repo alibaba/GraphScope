@@ -10,12 +10,9 @@
                 "vars": [],
                 "aggregate": 3,
                 "alias": {
-                  "alias": {
-                    "item": {
-                      "Name": "a"
-                    }
-                  },
-                  "is_query_given": true
+                  "item": {
+                    "Name": "a"
+                  }
                 }
               }
             ]

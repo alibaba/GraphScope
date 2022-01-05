@@ -23,6 +23,7 @@ import com.alibaba.graphscope.common.exception.InterOpUnsupportedException;
 import com.alibaba.graphscope.common.intermediate.ArgAggFn;
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.intermediate.operator.*;
+import com.alibaba.graphscope.common.intermediate.process.SinkArg;
 import com.alibaba.graphscope.common.jna.IrCoreLibrary;
 import com.alibaba.graphscope.common.jna.type.*;
 import com.sun.jna.Pointer;
@@ -285,6 +286,30 @@ public class IrPlan implements Closeable {
                 });
                 return ptrDedup;
             }
+        },
+        SINK_OP {
+            @Override
+            public Pointer apply(InterOpBase baseOp) {
+                SinkOp sinkOp = (SinkOp) baseOp;
+                Optional<OpArg> argOpt = sinkOp.getSinkArg();
+                if (!argOpt.isPresent()) {
+                    throw new InterOpIllegalArgException(baseOp.getClass(), "sinkArg", "not present");
+                }
+                SinkArg sinkArg = (SinkArg) argOpt.get().getArg();
+                boolean isCurrent = sinkArg.isCurrent();
+                List<FfiNameOrId.ByValue> columns = sinkArg.getColumnNames();
+                if (!isCurrent && columns.isEmpty()) {
+                    throw new InterOpIllegalArgException(baseOp.getClass(), "selected columns", "is empty if not current");
+                }
+                Pointer ptrSink = irCoreLib.initSinkOperator(isCurrent);
+                columns.forEach(column -> {
+                    ResultCode resultCode = irCoreLib.addSinkColumn(ptrSink, column);
+                    if (resultCode != ResultCode.Success) {
+                        throw new InterOpIllegalArgException(baseOp.getClass(), "columns", "addSinkColumn returns " + resultCode.name());
+                    }
+                });
+                return ptrSink;
+            }
         }
     }
 
@@ -343,6 +368,9 @@ public class IrPlan implements Closeable {
         } else if (base instanceof DedupOp) {
             Pointer ptrDedup = TransformFactory.DEDUP_OP.apply(base);
             resultCode = irCoreLib.appendDedupOperator(ptrPlan, ptrDedup, oprIdx.getValue(), oprIdx);
+        } else if (base instanceof SinkOp) {
+            Pointer ptrSink = TransformFactory.SINK_OP.apply(base);
+            resultCode = irCoreLib.appendSinkOperator(ptrPlan, ptrSink, oprIdx.getValue(), oprIdx);
         } else {
             throw new InterOpUnsupportedException(base.getClass(), "unimplemented yet");
         }

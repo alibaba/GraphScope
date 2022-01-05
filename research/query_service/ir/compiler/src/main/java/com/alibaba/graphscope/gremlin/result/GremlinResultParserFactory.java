@@ -81,8 +81,10 @@ public enum GremlinResultParserFactory implements GremlinResultParser {
                 switch (entry.getInnerCase()) {
                     case ELEMENT:
                         data.put(alias, ParserUtils.parseElement(entry.getElement()));
+                        break;
                     case COLLECTION:
                         data.put(alias, ParserUtils.parseCollection(entry.getCollection()));
+                        break;
                     default:
                         throw new GremlinResultParserException(entry.getInnerCase() + " is invalid");
                 }
