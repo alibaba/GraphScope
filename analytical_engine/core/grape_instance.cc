@@ -284,6 +284,7 @@ bl::result<void> GrapeInstance::modifyVertices(const rpc::GSParams& params) {
   double start = grape::GetCurrentTime();
   BOOST_LEAF_AUTO(nodes_json, params.Get<std::string>(rpc::NODES));
   LOG(INFO) << "Get from rpc time: " << grape::GetCurrentTime() - start;
+  LOG(INFO) << "nodes json: " << nodes_json;
   double t2 = grape::GetCurrentTime();
   folly::dynamic nodes = folly::parseJson(nodes_json);
   LOG(INFO) << "parse Json time: " << grape::GetCurrentTime() - t2;
@@ -323,6 +324,7 @@ bl::result<void> GrapeInstance::modifyEdges(const rpc::GSParams& params) {
   double start = grape::GetCurrentTime();
   BOOST_LEAF_AUTO(edges_json, params.Get<std::string>(rpc::EDGES));
   LOG(INFO) << "Get from rpc time: " << grape::GetCurrentTime() - start;
+  LOG(INFO) << "edges json: " << edges_json;
   double t2 = grape::GetCurrentTime();
   folly::dynamic edges = folly::parseJson(edges_json);
   LOG(INFO) << "parse Json time: " << grape::GetCurrentTime() - t2;

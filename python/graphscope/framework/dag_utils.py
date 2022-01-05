@@ -317,7 +317,7 @@ def modify_edges(graph, modify_type, edges, attr={}, weight=None):
     return op
 
 
-def modify_vertices(graph, modify_type, vertices):
+def modify_vertices(graph, modify_type, vertices, attr={}):
     """Create modify vertices operation for nx graph.
 
     Args:
@@ -332,7 +332,8 @@ def modify_vertices(graph, modify_type, vertices):
     config = {}
     config[types_pb2.GRAPH_NAME] = utils.s_to_attr(graph.key)
     config[types_pb2.MODIFY_TYPE] = utils.modify_type_to_attr(modify_type)
-    config[types_pb2.NODES] = utils.list_str_to_attr(vertices)
+    config[types_pb2.NODES] = utils.s_to_attr(vertices)
+    config[types_pb2.PROPERTIES] = utils.s_to_attr(json.dumps(attr))
     op = Operation(
         graph.session_id,
         types_pb2.MODIFY_VERTICES,

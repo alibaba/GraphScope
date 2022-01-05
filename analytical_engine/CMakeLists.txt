@@ -240,7 +240,6 @@ if (ENABLE_JAVA_SDK)
         ${VINEYARD_LIBRARIES}
         ${JAVA_JVM_LIBRARY}
         ${JNI_LIBRARIES}
-        nlohmann_json::nlohmann_json
         )
 else()
     target_link_libraries(grape_engine PRIVATE gs_proto
@@ -249,7 +248,6 @@ else()
         ${CMAKE_DL_LIBS}
         ${Boost_LIBRARIES}
         ${VINEYARD_LIBRARIES}
-        nlohmann_json::nlohmann_json
         )
 endif()
 target_link_libraries(grape_engine PRIVATE OpenMP::OpenMP_CXX)
