@@ -57,7 +57,7 @@ public class IngestProcessor implements MetricsAgent {
     private AtomicLong ingestSnapshotId;
 
     private LogService logService;
-    private BatchSender batchSender;
+    private BatchSender2 batchSender;
     private volatile boolean started;
 
     // For metrics
@@ -76,7 +76,7 @@ public class IngestProcessor implements MetricsAgent {
     public IngestProcessor(
             Configs configs,
             LogService logService,
-            BatchSender batchSender,
+            BatchSender2 batchSender,
             int queueId,
             AtomicLong ingestSnapshotId,
             MetricsCollector metricsCollector) {

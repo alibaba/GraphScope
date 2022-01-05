@@ -22,6 +22,7 @@ option java_multiple_files = true;
 
 service StoreWrite {
   rpc writeStore(WriteStoreRequest) returns(WriteStoreResponse);
+  rpc writeStore2(WriteStoreRequest2) returns(WriteStoreResponse);
 }
 
 message WriteStoreRequest {
@@ -42,4 +43,8 @@ message StoreDataBatchPb {
 
 message WriteStoreResponse {
   bool success = 1;
+}
+
+message WriteStoreRequest2 {
+  repeated StoreDataBatchPb data_batches = 1;
 }

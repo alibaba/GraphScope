@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class StoreDataBatch {
     private String requestId;
@@ -29,6 +30,7 @@ public class StoreDataBatch {
     private long offset;
     // List [ partition -> OperationBatch ]
     private List<Map<Integer, OperationBatch>> dataBatch;
+    private int size;
 
     private StoreDataBatch(
             String requestId,
@@ -36,11 +38,22 @@ public class StoreDataBatch {
             long snapshotId,
             long offset,
             List<Map<Integer, OperationBatch>> dataBatch) {
+        this(requestId, queueId, snapshotId, offset, dataBatch, -1);
+    }
+
+    private StoreDataBatch(
+            String requestId,
+            int queueId,
+            long snapshotId,
+            long offset,
+            List<Map<Integer, OperationBatch>> dataBatch,
+            int size) {
         this.requestId = requestId;
         this.queueId = queueId;
         this.snapshotId = snapshotId;
         this.offset = offset;
         this.dataBatch = Collections.unmodifiableList(new ArrayList<>(dataBatch));
+        this.size = size;
     }
 
     public static StoreDataBatch parseProto(StoreDataBatchPb proto) {
@@ -79,6 +92,23 @@ public class StoreDataBatch {
         return dataBatch;
     }
 
+    public int getSize() {
+        if (this.size == -1) {
+            this.size =
+                    this.dataBatch.stream()
+                            .collect(
+                                    Collectors.summingInt(
+                                            partitionToBatch ->
+                                                    partitionToBatch.values().stream()
+                                                            .collect(
+                                                                    Collectors.summingInt(
+                                                                            batch ->
+                                                                                    batch
+                                                                                            .getOperationCount()))));
+        }
+        return this.size;
+    }
+
     public StoreDataBatchPb toProto() {
         StoreDataBatchPb.Builder builder = StoreDataBatchPb.newBuilder();
         builder.setRequestId(requestId)
@@ -104,10 +134,12 @@ public class StoreDataBatch {
         private long offset;
         private List<Map<Integer, OperationBatch>> dataBatch;
         private Map<Integer, OperationBatch.Builder> partitionBatchBuilder;
+        private int size;
 
         public Builder() {
             this.dataBatch = new ArrayList<>();
             this.partitionBatchBuilder = new HashMap<>();
+            this.size = 0;
         }
 
         public Builder requestId(String requestId) {
@@ -130,7 +162,7 @@ public class StoreDataBatch {
             return this;
         }
 
-        public Builder addBatch(Map<Integer, OperationBatch> batch) {
+        private Builder addBatch(Map<Integer, OperationBatch> batch) {
             this.dataBatch.add(batch);
             return this;
         }
@@ -151,6 +183,7 @@ public class StoreDataBatch {
                     partitionBatchBuilder.computeIfAbsent(
                             partitionId, k -> OperationBatch.newBuilder());
             builder.addOperationBlob(operationBlob);
+            this.size++;
             return this;
         }
 
@@ -160,7 +193,7 @@ public class StoreDataBatch {
                 partitionBatchBuilder.forEach((pid, builder) -> batch.put(pid, builder.build()));
                 addBatch(batch);
             }
-            return new StoreDataBatch(requestId, queueId, snapshotId, offset, dataBatch);
+            return new StoreDataBatch(requestId, queueId, snapshotId, offset, dataBatch, size);
         }
     }
 }

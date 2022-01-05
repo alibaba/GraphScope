@@ -21,6 +21,7 @@ import com.alibaba.maxgraph.common.RoleType;
 
 import io.grpc.ManagedChannel;
 
+import java.util.List;
 import java.util.function.Function;
 
 public class StoreWriteClients extends RoleClients<StoreWriteClient> implements StoreWriter {
@@ -36,5 +37,13 @@ public class StoreWriteClients extends RoleClients<StoreWriteClient> implements 
     public void write(
             int storeId, StoreDataBatch storeDataBatch, CompletionCallback<Integer> callback) {
         this.getClient(storeId).writeStore(storeDataBatch, callback);
+    }
+
+    @Override
+    public void write(
+            int storeId,
+            List<StoreDataBatch> storeDataBatches,
+            CompletionCallback<Integer> callback) {
+        this.getClient(storeId).writeStore2(storeDataBatches, callback);
     }
 }

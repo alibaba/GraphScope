@@ -104,8 +104,8 @@ public class IngestService implements NodeDiscovery.Listener {
         this.queueIds = this.metaService.getQueueIdsForIngestor(this.ingestorId);
         this.queueToProcessor = new HashMap<>(this.queueIds.size());
         for (int queueId : queueIds) {
-            BatchSender batchSender =
-                    new BatchSender(
+            BatchSender2 batchSender =
+                    new BatchSender2(
                             this.configs,
                             this.metaService,
                             this.storeWriter,
@@ -148,7 +148,7 @@ public class IngestService implements NodeDiscovery.Listener {
     public IngestProcessor makeIngestProcessor(
             Configs configs,
             LogService logService,
-            BatchSender batchSender,
+            BatchSender2 batchSender,
             int queueId,
             AtomicLong ingestSnapshotId,
             MetricsCollector metricsCollector) {

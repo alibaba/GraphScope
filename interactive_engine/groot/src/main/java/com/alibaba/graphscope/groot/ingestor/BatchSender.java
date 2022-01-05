@@ -334,20 +334,20 @@ public class BatchSender implements MetricsAgent {
                         SEND_WRITE_LATENCY_PER_SECOND_MS,
                         String.valueOf(
                                 sendWriteLatencyMetrics.stream()
-                                        .map(m -> (int) (1000 * m.get()))
+                                        .map(m -> (int) (1000 * m.getAvg()))
                                         .collect(Collectors.toList())));
                 put(
                         SEND_CALLBACK_LATENCY_PER_SECOND_MS,
                         String.valueOf(
                                 sendCallbackLatencyMetrics.stream()
-                                        .map(m -> (int) (1000 * m.get()))
+                                        .map(m -> (int) (1000 * m.getAvg()))
                                         .collect(Collectors.toList())));
                 put(
                         SEND_BATCH_WAIT_PER_SECOND_MS,
-                        String.valueOf(1000 * sendBatchWaitLatencyMetric.get()));
+                        String.valueOf((int) (1000 * sendBatchWaitLatencyMetric.getAvg())));
                 put(
                         SEND_BATCH_COUNT_PER_SECOND,
-                        String.valueOf((int) (1000000000 * sendBatchCountPerSecond.get())));
+                        String.valueOf((int) (1000000000 * sendBatchCountPerSecond.getAvg())));
             }
         };
     }

@@ -36,7 +36,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 
 /**
  * WriterAgent is running on the GraphNode, it will cache data from IngestNode and write to the
@@ -172,6 +171,19 @@ public class WriterAgent implements MetricsAgent {
         return suc;
     }
 
+    public boolean writeStore2(List<StoreDataBatch> storeDataBatches) throws InterruptedException {
+        long beforeOfferTime = System.nanoTime();
+        for (StoreDataBatch storeDataBatch : storeDataBatches) {
+            int queueId = storeDataBatch.getQueueId();
+            if (!this.bufferQueue.offerQueue(queueId, storeDataBatch)) {
+                return false;
+            }
+        }
+        long afterOfferTime = System.nanoTime();
+        this.bufferWritePerSecondMetric.add(afterOfferTime - beforeOfferTime);
+        return true;
+    }
+
     private void processBatches() {
         while (!shouldStop) {
             try {
@@ -188,17 +200,7 @@ public class WriterAgent implements MetricsAgent {
                 long batchSnapshotId = storeDataBatch.getSnapshotId();
                 logger.debug("polled one batch [" + batchSnapshotId + "]");
                 boolean hasDdl = writeEngineWithRetry(storeDataBatch);
-                int writeCount =
-                        storeDataBatch.getDataBatch().stream()
-                                .collect(
-                                        Collectors.summingInt(
-                                                partitionToBatch ->
-                                                        partitionToBatch.values().stream()
-                                                                .collect(
-                                                                        Collectors.summingInt(
-                                                                                batch ->
-                                                                                        batch
-                                                                                                .getOperationCount()))));
+                int writeCount = storeDataBatch.getSize();
                 this.totalWrite += writeCount;
                 if (this.consumeSnapshotId < batchSnapshotId) {
                     SnapshotInfo availSnapshotInfo = this.availSnapshotInfoRef.get();
@@ -320,7 +322,7 @@ public class WriterAgent implements MetricsAgent {
                 put(STORE_WRITE_TOTAL, String.valueOf(totalWrite));
                 put(
                         BUFFER_WRITE_PER_SECOND_MS,
-                        String.valueOf((int) (1000 * bufferWritePerSecondMetric.get())));
+                        String.valueOf((int) (1000 * bufferWritePerSecondMetric.getAvg())));
             }
         };
     }
