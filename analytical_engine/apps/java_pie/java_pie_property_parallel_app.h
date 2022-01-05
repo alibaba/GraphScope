@@ -65,7 +65,6 @@ class JavaPIEPropertyParallelApp
                            reinterpret_cast<jlong>(communicator));
 
       jclass app_class = env->GetObjectClass(app_object);
-      CHECK_NOTNULL(app_class);
 
       const char* descriptor =
           "(Lcom/alibaba/graphscope/fragment/ArrowFragment;"
@@ -101,7 +100,6 @@ class JavaPIEPropertyParallelApp
       jobject app_object = ctx.app_object();
 
       jclass app_class = env->GetObjectClass(app_object);
-      CHECK_NOTNULL(app_class);
 
       const char* descriptor =
           "(Lcom/alibaba/graphscope/fragment/ArrowFragment;"

@@ -19,6 +19,8 @@ package com.alibaba.graphscope.parallel;
 import static com.alibaba.graphscope.utils.CppClassName.GRAPE_LONG_VERTEX;
 import static com.alibaba.graphscope.utils.CppClassName.GRAPE_MESSAGE_IN_BUFFER;
 import static com.alibaba.graphscope.utils.CppHeaderName.ARROW_PROJECTED_FRAGMENT_H;
+import static com.alibaba.graphscope.utils.CppHeaderName.CORE_JAVA_JAVA_MESSAGES_H;
+import static com.alibaba.graphscope.utils.CppHeaderName.CORE_JAVA_TYPE_ALIAS_H;
 import static com.alibaba.graphscope.utils.CppHeaderName.GRAPE_FRAGMENT_IMMUTABLE_EDGECUT_FRAGMENT_H;
 import static com.alibaba.graphscope.utils.CppHeaderName.GRAPE_PARALLEL_MESSAGE_IN_BUFFER_H;
 import static com.alibaba.graphscope.utils.JNILibraryName.JNI_LIBRARY_NAME;
@@ -29,22 +31,62 @@ import com.alibaba.fastffi.FFIFactory;
 import com.alibaba.fastffi.FFIGen;
 import com.alibaba.fastffi.FFINameAlias;
 import com.alibaba.fastffi.FFIPointer;
+import com.alibaba.fastffi.FFISkip;
 import com.alibaba.fastffi.FFITypeAlias;
 import com.alibaba.graphscope.ds.Vertex;
+import com.alibaba.graphscope.fragment.ArrowFragment;
+import com.alibaba.graphscope.fragment.ArrowProjectedFragment;
+import com.alibaba.graphscope.fragment.IFragment;
+import com.alibaba.graphscope.fragment.ImmutableEdgecutFragment;
+import com.alibaba.graphscope.fragment.adaptor.ArrowProjectedAdaptor;
+import com.alibaba.graphscope.fragment.adaptor.ImmutableEdgecutFragmentAdaptor;
 
 @FFIGen(library = JNI_LIBRARY_NAME)
 @FFITypeAlias(GRAPE_MESSAGE_IN_BUFFER)
 @CXXHead({
     GRAPE_PARALLEL_MESSAGE_IN_BUFFER_H,
     GRAPE_FRAGMENT_IMMUTABLE_EDGECUT_FRAGMENT_H,
-    ARROW_PROJECTED_FRAGMENT_H
+    ARROW_PROJECTED_FRAGMENT_H,
+    CORE_JAVA_TYPE_ALIAS_H,
+    CORE_JAVA_JAVA_MESSAGES_H
 })
 public interface MessageInBuffer extends FFIPointer {
-    @FFINameAlias("GetMessage")
-    <FRAG_T, MSG_T> boolean getMessage(
+    default <FRAG_T extends IFragment, MSG_T, @FFISkip VDATA_T> boolean getMessage(
             @CXXReference FRAG_T frag,
             @CXXReference @FFITypeAlias(GRAPE_LONG_VERTEX) Vertex<Long> vertex,
-            @CXXReference MSG_T msg);
+            @CXXReference MSG_T msg,
+            @FFISkip VDATA_T unused) {
+        if (frag.fragmentType().equals(ArrowProjectedAdaptor.fragmentType)) {
+            getMessageArrowProjected(
+                    (ArrowProjectedFragment) frag.getFFIPointer(), vertex, msg, unused);
+        } else if (frag.fragmentType().equals(ImmutableEdgecutFragmentAdaptor.fragmentType)) {
+            getMessageImmutable(
+                    (ImmutableEdgecutFragment) frag.getFFIPointer(), vertex, msg, unused);
+        }
+        return false;
+    }
+
+    @FFINameAlias("GetMessage")
+    <FRAG_T extends ArrowFragment, MSG_T, @FFISkip VDATA_T> boolean getMessage(
+            @CXXReference FRAG_T frag,
+            @CXXReference @FFITypeAlias(GRAPE_LONG_VERTEX) Vertex<Long> vertex,
+            @CXXReference MSG_T msg,
+            @FFISkip VDATA_T unused);
+
+    @FFINameAlias("GetMessage")
+    <FRAG_T extends ArrowProjectedFragment, MSG_T, @FFISkip VDATA_T>
+            boolean getMessageArrowProjected(
+                    @CXXReference FRAG_T frag,
+                    @CXXReference @FFITypeAlias(GRAPE_LONG_VERTEX) Vertex<Long> vertex,
+                    @CXXReference MSG_T msg,
+                    @FFISkip VDATA_T unused);
+
+    @FFINameAlias("GetMessage")
+    <FRAG_T extends ImmutableEdgecutFragment, MSG_T, @FFISkip VDATA_T> boolean getMessageImmutable(
+            @CXXReference FRAG_T frag,
+            @CXXReference @FFITypeAlias(GRAPE_LONG_VERTEX) Vertex<Long> vertex,
+            @CXXReference MSG_T msg,
+            @FFISkip VDATA_T unused);
 
     @FFIFactory
     interface Factory {

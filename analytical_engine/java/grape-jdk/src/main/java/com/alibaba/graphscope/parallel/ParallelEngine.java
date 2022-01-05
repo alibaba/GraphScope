@@ -27,8 +27,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public interface ParallelEngine {
+    Logger logger = LoggerFactory.getLogger(ParallelEngine.class);
+
     int chunkSize = 1024;
 
     /**
@@ -72,7 +76,7 @@ public interface ParallelEngine {
                                     }
                                 } catch (Exception e) {
                                     e.printStackTrace();
-                                    System.err.println(
+                                    logger.error(
                                             "origin end "
                                                     + originEnd
                                                     + " verteics "
@@ -259,7 +263,7 @@ public interface ParallelEngine {
                                     }
                                 } catch (Exception e) {
                                     e.printStackTrace();
-                                    System.err.println(
+                                    logger.error(
                                             "origin end "
                                                     + originEnd
                                                     + " verteics "
@@ -330,7 +334,7 @@ public interface ParallelEngine {
                                     }
                                 } catch (Exception e) {
                                     e.printStackTrace();
-                                    System.err.println(
+                                    logger.error(
                                             "origin end "
                                                     + originEnd
                                                     + " verteics "

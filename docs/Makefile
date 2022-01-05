@@ -2,6 +2,8 @@
 #
 MKFILE_PATH 			:= $(abspath $(lastword $(MAKEFILE_LIST)))
 WORKING_DIR 			:= $(dir $(MKFILE_PATH))
+M2_REPO					:= $(shell mvn help:evaluate -Dexpression=settings.localRepository -q -DforceStdout)
+
 
 # You can set these variables from the command line, and also
 # from the environment for the first two.
@@ -37,7 +39,11 @@ clean:
 	@echo "Building Java doc to $(BUILDDIR)/${TAG}/$@/reference/gae_java"
 
 	cd ${WORKING_DIR}/../analytical_engine/java/grape-jdk && \
-	mvn javadoc::javadoc -Djavadoc.output.directory=${WORKING_DIR}/$(BUILDDIR)/${TAG}/$@/reference -Djavadoc.output.destDir=gae_java --quiet
+	if [ -d "${M2_REPO}/com/alibaba/fastffi" ]; then \
+		mvn javadoc::javadoc -Djavadoc.output.directory=${WORKING_DIR}/$(BUILDDIR)/${TAG}/$@/reference -Djavadoc.output.destDir=gae_java --quiet; \
+	else \
+		echo "Can not generate javadoc without fastffi"; \
+	fi
 
 doxygen:
 	@mkdir -p _build

@@ -19,6 +19,7 @@ package com.alibaba.graphscope.annotation;
 import com.alibaba.fastffi.CXXTemplate;
 import com.squareup.javapoet.AnnotationSpec;
 
+/** Providing useful utility functions for build AnnotationSpec builder. */
 public class Utils {
     public static void addIntCXXTemplate(AnnotationSpec.Builder builder) {
         builder.addMember(

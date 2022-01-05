@@ -16,8 +16,9 @@
 
 package com.alibaba.graphscope.app;
 
+import com.alibaba.graphscope.context.ParallelContextBase;
+import com.alibaba.graphscope.fragment.IFragment;
 import com.alibaba.graphscope.fragment.ImmutableEdgecutFragment;
-import com.alibaba.graphscope.fragment.SimpleFragment;
 import com.alibaba.graphscope.parallel.ParallelMessageManager;
 
 /**
@@ -25,9 +26,9 @@ import com.alibaba.graphscope.parallel.ParallelMessageManager;
  * ImmutableEdgecutFragment} and {@link ParallelMessageManager}
  *
  * <p>To define your sequential graph algorithms, you should implement this interface and provide
- * the corresponding implementation for {@link ParallelAppBase#PEval(SimpleFragment,
- * ParallelContextBase, ParallelMessageManager)} and {@link ParallelAppBase#IncEval(SimpleFragment,
- * ParallelContextBase, ParallelMessageManager)}
+ * the corresponding implementation for {@link ParallelAppBase#PEval(IFragment, ParallelContextBase,
+ * ParallelMessageManager)} and {@link ParallelAppBase#IncEval(IFragment, ParallelContextBase,
+ * ParallelMessageManager)}
  *
  * <p>User-defined app shall work along with user-defined context, which should be an implementation
  * of {@link ParallelContextBase}.
@@ -82,12 +83,12 @@ public interface ParallelAppBase<
      * @param context context. User defined context which manages data during the whole
      *     computations.
      * @param messageManager The message manger which manages messages between fragments.
-     * @see SimpleFragment
+     * @see IFragment
      * @see ParallelContextBase
      * @see ParallelMessageManager
      */
     void PEval(
-            SimpleFragment<OID_T, VID_T, VDATA_T, EDATA_T> graph,
+            IFragment<OID_T, VID_T, VDATA_T, EDATA_T> graph,
             ParallelContextBase<OID_T, VID_T, VDATA_T, EDATA_T> context,
             ParallelMessageManager messageManager);
     /**
@@ -97,12 +98,12 @@ public interface ParallelAppBase<
      * @param context context. User defined context which manages data during the whole
      *     computations.
      * @param messageManager The message manger which manages messages between fragments.
-     * @see SimpleFragment
+     * @see IFragment
      * @see ParallelContextBase
      * @see ParallelMessageManager
      */
     void IncEval(
-            SimpleFragment<OID_T, VID_T, VDATA_T, EDATA_T> graph,
+            IFragment<OID_T, VID_T, VDATA_T, EDATA_T> graph,
             ParallelContextBase<OID_T, VID_T, VDATA_T, EDATA_T> context,
             ParallelMessageManager messageManager);
 }

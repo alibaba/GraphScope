@@ -25,8 +25,12 @@ import com.alibaba.graphscope.fragment.ArrowFragment;
 import com.alibaba.graphscope.parallel.PropertyMessageManager;
 import org.junit.Assert;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AppContextGetterTest {
+    private static Logger logger = LoggerFactory.getLogger(AppContextGetterTest.class.getName());
+
     @Test
     public void test() {
         Class<? extends DefaultPropertyAppBase> appClass = SamplePropertyApp.class;
@@ -35,7 +39,7 @@ public class AppContextGetterTest {
         // Class<?> ctxClass = AppContextGetter.getPropertyDefaultContext(appClass);
         try {
             // Assert.assertTrue(ctxClass.newInstance() instanceof PropertyDefaultContextBase);
-            System.out.println(AppContextGetter.getContextName(sampleApp));
+            logger.info(AppContextGetter.getContextName(sampleApp));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -52,7 +56,7 @@ public class AppContextGetterTest {
     @Test
     public void test2() {
         Vertex<Long> prev = FFITypeFactoryhelper.newVertexLong();
-        System.out.println("Vertex<Long>: " + FFITypeFactoryhelper.getForeignName(prev));
+        logger.info("Vertex<Long>: " + FFITypeFactoryhelper.getForeignName(prev));
     }
 
     public static class SampleContext extends LabeledVertexDataContext<Long, Double>
@@ -60,7 +64,7 @@ public class AppContextGetterTest {
         public SampleContext() {}
 
         @Override
-        public void init(
+        public void Init(
                 ArrowFragment<Long> fragment,
                 PropertyMessageManager messageManager,
                 JSONObject jsonObject) {}

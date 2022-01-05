@@ -46,12 +46,11 @@ public abstract class LabeledVertexPropertyContext<OID_T> {
         String contextName =
                 FFITypeFactoryhelper.makeParameterize(
                         CppClassName.LABELED_VERTEX_PROPERTY_CONTEXT, fragmentTemplateStr);
-        System.out.println("context name: " + contextName);
+        logger.info("context name: " + contextName);
         factory = FFITypeFactory.getFactory(FFILabeledVertexPropertyContext.class, contextName);
         ffiLabeledVertexPropertyContext = factory.create(fragment);
         ffiContextAddress = ffiLabeledVertexPropertyContext.getAddress();
-        System.out.println(
-                "create vertex property Context: " + contextName + "@" + ffiContextAddress);
+        logger.info("create vertex property Context: " + contextName + "@" + ffiContextAddress);
     }
 
     public long addColumn(int labelId, String str, ContextDataType contextDataType) {

@@ -54,8 +54,8 @@ def demo_jar():
 
 
 @pytest.fixture(scope="module")
-def property_graph_sssp_vertex_data_class():
-    return "com.alibaba.graphscope.example.property.sssp.ParallelPropertySSSPVertexData"
+def projected_graph_sssp_class():
+    return "com.alibaba.graphscope.example.sssp.SSSP"
 
 
 @pytest.fixture(scope="module")
@@ -68,10 +68,10 @@ def non_exist_java_class():
     reason="Java SDK is disabled, skip this test.",
 )
 def test_load_non_existing_jar(
-    not_exist_jar, property_graph_sssp_vertex_data_class, non_exist_java_class
+    not_exist_jar, projected_graph_sssp_class, non_exist_java_class
 ):
     with pytest.raises(FileNotFoundError):
-        sssp = JavaApp(not_exist_jar, property_graph_sssp_vertex_data_class)
+        sssp = JavaApp(not_exist_jar, projected_graph_sssp_class)
     with pytest.raises(FileNotFoundError):
         sssp = JavaApp(not_exist_jar, non_exist_java_class)
 
@@ -80,11 +80,9 @@ def test_load_non_existing_jar(
     os.environ.get("RUN_JAVA_TESTS") != "ON",
     reason="Java SDK is disabled, skip this test.",
 )
-def test_load_not_a_jar(
-    not_jar_file, property_graph_sssp_vertex_data_class, non_exist_java_class
-):
+def test_load_not_a_jar(not_jar_file, projected_graph_sssp_class, non_exist_java_class):
     with pytest.raises(KeyError):
-        sssp = JavaApp(not_jar_file, property_graph_sssp_vertex_data_class)
+        sssp = JavaApp(not_jar_file, projected_graph_sssp_class)
     with pytest.raises(KeyError):
         sssp = JavaApp(not_jar_file, non_exist_java_class)
 
@@ -93,11 +91,9 @@ def test_load_not_a_jar(
     os.environ.get("RUN_JAVA_TESTS") != "ON",
     reason="Java SDK is disabled, skip this test.",
 )
-def test_load_gar_file(
-    a_gar_file, property_graph_sssp_vertex_data_class, non_exist_java_class
-):
+def test_load_gar_file(a_gar_file, projected_graph_sssp_class, non_exist_java_class):
     with pytest.raises(KeyError):
-        sssp = JavaApp(a_gar_file, property_graph_sssp_vertex_data_class)
+        sssp = JavaApp(a_gar_file, projected_graph_sssp_class)
     with pytest.raises(KeyError):
         sssp = JavaApp(a_gar_file, non_exist_java_class)
 
@@ -106,11 +102,9 @@ def test_load_gar_file(
     os.environ.get("RUN_JAVA_TESTS") != "ON",
     reason="Java SDK is disabled, skip this test.",
 )
-def test_load_empty_jar(
-    empty_jar, property_graph_sssp_vertex_data_class, non_exist_java_class
-):
+def test_load_empty_jar(empty_jar, projected_graph_sssp_class, non_exist_java_class):
     with pytest.raises(KeyError):
-        sssp = JavaApp(empty_jar, property_graph_sssp_vertex_data_class)
+        sssp = JavaApp(empty_jar, projected_graph_sssp_class)
     with pytest.raises(KeyError):
         sssp = JavaApp(empty_jar, non_exist_java_class)
 
@@ -119,8 +113,8 @@ def test_load_empty_jar(
     os.environ.get("RUN_JAVA_TESTS") != "ON",
     reason="Java SDK is disabled, skip this test.",
 )
-def test_load_correct_jar(property_graph_sssp_vertex_data_class, demo_jar):
-    sssp = JavaApp(demo_jar, property_graph_sssp_vertex_data_class)
+def test_load_correct_jar(projected_graph_sssp_class, demo_jar):
+    sssp = JavaApp(demo_jar, projected_graph_sssp_class)
 
 
 @pytest.mark.skipif(
@@ -130,10 +124,8 @@ def test_load_correct_jar(property_graph_sssp_vertex_data_class, demo_jar):
 def test_sssp_property_vertex_data(
     demo_jar,
     graphscope_session,
-    p2p_property_graph,
-    property_graph_sssp_vertex_data_class,
+    p2p_project_directed_graph,
+    projected_graph_sssp_class,
 ):
-    sssp = JavaApp(
-        full_jar_path=demo_jar, java_app_class=property_graph_sssp_vertex_data_class
-    )
-    sssp(p2p_property_graph, src=6)
+    sssp = JavaApp(full_jar_path=demo_jar, java_app_class=projected_graph_sssp_class)
+    sssp(p2p_project_directed_graph, src=6, threadNum=1)
