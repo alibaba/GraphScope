@@ -15,7 +15,6 @@ package com.alibaba.maxgraph.tests.ingestor;
 
 import static org.mockito.Mockito.*;
 
-import com.alibaba.graphscope.groot.ingestor.BatchSender;
 import com.alibaba.graphscope.groot.ingestor.BatchSender2;
 import com.alibaba.graphscope.groot.ingestor.IngestCallback;
 import com.alibaba.graphscope.groot.ingestor.IngestProcessor;

@@ -15,6 +15,7 @@ package com.alibaba.graphscope.groot.ingestor;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.operation.StoreDataBatch;
+
 import java.util.List;
 
 public interface StoreWriter {

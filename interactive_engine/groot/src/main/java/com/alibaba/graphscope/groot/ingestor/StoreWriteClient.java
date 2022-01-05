@@ -26,9 +26,10 @@ import com.alibaba.maxgraph.proto.groot.WriteStoreResponse;
 import io.grpc.ManagedChannel;
 import io.grpc.stub.StreamObserver;
 
-import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.List;
 
 /** ingestor -> store */
 public class StoreWriteClient extends RpcClient {
