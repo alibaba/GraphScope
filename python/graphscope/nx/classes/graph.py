@@ -19,18 +19,18 @@
 # information.
 #
 
-import types
 import copy
-import json
-from timeit import default_timer as timer
-import pickle
 import cProfile
+import json
+import pickle
+import types
+from timeit import default_timer as timer
 
 from networkx import freeze
+from networkx.classes import reportviews
 from networkx.classes.coreviews import AdjacencyView
 from networkx.classes.graph import Graph as RefGraph
 from networkx.classes.graphviews import generic_graph_view
-from networkx.classes import reportviews
 from networkx.classes.reportviews import DegreeView
 from networkx.classes.reportviews import EdgeView
 from networkx.classes.reportviews import NodeView
@@ -47,10 +47,10 @@ from graphscope.nx.classes.dicts import AdjDict
 from graphscope.nx.classes.dicts import NodeDict
 from graphscope.nx.convert import to_networkx_graph
 from graphscope.nx.utils.compat import patch_docstring
+from graphscope.nx.utils.misc import clear_cache
 from graphscope.nx.utils.misc import empty_graph_in_engine
 from graphscope.nx.utils.misc import json_encoder
 from graphscope.nx.utils.misc import parse_ret_as_dict
-from graphscope.nx.utils.misc import clear_cache
 from graphscope.proto import graph_def_pb2
 from graphscope.proto import types_pb2
 
@@ -625,7 +625,9 @@ class Graph(_GraphBase):
         """
         self._convert_arrow_to_dynamic()
         self._schema.add_nx_vertex_properties(attr)
-        self._add_node_cache.append((node_for_adding, attr) if attr else node_for_adding)
+        self._add_node_cache.append(
+            (node_for_adding, attr) if attr else node_for_adding
+        )
         if len(self._add_node_cache) == self.node_cache_capacity:
             self._clear_adding_cache()
 
@@ -923,8 +925,11 @@ class Graph(_GraphBase):
         >>> G[1][2].update({0: 5})
         >>> G.edges[1, 2].update({0: 5})
         """
+        self._convert_arrow_to_dynamic()
         self._schema.add_nx_edge_properties(attr)
-        self._add_edge_cache.append((u_of_edge, v_of_edge, attr) if attr else (u_of_edge, v_of_edge))
+        self._add_edge_cache.append(
+            (u_of_edge, v_of_edge, attr) if attr else (u_of_edge, v_of_edge)
+        )
         if len(self._add_edge_cache) == self.edge_cache_capacity:
             self._clear_adding_cache()
 
@@ -967,7 +972,6 @@ class Graph(_GraphBase):
         >>> G.add_edges_from([(1, 2), (2, 3)], weight=3)
         >>> G.add_edges_from([(3, 4), (1, 4)], label="WN2898")
         """
-        self._convert_arrow_to_dynamic()
         for e in ebunch_to_add:
             ne = len(e)
             data = dict(attr)
@@ -1013,18 +1017,15 @@ class Graph(_GraphBase):
         >>> G = nx.Graph()  # or DiGraph
         >>> G.add_weighted_edges_from([(0, 1, 3.0), (1, 2, 7.5)])
         """
-        self._convert_arrow_to_dynamic()
-        for e in ebunch_to_add:
-            ne = len(e)
-            data = dict(attr)
-            u, v, d = e
+        for u, v, d in ebunch_to_add:
             # make attributes specified in ebunch take precedence to attr
-            data[weight] = d
-            self.add_edge(u, v, **data)
+            attr[weight] = d
+            self.add_edge(u, v, **attr)
 
     @clear_cache
     @patch_docstring(RefGraph.remove_edge)
     def remove_edge(self, u, v):
+        self._convert_arrow_to_dynamic()
         self._remove_edge_cache.append((u, v))
         if len(self._remove_edge_cache) == self.edge_cache_capacity:
             self._clear_removing_cache()
@@ -1056,7 +1057,6 @@ class Graph(_GraphBase):
         >>> ebunch = [(1, 2), (2, 3)]
         >>> G.remove_edges_from(ebunch)
         """
-        self._convert_arrow_to_dynamic()
         for e in ebunch:
             ne = len(e)
             if ne < 2:
@@ -1095,7 +1095,7 @@ class Graph(_GraphBase):
         self._convert_arrow_to_dynamic()
 
         edge = json.dumps(((u, v, data),), default=json_encoder)
-        # self._schema.add_nx_edge_properties(data)
+        self._schema.add_nx_edge_properties(data)
         self._op = dag_utils.modify_edges(self, types_pb2.NX_UPDATE_EDGES, edge)
         self._op.eval()
 

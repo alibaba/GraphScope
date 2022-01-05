@@ -301,10 +301,7 @@ def modify_edges(graph, modify_type, edges, attr={}, weight=None):
     config = {}
     config[types_pb2.GRAPH_NAME] = utils.s_to_attr(graph.key)
     config[types_pb2.MODIFY_TYPE] = utils.modify_type_to_attr(modify_type)
-    if isinstance(edges, str):
-        config[types_pb2.EDGES] = utils.s_to_attr(edges)
-    else:
-        config[types_pb2.EDGES] = utils.bytes_to_attr(edges)
+    config[types_pb2.EDGES] = utils.s_to_attr(edges)
     config[types_pb2.PROPERTIES] = utils.s_to_attr(json.dumps(attr))
     if weight:
         config[types_pb2.EDGE_KEY] = utils.s_to_attr(weight)
