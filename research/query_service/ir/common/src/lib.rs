@@ -378,44 +378,32 @@ impl From<Vec<String>> for pb::IndexPredicate {
     }
 }
 
-impl TryFrom<common_pb::Value> for Option<Object> {
+impl TryFrom<common_pb::Value> for Object {
     type Error = ParsePbError;
 
     fn try_from(value: common_pb::Value) -> Result<Self, Self::Error> {
         use common_pb::value::Item::*;
         if let Some(item) = value.item.as_ref() {
             return match item {
-                Boolean(b) => Ok(Some((*b).into())),
-                I32(i) => Ok(Some((*i).into())),
-                I64(i) => Ok(Some((*i).into())),
-                F64(f) => Ok(Some((*f).into())),
-                Str(s) => Ok(Some(s.clone().into())),
-                Blob(blob) => Ok(Some(blob.clone().into())),
-                None(_) => Ok(Option::None),
-                I32Array(v) => Ok(Some(v.item.clone().into())),
-                I64Array(v) => Ok(Some(v.item.clone().into())),
-                F64Array(v) => Ok(Some(v.item.clone().into())),
-                StrArray(v) => Ok(Some(v.item.clone().into())),
+                Boolean(b) => Ok((*b).into()),
+                I32(i) => Ok((*i).into()),
+                I64(i) => Ok((*i).into()),
+                F64(f) => Ok((*f).into()),
+                Str(s) => Ok(s.clone().into()),
+                Blob(blob) => Ok(blob.clone().into()),
+                None(_) => Ok(Object::None),
+                I32Array(v) => Ok(v.item.clone().into()),
+                I64Array(v) => Ok(v.item.clone().into()),
+                F64Array(v) => Ok(v.item.clone().into()),
+                StrArray(v) => Ok(v.item.clone().into()),
                 PairArray(pairs) => {
                     let mut vec = Vec::<(Object, Object)>::with_capacity(pairs.item.len());
-                    let mut is_ok = true;
                     for item in pairs.item.clone().into_iter() {
-                        let (key_obj_opt, val_obj_opt) = (
-                            <Option<Object>>::try_from(item.key.unwrap())?,
-                            <Option<Object>>::try_from(item.val.unwrap())?,
-                        );
-                        if key_obj_opt.is_none() || val_obj_opt.is_none() {
-                            is_ok = false;
-                            break;
-                        } else {
-                            vec.push((key_obj_opt.unwrap(), val_obj_opt.unwrap()));
-                        }
+                        let (key_obj, val_obj) =
+                            (Object::try_from(item.key.unwrap())?, Object::try_from(item.val.unwrap())?);
+                        vec.push((key_obj, val_obj));
                     }
-                    if is_ok {
-                        Ok(Some(vec.into()))
-                    } else {
-                        Err(ParsePbError::from("empty value provided"))
-                    }
+                    Ok(vec.into())
                 }
             };
         }

@@ -103,18 +103,21 @@ impl Encode for Object {
                 }
                 Ok(())
             }
-            Object::DynOwned(dyn_type) => {
-                writer.write_u8(5)?;
-                let bytes = (**dyn_type).to_bytes()?;
-                bytes.write_to(writer)?;
-                Ok(())
-            }
             Object::Blob(b) => {
                 writer.write_u8(4)?;
                 let len = b.len();
                 writer.write_u64(len as u64)?;
                 writer.write_all(&(**b))?;
                 Ok(())
+            }
+            Object::DynOwned(dyn_type) => {
+                writer.write_u8(5)?;
+                let bytes = (**dyn_type).to_bytes()?;
+                bytes.write_to(writer)?;
+                Ok(())
+            }
+            Object::None => {
+                writer.write_u8(6)
             }
         }
     }
@@ -162,6 +165,9 @@ impl Decode for Object {
                 let t: TypeId = unsafe { std::mem::transmute(number) };
                 let obj = de_dyn_obj(&t, &mut bytes_reader)?;
                 Ok(Object::DynOwned(obj))
+            }
+            6 => {
+                Ok(Object::None)
             }
             _ => Err(io::Error::new(io::ErrorKind::Other, "not supported")),
         }

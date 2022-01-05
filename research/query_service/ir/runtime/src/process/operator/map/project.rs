@@ -16,6 +16,7 @@
 use std::convert::{TryFrom, TryInto};
 use std::sync::Arc;
 
+use dyn_type::Object;
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::common as common_pb;
@@ -47,9 +48,11 @@ fn exec_projector(input: &Record, projector: &Projector) -> FnResult<Arc<Entry>>
                 .eval::<RecordElement, Record>(Some(&input))
                 .map_err(|e| FnExecError::from(e))?;
             Arc::new(
-                projected_result
-                    .map_or(ObjectElement::None, |prop| ObjectElement::Prop(prop))
-                    .into(),
+                match projected_result {
+                    Object::None => ObjectElement::None,
+                    _ => ObjectElement::Prop(projected_result),
+                }
+                .into(),
             )
         }
         Projector::GraphElementProjector(tag_key) => tag_key.get_entry(input)?,
@@ -542,16 +545,16 @@ mod tests {
         let expected_result = vec![
             Object::KV(
                 vec![
-                    (object!(vec![object!(""), object!("age")]), object!(29)),
-                    (object!(vec![object!(""), object!("name")]), object!("marko")),
+                    (object!(vec![Object::None, object!("age")]), object!(29)),
+                    (object!(vec![Object::None, object!("name")]), object!("marko")),
                 ]
                 .into_iter()
                 .collect(),
             ),
             Object::KV(
                 vec![
-                    (object!(vec![object!(""), object!("age")]), object!(27)),
-                    (object!(vec![object!(""), object!("name")]), object!("vadas")),
+                    (object!(vec![Object::None, object!("age")]), object!(27)),
+                    (object!(vec![Object::None, object!("name")]), object!("vadas")),
                 ]
                 .into_iter()
                 .collect(),

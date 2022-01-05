@@ -36,6 +36,7 @@ pub enum RawType {
     Blob(usize),
     Vector,
     KV,
+    None,
     Unknown,
 }
 
@@ -412,6 +413,7 @@ pub enum Object {
     KV(BTreeMap<Object, Object>),
     Blob(Box<[u8]>),
     DynOwned(Box<dyn DynType>),
+    None,
 }
 
 impl ToString for Object {
@@ -424,6 +426,7 @@ impl ToString for Object {
             KV(kv) => format!("{:?}", kv),
             Blob(b) => format!("{:?}", b),
             DynOwned(_) => "unknown dynamic type".to_string(),
+            None => "None".to_string(),
         }
     }
 }
@@ -438,6 +441,7 @@ pub enum BorrowObject<'a> {
     Blob(&'a [u8]),
     /// To borrow from `Object::DynOwned`, and it can be cloned back to `Object::DynOwned`
     DynRef(&'a Box<dyn DynType>),
+    None,
 }
 
 impl<'a> ToString for BorrowObject<'a> {
@@ -450,6 +454,7 @@ impl<'a> ToString for BorrowObject<'a> {
             KV(kv) => format!("{:?}", kv),
             Blob(b) => format!("{:?}", b),
             DynRef(_) => "unknown dynamic type".to_string(),
+            None => "None".to_string(),
         }
     }
 }
@@ -486,6 +491,7 @@ impl Object {
             Object::KV(_) => RawType::KV,
             Object::Blob(b) => RawType::Blob(b.len()),
             Object::DynOwned(_) => RawType::Unknown,
+            Object::None => RawType::None,
         }
     }
 
@@ -497,6 +503,7 @@ impl Object {
             Object::KV(kv) => BorrowObject::KV(kv),
             Object::Blob(v) => BorrowObject::Blob(v.as_ref()),
             Object::DynOwned(v) => BorrowObject::DynRef(v),
+            Object::None => BorrowObject::None,
         }
     }
 
@@ -690,6 +697,7 @@ impl<'a> BorrowObject<'a> {
             BorrowObject::KV(_) => RawType::KV,
             BorrowObject::Blob(b) => RawType::Blob(b.len()),
             BorrowObject::DynRef(_) => RawType::Unknown,
+            BorrowObject::None => RawType::None,
         }
     }
 
@@ -835,6 +843,7 @@ impl<'a> BorrowObject<'a> {
             BorrowObject::KV(kv) => Some(Object::KV(kv.clone())),
             BorrowObject::Blob(b) => Some(Object::Blob(b.to_vec().into_boxed_slice())),
             BorrowObject::DynRef(d) => Some(Object::DynOwned((*d).clone())),
+            BorrowObject::None => Some(Object::None),
         }
     }
 
@@ -895,6 +904,13 @@ macro_rules! eq {
             $crate::$ty::KV(kv1) => {
                 if let $crate::$ty::KV(kv2) = $other {
                     kv1 == kv2
+                } else {
+                    false
+                }
+            }
+            $crate::$ty::None => {
+                if let $crate::$ty::None = $other {
+                    true
                 } else {
                     false
                 }
@@ -1040,6 +1056,9 @@ macro_rules! hash {
                     pair.hash($state);
                 }
             }
+            $crate::$ty::None => {
+                "".hash($state);
+            }
             _ => unimplemented!(),
         }
     };
@@ -1054,6 +1073,24 @@ impl Hash for Object {
 impl<'a> Hash for BorrowObject<'a> {
     fn hash<H: Hasher>(&self, state: &mut H) {
         hash!(self, state, BorrowObject)
+    }
+}
+
+impl From<Option<Object>> for Object {
+    fn from(obj_opt: Option<Object>) -> Self {
+        match obj_opt {
+            Some(obj) => obj,
+            None => Object::None,
+        }
+    }
+}
+
+impl<'a> From<Option<BorrowObject<'a>>> for BorrowObject<'a> {
+    fn from(obj_opt: Option<BorrowObject<'a>>) -> Self {
+        match obj_opt {
+            Some(obj) => obj,
+            None => BorrowObject::None,
+        }
     }
 }
 

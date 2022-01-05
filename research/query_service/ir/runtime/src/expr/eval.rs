@@ -30,7 +30,7 @@ use crate::graph::property::{Details, PropKey};
 
 /// The trait to define evaluating an expression
 pub trait Evaluate {
-    fn eval<E: Element, C: Context<E>>(&self, context: Option<&C>) -> ExprEvalResult<Option<Object>>;
+    fn eval<E: Element, C: Context<E>>(&self, context: Option<&C>) -> ExprEvalResult<Object>;
 }
 
 #[derive(Debug)]
@@ -49,7 +49,7 @@ unsafe impl Sync for Evaluator {}
 pub(crate) enum InnerOpr {
     Logical(pb::Logical),
     Arith(pb::Arithmetic),
-    Const(Option<Object>),
+    Const(Object),
     Var { tag: Option<NameOrId>, prop_key: Option<PropKey> },
     Vars(Vec<InnerOpr>),
     VarMap(Vec<InnerOpr>),
@@ -163,9 +163,7 @@ fn apply_logical<'a>(
 impl Evaluator {
     /// Evaluate simple expression that contains less than three operators
     /// without using the stack.
-    fn eval_without_stack<E: Element, C: Context<E>>(
-        &self, context: Option<&C>,
-    ) -> ExprEvalResult<Option<Object>> {
+    fn eval_without_stack<E: Element, C: Context<E>>(&self, context: Option<&C>) -> ExprEvalResult<Object> {
         assert!(self.suffix_tree.len() <= 3);
         let _first = self.suffix_tree.get(0);
         let _second = self.suffix_tree.get(1);
@@ -178,17 +176,7 @@ impl Evaluator {
             let first = _first.unwrap();
             let second = _second.unwrap();
             if let InnerOpr::Logical(logical) = second {
-                Ok(Some(apply_logical(
-                    logical,
-                    first
-                        .eval(context)?
-                        .ok_or(ExprEvalError::NoneOperand(OperatorDesc(format!(
-                            "evaluate {:?} as `None`",
-                            first
-                        ))))?
-                        .as_borrow(),
-                    None,
-                )?))
+                Ok(apply_logical(logical, first.eval(context)?.as_borrow(), None)?)
             } else {
                 if !second.is_operand() {
                     Err(ExprEvalError::MissingOperands(second.into()))
@@ -202,33 +190,14 @@ impl Evaluator {
             let third = _third.unwrap();
 
             if let InnerOpr::Logical(logical) = third {
-                let a = first
-                    .eval(context)?
-                    .ok_or(ExprEvalError::NoneOperand(OperatorDesc(format!(
-                        "evaluate {:?} as `None`",
-                        first
-                    ))))?;
+                let a = first.eval(context)?;
                 let b = second.eval(context)?;
-                if let Some(obj) = b {
-                    Ok(Some(apply_logical(logical, a.as_borrow(), Some(obj.as_borrow()))?))
-                } else {
-                    Ok(Some(apply_logical(logical, a.as_borrow(), None)?))
-                }
+                Ok(apply_logical(logical, a.as_borrow(), Some(b.as_borrow()))?)
             } else if let InnerOpr::Arith(arith) = third {
-                let a = first
-                    .eval(context)?
-                    .ok_or(ExprEvalError::NoneOperand(OperatorDesc(format!(
-                        "evaluate {:?} as `None`",
-                        first
-                    ))))?;
-                let b = second
-                    .eval(context)?
-                    .ok_or(ExprEvalError::NoneOperand(OperatorDesc(format!(
-                        "evaluate {:?} as `None`",
-                        second
-                    ))))?;
+                let a = first.eval(context)?;
+                let b = second.eval(context)?;
 
-                Ok(Some(apply_arith(arith, a.as_borrow(), b.as_borrow())?))
+                Ok(apply_arith(arith, a.as_borrow(), b.as_borrow())?)
             } else {
                 Err(ExprEvalError::OtherErr("invalid expression".to_string()))
             }
@@ -293,7 +262,7 @@ impl Evaluate for Evaluator {
     ///
     /// assert!(eval.eval_bool::<_, _>(Some(&ctxt)).unwrap())
     /// ```
-    fn eval<E: Element, C: Context<E>>(&self, context: Option<&C>) -> ExprEvalResult<Option<Object>> {
+    fn eval<E: Element, C: Context<E>>(&self, context: Option<&C>) -> ExprEvalResult<Object> {
         let mut stack = self.stack.borrow_mut();
         if self.suffix_tree.len() <= 3 {
             return self.eval_without_stack(context);
@@ -301,12 +270,7 @@ impl Evaluate for Evaluator {
         stack.clear();
         for opr in &self.suffix_tree {
             if opr.is_operand() {
-                stack.push(
-                    opr.eval(context)?
-                        .ok_or(ExprEvalError::NoneOperand(OperatorDesc(
-                            "evaluate as `None` object".to_string(),
-                        )))?,
-                );
+                stack.push(opr.eval(context)?);
             } else {
                 if let Some(first) = stack.pop() {
                     let first_borrow = first.as_borrow();
@@ -337,7 +301,7 @@ impl Evaluate for Evaluator {
         }
 
         if stack.len() == 1 {
-            Ok(stack.pop())
+            Ok(stack.pop().unwrap())
         } else {
             Err("invalid expression".into())
         }
@@ -351,12 +315,11 @@ impl Evaluator {
     }
 
     pub fn eval_bool<E: Element, C: Context<E>>(&self, context: Option<&C>) -> ExprEvalResult<bool> {
-        Ok(self
-            .eval(context)
-            .unwrap_or(Some(false.into()))
-            .unwrap_or(false.into())
-            .as_bool()
-            .unwrap_or(false))
+        let object = self.eval(context)?;
+        Ok(match &object {
+            Object::None => false,
+            _ => object.as_bool()?,
+        })
     }
 }
 
@@ -411,25 +374,26 @@ impl TryFrom<pb::ExprOpr> for InnerOpr {
 }
 
 impl Evaluate for InnerOpr {
-    fn eval<E: Element, C: Context<E>>(&self, context: Option<&C>) -> ExprEvalResult<Option<Object>> {
+    fn eval<E: Element, C: Context<E>>(&self, context: Option<&C>) -> ExprEvalResult<Object> {
         match self {
-            Self::Const(c_opt) => Ok(if let Some(opt) = c_opt { Some(opt.clone()) } else { None }),
+            Self::Const(obj) => Ok(obj.clone()),
             Self::Var { tag, prop_key } => {
                 if let Some(ctxt) = context {
-                    let mut result = Ok(None);
+                    let mut result = Object::None;
                     if let Some(element) = ctxt.get(tag.as_ref()) {
                         if let Some(property) = prop_key {
                             if let Some(details) = element.details() {
-                                result = Ok(details
+                                result = details
                                     .get(property)
-                                    .and_then(|obj| obj.try_to_owned()));
+                                    .and_then(|obj| obj.try_to_owned())
+                                    .into();
                             }
                         } else {
-                            result = Ok(element.as_borrow_object().try_to_owned())
+                            result = element.as_borrow_object().try_to_owned().into()
                         }
                     }
 
-                    result
+                    Ok(result)
                 } else {
                     Err(ExprEvalError::MissingContext(self.into()))
                 }
@@ -437,22 +401,17 @@ impl Evaluate for InnerOpr {
             Self::Vars(vars) => {
                 let mut vec = Vec::with_capacity(vars.len());
                 for var in vars {
-                    if let Some(obj) = var.eval(context)? {
-                        vec.push(obj);
-                    } else {
-                        // Input a empty string-object
-                        vec.push(object!(""));
-                    }
+                    vec.push(var.eval(context)?);
                 }
-                Ok(Some(Object::Vector(vec)))
+                Ok(Object::Vector(vec))
             }
             Self::VarMap(vars) => {
                 let mut map = BTreeMap::new();
                 for var in vars {
                     let obj_key = match var {
                         InnerOpr::Var { tag, prop_key } => {
-                            let mut obj1 = object!("");
-                            let mut obj2 = object!("");
+                            let mut obj1 = Object::None;
+                            let mut obj2 = Object::None;
                             if let Some(t) = tag {
                                 match t {
                                     NameOrId::Str(str) => obj1 = object!(str.as_str()),
@@ -475,13 +434,9 @@ impl Evaluate for InnerOpr {
                             "evaluating `valueMap` on non-vars is not supported.".to_string(),
                         )),
                     }?;
-                    if let Some(obj) = var.eval(context)? {
-                        map.insert(obj_key, obj);
-                    } else {
-                        map.insert(obj_key, object!(""));
-                    }
+                    map.insert(obj_key, var.eval(context)?);
                 }
-                Ok(Some(Object::KV(map)))
+                Ok(Object::KV(map))
             }
             _ => Err(ExprEvalError::UnmatchedOperator(self.into())),
         }
@@ -608,12 +563,7 @@ mod tests {
 
         for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
             let eval = Evaluator::try_from(str_to_suffix_expr_pb(case.to_string()).unwrap()).unwrap();
-            assert_eq!(
-                eval.eval::<(), NoneContext>(None)
-                    .unwrap()
-                    .unwrap(),
-                expected
-            );
+            assert_eq!(eval.eval::<(), NoneContext>(None).unwrap(), expected);
         }
     }
 
@@ -653,12 +603,7 @@ mod tests {
 
         for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
             let eval = Evaluator::try_from(str_to_suffix_expr_pb(case.to_string()).unwrap()).unwrap();
-            assert_eq!(
-                eval.eval::<(), NoneContext>(None)
-                    .unwrap()
-                    .unwrap(),
-                expected
-            );
+            assert_eq!(eval.eval::<(), NoneContext>(None).unwrap(), expected);
         }
     }
 
@@ -701,12 +646,7 @@ mod tests {
 
         for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
             let eval = Evaluator::try_from(str_to_suffix_expr_pb(case.to_string()).unwrap()).unwrap();
-            assert_eq!(
-                eval.eval::<(), NoneContext>(None)
-                    .unwrap()
-                    .unwrap(),
-                expected
-            );
+            assert_eq!(eval.eval::<(), NoneContext>(None).unwrap(), expected);
         }
     }
 
@@ -755,12 +695,7 @@ mod tests {
 
         for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
             let eval = Evaluator::try_from(str_to_suffix_expr_pb(case.to_string()).unwrap()).unwrap();
-            assert_eq!(
-                eval.eval::<_, Vertices>(Some(&ctxt))
-                    .unwrap()
-                    .unwrap(),
-                expected
-            );
+            assert_eq!(eval.eval::<_, Vertices>(Some(&ctxt)).unwrap(), expected);
         }
     }
 
