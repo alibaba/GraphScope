@@ -21,11 +21,13 @@ import static com.alibaba.graphscope.utils.CppClassName.GRAPE_COMMUNICATOR;
 import com.alibaba.fastffi.FFITypeFactory;
 import com.alibaba.graphscope.parallel.message.DoubleMsg;
 import com.alibaba.graphscope.parallel.message.LongMsg;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Objects;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /** Communicator providing useful distributed aggregation methods such as min/min/sum. */
 public abstract class Communicator {

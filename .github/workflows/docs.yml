@@ -50,10 +50,8 @@ jobs:
     - name: Java Format and Lint Check
       run: |
         wget https://github.com/google/google-java-format/releases/download/v1.13.0/google-java-format-1.13.0-all-deps.jar
-        # Enable check for analytical engine after pr(https://github.com/alibaba/GraphScope/pulls) merged
 
-        # files_to_format=$(git ls-files ./**/*.java)
-        files_to_format=$(git ls-files research/**/*.java interactive_engine/**/*.java)
+        files_to_format=$(git ls-files *.java)
 
         # run formatter in-place
         java -jar ${GITHUB_WORKSPACE}/google-java-format-1.13.0-all-deps.jar --aosp --skip-javadoc-formatting -i $files_to_format
@@ -70,7 +68,7 @@ jobs:
             echo "|"
             echo "| Run: "
             echo "|"
-            echo '|    java -jar google-java-format-1.13.0-all-deps.jar --aosp --skip-javadoc-formatting -i $(git ls-files research/**/*.java interactive_engine/**/*.java)'
+            echo '|    java -jar google-java-format-1.13.0-all-deps.jar --aosp --skip-javadoc-formatting -i $(git ls-files *.java)'
             echo "|"
             echo "| to fix this error."
             echo "|"

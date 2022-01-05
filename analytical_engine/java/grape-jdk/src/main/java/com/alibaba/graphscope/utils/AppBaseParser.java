@@ -24,11 +24,13 @@ import com.alibaba.graphscope.context.LabeledVertexDataContext;
 import com.alibaba.graphscope.context.LabeledVertexPropertyContext;
 import com.alibaba.graphscope.context.VertexDataContext;
 import com.alibaba.graphscope.context.VertexPropertyContext;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class AppBaseParser {
     private static Logger logger = LoggerFactory.getLogger(AppBaseParser.class.getName());
