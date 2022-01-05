@@ -194,7 +194,7 @@ public class FFITypeFactoryhelper {
         } else {
             throw new IllegalStateException(
                     "Grape only support two kind of vertex, 32 bit and 64 bit, your are querying"
-                        + " for: "
+                            + " for: "
                             + vidClass.getName());
         }
     }
