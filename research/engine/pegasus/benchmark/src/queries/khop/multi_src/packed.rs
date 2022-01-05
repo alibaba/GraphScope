@@ -5,14 +5,14 @@ use std::time::Instant;
 use pegasus::api::{Binary, Fold, Iteration, Map, Sink};
 use pegasus::result::ResultStream;
 use pegasus::tag::tools::map::TidyTagMap;
-use pegasus::JobConf;
+use pegasus::{Data, JobConf};
 
 use super::super::one_hop;
-use crate::graph::Graph;
+use crate::graph::{Graph, VertexId};
 
 pub fn packed_multi_src_k_hop<G: Graph>(
-    src: Vec<u64>, k_hop: u32, use_loop: bool, conf: JobConf, graph: Arc<G>,
-) -> ResultStream<(u64, u64, u64)> {
+    src: Vec<G::VID>, k_hop: u32, use_loop: bool, conf: JobConf, graph: Arc<G>,
+) -> ResultStream<(u64, u64, u64)> where G::VID : Data {
     let start = Instant::now();
     let src = src
         .into_iter()
@@ -29,14 +29,14 @@ pub fn packed_multi_src_k_hop<G: Graph>(
                 right = right.iterate(k_hop, |start| {
                     let graph = pegasus::resource::get_resource::<Arc<G>>().expect("Graph not found");
                     start
-                        .repartition(|(_, id)| Ok(*id))
+                        .repartition(|(_, id)| Ok(id.get_id()))
                         .flat_map(move |(src, id)| Ok(one_hop(id, &*graph).map(move |id| (src, id))))
                 })?
             } else {
                 for _i in 0..k_hop {
                     let graph = pegasus::resource::get_resource::<Arc<G>>().expect("Graph not found");
                     right = right
-                        .repartition(|(_, id)| Ok(*id))
+                        .repartition(|(_, id)| Ok(id.get_id()))
                         .flat_map(move |(src, id)| Ok(one_hop(id, &*graph).map(move |id| (src, id))))?;
                 }
             };
@@ -69,9 +69,9 @@ pub fn packed_multi_src_k_hop<G: Graph>(
                             let id_map = map.get_mut_or_insert(&dataset.tag);
                             for (k, v) in dataset.drain() {
                                 if let Some(right) = id_map.remove(&k) {
-                                    session.give((v, right, start.elapsed().as_micros() as u64))?;
+                                    session.give((v.get_id(), right, start.elapsed().as_micros() as u64))?;
                                 } else {
-                                    id_map.insert(k, v);
+                                    id_map.insert(k, v.get_id());
                                 }
                             }
                             Ok(())

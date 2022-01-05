@@ -1,9 +1,10 @@
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::fmt::Debug;
+use std::hash::Hash;
 use std::sync::Arc;
 
-use pegasus_graph::graph::Direction;
+use pegasus_graph::graph::{Direction, Vid};
 
 mod storage;
 
@@ -70,8 +71,8 @@ impl PartialOrd for Value {
     }
 }
 
-pub struct Vertex {
-    pub id: u64,
+pub struct Vertex<VID> {
+    pub id: VID,
     pub label: String,
     pub properties: HashMap<String, Value>,
 }
@@ -92,11 +93,11 @@ impl OrderBy {
     }
 }
 
-impl Vertex {
-    pub fn cmp_by(&self, other: &Vertex, opts: &[OrderBy]) -> Ordering {
+impl<VID: VertexId> Vertex<VID> {
+    pub fn cmp_by(&self, other: &Vertex<VID>, opts: &[OrderBy]) -> Ordering {
         for p in opts {
             let mut ord = match p.by {
-                ILP::ID => self.id.cmp(&other.id),
+                ILP::ID => self.id.get_id().cmp(&other.id.get_id()),
                 ILP::Label => self.label.cmp(&other.label),
                 ILP::Property(ref v) => {
                     let name = v.as_str();
@@ -129,31 +130,53 @@ impl Vertex {
 }
 
 pub trait FilterById: Send + 'static {
-    fn exec(&self, ids: &[u64]) -> Box<dyn Iterator<Item = u64> + Send + 'static>;
+    type ID;
+    fn exec(&self, ids: &[Self::ID]) -> Box<dyn Iterator<Item = Self::ID> + Send + 'static>;
 }
 
+pub trait VertexId : Clone + Eq + PartialEq + Hash + Send + 'static {
+    fn get_id(&self) -> u64;
+}
+
+impl VertexId for u64 {
+    fn get_id(&self) -> u64 {
+        *self
+    }
+}
+
+impl VertexId for Vid {
+    fn get_id(&self) -> u64 {
+        self.vertex_id()
+    }
+}
+
+
 pub trait Graph: Send + Sync + 'static {
+    type VID: VertexId;
+
     fn get_neighbor_ids(
-        &self, src: u64, label: &str, dir: Direction,
-    ) -> Box<dyn Iterator<Item = u64> + Send + 'static>;
+        &self, src: Self::VID, edge_label: &str, dir: Direction,
+    ) -> Box<dyn Iterator<Item = Self::VID> + Send + 'static>;
 
-    fn get_vertices_by_ids(&self, ids: &[u64]) -> Vec<Vertex>;
+    fn get_vertices_by_ids(&self, ids: &[Self::VID]) -> Vec<Vertex<Self::VID>>;
 
-    fn prepare_filter_vertex<P: Debug>(&self, p: P) -> Box<dyn FilterById>;
+    fn prepare_filter_vertex<F: ToString>(&self, filter: F) -> Box<dyn FilterById<ID=Self::VID>>;
 }
 
 impl<G: ?Sized + Graph> Graph for Arc<G> {
+    type VID = G::VID;
+
     fn get_neighbor_ids(
-        &self, src: u64, label: &str, dir: Direction,
-    ) -> Box<dyn Iterator<Item = u64> + Send + 'static> {
+        &self, src: Self::VID, label: &str, dir: Direction,
+    ) -> Box<dyn Iterator<Item = Self::VID> + Send + 'static> {
         (**self).get_neighbor_ids(src, label, dir)
     }
 
-    fn get_vertices_by_ids(&self, ids: &[u64]) -> Vec<Vertex> {
+    fn get_vertices_by_ids(&self, ids: &[Self::VID]) -> Vec<Vertex<Self::VID>> {
         (**self).get_vertices_by_ids(ids)
     }
 
-    fn prepare_filter_vertex<P: Debug>(&self, p: P) -> Box<dyn FilterById> {
+    fn prepare_filter_vertex<F: ToString>(&self, p: F) -> Box<dyn FilterById<ID=Self::VID>> {
         (**self).prepare_filter_vertex(p)
     }
 }
@@ -162,31 +185,35 @@ impl<G: ?Sized + Graph> Graph for Arc<G> {
 pub struct TodoGraph;
 
 impl Graph for TodoGraph {
+    type VID = u64;
+
     fn get_neighbor_ids(
         &self, _: u64, _label: &str, _dir: Direction,
     ) -> Box<dyn Iterator<Item = u64> + Send + 'static> {
         todo!()
     }
 
-    fn get_vertices_by_ids(&self, _ids: &[u64]) -> Vec<Vertex> {
+    fn get_vertices_by_ids(&self, _ids: &[u64]) -> Vec<Vertex<Self::VID>> {
         todo!()
     }
 
-    fn prepare_filter_vertex<P: Debug>(&self, _p: P) -> Box<dyn FilterById> {
+    fn prepare_filter_vertex<P: ToString>(&self, _p: P) -> Box<dyn FilterById<ID = u64>> {
         todo!()
     }
 }
 
-impl Graph for pegasus_graph::IdTopoGraph {
+impl Graph for pegasus_graph::MemIdTopoGraph {
+    type VID = u64;
+
     fn get_neighbor_ids(&self, src: u64, _label: &str, _dir: Direction) -> Box<dyn Iterator<Item=u64> + Send + 'static> {
         Box::new(self.get_neighbors(src))
     }
 
-    fn get_vertices_by_ids(&self, _ids: &[u64]) -> Vec<Vertex> {
+    fn get_vertices_by_ids(&self, _ids: &[u64]) -> Vec<Vertex<Self::VID>> {
         unimplemented!()
     }
 
-    fn prepare_filter_vertex<P: Debug>(&self, _p: P) -> Box<dyn FilterById> {
+    fn prepare_filter_vertex<P: ToString>(&self, _p: P) -> Box<dyn FilterById<ID = u64>> {
         unimplemented!()
     }
 }
