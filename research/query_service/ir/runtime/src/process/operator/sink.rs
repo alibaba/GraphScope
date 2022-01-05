@@ -31,6 +31,7 @@ pub trait SinkFunctionGen {
     fn gen_sink(self) -> FnGenResult<Box<dyn MapFunction<Record, result_pb::Results>>>;
 }
 
+#[derive(Debug)]
 pub struct RecordSinkEncoder {
     /// the given column tags to sink;
     sink_keys: Vec<NameOrId>,
@@ -66,7 +67,9 @@ impl SinkFunctionGen for algebra_pb::Sink {
             .map(|tag| tag.try_into())
             .collect::<Result<_, _>>()?;
         let is_output_head = self.sink_current;
-        Ok(Box::new(RecordSinkEncoder { sink_keys, is_output_head }))
+        let record_sinker = RecordSinkEncoder { sink_keys, is_output_head };
+        debug!("Runtime sink operator: {:?}", record_sinker);
+        Ok(Box::new(record_sinker))
     }
 }
 
