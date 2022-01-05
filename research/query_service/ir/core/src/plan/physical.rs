@@ -384,6 +384,7 @@ impl AsPhysical for pb::logical_plan::Operator {
                 As(as_opr) => as_opr.add_job_builder(builder, plan_meta),
                 Dedup(dedup) => dedup.add_job_builder(builder, plan_meta),
                 GroupBy(groupby) => groupby.add_job_builder(builder, plan_meta),
+                Sink(sink) => sink.add_job_builder(builder, plan_meta),
                 _ => Err(IrError::Unsupported(format!("the operator {:?}", self))),
             }
         } else {
