@@ -15,7 +15,7 @@ package com.alibaba.maxgraph.tests.ingestor;
 
 import static org.mockito.Mockito.*;
 
-import com.alibaba.graphscope.groot.ingestor.BatchSender2;
+import com.alibaba.graphscope.groot.ingestor.BatchSender;
 import com.alibaba.graphscope.groot.ingestor.IngestCallback;
 import com.alibaba.graphscope.groot.ingestor.IngestProcessor;
 import com.alibaba.graphscope.groot.metrics.MetricsCollector;
@@ -57,7 +57,7 @@ public class IngestProcessorTest {
                 .thenReturn(readLogEntry2)
                 .thenReturn(null);
 
-        BatchSender2 mockBatchSender = mock(BatchSender2.class);
+        BatchSender mockBatchSender = mock(BatchSender.class);
         AtomicLong ingestSnapshotId = new AtomicLong(10L);
 
         IngestProcessor ingestProcessor =

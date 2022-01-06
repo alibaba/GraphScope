@@ -19,8 +19,6 @@ import com.alibaba.graphscope.groot.operation.StoreDataBatch;
 import java.util.List;
 
 public interface StoreWriter {
-    void write(int storeId, StoreDataBatch storeDataBatch, CompletionCallback<Integer> callback);
-
     void write(
             int storeId, List<StoreDataBatch> storeDataBatch, CompletionCallback<Integer> callback);
 }

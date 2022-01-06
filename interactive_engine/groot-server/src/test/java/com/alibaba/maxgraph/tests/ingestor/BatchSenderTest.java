@@ -99,7 +99,7 @@ public class BatchSenderTest {
                             return null;
                         })
                 .when(mockStoreWriter)
-                .write(anyInt(), (StoreDataBatch) any(), any());
+                .write(anyInt(), any(), any());
 
         BatchSender batchSender =
                 new BatchSender(

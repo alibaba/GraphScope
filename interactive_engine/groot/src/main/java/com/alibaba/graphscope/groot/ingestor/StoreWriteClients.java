@@ -35,15 +35,9 @@ public class StoreWriteClients extends RoleClients<StoreWriteClient> implements 
 
     @Override
     public void write(
-            int storeId, StoreDataBatch storeDataBatch, CompletionCallback<Integer> callback) {
-        this.getClient(storeId).writeStore(storeDataBatch, callback);
-    }
-
-    @Override
-    public void write(
             int storeId,
             List<StoreDataBatch> storeDataBatches,
             CompletionCallback<Integer> callback) {
-        this.getClient(storeId).writeStore2(storeDataBatches, callback);
+        this.getClient(storeId).writeStore(storeDataBatches, callback);
     }
 }

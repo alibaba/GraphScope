@@ -222,7 +222,7 @@ jobs:
         python3 -m pytest -s -vvv graphscope/tests/kubernetes/test_store_service.py -k test_demo_after_restart
 
     - name: Clean
-      if: true
+      if: always()
       run: |
         HADOOP_SSH_OPTS="-o StrictHostKeyChecking=no" /tmp/hadoop-2.10.1/sbin/stop-dfs.sh || true
         rm -rf /tmp/hadoop* || true

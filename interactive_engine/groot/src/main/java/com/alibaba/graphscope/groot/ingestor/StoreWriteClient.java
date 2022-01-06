@@ -16,11 +16,9 @@ package com.alibaba.graphscope.groot.ingestor;
 import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.operation.StoreDataBatch;
 import com.alibaba.graphscope.groot.rpc.RpcClient;
-import com.alibaba.maxgraph.proto.groot.StoreDataBatchPb;
 import com.alibaba.maxgraph.proto.groot.StoreWriteGrpc;
 import com.alibaba.maxgraph.proto.groot.WriteStoreRequest;
-import com.alibaba.maxgraph.proto.groot.WriteStoreRequest2;
-import com.alibaba.maxgraph.proto.groot.WriteStoreRequest2.Builder;
+import com.alibaba.maxgraph.proto.groot.WriteStoreRequest.Builder;
 import com.alibaba.maxgraph.proto.groot.WriteStoreResponse;
 
 import io.grpc.ManagedChannel;
@@ -47,40 +45,14 @@ public class StoreWriteClient extends RpcClient {
         this.stub = stub;
     }
 
-    public void writeStore(StoreDataBatch storeDataBatch, CompletionCallback<Integer> callback) {
-        StoreDataBatchPb batchPb = storeDataBatch.toProto();
-        WriteStoreRequest req = WriteStoreRequest.newBuilder().setBatch(batchPb).build();
-        stub.writeStore(
-                req,
-                new StreamObserver<WriteStoreResponse>() {
-                    @Override
-                    public void onNext(WriteStoreResponse writeStoreResponse) {
-                        boolean success = writeStoreResponse.getSuccess();
-                        if (success) {
-                            callback.onCompleted(batchPb.getSerializedSize());
-                        } else {
-                            onError(new RuntimeException("store buffer is full"));
-                        }
-                    }
-
-                    @Override
-                    public void onError(Throwable throwable) {
-                        callback.onError(throwable);
-                    }
-
-                    @Override
-                    public void onCompleted() {}
-                });
-    }
-
-    public void writeStore2(
+    public void writeStore(
             List<StoreDataBatch> storeDataBatches, CompletionCallback<Integer> callback) {
-        Builder builder = WriteStoreRequest2.newBuilder();
+        Builder builder = WriteStoreRequest.newBuilder();
         for (StoreDataBatch storeDataBatch : storeDataBatches) {
             builder.addDataBatches(storeDataBatch.toProto());
         }
-        WriteStoreRequest2 req = builder.build();
-        stub.writeStore2(
+        WriteStoreRequest req = builder.build();
+        stub.writeStore(
                 req,
                 new StreamObserver<WriteStoreResponse>() {
                     @Override
