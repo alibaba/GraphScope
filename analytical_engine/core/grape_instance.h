@@ -134,12 +134,7 @@ class GrapeInstance : public Subscriber {
 
 #ifdef NETWORKX
   bl::result<rpc::graph::GraphDefPb> induceSubGraph(
-      const rpc::GSParams& params,
-      const std::unordered_set<typename DynamicFragment::oid_t>&
-          induced_vertices,
-      const std::vector<std::pair<typename DynamicFragment::oid_t,
-                                  typename DynamicFragment::oid_t>>&
-          induced_edges);
+      const rpc::GSParams& params);
 #endif  // NETWORKX
 
   bl::result<rpc::graph::GraphDefPb> addLabelsToGraph(

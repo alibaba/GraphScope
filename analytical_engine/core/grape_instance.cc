@@ -277,12 +277,12 @@ bl::result<void> GrapeInstance::modifyVertices(const rpc::GSParams& params) {
             ", graph id: " + graph_name);
   }
 
-  auto fragment =
-      std::static_pointer_cast<DynamicFragment>(wrapper->fragment());
   BOOST_LEAF_AUTO(attr_json, params.Get<std::string>(rpc::PROPERTIES));
   auto common_attr = folly::parseJson(attr_json);
   BOOST_LEAF_AUTO(nodes_json, params.Get<std::string>(rpc::NODES));
   folly::dynamic nodes = folly::parseJson(nodes_json);
+  auto fragment =
+      std::static_pointer_cast<DynamicFragment>(wrapper->fragment());
   fragment->ModifyVertices(nodes, common_attr, modify_type);
   return {};
 #else
@@ -307,8 +307,6 @@ bl::result<void> GrapeInstance::modifyEdges(const rpc::GSParams& params) {
             std::to_string(graph_type) + ", graph name: " + graph_name);
   }
 
-  auto fragment =
-      std::static_pointer_cast<DynamicFragment>(wrapper->fragment());
   BOOST_LEAF_AUTO(attr_json, params.Get<std::string>(rpc::PROPERTIES));
   auto common_attr = folly::parseJson(attr_json);
   std::string weight = "";
@@ -317,6 +315,8 @@ bl::result<void> GrapeInstance::modifyEdges(const rpc::GSParams& params) {
   }
   BOOST_LEAF_AUTO(edges_json, params.Get<std::string>(rpc::EDGES));
   folly::dynamic edges = folly::parseJson(edges_json);
+  auto fragment =
+      std::static_pointer_cast<DynamicFragment>(wrapper->fragment());
   fragment->ModifyEdges(edges, common_attr, modify_type, weight);
 #else
   RETURN_GS_ERROR(vineyard::ErrorCode::kUnimplementedMethod,
@@ -816,11 +816,7 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::toUnDirected(
 
 #ifdef NETWORKX
 bl::result<rpc::graph::GraphDefPb> GrapeInstance::induceSubGraph(
-    const rpc::GSParams& params,
-    const std::unordered_set<typename DynamicFragment::oid_t>& induced_vertices,
-    const std::vector<std::pair<typename DynamicFragment::oid_t,
-                                typename DynamicFragment::oid_t>>&
-        induced_edges) {
+    const rpc::GSParams& params) {
   BOOST_LEAF_AUTO(src_graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
 
   BOOST_LEAF_AUTO(src_wrapper,
@@ -830,6 +826,29 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::induceSubGraph(
   VLOG(1) << "Inducing subgraph from " << src_graph_name
           << ", graph name: " << sub_graph_name;
 
+  std::unordered_set<DynamicFragment::oid_t> induced_vertices;
+  std::vector<std::pair<DynamicFragment::oid_t, DynamicFragment::oid_t>>
+      induced_edges;
+  if (params.HasKey(rpc::NODES)) {
+    // induce subgraph from nodes.
+    BOOST_LEAF_AUTO(nodes_json, params.Get<std::string>(rpc::NODES));
+    folly::dynamic nodes = folly::parseJson(nodes_json);
+    induced_vertices.reserve(nodes.size());
+    DynamicFragment::oid_t oid;
+    for (const auto& v : nodes) {
+      induced_vertices.insert(std::move(v));
+    }
+  } else if (params.HasKey(rpc::EDGES)) {
+    // induce subgraph from edges.
+    BOOST_LEAF_AUTO(edges_json, params.Get<std::string>(rpc::EDGES));
+    folly::dynamic edges = folly::parseJson(edges_json);
+    induced_edges.reserve(edges.size());
+    for (const auto& e : edges) {
+      induced_vertices.insert(e[0]);
+      induced_vertices.insert(e[1]);
+      induced_edges.emplace_back(e[0], e[1]);
+    }
+  }
   auto fragment =
       std::static_pointer_cast<DynamicFragment>(src_wrapper->fragment());
 
@@ -1147,37 +1166,7 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
   }
   case rpc::INDUCE_SUBGRAPH: {
 #ifdef NETWORKX
-    std::unordered_set<DynamicFragment::oid_t> induced_vertices;
-    std::vector<std::pair<DynamicFragment::oid_t, DynamicFragment::oid_t>>
-        induced_edges;
-    auto line_parser_ptr = std::make_unique<DynamicLineParser>();
-    if (params.HasKey(rpc::NODES)) {
-      // induce subgraph from nodes.
-      int size = cmd.params.at(rpc::NODES).list().s_size();
-      induced_vertices.reserve(size);
-      DynamicFragment::oid_t oid;
-      DynamicFragment::vdata_t vdata;
-      for (int i = 0; i < size; ++i) {
-        line_parser_ptr->LineParserForVFile(
-            cmd.params.at(rpc::NODES).list().s(i), oid, vdata);
-        induced_vertices.insert(oid);
-      }
-    } else if (params.HasKey(rpc::EDGES)) {
-      // induce subgraph from edges.
-      int size = cmd.params.at(rpc::EDGES).list().s_size();
-      induced_edges.reserve(size);
-      DynamicFragment::oid_t u_oid, v_oid;
-      DynamicFragment::edata_t edata;
-      for (int i = 0; i < size; ++i) {
-        line_parser_ptr->LineParserForEFile(
-            cmd.params.at(rpc::EDGES).list().s(i), u_oid, v_oid, edata);
-        induced_vertices.insert(u_oid);
-        induced_vertices.insert(v_oid);
-        induced_edges.emplace_back(u_oid, v_oid);
-      }
-    }
-    BOOST_LEAF_AUTO(graph_def,
-                    induceSubGraph(params, induced_vertices, induced_edges));
+    BOOST_LEAF_AUTO(graph_def, induceSubGraph(params));
     r->set_graph_def(graph_def);
 #else
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,

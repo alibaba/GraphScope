@@ -717,9 +717,9 @@ def create_subgraph(graph, nodes=None, edges=None):
         types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
     }
     if nodes is not None:
-        config[types_pb2.NODES] = utils.list_str_to_attr(nodes)
+        config[types_pb2.NODES] = utils.s_to_attr(nodes)
     if edges is not None:
-        config[types_pb2.EDGES] = utils.list_str_to_attr(edges)
+        config[types_pb2.EDGES] = utils.s_to_attr(edges)
 
     op = Operation(
         graph.session_id,

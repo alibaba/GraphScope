@@ -1839,14 +1839,7 @@ class Graph(_GraphBase):
         """
         self._convert_arrow_to_dynamic()
 
-        induced_nodes = []
-        for n in nodes:
-            try:
-                induced_nodes.append(json.dumps([n], default=json_encoder))
-            except TypeError as e:
-                raise TypeError(
-                    "The node {} failed to be serialized by json.".format(n)
-                ) from e
+        induced_nodes = json.dumps(list(nodes), default=json_encoder)
         g = self.__class__(create_empty_in_engine=False)
         g.graph.update(self.graph)
         op = dag_utils.create_subgraph(self, nodes=induced_nodes)
@@ -1891,15 +1884,7 @@ class Graph(_GraphBase):
         """
         self._convert_arrow_to_dynamic()
 
-        induced_edges = []
-        for e in edges:
-            u, v = e
-            try:
-                induced_edges.append(json.dumps((u, v), default=json_encoder))
-            except TypeError as e:
-                raise NetworkXError(
-                    "The edge {} failed to be serialized by json.".format((u, v))
-                ) from e
+        induced_edges = json.dumps(list(edges), default=json_encoder)
         g = self.__class__(create_empty_in_engine=False)
         g.graph.update(self.graph)
         op = dag_utils.create_subgraph(self, edges=induced_edges)
@@ -2219,7 +2204,7 @@ class Graph(_GraphBase):
 
     def _clear_adding_cache(self):
         if self._add_node_cache:
-            nodes_to_modify = json.dumps(self._add_node_cache)
+            nodes_to_modify = json.dumps(self._add_node_cache, default=json_encoder)
             self._op = dag_utils.modify_vertices(
                 self, types_pb2.NX_ADD_NODES, nodes_to_modify
             )
@@ -2227,7 +2212,7 @@ class Graph(_GraphBase):
             self._add_node_cache.clear()
 
         if self._add_edge_cache:
-            edges_to_modify = json.dumps(self._add_edge_cache)
+            edges_to_modify = json.dumps(self._add_edge_cache, default=json_encoder)
             self._op = dag_utils.modify_edges(
                 self, types_pb2.NX_ADD_EDGES, edges_to_modify
             )
@@ -2236,7 +2221,7 @@ class Graph(_GraphBase):
 
     def _clear_removing_cache(self):
         if self._remove_node_cache:
-            nodes_to_modify = json.dumps(self._remove_node_cache)
+            nodes_to_modify = json.dumps(self._remove_node_cache, default=json_encoder)
             self._op = dag_utils.modify_vertices(
                 self, types_pb2.NX_DEL_NODES, nodes_to_modify
             )
@@ -2244,7 +2229,7 @@ class Graph(_GraphBase):
             self._remove_node_cache.clear()
 
         if self._remove_edge_cache:
-            edges_to_modify = json.dumps(self._remove_edge_cache)
+            edges_to_modify = json.dumps(self._remove_edge_cache, default=json_encoder)
             self._op = dag_utils.modify_edges(
                 self, types_pb2.NX_DEL_EDGES, edges_to_modify
             )
