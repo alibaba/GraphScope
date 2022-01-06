@@ -834,7 +834,6 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::induceSubGraph(
     BOOST_LEAF_AUTO(nodes_json, params.Get<std::string>(rpc::NODES));
     folly::dynamic nodes = folly::parseJson(nodes_json);
     induced_vertices.reserve(nodes.size());
-    DynamicFragment::oid_t oid;
     for (const auto& v : nodes) {
       induced_vertices.insert(std::move(v));
     }
@@ -846,7 +845,7 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::induceSubGraph(
     for (const auto& e : edges) {
       induced_vertices.insert(e[0]);
       induced_vertices.insert(e[1]);
-      induced_edges.emplace_back(e[0], e[1]);
+      induced_edges.emplace_back(std::move(e[0]), std::move(e[1]));
     }
   }
   auto fragment =

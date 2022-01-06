@@ -23,7 +23,6 @@ import copy
 import json
 
 from networkx import freeze
-from networkx.classes import reportviews
 from networkx.classes.coreviews import AdjacencyView
 from networkx.classes.graph import Graph as RefGraph
 from networkx.classes.graphviews import generic_graph_view
@@ -743,7 +742,6 @@ class Graph(_GraphBase):
         []
 
         """
-        self._convert_arrow_to_dynamic()
         for n in nodes_for_removing:
             self.remove_node(n)
 
