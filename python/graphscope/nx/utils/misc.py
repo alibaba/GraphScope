@@ -22,12 +22,9 @@ import json
 
 import networkx.utils.misc
 import numpy as np
-from networkx.exception import NetworkXError
 
 from graphscope.client.session import get_session_by_id
 from graphscope.framework import dag_utils
-from graphscope.nx.classes.dicts import AdjEdgeAttrDict
-from graphscope.nx.classes.dicts import NodeAttrDict
 from graphscope.nx.utils.compat import import_as_graphscope_nx
 
 import_as_graphscope_nx(networkx.utils.misc)

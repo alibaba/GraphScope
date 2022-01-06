@@ -1559,9 +1559,11 @@ class DynamicFragment {
       for (const auto& v : vertices_to_modify) {
         v_data = common_attrs;
         if (v.isArray() && v.size() == 2 && v[1].isObject()) {
+          // node id with data
           oid = std::move(v[0]);
           v_data.update(std::move(v[1]));
         } else {
+          // only node id
           oid = std::move(v);
         }
         v_fid = partitioner.GetPartitionId(oid);
