@@ -111,6 +111,12 @@ app:
     src: apps/kshell/kshell.h
     compatible_graph:
       - gs::DynamicFragment
+  - algo: lcc
+    type: cpp_pie
+    class_name: grape::LCC
+    src: lcc/lcc.h
+    compatible_graph:
+      - gs::DynamicFragment
   - algo: clustering
     type: cpp_pie
     class_name: gs::Clustering
