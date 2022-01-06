@@ -12,6 +12,7 @@ import com.alibaba.graphscope.groot.operation.StoreDataBatch.Builder;
 import com.alibaba.maxgraph.common.config.CommonConfig;
 import com.alibaba.maxgraph.common.config.Configs;
 import com.alibaba.maxgraph.common.config.IngestorConfig;
+import com.alibaba.maxgraph.common.config.StoreConfig;
 import com.alibaba.maxgraph.common.util.PartitionUtils;
 
 import org.slf4j.Logger;
@@ -56,6 +57,7 @@ public class BatchSender2 implements MetricsAgent {
     private AvgMetric sendRecordsMetric;
     private List<AvgMetric> bufferBatchCountMetrics;
     private List<AvgMetric> callbackLatencyMetrics;
+    private int receiverQueueSize;
 
     public BatchSender2(
             Configs configs,
@@ -68,6 +70,7 @@ public class BatchSender2 implements MetricsAgent {
         this.storeCount = CommonConfig.STORE_NODE_COUNT.get(configs);
         this.bufferSize = IngestorConfig.INGESTOR_SENDER_BUFFER_MAX_COUNT.get(configs);
         this.sendOperationLimit = IngestorConfig.INGESTOR_SENDER_OPERATION_MAX_COUNT.get(configs);
+        this.receiverQueueSize = StoreConfig.STORE_QUEUE_BUFFER_SIZE.get(configs);
         initMetrics();
         metricsCollector.register(this, () -> updateMetrics());
     }
@@ -184,10 +187,13 @@ public class BatchSender2 implements MetricsAgent {
             BlockingQueue<StoreDataBatch> buffer = this.storeSendBuffer.get(storeId);
             StoreDataBatch dataBatch;
             int operationCount = 0;
+            int batchCount = 0;
             while (operationCount < this.sendOperationLimit
+                    && batchCount < this.receiverQueueSize
                     && (dataBatch = buffer.poll()) != null) {
                 dataToSend.add(dataBatch);
                 operationCount += dataBatch.getSize();
+                batchCount++;
             }
         }
 
