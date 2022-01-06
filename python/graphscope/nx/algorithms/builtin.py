@@ -47,7 +47,7 @@ def project_to_simple(func):
             ):  # func has 'weight' argument
                 weight = kwargs.get("weight", None)
                 try:
-                    e_label = graph.schema.vertex_labels[0]
+                    e_label = graph.schema.edge_labels[0]
                     graph.schema.get_edge_property_id(e_label, weight)
                 except KeyError:
                     weight = None
