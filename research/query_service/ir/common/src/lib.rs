@@ -628,6 +628,7 @@ impl From<Object> for common_pb::Value {
                 }
                 common_pb::value::Item::PairArray(common_pb::PairArray { item: pairs })
             }
+            Object::None => common_pb::value::Item::None(common_pb::None {}),
             _ => unimplemented!(),
         };
 
