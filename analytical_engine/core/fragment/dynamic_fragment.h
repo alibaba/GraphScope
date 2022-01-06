@@ -1479,7 +1479,7 @@ class DynamicFragment {
     std::vector<edge_t> edges;
 
     edges.reserve(edges_to_modify.size());
-    if (modify_type == rpc::NX_ADD_EDGES)
+    if (modify_type == rpc::NX_ADD_EDGES) {
       vertices.reserve(edges_to_modify.size() * 2);
     }
     invalidCache();
