@@ -21,6 +21,7 @@ use std::convert::{TryFrom, TryInto};
 use dyn_type::arith::Exp;
 use dyn_type::{BorrowObject, Object};
 use ir_common::error::{ParsePbError, ParsePbResult};
+use ir_common::expr_parse::to_suffix_expr;
 use ir_common::generated::common as pb;
 use ir_common::NameOrId;
 
@@ -110,7 +111,9 @@ impl TryFrom<pb::Expression> for Evaluator {
         Self: Sized,
     {
         let mut inner_tree: Vec<InnerOpr> = Vec::with_capacity(suffix_tree.operators.len());
-        for unit in suffix_tree.operators {
+        let suffix_oprs = to_suffix_expr(suffix_tree.operators)
+            .map_err(|err| ParsePbError::ParseError(format!("{:?}", err)))?;
+        for unit in suffix_oprs {
             inner_tree.push(InnerOpr::try_from(unit)?);
         }
         Ok(Self { suffix_tree: inner_tree, stack: RefCell::new(vec![]) })
@@ -220,7 +223,7 @@ impl Evaluate for Evaluator {
     /// # use runtime::graph::property::{DefaultDetails, DynDetails};
     /// # use std::collections::HashMap;
     /// # use std::convert::TryFrom;
-    /// # use ir_common::expr_parse::str_to_suffix_expr_pb;
+    /// # use ir_common::expr_parse::str_to_expr_pb;
     ///
     /// struct Vertices {
     ///     vec: Vec<Vertex>,
@@ -257,7 +260,7 @@ impl Evaluate for Evaluator {
     ///         ],
     ///     };
     ///
-    /// let suffix_tree = str_to_suffix_expr_pb("@0.age == @1.age".to_string()).unwrap();
+    /// let suffix_tree = str_to_expr_pb("@0.age == @1.age".to_string()).unwrap();
     /// let eval = Evaluator::try_from(suffix_tree).unwrap();
     ///
     /// assert!(eval.eval_bool::<_, _>(Some(&ctxt)).unwrap())
@@ -456,7 +459,7 @@ impl InnerOpr {
 mod tests {
     use std::collections::HashMap;
 
-    use ir_common::expr_parse::str_to_suffix_expr_pb;
+    use ir_common::expr_parse::str_to_expr_pb;
 
     use super::*;
     use crate::graph::element::Vertex;
@@ -562,7 +565,7 @@ mod tests {
         ];
 
         for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
-            let eval = Evaluator::try_from(str_to_suffix_expr_pb(case.to_string()).unwrap()).unwrap();
+            let eval = Evaluator::try_from(str_to_expr_pb(case.to_string()).unwrap()).unwrap();
             assert_eq!(eval.eval::<(), NoneContext>(None).unwrap(), expected);
         }
     }
@@ -602,7 +605,7 @@ mod tests {
         ];
 
         for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
-            let eval = Evaluator::try_from(str_to_suffix_expr_pb(case.to_string()).unwrap()).unwrap();
+            let eval = Evaluator::try_from(str_to_expr_pb(case.to_string()).unwrap()).unwrap();
             assert_eq!(eval.eval::<(), NoneContext>(None).unwrap(), expected);
         }
     }
@@ -645,7 +648,7 @@ mod tests {
         ];
 
         for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
-            let eval = Evaluator::try_from(str_to_suffix_expr_pb(case.to_string()).unwrap()).unwrap();
+            let eval = Evaluator::try_from(str_to_expr_pb(case.to_string()).unwrap()).unwrap();
             assert_eq!(eval.eval::<(), NoneContext>(None).unwrap(), expected);
         }
     }
@@ -694,7 +697,7 @@ mod tests {
         ];
 
         for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
-            let eval = Evaluator::try_from(str_to_suffix_expr_pb(case.to_string()).unwrap()).unwrap();
+            let eval = Evaluator::try_from(str_to_expr_pb(case.to_string()).unwrap()).unwrap();
             assert_eq!(eval.eval::<_, Vertices>(Some(&ctxt)).unwrap(), expected);
         }
     }
@@ -719,7 +722,7 @@ mod tests {
 
         let mut is_context = false;
         for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
-            let eval = Evaluator::try_from(str_to_suffix_expr_pb(case.to_string()).unwrap()).unwrap();
+            let eval = Evaluator::try_from(str_to_expr_pb(case.to_string()).unwrap()).unwrap();
             assert_eq!(
                 if is_context {
                     eval.eval::<_, Vertices>(Some(&ctxt))

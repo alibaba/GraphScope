@@ -126,7 +126,7 @@ mod tests {
     use std::collections::HashMap;
 
     use dyn_type::Object;
-    use ir_common::expr_parse::str_to_suffix_expr_pb;
+    use ir_common::expr_parse::str_to_expr_pb;
     use ir_common::generated::algebra as pb;
     use ir_common::NameOrId;
     use pegasus::api::{Map, Sink};
@@ -161,7 +161,7 @@ mod tests {
     fn project_single_mapping_test() {
         let project_opr_pb = pb::Project {
             mappings: vec![pb::project::ExprAlias {
-                expr: Some(str_to_suffix_expr_pb("@.id".to_string()).unwrap()),
+                expr: Some(str_to_expr_pb("@.id".to_string()).unwrap()),
                 alias: None,
             }],
             is_append: false,
@@ -185,7 +185,7 @@ mod tests {
     fn project_tag_single_mapping_test() {
         let project_opr_pb = pb::Project {
             mappings: vec![pb::project::ExprAlias {
-                expr: Some(str_to_suffix_expr_pb("@a.name".to_string()).unwrap()),
+                expr: Some(str_to_expr_pb("@a.name".to_string()).unwrap()),
                 alias: Some("b".into()),
             }],
             is_append: false,
@@ -212,7 +212,7 @@ mod tests {
     fn project_none_tag_single_mapping_test() {
         let project_opr_pb = pb::Project {
             mappings: vec![pb::project::ExprAlias {
-                expr: Some(str_to_suffix_expr_pb("@.id".to_string()).unwrap()),
+                expr: Some(str_to_expr_pb("@.id".to_string()).unwrap()),
                 alias: None,
             }],
             is_append: false,
@@ -237,11 +237,11 @@ mod tests {
         let project_opr_pb = pb::Project {
             mappings: vec![
                 pb::project::ExprAlias {
-                    expr: Some(str_to_suffix_expr_pb("@.age".to_string()).unwrap()),
+                    expr: Some(str_to_expr_pb("@.age".to_string()).unwrap()),
                     alias: Some(NameOrId::Str("b".to_string()).into()),
                 },
                 pb::project::ExprAlias {
-                    expr: Some(str_to_suffix_expr_pb("@.name".to_string()).unwrap()),
+                    expr: Some(str_to_expr_pb("@.name".to_string()).unwrap()),
                     alias: Some(NameOrId::Str("c".to_string()).into()),
                 },
             ],
@@ -272,11 +272,11 @@ mod tests {
         let project_opr_pb = pb::Project {
             mappings: vec![
                 pb::project::ExprAlias {
-                    expr: Some(str_to_suffix_expr_pb("@.age".to_string()).unwrap()),
+                    expr: Some(str_to_expr_pb("@.age".to_string()).unwrap()),
                     alias: Some(NameOrId::Str("b".to_string()).into()),
                 },
                 pb::project::ExprAlias {
-                    expr: Some(str_to_suffix_expr_pb("@.name".to_string()).unwrap()),
+                    expr: Some(str_to_expr_pb("@.name".to_string()).unwrap()),
                     alias: None,
                 },
             ],
@@ -307,11 +307,11 @@ mod tests {
         let project_opr_pb = pb::Project {
             mappings: vec![
                 pb::project::ExprAlias {
-                    expr: Some(str_to_suffix_expr_pb("@a.age".to_string()).unwrap()),
+                    expr: Some(str_to_expr_pb("@a.age".to_string()).unwrap()),
                     alias: Some(NameOrId::Str("b".to_string()).into()),
                 },
                 pb::project::ExprAlias {
-                    expr: Some(str_to_suffix_expr_pb("@a.name".to_string()).unwrap()),
+                    expr: Some(str_to_expr_pb("@a.name".to_string()).unwrap()),
                     alias: Some(NameOrId::Str("c".to_string()).into()),
                 },
             ],
@@ -359,15 +359,15 @@ mod tests {
         let project_opr_pb = pb::Project {
             mappings: vec![
                 pb::project::ExprAlias {
-                    expr: Some(str_to_suffix_expr_pb("@a.age".to_string()).unwrap()),
+                    expr: Some(str_to_expr_pb("@a.age".to_string()).unwrap()),
                     alias: Some(NameOrId::Str("c".to_string()).into()),
                 },
                 pb::project::ExprAlias {
-                    expr: Some(str_to_suffix_expr_pb("@a.name".to_string()).unwrap()),
+                    expr: Some(str_to_expr_pb("@a.name".to_string()).unwrap()),
                     alias: Some(NameOrId::Str("d".to_string()).into()),
                 },
                 pb::project::ExprAlias {
-                    expr: Some(str_to_suffix_expr_pb("@b.name".to_string()).unwrap()),
+                    expr: Some(str_to_expr_pb("@b.name".to_string()).unwrap()),
                     alias: Some(NameOrId::Str("e".to_string()).into()),
                 },
             ],
@@ -403,7 +403,7 @@ mod tests {
     fn project_single_mapping_appended_test() {
         let project_opr_pb = pb::Project {
             mappings: vec![pb::project::ExprAlias {
-                expr: Some(str_to_suffix_expr_pb("@a.age".to_string()).unwrap()),
+                expr: Some(str_to_expr_pb("@a.age".to_string()).unwrap()),
                 alias: Some(NameOrId::Str("b".to_string()).into()),
             }],
             is_append: true,
@@ -437,11 +437,11 @@ mod tests {
         let project_opr_pb = pb::Project {
             mappings: vec![
                 pb::project::ExprAlias {
-                    expr: Some(str_to_suffix_expr_pb("@.age".to_string()).unwrap()),
+                    expr: Some(str_to_expr_pb("@.age".to_string()).unwrap()),
                     alias: Some("b".into()),
                 },
                 pb::project::ExprAlias {
-                    expr: Some(str_to_suffix_expr_pb("@.name".to_string()).unwrap()),
+                    expr: Some(str_to_expr_pb("@.name".to_string()).unwrap()),
                     alias: Some("c".into()),
                 },
             ],
@@ -484,7 +484,7 @@ mod tests {
     fn project_empty_mapping_alias_test() {
         let project_opr_pb = pb::Project {
             mappings: vec![pb::project::ExprAlias {
-                expr: Some(str_to_suffix_expr_pb("@.id".to_string()).unwrap()),
+                expr: Some(str_to_expr_pb("@.id".to_string()).unwrap()),
                 alias: None,
             }],
             is_append: true,
@@ -500,7 +500,7 @@ mod tests {
     fn project_vec_mapping_test() {
         let project_opr_pb = pb::Project {
             mappings: vec![pb::project::ExprAlias {
-                expr: Some(str_to_suffix_expr_pb("[@.age,@.name]".to_string()).unwrap()),
+                expr: Some(str_to_expr_pb("[@.age,@.name]".to_string()).unwrap()),
                 alias: None,
             }],
             is_append: false,
@@ -527,7 +527,7 @@ mod tests {
     fn project_map_mapping_test() {
         let project_opr_pb = pb::Project {
             mappings: vec![pb::project::ExprAlias {
-                expr: Some(str_to_suffix_expr_pb("{@.age,@.name}".to_string()).unwrap()),
+                expr: Some(str_to_expr_pb("{@.age,@.name}".to_string()).unwrap()),
                 alias: None,
             }],
             is_append: false,
@@ -568,7 +568,7 @@ mod tests {
     fn project_tag_map_mapping_test() {
         let project_opr_pb = pb::Project {
             mappings: vec![pb::project::ExprAlias {
-                expr: Some(str_to_suffix_expr_pb("{@a.age,@a.name}".to_string()).unwrap()),
+                expr: Some(str_to_expr_pb("{@a.age,@a.name}".to_string()).unwrap()),
                 alias: None,
             }],
             is_append: false,

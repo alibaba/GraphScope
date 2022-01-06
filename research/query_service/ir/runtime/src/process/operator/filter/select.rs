@@ -53,7 +53,7 @@ impl FilterFuncGen for algebra_pb::Select {
 
 #[cfg(test)]
 mod tests {
-    use ir_common::expr_parse::str_to_suffix_expr_pb;
+    use ir_common::expr_parse::str_to_expr_pb;
     use ir_common::generated::algebra as pb;
     use pegasus::api::{Filter, Sink};
     use pegasus::result::ResultStream;
@@ -85,8 +85,7 @@ mod tests {
     // g.V().has("id",gt(1))
     #[test]
     fn select_gt_test() {
-        let select_opr_pb =
-            pb::Select { predicate: Some(str_to_suffix_expr_pb("@.id > 1".to_string()).unwrap()) };
+        let select_opr_pb = pb::Select { predicate: Some(str_to_expr_pb("@.id > 1".to_string()).unwrap()) };
         let mut result = select_test(init_source(), select_opr_pb);
         let mut count = 0;
         while let Some(Ok(record)) = result.next() {
@@ -102,8 +101,7 @@ mod tests {
     // g.V().has("id",lt(2))
     #[test]
     fn select_lt_test() {
-        let select_opr_pb =
-            pb::Select { predicate: Some(str_to_suffix_expr_pb("@.id < 2".to_string()).unwrap()) };
+        let select_opr_pb = pb::Select { predicate: Some(str_to_expr_pb("@.id < 2".to_string()).unwrap()) };
         let mut result = select_test(init_source(), select_opr_pb);
         let mut count = 0;
         while let Some(Ok(record)) = result.next() {
@@ -119,9 +117,8 @@ mod tests {
     // g.V().has("name","marko")
     #[test]
     fn select_eq_test() {
-        let select_opr_pb = pb::Select {
-            predicate: Some(str_to_suffix_expr_pb("@.name == \"marko\"".to_string()).unwrap()),
-        };
+        let select_opr_pb =
+            pb::Select { predicate: Some(str_to_expr_pb("@.name == \"marko\"".to_string()).unwrap()) };
         let mut result = select_test(init_source(), select_opr_pb);
         let mut count = 0;
         while let Some(Ok(record)) = result.next() {
@@ -148,7 +145,7 @@ mod tests {
     #[test]
     fn select_id_test() {
         let select_opr_pb =
-            pb::Select { predicate: Some(str_to_suffix_expr_pb("@.~id == 1".to_string()).unwrap()) };
+            pb::Select { predicate: Some(str_to_expr_pb("@.~id == 1".to_string()).unwrap()) };
         let mut result = select_test(init_source(), select_opr_pb);
         let mut count = 0;
         while let Some(Ok(record)) = result.next() {
@@ -174,9 +171,8 @@ mod tests {
     // g.V().hasLabel("person")
     #[test]
     fn select_label_test() {
-        let select_opr_pb = pb::Select {
-            predicate: Some(str_to_suffix_expr_pb("@.~label == \"person\"".to_string()).unwrap()),
-        };
+        let select_opr_pb =
+            pb::Select { predicate: Some(str_to_expr_pb("@.~label == \"person\"".to_string()).unwrap()) };
         let mut result = select_test(init_source(), select_opr_pb);
         let mut count = 0;
         while let Some(Ok(record)) = result.next() {

@@ -217,10 +217,6 @@ pub fn str_to_expr_pb(expr_str: String) -> ExprResult<pb::Expression> {
     to_expr_pb(tokenize(&expr_str)?)
 }
 
-pub fn str_to_suffix_expr_pb(expr_str: String) -> ExprResult<pb::Expression> {
-    to_expr_pb(to_suffix_expr(tokenize(&expr_str)?)?)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

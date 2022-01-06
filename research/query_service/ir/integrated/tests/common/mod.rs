@@ -23,7 +23,7 @@ pub mod test {
     use std::sync::Once;
 
     use graph_proxy::{InitializeJobCompiler, QueryExpGraph};
-    use ir_common::expr_parse::str_to_suffix_expr_pb;
+    use ir_common::expr_parse::str_to_expr_pb;
     use ir_common::generated::algebra as pb;
     use ir_common::generated::common as common_pb;
     use ir_common::generated::results as result_pb;
