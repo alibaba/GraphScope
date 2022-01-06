@@ -19,8 +19,6 @@ on:
   pull_request:
     branches:
       - main
-    types:
-      - ready_for_review
     paths:
       - 'analytical_engine/**'
       - '.github/workflows/gae.yml'

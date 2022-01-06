@@ -1475,7 +1475,6 @@ class DynamicFragment {
                    const folly::dynamic& common_attrs,
                    const rpc::ModifyType modify_type,
                    const std::string weight) {
-    double start = grape::GetCurrentTime();
     std::vector<internal_vertex_t> vertices;
     std::vector<edge_t> edges;
 
