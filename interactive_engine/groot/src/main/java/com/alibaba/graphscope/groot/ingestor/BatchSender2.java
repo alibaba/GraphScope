@@ -147,6 +147,7 @@ public class BatchSender2 implements MetricsAgent {
                     while (!shouldStop) {
                         try {
                             storeSendBuffer.get(storeId).put(batchBuilder.build());
+                            break;
                         } catch (InterruptedException e) {
                             logger.warn("send buffer interrupted", e);
                         }
