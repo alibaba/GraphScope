@@ -7,12 +7,14 @@ use crossbeam_utils::sync::ShardedLock;
 
 use crate::JobConf;
 
-pub type ResourceMap = HashMap<TypeId, Box<dyn Any + Send + Sync>>;
-pub type KeyedResources = HashMap<String, Box<dyn Any + Send + Sync>>;
+pub type ResourceMap = HashMap<TypeId, Box<dyn Any + Send>>;
+pub type KeyedResources = HashMap<String, Box<dyn Any + Send>>;
+pub type SharedResourceMap = HashMap<TypeId, Box<dyn Any + Send + Sync>>;
+pub type SharedKeyedResourceMap = HashMap<String, Box<dyn Any + Send + Sync>>;
 
 lazy_static! {
-    pub static ref GLOBAL_RESOURCE_MAP: ShardedLock<ResourceMap> = ShardedLock::new(Default::default());
-    pub static ref GLOBAL_KEYED_RESOURCES: ShardedLock<KeyedResources> =
+    pub static ref GLOBAL_RESOURCE_MAP: ShardedLock<SharedResourceMap> = ShardedLock::new(Default::default());
+    pub static ref GLOBAL_KEYED_RESOURCES: ShardedLock<SharedKeyedResourceMap> =
         ShardedLock::new(Default::default());
 }
 
@@ -138,15 +140,15 @@ pub fn add_global_resource<T: Any + Send + Sync>(key: String, res: T) {
     store.insert(key, Box::new(res));
 }
 
-pub trait PartitionableResource {
-    type Res: Send + Sync + 'static;
+pub trait PartitionedResource {
+    type Res: Send  + 'static;
 
     fn get_resource(&self, par: usize) -> Option<&Self::Res>;
 
     fn take_resource(&mut self, par: usize) -> Option<Self::Res>;
 }
 
-impl<T: ?Sized + Send + Sync + 'static> PartitionableResource for std::sync::Arc<T> {
+impl<T: ?Sized + Send + Sync + 'static> PartitionedResource for std::sync::Arc<T> {
     type Res = std::sync::Arc<T>;
 
     fn get_resource(&self, _par: usize) -> Option<&Self::Res> {
@@ -177,7 +179,7 @@ impl<T> DefaultParResource<T> {
     }
 }
 
-impl<T: Send + Sync + 'static> PartitionableResource for DefaultParResource<T> {
+impl<T: Send + Sync + 'static> PartitionedResource for DefaultParResource<T> {
     type Res = T;
 
     fn get_resource(&self, par: usize) -> Option<&Self::Res> {

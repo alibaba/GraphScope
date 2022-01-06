@@ -1,17 +1,17 @@
 use std::collections::HashMap;
-use std::sync::Arc;
 use std::time::Instant;
 
 use pegasus::api::{Binary, Fold, Iteration, Map, Sink};
 use pegasus::result::ResultStream;
 use pegasus::tag::tools::map::TidyTagMap;
 use pegasus::{Data, JobConf};
+use pegasus::resource::PartitionedResource;
 
 use super::super::one_hop;
 use crate::graph::{Graph, VertexId};
 
-pub fn packed_multi_src_k_hop<G: Graph>(
-    src: Vec<G::VID>, k_hop: u32, use_loop: bool, conf: JobConf, graph: Arc<G>,
+pub fn packed_multi_src_k_hop<G: Graph, R: PartitionedResource<Res=G>>(
+    src: Vec<G::VID>, k_hop: u32, use_loop: bool, conf: JobConf, graph: R,
 ) -> ResultStream<(u64, u64, u64)> where G::VID : Data {
     let start = Instant::now();
     let src = src
@@ -27,14 +27,14 @@ pub fn packed_multi_src_k_hop<G: Graph>(
             let (left, mut right) = stream.copied()?;
             if use_loop {
                 right = right.iterate(k_hop, |start| {
-                    let graph = pegasus::resource::get_resource::<Arc<G>>().expect("Graph not found");
+                    let graph = pegasus::resource::get_resource::<R::Res>().expect("Graph not found");
                     start
                         .repartition(|(_, id)| Ok(id.get_id()))
                         .flat_map(move |(src, id)| Ok(one_hop(id, &*graph).map(move |id| (src, id))))
                 })?
             } else {
                 for _i in 0..k_hop {
-                    let graph = pegasus::resource::get_resource::<Arc<G>>().expect("Graph not found");
+                    let graph = pegasus::resource::get_resource::<R::Res>().expect("Graph not found");
                     right = right
                         .repartition(|(_, id)| Ok(id.get_id()))
                         .flat_map(move |(src, id)| Ok(one_hop(id, &*graph).map(move |id| (src, id))))?;

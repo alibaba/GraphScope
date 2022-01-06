@@ -1,3 +1,4 @@
+use std::sync::Arc;
 use pegasus_graph::graph::{Direction, Vid};
 use pegasus_graph::{MemLabeledTopoGraph};
 use crate::graph::{FilterById, Graph, Vertex};
@@ -11,7 +12,7 @@ pub trait PropsStore: Send + Sync + 'static {
 }
 
 pub struct PropertyGraph<P: PropsStore> {
-    topo: MemLabeledTopoGraph,
+    topo: Arc<MemLabeledTopoGraph>,
     pros: P,
 }
 
@@ -23,6 +24,7 @@ impl<P: PropsStore> Graph for PropertyGraph<P> {
     }
 
     fn get_vertices_by_ids(&self, ids: &[Self::VID]) -> Vec<Vertex<Self::VID>> {
+
         self.pros.get_batch_vertices(ids)
     }
 
@@ -30,3 +32,5 @@ impl<P: PropsStore> Graph for PropertyGraph<P> {
         self.pros.get_id_filter(filter)
     }
 }
+
+

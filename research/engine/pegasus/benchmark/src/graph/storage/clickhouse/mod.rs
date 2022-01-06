@@ -186,8 +186,13 @@
 //     Ok(String::from_utf8(buf).unwrap())
 // }
 
+use pegasus_graph::graph::Vid;
+use crate::graph::storage::clickhouse::pb_gen::clickhouse_grpc::click_house_client::ClickHouseClient;
+use crate::graph::storage::PropsStore;
+use crate::graph::{FilterById, Vertex};
+
 #[cfg(not(feature = "gcip"))]
-mod codegen {
+mod pb_gen {
     pub mod clickhouse_grpc {
         tonic::include_proto!("clickhouse.grpc");
     }
@@ -195,7 +200,22 @@ mod codegen {
 
 #[rustfmt::skip]
 #[cfg(feature = "gcip")]
-mod codegen {
+mod pb_gen {
     #[path = "clickhouse.grpc.rs"]
     pub mod clickhouse_grpc;
+}
+
+
+pub struct ClickHouseStore {
+    _conn: ClickHouseClient<tonic::transport::Channel>
+}
+
+impl PropsStore for ClickHouseStore {
+    fn get_batch_vertices(&self, _ids: &[Vid]) -> Vec<Vertex<Vid>> {
+        todo!()
+    }
+
+    fn get_id_filter<F: ToString>(&self, _filter: F) -> Box<dyn FilterById<ID=Vid>> {
+        todo!()
+    }
 }

@@ -66,7 +66,7 @@ pub use worker_id::{get_current_worker, WorkerId};
 
 use crate::api::Source;
 pub use crate::errors::{BuildJobError, JobSubmitError, SpawnJobError, StartupError};
-use crate::resource::PartitionableResource;
+use crate::resource::PartitionedResource;
 use crate::result::{ResultSink, ResultStream};
 use crate::worker_id::WorkerIdIter;
 
@@ -227,7 +227,7 @@ pub fn run_with_resources<DI, DO, F, FN, R>(
 where
     DI: Data,
     DO: Debug + Send + 'static,
-    R: PartitionableResource,
+    R: PartitionedResource,
     F: Fn() -> FN,
     FN: FnOnce(&mut Source<DI>, ResultSink<DO>) -> Result<(), BuildJobError> + 'static,
 {

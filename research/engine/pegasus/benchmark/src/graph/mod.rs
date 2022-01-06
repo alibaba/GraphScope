@@ -151,7 +151,7 @@ impl VertexId for Vid {
 }
 
 
-pub trait Graph: Send + Sync + 'static {
+pub trait Graph: Send + 'static {
     type VID: VertexId;
 
     fn get_neighbor_ids(
@@ -163,7 +163,7 @@ pub trait Graph: Send + Sync + 'static {
     fn prepare_filter_vertex<F: ToString>(&self, filter: F) -> Box<dyn FilterById<ID=Self::VID>>;
 }
 
-impl<G: ?Sized + Graph> Graph for Arc<G> {
+impl<G: ?Sized + Sync + Graph> Graph for Arc<G> {
     type VID = G::VID;
 
     fn get_neighbor_ids(

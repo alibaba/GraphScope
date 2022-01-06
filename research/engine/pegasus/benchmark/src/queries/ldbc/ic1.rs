@@ -6,6 +6,7 @@ use pegasus::api::{Binary, Branch, IterCondition, Iteration, Map, Sink, Unary};
 use pegasus::result::ResultStream;
 use pegasus::tag::tools::map::TidyTagMap;
 use pegasus::{Data, JobConf};
+use pegasus::resource::PartitionedResource;
 use pegasus_graph::graph::Direction;
 
 use crate::graph::{Graph, OrderBy, VertexId};
@@ -18,8 +19,8 @@ use crate::graph::{Graph, OrderBy, VertexId};
 // .fold()
 // .map{ 排序 }
 
-pub fn ic1<G: Graph>(
-    person_id: G::VID, first_name: String, conf: JobConf, graph: Arc<G>,
+pub fn ic1<G: Graph, R: PartitionedResource<Res=G>>(
+    person_id: G::VID, first_name: String, conf: JobConf, graph: R,
 ) -> ResultStream<Vec<u8>> where G::VID : Data {
     pegasus::run_with_resources(conf, graph, || {
         let first_name = first_name.clone();
@@ -32,7 +33,7 @@ pub fn ic1<G: Graph>(
             }?;
 
             let (emit, leave) = stream.iterate_emit(IterCondition::max_iters(3), |start| {
-                let graph = pegasus::resource::get_resource::<Arc<G>>().unwrap();
+                let graph = pegasus::resource::get_resource::<R::Res>().unwrap();
                 start
                     .repartition(|id| Ok(id.get_id()))
                     .flat_map(move |src_id| {
@@ -42,7 +43,7 @@ pub fn ic1<G: Graph>(
                             .filter(move |id| id != &person_id))
                     })?
                     .unary("filter", |_| {
-                        let graph = pegasus::resource::get_resource::<Arc<G>>().unwrap();
+                        let graph = pegasus::resource::get_resource::<R::Res>().unwrap();
                         let mut vec = vec![];
                         let stat = graph.prepare_filter_vertex(format!("p_firstname = '{}'", first_name));
                         move |input, output| {
