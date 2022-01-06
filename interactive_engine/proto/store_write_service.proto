@@ -24,10 +24,6 @@ service StoreWrite {
   rpc writeStore(WriteStoreRequest) returns(WriteStoreResponse);
 }
 
-message WriteStoreRequest {
-  StoreDataBatchPb batch = 1;
-}
-
 message PartitionToBatchPb {
   map<int32, OperationBatchPb> partitionToBatch = 1;
 }
@@ -38,6 +34,10 @@ message StoreDataBatchPb {
   int64 snapshotId = 3;
   int64 offset = 4;
   repeated PartitionToBatchPb dataBatch = 5;
+}
+
+message WriteStoreRequest {
+  repeated StoreDataBatchPb data_batches = 1;
 }
 
 message WriteStoreResponse {

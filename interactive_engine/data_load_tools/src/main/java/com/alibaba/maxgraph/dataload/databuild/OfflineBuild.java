@@ -67,7 +67,7 @@ public class OfflineBuild {
         String outputPath = properties.getProperty(OUTPUT_PATH);
         String columnMappingConfigStr = properties.getProperty(COLUMN_MAPPING_CONFIG);
         String graphEndpoint = properties.getProperty(GRAPH_ENDPOINT);
-        Client client = new Client(graphEndpoint, "");
+        Client client = new Client(graphEndpoint);
         ObjectMapper objectMapper = new ObjectMapper();
         Map<String, FileColumnMapping> columnMappingConfig =
                 objectMapper.readValue(

@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 /** sort by (snapshotId, queueId) */
 public class SnapshotSortQueue {
@@ -40,6 +42,7 @@ public class SnapshotSortQueue {
 
     private int currentPollQueueIdx;
     private long currentPollSnapshotId;
+    private AtomicInteger size;
 
     public SnapshotSortQueue(Configs configs, MetaService metaService) {
         this.currentPollSnapshotId = -1L;
@@ -56,6 +59,7 @@ public class SnapshotSortQueue {
         this.currentPollQueueIdx = this.queueCount - 1;
 
         this.queueWaitMs = StoreConfig.STORE_QUEUE_WAIT_MS.get(configs);
+        this.size = new AtomicInteger(0);
     }
 
     public boolean offerQueue(int queueId, StoreDataBatch entry) throws InterruptedException {
@@ -63,7 +67,11 @@ public class SnapshotSortQueue {
         if (innerQueue == null) {
             throw new IllegalArgumentException("invalid queueId [" + queueId + "]");
         }
-        return innerQueue.offer(entry, this.queueWaitMs, TimeUnit.MILLISECONDS);
+        boolean res = innerQueue.offer(entry, this.queueWaitMs, TimeUnit.MILLISECONDS);
+        if (res) {
+            this.size.incrementAndGet();
+        }
+        return res;
     }
 
     public StoreDataBatch poll() throws InterruptedException {
@@ -103,6 +111,7 @@ public class SnapshotSortQueue {
 
             long snapshotId = entry.getSnapshotId();
             if (snapshotId == this.currentPollSnapshotId) {
+                this.size.decrementAndGet();
                 return entry;
             }
             if (snapshotId > this.currentPollSnapshotId) {
@@ -123,5 +132,13 @@ public class SnapshotSortQueue {
                                 + "]. Ignored entry.");
             }
         }
+    }
+
+    public int size() {
+        return this.size.get();
+    }
+
+    public List<Integer> innerQueueSizes() {
+        return this.innerQueues.stream().map(q -> q.size()).collect(Collectors.toList());
     }
 }

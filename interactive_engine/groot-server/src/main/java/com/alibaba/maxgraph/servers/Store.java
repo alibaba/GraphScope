@@ -16,6 +16,8 @@ package com.alibaba.maxgraph.servers;
 import com.alibaba.graphscope.groot.discovery.*;
 import com.alibaba.graphscope.groot.meta.DefaultMetaService;
 import com.alibaba.graphscope.groot.meta.MetaService;
+import com.alibaba.graphscope.groot.metrics.MetricsCollectService;
+import com.alibaba.graphscope.groot.metrics.MetricsCollector;
 import com.alibaba.graphscope.groot.rpc.ChannelManager;
 import com.alibaba.graphscope.groot.rpc.MaxGraphNameResolverFactory;
 import com.alibaba.graphscope.groot.rpc.RpcServer;
@@ -51,8 +53,15 @@ public class Store extends NodeBase {
         this.metaService = new DefaultMetaService(configs);
         this.storeService = new StoreService(configs, this.metaService);
         SnapshotCommitter snapshotCommitter = new DefaultSnapshotCommitter(this.channelManager);
+        MetricsCollector metricsCollector = new MetricsCollector(configs);
+        MetricsCollectService metricsCollectService = new MetricsCollectService(metricsCollector);
         this.writerAgent =
-                new WriterAgent(configs, this.storeService, this.metaService, snapshotCommitter);
+                new WriterAgent(
+                        configs,
+                        this.storeService,
+                        this.metaService,
+                        snapshotCommitter,
+                        metricsCollector);
         StoreWriteService storeWriteService = new StoreWriteService(this.writerAgent);
         this.backupAgent = new BackupAgent(configs, this.storeService);
         StoreBackupService storeBackupService = new StoreBackupService(this.backupAgent);
@@ -65,7 +74,8 @@ public class Store extends NodeBase {
                         storeWriteService,
                         storeBackupService,
                         storeSchemaService,
-                        storeIngestService);
+                        storeIngestService,
+                        metricsCollectService);
         ComputeServiceProducer serviceProducer = ServiceProducerFactory.getProducer(configs);
         this.executorService =
                 serviceProducer.makeExecutorService(storeService, metaService, discoveryFactory);

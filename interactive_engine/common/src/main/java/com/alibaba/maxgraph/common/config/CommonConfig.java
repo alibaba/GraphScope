@@ -29,9 +29,14 @@ public class CommonConfig {
     public static final Config<Integer> RPC_THREAD_COUNT =
             Config.intConfig(
                     "rpc.thread.count",
-                    Math.min(Runtime.getRuntime().availableProcessors() * 2, 64));
+                    Math.max(Math.min(Runtime.getRuntime().availableProcessors(), 64), 4));
 
-    public static final Config<Integer> RPC_MAX_BYTES_MB = Config.intConfig("rpc.max.bytes.mb", 4);
+    public static final Config<Integer> NETTY_THREAD_COUNT =
+            Config.intConfig(
+                    "netty.thread.count",
+                    Math.max(Math.min(Runtime.getRuntime().availableProcessors(), 64), 4));
+
+    public static final Config<Integer> RPC_MAX_BYTES_MB = Config.intConfig("rpc.max.bytes.mb", 16);
 
     public static final Config<Integer> STORE_NODE_COUNT =
             Config.intConfig(String.format(NODE_COUNT_FORMAT, RoleType.STORE.getName()), 1);

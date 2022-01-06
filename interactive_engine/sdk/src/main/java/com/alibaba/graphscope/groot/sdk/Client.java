@@ -49,12 +49,11 @@ public class Client implements Closeable {
     private ClientWriteGrpc.ClientWriteBlockingStub writeStub;
     private ClientBackupGrpc.ClientBackupBlockingStub backupStub;
     private ManagedChannel channel;
-    private String name = "";
+    private String clientId = "DEFAULT";
 
     private BatchWriteRequest.Builder batchWriteBuilder;
 
-    public Client(String hosts, String name) {
-        this.name = name;
+    public Client(String hosts) {
         List<SocketAddress> addrList = new ArrayList<>();
         for (String host : hosts.split(",")) {
             String[] items = host.split(":");
@@ -71,7 +70,7 @@ public class Client implements Closeable {
         this.stub = ClientGrpc.newBlockingStub(this.channel);
         this.writeStub = ClientWriteGrpc.newBlockingStub(this.channel);
         this.backupStub = ClientBackupGrpc.newBlockingStub(this.channel);
-        this.init();
+        this.reset();
     }
 
     public Client(String host, int port) {
@@ -83,11 +82,17 @@ public class Client implements Closeable {
         this.stub = ClientGrpc.newBlockingStub(this.channel);
         this.writeStub = ClientWriteGrpc.newBlockingStub(this.channel);
         this.backupStub = ClientBackupGrpc.newBlockingStub(this.channel);
-        this.init();
+        this.reset();
     }
 
-    private void init() {
-        this.batchWriteBuilder = BatchWriteRequest.newBuilder().setClientId("0-1");
+    private void reset() {
+        this.batchWriteBuilder = BatchWriteRequest.newBuilder().setClientId(this.clientId);
+    }
+
+    public void initWriteSession() {
+        this.clientId =
+                this.writeStub.getClientId(GetClientIdRequest.newBuilder().build()).getClientId();
+        this.reset();
     }
 
     public void addVertex(String label, Map<String, String> properties) {
@@ -134,7 +139,7 @@ public class Client implements Closeable {
             BatchWriteResponse response = this.writeStub.batchWrite(this.batchWriteBuilder.build());
             snapshotId = response.getSnapshotId();
         }
-        this.init();
+        this.reset();
         return snapshotId;
     }
 
