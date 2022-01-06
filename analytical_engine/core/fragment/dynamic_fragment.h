@@ -1526,8 +1526,6 @@ class DynamicFragment {
         }
       }
     }
-    LOG(INFO) << "Edge parsing time: " << grape::GetCurrentTime() - start;
-    start = grape::GetCurrentTime();
 
     switch (modify_type) {
     case rpc::NX_ADD_EDGES:
@@ -1542,7 +1540,6 @@ class DynamicFragment {
     default:
       CHECK(false);
     }
-    LOG(INFO) << "Edge inserting time: " << grape::GetCurrentTime() - start;
   }
 
   void ModifyVertices(const folly::dynamic& vertices_to_modify,
@@ -1882,8 +1879,6 @@ class DynamicFragment {
     } else {
       addEdges(edges);
     }
-    // initOuterVerticesOfFragment();
-    // initMessageDestination(message_strategy_);
   }
 
   void Update(std::vector<internal_vertex_t>& vertices,
@@ -1979,7 +1974,6 @@ class DynamicFragment {
       const std::vector<grape::Edge<vid_t, edata_t>>& edges) {
     deleteVertices(vertices);
     deleteEdges(edges);
-    // initMessageDestination(message_strategy_);
   }
 
   std::unordered_set<vid_t> allGatherDeadVertices(

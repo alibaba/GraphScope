@@ -20,11 +20,7 @@
 #
 
 import copy
-import cProfile
 import json
-import pickle
-import types
-from timeit import default_timer as timer
 
 from networkx import freeze
 from networkx.classes import reportviews
@@ -2231,20 +2227,11 @@ class Graph(_GraphBase):
             self._add_node_cache.clear()
 
         if self._add_edge_cache:
-            begin = timer()
             edges_to_modify = json.dumps(self._add_edge_cache)
-            end = timer()
-            print("json dumps time:", end - begin)
-            begin = timer()
             self._op = dag_utils.modify_edges(
                 self, types_pb2.NX_ADD_EDGES, edges_to_modify
             )
-            end = timer()
-            print("puts to proto payload:", end - begin)
-            begin = timer()
             self._op.eval()
-            end = timer()
-            print("OP eval time:", end - begin)
             self._add_edge_cache.clear()
 
     def _clear_removing_cache(self):

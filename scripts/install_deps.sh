@@ -154,8 +154,8 @@ init_basic_packages() {
       lsb-release
       libbrotli-dev
       libbz2-dev
-      # libclang-dev
-      # libcurl4-openssl-dev
+      libclang-dev
+      libcurl4-openssl-dev
       libdouble-conversion-dev
       protobuf-compiler-grpc
       libevent-dev
