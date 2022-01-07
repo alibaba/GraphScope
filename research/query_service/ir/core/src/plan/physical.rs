@@ -155,7 +155,6 @@ impl AsPhysical for pb::EdgeExpand {
 
     fn post_process(&mut self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         let mut is_adding_auxilia = false;
-        let is_partition = builder.conf.workers > 1 || builder.conf.servers().len() > 1;
 
         let mut auxilia = pb::Auxilia { params: None, alias: None };
         if let Some(base) = &mut self.base {
@@ -171,7 +170,7 @@ impl AsPhysical for pb::EdgeExpand {
                         );
                     }
                 }
-                if is_partition && !self.is_edge {
+                if plan_meta.is_partition() && !self.is_edge {
                     // Vertex expansion
                     // Move everything to Auxilia
                     auxilia.params = Some(params.clone());
@@ -227,7 +226,6 @@ impl AsPhysical for pb::GetV {
     }
 
     fn post_process(&mut self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
-        let is_partition = builder.conf.workers > 1 || builder.conf.servers().len() > 1;
         let mut is_adding_auxilia = false;
         let mut auxilia = pb::Auxilia { params: None, alias: None };
         if let Some(columns) = plan_meta.get_curr_node_columns() {
@@ -249,7 +247,7 @@ impl AsPhysical for pb::GetV {
         }
         simple_add_job_builder(builder, &pb::logical_plan::Operator::from(self.clone()), SimpleOpr::Map)?;
         if is_adding_auxilia {
-            if is_partition {
+            if plan_meta.is_partition() {
                 let key_pb = common_pb::NameOrIdKey { key: None };
                 builder.repartition(key_pb.encode_to_vec());
             }
@@ -370,12 +368,11 @@ impl AsPhysical for NodeType {
 impl AsPhysical for LogicalPlan {
     fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         use pb::logical_plan::operator::Opr::*;
-        let is_partition = builder.conf.workers as usize > 1 || builder.conf.servers().len() > 1;
         let mut prev_node_opt: Option<NodeType> = None;
         let mut curr_node_opt = self.root();
 
         while curr_node_opt.is_some() {
-            if is_partition {
+            if plan_meta.is_partition() {
                 if let Some(prev) = &prev_node_opt {
                     let prev_ref = prev.borrow();
                     let node_ref = curr_node_opt.as_ref().unwrap().borrow();
@@ -555,8 +552,8 @@ mod test {
         assert_eq!(job_builder, expected_builder);
 
         let mut job_builder = JobBuilder::default();
-        job_builder.conf.workers = 2;
         let mut plan_meta = plan.plan_meta.clone();
+        plan_meta.set_partition(true);
         plan.add_job_builder(&mut job_builder, &mut plan_meta)
             .unwrap();
 
@@ -581,8 +578,8 @@ mod test {
         plan.append_operator_as_node(build_select("@.creationDate == 20220101").into(), vec![1])
             .unwrap();
         let mut job_builder = JobBuilder::default();
-        job_builder.conf.workers = 2;
         let mut plan_meta = plan.plan_meta.clone();
+        plan_meta.set_partition(true);
         plan.add_job_builder(&mut job_builder, &mut plan_meta)
             .unwrap();
 
@@ -630,8 +627,8 @@ mod test {
         assert_eq!(job_builder, expected_builder);
 
         let mut job_builder = JobBuilder::default();
-        job_builder.conf.workers = 2;
         let mut plan_meta = plan.plan_meta.clone();
+        plan_meta.set_partition(true);
         plan.add_job_builder(&mut job_builder, &mut plan_meta)
             .unwrap();
 
@@ -695,8 +692,8 @@ mod test {
         assert_eq!(job_builder, expected_builder);
 
         let mut job_builder = JobBuilder::default();
-        job_builder.conf.workers = 2;
         let mut plan_meta = plan.plan_meta.clone();
+        plan_meta.set_partition(true);
         plan.add_job_builder(&mut job_builder, &mut plan_meta)
             .unwrap();
 

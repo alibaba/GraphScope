@@ -399,6 +399,8 @@ pub struct PlanMeta {
     max_tag_id: i32,
     /// Whether to preprocess the operator.
     is_preprocess: bool,
+    /// Whether to partition the task
+    is_partition: bool,
 }
 
 impl PlanMeta {
@@ -474,5 +476,13 @@ impl PlanMeta {
 
     pub fn set_preprocess(&mut self, is_preprocess: bool) {
         self.is_preprocess = is_preprocess;
+    }
+
+    pub fn is_partition(&self) -> bool {
+        self.is_partition
+    }
+
+    pub fn set_partition(&mut self, is_partition: bool) {
+        self.is_partition = is_partition;
     }
 }
