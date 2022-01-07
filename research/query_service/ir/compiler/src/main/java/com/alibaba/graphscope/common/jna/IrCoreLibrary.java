@@ -34,7 +34,7 @@ public interface IrCoreLibrary extends Library {
 
     void destroyLogicalPlan(Pointer plan);
 
-    FfiJobBuffer.ByValue buildPhysicalPlan(Pointer plan);
+    FfiJobBuffer.ByValue buildPhysicalPlan(Pointer plan, int workers, int servers);
 
     Pointer initScanOperator(FfiScanOpt opt);
 
