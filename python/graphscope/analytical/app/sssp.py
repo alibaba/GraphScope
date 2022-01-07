@@ -27,31 +27,40 @@ __all__ = [
 
 @project_to_simple
 @not_compatible_for("arrow_property", "dynamic_property")
-def sssp(graph, src=0):
+def sssp(graph, src=0, weight=None):
     """Compute single source shortest path length on the `graph`.
 
-    Note that SSSP requires an numerical property on the edge.
+    Note that the `sssp` algorithm requires an numerical property on the edge.
 
     Args:
-        graph (:class:`Graph`): A projected simple graph.
+        graph (:class:`graphscope.Graph`): A property graph.
         src (optional): The source vertex. The type should be consistent
             with the id type of the `graph`, that is, it's `int` or `str` depending
             on the `oid_type` is `int64_t` or `string` of the `graph`. Defaults to 0.
+        weight (str, optional): The edge data key corresponding to the edge weight.
+            Defaults to None.
 
     Returns:
         :class:`graphscope.framework.context.VertexDataContextDAGNode`:
-            A context with each vertex assigned with the shortest distance from the src, evaluated in eager mode.
+            A context with each vertex assigned with the shortest distance from the `src`,
+            evaluated in eager mode.
 
     Examples:
 
     .. code:: python
 
-        import graphscope as gs
-        g = gs.g()
-        # Load some data, then project to a simple graph (if needed).
-        pg = g.project(vertices={"vlabel": []}, edges={"elabel": ["e_property"]})
-        r = gs.sssp(pg, src=0)
-        s.close()
-
+        >>> import graphscope
+        >>> from graphscope.dataset import load_p2p_network
+        >>> sess = graphscope.session(cluster_type="hosts", mode="eager")
+        >>> g = load_p2p_network(sess)
+        >>> g.schema
+        ...
+        type: EDGE
+        Label: connect
+        Properties: Property(3, dist)
+        Relations: [Relation(source='host', destination='host')]
+        ...
+        >>> c = graphscope.sssp(g, src=0, weight="dist")
+        >>> s.close()
     """
     return AppAssets(algo="sssp", context="vertex_data")(graph, src)

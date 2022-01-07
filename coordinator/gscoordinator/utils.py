@@ -837,60 +837,115 @@ def _pre_process_for_project_to_simple_op(op, op_result_pool, key_to_op, **kwarg
         graph_def_pb2.ARROW_FLATTENED,
     ):
         return
-    assert len(op.parents) == 1
+
+    def __check_v_prop_exists_in_all_v_labels(schema, prop):
+        exists = True
+        for v_label in schema.vertex_labels:
+            exists = exists and schema.vertex_property_exists(v_label, prop)
+        return exists
+
+    def __check_e_prop_exists_in_all_e_labels(schema, prop):
+        exists = True
+        for e_label in schema.edge_labels:
+            exists = exists and schema.edge_property_exists(e_label, prop)
+        return exists
+
     # get parent graph schema
+    assert len(op.parents) == 1
     key_of_parent_op = op.parents[0]
     r = op_result_pool[key_of_parent_op]
     schema = GraphSchema()
     schema.from_graph_def(r.graph_def)
     graph_name = r.graph_def.key
-    check_argument(
-        schema.vertex_label_num == 1,
-        "Cannot project to simple, vertex label number is not one.",
-    )
-    check_argument(
-        schema.edge_label_num == 1,
-        "Cannot project to simple, edge label number is not one.",
-    )
-    v_label = schema.vertex_labels[0]
-    e_label = schema.edge_labels[0]
-    relation = (v_label, v_label)
-    check_argument(
-        relation in schema.get_relationships(e_label),
-        f"Cannot project to simple, Graph doesn't contain such relationship: {v_label} -> {e_label} <- {v_label}.",
-    )
-    v_props = schema.get_vertex_properties(v_label)
-    e_props = schema.get_edge_properties(e_label)
-    check_argument(len(v_props) <= 1)
-    check_argument(len(e_props) <= 1)
-    v_label_id = schema.get_vertex_label_id(v_label)
-    e_label_id = schema.get_edge_label_id(e_label)
-    v_prop_id, vdata_type = (v_props[0].id, v_props[0].type) if v_props else (-1, None)
-    e_prop_id, edata_type = (e_props[0].id, e_props[0].type) if e_props else (-1, None)
-    oid_type = schema.oid_type
-    vid_type = schema.vid_type
+
+    need_flatten_graph = False
+    if schema.vertex_label_num > 1 or schema.edge_label_num > 1:
+        need_flatten_graph = True
+
+    # check and get vertex property
+    v_prop = op.attr[types_pb2.V_PROP_KEY].s.decode("utf-8")
+    if v_prop == "None":
+        v_prop_id = -1
+        v_prop_type = graph_def_pb2.NULLVALUE
+        if not need_flatten_graph:
+            # for projected graph
+            # if there is only one property on the label, uses this property
+            v_label = schema.vertex_labels[0]
+            if schema.vertex_properties_num(v_label) == 1:
+                v_prop = schema.get_vertex_properties(v_label)[0]
+                v_prop_id = v_prop.id
+                v_prop_type = v_prop.type
+    else:
+        # v_prop should exists in all labels
+        if not __check_v_prop_exists_in_all_v_labels(schema, v_prop):
+            raise RuntimeError(
+                "Property {0} doesn't exists in all vertex labels".format(v_prop)
+            )
+        v_prop_id = schema.get_vertex_property_id(schema.vertex_labels[0], v_prop)
+        v_prop_type = schema.get_vertex_properties(schema.vertex_labels[0])[
+            v_prop_id
+        ].type
+
+    # check and get edge property
+    e_prop = op.attr[types_pb2.E_PROP_KEY].s.decode("utf-8")
+    if e_prop == "None":
+        e_prop_id = -1
+        e_prop_type = graph_def_pb2.NULLVALUE
+        if not need_flatten_graph:
+            # for projected graph
+            # if there is only one property on the label, uses this property
+            e_label = schema.edge_labels[0]
+            if schema.edge_properties_num(e_label) == 1:
+                e_prop = schema.get_edge_properties(e_label)[0]
+                e_prop_id = e_prop.id
+                e_prop_type = e_prop.type
+    else:
+        # e_prop should exists in all labels
+        if not __check_e_prop_exists_in_all_e_labels(schema, e_prop):
+            raise RuntimeError(
+                "Property {0} doesn't exists in all edge labels".format(e_prop)
+            )
+        e_prop_id = schema.get_edge_property_id(schema.edge_labels[0], e_prop)
+        e_prop_type = schema.get_edge_properties(schema.edge_labels[0])[e_prop_id].type
+
     op.attr[types_pb2.GRAPH_NAME].CopyFrom(
         attr_value_pb2.AttrValue(s=graph_name.encode("utf-8"))
     )
-    op.attr[types_pb2.GRAPH_TYPE].CopyFrom(
-        utils.graph_type_to_attr(graph_def_pb2.ARROW_PROJECTED)
-    )
-    op.attr[types_pb2.V_LABEL_ID].CopyFrom(utils.i_to_attr(v_label_id))
-    op.attr[types_pb2.V_PROP_ID].CopyFrom(utils.i_to_attr(v_prop_id))
-    op.attr[types_pb2.E_LABEL_ID].CopyFrom(utils.i_to_attr(e_label_id))
-    op.attr[types_pb2.E_PROP_ID].CopyFrom(utils.i_to_attr(e_prop_id))
     op.attr[types_pb2.OID_TYPE].CopyFrom(
-        utils.s_to_attr(utils.data_type_to_cpp(oid_type))
+        utils.s_to_attr(utils.data_type_to_cpp(schema.oid_type))
     )
     op.attr[types_pb2.VID_TYPE].CopyFrom(
-        utils.s_to_attr(utils.data_type_to_cpp(vid_type))
+        utils.s_to_attr(utils.data_type_to_cpp(schema.vid_type))
     )
     op.attr[types_pb2.V_DATA_TYPE].CopyFrom(
-        utils.s_to_attr(utils.data_type_to_cpp(vdata_type))
+        utils.s_to_attr(utils.data_type_to_cpp(v_prop_type))
     )
     op.attr[types_pb2.E_DATA_TYPE].CopyFrom(
-        utils.s_to_attr(utils.data_type_to_cpp(edata_type))
+        utils.s_to_attr(utils.data_type_to_cpp(e_prop_type))
     )
+    if need_flatten_graph:
+        op.attr[types_pb2.GRAPH_TYPE].CopyFrom(
+            utils.graph_type_to_attr(graph_def_pb2.ARROW_FLATTENED)
+        )
+        op.attr[types_pb2.V_PROP_KEY].CopyFrom(utils.s_to_attr(str(v_prop_id)))
+        op.attr[types_pb2.E_PROP_KEY].CopyFrom(utils.s_to_attr(str(e_prop_id)))
+    else:
+        v_label = schema.vertex_labels[0]
+        e_label = schema.edge_labels[0]
+        relation = (v_label, v_label)
+        check_argument(
+            relation in schema.get_relationships(e_label),
+            f"Cannot project to simple, Graph doesn't contain such relationship: {v_label} -> {e_label} <- {v_label}.",
+        )
+        v_label_id = schema.get_vertex_label_id(v_label)
+        e_label_id = schema.get_edge_label_id(e_label)
+        op.attr[types_pb2.GRAPH_TYPE].CopyFrom(
+            utils.graph_type_to_attr(graph_def_pb2.ARROW_PROJECTED)
+        )
+        op.attr[types_pb2.V_LABEL_ID].CopyFrom(utils.i_to_attr(v_label_id))
+        op.attr[types_pb2.V_PROP_ID].CopyFrom(utils.i_to_attr(v_prop_id))
+        op.attr[types_pb2.E_LABEL_ID].CopyFrom(utils.i_to_attr(e_label_id))
+        op.attr[types_pb2.E_PROP_ID].CopyFrom(utils.i_to_attr(e_prop_id))
 
 
 def _pre_process_for_project_op(op, op_result_pool, key_to_op, **kwargs):
