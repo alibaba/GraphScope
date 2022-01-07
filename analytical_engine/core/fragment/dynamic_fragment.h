@@ -1471,31 +1471,36 @@ class DynamicFragment {
     return false;
   }
 
-  void ModifyEdges(const std::vector<std::string>& edges_to_modify,
-                   const rpc::ModifyType modify_type) {
+  void ModifyEdges(const folly::dynamic& edges_to_modify,
+                   const folly::dynamic& common_attrs,
+                   const rpc::ModifyType modify_type,
+                   const std::string weight) {
     std::vector<internal_vertex_t> vertices;
     std::vector<edge_t> edges;
 
     edges.reserve(edges_to_modify.size());
+    if (modify_type == rpc::NX_ADD_EDGES) {
+      vertices.reserve(edges_to_modify.size() * 2);
+    }
     invalidCache();
     {
-      edata_t e_data = folly::dynamic::object;
+      edata_t e_data;
       vdata_t fake_data = folly::dynamic::object;
       oid_t src, dst;
       vid_t src_gid, dst_gid;
       fid_t src_fid, dst_fid;
       partitioner_t partitioner;
       partitioner.Init(fnum_);
-      auto line_parser_ptr = std::make_unique<DynamicLineParser>();
-      for (auto& line : edges_to_modify) {
-        if (line.empty() || line[0] == '#') {
-          continue;
-        }
-        try {
-          line_parser_ptr->LineParserForEFile(line, src, dst, e_data);
-        } catch (std::exception& e) {
-          LOG(ERROR) << e.what() << " line: " << line;
-          continue;
+      for (const auto& e : edges_to_modify) {
+        src = std::move(e[0]);
+        dst = std::move(e[1]);
+        e_data = common_attrs;
+        if (e.size() == 3) {
+          if (weight.empty()) {
+            e_data.update(std::move(e[2]));
+          } else {
+            e_data.insert(weight, std::move(e[2]));
+          }
         }
         src_fid = partitioner.GetPartitionId(src);
         dst_fid = partitioner.GetPartitionId(dst);
@@ -1538,7 +1543,8 @@ class DynamicFragment {
     }
   }
 
-  void ModifyVertices(const std::vector<std::string>& vertices_to_modify,
+  void ModifyVertices(const folly::dynamic& vertices_to_modify,
+                      const folly::dynamic& common_attrs,
                       const rpc::ModifyType& modify_type) {
     std::vector<internal_vertex_t> vertices;
     std::vector<edge_t> empty_edges;
@@ -1550,18 +1556,17 @@ class DynamicFragment {
       partitioner.Init(fnum_);
       oid_t oid;
       vid_t gid;
-      vdata_t v_data = folly::dynamic::object;
+      vdata_t v_data;
       fid_t v_fid;
-      auto line_parser_ptr = std::make_unique<DynamicLineParser>();
-      for (auto& line : vertices_to_modify) {
-        if (line.empty() || line[0] == '#') {
-          continue;
-        }
-        try {
-          line_parser_ptr->LineParserForVFile(line, oid, v_data);
-        } catch (std::exception& e) {
-          LOG(ERROR) << e.what();
-          continue;
+      for (const auto& v : vertices_to_modify) {
+        v_data = common_attrs;
+        if (v.isArray() && v.size() == 2 && v[1].isObject()) {
+          // node id with data
+          oid = std::move(v[0]);
+          v_data.update(std::move(v[1]));
+        } else {
+          // only node id
+          oid = std::move(v);
         }
         v_fid = partitioner.GetPartitionId(oid);
         if (modify_type == rpc::NX_ADD_NODES) {
@@ -1877,8 +1882,6 @@ class DynamicFragment {
     } else {
       addEdges(edges);
     }
-    // initOuterVerticesOfFragment();
-    initMessageDestination(message_strategy_);
   }
 
   void Update(std::vector<internal_vertex_t>& vertices,
@@ -1974,7 +1977,6 @@ class DynamicFragment {
       const std::vector<grape::Edge<vid_t, edata_t>>& edges) {
     deleteVertices(vertices);
     deleteEdges(edges);
-    initMessageDestination(message_strategy_);
   }
 
   std::unordered_set<vid_t> allGatherDeadVertices(

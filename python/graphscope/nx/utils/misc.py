@@ -17,11 +17,11 @@
 #
 
 
+import functools
 import json
 
 import networkx.utils.misc
 import numpy as np
-from networkx.exception import NetworkXError
 
 from graphscope.client.session import get_session_by_id
 from graphscope.framework import dag_utils
@@ -73,3 +73,30 @@ def json_encoder(obj):
         return obj.item()
     else:
         raise TypeError("Unserializable object {} of type {}".format(obj, type(obj)))
+
+
+def clear_cache(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        g = args[0]
+        if func.__name__ in (
+            "add_node",
+            "add_edge",
+            "add_nodes_from",
+            "add_edges_from",
+            "add_weighted_edges_from",
+        ):
+            g._clear_removing_cache()
+        elif func.__name__ in (
+            "remove_node",
+            "remove_edge",
+            "remove_nodes_from",
+            "remove_edges_from",
+        ):
+            g._clear_adding_cache()
+        else:
+            g._clear_removing_cache()
+            g._clear_adding_cache()
+        return func(*args, **kwargs)
+
+    return wrapper

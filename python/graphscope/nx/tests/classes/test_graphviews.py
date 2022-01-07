@@ -137,7 +137,11 @@ class TestChainsOfViews(test_gvs.TestChainsOfViews):
         SG = self.G.subgraph([4, 5, 6])
         SSG = SG.to_undirected()
         assert sorted(list(SSG)) == [4, 5, 6]
-        assert sorted(SSG.edges) in ([(5, 4), (6, 5)], [(4, 5), (6, 5)])
+        assert sorted(SSG.edges) in (
+            [(5, 4), (6, 5)],
+            [(4, 5), (5, 6)],
+            [(4, 5), (6, 5)],
+        )
 
     def test_reverse_subgraph_toundirected(self):
         # a view can not project subgraph in graphscope.nx

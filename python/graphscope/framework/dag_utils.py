@@ -286,7 +286,7 @@ def arrow_to_dynamic(graph):
     return op
 
 
-def modify_edges(graph, modify_type, edges):
+def modify_edges(graph, modify_type, edges, attr={}, weight=None):
     """Create modify edges operation for nx graph.
 
     Args:
@@ -301,7 +301,10 @@ def modify_edges(graph, modify_type, edges):
     config = {}
     config[types_pb2.GRAPH_NAME] = utils.s_to_attr(graph.key)
     config[types_pb2.MODIFY_TYPE] = utils.modify_type_to_attr(modify_type)
-    config[types_pb2.EDGES] = utils.list_str_to_attr(edges)
+    config[types_pb2.EDGES] = utils.s_to_attr(edges)
+    config[types_pb2.PROPERTIES] = utils.s_to_attr(json.dumps(attr))
+    if weight:
+        config[types_pb2.EDGE_KEY] = utils.s_to_attr(weight)
     op = Operation(
         graph.session_id,
         types_pb2.MODIFY_EDGES,
@@ -311,7 +314,7 @@ def modify_edges(graph, modify_type, edges):
     return op
 
 
-def modify_vertices(graph, modify_type, vertices):
+def modify_vertices(graph, modify_type, vertices, attr={}):
     """Create modify vertices operation for nx graph.
 
     Args:
@@ -326,7 +329,8 @@ def modify_vertices(graph, modify_type, vertices):
     config = {}
     config[types_pb2.GRAPH_NAME] = utils.s_to_attr(graph.key)
     config[types_pb2.MODIFY_TYPE] = utils.modify_type_to_attr(modify_type)
-    config[types_pb2.NODES] = utils.list_str_to_attr(vertices)
+    config[types_pb2.NODES] = utils.s_to_attr(vertices)
+    config[types_pb2.PROPERTIES] = utils.s_to_attr(json.dumps(attr))
     op = Operation(
         graph.session_id,
         types_pb2.MODIFY_VERTICES,
@@ -713,9 +717,9 @@ def create_subgraph(graph, nodes=None, edges=None):
         types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
     }
     if nodes is not None:
-        config[types_pb2.NODES] = utils.list_str_to_attr(nodes)
+        config[types_pb2.NODES] = utils.s_to_attr(nodes)
     if edges is not None:
-        config[types_pb2.EDGES] = utils.list_str_to_attr(edges)
+        config[types_pb2.EDGES] = utils.s_to_attr(edges)
 
     op = Operation(
         graph.session_id,
