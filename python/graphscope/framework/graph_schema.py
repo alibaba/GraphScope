@@ -314,7 +314,6 @@ class GraphSchema:
                     self._valid_vertices = schema["valid_vertices"]
                     self._valid_edges = schema["valid_edges"]
             except Exception as e:
-                print("!!!!!!!!!!:", str(e))
                 raise ValueError("Invalid property graph schema") from e
         return self
 

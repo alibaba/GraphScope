@@ -53,14 +53,9 @@ def sssp(graph, src=0, weight=None):
         >>> from graphscope.dataset import load_p2p_network
         >>> sess = graphscope.session(cluster_type="hosts", mode="eager")
         >>> g = load_p2p_network(sess)
-        >>> g.schema
-        ...
-        type: EDGE
-        Label: connect
-        Properties: Property(3, dist)
-        Relations: [Relation(source='host', destination='host')]
-        ...
-        >>> c = graphscope.sssp(g, src=0, weight="dist")
+        >>> # project to a simple graph (if needed)
+        >>> sg = g.project(vertices={"host": ["id"]}, edges={"connect": ["dist"]})
+        >>> c = graphscope.sssp(pg, src=6)
         >>> s.close()
     """
     return AppAssets(algo="sssp", context="vertex_data")(graph, src)
