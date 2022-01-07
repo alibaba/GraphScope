@@ -470,17 +470,14 @@ class TestSquareClustering:
 def test_average_clustering():
     G = nx.cycle_graph(3)
     G.add_edge(2, 3)
-    assert nx.builtin.average_clustering(G) in (
-        (1 + 1 + 1 / 3.0) / 4.0,
-        0.5833333333333333,
+    assert nx.builtin.average_clustering(G) == pytest.approx(
+        (1 + 1 + 1 / 3.0) / 4.0, rel=1e-9, abs=1e-12
     )
-    assert nx.builtin.average_clustering(G, count_zeros=True) in (
-        (1 + 1 + 1 / 3.0) / 4.0,
-        0.5833333333333333,
+    assert nx.builtin.average_clustering(G, count_zeros=True) == pytest.approx(
+        (1 + 1 + 1 / 3.0) / 4.0, rel=1e-9, abs=1e-12
     )
-    assert nx.builtin.average_clustering(G, count_zeros=False) in (
-        (1 + 1 + 1 / 3.0) / 3.0,
-        0.7777777777777777,
+    assert nx.builtin.average_clustering(G, count_zeros=False) == pytest.approx(
+        (1 + 1 + 1 / 3.0) / 3.0, rel=1e-9, abs=1e-12
     )
 
 
