@@ -309,12 +309,15 @@ impl LogicalPlan {
         let mut is_update_curr = false;
         if let Ok(meta) = STORE_META.read() {
             match opr.opr {
-                Some(pb::logical_plan::operator::Opr::Edge(_)) => {
+                Some(pb::logical_plan::operator::Opr::Edge(_))
+                | Some(pb::logical_plan::operator::Opr::Scan(_)) => {
                     self.plan_meta
                         .set_curr_node(self.total_size as u32);
                 }
                 Some(pb::logical_plan::operator::Opr::As(_))
-                | Some(pb::logical_plan::operator::Opr::Select(_)) => {}
+                | Some(pb::logical_plan::operator::Opr::Select(_))
+                | Some(pb::logical_plan::operator::Opr::OrderBy(_))
+                | Some(pb::logical_plan::operator::Opr::Dedup(_)) => {}
                 _ => is_update_curr = true,
             }
             opr.preprocess(&meta, &mut self.plan_meta)?;
