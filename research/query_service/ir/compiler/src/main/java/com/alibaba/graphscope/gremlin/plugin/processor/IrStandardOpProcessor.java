@@ -155,7 +155,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                             IrPlan irPlan = opCollection.buildIrPlan();
 
                             logger.info("{}", irPlan.getPlanAsJson());
-                            byte[] physicalPlanBytes = irPlan.toPhysicalBytes();
+                            byte[] physicalPlanBytes = irPlan.toPhysicalBytes(configs);
                             irPlan.close();
 
                             int serverNum = PegasusConfig.PEGASUS_HOSTS.get(configs).split(",").length;

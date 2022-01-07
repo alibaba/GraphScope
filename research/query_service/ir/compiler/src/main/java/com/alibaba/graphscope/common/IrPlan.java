@@ -16,6 +16,8 @@
 
 package com.alibaba.graphscope.common;
 
+import com.alibaba.graphscope.common.config.Configs;
+import com.alibaba.graphscope.common.config.PegasusConfig;
 import com.alibaba.graphscope.common.exception.AppendInterOpException;
 import com.alibaba.graphscope.common.exception.BuildPhysicalException;
 import com.alibaba.graphscope.common.exception.InterOpIllegalArgException;
@@ -396,11 +398,14 @@ public class IrPlan implements Closeable {
         }
     }
 
-    public byte[] toPhysicalBytes() throws BuildPhysicalException {
+    public byte[] toPhysicalBytes(Configs configs) throws BuildPhysicalException {
         if (ptrPlan == null) {
             throw new BuildPhysicalException("ptrPlan is NullPointer");
         }
-        FfiJobBuffer.ByValue buffer = irCoreLib.buildPhysicalPlan(ptrPlan);
+        // hack way to notify shuffle
+        int servers = PegasusConfig.PEGASUS_HOSTS.get(configs).split(",").length;
+        int workers = PegasusConfig.PEGASUS_WORKER_NUM.get(configs);
+        FfiJobBuffer.ByValue buffer = irCoreLib.buildPhysicalPlan(ptrPlan, workers, servers);
         if (buffer.len == 0) {
             throw new BuildPhysicalException("call libc returns " + ResultCode.BuildJobError.name());
         }
