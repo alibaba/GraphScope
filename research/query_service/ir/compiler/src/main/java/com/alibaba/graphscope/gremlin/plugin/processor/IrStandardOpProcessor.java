@@ -61,10 +61,12 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 
 public class IrStandardOpProcessor extends StandardOpProcessor {
     private static Logger logger = LoggerFactory.getLogger(IrStandardOpProcessor.class);
+    private static final AtomicLong JOB_ID_COUNTER = new AtomicLong(0L);
     private Graph graph;
     private GraphTraversalSource g;
     private Configs configs;
@@ -164,10 +166,13 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                                 servers.add(i);
                             }
 
+                            long jobId = JOB_ID_COUNTER.incrementAndGet();
+                            String jobName = "ir_plan_" + jobId;
+
                             PegasusClient.JobRequest request = PegasusClient.JobRequest.parseFrom(physicalPlanBytes);
                             PegasusClient.JobConfig jobConfig = PegasusClient.JobConfig.newBuilder()
-                                    .setJobId(1)
-                                    .setJobName("ir_plan_1")
+                                    .setJobId(jobId)
+                                    .setJobName(jobName)
                                     .setWorkers(PegasusConfig.PEGASUS_WORKER_NUM.get(configs))
                                     .setBatchSize(PegasusConfig.PEGASUS_BATCH_SIZE.get(configs))
                                     .setMemoryLimit(PegasusConfig.PEGASUS_MEMORY_LIMIT.get(configs))
