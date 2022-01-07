@@ -537,10 +537,7 @@ def clustering(G, nodes=None, weight=None):
     @context_to_dict
     @project_to_simple
     def _clustering(G):
-        if G.is_directed():
-            return graphscope.clustering(G)
-        else:
-            return AppAssets(algo="lcc", context="vertex_data")(G)
+        return graphscope.clustering(G)
 
     if weight:
         # forward networkx.clustering
