@@ -20,8 +20,11 @@
 
 #include "boost/algorithm/string.hpp"
 #include "boost/algorithm/string/split.hpp"
+
+#ifdef NETWORKX
 #include "folly/dynamic.h"
 #include "folly/json.h"
+#endif
 
 #include "vineyard/io/io/io_factory.h"
 
