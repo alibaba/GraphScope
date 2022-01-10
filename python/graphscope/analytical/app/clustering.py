@@ -49,4 +49,7 @@ def clustering(graph):
         s.close()
 
     """
-    return AppAssets(algo="clustering", context="vertex_data")(graph)
+    if graph.is_directed():
+        return AppAssets(algo="clustering", context="vertex_data")(graph)
+    else:
+        return AppAssets(algo="lcc", context="vertex_data")(graph)
