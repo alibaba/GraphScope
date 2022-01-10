@@ -162,7 +162,7 @@ impl Encode for DynDetails {
             write_id(writer, self.inner.get_id())?;
             self.inner
                 .get_label()
-                .map(|l| l.clone())
+                .cloned()
                 .write_to(writer)?;
         }
         Ok(())
