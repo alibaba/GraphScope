@@ -228,10 +228,17 @@ impl GraphProxy for DemoGraph {
         if params.partitions.is_some() {
             let label_ids = encode_storage_vertex_label(&params.labels);
             let store = self.store;
+            let props = params.props.clone();
             let result = self
                 .store
                 .get_all_vertices(label_ids.as_ref())
-                .map(move |v| to_runtime_vertex(v, store));
+                .map(move |v| {
+                    if let Some(property) = props.as_ref() {
+                        to_runtime_vertex_with_property(v, property)
+                    } else {
+                        to_runtime_vertex(v, store)
+                    }
+                });
 
             Ok(filter_limit!(result, params.filter, params.limit))
         } else {
@@ -299,7 +306,6 @@ impl GraphProxy for DemoGraph {
                 Direction::In => graph.get_in_vertices(v as DefaultId, edge_label_ids.as_ref()),
                 Direction::Both => graph.get_both_vertices(v as DefaultId, edge_label_ids.as_ref()),
             }
-            // TODO: change to to_runtime_vertex_with_property
             .map(move |v| to_runtime_vertex(v, graph));
             Ok(filter_limit!(iter, filter, limit))
         });
