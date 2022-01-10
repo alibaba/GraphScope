@@ -157,8 +157,13 @@ impl Encode for DynDetails {
             default.write_to(writer)?;
         } else {
             // TODO(yyy): handle other kinds of details
-            // hint to be other Details, not in use now
-            writer.write_u8(0)?;
+            // only write id and label for LazyDetails
+            writer.write_u8(2)?;
+            write_id(writer, self.inner.get_id())?;
+            self.inner
+                .get_label()
+                .map(|l| l.clone())
+                .write_to(writer)?;
         }
         Ok(())
     }
@@ -170,11 +175,13 @@ impl Decode for DynDetails {
         if kind == 1 {
             let details = <DefaultDetails>::read_from(reader)?;
             Ok(DynDetails::new(details))
+        } else if kind == 2 {
+            let id = read_id(reader)?;
+            let label = <Option<NameOrId>>::read_from(reader)?;
+            let details = DefaultDetails::with(id, label);
+            Ok(DynDetails::new(details))
         } else {
-            // TODO(yyy): handle other kinds of details
-            // safety: fake never be used
-            let fake = DefaultDetails::new(0, NameOrId::Id(0));
-            Ok(DynDetails::new(fake))
+            Err(io::Error::from(io::ErrorKind::Other))
         }
     }
 }
