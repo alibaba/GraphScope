@@ -30,7 +30,6 @@ from graphscope.nx import NetworkXError
 from graphscope.nx.tests.classes.test_digraph import TestDiGraph as _TestDiGraph
 from graphscope.nx.tests.classes.test_graph import TestGraph as _TestGraph
 from graphscope.nx.tests.utils import almost_equal
-from graphscope.nx.tests.utils import replace_with_inf
 
 
 def k3_graph(prefix, directed):
@@ -381,7 +380,7 @@ class TestBuiltinCopyOnWrite:
     def test_triangles(self):
         # triangles implementation contain grape::VertexDenseSet which
         # can not use with ArrowFlattenedFragment
-        with pytest.raises(InvalidArgumentError):
+        with pytest.raises(nx.NetworkXNotImplemented):
             nx.builtin.triangles(self.SG)
 
     def test_average_clustering(self):
