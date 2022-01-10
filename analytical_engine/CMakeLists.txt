@@ -194,22 +194,41 @@ execute_process(COMMAND python3 proto/graphscope/proto/proto_generator.py "${PRO
         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/..)
 
 file(GLOB PROTO_CPP_FILES "proto/graphscope/proto/*.cc")
-file(GLOB CORE_GS_FILES "core/*.cc" "core/java/javasdk.cc" "core/object/dynamic.cc")
 file(GLOB CORE_RPC_SRC_FILES "core/server/*.cc")
 
 # Add targets
 add_library(gs_proto SHARED ${PROTO_CPP_FILES})
 set_source_files_properties(${PROTO_CPP_FILES} PROPERTIES COMPILE_FLAGS -Wno-array-bounds)
 target_include_directories(gs_proto PRIVATE "${PROJECT_SOURCE_DIR}/proto")
-target_link_libraries(gs_proto ${Protobuf_LIBRARIES} ${GRPC_LIBRARY}
-    ${GRPC_GRPC++_LIBRARY} ${GRPC_GRPC++_REFLECTION_LIBRARY})
+target_link_libraries(gs_proto
+        ${Protobuf_LIBRARIES}
+        ${GRPC_LIBRARY}
+        ${GRPC_GRPC++_LIBRARY}
+        ${GRPC_GRPC++_REFLECTION_LIBRARY}
+    )
 
-add_executable(grape_engine ${CORE_GS_FILES} ${CORE_RPC_SRC_FILES})
+add_library(gs_util SHARED "core/flags.cc" "core/launcher.cc")
+target_link_libraries(gs_util PRIVATE
+        ${LIBGRAPELITE_LIBRARIES}
+        ${GFLAGS_LIBRARIES}
+        ${VINEYARD_LIBRARIES}
+        ${Boost_LIBRARIES}
+    )
+
+add_executable(grape_engine
+        "core/grape_engine.cc"
+        "core/grape_instance.cc"
+        "core/java/javasdk.cc"
+        "core/java/dynamic.cc"
+        ${CORE_RPC_SRC_FILES}
+    )
 target_include_directories(grape_engine PRIVATE proto utils)
 
 if (ENABLE_JAVA_SDK)
     target_compile_definitions(grape_engine PUBLIC ENABLE_JAVA_SDK)
-    target_link_libraries(grape_engine PRIVATE gs_proto
+    target_link_libraries(grape_engine PRIVATE
+        gs_proto
+        gs_util
         ${LIBGRAPELITE_LIBRARIES}
         ${GFLAGS_LIBRARIES}
         ${CMAKE_DL_LIBS}
@@ -219,7 +238,9 @@ if (ENABLE_JAVA_SDK)
         ${JNI_LIBRARIES}
         )
 else()
-    target_link_libraries(grape_engine PRIVATE gs_proto
+    target_link_libraries(grape_engine PRIVATE
+        gs_proto
+        gs_util
         ${LIBGRAPELITE_LIBRARIES}
         ${GFLAGS_LIBRARIES}
         ${CMAKE_DL_LIBS}
@@ -244,8 +265,7 @@ if (BUILD_TESTS)
         add_executable(run_java_app test/run_java_app.cc core/java/javasdk.cc core/object/dynamic.cc)
         target_include_directories(run_java_app PRIVATE core utils apps)
         target_compile_definitions(run_java_app PUBLIC ENABLE_JAVA_SDK)
-        target_link_libraries(run_java_app gs_proto ${GFLAGS_LIBRARIES} ${MPI_CXX_LIBRARIES} ${JNI_LIBRARIES} ${Boost_LIBRARIES}
-                                        ${CMAKE_DL_LIBS} ${GLOG_LIBRARIES} ${VINEYARD_LIBRARIES})
+        target_link_libraries(run_java_app gs_proto ${GFLAGS_LIBRARIES} ${MPI_CXX_LIBRARIES} ${JNI_LIBRARIES} ${Boost_LIBRARIES} ${CMAKE_DL_LIBS} ${GLOG_LIBRARIES} ${VINEYARD_LIBRARIES})
 
         # java app benchmark
         add_executable(property_graph_java_app_benchmarks benchmarks/property_graph_java_app_benchmarks.cc core/java/javasdk.cc core/object/dynamic.cc)
@@ -379,6 +399,7 @@ endmacro()
 
 install_gsa_binary(grape_engine)
 install_gsa_binary(gs_proto)
+install_gsa_binary(gs_util)
 
 install_gsa_headers("${PROJECT_SOURCE_DIR}/apps")
 install_gsa_headers("${PROJECT_SOURCE_DIR}/benchmarks")
