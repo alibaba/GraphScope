@@ -126,6 +126,7 @@ class KatzCentrality
 
   void PEval(const fragment_t& frag, context_t& ctx,
              message_manager_t& messages) {
+    messages.InitChannels(thread_num());
     pullAndSend(frag, ctx, messages);
 
     if (frag.fnum() == 1) {

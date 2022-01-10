@@ -128,6 +128,7 @@ class EigenvectorCentrality
   void PEval(const fragment_t& frag, context_t& ctx,
              message_manager_t& messages) {
     int thrd_num = thread_num();
+    messages.InitChannels(thread_num());
     Pull(frag, ctx, messages);
     auto inner_vertices = frag.InnerVertices();
 
