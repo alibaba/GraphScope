@@ -311,8 +311,7 @@ jobs:
             - 'analytical_engine/frame/**'
             - 'analytical_engine/core/**'
             - 'python/graphscope/nx/__init__.py'
-            - 'python/graphscope/nx/classes/**'
-            - 'python/graphscope/nx/utils/**'
+            - 'python/graphscope/nx/!(tests)'
             - 'python/graphscope/nx/tests/!(convert)'
           convert:
             - 'python/graphscope/nx/convert.py'
