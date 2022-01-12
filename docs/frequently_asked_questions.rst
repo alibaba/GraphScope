@@ -5,7 +5,7 @@ If you don't find an answer to your question here, feel free to file a `Issues`_
 
 1. What are the minimum resources and system requirements required to run GraphScope?
 
-    To use GraphScope Python interface, **Python >= 3.6** and **pip >= 19.0** is required.
+    To use GraphScope Python interface, **Python >= 3.7** and **pip >= 19.0** is required.
     GraphScope engine can be deployed in standalone mode or distributed mode. For standalone deployment, the mininum requirement is  **4 cores CPU** and **8G memory**.
 
     GraphScope is tested and supported on the following systems:
@@ -29,7 +29,7 @@ If you don't find an answer to your question here, feel free to file a `Issues`_
     To enable verbose logging, turn on it by this:
 
     .. code:: python
-       
+
        graphscope.set_option(show_log=True)
 
     If you are running GraphScope in k8s, you can use `kubectl describe/logs <https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands>`_ to check the log/status of the cluster. If the disk storage is accessible(on local or via Pods), you may also find logs in `/tmp/gs/runtime/logs`.
