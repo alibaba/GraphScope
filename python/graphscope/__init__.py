@@ -17,6 +17,7 @@
 #
 
 import sys
+
 if sys.version_info[:2] < (3, 7):
     m = "Python 3.7 or later is required for GraphScope (%d.%d detected)."
     raise ImportError(m % sys.version_info[:2])
