@@ -16,13 +16,6 @@
 # limitations under the License.
 #
 
-import sys
-
-if sys.version_info[:2] < (3, 7):
-    m = "Python 3.7 or later is required for GraphScope (%d.%d detected)."
-    raise ImportError(m % sys.version_info[:2])
-del sys
-
 from graphscope.analytical.app import *
 from graphscope.analytical.udf import declare
 from graphscope.analytical.udf.types import Vertex
