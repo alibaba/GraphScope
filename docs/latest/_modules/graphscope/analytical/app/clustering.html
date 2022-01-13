@@ -172,7 +172,10 @@
 <span class="sd">        s.close()</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">AppAssets</span><span class="p">(</span><span class="n">algo</span><span class="o">=</span><span class="s2">&quot;clustering&quot;</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="s2">&quot;vertex_data&quot;</span><span class="p">)(</span><span class="n">graph</span><span class="p">)</span></div>
+    <span class="k">if</span> <span class="n">graph</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+        <span class="k">return</span> <span class="n">AppAssets</span><span class="p">(</span><span class="n">algo</span><span class="o">=</span><span class="s2">&quot;clustering&quot;</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="s2">&quot;vertex_data&quot;</span><span class="p">)(</span><span class="n">graph</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">AppAssets</span><span class="p">(</span><span class="n">algo</span><span class="o">=</span><span class="s2">&quot;lcc&quot;</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="s2">&quot;vertex_data&quot;</span><span class="p">)(</span><span class="n">graph</span><span class="p">)</span></div>
 </pre></div>
 
            </div>
@@ -227,6 +230,16 @@
             
               
                 <dd><a href="../../../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../../v0.10.0/index.html">v0.10.0</a></dd>
               
             
 

@@ -312,7 +312,7 @@ the $i$-th element of the vector $x$ defined by the equation</p>
 <p>where $A$ is the adjacency matrix of the graph <cite>G</cite> with eigenvalue
 $lambda$. By virtue of the Perron–Frobenius theorem, there is a unique
 solution $x$, all of whose entries are positive, if $lambda$ is the
-largest eigenvalue of the adjacency matrix $A$ (<a href="#id21"><span class="problematic" id="id3">[2]_</span></a>).</p>
+largest eigenvalue of the adjacency matrix $A$ (<a href="#id23"><span class="problematic" id="id3">[2]_</span></a>).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -355,7 +355,7 @@ In this measure the weight is interpreted as the connection strength.</p></li>
 <p><code class="xref py py-obj docutils literal notranslate"><span class="pre">eigenvector_centrality_numpy</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">pagerank</span></code>, <a class="reference internal" href="#graphscope.nx.builtin.hits" title="graphscope.nx.builtin.hits"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hits</span></code></a></p>
 </div>
 <p class="rubric">Notes</p>
-<p>The measure was introduced by <a href="#id22"><span class="problematic" id="id4">[1]_</span></a> and is discussed in <a href="#id23"><span class="problematic" id="id5">[2]_</span></a>.</p>
+<p>The measure was introduced by <a href="#id24"><span class="problematic" id="id4">[1]_</span></a> and is discussed in <a href="#id25"><span class="problematic" id="id5">[2]_</span></a>.</p>
 <p>The power iteration method is used to compute the eigenvector and
 convergence is <strong>not</strong> guaranteed. Our method stops after <code class="docutils literal notranslate"><span class="pre">max_iter</span></code>
 iterations or when the change in the computed vector between two
@@ -405,7 +405,7 @@ parameter $beta$.  Connections made with distant neighbors
 are, however, penalized by an attenuation factor $alpha$ which
 should be strictly less than the inverse largest eigenvalue of the
 adjacency matrix in order for the Katz centrality to be computed
-correctly. More information is provided in <a href="#id24"><span class="problematic" id="id8">[1]_</span></a>.</p>
+correctly. More information is provided in <a href="#id26"><span class="problematic" id="id8">[1]_</span></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -456,7 +456,7 @@ In this measure the weight is interpreted as the connection strength.</p></li>
 <p><code class="xref py py-obj docutils literal notranslate"><span class="pre">katz_centrality_numpy</span></code>, <a class="reference internal" href="#graphscope.nx.builtin.eigenvector_centrality" title="graphscope.nx.builtin.eigenvector_centrality"><code class="xref py py-obj docutils literal notranslate"><span class="pre">eigenvector_centrality</span></code></a>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">eigenvector_centrality_numpy</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">pagerank</span></code>, <a class="reference internal" href="#graphscope.nx.builtin.hits" title="graphscope.nx.builtin.hits"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hits</span></code></a></p>
 </div>
 <p class="rubric">Notes</p>
-<p>Katz centrality was introduced by <a href="#id25"><span class="problematic" id="id9">[2]_</span></a>.</p>
+<p>Katz centrality was introduced by <a href="#id27"><span class="problematic" id="id9">[2]_</span></a>.</p>
 <p>This algorithm it uses the power method to find the eigenvector
 corresponding to the largest eigenvalue of the adjacency matrix of <code class="docutils literal notranslate"><span class="pre">G</span></code>.
 The parameter <code class="docutils literal notranslate"><span class="pre">alpha</span></code> should be strictly less than the inverse of largest
@@ -616,7 +616,7 @@ Vladimir Batagelj and Matjaz Zaversnik,  2003.
 
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.nx.builtin.clustering">
-<span class="sig-prename descclassname"><span class="pre">graphscope.nx.builtin.</span></span><span class="sig-name descname"><span class="pre">clustering</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.clustering" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">graphscope.nx.builtin.</span></span><span class="sig-name descname"><span class="pre">clustering</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.clustering" title="Permalink to this definition"></a></dt>
 <dd><p>Compute the clustering coefficient for nodes.</p>
 <p>For unweighted graphs, the clustering of a node <span class="math notranslate nohighlight">\(u\)</span>
 is the fraction of possible triangles through that node that exist,</p>
@@ -624,20 +624,21 @@ is the fraction of possible triangles through that node that exist,</p>
 \[c_u = \frac{2 T(u)}{deg(u)(deg(u)-1)},\]</div>
 <p>where <span class="math notranslate nohighlight">\(T(u)\)</span> is the number of triangles through node <span class="math notranslate nohighlight">\(u\)</span> and
 <span class="math notranslate nohighlight">\(deg(u)\)</span> is the degree of <span class="math notranslate nohighlight">\(u\)</span>.</p>
-<p>For weighted graphs, there are several ways to define clustering <a href="#id26"><span class="problematic" id="id13">[1]_</span></a>.
+<p>For weighted graphs, there are several ways to define clustering <a href="#id28"><span class="problematic" id="id13">[1]_</span></a>.
 the one used here is defined
-as the geometric average of the subgraph edge weights <a href="#id27"><span class="problematic" id="id14">[2]_</span></a>,</p>
+as the geometric average of the subgraph edge weights <a href="#id29"><span class="problematic" id="id14">[2]_</span></a>,</p>
 <div class="math notranslate nohighlight">
 \[c_u = \frac{1}{deg(u)(deg(u)-1))}
       \sum_{vw} (\hat{w}_{uv} \hat{w}_{uw} \hat{w}_{vw})^{1/3}.\]</div>
 <p>The edge weights <span class="math notranslate nohighlight">\(\hat{w}_{uv}\)</span> are normalized by the maximum weight
 in the network <span class="math notranslate nohighlight">\(\hat{w}_{uv} = w_{uv}/\max(w)\)</span>.</p>
 <p>The value of <span class="math notranslate nohighlight">\(c_u\)</span> is assigned to 0 if <span class="math notranslate nohighlight">\(deg(u) &lt; 2\)</span>.</p>
+<p>Additionally, this weighted definition has been generalized to support negative edge weights <a class="footnote-reference brackets" href="#id19" id="id15">3</a>.</p>
 <p>For directed graphs, the clustering is similarly defined as the fraction
 of all possible directed triangles or geometric average of the subgraph
-edge weights for unweighted and weighted directed graph respectively <a class="footnote-reference brackets" href="#id18" id="id15">3</a>.</p>
+edge weights for unweighted and weighted directed graph respectively <a class="footnote-reference brackets" href="#id20" id="id16">4</a>.</p>
 <div class="math notranslate nohighlight">
-\[c_u = \frac{1}{deg^{tot}(u)(deg^{tot}(u)-1) - 2deg^{\leftrightarrow}(u)}
+\[c_u = \frac{2}{deg^{tot}(u)(deg^{tot}(u)-1) - 2deg^{\leftrightarrow}(u)}
       T(u),\]</div>
 <p>where <span class="math notranslate nohighlight">\(T(u)\)</span> is the number of directed triangles through node
 <span class="math notranslate nohighlight">\(u\)</span>, <span class="math notranslate nohighlight">\(deg^{tot}(u)\)</span> is the sum of in degree and out degree of
@@ -645,34 +646,48 @@ edge weights for unweighted and weighted directed graph respectively <a class="f
 <span class="math notranslate nohighlight">\(u\)</span>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>G</strong> (<em>graph</em>) – </p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>G</strong> (<em>graph</em>) – </p></li>
+<li><p><strong>nodes</strong> (<em>container of nodes</em><em>, </em><em>optional</em><em> (</em><em>default=all nodes in G</em><em>)</em>) – Compute clustering for nodes in this container.</p></li>
+<li><p><strong>weight</strong> (<em>string</em><em> or </em><em>None</em><em>, </em><em>optional</em><em> (</em><em>default=None</em><em>)</em>) – The edge attribute that holds the numerical value used as a weight.
+If None, then each edge has weight 1.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>out</strong> – Clustering coefficient at nodes</p>
+<dd class="field-even"><p><strong>out</strong> – Clustering coefficient at specified nodes</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>dataframe</p>
+<dd class="field-odd"><p>float, or dictionary</p>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">path_graph</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
-<span class="go">&gt;&gt;&gt;nx.clustering(G)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">complete_graph</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">clustering</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+<span class="go">1.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">clustering</span><span class="p">(</span><span class="n">G</span><span class="p">))</span>
+<span class="go">{0: 1.0, 1: 1.0, 2: 1.0, 3: 1.0, 4: 1.0}</span>
 </pre></div>
 </div>
+<p class="rubric">Notes</p>
+<p>Self loops are ignored.</p>
 <p class="rubric">References</p>
 <dl class="footnote brackets">
-<dt class="label" id="id16"><span class="brackets">1</span></dt>
+<dt class="label" id="id17"><span class="brackets">1</span></dt>
 <dd><p>Generalizations of the clustering coefficient to weighted
 complex networks by J. Saramäki, M. Kivelä, J.-P. Onnela,
 K. Kaski, and J. Kertész, Physical Review E, 75 027105 (2007).
 <a class="reference external" href="http://jponnela.com/web_documents/a9.pdf">http://jponnela.com/web_documents/a9.pdf</a></p>
 </dd>
-<dt class="label" id="id17"><span class="brackets">2</span></dt>
+<dt class="label" id="id18"><span class="brackets">2</span></dt>
 <dd><p>Intensity and coherence of motifs in weighted complex
 networks by J. P. Onnela, J. Saramäki, J. Kertész, and K. Kaski,
 Physical Review E, 71(6), 065103 (2005).</p>
 </dd>
-<dt class="label" id="id18"><span class="brackets"><a class="fn-backref" href="#id15">3</a></span></dt>
+<dt class="label" id="id19"><span class="brackets"><a class="fn-backref" href="#id15">3</a></span></dt>
+<dd><p>Generalization of Clustering Coefficients to Signed Correlation Networks
+by G. Costantini and M. Perugini, PloS one, 9(2), e88669 (2014).</p>
+</dd>
+<dt class="label" id="id20"><span class="brackets"><a class="fn-backref" href="#id16">4</a></span></dt>
 <dd><p>Clustering in complex directed networks by G. Fagiolo,
 Physical Review E, 76(2), 026107 (2007).</p>
 </dd>
@@ -686,15 +701,28 @@ Physical Review E, 76(2), 026107 (2007).</p>
 <p>Finds the number of triangles that include a node as one vertex.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>G</strong> (<em>graph</em>) – A networkx graph</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>G</strong> (<em>graph</em>) – A networkx graph</p></li>
+<li><p><strong>nodes</strong> (<em>container of nodes</em><em>, </em><em>optional</em><em> (</em><em>default= all nodes in G</em><em>)</em>) – Compute triangles for nodes in this container.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><strong>out</strong> – Number of triangles keyed by node label.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>dataframe</p>
+<dd class="field-odd"><p>dictionary</p>
 </dd>
 </dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">complete_graph</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">triangles</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+<span class="go">6</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">triangles</span><span class="p">(</span><span class="n">G</span><span class="p">))</span>
+<span class="go">{0: 6, 1: 6, 2: 6, 3: 6, 4: 6}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">triangles</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+<span class="go">[6, 6]</span>
+</pre></div>
+</div>
 <p class="rubric">Notes</p>
 <p>When computing triangles for the entire graph each triangle is counted
 three times, once at each node.  Self loops are ignored.</p>
@@ -702,7 +730,7 @@ three times, once at each node.  Self loops are ignored.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.nx.builtin.average_clustering">
-<span class="sig-prename descclassname"><span class="pre">graphscope.nx.builtin.</span></span><span class="sig-name descname"><span class="pre">average_clustering</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count_zeros</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.average_clustering" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">graphscope.nx.builtin.</span></span><span class="sig-name descname"><span class="pre">average_clustering</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count_zeros</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.average_clustering" title="Permalink to this definition"></a></dt>
 <dd><p>Compute the average clustering coefficient for the graph G.</p>
 <p>The clustering coefficient for the graph is the average,</p>
 <div class="math notranslate nohighlight">
@@ -737,13 +765,13 @@ to use the clustering function to get a list and then take the average.</p>
 <p>Self loops are ignored.</p>
 <p class="rubric">References</p>
 <dl class="footnote brackets">
-<dt class="label" id="id19"><span class="brackets">1</span></dt>
+<dt class="label" id="id21"><span class="brackets">1</span></dt>
 <dd><p>Generalizations of the clustering coefficient to weighted
 complex networks by J. Saramäki, M. Kivelä, J.-P. Onnela,
 K. Kaski, and J. Kertész, Physical Review E, 75 027105 (2007).
 <a class="reference external" href="http://jponnela.com/web_documents/a9.pdf">http://jponnela.com/web_documents/a9.pdf</a></p>
 </dd>
-<dt class="label" id="id20"><span class="brackets">2</span></dt>
+<dt class="label" id="id22"><span class="brackets">2</span></dt>
 <dd><p>Marcus Kaiser,  Mean clustering coefficients: the role of isolated
 nodes and leafs on clustering measures for small-world networks.
 <a class="reference external" href="https://arxiv.org/abs/0802.2512">https://arxiv.org/abs/0802.2512</a></p>
@@ -809,6 +837,16 @@ nodes and leafs on clustering measures for small-world networks.
             
               
                 <dd><a href="../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.10.0/index.html">v0.10.0</a></dd>
               
             
 

@@ -409,7 +409,7 @@
     <span class="k">return</span> <span class="n">op</span></div>
 
 
-<div class="viewcode-block" id="modify_edges"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.modify_edges.html#graphscope.framework.dag_utils.modify_edges">[docs]</a><span class="k">def</span> <span class="nf">modify_edges</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">modify_type</span><span class="p">,</span> <span class="n">edges</span><span class="p">):</span>
+<div class="viewcode-block" id="modify_edges"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.modify_edges.html#graphscope.framework.dag_utils.modify_edges">[docs]</a><span class="k">def</span> <span class="nf">modify_edges</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">modify_type</span><span class="p">,</span> <span class="n">edges</span><span class="p">,</span> <span class="n">attr</span><span class="o">=</span><span class="p">{},</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Create modify edges operation for nx graph.</span>
 
 <span class="sd">    Args:</span>
@@ -424,7 +424,10 @@
     <span class="n">config</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH_NAME</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">key</span><span class="p">)</span>
     <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">MODIFY_TYPE</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">modify_type_to_attr</span><span class="p">(</span><span class="n">modify_type</span><span class="p">)</span>
-    <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">EDGES</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">list_str_to_attr</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span>
+    <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">EDGES</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span>
+    <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">PROPERTIES</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">attr</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">weight</span><span class="p">:</span>
+        <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">EDGE_KEY</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">weight</span><span class="p">)</span>
     <span class="n">op</span> <span class="o">=</span> <span class="n">Operation</span><span class="p">(</span>
         <span class="n">graph</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
         <span class="n">types_pb2</span><span class="o">.</span><span class="n">MODIFY_EDGES</span><span class="p">,</span>
@@ -434,7 +437,7 @@
     <span class="k">return</span> <span class="n">op</span></div>
 
 
-<div class="viewcode-block" id="modify_vertices"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.modify_vertices.html#graphscope.framework.dag_utils.modify_vertices">[docs]</a><span class="k">def</span> <span class="nf">modify_vertices</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">modify_type</span><span class="p">,</span> <span class="n">vertices</span><span class="p">):</span>
+<div class="viewcode-block" id="modify_vertices"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.modify_vertices.html#graphscope.framework.dag_utils.modify_vertices">[docs]</a><span class="k">def</span> <span class="nf">modify_vertices</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">modify_type</span><span class="p">,</span> <span class="n">vertices</span><span class="p">,</span> <span class="n">attr</span><span class="o">=</span><span class="p">{}):</span>
     <span class="sd">&quot;&quot;&quot;Create modify vertices operation for nx graph.</span>
 
 <span class="sd">    Args:</span>
@@ -449,7 +452,8 @@
     <span class="n">config</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH_NAME</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">key</span><span class="p">)</span>
     <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">MODIFY_TYPE</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">modify_type_to_attr</span><span class="p">(</span><span class="n">modify_type</span><span class="p">)</span>
-    <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">NODES</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">list_str_to_attr</span><span class="p">(</span><span class="n">vertices</span><span class="p">)</span>
+    <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">NODES</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">vertices</span><span class="p">)</span>
+    <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">PROPERTIES</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">attr</span><span class="p">))</span>
     <span class="n">op</span> <span class="o">=</span> <span class="n">Operation</span><span class="p">(</span>
         <span class="n">graph</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
         <span class="n">types_pb2</span><span class="o">.</span><span class="n">MODIFY_VERTICES</span><span class="p">,</span>
@@ -836,9 +840,9 @@
         <span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH_NAME</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">key</span><span class="p">),</span>
     <span class="p">}</span>
     <span class="k">if</span> <span class="n">nodes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">NODES</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">list_str_to_attr</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+        <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">NODES</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">edges</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">EDGES</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">list_str_to_attr</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span>
+        <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">EDGES</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span>
 
     <span class="n">op</span> <span class="o">=</span> <span class="n">Operation</span><span class="p">(</span>
         <span class="n">graph</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
@@ -1349,6 +1353,16 @@
             
               
                 <dd><a href="../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.10.0/index.html">v0.10.0</a></dd>
               
             
 
