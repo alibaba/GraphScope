@@ -252,9 +252,9 @@ init_basic_packages() {
 check_dependencies() {
   log "Checking dependencies for building GraphScope."
 
-  # check python3 >= 3.6
+  # check python3 >= 3.7
   if ! command -v python3 &> /dev/null ||
-     [[ "$(python3 -V 2>&1 | sed 's/.* \([0-9]\).\([0-9]\).*/\1\2/')" -lt "36" ]]; then
+     [[ "$(python3 -V 2>&1 | sed 's/.* \([0-9]\).\([0-9]\).*/\1\2/')" -lt "37" ]]; then
     if [[ "${PLATFORM}" == *"CentOS"* ]]; then
       packages_to_install+=(python3-devel)
     else
@@ -876,8 +876,8 @@ check_dependencies_version_k8s() {
     exit 1
   fi
   ver=$(python3 -V 2>&1 | sed 's/.* \([0-9]\).\([0-9]\).*/\1\2/')
-  if [ "$ver" -lt "36" ]; then
-    err "GraphScope requires python 3.6 or greater. Current version is ${python3 -V}"
+  if [ "$ver" -lt "37" ]; then
+    err "GraphScope requires python 3.7 or greater. Current version is ${python3 -V}"
     exit 1
   fi
 }

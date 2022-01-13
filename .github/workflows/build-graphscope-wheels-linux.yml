@@ -132,7 +132,7 @@ jobs:
     needs: [build-wheels]
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        python-version: [3.7, 3.8, 3.9]
 
     steps:
     - uses: actions/download-artifact@v2
@@ -193,10 +193,10 @@ jobs:
     - name: Prepare Environment
       shell: bash
       run: |
-        yum install -y gcc gcc-c++ make cmake
+        dnf install -y gcc gcc-c++  make cmake
 
         # install git and python3
-        yum install -y git python3-pip python3-devel
+        dnf install -y git python38 python38-devel
         python3 -m pip install --upgrade pip --user
 
         # install graphscope-client
@@ -218,7 +218,7 @@ jobs:
         # install tensorflow
         python3 -m pip install pytest "tensorflow<=2.5.2" --user
         # install jdk
-        yum install -y java-11-openjdk-devel
+        dnf install -y java-11-openjdk-devel
 
     - name: Run Minimum Test
       env:
