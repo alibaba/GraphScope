@@ -128,7 +128,7 @@
 <ol class="arabic">
 <li><p>What are the minimum resources and system requirements required to run GraphScope?</p>
 <blockquote>
-<div><p>To use GraphScope Python interface, <strong>Python &gt;= 3.6</strong> and <strong>pip &gt;= 19.0</strong> is required.
+<div><p>To use GraphScope Python interface, <strong>Python &gt;= 3.7</strong> and <strong>pip &gt;= 19.0</strong> is required.
 GraphScope engine can be deployed in standalone mode or distributed mode. For standalone deployment, the mininum requirement is  <strong>4 cores CPU</strong> and <strong>8G memory</strong>.</p>
 <p>GraphScope is tested and supported on the following systems:</p>
 <ul class="simple">
@@ -202,6 +202,20 @@ This case is observed when using GraphScope with helm. If users did not correctl
 <li><p>compile <code class="docutils literal notranslate"><span class="pre">scipy</span></code> failed: You can follow <a class="reference external" href="https://stackoverflow.com/questions/65745683/how-to-install-scipy-on-apple-silicon-arm-m1">this</a> to build scipy from source or try <code class="docutils literal notranslate"><span class="pre">pip3</span> <span class="pre">install</span> <span class="pre">--pre</span> <span class="pre">-i</span> <span class="pre">https://pypi.anaconda.org/scipy-wheels-nightly/simple</span> <span class="pre">scipy</span></code> to workaround this problem.</p></li>
 </ul>
 </li>
+<li><p>How to resolve the <code class="docutils literal notranslate"><span class="pre">Permission</span> <span class="pre">denied</span></code> error when allocating PV on NFS volumes?</p>
+<ul>
+<li><p>ENV: Use helm to install graphscope-store, NFS to supply PV.</p></li>
+<li><p>Appearance: Pod <code class="docutils literal notranslate"><span class="pre">graphscope-store-kafka-0</span></code> , <code class="docutils literal notranslate"><span class="pre">graphscope-store-zookeeper-0</span></code> reports <code class="docutils literal notranslate"><span class="pre">CrashLoopBackOff</span></code> status.</p></li>
+<li><p>Check: First use <code class="docutils literal notranslate"><span class="pre">kubectl</span> <span class="pre">logs</span> <span class="pre">graphscope-store-zookeeper-0</span></code> to check log. If the log shows <code class="docutils literal notranslate"><span class="pre">mkdir:</span> <span class="pre">cannot</span> <span class="pre">create</span> <span class="pre">directory</span> <span class="pre">'/bitnami/zookeeper/data':</span> <span class="pre">Permission</span> <span class="pre">denied</span></code>.</p></li>
+<li><p>Reason: Normaly, the permission of NFS directories we created is <code class="docutils literal notranslate"><span class="pre">root</span> <span class="pre">755</span></code> (depends on your sepcify environment), but the default user of graphscope-store is <code class="docutils literal notranslate"><span class="pre">graphscope(1001)</span></code>, so these pods have no permission to write on NFS.</p></li>
+<li><p>Solution: There are two slutions to solve this.</p>
+<blockquote>
+<div><p>The brutal one is using <code class="docutils literal notranslate"><span class="pre">chmod</span> <span class="pre">777</span></code> on all related PV directories, this is efficient but not recommended in production environment.</p>
+<p>The elegant one is creating <code class="docutils literal notranslate"><span class="pre">graphscope</span></code> user and user group first, and then grant the access permission on <code class="docutils literal notranslate"><span class="pre">graphscope</span></code> to the related NFS directories.</p>
+</div></blockquote>
+</li>
+</ul>
+</li>
 </ol>
 <p><strong>I do have many other questions…</strong></p>
 <blockquote>
@@ -265,6 +279,16 @@ This case is observed when using GraphScope with helm. If users did not correctl
             
               
                 <dd><a href="../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.10.0/index.html">v0.10.0</a></dd>
               
             
 
