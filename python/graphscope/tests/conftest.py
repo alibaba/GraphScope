@@ -521,6 +521,12 @@ def sssp_result():
 
 
 @pytest.fixture(scope="module")
+def twitter_sssp_result():
+    rlt = np.loadtxt("{}/results/twitter_property_sssp_4".format(property_dir), dtype=float)
+    yield rlt
+
+
+@pytest.fixture(scope="module")
 def wcc_result():
     ret = np.loadtxt("{}/../p2p-31-wcc_auto".format(property_dir), dtype=int)
     yield ret
