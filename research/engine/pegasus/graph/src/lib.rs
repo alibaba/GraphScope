@@ -16,7 +16,6 @@ use nohash_hasher::{BuildNoHashHasher, IntMap};
 use crate::topo::IdTopo;
 
 pub mod graph;
-pub mod meta;
 pub mod topo;
 
 pub type MemIdTopoGraph = IdTopo<NeighborsBackend>;

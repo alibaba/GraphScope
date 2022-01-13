@@ -84,7 +84,8 @@ fn main() {
         let mut conf = conf.clone();
         conf.job_id = i as u64;
         conf.plan_print = i <= 0;
-        let result = pegasus_benchmark::queries::khop::single_src_k_hop(id, k_hop, use_loop, conf, graph.clone());
+        let result =
+            pegasus_benchmark::queries::khop::single_src_k_hop(id, k_hop, use_loop, conf, graph.clone());
         results.push(result);
     }
 

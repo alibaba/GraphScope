@@ -1,13 +1,17 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Instant;
+
 use pegasus::{Configuration, JobConf, ServerConf};
 use structopt::StructOpt;
 
 /// Searching and counting k-hop neighbors for each vertex in a list use only one job;
 /// Do k-hop searching for all vertices in barrier sync mode;
 #[derive(Debug, StructOpt)]
-#[structopt(name = "sync packed multi-src k-hop", about = "Search k-hop neighbors using parallel dataflow system")]
+#[structopt(
+    name = "sync packed multi-src k-hop",
+    about = "Search k-hop neighbors using parallel dataflow system"
+)]
 struct Config {
     /// The number of hop this job will search;
     #[structopt(short = "k", default_value = "3")]

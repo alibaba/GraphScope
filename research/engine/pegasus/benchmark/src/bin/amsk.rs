@@ -8,7 +8,10 @@ use structopt::StructOpt;
 /// Search and count k-hop neighbors for each vertex in a list using only one job;
 /// Do k-hop searching for each vertex in async mode;
 #[derive(Debug, StructOpt)]
-#[structopt(name = "async multi-src k-hop ", about = "Search k-hop neighbors using parallel dataflow system")]
+#[structopt(
+    name = "async multi-src k-hop ",
+    about = "Search k-hop neighbors using parallel dataflow system"
+)]
 struct Config {
     /// The number of hop this job will search;
     #[structopt(short = "k", default_value = "3")]

@@ -958,6 +958,7 @@ version = "0.1.0"
 dependencies = [
  "ahash",
  "byteorder",
+ "crossbeam-utils 0.6.6",
  "lazy_static",
  "memmap",
  "nohash-hasher",

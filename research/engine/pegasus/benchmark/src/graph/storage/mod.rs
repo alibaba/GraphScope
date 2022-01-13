@@ -1,14 +1,17 @@
+use std::collections::HashMap;
 use std::sync::Arc;
-use pegasus_graph::graph::{Direction, Vid};
-use pegasus_graph::{MemLabeledTopoGraph};
-use crate::graph::{FilterById, Graph, Vertex};
+
+use pegasus_graph::graph::{Direction };
+use pegasus_graph::MemLabeledTopoGraph;
+
+use crate::graph::{Graph, Value, Vertex};
 
 mod clickhouse;
 
-pub trait PropsStore: Send + Sync + 'static {
-    fn get_batch_vertices(&self, ids: &[Vid]) -> Vec<Vertex<Vid>>;
+pub trait PropsStore: Send + 'static {
+    fn get_vertices(&self, v_type: &str, ids: &[u64]) -> Vec<(u64, HashMap<String, Value>)>;
 
-    fn get_id_filter<F: ToString>(&self, filter: F) -> Box<dyn FilterById<ID = Vid>>;
+    fn select_vertices<F: ToString>(&self, v_type: &str, ids: &[u64], filter: F) -> Vec<u64>;
 }
 
 pub struct PropertyGraph<P: PropsStore> {
@@ -17,20 +20,28 @@ pub struct PropertyGraph<P: PropsStore> {
 }
 
 impl<P: PropsStore> Graph for PropertyGraph<P> {
-    type VID = Vid;
 
-    fn get_neighbor_ids(&self, src: Self::VID, edge_label: &str, dir: Direction) -> Box<dyn Iterator<Item=Self::VID> + Send + 'static> {
-        Box::new(self.topo.get_neighbors_by_(src, edge_label, dir))
+    fn get_neighbor_ids(
+        &self, src_id: u64 , src_type: &str, edge_label: &str, dir: Direction,
+    ) -> Box<dyn Iterator<Item = u64> + Send + 'static> {
+        Box::new(
+            self.topo
+                .get_neighbors_through(src_id, src_type, edge_label, dir),
+        )
     }
 
-    fn get_vertices_by_ids(&self, ids: &[Self::VID]) -> Vec<Vertex<Self::VID>> {
-
-        self.pros.get_batch_vertices(ids)
+    fn get_vertices_by_ids(&self, v_type: &str, ids: &[u64]) -> Vec<Vertex> {
+        let label_id = MemLabeledTopoGraph::get_label_id(v_type).expect("label not found");
+        let props = self.pros.get_vertices(v_type, ids);
+        let mut vertices = Vec::with_capacity(props.len());
+        for (id, p)  in props {
+            let id = (label_id, id).into();
+            vertices.push(Vertex::new(id, p));
+        }
+        vertices
     }
 
-    fn prepare_filter_vertex<F: ToString>(&self, filter: F) -> Box<dyn FilterById<ID = Self::VID>> {
-        self.pros.get_id_filter(filter)
+    fn filter_vertex<F: ToString>(&self, v_type: &str, ids: &[u64], filter: F) -> Vec<u64> {
+        self.pros.select_vertices(v_type, ids, filter)
     }
 }
-
-

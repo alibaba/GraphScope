@@ -3,13 +3,13 @@ use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
 use pegasus::api::{Binary, Branch, IterCondition, Iteration, Map, Sink, Unary};
+use pegasus::resource::PartitionedResource;
 use pegasus::result::ResultStream;
 use pegasus::tag::tools::map::TidyTagMap;
-use pegasus::{Data, JobConf};
-use pegasus::resource::PartitionedResource;
+use pegasus::{JobConf};
 use pegasus_graph::graph::Direction;
 
-use crate::graph::{Graph, OrderBy, VertexId};
+use crate::graph::{Graph, OrderBy};
 
 // interactive complex query 1 :
 // g.V().hasLabel('person').has('person_id', $id)
@@ -19,12 +19,11 @@ use crate::graph::{Graph, OrderBy, VertexId};
 // .fold()
 // .map{ 排序 }
 
-pub fn ic1<G: Graph, R: PartitionedResource<Res=G>>(
-    person_id: G::VID, first_name: String, conf: JobConf, graph: R,
-) -> ResultStream<Vec<u8>> where G::VID : Data {
+pub fn ic1<G: Graph, R: PartitionedResource<Res = G>>(
+    person_id: u64, first_name: String, conf: JobConf, graph: R,
+) -> ResultStream<Vec<u8>> {
     pegasus::run_with_resources(conf, graph, || {
         let first_name = first_name.clone();
-        let person_id = person_id.clone();
         move |source, sink| {
             let stream = if source.get_worker_index() == 0 {
                 source.input_from(vec![person_id.clone()])
@@ -35,17 +34,15 @@ pub fn ic1<G: Graph, R: PartitionedResource<Res=G>>(
             let (emit, leave) = stream.iterate_emit(IterCondition::max_iters(3), |start| {
                 let graph = pegasus::resource::get_resource::<R::Res>().unwrap();
                 start
-                    .repartition(|id| Ok(id.get_id()))
+                    .repartition(|id| Ok(*id))
                     .flat_map(move |src_id| {
-                        let person_id = person_id.clone();
                         Ok(graph
-                            .get_neighbor_ids(src_id, "knows", Direction::Both)
-                            .filter(move |id| id != &person_id))
+                            .get_neighbor_ids(src_id, "person", "knows", Direction::Both)
+                            .filter(move |id| *id != person_id))
                     })?
                     .unary("filter", |_| {
                         let graph = pegasus::resource::get_resource::<R::Res>().unwrap();
                         let mut vec = vec![];
-                        let stat = graph.prepare_filter_vertex(format!("p_firstname = '{}'", first_name));
                         move |input, output| {
                             input.for_each_batch(|batch| {
                                 if !batch.is_empty() {
@@ -53,10 +50,10 @@ pub fn ic1<G: Graph, R: PartitionedResource<Res=G>>(
                                     for id in batch.drain() {
                                         vec.push(id);
                                     }
-                                    let result = stat.exec(&vec);
+                                    let result = graph.filter_vertex("person", &vec, format!("p_firstname = '{}'", first_name));
                                     output
                                         .new_session(batch.tag())?
-                                        .give_iterator(result)?;
+                                        .give_iterator(result.into_iter())?;
                                 }
                                 Ok(())
                             })
@@ -138,12 +135,12 @@ pub fn ic1<G: Graph, R: PartitionedResource<Res=G>>(
                         }
                         if batch.is_last() {
                             if !binary_end.insert(batch.tag().clone()) {
-                                let ids = collect.keys().cloned().collect::<Vec<_>>();
+                                let ids = collect.keys().copied().collect::<Vec<_>>();
                                 let graph = pegasus::resource::get_resource::<Arc<G>>().unwrap();
-                                let details = graph.get_vertices_by_ids(&ids);
+                                let details = graph.get_vertices_by_ids("person", &ids);
                                 let mut with_dist = Vec::with_capacity(details.len());
                                 for v in details {
-                                    let dist = collect.get(&v.id).unwrap();
+                                    let dist = collect.get(&v.id.vertex_id()).expect("dist lost");
                                     with_dist.push((*dist, v));
                                 }
                                 with_dist.sort_by(|a, b| {
@@ -166,12 +163,12 @@ pub fn ic1<G: Graph, R: PartitionedResource<Res=G>>(
                         }
                         if batch.is_last() {
                             if !binary_end.insert(batch.tag().clone()) {
-                                let ids = collect.keys().cloned().collect::<Vec<_>>();
+                                let ids = collect.keys().copied().collect::<Vec<_>>();
                                 let graph = pegasus::resource::get_resource::<Arc<G>>().unwrap();
-                                let details = graph.get_vertices_by_ids(&ids);
+                                let details = graph.get_vertices_by_ids("person", &ids);
                                 let mut with_dist = Vec::with_capacity(details.len());
                                 for v in details {
-                                    let dist = collect.get(&v.id).unwrap();
+                                    let dist = collect.get(&v.id.vertex_id()).unwrap();
                                     with_dist.push((*dist, v));
                                 }
                                 with_dist.sort_by(|a, b| {

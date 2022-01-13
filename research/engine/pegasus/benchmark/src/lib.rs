@@ -1,3 +1,5 @@
+#[macro_use]
+extern crate log;
 
-pub mod queries;
 pub mod graph;
+pub mod queries;

@@ -1,195 +1,13 @@
-// // use std::time::Instant;
-// // use futures::StreamExt;
-// // use klickhouse::*;
-// //
-// // #[derive(Row, Debug, Default)]
-// // struct Predict {
-// //     model_id: u32,
-// //     datetime: DateTime,
-// //     stock: String,
-// //     score: f64,
-// // }
-// //
-// // #[tokio::main]
-// // async fn main() {
-// //     pegasus_common::logs::init_log();
-// //     let mut opt = ClientOptions::default();
-// //     opt.default_database = "telescope".to_owned();
-// //     let client = Client::connect("100.81.128.150:9001", opt)
-// //         .await
-// //         .unwrap();
-// //     let query = "select * from us_cls_predict where model_id in (8,10,11,13,15,17,19,20,22,24,26,28,30)";
-// //     let start = Instant::now();
-// //     let mut all_rows = client
-// //         .query_raw(query)
-// //         .await
-// //         .unwrap();
-// //
-// //     let mut count = 0u64;
-// //     while let Some(row) = all_rows.next().await {
-// //         println!("row {}", row.rows);
-// //         count += row.rows;
-// //     }
-// //     println!("total received {} records, used {:?};", count, start.elapsed());
-// // }
-//
-// use std::collections::HashMap;
-// use std::io::Read;
-// //use std::str::FromStr;
-// use std::time::Instant;
-//
-// use byteorder::{LittleEndian, ReadBytesExt};
-// use futures_util::stream;
-// //use klickhouse::Type;
-// use pegasus_graph::ckh::{ClickHouseClient, Compression, QueryInfo};
-//
-// #[tokio::main]
-// async fn main() {
-//     let mut client = ClickHouseClient::connect("http://100.81.128.150:9010")
-//         .await
-//         .unwrap();
-//     client = client.send_gzip().accept_gzip();
-//     let ids: Vec<u64> = vec![
-//         26388281136663,
-//         13194140916590,
-//         30786326937488,
-//         24189256988753,
-//         8796094070929,
-//         28587304322313,
-//         28587304792431,
-//         2125462,
-//         26388282199678,
-//         21990235451026,
-//         21990235597655,
-//         21990235639208,
-//         15393165062444,
-//         15393165285050,
-//         15393165817581,
-//         30786328653168,
-//         17592189206907,
-//         24189258738599,
-//         28587305051971,
-//         28587305148849,
-//         28587305424253,
-//         19791211884447,
-//         19791212578815,
-//         19791212889775,
-//         28587302902162,
-//         28587303415134,
-//         13194142818954,
-//         15393163129096,
-//         19791209384491,
-//         32985350210506,
-//         24189259355357,
-//         26388279558703,
-//         26388280210284,
-//         30786326404180,
-//         32985351505648,
-//     ];
-//
-//     let query =
-//         format!("select p_personid from person where p_personid in {:?} and p_firstname = 'Chau'", ids);
-//     let mut settings = HashMap::new();
-//     settings.insert("max_block_size".to_string(), "1000000".to_string());
-//     let compression = Compression { algorithm: 2, level: 3 };
-//     let query = QueryInfo {
-//         query,
-//         query_id: "".to_string(),
-//         settings,
-//         database: "ldbc".to_string(),
-//         input_data: Default::default(),
-//         input_data_delimiter: Default::default(),
-//         output_format: "Native".to_string(),
-//         external_tables: vec![],
-//         user_name: "".to_string(),
-//         password: "".to_string(),
-//         quota: "".to_string(),
-//         session_id: "".to_string(),
-//         session_check: false,
-//         session_timeout: 0,
-//         cancel: false,
-//         next_query_info: false,
-//         result_compression: Some(compression),
-//         compression_type: "".to_string(),
-//         compression_level: 0,
-//     };
-//
-//     let start = Instant::now();
-//     let mut results = client
-//         .execute_query_with_stream_output(query)
-//         .await
-//         .unwrap()
-//         .into_inner();
-//     let mut result_binary = vec![];
-//     while let Some(res) = results.message().await.unwrap() {
-//         if let Some(err) = res.exception {
-//             println!(
-//                 "get error code {:?} name {}, {}, {}",
-//                 err.code, err.name, err.display_text, err.stack_trace
-//             );
-//         } else {
-//             //println!("totals: bytes(len={})", res.totals.len());
-//             //println!("extremes: bytes(len={})", res.extremes.len());
-//             if let Some(ref progress) = res.progress {
-//                 println!(
-//                     "Progress(read_rows={}, read_bytes={}, total={})",
-//                     progress.read_rows, progress.read_bytes, progress.total_rows_to_read
-//                 )
-//             }
-//             if !res.output.is_empty() {
-//                 println!("output: bytes(len={})", res.output.len());
-//                 //     let mut bytes = res.output.as_slice();
-//                 //     let columns = read_var_uint(&mut bytes).unwrap();
-//                 //     let rows = read_var_uint(&mut bytes).unwrap();
-//                 //     println!("columns = {}, rows = {}", columns, rows);
-//                 //     for _ in 0..columns {
-//                 //         let name = read_string(&mut bytes).unwrap();
-//                 //         let type_name = read_string(&mut bytes).unwrap();
-//                 //         let type_ = Type::from_str(&*type_name).unwrap();
-//                 //         println!("read column {}, type {} {:?}", name, type_name, type_);
-//                 //         for _ in 0..rows {
-//                 //             let v = bytes.read_u64::<LittleEndian>().unwrap();
-//                 //             result_binary.push(v);
-//                 //         }
-//                 //     }
-//                 result_binary.push(res.output);
-//             }
-//         }
-//     }
-//     println!("get {} records cost {:?}", result_binary.len(), start.elapsed());
-// }
-//
-// fn read_var_uint<R: Read>(reader: &mut R) -> std::io::Result<u64> {
-//     let mut out = 0u64;
-//     for i in 0..9u64 {
-//         let mut octet = [0u8];
-//         reader.read_exact(&mut octet[..])?;
-//         out |= ((octet[0] & 0x7F) as u64) << (7 * i);
-//         if (octet[0] & 0x80) == 0 {
-//             break;
-//         }
-//     }
-//     Ok(out)
-// }
-//
-// pub const MAX_STRING_SIZE: usize = 1 << 30;
-// fn read_string<R: Read>(reader: &mut R) -> std::io::Result<String> {
-//     let len = read_var_uint(reader)?;
-//     if len as usize > MAX_STRING_SIZE {
-//         panic!("string too large");
-//     }
-//     let mut buf = Vec::with_capacity(len as usize);
-//     unsafe { buf.set_len(len as usize) };
-//
-//     reader.read_exact(&mut buf[..])?;
-//
-//     Ok(String::from_utf8(buf).unwrap())
-// }
+use std::cell::RefCell;
+use std::collections::HashMap;
+use std::io::Read;
+use std::str::FromStr;
 
-use pegasus_graph::graph::Vid;
+
 use crate::graph::storage::clickhouse::pb_gen::clickhouse_grpc::click_house_client::ClickHouseClient;
+use crate::graph::storage::clickhouse::pb_gen::clickhouse_grpc::{Compression, QueryInfo};
 use crate::graph::storage::PropsStore;
-use crate::graph::{FilterById, Vertex};
+use crate::graph::{Value };
 
 #[cfg(not(feature = "gcip"))]
 mod pb_gen {
@@ -205,17 +23,271 @@ mod pb_gen {
     pub mod clickhouse_grpc;
 }
 
+/// A raw Clickhouse type.
+#[allow(dead_code)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub enum Type {
+    Int8,
+    Int16,
+    Int32,
+    Int64,
+    Int128,
+    Int256,
+
+    UInt8,
+    UInt16,
+    UInt32,
+    UInt64,
+    UInt128,
+    UInt256,
+
+    Float32,
+    Float64,
+
+    /// Not supported
+    Decimal32(usize),
+    /// Not supported
+    Decimal64(usize),
+    /// Not supported
+    Decimal128(usize),
+    /// Not supported
+    Decimal256(usize),
+
+    String,
+    FixedString(usize),
+    /// Not supported
+    Uuid,
+
+    Date,
+    /// Not supported
+    DateTime,
+    /// Not supported
+    DateTime64,
+    /// Not supported
+    Ipv4,
+    /// Not supported
+    Ipv6,
+
+    /// Not supported
+    Enum8(Vec<(String, u8)>),
+    /// Not supported
+    Enum16(Vec<(String, u16)>),
+    /// Not supported
+    LowCardinality(Box<Type>),
+    /// Not supported
+    Array(Box<Type>),
+
+    // unused (server never sends this)
+    // Nested(IndexMap<String, Type>),
+    Tuple(Vec<Type>),
+
+    Nullable(Box<Type>),
+    /// Not supported
+    Map(Box<Type>, Box<Type>),
+}
+
+// we assume complete identifier normalization and type resolution from clickhouse
+fn eat_identifier(input: &str) -> (&str, &str) {
+    for (i, c) in input.char_indices() {
+        if c.is_alphabetic() || c == '_' || c == '$' || (i > 0 && c.is_numeric()) {
+            continue;
+        } else {
+            return (&input[..i], &input[i..]);
+        }
+    }
+    (input, "")
+}
+
+impl FromStr for Type {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let (ident, following) = eat_identifier(s);
+        if ident.is_empty() {
+            return Err(format!("invalid empty identifier for type: '{}'", s));
+        }
+
+        let following = following.trim();
+        if !following.is_empty() {
+            return Err(format!("unsupported type : '{}'", s));
+        }
+
+        match ident {
+            "Int8" => Ok(Type::Int8),
+            "Int16" => Ok(Type::Int16),
+            "Int32" => Ok(Type::Int32),
+            "Int64" => Ok(Type::Int64),
+            "Int128" => Ok(Type::Int128),
+            "Int256" => Ok(Type::Int256),
+            "UInt8" => Ok(Type::UInt8),
+            "UInt16" => Ok(Type::UInt16),
+            "UInt32" => Ok(Type::UInt32),
+            "UInt64" => Ok(Type::UInt64),
+            "UInt128" => Ok(Type::UInt128),
+            "UInt256" => Ok(Type::UInt256),
+            "Float32" => Ok(Type::Float32),
+            "Float64" => Ok(Type::Float64),
+            "String" => Ok(Type::String),
+            "UUID" => Err("unsupported type UUID".to_owned()),
+            "Date" => Ok(Type::Date),
+            "DateTime" => Err("unsupported type DateTime".to_owned()),
+            "IPv4" => Err("unsupported type IPv4".to_owned()),
+            "IPv6" => Err("unsupported type IPv6".to_owned()),
+            _ => Err(format!("invalid type name: '{}'", ident)),
+        }
+    }
+}
+
+impl Type {
+    fn read_value<R: Read>(&self, _reader: &mut R) -> std::io::Result<Value> {
+        todo!()
+    }
+}
 
 pub struct ClickHouseStore {
-    _conn: ClickHouseClient<tonic::transport::Channel>
+    query_req: QueryInfo,
+    conn: RefCell<ClickHouseClient<tonic::transport::Channel>>,
+}
+
+#[allow(dead_code)]
+impl ClickHouseStore {
+    pub fn new(url: &str, db: String) -> Self {
+        let mut conn = futures::executor::block_on(ClickHouseClient::connect(url.to_owned()))
+            .expect("connect database fail");
+        conn = conn.accept_gzip();
+        let compression = Compression { algorithm: 1, level: 3 };
+        let query_req = QueryInfo {
+            query: "".to_string(),
+            query_id: "0".to_string(),
+            settings: HashMap::default(),
+            database: db,
+            input_data: Default::default(),
+            input_data_delimiter: Default::default(),
+            output_format: "Native".to_string(),
+            external_tables: vec![],
+            user_name: "".to_string(),
+            password: "".to_string(),
+            quota: "".to_string(),
+            session_id: "".to_string(),
+            session_check: false,
+            session_timeout: 0,
+            cancel: false,
+            next_query_info: false,
+            result_compression: Some(compression),
+            compression_type: "".to_string(),
+            compression_level: -1,
+        };
+        ClickHouseStore { query_req, conn: RefCell::new(conn) }
+    }
+
+    fn execute(&self, query: String) -> Vec<(String, Vec<Value>)> {
+        let mut req = self.query_req.clone();
+        req.query = query.clone();
+        match futures::executor::block_on(self.conn.borrow_mut().execute_query(req)) {
+            Ok(res) => {
+                let mut result = res.into_inner();
+                if let Some(err) = result.exception.take() {
+                    error!(
+                        "error query: code {}, name {}: {}, stack: {}",
+                        err.code, err.name, err.display_text, err.stack_trace
+                    );
+                    panic!(
+                        "error query: code {}, name {}: {}, stack: {}",
+                        err.code, err.name, err.display_text, err.stack_trace
+                    );
+                }
+
+                if !result.output.is_empty() {
+                    debug!("output: bytes(len={})", result.output.len());
+                    let mut bytes = result.output.as_slice();
+                    let columns = read_var_uint(&mut bytes).expect("read uint data fail;");
+                    let rows = read_var_uint(&mut bytes).expect("read uint data fail");
+                    debug!("fetched {} columns * {} rows ", columns, rows);
+                    let mut column_vec = Vec::with_capacity(columns as usize);
+                    for _ in 0..columns {
+                        let mut row_vec = Vec::with_capacity(rows as usize);
+                        let name = read_string(&mut bytes).expect("read string data fail;");
+                        let type_name = read_string(&mut bytes).expect("read string data fail");
+                        debug!("parse column {} of type {}", name, type_name);
+                        let type_ = Type::from_str(&*type_name).unwrap();
+                        for _ in 0..rows {
+                            let v = type_
+                                .read_value(&mut bytes)
+                                .expect("read row value fail;");
+                            row_vec.push(v);
+                        }
+                        column_vec.push((name, row_vec));
+                    }
+                    column_vec
+                } else {
+                    vec![]
+                }
+            }
+            Err(e) => {
+                error!("execute query: {} failed: {:?}", query, e);
+                panic!("execute query: {} failed: {:?}", query, e);
+            }
+        }
+    }
 }
 
 impl PropsStore for ClickHouseStore {
-    fn get_batch_vertices(&self, _ids: &[Vid]) -> Vec<Vertex<Vid>> {
-        todo!()
+    fn get_vertices(&self, v_type: &str, ids: &[u64]) -> Vec<(u64, HashMap<String, Value>)> {
+        let query = format!("select * from {} where id in {:?}", v_type, ids);
+        let result = self.execute(query);
+        decode_row( result)
     }
 
-    fn get_id_filter<F: ToString>(&self, _filter: F) -> Box<dyn FilterById<ID=Vid>> {
-        todo!()
+    fn select_vertices<F: ToString>(&self, v_type: &str, ids: &[u64], filter: F) -> Vec<u64> {
+        let query = format!("select id from {} where id in {:?} and {}", v_type, ids, filter.to_string());
+        let mut result = self.execute(query);
+        if result.is_empty() {
+            vec![]
+        } else {
+            let mut matched = Vec::with_capacity(result[0].1.len());
+            for i in result[0].1.drain(..) {
+                match i {
+                    Value::Int(v) => {
+                        matched.push(v);
+                    }
+                    _ => panic!("invalid data"),
+                }
+            }
+            matched
+        }
     }
+}
+
+fn decode_row( _columns: Vec<(String, Vec<Value>)>) -> Vec<(u64, HashMap<String, Value>)> {
+   todo!()
+}
+
+#[inline]
+fn read_var_uint<R: Read>(reader: &mut R) -> std::io::Result<u64> {
+    let mut out = 0u64;
+    for i in 0..9u64 {
+        let mut octet = [0u8];
+        reader.read_exact(&mut octet[..])?;
+        out |= ((octet[0] & 0x7F) as u64) << (7 * i);
+        if (octet[0] & 0x80) == 0 {
+            break;
+        }
+    }
+    Ok(out)
+}
+
+pub const MAX_STRING_SIZE: usize = 1 << 30;
+
+#[inline]
+fn read_string<R: Read>(reader: &mut R) -> std::io::Result<String> {
+    let len = read_var_uint(reader)?;
+    if len as usize > MAX_STRING_SIZE {
+        panic!("string too large");
+    }
+    let mut buf = Vec::with_capacity(len as usize);
+    unsafe { buf.set_len(len as usize) };
+
+    reader.read_exact(&mut buf[..])?;
+
+    Ok(String::from_utf8(buf).unwrap())
 }

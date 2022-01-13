@@ -1,10 +1,10 @@
+use std::cell::{Ref, RefCell};
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::fmt::Debug;
-use std::hash::Hash;
 use std::sync::Arc;
 
-use pegasus_graph::graph::{Direction, Vid};
+use pegasus_graph::graph::{Direction, VID};
 
 mod storage;
 
@@ -71,10 +71,10 @@ impl PartialOrd for Value {
     }
 }
 
-pub struct Vertex<VID> {
+pub struct Vertex {
     pub id: VID,
-    pub label: String,
-    pub properties: HashMap<String, Value>,
+    label: RefCell<Option<String>>,
+    properties: HashMap<String, Value>,
 }
 
 pub struct OrderBy {
@@ -93,12 +93,31 @@ impl OrderBy {
     }
 }
 
-impl<VID: VertexId> Vertex<VID> {
-    pub fn cmp_by(&self, other: &Vertex<VID>, opts: &[OrderBy]) -> Ordering {
+impl Vertex {
+
+    pub fn new(id: VID, properties: HashMap<String, Value>) -> Self {
+        Vertex {
+            id,
+            label: RefCell::new(None),
+            properties
+        }
+    }
+
+    pub fn get_label(&self) -> Ref<String> {
+        {
+            let mut label = self.label.borrow_mut();
+            if label.is_none() {
+                label.replace(self.id.get_label().expect("label lost"));
+            }
+        }
+        Ref::map(self.label.borrow(), |o| o.as_ref().expect("label lost"))
+    }
+
+    pub fn cmp_by(&self, other: &Vertex, opts: &[OrderBy]) -> Ordering {
         for p in opts {
             let mut ord = match p.by {
-                ILP::ID => self.id.get_id().cmp(&other.id.get_id()),
-                ILP::Label => self.label.cmp(&other.label),
+                ILP::ID => self.id.vertex_id().cmp(&other.id.vertex_id()),
+                ILP::Label => self.get_label().cmp(&other.get_label()),
                 ILP::Property(ref v) => {
                     let name = v.as_str();
                     if let Some(va) = self.properties.get(name) {
@@ -129,55 +148,31 @@ impl<VID: VertexId> Vertex<VID> {
     }
 }
 
-pub trait FilterById: Send + 'static {
-    type ID;
-    fn exec(&self, ids: &[Self::ID]) -> Box<dyn Iterator<Item = Self::ID> + Send + 'static>;
-}
-
-pub trait VertexId : Clone + Eq + PartialEq + Hash + Send + 'static {
-    fn get_id(&self) -> u64;
-}
-
-impl VertexId for u64 {
-    fn get_id(&self) -> u64 {
-        *self
-    }
-}
-
-impl VertexId for Vid {
-    fn get_id(&self) -> u64 {
-        self.vertex_id()
-    }
-}
-
-
 pub trait Graph: Send + 'static {
-    type VID: VertexId;
 
     fn get_neighbor_ids(
-        &self, src: Self::VID, edge_label: &str, dir: Direction,
-    ) -> Box<dyn Iterator<Item = Self::VID> + Send + 'static>;
+        &self, src: u64, src_type: &str, edge_type: &str, dir: Direction,
+    ) -> Box<dyn Iterator<Item = u64> + Send + 'static>;
 
-    fn get_vertices_by_ids(&self, ids: &[Self::VID]) -> Vec<Vertex<Self::VID>>;
+    fn get_vertices_by_ids(&self, v_type: &str, ids: &[u64]) -> Vec<Vertex>;
 
-    fn prepare_filter_vertex<F: ToString>(&self, filter: F) -> Box<dyn FilterById<ID=Self::VID>>;
+    fn filter_vertex<F: ToString>(&self, v_type: &str, ids: &[u64], filter: F) -> Vec<u64>;
 }
 
 impl<G: ?Sized + Sync + Graph> Graph for Arc<G> {
-    type VID = G::VID;
 
     fn get_neighbor_ids(
-        &self, src: Self::VID, label: &str, dir: Direction,
-    ) -> Box<dyn Iterator<Item = Self::VID> + Send + 'static> {
-        (**self).get_neighbor_ids(src, label, dir)
+        &self, src: u64, src_type: &str, edge_type: &str, dir: Direction,
+    ) -> Box<dyn Iterator<Item = u64> + Send + 'static> {
+        (**self).get_neighbor_ids(src, src_type, edge_type, dir)
     }
 
-    fn get_vertices_by_ids(&self, ids: &[Self::VID]) -> Vec<Vertex<Self::VID>> {
-        (**self).get_vertices_by_ids(ids)
+    fn get_vertices_by_ids(&self, v_type: &str, ids: &[u64]) -> Vec<Vertex> {
+        (**self).get_vertices_by_ids(v_type, ids)
     }
 
-    fn prepare_filter_vertex<F: ToString>(&self, p: F) -> Box<dyn FilterById<ID=Self::VID>> {
-        (**self).prepare_filter_vertex(p)
+    fn filter_vertex<F: ToString>(&self, v_type: &str, ids: &[u64], filter: F) -> Vec<u64> {
+        (**self).filter_vertex(v_type, ids, filter)
     }
 }
 
@@ -185,35 +180,34 @@ impl<G: ?Sized + Sync + Graph> Graph for Arc<G> {
 pub struct TodoGraph;
 
 impl Graph for TodoGraph {
-    type VID = u64;
-
     fn get_neighbor_ids(
-        &self, _: u64, _label: &str, _dir: Direction,
+        &self, _: u64, _: &str, _: &str, _dir: Direction,
     ) -> Box<dyn Iterator<Item = u64> + Send + 'static> {
         todo!()
     }
 
-    fn get_vertices_by_ids(&self, _ids: &[u64]) -> Vec<Vertex<Self::VID>> {
+    fn get_vertices_by_ids(&self, _: &str, _ids: &[u64]) -> Vec<Vertex> {
         todo!()
     }
 
-    fn prepare_filter_vertex<P: ToString>(&self, _p: P) -> Box<dyn FilterById<ID = u64>> {
+    fn filter_vertex<F: ToString>(&self, _v_type: &str, _ids: &[u64], _filter: F) -> Vec<u64> {
         todo!()
     }
 }
 
 impl Graph for pegasus_graph::MemIdTopoGraph {
-    type VID = u64;
 
-    fn get_neighbor_ids(&self, src: u64, _label: &str, _dir: Direction) -> Box<dyn Iterator<Item=u64> + Send + 'static> {
+    fn get_neighbor_ids(
+        &self, src: u64, _: &str, _: &str, _dir: Direction,
+    ) -> Box<dyn Iterator<Item = u64> + Send + 'static> {
         Box::new(self.get_neighbors(src))
     }
 
-    fn get_vertices_by_ids(&self, _ids: &[u64]) -> Vec<Vertex<Self::VID>> {
+    fn get_vertices_by_ids(&self, _: &str, _ids: &[u64]) -> Vec<Vertex> {
         unimplemented!()
     }
 
-    fn prepare_filter_vertex<P: ToString>(&self, _p: P) -> Box<dyn FilterById<ID = u64>> {
+    fn filter_vertex<F: ToString>(&self, _v_type: &str, _ids: &[u64], _filter: F) -> Vec<u64> {
         unimplemented!()
     }
 }
