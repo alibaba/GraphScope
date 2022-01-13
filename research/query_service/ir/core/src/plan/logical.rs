@@ -305,41 +305,38 @@ impl LogicalPlan {
     pub fn append_operator_as_node(
         &mut self, mut opr: pb::logical_plan::Operator, parent_ids: Vec<u32>,
     ) -> IrResult<i32> {
+        use common_pb::expr_opr::Item;
+        use pb::logical_plan::operator::Opr;
+
         let old_curr_node = self.plan_meta.get_curr_node();
         let mut is_update_curr = false;
         if let Ok(meta) = STORE_META.read() {
             match opr.opr {
-                Some(pb::logical_plan::operator::Opr::Edge(_))
-                | Some(pb::logical_plan::operator::Opr::Scan(_)) => {
+                Some(Opr::Edge(_)) | Some(Opr::Scan(_)) => {
                     self.plan_meta
                         .set_curr_node(self.total_size as u32);
                 }
-                Some(pb::logical_plan::operator::Opr::As(_))
-                | Some(pb::logical_plan::operator::Opr::Select(_))
-                | Some(pb::logical_plan::operator::Opr::OrderBy(_))
-                | Some(pb::logical_plan::operator::Opr::Dedup(_)) => {}
-                Some(pb::logical_plan::operator::Opr::Project(ref proj)) => {
+                Some(Opr::As(_)) | Some(Opr::Select(_)) | Some(Opr::OrderBy(_)) | Some(Opr::Dedup(_)) => {}
+                Some(Opr::Project(ref proj)) => {
                     is_update_curr = true;
                     if proj.mappings.len() == 1 {
                         if let Some(expr) = &proj.mappings[0].expr {
                             if expr.operators.len() == 1 {
-                                if let Some(opr) = &expr.operators.get(0).unwrap().item {
-                                    match opr {
-                                        common_pb::expr_opr::Item::Var(var) => {
-                                            if proj.mappings[0].alias.is_none()
-                                                && var.tag.is_some()
-                                                && var.property.is_none()  // tag as Head
-                                            {
-                                                if let Some(node) = self
-                                                    .plan_meta
-                                                    .get_tag_node(&var.tag.clone().unwrap().try_into()?)
-                                                {
-                                                    is_update_curr = false;
-                                                    self.plan_meta.set_curr_node(node);
-                                                }
-                                            }
+                                if let common_pb::ExprOpr { item: Some(Item::Var(var)) } =
+                                    expr.operators.get(0).unwrap()
+                                {
+                                    if proj.mappings[0].alias.is_none()
+                                        && var.tag.is_some()
+                                        && var.property.is_none()
+                                    // tag as Head
+                                    {
+                                        if let Some(node) = self
+                                            .plan_meta
+                                            .get_tag_node(&var.tag.clone().unwrap().try_into()?)
+                                        {
+                                            is_update_curr = false;
+                                            self.plan_meta.set_curr_node(node);
                                         }
-                                        _ => {}
                                     }
                                 }
                             }
