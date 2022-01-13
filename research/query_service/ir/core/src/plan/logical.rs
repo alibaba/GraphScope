@@ -318,6 +318,34 @@ impl LogicalPlan {
                 | Some(pb::logical_plan::operator::Opr::Select(_))
                 | Some(pb::logical_plan::operator::Opr::OrderBy(_))
                 | Some(pb::logical_plan::operator::Opr::Dedup(_)) => {}
+                Some(pb::logical_plan::operator::Opr::Project(ref proj)) => {
+                    is_update_curr = true;
+                    if proj.mappings.len() == 1 {
+                        if let Some(expr) = &proj.mappings[0].expr {
+                            if expr.operators.len() == 1 {
+                                if let Some(opr) = &expr.operators.get(0).unwrap().item {
+                                    match opr {
+                                        common_pb::expr_opr::Item::Var(var) => {
+                                            if proj.mappings[0].alias.is_none()
+                                                && var.tag.is_some()
+                                                && var.property.is_none()  // tag as Head
+                                            {
+                                                if let Some(node) = self
+                                                    .plan_meta
+                                                    .get_tag_node(&var.tag.clone().unwrap().try_into()?)
+                                                {
+                                                    is_update_curr = false;
+                                                    self.plan_meta.set_curr_node(node);
+                                                }
+                                            }
+                                        }
+                                        _ => {}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
                 _ => is_update_curr = true,
             }
             opr.preprocess(&meta, &mut self.plan_meta)?;
@@ -1315,6 +1343,89 @@ mod test {
                 .into_iter()
                 .collect::<BTreeSet<_>>()
         );
+    }
+
+    #[test]
+    fn test_tag_maintain_ci() {
+        let mut plan = LogicalPlan::default();
+        // g.V().out().as("here").has("lang", "java").select("here").values("name")
+        let scan = pb::Scan {
+            scan_opt: 0,
+            alias: None,
+            params: Some(pb::QueryParams {
+                table_names: vec![],
+                columns: vec![],
+                limit: None,
+                predicate: None,
+                requirements: vec![],
+            }),
+            idx_predicate: None,
+        };
+        plan.append_operator_as_node(scan.into(), vec![])
+            .unwrap();
+        assert_eq!(plan.plan_meta.get_curr_node(), 0);
+
+        // .out().as("here")
+        let expand = pb::EdgeExpand {
+            base: Some(pb::ExpandBase {
+                v_tag: Some("a".into()),
+                direction: 0,
+                params: Some(pb::QueryParams {
+                    table_names: vec![],
+                    columns: vec![],
+                    limit: None,
+                    predicate: None,
+                    requirements: vec![],
+                }),
+            }),
+            is_edge: false,
+            alias: Some("here".into()),
+        };
+        plan.append_operator_as_node(expand.into(), vec![0])
+            .unwrap();
+        assert_eq!(plan.plan_meta.get_curr_node(), 1);
+
+        // .has("lang", "Java")
+        let select = pb::Select { predicate: str_to_expr_pb("@.lang == \"Java\"".to_string()).ok() };
+        plan.append_operator_as_node(select.into(), vec![1])
+            .unwrap();
+        assert_eq!(plan.plan_meta.get_curr_node(), 1);
+        assert_eq!(
+            plan.plan_meta.get_node_columns(1).unwrap(),
+            &vec!["lang".into()]
+                .into_iter()
+                .collect::<BTreeSet<_>>()
+        );
+
+        // .select("here")
+        let project = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: str_to_expr_pb("@here".to_string()).ok(),
+                alias: None,
+            }],
+            is_append: true,
+        };
+        plan.append_operator_as_node(project.into(), vec![2])
+            .unwrap();
+        assert_eq!(plan.plan_meta.get_curr_node(), 1);
+
+        // .values("name")
+        let project = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: str_to_expr_pb("@.name".to_string()).ok(),
+                alias: None,
+            }],
+            is_append: true,
+        };
+        plan.append_operator_as_node(project.into(), vec![3])
+            .unwrap();
+        assert_eq!(
+            plan.plan_meta.get_node_columns(1).unwrap(),
+            &vec!["lang".into(), "name".into()]
+                .into_iter()
+                .collect::<BTreeSet<_>>()
+        );
+        assert_eq!(plan.plan_meta.get_curr_node(), 4);
     }
 
     #[test]
