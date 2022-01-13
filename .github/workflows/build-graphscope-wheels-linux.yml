@@ -203,26 +203,26 @@ jobs:
         tar xzf Python-3.7.9.tgz
         cd Python-3.7.9 && ./configure --enable-optimizations --enable-shared
         make altinstall
-        python3.7 -m pip install --upgrade pip --user
+        python3 -m pip install --upgrade pip --user
 
         # install graphscope-client
         cd ${GITHUB_WORKSPACE}/artifacts
         tar -zxf ./wheel-${{ github.sha }}/client.tar.gz
         pushd python/dist/wheelhouse
-        for f in * ; do python3.7 -m pip install $f --user || true; done
+        for f in * ; do python3 -m pip install $f --user || true; done
         popd
 
         # install graphscope
         tar -zxf ./wheel-${{ github.sha }}/graphscope.tar.gz
         pushd coordinator/dist/wheelhouse
-        python3.7 -m pip install ./*.whl --user
+        python3 -m pip install ./*.whl --user
         popd
         pushd coordinator/dist
-        python3.7 -m pip install ./*.whl --user || true
+        python3 -m pip install ./*.whl --user || true
         popd
 
         # install tensorflow
-        python3.7 -m pip install pytest "tensorflow<=2.5.2" --user
+        python3 -m pip install pytest "tensorflow<=2.5.2" --user
         # install jdk
         dnf install -y java-11-openjdk-devel
 
@@ -232,5 +232,6 @@ jobs:
       run: |
         # python3-Cython version is too old, use cython installed by pip in $HOME/.local/bin
         export PATH=$HOME/.local/bin:$PATH
+        export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/lib:/usr/lib:/usr/local/lib
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
-        python3.7 -m pytest -s -v $(dirname $(python3.7 -c "import graphscope; print(graphscope.__file__)"))/tests/minitest
+        python3 -m pytest -s -v $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/tests/minitest
