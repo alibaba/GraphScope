@@ -337,10 +337,28 @@ message SegmentApply {
 }
 
 message Sink {
+  message Entity {};
+  message Relation {};
+  message Column {};
+
+  message MapType {
+    oneof inner{
+      Entity entity = 1;
+      Relation relation = 2;
+      Column column = 3;
+    }
+  }
+  message IdNameMapping {
+    int32 id = 1;
+    string name = 2;
+    MapType map_type = 3;
+  }
   // Define the tags of columns to sink
   repeated common.NameOrId tags = 1;
   // The flag of sinking current entry
   bool sink_current = 2;
+  // The mapping of table_id to table_name
+  repeated IdNameMapping id_name_mapping = 3;
 }
 
 // A logical plan of graph relation algebra forms a DAG, where each node is an operator and the

@@ -1474,7 +1474,7 @@ mod sink {
     /// To initialize an Sink operator
     #[no_mangle]
     pub extern "C" fn init_sink_operator(sink_current: bool) -> *const c_void {
-        let sink_opr = Box::new(pb::Sink { tags: vec![], sink_current });
+        let sink_opr = Box::new(pb::Sink { tags: vec![], sink_current, id_name_mapping: vec![] });
         Box::into_raw(sink_opr) as *const c_void
     }
 
