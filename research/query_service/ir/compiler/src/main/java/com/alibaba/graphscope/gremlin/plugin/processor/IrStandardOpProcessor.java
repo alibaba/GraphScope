@@ -66,11 +66,11 @@ import java.util.function.Supplier;
 
 public class IrStandardOpProcessor extends StandardOpProcessor {
     private static Logger logger = LoggerFactory.getLogger(IrStandardOpProcessor.class);
-    private static final AtomicLong JOB_ID_COUNTER = new AtomicLong(0L);
-    private Graph graph;
-    private GraphTraversalSource g;
-    private Configs configs;
-    private AbstractBroadcastProcessor broadcastProcessor;
+    protected static final AtomicLong JOB_ID_COUNTER = new AtomicLong(0L);
+    protected Graph graph;
+    protected GraphTraversalSource g;
+    protected Configs configs;
+    protected AbstractBroadcastProcessor broadcastProcessor;
 
     public IrStandardOpProcessor(Configs configs) {
         this.graph = TinkerFactory.createModern();

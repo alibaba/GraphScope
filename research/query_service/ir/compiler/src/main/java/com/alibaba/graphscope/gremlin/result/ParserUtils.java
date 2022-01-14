@@ -5,6 +5,8 @@ import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.alibaba.graphscope.gremlin.exception.GremlinResultParserException;
 import org.apache.tinkerpop.gremlin.structure.util.detached.DetachedEdge;
 import org.apache.tinkerpop.gremlin.structure.util.detached.DetachedVertex;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.List;
@@ -12,6 +14,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class ParserUtils {
+    private static final Logger logger = LoggerFactory.getLogger(ParserUtils.class);
+
     public static Object parseElement(IrResult.Element element) {
         switch (element.getInnerCase()) {
             case VERTEX:

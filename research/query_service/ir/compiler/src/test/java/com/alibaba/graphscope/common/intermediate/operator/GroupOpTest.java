@@ -16,8 +16,8 @@
 
 package com.alibaba.graphscope.common.intermediate.operator;
 
+import com.alibaba.graphscope.common.utils.FileUtils;
 import com.alibaba.graphscope.common.IrPlan;
-import com.alibaba.graphscope.common.TestUtils;
 import com.alibaba.graphscope.common.intermediate.ArgAggFn;
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.jna.type.*;
@@ -41,7 +41,7 @@ public class GroupOpTest {
         op.setGroupByValues(new OpArg(Collections.singletonList(aggFn), Function.identity()));
 
         irPlan.appendInterOp(op);
-        Assert.assertEquals(TestUtils.readJsonFromResource("count.json"), irPlan.getPlanAsJson());
+        Assert.assertEquals(FileUtils.readJsonFromResource("count.json"), irPlan.getPlanAsJson());
     }
 
     @Test
@@ -52,7 +52,7 @@ public class GroupOpTest {
         op.setGroupByValues(new OpArg(Collections.singletonList(aggFn), Function.identity()));
 
         irPlan.appendInterOp(op);
-        Assert.assertEquals(TestUtils.readJsonFromResource("count_as.json"), irPlan.getPlanAsJson());
+        Assert.assertEquals(FileUtils.readJsonFromResource("count_as.json"), irPlan.getPlanAsJson());
     }
 
     @Test
@@ -66,7 +66,7 @@ public class GroupOpTest {
         op.setGroupByValues(new OpArg(Collections.singletonList(aggFn), Function.identity()));
 
         irPlan.appendInterOp(op);
-        Assert.assertEquals(TestUtils.readJsonFromResource("group.json"), irPlan.getPlanAsJson());
+        Assert.assertEquals(FileUtils.readJsonFromResource("group.json"), irPlan.getPlanAsJson());
     }
 
     @Test
@@ -81,7 +81,7 @@ public class GroupOpTest {
         op.setGroupByValues(new OpArg(Collections.singletonList(aggFn), Function.identity()));
 
         irPlan.appendInterOp(op);
-        Assert.assertEquals(TestUtils.readJsonFromResource("group_key.json"), irPlan.getPlanAsJson());
+        Assert.assertEquals(FileUtils.readJsonFromResource("group_key.json"), irPlan.getPlanAsJson());
     }
 
     @Test
@@ -96,7 +96,7 @@ public class GroupOpTest {
         op.setGroupByValues(new OpArg(Collections.singletonList(aggFn), Function.identity()));
 
         irPlan.appendInterOp(op);
-        Assert.assertEquals(TestUtils.readJsonFromResource("group_key_count.json"), irPlan.getPlanAsJson());
+        Assert.assertEquals(FileUtils.readJsonFromResource("group_key_count.json"), irPlan.getPlanAsJson());
     }
 
 
