@@ -337,16 +337,10 @@ message SegmentApply {
 }
 
 message Sink {
-  message Entity {};
-  message Relation {};
-  message Column {};
-
-  message MapType {
-    oneof inner{
-      Entity entity = 1;
-      Relation relation = 2;
-      Column column = 3;
-    }
+  enum MapType {
+      ENTITY = 0;
+      RELATION = 1;
+      COLUMN = 2;
   }
   message IdNameMapping {
     int32 id = 1;
