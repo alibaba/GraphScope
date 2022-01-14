@@ -19,9 +19,8 @@
 #
 
 
-from rraphscope.framework.app import not_compatible_for
-
 from graphscope.framework.app import AppAssets
+from graphscope.framework.app import not_compatible_for
 from graphscope.framework.app import project_to_simple
 
 __all__ = ["average_degree_connectivity"]
