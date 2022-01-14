@@ -5,9 +5,9 @@ use std::sync::Arc;
 use crossbeam_queue::ArrayQueue;
 use nohash_hasher::IntMap;
 use pegasus::api::{Fold, IterCondition, Iteration, Map, Reduce, Sink};
-use pegasus::resource::PartitionedResource;
+use pegasus::resource::DefaultParResource;
 use pegasus::{Configuration, JobConf, ServerConf};
-use pegasus_graph::{graph::Neighbors, Graph};
+use pegasus_graph::{topo::Neighbors, MemIdTopoGraph};
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
@@ -37,7 +37,7 @@ struct Config {
 
 struct PagesAndRanks {
     ranks: IntMap<u64, f64>,
-    graph: Arc<Graph>,
+    graph: Arc<MemIdTopoGraph>,
     damping_factor: f64,
     damping_value: f64,
     output: PathBuf,
@@ -45,7 +45,7 @@ struct PagesAndRanks {
 }
 
 impl PagesAndRanks {
-    fn new(total_pages: usize, graph: Graph, damping_factor: f64, output: PathBuf) -> Self {
+    fn new(total_pages: usize, graph: MemIdTopoGraph, damping_factor: f64, output: PathBuf) -> Self {
         println!("create partitions with {} vertices", graph.total_vertices());
         let init = 1.0 / total_pages as f64;
         let mut ranks: IntMap<u64, f64> = Default::default();
@@ -148,7 +148,7 @@ fn main() {
     pegasus::shutdown_all();
 }
 
-fn prepare_resources(config: &Config, conf: &JobConf) -> PartitionedResource<PagesAndRanks> {
+fn prepare_resources(config: &Config, conf: &JobConf) -> DefaultParResource<PagesAndRanks> {
     let graph = pegasus_graph::partition(&config.data_path, config.partitions as usize).unwrap();
     let total_pages = config.vertices as usize;
 
@@ -157,7 +157,7 @@ fn prepare_resources(config: &Config, conf: &JobConf) -> PartitionedResource<Pag
         let output = config.output.join(format!("partitions-{}", i));
         page_partitions.push(PagesAndRanks::new(total_pages, par, config.damping_factor, output));
     }
-    PartitionedResource::new(&conf, page_partitions)
+    DefaultParResource::new(&conf, page_partitions)
         .ok()
         .unwrap()
 }
@@ -199,7 +199,7 @@ impl Iterator for NeighborsRankUpdate {
 struct ScatterItemIter {
     damping_factor: f64,
     pr: Arc<ArrayQueue<(u64, f64)>>,
-    graph: Arc<Graph>,
+    graph: Arc<MemIdTopoGraph>,
     iter: Option<NeighborsRankUpdate>,
 }
 

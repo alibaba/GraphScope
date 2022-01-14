@@ -2,7 +2,7 @@ use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
 
 use pegasus::api::{Iteration, Map, Reduce, Sink};
-use pegasus::resource::PartitionedResource;
+use pegasus::resource::DefaultParResource;
 use pegasus::{Configuration, JobConf, ServerConf};
 use structopt::StructOpt;
 
@@ -114,7 +114,7 @@ fn init_empty(length: usize) -> Vector {
 
 fn load_samples<A: AsRef<Path>>(
     conf: &JobConf, path: A,
-) -> std::io::Result<(usize, PartitionedResource<LRData>)> {
+) -> std::io::Result<(usize, DefaultParResource<LRData>)> {
     let spt = std::env::var("PEGASUS_CSV_SPLIT")
         .unwrap_or(",".to_owned())
         .parse::<char>()
@@ -159,7 +159,7 @@ fn load_samples<A: AsRef<Path>>(
         lr_parts.push(lr);
     }
 
-    if let Ok(p) = PartitionedResource::new(conf, lr_parts) {
+    if let Ok(p) = DefaultParResource::new(conf, lr_parts) {
         Ok((features_len, p))
     } else {
         unreachable!("")

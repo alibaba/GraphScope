@@ -1,9 +1,8 @@
 use std::ffi::OsStr;
 use std::io::Write;
 use std::path::PathBuf;
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
-use byteorder::ReadBytesExt;
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]

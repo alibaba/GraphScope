@@ -7,12 +7,14 @@ use crossbeam_utils::sync::ShardedLock;
 
 use crate::JobConf;
 
-pub type ResourceMap = HashMap<TypeId, Box<dyn Any + Send + Sync>>;
-pub type KeyedResources = HashMap<String, Box<dyn Any + Send + Sync>>;
+pub type ResourceMap = HashMap<TypeId, Box<dyn Any + Send>>;
+pub type KeyedResources = HashMap<String, Box<dyn Any + Send>>;
+pub type SharedResourceMap = HashMap<TypeId, Box<dyn Any + Send + Sync>>;
+pub type SharedKeyedResourceMap = HashMap<String, Box<dyn Any + Send + Sync>>;
 
 lazy_static! {
-    pub static ref GLOBAL_RESOURCE_MAP: ShardedLock<ResourceMap> = ShardedLock::new(Default::default());
-    pub static ref GLOBAL_KEYED_RESOURCES: ShardedLock<KeyedResources> =
+    pub static ref GLOBAL_RESOURCE_MAP: ShardedLock<SharedResourceMap> = ShardedLock::new(Default::default());
+    pub static ref GLOBAL_KEYED_RESOURCES: ShardedLock<SharedKeyedResourceMap> =
         ShardedLock::new(Default::default());
 }
 
@@ -32,6 +34,10 @@ impl<T> Deref for Resource<T> {
         unsafe { self.ptr.as_ref().expect("resource lost") }
     }
 }
+
+unsafe impl<T: Send> Send for Resource<T> {}
+
+unsafe impl<T: Send + Sync> Sync for Resource<T> {}
 
 pub struct ResourceMut<T> {
     ptr: *mut T,
@@ -134,11 +140,31 @@ pub fn add_global_resource<T: Any + Send + Sync>(key: String, res: T) {
     store.insert(key, Box::new(res));
 }
 
-pub struct PartitionedResource<T> {
+pub trait PartitionedResource {
+    type Res: Send  + 'static;
+
+    fn get_resource(&self, par: usize) -> Option<&Self::Res>;
+
+    fn take_resource(&mut self, par: usize) -> Option<Self::Res>;
+}
+
+impl<T: ?Sized + Send + Sync + 'static> PartitionedResource for std::sync::Arc<T> {
+    type Res = std::sync::Arc<T>;
+
+    fn get_resource(&self, _par: usize) -> Option<&Self::Res> {
+        Some(&self)
+    }
+
+    fn take_resource(&mut self, _par: usize) -> Option<Self::Res> {
+        Some(self.clone())
+    }
+}
+
+pub struct DefaultParResource<T> {
     partitions: Vec<Option<T>>,
 }
 
-impl<T> PartitionedResource<T> {
+impl<T> DefaultParResource<T> {
     pub fn new(conf: &JobConf, res: Vec<T>) -> Result<Self, Vec<T>> {
         if res.len() as u32 != conf.workers {
             Err(res)
@@ -147,14 +173,26 @@ impl<T> PartitionedResource<T> {
             for r in res {
                 partitions.push(Some(r));
             }
-            let pr = PartitionedResource { partitions };
+            let pr = DefaultParResource { partitions };
             Ok(pr)
         }
     }
+}
 
-    pub(crate) fn take_partition_of(&mut self, index: usize) -> Option<T> {
-        if index < self.partitions.len() {
-            self.partitions[index].take()
+impl<T: Send + Sync + 'static> PartitionedResource for DefaultParResource<T> {
+    type Res = T;
+
+    fn get_resource(&self, par: usize) -> Option<&Self::Res> {
+        if par < self.partitions.len() {
+            self.partitions[par].as_ref()
+        } else {
+            None
+        }
+    }
+
+    fn take_resource(&mut self, par: usize) -> Option<Self::Res> {
+        if par < self.partitions.len() {
+            self.partitions[par].take()
         } else {
             None
         }

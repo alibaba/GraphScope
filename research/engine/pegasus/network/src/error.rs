@@ -14,7 +14,7 @@
 //! limitations under the License.
 
 use std::error::Error;
-use std::fmt::{Display};
+use std::fmt::Display;
 use std::net::{AddrParseError, SocketAddr};
 
 #[derive(Debug)]

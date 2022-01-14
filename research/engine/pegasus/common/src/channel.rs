@@ -77,7 +77,7 @@ const EXHAUSTED: usize = 0b00000001;
 /// - if it didn't been closed until it will be dropped, it will notify all the receivers this abnormal
 /// behavior.
 pub struct MessageSender<T: Send> {
-    id : u64,
+    id: u64,
     inner: Sender<Message<T>>,
     peers: Arc<AtomicUsize>,
     state: Arc<AtomicUsize>,
