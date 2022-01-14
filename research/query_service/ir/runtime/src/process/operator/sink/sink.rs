@@ -192,3 +192,193 @@ impl SinkFunctionGen for algebra_pb::Sink {
         Ok(Box::new(record_sinker))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use ir_common::generated::algebra as pb;
+    use ir_common::generated::common as common_pb;
+    use ir_common::generated::results as result_pb;
+    use pegasus::api::{Map, Sink};
+    use pegasus::result::ResultStream;
+    use pegasus::JobConf;
+
+    use crate::graph::element::{Edge, Vertex};
+    use crate::graph::property::{DefaultDetails, DynDetails};
+    use crate::process::operator::sink::SinkFunctionGen;
+    use crate::process::record::Record;
+
+    fn sink_test(source: Vec<Record>, sink_opr_pb: pb::Sink) -> ResultStream<result_pb::Results> {
+        let conf = JobConf::new("sink_test");
+        let result = pegasus::run(conf, || {
+            let source = source.clone();
+            let sink_opr_pb = sink_opr_pb.clone();
+            |input, output| {
+                let stream = input.input_from(source)?;
+                let ec = sink_opr_pb.gen_sink().unwrap();
+                stream
+                    .map(move |record| ec.exec(record))?
+                    .sink_into(output)
+            }
+        })
+        .expect("build job failure");
+
+        result
+    }
+
+    // g.V()
+    #[test]
+    fn sink_vertex_label_mapping_test() {
+        let v1 = Vertex::new(DynDetails::new(DefaultDetails::new(1, 1.into())));
+        let v2 = Vertex::new(DynDetails::new(DefaultDetails::new(2, 2.into())));
+
+        let sink_opr_pb = pb::Sink {
+            tags: vec![],
+            sink_current: true,
+            id_name_mapping: vec![
+                pb::sink::IdNameMapping {
+                    id: 1,
+                    name: "person".to_string(),
+                    map_type: 0, // pb::sink::MapType::Entity
+                },
+                pb::sink::IdNameMapping {
+                    id: 2,
+                    name: "software".to_string(),
+                    map_type: 0, // pb::sink::MapType::Entity
+                },
+            ],
+        };
+
+        let mut result = sink_test(vec![Record::new(v1, None), Record::new(v2, None)], sink_opr_pb);
+        let mut result_id_labels = vec![];
+        while let Some(Ok(result_pb)) = result.next() {
+            if let Some(result_pb::results::Inner::Record(record)) = result_pb.inner {
+                assert!(record.columns.len() == 1);
+                let entry = record
+                    .columns
+                    .get(0)
+                    .unwrap()
+                    .entry
+                    .as_ref()
+                    .unwrap();
+                if let Some(result_pb::entry::Inner::Element(e)) = entry.inner.as_ref() {
+                    if let Some(result_pb::element::Inner::Vertex(v)) = e.inner.as_ref() {
+                        result_id_labels.push((v.id, v.label.clone().unwrap()))
+                    }
+                }
+            }
+        }
+        result_id_labels.sort_by(|a, b| a.0.cmp(&b.0));
+
+        let expected_results = vec![
+            (
+                1,
+                common_pb::NameOrId { item: Some(common_pb::name_or_id::Item::Name("person".to_string())) },
+            ),
+            (
+                2,
+                common_pb::NameOrId {
+                    item: Some(common_pb::name_or_id::Item::Name("software".to_string())),
+                },
+            ),
+        ];
+
+        assert_eq!(result_id_labels, expected_results);
+    }
+
+    // g.E()
+    #[test]
+    fn sink_edge_label_mapping_test() {
+        // label_mapping:
+        // vlabel: 11:  person, 22:  software,
+        // elabel: 111: create, 222: created_by
+        let mut e1 = Edge::new(1, 2, DynDetails::new(DefaultDetails::new(1, 111.into())));
+        e1.set_src_label(11.into());
+        e1.set_dst_label(22.into());
+
+        let mut e2 = Edge::new(2, 1, DynDetails::new(DefaultDetails::new(2, 222.into())));
+        e2.set_src_label(22.into());
+        e2.set_dst_label(11.into());
+
+        let sink_opr_pb = pb::Sink {
+            tags: vec![],
+            sink_current: true,
+            id_name_mapping: vec![
+                pb::sink::IdNameMapping {
+                    id: 11,
+                    name: "person".to_string(),
+                    map_type: 0, // pb::sink::MapType::Entity
+                },
+                pb::sink::IdNameMapping {
+                    id: 22,
+                    name: "software".to_string(),
+                    map_type: 0, // pb::sink::MapType::Entity
+                },
+                pb::sink::IdNameMapping {
+                    id: 111,
+                    name: "create".to_string(),
+                    map_type: 1, // pb::sink::MapType::Relation
+                },
+                pb::sink::IdNameMapping {
+                    id: 222,
+                    name: "created_by".to_string(),
+                    map_type: 1, // pb::sink::MapType::Relation
+                },
+            ],
+        };
+
+        let mut result = sink_test(vec![Record::new(e1, None), Record::new(e2, None)], sink_opr_pb);
+        let mut result_eid_labels = vec![];
+        while let Some(Ok(result_pb)) = result.next() {
+            if let Some(result_pb::results::Inner::Record(record)) = result_pb.inner {
+                assert!(record.columns.len() == 1);
+                let entry = record
+                    .columns
+                    .get(0)
+                    .unwrap()
+                    .entry
+                    .as_ref()
+                    .unwrap();
+                if let Some(result_pb::entry::Inner::Element(e)) = entry.inner.as_ref() {
+                    if let Some(result_pb::element::Inner::Edge(e)) = e.inner.as_ref() {
+                        result_eid_labels.push((
+                            e.src_id,
+                            e.src_label.clone().unwrap(),
+                            e.dst_id,
+                            e.dst_label.clone().unwrap(),
+                            e.id,
+                            e.label.clone().unwrap(),
+                        ));
+                    }
+                }
+            }
+        }
+        result_eid_labels.sort_by(|a, b| a.0.cmp(&b.0));
+
+        let expected_results = vec![
+            (
+                1,
+                common_pb::NameOrId { item: Some(common_pb::name_or_id::Item::Name("person".to_string())) },
+                2,
+                common_pb::NameOrId {
+                    item: Some(common_pb::name_or_id::Item::Name("software".to_string())),
+                },
+                1,
+                common_pb::NameOrId { item: Some(common_pb::name_or_id::Item::Name("create".to_string())) },
+            ),
+            (
+                2,
+                common_pb::NameOrId {
+                    item: Some(common_pb::name_or_id::Item::Name("software".to_string())),
+                },
+                1,
+                common_pb::NameOrId { item: Some(common_pb::name_or_id::Item::Name("person".to_string())) },
+                2,
+                common_pb::NameOrId {
+                    item: Some(common_pb::name_or_id::Item::Name("created_by".to_string())),
+                },
+            ),
+        ];
+
+        assert_eq!(result_eid_labels, expected_results);
+    }
+}
