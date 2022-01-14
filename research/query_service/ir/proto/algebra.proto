@@ -348,9 +348,9 @@ message Sink {
       Column column = 3;
     }
   }
-  message TableNameMapping {
-    int32 table_id = 1;
-    string table_name = 2;
+  message IdNameMapping {
+    int32 id = 1;
+    string name = 2;
     MapType map_type = 3;
   }
   // Define the tags of columns to sink
@@ -358,7 +358,7 @@ message Sink {
   // The flag of sinking current entry
   bool sink_current = 2;
   // The mapping of table_id to table_name
-  repeated TableNameMapping table_name_mapping = 3;
+  repeated IdNameMapping id_name_mapping = 3;
 }
 
 // A logical plan of graph relation algebra forms a DAG, where each node is an operator and the
