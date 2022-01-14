@@ -61,7 +61,10 @@ pub(crate) struct ReadParams {
 
 impl Default for ReadParams {
     fn default() -> Self {
-        ReadParams { mode: BlockMode::Nonblocking, slab_size: DEFAULT_SLAB_SIZE }
+        ReadParams {
+            mode: BlockMode::Nonblocking,
+            slab_size: DEFAULT_SLAB_SIZE,
+        }
     }
 }
 
@@ -76,7 +79,11 @@ impl ConnectionParams {
     pub fn nonblocking() -> Self {
         let write = WriteParams::default();
         let read = ReadParams::default();
-        ConnectionParams { is_nonblocking: true, write, read }
+        ConnectionParams {
+            is_nonblocking: true,
+            write,
+            read,
+        }
     }
 
     pub fn blocking() -> Self {
@@ -84,7 +91,11 @@ impl ConnectionParams {
         write.mode = BlockMode::Blocking(None);
         let mut read = ReadParams::default();
         read.mode = BlockMode::Blocking(None);
-        ConnectionParams { is_nonblocking: false, write, read }
+        ConnectionParams {
+            is_nonblocking: false,
+            write,
+            read,
+        }
     }
 
     pub fn set_read_timeout(&mut self, timeout: Duration) {
@@ -328,7 +339,11 @@ impl NetworkConfig {
         self
     }
 
-    pub fn set_server_addr(&mut self, server_id: u64, addr: ServerAddr) -> Result<&mut Self, NetError> {
+    pub fn set_server_addr(
+        &mut self,
+        server_id: u64,
+        addr: ServerAddr,
+    ) -> Result<&mut Self, NetError> {
         if server_id as usize >= self.servers_size {
             Err(NetError::InvalidConfig(Some(format!(
                 "invalid server_id({}) larger than server size {}",
@@ -351,10 +366,14 @@ impl NetworkConfig {
             if let Some(ref addr) = servers[index] {
                 Ok(SocketAddr::new(addr.ip.parse()?, addr.port))
             } else {
-                Err(NetError::InvalidConfig(Some("local server address not found".to_owned())))
+                Err(NetError::InvalidConfig(Some(
+                    "local server address not found".to_owned(),
+                )))
             }
         } else {
-            Err(NetError::InvalidConfig(Some("local server address not found".to_owned())))
+            Err(NetError::InvalidConfig(Some(
+                "local server address not found".to_owned(),
+            )))
         }
     }
 
@@ -406,7 +425,10 @@ impl NetworkConfig {
                 if let Some(peer) = p {
                     let ip = peer.ip.parse()?;
                     let addr = SocketAddr::new(ip, peer.port);
-                    let server = Server { id: id as u64, addr };
+                    let server = Server {
+                        id: id as u64,
+                        addr,
+                    };
                     servers.push(server);
                 } else {
                     return Err(NetError::InvalidConfig(Some(format!(
