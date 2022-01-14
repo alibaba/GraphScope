@@ -106,6 +106,10 @@ pub trait Details: std::fmt::Debug + Send + Sync + AsAny {
             PropKey::Key(k) => self.get_property(k),
         }
     }
+
+    fn properties_len(&self) -> usize;
+
+    fn get_all_properties(&self) -> Box<dyn Iterator<Item = (NameOrId, Object)>>;
 }
 
 #[derive(Clone)]
@@ -133,6 +137,14 @@ impl Details for DynDetails {
     fn get_label(&self) -> Option<&NameOrId> {
         self.inner.get_label()
     }
+
+    fn properties_len(&self) -> usize {
+        self.inner.properties_len()
+    }
+
+    fn get_all_properties(&self) -> Box<dyn Iterator<Item = (NameOrId, Object)>> {
+        self.inner.get_all_properties()
+    }
 }
 
 impl fmt::Debug for DynDetails {
@@ -157,13 +169,18 @@ impl Encode for DynDetails {
             default.write_to(writer)?;
         } else {
             // TODO(yyy): handle other kinds of details
-            // only write id and label for LazyDetails
+            // for lazy details, we write id, label, and required properties
             writer.write_u8(2)?;
             write_id(writer, self.inner.get_id())?;
             self.inner
                 .get_label()
                 .cloned()
                 .write_to(writer)?;
+            writer.write_u64(self.properties_len() as u64)?;
+            for (k, v) in self.get_all_properties() {
+                k.write_to(writer)?;
+                v.write_to(writer)?;
+            }
         }
         Ok(())
     }
@@ -178,7 +195,14 @@ impl Decode for DynDetails {
         } else if kind == 2 {
             let id = read_id(reader)?;
             let label = <Option<NameOrId>>::read_from(reader)?;
-            let details = DefaultDetails::with(id, label);
+            let len = reader.read_u64()?;
+            let mut map = HashMap::with_capacity(len as usize);
+            for _i in 0..len {
+                let k = <NameOrId>::read_from(reader)?;
+                let v = <Object>::read_from(reader)?;
+                map.insert(k, v);
+            }
+            let details = DefaultDetails::with_property(id, label.unwrap(), map);
             Ok(DynDetails::new(details))
         } else {
             Err(io::Error::from(io::ErrorKind::Other))
@@ -236,6 +260,14 @@ impl Details for DefaultDetails {
 
     fn get_label(&self) -> Option<&NameOrId> {
         self.label.as_ref()
+    }
+
+    fn properties_len(&self) -> usize {
+        self.inner.len()
+    }
+
+    fn get_all_properties(&self) -> Box<dyn Iterator<Item = (NameOrId, Object)>> {
+        Box::new(self.inner.clone().into_iter())
     }
 }
 

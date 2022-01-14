@@ -232,13 +232,7 @@ impl GraphProxy for DemoGraph {
             let result = self
                 .store
                 .get_all_vertices(label_ids.as_ref())
-                .map(move |v| {
-                    if let Some(property) = props.as_ref() {
-                        to_runtime_vertex_with_property(v, property)
-                    } else {
-                        to_runtime_vertex(v, store)
-                    }
-                });
+                .map(move |v| to_runtime_vertex(v, store, props.clone()));
 
             Ok(filter_limit!(result, params.filter, params.limit))
         } else {
@@ -267,11 +261,7 @@ impl GraphProxy for DemoGraph {
         let mut result = Vec::with_capacity(ids.len());
         for id in ids {
             if let Some(local_vertex) = self.store.get_vertex(*id as DefaultId) {
-                let v = if let Some(props) = params.props.as_ref() {
-                    to_runtime_vertex_with_property(local_vertex, props)
-                } else {
-                    to_runtime_vertex(local_vertex, self.store)
-                };
+                let v = to_runtime_vertex(local_vertex, self.store, params.props.clone());
                 result.push(v);
             }
         }
@@ -306,7 +296,7 @@ impl GraphProxy for DemoGraph {
                 Direction::In => graph.get_in_vertices(v as DefaultId, edge_label_ids.as_ref()),
                 Direction::Both => graph.get_both_vertices(v as DefaultId, edge_label_ids.as_ref()),
             }
-            .map(move |v| to_runtime_vertex(v, graph));
+            .map(move |v| to_runtime_vertex(v, graph, None));
             Ok(filter_limit!(iter, filter, limit))
         });
         Ok(stmt)
@@ -341,35 +331,12 @@ pub fn create_demo_graph() {
 #[inline]
 fn to_runtime_vertex(
     v: LocalVertex<DefaultId>, store: &'static LargeGraphDB<DefaultId, InternalId>,
+    prop_keys: Option<Vec<NameOrId>>,
 ) -> Vertex {
     // For vertices, we query properties via vid
     let label = encode_runtime_v_label(&v);
-    let details = LazyVertexDetails::new(v.get_id(), label, store);
+    let details = LazyVertexDetails::new(v.get_id(), label, prop_keys, store);
     Vertex::new(DynDetails::new(details))
-}
-
-fn to_runtime_vertex_with_property(v: LocalVertex<DefaultId>, props: &Vec<NameOrId>) -> Vertex {
-    let id = encode_runtime_v_id(&v);
-    let label = encode_runtime_v_label(&v);
-    let mut properties = HashMap::new();
-    if props.is_empty() {
-        if let Some(mut prop_vals) = v.clone_all_properties() {
-            for (prop, obj) in prop_vals.drain() {
-                properties.insert(prop.into(), obj as Object);
-            }
-        }
-    } else {
-        for prop in props {
-            if let NameOrId::Str(prop) = prop {
-                if let Some(val) = v.get_property(prop) {
-                    if let Some(obj) = val.try_to_owned() {
-                        properties.insert(prop.clone().into(), obj as Object);
-                    }
-                }
-            }
-        }
-    }
-    Vertex::new(DynDetails::new(DefaultDetails::with_property(id, label, properties)))
 }
 
 #[inline]
@@ -394,10 +361,13 @@ fn to_runtime_edge(
     )
 }
 
+/// LazyVertexDetails is used for local property fetching optimization.
+/// That is, the required properties will not be materialized until LazyVertexDetails need to be shuffled.
 #[allow(dead_code)]
 struct LazyVertexDetails {
     pub id: DefaultId,
     label: NameOrId,
+    prop_keys: Option<Vec<NameOrId>>,
     inner: AtomicPtr<LocalVertex<'static, DefaultId>>,
     store: &'static LargeGraphDB<DefaultId, InternalId>,
 }
@@ -406,9 +376,10 @@ impl_as_any!(LazyVertexDetails);
 
 impl LazyVertexDetails {
     pub fn new(
-        id: DefaultId, label: NameOrId, store: &'static LargeGraphDB<DefaultId, InternalId>,
+        id: DefaultId, label: NameOrId, prop_keys: Option<Vec<NameOrId>>,
+        store: &'static LargeGraphDB<DefaultId, InternalId>,
     ) -> Self {
-        LazyVertexDetails { id, label, inner: AtomicPtr::default(), store }
+        LazyVertexDetails { id, label, prop_keys, inner: AtomicPtr::default(), store }
     }
 }
 
@@ -458,6 +429,26 @@ impl Details for LazyVertexDetails {
     fn get_label(&self) -> Option<&NameOrId> {
         Some(&self.label)
     }
+
+    fn properties_len(&self) -> usize {
+        self.prop_keys
+            .as_ref()
+            .map_or(0, |prop_keys| prop_keys.len())
+    }
+
+    fn get_all_properties(&self) -> Box<dyn Iterator<Item = (NameOrId, Object)>> {
+        let mut all_props = vec![];
+        if let Some(prop_keys) = self.prop_keys.as_ref() {
+            for key in prop_keys.iter() {
+                if let Some(prop) = self.get_property(&key) {
+                    all_props.push((key.clone(), prop.try_to_owned().unwrap()));
+                } else {
+                    all_props.push((key.clone(), Object::None))
+                }
+            }
+        }
+        Box::new(all_props.into_iter())
+    }
 }
 
 impl Drop for LazyVertexDetails {
@@ -469,10 +460,6 @@ impl Drop for LazyVertexDetails {
             }
         }
     }
-}
-
-fn encode_runtime_v_id(v: &LocalVertex<DefaultId>) -> ID {
-    v.get_id() as ID
 }
 
 /// Edge's ID is encoded by its internal index
