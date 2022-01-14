@@ -23,6 +23,7 @@ import com.alibaba.graphscope.common.jna.type.*;
 import com.alibaba.graphscope.common.jna.type.FfiDirection;
 import com.alibaba.graphscope.common.jna.type.FfiNameOrId;
 import com.alibaba.graphscope.common.jna.type.FfiScanOpt;
+import com.alibaba.graphscope.gremlin.antlr4.AnyValue;
 import org.apache.tinkerpop.gremlin.process.traversal.*;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.IdentityTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.ValueTraversal;
@@ -66,33 +67,42 @@ public class OpArgTransformFactory {
         String expr = "";
         for (int i = 0; i < containers.size(); ++i) {
             if (i > 0) {
-                expr += "&&";
+                expr += " && ";
             }
             HasContainer container = containers.get(i);
             if (container.getPredicate() instanceof ConnectiveP) {
                 throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE, "nested predicate");
             }
-            String valueExpr = getValueExpr(container.getValue());
-            BiPredicate predicate = container.getPredicate().getBiPredicate();
-            if (predicate == Compare.eq) {
-                expr += String.format("@.%s == %s", container.getKey(), valueExpr);
-            } else if (predicate == Compare.neq) {
-                expr += String.format("@.%s != %s", container.getKey(), valueExpr);
-            } else if (predicate == Compare.lt) {
-                expr += String.format("@.%s < %s", container.getKey(), valueExpr);
-            } else if (predicate == Compare.lte) {
-                expr += String.format("@.%s <= %s", container.getKey(), valueExpr);
-            } else if (predicate == Compare.gt) {
-                expr += String.format("@.%s > %s", container.getKey(), valueExpr);
-            } else if (predicate == Compare.gte) {
-                expr += String.format("@.%s >= %s", container.getKey(), valueExpr);
-            } else if (predicate == Contains.within) {
-                expr += String.format("@.%s within %s", container.getKey(), valueExpr);
-            } else if (predicate == Contains.without) {
-                expr += String.format("@.%s without %s", container.getKey(), valueExpr);
+            Object predicateValue = container.getValue();
+            String existPropertyKey = String.format("@.%s", container.getKey());
+            // has("name")
+            if (predicateValue instanceof AnyValue) {
+                expr += existPropertyKey;
             } else {
-                throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE, "predicate type is unsupported");
+                expr += existPropertyKey + " && ";
+                String valueExpr = getValueExpr(predicateValue);
+                BiPredicate predicate = container.getPredicate().getBiPredicate();
+                if (predicate == Compare.eq) {
+                    expr += String.format("@.%s == %s", container.getKey(), valueExpr);
+                } else if (predicate == Compare.neq) {
+                    expr += String.format("@.%s != %s", container.getKey(), valueExpr);
+                } else if (predicate == Compare.lt) {
+                    expr += String.format("@.%s < %s", container.getKey(), valueExpr);
+                } else if (predicate == Compare.lte) {
+                    expr += String.format("@.%s <= %s", container.getKey(), valueExpr);
+                } else if (predicate == Compare.gt) {
+                    expr += String.format("@.%s > %s", container.getKey(), valueExpr);
+                } else if (predicate == Compare.gte) {
+                    expr += String.format("@.%s >= %s", container.getKey(), valueExpr);
+                } else if (predicate == Contains.within) {
+                    expr += String.format("@.%s within %s", container.getKey(), valueExpr);
+                } else if (predicate == Contains.without) {
+                    expr += String.format("@.%s without %s", container.getKey(), valueExpr);
+                } else {
+                    throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE, "predicate type is unsupported");
+                }
             }
+
         }
         return expr;
     };

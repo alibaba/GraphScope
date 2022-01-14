@@ -35,6 +35,8 @@ import javax.script.Bindings;
 import javax.script.ScriptContext;
 import javax.script.SimpleBindings;
 import javax.script.SimpleScriptContext;
+import java.util.Arrays;
+import java.util.List;
 
 public class PositiveEvalTest {
     private Graph graph;
@@ -185,6 +187,11 @@ public class PositiveEvalTest {
     @Test
     public void g_V_has_age_P_eq_test() {
         Assert.assertEquals(g.V().has("age", P.eq(10)), eval("g.V().has('age', eq(10))"));
+    }
+
+    @Test
+    public void g_V_has_age_P_eq_1_test() {
+        Assert.assertEquals(g.V().has("age", P.eq(10)), eval("g.V().has('age', P.eq(10))"));
     }
 
     @Test
@@ -388,6 +395,11 @@ public class PositiveEvalTest {
     @Test
     public void g_V_has_within_ints_test() {
         Assert.assertEquals(g.V().has("age", P.within(10, 11)), eval("g.V().has('age', within(10, 11))"));
+    }
+
+    @Test
+    public void g_V_has_within_ints_1_test() {
+        Assert.assertEquals(g.V().has("age", P.within(10, 11)), eval("g.V().has('age', within([10, 11]))"));
     }
 
     @Test

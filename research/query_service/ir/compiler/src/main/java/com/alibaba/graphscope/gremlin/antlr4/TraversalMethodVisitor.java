@@ -21,6 +21,7 @@ import com.alibaba.graphscope.gremlin.exception.UnsupportedEvalException;
 import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSBaseVisitor;
 import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSParser;
 import org.apache.tinkerpop.gremlin.process.traversal.Order;
+import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
@@ -69,6 +70,10 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
 
     @Override
     public Traversal visitTraversalMethod_has(GremlinGSParser.TraversalMethod_hasContext ctx) {
+        if (ctx.stringLiteral() == null) {
+            throw new UnsupportedEvalException(ctx.getClass(),
+                    "supported pattern is [has('key', 'value')] or [has('key', P)] or [has('key')]");
+        }
         if (ctx.genericLiteral() != null) {
             return graphTraversal.has(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()),
                     GenericLiteralVisitor.getInstance().visitGenericLiteral(ctx.genericLiteral()));
@@ -76,8 +81,7 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
             return graphTraversal.has(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()),
                     TraversalPredicateVisitor.getInstance().visitTraversalPredicate(ctx.traversalPredicate()));
         } else {
-            throw new UnsupportedEvalException(ctx.getClass(),
-                    "supported pattern is [has('key', 'value')] or [has('key', P)]");
+            return graphTraversal.has(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()), P.eq(AnyValue.INSTANCE));
         }
     }
 

@@ -120,8 +120,8 @@ public class TraversalPredicateVisitor extends GremlinGSBaseVisitor<P> {
      */
     @Override
     public P visitTraversalPredicate_within(GremlinGSParser.TraversalPredicate_withinContext ctx) {
-        if (ctx.genericLiteralExpr() != null) {
-            Object args = GenericLiteralVisitor.getInstance().visitGenericLiteralExpr(ctx.genericLiteralExpr());
+        if (ctx.genericLiteralList() != null) {
+            Object args = GenericLiteralVisitor.getGenericLiteralList(ctx.genericLiteralList());
             P within;
             if (args instanceof Object[]) {
                 within = P.within((Object[]) args);
@@ -141,8 +141,8 @@ public class TraversalPredicateVisitor extends GremlinGSBaseVisitor<P> {
      */
     @Override
     public P visitTraversalPredicate_without(GremlinGSParser.TraversalPredicate_withoutContext ctx) {
-        if (ctx.genericLiteralExpr() != null) {
-            Object args = GenericLiteralVisitor.getInstance().visitGenericLiteralExpr(ctx.genericLiteralExpr());
+        if (ctx.genericLiteralList() != null) {
+            Object args = GenericLiteralVisitor.getGenericLiteralList(ctx.genericLiteralList());
             P without;
             if (args instanceof Object[]) {
                 without = P.without((Object[]) args);
