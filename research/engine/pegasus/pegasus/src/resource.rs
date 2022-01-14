@@ -245,7 +245,7 @@ impl<T: Send + Sync + 'static> PartitionedResource for DistributedParResource<T>
     type Res = T;
 
     fn get_resource(&self, par: usize) -> Option<&Self::Res> {
-        if par < self.start_index + self.partitions.len() {
+        if par > self.start_index && par < self.start_index + self.partitions.len() {
             self.partitions[par - self.start_index].as_ref()
         } else {
             None
@@ -253,7 +253,7 @@ impl<T: Send + Sync + 'static> PartitionedResource for DistributedParResource<T>
     }
 
     fn take_resource(&mut self, par: usize) -> Option<Self::Res> {
-        if par < self.start_index + self.partitions.len() {
+        if par > self.start_index && par < self.start_index + self.partitions.len() {
             self.partitions[par - self.start_index].take()
         } else {
             None

@@ -21,28 +21,22 @@ env:
 jobs:
   peagsus-build:
     runs-on: ubuntu-20.04
+    defaults: 
+      run: 
+        shell: bash --noprofile --norc -eo pipefail {0}
 
     steps:
     - uses: actions/checkout@v2
 
     - name: Build & Test
       run: |
-        source ~/.bashrc
-
         echo $(pwd)
         cd research/engine/pegasus
         cargo build --verbose
         cargo test --verbose
 
-  pegasus-test:
-    runs-on: ubuntu-20.04
-    needs: [peagsus-build]
-
-    steps:
-    - uses: actions/checkout@v2
     - name: Run example
       run: |
-        source ~/.bashrc
         cd research/engine/pegasus
         
         cargo build --release --examples
@@ -59,21 +53,15 @@ jobs:
 
   k8s-test:
     runs-on: self-hosted
+    defaults: 
+      run: 
+        shell: bash --noprofile --norc -eo pipefail {0}
 
     steps:
     - uses: actions/checkout@v2
 
-    - name : Build Example
-      run: |
-        source ~/.bashrc
-        . "$HOME/.cargo/env"
-        cd research/engine/pegasus
-        
-        cargo build --release --examples
-
     - name : Prepare Image
       run: |
-        echo ${{ github.sha }}
         sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/pegasus-base:latest
         sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/pegasus:${{ github.sha }} \
                           --network=host \
@@ -84,13 +72,13 @@ jobs:
 
     - name: Start k8s cluster
       run: |
+        kubectl get ns pegasus-ci || kubectl create ns pegasus-ci
+        kubectl --namespace pegasus-ci create -f research/engine/pegasus/test/k8s/role_binding.yaml
         kubectl --namespace pegasus-ci create -f research/engine/pegasus/test/k8s/pegasus-set.yaml
         bash research/engine/pegasus/test/k8s/read_result.sh ${{ github.sha }}
 
     - name: Clean
       if: always()
       run: |
-        kubectl -n pegasus-ci delete configmap pegasus-result-${{ github.sha }}
-        kubectl -n pegasus-ci delete svc pegasus-service
-        kubectl -n pegasus-ci delete statefulset pegasus
-        docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/pegasus:${{ github.sha }} || true
+        kubectl delete ns pegasus-ci || true
+        docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/pegasus:${{ github.sha }} --wait=false || true
