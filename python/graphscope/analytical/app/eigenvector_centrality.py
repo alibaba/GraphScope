@@ -26,15 +26,18 @@ __all__ = ["eigenvector_centrality"]
 
 @project_to_simple
 @not_compatible_for("arrow_property", "dynamic_property")
-def eigenvector_centrality(graph, tolerance=1e-06, max_round=100):
+def eigenvector_centrality(graph, tolerance=1e-06, max_round=100, weight=None):
     """Compute the eigenvector centrality for the `graph`.
     See more about eigenvector centrality here:
     https://networkx.org/documentation/networkx-1.10/reference/generated/networkx.algorithms.centrality.eigenvector_centrality.html
 
     Args:
-        graph (:class:`Graph`): A simple graph.
+        graph (:class:`graphscope.Graph`): A simple graph.
         tolerance (float, optional): Defaults to 1e-06.
         max_round (int, optional): Defaults to 100.
+        weight (str, optional): The edge data key corresponding to the edge weight.
+            Note that property under multiple labels should have the consistent index.
+            Defaults to None.
 
     Returns:
         :class:`graphscope.framework.context.VertexDataContextDAGNode`:
@@ -44,13 +47,14 @@ def eigenvector_centrality(graph, tolerance=1e-06, max_round=100):
 
     .. code:: python
 
-        import graphscope as gs
-        g = gs.g()
-        # Load some data, then project to a simple graph (if needed).
-        pg = g.project(vertices={"vlabel": []}, edges={"elabel": []})
-        r = gs.eigenvector_centrality(pg)
-        s.close()
-
+        >>> import graphscope
+        >>> from graphscope.dataset import load_p2p_network
+        >>> sess = graphscope.session(cluster_type="hosts", mode="eager")
+        >>> g = load_p2p_network(sess)
+        >>> # project to a simple graph (if needed)
+        >>> pg = g.project(vertices={"host": ["id"]}, edges={"connect": ["dist"]})
+        >>> c = graphscope.eigenvector_centrality(pg, tolerance=1e-06, max_round=10)
+        >>> sess.close()
     """
     tolerance = float(tolerance)
     max_round = int(max_round)

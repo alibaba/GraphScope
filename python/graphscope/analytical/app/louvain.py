@@ -32,14 +32,13 @@ def louvain(graph, min_progress=1000, progress_tries=1):
     """Compute best partition on the `graph` by louvain.
 
     Args:
-        graph (:class:`Graph`): A simple undirected graph.
+        graph (:class:`graphscope.Graph`): A simple undirected graph.
         min_progress: The minimum delta X required to be considered progress, where X is the number of nodes
                       that have changed their community on a particular pass.
                       Delta X is then the difference in number of nodes that changed communities
                       on the current pass compared to the previous pass.
         progress_tries: number of times the min_progress setting is not met
                         before exiting form the current level and compressing the graph.
-
 
     Returns:
         :class:`graphscope.framework.context.VertexDataContextDAGNode`:
@@ -60,14 +59,14 @@ def louvain(graph, min_progress=1000, progress_tries=1):
 
     .. code:: python
 
-        import graphscope as gs
-        g = gs.g(directed=False)
-        g = g.add_vertices('The parameters for loading a graph...')
-        g = g.add_edges('The parameters for loading a graph...')
-        pg = g.project(vertices={"vlabel": []}, edges={"elabel": ["weight"]})
-        r = gs.louvain(pg)
-        s.close()
-
+        >>> import graphscope
+        >>> from graphscope.dataset import load_p2p_network
+        >>> sess = graphscope.session(cluster_type="hosts", mode="eager")
+        >>> g = load_p2p_network(sess, directed=False)
+        >>> # project to a simple graph (if needed)
+        >>> pg = g.project(vertices={"host": ["id"]}, edges={"connect": ["dist"]})
+        >>> c = graphscope.louvain(pg, min_progress=1000, progress_tries=1)
+        >>> sess.close()
     """
     if graph.is_directed():
         raise InvalidArgumentError("Louvain not support directed graph.")

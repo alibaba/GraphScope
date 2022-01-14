@@ -830,7 +830,9 @@ def _pre_process_for_output_graph_op(op, op_result_pool, key_to_op, **kwargs):
     )
 
 
-def _pre_process_for_project_to_simple_op(op, op_result_pool, key_to_op, **kwargs):
+def _pre_process_for_project_to_simple_op(  # noqa: C901
+    op, op_result_pool, key_to_op, **kwargs
+):
     # for nx graph
     if op.attr[types_pb2.GRAPH_TYPE].graph_type in (
         graph_def_pb2.DYNAMIC_PROJECTED,
@@ -881,10 +883,15 @@ def _pre_process_for_project_to_simple_op(op, op_result_pool, key_to_op, **kwarg
             raise RuntimeError(
                 "Property {0} doesn't exists in all vertex labels".format(v_prop)
             )
+        # get vertex property id
         v_prop_id = schema.get_vertex_property_id(schema.vertex_labels[0], v_prop)
-        v_prop_type = schema.get_vertex_properties(schema.vertex_labels[0])[
-            v_prop_id
-        ].type
+        # get vertex property type
+        v_prop_type = graph_def_pb2.NULLVALUE
+        v_props = schema.get_vertex_properties(schema.vertex_labels[0])
+        for v_prop in v_props:
+            if v_prop.id == v_prop_id:
+                v_prop_type = v_prop.type
+                break
 
     # check and get edge property
     e_prop = op.attr[types_pb2.E_PROP_KEY].s.decode("utf-8")
@@ -905,8 +912,15 @@ def _pre_process_for_project_to_simple_op(op, op_result_pool, key_to_op, **kwarg
             raise RuntimeError(
                 "Property {0} doesn't exists in all edge labels".format(e_prop)
             )
+        # get edge property id
         e_prop_id = schema.get_edge_property_id(schema.edge_labels[0], e_prop)
-        e_prop_type = schema.get_edge_properties(schema.edge_labels[0])[e_prop_id].type
+        # get edge property type
+        e_props = schema.get_edge_properties(schema.edge_labels[0])
+        e_prop_type = graph_def_pb2.NULLVALUE
+        for e_prop in e_props:
+            if e_prop.id == e_prop_id:
+                e_prop_type = e_prop.type
+                break
 
     op.attr[types_pb2.GRAPH_NAME].CopyFrom(
         attr_value_pb2.AttrValue(s=graph_name.encode("utf-8"))

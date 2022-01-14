@@ -44,13 +44,14 @@ def degree_centrality(graph, centrality_type="both"):
 
     .. code:: python
 
-        import graphscope as gs
-        g = gs.g()
-        # Load some data, then project to a simple graph (if needed).
-        pg = g.project(vertices={"vlabel": []}, edges={"elabel": []})
-        r = gs.degree_centrality(pg, centrality_type="both")
-        s.close()
-
+        >>> import graphscope
+        >>> from graphscope.dataset import load_p2p_network
+        >>> sess = graphscope.session(cluster_type="hosts", mode="eager")
+        >>> g = load_p2p_network(sess)
+        >>> # project to a simple graph (if needed)
+        >>> pg = g.project(vertices={"host": ["id"]}, edges={"connect": ["dist"]})
+        >>> c = graphscope.degree_centrality(pg, centrality_type="both")
+        >>> sess.close()
     """
     centrality_type = str(centrality_type)
     return AppAssets(algo="degree_centrality", context="vertex_data")(

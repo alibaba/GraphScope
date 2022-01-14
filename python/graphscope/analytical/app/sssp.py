@@ -33,11 +33,12 @@ def sssp(graph, src=0, weight=None):
     Note that the `sssp` algorithm requires an numerical property on the edge.
 
     Args:
-        graph (:class:`graphscope.Graph`): A property graph.
+        graph (:class:`graphscope.Graph`): A simple graph.
         src (optional): The source vertex. The type should be consistent
             with the id type of the `graph`, that is, it's `int` or `str` depending
             on the `oid_type` is `int64_t` or `string` of the `graph`. Defaults to 0.
         weight (str, optional): The edge data key corresponding to the edge weight.
+            Note that property under multiple labels should have the consistent index.
             Defaults to None.
 
     Returns:
@@ -54,8 +55,8 @@ def sssp(graph, src=0, weight=None):
         >>> sess = graphscope.session(cluster_type="hosts", mode="eager")
         >>> g = load_p2p_network(sess)
         >>> # project to a simple graph (if needed)
-        >>> sg = g.project(vertices={"host": ["id"]}, edges={"connect": ["dist"]})
+        >>> pg = g.project(vertices={"host": ["id"]}, edges={"connect": ["dist"]})
         >>> c = graphscope.sssp(pg, src=6)
-        >>> s.close()
+        >>> sess.close()
     """
     return AppAssets(algo="sssp", context="vertex_data")(graph, src)

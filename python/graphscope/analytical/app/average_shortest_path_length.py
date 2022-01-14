@@ -26,9 +26,9 @@ __all__ = ["average_shortest_path_length"]
 
 
 @project_to_simple
-@not_compatible_for("arrow_property", "dynamic_property", "arrow_flattened")
-def average_shortest_path_length(G):
-    r"""Returns the average shortest path length.
+@not_compatible_for("arrow_property", "dynamic_property")
+def average_shortest_path_length(graph, weight=None):
+    r"""Compute the average shortest path length.
 
     The average shortest path length is
 
@@ -36,14 +36,32 @@ def average_shortest_path_length(G):
 
        a =\sum_{s,t \in V} \frac{d(s, t)}{n(n-1)}
 
-    where `V` is the set of nodes in `G`,
-    `d(s, t)` is the shortest path from `s` to `t`,
+    where `V` is the set of nodes in `G`, `d(s, t)` is the shortest path from `s` to `t`,
     and `n` is the number of nodes in `G`.
 
     Parameters
     ----------
-    G :  graph
+    graph : (:class:`graphscope.Graph`): A simple graph.
+    weight: (str, optional): The edge data key corresponding to the edge weight.
+        Note that property under multiple labels should have the consistent index.
+        Defaults to None.
 
+    Returns
+    -------
+    r : float
+        The average shortest path length.
+
+    Examples
+    --------
+    .. code:: python
+
+        >>> import graphscope
+        >>> from graphscope.dataset import load_modern_graph
+        >>> sess = graphscope.session(cluster_type="hosts", mode="eager")
+        >>> g = load_modern_graph(sess)
+        >>> g.schema
+        >>> c = graphscope.average_shortest_path_length(g, weight="weight")
+        >>> sess.close()
     """
-    ctx = AppAssets(algo="sssp_average_length", context="tensor")(G)
+    ctx = AppAssets(algo="sssp_average_length", context="tensor")(graph)
     return ctx.to_numpy("r", axis=0)[0]

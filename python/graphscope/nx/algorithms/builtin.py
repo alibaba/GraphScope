@@ -207,7 +207,9 @@ def eigenvector_centrality(G, max_iter=100, tol=1e-06, nstart=None, weight=None)
     @context_to_dict
     @project_to_simple
     def _eigenvector_centrality(G, max_iter=100, tol=1e-06, weight=None):
-        return graphscope.eigenvector_centrality(G, tolerance=tol, max_round=max_iter)
+        return graphscope.eigenvector_centrality(
+            G, tolerance=tol, max_round=max_iter, weight=weight
+        )
 
     if nstart is not None:
         # forward the nxa.eigenvector_centrality
@@ -333,7 +335,7 @@ def single_source_dijkstra_path_length(G, source, weight=None):
 def average_shortest_path_length(G, weight=None, method=None):
     @project_to_simple
     def _average_shortest_path_length(G, weight=None):
-        return graphscope.average_shortest_path_length(G)
+        return graphscope.average_shortest_path_length(G, weight)
 
     if method is not None:
         return nxa.average_shortest_path_length(G, weight, method)
@@ -514,7 +516,7 @@ def k_core(G, k=None, core_number=None):
     G : networkx graph
       A graph or directed graph
     k : int, optional
-      The order of the core.  If not specified return the main core.
+      The order of the core. If not specified return the main core.
 
     Returns
     -------
@@ -804,7 +806,7 @@ def attribute_assortativity_coefficient(G, attribute):
     .. [1] M. E. J. Newman, Mixing patterns in networks,
        Physical Review E, 67 026126, 2003
     """
-    return graphscope.attribute_assortativity_coefficient(G)
+    return graphscope.attribute_assortativity_coefficient(G, attribute)
 
 
 @project_to_simple
@@ -845,7 +847,7 @@ def numeric_assortativity_coefficient(G, attribute):
     .. [1] M. E. J. Newman, Mixing patterns in networks
            Physical Review E, 67 026126, 2003
     """
-    return graphscope.numeric_assortativity_coefficient(G)
+    return graphscope.numeric_assortativity_coefficient(G, attribute)
 
 
 @patch_docstring(nxa.is_simple_path)

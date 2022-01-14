@@ -30,7 +30,7 @@ def lpa(graph, max_round=10):
     """Evaluate Community Detection with Label Propagation.
 
     Args:
-        graph (:class:`Graph`): A simple graph.
+        graph (:class:`graphscope.Graph`): A simple graph.
         max_round (int, optional): Maximum rounds. Defaults to 10.
 
     Returns:
@@ -41,24 +41,27 @@ def lpa(graph, max_round=10):
 
     .. code:: python
 
-        import graphscope as gs
-        g = gs.g()
-        # Load some data, then project to a simple graph (if needed).
-        pg = g.project(vertices={"vlabel": []}, edges={"elabel": []})
-        r = gs.lpa(g, max_round=10)
-        s.close()
-
+        >>> import graphscope
+        >>> from graphscope.dataset import load_p2p_network
+        >>> sess = graphscope.session(cluster_type="hosts", mode="eager")
+        >>> g = load_p2p_network(sess)
+        >>> # project to a simple graph (if needed)
+        >>> pg = g.project(vertices={"host": ["id"]}, edges={"connect": ["dist"]})
+        >>> c = graphscope.lpa(pg, max_round=10)
+        >>> sess.close()
     """
     max_round = int(max_round)
     return AppAssets(algo="cdlp", context="vertex_data")(graph, max_round)
 
 
-@not_compatible_for("dynamic_property", "arrow_projected", "dynamic_projected")
+@not_compatible_for(
+    "dynamic_property", "arrow_projected", "dynamic_projected", "arrow_flattened"
+)
 def lpa_u2i(graph, max_round=10):
     """Evaluate (multi-) label propagation on a property graph.
 
     Args:
-        graph (:class:`Graph`): A property graph.
+        graph (:class:`graphscope.Graph`): A property graph.
         max_round (int, optional): Maximum number of rounds. Defaults to 10.
 
     Returns:
