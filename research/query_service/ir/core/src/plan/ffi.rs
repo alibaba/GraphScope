@@ -1273,9 +1273,8 @@ mod scan {
     #[derive(Copy, Clone, Debug, PartialEq)]
     #[repr(i32)]
     pub enum FfiScanOpt {
-        Vertex = 0,
-        Edge = 1,
-        Table = 2,
+        Entity = 0,
+        Relation = 1,
     }
 
     /// To initialize a scan operator
@@ -1474,7 +1473,7 @@ mod sink {
     /// To initialize an Sink operator
     #[no_mangle]
     pub extern "C" fn init_sink_operator(sink_current: bool) -> *const c_void {
-        let sink_opr = Box::new(pb::Sink { tags: vec![], sink_current, id_name_mapping: vec![] });
+        let sink_opr = Box::new(pb::Sink { tags: vec![], sink_current, id_name_mappings: vec![] });
         Box::into_raw(sink_opr) as *const c_void
     }
 

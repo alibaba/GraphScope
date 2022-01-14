@@ -43,7 +43,7 @@ public class GraphStepTest {
         Traversal traversal = g.V();
         Step graphStep = traversal.asAdmin().getStartStep();
         ScanFusionOp op = (ScanFusionOp) StepTransformFactory.GRAPH_STEP.apply(graphStep);
-        Assert.assertEquals(FfiScanOpt.Vertex, op.getScanOpt().get().getArg());
+        Assert.assertEquals(FfiScanOpt.Entity, op.getScanOpt().get().getArg());
     }
 
     @Test
@@ -51,7 +51,7 @@ public class GraphStepTest {
         Traversal traversal = g.E();
         Step graphStep = traversal.asAdmin().getStartStep();
         ScanFusionOp op = (ScanFusionOp) StepTransformFactory.GRAPH_STEP.apply(graphStep);
-        Assert.assertEquals(FfiScanOpt.Edge, op.getScanOpt().get().getArg());
+        Assert.assertEquals(FfiScanOpt.Relation, op.getScanOpt().get().getArg());
     }
 
     @Test

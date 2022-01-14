@@ -55,8 +55,8 @@ public class InterOpCollectionBuilder {
                 GraphStep graphStep = (GraphStep) step;
                 ScanFusionOp op = new ScanFusionOp();
                 op.setScanOpt(new OpArg<>(graphStep, (GraphStep t) -> {
-                    if (t.returnsVertex()) return FfiScanOpt.Vertex;
-                    else return FfiScanOpt.Edge;
+                    if (t.returnsVertex()) return FfiScanOpt.Entity;
+                    else return FfiScanOpt.Relation;
                 }));
 
                 if (graphStep.getIds().length > 0) {

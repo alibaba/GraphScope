@@ -39,7 +39,7 @@ public class ScanFusionOpTest {
     @Test
     public void scanOptTest() throws IOException {
         ScanFusionOp op = new ScanFusionOp();
-        op.setScanOpt(new OpArg<>(FfiScanOpt.Vertex, Function.identity()));
+        op.setScanOpt(new OpArg<>(FfiScanOpt.Entity, Function.identity()));
         irPlan.appendInterOp(op);
         String actual = irPlan.getPlanAsJson();
         Assert.assertEquals(TestUtils.readJsonFromResource("scan_opt.json"), actual);
@@ -48,7 +48,7 @@ public class ScanFusionOpTest {
     @Test
     public void predicateTest() throws IOException {
         ScanFusionOp op = new ScanFusionOp();
-        op.setScanOpt(new OpArg<>(FfiScanOpt.Vertex, Function.identity()));
+        op.setScanOpt(new OpArg<>(FfiScanOpt.Entity, Function.identity()));
         op.setPredicate(new OpArg("@.id == 1", Function.identity()));
         irPlan.appendInterOp(op);
         String actual = irPlan.getPlanAsJson();
@@ -58,7 +58,7 @@ public class ScanFusionOpTest {
     @Test
     public void labelsTest() throws IOException {
         ScanFusionOp op = new ScanFusionOp();
-        op.setScanOpt(new OpArg<>(FfiScanOpt.Vertex, Function.identity()));
+        op.setScanOpt(new OpArg<>(FfiScanOpt.Entity, Function.identity()));
         List<FfiNameOrId.ByValue> values = Arrays.asList(irCoreLib.cstrAsNameOrId("person"));
         op.setLabels(new OpArg<List, List>(values, Function.identity()));
         irPlan.appendInterOp(op);
@@ -69,7 +69,7 @@ public class ScanFusionOpTest {
     @Test
     public void idsTest() throws IOException {
         ScanFusionOp op = new ScanFusionOp();
-        op.setScanOpt(new OpArg<>(FfiScanOpt.Vertex, Function.identity()));
+        op.setScanOpt(new OpArg<>(FfiScanOpt.Entity, Function.identity()));
         List<FfiConst.ByValue> values = Arrays.asList(irCoreLib.int64AsConst(1L), irCoreLib.int64AsConst(2L));
         op.setIds(new OpArg<List, List>(values, Function.identity()));
         irPlan.appendInterOp(op);
@@ -80,7 +80,7 @@ public class ScanFusionOpTest {
     @Test
     public void aliasTest() throws IOException {
         ScanFusionOp op = new ScanFusionOp();
-        op.setScanOpt(new OpArg<>(FfiScanOpt.Vertex, Function.identity()));
+        op.setScanOpt(new OpArg<>(FfiScanOpt.Entity, Function.identity()));
         op.setAlias(new OpArg(ArgUtils.asFfiAlias("a", true), Function.identity()));
         irPlan.appendInterOp(op);
         String actual = irPlan.getPlanAsJson();

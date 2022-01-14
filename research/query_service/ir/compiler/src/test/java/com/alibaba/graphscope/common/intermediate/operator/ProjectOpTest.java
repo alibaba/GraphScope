@@ -42,7 +42,7 @@ public class ProjectOpTest {
     @Test
     public void projectAsTest() throws IOException {
         ScanFusionOp scanOp = new ScanFusionOp();
-        scanOp.setScanOpt(new OpArg<>(FfiScanOpt.Vertex, Function.identity()));
+        scanOp.setScanOpt(new OpArg<>(FfiScanOpt.Entity, Function.identity()));
         scanOp.setAlias(new OpArg(ArgUtils.asFfiAlias("a", true), Function.identity()));
         irPlan.appendInterOp(scanOp);
 
@@ -67,7 +67,7 @@ public class ProjectOpTest {
     @Test
     public void projectTagKeyTest() throws IOException {
         ScanFusionOp scanOp = new ScanFusionOp();
-        scanOp.setScanOpt(new OpArg<>(FfiScanOpt.Vertex, Function.identity()));
+        scanOp.setScanOpt(new OpArg<>(FfiScanOpt.Entity, Function.identity()));
         scanOp.setAlias(new OpArg(ArgUtils.asFfiAlias("a", true), Function.identity()));
         irPlan.appendInterOp(scanOp);
 
@@ -82,7 +82,7 @@ public class ProjectOpTest {
     @Test
     public void projectTagKeysTest() throws IOException {
         ScanFusionOp scanOp = new ScanFusionOp();
-        scanOp.setScanOpt(new OpArg<>(FfiScanOpt.Vertex, Function.identity()));
+        scanOp.setScanOpt(new OpArg<>(FfiScanOpt.Entity, Function.identity()));
         scanOp.setAlias(new OpArg(ArgUtils.asFfiAlias("a", true), Function.identity()));
         irPlan.appendInterOp(scanOp);
 

@@ -337,7 +337,7 @@ message SegmentApply {
 }
 
 message Sink {
-  enum MapType {
+  enum MetaType {
       ENTITY = 0;
       RELATION = 1;
       COLUMN = 2;
@@ -345,14 +345,14 @@ message Sink {
   message IdNameMapping {
     int32 id = 1;
     string name = 2;
-    MapType map_type = 3;
+    MetaType meta_type = 3;
   }
   // Define the tags of columns to sink
   repeated common.NameOrId tags = 1;
   // The flag of sinking current entry
   bool sink_current = 2;
-  // The mapping of table_id to table_name
-  repeated IdNameMapping id_name_mapping = 3;
+  // The mapping of id to name given certain `MetaType`
+  repeated IdNameMapping id_name_mappings = 3;
 }
 
 // A logical plan of graph relation algebra forms a DAG, where each node is an operator and the

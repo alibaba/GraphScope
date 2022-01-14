@@ -19,9 +19,8 @@ package com.alibaba.graphscope.common.jna.type;
 import com.alibaba.graphscope.common.jna.IntEnum;
 
 public enum FfiScanOpt implements IntEnum<FfiScanOpt> {
-    Vertex,
-    Edge,
-    Table;
+    Entity,
+    Relation;
 
     @Override
     public int getInt() {

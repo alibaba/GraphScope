@@ -47,8 +47,8 @@ public class OpArgTransformFactory {
     private static Logger logger = LoggerFactory.getLogger(OpArgTransformFactory.class);
 
     public static Function<GraphStep, FfiScanOpt> SCAN_OPT = (GraphStep s1) -> {
-        if (s1.returnsVertex()) return FfiScanOpt.Vertex;
-        else return FfiScanOpt.Edge;
+        if (s1.returnsVertex()) return FfiScanOpt.Entity;
+        else return FfiScanOpt.Relation;
     };
 
     public static Function<GraphStep, List<FfiConst.ByValue>> CONST_IDS_FROM_STEP = (GraphStep s1) ->
