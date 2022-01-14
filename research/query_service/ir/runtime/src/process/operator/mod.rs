@@ -28,6 +28,7 @@ pub mod source;
 use std::convert::TryFrom;
 use std::sync::Arc;
 
+use dyn_type::Object;
 use ir_common::error::ParsePbError;
 use ir_common::generated::common as common_pb;
 use ir_common::NameOrId;
@@ -58,14 +59,16 @@ impl TagKey {
                     .ok_or(FnExecError::get_tag_error(
                         "Get key failed since get details from a graph element failed",
                     ))?;
-                let properties = details
-                    .get(key)
-                    .ok_or(FnExecError::get_tag_error(
-                        "Get key failed since get prop_key from a graph element failed",
-                    ))?
-                    .try_to_owned()
-                    .ok_or(FnExecError::UnExpectedData("unable to own the `BorrowObject`".to_string()))?;
-                Ok(Arc::new(ObjectElement::Prop(properties).into()))
+                let prop_obj = if let Some(properties) = details.get(key) {
+                    properties
+                        .try_to_owned()
+                        .ok_or(FnExecError::UnExpectedData(
+                            "unable to own the `BorrowObject`".to_string(),
+                        ))?
+                } else {
+                    Object::None
+                };
+                Ok(Arc::new(ObjectElement::Prop(prop_obj).into()))
             } else {
                 Err(FnExecError::get_tag_error(
                     "Get key failed when attempt to get prop_key from a non-graph element",
