@@ -92,7 +92,7 @@ class UnionIdParser {
         break;
       }
     }
-    CHECK(index != 0);
+    CHECK_NE(index, 0);
     return index;
   }
 
