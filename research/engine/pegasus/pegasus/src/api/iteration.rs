@@ -97,6 +97,13 @@ pub trait Iteration<D: Data> {
     fn iterate_until<F>(self, until: IterCondition<D>, func: F) -> Result<Stream<D>, BuildJobError>
     where
         F: FnOnce(Stream<D>) -> Result<Stream<D>, BuildJobError>;
+
+    fn iterate_emit<T, F>(
+        self, until: IterCondition<D>, func: F,
+    ) -> Result<(Stream<T>, Stream<D>), BuildJobError>
+    where
+        T: Data,
+        F: FnOnce(Stream<D>) -> Result<(Stream<T>, Stream<D>), BuildJobError>;
 }
 
 /// To define the termination condition for an `iterate()` dataflow.

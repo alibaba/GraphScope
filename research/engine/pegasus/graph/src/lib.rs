@@ -15,12 +15,11 @@ use nohash_hasher::{BuildNoHashHasher, IntMap};
 
 use crate::topo::IdTopo;
 
-pub mod ckh;
 pub mod graph;
-pub mod meta;
 pub mod topo;
 
-pub type Graph = IdTopo<NeighborsBackend>;
+pub type MemIdTopoGraph = IdTopo<NeighborsBackend>;
+pub type MemLabeledTopoGraph = graph::LabeledTopoGraph<NeighborsBackend>;
 
 pub fn extract_partition<P: AsRef<Path>>(
     path: P, partition: u64, partitions: usize,
@@ -29,7 +28,7 @@ pub fn extract_partition<P: AsRef<Path>>(
     encode(path, move |id| id % p == partition)
 }
 
-pub fn partition<P: AsRef<Path>>(_path: P, _partitions: usize) -> std::io::Result<Vec<Graph>> {
+pub fn partition<P: AsRef<Path>>(_path: P, _partitions: usize) -> std::io::Result<Vec<MemIdTopoGraph>> {
     todo!()
 }
 
@@ -55,7 +54,7 @@ pub fn load<P: AsRef<Path>>(path: P) -> std::io::Result<IdTopo<NeighborsBackend>
     }
 }
 
-fn load_bin(binary: Mmap) -> std::io::Result<Graph> {
+fn load_bin(binary: Mmap) -> std::io::Result<MemIdTopoGraph> {
     println!("load binary file with len = {}", binary.len());
     let start = Instant::now();
     let vertices = {
