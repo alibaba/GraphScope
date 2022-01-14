@@ -91,7 +91,7 @@ def numeric_assortativity_coefficient(graph, attribute):
         >>> sess = graphscope.session(cluster_type="hosts", mode="eager")
         >>> g = load_modern_graph(sess)
         >>> g.schema
-        >>> c = graphscope.numeric_assortativity_coefficient(pg, attribute="name")
+        >>> c = graphscope.numeric_assortativity_coefficient(g, attribute="name")
         >>> sess.close()
 
     Notes
