@@ -613,6 +613,7 @@ impl From<Object> for common_pb::Value {
                                 .map(|obj| obj.to_string())
                                 .collect(),
                         }),
+                        RawType::None => common_pb::value::Item::None(common_pb::None {}),
                         _ => unimplemented!(),
                     }
                 } else {
