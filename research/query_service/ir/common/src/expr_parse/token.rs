@@ -252,58 +252,70 @@ fn str_to_partial_tokens(string: &str) -> ExprResult<Vec<PartialToken>> {
 }
 
 fn token_array_to_token(token_array: Vec<Token>) -> ExprResult<Token> {
-    // use pivot to regulate the type of all elements
-    let pivot = token_array.first().unwrap();
-    match pivot {
-        Token::Int(_) => {
-            let mut vec = Vec::with_capacity(token_array.len());
-            for t in token_array {
-                match t {
-                    Token::Int(i) => vec.push(i),
-                    _ => {
-                        return Err(ExprError::unsupported("array of various type unsupported".to_string()))
+    if token_array.is_empty() {
+        Ok(Token::IdentArray(vec![]))
+    } else {
+        // use pivot to regulate the type of all elements
+        let pivot = token_array.first().unwrap();
+        match pivot {
+            Token::Int(_) => {
+                let mut vec = Vec::with_capacity(token_array.len());
+                for t in token_array {
+                    match t {
+                        Token::Int(i) => vec.push(i),
+                        _ => {
+                            return Err(ExprError::unsupported(
+                                "array of various type unsupported".to_string(),
+                            ))
+                        }
                     }
                 }
+                Ok(Token::IntArray(vec))
             }
-            Ok(Token::IntArray(vec))
-        }
-        Token::Float(_) => {
-            let mut vec = Vec::with_capacity(token_array.len());
-            for t in token_array {
-                match t {
-                    Token::Float(f) => vec.push(f),
-                    _ => {
-                        return Err(ExprError::unsupported("array of various type unsupported".to_string()))
+            Token::Float(_) => {
+                let mut vec = Vec::with_capacity(token_array.len());
+                for t in token_array {
+                    match t {
+                        Token::Float(f) => vec.push(f),
+                        _ => {
+                            return Err(ExprError::unsupported(
+                                "array of various type unsupported".to_string(),
+                            ))
+                        }
                     }
                 }
+                Ok(Token::FloatArray(vec))
             }
-            Ok(Token::FloatArray(vec))
-        }
-        Token::String(_) => {
-            let mut vec = Vec::with_capacity(token_array.len());
-            for t in token_array {
-                match t {
-                    Token::String(s) => vec.push(s),
-                    _ => {
-                        return Err(ExprError::unsupported("array of various type unsupported".to_string()))
+            Token::String(_) => {
+                let mut vec = Vec::with_capacity(token_array.len());
+                for t in token_array {
+                    match t {
+                        Token::String(s) => vec.push(s),
+                        _ => {
+                            return Err(ExprError::unsupported(
+                                "array of various type unsupported".to_string(),
+                            ))
+                        }
                     }
                 }
+                Ok(Token::StrArray(vec))
             }
-            Ok(Token::StrArray(vec))
-        }
-        Token::Identifier(_) => {
-            let mut vec = Vec::with_capacity(token_array.len());
-            for t in token_array {
-                match t {
-                    Token::Identifier(s) => vec.push(s),
-                    _ => {
-                        return Err(ExprError::unsupported("array of various type unsupported".to_string()))
+            Token::Identifier(_) => {
+                let mut vec = Vec::with_capacity(token_array.len());
+                for t in token_array {
+                    match t {
+                        Token::Identifier(s) => vec.push(s),
+                        _ => {
+                            return Err(ExprError::unsupported(
+                                "array of various type unsupported".to_string(),
+                            ))
+                        }
                     }
                 }
+                Ok(Token::IdentArray(vec))
             }
-            Ok(Token::IdentArray(vec))
+            _ => Err(ExprError::unsupported(format!("array of this type: {:?} is not supported", pivot))),
         }
-        _ => Err(ExprError::unsupported(format!("array of this type: {:?} is not supported", pivot))),
     }
 }
 
@@ -446,12 +458,14 @@ fn partial_tokens_to_tokens(mut tokens: &[PartialToken]) -> ExprResult<Vec<Token
                             let elements = s.split(",");
                             for e in elements {
                                 let t = partial_tokens_to_tokens(&str_to_partial_tokens(e)?)?;
-                                if t.len() != 1 {
+                                if t.is_empty() {
+                                    // do nothing
+                                } else if t.len() == 1 {
+                                    token_array.push(t[0].clone())
+                                } else {
                                     return Err(format!("invalid token: {:?}", second)
                                         .as_str()
                                         .into());
-                                } else {
-                                    token_array.push(t[0].clone())
                                 }
                             }
                         }
@@ -461,18 +475,14 @@ fn partial_tokens_to_tokens(mut tokens: &[PartialToken]) -> ExprResult<Vec<Token
                                 .into())
                         }
                     }
-                    if token_array.is_empty() {
-                        return Err("empty array is given".into());
+                    let result = token_array_to_token(token_array)?;
+                    if is_bracket {
+                        Some(result)
                     } else {
-                        let result = token_array_to_token(token_array)?;
-                        if is_bracket {
-                            Some(result)
+                        if let Token::IdentArray(vec) = result {
+                            Some(Token::IdentMap(vec))
                         } else {
-                            if let Token::IdentArray(vec) = result {
-                                Some(Token::IdentMap(vec))
-                            } else {
-                                unreachable!()
-                            }
+                            unreachable!()
                         }
                     }
                 }
@@ -571,42 +581,25 @@ mod tests {
             vec![Token::Float(-4.0), Token::Within, Token::FloatArray(vec![1.0, -2.0, 3.0, -4.0])];
         assert_eq!(case6, expected_case6);
 
-        let case10 = tokenize("[@a, @a.name, @.age]");
-        let expected_case10 =
+        let case7 = tokenize("[@a, @a.name, @.age]");
+        let expected_case7 =
             vec![Token::IdentArray(vec!["@a".to_string(), "@a.name".to_string(), "@.age".to_string()])];
-        assert_eq!(case10.unwrap(), expected_case10,);
+        assert_eq!(case7.unwrap(), expected_case7,);
 
-        let case12 = tokenize("{@a, @a.name, @.age}");
-        let expected_case12 =
+        let case8 = tokenize("{@a, @a.name, @.age}");
+        let expected_case8 =
             vec![Token::IdentMap(vec!["@a".to_string(), "@a.name".to_string(), "@.age".to_string()])];
-        assert_eq!(case12.unwrap(), expected_case12,);
+        assert_eq!(case8.unwrap(), expected_case8,);
 
-        let case7 = tokenize("[1, -2, 3, -4");
-        assert_eq!(case7.err().unwrap(), ExprError::UnmatchedLRBrackets);
-
-        let case8 = tokenize("[1, -2, [3], -4]");
+        let case9 = tokenize("[]");
         assert_eq!(
-            case8.err().unwrap(),
-            ExprError::Unsupported("nested array is not supported".to_string())
-        );
-
-        let case9 = tokenize("[1, 0.5, -4]");
-        assert_eq!(
-            case9.err().unwrap(),
-            ExprError::unsupported("array of various type unsupported".to_string())
-        );
-
-        let case11 = tokenize("[]");
-        assert_eq!(
-            case11.err().unwrap(),
-            format!("invalid token: {:?}", Some(PartialToken::Token(Token::String("".to_string()))))
-                .as_str()
-                .into()
+            case9.unwrap(),
+            vec![Token::IdentArray(vec![])]
         );
     }
 
     #[test]
-    fn test_errors() {
+    fn test_tokenize_errors() {
         // 1 = 1, the partial = must be completed by another =
         let case1 = tokenize("1 = 1");
         assert_eq!(
@@ -633,6 +626,21 @@ mod tests {
                 PartialToken::Minus,
                 Some(PartialToken::Literal("a".to_string()))
             )
+        );
+
+        let case5 = tokenize("[1, -2, 3, -4");
+        assert_eq!(case5.err().unwrap(), ExprError::UnmatchedLRBrackets);
+
+        let case6 = tokenize("[1, -2, [3], -4]");
+        assert_eq!(
+            case6.err().unwrap(),
+            ExprError::Unsupported("nested array is not supported".to_string())
+        );
+
+        let case7 = tokenize("[1, 0.5, -4]");
+        assert_eq!(
+            case7.err().unwrap(),
+            ExprError::unsupported("array of various type unsupported".to_string())
         );
     }
 }

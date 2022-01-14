@@ -574,6 +574,8 @@ mod tests {
     fn test_eval_contains() {
         let cases: Vec<&str> = vec![
             "10 within [10, 9, 8, 7]",                                                // true
+            "10 within []",                                                           // false
+            "10 without []",                                                          // true
             "[10, 7] within [10, 9, 8, 7]",                                           // true
             "[10, 6] within [10, 9, 8, 7]",                                           // false
             "[10, 6] without [10, 9, 8, 7]",                                          // true
@@ -586,10 +588,14 @@ mod tests {
             "[\"f\"] without [\"a\", \"b\", \"c\", \"d\"]",                           // true
             "10 within [10, 9, 8, 7] && [\"f\"] within [\"a\", \"b\", \"c\", \"d\"]", // false
             "(3 + 7) within [10, 9, 8, 7] || [\"f\"] within [\"a\", \"b\", \"c\", \"d\"]", // true
+            "10 within [\"a\", \"b\", \"c\", \"d\"]",                                 // false
+            "10 without [\"a\", \"b\", \"c\", \"d\"]",                                // true
         ];
 
         let expected: Vec<Object> = vec![
             object!(true),
+            object!(false),
+            object!(true),
             object!(true),
             object!(false),
             object!(true),
@@ -597,6 +603,8 @@ mod tests {
             object!(true),
             object!(false),
             object!(true),
+            object!(true),
+            object!(false),
             object!(true),
             object!(false),
             object!(true),
