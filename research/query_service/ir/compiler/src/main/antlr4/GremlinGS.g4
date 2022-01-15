@@ -94,8 +94,10 @@ traversalMethod_hasId
     ;
 
 // has("str", y), has("str", eq/neq/gt/gte/lt/lte(y))
+// has("name")
 traversalMethod_has
     : 'has' LPAREN stringLiteral COMMA genericLiteral RPAREN  // indicate eq
+    | 'has' LPAREN stringLiteral RPAREN
     | 'has' LPAREN stringLiteral COMMA traversalPredicate RPAREN
     ;
 
@@ -261,6 +263,7 @@ genericLiteral
 
 genericLiteralList
     : genericLiteralExpr?
+    | LBRACK genericLiteralExpr? RBRACK
     ;
 
 genericLiteralExpr
@@ -296,37 +299,35 @@ traversalPredicate
     ;
 
 traversalPredicate_eq
-    : 'eq' LPAREN genericLiteral RPAREN
+    : ('P.eq' | 'eq') LPAREN genericLiteral RPAREN
     ;
 
 traversalPredicate_neq
-    : 'neq' LPAREN genericLiteral RPAREN
+    : ('P.neq' | 'neq') LPAREN genericLiteral RPAREN
     ;
 
 traversalPredicate_lt
-    : 'lt' LPAREN genericLiteral RPAREN
+    : ('P.lt' | 'lt') LPAREN genericLiteral RPAREN
     ;
 
 traversalPredicate_lte
-    : 'lte' LPAREN genericLiteral RPAREN
+    : ('P.lte' | 'lte') LPAREN genericLiteral RPAREN
     ;
 
 traversalPredicate_gt
-    : 'gt' LPAREN genericLiteral RPAREN
+    : ('P.gt' | 'gt') LPAREN genericLiteral RPAREN
     ;
 
 traversalPredicate_gte
-    : 'gte' LPAREN genericLiteral RPAREN
+    : ('P.gte' | 'gte') LPAREN genericLiteral RPAREN
     ;
 
-// within() is unsupported
 traversalPredicate_within
-    : 'within' LPAREN genericLiteralExpr RPAREN
+    : ('P.within' | 'within') LPAREN genericLiteralList RPAREN
     ;
 
-// without() is unsupported
 traversalPredicate_without
-    : 'without' LPAREN genericLiteralExpr RPAREN
+    : ('P.without' | 'without') LPAREN genericLiteralList RPAREN
     ;
 
 // incr and decr is unsupported in 3.5.1
