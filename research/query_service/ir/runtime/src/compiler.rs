@@ -43,7 +43,7 @@ use crate::process::operator::join::JoinFunctionGen;
 use crate::process::operator::keyed::KeyFunctionGen;
 use crate::process::operator::map::{FilterMapFuncGen, MapFuncGen};
 use crate::process::operator::shuffle::RecordRouter;
-use crate::process::operator::sink::{RecordSinkEncoder, SinkFunctionGen};
+use crate::process::operator::sink::SinkFunctionGen;
 use crate::process::operator::sort::CompareFunctionGen;
 use crate::process::operator::source::SourceOperator;
 use crate::process::record::{Record, RecordKey};
@@ -145,13 +145,8 @@ impl FnGenerator {
     }
 
     fn gen_sink(&self, res: &BinaryResource) -> FnGenResult<RecordEncode> {
-        if res.is_empty() {
-            // by default, we sink all aliased columns and head;
-            Ok(Box::new(RecordSinkEncoder::default()))
-        } else {
-            let step = decode::<algebra_pb::logical_plan::Operator>(res)?;
-            Ok(step.gen_sink()?)
-        }
+        let step = decode::<algebra_pb::logical_plan::Operator>(res)?;
+        Ok(step.gen_sink()?)
     }
 }
 
