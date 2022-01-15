@@ -18,7 +18,7 @@ use std::convert::TryInto;
 use std::ops::Deref;
 
 use ir_common::generated::algebra as algebra_pb;
-use ir_common::generated::algebra::sink::MapType;
+use ir_common::generated::algebra::sink::MetaType;
 use ir_common::generated::common as common_pb;
 use ir_common::generated::results as result_pb;
 use ir_common::NameOrId;
@@ -37,7 +37,7 @@ pub struct RecordSinkEncoder {
     is_output_head: bool,
     /// A map from id to name; including type of Entity (Vertex in Graph Database),
     /// Relation (Edge in Graph Database) and Column (Property in Graph Database)
-    schema_map: Option<HashMap<(MapType, i32), String>>,
+    schema_map: Option<HashMap<(MetaType, i32), String>>,
 }
 
 // sink head by default
@@ -99,7 +99,7 @@ impl RecordSinkEncoder {
         result_pb::Element { inner }
     }
 
-    fn label_to_pb(&self, label: NameOrId, t: MapType) -> common_pb::NameOrId {
+    fn label_to_pb(&self, label: NameOrId, t: MetaType) -> common_pb::NameOrId {
         let mapped_label = if let Some(schema_map) = self.schema_map.as_ref() {
             match label {
                 NameOrId::Str(_) => label,
@@ -119,7 +119,7 @@ impl RecordSinkEncoder {
             id: v.id() as i64,
             label: v
                 .label()
-                .map(|label| self.label_to_pb(label.clone(), MapType::Entity)),
+                .map(|label| self.label_to_pb(label.clone(), MetaType::Entity)),
             // TODO: return detached vertex without property for now
             properties: vec![],
         }
@@ -130,15 +130,15 @@ impl RecordSinkEncoder {
             id: e.id() as i64,
             label: e
                 .label()
-                .map(|label| self.label_to_pb(label.clone(), MapType::Relation)),
+                .map(|label| self.label_to_pb(label.clone(), MetaType::Relation)),
             src_id: e.src_id as i64,
             src_label: e
                 .get_src_label()
-                .map(|label| self.label_to_pb(label.clone(), MapType::Entity)),
+                .map(|label| self.label_to_pb(label.clone(), MetaType::Entity)),
             dst_id: e.dst_id as i64,
             dst_label: e
                 .get_dst_label()
-                .map(|label| self.label_to_pb(label.clone(), MapType::Entity)),
+                .map(|label| self.label_to_pb(label.clone(), MetaType::Entity)),
             // TODO: return detached edge without property for now
             properties: vec![],
         }
@@ -179,9 +179,9 @@ impl SinkFunctionGen for algebra_pb::Sink {
             .collect::<Result<_, _>>()?;
         let is_output_head = self.sink_current;
         let mut schema_map = HashMap::new();
-        for id_name_mapping_pb in self.id_name_mapping {
-            let map_type = unsafe { ::std::mem::transmute(id_name_mapping_pb.map_type) };
-            schema_map.insert((map_type, id_name_mapping_pb.id), id_name_mapping_pb.name);
+        for id_name_mappings_pb in self.id_name_mappings {
+            let meta_type = unsafe { ::std::mem::transmute(id_name_mappings_pb.meta_type) };
+            schema_map.insert((meta_type, id_name_mappings_pb.id), id_name_mappings_pb.name);
         }
         let record_sinker = RecordSinkEncoder {
             sink_keys,
@@ -234,16 +234,16 @@ mod tests {
         let sink_opr_pb = pb::Sink {
             tags: vec![],
             sink_current: true,
-            id_name_mapping: vec![
+            id_name_mappings: vec![
                 pb::sink::IdNameMapping {
                     id: 1,
                     name: "person".to_string(),
-                    map_type: 0, // pb::sink::MapType::Entity
+                    meta_type: 0, // pb::sink::MetaType::Entity
                 },
                 pb::sink::IdNameMapping {
                     id: 2,
                     name: "software".to_string(),
-                    map_type: 0, // pb::sink::MapType::Entity
+                    meta_type: 0, // pb::sink::MetaType::Entity
                 },
             ],
         };
@@ -252,7 +252,7 @@ mod tests {
         let mut result_id_labels = vec![];
         while let Some(Ok(result_pb)) = result.next() {
             if let Some(result_pb::results::Inner::Record(record)) = result_pb.inner {
-                assert!(record.columns.len() == 1);
+                assert_eq!(record.columns.len(), 1);
                 let entry = record
                     .columns
                     .get(0)
@@ -302,26 +302,26 @@ mod tests {
         let sink_opr_pb = pb::Sink {
             tags: vec![],
             sink_current: true,
-            id_name_mapping: vec![
+            id_name_mappings: vec![
                 pb::sink::IdNameMapping {
                     id: 11,
                     name: "person".to_string(),
-                    map_type: 0, // pb::sink::MapType::Entity
+                    meta_type: 0, // pb::sink::MetaType::Entity
                 },
                 pb::sink::IdNameMapping {
                     id: 22,
                     name: "software".to_string(),
-                    map_type: 0, // pb::sink::MapType::Entity
+                    meta_type: 0, // pb::sink::MetaType::Entity
                 },
                 pb::sink::IdNameMapping {
                     id: 111,
                     name: "create".to_string(),
-                    map_type: 1, // pb::sink::MapType::Relation
+                    meta_type: 1, // pb::sink::MetaType::Relation
                 },
                 pb::sink::IdNameMapping {
                     id: 222,
                     name: "created_by".to_string(),
-                    map_type: 1, // pb::sink::MapType::Relation
+                    meta_type: 1, // pb::sink::MetaType::Relation
                 },
             ],
         };
@@ -330,7 +330,7 @@ mod tests {
         let mut result_eid_labels = vec![];
         while let Some(Ok(result_pb)) = result.next() {
             if let Some(result_pb::results::Inner::Record(record)) = result_pb.inner {
-                assert!(record.columns.len() == 1);
+                assert_eq!(record.columns.len(), 1);
                 let entry = record
                     .columns
                     .get(0)
