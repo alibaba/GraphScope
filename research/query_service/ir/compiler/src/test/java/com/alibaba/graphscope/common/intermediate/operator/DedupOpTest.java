@@ -16,8 +16,8 @@
 
 package com.alibaba.graphscope.common.intermediate.operator;
 
+import com.alibaba.graphscope.common.utils.FileUtils;
 import com.alibaba.graphscope.common.IrPlan;
-import com.alibaba.graphscope.common.TestUtils;
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.jna.type.FfiVariable;
 import org.junit.After;
@@ -38,7 +38,7 @@ public class DedupOpTest {
         op.setDedupKeys(new OpArg(Collections.singletonList(dedupKey), Function.identity()));
 
         irPlan.appendInterOp(op);
-        Assert.assertEquals(TestUtils.readJsonFromResource("dedup.json"), irPlan.getPlanAsJson());
+        Assert.assertEquals(FileUtils.readJsonFromResource("dedup.json"), irPlan.getPlanAsJson());
     }
 
     @After

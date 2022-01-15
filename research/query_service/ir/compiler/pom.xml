@@ -77,9 +77,24 @@
             <version>${tinkerpop.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.apache.tinkerpop</groupId>
+            <artifactId>gremlin-test</artifactId>
+            <version>${tinkerpop.version}</version>
+        </dependency>
+        <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
             <version>${commons.io.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.module</groupId>
+            <artifactId>jackson-module-paranamer</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${jackson.version}</version>
         </dependency>
     </dependencies>
 
@@ -197,6 +212,9 @@
                     <argLine>
                         -Djna.library.path=${project.basedir}/../target/release
                     </argLine>
+                    <excludes>
+                        <exclude>**/IrGremlinTest.java</exclude>
+                    </excludes>
                 </configuration>
             </plugin>
             <plugin>

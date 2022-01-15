@@ -16,8 +16,8 @@
 
 package com.alibaba.graphscope.common.intermediate.operator;
 
+import com.alibaba.graphscope.common.utils.FileUtils;
 import com.alibaba.graphscope.common.IrPlan;
-import com.alibaba.graphscope.common.TestUtils;
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.jna.type.FfiScanOpt;
 import org.junit.After;
@@ -36,7 +36,7 @@ public class ProjectOpTest {
         String projectExpr = "@a";
         op.setSingleExpr(new OpArg(projectExpr, Function.identity()));
         irPlan.appendInterOp(op);
-        Assert.assertEquals(TestUtils.readJsonFromResource("project_tag.json"), irPlan.getPlanAsJson());
+        Assert.assertEquals(FileUtils.readJsonFromResource("project_tag.json"), irPlan.getPlanAsJson());
     }
 
     @Test
@@ -52,7 +52,7 @@ public class ProjectOpTest {
         op.setSingleExpr(new OpArg(projectExpr, Function.identity()));
         irPlan.appendInterOp(op);
 
-        Assert.assertEquals(TestUtils.readJsonFromResource("project_as.json"), irPlan.getPlanAsJson());
+        Assert.assertEquals(FileUtils.readJsonFromResource("project_as.json"), irPlan.getPlanAsJson());
     }
 
     @Test
@@ -61,7 +61,7 @@ public class ProjectOpTest {
         String projectExpr = "@.name";
         op.setSingleExpr(new OpArg(projectExpr, Function.identity()));
         irPlan.appendInterOp(op);
-        Assert.assertEquals(TestUtils.readJsonFromResource("project_key.json"), irPlan.getPlanAsJson());
+        Assert.assertEquals(FileUtils.readJsonFromResource("project_key.json"), irPlan.getPlanAsJson());
     }
 
     @Test
@@ -76,7 +76,7 @@ public class ProjectOpTest {
         op.setSingleExpr(new OpArg(projectExpr, Function.identity()));
         irPlan.appendInterOp(op);
 
-        Assert.assertEquals(TestUtils.readJsonFromResource("project_tag_key.json"), irPlan.getPlanAsJson());
+        Assert.assertEquals(FileUtils.readJsonFromResource("project_tag_key.json"), irPlan.getPlanAsJson());
     }
 
     @Test
@@ -91,7 +91,7 @@ public class ProjectOpTest {
         op.setSingleExpr(new OpArg(projectExpr, Function.identity()));
         irPlan.appendInterOp(op);
 
-        Assert.assertEquals(TestUtils.readJsonFromResource("project_tag_keys.json"), irPlan.getPlanAsJson());
+        Assert.assertEquals(FileUtils.readJsonFromResource("project_tag_keys.json"), irPlan.getPlanAsJson());
     }
 
     @After

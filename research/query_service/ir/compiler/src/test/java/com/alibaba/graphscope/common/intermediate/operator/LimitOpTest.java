@@ -16,8 +16,8 @@
 
 package com.alibaba.graphscope.common.intermediate.operator;
 
+import com.alibaba.graphscope.common.utils.FileUtils;
 import com.alibaba.graphscope.common.IrPlan;
-import com.alibaba.graphscope.common.TestUtils;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
@@ -35,7 +35,7 @@ public class LimitOpTest {
         op.setUpper(new OpArg<>(Integer.valueOf(2), Function.identity()));
         irPlan.appendInterOp(op);
         String actual = irPlan.getPlanAsJson();
-        Assert.assertEquals(TestUtils.readJsonFromResource("limit_range.json"), actual);
+        Assert.assertEquals(FileUtils.readJsonFromResource("limit_range.json"), actual);
     }
 
     @After

@@ -16,8 +16,8 @@
 
 package com.alibaba.graphscope.common.intermediate.operator;
 
+import com.alibaba.graphscope.common.utils.FileUtils;
 import com.alibaba.graphscope.common.IrPlan;
-import com.alibaba.graphscope.common.TestUtils;
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.jna.IrCoreLibrary;
 import com.alibaba.graphscope.common.jna.type.FfiDirection;
@@ -42,7 +42,7 @@ public class ExpandOpTest {
         op.setDirection(new OpArg<>(FfiDirection.Out, Function.identity()));
         irPlan.appendInterOp(op);
         String actual = irPlan.getPlanAsJson();
-        Assert.assertEquals(TestUtils.readJsonFromResource("expand_edge_opt.json"), actual);
+        Assert.assertEquals(FileUtils.readJsonFromResource("expand_edge_opt.json"), actual);
     }
 
     @Test
@@ -54,7 +54,7 @@ public class ExpandOpTest {
         op.setLabels(new OpArg<List, List>(values, Function.identity()));
         irPlan.appendInterOp(op);
         String actual = irPlan.getPlanAsJson();
-        Assert.assertEquals(TestUtils.readJsonFromResource("expand_labels.json"), actual);
+        Assert.assertEquals(FileUtils.readJsonFromResource("expand_labels.json"), actual);
     }
 
     @Test
@@ -65,7 +65,7 @@ public class ExpandOpTest {
         op.setAlias(new OpArg(ArgUtils.asFfiAlias("a", true), Function.identity()));
         irPlan.appendInterOp(op);
         String actual = irPlan.getPlanAsJson();
-        Assert.assertEquals(TestUtils.readJsonFromResource("expand_alias.json"), actual);
+        Assert.assertEquals(FileUtils.readJsonFromResource("expand_alias.json"), actual);
     }
 
     @After

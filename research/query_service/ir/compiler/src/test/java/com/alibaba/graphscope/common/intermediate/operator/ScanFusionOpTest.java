@@ -16,8 +16,8 @@
 
 package com.alibaba.graphscope.common.intermediate.operator;
 
+import com.alibaba.graphscope.common.utils.FileUtils;
 import com.alibaba.graphscope.common.IrPlan;
-import com.alibaba.graphscope.common.TestUtils;
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.jna.IrCoreLibrary;
 import com.alibaba.graphscope.common.jna.type.FfiConst;
@@ -42,7 +42,7 @@ public class ScanFusionOpTest {
         op.setScanOpt(new OpArg<>(FfiScanOpt.Entity, Function.identity()));
         irPlan.appendInterOp(op);
         String actual = irPlan.getPlanAsJson();
-        Assert.assertEquals(TestUtils.readJsonFromResource("scan_opt.json"), actual);
+        Assert.assertEquals(FileUtils.readJsonFromResource("scan_opt.json"), actual);
     }
 
     @Test
@@ -52,7 +52,7 @@ public class ScanFusionOpTest {
         op.setPredicate(new OpArg("@.id == 1", Function.identity()));
         irPlan.appendInterOp(op);
         String actual = irPlan.getPlanAsJson();
-        Assert.assertEquals(TestUtils.readJsonFromResource("scan_expr.json"), actual);
+        Assert.assertEquals(FileUtils.readJsonFromResource("scan_expr.json"), actual);
     }
 
     @Test
@@ -63,7 +63,7 @@ public class ScanFusionOpTest {
         op.setLabels(new OpArg<List, List>(values, Function.identity()));
         irPlan.appendInterOp(op);
         String actual = irPlan.getPlanAsJson();
-        Assert.assertEquals(TestUtils.readJsonFromResource("scan_labels.json"), actual);
+        Assert.assertEquals(FileUtils.readJsonFromResource("scan_labels.json"), actual);
     }
 
     @Test
@@ -74,7 +74,7 @@ public class ScanFusionOpTest {
         op.setIds(new OpArg<List, List>(values, Function.identity()));
         irPlan.appendInterOp(op);
         String actual = irPlan.getPlanAsJson();
-        Assert.assertEquals(TestUtils.readJsonFromResource("scan_ids.json"), actual);
+        Assert.assertEquals(FileUtils.readJsonFromResource("scan_ids.json"), actual);
     }
 
     @Test
@@ -84,7 +84,7 @@ public class ScanFusionOpTest {
         op.setAlias(new OpArg(ArgUtils.asFfiAlias("a", true), Function.identity()));
         irPlan.appendInterOp(op);
         String actual = irPlan.getPlanAsJson();
-        Assert.assertEquals(TestUtils.readJsonFromResource("scan_alias.json"), actual);
+        Assert.assertEquals(FileUtils.readJsonFromResource("scan_alias.json"), actual);
     }
 
     @After

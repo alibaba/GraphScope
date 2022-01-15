@@ -23,10 +23,10 @@ import java.util.concurrent.TimeUnit;
 
 public class GremlinResultProcessor extends StandardOpProcessor implements ResultProcessor {
     private static Logger logger = LoggerFactory.getLogger(GremlinResultProcessor.class);
-    private Context writeResult;
-    private List<Object> resultCollectors = new ArrayList<>();
-    private boolean locked = false;
-    private ResultParser resultParser;
+    protected Context writeResult;
+    protected List<Object> resultCollectors = new ArrayList<>();
+    protected boolean locked = false;
+    protected ResultParser resultParser;
 
     public GremlinResultProcessor(Context writeResult, ResultParser resultParser) {
         this.writeResult = writeResult;
@@ -72,7 +72,7 @@ public class GremlinResultProcessor extends StandardOpProcessor implements Resul
         }
     }
 
-    private void writeResultList(final Context context, final List<Object> resultList, final ResponseStatusCode statusCode) {
+    protected void writeResultList(final Context context, final List<Object> resultList, final ResponseStatusCode statusCode) {
         final ChannelHandlerContext ctx = context.getChannelHandlerContext();
         final RequestMessage msg = context.getRequestMessage();
         final MessageSerializer serializer = ctx.channel().attr(StateKey.SERIALIZER).get();

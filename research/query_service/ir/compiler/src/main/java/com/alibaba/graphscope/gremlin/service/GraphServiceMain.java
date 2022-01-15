@@ -21,17 +21,23 @@ import com.alibaba.graphscope.common.config.FileLoadType;
 import com.alibaba.graphscope.common.config.GraphConfig;
 import com.alibaba.graphscope.common.jna.IrCoreLibrary;
 import com.alibaba.graphscope.gremlin.Utils;
+import com.alibaba.graphscope.gremlin.integration.processor.IrTestOpProcessor;
 import com.alibaba.graphscope.gremlin.plugin.processor.IrOpLoader;
 import com.alibaba.graphscope.gremlin.plugin.processor.IrStandardOpProcessor;
 import org.apache.tinkerpop.gremlin.server.GremlinServer;
 import org.apache.tinkerpop.gremlin.server.Settings;
+import org.apache.tinkerpop.gremlin.server.op.AbstractOpProcessor;
 
 public class GraphServiceMain {
     private static IrCoreLibrary INSTANCE = IrCoreLibrary.INSTANCE;
 
     public static void main(String[] args) throws Exception {
         Configs configs = new Configs("conf/ir.compiler.properties", FileLoadType.RELATIVE_PATH);
-        IrOpLoader.addProcessor("", new IrStandardOpProcessor(configs));
+
+        AbstractOpProcessor standardProcessor = new IrStandardOpProcessor(configs);
+        IrOpLoader.addProcessor(standardProcessor.getName(), standardProcessor);
+        AbstractOpProcessor testProcessor = new IrTestOpProcessor(configs);
+        IrOpLoader.addProcessor(testProcessor.getName(), testProcessor);
 
         // set graph schema
         String schemaFilePath = GraphConfig.GRAPH_SCHEMA.get(configs);
