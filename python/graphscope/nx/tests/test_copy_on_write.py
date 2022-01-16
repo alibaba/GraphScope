@@ -354,10 +354,7 @@ class TestBuiltinCopyOnWrite:
         assert nx.builtin.has_path(self.SG, source=1, target=6)
 
     def test_average_shortest_path_length(self):
-        # average_shortest_path_length implementation contain grape::VertexDenseSet which
-        # can not use with ArrowFlattenedFragment
-        with pytest.raises(InvalidArgumentError):
-            nx.builtin.average_shortest_path_length(self.SG)
+        assert nx.builtin.average_shortest_path_length(self.SG) == 0.8
 
     def test_bfs_edges(self):
         ret = nx.builtin.bfs_edges(self.SG, 1, depth_limit=10)
@@ -367,21 +364,17 @@ class TestBuiltinCopyOnWrite:
         ret = nx.builtin.bfs_tree(self.SG, 1, depth_limit=10)
         assert sorted(ret) == [1, 2, 3, 4, 5, 6]
 
+    @pytest.mark.skip(reason="Not implemented in ReportGraph")
     def test_k_core(self):
-        # k_core implementation contain grape::VertexDenseSet which
-        # can not use with ArrowFlattenedFragment
-        with pytest.raises(InvalidArgumentError):
-            nx.builtin.k_core(self.SG, k=1)
+        print(nx.builtin.k_core(self.SG, k=1))
 
     def test_clustering(self):
         ret = nx.builtin.clustering(self.SG)
         assert ret == {1: 0.5, 2: 1.0, 3: 0.2, 5: 0.4, 4: 0.5, 6: 1.0}
 
+    @pytest.mark.skip(reason="Not implemented for directed type")
     def test_triangles(self):
-        # triangles implementation contain grape::VertexDenseSet which
-        # can not use with ArrowFlattenedFragment
-        with pytest.raises(nx.NetworkXNotImplemented):
-            nx.builtin.triangles(self.SG)
+        print(nx.builtin.triangles(self.SG))
 
     def test_average_clustering(self):
         ret = nx.builtin.average_clustering(self.SG)

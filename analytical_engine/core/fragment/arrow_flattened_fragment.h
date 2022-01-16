@@ -483,19 +483,15 @@ class ArrowFlattenedFragment {
   }
 
   inline bool GetVertex(const oid_t& oid, vertex_t& v) const {
-    bool has_vertex = false;
     for (label_id_t v_label = 0; v_label < fragment_->vertex_label_num();
          v_label++) {
       if (fragment_->GetVertex(v_label, oid, v)) {
-        has_vertex = true;
-        break;
+        // generate continuous lid
+        v.SetValue(union_id_parser_.GenerateContinuousLid(v.GetValue()));
+        return true;
       }
     }
-    if (has_vertex) {
-      // generate continuous lid
-      v.SetValue(union_id_parser_.GenerateContinuousLid(v.GetValue()));
-    }
-    return has_vertex;
+    return false;
   }
 
   inline oid_t GetId(const vertex_t& v) const {
@@ -509,11 +505,11 @@ class ArrowFlattenedFragment {
   }
 
   inline bool Gid2Vertex(const vid_t& gid, vertex_t& v) const {
-    bool has_vertex = fragment_->Gid2Vertex(gid, v);
-    if (has_vertex) {
+    if (fragment_->Gid2Vertex(gid, v)) {
       v.SetValue(union_id_parser_.GenerateContinuousLid(v.GetValue()));
+      return true;
     }
-    return has_vertex;
+    return false;
   }
 
   inline vid_t Vertex2Gid(const vertex_t& v) const {
@@ -549,35 +545,27 @@ class ArrowFlattenedFragment {
   }
 
   inline bool GetInnerVertex(const oid_t& oid, vertex_t& v) const {
-    bool has_vertex = false;
     for (label_id_t v_label = 0; v_label < fragment_->vertex_label_num();
          v_label++) {
       if (fragment_->GetInnerVertex(v_label, oid, v)) {
-        has_vertex = true;
-        break;
+        // generate continuous lid
+        v.SetValue(union_id_parser_.GenerateContinuousLid(v.GetValue()));
+        return true;
       }
     }
-    if (has_vertex) {
-      // generate continuous lid
-      v.SetValue(union_id_parser_.GenerateContinuousLid(v.GetValue()));
-    }
-    return has_vertex;
+    return false;
   }
 
   inline bool GetOuterVertex(const oid_t& oid, vertex_t& v) const {
-    bool has_vertex = false;
     for (label_id_t v_label = 0; v_label < fragment_->vertex_label_num();
          v_label++) {
       if (fragment_->GetOuterVertex(v_label, oid, v)) {
-        has_vertex = true;
-        break;
+        // generate continuous lid
+        v.SetValue(union_id_parser_.GenerateContinuousLid(v.GetValue()));
+        return true;
       }
     }
-    if (has_vertex) {
-      // generate continuous lid
-      v.SetValue(union_id_parser_.GenerateContinuousLid(v.GetValue()));
-    }
-    return has_vertex;
+    return false;
   }
 
   inline oid_t GetInnerVertexId(const vertex_t& v) const {
@@ -604,19 +592,19 @@ class ArrowFlattenedFragment {
   }
 
   inline bool InnerVertexGid2Vertex(const vid_t& gid, vertex_t& v) const {
-    bool has_vertex = fragment_->InnerVertexGid2Vertex(gid, v);
-    if (has_vertex) {
+    if (fragment_->InnerVertexGid2Vertex(gid, v)) {
       v.SetValue(union_id_parser_.GenerateContinuousLid(v.GetValue()));
+      return true;
     }
-    return has_vertex;
+    return false;
   }
 
   inline bool OuterVertexGid2Vertex(const vid_t& gid, vertex_t& v) const {
-    bool has_vertex = fragment_->OuterVertexGid2Vertex(gid, v);
-    if (has_vertex) {
+    if (fragment_->OuterVertexGid2Vertex(gid, v)) {
       v.SetValue(union_id_parser_.GenerateContinuousLid(v.GetValue()));
+      return true;
     }
-    return has_vertex;
+    return false;
   }
 
   inline vid_t GetOuterVertexGid(const vertex_t& v) const {
