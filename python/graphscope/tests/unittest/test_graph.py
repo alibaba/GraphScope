@@ -409,8 +409,8 @@ def test_project_subgraph(arrow_modern_graph):
     assert sub_graph.schema.vertex_labels == []
     assert sub_graph.schema.edge_labels == []
     with pytest.raises(
-        ValueError,
-        match="Check failed: Cannot project to simple, vertex label number is not one.",
+        RuntimeError,
+        match="Project simple graph failed due to vertex label num is 0",
     ):
         graphscope.wcc(sub_graph)
 
@@ -419,8 +419,8 @@ def test_project_subgraph(arrow_modern_graph):
     assert sub_graph.schema.vertex_labels == ["person"]
     assert sub_graph.schema.edge_labels == []
     with pytest.raises(
-        ValueError,
-        match="Check failed: Cannot project to simple, edge label number is not one.",
+        RuntimeError,
+        match="Project simple graph failed due to edge label num is 0",
     ):
         graphscope.wcc(sub_graph)
 

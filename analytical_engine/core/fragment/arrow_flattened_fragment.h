@@ -223,7 +223,7 @@ struct NbrDefault {
  private:
   nbr_t nbr_;
   prop_id_t default_prop_id_;
-  const UnionIdParser<VID_T>& union_id_parser_;
+  UnionIdParser<VID_T> union_id_parser_;
 };
 
 /**
@@ -338,7 +338,7 @@ class UnionAdjList {
  private:
   std::vector<adj_list_t> adj_lists_;
   prop_id_t default_prop_id_;
-  const UnionIdParser<VID_T>& union_id_parser_;
+  UnionIdParser<VID_T> union_id_parser_;
   size_t size_;
 };
 

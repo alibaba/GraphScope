@@ -860,6 +860,11 @@ def _pre_process_for_project_to_simple_op(  # noqa: C901
     schema.from_graph_def(r.graph_def)
     graph_name = r.graph_def.key
 
+    if schema.vertex_label_num == 0:
+        raise RuntimeError("Project simple graph failed due to vertex label num is 0.")
+    if schema.edge_label_num == 0:
+        raise RuntimeError("Project simple graph failed due to edge label num is 0.")
+
     need_flatten_graph = False
     if schema.vertex_label_num > 1 or schema.edge_label_num > 1:
         need_flatten_graph = True
