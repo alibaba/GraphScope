@@ -55,7 +55,6 @@ impl<I: Data, O: Send + Debug + Message + 'static, P: JobParser<I, O>> Service<I
     pub fn accept<'a>(
         &'a self, job: &'a JobDesc,
     ) -> impl FnOnce(&mut Source<I>, ResultSink<O>) -> Result<(), BuildJobError> + 'a {
-
         move |input, output| self.parser.parse(job, input, output)
     }
 }

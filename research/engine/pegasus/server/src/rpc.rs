@@ -133,12 +133,11 @@ where
         let service = &self.inner;
         let job = JobDesc {
             input: source.map(|b| b.resource).unwrap_or(vec![]),
-            plan : plan.map(|b|b.resource).unwrap_or(vec![]),
-            resource: resource.map(|b| b.resource).unwrap_or(vec![])
+            plan: plan.map(|b| b.resource).unwrap_or(vec![]),
+            resource: resource.map(|b| b.resource).unwrap_or(vec![]),
         };
 
-        let submitted =
-            pegasus::run_opt(conf, sink, move |worker| worker.dataflow(service.accept(&job)));
+        let submitted = pegasus::run_opt(conf, sink, move |worker| worker.dataflow(service.accept(&job)));
 
         if let Err(e) = submitted {
             error!("submit job {} failure: {:?}", job_id, e);

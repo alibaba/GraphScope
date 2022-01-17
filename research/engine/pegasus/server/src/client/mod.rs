@@ -1,17 +1,18 @@
 use std::cell::RefCell;
 use std::fmt::{Debug, Display, Formatter};
-use futures::{Stream};
+
+use futures::Stream;
 use tonic::Status;
-use crate::JobResponse;
-use crate::pb::{BinaryResource, JobConfig, JobRequest};
+
 use crate::pb::job_config::Servers;
 use crate::pb::job_service_client::JobServiceClient;
+use crate::pb::{BinaryResource, JobConfig, JobRequest};
 use crate::service::JobDesc;
-
+use crate::JobResponse;
 
 pub enum JobError {
     InvalidConfig(String),
-    RPCError(tonic::Status)
+    RPCError(tonic::Status),
 }
 
 impl Debug for JobError {
@@ -30,7 +31,7 @@ impl Display for JobError {
 }
 
 pub struct RPCJobClient {
-    conns: Vec<Option<RefCell<JobServiceClient<tonic::transport::Channel>>>>
+    conns: Vec<Option<RefCell<JobServiceClient<tonic::transport::Channel>>>>,
 }
 
 impl RPCJobClient {
@@ -39,9 +40,9 @@ impl RPCJobClient {
     }
 
     pub async fn connect<D>(&mut self, server_id: u64, url: D) -> Result<(), tonic::transport::Error>
-        where
-            D: std::convert::TryInto<tonic::transport::Endpoint>,
-            D::Error: Into<tonic::codegen::StdError>
+    where
+        D: std::convert::TryInto<tonic::transport::Endpoint>,
+        D::Error: Into<tonic::codegen::StdError>,
     {
         let client = JobServiceClient::connect(url).await?;
         while server_id as usize >= self.conns.len() {
@@ -51,17 +52,19 @@ impl RPCJobClient {
         Ok(())
     }
 
-    pub async fn submit(&mut self, config: JobConfig, job: JobDesc) -> Result<Box<dyn Stream<Item = Result<JobResponse, Status>>>, JobError> {
+    pub async fn submit(
+        &mut self, config: JobConfig, job: JobDesc,
+    ) -> Result<Box<dyn Stream<Item = Result<JobResponse, Status>>>, JobError> {
         let mut remotes = vec![];
         match config.servers {
             None | Some(Servers::Local(_)) => {
                 for conn in self.conns.iter() {
                     if let Some(c) = conn {
                         remotes.push(c);
-                        break
+                        break;
                     }
                 }
-            },
+            }
             Some(Servers::Part(ref list)) => {
                 for id in list.servers.iter() {
                     let index = *id as usize;
@@ -89,8 +92,8 @@ impl RPCJobClient {
         let req = JobRequest {
             conf: Some(config),
             source: if input.is_empty() { None } else { Some(BinaryResource { resource: input }) },
-            plan : if plan.is_empty() { None } else { Some(BinaryResource { resource: plan } ) },
-            resource: if resource.is_empty() { None } else { Some(BinaryResource { resource })}
+            plan: if plan.is_empty() { None } else { Some(BinaryResource { resource: plan }) },
+            resource: if resource.is_empty() { None } else { Some(BinaryResource { resource }) },
         };
 
         let r_size = remotes.len();
@@ -101,12 +104,8 @@ impl RPCJobClient {
 
         if r_size == 1 {
             match remotes[0].borrow_mut().submit(req).await {
-                Ok(resp) => {
-                   Ok(Box::new(resp.into_inner()))
-                },
-                Err(status) => {
-                    Err(JobError::RPCError(status))
-                }
+                Ok(resp) => Ok(Box::new(resp.into_inner())),
+                Err(status) => Err(JobError::RPCError(status)),
             }
         } else {
             let mut tasks = Vec::with_capacity(r_size);
@@ -122,9 +121,9 @@ impl RPCJobClient {
             for res in results {
                 match res {
                     Ok(resp) => {
-                        let stream  = resp.into_inner();
+                        let stream = resp.into_inner();
                         stream_res.push(stream);
-                    },
+                    }
                     Err(status) => {
                         return Err(JobError::RPCError(status));
                     }
@@ -134,4 +133,3 @@ impl RPCJobClient {
         }
     }
 }
-
