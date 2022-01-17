@@ -840,13 +840,13 @@ def _pre_process_for_project_to_simple_op(  # noqa: C901
     ):
         return
 
-    def __check_v_prop_exists_in_all_v_labels(schema, prop):
+    def _check_v_prop_exists_in_all_v_labels(schema, prop):
         exists = True
         for v_label in schema.vertex_labels:
             exists = exists and schema.vertex_property_exists(v_label, prop)
         return exists
 
-    def __check_e_prop_exists_in_all_e_labels(schema, prop):
+    def _check_e_prop_exists_in_all_e_labels(schema, prop):
         exists = True
         for e_label in schema.edge_labels:
             exists = exists and schema.edge_property_exists(e_label, prop)
@@ -861,9 +861,13 @@ def _pre_process_for_project_to_simple_op(  # noqa: C901
     graph_name = r.graph_def.key
 
     if schema.vertex_label_num == 0:
-        raise RuntimeError("Project simple graph failed due to vertex label num is 0.")
+        raise RuntimeError(
+            "Failed to project to simple graph as no vertex exists in this graph."
+        )
     if schema.edge_label_num == 0:
-        raise RuntimeError("Project simple graph failed due to edge label num is 0.")
+        raise RuntimeError(
+            "Failed to project to simple graph as no edge exists in this graph."
+        )
 
     need_flatten_graph = False
     if schema.vertex_label_num > 1 or schema.edge_label_num > 1:
@@ -884,7 +888,7 @@ def _pre_process_for_project_to_simple_op(  # noqa: C901
                 v_prop_type = v_prop.type
     else:
         # v_prop should exists in all labels
-        if not __check_v_prop_exists_in_all_v_labels(schema, v_prop):
+        if not _check_v_prop_exists_in_all_v_labels(schema, v_prop):
             raise RuntimeError(
                 "Property {0} doesn't exists in all vertex labels".format(v_prop)
             )
@@ -913,7 +917,7 @@ def _pre_process_for_project_to_simple_op(  # noqa: C901
                 e_prop_type = e_prop.type
     else:
         # e_prop should exists in all labels
-        if not __check_e_prop_exists_in_all_e_labels(schema, e_prop):
+        if not _check_e_prop_exists_in_all_e_labels(schema, e_prop):
             raise RuntimeError(
                 "Property {0} doesn't exists in all edge labels".format(e_prop)
             )

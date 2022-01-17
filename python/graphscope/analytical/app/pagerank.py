@@ -30,7 +30,7 @@ def pagerank(graph, delta=0.85, max_round=10):
     """Evalute PageRank on a graph.
 
     Args:
-        graph (:class:`graphscope.Graph:): A simple graph.
+        graph (:class:`graphscope.Graph`): A simple graph.
         delta (float, optional): Dumping factor. Defaults to 0.85.
         max_round (int, optional): Maximum number of rounds. Defaults to 10.
 
@@ -59,7 +59,7 @@ def pagerank(graph, delta=0.85, max_round=10):
 @project_to_simple
 @not_compatible_for("arrow_property", "dynamic_property")
 def pagerank_nx(graph, alpha=0.85, max_iter=100, tol=1e-06):
-    """Evalute PageRank on a graph in NetworkX version.
+    """Evaluate pagerank on a graph using algorithm exactly follows the implemented in NetworkX library.
 
     Args:
         graph (:class:`graphscope.Graph`): A simple graph.

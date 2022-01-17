@@ -410,7 +410,7 @@ def test_project_subgraph(arrow_modern_graph):
     assert sub_graph.schema.edge_labels == []
     with pytest.raises(
         RuntimeError,
-        match="Project simple graph failed due to vertex label num is 0",
+        match="Failed to project to simple graph as no vertex exists in this graph",
     ):
         graphscope.wcc(sub_graph)
 
@@ -420,7 +420,7 @@ def test_project_subgraph(arrow_modern_graph):
     assert sub_graph.schema.edge_labels == []
     with pytest.raises(
         RuntimeError,
-        match="Project simple graph failed due to edge label num is 0",
+        match="Failed to project to simple graph as no edge exists in this graph",
     ):
         graphscope.wcc(sub_graph)
 
