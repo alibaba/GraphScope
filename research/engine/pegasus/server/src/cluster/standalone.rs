@@ -21,7 +21,6 @@ impl ServiceStartListener for StandaloneServiceListener {
     }
 }
 
-#[allow(dead_code)]
 pub async fn start<I, O, P>(
     rpc_config: RPCServerConfig, server_config: pegasus::Configuration, job_parser: P,
 ) -> Result<(), Box<dyn std::error::Error>>

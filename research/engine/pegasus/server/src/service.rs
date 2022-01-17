@@ -30,7 +30,7 @@ pub struct JobDesc {
 
 pub trait JobParser<I: Data, O: Send + Debug + 'static>: Send + Sync + 'static {
     fn parse(
-        &self, plan: &JobDesc, input: &mut Source<I>, output: ResultSink<O>,
+        &self, job: &JobDesc, input: &mut Source<I>, output: ResultSink<O>,
     ) -> Result<(), BuildJobError>;
 }
 

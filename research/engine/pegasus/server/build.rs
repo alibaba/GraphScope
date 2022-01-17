@@ -27,6 +27,7 @@ fn codegen_inplace() -> Result<(), Box<dyn std::error::Error>> {
     std::fs::create_dir(&dir).unwrap();
     tonic_build::configure()
         .build_server(true)
+        .build_client(true)
         .out_dir("src/generated")
         .compile(&["proto/job_service.proto"], &["proto"])?;
     Ok(())

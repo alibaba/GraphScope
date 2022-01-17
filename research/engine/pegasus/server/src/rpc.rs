@@ -22,7 +22,7 @@ use std::sync::Arc;
 use std::task::{Context, Poll};
 use std::time::Duration;
 
-use futures_core::Stream;
+use futures::Stream;
 use hyper::server::accept::Accept;
 use hyper::server::conn::{AddrIncoming, AddrStream};
 use pegasus::api::function::FnResult;
