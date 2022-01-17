@@ -376,17 +376,44 @@ impl JsonIO for Schema {
     }
 }
 
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+/// Record the runtime schema of the node in the logical plan, for it being the vertex/edge
+pub struct NodeMeta {
+    /// The table names (labels)
+    tables: BTreeSet<NameOrId>,
+    /// The required columns (columns)
+    columns: BTreeSet<NameOrId>,
+}
+
+impl NodeMeta {
+    pub fn insert_column(&mut self, col: NameOrId) {
+        self.columns.insert(col);
+    }
+
+    pub fn get_columns(&self) -> &BTreeSet<NameOrId> {
+        &self.columns
+    }
+
+    pub fn insert_table(&mut self, table: NameOrId) {
+        self.tables.insert(table);
+    }
+
+    pub fn get_tables(&self) -> &BTreeSet<NameOrId> {
+        &self.tables
+    }
+}
+
 /// To record any tag-related data while processing the logical plan
 #[derive(Default, Clone, Debug)]
 pub struct PlanMeta {
-    /// To record all possible columns of a node, which is typically referred from a tag
+    /// To record all possible tables/columns of a node, which is typically referred from a tag
     /// while processing projection, selection, groupby, orderby, and etc. For example, when
     /// select the record via an expression "a.name == \"John\"", the tag "a" must refer to
     /// some node in the logical plan, and the node requires the column of \"John\". Such
     /// information is critical in distributed processing, as the computation may not align
     /// with the storage to access the required column. Thus, such information can help
     /// the computation route and fetch columns.
-    node_cols: HashMap<u32, BTreeSet<NameOrId>>,
+    node_metas: HashMap<u32, NodeMeta>,
     /// The tag must refer to a valid node in the plan.
     tag_nodes: HashMap<NameOrId, u32>,
     /// To ease the processing, tag may be transformed to an internal id.
@@ -407,39 +434,38 @@ impl PlanMeta {
     pub fn new(node_id: u32) -> Self {
         let mut plan_meta = PlanMeta::default();
         plan_meta.curr_node = node_id;
-        plan_meta.node_cols.entry(node_id).or_default();
+        plan_meta.node_metas.entry(node_id).or_default();
         plan_meta
     }
 
-    pub fn insert_tag_columns(&mut self, tag_opt: Option<NameOrId>, column: NameOrId) -> IrResult<u32> {
-        if let Some(tag) = tag_opt {
-            if let Some(&node_id) = self.tag_nodes.get(&tag) {
-                self.node_cols
-                    .entry(node_id)
-                    .or_default()
-                    .insert(column);
+    pub fn curr_node_meta_mut(&mut self) -> &mut NodeMeta {
+        self.node_metas
+            .entry(self.curr_node)
+            .or_default()
+    }
 
-                Ok(node_id)
+    pub fn tag_node_meta_mut(&mut self, tag_opt: Option<&NameOrId>) -> IrResult<&mut NodeMeta> {
+        if let Some(tag) = tag_opt {
+            if let Some(&node_id) = self.tag_nodes.get(tag) {
+                Ok(self.node_metas.entry(node_id).or_default())
             } else {
-                Err(IrError::TagNotExist(tag))
+                Err(IrError::TagNotExist(tag.clone()))
             }
         } else {
-            let curr_node = self.curr_node;
-            self.node_cols
-                .entry(curr_node)
-                .or_default()
-                .insert(column);
-
-            Ok(curr_node)
+            Ok(self.curr_node_meta_mut())
         }
     }
 
-    pub fn get_node_columns(&self, id: u32) -> Option<&BTreeSet<NameOrId>> {
-        self.node_cols.get(&id)
+    pub fn get_node_meta(&self, id: u32) -> Option<&NodeMeta> {
+        self.node_metas.get(&id)
     }
 
-    pub fn get_curr_node_columns(&self) -> Option<&BTreeSet<NameOrId>> {
-        self.node_cols.get(&self.curr_node)
+    pub fn get_all_node_metas(&self) -> &HashMap<u32, NodeMeta> {
+        &self.node_metas
+    }
+
+    pub fn curr_node_meta(&self) -> Option<&NodeMeta> {
+        self.get_node_meta(self.curr_node)
     }
 
     pub fn insert_tag_node(&mut self, tag: NameOrId, node: u32) {
