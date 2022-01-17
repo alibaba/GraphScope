@@ -27,7 +27,6 @@ from copy import deepcopy
 from io import BytesIO
 
 import yaml
-from decorator import decorator
 
 from graphscope.framework.context import create_context_node
 from graphscope.framework.dag import DAGNode
@@ -62,11 +61,11 @@ def project_to_simple(func):
         if not hasattr(graph, "graph_type"):
             raise InvalidArgumentError("Missing graph_type attribute in graph object.")
         if graph.graph_type == graph_def_pb2.ARROW_PROPERTY:
-            if "weight" in inspect.getfullargspec(func)[0]:
+            if "weight" in kwargs:
                 # func has 'weight' argument
                 weight = kwargs.get("weight", None)
                 graph = graph._project_to_simple(e_prop=weight)
-            elif "attribute" in inspect.getfullargspec(func)[0]:
+            elif "attribute" in kwargs:
                 # func has 'attribute' argument
                 attribute = kwargs.get("attribute", None)
                 graph = graph._project_to_simple(v_prop=attribute)
@@ -101,33 +100,39 @@ def not_compatible_for(*graph_types):
         >>>     pass
     """
 
-    @decorator
     def _not_compatible_for(not_compatible_for_func, *args, **kwargs):
-        graph = args[0]
-        if not hasattr(graph, "graph_type"):
-            raise InvalidArgumentError("Missing graph_type attribute in graph object.")
+        @functools.wraps(not_compatible_for_func)
+        def wrapper(*args, **kwargs):
+            graph = args[0]
+            if not hasattr(graph, "graph_type"):
+                raise InvalidArgumentError(
+                    "Missing graph_type attribute in graph object."
+                )
 
-        terms = {
-            "arrow_property": graph.graph_type == graph_def_pb2.ARROW_PROPERTY,
-            "dynamic_property": graph.graph_type == graph_def_pb2.DYNAMIC_PROPERTY,
-            "arrow_projected": graph.graph_type == graph_def_pb2.ARROW_PROJECTED,
-            "dynamic_projected": graph.graph_type == graph_def_pb2.DYNAMIC_PROJECTED,
-            "arrow_flattened": graph.graph_type == graph_def_pb2.ARROW_FLATTENED,
-        }
-        match = False
-        try:
-            for t in graph_types:
-                match = match or terms[t]
-        except KeyError:
-            raise InvalidArgumentError(
-                "Use one or more of arrow_property,dynamic_property,arrow_projected,dynamic_projected,arrow_flattened",
-            )
-        if match:
-            raise InvalidArgumentError(
-                "Not compatible for %s type" % " ".join(graph_types)
-            )
-        else:
-            return not_compatible_for_func(*args, **kwargs)
+            terms = {
+                "arrow_property": graph.graph_type == graph_def_pb2.ARROW_PROPERTY,
+                "dynamic_property": graph.graph_type == graph_def_pb2.DYNAMIC_PROPERTY,
+                "arrow_projected": graph.graph_type == graph_def_pb2.ARROW_PROJECTED,
+                "dynamic_projected": graph.graph_type
+                == graph_def_pb2.DYNAMIC_PROJECTED,
+                "arrow_flattened": graph.graph_type == graph_def_pb2.ARROW_FLATTENED,
+            }
+            match = False
+            try:
+                for t in graph_types:
+                    match = match or terms[t]
+            except KeyError:
+                raise InvalidArgumentError(
+                    "Use one or more of arrow_property,dynamic_property,arrow_projected,dynamic_projected,arrow_flattened",
+                )
+            if match:
+                raise InvalidArgumentError(
+                    "Not compatible for %s type" % " ".join(graph_types)
+                )
+            else:
+                return not_compatible_for_func(*args, **kwargs)
+
+        return wrapper
 
     return _not_compatible_for
 

@@ -243,6 +243,7 @@ class TestBuiltinCopyOnWrite:
 
         self.simple = simple_label_graph(data_dir, True)
         self.multi_simple = simple_label_multigraph(data_dir, True)
+        self.K3 = k3_graph(data_dir, False)
         self.SG = nx.DiGraph(self.simple, default_label="v-0")
         self.SG.pagerank = {
             1: 0.03721197,
@@ -364,17 +365,17 @@ class TestBuiltinCopyOnWrite:
         ret = nx.builtin.bfs_tree(self.SG, 1, depth_limit=10)
         assert sorted(ret) == [1, 2, 3, 4, 5, 6]
 
-    @pytest.mark.skip(reason="Not implemented in ReportGraph")
     def test_k_core(self):
-        print(nx.builtin.k_core(self.SG, k=1))
+        ret = nx.builtin.k_core(self.SG, k=1)
+        assert ret is not None
 
     def test_clustering(self):
         ret = nx.builtin.clustering(self.SG)
         assert ret == {1: 0.5, 2: 1.0, 3: 0.2, 5: 0.4, 4: 0.5, 6: 1.0}
 
-    @pytest.mark.skip(reason="Not implemented for directed type")
     def test_triangles(self):
-        print(nx.builtin.triangles(self.SG))
+        ret = nx.builtin.triangles(self.K3)
+        assert ret == {2: 1, 0: 1, 1: 1}
 
     def test_average_clustering(self):
         ret = nx.builtin.average_clustering(self.SG)
