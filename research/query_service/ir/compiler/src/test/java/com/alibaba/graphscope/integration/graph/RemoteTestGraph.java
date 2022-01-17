@@ -740,6 +740,102 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
         method = "g_VX4X_bothE",
         reason = "returned label is id")
 
+// add more ignored tests which are out of ir range
+@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.branch.RepeatTest",
+        method = "g_V_repeatXoutX_timesX2X",
+        reason = "repeat is unsupported")
+@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.branch.RepeatTest",
+        method = "g_VX1X_timesX2X_repeatXoutX_name",
+        reason = "repeat is unsupported")
+@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.branch.RepeatTest",
+        method = "g_V_repeatXbothX_timesX10X_asXaX_out_asXbX_selectXa_bX",
+        reason = "repeat is unsupported")
+@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.branch.RepeatTest",
+        method = "g_V_repeatXoutX_timesX2X_repeatXinX_timesX2X_name",
+        reason = "repeat is unsupported")
+
+@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.branch.UnionTest",
+        method = "g_VX1X_unionXrepeatXoutX_timesX2X__outX_name",
+        reason = "repeat is unsupported")
+
+@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.CyclicPathTest",
+        method = "g_VX1X_outXcreatedX_inXcreatedX_cyclicPath_path",
+        reason = "cyclicPath is unsupported")
+@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.CyclicPathTest",
+        method = "g_VX1X_outXcreatedX_inXcreatedX_cyclicPath",
+        reason = "cyclicPath is unsupported")
+
+@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.DedupTest",
+        method = "g_V_both_properties_dedup_count",
+        reason = "properties is unsupported")
+@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.DedupTest",
+        method = "g_V_bothE_properties_dedup_count",
+        reason = "properties is unsupported")
+@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.DedupTest",
+        method = "g_V_both_properties_properties_dedup_count",
+        reason = "properties is unsupported")
+
+@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
+        method = "g_VXv1X_hasXage_gt_30X",
+        reason = "object id is unsupported")
+@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
+        method = "g_VXv4X_hasXage_gt_30X",
+        reason = "object id is unsupported")
+@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
+        method = "g_V_hasXk_withinXcXX_valuesXkX",
+        reason = "addV is unsupported")
+
+@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.SimplePathTest",
+        method = "g_VX1X_outXcreatedX_inXcreatedX_simplePath",
+        reason = "simplePath is unsupported")
+@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.SimplePathTest",
+        method = "g_V_repeatXboth_simplePathX_timesX3X_path",
+        reason = "simplePath is unsupported")
+
+@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.GraphTest",
+        method = "g_VX1X_V_valuesXnameX",
+        reason = "g.V().V() is unsupported")
+
+@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
+        method = "g_VX1X_asXaX_repeatXout_asXaXX_timesX2X_selectXlast_aX",
+        reason = "repeat is unsupported")
+
+@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest",
+        method = "g_VXv1X_out",
+        reason = "object id is unsupported")
+@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest",
+        method = "g_VX1X_to_XOUT_knowsX",
+        reason = "to(Direction.OUT,\"knows\") is unsupported")
+@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest",
+        method = "g_VXlistXv1_v2_v3XX_name",
+        reason = "object id is unsupported")
+
+@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.ValueMapTest",
+        method = "g_VX1X_valueMapXname_locationX_byXunfoldX_by",
+        reason = "valueMap().by(...) is unsupported")
+@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.ValueMapTest",
+        method = "g_V_valueMap_withXtokensX",
+        reason = "valueMap(true) is unsupported")
+@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.ValueMapTest",
+        method = "g_V_valueMapXname_ageX_withXtokensX",
+        reason = "valueMap(true) is unsupported")
+@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.ValueMapTest",
+        method = "g_V_valueMapXname_ageX_withXtokens_idsX_byXunfoldX",
+        reason = "valueMap().with(...) is unsupported")
+@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.ValueMapTest",
+        method = "g_V_hasLabelXpersonX_filterXoutEXcreatedXX_valueMap_withXtokensX",
+        reason = "valueMap().with(...) is unsupported")
+@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.ValueMapTest",
+        method = "g_V_valueMapXname_ageX_withXtokens_labelsX_byXunfoldX",
+        reason = "valueMap().with(...) is unsupported")
+
+@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.GroupTest",
+        method = "g_V_groupXmX_byXlabelX_byXlabel_countX_capXmX",
+        reason = "group side effect is unsupported")
+@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.GroupCountTest",
+        method = "g_V_hasXperson_name_markoX_bothXknowsX_groupCount_byXvaluesXnameX_foldX",
+        reason = "fold() excluding group().by(...).by(fold()) is unsupported")
+
 public class RemoteTestGraph extends DummyGraph {
     public static final String GRAPH_NAME = "test.graph.name";
     private RemoteGremlinConnection remoteGremlinConnection;
