@@ -16,7 +16,6 @@
 use std::convert::TryFrom;
 use std::io;
 
-use dyn_type::object::RawType;
 use dyn_type::{BorrowObject, Object, Primitives};
 use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
 use prost::Message;
@@ -578,48 +577,17 @@ impl From<Object> for common_pb::Value {
                 Primitives::Byte(v) => common_pb::value::Item::Boolean(!(v == 0)),
                 Primitives::Integer(v) => common_pb::value::Item::I32(v),
                 Primitives::Long(v) => common_pb::value::Item::I64(v),
-                Primitives::ULLong(v) => common_pb::value::Item::Blob(v.to_be_bytes().to_vec()),
+                Primitives::ULLong(v) => common_pb::value::Item::Str(v.to_string()),
                 Primitives::Float(v) => common_pb::value::Item::F64(v),
             },
             Object::String(s) => common_pb::value::Item::Str(s),
             Object::Blob(b) => common_pb::value::Item::Blob(b.to_vec()),
-            Object::Vector(v) => {
-                if !v.is_empty() {
-                    let pivot = v.get(0).unwrap();
-                    match pivot.raw_type() {
-                        RawType::Byte | RawType::Integer => {
-                            common_pb::value::Item::I32Array(common_pb::I32Array {
-                                item: v
-                                    .into_iter()
-                                    .map(|obj| obj.as_i32().unwrap())
-                                    .collect(),
-                            })
-                        }
-                        RawType::Long => common_pb::value::Item::I64Array(common_pb::I64Array {
-                            item: v
-                                .into_iter()
-                                .map(|obj| obj.as_i64().unwrap())
-                                .collect(),
-                        }),
-                        RawType::Float => common_pb::value::Item::F64Array(common_pb::DoubleArray {
-                            item: v
-                                .into_iter()
-                                .map(|obj| obj.as_f64().unwrap())
-                                .collect(),
-                        }),
-                        RawType::String => common_pb::value::Item::StrArray(common_pb::StringArray {
-                            item: v
-                                .into_iter()
-                                .map(|obj| obj.to_string())
-                                .collect(),
-                        }),
-                        RawType::None => common_pb::value::Item::None(common_pb::None {}),
-                        _ => unimplemented!(),
-                    }
-                } else {
-                    common_pb::value::Item::None(common_pb::None {})
-                }
-            }
+            Object::Vector(v) => common_pb::value::Item::StrArray(common_pb::StringArray {
+                item: v
+                    .into_iter()
+                    .map(|obj| obj.to_string())
+                    .collect(),
+            }),
             Object::KV(kv) => {
                 let mut pairs: Vec<common_pb::Pair> = Vec::with_capacity(kv.len());
                 for (key, val) in kv {
