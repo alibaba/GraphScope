@@ -107,14 +107,14 @@ pub trait Details: std::fmt::Debug + Send + Sync + AsAny {
         }
     }
 
-    /// get_all_props_with_length returns all properties together with its length;
+    /// get_all_properties returns all properties.
     /// Specifically, it returns all properties of Vertex/Edge saved in RUNTIME rather than STORAGE.
     /// it may be used in two situations:
     /// (1) if no prop_keys are provided when querying the vertex/edge which indicates that all properties are necessary,
     /// then we can get all properties of the vertex/edge in storage; e.g., g.V().valueMap()
     /// (2) if some prop_keys are provided when querying the vertex/edge which indicates that only these properties are necessary,
     /// then we can only get all pre-specified properties of the vertex/edge.
-    fn get_all_props_with_length(&self) -> (Box<dyn Iterator<Item = (NameOrId, Object)>>, usize);
+    fn get_all_properties(&self) -> HashMap<NameOrId, Object>;
 }
 
 #[derive(Clone)]
@@ -143,8 +143,8 @@ impl Details for DynDetails {
         self.inner.get_label()
     }
 
-    fn get_all_props_with_length(&self) -> (Box<dyn Iterator<Item = (NameOrId, Object)>>, usize) {
-        self.inner.get_all_props_with_length()
+    fn get_all_properties(&self) -> HashMap<NameOrId, Object> {
+        self.inner.get_all_properties()
     }
 }
 
@@ -177,8 +177,8 @@ impl Encode for DynDetails {
                 .get_label()
                 .cloned()
                 .write_to(writer)?;
-            let (all_props, all_props_len) = self.get_all_props_with_length();
-            writer.write_u64(all_props_len as u64)?;
+            let all_props = self.get_all_properties();
+            writer.write_u64(all_props.len() as u64)?;
             for (k, v) in all_props {
                 k.write_to(writer)?;
                 v.write_to(writer)?;
@@ -253,9 +253,9 @@ impl Details for DefaultDetails {
         self.label.as_ref()
     }
 
-    fn get_all_props_with_length(&self) -> (Box<dyn Iterator<Item = (NameOrId, Object)>>, usize) {
+    fn get_all_properties(&self) -> HashMap<NameOrId, Object> {
         // it's actually unreachable!()
-        (Box::new(self.inner.clone().into_iter()), self.inner.len())
+        self.inner.clone()
     }
 }
 

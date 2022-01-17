@@ -433,9 +433,8 @@ impl Details for LazyVertexDetails {
         Some(&self.label)
     }
 
-    fn get_all_props_with_length(&self) -> (Box<dyn Iterator<Item = (NameOrId, Object)>>, usize) {
-        let mut all_props = vec![];
-        let mut all_props_len = 0;
+    fn get_all_properties(&self) -> HashMap<NameOrId, Object> {
+        let mut all_props = HashMap::new();
         if let Some(prop_keys) = self.prop_keys.as_ref() {
             // the case of get_all_properties from vertex;
             if prop_keys.is_empty() {
@@ -454,30 +453,29 @@ impl Details for LazyVertexDetails {
                             ptr = swapped
                         };
                     } else {
-                        return (Box::new(vec![].into_iter()), all_props_len);
+                        return all_props;
                     }
                 }
                 unsafe {
-                    if let Some(mut prop_key_vals) = (*ptr).clone_all_properties() {
-                        all_props_len = prop_key_vals.len();
-                        for (prop_key, prop_val) in prop_key_vals.drain() {
-                            all_props.push((prop_key.into(), prop_val as Object));
-                        }
+                    if let Some(prop_key_vals) = (*ptr).clone_all_properties() {
+                        all_props = prop_key_vals
+                            .into_iter()
+                            .map(|(prop_key, prop_val)| (prop_key.into(), prop_val as Object))
+                            .collect();
                     }
                 }
             } else {
                 // the case of get_all_properties with prop_keys pre-specified
-                all_props_len = prop_keys.len();
                 for key in prop_keys.iter() {
                     if let Some(prop) = self.get_property(&key) {
-                        all_props.push((key.clone(), prop.try_to_owned().unwrap()));
+                        all_props.insert(key.clone(), prop.try_to_owned().unwrap());
                     } else {
-                        all_props.push((key.clone(), Object::None))
+                        all_props.insert(key.clone(), Object::None);
                     }
                 }
             }
         }
-        (Box::new(all_props.into_iter()), all_props_len)
+        all_props
     }
 }
 
