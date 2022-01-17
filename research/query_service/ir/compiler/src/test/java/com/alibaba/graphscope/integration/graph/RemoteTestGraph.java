@@ -728,6 +728,18 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
         method = "g_V_asXaX_out_asXbX_out_asXcX_path_fromXbX_toXcX_byXnameX",
         reason = "unsupported")
 
+@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest",
+        method = "g_VX1X_outE",
+        reason = "returned label is id")
+
+@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest",
+        method = "g_VX4X_bothEXcreatedX",
+        reason = "returned label is id")
+
+@Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest",
+        method = "g_VX4X_bothE",
+        reason = "returned label is id")
+
 public class RemoteTestGraph extends DummyGraph {
     public static final String GRAPH_NAME = "test.graph.name";
     private RemoteGremlinConnection remoteGremlinConnection;

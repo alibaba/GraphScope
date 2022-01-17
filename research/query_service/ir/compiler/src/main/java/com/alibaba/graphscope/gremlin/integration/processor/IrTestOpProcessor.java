@@ -29,6 +29,7 @@ import javax.script.ScriptContext;
 import javax.script.SimpleBindings;
 import javax.script.SimpleScriptContext;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class IrTestOpProcessor extends IrStandardOpProcessor {
@@ -59,7 +60,7 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
             case Tokens.OPS_BYTECODE:
                 op = (context -> {
                     Bytecode byteCode = (Bytecode) message.getArgs().get(Tokens.ARGS_GREMLIN);
-                    String script = GroovyTranslator.of("g").translate(byteCode).getScript();
+                    String script = getScript(byteCode);
                     Traversal traversal = (Traversal) scriptEngine.eval(script, this.context);
 
                     InterOpCollection opCollection = (new InterOpCollectionBuilder(traversal)).build();
@@ -105,5 +106,15 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
     @Override
     public void close() throws Exception {
         this.broadcastProcessor.close();
+    }
+
+    private String getScript(Bytecode byteCode) {
+        String script = GroovyTranslator.of("g").translate(byteCode).getScript();
+        // remove type cast from original script, g.V().has("age",P.gt((int) 30))
+        List<String> typeCastStrs = Arrays.asList("\\(int\\)", "\\(long\\)", "\\(double\\)", "\\(boolean\\)");
+        for (String type : typeCastStrs) {
+            script = script.replaceAll(type, "");
+        }
+        return script;
     }
 }
