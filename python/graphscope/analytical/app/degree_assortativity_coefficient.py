@@ -28,7 +28,7 @@ __all__ = ["degree_assortativity_coefficient"]
 
 @project_to_simple
 @not_compatible_for("arrow_property")
-def degree_assortativity_coefficient(G, x="out", y="in", weight=None):
+def degree_assortativity_coefficient(graph, x="out", y="in", weight=None):
     """Compute degree assortativity of graph.
 
     Assortativity measures the similarity of connections
@@ -36,7 +36,7 @@ def degree_assortativity_coefficient(G, x="out", y="in", weight=None):
 
     Parameters
     ----------
-    G : NetworkX graph
+    graph (:class:`graphscope.Graph`): A simple graph.
 
     x: string ('in','out')
        The degree type for source node (directed graphs only).
@@ -56,16 +56,13 @@ def degree_assortativity_coefficient(G, x="out", y="in", weight=None):
 
     .. code:: python
 
-        import graphscope as gs
-        g = gs.g()
-        # Load some data, then project to a simple graph (if needed).
-        pg = g.project(vertices={"vlabel": []}, edges={"elabel": []})
-        r = gs.degree_assortativity_coefficient(pg)
-        s.close()
-
-    See Also
-    --------
-    attribute_assortativity_coefficient
+        >>> import graphscope
+        >>> from graphscope.dataset import load_modern_graph
+        >>> sess = graphscope.session(cluster_type="hosts", mode="eager")
+        >>> g = load_modern_graph(sess)
+        >>> g.schema
+        >>> c = graphscope.degree_assortativity_coefficient(g, weight="weight")
+        >>> sess.close()
 
     Notes
     -----
@@ -83,7 +80,7 @@ def degree_assortativity_coefficient(G, x="out", y="in", weight=None):
     """
     weighted = False if weight is None else True
     ctx = AppAssets(algo="degree_assortativity_coefficient", context="tensor")(
-        G,
+        graph,
         source_degree_type=x,
         target_degree_type=y,
         weighted=weighted,

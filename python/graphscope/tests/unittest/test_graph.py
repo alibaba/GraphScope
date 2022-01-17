@@ -409,8 +409,8 @@ def test_project_subgraph(arrow_modern_graph):
     assert sub_graph.schema.vertex_labels == []
     assert sub_graph.schema.edge_labels == []
     with pytest.raises(
-        ValueError,
-        match="Check failed: Cannot project to simple, vertex label number is not one.",
+        RuntimeError,
+        match="Failed to project to simple graph as no vertex exists in this graph",
     ):
         graphscope.wcc(sub_graph)
 
@@ -419,8 +419,8 @@ def test_project_subgraph(arrow_modern_graph):
     assert sub_graph.schema.vertex_labels == ["person"]
     assert sub_graph.schema.edge_labels == []
     with pytest.raises(
-        ValueError,
-        match="Check failed: Cannot project to simple, edge label number is not one.",
+        RuntimeError,
+        match="Failed to project to simple graph as no edge exists in this graph",
     ):
         graphscope.wcc(sub_graph)
 
@@ -457,8 +457,6 @@ def test_project_subgraph(arrow_modern_graph):
 
 def test_error_on_project(arrow_property_graph, ldbc_graph):
     graph = arrow_property_graph
-    with pytest.raises(ValueError, match="Cannot project to simple"):
-        graphscope.sssp(graph, 4)
     g2 = graph.project(vertices={"v0": []}, edges={"e0": []})
     assert g2.schema.edge_relationships == [[("v0", "v0")]]
 
@@ -489,20 +487,6 @@ def test_error_on_project(arrow_property_graph, ldbc_graph):
     # project with not existed edge
     with pytest.raises(ValueError, match="isSubclassOf not exists"):
         sub_graph.project(vertices={"tagclass": None}, edges={"isSubclassOf": None})
-
-    # more than one property on vertex can not project to simple
-    sub_graph = ldbc.project(
-        vertices={"person": ["id", "firstName"]}, edges={"knows": ["eid"]}
-    )
-    with pytest.raises(ValueError):
-        sub_graph._project_to_simple()
-
-    # more than one property on edge can not project to simple
-    sub_graph = ldbc.project(
-        vertices={"person": ["id"]}, edges={"knows": ["eid", "creationDate"]}
-    )
-    with pytest.raises(ValueError):
-        sub_graph._project_to_simple()
 
 
 def test_transform(arrow_modern_graph):

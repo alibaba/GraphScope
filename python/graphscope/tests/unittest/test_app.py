@@ -58,6 +58,16 @@ def test_compatible_with_dynamic_graph(dynamic_property_graph):
         bfs(dynamic_property_graph, src=4)
 
 
+def test_run_app_on_property_graph(arrow_property_graph, twitter_sssp_result):
+    ctx1 = graphscope.sssp(arrow_property_graph, src=4, weight="weight")
+    r1 = (
+        ctx1.to_dataframe({"node": "v.id", "r": "r"})
+        .sort_values(by=["node"])
+        .to_numpy(dtype=float)
+    )
+    assert np.allclose(r1, twitter_sssp_result)
+
+
 def test_run_app_on_directed_graph(
     p2p_project_directed_graph,
     sssp_result,

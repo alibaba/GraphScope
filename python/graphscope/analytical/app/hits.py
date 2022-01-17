@@ -34,7 +34,7 @@ def hits(graph, tolerance=0.01, max_round=100, normalized=True):
     https://en.wikipedia.org/wiki/HITS_algorithm
 
     Args:
-        graph (:class:`Graph`): A simple graph.
+        graph (:class:`graphscope.Graph`): A simple graph.
         tolerance (float, optional): Defaults to 0.01.
         max_round (int, optional): Defaults to 100.
         normalized (bool, optional): Whether to normalize the result to 0-1. Defaults to True.
@@ -47,13 +47,14 @@ def hits(graph, tolerance=0.01, max_round=100, normalized=True):
 
     .. code:: python
 
-        import graphscope as gs
-        g = gs.g()
-        # Load some data, then project to a simple graph (if needed).
-        pg = g.project(vertices={"vlabel": []}, edges={"elabel": []})
-        r = gs.hits(pg)
-        s.close()
-
+        >>> import graphscope
+        >>> from graphscope.dataset import load_p2p_network
+        >>> sess = graphscope.session(cluster_type="hosts", mode="eager")
+        >>> g = load_p2p_network(sess)
+        >>> # project to a simple graph (if needed)
+        >>> pg = g.project(vertices={"host": ["id"]}, edges={"connect": ["dist"]})
+        >>> c = graphscope.hits(pg, tolerance=0.01, max_round=10, normalized=True)
+        >>> sess.close()
     """
     tolerance = float(tolerance)
     max_round = int(max_round)

@@ -113,6 +113,11 @@ class Label:
             raise ValueError(f"{name} not exist in properties")
         return idx
 
+    def property_exists(self, name):
+        return (name in self._prop_index) and (
+            self._valid_props[self._prop_index[name]]
+        )
+
     def __repr__(self) -> str:
         s = f"Label: {self.label}\nProperties: {', '.join([str(p) for p in self.properties])}\n"
         return s
@@ -413,6 +418,12 @@ class GraphSchema:
     def get_edge_properties(self, label):
         return self._edge_labels[self.get_edge_label_id(label)].properties
 
+    def vertex_properties_num(self, label):
+        return len(self._vertex_labels[self.get_vertex_label_id(label)].properties)
+
+    def edge_properties_num(self, label):
+        return len(self._edge_labels[self.get_edge_label_id(label)].properties)
+
     def get_vertex_label_id(self, label):
         if label not in self._v_label_index:
             raise KeyError(f"{label} not exists.")
@@ -434,8 +445,16 @@ class GraphSchema:
             prop
         )
 
+    def vertex_property_exists(self, label, prop):
+        return self._vertex_labels[self.get_vertex_label_id(label)].property_exists(
+            prop
+        )
+
     def get_edge_property_id(self, label, prop):
         return self._edge_labels[self.get_edge_label_id(label)].get_property_id(prop)
+
+    def edge_property_exists(self, label, prop):
+        return self._edge_labels[self.get_edge_label_id(label)].property_exists(prop)
 
     def add_nx_vertex_properties(self, properties) -> bool:
         for key, value in properties.items():

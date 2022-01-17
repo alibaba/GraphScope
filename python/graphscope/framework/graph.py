@@ -288,9 +288,11 @@ class GraphDAGNode(DAGNode, GraphInterface):
         """
         return self._graph_type
 
-    def _project_to_simple(self):
+    def _project_to_simple(self, v_prop=None, e_prop=None):
         check_argument(self.graph_type == graph_def_pb2.ARROW_PROPERTY)
-        op = dag_utils.project_arrow_property_graph_to_simple(self)
+        op = dag_utils.project_arrow_property_graph_to_simple(
+            self, str(v_prop), str(e_prop)
+        )
         # construct dag node
         graph_dag_node = GraphDAGNode(self._session, op)
         graph_dag_node._base_graph = self
@@ -713,6 +715,8 @@ class Graph(GraphInterface):
             pass
 
     def update_from_graph_def(self, graph_def):
+        if graph_def.graph_type == graph_def_pb2.ARROW_FLATTENED:
+            self._graph_node._graph_type = graph_def_pb2.ARROW_FLATTENED
         check_argument(
             self._graph_node.graph_type == graph_def.graph_type,
             "Graph type doesn't match {} versus {}".format(
@@ -791,6 +795,8 @@ class Graph(GraphInterface):
             template = f"vineyard::ArrowFragment<{oid_type},{vid_type}>"
         elif self._graph_type == graph_def_pb2.ARROW_PROJECTED:
             template = f"gs::ArrowProjectedFragment<{oid_type},{vid_type},{vdata_type},{edata_type}>"
+        elif self._graph_type == graph_def_pb2.ARROW_FLATTENED:
+            template = f"ArrowFlattenedFragmen<{oid_type},{vid_type},{vdata_type},{edata_type}>"
         elif self._graph_type == graph_def_pb2.DYNAMIC_PROJECTED:
             template = f"gs::DynamicProjectedFragment<{vdata_type},{edata_type}>"
         else:
@@ -878,8 +884,10 @@ class Graph(GraphInterface):
         self._session = None
         return rlt
 
-    def _project_to_simple(self):
-        return self._session._wrapper(self._graph_node._project_to_simple())
+    def _project_to_simple(self, v_prop=None, e_prop=None):
+        return self._session._wrapper(
+            self._graph_node._project_to_simple(v_prop, e_prop)
+        )
 
     def add_column(self, results, selector):
         return self._session._wrapper(self._graph_node.add_column(results, selector))

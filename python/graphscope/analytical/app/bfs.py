@@ -30,7 +30,7 @@ def bfs(graph, src=0):
     """Breadth first search from the src on projected simple graph.
 
     Args:
-        graph (:class:`Graph`): A simple graph.
+        graph (:class:`graphscope.Graph`): A simple graph.
         src (optional): Source vertex of breadth first search. The type should be consistent
             with the id type of the `graph`, that is, it's `int` or `str` depending
             on the `oid_type` is `int64_t` or `string` of the `graph`. Defaults to 0.
@@ -43,12 +43,13 @@ def bfs(graph, src=0):
 
     .. code:: python
 
-        import graphscope as gs
-        g = gs.g()
-        # Load some data, then project to a simple graph (if needed).
-        pg = g.project(vertices={"vlabel": []}, edges={"elabel": []})
-        r = gs.bfs(pg, 6)  # use 6 as source vertex
-        s.close()
-
+        >>> import graphscope
+        >>> from graphscope.dataset import load_p2p_network
+        >>> sess = graphscope.session(cluster_type="hosts", mode="eager")
+        >>> g = load_p2p_network(sess)
+        >>> # project to a simple graph (if needed)
+        >>> pg = g.project(vertices={"host": ["id"]}, edges={"connect": ["dist"]})
+        >>> c = graphscope.bfs(pg, src=6)
+        >>> sess.close()
     """
     return AppAssets(algo="bfs", context="vertex_data")(graph, src)
