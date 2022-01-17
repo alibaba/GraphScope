@@ -107,14 +107,14 @@ pub trait Details: std::fmt::Debug + Send + Sync + AsAny {
         }
     }
 
-    /// get_all_properties returns all properties.
+    /// get_all_properties returns all properties. None means that we failed in getting the properties.
     /// Specifically, it returns all properties of Vertex/Edge saved in RUNTIME rather than STORAGE.
     /// it may be used in two situations:
     /// (1) if no prop_keys are provided when querying the vertex/edge which indicates that all properties are necessary,
     /// then we can get all properties of the vertex/edge in storage; e.g., g.V().valueMap()
     /// (2) if some prop_keys are provided when querying the vertex/edge which indicates that only these properties are necessary,
     /// then we can only get all pre-specified properties of the vertex/edge.
-    fn get_all_properties(&self) -> HashMap<NameOrId, Object>;
+    fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>>;
 }
 
 #[derive(Clone)]
@@ -143,7 +143,7 @@ impl Details for DynDetails {
         self.inner.get_label()
     }
 
-    fn get_all_properties(&self) -> HashMap<NameOrId, Object> {
+    fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {
         self.inner.get_all_properties()
     }
 }
@@ -178,10 +178,14 @@ impl Encode for DynDetails {
                 .cloned()
                 .write_to(writer)?;
             let all_props = self.get_all_properties();
-            writer.write_u64(all_props.len() as u64)?;
-            for (k, v) in all_props {
-                k.write_to(writer)?;
-                v.write_to(writer)?;
+            if let Some(all_props) = all_props {
+                writer.write_u64(all_props.len() as u64)?;
+                for (k, v) in all_props {
+                    k.write_to(writer)?;
+                    v.write_to(writer)?;
+                }
+            } else {
+                writer.write_u64(0)?;
             }
         }
         Ok(())
@@ -253,9 +257,9 @@ impl Details for DefaultDetails {
         self.label.as_ref()
     }
 
-    fn get_all_properties(&self) -> HashMap<NameOrId, Object> {
+    fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {
         // it's actually unreachable!()
-        self.inner.clone()
+        Some(self.inner.clone())
     }
 }
 

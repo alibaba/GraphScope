@@ -433,7 +433,7 @@ impl Details for LazyVertexDetails {
         Some(&self.label)
     }
 
-    fn get_all_properties(&self) -> HashMap<NameOrId, Object> {
+    fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {
         let mut all_props = HashMap::new();
         if let Some(prop_keys) = self.prop_keys.as_ref() {
             // the case of get_all_properties from vertex;
@@ -453,7 +453,7 @@ impl Details for LazyVertexDetails {
                             ptr = swapped
                         };
                     } else {
-                        return all_props;
+                        return None;
                     }
                 }
                 unsafe {
@@ -462,6 +462,8 @@ impl Details for LazyVertexDetails {
                             .into_iter()
                             .map(|(prop_key, prop_val)| (prop_key.into(), prop_val as Object))
                             .collect();
+                    } else {
+                        return None;
                     }
                 }
             } else {
@@ -475,7 +477,7 @@ impl Details for LazyVertexDetails {
                 }
             }
         }
-        all_props
+        Some(all_props)
     }
 }
 
