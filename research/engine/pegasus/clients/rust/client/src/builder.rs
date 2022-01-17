@@ -142,6 +142,22 @@ impl Plan {
         self
     }
 
+    pub fn iterate_emit<F>(&mut self, times: u32, mut func: F) -> &mut Self
+    where
+        F: FnMut(&mut Plan),
+    {
+        let mut sub_plan = Plan::default();
+        func(&mut sub_plan);
+        let iteration_emit = pb::IterationEmit {
+            max_iters: times,
+            until: None,
+            body: Some(pb::TaskPlan { plan: sub_plan.take() }),
+        };
+        let op = pb::OperatorDef { op_kind: Some(pb::operator_def::OpKind::IterateEmit(iteration_emit)) };
+        self.plan.push(op);
+        self
+    }
+
     pub fn iterate_until<F>(&mut self, times: u32, until: BinaryResource, mut func: F) -> &mut Self
     where
         F: FnMut(&mut Plan),
@@ -155,6 +171,23 @@ impl Plan {
             body: Some(pb::TaskPlan { plan: sub_plan.take() }),
         };
         let op = pb::OperatorDef { op_kind: Some(pb::operator_def::OpKind::Iterate(iteration)) };
+        self.plan.push(op);
+        self
+    }
+
+    pub fn iterate_emit_until<F>(&mut self, times: u32, until: BinaryResource, mut func: F) -> &mut Self
+    where
+        F: FnMut(&mut Plan),
+    {
+        let mut sub_plan = Plan::default();
+        func(&mut sub_plan);
+        let filter = pb::Filter { resource: until };
+        let iteration_emit = pb::IterationEmit {
+            max_iters: times,
+            until: Some(filter),
+            body: Some(pb::TaskPlan { plan: sub_plan.take() }),
+        };
+        let op = pb::OperatorDef { op_kind: Some(pb::operator_def::OpKind::IterateEmit(iteration_emit)) };
         self.plan.push(op);
         self
     }
