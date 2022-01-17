@@ -107,9 +107,14 @@ pub trait Details: std::fmt::Debug + Send + Sync + AsAny {
         }
     }
 
-    fn properties_len(&self) -> usize;
-
-    fn get_all_properties(&self) -> Box<dyn Iterator<Item = (NameOrId, Object)>>;
+    /// get_all_props_with_length returns all properties together with its length;
+    /// Specifically, it returns all properties of Vertex/Edge saved in RUNTIME rather than STORAGE.
+    /// it may be used in two situations:
+    /// (1) if no prop_keys are provided when querying the vertex/edge which indicates that all properties are necessary,
+    /// then we can get all properties of the vertex/edge in storage; e.g., g.V().valueMap()
+    /// (2) if some prop_keys are provided when querying the vertex/edge which indicates that only these properties are necessary,
+    /// then we can only get all pre-specified properties of the vertex/edge.
+    fn get_all_props_with_length(&self) -> (Box<dyn Iterator<Item = (NameOrId, Object)>>, usize);
 }
 
 #[derive(Clone)]
@@ -138,12 +143,8 @@ impl Details for DynDetails {
         self.inner.get_label()
     }
 
-    fn properties_len(&self) -> usize {
-        self.inner.properties_len()
-    }
-
-    fn get_all_properties(&self) -> Box<dyn Iterator<Item = (NameOrId, Object)>> {
-        self.inner.get_all_properties()
+    fn get_all_props_with_length(&self) -> (Box<dyn Iterator<Item = (NameOrId, Object)>>, usize) {
+        self.inner.get_all_props_with_length()
     }
 }
 
@@ -176,8 +177,9 @@ impl Encode for DynDetails {
                 .get_label()
                 .cloned()
                 .write_to(writer)?;
-            writer.write_u64(self.properties_len() as u64)?;
-            for (k, v) in self.get_all_properties() {
+            let (all_props, all_props_len) = self.get_all_props_with_length();
+            writer.write_u64(all_props_len as u64)?;
+            for (k, v) in all_props {
                 k.write_to(writer)?;
                 v.write_to(writer)?;
             }
@@ -251,12 +253,9 @@ impl Details for DefaultDetails {
         self.label.as_ref()
     }
 
-    fn properties_len(&self) -> usize {
-        self.inner.len()
-    }
-
-    fn get_all_properties(&self) -> Box<dyn Iterator<Item = (NameOrId, Object)>> {
-        Box::new(self.inner.clone().into_iter())
+    fn get_all_props_with_length(&self) -> (Box<dyn Iterator<Item = (NameOrId, Object)>>, usize) {
+        // it's actually unreachable!()
+        (Box::new(self.inner.clone().into_iter()), self.inner.len())
     }
 }
 

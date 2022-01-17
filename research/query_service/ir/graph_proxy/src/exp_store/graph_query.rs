@@ -367,6 +367,9 @@ fn to_runtime_edge(
 struct LazyVertexDetails {
     pub id: DefaultId,
     label: NameOrId,
+    // prop_keys specify the properties we query for,
+    // Specifically, Some(vec![]) indicates we need all properties
+    // and None indicates we do not need any property,
     prop_keys: Option<Vec<NameOrId>>,
     inner: AtomicPtr<LocalVertex<'static, DefaultId>>,
     store: &'static LargeGraphDB<DefaultId, InternalId>,
@@ -430,24 +433,51 @@ impl Details for LazyVertexDetails {
         Some(&self.label)
     }
 
-    fn properties_len(&self) -> usize {
-        self.prop_keys
-            .as_ref()
-            .map_or(0, |prop_keys| prop_keys.len())
-    }
-
-    fn get_all_properties(&self) -> Box<dyn Iterator<Item = (NameOrId, Object)>> {
+    fn get_all_props_with_length(&self) -> (Box<dyn Iterator<Item = (NameOrId, Object)>>, usize) {
         let mut all_props = vec![];
+        let mut all_props_len = 0;
         if let Some(prop_keys) = self.prop_keys.as_ref() {
-            for key in prop_keys.iter() {
-                if let Some(prop) = self.get_property(&key) {
-                    all_props.push((key.clone(), prop.try_to_owned().unwrap()));
-                } else {
-                    all_props.push((key.clone(), Object::None))
+            // the case of get_all_properties from vertex;
+            if prop_keys.is_empty() {
+                let mut ptr = self.inner.load(Ordering::SeqCst);
+                if ptr.is_null() {
+                    if let Some(v) = self.store.get_vertex(self.id) {
+                        let v = Box::new(v);
+                        let new_ptr = Box::into_raw(v);
+                        let swapped = self.inner.swap(new_ptr, Ordering::SeqCst);
+                        if swapped.is_null() {
+                            ptr = new_ptr;
+                        } else {
+                            unsafe {
+                                std::ptr::drop_in_place(new_ptr);
+                            }
+                            ptr = swapped
+                        };
+                    } else {
+                        return (Box::new(vec![].into_iter()), all_props_len);
+                    }
+                }
+                unsafe {
+                    if let Some(mut prop_key_vals) = (*ptr).clone_all_properties() {
+                        all_props_len = prop_key_vals.len();
+                        for (prop_key, prop_val) in prop_key_vals.drain() {
+                            all_props.push((prop_key.into(), prop_val as Object));
+                        }
+                    }
+                }
+            } else {
+                // the case of get_all_properties with prop_keys pre-specified
+                all_props_len = prop_keys.len();
+                for key in prop_keys.iter() {
+                    if let Some(prop) = self.get_property(&key) {
+                        all_props.push((key.clone(), prop.try_to_owned().unwrap()));
+                    } else {
+                        all_props.push((key.clone(), Object::None))
+                    }
                 }
             }
         }
-        Box::new(all_props.into_iter())
+        (Box::new(all_props.into_iter()), all_props_len)
     }
 }
 
