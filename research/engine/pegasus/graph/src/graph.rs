@@ -3,9 +3,9 @@ use std::hash::Hash;
 use std::ops::Deref;
 
 use ahash::AHashMap;
-use nohash_hasher::IntMap;
-use pegasus_common::codec::{Encode, WriteExt, Decode, ReadExt};
 use crossbeam_utils::sync::ShardedLock;
+use nohash_hasher::IntMap;
+use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
 
 use crate::topo::IdTopo;
 
@@ -22,9 +22,7 @@ struct SharedMap<K: Hash + Eq, V> {
 
 impl<K: Hash + Eq, V> SharedMap<K, V> {
     fn new() -> Self {
-        SharedMap {
-            map: ShardedLock::new(AHashMap::new())
-        }
+        SharedMap { map: ShardedLock::new(AHashMap::new()) }
     }
 
     fn insert(&self, key: K, value: V) -> Option<V> {
@@ -34,21 +32,23 @@ impl<K: Hash + Eq, V> SharedMap<K, V> {
 }
 
 impl<K: Hash + Eq, V: Copy> SharedMap<K, V> {
-    fn get<Q: ?Sized>(&self, key: &Q) -> Option<V> where K: Borrow<Q>, Q: Hash + Eq {
+    fn get<Q: ?Sized>(&self, key: &Q) -> Option<V>
+    where
+        K: Borrow<Q>,
+        Q: Hash + Eq,
+    {
         let map = self.map.read().expect("read lock failure");
         map.get(key).copied()
     }
 }
 
 struct SharedVec<T> {
-    vec: ShardedLock<Vec<T>>
+    vec: ShardedLock<Vec<T>>,
 }
 
 impl<T> SharedVec<T> {
     fn new() -> Self {
-        SharedVec {
-            vec: ShardedLock::new(Vec::new())
-        }
+        SharedVec { vec: ShardedLock::new(Vec::new()) }
     }
 
     fn push(&self, entry: T) -> usize {
@@ -74,11 +74,7 @@ pub struct EdgeMeta {
 
 impl From<(u32, u32, u32)> for EdgeMeta {
     fn from(tuple: (u32, u32, u32)) -> Self {
-        EdgeMeta {
-            src_label_id: tuple.0,
-            edge_label_id: tuple.1,
-            dst_label_id: tuple.2
-        }
+        EdgeMeta { src_label_id: tuple.0, edge_label_id: tuple.1, dst_label_id: tuple.2 }
     }
 }
 
@@ -97,9 +93,9 @@ impl EdgeMeta {
 }
 
 lazy_static! {
-    static ref LABEL_TO_ID : SharedMap<String, u32> = SharedMap::new();
-    static ref ID_TO_LABEL : SharedVec<String> = SharedVec::new();
-    static ref EDGE_META : SharedMap<u32, EdgeMeta> = SharedMap::new();
+    static ref LABEL_TO_ID: SharedMap<String, u32> = SharedMap::new();
+    static ref ID_TO_LABEL: SharedVec<String> = SharedVec::new();
+    static ref EDGE_META: SharedMap<u32, EdgeMeta> = SharedMap::new();
 }
 
 #[derive(Copy, Clone, Debug, Hash, Eq, PartialEq)]
@@ -175,7 +171,6 @@ impl<B: Deref<Target = [u64]>> LabeledTopoGraph<B> {
         EDGE_META.get(&id)
     }
 
-
     pub fn add_out_topo(&mut self, src_type: String, edge_type: String, dst_type: String, topo: IdTopo<B>) {
         let src_type_id = Self::get_or_create_label_id(&src_type);
         let edge_type_id = Self::get_or_create_label_id(&edge_type);
@@ -208,7 +203,7 @@ impl<B: Deref<Target = [u64]>> LabeledTopoGraph<B> {
 
     pub fn add_nodirct_topo(&mut self, vtype: String, edge_type: String, topo: IdTopo<B>) {
         let src_type_id = Self::get_or_create_label_id(&vtype);
-        let edge_type_id =Self::get_or_create_label_id(&edge_type);
+        let edge_type_id = Self::get_or_create_label_id(&edge_type);
         let meta_id = self.topos.len();
         let metas = self
             .v2e_metas
@@ -225,7 +220,6 @@ impl<B: Deref<Target = [u64]>> LabeledTopoGraph<B> {
         self.topos.push(topo);
         EDGE_META.insert(edge_type_id, (src_type_id, edge_type_id, src_type_id).into());
     }
-
 
     pub fn count_all_edge(&self, vid: u64, vtype: &str, dir: Direction) -> usize {
         if let Some(id) = LABEL_TO_ID.get(vtype) {
@@ -247,7 +241,7 @@ impl<B: Deref<Target = [u64]>> LabeledTopoGraph<B> {
         count
     }
 
-    pub fn get_all_neighbors(&self, vid: u64, vtype: &str, dir: Direction) -> impl Iterator<Item =VID> {
+    pub fn get_all_neighbors(&self, vid: u64, vtype: &str, dir: Direction) -> impl Iterator<Item = VID> {
         if let Some(label_id) = Self::get_label_id(vtype) {
             self.get_all_neighbors_(VID(label_id, vid), dir)
         } else {
@@ -255,13 +249,15 @@ impl<B: Deref<Target = [u64]>> LabeledTopoGraph<B> {
         }
     }
 
-    pub fn get_all_neighbors_(&self, vid: VID, dir: Direction) -> impl Iterator<Item =VID> {
+    pub fn get_all_neighbors_(&self, vid: VID, dir: Direction) -> impl Iterator<Item = VID> {
         let mut result = vec![];
         if let Some(metas) = self.v2e_metas.get(&vid.label_id()) {
             for m in metas {
                 if m.kind == dir || m.kind == Direction::Both || dir == Direction::Both {
                     let label_id = m.dst_type_id;
-                    let neighbors = self.topos[m.meta_id].get_neighbors(vid.vertex_id()).map(move |id| VID(label_id, id));
+                    let neighbors = self.topos[m.meta_id]
+                        .get_neighbors(vid.vertex_id())
+                        .map(move |id| VID(label_id, id));
                     result.push(neighbors);
                 }
             }
@@ -269,7 +265,9 @@ impl<B: Deref<Target = [u64]>> LabeledTopoGraph<B> {
         result.into_iter().flat_map(|n| n.into_iter())
     }
 
-    pub fn get_neighbors_through(&self, vid: u64, vtype: &str, edge_label: &str, dir: Direction) -> impl Iterator<Item = u64> {
+    pub fn get_neighbors_through(
+        &self, vid: u64, vtype: &str, edge_label: &str, dir: Direction,
+    ) -> impl Iterator<Item = u64> {
         if let Some(label_id) = LABEL_TO_ID.get(vtype) {
             VidIterator::Iter(self.get_neighbors_through_(VID(label_id, vid), edge_label, dir))
         } else {
@@ -277,18 +275,19 @@ impl<B: Deref<Target = [u64]>> LabeledTopoGraph<B> {
         }
     }
 
-    pub fn get_neighbors_through_(&self, vid: VID, edge_label: &str, dir: Direction) -> impl Iterator<Item = u64> {
+    pub fn get_neighbors_through_(
+        &self, vid: VID, edge_label: &str, dir: Direction,
+    ) -> impl Iterator<Item = u64> {
         if let Some(label_id) = LABEL_TO_ID.get(edge_label) {
             if let Some(meta) = self.v2e_metas.get(&vid.label_id()) {
                 for m in meta {
-                    if m.edge_type_id == label_id  {
+                    if m.edge_type_id == label_id {
                         if m.kind == dir || m.kind == Direction::Both || dir == Direction::Both {
                             let n = self.topos[m.meta_id].get_neighbors(vid.vertex_id());
                             return VidIterator::Iter(n);
                         } else {
                             break;
                         }
-
                     }
                 }
             }
@@ -299,7 +298,7 @@ impl<B: Deref<Target = [u64]>> LabeledTopoGraph<B> {
 
 pub enum VidIterator<T: Iterator> {
     Iter(T),
-    None
+    None,
 }
 
 impl<T: Iterator> Iterator for VidIterator<T> {
@@ -308,7 +307,7 @@ impl<T: Iterator> Iterator for VidIterator<T> {
     fn next(&mut self) -> Option<Self::Item> {
         match self {
             VidIterator::Iter(iter) => iter.next(),
-            VidIterator::None => None
+            VidIterator::None => None,
         }
     }
 }

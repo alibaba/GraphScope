@@ -28,8 +28,10 @@ use hyper::server::conn::{AddrIncoming, AddrStream};
 use pegasus::api::function::FnResult;
 use pegasus::api::FromStream;
 use pegasus::result::{FromStreamExt, ResultSink};
-use pegasus::{Data, JobConf, ServerConf};
+use pegasus::{Configuration, Data, JobConf, ServerConf};
+use pegasus_network::ServerDetect;
 use prost::Message;
+use serde::Deserialize;
 use tokio::sync::mpsc::UnboundedSender;
 use tokio_stream::wrappers::UnboundedReceiverStream;
 use tonic::transport::Server;
@@ -37,7 +39,7 @@ use tonic::{Code, Request, Response, Status};
 
 use crate::generated::protocol as pb;
 use crate::generated::protocol::job_config::Servers;
-use crate::service::{JobParser, Service};
+use crate::service::{JobDesc, JobParser, Service};
 
 pub struct RpcSink {
     pub job_id: u64,
@@ -98,13 +100,13 @@ impl Drop for RpcSink {
 }
 
 #[derive(Clone)]
-pub struct RpcService<I: Data, O, P> {
+pub struct JobServiceImpl<I: Data, O, P> {
     inner: Service<I, O, P>,
     report: bool,
 }
 
 #[tonic::async_trait]
-impl<I, O, P> pb::job_service_server::JobService for RpcService<I, O, P>
+impl<I, O, P> pb::job_service_server::JobService for JobServiceImpl<I, O, P>
 where
     I: Data,
     O: Send + Debug + Message + 'static,
@@ -113,22 +115,33 @@ where
     type SubmitStream = UnboundedReceiverStream<Result<pb::JobResponse, Status>>;
 
     async fn submit(&self, req: Request<pb::JobRequest>) -> Result<Response<Self::SubmitStream>, Status> {
-        info!("accept new request from {:?};", req.remote_addr());
-        let mut job_req = req.into_inner();
-        if job_req.conf.is_none() {
+        debug!("accept new request from {:?};", req.remote_addr());
+        let pb::JobRequest { conf, source, plan, resource } = req.into_inner();
+        if conf.is_none() {
             return Err(Status::new(Code::InvalidArgument, "job configuration not found"));
         }
 
-        let conf_req = job_req.conf.take().unwrap();
-        let conf = parse_conf_req(conf_req);
+        let conf = parse_conf_req(conf.unwrap());
+        pegasus::wait_servers_ready(conf.servers());
         let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
         let rpc_sink = RpcSink::new(conf.job_id, tx);
         let sink = ResultSink::<O>::with(rpc_sink);
-        let service = self.inner.clone();
+        if conf.trace_enable {
+            info!("submitting job {} with id {}", conf.job_name, conf.job_id);
+        }
+        let job_id = conf.job_id;
+        let service = &self.inner;
+        let job = JobDesc {
+            input: source.map(|b| b.resource).unwrap_or(vec![]),
+            plan : plan.map(|b|b.resource).unwrap_or(vec![]),
+            resource: resource.map(|b| b.resource).unwrap_or(vec![])
+        };
+
         let submitted =
-            pegasus::run_opt(conf, sink, move |worker| worker.dataflow(service.accept(&job_req)));
+            pegasus::run_opt(conf, sink, move |worker| worker.dataflow(service.accept(&job)));
 
         if let Err(e) = submitted {
+            error!("submit job {} failure: {:?}", job_id, e);
             return Err(Status::invalid_argument(format!("submit job error {}", e)));
         }
 
@@ -136,7 +149,8 @@ where
     }
 }
 
-pub struct RpcServerConfig {
+#[derive(Debug, Deserialize)]
+pub struct RPCServerConfig {
     rpc_host: Option<String>,
     rpc_port: Option<u16>,
     rpc_concurrency_limit_per_connection: Option<usize>,
@@ -150,73 +164,97 @@ pub struct RpcServerConfig {
     tcp_nodelay: Option<bool>,
 }
 
-pub struct RpcServer<S: pb::job_service_server::JobService> {
+pub struct RPCJobServer<S: pb::job_service_server::JobService> {
     service: S,
-    config: RpcServerConfig,
+    rpc_config: RPCServerConfig,
+    server_config: pegasus::Configuration,
 }
 
-pub async fn start_rpc_server<I, O, P>(
-    config: RpcServerConfig, service: RpcService<I, O, P>,
+pub async fn start_rpc_server<I, O, P, D, E>(
+    rpc_config: RPCServerConfig, server_config: Configuration, service: Service<I, O, P>,
+    server_detector: D, listener: E,
 ) -> Result<(), Box<dyn std::error::Error>>
 where
     I: Data,
     O: Send + Debug + Message + 'static,
     P: JobParser<I, O>,
+    D: ServerDetect + 'static,
+    E: ServiceStartListener,
 {
-    let server = RpcServer::new(config, service);
-    server.run().await?;
+    let service = JobServiceImpl { inner: service, report: true };
+    let server = RPCJobServer::new(rpc_config, server_config, service);
+    server.run(server_detector, listener).await?;
     Ok(())
 }
 
-impl<S: pb::job_service_server::JobService> RpcServer<S> {
-    pub fn new(config: RpcServerConfig, service: S) -> Self {
-        RpcServer { service, config }
+impl<S: pb::job_service_server::JobService> RPCJobServer<S> {
+    pub fn new(rpc_config: RPCServerConfig, server_config: Configuration, service: S) -> Self {
+        RPCJobServer { service, rpc_config, server_config }
     }
 
-    pub async fn run(self) -> Result<(), Box<dyn std::error::Error>> {
-        let RpcServer { service, mut config } = self;
-        let host = config
-            .rpc_host
-            .clone()
-            .unwrap_or("0.0.0.0".to_owned());
-        let addr = SocketAddr::new(host.parse()?, config.rpc_port.unwrap_or(0));
-        let incoming = TcpIncoming::new(addr, config.tcp_nodelay.unwrap_or(true), config.tcp_keep_alive)?;
-        info!("Rpc server started on {}", incoming.inner.local_addr());
+    pub async fn run<D, E>(
+        self, server_detector: D, mut listener: E,
+    ) -> Result<(), Box<dyn std::error::Error>>
+    where
+        D: ServerDetect + 'static,
+        E: ServiceStartListener,
+    {
+        let RPCJobServer { service, mut rpc_config, server_config } = self;
+        let server_id = server_config.server_id();
+        if let Some(server_addr) = pegasus::startup_with(server_config, server_detector)? {
+            listener.on_server_start(server_id, server_addr)?;
+        }
+
         let mut builder = Server::builder();
-        if let Some(limit) = config.rpc_concurrency_limit_per_connection {
+        if let Some(limit) = rpc_config.rpc_concurrency_limit_per_connection {
             builder = builder.concurrency_limit_per_connection(limit);
         }
 
-        if let Some(dur) = config.rpc_timeout.take() {
+        if let Some(dur) = rpc_config.rpc_timeout.take() {
             builder.timeout(dur);
         }
 
-        if let Some(size) = config.rpc_initial_stream_window_size {
+        if let Some(size) = rpc_config.rpc_initial_stream_window_size {
             builder = builder.initial_stream_window_size(Some(size));
         }
 
-        if let Some(size) = config.rpc_initial_connection_window_size {
+        if let Some(size) = rpc_config.rpc_initial_connection_window_size {
             builder = builder.initial_connection_window_size(Some(size));
         }
 
-        if let Some(size) = config.rpc_max_concurrent_streams {
+        if let Some(size) = rpc_config.rpc_max_concurrent_streams {
             builder = builder.max_concurrent_streams(Some(size));
         }
 
-        if let Some(dur) = config.rpc_keep_alive_interval.take() {
+        if let Some(dur) = rpc_config.rpc_keep_alive_interval.take() {
             builder = builder.http2_keepalive_interval(Some(dur));
         }
 
-        if let Some(dur) = config.rpc_keep_alive_timeout.take() {
+        if let Some(dur) = rpc_config.rpc_keep_alive_timeout.take() {
             builder = builder.http2_keepalive_timeout(Some(dur));
         }
 
-        builder
-            .add_service(pb::job_service_server::JobServiceServer::new(service))
-            .serve_with_incoming(incoming)
-            .await?;
+        let service = builder.add_service(pb::job_service_server::JobServiceServer::new(service));
+
+        let host = rpc_config
+            .rpc_host
+            .clone()
+            .unwrap_or("0.0.0.0".to_owned());
+        let addr = SocketAddr::new(host.parse()?, rpc_config.rpc_port.unwrap_or(0));
+        let incoming =
+            TcpIncoming::new(addr, rpc_config.tcp_nodelay.unwrap_or(true), rpc_config.tcp_keep_alive)?;
+        info!("starting RPC job server on {} ...", incoming.inner.local_addr());
+        listener.on_rpc_start(server_id, incoming.inner.local_addr())?;
+
+        service.serve_with_incoming(incoming).await?;
         Ok(())
     }
+}
+
+pub trait ServiceStartListener {
+    fn on_rpc_start(&mut self, server_id: u64, addr: SocketAddr) -> std::io::Result<()>;
+
+    fn on_server_start(&mut self, server_id: u64, addr: SocketAddr) -> std::io::Result<()>;
 }
 
 pub(crate) struct TcpIncoming {
@@ -262,7 +300,8 @@ fn parse_conf_req(mut req: pb::JobConfig) -> JobConf {
         conf.batch_capacity = req.batch_capacity;
     }
 
-    if req.plan_print {
+    if req.trace_enable {
+        conf.trace_enable = true;
         conf.plan_print = true;
     }
 

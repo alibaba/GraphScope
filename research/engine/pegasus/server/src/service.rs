@@ -14,8 +14,6 @@
 //! limitations under the License.
 //!
 
-#![allow(dead_code)]
-
 use std::fmt::Debug;
 use std::sync::Arc;
 
@@ -24,11 +22,15 @@ use pegasus::result::ResultSink;
 use pegasus::{BuildJobError, Data};
 use prost::Message;
 
-use crate::generated::protocol as pb;
+pub struct JobDesc {
+    pub input: Vec<u8>,
+    pub plan: Vec<u8>,
+    pub resource: Vec<u8>,
+}
 
 pub trait JobParser<I: Data, O: Send + Debug + 'static>: Send + Sync + 'static {
     fn parse(
-        &self, plan: &pb::JobRequest, input: &mut Source<I>, output: ResultSink<O>,
+        &self, plan: &JobDesc, input: &mut Source<I>, output: ResultSink<O>,
     ) -> Result<(), BuildJobError>;
 }
 
@@ -51,8 +53,9 @@ impl<I: Data, O: Send + Debug + Message + 'static, P: JobParser<I, O>> Service<I
     }
 
     pub fn accept<'a>(
-        &'a self, req: &'a pb::JobRequest,
+        &'a self, job: &'a JobDesc,
     ) -> impl FnOnce(&mut Source<I>, ResultSink<O>) -> Result<(), BuildJobError> + 'a {
-        move |input, output| self.parser.parse(req, input, output)
+
+        move |input, output| self.parser.parse(job, input, output)
     }
 }

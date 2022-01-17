@@ -992,7 +992,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "pegasus_server_v1"
+name = "pegasus_server"
 version = "0.1.0"
 dependencies = [
  "crossbeam-utils 0.6.6",

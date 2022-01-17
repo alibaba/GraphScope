@@ -16,7 +16,6 @@
 #[macro_use]
 extern crate log;
 
-pub use config::{CommonConfig, HostsConfig};
 use pegasus::Data;
 
 #[cfg(not(feature = "gcip"))]
@@ -38,6 +37,7 @@ pub use generated::protocol as pb;
 pub trait AnyData: Data + Eq {}
 
 // pub mod client;
+pub mod cluster;
 pub mod config;
 pub mod rpc;
 pub mod service;

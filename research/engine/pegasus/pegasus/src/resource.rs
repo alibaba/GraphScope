@@ -13,7 +13,8 @@ pub type SharedResourceMap = HashMap<TypeId, Box<dyn Any + Send + Sync>>;
 pub type SharedKeyedResourceMap = HashMap<String, Box<dyn Any + Send + Sync>>;
 
 lazy_static! {
-    pub static ref GLOBAL_RESOURCE_MAP: ShardedLock<SharedResourceMap> = ShardedLock::new(Default::default());
+    pub static ref GLOBAL_RESOURCE_MAP: ShardedLock<SharedResourceMap> =
+        ShardedLock::new(Default::default());
     pub static ref GLOBAL_KEYED_RESOURCES: ShardedLock<SharedKeyedResourceMap> =
         ShardedLock::new(Default::default());
 }
@@ -141,7 +142,7 @@ pub fn add_global_resource<T: Any + Send + Sync>(key: String, res: T) {
 }
 
 pub trait PartitionedResource {
-    type Res: Send  + 'static;
+    type Res: Send + 'static;
 
     fn get_resource(&self, par: usize) -> Option<&Self::Res>;
 
