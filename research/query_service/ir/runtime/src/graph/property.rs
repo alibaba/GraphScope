@@ -169,7 +169,7 @@ impl Encode for DynDetails {
             default.write_to(writer)?;
         } else {
             // TODO(yyy): handle other kinds of details
-            // for lazy details, we write id, label, and required properties
+            // for Lazy details, we write id, label, and required properties
             writer.write_u8(2)?;
             write_id(writer, self.inner.get_id())?;
             self.inner
@@ -189,20 +189,9 @@ impl Encode for DynDetails {
 impl Decode for DynDetails {
     fn read_from<R: ReadExt>(reader: &mut R) -> io::Result<Self> {
         let kind = <u8>::read_from(reader)?;
-        if kind == 1 {
+        if kind == 1 || kind == 2 {
+            // For either DefaultDetails or LazyDetails, we decoded as DefaultDetails
             let details = <DefaultDetails>::read_from(reader)?;
-            Ok(DynDetails::new(details))
-        } else if kind == 2 {
-            let id = read_id(reader)?;
-            let label = <Option<NameOrId>>::read_from(reader)?;
-            let len = reader.read_u64()?;
-            let mut map = HashMap::with_capacity(len as usize);
-            for _i in 0..len {
-                let k = <NameOrId>::read_from(reader)?;
-                let v = <Object>::read_from(reader)?;
-                map.insert(k, v);
-            }
-            let details = DefaultDetails::with_property(id, label.unwrap(), map);
             Ok(DynDetails::new(details))
         } else {
             Err(io::Error::from(io::ErrorKind::Other))
