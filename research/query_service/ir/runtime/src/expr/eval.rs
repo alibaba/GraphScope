@@ -421,25 +421,27 @@ impl Evaluate for InnerOpr {
                 for var in vars {
                     let obj_key = match var {
                         InnerOpr::Var { tag, prop_key } => {
-                            let mut obj1 = Object::None;
-                            let mut obj2 = Object::None;
+                            let mut key = "".to_string();
                             if let Some(t) = tag {
                                 match t {
-                                    NameOrId::Str(str) => obj1 = object!(str.as_str()),
-                                    NameOrId::Id(id) => obj1 = object!(*id),
+                                    NameOrId::Str(str) => key = str.to_string(),
+                                    NameOrId::Id(id) => key = id.to_string(),
                                 }
                             }
                             if let Some(prop) = prop_key {
+                                if !key.is_empty() {
+                                    key.push_str(".");
+                                }
                                 match prop {
-                                    PropKey::Id => obj2 = object!("~id"),
-                                    PropKey::Label => obj2 = object!("~label"),
-                                    PropKey::Key(key) => match key {
-                                        NameOrId::Str(str) => obj2 = object!(str.as_str()),
-                                        NameOrId::Id(id) => obj2 = object!(*id),
+                                    PropKey::Id => key.push_str("~id"),
+                                    PropKey::Label => key.push_str("~label"),
+                                    PropKey::Key(prop_key) => match prop_key {
+                                        NameOrId::Str(str) => key.push_str(str),
+                                        NameOrId::Id(id) => key.push_str(id.to_string().as_str()),
                                     },
                                 }
                             }
-                            Ok(object!(vec![obj1, obj2]))
+                            Ok(object!(key))
                         }
                         _ => Err(ExprEvalError::Unsupported(
                             "evaluating `valueMap` on non-vars is not supported.".to_string(),
