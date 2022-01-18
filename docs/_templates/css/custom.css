@@ -9,6 +9,10 @@
 	}
 }
 
+.wy-side-scroll {
+	height: calc(100% - 142px) !important; /* 128 + 16 */
+}
+
 .rst-versions {
     bottom: 128px !important;
 }
