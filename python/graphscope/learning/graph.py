@@ -95,6 +95,8 @@ class GraphDAGNode(DAGNode):
                 gen_labels=[
                     # cuts "paper" nodes into 100 pieces, and uses all pieces as traning dataset
                     ("train", "paper", 100, (0, 100)),
+                ]
+            )
         """
         self._session = session
         self._graph = graph
