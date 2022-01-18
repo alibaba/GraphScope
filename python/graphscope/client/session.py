@@ -1183,7 +1183,7 @@ class Session(object):
                 edges for gnn training.
             gen_labels (list, optional): Alias node and edge labels and extract
                 train/validation/test dataset from original graph for supervised
-                gnn training. We will explains the details in the examples.
+                gnn training. The detail is explained in the examples below.
 
         Examples
         --------
@@ -1194,7 +1194,7 @@ class Session(object):
                 nodes=[("paper", features)])  # use "paper" node and features for training
                 edges=[("paper", "links", "paper")]  # use the `paper->links->papers` edge type for training
                 gen_labels=[
-                    # cuts "paper" nodes into 100 pieces, and uses random 75 pieces(75%) as traning dataset
+                    # cuts "paper" nodes into 100 pieces, and uses random 75 pieces(75%) as training dataset
                     ("train", "paper", 100, (0, 75)),
                     # cuts "paper" nodes into 100 pieces, and uses random 10 pieces(10%) as validation dataset
                     ("val", "paper", 100, (75, 85)),

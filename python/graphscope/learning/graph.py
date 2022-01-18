@@ -52,7 +52,7 @@ class GraphDAGNode(DAGNode):
 
     def __init__(self, session, graph, nodes=None, edges=None, gen_labels=None):
         """
-            See params detail in :meth:`graphscope.Session.graphlearn`
+        See params detail in :meth:`graphscope.Session.graphlearn`
         """
         self._session = session
         self._graph = graph
