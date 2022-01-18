@@ -693,35 +693,37 @@ fn preprocess_expression(
     Ok(())
 }
 
-    fn preprocess_params(params: &mut pb::QueryParams, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
-        if let Some(pred) = &mut params.predicate {
-            preprocess_expression(pred, meta, plan_meta)?;
-        }
-        if let Some(schema) = &meta.schema {
-            if plan_meta.is_preprocess() && schema.is_table_id() {
-                for table in params.table_names.iter_mut() {
-                    *table = schema
-                        .get_table_id_from_pb(table)
-                        .unwrap_or(INVALID_META_ID)
-                        .into();
-                }
-            }
-        }
-        for column in params.columns.iter_mut() {
-            if let Some(schema) = &meta.schema {
-                if plan_meta.is_preprocess() && schema.is_column_id() {
-                    *column = schema
-                        .get_column_id_from_pb(column)
-                        .unwrap_or(INVALID_META_ID)
-                        .into();
-                }
-            }
-            plan_meta
-                .curr_node_meta_mut()
-                .insert_column(column.clone().try_into()?);
-        }
-        Ok(())
+fn preprocess_params(
+    params: &mut pb::QueryParams, meta: &StoreMeta, plan_meta: &mut PlanMeta,
+) -> IrResult<()> {
+    if let Some(pred) = &mut params.predicate {
+        preprocess_expression(pred, meta, plan_meta)?;
     }
+    if let Some(schema) = &meta.schema {
+        if plan_meta.is_preprocess() && schema.is_table_id() {
+            for table in params.table_names.iter_mut() {
+                *table = schema
+                    .get_table_id_from_pb(table)
+                    .unwrap_or(INVALID_META_ID)
+                    .into();
+            }
+        }
+    }
+    for column in params.columns.iter_mut() {
+        if let Some(schema) = &meta.schema {
+            if plan_meta.is_preprocess() && schema.is_column_id() {
+                *column = schema
+                    .get_column_id_from_pb(column)
+                    .unwrap_or(INVALID_META_ID)
+                    .into();
+            }
+        }
+        plan_meta
+            .curr_node_meta_mut()
+            .insert_column(column.clone().try_into()?);
+    }
+    Ok(())
+}
 
 impl AsLogical for pb::Project {
     fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
@@ -1115,8 +1117,7 @@ mod test {
         );
 
         let mut expression = str_to_expr_pb("@.~label == \"person\"".to_string()).unwrap();
-        preprocess_expression(&mut expression,&STORE_META.read().unwrap(), &mut plan_meta)
-            .unwrap();
+        preprocess_expression(&mut expression, &STORE_META.read().unwrap(), &mut plan_meta).unwrap();
         let opr = expression.operators.get(2).unwrap().clone();
         match opr.item.unwrap() {
             common_pb::expr_opr::Item::Const(val) => match val.item.unwrap() {
@@ -1128,8 +1129,7 @@ mod test {
 
         let mut expression =
             str_to_expr_pb("@.~label within [\"person\", \"software\"]".to_string()).unwrap();
-        preprocess_expression(&mut expression,&STORE_META.read().unwrap(), &mut plan_meta)
-            .unwrap();
+        preprocess_expression(&mut expression, &STORE_META.read().unwrap(), &mut plan_meta).unwrap();
         let opr = expression.operators.get(2).unwrap().clone();
         match opr.item.unwrap() {
             common_pb::expr_opr::Item::Const(val) => match val.item.unwrap() {
@@ -1143,8 +1143,7 @@ mod test {
 
         let mut expression =
             str_to_expr_pb("(@.name == \"person\") && @a.~label == \"knows\"".to_string()).unwrap();
-        preprocess_expression(&mut expression,&STORE_META.read().unwrap(), &mut plan_meta)
-            .unwrap();
+        preprocess_expression(&mut expression, &STORE_META.read().unwrap(), &mut plan_meta).unwrap();
         // person should not be mapped, as name is not a label key
         let opr = expression.operators.get(3).unwrap().clone();
         match opr.item.unwrap() {
@@ -1178,8 +1177,7 @@ mod test {
 
         // name maps to 1
         let mut expression = str_to_expr_pb("@a.name == \"John\"".to_string()).unwrap();
-        preprocess_expression(&mut expression,&STORE_META.read().unwrap(), &mut plan_meta)
-            .unwrap();
+        preprocess_expression(&mut expression, &STORE_META.read().unwrap(), &mut plan_meta).unwrap();
         let opr = expression.operators.get(0).unwrap().clone();
         match opr.item.unwrap() {
             common_pb::expr_opr::Item::Var(var) => {
@@ -1205,8 +1203,7 @@ mod test {
         );
 
         let mut expression = str_to_expr_pb("{@a.name, @b.id}".to_string()).unwrap();
-        preprocess_expression(&mut expression, &STORE_META.read().unwrap(), &mut plan_meta)
-            .unwrap();
+        preprocess_expression(&mut expression, &STORE_META.read().unwrap(), &mut plan_meta).unwrap();
         let opr = expression.operators.get(0).unwrap().clone();
         match opr.item.unwrap() {
             common_pb::expr_opr::Item::VarMap(vars) => {
