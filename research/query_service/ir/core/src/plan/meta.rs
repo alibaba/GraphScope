@@ -14,7 +14,7 @@
 //! limitations under the License.
 
 use std::collections::btree_map::Entry;
-use std::collections::{BTreeSet, BTreeMap};
+use std::collections::{BTreeMap, BTreeSet};
 use std::io;
 use std::sync::RwLock;
 

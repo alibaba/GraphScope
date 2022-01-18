@@ -603,6 +603,20 @@ impl AsLogical for common_pb::Value {
                                     .unwrap_or(INVALID_META_ID),
                             );
                         }
+                        common_pb::value::Item::StrArray(names) => {
+                            let ids = common_pb::I32Array {
+                                item: names
+                                    .item
+                                    .iter_mut()
+                                    .map(|name| {
+                                        schema
+                                            .get_table_id(name)
+                                            .unwrap_or(INVALID_META_ID)
+                                    })
+                                    .collect(),
+                            };
+                            *item = common_pb::value::Item::I32Array(ids);
+                        }
                         _ => {}
                     }
                 }
@@ -652,7 +666,7 @@ impl AsLogical for common_pb::Expression {
                         if count == 1 {
                             // means previous one is LabelKey
                             // The logical operator of Eq, Ne, Lt, Le, Gt, Ge
-                            if *l >= 0 && *l <= 5 {
+                            if *l >= 0 && *l <= 7 {
                                 count = 2; // indicates LabelKey <cmp>
                             }
                         } else {
@@ -894,7 +908,6 @@ mod test {
 
     use super::*;
     use crate::plan::meta::set_schema_simple;
-    use std::fs::File;
 
     #[test]
     fn test_logical_plan() {
@@ -1120,6 +1133,22 @@ mod test {
         match opr.item.unwrap() {
             common_pb::expr_opr::Item::Const(val) => match val.item.unwrap() {
                 common_pb::value::Item::I32(i) => assert_eq!(i, 0),
+                _ => panic!(),
+            },
+            _ => panic!(),
+        }
+
+        let mut expression =
+            str_to_expr_pb("@.~label within [\"person\", \"software\"]".to_string()).unwrap();
+        expression
+            .preprocess(&STORE_META.read().unwrap(), &mut plan_meta)
+            .unwrap();
+        let opr = expression.operators.get(2).unwrap().clone();
+        match opr.item.unwrap() {
+            common_pb::expr_opr::Item::Const(val) => match val.item.unwrap() {
+                common_pb::value::Item::I32Array(arr) => {
+                    assert_eq!(arr.item, vec![0, 1]);
+                }
                 _ => panic!(),
             },
             _ => panic!(),
