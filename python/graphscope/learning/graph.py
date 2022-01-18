@@ -79,11 +79,11 @@ class GraphDAGNode(DAGNode):
                 nodes=[("paper", features)])  # use "paper" node and features for training
                 edges=[("paper", "links", "paper")]  # use the `paper->links->papers` edge type for training
                 gen_labels=[
-                    # cuts "paper" nodes into 100 pieces, and uses random 75 pieces(75%) as traning dataset.
+                    # cuts "paper" nodes into 100 pieces, and uses random 75 pieces(75%) as traning dataset
                     ("train", "paper", 100, (0, 75)),
-                    # cuts "paper" nodes into 100 pieces, and uses random 10 pieces(10%) as validation dataset.
+                    # cuts "paper" nodes into 100 pieces, and uses random 10 pieces(10%) as validation dataset
                     ("val", "paper", 100, (75, 85)),
-                    # cuts "paper" nodes into 100 pieces, and uses random 15 pieces(15%) as test dataset.
+                    # cuts "paper" nodes into 100 pieces, and uses random 15 pieces(15%) as test dataset
                     ("test", "paper", 100, (85, 100)),
                 ]
             )
@@ -94,7 +94,6 @@ class GraphDAGNode(DAGNode):
                 edges=[("paper", "links", "paper")]  # use the `paper->links->papers` edge type for training
                 gen_labels=[
                     # cuts "paper" nodes into 100 pieces, and uses all pieces as traning dataset
-                    #   and just alias "paper" to "train".
                     ("train", "paper", 100, (0, 100)),
         """
         self._session = session
