@@ -52,51 +52,7 @@ class GraphDAGNode(DAGNode):
 
     def __init__(self, session, graph, nodes=None, edges=None, gen_labels=None):
         """
-        Args:
-            session (:class:`Session`): instance of GraphScope session.
-            graph (:class:`graphscope.framework.graph.GraphDAGNode`):
-                Source property graph.
-            nodes (list, optional): list of node types that will be used for gnn
-                training, the element of list can be `node_label` or
-                `(node_label, features)`. If the element of list is a tuple and
-                contains selected feature list, it would use the selected
-                feature list for training. if nodes is None, use all type of
-                nodes and features for the gnn training.
-            edges (list, optional): list of edge types that will be used for gnn
-                training. we use `(src_label, edge_label, dst_label)`
-                to specify one edge type. if edges is None, use all type of
-                edges for gnn training.
-            gen_labels (list, optional): Alias node and edge labels and extract
-                train/validation/test dataset from original graph for supervised
-                gnn training. We will explains the details in the examples.
-
-        Examples
-        --------
-        >>> # assumes the input graph contains one label node `paper` and one edge label `link`.
-        >>> features = ["weight", "name"] # use properties "weight" and "name" as features
-        >>> lg = sess.learing(
-                graph,
-                nodes=[("paper", features)])  # use "paper" node and features for training
-                edges=[("paper", "links", "paper")]  # use the `paper->links->papers` edge type for training
-                gen_labels=[
-                    # cuts "paper" nodes into 100 pieces, and uses random 75 pieces(75%) as traning dataset
-                    ("train", "paper", 100, (0, 75)),
-                    # cuts "paper" nodes into 100 pieces, and uses random 10 pieces(10%) as validation dataset
-                    ("val", "paper", 100, (75, 85)),
-                    # cuts "paper" nodes into 100 pieces, and uses random 15 pieces(15%) as test dataset
-                    ("test", "paper", 100, (85, 100)),
-                ]
-            )
-        Notes that the train, validation and test dataset are not overlapping. And for unsupervised learning
-        >>> lg = sess.learing(
-                graph,
-                nodes=[("paper", features)])  # use "paper" node and features for training
-                edges=[("paper", "links", "paper")]  # use the `paper->links->papers` edge type for training
-                gen_labels=[
-                    # cuts "paper" nodes into 100 pieces, and uses all pieces as traning dataset
-                    ("train", "paper", 100, (0, 100)),
-                ]
-            )
+            See params detail in :meth:`graphscope.Session.graphlearn`
         """
         self._session = session
         self._graph = graph

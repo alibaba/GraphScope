@@ -8,11 +8,6 @@ Graph Learning
 .. autosummary::
    "toctree: generated/
 
-.. autoclass:: GraphDAGNode
-    :special-members: __init__
-    :members: get_handle, V, E, close
-    :inherited-members:
-
 .. autoclass:: Graph
     :special-members: __init__
     :members: get_handle, V, E, close
