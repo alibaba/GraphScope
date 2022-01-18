@@ -22,41 +22,36 @@ option java_outer_classname = "OuterSchema";
 
 import "common.proto";
 
-message ColumnKey {
+message LabelMeta {
   int32 id = 1;
   string name = 2;
-  common.DataType data_type = 3;
 }
 
-message Entity {
-  // label id
-  int32 id  =  1;
-  // label name
-  string name = 2;
-  repeated ColumnKey columns = 4;
+message ColumnMeta {
+  LabelMeta key = 1;
+  common.DataType data_type = 2;
 }
 
-message Relation {
-  // source label id
-  int32 src_id = 1;
-  // source label name
-  string src_name = 2;
-  // destination label id
-  int32 dst_id = 3;
-  // destination label name
-  string dst_name = 4;
-  // edge label id
-  int32 id = 5;
-  // edge label name
-  string name = 6;
-  repeated ColumnKey columns = 7;
+message EntityMeta {
+  LabelMeta label = 1;
+  repeated ColumnMeta columns = 2;
+}
+
+message RelationMeta {
+  message LabelPair {
+    LabelMeta src = 1;
+    LabelMeta dst = 2;
+  }
+  LabelMeta label = 1;
+  repeated LabelPair entity_pairs = 2;
+  repeated ColumnMeta columns = 3;
 }
 
 message Schema {
   // the entities (vertices)
-  repeated Entity entities = 1;
+  repeated EntityMeta entities = 1;
   // the relations (edges)
-  repeated Relation rels = 2;
+  repeated RelationMeta relations = 2;
   // is the table (label)'s name mapped as an id
   bool is_table_id = 3;
   // is the column (property)'s name mapped as an id

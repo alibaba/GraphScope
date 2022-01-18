@@ -27,11 +27,8 @@ use ir_common::generated::common as common_pb;
 use vec_map::VecMap;
 
 use crate::error::IrResult;
-use crate::plan::meta::{PlanMeta, StoreMeta, STORE_META};
+use crate::plan::meta::{PlanMeta, StoreMeta, INVALID_META_ID, STORE_META};
 use crate::JsonIO;
-
-pub static INVALID_TABLE_ID: i32 = i32::MIN;
-pub static INVALID_COLUMN_ID: i32 = i32::MIN;
 
 /// An internal representation of the pb-[`Node`].
 ///
@@ -544,7 +541,7 @@ impl AsLogical for common_pb::Property {
                         if plan_meta.is_preprocess() && schema.is_column_id() {
                             *key = schema
                                 .get_column_id_from_pb(key)
-                                .unwrap_or(INVALID_COLUMN_ID)
+                                .unwrap_or(INVALID_META_ID)
                                 .into();
                         }
                     }
@@ -569,7 +566,7 @@ impl AsLogical for common_pb::Variable {
                             if plan_meta.is_preprocess() && schema.is_column_id() {
                                 *key = schema
                                     .get_column_id_from_pb(key)
-                                    .unwrap_or(INVALID_COLUMN_ID)
+                                    .unwrap_or(INVALID_META_ID)
                                     .into();
                             }
                         }
@@ -603,7 +600,7 @@ impl AsLogical for common_pb::Value {
                             *item = common_pb::value::Item::I32(
                                 schema
                                     .get_table_id(name)
-                                    .unwrap_or(INVALID_TABLE_ID),
+                                    .unwrap_or(INVALID_META_ID),
                             );
                         }
                         _ => {}
@@ -631,7 +628,7 @@ impl AsLogical for common_pb::Expression {
                                             if plan_meta.is_preprocess() && schema.is_column_id() {
                                                 *key = schema
                                                     .get_column_id_from_pb(key)
-                                                    .unwrap_or(INVALID_COLUMN_ID)
+                                                    .unwrap_or(INVALID_META_ID)
                                                     .into();
                                             }
                                         }
@@ -694,7 +691,7 @@ impl AsLogical for pb::QueryParams {
                 for table in self.table_names.iter_mut() {
                     *table = schema
                         .get_table_id_from_pb(table)
-                        .unwrap_or(INVALID_TABLE_ID)
+                        .unwrap_or(INVALID_META_ID)
                         .into();
                 }
             }
@@ -704,7 +701,7 @@ impl AsLogical for pb::QueryParams {
                 if plan_meta.is_preprocess() && schema.is_column_id() {
                     *column = schema
                         .get_column_id_from_pb(column)
-                        .unwrap_or(INVALID_COLUMN_ID)
+                        .unwrap_or(INVALID_META_ID)
                         .into();
                 }
             }
@@ -807,7 +804,7 @@ impl AsLogical for pb::IndexPredicate {
                                     if plan_meta.is_preprocess() && schema.is_column_id() {
                                         *key = schema
                                             .get_column_id_from_pb(key)
-                                            .unwrap_or(INVALID_COLUMN_ID)
+                                            .unwrap_or(INVALID_META_ID)
                                             .into();
                                     }
                                 }
@@ -897,6 +894,7 @@ mod test {
 
     use super::*;
     use crate::plan::meta::set_schema_simple;
+    use std::fs::File;
 
     #[test]
     fn test_logical_plan() {
@@ -1113,6 +1111,7 @@ mod test {
             vec![("knows".to_string(), 0), ("creates".to_string(), 1)],
             vec![("id".to_string(), 0), ("name".to_string(), 1), ("age".to_string(), 2)],
         );
+
         let mut expression = str_to_expr_pb("@.~label == \"person\"".to_string()).unwrap();
         expression
             .preprocess(&STORE_META.read().unwrap(), &mut plan_meta)
