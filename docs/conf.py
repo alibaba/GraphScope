@@ -48,7 +48,7 @@ breathe_debug_trace_directives = True
 breathe_debug_trace_doxygen_ids = True
 breathe_debug_trace_qualification = True
 
-autodoc_mock_imports = ['vineyard', "graphlearn"]
+autodoc_mock_imports = ["graphlearn"]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
