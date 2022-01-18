@@ -13,16 +13,15 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use std::convert::{TryFrom, TryInto};
+use std::convert::TryInto;
 
-use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::NameOrId;
 use pegasus::api::function::{DynIter, FlatMapFunction, FnResult};
 
 use crate::error::{FnExecError, FnGenError, FnGenResult};
 use crate::graph::element::{GraphElement, VertexOrEdge};
-use crate::graph::{Direction, QueryParams, Statement, ID};
+use crate::graph::{Direction, Statement, ID};
 use crate::process::operator::flatmap::FlatMapFuncGen;
 use crate::process::record::{Record, RecordExpandIter};
 
@@ -53,59 +52,30 @@ impl FlatMapFuncGen for algebra_pb::EdgeExpand {
         self,
     ) -> FnGenResult<Box<dyn FlatMapFunction<Record, Record, Target = DynIter<Record>>>> {
         let graph = crate::get_graph().ok_or(FnGenError::NullGraphError)?;
-        let expand_base = ExpandBase::try_from(self.base)?;
+        let start_v_tag = self
+            .v_tag
+            .map(|v_tag| v_tag.try_into())
+            .transpose()?;
+        let edge_or_end_v_tag = self
+            .alias
+            .map(|alias| alias.try_into())
+            .transpose()?;
+        let direction_pb: algebra_pb::edge_expand::Direction =
+            unsafe { ::std::mem::transmute(self.direction) };
+        let direction = Direction::from(direction_pb);
+        let query_params = self.params.try_into()?;
+        debug!(
+            "Runtime expand operator of edge with start_v_tag {:?}, edge_tag {:?}, direction {:?}, query_params {:?}",
+            start_v_tag, edge_or_end_v_tag, direction, query_params
+        );
         if self.is_edge {
-            let stmt = graph.prepare_explore_edge(expand_base.direction, &expand_base.query_params)?;
-            let edge_expand_operator = EdgeExpandOperator {
-                start_v_tag: expand_base.v_tag.clone(),
-                edge_or_end_v_tag: self
-                    .alias
-                    .map(|e_tag| e_tag.try_into())
-                    .transpose()?,
-                stmt,
-            };
-            debug!(
-                "Runtime expand operator of edge with start_v_tag {:?} and edge_tag {:?}",
-                edge_expand_operator.start_v_tag, edge_expand_operator.edge_or_end_v_tag
-            );
+            let stmt = graph.prepare_explore_edge(direction, &query_params)?;
+            let edge_expand_operator = EdgeExpandOperator { start_v_tag, edge_or_end_v_tag, stmt };
             Ok(Box::new(edge_expand_operator))
         } else {
-            let stmt = graph.prepare_explore_vertex(expand_base.direction, &expand_base.query_params)?;
-            let edge_expand_operator = EdgeExpandOperator {
-                start_v_tag: expand_base.v_tag,
-                edge_or_end_v_tag: self
-                    .alias
-                    .map(|v_tag| v_tag.try_into())
-                    .transpose()?,
-                stmt,
-            };
-            debug!(
-                "Runtime expand operator of vertex with start_v_tag {:?} and end_v_tag {:?}",
-                edge_expand_operator.start_v_tag, edge_expand_operator.edge_or_end_v_tag
-            );
+            let stmt = graph.prepare_explore_vertex(direction, &query_params)?;
+            let edge_expand_operator = EdgeExpandOperator { start_v_tag, edge_or_end_v_tag, stmt };
             Ok(Box::new(edge_expand_operator))
-        }
-    }
-}
-
-pub struct ExpandBase {
-    v_tag: Option<NameOrId>,
-    direction: Direction,
-    query_params: QueryParams,
-}
-
-impl TryFrom<Option<algebra_pb::ExpandBase>> for ExpandBase {
-    type Error = ParsePbError;
-
-    fn try_from(expand_base: Option<algebra_pb::ExpandBase>) -> Result<Self, Self::Error> {
-        if let Some(expand_base) = expand_base {
-            let v_tag = if let Some(tag) = expand_base.v_tag { Some(tag.try_into()?) } else { None };
-            let direction: algebra_pb::expand_base::Direction =
-                unsafe { ::std::mem::transmute(expand_base.direction) };
-            let query_params = expand_base.params.try_into()?;
-            Ok(ExpandBase { v_tag, direction: Direction::from(direction), query_params })
-        } else {
-            Err(ParsePbError::EmptyFieldError("empty expand_base pb".to_string()))
         }
     }
 }
