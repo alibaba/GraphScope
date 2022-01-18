@@ -26,6 +26,7 @@ use ir_common::NameOrId;
 use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
 pub use vertex::Vertex;
 
+use crate::graph::element::path::GraphPath;
 use crate::graph::property::{DefaultDetails, DynDetails};
 use crate::graph::ID;
 
@@ -62,6 +63,7 @@ impl<'a> Element for BorrowObject<'a> {
 }
 
 mod edge;
+mod path;
 mod vertex;
 
 #[derive(Clone, Debug)]
