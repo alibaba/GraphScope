@@ -474,7 +474,7 @@ pub extern "C" fn set_schema(cstr_json: *const c_char) -> ResultCode {
 #[no_mangle]
 pub extern "C" fn init_logical_plan(is_preprocess: bool) -> *const c_void {
     let mut plan = Box::new(LogicalPlan::default());
-    plan.plan_meta.set_preprocess(is_preprocess);
+    plan.meta.set_preprocess(is_preprocess);
     Box::into_raw(plan) as *const c_void
 }
 
@@ -516,7 +516,7 @@ pub extern "C" fn build_physical_plan(
     ptr_plan: *const c_void, num_workers: u32, num_servers: u32,
 ) -> FfiJobBuffer {
     let plan = unsafe { Box::from_raw(ptr_plan as *mut LogicalPlan) };
-    let mut plan_meta = plan.plan_meta.clone();
+    let mut plan_meta = plan.meta.clone();
     plan_meta.set_partition(num_workers > 1 || num_servers > 1);
     let mut builder = JobBuilder::default();
     let build_result = plan.add_job_builder(&mut builder, &mut plan_meta);

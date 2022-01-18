@@ -544,7 +544,7 @@ mod test {
         plan.append_operator_as_node(build_edgexpd(true, vec![], None).into(), vec![0])
             .unwrap();
         let mut job_builder = JobBuilder::default();
-        let mut plan_meta = plan.plan_meta.clone();
+        let mut plan_meta = plan.meta.clone();
         plan.add_job_builder(&mut job_builder, &mut plan_meta)
             .unwrap();
 
@@ -557,7 +557,7 @@ mod test {
         assert_eq!(job_builder, expected_builder);
 
         let mut job_builder = JobBuilder::default();
-        let mut plan_meta = plan.plan_meta.clone();
+        let mut plan_meta = plan.meta.clone();
         plan_meta.set_partition(true);
         plan.add_job_builder(&mut job_builder, &mut plan_meta)
             .unwrap();
@@ -583,7 +583,7 @@ mod test {
         plan.append_operator_as_node(build_select("@.creationDate == 20220101").into(), vec![1])
             .unwrap();
         let mut job_builder = JobBuilder::default();
-        let mut plan_meta = plan.plan_meta.clone();
+        let mut plan_meta = plan.meta.clone();
         plan_meta.set_partition(true);
         plan.add_job_builder(&mut job_builder, &mut plan_meta)
             .unwrap();
@@ -614,7 +614,7 @@ mod test {
         plan.append_operator_as_node(build_select("@.creationDate == 20220101").into(), vec![1])
             .unwrap();
         let mut job_builder = JobBuilder::default();
-        let mut plan_meta = plan.plan_meta.clone();
+        let mut plan_meta = plan.meta.clone();
         plan.add_job_builder(&mut job_builder, &mut plan_meta)
             .unwrap();
 
@@ -632,7 +632,7 @@ mod test {
         assert_eq!(job_builder, expected_builder);
 
         let mut job_builder = JobBuilder::default();
-        let mut plan_meta = plan.plan_meta.clone();
+        let mut plan_meta = plan.meta.clone();
         plan_meta.set_partition(true);
         plan.add_job_builder(&mut job_builder, &mut plan_meta)
             .unwrap();
@@ -675,7 +675,7 @@ mod test {
         plan.append_operator_as_node(build_project("{@a.name, @a.id, @a.age}").into(), vec![1])
             .unwrap();
         let mut job_builder = JobBuilder::default();
-        let mut plan_meta = plan.plan_meta.clone();
+        let mut plan_meta = plan.meta.clone();
         plan.add_job_builder(&mut job_builder, &mut plan_meta)
             .unwrap();
 
@@ -697,7 +697,7 @@ mod test {
         assert_eq!(job_builder, expected_builder);
 
         let mut job_builder = JobBuilder::default();
-        let mut plan_meta = plan.plan_meta.clone();
+        let mut plan_meta = plan.meta.clone();
         plan_meta.set_partition(true);
         plan.add_job_builder(&mut job_builder, &mut plan_meta)
             .unwrap();
@@ -747,7 +747,7 @@ mod test {
             .unwrap();
 
         let mut job_builder = JobBuilder::default();
-        let mut plan_meta = plan.plan_meta.clone();
+        let mut plan_meta = plan.meta.clone();
         plan.add_job_builder(&mut job_builder, &mut plan_meta)
             .unwrap();
 
