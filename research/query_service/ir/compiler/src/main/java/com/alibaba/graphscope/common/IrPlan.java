@@ -192,22 +192,33 @@ public class IrPlan implements Closeable {
             @Override
             public Pointer apply(InterOpBase baseOp) {
                 ProjectOp op = (ProjectOp) baseOp;
-                Optional<OpArg> exprOpt = op.getSingleExpr();
+                Optional<OpArg> exprOpt = op.getExprWithAlias();
                 if (!exprOpt.isPresent()) {
-                    throw new InterOpIllegalArgException(baseOp.getClass(), "singleExpr", "not present");
+                    throw new InterOpIllegalArgException(baseOp.getClass(), "exprWithAlias", "not present");
                 }
-                String expr = (String) exprOpt.get().getArg();
-                FfiAlias.ByValue alias = ArgUtils.asNoneAlias();
+                List<Pair> exprWithAlias = (List<Pair>) exprOpt.get().getArg();
                 Optional<OpArg> aliasOpt = baseOp.getAlias();
                 if (aliasOpt.isPresent()) {
-                    alias = (FfiAlias.ByValue) aliasOpt.get().getArg();
+                    // replace with the query given alias
+                    if (exprWithAlias.size() == 1) {
+                        Pair firstEntry = exprWithAlias.get(0);
+                        exprWithAlias.set(0, firstEntry.setAt1(aliasOpt.get().getArg()));
+                    }
+                    if (exprWithAlias.size() > 1) {
+                        throw new InterOpIllegalArgException(baseOp.getClass(),
+                                "exprWithAlias", "multiple columns as a single alias is unsupported");
+                    }
                 }
                 // append always and sink by parameters
                 Pointer ptrProject = irCoreLib.initProjectOperator(true);
-                ResultCode resultCode = irCoreLib.addProjectExprAlias(ptrProject, expr, alias);
-                if (resultCode != ResultCode.Success) {
-                    throw new InterOpIllegalArgException(baseOp.getClass(), "singleExpr", "append returns " + resultCode.name());
-                }
+                exprWithAlias.forEach(p -> {
+                    String expr = (String) p.getValue0();
+                    FfiAlias.ByValue alias = (FfiAlias.ByValue) p.getValue1();
+                    ResultCode resultCode = irCoreLib.addProjectExprAlias(ptrProject, expr, alias);
+                    if (resultCode != ResultCode.Success) {
+                        throw new InterOpIllegalArgException(baseOp.getClass(), "exprWithAlias", "append returns " + resultCode.name());
+                    }
+                });
                 return ptrProject;
             }
         },
@@ -267,6 +278,10 @@ public class IrPlan implements Closeable {
                 groupValues.forEach(p -> {
                     irCoreLib.addGroupbyAggFn(ptrGroup, ArgUtils.asFfiAggFn(p));
                 });
+                Optional<OpArg> aliasOpt = baseOp.getAlias();
+                if (aliasOpt.isPresent()) {
+                    throw new InterOpIllegalArgException(baseOp.getClass(), "groupKeys+groupValues", "the query given alias is unsupported");
+                }
                 return ptrGroup;
             }
         },
@@ -384,7 +399,8 @@ public class IrPlan implements Closeable {
     }
 
     private void setPostAlias(InterOpBase base) {
-        if (!(base instanceof ScanFusionOp || base instanceof ExpandOp || base instanceof ProjectOp) && base.getAlias().isPresent()) {
+        if (!(base instanceof ScanFusionOp || base instanceof ExpandOp || base instanceof ProjectOp || base instanceof GroupOp)
+                && base.getAlias().isPresent()) {
             FfiAlias.ByValue ffiAlias = (FfiAlias.ByValue) base.getAlias().get().getArg();
             Pointer ptrAs = irCoreLib.initAsOperator();
             ResultCode asResult = irCoreLib.setAsAlias(ptrAs, ffiAlias);

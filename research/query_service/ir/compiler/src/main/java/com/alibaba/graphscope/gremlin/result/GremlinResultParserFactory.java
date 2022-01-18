@@ -1,6 +1,8 @@
 package com.alibaba.graphscope.gremlin.result;
 
 import com.alibaba.graphscope.gaia.proto.IrResult;
+import com.alibaba.graphscope.gaia.proto.OuterExpression;
+import com.alibaba.graphscope.gremlin.OpArgTransformFactory;
 import com.alibaba.graphscope.gremlin.exception.GremlinResultParserException;
 import org.apache.tinkerpop.gremlin.structure.Element;
 
@@ -27,46 +29,57 @@ public enum GremlinResultParserFactory implements GremlinResultParser {
             return ParserUtils.parseElement(element);
         }
     },
-    VALUE_MAP {
-        @Override
-        public Map parseFrom(IrResult.Results results) {
-            IrResult.Element element = ParserUtils.getHeadEntry(results).getElement();
-            Map<List, Object> parseElement = (Map<List, Object>) ParserUtils.parseElement(element);
-            Map<String, Object> data = new HashMap<>();
-            // remove head
-            parseElement.forEach((k, v) -> {
-                List<String> keys = (List<String>) k;
-                data.put(keys.get(1), v);
-            });
-            return data;
-        }
-    },
-    PROJECT_TAG {
+    PROJECT_VALUE {
+        // values("name") -> key: name, value: "marko"
+        // valueMap("name") -> key: {name}, value: {name, "marko"}
+        // select("a").by("name") -> key: a, value: "marko"
+        // select("a", "b").by("name") -> key: a, value: "marko"; key: b, value: "josh"
+        // select("a", "b").by(valueMap("name")) -> key: a, value: {name, "marko"}; key: b, value: {name, "josh"}
         @Override
         public Object parseFrom(IrResult.Results results) {
-            IrResult.Element element = ParserUtils.getHeadEntry(results).getElement();
-            Object parseElement = ParserUtils.parseElement(element);
-            if (parseElement instanceof Map) {
-                Map<String, Object> data = new HashMap<>();
-                Map<List, Object> projectTags = (Map<List, Object>) parseElement;
-                projectTags.forEach((k, v) -> {
-                    String tag = (String) k.get(0);
-                    String property = (String) k.get(1);
-                    if (tag.isEmpty() && property.isEmpty()) {
-                        throw new GremlinResultParserException("string array inside pair key is empty");
-                    }
-                    if (tag.isEmpty()) {
-                        data.put(property, v);
-                    } else if (property.isEmpty()) {
-                        data.put(tag, v);
-                    } else {
-                        Map tagEntry = (Map) data.computeIfAbsent(tag, k1 -> new HashMap<>());
+            IrResult.Record record = results.getRecord();
+            Map<String, Object> projectResult = new HashMap<>();
+            record.getColumnsList().forEach(column -> {
+                String tag = getTagFromColumnKey(column.getNameOrId());
+                Object parseElement = ParserUtils.parseElement(column.getEntry().getElement());
+                if (parseElement instanceof Map) {
+                    Map<List, Object> projectTags = (Map<List, Object>) parseElement;
+                    projectTags.forEach((k, v) -> {
+                        String property = (String) k.get(1);
+                        if (property.isEmpty()) {
+                            throw new GremlinResultParserException("map value should have property key");
+                        }
+                        Map tagEntry = (Map) projectResult.computeIfAbsent(tag, k1 -> new HashMap<>());
                         tagEntry.put(property, v);
-                    }
-                });
-                return data;
+                    });
+                } else {
+                    projectResult.put(tag, parseElement);
+                }
+            });
+            if (projectResult.size() == 1) {
+                return projectResult.entrySet().iterator().next().getValue();
             } else {
-                return parseElement;
+                return projectResult;
+            }
+        }
+
+        // project_a
+        // a_name
+        // name
+        private String getTagFromColumnKey(OuterExpression.NameOrId columnKey) {
+            String key = columnKey.getName();
+            String[] tagProperty = key.split("_");
+            if (tagProperty.length == 0) {
+                throw new GremlinResultParserException("column key " + key + " is invalid");
+            }
+            // project self
+            if (key.startsWith(OpArgTransformFactory.PROJECT_SELF_PREFIX)) {
+                return tagProperty[1];
+            } else if (tagProperty.length == 1) {
+                // head
+                return "";
+            } else {
+                return tagProperty[0];
             }
         }
     },
@@ -91,5 +104,5 @@ public enum GremlinResultParserFactory implements GremlinResultParser {
             });
             return data;
         }
-    }
+    };
 }

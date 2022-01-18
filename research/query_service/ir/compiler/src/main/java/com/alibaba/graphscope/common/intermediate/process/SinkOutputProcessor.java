@@ -40,8 +40,17 @@ public class SinkOutputProcessor implements InterOpProcessor {
             InterOpBase cur = collections.get(i);
             if (cur instanceof DedupOp || cur instanceof LimitOp || cur instanceof OrderOp || cur instanceof SelectOp) {
                 continue;
-            } else if (cur instanceof ExpandOp || cur instanceof ProjectOp || cur instanceof ScanFusionOp) {
+            } else if (cur instanceof ExpandOp || cur instanceof ScanFusionOp) {
                 sinkArg = new SinkArg(true);
+                break;
+            } else if (cur instanceof ProjectOp) {
+                ProjectOp op = (ProjectOp) cur;
+                sinkArg = new SinkArg(false);
+                List<Pair> exprWithAlias = (List<Pair>) op.getExprWithAlias().get().getArg();
+                for (Pair pair : exprWithAlias) {
+                    FfiAlias.ByValue alias = (FfiAlias.ByValue) pair.getValue1();
+                    sinkArg.addColumnName(alias.alias);
+                }
                 break;
             } else if (cur instanceof GroupOp) {
                 GroupOp op = (GroupOp) cur;

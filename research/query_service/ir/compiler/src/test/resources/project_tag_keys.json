@@ -75,7 +75,11 @@
                     }
                   ]
                 },
-                "alias": null
+                "alias": {
+                  "item": {
+                    "Name": "a_{name, id}"
+                  }
+                }
               }
             ],
             "is_append": true

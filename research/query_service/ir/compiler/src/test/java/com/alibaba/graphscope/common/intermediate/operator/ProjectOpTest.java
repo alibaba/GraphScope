@@ -16,15 +16,20 @@
 
 package com.alibaba.graphscope.common.intermediate.operator;
 
+import com.alibaba.graphscope.common.jna.type.FfiAlias;
 import com.alibaba.graphscope.common.utils.FileUtils;
 import com.alibaba.graphscope.common.IrPlan;
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.jna.type.FfiScanOpt;
+import org.javatuples.Pair;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.function.Function;
 
 public class ProjectOpTest {
@@ -33,8 +38,12 @@ public class ProjectOpTest {
     @Test
     public void projectTagTest() throws IOException {
         ProjectOp op = new ProjectOp();
+
         String projectExpr = "@a";
-        op.setSingleExpr(new OpArg(projectExpr, Function.identity()));
+        FfiAlias.ByValue alias = ArgUtils.asFfiAlias("project_a", false);
+        List<Pair> exprWithAlias = Collections.singletonList(Pair.with(projectExpr, alias));
+
+        op.setExprWithAlias(new OpArg(exprWithAlias, Function.identity()));
         irPlan.appendInterOp(op);
         Assert.assertEquals(FileUtils.readJsonFromResource("project_tag.json"), irPlan.getPlanAsJson());
     }
@@ -47,19 +56,26 @@ public class ProjectOpTest {
         irPlan.appendInterOp(scanOp);
 
         ProjectOp op = new ProjectOp();
-        String projectExpr = "@a";
         op.setAlias(new OpArg(ArgUtils.asFfiAlias("b", true), Function.identity()));
-        op.setSingleExpr(new OpArg(projectExpr, Function.identity()));
-        irPlan.appendInterOp(op);
 
+        String projectExpr = "@a";
+        FfiAlias.ByValue alias = ArgUtils.asFfiAlias("project_a", false);
+        List<Pair> exprWithAlias = Arrays.asList(Pair.with(projectExpr, alias));
+
+        op.setExprWithAlias(new OpArg(exprWithAlias, Function.identity()));
+        irPlan.appendInterOp(op);
         Assert.assertEquals(FileUtils.readJsonFromResource("project_as.json"), irPlan.getPlanAsJson());
     }
 
     @Test
     public void projectKeyTest() throws IOException {
         ProjectOp op = new ProjectOp();
+
         String projectExpr = "@.name";
-        op.setSingleExpr(new OpArg(projectExpr, Function.identity()));
+        FfiAlias.ByValue alias = ArgUtils.asFfiAlias("name", false);
+        List<Pair> exprWithAlias = Collections.singletonList(Pair.with(projectExpr, alias));
+
+        op.setExprWithAlias(new OpArg(exprWithAlias, Function.identity()));
         irPlan.appendInterOp(op);
         Assert.assertEquals(FileUtils.readJsonFromResource("project_key.json"), irPlan.getPlanAsJson());
     }
@@ -72,10 +88,13 @@ public class ProjectOpTest {
         irPlan.appendInterOp(scanOp);
 
         ProjectOp op = new ProjectOp();
-        String projectExpr = "@a.name";
-        op.setSingleExpr(new OpArg(projectExpr, Function.identity()));
-        irPlan.appendInterOp(op);
 
+        String projectExpr = "@a.name";
+        FfiAlias.ByValue alias = ArgUtils.asFfiAlias("a_name", false);
+        List<Pair> exprWithAlias = Collections.singletonList(Pair.with(projectExpr, alias));
+
+        op.setExprWithAlias(new OpArg(exprWithAlias, Function.identity()));
+        irPlan.appendInterOp(op);
         Assert.assertEquals(FileUtils.readJsonFromResource("project_tag_key.json"), irPlan.getPlanAsJson());
     }
 
@@ -87,10 +106,13 @@ public class ProjectOpTest {
         irPlan.appendInterOp(scanOp);
 
         ProjectOp op = new ProjectOp();
-        String projectExpr = "{@a.name, @a.id}";
-        op.setSingleExpr(new OpArg(projectExpr, Function.identity()));
-        irPlan.appendInterOp(op);
 
+        String projectExpr = "{@a.name, @a.id}";
+        FfiAlias.ByValue alias = ArgUtils.asFfiAlias("a_{name, id}", false);
+        List<Pair> exprWithAlias = Collections.singletonList(Pair.with(projectExpr, alias));
+
+        op.setExprWithAlias(new OpArg(exprWithAlias, Function.identity()));
+        irPlan.appendInterOp(op);
         Assert.assertEquals(FileUtils.readJsonFromResource("project_tag_keys.json"), irPlan.getPlanAsJson());
     }
 
