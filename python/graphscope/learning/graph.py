@@ -79,7 +79,14 @@ class GraphDAGNode(DAGNode):
                     ("test", "paper", 100, (85, 100)), # cuts "paper" nodes into 100 pieces, and uses random 15 pieces(15%) as test dataset.
                 ]
             )
-        Notes that the train, validation and test dataset are not overlapping.
+        Notes that the train, validation and test dataset are not overlapping. For unsupervised learning
+        >>> lg = sess.learing(
+                graph,
+                nodes=[("paper", features)])  # use "paper" node and features for training
+                edges=[("paper", "links", "paper")]  # use the `paper->links->papers` edge type for training
+                gen_labels=[
+                    ("train", "paper", 100, (0, 100)), # cuts "paper" nodes into 100 pieces, and uses all pieces as traning dataset and just alias "paper" to "train".
+                ]
         """
         self._session = session
         self._graph = graph
