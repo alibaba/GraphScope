@@ -1406,16 +1406,14 @@ mod test {
 
         // .out().as("here")
         let expand = pb::EdgeExpand {
-            base: Some(pb::ExpandBase {
-                v_tag: Some("a".into()),
-                direction: 0,
-                params: Some(pb::QueryParams {
-                    table_names: vec![],
-                    columns: vec![],
-                    limit: None,
-                    predicate: None,
-                    requirements: vec![],
-                }),
+            v_tag: Some("a".into()),
+            direction: 0,
+            params: Some(pb::QueryParams {
+                table_names: vec![],
+                columns: vec![],
+                limit: None,
+                predicate: None,
+                requirements: vec![],
             }),
             is_edge: false,
             alias: Some("here".into()),
@@ -1526,16 +1524,14 @@ mod test {
 
         // outE("knows").as('b').has("date", 20200101)
         let expand = pb::EdgeExpand {
-            base: Some(pb::ExpandBase {
-                v_tag: Some("a".into()),
-                direction: 0,
-                params: Some(pb::QueryParams {
-                    table_names: vec!["knows".into()],
-                    columns: vec![],
-                    limit: None,
-                    predicate: str_to_expr_pb("@.date == 20200101".to_string()).ok(),
-                    requirements: vec![],
-                }),
+            v_tag: Some("a".into()),
+            direction: 0,
+            params: Some(pb::QueryParams {
+                table_names: vec!["knows".into()],
+                columns: vec![],
+                limit: None,
+                predicate: str_to_expr_pb("@.date == 20200101".to_string()).ok(),
+                requirements: vec![],
             }),
             is_edge: true,
             alias: Some("b".into()),

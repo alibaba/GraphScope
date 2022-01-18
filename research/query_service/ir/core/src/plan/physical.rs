@@ -495,16 +495,14 @@ mod test {
         is_edge: bool, columns: Vec<common_pb::NameOrId>, alias: Option<common_pb::NameOrId>,
     ) -> pb::EdgeExpand {
         pb::EdgeExpand {
-            base: Some(pb::ExpandBase {
-                v_tag: None,
-                direction: 0,
-                params: Some(pb::QueryParams {
-                    table_names: vec![],
-                    columns,
-                    limit: None,
-                    predicate: None,
-                    requirements: vec![],
-                }),
+            v_tag: None,
+            direction: 0,
+            params: Some(pb::QueryParams {
+                table_names: vec![],
+                columns,
+                limit: None,
+                predicate: None,
+                requirements: vec![],
             }),
             is_edge,
             alias,
@@ -785,16 +783,14 @@ mod test {
             predicate: Some(str_to_expr_pb("@.id == 10".to_string()).unwrap()),
         });
         let expand_opr = pb::logical_plan::Operator::from(pb::EdgeExpand {
-            base: Some(pb::ExpandBase {
-                v_tag: None,
-                direction: 0,
-                params: Some(pb::QueryParams {
-                    table_names: vec![common_pb::NameOrId::from("knows".to_string())],
-                    columns: vec![],
-                    limit: None,
-                    predicate: None,
-                    requirements: vec![],
-                }),
+            v_tag: None,
+            direction: 0,
+            params: Some(pb::QueryParams {
+                table_names: vec![common_pb::NameOrId::from("knows".to_string())],
+                columns: vec![],
+                limit: None,
+                predicate: None,
+                requirements: vec![],
             }),
             is_edge: false,
             alias: None,
@@ -931,7 +927,9 @@ mod test {
             idx_predicate: None,
         });
         let expand_opr = pb::logical_plan::Operator::from(pb::EdgeExpand {
-            base: Some(pb::ExpandBase { v_tag: None, direction: 0, params: None }),
+            v_tag: None,
+            direction: 0,
+            params: None,
             is_edge: false,
             alias: None,
         });
