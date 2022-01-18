@@ -125,7 +125,7 @@ impl QueryParams {
         mut self, required_properties_pb: Vec<common_pb::NameOrId>,
     ) -> Result<Self, ParsePbError> {
         // TODO: Specify whether we need all properties or None properties
-        // we assume that empty required_properties_pb vec indicates all properties needed
+        // TODO: for now, we assume that empty required_properties_pb vec indicates all properties needed
         self.props = Some(
             required_properties_pb
                 .into_iter()
