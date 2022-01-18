@@ -22,4 +22,4 @@ Session Functions
    graphscope.get_option
    graphscope.g
    graphscope.gremlin
-   graphscope.learning
+   graphscope.graphlearn
