@@ -749,10 +749,8 @@ impl AsLogical for pb::Scan {
 
 impl AsLogical for pb::EdgeExpand {
     fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
-        if let Some(expand) = self.base.as_mut() {
-            if let Some(params) = expand.params.as_mut() {
-                preprocess_params(params, meta, plan_meta)?;
-            }
+        if let Some(params) = self.params.as_mut() {
+            preprocess_params(params, meta, plan_meta)?;
         }
         Ok(())
     }

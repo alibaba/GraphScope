@@ -159,54 +159,53 @@ impl AsPhysical for pb::EdgeExpand {
         let mut is_adding_auxilia = false;
 
         let mut auxilia = pb::Auxilia { params: None, alias: None };
-        if let Some(base) = &mut self.base {
-            if let Some(params) = &mut base.params {
-                if let Some(node_meta) = plan_meta.curr_node_meta() {
-                    let columns = node_meta.get_columns();
-                    if !columns.is_empty() {
-                        is_adding_auxilia = true;
-                        params.columns.clear();
-                        params.columns.extend(
-                            columns
-                                .iter()
-                                .map(|tag| common_pb::NameOrId::from(tag.clone())),
-                        );
-                    }
-                }
-                if plan_meta.is_partition() && !self.is_edge {
-                    // Vertex expansion
-                    // Move everything to Auxilia
-                    auxilia.params = Some(params.clone());
-                    auxilia.alias = self.alias.clone();
+        if let Some(params) = &mut self.params {
+            if let Some(node_meta) = plan_meta.curr_node_meta() {
+                let columns = node_meta.get_columns();
+                if !columns.is_empty() {
+                    is_adding_auxilia = true;
                     params.columns.clear();
-                    params.predicate = None;
-                    self.alias = None;
-                } else {
-                    is_adding_auxilia = false;
+                    params.columns.extend(
+                        columns
+                            .iter()
+                            .map(|tag| common_pb::NameOrId::from(tag.clone())),
+                    );
                 }
+            }
+            if plan_meta.is_partition() && !self.is_edge {
+                // Vertex expansion
+                // Move everything to Auxilia
+                auxilia.params = Some(params.clone());
+                auxilia.alias = self.alias.clone();
+                params.columns.clear();
+                params.predicate = None;
+                self.alias = None;
             } else {
-                if let Some(node_meta) = plan_meta.curr_node_meta() {
-                    let columns = node_meta.get_columns();
-                    if !columns.is_empty() {
-                        if !self.is_edge {
-                            // Vertex expansion
-                            // Move everything to Auxilia
-                            auxilia.params = Some(pb::QueryParams {
-                                table_names: vec![],
-                                columns: columns
-                                    .iter()
-                                    .map(|tag| common_pb::NameOrId::from(tag.clone()))
-                                    .collect(),
-                                limit: None,
-                                predicate: None,
-                                requirements: vec![],
-                            });
-                            is_adding_auxilia = true;
-                        }
+                is_adding_auxilia = false;
+            }
+        } else {
+            if let Some(node_meta) = plan_meta.curr_node_meta() {
+                let columns = node_meta.get_columns();
+                if !columns.is_empty() {
+                    if !self.is_edge {
+                        // Vertex expansion
+                        // Move everything to Auxilia
+                        auxilia.params = Some(pb::QueryParams {
+                            table_names: vec![],
+                            columns: columns
+                                .iter()
+                                .map(|tag| common_pb::NameOrId::from(tag.clone()))
+                                .collect(),
+                            limit: None,
+                            predicate: None,
+                            requirements: vec![],
+                        });
+                        is_adding_auxilia = true;
                     }
                 }
             }
         }
+
         simple_add_job_builder(
             builder,
             &pb::logical_plan::Operator::from(self.clone()),
@@ -383,9 +382,7 @@ impl AsPhysical for LogicalPlan {
                     let node_ref = curr_node_opt.as_ref().unwrap().borrow();
                     match (&prev_ref.opr.opr, &node_ref.opr.opr) {
                         (_, Some(Edge(edgexpd))) => {
-                            let key_pb = common_pb::NameOrIdKey {
-                                key: edgexpd.base.as_ref().unwrap().v_tag.clone(),
-                            };
+                            let key_pb = common_pb::NameOrIdKey { key: edgexpd.v_tag.clone() };
                             builder.repartition(key_pb.encode_to_vec());
                         }
                         _ => {}
