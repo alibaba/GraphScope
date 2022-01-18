@@ -1208,7 +1208,7 @@ class Session(object):
                 nodes=[("paper", features)])  # use "paper" node and features for training
                 edges=[("paper", "links", "paper")]  # use the `paper->links->papers` edge type for training
                 gen_labels=[
-                    # cuts "paper" nodes into 100 pieces, and uses all pieces as traning dataset
+                    # cuts "paper" nodes into 100 pieces, and uses all pieces as training dataset
                     ("train", "paper", 100, (0, 100)),
                 ]
             )
