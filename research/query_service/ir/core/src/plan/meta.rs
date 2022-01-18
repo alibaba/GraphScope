@@ -137,10 +137,6 @@ impl Schema {
         })
     }
 
-    pub fn get_table_name(&self, id: i32, ty: KeyType) -> Option<&String> {
-        self.id_name_rev.get(&(ty, id))
-    }
-
     pub fn get_column_id(&self, name: &str) -> Option<i32> {
         self.column_map.get(name).cloned()
     }
@@ -152,15 +148,15 @@ impl Schema {
         })
     }
 
-    pub fn get_column_name(&self, id: i32) -> Option<&String> {
-        self.id_name_rev.get(&(KeyType::Column, id))
+    pub fn get_name(&self, id: i32, ty: KeyType) -> Option<&String> {
+        self.id_name_rev.get(&(ty, id))
     }
 
     pub fn get_relation_labels(&self, relation: &NameOrId) -> Option<&Vec<(LabelMeta, LabelMeta)>> {
         match relation {
             NameOrId::Str(name) => self.relation_labels.get(name),
             NameOrId::Id(id) => self
-                .get_table_name(*id, KeyType::Relation)
+                .get_name(*id, KeyType::Relation)
                 .and_then(|name| self.relation_labels.get(name)),
         }
     }
