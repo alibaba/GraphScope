@@ -181,8 +181,8 @@ traversalMethod_select
 
 // by(valueMap())
 traversalMethod_selectby
-    : 'by'  LPAREN stringLiteral RPAREN
-    | 'by' LPAREN traversalMethod_valueMap RPAREN
+    : 'by' LPAREN stringLiteral RPAREN
+    | 'by' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_valueMap RPAREN
     ;
 
 traversalMethod_selectby_list
@@ -208,14 +208,14 @@ traversalMethod_groupCount
 // group().by(values('name').as('key'))
 traversalMethod_group_keyby
     : 'by' LPAREN stringLiteral RPAREN
-    | 'by' LPAREN traversalMethod_values (DOT traversalMethod_as)? RPAREN
+    | 'by' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_values (DOT traversalMethod_as)? RPAREN
     ;
 
 // group().by(...).by(fold().as("value"))
 // group().by(...).by(count())
 // group().by(...).by(count().as("value"))
 traversalMethod_group_valueby
-    : 'by' LPAREN traversalMethod_aggregate_func (DOT traversalMethod_as)? RPAREN
+    : 'by' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_aggregate_func (DOT traversalMethod_as)? RPAREN
     ;
 
 traversalMethod_aggregate_func

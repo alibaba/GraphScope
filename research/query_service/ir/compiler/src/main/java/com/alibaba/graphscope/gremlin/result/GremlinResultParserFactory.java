@@ -1,10 +1,13 @@
 package com.alibaba.graphscope.gremlin.result;
 
+import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.alibaba.graphscope.gaia.proto.OuterExpression;
 import com.alibaba.graphscope.gremlin.OpArgTransformFactory;
 import com.alibaba.graphscope.gremlin.exception.GremlinResultParserException;
 import org.apache.tinkerpop.gremlin.structure.Element;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.List;
@@ -45,18 +48,24 @@ public enum GremlinResultParserFactory implements GremlinResultParser {
                 if (parseElement instanceof Map) {
                     Map<List, Object> projectTags = (Map<List, Object>) parseElement;
                     projectTags.forEach((k, v) -> {
-                        String property = (String) k.get(1);
-                        if (property.isEmpty()) {
-                            throw new GremlinResultParserException("map value should have property key");
+                        if (!(v instanceof EmptyValue)) {
+                            String property = (String) k.get(1);
+                            if (property.isEmpty()) {
+                                throw new GremlinResultParserException("map value should have property key");
+                            }
+                            Map tagEntry = (Map) projectResult.computeIfAbsent(tag, k1 -> new HashMap<>());
+                            tagEntry.put(property, v);
                         }
-                        Map tagEntry = (Map) projectResult.computeIfAbsent(tag, k1 -> new HashMap<>());
-                        tagEntry.put(property, v);
                     });
                 } else {
-                    projectResult.put(tag, parseElement);
+                    if (!(parseElement instanceof EmptyValue)) {
+                        projectResult.put(tag, parseElement);
+                    }
                 }
             });
-            if (projectResult.size() == 1) {
+            if (projectResult.isEmpty()) {
+                return EmptyValue.INSTANCE;
+            } else if (projectResult.size() == 1) {
                 return projectResult.entrySet().iterator().next().getValue();
             } else {
                 return projectResult;
@@ -85,24 +94,39 @@ public enum GremlinResultParserFactory implements GremlinResultParser {
     },
     GROUP {
         @Override
-        public Object parseFrom(IrResult.Results results) {
+        public Map parseFrom(IrResult.Results results) {
             IrResult.Record record = results.getRecord();
-            Map data = new HashMap();
-            record.getColumnsList().forEach(column -> {
+            Object key = null;
+            Object value = null;
+            for (IrResult.Column column : record.getColumnsList()) {
                 String alias = column.getNameOrId().getName();
-                IrResult.Entry entry = column.getEntry();
-                switch (entry.getInnerCase()) {
-                    case ELEMENT:
-                        data.put(alias, ParserUtils.parseElement(entry.getElement()));
-                        break;
-                    case COLLECTION:
-                        data.put(alias, ParserUtils.parseCollection(entry.getCollection()));
-                        break;
-                    default:
-                        throw new GremlinResultParserException(entry.getInnerCase() + " is invalid");
+                Object parseEntry = parseGroupEntry(column.getEntry());
+                if (parseEntry instanceof EmptyValue) {
+                    continue;
                 }
-            });
+                if (alias.startsWith(ArgUtils.groupKeys())) {
+                    key = parseEntry;
+                } else {
+                    value = parseEntry;
+                }
+            }
+            // key or value can be null
+            Map data = new HashMap();
+            data.put(key, value);
             return data;
         }
+
+        private Object parseGroupEntry(IrResult.Entry entry) {
+            switch (entry.getInnerCase()) {
+                case ELEMENT:
+                    return ParserUtils.parseElement(entry.getElement());
+                case COLLECTION:
+                    return ParserUtils.parseCollection(entry.getCollection());
+                default:
+                    throw new GremlinResultParserException(entry.getInnerCase() + " is invalid");
+            }
+        }
     };
+
+    private static Logger logger = LoggerFactory.getLogger(GremlinResultParserFactory.class);
 }

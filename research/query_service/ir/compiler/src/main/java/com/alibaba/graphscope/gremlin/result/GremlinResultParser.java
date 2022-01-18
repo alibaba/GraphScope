@@ -14,7 +14,12 @@ public interface GremlinResultParser extends ResultParser {
     default List<Object> parseFrom(PegasusClient.JobResponse response) {
         try {
             IrResult.Results results = IrResult.Results.parseFrom(response.getData());
-            return Collections.singletonList(parseFrom(results));
+            Object parseResult = parseFrom(results);
+            if (parseResult instanceof EmptyValue) {
+                return Collections.emptyList();
+            } else {
+                return Collections.singletonList(parseResult);
+            }
         } catch (InvalidProtocolBufferException e) {
             throw new GremlinResultParserException("parse from proto failed " + e);
         }
