@@ -197,7 +197,7 @@ public class IrPlan implements Closeable {
                     throw new InterOpIllegalArgException(baseOp.getClass(), "exprWithAlias", "not present");
                 }
                 List<Pair> exprWithAlias = (List<Pair>) exprOpt.get().getArg();
-                Optional<OpArg> aliasOpt = baseOp.getAlias();
+                Optional<OpArg> aliasOpt = op.getAlias();
                 if (aliasOpt.isPresent()) {
                     // replace with the query given alias
                     if (exprWithAlias.size() == 1) {
@@ -205,7 +205,7 @@ public class IrPlan implements Closeable {
                         exprWithAlias.set(0, firstEntry.setAt1(aliasOpt.get().getArg()));
                     }
                     if (exprWithAlias.size() > 1) {
-                        throw new InterOpIllegalArgException(baseOp.getClass(),
+                        throw new InterOpIllegalArgException(op.getClass(),
                                 "exprWithAlias", "multiple columns as a single alias is unsupported");
                     }
                 }
