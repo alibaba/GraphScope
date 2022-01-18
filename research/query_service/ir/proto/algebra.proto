@@ -263,16 +263,30 @@ message EdgeExpand {
   common.NameOrId alias = 5;
 }
 
+message PathStart {
+  // The tag that refers to the starting vertex
+  common.NameOrId start_tag = 1;
+  // Whether to take path (true) or end vertex (false) for this expansion
+  bool is_whole_path = 2;
+}
+
+message PathEnd {
+  // An optional alias for the object of the path expansion
+  common.NameOrId alias = 1;
+}
+
 message PathExpand {
   // A path expansion has a base of edge expansion
   EdgeExpand base = 1;
+  // The tag that refers to the starting vertex
+  common.NameOrId start_tag = 2;
   // Whether to take path (true) or end vertex (false) for this expansion
-  bool is_path = 2;
+  bool is_whole_path = 3;
   // An optional alias for the object of the expansion
-  common.NameOrId alias = 3;
+  common.NameOrId alias = 4;
   // The range that defines the minimum and maximum number of hops of the path expansion.
   // This is optional, if not set, the minimum number is 1, and the maximum is INT_MAX
-  Range hop_range = 4;
+  Range hop_range = 5;
 }
 
 message ShortestPathExpand {

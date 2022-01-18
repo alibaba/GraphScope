@@ -776,6 +776,14 @@ fn process_params(ptr: *const c_void, key: ParamsKey, val: FfiNameOrId, opr: Opr
                 }
                 std::mem::forget(getv);
             }
+            Opr::PathExpand => {
+                let mut pathxpd = unsafe { Box::from_raw(ptr as *mut pb::PathExpand) };
+                match key {
+                    ParamsKey::Tag => pathxpd.start_tag = pb.unwrap(),
+                    _ => unreachable!(),
+                }
+                std::mem::forget(pathxpd);
+            }
             _ => unreachable!(),
         }
     } else {
@@ -1642,16 +1650,25 @@ mod graph {
 
     /// To initialize an path expand operator from an expand base
     #[no_mangle]
-    pub extern "C" fn init_pathxpd_operator(ptr_expand: *const c_void, is_path: bool) -> *const c_void {
+    pub extern "C" fn init_pathxpd_operator(
+        ptr_expand: *const c_void, is_whole_path: bool,
+    ) -> *const c_void {
         let expand = unsafe { Box::from_raw(ptr_expand as *mut pb::EdgeExpand) };
         let edgexpd = Box::new(pb::PathExpand {
             base: Some(expand.as_ref().clone()),
-            is_path,
+            start_tag: None,
+            is_whole_path,
             alias: None,
             hop_range: None,
         });
 
         Box::into_raw(edgexpd) as *const c_void
+    }
+
+    /// Set path alias of this path expansion
+    #[no_mangle]
+    pub extern "C" fn set_pathxpd_tag(ptr_pathxpd: *const c_void, tag: FfiNameOrId) -> ResultCode {
+        process_params(ptr_pathxpd, ParamsKey::Tag, tag, Opr::PathExpand)
     }
 
     /// Set path alias of this path expansion
