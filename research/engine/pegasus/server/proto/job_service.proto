@@ -36,13 +36,12 @@ message JobConfig {
   uint64 time_limit         = 4;
   uint32 batch_size         = 5;
   uint32 batch_capacity     = 6;
-  uint32 scope_capacity     = 7;
-  uint32 memory_limit       = 8;
-  bool trace_enable           = 9;
+  uint32 memory_limit       = 7;
+  bool trace_enable           = 8;
   oneof servers {
-    Empty local             = 10;
-    ServerList part         = 11;
-    Empty all               = 12;
+    Empty local             = 9;
+    ServerList part         = 10;
+    Empty all               = 11;
   }
 }
 

@@ -1,14 +1,16 @@
 use std::cell::RefCell;
 use std::fmt::{Debug, Display, Formatter};
+use std::pin::Pin;
+use std::task::{Context, Poll};
 
-use futures::Stream;
-use tonic::Status;
+use futures::stream::{BoxStream, SelectAll};
+use futures::{Stream, StreamExt};
+use pegasus::{JobConf, ServerConf};
 
 use crate::pb::job_config::Servers;
 use crate::pb::job_service_client::JobServiceClient;
-use crate::pb::{BinaryResource, JobConfig, JobRequest};
+use crate::pb::{BinaryResource, Empty, JobConfig, JobRequest, ServerList};
 use crate::service::JobDesc;
-use crate::JobResponse;
 
 pub enum JobError {
     InvalidConfig(String),
@@ -53,20 +55,21 @@ impl RPCJobClient {
     }
 
     pub async fn submit(
-        &mut self, config: JobConfig, job: JobDesc,
-    ) -> Result<Box<dyn Stream<Item = Result<JobResponse, Status>>>, JobError> {
+        &mut self, config: JobConf, job: JobDesc,
+    ) -> Result<BoxStream<'static, Result<Option<Vec<u8>>, tonic::Status>>, JobError> {
         let mut remotes = vec![];
-        match config.servers {
-            None | Some(Servers::Local(_)) => {
+        let servers = match config.servers() {
+            ServerConf::Local => {
                 for conn in self.conns.iter() {
                     if let Some(c) = conn {
                         remotes.push(c);
                         break;
                     }
                 }
+                Servers::Local(Empty {})
             }
-            Some(Servers::Part(ref list)) => {
-                for id in list.servers.iter() {
+            ServerConf::Partial(ref list) => {
+                for id in list.iter() {
                     let index = *id as usize;
                     if index >= self.conns.len() {
                         return Err(JobError::InvalidConfig(format!("server[{}] not connect;", index)));
@@ -77,8 +80,9 @@ impl RPCJobClient {
                         return Err(JobError::InvalidConfig(format!("server[{}] not connect;", index)));
                     }
                 }
+                Servers::Part(ServerList { servers: list.clone() })
             }
-            Some(Servers::All(_)) => {
+            ServerConf::All => {
                 for (index, conn) in self.conns.iter().enumerate() {
                     if let Some(c) = conn {
                         remotes.push(c);
@@ -86,25 +90,42 @@ impl RPCJobClient {
                         return Err(JobError::InvalidConfig(format!("server[{}] not connect;", index)));
                     }
                 }
+                Servers::All(Empty {})
             }
-        }
-        let JobDesc { input, plan, resource } = job;
-        let req = JobRequest {
-            conf: Some(config),
-            source: if input.is_empty() { None } else { Some(BinaryResource { resource: input }) },
-            plan: if plan.is_empty() { None } else { Some(BinaryResource { resource: plan }) },
-            resource: if resource.is_empty() { None } else { Some(BinaryResource { resource }) },
         };
 
         let r_size = remotes.len();
         if r_size == 0 {
             warn!("No remote server selected;");
-            return Ok(Box::new(futures::stream::empty()));
+            return Ok(futures::stream::empty().boxed());
         }
+
+        let JobDesc { input, plan, resource } = job;
+
+        let conf = JobConfig {
+            job_id: config.job_id,
+            job_name: config.job_name,
+            workers: config.workers,
+            time_limit: config.time_limit,
+            batch_size: config.batch_size,
+            batch_capacity: config.batch_capacity,
+            memory_limit: config.memory_limit,
+            trace_enable: config.trace_enable,
+            servers: Some(servers),
+        };
+        let req = JobRequest {
+            conf: Some(conf),
+            source: if input.is_empty() { None } else { Some(BinaryResource { resource: input }) },
+            plan: if plan.is_empty() { None } else { Some(BinaryResource { resource: plan }) },
+            resource: if resource.is_empty() { None } else { Some(BinaryResource { resource }) },
+        };
 
         if r_size == 1 {
             match remotes[0].borrow_mut().submit(req).await {
-                Ok(resp) => Ok(Box::new(resp.into_inner())),
+                Ok(resp) => Ok(resp
+                    .into_inner()
+                    .map(|r| r.map(|jr| jr.res.map(|b| b.resource)))
+                    .boxed()),
                 Err(status) => Err(JobError::RPCError(status)),
             }
         } else {
@@ -129,7 +150,25 @@ impl RPCJobClient {
                     }
                 }
             }
-            Ok(Box::new(futures::stream::select_all(stream_res)))
+            Ok(futures::stream::select_all(stream_res)
+                .map(|r| r.map(|jr| jr.res.map(|b| b.resource)))
+                .boxed())
+        }
+    }
+}
+
+pub enum Either<T: Stream + Unpin> {
+    Single(T),
+    Select(SelectAll<T>),
+}
+
+impl<T: Stream + Unpin> Stream for Either<T> {
+    type Item = T::Item;
+
+    fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
+        match *self {
+            Either::Single(ref mut s) => Pin::new(s).poll_next(cx),
+            Either::Select(ref mut s) => Pin::new(s).poll_next(cx),
         }
     }
 }

@@ -420,6 +420,18 @@ impl NetworkConfig {
             Ok(None)
         }
     }
+
+    pub fn get_server_addr(&self, server_id: u64) -> Option<&ServerAddr> {
+        if let Some(servers) = self.servers.as_ref() {
+            if server_id >= servers.len() as u64 {
+                None
+            } else {
+                servers[server_id as usize].as_ref()
+            }
+        } else {
+            None
+        }
+    }
 }
 
 #[cfg(test)]

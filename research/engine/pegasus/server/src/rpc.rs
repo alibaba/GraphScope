@@ -150,17 +150,17 @@ where
 
 #[derive(Debug, Deserialize)]
 pub struct RPCServerConfig {
-    rpc_host: Option<String>,
-    rpc_port: Option<u16>,
-    rpc_concurrency_limit_per_connection: Option<usize>,
-    rpc_timeout: Option<Duration>,
-    rpc_initial_stream_window_size: Option<u32>,
-    rpc_initial_connection_window_size: Option<u32>,
-    rpc_max_concurrent_streams: Option<u32>,
-    rpc_keep_alive_interval: Option<Duration>,
-    rpc_keep_alive_timeout: Option<Duration>,
-    tcp_keep_alive: Option<Duration>,
-    tcp_nodelay: Option<bool>,
+    pub rpc_host: Option<String>,
+    pub rpc_port: Option<u16>,
+    pub rpc_concurrency_limit_per_connection: Option<usize>,
+    pub rpc_timeout: Option<Duration>,
+    pub rpc_initial_stream_window_size: Option<u32>,
+    pub rpc_initial_connection_window_size: Option<u32>,
+    pub rpc_max_concurrent_streams: Option<u32>,
+    pub rpc_keep_alive_interval: Option<Duration>,
+    pub rpc_keep_alive_timeout: Option<Duration>,
+    pub tcp_keep_alive: Option<Duration>,
+    pub tcp_nodelay: Option<bool>,
 }
 
 pub struct RPCJobServer<S: pb::job_service_server::JobService> {
