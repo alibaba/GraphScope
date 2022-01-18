@@ -956,6 +956,13 @@ macro_rules! partial_cmp {
                     None
                 }
             }
+            $crate::$ty::None => {
+                if let $crate::$ty::None = $other {
+                    Some(Ordering::Equal)
+                } else {
+                    None
+                }
+            }
             _ => None,
         }
     };
@@ -966,7 +973,7 @@ macro_rules! cmp {
         if let Some(ord) = $self.partial_cmp($other) {
             ord
         } else {
-            Ordering::Equal
+            Ordering::Less
         }
     };
 }
