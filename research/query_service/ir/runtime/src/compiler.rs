@@ -287,6 +287,9 @@ impl IRJobCompiler {
                             Err("iteration body can't be empty;")?
                         }
                     }
+                    server_pb::operator_def::OpKind::IterateEmit(_iter_emit) => {
+                        todo!()
+                    }
                     server_pb::operator_def::OpKind::Apply(sub) => {
                         let join_func = self.udf_gen.gen_subtask(
                             sub.join
