@@ -1172,12 +1172,12 @@ class Session(object):
                 The graph to create learning instance.
             nodes (list, optional): list of node types that will be used for GNN
                 training, the element of list can be `"node_label"` or
-                `(node_label, feature)`. If the element of list is a tuple and
+                `(node_label, features)`. If the element of the list is a tuple and
                 contains selected feature list, it would use the selected
                 feature list for training. Default is None which use all type of
                 nodes and for the GNN training.
             edges (list, optional): list of edge types that will be used for GNN
-                training. we use `(src_label, edge_label, dst_label)`
+                training. We use `(src_label, edge_label, dst_label)`
                 to specify one edge type. Default is None which use all type of
                 edges for GNN training.
             gen_labels (list, optional): Alias node and edge labels and extract
@@ -1201,7 +1201,7 @@ class Session(object):
                     ("test", "paper", 100, (85, 100)),
                 ]
             )
-        Note that the training, validation and test datasets are not overlapping. And for unsupervised learning
+        Note that the training, validation and test datasets are not overlapping. And for unsupervised learning:
         >>> lg = sess.graphlearn(
                 graph,
                 nodes=[("paper", features)])  # use "paper" node and features for training
