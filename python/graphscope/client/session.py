@@ -1168,9 +1168,8 @@ class Session(object):
         """Start a graph learning engine.
 
         Args:
-            session (:class:`Session`): instance of GraphScope session.
             graph (:class:`graphscope.framework.graph.GraphDAGNode`):
-                Source property graph.
+                The graph to create learning instance.
             nodes (list, optional): list of node types that will be used for gnn
                 training, the element of list can be `node_label` or
                 `(node_label, features)`. If the element of list is a tuple and
