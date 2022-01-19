@@ -95,10 +95,13 @@ traversalMethod_hasId
     ;
 
 // has("str", y), has("str", eq/neq/gt/gte/lt/lte(y))
-// has("name")
+// has("person", "name", "marko")
+// has("person", "name", P.eq("marko"))
 traversalMethod_has
     : 'has' LPAREN stringLiteral COMMA genericLiteral RPAREN  // indicate eq
     | 'has' LPAREN stringLiteral COMMA traversalPredicate RPAREN
+    | 'has' LPAREN stringLiteral COMMA stringLiteral COMMA genericLiteral RPAREN
+    | 'has' LPAREN stringLiteral COMMA stringLiteral COMMA traversalPredicate RPAREN
     ;
 
 // out('str1', ...)

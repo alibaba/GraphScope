@@ -429,6 +429,16 @@ public class PositiveEvalTest {
     }
 
     @Test
+    public void g_V_has_label_property_test() {
+        Assert.assertEquals(g.V().has("person", "age", 25), eval("g.V().has(\"person\", \"age\", 25)"));
+    }
+
+    @Test
+    public void g_V_has_label_property_eq_test() {
+        Assert.assertEquals(g.V().has("person", "age", P.eq(25)), eval("g.V().has(\"person\", \"age\", P.eq(25))"));
+    }
+
+    @Test
     public void g_V_values_is_val_test() {
         Assert.assertEquals(g.V().values("name").is(27), eval("g.V().values(\"name\").is(27)"));
     }
