@@ -25,7 +25,7 @@ use ir_common::generated::algebra as pb;
 use ir_common::generated::common as common_pb;
 use vec_map::VecMap;
 
-use crate::error::{IrResult, IrError};
+use crate::error::{IrError, IrResult};
 use crate::plan::meta::{PlanMeta, StoreMeta, INVALID_META_ID, STORE_META};
 use crate::JsonIO;
 
@@ -132,7 +132,8 @@ impl TryFrom<pb::LogicalPlan> for LogicalPlan {
                         .get(&(id as u32))
                         .cloned()
                         .unwrap_or(Vec::new()),
-                ).map_err(|err| ParsePbError::ParseError(format!("{:?}", err)))?;
+                )
+                .map_err(|err| ParsePbError::ParseError(format!("{:?}", err)))?;
             } else {
                 return Err(ParsePbError::from("do not specify operator in a node"));
             }

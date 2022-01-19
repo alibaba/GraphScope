@@ -50,7 +50,10 @@ impl TagKey {
     pub fn get_entry(&self, input: &Record) -> Result<Arc<Entry>, FnExecError> {
         let entry = input
             .get(self.tag.as_ref())
-            .ok_or(FnExecError::get_tag_error("Get tag failed since it refers to an empty entry"))?
+            .ok_or(FnExecError::get_tag_error(&format!(
+                "Get tag {:?} failed since it refers to an empty entry",
+                self.tag
+            )))?
             .clone();
         if let Some(key) = self.key.as_ref() {
             if let Some(element) = entry.as_graph_element() {
@@ -190,6 +193,14 @@ pub(crate) mod tests {
         let r1 = Record::new(v1, Some("a".into()));
         let r2 = Record::new(v2, Some("a".into()));
         vec![r1, r2]
+    }
+
+    pub fn init_source_with_multi_tags() -> Vec<Record> {
+        let v1 = init_vertex1();
+        let v2 = init_vertex2();
+        let mut r1 = Record::new(v1, Some("a".into()));
+        r1.append(v2, Some("b".into()));
+        vec![r1]
     }
 
     #[test]
