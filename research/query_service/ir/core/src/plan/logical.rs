@@ -18,15 +18,14 @@ use std::collections::{BTreeSet, HashMap};
 use std::convert::{TryFrom, TryInto};
 use std::fmt;
 use std::io;
-use std::iter::FromIterator;
 use std::rc::Rc;
 
-use ir_common::error::{ParsePbError, ParsePbResult};
+use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as pb;
 use ir_common::generated::common as common_pb;
 use vec_map::VecMap;
 
-use crate::error::IrResult;
+use crate::error::{IrResult, IrError};
 use crate::plan::meta::{PlanMeta, StoreMeta, INVALID_META_ID, STORE_META};
 use crate::JsonIO;
 
@@ -103,45 +102,41 @@ impl fmt::Debug for LogicalPlan {
     }
 }
 
-fn parse_pb_node(node_pbs: &Vec<pb::logical_plan::Node>, nodes: &Vec<NodeType>) -> ParsePbResult<()> {
-    for (node_pb, node) in node_pbs.iter().zip(nodes.iter()) {
-        for child_id in &node_pb.children {
-            node.borrow_mut().add_child(*child_id as u32);
-            if let Some(child_node) = nodes.get(*child_id as usize) {
-                child_node
-                    .borrow_mut()
-                    .add_parent(node.borrow().id as u32);
-            } else {
-                return Err(ParsePbError::from("the child id is out of index".to_string()));
-            }
-        }
-    }
-
-    Ok(())
-}
-
 impl TryFrom<pb::LogicalPlan> for LogicalPlan {
     type Error = ParsePbError;
 
     fn try_from(pb: pb::LogicalPlan) -> Result<Self, Self::Error> {
         let nodes_pb = pb.nodes;
-        let mut nodes = Vec::<NodeType>::with_capacity(nodes_pb.len());
-
+        let mut plan = LogicalPlan::default();
+        let mut parents = HashMap::<u32, Vec<u32>>::new();
         for (id, node) in nodes_pb.iter().enumerate() {
-            if let Some(opr) = &node.opr {
-                nodes.push(Rc::new(RefCell::new(Node::new(id as u32, opr.clone()))));
+            for &child in &node.children {
+                if child <= id as i32 {
+                    return Err(ParsePbError::ParseError(format!(
+                        "the child node's id {:?} is not larger than parent node's id {:?}",
+                        child, id
+                    )));
+                }
+                parents
+                    .entry(child as u32)
+                    .or_insert_with(Vec::new)
+                    .push(id as u32);
+            }
+        }
+
+        for (id, node) in nodes_pb.into_iter().enumerate() {
+            if let Some(opr) = node.opr {
+                plan.append_operator_as_node(
+                    opr,
+                    parents
+                        .get(&(id as u32))
+                        .cloned()
+                        .unwrap_or(Vec::new()),
+                ).map_err(|err| ParsePbError::ParseError(format!("{:?}", err)))?;
             } else {
                 return Err(ParsePbError::from("do not specify operator in a node"));
             }
         }
-
-        parse_pb_node(&nodes_pb, &nodes)?;
-
-        let plan = LogicalPlan {
-            total_size: nodes.len(),
-            nodes: VecMap::from_iter(nodes.into_iter().enumerate()),
-            meta: PlanMeta::default(),
-        };
 
         Ok(plan)
     }
@@ -578,7 +573,7 @@ fn preprocess_const(
                         let new_item = common_pb::value::Item::I32(
                             schema
                                 .get_table_id(name)
-                                .unwrap_or(INVALID_META_ID),
+                                .ok_or(IrError::TableNotExist(name.to_string()))?,
                         );
                         debug!("table: {:?} -> {:?}", item, new_item);
                         *item = new_item;
@@ -587,13 +582,13 @@ fn preprocess_const(
                         let new_item = common_pb::value::Item::I32Array(common_pb::I32Array {
                             item: names
                                 .item
-                                .iter_mut()
+                                .iter()
                                 .map(|name| {
                                     schema
                                         .get_table_id(name)
-                                        .unwrap_or(INVALID_META_ID)
+                                        .ok_or(IrError::TableNotExist(name.to_string()))
                                 })
-                                .collect(),
+                                .collect::<IrResult<Vec<i32>>>()?,
                         });
                         debug!("table: {:?} -> {:?}", item, new_item);
                         *item = new_item;
@@ -689,7 +684,7 @@ fn preprocess_params(
             for table in params.table_names.iter_mut() {
                 let new_table = schema
                     .get_table_id_from_pb(table)
-                    .unwrap_or(INVALID_META_ID)
+                    .ok_or(IrError::TableNotExist(format!("{:?}", table)))?
                     .into();
                 debug!("table: {:?} -> {:?}", table, new_table);
                 *table = new_table;
