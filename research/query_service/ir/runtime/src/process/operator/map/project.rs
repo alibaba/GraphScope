@@ -136,7 +136,9 @@ mod tests {
     use crate::graph::element::{GraphElement, Vertex};
     use crate::graph::property::{DefaultDetails, DynDetails};
     use crate::process::operator::map::MapFuncGen;
-    use crate::process::operator::tests::{init_source, init_source_with_tag, init_vertex1, init_vertex2, init_source_with_multi_tags};
+    use crate::process::operator::tests::{
+        init_source, init_source_with_multi_tags, init_source_with_tag, init_vertex1, init_vertex2,
+    };
     use crate::process::record::{Entry, ObjectElement, Record, RecordElement};
 
     fn project_test(source: Vec<Record>, project_opr_pb: pb::Project) -> ResultStream<Record> {
@@ -608,14 +610,16 @@ mod tests {
     #[test]
     fn project_multi_mapping_tags() {
         let project_opr_pb = pb::Project {
-            mappings: vec![pb::project::ExprAlias {
-                expr: Some(str_to_expr_pb("@a".to_string()).unwrap()),
-                alias: Some(NameOrId::Str("a_col".to_string()).into()),
-            },
-            pb::project::ExprAlias {
-                expr: Some(str_to_expr_pb("@b".to_string()).unwrap()),
-                alias: Some(NameOrId::Str("b_col".to_string()).into()),
-            }],
+            mappings: vec![
+                pb::project::ExprAlias {
+                    expr: Some(str_to_expr_pb("@a".to_string()).unwrap()),
+                    alias: Some(NameOrId::Str("a_col".to_string()).into()),
+                },
+                pb::project::ExprAlias {
+                    expr: Some(str_to_expr_pb("@b".to_string()).unwrap()),
+                    alias: Some(NameOrId::Str("b_col".to_string()).into()),
+                },
+            ],
             is_append: true,
         };
         let mut result = project_test(init_source_with_multi_tags(), project_opr_pb);

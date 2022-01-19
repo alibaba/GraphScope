@@ -53,12 +53,14 @@ mod test {
             }
             .into(),
             vec![],
-        ).unwrap();
+        )
+        .unwrap();
 
         plan.append_operator_as_node(
             pb::Select { predicate: Some(str_to_expr_pb("@.id == 1".to_string()).unwrap()) }.into(),
             vec![0],
-        ).unwrap();
+        )
+        .unwrap();
 
         plan.append_operator_as_node(
             pb::EdgeExpand {
@@ -78,16 +80,19 @@ mod test {
             }
             .into(),
             vec![1],
-        ).unwrap();
+        )
+        .unwrap();
 
         plan.append_operator_as_node(
             pb::Sink { tags: vec![], sink_current: true, id_name_mappings: vec![] }.into(),
             vec![2],
-        ).unwrap();
+        )
+        .unwrap();
 
         let mut job_builder = JobBuilder::default();
         let mut plan_meta = plan.meta.clone();
-        plan.add_job_builder(&mut job_builder, &mut plan_meta).unwrap();
+        plan.add_job_builder(&mut job_builder, &mut plan_meta)
+            .unwrap();
 
         job_builder.build().unwrap()
     }
@@ -110,7 +115,8 @@ mod test {
             }
             .into(),
             vec![],
-        ).unwrap();
+        )
+        .unwrap();
 
         plan.append_operator_as_node(
             pb::EdgeExpand {
@@ -130,7 +136,8 @@ mod test {
             }
             .into(),
             vec![0],
-        ).unwrap();
+        )
+        .unwrap();
 
         plan.append_operator_as_node(
             pb::Project {
@@ -142,16 +149,19 @@ mod test {
             }
             .into(),
             vec![1],
-        ).unwrap();
+        )
+        .unwrap();
 
         plan.append_operator_as_node(
             pb::Sink { tags: vec![], sink_current: true, id_name_mappings: vec![] }.into(),
             vec![2],
-        ).unwrap();
+        )
+        .unwrap();
 
         let mut job_builder = JobBuilder::default();
         let mut plan_meta = plan.meta.clone();
-        plan.add_job_builder(&mut job_builder, &mut plan_meta).unwrap();
+        plan.add_job_builder(&mut job_builder, &mut plan_meta)
+            .unwrap();
 
         job_builder.build().unwrap()
     }
