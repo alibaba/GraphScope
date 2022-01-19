@@ -13,9 +13,14 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+mod edge;
+mod path;
+mod vertex;
+
 use std::cmp::Ordering;
 use std::convert::{TryFrom, TryInto};
 use std::fmt::Debug;
+use std::hash::{Hash, Hasher};
 use std::io;
 
 use dyn_type::{BorrowObject, Object};
@@ -23,10 +28,10 @@ pub use edge::Edge;
 use ir_common::error::ParsePbError;
 use ir_common::generated::results as result_pb;
 use ir_common::NameOrId;
+pub use path::GraphPath;
 use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
 pub use vertex::Vertex;
 
-use crate::graph::element::path::GraphPath;
 use crate::graph::property::{DefaultDetails, DynDetails};
 use crate::graph::ID;
 
@@ -46,7 +51,7 @@ pub trait GraphElement: Element {
 
 impl Element for () {
     fn as_borrow_object(&self) -> BorrowObject {
-        BorrowObject::String("")
+        BorrowObject::None
     }
 }
 
@@ -61,10 +66,6 @@ impl<'a> Element for BorrowObject<'a> {
         *self
     }
 }
-
-mod edge;
-mod path;
-mod vertex;
 
 #[derive(Clone, Debug)]
 pub enum VertexOrEdge {
@@ -204,5 +205,87 @@ impl TryFrom<result_pb::Edge> for VertexOrEdge {
                 .try_into()?,
         );
         Ok(VertexOrEdge::E(edge))
+    }
+}
+
+impl Hash for VertexOrEdge {
+    fn hash<H: Hasher>(&self, mut state: &mut H) {
+        self.id().hash(&mut state)
+    }
+}
+
+#[derive(Clone, Debug, Hash)]
+pub enum GraphObject {
+    VOrE(VertexOrEdge),
+    P(GraphPath),
+}
+
+impl Element for GraphObject {
+    fn details(&self) -> Option<&DynDetails> {
+        match self {
+            GraphObject::VOrE(v_or_e) => v_or_e.details(),
+            GraphObject::P(_p) => None,
+        }
+    }
+
+    fn as_borrow_object(&self) -> BorrowObject {
+        match self {
+            GraphObject::VOrE(v_or_e) => v_or_e.as_borrow_object(),
+            GraphObject::P(_p) => BorrowObject::None,
+        }
+    }
+}
+
+impl PartialEq for GraphObject {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (GraphObject::VOrE(v1), GraphObject::VOrE(v2)) => v1.eq(v2),
+            (GraphObject::P(p1), GraphObject::P(p2)) => p1.eq(p2),
+            _ => false,
+        }
+    }
+}
+
+impl PartialOrd for GraphObject {
+    // TODO: not sure if it is reasonable. GraphObject seems to be not comparable.
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        match (self, other) {
+            (GraphObject::VOrE(v1), GraphObject::VOrE(v2)) => v1.partial_cmp(v2),
+            (GraphObject::P(p1), GraphObject::P(p2)) => p1.partial_cmp(p2),
+            _ => None,
+        }
+    }
+}
+
+impl Encode for GraphObject {
+    fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
+        match self {
+            GraphObject::VOrE(v_or_e) => {
+                writer.write_u8(0)?;
+                v_or_e.write_to(writer)?;
+            }
+            GraphObject::P(p) => {
+                writer.write_u8(1)?;
+                p.write_to(writer)?;
+            }
+        }
+        Ok(())
+    }
+}
+
+impl Decode for GraphObject {
+    fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
+        let opt = reader.read_u8()?;
+        match opt {
+            0 => {
+                let vertex_or_edge = <VertexOrEdge>::read_from(reader)?;
+                Ok(GraphObject::VOrE(vertex_or_edge))
+            }
+            1 => {
+                let path = <GraphPath>::read_from(reader)?;
+                Ok(GraphObject::P(path))
+            }
+            _ => Err(std::io::Error::new(std::io::ErrorKind::Other, "unreachable")),
+        }
     }
 }

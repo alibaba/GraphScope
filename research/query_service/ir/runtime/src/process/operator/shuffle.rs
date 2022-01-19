@@ -23,7 +23,7 @@ use pegasus::api::function::{FnResult, RouteFunction};
 
 use crate::graph::element::GraphElement;
 use crate::graph::partitioner::Partitioner;
-use crate::process::record::{Entry, Record, RecordElement};
+use crate::process::record::Record;
 
 pub struct RecordRouter {
     p: Arc<dyn Partitioner>,
@@ -47,13 +47,12 @@ impl RecordRouter {
 impl RouteFunction<Record> for RecordRouter {
     fn route(&self, t: &Record) -> FnResult<u64> {
         if let Some(entry) = t.get(self.shuffle_key.as_ref()) {
-            match entry.as_ref() {
-                Entry::Element(element) => match element {
-                    RecordElement::OnGraph(e) => self.p.get_partition(&e.id(), self.num_workers),
-                    //TODO(bingqing): deal with the OffGraph element shuffle
-                    RecordElement::OffGraph(_) => Ok(0),
-                },
-                Entry::Collection(_) => Ok(0),
+            if let Some(vertex_or_edge) = entry.as_graph_element() {
+                self.p
+                    .get_partition(&vertex_or_edge.id(), self.num_workers)
+            } else {
+                //TODO(bingqing): deal with other element shuffle
+                Ok(0)
             }
         } else {
             Ok(0)

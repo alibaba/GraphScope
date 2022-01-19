@@ -27,10 +27,11 @@ use pegasus::api::function::DynIter;
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 
 use crate::expr::eval::Context;
-use crate::graph::element::{Edge, Element, GraphElement, Vertex, VertexOrEdge};
+use crate::graph::element::{Edge, Element, GraphObject, GraphPath, Vertex, VertexOrEdge};
 use crate::graph::property::DynDetails;
 
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
+// TODO: rename as CommonObject
 pub enum ObjectElement {
     // TODO: common-used object elements
     None,
@@ -44,8 +45,17 @@ pub enum ObjectElement {
 
 #[derive(Debug, Clone)]
 pub enum RecordElement {
-    OnGraph(VertexOrEdge),
+    OnGraph(GraphObject),
     OffGraph(ObjectElement),
+}
+
+impl RecordElement {
+    pub fn as_vertex_or_edge(&self) -> Option<&VertexOrEdge> {
+        match self {
+            RecordElement::OnGraph(GraphObject::VOrE(vertex_or_edge)) => Some(vertex_or_edge),
+            _ => None,
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -55,9 +65,10 @@ pub enum Entry {
 }
 
 impl Entry {
+    // TODO: rename as as_vertex_or_edge
     pub fn as_graph_element(&self) -> Option<&VertexOrEdge> {
         match self {
-            Entry::Element(RecordElement::OnGraph(vertex_or_edge)) => Some(vertex_or_edge),
+            Entry::Element(record_element) => record_element.as_vertex_or_edge(),
             _ => None,
         }
     }
@@ -100,16 +111,18 @@ impl Record {
         }
     }
 
+    // append a path element on curr entry; notice that curr entry should be GraphPath
+    // if curr is not a path, initial the path; else, insert the entry into the path
+    pub fn append_path_element(&mut self, _entry: VertexOrEdge) {
+        todo!()
+    }
+
     pub fn get(&self, tag: Option<&NameOrId>) -> Option<&Arc<Entry>> {
         if let Some(tag) = tag {
             self.columns.get(tag)
         } else {
             self.curr.as_ref()
         }
-    }
-
-    pub fn get_all(&self) -> &IndexMap<NameOrId, Arc<Entry>> {
-        &self.columns
     }
 
     /// To join this record with `other` record. After the join, the columns
@@ -142,19 +155,25 @@ pub enum HeadJoinOpt {
 
 impl Into<Entry> for Vertex {
     fn into(self) -> Entry {
-        Entry::Element(RecordElement::OnGraph(self.into()))
+        Entry::Element(RecordElement::OnGraph(GraphObject::VOrE(self.into())))
     }
 }
 
 impl Into<Entry> for Edge {
     fn into(self) -> Entry {
-        Entry::Element(RecordElement::OnGraph(self.into()))
+        Entry::Element(RecordElement::OnGraph(GraphObject::VOrE(self.into())))
     }
 }
 
 impl Into<Entry> for VertexOrEdge {
     fn into(self) -> Entry {
-        Entry::Element(RecordElement::OnGraph(self))
+        Entry::Element(RecordElement::OnGraph(GraphObject::VOrE(self)))
+    }
+}
+
+impl Into<Entry> for GraphPath {
+    fn into(self) -> Entry {
+        Entry::Element(RecordElement::OnGraph(GraphObject::P(self)))
     }
 }
 
@@ -184,17 +203,19 @@ impl Context<RecordElement> for Record {
 impl Element for RecordElement {
     fn details(&self) -> Option<&DynDetails> {
         match self {
-            RecordElement::OnGraph(vertex_or_edge) => vertex_or_edge.details(),
+            RecordElement::OnGraph(GraphObject::VOrE(vertex_or_edge)) => vertex_or_edge.details(),
+            RecordElement::OnGraph(GraphObject::P(_)) => None,
             RecordElement::OffGraph(_) => None,
         }
     }
 
     fn as_borrow_object(&self) -> BorrowObject {
         match self {
-            RecordElement::OnGraph(vertex_or_edge) => vertex_or_edge.as_borrow_object(),
+            RecordElement::OnGraph(GraphObject::VOrE(vertex_or_edge)) => vertex_or_edge.as_borrow_object(),
+            // TODO(bingqing): confirm if path can be as_borrow_object?
+            RecordElement::OnGraph(GraphObject::P(_)) => BorrowObject::None,
             RecordElement::OffGraph(obj_element) => match obj_element {
-                // TODO(longbin) We may need a `None` option for `BorrowObject`
-                ObjectElement::None => BorrowObject::String(""),
+                ObjectElement::None => BorrowObject::None,
                 ObjectElement::Prop(obj) | ObjectElement::Agg(obj) => obj.as_borrow(),
                 ObjectElement::Count(cnt) => (*cnt).into(),
             },
@@ -220,7 +241,7 @@ impl RecordKey {
 impl Hash for RecordElement {
     fn hash<H: Hasher>(&self, mut state: &mut H) {
         match self {
-            RecordElement::OnGraph(v) => v.id().hash(&mut state),
+            RecordElement::OnGraph(graph_obj) => graph_obj.hash(&mut state),
             RecordElement::OffGraph(o) => match o {
                 ObjectElement::None => None::<Object>.hash(&mut state),
                 ObjectElement::Prop(o) => o.hash(&mut state),
@@ -249,8 +270,8 @@ impl Hash for RecordKey {
 impl PartialEq for RecordElement {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
-            (RecordElement::OnGraph(v1), RecordElement::OnGraph(v2)) => v1 == v2,
-            (RecordElement::OffGraph(o1), RecordElement::OffGraph(o2)) => o1 == o2,
+            (RecordElement::OnGraph(v1), RecordElement::OnGraph(v2)) => v1.eq(v2),
+            (RecordElement::OffGraph(o1), RecordElement::OffGraph(o2)) => o1.eq(o2),
             _ => false,
         }
     }
@@ -371,9 +392,9 @@ impl Decode for ObjectElement {
 impl Encode for RecordElement {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
         match self {
-            RecordElement::OnGraph(vertex_or_edge) => {
+            RecordElement::OnGraph(graph_obj) => {
                 writer.write_u8(0)?;
-                vertex_or_edge.write_to(writer)?;
+                graph_obj.write_to(writer)?;
             }
             RecordElement::OffGraph(object_element) => {
                 writer.write_u8(1)?;
@@ -389,8 +410,8 @@ impl Decode for RecordElement {
         let opt = reader.read_u8()?;
         match opt {
             0 => {
-                let vertex_or_edge = <VertexOrEdge>::read_from(reader)?;
-                Ok(RecordElement::OnGraph(vertex_or_edge))
+                let graph_obj = <GraphObject>::read_from(reader)?;
+                Ok(RecordElement::OnGraph(graph_obj))
             }
             1 => {
                 let object_element = <ObjectElement>::read_from(reader)?;
@@ -516,8 +537,13 @@ impl TryFrom<result_pb::Element> for RecordElement {
     fn try_from(e: result_pb::Element) -> Result<Self, Self::Error> {
         if let Some(inner) = e.inner {
             match inner {
-                result_pb::element::Inner::Vertex(v) => Ok(RecordElement::OnGraph(v.try_into()?)),
-                result_pb::element::Inner::Edge(e) => Ok(RecordElement::OnGraph(e.try_into()?)),
+                result_pb::element::Inner::Vertex(v) => {
+                    Ok(RecordElement::OnGraph(GraphObject::VOrE(v.try_into()?)))
+                }
+                result_pb::element::Inner::Edge(e) => {
+                    Ok(RecordElement::OnGraph(GraphObject::VOrE(e.try_into()?)))
+                }
+                // TODO(bingqing): may need add a path type in result pb
                 result_pb::element::Inner::Object(_o) => {
                     Err(ParsePbError::NotSupported("Cannot parse object".to_string()))
                 }

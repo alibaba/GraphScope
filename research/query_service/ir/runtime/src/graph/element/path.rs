@@ -13,9 +13,13 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::graph::element::VertexOrEdge;
-use pegasus::codec::{Encode, Decode, WriteExt, ReadExt};
+use std::cmp::Ordering;
 
+use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
+
+use crate::graph::element::VertexOrEdge;
+
+#[derive(Clone, Debug, Hash)]
 pub enum PathStruct {
     // save the whole path
     WHOLE(Vec<VertexOrEdge>),
@@ -23,10 +27,10 @@ pub enum PathStruct {
     END(VertexOrEdge),
 }
 
-
+#[derive(Clone, Debug, Hash)]
 pub struct GraphPath {
     path: PathStruct,
-    // TODO: may not be a usize, can be a WeightFunc that can define a user-given weight calculation
+    // TODO(bingqing): may not be a usize, can be a WeightFunc that can define a user-given weight calculation
     weight: usize,
 }
 
@@ -44,32 +48,40 @@ impl GraphPath {
 
     pub fn append<E: Into<VertexOrEdge>>(&mut self, entry: E) {
         match self.path {
-            PathStruct::WHOLE(ref mut w) => {
-                w.push(entry.into())
-            }
-            PathStruct::END(ref mut e) => {
-                *e = entry.into()
-            }
+            PathStruct::WHOLE(ref mut w) => w.push(entry.into()),
+            PathStruct::END(ref mut e) => *e = entry.into(),
         }
         self.weight += 1;
     }
 }
 
+impl PartialEq for GraphPath {
+    fn eq(&self, _other: &Self) -> bool {
+        todo!()
+    }
+}
+
+impl PartialOrd for GraphPath {
+    fn partial_cmp(&self, _other: &Self) -> Option<Ordering> {
+        todo!()
+    }
+}
+
 impl Encode for PathStruct {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
-       match self {
-           PathStruct::WHOLE(path) => {
-               writer.write_u8(0)?;
-               writer.write_u64(path.len() as u64)?;
-               for vertex_or_edge in path {
-                   vertex_or_edge.write_to(writer)?;
-               }
-           }
-           PathStruct::END(path_end) => {
-               writer.write_u8(1)?;
-               path_end.write_to(writer)?;
-           }
-       }
+        match self {
+            PathStruct::WHOLE(path) => {
+                writer.write_u8(0)?;
+                writer.write_u64(path.len() as u64)?;
+                for vertex_or_edge in path {
+                    vertex_or_edge.write_to(writer)?;
+                }
+            }
+            PathStruct::END(path_end) => {
+                writer.write_u8(1)?;
+                path_end.write_to(writer)?;
+            }
+        }
         Ok(())
     }
 }
@@ -79,7 +91,7 @@ impl Decode for PathStruct {
         let opt = reader.read_u8()?;
         match opt {
             0 => {
-                let length =  <u64>::read_from(reader)?;
+                let length = <u64>::read_from(reader)?;
                 let mut path = Vec::with_capacity(length as usize);
                 for _i in 0..length {
                     let vertex_or_edge = <VertexOrEdge>::read_from(reader)?;
@@ -108,9 +120,6 @@ impl Decode for GraphPath {
     fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
         let path = <PathStruct>::read_from(reader)?;
         let weight = <u64>::read_from(reader)? as usize;
-        Ok(GraphPath {
-            path,
-            weight
-        })
+        Ok(GraphPath { path, weight })
     }
 }
