@@ -47,6 +47,7 @@ where
 #[cfg(test)]
 mod test {
     use std::path::PathBuf;
+
     use super::load_configs;
 
     #[test]
@@ -72,11 +73,23 @@ mod test {
             let params = net_conf.get_connection_param();
             assert!(!params.is_nonblocking);
             assert_eq!(params.get_read_params().slab_size, 65535);
-            assert_eq!(params.get_read_params().mode.get_block_timeout_ms(), 1);
+            assert_eq!(
+                params
+                    .get_read_params()
+                    .mode
+                    .get_block_timeout_ms(),
+                1
+            );
             assert!(params.get_write_params().nodelay);
             assert_eq!(params.get_write_params().heartbeat, 5);
             assert_eq!(params.get_write_params().buffer, 4096);
-            assert_eq!(params.get_write_params().mode.get_block_timeout_ms(), 1);
+            assert_eq!(
+                params
+                    .get_write_params()
+                    .mode
+                    .get_block_timeout_ms(),
+                1
+            );
         } else {
             panic!("Network configuration should not be None;")
         }

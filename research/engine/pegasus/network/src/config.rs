@@ -36,7 +36,7 @@ impl BlockMode {
     pub fn get_block_timeout_ms(&self) -> usize {
         match self {
             BlockMode::Blocking(Some(d)) => d.as_millis() as usize,
-            BlockMode::Blocking(None) | BlockMode::Nonblocking => 0
+            BlockMode::Blocking(None) | BlockMode::Nonblocking => 0,
         }
     }
 }

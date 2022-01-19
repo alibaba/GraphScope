@@ -128,7 +128,7 @@ where
         let rpc_sink = RpcSink::new(conf.job_id, tx);
         let sink = ResultSink::<O>::with(rpc_sink);
         if conf.trace_enable {
-            info!("submitting job {} with id {}", conf.job_name, conf.job_id);
+            info!("submitting job({}) with id {}", conf.job_name, conf.job_id);
         }
         let job_id = conf.job_id;
         let service = &self.inner;
@@ -241,9 +241,10 @@ impl<S: pb::job_service_server::JobService> RPCJobServer<S> {
             .clone()
             .unwrap_or("0.0.0.0".to_owned());
         let addr = SocketAddr::new(host.parse()?, rpc_config.rpc_port.unwrap_or(0));
-        let ka = rpc_config.tcp_keep_alive_ms.map(|d| Duration::from_millis(d));
-        let incoming =
-            TcpIncoming::new(addr, rpc_config.tcp_nodelay.unwrap_or(true), ka)?;
+        let ka = rpc_config
+            .tcp_keep_alive_ms
+            .map(|d| Duration::from_millis(d));
+        let incoming = TcpIncoming::new(addr, rpc_config.tcp_nodelay.unwrap_or(true), ka)?;
         info!("starting RPC job server on {} ...", incoming.inner.local_addr());
         listener.on_rpc_start(server_id, incoming.inner.local_addr())?;
 

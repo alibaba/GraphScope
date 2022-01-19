@@ -1,12 +1,14 @@
+use std::io::Write;
+use std::net::{AddrParseError, SocketAddr};
 use std::path::PathBuf;
 use std::time::Instant;
 
 use log::info;
-use prost::Message;
 use pegasus::api::{Sink, Source};
 use pegasus::result::ResultSink;
 use pegasus::{BuildJobError, JobConf, ServerConf};
 use pegasus_server::service::{JobDesc, JobParser};
+use prost::Message;
 use structopt::StructOpt;
 use tokio_stream::StreamExt;
 
@@ -20,7 +22,9 @@ struct Config {
     #[structopt(long = "client")]
     client: bool,
     #[structopt(short = "t", long = "times", default_value = "100")]
-    times: u64
+    times: u64,
+    #[structopt(long = "setaddr")]
+    setaddr: bool,
 }
 
 struct EchoJobParser;
@@ -46,11 +50,38 @@ async fn main() {
             .expect("start server failure;")
     } else if config.client {
         let mut client = pegasus_server::client::RPCJobClient::new();
+
         let servers = server_config
             .network_config()
             .map(|n| n.servers_size)
             .unwrap_or(1);
-        if servers == 1 {
+        if config.setaddr {
+            let mut not_connect = servers;
+            let mut server_id = 0;
+            while not_connect > 0 {
+                print!("server {} address: ", server_id);
+                std::io::stdout().flush().unwrap();
+                let mut buf = String::new();
+                std::io::stdin().read_line(&mut buf).unwrap();
+                let parsed = buf
+                    .trim_end_matches(|c| c == '\n' || c == '\t' || c == ' ')
+                    .parse::<SocketAddr>();
+                match parsed {
+                    Ok(addr) => {
+                        client
+                            .connect(server_id, format!("http://{}:{}", addr.ip(), addr.port()))
+                            .await
+                            .unwrap();
+                        server_id += 1;
+                        not_connect -= 1;
+                    }
+                    Err(e) => {
+                        eprintln!("error address format {} error: {}", buf, e)
+                    }
+                }
+            }
+            println!("all servers connected;");
+        } else if servers == 1 {
             let mut host = "0.0.0.0".to_owned();
             if let Some(net_conf) = server_config.network_config() {
                 if let Some(addr) = net_conf

@@ -37,7 +37,7 @@ message JobConfig {
   uint32 batch_size         = 5;
   uint32 batch_capacity     = 6;
   uint32 memory_limit       = 7;
-  bool trace_enable           = 8;
+  bool trace_enable         = 8;
   oneof servers {
     Empty local             = 9;
     ServerList part         = 10;
