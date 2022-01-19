@@ -173,7 +173,7 @@ impl AsPhysical for pb::EdgeExpand {
                         );
                     }
                 }
-                if plan_meta.is_partition() && !self.is_edge {
+                if plan_meta.is_partition() && !self.is_edge && !params.columns.is_empty() {
                     // Vertex expansion
                     // Move everything to Auxilia
                     auxilia.params = Some(params.clone());
@@ -724,6 +724,37 @@ mod test {
         expected_builder.map(
             pb::logical_plan::Operator::from(build_project("{@a.name, @a.id, @a.age}")).encode_to_vec(),
         );
+        expected_builder.sink(vec![]);
+
+        assert_eq!(job_builder, expected_builder);
+    }
+
+    #[test]
+    fn test_post_process_edgexpd_tag_no_auxilia() {
+        // g.V().out().as('a').select('a')
+        let mut plan = LogicalPlan::default();
+        plan.append_operator_as_node(build_scan(vec![]).into(), vec![])
+            .unwrap();
+        plan.append_operator_as_node(build_edgexpd(false, vec![], Some("a".into())).into(), vec![0])
+            .unwrap();
+        plan.append_operator_as_node(build_project("@a").into(), vec![1])
+            .unwrap();
+        let mut job_builder = JobBuilder::default();
+        let mut plan_meta = plan.meta.clone();
+        plan_meta.set_partition(true);
+        plan.add_job_builder(&mut job_builder, &mut plan_meta)
+            .unwrap();
+
+        let mut expected_builder = JobBuilder::default();
+        expected_builder.add_source(
+            pb::logical_plan::Operator::from(build_scan(vec![]))
+                .encode_to_vec(),
+        );
+        expected_builder.repartition(vec![]);
+        expected_builder
+            .flat_map(pb::logical_plan::Operator::from(build_edgexpd(false, vec![], Some("a".into()))).encode_to_vec());
+        expected_builder
+            .map(pb::logical_plan::Operator::from(build_project("@a")).encode_to_vec());
         expected_builder.sink(vec![]);
 
         assert_eq!(job_builder, expected_builder);
