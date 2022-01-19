@@ -82,6 +82,48 @@ mod tests {
         result
     }
 
+    // g.V().has("~label")
+    #[test]
+    fn select_label_exist_test() {
+        let select_opr_pb = pb::Select { predicate: Some(str_to_expr_pb("@.~label".to_string()).unwrap()) };
+        let mut result = select_test(init_source(), select_opr_pb);
+        let mut count = 0;
+        while let Some(Ok(_)) = result.next() {
+            count += 1;
+        }
+
+        assert_eq!(count, 2);
+    }
+
+    // g.V().has("~id")
+    #[test]
+    fn select_id_exist_test() {
+        let select_opr_pb = pb::Select { predicate: Some(str_to_expr_pb("@.~id".to_string()).unwrap()) };
+        let mut result = select_test(init_source(), select_opr_pb);
+        let mut count = 0;
+        while let Some(Ok(_)) = result.next() {
+            count += 1;
+        }
+
+        assert_eq!(count, 2);
+    }
+
+    // g.V().has("code")
+    #[test]
+    fn select_property_exist_test() {
+        let select_opr_pb = pb::Select { predicate: Some(str_to_expr_pb("@.code".to_string()).unwrap()) };
+        let mut result = select_test(init_source(), select_opr_pb);
+        let mut count = 0;
+        while let Some(Ok(record)) = result.next() {
+            if let Some(element) = record.get(None).unwrap().as_graph_element() {
+                assert!(element.id() < 2)
+            }
+            count += 1;
+        }
+
+        assert_eq!(count, 1);
+    }
+
     // g.V().has("id",gt(1))
     #[test]
     fn select_gt_test() {

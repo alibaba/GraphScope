@@ -153,10 +153,14 @@ pub(crate) mod tests {
     use crate::process::record::RecordElement;
 
     pub fn init_vertex1() -> Vertex {
-        let map1: HashMap<NameOrId, Object> =
-            vec![("id".into(), object!(1)), ("age".into(), object!(29)), ("name".into(), object!("marko"))]
-                .into_iter()
-                .collect();
+        let map1: HashMap<NameOrId, Object> = vec![
+            ("id".into(), object!(1)),
+            ("age".into(), object!(29)),
+            ("name".into(), object!("marko")),
+            ("code".into(), object!("11051")),
+        ]
+        .into_iter()
+        .collect();
         Vertex::new(DynDetails::new(DefaultDetails::with_property(1, "person".into(), map1)))
     }
 
