@@ -1,5 +1,6 @@
 package com.alibaba.graphscope.gremlin;
 
+import org.apache.tinkerpop.gremlin.process.traversal.step.filter.IsStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.HasContainer;
 
 import java.util.List;
@@ -21,4 +22,13 @@ public enum PredicateExprTransformerFactory implements PredicateExprTransformer 
             return expr;
         }
     },
+    EXPR_FROM_IS_STEP {
+        @Override
+        public String apply(Object arg) {
+            IsStep isStep = (IsStep) arg;
+            // current value
+            String key = "@";
+            return flatPredicate(key, isStep.getPredicate());
+        }
+    }
 }

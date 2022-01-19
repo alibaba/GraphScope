@@ -69,6 +69,7 @@ traversalMethod
     | traversalMethod_groupCount // groupCount()
     | traversalMethod_values    // values()
     | traversalMethod_count // count()
+    | traversalMethod_is    // is()
     ;
 
 traversalSourceSpawnMethod_V
@@ -237,6 +238,13 @@ traversalMethod_values
 // fold()
 traversalMethod_fold
 	: 'fold' LPAREN RPAREN
+	;
+
+// is(27)
+// is(P.eq(27))
+traversalMethod_is
+	: 'is' LPAREN genericLiteral RPAREN
+	| 'is' LPAREN traversalPredicate RPAREN
 	;
 
 // only permit non empty, \'\' or \"\" or \'null\' is meaningless as a parameter

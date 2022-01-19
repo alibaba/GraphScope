@@ -84,6 +84,18 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
     }
 
     @Override
+    public Traversal visitTraversalMethod_is(GremlinGSParser.TraversalMethod_isContext ctx) {
+        if (ctx.genericLiteral() != null) {
+            return graphTraversal.is(GenericLiteralVisitor.getInstance().visitGenericLiteral(ctx.genericLiteral()));
+        } else if (ctx.traversalPredicate() != null) {
+            return graphTraversal.is(
+                    TraversalPredicateVisitor.getInstance().visitTraversalPredicate(ctx.traversalPredicate()));
+        } else {
+            throw new UnsupportedEvalException(ctx.getClass(), "supported pattern is [is(27)] or [is(eq(27))])");
+        }
+    }
+
+    @Override
     public Traversal visitTraversalMethod_out(GremlinGSParser.TraversalMethod_outContext ctx) {
         return graphTraversal.out(GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList()));
     }

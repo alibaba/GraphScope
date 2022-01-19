@@ -429,6 +429,16 @@ public class PositiveEvalTest {
     }
 
     @Test
+    public void g_V_values_is_val_test() {
+        Assert.assertEquals(g.V().values("name").is(27), eval("g.V().values(\"name\").is(27)"));
+    }
+
+    @Test
+    public void g_V_values_is_p_test() {
+        Assert.assertEquals(g.V().values("name").is(P.eq(27)), eval("g.V().values(\"name\").is(P.eq(27))"));
+    }
+
+    @Test
     public void g_V_as_test() {
         Assert.assertEquals(g.V().as("a"), eval("g.V().as('a')"));
     }
