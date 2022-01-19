@@ -33,7 +33,7 @@ public class TopKStrategyTest {
         OrderOp orderLimit = (OrderOp) opCollection.unmodifiableCollection().get(0);
 
         Assert.assertEquals(1, opCollection.unmodifiableCollection().size());
-        Assert.assertEquals(1, orderLimit.getLower().get().getArg());
-        Assert.assertEquals(2, orderLimit.getUpper().get().getArg());
+        Assert.assertEquals(1, orderLimit.getLower().get().applyArg());
+        Assert.assertEquals(2, orderLimit.getUpper().get().applyArg());
     }
 }

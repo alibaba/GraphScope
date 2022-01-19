@@ -16,7 +16,6 @@
 
 package com.alibaba.graphscope.common.intermediate.process;
 
-import com.alibaba.graphscope.common.exception.InterOpIllegalArgException;
 import com.alibaba.graphscope.common.exception.InterOpUnsupportedException;
 import com.alibaba.graphscope.common.intermediate.ArgAggFn;
 import com.alibaba.graphscope.common.intermediate.InterOpCollection;
@@ -25,7 +24,6 @@ import com.alibaba.graphscope.common.jna.type.FfiAlias;
 import org.javatuples.Pair;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Function;
 
 public class SinkOutputProcessor implements InterOpProcessor {
@@ -48,21 +46,7 @@ public class SinkOutputProcessor implements InterOpProcessor {
             } else if (cur instanceof ProjectOp) {
                 ProjectOp op = (ProjectOp) cur;
                 sinkArg = new SinkArg(false);
-                List<Pair> exprWithAlias = (List<Pair>) op.getExprWithAlias().get().getArg();
-
-                Optional<OpArg> aliasOpt = op.getAlias();
-                if (aliasOpt.isPresent()) {
-                    // replace with the query given alias
-                    if (exprWithAlias.size() == 1) {
-                        Pair firstEntry = exprWithAlias.get(0);
-                        exprWithAlias.set(0, firstEntry.setAt1(aliasOpt.get().getArg()));
-                    }
-                    if (exprWithAlias.size() > 1) {
-                        throw new InterOpIllegalArgException(op.getClass(),
-                                "exprWithAlias", "multiple columns as a single alias is unsupported");
-                    }
-                }
-
+                List<Pair> exprWithAlias = (List<Pair>) op.getExprWithAlias().get().applyArg();
                 for (Pair pair : exprWithAlias) {
                     FfiAlias.ByValue alias = (FfiAlias.ByValue) pair.getValue1();
                     sinkArg.addColumnName(alias.alias);
@@ -71,12 +55,12 @@ public class SinkOutputProcessor implements InterOpProcessor {
             } else if (cur instanceof GroupOp) {
                 GroupOp op = (GroupOp) cur;
                 sinkArg = new SinkArg(false);
-                List<Pair> groupKeys = (List<Pair>) op.getGroupByKeys().get().getArg();
+                List<Pair> groupKeys = (List<Pair>) op.getGroupByKeys().get().applyArg();
                 for (Pair pair : groupKeys) {
                     FfiAlias.ByValue alias = (FfiAlias.ByValue) pair.getValue1();
                     sinkArg.addColumnName(alias.alias);
                 }
-                List<ArgAggFn> groupValues = (List<ArgAggFn>) op.getGroupByValues().get().getArg();
+                List<ArgAggFn> groupValues = (List<ArgAggFn>) op.getGroupByValues().get().applyArg();
                 for (ArgAggFn aggFn : groupValues) {
                     sinkArg.addColumnName(aggFn.getAlias().alias);
                 }

@@ -9,6 +9,7 @@ import org.apache.tinkerpop.gremlin.structure.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,7 +55,7 @@ public enum GremlinResultParserFactory implements GremlinResultParser {
                                 throw new GremlinResultParserException("map value should have property key");
                             }
                             Map tagEntry = (Map) projectResult.computeIfAbsent(tag, k1 -> new HashMap<>());
-                            tagEntry.put(property, v);
+                            tagEntry.put(property, Collections.singletonList(v));
                         }
                     });
                 } else {

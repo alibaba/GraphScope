@@ -42,6 +42,6 @@ public class DedupStepTest {
         DedupOp op = (DedupOp) StepTransformFactory.DEDUP_STEP.apply(step);
 
         FfiVariable.ByValue expectedVar = ArgUtils.asNoneVar();
-        Assert.assertEquals(Collections.singletonList(expectedVar), op.getDedupKeys().get().getArg());
+        Assert.assertEquals(Collections.singletonList(expectedVar), op.getDedupKeys().get().applyArg());
     }
 }

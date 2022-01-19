@@ -40,7 +40,7 @@ public class SelectStepTest {
         Traversal traversal = g.V().as("a").out().as("b").select("a", "b");
         Step selectStep = traversal.asAdmin().getEndStep();
         ProjectOp op = (ProjectOp) StepTransformFactory.SELECT_BY_STEP.apply(selectStep);
-        List<Pair> exprWithAlias = (List<Pair>) op.getExprWithAlias().get().getArg();
+        List<Pair> exprWithAlias = (List<Pair>) op.getExprWithAlias().get().applyArg();
 
         Pair firstEntry = exprWithAlias.get(0);
         Assert.assertEquals("@a", firstEntry.getValue0());
@@ -56,7 +56,7 @@ public class SelectStepTest {
         Traversal traversal = g.V().as("a").out().as("b").select("a", "b").by("name");
         Step selectStep = traversal.asAdmin().getEndStep();
         ProjectOp op = (ProjectOp) StepTransformFactory.SELECT_BY_STEP.apply(selectStep);
-        List<Pair> exprWithAlias = (List<Pair>) op.getExprWithAlias().get().getArg();
+        List<Pair> exprWithAlias = (List<Pair>) op.getExprWithAlias().get().applyArg();
 
         Pair firstEntry = exprWithAlias.get(0);
         Assert.assertEquals("@a.name", firstEntry.getValue0());
@@ -73,7 +73,7 @@ public class SelectStepTest {
         Step selectStep = traversal.asAdmin().getEndStep();
         ProjectOp op = (ProjectOp) StepTransformFactory.SELECT_ONE_BY_STEP.apply(selectStep);
 
-        List<Pair> exprWithAlias = (List<Pair>) op.getExprWithAlias().get().getArg();
+        List<Pair> exprWithAlias = (List<Pair>) op.getExprWithAlias().get().applyArg();
         Assert.assertEquals("@a", exprWithAlias.get(0).getValue0());
         Assert.assertEquals(ArgUtils.asFfiAlias("project_a", false), exprWithAlias.get(0).getValue1());
     }
@@ -84,7 +84,7 @@ public class SelectStepTest {
         Step selectStep = traversal.asAdmin().getEndStep();
         ProjectOp op = (ProjectOp) StepTransformFactory.SELECT_ONE_BY_STEP.apply(selectStep);
 
-        List<Pair> exprWithAlias = (List<Pair>) op.getExprWithAlias().get().getArg();
+        List<Pair> exprWithAlias = (List<Pair>) op.getExprWithAlias().get().applyArg();
         Assert.assertEquals("@a.name", exprWithAlias.get(0).getValue0());
         Assert.assertEquals(ArgUtils.asFfiAlias("a_name", false), exprWithAlias.get(0).getValue1());
     }
@@ -95,7 +95,7 @@ public class SelectStepTest {
         Step selectStep = traversal.asAdmin().getEndStep();
         ProjectOp op = (ProjectOp) StepTransformFactory.SELECT_ONE_BY_STEP.apply(selectStep);
 
-        List<Pair> exprWithAlias = (List<Pair>) op.getExprWithAlias().get().getArg();
+        List<Pair> exprWithAlias = (List<Pair>) op.getExprWithAlias().get().applyArg();
         Assert.assertEquals("{@a.name}", exprWithAlias.get(0).getValue0());
         Assert.assertEquals(ArgUtils.asFfiAlias("a_{name}", false), exprWithAlias.get(0).getValue1());
     }
@@ -106,7 +106,7 @@ public class SelectStepTest {
         Step selectStep = traversal.asAdmin().getEndStep();
         ProjectOp op = (ProjectOp) StepTransformFactory.SELECT_ONE_BY_STEP.apply(selectStep);
 
-        List<Pair> exprWithAlias = (List<Pair>) op.getExprWithAlias().get().getArg();
+        List<Pair> exprWithAlias = (List<Pair>) op.getExprWithAlias().get().applyArg();
         Assert.assertEquals("{@a.name, @a.id}", exprWithAlias.get(0).getValue0());
         Assert.assertEquals(ArgUtils.asFfiAlias("a_{name, id}", false), exprWithAlias.get(0).getValue1());
     }
