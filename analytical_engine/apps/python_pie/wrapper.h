@@ -22,6 +22,8 @@
 #include <utility>
 #include <vector>
 
+#include "boost/lexical_cast.hpp"
+
 #include "vineyard/graph/fragment/arrow_fragment.h"
 
 #include "apps/python_pie/aggregate_factory.h"
@@ -101,19 +103,21 @@ class PythonPIEFragment {
 
   bool is_inner_node(const vertex_t& v) { return fragment_->IsInnerVertex(v); }
   bool is_outer_node(const vertex_t& v) { return fragment_->IsOuterVertex(v); }
-  bool get_node(label_id_t label, const oid_t& oid, vertex_t& v) {
-    return fragment_->GetVertex(label, oid, v);
+  bool get_node(label_id_t label, const std::string& oid, vertex_t& v) {
+    return fragment_->GetVertex(label, boost::lexical_cast<oid_t>(oid), v);
   }
-  bool get_inner_node(label_id_t label, const oid_t& oid, vertex_t& v) {
-    return fragment_->GetInnerVertex(label, oid, v);
+  bool get_inner_node(label_id_t label, const std::string& oid, vertex_t& v) {
+    return fragment_->GetInnerVertex(label, boost::lexical_cast<oid_t>(oid), v);
   }
-  bool get_outer_node(label_id_t label, const oid_t& oid, vertex_t& v) {
-    return fragment_->GetOuterVertex(label, oid, v);
+  bool get_outer_node(label_id_t label, const std::string& oid, vertex_t& v) {
+    return fragment_->GetOuterVertex(label, boost::lexical_cast<oid_t>(oid), v);
   }
   bool get_node_by_gid(vid_t gid, vertex_t& v) {
     return fragment_->Gid2Vertex(gid, v);
   }
-  oid_t get_node_id(const vertex_t& v) const { return fragment_->GetId(v); }
+  std::string get_node_id(const vertex_t& v) const {
+    return boost::lexical_cast<std::string>(fragment_->GetId(v));
+  }
 
   uint64_t get_inner_node_gid(const vertex_t& v) {
     return fragment_->GetInnerVertexGid(v);
@@ -121,8 +125,8 @@ class PythonPIEFragment {
   uint64_t get_outer_node_gid(const vertex_t& v) {
     return fragment_->GetOuterVertexGid(v);
   }
-  bool get_gid_by_oid(const oid_t& oid, vid_t& gid) {
-    return fragment_->Oid2Gid(oid, gid);
+  bool get_gid_by_oid(const std::string& oid, vid_t& gid) {
+    return fragment_->Oid2Gid(boost::lexical_cast<oid_t>(oid), gid);
   }
   adj_list_t get_outgoing_edges(const vertex_t& v, label_id_t e_label) {
     return adj_list_t(fragment_->GetOutgoingAdjList(v, e_label));
