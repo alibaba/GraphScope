@@ -192,6 +192,14 @@ pub(crate) mod tests {
         vec![r1, r2]
     }
 
+    pub fn init_source_with_multi_tags() -> Vec<Record> {
+        let v1 = init_vertex1();
+        let v2 = init_vertex2();
+        let mut r1 = Record::new(v1, Some("a".into()));
+        r1.append(v2, Some("a".into()));
+        vec![r1]
+    }
+
     #[test]
     // None tag refers to the last appended entry;
     fn test_get_none_tag_entry() {

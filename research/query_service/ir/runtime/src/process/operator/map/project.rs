@@ -136,7 +136,7 @@ mod tests {
     use crate::graph::element::{GraphElement, Vertex};
     use crate::graph::property::{DefaultDetails, DynDetails};
     use crate::process::operator::map::MapFuncGen;
-    use crate::process::operator::tests::{init_source, init_source_with_tag, init_vertex1, init_vertex2};
+    use crate::process::operator::tests::{init_source, init_source_with_tag, init_vertex1, init_vertex2, init_source_with_multi_tags};
     use crate::process::record::{Entry, ObjectElement, Record, RecordElement};
 
     fn project_test(source: Vec<Record>, project_opr_pb: pb::Project) -> ResultStream<Record> {
@@ -603,5 +603,38 @@ mod tests {
             ),
         ];
         assert_eq!(object_result, expected_result);
+    }
+
+    #[test]
+    fn project_multi_mapping_tags() {
+        let project_opr_pb = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: Some(str_to_expr_pb("@a".to_string()).unwrap()),
+                alias: Some(NameOrId::Str("a_col".to_string()).into()),
+            },
+            pb::project::ExprAlias {
+                expr: Some(str_to_expr_pb("@b".to_string()).unwrap()),
+                alias: Some(NameOrId::Str("b_col".to_string()).into()),
+            }],
+            is_append: true,
+        };
+        let mut result = project_test(init_source_with_multi_tags(), project_opr_pb);
+        let mut results = vec![];
+        while let Some(Ok(res)) = result.next() {
+            let a_entry = res.get(Some(&"a_col".into())).unwrap().as_ref();
+            let b_entry = res.get(Some(&"b_col".into())).unwrap().as_ref();
+            match (a_entry, b_entry) {
+                (
+                    Entry::Element(RecordElement::OffGraph(ObjectElement::Prop(val1))),
+                    Entry::Element(RecordElement::OffGraph(ObjectElement::Prop(val2))),
+                ) => {
+                    results.push(val1.clone());
+                    results.push(val2.clone());
+                }
+                _ => {}
+            }
+        }
+        let expected_results = vec![object!(1), object!(2)];
+        assert_eq!(results, expected_results);
     }
 }
