@@ -273,7 +273,8 @@ if (CYTHON_PREGEL_APP)
     file(GLOB_RECURSE FILES_NEED_COMPILE "*.cc")
     add_library(${FRAME_NAME} SHARED ${FILES_NEED_COMPILE}
                                      ${ANALYTICAL_ENGINE_FRAME_DIR}/cython_app_frame.cc)
-    target_compile_definitions(${FRAME_NAME} PRIVATE _VD_TYPE=$_vd_type
+    target_compile_definitions(${FRAME_NAME} PRIVATE _OID_TYPE=$_oid_type
+                                                     _VD_TYPE=$_vd_type
                                                      _MD_TYPE=$_md_type
                                                      _MODULE_NAME=$_module_name
                                                      _GRAPH_TYPE=$_graph_type
@@ -285,7 +286,8 @@ elseif (CYTHON_PIE_APP)
     file(GLOB_RECURSE FILES_NEED_COMPILE "*.cc")
     add_library(${FRAME_NAME} SHARED ${FILES_NEED_COMPILE}
                                      ${ANALYTICAL_ENGINE_FRAME_DIR}/cython_pie_app_frame.cc)
-    target_compile_definitions(${FRAME_NAME} PRIVATE _VD_TYPE=$_vd_type
+    target_compile_definitions(${FRAME_NAME} PRIVATE _OID_TYPE=$_oid_type
+                                                     _VD_TYPE=$_vd_type
                                                      _MD_TYPE=$_md_type
                                                      _MODULE_NAME=$_module_name
                                                      _GRAPH_TYPE=$_graph_type

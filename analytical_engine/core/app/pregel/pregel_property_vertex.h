@@ -22,6 +22,8 @@
 #include <utility>
 #include <vector>
 
+#include "boost/lexical_cast.hpp"
+
 #include "grape/grape.h"
 #include "grape/utils/iterator_pair.h"
 
@@ -65,7 +67,9 @@ class PregelPropertyVertex {
   PregelPropertyVertex(const fragment_t* fragment, vertex_t vertex)
       : fragment_(fragment), vertex_(vertex) {}
 
-  std::string id() { return std::to_string(fragment_->GetId(vertex_)); }
+  std::string id() {
+    return boost::lexical_cast<std::string>(fragment_->GetId(vertex_));
+  }
 
   std::string label() const {
     return compute_context_->schema()->GetVertexLabelName(label_id_);
