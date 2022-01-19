@@ -97,7 +97,6 @@ traversalMethod_hasId
 // has("name")
 traversalMethod_has
     : 'has' LPAREN stringLiteral COMMA genericLiteral RPAREN  // indicate eq
-    | 'has' LPAREN stringLiteral RPAREN
     | 'has' LPAREN stringLiteral COMMA traversalPredicate RPAREN
     ;
 
