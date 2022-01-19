@@ -1229,7 +1229,6 @@ def test_run_on_string_oid_graph(graphscope_session, p2p_property_graph_string, 
     r2["node"] = r2["node"].astype(int)
     r2 = r2.sort_values(by=["node"]).to_numpy(dtype=float)
     r2[r2 == 1000000000.0] = float("inf")
-    np.savetxt("/tmp/rlt", r2, delimiter="\t")
     assert np.allclose(r2, sssp_result["directed"])
 
 
