@@ -28,7 +28,6 @@ public class ParserUtils {
                 return new DetachedEdge(edge.getId(), edge.getLabel().getName(), edgeProperties,
                         edge.getSrcId(), edge.getSrcLabel().getName(), edge.getDstId(), edge.getDstLabel().getName());
             case OBJECT:
-                logger.info("parseElement is {}", element.getObject());
                 return parseCommonValue(element.getObject());
             default:
                 throw new GremlinResultParserException(element.getInnerCase() + " is invalid");
