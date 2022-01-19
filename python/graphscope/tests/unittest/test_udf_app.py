@@ -1008,7 +1008,7 @@ def test_property_context(graphscope_session, p2p_property_graph):
     vdf_out = ctx.to_vineyard_dataframe({"node": "v:person.id", "r": "r:person"})
     assert vdf_out is not None
     # add column
-    g = p2p_property_graph.add_column(ctx1, {"result0": "r:person"})
+    g = p2p_property_graph.add_column(ctx, {"result0": "r:person"})
     g_out_df = g.to_dataframe({"result": "v:person.result0"})
     assert g_out_df.equals(df_out)
 
