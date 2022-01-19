@@ -196,7 +196,7 @@ pub(crate) mod tests {
         let v1 = init_vertex1();
         let v2 = init_vertex2();
         let mut r1 = Record::new(v1, Some("a".into()));
-        r1.append(v2, Some("a".into()));
+        r1.append(v2, Some("b".into()));
         vec![r1]
     }
 
