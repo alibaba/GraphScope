@@ -405,3 +405,25 @@ setup(
     install_requires=parsed_reqs(),
     extras_require=parsed_dev_reqs(),
 )
+
+
+if os.name == "nt":
+
+    class _ReprableString(str):
+        def __repr__(self) -> str:
+            return self
+
+    raise RuntimeError(
+        _ReprableString(
+            """
+            ====================================================================
+
+            GraphScope doesn't support Windows natively, please try to install graphscope in WSL
+
+                https://docs.microsoft.com/en-us/windows/wsl/install
+
+            with pip.
+
+            ===================================================================="""
+        )
+    )
