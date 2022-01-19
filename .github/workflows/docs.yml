@@ -47,6 +47,10 @@ jobs:
             exit -1
         fi
 
+    - name: Setup tmate session
+      if: always()
+      uses: mxschmitt/action-tmate@v2
+
     - name: Java Format and Lint Check
       run: |
         wget https://github.com/google/google-java-format/releases/download/v1.13.0/google-java-format-1.13.0-all-deps.jar
