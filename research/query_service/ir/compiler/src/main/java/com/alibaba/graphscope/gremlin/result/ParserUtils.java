@@ -64,7 +64,7 @@ public class ParserUtils {
             case STR_ARRAY:
                 return value.getStrArray().getItemList();
             case NONE:
-                return value.getNone();
+                return EmptyValue.INSTANCE;
             default:
                 throw new GremlinResultParserException(value.getItemCase() + " is unsupported yet");
 

@@ -278,6 +278,12 @@ public class PositiveEvalTest {
     }
 
     @Test
+    public void g_V_select_a_by_valueMap_key_1_test() {
+        Traversal expected = g.V().as("a").select("a").by(__.valueMap("name"));
+        Assert.assertEquals(expected, eval("g.V().as(\"a\").select(\"a\").by(__.valueMap(\"name\"))"));
+    }
+
+    @Test
     public void g_V_select_a_by_valueMap_keys_test() {
         Traversal expected = g.V().as("a").select("a").by(__.valueMap("name", "id"));
         Assert.assertEquals(expected, eval("g.V().as(\"a\").select(\"a\").by(valueMap(\"name\", \"id\"))"));
@@ -452,6 +458,11 @@ public class PositiveEvalTest {
     }
 
     @Test
+    public void g_V_group_by_key_values_1_test() {
+        Assert.assertEquals(g.V().group().by(__.values("name")), eval("g.V().group().by(__.values(\"name\"))"));
+    }
+
+    @Test
     public void g_V_group_by_key_values_as_test() {
         Assert.assertEquals(g.V().group().by(__.values("name").as("name")),
                 eval("g.V().group().by(values(\"name\").as(\"name\"))"));
@@ -466,6 +477,12 @@ public class PositiveEvalTest {
     public void g_V_group_by_key_values_by_value_fold_test() {
         Assert.assertEquals(g.V().group().by(__.values("name")).by(__.fold()),
                 eval("g.V().group().by(values(\"name\")).by(fold())"));
+    }
+
+    @Test
+    public void g_V_group_by_key_values_by_value_fold_1_test() {
+        Assert.assertEquals(g.V().group().by(__.values("name")).by(__.fold()),
+                eval("g.V().group().by(values(\"name\")).by(__.fold())"));
     }
 
     @Test

@@ -16,22 +16,48 @@
 
 package com.alibaba.graphscope.common.intermediate.operator;
 
+import com.alibaba.graphscope.common.exception.InterOpIllegalArgException;
+import org.javatuples.Pair;
+
+import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 
 public class ProjectOp extends InterOpBase {
-    // expr
-    private Optional<OpArg> singleExpr;
+    // List of Pair<expr, alias>
+    private Optional<OpArg> exprWithAlias;
 
     public ProjectOp() {
         super();
-        singleExpr = Optional.empty();
+        exprWithAlias = Optional.empty();
     }
 
-    public Optional<OpArg> getSingleExpr() {
-        return singleExpr;
+    public Optional<OpArg> getExprWithAlias() {
+        if (exprWithAlias.isPresent()) {
+            Object arg = exprWithAlias.get().getArg();
+            Function transform = exprWithAlias.get().getTransform();
+            Function thenApply = transform.andThen((Object o) -> {
+                List<Pair> exprList = (List<Pair>) o;
+                Optional<OpArg> aliasOpt = getAlias();
+                if (aliasOpt.isPresent()) {
+                    // replace with the query given alias
+                    if (exprList.size() == 1) {
+                        Pair firstEntry = exprList.get(0);
+                        exprList.set(0, firstEntry.setAt1(aliasOpt.get().applyArg()));
+                    }
+                    if (exprList.size() > 1) {
+                        throw new InterOpIllegalArgException(getClass(),
+                                "exprWithAlias", "multiple columns as a single alias is unsupported");
+                    }
+                }
+                return exprList;
+            });
+            setExprWithAlias(new OpArg(arg, thenApply));
+        }
+        return exprWithAlias;
     }
 
-    public void setSingleExpr(OpArg projectExpr) {
-        this.singleExpr = Optional.of(projectExpr);
+    public void setExprWithAlias(OpArg projectExpr) {
+        this.exprWithAlias = Optional.of(projectExpr);
     }
 }

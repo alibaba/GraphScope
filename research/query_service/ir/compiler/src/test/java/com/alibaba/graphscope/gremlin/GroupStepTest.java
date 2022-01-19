@@ -47,8 +47,8 @@ public class GroupStepTest {
                 ArgUtils.asFfiAlias("keys", false));
         ArgAggFn expectedValue = new ArgAggFn(FfiAggOpt.ToList, ArgUtils.asFfiAlias("values", false));
 
-        Assert.assertEquals(Collections.singletonList(expectedKey), op.getGroupByKeys().get().getArg());
-        Assert.assertEquals(Collections.singletonList(expectedValue), op.getGroupByValues().get().getArg());
+        Assert.assertEquals(Collections.singletonList(expectedKey), op.getGroupByKeys().get().applyArg());
+        Assert.assertEquals(Collections.singletonList(expectedValue), op.getGroupByValues().get().applyArg());
     }
 
     @Test
@@ -62,8 +62,8 @@ public class GroupStepTest {
                 ArgUtils.asFfiAlias("keys_name", false));
         ArgAggFn expectedValue = new ArgAggFn(FfiAggOpt.ToList, ArgUtils.asFfiAlias("values", false));
 
-        Assert.assertEquals(Collections.singletonList(expectedKey), op.getGroupByKeys().get().getArg());
-        Assert.assertEquals(Collections.singletonList(expectedValue), op.getGroupByValues().get().getArg());
+        Assert.assertEquals(Collections.singletonList(expectedKey), op.getGroupByKeys().get().applyArg());
+        Assert.assertEquals(Collections.singletonList(expectedValue), op.getGroupByValues().get().applyArg());
     }
 
     @Test
@@ -77,8 +77,8 @@ public class GroupStepTest {
                 ArgUtils.asFfiAlias("keys_name", false));
         ArgAggFn expectedValue = new ArgAggFn(FfiAggOpt.ToList, ArgUtils.asFfiAlias("values", false));
 
-        Assert.assertEquals(Collections.singletonList(expectedKey), op.getGroupByKeys().get().getArg());
-        Assert.assertEquals(Collections.singletonList(expectedValue), op.getGroupByValues().get().getArg());
+        Assert.assertEquals(Collections.singletonList(expectedKey), op.getGroupByKeys().get().applyArg());
+        Assert.assertEquals(Collections.singletonList(expectedValue), op.getGroupByValues().get().applyArg());
     }
 
     @Test
@@ -92,8 +92,8 @@ public class GroupStepTest {
                 ArgUtils.asFfiAlias("a", true));
         ArgAggFn expectedValue = new ArgAggFn(FfiAggOpt.ToList, ArgUtils.asFfiAlias("values", false));
 
-        Assert.assertEquals(Collections.singletonList(expectedKey), op.getGroupByKeys().get().getArg());
-        Assert.assertEquals(Collections.singletonList(expectedValue), op.getGroupByValues().get().getArg());
+        Assert.assertEquals(Collections.singletonList(expectedKey), op.getGroupByKeys().get().applyArg());
+        Assert.assertEquals(Collections.singletonList(expectedValue), op.getGroupByValues().get().applyArg());
     }
 
     @Test
@@ -107,8 +107,8 @@ public class GroupStepTest {
                 ArgUtils.asFfiAlias("keys_name", false));
         ArgAggFn expectedValue = new ArgAggFn(FfiAggOpt.Count, ArgUtils.asFfiAlias("values", false));
 
-        Assert.assertEquals(Collections.singletonList(expectedKey), op.getGroupByKeys().get().getArg());
-        Assert.assertEquals(Collections.singletonList(expectedValue), op.getGroupByValues().get().getArg());
+        Assert.assertEquals(Collections.singletonList(expectedKey), op.getGroupByKeys().get().applyArg());
+        Assert.assertEquals(Collections.singletonList(expectedValue), op.getGroupByValues().get().applyArg());
     }
 
     @Test
@@ -122,8 +122,8 @@ public class GroupStepTest {
                 ArgUtils.asFfiAlias("keys_name", false));
         ArgAggFn expectedValue = new ArgAggFn(FfiAggOpt.Count, ArgUtils.asFfiAlias("b", true));
 
-        Assert.assertEquals(Collections.singletonList(expectedKey), op.getGroupByKeys().get().getArg());
-        Assert.assertEquals(Collections.singletonList(expectedValue), op.getGroupByValues().get().getArg());
+        Assert.assertEquals(Collections.singletonList(expectedKey), op.getGroupByKeys().get().applyArg());
+        Assert.assertEquals(Collections.singletonList(expectedValue), op.getGroupByValues().get().applyArg());
     }
 
     @Test
@@ -137,8 +137,8 @@ public class GroupStepTest {
                 ArgUtils.asFfiAlias("keys_name", false));
         ArgAggFn expectedValue = new ArgAggFn(FfiAggOpt.ToList, ArgUtils.asFfiAlias("values", false));
 
-        Assert.assertEquals(Collections.singletonList(expectedKey), op.getGroupByKeys().get().getArg());
-        Assert.assertEquals(Collections.singletonList(expectedValue), op.getGroupByValues().get().getArg());
+        Assert.assertEquals(Collections.singletonList(expectedKey), op.getGroupByKeys().get().applyArg());
+        Assert.assertEquals(Collections.singletonList(expectedValue), op.getGroupByValues().get().applyArg());
     }
 
     @Test
@@ -152,8 +152,8 @@ public class GroupStepTest {
                 ArgUtils.asFfiAlias("keys_name", false));
         ArgAggFn expectedValue = new ArgAggFn(FfiAggOpt.ToList, ArgUtils.asFfiAlias("b", true));
 
-        Assert.assertEquals(Collections.singletonList(expectedKey), op.getGroupByKeys().get().getArg());
-        Assert.assertEquals(Collections.singletonList(expectedValue), op.getGroupByValues().get().getArg());
+        Assert.assertEquals(Collections.singletonList(expectedKey), op.getGroupByKeys().get().applyArg());
+        Assert.assertEquals(Collections.singletonList(expectedValue), op.getGroupByValues().get().applyArg());
     }
 
 
@@ -167,8 +167,8 @@ public class GroupStepTest {
                 ArgUtils.asFfiAlias("keys", false));
         ArgAggFn expectedValue = new ArgAggFn(FfiAggOpt.Count, ArgUtils.asFfiAlias("values", false));
 
-        Assert.assertEquals(Collections.singletonList(expectedKey), op.getGroupByKeys().get().getArg());
-        Assert.assertEquals(Collections.singletonList(expectedValue), op.getGroupByValues().get().getArg());
+        Assert.assertEquals(Collections.singletonList(expectedKey), op.getGroupByKeys().get().applyArg());
+        Assert.assertEquals(Collections.singletonList(expectedValue), op.getGroupByValues().get().applyArg());
     }
 
     @Test
@@ -182,8 +182,8 @@ public class GroupStepTest {
                 ArgUtils.asFfiAlias("keys_name", false));
         ArgAggFn expectedValue = new ArgAggFn(FfiAggOpt.Count, ArgUtils.asFfiAlias("values", false));
 
-        Assert.assertEquals(Collections.singletonList(expectedKey), op.getGroupByKeys().get().getArg());
-        Assert.assertEquals(Collections.singletonList(expectedValue), op.getGroupByValues().get().getArg());
+        Assert.assertEquals(Collections.singletonList(expectedKey), op.getGroupByKeys().get().applyArg());
+        Assert.assertEquals(Collections.singletonList(expectedValue), op.getGroupByValues().get().applyArg());
     }
 
     @Test
@@ -197,8 +197,8 @@ public class GroupStepTest {
                 ArgUtils.asFfiAlias("keys_name", false));
         ArgAggFn expectedValue = new ArgAggFn(FfiAggOpt.Count, ArgUtils.asFfiAlias("values", false));
 
-        Assert.assertEquals(Collections.singletonList(expectedKey), op.getGroupByKeys().get().getArg());
-        Assert.assertEquals(Collections.singletonList(expectedValue), op.getGroupByValues().get().getArg());
+        Assert.assertEquals(Collections.singletonList(expectedKey), op.getGroupByKeys().get().applyArg());
+        Assert.assertEquals(Collections.singletonList(expectedValue), op.getGroupByValues().get().applyArg());
     }
 
     @Test
@@ -212,7 +212,7 @@ public class GroupStepTest {
                 ArgUtils.asFfiAlias("a", true));
         ArgAggFn expectedValue = new ArgAggFn(FfiAggOpt.Count,  ArgUtils.asFfiAlias("values", false));
 
-        Assert.assertEquals(Collections.singletonList(expectedKey), op.getGroupByKeys().get().getArg());
-        Assert.assertEquals(Collections.singletonList(expectedValue), op.getGroupByValues().get().getArg());
+        Assert.assertEquals(Collections.singletonList(expectedKey), op.getGroupByKeys().get().applyArg());
+        Assert.assertEquals(Collections.singletonList(expectedValue), op.getGroupByValues().get().applyArg());
     }
 }

@@ -255,11 +255,13 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
                     GremlinAntlrToJava.getTraversalSupplier().get());
             Traversal nestedTraversal = nestedVisitor.visitTraversalMethod_values(ctx.traversalMethod_values());
             return graphTraversal.by(nestedTraversal);
-        } else if (childCount == 6 && ctx.traversalMethod_values() != null && ctx.traversalMethod_as() != null) {
+        } else if (childCount >= 6 && ctx.traversalMethod_values() != null) {
             TraversalMethodVisitor nestedVisitor = new TraversalMethodVisitor(gvisitor,
                     GremlinAntlrToJava.getTraversalSupplier().get());
-            nestedVisitor.visitTraversalMethod_values(ctx.traversalMethod_values());
-            Traversal nestedTraversal = nestedVisitor.visitTraversalMethod_as(ctx.traversalMethod_as());
+            Traversal nestedTraversal = nestedVisitor.visitTraversalMethod_values(ctx.traversalMethod_values());
+            if (ctx.traversalMethod_as() != null) {
+                nestedTraversal = nestedVisitor.visitTraversalMethod_as(ctx.traversalMethod_as());
+            }
             return graphTraversal.by(nestedTraversal);
         } else {
             throw new UnsupportedEvalException(ctx.getClass(),
@@ -275,11 +277,13 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
                     GremlinAntlrToJava.getTraversalSupplier().get());
             Traversal nestedTraversal = nestedVisitor.visitTraversalMethod_aggregate_func(ctx.traversalMethod_aggregate_func());
             return graphTraversal.by(nestedTraversal);
-        } else if (childCount == 6 && ctx.traversalMethod_aggregate_func() != null && ctx.traversalMethod_as() != null) {
+        } else if (childCount >= 6 && ctx.traversalMethod_aggregate_func() != null) {
             TraversalMethodVisitor nestedVisitor = new TraversalMethodVisitor(gvisitor,
                     GremlinAntlrToJava.getTraversalSupplier().get());
-            nestedVisitor.visitTraversalMethod_aggregate_func(ctx.traversalMethod_aggregate_func());
-            Traversal nestedTraversal = nestedVisitor.visitTraversalMethod_as(ctx.traversalMethod_as());
+            Traversal nestedTraversal = nestedVisitor.visitTraversalMethod_aggregate_func(ctx.traversalMethod_aggregate_func());
+            if (ctx.traversalMethod_as() != null) {
+                nestedTraversal = nestedVisitor.visitTraversalMethod_as(ctx.traversalMethod_as());
+            }
             return graphTraversal.by(nestedTraversal);
         } else {
             throw new UnsupportedEvalException(ctx.getClass(),
