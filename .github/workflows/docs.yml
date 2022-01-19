@@ -12,6 +12,12 @@ jobs:
         submodules: true
         fetch-depth: 0
 
+    - name: Setup Java11
+      uses: actions/setup-java@v2
+      with:
+         distribution: 'zulu'
+         java-version: '11'
+
     - name: Cpp Format and Lint Check
       run: |
         # install clang-format
@@ -46,10 +52,6 @@ jobs:
             echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
             exit -1
         fi
-
-    - name: Setup tmate session
-      if: always()
-      uses: mxschmitt/action-tmate@v2
 
     - name: Java Format and Lint Check
       run: |

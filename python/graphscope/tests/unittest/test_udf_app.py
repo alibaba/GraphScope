@@ -1213,7 +1213,9 @@ def test_edge_traversal(
     )
 
 
-def test_run_on_string_oid_graph(graphscope_session, p2p_property_graph_string, sssp_result):
+def test_run_on_string_oid_graph(
+    graphscope_session, p2p_property_graph_string, sssp_result
+):
     # pregel
     a1 = SSSP_Pregel()
     ctx1 = a1(p2p_property_graph_string, src="6")
