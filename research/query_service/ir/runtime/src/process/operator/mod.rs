@@ -50,7 +50,10 @@ impl TagKey {
     pub fn get_entry(&self, input: &Record) -> Result<Arc<Entry>, FnExecError> {
         let entry = input
             .get(self.tag.as_ref())
-            .ok_or(FnExecError::get_tag_error("Get tag failed since it refers to an empty entry"))?
+            .ok_or(FnExecError::get_tag_error(&format!(
+                "Get tag {:?} failed since it refers to an empty entry",
+                self.tag
+            )))?
             .clone();
         if let Some(key) = self.key.as_ref() {
             if let Some(element) = entry.as_graph_element() {

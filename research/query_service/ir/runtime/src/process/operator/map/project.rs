@@ -629,16 +629,16 @@ mod tests {
             let b_entry = res.get(Some(&"b_col".into())).unwrap().as_ref();
             match (a_entry, b_entry) {
                 (
-                    Entry::Element(RecordElement::OffGraph(ObjectElement::Prop(val1))),
-                    Entry::Element(RecordElement::OffGraph(ObjectElement::Prop(val2))),
+                    Entry::Element(RecordElement::OnGraph(v1)),
+                    Entry::Element(RecordElement::OnGraph(v2)),
                 ) => {
-                    results.push(val1.clone());
-                    results.push(val2.clone());
+                    results.push(v1.id());
+                    results.push(v2.id());
                 }
                 _ => {}
             }
         }
-        let expected_results = vec![object!(1), object!(2)];
+        let expected_results = vec![1, 2];
         assert_eq!(results, expected_results);
     }
 }
