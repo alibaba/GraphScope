@@ -28,7 +28,6 @@ import org.apache.tinkerpop.gremlin.process.traversal.lambda.IdentityTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.ValueTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.*;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.HasContainer;
-import org.apache.tinkerpop.gremlin.process.traversal.util.ConnectiveP;
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.apache.tinkerpop.gremlin.structure.T;
 import org.javatuples.Pair;
@@ -36,7 +35,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.function.BiPredicate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -61,42 +59,6 @@ public class OpArgTransformFactory {
                     throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE, "unimplemented yet");
                 }
             }).collect(Collectors.toList());
-
-    public static Function<List<HasContainer>, String> EXPR_FROM_CONTAINERS = (List<HasContainer> containers) -> {
-        String expr = "";
-        for (int i = 0; i < containers.size(); ++i) {
-            if (i > 0) {
-                expr += " && ";
-            }
-            HasContainer container = containers.get(i);
-            if (container.getPredicate() instanceof ConnectiveP) {
-                throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE, "nested predicate");
-            }
-            Object predicateValue = container.getValue();
-            String valueExpr = getValueExpr(predicateValue);
-            BiPredicate predicate = container.getPredicate().getBiPredicate();
-            if (predicate == Compare.eq) {
-                expr += String.format("@.%s == %s", container.getKey(), valueExpr);
-            } else if (predicate == Compare.neq) {
-                expr += String.format("@.%s != %s", container.getKey(), valueExpr);
-            } else if (predicate == Compare.lt) {
-                expr += String.format("@.%s < %s", container.getKey(), valueExpr);
-            } else if (predicate == Compare.lte) {
-                expr += String.format("@.%s <= %s", container.getKey(), valueExpr);
-            } else if (predicate == Compare.gt) {
-                expr += String.format("@.%s > %s", container.getKey(), valueExpr);
-            } else if (predicate == Compare.gte) {
-                expr += String.format("@.%s >= %s", container.getKey(), valueExpr);
-            } else if (predicate == Contains.within) {
-                expr += String.format("@.%s within %s", container.getKey(), valueExpr);
-            } else if (predicate == Contains.without) {
-                expr += String.format("@.%s without %s", container.getKey(), valueExpr);
-            } else {
-                throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE, "predicate type is unsupported");
-            }
-        }
-        return expr;
-    };
 
     public static Function<List<HasContainer>, List<FfiNameOrId.ByValue>> LABELS_FROM_CONTAINERS = (List<HasContainer> containers) -> {
         List<String> labels = new ArrayList<>();
@@ -236,31 +198,6 @@ public class OpArgTransformFactory {
             default:
                 throw new OpArgIllegalException(OpArgIllegalException.Cause.INVALID_TYPE, "invalid order type");
         }
-    }
-
-    public static String getValueExpr(Object value) {
-        String valueExpr;
-        if (value instanceof String) {
-            valueExpr = String.format("\"%s\"", value);
-        } else if (value instanceof List) {
-            String content = "";
-            List values = (List) value;
-            for (int i = 0; i < values.size(); ++i) {
-                if (i != 0) {
-                    content += ", ";
-                }
-                Object v = values.get(i);
-                if (v instanceof List) {
-                    throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
-                            "nested list of predicate value is unsupported");
-                }
-                content += getValueExpr(v);
-            }
-            valueExpr = String.format("[%s]", content);
-        } else {
-            valueExpr = value.toString();
-        }
-        return valueExpr;
     }
 
     // isQueryGiven is set as true by default

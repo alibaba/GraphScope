@@ -295,6 +295,8 @@ traversalPredicate
     | traversalPredicate_gte
     | traversalPredicate_within
     | traversalPredicate_without
+    | traversalPredicate DOT 'and' LPAREN traversalPredicate RPAREN
+    | traversalPredicate DOT 'or' LPAREN traversalPredicate RPAREN
     ;
 
 traversalPredicate_eq

@@ -86,7 +86,7 @@ public class InterOpCollectionBuilder {
                     predicates.removeAll(labels);
                     // add corner judgement
                     if (!predicates.isEmpty()) {
-                        op.setPredicate(new OpArg(predicates, OpArgTransformFactory.EXPR_FROM_CONTAINERS));
+                        op.setPredicate(new OpArg(predicates, PredicateExprTransformerFactory.EXPR_FROM_CONTAINERS));
                     }
                 }
 
@@ -104,7 +104,7 @@ public class InterOpCollectionBuilder {
                 List containers = ((HasStep) step).getHasContainers();
                 // add corner judgement
                 if (!containers.isEmpty()) {
-                    op.setPredicate(new OpArg(containers, OpArgTransformFactory.EXPR_FROM_CONTAINERS));
+                    op.setPredicate(new OpArg(containers, PredicateExprTransformerFactory.EXPR_FROM_CONTAINERS));
                 }
                 return op;
             }
