@@ -1,7 +1,9 @@
 use std::any::{Any, TypeId};
-use std::cell::RefCell;
+use std::cell::{RefCell, UnsafeCell};
 use std::collections::HashMap;
 use std::ops::{Deref, DerefMut};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+use std::sync::Arc;
 
 use crossbeam_utils::sync::ShardedLock;
 
@@ -12,11 +14,149 @@ pub type KeyedResources = HashMap<String, Box<dyn Any + Send>>;
 pub type SharedResourceMap = HashMap<TypeId, Box<dyn Any + Send + Sync>>;
 pub type SharedKeyedResourceMap = HashMap<String, Box<dyn Any + Send + Sync>>;
 
+struct REntry {
+    ref_cnt: Arc<AtomicUsize>,
+    entry: Box<dyn Any + Send + Sync>,
+    freezed: AtomicBool,
+}
+
+impl REntry {
+    fn new<T: Any + Send + Sync>(e: T) -> Self {
+        REntry {
+            ref_cnt: Arc::new(AtomicUsize::new(0)),
+            entry: Box::new(e) as Box<dyn Any + Send + Sync>,
+            freezed: AtomicBool::new(false),
+        }
+    }
+
+    fn get_ref<T: Any>(&self) -> Option<ArcRef<T>> {
+        if self.freezed.load(Ordering::SeqCst) {
+            return None;
+        }
+        let r = self.entry.downcast_ref::<T>()?;
+        let ref_cnt = self.ref_cnt.clone();
+        ref_cnt.fetch_add(1, Ordering::SeqCst);
+        Some(ArcRef { cnt: ref_cnt, inner: r })
+    }
+
+    fn get_ref_cnt(&self) -> usize {
+        self.ref_cnt.load(Ordering::SeqCst)
+    }
+
+    fn freeze(&self) {
+        self.freezed.store(true, Ordering::SeqCst);
+    }
+
+    fn is_idle(&self) -> bool {
+        self.ref_cnt.load(Ordering::SeqCst) == 0 && self.freezed.load(Ordering::SeqCst)
+    }
+}
+
+struct KeyedResourceMap {
+    index: ShardedLock<HashMap<String, usize>>,
+    values: UnsafeCell<Vec<Option<REntry>>>,
+}
+
+unsafe impl Sync for KeyedResourceMap {}
+
+pub struct ArcRef<'a, T> {
+    inner: &'a T,
+    cnt: Arc<AtomicUsize>,
+}
+
+impl<'a, T> Deref for ArcRef<'a, T> {
+    type Target = T;
+    fn deref(&self) -> &Self::Target {
+        self.inner
+    }
+}
+
+impl<'a, T> Drop for ArcRef<'a, T> {
+    fn drop(&mut self) {
+        self.cnt.fetch_sub(1, Ordering::SeqCst);
+    }
+}
+
+impl KeyedResourceMap {
+    fn new() -> Self {
+        KeyedResourceMap { index: ShardedLock::new(HashMap::new()), values: UnsafeCell::new(Vec::new()) }
+    }
+
+    pub fn add_resource<T: Send + Sync + 'static>(&self, key: String, res: T) -> Option<(String, T)> {
+        let mut locked = self.index.write().expect("lock write poisoned");
+        if locked.contains_key(&key) {
+            return Some((key, res));
+        }
+        let offset = unsafe {
+            let v = &mut *self.values.get();
+            if v.len() < 1024 {
+                v.push(Some(REntry::new(res)));
+                v.len() - 1
+            } else {
+                let mut found = None;
+                for (i, slot) in v.iter_mut().enumerate() {
+                    match slot {
+                        Some(e) => {
+                            if e.is_idle() {
+                                found = Some(i);
+                                break;
+                            }
+                        }
+                        None => {
+                            found = Some(i);
+                            break;
+                        }
+                    }
+                }
+                if let Some(idle) = found {
+                    v[idle] = Some(REntry::new(res));
+                    idle
+                } else {
+                    v.push(Some(REntry::new(res)));
+                    v.len() - 1
+                }
+            }
+        };
+        locked.insert(key, offset);
+        None
+    }
+
+    pub fn get_resource<T: Any>(&self, key: &str) -> Option<ArcRef<T>> {
+        let locked = self.index.read().expect("lock read poisioned");
+        if let Some(offset) = locked.get(key) {
+            let v = unsafe { &*self.values.get() };
+            if *offset >= v.len() {
+                return None;
+            }
+            if let Some(entry) = &v[*offset] {
+                entry.get_ref()
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    }
+
+    pub fn remove_resource(&self, key: &str) {
+        let mut locked = self.index.write().expect("lock read poisioned");
+        if let Some(offset) = locked.remove(key) {
+            let v = unsafe { &mut *self.values.get() };
+            if offset < v.len() {
+                if let Some(entry) = v[offset].take() {
+                    if entry.get_ref_cnt() > 0 {
+                        entry.freeze();
+                        v[offset].replace(entry);
+                    }
+                }
+            }
+        }
+    }
+}
+
 lazy_static! {
-    pub static ref GLOBAL_RESOURCE_MAP: ShardedLock<SharedResourceMap> =
-        ShardedLock::new(Default::default());
-    pub static ref GLOBAL_KEYED_RESOURCES: ShardedLock<SharedKeyedResourceMap> =
-        ShardedLock::new(Default::default());
+    static ref GLOBAL_RESOURCE_MAP: ShardedLock<SharedResourceMap> = ShardedLock::new(Default::default());
+    static ref GLOBAL_KEYED_RESOURCES: KeyedResourceMap = KeyedResourceMap::new();
 }
 
 thread_local! {
@@ -134,11 +274,16 @@ pub fn set_global_resource<T: Any + Send + Sync>(res: T) {
     store.insert(type_id, Box::new(res));
 }
 
-pub fn add_global_resource<T: Any + Send + Sync>(key: String, res: T) {
-    let mut store = GLOBAL_KEYED_RESOURCES
-        .write()
-        .expect("global resource write lock poisoned");
-    store.insert(key, Box::new(res));
+pub fn add_global_resource<T: Any + Send + Sync>(key: String, res: T) -> Option<(String, T)> {
+    GLOBAL_KEYED_RESOURCES.add_resource(key, res)
+}
+
+pub fn get_global_resource<T: Any + Send + Sync>(key: &str) -> Option<ArcRef<'static, T>> {
+    GLOBAL_KEYED_RESOURCES.get_resource(key)
+}
+
+pub fn remove_global_resource(key: &str) {
+    GLOBAL_KEYED_RESOURCES.remove_resource(key)
 }
 
 pub trait PartitionedResource {

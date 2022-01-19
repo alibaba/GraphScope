@@ -4,8 +4,9 @@ use std::net::SocketAddr;
 use pegasus::Data;
 use prost::Message;
 
+use crate::job::JobParser;
 use crate::rpc::{RPCServerConfig, ServiceStartListener};
-use crate::service::{JobParser, Service};
+use crate::service::Service;
 
 struct StandaloneServiceListener;
 

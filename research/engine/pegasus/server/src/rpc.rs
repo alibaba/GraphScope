@@ -15,7 +15,9 @@
 
 use std::error::Error;
 use std::fmt::Debug;
+use std::io::Write;
 use std::net::SocketAddr;
+use std::path::PathBuf;
 use std::pin::Pin;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::Arc;
@@ -39,7 +41,9 @@ use tonic::{Code, Request, Response, Status};
 
 use crate::generated::protocol as pb;
 use crate::generated::protocol::job_config::Servers;
-use crate::service::{JobDesc, JobParser, Service};
+use crate::job::{JobDesc, JobParser};
+use crate::pb::{BinaryResource, Empty, Name};
+use crate::service::Service;
 
 pub struct RpcSink {
     pub job_id: u64,
@@ -63,7 +67,7 @@ impl<T: Message> FromStream<T> for RpcSink {
     fn on_next(&mut self, next: T) -> FnResult<()> {
         // todo: use bytes to alleviate copy & allocate cost;
         let data = next.encode_to_vec();
-        let res = pb::JobResponse { job_id: self.job_id, res: Some(pb::BinaryResource { resource: data }) };
+        let res = pb::JobResponse { job_id: self.job_id, resp: data };
         self.tx.send(Ok(res)).ok();
         Ok(())
     }
@@ -113,6 +117,44 @@ where
     O: Send + Debug + Message + 'static,
     P: JobParser<I, O>,
 {
+    async fn add_library(&self, request: Request<BinaryResource>) -> Result<Response<Empty>, Status> {
+        let BinaryResource { name, resource } = request.into_inner();
+        let mut path = PathBuf::from("./lib");
+        path.push(&name);
+        path = path.with_extension("so");
+
+        match std::fs::File::create(path.as_path()) {
+            Ok(mut f) => {
+                if let Err(e) = f.write_all(&resource[..]) {
+                    return Err(Status::aborted(format!("write lib failure: {}", e)));
+                }
+                if let Err(e) = f.flush() {
+                    return Err(Status::aborted(format!("write lib failure: {}", e)));
+                }
+            }
+            Err(e) => {
+                return Err(Status::aborted(format!("create lib failure: {}", e)));
+            }
+        }
+        match unsafe { libloading::Library::new(&path) } {
+            Ok(lib) => {
+                pegasus::resource::add_global_resource(name, lib);
+                Ok(Response::new(Empty {}))
+            }
+            Err(err) => {
+                let msg = format!("fail to load library {:?}", path);
+                error!("{}, caused by {} ;", msg, err);
+                Err(Status::aborted(msg))
+            }
+        }
+    }
+
+    async fn remove_library(&self, request: Request<Name>) -> Result<Response<Empty>, Status> {
+        let name = request.into_inner().name;
+        pegasus::resource::remove_global_resource(&name);
+        Ok(Response::new(Empty {}))
+    }
+
     type SubmitStream = UnboundedReceiverStream<Result<pb::JobResponse, Status>>;
 
     async fn submit(&self, req: Request<pb::JobRequest>) -> Result<Response<Self::SubmitStream>, Status> {
@@ -132,11 +174,7 @@ where
         }
         let job_id = conf.job_id;
         let service = &self.inner;
-        let job = JobDesc {
-            input: source.map(|b| b.resource).unwrap_or(vec![]),
-            plan: plan.map(|b| b.resource).unwrap_or(vec![]),
-            resource: resource.map(|b| b.resource).unwrap_or(vec![]),
-        };
+        let job = JobDesc { input: source, plan, resource };
 
         let submitted = pegasus::run_opt(conf, sink, move |worker| worker.dataflow(service.accept(&job)));
 

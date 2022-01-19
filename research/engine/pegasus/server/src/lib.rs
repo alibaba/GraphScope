@@ -40,6 +40,7 @@ pub trait AnyData: Data + Eq {}
 pub mod client;
 pub mod cluster;
 pub mod config;
+pub mod job;
 pub mod rpc;
 pub mod service;
 

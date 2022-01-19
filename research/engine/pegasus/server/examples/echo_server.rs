@@ -1,5 +1,5 @@
 use std::io::Write;
-use std::net::{AddrParseError, SocketAddr};
+use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::time::Instant;
 
@@ -7,7 +7,7 @@ use log::info;
 use pegasus::api::{Sink, Source};
 use pegasus::result::ResultSink;
 use pegasus::{BuildJobError, JobConf, ServerConf};
-use pegasus_server::service::{JobDesc, JobParser};
+use pegasus_server::job::{JobDesc, JobParser};
 use prost::Message;
 use structopt::StructOpt;
 use tokio_stream::StreamExt;
@@ -129,13 +129,11 @@ async fn main() {
             let mut job_desc = JobDesc::default();
             job_desc.set_input(vec![8u8; 8]);
             let result = client.submit(conf, job_desc).await.unwrap();
-            let result_set: Result<Vec<Option<Vec<u8>>>, tonic::Status> = result.collect().await;
+            let result_set: Result<Vec<Vec<u8>>, tonic::Status> = result.collect().await;
             let result_set = result_set.unwrap();
             assert_eq!(result_set.len(), servers);
             for r in result_set {
-                assert!(r.is_some());
-                let data = r.unwrap();
-                let res = Vec::<u8>::decode(&data[..]).unwrap();
+                let res = Vec::<u8>::decode(&r[..]).unwrap();
                 assert_eq!(res, vec![8u8; 8]);
             }
         }

@@ -22,24 +22,7 @@ use pegasus::result::ResultSink;
 use pegasus::{BuildJobError, Data};
 use prost::Message;
 
-#[derive(Default)]
-pub struct JobDesc {
-    pub input: Vec<u8>,
-    pub plan: Vec<u8>,
-    pub resource: Vec<u8>,
-}
-
-impl JobDesc {
-    pub fn set_input(&mut self, input_bytes: Vec<u8>) {
-        self.input = input_bytes;
-    }
-}
-
-pub trait JobParser<I: Data, O: Send + Debug + 'static>: Send + Sync + 'static {
-    fn parse(
-        &self, job: &JobDesc, input: &mut Source<I>, output: ResultSink<O>,
-    ) -> Result<(), BuildJobError>;
-}
+use crate::job::{JobDesc, JobParser};
 
 pub struct Service<I, O, P> {
     parser: Arc<P>,

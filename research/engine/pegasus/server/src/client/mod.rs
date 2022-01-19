@@ -7,10 +7,10 @@ use futures::stream::{BoxStream, SelectAll};
 use futures::{Stream, StreamExt};
 use pegasus::{JobConf, ServerConf};
 
+use crate::job::JobDesc;
 use crate::pb::job_config::Servers;
 use crate::pb::job_service_client::JobServiceClient;
-use crate::pb::{BinaryResource, Empty, JobConfig, JobRequest, ServerList};
-use crate::service::JobDesc;
+use crate::pb::{Empty, JobConfig, JobRequest, ServerList};
 
 pub enum JobError {
     InvalidConfig(String),
@@ -56,7 +56,7 @@ impl RPCJobClient {
 
     pub async fn submit(
         &mut self, config: JobConf, job: JobDesc,
-    ) -> Result<BoxStream<'static, Result<Option<Vec<u8>>, tonic::Status>>, JobError> {
+    ) -> Result<BoxStream<'static, Result<Vec<u8>, tonic::Status>>, JobError> {
         let mut remotes = vec![];
         let servers = match config.servers() {
             ServerConf::Local => {
@@ -113,18 +113,13 @@ impl RPCJobClient {
             trace_enable: config.trace_enable,
             servers: Some(servers),
         };
-        let req = JobRequest {
-            conf: Some(conf),
-            source: if input.is_empty() { None } else { Some(BinaryResource { resource: input }) },
-            plan: if plan.is_empty() { None } else { Some(BinaryResource { resource: plan }) },
-            resource: if resource.is_empty() { None } else { Some(BinaryResource { resource }) },
-        };
+        let req = JobRequest { conf: Some(conf), source: input, plan, resource };
 
         if r_size == 1 {
             match remotes[0].borrow_mut().submit(req).await {
                 Ok(resp) => Ok(resp
                     .into_inner()
-                    .map(|r| r.map(|jr| jr.res.map(|b| b.resource)))
+                    .map(|r| r.map(|jr| jr.resp))
                     .boxed()),
                 Err(status) => Err(JobError::RPCError(status)),
             }
@@ -151,7 +146,7 @@ impl RPCJobClient {
                 }
             }
             Ok(futures::stream::select_all(stream_res)
-                .map(|r| r.map(|jr| jr.res.map(|b| b.resource)))
+                .map(|r| r.map(|jr| jr.resp))
                 .boxed())
         }
     }

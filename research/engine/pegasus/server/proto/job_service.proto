@@ -21,8 +21,13 @@ option java_outer_classname = "PegasusClient";
 
 message Empty { }
 
+message Name {
+  string name = 1;
+}
+
 message BinaryResource {
-  bytes resource = 1;
+  string name = 1;
+  bytes resource = 2;
 }
 
 message ServerList {
@@ -47,16 +52,21 @@ message JobConfig {
 
 message JobRequest {
   JobConfig conf          = 1;
-  BinaryResource source   = 2;
-  BinaryResource plan     = 3;
-  BinaryResource resource = 4;
+  bytes source   = 2;
+  bytes plan     = 3;
+  bytes resource = 4;
 }
 
 message JobResponse {
   uint64 job_id       = 1;
-  BinaryResource res  = 2;
+  bytes  resp  = 2;
 }
 
 service JobService {
+
+  rpc AddLibrary(BinaryResource) returns(Empty) {}
+
+  rpc RemoveLibrary(Name) returns(Empty) {}
+
   rpc Submit(JobRequest) returns(stream JobResponse) {}
 }
