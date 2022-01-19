@@ -518,8 +518,8 @@ impl TryFrom<result_pb::Element> for RecordElement {
             match inner {
                 result_pb::element::Inner::Vertex(v) => Ok(RecordElement::OnGraph(v.try_into()?)),
                 result_pb::element::Inner::Edge(e) => Ok(RecordElement::OnGraph(e.try_into()?)),
-                result_pb::element::Inner::Object(_o) => {
-                    Err(ParsePbError::NotSupported("Cannot parse object".to_string()))
+                result_pb::element::Inner::Object(o) => {
+                    Ok(RecordElement::OffGraph(ObjectElement::Prop(o.try_into()?)))
                 }
             }
         } else {

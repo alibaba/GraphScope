@@ -21,6 +21,7 @@ ir_common = {path = "../common"}
 runtime = {path="../runtime"}
 graph_proxy = {path = "../graph_proxy"}
 graph_store = {path = "../../../graph_store"}
+dyn_type = {path = "../../../dyn_type"}
 
 [features]
 default = []
