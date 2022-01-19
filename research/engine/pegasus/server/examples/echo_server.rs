@@ -1,6 +1,8 @@
 use std::path::PathBuf;
+use std::time::Instant;
 
 use log::info;
+use prost::Message;
 use pegasus::api::{Sink, Source};
 use pegasus::result::ResultSink;
 use pegasus::{BuildJobError, JobConf, ServerConf};
@@ -17,6 +19,8 @@ struct Config {
     server: bool,
     #[structopt(long = "client")]
     client: bool,
+    #[structopt(short = "t", long = "times", default_value = "100")]
+    times: u64
 }
 
 struct EchoJobParser;
@@ -48,15 +52,15 @@ async fn main() {
             .unwrap_or(1);
         if servers == 1 {
             let mut host = "0.0.0.0".to_owned();
-            if let Some(addr) = rpc_config.rpc_host {
-                host = addr;
-            } else if let Some(net_conf) = server_config.network_config() {
+            if let Some(net_conf) = server_config.network_config() {
                 if let Some(addr) = net_conf
                     .get_server_addr(0)
                     .map(|s| s.get_ip().to_owned())
                 {
                     host = addr;
                 }
+            } else if let Some(addr) = rpc_config.rpc_host {
+                host = addr;
             }
             let port = rpc_config
                 .rpc_port
@@ -87,7 +91,8 @@ async fn main() {
                     .unwrap();
             }
         }
-        for i in 0..100 {
+        let start = Instant::now();
+        for i in 0..config.times {
             let mut conf = JobConf::with_id(i + 1, "Echo example", 1);
             conf.reset_servers(ServerConf::All);
             let mut job_desc = JobDesc::default();
@@ -98,9 +103,12 @@ async fn main() {
             assert_eq!(result_set.len(), servers);
             for r in result_set {
                 assert!(r.is_some());
-                assert_eq!(r.unwrap(), vec![8u8; 8]);
+                let data = r.unwrap();
+                let res = Vec::<u8>::decode(&data[..]).unwrap();
+                assert_eq!(res, vec![8u8; 8]);
             }
         }
+        println!("finish {} echo request, used {:?};", config.times, start.elapsed());
     } else {
         println!("--server or --client");
     }

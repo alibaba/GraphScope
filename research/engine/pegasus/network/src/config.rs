@@ -32,8 +32,17 @@ pub enum BlockMode {
     Nonblocking,
 }
 
+impl BlockMode {
+    pub fn get_block_timeout_ms(&self) -> usize {
+        match self {
+            BlockMode::Blocking(Some(d)) => d.as_millis() as usize,
+            BlockMode::Blocking(None) | BlockMode::Nonblocking => 0
+        }
+    }
+}
+
 #[derive(Clone, Copy, Debug)]
-pub(crate) struct WriteParams {
+pub struct WriteParams {
     pub mode: BlockMode,
     pub buffer: usize,
     pub nodelay: bool,
@@ -54,7 +63,7 @@ impl Default for WriteParams {
 }
 
 #[derive(Clone, Copy, Debug)]
-pub(crate) struct ReadParams {
+pub struct ReadParams {
     pub mode: BlockMode,
     pub slab_size: usize,
 }
@@ -119,11 +128,11 @@ impl ConnectionParams {
         self.write.heartbeat = interval;
     }
 
-    pub(crate) fn get_write_params(&self) -> &WriteParams {
+    pub fn get_write_params(&self) -> &WriteParams {
         &self.write
     }
 
-    pub(crate) fn get_read_params(&self) -> &ReadParams {
+    pub fn get_read_params(&self) -> &ReadParams {
         &self.read
     }
 
@@ -132,6 +141,7 @@ impl ConnectionParams {
     }
 }
 
+/// Check "../server/config/server_config.toml" for configuration descriptions;
 #[derive(Debug, Deserialize)]
 pub struct NetworkConfig {
     pub server_id: u64,

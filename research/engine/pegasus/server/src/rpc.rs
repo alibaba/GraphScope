@@ -61,6 +61,7 @@ impl RpcSink {
 
 impl<T: Message> FromStream<T> for RpcSink {
     fn on_next(&mut self, next: T) -> FnResult<()> {
+        // todo: use bytes to alleviate copy & allocate cost;
         let data = next.encode_to_vec();
         let res = pb::JobResponse { job_id: self.job_id, res: Some(pb::BinaryResource { resource: data }) };
         self.tx.send(Ok(res)).ok();
@@ -148,18 +149,18 @@ where
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 pub struct RPCServerConfig {
     pub rpc_host: Option<String>,
     pub rpc_port: Option<u16>,
     pub rpc_concurrency_limit_per_connection: Option<usize>,
-    pub rpc_timeout: Option<Duration>,
+    pub rpc_timeout_ms: Option<u64>,
     pub rpc_initial_stream_window_size: Option<u32>,
     pub rpc_initial_connection_window_size: Option<u32>,
     pub rpc_max_concurrent_streams: Option<u32>,
-    pub rpc_keep_alive_interval: Option<Duration>,
-    pub rpc_keep_alive_timeout: Option<Duration>,
-    pub tcp_keep_alive: Option<Duration>,
+    pub rpc_keep_alive_interval_ms: Option<u64>,
+    pub rpc_keep_alive_timeout_ms: Option<u64>,
+    pub tcp_keep_alive_ms: Option<u64>,
     pub tcp_nodelay: Option<bool>,
 }
 
@@ -209,8 +210,8 @@ impl<S: pb::job_service_server::JobService> RPCJobServer<S> {
             builder = builder.concurrency_limit_per_connection(limit);
         }
 
-        if let Some(dur) = rpc_config.rpc_timeout.take() {
-            builder.timeout(dur);
+        if let Some(dur) = rpc_config.rpc_timeout_ms.take() {
+            builder.timeout(Duration::from_millis(dur));
         }
 
         if let Some(size) = rpc_config.rpc_initial_stream_window_size {
@@ -225,12 +226,12 @@ impl<S: pb::job_service_server::JobService> RPCJobServer<S> {
             builder = builder.max_concurrent_streams(Some(size));
         }
 
-        if let Some(dur) = rpc_config.rpc_keep_alive_interval.take() {
-            builder = builder.http2_keepalive_interval(Some(dur));
+        if let Some(dur) = rpc_config.rpc_keep_alive_interval_ms.take() {
+            builder = builder.http2_keepalive_interval(Some(Duration::from_millis(dur)));
         }
 
-        if let Some(dur) = rpc_config.rpc_keep_alive_timeout.take() {
-            builder = builder.http2_keepalive_timeout(Some(dur));
+        if let Some(dur) = rpc_config.rpc_keep_alive_timeout_ms.take() {
+            builder = builder.http2_keepalive_timeout(Some(Duration::from_millis(dur)));
         }
 
         let service = builder.add_service(pb::job_service_server::JobServiceServer::new(service));
@@ -240,8 +241,9 @@ impl<S: pb::job_service_server::JobService> RPCJobServer<S> {
             .clone()
             .unwrap_or("0.0.0.0".to_owned());
         let addr = SocketAddr::new(host.parse()?, rpc_config.rpc_port.unwrap_or(0));
+        let ka = rpc_config.tcp_keep_alive_ms.map(|d| Duration::from_millis(d));
         let incoming =
-            TcpIncoming::new(addr, rpc_config.tcp_nodelay.unwrap_or(true), rpc_config.tcp_keep_alive)?;
+            TcpIncoming::new(addr, rpc_config.tcp_nodelay.unwrap_or(true), ka)?;
         info!("starting RPC job server on {} ...", incoming.inner.local_addr());
         listener.on_rpc_start(server_id, incoming.inner.local_addr())?;
 
