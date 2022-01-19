@@ -69,17 +69,37 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
 
     @Override
     public Traversal visitTraversalMethod_has(GremlinGSParser.TraversalMethod_hasContext ctx) {
-        String notice = "supported pattern is [has('key', 'value')] or [has('key', P)]";
-        if (ctx.stringLiteral() == null) {
-            throw new UnsupportedEvalException(ctx.getClass(), notice);
-        } else if (ctx.genericLiteral() != null) {
-            return graphTraversal.has(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()),
+        String notice = "supported pattern is " +
+                "[has('key', 'value')] or [has('key', P)] or [has('label', 'key', 'value')] or [has('label', 'key', P)]";
+        int childCount = ctx.getChildCount();
+        if (childCount == 6 && ctx.genericLiteral() != null) {
+            return graphTraversal.has(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral(0)),
                     GenericLiteralVisitor.getInstance().visitGenericLiteral(ctx.genericLiteral()));
-        } else if (ctx.traversalPredicate() != null) {
-            return graphTraversal.has(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()),
+        } else if (childCount == 6 && ctx.traversalPredicate() != null) {
+            return graphTraversal.has(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral(0)),
+                    TraversalPredicateVisitor.getInstance().visitTraversalPredicate(ctx.traversalPredicate()));
+        } else if (childCount == 8 && ctx.genericLiteral() != null) {
+            return graphTraversal.has(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral(0)),
+                    GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral(1)),
+                    GenericLiteralVisitor.getInstance().visitGenericLiteral(ctx.genericLiteral()));
+        } else if (childCount == 8 && ctx.traversalPredicate() != null) {
+            return graphTraversal.has(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral(0)),
+                    GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral(1)),
                     TraversalPredicateVisitor.getInstance().visitTraversalPredicate(ctx.traversalPredicate()));
         } else {
             throw new UnsupportedEvalException(ctx.getClass(), notice);
+        }
+    }
+
+    @Override
+    public Traversal visitTraversalMethod_is(GremlinGSParser.TraversalMethod_isContext ctx) {
+        if (ctx.genericLiteral() != null) {
+            return graphTraversal.is(GenericLiteralVisitor.getInstance().visitGenericLiteral(ctx.genericLiteral()));
+        } else if (ctx.traversalPredicate() != null) {
+            return graphTraversal.is(
+                    TraversalPredicateVisitor.getInstance().visitTraversalPredicate(ctx.traversalPredicate()));
+        } else {
+            throw new UnsupportedEvalException(ctx.getClass(), "supported pattern is [is(27)] or [is(eq(27))])");
         }
     }
 

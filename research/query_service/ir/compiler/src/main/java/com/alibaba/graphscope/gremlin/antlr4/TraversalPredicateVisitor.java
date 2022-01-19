@@ -51,10 +51,26 @@ public class TraversalPredicateVisitor extends GremlinGSBaseVisitor<P> {
      */
     @Override
     public P visitTraversalPredicate(final GremlinGSParser.TraversalPredicateContext ctx) {
-        if (ctx.getChildCount() != 1) {
-            throw new UnsupportedEvalException(ctx.getClass(), "support pattern is [P.predicate(...)]");
+        switch (ctx.getChildCount()) {
+            case 1:
+                // handle simple predicate
+                return visitChildren(ctx);
+            case 6:
+                final int childIndexOfParameterOperator = 2;
+                final int childIndexOfCaller = 0;
+                final int childIndexOfArgument = 4;
+
+                if (ctx.getChild(childIndexOfParameterOperator).getText().equals("or")) {
+                    // handle or
+                    return visit(ctx.getChild(childIndexOfCaller)).or(visit(ctx.getChild(childIndexOfArgument)));
+                } else {
+                    // handle and
+                    return visit(ctx.getChild(childIndexOfCaller)).and(visit(ctx.getChild(childIndexOfArgument)));
+                }
+            default:
+                throw new UnsupportedEvalException(ctx.getClass(),
+                        "unexpected number of children in TraversalPredicateContext " + ctx.getChildCount());
         }
-        return visitChildren(ctx);
     }
 
     /**

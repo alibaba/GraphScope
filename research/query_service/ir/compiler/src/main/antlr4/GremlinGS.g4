@@ -69,6 +69,7 @@ traversalMethod
     | traversalMethod_groupCount // groupCount()
     | traversalMethod_values    // values()
     | traversalMethod_count // count()
+    | traversalMethod_is    // is()
     ;
 
 traversalSourceSpawnMethod_V
@@ -94,10 +95,13 @@ traversalMethod_hasId
     ;
 
 // has("str", y), has("str", eq/neq/gt/gte/lt/lte(y))
-// has("name")
+// has("person", "name", "marko")
+// has("person", "name", P.eq("marko"))
 traversalMethod_has
     : 'has' LPAREN stringLiteral COMMA genericLiteral RPAREN  // indicate eq
     | 'has' LPAREN stringLiteral COMMA traversalPredicate RPAREN
+    | 'has' LPAREN stringLiteral COMMA stringLiteral COMMA genericLiteral RPAREN
+    | 'has' LPAREN stringLiteral COMMA stringLiteral COMMA traversalPredicate RPAREN
     ;
 
 // out('str1', ...)
@@ -239,6 +243,13 @@ traversalMethod_fold
 	: 'fold' LPAREN RPAREN
 	;
 
+// is(27)
+// is(P.eq(27))
+traversalMethod_is
+	: 'is' LPAREN genericLiteral RPAREN
+	| 'is' LPAREN traversalPredicate RPAREN
+	;
+
 // only permit non empty, \'\' or \"\" or \'null\' is meaningless as a parameter
 stringLiteral
     : NonEmptyStringLiteral
@@ -295,6 +306,8 @@ traversalPredicate
     | traversalPredicate_gte
     | traversalPredicate_within
     | traversalPredicate_without
+    | traversalPredicate DOT 'and' LPAREN traversalPredicate RPAREN
+    | traversalPredicate DOT 'or' LPAREN traversalPredicate RPAREN
     ;
 
 traversalPredicate_eq

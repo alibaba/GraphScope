@@ -33,8 +33,6 @@ import javax.script.Bindings;
 import javax.script.ScriptContext;
 import javax.script.SimpleBindings;
 import javax.script.SimpleScriptContext;
-import java.util.Arrays;
-import java.util.List;
 
 public class PositiveEvalTest {
     private Graph graph;
@@ -424,6 +422,36 @@ public class PositiveEvalTest {
     @Test
     public void g_V_has_without_strs_test() {
         Assert.assertEquals(g.V().has("name", P.without("marko", "josh")), eval("g.V().has('name', without('marko', 'josh'))"));
+    }
+
+    @Test
+    public void g_V_has_and_p_test() {
+        Assert.assertEquals(g.V().has("age", P.gt(25).and(P.lt(32))), eval("g.V().has(\"age\", P.gt(25).and(P.lt(32)))"));
+    }
+
+    @Test
+    public void g_V_has_or_p_test() {
+        Assert.assertEquals(g.V().has("age", P.gt(25).or(P.lt(32))), eval("g.V().has(\"age\", P.gt(25).or(P.lt(32)))"));
+    }
+
+    @Test
+    public void g_V_has_label_property_test() {
+        Assert.assertEquals(g.V().has("person", "age", 25), eval("g.V().has(\"person\", \"age\", 25)"));
+    }
+
+    @Test
+    public void g_V_has_label_property_eq_test() {
+        Assert.assertEquals(g.V().has("person", "age", P.eq(25)), eval("g.V().has(\"person\", \"age\", P.eq(25))"));
+    }
+
+    @Test
+    public void g_V_values_is_val_test() {
+        Assert.assertEquals(g.V().values("name").is(27), eval("g.V().values(\"name\").is(27)"));
+    }
+
+    @Test
+    public void g_V_values_is_p_test() {
+        Assert.assertEquals(g.V().values("name").is(P.eq(27)), eval("g.V().values(\"name\").is(P.eq(27))"));
     }
 
     @Test

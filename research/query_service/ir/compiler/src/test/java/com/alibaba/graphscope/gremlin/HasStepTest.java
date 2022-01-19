@@ -134,4 +134,36 @@ public class HasStepTest {
         SelectOp op = (SelectOp) StepTransformFactory.HAS_STEP.apply(hasStep);
         Assert.assertEquals("@.name without [\"marko\", \"josh\"]", op.getPredicate().get().applyArg());
     }
+
+    @Test
+    public void g_V_has_and_p_test() {
+        Traversal traversal = g.V().has("age", P.gt(27).and(P.lt(32)));
+        Step hasStep = traversal.asAdmin().getEndStep();
+        SelectOp op = (SelectOp) StepTransformFactory.HAS_STEP.apply(hasStep);
+        Assert.assertEquals("@.age > 27 && @.age < 32", op.getPredicate().get().getArg());
+    }
+
+    @Test
+    public void g_V_has_or_p_test() {
+        Traversal traversal = g.V().has("age", P.lt(27).or(P.gt(32)));
+        Step hasStep = traversal.asAdmin().getEndStep();
+        SelectOp op = (SelectOp) StepTransformFactory.HAS_STEP.apply(hasStep);
+        Assert.assertEquals("@.age < 27 || @.age > 32", op.getPredicate().get().getArg());
+    }
+
+    @Test
+    public void g_V_values_is_eq_test() {
+        Traversal traversal = g.V().values("age").is(P.eq(27));
+        Step hasStep = traversal.asAdmin().getEndStep();
+        SelectOp op = (SelectOp) StepTransformFactory.IS_STEP.apply(hasStep);
+        Assert.assertEquals("@ == 27", op.getPredicate().get().getArg());
+    }
+
+    @Test
+    public void g_V_values_is_and_p_test() {
+        Traversal traversal = g.V().values("age").is(P.gt(27).and(P.lt(32)));
+        Step hasStep = traversal.asAdmin().getEndStep();
+        SelectOp op = (SelectOp) StepTransformFactory.IS_STEP.apply(hasStep);
+        Assert.assertEquals("@ > 27 && @ < 32", op.getPredicate().get().getArg());
+    }
 }
