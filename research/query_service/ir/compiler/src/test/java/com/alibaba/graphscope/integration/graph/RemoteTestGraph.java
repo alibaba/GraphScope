@@ -894,7 +894,6 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
 @Graph.OptOut(method="g_V_valueMap" , test="org.apache.tinkerpop.gremlin.process.traversal.step.map.ValueMapTest", reason = "will be supported")
 @Graph.OptOut(method="g_V_group_byXlabelX_byXlabel_countX" , test="org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.GroupTest", reason = "will be supported")
 //@Graph.OptOut(method="g_V_group_byXageX" , test="org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.GroupTest", reason = "will be supported")
-//@Graph.OptOut(method="g_V_hasXlangX_group_byXlangX_byXcountX" , test="org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.GroupTest", reason = "will be supported")
 
 @Graph.OptOut(method="g_V_hasXp_neqXvXX" , test="org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest", reason = "existence of property is unsupported")
 @Graph.OptOut(method="g_V_hasXage_withoutX27X_count" , test="org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest", reason = "existence of property is unsupported")
@@ -902,6 +901,7 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
 @Graph.OptOut(method="g_V_hasXage_withoutX27_29X_count" , test="org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest", reason = "existence of property is unsupported")
 @Graph.OptOut(method="g_VX1X_hasXnameX" , test="org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest", reason = "existence of property is unsupported")
 @Graph.OptOut(method="g_V_hasXblahX" , test="org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest", reason = "existence of property is unsupported")
+@Graph.OptOut(method="g_V_hasXlangX_group_byXlangX_byXcountX" , test="org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.GroupTest", reason = "existence of property is unsupported")
 
 public class RemoteTestGraph extends DummyGraph {
     public static final String GRAPH_NAME = "test.graph.name";
