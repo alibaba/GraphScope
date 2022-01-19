@@ -351,11 +351,15 @@ pub struct NodeMeta {
     tables: BTreeSet<NameOrId>,
     /// The required columns (columns)
     columns: BTreeSet<NameOrId>,
+    /// Whether the current node accept columns
+    pub(crate) is_add_column: bool,
 }
 
 impl NodeMeta {
     pub fn insert_column(&mut self, col: NameOrId) {
-        self.columns.insert(col);
+        if self.is_add_column {
+            self.columns.insert(col);
+        }
     }
 
     pub fn get_columns(&self) -> &BTreeSet<NameOrId> {
