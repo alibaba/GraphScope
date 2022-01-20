@@ -2,13 +2,10 @@ use std::io::Write;
 use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::time::Instant;
-
 use log::info;
-use pegasus::api::{Sink, Source};
-use pegasus::result::ResultSink;
-use pegasus::{BuildJobError, JobConf, ServerConf};
-use pegasus_server::job::{JobDesc, JobParser};
-use prost::Message;
+use pegasus::api::{Sink};
+use pegasus::{BuildJobError, JobConf, ServerConf, Worker};
+use pegasus_server::job::{JobDesc, JobAssembly};
 use structopt::StructOpt;
 use tokio_stream::StreamExt;
 
@@ -29,13 +26,12 @@ struct Config {
 
 struct EchoJobParser;
 
-impl JobParser<Vec<u8>, Vec<u8>> for EchoJobParser {
-    fn parse(
-        &self, job: &JobDesc, input: &mut Source<Vec<u8>>, output: ResultSink<Vec<u8>>,
-    ) -> Result<(), BuildJobError> {
-        input
-            .input_from(Some(job.input.clone()))?
-            .sink_into(output)
+impl JobAssembly for EchoJobParser {
+    fn assemble(&self, job: &JobDesc, worker: &mut Worker<Vec<u8>, Vec<u8>>) -> Result<(), BuildJobError> {
+        worker.dataflow(|input, output| {
+            input.input_from(Some(job.input.clone()))?
+                .sink_into(output)
+        })
     }
 }
 
@@ -132,8 +128,7 @@ async fn main() {
             let result_set: Result<Vec<Vec<u8>>, tonic::Status> = result.collect().await;
             let result_set = result_set.unwrap();
             assert_eq!(result_set.len(), servers);
-            for r in result_set {
-                let res = Vec::<u8>::decode(&r[..]).unwrap();
+            for res in result_set {
                 assert_eq!(res, vec![8u8; 8]);
             }
         }
