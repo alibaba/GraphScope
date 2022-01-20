@@ -60,7 +60,7 @@ mod tests {
     use pegasus::JobConf;
 
     use crate::graph::element::{Element, GraphElement};
-    use crate::graph::property::{Details, PropKey};
+    use crate::graph::property::Details;
     use crate::process::operator::filter::FilterFuncGen;
     use crate::process::operator::tests::init_source;
     use crate::process::record::Record;
@@ -193,16 +193,7 @@ mod tests {
         while let Some(Ok(record)) = result.next() {
             if let Some(element) = record.get(None).unwrap().as_graph_element() {
                 {
-                    assert_eq!(
-                        element
-                            .details()
-                            .unwrap()
-                            .get(&PropKey::Id)
-                            .unwrap()
-                            .try_to_owned()
-                            .unwrap(),
-                        object!(1)
-                    );
+                    assert_eq!(element.id(), 1);
                 }
                 count += 1;
             }
@@ -220,16 +211,7 @@ mod tests {
         while let Some(Ok(record)) = result.next() {
             if let Some(element) = record.get(None).unwrap().as_graph_element() {
                 {
-                    assert_eq!(
-                        element
-                            .details()
-                            .unwrap()
-                            .get(&PropKey::Label)
-                            .unwrap()
-                            .try_to_owned()
-                            .unwrap(),
-                        object!("person")
-                    );
+                    assert_eq!(element.label().unwrap().clone(), "person".into());
                 }
                 count += 1;
             }

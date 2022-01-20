@@ -51,7 +51,7 @@ impl MapFunction<Record, Record> for GetVertexOperator {
                 VOpt::Other => (e.get_other_id(), e.get_other_label()),
             },
         };
-        let vertex = Vertex::new(DynDetails::new(DefaultDetails::with(id, label.map(|l| l.clone()))));
+        let vertex = Vertex::new(id, label.map(|l| l.clone()), DynDetails::new(DefaultDetails::default()));
         input.append(vertex, self.alias.clone());
         Ok(input)
     }

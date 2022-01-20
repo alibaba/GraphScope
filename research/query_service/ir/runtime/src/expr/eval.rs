@@ -258,14 +258,10 @@ impl Evaluate for Evaluator {
     ///
     ///     let ctxt = Vertices {
     ///         vec: vec![
-    ///             Vertex::new(DynDetails::new(DefaultDetails::with_property(
-    ///                 1,
-    ///                 NameOrId::from(1),
+    ///             Vertex::new(1, Some(NameOrId::from(1)), DynDetails::new(DefaultDetails::new(
     ///                 map.clone(),
     ///             ))),
-    ///             Vertex::new(DynDetails::new(DefaultDetails::with_property(
-    ///                 2,
-    ///                 NameOrId::from(2),
+    ///             Vertex::new(2, Some(NameOrId::from(2)), DynDetails::new(DefaultDetails::new(
     ///                 map.clone(),
     ///             ))),
     ///         ],
@@ -393,16 +389,43 @@ impl Evaluate for InnerOpr {
                     let mut result = Object::None;
                     if let Some(element) = ctxt.get(tag.as_ref()) {
                         if let Some(property) = prop_key {
-                            if let Some(details) = element.details() {
-                                result = details
-                                    .get(property)
-                                    .and_then(|obj| obj.try_to_owned())
-                                    .into();
+                            match property {
+                                PropKey::Id => {
+                                    println!("{:?}", element.as_graph_element().unwrap().id());
+                                    result = element
+                                        .as_graph_element()
+                                        .map(|g| g.id().into())
+                                        .unwrap_or(Object::None)
+                                }
+                                PropKey::Label => {
+                                    result = element
+                                        .as_graph_element()
+                                        .and_then(|g| g.label())
+                                        .map(|label| match label {
+                                            NameOrId::Str(str) => str.clone().into(),
+                                            NameOrId::Id(id) => (*id).into(),
+                                        })
+                                        .unwrap_or(Object::None)
+                                }
+                                PropKey::Len => {
+                                    result = element
+                                        .as_graph_element()
+                                        .map(|g| (g.len() as u64).into())
+                                        .unwrap_or(Object::None)
+                                }
+                                PropKey::Key(key) => {
+                                    if let Some(details) = element.details() {
+                                        result = details
+                                            .get_property(key)
+                                            .and_then(|obj| obj.try_to_owned())
+                                            .into();
+                                    }
+                                }
                             }
                         } else {
                             result = element.as_borrow_object().try_to_owned().into()
                         }
-                    }
+                    };
 
                     Ok(result)
                 } else {
@@ -507,8 +530,8 @@ mod tests {
         .collect();
         Vertices {
             vec: vec![
-                Vertex::new(DynDetails::new(DefaultDetails::with_property(1, NameOrId::from(9), map1))),
-                Vertex::new(DynDetails::new(DefaultDetails::with_property(2, NameOrId::from(11), map2))),
+                Vertex::new(1, Some(9.into()), DynDetails::new(DefaultDetails::new(map1))),
+                Vertex::new(2, Some(11.into()), DynDetails::new(DefaultDetails::new(map2))),
             ],
         }
     }

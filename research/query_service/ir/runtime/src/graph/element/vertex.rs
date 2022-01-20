@@ -21,23 +21,29 @@ use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
 
 use crate::expr::eval::Context;
 use crate::graph::element::{Element, GraphElement};
-use crate::graph::property::{Details, DynDetails};
-use crate::graph::ID;
+use crate::graph::property::DynDetails;
+use crate::graph::{read_id, write_id, ID};
 
 #[derive(Clone, Debug)]
 pub struct Vertex {
+    id: ID,
+    label: Option<NameOrId>,
     details: DynDetails,
 }
 
 impl Vertex {
-    pub fn new(details: DynDetails) -> Self {
-        Vertex { details }
+    pub fn new(id: ID, label: Option<NameOrId>, details: DynDetails) -> Self {
+        Vertex { id, label, details }
     }
 }
 
 impl Element for Vertex {
     fn details(&self) -> Option<&DynDetails> {
         Some(&self.details)
+    }
+
+    fn as_graph_element(&self) -> Option<&dyn GraphElement> {
+        Some(self)
     }
 
     fn as_borrow_object(&self) -> BorrowObject {
@@ -47,16 +53,22 @@ impl Element for Vertex {
 
 impl GraphElement for Vertex {
     fn id(&self) -> ID {
-        self.details.get_id()
+        self.id
     }
 
     fn label(&self) -> Option<&NameOrId> {
-        self.details.get_label()
+        self.label.as_ref()
+    }
+
+    fn len(&self) -> usize {
+        0
     }
 }
 
 impl Encode for Vertex {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
+        write_id(writer, self.id)?;
+        self.label.write_to(writer)?;
         self.details.write_to(writer)?;
         Ok(())
     }
@@ -64,8 +76,10 @@ impl Encode for Vertex {
 
 impl Decode for Vertex {
     fn read_from<R: ReadExt>(reader: &mut R) -> io::Result<Self> {
+        let id = read_id(reader)?;
+        let label = <Option<NameOrId>>::read_from(reader)?;
         let details = <DynDetails>::read_from(reader)?;
-        Ok(Vertex { details })
+        Ok(Vertex { id, label, details })
     }
 }
 
