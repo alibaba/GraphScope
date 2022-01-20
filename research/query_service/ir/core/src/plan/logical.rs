@@ -750,9 +750,8 @@ impl AsLogical for pb::EdgeExpand {
         if let Some(params) = self.params.as_mut() {
             preprocess_params(params, meta, plan_meta)?;
         }
-        if !self.is_edge {
-            plan_meta.curr_node_meta_mut().is_add_column = true;
-        }
+        plan_meta.curr_node_meta_mut().is_add_column = true;
+
         Ok(())
     }
 }
