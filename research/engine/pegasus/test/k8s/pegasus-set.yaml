@@ -1,0 +1,48 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: pegasus-service
+  labels:
+    app: pegasus
+spec:
+  ports:
+  - port: 80
+    name: pegasus-service
+  clusterIP: None
+  selector:
+    app: pegasus
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: pegasus
+spec:
+  selector:
+    matchLabels:
+      app: pegasus # has to match .spec.template.metadata.labels
+  serviceName: "pegasus-service"
+  replicas: 4 # by default is 1
+  template:
+    metadata:
+      labels:
+        app: pegasus # has to match .spec.selector.matchLabels
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+      - name: pegasus
+        imagePullPolicy: IfNotPresent
+        command: ["bash", "/home/graphscope/pegasus/test/pegasus-entry.sh"]
+        ports:
+        - containerPort: 80
+          name: pegasus
+        env:
+        - name: POD_PREFIX
+          value: "pegasus"
+        - name: SERVICE_NAME
+          value: "pegasus-service"
+        - name: REPLICAS
+          value: "4"
+        - name: NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace

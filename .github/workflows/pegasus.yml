@@ -1,0 +1,84 @@
+name: GraphScope Pegasus CI
+
+on:
+  push:
+    branches:
+      - gaia-x
+    paths:
+      - 'research/engine/pegasus/**'
+      - '.github/workflows/pegasus.yml'
+
+  pull_request:
+    branches:
+      - gaia-x
+    paths:
+      - 'research/engine/pegasus/**'
+      - '.github/workflows/pegasus.yml'
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  peagsus-build:
+    runs-on: ubuntu-20.04
+    defaults: 
+      run: 
+        shell: bash --noprofile --norc -eo pipefail {0}
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Build & Test
+      run: |
+        echo $(pwd)
+        cd research/engine/pegasus
+        cargo build --verbose
+        cargo test --verbose
+
+    - name: Run example
+      run: |
+        cd research/engine/pegasus
+        
+        cargo build --release --examples
+        
+        # Run word_count_toy
+        target/release/examples/word_count_toy
+
+        target/release/examples/word_count_toy -w 2
+
+        target/release/examples/word_count_toy -w 4
+
+        # Run logistic regression
+        target/release/examples/logistic_regression --data pegasus/examples/data/binary.csv
+
+  k8s-test:
+    runs-on: self-hosted
+    defaults: 
+      run: 
+        shell: bash --noprofile --norc -eo pipefail {0}
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name : Prepare Image
+      run: |
+        sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/pegasus-base:latest
+        sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/pegasus:${{ github.sha }} \
+                          --network=host \
+                          -f research/engine/pegasus/test/k8s/pegasus.Dockerfile .
+        echo "        - name: CONFIG_MAP_NAME" >> research/engine/pegasus/test/k8s/pegasus-set.yaml
+        echo "          value: \"${{ github.sha }}\"" >> research/engine/pegasus/test/k8s/pegasus-set.yaml
+        echo "        image: registry.cn-hongkong.aliyuncs.com/graphscope/pegasus:${{ github.sha }}" >> research/engine/pegasus/test/k8s/pegasus-set.yaml
+
+    - name: Start k8s cluster
+      run: |
+        kubectl get ns pegasus-ci || kubectl create ns pegasus-ci
+        kubectl --namespace pegasus-ci create -f research/engine/pegasus/test/k8s/role_binding.yaml
+        kubectl --namespace pegasus-ci create -f research/engine/pegasus/test/k8s/pegasus-set.yaml
+        bash research/engine/pegasus/test/k8s/read_result.sh ${{ github.sha }}
+
+    - name: Clean
+      if: always()
+      run: |
+        kubectl delete ns pegasus-ci || true
+        docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/pegasus:${{ github.sha }} --wait=false || true
