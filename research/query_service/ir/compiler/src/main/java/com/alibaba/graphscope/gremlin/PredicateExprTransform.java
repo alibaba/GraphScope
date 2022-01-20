@@ -27,7 +27,7 @@ import java.util.function.BiPredicate;
 import java.util.function.Function;
 
 // transform predicate into expression
-public interface PredicateExprTransformer extends Function {
+public interface PredicateExprTransform extends Function {
     default String flatPredicate(String subject, P predicate) {
         String expr = "";
         if (predicate instanceof ConnectiveP) {

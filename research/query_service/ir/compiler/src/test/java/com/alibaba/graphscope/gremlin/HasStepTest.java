@@ -140,7 +140,7 @@ public class HasStepTest {
         Traversal traversal = g.V().has("age", P.gt(27).and(P.lt(32)));
         Step hasStep = traversal.asAdmin().getEndStep();
         SelectOp op = (SelectOp) StepTransformFactory.HAS_STEP.apply(hasStep);
-        Assert.assertEquals("@.age > 27 && @.age < 32", op.getPredicate().get().getArg());
+        Assert.assertEquals("@.age > 27 && @.age < 32", op.getPredicate().get().applyArg());
     }
 
     @Test
@@ -148,7 +148,7 @@ public class HasStepTest {
         Traversal traversal = g.V().has("age", P.lt(27).or(P.gt(32)));
         Step hasStep = traversal.asAdmin().getEndStep();
         SelectOp op = (SelectOp) StepTransformFactory.HAS_STEP.apply(hasStep);
-        Assert.assertEquals("@.age < 27 || @.age > 32", op.getPredicate().get().getArg());
+        Assert.assertEquals("@.age < 27 || @.age > 32", op.getPredicate().get().applyArg());
     }
 
     @Test
@@ -156,7 +156,7 @@ public class HasStepTest {
         Traversal traversal = g.V().values("age").is(P.eq(27));
         Step hasStep = traversal.asAdmin().getEndStep();
         SelectOp op = (SelectOp) StepTransformFactory.IS_STEP.apply(hasStep);
-        Assert.assertEquals("@ == 27", op.getPredicate().get().getArg());
+        Assert.assertEquals("@ == 27", op.getPredicate().get().applyArg());
     }
 
     @Test
@@ -164,6 +164,6 @@ public class HasStepTest {
         Traversal traversal = g.V().values("age").is(P.gt(27).and(P.lt(32)));
         Step hasStep = traversal.asAdmin().getEndStep();
         SelectOp op = (SelectOp) StepTransformFactory.IS_STEP.apply(hasStep);
-        Assert.assertEquals("@ > 27 && @ < 32", op.getPredicate().get().getArg());
+        Assert.assertEquals("@ > 27 && @ < 32", op.getPredicate().get().applyArg());
     }
 }
