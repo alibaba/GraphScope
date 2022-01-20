@@ -41,7 +41,7 @@ jobs:
     - name: Run Python Test
       if: matrix.os == 'ubuntu-20.04'
       env:
-        FULL-TEST-SUITE: ON
+        FULL_TEST_SUITE: ON
         GS_TEST_DIR: ${{ github.workspace }}/gstest
       run: |
         # download dataset

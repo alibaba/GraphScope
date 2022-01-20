@@ -68,7 +68,7 @@ def test_launch_cluster_on_local(local_config_file):
     s.close()
 
 
-@pytest.mark.skipif("FULL-TEST-SUITE" not in os.environ, reason="Run in nightly CI")
+@pytest.mark.skipif("FULL_TEST_SUITE" not in os.environ, reason="Run in nightly CI")
 def test_launch_session_from_config(local_config_file):
     saved = os.environ.get("GS_CONFIG_PATH", "")
     try:
@@ -82,7 +82,7 @@ def test_launch_session_from_config(local_config_file):
         os.environ["GS_CONFIG_PATH"] = saved
 
 
-@pytest.mark.skipif("FULL-TEST-SUITE" not in os.environ, reason="Run in nightly CI")
+@pytest.mark.skipif("FULL_TEST_SUITE" not in os.environ, reason="Run in nightly CI")
 def test_launch_session_from_dict():
     conf_dict = {"num_workers": 4}
     s = graphscope.session(cluster_type="hosts", config=conf_dict)
@@ -92,7 +92,7 @@ def test_launch_session_from_dict():
     s.close()
 
 
-@pytest.mark.skipif("FULL-TEST-SUITE" not in os.environ, reason="Run in nightly CI")
+@pytest.mark.skipif("FULL_TEST_SUITE" not in os.environ, reason="Run in nightly CI")
 def test_config_dict_has_highest_priority(local_config_file):
     s = graphscope.session(
         cluster_type="hosts", config=local_config_file, num_workers=2
@@ -123,7 +123,7 @@ def test_correct_closing_on_hosts():
     s1.close()
 
 
-@pytest.mark.skipif("FULL-TEST-SUITE" not in os.environ, reason="Run in nightly CI")
+@pytest.mark.skipif("FULL_TEST_SUITE" not in os.environ, reason="Run in nightly CI")
 def test_border_cases():
     s1 = graphscope.session(cluster_type="hosts")
     s2 = graphscope.session(cluster_type="hosts")

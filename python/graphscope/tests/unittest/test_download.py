@@ -23,7 +23,7 @@ import pytest
 from graphscope.dataset import *
 
 
-@pytest.mark.skipif("FULL-TEST-SUITE" not in os.environ, reason="Run in nightly CI")
+@pytest.mark.skipif("FULL_TEST_SUITE" not in os.environ, reason="Run in nightly CI")
 def test_download_dataset(graphscope_session):
     g1 = load_modern_graph(graphscope_session)
     g1.unload()

@@ -382,7 +382,7 @@ def test_run_app_on_string_oid_graph(p2p_project_directed_graph_string):
     assert r1[r1["node"] == "6"].r.values[0] == 0.0
 
 
-@pytest.mark.skipif("FULL-TEST-SUITE" not in os.environ, reason="Run in nightly CI")
+@pytest.mark.skipif("FULL_TEST_SUITE" not in os.environ, reason="Run in nightly CI")
 def test_error_on_run_app(projected_pg_no_edge_data):
     # compile error: wrong type of edge data with sssp
     with pytest.raises(graphscope.CompilationError):
