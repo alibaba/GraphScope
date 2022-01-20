@@ -149,7 +149,8 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
 
     @Override
     public Traversal visitTraversalMethod_limit(GremlinGSParser.TraversalMethod_limitContext ctx) {
-        return graphTraversal.limit((Integer) GenericLiteralVisitor.getInstance().visitIntegerLiteral(ctx.integerLiteral()));
+        Number integer = (Number) GenericLiteralVisitor.getInstance().visitIntegerLiteral(ctx.integerLiteral());
+        return graphTraversal.limit(integer.longValue());
     }
 
     @Override
@@ -221,15 +222,37 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
             for (int i = 0; i < childCount; ++i) {
                 GremlinGSParser.TraversalMethod_orderbyContext byCtx = ctx.traversalMethod_orderby_list().traversalMethod_orderby(i);
                 if (byCtx == null) continue;
-                if (byCtx.getChildCount() == 4 && byCtx.traversalOrder() != null) {
-                    Order order = TraversalEnumParser.parseTraversalEnumFromContext(Order.class, byCtx.traversalOrder());
-                    step.modulateBy(order);
-                } else if (byCtx.getChildCount() == 6 && byCtx.traversalOrder() != null && byCtx.stringLiteral() != null) {
-                    Order order = TraversalEnumParser.parseTraversalEnumFromContext(Order.class, byCtx.traversalOrder());
-                    step.modulateBy(GenericLiteralVisitor.getStringLiteral(byCtx.stringLiteral()), order);
+                Order orderOpt = null;
+                String strAsKey = null;
+                Traversal nestedTraversalAskey = null;
+                if (byCtx.traversalOrder() != null) {
+                    orderOpt = TraversalEnumParser.parseTraversalEnumFromContext(Order.class, byCtx.traversalOrder());
+                }
+                if (byCtx.stringLiteral() != null) {
+                    strAsKey = GenericLiteralVisitor.getStringLiteral(byCtx.stringLiteral());
+                }
+                if (byCtx.traversalMethod_values() != null) {
+                    TraversalMethodVisitor nestedVisitor = new TraversalMethodVisitor(gvisitor,
+                            GremlinAntlrToJava.getTraversalSupplier().get());
+                    nestedTraversalAskey = nestedVisitor.visitTraversalMethod_values(byCtx.traversalMethod_values());
+                }
+                if (byCtx.traversalMethod_select() != null) {
+                    TraversalMethodVisitor nestedVisitor = new TraversalMethodVisitor(gvisitor,
+                            GremlinAntlrToJava.getTraversalSupplier().get());
+                    nestedTraversalAskey = nestedVisitor.visitTraversalMethod_select(byCtx.traversalMethod_select());
+                }
+                if (strAsKey != null && orderOpt == null) {
+                    step.modulateBy(strAsKey);
+                } else if (strAsKey != null && orderOpt != null) {
+                    step.modulateBy(strAsKey, orderOpt);
+                } else if (nestedTraversalAskey != null && orderOpt == null) {
+                    step.modulateBy(nestedTraversalAskey.asAdmin());
+                } else if (nestedTraversalAskey != null && orderOpt != null) {
+                    step.modulateBy(nestedTraversalAskey.asAdmin(), orderOpt);
+                } else if (orderOpt != null) {
+                    step.modulateBy(orderOpt);
                 } else {
-                    throw new UnsupportedEvalException(byCtx.getClass(),
-                            "supported pattern is [order().by(order)] or [order().by('key', order)]");
+                    throw new UnsupportedEvalException(byCtx.getClass(), "pattern of order by is unsupported");
                 }
             }
         }

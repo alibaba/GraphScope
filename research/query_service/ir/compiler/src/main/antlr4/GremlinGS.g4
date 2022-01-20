@@ -169,9 +169,15 @@ traversalMethod_order
 
 // by('asc' | 'desc')
 // by('a', 'asc' | 'desc')
+// by(values(..), 'asc' | 'desc')
+// by(select("a"), 'asc' | 'desc')
+// by(select("a").by("name"), 'asc' | 'desc')
+// by(select("a").by(valueMap("name")), 'asc' | 'desc')
 traversalMethod_orderby
     : 'by' LPAREN traversalOrder RPAREN
-    | 'by' LPAREN stringLiteral COMMA traversalOrder RPAREN
+    | 'by' LPAREN stringLiteral (COMMA traversalOrder)? RPAREN
+    | 'by' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_values (COMMA traversalOrder)? RPAREN
+    | 'by' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_select (COMMA traversalOrder)? RPAREN
     ;
 
 traversalMethod_orderby_list
@@ -363,9 +369,9 @@ traversalPredicate_without
 
 // incr and decr is unsupported in 3.5.1
 traversalOrder
-    : 'asc'  | 'ASC'
-    | 'desc' | 'DESC'
-    // | 'shuffle' | 'SHUFFLE'
+    : 'asc'  | 'Order.asc'
+    | 'desc' | 'Order.desc'
+    | 'shuffle' | 'Order.shuffle'
     ;
 
 // Integer Literals

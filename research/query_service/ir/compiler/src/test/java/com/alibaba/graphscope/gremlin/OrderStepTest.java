@@ -23,6 +23,7 @@ import com.alibaba.graphscope.common.jna.type.FfiProperty;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
+import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
 import com.alibaba.graphscope.gremlin.InterOpCollectionBuilder.StepTransformFactory;
@@ -64,6 +65,26 @@ public class OrderStepTest {
         OrderOp op = (OrderOp) StepTransformFactory.ORDER_BY_STEP.apply(orderStep);
         FfiProperty.ByValue property = ArgUtils.asFfiProperty("name");
         List<Pair> expected = Arrays.asList(Pair.with(ArgUtils.asVarPropertyOnly(property), FfiOrderOpt.Asc));
+        Assert.assertEquals(expected, op.getOrderVarWithOrder().get().applyArg());
+    }
+
+    @Test
+    public void g_V_order_by_a_test() {
+        Traversal traversal = g.V().as("a").order().by(__.select("a"));
+        Step orderStep = traversal.asAdmin().getEndStep();
+        OrderOp op = (OrderOp) StepTransformFactory.ORDER_BY_STEP.apply(orderStep);
+
+        List<Pair> expected = Arrays.asList(Pair.with(ArgUtils.asVarTagOnly("a"), FfiOrderOpt.Asc));
+        Assert.assertEquals(expected, op.getOrderVarWithOrder().get().applyArg());
+    }
+
+    @Test
+    public void g_V_order_by_a_name_test() {
+        Traversal traversal = g.V().as("a").order().by(__.select("a").by("name"));
+        Step orderStep = traversal.asAdmin().getEndStep();
+        OrderOp op = (OrderOp) StepTransformFactory.ORDER_BY_STEP.apply(orderStep);
+
+        List<Pair> expected = Arrays.asList(Pair.with(ArgUtils.asVar("a", "name"), FfiOrderOpt.Asc));
         Assert.assertEquals(expected, op.getOrderVarWithOrder().get().applyArg());
     }
 }
