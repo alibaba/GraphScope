@@ -162,7 +162,7 @@ def get_app_sha256(attr):
         java_jar_path,
         java_app_class,
     ) = _codegen_app_info(attr, DEFAULT_GS_CONFIG_FILE)
-    graph_header, graph_type = _codegen_graph_info(attr)
+    graph_header, graph_type, _ = _codegen_graph_info(attr)
     logger.info("Codegened graph type: %s, Graph header: %s", graph_type, graph_header)
 
     app_sha256 = ""
@@ -188,7 +188,7 @@ def get_app_sha256(attr):
 
 
 def get_graph_sha256(attr):
-    _, graph_class = _codegen_graph_info(attr)
+    _, graph_class, _ = _codegen_graph_info(attr)
     return hashlib.sha256(graph_class.encode("utf-8")).hexdigest()
 
 
@@ -236,7 +236,7 @@ def compile_app(workspace: str, library_name, attr, engine_config: dict):
         str(java_app_class),
     )
 
-    graph_header, graph_type = _codegen_graph_info(attr)
+    graph_header, graph_type, graph_oid_type = _codegen_graph_info(attr)
     logger.info("Codegened graph type: %s, Graph header: %s", graph_type, graph_header)
 
     os.chdir(app_dir)
@@ -314,6 +314,7 @@ def compile_app(workspace: str, library_name, attr, engine_config: dict):
         content = Template(content).safe_substitute(
             _analytical_engine_home=ANALYTICAL_ENGINE_HOME,
             _frame_name=library_name,
+            _oid_type=graph_oid_type,
             _vd_type=vd_type,
             _md_type=md_type,
             _graph_type=graph_type,
@@ -381,7 +382,7 @@ def compile_graph_frame(workspace: str, library_name, attr: dict, engine_config:
         None: for consistency with compile_app.
     """
 
-    _, graph_class = _codegen_graph_info(attr)
+    _, graph_class, _ = _codegen_graph_info(attr)
 
     logger.info("Codegened graph frame type: %s", graph_class)
 
@@ -1311,6 +1312,7 @@ def _codegen_graph_info(attr):
     graph_class, graph_header = GRAPH_HEADER_MAP[graph_type]
     # graph_type is a literal of graph template in c++ side
     if graph_class == "vineyard::ArrowFragment":
+        graph_oid_type = attr[types_pb2.OID_TYPE].s.decode("utf-8")
         # in a format of full qualified name, e.g. vineyard::ArrowFragment<double, double>
         graph_fqn = "{}<{},{}>".format(
             graph_class,
@@ -1323,6 +1325,7 @@ def _codegen_graph_info(attr):
     ):
         # in a format of gs::ArrowProjectedFragment<int64_t, uint32_t, double, double>
         # or grape::ImmutableEdgecutFragment<int64_t, uint32_t, double, double>
+        graph_oid_type = attr[types_pb2.OID_TYPE].s.decode("utf-8")
         graph_fqn = "{}<{},{},{},{}>".format(
             graph_class,
             attr[types_pb2.OID_TYPE].s.decode("utf-8"),
@@ -1331,6 +1334,7 @@ def _codegen_graph_info(attr):
             attr[types_pb2.E_DATA_TYPE].s.decode("utf-8"),
         )
     elif graph_class == "gs::ArrowFlattenedFragment":
+        graph_oid_type = attr[types_pb2.OID_TYPE].s.decode("utf-8")
         graph_fqn = "{}<{},{},{},{}>".format(
             graph_class,
             attr[types_pb2.OID_TYPE].s.decode("utf-8"),
@@ -1340,12 +1344,13 @@ def _codegen_graph_info(attr):
         )
     else:
         # gs::DynamicProjectedFragment<double, double>
+        graph_oid_type = None
         graph_fqn = "{}<{},{}>".format(
             graph_class,
             attr[types_pb2.V_DATA_TYPE].s.decode("utf-8"),
             attr[types_pb2.E_DATA_TYPE].s.decode("utf-8"),
         )
-    return graph_header, graph_fqn
+    return graph_header, graph_fqn, graph_oid_type
 
 
 def create_single_op_dag(op_type, config=None):

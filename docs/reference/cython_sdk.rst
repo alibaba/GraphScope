@@ -618,22 +618,22 @@ PIE
 
         Return False if `v` is the outer vertex of this fragment.
 
-   .. py:method:: Fragment.get_node(label_id: int, oid: int64_t, v: Vertex&) -> bool
+   .. py:method:: Fragment.get_node(label_id: int, oid: string&, v: Vertex&) -> bool
       :noindex:
 
         Return True if oid exists in this fragment.
 
-   .. py:method:: Fragment.get_inner_node(label_id: int, oid: int64_t, v: Vertex&) -> bool
+   .. py:method:: Fragment.get_inner_node(label_id: int, oid: string&, v: Vertex&) -> bool
       :noindex:
 
         Return True if oid exists in the inner vertex in this fragment, and assign the node to `v`.
 
-   .. py:method:: Fragment.get_outer_node(label_id: int, oid: int64_t, v: Vertex&) -> bool
+   .. py:method:: Fragment.get_outer_node(label_id: int, oid: string&, v: Vertex&) -> bool
       :noindex:
 
         Return True if oid exists in the outer vertex in this fragment, and assign the node to `v`.
 
-   .. py:method:: Fragment.get_node_id(v: Vertex) -> int64_t
+   .. py:method:: Fragment.get_node_id(v: Vertex) -> str
       :noindex:
 
         Return vertex oid of `v`.

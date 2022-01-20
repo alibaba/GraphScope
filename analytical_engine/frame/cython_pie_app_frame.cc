@@ -20,6 +20,8 @@
 
 #include "grape/util.h"
 
+#include "vineyard/graph/fragment/arrow_fragment.h"
+
 #include "apps/python_pie/cython_pie_program.h"
 #include "apps/python_pie/export.h"
 #include "apps/python_pie/python_pie_app.h"
@@ -37,6 +39,10 @@ using string = std::string;
 #if defined(_GRAPH_TYPE) && defined(_GRAPH_HEADER)
 #else
 #error "Missing macro _GRAPH_TYPE or _GRAPH_HEADER"
+#endif
+
+#if !defined(_OID_TYPE)
+#define _OID_TYPE vineyard::property_graph_types::OID_TYPE
 #endif
 
 #if defined(_VD_TYPE) && defined(_MD_TYPE)

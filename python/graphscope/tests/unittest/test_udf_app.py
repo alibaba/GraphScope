@@ -580,7 +580,7 @@ class SSSP_PIE(AppAssets):
 
     @staticmethod
     def PEval(frag, context):
-        src = int(context.get_config(b"src"))
+        src = context.get_config(b"src")
         graphscope.declare(graphscope.Vertex, source)
         native_source = False
         v_label_num = frag.vertex_label_num()
@@ -1008,7 +1008,7 @@ def test_property_context(graphscope_session, p2p_property_graph):
     vdf_out = ctx.to_vineyard_dataframe({"node": "v:person.id", "r": "r:person"})
     assert vdf_out is not None
     # add column
-    g = p2p_property_graph.add_column(ctx1, {"result0": "r:person"})
+    g = p2p_property_graph.add_column(ctx, {"result0": "r:person"})
     g_out_df = g.to_dataframe({"result": "v:person.result0"})
     assert g_out_df.equals(df_out)
 
@@ -1211,6 +1211,28 @@ def test_edge_traversal(
         twitter_e_1_0_1,
         twitter_e_1_1_1,
     )
+
+
+@pytest.mark.skipif("FULL-TEST-SUITE" not in os.environ, reason="Run in nightly CI")
+def test_run_on_string_oid_graph(
+    graphscope_session, p2p_property_graph_string, sssp_result
+):
+    # pregel
+    a1 = SSSP_Pregel()
+    ctx1 = a1(p2p_property_graph_string, src="6")
+    r1 = ctx1.to_dataframe({"node": "v:person.id", "r": "r:person"})
+    r1["node"] = r1["node"].astype(int)
+    r1 = r1.sort_values(by=["node"]).to_numpy(dtype=float)
+    r1[r1 == 1000000000.0] = float("inf")
+    assert np.allclose(r1, sssp_result["directed"])
+    # pie
+    a2 = SSSP_PIE()
+    ctx2 = a2(p2p_property_graph_string, src="6")
+    r2 = ctx2.to_dataframe({"node": "v:person.id", "r": "r:person"})
+    r2["node"] = r2["node"].astype(int)
+    r2 = r2.sort_values(by=["node"]).to_numpy(dtype=float)
+    r2[r2 == 1000000000.0] = float("inf")
+    assert np.allclose(r2, sssp_result["directed"])
 
 
 def test_pregel_api(graphscope_session, ldbc_graph):
