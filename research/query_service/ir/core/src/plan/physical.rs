@@ -161,24 +161,36 @@ impl AsPhysical for pb::EdgeExpand {
         if let Some(node_meta) = plan_meta.curr_node_meta() {
             let columns = node_meta.get_columns();
             if !columns.is_empty() {
-                assert!(!self.is_edge);
-                // Vertex expansion
-                // Move everything to Auxilia
-                auxilia.params = Some(pb::QueryParams {
-                    table_names: vec![],
-                    columns: columns
-                        .iter()
-                        .map(|tag| common_pb::NameOrId::from(tag.clone()))
-                        .collect(),
-                    limit: None,
-                    predicate: None,
-                    requirements: vec![],
-                });
-                if self.alias.is_some() {
-                    auxilia.alias = self.alias.clone();
-                    self.alias = None;
+                if !self.is_edge {
+                    // Vertex expansion
+                    // Move everything to Auxilia
+                    auxilia.params = Some(pb::QueryParams {
+                        table_names: vec![],
+                        columns: columns
+                            .iter()
+                            .map(|tag| common_pb::NameOrId::from(tag.clone()))
+                            .collect(),
+                        limit: None,
+                        predicate: None,
+                        requirements: vec![],
+                    });
+                    if self.alias.is_some() {
+                        auxilia.alias = self.alias.clone();
+                        self.alias = None;
+                    }
+                    is_adding_auxilia = true;
+                } else {
+                    if let Some(base) = self.base.as_mut() {
+                        if let Some(params) = base.params.as_mut() {
+                            params.columns.clear();
+                            params.columns.extend(
+                                columns
+                                    .iter()
+                                    .map(|tag| common_pb::NameOrId::from(tag.clone())),
+                            )
+                        }
+                    }
                 }
-                is_adding_auxilia = true;
             }
         }
         simple_add_job_builder(
@@ -567,8 +579,10 @@ mod test {
         let mut expected_builder = JobBuilder::default();
         expected_builder.add_source(pb::logical_plan::Operator::from(build_scan(vec![])).encode_to_vec());
         expected_builder.repartition(vec![]);
-        expected_builder
-            .flat_map(pb::logical_plan::Operator::from(build_edgexpd(true, vec![], None)).encode_to_vec());
+        expected_builder.flat_map(
+            pb::logical_plan::Operator::from(build_edgexpd(true, vec!["creationDate".into()], None))
+                .encode_to_vec(),
+        );
         expected_builder.filter(
             pb::logical_plan::Operator::from(build_select("@.creationDate == 20220101")).encode_to_vec(),
         );
