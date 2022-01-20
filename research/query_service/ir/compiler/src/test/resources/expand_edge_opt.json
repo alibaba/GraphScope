@@ -4,16 +4,14 @@
       "opr": {
         "opr": {
           "Edge": {
-            "base": {
-              "v_tag": null,
-              "direction": 0,
-              "params": {
-                "table_names": [],
-                "columns": [],
-                "limit": null,
-                "predicate": null,
-                "requirements": []
-              }
+            "v_tag": null,
+            "direction": 0,
+            "params": {
+              "table_names": [],
+              "columns": [],
+              "limit": null,
+              "predicate": null,
+              "requirements": []
             },
             "is_edge": true,
             "alias": null
