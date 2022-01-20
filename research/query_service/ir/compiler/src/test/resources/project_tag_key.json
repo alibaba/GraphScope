@@ -55,7 +55,11 @@
                     }
                   ]
                 },
-                "alias": null
+                "alias": {
+                  "item": {
+                    "Name": "a_name"
+                  }
+                }
               }
             ],
             "is_append": true

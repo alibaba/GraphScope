@@ -16,9 +16,7 @@ import org.apache.tinkerpop.gremlin.server.op.standard.StandardOpProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class GremlinResultProcessor extends StandardOpProcessor implements ResultProcessor {
@@ -38,7 +36,6 @@ public class GremlinResultProcessor extends StandardOpProcessor implements Resul
         synchronized (this) {
             try {
                 if (!locked) {
-                    logger.debug("start to process");
                     resultCollectors.addAll(resultParser.parseFrom(response));
                 }
             } catch (Exception e) {
@@ -54,10 +51,22 @@ public class GremlinResultProcessor extends StandardOpProcessor implements Resul
     public void finish() {
         synchronized (this) {
             if (!locked) {
-                logger.debug("process finish");
+                formatResultIfNeed();
                 writeResultList(writeResult, resultCollectors, ResponseStatusCode.SUCCESS);
                 locked = true;
             }
+        }
+    }
+
+    // format group result as a single map
+    protected void formatResultIfNeed() {
+        if (resultParser == GremlinResultParserFactory.GROUP) {
+            Map groupResult = new HashMap();
+            resultCollectors.forEach(k -> {
+                groupResult.putAll((Map) k);
+            });
+            resultCollectors.clear();
+            resultCollectors.add(groupResult);
         }
     }
 
@@ -65,7 +74,6 @@ public class GremlinResultProcessor extends StandardOpProcessor implements Resul
     public void error(Status status) {
         synchronized (this) {
             if (!locked) {
-                logger.debug("process error");
                 writeResultList(writeResult, Collections.singletonList(status.toString()), ResponseStatusCode.SERVER_ERROR);
                 locked = true;
             }

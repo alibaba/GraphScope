@@ -305,7 +305,7 @@ impl LogicalPlan {
         let mut is_update_curr = false;
         if let Ok(meta) = STORE_META.read() {
             match opr.opr {
-                Some(Opr::Edge(_)) | Some(Opr::Scan(_)) => {
+                Some(Opr::Scan(_)) | Some(Opr::Edge(_)) | Some(Opr::Vertex(_)) => {
                     // change current node before appending node
                     self.meta.set_curr_node(self.total_size as u32);
                 }
@@ -733,6 +733,7 @@ impl AsLogical for pb::Select {
 
 impl AsLogical for pb::Scan {
     fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
+        plan_meta.curr_node_meta_mut().is_add_column = true;
         if let Some(params) = self.params.as_mut() {
             preprocess_params(params, meta, plan_meta)?;
         }
@@ -745,15 +746,22 @@ impl AsLogical for pb::Scan {
 
 impl AsLogical for pb::EdgeExpand {
     fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
-        if let Some(params) = self.params.as_mut() {
-            preprocess_params(params, meta, plan_meta)?;
+        plan_meta.curr_node_meta_mut().is_add_column = false;
+        if let Some(expand) = self.base.as_mut() {
+            if let Some(params) = expand.params.as_mut() {
+                preprocess_params(params, meta, plan_meta)?;
+            }
+        }
+        if !self.is_edge {
+            plan_meta.curr_node_meta_mut().is_add_column = true;
         }
         Ok(())
     }
 }
 
 impl AsLogical for pb::GetV {
-    fn preprocess(&mut self, _meta: &StoreMeta, _plan_meta: &mut PlanMeta) -> IrResult<()> {
+    fn preprocess(&mut self, _meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
+        plan_meta.curr_node_meta_mut().is_add_column = true;
         Ok(())
     }
 }
@@ -1096,6 +1104,15 @@ mod test {
         plan_meta.set_preprocess(true);
         plan_meta.insert_tag_node("a".into(), 1);
         plan_meta.insert_tag_node("b".into(), 2);
+        plan_meta.curr_node_meta_mut().is_add_column = true;
+        plan_meta
+            .tag_node_meta_mut(Some(&"a".into()))
+            .unwrap()
+            .is_add_column = true;
+        plan_meta
+            .tag_node_meta_mut(Some(&"b".into()))
+            .unwrap()
+            .is_add_column = true;
 
         set_schema_simple(
             vec![("person".to_string(), 0), ("software".to_string(), 1)],
@@ -1131,6 +1148,7 @@ mod test {
         let mut expression =
             str_to_expr_pb("(@.name == \"person\") && @a.~label == \"knows\"".to_string()).unwrap();
         preprocess_expression(&mut expression, &STORE_META.read().unwrap(), &mut plan_meta).unwrap();
+
         // person should not be mapped, as name is not a label key
         let opr = expression.operators.get(3).unwrap().clone();
         match opr.item.unwrap() {
@@ -1238,6 +1256,11 @@ mod test {
         let mut plan_meta = PlanMeta::default();
         plan_meta.set_preprocess(true);
         plan_meta.insert_tag_node("a".into(), 1);
+        plan_meta.curr_node_meta_mut().is_add_column = true;
+        plan_meta
+            .tag_node_meta_mut(Some(&"a".into()))
+            .unwrap()
+            .is_add_column = true;
         set_schema_simple(
             vec![("person".to_string(), 0), ("software".to_string(), 1)],
             vec![("knows".to_string(), 0), ("creates".to_string(), 1)],
@@ -1536,15 +1559,6 @@ mod test {
             .append_operator_as_node(expand.into(), vec![opr_id as u32])
             .unwrap();
         assert_eq!(plan.meta.get_curr_node(), opr_id as u32);
-        assert_eq!(
-            plan.meta
-                .get_node_meta(opr_id as u32)
-                .unwrap()
-                .get_columns(),
-            &vec!["date".into()]
-                .into_iter()
-                .collect::<BTreeSet<_>>()
-        );
         assert_eq!(plan.meta.get_tag_node(&"b".into()).unwrap(), opr_id as u32);
 
         //.inV().as('c')

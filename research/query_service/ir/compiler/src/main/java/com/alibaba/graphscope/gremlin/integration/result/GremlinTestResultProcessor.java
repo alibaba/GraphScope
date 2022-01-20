@@ -3,6 +3,7 @@ package com.alibaba.graphscope.gremlin.integration.result;
 import com.alibaba.graphscope.common.utils.FileUtils;
 import com.alibaba.graphscope.common.client.ResultParser;
 import com.alibaba.graphscope.common.utils.JsonUtils;
+import com.alibaba.graphscope.gremlin.result.GremlinResultParserFactory;
 import com.alibaba.graphscope.gremlin.result.GremlinResultProcessor;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.ImmutableMap;
@@ -40,24 +41,32 @@ public class GremlinTestResultProcessor extends GremlinResultProcessor {
         synchronized (this) {
             if (!locked) {
                 logger.debug("process finish");
-                List<Object> testTraversers = resultCollectors.stream().map(k -> {
-                    if (k instanceof DetachedVertex) {
-                        DetachedVertex vertex = (DetachedVertex) k;
-                        return new DetachedVertex(vertex.id(), vertex.label(), getVertexProperties(vertex));
-                    } else if (k instanceof DetachedEdge) {
-                        DetachedEdge edge = (DetachedEdge) k;
-                        Vertex outVertex = edge.outVertex();
-                        Vertex inVertex = edge.inVertex();
-                        return new DetachedEdge(edge.id(), edge.label(), getEdgeProperties(edge),
-                                outVertex.id(), outVertex.label(), inVertex.id(), inVertex.label());
-                    } else {
-                        return k;
-                    }
-                }).map(k -> new DefaultRemoteTraverser(k, 1)).collect(Collectors.toList());
-                writeResultList(writeResult, testTraversers, ResponseStatusCode.SUCCESS);
+                formatResultIfNeed();
+                writeResultList(writeResult, resultCollectors, ResponseStatusCode.SUCCESS);
                 locked = true;
             }
         }
+    }
+
+    @Override
+    protected void formatResultIfNeed() {
+        super.formatResultIfNeed();
+        List<Object> testTraversers = resultCollectors.stream().map(k -> {
+            if (k instanceof DetachedVertex) {
+                DetachedVertex vertex = (DetachedVertex) k;
+                return new DetachedVertex(vertex.id(), vertex.label(), getVertexProperties(vertex));
+            } else if (k instanceof DetachedEdge) {
+                DetachedEdge edge = (DetachedEdge) k;
+                Vertex outVertex = edge.outVertex();
+                Vertex inVertex = edge.inVertex();
+                return new DetachedEdge(edge.id(), edge.label(), getEdgeProperties(edge),
+                        outVertex.id(), outVertex.label(), inVertex.id(), inVertex.label());
+            } else {
+                return k;
+            }
+        }).map(k -> new DefaultRemoteTraverser(k, 1)).collect(Collectors.toList());
+        resultCollectors.clear();
+        resultCollectors.addAll(testTraversers);
     }
 
     private Map<String, Object> getVertexProperties(Vertex vertex) {

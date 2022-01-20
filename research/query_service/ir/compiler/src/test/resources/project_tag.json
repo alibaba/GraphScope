@@ -22,7 +22,11 @@
                     }
                   ]
                 },
-                "alias": null
+                "alias": {
+                  "item": {
+                    "Name": "project_a"
+                  }
+                }
               }
             ],
             "is_append": true
@@ -33,4 +37,3 @@
     }
   ]
 }
-

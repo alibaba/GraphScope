@@ -33,8 +33,6 @@ import javax.script.Bindings;
 import javax.script.ScriptContext;
 import javax.script.SimpleBindings;
 import javax.script.SimpleScriptContext;
-import java.util.Arrays;
-import java.util.List;
 
 public class PositiveEvalTest {
     private Graph graph;
@@ -278,6 +276,12 @@ public class PositiveEvalTest {
     }
 
     @Test
+    public void g_V_select_a_by_valueMap_key_1_test() {
+        Traversal expected = g.V().as("a").select("a").by(__.valueMap("name"));
+        Assert.assertEquals(expected, eval("g.V().as(\"a\").select(\"a\").by(__.valueMap(\"name\"))"));
+    }
+
+    @Test
     public void g_V_select_a_by_valueMap_keys_test() {
         Traversal expected = g.V().as("a").select("a").by(__.valueMap("name", "id"));
         Assert.assertEquals(expected, eval("g.V().as(\"a\").select(\"a\").by(valueMap(\"name\", \"id\"))"));
@@ -421,6 +425,36 @@ public class PositiveEvalTest {
     }
 
     @Test
+    public void g_V_has_and_p_test() {
+        Assert.assertEquals(g.V().has("age", P.gt(25).and(P.lt(32))), eval("g.V().has(\"age\", P.gt(25).and(P.lt(32)))"));
+    }
+
+    @Test
+    public void g_V_has_or_p_test() {
+        Assert.assertEquals(g.V().has("age", P.gt(25).or(P.lt(32))), eval("g.V().has(\"age\", P.gt(25).or(P.lt(32)))"));
+    }
+
+    @Test
+    public void g_V_has_label_property_test() {
+        Assert.assertEquals(g.V().has("person", "age", 25), eval("g.V().has(\"person\", \"age\", 25)"));
+    }
+
+    @Test
+    public void g_V_has_label_property_eq_test() {
+        Assert.assertEquals(g.V().has("person", "age", P.eq(25)), eval("g.V().has(\"person\", \"age\", P.eq(25))"));
+    }
+
+    @Test
+    public void g_V_values_is_val_test() {
+        Assert.assertEquals(g.V().values("name").is(27), eval("g.V().values(\"name\").is(27)"));
+    }
+
+    @Test
+    public void g_V_values_is_p_test() {
+        Assert.assertEquals(g.V().values("name").is(P.eq(27)), eval("g.V().values(\"name\").is(P.eq(27))"));
+    }
+
+    @Test
     public void g_V_as_test() {
         Assert.assertEquals(g.V().as("a"), eval("g.V().as('a')"));
     }
@@ -452,6 +486,11 @@ public class PositiveEvalTest {
     }
 
     @Test
+    public void g_V_group_by_key_values_1_test() {
+        Assert.assertEquals(g.V().group().by(__.values("name")), eval("g.V().group().by(__.values(\"name\"))"));
+    }
+
+    @Test
     public void g_V_group_by_key_values_as_test() {
         Assert.assertEquals(g.V().group().by(__.values("name").as("name")),
                 eval("g.V().group().by(values(\"name\").as(\"name\"))"));
@@ -466,6 +505,12 @@ public class PositiveEvalTest {
     public void g_V_group_by_key_values_by_value_fold_test() {
         Assert.assertEquals(g.V().group().by(__.values("name")).by(__.fold()),
                 eval("g.V().group().by(values(\"name\")).by(fold())"));
+    }
+
+    @Test
+    public void g_V_group_by_key_values_by_value_fold_1_test() {
+        Assert.assertEquals(g.V().group().by(__.values("name")).by(__.fold()),
+                eval("g.V().group().by(values(\"name\")).by(__.fold())"));
     }
 
     @Test

@@ -26,6 +26,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.DedupGlobalStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasStep;
+import org.apache.tinkerpop.gremlin.process.traversal.step.filter.IsStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.RangeGlobalStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.*;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.HasContainer;
@@ -86,7 +87,7 @@ public class InterOpCollectionBuilder {
                     predicates.removeAll(labels);
                     // add corner judgement
                     if (!predicates.isEmpty()) {
-                        op.setPredicate(new OpArg(predicates, OpArgTransformFactory.EXPR_FROM_CONTAINERS));
+                        op.setPredicate(new OpArg(predicates, PredicateExprTransformerFactory.EXPR_FROM_CONTAINERS));
                     }
                 }
 
@@ -104,8 +105,16 @@ public class InterOpCollectionBuilder {
                 List containers = ((HasStep) step).getHasContainers();
                 // add corner judgement
                 if (!containers.isEmpty()) {
-                    op.setPredicate(new OpArg(containers, OpArgTransformFactory.EXPR_FROM_CONTAINERS));
+                    op.setPredicate(new OpArg(containers, PredicateExprTransformerFactory.EXPR_FROM_CONTAINERS));
                 }
+                return op;
+            }
+        },
+        IS_STEP {
+            @Override
+            public InterOpBase apply(Step step) {
+                SelectOp op = new SelectOp();
+                op.setPredicate(new OpArg(step, PredicateExprTransformerFactory.EXPR_FROM_IS_STEP));
                 return op;
             }
         },
@@ -141,7 +150,7 @@ public class InterOpCollectionBuilder {
                 Map<String, Traversal.Admin> byTraversals = getProjectTraversals(selectStep);
                 ProjectOp op = new ProjectOp();
                 if (!byTraversals.isEmpty()) {
-                    op.setSingleExpr(new OpArg(byTraversals, OpArgTransformFactory.PROJECT_EXPR_FROM_BY_TRAVERSALS));
+                    op.setExprWithAlias(new OpArg(byTraversals, OpArgTransformFactory.PROJECT_EXPR_FROM_BY_TRAVERSALS));
                 }
                 return op;
             }
@@ -167,7 +176,7 @@ public class InterOpCollectionBuilder {
                 PropertyMapStep valueMapStep = (PropertyMapStep) step;
                 ProjectOp op = new ProjectOp();
                 Map<String, Traversal.Admin> valueMap = getProjectTraversals(valueMapStep);
-                op.setSingleExpr(new OpArg(valueMap, OpArgTransformFactory.PROJECT_EXPR_FROM_BY_TRAVERSALS));
+                op.setExprWithAlias(new OpArg(valueMap, OpArgTransformFactory.PROJECT_EXPR_FROM_BY_TRAVERSALS));
                 return op;
             }
 
@@ -182,7 +191,7 @@ public class InterOpCollectionBuilder {
                 PropertiesStep valuesStep = (PropertiesStep) step;
                 ProjectOp op = new ProjectOp();
                 Map<String, Traversal.Admin> valueMap = getProjectTraversals(valuesStep);
-                op.setSingleExpr(new OpArg(valueMap, OpArgTransformFactory.PROJECT_EXPR_FROM_BY_TRAVERSALS));
+                op.setExprWithAlias(new OpArg(valueMap, OpArgTransformFactory.PROJECT_EXPR_FROM_BY_TRAVERSALS));
                 return op;
             }
 
@@ -272,7 +281,7 @@ public class InterOpCollectionBuilder {
                 Map<String, Traversal.Admin> byTraversals = getProjectTraversals((SelectOneStep) step);
                 ProjectOp op = new ProjectOp();
                 if (!byTraversals.isEmpty()) {
-                    op.setSingleExpr(new OpArg(byTraversals, OpArgTransformFactory.PROJECT_EXPR_FROM_BY_TRAVERSALS));
+                    op.setExprWithAlias(new OpArg(byTraversals, OpArgTransformFactory.PROJECT_EXPR_FROM_BY_TRAVERSALS));
                 }
                 return op;
             }
@@ -342,6 +351,8 @@ public class InterOpCollectionBuilder {
                 op = StepTransformFactory.COUNT_STEP.apply(step);
             } else if (Utils.equalClass(step, PropertiesStep.class)) {
                 op = StepTransformFactory.VALUES_STEP.apply(step);
+            } else if (Utils.equalClass(step, IsStep.class)) {
+                op = StepTransformFactory.IS_STEP.apply(step);
             } else {
                 throw new UnsupportedStepException(step.getClass(), "unimplemented yet");
             }
@@ -358,6 +369,4 @@ public class InterOpCollectionBuilder {
         }
         return opCollection;
     }
-
-
 }

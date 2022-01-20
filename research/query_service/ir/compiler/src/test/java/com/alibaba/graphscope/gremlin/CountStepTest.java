@@ -25,9 +25,9 @@ public class CountStepTest {
         Step step = traversal.asAdmin().getEndStep();
         GroupOp op = (GroupOp) StepTransformFactory.COUNT_STEP.apply(step);
 
-        Assert.assertEquals(Collections.emptyList(), op.getGroupByKeys().get().getArg());
+        Assert.assertEquals(Collections.emptyList(), op.getGroupByKeys().get().applyArg());
         ArgAggFn expectedValue = new ArgAggFn(FfiAggOpt.Count, ArgUtils.asFfiAlias("values", false));
-        Assert.assertEquals(Collections.singletonList(expectedValue), op.getGroupByValues().get().getArg());
+        Assert.assertEquals(Collections.singletonList(expectedValue), op.getGroupByValues().get().applyArg());
     }
 
     @Test
@@ -36,8 +36,8 @@ public class CountStepTest {
         Step step = traversal.asAdmin().getEndStep();
         GroupOp op = (GroupOp) StepTransformFactory.COUNT_STEP.apply(step);
 
-        Assert.assertEquals(Collections.emptyList(), op.getGroupByKeys().get().getArg());
+        Assert.assertEquals(Collections.emptyList(), op.getGroupByKeys().get().applyArg());
         ArgAggFn expectedValue = new ArgAggFn(FfiAggOpt.Count, ArgUtils.asFfiAlias("a", true));
-        Assert.assertEquals(Collections.singletonList(expectedValue), op.getGroupByValues().get().getArg());
+        Assert.assertEquals(Collections.singletonList(expectedValue), op.getGroupByValues().get().applyArg());
     }
 }

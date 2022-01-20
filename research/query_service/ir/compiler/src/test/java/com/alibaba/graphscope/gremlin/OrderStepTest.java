@@ -44,7 +44,7 @@ public class OrderStepTest {
         Step orderStep = traversal.asAdmin().getEndStep();
         OrderOp op = (OrderOp) StepTransformFactory.ORDER_BY_STEP.apply(orderStep);
         List<Pair> expected = Arrays.asList(Pair.with(ArgUtils.asNoneVar(), FfiOrderOpt.Asc));
-        Assert.assertEquals(expected, op.getOrderVarWithOrder().get().getArg());
+        Assert.assertEquals(expected, op.getOrderVarWithOrder().get().applyArg());
     }
 
     @Test
@@ -54,7 +54,7 @@ public class OrderStepTest {
         OrderOp op = (OrderOp) StepTransformFactory.ORDER_BY_STEP.apply(orderStep);
         FfiProperty.ByValue property = ArgUtils.asFfiProperty("~label");
         List<Pair> expected = Arrays.asList(Pair.with(ArgUtils.asVarPropertyOnly(property), FfiOrderOpt.Asc));
-        Assert.assertEquals(expected, op.getOrderVarWithOrder().get().getArg());
+        Assert.assertEquals(expected, op.getOrderVarWithOrder().get().applyArg());
     }
 
     @Test
@@ -64,6 +64,6 @@ public class OrderStepTest {
         OrderOp op = (OrderOp) StepTransformFactory.ORDER_BY_STEP.apply(orderStep);
         FfiProperty.ByValue property = ArgUtils.asFfiProperty("name");
         List<Pair> expected = Arrays.asList(Pair.with(ArgUtils.asVarPropertyOnly(property), FfiOrderOpt.Asc));
-        Assert.assertEquals(expected, op.getOrderVarWithOrder().get().getArg());
+        Assert.assertEquals(expected, op.getOrderVarWithOrder().get().applyArg());
     }
 }
