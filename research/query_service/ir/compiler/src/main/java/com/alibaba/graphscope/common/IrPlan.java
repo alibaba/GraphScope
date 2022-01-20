@@ -136,28 +136,26 @@ public class IrPlan implements Closeable {
                     throw new InterOpIllegalArgException(baseOp.getClass(), "direction", "not present");
                 }
                 FfiDirection ffiDirection = (FfiDirection) direction.get().applyArg();
-                Pointer expand = irCoreLib.initExpandBase(ffiDirection);
+                Optional<OpArg> edgeOpt = op.getIsEdge();
+                if (!edgeOpt.isPresent()) {
+                    throw new InterOpIllegalArgException(baseOp.getClass(), "edgeOpt", "not present");
+                }
+                Boolean isEdge = (Boolean) edgeOpt.get().applyArg();
+                Pointer expand = irCoreLib.initEdgexpdOperator(isEdge, ffiDirection);
                 Optional<OpArg> labels = op.getLabels();
                 if (labels.isPresent()) {
                     List<FfiNameOrId.ByValue> ffiLabels = (List<FfiNameOrId.ByValue>) labels.get().applyArg();
                     for (FfiNameOrId.ByValue label : ffiLabels) {
-                        ResultCode resultCode = irCoreLib.addExpandLabel(expand, label);
+                        ResultCode resultCode = irCoreLib.addEdgexpdLabel(expand, label);
                         if (resultCode != ResultCode.Success) {
                             throw new InterOpIllegalArgException(baseOp.getClass(),
-                                    "labels", "addExpandLabel returns " + resultCode.name());
+                                    "labels", "addEdgexpdLabel returns " + resultCode.name());
                         }
                     }
                 }
                 // todo: add properties
                 // todo: add predicates
                 // todo: add limit
-                Optional<OpArg> edgeOpt = op.getIsEdge();
-                if (!edgeOpt.isPresent()) {
-                    throw new InterOpIllegalArgException(baseOp.getClass(), "edgeOpt", "not present");
-                }
-                Boolean isEdge = (Boolean) edgeOpt.get().applyArg();
-                expand = irCoreLib.initEdgexpdOperator(expand, isEdge);
-
                 Optional<OpArg> aliasOpt = baseOp.getAlias();
                 if (aliasOpt.isPresent()) {
                     FfiAlias.ByValue alias = (FfiAlias.ByValue) aliasOpt.get().applyArg();
