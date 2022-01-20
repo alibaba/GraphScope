@@ -98,12 +98,16 @@ pub fn server_id() -> Option<u64> {
 }
 
 pub fn get_servers() -> Vec<u64> {
-    let lock = SERVERS.read().expect("fetch read lock failure;");
+    let lock = SERVERS
+        .read()
+        .expect("fetch read lock failure;");
     lock.to_vec()
 }
 
 pub fn get_servers_len() -> usize {
-    let lock = SERVERS.read().expect("fetch read lock failure;");
+    let lock = SERVERS
+        .read()
+        .expect("fetch read lock failure;");
     lock.len()
 }
 
@@ -158,7 +162,9 @@ pub fn startup(conf: Configuration) -> Result<(), StartupError> {
             return Err(StartupError::CannotFindServers);
         }
     }
-    let mut lock = SERVERS.write().expect("fetch servers lock failure;");
+    let mut lock = SERVERS
+        .write()
+        .expect("fetch servers lock failure;");
     assert!(lock.is_empty());
     for s in servers {
         lock.push(s);
@@ -168,8 +174,7 @@ pub fn startup(conf: Configuration) -> Result<(), StartupError> {
 }
 
 pub fn startup_with<D: ServerDetect + 'static>(
-    conf: Configuration,
-    detect: D,
+    conf: Configuration, detect: D,
 ) -> Result<Option<SocketAddr>, StartupError> {
     if let Some(pool_size) = conf.max_pool_size {
         pegasus_executor::set_core_pool_size(pool_size as usize);
@@ -240,11 +245,7 @@ where
     Ok(results)
 }
 
-pub fn run_opt<DI, DO, F>(
-    conf: JobConf,
-    sink: ResultSink<DO>,
-    mut logic: F,
-) -> Result<(), JobSubmitError>
+pub fn run_opt<DI, DO, F>(conf: JobConf, sink: ResultSink<DO>, mut logic: F) -> Result<(), JobSubmitError>
 where
     DI: Data,
     DO: Debug + Send + 'static,
@@ -270,12 +271,7 @@ where
         return Ok(());
     }
 
-    info!(
-        "spawn job_{}({}) with {} workers;",
-        conf.job_name,
-        conf.job_id,
-        workers.len()
-    );
+    info!("spawn job_{}({}) with {} workers;", conf.job_name, conf.job_id, workers.len());
     match pegasus_executor::spawn_batch(workers) {
         Ok(_) => Ok(()),
         Err(e) => {
@@ -323,10 +319,7 @@ fn allocate_local_worker(conf: &Arc<JobConf>) -> Result<Option<WorkerIdIter>, Bu
                         servers.len() as u32,
                     )))
                 } else {
-                    return BuildJobError::server_err(format!(
-                        "servers {:?} are not connected;",
-                        servers
-                    ));
+                    return BuildJobError::server_err(format!("servers {:?} are not connected;", servers));
                 }
             }
         } else {
