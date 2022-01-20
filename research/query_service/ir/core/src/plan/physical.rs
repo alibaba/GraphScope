@@ -180,15 +180,13 @@ impl AsPhysical for pb::EdgeExpand {
                     }
                     is_adding_auxilia = true;
                 } else {
-                    if let Some(base) = self.base.as_mut() {
-                        if let Some(params) = base.params.as_mut() {
-                            params.columns.clear();
-                            params.columns.extend(
-                                columns
-                                    .iter()
-                                    .map(|tag| common_pb::NameOrId::from(tag.clone())),
-                            )
-                        }
+                    if let Some(params) = self.params.as_mut() {
+                        params.columns.clear();
+                        params.columns.extend(
+                            columns
+                                .iter()
+                                .map(|tag| common_pb::NameOrId::from(tag.clone())),
+                        )
                     }
                 }
             }
