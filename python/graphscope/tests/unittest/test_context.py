@@ -103,7 +103,7 @@ def test_lpa_u2i(arrow_property_graph_lpa_u2i):
     )
 
 
-@pytest.mark.skipif("FULL-TEST-SUITE" not in os.environ, reason="Run in nightly CI")
+@pytest.mark.skipif("FULL_TEST_SUITE" not in os.environ, reason="Run in nightly CI")
 def test_error_on_selector(arrow_property_graph_lpa_u2i):
     property_context = lpa_u2i(arrow_property_graph_lpa_u2i, max_round=20)
     with pytest.raises(KeyError, match="non_exist_label"):
