@@ -23,7 +23,7 @@ use dyn_type::{BorrowObject, Object};
 use ir_common::error::{ParsePbError, ParsePbResult};
 use ir_common::expr_parse::to_suffix_expr;
 use ir_common::generated::common as pb;
-use ir_common::NameOrId;
+use ir_common::{NameOrId, ID_KEY, LABEL_KEY, LENGTH_KEY};
 
 use crate::expr::{ExprEvalError, ExprEvalResult};
 use crate::graph::element::Element;
@@ -431,8 +431,9 @@ impl Evaluate for InnerOpr {
                             }
                             if let Some(prop) = prop_key {
                                 match prop {
-                                    PropKey::Id => obj2 = object!("~id"),
-                                    PropKey::Label => obj2 = object!("~label"),
+                                    PropKey::Id => obj2 = object!(ID_KEY),
+                                    PropKey::Label => obj2 = object!(LABEL_KEY),
+                                    PropKey::Len => obj2 = object!(LENGTH_KEY),
                                     PropKey::Key(key) => match key {
                                         NameOrId::Str(str) => obj2 = object!(str.as_str()),
                                         NameOrId::Id(id) => obj2 = object!(*id),

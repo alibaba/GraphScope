@@ -756,6 +756,12 @@ impl AsLogical for pb::EdgeExpand {
     }
 }
 
+impl AsLogical for pb::PathExpand {
+    fn preprocess(&mut self, _meta: &StoreMeta, _plan_meta: &mut PlanMeta) -> IrResult<()> {
+        todo!()
+    }
+}
+
 impl AsLogical for pb::GetV {
     fn preprocess(&mut self, _meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
         plan_meta.curr_node_meta_mut().is_add_column = true;

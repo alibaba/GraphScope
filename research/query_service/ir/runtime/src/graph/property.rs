@@ -34,6 +34,7 @@ use crate::graph::{read_id, write_id, ID};
 pub enum PropKey {
     Id,
     Label,
+    Len,
     Key(NameOrId),
 }
 
@@ -49,6 +50,7 @@ impl TryFrom<pb::Property> for PropKey {
             match item {
                 Item::Id(_) => Ok(PropKey::Id),
                 Item::Label(_) => Ok(PropKey::Label),
+                Item::Len(_) => Ok(PropKey::Len),
                 Item::Key(k) => Ok(PropKey::Key(NameOrId::try_from(k)?)),
             }
         } else {
@@ -66,8 +68,11 @@ impl Encode for PropKey {
             PropKey::Label => {
                 writer.write_u8(1)?;
             }
-            PropKey::Key(key) => {
+            PropKey::Len => {
                 writer.write_u8(2)?;
+            }
+            PropKey::Key(key) => {
+                writer.write_u8(3)?;
                 key.write_to(writer)?;
             }
         }
@@ -81,7 +86,8 @@ impl Decode for PropKey {
         match opt {
             0 => Ok(PropKey::Id),
             1 => Ok(PropKey::Label),
-            2 => {
+            2 => Ok(PropKey::Len),
+            3 => {
                 let key = <NameOrId>::read_from(reader)?;
                 Ok(PropKey::Key(key))
             }
@@ -97,12 +103,15 @@ pub trait Details: std::fmt::Debug + Send + Sync + AsAny {
 
     fn get_label(&self) -> Option<&NameOrId>;
 
+    fn get_len(&self) -> usize;
+
     fn get(&self, prop_key: &PropKey) -> Option<BorrowObject> {
         match prop_key {
             PropKey::Id => Some(self.get_id().into()),
             PropKey::Label => self
                 .get_label()
                 .map(|label| label.as_borrow_object()),
+            PropKey::Len => Some((self.get_len() as u64).into()),
             PropKey::Key(k) => self.get_property(k),
         }
     }
@@ -141,6 +150,10 @@ impl Details for DynDetails {
 
     fn get_label(&self) -> Option<&NameOrId> {
         self.inner.get_label()
+    }
+
+    fn get_len(&self) -> usize {
+        0
     }
 
     fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {
@@ -255,6 +268,10 @@ impl Details for DefaultDetails {
 
     fn get_label(&self) -> Option<&NameOrId> {
         self.label.as_ref()
+    }
+
+    fn get_len(&self) -> usize {
+        0
     }
 
     fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {
