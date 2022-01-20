@@ -24,10 +24,7 @@ import com.alibaba.graphscope.common.jna.type.FfiScanOpt;
 import com.google.common.collect.ImmutableMap;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
-import org.apache.tinkerpop.gremlin.process.traversal.step.filter.DedupGlobalStep;
-import org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasStep;
-import org.apache.tinkerpop.gremlin.process.traversal.step.filter.IsStep;
-import org.apache.tinkerpop.gremlin.process.traversal.step.filter.RangeGlobalStep;
+import org.apache.tinkerpop.gremlin.process.traversal.step.filter.*;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.*;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.HasContainer;
 import org.apache.tinkerpop.gremlin.process.traversal.util.DefaultTraversal;
@@ -87,7 +84,7 @@ public class InterOpCollectionBuilder {
                     predicates.removeAll(labels);
                     // add corner judgement
                     if (!predicates.isEmpty()) {
-                        op.setPredicate(new OpArg(predicates, PredicateExprTransformerFactory.EXPR_FROM_CONTAINERS));
+                        op.setPredicate(new OpArg(predicates, PredicateExprTransformFactory.EXPR_FROM_CONTAINERS));
                     }
                 }
 
@@ -105,7 +102,7 @@ public class InterOpCollectionBuilder {
                 List containers = ((HasStep) step).getHasContainers();
                 // add corner judgement
                 if (!containers.isEmpty()) {
-                    op.setPredicate(new OpArg(containers, PredicateExprTransformerFactory.EXPR_FROM_CONTAINERS));
+                    op.setPredicate(new OpArg(containers, PredicateExprTransformFactory.EXPR_FROM_CONTAINERS));
                 }
                 return op;
             }
@@ -114,7 +111,7 @@ public class InterOpCollectionBuilder {
             @Override
             public InterOpBase apply(Step step) {
                 SelectOp op = new SelectOp();
-                op.setPredicate(new OpArg(step, PredicateExprTransformerFactory.EXPR_FROM_IS_STEP));
+                op.setPredicate(new OpArg(step, PredicateExprTransformFactory.EXPR_FROM_IS_STEP));
                 return op;
             }
         },
@@ -314,6 +311,15 @@ public class InterOpCollectionBuilder {
                 countTraversal.addStep(step);
                 return countTraversal;
             }
+        },
+        WHERE_PREDICATE_STEP {
+            @Override
+            public InterOpBase apply(Step step) {
+                WherePredicateStep whereStep = (WherePredicateStep) step;
+                SelectOp op = new SelectOp();
+                op.setPredicate(new OpArg(whereStep, PredicateExprTransformFactory.EXPR_FROM_WHERE_PREDICATE));
+                return op;
+            }
         }
     }
 
@@ -353,6 +359,8 @@ public class InterOpCollectionBuilder {
                 op = StepTransformFactory.VALUES_STEP.apply(step);
             } else if (Utils.equalClass(step, IsStep.class)) {
                 op = StepTransformFactory.IS_STEP.apply(step);
+            } else if (Utils.equalClass(step, WherePredicateStep.class)) {
+                op = StepTransformFactory.WHERE_PREDICATE_STEP.apply(step);
             } else {
                 throw new UnsupportedStepException(step.getClass(), "unimplemented yet");
             }
