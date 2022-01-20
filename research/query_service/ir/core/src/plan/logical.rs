@@ -745,10 +745,8 @@ impl AsLogical for pb::Scan {
 
 impl AsLogical for pb::EdgeExpand {
     fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
-        if let Some(expand) = self.base.as_mut() {
-            if let Some(params) = expand.params.as_mut() {
-                preprocess_params(params, meta, plan_meta)?;
-            }
+        if let Some(params) = self.params.as_mut() {
+            preprocess_params(params, meta, plan_meta)?;
         }
         Ok(())
     }
@@ -1404,16 +1402,14 @@ mod test {
 
         // .out().as("here")
         let expand = pb::EdgeExpand {
-            base: Some(pb::ExpandBase {
-                v_tag: Some("a".into()),
-                direction: 0,
-                params: Some(pb::QueryParams {
-                    table_names: vec![],
-                    columns: vec![],
-                    limit: None,
-                    predicate: None,
-                    requirements: vec![],
-                }),
+            v_tag: Some("a".into()),
+            direction: 0,
+            params: Some(pb::QueryParams {
+                table_names: vec![],
+                columns: vec![],
+                limit: None,
+                predicate: None,
+                requirements: vec![],
             }),
             is_edge: false,
             alias: Some("here".into()),
@@ -1524,16 +1520,14 @@ mod test {
 
         // outE("knows").as('b').has("date", 20200101)
         let expand = pb::EdgeExpand {
-            base: Some(pb::ExpandBase {
-                v_tag: Some("a".into()),
-                direction: 0,
-                params: Some(pb::QueryParams {
-                    table_names: vec!["knows".into()],
-                    columns: vec![],
-                    limit: None,
-                    predicate: str_to_expr_pb("@.date == 20200101".to_string()).ok(),
-                    requirements: vec![],
-                }),
+            v_tag: Some("a".into()),
+            direction: 0,
+            params: Some(pb::QueryParams {
+                table_names: vec!["knows".into()],
+                columns: vec![],
+                limit: None,
+                predicate: str_to_expr_pb("@.date == 20200101".to_string()).ok(),
+                requirements: vec![],
             }),
             is_edge: true,
             alias: Some("b".into()),
