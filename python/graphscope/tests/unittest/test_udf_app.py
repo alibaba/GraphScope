@@ -1213,6 +1213,7 @@ def test_edge_traversal(
     )
 
 
+@pytest.mark.skipif("FULL-TEST-SUITE" not in os.environ, reason="Run in nightly CI")
 def test_run_on_string_oid_graph(
     graphscope_session, p2p_property_graph_string, sssp_result
 ):
