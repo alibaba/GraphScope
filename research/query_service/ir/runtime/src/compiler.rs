@@ -34,7 +34,7 @@ use prost::Message;
 
 use crate::error::{FnExecError, FnGenResult};
 use crate::graph::partitioner::Partitioner;
-use crate::process::functions::{CompareFunction, FoldGen, GroupGen, JoinKeyGen, KeyFunction};
+use crate::process::functions::{ApplyGen, CompareFunction, FoldGen, GroupGen, JoinKeyGen, KeyFunction};
 use crate::process::operator::accum::accumulator::Accumulator;
 use crate::process::operator::filter::FilterFuncGen;
 use crate::process::operator::flatmap::FlatMapFuncGen;
@@ -46,13 +46,14 @@ use crate::process::operator::shuffle::RecordRouter;
 use crate::process::operator::sink::SinkFunctionGen;
 use crate::process::operator::sort::CompareFunctionGen;
 use crate::process::operator::source::SourceOperator;
+use crate::process::operator::subtask::RecordLeftJoinGen;
 use crate::process::record::{Record, RecordKey};
 
 type RecordMap = Box<dyn MapFunction<Record, Record>>;
 type RecordFilterMap = Box<dyn FilterMapFunction<Record, Record>>;
 type RecordFlatMap = Box<dyn FlatMapFunction<Record, Record, Target = DynIter<Record>>>;
 type RecordFilter = Box<dyn FilterFunction<Record>>;
-type RecordLeftJoin = Box<dyn BinaryFunction<Record, Vec<Record>, Option<Record>>>;
+type RecordLeftJoin = Box<dyn ApplyGen<Record, Vec<Record>, Option<Record>>>;
 type RecordEncode = Box<dyn MapFunction<Record, result_pb::Results>>;
 type RecordShuffle = Box<dyn RouteFunction<Record>>;
 type RecordCompare = Box<dyn CompareFunction<Record>>;
@@ -130,8 +131,9 @@ impl FnGenerator {
         Ok(step.gen_fold()?)
     }
 
-    fn gen_subtask(&self, _res: &BinaryResource) -> FnGenResult<RecordLeftJoin> {
-        todo!()
+    fn gen_subtask(&self, res: &BinaryResource) -> FnGenResult<RecordLeftJoin> {
+        let step = decode::<algebra_pb::logical_plan::Operator>(res)?;
+        Ok(step.gen_subtask()?)
     }
 
     fn gen_join(&self, res: &BinaryResource) -> FnGenResult<RecordJoin> {
@@ -291,24 +293,40 @@ impl IRJobCompiler {
                         todo!()
                     }
                     server_pb::operator_def::OpKind::Apply(sub) => {
-                        let join_func = self.udf_gen.gen_subtask(
+                        let apply_gen = self.udf_gen.gen_subtask(
                             sub.join
                                 .as_ref()
                                 .ok_or("should have subtask_kind")?
                                 .resource
                                 .as_ref(),
                         )?;
-
-                        if let Some(ref body) = sub.task {
-                            stream = stream
-                                .apply(|sub_start| {
-                                    let sub_end = self
-                                        .install(sub_start, &body.plan[..])?
-                                        .collect::<Vec<Record>>()?;
-                                    Ok(sub_end)
-                                })?
-                                .filter_map(move |(parent, sub)| join_func.exec(parent, sub))?;
+                        let join_kind = apply_gen.get_join_kind();
+                        let join_func = apply_gen.gen_left_join_func()?;
+                        let sub_task = sub
+                            .task
+                            .as_ref()
+                            .ok_or(BuildJobError::Unsupported("Task is missing in Apply".to_string()))?;
+                        stream = match join_kind {
+                            JoinKind::Semi | JoinKind::Anti => stream.apply(|sub_start| {
+                                let sub_end = self
+                                    .install(sub_start, &sub_task.plan[..])?
+                                    // TODO: is_any api instead;
+                                    .limit(1)?
+                                    .collect::<Vec<Record>>()?;
+                                Ok(sub_end)
+                            })?,
+                            JoinKind::Inner | JoinKind::LeftOuter => stream.apply(|sub_start| {
+                                let sub_end = self
+                                    .install(sub_start, &sub_task.plan[..])?
+                                    .collect::<Vec<Record>>()?;
+                                Ok(sub_end)
+                            })?,
+                            _ => Err(BuildJobError::Unsupported(format!(
+                                "Do not support join_kind {:?} in Apply",
+                                join_kind
+                            )))?,
                         }
+                        .filter_map(move |(parent, sub)| join_func.exec(parent, sub))?;
                     }
                     server_pb::operator_def::OpKind::SegApply(_) => {
                         Err(BuildJobError::Unsupported("SegApply is not supported yet".to_string()))?
