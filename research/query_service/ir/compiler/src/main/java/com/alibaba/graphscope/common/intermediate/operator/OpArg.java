@@ -28,7 +28,15 @@ public class OpArg<T, R> {
         this.transform = transform;
     }
 
-    public R getArg() {
+    public T getArg() {
+        return arg;
+    }
+
+    public R applyArg() {
         return transform.apply(arg);
+    }
+
+    public Function<T, R> getTransform() {
+        return transform;
     }
 }

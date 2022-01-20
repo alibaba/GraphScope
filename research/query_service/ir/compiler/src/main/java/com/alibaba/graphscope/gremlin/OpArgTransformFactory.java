@@ -23,21 +23,16 @@ import com.alibaba.graphscope.common.jna.type.*;
 import com.alibaba.graphscope.common.jna.type.FfiDirection;
 import com.alibaba.graphscope.common.jna.type.FfiNameOrId;
 import com.alibaba.graphscope.common.jna.type.FfiScanOpt;
-import com.alibaba.graphscope.gremlin.antlr4.AnyValue;
 import org.apache.tinkerpop.gremlin.process.traversal.*;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.IdentityTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.ValueTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.*;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.HasContainer;
-import org.apache.tinkerpop.gremlin.process.traversal.util.ConnectiveP;
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.apache.tinkerpop.gremlin.structure.T;
 import org.javatuples.Pair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.function.BiPredicate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -45,7 +40,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class OpArgTransformFactory {
-    private static Logger logger = LoggerFactory.getLogger(OpArgTransformFactory.class);
+    public static String PROJECT_SELF_PREFIX = "project_";
 
     public static Function<GraphStep, FfiScanOpt> SCAN_OPT = (GraphStep s1) -> {
         if (s1.returnsVertex()) return FfiScanOpt.Entity;
@@ -62,50 +57,6 @@ public class OpArgTransformFactory {
                     throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE, "unimplemented yet");
                 }
             }).collect(Collectors.toList());
-
-    public static Function<List<HasContainer>, String> EXPR_FROM_CONTAINERS = (List<HasContainer> containers) -> {
-        String expr = "";
-        for (int i = 0; i < containers.size(); ++i) {
-            if (i > 0) {
-                expr += " && ";
-            }
-            HasContainer container = containers.get(i);
-            if (container.getPredicate() instanceof ConnectiveP) {
-                throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE, "nested predicate");
-            }
-            Object predicateValue = container.getValue();
-            String existPropertyKey = String.format("@.%s", container.getKey());
-            // has("name")
-            if (predicateValue instanceof AnyValue) {
-                expr += existPropertyKey;
-            } else {
-                expr += existPropertyKey + " && ";
-                String valueExpr = getValueExpr(predicateValue);
-                BiPredicate predicate = container.getPredicate().getBiPredicate();
-                if (predicate == Compare.eq) {
-                    expr += String.format("@.%s == %s", container.getKey(), valueExpr);
-                } else if (predicate == Compare.neq) {
-                    expr += String.format("@.%s != %s", container.getKey(), valueExpr);
-                } else if (predicate == Compare.lt) {
-                    expr += String.format("@.%s < %s", container.getKey(), valueExpr);
-                } else if (predicate == Compare.lte) {
-                    expr += String.format("@.%s <= %s", container.getKey(), valueExpr);
-                } else if (predicate == Compare.gt) {
-                    expr += String.format("@.%s > %s", container.getKey(), valueExpr);
-                } else if (predicate == Compare.gte) {
-                    expr += String.format("@.%s >= %s", container.getKey(), valueExpr);
-                } else if (predicate == Contains.within) {
-                    expr += String.format("@.%s within %s", container.getKey(), valueExpr);
-                } else if (predicate == Contains.without) {
-                    expr += String.format("@.%s without %s", container.getKey(), valueExpr);
-                } else {
-                    throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE, "predicate type is unsupported");
-                }
-            }
-
-        }
-        return expr;
-    };
 
     public static Function<List<HasContainer>, List<FfiNameOrId.ByValue>> LABELS_FROM_CONTAINERS = (List<HasContainer> containers) -> {
         List<String> labels = new ArrayList<>();
@@ -151,65 +102,76 @@ public class OpArgTransformFactory {
     public static Function<VertexStep, List<FfiNameOrId.ByValue>> EDGE_LABELS_FROM_STEP = (VertexStep s1) ->
             Arrays.stream(s1.getEdgeLabels()).map(k -> ArgUtils.strAsNameId(k)).collect(Collectors.toList());
 
-    public static Function<Map<String, Traversal.Admin>, String>
+    public static Function<Map<String, Traversal.Admin>, List<Pair<String, FfiAlias.ByValue>>>
             PROJECT_EXPR_FROM_BY_TRAVERSALS = (Map<String, Traversal.Admin> map) -> {
-        StringBuilder builder = new StringBuilder();
+        List<Pair<String, FfiAlias.ByValue>> projectWithAliasList = new ArrayList<>();
         map.forEach((k, v) -> {
-            if (v == null || v instanceof IdentityTraversal) { // select(..)
-                addProjectExpr(builder, "@" + k, false);
-            } else if (v instanceof ValueTraversal) {  // select(..).by('name')
-                String expr = String.format("@%s.%s", k, ((ValueTraversal) v).getPropertyKey());
-                addProjectExpr(builder, expr, false);
-            } else if (v.getSteps().size() == 1 && v.getStartStep() instanceof PropertyMapStep) { // select(..).by(valueMap(''))
-                String[] mapKeys = ((PropertyMapStep) v.getStartStep()).getPropertyKeys();
-                if (mapKeys.length > 0) {
-                    for (int i = 0; i < mapKeys.length; ++i) {
-                        String e1 = String.format("@%s.%s", k, mapKeys[i]);
-                        addProjectExpr(builder, e1, true);
-                    }
-                } else {
-                    throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE, "valueMap() is unsupported");
-                }
-            } else if (v.getSteps().size() == 1 && v.getStartStep() instanceof PropertiesStep) { // values("name")
-                String[] mapKeys = ((PropertiesStep) v.getStartStep()).getPropertyKeys();
-                if (mapKeys.length == 0) {
-                    throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE, "values() is unsupported");
-                }
-                if (mapKeys.length > 1) {
-                    throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
-                            "use valueMap(..) instead if there are multiple project keys");
-                }
-                String expr = String.format("@%s.%s", k, mapKeys[0]);
-                addProjectExpr(builder, expr, false);
-            } else {
-                throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
-                        "supported pattern is [select(..)] or [selecy(..).by('name')] or [select(..).by(valueMap(..))]");
-            }
+            String expression = ByTraversalTransformFactory.getTagByTraversalAsExpr(k, v);
+            String formatAlias = formatProjectAlias(expression);
+            projectWithAliasList.add(Pair.with(expression, ArgUtils.asFfiAlias(formatAlias, false)));
         });
-        return builder.toString();
+        return projectWithAliasList;
     };
 
-    // append a new expr into projectExpr
-    // format single value into map or not
-    private static void addProjectExpr(StringBuilder builder, String expr, boolean isSingleAsMap) {
-        String left = "{";
-        String right = "}";
-        if (builder.length() == 0) {
-            if (!isSingleAsMap) {
-                builder.append(expr);
+    private static String formatProjectAlias(String expression) {
+        // {@.name, @.id} -> {name, id}
+        // {@a.name, @a.id} -> a_{name, id}
+        if (expression.startsWith("{") && expression.endsWith("}")) {
+            String[] exprs = expression.split(",|\\{|\\}|\\s+");
+            // default is head
+            String tag = "";
+            List<String> properties = new ArrayList<>();
+            for (int i = 0; i < exprs.length; ++i) {
+                if (exprs[i].isEmpty()) continue;
+                String alias = formatProjectAlias(exprs[i]);
+                String[] tagProperty = alias.split("_");
+                if (tagProperty.length == 1) {
+                    properties.add(tagProperty[0]);
+                } else if (tagProperty.length > 1) {
+                    tag = (tag.isEmpty()) ? tagProperty[0] : tag;
+                    properties.add(tagProperty[1]);
+                } else {
+                    throw new OpArgIllegalException(OpArgIllegalException.Cause.INVALID_TYPE,
+                            "alias format is invalid, split length is " + tagProperty.length);
+                }
+            }
+            StringBuilder aliasBuilder = new StringBuilder();
+            if (!tag.isEmpty()) {
+                aliasBuilder.append(tag);
+            }
+            if (!properties.isEmpty()) {
+                StringBuilder propertiesBuilder = new StringBuilder();
+                properties.forEach(p -> {
+                    boolean isEmpty = (propertiesBuilder.length() == 0);
+                    if (!isEmpty) {
+                        propertiesBuilder.append(", ");
+                    }
+                    propertiesBuilder.append(p);
+                });
+                if (aliasBuilder.length() > 0) {
+                    aliasBuilder.append("_");
+                }
+                aliasBuilder.append("{" + propertiesBuilder.toString() + "}");
+            }
+            return aliasBuilder.toString();
+        } else { // @a.name -> a_name, @.name -> name, @a -> project_a
+            String[] splitExpr = expression.split("\\.|\\s+");
+            if (splitExpr.length == 0) {
+                throw new OpArgIllegalException(OpArgIllegalException.Cause.INVALID_TYPE,
+                        "expression invalid, split length is 0");
+            }
+            String tag = splitExpr[0].replace("@", "");
+            String property = "";
+            if (splitExpr.length > 1) {
+                property = splitExpr[1];
+            }
+            if (property.isEmpty()) {
+                return PROJECT_SELF_PREFIX + tag;
+            } else if (tag.isEmpty()) {
+                return property;
             } else {
-                builder.append("{" + expr + "}");
+                return tag + "_" + property;
             }
-        } else if (builder.charAt(0) != left.charAt(0)) {
-            builder.insert(0, left);
-            builder.append(", " + expr);
-            builder.append(right);
-        } else {
-            int rightEnd = builder.lastIndexOf(right);
-            if (rightEnd == -1) {
-                throw new OpArgIllegalException(OpArgIllegalException.Cause.INVALID_TYPE, "} is not present in a collection expression");
-            }
-            builder.insert(rightEnd, ", " + expr);
         }
     }
 
@@ -245,31 +207,6 @@ public class OpArgTransformFactory {
             default:
                 throw new OpArgIllegalException(OpArgIllegalException.Cause.INVALID_TYPE, "invalid order type");
         }
-    }
-
-    public static String getValueExpr(Object value) {
-        String valueExpr;
-        if (value instanceof String) {
-            valueExpr = String.format("\"%s\"", value);
-        } else if (value instanceof List) {
-            String content = "";
-            List values = (List) value;
-            for (int i = 0; i < values.size(); ++i) {
-                if (i != 0) {
-                    content += ", ";
-                }
-                Object v = values.get(i);
-                if (v instanceof List) {
-                    throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
-                            "nested list of predicate value is unsupported");
-                }
-                content += getValueExpr(v);
-            }
-            valueExpr = String.format("[%s]", content);
-        } else {
-            valueExpr = value.toString();
-        }
-        return valueExpr;
     }
 
     // isQueryGiven is set as true by default

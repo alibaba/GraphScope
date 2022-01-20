@@ -1,65 +1,101 @@
 {
   "entities": [
     {
-      "id": 1,
-      "name": "software",
+      "label": {
+        "id": 1,
+        "name": "software"
+      },
       "columns": [
         {
-          "id": 0,
-          "name": "name",
+          "key": {
+            "id": 0,
+            "name": "name"
+          },
           "data_type": 4
         },
         {
-          "id": 2,
-          "name": "lang",
+          "key": {
+            "id": 2,
+            "name": "lang"
+          },
           "data_type": 4
         }
       ]
     },
     {
-      "id": 0,
-      "name": "person",
+      "label": {
+        "id": 0,
+        "name": "person"
+      },
       "columns": [
         {
-          "id": 0,
-          "name": "name",
+          "key": {
+            "id": 0,
+            "name": "name"
+          },
           "data_type": 4
         },
         {
-          "id": 1,
-          "name": "age",
+          "key": {
+            "id": 1,
+            "name": "age"
+          },
           "data_type": 1
         }
       ]
     }
   ],
-  "rels": [
+  "relations": [
     {
-      "src_id": 0,
-      "src_name": "person",
-      "dst_id": 0,
-      "dst_name": "person",
-      "id": 0,
-      "name": "knows",
+      "label": {
+        "id": 0,
+        "name": "knows"
+      },
+      "entity_pairs": [
+        {
+          "src": {
+            "id": 0,
+            "name": "person"
+          },
+          "dst": {
+            "id": 0,
+            "name": "person"
+          }
+        }
+      ],
       "columns": [
         {
-          "id": 3,
-          "name": "weight",
+          "key": {
+            "id": 3,
+            "name": "weight"
+          },
           "data_type": 3
         }
       ]
     },
     {
-      "src_id": 0,
-      "src_name": "person",
-      "dst_id": 1,
-      "dst_name": "software",
-      "id": 1,
-      "name": "created",
+      "label": {
+        "id": 1,
+        "name": "created"
+      },
+      "entity_pairs": [
+        {
+          "src": {
+            "id": 0,
+            "name": "person"
+          },
+          "dst": {
+            "id": 0,
+            "name": "software"
+          }
+        }
+      ],
       "columns": [
         {
-          "id": 3,
-          "name": "weight",
+          "key": {
+            "id": 3,
+            "name": "weight"
+          },
           "data_type": 3
         }
       ]

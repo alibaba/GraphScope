@@ -519,12 +519,13 @@ impl TryFrom<result_pb::Entry> for Entry {
         if let Some(inner) = entry_pb.inner {
             match inner {
                 result_pb::entry::Inner::Element(e) => Ok(Entry::Element(e.try_into()?)),
-                result_pb::entry::Inner::Collection(c) => Ok(Entry::Collection(
-                    c.collection
-                        .into_iter()
-                        .map(|e| e.try_into())
-                        .collect::<Result<Vec<_>, Self::Error>>()?,
-                )),
+                result_pb::entry::Inner::Collection(c) => {
+                    Ok(Entry::Collection(c.collection.into_iter().map(|e| e.try_into()).collect::<Result<
+                        Vec<_>,
+                        Self::Error,
+                    >>(
+                    )?))
+                }
             }
         } else {
             Err(ParsePbError::EmptyFieldError("entry inner is empty".to_string()))?
@@ -544,8 +545,8 @@ impl TryFrom<result_pb::Element> for RecordElement {
                     Ok(RecordElement::OnGraph(GraphObject::VOrE(e.try_into()?)))
                 }
                 // TODO(bingqing): may need add a path type in result pb
-                result_pb::element::Inner::Object(_o) => {
-                    Err(ParsePbError::NotSupported("Cannot parse object".to_string()))
+                result_pb::element::Inner::Object(o) => {
+                    Ok(RecordElement::OffGraph(ObjectElement::Prop(o.try_into()?)))
                 }
             }
         } else {

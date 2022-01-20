@@ -23,7 +23,7 @@ use dyn_type::{BorrowObject, Object};
 use ir_common::error::{ParsePbError, ParsePbResult};
 use ir_common::expr_parse::to_suffix_expr;
 use ir_common::generated::common as pb;
-use ir_common::NameOrId;
+use ir_common::{NameOrId, ID_KEY, LABEL_KEY, LENGTH_KEY};
 
 use crate::expr::{ExprEvalError, ExprEvalResult};
 use crate::graph::element::Element;
@@ -431,8 +431,9 @@ impl Evaluate for InnerOpr {
                             }
                             if let Some(prop) = prop_key {
                                 match prop {
-                                    PropKey::Id => obj2 = object!("~id"),
-                                    PropKey::Label => obj2 = object!("~label"),
+                                    PropKey::Id => obj2 = object!(ID_KEY),
+                                    PropKey::Label => obj2 = object!(LABEL_KEY),
+                                    PropKey::Len => obj2 = object!(LENGTH_KEY),
                                     PropKey::Key(key) => match key {
                                         NameOrId::Str(str) => obj2 = object!(str.as_str()),
                                         NameOrId::Id(id) => obj2 = object!(*id),
@@ -676,7 +677,8 @@ mod tests {
         let ctxt = prepare_context();
         let cases: Vec<&str> = vec![
             "@0.~id",                                      // 1
-            "@1.~label",                                   // 1
+            "@1.~label",                                   // 11
+            "@1.~label && @1.~label == 11",                // true
             "@0.~id < @1.~id",                             // true
             "@0.birthday > @1.birthday",                   // false
             "@0.~label == @1.~label",                      // false
@@ -693,6 +695,7 @@ mod tests {
         let expected: Vec<Object> = vec![
             object!(1),
             object!(11),
+            object!(true),
             object!(true),
             object!(false),
             object!(false),

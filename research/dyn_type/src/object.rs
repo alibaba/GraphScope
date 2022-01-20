@@ -418,15 +418,14 @@ pub enum Object {
 
 impl ToString for Object {
     fn to_string(&self) -> String {
-        use Object::*;
         match self {
-            Primitive(p) => p.to_string(),
-            String(s) => s.to_string(),
-            Vector(v) => format!("{:?}", v),
-            KV(kv) => format!("{:?}", kv),
-            Blob(b) => format!("{:?}", b),
-            DynOwned(_) => "unknown dynamic type".to_string(),
-            None => "None".to_string(),
+            Object::Primitive(p) => p.to_string(),
+            Object::String(s) => s.to_string(),
+            Object::Vector(v) => format!("{:?}", v),
+            Object::KV(kv) => format!("{:?}", kv),
+            Object::Blob(b) => format!("{:?}", b),
+            Object::DynOwned(_) => "unknown dynamic type".to_string(),
+            Object::None => "".to_string(),
         }
     }
 }
@@ -957,6 +956,13 @@ macro_rules! partial_cmp {
                     None
                 }
             }
+            $crate::$ty::None => {
+                if let $crate::$ty::None = $other {
+                    Some(Ordering::Equal)
+                } else {
+                    None
+                }
+            }
             _ => None,
         }
     };
@@ -967,7 +973,7 @@ macro_rules! cmp {
         if let Some(ord) = $self.partial_cmp($other) {
             ord
         } else {
-            Ordering::Equal
+            Ordering::Less
         }
     };
 }

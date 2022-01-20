@@ -592,10 +592,7 @@ mod tests {
         assert_eq!(case8.unwrap(), expected_case8,);
 
         let case9 = tokenize("[]");
-        assert_eq!(
-            case9.unwrap(),
-            vec![Token::IdentArray(vec![])]
-        );
+        assert_eq!(case9.unwrap(), vec![Token::IdentArray(vec![])]);
     }
 
     #[test]

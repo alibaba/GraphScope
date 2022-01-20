@@ -45,16 +45,14 @@ mod test {
         };
         let select_opr = pb::Select { predicate: Some(str_to_expr_pb("@.id == 1".to_string()).unwrap()) };
         let expand_opr = pb::EdgeExpand {
-            base: Some(pb::ExpandBase {
-                v_tag: None,
-                direction: 0,
-                params: Some(pb::QueryParams {
-                    table_names: vec![common_pb::NameOrId::from("knows".to_string())],
-                    columns: vec![],
-                    limit: None,
-                    predicate: None,
-                    requirements: vec![],
-                }),
+            v_tag: None,
+            direction: 0,
+            params: Some(pb::QueryParams {
+                table_names: vec![common_pb::NameOrId::from("knows".to_string())],
+                columns: vec![],
+                limit: None,
+                predicate: None,
+                requirements: vec![],
             }),
             is_edge: false,
             alias: None,
@@ -62,13 +60,19 @@ mod test {
         let source_opr_bytes = pb::logical_plan::Operator::from(source_opr).encode_to_vec();
         let select_opr_bytes = pb::logical_plan::Operator::from(select_opr).encode_to_vec();
         let expand_opr_bytes = pb::logical_plan::Operator::from(expand_opr).encode_to_vec();
+        let sink_opr_bytes = pb::logical_plan::Operator::from(pb::Sink {
+            tags: vec![],
+            sink_current: true,
+            id_name_mappings: vec![],
+        })
+        .encode_to_vec();
 
         let mut job_builder = JobBuilder::default();
         job_builder.add_source(source_opr_bytes.clone());
         job_builder.filter(select_opr_bytes);
         job_builder.flat_map(expand_opr_bytes.clone());
         job_builder.limit(10);
-        job_builder.sink(vec![]);
+        job_builder.sink(sink_opr_bytes);
 
         job_builder.build().unwrap()
     }

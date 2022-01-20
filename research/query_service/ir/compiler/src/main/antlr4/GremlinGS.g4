@@ -69,6 +69,8 @@ traversalMethod
     | traversalMethod_groupCount // groupCount()
     | traversalMethod_values    // values()
     | traversalMethod_count // count()
+    | traversalMethod_is    // is()
+    | traversalMethod_where // where()
     ;
 
 traversalSourceSpawnMethod_V
@@ -94,11 +96,13 @@ traversalMethod_hasId
     ;
 
 // has("str", y), has("str", eq/neq/gt/gte/lt/lte(y))
-// has("name")
+// has("person", "name", "marko")
+// has("person", "name", P.eq("marko"))
 traversalMethod_has
     : 'has' LPAREN stringLiteral COMMA genericLiteral RPAREN  // indicate eq
-    | 'has' LPAREN stringLiteral RPAREN
     | 'has' LPAREN stringLiteral COMMA traversalPredicate RPAREN
+    | 'has' LPAREN stringLiteral COMMA stringLiteral COMMA genericLiteral RPAREN
+    | 'has' LPAREN stringLiteral COMMA stringLiteral COMMA traversalPredicate RPAREN
     ;
 
 // out('str1', ...)
@@ -182,8 +186,8 @@ traversalMethod_select
 
 // by(valueMap())
 traversalMethod_selectby
-    : 'by'  LPAREN stringLiteral RPAREN
-    | 'by' LPAREN traversalMethod_valueMap RPAREN
+    : 'by' LPAREN stringLiteral RPAREN
+    | 'by' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_valueMap RPAREN
     ;
 
 traversalMethod_selectby_list
@@ -209,14 +213,14 @@ traversalMethod_groupCount
 // group().by(values('name').as('key'))
 traversalMethod_group_keyby
     : 'by' LPAREN stringLiteral RPAREN
-    | 'by' LPAREN traversalMethod_values (DOT traversalMethod_as)? RPAREN
+    | 'by' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_values (DOT traversalMethod_as)? RPAREN
     ;
 
 // group().by(...).by(fold().as("value"))
 // group().by(...).by(count())
 // group().by(...).by(count().as("value"))
 traversalMethod_group_valueby
-    : 'by' LPAREN traversalMethod_aggregate_func (DOT traversalMethod_as)? RPAREN
+    : 'by' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_aggregate_func (DOT traversalMethod_as)? RPAREN
     ;
 
 traversalMethod_aggregate_func
@@ -239,6 +243,31 @@ traversalMethod_values
 traversalMethod_fold
 	: 'fold' LPAREN RPAREN
 	;
+
+// is(27)
+// is(P.eq(27))
+traversalMethod_is
+	: 'is' LPAREN genericLiteral RPAREN
+	| 'is' LPAREN traversalPredicate RPAREN
+	;
+
+// where(P.eq("a"))
+// where("c", P.eq("a"))
+// where(P.eq("a")).by("age")
+// where("c", P.eq("a")).by("id").by("age")
+traversalMethod_where
+	: 'where' LPAREN traversalPredicate RPAREN (DOT traversalMethod_whereby_list)?
+	| 'where' LPAREN stringLiteral COMMA traversalPredicate RPAREN (DOT traversalMethod_whereby_list)?
+	;
+
+traversalMethod_whereby
+    : 'by' LPAREN stringLiteral RPAREN
+    | 'by' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_values RPAREN
+    ;
+
+traversalMethod_whereby_list
+    : traversalMethod_whereby (DOT traversalMethod_whereby)*
+    ;
 
 // only permit non empty, \'\' or \"\" or \'null\' is meaningless as a parameter
 stringLiteral
@@ -296,6 +325,8 @@ traversalPredicate
     | traversalPredicate_gte
     | traversalPredicate_within
     | traversalPredicate_without
+    | traversalPredicate DOT 'and' LPAREN traversalPredicate RPAREN
+    | traversalPredicate DOT 'or' LPAREN traversalPredicate RPAREN
     ;
 
 traversalPredicate_eq

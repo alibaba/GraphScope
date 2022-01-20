@@ -48,6 +48,19 @@ public class Utils {
         }
     }
 
+    public static <V> V getFieldValue(Class<?> clazz, Object obj, String fieldName) {
+        Preconditions.checkNotNull(obj);
+        Preconditions.checkNotNull(fieldName);
+
+        try {
+            Field field = clazz.getDeclaredField(fieldName);
+            field.setAccessible(true);
+            return (V) field.get(obj);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public static String[] removeStringEle(int i, String[] data) {
         if (data.length == 0 || i < 0 || i >= data.length) return data;
         String[] copy = new String[data.length - 1];

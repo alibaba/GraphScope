@@ -13,8 +13,8 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use std::collections::hash_map::Entry;
-use std::collections::{BTreeSet, HashMap};
+use std::collections::btree_map::Entry;
+use std::collections::{BTreeMap, BTreeSet};
 use std::io;
 use std::sync::RwLock;
 
@@ -24,6 +24,8 @@ use ir_common::NameOrId;
 
 use crate::error::{IrError, IrResult};
 use crate::JsonIO;
+
+pub static INVALID_META_ID: i32 = -1;
 
 lazy_static! {
     pub static ref STORE_META: RwLock<StoreMeta> = RwLock::new(StoreMeta::default());
@@ -58,103 +60,44 @@ pub struct StoreMeta {
     pub schema: Option<Schema>,
 }
 
-#[derive(Clone, Debug, Default)]
-pub struct Column {
-    name: String,
-    id: i32,
-    data_type: common_pb::DataType,
-}
-
-#[derive(Clone, Debug, Default)]
-pub struct EntityPair {
+#[derive(Clone, Debug)]
+pub struct LabelMeta {
     name: String,
     id: i32,
 }
 
-#[derive(Clone, Debug, Default)]
-pub struct RelationTriplet {
-    src: EntityPair,
-    dst: EntityPair,
-    edge: EntityPair,
-}
-
-impl From<schema_pb::ColumnKey> for Column {
-    fn from(column_pb: schema_pb::ColumnKey) -> Self {
-        Column {
-            name: column_pb.name.clone(),
-            id: column_pb.id,
-            data_type: unsafe { std::mem::transmute::<i32, common_pb::DataType>(column_pb.data_type) },
-        }
+impl Default for LabelMeta {
+    fn default() -> Self {
+        Self { name: "INVALID".into(), id: INVALID_META_ID }
     }
 }
 
-fn into_entity(entity_pb: schema_pb::Entity) -> (EntityPair, Vec<Column>) {
-    let entity = EntityPair { name: entity_pb.name.clone(), id: entity_pb.id };
-    let columns = entity_pb
-        .columns
-        .into_iter()
-        .map(|col| col.into())
-        .collect();
-
-    (entity, columns)
-}
-
-fn into_entity_pb(tuple: (EntityPair, Vec<Column>)) -> schema_pb::Entity {
-    schema_pb::Entity {
-        id: tuple.0.id,
-        name: tuple.0.name.clone(),
-        columns: tuple
-            .1
-            .into_iter()
-            .map(|col| schema_pb::ColumnKey {
-                id: col.id,
-                name: col.name.clone(),
-                data_type: unsafe { std::mem::transmute::<common_pb::DataType, i32>(col.data_type) },
-            })
-            .collect(),
+impl From<(String, i32)> for LabelMeta {
+    fn from(tuple: (String, i32)) -> Self {
+        Self { name: tuple.0, id: tuple.1 }
     }
 }
 
-fn into_relation(rel_pb: schema_pb::Relation) -> (RelationTriplet, Vec<Column>) {
-    let src = EntityPair { name: rel_pb.src_name.clone(), id: rel_pb.src_id };
-    let dst = EntityPair { name: rel_pb.dst_name.clone(), id: rel_pb.dst_id };
-    let edge = EntityPair { name: rel_pb.name.clone(), id: rel_pb.id };
-    let columns = rel_pb
-        .columns
-        .into_iter()
-        .map(|col| col.into())
-        .collect();
-
-    (RelationTriplet { src, dst, edge }, columns)
-}
-
-fn into_relation_pb(tuple: (RelationTriplet, Vec<Column>)) -> schema_pb::Relation {
-    schema_pb::Relation {
-        src_id: tuple.0.src.id,
-        src_name: tuple.0.src.name.clone(),
-        dst_id: tuple.0.dst.id,
-        dst_name: tuple.0.dst.name.clone(),
-        id: tuple.0.edge.id,
-        name: tuple.0.edge.name.clone(),
-        columns: tuple
-            .1
-            .into_iter()
-            .map(|col| schema_pb::ColumnKey {
-                id: col.id,
-                name: col.name.clone(),
-                data_type: unsafe { std::mem::transmute::<common_pb::DataType, i32>(col.data_type) },
-            })
-            .collect(),
+impl From<schema_pb::LabelMeta> for LabelMeta {
+    fn from(label: schema_pb::LabelMeta) -> Self {
+        Self { name: label.name, id: label.id }
     }
 }
 
-#[derive(Copy, Clone, Debug, Hash, PartialEq, Eq)]
-pub enum TableType {
+impl From<LabelMeta> for schema_pb::LabelMeta {
+    fn from(label: LabelMeta) -> Self {
+        Self { name: label.name, id: label.id }
+    }
+}
+
+#[derive(Copy, Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
+pub enum KeyType {
     Entity = 0,
     Relation = 1,
+    Column = 2,
 }
 
-impl Default for TableType {
+impl Default for KeyType {
     fn default() -> Self {
         Self::Entity
     }
@@ -164,22 +107,22 @@ impl Default for TableType {
 pub struct Schema {
     /// A map from table name to its internally encoded id
     /// In the concept of graph database, this is also known as label
-    table_map: HashMap<String, i32>,
-    /// A reversed map of `table_map`
-    table_map_rev: HashMap<(TableType, i32), String>,
+    table_map: BTreeMap<String, i32>,
     /// A map from column name to its internally encoded id
     /// In the concept of graph database, this is also known as property
-    column_map: HashMap<String, i32>,
-    /// A reversed map of `column_map`
-    column_map_rev: HashMap<i32, String>,
+    column_map: BTreeMap<String, i32>,
+    /// A reversed map of `id` to `name` mapping
+    id_name_rev: BTreeMap<(KeyType, i32), String>,
+    /// The source and destination labels of a given relation label's id
+    relation_labels: BTreeMap<String, Vec<(LabelMeta, LabelMeta)>>,
     /// Is the table name mapped as id
     is_table_id: bool,
     /// Is the column name mapped as id
     is_column_id: bool,
     /// Entities
-    entities: Vec<(EntityPair, Vec<Column>)>,
+    entities: Vec<schema_pb::EntityMeta>,
     /// Relations
-    rels: Vec<(RelationTriplet, Vec<Column>)>,
+    rels: Vec<schema_pb::RelationMeta>,
 }
 
 impl Schema {
@@ -194,10 +137,6 @@ impl Schema {
         })
     }
 
-    pub fn get_table_name(&self, id: i32, ty: TableType) -> Option<&String> {
-        self.table_map_rev.get(&(ty, id))
-    }
-
     pub fn get_column_id(&self, name: &str) -> Option<i32> {
         self.column_map.get(name).cloned()
     }
@@ -209,8 +148,17 @@ impl Schema {
         })
     }
 
-    pub fn get_column_name(&self, id: i32) -> Option<&String> {
-        self.column_map_rev.get(&id)
+    pub fn get_name(&self, id: i32, ty: KeyType) -> Option<&String> {
+        self.id_name_rev.get(&(ty, id))
+    }
+
+    pub fn get_relation_labels(&self, relation: &NameOrId) -> Option<&Vec<(LabelMeta, LabelMeta)>> {
+        match relation {
+            NameOrId::Str(name) => self.relation_labels.get(name),
+            NameOrId::Id(id) => self
+                .get_name(*id, KeyType::Relation)
+                .and_then(|name| self.relation_labels.get(name)),
+        }
     }
 
     pub fn is_column_id(&self) -> bool {
@@ -233,20 +181,22 @@ impl From<(Vec<(String, i32)>, Vec<(String, i32)>, Vec<(String, i32)>)> for Sche
             for (name, id) in entities.into_iter() {
                 schema.table_map.insert(name.clone(), id);
                 schema
-                    .table_map_rev
-                    .insert((TableType::Entity, id), name);
+                    .id_name_rev
+                    .insert((KeyType::Entity, id), name);
             }
             for (name, id) in relations.into_iter() {
                 schema.table_map.insert(name.clone(), id);
                 schema
-                    .table_map_rev
-                    .insert((TableType::Relation, id), name);
+                    .id_name_rev
+                    .insert((KeyType::Relation, id), name);
             }
         }
         if schema.is_column_id {
             for (name, id) in columns.into_iter() {
                 schema.column_map.insert(name.clone(), id);
-                schema.column_map_rev.insert(id, name);
+                schema
+                    .id_name_rev
+                    .insert((KeyType::Column, id), name);
             }
         }
 
@@ -256,41 +206,43 @@ impl From<(Vec<(String, i32)>, Vec<(String, i32)>, Vec<(String, i32)>)> for Sche
 
 impl JsonIO for Schema {
     fn into_json<W: io::Write>(self, writer: W) -> io::Result<()> {
-        let entities_pb: Vec<schema_pb::Entity> = if !self.entities.is_empty() {
-            self.entities
-                .clone()
-                .into_iter()
-                .map(|tuple| into_entity_pb(tuple))
-                .collect()
+        let entities_pb: Vec<schema_pb::EntityMeta> = if !self.entities.is_empty() {
+            self.entities.clone()
         } else {
             let mut entities = Vec::new();
-            for (&(ty, id), name) in &self.table_map_rev {
-                if ty == TableType::Entity {
-                    entities.push(schema_pb::Entity { id, name: name.clone(), columns: vec![] })
+            for (&(ty, id), name) in &self.id_name_rev {
+                if ty == KeyType::Entity {
+                    entities.push(schema_pb::EntityMeta {
+                        label: Some(schema_pb::LabelMeta { id, name: name.to_string() }),
+                        columns: vec![],
+                    })
                 }
             }
             entities
         };
 
-        let relations_pb: Vec<schema_pb::Relation> = if !self.rels.is_empty() {
-            self.rels
-                .clone()
-                .into_iter()
-                .map(|tuple| into_relation_pb(tuple))
-                .collect()
+        let relations_pb: Vec<schema_pb::RelationMeta> = if !self.rels.is_empty() {
+            self.rels.clone()
         } else {
             let mut relations = Vec::new();
-            for (&(ty, id), name) in &self.table_map_rev {
-                if ty == TableType::Relation {
-                    relations.push(schema_pb::Relation {
-                        src_id: -1,
-                        src_name: "".to_string(),
-                        dst_id: -1,
-                        dst_name: "".to_string(),
-                        id,
-                        name: name.clone(),
+            for (&(ty, id), name) in &self.id_name_rev {
+                if ty == KeyType::Relation {
+                    let mut relation_meta = schema_pb::RelationMeta {
+                        label: Some(schema_pb::LabelMeta { id, name: name.to_string() }),
+                        entity_pairs: vec![],
                         columns: vec![],
-                    })
+                    };
+                    if let Some(labels) = self.get_relation_labels(&id.into()) {
+                        relation_meta.entity_pairs = labels
+                            .iter()
+                            .cloned()
+                            .map(|(src, dst)| schema_pb::relation_meta::LabelPair {
+                                src: Some(src.into()),
+                                dst: Some(dst.into()),
+                            })
+                            .collect();
+                    }
+                    relations.push(relation_meta);
                 }
             }
             relations
@@ -298,7 +250,7 @@ impl JsonIO for Schema {
 
         let schema_pb = schema_pb::Schema {
             entities: entities_pb,
-            rels: relations_pb,
+            relations: relations_pb,
             is_table_id: self.is_table_id,
             is_column_id: self.is_column_id,
         };
@@ -312,61 +264,77 @@ impl JsonIO for Schema {
     {
         let schema_pb = serde_json::from_reader::<_, schema_pb::Schema>(reader)?;
         let mut schema = Schema::default();
-        schema.entities = schema_pb
-            .entities
-            .clone()
-            .into_iter()
-            .map(|entity_pb| into_entity(entity_pb))
-            .collect();
-        schema.rels = schema_pb
-            .rels
-            .clone()
-            .into_iter()
-            .map(|rel_pb| into_relation(rel_pb))
-            .collect();
+        schema.entities = schema_pb.entities.clone();
+        schema.rels = schema_pb.relations.clone();
         schema.is_table_id = schema_pb.is_table_id;
         schema.is_column_id = schema_pb.is_column_id;
         for entity in schema_pb.entities {
             if schema_pb.is_table_id {
-                let key = &entity.name;
-                if !schema.table_map.contains_key(key) {
-                    schema.table_map.insert(key.clone(), entity.id);
-                    schema
-                        .table_map_rev
-                        .insert((TableType::Entity, entity.id), key.clone());
+                if let Some(label) = &entity.label {
+                    if !schema.table_map.contains_key(&label.name) {
+                        schema
+                            .table_map
+                            .insert(label.name.clone(), label.id);
+                        schema
+                            .id_name_rev
+                            .insert((KeyType::Entity, label.id), label.name.clone());
+                    }
                 }
             }
             if schema_pb.is_column_id {
                 for column in entity.columns {
-                    let key = &column.name;
-                    if !schema.column_map.contains_key(key) {
-                        schema.column_map.insert(key.clone(), column.id);
-                        schema
-                            .column_map_rev
-                            .insert(column.id, key.clone());
+                    if let Some(key) = &column.key {
+                        if !schema.column_map.contains_key(&key.name) {
+                            schema
+                                .column_map
+                                .insert(key.name.clone(), key.id);
+                            schema
+                                .id_name_rev
+                                .insert((KeyType::Column, key.id), key.name.clone());
+                        }
                     }
                 }
             }
         }
 
-        for rel in schema_pb.rels {
+        for rel in schema_pb.relations {
             if schema_pb.is_table_id {
-                let key = &rel.name;
-                if !schema.table_map.contains_key(key) {
-                    schema.table_map.insert(key.clone(), rel.id);
-                    schema
-                        .table_map_rev
-                        .insert((TableType::Relation, rel.id), key.clone());
+                if let Some(label) = &rel.label {
+                    if !schema.table_map.contains_key(&label.name) {
+                        schema
+                            .table_map
+                            .insert(label.name.clone(), label.id);
+                        schema
+                            .id_name_rev
+                            .insert((KeyType::Relation, label.id), label.name.clone());
+                    }
                 }
             }
             if schema_pb.is_column_id {
                 for column in rel.columns {
-                    let key = &column.name;
-                    if !schema.column_map.contains_key(key) {
-                        schema.column_map.insert(key.clone(), column.id);
-                        schema
-                            .column_map_rev
-                            .insert(column.id, key.clone());
+                    if let Some(key) = &column.key {
+                        if !schema.column_map.contains_key(&key.name) {
+                            schema
+                                .column_map
+                                .insert(key.name.clone(), key.id);
+                            schema
+                                .id_name_rev
+                                .insert((KeyType::Column, key.id), key.name.clone());
+                        }
+                    }
+                }
+            }
+            if let Some(label) = &rel.label {
+                let pairs = schema
+                    .relation_labels
+                    .entry(label.name.clone())
+                    .or_default();
+                for entity_pair in rel.entity_pairs {
+                    if entity_pair.src.is_some() && entity_pair.dst.is_some() {
+                        pairs.push((
+                            entity_pair.src.clone().unwrap().into(),
+                            entity_pair.dst.clone().unwrap().into(),
+                        ))
                     }
                 }
             }
@@ -376,22 +344,53 @@ impl JsonIO for Schema {
     }
 }
 
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+/// Record the runtime schema of the node in the logical plan, for it being the vertex/edge
+pub struct NodeMeta {
+    /// The table names (labels)
+    tables: BTreeSet<NameOrId>,
+    /// The required columns (columns)
+    columns: BTreeSet<NameOrId>,
+    /// Whether the current node accept columns
+    pub(crate) is_add_column: bool,
+}
+
+impl NodeMeta {
+    pub fn insert_column(&mut self, col: NameOrId) {
+        if self.is_add_column {
+            self.columns.insert(col);
+        }
+    }
+
+    pub fn get_columns(&self) -> &BTreeSet<NameOrId> {
+        &self.columns
+    }
+
+    pub fn insert_table(&mut self, table: NameOrId) {
+        self.tables.insert(table);
+    }
+
+    pub fn get_tables(&self) -> &BTreeSet<NameOrId> {
+        &self.tables
+    }
+}
+
 /// To record any tag-related data while processing the logical plan
 #[derive(Default, Clone, Debug)]
 pub struct PlanMeta {
-    /// To record all possible columns of a node, which is typically referred from a tag
+    /// To record all possible tables/columns of a node, which is typically referred from a tag
     /// while processing projection, selection, groupby, orderby, and etc. For example, when
     /// select the record via an expression "a.name == \"John\"", the tag "a" must refer to
     /// some node in the logical plan, and the node requires the column of \"John\". Such
     /// information is critical in distributed processing, as the computation may not align
     /// with the storage to access the required column. Thus, such information can help
     /// the computation route and fetch columns.
-    node_cols: HashMap<u32, BTreeSet<NameOrId>>,
+    node_metas: BTreeMap<u32, NodeMeta>,
     /// The tag must refer to a valid node in the plan.
-    tag_nodes: HashMap<NameOrId, u32>,
+    tag_nodes: BTreeMap<NameOrId, u32>,
     /// To ease the processing, tag may be transformed to an internal id.
     /// This maintains the mappings
-    tag_ids: HashMap<NameOrId, NameOrId>,
+    tag_ids: BTreeMap<NameOrId, NameOrId>,
     /// To record the current node's id in the logical plan. Note that nodes that have operators that
     /// of `As` or `Selection` does not alter curr_node.
     curr_node: u32,
@@ -407,39 +406,38 @@ impl PlanMeta {
     pub fn new(node_id: u32) -> Self {
         let mut plan_meta = PlanMeta::default();
         plan_meta.curr_node = node_id;
-        plan_meta.node_cols.entry(node_id).or_default();
+        plan_meta.node_metas.entry(node_id).or_default();
         plan_meta
     }
 
-    pub fn insert_tag_columns(&mut self, tag_opt: Option<NameOrId>, column: NameOrId) -> IrResult<u32> {
-        if let Some(tag) = tag_opt {
-            if let Some(&node_id) = self.tag_nodes.get(&tag) {
-                self.node_cols
-                    .entry(node_id)
-                    .or_default()
-                    .insert(column);
+    pub fn curr_node_meta_mut(&mut self) -> &mut NodeMeta {
+        self.node_metas
+            .entry(self.curr_node)
+            .or_default()
+    }
 
-                Ok(node_id)
+    pub fn tag_node_meta_mut(&mut self, tag_opt: Option<&NameOrId>) -> IrResult<&mut NodeMeta> {
+        if let Some(tag) = tag_opt {
+            if let Some(&node_id) = self.tag_nodes.get(tag) {
+                Ok(self.node_metas.entry(node_id).or_default())
             } else {
-                Err(IrError::TagNotExist(tag))
+                Err(IrError::TagNotExist(tag.clone()))
             }
         } else {
-            let curr_node = self.curr_node;
-            self.node_cols
-                .entry(curr_node)
-                .or_default()
-                .insert(column);
-
-            Ok(curr_node)
+            Ok(self.curr_node_meta_mut())
         }
     }
 
-    pub fn get_node_columns(&self, id: u32) -> Option<&BTreeSet<NameOrId>> {
-        self.node_cols.get(&id)
+    pub fn get_node_meta(&self, id: u32) -> Option<&NodeMeta> {
+        self.node_metas.get(&id)
     }
 
-    pub fn get_curr_node_columns(&self) -> Option<&BTreeSet<NameOrId>> {
-        self.node_cols.get(&self.curr_node)
+    pub fn get_all_node_metas(&self) -> &BTreeMap<u32, NodeMeta> {
+        &self.node_metas
+    }
+
+    pub fn curr_node_meta(&self) -> Option<&NodeMeta> {
+        self.get_node_meta(self.curr_node)
     }
 
     pub fn insert_tag_node(&mut self, tag: NameOrId, node: u32) {

@@ -34,6 +34,7 @@ use crate::graph::{read_id, write_id, ID};
 pub enum PropKey {
     Id,
     Label,
+    Len,
     Key(NameOrId),
 }
 
@@ -49,6 +50,7 @@ impl TryFrom<pb::Property> for PropKey {
             match item {
                 Item::Id(_) => Ok(PropKey::Id),
                 Item::Label(_) => Ok(PropKey::Label),
+                Item::Len(_) => Ok(PropKey::Len),
                 Item::Key(k) => Ok(PropKey::Key(NameOrId::try_from(k)?)),
             }
         } else {
@@ -66,8 +68,11 @@ impl Encode for PropKey {
             PropKey::Label => {
                 writer.write_u8(1)?;
             }
-            PropKey::Key(key) => {
+            PropKey::Len => {
                 writer.write_u8(2)?;
+            }
+            PropKey::Key(key) => {
+                writer.write_u8(3)?;
                 key.write_to(writer)?;
             }
         }
@@ -81,7 +86,8 @@ impl Decode for PropKey {
         match opt {
             0 => Ok(PropKey::Id),
             1 => Ok(PropKey::Label),
-            2 => {
+            2 => Ok(PropKey::Len),
+            3 => {
                 let key = <NameOrId>::read_from(reader)?;
                 Ok(PropKey::Key(key))
             }
@@ -97,15 +103,27 @@ pub trait Details: std::fmt::Debug + Send + Sync + AsAny {
 
     fn get_label(&self) -> Option<&NameOrId>;
 
+    fn get_len(&self) -> usize;
+
     fn get(&self, prop_key: &PropKey) -> Option<BorrowObject> {
         match prop_key {
             PropKey::Id => Some(self.get_id().into()),
             PropKey::Label => self
                 .get_label()
                 .map(|label| label.as_borrow_object()),
+            PropKey::Len => Some((self.get_len() as u64).into()),
             PropKey::Key(k) => self.get_property(k),
         }
     }
+
+    /// get_all_properties returns all properties. None means that we failed in getting the properties.
+    /// Specifically, it returns all properties of Vertex/Edge saved in RUNTIME rather than STORAGE.
+    /// it may be used in two situations:
+    /// (1) if no prop_keys are provided when querying the vertex/edge which indicates that all properties are necessary,
+    /// then we can get all properties of the vertex/edge in storage; e.g., g.V().valueMap()
+    /// (2) if some prop_keys are provided when querying the vertex/edge which indicates that only these properties are necessary,
+    /// then we can only get all pre-specified properties of the vertex/edge.
+    fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>>;
 }
 
 #[derive(Clone)]
@@ -133,6 +151,14 @@ impl Details for DynDetails {
     fn get_label(&self) -> Option<&NameOrId> {
         self.inner.get_label()
     }
+
+    fn get_len(&self) -> usize {
+        0
+    }
+
+    fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {
+        self.inner.get_all_properties()
+    }
 }
 
 impl fmt::Debug for DynDetails {
@@ -157,13 +183,23 @@ impl Encode for DynDetails {
             default.write_to(writer)?;
         } else {
             // TODO(yyy): handle other kinds of details
-            // only write id and label for LazyDetails
+            // for Lazy details, we write id, label, and required properties
             writer.write_u8(2)?;
             write_id(writer, self.inner.get_id())?;
             self.inner
                 .get_label()
                 .cloned()
                 .write_to(writer)?;
+            let all_props = self.get_all_properties();
+            if let Some(all_props) = all_props {
+                writer.write_u64(all_props.len() as u64)?;
+                for (k, v) in all_props {
+                    k.write_to(writer)?;
+                    v.write_to(writer)?;
+                }
+            } else {
+                writer.write_u64(0)?;
+            }
         }
         Ok(())
     }
@@ -172,13 +208,9 @@ impl Encode for DynDetails {
 impl Decode for DynDetails {
     fn read_from<R: ReadExt>(reader: &mut R) -> io::Result<Self> {
         let kind = <u8>::read_from(reader)?;
-        if kind == 1 {
+        if kind == 1 || kind == 2 {
+            // For either DefaultDetails or LazyDetails, we decoded as DefaultDetails
             let details = <DefaultDetails>::read_from(reader)?;
-            Ok(DynDetails::new(details))
-        } else if kind == 2 {
-            let id = read_id(reader)?;
-            let label = <Option<NameOrId>>::read_from(reader)?;
-            let details = DefaultDetails::with(id, label);
             Ok(DynDetails::new(details))
         } else {
             Err(io::Error::from(io::ErrorKind::Other))
@@ -236,6 +268,15 @@ impl Details for DefaultDetails {
 
     fn get_label(&self) -> Option<&NameOrId> {
         self.label.as_ref()
+    }
+
+    fn get_len(&self) -> usize {
+        0
+    }
+
+    fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {
+        // it's actually unreachable!()
+        Some(self.inner.clone())
     }
 }
 

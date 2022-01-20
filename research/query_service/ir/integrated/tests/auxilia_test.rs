@@ -51,16 +51,14 @@ mod test {
     #[test]
     fn auxilia_simple_alias_test() {
         let expand_opr = pb::EdgeExpand {
-            base: Some(pb::ExpandBase {
-                v_tag: None,
-                direction: 0,
-                params: Some(pb::QueryParams {
-                    table_names: vec![common_pb::NameOrId::from("knows".to_string())],
-                    columns: vec![],
-                    limit: None,
-                    predicate: None,
-                    requirements: vec![],
-                }),
+            v_tag: None,
+            direction: 0,
+            params: Some(pb::QueryParams {
+                table_names: vec![common_pb::NameOrId::from("knows".to_string())],
+                columns: vec![],
+                limit: None,
+                predicate: None,
+                requirements: vec![],
             }),
             is_edge: false,
             alias: None,
@@ -111,16 +109,14 @@ mod test {
     #[test]
     fn auxilia_get_property_test() {
         let expand_opr = pb::EdgeExpand {
-            base: Some(pb::ExpandBase {
-                v_tag: None,
-                direction: 0,
-                params: Some(pb::QueryParams {
-                    table_names: vec![common_pb::NameOrId::from("knows".to_string())],
-                    columns: vec![],
-                    limit: None,
-                    predicate: None,
-                    requirements: vec![],
-                }),
+            v_tag: None,
+            direction: 0,
+            params: Some(pb::QueryParams {
+                table_names: vec![common_pb::NameOrId::from("knows".to_string())],
+                columns: vec![],
+                limit: None,
+                predicate: None,
+                requirements: vec![],
             }),
             is_edge: false,
             alias: None,
@@ -176,16 +172,14 @@ mod test {
     #[test]
     fn auxilia_get_property_with_none_tag_input_test() {
         let expand_opr = pb::EdgeExpand {
-            base: Some(pb::ExpandBase {
-                v_tag: None,
-                direction: 0,
-                params: Some(pb::QueryParams {
-                    table_names: vec![common_pb::NameOrId::from("knows".to_string())],
-                    columns: vec![],
-                    limit: None,
-                    predicate: None,
-                    requirements: vec![],
-                }),
+            v_tag: None,
+            direction: 0,
+            params: Some(pb::QueryParams {
+                table_names: vec![common_pb::NameOrId::from("knows".to_string())],
+                columns: vec![],
+                limit: None,
+                predicate: None,
+                requirements: vec![],
             }),
             is_edge: false,
             alias: None,
@@ -245,16 +239,14 @@ mod test {
     #[test]
     fn auxilia_filter_test() {
         let expand_opr = pb::EdgeExpand {
-            base: Some(pb::ExpandBase {
-                v_tag: None,
-                direction: 0,
-                params: Some(pb::QueryParams {
-                    table_names: vec![common_pb::NameOrId::from("knows".to_string())],
-                    columns: vec![],
-                    limit: None,
-                    predicate: None,
-                    requirements: vec![],
-                }),
+            v_tag: None,
+            direction: 0,
+            params: Some(pb::QueryParams {
+                table_names: vec![common_pb::NameOrId::from("knows".to_string())],
+                columns: vec![],
+                limit: None,
+                predicate: None,
+                requirements: vec![],
             }),
             is_edge: false,
             alias: None,
@@ -310,16 +302,14 @@ mod test {
     #[test]
     fn auxilia_alias_test() {
         let expand_opr = pb::EdgeExpand {
-            base: Some(pb::ExpandBase {
-                v_tag: None,
-                direction: 0,
-                params: Some(pb::QueryParams {
-                    table_names: vec![common_pb::NameOrId::from("knows".to_string())],
-                    columns: vec![],
-                    limit: None,
-                    predicate: None,
-                    requirements: vec![],
-                }),
+            v_tag: None,
+            direction: 0,
+            params: Some(pb::QueryParams {
+                table_names: vec![common_pb::NameOrId::from("knows".to_string())],
+                columns: vec![],
+                limit: None,
+                predicate: None,
+                requirements: vec![],
             }),
             is_edge: false,
             alias: None,

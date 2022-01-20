@@ -39,8 +39,8 @@ public class VertexStepTest {
         Traversal traversal = g.V().out();
         Step vertexStep = traversal.asAdmin().getEndStep();
         ExpandOp op = (ExpandOp) StepTransformFactory.VERTEX_STEP.apply(vertexStep);
-        Assert.assertEquals(FfiDirection.Out, op.getDirection().get().getArg());
-        Assert.assertEquals(false, op.getIsEdge().get().getArg());
+        Assert.assertEquals(FfiDirection.Out, op.getDirection().get().applyArg());
+        Assert.assertEquals(false, op.getIsEdge().get().applyArg());
     }
 
     @Test
@@ -48,8 +48,8 @@ public class VertexStepTest {
         Traversal traversal = g.V().outE();
         Step vertexStep = traversal.asAdmin().getEndStep();
         ExpandOp op = (ExpandOp) StepTransformFactory.VERTEX_STEP.apply(vertexStep);
-        Assert.assertEquals(FfiDirection.Out, op.getDirection().get().getArg());
-        Assert.assertEquals(true, op.getIsEdge().get().getArg());
+        Assert.assertEquals(FfiDirection.Out, op.getDirection().get().applyArg());
+        Assert.assertEquals(true, op.getIsEdge().get().applyArg());
     }
 
     @Test
@@ -57,7 +57,7 @@ public class VertexStepTest {
         Traversal traversal = g.V().out("knows");
         Step vertexStep = traversal.asAdmin().getEndStep();
         ExpandOp op = (ExpandOp) StepTransformFactory.VERTEX_STEP.apply(vertexStep);
-        FfiNameOrId.ByValue label = ((List<FfiNameOrId.ByValue>) op.getLabels().get().getArg()).get(0);
+        FfiNameOrId.ByValue label = ((List<FfiNameOrId.ByValue>) op.getLabels().get().applyArg()).get(0);
         Assert.assertEquals("knows", label.name);
     }
 }

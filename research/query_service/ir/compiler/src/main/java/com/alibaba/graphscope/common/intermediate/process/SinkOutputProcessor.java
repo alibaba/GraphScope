@@ -40,18 +40,27 @@ public class SinkOutputProcessor implements InterOpProcessor {
             InterOpBase cur = collections.get(i);
             if (cur instanceof DedupOp || cur instanceof LimitOp || cur instanceof OrderOp || cur instanceof SelectOp) {
                 continue;
-            } else if (cur instanceof ExpandOp || cur instanceof ProjectOp || cur instanceof ScanFusionOp) {
+            } else if (cur instanceof ExpandOp || cur instanceof ScanFusionOp) {
                 sinkArg = new SinkArg(true);
+                break;
+            } else if (cur instanceof ProjectOp) {
+                ProjectOp op = (ProjectOp) cur;
+                sinkArg = new SinkArg(false);
+                List<Pair> exprWithAlias = (List<Pair>) op.getExprWithAlias().get().applyArg();
+                for (Pair pair : exprWithAlias) {
+                    FfiAlias.ByValue alias = (FfiAlias.ByValue) pair.getValue1();
+                    sinkArg.addColumnName(alias.alias);
+                }
                 break;
             } else if (cur instanceof GroupOp) {
                 GroupOp op = (GroupOp) cur;
                 sinkArg = new SinkArg(false);
-                List<Pair> groupKeys = (List<Pair>) op.getGroupByKeys().get().getArg();
+                List<Pair> groupKeys = (List<Pair>) op.getGroupByKeys().get().applyArg();
                 for (Pair pair : groupKeys) {
                     FfiAlias.ByValue alias = (FfiAlias.ByValue) pair.getValue1();
                     sinkArg.addColumnName(alias.alias);
                 }
-                List<ArgAggFn> groupValues = (List<ArgAggFn>) op.getGroupByValues().get().getArg();
+                List<ArgAggFn> groupValues = (List<ArgAggFn>) op.getGroupByValues().get().applyArg();
                 for (ArgAggFn aggFn : groupValues) {
                     sinkArg.addColumnName(aggFn.getAlias().alias);
                 }

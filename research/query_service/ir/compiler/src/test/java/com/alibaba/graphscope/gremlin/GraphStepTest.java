@@ -43,7 +43,7 @@ public class GraphStepTest {
         Traversal traversal = g.V();
         Step graphStep = traversal.asAdmin().getStartStep();
         ScanFusionOp op = (ScanFusionOp) StepTransformFactory.GRAPH_STEP.apply(graphStep);
-        Assert.assertEquals(FfiScanOpt.Entity, op.getScanOpt().get().getArg());
+        Assert.assertEquals(FfiScanOpt.Entity, op.getScanOpt().get().applyArg());
     }
 
     @Test
@@ -51,7 +51,7 @@ public class GraphStepTest {
         Traversal traversal = g.E();
         Step graphStep = traversal.asAdmin().getStartStep();
         ScanFusionOp op = (ScanFusionOp) StepTransformFactory.GRAPH_STEP.apply(graphStep);
-        Assert.assertEquals(FfiScanOpt.Relation, op.getScanOpt().get().getArg());
+        Assert.assertEquals(FfiScanOpt.Relation, op.getScanOpt().get().applyArg());
     }
 
     @Test
@@ -60,7 +60,7 @@ public class GraphStepTest {
         traversal.asAdmin().applyStrategies();
         Step graphStep = traversal.asAdmin().getStartStep();
         ScanFusionOp op = (ScanFusionOp) StepTransformFactory.TINKER_GRAPH_STEP.apply(graphStep);
-        FfiNameOrId.ByValue ffiLabel = ((List<FfiNameOrId.ByValue>) op.getLabels().get().getArg()).get(0);
+        FfiNameOrId.ByValue ffiLabel = ((List<FfiNameOrId.ByValue>) op.getLabels().get().applyArg()).get(0);
         Assert.assertEquals("person", ffiLabel.name);
     }
 
@@ -69,7 +69,7 @@ public class GraphStepTest {
         Traversal traversal = g.V(1L);
         Step graphStep = traversal.asAdmin().getStartStep();
         ScanFusionOp op = (ScanFusionOp) StepTransformFactory.GRAPH_STEP.apply(graphStep);
-        FfiConst.ByValue ffiId = ((List<FfiConst.ByValue>) op.getIds().get().getArg()).get(0);
+        FfiConst.ByValue ffiId = ((List<FfiConst.ByValue>) op.getIds().get().applyArg()).get(0);
         Assert.assertEquals(1L, ffiId.int64);
     }
 
@@ -79,8 +79,8 @@ public class GraphStepTest {
         traversal.asAdmin().applyStrategies();
         Step graphStep = traversal.asAdmin().getStartStep();
         ScanFusionOp op = (ScanFusionOp) StepTransformFactory.TINKER_GRAPH_STEP.apply(graphStep);
-        String expr = (String) op.getPredicate().get().getArg();
-        Assert.assertEquals("@.name && @.name == \"marko\"", expr);
+        String expr = (String) op.getPredicate().get().applyArg();
+        Assert.assertEquals("@.name == \"marko\"", expr);
     }
 
     @Test
@@ -88,7 +88,7 @@ public class GraphStepTest {
         Traversal traversal = g.V().as("a");
         ScanFusionOp op = (ScanFusionOp) generateInterOpFromBuilder(traversal, 0);
         FfiAlias.ByValue expected = ArgUtils.asFfiAlias("a", true);
-        Assert.assertEquals(expected, op.getAlias().get().getArg());
+        Assert.assertEquals(expected, op.getAlias().get().applyArg());
     }
 
     @Test
@@ -96,7 +96,7 @@ public class GraphStepTest {
         Traversal traversal = g.E().as("a");
         ScanFusionOp op = (ScanFusionOp) generateInterOpFromBuilder(traversal, 0);
         FfiAlias.ByValue expected = ArgUtils.asFfiAlias("a", true);
-        Assert.assertEquals(expected, op.getAlias().get().getArg());
+        Assert.assertEquals(expected, op.getAlias().get().applyArg());
     }
 
     private InterOpBase generateInterOpFromBuilder(Traversal traversal, int idx) {
