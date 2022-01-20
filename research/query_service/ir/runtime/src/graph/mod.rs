@@ -45,22 +45,22 @@ pub fn write_id<W: WriteExt>(writer: &mut W, id: ID) -> io::Result<()> {
 /// The number of bits in an `ID`
 pub const ID_BITS: usize = std::mem::size_of::<ID>() * 8;
 
-#[derive(Copy, Clone, Eq, PartialEq)]
+#[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub enum Direction {
     Out = 0,
     In = 1,
     Both = 2,
 }
 
-impl From<algebra_pb::expand_base::Direction> for Direction {
-    fn from(direction: algebra_pb::expand_base::Direction) -> Self
+impl From<algebra_pb::edge_expand::Direction> for Direction {
+    fn from(direction: algebra_pb::edge_expand::Direction) -> Self
     where
         Self: Sized,
     {
         match direction {
-            algebra_pb::expand_base::Direction::Out => Direction::Out,
-            algebra_pb::expand_base::Direction::In => Direction::In,
-            algebra_pb::expand_base::Direction::Both => Direction::Both,
+            algebra_pb::edge_expand::Direction::Out => Direction::Out,
+            algebra_pb::edge_expand::Direction::In => Direction::In,
+            algebra_pb::edge_expand::Direction::Both => Direction::Both,
         }
     }
 }

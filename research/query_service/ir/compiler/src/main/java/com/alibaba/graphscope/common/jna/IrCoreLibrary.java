@@ -55,13 +55,11 @@ public interface IrCoreLibrary extends Library {
 
     ResultCode appendScanOperator(Pointer plan, Pointer scan, int parent, IntByReference oprIdx);
 
-    Pointer initExpandBase(FfiDirection direction);
-
-    ResultCode addExpandLabel(Pointer expand, FfiNameOrId.ByValue label);
-
-    Pointer initEdgexpdOperator(Pointer expand, boolean isEdge);
+    Pointer initEdgexpdOperator(boolean isEdge, FfiDirection direction);
 
     ResultCode appendEdgexpdOperator(Pointer plan, Pointer edgeXpd, int parent, IntByReference oprIdx);
+
+    ResultCode addEdgexpdLabel(Pointer edgeXpd, FfiNameOrId.ByValue label);
 
     ResultCode setEdgexpdAlias(Pointer edgeXpd, FfiAlias.ByValue alias);
 

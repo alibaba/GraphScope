@@ -587,7 +587,6 @@ enum Opr {
     Select,
     Scan,
     GetV,
-    ExpandBase,
     EdgeExpand,
     PathExpand,
     Limit,
@@ -603,10 +602,10 @@ fn set_range(ptr: *const c_void, lower: i32, upper: i32, opr: Opr) -> ResultCode
         ResultCode::InvalidRangeError
     } else {
         match opr {
-            Opr::ExpandBase => {
-                let mut base = unsafe { Box::from_raw(ptr as *mut pb::ExpandBase) };
-                base.params.as_mut().unwrap().limit = Some(pb::Range { lower, upper });
-                std::mem::forget(base);
+            Opr::EdgeExpand => {
+                let mut edgexpd = unsafe { Box::from_raw(ptr as *mut pb::EdgeExpand) };
+                edgexpd.params.as_mut().unwrap().limit = Some(pb::Range { lower, upper });
+                std::mem::forget(edgexpd);
             }
             Opr::PathExpand => {
                 let mut pathxpd = unsafe { Box::from_raw(ptr as *mut pb::PathExpand) };
@@ -692,10 +691,10 @@ fn set_predicate(ptr: *const c_void, cstr_predicate: *const c_char, opr: Opr) ->
                 select.predicate = predicate_pb.ok();
                 std::mem::forget(select);
             }
-            Opr::ExpandBase => {
-                let mut expand = unsafe { Box::from_raw(ptr as *mut pb::ExpandBase) };
-                expand.params.as_mut().unwrap().predicate = predicate_pb.ok();
-                std::mem::forget(expand);
+            Opr::EdgeExpand => {
+                let mut edgexpd = unsafe { Box::from_raw(ptr as *mut pb::EdgeExpand) };
+                edgexpd.params.as_mut().unwrap().predicate = predicate_pb.ok();
+                std::mem::forget(edgexpd);
             }
             Opr::Scan => {
                 let mut scan = unsafe { Box::from_raw(ptr as *mut pb::Scan) };
@@ -721,8 +720,8 @@ fn process_params(ptr: *const c_void, key: ParamsKey, val: FfiNameOrId, opr: Opr
     let pb: FfiResult<Option<common_pb::NameOrId>> = val.try_into();
     if pb.is_ok() {
         match opr {
-            Opr::ExpandBase => {
-                let mut expand = unsafe { Box::from_raw(ptr as *mut pb::ExpandBase) };
+            Opr::EdgeExpand => {
+                let mut expand = unsafe { Box::from_raw(ptr as *mut pb::EdgeExpand) };
                 match key {
                     ParamsKey::Tag => expand.v_tag = pb.unwrap(),
                     ParamsKey::Table => {
@@ -776,6 +775,14 @@ fn process_params(ptr: *const c_void, key: ParamsKey, val: FfiNameOrId, opr: Opr
                     _ => unreachable!(),
                 }
                 std::mem::forget(getv);
+            }
+            Opr::PathExpand => {
+                let mut pathxpd = unsafe { Box::from_raw(ptr as *mut pb::PathExpand) };
+                match key {
+                    ParamsKey::Tag => pathxpd.start_tag = pb.unwrap(),
+                    _ => unreachable!(),
+                }
+                std::mem::forget(pathxpd);
             }
             _ => unreachable!(),
         }
@@ -1522,12 +1529,12 @@ mod graph {
         Both = 2,
     }
 
-    /// To initialize an expansion base
+    /// To initialize an edge expand operator from an expand base
     #[no_mangle]
-    pub extern "C" fn init_expand_base(direction: FfiDirection) -> *const c_void {
-        let expand = Box::new(pb::ExpandBase {
+    pub extern "C" fn init_edgexpd_operator(is_edge: bool, dir: FfiDirection) -> *const c_void {
+        let edgexpd = Box::new(pb::EdgeExpand {
             v_tag: None,
-            direction: unsafe { std::mem::transmute::<FfiDirection, i32>(direction) },
+            direction: unsafe { std::mem::transmute::<FfiDirection, i32>(dir) },
             params: Some(pb::QueryParams {
                 table_names: vec![],
                 columns: vec![],
@@ -1535,50 +1542,45 @@ mod graph {
                 predicate: None,
                 requirements: vec![],
             }),
+            is_edge,
+            alias: None,
         });
-        Box::into_raw(expand) as *const c_void
+
+        Box::into_raw(edgexpd) as *const c_void
     }
 
     /// Set the start-vertex's tag to conduct this expansion
     #[no_mangle]
-    pub extern "C" fn set_expand_vtag(ptr_expand: *const c_void, v_tag: FfiNameOrId) -> ResultCode {
-        process_params(ptr_expand, ParamsKey::Tag, v_tag, Opr::ExpandBase)
+    pub extern "C" fn set_edgexpd_vtag(ptr_edgexpd: *const c_void, v_tag: FfiNameOrId) -> ResultCode {
+        process_params(ptr_edgexpd, ParamsKey::Tag, v_tag, Opr::EdgeExpand)
     }
 
     /// Add a label of the edge that this expansion must satisfy
     #[no_mangle]
-    pub extern "C" fn add_expand_label(ptr_expand: *const c_void, label: FfiNameOrId) -> ResultCode {
-        process_params(ptr_expand, ParamsKey::Table, label, Opr::ExpandBase)
+    pub extern "C" fn add_edgexpd_label(ptr_edgexpd: *const c_void, label: FfiNameOrId) -> ResultCode {
+        process_params(ptr_edgexpd, ParamsKey::Table, label, Opr::EdgeExpand)
     }
 
     /// Add a property that this edge expansion must carry
     #[no_mangle]
-    pub extern "C" fn add_expand_property(ptr_expand: *const c_void, property: FfiNameOrId) -> ResultCode {
-        process_params(ptr_expand, ParamsKey::Column, property, Opr::ExpandBase)
+    pub extern "C" fn add_edgexpd_property(
+        ptr_edgexpd: *const c_void, property: FfiNameOrId,
+    ) -> ResultCode {
+        process_params(ptr_edgexpd, ParamsKey::Column, property, Opr::EdgeExpand)
     }
 
     /// Set the size range limitation of this expansion
     #[no_mangle]
-    pub extern "C" fn set_expand_limit(ptr_expand: *const c_void, lower: i32, upper: i32) -> ResultCode {
-        set_range(ptr_expand, lower, upper, Opr::ExpandBase)
+    pub extern "C" fn set_edgexpd_limit(ptr_edgexpd: *const c_void, lower: i32, upper: i32) -> ResultCode {
+        set_range(ptr_edgexpd, lower, upper, Opr::EdgeExpand)
     }
 
     /// Set the edge predicate of this expansion
     #[no_mangle]
-    pub extern "C" fn set_expand_predicate(
-        ptr_expand: *const c_void, cstr_predicate: *const c_char,
+    pub extern "C" fn set_edgexpd_predicate(
+        ptr_edgexpd: *const c_void, cstr_predicate: *const c_char,
     ) -> ResultCode {
-        set_predicate(ptr_expand, cstr_predicate, Opr::ExpandBase)
-    }
-
-    /// To initialize an edge expand operator from an expand base
-    #[no_mangle]
-    pub extern "C" fn init_edgexpd_operator(ptr_expand: *const c_void, is_edge: bool) -> *const c_void {
-        let expand = unsafe { Box::from_raw(ptr_expand as *mut pb::ExpandBase) };
-        let edgexpd =
-            Box::new(pb::EdgeExpand { base: Some(expand.as_ref().clone()), is_edge, alias: None });
-
-        Box::into_raw(edgexpd) as *const c_void
+        set_predicate(ptr_edgexpd, cstr_predicate, Opr::EdgeExpand)
     }
 
     /// Set edge alias of this edge expansion
@@ -1648,16 +1650,25 @@ mod graph {
 
     /// To initialize an path expand operator from an expand base
     #[no_mangle]
-    pub extern "C" fn init_pathxpd_operator(ptr_expand: *const c_void, is_path: bool) -> *const c_void {
-        let expand = unsafe { Box::from_raw(ptr_expand as *mut pb::ExpandBase) };
+    pub extern "C" fn init_pathxpd_operator(
+        ptr_expand: *const c_void, is_whole_path: bool,
+    ) -> *const c_void {
+        let expand = unsafe { Box::from_raw(ptr_expand as *mut pb::EdgeExpand) };
         let edgexpd = Box::new(pb::PathExpand {
             base: Some(expand.as_ref().clone()),
-            is_path,
+            start_tag: None,
+            is_whole_path,
             alias: None,
             hop_range: None,
         });
 
         Box::into_raw(edgexpd) as *const c_void
+    }
+
+    /// Set path alias of this path expansion
+    #[no_mangle]
+    pub extern "C" fn set_pathxpd_tag(ptr_pathxpd: *const c_void, tag: FfiNameOrId) -> ResultCode {
+        process_params(ptr_pathxpd, ParamsKey::Tag, tag, Opr::PathExpand)
     }
 
     /// Set path alias of this path expansion

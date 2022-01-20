@@ -85,8 +85,8 @@ mod test {
     // g.V().out()
     #[test]
     fn expand_outv_test() {
-        let edge_expand_base = pb::ExpandBase { v_tag: None, direction: 0, params: None };
-        let expand_opr_pb = pb::EdgeExpand { base: Some(edge_expand_base), is_edge: false, alias: None };
+        let expand_opr_pb =
+            pb::EdgeExpand { v_tag: None, direction: 0, params: None, is_edge: false, alias: None };
         let mut result = expand_test(expand_opr_pb);
         let mut result_ids = vec![];
         let v2: DefaultId = LDBCVertexParser::to_global_id(2, 0);
@@ -114,8 +114,13 @@ mod test {
             predicate: None,
             requirements: vec![],
         };
-        let edge_expand_base = pb::ExpandBase { v_tag: None, direction: 0, params: Some(query_param) };
-        let expand_opr_pb = pb::EdgeExpand { base: Some(edge_expand_base), is_edge: true, alias: None };
+        let expand_opr_pb = pb::EdgeExpand {
+            v_tag: None,
+            direction: 0,
+            params: Some(query_param),
+            is_edge: true,
+            alias: None,
+        };
         let mut result = expand_test(expand_opr_pb);
         let mut result_edges = vec![];
         let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
@@ -140,8 +145,13 @@ mod test {
             predicate: None,
             requirements: vec![],
         };
-        let edge_expand_base = pb::ExpandBase { v_tag: None, direction: 0, params: Some(query_param) };
-        let expand_opr_pb = pb::EdgeExpand { base: Some(edge_expand_base), is_edge: true, alias: None };
+        let expand_opr_pb = pb::EdgeExpand {
+            v_tag: None,
+            direction: 0,
+            params: Some(query_param),
+            is_edge: true,
+            alias: None,
+        };
         let mut result = expand_test(expand_opr_pb);
         let mut result_edges = vec![];
         let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
@@ -171,8 +181,13 @@ mod test {
             predicate: None,
             requirements: vec![],
         };
-        let edge_expand_base = pb::ExpandBase { v_tag: None, direction: 1, params: Some(query_param) };
-        let expand_opr_pb = pb::EdgeExpand { base: Some(edge_expand_base), is_edge: false, alias: None };
+        let expand_opr_pb = pb::EdgeExpand {
+            v_tag: None,
+            direction: 1,
+            params: Some(query_param),
+            is_edge: false,
+            alias: None,
+        };
         let mut result = expand_test(expand_opr_pb);
         let mut result_ids_with_prop = vec![];
         let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
@@ -206,8 +221,13 @@ mod test {
             predicate: None,
             requirements: vec![],
         };
-        let edge_expand_base = pb::ExpandBase { v_tag: None, direction: 2, params: Some(query_param) };
-        let expand_opr_pb = pb::EdgeExpand { base: Some(edge_expand_base), is_edge: false, alias: None };
+        let expand_opr_pb = pb::EdgeExpand {
+            v_tag: None,
+            direction: 2,
+            params: Some(query_param),
+            is_edge: false,
+            alias: None,
+        };
         let mut result = expand_test(expand_opr_pb);
         let mut cnt = 0;
         let expected_result_num = 12;
@@ -227,10 +247,13 @@ mod test {
             predicate: None,
             requirements: vec![],
         };
-        let edge_expand_base =
-            pb::ExpandBase { v_tag: Some("a".into()), direction: 0, params: Some(query_param) };
-        let expand_opr_pb =
-            pb::EdgeExpand { base: Some(edge_expand_base), is_edge: false, alias: Some("b".into()) };
+        let expand_opr_pb = pb::EdgeExpand {
+            v_tag: Some("a".into()),
+            direction: 0,
+            params: Some(query_param),
+            is_edge: false,
+            alias: Some("b".into()),
+        };
         let mut result = expand_test_with_source_tag("a".into(), expand_opr_pb);
         let mut result_ids = vec![];
         let v2: DefaultId = LDBCVertexParser::to_global_id(2, 0);
@@ -267,8 +290,13 @@ mod test {
             }],
             is_append: false,
         };
-        let edge_expand_base = pb::ExpandBase { v_tag: None, direction: 0, params: Some(query_param) };
-        let expand = pb::EdgeExpand { base: Some(edge_expand_base), is_edge: false, alias: None };
+        let expand = pb::EdgeExpand {
+            v_tag: None,
+            direction: 0,
+            params: Some(query_param),
+            is_edge: false,
+            alias: None,
+        };
 
         let conf = JobConf::new("expand_test");
         let mut result = pegasus::run(conf, || {
@@ -309,8 +337,13 @@ mod test {
             predicate: str_to_expr_pb("@.id == 2".to_string()).ok(),
             requirements: vec![],
         };
-        let edge_expand_base = pb::ExpandBase { v_tag: None, direction: 0, params: Some(query_param) };
-        let expand_opr_pb = pb::EdgeExpand { base: Some(edge_expand_base), is_edge: false, alias: None };
+        let expand_opr_pb = pb::EdgeExpand {
+            v_tag: None,
+            direction: 0,
+            params: Some(query_param),
+            is_edge: false,
+            alias: None,
+        };
         let mut result = expand_test(expand_opr_pb);
         let mut result_ids = vec![];
         let v2: DefaultId = LDBCVertexParser::to_global_id(2, 0);
@@ -327,16 +360,14 @@ mod test {
     #[test]
     fn expand_oute_inv_test() {
         let expand_opr = pb::EdgeExpand {
-            base: Some(pb::ExpandBase {
-                v_tag: None,
-                direction: 0,
-                params: Some(pb::QueryParams {
-                    table_names: vec!["knows".into()],
-                    columns: vec![],
-                    limit: None,
-                    predicate: None,
-                    requirements: vec![],
-                }),
+            v_tag: None,
+            direction: 0,
+            params: Some(pb::QueryParams {
+                table_names: vec!["knows".into()],
+                columns: vec![],
+                limit: None,
+                predicate: None,
+                requirements: vec![],
             }),
             is_edge: true,
             alias: None,
@@ -383,16 +414,14 @@ mod test {
     #[test]
     fn expand_ine_outv_test() {
         let expand_opr = pb::EdgeExpand {
-            base: Some(pb::ExpandBase {
-                v_tag: None,
-                direction: 1,
-                params: Some(pb::QueryParams {
-                    table_names: vec!["created".into()],
-                    columns: vec![],
-                    limit: None,
-                    predicate: None,
-                    requirements: vec![],
-                }),
+            v_tag: None,
+            direction: 1,
+            params: Some(pb::QueryParams {
+                table_names: vec!["created".into()],
+                columns: vec![],
+                limit: None,
+                predicate: None,
+                requirements: vec![],
             }),
             is_edge: true,
             alias: None,
@@ -439,16 +468,14 @@ mod test {
     #[test]
     fn expand_bothe_otherv_test() {
         let expand_opr = pb::EdgeExpand {
-            base: Some(pb::ExpandBase {
-                v_tag: None,
-                direction: 2,
-                params: Some(pb::QueryParams {
-                    table_names: vec!["knows".into()],
-                    columns: vec![],
-                    limit: None,
-                    predicate: None,
-                    requirements: vec![],
-                }),
+            v_tag: None,
+            direction: 2,
+            params: Some(pb::QueryParams {
+                table_names: vec!["knows".into()],
+                columns: vec![],
+                limit: None,
+                predicate: None,
+                requirements: vec![],
             }),
             is_edge: true,
             alias: None,

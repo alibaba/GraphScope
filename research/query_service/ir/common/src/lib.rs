@@ -284,8 +284,9 @@ impl From<String> for common_pb::NameOrId {
     }
 }
 
-const ID_KEY: &'static str = "~id";
-const LABEL_KEY: &'static str = "~label";
+pub const ID_KEY: &'static str = "~id";
+pub const LABEL_KEY: &'static str = "~label";
+pub const LENGTH_KEY: &'static str = "~len";
 
 impl From<String> for common_pb::Property {
     fn from(str: String) -> Self {
@@ -293,6 +294,8 @@ impl From<String> for common_pb::Property {
             common_pb::Property { item: Some(common_pb::property::Item::Id(common_pb::IdKey {})) }
         } else if str == LABEL_KEY {
             common_pb::Property { item: Some(common_pb::property::Item::Label(common_pb::LabelKey {})) }
+        } else if str == LENGTH_KEY {
+            common_pb::Property { item: Some(common_pb::property::Item::Len(common_pb::LengthKey {})) }
         } else {
             common_pb::Property { item: Some(common_pb::property::Item::Key(str.into())) }
         }

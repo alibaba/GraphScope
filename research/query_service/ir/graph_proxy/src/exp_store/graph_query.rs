@@ -433,6 +433,10 @@ impl Details for LazyVertexDetails {
         Some(&self.label)
     }
 
+    fn get_len(&self) -> usize {
+        0
+    }
+
     fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {
         let mut all_props = HashMap::new();
         if let Some(prop_keys) = self.prop_keys.as_ref() {
