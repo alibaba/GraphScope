@@ -359,9 +359,7 @@ impl AsPhysical for LogicalPlan {
                     let node_ref = curr_node_opt.as_ref().unwrap().borrow();
                     match (&prev_ref.opr.opr, &node_ref.opr.opr) {
                         (_, Some(Edge(edgexpd))) => {
-                            let key_pb = common_pb::NameOrIdKey {
-                                key: edgexpd.base.as_ref().unwrap().v_tag.clone(),
-                            };
+                            let key_pb = common_pb::NameOrIdKey { key: edgexpd.v_tag.clone() };
                             builder.repartition(key_pb.encode_to_vec());
                         }
                         _ => {}
