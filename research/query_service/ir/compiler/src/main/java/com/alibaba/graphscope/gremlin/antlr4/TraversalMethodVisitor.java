@@ -345,4 +345,35 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
     public Traversal visitTraversalMethod_dedup(GremlinGSParser.TraversalMethod_dedupContext ctx) {
         return graphTraversal.dedup();
     }
+
+    @Override
+    public Traversal visitTraversalMethod_where(GremlinGSParser.TraversalMethod_whereContext ctx) {
+        if (ctx.stringLiteral() != null && ctx.traversalPredicate() != null) {
+            graphTraversal.where(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()),
+                    TraversalPredicateVisitor.getInstance().visitTraversalPredicate(ctx.traversalPredicate()));
+        } else if (ctx.traversalPredicate() != null) {
+            graphTraversal.where(TraversalPredicateVisitor.getInstance().visitTraversalPredicate(ctx.traversalPredicate()));
+        } else {
+            throw new UnsupportedEvalException(ctx.getClass(), "supported pattern is [where(P.eq(...))] or [where(a, P.eq(...))]");
+        }
+        if (ctx.traversalMethod_whereby_list() != null) {
+            ByModulating byModulating = (ByModulating) graphTraversal.asAdmin().getEndStep();
+            int childCount = ctx.traversalMethod_whereby_list().getChildCount();
+            for (int i = 0; i < childCount; ++i) {
+                GremlinGSParser.TraversalMethod_wherebyContext byCtx =
+                        ctx.traversalMethod_whereby_list().traversalMethod_whereby(i);
+                if (byCtx == null) continue;
+                if (byCtx.stringLiteral() != null) {
+                    byModulating.modulateBy(GenericLiteralVisitor.getStringLiteral(byCtx.stringLiteral()));
+                } else if (byCtx.traversalMethod_values() != null) {
+                    // select(..).by(valueMap())
+                    TraversalMethodVisitor nestedVisitor = new TraversalMethodVisitor(gvisitor,
+                            GremlinAntlrToJava.getTraversalSupplier().get());
+                    Traversal nestedTraversal = nestedVisitor.visitTraversalMethod_values(byCtx.traversalMethod_values());
+                    byModulating.modulateBy(nestedTraversal.asAdmin());
+                }
+            }
+        }
+        return graphTraversal;
+    }
 }

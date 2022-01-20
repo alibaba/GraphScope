@@ -70,6 +70,7 @@ traversalMethod
     | traversalMethod_values    // values()
     | traversalMethod_count // count()
     | traversalMethod_is    // is()
+    | traversalMethod_where // where()
     ;
 
 traversalSourceSpawnMethod_V
@@ -249,6 +250,24 @@ traversalMethod_is
 	: 'is' LPAREN genericLiteral RPAREN
 	| 'is' LPAREN traversalPredicate RPAREN
 	;
+
+// where(P.eq("a"))
+// where("c", P.eq("a"))
+// where(P.eq("a")).by("age")
+// where("c", P.eq("a")).by("id").by("age")
+traversalMethod_where
+	: 'where' LPAREN traversalPredicate RPAREN (DOT traversalMethod_whereby_list)?
+	| 'where' LPAREN stringLiteral COMMA traversalPredicate RPAREN (DOT traversalMethod_whereby_list)?
+	;
+
+traversalMethod_whereby
+    : 'by' LPAREN stringLiteral RPAREN
+    | 'by' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_values RPAREN
+    ;
+
+traversalMethod_whereby_list
+    : traversalMethod_whereby (DOT traversalMethod_whereby)*
+    ;
 
 // only permit non empty, \'\' or \"\" or \'null\' is meaningless as a parameter
 stringLiteral

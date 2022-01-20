@@ -564,4 +564,36 @@ public class PositiveEvalTest {
     public void g_V_values_test() {
         Assert.assertEquals(g.V().values("name"), eval("g.V().values(\"name\")"));
     }
+
+    @Test
+    public void g_V_where_eq_a_test() {
+        Assert.assertEquals(g.V().where(P.eq("a")), eval("g.V().where(P.eq(\"a\"))"));
+    }
+
+    @Test
+    public void g_V_where_eq_a_age_test() {
+        Assert.assertEquals(g.V().where(P.eq("a")).by("age"), eval("g.V().where(P.eq(\"a\")).by(\"age\")"));
+    }
+
+    @Test
+    public void g_V_where_a_eq_b_test() {
+        Assert.assertEquals(g.V().where("a", P.eq("b")), eval("g.V().where(\"a\", P.eq(\"b\"))"));
+    }
+
+    @Test
+    public void g_V_where_a_eq_b_age_test() {
+        Assert.assertEquals(g.V().where("a", P.eq("b")).by("age"), eval("g.V().where(\"a\", P.eq(\"b\")).by(\"age\")"));
+    }
+
+    @Test
+    public void g_V_where_a_eq_b_value_age_test() {
+        Assert.assertEquals(g.V().where("a", P.eq("b")).by("age").by(__.values("age")),
+                eval("g.V().where(\"a\", P.eq(\"b\")).by(\"age\").by(values(\"age\"))"));
+    }
+
+    @Test
+    public void g_V_where_a_eq_b_nested_value_age_test() {
+        Assert.assertEquals(g.V().where("a", P.eq("b")).by("age").by(__.values("age")),
+                eval("g.V().where(\"a\", P.eq(\"b\")).by(\"age\").by(__.values(\"age\"))"));
+    }
 }
