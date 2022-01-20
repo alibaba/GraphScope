@@ -41,8 +41,7 @@ using string = std::string;
 #error "Missing macro _GRAPH_TYPE or _GRAPH_HEADER"
 #endif
 
-#if defined(_OID_TYPE)
-#else
+#if !defined(_OID_TYPE)
 #define _OID_TYPE vineyard::property_graph_types::OID_TYPE
 #endif
 
