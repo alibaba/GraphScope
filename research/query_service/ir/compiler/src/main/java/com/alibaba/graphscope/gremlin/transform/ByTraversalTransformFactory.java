@@ -1,4 +1,4 @@
-package com.alibaba.graphscope.gremlin;
+package com.alibaba.graphscope.gremlin.transform;
 
 import com.alibaba.graphscope.common.exception.OpArgIllegalException;
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
@@ -69,7 +69,6 @@ public class ByTraversalTransformFactory {
 
     // select("a") -> <"a", IdentityTraversal>
     // by(select("a").by(values...)) -> <"a", values(...)>
-    // by(select("a").values(...)) -> <"a", values(...)>
     public static Pair<String, Traversal.Admin> getByTraversalAsTagProperty(Traversal.Admin byTraversal) {
         Pair tagBy;
         if (byTraversal.getSteps().size() == 1 && byTraversal.getStartStep() instanceof SelectOneStep) {
@@ -90,7 +89,6 @@ public class ByTraversalTransformFactory {
 
     // select("a")
     // select("a").by(values...)
-    // select("a").values(...)
     public static boolean isTagPropertyPattern(Traversal.Admin byTraversal) {
         return byTraversal.getSteps().size() == 1 && byTraversal.getStartStep() instanceof SelectOneStep;
     }
