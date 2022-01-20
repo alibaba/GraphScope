@@ -220,6 +220,30 @@ pub enum GraphObject {
     P(GraphPath),
 }
 
+impl From<Vertex> for GraphObject {
+    fn from(v: Vertex) -> Self {
+        GraphObject::VOrE(v.into())
+    }
+}
+
+impl From<Edge> for GraphObject {
+    fn from(e: Edge) -> Self {
+        GraphObject::VOrE(e.into())
+    }
+}
+
+impl From<VertexOrEdge> for GraphObject {
+    fn from(v: VertexOrEdge) -> Self {
+        GraphObject::VOrE(v)
+    }
+}
+
+impl From<GraphPath> for GraphObject {
+    fn from(p: GraphPath) -> Self {
+        GraphObject::P(p)
+    }
+}
+
 impl Element for GraphObject {
     fn details(&self) -> Option<&DynDetails> {
         match self {
