@@ -106,41 +106,7 @@ public class OpArgTransformFactory {
             PROJECT_EXPR_FROM_BY_TRAVERSALS = (Map<String, Traversal.Admin> map) -> {
         List<Pair<String, FfiAlias.ByValue>> projectWithAliasList = new ArrayList<>();
         map.forEach((k, v) -> {
-            String expression;
-            if (v == null || v instanceof IdentityTraversal) { // select(..)
-                expression = "@" + k;
-            } else if (v instanceof ValueTraversal) {  // select(..).by('name')
-                expression = String.format("@%s.%s", k, ((ValueTraversal) v).getPropertyKey());
-            } else if (v.getSteps().size() == 1 && v.getStartStep() instanceof PropertyMapStep) { // select(..).by(valueMap(''))
-                String[] mapKeys = ((PropertyMapStep) v.getStartStep()).getPropertyKeys();
-                if (mapKeys.length > 0) {
-                    StringBuilder stringBuilder = new StringBuilder();
-                    stringBuilder.append("{");
-                    for (int i = 0; i < mapKeys.length; ++i) {
-                        if (i > 0) {
-                            stringBuilder.append(", ");
-                        }
-                        stringBuilder.append(String.format("@%s.%s", k, mapKeys[i]));
-                    }
-                    stringBuilder.append("}");
-                    expression = stringBuilder.toString();
-                } else {
-                    throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE, "valueMap() is unsupported");
-                }
-            } else if (v.getSteps().size() == 1 && v.getStartStep() instanceof PropertiesStep) { // values("name")
-                String[] mapKeys = ((PropertiesStep) v.getStartStep()).getPropertyKeys();
-                if (mapKeys.length == 0) {
-                    throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE, "values() is unsupported");
-                }
-                if (mapKeys.length > 1) {
-                    throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
-                            "use valueMap(..) instead if there are multiple project keys");
-                }
-                expression = String.format("@%s.%s", k, mapKeys[0]);
-            } else {
-                throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
-                        "supported pattern is [select(..)] or [select(..).by('name')] or [select(..).by(valueMap(..))]");
-            }
+            String expression = ByTraversalTransformFactory.getTagByTraversalAsExpr(k, v);
             String formatAlias = formatProjectAlias(expression);
             projectWithAliasList.add(Pair.with(expression, ArgUtils.asFfiAlias(formatAlias, false)));
         });

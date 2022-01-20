@@ -15,14 +15,9 @@
  */
 package com.alibaba.graphscope.gremlin;
 
-import com.alibaba.graphscope.common.exception.OpArgIllegalException;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
-import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
-import org.apache.tinkerpop.gremlin.process.traversal.lambda.IdentityTraversal;
-import org.apache.tinkerpop.gremlin.process.traversal.lambda.ValueTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.IsStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.WherePredicateStep;
-import org.apache.tinkerpop.gremlin.process.traversal.step.map.PropertiesStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.HasContainer;
 import org.apache.tinkerpop.gremlin.process.traversal.util.ConnectiveP;
 import org.apache.tinkerpop.gremlin.process.traversal.util.TraversalRing;
@@ -65,7 +60,7 @@ public enum PredicateExprTransformFactory implements PredicateExprTransform {
             TraversalRing traversalRing = Utils.getFieldValue(WherePredicateStep.class, step, "traversalRing");
 
             String startTag = startKey.isPresent() ? startKey.get() : "";
-            String startBy = getTagByTraversal(startTag, traversalRing.next());
+            String startBy = ByTraversalTransformFactory.getTagByTraversalAsExpr(startTag, traversalRing.next());
 
             P predicate = (P) step.getPredicate().get();
             List<String> selectKeys = Utils.getFieldValue(WherePredicateStep.class, step, "selectKeys");
@@ -80,34 +75,9 @@ public enum PredicateExprTransformFactory implements PredicateExprTransform {
                     traverseAndUpdateP((P) p1, selectKeysIterator, traversalRing);
                 });
             } else {
-                String tagProperty = getTagByTraversal(selectKeysIterator.next(), traversalRing.next());
+                String tagProperty = ByTraversalTransformFactory.getTagByTraversalAsExpr(selectKeysIterator.next(), traversalRing.next());
                 predicate.setValue(new WherePredicateValue(tagProperty));
             }
-        }
-
-        private String getTagByTraversal(String tag, Traversal.Admin byTraversal) {
-            String expr;
-            if (byTraversal == null || byTraversal instanceof IdentityTraversal) {
-                expr = "@" + tag;
-            } else if (byTraversal instanceof ValueTraversal) {
-                String property = ((ValueTraversal) byTraversal).getPropertyKey();
-                expr = String.format("@%s.%s", tag, property);
-            } else if (byTraversal.getSteps().size() == 1 && byTraversal.getStartStep() instanceof PropertiesStep) {
-                String[] mapKeys = ((PropertiesStep) byTraversal.getStartStep()).getPropertyKeys();
-                if (mapKeys.length == 0) {
-                    throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE, "values() is unsupported");
-                }
-                if (mapKeys.length > 1) {
-                    throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
-                            "use valueMap(..) instead if there are multiple project keys");
-                }
-                expr = String.format("@%s.%s", tag, mapKeys[0]);
-            } else {
-                throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
-                        "supported pattern is [by()] or [by('name')] or [by(values('name'))]");
-            }
-            // todo: by(valueMap)
-            return expr;
         }
     };
 
