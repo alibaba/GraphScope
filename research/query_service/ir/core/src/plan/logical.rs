@@ -305,7 +305,7 @@ impl LogicalPlan {
         let mut is_update_curr = false;
         if let Ok(meta) = STORE_META.read() {
             match opr.opr {
-                Some(Opr::Scan(_)) | Some(Opr::Edge(_)) | Some(Opr::Vertex(_)) => {
+                Some(Opr::Scan(_)) | Some(Opr::Edge(_)) | Some(Opr::Vertex(_)) | Some(Opr::Path(_)) => {
                     // change current node before appending node
                     self.meta.set_curr_node(self.total_size as u32);
                 }
@@ -757,8 +757,13 @@ impl AsLogical for pb::EdgeExpand {
 }
 
 impl AsLogical for pb::PathExpand {
-    fn preprocess(&mut self, _meta: &StoreMeta, _plan_meta: &mut PlanMeta) -> IrResult<()> {
-        todo!()
+    fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
+        // PathExpand would never require adding columns
+        plan_meta.curr_node_meta_mut().is_add_column = false;
+        if let Some(base) = self.base.as_mut() {
+            base.preprocess(meta, plan_meta)?;
+        }
+        Ok(())
     }
 }
 
@@ -876,6 +881,7 @@ impl AsLogical for pb::logical_plan::Operator {
                 Opr::Select(opr) => opr.preprocess(meta, plan_meta)?,
                 Opr::Scan(opr) => opr.preprocess(meta, plan_meta)?,
                 Opr::Edge(opr) => opr.preprocess(meta, plan_meta)?,
+                Opr::Path(opr) => opr.preprocess(meta, plan_meta)?,
                 Opr::Vertex(opr) => opr.preprocess(meta, plan_meta)?,
                 Opr::Dedup(opr) => opr.preprocess(meta, plan_meta)?,
                 Opr::GroupBy(opr) => opr.preprocess(meta, plan_meta)?,

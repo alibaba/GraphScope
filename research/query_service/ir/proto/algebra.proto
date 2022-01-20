@@ -384,10 +384,12 @@ message LogicalPlan {
       As as = 15;
       Sink sink = 16;
       // Saving the room for relational operators
-      GetV vertex = 20;
-      EdgeExpand edge = 21;
-      PathExpand path = 22;
-      ShortestPathExpand shortest_path = 23;
+      GetV vertex = 30;
+      EdgeExpand edge = 31;
+      PathExpand path = 32;
+      ShortestPathExpand shortest_path = 33;
+      PathStart path_start = 34;
+      PathEnd path_end = 35;
     }
   }
   message Node {
