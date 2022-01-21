@@ -13,9 +13,8 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use std::cmp::Ordering;
 use std::convert::{TryFrom, TryInto};
-use std::hash::{Hash, Hasher};
+use std::hash::Hash;
 use std::sync::Arc;
 
 use dyn_type::{BorrowObject, Object};
@@ -27,10 +26,10 @@ use pegasus::api::function::DynIter;
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 
 use crate::expr::eval::Context;
-use crate::graph::element::{Edge, Element, GraphObject, GraphPath, Vertex, VertexOrEdge};
+use crate::graph::element::{Edge, Element, GraphElement, GraphObject, GraphPath, Vertex, VertexOrEdge};
 use crate::graph::property::DynDetails;
 
-#[derive(Debug, Clone, PartialEq, PartialOrd)]
+#[derive(Debug, Clone, Hash, PartialEq, PartialOrd)]
 // TODO: rename as CommonObject
 pub enum ObjectElement {
     // TODO: common-used object elements
@@ -43,7 +42,7 @@ pub enum ObjectElement {
     Agg(Object),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Hash, PartialEq, PartialOrd)]
 pub enum RecordElement {
     OnGraph(GraphObject),
     OffGraph(ObjectElement),
@@ -58,7 +57,7 @@ impl RecordElement {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Hash, PartialEq, PartialOrd)]
 pub enum Entry {
     Element(RecordElement),
     Collection(Vec<RecordElement>),
@@ -111,8 +110,7 @@ impl Record {
         }
     }
 
-    // append a path element on curr entry; notice that curr entry should be GraphPath
-    // if curr is not a path, initial the path; else, insert the entry into the path
+    // append a path element on curr entry; notice that curr entry Must be GraphPath
     pub fn append_path_element(&mut self, _entry: VertexOrEdge) {
         todo!()
     }
@@ -231,7 +229,7 @@ impl Element for RecordElement {
 }
 
 /// RecordKey is the key fields of a Record, with each key corresponding to a request column_tag
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Hash, PartialEq)]
 pub struct RecordKey {
     key_fields: Vec<Arc<Entry>>,
 }
@@ -245,83 +243,7 @@ impl RecordKey {
     }
 }
 
-impl Hash for RecordElement {
-    fn hash<H: Hasher>(&self, mut state: &mut H) {
-        match self {
-            RecordElement::OnGraph(graph_obj) => graph_obj.hash(&mut state),
-            RecordElement::OffGraph(o) => match o {
-                ObjectElement::None => None::<Object>.hash(&mut state),
-                ObjectElement::Prop(o) => o.hash(&mut state),
-                ObjectElement::Count(o) => o.hash(&mut state),
-                ObjectElement::Agg(o) => o.hash(&mut state),
-            },
-        }
-    }
-}
-
-impl Hash for Entry {
-    fn hash<H: Hasher>(&self, mut state: &mut H) {
-        match self {
-            Entry::Element(e) => e.hash(&mut state),
-            Entry::Collection(c) => c.hash(&mut state),
-        }
-    }
-}
-
-impl Hash for RecordKey {
-    fn hash<H: Hasher>(&self, mut state: &mut H) {
-        self.key_fields.hash(&mut state)
-    }
-}
-
-impl PartialEq for RecordElement {
-    fn eq(&self, other: &Self) -> bool {
-        match (self, other) {
-            (RecordElement::OnGraph(v1), RecordElement::OnGraph(v2)) => v1.eq(v2),
-            (RecordElement::OffGraph(o1), RecordElement::OffGraph(o2)) => o1.eq(o2),
-            _ => false,
-        }
-    }
-}
-
-impl PartialEq for Entry {
-    fn eq(&self, other: &Self) -> bool {
-        match (self, other) {
-            (Entry::Element(e1), Entry::Element(e2)) => e1 == e2,
-            (Entry::Collection(c1), Entry::Collection(c2)) => c1 == c2,
-            _ => false,
-        }
-    }
-}
-
-impl PartialEq for RecordKey {
-    fn eq(&self, other: &Self) -> bool {
-        self.key_fields == other.key_fields
-    }
-}
-
 impl Eq for RecordKey {}
-
-impl PartialOrd for RecordElement {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        match (self, other) {
-            (RecordElement::OnGraph(v1), RecordElement::OnGraph(v2)) => v1.partial_cmp(v2),
-            (RecordElement::OffGraph(o1), RecordElement::OffGraph(o2)) => o1.partial_cmp(o2),
-            _ => None,
-        }
-    }
-}
-
-impl PartialOrd for Entry {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        match (self, other) {
-            (Entry::Element(e1), Entry::Element(e2)) => e1.partial_cmp(e2),
-            (Entry::Collection(c1), Entry::Collection(c2)) => c1.partial_cmp(c2),
-            _ => None,
-        }
-    }
-}
-
 impl Eq for Entry {}
 
 pub struct RecordExpandIter<E> {

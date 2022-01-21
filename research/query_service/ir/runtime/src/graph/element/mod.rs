@@ -17,10 +17,9 @@ mod edge;
 mod path;
 mod vertex;
 
-use std::cmp::Ordering;
 use std::convert::{TryFrom, TryInto};
 use std::fmt::Debug;
-use std::hash::{Hash, Hasher};
+use std::hash::Hash;
 use std::io;
 
 use dyn_type::{BorrowObject, Object};
@@ -71,7 +70,7 @@ impl<'a> Element for BorrowObject<'a> {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Hash, PartialEq, PartialOrd)]
 pub enum VertexOrEdge {
     V(Vertex),
     E(Edge),
@@ -160,24 +159,6 @@ impl Decode for VertexOrEdge {
     }
 }
 
-impl PartialEq for VertexOrEdge {
-    fn eq(&self, other: &Self) -> bool {
-        match (self, other) {
-            (VertexOrEdge::V(v1), VertexOrEdge::V(v2)) => v1.id() == v2.id(),
-            (VertexOrEdge::E(e1), VertexOrEdge::E(e2)) => e1.id() == e2.id(),
-            _ => false,
-        }
-    }
-}
-
-impl PartialOrd for VertexOrEdge {
-    // TODO: not sure if it is reasonable. VertexOrEdge seems to be not comparable.
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.as_borrow_object()
-            .partial_cmp(&other.as_borrow_object())
-    }
-}
-
 impl TryFrom<result_pb::Vertex> for VertexOrEdge {
     type Error = ParsePbError;
     fn try_from(v: result_pb::Vertex) -> Result<Self, Self::Error> {
@@ -218,13 +199,7 @@ impl TryFrom<result_pb::Edge> for VertexOrEdge {
     }
 }
 
-impl Hash for VertexOrEdge {
-    fn hash<H: Hasher>(&self, mut state: &mut H) {
-        self.id().hash(&mut state)
-    }
-}
-
-#[derive(Clone, Debug, Hash)]
+#[derive(Clone, Debug, Hash, PartialEq, PartialOrd)]
 pub enum GraphObject {
     VOrE(VertexOrEdge),
     P(GraphPath),
@@ -270,23 +245,25 @@ impl Element for GraphObject {
     }
 }
 
-impl PartialEq for GraphObject {
-    fn eq(&self, other: &Self) -> bool {
-        match (self, other) {
-            (GraphObject::VOrE(v1), GraphObject::VOrE(v2)) => v1.eq(v2),
-            (GraphObject::P(p1), GraphObject::P(p2)) => p1.eq(p2),
-            _ => false,
+impl GraphElement for GraphObject {
+    fn id(&self) -> u64 {
+        match self {
+            GraphObject::VOrE(v_or_e) => v_or_e.id(),
+            GraphObject::P(p) => p.id(),
         }
     }
-}
 
-impl PartialOrd for GraphObject {
-    // TODO: not sure if it is reasonable. GraphObject seems to be not comparable.
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        match (self, other) {
-            (GraphObject::VOrE(v1), GraphObject::VOrE(v2)) => v1.partial_cmp(v2),
-            (GraphObject::P(p1), GraphObject::P(p2)) => p1.partial_cmp(p2),
-            _ => None,
+    fn label(&self) -> Option<&NameOrId> {
+        match self {
+            GraphObject::VOrE(v_or_e) => v_or_e.label(),
+            GraphObject::P(p) => p.label(),
+        }
+    }
+
+    fn len(&self) -> usize {
+        match self {
+            GraphObject::VOrE(v_or_e) => v_or_e.len(),
+            GraphObject::P(p) => p.len(),
         }
     }
 }

@@ -15,11 +15,15 @@
 
 use std::cmp::Ordering;
 
+use dyn_type::BorrowObject;
+use ir_common::NameOrId;
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 
-use crate::graph::element::VertexOrEdge;
+use crate::graph::element::{Element, GraphElement, VertexOrEdge};
+use crate::graph::property::DynDetails;
+use crate::graph::ID;
 
-#[derive(Clone, Debug, Hash)]
+#[derive(Clone, Debug, Hash, PartialEq, PartialOrd)]
 pub enum PathStruct {
     // save the whole path
     WHOLE(Vec<VertexOrEdge>),
@@ -35,9 +39,9 @@ pub struct GraphPath {
 }
 
 impl GraphPath {
-    // is_path_opt: Whether to save the whole path (true) or only the path_end (false)
-    pub fn new<E: Into<VertexOrEdge>>(entry: E, is_path_opt: bool) -> Self {
-        if is_path_opt {
+    // is_whole_path: Whether to preserve the whole path or only the path_end
+    pub fn new<E: Into<VertexOrEdge>>(entry: E, is_whole_path: bool) -> Self {
+        if is_whole_path {
             let mut path = Vec::new();
             path.push(entry.into());
             GraphPath { path: PathStruct::WHOLE(path), weight: 1 }
@@ -55,15 +59,44 @@ impl GraphPath {
     }
 }
 
-impl PartialEq for GraphPath {
-    fn eq(&self, _other: &Self) -> bool {
-        todo!()
+impl Element for GraphPath {
+    fn details(&self) -> Option<&DynDetails> {
+        None
+    }
+
+    fn as_graph_element(&self) -> Option<&dyn GraphElement> {
+        Some(self)
+    }
+
+    fn as_borrow_object(&self) -> BorrowObject {
+        BorrowObject::None
     }
 }
 
-impl PartialOrd for GraphPath {
-    fn partial_cmp(&self, _other: &Self) -> Option<Ordering> {
+impl GraphElement for GraphPath {
+    fn id(&self) -> ID {
         todo!()
+    }
+
+    fn label(&self) -> Option<&NameOrId> {
+        None
+    }
+
+    fn len(&self) -> usize {
+        self.weight
+    }
+}
+
+impl PartialEq for GraphPath {
+    fn eq(&self, other: &Self) -> bool {
+        // We define eq by structure, ignoring path weight
+        self.path.eq(&other.path)
+    }
+}
+impl PartialOrd for GraphPath {
+    // We define partial_cmp by structure, ignoring path weight
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        self.path.partial_cmp(&other.path)
     }
 }
 

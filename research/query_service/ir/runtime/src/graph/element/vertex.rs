@@ -13,6 +13,8 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::cmp::Ordering;
+use std::hash::{Hash, Hasher};
 use std::io;
 
 use dyn_type::BorrowObject;
@@ -86,5 +88,25 @@ impl Decode for Vertex {
 impl Context<Vertex> for Vertex {
     fn get(&self, _tag: Option<&NameOrId>) -> Option<&Vertex> {
         Some(&self)
+    }
+}
+
+impl Hash for Vertex {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.id.hash(state)
+    }
+}
+
+impl PartialEq for Vertex {
+    fn eq(&self, other: &Self) -> bool {
+        self.id() == other.id()
+    }
+}
+
+impl PartialOrd for Vertex {
+    // TODO: not sure if it is reasonable. Vertex may be not comparable.
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        self.as_borrow_object()
+            .partial_cmp(&other.as_borrow_object())
     }
 }
