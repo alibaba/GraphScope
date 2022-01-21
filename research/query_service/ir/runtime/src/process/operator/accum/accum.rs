@@ -26,7 +26,7 @@ use crate::error::{FnExecError, FnExecResult, FnGenError, FnGenResult};
 use crate::process::operator::accum::accumulator::{Accumulator, Count, ToList};
 use crate::process::operator::accum::AccumFactoryGen;
 use crate::process::operator::TagKey;
-use crate::process::record::{Entry, ObjectElement, Record};
+use crate::process::record::{CommonObject, Entry, Record};
 
 #[derive(Debug, Clone)]
 pub enum EntryAccumulator {
@@ -71,7 +71,7 @@ impl Accumulator<Arc<Entry>, Arc<Entry>> for EntryAccumulator {
         match self {
             EntryAccumulator::ToCount(count) => {
                 let cnt = count.finalize()?;
-                Ok(Arc::new(ObjectElement::Count(cnt).into()))
+                Ok(Arc::new(CommonObject::Count(cnt).into()))
             }
             EntryAccumulator::ToList(list) => {
                 let list_entry = list
@@ -154,7 +154,7 @@ mod tests {
     use crate::process::operator::accum::accumulator::Accumulator;
     use crate::process::operator::accum::AccumFactoryGen;
     use crate::process::operator::tests::{init_source, init_vertex1, init_vertex2};
-    use crate::process::record::{Entry, ObjectElement, Record, RecordElement};
+    use crate::process::record::{CommonObject, Entry, Record, RecordElement};
 
     fn fold_test(source: Vec<Record>, fold_opr_pb: pb::GroupBy) -> ResultStream<Record> {
         let conf = JobConf::new("fold_test");
@@ -218,7 +218,7 @@ mod tests {
         if let Some(Ok(record)) = result.next() {
             if let Some(entry) = record.get(Some(&"a".into())) {
                 cnt = match entry.as_ref() {
-                    Entry::Element(RecordElement::OffGraph(ObjectElement::Count(cnt))) => *cnt,
+                    Entry::Element(RecordElement::OffGraph(CommonObject::Count(cnt))) => *cnt,
                     _ => {
                         unreachable!()
                     }
@@ -243,13 +243,13 @@ mod tests {
         };
         let fold_opr_pb = pb::GroupBy { mappings: vec![], functions: vec![function_1, function_2] };
         let mut result = fold_test(init_source(), fold_opr_pb);
-        let mut fold_result: (Entry, Entry) = (Entry::Collection(vec![]), ObjectElement::Count(0).into());
+        let mut fold_result: (Entry, Entry) = (Entry::Collection(vec![]), CommonObject::Count(0).into());
         let expected_result: (Entry, Entry) = (
             Entry::Collection(vec![
                 RecordElement::OnGraph(init_vertex1().into()),
                 RecordElement::OnGraph(init_vertex2().into()),
             ]),
-            ObjectElement::Count(2).into(),
+            CommonObject::Count(2).into(),
         );
         if let Some(Ok(record)) = result.next() {
             let collection_entry = record

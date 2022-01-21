@@ -21,7 +21,7 @@ use ir_common::NameOrId;
 use pegasus::api::function::{FnResult, MapFunction};
 
 use crate::error::{FnExecError, FnGenResult};
-use crate::graph::element::{Vertex, VertexOrEdge};
+use crate::graph::element::Vertex;
 use crate::graph::property::{DefaultDetails, DynDetails};
 use crate::process::operator::map::MapFuncGen;
 use crate::process::record::Record;
@@ -38,22 +38,24 @@ impl MapFunction<Record, Record> for GetVertexOperator {
         let entry = input
             .get(self.start_tag.as_ref())
             .ok_or(FnExecError::get_tag_error("get tag failed in GetVertexOperator"))?;
-        let vertex_or_edge = entry
-            .as_graph_element()
-            .ok_or(FnExecError::unexpected_data_error("tag does not refer to a graph element"))?;
-        let (id, label) = match vertex_or_edge {
-            VertexOrEdge::V(_) => Err(FnExecError::unexpected_data_error(
-                "should not apply `GetV` (`Auxilia` instead) on a vertex",
-            ))?,
-            VertexOrEdge::E(e) => match self.opt {
+        if let Some(e) = entry.as_graph_edge() {
+            let (id, label) = match self.opt {
                 VOpt::Start => (e.src_id, e.get_src_label()),
                 VOpt::End => (e.dst_id, e.get_dst_label()),
                 VOpt::Other => (e.get_other_id(), e.get_other_label()),
-            },
-        };
-        let vertex = Vertex::new(id, label.map(|l| l.clone()), DynDetails::new(DefaultDetails::default()));
-        input.append(vertex, self.alias.clone());
-        Ok(input)
+            };
+            let vertex =
+                Vertex::new(id, label.map(|l| l.clone()), DynDetails::new(DefaultDetails::default()));
+            input.append(vertex, self.alias.clone());
+            Ok(input)
+        } else if let Some(_p) = entry.as_graph_path() {
+            //TODO(bingqing): endV for path
+            todo!()
+        } else {
+            Err(FnExecError::unexpected_data_error(
+                "Can only apply `GetV` (`Auxilia` instead) on an edge or path entry",
+            ))?
+        }
     }
 }
 

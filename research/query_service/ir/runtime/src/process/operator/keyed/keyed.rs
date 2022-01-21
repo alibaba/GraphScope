@@ -126,7 +126,7 @@ mod tests {
 
         let mut result_ids = vec![];
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record.get(None).unwrap().as_graph_element() {
+            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
                 result_ids.push(element.id());
             }
         }

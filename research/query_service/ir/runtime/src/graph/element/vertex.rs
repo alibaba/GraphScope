@@ -13,15 +13,20 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::cmp::Ordering;
+use std::convert::{TryFrom, TryInto};
+use std::hash::{Hash, Hasher};
 use std::io;
 
 use dyn_type::BorrowObject;
+use ir_common::error::ParsePbError;
+use ir_common::generated::results as result_pb;
 use ir_common::NameOrId;
 use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
 
 use crate::expr::eval::Context;
 use crate::graph::element::{Element, GraphElement};
-use crate::graph::property::DynDetails;
+use crate::graph::property::{DefaultDetails, DynDetails};
 use crate::graph::{read_id, write_id, ID};
 
 #[derive(Clone, Debug)]
@@ -86,5 +91,39 @@ impl Decode for Vertex {
 impl Context<Vertex> for Vertex {
     fn get(&self, _tag: Option<&NameOrId>) -> Option<&Vertex> {
         Some(&self)
+    }
+}
+
+impl Hash for Vertex {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.id.hash(state)
+    }
+}
+
+impl PartialEq for Vertex {
+    fn eq(&self, other: &Self) -> bool {
+        self.id() == other.id()
+    }
+}
+
+impl PartialOrd for Vertex {
+    // TODO: not sure if it is reasonable. Vertex may be not comparable.
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        self.as_borrow_object()
+            .partial_cmp(&other.as_borrow_object())
+    }
+}
+
+impl TryFrom<result_pb::Vertex> for Vertex {
+    type Error = ParsePbError;
+    fn try_from(v: result_pb::Vertex) -> Result<Self, Self::Error> {
+        let vertex = Vertex::new(
+            v.id as ID,
+            v.label
+                .map(|label| label.try_into())
+                .transpose()?,
+            DynDetails::new(DefaultDetails::default()),
+        );
+        Ok(vertex)
     }
 }

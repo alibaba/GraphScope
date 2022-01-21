@@ -23,7 +23,7 @@ use pegasus_server::pb as server_pb;
 use crate::error::{FnGenError, FnGenResult};
 use crate::process::functions::FoldGen;
 use crate::process::operator::accum::{AccumFactoryGen, RecordAccumulator};
-use crate::process::record::{Entry, ObjectElement, Record};
+use crate::process::record::{CommonObject, Entry, Record};
 
 impl FoldGen<u64, Record> for algebra_pb::GroupBy {
     fn get_accum_kind(&self) -> server_pb::AccumKind {
@@ -65,7 +65,7 @@ struct CountAlias {
 
 impl MapFunction<u64, Record> for CountAlias {
     fn exec(&self, cnt: u64) -> FnResult<Record> {
-        let cnt_entry: Entry = ObjectElement::Count(cnt).into();
+        let cnt_entry: Entry = CommonObject::Count(cnt).into();
         Ok(Record::new(cnt_entry, self.alias.clone()))
     }
 }
@@ -81,7 +81,7 @@ mod tests {
 
     use crate::process::functions::FoldGen;
     use crate::process::operator::tests::init_source;
-    use crate::process::record::{Entry, ObjectElement, Record, RecordElement};
+    use crate::process::record::{CommonObject, Entry, Record, RecordElement};
 
     fn count_test(source: Vec<Record>, fold_opr_pb: pb::GroupBy) -> ResultStream<Record> {
         let conf = JobConf::new("fold_test");
@@ -119,7 +119,7 @@ mod tests {
         if let Some(Ok(record)) = result.next() {
             if let Some(entry) = record.get(None) {
                 cnt = match entry.as_ref() {
-                    Entry::Element(RecordElement::OffGraph(ObjectElement::Count(cnt))) => *cnt,
+                    Entry::Element(RecordElement::OffGraph(CommonObject::Count(cnt))) => *cnt,
                     _ => {
                         unreachable!()
                     }
@@ -143,7 +143,7 @@ mod tests {
         if let Some(Ok(record)) = result.next() {
             if let Some(entry) = record.get(Some(&"a".into())) {
                 cnt = match entry.as_ref() {
-                    Entry::Element(RecordElement::OffGraph(ObjectElement::Count(cnt))) => *cnt,
+                    Entry::Element(RecordElement::OffGraph(CommonObject::Count(cnt))) => *cnt,
                     _ => {
                         unreachable!()
                     }
