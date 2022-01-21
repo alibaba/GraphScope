@@ -70,6 +70,24 @@ public class ArgUtils {
         return irCoreLib.asNoneVar();
     }
 
+    public static FfiVariable.ByValue asVarTagOnly(String tag) {
+        if (tag.isEmpty()) {
+            return irCoreLib.asNoneVar();
+        } else {
+            return irCoreLib.asVarTagOnly(irCoreLib.cstrAsNameOrId(tag));
+        }
+    }
+
+    public static FfiVariable.ByValue asVar(String tag, String property) {
+        FfiNameOrId.ByValue ffiTag;
+        if (tag.isEmpty()) {
+            ffiTag = asNoneNameOrId();
+        } else {
+            ffiTag = irCoreLib.cstrAsNameOrId(tag);
+        }
+        return irCoreLib.asVar(ffiTag, asFfiProperty(property));
+    }
+
     public static FfiNameOrId.ByValue asNoneNameOrId() {
         return irCoreLib.noneNameOrId();
     }
