@@ -14,16 +14,19 @@
 //! limitations under the License.
 
 use std::cmp::Ordering;
+use std::convert::{TryFrom, TryInto};
 use std::hash::{Hash, Hasher};
 use std::io;
 
 use dyn_type::BorrowObject;
+use ir_common::error::ParsePbError;
+use ir_common::generated::results as result_pb;
 use ir_common::NameOrId;
 use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
 
 use crate::expr::eval::Context;
 use crate::graph::element::{Element, GraphElement};
-use crate::graph::property::DynDetails;
+use crate::graph::property::{DefaultDetails, DynDetails};
 use crate::graph::{read_id, write_id, ID};
 
 #[derive(Clone, Debug)]
@@ -171,5 +174,31 @@ impl PartialOrd for Edge {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         self.as_borrow_object()
             .partial_cmp(&other.as_borrow_object())
+    }
+}
+
+impl TryFrom<result_pb::Edge> for Edge {
+    type Error = ParsePbError;
+    fn try_from(e: result_pb::Edge) -> Result<Self, Self::Error> {
+        let mut edge = Edge::new(
+            e.id as ID,
+            e.label
+                .map(|label| label.try_into())
+                .transpose()?,
+            e.src_id as ID,
+            e.dst_id as ID,
+            DynDetails::new(DefaultDetails::default()),
+        );
+        edge.set_src_label(
+            e.src_label
+                .map(|label| label.try_into())
+                .transpose()?,
+        );
+        edge.set_dst_label(
+            e.dst_label
+                .map(|label| label.try_into())
+                .transpose()?,
+        );
+        Ok(edge)
     }
 }

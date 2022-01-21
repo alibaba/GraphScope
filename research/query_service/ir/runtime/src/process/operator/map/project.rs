@@ -133,7 +133,7 @@ mod tests {
     use pegasus::result::ResultStream;
     use pegasus::JobConf;
 
-    use crate::graph::element::{GraphElement, GraphObject, Vertex};
+    use crate::graph::element::{GraphElement, Vertex};
     use crate::graph::property::{DefaultDetails, DynDetails};
     use crate::process::operator::map::MapFuncGen;
     use crate::process::operator::tests::{
@@ -414,13 +414,14 @@ mod tests {
         let mut a_results = vec![];
         let mut b_results = vec![];
         while let Some(Ok(res)) = result.next() {
-            let a_entry = res.get(Some(&"a".into())).unwrap().as_ref();
+            let v = res
+                .get(Some(&"a".into()))
+                .unwrap()
+                .as_graph_vertex()
+                .unwrap();
             let b_entry = res.get(Some(&"b".into())).unwrap().as_ref();
-            match (a_entry, b_entry) {
-                (
-                    Entry::Element(RecordElement::OnGraph(GraphObject::VOrE(v))),
-                    Entry::Element(RecordElement::OffGraph(ObjectElement::Prop(val))),
-                ) => {
+            match b_entry {
+                Entry::Element(RecordElement::OffGraph(ObjectElement::Prop(val))) => {
                     a_results.push(v.id());
                     b_results.push(val.clone());
                 }
@@ -627,8 +628,8 @@ mod tests {
         while let Some(Ok(res)) = result.next() {
             let a_entry = res.get(Some(&"a_col".into())).unwrap().as_ref();
             let b_entry = res.get(Some(&"b_col".into())).unwrap().as_ref();
-            let v1 = a_entry.as_graph_element().unwrap();
-            let v2 = b_entry.as_graph_element().unwrap();
+            let v1 = a_entry.as_graph_vertex().unwrap();
+            let v2 = b_entry.as_graph_vertex().unwrap();
             results.push(v1.id());
             results.push(v2.id());
         }

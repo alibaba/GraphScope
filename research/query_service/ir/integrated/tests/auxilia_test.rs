@@ -96,7 +96,7 @@ mod test {
             if let Some(element) = record
                 .get(Some(&"a".to_string().into()))
                 .unwrap()
-                .as_graph_element()
+                .as_graph_vertex()
             {
                 result_ids.push(element.id());
             }
@@ -151,7 +151,7 @@ mod test {
         let expected_ids_with_prop = vec![(2, "vadas".to_string().into()), (4, "josh".to_string().into())];
         let mut result_ids_with_prop = vec![];
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record.get(None).unwrap().as_graph_element() {
+            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
                 result_ids_with_prop.push((
                     element.id(),
                     element
@@ -217,7 +217,7 @@ mod test {
             if let Some(element) = record
                 .get(Some(&NameOrId::Str("a".to_string())))
                 .unwrap()
-                .as_graph_element()
+                .as_graph_vertex()
             {
                 result_ids_with_prop.push((
                     element.id(),
@@ -281,7 +281,7 @@ mod test {
         let expected_ids_with_prop = vec![(2, "vadas".to_string().into())];
         let mut result_ids_with_prop = vec![];
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record.get(None).unwrap().as_graph_element() {
+            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
                 result_ids_with_prop.push((
                     element.id(),
                     element
@@ -347,7 +347,7 @@ mod test {
             if let Some(element) = record
                 .get(Some(&NameOrId::Str("a".to_string())))
                 .unwrap()
-                .as_graph_element()
+                .as_graph_vertex()
             {
                 result_ids.push(element.id());
             }

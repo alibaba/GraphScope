@@ -49,9 +49,23 @@ pub enum RecordElement {
 }
 
 impl RecordElement {
-    pub fn as_vertex_or_edge(&self) -> Option<&VertexOrEdge> {
+    fn as_graph_vertex(&self) -> Option<&Vertex> {
         match self {
-            RecordElement::OnGraph(GraphObject::VOrE(vertex_or_edge)) => Some(vertex_or_edge),
+            RecordElement::OnGraph(GraphObject::V(v)) => Some(v),
+            _ => None,
+        }
+    }
+
+    fn as_graph_edge(&self) -> Option<&Edge> {
+        match self {
+            RecordElement::OnGraph(GraphObject::E(e)) => Some(e),
+            _ => None,
+        }
+    }
+
+    fn as_graph_path(&self) -> Option<&GraphPath> {
+        match self {
+            RecordElement::OnGraph(GraphObject::P(graph_path)) => Some(graph_path),
             _ => None,
         }
     }
@@ -64,10 +78,23 @@ pub enum Entry {
 }
 
 impl Entry {
-    // TODO: rename as as_vertex_or_edge
-    pub fn as_graph_element(&self) -> Option<&VertexOrEdge> {
+    pub fn as_graph_vertex(&self) -> Option<&Vertex> {
         match self {
-            Entry::Element(record_element) => record_element.as_vertex_or_edge(),
+            Entry::Element(record_element) => record_element.as_graph_vertex(),
+            _ => None,
+        }
+    }
+
+    pub fn as_graph_edge(&self) -> Option<&Edge> {
+        match self {
+            Entry::Element(record_element) => record_element.as_graph_edge(),
+            _ => None,
+        }
+    }
+
+    pub fn as_graph_path(&self) -> Option<&GraphPath> {
+        match self {
+            Entry::Element(record_element) => record_element.as_graph_path(),
             _ => None,
         }
     }
@@ -153,25 +180,25 @@ pub enum HeadJoinOpt {
 
 impl Into<Entry> for Vertex {
     fn into(self) -> Entry {
-        Entry::Element(RecordElement::OnGraph(GraphObject::VOrE(self.into())))
+        Entry::Element(RecordElement::OnGraph(GraphObject::V(self)))
     }
 }
 
 impl Into<Entry> for Edge {
     fn into(self) -> Entry {
-        Entry::Element(RecordElement::OnGraph(GraphObject::VOrE(self.into())))
-    }
-}
-
-impl Into<Entry> for VertexOrEdge {
-    fn into(self) -> Entry {
-        Entry::Element(RecordElement::OnGraph(GraphObject::VOrE(self)))
+        Entry::Element(RecordElement::OnGraph(GraphObject::E(self)))
     }
 }
 
 impl Into<Entry> for GraphPath {
     fn into(self) -> Entry {
         Entry::Element(RecordElement::OnGraph(GraphObject::P(self)))
+    }
+}
+
+impl Into<Entry> for GraphObject {
+    fn into(self) -> Entry {
+        Entry::Element(RecordElement::OnGraph(self))
     }
 }
 
@@ -201,8 +228,7 @@ impl Context<RecordElement> for Record {
 impl Element for RecordElement {
     fn details(&self) -> Option<&DynDetails> {
         match self {
-            RecordElement::OnGraph(GraphObject::VOrE(vertex_or_edge)) => vertex_or_edge.details(),
-            RecordElement::OnGraph(GraphObject::P(_)) => None,
+            RecordElement::OnGraph(graph_obj) => graph_obj.details(),
             RecordElement::OffGraph(_) => None,
         }
     }
@@ -216,9 +242,7 @@ impl Element for RecordElement {
 
     fn as_borrow_object(&self) -> BorrowObject {
         match self {
-            RecordElement::OnGraph(GraphObject::VOrE(vertex_or_edge)) => vertex_or_edge.as_borrow_object(),
-            // TODO(bingqing): confirm if path can be as_borrow_object?
-            RecordElement::OnGraph(GraphObject::P(_)) => BorrowObject::None,
+            RecordElement::OnGraph(graph_obj) => graph_obj.as_borrow_object(),
             RecordElement::OffGraph(obj_element) => match obj_element {
                 ObjectElement::None => BorrowObject::None,
                 ObjectElement::Prop(obj) | ObjectElement::Agg(obj) => obj.as_borrow(),
@@ -258,7 +282,7 @@ impl<E> RecordExpandIter<E> {
     }
 }
 
-impl<E: Into<VertexOrEdge>> Iterator for RecordExpandIter<E> {
+impl<E: Into<GraphObject>> Iterator for RecordExpandIter<E> {
     type Item = Record;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -467,10 +491,10 @@ impl TryFrom<result_pb::Element> for RecordElement {
         if let Some(inner) = e.inner {
             match inner {
                 result_pb::element::Inner::Vertex(v) => {
-                    Ok(RecordElement::OnGraph(GraphObject::VOrE(v.try_into()?)))
+                    Ok(RecordElement::OnGraph(GraphObject::V(v.try_into()?)))
                 }
                 result_pb::element::Inner::Edge(e) => {
-                    Ok(RecordElement::OnGraph(GraphObject::VOrE(e.try_into()?)))
+                    Ok(RecordElement::OnGraph(GraphObject::E(e.try_into()?)))
                 }
                 // TODO(bingqing): may need add a path type in result pb
                 result_pb::element::Inner::Object(o) => {

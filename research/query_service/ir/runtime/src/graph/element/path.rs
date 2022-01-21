@@ -19,9 +19,27 @@ use dyn_type::BorrowObject;
 use ir_common::NameOrId;
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 
-use crate::graph::element::{Element, GraphElement, VertexOrEdge};
+use crate::graph::element::{Edge, Element, GraphElement, Vertex};
 use crate::graph::property::DynDetails;
 use crate::graph::ID;
+
+#[derive(Clone, Debug, Hash, PartialEq, PartialOrd)]
+pub enum VertexOrEdge {
+    V(Vertex),
+    E(Edge),
+}
+
+impl From<Vertex> for VertexOrEdge {
+    fn from(v: Vertex) -> Self {
+        Self::V(v)
+    }
+}
+
+impl From<Edge> for VertexOrEdge {
+    fn from(e: Edge) -> Self {
+        Self::E(e)
+    }
+}
 
 #[derive(Clone, Debug, Hash, PartialEq, PartialOrd)]
 pub enum PathStruct {
@@ -97,6 +115,39 @@ impl PartialOrd for GraphPath {
     // We define partial_cmp by structure, ignoring path weight
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         self.path.partial_cmp(&other.path)
+    }
+}
+
+impl Encode for VertexOrEdge {
+    fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
+        match self {
+            VertexOrEdge::V(v) => {
+                writer.write_u8(0)?;
+                v.write_to(writer)?;
+            }
+            VertexOrEdge::E(e) => {
+                writer.write_u8(1)?;
+                e.write_to(writer)?;
+            }
+        }
+        Ok(())
+    }
+}
+
+impl Decode for VertexOrEdge {
+    fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
+        let e = reader.read_u8()?;
+        match e {
+            0 => {
+                let v = <Vertex>::read_from(reader)?;
+                Ok(VertexOrEdge::V(v))
+            }
+            1 => {
+                let e = <Edge>::read_from(reader)?;
+                Ok(VertexOrEdge::E(e))
+            }
+            _ => Err(std::io::Error::new(std::io::ErrorKind::Other, "unreachable")),
+        }
     }
 }
 

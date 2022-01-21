@@ -54,7 +54,7 @@ mod test {
         let v6: DefaultId = LDBCVertexParser::to_global_id(6, 0);
         let mut expected_ids = vec![v1, v2, v3, v4, v5, v6];
         for record in source_iter {
-            if let Some(element) = record.get(None).unwrap().as_graph_element() {
+            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
                 result_ids.push(element.id() as usize)
             }
         }
@@ -85,7 +85,7 @@ mod test {
         let v6: DefaultId = LDBCVertexParser::to_global_id(6, 0);
         let mut expected_ids = vec![v1, v2, v4, v6];
         for record in source_iter {
-            if let Some(element) = record.get(None).unwrap().as_graph_element() {
+            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
                 result_ids.push(element.id() as usize)
             }
         }
@@ -118,7 +118,7 @@ mod test {
         let v6: DefaultId = LDBCVertexParser::to_global_id(6, 0);
         let mut expected_ids = vec![v1, v2, v3, v4, v5, v6];
         for record in source_iter {
-            if let Some(element) = record.get(None).unwrap().as_graph_element() {
+            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
                 result_ids.push(element.id() as usize)
             }
         }
@@ -141,7 +141,7 @@ mod test {
         let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
         let mut expected_ids = vec![v1];
         for record in source_iter {
-            if let Some(element) = record.get(None).unwrap().as_graph_element() {
+            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
                 result_ids.push(element.id() as usize)
             }
         }
@@ -165,7 +165,7 @@ mod test {
         let v2: DefaultId = LDBCVertexParser::to_global_id(2, 0);
         let mut expected_ids = vec![v1, v2];
         for record in source_iter {
-            if let Some(element) = record.get(None).unwrap().as_graph_element() {
+            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
                 result_ids.push(element.id() as usize)
             }
         }

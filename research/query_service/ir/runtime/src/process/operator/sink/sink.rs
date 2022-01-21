@@ -25,7 +25,7 @@ use ir_common::NameOrId;
 use pegasus::api::function::{FnResult, MapFunction};
 
 use crate::error::FnGenResult;
-use crate::graph::element::{Edge, GraphElement, GraphObject, Vertex, VertexOrEdge};
+use crate::graph::element::{Edge, GraphElement, GraphObject, Vertex};
 use crate::process::operator::sink::SinkFunctionGen;
 use crate::process::record::{Entry, ObjectElement, Record, RecordElement};
 
@@ -70,16 +70,14 @@ impl RecordSinkEncoder {
 
     fn element_to_pb(&self, e: &RecordElement) -> result_pb::Element {
         let inner = match e {
-            RecordElement::OnGraph(GraphObject::VOrE(vertex_or_edge)) => match vertex_or_edge {
-                VertexOrEdge::V(v) => {
-                    let vertex_pb = self.vertex_to_pb(v);
-                    Some(result_pb::element::Inner::Vertex(vertex_pb))
-                }
-                VertexOrEdge::E(e) => {
-                    let edge_pb = self.edge_to_pb(e);
-                    Some(result_pb::element::Inner::Edge(edge_pb))
-                }
-            },
+            RecordElement::OnGraph(GraphObject::V(v)) => {
+                let vertex_pb = self.vertex_to_pb(v);
+                Some(result_pb::element::Inner::Vertex(vertex_pb))
+            }
+            RecordElement::OnGraph(GraphObject::E(e)) => {
+                let edge_pb = self.edge_to_pb(e);
+                Some(result_pb::element::Inner::Edge(edge_pb))
+            }
             // TODO(bingqing): add path type in result_pb
             RecordElement::OnGraph(GraphObject::P(_)) => {
                 todo!()

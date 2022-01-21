@@ -47,9 +47,12 @@ impl RecordRouter {
 impl RouteFunction<Record> for RecordRouter {
     fn route(&self, t: &Record) -> FnResult<u64> {
         if let Some(entry) = t.get(self.shuffle_key.as_ref()) {
-            if let Some(vertex_or_edge) = entry.as_graph_element() {
+            if let Some(v) = entry.as_graph_vertex() {
+                self.p.get_partition(&v.id(), self.num_workers)
+            } else if let Some(e) = entry.as_graph_edge() {
+                // shuffle e to the partition that contains other_id
                 self.p
-                    .get_partition(&vertex_or_edge.id(), self.num_workers)
+                    .get_partition(&e.get_other_id(), self.num_workers)
             } else {
                 //TODO(bingqing): deal with other element shuffle
                 Ok(0)

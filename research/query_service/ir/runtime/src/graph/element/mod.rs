@@ -17,21 +17,18 @@ mod edge;
 mod path;
 mod vertex;
 
-use std::convert::{TryFrom, TryInto};
 use std::fmt::Debug;
 use std::hash::Hash;
-use std::io;
 
 use dyn_type::{BorrowObject, Object};
 pub use edge::Edge;
-use ir_common::error::ParsePbError;
-use ir_common::generated::results as result_pb;
 use ir_common::NameOrId;
 pub use path::GraphPath;
+pub use path::VertexOrEdge;
 use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
 pub use vertex::Vertex;
 
-use crate::graph::property::{DefaultDetails, DynDetails};
+use crate::graph::property::DynDetails;
 use crate::graph::ID;
 
 /// A field that is an element
@@ -71,155 +68,21 @@ impl<'a> Element for BorrowObject<'a> {
 }
 
 #[derive(Clone, Debug, Hash, PartialEq, PartialOrd)]
-pub enum VertexOrEdge {
+pub enum GraphObject {
     V(Vertex),
     E(Edge),
-}
-
-impl From<Vertex> for VertexOrEdge {
-    fn from(v: Vertex) -> Self {
-        Self::V(v)
-    }
-}
-
-impl From<Edge> for VertexOrEdge {
-    fn from(e: Edge) -> Self {
-        Self::E(e)
-    }
-}
-
-impl Element for VertexOrEdge {
-    fn details(&self) -> Option<&DynDetails> {
-        match self {
-            VertexOrEdge::V(v) => v.details(),
-            VertexOrEdge::E(e) => e.details(),
-        }
-    }
-    fn as_graph_element(&self) -> Option<&dyn GraphElement> {
-        Some(self)
-    }
-    fn as_borrow_object(&self) -> BorrowObject {
-        match self {
-            VertexOrEdge::V(v) => v.as_borrow_object(),
-            VertexOrEdge::E(e) => e.as_borrow_object(),
-        }
-    }
-}
-
-impl GraphElement for VertexOrEdge {
-    fn id(&self) -> ID {
-        match self {
-            VertexOrEdge::V(v) => v.id(),
-            VertexOrEdge::E(e) => e.id(),
-        }
-    }
-
-    fn label(&self) -> Option<&NameOrId> {
-        match self {
-            VertexOrEdge::V(v) => v.label(),
-            VertexOrEdge::E(e) => e.label(),
-        }
-    }
-
-    fn len(&self) -> usize {
-        0
-    }
-}
-
-impl Encode for VertexOrEdge {
-    fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
-        match self {
-            VertexOrEdge::V(v) => {
-                writer.write_u8(0)?;
-                v.write_to(writer)?;
-            }
-            VertexOrEdge::E(e) => {
-                writer.write_u8(1)?;
-                e.write_to(writer)?;
-            }
-        }
-        Ok(())
-    }
-}
-
-impl Decode for VertexOrEdge {
-    fn read_from<R: ReadExt>(reader: &mut R) -> io::Result<Self> {
-        let e = reader.read_u8()?;
-        match e {
-            0 => {
-                let v = <Vertex>::read_from(reader)?;
-                Ok(VertexOrEdge::V(v))
-            }
-            1 => {
-                let e = <Edge>::read_from(reader)?;
-                Ok(VertexOrEdge::E(e))
-            }
-            _ => Err(io::Error::new(io::ErrorKind::Other, "unreachable")),
-        }
-    }
-}
-
-impl TryFrom<result_pb::Vertex> for VertexOrEdge {
-    type Error = ParsePbError;
-    fn try_from(v: result_pb::Vertex) -> Result<Self, Self::Error> {
-        let vertex = Vertex::new(
-            v.id as ID,
-            v.label
-                .map(|label| label.try_into())
-                .transpose()?,
-            DynDetails::new(DefaultDetails::default()),
-        );
-        Ok(VertexOrEdge::V(vertex))
-    }
-}
-
-impl TryFrom<result_pb::Edge> for VertexOrEdge {
-    type Error = ParsePbError;
-    fn try_from(e: result_pb::Edge) -> Result<Self, Self::Error> {
-        let mut edge = Edge::new(
-            e.id as ID,
-            e.label
-                .map(|label| label.try_into())
-                .transpose()?,
-            e.src_id as ID,
-            e.dst_id as ID,
-            DynDetails::new(DefaultDetails::default()),
-        );
-        edge.set_src_label(
-            e.src_label
-                .map(|label| label.try_into())
-                .transpose()?,
-        );
-        edge.set_dst_label(
-            e.dst_label
-                .map(|label| label.try_into())
-                .transpose()?,
-        );
-        Ok(VertexOrEdge::E(edge))
-    }
-}
-
-#[derive(Clone, Debug, Hash, PartialEq, PartialOrd)]
-pub enum GraphObject {
-    VOrE(VertexOrEdge),
     P(GraphPath),
 }
 
 impl From<Vertex> for GraphObject {
     fn from(v: Vertex) -> Self {
-        GraphObject::VOrE(v.into())
+        GraphObject::V(v.into())
     }
 }
 
 impl From<Edge> for GraphObject {
     fn from(e: Edge) -> Self {
-        GraphObject::VOrE(e.into())
-    }
-}
-
-impl From<VertexOrEdge> for GraphObject {
-    fn from(v: VertexOrEdge) -> Self {
-        GraphObject::VOrE(v)
+        GraphObject::E(e.into())
     }
 }
 
@@ -232,15 +95,17 @@ impl From<GraphPath> for GraphObject {
 impl Element for GraphObject {
     fn details(&self) -> Option<&DynDetails> {
         match self {
-            GraphObject::VOrE(v_or_e) => v_or_e.details(),
-            GraphObject::P(_p) => None,
+            GraphObject::V(v) => v.details(),
+            GraphObject::E(e) => e.details(),
+            GraphObject::P(p) => p.details(),
         }
     }
 
     fn as_borrow_object(&self) -> BorrowObject {
         match self {
-            GraphObject::VOrE(v_or_e) => v_or_e.as_borrow_object(),
-            GraphObject::P(_p) => BorrowObject::None,
+            GraphObject::V(v) => v.as_borrow_object(),
+            GraphObject::E(e) => e.as_borrow_object(),
+            GraphObject::P(p) => p.as_borrow_object(),
         }
     }
 }
@@ -248,21 +113,24 @@ impl Element for GraphObject {
 impl GraphElement for GraphObject {
     fn id(&self) -> u64 {
         match self {
-            GraphObject::VOrE(v_or_e) => v_or_e.id(),
+            GraphObject::V(v) => v.id(),
+            GraphObject::E(e) => e.id(),
             GraphObject::P(p) => p.id(),
         }
     }
 
     fn label(&self) -> Option<&NameOrId> {
         match self {
-            GraphObject::VOrE(v_or_e) => v_or_e.label(),
+            GraphObject::V(v) => v.label(),
+            GraphObject::E(e) => e.label(),
             GraphObject::P(p) => p.label(),
         }
     }
 
     fn len(&self) -> usize {
         match self {
-            GraphObject::VOrE(v_or_e) => v_or_e.len(),
+            GraphObject::V(v) => v.len(),
+            GraphObject::E(e) => e.len(),
             GraphObject::P(p) => p.len(),
         }
     }
@@ -271,12 +139,16 @@ impl GraphElement for GraphObject {
 impl Encode for GraphObject {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
         match self {
-            GraphObject::VOrE(v_or_e) => {
+            GraphObject::V(v) => {
                 writer.write_u8(0)?;
-                v_or_e.write_to(writer)?;
+                v.write_to(writer)?;
+            }
+            GraphObject::E(e) => {
+                writer.write_u8(1)?;
+                e.write_to(writer)?;
             }
             GraphObject::P(p) => {
-                writer.write_u8(1)?;
+                writer.write_u8(2)?;
                 p.write_to(writer)?;
             }
         }
@@ -289,10 +161,14 @@ impl Decode for GraphObject {
         let opt = reader.read_u8()?;
         match opt {
             0 => {
-                let vertex_or_edge = <VertexOrEdge>::read_from(reader)?;
-                Ok(GraphObject::VOrE(vertex_or_edge))
+                let v = <Vertex>::read_from(reader)?;
+                Ok(GraphObject::V(v))
             }
             1 => {
+                let e = <Edge>::read_from(reader)?;
+                Ok(GraphObject::E(e))
+            }
+            2 => {
                 let path = <GraphPath>::read_from(reader)?;
                 Ok(GraphObject::P(path))
             }

@@ -56,7 +56,7 @@ impl TagKey {
             )))?
             .clone();
         if let Some(prop_key) = self.key.as_ref() {
-            if let Some(element) = entry.as_graph_element() {
+            if let Some(element) = entry.as_graph_vertex() {
                 let details = element
                     .details()
                     .ok_or(FnExecError::get_tag_error(
@@ -239,7 +239,7 @@ pub(crate) mod tests {
         let expected = init_vertex2();
         let record = init_record();
         let entry = tag_key.get_entry(&record).unwrap();
-        if let Some(element) = entry.as_graph_element() {
+        if let Some(element) = entry.as_graph_vertex() {
             assert_eq!(element.id(), expected.id());
         } else {
             assert!(false);
