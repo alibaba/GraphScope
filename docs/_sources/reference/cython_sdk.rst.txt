@@ -178,7 +178,7 @@ Pregel
 
         Get value from a aggregator.
 
-    .. py:method:: Context.superstep() -> str
+    .. py:method:: Context.superstep() -> int
        :noindex:
 
         Get current superstep, begin with 0.
