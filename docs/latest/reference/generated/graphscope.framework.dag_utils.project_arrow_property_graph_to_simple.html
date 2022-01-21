@@ -165,21 +165,18 @@
 <h1>graphscope.framework.dag_utils.project_arrow_property_graph_to_simple<a class="headerlink" href="#graphscope-framework-dag-utils-project-arrow-property-graph-to-simple" title="Permalink to this headline"></a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.framework.dag_utils.project_arrow_property_graph_to_simple">
-<span class="sig-prename descclassname"><span class="pre">graphscope.framework.dag_utils.</span></span><span class="sig-name descname"><span class="pre">project_arrow_property_graph_to_simple</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v_label_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v_prop_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">e_label_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">e_prop_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v_data_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">e_data_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oid_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vid_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/framework/dag_utils.html#project_arrow_property_graph_to_simple"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.dag_utils.project_arrow_property_graph_to_simple" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">graphscope.framework.dag_utils.</span></span><span class="sig-name descname"><span class="pre">project_arrow_property_graph_to_simple</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v_prop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">e_prop</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/framework/dag_utils.html#project_arrow_property_graph_to_simple"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.dag_utils.project_arrow_property_graph_to_simple" title="Permalink to this definition"></a></dt>
 <dd><p>Project arrow property graph to a simple graph.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code>) – Source graph, which type should be ARROW_PROPERTY</p></li>
-<li><p><strong>dst_graph_key</strong> (<em>str</em>) – The key of projected graph.</p></li>
-<li><p><strong>v_label_id</strong> (<em>int</em>) – Label id of vertex used to project.</p></li>
-<li><p><strong>v_prop_id</strong> (<em>int</em>) – Property id of vertex used to project.</p></li>
-<li><p><strong>e_label_id</strong> (<em>int</em>) – Label id of edge used to project.</p></li>
-<li><p><strong>e_prop_id</strong> (<em>int</em>) – Property id of edge used to project.</p></li>
+<li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.Graph</span></code>) – Source graph, which type should be ARROW_PROPERTY</p></li>
+<li><p><strong>v_prop</strong> (<em>str</em>) – The node attribute key to project.</p></li>
+<li><p><strong>e_prop</strong> (<em>str</em>) – The edge attribute key to project.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>An op to project <cite>graph</cite>, results in a simple ARROW_PROJECTED graph.</p>
+<dd class="field-even"><p>Operation to project a property graph, results in a simple ARROW_PROJECTED graph.</p>
 </dd>
 </dl>
 </dd></dl>

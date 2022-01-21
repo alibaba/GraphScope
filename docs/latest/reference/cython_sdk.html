@@ -1085,7 +1085,7 @@ non-deterministic.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">get_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">label_id:</span> <span class="pre">int</span></em>, <em class="sig-param"><span class="pre">oid:</span> <span class="pre">int64_t</span></em>, <em class="sig-param"><span class="pre">v:</span> <span class="pre">Vertex&amp;</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">bool</span></dt>
+<span class="sig-name descname"><span class="pre">get_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">label_id:</span> <span class="pre">int</span></em>, <em class="sig-param"><span class="pre">oid:</span> <span class="pre">string&amp;</span></em>, <em class="sig-param"><span class="pre">v:</span> <span class="pre">Vertex&amp;</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">bool</span></dt>
 <dd><blockquote>
 <div><p>Return True if oid exists in this fragment.</p>
 </div></blockquote>
@@ -1093,7 +1093,7 @@ non-deterministic.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">get_inner_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">label_id:</span> <span class="pre">int</span></em>, <em class="sig-param"><span class="pre">oid:</span> <span class="pre">int64_t</span></em>, <em class="sig-param"><span class="pre">v:</span> <span class="pre">Vertex&amp;</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">bool</span></dt>
+<span class="sig-name descname"><span class="pre">get_inner_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">label_id:</span> <span class="pre">int</span></em>, <em class="sig-param"><span class="pre">oid:</span> <span class="pre">string&amp;</span></em>, <em class="sig-param"><span class="pre">v:</span> <span class="pre">Vertex&amp;</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">bool</span></dt>
 <dd><blockquote>
 <div><p>Return True if oid exists in the inner vertex in this fragment, and assign the node to <cite>v</cite>.</p>
 </div></blockquote>
@@ -1101,7 +1101,7 @@ non-deterministic.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">get_outer_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">label_id:</span> <span class="pre">int</span></em>, <em class="sig-param"><span class="pre">oid:</span> <span class="pre">int64_t</span></em>, <em class="sig-param"><span class="pre">v:</span> <span class="pre">Vertex&amp;</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">bool</span></dt>
+<span class="sig-name descname"><span class="pre">get_outer_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">label_id:</span> <span class="pre">int</span></em>, <em class="sig-param"><span class="pre">oid:</span> <span class="pre">string&amp;</span></em>, <em class="sig-param"><span class="pre">v:</span> <span class="pre">Vertex&amp;</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">bool</span></dt>
 <dd><blockquote>
 <div><p>Return True if oid exists in the outer vertex in this fragment, and assign the node to <cite>v</cite>.</p>
 </div></blockquote>
@@ -1109,7 +1109,7 @@ non-deterministic.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">get_node_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Vertex</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">int64_t</span></dt>
+<span class="sig-name descname"><span class="pre">get_node_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Vertex</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">str</span></dt>
 <dd><blockquote>
 <div><p>Return vertex oid of <cite>v</cite>.</p>
 </div></blockquote>

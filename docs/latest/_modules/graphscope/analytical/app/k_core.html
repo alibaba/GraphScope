@@ -148,14 +148,14 @@
 
 
 <div class="viewcode-block" id="k_core"><a class="viewcode-back" href="../../../../reference/app.html#graphscope.k_core">[docs]</a><span class="nd">@project_to_simple</span>
-<span class="nd">@not_compatible_for</span><span class="p">(</span><span class="s2">&quot;arrow_property&quot;</span><span class="p">,</span> <span class="s2">&quot;dynamic_property&quot;</span><span class="p">,</span> <span class="s2">&quot;arrow_flattened&quot;</span><span class="p">)</span>
+<span class="nd">@not_compatible_for</span><span class="p">(</span><span class="s2">&quot;arrow_property&quot;</span><span class="p">,</span> <span class="s2">&quot;dynamic_property&quot;</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">k_core</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">k</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;K-cores of the graph are connected components that are left after</span>
 <span class="sd">    all vertices of degree less than `k` have been removed.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        graph (:class:`Graph`): A projected simple graph.</span>
-<span class="sd">        k (int): The `k` for k-core.</span>
+<span class="sd">        graph (:class:`graphscope.Graph`): A simple graph.</span>
+<span class="sd">        k (int): The order of the core.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        :class:`graphscope.framework.context.VertexDataContextDAGNode`:</span>
@@ -167,13 +167,14 @@
 
 <span class="sd">    .. code:: python</span>
 
-<span class="sd">        import graphscope as gs</span>
-<span class="sd">        g = gs.g()</span>
-<span class="sd">        # Load some data, then project to a simple graph (if needed).</span>
-<span class="sd">        pg = g.project(vertices={&quot;vlabel&quot;: []}, edges={&quot;elabel&quot;: []})</span>
-<span class="sd">        r = gs.k_core(pg)</span>
-<span class="sd">        s.close()</span>
-
+<span class="sd">        &gt;&gt;&gt; import graphscope</span>
+<span class="sd">        &gt;&gt;&gt; from graphscope.dataset import load_p2p_network</span>
+<span class="sd">        &gt;&gt;&gt; sess = graphscope.session(cluster_type=&quot;hosts&quot;, mode=&quot;eager&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; g = load_p2p_network(sess)</span>
+<span class="sd">        &gt;&gt;&gt; # project to a simple graph (if needed)</span>
+<span class="sd">        &gt;&gt;&gt; pg = g.project(vertices={&quot;host&quot;: [&quot;id&quot;]}, edges={&quot;connect&quot;: [&quot;dist&quot;]})</span>
+<span class="sd">        &gt;&gt;&gt; c = graphscope.k_core(pg, k=3)</span>
+<span class="sd">        &gt;&gt;&gt; sess.close()</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">AppAssets</span><span class="p">(</span><span class="n">algo</span><span class="o">=</span><span class="s2">&quot;kcore&quot;</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="s2">&quot;vertex_data&quot;</span><span class="p">)(</span><span class="n">graph</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">)</span></div>
 </pre></div>

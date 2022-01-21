@@ -157,7 +157,7 @@
 <span class="sd">    https://en.wikipedia.org/wiki/HITS_algorithm</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        graph (:class:`Graph`): A simple graph.</span>
+<span class="sd">        graph (:class:`graphscope.Graph`): A simple graph.</span>
 <span class="sd">        tolerance (float, optional): Defaults to 0.01.</span>
 <span class="sd">        max_round (int, optional): Defaults to 100.</span>
 <span class="sd">        normalized (bool, optional): Whether to normalize the result to 0-1. Defaults to True.</span>
@@ -170,13 +170,14 @@
 
 <span class="sd">    .. code:: python</span>
 
-<span class="sd">        import graphscope as gs</span>
-<span class="sd">        g = gs.g()</span>
-<span class="sd">        # Load some data, then project to a simple graph (if needed).</span>
-<span class="sd">        pg = g.project(vertices={&quot;vlabel&quot;: []}, edges={&quot;elabel&quot;: []})</span>
-<span class="sd">        r = gs.hits(pg)</span>
-<span class="sd">        s.close()</span>
-
+<span class="sd">        &gt;&gt;&gt; import graphscope</span>
+<span class="sd">        &gt;&gt;&gt; from graphscope.dataset import load_p2p_network</span>
+<span class="sd">        &gt;&gt;&gt; sess = graphscope.session(cluster_type=&quot;hosts&quot;, mode=&quot;eager&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; g = load_p2p_network(sess)</span>
+<span class="sd">        &gt;&gt;&gt; # project to a simple graph (if needed)</span>
+<span class="sd">        &gt;&gt;&gt; pg = g.project(vertices={&quot;host&quot;: [&quot;id&quot;]}, edges={&quot;connect&quot;: [&quot;dist&quot;]})</span>
+<span class="sd">        &gt;&gt;&gt; c = graphscope.hits(pg, tolerance=0.01, max_round=10, normalized=True)</span>
+<span class="sd">        &gt;&gt;&gt; sess.close()</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">tolerance</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">tolerance</span><span class="p">)</span>
     <span class="n">max_round</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">max_round</span><span class="p">)</span>

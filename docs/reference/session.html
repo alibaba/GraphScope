@@ -100,6 +100,7 @@
 <li class="toctree-l4"><a class="reference internal" href="generated/graphscope.get_option.html">graphscope.get_option</a></li>
 <li class="toctree-l4"><a class="reference internal" href="generated/graphscope.g.html">graphscope.g</a></li>
 <li class="toctree-l4"><a class="reference internal" href="generated/graphscope.gremlin.html">graphscope.gremlin</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.graphlearn.html">graphscope.graphlearn</a></li>
 </ul>
 </li>
 </ul>
@@ -466,18 +467,51 @@ install self as a default session.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>nodes</strong> (<em>list</em>) – The node types that will be used for gnn training.</p></li>
-<li><p><strong>edges</strong> (<em>list</em>) – The edge types that will be used for gnn training.</p></li>
-<li><p><strong>gen_labels</strong> (<em>list</em>) – Extra node and edge labels on original graph for gnn training.</p></li>
+<li><p><strong>graph</strong> (<a class="reference internal" href="graph.html#graphscope.framework.graph.GraphDAGNode" title="graphscope.framework.graph.GraphDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.graph.GraphDAGNode</span></code></a>) – The graph to create learning instance.</p></li>
+<li><p><strong>nodes</strong> (<em>list</em><em>, </em><em>optional</em>) – list of node types that will be used for GNN
+training, the element of list can be <cite>“node_label”</cite> or
+<cite>(node_label, features)</cite>. If the element of the list is a tuple and
+contains selected feature list, it would use the selected
+feature list for training. Default is None which use all type of
+nodes and for the GNN training.</p></li>
+<li><p><strong>edges</strong> (<em>list</em><em>, </em><em>optional</em>) – list of edge types that will be used for GNN
+training. We use <cite>(src_label, edge_label, dst_label)</cite>
+to specify one edge type. Default is None which use all type of
+edges for GNN training.</p></li>
+<li><p><strong>gen_labels</strong> (<em>list</em><em>, </em><em>optional</em>) – Alias node and edge labels and extract
+train/validation/test dataset from original graph for supervised
+GNN training. The detail is explained in the examples below.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>An instance of learning graph that could be feed to the learning engine, evaluated in eager node.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.learning.GraphDAGNode</span></code></p>
-</dd>
 </dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Assume the input graph contains one label node `paper` and one edge label `link`.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">features</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;weight&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="c1"># use properties &quot;weight&quot; and &quot;name&quot; as features</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lg</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">graphlearn</span><span class="p">(</span>
+<span class="go">        graph,</span>
+<span class="go">        nodes=[(&quot;paper&quot;, features)])  # use &quot;paper&quot; node and features for training</span>
+<span class="go">        edges=[(&quot;paper&quot;, &quot;links&quot;, &quot;paper&quot;)]  # use the `paper-&gt;links-&gt;papers` edge type for training</span>
+<span class="go">        gen_labels=[</span>
+<span class="go">            # split &quot;paper&quot; nodes into 100 pieces, and uses random 75 pieces (75%) as training dataset</span>
+<span class="go">            (&quot;train&quot;, &quot;paper&quot;, 100, (0, 75)),</span>
+<span class="go">            # split &quot;paper&quot; nodes into 100 pieces, and uses random 10 pieces (10%) as validation dataset</span>
+<span class="go">            (&quot;val&quot;, &quot;paper&quot;, 100, (75, 85)),</span>
+<span class="go">            # split &quot;paper&quot; nodes into 100 pieces, and uses random 15 pieces (15%) as test dataset</span>
+<span class="go">            (&quot;test&quot;, &quot;paper&quot;, 100, (85, 100)),</span>
+<span class="go">        ]</span>
+<span class="go">    )</span>
+<span class="go">Note that the training, validation and test datasets are not overlapping. And for unsupervised learning:</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lg</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">graphlearn</span><span class="p">(</span>
+<span class="go">        graph,</span>
+<span class="go">        nodes=[(&quot;paper&quot;, features)])  # use &quot;paper&quot; node and features for training</span>
+<span class="go">        edges=[(&quot;paper&quot;, &quot;links&quot;, &quot;paper&quot;)]  # use the `paper-&gt;links-&gt;papers` edge type for training</span>
+<span class="go">        gen_labels=[</span>
+<span class="go">            # split &quot;paper&quot; nodes into 100 pieces, and uses all pieces as training dataset</span>
+<span class="go">            (&quot;train&quot;, &quot;paper&quot;, 100, (0, 100)),</span>
+<span class="go">        ]</span>
+<span class="go">    )</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py method">
@@ -570,6 +604,9 @@ See more information in <code class="xref py py-meth docutils literal notranslat
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.gremlin.html#graphscope.gremlin" title="graphscope.gremlin"><code class="xref py py-obj docutils literal notranslate"><span class="pre">graphscope.gremlin</span></code></a>(graph[, engine_params])</p></td>
 <td><p>Create a interactive engine and get the handler to execute the gremlin queries.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.graphlearn.html#graphscope.graphlearn" title="graphscope.graphlearn"><code class="xref py py-obj docutils literal notranslate"><span class="pre">graphscope.graphlearn</span></code></a>(graph[, nodes, edges, …])</p></td>
+<td><p>Create a graph learning engine.</p></td>
 </tr>
 </tbody>
 </table>
