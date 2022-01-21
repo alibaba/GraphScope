@@ -18,6 +18,7 @@ package com.alibaba.graphscope.gremlin.antlr4;
 
 import com.alibaba.graphscope.gremlin.Utils;
 import com.alibaba.graphscope.gremlin.exception.UnsupportedEvalException;
+import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversal;
 import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSBaseVisitor;
 import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSParser;
 import org.apache.tinkerpop.gremlin.process.traversal.Order;
@@ -110,17 +111,57 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
 
     @Override
     public Traversal visitTraversalMethod_out(GremlinGSParser.TraversalMethod_outContext ctx) {
-        return graphTraversal.out(GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList()));
+        String[] labels = GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList());
+        if (ctx.traversalMethod_range() != null) {
+            TraversalMethodVisitor nestedVisitor = new TraversalMethodVisitor(gvisitor,
+                    GremlinAntlrToJava.getTraversalSupplier().get());
+            Traversal nested = nestedVisitor.visitTraversalMethod_range(ctx.traversalMethod_range());
+            IrCustomizedTraversal traversal = (IrCustomizedTraversal) graphTraversal;
+            return traversal.out(nested, labels);
+        } else {
+            return graphTraversal.out(labels);
+        }
     }
 
     @Override
     public Traversal visitTraversalMethod_in(GremlinGSParser.TraversalMethod_inContext ctx) {
-        return graphTraversal.in(GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList()));
+        String[] labels = GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList());
+        if (ctx.traversalMethod_range() != null) {
+            TraversalMethodVisitor nestedVisitor = new TraversalMethodVisitor(gvisitor,
+                    GremlinAntlrToJava.getTraversalSupplier().get());
+            Traversal nested = nestedVisitor.visitTraversalMethod_range(ctx.traversalMethod_range());
+            IrCustomizedTraversal traversal = (IrCustomizedTraversal) graphTraversal;
+            return traversal.in(nested, labels);
+        } else {
+            return graphTraversal.in(labels);
+        }
     }
 
     @Override
     public Traversal visitTraversalMethod_both(GremlinGSParser.TraversalMethod_bothContext ctx) {
-        return graphTraversal.both(GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList()));
+        String[] labels = GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList());
+        if (ctx.traversalMethod_range() != null) {
+            TraversalMethodVisitor nestedVisitor = new TraversalMethodVisitor(gvisitor,
+                    GremlinAntlrToJava.getTraversalSupplier().get());
+            Traversal nested = nestedVisitor.visitTraversalMethod_range(ctx.traversalMethod_range());
+            IrCustomizedTraversal traversal = (IrCustomizedTraversal) graphTraversal;
+            return traversal.both(nested, labels);
+        } else {
+            return graphTraversal.both(labels);
+        }
+    }
+
+    @Override
+    public Traversal visitTraversalMethod_range(GremlinGSParser.TraversalMethod_rangeContext ctx) {
+        if (ctx.integerLiteral() != null && ctx.integerLiteral().size() == 2) {
+            Object lower = GenericLiteralVisitor.getInstance()
+                    .visitIntegerLiteral(ctx.integerLiteral(0));
+            Object upper = GenericLiteralVisitor.getInstance()
+                    .visitIntegerLiteral(ctx.integerLiteral(1));
+            return graphTraversal.range(((Number) lower).longValue(), ((Number) upper).longValue());
+        } else {
+            throw new UnsupportedEvalException(ctx.getClass(), "supported pattern is [range(1, 2)]");
+        }
     }
 
     public Traversal visitTraversalMethod_outE(GremlinGSParser.TraversalMethod_outEContext ctx) {

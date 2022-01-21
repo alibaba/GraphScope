@@ -112,18 +112,24 @@ traversalMethod_has
     ;
 
 // out('str1', ...)
+// out(range(1, 5), 'str1')
 traversalMethod_out
 	: 'out' LPAREN stringLiteralList RPAREN
+	| 'out' LPAREN traversalMethod_range (COMMA stringLiteralList)? RPAREN
 	;
 
 // in('str1', ...)
+// in(range(1, 5), 'str1')
 traversalMethod_in
 	: 'in' LPAREN stringLiteralList RPAREN
+	| 'in' LPAREN traversalMethod_range (COMMA stringLiteralList)? RPAREN
 	;
 
 // both('str1', ...)
+// both(range(1, 5), 'str1', ...)
 traversalMethod_both
 	: 'both' LPAREN stringLiteralList RPAREN
+	| 'both' LPAREN traversalMethod_range (COMMA stringLiteralList)? RPAREN
 	;
 
 // outE('str1', ...), outE().inV()
@@ -285,6 +291,10 @@ traversalMethod_whereby
 traversalMethod_whereby_list
     : traversalMethod_whereby (DOT traversalMethod_whereby)*
     ;
+
+traversalMethod_range
+	: 'range' LPAREN integerLiteral COMMA integerLiteral RPAREN
+	;
 
 traversalMethod_not
     : 'not' LPAREN nestedTraversal RPAREN

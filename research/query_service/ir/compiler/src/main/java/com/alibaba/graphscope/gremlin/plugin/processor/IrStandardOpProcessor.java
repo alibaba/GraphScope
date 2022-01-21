@@ -32,6 +32,7 @@ import com.alibaba.graphscope.common.config.PegasusConfig;
 import com.alibaba.graphscope.common.intermediate.InterOpCollection;
 import com.alibaba.graphscope.gremlin.InterOpCollectionBuilder;
 import com.alibaba.graphscope.gremlin.plugin.script.AntlrToJavaScriptEngineFactory;
+import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversalSource;
 import com.alibaba.graphscope.gremlin.result.GremlinResultAnalyzer;
 import com.alibaba.graphscope.gremlin.result.GremlinResultProcessor;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
@@ -74,7 +75,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
 
     public IrStandardOpProcessor(Configs configs) {
         this.graph = TinkerFactory.createModern();
-        this.g = graph.traversal();
+        this.g = graph.traversal(IrCustomizedTraversalSource.class);
         this.configs = configs;
         RpcChannelFetcher channelFetcher = new HostsChannelFetcher(configs);
         broadcastProcessor = new RpcBroadcastProcessor(channelFetcher);

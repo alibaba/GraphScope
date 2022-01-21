@@ -18,6 +18,7 @@ package com.alibaba.graphscope.gremlin.antlr4;
 
 import com.alibaba.graphscope.gremlin.exception.InvalidGremlinScriptException;
 import com.alibaba.graphscope.gremlin.plugin.script.AntlrToJavaScriptEngine;
+import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversalSource;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
@@ -37,7 +38,7 @@ public class NegativeEvalTest {
     @Before
     public void before() {
         Graph graph = TinkerFactory.createModern();
-        GraphTraversalSource g = graph.traversal();
+        GraphTraversalSource g = graph.traversal(IrCustomizedTraversalSource.class);
         Bindings globalBindings = new SimpleBindings();
         globalBindings.put("g", g);
         context = new SimpleScriptContext();
