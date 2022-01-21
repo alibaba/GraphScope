@@ -41,19 +41,10 @@ impl From<Edge> for VertexOrEdge {
     }
 }
 
-#[derive(Clone, Debug, Hash, PartialEq, PartialOrd)]
-pub enum PathStruct {
-    // save the whole path
-    WHOLE(Vec<VertexOrEdge>),
-    // save the path_end
-    END(VertexOrEdge),
-}
-
 #[derive(Clone, Debug, Hash)]
-pub struct GraphPath {
-    path: PathStruct,
-    // TODO(bingqing): may not be a usize, can be a WeightFunc that can define a user-given weight calculation
-    weight: usize,
+pub enum GraphPath {
+    WHOLE((Vec<VertexOrEdge>, usize)),
+    END((VertexOrEdge, usize)),
 }
 
 impl GraphPath {
@@ -62,18 +53,74 @@ impl GraphPath {
         if is_whole_path {
             let mut path = Vec::new();
             path.push(entry.into());
-            GraphPath { path: PathStruct::WHOLE(path), weight: 1 }
+            GraphPath::WHOLE((path, 1))
         } else {
-            GraphPath { path: PathStruct::END(entry.into()), weight: 1 }
+            GraphPath::END((entry.into(), 1))
         }
     }
 
     pub fn append<E: Into<VertexOrEdge>>(&mut self, entry: E) {
-        match self.path {
-            PathStruct::WHOLE(ref mut w) => w.push(entry.into()),
-            PathStruct::END(ref mut e) => *e = entry.into(),
+        match self {
+            GraphPath::WHOLE((ref mut path, ref mut weight)) => {
+                path.push(entry.into());
+                *weight += 1;
+            }
+            GraphPath::END((ref mut e, ref mut weight)) => {
+                *e = entry.into();
+                *weight += 1;
+            }
         }
-        self.weight += 1;
+    }
+
+    pub fn get_path_end(&self) -> Option<&VertexOrEdge> {
+        match self {
+            GraphPath::WHOLE((ref w, _)) => w.last(),
+            GraphPath::END((ref e, _)) => Some(e),
+        }
+    }
+}
+
+impl Element for VertexOrEdge {
+    fn details(&self) -> Option<&DynDetails> {
+        match self {
+            VertexOrEdge::V(v) => v.details(),
+            VertexOrEdge::E(e) => e.details(),
+        }
+    }
+    fn as_graph_element(&self) -> Option<&dyn GraphElement> {
+        match self {
+            VertexOrEdge::V(v) => v.as_graph_element(),
+            VertexOrEdge::E(e) => e.as_graph_element(),
+        }
+    }
+    fn as_borrow_object(&self) -> BorrowObject {
+        match self {
+            VertexOrEdge::V(v) => v.as_borrow_object(),
+            VertexOrEdge::E(e) => e.as_borrow_object(),
+        }
+    }
+}
+
+impl GraphElement for VertexOrEdge {
+    fn id(&self) -> ID {
+        match self {
+            VertexOrEdge::V(v) => v.id(),
+            VertexOrEdge::E(e) => e.id(),
+        }
+    }
+
+    fn label(&self) -> Option<&NameOrId> {
+        match self {
+            VertexOrEdge::V(v) => v.label(),
+            VertexOrEdge::E(e) => e.label(),
+        }
+    }
+
+    fn len(&self) -> usize {
+        match self {
+            VertexOrEdge::V(v) => v.len(),
+            VertexOrEdge::E(e) => e.len(),
+        }
     }
 }
 
@@ -101,20 +148,31 @@ impl GraphElement for GraphPath {
     }
 
     fn len(&self) -> usize {
-        self.weight
+        match self {
+            GraphPath::WHOLE((_, weight)) => *weight,
+            GraphPath::END((_, weight)) => *weight,
+        }
     }
 }
 
 impl PartialEq for GraphPath {
     fn eq(&self, other: &Self) -> bool {
         // We define eq by structure, ignoring path weight
-        self.path.eq(&other.path)
+        match (self, other) {
+            (GraphPath::WHOLE((p1, _)), GraphPath::WHOLE((p2, _))) => p1.eq(p2),
+            (GraphPath::END((p1, _)), GraphPath::END((p2, _))) => p1.eq(p2),
+            _ => false,
+        }
     }
 }
 impl PartialOrd for GraphPath {
     // We define partial_cmp by structure, ignoring path weight
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.path.partial_cmp(&other.path)
+        match (self, other) {
+            (GraphPath::WHOLE((p1, _)), GraphPath::WHOLE((p2, _))) => p1.partial_cmp(p2),
+            (GraphPath::END((p1, _)), GraphPath::END((p2, _))) => p1.partial_cmp(p2),
+            _ => None,
+        }
     }
 }
 
@@ -151,26 +209,28 @@ impl Decode for VertexOrEdge {
     }
 }
 
-impl Encode for PathStruct {
+impl Encode for GraphPath {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
         match self {
-            PathStruct::WHOLE(path) => {
+            GraphPath::WHOLE((path, weight)) => {
                 writer.write_u8(0)?;
                 writer.write_u64(path.len() as u64)?;
                 for vertex_or_edge in path {
                     vertex_or_edge.write_to(writer)?;
                 }
+                writer.write_u64(*weight as u64)?;
             }
-            PathStruct::END(path_end) => {
+            GraphPath::END((path_end, weight)) => {
                 writer.write_u8(1)?;
                 path_end.write_to(writer)?;
+                writer.write_u64(*weight as u64)?;
             }
         }
         Ok(())
     }
 }
 
-impl Decode for PathStruct {
+impl Decode for GraphPath {
     fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
         let opt = reader.read_u8()?;
         match opt {
@@ -179,31 +239,17 @@ impl Decode for PathStruct {
                 let mut path = Vec::with_capacity(length as usize);
                 for _i in 0..length {
                     let vertex_or_edge = <VertexOrEdge>::read_from(reader)?;
-                    path.push(vertex_or_edge)
+                    path.push(vertex_or_edge);
                 }
-                Ok(PathStruct::WHOLE(path))
+                let weight = <u64>::read_from(reader)? as usize;
+                Ok(GraphPath::WHOLE((path, weight)))
             }
             1 => {
                 let vertex_or_edge = <VertexOrEdge>::read_from(reader)?;
-                Ok(PathStruct::END(vertex_or_edge))
+                let weight = <u64>::read_from(reader)? as usize;
+                Ok(GraphPath::END((vertex_or_edge, weight)))
             }
             _ => Err(std::io::Error::new(std::io::ErrorKind::Other, "unreachable")),
         }
-    }
-}
-
-impl Encode for GraphPath {
-    fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
-        self.path.write_to(writer)?;
-        writer.write_u64(self.weight as u64)?;
-        Ok(())
-    }
-}
-
-impl Decode for GraphPath {
-    fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
-        let path = <PathStruct>::read_from(reader)?;
-        let weight = <u64>::read_from(reader)? as usize;
-        Ok(GraphPath { path, weight })
     }
 }
