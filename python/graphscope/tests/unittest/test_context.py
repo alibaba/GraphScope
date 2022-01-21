@@ -112,10 +112,16 @@ def test_error_on_selector(arrow_property_graph_lpa_u2i):
         out = property_context.to_numpy("v:v0.non_exist_prop")
     with pytest.raises(
         InvalidArgumentError,
-        match="Selector in labeled vertex data context cannot be None",
+        match="Selector in labeled vertex property context cannot be None",
     ):
         out = property_context.to_numpy(selector=None)
-    with pytest.raises(ValueError, match="not enough values to unpack"):
+    with pytest.raises(
+        SyntaxError,
+        match="Invalid selector: `xxx`. Please inspect the result with `ret.schema` and choose a valid selector",
+    ):
         out = property_context.to_numpy("xxx")
-    with pytest.raises(SyntaxError, match="Invalid selector"):
+    with pytest.raises(
+        SyntaxError,
+        match="Invalid selector: `xxx:a.b`. Please inspect the result with `ret.schema` and choose a valid selector",
+    ):
         out = property_context.to_numpy("xxx:a.b")
