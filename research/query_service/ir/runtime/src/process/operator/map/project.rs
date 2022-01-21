@@ -27,7 +27,7 @@ use crate::error::{FnExecError, FnGenResult};
 use crate::expr::eval::{Evaluate, Evaluator};
 use crate::process::operator::map::MapFuncGen;
 use crate::process::operator::TagKey;
-use crate::process::record::{Entry, ObjectElement, Record, RecordElement};
+use crate::process::record::{CommonObject, Entry, Record, RecordElement};
 
 #[derive(Debug)]
 struct ProjectOperator {
@@ -49,8 +49,8 @@ fn exec_projector(input: &Record, projector: &Projector) -> FnResult<Arc<Entry>>
                 .map_err(|e| FnExecError::from(e))?;
             Arc::new(
                 match projected_result {
-                    Object::None => ObjectElement::None,
-                    _ => ObjectElement::Prop(projected_result),
+                    Object::None => CommonObject::None,
+                    _ => CommonObject::Prop(projected_result),
                 }
                 .into(),
             )
@@ -139,7 +139,7 @@ mod tests {
     use crate::process::operator::tests::{
         init_source, init_source_with_multi_tags, init_source_with_tag, init_vertex1, init_vertex2,
     };
-    use crate::process::record::{Entry, ObjectElement, Record, RecordElement};
+    use crate::process::record::{CommonObject, Entry, Record, RecordElement};
 
     fn project_test(source: Vec<Record>, project_opr_pb: pb::Project) -> ResultStream<Record> {
         let conf = JobConf::new("project_test");
@@ -172,7 +172,7 @@ mod tests {
         let mut object_result = vec![];
         while let Some(Ok(res)) = result.next() {
             match res.get(None).unwrap().as_ref() {
-                Entry::Element(RecordElement::OffGraph(ObjectElement::Prop(val))) => {
+                Entry::Element(RecordElement::OffGraph(CommonObject::Prop(val))) => {
                     object_result.push(val.clone());
                 }
                 _ => {}
@@ -199,7 +199,7 @@ mod tests {
             let a_entry = res.get(Some(&"a".into()));
             assert_eq!(a_entry, None);
             match res.get(Some(&"b".into())).unwrap().as_ref() {
-                Entry::Element(RecordElement::OffGraph(ObjectElement::Prop(val))) => {
+                Entry::Element(RecordElement::OffGraph(CommonObject::Prop(val))) => {
                     object_result.push(val.clone());
                 }
                 _ => {}
@@ -223,7 +223,7 @@ mod tests {
         let mut object_result = vec![];
         while let Some(Ok(res)) = result.next() {
             match res.get(None).unwrap().as_ref() {
-                Entry::Element(RecordElement::OffGraph(ObjectElement::Prop(val))) => {
+                Entry::Element(RecordElement::OffGraph(CommonObject::Prop(val))) => {
                     object_result.push(val.clone());
                 }
                 _ => {}
@@ -256,8 +256,8 @@ mod tests {
             let name_val = res.get(Some(&"c".into())).unwrap();
             match (age_val.as_ref(), name_val.as_ref()) {
                 (
-                    Entry::Element(RecordElement::OffGraph(ObjectElement::Prop(age))),
-                    Entry::Element(RecordElement::OffGraph(ObjectElement::Prop(name))),
+                    Entry::Element(RecordElement::OffGraph(CommonObject::Prop(age))),
+                    Entry::Element(RecordElement::OffGraph(CommonObject::Prop(name))),
                 ) => {
                     object_result.push((age.clone(), name.clone()));
                 }
@@ -291,8 +291,8 @@ mod tests {
             let name_val = res.get(None).unwrap();
             match (age_val.as_ref(), name_val.as_ref()) {
                 (
-                    Entry::Element(RecordElement::OffGraph(ObjectElement::Prop(age))),
-                    Entry::Element(RecordElement::OffGraph(ObjectElement::Prop(name))),
+                    Entry::Element(RecordElement::OffGraph(CommonObject::Prop(age))),
+                    Entry::Element(RecordElement::OffGraph(CommonObject::Prop(name))),
                 ) => {
                     object_result.push((age.clone(), name.clone()));
                 }
@@ -327,8 +327,8 @@ mod tests {
             let name_val = res.get(Some(&"c".into())).unwrap();
             match (age_val.as_ref(), name_val.as_ref()) {
                 (
-                    Entry::Element(RecordElement::OffGraph(ObjectElement::Prop(age))),
-                    Entry::Element(RecordElement::OffGraph(ObjectElement::Prop(name))),
+                    Entry::Element(RecordElement::OffGraph(CommonObject::Prop(age))),
+                    Entry::Element(RecordElement::OffGraph(CommonObject::Prop(name))),
                 ) => {
                     object_result.push((age.clone(), name.clone()));
                 }
@@ -384,9 +384,9 @@ mod tests {
             let b_name_val = res.get(Some(&"e".into())).unwrap();
             match (a_age_val.as_ref(), a_name_val.as_ref(), b_name_val.as_ref()) {
                 (
-                    Entry::Element(RecordElement::OffGraph(ObjectElement::Prop(a_age))),
-                    Entry::Element(RecordElement::OffGraph(ObjectElement::Prop(a_name))),
-                    Entry::Element(RecordElement::OffGraph(ObjectElement::Prop(b_name))),
+                    Entry::Element(RecordElement::OffGraph(CommonObject::Prop(a_age))),
+                    Entry::Element(RecordElement::OffGraph(CommonObject::Prop(a_name))),
+                    Entry::Element(RecordElement::OffGraph(CommonObject::Prop(b_name))),
                 ) => {
                     object_result.push((a_age.clone(), a_name.clone(), b_name.clone()));
                 }
@@ -421,7 +421,7 @@ mod tests {
                 .unwrap();
             let b_entry = res.get(Some(&"b".into())).unwrap().as_ref();
             match b_entry {
-                Entry::Element(RecordElement::OffGraph(ObjectElement::Prop(val))) => {
+                Entry::Element(RecordElement::OffGraph(CommonObject::Prop(val))) => {
                     a_results.push(v.id());
                     b_results.push(val.clone());
                 }
@@ -457,8 +457,8 @@ mod tests {
             let name_val = res.get(Some(&"c".into())).unwrap();
             match (age_val.as_ref(), name_val.as_ref()) {
                 (
-                    Entry::Element(RecordElement::OffGraph(ObjectElement::Prop(age))),
-                    Entry::Element(RecordElement::OffGraph(ObjectElement::Prop(name))),
+                    Entry::Element(RecordElement::OffGraph(CommonObject::Prop(age))),
+                    Entry::Element(RecordElement::OffGraph(CommonObject::Prop(name))),
                 ) => {
                     object_result.push((age.clone(), name.clone()));
                 }
@@ -512,7 +512,7 @@ mod tests {
         let mut object_result = vec![];
         while let Some(Ok(res)) = result.next() {
             match res.get(None).unwrap().as_ref() {
-                Entry::Element(RecordElement::OffGraph(ObjectElement::Prop(val))) => {
+                Entry::Element(RecordElement::OffGraph(CommonObject::Prop(val))) => {
                     object_result.push(val.clone());
                 }
                 _ => {}
@@ -539,7 +539,7 @@ mod tests {
         let mut object_result = vec![];
         while let Some(Ok(res)) = result.next() {
             match res.get(None).unwrap().as_ref() {
-                Entry::Element(RecordElement::OffGraph(ObjectElement::Prop(val))) => {
+                Entry::Element(RecordElement::OffGraph(CommonObject::Prop(val))) => {
                     object_result.push(val.clone());
                 }
                 _ => {}
@@ -580,7 +580,7 @@ mod tests {
         let mut object_result = vec![];
         while let Some(Ok(res)) = result.next() {
             match res.get(None).unwrap().as_ref() {
-                Entry::Element(RecordElement::OffGraph(ObjectElement::Prop(val))) => {
+                Entry::Element(RecordElement::OffGraph(CommonObject::Prop(val))) => {
                     object_result.push(val.clone());
                 }
                 _ => {}

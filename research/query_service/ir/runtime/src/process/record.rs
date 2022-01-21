@@ -30,8 +30,7 @@ use crate::graph::element::{Edge, Element, GraphElement, GraphObject, GraphPath,
 use crate::graph::property::DynDetails;
 
 #[derive(Debug, Clone, Hash, PartialEq, PartialOrd)]
-// TODO: rename as CommonObject
-pub enum ObjectElement {
+pub enum CommonObject {
     // TODO: common-used object elements
     None,
     /// projected property
@@ -45,7 +44,7 @@ pub enum ObjectElement {
 #[derive(Debug, Clone, Hash, PartialEq, PartialOrd)]
 pub enum RecordElement {
     OnGraph(GraphObject),
-    OffGraph(ObjectElement),
+    OffGraph(CommonObject),
 }
 
 impl RecordElement {
@@ -202,7 +201,7 @@ impl Into<Entry> for GraphObject {
     }
 }
 
-impl Into<Entry> for ObjectElement {
+impl Into<Entry> for CommonObject {
     fn into(self) -> Entry {
         Entry::Element(RecordElement::OffGraph(self))
     }
@@ -244,9 +243,9 @@ impl Element for RecordElement {
         match self {
             RecordElement::OnGraph(graph_obj) => graph_obj.as_borrow_object(),
             RecordElement::OffGraph(obj_element) => match obj_element {
-                ObjectElement::None => BorrowObject::None,
-                ObjectElement::Prop(obj) | ObjectElement::Agg(obj) => obj.as_borrow(),
-                ObjectElement::Count(cnt) => (*cnt).into(),
+                CommonObject::None => BorrowObject::None,
+                CommonObject::Prop(obj) | CommonObject::Agg(obj) => obj.as_borrow(),
+                CommonObject::Count(cnt) => (*cnt).into(),
             },
         }
     }
@@ -297,21 +296,21 @@ impl<E: Into<GraphObject>> Iterator for RecordExpandIter<E> {
     }
 }
 
-impl Encode for ObjectElement {
+impl Encode for CommonObject {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
         match self {
-            ObjectElement::None => {
+            CommonObject::None => {
                 writer.write_u8(0)?;
             }
-            ObjectElement::Prop(prop) => {
+            CommonObject::Prop(prop) => {
                 writer.write_u8(1)?;
                 prop.write_to(writer)?;
             }
-            ObjectElement::Count(cnt) => {
+            CommonObject::Count(cnt) => {
                 writer.write_u8(2)?;
                 writer.write_u64(*cnt)?;
             }
-            ObjectElement::Agg(agg) => {
+            CommonObject::Agg(agg) => {
                 writer.write_u8(3)?;
                 agg.write_to(writer)?;
             }
@@ -320,22 +319,22 @@ impl Encode for ObjectElement {
     }
 }
 
-impl Decode for ObjectElement {
+impl Decode for CommonObject {
     fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
         let opt = reader.read_u8()?;
         match opt {
-            0 => Ok(ObjectElement::None),
+            0 => Ok(CommonObject::None),
             1 => {
                 let object = <Object>::read_from(reader)?;
-                Ok(ObjectElement::Prop(object))
+                Ok(CommonObject::Prop(object))
             }
             2 => {
                 let cnt = <u64>::read_from(reader)?;
-                Ok(ObjectElement::Count(cnt))
+                Ok(CommonObject::Count(cnt))
             }
             3 => {
                 let object = <Object>::read_from(reader)?;
-                Ok(ObjectElement::Agg(object))
+                Ok(CommonObject::Agg(object))
             }
             _ => Err(std::io::Error::new(std::io::ErrorKind::Other, "unreachable")),
         }
@@ -367,7 +366,7 @@ impl Decode for RecordElement {
                 Ok(RecordElement::OnGraph(graph_obj))
             }
             1 => {
-                let object_element = <ObjectElement>::read_from(reader)?;
+                let object_element = <CommonObject>::read_from(reader)?;
                 Ok(RecordElement::OffGraph(object_element))
             }
             _ => Err(std::io::Error::new(std::io::ErrorKind::Other, "unreachable")),
@@ -498,7 +497,7 @@ impl TryFrom<result_pb::Element> for RecordElement {
                 }
                 // TODO(bingqing): may need add a path type in result pb
                 result_pb::element::Inner::Object(o) => {
-                    Ok(RecordElement::OffGraph(ObjectElement::Prop(o.try_into()?)))
+                    Ok(RecordElement::OffGraph(CommonObject::Prop(o.try_into()?)))
                 }
             }
         } else {

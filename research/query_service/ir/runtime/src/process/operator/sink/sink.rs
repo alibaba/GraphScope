@@ -27,7 +27,7 @@ use pegasus::api::function::{FnResult, MapFunction};
 use crate::error::FnGenResult;
 use crate::graph::element::{Edge, GraphElement, GraphObject, Vertex};
 use crate::process::operator::sink::SinkFunctionGen;
-use crate::process::record::{Entry, ObjectElement, Record, RecordElement};
+use crate::process::record::{CommonObject, Entry, Record, RecordElement};
 
 #[derive(Debug)]
 pub struct RecordSinkEncoder {
@@ -83,11 +83,11 @@ impl RecordSinkEncoder {
                 todo!()
             }
             RecordElement::OffGraph(o) => match o {
-                ObjectElement::None => None,
-                ObjectElement::Prop(obj) | ObjectElement::Agg(obj) => {
+                CommonObject::None => None,
+                CommonObject::Prop(obj) | CommonObject::Agg(obj) => {
                     Some(result_pb::element::Inner::Object(obj.clone().into()))
                 }
-                ObjectElement::Count(cnt) => {
+                CommonObject::Count(cnt) => {
                     let item = if *cnt <= (i64::MAX as u64) {
                         common_pb::value::Item::I64(*cnt as i64)
                     } else {
