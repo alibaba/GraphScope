@@ -25,6 +25,7 @@ use ir_common::expr_parse::to_suffix_expr;
 use ir_common::generated::common as pb;
 use ir_common::{NameOrId, ID_KEY, LABEL_KEY, LENGTH_KEY};
 
+use crate::expr::eval_pred::EvalPred;
 use crate::expr::{ExprEvalError, ExprEvalResult};
 use crate::graph::element::Element;
 use crate::graph::property::{Details, PropKey};
@@ -45,15 +46,20 @@ pub struct Evaluator {
 
 unsafe impl Sync for Evaluator {}
 
+#[derive(Debug, Clone, PartialEq)]
+pub enum Operand {
+    Const(Object),
+    Var { tag: Option<NameOrId>, prop_key: Option<PropKey> },
+    Vars(Vec<Operand>),
+    VarMap(Vec<Operand>),
+}
+
 /// An inner representation of `pb::ExprOpr` for one-shot translation of `pb::ExprOpr`.
 #[derive(Debug, Clone)]
 pub(crate) enum InnerOpr {
     Logical(pb::Logical),
     Arith(pb::Arithmetic),
-    Const(Object),
-    Var { tag: Option<NameOrId>, prop_key: Option<PropKey> },
-    Vars(Vec<InnerOpr>),
-    VarMap(Vec<InnerOpr>),
+    Operand(Operand),
 }
 
 impl ToString for InnerOpr {
@@ -61,16 +67,7 @@ impl ToString for InnerOpr {
         match self {
             InnerOpr::Logical(logical) => format!("{:?}", logical),
             InnerOpr::Arith(arith) => format!("{:?}", arith),
-            InnerOpr::Const(c) => format!("Const ({:?})", c),
-            InnerOpr::Var { tag, prop_key } => {
-                if let Some(p) = prop_key {
-                    format!("Var (tag: {:?}, prop_key: {:?})", tag, p)
-                } else {
-                    format!("Var (tag: {:?})", tag)
-                }
-            }
-            InnerOpr::Vars(vars) => format!("Vars ({:?})", vars),
-            InnerOpr::VarMap(vars) => format!("Vars' map ({:?})", vars),
+            InnerOpr::Operand(item) => format!("{:?}", item),
         }
     }
 }
@@ -134,7 +131,7 @@ fn apply_arith<'a>(
     })
 }
 
-fn eval_object_as_bool(object: BorrowObject) -> bool {
+pub(crate) fn eval_object_as_bool(object: BorrowObject) -> bool {
     match object {
         // The logic is, if the object is a primitive, then check whether
         // it is zero, otherwise return true for whatever object other than `Object::None`
@@ -145,7 +142,7 @@ fn eval_object_as_bool(object: BorrowObject) -> bool {
     }
 }
 
-fn apply_logical<'a>(
+pub(crate) fn apply_logical<'a>(
     logical: &pb::Logical, a: BorrowObject<'a>, b_opt: Option<BorrowObject<'a>>,
 ) -> ExprEvalResult<Object> {
     use pb::Logical::*;
@@ -235,6 +232,7 @@ impl Evaluate for Evaluator {
     /// # use std::collections::HashMap;
     /// # use std::convert::TryFrom;
     /// # use ir_common::expr_parse::str_to_expr_pb;
+    /// # use runtime::expr::eval_pred::EvalPred;
     ///
     /// struct Vertices {
     ///     vec: Vec<Vertex>,
@@ -318,32 +316,27 @@ impl Evaluate for Evaluator {
     }
 }
 
-impl Evaluator {
-    /// Reset the status of the evaluator for further evaluation
-    pub fn reset(&self) {
-        self.stack.borrow_mut().clear();
-    }
-
-    pub fn eval_bool<E: Element, C: Context<E>>(&self, context: Option<&C>) -> ExprEvalResult<bool> {
+impl EvalPred for Evaluator {
+    fn eval_bool<E: Element, C: Context<E>>(&self, context: Option<&C>) -> ExprEvalResult<bool> {
         let object = self.eval(context)?;
         Ok(eval_object_as_bool(object.as_borrow()))
     }
 }
 
-impl TryFrom<pb::ExprOpr> for InnerOpr {
+impl Evaluator {
+    /// Reset the status of the evaluator for further evaluation
+    pub fn reset(&self) {
+        self.stack.borrow_mut().clear();
+    }
+}
+
+impl TryFrom<pb::ExprOpr> for Operand {
     type Error = ParsePbError;
 
-    fn try_from(unit: pb::ExprOpr) -> ParsePbResult<Self>
-    where
-        Self: Sized,
-    {
+    fn try_from(unit: pb::ExprOpr) -> Result<Self, Self::Error> {
         use pb::expr_opr::Item::*;
         if let Some(item) = unit.item {
             match item {
-                Logical(logical) => {
-                    Ok(Self::Logical(unsafe { std::mem::transmute::<_, pb::Logical>(logical) }))
-                }
-                Arith(arith) => Ok(Self::Arith(unsafe { std::mem::transmute::<_, pb::Arithmetic>(arith) })),
                 Const(c) => Ok(Self::Const(c.try_into()?)),
                 Var(var) => {
                     let (_tag, _property) = (var.tag, var.property);
@@ -357,7 +350,7 @@ impl TryFrom<pb::ExprOpr> for InnerOpr {
                 Vars(vars) => {
                     let mut vec = Vec::with_capacity(vars.keys.len());
                     for var in vars.keys {
-                        let var_opr: InnerOpr =
+                        let var_opr: Operand =
                             pb::ExprOpr { item: Some(pb::expr_opr::Item::Var(var)) }.try_into()?;
                         vec.push(var_opr);
                     }
@@ -366,13 +359,13 @@ impl TryFrom<pb::ExprOpr> for InnerOpr {
                 VarMap(vars) => {
                     let mut vec = Vec::with_capacity(vars.keys.len());
                     for var in vars.keys {
-                        let var_opr: InnerOpr =
+                        let var_opr: Operand =
                             pb::ExprOpr { item: Some(pb::expr_opr::Item::Var(var)) }.try_into()?;
                         vec.push(var_opr);
                     }
                     Ok(Self::VarMap(vec))
                 }
-                _ => Err(ParsePbError::ParseError("invalid operator of braces".to_string())),
+                _ => Err(ParsePbError::ParseError("invalid operators for an Operand".to_string())),
             }
         } else {
             Err(ParsePbError::from("empty value provided"))
@@ -380,7 +373,31 @@ impl TryFrom<pb::ExprOpr> for InnerOpr {
     }
 }
 
-impl Evaluate for InnerOpr {
+impl TryFrom<pb::ExprOpr> for InnerOpr {
+    type Error = ParsePbError;
+
+    fn try_from(unit: pb::ExprOpr) -> ParsePbResult<Self>
+    where
+        Self: Sized,
+    {
+        use pb::expr_opr::Item::*;
+        if let Some(item) = &unit.item {
+            match item {
+                Logical(logical) => {
+                    Ok(Self::Logical(unsafe { std::mem::transmute::<_, pb::Logical>(*logical) }))
+                }
+                Arith(arith) => {
+                    Ok(Self::Arith(unsafe { std::mem::transmute::<_, pb::Arithmetic>(*arith) }))
+                }
+                _ => Ok(Self::Operand(unit.clone().try_into()?)),
+            }
+        } else {
+            Err(ParsePbError::from("empty value provided"))
+        }
+    }
+}
+
+impl Evaluate for Operand {
     fn eval<E: Element, C: Context<E>>(&self, context: Option<&C>) -> ExprEvalResult<Object> {
         match self {
             Self::Const(obj) => Ok(obj.clone()),
@@ -429,7 +446,7 @@ impl Evaluate for InnerOpr {
 
                     Ok(result)
                 } else {
-                    Err(ExprEvalError::MissingContext(self.into()))
+                    Err(ExprEvalError::MissingContext(InnerOpr::Operand(self.clone()).into()))
                 }
             }
             Self::Vars(vars) => {
@@ -443,7 +460,7 @@ impl Evaluate for InnerOpr {
                 let mut map = BTreeMap::new();
                 for var in vars {
                     let obj_key = match var {
-                        InnerOpr::Var { tag, prop_key } => {
+                        Operand::Var { tag, prop_key } => {
                             let mut obj1 = Object::None;
                             let mut obj2 = Object::None;
                             if let Some(t) = tag {
@@ -473,6 +490,14 @@ impl Evaluate for InnerOpr {
                 }
                 Ok(Object::KV(map))
             }
+        }
+    }
+}
+
+impl Evaluate for InnerOpr {
+    fn eval<E: Element, C: Context<E>>(&self, context: Option<&C>) -> ExprEvalResult<Object> {
+        match self {
+            Self::Operand(item) => item.eval(context),
             _ => Err(ExprEvalError::UnmatchedOperator(self.into())),
         }
     }
@@ -481,7 +506,7 @@ impl Evaluate for InnerOpr {
 impl InnerOpr {
     pub fn is_operand(&self) -> bool {
         match self {
-            InnerOpr::Const(_) | InnerOpr::Var { .. } | InnerOpr::Vars(_) => true,
+            InnerOpr::Operand(_) => true,
             _ => false,
         }
     }
@@ -752,7 +777,9 @@ mod tests {
 
         let expected: Vec<ExprEvalError> = vec![
             // Evaluate variable without providing the context
-            ExprEvalError::MissingContext(InnerOpr::Var { tag: Some(2.into()), prop_key: None }.into()),
+            ExprEvalError::MissingContext(
+                InnerOpr::Operand(Operand::Var { tag: Some(2.into()), prop_key: None }).into(),
+            ),
             // try to evaluate neither a variable nor a const
             ExprEvalError::UnmatchedOperator(InnerOpr::Arith(pb::Arithmetic::Add).into()),
             ExprEvalError::MissingOperands(InnerOpr::Arith(pb::Arithmetic::Add).into()),

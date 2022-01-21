@@ -29,7 +29,7 @@ use ir_common::NameOrId;
 use pegasus::api::function::{DynIter, FnResult};
 use pegasus::codec::{ReadExt, WriteExt};
 
-use crate::expr::eval::Evaluator;
+use crate::expr::eval_pred::PEvaluator;
 use crate::graph::element::{Edge, Vertex};
 
 pub type ID = u64;
@@ -71,7 +71,7 @@ pub struct QueryParams {
     pub limit: Option<usize>,
     pub props: Option<Vec<NameOrId>>,
     pub partitions: Option<Vec<u64>>,
-    pub filter: Option<Arc<Evaluator>>,
+    pub filter: Option<Arc<PEvaluator>>,
 }
 
 impl TryFrom<Option<algebra_pb::QueryParams>> for QueryParams {
