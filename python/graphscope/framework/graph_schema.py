@@ -59,7 +59,7 @@ class Property:
         return prop
 
     def __repr__(self) -> str:
-        return f"Property({self.id}, {self.name})"
+        return f"Property({self.id}, {self.name}, {graph_def_pb2.DataTypePb.Name(self.data_type)})"
 
     def __str__(self) -> str:
         return self.__repr__()
