@@ -40,6 +40,9 @@ pub trait Element {
     fn details(&self) -> Option<&DynDetails> {
         None
     }
+    fn as_graph_element(&self) -> Option<&dyn GraphElement> {
+        None
+    }
     fn as_borrow_object(&self) -> BorrowObject;
 }
 
@@ -47,6 +50,7 @@ pub trait Element {
 pub trait GraphElement: Element {
     fn id(&self) -> ID;
     fn label(&self) -> Option<&NameOrId>;
+    fn len(&self) -> usize;
 }
 
 impl Element for () {
@@ -92,7 +96,9 @@ impl Element for VertexOrEdge {
             VertexOrEdge::E(e) => e.details(),
         }
     }
-
+    fn as_graph_element(&self) -> Option<&dyn GraphElement> {
+        Some(self)
+    }
     fn as_borrow_object(&self) -> BorrowObject {
         match self {
             VertexOrEdge::V(v) => v.as_borrow_object(),
@@ -114,6 +120,10 @@ impl GraphElement for VertexOrEdge {
             VertexOrEdge::V(v) => v.label(),
             VertexOrEdge::E(e) => e.label(),
         }
+    }
+
+    fn len(&self) -> usize {
+        0
     }
 }
 
@@ -171,12 +181,13 @@ impl PartialOrd for VertexOrEdge {
 impl TryFrom<result_pb::Vertex> for VertexOrEdge {
     type Error = ParsePbError;
     fn try_from(v: result_pb::Vertex) -> Result<Self, Self::Error> {
-        let vertex = Vertex::new(DynDetails::new(DefaultDetails::new(
+        let vertex = Vertex::new(
             v.id as ID,
             v.label
-                .ok_or(ParsePbError::EmptyFieldError("label is empty".to_string()))?
-                .try_into()?,
-        )));
+                .map(|label| label.try_into())
+                .transpose()?,
+            DynDetails::new(DefaultDetails::default()),
+        );
         Ok(VertexOrEdge::V(vertex))
     }
 }
@@ -185,24 +196,23 @@ impl TryFrom<result_pb::Edge> for VertexOrEdge {
     type Error = ParsePbError;
     fn try_from(e: result_pb::Edge) -> Result<Self, Self::Error> {
         let mut edge = Edge::new(
+            e.id as ID,
+            e.label
+                .map(|label| label.try_into())
+                .transpose()?,
             e.src_id as ID,
             e.dst_id as ID,
-            DynDetails::new(DefaultDetails::new(
-                e.id as ID,
-                e.label
-                    .ok_or(ParsePbError::EmptyFieldError("label is empty".to_string()))?
-                    .try_into()?,
-            )),
+            DynDetails::new(DefaultDetails::default()),
         );
         edge.set_src_label(
             e.src_label
-                .ok_or(ParsePbError::EmptyFieldError("label is empty".to_string()))?
-                .try_into()?,
+                .map(|label| label.try_into())
+                .transpose()?,
         );
         edge.set_dst_label(
             e.dst_label
-                .ok_or(ParsePbError::EmptyFieldError("label is empty".to_string()))?
-                .try_into()?,
+                .map(|label| label.try_into())
+                .transpose()?,
         );
         Ok(VertexOrEdge::E(edge))
     }

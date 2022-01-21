@@ -335,8 +335,8 @@ fn to_runtime_vertex(
 ) -> Vertex {
     // For vertices, we query properties via vid
     let label = encode_runtime_v_label(&v);
-    let details = LazyVertexDetails::new(v.get_id(), label, prop_keys, store);
-    Vertex::new(DynDetails::new(details))
+    let details = LazyVertexDetails::new(v.get_id(), prop_keys, store);
+    Vertex::new(v.get_id() as ID, Some(label), DynDetails::new(details))
 }
 
 #[inline]
@@ -354,10 +354,12 @@ fn to_runtime_edge(
     }
 
     Edge::with_from_src(
+        id,
+        Some(label),
         e.get_src_id() as ID,
         e.get_dst_id() as ID,
         e.is_from_start(),
-        DynDetails::new(DefaultDetails::with_property(id, label, properties)),
+        DynDetails::new(DefaultDetails::new(properties)),
     )
 }
 
@@ -366,7 +368,6 @@ fn to_runtime_edge(
 #[allow(dead_code)]
 struct LazyVertexDetails {
     pub id: DefaultId,
-    label: NameOrId,
     // prop_keys specify the properties we query for,
     // Specifically, Some(vec![]) indicates we need all properties
     // and None indicates we do not need any property,
@@ -379,10 +380,10 @@ impl_as_any!(LazyVertexDetails);
 
 impl LazyVertexDetails {
     pub fn new(
-        id: DefaultId, label: NameOrId, prop_keys: Option<Vec<NameOrId>>,
+        id: DefaultId, prop_keys: Option<Vec<NameOrId>>,
         store: &'static LargeGraphDB<DefaultId, InternalId>,
     ) -> Self {
-        LazyVertexDetails { id, label, prop_keys, inner: AtomicPtr::default(), store }
+        LazyVertexDetails { id, prop_keys, inner: AtomicPtr::default(), store }
     }
 }
 
@@ -390,7 +391,6 @@ impl fmt::Debug for LazyVertexDetails {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("LazyVertexDetails")
             .field("id", &self.id)
-            .field("label", &self.label)
             .field("inner", &self.inner)
             .finish()
     }
@@ -423,18 +423,6 @@ impl Details for LazyVertexDetails {
             info!("Have not support getting property by prop_id in experiments store yet");
             None
         }
-    }
-
-    fn get_id(&self) -> ID {
-        self.id as ID
-    }
-
-    fn get_label(&self) -> Option<&NameOrId> {
-        Some(&self.label)
-    }
-
-    fn get_len(&self) -> usize {
-        0
     }
 
     fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {

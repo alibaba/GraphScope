@@ -625,6 +625,7 @@ impl Object {
             Object::String(str) => Ok(Cow::Borrowed(str.as_str())),
             Object::Blob(b) => Ok(String::from_utf8_lossy(b)),
             Object::DynOwned(x) => try_downcast!(x, String, as_str).map(|r| Cow::Borrowed(r)),
+            Object::None => Ok(Cow::Borrowed("")),
             _ => Err(CastError::new::<String>(self.raw_type())),
         }
     }
@@ -636,6 +637,7 @@ impl Object {
             Object::String(str) => Ok(str.as_bytes()),
             Object::Blob(v) => Ok(v.as_ref()),
             Object::DynOwned(x) => try_downcast!(x, Vec<u8>, as_slice),
+            Object::None => Ok(&[]),
             _ => Err(CastError::new::<&[u8]>(self.raw_type())),
         }
     }
@@ -819,6 +821,7 @@ impl<'a> BorrowObject<'a> {
             BorrowObject::String(str) => Ok(Cow::Borrowed(*str)),
             BorrowObject::Blob(b) => Ok(String::from_utf8_lossy(b)),
             BorrowObject::DynRef(x) => try_downcast!(x, String, as_str).map(|r| Cow::Borrowed(r)),
+            BorrowObject::None => Ok(Cow::Borrowed("")),
             _ => Err(CastError::new::<String>(self.raw_type())),
         }
     }
@@ -830,6 +833,7 @@ impl<'a> BorrowObject<'a> {
             BorrowObject::String(v) => Ok(v.as_bytes()),
             BorrowObject::Blob(v) => Ok(*v),
             BorrowObject::DynRef(v) => try_downcast!(v, Vec<u8>, as_slice),
+            BorrowObject::None => Ok(&[]),
             _ => Err(CastError::new::<&[u8]>(self.raw_type())),
         }
     }
@@ -930,10 +934,16 @@ impl Eq for Object {}
 macro_rules! partial_cmp {
     ($self:expr, $other:expr, $ty:ident) => {
         match $self {
-            $crate::$ty::Primitive(p) => $other
-                .as_primitive()
-                .map(|o| p.partial_cmp(&o))
-                .unwrap_or(None),
+            $crate::$ty::Primitive(p) => {
+                if let $crate::$ty::None = $other {
+                    Some(Ordering::Greater)
+                } else {
+                    $other
+                    .as_primitive()
+                    .map(|o| p.partial_cmp(&o))
+                    .unwrap_or(None)
+                }
+            }
             $crate::$ty::Blob(v) => $other
                 .as_bytes()
                 .map(|o| v.as_ref().partial_cmp(o))
@@ -945,6 +955,8 @@ macro_rules! partial_cmp {
             $crate::$ty::Vector(v1) => {
                 if let $crate::$ty::Vector(v2) = $other {
                     v1.partial_cmp(v2)
+                } else if let $crate::$ty::None = $other {
+                    Some(Ordering::Greater)
                 } else {
                     None
                 }
@@ -952,6 +964,8 @@ macro_rules! partial_cmp {
             $crate::$ty::KV(kv1) => {
                 if let $crate::$ty::KV(kv2) = $other {
                     kv1.partial_cmp(kv2)
+                } else if let $crate::$ty::None = $other {
+                    Some(Ordering::Greater)
                 } else {
                     None
                 }
@@ -960,7 +974,7 @@ macro_rules! partial_cmp {
                 if let $crate::$ty::None = $other {
                     Some(Ordering::Equal)
                 } else {
-                    None
+                    Some(Ordering::Less)
                 }
             }
             _ => None,

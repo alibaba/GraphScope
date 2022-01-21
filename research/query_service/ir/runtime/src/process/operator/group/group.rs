@@ -111,7 +111,7 @@ mod tests {
             vec![("id".into(), object!(3)), ("age".into(), object!(27)), ("name".into(), object!("marko"))]
                 .into_iter()
                 .collect();
-        Vertex::new(DynDetails::new(DefaultDetails::with_property(3, "person".into(), map3)))
+        Vertex::new(3, Some("person".into()), DynDetails::new(DefaultDetails::new(map3)))
     }
 
     fn group_test(group_opr_pb: pb::GroupBy) -> ResultStream<Record> {

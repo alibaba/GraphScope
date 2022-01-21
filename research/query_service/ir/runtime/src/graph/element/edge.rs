@@ -21,15 +21,17 @@ use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
 
 use crate::expr::eval::Context;
 use crate::graph::element::{Element, GraphElement};
-use crate::graph::property::{Details, DynDetails};
+use crate::graph::property::DynDetails;
 use crate::graph::{read_id, write_id, ID};
 
 #[derive(Clone, Debug)]
 pub struct Edge {
+    id: ID,
+    label: Option<NameOrId>,
     pub src_id: ID,
     pub dst_id: ID,
-    src_label: Option<NameOrId>,
-    dst_label: Option<NameOrId>,
+    pub src_label: Option<NameOrId>,
+    pub dst_label: Option<NameOrId>,
     /// An indicator for whether this edge is obtained from the source or destination vertex
     from_src: bool,
     details: DynDetails,
@@ -40,6 +42,10 @@ impl Element for Edge {
         Some(&self.details)
     }
 
+    fn as_graph_element(&self) -> Option<&dyn GraphElement> {
+        Some(self)
+    }
+
     fn as_borrow_object(&self) -> BorrowObject {
         self.id().into()
     }
@@ -47,29 +53,44 @@ impl Element for Edge {
 
 impl GraphElement for Edge {
     fn id(&self) -> ID {
-        self.details.get_id()
+        self.id
     }
 
     fn label(&self) -> Option<&NameOrId> {
-        self.details.get_label()
+        self.label.as_ref()
+    }
+
+    fn len(&self) -> usize {
+        0
     }
 }
 
 impl Edge {
-    pub fn new(src: ID, dst: ID, details: DynDetails) -> Self {
-        Edge { src_id: src, dst_id: dst, src_label: None, dst_label: None, from_src: true, details }
+    pub fn new(id: ID, label: Option<NameOrId>, src: ID, dst: ID, details: DynDetails) -> Self {
+        Edge {
+            id,
+            label,
+            src_id: src,
+            dst_id: dst,
+            src_label: None,
+            dst_label: None,
+            from_src: true,
+            details,
+        }
     }
 
-    pub fn with_from_src(src: ID, dst: ID, from_src: bool, details: DynDetails) -> Self {
-        Edge { src_id: src, dst_id: dst, src_label: None, dst_label: None, from_src, details }
+    pub fn with_from_src(
+        id: ID, label: Option<NameOrId>, src: ID, dst: ID, from_src: bool, details: DynDetails,
+    ) -> Self {
+        Edge { id, label, src_id: src, dst_id: dst, src_label: None, dst_label: None, from_src, details }
     }
 
-    pub fn set_src_label(&mut self, label: NameOrId) {
-        self.src_label = Some(label);
+    pub fn set_src_label(&mut self, label: Option<NameOrId>) {
+        self.src_label = label;
     }
 
-    pub fn set_dst_label(&mut self, label: NameOrId) {
-        self.dst_label = Some(label);
+    pub fn set_dst_label(&mut self, label: Option<NameOrId>) {
+        self.dst_label = label;
     }
 
     pub fn get_src_label(&self) -> Option<&NameOrId> {
@@ -99,6 +120,8 @@ impl Edge {
 
 impl Encode for Edge {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
+        write_id(writer, self.id)?;
+        self.label.write_to(writer)?;
         write_id(writer, self.src_id)?;
         write_id(writer, self.dst_id)?;
         self.src_label.write_to(writer)?;
@@ -111,13 +134,15 @@ impl Encode for Edge {
 
 impl Decode for Edge {
     fn read_from<R: ReadExt>(reader: &mut R) -> io::Result<Self> {
+        let id = read_id(reader)?;
+        let label = <Option<NameOrId>>::read_from(reader)?;
         let src_id = read_id(reader)?;
         let dst_id = read_id(reader)?;
         let src_label = <Option<NameOrId>>::read_from(reader)?;
         let dst_label = <Option<NameOrId>>::read_from(reader)?;
         let from_src = <bool>::read_from(reader)?;
         let details = <DynDetails>::read_from(reader)?;
-        Ok(Edge { src_id, dst_id, src_label, dst_label, from_src, details })
+        Ok(Edge { id, label, src_id, dst_id, src_label, dst_label, from_src, details })
     }
 }
 

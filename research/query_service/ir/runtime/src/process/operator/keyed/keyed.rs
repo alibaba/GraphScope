@@ -98,10 +98,9 @@ mod tests {
             .into_iter()
             .collect();
 
-        let v1 = Vertex::new(DynDetails::new(DefaultDetails::with_property(1, "person".into(), p1)));
-        let v2 =
-            Vertex::new(DynDetails::new(DefaultDetails::with_property(1, "person".into(), p2.clone())));
-        let v3 = Vertex::new(DynDetails::new(DefaultDetails::with_property(3, "person".into(), p2)));
+        let v1 = Vertex::new(1, Some("person".into()), DynDetails::new(DefaultDetails::new(p1)));
+        let v2 = Vertex::new(1, Some("person".into()), DynDetails::new(DefaultDetails::new(p2.clone())));
+        let v3 = Vertex::new(3, Some("person".into()), DynDetails::new(DefaultDetails::new(p2)));
         let r1 = Record::new(v1, None);
         let r2 = Record::new(v2, None);
         let r3 = Record::new(v3, None);

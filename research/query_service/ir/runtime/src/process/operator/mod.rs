@@ -35,7 +35,7 @@ use ir_common::NameOrId;
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 
 use crate::error::FnExecError;
-use crate::graph::element::Element;
+use crate::graph::element::{Element, GraphElement};
 use crate::graph::property::{Details, PropKey};
 use crate::process::record::{Entry, ObjectElement, Record};
 
@@ -55,22 +55,38 @@ impl TagKey {
                 self.tag
             )))?
             .clone();
-        if let Some(key) = self.key.as_ref() {
+        if let Some(prop_key) = self.key.as_ref() {
             if let Some(element) = entry.as_graph_element() {
                 let details = element
                     .details()
                     .ok_or(FnExecError::get_tag_error(
                         "Get key failed since get details from a graph element failed",
                     ))?;
-                let prop_obj = if let Some(properties) = details.get(key) {
-                    properties
-                        .try_to_owned()
-                        .ok_or(FnExecError::UnExpectedData(
-                            "unable to own the `BorrowObject`".to_string(),
-                        ))?
-                } else {
-                    Object::None
+
+                let prop_obj = match prop_key {
+                    PropKey::Id => element.id().into(),
+                    PropKey::Label => element
+                        .label()
+                        .cloned()
+                        .map(|label| match label {
+                            NameOrId::Str(str) => str.into(),
+                            NameOrId::Id(id) => id.into(),
+                        })
+                        .unwrap_or(Object::None),
+                    PropKey::Len => (element.len() as u64).into(),
+                    PropKey::Key(key) => {
+                        if let Some(properties) = details.get_property(key) {
+                            properties
+                                .try_to_owned()
+                                .ok_or(FnExecError::UnExpectedData(
+                                    "unable to own the `BorrowObject`".to_string(),
+                                ))?
+                        } else {
+                            Object::None
+                        }
+                    }
                 };
+
                 Ok(Arc::new(ObjectElement::Prop(prop_obj).into()))
             } else {
                 Err(FnExecError::get_tag_error(
@@ -161,7 +177,7 @@ pub(crate) mod tests {
         ]
         .into_iter()
         .collect();
-        Vertex::new(DynDetails::new(DefaultDetails::with_property(1, "person".into(), map1)))
+        Vertex::new(1, Some("person".into()), DynDetails::new(DefaultDetails::new(map1)))
     }
 
     pub fn init_vertex2() -> Vertex {
@@ -169,7 +185,7 @@ pub(crate) mod tests {
             vec![("id".into(), object!(2)), ("age".into(), object!(27)), ("name".into(), object!("vadas"))]
                 .into_iter()
                 .collect();
-        Vertex::new(DynDetails::new(DefaultDetails::with_property(2, "person".into(), map2)))
+        Vertex::new(2, Some("person".into()), DynDetails::new(DefaultDetails::new(map2)))
     }
 
     fn init_record() -> Record {

@@ -351,7 +351,7 @@ mod tests {
             vec![("id".into(), object!(3)), ("age".into(), object!(32)), ("name".into(), object!("josh"))]
                 .into_iter()
                 .collect();
-        let v3 = Vertex::new(DynDetails::new(DefaultDetails::with_property(3, "person".into(), map3)));
+        let v3 = Vertex::new(3, Some("person".into()), DynDetails::new(DefaultDetails::new(map3)));
         let mut r1 = Record::new(v1, Some("a".into()));
         r1.append(v3.clone(), Some("b".into()));
         let mut r2 = Record::new(v2, Some("a".into()));

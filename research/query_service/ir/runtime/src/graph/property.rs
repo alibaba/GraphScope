@@ -27,8 +27,6 @@ use ir_common::NameOrId;
 use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
 use pegasus_common::downcast::*;
 
-use crate::graph::{read_id, write_id, ID};
-
 /// The three types of property to get
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum PropKey {
@@ -97,24 +95,8 @@ impl Decode for PropKey {
 }
 
 pub trait Details: std::fmt::Debug + Send + Sync + AsAny {
+    /// Get a property with given key
     fn get_property(&self, key: &NameOrId) -> Option<BorrowObject>;
-
-    fn get_id(&self) -> ID;
-
-    fn get_label(&self) -> Option<&NameOrId>;
-
-    fn get_len(&self) -> usize;
-
-    fn get(&self, prop_key: &PropKey) -> Option<BorrowObject> {
-        match prop_key {
-            PropKey::Id => Some(self.get_id().into()),
-            PropKey::Label => self
-                .get_label()
-                .map(|label| label.as_borrow_object()),
-            PropKey::Len => Some((self.get_len() as u64).into()),
-            PropKey::Key(k) => self.get_property(k),
-        }
-    }
 
     /// get_all_properties returns all properties. None means that we failed in getting the properties.
     /// Specifically, it returns all properties of Vertex/Edge saved in RUNTIME rather than STORAGE.
@@ -144,18 +126,6 @@ impl Details for DynDetails {
         self.inner.get_property(key)
     }
 
-    fn get_id(&self) -> ID {
-        self.inner.get_id()
-    }
-
-    fn get_label(&self) -> Option<&NameOrId> {
-        self.inner.get_label()
-    }
-
-    fn get_len(&self) -> usize {
-        0
-    }
-
     fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {
         self.inner.get_all_properties()
     }
@@ -164,8 +134,6 @@ impl Details for DynDetails {
 impl fmt::Debug for DynDetails {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("DynDetails")
-            .field("id", &self.get_id())
-            .field("label", &self.get_label())
             .field("properties", &format!("{:?}", &self.inner.as_ref()))
             .finish()
     }
@@ -185,11 +153,6 @@ impl Encode for DynDetails {
             // TODO(yyy): handle other kinds of details
             // for Lazy details, we write id, label, and required properties
             writer.write_u8(2)?;
-            write_id(writer, self.inner.get_id())?;
-            self.inner
-                .get_label()
-                .cloned()
-                .write_to(writer)?;
             let all_props = self.get_all_properties();
             if let Some(all_props) = all_props {
                 writer.write_u64(all_props.len() as u64)?;
@@ -219,25 +182,15 @@ impl Decode for DynDetails {
 }
 
 #[allow(dead_code)]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct DefaultDetails {
-    id: ID,
-    label: Option<NameOrId>,
     inner: HashMap<NameOrId, Object>,
 }
 
 #[allow(dead_code)]
 impl DefaultDetails {
-    pub fn new(id: ID, label: NameOrId) -> Self {
-        DefaultDetails { id, label: Some(label), inner: HashMap::new() }
-    }
-
-    pub fn with(id: ID, label: Option<NameOrId>) -> Self {
-        DefaultDetails { id, label, inner: HashMap::new() }
-    }
-
-    pub fn with_property(id: ID, label: NameOrId, properties: HashMap<NameOrId, Object>) -> Self {
-        DefaultDetails { id, label: Some(label), inner: properties }
+    pub fn new(properties: HashMap<NameOrId, Object>) -> Self {
+        DefaultDetails { inner: properties }
     }
 }
 
@@ -262,18 +215,6 @@ impl Details for DefaultDetails {
         self.inner.get(key).map(|o| o.as_borrow())
     }
 
-    fn get_id(&self) -> ID {
-        self.id
-    }
-
-    fn get_label(&self) -> Option<&NameOrId> {
-        self.label.as_ref()
-    }
-
-    fn get_len(&self) -> usize {
-        0
-    }
-
     fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {
         // it's actually unreachable!()
         Some(self.inner.clone())
@@ -282,8 +223,6 @@ impl Details for DefaultDetails {
 
 impl Encode for DefaultDetails {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
-        write_id(writer, self.id)?;
-        self.label.write_to(writer)?;
         writer.write_u64(self.inner.len() as u64)?;
         for (k, v) in &self.inner {
             k.write_to(writer)?;
@@ -295,8 +234,6 @@ impl Encode for DefaultDetails {
 
 impl Decode for DefaultDetails {
     fn read_from<R: ReadExt>(reader: &mut R) -> io::Result<Self> {
-        let id = read_id(reader)?;
-        let label = <Option<NameOrId>>::read_from(reader)?;
         let len = reader.read_u64()?;
         let mut map = HashMap::with_capacity(len as usize);
         for _i in 0..len {
@@ -304,6 +241,6 @@ impl Decode for DefaultDetails {
             let v = <Object>::read_from(reader)?;
             map.insert(k, v);
         }
-        Ok(DefaultDetails { id, label, inner: map })
+        Ok(DefaultDetails { inner: map })
     }
 }

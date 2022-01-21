@@ -209,6 +209,13 @@ impl Element for RecordElement {
         }
     }
 
+    fn as_graph_element(&self) -> Option<&dyn GraphElement> {
+        match self {
+            RecordElement::OnGraph(graph) => Some(graph),
+            RecordElement::OffGraph(_) => None,
+        }
+    }
+
     fn as_borrow_object(&self) -> BorrowObject {
         match self {
             RecordElement::OnGraph(GraphObject::VOrE(vertex_or_edge)) => vertex_or_edge.as_borrow_object(),

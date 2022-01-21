@@ -554,6 +554,18 @@ impl From<pb::PathExpand> for pb::logical_plan::Operator {
     }
 }
 
+impl From<pb::PathStart> for pb::logical_plan::Operator {
+    fn from(opr: pb::PathStart) -> Self {
+        pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::PathStart(opr)) }
+    }
+}
+
+impl From<pb::PathEnd> for pb::logical_plan::Operator {
+    fn from(opr: pb::PathEnd) -> Self {
+        pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::PathEnd(opr)) }
+    }
+}
+
 impl From<pb::ShortestPathExpand> for pb::logical_plan::Operator {
     fn from(opr: pb::ShortestPathExpand) -> Self {
         pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::ShortestPath(opr)) }

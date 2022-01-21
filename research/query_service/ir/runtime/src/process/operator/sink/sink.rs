@@ -232,8 +232,8 @@ mod tests {
     // g.V()
     #[test]
     fn sink_vertex_label_mapping_test() {
-        let v1 = Vertex::new(DynDetails::new(DefaultDetails::new(1, 1.into())));
-        let v2 = Vertex::new(DynDetails::new(DefaultDetails::new(2, 2.into())));
+        let v1 = Vertex::new(1, Some(1.into()), DynDetails::new(DefaultDetails::default()));
+        let v2 = Vertex::new(2, Some(2.into()), DynDetails::new(DefaultDetails::default()));
 
         let sink_opr_pb = pb::Sink {
             tags: vec![],
@@ -295,13 +295,13 @@ mod tests {
         // label_mapping:
         // vlabel: 11:  person, 22:  software,
         // elabel: 111: create, 222: created_by
-        let mut e1 = Edge::new(1, 2, DynDetails::new(DefaultDetails::new(1, 111.into())));
-        e1.set_src_label(11.into());
-        e1.set_dst_label(22.into());
+        let mut e1 = Edge::new(1, Some(111.into()), 1, 2, DynDetails::new(DefaultDetails::default()));
+        e1.set_src_label(Some(11.into()));
+        e1.set_dst_label(Some(22.into()));
 
-        let mut e2 = Edge::new(2, 1, DynDetails::new(DefaultDetails::new(2, 222.into())));
-        e2.set_src_label(22.into());
-        e2.set_dst_label(11.into());
+        let mut e2 = Edge::new(2, Some(222.into()), 2, 1, DynDetails::new(DefaultDetails::default()));
+        e2.set_src_label(Some(22.into()));
+        e2.set_dst_label(Some(11.into()));
 
         let sink_opr_pb = pb::Sink {
             tags: vec![],
