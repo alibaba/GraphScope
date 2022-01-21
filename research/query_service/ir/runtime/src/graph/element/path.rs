@@ -14,6 +14,8 @@
 //! limitations under the License.
 
 use std::cmp::Ordering;
+use std::collections::hash_map::DefaultHasher;
+use std::hash::{Hash, Hasher};
 
 use dyn_type::BorrowObject;
 use ir_common::NameOrId;
@@ -140,7 +142,15 @@ impl Element for GraphPath {
 
 impl GraphElement for GraphPath {
     fn id(&self) -> ID {
-        todo!()
+        match self {
+            GraphPath::WHOLE((path, _)) => {
+                let ids: Vec<ID> = path.iter().map(|v| v.id()).collect();
+                let mut hasher = DefaultHasher::new();
+                ids.hash(&mut hasher);
+                hasher.finish() as ID
+            }
+            GraphPath::END((path_end, _)) => path_end.id(),
+        }
     }
 
     fn label(&self) -> Option<&NameOrId> {
