@@ -126,7 +126,7 @@ mod tests {
         let mut result = sort_test(init_source(), sort_opr);
         let mut result_ids = vec![];
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record.get(None).unwrap().as_graph_element() {
+            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
                 result_ids.push(element.id());
             }
         }
@@ -147,7 +147,7 @@ mod tests {
         let mut result = sort_test(init_source(), sort_opr);
         let mut result_ids = vec![];
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record.get(None).unwrap().as_graph_element() {
+            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
                 result_ids.push(element.id());
             }
         }
@@ -168,7 +168,7 @@ mod tests {
         let mut result = sort_test(init_source(), sort_opr);
         let mut result_name = vec![];
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record.get(None).unwrap().as_graph_element() {
+            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
                 result_name.push(
                     element
                         .details()
@@ -211,7 +211,7 @@ mod tests {
         let mut result = sort_test(source, sort_opr);
         let mut result_name_ages = vec![];
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record.get(None).unwrap().as_graph_element() {
+            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
                 let details = element.details().unwrap();
                 result_name_ages.push((
                     details
@@ -251,7 +251,7 @@ mod tests {
             if let Some(element) = record
                 .get(Some(&"a".into()))
                 .unwrap()
-                .as_graph_element()
+                .as_graph_vertex()
             {
                 result_ids.push(element.id());
             }
@@ -276,7 +276,7 @@ mod tests {
             if let Some(element) = record
                 .get(Some(&"a".into()))
                 .unwrap()
-                .as_graph_element()
+                .as_graph_vertex()
             {
                 result_ids.push(element.id());
             }

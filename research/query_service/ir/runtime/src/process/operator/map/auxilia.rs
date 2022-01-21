@@ -20,7 +20,7 @@ use ir_common::NameOrId;
 use pegasus::api::function::{FilterMapFunction, FnResult};
 
 use crate::error::{FnExecError, FnGenResult};
-use crate::graph::element::{GraphElement, VertexOrEdge};
+use crate::graph::element::GraphElement;
 use crate::graph::QueryParams;
 use crate::process::operator::map::FilterMapFuncGen;
 use crate::process::record::{Entry, Record};
@@ -48,19 +48,15 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
         // TODO: it seems that we do not really care about getting head from curr or "a", we only need to save the updated entry with expected alias "a"
         if self.query_params.is_queryable() {
             // If queryable, then turn into graph element and do the query
-            let vertex_or_edge = entry
-                .as_graph_element()
-                .ok_or(FnExecError::unexpected_data_error("should be vertex_or_edge in AuxiliaOperator"))?;
             let graph = crate::get_graph().ok_or(FnExecError::NullGraphError)?;
-            let new_entry: Option<Entry> = match vertex_or_edge {
-                VertexOrEdge::V(v) => {
-                    let mut result_iter = graph.get_vertex(&[v.id()], &self.query_params)?;
-                    result_iter.next().map(|vertex| vertex.into())
-                }
-                VertexOrEdge::E(e) => {
-                    let mut result_iter = graph.get_edge(&[e.id()], &self.query_params)?;
-                    result_iter.next().map(|edge| edge.into())
-                }
+            let new_entry: Option<Entry> = if let Some(v) = entry.as_graph_vertex() {
+                let mut result_iter = graph.get_vertex(&[v.id()], &self.query_params)?;
+                result_iter.next().map(|vertex| vertex.into())
+            } else if let Some(e) = entry.as_graph_edge() {
+                let mut result_iter = graph.get_edge(&[e.id()], &self.query_params)?;
+                result_iter.next().map(|edge| edge.into())
+            } else {
+                Err(FnExecError::unexpected_data_error("should be vertex or edge in AuxiliaOperator"))?
             };
             if new_entry.is_some() {
                 input.append(new_entry.unwrap(), self.alias.clone());

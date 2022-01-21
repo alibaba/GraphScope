@@ -30,7 +30,7 @@ mod test {
     use pegasus::api::{Map, Sink};
     use pegasus::result::ResultStream;
     use pegasus::JobConf;
-    use runtime::graph::element::{Element, GraphElement, VertexOrEdge};
+    use runtime::graph::element::{Element, GraphElement};
     use runtime::graph::property::Details;
     use runtime::process::operator::flatmap::FlatMapFuncGen;
     use runtime::process::operator::map::MapFuncGen;
@@ -95,7 +95,7 @@ mod test {
         let v5: DefaultId = LDBCVertexParser::to_global_id(5, 1);
         let mut expected_ids = vec![v2, v3, v3, v3, v4, v5];
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record.get(None).unwrap().as_graph_element() {
+            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
                 result_ids.push(element.id() as usize)
             }
         }
@@ -128,7 +128,7 @@ mod test {
         let v4: DefaultId = LDBCVertexParser::to_global_id(4, 0);
         let expected_edges = vec![(v1, v4), (v1, v2)];
         while let Some(Ok(record)) = result.next() {
-            if let Some(VertexOrEdge::E(e)) = record.get(None).unwrap().as_graph_element() {
+            if let Some(e) = record.get(None).unwrap().as_graph_edge() {
                 result_edges.push((e.src_id as usize, e.dst_id as usize));
             }
         }
@@ -163,7 +163,7 @@ mod test {
         let mut expected_edges = vec![(v1, v2), (v1, v3), (v1, v4), (v4, v3), (v4, v5), (v6, v3)];
         expected_edges.sort();
         while let Some(Ok(record)) = result.next() {
-            if let Some(VertexOrEdge::E(e)) = record.get(None).unwrap().as_graph_element() {
+            if let Some(e) = record.get(None).unwrap().as_graph_edge() {
                 result_edges.push((e.src_id as usize, e.dst_id as usize));
             }
         }
@@ -194,7 +194,7 @@ mod test {
         let expected_ids_with_prop =
             vec![(v1, "marko".to_string().into()), (v1, "marko".to_string().into())];
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record.get(None).unwrap().as_graph_element() {
+            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
                 result_ids_with_prop.push((
                     element.id() as usize,
                     element
@@ -263,7 +263,7 @@ mod test {
             if let Some(element) = record
                 .get(Some(&"b".into()))
                 .unwrap()
-                .as_graph_element()
+                .as_graph_vertex()
             {
                 result_ids.push(element.id() as usize)
             }
@@ -318,7 +318,7 @@ mod test {
         let v4: DefaultId = LDBCVertexParser::to_global_id(4, 0);
         let mut expected_ids = vec![v2, v4];
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record.get(None).unwrap().as_graph_element() {
+            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
                 result_ids.push(element.id() as usize)
             }
         }
@@ -349,7 +349,7 @@ mod test {
         let v2: DefaultId = LDBCVertexParser::to_global_id(2, 0);
         let expected_ids = vec![v2];
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record.get(None).unwrap().as_graph_element() {
+            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
                 result_ids.push(element.id() as usize)
             }
         }
@@ -397,7 +397,7 @@ mod test {
         let expected_ids = vec![2, 4];
         let mut result_ids = vec![];
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record.get(None).unwrap().as_graph_element() {
+            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
                 result_ids.push(element.id() as usize);
                 assert!(element
                     .details()
@@ -451,7 +451,7 @@ mod test {
         let expected_ids = vec![1, 4, 4, 6];
         let mut result_ids = vec![];
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record.get(None).unwrap().as_graph_element() {
+            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
                 result_ids.push(element.id() as usize);
                 assert!(element
                     .details()
@@ -505,7 +505,7 @@ mod test {
         let expected_ids = vec![1, 1, 2, 4];
         let mut result_ids = vec![];
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record.get(None).unwrap().as_graph_element() {
+            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
                 result_ids.push(element.id() as usize);
                 assert!(element
                     .details()

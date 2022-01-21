@@ -20,28 +20,28 @@ use ir_common::NameOrId;
 use pegasus::api::function::{DynIter, FlatMapFunction, FnResult};
 
 use crate::error::{FnExecError, FnGenError, FnGenResult};
-use crate::graph::element::{GraphElement, VertexOrEdge};
+use crate::graph::element::{GraphElement, GraphObject};
 use crate::graph::{Direction, Statement, ID};
 use crate::process::operator::flatmap::FlatMapFuncGen;
 use crate::process::record::{Record, RecordExpandIter};
 
-pub struct EdgeExpandOperator<E: Into<VertexOrEdge>> {
+pub struct EdgeExpandOperator<E: Into<GraphObject>> {
     start_v_tag: Option<NameOrId>,
     edge_or_end_v_tag: Option<NameOrId>,
     stmt: Box<dyn Statement<ID, E>>,
 }
 
-impl<E: Into<VertexOrEdge> + 'static> FlatMapFunction<Record, Record> for EdgeExpandOperator<E> {
+impl<E: Into<GraphObject> + 'static> FlatMapFunction<Record, Record> for EdgeExpandOperator<E> {
     type Target = DynIter<Record>;
 
     fn exec(&self, input: Record) -> FnResult<Self::Target> {
         let entry = input
             .get(self.start_v_tag.as_ref())
             .ok_or(FnExecError::get_tag_error("get start_v failed"))?;
-        let vertex_or_edge = entry
-            .as_graph_element()
-            .ok_or(FnExecError::unexpected_data_error("start_v does not refer to a graph element"))?;
-        let id = vertex_or_edge.id();
+        let v = entry
+            .as_graph_vertex()
+            .ok_or(FnExecError::unexpected_data_error("start_v does not refer to a graph vertex"))?;
+        let id = v.id();
         let iter = self.stmt.exec(id)?;
         Ok(Box::new(RecordExpandIter::new(input, self.edge_or_end_v_tag.as_ref(), iter)))
     }

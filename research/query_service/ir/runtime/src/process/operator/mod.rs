@@ -37,7 +37,7 @@ use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 use crate::error::FnExecError;
 use crate::graph::element::{Element, GraphElement};
 use crate::graph::property::{Details, PropKey};
-use crate::process::record::{Entry, ObjectElement, Record};
+use crate::process::record::{CommonObject, Entry, Record};
 
 #[derive(Clone, Debug, Default)]
 pub struct TagKey {
@@ -56,7 +56,7 @@ impl TagKey {
             )))?
             .clone();
         if let Some(prop_key) = self.key.as_ref() {
-            if let Some(element) = entry.as_graph_element() {
+            if let Some(element) = entry.as_graph_vertex() {
                 let details = element
                     .details()
                     .ok_or(FnExecError::get_tag_error(
@@ -87,7 +87,7 @@ impl TagKey {
                     }
                 };
 
-                Ok(Arc::new(ObjectElement::Prop(prop_obj).into()))
+                Ok(Arc::new(CommonObject::Prop(prop_obj).into()))
             } else {
                 Err(FnExecError::get_tag_error(
                     "Get key failed when attempt to get prop_key from a non-graph element",
@@ -191,7 +191,7 @@ pub(crate) mod tests {
     fn init_record() -> Record {
         let vertex1 = init_vertex1();
         let vertex2 = init_vertex2();
-        let object3 = ObjectElement::Count(10);
+        let object3 = CommonObject::Count(10);
 
         let mut record = Record::new(vertex1, None);
         record.append(vertex2, Some((0 as KeyId).into()));
@@ -228,7 +228,7 @@ pub(crate) mod tests {
     fn test_get_none_tag_entry() {
         let tag_key = TagKey { tag: None, key: None };
         let record = init_record();
-        let expected = ObjectElement::Count(10).into();
+        let expected = CommonObject::Count(10).into();
         let entry = tag_key.get_entry(&record).unwrap();
         assert_eq!(entry.as_ref().clone(), expected)
     }
@@ -239,7 +239,7 @@ pub(crate) mod tests {
         let expected = init_vertex2();
         let record = init_record();
         let entry = tag_key.get_entry(&record).unwrap();
-        if let Some(element) = entry.as_graph_element() {
+        if let Some(element) = entry.as_graph_vertex() {
             assert_eq!(element.id(), expected.id());
         } else {
             assert!(false);
@@ -253,7 +253,7 @@ pub(crate) mod tests {
         let record = init_record();
         let entry = tag_key.get_entry(&record).unwrap();
         match entry.as_ref() {
-            Entry::Element(RecordElement::OffGraph(ObjectElement::Prop(obj))) => {
+            Entry::Element(RecordElement::OffGraph(CommonObject::Prop(obj))) => {
                 assert_eq!(obj.clone(), object!(expected));
             }
             _ => {
