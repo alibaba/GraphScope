@@ -1291,13 +1291,49 @@
         <span class="sd">&quot;&quot;&quot;Start a graph learning engine.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            nodes (list): The node types that will be used for gnn training.</span>
-<span class="sd">            edges (list): The edge types that will be used for gnn training.</span>
-<span class="sd">            gen_labels (list): Extra node and edge labels on original graph for gnn training.</span>
+<span class="sd">            graph (:class:`graphscope.framework.graph.GraphDAGNode`):</span>
+<span class="sd">                The graph to create learning instance.</span>
+<span class="sd">            nodes (list, optional): list of node types that will be used for GNN</span>
+<span class="sd">                training, the element of list can be `&quot;node_label&quot;` or</span>
+<span class="sd">                `(node_label, features)`. If the element of the list is a tuple and</span>
+<span class="sd">                contains selected feature list, it would use the selected</span>
+<span class="sd">                feature list for training. Default is None which use all type of</span>
+<span class="sd">                nodes and for the GNN training.</span>
+<span class="sd">            edges (list, optional): list of edge types that will be used for GNN</span>
+<span class="sd">                training. We use `(src_label, edge_label, dst_label)`</span>
+<span class="sd">                to specify one edge type. Default is None which use all type of</span>
+<span class="sd">                edges for GNN training.</span>
+<span class="sd">            gen_labels (list, optional): Alias node and edge labels and extract</span>
+<span class="sd">                train/validation/test dataset from original graph for supervised</span>
+<span class="sd">                GNN training. The detail is explained in the examples below.</span>
 
-<span class="sd">        Returns:</span>
-<span class="sd">            :class:`graphscope.learning.GraphDAGNode`:</span>
-<span class="sd">                An instance of learning graph that could be feed to the learning engine, evaluated in eager node.</span>
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; # Assume the input graph contains one label node `paper` and one edge label `link`.</span>
+<span class="sd">        &gt;&gt;&gt; features = [&quot;weight&quot;, &quot;name&quot;] # use properties &quot;weight&quot; and &quot;name&quot; as features</span>
+<span class="sd">        &gt;&gt;&gt; lg = sess.graphlearn(</span>
+<span class="sd">                graph,</span>
+<span class="sd">                nodes=[(&quot;paper&quot;, features)])  # use &quot;paper&quot; node and features for training</span>
+<span class="sd">                edges=[(&quot;paper&quot;, &quot;links&quot;, &quot;paper&quot;)]  # use the `paper-&gt;links-&gt;papers` edge type for training</span>
+<span class="sd">                gen_labels=[</span>
+<span class="sd">                    # split &quot;paper&quot; nodes into 100 pieces, and uses random 75 pieces (75%) as training dataset</span>
+<span class="sd">                    (&quot;train&quot;, &quot;paper&quot;, 100, (0, 75)),</span>
+<span class="sd">                    # split &quot;paper&quot; nodes into 100 pieces, and uses random 10 pieces (10%) as validation dataset</span>
+<span class="sd">                    (&quot;val&quot;, &quot;paper&quot;, 100, (75, 85)),</span>
+<span class="sd">                    # split &quot;paper&quot; nodes into 100 pieces, and uses random 15 pieces (15%) as test dataset</span>
+<span class="sd">                    (&quot;test&quot;, &quot;paper&quot;, 100, (85, 100)),</span>
+<span class="sd">                ]</span>
+<span class="sd">            )</span>
+<span class="sd">        Note that the training, validation and test datasets are not overlapping. And for unsupervised learning:</span>
+<span class="sd">        &gt;&gt;&gt; lg = sess.graphlearn(</span>
+<span class="sd">                graph,</span>
+<span class="sd">                nodes=[(&quot;paper&quot;, features)])  # use &quot;paper&quot; node and features for training</span>
+<span class="sd">                edges=[(&quot;paper&quot;, &quot;links&quot;, &quot;paper&quot;)]  # use the `paper-&gt;links-&gt;papers` edge type for training</span>
+<span class="sd">                gen_labels=[</span>
+<span class="sd">                    # split &quot;paper&quot; nodes into 100 pieces, and uses all pieces as training dataset</span>
+<span class="sd">                    (&quot;train&quot;, &quot;paper&quot;, 100, (0, 100)),</span>
+<span class="sd">                ]</span>
+<span class="sd">            )</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span> <span class="o">!=</span> <span class="n">graph</span><span class="o">.</span><span class="n">session_id</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
@@ -1578,10 +1614,10 @@
     <span class="k">return</span> <span class="n">get_default_session</span><span class="p">()</span><span class="o">.</span><span class="n">gremlin</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">engine_params</span><span class="p">)</span></div>
 
 
-<span class="k">def</span> <span class="nf">graphlearn</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">edges</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gen_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="graphlearn"><a class="viewcode-back" href="../../../reference/generated/graphscope.graphlearn.html#graphscope.graphlearn">[docs]</a><span class="k">def</span> <span class="nf">graphlearn</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">edges</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gen_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Create a graph learning engine.</span>
 
-<span class="sd">    See params detail in :meth:`graphscope.Session.learning`</span>
+<span class="sd">    See params detail in :meth:`graphscope.Session.graphlearn`</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        :class:`graphscope.learning.GraphDAGNode`:</span>
@@ -1597,7 +1633,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">_default_session_stack</span><span class="o">.</span><span class="n">is_cleared</span><span class="p">():</span>
         <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;No de fault session found.&quot;</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">get_default_session</span><span class="p">()</span><span class="o">.</span><span class="n">graphlearn</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">edges</span><span class="p">,</span> <span class="n">gen_labels</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">get_default_session</span><span class="p">()</span><span class="o">.</span><span class="n">graphlearn</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">edges</span><span class="p">,</span> <span class="n">gen_labels</span><span class="p">)</span></div>
 </pre></div>
 
            </div>

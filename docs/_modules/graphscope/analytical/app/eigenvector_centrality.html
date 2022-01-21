@@ -149,15 +149,18 @@
 
 <div class="viewcode-block" id="eigenvector_centrality"><a class="viewcode-back" href="../../../../reference/app.html#graphscope.eigenvector_centrality">[docs]</a><span class="nd">@project_to_simple</span>
 <span class="nd">@not_compatible_for</span><span class="p">(</span><span class="s2">&quot;arrow_property&quot;</span><span class="p">,</span> <span class="s2">&quot;dynamic_property&quot;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">eigenvector_centrality</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="mf">1e-06</span><span class="p">,</span> <span class="n">max_round</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">eigenvector_centrality</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="mf">1e-06</span><span class="p">,</span> <span class="n">max_round</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Compute the eigenvector centrality for the `graph`.</span>
 <span class="sd">    See more about eigenvector centrality here:</span>
 <span class="sd">    https://networkx.org/documentation/networkx-1.10/reference/generated/networkx.algorithms.centrality.eigenvector_centrality.html</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        graph (:class:`Graph`): A simple graph.</span>
+<span class="sd">        graph (:class:`graphscope.Graph`): A simple graph.</span>
 <span class="sd">        tolerance (float, optional): Defaults to 1e-06.</span>
 <span class="sd">        max_round (int, optional): Defaults to 100.</span>
+<span class="sd">        weight (str, optional): The edge data key corresponding to the edge weight.</span>
+<span class="sd">            Note that property under multiple labels should have the consistent index.</span>
+<span class="sd">            Defaults to None.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        :class:`graphscope.framework.context.VertexDataContextDAGNode`:</span>
@@ -167,13 +170,14 @@
 
 <span class="sd">    .. code:: python</span>
 
-<span class="sd">        import graphscope as gs</span>
-<span class="sd">        g = gs.g()</span>
-<span class="sd">        # Load some data, then project to a simple graph (if needed).</span>
-<span class="sd">        pg = g.project(vertices={&quot;vlabel&quot;: []}, edges={&quot;elabel&quot;: []})</span>
-<span class="sd">        r = gs.eigenvector_centrality(pg)</span>
-<span class="sd">        s.close()</span>
-
+<span class="sd">        &gt;&gt;&gt; import graphscope</span>
+<span class="sd">        &gt;&gt;&gt; from graphscope.dataset import load_p2p_network</span>
+<span class="sd">        &gt;&gt;&gt; sess = graphscope.session(cluster_type=&quot;hosts&quot;, mode=&quot;eager&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; g = load_p2p_network(sess)</span>
+<span class="sd">        &gt;&gt;&gt; # project to a simple graph (if needed)</span>
+<span class="sd">        &gt;&gt;&gt; pg = g.project(vertices={&quot;host&quot;: [&quot;id&quot;]}, edges={&quot;connect&quot;: [&quot;dist&quot;]})</span>
+<span class="sd">        &gt;&gt;&gt; c = graphscope.eigenvector_centrality(pg, tolerance=1e-06, max_round=10)</span>
+<span class="sd">        &gt;&gt;&gt; sess.close()</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">tolerance</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">tolerance</span><span class="p">)</span>
     <span class="n">max_round</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">max_round</span><span class="p">)</span>
