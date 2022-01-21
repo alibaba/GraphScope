@@ -131,23 +131,12 @@ fn apply_arith<'a>(
     })
 }
 
-pub(crate) fn eval_object_as_bool(object: BorrowObject) -> bool {
-    match object {
-        // The logic is, if the object is a primitive, then check whether
-        // it is zero, otherwise return true for whatever object other than `Object::None`
-        // TODO(longbin) The above logic may not be solid
-        BorrowObject::Primitive(p) => p.as_bool().unwrap_or(true),
-        BorrowObject::None => false,
-        _ => true,
-    }
-}
-
 pub(crate) fn apply_logical<'a>(
     logical: &pb::Logical, a: BorrowObject<'a>, b_opt: Option<BorrowObject<'a>>,
 ) -> ExprEvalResult<Object> {
     use pb::Logical::*;
     if logical == &Not {
-        return Ok((!eval_object_as_bool(a)).into());
+        return Ok((!a.eval_bool::<(), NoneContext>(None)?).into());
     } else {
         if b_opt.is_some() {
             let b = b_opt.unwrap();
@@ -158,8 +147,12 @@ pub(crate) fn apply_logical<'a>(
                 Le => Ok((a <= b).into()),
                 Gt => Ok((a > b).into()),
                 Ge => Ok((a >= b).into()),
-                And => Ok((eval_object_as_bool(a) && eval_object_as_bool(b)).into()),
-                Or => Ok((eval_object_as_bool(a) || eval_object_as_bool(b)).into()),
+                And => Ok((a.eval_bool::<(), NoneContext>(None)?
+                    && b.eval_bool::<(), NoneContext>(None)?)
+                .into()),
+                Or => Ok((a.eval_bool::<(), NoneContext>(None)?
+                    || b.eval_bool::<(), NoneContext>(None)?)
+                .into()),
                 Within => Ok(b.contains(&a).into()),
                 Without => Ok((!b.contains(&a)).into()),
                 Not => unreachable!(),
@@ -319,7 +312,7 @@ impl Evaluate for Evaluator {
 impl EvalPred for Evaluator {
     fn eval_bool<E: Element, C: Context<E>>(&self, context: Option<&C>) -> ExprEvalResult<bool> {
         let object = self.eval(context)?;
-        Ok(eval_object_as_bool(object.as_borrow()))
+        object.as_borrow().eval_bool(context)
     }
 }
 

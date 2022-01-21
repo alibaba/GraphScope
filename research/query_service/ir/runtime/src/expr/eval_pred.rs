@@ -16,10 +16,11 @@
 
 use std::convert::{TryFrom, TryInto};
 
+use dyn_type::{BorrowObject, Object};
 use ir_common::error::{ParsePbError, ParsePbResult};
 use ir_common::generated::common as common_pb;
 
-use crate::expr::eval::{apply_logical, eval_object_as_bool, Context, Evaluate, Evaluator, Operand};
+use crate::expr::eval::{apply_logical, Context, Evaluate, Evaluator, Operand};
 use crate::expr::{ExprEvalError, ExprEvalResult};
 use crate::graph::element::Element;
 use crate::graph::property::{Details, PropKey};
@@ -111,10 +112,41 @@ pub enum Predicates {
     Or((Box<Predicates>, Box<Predicates>)),
 }
 
+impl<'a> EvalPred for BorrowObject<'a> {
+    fn eval_bool<E: Element, C: Context<E>>(&self, _context: Option<&C>) -> ExprEvalResult<bool> {
+        match *self {
+            BorrowObject::Primitive(p) => Ok(p.as_bool().unwrap_or(true)),
+            BorrowObject::String(str) => Ok(!str.is_empty()),
+            BorrowObject::Vector(vec) => {
+                for obj in vec {
+                    // Every object must contain some object
+                    match obj {
+                        Object::None => return Ok(false),
+                        _ => {}
+                    }
+                }
+                Ok(true)
+            }
+            BorrowObject::KV(kv) => {
+                // Every value must contain some object
+                for value in kv.values() {
+                    match value {
+                        Object::None => return Ok(false),
+                        _ => {}
+                    }
+                }
+                Ok(true)
+            }
+            BorrowObject::None => Ok(false),
+            _ => Ok(true),
+        }
+    }
+}
+
 impl EvalPred for Operand {
     fn eval_bool<E: Element, C: Context<E>>(&self, context_: Option<&C>) -> ExprEvalResult<bool> {
         match self {
-            Operand::Const(c) => Ok(eval_object_as_bool(c.as_borrow())),
+            Operand::Const(c) => c.as_borrow().eval_bool(context_),
             Operand::Var { tag, prop_key } => {
                 let mut result = false;
                 if let Some(context) = context_ {
