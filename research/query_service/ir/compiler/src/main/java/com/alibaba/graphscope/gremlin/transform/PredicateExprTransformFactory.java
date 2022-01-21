@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.graphscope.gremlin;
+package com.alibaba.graphscope.gremlin.transform;
 
+import com.alibaba.graphscope.gremlin.Utils;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.IsStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.WherePredicateStep;

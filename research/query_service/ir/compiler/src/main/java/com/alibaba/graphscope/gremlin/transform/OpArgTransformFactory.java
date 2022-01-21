@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.gremlin;
+package com.alibaba.graphscope.gremlin.transform;
 
 import com.alibaba.graphscope.common.exception.OpArgIllegalException;
 import com.alibaba.graphscope.common.intermediate.ArgAggFn;
@@ -23,6 +23,7 @@ import com.alibaba.graphscope.common.jna.type.*;
 import com.alibaba.graphscope.common.jna.type.FfiDirection;
 import com.alibaba.graphscope.common.jna.type.FfiNameOrId;
 import com.alibaba.graphscope.common.jna.type.FfiScanOpt;
+import com.alibaba.graphscope.gremlin.transform.ByTraversalTransformFactory;
 import org.apache.tinkerpop.gremlin.process.traversal.*;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.IdentityTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.ValueTraversal;
@@ -181,17 +182,17 @@ public class OpArgTransformFactory {
         list.forEach(k -> {
             Traversal.Admin admin = k.getValue0();
             FfiOrderOpt orderOpt = getFfiOrderOpt((Order) k.getValue1());
-            // order().by('name', order)
-            if (admin != null && admin instanceof ValueTraversal) {
-                String key = ((ValueTraversal) admin).getPropertyKey();
-                FfiProperty.ByValue property = ArgUtils.asFfiProperty(key);
-                vars.add(Pair.with(ArgUtils.asVarPropertyOnly(property), orderOpt));
-            } else if (admin == null || admin instanceof IdentityTraversal) { // order, order().by(order)
-                vars.add(Pair.with(ArgUtils.asNoneVar(), orderOpt));
-            } else {
-                throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
-                        "supported pattern is [order()] or [order().by(order) or order().by('name', order)]");
+            FfiVariable.ByValue orderKey;
+            // order().by(select("a"))
+            // order().by(select("a").by(values(...)))
+            // order().by(select("a").values(...))
+            if (ByTraversalTransformFactory.isTagPropertyPattern(admin)) {
+                Pair<String, Traversal.Admin> tagProperty = ByTraversalTransformFactory.getByTraversalAsTagProperty(admin);
+                orderKey = ByTraversalTransformFactory.getTagByTraversalAsVar(tagProperty.getValue0(), tagProperty.getValue1());
+            } else { // order().by("name"), order().by(values("name"))
+                orderKey = ByTraversalTransformFactory.getTagByTraversalAsVar("", admin);
             }
+            vars.add(Pair.with(orderKey, orderOpt));
         });
         return vars;
     };
@@ -203,7 +204,7 @@ public class OpArgTransformFactory {
             case desc:
                 return FfiOrderOpt.Desc;
             case shuffle:
-                return FfiOrderOpt.Desc;
+                return FfiOrderOpt.Shuffle;
             default:
                 throw new OpArgIllegalException(OpArgIllegalException.Cause.INVALID_TYPE, "invalid order type");
         }
