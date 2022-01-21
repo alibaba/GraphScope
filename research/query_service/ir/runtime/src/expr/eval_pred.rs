@@ -330,19 +330,16 @@ fn process_predicates(iter: &mut dyn Iterator<Item = &common_pb::ExprOpr>) -> Pa
 }
 
 #[derive(Debug)]
-pub struct PEvaluator {
-    predicates: Option<Predicates>,
-    evaluator: Option<Evaluator>,
+pub enum PEvaluator {
+    Pred(Predicates),
+    General(Evaluator),
 }
 
 impl EvalPred for PEvaluator {
     fn eval_bool<E: Element, C: Context<E>>(&self, context: Option<&C>) -> ExprEvalResult<bool> {
-        if let Some(pred) = &self.predicates {
-            pred.eval_bool(context)
-        } else if let Some(eval) = &self.evaluator {
-            eval.eval_bool(context)
-        } else {
-            Err(ExprEvalError::EmptyExpression)
+        match self {
+            PEvaluator::Pred(pred) => pred.eval_bool(context),
+            PEvaluator::General(eval) => eval.eval_bool(context),
         }
     }
 }
@@ -353,9 +350,9 @@ impl TryFrom<common_pb::Expression> for PEvaluator {
     fn try_from(expr: common_pb::Expression) -> Result<Self, Self::Error> {
         let mut iter = expr.operators.iter();
         if let Ok(pred) = process_predicates(&mut iter) {
-            Ok(Self { predicates: Some(pred), evaluator: None })
+            Ok(Self::Pred(pred))
         } else {
-            Ok(Self { predicates: None, evaluator: Some(expr.try_into()?) })
+            Ok(Self::General(expr.try_into()?))
         }
     }
 }
@@ -416,71 +413,99 @@ mod tests {
     fn test_parse_predicate() {
         let expr = str_to_expr_pb("1".to_string()).unwrap();
         let p_eval = PEvaluator::try_from(expr).unwrap();
-        assert_eq!(p_eval.predicates.clone().unwrap(), Predicates::SingleItem(Operand::Const(object!(1))));
+        match &p_eval {
+            PEvaluator::Pred(pred) => {
+                assert_eq!(pred.clone(), Predicates::SingleItem(Operand::Const(object!(1))));
+            }
+            PEvaluator::General(_) => panic!("should be predicate"),
+        }
         assert!(p_eval
             .eval_bool::<(), NoneContext>(None)
             .unwrap());
 
         let expr = str_to_expr_pb("@a.name".to_string()).unwrap();
         let p_eval = PEvaluator::try_from(expr).unwrap();
-        assert_eq!(
-            p_eval.predicates.clone().unwrap(),
-            Predicates::SingleItem(Operand::Var {
-                tag: Some("a".into()),
-                prop_key: Some(PropKey::Key("name".into()))
-            })
-        );
+        match &p_eval {
+            PEvaluator::Pred(pred) => {
+                assert_eq!(
+                    pred.clone(),
+                    Predicates::SingleItem(Operand::Var {
+                        tag: Some("a".into()),
+                        prop_key: Some(PropKey::Key("name".into()))
+                    })
+                );
+            }
+            PEvaluator::General(_) => panic!("should be predicate"),
+        }
         assert!(!p_eval
             .eval_bool::<(), NoneContext>(None)
             .unwrap());
 
         let expr = str_to_expr_pb("1 > 2".to_string()).unwrap();
         let p_eval = PEvaluator::try_from(expr).unwrap();
-        assert_eq!(
-            p_eval.predicates.clone().unwrap(),
-            Predicates::Pred(Predicate {
-                left: Operand::Const(object!(1)),
-                cmp: common_pb::Logical::Gt,
-                right: Operand::Const(object!(2)),
-            })
-        );
+        match &p_eval {
+            PEvaluator::Pred(pred) => {
+                assert_eq!(
+                    pred.clone(),
+                    Predicates::Pred(Predicate {
+                        left: Operand::Const(object!(1)),
+                        cmp: common_pb::Logical::Gt,
+                        right: Operand::Const(object!(2)),
+                    })
+                );
+            }
+            PEvaluator::General(_) => panic!("should be predicate"),
+        }
         assert!(!p_eval
             .eval_bool::<(), NoneContext>(None)
             .unwrap());
 
         let expr = str_to_expr_pb("1 && 1 > 2".to_string()).unwrap();
         let p_eval = PEvaluator::try_from(expr).unwrap();
-        assert_eq!(
-            p_eval.predicates.clone().unwrap(),
-            Predicates::SingleItem(Operand::Const(object!(1))).and(Predicates::Pred(Predicate {
-                left: Operand::Const(object!(1)),
-                cmp: common_pb::Logical::Gt,
-                right: Operand::Const(object!(2)),
-            }))
-        );
+        match &p_eval {
+            PEvaluator::Pred(pred) => {
+                assert_eq!(
+                    pred.clone(),
+                    Predicates::SingleItem(Operand::Const(object!(1))).and(Predicates::Pred(Predicate {
+                        left: Operand::Const(object!(1)),
+                        cmp: common_pb::Logical::Gt,
+                        right: Operand::Const(object!(2)),
+                    }))
+                );
+            }
+            PEvaluator::General(_) => panic!("should be predicate"),
+        }
         assert!(!p_eval
             .eval_bool::<(), NoneContext>(None)
             .unwrap());
 
         let expr = str_to_expr_pb("!@a.name && @a.age > 2 || @b.~id == 10".to_string()).unwrap();
         let p_eval = PEvaluator::try_from(expr).unwrap();
-        assert_eq!(
-            p_eval.predicates.unwrap(),
-            Predicates::not(Predicates::SingleItem(Operand::Var {
-                tag: Some("a".into()),
-                prop_key: Some(PropKey::Key("name".into()))
-            }))
-            .and(Predicates::Pred(Predicate {
-                left: Operand::Var { tag: Some("a".into()), prop_key: Some(PropKey::Key("age".into())) },
-                cmp: common_pb::Logical::Gt,
-                right: Operand::Const(object!(2)),
-            }))
-            .or(Predicates::Pred(Predicate {
-                left: Operand::Var { tag: Some("b".into()), prop_key: Some(PropKey::Id) },
-                cmp: common_pb::Logical::Eq,
-                right: Operand::Const(object!(10)),
-            }))
-        );
+        match &p_eval {
+            PEvaluator::Pred(pred) => {
+                assert_eq!(
+                    pred.clone(),
+                    Predicates::not(Predicates::SingleItem(Operand::Var {
+                        tag: Some("a".into()),
+                        prop_key: Some(PropKey::Key("name".into()))
+                    }))
+                    .and(Predicates::Pred(Predicate {
+                        left: Operand::Var {
+                            tag: Some("a".into()),
+                            prop_key: Some(PropKey::Key("age".into()))
+                        },
+                        cmp: common_pb::Logical::Gt,
+                        right: Operand::Const(object!(2)),
+                    }))
+                    .or(Predicates::Pred(Predicate {
+                        left: Operand::Var { tag: Some("b".into()), prop_key: Some(PropKey::Id) },
+                        cmp: common_pb::Logical::Eq,
+                        right: Operand::Const(object!(10)),
+                    }))
+                );
+            }
+            PEvaluator::General(_) => panic!("should be predicate"),
+        }
     }
 
     #[test]
