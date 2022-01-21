@@ -150,7 +150,7 @@ class ArrowFragmentLoader {
       BOOST_LEAF_AUTO(tmp_v,
                       vineyard::sync_gs_error(comm_spec_, load_v_procedure));
       v_tables = tmp_v;
-    } else {
+    } else if (graph_info_) {
       auto load_v_procedure = [&]() {
         return loadVertexTables(graph_info_->vertices, comm_spec_.worker_id(),
                                 comm_spec_.worker_num());
@@ -179,7 +179,7 @@ class ArrowFragmentLoader {
       BOOST_LEAF_AUTO(tmp_e,
                       vineyard::sync_gs_error(comm_spec_, load_e_procedure));
       e_tables = tmp_e;
-    } else {
+    } else if (graph_info_) {
       auto load_e_procedure = [&]() {
         return loadEdgeTables(graph_info_->edges, comm_spec_.worker_id(),
                               comm_spec_.worker_num());
