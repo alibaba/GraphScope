@@ -312,7 +312,7 @@ impl Evaluate for Evaluator {
 impl EvalPred for Evaluator {
     fn eval_bool<E: Element, C: Context<E>>(&self, context: Option<&C>) -> ExprEvalResult<bool> {
         let object = self.eval(context)?;
-        object.as_borrow().eval_bool(context)
+        object.eval_bool(context)
     }
 }
 
@@ -433,7 +433,7 @@ impl Evaluate for Operand {
                                 }
                             }
                         } else {
-                            result = element.as_borrow_object().try_to_owned().into()
+                            result = element.as_borrow_object().try_to_owned().into();
                         }
                     };
 
