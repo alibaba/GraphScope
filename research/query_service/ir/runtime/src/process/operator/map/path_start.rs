@@ -38,8 +38,6 @@ impl MapFunction<Record, Record> for PathStartOperator {
         let v = entry
             .as_graph_vertex()
             .ok_or(FnExecError::unexpected_data_error("tag does not refer to a graph vertex element"))?;
-        // TODO(bingqing): for now, we append the start_vertex into path; this may occur a duplicate vertex;
-        // If the duplicate vertex is not expected, we may remove it in path_end;
         let graph_path = GraphPath::new(v.clone(), self.is_whole_path);
         input.append(graph_path, None);
         Ok(input)

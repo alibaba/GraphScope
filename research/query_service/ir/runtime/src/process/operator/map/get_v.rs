@@ -54,7 +54,6 @@ impl MapFunction<Record, Record> for GetVertexOperator {
                     .get_path_end()
                     .ok_or(FnExecError::unexpected_data_error("Get path_end failed in path expand"))?
                     .clone();
-                // TODO: for now, we append the endV of path into columns; this may occur a duplicate vertex;
                 input.append(path_end, self.alias.clone());
                 Ok(input)
             } else {
