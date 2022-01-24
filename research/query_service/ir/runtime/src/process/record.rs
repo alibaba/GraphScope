@@ -68,6 +68,13 @@ impl RecordElement {
             _ => None,
         }
     }
+
+    pub fn as_mut_graph_path(&mut self) -> Option<&mut GraphPath> {
+        match self {
+            RecordElement::OnGraph(GraphObject::P(graph_path)) => Some(graph_path),
+            _ => None,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, PartialOrd)]
@@ -94,6 +101,13 @@ impl Entry {
     pub fn as_graph_path(&self) -> Option<&GraphPath> {
         match self {
             Entry::Element(record_element) => record_element.as_graph_path(),
+            _ => None,
+        }
+    }
+
+    pub fn as_mut_graph_path(&mut self) -> Option<&mut GraphPath> {
+        match self {
+            Entry::Element(record_element) => record_element.as_mut_graph_path(),
             _ => None,
         }
     }
@@ -134,11 +148,6 @@ impl Record {
         if let Some(alias) = alias {
             self.columns.insert(alias, entry);
         }
-    }
-
-    // append a path element on curr entry; notice that curr entry Must be GraphPath
-    pub fn append_path_element(&mut self, _entry: VertexOrEdge) {
-        todo!()
     }
 
     pub fn get(&self, tag: Option<&NameOrId>) -> Option<&Arc<Entry>> {
@@ -192,6 +201,15 @@ impl Into<Entry> for Edge {
 impl Into<Entry> for GraphPath {
     fn into(self) -> Entry {
         Entry::Element(RecordElement::OnGraph(GraphObject::P(self)))
+    }
+}
+
+impl Into<Entry> for VertexOrEdge {
+    fn into(self) -> Entry {
+        match self {
+            VertexOrEdge::V(v) => v.into(),
+            VertexOrEdge::E(e) => e.into(),
+        }
     }
 }
 
@@ -290,6 +308,46 @@ impl<E: Into<GraphObject>> Iterator for RecordExpandIter<E> {
             Some(elem) => {
                 record.append(elem.into(), self.tag.clone());
                 Some(record)
+            }
+            None => None,
+        }
+    }
+}
+
+pub struct RecordPathExpandIter<E> {
+    origin: Record,
+    curr_path: GraphPath,
+    children: DynIter<E>,
+}
+
+impl<E> RecordPathExpandIter<E> {
+    pub fn new(origin: Record, curr_path: GraphPath, children: DynIter<E>) -> Self {
+        RecordPathExpandIter { origin, curr_path, children }
+    }
+}
+
+impl<E: Into<GraphObject>> Iterator for RecordPathExpandIter<E> {
+    type Item = Record;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let mut record = self.origin.clone();
+        let mut curr_path = self.curr_path.clone();
+        match self.children.next() {
+            Some(elem) => {
+                let graph_obj = elem.into();
+                match graph_obj {
+                    GraphObject::V(v) => {
+                        curr_path.append(v);
+                        record.append(curr_path, None);
+                        Some(record)
+                    }
+                    GraphObject::E(e) => {
+                        curr_path.append(e);
+                        record.append(curr_path, None);
+                        Some(record)
+                    }
+                    GraphObject::P(_) => None,
+                }
             }
             None => None,
         }
