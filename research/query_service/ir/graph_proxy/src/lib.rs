@@ -51,6 +51,7 @@ macro_rules! limit_n {
 macro_rules! filter_limit {
     ($iter: expr, $f: expr, $n: expr) => {
         if let Some(ref f) = $f {
+            use runtime::expr::eval_pred::EvalPred;
             let f = f.clone();
             let r = $iter.filter(move |v| f.eval_bool(Some(v)).unwrap_or(false));
             limit_n!(r, $n)
