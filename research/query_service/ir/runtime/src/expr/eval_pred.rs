@@ -67,7 +67,9 @@ impl Partial {
                 *left = Some(item);
                 Ok(())
             }
-            Self::Predicates(_) => Err(ExprError::OtherErr(format!("invalid predicate: {:?}, {:?}", self, item)))
+            Self::Predicates(_) => {
+                Err(ExprError::OtherErr(format!("invalid predicate: {:?}, {:?}", self, item)))
+            }
         }
     }
 
