@@ -16,6 +16,7 @@
 package com.alibaba.graphscope.gremlin.transform;
 
 import com.alibaba.graphscope.common.exception.OpArgIllegalException;
+import com.alibaba.graphscope.gremlin.antlr4.AnyValue;
 import org.apache.tinkerpop.gremlin.process.traversal.Compare;
 import org.apache.tinkerpop.gremlin.process.traversal.Contains;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
@@ -43,40 +44,48 @@ public interface PredicateExprTransform extends Function {
                 if (i > 0) {
                     expr += connector;
                 }
-                expr += flatPredicate(subject, cur);
+                String flatPredicate = flatPredicate(subject, cur);
+                if (i > 0) {
+                    expr += "(" + flatPredicate + ")";
+                } else {
+                    expr += flatPredicate;
+                }
             }
         } else {
             Object predicateValue = predicate.getValue();
-            String valueExpr = getValueExpr(predicateValue);
-            BiPredicate biPredicate = predicate.getBiPredicate();
-            if (biPredicate == Compare.eq) {
-                expr += String.format("%s == %s", subject, valueExpr);
-            } else if (biPredicate == Compare.neq) {
-                expr += String.format("%s != %s", subject, valueExpr);
-            } else if (biPredicate == Compare.lt) {
-                expr += String.format("%s < %s", subject, valueExpr);
-            } else if (biPredicate == Compare.lte) {
-                expr += String.format("%s <= %s", subject, valueExpr);
-            } else if (biPredicate == Compare.gt) {
-                expr += String.format("%s > %s", subject, valueExpr);
-            } else if (biPredicate == Compare.gte) {
-                expr += String.format("%s >= %s", subject, valueExpr);
-            } else if (biPredicate == Contains.within) {
-                expr += String.format("%s within %s", subject, valueExpr);
-            } else if (biPredicate == Contains.without) {
-                expr += String.format("%s without %s", subject, valueExpr);
+            if (predicateValue instanceof AnyValue) {
+                expr = getExprIfPropertyExist(subject);
             } else {
-                throw new OpArgIllegalException(
-                        OpArgIllegalException.Cause.UNSUPPORTED_TYPE, "predicate type is unsupported");
+                BiPredicate biPredicate = predicate.getBiPredicate();
+                if (biPredicate == Compare.eq) {
+                    expr += getPredicateExpr(subject, "==", predicateValue);
+                } else if (biPredicate == Compare.neq) {
+                    expr += getPredicateExpr(subject, "!=", predicateValue);
+                } else if (biPredicate == Compare.lt) {
+                    expr += getPredicateExpr(subject, "<", predicateValue);
+                } else if (biPredicate == Compare.lte) {
+                    expr += getPredicateExpr(subject, "<=", predicateValue);
+                } else if (biPredicate == Compare.gt) {
+                    expr += getPredicateExpr(subject, ">", predicateValue);
+                } else if (biPredicate == Compare.gte) {
+                    expr += getPredicateExpr(subject, ">=", predicateValue);
+                } else if (biPredicate == Contains.within) {
+                    expr += getPredicateExpr(subject, "within", predicateValue);
+                } else if (biPredicate == Contains.without) {
+                    expr += getPredicateExpr(subject, "without", predicateValue);
+                } else {
+                    throw new OpArgIllegalException(
+                            OpArgIllegalException.Cause.UNSUPPORTED_TYPE, "predicate type is unsupported");
+                }
             }
         }
         return expr;
     }
 
-    default String getValueExpr(Object value) {
-        String valueExpr;
+    default String getpredicateValue(Object value) {
+        String predicateValue;
         if (value instanceof String) {
-            valueExpr = String.format("\"%s\"", value);
+            predicateValue = String.format("\"%s\"", value);
         } else if (value instanceof List) {
             String content = "";
             List values = (List) value;
@@ -89,12 +98,38 @@ public interface PredicateExprTransform extends Function {
                     throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
                             "nested list of predicate value is unsupported");
                 }
-                content += getValueExpr(v);
+                content += getpredicateValue(v);
             }
-            valueExpr = String.format("[%s]", content);
+            predicateValue = String.format("[%s]", content);
         } else {
-            valueExpr = value.toString();
+            predicateValue = value.toString();
         }
-        return valueExpr;
+        return predicateValue;
+    }
+
+    // @a -> ""
+    // @a.name -> @a.name
+    // @.name -> @.name
+    // @ -> ""
+    default String getExprIfPropertyExist(String expr) {
+        String[] splitExprs = expr.split("\\.");
+        return (splitExprs.length == 2) ? expr : "";
+    }
+
+    default String getPredicateExpr(String subject, String predicate, Object value) {
+        String subjectKeyExist = getExprIfPropertyExist(subject);
+        String valueKeyExist = "";
+        if (value instanceof PredicateExprTransformFactory.WherePredicateValue) {
+            valueKeyExist = getExprIfPropertyExist(value.toString());
+        }
+        String predicateExpr = String.format("%s %s %s", subject, predicate, getpredicateValue(value));
+        StringBuilder builder = new StringBuilder(predicateExpr);
+        if (!valueKeyExist.isEmpty()) {
+            builder.insert(0, String.format("%s && ", valueKeyExist));
+        }
+        if (!subjectKeyExist.isEmpty()) {
+            builder.insert(0, String.format("%s && ", subjectKeyExist));
+        }
+        return builder.toString();
     }
 }

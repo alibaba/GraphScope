@@ -39,7 +39,12 @@ public enum PredicateExprTransformFactory implements PredicateExprTransform {
                 }
                 HasContainer container = containers.get(i);
                 String key = "@." + container.getKey();
-                expr += flatPredicate(key, container.getPredicate());
+                String flatPredicate = flatPredicate(key, container.getPredicate());
+                if (i > 0) {
+                    expr += "(" + flatPredicate + ")";
+                } else {
+                    expr += flatPredicate;
+                }
             }
             return expr;
         }

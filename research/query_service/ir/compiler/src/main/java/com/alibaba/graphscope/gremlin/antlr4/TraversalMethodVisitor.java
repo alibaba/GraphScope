@@ -21,6 +21,7 @@ import com.alibaba.graphscope.gremlin.exception.UnsupportedEvalException;
 import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSBaseVisitor;
 import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSParser;
 import org.apache.tinkerpop.gremlin.process.traversal.Order;
+import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
@@ -86,6 +87,9 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
             return graphTraversal.has(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral(0)),
                     GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral(1)),
                     TraversalPredicateVisitor.getInstance().visitTraversalPredicate(ctx.traversalPredicate()));
+        } else if (childCount == 4 && ctx.stringLiteral() != null) {
+            P eqAny = P.eq(AnyValue.INSTANCE);
+            return graphTraversal.has(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral(0)), eqAny);
         } else {
             throw new UnsupportedEvalException(ctx.getClass(), notice);
         }

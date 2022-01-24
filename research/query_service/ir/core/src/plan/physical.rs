@@ -1088,7 +1088,7 @@ mod test {
         logical_plan
             .append_operator_as_node(path_opr.clone(), vec![0])
             .unwrap(); // node 1
-        // Case with partition
+                       // Case with partition
         let mut builder = JobBuilder::default();
         let mut plan_meta = PlanMeta::default();
         plan_meta.set_partition(true);

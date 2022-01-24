@@ -80,7 +80,7 @@ public class GraphStepTest {
         Step graphStep = traversal.asAdmin().getStartStep();
         ScanFusionOp op = (ScanFusionOp) StepTransformFactory.TINKER_GRAPH_STEP.apply(graphStep);
         String expr = (String) op.getPredicate().get().applyArg();
-        Assert.assertEquals("@.name == \"marko\"", expr);
+        Assert.assertEquals("@.name && @.name == \"marko\"", expr);
     }
 
     @Test
