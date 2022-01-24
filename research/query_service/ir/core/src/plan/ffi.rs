@@ -661,7 +661,7 @@ fn set_alias(ptr: *const c_void, alias: FfiAlias, opr: Opr) -> ResultCode {
             }
             Opr::Apply => {
                 let mut apply = unsafe { Box::from_raw(ptr as *mut pb::Apply) };
-                apply.subtask.as_mut().unwrap().alias = alias_pb.unwrap();
+                apply.alias = alias_pb.unwrap();
                 std::mem::forget(apply);
             }
             Opr::As => {
@@ -1709,7 +1709,9 @@ mod subtask {
     pub extern "C" fn init_apply_operator(subtask_root: i32, join_kind: FfiJoinKind) -> *const c_void {
         let apply = Box::new(pb::Apply {
             join_kind: unsafe { std::mem::transmute::<FfiJoinKind, i32>(join_kind) },
-            subtask: Some(pb::apply::Subtask { tags: vec![], subtask: subtask_root, alias: None }),
+            tags: vec![],
+            subtask: subtask_root,
+            alias: None,
         });
 
         Box::into_raw(apply) as *const c_void
@@ -1722,7 +1724,7 @@ mod subtask {
         if tag_pb.is_ok() {
             if let Some(tag) = tag_pb.unwrap() {
                 let mut apply = unsafe { Box::from_raw(ptr_apply as *mut pb::Apply) };
-                apply.subtask.as_mut().unwrap().tags.push(tag);
+                apply.tags.push(tag);
                 std::mem::forget(apply);
             }
         } else {

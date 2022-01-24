@@ -281,6 +281,12 @@ impl LogicalPlan {
                         .insert_tag_node(alias.clone().try_into().unwrap(), id);
                 }
             }
+            Some(pb::logical_plan::operator::Opr::Apply(apply_opr)) => {
+                if let Some(alias) = &apply_opr.alias {
+                    self.meta
+                        .insert_tag_node(alias.clone().try_into().unwrap(), id);
+                }
+            }
             Some(pb::logical_plan::operator::Opr::As(as_opr)) => {
                 if let Some(alias) = &as_opr.alias {
                     self.meta
@@ -469,6 +475,7 @@ impl LogicalPlan {
             return None;
         }
         let mut plan = LogicalPlan::with_root(clone_node(from_node.clone()));
+        plan.meta = self.meta.clone();
         let mut curr_node = from_node;
         while curr_node.borrow().id != to_node.borrow().id {
             if curr_node.borrow().children.is_empty() {

@@ -317,22 +317,14 @@ message ShortestPathExpand {
 // Apply is a relational operation where it first performs a inner correlated subtask for each tuple
 // of input relations, and then the result of the subtask will be joined back to each input tuple.
 message Apply {
-  message Subtask {
-    // To project on certain tags of the input relation to execute the subtask
-    repeated common.NameOrId tags = 1;
-    // The subtask for each input tuple, which is given as the root to an inner logical plan
-    // Node gives the identity of a certain operation, which is an index to the
-    // array of operators in a LogicalPlan. As a result, for Apply to make sense, it must only
-    // be used by referencing a LogicalPlan.
-    int32 subtask = 2;
-    // An alias for the result of the subtask. In order for Apply to be semantically intact,
-    // the subtask must return a scalar value.
-    common.NameOrId alias = 3;
-  }
   // Define how to join the result of the subtask back to the original relation
   Join.JoinKind join_kind = 1;
+  // To project on certain tags of the input relation to execute the subtask
+  repeated common.NameOrId tags = 2;
   // The subtask will be perform on certain tags as keys of the input relation
-  Subtask subtask = 2;
+  int32 subtask = 3;
+  // Define the alias of output from `Apply`
+  common.NameOrId alias = 4;
 }
 
 message SegmentApply {
