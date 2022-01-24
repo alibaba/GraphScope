@@ -287,8 +287,30 @@ impl IRJobCompiler {
                             Err("iteration body can't be empty;")?
                         }
                     }
-                    server_pb::operator_def::OpKind::IterateEmit(_iter_emit) => {
-                        todo!()
+                    server_pb::operator_def::OpKind::IterateEmit(iter_emit) => {
+                        let until = if let Some(condition) = iter_emit
+                            .until
+                            .as_ref()
+                            .and_then(|f| Some(f.resource.as_ref()))
+                        {
+                            let cond = self.udf_gen.gen_filter(condition)?;
+                            let mut until = IterCondition::new();
+                            until.until(move |input| cond.test(input));
+                            until.max_iters = iter_emit.max_iters;
+                            until
+                        } else {
+                            IterCondition::max_iters(iter_emit.max_iters)
+                        };
+                        if let Some(ref iter_body) = iter_emit.body {
+                            let (emit, _feedback) = stream.iterate_emit(until, |start| {
+                                let body = self.install(start, &iter_body.plan[..])?;
+                                body.copied()
+                            })?;
+                            // TODO: engine bug here, emit is now an empty stream
+                            stream = emit;
+                        } else {
+                            Err("iteration body can't be empty;")?
+                        }
                     }
                     server_pb::operator_def::OpKind::Apply(sub) => {
                         let join_func = self.udf_gen.gen_subtask(
