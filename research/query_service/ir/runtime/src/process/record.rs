@@ -13,6 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::borrow::BorrowMut;
 use std::convert::{TryFrom, TryInto};
 use std::hash::Hash;
 use std::sync::Arc;
@@ -129,11 +130,8 @@ impl Record {
         }
     }
 
-    // append without moving curr entry
-    pub fn append_without_moving_curr(&mut self, entry: Arc<Entry>, alias: Option<NameOrId>) {
-        if let Some(alias) = alias {
-            self.columns.insert(alias, entry);
-        }
+    pub fn get_columns_mut(&mut self) -> &mut IndexMap<NameOrId, Arc<Entry>> {
+        self.columns.borrow_mut()
     }
 
     // append a path element on curr entry; notice that curr entry Must be GraphPath
