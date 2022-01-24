@@ -318,9 +318,7 @@ impl LogicalPlan {
                                 if let common_pb::ExprOpr { item: Some(Item::Var(var)) } =
                                     expr.operators.get(0).unwrap()
                                 {
-                                    if proj.mappings[0].alias.is_none()
-                                        && var.tag.is_some()
-                                        && var.property.is_none()
+                                    if var.tag.is_some() && var.property.is_none()
                                     // tag as Head
                                     {
                                         if let Some(node) = self
@@ -1348,7 +1346,7 @@ mod test {
     }
 
     #[test]
-    fn test_tag_maintain_simple() {
+    fn test_tag_maintain_case1() {
         let mut plan = LogicalPlan::default();
         // g.V().hasLabel("person").has("age", 27).valueMap("age", "name", "id")
 
@@ -1413,7 +1411,7 @@ mod test {
     }
 
     #[test]
-    fn test_tag_maintain_ci() {
+    fn test_tag_maintain_case2() {
         let mut plan = LogicalPlan::default();
         // g.V().out().as("here").has("lang", "java").select("here").values("name")
         let scan = pb::Scan {
@@ -1500,9 +1498,126 @@ mod test {
     }
 
     #[test]
-    fn test_tag_maintain_complex() {
+    fn test_tag_maintain_case3() {
         let mut plan = LogicalPlan::default();
+        // g.V().outE().as("e").inV().as("v").select("e").order().by("weight").select("v").values("name").dedup()
 
+        // g.V()
+        let scan = pb::Scan {
+            scan_opt: 0,
+            alias: None,
+            params: Some(pb::QueryParams {
+                table_names: vec![],
+                columns: vec![],
+                limit: None,
+                predicate: None,
+                requirements: vec![],
+            }),
+            idx_predicate: None,
+        };
+        plan.append_operator_as_node(scan.into(), vec![])
+            .unwrap();
+        assert_eq!(plan.meta.get_curr_node(), 0);
+
+        // .outE().as("e")
+        let expand = pb::EdgeExpand {
+            v_tag: None,
+            direction: 0,
+            params: Some(pb::QueryParams {
+                table_names: vec![],
+                columns: vec![],
+                limit: None,
+                predicate: None,
+                requirements: vec![],
+            }),
+            is_edge: true,
+            alias: Some("e".into()),
+        };
+        plan.append_operator_as_node(expand.into(), vec![0])
+            .unwrap();
+        assert_eq!(plan.meta.get_curr_node(), 1);
+        assert_eq!(plan.meta.get_tag_node(&"e".into()).unwrap(), 1);
+
+        // .inV().as("v")
+        let getv = pb::GetV { tag: None, opt: 1, alias: Some("v".into()) };
+        plan.append_operator_as_node(getv.into(), vec![1])
+            .unwrap();
+        assert_eq!(plan.meta.get_curr_node(), 2);
+        assert_eq!(plan.meta.get_tag_node(&"v".into()).unwrap(), 2);
+
+        // .select("e")
+        let project = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: str_to_expr_pb("@e".to_string()).ok(),
+                alias: Some("project_e".into()),
+            }],
+            is_append: true,
+        };
+        plan.append_operator_as_node(project.into(), vec![2])
+            .unwrap();
+        assert_eq!(plan.meta.get_curr_node(), 1);
+
+        // .order().by("weight")
+        let orderby = pb::OrderBy {
+            pairs: vec![pb::order_by::OrderingPair {
+                key: Some(common_pb::Variable {
+                    tag: None,
+                    property: Some(common_pb::Property {
+                        item: Some(common_pb::property::Item::Key("weight".into())),
+                    }),
+                }),
+                order: 1,
+            }],
+            limit: None,
+        };
+        plan.append_operator_as_node(orderby.into(), vec![3])
+            .unwrap();
+        assert_eq!(plan.meta.get_curr_node(), 1);
+        assert_eq!(
+            plan.meta
+                .curr_node_meta()
+                .unwrap()
+                .get_columns()
+                .clone(),
+            vec!["weight".into()].into_iter().collect()
+        );
+
+        // select("v")
+        let project = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: str_to_expr_pb("@v".to_string()).ok(),
+                alias: Some("project_v".into()),
+            }],
+            is_append: true,
+        };
+        plan.append_operator_as_node(project.into(), vec![4])
+            .unwrap();
+        assert_eq!(plan.meta.get_curr_node(), 2);
+
+        // .values("name")
+        let project = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: str_to_expr_pb("@.name".to_string()).ok(),
+                alias: Some("name".into()),
+            }],
+            is_append: true,
+        };
+        plan.append_operator_as_node(project.into(), vec![5])
+            .unwrap();
+        assert_eq!(plan.meta.get_curr_node(), 6);
+        assert_eq!(
+            plan.meta
+                .get_node_meta(2)
+                .unwrap()
+                .get_columns()
+                .clone(),
+            vec!["name".into()].into_iter().collect()
+        );
+    }
+
+    #[test]
+    fn test_tag_maintain_case4() {
+        let mut plan = LogicalPlan::default();
         // g.V("person").has("name", "John").as('a').outE("knows").as('b')
         //  .has("date", 20200101).inV().as('c').has('id', 10)
         //  .select('a').by(valueMap('age', "name"))
