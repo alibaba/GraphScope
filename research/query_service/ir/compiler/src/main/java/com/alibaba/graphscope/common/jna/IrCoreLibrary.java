@@ -118,6 +118,12 @@ public interface IrCoreLibrary extends Library {
 
     ResultCode appendSinkOperator(Pointer plan, Pointer sink, int parent, IntByReference oprIdx);
 
+    Pointer initGetvOperator(FfiVOpt vOpt);
+
+    ResultCode setGetvAlias(Pointer getV, FfiAlias.ByValue alias);
+
+    ResultCode appendGetvOperator(Pointer plan, Pointer getV, int parent, IntByReference oprIdx);
+
     FfiNameOrId.ByValue noneNameOrId();
 
     FfiNameOrId.ByValue cstrAsNameOrId(String name);

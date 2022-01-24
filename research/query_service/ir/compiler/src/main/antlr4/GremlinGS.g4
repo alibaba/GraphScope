@@ -71,6 +71,9 @@ traversalMethod
     | traversalMethod_count // count()
     | traversalMethod_is    // is()
     | traversalMethod_where // where()
+    | traversalMethod_inV   // inV()
+    | traversalMethod_outV  // outV()
+    | traversalMethod_otherV  // otherV()
     ;
 
 traversalSourceSpawnMethod_V

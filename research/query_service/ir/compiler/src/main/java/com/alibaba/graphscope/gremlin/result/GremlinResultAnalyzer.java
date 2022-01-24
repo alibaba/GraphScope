@@ -16,7 +16,8 @@ public class GremlinResultAnalyzer {
         GremlinResultParser parserType = GremlinResultParserFactory.GRAPH_ELEMENT;
         for (Step step : steps) {
             if (Utils.equalClass(step, GraphStep.class)
-                    || Utils.equalClass(step, TinkerGraphStep.class) || Utils.equalClass(step, VertexStep.class)) {
+                    || Utils.equalClass(step, TinkerGraphStep.class) || Utils.equalClass(step, VertexStep.class)
+                    || Utils.equalClass(step, EdgeVertexStep.class) || Utils.equalClass(step, EdgeOtherVertexStep.class)) {
                 parserType = GremlinResultParserFactory.GRAPH_ELEMENT;
             } else if (Utils.equalClass(step, CountGlobalStep.class)) {
                 parserType = GremlinResultParserFactory.SINGLE_VALUE;

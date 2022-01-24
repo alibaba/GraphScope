@@ -23,6 +23,7 @@ import com.alibaba.graphscope.common.jna.type.*;
 import com.alibaba.graphscope.common.jna.type.FfiDirection;
 import com.alibaba.graphscope.common.jna.type.FfiNameOrId;
 import com.alibaba.graphscope.common.jna.type.FfiScanOpt;
+import com.alibaba.graphscope.gremlin.Utils;
 import org.apache.tinkerpop.gremlin.process.traversal.*;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.IdentityTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.ValueTraversal;
@@ -327,6 +328,26 @@ public class OpArgTransformFactory {
             return Collections.singletonList(ArgUtils.asNoneVar());
         } else {
             throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE, "supported pattern is [dedup()]");
+        }
+    };
+
+    public static Function<Step, FfiVOpt> GETV_OPT_FROM_STEP = (Step step) -> {
+        if (Utils.equalClass(step, EdgeVertexStep.class)) {
+            EdgeVertexStep edgeVertexStep = (EdgeVertexStep) step;
+            Direction direction = edgeVertexStep.getDirection();
+            switch (direction) {
+                case OUT:
+                    return FfiVOpt.Start;
+                case IN:
+                    return FfiVOpt.End;
+                case BOTH:
+                default:
+                    throw new OpArgIllegalException(OpArgIllegalException.Cause.INVALID_TYPE, direction + " cannot be converted to FfiVOpt");
+            }
+        } else if (Utils.equalClass(step, EdgeOtherVertexStep.class)) {
+            return FfiVOpt.Other;
+        } else {
+            throw new OpArgIllegalException(OpArgIllegalException.Cause.INVALID_TYPE, "cannot get FfiVOpt from " + step.getClass());
         }
     };
 }
