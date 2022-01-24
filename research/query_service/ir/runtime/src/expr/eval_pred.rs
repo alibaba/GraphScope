@@ -61,12 +61,13 @@ impl Partial {
         }
     }
 
-    pub fn left(&mut self, item: Operand) {
+    pub fn left(&mut self, item: Operand) -> ExprResult<()> {
         match self {
             Self::SingleItem { left, cmp: _, right: _ } => {
                 *left = Some(item);
+                Ok(())
             }
-            Self::Predicates(_) => {}
+            Self::Predicates(_) => Err(ExprError::OtherErr(format!("invalid predicate: {:?}, {:?}", self, item)))
         }
     }
 
@@ -436,7 +437,7 @@ fn process_predicates(iter: &mut dyn Iterator<Item = &common_pb::ExprOpr>) -> Ex
                 Item::Const(_) | Item::Var(_) | Item::Vars(_) | Item::VarMap(_) => {
                     if left_brace_count == 0 {
                         if partial.get_left().is_none() {
-                            partial.left(opr.clone().try_into()?);
+                            partial.left(opr.clone().try_into()?)?;
                         } else {
                             partial.right(opr.clone().try_into()?)?;
                         }
