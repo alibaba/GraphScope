@@ -26,6 +26,7 @@ import com.alibaba.graphscope.common.intermediate.operator.*;
 import com.alibaba.graphscope.common.intermediate.process.SinkArg;
 import com.alibaba.graphscope.common.jna.IrCoreLibrary;
 import com.alibaba.graphscope.common.jna.type.*;
+import com.alibaba.graphscope.common.utils.ClassUtils;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 import org.apache.commons.io.FileUtils;
@@ -154,7 +155,7 @@ public class IrPlan implements Closeable {
                 // todo: add predicates
                 // todo: add limit
                 Optional<OpArg> aliasOpt = baseOp.getAlias();
-                if (aliasOpt.isPresent()) {
+                if (aliasOpt.isPresent() && ClassUtils.equalClass(baseOp, ExpandOp.class)) {
                     FfiAlias.ByValue alias = (FfiAlias.ByValue) aliasOpt.get().applyArg();
                     irCoreLib.setEdgexpdAlias(expand, alias);
                 }
@@ -311,6 +312,26 @@ public class IrPlan implements Closeable {
                 return ptrSink;
             }
         },
+        PATH_EXPAND_OP {
+            @Override
+            public Pointer apply(InterOpBase baseOp) {
+                PathExpandOp pathOp = (PathExpandOp) baseOp;
+                int lower = (Integer) pathOp.getLower().get().applyArg();
+                int upper = (Integer) pathOp.getUpper().get().applyArg();
+
+                Pointer expand = EXPAND_OP.apply(baseOp);
+                // todo: make isWholePath configurable
+                Pointer pathExpand = irCoreLib.initPathxpdOperator(expand, false);
+                irCoreLib.setPathxpdHops(pathExpand, lower, upper);
+
+                Optional<OpArg> aliasOpt = baseOp.getAlias();
+                if (aliasOpt.isPresent()) {
+                    FfiAlias.ByValue alias = (FfiAlias.ByValue) aliasOpt.get().applyArg();
+                    irCoreLib.setPathxpdAlias(pathExpand, alias);
+                }
+                return pathExpand;
+            }
+        },
         GETV_OP {
             @Override
             public Pointer apply(InterOpBase baseOp) {
@@ -432,6 +453,9 @@ public class IrPlan implements Closeable {
         } else if (base instanceof SinkOp) {
             Pointer ptrSink = TransformFactory.SINK_OP.apply(base);
             resultCode = irCoreLib.appendSinkOperator(ptrPlan, ptrSink, oprId.getValue(), oprId);
+        } else if (base instanceof PathExpandOp) {
+            Pointer ptrPathXPd = TransformFactory.PATH_EXPAND_OP.apply(base);
+            resultCode = irCoreLib.appendPathxpdOperator(ptrPlan, ptrPathXPd, oprId.getValue(), oprId);
         } else if (base instanceof GetVOp) {
             Pointer ptrGetV = TransformFactory.GETV_OP.apply(base);
             resultCode = irCoreLib.appendGetvOperator(ptrPlan, ptrGetV, oprId.getValue(), oprId);
@@ -459,6 +483,7 @@ public class IrPlan implements Closeable {
 
     private IntByReference setPostAlias(int parentId, InterOpBase base) {
         IntByReference oprId = new IntByReference(parentId);
+        // PathExpandOp is instance of ExpandOp
         if (!(base instanceof ScanFusionOp || base instanceof ExpandOp
                 || base instanceof ProjectOp || base instanceof GroupOp || base instanceof ApplyOp || base instanceof GetVOp)
                 && base.getAlias().isPresent()) {

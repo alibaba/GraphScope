@@ -16,16 +16,16 @@
 
 package com.alibaba.graphscope.gremlin;
 
+import com.alibaba.graphscope.common.utils.ClassUtils;
 import com.google.common.base.Preconditions;
 import org.apache.commons.io.FileUtils;
-import org.apache.tinkerpop.gremlin.process.traversal.Step;
 
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 
-public class Utils {
+public class Utils extends ClassUtils {
     /**
      * Set private field with given value
      *
@@ -76,9 +76,5 @@ public class Utils {
 
     public static String readStringFromFile(String filePath) throws IOException {
         return FileUtils.readFileToString(new File(filePath), StandardCharsets.UTF_8);
-    }
-
-    public static boolean equalClass(Step t1, Class<? extends Step> target) {
-        return t1.getClass().equals(target);
     }
 }

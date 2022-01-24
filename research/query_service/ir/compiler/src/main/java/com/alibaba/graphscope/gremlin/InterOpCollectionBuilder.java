@@ -22,6 +22,7 @@ import com.alibaba.graphscope.common.jna.type.FfiJoinKind;
 import com.alibaba.graphscope.gremlin.exception.UnsupportedStepException;
 import com.alibaba.graphscope.common.intermediate.operator.*;
 import com.alibaba.graphscope.common.jna.type.FfiScanOpt;
+import com.alibaba.graphscope.gremlin.plugin.step.PathExpandStep;
 import com.alibaba.graphscope.gremlin.transform.OpArgTransformFactory;
 import com.alibaba.graphscope.gremlin.transform.PredicateExprTransformFactory;
 import com.alibaba.graphscope.gremlin.transform.ProjectTraversalTransformFactory;
@@ -327,6 +328,16 @@ public class InterOpCollectionBuilder {
                 return op;
             }
         },
+        PATH_EXPAND_STEP {
+            @Override
+            public InterOpBase apply(Step step) {
+                PathExpandOp op = new PathExpandOp((ExpandOp) VERTEX_STEP.apply(step));
+                PathExpandStep pathStep = (PathExpandStep) step;
+                op.setLower(new OpArg(Integer.valueOf(pathStep.getLower() + 1), Function.identity()));
+                op.setUpper(new OpArg(Integer.valueOf(pathStep.getUpper() + 1), Function.identity()));
+                return op;
+            }
+        },
         EDGE_VERTEX_STEP {
             @Override
             public InterOpBase apply(Step step) {
@@ -462,6 +473,8 @@ public class InterOpCollectionBuilder {
                 op = StepTransformFactory.EDGE_VERTEX_STEP.apply(step);
             } else if (Utils.equalClass(step, EdgeOtherVertexStep.class)) {
                 op = StepTransformFactory.EDGE_OTHER_STEP.apply(step);
+            } else if (Utils.equalClass(step, PathExpandStep.class)) {
+                op = StepTransformFactory.PATH_EXPAND_STEP.apply(step);
             } else if (Utils.equalClass(step, WherePredicateStep.class)) {
                 op = StepTransformFactory.WHERE_PREDICATE_STEP.apply(step);
             } else if (Utils.equalClass(step, TraversalFilterStep.class)
