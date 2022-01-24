@@ -77,6 +77,58 @@ mod test {
         job_builder.build().unwrap()
     }
 
+    // g.V().both("1..3", "knows")
+    fn init_path_expand_request() -> JobRequest {
+        let source_opr = pb::logical_plan::Operator::from(pb::Scan {
+            scan_opt: 0,
+            alias: None,
+            params: Some(pb::QueryParams {
+                table_names: vec![common_pb::NameOrId::from("person".to_string())],
+                columns: vec![],
+                limit: None,
+                predicate: None,
+                requirements: vec![],
+            }),
+            idx_predicate: None,
+        });
+
+        let edge_expand = pb::EdgeExpand {
+            v_tag: None,
+            direction: 2,
+            params: Some(pb::QueryParams {
+                table_names: vec![common_pb::NameOrId::from("knows".to_string())],
+                columns: vec![],
+                limit: None,
+                predicate: None,
+                requirements: vec![],
+            }),
+            is_edge: false,
+            alias: None,
+        };
+
+        let expand_opr = pb::logical_plan::Operator::from(edge_expand.clone());
+        let path_start_opr =
+            pb::logical_plan::Operator::from(pb::PathStart { start_tag: None, is_whole_path: false });
+        let path_end_opr = pb::logical_plan::Operator::from(pb::PathEnd { alias: None });
+        let sink_opr_bytes = pb::logical_plan::Operator::from(pb::Sink {
+            tags: vec![],
+            sink_current: true,
+            id_name_mappings: vec![],
+        })
+        .encode_to_vec();
+
+        let mut job_builder = JobBuilder::default();
+        job_builder.add_source(source_opr.encode_to_vec());
+        job_builder.map(path_start_opr.encode_to_vec());
+        job_builder.iterate_emit(2, |plan| {
+            plan.flat_map(expand_opr.clone().encode_to_vec());
+        });
+        job_builder.map(path_end_opr.encode_to_vec());
+        job_builder.sink(sink_opr_bytes);
+
+        job_builder.build().unwrap()
+    }
+
     #[test]
     fn test_poc_query() {
         initialize();
@@ -99,5 +151,41 @@ mod test {
         }
         result_collection.sort();
         assert_eq!(result_collection, expected_result_ids)
+    }
+
+    #[test]
+    #[ignore]
+    fn test_path_expand_query() {
+        initialize();
+        let request = init_path_expand_request();
+        let mut results = submit_query(request, 1);
+        let mut result_collection = vec![];
+        // result paths:
+        //     vec![1, 2],
+        //     vec![1, 4],
+        //     vec![2, 1],
+        //     vec![4, 1],
+        //     vec![1, 2, 1],
+        //     vec![1, 4, 1],
+        //     vec![2, 1, 2],
+        //     vec![2, 1, 4],
+        //     vec![4, 1, 2],
+        //     vec![4, 1, 4],
+        let mut expected_result_path_ends = vec![1, 1, 1, 1, 2, 2, 2, 4, 4, 4];
+        while let Some(result) = results.next() {
+            match result {
+                Ok(res) => {
+                    let entry = parse_result(res).unwrap();
+                    if let Some(path) = entry.get(None).unwrap().as_graph_path() {
+                        result_collection.push(path.get_path_end().unwrap().id());
+                    }
+                }
+                Err(e) => {
+                    panic!("err result {:?}", e);
+                }
+            }
+        }
+        result_collection.sort();
+        assert_eq!(result_collection, expected_result_path_ends)
     }
 }
