@@ -37,7 +37,7 @@ use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 use crate::error::FnExecError;
 use crate::graph::element::{Element, GraphElement};
 use crate::graph::property::{Details, PropKey};
-use crate::process::record::{CommonObject, Entry, Record};
+use crate::process::record::{CommonObject, Entry, Record, RecordElement};
 
 #[derive(Clone, Debug, Default)]
 pub struct TagKey {
@@ -56,13 +56,7 @@ impl TagKey {
             )))?
             .clone();
         if let Some(prop_key) = self.key.as_ref() {
-            if let Some(element) = entry.as_graph_vertex() {
-                let details = element
-                    .details()
-                    .ok_or(FnExecError::get_tag_error(
-                        "Get key failed since get details from a graph element failed",
-                    ))?;
-
+            if let Entry::Element(RecordElement::OnGraph(element)) = entry.as_ref() {
                 let prop_obj = match prop_key {
                     PropKey::Id => element.id().into(),
                     PropKey::Label => element
@@ -75,6 +69,11 @@ impl TagKey {
                         .unwrap_or(Object::None),
                     PropKey::Len => (element.len() as u64).into(),
                     PropKey::Key(key) => {
+                        let details = element
+                            .details()
+                            .ok_or(FnExecError::get_tag_error(
+                                "Get key failed since get details from a graph element failed",
+                            ))?;
                         if let Some(properties) = details.get_property(key) {
                             properties
                                 .try_to_owned()
