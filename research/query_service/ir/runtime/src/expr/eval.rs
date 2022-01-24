@@ -22,7 +22,7 @@ use dyn_type::arith::Exp;
 use dyn_type::{BorrowObject, Object};
 use ir_common::error::{ParsePbError, ParsePbResult};
 use ir_common::expr_parse::to_suffix_expr;
-use ir_common::generated::common as pb;
+use ir_common::generated::common as common_pb;
 use ir_common::{NameOrId, ID_KEY, LABEL_KEY, LENGTH_KEY};
 
 use crate::expr::eval_pred::EvalPred;
@@ -54,11 +54,11 @@ pub enum Operand {
     VarMap(Vec<Operand>),
 }
 
-/// An inner representation of `pb::ExprOpr` for one-shot translation of `pb::ExprOpr`.
+/// An inner representation of `common_pb::ExprOpr` for one-shot translation of `common_pb::ExprOpr`.
 #[derive(Debug, Clone)]
 pub(crate) enum InnerOpr {
-    Logical(pb::Logical),
-    Arith(pb::Arithmetic),
+    Logical(common_pb::Logical),
+    Arith(common_pb::Arithmetic),
     Operand(Operand),
 }
 
@@ -100,10 +100,10 @@ pub struct NoneContext {}
 
 impl Context<()> for NoneContext {}
 
-impl TryFrom<pb::Expression> for Evaluator {
+impl TryFrom<common_pb::Expression> for Evaluator {
     type Error = ParsePbError;
 
-    fn try_from(suffix_tree: pb::Expression) -> ParsePbResult<Self>
+    fn try_from(suffix_tree: common_pb::Expression) -> ParsePbResult<Self>
     where
         Self: Sized,
     {
@@ -118,9 +118,9 @@ impl TryFrom<pb::Expression> for Evaluator {
 }
 
 fn apply_arith<'a>(
-    arith: &pb::Arithmetic, a: BorrowObject<'a>, b: BorrowObject<'a>,
+    arith: &common_pb::Arithmetic, a: BorrowObject<'a>, b: BorrowObject<'a>,
 ) -> ExprEvalResult<Object> {
-    use pb::Arithmetic::*;
+    use common_pb::Arithmetic::*;
     Ok(match arith {
         Add => Object::Primitive(a.as_primitive()? + b.as_primitive()?),
         Sub => Object::Primitive(a.as_primitive()? - b.as_primitive()?),
@@ -132,9 +132,9 @@ fn apply_arith<'a>(
 }
 
 pub(crate) fn apply_logical<'a>(
-    logical: &pb::Logical, a: BorrowObject<'a>, b_opt: Option<BorrowObject<'a>>,
+    logical: &common_pb::Logical, a: BorrowObject<'a>, b_opt: Option<BorrowObject<'a>>,
 ) -> ExprEvalResult<Object> {
-    use pb::Logical::*;
+    use common_pb::Logical::*;
     if logical == &Not {
         return Ok((!a.eval_bool::<(), NoneContext>(None)?).into());
     } else {
@@ -277,7 +277,7 @@ impl Evaluate for Evaluator {
                     let first_borrow = first.as_borrow();
                     let rst = match opr {
                         InnerOpr::Logical(logical) => {
-                            if logical == &pb::Logical::Not {
+                            if logical == &common_pb::Logical::Not {
                                 apply_logical(logical, first_borrow, None)
                             } else {
                                 if let Some(second) = stack.pop() {
@@ -323,38 +323,56 @@ impl Evaluator {
     }
 }
 
-impl TryFrom<pb::ExprOpr> for Operand {
+impl TryFrom<common_pb::Value> for Operand {
     type Error = ParsePbError;
 
-    fn try_from(unit: pb::ExprOpr) -> Result<Self, Self::Error> {
-        use pb::expr_opr::Item::*;
+    fn try_from(value: common_pb::Value) -> Result<Self, Self::Error> {
+        Ok(Self::Const(value.try_into()?))
+    }
+}
+
+impl TryFrom<common_pb::Property> for Operand {
+    type Error = ParsePbError;
+
+    fn try_from(property: common_pb::Property) -> Result<Self, Self::Error> {
+        Ok(Self::Var { tag: None, prop_key: Some(PropKey::try_from(property)?) })
+    }
+}
+
+impl TryFrom<common_pb::Variable> for Operand {
+    type Error = ParsePbError;
+
+    fn try_from(var: common_pb::Variable) -> Result<Self, Self::Error> {
+        let (_tag, _property) = (var.tag, var.property);
+        let tag = if let Some(tag) = _tag { Some(NameOrId::try_from(tag)?) } else { None };
+        if let Some(property) = _property {
+            Ok(Self::Var { tag, prop_key: Some(PropKey::try_from(property)?) })
+        } else {
+            Ok(Self::Var { tag, prop_key: None })
+        }
+    }
+}
+
+impl TryFrom<common_pb::ExprOpr> for Operand {
+    type Error = ParsePbError;
+
+    fn try_from(unit: common_pb::ExprOpr) -> Result<Self, Self::Error> {
+        use common_pb::expr_opr::Item::*;
         if let Some(item) = unit.item {
             match item {
-                Const(c) => Ok(Self::Const(c.try_into()?)),
-                Var(var) => {
-                    let (_tag, _property) = (var.tag, var.property);
-                    let tag = if let Some(tag) = _tag { Some(NameOrId::try_from(tag)?) } else { None };
-                    if let Some(property) = _property {
-                        Ok(Self::Var { tag, prop_key: Some(PropKey::try_from(property)?) })
-                    } else {
-                        Ok(Self::Var { tag, prop_key: None })
-                    }
-                }
+                Const(c) => c.try_into(),
+                Var(var) => var.try_into(),
                 Vars(vars) => {
                     let mut vec = Vec::with_capacity(vars.keys.len());
                     for var in vars.keys {
-                        let var_opr: Operand =
-                            pb::ExprOpr { item: Some(pb::expr_opr::Item::Var(var)) }.try_into()?;
-                        vec.push(var_opr);
+                        vec.push(var.try_into()?);
                     }
                     Ok(Self::Vars(vec))
                 }
                 VarMap(vars) => {
                     let mut vec = Vec::with_capacity(vars.keys.len());
                     for var in vars.keys {
-                        let var_opr: Operand =
-                            pb::ExprOpr { item: Some(pb::expr_opr::Item::Var(var)) }.try_into()?;
-                        vec.push(var_opr);
+                        vec.push(var.try_into()?);
                     }
                     Ok(Self::VarMap(vec))
                 }
@@ -366,21 +384,21 @@ impl TryFrom<pb::ExprOpr> for Operand {
     }
 }
 
-impl TryFrom<pb::ExprOpr> for InnerOpr {
+impl TryFrom<common_pb::ExprOpr> for InnerOpr {
     type Error = ParsePbError;
 
-    fn try_from(unit: pb::ExprOpr) -> ParsePbResult<Self>
+    fn try_from(unit: common_pb::ExprOpr) -> ParsePbResult<Self>
     where
         Self: Sized,
     {
-        use pb::expr_opr::Item::*;
+        use common_pb::expr_opr::Item::*;
         if let Some(item) = &unit.item {
             match item {
                 Logical(logical) => {
-                    Ok(Self::Logical(unsafe { std::mem::transmute::<_, pb::Logical>(*logical) }))
+                    Ok(Self::Logical(unsafe { std::mem::transmute::<_, common_pb::Logical>(*logical) }))
                 }
                 Arith(arith) => {
-                    Ok(Self::Arith(unsafe { std::mem::transmute::<_, pb::Arithmetic>(*arith) }))
+                    Ok(Self::Arith(unsafe { std::mem::transmute::<_, common_pb::Arithmetic>(*arith) }))
                 }
                 _ => Ok(Self::Operand(unit.clone().try_into()?)),
             }
@@ -774,8 +792,8 @@ mod tests {
                 InnerOpr::Operand(Operand::Var { tag: Some(2.into()), prop_key: None }).into(),
             ),
             // try to evaluate neither a variable nor a const
-            ExprEvalError::UnmatchedOperator(InnerOpr::Arith(pb::Arithmetic::Add).into()),
-            ExprEvalError::MissingOperands(InnerOpr::Arith(pb::Arithmetic::Add).into()),
+            ExprEvalError::UnmatchedOperator(InnerOpr::Arith(common_pb::Arithmetic::Add).into()),
+            ExprEvalError::MissingOperands(InnerOpr::Arith(common_pb::Arithmetic::Add).into()),
             ExprEvalError::OtherErr("invalid expression".to_string()),
             ExprEvalError::OtherErr("invalid expression".to_string()),
             ExprEvalError::OtherErr("invalid expression".to_string()),

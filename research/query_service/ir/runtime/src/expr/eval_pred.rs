@@ -17,7 +17,9 @@
 use std::convert::{TryFrom, TryInto};
 
 use dyn_type::{BorrowObject, Object};
-use ir_common::error::{ParsePbError, ParsePbResult};
+use ir_common::error::ParsePbError;
+use ir_common::expr_parse::error::{ExprError, ExprResult};
+use ir_common::generated::algebra as pb;
 use ir_common::generated::common as common_pb;
 
 use crate::expr::eval::{apply_logical, Context, Evaluate, Evaluator, Operand};
@@ -68,11 +70,11 @@ impl Partial {
         }
     }
 
-    pub fn cmp(&mut self, logical: common_pb::Logical) -> ParsePbResult<()> {
+    pub fn cmp(&mut self, logical: common_pb::Logical) -> ExprResult<()> {
         match self {
             Partial::SingleItem { left, cmp, right: _ } => {
                 if left.is_none() || cmp.is_some() {
-                    Err(ParsePbError::ParseError(format!("invalid predicate: {:?}, {:?}", self, logical)))
+                    Err(ExprError::OtherErr(format!("invalid predicate: {:?}, {:?}", self, logical)))
                 } else {
                     *cmp = Some(logical);
                     Ok(())
@@ -82,11 +84,11 @@ impl Partial {
         }
     }
 
-    pub fn right(&mut self, item: Operand) -> ParsePbResult<()> {
+    pub fn right(&mut self, item: Operand) -> ExprResult<()> {
         match self {
             Partial::SingleItem { left: _, cmp, right } => {
                 if cmp.is_none() || right.is_some() {
-                    Err(ParsePbError::ParseError(format!("invalid predicate: {:?}, {:?}", self, item)))
+                    Err(ExprError::OtherErr(format!("invalid predicate: {:?}, {:?}", self, item)))
                 } else {
                     *right = Some(item);
                     Ok(())
@@ -96,14 +98,11 @@ impl Partial {
         }
     }
 
-    pub fn predicates(&mut self, pred: Predicates) -> ParsePbResult<()> {
+    pub fn predicates(&mut self, pred: Predicates) -> ExprResult<()> {
         match self {
             Partial::SingleItem { left, cmp: _, right: _ } => {
                 if !left.is_none() {
-                    return Err(ParsePbError::ParseError(format!(
-                        "invalid predicate: {:?}, {:?}",
-                        self, pred
-                    )));
+                    return Err(ExprError::OtherErr(format!("invalid predicate: {:?}, {:?}", self, pred)));
                 }
             }
             Partial::Predicates(_) => {}
@@ -144,6 +143,67 @@ pub enum Predicates {
     Not(Box<Predicates>),
     And((Box<Predicates>, Box<Predicates>)),
     Or((Box<Predicates>, Box<Predicates>)),
+}
+
+impl TryFrom<pb::index_predicate::Triplet> for Predicates {
+    type Error = ParsePbError;
+
+    fn try_from(triplet: pb::index_predicate::Triplet) -> Result<Self, Self::Error> {
+        let partial = Partial::SingleItem {
+            left: triplet
+                .key
+                .map(|var| var.try_into())
+                .transpose()?,
+            cmp: Some(common_pb::Logical::Eq),
+            right: triplet
+                .value
+                .map(|val| val.try_into())
+                .transpose()?,
+        };
+
+        Option::<Predicates>::from(partial)
+            .ok_or(ParsePbError::ParseError("invalid `Triplet` in `IndexPredicate`".to_string()))
+    }
+}
+
+impl TryFrom<pb::index_predicate::AndPredicate> for Predicates {
+    type Error = ParsePbError;
+
+    fn try_from(and_predicate: pb::index_predicate::AndPredicate) -> Result<Self, Self::Error> {
+        let mut predicates: Option<Predicates> = None;
+        let mut is_first = true;
+        for triplet in and_predicate.predicates {
+            if is_first {
+                predicates = Some(triplet.try_into()?);
+                is_first = false;
+            } else {
+                let new_pred = triplet.try_into()?;
+                predicates = predicates.map(|pred| pred.and(new_pred));
+            }
+        }
+
+        predicates.ok_or(ParsePbError::ParseError("invalid `AndPredicate` in `IndexPredicate`".to_string()))
+    }
+}
+
+impl TryFrom<pb::IndexPredicate> for Predicates {
+    type Error = ParsePbError;
+
+    fn try_from(index_predicate: pb::IndexPredicate) -> Result<Self, Self::Error> {
+        let mut predicates: Option<Predicates> = None;
+        let mut is_first = true;
+        for and_triplet in index_predicate.or_predicates {
+            if is_first {
+                predicates = Some(and_triplet.try_into()?);
+                is_first = false;
+            } else {
+                let new_pred = and_triplet.try_into()?;
+                predicates = predicates.map(|pred| pred.and(new_pred));
+            }
+        }
+
+        predicates.ok_or(ParsePbError::ParseError("invalid `IndexPredicate`".to_string()))
+    }
 }
 
 impl<'a> EvalPred for BorrowObject<'a> {
@@ -293,30 +353,34 @@ impl Predicates {
 fn merge_predicates(
     mut predicates: Option<Predicates>, curr_cmp: Option<common_pb::Logical>, partial: Partial,
     is_not: bool,
-) -> ParsePbResult<Predicates> {
+) -> ExprResult<Predicates> {
     use common_pb::Logical;
 
     let old_partial = partial.clone();
     let new_pred = Option::<Predicates>::from(partial);
     if new_pred.is_none() {
-        return Err(ParsePbError::ParseError(format!("invalid predicate: {:?}", old_partial)));
+        return Err(ExprError::OtherErr(format!("invalid predicate: {:?}", old_partial)));
     }
     if let Some(cmp) = curr_cmp {
-        if let Some(pred) = &predicates {
+        if predicates.is_some() {
             match cmp {
                 Logical::And => {
-                    predicates = Some(pred.clone().and(if !is_not {
-                        new_pred.unwrap()
-                    } else {
-                        new_pred.unwrap().not()
-                    }))
+                    predicates = predicates.map(|pred| {
+                        if !is_not {
+                            pred.and(new_pred.unwrap())
+                        } else {
+                            pred.and(new_pred.unwrap().not())
+                        }
+                    });
                 }
                 Logical::Or => {
-                    predicates = Some(pred.clone().or(if !is_not {
-                        new_pred.unwrap()
-                    } else {
-                        new_pred.unwrap().not()
-                    }))
+                    predicates = predicates.map(|pred| {
+                        if !is_not {
+                            pred.or(new_pred.unwrap())
+                        } else {
+                            pred.or(new_pred.unwrap().not())
+                        }
+                    });
                 }
                 _ => unreachable!(),
             }
@@ -329,7 +393,7 @@ fn merge_predicates(
 }
 
 #[allow(dead_code)]
-fn process_predicates(iter: &mut dyn Iterator<Item = &common_pb::ExprOpr>) -> ParsePbResult<Predicates> {
+fn process_predicates(iter: &mut dyn Iterator<Item = &common_pb::ExprOpr>) -> ExprResult<Predicates> {
     use common_pb::expr_opr::Item;
     use common_pb::Logical;
     let mut partial = Partial::default();
@@ -381,7 +445,7 @@ fn process_predicates(iter: &mut dyn Iterator<Item = &common_pb::ExprOpr>) -> Pa
                     }
                 }
                 Item::Arith(_) => {
-                    return Err(ParsePbError::NotSupported(
+                    return Err(ExprError::Unsupported(
                         "arithmetic is not supported in predicates".to_string(),
                     ))
                 }
@@ -407,12 +471,10 @@ fn process_predicates(iter: &mut dyn Iterator<Item = &common_pb::ExprOpr>) -> Pa
         }
     }
 
-    if left_brace_count != 0 {
-        return Err(ParsePbError::ParseError(
-            "invalid predicate: left/right brace do not match".to_string(),
-        ));
-    } else {
+    if left_brace_count == 0 {
         merge_predicates(predicates, curr_cmp, partial, is_not)
+    } else {
+        Err(ExprError::UnmatchedLRBraces)
     }
 }
 
@@ -441,6 +503,14 @@ impl TryFrom<common_pb::Expression> for PEvaluator {
         } else {
             Ok(Self::General(expr.try_into()?))
         }
+    }
+}
+
+impl TryFrom<pb::IndexPredicate> for PEvaluator {
+    type Error = ParsePbError;
+
+    fn try_from(index_pred: pb::IndexPredicate) -> Result<Self, Self::Error> {
+        Ok(Self::Predicates(index_pred.try_into()?))
     }
 }
 
