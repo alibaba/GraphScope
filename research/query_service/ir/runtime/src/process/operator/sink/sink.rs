@@ -25,7 +25,7 @@ use ir_common::NameOrId;
 use pegasus::api::function::{FnResult, MapFunction};
 
 use crate::error::FnGenResult;
-use crate::graph::element::{Edge, GraphElement, GraphObject, Vertex};
+use crate::graph::element::{Edge, GraphElement, GraphObject, GraphPath, Vertex, VertexOrEdge};
 use crate::process::operator::sink::SinkFunctionGen;
 use crate::process::record::{CommonObject, Entry, Record, RecordElement};
 
@@ -78,9 +78,9 @@ impl RecordSinkEncoder {
                 let edge_pb = self.edge_to_pb(e);
                 Some(result_pb::element::Inner::Edge(edge_pb))
             }
-            // TODO(bingqing): add path type in result_pb
-            RecordElement::OnGraph(GraphObject::P(_)) => {
-                todo!()
+            RecordElement::OnGraph(GraphObject::P(p)) => {
+                let path_pb = self.path_to_pb(p);
+                Some(result_pb::element::Inner::GraphPath(path_pb))
             }
             RecordElement::OffGraph(o) => match o {
                 CommonObject::None => None,
@@ -144,6 +144,40 @@ impl RecordSinkEncoder {
             // TODO: return detached edge without property for now
             properties: vec![],
         }
+    }
+
+    fn vertex_or_edge_to_pb(&self, vertex_or_edge: &VertexOrEdge) -> result_pb::graph_path::VertexOrEdge {
+        match vertex_or_edge {
+            VertexOrEdge::V(v) => {
+                let vertex_pb = self.vertex_to_pb(v);
+                result_pb::graph_path::VertexOrEdge {
+                    inner: Some(result_pb::graph_path::vertex_or_edge::Inner::Vertex(vertex_pb)),
+                }
+            }
+            VertexOrEdge::E(e) => {
+                let edge_pb = self.edge_to_pb(e);
+                result_pb::graph_path::VertexOrEdge {
+                    inner: Some(result_pb::graph_path::vertex_or_edge::Inner::Edge(edge_pb)),
+                }
+            }
+        }
+    }
+
+    fn path_to_pb(&self, p: &GraphPath) -> result_pb::GraphPath {
+        let mut graph_path_pb = vec![];
+        match p {
+            GraphPath::WHOLE((path, _)) => {
+                for vertex_or_edge in path {
+                    let vertex_or_edge_pb = self.vertex_or_edge_to_pb(vertex_or_edge);
+                    graph_path_pb.push(vertex_or_edge_pb);
+                }
+            }
+            GraphPath::END((path_end, _)) => {
+                let vertex_or_edge_pb = self.vertex_or_edge_to_pb(path_end);
+                graph_path_pb.push(vertex_or_edge_pb);
+            }
+        }
+        result_pb::GraphPath { path: graph_path_pb }
     }
 }
 

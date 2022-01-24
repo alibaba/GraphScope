@@ -15,9 +15,12 @@
 
 use std::cmp::Ordering;
 use std::collections::hash_map::DefaultHasher;
+use std::convert::{TryFrom, TryInto};
 use std::hash::{Hash, Hasher};
 
 use dyn_type::BorrowObject;
+use ir_common::error::ParsePbError;
+use ir_common::generated::results as result_pb;
 use ir_common::NameOrId;
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 
@@ -261,5 +264,37 @@ impl Decode for GraphPath {
             }
             _ => Err(std::io::Error::new(std::io::ErrorKind::Other, "unreachable")),
         }
+    }
+}
+
+impl TryFrom<result_pb::graph_path::VertexOrEdge> for VertexOrEdge {
+    type Error = ParsePbError;
+    fn try_from(e: result_pb::graph_path::VertexOrEdge) -> Result<Self, Self::Error> {
+        let vertex_or_edge = e
+            .inner
+            .ok_or(ParsePbError::EmptyFieldError("empty field of VertexOrEdge".to_string()))?;
+        match vertex_or_edge {
+            result_pb::graph_path::vertex_or_edge::Inner::Vertex(v) => {
+                let vertex = v.try_into()?;
+                Ok(VertexOrEdge::V(vertex))
+            }
+            result_pb::graph_path::vertex_or_edge::Inner::Edge(e) => {
+                let edge = e.try_into()?;
+                Ok(VertexOrEdge::E(edge))
+            }
+        }
+    }
+}
+
+impl TryFrom<result_pb::GraphPath> for GraphPath {
+    type Error = ParsePbError;
+    fn try_from(e: result_pb::GraphPath) -> Result<Self, Self::Error> {
+        let graph_path = e
+            .path
+            .into_iter()
+            .map(|vertex_or_edge| vertex_or_edge.try_into())
+            .collect::<Result<Vec<_>, _>>()?;
+        let graph_len = graph_path.len();
+        Ok(GraphPath::WHOLE((graph_path, graph_len)))
     }
 }
