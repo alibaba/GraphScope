@@ -225,22 +225,29 @@ impl AsPhysical for pb::PathExpand {
                         SimpleOpr::Map,
                     )?;
                     let is_partition = plan_meta.is_partition();
-                    for _ in 0..range.lower {
-                        pb::logical_plan::Operator::from(base.clone())
-                            .add_job_builder(builder, plan_meta)?;
+                    for _ in 0..(range.lower - 1) {
                         if is_partition {
                             let key_pb = common_pb::NameOrIdKey { key: None };
                             builder.repartition(key_pb.encode_to_vec());
                         }
+                        pb::logical_plan::Operator::from(base.clone())
+                            .add_job_builder(builder, plan_meta)?;
                     }
-                    let times = range.upper - range.lower - 1;
-                    if times > 0 {
+                    let times = range.upper - range.lower;
+                    if times == 1 {
+                        if is_partition {
+                            let key_pb = common_pb::NameOrIdKey { key: None };
+                            builder.repartition(key_pb.encode_to_vec());
+                        }
+                        pb::logical_plan::Operator::from(base.clone())
+                            .add_job_builder(builder, plan_meta)?;
+                    } else if times > 1 {
                         builder.iterate_emit(times as u32, move |plan| {
-                            plan.flat_map(pb::logical_plan::Operator::from(base.clone()).encode_to_vec());
                             if is_partition {
                                 let key_pb = common_pb::NameOrIdKey { key: None };
                                 plan.repartition(key_pb.encode_to_vec());
                             }
+                            plan.flat_map(pb::logical_plan::Operator::from(base.clone()).encode_to_vec());
                         });
                     }
                     let path_end = pb::PathEnd { alias: self.alias.clone() };
@@ -422,10 +429,6 @@ impl AsPhysical for LogicalPlan {
                     match (&prev_ref.opr.opr, &node_ref.opr.opr) {
                         (Some(_), Some(Edge(edgexpd))) => {
                             let key_pb = common_pb::NameOrIdKey { key: edgexpd.v_tag.clone() };
-                            builder.repartition(key_pb.encode_to_vec());
-                        }
-                        (Some(_), Some(Path(pathxpd))) => {
-                            let key_pb = common_pb::NameOrIdKey { key: pathxpd.start_tag.clone() };
                             builder.repartition(key_pb.encode_to_vec());
                         }
                         _ => {}
@@ -1013,8 +1016,7 @@ mod test {
         let mut expected_builder = JobBuilder::default();
         expected_builder.add_source(source_opr.encode_to_vec());
         expected_builder.map(path_start_opr.encode_to_vec());
-        expected_builder.flat_map(expand_opr.clone().encode_to_vec());
-        expected_builder.iterate_emit(2, |plan| {
+        expected_builder.iterate_emit(3, |plan| {
             plan.flat_map(expand_opr.clone().encode_to_vec());
         });
         expected_builder.map(path_end_opr.encode_to_vec());
@@ -1031,14 +1033,78 @@ mod test {
 
         let mut expected_builder = JobBuilder::default();
         expected_builder.add_source(source_opr.encode_to_vec());
-        expected_builder.repartition(vec![]);
         expected_builder.map(path_start_opr.encode_to_vec());
+        expected_builder.iterate_emit(3, |plan| {
+            plan.repartition(vec![])
+                .flat_map(expand_opr.clone().encode_to_vec());
+        });
+        expected_builder.map(path_end_opr.encode_to_vec());
+
+        assert_eq!(builder, expected_builder);
+    }
+
+    #[test]
+    fn test_path_expand_exactly() {
+        let source_opr = pb::logical_plan::Operator::from(pb::Scan {
+            scan_opt: 0,
+            alias: None,
+            params: Some(pb::QueryParams {
+                table_names: vec![common_pb::NameOrId::from("person".to_string())],
+                columns: vec![],
+                limit: None,
+                predicate: None,
+                requirements: vec![],
+            }),
+            idx_predicate: None,
+        });
+
+        let edge_expand = pb::EdgeExpand {
+            v_tag: None,
+            direction: 0,
+            params: Some(pb::QueryParams {
+                table_names: vec![common_pb::NameOrId::from("knows".to_string())],
+                columns: vec![],
+                limit: None,
+                predicate: None,
+                requirements: vec![],
+            }),
+            is_edge: false,
+            alias: None,
+        };
+
+        let expand_opr = pb::logical_plan::Operator::from(edge_expand.clone());
+        let path_start_opr =
+            pb::logical_plan::Operator::from(pb::PathStart { start_tag: None, is_whole_path: false });
+        let path_opr = pb::logical_plan::Operator::from(pb::PathExpand {
+            base: Some(edge_expand.clone()),
+            start_tag: None,
+            is_whole_path: false,
+            alias: None,
+            hop_range: Some(pb::Range { lower: 3, upper: 4 }),
+        });
+        let path_end_opr = pb::logical_plan::Operator::from(pb::PathEnd { alias: None });
+
+        let mut logical_plan = LogicalPlan::with_root(Node::new(0, source_opr.clone()));
+        logical_plan
+            .append_operator_as_node(path_opr.clone(), vec![0])
+            .unwrap(); // node 1
+        // Case with partition
+        let mut builder = JobBuilder::default();
+        let mut plan_meta = PlanMeta::default();
+        plan_meta.set_partition(true);
+        logical_plan
+            .add_job_builder(&mut builder, &mut plan_meta)
+            .unwrap();
+
+        let mut expected_builder = JobBuilder::default();
+        expected_builder.add_source(source_opr.encode_to_vec());
+        expected_builder.map(path_start_opr.encode_to_vec());
+        expected_builder.repartition(vec![]);
         expected_builder.flat_map(expand_opr.clone().encode_to_vec());
         expected_builder.repartition(vec![]);
-        expected_builder.iterate_emit(2, |plan| {
-            plan.flat_map(expand_opr.clone().encode_to_vec())
-                .repartition(vec![]);
-        });
+        expected_builder.flat_map(expand_opr.clone().encode_to_vec());
+        expected_builder.repartition(vec![]);
+        expected_builder.flat_map(expand_opr.clone().encode_to_vec());
         expected_builder.map(path_end_opr.encode_to_vec());
 
         assert_eq!(builder, expected_builder);
