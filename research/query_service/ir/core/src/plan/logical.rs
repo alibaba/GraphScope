@@ -872,6 +872,12 @@ impl AsLogical for pb::Sink {
     }
 }
 
+impl AsLogical for pb::Apply {
+    fn preprocess(&mut self, _meta: &StoreMeta, _plan_meta: &mut PlanMeta) -> IrResult<()> {
+        Ok(())
+    }
+}
+
 impl AsLogical for pb::logical_plan::Operator {
     fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
         use pb::logical_plan::operator::Opr;
@@ -889,6 +895,7 @@ impl AsLogical for pb::logical_plan::Operator {
                 Opr::Limit(opr) => opr.preprocess(meta, plan_meta)?,
                 Opr::Join(opr) => opr.preprocess(meta, plan_meta)?,
                 Opr::Sink(opr) => opr.preprocess(meta, plan_meta)?,
+                Opr::Apply(opr) => opr.preprocess(meta, plan_meta)?,
                 _ => {}
             }
         }
