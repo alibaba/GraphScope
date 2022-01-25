@@ -1,10 +1,5 @@
-use std::fmt::Debug;
-
 use libloading::{Library, Symbol};
-use pegasus::api::{Sink, Source};
-use pegasus::result::ResultSink;
-use pegasus::stream::Stream;
-use pegasus::{BuildJobError, Data};
+use pegasus::{BuildJobError, Worker};
 
 #[derive(Default)]
 pub struct JobDesc {
@@ -14,29 +9,47 @@ pub struct JobDesc {
 }
 
 impl JobDesc {
-    pub fn set_input(&mut self, input_bytes: Vec<u8>) {
+    pub fn set_input(&mut self, input_bytes: Vec<u8>) -> &mut Self {
         self.input = input_bytes;
+        self
+    }
+
+    pub fn set_plan(&mut self, plan_bytes: Vec<u8>) -> &mut Self {
+        self.plan = plan_bytes;
+        self
+    }
+
+    pub fn set_resource(&mut self, resource_bytes: Vec<u8>) -> &mut Self {
+        self.resource = resource_bytes;
+        self
     }
 }
 
-pub trait JobParser<I: Data, O: Send + Debug + 'static>: Send + Sync + 'static {
-    fn parse(
-        &self, job: &JobDesc, input: &mut Source<I>, output: ResultSink<O>,
-    ) -> Result<(), BuildJobError>;
+pub trait JobAssembly: Send + Sync + 'static {
+    fn assemble(&self, job: &JobDesc, worker: &mut Worker<Vec<u8>, Vec<u8>>) -> Result<(), BuildJobError>;
 }
 
-struct DyLibParser;
+pub struct DynLibraryAssembly;
 
-impl JobParser<Vec<u8>, Vec<u8>> for DyLibParser {
-    fn parse(
-        &self, job: &JobDesc, input: &mut Source<Vec<u8>>, output: ResultSink<Vec<u8>>,
-    ) -> Result<(), BuildJobError> {
-        let stream = input.input_from(Some(job.input.clone()))?;
-
-        let resource = String::from_utf8(job.resource.clone()).expect("todo");
-        let lib = pegasus::resource::get_global_resource::<Library>(&resource).expect("todo");
-        let func: Symbol<unsafe fn(Stream<Vec<u8>>) -> Result<Stream<Vec<u8>>, BuildJobError>> =
-            unsafe { lib.get(&job.plan[..]).expect("todo") };
-        unsafe { func(stream)? }.sink_into(output)
+impl JobAssembly for DynLibraryAssembly {
+    fn assemble(&self, job: &JobDesc, worker: &mut Worker<Vec<u8>, Vec<u8>>) -> Result<(), BuildJobError> {
+        if let Ok(resource) = String::from_utf8(job.resource.clone()) {
+            if let Some(lib) = pegasus::resource::get_global_resource::<Library>(&resource) {
+                info!("load library {};", resource);
+                let func: Symbol<unsafe extern "Rust" fn(&[u8], &mut Worker<Vec<u8>, Vec<u8>>) -> Result<(), BuildJobError>> = unsafe {
+                    match lib.get(&job.plan[..]) {
+                        Ok(sym) => sym,
+                        Err(e) => {
+                            return Err(format!("fail to link, because {:?}", e))?;
+                        }
+                    }
+                };
+                unsafe { func(&job.input, worker) }
+            } else {
+                Err(format!("libarry with name {} not found;", resource))?
+            }
+        } else {
+            Err("illegal library name;")?
+        }
     }
 }

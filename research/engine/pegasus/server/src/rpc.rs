@@ -30,9 +30,8 @@ use hyper::server::conn::{AddrIncoming, AddrStream};
 use pegasus::api::function::FnResult;
 use pegasus::api::FromStream;
 use pegasus::result::{FromStreamExt, ResultSink};
-use pegasus::{Configuration, Data, JobConf, ServerConf};
+use pegasus::{Configuration, JobConf, ServerConf};
 use pegasus_network::ServerDetect;
-use prost::Message;
 use serde::Deserialize;
 use tokio::sync::mpsc::UnboundedSender;
 use tokio_stream::wrappers::UnboundedReceiverStream;
@@ -41,9 +40,8 @@ use tonic::{Code, Request, Response, Status};
 
 use crate::generated::protocol as pb;
 use crate::generated::protocol::job_config::Servers;
-use crate::job::{JobDesc, JobParser};
+use crate::job::{JobDesc, JobAssembly};
 use crate::pb::{BinaryResource, Empty, Name};
-use crate::service::Service;
 
 pub struct RpcSink {
     pub job_id: u64,
@@ -63,11 +61,10 @@ impl RpcSink {
     }
 }
 
-impl<T: Message> FromStream<T> for RpcSink {
-    fn on_next(&mut self, next: T) -> FnResult<()> {
+impl FromStream<Vec<u8>> for RpcSink {
+    fn on_next(&mut self, resp: Vec<u8>) -> FnResult<()> {
         // todo: use bytes to alleviate copy & allocate cost;
-        let data = next.encode_to_vec();
-        let res = pb::JobResponse { job_id: self.job_id, resp: data };
+        let res = pb::JobResponse { job_id: self.job_id, resp };
         self.tx.send(Ok(res)).ok();
         Ok(())
     }
@@ -85,7 +82,7 @@ impl Clone for RpcSink {
     }
 }
 
-impl<T: Message> FromStreamExt<T> for RpcSink {
+impl FromStreamExt<Vec<u8>> for RpcSink {
     fn on_error(&mut self, error: Box<dyn Error + Send>) {
         self.had_error.store(true, Ordering::SeqCst);
         let status = Status::unknown(format!("execution_error: {}", error));
@@ -105,17 +102,15 @@ impl Drop for RpcSink {
 }
 
 #[derive(Clone)]
-pub struct JobServiceImpl<I: Data, O, P> {
-    inner: Service<I, O, P>,
+pub struct JobServiceImpl<P> {
+    inner: Arc<P>,
     report: bool,
 }
 
 #[tonic::async_trait]
-impl<I, O, P> pb::job_service_server::JobService for JobServiceImpl<I, O, P>
+impl<P: JobAssembly> pb::job_service_server::JobService for JobServiceImpl<P>
 where
-    I: Data,
-    O: Send + Debug + Message + 'static,
-    P: JobParser<I, O>,
+    P: JobAssembly,
 {
     async fn add_library(&self, request: Request<BinaryResource>) -> Result<Response<Empty>, Status> {
         let BinaryResource { name, resource } = request.into_inner();
@@ -138,7 +133,10 @@ where
         }
         match unsafe { libloading::Library::new(&path) } {
             Ok(lib) => {
-                pegasus::resource::add_global_resource(name, lib);
+                info!("add library with name {}", name);
+                if let Some((name, _)) = pegasus::resource::add_global_resource(name, lib) {
+                    return Err(Status::aborted(format!("resource {} already exists;", name)))
+                }
                 Ok(Response::new(Empty {}))
             }
             Err(err) => {
@@ -168,7 +166,7 @@ where
         pegasus::wait_servers_ready(conf.servers());
         let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
         let rpc_sink = RpcSink::new(conf.job_id, tx);
-        let sink = ResultSink::<O>::with(rpc_sink);
+        let sink = ResultSink::<Vec<u8>>::with(rpc_sink);
         if conf.trace_enable {
             info!("submitting job({}) with id {}", conf.job_name, conf.job_id);
         }
@@ -176,14 +174,12 @@ where
         let service = &self.inner;
         let job = JobDesc { input: source, plan, resource };
 
-        let submitted = pegasus::run_opt(conf, sink, move |worker| worker.dataflow(service.accept(&job)));
-
-        if let Err(e) = submitted {
+        if let Err(e) = pegasus::run_opt(conf, sink, move |worker| service.assemble(&job, worker)) {
             error!("submit job {} failure: {:?}", job_id, e);
-            return Err(Status::invalid_argument(format!("submit job error {}", e)));
+            Err(Status::unknown(format!("submit job error {}", e)))
+        } else {
+            Ok(Response::new(UnboundedReceiverStream::new(rx)))
         }
-
-        Ok(Response::new(UnboundedReceiverStream::new(rx)))
     }
 }
 
@@ -202,24 +198,28 @@ pub struct RPCServerConfig {
     pub tcp_nodelay: Option<bool>,
 }
 
+impl RPCServerConfig {
+    pub fn parse(content: &str) -> Result<Self, toml::de::Error> {
+        toml::from_str(&content)
+    }
+}
+
 pub struct RPCJobServer<S: pb::job_service_server::JobService> {
     service: S,
     rpc_config: RPCServerConfig,
     server_config: pegasus::Configuration,
 }
 
-pub async fn start_rpc_server<I, O, P, D, E>(
-    rpc_config: RPCServerConfig, server_config: Configuration, service: Service<I, O, P>,
+pub async fn start_rpc_server<P, D, E>(
+    rpc_config: RPCServerConfig, server_config: Configuration, assemble: P,
     server_detector: D, listener: E,
 ) -> Result<(), Box<dyn std::error::Error>>
 where
-    I: Data,
-    O: Send + Debug + Message + 'static,
-    P: JobParser<I, O>,
+    P: JobAssembly,
     D: ServerDetect + 'static,
     E: ServiceStartListener,
 {
-    let service = JobServiceImpl { inner: service, report: true };
+    let service = JobServiceImpl { inner: Arc::new(assemble), report: true };
     let server = RPCJobServer::new(rpc_config, server_config, service);
     server.run(server_detector, listener).await?;
     Ok(())
