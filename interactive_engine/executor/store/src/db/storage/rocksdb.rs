@@ -6,7 +6,7 @@ use std::sync::Arc;
 use crate::db::api::*;
 use super::{StorageIter, StorageRes, ExternalStorage, ExternalStorageBackup};
 use crate::db::storage::{KvPair, RawBytes};
-use rocksdb::DBCompressionType;
+use rocksdb::{DBCompressionType, DBCompactionStyle};
 
 pub struct RocksDB {
     db: Arc<DB>,
@@ -203,6 +203,9 @@ fn init_options(options: &HashMap<String, String>) -> Options {
     ret.create_if_missing(true);
     // TODO: Add other customized db options.
     ret.set_compression_type(DBCompressionType::None);
+    ret.set_compaction_style(DBCompactionStyle::Universal);
+    ret.set_write_buffer_size(1024 * 1024 * 1024);
+    ret.set_stats_dump_period_sec(60);
     ret
 }
 
