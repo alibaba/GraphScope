@@ -892,7 +892,7 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
 @Graph.OptOut(method="g_VX1AsStringX_outXknowsX" , test="org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest", reason = "will be supported")
 //@Graph.OptOut(method="g_V_out_outE_inV_inE_inV_both_name" , test="org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest", reason = "will be supported")
 @Graph.OptOut(method="g_EXe11X" , test="org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest", reason = "will be supported")
-@Graph.OptOut(method="g_EX11X" , test="org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest", reason = "will be supported")
+//@Graph.OptOut(method="g_EX11X" , test="org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest", reason = "will be supported")
 //@Graph.OptOut(method="g_V_outE_hasXweight_1X_outV" , test="org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest", reason = "will be supported")
 @Graph.OptOut(method="g_EXlistXe7_e11XX" , test="org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest", reason = "will be supported")
 @Graph.OptOut(method="g_EX11AsStringX" , test="org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest", reason = "will be supported")
