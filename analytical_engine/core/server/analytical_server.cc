@@ -26,8 +26,10 @@ void AnalyticalServer::StartServer() {
   GraphScopeService service(dispatcher_);
 
   grpc::ServerBuilder builder;
-  builder.SetMaxReceiveMessageSize(std::numeric_limits<int>::max());
-  builder.SetMaxSendMessageSize(std::numeric_limits<int>::max());
+  // builder.SetMaxReceiveMessageSize(std::numeric_limits<int>::max());
+  // builder.SetMaxSendMessageSize(std::numeric_limits<int>::max());
+  builder.SetMaxReceiveMessageSize(8 * 1024 * 1024 -1);
+  builder.SetMaxSendMessageSize(8 * 1024 * 1024 -1);
 
   builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
   builder.RegisterService(&service);
