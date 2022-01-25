@@ -203,9 +203,23 @@ fn init_options(options: &HashMap<String, String>) -> Options {
     ret.create_if_missing(true);
     // TODO: Add other customized db options.
     ret.set_compression_type(DBCompressionType::None);
-    ret.set_compaction_style(DBCompactionStyle::Universal);
-    ret.set_write_buffer_size(1024 * 1024 * 1024);
     ret.set_stats_dump_period_sec(60);
+
+    if let Some(conf_str) = options.get("compaction_style") {
+        match conf_str.as_str() {
+            "universal" => ret.set_compaction_style(DBCompactionStyle::Universal),
+            "level" => ret.set_compaction_style(DBCompactionStyle::Level),
+            _ => panic!("invalid compaction_style config"),
+        }
+    }
+    if let Some(conf_str) = options.get("write_buffer_mb") {
+        let size_mb = conf_str.parse().unwrap();
+        ret.set_write_buffer_size(size_mb * 1024 * 1024);
+    }
+    if let Some(conf_str) = options.get("background_jobs") {
+        let background_jobs = conf_str.parse().unwrap();
+        ret.set_max_background_jobs(background_jobs);
+    }
     ret
 }
 

@@ -5,11 +5,25 @@ use maxgraph_store::db::api::multi_version_graph::MultiVersionGraph;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::collections::hash_map::DefaultHasher;
+use std::env;
 
 fn main() {
+    let args: Vec<String> = env::args().collect();
+
+    let write_buffer_mb = &args[1];
+    let compaction_style = &args[2];
+    let background_job = &args[3];
+
+    println!("write_buffer_mb {}, compaction_style {}, background_job {}", write_buffer_mb, compaction_style, background_job);
     let path = format!("write_bench_data_dir");
     fs::rmr(&path).unwrap();
-    let store = open_graph_store(&path);
+    let mut builder = GraphConfigBuilder::new();
+    builder.set_storage_engine("rocksdb");
+    builder.add_storage_option("write_buffer_mb", write_buffer_mb);
+    builder.add_storage_option("compaction_style", compaction_style);
+    builder.add_storage_option("background_jobs", background_job);
+    let config = builder.build();
+    let store = GraphStore::open(&config, &path).unwrap();
     println!("store opened.");
     let mut type_def_builer = TypeDefBuilder::new();
     type_def_builer.version(1);
