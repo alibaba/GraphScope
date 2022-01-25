@@ -129,6 +129,7 @@ impl From<IrError> for ResultCode {
             IrError::ParsePbError(_) => Self::ParsePbError,
             IrError::ColumnNotExist(_) => Self::ColumnNotExistError,
             IrError::TableNotExist(_) => Self::TableNotExistError,
+            IrError::ParentNodeNotExist(_) => Self::ParentNotFoundError,
             IrError::MissingDataError => Self::MissingDataError,
             _ => Self::Unknown,
         }
@@ -553,20 +554,14 @@ fn append_operator(
     );
     if result.is_err() {
         std::mem::forget(plan);
-        return ResultCode::from(result.err().unwrap());
+        ResultCode::from(result.err().unwrap())
     } else {
-        let opr_id = result.unwrap();
+        unsafe {
+            *id = result.unwrap() as i32;
+        }
         // Do not let rust drop the pointer before explicitly calling `destroy_logical_plan`
         std::mem::forget(plan);
-        if opr_id >= 0 {
-            unsafe {
-                *id = opr_id;
-            }
-            ResultCode::Success
-        } else {
-            // This must due to the query parent does not present
-            ResultCode::ParentNotFoundError
-        }
+        ResultCode::Success
     }
 }
 
