@@ -617,4 +617,19 @@ public class PositiveEvalTest {
         Assert.assertEquals(g.V().where("a", P.eq("b")).by("age").by(__.values("age")),
                 eval("g.V().where(\"a\", P.eq(\"b\")).by(\"age\").by(__.values(\"age\"))"));
     }
+
+    @Test
+    public void g_V_outE_as_otherV_test() {
+        Assert.assertEquals(g.V().outE().as("a").otherV(), eval("g.V().outE().as(\"a\").otherV()"));
+    }
+
+    @Test
+    public void g_V_outE_as_inV_test() {
+        Assert.assertEquals(g.V().outE().as("a").inV(), eval("g.V().outE().as(\"a\").inV()"));
+    }
+
+    @Test
+    public void g_V_outE_as_outV_test() {
+        Assert.assertEquals(g.V().outE().as("a").outV(), eval("g.V().outE().as(\"a\").outV()"));
+    }
 }
