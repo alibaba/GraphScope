@@ -344,7 +344,8 @@ class GraphSchema:
                         self._edge_labels[0].add_property(props.name, props.type)
 
     def __repr__(self):
-        s = f"oid_type: {self._oid_type}\nvid_type: {self._vid_type}\n"
+        s = f"oid_type: {graph_def_pb2.DataTypePb.Name(self._oid_type)}\n"
+        s += f"vid_type: {graph_def_pb2.DataTypePb.Name(self._vid_type)}\n"
         if (
             self._vdata_type != graph_def_pb2.UNKNOWN
             and self._edata_type != graph_def_pb2.UNKNOWN
