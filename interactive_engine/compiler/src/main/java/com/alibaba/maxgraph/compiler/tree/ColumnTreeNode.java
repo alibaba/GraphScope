@@ -16,6 +16,8 @@ package com.alibaba.maxgraph.compiler.tree;
 import com.alibaba.maxgraph.Message;
 import com.alibaba.maxgraph.QueryFlowOuterClass;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
+import com.alibaba.maxgraph.compiler.logical.LogicalSubQueryPlan;
+import com.alibaba.maxgraph.compiler.logical.function.ProcessorFunction;
 import com.alibaba.maxgraph.compiler.optimizer.ContextManager;
 import com.alibaba.maxgraph.compiler.tree.value.ListValueType;
 import com.alibaba.maxgraph.compiler.tree.value.MapEntryValueType;
@@ -23,9 +25,8 @@ import com.alibaba.maxgraph.compiler.tree.value.MapValueType;
 import com.alibaba.maxgraph.compiler.tree.value.PathValueType;
 import com.alibaba.maxgraph.compiler.tree.value.ValueType;
 import com.alibaba.maxgraph.compiler.tree.value.ValueValueType;
-import com.alibaba.maxgraph.compiler.logical.LogicalSubQueryPlan;
-import com.alibaba.maxgraph.compiler.logical.function.ProcessorFunction;
 import com.google.common.collect.Lists;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.tinkerpop.gremlin.structure.Column;
 

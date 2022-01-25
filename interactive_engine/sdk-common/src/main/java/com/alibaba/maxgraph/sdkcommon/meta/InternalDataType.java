@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -83,14 +83,18 @@ public enum InternalDataType {
      */
     UNKNOWN;
 
-
-    public final static List<String> primitiveTypes = Lists.newArrayList();
+    public static final List<String> primitiveTypes = Lists.newArrayList();
 
     static {
         InternalDataType[] values = InternalDataType.values();
 
         for (InternalDataType value : values) {
-            if (value != LIST && value != SET && value != MAP && value != UNKNOWN && value != CHAR && value != DATE
+            if (value != LIST
+                    && value != SET
+                    && value != MAP
+                    && value != UNKNOWN
+                    && value != CHAR
+                    && value != DATE
                     && value != SHORT) {
                 primitiveTypes.add(value.name());
             }

@@ -13,19 +13,24 @@
  */
 package com.alibaba.maxgraph.tests.ingestor;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.*;
+
 import com.alibaba.graphscope.groot.CompletionCallback;
+import com.alibaba.graphscope.groot.ingestor.BatchSender;
+import com.alibaba.graphscope.groot.ingestor.StoreWriter;
 import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.metrics.MetricsCollector;
+import com.alibaba.graphscope.groot.operation.LabelId;
 import com.alibaba.graphscope.groot.operation.OperationBatch;
 import com.alibaba.graphscope.groot.operation.OperationBlob;
 import com.alibaba.graphscope.groot.operation.StoreDataBatch;
+import com.alibaba.graphscope.groot.operation.VertexId;
+import com.alibaba.graphscope.groot.operation.dml.OverwriteVertexOperation;
 import com.alibaba.maxgraph.common.config.CommonConfig;
 import com.alibaba.maxgraph.common.config.Configs;
-import com.alibaba.graphscope.groot.operation.LabelId;
-import com.alibaba.graphscope.groot.operation.dml.OverwriteVertexOperation;
-import com.alibaba.graphscope.groot.operation.VertexId;
-import com.alibaba.graphscope.groot.ingestor.BatchSender;
-import com.alibaba.graphscope.groot.ingestor.StoreWriter;
+
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
@@ -33,10 +38,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.Mockito.*;
 
 public class BatchSenderTest {
 

@@ -13,21 +13,25 @@
  */
 package com.alibaba.maxgraph.coordinator.manager;
 
+import static com.alibaba.maxgraph.proto.InstanceInfoProto.Status.ABNORMAL;
+import static com.alibaba.maxgraph.proto.InstanceInfoProto.Status.NORMAL;
+
 import com.alibaba.maxgraph.common.DataStatus;
 import com.alibaba.maxgraph.common.ServerAssignment;
 import com.alibaba.maxgraph.common.client.WorkerInfo;
 import com.alibaba.maxgraph.common.cluster.InstanceConfig;
 import com.alibaba.maxgraph.common.lock.ExtendedRWLock;
 import com.alibaba.maxgraph.common.lock.LockWrapper;
-import com.alibaba.maxgraph.sdkcommon.Protoable;
-import com.alibaba.maxgraph.sdkcommon.client.Endpoint;
 import com.alibaba.maxgraph.common.util.CommonUtil;
 import com.alibaba.maxgraph.logging.LogEvents;
 import com.alibaba.maxgraph.logging.Logging;
 import com.alibaba.maxgraph.proto.*;
+import com.alibaba.maxgraph.sdkcommon.Protoable;
+import com.alibaba.maxgraph.sdkcommon.client.Endpoint;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.*;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -37,9 +41,6 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
-
-import static com.alibaba.maxgraph.proto.InstanceInfoProto.Status.ABNORMAL;
-import static com.alibaba.maxgraph.proto.InstanceInfoProto.Status.NORMAL;
 
 /**
  * @author lvshuang.xjs@alibaba-inc.com

@@ -17,9 +17,7 @@ import com.alibaba.maxgraph.structure.graph.TinkerMaxGraph;
 import com.alibaba.maxgraph.tinkerpop.Utils;
 
 import io.netty.channel.Channel;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.util.stream.Collectors;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.tinkerpop.gremlin.groovy.engine.GremlinExecutor;
@@ -32,16 +30,20 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nonnull;
-import javax.script.Bindings;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import javax.annotation.Nonnull;
+import javax.script.Bindings;
 
 public class MaxGraphServer {
     private static Logger LOG = LoggerFactory.getLogger(MaxGraphServer.class);
@@ -150,7 +152,8 @@ public class MaxGraphServer {
                 .exceptionally(
                         t -> {
                             LOG.error(
-                                    "Gremlin Server was unable to start and will now begin shutdown: {}",
+                                    "Gremlin Server was unable to start and will now begin"
+                                            + " shutdown: {}",
                                     t.getMessage());
                             innerServer.stop().join();
                             return null;

@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,8 +16,8 @@
 package com.alibaba.maxgraph.compiler.executor;
 
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
-import com.alibaba.maxgraph.rpc.TimelyResultProcessor;
 import com.alibaba.maxgraph.compiler.query.TimelyQuery;
+import com.alibaba.maxgraph.rpc.TimelyResultProcessor;
 
 /**
  * Defines methods to execute queries that are described by an Query object.
@@ -37,7 +37,12 @@ public interface QueryExecutor<V> {
      *
      * @param timelyQuery An expression tree.
      */
-    void execute(TimelyQuery timelyQuery, ExecuteConfig executeConfig, GraphSchema schema, long timeout, String queryId);
+    void execute(
+            TimelyQuery timelyQuery,
+            ExecuteConfig executeConfig,
+            GraphSchema schema,
+            long timeout,
+            String queryId);
 
     /**
      * PREPARE the query
@@ -54,7 +59,8 @@ public interface QueryExecutor<V> {
      * @param timelyQuery
      * @param schema
      */
-    void executePrepare(String prepareId, TimelyQuery timelyQuery, GraphSchema schema, String queryId);
+    void executePrepare(
+            String prepareId, TimelyQuery timelyQuery, GraphSchema schema, String queryId);
 
     /**
      * Query current process list.

@@ -13,16 +13,17 @@
  */
 package com.alibaba.graphscope.groot.store;
 
-import com.alibaba.maxgraph.proto.groot.GraphDefPb;
 import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.operation.OperationBatch;
 import com.alibaba.graphscope.groot.operation.StoreDataBatch;
+import com.alibaba.graphscope.groot.store.jna.JnaGraphStore;
 import com.alibaba.maxgraph.common.config.CommonConfig;
 import com.alibaba.maxgraph.common.config.Configs;
 import com.alibaba.maxgraph.common.config.StoreConfig;
 import com.alibaba.maxgraph.common.util.ThreadFactoryUtils;
-import com.alibaba.graphscope.groot.store.jna.JnaGraphStore;
+import com.alibaba.maxgraph.proto.groot.GraphDefPb;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;

@@ -16,6 +16,7 @@
 package com.alibaba.graphscope.gaia.plan.strategy.shuffle;
 
 import com.alibaba.graphscope.gaia.plan.strategy.PropertyIdentityStep;
+
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.HasContainer;
@@ -56,21 +57,27 @@ public class HasStepProperty extends PropertyShuffler {
     protected boolean match() {
         List<HasContainer> containerList = ((HasStep) step).getHasContainers();
         for (HasContainer container : containerList) {
-            if (!container.getKey().equals(T.id.getAccessor()) && !container.getKey().equals(T.label.getAccessor())) {
+            if (!container.getKey().equals(T.id.getAccessor())
+                    && !container.getKey().equals(T.label.getAccessor())) {
                 return true;
             }
         }
         return false;
     }
 
-    protected void extractHasProperty(List<HasContainer> source, List<HasContainer> propertyList, List<HasContainer> schemaKeyList) {
-        source.forEach(h -> {
-            if (h.getKey().equals(T.label.getAccessor()) || h.getKey().equals(T.id.getAccessor())) {
-                schemaKeyList.add(h);
-            } else {
-                propertyList.add(h);
-            }
-        });
+    protected void extractHasProperty(
+            List<HasContainer> source,
+            List<HasContainer> propertyList,
+            List<HasContainer> schemaKeyList) {
+        source.forEach(
+                h -> {
+                    if (h.getKey().equals(T.label.getAccessor())
+                            || h.getKey().equals(T.id.getAccessor())) {
+                        schemaKeyList.add(h);
+                    } else {
+                        propertyList.add(h);
+                    }
+                });
     }
 
     protected HasContainer[] asArray(List<HasContainer> list) {

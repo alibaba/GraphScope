@@ -13,7 +13,6 @@
  */
 package com.alibaba.maxgraph.compiler.cost.statistics;
 
-import org.apache.tinkerpop.gremlin.structure.Direction;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.maxgraph.compiler.api.schema.EdgeRelation;
 import com.alibaba.maxgraph.compiler.api.schema.GraphEdge;
@@ -27,10 +26,11 @@ import com.alibaba.maxgraph.compiler.tree.NodeType;
 import com.alibaba.maxgraph.compiler.tree.TreeNode;
 import com.alibaba.maxgraph.compiler.tree.VertexTreeNode;
 import com.alibaba.maxgraph.compiler.tree.source.SourceTreeNode;
-
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+
+import org.apache.tinkerpop.gremlin.structure.Direction;
 
 import java.util.List;
 import java.util.Map;

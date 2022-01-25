@@ -37,9 +37,7 @@ public final class MaxGraphVariables implements Graph.Variables {
 
     private final Map<String, Object> variables = new ConcurrentHashMap<>();
 
-    public MaxGraphVariables() {
-
-    }
+    public MaxGraphVariables() {}
 
     @Override
     public Set<String> keys() {

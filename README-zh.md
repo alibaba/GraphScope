@@ -34,7 +34,7 @@ GraphScope 支持本地运行，或在 [Kubernetes (k8s)](https://kubernetes.io/
 pip3 install graphscope
 ```
 
-注意 `graphscope` 的版本要求，需要 `Python` >= 3.6 及 `pip` >= 19.0.
+注意 `graphscope` 的版本要求，需要 `Python` >= 3.7 及 `pip` >= 19.0.
 
 GraphScope 包在大多数流行的Linux发行版 （Ubuntu 18.04+ / Centos 7+) 与 macOS 10.15+ 上测试通过，对于 Windows 用户，需要在 WSL2 上安装 Ubuntu 来使用 GraphScope。
 

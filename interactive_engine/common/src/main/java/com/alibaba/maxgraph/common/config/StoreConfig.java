@@ -39,5 +39,4 @@ public class StoreConfig {
 
     public static final Config<Integer> EXECUTOR_ENGINE_PORT =
             Config.intConfig("executor.engine.port", 0);
-
 }

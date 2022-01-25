@@ -20,14 +20,6 @@
  */
 package com.alibaba.maxgraph.tinkerpop.steps;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-
-import javax.annotation.Nonnull;
-
 import com.alibaba.maxgraph.structure.graph.TinkerMaxGraph;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -40,6 +32,14 @@ import org.apache.tinkerpop.gremlin.process.traversal.util.AndP;
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Element;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+
+import javax.annotation.Nonnull;
 
 public class MxGraphStep<S, E extends Element> extends GraphStep<S, E>
         implements HasContainerHolder {

@@ -13,15 +13,22 @@
  */
 package com.alibaba.maxgraph.tests.coordinator;
 
+import static com.alibaba.graphscope.groot.coordinator.SnapshotManager.*;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.*;
+
+import com.alibaba.graphscope.groot.coordinator.IngestorWriteSnapshotIdNotifier;
+import com.alibaba.graphscope.groot.coordinator.SnapshotInfo;
+import com.alibaba.graphscope.groot.coordinator.SnapshotManager;
+import com.alibaba.graphscope.groot.meta.MetaStore;
+import com.alibaba.graphscope.groot.wal.LogService;
 import com.alibaba.maxgraph.common.config.CommonConfig;
 import com.alibaba.maxgraph.common.config.Configs;
 import com.alibaba.maxgraph.common.config.CoordinatorConfig;
-import com.alibaba.graphscope.groot.wal.LogService;
-import com.alibaba.graphscope.groot.coordinator.IngestorWriteSnapshotIdNotifier;
-import com.alibaba.graphscope.groot.meta.MetaStore;
-import com.alibaba.graphscope.groot.coordinator.SnapshotInfo;
-import com.alibaba.graphscope.groot.coordinator.SnapshotManager;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -29,11 +36,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-
-import static com.alibaba.graphscope.groot.coordinator.SnapshotManager.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.*;
 
 public class SnapshotManagerTest {
 

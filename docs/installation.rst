@@ -4,7 +4,7 @@ Installation
 GraphScope is tested and supported on the following 64-bit systems:
 
 - gcc 7.1+
-- Python 3.6 - 3.9
+- Python 3.7 - 3.9
 - Ubuntu 18.04 or later
 - CentOS 7 or later
 - macOS 11.2.1 (Big Sur) or later, with both Intel chip and Apple M1 chip
@@ -32,7 +32,7 @@ Install GraphScope Client for Kubernetes
 For quickly getting started, we set up a local kubernetes cluster and take advantage of pre-built Docker images as follows.
 The following dependencies or tools are required.
 
-- Python 3.6 - 3.9
+- Python 3.7 - 3.9
 - Local Kubernetes cluster set-up tool (e.g. `Kind <https://kind.sigs.k8s.io>`_)
 
 On Windows and macOS, you can follow the official guides to install them and enable Kubernetes in Docker.

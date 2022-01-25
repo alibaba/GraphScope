@@ -22,6 +22,10 @@ import com.alibaba.graphscope.parallel.message.DoubleMsg;
 import com.alibaba.graphscope.parallel.message.PrimitiveMessage;
 import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
 import com.alibaba.graphscope.utils.TriConsumer;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -29,6 +33,8 @@ import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
 public interface ParallelEngine {
+    Logger logger = LoggerFactory.getLogger(ParallelEngine.class);
+
     int chunkSize = 1024;
 
     /**
@@ -72,7 +78,7 @@ public interface ParallelEngine {
                                     }
                                 } catch (Exception e) {
                                     e.printStackTrace();
-                                    System.err.println(
+                                    logger.error(
                                             "origin end "
                                                     + originEnd
                                                     + " verteics "
@@ -259,7 +265,7 @@ public interface ParallelEngine {
                                     }
                                 } catch (Exception e) {
                                     e.printStackTrace();
-                                    System.err.println(
+                                    logger.error(
                                             "origin end "
                                                     + originEnd
                                                     + " verteics "
@@ -330,7 +336,7 @@ public interface ParallelEngine {
                                     }
                                 } catch (Exception e) {
                                     e.printStackTrace();
-                                    System.err.println(
+                                    logger.error(
                                             "origin end "
                                                     + originEnd
                                                     + " verteics "

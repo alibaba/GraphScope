@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,16 +23,18 @@ import org.apache.tinkerpop.gremlin.driver.ResultSet;
 import java.util.HashMap;
 
 public abstract class LdbcWithSubQuery extends LdbcQuery {
-    
-    public LdbcWithSubQuery(String queryName, String queryFile, String parameterFile) throws Exception {
+
+    public LdbcWithSubQuery(String queryName, String queryFile, String parameterFile)
+            throws Exception {
         super(queryName, queryFile, parameterFile);
     }
 
     @Override
-    public void processGremlinQuery(Client client,
-                                    HashMap<String, String> singleParameter,
-                                    boolean printResult,
-                                    boolean printQuery) {
+    public void processGremlinQuery(
+            Client client,
+            HashMap<String, String> singleParameter,
+            boolean printResult,
+            boolean printQuery) {
 
         try {
             String gremlinQuery = generateGremlinQuery(singleParameter, queryPattern);
@@ -53,22 +55,20 @@ public abstract class LdbcWithSubQuery extends LdbcQuery {
             long endTime = System.currentTimeMillis();
             long executeTime = endTime - startTime;
             if (printQuery) {
-                String printInfo = String.format("QueryName[%s], Parameter[%s], ResultCount[%d], ExecuteTimeMS[%d].",
-                        queryName,
-                        singleParameter.toString(),
-                        resultCount,
-                        executeTime);
+                String printInfo =
+                        String.format(
+                                "QueryName[%s], Parameter[%s], ResultCount[%d], ExecuteTimeMS[%d].",
+                                queryName, singleParameter.toString(), resultCount, executeTime);
                 if (printResult) {
-                    printInfo = String.format("%s Result: { %s }",
-                            printInfo,
-                            resultStr);
+                    printInfo = String.format("%s Result: { %s }", printInfo, resultStr);
                 }
                 System.out.println(printInfo);
             }
-        }  catch (Exception e) {
-            System.out.println(String.format("Timeout or failed: QueryName[%s], Parameter[%s].",
-                    queryName,
-                    singleParameter.toString()));
+        } catch (Exception e) {
+            System.out.println(
+                    String.format(
+                            "Timeout or failed: QueryName[%s], Parameter[%s].",
+                            queryName, singleParameter.toString()));
             e.printStackTrace();
         }
     }

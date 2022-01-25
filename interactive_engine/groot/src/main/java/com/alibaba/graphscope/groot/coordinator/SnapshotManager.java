@@ -15,15 +15,16 @@ package com.alibaba.graphscope.groot.coordinator;
 
 import com.alibaba.graphscope.groot.SnapshotListener;
 import com.alibaba.graphscope.groot.meta.MetaStore;
+import com.alibaba.graphscope.groot.wal.LogReader;
+import com.alibaba.graphscope.groot.wal.LogService;
 import com.alibaba.maxgraph.common.config.CommonConfig;
 import com.alibaba.maxgraph.common.config.Configs;
 import com.alibaba.maxgraph.common.config.CoordinatorConfig;
-import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
 import com.alibaba.maxgraph.common.util.ThreadFactoryUtils;
-import com.alibaba.graphscope.groot.wal.LogReader;
-import com.alibaba.graphscope.groot.wal.LogService;
+import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

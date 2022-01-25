@@ -73,7 +73,11 @@ public class BackupInfo {
         List<Long> walOffsets = proto.getWalOffsetsList();
         Map<Integer, Integer> partitionToBackupId = proto.getPartitionToBackupIdMap();
         return new BackupInfo(
-                globalBackupId, snapshotId, proto.getGraphDef().toByteArray(), walOffsets, partitionToBackupId);
+                globalBackupId,
+                snapshotId,
+                proto.getGraphDef().toByteArray(),
+                walOffsets,
+                partitionToBackupId);
     }
 
     public BackupInfoPb toProto() throws IOException {
@@ -104,8 +108,8 @@ public class BackupInfo {
         if (!partitionToBackupId.equals(backupInfo.partitionToBackupId)) {
             return false;
         }
-        return (globalBackupId == backupInfo.globalBackupId) &&
-                (snapshotId == backupInfo.snapshotId);
+        return (globalBackupId == backupInfo.globalBackupId)
+                && (snapshotId == backupInfo.snapshotId);
     }
 
     @Override

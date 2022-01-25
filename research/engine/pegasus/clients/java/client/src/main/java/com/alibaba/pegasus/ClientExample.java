@@ -15,20 +15,22 @@
  */
 package com.alibaba.pegasus;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import com.alibaba.pegasus.builder.JobBuilder;
 import com.alibaba.pegasus.intf.CloseableIterator;
 import com.alibaba.pegasus.service.protocol.PegasusClient.JobConfig;
 import com.alibaba.pegasus.service.protocol.PegasusClient.JobRequest;
 import com.alibaba.pegasus.service.protocol.PegasusClient.JobResponse;
 import com.google.protobuf.ByteString;
+
 import io.grpc.Status;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class ClientExample {
     private static final Logger logger = LoggerFactory.getLogger(ClientExample.class);
@@ -36,7 +38,8 @@ public class ClientExample {
     private static void process(JobResponse response) {
         ByteString data = response.getData();
         ArrayList<Long> res = toLongArray(data.toByteArray(), data.size());
-        logger.info("got one response: job id {}, array size {}, job data {}",
+        logger.info(
+                "got one response: job id {}, array size {}, job data {}",
                 response.getJobId(),
                 res.size(),
                 res.toString());
@@ -71,16 +74,15 @@ public class ClientExample {
     }
 
     private static long fromByteArray(byte[] bytes) {
-        return ((long) bytes[7] & 255L) << 56 |
-                ((long) bytes[6] & 255L) << 48 |
-                ((long) bytes[5] & 255L) << 40 |
-                ((long) bytes[4] & 255L) << 32 |
-                ((long) bytes[3] & 255L) << 24 |
-                ((long) bytes[2] & 255L) << 16 |
-                ((long) bytes[1] & 255L) << 8 |
-                (long) bytes[0] & 255L;
+        return ((long) bytes[7] & 255L) << 56
+                | ((long) bytes[6] & 255L) << 48
+                | ((long) bytes[5] & 255L) << 40
+                | ((long) bytes[4] & 255L) << 32
+                | ((long) bytes[3] & 255L) << 24
+                | ((long) bytes[2] & 255L) << 16
+                | ((long) bytes[1] & 255L) << 8
+                | (long) bytes[0] & 255L;
     }
-
 
     private static ByteString getSeed(long a) {
         return ByteString.copyFrom(toByteArray(a));
@@ -112,26 +114,23 @@ public class ClientExample {
         RpcClient rpcClient = new RpcClient(channels);
 
         logger.info("Will try to send request");
-        JobConfig confPb = JobConfig
-                .newBuilder()
-                .setJobId(2)
-                .setJobName("ping_pong_example")
-                .setWorkers(2)
-                .addServers(0)
-                .addServers(1)
-                .build();
+        JobConfig confPb =
+                JobConfig.newBuilder()
+                        .setJobId(2)
+                        .setJobName("ping_pong_example")
+                        .setWorkers(2)
+                        .addServers(0)
+                        .addServers(1)
+                        .build();
         // for job build
         JobBuilder jobBuilder = new JobBuilder(confPb);
         // for nested task
         JobBuilder start = new JobBuilder();
 
         // construct job
-        jobBuilder.addSource(getSeed(0))
-                .repeat(3,
-                        start.exchange(getRoute())
-                                .map(add(1))
-                                .flatMap(copy(8))
-                )
+        jobBuilder
+                .addSource(getSeed(0))
+                .repeat(3, start.exchange(getRoute()).map(add(1)).flatMap(copy(8)))
                 .sink(getSink());
 
         JobRequest req = jobBuilder.build();

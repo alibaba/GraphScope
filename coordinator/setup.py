@@ -382,7 +382,6 @@ setup(
         "Operating System :: POSIX",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
@@ -406,3 +405,25 @@ setup(
     install_requires=parsed_reqs(),
     extras_require=parsed_dev_reqs(),
 )
+
+
+if os.name == "nt":
+
+    class _ReprableString(str):
+        def __repr__(self) -> str:
+            return self
+
+    raise RuntimeError(
+        _ReprableString(
+            """
+            ====================================================================
+
+            GraphScope doesn't support Windows natively, please try to install graphscope in WSL
+
+                https://docs.microsoft.com/en-us/windows/wsl/install
+
+            with pip.
+
+            ===================================================================="""
+        )
+    )

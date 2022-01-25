@@ -24,9 +24,13 @@ public interface GnnLibrary extends Library {
     GnnLibrary INSTANCE = Native.load("lgraph", GnnLibrary.class);
 
     void setPartitionGraph(Pointer partitionGraph);
+
     Pointer runLocalTests();
+
     boolean getTestResultFlag(Pointer r);
+
     Pointer getTestResultInfo(Pointer r);
+
     void freeTestResult(Pointer r);
 
     class TestResult implements AutoCloseable {

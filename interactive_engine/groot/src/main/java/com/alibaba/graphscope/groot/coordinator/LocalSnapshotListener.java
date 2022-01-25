@@ -15,6 +15,7 @@ package com.alibaba.graphscope.groot.coordinator;
 
 import com.alibaba.graphscope.groot.SnapshotCache;
 import com.alibaba.graphscope.groot.schema.GraphDef;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,7 +47,6 @@ public class LocalSnapshotListener implements QuerySnapshotListener {
             graphDef = this.schemaManager.getGraphDef();
         }
         this.snapshotCache.advanceQuerySnapshotId(snapshotId, graphDef);
-        lastDdlSnapshotId.getAndUpdate(
-                x -> Math.max(x, ddlSnapshotId));
+        lastDdlSnapshotId.getAndUpdate(x -> Math.max(x, ddlSnapshotId));
     }
 }

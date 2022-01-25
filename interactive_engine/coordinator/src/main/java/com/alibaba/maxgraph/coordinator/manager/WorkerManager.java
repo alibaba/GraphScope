@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,6 +21,7 @@ import com.alibaba.maxgraph.logging.LogEvents;
 import com.alibaba.maxgraph.logging.Logging;
 import com.alibaba.maxgraph.proto.WorkerStatus;
 import com.google.common.collect.Sets;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,25 +54,36 @@ public class WorkerManager {
         serverDataManager.instanceInfo.updateWorkerStatus(workerId, workerStatus);
     }
 
-    private void  checkAllWorkerExistTime() {
-        serverDataManager.instanceInfo.getWorkerId2ExistTime().forEach((key, value) -> {
-            Long workerExistTime = System.currentTimeMillis() - value;
-            LOG.info("worker {} exist time:{}", key, workerExistTime);
-            if (getWorkerStatusById(key) == WorkerStatus.RUNNING &&
-                    workerExistTime > instanceConfig.getWorkerHBTimeoutSeconds() * 1000) {
-                updateWorkerStatusById(key, WorkerStatus.LOST);
+    private void checkAllWorkerExistTime() {
+        serverDataManager
+                .instanceInfo
+                .getWorkerId2ExistTime()
+                .forEach(
+                        (key, value) -> {
+                            Long workerExistTime = System.currentTimeMillis() - value;
+                            LOG.info("worker {} exist time:{}", key, workerExistTime);
+                            if (getWorkerStatusById(key) == WorkerStatus.RUNNING
+                                    && workerExistTime
+                                            > instanceConfig.getWorkerHBTimeoutSeconds() * 1000) {
+                                updateWorkerStatusById(key, WorkerStatus.LOST);
 
-                Logging.schedule(instanceConfig.getGraphName(),
-                        LogEvents.ScheduleEvent.WORKER_HB_TIMEOUT, key,
-                        "worker has no hb " + workerExistTime + "ms");
-            }
-        });
+                                Logging.schedule(
+                                        instanceConfig.getGraphName(),
+                                        LogEvents.ScheduleEvent.WORKER_HB_TIMEOUT,
+                                        key,
+                                        "worker has no hb " + workerExistTime + "ms");
+                            }
+                        });
     }
 
     private void startWorkerTimeoutMonitorThread() {
-        workerTimeoutMonitor = new ScheduledThreadPoolExecutor(1,
-                CommonUtil.createFactoryWithDefaultExceptionHandler("TIMEOUT_MONITOR", LOG));
-        workerTimeoutMonitor.scheduleWithFixedDelay(this::checkAllWorkerExistTime, 1, 3, TimeUnit.SECONDS);
+        workerTimeoutMonitor =
+                new ScheduledThreadPoolExecutor(
+                        1,
+                        CommonUtil.createFactoryWithDefaultExceptionHandler(
+                                "TIMEOUT_MONITOR", LOG));
+        workerTimeoutMonitor.scheduleWithFixedDelay(
+                this::checkAllWorkerExistTime, 1, 3, TimeUnit.SECONDS);
     }
 
     public Set<Integer> findWorkerIdSetByStatus(WorkerStatus workerStatus) {
@@ -87,30 +99,46 @@ public class WorkerManager {
     }
 
     public Set<Integer> getNeedRestartUnregisteredWorkerIdSet(Set<Integer> totalWorkerIdSet) {
-        Set<Integer> unregisterWorkerIdSet = Sets.difference(totalWorkerIdSet, serverDataManager.instanceInfo.server2WorkerInfo.keySet());
-        Set<Integer> restartingWorkerIdSet = serverDataManager.instanceInfo.server2WorkerInfo.entrySet().stream()
-                .filter(entry -> entry.getValue().workerStatus == WorkerStatus.RESTARTING)
-                .map(Map.Entry::getKey)
-                .collect(Collectors.toSet());
+        Set<Integer> unregisterWorkerIdSet =
+                Sets.difference(
+                        totalWorkerIdSet,
+                        serverDataManager.instanceInfo.server2WorkerInfo.keySet());
+        Set<Integer> restartingWorkerIdSet =
+                serverDataManager.instanceInfo.server2WorkerInfo.entrySet().stream()
+                        .filter(entry -> entry.getValue().workerStatus == WorkerStatus.RESTARTING)
+                        .map(Map.Entry::getKey)
+                        .collect(Collectors.toSet());
         restartingWorkerIdSet.addAll(unregisterWorkerIdSet);
 
         Set<Integer> needRestartIdSet = Sets.newHashSet();
-        restartingWorkerIdSet.forEach(id -> {
-            if (serverDataManager.instanceInfo.getWorkerLastRegisterTime().containsKey(id)) {
-                long timeCost = System.currentTimeMillis() - serverDataManager.instanceInfo.getWorkerLastRegisterTime().get(id);
-                LOG.info("worker id {} not register time cost:{}", id, timeCost);
-                if (timeCost > instanceConfig.getWorkerUnregisteredTimeoutSeconds() * 1000L) {
-                    needRestartIdSet.add(id);
-                    serverDataManager.instanceInfo.updateWorkerRegisterTimestamp(id);
+        restartingWorkerIdSet.forEach(
+                id -> {
+                    if (serverDataManager
+                            .instanceInfo
+                            .getWorkerLastRegisterTime()
+                            .containsKey(id)) {
+                        long timeCost =
+                                System.currentTimeMillis()
+                                        - serverDataManager
+                                                .instanceInfo
+                                                .getWorkerLastRegisterTime()
+                                                .get(id);
+                        LOG.info("worker id {} not register time cost:{}", id, timeCost);
+                        if (timeCost
+                                > instanceConfig.getWorkerUnregisteredTimeoutSeconds() * 1000L) {
+                            needRestartIdSet.add(id);
+                            serverDataManager.instanceInfo.updateWorkerRegisterTimestamp(id);
 
-                    Logging.schedule(instanceConfig.getGraphName(),
-                            LogEvents.ScheduleEvent.WORKER_REG_TIMEOUT, id,
-                            "worker not register in " + timeCost + "ms");
-                }
-            } else {
-                serverDataManager.instanceInfo.updateWorkerRegisterTimestamp(id);
-            }
-        });
+                            Logging.schedule(
+                                    instanceConfig.getGraphName(),
+                                    LogEvents.ScheduleEvent.WORKER_REG_TIMEOUT,
+                                    id,
+                                    "worker not register in " + timeCost + "ms");
+                        }
+                    } else {
+                        serverDataManager.instanceInfo.updateWorkerRegisterTimestamp(id);
+                    }
+                });
 
         return needRestartIdSet;
     }

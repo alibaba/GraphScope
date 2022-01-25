@@ -20,11 +20,6 @@
  */
 package com.alibaba.maxgraph.tinkerpop.strategies;
 
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import com.alibaba.maxgraph.tinkerpop.steps.MxGraphStep;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -43,6 +38,11 @@ import org.apache.tinkerpop.gremlin.process.traversal.step.map.OrderGlobalStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.HasContainer;
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.AbstractTraversalStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.util.TraversalHelper;
+
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class MxGraphStepStrategy extends AbstractTraversalStrategy<ProviderOptimizationStrategy>
         implements TraversalStrategy.ProviderOptimizationStrategy {

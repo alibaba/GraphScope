@@ -16,25 +16,28 @@ Built-in Algorithms
 ---------------------
 
 GraphScope analytical engine provides many common used algorithms, 
-including connectivity and path
-analysis, community detection, centrality computations.
+including connectivity and path analysis, community detection, centrality computations.
 
 Built-in algorithms can be easily invoked over loaded graphs. For example, 
 
 .. code:: python
 
     import graphscope
-    from graphscope import pagerank
-    from graphscope import lpa
+    from graphscope.dataset import load_p2p_network
 
-    g = graphscope.g()
-    # algorithms defined on property graph can be invoked directly.
-    result = lpa(g)
+    graphscope.set_option(show_log=True)
 
-    # some other algorithms may only support evaluate on simple graph
+    # load property graph
+    g = load_p2p_network()
+
+    # many algorithms only support evaluate on simple graph
     # hence we need to generate one by selecting a kind of vertices and edges.
-    simple_g = g.project(vertices={"users": []}, edges={"follows": []})
-    result_pr = pagerank(simple_g)
+    simple_g = g.project(vertices={"host": ["id"]}, edges={"connect": ["dist"]})
+
+    # run builtin applications
+    result_lpa = graphscope.lpa(simple_g, max_round=20)
+    result_sssp = graphscope.sssp(simple_g, src=20)
+
 
 A full-list of builtin algorithms is shown as below. Whether an algorithm supports
 property graph or not is described in its docstring.
@@ -43,16 +46,24 @@ property graph or not is described in its docstring.
 
 .. autosummary::
 
+- :func:`average_degree_connectivity`
+- :func:`average_shortest_path_length`
+- :func:`attribute_assortativity_coefficient`
 - :func:`bfs`
-- :func:`cdlp`
 - :func:`clustering`
 - :func:`degree_centrality`
+- :func:`degree_assortativity_coefficient`
 - :func:`eigenvector_centrality`
 - :func:`hits`
+- :func:`is_simple_path`
 - :func:`k_core`
+- :func:`k_shell`
 - :func:`katz_centrality`
+- :func:`louvain`
 - :func:`lpa`
+- :func:`numeric_assortativity_coefficient`
 - :func:`pagerank`
+- :func:`pagerank_nx`
 - :func:`sssp`
 - :func:`triangles`
 - :func:`wcc`
@@ -73,31 +84,28 @@ There is a list of supported method to retrieve the results.
 .. code:: python
 
     # fetch to data structures
-    result_pr.to_numpy()
-    result_pr.to_dataframe()
+    result_lpa.to_numpy("r")
+    result_lpa.to_dataframe({"node": "v.id", "result": "r"})
 
     # or write to hdfs or oss, or local (local means the path is relative to the pods)
-    result_pr.output("hdfs://output")
-    result_pr.output("oss://id:key@endpoint/bucket/object")
-    result_pr.output("file:///tmp/path")
+    result_lpa.output("hdfs://output", {"node": "v.id", "result": "r"})
+    result_lpa.output("oss://id:key@endpoint/bucket/object", {"node": "v.id", "result": "r"})
+    result_lpa.output("file:///tmp/path", {"node": "v.id", "result": "r"})
 
     # or write to client local
-    result_pr.output_to_client("local_filename")
+    result_lpa.output_to_client("/tmp/lpa_result.txt", {"node": "v.id", "result": "r"})
 
     # or seal to vineyard
-    result_pr.to_vineyard_dataframe()
-    result_pr.to_vineyard_numpy()
+    result_lpa.to_vineyard_dataframe({"node": "v.id", "result": "r"})
+    result_lpa.to_vineyard_tensor("r")
 
 In addition, as shown in the :ref:`Getting Started`, computation results can add back to 
 the graph as a new property (column) of the vertices(edges).
 
 .. code:: python
 
-    simple_g = g.project(vertices={"paper": []}, edges={"sites": []})
-    ret = graphscope.kcore(simple_g, k=5)
-
-    # add the results as new columns to the citation graph, the column name is 'kcore'
-    subgraph = sub_graph.add_column(ret, {'kcore': 'r'})
+    # add the results as new columns to the citation graph, the column name is 'lpa_result'
+    new_graph = g.add_column(result_lpa, {"lpa_result": "r"})
 
 
 Users may assign a :ref:`Selector` to define which parts of the results to write. A selector specifies
@@ -109,13 +117,13 @@ Here are some examples for selectors on result processing.
 .. code:: python
 
     # get the results on the vertex
-    result_pr.to_numpy('r')
+    result_lpa.to_numpy('r')
 
     # to dataframe,
     # using the `id` of vertices (`v.id`) as a column named df_v
     # using the `data` of v (`v.data`) as a column named df_vd
     # and using the result (`r`) as a column named df_result
-    result_pr.to_dataframe({'df_v': 'v.id', 'df_vd': 'v.data', 'df_result': 'r'})
+    result_lpa.to_dataframe({'df_v': 'v.id', 'df_vd': 'v.data', 'df_result': 'r'})
 
     # for results on property graph
     # using `:` as a label selector for v and e
@@ -145,10 +153,10 @@ To implement this, a user just need to fulfill this class.
 
 .. code:: python
 
-    from graphscope.analytical.udf import pie
+    from graphscope.analytical.udf.decorators import pie
     from graphscope.framework.app import AppAssets
 
-    @pie
+    @pie(vd_type="double", md_type="double")
     class YourAlgorithm(AppAssets):
         @staticmethod
         def Init(frag, context):
@@ -173,7 +181,7 @@ Let's take SSSP as example, a user defined SSSP in PIE model may be like this.
 
 .. code:: python
 
-    from graphscope.analytical.udf import pie
+    from graphscope.analytical.udf.decorators import pie
     from graphscope.framework.app import AppAssets
 
     @pie(vd_type="double", md_type="double")
@@ -207,6 +215,7 @@ Let's take SSSP as example, a user defined SSSP in PIE model may be like this.
                 edges = frag.get_outgoing_edges(source, e_label_id)
                 for e in edges:
                     dst = e.neighbor()
+                    # use the third column of edge data as the distance between two vertices
                     distv = e.get_int(2)
                     if context.get_node_value(dst) > distv:
                         context.set_node_value(dst, distv)
@@ -227,7 +236,6 @@ Let's take SSSP as example, a user defined SSSP in PIE model may be like this.
                             if context.get_node_value(u) > u_dist:
                                 context.set_node_value(u, u_dist)
 
-
 As shown in the code, users only need to design and implement sequential algorithm
 over a fragment, rather than considering the communication and message passing
 in the distributed setting. In this case, the classic dijkstra algorithm and its
@@ -236,14 +244,12 @@ incremental version works for large graphs partitioned on a cluster.
 Writing Algorithms in Pregel
 ----------------------------------------------
 
-In addition to the sub-graph based PIE model, 
-`graphscope` supports vertex-centric
-`Pregel` model as well. 
-You may develop an algorithms in `Pregel` model by implementing this.
+In addition to the sub-graph based PIE model, `graphscope` supports vertex-centric
+`Pregel` model as well. You may develop an algorithms in `Pregel` model by implementing this.
 
 .. code:: python
 
-    from graphscope.analytical.udf import pregel
+    from graphscope.analytical.udf.decorators import pregel
     from graphscope.framework.app import AppAssets
 
     @pregel(vd_type='double', md_type='double')
@@ -271,9 +277,8 @@ Take SSSP as example, the algorithm in Pregel model looks like this.
     from graphscope.framework.app import AppAssets
 
     # decorator, and assign the types for vertex data, message data.
-    @pregel(vd_type='double', md_type='double')
+    @pregel(vd_type="double", md_type="double")
     class SSSP_Pregel(AppAssets):
-
         @staticmethod
         def Init(v, context):
             v.set_value(1000000000.0)
@@ -330,52 +335,80 @@ To run your own algorithms, you may trigger it in place where you defined it.
 .. code:: python
 
     import graphscope
+    from graphscope.dataset import load_p2p_network
 
-    sess = graphscope.session()
-    g = sess.g()
+    g = load_p2p_network()
 
     # load my algorithm
     my_app = SSSP_Pregel()
 
     # run my algorithm over a graph and get the result.
     # Here the `src` is correspondent to the `context.get_config(b"src")`
-    ret = my_app(g, src="0")
+    ret = my_app(g, src="6")
 
 
 After developing and testing, you may want to save it for the future use.
 
 .. code:: python
 
-    SSSP_Pregel.to_gar("file:///var/graphscope/udf/my_sssp_pregel.gar")
-
+    SSSP_Pregel.to_gar("/tmp/my_sssp_pregel.gar")
 
 Later, you can load your own algorithm from the gar package.
 
 .. code:: python
 
-    import graphscope
-
-    g = graphscope.g()
+    from graphscope.framework.app import load_app
 
     # load my algorithm from a gar package
-    my_app = load_app('file:///var/graphscope/udf/my_sssp_pregel.gar')
+    my_app = load_app("/tmp/my_sssp_pregel.gar")
 
     # run my algorithm over a graph and get the result.
-    ret = my_app(g, src="0")
+    ret = my_app(g, src="6")
 
-Writing Your Own Algorithms In Java
+Run Algorithm in Java
 ----------------------------------------------
 
 If you are a ``Java`` programmer, then you may want to implement your graph algorithm in ``Java``, and 
-run it on GraphScope analytical engine.
+run it on GraphScope analytical engine. We first show you how to run a demo java algorithm(i.e. sssp), and then 
+how to implement your own algorithms in java.
 
-Step 0: Get grape-jdk
+Run a Demo Java Algorithm
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-First, you will need ``grape-jdk`` installed on your developing environment. We will support downloading/installing ``grape-jdk``
-from maven central repositories in the future, however, currently you need to build from source. 
-Please follow :ref:`gae_java_sdk_about` for building grape-jdk from source.
+We provide some sample java app implementation, and you can directly run them on Graphscope Analytical Engine. First you 
+need to download a `grape-demo.jar <https://github.com/GraphScope/gstest/blob/master/jars/graphscope-demo-0.1-shaded.jar>`_。
 
+Then open your GraphScope python client, try to load a graph, and run the sample sssp algorithm.
+
+.. code:: python
+
+    import graphscope
+    from graphscope import JavaApp
+    from graphscope.dataset import load_p2p_network
+
+    """Or lauch session in k8s cluster"""
+    sess = graphscope.session(cluster_type='hosts') 
+
+    graph = load_p2p_network(sess)    
+
+    """This app need to run on simple graph"""
+    graph = graph.project(vertices={"host": ['id']}, edges={"connect": ["dist"]})
+
+    sssp=JavaApp(
+        full_jar_path="grape-demo.jar", # The path to the grape-demo.jar
+        java_app_class="com.alibaba.graphscope.example.bfs.BFS", 
+    )
+    ctx=sssp(graph,src=6)
+
+    """Fetch the result via context"""
+    ctx.to_numpy("r:label0.dist_0")
+
+
+Writing Your Own Algorithms in Java
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To develop your algorithm in java, first, you will need ``grape-jdk`` installed on your developing environment. 
+Currently you need to build from source. Please follow :ref:`gae_java_sdk_about` for building grape-jdk from source.
 
 After installing ``grape-jdk``, you can include it as dependency in your maven project. You shall add classifier *shaded* to use the jar which includes all necessary dependencies.
 
@@ -388,67 +421,7 @@ After installing ``grape-jdk``, you can include it as dependency in your maven p
       <classifier>shaded</classifier>
     </dependency>
 
-Step 1: Develop your graph algorithm in Java
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-You shall implement your algorithm in `PIE <https://dl.acm.org/doi/10.1145/3282488>`_  programming model, and your app shall inherit
- :code:`com.alibaba.graphscope.app.PropertyDefaultAppBase` if it works on a property graph,  
- or :code:`com.alibaba.graphscope.app.ProjectedDefaultAppBase` in case it works on a projected graph. 
- 
- Here we present a simple app which traverse all vertices and edges on a property graph.
-
- .. code:: java
-
-    public class PropertyTraverseVertexData implements PropertyDefaultAppBase<Long, PropertyTraverseVertexDataContext> {
-        static private int propertyId = 0;
-
-        @Override
-        public void PEval(ArrowFragment<Long> fragment, PropertyDefaultContextBase<Long> context,
-                PropertyMessageManager messageManager) {
-            PropertyTraverseVertexDataContext ctx = (PropertyTraverseVertexDataContext) context;
-            for (int i = 0; i < fragment.vertexLabelNum(); ++i) {
-                VertexRange<Long> innerVertices = fragment.innerVertices(i);
-                for (Vertex<Long> vertex : innerVertices.locals()) {
-                    for (int j = 0; j < fragment.edgeLabelNum(); ++j) {
-                        PropertyAdjList<Long> adjList = fragment.getOutgoingAdjList(vertex, j);
-                        for (PropertyNbr<Long> nbr : adjList.iterator()) {
-                            Vertex<Long> dst = nbr.neighbor();
-                            double edgeData = nbr.getDouble(propertyId);
-                        }
-                    }
-                }
-            }
-        }
-
-        @Override
-        public void IncEval(ArrowFragment<Long> fragment, PropertyDefaultContextBase<Long> context,
-                PropertyMessageManager messageManager) {
-            PropertyTraverseVertexDataContext ctx = (PropertyTraverseVertexDataContext) context;
-            if (ctx.step >= ctx.maxStep) {
-                return;
-            }
-            for (int i = 0; i < fragment.vertexLabelNum(); ++i) {
-                VertexRange<Long> innerVertices = fragment.innerVertices(i);
-                for (Vertex<Long> vertex : innerVertices.locals()) {
-                    for (int j = 0; j < fragment.edgeLabelNum(); ++j) {
-                        PropertyAdjList<Long> adjList = fragment.getOutgoingAdjList(vertex, j);
-                        for (PropertyNbr<Long> nbr : adjList.iterator()) {
-                            Vertex<Long> dst = nbr.neighbor();
-                            double edgeData = nbr.getDouble(propertyId);
-                        }
-                    }
-                }
-            }
-            messageManager.ForceContinue();
-        }
-    }
-
-
-Step 2: Pack to jar and submit to GraphScope
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-To run your algorithms on GraphScope analytical engine, first you need to pack your algorithms in a ``jar``.
-To address the jar dependencies issue, we need you to pack with dependencies included. For example, you can
+To address the jar dependencies issue, we need you to pack your jar with dependencies included. For example, you can
 used maven plugin `maven-shade-pluging`.
 
 .. code:: xml
@@ -458,7 +431,103 @@ used maven plugin `maven-shade-pluging`.
         <artifactId>maven-shade-plugin</artifactId>
     </plugin>
 
+For the implementation of your algorithm, You shall follow `PIE <https://dl.acm.org/doi/10.1145/3282488>`_  programming model, 
+and your app need to inherit :code:`DefaultPropertyAppBase` or :code:`ParallelPropertyAppBase` if it works on a property graph,  
+or :code:`DefaultAppBase` or :code:`ParallelAppBase` in case it works on a simple graph. Meanwhile, you also need to implement 
+the corresponding context for your app, by inheriting :code:`DefaultPropertyContextBase` , :code:`ParallelPropertyContextBase`,
+:code:`DefaultContextBase` or :code:`ParallelContextBase`. Users can also extends :code:`VertexDataContext` or :code:`VertexPropertyContext`
+to make use of features provided by different types of context. The vertex data or columns in these two context will be available after query. You can access
+the data via the returned context object in python client.
+ 
+Here we present an app which simply traverse a simple graph.
 
+.. code:: java
+
+    public class Traverse implements ParallelAppBase<Long, Long, Double, Long, TraverseContext>,
+        ParallelEngine {
+
+        @Override
+        public void PEval(IFragment<Long, Long, Double, Long> fragment,
+            ParallelContextBase<Long, Long, Double, Long> context,
+            ParallelMessageManager messageManager) {
+            TraverseContext ctx = (TraverseContext) context;
+            for (Vertex<Long> vertex : fragment.innerVertices()) {
+                AdjList<Long, Long> adjList = fragment.getOutgoingAdjList(vertex);
+                for (Nbr<Long, Long> nbr : adjList.iterator()) {
+                    Vertex<Long> dst = nbr.neighbor();
+                    //Update largest distance for current vertex
+                    ctx.vertexArray.setValue(vertex, Math.max(nbr.data(), ctx.vertexArray.get(vertex)));
+                }
+            }
+            messageManager.ForceContinue();
+        }
+
+        @Override
+        public void IncEval(IFragment<Long, Long, Double, Long> fragment,
+            ParallelContextBase<Long, Long, Double, Long> context,
+            ParallelMessageManager messageManager) {
+            TraverseContext ctx = (TraverseContext) context;
+            for (Vertex<Long> vertex : fragment.innerVertices()) {
+                AdjList<Long, Long> adjList = fragment.getOutgoingAdjList(vertex);
+                for (Nbr<Long, Long> nbr : adjList.iterator()) {
+                    Vertex<Long> dst = nbr.neighbor();
+                    //Update largest distance for current vertex
+                    ctx.vertexArray.setValue(vertex, Math.max(nbr.data(), ctx.vertexArray.get(vertex)));
+                }
+            }
+        }
+    }
+
+Corresponding context:
+
+.. code:: java
+    
+    public class TraverseContext extends
+        VertexDataContext<IFragment<Long, Long, Double, Long>, Long> implements ParallelContextBase<Long,Long,Double,Long> {
+
+        public GSVertexArray<Long> vertexArray;
+        public int maxIteration;
+
+        @Override
+        public void Init(IFragment<Long, Long, Double, Long> frag,
+            ParallelMessageManager messageManager, JSONObject jsonObject) {
+            createFFIContext(frag, Long.class, false);
+            //This vertex Array is created by our framework. Data stored in this array will be available
+            //after execution, you can receive them by invoking method provided in Python Context.
+            vertexArray = data();
+            maxIteration = 10;
+            if (jsonObject.containsKey("maxIteration")){
+                maxIteration = jsonObject.getInteger("maxIteration");
+            }
+        }
+
+        @Override
+        public void Output(IFragment<Long, Long, Double, Long> frag) {
+            //You can also write output logic in this function.
+        }
+    }
+
+
+You may want to verify your implementation locally, before submitting your algorithm to GraphScope analytical engine.
+A simple bash script is provided to address this need. To verfy your algorithm, just run
+
+.. code:: bash
+
+    python3 ${GRAPHSCOPE_REPO}/analytical_engine/java/java-app-runner.py
+                --app=${app_class_name} --java_path=${path_to_your_jar} 
+                --param_str=${params_str}
+
+``app_class_name`` is the fully-specified name for your algorithm class(i.e. com.xxx.Traverse), ``path_to_your_jar`` should be the place where your packed jar resides.
+To pass params to your contex, put them in ``params`` like ``src=6,threadNum=1``, and these params will be provided in ``Context::Init`` as a json string. For example,
+
+.. code:: bash
+
+    cd ${GRAPHSCOPE_REPO}/analytical_engine/java/
+    python3 java-app-runner.py --app com.alibaba.graphscope.example.traverse.Traverse 
+                --jar_path /home/graphscope/GraphScope/analytical_engine/java/grape-demo/target/grape-demo-0.1-shaded.jar 
+                --arguments "maxIteration=10"
+
+After verifying your algorithm locally, you may try to run your algorithms on GraphScope analytical engine. 
 You will need ``python client`` to run a java app. A simple jar can contains serveral app implementation,
 and you need to specify the app you want in this run.
 
@@ -466,29 +535,19 @@ and you need to specify the app you want in this run.
 
     import graphscope
     from graphscope import JavaApp
-    graphscope.set_option(show_log=True)
+    from graphscope.dataset import load_p2p_network
+    
     """Or lauch session in k8s cluster"""
-    sess = graphscope.session(cluster_type='hosts') 
+    sess = graphscope.session(cluster_type='hosts')
 
-    graph = sess.g()
-    graph = sess.g(directed=False)
-    graph = graph.add_vertices("gstest/property/p2p-31_property_v_0", label="person")
-    graph = graph.add_edges("gstest/property/p2p-31_property_e_0", label="knows")
+    graph = load_p2p_network(sess)
+    graph = graph.project(vertices={"host": ['id']}, edges={"connect": ["dist"]})
 
-    sssp1=JavaApp(
-        full_jar_path="full/path/to/your/packed/jar", 
-        java_app_class="fullly/qualified/class/name/of/your/app", 
+    app=JavaApp(
+        full_jar_path="{full/path/to/your/packed/jar}", 
+        java_app_class="{fullly/qualified/class/name/of/your/app}", 
     )
-    ctx2=sssp1(graph,src=6)
-
-    graph = graph.project(vertices={"person": ['id']}, edges={"knows": ["dist"]})
-    sssp3=JavaApp(
-        full_jar_path="full/path/to/your/packed/jar", 
-        java_app_class="app/on/projected/graph", 
-    )
-    ctx3=sssp3(graph,src=6)
-
-    ctx.to_numpy("r:label0.dist_0")
+    ctx=app(graph, "{param string}")
 
 After computation, you can obtain the results stored in context with the help of :ref:`Context`.
 

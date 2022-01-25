@@ -13,15 +13,16 @@
  */
 package com.alibaba.maxgraph.tests.common;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import com.alibaba.graphscope.groot.meta.DefaultMetaService;
 import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.maxgraph.common.config.Configs;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class DefaultMetaServiceTest {
 

@@ -16,17 +16,18 @@
 
 package com.alibaba.graphscope.app;
 
-import com.alibaba.graphscope.fragment.SimpleFragment;
+import com.alibaba.graphscope.context.DefaultContextBase;
+import com.alibaba.graphscope.fragment.IFragment;
 import com.alibaba.graphscope.parallel.DefaultMessageManager;
 
 /**
- * The base interface for all <em>sequential</em> PIE apps which work along with {@link
- * SimpleFragment} and {@link DefaultMessageManager}
+ * The base interface for all <em>sequential</em> PIE apps which work along with {@link IFragment}
+ * and {@link DefaultMessageManager}
  *
  * <p>To define your sequential graph algorithms, you should implement this interface and provide
- * the corresponding implementation for {@link DefaultAppBase#PEval(SimpleFragment,
- * DefaultContextBase, DefaultMessageManager)} and {@link DefaultAppBase#IncEval(SimpleFragment,
- * DefaultContextBase, DefaultMessageManager)}
+ * the corresponding implementation for {@link DefaultAppBase#PEval(IFragment, DefaultContextBase,
+ * DefaultMessageManager)} and {@link DefaultAppBase#IncEval(IFragment, DefaultContextBase,
+ * DefaultMessageManager)}
  *
  * <p>User-defined app shall work along with user-defined context, which should be an implementation
  * of {@link DefaultContextBase}.
@@ -36,22 +37,22 @@ import com.alibaba.graphscope.parallel.DefaultMessageManager;
  * <pre>
  * {
  *         class MyContext implements DefaultContextBase&lt;Long, Long, Long, Double&gt; {
- *                 public void Init(SimpleFragment&lt;Long, Long, Long, Double&gt; frag,
+ *                 public void Init(IFragment&lt;Long, Long, Long, Double&gt; frag,
  *                                 DefaultMessageManager messageManager, StdVector&lt;FFIByteString&gt; args) {
  *
  *                 }
  *
- *                 public void Output(SimpleFragment&lt;Long, Long, Long, Double&gt; frag) {
+ *                 public void Output(IFragment&lt;Long, Long, Long, Double&gt; frag) {
  *
  *                 }
  *         }
  *         class MyApp implements DefaultAppBase&lt;Long, Long, Long, Double, MyContext&gt; {
- *                 public void PEval(SimpleFragment&lt;Long, Long, Long, Double&gt; graph,
+ *                 public void PEval(IFragment&lt;Long, Long, Long, Double&gt; graph,
  *                                 DefaultContextBase context, DefaultMessageManager messageManager) {
  *
  *                 }
  *
- *                 public void IncEval(SimpleFragment&lt;Long, Long, Long, Double&gt; graph,
+ *                 public void IncEval(IFragment&lt;Long, Long, Long, Double&gt; graph,
  *                                 DefaultContextBase context, DefaultMessageManager messageManager) {
  *
  *                 }
@@ -82,12 +83,12 @@ public interface DefaultAppBase<
      * @param context context. User defined context which manages data during the whole
      *     computations.
      * @param messageManager The message manger which manages messages between fragments.
-     * @see SimpleFragment
+     * @see IFragment
      * @see DefaultContextBase
      * @see DefaultMessageManager
      */
     void PEval(
-            SimpleFragment<OID_T, VID_T, VDATA_T, EDATA_T> graph,
+            IFragment<OID_T, VID_T, VDATA_T, EDATA_T> graph,
             DefaultContextBase<OID_T, VID_T, VDATA_T, EDATA_T> context,
             DefaultMessageManager messageManager);
 
@@ -98,12 +99,12 @@ public interface DefaultAppBase<
      * @param context context. User defined context which manages data during the whole
      *     computations.
      * @param messageManager The message manger which manages messages between fragments.
-     * @see SimpleFragment
+     * @see IFragment
      * @see DefaultContextBase
      * @see DefaultMessageManager
      */
     void IncEval(
-            SimpleFragment<OID_T, VID_T, VDATA_T, EDATA_T> graph,
+            IFragment<OID_T, VID_T, VDATA_T, EDATA_T> graph,
             DefaultContextBase<OID_T, VID_T, VDATA_T, EDATA_T> context,
             DefaultMessageManager messageManager);
 }

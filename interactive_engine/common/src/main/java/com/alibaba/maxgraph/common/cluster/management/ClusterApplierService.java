@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,8 +28,10 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class ClusterApplierService extends AbstractLifecycleComponent {
 
-    private final Collection<ClusterStateListener> clusterStateListeners = new CopyOnWriteArrayList<>();
-    private final Collection<ClusterStateApplier> clusterStateAppliers = new CopyOnWriteArrayList<>();
+    private final Collection<ClusterStateListener> clusterStateListeners =
+            new CopyOnWriteArrayList<>();
+    private final Collection<ClusterStateApplier> clusterStateAppliers =
+            new CopyOnWriteArrayList<>();
 
     private final AtomicReference<ClusterState> lastAppliedState;
 
@@ -44,8 +46,10 @@ public class ClusterApplierService extends AbstractLifecycleComponent {
     protected void doStart() {
         logger.info("Start ClusterApplierService...");
         setInitialState(ClusterState.emptyClusterState());
-        threadPoolExecutor = Executors.newSingleThreadExecutor(
-                CommonUtil.createFactoryWithDefaultExceptionHandler("cluster-applier-service", logger));
+        threadPoolExecutor =
+                Executors.newSingleThreadExecutor(
+                        CommonUtil.createFactoryWithDefaultExceptionHandler(
+                                "cluster-applier-service", logger));
     }
 
     @Override
@@ -57,14 +61,11 @@ public class ClusterApplierService extends AbstractLifecycleComponent {
     }
 
     @Override
-    protected void doClose() throws IOException {
-
-    }
+    protected void doClose() throws IOException {}
 
     public ClusterState lastAppliedState() {
         return lastAppliedState.get();
     }
-
 
     class UpdateTask implements Runnable {
 
@@ -90,18 +91,25 @@ public class ClusterApplierService extends AbstractLifecycleComponent {
         final ClusterState previousClusterState = lastAppliedState.get();
         final ClusterState newClusterState = task.nextClusterState;
 
-        if (previousClusterState == newClusterState || previousClusterState.version() == newClusterState.version()) {
+        if (previousClusterState == newClusterState
+                || previousClusterState.version() == newClusterState.version()) {
             logger.debug("no change in cluster lastAppliedState");
         } else {
-            logger.info("Update task applying changes. Source: " + task.source +
-                    ". from " + previousClusterState.version() + ", to " + newClusterState.version());
+            logger.info(
+                    "Update task applying changes. Source: "
+                            + task.source
+                            + ". from "
+                            + previousClusterState.version()
+                            + ", to "
+                            + newClusterState.version());
             logger.info("previous: " + previousClusterState.toProto().toString());
             logger.info("new: " + newClusterState.toProto().toString());
             applyChanges(task, previousClusterState, newClusterState);
         }
     }
 
-    private void applyChanges(UpdateTask task, ClusterState previousClusterState, ClusterState newClusterState) {
+    private void applyChanges(
+            UpdateTask task, ClusterState previousClusterState, ClusterState newClusterState) {
         ClusterChangedEvent clusterChangedEvent =
                 new ClusterChangedEvent(task.source, newClusterState, previousClusterState);
         // nodes delta, update connections
@@ -118,7 +126,7 @@ public class ClusterApplierService extends AbstractLifecycleComponent {
     }
 
     private void callClusterStateListeners(ClusterChangedEvent clusterChangedEvent) {
-        for(ClusterStateListener listener : clusterStateListeners) {
+        for (ClusterStateListener listener : clusterStateListeners) {
             try {
                 listener.clusterChanged(clusterChangedEvent);
             } catch (Exception ex) {
@@ -137,7 +145,8 @@ public class ClusterApplierService extends AbstractLifecycleComponent {
 
     public void setInitialState(ClusterState initialState) {
         if (lifecycle.started()) {
-            throw new IllegalStateException("Error: setting initial lastAppliedState after starting");
+            throw new IllegalStateException(
+                    "Error: setting initial lastAppliedState after starting");
         }
         lastAppliedState.set(initialState);
     }

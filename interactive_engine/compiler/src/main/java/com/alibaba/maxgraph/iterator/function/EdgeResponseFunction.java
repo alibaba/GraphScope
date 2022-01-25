@@ -29,8 +29,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.function.Function;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 public class EdgeResponseFunction implements Function<StoreApi.GraphEdgeReponse, Edge> {
     private GraphSchema schema;
     private MaxGraph graph;

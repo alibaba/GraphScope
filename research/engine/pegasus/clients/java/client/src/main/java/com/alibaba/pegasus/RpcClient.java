@@ -19,18 +19,19 @@ import com.alibaba.pegasus.common.StreamIterator;
 import com.alibaba.pegasus.intf.CloseableIterator;
 import com.alibaba.pegasus.service.protocol.JobServiceGrpc;
 import com.alibaba.pegasus.service.protocol.JobServiceGrpc.JobServiceStub;
-import com.alibaba.pegasus.service.protocol.PegasusClient.JobResponse;
 import com.alibaba.pegasus.service.protocol.PegasusClient.JobRequest;
+import com.alibaba.pegasus.service.protocol.PegasusClient.JobResponse;
+
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class RpcClient {
     private static final Logger logger = LoggerFactory.getLogger(RpcClient.class);
@@ -41,14 +42,19 @@ public class RpcClient {
         this.channels = channels;
     }
 
-    public CloseableIterator<JobResponse> submit(JobRequest jobRequest) throws InterruptedException {
+    public CloseableIterator<JobResponse> submit(JobRequest jobRequest)
+            throws InterruptedException {
         StreamIterator<JobResponse> responseIterator = new StreamIterator<>();
         AtomicInteger counter = new AtomicInteger(this.channels.size());
         AtomicBoolean finished = new AtomicBoolean(false);
         for (RpcChannel rpcChannel : channels) {
             JobServiceStub asyncStub = JobServiceGrpc.newStub(rpcChannel.getChannel());
             // todo: make timeout configurable
-            asyncStub.withDeadlineAfter(600000, TimeUnit.MILLISECONDS).submit(jobRequest, new JobResponseObserver(responseIterator, finished, counter));
+            asyncStub
+                    .withDeadlineAfter(600000, TimeUnit.MILLISECONDS)
+                    .submit(
+                            jobRequest,
+                            new JobResponseObserver(responseIterator, finished, counter));
         }
         return responseIterator;
     }
@@ -64,7 +70,10 @@ public class RpcClient {
         private final AtomicBoolean finished;
         private final AtomicInteger counter;
 
-        public JobResponseObserver(StreamIterator<JobResponse> iterator, AtomicBoolean finished, AtomicInteger counter) {
+        public JobResponseObserver(
+                StreamIterator<JobResponse> iterator,
+                AtomicBoolean finished,
+                AtomicInteger counter) {
             this.iterator = iterator;
             this.finished = finished;
             this.counter = counter;
@@ -98,7 +107,7 @@ public class RpcClient {
             if (counter.decrementAndGet() == 0) {
                 logger.info("finish get job response from all servers");
                 try {
-                   this.iterator.finish();
+                    this.iterator.finish();
                 } catch (InterruptedException e) {
                     onError(e);
                 }

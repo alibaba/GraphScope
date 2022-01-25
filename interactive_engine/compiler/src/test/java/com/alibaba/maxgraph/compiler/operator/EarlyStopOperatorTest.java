@@ -13,12 +13,12 @@
  */
 package com.alibaba.maxgraph.compiler.operator;
 
+import static org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__.both;
+import static org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__.out;
+
 import org.junit.Test;
 
 import java.io.IOException;
-
-import static org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__.both;
-import static org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__.out;
 
 public class EarlyStopOperatorTest extends AbstractOperatorTest {
 

@@ -5,7 +5,7 @@ If you don't find an answer to your question here, feel free to file a `Issues`_
 
 1. What are the minimum resources and system requirements required to run GraphScope?
 
-    To use GraphScope Python interface, **Python >= 3.6** and **pip >= 19.0** is required.
+    To use GraphScope Python interface, **Python >= 3.7** and **pip >= 19.0** is required.
     GraphScope engine can be deployed in standalone mode or distributed mode. For standalone deployment, the mininum requirement is  **4 cores CPU** and **8G memory**.
 
     GraphScope is tested and supported on the following systems:
@@ -29,7 +29,7 @@ If you don't find an answer to your question here, feel free to file a `Issues`_
     To enable verbose logging, turn on it by this:
 
     .. code:: python
-       
+
        graphscope.set_option(show_log=True)
 
     If you are running GraphScope in k8s, you can use `kubectl describe/logs <https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands>`_ to check the log/status of the cluster. If the disk storage is accessible(on local or via Pods), you may also find logs in `/tmp/gs/runtime/logs`.
@@ -79,6 +79,21 @@ If you don't find an answer to your question here, feel free to file a `Issues`_
 
     - compile ``scipy`` failed: You can follow `this <https://stackoverflow.com/questions/65745683/how-to-install-scipy-on-apple-silicon-arm-m1>`_ to build scipy from source or try ``pip3 install --pre -i https://pypi.anaconda.org/scipy-wheels-nightly/simple scipy`` to workaround this problem.
 
+11. How to resolve the ``Permission denied`` error when allocating PV on NFS volumes?
+
+    - ENV: Use helm to install graphscope-store, NFS to supply PV.
+
+    - Appearance: Pod ``graphscope-store-kafka-0`` , ``graphscope-store-zookeeper-0`` reports ``CrashLoopBackOff`` status.
+
+    - Check: First use ``kubectl logs graphscope-store-zookeeper-0`` to check log. If the log shows ``mkdir: cannot create directory '/bitnami/zookeeper/data': Permission denied``.
+
+    - Reason: Normaly, the permission of NFS directories we created is ``root 755`` (depends on your sepcify environment), but the default user of graphscope-store is ``graphscope(1001)``, so these pods have no permission to write on NFS.
+
+    - Solution: There are two slutions to solve this.
+
+        The brutal one is using ``chmod 777`` on all related PV directories, this is efficient but not recommended in production environment.
+
+        The elegant one is creating ``graphscope`` user and user group first, and then grant the access permission on ``graphscope`` to the related NFS directories.
 
 **I do have many other questions...**
 

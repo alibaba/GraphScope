@@ -13,13 +13,13 @@
  */
 package com.alibaba.graphscope.groot.operation.dml;
 
-import com.alibaba.maxgraph.proto.groot.DataOperationPb;
-import com.alibaba.maxgraph.proto.groot.EdgeLocationPb;
 import com.alibaba.graphscope.groot.operation.EdgeId;
-import com.alibaba.graphscope.groot.schema.EdgeKind;
 import com.alibaba.graphscope.groot.operation.Operation;
 import com.alibaba.graphscope.groot.operation.OperationType;
+import com.alibaba.graphscope.groot.schema.EdgeKind;
 import com.alibaba.graphscope.groot.schema.PropertyValue;
+import com.alibaba.maxgraph.proto.groot.DataOperationPb;
+import com.alibaba.maxgraph.proto.groot.EdgeLocationPb;
 import com.google.protobuf.ByteString;
 
 import java.util.Map;

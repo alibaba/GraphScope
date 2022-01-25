@@ -28,7 +28,11 @@ public class RemoteTestGraphProvider extends AbstractGraphProvider {
     public static String MODERN_GRAPH_ENDPOINT = "localhost:8182";
 
     @Override
-    public Map<String, Object> getBaseConfiguration(String graphName, Class<?> test, String testMethodName, LoadGraphWith.GraphData loadGraphWith) {
+    public Map<String, Object> getBaseConfiguration(
+            String graphName,
+            Class<?> test,
+            String testMethodName,
+            LoadGraphWith.GraphData loadGraphWith) {
         Map config = new HashMap();
         config.put(Graph.GRAPH, RemoteTestGraph.class.getName());
         config.put(RemoteTestGraph.GRAPH_NAME, MODERN_GRAPH_ENDPOINT);
@@ -46,7 +50,11 @@ public class RemoteTestGraphProvider extends AbstractGraphProvider {
     }
 
     @Override
-    public void loadGraphData(final Graph graph, final LoadGraphWith loadGraphWith, final Class testClass, final String testName) {
+    public void loadGraphData(
+            final Graph graph,
+            final LoadGraphWith loadGraphWith,
+            final Class testClass,
+            final String testName) {
         // do nothing
     }
 }

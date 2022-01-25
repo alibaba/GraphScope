@@ -27,5 +27,4 @@ import com.alibaba.graphscope.context.ContextBase;
  * @param <EDATA_T> edge data type
  * @param <C> implementation class for {@link ContextBase}
  */
-public interface AppBase<
-        OID_T, VID_T, VDATA_T, EDATA_T, C extends ContextBase<OID_T, VID_T, VDATA_T, EDATA_T>> {}
+public interface AppBase<OID_T, VID_T, VDATA_T, EDATA_T, C extends ContextBase> {}

@@ -31,7 +31,7 @@ def clustering(graph):
     of pairs of the node’s neighbors that are adjacent to each other.
 
     Args:
-        graph (:class:`Graph`): A simple graph.
+        graph (:class:`graphscope.Graph`): A simple graph.
 
     Returns:
         :class:`graphscope.framework.context.VertexDataContextDAGNode`:
@@ -41,12 +41,16 @@ def clustering(graph):
 
     .. code:: python
 
-        import graphscope as gs
-        g = gs.g()
-        # Load some data, then project to a simple graph (if needed).
-        pg = g.project(vertices={"vlabel": []}, edges={"elabel": []})
-        r = gs.clustering(pg)
-        s.close()
-
+        >>> import graphscope
+        >>> from graphscope.dataset import load_p2p_network
+        >>> sess = graphscope.session(cluster_type="hosts", mode="eager")
+        >>> g = load_p2p_network(sess)
+        >>> # project to a simple graph (if needed)
+        >>> pg = g.project(vertices={"host": ["id"]}, edges={"connect": ["dist"]})
+        >>> c = graphscope.clustering(pg)
+        >>> sess.close()
     """
-    return AppAssets(algo="clustering", context="vertex_data")(graph)
+    if graph.is_directed():
+        return AppAssets(algo="clustering", context="vertex_data")(graph)
+    else:
+        return AppAssets(algo="lcc", context="vertex_data")(graph)

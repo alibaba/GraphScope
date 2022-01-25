@@ -21,16 +21,22 @@ import static com.alibaba.graphscope.utils.CppClassName.GRAPE_COMMUNICATOR;
 import com.alibaba.fastffi.FFITypeFactory;
 import com.alibaba.graphscope.parallel.message.DoubleMsg;
 import com.alibaba.graphscope.parallel.message.LongMsg;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Objects;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /** Communicator providing useful distributed aggregation methods such as min/min/sum. */
 public abstract class Communicator {
     private static Logger logger = LoggerFactory.getLogger(Communicator.class.getName());
     private FFICommunicator communicatorImpl;
+
+    public FFICommunicator getFFICommunicator() {
+        return communicatorImpl;
+    }
 
     /**
      * This function is set private, not intended to be invokede by user. It is meat to only be
@@ -53,7 +59,7 @@ public abstract class Communicator {
             if (constructor.getParameterCount() == 1
                     && constructor.getParameterTypes()[0].getName().equals("long")) {
                 communicatorImpl = communicatorClass.cast(constructor.newInstance(appAddr));
-                System.out.println(communicatorImpl);
+                logger.info("Init communicator:" + communicatorImpl);
             }
         }
     }

@@ -31,8 +31,8 @@ def k_shell(graph, k: int):
     That is, nodes in the k-core that are not in the (k+1)-core.
 
     Args:
-        graph (:class:`Graph`): A simple graph.
-        k (int): The `k` for k-shell.
+        graph (:class:`graphscope.Graph`): A simple graph.
+        k (int): The order of the k_shell.
 
     Returns:
         :class:`graphscope.framework.context.VertexDataContextDAGNode`:
@@ -44,13 +44,14 @@ def k_shell(graph, k: int):
 
     .. code:: python
 
-        import graphscope as gs
-        g = gs.g()
-        # Load some data, then project to a simple graph (if needed).
-        pg = g.project(vertices={"vlabel": []}, edges={"elabel": []})
-        r = gs.k_shell(pg)
-        s.close()
-
+        >>> import graphscope
+        >>> from graphscope.dataset import load_p2p_network
+        >>> sess = graphscope.session(cluster_type="hosts", mode="eager")
+        >>> g = load_p2p_network(sess)
+        >>> # project to a simple graph (if needed)
+        >>> pg = g.project(vertices={"host": ["id"]}, edges={"connect": ["dist"]})
+        >>> c = graphscope.k_shell(pg, k=3)
+        >>> sess.close()
     """
     k = int(k)
     return AppAssets(algo="kshell", context="vertex_data")(graph, k)

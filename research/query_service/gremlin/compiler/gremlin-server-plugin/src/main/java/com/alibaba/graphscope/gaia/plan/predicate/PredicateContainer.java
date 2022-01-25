@@ -16,6 +16,7 @@
 package com.alibaba.graphscope.gaia.plan.predicate;
 
 import com.alibaba.graphscope.common.proto.Gremlin;
+
 import org.apache.tinkerpop.gremlin.process.traversal.P;
 
 import java.util.Iterator;

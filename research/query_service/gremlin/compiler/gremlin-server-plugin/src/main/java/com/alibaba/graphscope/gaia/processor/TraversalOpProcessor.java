@@ -15,6 +15,7 @@ import com.alibaba.graphscope.gaia.store.GraphStoreService;
 import com.alibaba.graphscope.gaia.store.GraphType;
 import com.alibaba.graphscope.gaia.store.SchemaNotFoundException;
 import com.alibaba.pegasus.builder.AbstractBuilder;
+
 import org.apache.tinkerpop.gremlin.driver.Tokens;
 import org.apache.tinkerpop.gremlin.driver.message.RequestMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseMessage;
@@ -29,9 +30,10 @@ import org.apache.tinkerpop.gremlin.util.function.ThrowingConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.script.SimpleBindings;
 import java.util.Collections;
 import java.util.Map;
+
+import javax.script.SimpleBindings;
 
 public class TraversalOpProcessor extends AbstractOpProcessor {
     private static final Logger logger = LoggerFactory.getLogger(TraversalOpProcessor.class);
@@ -40,7 +42,10 @@ public class TraversalOpProcessor extends AbstractOpProcessor {
     private GaiaConfig config;
     private GraphStoreService graphStore;
 
-    public TraversalOpProcessor(GaiaConfig config, GraphStoreService graphStore, AbstractBroadcastProcessor broadcastProcessor) {
+    public TraversalOpProcessor(
+            GaiaConfig config,
+            GraphStoreService graphStore,
+            AbstractBroadcastProcessor broadcastProcessor) {
         super(false);
         this.config = config;
         this.graphStore = graphStore;
@@ -59,7 +64,8 @@ public class TraversalOpProcessor extends AbstractOpProcessor {
         final ThrowingConsumer<Context> op;
         final GremlinExecutor executor = ctx.getGremlinExecutor();
         final SimpleBindings b = new SimpleBindings();
-        final Map<String, String> aliases = (Map<String, String>) message.optionalArgs(Tokens.ARGS_ALIASES).get();
+        final Map<String, String> aliases =
+                (Map<String, String>) message.optionalArgs(Tokens.ARGS_ALIASES).get();
         final String traversalSourceName = aliases.entrySet().iterator().next().getValue();
         logger.info("tokens ops is {}", message.getOp());
         if (config.getGraphType() == GraphType.MAXGRAPH) {
@@ -67,36 +73,63 @@ public class TraversalOpProcessor extends AbstractOpProcessor {
         }
         switch (message.getOp()) {
             case Tokens.OPS_BYTECODE:
-                op = (context -> {
-                    try {
-                        Object byteCode = message.getArgs().get(Tokens.ARGS_GREMLIN);
-                        Traversal traversal = executor.eval((Bytecode) byteCode, new SimpleBindings(), null, traversalSourceName);
-                        GaiaGraphOpProcessor.applyStrategy(traversal, config, graphStore);
-                        long queryId = (long) queryIdMaker.getId(traversal);
-                        TraversalBuilder traversalBuilder = new TraversalBuilder((Traversal.Admin) traversal)
-                                .addConfig(PlanConfig.QUERY_ID, queryId)
-                                .addConfig(PlanConfig.TAG_ID_MAKER, new TagIdMaker((Traversal.Admin) traversal))
-                                .addConfig(PlanConfig.QUERY_CONFIG, PlanUtils.getDefaultConfig(queryId, config));
-                        if (config.getGraphType() == GraphType.MAXGRAPH) {
-                            traversalBuilder.addConfig(PlanConfig.SNAPSHOT_ID, Long.valueOf(graphStore.getSnapShotId()));
-                        }
-                        AbstractBuilder jobReqBuilder = new TraversalTranslator(traversalBuilder).translate();
-                        PlanUtils.print(jobReqBuilder);
-                        broadcastProcessor.broadcast(jobReqBuilder.build(),
-                                new GremlinResultProcessor(ctx, new RemoteTraverserResultParser(traversalBuilder, graphStore, config)));
-                        logger.info("query-{} finish", queryId);
-                    } catch (SchemaNotFoundException e) {
-                        throw new OpProcessorException("schema not found error",
-                                ResponseMessage.build(message).code(ResponseStatusCode.SUCCESS).result(Collections.EMPTY_LIST).create());
-                    }
-                });
+                op =
+                        (context -> {
+                            try {
+                                Object byteCode = message.getArgs().get(Tokens.ARGS_GREMLIN);
+                                Traversal traversal =
+                                        executor.eval(
+                                                (Bytecode) byteCode,
+                                                new SimpleBindings(),
+                                                null,
+                                                traversalSourceName);
+                                GaiaGraphOpProcessor.applyStrategy(traversal, config, graphStore);
+                                long queryId = (long) queryIdMaker.getId(traversal);
+                                TraversalBuilder traversalBuilder =
+                                        new TraversalBuilder((Traversal.Admin) traversal)
+                                                .addConfig(PlanConfig.QUERY_ID, queryId)
+                                                .addConfig(
+                                                        PlanConfig.TAG_ID_MAKER,
+                                                        new TagIdMaker((Traversal.Admin) traversal))
+                                                .addConfig(
+                                                        PlanConfig.QUERY_CONFIG,
+                                                        PlanUtils.getDefaultConfig(
+                                                                queryId, config));
+                                if (config.getGraphType() == GraphType.MAXGRAPH) {
+                                    traversalBuilder.addConfig(
+                                            PlanConfig.SNAPSHOT_ID,
+                                            Long.valueOf(graphStore.getSnapShotId()));
+                                }
+                                AbstractBuilder jobReqBuilder =
+                                        new TraversalTranslator(traversalBuilder).translate();
+                                PlanUtils.print(jobReqBuilder);
+                                broadcastProcessor.broadcast(
+                                        jobReqBuilder.build(),
+                                        new GremlinResultProcessor(
+                                                ctx,
+                                                new RemoteTraverserResultParser(
+                                                        traversalBuilder, graphStore, config)));
+                                logger.info("query-{} finish", queryId);
+                            } catch (SchemaNotFoundException e) {
+                                throw new OpProcessorException(
+                                        "schema not found error",
+                                        ResponseMessage.build(message)
+                                                .code(ResponseStatusCode.SUCCESS)
+                                                .result(Collections.EMPTY_LIST)
+                                                .create());
+                            }
+                        });
                 return op;
             case Tokens.OPS_KEYS:
-                GaiaGraphOpProcessor.writeResultList(ctx, Collections.EMPTY_LIST, ResponseStatusCode.SUCCESS);
+                GaiaGraphOpProcessor.writeResultList(
+                        ctx, Collections.EMPTY_LIST, ResponseStatusCode.SUCCESS);
                 return null;
             default:
                 String errorMsg = "not support " + message.getOp();
-                GaiaGraphOpProcessor.writeResultList(ctx, Collections.singletonList(errorMsg), ResponseStatusCode.REQUEST_ERROR_INVALID_REQUEST_ARGUMENTS);
+                GaiaGraphOpProcessor.writeResultList(
+                        ctx,
+                        Collections.singletonList(errorMsg),
+                        ResponseStatusCode.REQUEST_ERROR_INVALID_REQUEST_ARGUMENTS);
                 return null;
         }
     }

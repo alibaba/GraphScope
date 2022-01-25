@@ -49,7 +49,7 @@
 #include "core/loader/arrow_fragment_loader.h"
 #include "core/object/fragment_wrapper.h"
 #include "core/utils/transform_utils.h"
-#include "java_pie/java_pie_projected_default_app.h"
+#include "java_pie/java_pie_projected_parallel_app.h"
 #include "java_pie/java_pie_property_parallel_app.h"
 #include "proto/graphscope/proto/graph_def.pb.h"
 
@@ -337,7 +337,7 @@ void QueryProjected(vineyard::Client& client,
                     const std::string& basic_params,
                     const std::string& selector_string,
                     const std::string& selectors_string) {
-  using AppType = gs::JavaPIEProjectedDefaultApp<ProjectedFragmentType>;
+  using AppType = gs::JavaPIEProjectedParallelApp<ProjectedFragmentType>;
   auto app = std::make_shared<AppType>();
   auto worker = AppType::CreateWorker(app, fragment);
   auto spec = grape::DefaultParallelEngineSpec();
@@ -463,6 +463,7 @@ void Run(vineyard::Client& client, const grape::CommSpec& comm_spec,
 
   boost::property_tree::ptree pt;
   pt.put("src", "4");
+  pt.put("threadNum", "1");
   pt.put("app_class", app_name);
   if (getenv("USER_JAR_PATH")) {
     pt.put("jar_name", getenv("USER_JAR_PATH"));
@@ -515,7 +516,7 @@ void Run(vineyard::Client& client, const grape::CommSpec& comm_spec,
     VLOG(1) << "vertex properties num: " << fragment->vertex_property_num(0);
     VLOG(1) << "edge properties num: " << fragment->edge_property_num(0);
     std::shared_ptr<ProjectedFragmentType> projected_fragment =
-        ProjectedFragmentType::Project(fragment, "0", "0", "0", "2");
+        ProjectedFragmentType::Project(fragment, "0", "0", "0", "0");
     // test get data
     using vertex_t = ProjectedFragmentType::vertex_t;
     vertex_t vertex;

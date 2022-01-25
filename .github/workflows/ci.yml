@@ -140,6 +140,11 @@ jobs:
         fi
         python3 ./misc/cpplint.py --recursive ./apps ./benchmarks ./core ./frame ./test
 
+    - name: Java Format and Lint Check
+      run: |
+        wget https://github.com/google/google-java-format/releases/download/v1.13.0/google-java-format-1.13.0-all-deps.jar
+        java -jar ${GITHUB_WORKSPACE}/google-java-format-1.13.0-all-deps.jar --aosp --skip-javadoc-formatting --set-exit-if-changed --dry-run $(git ls-files *.java)
+
     - name: Python Format and Lint Check
       run: |
         echo "Checking formatting for $GITHUB_REPOSITORY"
@@ -306,8 +311,7 @@ jobs:
             - 'analytical_engine/frame/**'
             - 'analytical_engine/core/**'
             - 'python/graphscope/nx/__init__.py'
-            - 'python/graphscope/nx/classes/**'
-            - 'python/graphscope/nx/utils/**'
+            - 'python/graphscope/nx/!(tests)'
             - 'python/graphscope/nx/tests/!(convert)'
           convert:
             - 'python/graphscope/nx/convert.py'
@@ -544,12 +548,16 @@ jobs:
           make graphscope-image
           sudo docker tag graphscope/graphscope:${SHORT_SHA} ${{ env.GS_IMAGE }}:${SHORT_SHA}
 
+          cd ${GITHUB_WORKSPACE}/python
+          pip3 install -r requirements.txt
+          pip3 install -r requirements-dev.txt
+
           # build python client proto
           cd ${GITHUB_WORKSPACE}/python
           python3 setup.py build_proto
 
           # install mars
-          python3 -m pip install git+https://github.com/mars-project/mars.git@92d4959511ff9fa107b458239e7c1022baec3325#egg=pymars
+          python3 -m pip install pymars==0.8.0
 
           # install pytest
           python3 -m pip install pytest pytest-cov

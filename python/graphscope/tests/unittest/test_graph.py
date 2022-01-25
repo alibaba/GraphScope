@@ -25,11 +25,12 @@ import vineyard
 
 import graphscope
 from graphscope import Graph
-from graphscope import property_sssp
+from graphscope import lpa_u2i
 from graphscope import sssp
 from graphscope.dataset import load_ldbc
 from graphscope.dataset import load_modern_graph
 from graphscope.dataset import load_ogbn_mag
+from graphscope.dataset import load_p2p_network
 from graphscope.framework.errors import AnalyticalEngineInternalError
 from graphscope.framework.errors import GRPCError
 from graphscope.framework.errors import InvalidArgumentError
@@ -127,29 +128,21 @@ def test_error_relationship_on_project_to_simple(arrow_modern_graph):
 
 
 def test_unload(graphscope_session):
-    graph = graphscope_session.g()
-    prefix = os.path.expandvars("${GS_TEST_DIR}/property")
-    graph = (
-        graphscope_session.g()
-        .add_vertices(f"{prefix}/p2p-31_property_v_0", "person")
-        .add_edges(f"{prefix}/p2p-31_property_e_0", "knows")
-    )
-    assert graph.loaded()
-    assert graph.vineyard_id is not None
-    graph.unload()
+    g = load_p2p_network(graphscope_session)
+    assert g.loaded()
+    assert g.vineyard_id is not None
+    g.unload()
 
-    assert not graph.loaded()
+    assert not g.loaded()
 
     with pytest.raises(RuntimeError, match="The graph is not loaded"):
-        graph.unload()
+        g.unload()
 
     with pytest.raises(RuntimeError, match="The graph is not loaded"):
-        pg = graph.project(vertices={"person": []}, edges={"knows": []})
+        pg = g.project(vertices={"host": []}, edges={"connect": []})
         pg._project_to_simple()
     with pytest.raises(AssertionError):
-        g2 = graphscope_session.g(graph)
-    with pytest.raises(RuntimeError, match="The graph is not loaded"):
-        property_sssp(graph, src=6)
+        g2 = graphscope_session.g(g)
 
 
 def test_error_on_project_to_simple_wrong_graph_type(arrow_property_graph):
@@ -190,47 +183,27 @@ def test_load_only_from_efile(
     assert sorted(r_out1) == sorted(r_out2)
 
 
-def test_graph_to_numpy(arrow_property_graph):
-    g = arrow_property_graph
-    ret = property_sssp(g, 20)
-    ctx_out_np_0 = ret.to_numpy("r:v0.dist_0")
-    logger.info("ctx_out_np_0.shape = %r", ctx_out_np_0.shape)
-    ctx_out_np_1 = ret.to_numpy("r:v1.dist_1")
-    logger.info("ctx_out_np_1.shape = %r", ctx_out_np_1.shape)
-    g2 = g.add_column(ret, {"result_0": "r:v0.dist_0", "result_1": "r:v1.dist_1"})
-    out_np_0 = g2.to_numpy("v:v0.result_0")
-    logger.info("out_np_0.shape = %r", out_np_0.shape)
-    out_np_1 = g2.to_numpy("v:v1.result_1")
-    logger.info("out_np_1.shape = %r", out_np_1.shape)
+def test_error_on_add_column(arrow_property_graph_lpa_u2i):
+    property_context = lpa_u2i(arrow_property_graph_lpa_u2i, max_round=20)
 
-
-def test_graph_to_dataframe(arrow_property_graph):
-    g = arrow_property_graph
-    ret = property_sssp(g, 20)
-    g2 = g.add_column(ret, {"result_0": "r:v0.dist_0", "result_1": "r:v1.dist_1"})
-    out_df_0 = g2.to_dataframe({"id": "v:v0.id", "result": "v:v0.result_0"})
-    logger.info("out_df_0.shape = %r", out_df_0.shape)
-    out_df_1 = g2.to_dataframe({"id": "v:v1.id", "result": "v:v1.result_1"})
-    logger.info("out_df_1.shape = %r", out_df_1.shape)
-
-
-def test_error_on_add_column(arrow_property_graph, property_context):
     with pytest.raises(KeyError, match="non_exist_label"):
-        out = arrow_property_graph.add_column(
+        out = arrow_property_graph_lpa_u2i.add_column(
             property_context,
             {"id": "v:non_exist_label.id", "result": "r:non_exist_label.age"},
         )
 
     with pytest.raises(KeyError, match="non_exist_prop"):
-        out = arrow_property_graph.add_column(
+        out = arrow_property_graph_lpa_u2i.add_column(
             property_context, {"id": "v:v0.non_exist_prop"}
         )
 
     with pytest.raises(AssertionError, match="selector of add column must be a dict"):
-        out = arrow_property_graph.add_column(property_context, selector=None)
+        out = arrow_property_graph_lpa_u2i.add_column(property_context, selector=None)
 
     with pytest.raises(SyntaxError, match="Invalid selector"):
-        out = arrow_property_graph.add_column(property_context, {"id": "xxx:a.b"})
+        out = arrow_property_graph_lpa_u2i.add_column(
+            property_context, {"id": "xxx:a.b"}
+        )
 
 
 @pytest.mark.skip(reason="Issue 366")
@@ -436,8 +409,8 @@ def test_project_subgraph(arrow_modern_graph):
     assert sub_graph.schema.vertex_labels == []
     assert sub_graph.schema.edge_labels == []
     with pytest.raises(
-        ValueError,
-        match="Check failed: Cannot project to simple, vertex label number is not one.",
+        RuntimeError,
+        match="Failed to project to simple graph as no vertex exists in this graph",
     ):
         graphscope.wcc(sub_graph)
 
@@ -446,8 +419,8 @@ def test_project_subgraph(arrow_modern_graph):
     assert sub_graph.schema.vertex_labels == ["person"]
     assert sub_graph.schema.edge_labels == []
     with pytest.raises(
-        ValueError,
-        match="Check failed: Cannot project to simple, edge label number is not one.",
+        RuntimeError,
+        match="Failed to project to simple graph as no edge exists in this graph",
     ):
         graphscope.wcc(sub_graph)
 
@@ -484,8 +457,6 @@ def test_project_subgraph(arrow_modern_graph):
 
 def test_error_on_project(arrow_property_graph, ldbc_graph):
     graph = arrow_property_graph
-    with pytest.raises(ValueError, match="Cannot project to simple"):
-        graphscope.sssp(graph, 4)
     g2 = graph.project(vertices={"v0": []}, edges={"e0": []})
     assert g2.schema.edge_relationships == [[("v0", "v0")]]
 
@@ -516,20 +487,6 @@ def test_error_on_project(arrow_property_graph, ldbc_graph):
     # project with not existed edge
     with pytest.raises(ValueError, match="isSubclassOf not exists"):
         sub_graph.project(vertices={"tagclass": None}, edges={"isSubclassOf": None})
-
-    # more than one property on vertex can not project to simple
-    sub_graph = ldbc.project(
-        vertices={"person": ["id", "firstName"]}, edges={"knows": ["eid"]}
-    )
-    with pytest.raises(ValueError):
-        sub_graph._project_to_simple()
-
-    # more than one property on edge can not project to simple
-    sub_graph = ldbc.project(
-        vertices={"person": ["id"]}, edges={"knows": ["eid", "creationDate"]}
-    )
-    with pytest.raises(ValueError):
-        sub_graph._project_to_simple()
 
 
 def test_transform(arrow_modern_graph):

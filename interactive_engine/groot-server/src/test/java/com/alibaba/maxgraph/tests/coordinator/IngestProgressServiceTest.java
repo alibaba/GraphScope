@@ -13,18 +13,20 @@
  */
 package com.alibaba.maxgraph.tests.coordinator;
 
-import com.alibaba.maxgraph.proto.groot.GetTailOffsetsRequest;
-import com.alibaba.maxgraph.proto.groot.GetTailOffsetsResponse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.*;
+
 import com.alibaba.graphscope.groot.coordinator.IngestProgressService;
 import com.alibaba.graphscope.groot.coordinator.SnapshotManager;
+import com.alibaba.maxgraph.proto.groot.GetTailOffsetsRequest;
+import com.alibaba.maxgraph.proto.groot.GetTailOffsetsResponse;
+
 import io.grpc.stub.StreamObserver;
+
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.*;
 
 public class IngestProgressServiceTest {
     @Test

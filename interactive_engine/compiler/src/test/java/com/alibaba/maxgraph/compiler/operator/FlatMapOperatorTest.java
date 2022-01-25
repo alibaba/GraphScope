@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,15 +15,14 @@
  */
 package com.alibaba.maxgraph.compiler.operator;
 
+import static org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__.out;
+
 import org.junit.Test;
 
 import java.io.IOException;
 
-import static org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__.out;
-
 public class FlatMapOperatorTest extends AbstractOperatorTest {
-    public FlatMapOperatorTest() throws IOException {
-    }
+    public FlatMapOperatorTest() throws IOException {}
 
     @Test
     public void testFlatMapOut() {
@@ -42,7 +41,11 @@ public class FlatMapOperatorTest extends AbstractOperatorTest {
 
     @Test
     public void testFlatMapOrderLimit() {
-        executeTreeQuery(g.V().hasLabel("person").flatMap(out().order().by("firstName").limit(10)).both().path());
+        executeTreeQuery(
+                g.V().hasLabel("person")
+                        .flatMap(out().order().by("firstName").limit(10))
+                        .both()
+                        .path());
     }
 
     @Test
@@ -50,8 +53,8 @@ public class FlatMapOperatorTest extends AbstractOperatorTest {
         executeTreeQuery(g.V().hasLabel("person").flatMap(out().out()).both().path());
     }
 
-//    @Test
-//    public void testFlatMapGroupCount() {
-//        executeTreeQuery(g.V().flatMap(out().out().groupCount()).path());
-//    }
+    //    @Test
+    //    public void testFlatMapGroupCount() {
+    //        executeTreeQuery(g.V().flatMap(out().out().groupCount()).path());
+    //    }
 }

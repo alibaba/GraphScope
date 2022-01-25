@@ -83,20 +83,16 @@ class PregelContext
 /**
  * @brief This is a specialized PregelContext for the labeled graph. The data
  * attached to the vertices are stored in gs::LabeledVertexDataContext.
+ *
+ * @tparam OID_T OID type
+ * @tparam VID_T VID type
  * @tparam COMPUTE_CONTEXT_T
  */
-template <typename COMPUTE_CONTEXT_T>
-class PregelContext<
-    vineyard::ArrowFragment<vineyard::property_graph_types::OID_TYPE,
-                            vineyard::property_graph_types::VID_TYPE>,
-    COMPUTE_CONTEXT_T>
-    : public LabeledVertexDataContext<
-          vineyard::ArrowFragment<vineyard::property_graph_types::OID_TYPE,
-                                  vineyard::property_graph_types::VID_TYPE>,
-          typename COMPUTE_CONTEXT_T::vd_t> {
-  using fragment_t =
-      vineyard::ArrowFragment<vineyard::property_graph_types::OID_TYPE,
-                              vineyard::property_graph_types::VID_TYPE>;
+template <typename OID_T, typename VID_T, typename COMPUTE_CONTEXT_T>
+class PregelContext<vineyard::ArrowFragment<OID_T, VID_T>, COMPUTE_CONTEXT_T>
+    : public LabeledVertexDataContext<vineyard::ArrowFragment<OID_T, VID_T>,
+                                      typename COMPUTE_CONTEXT_T::vd_t> {
+  using fragment_t = vineyard::ArrowFragment<OID_T, VID_T>;
   using vid_t = typename fragment_t::vid_t;
   using vd_t = typename COMPUTE_CONTEXT_T::vd_t;
   using label_id_t = typename fragment_t::label_id_t;

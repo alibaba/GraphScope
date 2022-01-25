@@ -636,7 +636,7 @@ class CoordinatorServiceServicer(
             except Exception as e:
                 info_message, error_message = "WARNING: failed to read log: %s" % e, ""
 
-            if info_message and error_message:
+            if info_message or error_message:
                 if self._streaming_logs:
                     yield message_pb2.FetchLogsResponse(
                         info_message=info_message, error_message=error_message
@@ -1407,7 +1407,6 @@ def launch_graphscope():
 
     # handle SIGTERM signal
     def terminate(signum, frame):
-        global coordinator_service_servicer
         coordinator_service_servicer._cleanup()
 
     signal.signal(signal.SIGTERM, terminate)

@@ -15,9 +15,9 @@
  */
 package com.alibaba.graphscope.gaia.vineyard.store;
 
+import com.alibaba.graphscope.gaia.broadcast.AbstractBroadcastProcessor;
 import com.alibaba.graphscope.gaia.broadcast.AsyncRpcBroadcastProcessor;
 import com.alibaba.graphscope.gaia.broadcast.channel.AsyncRpcChannelFetcher;
-import com.alibaba.graphscope.gaia.broadcast.AbstractBroadcastProcessor;
 import com.alibaba.graphscope.gaia.store.GraphStoreService;
 import com.alibaba.maxgraph.common.cluster.InstanceConfig;
 import com.alibaba.maxgraph.compiler.api.schema.SchemaFetcher;
@@ -26,6 +26,7 @@ import com.alibaba.maxgraph.compiler.schema.JsonFileSchemaFetcher;
 import com.alibaba.maxgraph.frontendservice.RemoteGraph;
 import com.alibaba.maxgraph.frontendservice.server.ExecutorAddressFetcher;
 import com.alibaba.maxgraph.structure.graph.TinkerMaxGraph;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,10 +51,18 @@ public class Frontend extends com.alibaba.maxgraph.frontendservice.Frontend {
 
         this.graph = new TinkerMaxGraph(instanceConfig, remoteGraph, new DefaultGraphDfs());
         // add gaia compiler
-        AsyncRpcChannelFetcher gaiaRpcFetcher = new AddressChannelFetcher(new ExecutorAddressFetcher(this.clientManager));
+        AsyncRpcChannelFetcher gaiaRpcFetcher =
+                new AddressChannelFetcher(new ExecutorAddressFetcher(this.clientManager));
         GraphStoreService gaiaStoreService = new VineyardGraphStore(schemaFetcher);
-        AbstractBroadcastProcessor broadcastProcessor = new AsyncRpcBroadcastProcessor(gaiaRpcFetcher);
-        gaiaGraphServer = new GaiaGraphServer(this.graph, instanceConfig, gaiaStoreService, broadcastProcessor, new VineyardConfig(instanceConfig));
+        AbstractBroadcastProcessor broadcastProcessor =
+                new AsyncRpcBroadcastProcessor(gaiaRpcFetcher);
+        gaiaGraphServer =
+                new GaiaGraphServer(
+                        this.graph,
+                        instanceConfig,
+                        gaiaStoreService,
+                        broadcastProcessor,
+                        new VineyardConfig(instanceConfig));
 
         gaiaGraphServer.start(0, null, false);
         this.gremlinServerPort = gaiaGraphServer.getGremlinServerPort();

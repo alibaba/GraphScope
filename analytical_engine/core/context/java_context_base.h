@@ -55,6 +55,8 @@ static constexpr const char* LOAD_LIBRARY_CLASS =
 static constexpr const char* CONTEXT_UTILS_CLASS =
     "com/alibaba/graphscope/utils/ContextUtils";
 static constexpr const char* JSON_CLASS_NAME = "com.alibaba.fastjson.JSON";
+static constexpr const char* IFRAGMENT_HELPER_CLASS =
+    "com.alibaba.graphscope.runtime.IFragmentHelper";
 
 /**
  * @brief JavaContextBase is the base class for JavaPropertyContext and
@@ -191,14 +193,35 @@ class JavaContextBase : public grape::ContextBase {
       CHECK_NOTNULL(context_class);
 
       jmethodID init_method_id =
-          env->GetMethodID(context_class, "init", evalDescriptor());
+          env->GetMethodID(context_class, "Init", evalDescriptor());
       CHECK_NOTNULL(init_method_id);
 
       jobject fragObject = CreateFFIPointer(
           env, graph_type_str_.c_str(), url_class_loader_object_,
           reinterpret_cast<jlong>(&fragment_));
       CHECK_NOTNULL(fragObject);
-      fragment_object_ = env->NewGlobalRef(fragObject);
+      if (graph_type_str_.find("Immutable") != std::string::npos ||
+          graph_type_str_.find("ArrowProjected") != std::string::npos) {
+        VLOG(1) << "Creating IFragment";
+        // jobject fragment_object_impl_ = env->NewGlobalRef(fragObject);
+        // For immutableFragment and ArrowProjectedFragment, we use a wrapper
+        // Load IFragmentHelper class, and call it functions.
+        jclass ifragment_helper_clz = (jclass) LoadClassWithClassLoader(
+            env, url_class_loader_object_, IFRAGMENT_HELPER_CLASS);
+        CHECK_NOTNULL(ifragment_helper_clz);
+        jmethodID adapt2SimpleFragment_methodID = env->GetStaticMethodID(
+            ifragment_helper_clz, "adapt2SimpleFragment",
+            "(Ljava/lang/Object;)Lcom/alibaba/graphscope/fragment/IFragment;");
+        CHECK_NOTNULL(adapt2SimpleFragment_methodID);
+
+        jobject res = (jobject) env->CallStaticObjectMethod(
+            ifragment_helper_clz, adapt2SimpleFragment_methodID, fragObject);
+        CHECK_NOTNULL(res);
+        fragment_object_ = env->NewGlobalRef(res);
+      } else {
+        fragment_object_ = env->NewGlobalRef(fragObject);
+        VLOG(1) << "Creating ArrowFragment";
+      }
 
       // 2. Create Message manager Java object
       jobject messagesObject =
@@ -282,7 +305,7 @@ class JavaContextBase : public grape::ContextBase {
       jar_unpack_path += jar_name;
 
       snprintf(user_class_path, sizeof(user_class_path),
-               "%s:/usr/local/lib:/opt/graphscope/lib:%s:%s:%s",
+               "%s:/usr/local/lib:/opt/graphscope/lib:%s:%s/CLASS_OUTPUT/:%s",
                lib_dir.string().c_str(), llvm4jni_output_dir.c_str(),
                java_codegen_cp.c_str(), jar_unpack_path.c_str());
     } else {

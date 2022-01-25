@@ -38,6 +38,7 @@ from graphscope.nx import NetworkXError
 from graphscope.nx.classes.graph import Graph
 from graphscope.nx.convert import to_networkx_graph
 from graphscope.nx.utils.compat import patch_docstring
+from graphscope.nx.utils.misc import clear_cache
 from graphscope.nx.utils.misc import empty_graph_in_engine
 from graphscope.proto import graph_def_pb2
 from graphscope.proto import types_pb2
@@ -262,8 +263,10 @@ class DiGraph(Graph):
         self._schema.init_nx_schema()
 
         # cache for add_node and add_edge
-        self._nodes_for_adding = []
-        self._edges_for_adding = []
+        self._add_node_cache = []
+        self._add_edge_cache = []
+        self._remove_node_cache = []
+        self._remove_edge_cache = []
 
         create_empty_in_engine = attr.pop(
             "create_empty_in_engine", True
@@ -293,32 +296,32 @@ class DiGraph(Graph):
         self._saved_signature = self.signature
 
     @property
+    @clear_cache
     @patch_docstring(RefDiGraph.adj)
     def adj(self):
-        self._clear_adding_cache()
         return AdjacencyView(self._succ)
 
     succ = adj
 
     @property
+    @clear_cache
     @patch_docstring(RefDiGraph.pred)
     def pred(self):
-        self._clear_adding_cache()
         return AdjacencyView(self._pred)
 
+    @clear_cache
     @patch_docstring(RefDiGraph.has_predecessor)
     def has_successor(self, u, v):
-        self._clear_adding_cache()
         return self.has_edge(u, v)
 
+    @clear_cache
     @patch_docstring(RefDiGraph.has_predecessor)
     def has_predecessor(self, u, v):
-        self._clear_adding_cache()
         return self.has_edge(v, u)
 
+    @clear_cache
     @patch_docstring(RefDiGraph.successors)
     def successors(self, n):
-        self._clear_adding_cache()
         try:
             return iter(self._succ[n])
         except KeyError:
@@ -327,15 +330,16 @@ class DiGraph(Graph):
     # digraph definitions
     neighbors = successors
 
+    @clear_cache
     @patch_docstring(RefDiGraph.predecessors)
     def predecessors(self, n):
-        self._clear_adding_cache()
         try:
             return iter(self._pred[n])
         except KeyError:
             raise NetworkXError("The node %s is not in the digraph." % (n,))
 
     @property
+    @clear_cache
     def edges(self):
         """An OutEdgeView of the DiGraph as G.edges or G.edges().
 
@@ -396,19 +400,19 @@ class DiGraph(Graph):
         OutEdgeDataView([(0, 1)])
 
         """
-        self._clear_adding_cache()
         return OutEdgeView(self)
 
     # alias out_edges to edges
     out_edges = edges
 
     @property
+    @clear_cache
     @patch_docstring(RefDiGraph.in_edges)
     def in_edges(self):
-        self._clear_adding_cache()
         return InEdgeView(self)
 
     @property
+    @clear_cache
     def degree(self):
         """A DegreeView for the Graph as G.degree or G.degree().
 
@@ -453,19 +457,18 @@ class DiGraph(Graph):
         [(0, 1), (1, 2), (2, 2)]
 
         """
-        self._clear_adding_cache()
         return DiDegreeView(self)
 
     @property
+    @clear_cache
     @patch_docstring(RefDiGraph.in_degree)
     def in_degree(self):
-        self._clear_adding_cache()
         return InDegreeView(self)
 
     @property
+    @clear_cache
     @patch_docstring(RefDiGraph.out_degree)
     def out_degree(self):
-        self._clear_adding_cache()
         return OutDegreeView(self)
 
     @patch_docstring(RefDiGraph.is_directed)
@@ -476,10 +479,10 @@ class DiGraph(Graph):
     def is_multigraph(self):
         return False
 
+    @clear_cache
     @patch_docstring(RefDiGraph.reverse)
     def reverse(self, copy=True):
         self._convert_arrow_to_dynamic()
-        self._clear_adding_cache()
 
         if not copy:
             g = self.__class__(create_empty_in_engine=False)

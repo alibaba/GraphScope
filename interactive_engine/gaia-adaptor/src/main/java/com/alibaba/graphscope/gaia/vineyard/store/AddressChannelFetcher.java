@@ -19,6 +19,7 @@ import com.alibaba.graphscope.gaia.broadcast.channel.AsyncRpcChannelFetcher;
 import com.alibaba.maxgraph.common.rpc.RpcAddressFetcher;
 import com.alibaba.maxgraph.sdkcommon.client.Endpoint;
 import com.alibaba.pegasus.RpcChannel;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,6 +38,8 @@ public class AddressChannelFetcher extends AsyncRpcChannelFetcher {
     public List<RpcChannel> refresh() {
         List<Endpoint> endpoints = addressFetcher.getServiceAddress();
         logger.info("endpoints are {}", endpoints);
-        return endpoints.stream().map(k -> new RpcChannel(k.getIp(), k.getRuntimeCtrlAndAsyncPort())).collect(Collectors.toList());
+        return endpoints.stream()
+                .map(k -> new RpcChannel(k.getIp(), k.getRuntimeCtrlAndAsyncPort()))
+                .collect(Collectors.toList());
     }
 }

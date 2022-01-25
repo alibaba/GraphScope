@@ -54,7 +54,7 @@ jobs:
     runs-on: macos-10.15
     strategy:
       matrix:
-        python-version: ['3.6', '3.7', '3.8', '3.9']
+        python-version: ['3.7', '3.8', '3.9']
 
     steps:
     - uses: actions/checkout@v2.3.2
@@ -97,7 +97,7 @@ jobs:
     needs: [build-wheels, build-client-wheels]
     strategy:
       matrix:
-        python-version: ['3.6', '3.7', '3.8', '3.9']
+        python-version: ['3.7', '3.8', '3.9']
 
     steps:
     - uses: actions/download-artifact@v2
@@ -115,7 +115,7 @@ jobs:
         tar -zxf ./wheel-macos-${{ github.sha }}-${{ matrix.python-version }}/client.tar.gz
         mv ${GITHUB_WORKSPACE}/artifacts/python/dist/wheelhouse/*.whl ${GITHUB_WORKSPACE}/upload_pypi/
 
-        if [ "$PYTHON" == "3.6" ]; then
+        if [ "$PYTHON" == "3.7" ]; then
           tar -zxf ./wheel-macos-${{ github.sha }}/graphscope.tar.gz
           mv ${GITHUB_WORKSPACE}/artifacts/coordinator/dist/wheelhouse/*.whl ${GITHUB_WORKSPACE}/upload_pypi/
         fi
@@ -142,7 +142,7 @@ jobs:
     needs: [build-wheels, build-client-wheels]
     strategy:
       matrix:
-        python-version: ['3.6', '3.7', '3.8', '3.9']
+        python-version: ['3.7', '3.8', '3.9']
 
     steps:
     - uses: actions/download-artifact@v2

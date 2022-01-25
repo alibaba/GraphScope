@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,6 +17,7 @@ package com.alibaba.maxgraph.coordinator.manager.runtime;
 
 import com.alibaba.maxgraph.proto.RuntimeAddressProto;
 import com.alibaba.maxgraph.proto.RuntimeHBReq;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,7 +43,12 @@ public class PegasusGroupInfo extends GroupInfoCommon {
      * @param version     group version
      * @param groupStatus initialize group status
      */
-    public PegasusGroupInfo(List<Integer> serverList, long version, GroupStatus groupStatus, String graph, int serverId) {
+    public PegasusGroupInfo(
+            List<Integer> serverList,
+            long version,
+            GroupStatus groupStatus,
+            String graph,
+            int serverId) {
         super(serverList, version, groupStatus, graph, serverId);
     }
 
@@ -61,11 +67,12 @@ public class PegasusGroupInfo extends GroupInfoCommon {
         for (int i = 0; i < nodes.size(); i++) {
             NodeInfo nodeInfo = nodes.get(i);
             if (!"".equals(nodeInfo.ip) && nodeInfo.port != 0 && nodeInfo.storePort != 0) {
-                addressList.add(RuntimeAddressProto.newBuilder()
-                        .setIp(nodeInfo.ip)
-                        .setRuntimePort(nodeInfo.port)
-                        .setStorePort(nodeInfo.storePort)
-                        .build());
+                addressList.add(
+                        RuntimeAddressProto.newBuilder()
+                                .setIp(nodeInfo.ip)
+                                .setRuntimePort(nodeInfo.port)
+                                .setStorePort(nodeInfo.storePort)
+                                .build());
             } else {
                 LOG.warn("invalid node info " + nodeInfo);
                 return Collections.emptyList();
@@ -75,8 +82,8 @@ public class PegasusGroupInfo extends GroupInfoCommon {
     }
 
     private void updateGroupStatus() {
-        for(Map.Entry<Integer, NodeInfo> entry : this.nodes.entrySet()) {
-            if(!entry.getValue().status.equals(RuntimeHBReq.RuntimeStatus.RUNNING)) {
+        for (Map.Entry<Integer, NodeInfo> entry : this.nodes.entrySet()) {
+            if (!entry.getValue().status.equals(RuntimeHBReq.RuntimeStatus.RUNNING)) {
                 this.groupStatus = GroupStatus.STARTING;
                 return;
             }
@@ -85,7 +92,7 @@ public class PegasusGroupInfo extends GroupInfoCommon {
     }
 
     public void invalidGroup() {
-        for(Map.Entry<Integer, NodeInfo> entry : this.nodes.entrySet()) {
+        for (Map.Entry<Integer, NodeInfo> entry : this.nodes.entrySet()) {
             entry.getValue().resetInfo();
         }
     }

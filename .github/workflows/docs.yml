@@ -12,6 +12,12 @@ jobs:
         submodules: true
         fetch-depth: 0
 
+    - name: Setup Java11
+      uses: actions/setup-java@v2
+      with:
+         distribution: 'zulu'
+         java-version: '11'
+
     - name: Cpp Format and Lint Check
       run: |
         # install clang-format
@@ -42,6 +48,39 @@ jobs:
             echo "| Ensure you are working with clang-format-8, which can be obtained from"
             echo "|"
             echo "|    https://github.com/muttleyxd/clang-tools-static-binaries/releases"
+            echo "|"
+            echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+            exit -1
+        fi
+
+    - name: Java Format and Lint Check
+      run: |
+        wget https://github.com/google/google-java-format/releases/download/v1.13.0/google-java-format-1.13.0-all-deps.jar
+
+        files_to_format=$(git ls-files *.java)
+
+        # run formatter in-place
+        java -jar ${GITHUB_WORKSPACE}/google-java-format-1.13.0-all-deps.jar --aosp --skip-javadoc-formatting -i $files_to_format
+
+        # validate format
+        function prepend() { while read line; do echo "${1}${line}"; done; }
+
+        GIT_DIFF=$(git diff --ignore-submodules)
+        if [[ -n $GIT_DIFF ]]; then
+            echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+            echo "| google-java-format failures found!"
+            echo "|"
+            echo "$GIT_DIFF" | prepend "| "
+            echo "|"
+            echo "| Run: "
+            echo "|"
+            echo '|    java -jar google-java-format-1.13.0-all-deps.jar --aosp --skip-javadoc-formatting -i $(git ls-files *.java)'
+            echo "|"
+            echo "| to fix this error."
+            echo "|"
+            echo "| Ensure you are working with google-java-format-1.13.0, which can be obtained from"
+            echo "|"
+            echo "|    https://github.com/google/google-java-format/releases/download/v1.13.0/google-java-format-1.13.0-all-deps.jar"
             echo "|"
             echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
             exit -1
@@ -93,6 +132,7 @@ jobs:
       shell: bash
       run: |
         shopt -s extglob
+        rm google-java-format-1.13.0-all-deps.jar || true
 
         git config user.email github-actions@github.com
         git config user.name github-actions

@@ -20,6 +20,7 @@ import com.alibaba.graphscope.gaia.plan.PlanUtils;
 import com.alibaba.graphscope.gaia.store.GraphStoreService;
 import com.alibaba.graphscope.gaia.store.GraphType;
 import com.alibaba.graphscope.gaia.store.SchemaNotFoundException;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
@@ -43,14 +44,15 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class SchemaIdMakerStrategy extends AbstractTraversalStrategy<TraversalStrategy.ProviderOptimizationStrategy> implements TraversalStrategy.ProviderOptimizationStrategy {
+public class SchemaIdMakerStrategy
+        extends AbstractTraversalStrategy<TraversalStrategy.ProviderOptimizationStrategy>
+        implements TraversalStrategy.ProviderOptimizationStrategy {
     private static final Logger logger = LoggerFactory.getLogger(SchemaIdMakerStrategy.class);
     private static final SchemaIdMakerStrategy INSTANCE = new SchemaIdMakerStrategy();
     private GaiaConfig config;
     private GraphStoreService graphStore;
 
-    private SchemaIdMakerStrategy() {
-    }
+    private SchemaIdMakerStrategy() {}
 
     public static SchemaIdMakerStrategy instance(GaiaConfig config, GraphStoreService graphStore) {
         if (INSTANCE.config == null) {
@@ -74,16 +76,22 @@ public class SchemaIdMakerStrategy extends AbstractTraversalStrategy<TraversalSt
                     for (HasContainer container : containers) {
                         if (container.getKey().equals(T.label.getAccessor())) {
                             P predicate = container.getPredicate();
-                            if (predicate.getValue() instanceof List && ((List) predicate.getValue()).get(0) instanceof String) {
+                            if (predicate.getValue() instanceof List
+                                    && ((List) predicate.getValue()).get(0) instanceof String) {
                                 List<String> values = (List<String>) predicate.getValue();
-                                predicate.setValue(values.stream().map(k -> {
-                                    if (StringUtils.isNumeric(k)) {
-                                        return k;
-                                    } else {
-                                        long labelId = graphStore.getLabelId(k);
-                                        return String.valueOf(labelId);
-                                    }
-                                }).collect(Collectors.toList()));
+                                predicate.setValue(
+                                        values.stream()
+                                                .map(
+                                                        k -> {
+                                                            if (StringUtils.isNumeric(k)) {
+                                                                return k;
+                                                            } else {
+                                                                long labelId =
+                                                                        graphStore.getLabelId(k);
+                                                                return String.valueOf(labelId);
+                                                            }
+                                                        })
+                                                .collect(Collectors.toList()));
                             } else if (predicate.getValue() instanceof String) {
                                 String value = (String) predicate.getValue();
                                 if (StringUtils.isNumeric(value)) {
@@ -93,7 +101,9 @@ public class SchemaIdMakerStrategy extends AbstractTraversalStrategy<TraversalSt
                                     predicate.setValue(String.valueOf(labelId));
                                 }
                             } else {
-                                throw new UnsupportedOperationException("hasLabel value type not support " + predicate.getValue().getClass());
+                                throw new UnsupportedOperationException(
+                                        "hasLabel value type not support "
+                                                + predicate.getValue().getClass());
                             }
                         }
                     }
@@ -115,9 +125,11 @@ public class SchemaIdMakerStrategy extends AbstractTraversalStrategy<TraversalSt
                 for (int i = 0; i < steps.size(); ++i) {
                     Step step = steps.get(i);
                     if (step instanceof HasContainerHolder) {
-                        List<HasContainer> containers = ((HasContainerHolder) step).getHasContainers();
+                        List<HasContainer> containers =
+                                ((HasContainerHolder) step).getHasContainers();
                         for (HasContainer container : containers) {
-                            container.setKey(PlanUtils.convertToPropertyId(graphStore, container.getKey()));
+                            container.setKey(
+                                    PlanUtils.convertToPropertyId(graphStore, container.getKey()));
                         }
                     } else if (step instanceof PropertiesStep || step instanceof PropertyMapStep) {
                         String[] oldKeys;
@@ -126,15 +138,19 @@ public class SchemaIdMakerStrategy extends AbstractTraversalStrategy<TraversalSt
                         } else {
                             oldKeys = ((PropertyMapStep) step).getPropertyKeys();
                         }
-                        String[] newKeys = Arrays.stream(oldKeys).map(k -> PlanUtils.convertToPropertyId(graphStore, k))
-                                .toArray(String[]::new);
+                        String[] newKeys =
+                                Arrays.stream(oldKeys)
+                                        .map(k -> PlanUtils.convertToPropertyId(graphStore, k))
+                                        .toArray(String[]::new);
                         FieldUtils.writeField(step, "propertyKeys", newKeys, true);
                     } else if (step instanceof ByModulating) {
                         TraversalParent byParent = (TraversalParent) step;
                         for (Traversal.Admin k : byParent.getLocalChildren()) {
                             if (k instanceof ElementValueTraversal) {
                                 ElementValueTraversal value = (ElementValueTraversal) k;
-                                String propertyId = PlanUtils.convertToPropertyId(graphStore, value.getPropertyKey());
+                                String propertyId =
+                                        PlanUtils.convertToPropertyId(
+                                                graphStore, value.getPropertyKey());
                                 FieldUtils.writeField(value, "propertyKey", propertyId, true);
                             }
                         }

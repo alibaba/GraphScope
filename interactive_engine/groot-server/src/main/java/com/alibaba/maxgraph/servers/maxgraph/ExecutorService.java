@@ -13,19 +13,20 @@
  */
 package com.alibaba.maxgraph.servers.maxgraph;
 
-import com.alibaba.maxgraph.common.RoleType;
+import com.alibaba.graphscope.groot.discovery.*;
 import com.alibaba.graphscope.groot.meta.MetaService;
+import com.alibaba.graphscope.groot.store.GraphPartition;
+import com.alibaba.graphscope.groot.store.StoreService;
+import com.alibaba.graphscope.groot.store.jna.JnaGraphStore;
+import com.alibaba.maxgraph.common.RoleType;
 import com.alibaba.maxgraph.common.config.CommonConfig;
 import com.alibaba.maxgraph.common.config.Configs;
 import com.alibaba.maxgraph.common.config.StoreConfig;
-import com.alibaba.graphscope.groot.discovery.*;
 import com.alibaba.maxgraph.common.util.ThreadFactoryUtils;
-import com.alibaba.graphscope.groot.store.GraphPartition;
-import com.alibaba.graphscope.groot.store.StoreService;
 import com.alibaba.maxgraph.servers.AbstractService;
 import com.alibaba.maxgraph.servers.jna.ExecutorLibrary;
-import com.alibaba.graphscope.groot.store.jna.JnaGraphStore;
 import com.sun.jna.Pointer;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -18,6 +18,7 @@
 
 import functools
 import hashlib
+import inspect
 import json
 import logging
 import os
@@ -43,13 +44,33 @@ DEFAULT_GS_CONFIG_FILE = ".gs_conf.yaml"
 
 
 def project_to_simple(func):
+    """Decorator to project a property graph to the simple graph.
+
+    Default to uses `weight` as edge data key to correspond to the edge weight,
+    and uses `attribute` as node data key to correspond to the node attribute.
+
+    Examples:
+        >>> @project_to_simple
+        >>> def sssp(G, src, weight="dist")
+        >>>     pass
+    """
+
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         graph = args[0]
         if not hasattr(graph, "graph_type"):
             raise InvalidArgumentError("Missing graph_type attribute in graph object.")
         if graph.graph_type == graph_def_pb2.ARROW_PROPERTY:
-            graph = graph._project_to_simple()
+            if "weight" in kwargs:
+                # func has 'weight' argument
+                weight = kwargs.get("weight", None)
+                graph = graph._project_to_simple(e_prop=weight)
+            elif "attribute" in kwargs:
+                # func has 'attribute' argument
+                attribute = kwargs.get("attribute", None)
+                graph = graph._project_to_simple(v_prop=attribute)
+            else:
+                graph = graph._project_to_simple()
         return func(graph, *args[1:], **kwargs)
 
     return wrapper
@@ -75,11 +96,11 @@ def not_compatible_for(*graph_types):
 
     Examples:
         >>> @not_compatible_for('arrow_property', 'dynamic_property')
-        >>> def sssp(G, src):
+        >>> def sssp(G, src, weight="dist"):
         >>>     pass
     """
 
-    def _not_compatible_for(not_compatible_for_func):
+    def _not_compatible_for(not_compatible_for_func, *args, **kwargs):
         @functools.wraps(not_compatible_for_func)
         def wrapper(*args, **kwargs):
             graph = args[0]
@@ -312,7 +333,7 @@ class AppDAGNode(DAGNode):
         self._session.dag.add_op(self._op)
 
     def __repr__(self):
-        s = f"graphscope.App <type: {self._app_assets.type}, algorithm: {self._app_assets.algo}"
+        s = f"graphscope.App <type: {self._app_assets.type}, algorithm: {self._app_assets.algo} "
         s += f"bounded_graph: {str(self._graph)}>"
         return s
 

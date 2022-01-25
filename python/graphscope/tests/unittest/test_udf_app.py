@@ -580,7 +580,7 @@ class SSSP_PIE(AppAssets):
 
     @staticmethod
     def PEval(frag, context):
-        src = int(context.get_config(b"src"))
+        src = context.get_config(b"src")
         graphscope.declare(graphscope.Vertex, source)
         native_source = False
         v_label_num = frag.vertex_label_num()
@@ -971,7 +971,7 @@ def test_error_on_create_cython_app(
         a3(p2p_property_graph, src=6)
 
 
-@pytest.mark.skipif("FULL-TEST-SUITE" not in os.environ, reason="Run in nightly CI")
+@pytest.mark.skipif("FULL_TEST_SUITE" not in os.environ, reason="Run in nightly CI")
 def test_get_schema(graphscope_session, arrow_property_graph):
     # pregel
     a1 = Pregel_GetSchema()
@@ -993,7 +993,27 @@ def test_get_schema(graphscope_session, arrow_property_graph):
     ]
 
 
-@pytest.mark.skipif("FULL-TEST-SUITE" not in os.environ, reason="Run in nightly CI")
+@pytest.mark.skipif("FULL_TEST_SUITE" not in os.environ, reason="Run in nightly CI")
+def test_property_context(graphscope_session, p2p_property_graph):
+    a1 = SSSP_Pregel()
+    ctx = a1(p2p_property_graph, src=6)
+    # property context to numpy
+    np_out = ctx.to_numpy("r:person")
+    # property context to tensor
+    df_out = ctx.to_dataframe({"result": "r:person"})
+    # property context to vineyard tensor
+    vt_out = ctx.to_vineyard_tensor("r:person")
+    assert vt_out is not None
+    # property context to vineyard dataframe
+    vdf_out = ctx.to_vineyard_dataframe({"node": "v:person.id", "r": "r:person"})
+    assert vdf_out is not None
+    # add column
+    g = p2p_property_graph.add_column(ctx, {"result0": "r:person"})
+    g_out_df = g.to_dataframe({"result": "v:person.result0"})
+    assert g_out_df.equals(df_out)
+
+
+@pytest.mark.skipif("FULL_TEST_SUITE" not in os.environ, reason="Run in nightly CI")
 def test_run_cython_pregel_app(
     graphscope_session, p2p_property_graph, sssp_result, random_gar
 ):
@@ -1051,7 +1071,7 @@ def test_run_cython_pregel_app(
     a7(p2p_property_graph)
 
 
-@pytest.mark.skipif("FULL-TEST-SUITE" not in os.environ, reason="Run in nightly CI")
+@pytest.mark.skipif("FULL_TEST_SUITE" not in os.environ, reason="Run in nightly CI")
 def test_run_cython_pie_app(
     graphscope_session, p2p_property_graph, sssp_result, random_gar
 ):
@@ -1091,7 +1111,7 @@ def test_run_cython_pie_app(
         ctx4 = a3(p2p_property_graph, 6, src=6)
 
 
-@pytest.mark.skipif("FULL-TEST-SUITE" not in os.environ, reason="Run in nightly CI")
+@pytest.mark.skipif("FULL_TEST_SUITE" not in os.environ, reason="Run in nightly CI")
 def test_vertex_traversal(arrow_property_graph, twitter_v_0, twitter_v_1):
     traversal = PregelVertexTraversal()
     ctx = traversal(arrow_property_graph)
@@ -1118,7 +1138,7 @@ def test_vertex_traversal(arrow_property_graph, twitter_v_0, twitter_v_1):
     compare_result(r1, twitter_v_1)
 
 
-@pytest.mark.skipif("FULL-TEST-SUITE" not in os.environ, reason="Run in nightly CI")
+@pytest.mark.skipif("FULL_TEST_SUITE" not in os.environ, reason="Run in nightly CI")
 def test_modern_graph_vertex_traversal(arrow_modern_graph):
     traversal = PregelVertexTraversal()
     ctx = traversal(arrow_modern_graph)
@@ -1138,7 +1158,7 @@ def test_modern_graph_vertex_traversal(arrow_modern_graph):
     compare_id(r1, ["name", "lang"])
 
 
-@pytest.mark.skipif("FULL-TEST-SUITE" not in os.environ, reason="Run in nightly CI")
+@pytest.mark.skipif("FULL_TEST_SUITE" not in os.environ, reason="Run in nightly CI")
 def test_edge_traversal(
     arrow_property_graph,
     twitter_e_0_0_0,
@@ -1191,6 +1211,28 @@ def test_edge_traversal(
         twitter_e_1_0_1,
         twitter_e_1_1_1,
     )
+
+
+@pytest.mark.skipif("FULL_TEST_SUITE" not in os.environ, reason="Run in nightly CI")
+def test_run_on_string_oid_graph(
+    graphscope_session, p2p_property_graph_string, sssp_result
+):
+    # pregel
+    a1 = SSSP_Pregel()
+    ctx1 = a1(p2p_property_graph_string, src="6")
+    r1 = ctx1.to_dataframe({"node": "v:person.id", "r": "r:person"})
+    r1["node"] = r1["node"].astype(int)
+    r1 = r1.sort_values(by=["node"]).to_numpy(dtype=float)
+    r1[r1 == 1000000000.0] = float("inf")
+    assert np.allclose(r1, sssp_result["directed"])
+    # pie
+    a2 = SSSP_PIE()
+    ctx2 = a2(p2p_property_graph_string, src="6")
+    r2 = ctx2.to_dataframe({"node": "v:person.id", "r": "r:person"})
+    r2["node"] = r2["node"].astype(int)
+    r2 = r2.sort_values(by=["node"]).to_numpy(dtype=float)
+    r2[r2 == 1000000000.0] = float("inf")
+    assert np.allclose(r2, sssp_result["directed"])
 
 
 def test_pregel_api(graphscope_session, ldbc_graph):

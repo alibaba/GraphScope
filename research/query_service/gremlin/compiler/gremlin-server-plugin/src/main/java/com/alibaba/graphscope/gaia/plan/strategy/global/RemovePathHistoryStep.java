@@ -16,6 +16,7 @@
 package com.alibaba.graphscope.gaia.plan.strategy.global;
 
 import com.alibaba.graphscope.gaia.plan.strategy.DummyStep;
+
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.Traverser;
 import org.apache.tinkerpop.gremlin.structure.Element;

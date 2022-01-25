@@ -20,5 +20,4 @@ import org.junit.runner.RunWith;
 
 @RunWith(GaiaGremlinTestSuite.class)
 @GraphProviderClass(provider = RemoteTestGraphProvider.class, graph = RemoteTestGraph.class)
-public class GaiaGremlinTest {
-}
+public class GaiaGremlinTest {}

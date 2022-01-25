@@ -23,6 +23,7 @@ import com.alibaba.graphscope.gaia.plan.translator.builder.ConfigBuilder;
 import com.alibaba.graphscope.gaia.plan.translator.builder.PlanConfig;
 import com.alibaba.graphscope.gaia.store.GraphStoreService;
 import com.alibaba.graphscope.gaia.store.GraphType;
+
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.tinkerpop.gremlin.structure.util.detached.DetachedEdge;
 import org.apache.tinkerpop.gremlin.structure.util.detached.DetachedVertex;
@@ -39,7 +40,8 @@ public class DefaultResultParser implements ResultParser {
     protected GraphStoreService graphStore;
     protected GaiaConfig config;
 
-    public DefaultResultParser(ConfigBuilder builder, GraphStoreService graphStore, GaiaConfig config) {
+    public DefaultResultParser(
+            ConfigBuilder builder, GraphStoreService graphStore, GaiaConfig config) {
         this.tagIdMaker = (TagIdMaker) builder.getConfig(PlanConfig.TAG_ID_MAKER);
         this.graphStore = graphStore;
         this.config = config;
@@ -49,28 +51,51 @@ public class DefaultResultParser implements ResultParser {
     public List<Object> parseFrom(GremlinResult.Result resultData) {
         List<Object> result = new ArrayList<>();
         if (resultData.getInnerCase() == GremlinResult.Result.InnerCase.PATHS) {
-            resultData.getPaths().getItemList().forEach(p -> {
-                result.add(parsePath(p));
-            });
+            resultData
+                    .getPaths()
+                    .getItemList()
+                    .forEach(
+                            p -> {
+                                result.add(parsePath(p));
+                            });
         } else if (resultData.getInnerCase() == GremlinResult.Result.InnerCase.ELEMENTS) {
-            resultData.getElements().getItemList().forEach(e -> {
-                result.add(parseElement(e));
-            });
+            resultData
+                    .getElements()
+                    .getItemList()
+                    .forEach(
+                            e -> {
+                                result.add(parseElement(e));
+                            });
         } else if (resultData.getInnerCase() == GremlinResult.Result.InnerCase.TAG_ENTRIES) {
-            resultData.getTagEntries().getItemList().forEach(e -> {
-                result.add(parseTagPropertyValue(e));
-            });
+            resultData
+                    .getTagEntries()
+                    .getItemList()
+                    .forEach(
+                            e -> {
+                                result.add(parseTagPropertyValue(e));
+                            });
         } else if (resultData.getInnerCase() == GremlinResult.Result.InnerCase.MAP_RESULT) {
-            resultData.getMapResult().getItemList().forEach(e -> {
-                Map entry = Collections.singletonMap(parsePairElement(e.getFirst()), parsePairElement(e.getSecond()));
-                result.add(entry);
-            });
+            resultData
+                    .getMapResult()
+                    .getItemList()
+                    .forEach(
+                            e -> {
+                                Map entry =
+                                        Collections.singletonMap(
+                                                parsePairElement(e.getFirst()),
+                                                parsePairElement(e.getSecond()));
+                                result.add(entry);
+                            });
         } else if (resultData.getInnerCase() == GremlinResult.Result.InnerCase.VALUE) {
             result.add(parseValue(resultData.getValue()));
         } else if (resultData.getInnerCase() == GremlinResult.Result.InnerCase.VALUE_LIST) {
-            resultData.getValueList().getItemList().forEach(k -> {
-                result.add(parseValue(k));
-            });
+            resultData
+                    .getValueList()
+                    .getItemList()
+                    .forEach(
+                            k -> {
+                                result.add(parseValue(k));
+                            });
         } else {
             throw new UnsupportedOperationException("");
         }
@@ -81,13 +106,20 @@ public class DefaultResultParser implements ResultParser {
         if (elementPB.getInnerCase() == GremlinResult.GraphElement.InnerCase.EDGE) {
             GremlinResult.Edge edge = elementPB.getEdge();
             Triple<String, String, String> labels = extractEdgeLabel(edge);
-            return new DetachedEdge(extractEdgeId(edge), labels.getLeft(), extractProperties(edge),
-                    edge.getSrcId(), labels.getMiddle(),
-                    edge.getDstId(), labels.getRight());
+            return new DetachedEdge(
+                    extractEdgeId(edge),
+                    labels.getLeft(),
+                    extractProperties(edge),
+                    edge.getSrcId(),
+                    labels.getMiddle(),
+                    edge.getDstId(),
+                    labels.getRight());
         }
         if (elementPB.getInnerCase() == GremlinResult.GraphElement.InnerCase.VERTEX) {
             GremlinResult.Vertex vertex = elementPB.getVertex();
-            return new DetachedVertex(vertex.getId(), extractVertexLabel(vertex.getLabel(), vertex.getId()),
+            return new DetachedVertex(
+                    vertex.getId(),
+                    extractVertexLabel(vertex.getLabel(), vertex.getId()),
                     extractProperties(vertex));
         }
         throw new RuntimeException("graph element type not set");
@@ -102,7 +134,8 @@ public class DefaultResultParser implements ResultParser {
                 long labelId = (vertexId >> 56) & 0xff;
                 return graphStore.getLabel(labelId);
             } else {
-                throw new UnsupportedOperationException("cannot extract vertex label from returned vertex");
+                throw new UnsupportedOperationException(
+                        "cannot extract vertex label from returned vertex");
             }
         }
     }
@@ -130,9 +163,11 @@ public class DefaultResultParser implements ResultParser {
 
     protected Object parsePath(GremlinResult.Path pathPB) {
         List<Object> path = new ArrayList<>();
-        pathPB.getPathList().forEach(p -> {
-            path.add(parseElement(p));
-        });
+        pathPB.getPathList()
+                .forEach(
+                        p -> {
+                            path.add(parseElement(p));
+                        });
         return path;
     }
 
@@ -167,20 +202,30 @@ public class DefaultResultParser implements ResultParser {
             return parseElement(pairElement.getGraphElement());
         } else if (pairElement.getInnerCase() == GremlinResult.PairElement.InnerCase.VALUE) {
             return parseValue(pairElement.getValue());
-        } else if (pairElement.getInnerCase() == GremlinResult.PairElement.InnerCase.GRAPH_ELEMENT_LIST) {
+        } else if (pairElement.getInnerCase()
+                == GremlinResult.PairElement.InnerCase.GRAPH_ELEMENT_LIST) {
             List<Object> result = new ArrayList();
-            pairElement.getGraphElementList().getItemList().forEach(e -> {
-                result.add(parseElement(e));
-            });
+            pairElement
+                    .getGraphElementList()
+                    .getItemList()
+                    .forEach(
+                            e -> {
+                                result.add(parseElement(e));
+                            });
             return result;
         } else if (pairElement.getInnerCase() == GremlinResult.PairElement.InnerCase.VALUE_LIST) {
             List<Object> result = new ArrayList();
-            pairElement.getValueList().getItemList().forEach(e -> {
-                result.add(parseValue(e));
-            });
+            pairElement
+                    .getValueList()
+                    .getItemList()
+                    .forEach(
+                            e -> {
+                                result.add(parseValue(e));
+                            });
             return result;
         } else {
-            throw new UnsupportedOperationException("parse pair element not support " + pairElement.getInnerCase());
+            throw new UnsupportedOperationException(
+                    "parse pair element not support " + pairElement.getInnerCase());
         }
     }
 
@@ -206,21 +251,24 @@ public class DefaultResultParser implements ResultParser {
         } else if (value.getItemCase() == Common.Value.ItemCase.STR_ARRAY) {
             return new ArrayList<>(value.getStrArray().getItemList());
         } else {
-            throw new UnsupportedOperationException("parse value not support " + value.getItemCase());
+            throw new UnsupportedOperationException(
+                    "parse value not support " + value.getItemCase());
         }
     }
 
     protected Map<String, Object> parseValueMap(GremlinResult.ValueMapEntries entries) {
         Map<String, Object> result = new HashMap<>();
-        entries.getPropertyList().forEach(p -> {
-            String propertyName;
-            if (p.getKey().getItemCase() == Common.PropertyKey.ItemCase.NAME_ID) {
-                propertyName = graphStore.getPropertyName(p.getKey().getNameId());
-            } else {
-                propertyName = p.getKey().getName();
-            }
-            result.put(propertyName, parseValue(p.getValue()));
-        });
+        entries.getPropertyList()
+                .forEach(
+                        p -> {
+                            String propertyName;
+                            if (p.getKey().getItemCase() == Common.PropertyKey.ItemCase.NAME_ID) {
+                                propertyName = graphStore.getPropertyName(p.getKey().getNameId());
+                            } else {
+                                propertyName = p.getKey().getName();
+                            }
+                            result.put(propertyName, parseValue(p.getValue()));
+                        });
         return result;
     }
 

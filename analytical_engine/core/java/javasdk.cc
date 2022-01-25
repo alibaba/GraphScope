@@ -422,5 +422,6 @@ jclass LoadClassWithClassLoader(JNIEnv* env, const jobject& url_class_loader,
   }
   return result_class;
 }
+
 }  // namespace gs
 #endif

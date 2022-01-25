@@ -3,8 +3,13 @@ package com.alibaba.graphscope.ds.adaptor;
 import com.alibaba.graphscope.ds.ProjectedNbr;
 import com.alibaba.graphscope.ds.Vertex;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class ProjectedNbrAdaptor<VID_T, EDATA_T> implements Nbr<VID_T, EDATA_T> {
-    public static final String TYPE = "GrapeNbr";
+    private static Logger logger = LoggerFactory.getLogger(ProjectedNbrAdaptor.class.getName());
+
+    public static final String TYPE = "ProjectedNbr";
     private ProjectedNbr<VID_T, EDATA_T> nbr;
 
     @Override
@@ -28,16 +33,22 @@ public class ProjectedNbrAdaptor<VID_T, EDATA_T> implements Nbr<VID_T, EDATA_T> 
 
     @Override
     public Nbr<VID_T, EDATA_T> inc() {
-        return (Nbr<VID_T, EDATA_T>) nbr.inc();
+        nbr = nbr.inc();
+        return this;
     }
 
     @Override
     public boolean eq(Nbr<VID_T, EDATA_T> rhs) {
-        return nbr.eq((ProjectedNbr<VID_T, EDATA_T>) rhs);
+        if (!(rhs instanceof ProjectedNbrAdaptor)) {
+            logger.error("rhs:" + rhs + "not instance of ProjectedNbrAdaptor");
+            return false;
+        }
+        return nbr.eq(((ProjectedNbrAdaptor<VID_T, EDATA_T>) rhs).nbr);
     }
 
     @Override
     public Nbr<VID_T, EDATA_T> dec() {
-        return (Nbr<VID_T, EDATA_T>) nbr.dec();
+        nbr.dec();
+        return this;
     }
 }

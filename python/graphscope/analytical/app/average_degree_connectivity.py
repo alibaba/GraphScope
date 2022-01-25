@@ -28,7 +28,7 @@ __all__ = ["average_degree_connectivity"]
 
 @project_to_simple
 @not_compatible_for("arrow_property")
-def average_degree_connectivity(G, source="in+out", target="in+out", weight=None):
+def average_degree_connectivity(graph, source="in+out", target="in+out", weight=None):
     """Compute the average degree connectivity of graph.
 
     The average degree connectivity is the average nearest neighbor degree of
@@ -46,7 +46,7 @@ def average_degree_connectivity(G, source="in+out", target="in+out", weight=None
 
     Parameters
     ----------
-    G : NetworkX graph
+    graph : (:class:`graphscope.Graph`): A simple graph.
 
     source :  "in"|"out"|"in+out" (default:"in+out")
        Directed graphs only. Use "in"- or "out"-degree for source node.
@@ -73,12 +73,13 @@ def average_degree_connectivity(G, source="in+out", target="in+out", weight=None
     --------
     .. code:: python
 
-        import graphscope as gs
-        sess = gs.session()
-        g = sess.g()
-        pg = g.project(vertices={"vlabel": []}, edges={"elabel": []})
-        r = gs.average_degree_connectivity(pg)
-        s.close()
+        >>> import graphscope
+        >>> from graphscope.dataset import load_modern_graph
+        >>> sess = graphscope.session(cluster_type="hosts", mode="eager")
+        >>> g = load_modern_graph(sess)
+        >>> g.schema
+        >>> c = graphscope.average_degree_connectivity(g, weight="weight")
+        >>> sess.close()
 
     References
     ----------
@@ -86,13 +87,13 @@ def average_degree_connectivity(G, source="in+out", target="in+out", weight=None
        "The architecture of complex weighted networks".
        PNAS 101 (11): 3747–3752 (2004).
     """
-    if G.is_directed():
+    if graph.is_directed():
         if source not in ("in", "out", "in+out"):
             raise ValueError('source must be one of "in", "out", or "in+out"')
         if target not in ("in", "out", "in+out"):
             raise ValueError('target must be one of "in", "out", or "in+out"')
     ctx = AppAssets(algo="average_degree_connectivity", context="tensor")(
-        G, source, target
+        graph, source, target
     )
     res_list = ctx.to_numpy("r", axis=0).tolist()
     res_list = [i for item in res_list for i in item]

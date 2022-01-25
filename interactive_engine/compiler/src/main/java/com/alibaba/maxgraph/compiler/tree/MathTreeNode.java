@@ -15,14 +15,16 @@ package com.alibaba.maxgraph.compiler.tree;
 
 import com.alibaba.maxgraph.Message;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
-import com.alibaba.maxgraph.compiler.tree.value.ValueType;
-import com.alibaba.maxgraph.compiler.tree.value.ValueValueType;
 import com.alibaba.maxgraph.compiler.logical.LogicalSubQueryPlan;
 import com.alibaba.maxgraph.compiler.optimizer.ContextManager;
+import com.alibaba.maxgraph.compiler.tree.value.ValueType;
+import com.alibaba.maxgraph.compiler.tree.value.ValueValueType;
 import com.alibaba.maxgraph.compiler.utils.ReflectionUtils;
 import com.google.common.collect.Lists;
+
 import net.objecthunter.exp4j.Expression;
 import net.objecthunter.exp4j.tokenizer.Token;
+
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.MathStep;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

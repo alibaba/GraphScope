@@ -40,7 +40,7 @@ def katz_centrality(
     https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.centrality.katz_centrality_numpy.html
 
     Args:
-        graph (:class:`Graph`): A simple graph.
+        graph (:class:`graphscope.Graph`): A simple graph.
         alpha (float, optional): Auttenuation factor. Defaults to 0.1.
         beta (float, optional): Weight attributed to the immediate neighborhood. Defaults to 1.0.
         tolerance (float, optional): Error tolerance. Defaults to 1e-06.
@@ -55,13 +55,14 @@ def katz_centrality(
 
     .. code:: python
 
-        import graphscope as gs
-        g = gs.g()
-        # Load some data, then project to a simple graph (if needed).
-        pg = g.project(vertices={"vlabel": []}, edges={"elabel": []})
-        r = gs.katz_centrality(pg)
-        s.close()
-
+        >>> import graphscope
+        >>> from graphscope.dataset import load_p2p_network
+        >>> sess = graphscope.session(cluster_type="hosts", mode="eager")
+        >>> g = load_p2p_network(sess)
+        >>> # project to a simple graph (if needed)
+        >>> pg = g.project(vertices={"host": ["id"]}, edges={"connect": ["dist"]})
+        >>> c = graphscope.katz_centrality(pg)
+        >>> sess.close()
     """
     alpha = float(alpha)
     beta = float(beta)

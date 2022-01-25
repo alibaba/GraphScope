@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,9 +15,10 @@
  */
 package com.alibaba.maxgraph.compiler.logical;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.alibaba.maxgraph.QueryFlowOuterClass;
 import com.alibaba.maxgraph.common.util.CompilerConstant;
-import com.alibaba.maxgraph.compiler.tree.value.ValueType;
 import com.alibaba.maxgraph.compiler.logical.chain.LogicalChainSourceVertex;
 import com.alibaba.maxgraph.compiler.logical.edge.EdgeShuffleType;
 import com.alibaba.maxgraph.compiler.logical.function.ProcessorFunction;
@@ -25,9 +26,11 @@ import com.alibaba.maxgraph.compiler.logical.function.ProcessorRepeatFunction;
 import com.alibaba.maxgraph.compiler.logical.function.ProcessorSourceFunction;
 import com.alibaba.maxgraph.compiler.optimizer.ContextManager;
 import com.alibaba.maxgraph.compiler.tree.TreeNodeLabelManager;
+import com.alibaba.maxgraph.compiler.tree.value.ValueType;
 import com.alibaba.maxgraph.compiler.utils.PlanUtils;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -38,8 +41,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 public class LogicalQueryPlan {
     private Graph<LogicalVertex, LogicalEdge> plan = new DefaultDirectedGraph<>(LogicalEdge.class);
@@ -80,19 +81,28 @@ public class LogicalQueryPlan {
         for (LogicalVertex logicalVertex : logicalVertexList) {
             if (!plan.containsVertex(logicalVertex)) {
                 addLogicalVertex(logicalVertex);
-                List<Pair<LogicalEdge, LogicalVertex>> sourceEdgeVertexList = queryPlan.getSourceEdgeVertexList(logicalVertex);
+                List<Pair<LogicalEdge, LogicalVertex>> sourceEdgeVertexList =
+                        queryPlan.getSourceEdgeVertexList(logicalVertex);
                 Set<LogicalVertex> binaryParentList = Sets.newHashSet();
                 for (Pair<LogicalEdge, LogicalVertex> sourceEdgeVertex : sourceEdgeVertexList) {
-                    addLogicalEdge(sourceEdgeVertex.getRight(), logicalVertex, sourceEdgeVertex.getLeft());
+                    addLogicalEdge(
+                            sourceEdgeVertex.getRight(), logicalVertex, sourceEdgeVertex.getLeft());
                     binaryParentList.add(sourceEdgeVertex.getRight());
                 }
-                if (logicalVertex instanceof LogicalBinaryVertex && sourceEdgeVertexList.size() == 1) {
-                    LogicalBinaryVertex logicalBinaryVertex = LogicalBinaryVertex.class.cast(logicalVertex);
-                    LogicalVertex parentVertex = binaryParentList.contains(logicalBinaryVertex.getLeftInput()) ?
-                            logicalBinaryVertex.getRightInput() : logicalBinaryVertex.getLeftInput();
+                if (logicalVertex instanceof LogicalBinaryVertex
+                        && sourceEdgeVertexList.size() == 1) {
+                    LogicalBinaryVertex logicalBinaryVertex =
+                            LogicalBinaryVertex.class.cast(logicalVertex);
+                    LogicalVertex parentVertex =
+                            binaryParentList.contains(logicalBinaryVertex.getLeftInput())
+                                    ? logicalBinaryVertex.getRightInput()
+                                    : logicalBinaryVertex.getLeftInput();
                     if (existVertex(parentVertex)) {
                         if (parentVertex.isPropLocalFlag()) {
-                            addLogicalEdge(parentVertex, logicalBinaryVertex, new LogicalEdge(EdgeShuffleType.FORWARD));
+                            addLogicalEdge(
+                                    parentVertex,
+                                    logicalBinaryVertex,
+                                    new LogicalEdge(EdgeShuffleType.FORWARD));
                         } else {
                             addLogicalEdge(parentVertex, logicalBinaryVertex, new LogicalEdge());
                         }
@@ -118,12 +128,13 @@ public class LogicalQueryPlan {
     }
 
     public boolean isPullGraphEnable() {
-        return this.contextManager.getQueryConfig().getBoolean(CompilerConstant.QUERY_GRAPH_PULL_ENABLE, false);
+        return this.contextManager
+                .getQueryConfig()
+                .getBoolean(CompilerConstant.QUERY_GRAPH_PULL_ENABLE, false);
     }
 
     private List<LogicalVertex> getSourceVertexList(LogicalVertex currentVertex) {
-        return this.getSourceEdgeVertexList(currentVertex)
-                .stream()
+        return this.getSourceEdgeVertexList(currentVertex).stream()
                 .map(Pair::getRight)
                 .collect(Collectors.toList());
     }
@@ -137,18 +148,22 @@ public class LogicalQueryPlan {
                 if (logicalVertex instanceof LogicalBinaryVertex) {
                     LogicalBinaryVertex binaryVertex = (LogicalBinaryVertex) logicalVertex;
                     LogicalVertex leftVertex = binaryVertex.getLeftInput();
-                    if (leftVertex.getProcessorFunction().getOperatorType() == QueryFlowOuterClass.OperatorType.ENTER_KEY) {
+                    if (leftVertex.getProcessorFunction().getOperatorType()
+                            == QueryFlowOuterClass.OperatorType.ENTER_KEY) {
                         if (((LogicalBinaryVertex) logicalVertex).containsAfterKeyDelete()) {
                             for (int k = i - 1; k >= 0; k--) {
                                 LogicalVertex currentBinaryVertex = logicalVertexList.get(k);
-                                if (currentBinaryVertex.getProcessorFunction().getOperatorType() == QueryFlowOuterClass.OperatorType.ENTER_KEY) {
+                                if (currentBinaryVertex.getProcessorFunction().getOperatorType()
+                                        == QueryFlowOuterClass.OperatorType.ENTER_KEY) {
                                     if (currentBinaryVertex != leftVertex) {
-                                        throw new IllegalArgumentException("Not support nest enter key");
+                                        throw new IllegalArgumentException(
+                                                "Not support nest enter key");
                                     }
                                     break;
                                 }
                                 if (currentBinaryVertex instanceof LogicalBinaryVertex) {
-                                    ((LogicalBinaryVertex) currentBinaryVertex).removeAfterKeyDelete();
+                                    ((LogicalBinaryVertex) currentBinaryVertex)
+                                            .removeAfterKeyDelete();
                                 }
                             }
                         }
@@ -156,9 +171,10 @@ public class LogicalQueryPlan {
                         binaryVertex.removeAfterKeyDelete();
                     }
                 } else {
-                    QueryFlowOuterClass.OperatorType operatorType = logicalVertex.getProcessorFunction().getOperatorType();
-                    if (operatorType == QueryFlowOuterClass.OperatorType.KEY_MESSAGE ||
-                            operatorType == QueryFlowOuterClass.OperatorType.BYKEY_ENTRY) {
+                    QueryFlowOuterClass.OperatorType operatorType =
+                            logicalVertex.getProcessorFunction().getOperatorType();
+                    if (operatorType == QueryFlowOuterClass.OperatorType.KEY_MESSAGE
+                            || operatorType == QueryFlowOuterClass.OperatorType.BYKEY_ENTRY) {
                         LogicalVertex currentKeyVertex = logicalVertex;
                         while (true) {
                             LogicalVertex currentSourceVertex = getSourceVertex(currentKeyVertex);
@@ -174,7 +190,6 @@ public class LogicalQueryPlan {
                     }
                 }
             }
-
         }
     }
 
@@ -182,32 +197,44 @@ public class LogicalQueryPlan {
         List<LogicalVertex> logicalVertexList = this.getLogicalVertexList();
         LogicalVertex graphVertex = null;
         for (LogicalVertex logicalVertex : logicalVertexList) {
-            if (logicalVertex.getProcessorFunction().getOperatorType() == QueryFlowOuterClass.OperatorType.SUBGRAPH) {
+            if (logicalVertex.getProcessorFunction().getOperatorType()
+                    == QueryFlowOuterClass.OperatorType.SUBGRAPH) {
                 graphVertex = logicalVertex;
                 break;
             }
         }
         if (null != graphVertex) {
-            List<Pair<LogicalEdge, LogicalVertex>> graphSourceVertexList = this.getSourceEdgeVertexList(graphVertex);
-            List<Pair<LogicalEdge, LogicalVertex>> graphTargetVertexList = this.getTargetEdgeVertexList(graphVertex);
+            List<Pair<LogicalEdge, LogicalVertex>> graphSourceVertexList =
+                    this.getSourceEdgeVertexList(graphVertex);
+            List<Pair<LogicalEdge, LogicalVertex>> graphTargetVertexList =
+                    this.getTargetEdgeVertexList(graphVertex);
             if (graphTargetVertexList != null && graphTargetVertexList.size() == 1) {
                 LogicalVertex targetVertex = graphTargetVertexList.get(0).getRight();
-                if (targetVertex.getProcessorFunction().getOperatorType() == QueryFlowOuterClass.OperatorType.OUTPUT_VINEYARD_VERTEX) {
+                if (targetVertex.getProcessorFunction().getOperatorType()
+                        == QueryFlowOuterClass.OperatorType.OUTPUT_VINEYARD_VERTEX) {
                     return;
                 }
             }
             if (graphSourceVertexList.size() == 1) {
                 LogicalVertex graphSourceVertex = graphSourceVertexList.get(0).getRight();
                 if (graphSourceVertex.getProcessorFunction() instanceof ProcessorSourceFunction) {
-                    ProcessorSourceFunction processorSourceFunction = ProcessorSourceFunction.class.cast(graphSourceVertex.getProcessorFunction());
-                    processorSourceFunction.resetOperatorType(QueryFlowOuterClass.OperatorType.SUBGRAPH_SOURCE);
+                    ProcessorSourceFunction processorSourceFunction =
+                            ProcessorSourceFunction.class.cast(
+                                    graphSourceVertex.getProcessorFunction());
+                    processorSourceFunction.resetOperatorType(
+                            QueryFlowOuterClass.OperatorType.SUBGRAPH_SOURCE);
                     if (graphVertex.getProcessorFunction().getArgumentBuilder() != null) {
-                        processorSourceFunction.getArgumentBuilder().mergeFrom(graphVertex.getProcessorFunction().getArgumentBuilder().build());
+                        processorSourceFunction
+                                .getArgumentBuilder()
+                                .mergeFrom(
+                                        graphVertex
+                                                .getProcessorFunction()
+                                                .getArgumentBuilder()
+                                                .build());
                     }
                     this.removeVertex(graphVertex);
                 }
             }
-
         }
     }
 
@@ -219,12 +246,14 @@ public class LogicalQueryPlan {
                 continue;
             }
             if (logicalVertex.getProcessorFunction() instanceof ProcessorRepeatFunction) {
-                ProcessorRepeatFunction processorRepeatFunction = ProcessorRepeatFunction.class.cast(logicalVertex.getProcessorFunction());
+                ProcessorRepeatFunction processorRepeatFunction =
+                        ProcessorRepeatFunction.class.cast(logicalVertex.getProcessorFunction());
                 processorRepeatFunction.getRepeatPlan().optimizeLogicalPlan(labelUsedList);
                 continue;
             }
             Set<Integer> removeLabelList = Sets.newHashSet();
-            for (Integer labelId : logicalVertex.getProcessorFunction().getFunctionUsedLabelList()) {
+            for (Integer labelId :
+                    logicalVertex.getProcessorFunction().getFunctionUsedLabelList()) {
                 if (!labelUsedList.contains(labelId)) {
                     removeLabelList.add(labelId);
                     labelUsedList.add(labelId);
@@ -232,28 +261,33 @@ public class LogicalQueryPlan {
             }
             if (!removeLabelList.isEmpty()) {
                 QueryFlowOuterClass.RequirementValue.Builder removeRequirementBuilder = null;
-                for (QueryFlowOuterClass.RequirementValue.Builder reqBuilder : logicalVertex.getAfterRequirementList()) {
+                for (QueryFlowOuterClass.RequirementValue.Builder reqBuilder :
+                        logicalVertex.getAfterRequirementList()) {
                     if (reqBuilder.getReqType() == QueryFlowOuterClass.RequirementType.LABEL_DEL) {
                         removeRequirementBuilder = reqBuilder;
                         break;
                     }
                 }
                 if (null == removeRequirementBuilder) {
-                    removeRequirementBuilder = QueryFlowOuterClass.RequirementValue.newBuilder().setReqType(QueryFlowOuterClass.RequirementType.LABEL_DEL);
+                    removeRequirementBuilder =
+                            QueryFlowOuterClass.RequirementValue.newBuilder()
+                                    .setReqType(QueryFlowOuterClass.RequirementType.LABEL_DEL);
                     logicalVertex.getAfterRequirementList().add(removeRequirementBuilder);
                 }
-                removeRequirementBuilder.getReqArgumentBuilder().addAllIntValueList(removeLabelList);
+                removeRequirementBuilder
+                        .getReqArgumentBuilder()
+                        .addAllIntValueList(removeLabelList);
             }
 
-            Iterator<QueryFlowOuterClass.RequirementValue.Builder> reqValueIterator = logicalVertex.getAfterRequirementList().iterator();
+            Iterator<QueryFlowOuterClass.RequirementValue.Builder> reqValueIterator =
+                    logicalVertex.getAfterRequirementList().iterator();
             while (reqValueIterator.hasNext()) {
                 QueryFlowOuterClass.RequirementValue.Builder reqBuilder = reqValueIterator.next();
                 if (reqBuilder.getReqType() == QueryFlowOuterClass.RequirementType.LABEL_START) {
-                    List<Integer> startLabelList = reqBuilder.getReqArgumentBuilder()
-                            .getIntValueListList()
-                            .stream()
-                            .filter(labelUsedList::contains)
-                            .collect(Collectors.toList());
+                    List<Integer> startLabelList =
+                            reqBuilder.getReqArgumentBuilder().getIntValueListList().stream()
+                                    .filter(labelUsedList::contains)
+                                    .collect(Collectors.toList());
                     if (startLabelList.isEmpty()) {
                         reqValueIterator.remove();
                     } else {
@@ -267,11 +301,10 @@ public class LogicalQueryPlan {
             while (reqValueIterator.hasNext()) {
                 QueryFlowOuterClass.RequirementValue.Builder reqBuilder = reqValueIterator.next();
                 if (reqBuilder.getReqType() == QueryFlowOuterClass.RequirementType.LABEL_START) {
-                    List<Integer> startLabelList = reqBuilder.getReqArgumentBuilder()
-                            .getIntValueListList()
-                            .stream()
-                            .filter(labelUsedList::contains)
-                            .collect(Collectors.toList());
+                    List<Integer> startLabelList =
+                            reqBuilder.getReqArgumentBuilder().getIntValueListList().stream()
+                                    .filter(labelUsedList::contains)
+                                    .collect(Collectors.toList());
                     if (startLabelList.isEmpty()) {
                         reqValueIterator.remove();
                     } else {
@@ -291,23 +324,32 @@ public class LogicalQueryPlan {
             if (logicalVertex instanceof LogicalSourceDelegateVertex) {
                 continue;
             }
-            if (logicalVertex.getProcessorFunction().getOperatorType() == QueryFlowOuterClass.OperatorType.FOLD
-                    || logicalVertex.getProcessorFunction().getOperatorType() == QueryFlowOuterClass.OperatorType.FOLD_BY_KEY
-                    || logicalVertex.getProcessorFunction().getOperatorType() == QueryFlowOuterClass.OperatorType.FOLDMAP) {
+            if (logicalVertex.getProcessorFunction().getOperatorType()
+                            == QueryFlowOuterClass.OperatorType.FOLD
+                    || logicalVertex.getProcessorFunction().getOperatorType()
+                            == QueryFlowOuterClass.OperatorType.FOLD_BY_KEY
+                    || logicalVertex.getProcessorFunction().getOperatorType()
+                            == QueryFlowOuterClass.OperatorType.FOLDMAP) {
                 if (logicalVertex.getAfterRequirementList().isEmpty()) {
                     List<LogicalVertex> targetVertexList = getTargetVertexList(logicalVertex);
                     if (targetVertexList.size() == 1) {
                         LogicalVertex targetVertex = targetVertexList.get(0);
                         if (targetVertex.getBeforeRequirementList().isEmpty()) {
                             ProcessorFunction targetFunction = targetVertex.getProcessorFunction();
-                            if (targetFunction.getOperatorType() == QueryFlowOuterClass.OperatorType.UNFOLD) {
+                            if (targetFunction.getOperatorType()
+                                    == QueryFlowOuterClass.OperatorType.UNFOLD) {
                                 LogicalVertex inputVertex = getSourceVertex(logicalVertex);
-                                List<LogicalVertex> targetOutputList = getTargetVertexList(targetVertex);
+                                List<LogicalVertex> targetOutputList =
+                                        getTargetVertexList(targetVertex);
                                 if (targetOutputList.size() <= 1) {
-                                    inputVertex.getAfterRequirementList().addAll(logicalVertex.getBeforeRequirementList());
+                                    inputVertex
+                                            .getAfterRequirementList()
+                                            .addAll(logicalVertex.getBeforeRequirementList());
                                     if (targetOutputList.size() == 1) {
                                         LogicalVertex targetOutputVertex = targetOutputList.get(0);
-                                        targetOutputVertex.getBeforeRequirementList().addAll(targetVertex.getAfterRequirementList());
+                                        targetOutputVertex
+                                                .getBeforeRequirementList()
+                                                .addAll(targetVertex.getAfterRequirementList());
                                     }
                                     removeVertexList.add(logicalVertex);
                                     removeVertexList.add(targetVertex);
@@ -403,20 +445,23 @@ public class LogicalQueryPlan {
             boolean outVertexFlag = false;
             for (LogicalVertex logicalVertex : orderVertexList) {
                 if (logicalVertex.getProcessorFunction() != null) {
-                    QueryFlowOuterClass.OperatorType operatorType = logicalVertex.getProcessorFunction().getOperatorType();
-                    if (QueryFlowOuterClass.OperatorType.OUT == operatorType ||
-                            QueryFlowOuterClass.OperatorType.OUT_E == operatorType ||
-                            QueryFlowOuterClass.OperatorType.IN == operatorType ||
-                            QueryFlowOuterClass.OperatorType.IN_E == operatorType ||
-                            QueryFlowOuterClass.OperatorType.BOTH == operatorType ||
-                            QueryFlowOuterClass.OperatorType.BOTH_E == operatorType) {
-                        if (!outVertexFlag &&
-                                (QueryFlowOuterClass.OperatorType.OUT == operatorType ||
-                                        QueryFlowOuterClass.OperatorType.OUT_E == operatorType)) {
+                    QueryFlowOuterClass.OperatorType operatorType =
+                            logicalVertex.getProcessorFunction().getOperatorType();
+                    if (QueryFlowOuterClass.OperatorType.OUT == operatorType
+                            || QueryFlowOuterClass.OperatorType.OUT_E == operatorType
+                            || QueryFlowOuterClass.OperatorType.IN == operatorType
+                            || QueryFlowOuterClass.OperatorType.IN_E == operatorType
+                            || QueryFlowOuterClass.OperatorType.BOTH == operatorType
+                            || QueryFlowOuterClass.OperatorType.BOTH_E == operatorType) {
+                        if (!outVertexFlag
+                                && (QueryFlowOuterClass.OperatorType.OUT == operatorType
+                                        || QueryFlowOuterClass.OperatorType.OUT_E
+                                                == operatorType)) {
                             outVertexFlag = true;
                             continue;
                         }
-                        logicalVertex.getProcessorFunction()
+                        logicalVertex
+                                .getProcessorFunction()
                                 .getArgumentBuilder()
                                 .setExecLocalDisable(true);
                         break;
@@ -430,25 +475,36 @@ public class LogicalQueryPlan {
             chainFlag = false;
             List<LogicalVertex> orderVertexList = PlanUtils.getOrderVertexList(plan);
             for (LogicalVertex logicalVertex : orderVertexList) {
-                List<LogicalVertex> targetVertexList = PlanUtils.getTargetVertexList(plan, logicalVertex);
+                List<LogicalVertex> targetVertexList =
+                        PlanUtils.getTargetVertexList(plan, logicalVertex);
                 if (targetVertexList.size() == 1) {
                     LogicalVertex targetVertex = targetVertexList.get(0);
                     if (checkVertexChain(logicalVertex, targetVertex)) {
                         LogicalChainSourceVertex logicalChainSourceVertex;
                         if (logicalVertex instanceof LogicalSourceVertex) {
-                            logicalChainSourceVertex = new LogicalChainSourceVertex((LogicalSourceVertex) logicalVertex);
+                            logicalChainSourceVertex =
+                                    new LogicalChainSourceVertex(
+                                            (LogicalSourceVertex) logicalVertex);
                             removeVertex(logicalVertex);
                             addLogicalVertex(logicalChainSourceVertex);
                             logicalChainSourceVertex.addLogicalVertex(targetVertex);
 
-                            List<Pair<LogicalEdge, LogicalVertex>> targetEdgeVertexList = PlanUtils.getTargetEdgeVertexList(plan, targetVertex);
+                            List<Pair<LogicalEdge, LogicalVertex>> targetEdgeVertexList =
+                                    PlanUtils.getTargetEdgeVertexList(plan, targetVertex);
                             removeVertex(targetVertex);
-                            for (Pair<LogicalEdge, LogicalVertex> targetPair : targetEdgeVertexList) {
-                                addLogicalEdge(logicalChainSourceVertex, targetPair.getRight(), targetPair.getLeft());
-                                targetPair.getRight().resetInputVertex(targetVertex, logicalChainSourceVertex);
+                            for (Pair<LogicalEdge, LogicalVertex> targetPair :
+                                    targetEdgeVertexList) {
+                                addLogicalEdge(
+                                        logicalChainSourceVertex,
+                                        targetPair.getRight(),
+                                        targetPair.getLeft());
+                                targetPair
+                                        .getRight()
+                                        .resetInputVertex(targetVertex, logicalChainSourceVertex);
                             }
                         } else if (logicalVertex instanceof LogicalChainSourceVertex) {
-                            logicalChainSourceVertex = LogicalChainSourceVertex.class.cast(logicalVertex);
+                            logicalChainSourceVertex =
+                                    LogicalChainSourceVertex.class.cast(logicalVertex);
                             logicalChainSourceVertex.addLogicalVertex(targetVertex);
                             removeVertex(targetVertex);
                         } else {
@@ -470,25 +526,27 @@ public class LogicalQueryPlan {
         ProcessorFunction targetFunction = targetVertex.getProcessorFunction();
         QueryFlowOuterClass.OperatorType targetOperatorType = targetFunction.getOperatorType();
         if (sourceVertex instanceof LogicalSourceVertex) {
-            if ((targetOperatorType == QueryFlowOuterClass.OperatorType.OUT ||
-                    targetOperatorType == QueryFlowOuterClass.OperatorType.OUT_E) &&
-                    targetVertex.getAfterRequirementList().isEmpty() &&
-                    targetVertex.getBeforeRequirementList().isEmpty() &&
-                    targetVertex.getProcessorFunction().getRangeLimit() == null &&
-                    sourceVertex.getAfterRequirementList().isEmpty() &&
-                    sourceVertex.getBeforeRequirementList().isEmpty() &&
-                    sourceVertex.getProcessorFunction().getRangeLimit() == null &&
-                    ((ProcessorSourceFunction) sourceVertex.getProcessorFunction()).getOdpsQueryInput() == null) {
+            if ((targetOperatorType == QueryFlowOuterClass.OperatorType.OUT
+                            || targetOperatorType == QueryFlowOuterClass.OperatorType.OUT_E)
+                    && targetVertex.getAfterRequirementList().isEmpty()
+                    && targetVertex.getBeforeRequirementList().isEmpty()
+                    && targetVertex.getProcessorFunction().getRangeLimit() == null
+                    && sourceVertex.getAfterRequirementList().isEmpty()
+                    && sourceVertex.getBeforeRequirementList().isEmpty()
+                    && sourceVertex.getProcessorFunction().getRangeLimit() == null
+                    && ((ProcessorSourceFunction) sourceVertex.getProcessorFunction())
+                                    .getOdpsQueryInput()
+                            == null) {
                 return true;
             }
         } else if (sourceVertex instanceof LogicalChainSourceVertex) {
-            if ((targetOperatorType == QueryFlowOuterClass.OperatorType.IN_V ||
-                    targetOperatorType == QueryFlowOuterClass.OperatorType.OUT_V ||
-                    targetOperatorType == QueryFlowOuterClass.OperatorType.BOTH_V ||
-                    targetOperatorType == QueryFlowOuterClass.OperatorType.OTHER_V) &&
-                    targetVertex.getBeforeRequirementList().isEmpty() &&
-                    targetVertex.getAfterRequirementList().isEmpty() &&
-                    targetVertex.getProcessorFunction().getRangeLimit() == null) {
+            if ((targetOperatorType == QueryFlowOuterClass.OperatorType.IN_V
+                            || targetOperatorType == QueryFlowOuterClass.OperatorType.OUT_V
+                            || targetOperatorType == QueryFlowOuterClass.OperatorType.BOTH_V
+                            || targetOperatorType == QueryFlowOuterClass.OperatorType.OTHER_V)
+                    && targetVertex.getBeforeRequirementList().isEmpty()
+                    && targetVertex.getAfterRequirementList().isEmpty()
+                    && targetVertex.getProcessorFunction().getRangeLimit() == null) {
                 return true;
             }
         }
@@ -497,7 +555,9 @@ public class LogicalQueryPlan {
 
     public Pair<LogicalVertex, LogicalVertex> getOutputVertexPair() {
         List<LogicalVertex> logicalVertexList = PlanUtils.getOutputVertexList(plan);
-        checkArgument(logicalVertexList.size() == 2, "There should be two output vertex while current is " + logicalVertexList);
+        checkArgument(
+                logicalVertexList.size() == 2,
+                "There should be two output vertex while current is " + logicalVertexList);
 
         return Pair.of(logicalVertexList.get(0), logicalVertexList.get(1));
     }
@@ -507,7 +567,8 @@ public class LogicalQueryPlan {
     }
 
     public LogicalEdge getTargetEdge(LogicalVertex vertex) {
-        List<Pair<LogicalEdge, LogicalVertex>> targetEdgeVertexList = PlanUtils.getTargetEdgeVertexList(this.plan, vertex);
+        List<Pair<LogicalEdge, LogicalVertex>> targetEdgeVertexList =
+                PlanUtils.getTargetEdgeVertexList(this.plan, vertex);
         checkArgument(targetEdgeVertexList.size() == 1, "Must only one target");
         return targetEdgeVertexList.get(0).getLeft();
     }
@@ -525,7 +586,9 @@ public class LogicalQueryPlan {
         try {
             return configuration.getBoolean(CompilerConstant.QUERY_DEBUG_LOG_ENABLE, false);
         } catch (Exception e) {
-            throw new IllegalArgumentException("use g.enableDebugLog() or g.config(\"query.debug.log.enable\", true) to open debug log");
+            throw new IllegalArgumentException(
+                    "use g.enableDebugLog() or g.config(\"query.debug.log.enable\", true) to open"
+                            + " debug log");
         }
     }
 
@@ -534,13 +597,16 @@ public class LogicalQueryPlan {
         try {
             return configuration.getLong(CompilerConstant.QUERY_TIMEOUT_MILLISEC, -1);
         } catch (Exception e) {
-            throw new IllegalArgumentException("use g.timeout(milliSec) or g.timeoutSec(sec) or g.config(\"query.timeout.millsec\", milliSec) to set timeout");
+            throw new IllegalArgumentException(
+                    "use g.timeout(milliSec) or g.timeoutSec(sec) or"
+                            + " g.config(\"query.timeout.millsec\", milliSec) to set timeout");
         }
     }
 
     public QueryFlowOuterClass.InputBatchLevel getInputBatchLavel() {
         Configuration configuration = this.contextManager.getQueryConfig();
-        String batchLavelValue = configuration.getString(CompilerConstant.QUERY_SCHEDULE_GRANULARITY, null);
+        String batchLavelValue =
+                configuration.getString(CompilerConstant.QUERY_SCHEDULE_GRANULARITY, null);
         try {
             if (StringUtils.isEmpty(batchLavelValue)) {
                 return QueryFlowOuterClass.InputBatchLevel.Medium;
@@ -549,7 +615,9 @@ public class LogicalQueryPlan {
             }
 
         } catch (Exception e) {
-            throw new IllegalArgumentException("use g.scheduleVerySmall()/Small()/Medium()/Large()/VeryLarge() to set scheduler batch lavel");
+            throw new IllegalArgumentException(
+                    "use g.scheduleVerySmall()/Small()/Medium()/Large()/VeryLarge() to set"
+                            + " scheduler batch lavel");
         }
     }
 

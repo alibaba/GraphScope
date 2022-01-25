@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,7 +21,6 @@ import com.alibaba.maxgraph.sdkcommon.exception.QueueRejectException;
 public class ExceptionUtils {
 
     public enum ErrorCode {
-
         OK(0),
         PropertyAlreadyExist(1000),
         PropertyNotExist(1001),
@@ -77,7 +76,7 @@ public class ExceptionUtils {
         CancelJobFailed(5013),
         HttpRequestFailed(5014),
 
-        //frontend related
+        // frontend related
         AuthenticationFailed(6000),
         AuthorizationFailed(6001),
 
@@ -144,7 +143,6 @@ public class ExceptionUtils {
                 throw new QueueRejectException(errMsg);
             default:
                 throw new MaxGraphException(errorCode, errMsg);
-
         }
     }
 }

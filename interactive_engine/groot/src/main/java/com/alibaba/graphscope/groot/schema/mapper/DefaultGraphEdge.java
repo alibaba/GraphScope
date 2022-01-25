@@ -19,6 +19,7 @@ import com.alibaba.maxgraph.compiler.api.schema.GraphEdge;
 import com.alibaba.maxgraph.compiler.api.schema.GraphProperty;
 import com.alibaba.maxgraph.compiler.api.schema.PrimaryKeyConstraint;
 import com.google.common.base.MoreObjects;
+
 import org.apache.commons.lang.StringUtils;
 
 import java.util.List;

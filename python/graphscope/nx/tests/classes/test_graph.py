@@ -79,6 +79,20 @@ class TestGraph(_TestGraph):
     def test_pickle(self):
         pass
 
+    def test_none_node(self):
+        # graphscope.nx support None as node
+        pass
+
+    def test_remove_node(self):
+        G = self.K3.copy()
+        G.remove_node(0)
+        assert G.adj == {1: {2: {}}, 2: {1: {}}}
+
+    def test_remove_edge(self):
+        G = self.K3.copy()
+        G.remove_edge(0, 1)
+        assert G.adj == {0: {2: {}}, 1: {2: {}}, 2: {0: {}, 1: {}}}
+
     def test_to_undirected(self):
         G = self.K3
         self.add_attributes(G)

@@ -17,6 +17,7 @@ import com.alibaba.maxgraph.Message;
 import com.alibaba.maxgraph.QueryFlowOuterClass;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.compiler.logical.LogicalEdge;
+import com.alibaba.maxgraph.compiler.logical.LogicalSubQueryPlan;
 import com.alibaba.maxgraph.compiler.logical.LogicalUnaryVertex;
 import com.alibaba.maxgraph.compiler.logical.LogicalVertex;
 import com.alibaba.maxgraph.compiler.logical.function.ProcessorFunction;
@@ -24,7 +25,6 @@ import com.alibaba.maxgraph.compiler.optimizer.ContextManager;
 import com.alibaba.maxgraph.compiler.tree.addition.AbstractUseKeyNode;
 import com.alibaba.maxgraph.compiler.tree.value.ValueType;
 import com.alibaba.maxgraph.compiler.tree.value.ValueValueType;
-import com.alibaba.maxgraph.compiler.logical.LogicalSubQueryPlan;
 
 public class MinTreeNode extends AbstractUseKeyNode {
 

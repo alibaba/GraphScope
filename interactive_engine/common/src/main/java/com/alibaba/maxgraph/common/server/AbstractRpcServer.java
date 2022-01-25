@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,19 +15,20 @@
  */
 package com.alibaba.maxgraph.common.server;
 
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executor;
-import java.util.function.Function;
-
 import com.alibaba.maxgraph.sdkcommon.client.Endpoint;
 
 import io.grpc.BindableService;
 import io.grpc.Server;
 import io.grpc.netty.NettyServerBuilder;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
+import java.util.function.Function;
 
 /**
  * Created by xiafei.qiuxf on 16/5/25.
@@ -48,17 +49,21 @@ public abstract class AbstractRpcServer<K, V> {
     }
 
     public void init(Endpoint addr, Executor executor) throws IOException {
-        NettyServerBuilder builder = NettyServerBuilder
-                .forAddress(new InetSocketAddress(addr.getIp(), addr.getPort()))
-                .maxMessageSize(BIGGRAPH_RPC_MAX_MESSAGE_SIZE)
-                .addService(getService());
+        NettyServerBuilder builder =
+                NettyServerBuilder.forAddress(new InetSocketAddress(addr.getIp(), addr.getPort()))
+                        .maxMessageSize(BIGGRAPH_RPC_MAX_MESSAGE_SIZE)
+                        .addService(getService());
         if (executor != null) {
             builder.executor(executor);
         }
         grpcServer = builder.build();
         grpcServer.start();
         port = grpcServer.getPort();
-        LOG.info("rpc service [{}] started on: {}:{}", this.getClass().getCanonicalName(), addr.getIp(), port);
+        LOG.info(
+                "rpc service [{}] started on: {}:{}",
+                this.getClass().getCanonicalName(),
+                addr.getIp(),
+                port);
     }
 
     public void init(NettyServerBuilder serverBuilder) throws IOException {
@@ -119,6 +124,4 @@ public abstract class AbstractRpcServer<K, V> {
     public V removeDelegate(K k) {
         return delegates.remove(k);
     }
-
 }
-

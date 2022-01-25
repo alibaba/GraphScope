@@ -13,6 +13,20 @@
  */
 package com.alibaba.maxgraph.tests.ingestor;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.*;
+
+import com.alibaba.graphscope.groot.CompletionCallback;
+import com.alibaba.graphscope.groot.ingestor.IngestCallback;
+import com.alibaba.graphscope.groot.ingestor.IngestProgressClient;
+import com.alibaba.graphscope.groot.ingestor.IngestService;
+import com.alibaba.graphscope.groot.ingestor.IngestorSnapshotService;
+import com.alibaba.graphscope.groot.ingestor.IngestorWriteService;
+import com.alibaba.graphscope.groot.ingestor.StoreWriteClient;
+import com.alibaba.graphscope.groot.operation.OperationBatch;
+import com.alibaba.graphscope.groot.operation.StoreDataBatch;
 import com.alibaba.maxgraph.proto.groot.AdvanceIngestSnapshotIdRequest;
 import com.alibaba.maxgraph.proto.groot.AdvanceIngestSnapshotIdResponse;
 import com.alibaba.maxgraph.proto.groot.GetTailOffsetsResponse;
@@ -21,25 +35,13 @@ import com.alibaba.maxgraph.proto.groot.StoreWriteGrpc;
 import com.alibaba.maxgraph.proto.groot.WriteIngestorRequest;
 import com.alibaba.maxgraph.proto.groot.WriteIngestorResponse;
 import com.alibaba.maxgraph.proto.groot.WriteStoreResponse;
-import com.alibaba.graphscope.groot.CompletionCallback;
-import com.alibaba.graphscope.groot.operation.OperationBatch;
-import com.alibaba.graphscope.groot.operation.StoreDataBatch;
-import com.alibaba.graphscope.groot.ingestor.IngestCallback;
-import com.alibaba.graphscope.groot.ingestor.IngestProgressClient;
-import com.alibaba.graphscope.groot.ingestor.IngestService;
-import com.alibaba.graphscope.groot.ingestor.IngestorSnapshotService;
-import com.alibaba.graphscope.groot.ingestor.IngestorWriteService;
-import com.alibaba.graphscope.groot.ingestor.StoreWriteClient;
+
 import io.grpc.stub.StreamObserver;
+
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.*;
 
 public class IngestorRpcTest {
 
@@ -120,7 +122,8 @@ public class IngestorRpcTest {
                         })
                 .when(stub)
                 .writeStore(any(), any());
-        client.writeStore(StoreDataBatch.newBuilder().requestId("test_req").build(), callback);
+        client.writeStore(
+                Arrays.asList(StoreDataBatch.newBuilder().requestId("test_req").build()), callback);
         verify(callback).onCompleted(10);
     }
 }

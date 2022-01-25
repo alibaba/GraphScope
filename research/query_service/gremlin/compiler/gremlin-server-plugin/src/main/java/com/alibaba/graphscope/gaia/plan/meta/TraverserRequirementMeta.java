@@ -16,6 +16,7 @@
 package com.alibaba.graphscope.gaia.plan.meta;
 
 import com.alibaba.graphscope.gaia.plan.meta.object.StepId;
+
 import org.apache.tinkerpop.gremlin.process.traversal.traverser.TraverserRequirement;
 
 import java.util.HashSet;

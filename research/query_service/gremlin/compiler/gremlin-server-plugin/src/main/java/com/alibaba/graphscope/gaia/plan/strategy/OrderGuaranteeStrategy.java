@@ -18,6 +18,7 @@ package com.alibaba.graphscope.gaia.plan.strategy;
 import com.alibaba.graphscope.gaia.plan.strategy.shuffle.HasStepProperty;
 import com.alibaba.graphscope.gaia.plan.strategy.shuffle.IdentityProperty;
 import com.alibaba.graphscope.gaia.plan.strategy.shuffle.PropertyShuffler;
+
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalStrategy;
@@ -30,11 +31,11 @@ import org.apache.tinkerpop.gremlin.process.traversal.util.TraversalHelper;
 
 import java.util.List;
 
-public class OrderGuaranteeStrategy extends AbstractTraversalStrategy<TraversalStrategy.ProviderOptimizationStrategy> {
+public class OrderGuaranteeStrategy
+        extends AbstractTraversalStrategy<TraversalStrategy.ProviderOptimizationStrategy> {
     private static final OrderGuaranteeStrategy INSTANCE = new OrderGuaranteeStrategy();
 
-    private OrderGuaranteeStrategy() {
-    }
+    private OrderGuaranteeStrategy() {}
 
     public static OrderGuaranteeStrategy instance() {
         return INSTANCE;
@@ -50,17 +51,20 @@ public class OrderGuaranteeStrategy extends AbstractTraversalStrategy<TraversalS
             Step step = steps.get(i);
             // add shuffle implicitly
             if (step instanceof HasStep && (new HasStepProperty((HasStep) step)).needShuffle()
-                    || step instanceof PropertyIdentityStep && (new IdentityProperty((PropertyIdentityStep) step)).needShuffle()) {
+                    || step instanceof PropertyIdentityStep
+                            && (new IdentityProperty((PropertyIdentityStep) step)).needShuffle()) {
                 Step p = step.getPreviousStep();
                 boolean existShuffleStep = false;
-                while (!(p instanceof EmptyStep) && !(p instanceof OrderGlobalStep || p instanceof OrderGlobalLimitStep)) {
+                while (!(p instanceof EmptyStep)
+                        && !(p instanceof OrderGlobalStep || p instanceof OrderGlobalLimitStep)) {
                     if (p instanceof VertexStep || PropertyShuffler.isGlobalStep(step)) {
                         existShuffleStep = true;
                         break;
                     }
                     p = p.getPreviousStep();
                 }
-                if (!existShuffleStep && (p instanceof OrderGlobalStep || p instanceof OrderGlobalLimitStep)) {
+                if (!existShuffleStep
+                        && (p instanceof OrderGlobalStep || p instanceof OrderGlobalLimitStep)) {
                     int orderIdx = TraversalHelper.stepIndex(p, traversal);
                     traversal.removeStep(step);
                     traversal.addStep(orderIdx, step);

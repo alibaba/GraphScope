@@ -52,13 +52,7 @@ class GraphDAGNode(DAGNode):
 
     def __init__(self, session, graph, nodes=None, edges=None, gen_labels=None):
         """
-        Args:
-            session (:class:`Session`): instance of GraphScope session.
-            graph (:class:`graphscope.framework.graph.GraphDAGNode`):
-                Source property graph.
-            nodes (list): The node types that will be used for gnn training.
-            edges (list): The edge types that will be used for gnn training.
-            gen_labels (list): Extra node and edge labels on original graph for gnn training.
+        See params detail in :meth:`graphscope.Session.graphlearn`
         """
         self._session = session
         self._graph = graph

@@ -29,6 +29,7 @@ import com.alibaba.maxgraph.compiler.api.exception.BackupException;
 import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,9 +77,14 @@ public class BackupManager {
     private Lock globalBackupIdLock = new ReentrantLock();
     private Lock globalBackupIdToInfoLock = new ReentrantLock();
 
-    public BackupManager(Configs configs, MetaService metaService, MetaStore metaStore,
-                         SnapshotManager snapshotManager, SchemaManager schemaManager,
-                         SnapshotCache localSnapshotCache, StoreBackupTaskSender storeBackupTaskSender) {
+    public BackupManager(
+            Configs configs,
+            MetaService metaService,
+            MetaStore metaStore,
+            SnapshotManager snapshotManager,
+            SchemaManager schemaManager,
+            SnapshotCache localSnapshotCache,
+            StoreBackupTaskSender storeBackupTaskSender) {
         this.metaService = metaService;
         this.metaStore = metaStore;
         this.snapshotManager = snapshotManager;
@@ -91,7 +97,8 @@ public class BackupManager {
         this.storeBackupTaskSender = storeBackupTaskSender;
 
         this.backupEnable = BackupConfig.BACKUP_ENABLE.get(configs);
-        this.backupCreationBufferMaxSize = BackupConfig.BACKUP_CREATION_BUFFER_MAX_COUNT.get(configs);
+        this.backupCreationBufferMaxSize =
+                BackupConfig.BACKUP_CREATION_BUFFER_MAX_COUNT.get(configs);
         this.backupGcIntervalHours = BackupConfig.BACKUP_GC_INTERVAL_HOURS.get(configs);
         this.autoSubmit = BackupConfig.BACKUP_AUTO_SUBMIT.get(configs);
         this.autoSubmitIntervalHours = BackupConfig.BACKUP_AUTO_SUBMIT_INTERVAL_HOURS.get(configs);
@@ -113,30 +120,46 @@ public class BackupManager {
         this.snapshotManager.addListener(this.localListener);
 
         this.backupCreationBuffer = new ArrayBlockingQueue<>(backupCreationBufferMaxSize);
-        this.backupCreationExecutor = new ThreadPoolExecutor(
-                1,
-                1,
-                0L,
-                TimeUnit.MILLISECONDS,
-                new LinkedBlockingQueue<>(),
-                ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler("backup-creation-executor", logger));
+        this.backupCreationExecutor =
+                new ThreadPoolExecutor(
+                        1,
+                        1,
+                        0L,
+                        TimeUnit.MILLISECONDS,
+                        new LinkedBlockingQueue<>(),
+                        ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
+                                "backup-creation-executor", logger));
 
-        this.backupGcScheduler = Executors.newSingleThreadScheduledExecutor(
-                ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler("backup-gc-scheduler", logger));
-        this.backupGcScheduler.scheduleWithFixedDelay(this::clearUnavailableBackups,
-                backupGcIntervalHours, backupGcIntervalHours, TimeUnit.HOURS);
+        this.backupGcScheduler =
+                Executors.newSingleThreadScheduledExecutor(
+                        ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
+                                "backup-gc-scheduler", logger));
+        this.backupGcScheduler.scheduleWithFixedDelay(
+                this::clearUnavailableBackups,
+                backupGcIntervalHours,
+                backupGcIntervalHours,
+                TimeUnit.HOURS);
 
         if (autoSubmit) {
-            this.autoCommitScheduler = Executors.newSingleThreadScheduledExecutor(
-                    ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler("backup-autocommit-scheduler", logger));
-            this.autoCommitScheduler.scheduleWithFixedDelay(() -> {
-                try {
-                    int newGlobalBackupId = createNewBackup();
-                    logger.info("backup creation auto submitted with backupId #[" + newGlobalBackupId + "]");
-                } catch (Exception e) {
-                    logger.error("backup creation auto submit failed, ignore");
-                }
-            }, autoSubmitIntervalHours, autoSubmitIntervalHours, TimeUnit.HOURS);
+            this.autoCommitScheduler =
+                    Executors.newSingleThreadScheduledExecutor(
+                            ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
+                                    "backup-autocommit-scheduler", logger));
+            this.autoCommitScheduler.scheduleWithFixedDelay(
+                    () -> {
+                        try {
+                            int newGlobalBackupId = createNewBackup();
+                            logger.info(
+                                    "backup creation auto submitted with backupId #["
+                                            + newGlobalBackupId
+                                            + "]");
+                        } catch (Exception e) {
+                            logger.error("backup creation auto submit failed, ignore");
+                        }
+                    },
+                    autoSubmitIntervalHours,
+                    autoSubmitIntervalHours,
+                    TimeUnit.HOURS);
         }
     }
 
@@ -178,7 +201,9 @@ public class BackupManager {
         int newGlobalBackupId = increaseGlobalBackupId();
         boolean suc = this.backupCreationBuffer.offer(newGlobalBackupId);
         if (!suc) {
-            throw new BackupException("add backup creation task to buffer failed, new global backupId: " + newGlobalBackupId);
+            throw new BackupException(
+                    "add backup creation task to buffer failed, new global backupId: "
+                            + newGlobalBackupId);
         }
         this.backupCreationExecutor.execute(this::processBackupCreationTasks);
         logger.info("submit new backup creation task with backupId #[" + newGlobalBackupId + "]");
@@ -198,7 +223,8 @@ public class BackupManager {
     public void purgeOldBackups(int keepAliveNum) throws BackupException, IOException {
         checkEnable();
         if (keepAliveNum <= 0) {
-            throw new IllegalArgumentException("the input keepAliveNum should > 0, got " + keepAliveNum);
+            throw new IllegalArgumentException(
+                    "the input keepAliveNum should > 0, got " + keepAliveNum);
         } else if (keepAliveNum >= this.globalBackupIdToInfo.size()) {
             return;
         }
@@ -206,7 +232,8 @@ public class BackupManager {
         logger.info(numPurged + " old backups purged");
     }
 
-    public void restoreFromBackup(int globalBackupId, String metaRestorePath, String storeRestorePath)
+    public void restoreFromBackup(
+            int globalBackupId, String metaRestorePath, String storeRestorePath)
             throws BackupException, IOException {
         checkEnable();
         if (!this.globalBackupIdToInfo.containsKey(globalBackupId)) {
@@ -214,8 +241,14 @@ public class BackupManager {
         }
         restoreGraphMeta(globalBackupId, metaRestorePath);
         restoreGraphStore(globalBackupId, storeRestorePath);
-        logger.info("graph store restored from backup #[" + globalBackupId + "], meta restore dir ["
-                + metaRestorePath + "], store restore dir [" + storeRestorePath + "]");
+        logger.info(
+                "graph store restored from backup #["
+                        + globalBackupId
+                        + "], meta restore dir ["
+                        + metaRestorePath
+                        + "], store restore dir ["
+                        + storeRestorePath
+                        + "]");
     }
 
     public void verifyBackup(int globalBackupId) throws BackupException {
@@ -228,22 +261,25 @@ public class BackupManager {
         AtomicBoolean finished = new AtomicBoolean(false);
         CompletableFuture<Void> future = new CompletableFuture<>();
         for (int sId = 0; sId < storeNodeCount; sId++) {
-            storeBackupTaskSender.verifyStoreBackup(sId, storeBackupIds.get(sId), new CompletionCallback<Void>() {
-                @Override
-                public void onCompleted(Void res) {
-                    if (!finished.get() && counter.decrementAndGet() == 0) {
-                        future.complete(null);
-                    }
-                }
+            storeBackupTaskSender.verifyStoreBackup(
+                    sId,
+                    storeBackupIds.get(sId),
+                    new CompletionCallback<Void>() {
+                        @Override
+                        public void onCompleted(Void res) {
+                            if (!finished.get() && counter.decrementAndGet() == 0) {
+                                future.complete(null);
+                            }
+                        }
 
-                @Override
-                public void onError(Throwable t) {
-                    if (finished.getAndSet(true)) {
-                        return;
-                    }
-                    future.completeExceptionally(t);
-                }
-            });
+                        @Override
+                        public void onError(Throwable t) {
+                            if (finished.getAndSet(true)) {
+                                return;
+                            }
+                            future.completeExceptionally(t);
+                        }
+                    });
         }
         try {
             future.get();
@@ -277,8 +313,9 @@ public class BackupManager {
         this.globalBackupId = this.objectMapper.readValue(globalBackupIdBytes, Integer.class);
 
         byte[] backupInfoBytes = this.metaStore.read(BACKUP_INFO_PATH);
-        List<BackupInfo> recoveredBackupInfoList = this.objectMapper.readValue(backupInfoBytes,
-                new TypeReference<List<BackupInfo>>() {});
+        List<BackupInfo> recoveredBackupInfoList =
+                this.objectMapper.readValue(
+                        backupInfoBytes, new TypeReference<List<BackupInfo>>() {});
         this.globalBackupIdToInfo = new ConcurrentHashMap<>(recoveredBackupInfoList.size());
         for (BackupInfo bi : recoveredBackupInfoList) {
             this.globalBackupIdToInfo.put(bi.getGlobalBackupId(), bi);
@@ -309,43 +346,61 @@ public class BackupManager {
         AtomicBoolean finished = new AtomicBoolean(false);
         CompletableFuture<Void> future = new CompletableFuture<>();
         for (int sId = 0; sId < storeNodeCount; sId++) {
-            storeBackupTaskSender.createStoreBackup(sId, newGlobalBackupId, new CompletionCallback<StoreBackupId>() {
-                @Override
-                public void onCompleted(StoreBackupId storeBackupId) {
-                    if (finished.get()) {
-                        return;
-                    }
-                    partitionToBackupId.putAll(storeBackupId.getPartitionToBackupId());
-                    if (counter.decrementAndGet() == 0) {
-                        if (partitionToBackupId.size() == graphPartitionCount) {
-                            try {
-                                addNewBackupInfo(new BackupInfo(
-                                        newGlobalBackupId,
-                                        snapshotWithSchema.getSnapshotId(),
-                                        snapshotWithSchema.getGraphDef().toProto().toByteArray(),
-                                        walOffsets,
-                                        partitionToBackupId));
-                                future.complete(null);
-                            } catch (Exception e) {
-                                future.completeExceptionally(new BackupException(
-                                        "failed to persist backup info of new created backup #[" +
-                                        newGlobalBackupId + "], " + e.getMessage()));
+            storeBackupTaskSender.createStoreBackup(
+                    sId,
+                    newGlobalBackupId,
+                    new CompletionCallback<StoreBackupId>() {
+                        @Override
+                        public void onCompleted(StoreBackupId storeBackupId) {
+                            if (finished.get()) {
+                                return;
                             }
-                        } else {
-                            future.completeExceptionally(new BackupException(
-                                    "got incorrect number of partition backupIds when creating backup #[" + newGlobalBackupId +
-                                    "], got " + partitionToBackupId.size() + ", expect " + graphPartitionCount));
+                            partitionToBackupId.putAll(storeBackupId.getPartitionToBackupId());
+                            if (counter.decrementAndGet() == 0) {
+                                if (partitionToBackupId.size() == graphPartitionCount) {
+                                    try {
+                                        addNewBackupInfo(
+                                                new BackupInfo(
+                                                        newGlobalBackupId,
+                                                        snapshotWithSchema.getSnapshotId(),
+                                                        snapshotWithSchema
+                                                                .getGraphDef()
+                                                                .toProto()
+                                                                .toByteArray(),
+                                                        walOffsets,
+                                                        partitionToBackupId));
+                                        future.complete(null);
+                                    } catch (Exception e) {
+                                        future.completeExceptionally(
+                                                new BackupException(
+                                                        "failed to persist backup info of new"
+                                                                + " created backup #["
+                                                                + newGlobalBackupId
+                                                                + "], "
+                                                                + e.getMessage()));
+                                    }
+                                } else {
+                                    future.completeExceptionally(
+                                            new BackupException(
+                                                    "got incorrect number of partition backupIds"
+                                                            + " when creating backup #["
+                                                            + newGlobalBackupId
+                                                            + "], got "
+                                                            + partitionToBackupId.size()
+                                                            + ", expect "
+                                                            + graphPartitionCount));
+                                }
+                            }
                         }
-                    }
-                }
-                @Override
-                public void onError(Throwable t) {
-                    if (finished.getAndSet(true)) {
-                        return;
-                    }
-                    future.completeExceptionally(t);
-                }
-            });
+
+                        @Override
+                        public void onError(Throwable t) {
+                            if (finished.getAndSet(true)) {
+                                return;
+                            }
+                            future.completeExceptionally(t);
+                        }
+                    });
         }
         try {
             future.get();
@@ -356,12 +411,15 @@ public class BackupManager {
     }
 
     private void clearUnavailableBackups() {
-        List<Map<Integer, List<Integer>>> readyPartitionBackupIdsByStore = getPartitionReadyBackupIdsByStore();
+        List<Map<Integer, List<Integer>>> readyPartitionBackupIdsByStore =
+                getPartitionReadyBackupIdsByStore();
         AtomicInteger counter = new AtomicInteger(storeNodeCount);
         AtomicBoolean finished = new AtomicBoolean(false);
         CompletableFuture<Void> future = new CompletableFuture<>();
         for (int sId = 0; sId < storeNodeCount; sId++) {
-            storeBackupTaskSender.clearUnavailableBackups(sId, readyPartitionBackupIdsByStore.get(sId),
+            storeBackupTaskSender.clearUnavailableBackups(
+                    sId,
+                    readyPartitionBackupIdsByStore.get(sId),
                     new CompletionCallback<Void>() {
                         @Override
                         public void onCompleted(Void res) {
@@ -372,6 +430,7 @@ public class BackupManager {
                                 future.complete(null);
                             }
                         }
+
                         @Override
                         public void onError(Throwable t) {
                             if (finished.getAndSet(true)) {
@@ -379,8 +438,7 @@ public class BackupManager {
                             }
                             future.completeExceptionally(t);
                         }
-                    }
-            );
+                    });
         }
         try {
             future.get();
@@ -398,27 +456,27 @@ public class BackupManager {
 
         long restoredSnapshotId = restoredBackupInfo.getSnapshotId();
         restoredMetaStore.write(
-                "query_snapshot_id",
-                this.objectMapper.writeValueAsBytes(restoredSnapshotId));
-        restoredMetaStore.write(
-                "graph_def_proto_bytes",
-                restoredBackupInfo.getGraphDefBytes());
+                "query_snapshot_id", this.objectMapper.writeValueAsBytes(restoredSnapshotId));
+        restoredMetaStore.write("graph_def_proto_bytes", restoredBackupInfo.getGraphDefBytes());
         List<Long> restoredWalOffsets = restoredBackupInfo.getWalOffsets();
         restoredMetaStore.write(
-                "queue_offsets",
-                this.objectMapper.writeValueAsBytes(restoredWalOffsets));
+                "queue_offsets", this.objectMapper.writeValueAsBytes(restoredWalOffsets));
 
         // Restore all graph meta restore in the future.
         // To be implemented.
     }
 
-    private void restoreGraphStore(int globalBackupId, String storeRestorePath) throws BackupException {
+    private void restoreGraphStore(int globalBackupId, String storeRestorePath)
+            throws BackupException {
         List<StoreBackupId> storeBackupIds = getStoreBackupIds(globalBackupId);
         AtomicInteger counter = new AtomicInteger(storeNodeCount);
         AtomicBoolean finished = new AtomicBoolean(false);
         CompletableFuture<Void> future = new CompletableFuture<>();
         for (int sId = 0; sId < storeNodeCount; sId++) {
-            storeBackupTaskSender.restoreFromStoreBackup(sId, storeBackupIds.get(sId), storeRestorePath,
+            storeBackupTaskSender.restoreFromStoreBackup(
+                    sId,
+                    storeBackupIds.get(sId),
+                    storeRestorePath,
                     new CompletionCallback<Void>() {
                         @Override
                         public void onCompleted(Void res) {
@@ -426,6 +484,7 @@ public class BackupManager {
                                 future.complete(null);
                             }
                         }
+
                         @Override
                         public void onError(Throwable t) {
                             if (finished.getAndSet(true)) {
@@ -433,8 +492,7 @@ public class BackupManager {
                             }
                             future.completeExceptionally(t);
                         }
-                    }
-            );
+                    });
         }
         try {
             future.get();
@@ -451,13 +509,18 @@ public class BackupManager {
         for (int pId = 0; pId < graphPartitionCount; pId++) {
             ret.get(metaService.getStoreIdByPartition(pId)).put(pId, new ArrayList<>());
         }
-        for (Map.Entry<Integer, BackupInfo> globalBackupInfoEntry : this.globalBackupIdToInfo.entrySet()) {
-            Map<Integer, Integer> partitionToBackupId = globalBackupInfoEntry.getValue().getPartitionToBackupId();
+        for (Map.Entry<Integer, BackupInfo> globalBackupInfoEntry :
+                this.globalBackupIdToInfo.entrySet()) {
+            Map<Integer, Integer> partitionToBackupId =
+                    globalBackupInfoEntry.getValue().getPartitionToBackupId();
             if (partitionToBackupId.size() != graphPartitionCount) {
-                logger.error("got error partition backup id list, global backup id: " + globalBackupInfoEntry.getKey());
+                logger.error(
+                        "got error partition backup id list, global backup id: "
+                                + globalBackupInfoEntry.getKey());
                 continue;
             }
-            for (Map.Entry<Integer, Integer> partitionBackupMapEntry : partitionToBackupId.entrySet()) {
+            for (Map.Entry<Integer, Integer> partitionBackupMapEntry :
+                    partitionToBackupId.entrySet()) {
                 int partitionId = partitionBackupMapEntry.getKey();
                 int partitionBackupId = partitionBackupMapEntry.getValue();
                 int storeId = metaService.getStoreIdByPartition(partitionId);
@@ -472,7 +535,8 @@ public class BackupManager {
         for (int sId = 0; sId < storeNodeCount; sId++) {
             storeBackupIds.add(new StoreBackupId(globalBackupId));
         }
-        Map<Integer, Integer> partitionToBackupId = this.globalBackupIdToInfo.get(globalBackupId).getPartitionToBackupId();
+        Map<Integer, Integer> partitionToBackupId =
+                this.globalBackupIdToInfo.get(globalBackupId).getPartitionToBackupId();
         for (Map.Entry<Integer, Integer> entry : partitionToBackupId.entrySet()) {
             int partitionId = entry.getKey();
             int partitionBackupId = entry.getValue();
@@ -520,18 +584,22 @@ public class BackupManager {
 
     private int purgeOldBackupInfo(int keepAliveNum) throws IOException {
         this.globalBackupIdToInfoLock.lock();
-        try  {
+        try {
             List<BackupInfo> backupInfoList = new ArrayList<>(this.globalBackupIdToInfo.values());
             int oldSize = backupInfoList.size();
-            int minBackupIdToKeep = backupInfoList.stream()
-                    .mapToInt(BackupInfo::getGlobalBackupId)
-                    .sorted()
-                    .skip(oldSize - keepAliveNum)
-                    .min()
-                    .orElse(0);
-            backupInfoList.removeIf(backupInfo -> backupInfo.getGlobalBackupId() < minBackupIdToKeep);
+            int minBackupIdToKeep =
+                    backupInfoList.stream()
+                            .mapToInt(BackupInfo::getGlobalBackupId)
+                            .sorted()
+                            .skip(oldSize - keepAliveNum)
+                            .min()
+                            .orElse(0);
+            backupInfoList.removeIf(
+                    backupInfo -> backupInfo.getGlobalBackupId() < minBackupIdToKeep);
             persistBackupInfoList(backupInfoList);
-            this.globalBackupIdToInfo.entrySet().removeIf(entry -> entry.getKey() < minBackupIdToKeep);
+            this.globalBackupIdToInfo
+                    .entrySet()
+                    .removeIf(entry -> entry.getKey() < minBackupIdToKeep);
             return oldSize - keepAliveNum;
         } finally {
             globalBackupIdToInfoLock.unlock();

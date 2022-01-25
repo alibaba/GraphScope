@@ -24,7 +24,6 @@ import pytest
 
 import graphscope
 import graphscope.nx as nx
-from graphscope import property_sssp
 from graphscope import sssp
 from graphscope.client.session import default_session
 from graphscope.dataset import load_ldbc
@@ -385,7 +384,7 @@ def arrow_property_graph_undirected(graphscope_session):
 
 
 @pytest.fixture(scope="module")
-def arrow_property_graph_lpa(graphscope_session):
+def arrow_property_graph_lpa_u2i(graphscope_session):
     g = graphscope_session.g(generate_eid=False)
     g = g.add_vertices(f"{property_dir}/lpa_dataset/lpa_3000_v_0", "v0")
     g = g.add_vertices(f"{property_dir}/lpa_dataset/lpa_3000_v_1", "v1")
@@ -522,6 +521,14 @@ def sssp_result():
 
 
 @pytest.fixture(scope="module")
+def twitter_sssp_result():
+    rlt = np.loadtxt(
+        "{}/results/twitter_property_sssp_4".format(property_dir), dtype=float
+    )
+    yield rlt
+
+
+@pytest.fixture(scope="module")
 def wcc_result():
     ret = np.loadtxt("{}/../p2p-31-wcc_auto".format(property_dir), dtype=int)
     yield ret
@@ -570,7 +577,7 @@ def bfs_result():
 
 
 @pytest.fixture(scope="module")
-def cdlp_result():
+def lpa_result():
     ret = np.loadtxt("{}/ldbc/p2p-31-CDLP".format(property_dir), dtype=int)
     yield ret
 
@@ -617,11 +624,6 @@ def triangles_result():
         dtype=np.int64,
     )
     yield ret
-
-
-@pytest.fixture(scope="module")
-def property_context(arrow_property_graph):
-    return property_sssp(arrow_property_graph, 20)
 
 
 @pytest.fixture(scope="module")

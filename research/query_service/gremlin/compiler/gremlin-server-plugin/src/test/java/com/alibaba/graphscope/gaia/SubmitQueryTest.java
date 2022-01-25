@@ -26,19 +26,23 @@ public class SubmitQueryTest {
     public static void main(String[] args) throws Exception {
         MessageSerializer serializer = new GryoMessageSerializerV1d0();
         // new File(getResource("gremlin-sdk.yaml"))
-        Cluster cluster = Cluster.build()
-                .addContactPoint("localhost")
-                .port(8182)
-                .credentials("admin", "admin")
-                .serializer(serializer)
-                .create();
+        Cluster cluster =
+                Cluster.build()
+                        .addContactPoint("localhost")
+                        .port(8182)
+                        .credentials("admin", "admin")
+                        .serializer(serializer)
+                        .create();
         Client client = cluster.connect();
-        String query = "g.V().hasLabel('PERSON').has('id',28587302327593).both('KNOWS').as('p').in('COMMENT_HASCREATOR_PERSON', 'POST_HASCREATOR_PERSON').has('creationDate',lte(20120301080000000)).order().by('creationDate',desc).by('id',asc).limit(20).as('m').select('p', 'm')";
-        RequestMessage request = RequestMessage
-                .build(Tokens.OPS_EVAL)
-                .add(Tokens.ARGS_GREMLIN, query)
-                // .processor("plan")
-                .create();
+        String query =
+                "g.V().hasLabel('PERSON').has('id',28587302327593).both('KNOWS').as('p').in('COMMENT_HASCREATOR_PERSON',"
+                    + " 'POST_HASCREATOR_PERSON').has('creationDate',lte(20120301080000000)).order().by('creationDate',desc).by('id',asc).limit(20).as('m').select('p',"
+                    + " 'm')";
+        RequestMessage request =
+                RequestMessage.build(Tokens.OPS_EVAL)
+                        .add(Tokens.ARGS_GREMLIN, query)
+                        // .processor("plan")
+                        .create();
         CompletableFuture<ResultSet> resultSet = client.submitAsync(request);
         while (!resultSet.isDone()) {
             Thread.sleep(100);

@@ -15,18 +15,18 @@
  */
 package com.alibaba.pegasus.common;
 
+import com.alibaba.pegasus.intf.CloseableIterator;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.NoSuchElementException;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicReference;
 
-import com.alibaba.pegasus.intf.CloseableIterator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class StreamIterator<T> implements CloseableIterator<T> {
     private static final Logger logger = LoggerFactory.getLogger(StreamIterator.class);
-
 
     private static final Object PILL = new Object();
     private BlockingQueue<Object> buffer;

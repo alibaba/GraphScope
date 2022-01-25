@@ -20,6 +20,7 @@ import com.alibaba.graphscope.gaia.store.GraphStoreService;
 import com.alibaba.graphscope.gaia.store.SchemaNotFoundException;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.compiler.api.schema.SchemaFetcher;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,7 +28,8 @@ import java.math.BigInteger;
 
 public class VineyardGraphStore extends GraphStoreService {
     private static final Logger logger = LoggerFactory.getLogger(VineyardGraphStore.class);
-    public static final String VINEYARD_MODERN_PROPERTY_RESOURCE = "vineyard.modern.properties.json";
+    public static final String VINEYARD_MODERN_PROPERTY_RESOURCE =
+            "vineyard.modern.properties.json";
     private SchemaFetcher schemaFetcher;
 
     public VineyardGraphStore(SchemaFetcher schemaFetcher) {
@@ -42,7 +44,8 @@ public class VineyardGraphStore extends GraphStoreService {
             return graphSchema.getElement(label).getLabelId();
         } catch (Exception e) {
             logger.error("label " + label + " is invalid, please check schema");
-            throw new SchemaNotFoundException("label " + label + " is invalid, please check schema");
+            throw new SchemaNotFoundException(
+                    "label " + label + " is invalid, please check schema");
         }
     }
 
@@ -64,7 +67,8 @@ public class VineyardGraphStore extends GraphStoreService {
             return graphSchema.getPropertyId(propertyName);
         } catch (Exception e) {
             logger.error("property " + propertyName + " is invalid, please check schema");
-            throw new SchemaNotFoundException("property " + propertyName + " is invalid, please check schema");
+            throw new SchemaNotFoundException(
+                    "property " + propertyName + " is invalid, please check schema");
         }
     }
 
@@ -80,8 +84,7 @@ public class VineyardGraphStore extends GraphStoreService {
     }
 
     @Override
-    public synchronized void updateSnapShotId() {
-    }
+    public synchronized void updateSnapShotId() {}
 
     @Override
     public Object fromBytes(byte[] edgeId) {

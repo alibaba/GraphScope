@@ -13,19 +13,20 @@
  */
 package com.alibaba.maxgraph.structure;
 
+import com.alibaba.maxgraph.compiler.api.schema.GraphProperty;
+import com.alibaba.maxgraph.compiler.api.schema.GraphVertex;
+import com.alibaba.maxgraph.structure.graph.TinkerMaxGraph;
+import com.google.common.collect.Maps;
+
+import org.apache.tinkerpop.gremlin.structure.Property;
+import org.apache.tinkerpop.gremlin.structure.Vertex;
+import org.apache.tinkerpop.gremlin.structure.VertexProperty;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import com.alibaba.maxgraph.compiler.api.schema.GraphProperty;
-import com.alibaba.maxgraph.compiler.api.schema.GraphVertex;
-import com.alibaba.maxgraph.structure.graph.TinkerMaxGraph;
-import com.google.common.collect.Maps;
-import org.apache.tinkerpop.gremlin.structure.Property;
-import org.apache.tinkerpop.gremlin.structure.Vertex;
-import org.apache.tinkerpop.gremlin.structure.VertexProperty;
 
 public class MxVertexProperty<V> implements VertexProperty<V> {
 

@@ -47,7 +47,7 @@ def project_to_simple(func):
             ):  # func has 'weight' argument
                 weight = kwargs.get("weight", None)
                 try:
-                    e_label = graph.schema.vertex_labels[0]
+                    e_label = graph.schema.edge_labels[0]
                     graph.schema.get_edge_property_id(e_label, weight)
                 except KeyError:
                     weight = None
@@ -207,7 +207,9 @@ def eigenvector_centrality(G, max_iter=100, tol=1e-06, nstart=None, weight=None)
     @context_to_dict
     @project_to_simple
     def _eigenvector_centrality(G, max_iter=100, tol=1e-06, weight=None):
-        return graphscope.eigenvector_centrality(G, tolerance=tol, max_round=max_iter)
+        return graphscope.eigenvector_centrality(
+            G, tolerance=tol, max_round=max_iter, weight=weight
+        )
 
     if nstart is not None:
         # forward the nxa.eigenvector_centrality
@@ -333,7 +335,7 @@ def single_source_dijkstra_path_length(G, source, weight=None):
 def average_shortest_path_length(G, weight=None, method=None):
     @project_to_simple
     def _average_shortest_path_length(G, weight=None):
-        return graphscope.average_shortest_path_length(G)
+        return graphscope.average_shortest_path_length(G, weight)
 
     if method is not None:
         return nxa.average_shortest_path_length(G, weight, method)
@@ -514,7 +516,7 @@ def k_core(G, k=None, core_number=None):
     G : networkx graph
       A graph or directed graph
     k : int, optional
-      The order of the core.  If not specified return the main core.
+      The order of the core. If not specified return the main core.
 
     Returns
     -------
@@ -532,162 +534,65 @@ def k_core(G, k=None, core_number=None):
     return graphscope.k_core(G, k)
 
 
-@context_to_dict
-@project_to_simple
-def clustering(G):
-    r"""Compute the clustering coefficient for nodes.
+@patch_docstring(nxa.clustering)
+def clustering(G, nodes=None, weight=None):
+    @context_to_dict
+    @project_to_simple
+    def _clustering(G):
+        return graphscope.clustering(G)
 
-    For unweighted graphs, the clustering of a node :math:`u`
-    is the fraction of possible triangles through that node that exist,
-
-    .. math::
-
-      c_u = \frac{2 T(u)}{deg(u)(deg(u)-1)},
-
-    where :math:`T(u)` is the number of triangles through node :math:`u` and
-    :math:`deg(u)` is the degree of :math:`u`.
-
-    For weighted graphs, there are several ways to define clustering [1]_.
-    the one used here is defined
-    as the geometric average of the subgraph edge weights [2]_,
-
-    .. math::
-
-       c_u = \frac{1}{deg(u)(deg(u)-1))}
-             \sum_{vw} (\hat{w}_{uv} \hat{w}_{uw} \hat{w}_{vw})^{1/3}.
-
-    The edge weights :math:`\hat{w}_{uv}` are normalized by the maximum weight
-    in the network :math:`\hat{w}_{uv} = w_{uv}/\max(w)`.
-
-    The value of :math:`c_u` is assigned to 0 if :math:`deg(u) < 2`.
-
-    For directed graphs, the clustering is similarly defined as the fraction
-    of all possible directed triangles or geometric average of the subgraph
-    edge weights for unweighted and weighted directed graph respectively [3]_.
-
-    .. math::
-
-       c_u = \frac{1}{deg^{tot}(u)(deg^{tot}(u)-1) - 2deg^{\leftrightarrow}(u)}
-             T(u),
-
-    where :math:`T(u)` is the number of directed triangles through node
-    :math:`u`, :math:`deg^{tot}(u)` is the sum of in degree and out degree of
-    :math:`u` and :math:`deg^{\leftrightarrow}(u)` is the reciprocal degree of
-    :math:`u`.
-
-    Parameters
-    ----------
-    G : graph
-
-    Returns
-    -------
-    out : dataframe
-       Clustering coefficient at nodes
-
-    Examples
-    --------
-    >>> G = nx.path_graph(5)
-    >>>nx.clustering(G)
-
-    References
-    ----------
-    .. [1] Generalizations of the clustering coefficient to weighted
-       complex networks by J. Saramäki, M. Kivelä, J.-P. Onnela,
-       K. Kaski, and J. Kertész, Physical Review E, 75 027105 (2007).
-       http://jponnela.com/web_documents/a9.pdf
-    .. [2] Intensity and coherence of motifs in weighted complex
-       networks by J. P. Onnela, J. Saramäki, J. Kertész, and K. Kaski,
-       Physical Review E, 71(6), 065103 (2005).
-    .. [3] Clustering in complex directed networks by G. Fagiolo,
-       Physical Review E, 76(2), 026107 (2007).
-    """
-    # FIXME(weibin): clustering now only correct in directed graph.
-    # FIXME: nodes and weight not support.
-    return graphscope.clustering(G)
+    if weight:
+        # forward networkx.clustering
+        return nxa.clustering(G, nodes, weight)
+    clusterc = _clustering(G)
+    if nodes is not None:
+        if not isinstance(nodes, list) and nodes in clusterc:
+            return clusterc[nodes]
+        else:
+            return {n: clusterc[n] for n in nodes}
+    return clusterc
 
 
-@context_to_dict
-@project_to_simple
+@not_implemented_for("directed")
+@patch_docstring(nxa.triangles)
 def triangles(G, nodes=None):
-    """Compute the number of triangles.
+    @context_to_dict
+    @project_to_simple
+    def _triangles(G):
+        return graphscope.triangles(G)
 
-    Finds the number of triangles that include a node as one vertex.
-
-    Parameters
-    ----------
-    G : graph
-       A networkx graph
-
-    Returns
-    -------
-    out : dataframe
-       Number of triangles keyed by node label.
-
-    Notes
-    -----
-    When computing triangles for the entire graph each triangle is counted
-    three times, once at each node.  Self loops are ignored.
-
-    """
-    # FIXME: nodes not support.
-    return graphscope.triangles(G)
+    tricnt = _triangles(G)
+    if nodes is not None:
+        if not isinstance(nodes, list) and nodes in tricnt:
+            return tricnt[nodes]
+        else:
+            return {n: tricnt[n] for n in nodes}
+    return tricnt
 
 
 @project_to_simple
 @patch_docstring(nxa.transitivity)
 def transitivity(G):
-    # FIXME: nodes not support.
-    return AppAssets(algo="transitivity", context="tensor")(G)
-
-
-@project_to_simple
-@patch_docstring(nxa.average_clustering)
-def average_clustering(G, nodes=None, count_zeros=True):
-    """Compute the average clustering coefficient for the graph G.
-
-    The clustering coefficient for the graph is the average,
-
-    .. math::
-
-       C = \frac{1}{n}\sum_{v \in G} c_v,
-
-    where :math:`n` is the number of nodes in `G`.
-
-    Parameters
-    ----------
-    G : graph
-
-    Returns
-    -------
-    avg : float
-       Average clustering
-
-    Examples
-    --------
-    >>> G = nx.complete_graph(5)
-    >>> print(nx.average_clustering(G))
-    1.0
-
-    Notes
-    -----
-    This is a space saving routine; it might be faster
-    to use the clustering function to get a list and then take the average.
-
-    Self loops are ignored.
-
-    References
-    ----------
-    .. [1] Generalizations of the clustering coefficient to weighted
-       complex networks by J. Saramäki, M. Kivelä, J.-P. Onnela,
-       K. Kaski, and J. Kertész, Physical Review E, 75 027105 (2007).
-       http://jponnela.com/web_documents/a9.pdf
-    .. [2] Marcus Kaiser,  Mean clustering coefficients: the role of isolated
-       nodes and leafs on clustering measures for small-world networks.
-       https://arxiv.org/abs/0802.2512
-    """
-    # FIXME: nodes, weight, count_zeros not support.
-    ctx = AppAssets(algo="avg_clustering", context="tensor")(G)
+    ctx = AppAssets(algo="transitivity", context="tensor")(G)
     return ctx.to_numpy("r")[0]
+
+
+@patch_docstring(nxa.average_clustering)
+def average_clustering(G, nodes=None, weight=None, count_zeros=True):
+    @project_to_simple
+    def _average_clustering(G):
+        ctx = AppAssets(algo="avg_clustering", context="tensor")(G)
+        return ctx.to_numpy("r")[0]
+
+    if weight is not None:
+        # forward to networkx.average_clustering
+        return nxa.average_clustering(G, nodes, weight, count_zeros)
+    if nodes or not count_zeros or not G.is_directed():
+        c = clustering(G, nodes=nodes).values()
+        if not count_zeros:
+            c = [v for v in c if abs(v) > 0]
+        return sum(c) / len(c)
+    return _average_clustering(G)
 
 
 @context_to_dict
@@ -901,7 +806,7 @@ def attribute_assortativity_coefficient(G, attribute):
     .. [1] M. E. J. Newman, Mixing patterns in networks,
        Physical Review E, 67 026126, 2003
     """
-    return graphscope.attribute_assortativity_coefficient(G)
+    return graphscope.attribute_assortativity_coefficient(G, attribute)
 
 
 @project_to_simple
@@ -942,7 +847,7 @@ def numeric_assortativity_coefficient(G, attribute):
     .. [1] M. E. J. Newman, Mixing patterns in networks
            Physical Review E, 67 026126, 2003
     """
-    return graphscope.numeric_assortativity_coefficient(G)
+    return graphscope.numeric_assortativity_coefficient(G, attribute)
 
 
 @patch_docstring(nxa.is_simple_path)

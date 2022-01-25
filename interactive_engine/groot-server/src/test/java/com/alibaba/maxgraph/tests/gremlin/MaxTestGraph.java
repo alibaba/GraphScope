@@ -14,25 +14,24 @@
 package com.alibaba.maxgraph.tests.gremlin;
 
 import com.alibaba.graphscope.groot.frontend.ClientService;
+import com.alibaba.graphscope.groot.schema.GraphDef;
+import com.alibaba.maxgraph.common.config.CommonConfig;
+import com.alibaba.maxgraph.common.config.Configs;
+import com.alibaba.maxgraph.common.config.GremlinConfig;
+import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
-import com.alibaba.maxgraph.servers.Frontend;
 import com.alibaba.maxgraph.proto.groot.DropSchemaRequest;
 import com.alibaba.maxgraph.proto.groot.DropSchemaResponse;
 import com.alibaba.maxgraph.proto.groot.LoadJsonSchemaRequest;
 import com.alibaba.maxgraph.proto.groot.LoadJsonSchemaResponse;
 import com.alibaba.maxgraph.sdkcommon.io.MaxGraphIORegistry;
-import com.alibaba.maxgraph.tinkerpop.traversal.MaxGraphTraversalSource;
+import com.alibaba.maxgraph.servers.Frontend;
 import com.alibaba.maxgraph.servers.MaxNode;
 import com.alibaba.maxgraph.servers.NodeBase;
-import com.alibaba.maxgraph.common.config.CommonConfig;
-import com.alibaba.maxgraph.common.config.Configs;
-import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
-import com.alibaba.graphscope.groot.schema.GraphDef;
-import com.alibaba.maxgraph.common.config.GremlinConfig;
+import com.alibaba.maxgraph.tinkerpop.traversal.MaxGraphTraversalSource;
+
 import io.grpc.stub.StreamObserver;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.util.concurrent.CompletableFuture;
+
 import org.apache.commons.configuration.Configuration;
 import org.apache.tinkerpop.gremlin.LoadGraphWith;
 import org.apache.tinkerpop.gremlin.driver.Cluster;
@@ -55,9 +54,12 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
+import java.util.concurrent.CompletableFuture;
 
 @Graph.OptIn("com.alibaba.maxgraph.tests.gremlin.GremlinStandardTestSuite")
 @Graph.OptOut(

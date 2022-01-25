@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,7 +19,6 @@ package com.alibaba.maxgraph.common.zookeeper;
  * @author lvshuang.xjs@alibaba-inc.com
  * @create 2018-06-11 下午5:19
  **/
-
 public class ZKPaths {
 
     public static final String COORDINATOR = "/%s/coordinator";
@@ -32,10 +31,8 @@ public class ZKPaths {
 
     public static final String TYPE_SCHEMA_ID_PATH = "/%s/schema/%s/%d";
 
-    @Deprecated
-    public static final String TYPE_CONFIG_PATH_SERVING = "/%s/typeconfig/all";
-    @Deprecated
-    public static final String TYPE_CONFIG_PATH_LOADING = "/%s/typeconfig/loading";
+    @Deprecated public static final String TYPE_CONFIG_PATH_SERVING = "/%s/typeconfig/all";
+    @Deprecated public static final String TYPE_CONFIG_PATH_LOADING = "/%s/typeconfig/loading";
 
     public static final String TYPE_CONFIG_PATH_ONE = "/%s/typeconfig/one";
 

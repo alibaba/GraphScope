@@ -28,11 +28,12 @@ import org.apache.tinkerpop.gremlin.process.traversal.util.TraversalHelper;
 import java.util.List;
 import java.util.Optional;
 
-public class WhereTraversalStrategy extends AbstractTraversalStrategy<TraversalStrategy.ProviderOptimizationStrategy> implements TraversalStrategy.ProviderOptimizationStrategy {
+public class WhereTraversalStrategy
+        extends AbstractTraversalStrategy<TraversalStrategy.ProviderOptimizationStrategy>
+        implements TraversalStrategy.ProviderOptimizationStrategy {
     private static final WhereTraversalStrategy INSTANCE = new WhereTraversalStrategy();
 
-    private WhereTraversalStrategy() {
-    }
+    private WhereTraversalStrategy() {}
 
     public static WhereTraversalStrategy instance() {
         return INSTANCE;
@@ -78,7 +79,8 @@ public class WhereTraversalStrategy extends AbstractTraversalStrategy<TraversalS
             newTraversal.removeStep(lastStep);
             if (!lastStep.getScopeKeys().isEmpty()) {
                 String tag = lastStep.getScopeKeys().iterator().next();
-                newTraversal.addStep(new WherePredicateStep(newTraversal, Optional.ofNullable(null), P.eq(tag)));
+                newTraversal.addStep(
+                        new WherePredicateStep(newTraversal, Optional.ofNullable(null), P.eq(tag)));
             }
         }
         return newTraversal;

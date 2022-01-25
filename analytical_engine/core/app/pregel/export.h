@@ -26,25 +26,25 @@ namespace pregel {
 
 template <typename VD_T, typename MD_T>
 using Vertex = gs::PregelPropertyVertex<
-    vineyard::ArrowFragment<vineyard::property_graph_types::OID_TYPE,
+    vineyard::ArrowFragment<_OID_TYPE,
                             vineyard::property_graph_types::VID_TYPE>,
     VD_T, MD_T>;
 
 template <typename VD_T, typename MD_T>
 using Context = gs::PregelPropertyComputeContext<
-    vineyard::ArrowFragment<vineyard::property_graph_types::OID_TYPE,
+    vineyard::ArrowFragment<_OID_TYPE,
                             vineyard::property_graph_types::VID_TYPE>,
     VD_T, MD_T>;
 
 template <typename VD_T, typename MD_T>
 using Neighbor = gs::PregelPropertyNeighbor<
-    vineyard::ArrowFragment<vineyard::property_graph_types::OID_TYPE,
+    vineyard::ArrowFragment<_OID_TYPE,
                             vineyard::property_graph_types::VID_TYPE>,
     VD_T, MD_T>;
 
 template <typename VD_T, typename MD_T>
 using AdjList = gs::PregelPropertyAdjList<
-    vineyard::ArrowFragment<vineyard::property_graph_types::OID_TYPE,
+    vineyard::ArrowFragment<_OID_TYPE,
                             vineyard::property_graph_types::VID_TYPE>,
     VD_T, MD_T>;
 

@@ -17,6 +17,7 @@ package com.alibaba.graphscope.gaia.plan.predicate;
 
 import com.alibaba.graphscope.common.proto.Gremlin;
 import com.alibaba.graphscope.gaia.plan.extractor.TagKeyExtractorFactory;
+
 import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.util.TraversalRing;
 
@@ -33,8 +34,11 @@ public class WherePredicateP implements PredicateContainer {
     @Override
     public Gremlin.FilterExp generateSimpleP(P predicate) {
         return HasContainerP.generateFilter(
-                TagKeyExtractorFactory.WherePredicate.extractFrom(traversalRing.next()).getByKey().getKey(),
-                predicate, true);
+                TagKeyExtractorFactory.WherePredicate.extractFrom(traversalRing.next())
+                        .getByKey()
+                        .getKey(),
+                predicate,
+                true);
     }
 
     @Override

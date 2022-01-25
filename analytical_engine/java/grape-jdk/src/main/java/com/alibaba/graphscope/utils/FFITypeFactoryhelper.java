@@ -37,17 +37,20 @@ import com.alibaba.graphscope.parallel.message.LongMsg;
 import com.alibaba.graphscope.parallel.message.PrimitiveMessage;
 import com.alibaba.graphscope.stdcxx.StdString;
 import com.alibaba.graphscope.stdcxx.StdString.Factory;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.HashMap;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class FFITypeFactoryhelper {
     private static Logger logger = LoggerFactory.getLogger(FFITypeFactoryhelper.class.getName());
     private static volatile Factory stdStrFactory;
-    private static volatile Vertex.Factory vertexFactory;
+    private static volatile Vertex.Factory vertexLongFactory;
+    private static volatile Vertex.Factory vertexIntegerFactory;
     private static volatile MessageInBuffer.Factory javaMsgInBufFactory;
     private static volatile EmptyType.Factory emptyTypeFactory;
     private static volatile VertexRange.Factory vertexRangeLongFactory;
@@ -71,7 +74,7 @@ public class FFITypeFactoryhelper {
         } else if (clz.getName() == Double.class.getName()) {
             return "double";
         } else {
-            System.err.println("Must be one of long, double, integer");
+            logger.error("Must be one of long, double, integer");
             return "null";
         }
     }
@@ -88,14 +91,25 @@ public class FFITypeFactoryhelper {
     }
 
     public static Vertex.Factory getVertexLongFactory() {
-        if (vertexFactory == null) {
+        if (vertexLongFactory == null) {
             synchronized (Vertex.Factory.class) {
-                if (vertexFactory == null) {
-                    vertexFactory = FFITypeFactory.getFactory("grape::Vertex<uint64_t>");
+                if (vertexLongFactory == null) {
+                    vertexLongFactory = FFITypeFactory.getFactory("grape::Vertex<uint64_t>");
                 }
             }
         }
-        return vertexFactory;
+        return vertexLongFactory;
+    }
+
+    public static Vertex.Factory getVertexIntegerFactory() {
+        if (vertexIntegerFactory == null) {
+            synchronized (Vertex.Factory.class) {
+                if (vertexIntegerFactory == null) {
+                    vertexIntegerFactory = FFITypeFactory.getFactory("grape::Vertex<uint32_t>");
+                }
+            }
+        }
+        return vertexIntegerFactory;
     }
 
     public static VertexRange.Factory getVertexRangeLongFactory() {
@@ -170,6 +184,19 @@ public class FFITypeFactoryhelper {
 
     public static Vertex<Long> newVertexLong() {
         return getVertexLongFactory().create();
+    }
+
+    public static <T> Vertex<T> newVertex(Class<? extends T> vidClass) {
+        if (vidClass.equals(Long.class)) {
+            return getVertexLongFactory().create();
+        } else if (vidClass.equals(Integer.class)) {
+            return getVertexIntegerFactory().create();
+        } else {
+            throw new IllegalStateException(
+                    "Grape only support two kind of vertex, 32 bit and 64 bit, your are querying"
+                            + " for: "
+                            + vidClass.getName());
+        }
     }
 
     /**
@@ -301,7 +328,7 @@ public class FFITypeFactoryhelper {
     public static String[] getTypeParams(Class<?> clz, int expectedNum) {
         // TypeVariable[] typeVariables = (TypeVariable[]) clz.getTypeParameters();
         Type clzz = (Type) clz;
-        System.out.println(clzz.getTypeName());
+        logger.info(clzz.getTypeName());
         if (clzz instanceof ParameterizedType) {
             ParameterizedType parameterizedType = (ParameterizedType) clzz;
             Type[] types = parameterizedType.getActualTypeArguments();

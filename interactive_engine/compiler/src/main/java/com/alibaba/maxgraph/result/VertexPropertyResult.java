@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,6 +17,7 @@ package com.alibaba.maxgraph.result;
 
 import com.alibaba.maxgraph.sdkcommon.graph.QueryResult;
 import com.google.common.base.Objects;
+
 import org.apache.tinkerpop.gremlin.structure.Property;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.structure.VertexProperty;
@@ -99,11 +100,19 @@ public class VertexPropertyResult<V> implements QueryResult, VertexProperty<V> {
             Property<U> property = (Property) this.properties.get(propertyKeys[0]);
             return null == property ? Collections.emptyIterator() : IteratorUtils.of(property);
         } else {
-            return ((List) this.properties.entrySet().stream().filter((entry) -> {
-                return ElementHelper.keyExists((String) entry.getKey(), propertyKeys);
-            }).map((entry) -> {
-                return (Property) entry.getValue();
-            }).collect(Collectors.toList())).iterator();
+            return ((List)
+                            this.properties.entrySet().stream()
+                                    .filter(
+                                            (entry) -> {
+                                                return ElementHelper.keyExists(
+                                                        (String) entry.getKey(), propertyKeys);
+                                            })
+                                    .map(
+                                            (entry) -> {
+                                                return (Property) entry.getValue();
+                                            })
+                                    .collect(Collectors.toList()))
+                    .iterator();
         }
     }
 
@@ -112,10 +121,10 @@ public class VertexPropertyResult<V> implements QueryResult, VertexProperty<V> {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         VertexPropertyResult<?> that = (VertexPropertyResult<?>) o;
-        return id == that.id &&
-                Objects.equal(properties, that.properties) &&
-                Objects.equal(key, that.key) &&
-                Objects.equal(value, that.value);
+        return id == that.id
+                && Objects.equal(properties, that.properties)
+                && Objects.equal(key, that.key)
+                && Objects.equal(value, that.value);
     }
 
     @Override

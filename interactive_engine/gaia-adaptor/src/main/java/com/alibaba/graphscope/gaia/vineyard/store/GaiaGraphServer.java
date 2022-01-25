@@ -26,7 +26,9 @@ import com.alibaba.graphscope.gaia.store.GraphStoreService;
 import com.alibaba.maxgraph.common.cluster.InstanceConfig;
 import com.alibaba.maxgraph.server.MaxGraphServer;
 import com.alibaba.maxgraph.server.ProcessorLoader;
+
 import io.netty.channel.Channel;
+
 import org.apache.commons.configuration.BaseConfiguration;
 import org.apache.tinkerpop.gremlin.groovy.engine.GremlinExecutor;
 import org.apache.tinkerpop.gremlin.server.GremlinServer;
@@ -38,13 +40,14 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.script.Bindings;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.script.Bindings;
 
 public class GaiaGraphServer extends MaxGraphServer {
     private static final Logger logger = LoggerFactory.getLogger(GaiaGraphServer.class);
@@ -97,7 +100,8 @@ public class GaiaGraphServer extends MaxGraphServer {
                     .exceptionally(
                             t -> {
                                 logger.error(
-                                        "Gremlin Server was unable to start and will now begin shutdown {}",
+                                        "Gremlin Server was unable to start and will now begin"
+                                                + " shutdown {}",
                                         t);
                                 server.stop().join();
                                 return null;

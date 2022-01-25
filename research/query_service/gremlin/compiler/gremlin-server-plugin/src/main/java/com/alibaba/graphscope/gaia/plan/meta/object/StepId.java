@@ -33,8 +33,8 @@ public class StepId {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         StepId stepId1 = (StepId) o;
-        return Objects.equal(traversalId, stepId1.traversalId) &&
-                Objects.equal(stepId, stepId1.stepId);
+        return Objects.equal(traversalId, stepId1.traversalId)
+                && Objects.equal(stepId, stepId1.stepId);
     }
 
     @Override

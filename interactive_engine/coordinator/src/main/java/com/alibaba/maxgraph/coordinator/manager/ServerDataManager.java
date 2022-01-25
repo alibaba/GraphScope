@@ -13,10 +13,6 @@
  */
 package com.alibaba.maxgraph.coordinator.manager;
 
-import java.util.Map;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-
 import com.alibaba.maxgraph.common.client.WorkerInfo;
 import com.alibaba.maxgraph.common.cluster.InstanceConfig;
 import com.alibaba.maxgraph.common.cluster.management.ClusterApplierService;
@@ -26,11 +22,15 @@ import com.alibaba.maxgraph.coordinator.manager.runtime.PegasusRuntimeManager;
 import com.alibaba.maxgraph.coordinator.manager.runtime.RuntimeManager;
 import com.alibaba.maxgraph.proto.RoleType;
 import com.alibaba.maxgraph.sdkcommon.client.Endpoint;
-
 import com.google.common.collect.Maps;
+
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Map;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author lvshuang.xjs@alibaba-inc.com

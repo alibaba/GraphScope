@@ -20,6 +20,7 @@ import com.alibaba.graphscope.gaia.JsonUtils;
 import com.alibaba.graphscope.gaia.config.GaiaConfig;
 import com.alibaba.graphscope.gaia.idmaker.IdMaker;
 import com.fasterxml.jackson.core.type.TypeReference;
+
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,8 +45,8 @@ public class ExperimentalGraphStore extends GraphStoreService {
         try {
             File configF = new File(config.getSchemaFilePath());
             String schemaJson = FileUtils.readFileToString(configF, StandardCharsets.UTF_8);
-            this.graphSchema = JsonUtils.fromJson(schemaJson, new TypeReference<Map<String, Object>>() {
-            });
+            this.graphSchema =
+                    JsonUtils.fromJson(schemaJson, new TypeReference<Map<String, Object>>() {});
             this.idMaker = new GlobalIdMaker();
         } catch (Exception e) {
             throw new RuntimeException("exception is ", e);
@@ -54,7 +55,8 @@ public class ExperimentalGraphStore extends GraphStoreService {
 
     @Override
     public long getLabelId(String label) {
-        Map<String, Integer> vertexTypeMap = (Map<String, Integer>) graphSchema.get(VERTEX_TYPE_MAP);
+        Map<String, Integer> vertexTypeMap =
+                (Map<String, Integer>) graphSchema.get(VERTEX_TYPE_MAP);
         Integer typeId;
         if (vertexTypeMap != null && (typeId = vertexTypeMap.get(label)) != null) {
             return typeId;
@@ -84,7 +86,8 @@ public class ExperimentalGraphStore extends GraphStoreService {
 
     @Override
     public String getLabel(long labelId) {
-        Map<String, Integer> vertexTypeMap = (Map<String, Integer>) graphSchema.get(VERTEX_TYPE_MAP);
+        Map<String, Integer> vertexTypeMap =
+                (Map<String, Integer>) graphSchema.get(VERTEX_TYPE_MAP);
         String label = null;
         for (Map.Entry<String, Integer> e : vertexTypeMap.entrySet()) {
             if (e.getValue() == labelId) {

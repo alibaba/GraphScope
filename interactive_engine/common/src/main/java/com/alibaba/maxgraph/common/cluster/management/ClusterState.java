@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,16 +25,19 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-
 public class ClusterState {
 
     private long version;
     private NodeInfos nodes;
-    private ImmutableMap<Integer, PartitionInfo> partitionInfoMap;  // partitionID: {nodeID: STATE}
-    private ImmutableMap<Integer, NodeStateProto> nodeExpectedStateMap; // nodeID : { partitionID : STATE }
+    private ImmutableMap<Integer, PartitionInfo> partitionInfoMap; // partitionID: {nodeID: STATE}
+    private ImmutableMap<Integer, NodeStateProto>
+            nodeExpectedStateMap; // nodeID : { partitionID : STATE }
 
-    public ClusterState(long version, NodeInfos nodes, Map<Integer, PartitionInfo> partitionInfoMap,
-                        Map<Integer, NodeStateProto> expectedStateMap) {
+    public ClusterState(
+            long version,
+            NodeInfos nodes,
+            Map<Integer, PartitionInfo> partitionInfoMap,
+            Map<Integer, NodeStateProto> expectedStateMap) {
         this.version = version;
         this.nodes = nodes;
         this.partitionInfoMap = ImmutableMap.copyOf(partitionInfoMap);
@@ -73,7 +76,8 @@ public class ClusterState {
     }
 
     public static ClusterState fromProto(ClusterStateProto proto) {
-        return new ClusterState(proto.getVersion(),
+        return new ClusterState(
+                proto.getVersion(),
                 new NodeInfos(proto.getNodesList()),
                 proto.getPartitionsMap(),
                 proto.getExpectedStateMapMap());
@@ -89,11 +93,10 @@ public class ClusterState {
     }
 
     public static ClusterState emptyClusterState() {
-        return new ClusterState(0,
-                        new NodeInfos(Collections.emptyList()),
-                        Collections.emptyMap(),
-                        Collections.emptyMap()
-                );
+        return new ClusterState(
+                0,
+                new NodeInfos(Collections.emptyList()),
+                Collections.emptyMap(),
+                Collections.emptyMap());
     }
-
 }

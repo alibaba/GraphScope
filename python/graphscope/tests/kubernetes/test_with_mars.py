@@ -49,7 +49,7 @@ def get_gs_image_on_ci_env():
 def gs_session():
     gs_image = get_gs_image_on_ci_env()
     sess = graphscope.session(
-        num_workers=1,
+        num_workers=2,
         k8s_gs_image=gs_image,
         k8s_coordinator_cpu=2,
         k8s_coordinator_mem="4Gi",
@@ -68,7 +68,7 @@ def gs_session():
     sess.close()
 
 
-@pytest.mark.skip(reason="Requires our runtime image has Python>=3.7.")
+@pytest.mark.skipif("WITH_MARS" not in os.environ, reason="Mars tests is not enabled.")
 def test_mars_session(gs_session):
     from mars import new_session
     from mars import tensor as mt

@@ -26,6 +26,7 @@ package com.alibaba.graphscope.gaia.plan.strategy;
 
 import com.alibaba.graphscope.gaia.store.ExperimentalGraphStore;
 import com.alibaba.graphscope.gaia.store.GraphStoreService;
+
 import org.apache.tinkerpop.gremlin.process.traversal.Compare;
 import org.apache.tinkerpop.gremlin.process.traversal.Contains;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
@@ -42,7 +43,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
-public class GaiaGraphStep<S, E extends Element> extends GraphStep<S, E> implements HasContainerHolder, AutoCloseable {
+public class GaiaGraphStep<S, E extends Element> extends GraphStep<S, E>
+        implements HasContainerHolder, AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(GaiaGraphStep.class);
     private final List<HasContainer> hasContainers = new ArrayList<>();
     private final List<String> graphLabels = new ArrayList<>();
@@ -50,18 +52,28 @@ public class GaiaGraphStep<S, E extends Element> extends GraphStep<S, E> impleme
     private TraverserRequirement traverserRequirement = TraverserRequirement.PATH;
 
     public GaiaGraphStep(final GraphStep<S, E> originalGraphStep) {
-        super(originalGraphStep.getTraversal(), originalGraphStep.getReturnClass(), originalGraphStep.isStartStep(), originalGraphStep.getIds());
+        super(
+                originalGraphStep.getTraversal(),
+                originalGraphStep.getReturnClass(),
+                originalGraphStep.isStartStep(),
+                originalGraphStep.getIds());
         originalGraphStep.getLabels().forEach(this::addLabel);
     }
 
     @Override
     public String toString() {
-        if (this.hasContainers.isEmpty())
-            return super.toString();
+        if (this.hasContainers.isEmpty()) return super.toString();
         else
-            return (null == this.ids || 0 == this.ids.length) ?
-                    StringFactory.stepString(this, this.returnClass.getSimpleName().toLowerCase(), this.hasContainers) :
-                    StringFactory.stepString(this, this.returnClass.getSimpleName().toLowerCase(), Arrays.toString(this.ids), this.hasContainers);
+            return (null == this.ids || 0 == this.ids.length)
+                    ? StringFactory.stepString(
+                            this,
+                            this.returnClass.getSimpleName().toLowerCase(),
+                            this.hasContainers)
+                    : StringFactory.stepString(
+                            this,
+                            this.returnClass.getSimpleName().toLowerCase(),
+                            Arrays.toString(this.ids),
+                            this.hasContainers);
     }
 
     public TraverserRequirement getTraverserRequirement() {
@@ -82,15 +94,13 @@ public class GaiaGraphStep<S, E extends Element> extends GraphStep<S, E> impleme
         return super.hashCode() ^ this.hasContainers.hashCode();
     }
 
-
     @Override
     public void addHasContainer(final HasContainer hasContainer) {
         if (hasContainer.getPredicate() instanceof AndP) {
             for (final P<?> predicate : ((AndP<?>) hasContainer.getPredicate()).getPredicates()) {
                 this.addHasContainer(new HasContainer(hasContainer.getKey(), predicate));
             }
-        } else
-            this.hasContainers.add(hasContainer);
+        } else this.hasContainers.add(hasContainer);
     }
 
     public List<String> getGraphLabels() {
@@ -104,18 +114,28 @@ public class GaiaGraphStep<S, E extends Element> extends GraphStep<S, E> impleme
     /**
      * label + id -> global_id
      */
-    public static boolean processPrimaryKey(final GaiaGraphStep<?, ?> graphStep, final HasContainer hasContainer,
-                                            final List<HasContainer> originalContainers, boolean[] primaryKeyAsIndex,
-                                            final GraphStoreService graphStore) {
-        if (graphStep.ids.length == 0 && isValidPrimaryKey(hasContainer)
-                && (hasContainer.getKey().equals(T.label.getAccessor()) && isValidPrimaryKey(getContainer(originalContainers, "id"))
-                || hasContainer.getKey().equals("id") && isValidPrimaryKey(getContainer(originalContainers, T.label.getAccessor())))) {
+    public static boolean processPrimaryKey(
+            final GaiaGraphStep<?, ?> graphStep,
+            final HasContainer hasContainer,
+            final List<HasContainer> originalContainers,
+            boolean[] primaryKeyAsIndex,
+            final GraphStoreService graphStore) {
+        if (graphStep.ids.length == 0
+                && isValidPrimaryKey(hasContainer)
+                && (hasContainer.getKey().equals(T.label.getAccessor())
+                                && isValidPrimaryKey(getContainer(originalContainers, "id"))
+                        || hasContainer.getKey().equals("id")
+                                && isValidPrimaryKey(
+                                        getContainer(originalContainers, T.label.getAccessor())))) {
             primaryKeyAsIndex[0] = true;
         }
 
-        if (!hasContainer.getKey().equals(T.label.getAccessor()) && !hasContainer.getKey().equals("id")
-                || hasContainer.getBiPredicate() != Compare.eq && hasContainer.getBiPredicate() != Contains.within
-                || !isFirstHasContainerWithKey(hasContainer, originalContainers) || !primaryKeyAsIndex[0]
+        if (!hasContainer.getKey().equals(T.label.getAccessor())
+                        && !hasContainer.getKey().equals("id")
+                || hasContainer.getBiPredicate() != Compare.eq
+                        && hasContainer.getBiPredicate() != Contains.within
+                || !isFirstHasContainerWithKey(hasContainer, originalContainers)
+                || !primaryKeyAsIndex[0]
                 || !(graphStore instanceof ExperimentalGraphStore)) {
             return false;
         }
@@ -123,48 +143,64 @@ public class GaiaGraphStep<S, E extends Element> extends GraphStep<S, E> impleme
         if (primaryKeyAsIndex[0] && hasContainer.getKey().equals(T.label.getAccessor())) {
             HasContainer propertyIdContainer = getContainer(originalContainers, "id");
             P predicate = hasContainer.getPredicate();
-            if (predicate.getValue() instanceof List && ((List) predicate.getValue()).get(0) instanceof String) {
+            if (predicate.getValue() instanceof List
+                    && ((List) predicate.getValue()).get(0) instanceof String) {
                 List<String> values = (List<String>) predicate.getValue();
-                values.forEach(k -> {
-                    long globalId = graphStore.getGlobalId(Long.valueOf(k),
-                            ((Number) propertyIdContainer.getPredicate().getValue()).longValue());
-                    graphStep.addIds(globalId);
-                });
+                values.forEach(
+                        k -> {
+                            long globalId =
+                                    graphStore.getGlobalId(
+                                            Long.valueOf(k),
+                                            ((Number) propertyIdContainer.getPredicate().getValue())
+                                                    .longValue());
+                            graphStep.addIds(globalId);
+                        });
             } else if (predicate.getValue() instanceof String) {
-                long globalId = graphStore.getGlobalId(Long.valueOf((String) predicate.getValue()),
-                        ((Number) propertyIdContainer.getPredicate().getValue()).longValue());
+                long globalId =
+                        graphStore.getGlobalId(
+                                Long.valueOf((String) predicate.getValue()),
+                                ((Number) propertyIdContainer.getPredicate().getValue())
+                                        .longValue());
                 graphStep.addIds(globalId);
             } else {
-                throw new UnsupportedOperationException("hasLabel value type not support " + predicate.getValue().getClass());
+                throw new UnsupportedOperationException(
+                        "hasLabel value type not support " + predicate.getValue().getClass());
             }
         }
         return true;
     }
 
-    public static boolean processHasLabels(final GaiaGraphStep<?, ?> graphStep, final HasContainer hasContainer,
-                                           List<HasContainer> originalContainers) {
-        if (!hasContainer.getKey().equals(T.label.getAccessor()) || graphStep.getIds().length != 0
+    public static boolean processHasLabels(
+            final GaiaGraphStep<?, ?> graphStep,
+            final HasContainer hasContainer,
+            List<HasContainer> originalContainers) {
+        if (!hasContainer.getKey().equals(T.label.getAccessor())
+                || graphStep.getIds().length != 0
                 || graphStep.getGraphLabels().size() != 0
-                || hasContainer.getBiPredicate() != Compare.eq && hasContainer.getBiPredicate() != Contains.within) {
+                || hasContainer.getBiPredicate() != Compare.eq
+                        && hasContainer.getBiPredicate() != Contains.within) {
             return false;
         }
         if (getContainer(originalContainers, T.id.getAccessor()) != null) {
             return false;
         } else {
             P predicate = hasContainer.getPredicate();
-            if (predicate.getValue() instanceof List && ((List) predicate.getValue()).get(0) instanceof String) {
+            if (predicate.getValue() instanceof List
+                    && ((List) predicate.getValue()).get(0) instanceof String) {
                 List<String> values = (List<String>) predicate.getValue();
                 values.forEach(k -> graphStep.addGraphLabels(k));
             } else if (predicate.getValue() instanceof String) {
                 graphStep.addGraphLabels((String) predicate.getValue());
             } else {
-                throw new UnsupportedOperationException("hasLabel value type not support " + predicate.getValue().getClass());
+                throw new UnsupportedOperationException(
+                        "hasLabel value type not support " + predicate.getValue().getClass());
             }
             return true;
         }
     }
 
-    public static boolean isFirstHasContainerWithKey(final HasContainer hasContainer, final List<HasContainer> originalContainers) {
+    public static boolean isFirstHasContainerWithKey(
+            final HasContainer hasContainer, final List<HasContainer> originalContainers) {
         String key = hasContainer.getKey();
         boolean result = true;
         for (HasContainer container : originalContainers) {
@@ -182,8 +218,10 @@ public class GaiaGraphStep<S, E extends Element> extends GraphStep<S, E> impleme
     }
 
     public static boolean isValidPrimaryKey(HasContainer container) {
-        return container != null &&
-                (container.getKey().equals(T.label.getAccessor()) || container.getKey().equals("id")) &&
-                (container.getBiPredicate() == Compare.eq || container.getBiPredicate() == Contains.within);
+        return container != null
+                && (container.getKey().equals(T.label.getAccessor())
+                        || container.getKey().equals("id"))
+                && (container.getBiPredicate() == Compare.eq
+                        || container.getBiPredicate() == Contains.within);
     }
 }

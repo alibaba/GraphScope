@@ -14,16 +14,18 @@
 package com.alibaba.graphscope.groot.sdk;
 
 import com.alibaba.graphscope.groot.coordinator.BackupInfo;
+import com.alibaba.graphscope.groot.frontend.write.EdgeRecordKey;
+import com.alibaba.graphscope.groot.frontend.write.VertexRecordKey;
+import com.alibaba.graphscope.groot.schema.GraphDef;
 import com.alibaba.graphscope.proto.write.*;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.proto.groot.*;
 import com.alibaba.maxgraph.proto.groot.RemoteFlushRequest;
-import com.alibaba.graphscope.groot.schema.GraphDef;
-import com.alibaba.graphscope.groot.frontend.write.EdgeRecordKey;
-import com.alibaba.graphscope.groot.frontend.write.VertexRecordKey;
 import com.alibaba.maxgraph.sdkcommon.common.DataLoadTarget;
+
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,12 +49,11 @@ public class Client implements Closeable {
     private ClientWriteGrpc.ClientWriteBlockingStub writeStub;
     private ClientBackupGrpc.ClientBackupBlockingStub backupStub;
     private ManagedChannel channel;
-    private String name = "";
+    private String clientId = "DEFAULT";
 
     private BatchWriteRequest.Builder batchWriteBuilder;
 
-    public Client(String hosts, String name) {
-        this.name = name;
+    public Client(String hosts) {
         List<SocketAddress> addrList = new ArrayList<>();
         for (String host : hosts.split(",")) {
             String[] items = host.split(":");
@@ -69,7 +70,7 @@ public class Client implements Closeable {
         this.stub = ClientGrpc.newBlockingStub(this.channel);
         this.writeStub = ClientWriteGrpc.newBlockingStub(this.channel);
         this.backupStub = ClientBackupGrpc.newBlockingStub(this.channel);
-        this.init();
+        this.reset();
     }
 
     public Client(String host, int port) {
@@ -81,11 +82,17 @@ public class Client implements Closeable {
         this.stub = ClientGrpc.newBlockingStub(this.channel);
         this.writeStub = ClientWriteGrpc.newBlockingStub(this.channel);
         this.backupStub = ClientBackupGrpc.newBlockingStub(this.channel);
-        this.init();
+        this.reset();
     }
 
-    private void init() {
-        this.batchWriteBuilder = BatchWriteRequest.newBuilder().setClientId("0-1");
+    private void reset() {
+        this.batchWriteBuilder = BatchWriteRequest.newBuilder().setClientId(this.clientId);
+    }
+
+    public void initWriteSession() {
+        this.clientId =
+                this.writeStub.getClientId(GetClientIdRequest.newBuilder().build()).getClientId();
+        this.reset();
     }
 
     public void addVertex(String label, Map<String, String> properties) {
@@ -132,7 +139,7 @@ public class Client implements Closeable {
             BatchWriteResponse response = this.writeStub.batchWrite(this.batchWriteBuilder.build());
             snapshotId = response.getSnapshotId();
         }
-        this.init();
+        this.reset();
         return snapshotId;
     }
 
@@ -195,7 +202,8 @@ public class Client implements Closeable {
 
     public int createNewGraphBackup() {
         CreateNewGraphBackupResponse response =
-                this.backupStub.createNewGraphBackup(CreateNewGraphBackupRequest.newBuilder().build());
+                this.backupStub.createNewGraphBackup(
+                        CreateNewGraphBackupRequest.newBuilder().build());
         return response.getBackupId();
     }
 
@@ -206,20 +214,25 @@ public class Client implements Closeable {
 
     public void purgeOldGraphBackups(int keepAliveNumber) {
         this.backupStub.purgeOldGraphBackups(
-                PurgeOldGraphBackupsRequest.newBuilder().setKeepAliveNumber(keepAliveNumber).build());
+                PurgeOldGraphBackupsRequest.newBuilder()
+                        .setKeepAliveNumber(keepAliveNumber)
+                        .build());
     }
 
-    public void restoreFromGraphBackup(int backupId, String metaRestorePath, String storeRestorePath) {
-        this.backupStub.restoreFromGraphBackup(RestoreFromGraphBackupRequest.newBuilder()
-                .setBackupId(backupId)
-                .setMetaRestorePath(metaRestorePath)
-                .setStoreRestorePath(storeRestorePath)
-                .build());
+    public void restoreFromGraphBackup(
+            int backupId, String metaRestorePath, String storeRestorePath) {
+        this.backupStub.restoreFromGraphBackup(
+                RestoreFromGraphBackupRequest.newBuilder()
+                        .setBackupId(backupId)
+                        .setMetaRestorePath(metaRestorePath)
+                        .setStoreRestorePath(storeRestorePath)
+                        .build());
     }
 
     public boolean verifyGraphBackup(int backupId) {
         VerifyGraphBackupResponse response =
-                this.backupStub.verifyGraphBackup(VerifyGraphBackupRequest.newBuilder().setBackupId(backupId).build());
+                this.backupStub.verifyGraphBackup(
+                        VerifyGraphBackupRequest.newBuilder().setBackupId(backupId).build());
         boolean suc = response.getIsOk();
         if (!suc) {
             logger.info("verify backup [" + backupId + "] failed, " + response.getErrMsg());
@@ -230,7 +243,9 @@ public class Client implements Closeable {
     public List<BackupInfo> getGraphBackupInfo() {
         GetGraphBackupInfoResponse response =
                 this.backupStub.getGraphBackupInfo(GetGraphBackupInfoRequest.newBuilder().build());
-        return response.getBackupInfoListList().stream().map(BackupInfo::parseProto).collect(Collectors.toList());
+        return response.getBackupInfoListList().stream()
+                .map(BackupInfo::parseProto)
+                .collect(Collectors.toList());
     }
 
     @Override

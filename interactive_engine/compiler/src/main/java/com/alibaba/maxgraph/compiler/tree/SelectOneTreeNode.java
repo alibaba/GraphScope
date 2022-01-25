@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,15 +17,16 @@ package com.alibaba.maxgraph.compiler.tree;
 
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.compiler.logical.LogicalEdge;
-import com.alibaba.maxgraph.compiler.optimizer.ContextManager;
-import com.alibaba.maxgraph.compiler.utils.TreeNodeUtils;
-import com.alibaba.maxgraph.compiler.tree.value.ValueType;
 import com.alibaba.maxgraph.compiler.logical.LogicalSubQueryPlan;
 import com.alibaba.maxgraph.compiler.logical.LogicalVertex;
 import com.alibaba.maxgraph.compiler.logical.VertexIdManager;
 import com.alibaba.maxgraph.compiler.logical.function.ProcessorFunction;
+import com.alibaba.maxgraph.compiler.optimizer.ContextManager;
 import com.alibaba.maxgraph.compiler.tree.source.SourceTreeNode;
+import com.alibaba.maxgraph.compiler.tree.value.ValueType;
 import com.alibaba.maxgraph.compiler.utils.CompilerUtils;
+import com.alibaba.maxgraph.compiler.utils.TreeNodeUtils;
+
 import org.apache.tinkerpop.gremlin.process.traversal.Pop;
 
 import java.util.List;
@@ -38,7 +39,12 @@ public class SelectOneTreeNode extends UnaryTreeNode {
     private List<TreeNode> selectTreeNodeList;
     private ValueType constantValueType;
 
-    public SelectOneTreeNode(TreeNode input, String selectLabel, Pop pop, List<TreeNode> selectTreeNodeList, GraphSchema schema) {
+    public SelectOneTreeNode(
+            TreeNode input,
+            String selectLabel,
+            Pop pop,
+            List<TreeNode> selectTreeNodeList,
+            GraphSchema schema) {
         super(input, NodeType.MAP, schema);
         this.selectLabel = selectLabel;
         this.pop = pop;
@@ -58,20 +64,24 @@ public class SelectOneTreeNode extends UnaryTreeNode {
         VertexIdManager vertexIdManager = contextManager.getVertexIdManager();
         Map<String, Integer> labelIndexList = labelManager.getLabelIndexList();
 
-        ProcessorFunction selectOneFunction = TreeNodeUtils.createSelectOneFunction(selectLabel, pop, labelIndexList);
-        LogicalSubQueryPlan logicalSubQueryPlan = parseSingleUnaryVertex(vertexIdManager,
-                labelManager,
-                selectOneFunction,
-                contextManager,
-                LogicalEdge.shuffleByKey(0),
-                null == traversalTreeNode);
+        ProcessorFunction selectOneFunction =
+                TreeNodeUtils.createSelectOneFunction(selectLabel, pop, labelIndexList);
+        LogicalSubQueryPlan logicalSubQueryPlan =
+                parseSingleUnaryVertex(
+                        vertexIdManager,
+                        labelManager,
+                        selectOneFunction,
+                        contextManager,
+                        LogicalEdge.shuffleByKey(0),
+                        null == traversalTreeNode);
 
-        if (null != traversalTreeNode &&
-                !contextManager.getCostModelManager().processFieldValue(selectLabel)) {
-            LogicalSubQueryPlan traversalValuePlan = TreeNodeUtils.buildSubQueryPlan(
-                    traversalTreeNode,
-                    logicalSubQueryPlan.getOutputVertex(),
-                    contextManager);
+        if (null != traversalTreeNode
+                && !contextManager.getCostModelManager().processFieldValue(selectLabel)) {
+            LogicalSubQueryPlan traversalValuePlan =
+                    TreeNodeUtils.buildSubQueryPlan(
+                            traversalTreeNode,
+                            logicalSubQueryPlan.getOutputVertex(),
+                            contextManager);
             logicalSubQueryPlan.mergeLogicalQueryPlan(traversalValuePlan);
 
             LogicalVertex outputVertex = logicalSubQueryPlan.getOutputVertex();
@@ -83,10 +93,11 @@ public class SelectOneTreeNode extends UnaryTreeNode {
 
     @Override
     public ValueType getOutputValueType() {
-        return constantValueType != null ? constantValueType :
-                (null != traversalTreeNode && !(traversalTreeNode instanceof SourceTreeNode) ?
-                        traversalTreeNode.getOutputValueType() :
-                        CompilerUtils.parseValueTypeWithPop(selectTreeNodeList, pop));
+        return constantValueType != null
+                ? constantValueType
+                : (null != traversalTreeNode && !(traversalTreeNode instanceof SourceTreeNode)
+                        ? traversalTreeNode.getOutputValueType()
+                        : CompilerUtils.parseValueTypeWithPop(selectTreeNodeList, pop));
     }
 
     public void setTraversalTreeNode(TreeNode traversalTreeNode) {

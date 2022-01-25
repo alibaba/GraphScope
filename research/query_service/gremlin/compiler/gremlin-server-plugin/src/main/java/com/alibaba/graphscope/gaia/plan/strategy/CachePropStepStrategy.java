@@ -1,6 +1,7 @@
 package com.alibaba.graphscope.gaia.plan.strategy;
 
 import com.alibaba.graphscope.gaia.config.GaiaConfig;
+
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalStrategy;
@@ -10,12 +11,12 @@ import org.apache.tinkerpop.gremlin.process.traversal.util.TraversalHelper;
 
 import java.util.List;
 
-public class CachePropStepStrategy extends AbstractTraversalStrategy<TraversalStrategy.ProviderOptimizationStrategy> {
+public class CachePropStepStrategy
+        extends AbstractTraversalStrategy<TraversalStrategy.ProviderOptimizationStrategy> {
     private GaiaConfig gaiaConfig;
     private static final CachePropStepStrategy INSTANCE = new CachePropStepStrategy();
 
-    private CachePropStepStrategy() {
-    }
+    private CachePropStepStrategy() {}
 
     public static CachePropStepStrategy instance(GaiaConfig config) {
         if (INSTANCE.gaiaConfig == null) {

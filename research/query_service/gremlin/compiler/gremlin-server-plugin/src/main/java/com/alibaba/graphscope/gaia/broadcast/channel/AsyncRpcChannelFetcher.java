@@ -11,5 +11,5 @@ public abstract class AsyncRpcChannelFetcher implements RpcChannelFetcher {
         return Collections.EMPTY_LIST;
     }
 
-    abstract public List<RpcChannel> refresh();
+    public abstract List<RpcChannel> refresh();
 }

@@ -20,39 +20,27 @@ import com.google.protobuf.ByteString;
 
 public final class EncodeValue {
     public static Common.Value fromBool(final boolean v) {
-        return Common.Value.newBuilder()
-                .setBoolean(v)
-                .build();
+        return Common.Value.newBuilder().setBoolean(v).build();
     }
 
     public static Common.Value fromInt(final int v) {
-        return Common.Value.newBuilder()
-                .setI32(v)
-                .build();
+        return Common.Value.newBuilder().setI32(v).build();
     }
 
     public static Common.Value fromLong(final long v) {
-        return Common.Value.newBuilder()
-                .setI64(v)
-                .build();
+        return Common.Value.newBuilder().setI64(v).build();
     }
 
     public static Common.Value fromString(final String v) {
-        return Common.Value.newBuilder()
-                .setStr(v)
-                .build();
+        return Common.Value.newBuilder().setStr(v).build();
     }
 
     public static Common.Value fromBytes(final byte[] bytes) {
-        return Common.Value.newBuilder()
-                .setBlob(ByteString.copyFrom(bytes))
-                .build();
+        return Common.Value.newBuilder().setBlob(ByteString.copyFrom(bytes)).build();
     }
 
     public static Common.Value fromDouble(final double v) {
-        return Common.Value.newBuilder()
-                .setF64(v)
-                .build();
+        return Common.Value.newBuilder().setF64(v).build();
     }
 
     public static Common.Value fromIntArray(final int[] array) {
@@ -60,16 +48,12 @@ public final class EncodeValue {
         for (int j : array) {
             b.addItem(j);
         }
-        return Common.Value.newBuilder()
-                .setI32Array(b)
-                .build();
+        return Common.Value.newBuilder().setI32Array(b).build();
     }
 
     public static Common.Value fromIntArray(final Iterable<Integer> array) {
         Common.I32Array v = Common.I32Array.newBuilder().addAllItem(array).build();
-        return Common.Value.newBuilder()
-                .setI32Array(v)
-                .build();
+        return Common.Value.newBuilder().setI32Array(v).build();
     }
 
     public static Common.Value fromLongArray(final long[] array) {
@@ -77,16 +61,12 @@ public final class EncodeValue {
         for (long j : array) {
             b.addItem(j);
         }
-        return Common.Value.newBuilder()
-                .setI64Array(b)
-                .build();
+        return Common.Value.newBuilder().setI64Array(b).build();
     }
 
     public static Common.Value fromLongArray(final Iterable<Long> array) {
         Common.I64Array.Builder b = Common.I64Array.newBuilder().addAllItem(array);
-        return Common.Value.newBuilder()
-                .setI64Array(b)
-                .build();
+        return Common.Value.newBuilder().setI64Array(b).build();
     }
 
     public static Common.Value fromDoubleArray(double[] array) {
@@ -94,29 +74,20 @@ public final class EncodeValue {
         for (double j : array) {
             b.addItem(j);
         }
-        return Common.Value.newBuilder()
-                .setF64Array(b)
-                .build();
+        return Common.Value.newBuilder().setF64Array(b).build();
     }
 
     public static Common.Value fromDoubleArray(Iterable<Double> array) {
         Common.DoubleArray.Builder b = Common.DoubleArray.newBuilder().addAllItem(array);
-        return Common.Value.newBuilder()
-                .setF64Array(b)
-                .build();
+        return Common.Value.newBuilder().setF64Array(b).build();
     }
 
     public static Common.Value fromStrArray(Iterable<String> array) {
         Common.StringArray.Builder b = Common.StringArray.newBuilder().addAllItem(array);
-        return Common.Value.newBuilder()
-                .setStrArray(b)
-                .build();
+        return Common.Value.newBuilder().setStrArray(b).build();
     }
 
     public static Common.Value fromNull() {
-        return Common.Value.newBuilder()
-                .setNone(Common.None.newBuilder().build())
-                .build();
+        return Common.Value.newBuilder().setNone(Common.None.newBuilder().build()).build();
     }
 }
-

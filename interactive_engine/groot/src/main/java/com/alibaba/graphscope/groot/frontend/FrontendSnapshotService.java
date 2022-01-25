@@ -14,11 +14,13 @@
 package com.alibaba.graphscope.groot.frontend;
 
 import com.alibaba.graphscope.groot.SnapshotCache;
+import com.alibaba.graphscope.groot.schema.GraphDef;
 import com.alibaba.maxgraph.proto.groot.AdvanceQuerySnapshotRequest;
 import com.alibaba.maxgraph.proto.groot.AdvanceQuerySnapshotResponse;
 import com.alibaba.maxgraph.proto.groot.FrontendSnapshotGrpc;
-import com.alibaba.graphscope.groot.schema.GraphDef;
+
 import io.grpc.stub.StreamObserver;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

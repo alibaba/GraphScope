@@ -17,6 +17,7 @@ package com.alibaba.graphscope.gaia.plan.strategy;
 
 import com.alibaba.graphscope.gaia.plan.PlanUtils;
 import com.alibaba.graphscope.gaia.plan.extractor.TagKeyExtractorFactory;
+
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
@@ -34,11 +35,11 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
-public class BySubTraversalStrategy extends AbstractTraversalStrategy<TraversalStrategy.ProviderOptimizationStrategy> {
+public class BySubTraversalStrategy
+        extends AbstractTraversalStrategy<TraversalStrategy.ProviderOptimizationStrategy> {
     private static final BySubTraversalStrategy INSTANCE = new BySubTraversalStrategy();
 
-    private BySubTraversalStrategy() {
-    }
+    private BySubTraversalStrategy() {}
 
     public static BySubTraversalStrategy instance() {
         return INSTANCE;
@@ -56,46 +57,76 @@ public class BySubTraversalStrategy extends AbstractTraversalStrategy<TraversalS
             for (int i = 0; i < stepList.size(); ++i) {
                 Step step = stepList.get(i);
                 if (step instanceof SelectOneStep || step instanceof SelectStep) {
-                    Map<String, Traversal.Admin> selectTraversals = PlanUtils.getSelectTraversalMap(step);
+                    Map<String, Traversal.Admin> selectTraversals =
+                            PlanUtils.getSelectTraversalMap(step);
                     for (Map.Entry<String, Traversal.Admin> e : selectTraversals.entrySet()) {
-                        boolean isSimpleValue = TagKeyExtractorFactory.Select.isSimpleValue(e.getValue());
+                        boolean isSimpleValue =
+                                TagKeyExtractorFactory.Select.isSimpleValue(e.getValue());
                         if (step instanceof SelectStep && !isSimpleValue) {
                             // todo: do transform
-                            throw new UnsupportedOperationException("cannot support sub traversal in " + step.getClass());
+                            throw new UnsupportedOperationException(
+                                    "cannot support sub traversal in " + step.getClass());
                         } else if (step instanceof SelectOneStep && !isSimpleValue) {
                             FieldUtils.writeField(step, "selectTraversal", null, true);
-                            traversal.addStep(++i, new BySubTaskStep(traversal, e.getValue(), BySubTaskStep.JoinerType.Select));
+                            traversal.addStep(
+                                    ++i,
+                                    new BySubTaskStep(
+                                            traversal,
+                                            e.getValue(),
+                                            BySubTaskStep.JoinerType.Select));
                         }
                     }
                 } else if (step instanceof GroupCountStep || step instanceof GroupStep) {
                     Traversal.Admin groupByKey = PlanUtils.getKeyTraversal(step);
-                    if (groupByKey != null && !TagKeyExtractorFactory.GroupKeyBy.isSimpleValue(groupByKey)) {
-                        traversal.addStep(i++, new BySubTaskStep(traversal, groupByKey, BySubTaskStep.JoinerType.GroupKeyBy));
+                    if (groupByKey != null
+                            && !TagKeyExtractorFactory.GroupKeyBy.isSimpleValue(groupByKey)) {
+                        traversal.addStep(
+                                i++,
+                                new BySubTaskStep(
+                                        traversal,
+                                        groupByKey,
+                                        BySubTaskStep.JoinerType.GroupKeyBy));
                         FieldUtils.writeField(step, "keyTraversal", new PreBySubTraversal(), true);
                     }
                     Traversal.Admin groupValue;
-                    if (step instanceof GroupStep && (groupValue = PlanUtils.getValueTraversal(step)) != null
+                    if (step instanceof GroupStep
+                            && (groupValue = PlanUtils.getValueTraversal(step)) != null
                             && !TagKeyExtractorFactory.GroupValueBy.isSimpleValue(groupValue)) {
                         if (step.getNextStep() instanceof UnfoldStep) {
                             ++i;
                         } else {
                             traversal.addStep(++i, new UnfoldStep(traversal));
                         }
-                        traversal.addStep(++i, new BySubTaskStep(traversal, addPreStep(groupValue), BySubTaskStep.JoinerType.GroupValueBy));
+                        traversal.addStep(
+                                ++i,
+                                new BySubTaskStep(
+                                        traversal,
+                                        addPreStep(groupValue),
+                                        BySubTaskStep.JoinerType.GroupValueBy));
                         // to_list
                         // todo: distinguish between end fold and count
                         Traversal.Admin newValue = new DefaultTraversal();
                         newValue.addStep(new FoldStep(newValue.asAdmin()));
                         FieldUtils.writeField(step, "valueTraversal", newValue, true);
                     }
-                } else if (step instanceof OrderGlobalStep || step instanceof OrderGlobalLimitStep) {
+                } else if (step instanceof OrderGlobalStep
+                        || step instanceof OrderGlobalLimitStep) {
                     List<Pair<Traversal.Admin, Comparator>> toReplace = new ArrayList<>();
-                    List<Pair<Traversal.Admin, Comparator>> comparators = ((ComparatorHolder) step).getComparators();
+                    List<Pair<Traversal.Admin, Comparator>> comparators =
+                            ((ComparatorHolder) step).getComparators();
                     for (Pair<Traversal.Admin, Comparator> pair : comparators) {
-                        Pair<Traversal.Admin, Comparator> copy = new Pair(pair.getValue0(), pair.getValue1());
-                        if (copy.getValue0() != null && !TagKeyExtractorFactory.OrderBY.isSimpleValue(copy.getValue0())) {
+                        Pair<Traversal.Admin, Comparator> copy =
+                                new Pair(pair.getValue0(), pair.getValue1());
+                        if (copy.getValue0() != null
+                                && !TagKeyExtractorFactory.OrderBY.isSimpleValue(
+                                        copy.getValue0())) {
                             // fork subtask
-                            traversal.addStep(i++, new BySubTaskStep(traversal, copy.getValue0(), BySubTaskStep.JoinerType.OrderBy));
+                            traversal.addStep(
+                                    i++,
+                                    new BySubTaskStep(
+                                            traversal,
+                                            copy.getValue0(),
+                                            BySubTaskStep.JoinerType.OrderBy));
                             copy = copy.setAt0(new PreBySubTraversal());
                         }
                         toReplace.add(copy);

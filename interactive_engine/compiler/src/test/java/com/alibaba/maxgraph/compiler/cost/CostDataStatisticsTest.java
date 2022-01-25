@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,10 +15,10 @@
  */
 package com.alibaba.maxgraph.compiler.cost;
 
+import com.alibaba.maxgraph.compiler.api.schema.DataType;
 import com.alibaba.maxgraph.compiler.api.schema.GraphEdge;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.compiler.api.schema.GraphVertex;
-import com.alibaba.maxgraph.compiler.api.schema.DataType;
 import com.alibaba.maxgraph.compiler.cost.statistics.CostDataStatistics;
 import com.alibaba.maxgraph.compiler.cost.statistics.NodeStatistics;
 import com.alibaba.maxgraph.compiler.schema.DefaultEdgeRelation;
@@ -26,7 +26,6 @@ import com.alibaba.maxgraph.compiler.schema.DefaultGraphEdge;
 import com.alibaba.maxgraph.compiler.schema.DefaultGraphProperty;
 import com.alibaba.maxgraph.compiler.schema.DefaultGraphSchema;
 import com.alibaba.maxgraph.compiler.schema.DefaultGraphVertex;
-
 import com.alibaba.maxgraph.compiler.schema.DefaultSchemaFetcher;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -46,25 +45,48 @@ public class CostDataStatisticsTest {
         Map<String, Integer> propNameToIdList = Maps.newHashMap();
         propNameToIdList.put("name", 1);
 
-        DefaultGraphVertex post = new DefaultGraphVertex(1, "post", Lists.newArrayList(postIdProp), Lists.newArrayList(postIdProp));
-        DefaultGraphVertex comment = new DefaultGraphVertex(2, "comment", Lists.newArrayList(postIdProp), Lists.newArrayList(postIdProp));
-        DefaultGraphVertex person = new DefaultGraphVertex(3, "person", Lists.newArrayList(postIdProp), Lists.newArrayList(postIdProp));
+        DefaultGraphVertex post =
+                new DefaultGraphVertex(
+                        1, "post", Lists.newArrayList(postIdProp), Lists.newArrayList(postIdProp));
+        DefaultGraphVertex comment =
+                new DefaultGraphVertex(
+                        2,
+                        "comment",
+                        Lists.newArrayList(postIdProp),
+                        Lists.newArrayList(postIdProp));
+        DefaultGraphVertex person =
+                new DefaultGraphVertex(
+                        3,
+                        "person",
+                        Lists.newArrayList(postIdProp),
+                        Lists.newArrayList(postIdProp));
         Map<String, GraphVertex> vertexList = Maps.newHashMap();
         vertexList.put(post.getLabel(), post);
         vertexList.put(comment.getLabel(), comment);
         vertexList.put(person.getLabel(), person);
 
-        DefaultGraphEdge create = new DefaultGraphEdge(4, "create", Lists.newArrayList(), Lists.newArrayList(
-                new DefaultEdgeRelation(person, post),
-                new DefaultEdgeRelation(person, comment)
-        ));
-        DefaultGraphEdge reply = new DefaultGraphEdge(5, "reply", Lists.newArrayList(), Lists.newArrayList(
-                new DefaultEdgeRelation(comment, post),
-                new DefaultEdgeRelation(comment, comment)
-        ));
-        DefaultGraphEdge knows = new DefaultGraphEdge(6, "knows", Lists.newArrayList(), Lists.newArrayList(
-                new DefaultEdgeRelation(person, person)
-        ));
+        DefaultGraphEdge create =
+                new DefaultGraphEdge(
+                        4,
+                        "create",
+                        Lists.newArrayList(),
+                        Lists.newArrayList(
+                                new DefaultEdgeRelation(person, post),
+                                new DefaultEdgeRelation(person, comment)));
+        DefaultGraphEdge reply =
+                new DefaultGraphEdge(
+                        5,
+                        "reply",
+                        Lists.newArrayList(),
+                        Lists.newArrayList(
+                                new DefaultEdgeRelation(comment, post),
+                                new DefaultEdgeRelation(comment, comment)));
+        DefaultGraphEdge knows =
+                new DefaultGraphEdge(
+                        6,
+                        "knows",
+                        Lists.newArrayList(),
+                        Lists.newArrayList(new DefaultEdgeRelation(person, person)));
         Map<String, GraphEdge> edgeList = Maps.newHashMap();
         edgeList.put(create.getLabel(), create);
         edgeList.put(reply.getLabel(), reply);
@@ -117,12 +139,14 @@ public class CostDataStatisticsTest {
         Map<String, Double> outVertexCountList = outRatio.getVertexCountList();
         Assert.assertEquals((Double) 1000.0, outVertexCountList.get("person"));
 
-        NodeStatistics inRatio = statistics.getInRatio(startStatistics, Sets.newHashSet("reply", "create"));
+        NodeStatistics inRatio =
+                statistics.getInRatio(startStatistics, Sets.newHashSet("reply", "create"));
         Map<String, Double> inVertexCountList = inRatio.getVertexCountList();
         Assert.assertEquals((Double) 550.0, inVertexCountList.get("person"));
         Assert.assertEquals((Double) 200.0, inVertexCountList.get("comment"));
 
-        NodeStatistics bothRatio = statistics.getBothRatio(startStatistics, Sets.newHashSet("reply"));
+        NodeStatistics bothRatio =
+                statistics.getBothRatio(startStatistics, Sets.newHashSet("reply"));
         Map<String, Double> bothVertexCountList = bothRatio.getVertexCountList();
         Assert.assertEquals((Double) 200.0, bothVertexCountList.get("comment"));
     }

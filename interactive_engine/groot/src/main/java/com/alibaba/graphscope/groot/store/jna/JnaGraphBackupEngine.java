@@ -15,6 +15,7 @@ package com.alibaba.graphscope.groot.store.jna;
 
 import com.alibaba.graphscope.groot.store.GraphPartitionBackup;
 import com.sun.jna.Pointer;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,7 +53,10 @@ public class JnaGraphBackupEngine implements GraphPartitionBackup {
             }
             byte[] data = jnaResponse.getData();
             if (data == null || data.length != Integer.BYTES) {
-                throw new IOException("fail to get new created backup id from jna response, partition [" + this.partitionId + "]");
+                throw new IOException(
+                        "fail to get new created backup id from jna response, partition ["
+                                + this.partitionId
+                                + "]");
             }
             IntBuffer intBuf = ByteBuffer.wrap(data).order(ByteOrder.nativeOrder()).asIntBuffer();
             int[] intData = new int[intBuf.remaining()];
@@ -62,12 +66,14 @@ public class JnaGraphBackupEngine implements GraphPartitionBackup {
     }
 
     @Override
-    public void restoreFromPartitionBackup(int partitionBackupId, String PartitionRestorePath) throws IOException {
+    public void restoreFromPartitionBackup(int partitionBackupId, String PartitionRestorePath)
+            throws IOException {
         if (PartitionRestorePath.equals(this.backupPath)) {
             throw new IOException("restore path cannot be same with backup path");
         }
-        try (JnaResponse jnaResponse = GraphLibrary.INSTANCE.restoreFromBackup(
-                this.bePointer, PartitionRestorePath, partitionBackupId)) {
+        try (JnaResponse jnaResponse =
+                GraphLibrary.INSTANCE.restoreFromBackup(
+                        this.bePointer, PartitionRestorePath, partitionBackupId)) {
             if (!jnaResponse.success()) {
                 String errMsg = jnaResponse.getErrMsg();
                 throw new IOException(errMsg);
@@ -77,7 +83,8 @@ public class JnaGraphBackupEngine implements GraphPartitionBackup {
 
     @Override
     public void verifyPartitionBackup(int partitionBackupId) throws IOException {
-        try (JnaResponse jnaResponse = GraphLibrary.INSTANCE.verifyBackup(this.bePointer, partitionBackupId)) {
+        try (JnaResponse jnaResponse =
+                GraphLibrary.INSTANCE.verifyBackup(this.bePointer, partitionBackupId)) {
             if (!jnaResponse.success()) {
                 String errMsg = jnaResponse.getErrMsg();
                 throw new IOException(errMsg);
@@ -105,9 +112,15 @@ public class JnaGraphBackupEngine implements GraphPartitionBackup {
         }
         for (int bId : partitionBackupIds) {
             if (!readyPartitionBackupIds.contains(bId)) {
-                try (JnaResponse jnaResponse = GraphLibrary.INSTANCE.deleteBackup(this.bePointer, bId)) {
+                try (JnaResponse jnaResponse =
+                        GraphLibrary.INSTANCE.deleteBackup(this.bePointer, bId)) {
                     if (!jnaResponse.success()) {
-                        logger.error("fail to delete backup [" + bId + "] from partition [" + this.partitionId + "], ignore");
+                        logger.error(
+                                "fail to delete backup ["
+                                        + bId
+                                        + "] from partition ["
+                                        + this.partitionId
+                                        + "], ignore");
                     }
                 }
             }

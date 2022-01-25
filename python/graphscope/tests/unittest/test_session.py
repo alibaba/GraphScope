@@ -23,6 +23,7 @@ import tempfile
 import pytest
 
 import graphscope
+from graphscope.dataset import load_p2p_network
 
 COORDINATOR_HOME = os.path.join(os.path.dirname(__file__), "../", "../coordinator")
 new_data_dir = os.path.expandvars("${GS_TEST_DIR}/new_property/v2_e2")
@@ -53,72 +54,6 @@ def local_config_file():
         yield json_path
 
 
-# load property graph to specified session
-def load_graph(session):
-    g = session.load_from(
-        edges={
-            "e0": [
-                (
-                    "{}/twitter_e_0_0_0#header_row=true".format(new_data_dir),
-                    ["weight"],
-                    ("src", "v0"),
-                    ("dst", "v0"),
-                ),
-                (
-                    "{}/twitter_e_0_1_0#header_row=true".format(new_data_dir),
-                    ["weight"],
-                    ("src", "v0"),
-                    ("dst", "v1"),
-                ),
-                (
-                    "{}/twitter_e_1_0_0#header_row=true".format(new_data_dir),
-                    ["weight"],
-                    ("src", "v1"),
-                    ("dst", "v0"),
-                ),
-                (
-                    "{}/twitter_e_1_1_0#header_row=true".format(new_data_dir),
-                    ["weight"],
-                    ("src", "v1"),
-                    ("dst", "v1"),
-                ),
-            ],
-            "e1": [
-                (
-                    "{}/twitter_e_0_0_1#header_row=true".format(new_data_dir),
-                    ["weight"],
-                    ("src", "v0"),
-                    ("dst", "v0"),
-                ),
-                (
-                    "{}/twitter_e_0_1_1#header_row=true".format(new_data_dir),
-                    ["weight"],
-                    ("src", "v0"),
-                    ("dst", "v1"),
-                ),
-                (
-                    "{}/twitter_e_1_0_1#header_row=true".format(new_data_dir),
-                    ["weight"],
-                    ("src", "v1"),
-                    ("dst", "v0"),
-                ),
-                (
-                    "{}/twitter_e_1_1_1#header_row=true".format(new_data_dir),
-                    ["weight"],
-                    ("src", "v1"),
-                    ("dst", "v1"),
-                ),
-            ],
-        },
-        vertices={
-            "v0": "{}/twitter_v_0#header_row=true".format(new_data_dir),
-            "v1": "{}/twitter_v_1#header_row=true".format(new_data_dir),
-        },
-        generate_eid=False,
-    )
-    return g
-
-
 def test_default_session():
     default_sess = graphscope.get_default_session()
     assert default_sess.info["status"] == "active"
@@ -133,7 +68,7 @@ def test_launch_cluster_on_local(local_config_file):
     s.close()
 
 
-@pytest.mark.skipif("FULL-TEST-SUITE" not in os.environ, reason="Run in nightly CI")
+@pytest.mark.skipif("FULL_TEST_SUITE" not in os.environ, reason="Run in nightly CI")
 def test_launch_session_from_config(local_config_file):
     saved = os.environ.get("GS_CONFIG_PATH", "")
     try:
@@ -147,7 +82,7 @@ def test_launch_session_from_config(local_config_file):
         os.environ["GS_CONFIG_PATH"] = saved
 
 
-@pytest.mark.skipif("FULL-TEST-SUITE" not in os.environ, reason="Run in nightly CI")
+@pytest.mark.skipif("FULL_TEST_SUITE" not in os.environ, reason="Run in nightly CI")
 def test_launch_session_from_dict():
     conf_dict = {"num_workers": 4}
     s = graphscope.session(cluster_type="hosts", config=conf_dict)
@@ -157,7 +92,7 @@ def test_launch_session_from_dict():
     s.close()
 
 
-@pytest.mark.skipif("FULL-TEST-SUITE" not in os.environ, reason="Run in nightly CI")
+@pytest.mark.skipif("FULL_TEST_SUITE" not in os.environ, reason="Run in nightly CI")
 def test_config_dict_has_highest_priority(local_config_file):
     s = graphscope.session(
         cluster_type="hosts", config=local_config_file, num_workers=2
@@ -188,7 +123,7 @@ def test_correct_closing_on_hosts():
     s1.close()
 
 
-@pytest.mark.skipif("FULL-TEST-SUITE" not in os.environ, reason="Run in nightly CI")
+@pytest.mark.skipif("FULL_TEST_SUITE" not in os.environ, reason="Run in nightly CI")
 def test_border_cases():
     s1 = graphscope.session(cluster_type="hosts")
     s2 = graphscope.session(cluster_type="hosts")
@@ -197,7 +132,8 @@ def test_border_cases():
     s1.as_default()
     assert graphscope.get_default_session() == s1
 
-    g3 = load_graph(s3)
+    g3 = load_p2p_network(s3)
+    pg3 = g3.project(vertices={"host": ["id"]}, edges={"connect": ["dist"]})
 
     with pytest.raises(
         ValueError,
@@ -213,7 +149,7 @@ def test_border_cases():
 
     s3.as_default()
     assert graphscope.get_default_session() == s3
-    sssp = graphscope.property_sssp(g3, src=4)  # ok, g3 belong to s3
+    sssp = graphscope.sssp(pg3, src=4)  # ok, g3 belong to s3
     s3.close()
 
 

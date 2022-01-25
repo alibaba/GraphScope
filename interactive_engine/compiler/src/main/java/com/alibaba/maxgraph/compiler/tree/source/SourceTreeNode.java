@@ -15,7 +15,6 @@ package com.alibaba.maxgraph.compiler.tree.source;
 
 import com.alibaba.maxgraph.Message;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
-import com.alibaba.maxgraph.compiler.tree.TreeNodeLabelManager;
 import com.alibaba.maxgraph.compiler.logical.LogicalSourceVertex;
 import com.alibaba.maxgraph.compiler.logical.LogicalSubQueryPlan;
 import com.alibaba.maxgraph.compiler.logical.VertexIdManager;
@@ -24,7 +23,9 @@ import com.alibaba.maxgraph.compiler.optimizer.OperatorListManager;
 import com.alibaba.maxgraph.compiler.tree.BaseTreeNode;
 import com.alibaba.maxgraph.compiler.tree.NodeType;
 import com.alibaba.maxgraph.compiler.tree.TreeConstants;
+import com.alibaba.maxgraph.compiler.tree.TreeNodeLabelManager;
 import com.alibaba.maxgraph.compiler.utils.CompilerUtils;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.tinkerpop.gremlin.process.traversal.Compare;
 import org.apache.tinkerpop.gremlin.process.traversal.Contains;
@@ -36,8 +37,6 @@ import org.slf4j.LoggerFactory;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 public abstract class SourceTreeNode extends BaseTreeNode {
     private static final Logger logger = LoggerFactory.getLogger(SourceTreeNode.class);

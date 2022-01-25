@@ -17,14 +17,15 @@
 package com.alibaba.graphscope.utils;
 
 import com.alibaba.fastjson.JSONObject;
+import com.alibaba.graphscope.context.DefaultContextBase;
 import com.alibaba.graphscope.context.LabeledVertexDataContext;
-import com.alibaba.graphscope.context.ProjectedDefaultContextBase;
 import com.alibaba.graphscope.context.PropertyDefaultContextBase;
 import com.alibaba.graphscope.context.VertexDataContext;
 import com.alibaba.graphscope.fragment.ArrowFragment;
-import com.alibaba.graphscope.fragment.ArrowProjectedFragment;
+import com.alibaba.graphscope.fragment.IFragment;
 import com.alibaba.graphscope.parallel.DefaultMessageManager;
 import com.alibaba.graphscope.parallel.PropertyMessageManager;
+
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -33,30 +34,51 @@ public class ContextUtilsTest {
     @Test
     public void test() {
         Assert.assertTrue(
-                ContextUtils.getPropertyCtxObjBaseClzName(new SampleContext())
+                ContextUtils.getCtxObjBaseClzName(new SampleContext())
                         .equals("LabeledVertexDataContext"));
         Assert.assertTrue(
-                ContextUtils.getProjectedCtxObjBaseClzName(new SampleContext2())
+                ContextUtils.getCtxObjBaseClzName(new SampleContext2())
                         .equals("VertexDataContext"));
     }
 
     public static class SampleContext extends LabeledVertexDataContext<Long, Double>
             implements PropertyDefaultContextBase<Long> {
+
         @Override
-        public void init(
+        public void Init(
                 ArrowFragment<Long> fragment,
                 PropertyMessageManager messageManager,
                 JSONObject jsonObject) {}
     }
 
     public static class SampleContext2
-            extends VertexDataContext<ArrowProjectedFragment<Long, Long, Long, Double>, Double>
-            implements ProjectedDefaultContextBase<
-                    ArrowProjectedFragment<Long, Long, Long, Double>> {
+            extends VertexDataContext<IFragment<Long, Long, Long, Double>, Double>
+            implements DefaultContextBase<Long, Long, Long, Double> {
+
+        /**
+         * Called by grape framework, before any PEval. You can initiating data structures need
+         * during super steps here.
+         *
+         * @param frag The graph fragment providing accesses to graph data.
+         * @param messageManager The message manger which manages messages between fragments.
+         * @param jsonObject String args from cmdline.
+         * @see IFragment
+         * @see DefaultMessageManager
+         */
         @Override
-        public void init(
-                ArrowProjectedFragment<Long, Long, Long, Double> fragment,
+        public void Init(
+                IFragment<Long, Long, Long, Double> frag,
                 DefaultMessageManager messageManager,
                 JSONObject jsonObject) {}
+
+        /**
+         * Output will be executed when the computations finalizes. Data maintained in this context
+         * shall be outputted here.
+         *
+         * @param frag The graph fragment contains the graph info.
+         * @see IFragment
+         */
+        @Override
+        public void Output(IFragment<Long, Long, Long, Double> frag) {}
     }
 }

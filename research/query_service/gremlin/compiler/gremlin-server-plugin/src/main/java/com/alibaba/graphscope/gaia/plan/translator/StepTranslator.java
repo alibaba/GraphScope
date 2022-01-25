@@ -18,6 +18,7 @@ package com.alibaba.graphscope.gaia.plan.translator;
 import com.alibaba.graphscope.gaia.plan.LogicPlanGlobalMap;
 import com.alibaba.graphscope.gaia.plan.resource.StepResource;
 import com.alibaba.graphscope.gaia.plan.translator.builder.StepBuilder;
+
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,11 +37,13 @@ public class StepTranslator extends AttributeTranslator<StepBuilder, Void> {
     protected Function<StepBuilder, Void> getApplyFunc() {
         return (StepBuilder stepBuilder) -> {
             Step step = stepBuilder.getStep();
-            Optional<StepResource> constructorOpt = LogicPlanGlobalMap.getResourceConstructor(LogicPlanGlobalMap.stepType(step));
+            Optional<StepResource> constructorOpt =
+                    LogicPlanGlobalMap.getResourceConstructor(LogicPlanGlobalMap.stepType(step));
             if (constructorOpt.isPresent()) {
                 constructorOpt.get().attachResource(stepBuilder);
             } else {
-                throw new UnsupportedOperationException("compiler not support StepResource of step " + step.getClass());
+                throw new UnsupportedOperationException(
+                        "compiler not support StepResource of step " + step.getClass());
             }
             return null;
         };

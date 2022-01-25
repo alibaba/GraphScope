@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,6 +21,7 @@ import com.alibaba.maxgraph.compiler.dfs.DfsTraversal;
 import com.alibaba.maxgraph.compiler.optimizer.QueryFlowManager;
 import com.alibaba.maxgraph.structure.graph.TinkerMaxGraph;
 import com.google.protobuf.TextFormat;
+
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 
@@ -32,7 +33,8 @@ public class DfsOperatorTest extends AbstractOperatorTest {
     private TinkerMaxGraph tinkerMaxGraph;
 
     public DfsOperatorTest() throws IOException {
-        tinkerMaxGraph = new TinkerMaxGraph(new MaxGraphConfiguration(), null,  new DefaultGraphDfs());
+        tinkerMaxGraph =
+                new TinkerMaxGraph(new MaxGraphConfiguration(), null, new DefaultGraphDfs());
     }
 
     @Test
@@ -43,7 +45,11 @@ public class DfsOperatorTest extends AbstractOperatorTest {
         System.out.println(resultContent);
         if (super.writeFlag) {
             try {
-                IOUtils.write(resultContent, new FileOutputStream(new File(getWriteDirectory() + "/" + name.getMethodName())), "utf-8");
+                IOUtils.write(
+                        resultContent,
+                        new FileOutputStream(
+                                new File(getWriteDirectory() + "/" + name.getMethodName())),
+                        "utf-8");
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

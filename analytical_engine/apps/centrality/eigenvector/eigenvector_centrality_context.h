@@ -33,7 +33,7 @@ class EigenvectorCentralityContext
       : grape::VertexDataContext<FRAG_T, double>(fragment, true),
         x(this->data()) {}
 
-  void Init(grape::DefaultMessageManager& messages, double tolerance,
+  void Init(grape::ParallelMessageManager& messages, double tolerance,
             int max_round) {
     auto& frag = this->fragment();
     auto vertices = frag.Vertices();

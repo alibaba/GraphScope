@@ -23,12 +23,12 @@ import org.apache.tinkerpop.gremlin.process.traversal.strategy.AbstractTraversal
 
 import java.util.List;
 
-public class WhereEndLimitStrategy extends AbstractTraversalStrategy<TraversalStrategy.ProviderOptimizationStrategy>
+public class WhereEndLimitStrategy
+        extends AbstractTraversalStrategy<TraversalStrategy.ProviderOptimizationStrategy>
         implements TraversalStrategy.ProviderOptimizationStrategy {
     private static final WhereEndLimitStrategy INSTANCE = new WhereEndLimitStrategy();
 
-    private WhereEndLimitStrategy() {
-    }
+    private WhereEndLimitStrategy() {}
 
     public static WhereEndLimitStrategy instance() {
         return INSTANCE;

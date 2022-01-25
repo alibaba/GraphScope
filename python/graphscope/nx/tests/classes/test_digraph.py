@@ -83,8 +83,6 @@ class TestDiGraph(BaseAttrDiGraphTester, TestGraph):
         G.remove_edge(0, 1)
         assert G.succ == {0: {2: {}}, 1: {0: {}, 2: {}}, 2: {0: {}, 1: {}}}
         assert G.pred == {0: {1: {}, 2: {}}, 1: {2: {}}, 2: {0: {}, 1: {}}}
-        with pytest.raises(nx.NetworkXError):
-            G.remove_edge(-1, 0)
 
     def test_remove_edges_from(self):
         G = self.K3

@@ -16,17 +16,43 @@
 
 package com.alibaba.graphscope.runtime;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Vector;
+
+/** Load JNI library with library name. */
 public class LoadLibrary {
+
+    private static Logger logger = LoggerFactory.getLogger(LoadLibrary.class);
+    static java.lang.reflect.Field LIBRARIES = null;
+
     static {
         System.loadLibrary("grape-jni");
     }
+
     /**
      * Loading the library with library name.
      *
      * @param userLibrary name for library to be loaded.
      */
     public static void invoke(String userLibrary) {
-        System.out.println("loading " + userLibrary);
+        logger.info("loading " + userLibrary);
         System.loadLibrary(userLibrary);
+        logger.info("Load libary cl: " + LoadLibrary.class.getClassLoader());
+        try {
+            LIBRARIES = ClassLoader.class.getDeclaredField("loadedLibraryNames");
+            LIBRARIES.setAccessible(true);
+            final Vector<String> libraries =
+                    (Vector<String>) LIBRARIES.get(LoadLibrary.class.getClassLoader());
+            logger.info(
+                    "Loaded library in cl "
+                            + LoadLibrary.class.getClassLoader()
+                            + ": "
+                            + String.join(",", libraries.toArray(new String[] {})));
+
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
     }
 }

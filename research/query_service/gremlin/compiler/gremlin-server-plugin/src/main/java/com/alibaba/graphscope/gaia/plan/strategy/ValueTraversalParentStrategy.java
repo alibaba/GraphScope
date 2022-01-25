@@ -1,6 +1,7 @@
 package com.alibaba.graphscope.gaia.plan.strategy;
 
 import com.alibaba.graphscope.gaia.plan.PlanUtils;
+
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalStrategy;
@@ -17,11 +18,11 @@ import org.javatuples.Pair;
 import java.util.List;
 import java.util.Map;
 
-public class ValueTraversalParentStrategy extends AbstractTraversalStrategy<TraversalStrategy.ProviderOptimizationStrategy> {
+public class ValueTraversalParentStrategy
+        extends AbstractTraversalStrategy<TraversalStrategy.ProviderOptimizationStrategy> {
     private static final ValueTraversalParentStrategy INSTANCE = new ValueTraversalParentStrategy();
 
-    private ValueTraversalParentStrategy() {
-    }
+    private ValueTraversalParentStrategy() {}
 
     public static ValueTraversalParentStrategy instance() {
         return INSTANCE;
@@ -33,12 +34,16 @@ public class ValueTraversalParentStrategy extends AbstractTraversalStrategy<Trav
         for (int i = 0; i < steps.size(); ++i) {
             Step step = steps.get(i);
             if (step instanceof OrderGlobalStep || step instanceof OrderGlobalLimitStep) {
-                ((ComparatorHolder) step).getComparators().forEach(k -> {
-                    Traversal.Admin admin = (Traversal.Admin) ((Pair) k).getValue0();
-                    if (admin instanceof ElementValueTraversal) {
-                        setParent((ElementValueTraversal) admin, step);
-                    }
-                });
+                ((ComparatorHolder) step)
+                        .getComparators()
+                        .forEach(
+                                k -> {
+                                    Traversal.Admin admin =
+                                            (Traversal.Admin) ((Pair) k).getValue0();
+                                    if (admin instanceof ElementValueTraversal) {
+                                        setParent((ElementValueTraversal) admin, step);
+                                    }
+                                });
             } else if (step instanceof GroupCountStep) {
                 Traversal.Admin keyTraversal = PlanUtils.getKeyTraversal(step);
                 if (keyTraversal != null && keyTraversal instanceof ElementValueTraversal) {
@@ -61,7 +66,9 @@ public class ValueTraversalParentStrategy extends AbstractTraversalStrategy<Trav
                     }
                 }
             } else if (step instanceof WherePredicateStep) {
-                TraversalRing modulateBy = PlanUtils.getTraversalRing(((WherePredicateStep) step).getLocalChildren(), true);
+                TraversalRing modulateBy =
+                        PlanUtils.getTraversalRing(
+                                ((WherePredicateStep) step).getLocalChildren(), true);
                 for (int k = 0; k < modulateBy.size(); ++k) {
                     Traversal.Admin current = modulateBy.next();
                     if (current != null && current instanceof ElementValueTraversal) {
@@ -69,7 +76,9 @@ public class ValueTraversalParentStrategy extends AbstractTraversalStrategy<Trav
                     }
                 }
             } else if (step instanceof TraversalMapStep) {
-                Traversal.Admin admin = (Traversal.Admin) ((TraversalMapStep) step).getLocalChildren().iterator().next();
+                Traversal.Admin admin =
+                        (Traversal.Admin)
+                                ((TraversalMapStep) step).getLocalChildren().iterator().next();
                 if (admin != null && admin instanceof ElementValueTraversal) {
                     setParent((ElementValueTraversal) admin, step);
                 }

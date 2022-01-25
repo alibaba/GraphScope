@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,16 +15,16 @@
  */
 package com.alibaba.maxgraph.structure;
 
-import java.util.Iterator;
-import java.util.Map;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.alibaba.maxgraph.sdkcommon.graph.ElementId;
 import com.alibaba.maxgraph.structure.graph.MaxGraph;
-
 import com.google.common.collect.Iterators;
+
 import org.apache.tinkerpop.gremlin.structure.Direction;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import java.util.Iterator;
+import java.util.Map;
 
 public class Vertex extends AbstractElement {
 
@@ -53,5 +53,4 @@ public class Vertex extends AbstractElement {
         super.addProperty(key, value);
         super.graph.addVertex(super.label, super.getProperties());
     }
-
 }

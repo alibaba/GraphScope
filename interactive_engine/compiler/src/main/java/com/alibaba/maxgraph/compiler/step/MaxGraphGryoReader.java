@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,9 +15,12 @@
  */
 package com.alibaba.maxgraph.compiler.step;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.alibaba.maxgraph.structure.graph.TinkerMaxGraph;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+
 import org.apache.tinkerpop.gremlin.process.computer.GraphFilter;
 import org.apache.tinkerpop.gremlin.structure.*;
 import org.apache.tinkerpop.gremlin.structure.io.GraphReader;
@@ -42,8 +45,6 @@ import java.io.OutputStream;
 import java.util.*;
 import java.util.function.Function;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 public class MaxGraphGryoReader implements GraphReader {
     private final Kryo kryo;
     private final Map<GraphFilter, StarGraphGryoSerializer> graphFilterCache = new HashMap<>();
@@ -65,7 +66,8 @@ public class MaxGraphGryoReader implements GraphReader {
      * @throws IOException
      */
     @Override
-    public void readGraph(final InputStream inputStream, final Graph graphToWriteTo) throws IOException {
+    public void readGraph(final InputStream inputStream, final Graph graphToWriteTo)
+            throws IOException {
         if (!(graphToWriteTo instanceof TinkerMaxGraph)) {
             throw new IOException("Only support snapshot maxgraph here.");
         }
@@ -126,7 +128,8 @@ public class MaxGraphGryoReader implements GraphReader {
                     keyValues.add(property.key());
                     keyValues.add(property.value());
                 }
-                tinkerMaxGraph.addEdgeAsync(insertedSrcVertex, insertedDstVertex, edge.label(), keyValues.toArray());
+                tinkerMaxGraph.addEdgeAsync(
+                        insertedSrcVertex, insertedDstVertex, edge.label(), keyValues.toArray());
             }
         }
         tx.commit();
@@ -144,15 +147,18 @@ public class MaxGraphGryoReader implements GraphReader {
      * @param attachEdgesOfThisDirection only edges of this direction are passed to the {@code edgeMaker}.
      */
     @Override
-    public Iterator<Vertex> readVertices(final InputStream inputStream,
-                                         final Function<Attachable<Vertex>, Vertex> vertexAttachMethod,
-                                         final Function<Attachable<Edge>, Edge> edgeAttachMethod,
-                                         final Direction attachEdgesOfThisDirection) throws IOException {
+    public Iterator<Vertex> readVertices(
+            final InputStream inputStream,
+            final Function<Attachable<Vertex>, Vertex> vertexAttachMethod,
+            final Function<Attachable<Edge>, Edge> edgeAttachMethod,
+            final Direction attachEdgesOfThisDirection)
+            throws IOException {
         throw new UnsupportedOperationException("Not support");
     }
 
     @Override
-    public Optional<Vertex> readVertex(final InputStream inputStream, final GraphFilter graphFilter) throws IOException {
+    public Optional<Vertex> readVertex(final InputStream inputStream, final GraphFilter graphFilter)
+            throws IOException {
         StarGraphGryoSerializer serializer = this.graphFilterCache.get(graphFilter);
         if (null == serializer) {
             serializer = StarGraphGryoSerializer.withGraphFilter(graphFilter);
@@ -175,7 +181,10 @@ public class MaxGraphGryoReader implements GraphReader {
      * @param vertexAttachMethod a function that creates re-attaches a {@link Vertex} to a {@link Host} object.
      */
     @Override
-    public Vertex readVertex(final InputStream inputStream, final Function<Attachable<Vertex>, Vertex> vertexAttachMethod) throws IOException {
+    public Vertex readVertex(
+            final InputStream inputStream,
+            final Function<Attachable<Vertex>, Vertex> vertexAttachMethod)
+            throws IOException {
         return readVertex(inputStream, vertexAttachMethod, null, null);
     }
 
@@ -190,13 +199,15 @@ public class MaxGraphGryoReader implements GraphReader {
      * @param attachEdgesOfThisDirection only edges of this direction are passed to the {@code edgeMaker}.
      */
     @Override
-    public Vertex readVertex(final InputStream inputStream,
-                             final Function<Attachable<Vertex>, Vertex> vertexAttachMethod,
-                             final Function<Attachable<Edge>, Edge> edgeAttachMethod,
-                             final Direction attachEdgesOfThisDirection) throws IOException {
+    public Vertex readVertex(
+            final InputStream inputStream,
+            final Function<Attachable<Vertex>, Vertex> vertexAttachMethod,
+            final Function<Attachable<Edge>, Edge> edgeAttachMethod,
+            final Direction attachEdgesOfThisDirection)
+            throws IOException {
         throw new UnsupportedOperationException("Not support");
     }
-    
+
     /**
      * Read a {@link VertexProperty} from output generated by
      * {@link GryoWriter#writeVertexProperty(OutputStream, VertexProperty)} or via an {@link VertexProperty} passed
@@ -208,11 +219,14 @@ public class MaxGraphGryoReader implements GraphReader {
      *                                   {@link Host} object.
      */
     @Override
-    public VertexProperty readVertexProperty(final InputStream inputStream,
-                                             final Function<Attachable<VertexProperty>, VertexProperty> vertexPropertyAttachMethod) throws IOException {
+    public VertexProperty readVertexProperty(
+            final InputStream inputStream,
+            final Function<Attachable<VertexProperty>, VertexProperty> vertexPropertyAttachMethod)
+            throws IOException {
         final Input input = new Input(inputStream);
         readHeader(input);
-        final Attachable<VertexProperty> attachable = kryo.readObject(input, DetachedVertexProperty.class);
+        final Attachable<VertexProperty> attachable =
+                kryo.readObject(input, DetachedVertexProperty.class);
         return vertexPropertyAttachMethod.apply(attachable);
     }
 
@@ -225,7 +239,9 @@ public class MaxGraphGryoReader implements GraphReader {
      * @param edgeAttachMethod a function that creates re-attaches a {@link Edge} to a {@link Host} object.
      */
     @Override
-    public Edge readEdge(final InputStream inputStream, final Function<Attachable<Edge>, Edge> edgeAttachMethod) throws IOException {
+    public Edge readEdge(
+            final InputStream inputStream, final Function<Attachable<Edge>, Edge> edgeAttachMethod)
+            throws IOException {
         final Input input = new Input(inputStream);
         readHeader(input);
         final Attachable<Edge> attachable = kryo.readObject(input, DetachedEdge.class);
@@ -241,8 +257,10 @@ public class MaxGraphGryoReader implements GraphReader {
      * @param propertyAttachMethod a function that creates re-attaches a {@link Property} to a {@link Host} object.
      */
     @Override
-    public Property readProperty(final InputStream inputStream,
-                                 final Function<Attachable<Property>, Property> propertyAttachMethod) throws IOException {
+    public Property readProperty(
+            final InputStream inputStream,
+            final Function<Attachable<Property>, Property> propertyAttachMethod)
+            throws IOException {
         final Input input = new Input(inputStream);
         readHeader(input);
         final Attachable<Property> attachable = kryo.readObject(input, DetachedProperty.class);
@@ -253,13 +271,15 @@ public class MaxGraphGryoReader implements GraphReader {
      * {@inheritDoc}
      */
     @Override
-    public <C> C readObject(final InputStream inputStream, final Class<? extends C> clazz) throws IOException {
+    public <C> C readObject(final InputStream inputStream, final Class<? extends C> clazz)
+            throws IOException {
         return clazz.cast(this.kryo.readClassAndObject(new Input(inputStream)));
     }
 
     private void readHeader(final Input input) throws IOException {
         if (!Arrays.equals(GryoMapper.GIO, input.readBytes(3)))
-            throw new IOException("Invalid format - first three bytes of header do not match expected value");
+            throw new IOException(
+                    "Invalid format - first three bytes of header do not match expected value");
 
         // skip the next 13 bytes - for future use
         input.readBytes(13);
@@ -269,7 +289,7 @@ public class MaxGraphGryoReader implements GraphReader {
         return new Builder();
     }
 
-    public final static class Builder implements ReaderBuilder<MaxGraphGryoReader> {
+    public static final class Builder implements ReaderBuilder<MaxGraphGryoReader> {
 
         private long batchSize = 10000;
         /**
@@ -277,8 +297,7 @@ public class MaxGraphGryoReader implements GraphReader {
          */
         private Mapper<Kryo> gryoMapper = GryoMapper.build().create();
 
-        private Builder() {
-        }
+        private Builder() {}
 
         /**
          * Number of mutations to perform before a commit is executed when using
@@ -300,6 +319,5 @@ public class MaxGraphGryoReader implements GraphReader {
         public MaxGraphGryoReader create() {
             return new MaxGraphGryoReader(batchSize, this.gryoMapper);
         }
-
     }
 }

@@ -15,6 +15,7 @@ package com.alibaba.graphscope.groot.discovery;
 
 import com.alibaba.maxgraph.common.RoleType;
 import com.alibaba.maxgraph.common.config.*;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

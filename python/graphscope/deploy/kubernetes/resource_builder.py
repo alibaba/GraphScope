@@ -18,6 +18,7 @@
 
 
 import logging
+import math
 import os
 import sys
 
@@ -640,9 +641,9 @@ class GSEngineBuilder(ReplicaSetBuilder):
     _engine_requests_mem = "1Gi"
 
     _mars_worker_requests_cpu = 0.2
-    _mars_worker_requests_mem = "512Mi"
+    _mars_worker_requests_mem = "1Gi"
     _mars_scheduler_requests_cpu = 0.2
-    _mars_scheduler_requests_mem = "512Mi"
+    _mars_scheduler_requests_mem = "1Gi"
 
     def __init__(self, name, labels, num_workers, image_pull_policy):
         self._name = name
@@ -671,7 +672,8 @@ class GSEngineBuilder(ReplicaSetBuilder):
         vineyard_command = " ".join(
             [
                 sys.executable,
-                "-m" "vineyard",
+                "-m",
+                "vineyard",
                 "--size=%s" % str(shared_mem),
                 '--etcd_endpoint="%s"' % (";".join(etcd_endpoints),),
                 "--socket=%s" % self._ipc_socket_file,
@@ -809,6 +811,15 @@ class GSEngineBuilder(ReplicaSetBuilder):
     def add_mars_worker_container(
         self, name, image, cpu, mem, preemptive, port, scheduler_endpoint
     ):
+        # compute n cpu, to avoid mars worker launches too many actors
+        if isinstance(cpu, str) and cpu[-1] == "m":
+            n_cpu = math.ceil(int("200m"[:-1]) / 1000)
+        if isinstance(cpu, (int, float)):
+            n_cpu = math.ceil(cpu)
+        else:
+            # by default: 1
+            n_cpu = 1
+
         cmd = [
             "while ! ls $VINEYARD_IPC_SOCKET 2>/dev/null; do sleep 1 && echo -n .; done",
             ";",
@@ -827,9 +838,10 @@ class GSEngineBuilder(ReplicaSetBuilder):
             "python3",
             "-m",
             "mars.deploy.oscar.worker",
+            "--n-cpu=%d" % n_cpu,
             "--endpoint=$MY_POD_IP:%s" % port,
             "--supervisors=%s" % scheduler_endpoint,
-            "--log-level=debug",
+            "--log-level=DEBUG",
             "--config-file=/tmp/mars-on-vineyard.yml",
         ]
         cmd = ["bash", "-c", " ".join(cmd)]
@@ -868,7 +880,9 @@ class GSEngineBuilder(ReplicaSetBuilder):
             )
         )
 
-    def add_mars_scheduler_container(self, name, image, cpu, mem, preemptive, port):
+    def add_mars_scheduler_container(
+        self, name, image, cpu, mem, preemptive, port, web_port
+    ):
         cmd = [
             "while ! ls $VINEYARD_IPC_SOCKET 2>/dev/null; do sleep 1 && echo -n .; done",
             ";",
@@ -888,7 +902,8 @@ class GSEngineBuilder(ReplicaSetBuilder):
             "-m",
             "mars.deploy.oscar.supervisor",
             "--endpoint=$MY_POD_IP:%s" % port,
-            "--log-level=debug",
+            "--web-port=%s" % web_port,
+            "--log-level=DEBUG",
             "--config-file=/tmp/mars-on-vineyard.yml",
         ]
         cmd = ["bash", "-c", " ".join(cmd)]
@@ -919,13 +934,15 @@ class GSEngineBuilder(ReplicaSetBuilder):
                     "imagePullPolicy": self._image_pull_policy,
                     "resources": dict((k, v) for k, v in resources_dict.items() if v)
                     or None,
-                    "ports": [PortBuilder(port).build()],
+                    "ports": [PortBuilder(port).build(), PortBuilder(web_port).build()],
                     "volumeMounts": volumeMounts or None,
                     "livenessProbe": None,
                     "readinessProbe": probe.build(),
                 }
             )
         )
+
+        super().add_annotation("kubectl.kubernetes.io/default-container", name)
 
 
 class PodBuilder(object):
@@ -1115,7 +1132,7 @@ class GSEtcdBuilder(object):
                         ],
                         "volumeMounts": volumeMounts or None,
                         "livenessProbe": self.build_liveness_probe().build(),
-                        "readinessProbe": None,
+                        "readinessProbe": self.build_readiness_probe().build(),
                         "lifecycle": None,
                     }
                 )
@@ -1142,7 +1159,12 @@ class GSEtcdBuilder(object):
             "ETCDCTL_API=3 etcdctl --endpoints=http://[127.0.0.1]:%s get foo"
             % str(self._listen_client_service_port),
         ]
-        return ExecProbeBuilder(liveness_cmd, timeout=15, failure_thresh=8)
+        return ExecProbeBuilder(liveness_cmd, timeout=15, period=10, failure_thresh=8)
+
+    def build_readiness_probe(self):
+        return TcpProbeBuilder(
+            self._listen_peer_service_port, timeout=15, period=10, failure_thresh=8
+        )
 
 
 class GSGraphManagerBuilder(DeploymentBuilder):

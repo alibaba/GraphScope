@@ -46,7 +46,11 @@ public class VertexWithByStep<E extends Element> extends VertexStep<E> implement
     private static final long serialVersionUID = -4061246771715369013L;
     private Function function = null;
 
-    public VertexWithByStep(Traversal.Admin traversal, Class<E> returnClass, Direction direction, String... edgeLabels) {
+    public VertexWithByStep(
+            Traversal.Admin traversal,
+            Class<E> returnClass,
+            Direction direction,
+            String... edgeLabels) {
         super(traversal, returnClass, direction, edgeLabels);
     }
 
@@ -79,11 +83,8 @@ public class VertexWithByStep<E extends Element> extends VertexStep<E> implement
     }
 
     public void modulateBy(final Function function, final Comparator comparator) {
-        if (function instanceof T)
-            this.modulateBy((T) function, comparator);
-        else if (function instanceof Column)
-            this.modulateBy((Column) function, comparator);
-        else
-            this.modulateBy(__.map(new FunctionTraverser<>(function)).asAdmin(), comparator);
+        if (function instanceof T) this.modulateBy((T) function, comparator);
+        else if (function instanceof Column) this.modulateBy((Column) function, comparator);
+        else this.modulateBy(__.map(new FunctionTraverser<>(function)).asAdmin(), comparator);
     }
 }

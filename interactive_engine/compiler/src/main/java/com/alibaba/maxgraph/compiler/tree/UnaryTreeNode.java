@@ -13,16 +13,16 @@
  */
 package com.alibaba.maxgraph.compiler.tree;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.compiler.logical.LogicalEdge;
 import com.alibaba.maxgraph.compiler.logical.LogicalSubQueryPlan;
 import com.alibaba.maxgraph.compiler.logical.LogicalUnaryVertex;
+import com.alibaba.maxgraph.compiler.logical.LogicalVertex;
 import com.alibaba.maxgraph.compiler.logical.VertexIdManager;
 import com.alibaba.maxgraph.compiler.logical.function.ProcessorFunction;
 import com.alibaba.maxgraph.compiler.optimizer.ContextManager;
-import com.alibaba.maxgraph.compiler.logical.LogicalVertex;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 public abstract class UnaryTreeNode extends BaseTreeNode {
     private TreeNode input;

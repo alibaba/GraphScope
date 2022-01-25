@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -36,7 +36,6 @@ public class PrepareException extends Exception {
     private ErrorCode errorCode;
     private Object message;
 
-
     public PrepareException(int error) {
         super();
         Preconditions.checkArgument(error != 0);
@@ -46,14 +45,13 @@ public class PrepareException extends Exception {
     public PrepareException(int error, Object message) {
         super(message.toString());
         Preconditions.checkArgument(error != 0);
-        if(error < 0) {
+        if (error < 0) {
             this.errorCode = ErrorCode.unknown;
         } else {
             this.errorCode = ErrorCode.values()[error];
         }
         this.message = message;
     }
-
 
     public PrepareException(ErrorCode error, Object message) {
         super(message.toString());

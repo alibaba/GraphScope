@@ -67,4 +67,6 @@ public class CppClassName {
 
     public static final String STD_UNORDERED_MAP = "std::unordered_map";
     public static final String GS_VERTEX_ARRAY = "gs::VertexArrayDefault";
+    public static final String GRAPE_IN_ARCHIVE = "grape::InArchive";
+    public static final String GRAPE_OUT_ARCHIVE = "grape::OutArchive";
 }

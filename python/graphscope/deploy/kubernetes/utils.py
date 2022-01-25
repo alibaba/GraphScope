@@ -213,8 +213,13 @@ class KubernetesPodWatcher(object):
                 )
 
 
-def get_service_endpoints(
-    api_client, namespace, name, service_type, timeout_seconds=60
+def get_service_endpoints(  # noqa: C901
+    api_client,
+    namespace,
+    name,
+    service_type,
+    timeout_seconds=60,
+    query_port=None,
 ):
     """Get service endpoint by service name and service type.
 
@@ -259,7 +264,8 @@ def get_service_endpoints(
         for pod in pods.items:
             ips.append(pod.status.host_ip)
         for port in svc.spec.ports:
-            ports.append(port.node_port)
+            if query_port is None or port.port == query_port:
+                ports.append(port.node_port)
     elif service_type == "LoadBalancer":
         while True:
             svc = core_api.read_namespaced_service(name=name, namespace=namespace)
@@ -270,7 +276,8 @@ def get_service_endpoints(
                     else:
                         ips.append(ingress.ip)
                 for port in svc.spec.ports:
-                    ports.append(port.port)
+                    if query_port is None or port.port == query_port:
+                        ports.append(port.port)
                 break
             time.sleep(1)
             if time.time() - start_time > timeout_seconds:
@@ -278,7 +285,8 @@ def get_service_endpoints(
     elif service_type == "ClusterIP":
         ips.append(svc.spec.cluster_ip)
         for port in svc.spec.ports:
-            ports.append(port.port)
+            if query_port is None or port.port == query_port:
+                ports.append(port.port)
     else:
         raise K8sError("Service type {0} is not supported yet".format(service_type))
 

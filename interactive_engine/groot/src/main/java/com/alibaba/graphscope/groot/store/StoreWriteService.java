@@ -13,12 +13,16 @@
  */
 package com.alibaba.graphscope.groot.store;
 
+import com.alibaba.graphscope.groot.operation.StoreDataBatch;
 import com.alibaba.maxgraph.proto.groot.StoreDataBatchPb;
 import com.alibaba.maxgraph.proto.groot.StoreWriteGrpc;
 import com.alibaba.maxgraph.proto.groot.WriteStoreRequest;
 import com.alibaba.maxgraph.proto.groot.WriteStoreResponse;
-import com.alibaba.graphscope.groot.operation.StoreDataBatch;
+
 import io.grpc.stub.StreamObserver;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class StoreWriteService extends StoreWriteGrpc.StoreWriteImplBase {
 
@@ -31,9 +35,13 @@ public class StoreWriteService extends StoreWriteGrpc.StoreWriteImplBase {
     @Override
     public void writeStore(
             WriteStoreRequest request, StreamObserver<WriteStoreResponse> responseObserver) {
-        StoreDataBatchPb batchProto = request.getBatch();
+        List<StoreDataBatchPb> dataBatchesList = request.getDataBatchesList();
+        List<StoreDataBatch> batches = new ArrayList<>(dataBatchesList.size());
         try {
-            boolean success = writerAgent.writeStore(StoreDataBatch.parseProto(batchProto));
+            for (StoreDataBatchPb pb : dataBatchesList) {
+                batches.add(StoreDataBatch.parseProto(pb));
+            }
+            boolean success = writerAgent.writeStore2(batches);
             WriteStoreResponse response =
                     WriteStoreResponse.newBuilder().setSuccess(success).build();
             responseObserver.onNext(response);

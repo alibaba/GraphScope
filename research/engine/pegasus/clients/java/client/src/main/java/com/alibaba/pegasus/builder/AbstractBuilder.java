@@ -15,11 +15,11 @@
  */
 package com.alibaba.pegasus.builder;
 
-import com.alibaba.pegasus.service.protocol.PegasusClient.Sink;
-import com.alibaba.pegasus.service.protocol.PegasusClient.TaskPlan;
-import com.alibaba.pegasus.service.protocol.PegasusClient.Source;
 import com.alibaba.pegasus.service.protocol.PegasusClient.JobConfig;
 import com.alibaba.pegasus.service.protocol.PegasusClient.JobRequest;
+import com.alibaba.pegasus.service.protocol.PegasusClient.Sink;
+import com.alibaba.pegasus.service.protocol.PegasusClient.Source;
+import com.alibaba.pegasus.service.protocol.PegasusClient.TaskPlan;
 import com.google.protobuf.ByteString;
 
 public abstract class AbstractBuilder {

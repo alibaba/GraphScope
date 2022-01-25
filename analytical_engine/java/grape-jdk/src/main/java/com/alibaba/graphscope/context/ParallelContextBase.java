@@ -14,30 +14,26 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.app;
+package com.alibaba.graphscope.context;
 
 import com.alibaba.fastjson.JSONObject;
-import com.alibaba.graphscope.context.ContextBase;
-import com.alibaba.graphscope.fragment.SimpleFragment;
-import com.alibaba.graphscope.parallel.DefaultMessageManager;
-import com.alibaba.graphscope.stdcxx.StdVector;
+import com.alibaba.graphscope.fragment.IFragment;
+import com.alibaba.graphscope.parallel.ParallelMessageManager;
 
 /**
- * DefaultContextBase is the base class for user-defined contexts for sequential apps. A context
+ * ParallelContextBase is the base class for user-defined contexts for parallel apps. A context
  * manages data through the whole computation. The data won't be cleared during supersteps.
  *
- * <p>Apart from data structures provided by {@link java.lang}, you can also use java wrappers for
+ * <p>Apart from data structures provided by {@link java.lang}, you can also use java wrappers for *
  * grape data structures provided {@link com.alibaba.graphscope.ds} and {@link
  * com.alibaba.graphscope.stdcxx}.
  *
- * @param <OID_T> Original vertex id type
- * @param <VID_T> inner vertex id type
- * @param <VDATA_T> Vertex data type
+ * @param <OID_T> original id type
+ * @param <VID_T> vertex id type
+ * @param <VDATA_T> vertex data type
  * @param <EDATA_T> edge data type
  */
-public interface DefaultContextBase<OID_T, VID_T, VDATA_T, EDATA_T>
-        extends ContextBase<OID_T, VID_T, VDATA_T, EDATA_T> {
-
+public interface ParallelContextBase<OID_T, VID_T, VDATA_T, EDATA_T> extends ContextBase {
     /**
      * Called by grape framework, before any PEval. You can initiating data structures need during
      * super steps here.
@@ -45,13 +41,13 @@ public interface DefaultContextBase<OID_T, VID_T, VDATA_T, EDATA_T>
      * @param frag The graph fragment providing accesses to graph data.
      * @param messageManager The message manger which manages messages between fragments.
      * @param jsonObject String args from cmdline.
-     * @see SimpleFragment
-     * @see DefaultMessageManager
-     * @see StdVector
+     * @see IFragment
+     * @see ParallelMessageManager
+     * @see JSONObject
      */
     void Init(
-            SimpleFragment<OID_T, VID_T, VDATA_T, EDATA_T> frag,
-            DefaultMessageManager messageManager,
+            IFragment<OID_T, VID_T, VDATA_T, EDATA_T> frag,
+            ParallelMessageManager messageManager,
             JSONObject jsonObject);
 
     /**
@@ -59,7 +55,7 @@ public interface DefaultContextBase<OID_T, VID_T, VDATA_T, EDATA_T>
      * shall be outputted here.
      *
      * @param frag The graph fragment contains the graph info.
-     * @see SimpleFragment
+     * @see IFragment
      */
-    void Output(SimpleFragment<OID_T, VID_T, VDATA_T, EDATA_T> frag);
+    void Output(IFragment<OID_T, VID_T, VDATA_T, EDATA_T> frag);
 }

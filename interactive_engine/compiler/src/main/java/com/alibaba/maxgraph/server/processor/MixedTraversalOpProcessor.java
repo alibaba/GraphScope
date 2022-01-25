@@ -13,6 +13,8 @@
  */
 package com.alibaba.maxgraph.server.processor;
 
+import static com.alibaba.maxgraph.proto.RoleType.FRONTEND;
+
 import com.alibaba.maxgraph.api.query.QueryCallbackManager;
 import com.alibaba.maxgraph.api.query.QueryStatus;
 import com.alibaba.maxgraph.common.cluster.InstanceConfig;
@@ -32,13 +34,14 @@ import com.alibaba.maxgraph.logging.LogEvents.QueryEvent;
 import com.alibaba.maxgraph.logging.LogEvents.QueryType;
 import com.alibaba.maxgraph.logging.Logging;
 import com.alibaba.maxgraph.sdkcommon.graph.DfsRequest;
+import com.alibaba.maxgraph.server.AbstractMixedOpProcessor;
+import com.alibaba.maxgraph.server.AbstractMixedTraversalOpProcessor;
 import com.alibaba.maxgraph.server.query.*;
 import com.alibaba.maxgraph.structure.graph.TinkerMaxGraph;
 import com.alibaba.maxgraph.tinkerpop.strategies.MxGraphStepStrategy;
-import com.alibaba.maxgraph.server.AbstractMixedOpProcessor;
-import com.alibaba.maxgraph.server.AbstractMixedTraversalOpProcessor;
 import com.google.common.base.Stopwatch;
 import com.google.protobuf.ByteString;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.tinkerpop.gremlin.driver.Tokens;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseStatusCode;
@@ -61,8 +64,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
-
-import static com.alibaba.maxgraph.proto.RoleType.FRONTEND;
 
 public class MixedTraversalOpProcessor extends AbstractMixedTraversalOpProcessor {
     private static final Logger logger = LoggerFactory.getLogger(AbstractMixedOpProcessor.class);

@@ -18,19 +18,26 @@ package com.alibaba.graphscope.utils;
 
 import com.alibaba.graphscope.app.DefaultAppBase;
 import com.alibaba.graphscope.app.DefaultPropertyAppBase;
+import com.alibaba.graphscope.app.ParallelAppBase;
 import com.alibaba.graphscope.app.ParallelPropertyAppBase;
 import com.alibaba.graphscope.context.LabeledVertexDataContext;
 import com.alibaba.graphscope.context.LabeledVertexPropertyContext;
 import com.alibaba.graphscope.context.VertexDataContext;
 import com.alibaba.graphscope.context.VertexPropertyContext;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
 public class AppBaseParser {
+    private static Logger logger = LoggerFactory.getLogger(AppBaseParser.class.getName());
+
     public static void main(String[] args) {
         if (args.length != 1) {
-            System.out.println("Error: Expected only one class, fully named.");
+            logger.error("Error: Expected only one class, fully named.");
             return;
         }
         loadClassAndParse(args[0]);
@@ -39,83 +46,38 @@ public class AppBaseParser {
     private static void loadClassAndParse(String className) {
         try {
             Class<?> clz = Class.forName(className);
-            boolean flag = DefaultPropertyAppBase.class.isAssignableFrom(clz);
-            if (flag == true) {
-                System.out.println("DefaultPropertyApp");
-                Class<? extends DefaultPropertyAppBase> clzCasted =
-                        (Class<? extends DefaultPropertyAppBase>) clz;
-                Type type = clzCasted.getGenericInterfaces()[0];
-                if (type instanceof ParameterizedType) {
-                    ParameterizedType parameterizedType = (ParameterizedType) type;
-                    Type[] typeParams = parameterizedType.getActualTypeArguments();
-                    if (typeParams.length != 2) {
-                        System.out.println(
-                                "Error: Number of params error, expected 2, actuval "
-                                        + typeParams.length);
-                        return;
-                    }
-                    System.out.println("TypeParams: " + typeParams[0].getTypeName());
-                    Class<?> ctxType = (Class<?>) typeParams[1];
-                    System.out.println("ContextType:" + javaContextToCppContextName(ctxType));
-                    return;
-                }
-                System.out.println("Error: Not a parameterized type " + type.getTypeName());
+            Type[] typeParams;
+            if (DefaultAppBase.class.isAssignableFrom(clz)) {
+                logger.info("DefaultAppBase");
+                typeParams = getTypeParams(clz, 5);
+            } else if (ParallelAppBase.class.isAssignableFrom(clz)) {
+                logger.info("ParallelAppBase");
+                typeParams = getTypeParams(clz, 5);
+            } else if (DefaultPropertyAppBase.class.isAssignableFrom(clz)) {
+                logger.info("DefaultPropertyAppBase");
+                typeParams = getTypeParams(clz, 2);
+            } else if (ParallelPropertyAppBase.class.isAssignableFrom(clz)) {
+                logger.info("ParallelPropertyAppBase");
+                typeParams = getTypeParams(clz, 2);
+            } else {
+                logger.error("No matching app bases");
                 return;
             }
-
-            flag = ParallelPropertyAppBase.class.isAssignableFrom(clz);
-            if (flag == true) {
-                System.out.println("ParallelPropertyApp");
-                Class<? extends ParallelPropertyAppBase> clzCasted =
-                        (Class<? extends ParallelPropertyAppBase>) clz;
-                Type type = clzCasted.getGenericInterfaces()[0];
-                if (type instanceof ParameterizedType) {
-                    ParameterizedType parameterizedType = (ParameterizedType) type;
-                    Type[] typeParams = parameterizedType.getActualTypeArguments();
-                    if (typeParams.length != 2) {
-                        System.out.println(
-                                "Error: Number of params error, expected 2, actuval "
-                                        + typeParams.length);
-                        return;
-                    }
-                    System.out.println("TypeParams: " + typeParams[0].getTypeName());
-                    Class<?> ctxType = (Class<?>) typeParams[1];
-                    System.out.println("ContextType:" + javaContextToCppContextName(ctxType));
-                    return;
+            if (typeParams.length == 2) {
+                logger.info("TypeParams: " + typeParams[0].getTypeName());
+                Class<?> ctxType = (Class<?>) typeParams[1];
+                logger.info("ContextType:" + javaContextToCppContextName(ctxType));
+            } else {
+                String typeParamNames[] = new String[4];
+                for (int i = 0; i < 4; ++i) {
+                    typeParamNames[i] = typeParams[i].getTypeName();
                 }
-                System.out.println("Error: Not a parameterized type " + type.getTypeName());
-                return;
+                logger.info("TypeParams: " + String.join(",", typeParamNames));
+                Class<?> ctxType = (Class<?>) typeParams[4];
+                logger.info("ContextType:" + javaContextToCppContextName(ctxType));
             }
-            // try Projected
-            flag = DefaultAppBase.class.isAssignableFrom(clz);
-            if (flag == true) {
-                System.out.println("DefaultAppBase");
-                Class<? extends DefaultAppBase> clzCasted = (Class<? extends DefaultAppBase>) clz;
-                Type type = clzCasted.getGenericInterfaces()[0];
-                if (type instanceof ParameterizedType) {
-                    ParameterizedType parameterizedType = (ParameterizedType) type;
-                    Type[] typeParams = parameterizedType.getActualTypeArguments();
-                    String[] typeParamNames = new String[4];
-                    if (typeParams.length != 5) {
-                        System.out.println(
-                                "Error: Number of params error, expected 5, actuval "
-                                        + typeParams.length);
-                        return;
-                    }
-                    for (int i = 0; i < 4; ++i) {
-                        typeParamNames[i] = typeParams[i].getTypeName();
-                    }
-                    System.out.println("TypeParams: " + String.join(",", typeParamNames));
-                    Class<?> ctxType = (Class<?>) typeParams[4];
-                    System.out.println("ContextType:" + javaContextToCppContextName(ctxType));
-                    return;
-                }
-                System.out.println("Error: Not a parameterized type " + type.getTypeName());
-                return;
-            }
-            System.out.println("Unrecognizable class Name");
         } catch (Exception e) {
-            System.out.println("Exception occurred");
+            logger.info("Exception occurred");
             e.printStackTrace();
         }
     }
@@ -133,6 +95,25 @@ public class AppBaseParser {
         return "null";
     }
 
+    private static Type[] getTypeParams(Class<?> clz, int size) {
+        Type type = clz.getGenericInterfaces()[0];
+        if (!(type instanceof ParameterizedType)) {
+            logger.error("Not a parameterized type" + type.getTypeName());
+            throw new IllegalStateException("not a parameterized type" + type.getTypeName());
+        }
+        ParameterizedType parameterizedType = (ParameterizedType) type;
+        Type[] typeParams = parameterizedType.getActualTypeArguments();
+        if (typeParams.length != size) {
+            logger.error(
+                    "Error: Number of params error, expected "
+                            + size
+                            + ", actual "
+                            + typeParams.length);
+            throw new IllegalStateException("Type params size not match");
+        }
+        return typeParams;
+    }
+
     private static Method getMethod(Class<?> clz) {
         Method[] methods = clz.getDeclaredMethods();
         for (Method method : methods) {
@@ -146,7 +127,7 @@ public class AppBaseParser {
     private static Class<?> getFragmentClassFromMethod(Method method) {
         Class<?>[] params = method.getParameterTypes();
         if (params.length != 3) {
-            System.err.println("Expected 3 parameters for this method: " + method.getName());
+            logger.error("Expected 3 parameters for this method: " + method.getName());
             return null;
         }
         return params[0];

@@ -1,6 +1,8 @@
 newIssueWelcomeComment: >
   Thanks for opening your first issue here! Be sure to follow the issue template! And a maintainer will get back to you shortly!
 
+  Please feel free to contact us on [DingTalk](https://h5.dingtalk.com/circle/healthCheckin.html?dtaction=os&corpId=dingb4b76e0fa9ccd8d516fd0f0acdf19f55&68e71190=0fe34ec0&cbdbhh=qwertyuiop), WeChat account(graphscope) or [Slack](http://slack.graphscope.io/). We are happy to answer your questions responsively.
+
 newPRWelcomeComment: >
   Thanks for submitting your first pull request! You are awesome! 🤗
 

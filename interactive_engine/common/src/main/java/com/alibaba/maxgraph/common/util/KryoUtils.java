@@ -6,13 +6,13 @@
  * which has the following license:
  *
  * Copyright (c) 2008-2016 Haulmont.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,10 +24,12 @@ package com.alibaba.maxgraph.common.util;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
+
 import de.javakaffee.kryoserializers.*;
 import de.javakaffee.kryoserializers.guava.ImmutableListSerializer;
 import de.javakaffee.kryoserializers.guava.ImmutableMapSerializer;
 import de.javakaffee.kryoserializers.guava.ImmutableSetSerializer;
+
 import org.objenesis.strategy.StdInstantiatorStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,7 +65,8 @@ public class KryoUtils {
     public static Kryo createDefaultKryo() {
         Kryo kryo = new Kryo();
         kryo.setRegistrationRequired(false);
-        kryo.setInstantiatorStrategy(new Kryo.DefaultInstantiatorStrategy(new StdInstantiatorStrategy()));
+        kryo.setInstantiatorStrategy(
+                new Kryo.DefaultInstantiatorStrategy(new StdInstantiatorStrategy()));
         ImmutableListSerializer.registerSerializers(kryo);
         ImmutableSetSerializer.registerSerializers(kryo);
         ImmutableMapSerializer.registerSerializers(kryo);
@@ -71,9 +74,13 @@ public class KryoUtils {
         kryo.register(Collections.EMPTY_LIST.getClass(), new CollectionsEmptyListSerializer());
         kryo.register(Collections.EMPTY_MAP.getClass(), new CollectionsEmptyMapSerializer());
         kryo.register(Collections.EMPTY_SET.getClass(), new CollectionsEmptySetSerializer());
-        kryo.register(Collections.singletonList("").getClass(), new CollectionsSingletonListSerializer());
-        kryo.register(Collections.singletonMap("", "").getClass(), new CollectionsSingletonMapSerializer());
-        kryo.register(Collections.singleton("").getClass(), new CollectionsSingletonSetSerializer());
+        kryo.register(
+                Collections.singletonList("").getClass(), new CollectionsSingletonListSerializer());
+        kryo.register(
+                Collections.singletonMap("", "").getClass(),
+                new CollectionsSingletonMapSerializer());
+        kryo.register(
+                Collections.singleton("").getClass(), new CollectionsSingletonSetSerializer());
         kryo.register(ARRAYS_AS_LIST_CLAZZ, new ArraysAsListSerializer());
 
         return kryo;
@@ -82,7 +89,8 @@ public class KryoUtils {
     private static Kryo newKyroInstance() {
         Kryo kryo = createDefaultKryo();
         kryo.setRegistrationRequired(false);
-        kryo.setInstantiatorStrategy(new Kryo.DefaultInstantiatorStrategy(new StdInstantiatorStrategy()));
+        kryo.setInstantiatorStrategy(
+                new Kryo.DefaultInstantiatorStrategy(new StdInstantiatorStrategy()));
         ImmutableListSerializer.registerSerializers(kryo);
         ImmutableSetSerializer.registerSerializers(kryo);
         ImmutableMapSerializer.registerSerializers(kryo);
@@ -103,7 +111,8 @@ public class KryoUtils {
      * @return serialized byte array
      * @throws IOException if compression fails
      */
-    public static byte[] obj2Bytes(Object o, boolean writeClass, boolean compress) throws IOException {
+    public static byte[] obj2Bytes(Object o, boolean writeClass, boolean compress)
+            throws IOException {
         byte[] bytes = obj2OutputStream(o, writeClass).toByteArray();
         if (compress) {
             bytes = Snappy.compress(bytes);
@@ -132,8 +141,8 @@ public class KryoUtils {
      * @return the deserialized java object
      * @throws IOException if  decompression fails
      */
-    public static Object bytes2Object(byte[] data, boolean readClass, Class clazz, boolean decompress)
-            throws IOException {
+    public static Object bytes2Object(
+            byte[] data, boolean readClass, Class clazz, boolean decompress) throws IOException {
         Kryo kryo = local.get();
         if (decompress) {
             data = Snappy.uncompress(data);
@@ -207,5 +216,4 @@ public class KryoUtils {
         local.remove();
         localClassLoaderId.remove();
     }
-
 }

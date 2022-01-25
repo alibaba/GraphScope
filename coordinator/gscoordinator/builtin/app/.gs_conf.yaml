@@ -66,13 +66,6 @@ app:
     src: apps/sssp/sssp_average_length.h
     compatible_graph:
       - gs::DynamicFragment
-  - algo: property_sssp
-    type: cpp_pie
-    class_name: gs::PropertySSSP
-    src: apps/property/property_sssp.h
-    compatible_graph:
-      - vineyard::ArrowFragment
-      - gs::DynamicFragment
   - algo: hits
     type: cpp_pie
     class_name: gs::HITS
@@ -118,6 +111,12 @@ app:
     src: apps/kshell/kshell.h
     compatible_graph:
       - gs::DynamicFragment
+  - algo: lcc
+    type: cpp_pie
+    class_name: grape::LCC
+    src: lcc/lcc.h
+    compatible_graph:
+      - gs::DynamicFragment
   - algo: clustering
     type: cpp_pie
     class_name: gs::Clustering
@@ -156,12 +155,6 @@ app:
       - grape::ImmutableEdgecutFragment
       - gs::ArrowProjectedFragment
       - gs::DynamicProjectedFragment
-  - algo: property_bfs
-    type: cpp_pie
-    class_name: gs::benchmarks::PropertyBFS
-    src: benchmarks/apps/bfs/property_bfs.h
-    compatible_graph:
-      - vineyard::ArrowFragment
   - algo: louvain
     type: cpp_pie
     class_name: gs::LouvainAppBase

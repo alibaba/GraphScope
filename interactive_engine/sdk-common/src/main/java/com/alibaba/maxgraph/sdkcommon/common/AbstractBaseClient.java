@@ -16,8 +16,9 @@ package com.alibaba.maxgraph.sdkcommon.common;
 import com.alibaba.maxgraph.sdkcommon.error.FatalException;
 import com.alibaba.maxgraph.sdkcommon.error.RetryableException;
 
-import javax.annotation.Nonnull;
 import java.util.concurrent.Callable;
+
+import javax.annotation.Nonnull;
 
 public abstract class AbstractBaseClient implements Refreshable {
 

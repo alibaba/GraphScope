@@ -17,6 +17,7 @@ package com.alibaba.maxgraph.servers.gaia;
 
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.compiler.api.schema.SchemaFetcher;
+
 import org.apache.commons.lang3.tuple.Pair;
 
 public class CachedMaxGraphMeta {

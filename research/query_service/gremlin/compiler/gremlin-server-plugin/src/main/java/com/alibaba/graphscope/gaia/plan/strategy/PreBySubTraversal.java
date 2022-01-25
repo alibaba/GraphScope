@@ -18,6 +18,5 @@ package com.alibaba.graphscope.gaia.plan.strategy;
 import org.apache.tinkerpop.gremlin.process.traversal.util.DefaultTraversal;
 
 public class PreBySubTraversal extends DefaultTraversal {
-    public PreBySubTraversal() {
-    }
+    public PreBySubTraversal() {}
 }

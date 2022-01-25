@@ -65,9 +65,9 @@ class GSConfig(object):
 
     # mars resource configuration
     mars_worker_cpu = 0.2
-    mars_worker_mem = "512Mi"
+    mars_worker_mem = "4Mi"
     mars_scheduler_cpu = 0.2
-    mars_scheduler_mem = "512Mi"
+    mars_scheduler_mem = "2Mi"
 
     # launch graphscope with mars
     with_mars = False

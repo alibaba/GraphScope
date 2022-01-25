@@ -13,18 +13,25 @@
  */
 package com.alibaba.graphscope.groot.ingestor;
 
-import com.alibaba.maxgraph.proto.groot.StoreDataBatchPb;
-import com.alibaba.maxgraph.proto.groot.StoreWriteGrpc;
-import com.alibaba.maxgraph.proto.groot.WriteStoreRequest;
-import com.alibaba.maxgraph.proto.groot.WriteStoreResponse;
 import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.operation.StoreDataBatch;
 import com.alibaba.graphscope.groot.rpc.RpcClient;
+import com.alibaba.maxgraph.proto.groot.StoreWriteGrpc;
+import com.alibaba.maxgraph.proto.groot.WriteStoreRequest;
+import com.alibaba.maxgraph.proto.groot.WriteStoreRequest.Builder;
+import com.alibaba.maxgraph.proto.groot.WriteStoreResponse;
+
 import io.grpc.ManagedChannel;
 import io.grpc.stub.StreamObserver;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.List;
+
 /** ingestor -> store */
 public class StoreWriteClient extends RpcClient {
+    private static final Logger logger = LoggerFactory.getLogger(StoreWriteClient.class);
 
     private StoreWriteGrpc.StoreWriteStub stub;
 
@@ -38,9 +45,13 @@ public class StoreWriteClient extends RpcClient {
         this.stub = stub;
     }
 
-    public void writeStore(StoreDataBatch storeDataBatch, CompletionCallback<Integer> callback) {
-        StoreDataBatchPb batchPb = storeDataBatch.toProto();
-        WriteStoreRequest req = WriteStoreRequest.newBuilder().setBatch(batchPb).build();
+    public void writeStore(
+            List<StoreDataBatch> storeDataBatches, CompletionCallback<Integer> callback) {
+        Builder builder = WriteStoreRequest.newBuilder();
+        for (StoreDataBatch storeDataBatch : storeDataBatches) {
+            builder.addDataBatches(storeDataBatch.toProto());
+        }
+        WriteStoreRequest req = builder.build();
         stub.writeStore(
                 req,
                 new StreamObserver<WriteStoreResponse>() {
@@ -48,7 +59,7 @@ public class StoreWriteClient extends RpcClient {
                     public void onNext(WriteStoreResponse writeStoreResponse) {
                         boolean success = writeStoreResponse.getSuccess();
                         if (success) {
-                            callback.onCompleted(batchPb.getSerializedSize());
+                            callback.onCompleted(req.getSerializedSize());
                         } else {
                             onError(new RuntimeException("store buffer is full"));
                         }

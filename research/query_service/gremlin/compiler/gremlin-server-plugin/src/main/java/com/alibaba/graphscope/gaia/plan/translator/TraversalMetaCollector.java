@@ -21,6 +21,7 @@ import com.alibaba.graphscope.gaia.plan.strategy.global.property.cache.ToFetchPr
 import com.alibaba.graphscope.gaia.plan.translator.builder.MetaConfig;
 import com.alibaba.graphscope.gaia.plan.translator.builder.StepMetaBuilder;
 import com.alibaba.graphscope.gaia.plan.translator.builder.TraversalMetaBuilder;
+
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.ColumnTraversal;
@@ -35,7 +36,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-public class TraversalMetaCollector extends AttributeTranslator<TraversalMetaBuilder, TraverserElement> {
+public class TraversalMetaCollector
+        extends AttributeTranslator<TraversalMetaBuilder, TraverserElement> {
     public TraversalMetaCollector(TraversalMetaBuilder input) {
         super(input);
     }
@@ -52,13 +54,19 @@ public class TraversalMetaCollector extends AttributeTranslator<TraversalMetaBui
             Traversal.Admin admin = t.getAdmin();
             TraverserElement head = t.getHead();
             // pre-cache properties
-            Meta<GraphElement, StepPropertiesMeta> elementProperties = (Meta) t.getConfig(MetaConfig.ELEMENT_PROPERTIES);
-            if (elementProperties != null && admin instanceof ElementValueTraversal && head.getObject().isGraphElement()) {
+            Meta<GraphElement, StepPropertiesMeta> elementProperties =
+                    (Meta) t.getConfig(MetaConfig.ELEMENT_PROPERTIES);
+            if (elementProperties != null
+                    && admin instanceof ElementValueTraversal
+                    && head.getObject().isGraphElement()) {
                 ElementValueTraversal admin1 = (ElementValueTraversal) admin;
                 Step parent = StepMetaCollector.getParentOfTraversalId(t.getMetaId(), admin1);
                 int stepIdx = TraversalHelper.stepIndex(parent, parent.getTraversal());
-                elementProperties.add(head.getObject().getElement(),
-                        new StepPropertiesMeta(new ToFetchProperties(false, Collections.singletonList(admin1.getPropertyKey())),
+                elementProperties.add(
+                        head.getObject().getElement(),
+                        new StepPropertiesMeta(
+                                new ToFetchProperties(
+                                        false, Collections.singletonList(admin1.getPropertyKey())),
                                 new StepId(t.getMetaId(), stepIdx)));
             }
             if (admin instanceof IdentityTraversal) {
@@ -66,7 +74,9 @@ public class TraversalMetaCollector extends AttributeTranslator<TraversalMetaBui
             }
             if (admin instanceof ColumnTraversal) {
                 if (head.getObject().getClassName() != Map.Entry.class) {
-                    throw new UnsupportedOperationException("ColumnTraversal has invalid input type " + head.getObject().getClassName());
+                    throw new UnsupportedOperationException(
+                            "ColumnTraversal has invalid input type "
+                                    + head.getObject().getClassName());
                 }
                 if (((ColumnTraversal) admin).getColumn() == Column.keys) {
                     return new TraverserElement(head.getObject().getSub(0));
@@ -79,7 +89,11 @@ public class TraversalMetaCollector extends AttributeTranslator<TraversalMetaBui
             }
             List<Step> steps = t.getAdmin().getSteps();
             for (Step step : steps) {
-                head = new StepMetaCollector(new StepMetaBuilder(step, t.getMetaId(), head).setConf(t.getConf())).translate();
+                head =
+                        new StepMetaCollector(
+                                        new StepMetaBuilder(step, t.getMetaId(), head)
+                                                .setConf(t.getConf()))
+                                .translate();
             }
             return head;
         };
@@ -87,7 +101,8 @@ public class TraversalMetaCollector extends AttributeTranslator<TraversalMetaBui
 
     public static void forkTraversalMetaIfNeed(TraversalMetaBuilder t) {
         TraversalId metaId = t.getMetaId();
-        TraversalsMeta<TraversalId, PathHistoryMeta> traversalsPath = (TraversalsMeta) t.getConfig(MetaConfig.TRAVERSALS_PATH);
+        TraversalsMeta<TraversalId, PathHistoryMeta> traversalsPath =
+                (TraversalsMeta) t.getConfig(MetaConfig.TRAVERSALS_PATH);
         if (traversalsPath.get(metaId).isPresent()) {
             return;
         }
@@ -96,20 +111,24 @@ public class TraversalMetaCollector extends AttributeTranslator<TraversalMetaBui
         PathHistoryMeta newPath = parentPath.fork();
         traversalsPath.add(metaId, newPath);
         // fork lifetime if need
-        TraversalsMeta<TraversalId, LifetimeMeta> traversalsLife = (TraversalsMeta) t.getConfig(MetaConfig.TRAVERSALS_LIFETIME);
+        TraversalsMeta<TraversalId, LifetimeMeta> traversalsLife =
+                (TraversalsMeta) t.getConfig(MetaConfig.TRAVERSALS_LIFETIME);
         if (traversalsLife != null) {
             LifetimeMeta newLife = new LifetimeMeta();
-            newPath.getAllObjects().forEach(k -> {
-                TraverserElement ele = newPath.get(k).get();
-                if (!newLife.get(ele).isPresent()) {
-                    newLife.add(ele, new Lifetime(null, null));
-                    newLife.attachLabel(ele, k);
-                }
-            });
+            newPath.getAllObjects()
+                    .forEach(
+                            k -> {
+                                TraverserElement ele = newPath.get(k).get();
+                                if (!newLife.get(ele).isPresent()) {
+                                    newLife.add(ele, new Lifetime(null, null));
+                                    newLife.attachLabel(ele, k);
+                                }
+                            });
             traversalsLife.add(metaId, newLife);
         }
         // fork path requirement if need
-        TraversalsMeta<TraversalId, TraverserRequirementMeta> traversalsRequire = (TraversalsMeta) t.getConfig(MetaConfig.TRAVERSALS_REQUIREMENT);
+        TraversalsMeta<TraversalId, TraverserRequirementMeta> traversalsRequire =
+                (TraversalsMeta) t.getConfig(MetaConfig.TRAVERSALS_REQUIREMENT);
         if (traversalsRequire != null) {
             traversalsRequire.add(metaId, new TraverserRequirementMeta());
         }
@@ -122,7 +141,8 @@ public class TraversalMetaCollector extends AttributeTranslator<TraversalMetaBui
             ((Meta) t.getConfig(MetaConfig.TRAVERSALS_LIFETIME)).add(rootId, new LifetimeMeta());
         }
         if (t.getConfig(MetaConfig.TRAVERSALS_REQUIREMENT) != null) {
-            ((Meta) t.getConfig(MetaConfig.TRAVERSALS_REQUIREMENT)).add(rootId, new TraverserRequirementMeta());
+            ((Meta) t.getConfig(MetaConfig.TRAVERSALS_REQUIREMENT))
+                    .add(rootId, new TraverserRequirementMeta());
         }
     }
 }

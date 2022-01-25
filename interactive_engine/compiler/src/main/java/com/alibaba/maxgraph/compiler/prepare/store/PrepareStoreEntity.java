@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,6 +18,7 @@ package com.alibaba.maxgraph.compiler.prepare.store;
 import com.alibaba.maxgraph.QueryFlowOuterClass;
 import com.alibaba.maxgraph.compiler.tree.TreeNodeLabelManager;
 import com.alibaba.maxgraph.compiler.tree.value.ValueType;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,17 +33,21 @@ public class PrepareStoreEntity implements Serializable {
     private TreeNodeLabelManager labelManager;
     private ValueType resultValueType;
 
-    //queryFlow will not be serialized, which has been serialized by pb
+    // queryFlow will not be serialized, which has been serialized by pb
     private transient QueryFlowOuterClass.QueryFlow queryFlow;
 
-    public PrepareStoreEntity(List<PrepareEntity> prepareEntityList, TreeNodeLabelManager labelManager, ValueType resultValueType, QueryFlowOuterClass.QueryFlow queryFlow) {
+    public PrepareStoreEntity(
+            List<PrepareEntity> prepareEntityList,
+            TreeNodeLabelManager labelManager,
+            ValueType resultValueType,
+            QueryFlowOuterClass.QueryFlow queryFlow) {
         this.prepareEntityList = prepareEntityList;
         this.labelManager = labelManager;
         this.resultValueType = resultValueType;
         this.queryFlow = queryFlow;
     }
 
-    public PrepareStoreEntity (byte[] bytes) {
+    public PrepareStoreEntity(byte[] bytes) {
         PrepareStoreEntity prepareStoreEntity = null;
         ByteArrayInputStream byteArrayInputStream = null;
         ObjectInputStream objectInputStream = null;
@@ -55,10 +60,10 @@ public class PrepareStoreEntity implements Serializable {
             LOGGER.error("Byte array to object PrepareStoreEntity failed, " + e);
             throw new RuntimeException(e);
         } finally {
-            if (byteArrayInputStream != null ) {
+            if (byteArrayInputStream != null) {
                 try {
                     byteArrayInputStream.close();
-                } catch (IOException e){
+                } catch (IOException e) {
                     LOGGER.error("Close byte array input stream failed, " + e);
                     throw new RuntimeException(e);
                 }
@@ -90,9 +95,13 @@ public class PrepareStoreEntity implements Serializable {
         return resultValueType;
     }
 
-    public QueryFlowOuterClass.QueryFlow getQueryFlow() { return queryFlow; }
+    public QueryFlowOuterClass.QueryFlow getQueryFlow() {
+        return queryFlow;
+    }
 
-    public void setQueryFlow(QueryFlowOuterClass.QueryFlow queryFlow) { this.queryFlow = queryFlow; }
+    public void setQueryFlow(QueryFlowOuterClass.QueryFlow queryFlow) {
+        this.queryFlow = queryFlow;
+    }
 
     // transform the object PrepareStoryEntity to byte array, except queryFlow
     public byte[] toByteArray() {
@@ -137,10 +146,10 @@ public class PrepareStoreEntity implements Serializable {
             LOGGER.error("Byte array to object PrepareStoreEntity failed, " + e);
             throw new RuntimeException(e);
         } finally {
-            if (byteArrayInputStream != null ) {
+            if (byteArrayInputStream != null) {
                 try {
                     byteArrayInputStream.close();
-                } catch (IOException e){
+                } catch (IOException e) {
                     LOGGER.error("Close byte array input stream failed, " + e);
                 }
             }
@@ -155,5 +164,4 @@ public class PrepareStoreEntity implements Serializable {
 
         return prepareStoreEntity;
     }
-
 }

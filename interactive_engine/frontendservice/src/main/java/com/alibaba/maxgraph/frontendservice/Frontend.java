@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,13 +28,15 @@ import com.alibaba.maxgraph.frontendservice.server.manager.MaxGraphRecordProcess
 import com.alibaba.maxgraph.frontendservice.service.*;
 import com.alibaba.maxgraph.proto.RoleType;
 import com.alibaba.maxgraph.sdkcommon.client.Endpoint;
-import com.alibaba.maxgraph.server.processor.MixedProcessorLoader;
 import com.alibaba.maxgraph.server.GremlinProcessorLoader;
 import com.alibaba.maxgraph.server.MaxGraphServer;
 import com.alibaba.maxgraph.server.ProcessorLoader;
+import com.alibaba.maxgraph.server.processor.MixedProcessorLoader;
 import com.alibaba.maxgraph.structure.graph.TinkerMaxGraph;
+
 import io.grpc.Server;
 import io.grpc.netty.NettyServerBuilder;
+
 import org.apache.tinkerpop.gremlin.groovy.engine.GremlinExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,7 +80,8 @@ public class Frontend {
         this.instanceConfig = instanceConfig;
         this.roleId = instanceConfig.getRoleOrderId() - 1;
         this.clientManager = new ClientManager(instanceConfig);
-        this.memoryMonitor = new MemoryMonitor(instanceConfig.getFrontendServiceMemoryThresholdPercent());
+        this.memoryMonitor =
+                new MemoryMonitor(instanceConfig.getFrontendServiceMemoryThresholdPercent());
         this.queryManager = new FrontendQueryManager(instanceConfig, clientManager);
         initAndStartGremlinServer();
         // this.metricReporter = new MetricReporter();
@@ -86,8 +89,9 @@ public class Frontend {
     }
 
     private void loadPrepareManagerService() {
-        Iterator<PreparedQueryManager> managers = ServiceLoader.load(PreparedQueryManager.class,
-                ClassLoader.getSystemClassLoader()).iterator();
+        Iterator<PreparedQueryManager> managers =
+                ServiceLoader.load(PreparedQueryManager.class, ClassLoader.getSystemClassLoader())
+                        .iterator();
         while (managers.hasNext()) {
             try {
                 this.preparedQueryManager = managers.next();
@@ -114,46 +118,60 @@ public class Frontend {
 
         this.graph = new TinkerMaxGraph(instanceConfig, remoteGraph, new DefaultGraphDfs());
         this.graphGremlinServer = new MaxGraphServer(this.graph);
-        int tmpGremlinServerPort = instanceConfig.getGremlinServerPort() > 0 ? instanceConfig.getGremlinServerPort() : 0;
+        int tmpGremlinServerPort =
+                instanceConfig.getGremlinServerPort() > 0
+                        ? instanceConfig.getGremlinServerPort()
+                        : 0;
 
         ProcessorLoader processorLoader;
         switch (instanceConfig.getGremlinServerMode()) {
             case TIMELY:
-            case MIXED: {
-                processorLoader = MixedProcessorLoader.newProcessorLoader(
-                        graph,
-                        this.instanceConfig,
-                        new ExecutorAddressFetcher(clientManager),
-                        schemaFetcher,
-                        new ZKStatementStore(instanceConfig),
-                        new MaxGraphRecordProcessorManager(this.graph, this),
-                        this.getFrontendQueryManager());
-                break;
-            }
-            default: {
-                processorLoader = GremlinProcessorLoader.newProcessorLoader();
-                break;
-            }
+            case MIXED:
+                {
+                    processorLoader =
+                            MixedProcessorLoader.newProcessorLoader(
+                                    graph,
+                                    this.instanceConfig,
+                                    new ExecutorAddressFetcher(clientManager),
+                                    schemaFetcher,
+                                    new ZKStatementStore(instanceConfig),
+                                    new MaxGraphRecordProcessorManager(this.graph, this),
+                                    this.getFrontendQueryManager());
+                    break;
+                }
+            default:
+                {
+                    processorLoader = GremlinProcessorLoader.newProcessorLoader();
+                    break;
+                }
         }
-        this.graphGremlinServer.start(tmpGremlinServerPort, processorLoader, instanceConfig.getInstanceAuthType() == 1);
+        this.graphGremlinServer.start(
+                tmpGremlinServerPort, processorLoader, instanceConfig.getInstanceAuthType() == 1);
 
-        this.gremlinServerPort = tmpGremlinServerPort > 0 ? tmpGremlinServerPort : this.graphGremlinServer.getGremlinServerPort();
+        this.gremlinServerPort =
+                tmpGremlinServerPort > 0
+                        ? tmpGremlinServerPort
+                        : this.graphGremlinServer.getGremlinServerPort();
         LOG.info("gremlin server port:{}", this.gremlinServerPort);
     }
 
-    private void updateWorkerConnection(Map<RoleType, Map<Integer, Endpoint>> workerInfoMap) throws Exception {
+    private void updateWorkerConnection(Map<RoleType, Map<Integer, Endpoint>> workerInfoMap)
+            throws Exception {
 
         for (Map.Entry<RoleType, Map<Integer, Endpoint>> entry : workerInfoMap.entrySet()) {
             if (entry.getValue().isEmpty()) {
                 continue;
             }
 
-            LOG.debug("got workers info from am: role is {}, endpoint list:{}",
-                    entry.getKey(), entry.getValue());
+            LOG.debug(
+                    "got workers info from am: role is {}, endpoint list:{}",
+                    entry.getKey(),
+                    entry.getValue());
 
             switch (entry.getKey()) {
                 case EXECUTOR:
-                    entry.getValue().forEach((key, value) -> clientManager.updateExecutorMap(key, value));
+                    entry.getValue()
+                            .forEach((key, value) -> clientManager.updateExecutorMap(key, value));
                     if (currentExecutorVersion != clientManager.getExecutorUpdateVersion()) {
                         LOG.info("update remote graph proxys");
                         currentExecutorVersion = clientManager.getExecutorUpdateVersion();
@@ -170,23 +188,35 @@ public class Frontend {
     }
 
     protected void startHBThread() {
-        hbSchedule = new ScheduledThreadPoolExecutor(1,
-                CommonUtil.createFactoryWithDefaultExceptionHandler("HB_THREAD", LOG));
-        hbSchedule.scheduleWithFixedDelay(() -> {
-            if (clientManager.isCoordinatorRelatedClientNotReady()) {
-                LOG.info("wait am ready.");
-            } else {
-                try {
-                    LOG.info("send hb {} to am", endpoint);
-                    Map<RoleType, Map<Integer, Endpoint>> workerInfoMap =
-                            clientManager.getServerDataApiClient().workerHeartbeat(instanceConfig.getServerId(),
-                                    endpoint, RoleType.FRONTEND, CommonUtil.getYarnLogDir(), this.aliveId, this.roleId);
-                    updateWorkerConnection(workerInfoMap);
-                } catch (Exception e) {
-                    LOG.error("register to am failed:{}", e);
-                }
-            }
-        }, 1, instanceConfig.getFrontendAmHbIntervalSeconds(), TimeUnit.SECONDS);
+        hbSchedule =
+                new ScheduledThreadPoolExecutor(
+                        1, CommonUtil.createFactoryWithDefaultExceptionHandler("HB_THREAD", LOG));
+        hbSchedule.scheduleWithFixedDelay(
+                () -> {
+                    if (clientManager.isCoordinatorRelatedClientNotReady()) {
+                        LOG.info("wait am ready.");
+                    } else {
+                        try {
+                            LOG.info("send hb {} to am", endpoint);
+                            Map<RoleType, Map<Integer, Endpoint>> workerInfoMap =
+                                    clientManager
+                                            .getServerDataApiClient()
+                                            .workerHeartbeat(
+                                                    instanceConfig.getServerId(),
+                                                    endpoint,
+                                                    RoleType.FRONTEND,
+                                                    CommonUtil.getYarnLogDir(),
+                                                    this.aliveId,
+                                                    this.roleId);
+                            updateWorkerConnection(workerInfoMap);
+                        } catch (Exception e) {
+                            LOG.error("register to am failed:{}", e);
+                        }
+                    }
+                },
+                1,
+                instanceConfig.getFrontendAmHbIntervalSeconds(),
+                TimeUnit.SECONDS);
     }
 
     public ClientManager getClientManager() {
@@ -211,7 +241,8 @@ public class Frontend {
 
     public PreparedQueryManager getPreparedQueryManager() throws UnsupportedOperationException {
         if (this.preparedQueryManager == null) {
-            throw new UnsupportedOperationException("PREPARE is not support, because no PreparedQueryManager implementation.");
+            throw new UnsupportedOperationException(
+                    "PREPARE is not support, because no PreparedQueryManager implementation.");
         }
 
         return this.preparedQueryManager;
@@ -228,19 +259,22 @@ public class Frontend {
         String hostName = InetAddress.getLocalHost().getHostAddress();
         int threadCount = this.instanceConfig.getFrontendGrpcThreadCount();
         LOG.info("rpc server thread count: " + threadCount);
-        NettyServerBuilder serverBuilder = NettyServerBuilder
-                .forAddress(new InetSocketAddress(hostName, 0))
-                .executor(CommonUtil.getGrpcExecutor(threadCount))
-                .maxInboundMessageSize(Constants.MAXGRAPH_RPC_MAX_MESSAGE_SIZE);
+        NettyServerBuilder serverBuilder =
+                NettyServerBuilder.forAddress(new InetSocketAddress(hostName, 0))
+                        .executor(CommonUtil.getGrpcExecutor(threadCount))
+                        .maxInboundMessageSize(Constants.MAXGRAPH_RPC_MAX_MESSAGE_SIZE);
 
         Server rpcServer = serverBuilder.build().start();
 
         this.endpoint = new Endpoint(hostName, rpcServer.getPort(), gremlinServerPort);
-        LOG.info("frontend host: {}, port: {}, gremlin server port:{}", endpoint.getIp(), endpoint.getPort(), gremlinServerPort);
+        LOG.info(
+                "frontend host: {}, port: {}, gremlin server port:{}",
+                endpoint.getIp(),
+                endpoint.getPort(),
+                gremlinServerPort);
     }
 
     public TinkerMaxGraph getGraph() {
         return graph;
     }
-
 }

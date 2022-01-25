@@ -22,7 +22,10 @@ import com.google.protobuf.ByteString;
 public class JobBuilderTest {
     public static void main(String[] args) {
         JobBuilder builder = new JobBuilder();
-        builder.addSource(ByteString.EMPTY).filter(ByteString.EMPTY).map(ByteString.EMPTY).filter(ByteString.EMPTY);
+        builder.addSource(ByteString.EMPTY)
+                .filter(ByteString.EMPTY)
+                .map(ByteString.EMPTY)
+                .filter(ByteString.EMPTY);
         PlanUtils.print(builder);
     }
 }

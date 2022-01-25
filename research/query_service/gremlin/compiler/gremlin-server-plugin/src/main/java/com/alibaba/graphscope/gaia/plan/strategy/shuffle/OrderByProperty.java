@@ -21,6 +21,7 @@ import com.alibaba.graphscope.gaia.plan.PlanUtils;
 import com.alibaba.graphscope.gaia.plan.extractor.TagKeyExtractorFactory;
 import com.alibaba.graphscope.gaia.plan.strategy.OrderGlobalLimitStep;
 import com.alibaba.graphscope.gaia.plan.strategy.PropertyIdentityStep;
+
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.step.ComparatorHolder;
@@ -40,7 +41,8 @@ public class OrderByProperty extends PropertyShuffler {
         if (step instanceof OrderGlobalStep || step instanceof OrderGlobalLimitStep) {
             holder = (ComparatorHolder) step;
         } else {
-            throw new UnsupportedOperationException("cannot support other step in order by property " + step.getClass());
+            throw new UnsupportedOperationException(
+                    "cannot support other step in order by property " + step.getClass());
         }
     }
 
@@ -68,8 +70,10 @@ public class OrderByProperty extends PropertyShuffler {
             if (byTraversal != null && TagKeyExtractorFactory.OrderBY.isSimpleValue(byTraversal)) {
                 Gremlin.TagKey orderByKey = TagKeyExtractorFactory.OrderBY.extractFrom(byTraversal);
                 // current head with by(property)
-                if (PlanUtils.isNotSet(orderByKey.getTag()) && orderByKey.getByKey().getItemCase() == Gremlin.ByKey.ItemCase.KEY
-                        && orderByKey.getByKey().getKey().getItemCase() == Common.Key.ItemCase.NAME) {
+                if (PlanUtils.isNotSet(orderByKey.getTag())
+                        && orderByKey.getByKey().getItemCase() == Gremlin.ByKey.ItemCase.KEY
+                        && orderByKey.getByKey().getKey().getItemCase()
+                                == Common.Key.ItemCase.NAME) {
                     return true;
                 }
             }

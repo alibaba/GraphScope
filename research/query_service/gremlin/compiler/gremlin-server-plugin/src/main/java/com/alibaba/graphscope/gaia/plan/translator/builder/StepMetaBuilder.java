@@ -17,6 +17,7 @@ package com.alibaba.graphscope.gaia.plan.translator.builder;
 
 import com.alibaba.graphscope.gaia.plan.meta.object.TraversalId;
 import com.alibaba.graphscope.gaia.plan.meta.object.TraverserElement;
+
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 
 public class StepMetaBuilder extends ConfigBuilder<StepMetaBuilder> {

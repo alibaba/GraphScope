@@ -25,6 +25,10 @@ import com.alibaba.fastffi.FFITypeAlias;
 import com.alibaba.fastffi.annotation.AnnotationProcessor;
 import com.google.testing.compile.Compilation;
 import com.google.testing.compile.JavaFileObjects;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -51,10 +55,15 @@ import java.util.Objects;
 import java.util.Properties;
 import java.util.Random;
 import java.util.stream.Collectors;
-import javax.tools.JavaFileObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+import javax.tools.JavaFileObject;
+
+/**
+ * This class accept
+ *
+ * <p>1) classpath 2) output directory 3) graph template string Then scan all class, for all class
+ * annotated with FFIGen, FFIMirror, do the code generation.
+ */
 public class GraphScopeAppScanner {
     private static Logger logger = LoggerFactory.getLogger(GraphScopeAppScanner.class.getName());
     private String classpath;
@@ -133,7 +142,10 @@ public class GraphScopeAppScanner {
         // sb.append("gs::DoubleMsg=com.alibaba.graphscopescope.parallel.message.DoubleMsg,");
         //        sb.append("gs::LongMsg=com.alibaba.graphscopescope.parallel.message.LongMsg,");
         String temp = sb.toString();
-        String messageTypes = temp.substring(0, temp.length() - 1);
+        String messageTypes = "";
+        if (!temp.isEmpty()) {
+            messageTypes = temp.substring(0, temp.length() - 1);
+        }
         // create a dummy graphConfig, oid type should never be used.
         logger.info("message types:" + messageTypes);
 
@@ -222,7 +234,8 @@ public class GraphScopeAppScanner {
         List<String> ffiMirrorNames = new ArrayList<>(this.ffiMirrors.keySet());
         Collections.sort(ffiMirrorNames);
         if (ffiMirrorNames.isEmpty()) {
-            throw new IllegalStateException("No FFIMirror is detected.");
+            logger.warn("No FFIMirror is detected.");
+            return "";
         }
         StringBuilder sb = new StringBuilder();
         sb.append("@FFIGenBatch({\n");
@@ -296,7 +309,7 @@ public class GraphScopeAppScanner {
                 throw new IllegalStateException("Oops, cannot write files ", e);
             }
         } else if (status == Compilation.Status.FAILURE) {
-            compilation.errors().forEach(d -> System.out.println(d));
+            compilation.errors().forEach(d -> logger.info("" + d));
             return null;
         } else {
             throw new IllegalStateException("Oops, should not reach here");
@@ -408,7 +421,7 @@ public class GraphScopeAppScanner {
                     } catch (ClassNotFoundException | NoClassDefFoundError e) {
                         if (Main.ignoreError) {
                             if (Main.verbose) {
-                                System.err.println("WARNING: Cannot load class " + className);
+                                logger.error("WARNING: Cannot load class " + className);
                             }
                         } else {
                             throw new IllegalStateException(e);
@@ -416,8 +429,7 @@ public class GraphScopeAppScanner {
                     } catch (IncompatibleClassChangeError e) {
                         if (Main.ignoreError) {
                             if (Main.verbose) {
-                                System.err.println(
-                                        "WARNING: incompatible class error " + className);
+                                logger.error("WARNING: incompatible class error " + className);
                             }
                         } else {
                             throw new IllegalStateException(e);

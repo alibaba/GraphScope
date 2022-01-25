@@ -35,10 +35,10 @@
     <rust.compile.mode>debug</rust.compile.mode>
     <rust.compile.skip.clean>true</rust.compile.skip.clean>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <log4j2.version>[2.15.0,)</log4j2.version>
+    <log4j2.version>[2.17.1,)</log4j2.version>
     <hadoop.version>2.8.4</hadoop.version>
     <grpc.version>1.30.1</grpc.version>
-    <protobuf.version>3.5.1</protobuf.version>
+    <protobuf.version>3.16.1</protobuf.version>
     <tinkerpop.version>3.4.12</tinkerpop.version>
     <slf4j.version>1.7.21</slf4j.version>
     <groovy.version>2.5.14</groovy.version>

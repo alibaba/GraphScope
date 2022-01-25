@@ -16,6 +16,7 @@
 package com.alibaba.graphscope.gaia.plan.strategy;
 
 import com.alibaba.graphscope.gaia.plan.strategy.global.property.cache.ToFetchProperties;
+
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.Traverser;
@@ -34,7 +35,8 @@ public class PropertyIdentityStep<S, E extends Element> extends AbstractStep<S, 
     }
 
     public static PropertyIdentityStep createDefault(Step step) {
-        return new PropertyIdentityStep(step.getTraversal(), new ToFetchProperties(true, Collections.EMPTY_LIST));
+        return new PropertyIdentityStep(
+                step.getTraversal(), new ToFetchProperties(true, Collections.EMPTY_LIST));
     }
 
     @Override

@@ -13,12 +13,13 @@
  */
 package com.alibaba.maxgraph.server.processor;
 
+import com.alibaba.maxgraph.cache.CacheFactory;
 import com.alibaba.maxgraph.result.BulkResult;
 import com.alibaba.maxgraph.sdkcommon.graph.QueryResult;
-import com.alibaba.maxgraph.cache.CacheFactory;
 import com.alibaba.maxgraph.server.AbstractMixedOpProcessor;
 import com.google.common.cache.Cache;
 import com.google.common.collect.Lists;
+
 import org.apache.tinkerpop.gremlin.driver.message.ResponseStatusCode;
 import org.apache.tinkerpop.gremlin.server.Context;
 import org.slf4j.Logger;

@@ -13,13 +13,14 @@
  */
 package com.alibaba.maxgraph.tests.coordinator;
 
+import static org.mockito.Mockito.*;
+
 import com.alibaba.graphscope.groot.SnapshotCache;
 import com.alibaba.graphscope.groot.coordinator.LocalSnapshotListener;
 import com.alibaba.graphscope.groot.coordinator.SchemaManager;
 import com.alibaba.graphscope.groot.schema.GraphDef;
-import org.junit.jupiter.api.Test;
 
-import static org.mockito.Mockito.*;
+import org.junit.jupiter.api.Test;
 
 public class LocalSnapshotListenerTest {
 
@@ -29,8 +30,7 @@ public class LocalSnapshotListenerTest {
         GraphDef graphDef = GraphDef.newBuilder().setVersion(3L).build();
         when(schemaManager.getGraphDef()).thenReturn(graphDef);
         SnapshotCache snapshotCache = mock(SnapshotCache.class);
-        LocalSnapshotListener listener =
-                new LocalSnapshotListener(schemaManager, snapshotCache);
+        LocalSnapshotListener listener = new LocalSnapshotListener(schemaManager, snapshotCache);
         listener.snapshotAdvanced(10L, 10L);
         verify(snapshotCache).advanceQuerySnapshotId(eq(10L), eq(graphDef));
         listener.snapshotAdvanced(20L, 10L);

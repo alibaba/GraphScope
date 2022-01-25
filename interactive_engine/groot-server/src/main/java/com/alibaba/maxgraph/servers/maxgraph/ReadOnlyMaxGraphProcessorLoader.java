@@ -16,6 +16,7 @@ package com.alibaba.maxgraph.servers.maxgraph;
 import com.alibaba.maxgraph.api.query.QueryCallbackManager;
 import com.alibaba.maxgraph.api.query.QueryStatus;
 import com.alibaba.maxgraph.common.cluster.InstanceConfig;
+import com.alibaba.maxgraph.common.config.Configs;
 import com.alibaba.maxgraph.common.rpc.RpcAddressFetcher;
 import com.alibaba.maxgraph.compiler.api.schema.SchemaFetcher;
 import com.alibaba.maxgraph.compiler.cost.statistics.CostDataStatistics;
@@ -24,7 +25,7 @@ import com.alibaba.maxgraph.server.ProcessorLoader;
 import com.alibaba.maxgraph.server.processor.MixedOpProcessor;
 import com.alibaba.maxgraph.server.processor.MixedTraversalOpProcessor;
 import com.alibaba.maxgraph.structure.graph.TinkerMaxGraph;
-import com.alibaba.maxgraph.common.config.Configs;
+
 import org.apache.tinkerpop.gremlin.server.Settings;
 import org.apache.tinkerpop.gremlin.server.op.OpLoader;
 

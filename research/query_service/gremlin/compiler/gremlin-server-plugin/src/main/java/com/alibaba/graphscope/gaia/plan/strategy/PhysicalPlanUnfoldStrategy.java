@@ -23,11 +23,11 @@ import org.apache.tinkerpop.gremlin.process.traversal.strategy.AbstractTraversal
 
 import java.util.List;
 
-public class PhysicalPlanUnfoldStrategy extends AbstractTraversalStrategy<TraversalStrategy.ProviderOptimizationStrategy> {
+public class PhysicalPlanUnfoldStrategy
+        extends AbstractTraversalStrategy<TraversalStrategy.ProviderOptimizationStrategy> {
     private static final PhysicalPlanUnfoldStrategy INSTANCE = new PhysicalPlanUnfoldStrategy();
 
-    private PhysicalPlanUnfoldStrategy() {
-    }
+    private PhysicalPlanUnfoldStrategy() {}
 
     public static PhysicalPlanUnfoldStrategy instance() {
         return INSTANCE;
@@ -40,10 +40,13 @@ public class PhysicalPlanUnfoldStrategy extends AbstractTraversalStrategy<Traver
             Step step = steps.get(i);
             if (step instanceof UnfoldStep) {
                 Step unfoldStep = step.getPreviousStep();
-                if (unfoldStep instanceof GroupStep || unfoldStep instanceof GroupCountStep
-                        || unfoldStep instanceof OrderGlobalLimitStep || unfoldStep instanceof OrderGlobalStep
+                if (unfoldStep instanceof GroupStep
+                        || unfoldStep instanceof GroupCountStep
+                        || unfoldStep instanceof OrderGlobalLimitStep
+                        || unfoldStep instanceof OrderGlobalStep
                         || unfoldStep instanceof CountGlobalStep) {
-                    traversal.addStep(i, new PhysicalPlanUnfoldStep(traversal, unfoldStep.getClass()));
+                    traversal.addStep(
+                            i, new PhysicalPlanUnfoldStep(traversal, unfoldStep.getClass()));
                     traversal.removeStep(step);
                 }
             }

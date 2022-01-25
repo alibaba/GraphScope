@@ -21,6 +21,8 @@
 #include "grape/app/context_base.h"
 #include "grape/util.h"
 
+#include "vineyard/graph/fragment/arrow_fragment.h"
+
 #include "core/app/app_invoker.h"
 #include "core/app/pregel/cython_vertex_program.h"
 #include "core/app/pregel/export.h"
@@ -40,6 +42,10 @@ using string = std::string;
 #include QUOTE(_GRAPH_HEADER)
 #else
 #error "Missing macro _GRAPH_TYPE or _GRAPH_HEADER"
+#endif
+
+#if !defined(_OID_TYPE)
+#define _OID_TYPE vineyard::property_graph_types::OID_TYPE
 #endif
 
 #if defined(_VD_TYPE) && defined(_MD_TYPE)

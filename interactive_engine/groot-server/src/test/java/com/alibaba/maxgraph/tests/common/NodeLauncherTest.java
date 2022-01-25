@@ -13,12 +13,13 @@
  */
 package com.alibaba.maxgraph.tests.common;
 
-import com.alibaba.maxgraph.servers.NodeBase;
-import com.alibaba.maxgraph.servers.NodeLauncher;
-import org.junit.jupiter.api.Test;
-
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+
+import com.alibaba.maxgraph.servers.NodeBase;
+import com.alibaba.maxgraph.servers.NodeLauncher;
+
+import org.junit.jupiter.api.Test;
 
 public class NodeLauncherTest {
 

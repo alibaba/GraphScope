@@ -1,16 +1,22 @@
 package com.alibaba.graphscope.fragment.adaptor;
 
 import com.alibaba.fastffi.CXXReference;
+import com.alibaba.fastffi.FFIPointer;
 import com.alibaba.graphscope.ds.DestList;
 import com.alibaba.graphscope.ds.Vertex;
 import com.alibaba.graphscope.ds.VertexRange;
 import com.alibaba.graphscope.ds.adaptor.AdjList;
 import com.alibaba.graphscope.ds.adaptor.ProjectedAdjListAdaptor;
 import com.alibaba.graphscope.fragment.ArrowProjectedFragment;
-import com.alibaba.graphscope.fragment.SimpleFragment;
+import com.alibaba.graphscope.fragment.IFragment;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ArrowProjectedAdaptor<OID_T, VID_T, VDATA_T, EDATA_T>
-        implements SimpleFragment<OID_T, VID_T, VDATA_T, EDATA_T> {
+        implements IFragment<OID_T, VID_T, VDATA_T, EDATA_T> {
+    private static Logger logger = LoggerFactory.getLogger(ArrowProjectedAdaptor.class.getName());
+
     public static String fragmentType = "ArrowProjectedFragment";
     private ArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T> fragment;
 
@@ -18,9 +24,23 @@ public class ArrowProjectedAdaptor<OID_T, VID_T, VDATA_T, EDATA_T>
         fragment = frag;
     }
 
+    public ArrowProjectedFragment getArrowProjectedFragment() {
+        return fragment;
+    }
+
     @Override
     public String fragmentType() {
         return fragmentType;
+    }
+
+    /**
+     * Get the actual fragment FFIPointer we are using.
+     *
+     * @return a ffipointer
+     */
+    @Override
+    public FFIPointer getFFIPointer() {
+        return fragment;
     }
 
     @Override
@@ -89,12 +109,12 @@ public class ArrowProjectedAdaptor<OID_T, VID_T, VDATA_T, EDATA_T>
     }
 
     @Override
-    public VID_T getInnerVerticesNum() {
+    public long getInnerVerticesNum() {
         return fragment.getInnerVerticesNum();
     }
 
     @Override
-    public VID_T getOuterVerticesNum() {
+    public long getOuterVerticesNum() {
         return fragment.getOuterVerticesNum();
     }
 
@@ -181,5 +201,28 @@ public class ArrowProjectedAdaptor<OID_T, VID_T, VDATA_T, EDATA_T>
     @Override
     public AdjList<VID_T, EDATA_T> getOutgoingAdjList(Vertex<VID_T> vertex) {
         return new ProjectedAdjListAdaptor<>(fragment.getOutgoingAdjList(vertex));
+    }
+
+    /**
+     * Get the data on vertex.
+     *
+     * @param vertex querying vertex.
+     * @return vertex data
+     */
+    @Override
+    public VDATA_T getData(Vertex<VID_T> vertex) {
+        logger.error("Method not implemented");
+        return null;
+    }
+
+    /**
+     * Update vertex data with a new value.
+     *
+     * @param vertex querying vertex.
+     * @param vdata new vertex data.
+     */
+    @Override
+    public void setData(Vertex<VID_T> vertex, VDATA_T vdata) {
+        logger.error("Method not implemented");
     }
 }

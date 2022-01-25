@@ -1,68 +1,63 @@
-/**
- * Copyright 2020 Alibaba Group Holding Limited.
- *
- * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a copy of the License at
- *
- * <p>http://www.apache.org/licenses/LICENSE-2.0
- *
- * <p>Unless required by applicable law or agreed to in writing, software distributed under the
- * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package com.alibaba.graphscope.groot.ingestor;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.meta.MetaService;
+import com.alibaba.graphscope.groot.metrics.AvgMetric;
+import com.alibaba.graphscope.groot.metrics.MetricsAgent;
+import com.alibaba.graphscope.groot.metrics.MetricsCollector;
 import com.alibaba.graphscope.groot.operation.OperationBatch;
 import com.alibaba.graphscope.groot.operation.OperationBlob;
 import com.alibaba.graphscope.groot.operation.StoreDataBatch;
-import com.alibaba.graphscope.groot.metrics.MetricsAgent;
-import com.alibaba.graphscope.groot.metrics.MetricsCollector;
+import com.alibaba.graphscope.groot.operation.StoreDataBatch.Builder;
 import com.alibaba.maxgraph.common.config.CommonConfig;
 import com.alibaba.maxgraph.common.config.Configs;
 import com.alibaba.maxgraph.common.config.IngestorConfig;
+import com.alibaba.maxgraph.common.config.StoreConfig;
 import com.alibaba.maxgraph.common.util.PartitionUtils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class BatchSender implements MetricsAgent {
     private static final Logger logger = LoggerFactory.getLogger(BatchSender.class);
 
     public static final String SEND_BYTES_PER_SECOND = "send.bytes.per.second";
     public static final String SEND_BYTES_TOTAL = "send.bytes.total";
-
     public static final String SEND_RECORDS_PER_SECOND = "send.records.per.second";
     public static final String SEND_RECORDS_TOTAL = "send.records.total";
+    public static final String SEND_BUFFER_BATCH_COUNT = "send.buffer.batch.count";
+    public static final String SEND_CALLBACK_LATENCY_PER_SECOND_MS =
+            "send.callback.latency.per.second.ms";
 
     private MetaService metaService;
     private StoreWriter storeWriter;
 
-    private volatile boolean shouldStop = true;
-
     private int bufferSize;
     private int storeCount;
-    private BlockingQueue<SendTask> sendBuffer;
-    private Thread sendThread;
+    private int sendOperationLimit;
 
-    private volatile long totalBytes;
-    private volatile long lastUpdateBytes;
+    private List<BlockingQueue<StoreDataBatch>> storeSendBuffer;
+    private BlockingQueue<SendTask> sendTasks;
+
+    private Thread sendThread;
+    private volatile boolean shouldStop = true;
+
     private volatile long lastUpdateTime;
-    private volatile long sendBytesPerSecond;
-    private volatile long totalRecords;
-    private volatile long lastUpdateRecords;
-    private volatile long sendRecordsPerSecond;
+    private AvgMetric sendBytesMetric;
+    private AvgMetric sendRecordsMetric;
+    private List<AvgMetric> bufferBatchCountMetrics;
+    private List<AvgMetric> callbackLatencyMetrics;
+    private int receiverQueueSize;
 
     public BatchSender(
             Configs configs,
@@ -71,15 +66,22 @@ public class BatchSender implements MetricsAgent {
             MetricsCollector metricsCollector) {
         this.metaService = metaService;
         this.storeWriter = storeWriter;
+
         this.storeCount = CommonConfig.STORE_NODE_COUNT.get(configs);
         this.bufferSize = IngestorConfig.INGESTOR_SENDER_BUFFER_MAX_COUNT.get(configs);
+        this.sendOperationLimit = IngestorConfig.INGESTOR_SENDER_OPERATION_MAX_COUNT.get(configs);
+        this.receiverQueueSize = StoreConfig.STORE_QUEUE_BUFFER_SIZE.get(configs);
         initMetrics();
         metricsCollector.register(this, () -> updateMetrics());
     }
 
     public void start() {
-        logger.info("starting batchSender");
-        this.sendBuffer = new ArrayBlockingQueue<>(this.bufferSize);
+        this.storeSendBuffer = new ArrayList<>(this.storeCount);
+        this.sendTasks = new ArrayBlockingQueue<>(this.storeCount);
+        for (int i = 0; i < this.storeCount; i++) {
+            this.storeSendBuffer.add(new ArrayBlockingQueue<>(this.bufferSize));
+            this.sendTasks.add(new SendTask(i, null));
+        }
 
         this.shouldStop = false;
         this.sendThread =
@@ -87,7 +89,7 @@ public class BatchSender implements MetricsAgent {
                         () -> {
                             while (!shouldStop) {
                                 try {
-                                    process();
+                                    sendBatch();
                                 } catch (Exception e) {
                                     logger.warn("error occurred in send process", e);
                                 }
@@ -95,11 +97,9 @@ public class BatchSender implements MetricsAgent {
                         });
         this.sendThread.setDaemon(true);
         this.sendThread.start();
-        logger.info("batchSender started");
     }
 
     public void stop() {
-        logger.info("stopping batchSender");
         this.shouldStop = true;
         if (this.sendThread != null && this.sendThread.isAlive()) {
             try {
@@ -110,7 +110,6 @@ public class BatchSender implements MetricsAgent {
             }
             this.sendThread = null;
         }
-        logger.info("batchSender stopped");
     }
 
     public void asyncSendWithRetry(
@@ -119,69 +118,22 @@ public class BatchSender implements MetricsAgent {
             long snapshotId,
             long offset,
             OperationBatch operationBatch) {
-        logger.debug("asyncSendWithRetry requestId [" + requestId + "], offset [" + offset + "]");
-        while (!shouldStop) {
-            try {
-                this.sendBuffer.put(
-                        new SendTask(requestId, queueId, snapshotId, offset, operationBatch));
-                break;
-            } catch (InterruptedException e) {
-                logger.warn("send buffer interrupted", e);
-            }
-        }
-    }
-
-    private void process() {
-        SendTask task;
-        try {
-            task = this.sendBuffer.poll(1000L, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException e) {
-            logger.warn("polling sendBuffer interrupted", e);
-            return;
-        }
-        if (task == null) {
-            return;
-        }
-        while (!shouldStop) {
-            try {
-                doSend(task);
-                break;
-            } catch (Exception e) {
-                logger.warn("unexpected send batch task failed, will retry after 1s", e);
-                try {
-                    Thread.sleep(1000L);
-                } catch (InterruptedException ie) {
-                    // Ignore
-                }
-            }
-        }
-    }
-
-    private void doSend(SendTask task) throws ExecutionException, InterruptedException {
-        Map<Integer, StoreDataBatch> batchNeedSend = rebatch(task);
-        while (!shouldStop && batchNeedSend.size() != 0) {
-            batchNeedSend = parallelSend(batchNeedSend);
-        }
-        this.totalRecords += task.operationBatch.getOperationCount();
-    }
-
-    private Map<Integer, StoreDataBatch> rebatch(SendTask task) {
         int partitionCount = metaService.getPartitionCount();
-        Map<Integer, StoreDataBatch.Builder> storeToBatchBuilder = new HashMap<>();
-        for (OperationBlob operationBlob : task.operationBatch) {
+        Map<Integer, Builder> storeToBatchBuilder = new HashMap<>();
+        Function<Integer, Builder> storeDataBatchBuilderFunc =
+                k ->
+                        StoreDataBatch.newBuilder()
+                                .requestId(requestId)
+                                .queueId(queueId)
+                                .snapshotId(snapshotId)
+                                .offset(offset);
+        for (OperationBlob operationBlob : operationBatch) {
             long partitionKey = operationBlob.getPartitionKey();
             if (partitionKey == -1L) {
                 // replicate to all store node
                 for (int i = 0; i < this.storeCount; i++) {
                     StoreDataBatch.Builder batchBuilder =
-                            storeToBatchBuilder.computeIfAbsent(
-                                    i,
-                                    k ->
-                                            StoreDataBatch.newBuilder()
-                                                    .requestId(task.requestId)
-                                                    .queueId(task.queueId)
-                                                    .snapshotId(task.snapshotId)
-                                                    .offset(task.offset));
+                            storeToBatchBuilder.computeIfAbsent(i, storeDataBatchBuilderFunc);
                     batchBuilder.addOperation(-1, operationBlob);
                 }
             } else {
@@ -189,94 +141,130 @@ public class BatchSender implements MetricsAgent {
                         PartitionUtils.getPartitionIdFromKey(partitionKey, partitionCount);
                 int storeId = metaService.getStoreIdByPartition(partitionId);
                 StoreDataBatch.Builder batchBuilder =
-                        storeToBatchBuilder.computeIfAbsent(
-                                storeId,
-                                k ->
-                                        StoreDataBatch.newBuilder()
-                                                .requestId(task.requestId)
-                                                .queueId(task.queueId)
-                                                .snapshotId(task.snapshotId)
-                                                .offset(task.offset));
+                        storeToBatchBuilder.computeIfAbsent(storeId, storeDataBatchBuilderFunc);
                 batchBuilder.addOperation(partitionId, operationBlob);
             }
         }
-        Map<Integer, StoreDataBatch> batchNeedSend = new HashMap<>();
-        for (Map.Entry<Integer, StoreDataBatch.Builder> entry : storeToBatchBuilder.entrySet()) {
-            batchNeedSend.put(entry.getKey(), entry.getValue().build());
-        }
-        return batchNeedSend;
+        storeToBatchBuilder.forEach(
+                (storeId, batchBuilder) -> {
+                    while (!shouldStop) {
+                        try {
+                            storeSendBuffer.get(storeId).put(batchBuilder.build());
+                            break;
+                        } catch (InterruptedException e) {
+                            logger.warn("send buffer interrupted", e);
+                        }
+                    }
+                });
     }
 
-    private Map<Integer, StoreDataBatch> parallelSend(Map<Integer, StoreDataBatch> storeToBatch)
-            throws ExecutionException, InterruptedException {
-        Map<Integer, StoreDataBatch> batchNeedRetry = new ConcurrentHashMap<>();
-        AtomicInteger counter = new AtomicInteger(storeToBatch.size());
-        AtomicInteger totalSizeBytes = new AtomicInteger(0);
-        CompletableFuture<Integer> future = new CompletableFuture<>();
+    class SendTask {
+        int storeId;
+        List<StoreDataBatch> dataToRetry;
 
-        for (Map.Entry<Integer, StoreDataBatch> entry : storeToBatch.entrySet()) {
-            int storeId = entry.getKey();
-            StoreDataBatch storeDataBatch = entry.getValue();
+        public SendTask(int storeId, List<StoreDataBatch> dataToRetry) {
+            this.storeId = storeId;
+            this.dataToRetry = dataToRetry;
+        }
+    }
+
+    private void sendBatch() {
+        SendTask sendTask;
+        try {
+            sendTask = this.sendTasks.poll(1000L, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            logger.warn("polling send task interrupted", e);
+            return;
+        }
+        if (sendTask == null) {
+            return;
+        }
+
+        int storeId = sendTask.storeId;
+        List<StoreDataBatch> dataToSend = sendTask.dataToRetry;
+        if (dataToSend == null) {
+            dataToSend = new ArrayList<>();
+            BlockingQueue<StoreDataBatch> buffer = this.storeSendBuffer.get(storeId);
+            StoreDataBatch dataBatch;
+            int operationCount = 0;
+            int batchCount = 0;
+            while (operationCount < this.sendOperationLimit
+                    && batchCount < this.receiverQueueSize
+                    && (dataBatch = buffer.poll()) != null) {
+                dataToSend.add(dataBatch);
+                operationCount += dataBatch.getSize();
+                batchCount++;
+            }
+        }
+
+        if (dataToSend.size() > 0) {
+            List<StoreDataBatch> finalDataToSend = dataToSend;
+            long beforeWriteTime = System.nanoTime();
             this.storeWriter.write(
                     storeId,
-                    storeDataBatch,
+                    dataToSend,
                     new CompletionCallback<Integer>() {
                         @Override
                         public void onCompleted(Integer res) {
-                            totalSizeBytes.addAndGet(res);
-                            if (counter.decrementAndGet() == 0) {
-                                future.complete(totalSizeBytes.get());
-                            }
+                            sendBytesMetric.add(res);
+                            sendRecordsMetric.add(
+                                    finalDataToSend.stream()
+                                            .collect(
+                                                    Collectors.summingInt(
+                                                            batch -> batch.getSize())));
+                            finish(true);
                         }
 
                         @Override
                         public void onError(Throwable t) {
                             logger.warn(
-                                    "send to store ["
-                                            + storeId
-                                            + "] failed. requestId ["
-                                            + storeDataBatch.getRequestId()
-                                            + "]. will retry",
-                                    t);
-                            batchNeedRetry.put(storeId, storeDataBatch);
-                            if (counter.decrementAndGet() == 0) {
-                                future.complete(null);
+                                    "send to store [" + storeId + "] failed. will retry later", t);
+                            finish(false);
+                        }
+
+                        private void finish(boolean suc) {
+                            long finishTime = System.nanoTime();
+                            callbackLatencyMetrics.get(storeId).add(finishTime - beforeWriteTime);
+                            if (suc) {
+                                addTask(storeId, null);
+                            } else {
+                                addTask(storeId, finalDataToSend);
                             }
                         }
                     });
+        } else {
+            addTask(storeId, null);
         }
-        this.totalBytes += future.get();
-        if (batchNeedRetry.size() > 0) {
-            try {
-                Thread.sleep(1000L);
-            } catch (InterruptedException e) {
-                // Ignore
-            }
+    }
+
+    private void addTask(int storeId, List<StoreDataBatch> dataToRetry) {
+        if (!sendTasks.offer(new SendTask(storeId, dataToRetry))) {
+            logger.error(
+                    "Unexpected error, failed to add send task to queue. storeId ["
+                            + storeId
+                            + "]");
         }
-        return batchNeedRetry;
     }
 
     @Override
     public void initMetrics() {
-        this.totalBytes = 0L;
-        this.lastUpdateBytes = 0L;
         this.lastUpdateTime = System.nanoTime();
-        this.totalRecords = 0L;
-        this.lastUpdateRecords = 0L;
+        this.sendBytesMetric = new AvgMetric();
+        this.sendRecordsMetric = new AvgMetric();
+        this.bufferBatchCountMetrics = new ArrayList<>(this.storeCount);
+        this.callbackLatencyMetrics = new ArrayList<>(this.storeCount);
+        for (int i = 0; i < this.storeCount; i++) {
+            this.bufferBatchCountMetrics.add(new AvgMetric());
+            this.callbackLatencyMetrics.add(new AvgMetric());
+        }
     }
 
     private void updateMetrics() {
         long currentTime = System.nanoTime();
-
-        long sendBytes = this.totalBytes;
         long interval = currentTime - this.lastUpdateTime;
-        this.sendBytesPerSecond = 1000000000 * (sendBytes - this.lastUpdateBytes) / interval;
-        this.lastUpdateBytes = sendBytes;
-
-        long sendRecords = this.totalRecords;
-        this.sendRecordsPerSecond = 1000000000 * (sendRecords - this.lastUpdateRecords) / interval;
-        this.lastUpdateRecords = sendRecords;
-
+        this.sendBytesMetric.update(interval);
+        this.sendRecordsMetric.update(interval);
+        this.callbackLatencyMetrics.forEach(m -> m.update(interval));
         this.lastUpdateTime = currentTime;
     }
 
@@ -284,10 +272,26 @@ public class BatchSender implements MetricsAgent {
     public Map<String, String> getMetrics() {
         return new HashMap<String, String>() {
             {
-                put(SEND_BYTES_PER_SECOND, String.valueOf(sendBytesPerSecond));
-                put(SEND_BYTES_TOTAL, String.valueOf(totalBytes));
-                put(SEND_RECORDS_PER_SECOND, String.valueOf(sendRecordsPerSecond));
-                put(SEND_RECORDS_TOTAL, String.valueOf(totalRecords));
+                put(
+                        SEND_BYTES_PER_SECOND,
+                        String.valueOf((int) (1000000000 * sendBytesMetric.getAvg())));
+                put(SEND_BYTES_TOTAL, String.valueOf(sendBytesMetric.getLastUpdateTotal()));
+                put(
+                        SEND_RECORDS_PER_SECOND,
+                        String.valueOf((int) (1000000000 * sendRecordsMetric.getAvg())));
+                put(SEND_RECORDS_TOTAL, String.valueOf(sendRecordsMetric.getLastUpdateTotal()));
+                put(
+                        SEND_BUFFER_BATCH_COUNT,
+                        String.valueOf(
+                                storeSendBuffer.stream()
+                                        .map(q -> q.size())
+                                        .collect(Collectors.toList())));
+                put(
+                        SEND_CALLBACK_LATENCY_PER_SECOND_MS,
+                        String.valueOf(
+                                callbackLatencyMetrics.stream()
+                                        .map(m -> (int) (1000 * m.getAvg()))
+                                        .collect(Collectors.toList())));
             }
         };
     }
@@ -295,28 +299,12 @@ public class BatchSender implements MetricsAgent {
     @Override
     public String[] getMetricKeys() {
         return new String[] {
-            SEND_BYTES_PER_SECOND, SEND_BYTES_TOTAL, SEND_RECORDS_PER_SECOND, SEND_RECORDS_TOTAL
+            SEND_BYTES_PER_SECOND,
+            SEND_BYTES_TOTAL,
+            SEND_RECORDS_PER_SECOND,
+            SEND_RECORDS_TOTAL,
+            SEND_BUFFER_BATCH_COUNT,
+            SEND_CALLBACK_LATENCY_PER_SECOND_MS
         };
-    }
-
-    class SendTask {
-        String requestId;
-        int queueId;
-        long snapshotId;
-        long offset;
-        OperationBatch operationBatch;
-
-        public SendTask(
-                String requestId,
-                int queueId,
-                long snapshotId,
-                long offset,
-                OperationBatch operationBatch) {
-            this.requestId = requestId;
-            this.queueId = queueId;
-            this.snapshotId = snapshotId;
-            this.offset = offset;
-            this.operationBatch = operationBatch;
-        }
     }
 }

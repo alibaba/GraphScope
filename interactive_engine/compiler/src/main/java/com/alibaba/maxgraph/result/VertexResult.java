@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,6 +20,7 @@ import com.alibaba.maxgraph.sdkcommon.graph.QueryResult;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.collect.Sets;
+
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Graph;
@@ -59,9 +60,9 @@ public class VertexResult implements Vertex, QueryResult {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         VertexResult that = (VertexResult) o;
-        return id == that.id &&
-                Objects.equal(label, that.label) &&
-                Objects.equal(propertyList, that.propertyList);
+        return id == that.id
+                && Objects.equal(label, that.label)
+                && Objects.equal(propertyList, that.propertyList);
     }
 
     @Override
@@ -71,9 +72,11 @@ public class VertexResult implements Vertex, QueryResult {
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this).add("id", id)
+        return MoreObjects.toStringHelper(this)
+                .add("id", id)
                 .add("label", label)
-                .add("propertyList", propertyList).toString();
+                .add("propertyList", propertyList)
+                .toString();
     }
 
     @Override
@@ -82,7 +85,8 @@ public class VertexResult implements Vertex, QueryResult {
     }
 
     @Override
-    public <V> VertexProperty<V> property(VertexProperty.Cardinality cardinality, String key, V value, Object... keyValues) {
+    public <V> VertexProperty<V> property(
+            VertexProperty.Cardinality cardinality, String key, V value, Object... keyValues) {
         throw new UnsupportedOperationException();
     }
 
@@ -96,7 +100,7 @@ public class VertexResult implements Vertex, QueryResult {
         throw new UnsupportedOperationException();
     }
 
-    public Iterator<Vertex> self(){
+    public Iterator<Vertex> self() {
         List<Vertex> vertices = new ArrayList<>();
         vertices.add(this);
         return vertices.iterator();
@@ -124,9 +128,13 @@ public class VertexResult implements Vertex, QueryResult {
 
     @Override
     public <V> Iterator<VertexProperty<V>> properties(String... propertyKeys) {
-        return null == this.propertyList ?
-                Collections.emptyIterator():
-                (Iterator)propertyList.stream().filter(entry -> ElementHelper.keyExists(entry.key(), propertyKeys)).map(entry -> (VertexProperty<V>)entry).iterator();
+        return null == this.propertyList
+                ? Collections.emptyIterator()
+                : (Iterator)
+                        propertyList.stream()
+                                .filter(entry -> ElementHelper.keyExists(entry.key(), propertyKeys))
+                                .map(entry -> (VertexProperty<V>) entry)
+                                .iterator();
     }
 
     public int getStoreId() {
