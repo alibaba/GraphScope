@@ -22,15 +22,16 @@ fn main() {
     let timer = Timer::new();
     let mut tmp_time = 0.0;
     let mut tmp_count = 0;
+    let val = "c".repeat(str_len);
     loop {
         let snapshot_id = i;
         let vertex_id = i;
         let mut properties = HashMap::new();
         properties.insert(1, Value::long(i));
-        properties.insert(2, Value::string(&String::from_utf8(vec!['a' as u8; str_len]).unwrap()));
-        store.insert_overwrite_vertex(snapshot_id, vertex_id, label_id, &properties);
+        properties.insert(2, Value::string(&val));
+        store.insert_overwrite_vertex(snapshot_id, vertex_id, label_id, &properties).unwrap();
         i += 1;
-        if i % 200000 == 0 {
+        if i % 500000 == 0 {
             let write_count = i - tmp_count;
             let total_time = timer.elasped_secs();
             let t = total_time - tmp_time;
