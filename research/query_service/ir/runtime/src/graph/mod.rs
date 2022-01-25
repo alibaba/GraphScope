@@ -17,17 +17,20 @@ pub mod element;
 pub mod partitioner;
 pub mod property;
 
+use std::collections::HashMap;
 use std::convert::{TryFrom, TryInto};
 use std::io;
 use std::sync::atomic::{AtomicPtr, Ordering};
 use std::sync::Arc;
 
+use dyn_type::Object;
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::common as common_pb;
 use ir_common::NameOrId;
 use pegasus::api::function::{DynIter, FnResult};
 use pegasus::codec::{ReadExt, WriteExt};
+pub use property::DefaultDetails;
 
 use crate::expr::eval_pred::PEvaluator;
 use crate::graph::element::{Edge, Vertex};
@@ -72,6 +75,7 @@ pub struct QueryParams {
     pub props: Option<Vec<NameOrId>>,
     pub partitions: Option<Vec<u64>>,
     pub filter: Option<Arc<PEvaluator>>,
+    pub extra_params: Option<HashMap<String, Object>>,
 }
 
 impl TryFrom<Option<algebra_pb::QueryParams>> for QueryParams {
@@ -149,6 +153,14 @@ impl QueryParams {
             && self.limit.is_none()
             && self.partitions.is_none()
             && self.props.is_none())
+    }
+
+    pub fn get_extra_param(&self, key: &str) -> Option<&Object> {
+        if let Some(ref extra_params) = self.extra_params {
+            extra_params.get(key)
+        } else {
+            None
+        }
     }
 }
 
