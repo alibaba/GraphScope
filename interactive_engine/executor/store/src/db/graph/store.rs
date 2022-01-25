@@ -263,6 +263,8 @@ impl MultiVersionGraph for GraphStore {
     }
 
     fn insert_overwrite_vertex(&self, si: SnapshotId, id: VertexId, label: LabelId, properties: &dyn PropertyMap) -> GraphResult<()> {
+        let s = format!("si {}, id {}, label {}, properties: {:?}", si, id, label, properties.as_map());
+        println!(s);
         self.check_si_guard(si)?;
         let res = self.vertex_manager.get_type(si, label).and_then(|info| {
             self.do_insert_vertex_data(si, info, id, properties)
