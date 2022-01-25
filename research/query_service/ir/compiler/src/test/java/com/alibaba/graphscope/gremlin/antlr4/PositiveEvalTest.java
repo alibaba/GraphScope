@@ -619,17 +619,17 @@ public class PositiveEvalTest {
     }
 
     @Test
-    public void g_V_otherV_test() {
-        Assert.assertEquals(g.V().otherV(), eval("g.V().otherV()"));
+    public void g_V_outE_as_otherV_test() {
+        Assert.assertEquals(g.V().outE().as("a").otherV(), eval("g.V().outE().as(\"a\").otherV()"));
     }
 
     @Test
-    public void g_V_inV_test() {
-        Assert.assertEquals(g.V().inV(), eval("g.V().inV()"));
+    public void g_V_outE_as_inV_test() {
+        Assert.assertEquals(g.V().outE().as("a").inV(), eval("g.V().outE().as(\"a\").inV()"));
     }
 
     @Test
-    public void g_V_outV_test() {
-        Assert.assertEquals(g.V().outV(), eval("g.V().outV()"));
+    public void g_V_outE_as_outV_test() {
+        Assert.assertEquals(g.V().outE().as("a").outV(), eval("g.V().outE().as(\"a\").outV()"));
     }
 }
