@@ -1,0 +1,47 @@
+# Set ip address the RPC server will start;
+# It is set to "0.0.0.0" by default;
+rpc_host = "127.0.0.1"
+# Set port the RPC service will listen on;
+# It is set to 0 use random port by default;
+rpc_port = 5000
+
+# Set the concurrency limit applied to on requests inbound per connection.
+#rpc_concurrency_limit_per_connection = 32
+
+# Set a timeout milliseconds  for all request handlers.
+#rpc_timeout = 10;
+
+# Sets the SETTINGS_INITIAL_WINDOW_SIZE option for HTTP2
+# stream-level flow control.
+#
+# Default is 65,535
+#
+# [SETTINGS_INITIAL_WINDOW_SIZE]: https://httpwg.org/specs/rfc7540.html#SETTINGS_INITIAL_WINDOW_SIZE
+#rpc_initial_stream_window_size = 65535
+
+# Sets the max connection-level flow control for HTTP2
+# Default is 65,535
+#rpc_initial_connection_window_size = 65535
+
+# Sets the SETTINGS_MAX_CONCURRENT_STREAMS option for HTTP2 connections.
+# Default is no limit (None).
+# [SETTINGS_MAX_CONCURRENT_STREAMS]: https://httpwg.org/specs/rfc7540.html#SETTINGS_MAX_CONCURRENT_STREAMS
+#rpc_max_concurrent_streams = 64
+
+# Set whether HTTP2 Ping frames are enabled on accepted connections.
+# If None is specified, HTTP2 keepalive is disabled, otherwise the duration specified will be the time interval between HTTP2 Ping frames.
+# The timeout for receiving an acknowledgement of the keepalive ping can be set with rpc_keepalive_timeout_ms.
+# Default is no HTTP2 keepalive (None)
+#rpc_keep_alive_interval_ms = 1
+
+# Sets a timeout for receiving an acknowledgement of the keepalive ping.
+# If the ping is not acknowledged within the timeout, the connection will be closed. Does nothing if rpc_keep_alive_interval_ms is disabled.
+# Default is 20 seconds.
+#rpc_keep_alive_timeout_ms = 20000
+
+# Set whether TCP keepalive messages are enabled on accepted connections.
+# If None is specified, keepalive is disabled, otherwise the duration specified will be the time to remain idle before sending TCP keepalive probes.
+#tcp_keep_alive_ms = 20000
+
+# Set the value of TCP_NODELAY option for accepted connections.
+#tcp_nodelay = false

@@ -55,6 +55,14 @@ impl Configuration {
         }
     }
 
+    pub fn servers_size(&self) -> usize {
+        if let Some(net_conf) = self.network.as_ref() {
+            net_conf.servers_size
+        } else {
+            1
+        }
+    }
+
     pub fn network_config(&self) -> Option<&NetworkConfig> {
         self.network.as_ref()
     }

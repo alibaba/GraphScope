@@ -21,95 +21,13 @@ option java_outer_classname = "PegasusClient";
 
 message Empty { }
 
+message Name {
+  string name = 1;
+}
+
 message BinaryResource {
-  bytes resource = 1;
-}
-
-
-enum CommunicateKind {
-  EXCHANGE = 0;
-  BROADCAST = 1;
-  AGGREGATE = 2;
-}
-
-message CommunicateOperator {
-  CommunicateKind kind = 1;
-  BinaryResource resource = 2;
-}
-
-message Inputs {
-  BinaryResource src = 1;
-}
-
-enum MapKind {
-  MAP = 0;
-  FLATMAP = 1;
-  FILTER_MAP = 2;
-  FILTER = 3;
-}
-
-message MapOperator {
-  MapKind kind = 1;
-  BinaryResource resource = 2;
-}
-
-enum Scope {
-  PARTITION = 0;
-  GLOBAL = 1;
-}
-
-enum FoldKind {
-  TO_VEC = 0;
-  TO_SET = 1;
-  COUNT = 2;
-  CUSTOM_FOLD = 3;
-}
-
-enum ReduceKind {
-  SUM = 0;
-  MAX = 1;
-  MIN = 2;
-  CUSTOM_REDUCE = 3;
-}
-
-enum UnfoldKind {
-  DIRECT = 0;
-  FLAT_MAP = 1;
-}
-
-message UnfoldOperator {
-  UnfoldKind kind = 1;
-  BinaryResource resource = 2;
-}
-
-message AggregationOperator {
-  Scope scope = 1;
-  oneof kind {
-    FoldKind fold = 2;
-    ReduceKind reduce = 3;
-  }
-  BinaryResource resource = 4;
-  UnfoldOperator unfold = 5;
-}
-
-message Iteration {
-  uint32 max_iters = 1;
-  BinaryResource until = 2;
-  ExecutionPlan plan = 3;
-}
-
-message Operator {
-  uint32 index = 1;
-  oneof op_kind {
-    CommunicateOperator comm = 2;
-    MapOperator map = 3;
-    AggregationOperator agg = 4;
-    Iteration iter = 5;
-  }
-}
-
-message ExecutionPlan {
-  repeated Operator plan = 1;
+  string name = 1;
+  bytes resource = 2;
 }
 
 message ServerList {
@@ -123,28 +41,32 @@ message JobConfig {
   uint64 time_limit         = 4;
   uint32 batch_size         = 5;
   uint32 batch_capacity     = 6;
-  uint32 scope_capacity     = 7;
-  uint32 memory_limit       = 8;
-  bool plan_print           = 9;
+  uint32 memory_limit       = 7;
+  bool trace_enable         = 8;
   oneof servers {
-    Empty local             = 10;
-    ServerList part         = 11;
-    Empty all               = 12;
+    Empty local             = 9;
+    ServerList part         = 10;
+    Empty all               = 11;
   }
 }
 
 message JobRequest {
   JobConfig conf          = 1;
-  BinaryResource source   = 2;
-  BinaryResource plan     = 3;
-  BinaryResource resource = 4;
+  bytes source   = 2;
+  bytes plan     = 3;
+  bytes resource = 4;
 }
 
 message JobResponse {
   uint64 job_id       = 1;
-  BinaryResource res  = 2;
+  bytes  resp  = 2;
 }
 
 service JobService {
+
+  rpc AddLibrary(BinaryResource) returns(Empty) {}
+
+  rpc RemoveLibrary(Name) returns(Empty) {}
+
   rpc Submit(JobRequest) returns(stream JobResponse) {}
 }
