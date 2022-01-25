@@ -1,0 +1,55 @@
+# Set max threads will be created in the executor pool;
+# It will be set to CPU cores by default;
+max_pool_size = 8
+
+[network]
+# Set server id of current config belongs to;
+server_id = 1
+# Set size of total servers;
+servers_size = 2
+
+# enable nonblocking mode when reading or writing socket;
+# default is false;
+#nonblocking = false
+
+# Set timeout milliseconds when reading socket in blocking mode;
+# It will block indefinitely by default;
+# It can't be set to 0, set nonblocking instead;
+#read_timeout_ms = 1
+
+# Set timeout milliseconds when writing socket in blocking mode;
+# It will block indefinitely by default;
+# It can't be set to 0, set nonblocking instead;
+#write_timeout_ms = 1
+
+# Use byte slab to store bytes reading from socket, set the capacity of slab;
+# See https://docs.rs/bytes/latest/bytes/index.html for more information;
+# It is set to 2^16 by default;
+#read_slab_size = 65536
+
+# Set the value of TCP_NODELAY option for accepted connections.
+# See https://doc.rust-lang.org/std/net/struct.TcpStream.html#method.set_nodelay
+# It is set to false by default;
+#no_delay = false
+
+# Use buffer to write socket; Set the size of buffer;
+# No buffer will be used if set to 0;
+# A default value will be set by default;
+#send_buffer = 4096
+
+# Set heartbeat seconds for keep-alive;
+#heartbeat_sec = 1
+
+# Set addresses of your servers;
+# If the cluster is standalone, the size of addresses should be equal to [server_size] set above, and the addresses
+# should be in order, the fisrt address would be server 0.
+
+[[network.servers]]
+ip = '127.0.0.1'
+port = 8090
+
+[[network.servers]]
+ip = '127.0.0.1'
+port = 8091
+
+

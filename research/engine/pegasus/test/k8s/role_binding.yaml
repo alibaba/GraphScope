@@ -1,0 +1,23 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: grole
+  namespace: pegasus-ci
+rules:
+- apiGroups: ["apps", "extensions", ""]
+  resources: ["configmaps", "deployments", "deployments/status", "endpoints", "events", "pods", "pods/log", "pods/exec", "pods/status", "services", "replicasets"]
+  verbs: ["*"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: grole-binding
+  namespace: pegasus-ci
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: pegasus-ci
+roleRef:
+  kind: Role
+  name: grole
+  apiGroup: rbac.authorization.k8s.io

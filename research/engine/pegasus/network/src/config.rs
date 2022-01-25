@@ -32,8 +32,17 @@ pub enum BlockMode {
     Nonblocking,
 }
 
+impl BlockMode {
+    pub fn get_block_timeout_ms(&self) -> usize {
+        match self {
+            BlockMode::Blocking(Some(d)) => d.as_millis() as usize,
+            BlockMode::Blocking(None) | BlockMode::Nonblocking => 0,
+        }
+    }
+}
+
 #[derive(Clone, Copy, Debug)]
-pub(crate) struct WriteParams {
+pub struct WriteParams {
     pub mode: BlockMode,
     pub buffer: usize,
     pub nodelay: bool,
@@ -54,17 +63,14 @@ impl Default for WriteParams {
 }
 
 #[derive(Clone, Copy, Debug)]
-pub(crate) struct ReadParams {
+pub struct ReadParams {
     pub mode: BlockMode,
     pub slab_size: usize,
 }
 
 impl Default for ReadParams {
     fn default() -> Self {
-        ReadParams {
-            mode: BlockMode::Nonblocking,
-            slab_size: DEFAULT_SLAB_SIZE,
-        }
+        ReadParams { mode: BlockMode::Nonblocking, slab_size: DEFAULT_SLAB_SIZE }
     }
 }
 
@@ -79,11 +85,7 @@ impl ConnectionParams {
     pub fn nonblocking() -> Self {
         let write = WriteParams::default();
         let read = ReadParams::default();
-        ConnectionParams {
-            is_nonblocking: true,
-            write,
-            read,
-        }
+        ConnectionParams { is_nonblocking: true, write, read }
     }
 
     pub fn blocking() -> Self {
@@ -91,11 +93,7 @@ impl ConnectionParams {
         write.mode = BlockMode::Blocking(None);
         let mut read = ReadParams::default();
         read.mode = BlockMode::Blocking(None);
-        ConnectionParams {
-            is_nonblocking: false,
-            write,
-            read,
-        }
+        ConnectionParams { is_nonblocking: false, write, read }
     }
 
     pub fn set_read_timeout(&mut self, timeout: Duration) {
@@ -130,11 +128,11 @@ impl ConnectionParams {
         self.write.heartbeat = interval;
     }
 
-    pub(crate) fn get_write_params(&self) -> &WriteParams {
+    pub fn get_write_params(&self) -> &WriteParams {
         &self.write
     }
 
-    pub(crate) fn get_read_params(&self) -> &ReadParams {
+    pub fn get_read_params(&self) -> &ReadParams {
         &self.read
     }
 
@@ -143,6 +141,7 @@ impl ConnectionParams {
     }
 }
 
+/// Check "../server/config/server_config.toml" for configuration descriptions;
 #[derive(Debug, Deserialize)]
 pub struct NetworkConfig {
     pub server_id: u64,
@@ -339,11 +338,7 @@ impl NetworkConfig {
         self
     }
 
-    pub fn set_server_addr(
-        &mut self,
-        server_id: u64,
-        addr: ServerAddr,
-    ) -> Result<&mut Self, NetError> {
+    pub fn set_server_addr(&mut self, server_id: u64, addr: ServerAddr) -> Result<&mut Self, NetError> {
         if server_id as usize >= self.servers_size {
             Err(NetError::InvalidConfig(Some(format!(
                 "invalid server_id({}) larger than server size {}",
@@ -366,14 +361,10 @@ impl NetworkConfig {
             if let Some(ref addr) = servers[index] {
                 Ok(SocketAddr::new(addr.ip.parse()?, addr.port))
             } else {
-                Err(NetError::InvalidConfig(Some(
-                    "local server address not found".to_owned(),
-                )))
+                Err(NetError::InvalidConfig(Some("local server address not found".to_owned())))
             }
         } else {
-            Err(NetError::InvalidConfig(Some(
-                "local server address not found".to_owned(),
-            )))
+            Err(NetError::InvalidConfig(Some("local server address not found".to_owned())))
         }
     }
 
@@ -425,14 +416,11 @@ impl NetworkConfig {
                 if let Some(peer) = p {
                     let ip = peer.ip.parse()?;
                     let addr = SocketAddr::new(ip, peer.port);
-                    let server = Server {
-                        id: id as u64,
-                        addr,
-                    };
+                    let server = Server { id: id as u64, addr };
                     servers.push(server);
                 } else {
                     return Err(NetError::InvalidConfig(Some(format!(
-                        "addredd of server {} not found",
+                        "address of server {} not found",
                         id
                     ))));
                 }
@@ -440,6 +428,18 @@ impl NetworkConfig {
             Ok(Some(servers))
         } else {
             Ok(None)
+        }
+    }
+
+    pub fn get_server_addr(&self, server_id: u64) -> Option<&ServerAddr> {
+        if let Some(servers) = self.servers.as_ref() {
+            if server_id >= servers.len() as u64 {
+                None
+            } else {
+                servers[server_id as usize].as_ref()
+            }
+        } else {
+            None
         }
     }
 }
