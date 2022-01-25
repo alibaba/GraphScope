@@ -213,7 +213,7 @@ fn init_options(options: &HashMap<String, String>) -> Options {
         }
     }
     if let Some(conf_str) = options.get("write_buffer_mb") {
-        let size_mb = conf_str.parse().unwrap();
+        let size_mb: usize = conf_str.parse().unwrap();
         ret.set_write_buffer_size(size_mb * 1024 * 1024);
     }
     if let Some(conf_str) = options.get("background_jobs") {
