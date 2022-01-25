@@ -25,6 +25,7 @@ fn main() {
     let mut tmp_time = 0.0;
     let mut tmp_count = 0;
     let val = "c".repeat(str_len);
+    println!("{}\t{}\t{}", "time(sec)", "speed(record/s)", "total");
     loop {
         let snapshot_id = i;
         let vertex_id = i;
@@ -40,7 +41,7 @@ fn main() {
             let write_count = i - tmp_count;
             let total_time = timer.elasped_secs();
             let t = total_time - tmp_time;
-            println!("{:.0}\t{:.2}", total_time, write_count as f64 / t);
+            println!("{:.0}\t{:.2}\t{:.0}", total_time, write_count as f64 / t, write_count);
             tmp_count = i;
             tmp_time = total_time;
         }
