@@ -23,6 +23,7 @@ use runtime::graph::Statement;
 use runtime::IRJobCompiler;
 
 mod exp_store;
+mod gs_store;
 
 pub trait InitializeJobCompiler {
     fn initialize_job_compiler(&self) -> IRJobCompiler;
