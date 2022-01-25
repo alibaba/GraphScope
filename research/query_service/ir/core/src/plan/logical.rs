@@ -513,6 +513,44 @@ impl LogicalPlan {
         }
         Some(plan)
     }
+
+    /// Given a node that contains a subtask, which is typically an  `Apply` operator,
+    /// try to extract the subtask as a logical plan.
+    ///
+    /// TODO(longbin): There may be an issue when the last node of a subtask is a merge node.
+    pub fn extract_subplan(&self, node: NodeType) -> Option<LogicalPlan> {
+        let node_borrow = node.borrow();
+        match &node_borrow.opr.opr {
+            Some(pb::logical_plan::operator::Opr::Apply(apply_opr)) => {
+                if let Some(from_node) = self.get_node(apply_opr.subtask as u32) {
+                    let mut curr_node = from_node.clone();
+                    while let Some(to_node) = curr_node
+                        .clone()
+                        .borrow()
+                        .get_first_child()
+                        .and_then(|node_id| self.get_node(node_id))
+                    {
+                        curr_node = to_node.clone();
+                    }
+                    let parent_ids = curr_node
+                        .borrow()
+                        .parents
+                        .iter()
+                        .cloned()
+                        .collect();
+                    let mut subplan = self.subplan(from_node, curr_node.clone());
+                    if let Some(plan) = subplan.as_mut() {
+                        plan.append_node(curr_node.borrow().clone(), parent_ids)
+                            .expect("append node to subplan error!");
+                    }
+                    subplan
+                } else {
+                    None
+                }
+            }
+            _ => None,
+        }
+    }
 }
 
 impl JsonIO for LogicalPlan {
@@ -913,13 +951,14 @@ impl AsLogical for pb::logical_plan::Operator {
 #[cfg(test)]
 mod test {
     use ir_common::expr_parse::str_to_expr_pb;
+    use ir_common::generated::algebra::logical_plan::operator::Opr;
     use ir_common::generated::common::property::Item;
 
     use super::*;
     use crate::plan::meta::set_schema_simple;
 
     #[test]
-    fn test_logical_plan() {
+    fn logical_plan_construct() {
         let opr = pb::logical_plan::Operator { opr: None };
         let mut plan = LogicalPlan::default();
 
@@ -1048,7 +1087,7 @@ mod test {
     }
 
     #[test]
-    fn test_logical_plan_from_pb() {
+    fn logical_plan_from_pb() {
         let opr = pb::logical_plan::Operator { opr: None };
         let root_pb = pb::logical_plan::Node { opr: Some(opr.clone()), children: vec![1, 2] };
         let node1_pb = pb::logical_plan::Node { opr: Some(opr.clone()), children: vec![2] };
@@ -1095,7 +1134,7 @@ mod test {
     }
 
     #[test]
-    fn test_logical_plan_into_pb() {
+    fn logical_plan_into_pb() {
         let opr = pb::logical_plan::Operator { opr: None };
         let mut plan = LogicalPlan::default();
 
@@ -1123,7 +1162,7 @@ mod test {
     }
 
     #[test]
-    fn test_preprocess_expression() {
+    fn prep_expression() {
         let mut plan_meta = PlanMeta::default();
         plan_meta.set_preprocess(true);
         plan_meta.insert_tag_node("a".into(), 1);
@@ -1276,7 +1315,7 @@ mod test {
     }
 
     #[test]
-    fn test_preprocess_scan() {
+    fn preprocess_scan() {
         let mut plan_meta = PlanMeta::default();
         plan_meta.set_preprocess(true);
         plan_meta.insert_tag_node("a".into(), 1);
@@ -1363,7 +1402,7 @@ mod test {
     }
 
     #[test]
-    fn test_tag_maintain_case1() {
+    fn tag_maintain_case1() {
         let mut plan = LogicalPlan::default();
         // g.V().hasLabel("person").has("age", 27).valueMap("age", "name", "id")
 
@@ -1428,7 +1467,7 @@ mod test {
     }
 
     #[test]
-    fn test_tag_maintain_case2() {
+    fn tag_maintain_case2() {
         let mut plan = LogicalPlan::default();
         // g.V().out().as("here").has("lang", "java").select("here").values("name")
         let scan = pb::Scan {
@@ -1515,7 +1554,7 @@ mod test {
     }
 
     #[test]
-    fn test_tag_maintain_case3() {
+    fn tag_maintain_case3() {
         let mut plan = LogicalPlan::default();
         // g.V().outE().as("e").inV().as("v").select("e").order().by("weight").select("v").values("name").dedup()
 
@@ -1633,7 +1672,7 @@ mod test {
     }
 
     #[test]
-    fn test_tag_maintain_case4() {
+    fn tag_maintain_case4() {
         let mut plan = LogicalPlan::default();
         // g.V("person").has("name", "John").as('a').outE("knows").as('b')
         //  .has("date", 20200101).inV().as('c').has('id', 10)
@@ -1771,6 +1810,100 @@ mod test {
         );
     }
 
+    #[test]
+    fn extract_subplan_from_apply() {
+        let mut plan = LogicalPlan::default();
+        // g.V().as("v").where(out().as("o").has("lang", "java")).select("v").values("name")
+
+        // g.V("person")
+        let scan = pb::Scan {
+            scan_opt: 0,
+            alias: Some("v".into()),
+            params: Some(pb::QueryParams {
+                table_names: vec![],
+                columns: vec![],
+                limit: None,
+                predicate: None,
+                requirements: vec![],
+            }),
+            idx_predicate: None,
+        };
+
+        let opr_id = plan
+            .append_operator_as_node(scan.into(), vec![])
+            .unwrap();
+
+        // .out().as("o")
+        let expand = pb::EdgeExpand {
+            v_tag: None,
+            direction: 0,
+            params: Some(pb::QueryParams {
+                table_names: vec![],
+                columns: vec![],
+                limit: None,
+                predicate: None,
+                requirements: vec![],
+            }),
+            is_edge: false,
+            alias: Some("o".into()),
+        };
+
+        let root_id = plan
+            .append_operator_as_node(expand.into(), vec![])
+            .unwrap();
+
+        // .has("lang", "Java")
+        let select = pb::Select { predicate: str_to_expr_pb("@.lang == \"Java\"".to_string()).ok() };
+        plan.append_operator_as_node(select.into(), vec![root_id])
+            .unwrap();
+
+        let apply = pb::Apply { join_kind: 4, tags: vec![], subtask: root_id as i32, alias: None };
+        let opr_id = plan
+            .append_operator_as_node(apply.into(), vec![opr_id])
+            .unwrap();
+
+        let project = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: str_to_expr_pb("@v.name".to_string()).ok(),
+                alias: None,
+            }],
+            is_append: true,
+        };
+        plan.append_operator_as_node(project.into(), vec![opr_id])
+            .unwrap();
+
+        let subplan = plan
+            .extract_subplan(plan.get_node(opr_id).unwrap())
+            .unwrap();
+        assert_eq!(subplan.len(), 2);
+        for (id, node) in &subplan.nodes {
+            let node_ref = node.borrow();
+            if id == root_id as usize {
+                match node_ref.opr.opr.as_ref().unwrap() {
+                    Opr::Edge(_) => {}
+                    _ => panic!("should be edge expand"),
+                }
+                assert_eq!(subplan.meta.get_tag_node(&"o".into()).unwrap(), root_id);
+                assert_eq!(
+                    subplan
+                        .meta
+                        .get_node_meta(root_id)
+                        .unwrap()
+                        .get_columns()
+                        .iter()
+                        .cloned()
+                        .collect::<Vec<_>>(),
+                    vec!["lang".into()]
+                )
+            } else {
+                match node_ref.opr.opr.as_ref().unwrap() {
+                    Opr::Select(_) => {}
+                    _ => panic!("should be select"),
+                }
+            }
+        }
+    }
+
     // The plan looks like:
     //       root
     //       / \
@@ -1807,7 +1940,7 @@ mod test {
     }
 
     #[test]
-    fn test_get_merge_node() {
+    fn get_merge_node() {
         let plan = create_logical_plan();
         let merge_node = plan.get_merge_node(plan.get_node(1).unwrap());
         assert_eq!(merge_node, plan.get_node(5));
@@ -1819,7 +1952,7 @@ mod test {
     }
 
     #[test]
-    fn test_merge_branch_plans() {
+    fn merge_branch_plans() {
         let opr = pb::logical_plan::Operator { opr: None };
         let mut plan = LogicalPlan::with_root(Node::new(0, opr.clone()));
 
@@ -1849,7 +1982,7 @@ mod test {
     }
 
     #[test]
-    fn test_subplan() {
+    fn subplan() {
         let plan = create_logical_plan();
         let opr = pb::logical_plan::Operator { opr: None };
         let subplan = plan.subplan(plan.get_node(2).unwrap(), plan.get_node(7).unwrap());
@@ -1879,7 +2012,7 @@ mod test {
     }
 
     #[test]
-    fn test_get_branch_plans() {
+    fn get_branch_plans() {
         let plan = create_logical_plan();
         let (merge_node, subplans) = plan.get_branch_plans(plan.get_node(1).unwrap());
         let opr = pb::logical_plan::Operator { opr: None };

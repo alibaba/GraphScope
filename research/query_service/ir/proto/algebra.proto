@@ -371,10 +371,10 @@ message LogicalPlan {
       Apply apply = 9;
       SegmentApply seg_apply = 10;
       Scan scan = 11;
-      Limit limit = 13;
-      Auxilia auxilia = 14;
-      As as = 15;
-      Sink sink = 16;
+      Limit limit = 12;
+      Auxilia auxilia = 13;
+      As as = 14;
+      Sink sink = 15;
       // Saving the room for relational operators
       GetV vertex = 30;
       EdgeExpand edge = 31;
