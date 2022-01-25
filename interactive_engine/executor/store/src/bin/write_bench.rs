@@ -3,6 +3,8 @@ use maxgraph_store::db::api::{GraphConfigBuilder, TypeDefBuilder, ValueType, Val
 use maxgraph_store::db::graph::store::GraphStore;
 use maxgraph_store::db::api::multi_version_graph::MultiVersionGraph;
 use std::collections::HashMap;
+use std::hash::{Hash, Hasher};
+use std::collections::hash_map::DefaultHasher;
 
 fn main() {
     let path = format!("write_bench_data_dir");
@@ -29,7 +31,10 @@ fn main() {
         let mut properties = HashMap::new();
         properties.insert(1, Value::long(i));
         properties.insert(2, Value::string(&val));
-        store.insert_overwrite_vertex(snapshot_id, vertex_id, label_id, &properties).unwrap();
+        let mut hasher = DefaultHasher::new();
+        vertex_id.hash(&mut hasher);
+        let hash_id = hasher.finish();
+        store.insert_overwrite_vertex(snapshot_id, hash_id as i64, label_id, &properties).unwrap();
         i += 1;
         if i % 500000 == 0 {
             let write_count = i - tmp_count;
