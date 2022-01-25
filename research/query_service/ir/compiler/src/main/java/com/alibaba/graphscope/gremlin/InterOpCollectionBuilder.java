@@ -322,6 +322,24 @@ public class InterOpCollectionBuilder {
                 op.setPredicate(new OpArg(whereStep, PredicateExprTransformFactory.EXPR_FROM_WHERE_PREDICATE));
                 return op;
             }
+        },
+        EDGE_VERTEX_STEP {
+            @Override
+            public InterOpBase apply(Step step) {
+                EdgeVertexStep vertexStep = (EdgeVertexStep) step;
+                GetVOp op = new GetVOp();
+                op.setGetVOpt(new OpArg(vertexStep, OpArgTransformFactory.GETV_OPT_FROM_STEP));
+                return op;
+            }
+        },
+        EDGE_OTHER_STEP {
+            @Override
+            public InterOpBase apply(Step step) {
+                EdgeOtherVertexStep otherStep = (EdgeOtherVertexStep) step;
+                GetVOp op = new GetVOp();
+                op.setGetVOpt(new OpArg(otherStep, OpArgTransformFactory.GETV_OPT_FROM_STEP));
+                return op;
+            }
         }
     }
 
@@ -363,6 +381,10 @@ public class InterOpCollectionBuilder {
                 op = StepTransformFactory.IS_STEP.apply(step);
             } else if (Utils.equalClass(step, WherePredicateStep.class)) {
                 op = StepTransformFactory.WHERE_PREDICATE_STEP.apply(step);
+            } else if (Utils.equalClass(step, EdgeVertexStep.class)) {
+                op = StepTransformFactory.EDGE_VERTEX_STEP.apply(step);
+            } else if (Utils.equalClass(step, EdgeOtherVertexStep.class)) {
+                op = StepTransformFactory.EDGE_OTHER_STEP.apply(step);
             } else {
                 throw new UnsupportedStepException(step.getClass(), "unimplemented yet");
             }

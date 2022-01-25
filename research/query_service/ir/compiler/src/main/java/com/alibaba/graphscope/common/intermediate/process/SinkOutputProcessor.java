@@ -40,7 +40,7 @@ public class SinkOutputProcessor implements InterOpProcessor {
             InterOpBase cur = collections.get(i);
             if (cur instanceof DedupOp || cur instanceof LimitOp || cur instanceof OrderOp || cur instanceof SelectOp) {
                 continue;
-            } else if (cur instanceof ExpandOp || cur instanceof ScanFusionOp) {
+            } else if (cur instanceof ExpandOp || cur instanceof ScanFusionOp || cur instanceof GetVOp) {
                 sinkArg = new SinkArg(true);
                 break;
             } else if (cur instanceof ProjectOp) {
