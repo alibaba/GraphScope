@@ -55,7 +55,7 @@ fn main() {
             let write_count = i - tmp_count;
             let total_time = timer.elasped_secs();
             let t = total_time - tmp_time;
-            println!("{:.0}\t{:.2}\t{:.0}", total_time, write_count as f64 / t, write_count);
+            println!("{:.0}\t{:.2}\t{:.0}", total_time, write_count as f64 / t, i);
             tmp_count = i;
             tmp_time = total_time;
         }
