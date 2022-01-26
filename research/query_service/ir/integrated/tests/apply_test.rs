@@ -71,8 +71,7 @@ mod test {
         let apply_opr_bytes = pb::logical_plan::Operator::from(apply_opr).encode_to_vec();
         let expand_opr_bytes = pb::logical_plan::Operator::from(expand_opr).encode_to_vec();
         let sink_opr_bytes = pb::logical_plan::Operator::from(pb::Sink {
-            tags: vec![],
-            sink_current: true,
+            tags: vec![common_pb::NameOrIdKey { key: None }],
             id_name_mappings: vec![],
         })
         .encode_to_vec();
@@ -196,8 +195,7 @@ mod test {
         let expand_opr_bytes = pb::logical_plan::Operator::from(expand_opr).encode_to_vec();
         let fold_opr_bytes = pb::logical_plan::Operator::from(fold_opr).encode_to_vec();
         let sink_opr_bytes = pb::logical_plan::Operator::from(pb::Sink {
-            tags: vec![alias],
-            sink_current: true,
+            tags: vec![common_pb::NameOrIdKey { key: Some(alias) }],
             id_name_mappings: vec![],
         })
         .encode_to_vec();
