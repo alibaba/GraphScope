@@ -38,12 +38,10 @@ impl BinaryFunction<Record, Vec<Record>, Option<Record>> for ApplyOperator {
         }
         match self.join_kind {
             JoinKind::Inner => {
-                if sub.len() == 0 {
+                if sub.is_empty() {
                     Ok(None)
                 } else {
-                    let sub_result = sub
-                        .get(0)
-                        .ok_or(FnExecError::unexpected_data_error("get result of subtask failed"))?;
+                    let sub_result = sub.get(0).unwrap();
                     // We assume the result of sub_entry is always saved on head of Record for now.
                     let sub_entry = sub_result
                         .get(None)
@@ -59,7 +57,7 @@ impl BinaryFunction<Record, Vec<Record>, Option<Record>> for ApplyOperator {
                 }
             }
             JoinKind::LeftOuter => {
-                if sub.len() == 0 {
+                if sub.is_empty() {
                     let entry: Arc<Entry> = Arc::new((CommonObject::None).into());
                     if let Some(alias) = self.alias.as_ref() {
                         let columns = parent.get_columns_mut();
@@ -69,9 +67,7 @@ impl BinaryFunction<Record, Vec<Record>, Option<Record>> for ApplyOperator {
                     }
                     Ok(Some(parent))
                 } else {
-                    let sub_result = sub
-                        .get(0)
-                        .ok_or(FnExecError::unexpected_data_error("get result of subtask failed"))?;
+                    let sub_result = sub.get(0).unwrap();
                     // We assume the result of sub_entry is always saved on head of Record for now.
                     let sub_entry = sub_result
                         .get(None)
