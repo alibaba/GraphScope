@@ -20,13 +20,14 @@
 #[allow(unused_imports)]
 pub mod test {
     use std::convert::{TryFrom, TryInto};
-    use std::sync::Once;
+    use std::sync::{Arc, Once};
 
     use graph_proxy::{InitializeJobCompiler, QueryExpGraph};
     use ir_common::expr_parse::str_to_expr_pb;
     use ir_common::generated::algebra as pb;
     use ir_common::generated::common as common_pb;
     use ir_common::generated::results as result_pb;
+    use ir_common::NameOrId;
     use lazy_static::lazy_static;
     use pegasus::result::{ResultSink, ResultStream};
     use pegasus::{run_opt, Configuration, JobConf, StartupError};
@@ -86,10 +87,16 @@ pub mod test {
         if let Some(result_pb::results::Inner::Record(record_pb)) = result.inner {
             let mut record = Record::default();
             for column in record_pb.columns {
-                let tag =
+                let tag: Option<NameOrId> =
                     if let Some(tag) = column.name_or_id { Some(tag.try_into().unwrap()) } else { None };
                 let entry = column.entry.unwrap();
-                record.append(Entry::try_from(entry).unwrap(), tag);
+                // append entry without moving head
+                if let Some(tag) = tag {
+                    let columns = record.get_columns_mut();
+                    columns.insert(tag.clone(), Arc::new(Entry::try_from(entry).unwrap()));
+                } else {
+                    record.append(Entry::try_from(entry).unwrap(), None);
+                }
             }
             Some(record)
         } else {
