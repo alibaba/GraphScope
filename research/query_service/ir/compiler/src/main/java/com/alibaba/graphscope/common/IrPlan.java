@@ -18,12 +18,10 @@ package com.alibaba.graphscope.common;
 
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.PegasusConfig;
-import com.alibaba.graphscope.common.exception.AppendInterOpException;
-import com.alibaba.graphscope.common.exception.BuildPhysicalException;
-import com.alibaba.graphscope.common.exception.InterOpIllegalArgException;
-import com.alibaba.graphscope.common.exception.InterOpUnsupportedException;
+import com.alibaba.graphscope.common.exception.*;
 import com.alibaba.graphscope.common.intermediate.ArgAggFn;
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
+import com.alibaba.graphscope.common.intermediate.InterOpCollection;
 import com.alibaba.graphscope.common.intermediate.operator.*;
 import com.alibaba.graphscope.common.intermediate.process.SinkArg;
 import com.alibaba.graphscope.common.jna.IrCoreLibrary;
@@ -48,7 +46,6 @@ public class IrPlan implements Closeable {
     private static Logger logger = LoggerFactory.getLogger(IrPlan.class);
     private static String PLAN_JSON_FILE = "plan.json";
     private Pointer ptrPlan;
-    private IntByReference oprIdx;
 
     // call libc to transform from InterOpBase to c structure
     private enum TransformFactory implements Function<InterOpBase, Pointer> {
@@ -100,6 +97,7 @@ public class IrPlan implements Closeable {
                 }
                 // todo: add other predicates
                 // todo: add limit
+
                 Optional<OpArg> aliasOpt = baseOp.getAlias();
                 if (aliasOpt.isPresent()) {
                     FfiAlias.ByValue alias = (FfiAlias.ByValue) aliasOpt.get().applyArg();
@@ -332,12 +330,35 @@ public class IrPlan implements Closeable {
                 }
                 return ptrGetV;
             }
+        },
+        APPLY_OP {
+            @Override
+            public Pointer apply(InterOpBase baseOp) {
+                ApplyOp applyOp = (ApplyOp) baseOp;
+                Optional<OpArg> subRootOpt = applyOp.getSubRootId();
+                if (!subRootOpt.isPresent()) {
+                    throw new InterOpIllegalArgException(baseOp.getClass(), "subRootId", "not present");
+                }
+                Optional<OpArg> joinKindOpt = applyOp.getJoinKind();
+                if (!joinKindOpt.isPresent()) {
+                    throw new InterOpIllegalArgException(baseOp.getClass(), "joinKind", "not present");
+                }
+                int subRootId = (Integer) subRootOpt.get().applyArg();
+                FfiJoinKind joinKind = (FfiJoinKind) joinKindOpt.get().applyArg();
+                Pointer ptrApply = irCoreLib.initApplyOperator(subRootId, joinKind);
+
+                // set alias
+                Optional<OpArg> aliasOpt = baseOp.getAlias();
+                if (aliasOpt.isPresent()) {
+                    throw new InterOpIllegalArgException(baseOp.getClass(), "subOpCollection", "the query given alias is unsupported");
+                }
+                return ptrApply;
+            }
         }
     }
 
     public IrPlan() {
         this.ptrPlan = irCoreLib.initLogicalPlan(true);
-        this.oprIdx = new IntByReference(0);
     }
 
     @Override
@@ -363,39 +384,69 @@ public class IrPlan implements Closeable {
         return json;
     }
 
-    public void appendInterOp(InterOpBase base) throws
+    // return id of the first operator
+    public int appendInterOpCollection(InterOpCollection opCollection) {
+        int rootId = 0;
+        // parent of the first op is always -1
+        IntByReference oprId = new IntByReference(-1);
+        List<InterOpBase> opList = opCollection.unmodifiableCollection();
+        for (int i = 0; i < opList.size(); ++i) {
+            InterOpBase op = opList.get(i);
+            oprId = appendInterOp(oprId.getValue(), op);
+            if (i == 0) {
+                rootId = oprId.getValue();
+            }
+        }
+        return rootId;
+    }
+
+    // return id of the current operator
+    public IntByReference appendInterOp(int parentId, InterOpBase base) throws
             InterOpIllegalArgException, InterOpUnsupportedException, AppendInterOpException {
         ResultCode resultCode;
+        IntByReference oprId = new IntByReference(parentId);
         if (base instanceof ScanFusionOp) {
             Pointer ptrScan = TransformFactory.SCAN_FUSION_OP.apply(base);
-            resultCode = irCoreLib.appendScanOperator(ptrPlan, ptrScan, oprIdx.getValue(), oprIdx);
+            resultCode = irCoreLib.appendScanOperator(ptrPlan, ptrScan, oprId.getValue(), oprId);
         } else if (base instanceof SelectOp) {
             Pointer ptrSelect = TransformFactory.SELECT_OP.apply(base);
-            resultCode = irCoreLib.appendSelectOperator(ptrPlan, ptrSelect, oprIdx.getValue(), oprIdx);
+            resultCode = irCoreLib.appendSelectOperator(ptrPlan, ptrSelect, oprId.getValue(), oprId);
         } else if (base instanceof ExpandOp) {
             Pointer ptrExpand = TransformFactory.EXPAND_OP.apply(base);
-            resultCode = irCoreLib.appendEdgexpdOperator(ptrPlan, ptrExpand, oprIdx.getValue(), oprIdx);
+            resultCode = irCoreLib.appendEdgexpdOperator(ptrPlan, ptrExpand, oprId.getValue(), oprId);
         } else if (base instanceof LimitOp) {
             Pointer ptrLimit = TransformFactory.LIMIT_OP.apply(base);
-            resultCode = irCoreLib.appendLimitOperator(ptrPlan, ptrLimit, oprIdx.getValue(), oprIdx);
+            resultCode = irCoreLib.appendLimitOperator(ptrPlan, ptrLimit, oprId.getValue(), oprId);
         } else if (base instanceof ProjectOp) {
             Pointer ptrProject = TransformFactory.PROJECT_OP.apply(base);
-            resultCode = irCoreLib.appendProjectOperator(ptrPlan, ptrProject, oprIdx.getValue(), oprIdx);
+            resultCode = irCoreLib.appendProjectOperator(ptrPlan, ptrProject, oprId.getValue(), oprId);
         } else if (base instanceof OrderOp) {
             Pointer ptrOrder = TransformFactory.ORDER_OP.apply(base);
-            resultCode = irCoreLib.appendOrderbyOperator(ptrPlan, ptrOrder, oprIdx.getValue(), oprIdx);
+            resultCode = irCoreLib.appendOrderbyOperator(ptrPlan, ptrOrder, oprId.getValue(), oprId);
         } else if (base instanceof GroupOp) {
             Pointer ptrGroup = TransformFactory.GROUP_OP.apply(base);
-            resultCode = irCoreLib.appendGroupbyOperator(ptrPlan, ptrGroup, oprIdx.getValue(), oprIdx);
+            resultCode = irCoreLib.appendGroupbyOperator(ptrPlan, ptrGroup, oprId.getValue(), oprId);
         } else if (base instanceof DedupOp) {
             Pointer ptrDedup = TransformFactory.DEDUP_OP.apply(base);
-            resultCode = irCoreLib.appendDedupOperator(ptrPlan, ptrDedup, oprIdx.getValue(), oprIdx);
+            resultCode = irCoreLib.appendDedupOperator(ptrPlan, ptrDedup, oprId.getValue(), oprId);
         } else if (base instanceof SinkOp) {
             Pointer ptrSink = TransformFactory.SINK_OP.apply(base);
-            resultCode = irCoreLib.appendSinkOperator(ptrPlan, ptrSink, oprIdx.getValue(), oprIdx);
+            resultCode = irCoreLib.appendSinkOperator(ptrPlan, ptrSink, oprId.getValue(), oprId);
         } else if (base instanceof GetVOp) {
             Pointer ptrGetV = TransformFactory.GETV_OP.apply(base);
-            resultCode = irCoreLib.appendGetvOperator(ptrPlan, ptrGetV, oprIdx.getValue(), oprIdx);
+            resultCode = irCoreLib.appendGetvOperator(ptrPlan, ptrGetV, oprId.getValue(), oprId);
+        } else if (base instanceof ApplyOp) {
+            ApplyOp applyOp = (ApplyOp) base;
+            Optional<OpArg> subOps = applyOp.getSubOpCollection();
+            if (!subOps.isPresent()) {
+                throw new InterOpIllegalArgException(base.getClass(), "subOpCollection", "is not present in apply");
+            }
+            InterOpCollection opCollection = (InterOpCollection) subOps.get().applyArg();
+            int subRootId = appendInterOpCollection(opCollection);
+            applyOp.setSubRootId(new OpArg(Integer.valueOf(subRootId), Function.identity()));
+
+            Pointer ptrApply = TransformFactory.APPLY_OP.apply(base);
+            resultCode = irCoreLib.appendApplyOperator(ptrPlan, ptrApply, oprId.getValue(), oprId);
         } else {
             throw new InterOpUnsupportedException(base.getClass(), "unimplemented yet");
         }
@@ -403,12 +454,13 @@ public class IrPlan implements Closeable {
             throw new AppendInterOpException(base.getClass(), resultCode);
         }
         // add alias after the op if necessary
-        setPostAlias(base);
+        return setPostAlias(oprId.getValue(), base);
     }
 
-    private void setPostAlias(InterOpBase base) {
+    private IntByReference setPostAlias(int parentId, InterOpBase base) {
+        IntByReference oprId = new IntByReference(parentId);
         if (!(base instanceof ScanFusionOp || base instanceof ExpandOp
-                || base instanceof ProjectOp || base instanceof GroupOp || base instanceof GetVOp)
+                || base instanceof ProjectOp || base instanceof GroupOp || base instanceof ApplyOp || base instanceof GetVOp)
                 && base.getAlias().isPresent()) {
             FfiAlias.ByValue ffiAlias = (FfiAlias.ByValue) base.getAlias().get().applyArg();
             Pointer ptrAs = irCoreLib.initAsOperator();
@@ -416,11 +468,12 @@ public class IrPlan implements Closeable {
             if (asResult != null && asResult != ResultCode.Success) {
                 throw new AppendInterOpException(base.getClass(), asResult);
             }
-            ResultCode appendResult = irCoreLib.appendAsOperator(ptrPlan, ptrAs, oprIdx.getValue(), oprIdx);
+            ResultCode appendResult = irCoreLib.appendAsOperator(ptrPlan, ptrAs, parentId, oprId);
             if (appendResult != null && appendResult != ResultCode.Success) {
                 throw new AppendInterOpException(base.getClass(), appendResult);
             }
         }
+        return oprId;
     }
 
     public byte[] toPhysicalBytes(Configs configs) throws BuildPhysicalException {

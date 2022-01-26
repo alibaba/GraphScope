@@ -22,6 +22,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
+import org.apache.tinkerpop.gremlin.process.traversal.step.filter.NotStep;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
 import org.junit.Assert;
@@ -631,5 +632,38 @@ public class PositiveEvalTest {
     @Test
     public void g_V_outE_as_outV_test() {
         Assert.assertEquals(g.V().outE().as("a").outV(), eval("g.V().outE().as(\"a\").outV()"));
+    }
+
+    @Test
+    public void g_V_where_out_out() {
+        Assert.assertEquals(g.V().where(__.out().out()), eval("g.V().where(__.out().out())"));
+    }
+
+    @Test
+    public void g_V_where_as_out() {
+        Assert.assertEquals(g.V().as("a").where(__.as("a").out().out()),
+                eval("g.V().as(\"a\").where(__.as(\"a\").out().out())"));
+    }
+
+    @Test
+    public void g_V_where_out_as() {
+        Assert.assertEquals(g.V().as("a").where(__.out().out().as("a")),
+                eval("g.V().as(\"a\").where(__.out().out().as(\"a\"))"));
+    }
+
+    @Test
+    public void g_V_where_not() {
+        Traversal.Admin traversal = (Traversal.Admin) eval("g.V().where(__.not(__.out()))");
+        Assert.assertEquals(NotStep.class, traversal.getEndStep().getClass());
+    }
+
+    @Test
+    public void g_V_not_out() {
+        Assert.assertEquals(g.V().not(__.out().out()), eval("g.V().not(__.out().out())"));
+    }
+
+    @Test
+    public void g_V_not_values() {
+        Assert.assertEquals(g.V().not(__.values("name")), eval("g.V().not(__.values(\"name\"))"));
     }
 }

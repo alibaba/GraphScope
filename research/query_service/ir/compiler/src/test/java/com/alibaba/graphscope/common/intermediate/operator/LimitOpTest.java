@@ -33,7 +33,7 @@ public class LimitOpTest {
         LimitOp op = new LimitOp();
         op.setLower(new OpArg<>(Integer.valueOf(1), Function.identity()));
         op.setUpper(new OpArg<>(Integer.valueOf(2), Function.identity()));
-        irPlan.appendInterOp(op);
+        irPlan.appendInterOp(0, op);
         String actual = irPlan.getPlanAsJson();
         Assert.assertEquals(FileUtils.readJsonFromResource("limit_range.json"), actual);
     }

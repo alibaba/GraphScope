@@ -21,6 +21,7 @@ import com.alibaba.graphscope.common.intermediate.ArgAggFn;
 import com.alibaba.graphscope.common.intermediate.InterOpCollection;
 import com.alibaba.graphscope.common.intermediate.operator.*;
 import com.alibaba.graphscope.common.jna.type.FfiAlias;
+import com.alibaba.graphscope.common.jna.type.FfiJoinKind;
 import org.javatuples.Pair;
 
 import java.util.List;
@@ -65,6 +66,15 @@ public class SinkOutputProcessor implements InterOpProcessor {
                     sinkArg.addColumnName(aggFn.getAlias().alias);
                 }
                 break;
+            } else if (cur instanceof ApplyOp) {
+                ApplyOp applyOp = (ApplyOp) cur;
+                FfiJoinKind joinKind = (FfiJoinKind) applyOp.getJoinKind().get().applyArg();
+                // where or not
+                if (joinKind == FfiJoinKind.Semi || joinKind == FfiJoinKind.Anti) {
+                    continue;
+                } else {
+                    throw new InterOpUnsupportedException(cur.getClass(), "join kind is unsupported yet");
+                }
             } else {
                 throw new InterOpUnsupportedException(cur.getClass(), "unimplemented yet");
             }

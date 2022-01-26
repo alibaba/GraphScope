@@ -82,7 +82,7 @@ public interface PredicateExprTransform extends Function {
         return expr;
     }
 
-    default String getpredicateValue(Object value) {
+    default String getPredicateValue(Object value) {
         String predicateValue;
         if (value instanceof String) {
             predicateValue = String.format("\"%s\"", value);
@@ -98,7 +98,7 @@ public interface PredicateExprTransform extends Function {
                     throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
                             "nested list of predicate value is unsupported");
                 }
-                content += getpredicateValue(v);
+                content += getPredicateValue(v);
             }
             predicateValue = String.format("[%s]", content);
         } else {
@@ -122,7 +122,7 @@ public interface PredicateExprTransform extends Function {
         if (value instanceof PredicateExprTransformFactory.WherePredicateValue) {
             valueKeyExist = getExprIfPropertyExist(value.toString());
         }
-        String predicateExpr = String.format("%s %s %s", subject, predicate, getpredicateValue(value));
+        String predicateExpr = String.format("%s %s %s", subject, predicate, getPredicateValue(value));
         StringBuilder builder = new StringBuilder(predicateExpr);
         if (!valueKeyExist.isEmpty()) {
             builder.insert(0, String.format("%s && ", valueKeyExist));

@@ -32,7 +32,7 @@ public class SelectOpTest {
     public void selectOpTest() throws IOException {
         SelectOp op = new SelectOp();
         op.setPredicate(new OpArg("@.id == 1 && @.name == \"marko\"", Function.identity()));
-        irPlan.appendInterOp(op);
+        irPlan.appendInterOp(0, op);
         String actual = irPlan.getPlanAsJson();
         Assert.assertEquals(FileUtils.readJsonFromResource("select_expr.json"), actual);
     }
