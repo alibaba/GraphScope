@@ -22,7 +22,6 @@
 import copy
 import json
 
-from aiobotocore import get_session
 from networkx import freeze
 from networkx.classes.coreviews import AdjacencyView
 from networkx.classes.graph import Graph as RefGraph
@@ -868,8 +867,7 @@ class Graph(_GraphBase):
             op = dag_utils.report_graph(
                 self, types_pb2.HAS_NODE, node=json.dumps([n], default=json_encoder)
             )
-            ret = op.eval()
-            return bool(int(ret))
+            return bool(int(op.eval()))
         except NetworkXError:
             return False
 
