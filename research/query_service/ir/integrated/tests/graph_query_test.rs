@@ -154,7 +154,6 @@ mod test {
     }
 
     #[test]
-    #[ignore]
     fn test_path_expand_query() {
         initialize();
         let request = init_path_expand_request();
@@ -171,7 +170,7 @@ mod test {
         //     vec![2, 1, 4],
         //     vec![4, 1, 2],
         //     vec![4, 1, 4],
-        let mut expected_result_path_ends = vec![1, 1, 1, 1, 2, 2, 2, 4, 4, 4];
+        let expected_result_path_ends = vec![1, 1, 1, 1, 2, 2, 2, 4, 4, 4];
         while let Some(result) = results.next() {
             match result {
                 Ok(res) => {

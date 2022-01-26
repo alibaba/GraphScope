@@ -21,8 +21,8 @@ use ir_common::generated::common as common_pb;
 use ir_common::generated::results as result_pb;
 use pegasus::api::function::*;
 use pegasus::api::{
-    Collect, CorrelatedSubTask, Count, Dedup, Filter, Fold, FoldByKey, IterCondition, Iteration, Join,
-    KeyBy, Limit, Map, Merge, PartitionByKey, Sink, SortBy, SortLimitBy, Source,
+    Collect, CorrelatedSubTask, Count, Dedup, EmitKind, Filter, Fold, FoldByKey, IterCondition, Iteration,
+    Join, KeyBy, Limit, Map, Merge, PartitionByKey, Sink, SortBy, SortLimitBy, Source,
 };
 use pegasus::result::ResultSink;
 use pegasus::stream::Stream;
@@ -302,12 +302,9 @@ impl IRJobCompiler {
                             IterCondition::max_iters(iter_emit.max_iters)
                         };
                         if let Some(ref iter_body) = iter_emit.body {
-                            let (emit, _feedback) = stream.iterate_emit(until, |start| {
-                                let body = self.install(start, &iter_body.plan[..])?;
-                                body.copied()
+                            stream = stream.iterate_emit_until(until, EmitKind::After, |start| {
+                                self.install(start, &iter_body.plan[..])
                             })?;
-                            // TODO: engine bug here, emit is now an empty stream
-                            stream = emit;
                         } else {
                             Err("iteration body can't be empty;")?
                         }
