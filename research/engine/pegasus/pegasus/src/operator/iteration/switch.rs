@@ -1,3 +1,4 @@
+use crate::api::iteration::EmitKind;
 use crate::api::notification::{Cancel, End};
 use crate::api::IterCondition;
 use crate::communication::input::{new_input_session, InputProxy};
@@ -7,6 +8,7 @@ use crate::operator::{Notifiable, OperatorCore};
 use crate::progress::EndOfScope;
 use crate::tag::tools::map::TidyTagMap;
 use crate::Data;
+use crate::data::MicroBatch;
 
 struct IterateState {
     iterating: bool,
@@ -33,6 +35,8 @@ impl IterateState {
 
 pub(crate) struct SwitchOperator<D> {
     scope_level: u32,
+
+    emit_kind: Option<EmitKind>,
     cond: IterCondition<D>,
     // record scopes in iteration;
     // e.g. if scope ( [0, 0], [1, 0] ) need iteration:
@@ -46,7 +50,7 @@ pub(crate) struct SwitchOperator<D> {
 }
 
 impl<D> SwitchOperator<D> {
-    pub fn new(scope_level: u32, cond: IterCondition<D>) -> Self {
+    pub fn new(scope_level: u32, emit_kind: Option<EmitKind>, cond: IterCondition<D>) -> Self {
         assert!(scope_level > 0);
         let mut parent_parent_scope_ends = Vec::with_capacity(scope_level as usize + 1);
         for _ in 0..scope_level + 1 {
@@ -54,6 +58,7 @@ impl<D> SwitchOperator<D> {
         }
         SwitchOperator {
             scope_level,
+            emit_kind,
             cond,
             iterate_states: TidyTagMap::new(scope_level - 1),
             parent_parent_scope_ends,
@@ -71,13 +76,47 @@ impl<D: Data> OperatorCore for SwitchOperator<D> {
         let mut main = new_input_session::<D>(&inputs[0]);
         main.for_each_batch(|batch| {
             if !batch.is_empty() {
-                let mut leave = leave.new_session(&batch.tag)?;
-                let mut enter = enter.new_session(&batch.tag)?;
-                for data in batch.drain() {
-                    if self.cond.is_converge(&data)? {
-                        leave.give(data)?;
+                if self.cond.has_until_cond() {
+                    let mut leave = leave.new_session(&batch.tag)?;
+                    let mut enter = enter.new_session(&batch.tag)?;
+                    for data in batch.drain() {
+                        if self.cond.is_converge(&data)? {
+                            leave.give(data)?;
+                        } else {
+                            if self.emit_kind == Some(EmitKind::Before) {
+                                match enter.give(data.clone()) {
+                                    Err(e) => {
+                                        if e.is_would_block()  {
+                                            leave.give(data)?;
+                                        }
+                                        Err(e)
+                                    },
+                                    Ok(()) => leave.give(data)
+                                }?;
+                            } else {
+                                enter.give(data)?;
+                            }
+                        }
+                    }
+                } else {
+                    let mut re = std::mem::replace(batch, MicroBatch::empty());
+                    batch.set_tag(re.tag.clone());
+                    batch.set_seq(re.get_seq());
+                    if let Some(e) = re.take_end() {
+                        batch.set_end(e);
+                    }
+                    if self.emit_kind == Some(EmitKind::Before) {
+                        match enter.push_batch(re.share()) {
+                            Err(e) => {
+                                if e.is_would_block() {
+                                    leave.push_batch(re)?;
+                                }
+                                Err(e)
+                            },
+                            Ok(()) => leave.push_batch(re)
+                        }?;
                     } else {
-                        enter.give(data)?;
+                        enter.push_batch(re)?;
                     }
                 }
             }
@@ -134,15 +173,51 @@ impl<D: Data> OperatorCore for SwitchOperator<D> {
                     }
                 }
             } else {
-                let mut leave = leave.new_session(&batch.tag)?;
-                let mut enter = enter.new_session(&batch.tag)?;
-                for data in batch.drain() {
-                    if self.cond.is_converge(&data)? {
-                        leave.give(data)?;
+                if self.cond.has_until_cond() {
+                    let mut leave = leave.new_session(&batch.tag)?;
+                    let mut enter = enter.new_session(&batch.tag)?;
+                    for data in batch.drain() {
+                        if self.cond.is_converge(&data)? {
+                            leave.give(data)?;
+                        } else {
+                            if self.emit_kind.is_some() {
+                                match enter.give(data.clone()) {
+                                    Err(e) => {
+                                        if e.is_would_block() {
+                                            leave.give(data)?;
+                                        }
+                                        Err(e)
+                                    },
+                                    Ok(()) => leave.give(data)
+                                }?;
+                            } else {
+                                enter.give(data)?;
+                            }
+                        }
+                    }
+                } else {
+                    let mut re = std::mem::replace(batch, MicroBatch::empty());
+                    batch.set_tag(re.tag.clone());
+                    batch.set_seq(re.get_seq());
+                    if let Some(end) = re.take_end() {
+                        batch.set_end(end);
+                    }
+
+                    if self.emit_kind.is_some() {
+                        match enter.push_batch(re.share()) {
+                            Err(e) => {
+                                if e.is_would_block() {
+                                    leave.push_batch(re)?;
+                                }
+                                Err(e)
+                            },
+                            Ok(()) => leave.push_batch(re)
+                        }?;
                     } else {
-                        enter.give(data)?;
+                        enter.push_batch(re)?;
                     }
                 }
+
                 if let Some(end) = batch.take_end() {
                     let p = batch.tag.to_parent_uncheck();
                     if !self.iterate_states.contains_key(&p) {
@@ -152,6 +227,7 @@ impl<D: Data> OperatorCore for SwitchOperator<D> {
                     }
                     enter.notify_end(end)?;
                 }
+
             }
 
             Ok(())

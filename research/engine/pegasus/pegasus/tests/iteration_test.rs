@@ -13,8 +13,96 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 //
-use pegasus::api::{CorrelatedSubTask, Count, IterCondition, Iteration, Map, Reduce, Sink};
+use pegasus::api::{CorrelatedSubTask, Count, IterCondition, Iteration, Map, Reduce, Sink, EmitKind};
 use pegasus::JobConf;
+
+
+#[test]
+fn iterate_x_r_map_x_test() {
+    let mut conf = JobConf::new("iterate_times_3");
+    conf.set_workers(2);
+    let result_stream = pegasus::run(conf, || {
+        |input, output| {
+            let index = input.get_worker_index();
+            let src = index * 10..(index + 1) * 10;
+            input.input_from(src)?
+                .iterate(3, |start| {
+                    start.repartition(|i| Ok(*i as u64))
+                        .map(|i| Ok(i + 2))
+                })?
+                .sink_into(output)
+
+        }
+    }).expect("submit job failure");
+
+    let mut results = result_stream
+        .map(|item| item.unwrap())
+        .collect::<Vec<u32>>();
+    results.sort();
+    assert_eq!(results, (6..26).collect::<Vec<_>>());
+}
+
+#[test]
+fn iterate_emit_after_x_r_map_x_test() {
+    let mut conf = JobConf::new("iterate_times_3_emit");
+    conf.set_workers(2);
+    let result_stream = pegasus::run(conf, || {
+        |input, output| {
+            let index = input.get_worker_index();
+            let src = index * 10..(index + 1) * 10;
+            input.input_from(src)?
+                .iterate_emit_until(IterCondition::max_iters(3), EmitKind::After, |start| {
+                    start.repartition(|i| Ok(*i as u64))
+                        .map(|i| Ok(i + 2))
+                })?
+                .sink_into(output)
+
+        }
+    }).expect("submit job failure");
+
+    let mut results = result_stream
+        .map(|item| item.unwrap())
+        .collect::<Vec<u32>>();
+    let mut expected = (0..20u32).map(|i| i + 2)
+        .chain((0..20u32).map(|i| i + 2).map(|i| i + 2))
+        .chain((0..20u32).map(|i| i + 2).map(|i| i + 2).map(|i| i + 2))
+        .collect::<Vec<_>>();
+    results.sort();
+    expected.sort();
+    assert_eq!(results, expected);
+}
+
+
+#[test]
+fn iterate_emit_before_x_r_map_x_test() {
+    let mut conf = JobConf::new("emit_iterate_times_3");
+    conf.set_workers(2);
+    let result_stream = pegasus::run(conf, || {
+        |input, output| {
+            let index = input.get_worker_index();
+            let src = index * 10..(index + 1) * 10;
+            input.input_from(src)?
+                .iterate_emit_until(IterCondition::max_iters(3), EmitKind::Before, |start| {
+                    start.repartition(|i| Ok(*i as u64))
+                        .map(|i| Ok(i + 2))
+                })?
+                .sink_into(output)
+
+        }
+    }).expect("submit job failure");
+
+    let mut results = result_stream
+        .map(|item| item.unwrap())
+        .collect::<Vec<u32>>();
+    let mut expected = (0..20u32)
+        .chain((0..20u32).map(|i| i + 2))
+        .chain((0..20u32).map(|i| i + 2).map(|i| i + 2))
+        .chain((0..20u32).map(|i| i + 2).map(|i| i + 2).map(|i| i + 2))
+        .collect::<Vec<_>>();
+    results.sort();
+    expected.sort();
+    assert_eq!(results, expected);
+}
 
 #[test]
 fn ping_pong_test_01() {
