@@ -70,7 +70,10 @@ impl MapFunction<Record, Record> for ProjectOperator {
                     input.append_arc_entry(entry, alias.clone());
                 } else {
                     // Notice that if multiple columns, alias cannot be None
-                    input.append_without_moving_curr(entry, alias.clone());
+                    if let Some(alias) = alias {
+                        let columns = input.get_columns_mut();
+                        columns.insert(alias.clone(), entry);
+                    }
                 }
             }
 
