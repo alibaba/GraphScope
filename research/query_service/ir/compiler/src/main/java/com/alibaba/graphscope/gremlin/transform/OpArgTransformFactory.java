@@ -19,11 +19,13 @@ package com.alibaba.graphscope.gremlin.transform;
 import com.alibaba.graphscope.common.exception.OpArgIllegalException;
 import com.alibaba.graphscope.common.intermediate.ArgAggFn;
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
+import com.alibaba.graphscope.common.intermediate.InterOpCollection;
 import com.alibaba.graphscope.common.jna.type.*;
 import com.alibaba.graphscope.common.jna.type.FfiDirection;
 import com.alibaba.graphscope.common.jna.type.FfiNameOrId;
 import com.alibaba.graphscope.common.jna.type.FfiScanOpt;
 import com.alibaba.graphscope.gremlin.Utils;
+import com.alibaba.graphscope.gremlin.InterOpCollectionBuilder;
 import org.apache.tinkerpop.gremlin.process.traversal.*;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.IdentityTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.ValueTraversal;
@@ -107,10 +109,15 @@ public class OpArgTransformFactory {
             PROJECT_EXPR_FROM_BY_TRAVERSALS = (Map<String, Traversal.Admin> map) -> {
         List<Pair<String, FfiAlias.ByValue>> projectWithAliasList = new ArrayList<>();
         map.forEach((k, v) -> {
-            String expression = ByTraversalTransformFactory.getTagByTraversalAsExpr(k, v);
+            String expression = ProjectTraversalTransformFactory.getTagProjectTraversalAsExpr(k, v);
             String formatAlias = formatProjectAlias(expression);
             projectWithAliasList.add(Pair.with(expression, ArgUtils.asFfiAlias(formatAlias, false)));
         });
+        // optimize: set default alias of the single expression to head
+        if (projectWithAliasList.size() == 1) {
+            Pair<String, FfiAlias.ByValue> singleExprWithAlias = projectWithAliasList.get(0);
+            projectWithAliasList.set(0, singleExprWithAlias.setAt1(ArgUtils.asNoneAlias()));
+        }
         return projectWithAliasList;
     };
 
@@ -186,11 +193,11 @@ public class OpArgTransformFactory {
             // order().by(select("a"))
             // order().by(select("a").by(values(...)))
             // order().by(select("a").values(...))
-            if (ByTraversalTransformFactory.isTagPropertyPattern(admin)) {
-                Pair<String, Traversal.Admin> tagProperty = ByTraversalTransformFactory.getByTraversalAsTagProperty(admin);
-                orderKey = ByTraversalTransformFactory.getTagByTraversalAsVar(tagProperty.getValue0(), tagProperty.getValue1());
+            if (ProjectTraversalTransformFactory.isTagPropertyPattern(admin)) {
+                Pair<String, Traversal.Admin> tagProperty = ProjectTraversalTransformFactory.getProjectTraversalAsTagProperty(admin);
+                orderKey = ProjectTraversalTransformFactory.getTagProjectTraversalAsVar(tagProperty.getValue0(), tagProperty.getValue1());
             } else { // order().by("name"), order().by(values("name"))
-                orderKey = ByTraversalTransformFactory.getTagByTraversalAsVar("", admin);
+                orderKey = ProjectTraversalTransformFactory.getTagProjectTraversalAsVar("", admin);
             }
             vars.add(Pair.with(orderKey, orderOpt));
         });
@@ -350,4 +357,7 @@ public class OpArgTransformFactory {
             throw new OpArgIllegalException(OpArgIllegalException.Cause.INVALID_TYPE, "cannot get FfiVOpt from " + step.getClass());
         }
     };
+
+    public static Function<Traversal.Admin, InterOpCollection>
+            INTER_OPS_FROM_SUB_TRAVERSAL = (Traversal.Admin sub) -> (new InterOpCollectionBuilder(sub)).build();
 }

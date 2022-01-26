@@ -28,7 +28,9 @@ public class GremlinResultAnalyzer {
                 parserType = GremlinResultParserFactory.GROUP;
             } else if (Utils.equalClass(step, HasStep.class) || Utils.equalClass(step, DedupGlobalStep.class)
                     || Utils.equalClass(step, RangeGlobalStep.class) || Utils.equalClass(step, OrderGlobalStep.class)
-                    || Utils.equalClass(step, IsStep.class) || Utils.equalClass(step, WherePredicateStep.class)) {
+                    || Utils.equalClass(step, IsStep.class) || Utils.equalClass(step, WherePredicateStep.class)
+                    || Utils.equalClass(step, TraversalFilterStep.class) || Utils.equalClass(step, WhereTraversalStep.class)
+                    || Utils.equalClass(step, NotStep.class)) {
                 // do nothing;
             } else {
                 throw new UnsupportedStepException(step.getClass(), "unimplemented yet");

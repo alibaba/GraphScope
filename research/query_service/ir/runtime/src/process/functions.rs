@@ -16,7 +16,7 @@
 use std::cmp::Ordering;
 
 use ir_common::generated::algebra::join::JoinKind;
-use pegasus::api::function::{FnResult, MapFunction};
+use pegasus::api::function::{BinaryFunction, FnResult, MapFunction};
 use pegasus_server::pb::AccumKind;
 
 use crate::error::FnGenResult;
@@ -55,6 +55,12 @@ pub trait FoldGen<I, O>: Send + 'static {
 
     // TODO(bingqing): enable fold_partition + fold_global optimization in RecordAccumulator
     fn gen_fold_accum(&self) -> FnGenResult<RecordAccumulator>;
+}
+
+pub trait ApplyGen<L, R, O>: Send + 'static {
+    fn get_join_kind(&self) -> JoinKind;
+
+    fn gen_left_join_func(&self) -> FnGenResult<Box<dyn BinaryFunction<L, R, O>>>;
 }
 
 ///
@@ -114,6 +120,16 @@ mod box_impl {
 
         fn gen_fold_accum(&self) -> FnGenResult<RecordAccumulator> {
             (**self).gen_fold_accum()
+        }
+    }
+
+    impl<L, R, O, F: ApplyGen<L, R, O> + ?Sized> ApplyGen<L, R, O> for Box<F> {
+        fn get_join_kind(&self) -> JoinKind {
+            (**self).get_join_kind()
+        }
+
+        fn gen_left_join_func(&self) -> FnGenResult<Box<dyn BinaryFunction<L, R, O>>> {
+            (**self).gen_left_join_func()
         }
     }
 }

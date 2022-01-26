@@ -112,7 +112,7 @@ public interface IrCoreLibrary extends Library {
 
     ResultCode appendDedupOperator(Pointer plan, Pointer dedup, int parent, IntByReference oprIdx);
 
-    Pointer initSinkOperator(boolean isCurrent);
+    Pointer initSinkOperator();
 
     ResultCode addSinkColumn(Pointer sink, FfiNameOrId.ByValue column);
 
@@ -123,6 +123,12 @@ public interface IrCoreLibrary extends Library {
     ResultCode setGetvAlias(Pointer getV, FfiAlias.ByValue alias);
 
     ResultCode appendGetvOperator(Pointer plan, Pointer getV, int parent, IntByReference oprIdx);
+
+    Pointer initApplyOperator(int subtaskRoot, FfiJoinKind joinKind);
+
+    ResultCode setApplyAlias(Pointer apply, FfiAlias.ByValue alias);
+
+    ResultCode appendApplyOperator(Pointer plan, Pointer apply, int parent, IntByReference oprIdx);
 
     FfiNameOrId.ByValue noneNameOrId();
 

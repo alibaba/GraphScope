@@ -75,7 +75,7 @@ public class SelectStepTest {
 
         List<Pair> exprWithAlias = (List<Pair>) op.getExprWithAlias().get().applyArg();
         Assert.assertEquals("@a", exprWithAlias.get(0).getValue0());
-        Assert.assertEquals(ArgUtils.asFfiAlias("project_a", false), exprWithAlias.get(0).getValue1());
+        Assert.assertEquals(ArgUtils.asNoneAlias(), exprWithAlias.get(0).getValue1());
     }
 
     @Test
@@ -86,7 +86,7 @@ public class SelectStepTest {
 
         List<Pair> exprWithAlias = (List<Pair>) op.getExprWithAlias().get().applyArg();
         Assert.assertEquals("@a.name", exprWithAlias.get(0).getValue0());
-        Assert.assertEquals(ArgUtils.asFfiAlias("a_name", false), exprWithAlias.get(0).getValue1());
+        Assert.assertEquals(ArgUtils.asNoneAlias(), exprWithAlias.get(0).getValue1());
     }
 
     @Test
@@ -97,7 +97,7 @@ public class SelectStepTest {
 
         List<Pair> exprWithAlias = (List<Pair>) op.getExprWithAlias().get().applyArg();
         Assert.assertEquals("{@a.name}", exprWithAlias.get(0).getValue0());
-        Assert.assertEquals(ArgUtils.asFfiAlias("a_{name}", false), exprWithAlias.get(0).getValue1());
+        Assert.assertEquals(ArgUtils.asNoneAlias(), exprWithAlias.get(0).getValue1());
     }
 
     @Test
@@ -108,6 +108,6 @@ public class SelectStepTest {
 
         List<Pair> exprWithAlias = (List<Pair>) op.getExprWithAlias().get().applyArg();
         Assert.assertEquals("{@a.name, @a.id}", exprWithAlias.get(0).getValue0());
-        Assert.assertEquals(ArgUtils.asFfiAlias("a_{name, id}", false), exprWithAlias.get(0).getValue1());
+        Assert.assertEquals(ArgUtils.asNoneAlias(), exprWithAlias.get(0).getValue1());
     }
 }

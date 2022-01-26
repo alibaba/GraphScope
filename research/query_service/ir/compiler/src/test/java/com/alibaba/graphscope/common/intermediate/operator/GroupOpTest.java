@@ -40,7 +40,7 @@ public class GroupOpTest {
         ArgAggFn aggFn = new ArgAggFn(FfiAggOpt.Count, ArgUtils.asFfiAlias("values", false));
         op.setGroupByValues(new OpArg(Collections.singletonList(aggFn), Function.identity()));
 
-        irPlan.appendInterOp(op);
+        irPlan.appendInterOp(0, op);
         Assert.assertEquals(FileUtils.readJsonFromResource("count.json"), irPlan.getPlanAsJson());
     }
 
@@ -51,7 +51,7 @@ public class GroupOpTest {
         ArgAggFn aggFn = new ArgAggFn(FfiAggOpt.Count, ArgUtils.asFfiAlias("a", true));
         op.setGroupByValues(new OpArg(Collections.singletonList(aggFn), Function.identity()));
 
-        irPlan.appendInterOp(op);
+        irPlan.appendInterOp(0, op);
         Assert.assertEquals(FileUtils.readJsonFromResource("count_as.json"), irPlan.getPlanAsJson());
     }
 
@@ -65,7 +65,7 @@ public class GroupOpTest {
         ArgAggFn aggFn = new ArgAggFn(FfiAggOpt.ToList, ArgUtils.asFfiAlias("values", false));
         op.setGroupByValues(new OpArg(Collections.singletonList(aggFn), Function.identity()));
 
-        irPlan.appendInterOp(op);
+        irPlan.appendInterOp(0, op);
         Assert.assertEquals(FileUtils.readJsonFromResource("group.json"), irPlan.getPlanAsJson());
     }
 
@@ -80,7 +80,7 @@ public class GroupOpTest {
         ArgAggFn aggFn = new ArgAggFn(FfiAggOpt.ToList, ArgUtils.asFfiAlias("values", false));
         op.setGroupByValues(new OpArg(Collections.singletonList(aggFn), Function.identity()));
 
-        irPlan.appendInterOp(op);
+        irPlan.appendInterOp(0, op);
         Assert.assertEquals(FileUtils.readJsonFromResource("group_key.json"), irPlan.getPlanAsJson());
     }
 
@@ -95,7 +95,7 @@ public class GroupOpTest {
         ArgAggFn aggFn = new ArgAggFn(FfiAggOpt.Count, ArgUtils.asFfiAlias("values", false));
         op.setGroupByValues(new OpArg(Collections.singletonList(aggFn), Function.identity()));
 
-        irPlan.appendInterOp(op);
+        irPlan.appendInterOp(0, op);
         Assert.assertEquals(FileUtils.readJsonFromResource("group_key_count.json"), irPlan.getPlanAsJson());
     }
 

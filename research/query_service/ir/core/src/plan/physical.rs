@@ -1149,7 +1149,7 @@ mod test {
     }
 
     #[test]
-    fn apply_as_physical() {
+    fn apply_as_physical_case1() {
         let mut plan = LogicalPlan::default();
         // g.V().as("v").where(out().as("o").has("lang", "java")).select("v").values("name")
 

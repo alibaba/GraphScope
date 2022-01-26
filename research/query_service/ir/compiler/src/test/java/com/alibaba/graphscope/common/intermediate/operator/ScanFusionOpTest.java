@@ -40,7 +40,7 @@ public class ScanFusionOpTest {
     public void scanOptTest() throws IOException {
         ScanFusionOp op = new ScanFusionOp();
         op.setScanOpt(new OpArg<>(FfiScanOpt.Entity, Function.identity()));
-        irPlan.appendInterOp(op);
+        irPlan.appendInterOp(0, op);
         String actual = irPlan.getPlanAsJson();
         Assert.assertEquals(FileUtils.readJsonFromResource("scan_opt.json"), actual);
     }
@@ -50,7 +50,7 @@ public class ScanFusionOpTest {
         ScanFusionOp op = new ScanFusionOp();
         op.setScanOpt(new OpArg<>(FfiScanOpt.Entity, Function.identity()));
         op.setPredicate(new OpArg("@.id == 1", Function.identity()));
-        irPlan.appendInterOp(op);
+        irPlan.appendInterOp(0, op);
         String actual = irPlan.getPlanAsJson();
         Assert.assertEquals(FileUtils.readJsonFromResource("scan_expr.json"), actual);
     }
@@ -61,7 +61,7 @@ public class ScanFusionOpTest {
         op.setScanOpt(new OpArg<>(FfiScanOpt.Entity, Function.identity()));
         List<FfiNameOrId.ByValue> values = Arrays.asList(irCoreLib.cstrAsNameOrId("person"));
         op.setLabels(new OpArg<List, List>(values, Function.identity()));
-        irPlan.appendInterOp(op);
+        irPlan.appendInterOp(0, op);
         String actual = irPlan.getPlanAsJson();
         Assert.assertEquals(FileUtils.readJsonFromResource("scan_labels.json"), actual);
     }
@@ -72,7 +72,7 @@ public class ScanFusionOpTest {
         op.setScanOpt(new OpArg<>(FfiScanOpt.Entity, Function.identity()));
         List<FfiConst.ByValue> values = Arrays.asList(irCoreLib.int64AsConst(1L), irCoreLib.int64AsConst(2L));
         op.setIds(new OpArg<List, List>(values, Function.identity()));
-        irPlan.appendInterOp(op);
+        irPlan.appendInterOp(0, op);
         String actual = irPlan.getPlanAsJson();
         Assert.assertEquals(FileUtils.readJsonFromResource("scan_ids.json"), actual);
     }
@@ -82,7 +82,7 @@ public class ScanFusionOpTest {
         ScanFusionOp op = new ScanFusionOp();
         op.setScanOpt(new OpArg<>(FfiScanOpt.Entity, Function.identity()));
         op.setAlias(new OpArg(ArgUtils.asFfiAlias("a", true), Function.identity()));
-        irPlan.appendInterOp(op);
+        irPlan.appendInterOp(0, op);
         String actual = irPlan.getPlanAsJson();
         Assert.assertEquals(FileUtils.readJsonFromResource("scan_alias.json"), actual);
     }

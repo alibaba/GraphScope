@@ -66,4 +66,10 @@ public class TraversalRootVisitor<G extends Traversal> extends GremlinGSBaseVisi
             return visit(ctx.getChild(2));
         }
     }
+
+    @Override
+    public Traversal visitNestedTraversal(final GremlinGSParser.NestedTraversalContext ctx) {
+        TraversalMethodVisitor nestedTraversal = new TraversalMethodVisitor(gvisitor, GremlinAntlrToJava.getTraversalSupplier().get());
+        return nestedTraversal.visitChainedTraversal(ctx.chainedTraversal());
+    }
 }
