@@ -538,7 +538,13 @@ impl LogicalPlan {
                         .iter()
                         .cloned()
                         .collect();
-                    let mut subplan = self.subplan(from_node, curr_node.clone());
+                    let mut subplan = if from_node == curr_node {
+                        let mut p = LogicalPlan::default();
+                        p.meta = self.meta.clone();
+                        Some(p)
+                    } else {
+                        self.subplan(from_node, curr_node.clone())
+                    };
                     if let Some(plan) = subplan.as_mut() {
                         plan.append_node(curr_node.borrow().clone(), parent_ids)
                             .expect("append node to subplan error!");
@@ -1811,7 +1817,7 @@ mod test {
     }
 
     #[test]
-    fn extract_subplan_from_apply() {
+    fn extract_subplan_from_apply_case1() {
         let mut plan = LogicalPlan::default();
         // g.V().as("v").where(out().as("o").has("lang", "java")).select("v").values("name")
 
@@ -1901,6 +1907,79 @@ mod test {
                     _ => panic!("should be select"),
                 }
             }
+        }
+    }
+
+    #[test]
+    fn extract_subplan_from_apply_case2() {
+        let mut plan = LogicalPlan::default();
+        // g.V().where(not(out("created"))).values("name")
+        let scan = pb::Scan {
+            scan_opt: 0,
+            alias: None,
+            params: Some(pb::QueryParams {
+                table_names: vec![],
+                columns: vec![],
+                limit: None,
+                predicate: None,
+                requirements: vec![],
+            }),
+            idx_predicate: None,
+        };
+
+        plan.append_operator_as_node(scan.into(), vec![])
+            .unwrap();
+
+        let expand = pb::EdgeExpand {
+            v_tag: None,
+            direction: 0,
+            params: Some(pb::QueryParams {
+                table_names: vec![],
+                columns: vec![],
+                limit: None,
+                predicate: None,
+                requirements: vec![],
+            }),
+            is_edge: false,
+            alias: None,
+        };
+        let root_id = plan
+            .append_operator_as_node(expand.into(), vec![])
+            .unwrap();
+
+        let apply = pb::Apply { join_kind: 5, tags: vec![], subtask: root_id as i32, alias: None };
+        plan.append_operator_as_node(apply.into(), vec![0])
+            .unwrap();
+
+        let project = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: str_to_expr_pb("@.name".to_string()).ok(),
+                alias: Some("name".into()),
+            }],
+            is_append: true,
+        };
+        plan.append_operator_as_node(project.into(), vec![2])
+            .unwrap();
+
+        let sink = pb::Sink { tags: vec!["name".into()], sink_current: false, id_name_mappings: vec![] };
+        plan.append_operator_as_node(sink.into(), vec![3])
+            .unwrap();
+
+        let subplan = plan
+            .extract_subplan(plan.get_node(2).unwrap())
+            .unwrap();
+        assert_eq!(subplan.len(), 1);
+        match subplan
+            .get_node(1)
+            .unwrap()
+            .borrow()
+            .opr
+            .opr
+            .as_ref()
+            .unwrap()
+        {
+            Opr::Edge(_) => {}
+            _ => panic!("wrong operator: should be `EdgeExpand`"),
         }
     }
 
