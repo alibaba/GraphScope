@@ -426,40 +426,40 @@ public class IrPlan implements Closeable {
             InterOpIllegalArgException, InterOpUnsupportedException, AppendInterOpException {
         ResultCode resultCode;
         IntByReference oprId = new IntByReference(parentId);
-        if (base instanceof ScanFusionOp) {
+        if (ClassUtils.equalClass(base, ScanFusionOp.class)) {
             Pointer ptrScan = TransformFactory.SCAN_FUSION_OP.apply(base);
             resultCode = irCoreLib.appendScanOperator(ptrPlan, ptrScan, oprId.getValue(), oprId);
-        } else if (base instanceof SelectOp) {
+        } else if (ClassUtils.equalClass(base, SelectOp.class)) {
             Pointer ptrSelect = TransformFactory.SELECT_OP.apply(base);
             resultCode = irCoreLib.appendSelectOperator(ptrPlan, ptrSelect, oprId.getValue(), oprId);
-        } else if (base instanceof ExpandOp) {
+        } else if (ClassUtils.equalClass(base, ExpandOp.class)) {
             Pointer ptrExpand = TransformFactory.EXPAND_OP.apply(base);
             resultCode = irCoreLib.appendEdgexpdOperator(ptrPlan, ptrExpand, oprId.getValue(), oprId);
-        } else if (base instanceof LimitOp) {
+        } else if (ClassUtils.equalClass(base, LimitOp.class)) {
             Pointer ptrLimit = TransformFactory.LIMIT_OP.apply(base);
             resultCode = irCoreLib.appendLimitOperator(ptrPlan, ptrLimit, oprId.getValue(), oprId);
-        } else if (base instanceof ProjectOp) {
+        } else if (ClassUtils.equalClass(base, ProjectOp.class)) {
             Pointer ptrProject = TransformFactory.PROJECT_OP.apply(base);
             resultCode = irCoreLib.appendProjectOperator(ptrPlan, ptrProject, oprId.getValue(), oprId);
-        } else if (base instanceof OrderOp) {
+        } else if (ClassUtils.equalClass(base, OrderOp.class)) {
             Pointer ptrOrder = TransformFactory.ORDER_OP.apply(base);
             resultCode = irCoreLib.appendOrderbyOperator(ptrPlan, ptrOrder, oprId.getValue(), oprId);
-        } else if (base instanceof GroupOp) {
+        } else if (ClassUtils.equalClass(base, GroupOp.class)) {
             Pointer ptrGroup = TransformFactory.GROUP_OP.apply(base);
             resultCode = irCoreLib.appendGroupbyOperator(ptrPlan, ptrGroup, oprId.getValue(), oprId);
-        } else if (base instanceof DedupOp) {
+        } else if (ClassUtils.equalClass(base, DedupOp.class)) {
             Pointer ptrDedup = TransformFactory.DEDUP_OP.apply(base);
             resultCode = irCoreLib.appendDedupOperator(ptrPlan, ptrDedup, oprId.getValue(), oprId);
-        } else if (base instanceof SinkOp) {
+        } else if (ClassUtils.equalClass(base, SinkOp.class)) {
             Pointer ptrSink = TransformFactory.SINK_OP.apply(base);
             resultCode = irCoreLib.appendSinkOperator(ptrPlan, ptrSink, oprId.getValue(), oprId);
-        } else if (base instanceof PathExpandOp) {
+        } else if (ClassUtils.equalClass(base, PathExpandOp.class)) {
             Pointer ptrPathXPd = TransformFactory.PATH_EXPAND_OP.apply(base);
             resultCode = irCoreLib.appendPathxpdOperator(ptrPlan, ptrPathXPd, oprId.getValue(), oprId);
-        } else if (base instanceof GetVOp) {
+        } else if (ClassUtils.equalClass(base, GetVOp.class)) {
             Pointer ptrGetV = TransformFactory.GETV_OP.apply(base);
             resultCode = irCoreLib.appendGetvOperator(ptrPlan, ptrGetV, oprId.getValue(), oprId);
-        } else if (base instanceof ApplyOp) {
+        } else if (ClassUtils.equalClass(base, ApplyOp.class)) {
             ApplyOp applyOp = (ApplyOp) base;
             Optional<OpArg> subOps = applyOp.getSubOpCollection();
             if (!subOps.isPresent()) {

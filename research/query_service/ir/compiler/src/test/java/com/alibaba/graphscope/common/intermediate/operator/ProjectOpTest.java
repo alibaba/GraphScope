@@ -44,7 +44,7 @@ public class ProjectOpTest {
         List<Pair> exprWithAlias = Collections.singletonList(Pair.with(projectExpr, alias));
 
         op.setExprWithAlias(new OpArg(exprWithAlias, Function.identity()));
-        irPlan.appendInterOp(0, op);
+        irPlan.appendInterOp(-1, op);
         Assert.assertEquals(FileUtils.readJsonFromResource("project_tag.json"), irPlan.getPlanAsJson());
     }
 
@@ -53,7 +53,7 @@ public class ProjectOpTest {
         ScanFusionOp scanOp = new ScanFusionOp();
         scanOp.setScanOpt(new OpArg<>(FfiScanOpt.Entity, Function.identity()));
         scanOp.setAlias(new OpArg(ArgUtils.asFfiAlias("a", true), Function.identity()));
-        irPlan.appendInterOp(0, scanOp);
+        irPlan.appendInterOp(-1, scanOp);
 
         ProjectOp op = new ProjectOp();
         op.setAlias(new OpArg(ArgUtils.asFfiAlias("b", true), Function.identity()));
@@ -76,7 +76,7 @@ public class ProjectOpTest {
         List<Pair> exprWithAlias = Collections.singletonList(Pair.with(projectExpr, alias));
 
         op.setExprWithAlias(new OpArg(exprWithAlias, Function.identity()));
-        irPlan.appendInterOp(0, op);
+        irPlan.appendInterOp(-1, op);
         Assert.assertEquals(FileUtils.readJsonFromResource("project_key.json"), irPlan.getPlanAsJson());
     }
 
@@ -85,7 +85,7 @@ public class ProjectOpTest {
         ScanFusionOp scanOp = new ScanFusionOp();
         scanOp.setScanOpt(new OpArg<>(FfiScanOpt.Entity, Function.identity()));
         scanOp.setAlias(new OpArg(ArgUtils.asFfiAlias("a", true), Function.identity()));
-        irPlan.appendInterOp(0, scanOp);
+        irPlan.appendInterOp(-1, scanOp);
 
         ProjectOp op = new ProjectOp();
 
@@ -103,7 +103,7 @@ public class ProjectOpTest {
         ScanFusionOp scanOp = new ScanFusionOp();
         scanOp.setScanOpt(new OpArg<>(FfiScanOpt.Entity, Function.identity()));
         scanOp.setAlias(new OpArg(ArgUtils.asFfiAlias("a", true), Function.identity()));
-        irPlan.appendInterOp(0, scanOp);
+        irPlan.appendInterOp(-1, scanOp);
 
         ProjectOp op = new ProjectOp();
 

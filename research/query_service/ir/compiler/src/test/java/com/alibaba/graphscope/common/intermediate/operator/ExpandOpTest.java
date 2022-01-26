@@ -40,7 +40,7 @@ public class ExpandOpTest {
         ExpandOp op = new ExpandOp();
         op.setEdgeOpt(new OpArg<>(Boolean.valueOf(true), Function.identity()));
         op.setDirection(new OpArg<>(FfiDirection.Out, Function.identity()));
-        irPlan.appendInterOp(0, op);
+        irPlan.appendInterOp(-1, op);
         String actual = irPlan.getPlanAsJson();
         Assert.assertEquals(FileUtils.readJsonFromResource("expand_edge_opt.json"), actual);
     }
@@ -52,7 +52,7 @@ public class ExpandOpTest {
         op.setDirection(new OpArg<>(FfiDirection.Out, Function.identity()));
         List<FfiNameOrId.ByValue> values = Arrays.asList(irCoreLib.cstrAsNameOrId("knows"));
         op.setLabels(new OpArg<List, List>(values, Function.identity()));
-        irPlan.appendInterOp(0, op);
+        irPlan.appendInterOp(-1, op);
         String actual = irPlan.getPlanAsJson();
         Assert.assertEquals(FileUtils.readJsonFromResource("expand_labels.json"), actual);
     }
@@ -63,7 +63,7 @@ public class ExpandOpTest {
         op.setEdgeOpt(new OpArg<>(Boolean.valueOf(true), Function.identity()));
         op.setDirection(new OpArg<>(FfiDirection.Out, Function.identity()));
         op.setAlias(new OpArg(ArgUtils.asFfiAlias("a", true), Function.identity()));
-        irPlan.appendInterOp(0, op);
+        irPlan.appendInterOp(-1, op);
         String actual = irPlan.getPlanAsJson();
         Assert.assertEquals(FileUtils.readJsonFromResource("expand_alias.json"), actual);
     }

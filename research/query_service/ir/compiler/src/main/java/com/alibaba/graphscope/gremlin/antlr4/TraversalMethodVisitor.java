@@ -27,7 +27,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.process.traversal.step.ByModulating;
-import org.apache.tinkerpop.gremlin.process.traversal.step.filter.WhereTraversalStep;
+import org.apache.tinkerpop.gremlin.process.traversal.step.filter.RangeGlobalStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.OrderGlobalStep;
 
 public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal> {
@@ -112,26 +112,34 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
     @Override
     public Traversal visitTraversalMethod_out(GremlinGSParser.TraversalMethod_outContext ctx) {
         String[] labels = GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList());
-        if (ctx.traversalMethod_range() != null) {
-            TraversalMethodVisitor nestedVisitor = new TraversalMethodVisitor(gvisitor,
-                    GremlinAntlrToJava.getTraversalSupplier().get());
-            Traversal nested = nestedVisitor.visitTraversalMethod_range(ctx.traversalMethod_range());
+        if (labels != null && labels.length > 0 && isRangeExpression(labels[0])) {
+            GraphTraversal nestedRange = GremlinAntlrToJava.getTraversalSupplier().get();
+            String[] ranges = labels[0].split("\\.\\.");
+            RangeGlobalStep rangeStep = new RangeGlobalStep(nestedRange.asAdmin(), Integer.valueOf(ranges[0]), Integer.valueOf(ranges[1]));
+            nestedRange.asAdmin().addStep(rangeStep);
             IrCustomizedTraversal traversal = (IrCustomizedTraversal) graphTraversal;
-            return traversal.out(nested, labels);
+            labels = Utils.removeStringEle(0, labels);
+            return traversal.out(nestedRange, labels);
         } else {
             return graphTraversal.out(labels);
         }
     }
 
+    private boolean isRangeExpression(String label) {
+        return label.matches("^\\d+\\.\\.\\d+");
+    }
+
     @Override
     public Traversal visitTraversalMethod_in(GremlinGSParser.TraversalMethod_inContext ctx) {
         String[] labels = GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList());
-        if (ctx.traversalMethod_range() != null) {
-            TraversalMethodVisitor nestedVisitor = new TraversalMethodVisitor(gvisitor,
-                    GremlinAntlrToJava.getTraversalSupplier().get());
-            Traversal nested = nestedVisitor.visitTraversalMethod_range(ctx.traversalMethod_range());
+        if (labels != null && labels.length > 0 && isRangeExpression(labels[0])) {
+            GraphTraversal nestedRange = GremlinAntlrToJava.getTraversalSupplier().get();
+            String[] ranges = labels[0].split("\\.\\.");
+            RangeGlobalStep rangeStep = new RangeGlobalStep(nestedRange.asAdmin(), Integer.valueOf(ranges[0]), Integer.valueOf(ranges[1]));
+            nestedRange.asAdmin().addStep(rangeStep);
             IrCustomizedTraversal traversal = (IrCustomizedTraversal) graphTraversal;
-            return traversal.in(nested, labels);
+            labels = Utils.removeStringEle(0, labels);
+            return traversal.in(nestedRange, labels);
         } else {
             return graphTraversal.in(labels);
         }
@@ -140,27 +148,16 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
     @Override
     public Traversal visitTraversalMethod_both(GremlinGSParser.TraversalMethod_bothContext ctx) {
         String[] labels = GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList());
-        if (ctx.traversalMethod_range() != null) {
-            TraversalMethodVisitor nestedVisitor = new TraversalMethodVisitor(gvisitor,
-                    GremlinAntlrToJava.getTraversalSupplier().get());
-            Traversal nested = nestedVisitor.visitTraversalMethod_range(ctx.traversalMethod_range());
+        if (labels != null && labels.length > 0 && isRangeExpression(labels[0])) {
+            GraphTraversal nestedRange = GremlinAntlrToJava.getTraversalSupplier().get();
+            String[] ranges = labels[0].split("\\.\\.");
+            RangeGlobalStep rangeStep = new RangeGlobalStep(nestedRange.asAdmin(), Integer.valueOf(ranges[0]), Integer.valueOf(ranges[1]));
+            nestedRange.asAdmin().addStep(rangeStep);
             IrCustomizedTraversal traversal = (IrCustomizedTraversal) graphTraversal;
-            return traversal.both(nested, labels);
+            labels = Utils.removeStringEle(0, labels);
+            return traversal.both(nestedRange, labels);
         } else {
             return graphTraversal.both(labels);
-        }
-    }
-
-    @Override
-    public Traversal visitTraversalMethod_range(GremlinGSParser.TraversalMethod_rangeContext ctx) {
-        if (ctx.integerLiteral() != null && ctx.integerLiteral().size() == 2) {
-            Object lower = GenericLiteralVisitor.getInstance()
-                    .visitIntegerLiteral(ctx.integerLiteral(0));
-            Object upper = GenericLiteralVisitor.getInstance()
-                    .visitIntegerLiteral(ctx.integerLiteral(1));
-            return graphTraversal.range(((Number) lower).longValue(), ((Number) upper).longValue());
-        } else {
-            throw new UnsupportedEvalException(ctx.getClass(), "supported pattern is [range(1, 2)]");
         }
     }
 

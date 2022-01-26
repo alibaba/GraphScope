@@ -622,17 +622,19 @@ public class PositiveEvalTest {
 
     @Test
     public void g_V_path_expand_test() {
-        Assert.assertEquals(((IrCustomizedTraversalSource) g).V().out(__.range(1, 2)), eval("g.V().out(range(1, 2))"));
+        Assert.assertEquals(((IrCustomizedTraversalSource) g).V().out(__.range(1, 2)), eval("g.V().out('1..2')"));
     }
 
     @Test
     public void g_V_path_expand_label_test() {
-        Assert.assertEquals(((IrCustomizedTraversalSource) g).V().out(__.range(1, 2), "knows"), eval("g.V().out(range(1, 2), \"knows\"))"));
+        Assert.assertEquals(((IrCustomizedTraversalSource) g).V().out(__.range(1, 2), "knows"),
+                eval("g.V().out('1..2', \"knows\"))"));
     }
 
     @Test
     public void g_V_path_expand_labels_test() {
-        Assert.assertEquals(((IrCustomizedTraversalSource) g).V().out(__.range(1, 2), "knows", "person"), eval("g.V().out(range(1, 2), \"knows\", \"person\"))"));
+        Assert.assertEquals(((IrCustomizedTraversalSource) g).V().out(__.range(1, 2), "knows", "person"),
+                eval("g.V().out(\"1..2\", \"knows\", \"person\"))"));
     }
 
     @Test
