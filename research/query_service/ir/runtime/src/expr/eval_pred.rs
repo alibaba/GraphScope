@@ -141,11 +141,18 @@ impl From<Partial> for Option<Predicates> {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Predicates {
+    Init,
     SingleItem(Operand),
     Predicate(Predicate),
     Not(Box<Predicates>),
     And((Box<Predicates>, Box<Predicates>)),
     Or((Box<Predicates>, Box<Predicates>)),
+}
+
+impl Default for Predicates {
+    fn default() -> Self {
+        Self::Init
+    }
 }
 
 impl TryFrom<pb::index_predicate::Triplet> for Predicates {
@@ -329,6 +336,7 @@ impl EvalPred for Predicate {
 impl EvalPred for Predicates {
     fn eval_bool<E: Element, C: Context<E>>(&self, context: Option<&C>) -> ExprEvalResult<bool> {
         match self {
+            Predicates::Init => Ok(false),
             Predicates::SingleItem(item) => item.eval_bool(context),
             Predicates::Predicate(pred) => pred.eval_bool(context),
             Predicates::Not(pred) => Ok(!pred.eval_bool(context)?),
@@ -344,63 +352,53 @@ impl Predicates {
     }
 
     pub fn and(self, other: Predicates) -> Self {
-        Predicates::And((Box::new(self), Box::new(other)))
+        match (&self, &other) {
+            (Predicates::Init, _) => other,
+            (_, Predicates::Init) => self,
+            _ => Predicates::And((Box::new(self), Box::new(other))),
+        }
     }
 
     pub fn or(self, other: Predicates) -> Self {
-        Predicates::Or((Box::new(self), Box::new(other)))
-    }
-}
-
-#[allow(dead_code)]
-fn merge_predicates(
-    mut predicates: Option<Predicates>, curr_cmp: Option<common_pb::Logical>, partial: Partial,
-    is_not: bool,
-) -> ExprResult<Predicates> {
-    use common_pb::Logical;
-
-    let old_partial = partial.clone();
-    let new_pred = Option::<Predicates>::from(partial);
-    if new_pred.is_none() {
-        return Err(ExprError::OtherErr(format!("invalid predicate: {:?}", old_partial)));
-    }
-    if let Some(cmp) = curr_cmp {
-        if predicates.is_some() {
-            match cmp {
-                Logical::And => {
-                    predicates = predicates.map(|pred| {
-                        if !is_not {
-                            pred.and(new_pred.unwrap())
-                        } else {
-                            pred.and(new_pred.unwrap().not())
-                        }
-                    });
-                }
-                Logical::Or => {
-                    predicates = predicates.map(|pred| {
-                        if !is_not {
-                            pred.or(new_pred.unwrap())
-                        } else {
-                            pred.or(new_pred.unwrap().not())
-                        }
-                    });
-                }
-                _ => unreachable!(),
-            }
+        match (&self, &other) {
+            (Predicates::Init, _) => other,
+            (_, Predicates::Init) => self,
+            _ => Predicates::Or((Box::new(self), Box::new(other))),
         }
-    } else {
-        predicates = Some(if !is_not { new_pred.unwrap() } else { new_pred.unwrap().not() });
     }
 
-    Ok(predicates.unwrap())
+    fn merge_partial(
+        self, curr_cmp: Option<common_pb::Logical>, partial: Partial, is_not: bool,
+    ) -> ExprResult<Predicates> {
+        use common_pb::Logical;
+        let old_partial = partial.clone();
+        if let Some(mut new_pred) = Option::<Predicates>::from(partial) {
+            if is_not {
+                new_pred = new_pred.not()
+            };
+            if let Some(cmp) = curr_cmp {
+                match cmp {
+                    Logical::And => Ok(self.and(new_pred)),
+                    Logical::Or => Ok(self.or(new_pred)),
+                    _ => unreachable!(),
+                }
+            } else {
+                Ok(new_pred)
+            }
+        } else {
+            Err(ExprError::OtherErr(format!("invalid predicate: {:?}", old_partial)))
+        }
+    }
 }
 
 #[allow(dead_code)]
-fn process_predicates(iter: &mut dyn Iterator<Item = &common_pb::ExprOpr>) -> ExprResult<Predicates> {
+fn process_predicates(
+    iter: &mut dyn Iterator<Item = &common_pb::ExprOpr>,
+) -> ExprResult<Option<Predicates>> {
     use common_pb::expr_opr::Item;
     use common_pb::Logical;
     let mut partial = Partial::default();
-    let mut predicates: Option<Predicates> = None;
+    let mut predicates = Predicates::default();
     let mut curr_cmp: Option<common_pb::Logical> = None;
     let mut is_not = false;
     let mut left_brace_count = 0;
@@ -423,11 +421,10 @@ fn process_predicates(iter: &mut dyn Iterator<Item = &common_pb::ExprOpr>) -> Ex
                             | Logical::Without => partial.cmp(logical)?,
                             Logical::Not => is_not = true,
                             Logical::And | Logical::Or => {
-                                let p = merge_predicates(predicates, curr_cmp, partial, is_not)?;
+                                predicates = predicates.merge_partial(curr_cmp, partial, is_not)?;
                                 if is_not {
                                     is_not = false;
                                 }
-                                predicates = Some(p);
                                 partial = Partial::default();
                                 curr_cmp = Some(logical);
                             }
@@ -447,11 +444,6 @@ fn process_predicates(iter: &mut dyn Iterator<Item = &common_pb::ExprOpr>) -> Ex
                         container.push(opr.clone());
                     }
                 }
-                Item::Arith(_) => {
-                    return Err(ExprError::Unsupported(
-                        "arithmetic is not supported in predicates".to_string(),
-                    ))
-                }
                 Item::Brace(brace) => {
                     if *brace == 0 {
                         if left_brace_count != 0 {
@@ -462,20 +454,24 @@ fn process_predicates(iter: &mut dyn Iterator<Item = &common_pb::ExprOpr>) -> Ex
                         left_brace_count -= 1;
                         if left_brace_count == 0 {
                             let mut iter = container.iter();
-                            let p = process_predicates(&mut iter)?;
-                            partial.predicates(p)?;
-                            container.clear();
+                            if let Some(p) = process_predicates(&mut iter)? {
+                                partial.predicates(p)?;
+                                container.clear();
+                            } else {
+                                return Ok(None);
+                            }
                         } else {
                             container.push(opr.clone());
                         }
                     }
                 }
+                Item::Arith(_) => return Ok(None),
             }
         }
     }
 
     if left_brace_count == 0 {
-        merge_predicates(predicates, curr_cmp, partial, is_not)
+        Ok(Some(predicates.merge_partial(curr_cmp, partial, is_not)?))
     } else {
         Err(ExprError::UnmatchedLRBraces)
     }
@@ -501,7 +497,9 @@ impl TryFrom<common_pb::Expression> for PEvaluator {
 
     fn try_from(expr: common_pb::Expression) -> Result<Self, Self::Error> {
         let mut iter = expr.operators.iter();
-        if let Ok(pred) = process_predicates(&mut iter) {
+        if let Some(pred) =
+            process_predicates(&mut iter).map_err(|err| ParsePbError::ParseError(format!("{:?}", err)))?
+        {
             Ok(Self::Predicates(pred))
         } else {
             Ok(Self::General(expr.try_into()?))
