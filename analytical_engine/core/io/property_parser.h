@@ -138,7 +138,6 @@ inline void ParseVertex(std::shared_ptr<detail::Graph>& graph,
   vertex->label = attrs.at(rpc::LABEL).s();
   vertex->vid = attrs.at(rpc::VID).s();
   vertex->protocol = attrs.at(rpc::PROTOCOL).s();
-  // TODO (dongze) copy
   vertex->values = data;
   graph->vertices.push_back(vertex);
 }
@@ -164,7 +163,6 @@ inline void ParseEdge(std::shared_ptr<detail::Graph>& graph,
   sub_label.dst_vid = attrs.at(rpc::DST_VID).s();
   sub_label.load_strategy = attrs.at(rpc::LOAD_STRATEGY).s();
   sub_label.protocol = attrs.at(rpc::PROTOCOL).s();
-  // TODO (dongze) copy
   sub_label.values = data;
   edge->sub_labels.push_back(sub_label);
 

@@ -103,7 +103,6 @@ void Dispatcher::publisherPreprocessCmd(CommandDetail& cmd) {
     CHECK_EQ(static_cast<int>(params_vec.size()), comm_spec_.worker_num());
     for (int i = 1; i < comm_spec_.worker_num(); ++i) {
       grape::InArchive ia;
-      // TODO (dongze): Copy
       cmd.large_attr = params_vec[i];
       ia << cmd;
       grape::SendArchive(ia, i, MPI_COMM_WORLD);

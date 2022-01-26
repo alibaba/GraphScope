@@ -810,32 +810,27 @@ class CoordinatorServiceServicer(
             )
             return "vineyard", stream_id
 
-        def _process_loader_func(func):
-            protocol = func.attr[types_pb2.PROTOCOL].s.decode()
+        def _process_loader_func(loader):
+            # loader is type of attr_value_pb2.Chunk
+            protocol = loader.attr[types_pb2.PROTOCOL].s.decode()
             if protocol in ("hdfs", "hive", "oss", "s3"):
-                source = func.attr[types_pb2.VALUES].s.decode()
+                source = loader.buffer.decode()
                 storage_options = json.loads(
-                    func.attr[types_pb2.STORAGE_OPTIONS].s.decode()
+                    loader.attr[types_pb2.STORAGE_OPTIONS].s.decode()
                 )
-                read_options = json.loads(func.attr[types_pb2.READ_OPTIONS].s.decode())
+                read_options = json.loads(
+                    loader.attr[types_pb2.READ_OPTIONS].s.decode()
+                )
                 new_protocol, new_source = _spawn_vineyard_io_stream(
                     source, storage_options, read_options
                 )
-                func.attr[types_pb2.PROTOCOL].CopyFrom(utils.s_to_attr(new_protocol))
-                func.attr[types_pb2.VALUES].CopyFrom(utils.s_to_attr(new_source))
+                loader.buffer = new_source.encode("utf-8")
+                loader.attr[types_pb2.PROTOCOL].CopyFrom(utils.s_to_attr(new_protocol))
 
-        for label in op.attr[types_pb2.ARROW_PROPERTY_DEFINITION].list.func:
-            # vertex label or edge label
-            if types_pb2.LOADER in label.attr:
-                loader_func = label.attr[types_pb2.LOADER].func
-                if loader_func.name == "loader":
-                    _process_loader_func(loader_func)
-            if types_pb2.SUB_LABEL in label.attr:
-                for func in label.attr[types_pb2.SUB_LABEL].list.func:
-                    if types_pb2.LOADER in func.attr:
-                        loader_func = func.attr[types_pb2.LOADER].func
-                        if loader_func.name == "loader":
-                            _process_loader_func(loader_func)
+        for loader in op.large_attr.chunk_list.items:
+            # handle vertex or edge loader
+            if loader.attr[types_pb2.CHUNK_TYPE].s.decode() == "loader":
+                _process_loader_func(loader)
 
         return op_def_pb2.OpResult(code=error_codes_pb2.OK, key=op.key)
 
