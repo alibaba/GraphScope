@@ -48,11 +48,9 @@ mod test {
 
         let apply_opr = pb::Apply {
             join_kind,
-            subtask: Some(pb::apply::Subtask {
-                tags: vec![], // ignore this
-                subtask: 0,   // ignore this
-                alias: None,
-            }),
+            tags: vec![], // ignore this
+            subtask: 0,   // ignore this
+            alias: None,
         };
 
         let expand_opr = pb::EdgeExpand {
@@ -152,7 +150,7 @@ mod test {
     fn init_apply_count_request(join_kind: i32, alias: common_pb::NameOrId) -> JobRequest {
         let source_opr = pb::Scan {
             scan_opt: 0,
-            alias: Some("b".into()),
+            alias: Some("s".into()),
             params: Some(pb::QueryParams {
                 table_names: vec![common_pb::NameOrId::from("person".to_string())],
                 columns: vec![],
@@ -165,11 +163,9 @@ mod test {
 
         let apply_opr = pb::Apply {
             join_kind,
-            subtask: Some(pb::apply::Subtask {
-                tags: vec![], // ignore this
-                subtask: 0,   // ignore this
-                alias: Some(alias.clone()),
-            }),
+            tags: vec![], // ignore this
+            subtask: 0,   // ignore this
+            alias: Some(alias.clone()),
         };
 
         let expand_opr = pb::EdgeExpand {
@@ -200,7 +196,7 @@ mod test {
         let expand_opr_bytes = pb::logical_plan::Operator::from(expand_opr).encode_to_vec();
         let fold_opr_bytes = pb::logical_plan::Operator::from(fold_opr).encode_to_vec();
         let sink_opr_bytes = pb::logical_plan::Operator::from(pb::Sink {
-            tags: vec![alias, "b".into()],
+            tags: vec![alias, "s".into()],
             sink_current: true,
             id_name_mappings: vec![],
         })

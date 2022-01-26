@@ -15,7 +15,6 @@
 
 use std::convert::TryFrom;
 
-use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::algebra::join::JoinKind;
 use ir_common::NameOrId;
@@ -100,9 +99,6 @@ impl ApplyGen<Record, Vec<Record>, Option<Record>> for algebra_pb::Apply {
     ) -> FnGenResult<Box<dyn BinaryFunction<Record, Vec<Record>, Option<Record>>>> {
         let join_kind: JoinKind = unsafe { ::std::mem::transmute(self.join_kind) };
         let alias = self
-            .subtask
-            .as_ref()
-            .ok_or(ParsePbError::from("subtask is missing"))?
             .alias
             .as_ref()
             .map(|tag_pb| NameOrId::try_from(tag_pb.clone()))
