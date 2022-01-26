@@ -14,6 +14,7 @@
 //! limitations under the License.
 
 use std::convert::TryFrom;
+use std::sync::Arc;
 
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::algebra::join::JoinKind;
@@ -22,7 +23,7 @@ use pegasus::api::function::{BinaryFunction, FnResult};
 
 use crate::error::{FnExecError, FnGenError, FnGenResult};
 use crate::process::functions::ApplyGen;
-use crate::process::record::{CommonObject, Record};
+use crate::process::record::{CommonObject, Entry, Record};
 
 #[derive(Debug)]
 struct ApplyOperator {
@@ -47,13 +48,25 @@ impl BinaryFunction<Record, Vec<Record>, Option<Record>> for ApplyOperator {
                     let sub_entry = sub_result
                         .get(None)
                         .ok_or(FnExecError::get_tag_error("get entry of subtask result failed"))?;
-                    parent.append_arc_entry(sub_entry.clone(), self.alias.clone());
+                    if let Some(alias) = self.alias.as_ref() {
+                        // append sub_entry without moving head
+                        let columns = parent.get_columns_mut();
+                        columns.insert(alias.clone(), sub_entry.clone());
+                    } else {
+                        parent.append_arc_entry(sub_entry.clone(), None);
+                    }
                     Ok(Some(parent))
                 }
             }
             JoinKind::LeftOuter => {
                 if sub.len() == 0 {
-                    parent.append(CommonObject::None, self.alias.clone());
+                    let entry: Arc<Entry> = Arc::new((CommonObject::None).into());
+                    if let Some(alias) = self.alias.as_ref() {
+                        let columns = parent.get_columns_mut();
+                        columns.insert(alias.clone(), entry.clone());
+                    } else {
+                        parent.append_arc_entry(entry.clone(), None);
+                    }
                     Ok(Some(parent))
                 } else {
                     let sub_result = sub
@@ -63,7 +76,12 @@ impl BinaryFunction<Record, Vec<Record>, Option<Record>> for ApplyOperator {
                     let sub_entry = sub_result
                         .get(None)
                         .ok_or(FnExecError::get_tag_error("get entry of subtask result failed"))?;
-                    parent.append_arc_entry(sub_entry.clone(), self.alias.clone());
+                    if let Some(alias) = self.alias.as_ref() {
+                        let columns = parent.get_columns_mut();
+                        columns.insert(alias.clone(), sub_entry.clone());
+                    } else {
+                        parent.append_arc_entry(sub_entry.clone(), None);
+                    }
                     Ok(Some(parent))
                 }
             }
