@@ -67,20 +67,6 @@ impl BinaryFunction<Record, Vec<Record>, Option<Record>> for ApplyOperator {
                     Ok(Some(parent))
                 }
             }
-            JoinKind::Semi => {
-                if sub.len() == 0 {
-                    Ok(None)
-                } else {
-                    Ok(Some(parent))
-                }
-            }
-            JoinKind::Anti => {
-                if sub.len() != 0 {
-                    Ok(None)
-                } else {
-                    Ok(Some(parent))
-                }
-            }
             _ => Err(FnExecError::UnSupported(format!(
                 "Do not support the join type {:?} in Apply",
                 self.join_kind

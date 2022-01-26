@@ -21,8 +21,8 @@ use ir_common::generated::common as common_pb;
 use ir_common::generated::results as result_pb;
 use pegasus::api::function::*;
 use pegasus::api::{
-    Collect, CorrelatedSubTask, Count, Dedup, Filter, Fold, FoldByKey, IterCondition, Iteration, Join,
-    KeyBy, Limit, Map, Merge, PartitionByKey, Sink, SortBy, SortLimitBy, Source,
+    Collect, CorrelatedSubTask, Count, Dedup, Filter, Fold, FoldByKey, HasAny, IterCondition, Iteration,
+    Join, KeyBy, Limit, Map, Merge, PartitionByKey, Sink, SortBy, SortLimitBy, Source,
 };
 use pegasus::result::ResultSink;
 use pegasus::stream::Stream;
@@ -307,26 +307,51 @@ impl IRJobCompiler {
                             .as_ref()
                             .ok_or(BuildJobError::Unsupported("Task is missing in Apply".to_string()))?;
                         stream = match join_kind {
-                            JoinKind::Semi | JoinKind::Anti => stream.apply(|sub_start| {
-                                let sub_end = self
-                                    .install(sub_start, &sub_task.plan[..])?
-                                    // TODO: is_any api instead;
-                                    .limit(1)?
-                                    .collect::<Vec<Record>>()?;
-                                Ok(sub_end)
-                            })?,
-                            JoinKind::Inner | JoinKind::LeftOuter => stream.apply(|sub_start| {
-                                let sub_end = self
-                                    .install(sub_start, &sub_task.plan[..])?
-                                    .collect::<Vec<Record>>()?;
-                                Ok(sub_end)
-                            })?,
+                            JoinKind::Semi => stream
+                                .apply(|sub_start| {
+                                    let has_sub = self
+                                        .install(sub_start, &sub_task.plan[..])?
+                                        .any()?;
+                                    Ok(has_sub)
+                                })?
+                                .filter_map(
+                                    move |(parent, has_sub)| {
+                                        if has_sub {
+                                            Ok(Some(parent))
+                                        } else {
+                                            Ok(None)
+                                        }
+                                    },
+                                )?,
+                            JoinKind::Anti => stream
+                                .apply(|sub_start| {
+                                    let has_sub = self
+                                        .install(sub_start, &sub_task.plan[..])?
+                                        .any()?;
+                                    Ok(has_sub)
+                                })?
+                                .filter_map(
+                                    move |(parent, has_sub)| {
+                                        if has_sub {
+                                            Ok(None)
+                                        } else {
+                                            Ok(Some(parent))
+                                        }
+                                    },
+                                )?,
+                            JoinKind::Inner | JoinKind::LeftOuter => stream
+                                .apply(|sub_start| {
+                                    let sub_end = self
+                                        .install(sub_start, &sub_task.plan[..])?
+                                        .collect::<Vec<Record>>()?;
+                                    Ok(sub_end)
+                                })?
+                                .filter_map(move |(parent, sub)| join_func.exec(parent, sub))?,
                             _ => Err(BuildJobError::Unsupported(format!(
                                 "Do not support join_kind {:?} in Apply",
                                 join_kind
                             )))?,
-                        }
-                        .filter_map(move |(parent, sub)| join_func.exec(parent, sub))?;
+                        };
                     }
                     server_pb::operator_def::OpKind::SegApply(_) => {
                         Err(BuildJobError::Unsupported("SegApply is not supported yet".to_string()))?
