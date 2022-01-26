@@ -235,6 +235,10 @@ enum ParamKey {
   READ_OPTIONS = 322;
   FD = 323;  // file descriptor
 
+  // large attr
+  CHUNK_NAME = 341;
+  CHUNK_TYPE = 342;
+
   GRAPH_LIBRARY_PATH = 400;
 }
 

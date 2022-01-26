@@ -27,8 +27,8 @@ from graphscope.config import GSConfig as gs_config
 logger = logging.getLogger("graphscope")
 
 # 2GB
-# GS_GRPC_MAX_MESSAGE_LENGTH = 2 * 1024 * 1024 * 1024 - 1
-GS_GRPC_MAX_MESSAGE_LENGTH = 8 * 1024 * 1024 - 1  # 8M
+GS_GRPC_MAX_MESSAGE_LENGTH = 2 * 1024 * 1024 * 1024 - 1
+# GS_GRPC_MAX_MESSAGE_LENGTH = 8 * 1024 * 1024 - 1  # 8M
 
 
 class ConditionalFormatter(logging.Formatter):

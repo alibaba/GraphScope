@@ -239,29 +239,24 @@ class Loader(object):
         self.options.force_include_all = include_all
 
     def get_attr(self):
-        attr = attr_value_pb2.AttrValue()
-        attr.func.name = "loader"
-        attr.func.attr[types_pb2.PROTOCOL].CopyFrom(utils.s_to_attr(self.protocol))
+        config = {}
+        config[types_pb2.PROTOCOL] = utils.s_to_attr(self.protocol)
         # Let graphscope handle local files cause it's implemented in c++ and
         # doesn't add an additional stream layer.
         # Maybe handled by vineyard in the near future
         if self.protocol == "file":
             source = "{}#{}".format(self.source, self.options)
-            attr.func.attr[types_pb2.VALUES].CopyFrom(
-                utils.bytes_to_attr(source.encode("utf-8"))
-            )
+            config[types_pb2.VALUES] = source.encode("utf-8")
         elif self.protocol == "pandas":
-            attr.func.attr[types_pb2.VALUES].CopyFrom(utils.bytes_to_attr(self.source))
+            config[types_pb2.VALUES] = self.source
         else:  # Let vineyard handle other data source.
-            attr.func.attr[types_pb2.VALUES].CopyFrom(
-                utils.bytes_to_attr(self.source.encode("utf-8"))
-            )
+            config[types_pb2.VALUES] = self.source.encode("utf-8")
             if self.protocol != "vineyard":
                 # need spawn an io stream in coordinator
-                attr.func.attr[types_pb2.STORAGE_OPTIONS].CopyFrom(
-                    utils.s_to_attr(json.dumps(self.storage_options))
+                config[types_pb2.STORAGE_OPTIONS] = utils.s_to_attr(
+                    json.dumps(self.storage_options)
                 )
-                attr.func.attr[types_pb2.READ_OPTIONS].CopyFrom(
-                    utils.s_to_attr(json.dumps(self.options.to_dict()))
+                config[types_pb2.READ_OPTIONS] = utils.s_to_attr(
+                    json.dumps(self.options.to_dict())
                 )
-        return attr
+        return config

@@ -146,14 +146,14 @@ def create_loader(vertex_or_edge_label_list):
     """
     if not isinstance(vertex_or_edge_label_list, list):
         vertex_or_edge_label_list = [vertex_or_edge_label_list]
-    attr = attr_value_pb2.AttrValue()
-    attr.list.func.extend([label.attr() for label in vertex_or_edge_label_list])
-    config = {}
-    config[types_pb2.ARROW_PROPERTY_DEFINITION] = attr
+    large_attr = attr_value_pb2.LargeAttrValue()
+    for label in vertex_or_edge_label_list:
+        large_attr.chunk_list.items.extend(label.attr())
     op = Operation(
         vertex_or_edge_label_list[0]._session_id,
         types_pb2.DATA_SOURCE,
-        config=config,
+        config={},
+        large_attr=large_attr,
         output_types=types_pb2.NULL_OUTPUT,
     )
     return op

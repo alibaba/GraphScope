@@ -1058,7 +1058,7 @@ bl::result<void> GrapeInstance::registerGraphType(const rpc::GSParams& params) {
 bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
     const CommandDetail& cmd) {
   auto r = std::make_shared<DispatchResult>(comm_spec_.worker_id());
-  rpc::GSParams params(cmd.params);
+  rpc::GSParams params(cmd.params, cmd.large_attr);
 
   switch (cmd.type) {
   case rpc::CREATE_GRAPH: {

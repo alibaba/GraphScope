@@ -94,8 +94,8 @@ from gscoordinator.version import __version__
 GS_DEBUG_ENDPOINT = os.environ.get("GS_DEBUG_ENDPOINT", "")
 
 # 2 GB
-# GS_GRPC_MAX_MESSAGE_LENGTH = 2 * 1024 * 1024 * 1024 - 1
-GS_GRPC_MAX_MESSAGE_LENGTH = 8 * 1024 * 1024 - 1  # 8M
+GS_GRPC_MAX_MESSAGE_LENGTH = 2 * 1024 * 1024 * 1024 - 1
+# GS_GRPC_MAX_MESSAGE_LENGTH = 8 * 1024 * 1024 - 1  # 8M
 
 logger = logging.getLogger("graphscope")
 

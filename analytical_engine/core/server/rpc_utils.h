@@ -94,8 +94,9 @@ inline rpc::ReportType get_param_impl<rpc::ReportType>(
  */
 class GSParams {
  public:
-  explicit GSParams(std::map<int, rpc::AttrValue> params)
-      : params_(std::move(params)) {}
+  explicit GSParams(std::map<int, rpc::AttrValue> params,
+                    const rpc::LargeAttrValue& large_attr)
+      : params_(std::move(params)), large_attr_(std::move(large_attr)) {}
 
   template <typename T>
   bl::result<T> Get(rpc::ParamKey key) const {
@@ -110,8 +111,11 @@ class GSParams {
     return params_.find(key) != params_.end();
   }
 
+  const rpc::LargeAttrValue& GetLargeAttr() const { return large_attr_; }
+
  private:
   const std::map<int, rpc::AttrValue> params_;
+  const rpc::LargeAttrValue large_attr_;
 };
 
 inline bl::result<DagDef> ReadDagFromFile(const std::string& location) {
@@ -135,9 +139,11 @@ inline CommandDetail OpToCmd(const OpDef& op) {
   for (auto& pair : op.attr()) {
     params[pair.first] = pair.second;
   }
+  // large attr
   return op.has_query_args()
-             ? CommandDetail(op_type, std::move(params), op.query_args())
-             : CommandDetail(op_type, std::move(params));
+             ? CommandDetail(op_type, std::move(params), op.large_attr(),
+                             op.query_args())
+             : CommandDetail(op_type, std::move(params), op.large_attr());
 }
 }  // namespace rpc
 }  // namespace gs
