@@ -30,6 +30,7 @@ from networkx.classes.reportviews import InEdgeView
 from networkx.classes.reportviews import OutDegreeView
 from networkx.classes.reportviews import OutEdgeView
 
+from graphscope.client.session import get_session_by_id
 from graphscope.framework import dag_utils
 from graphscope.framework.dag_utils import copy_graph
 from graphscope.framework.errors import check_argument
@@ -242,8 +243,6 @@ class DiGraph(Graph):
 
     @patch_docstring(Graph.__init__)
     def __init__(self, incoming_graph_data=None, default_label=None, **attr):
-        if self._session is None:
-            self._try_to_get_default_session()
 
         self.graph_attr_dict_factory = self.graph_attr_dict_factory
         self.node_dict_factory = self.node_dict_factory
@@ -275,7 +274,11 @@ class DiGraph(Graph):
         if incoming_graph_data is not None and self._is_gs_graph(incoming_graph_data):
             # convert from gs graph always use distributed mode
             self._distributed = True
+            self._session = get_session_by_id(incoming_graph_data.session_id)
         self._default_label = default_label
+
+        if self._session is None:
+            self._try_to_get_default_session()
 
         if not self._is_gs_graph(incoming_graph_data) and create_empty_in_engine:
             graph_def = empty_graph_in_engine(

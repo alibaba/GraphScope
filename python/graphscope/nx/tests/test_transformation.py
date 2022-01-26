@@ -448,7 +448,8 @@ class TestGraphTransformation(object):
 
     def test_str_oid_gs_to_nx(self):
         g = self.str_oid_g
-        nx_g = self.NXGraph(g)
+        nx_g = self.NXGraph(g, default_label="comment")
+        assert "618475290625" in nx_g
         self.assert_convert_success(g, nx_g)
 
     @pytest.mark.skip(reason="TODO: open after supporting run app on arrow_property")
