@@ -19,6 +19,7 @@ import com.alibaba.graphscope.gremlin.Utils;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.IsStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.WherePredicateStep;
+import org.apache.tinkerpop.gremlin.process.traversal.step.filter.WhereTraversalStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.HasContainer;
 import org.apache.tinkerpop.gremlin.process.traversal.util.ConnectiveP;
 import org.apache.tinkerpop.gremlin.process.traversal.util.TraversalRing;
@@ -84,6 +85,15 @@ public enum PredicateExprTransformFactory implements PredicateExprTransform {
                 String tagProperty = ProjectTraversalTransformFactory.getTagProjectTraversalAsExpr(selectKeysIterator.next(), traversalRing.next());
                 predicate.setValue(new WherePredicateValue(tagProperty));
             }
+        }
+    },
+    EXPR_FROM_WHERE_END {
+        @Override
+        public String apply(Object arg) {
+            WhereTraversalStep.WhereEndStep endStep = (WhereTraversalStep.WhereEndStep) arg;
+            String matchTag = endStep.getScopeKeys().iterator().next();
+            P predicate = P.eq(new WherePredicateValue("@" + matchTag));
+            return flatPredicate("@", predicate);
         }
     };
 

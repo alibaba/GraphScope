@@ -6,6 +6,7 @@ import com.alibaba.graphscope.common.jna.type.FfiVariable;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.IdentityTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.ValueTraversal;
+import org.apache.tinkerpop.gremlin.process.traversal.step.filter.WhereTraversalStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.PropertiesStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.PropertyMapStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectOneStep;
@@ -78,6 +79,7 @@ public class ProjectTraversalTransformFactory {
 
     // select("a") -> <"a", IdentityTraversal>
     // by(select("a").by(values...)) -> <"a", values(...)>
+    // where(__.as("a")...)
     public static Pair<String, Traversal.Admin> getProjectTraversalAsTagProperty(Traversal.Admin projectTraversal) {
         Pair tagBy;
         if (projectTraversal.getSteps().size() == 1 && projectTraversal.getStartStep() instanceof SelectOneStep) {
@@ -89,6 +91,10 @@ public class ProjectTraversalTransformFactory {
             } else {
                 tagBy = Pair.with(selectKey, traversals.get(0));
             }
+        } else if (projectTraversal.getSteps().size() == 1 && projectTraversal.getStartStep() instanceof WhereTraversalStep.WhereStartStep) {
+            WhereTraversalStep.WhereStartStep startStep = (WhereTraversalStep.WhereStartStep) projectTraversal.getStartStep();
+            String selectKey = (String) startStep.getScopeKeys().iterator().next();
+            tagBy = Pair.with(selectKey, null);
         } else {
             throw new OpArgIllegalException(
                     OpArgIllegalException.Cause.UNSUPPORTED_TYPE, "[ " + projectTraversal + " ] as (tag, property) is unsupported");
@@ -98,7 +104,9 @@ public class ProjectTraversalTransformFactory {
 
     // select("a")
     // select("a").by(values...)
+    // where(__.as("a")...)
     public static boolean isTagPropertyPattern(Traversal.Admin projectTraversal) {
-        return projectTraversal.getSteps().size() == 1 && projectTraversal.getStartStep() instanceof SelectOneStep;
+        return (projectTraversal.getSteps().size() == 1 && projectTraversal.getStartStep() instanceof SelectOneStep)
+                || (projectTraversal.getSteps().size() == 1 && projectTraversal.getStartStep() instanceof WhereTraversalStep.WhereStartStep);
     }
 }

@@ -10,6 +10,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSo
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.TraversalFilterStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.WherePredicateStep;
+import org.apache.tinkerpop.gremlin.process.traversal.step.filter.WhereTraversalStep;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
 import com.alibaba.graphscope.gremlin.InterOpCollectionBuilder.StepTransformFactory;
@@ -85,7 +86,7 @@ public class WherePredicateTest {
     public void g_V_where_values() {
         Traversal traversal = g.V().where(__.values("name"));
         TraversalFilterStep step = (TraversalFilterStep) traversal.asAdmin().getEndStep();
-        SelectOp selectOp = (SelectOp) StepTransformFactory.TRAVERSAL_FILTER_STEP.apply(step);
+        SelectOp selectOp = (SelectOp) StepTransformFactory.WHERE_TRAVERSAL_STEP.apply(step);
         Assert.assertEquals("@.name", selectOp.getPredicate().get().applyArg());
     }
 
@@ -93,7 +94,7 @@ public class WherePredicateTest {
     public void g_V_where_select() {
         Traversal traversal = g.V().as("a").where(__.select("a"));
         TraversalFilterStep step = (TraversalFilterStep) traversal.asAdmin().getEndStep();
-        SelectOp selectOp = (SelectOp) StepTransformFactory.TRAVERSAL_FILTER_STEP.apply(step);
+        SelectOp selectOp = (SelectOp) StepTransformFactory.WHERE_TRAVERSAL_STEP.apply(step);
         Assert.assertEquals("@a", selectOp.getPredicate().get().applyArg());
     }
 
@@ -101,9 +102,27 @@ public class WherePredicateTest {
     public void g_V_where_out_out() {
         Traversal traversal = g.V().where(__.out().out());
         TraversalFilterStep step = (TraversalFilterStep) traversal.asAdmin().getEndStep();
-        ApplyOp applyOp = (ApplyOp) StepTransformFactory.TRAVERSAL_FILTER_STEP.apply(step);
+        ApplyOp applyOp = (ApplyOp) StepTransformFactory.WHERE_TRAVERSAL_STEP.apply(step);
         Assert.assertEquals(FfiJoinKind.Semi, applyOp.getJoinKind().get().applyArg());
         InterOpCollection subOps = (InterOpCollection) applyOp.getSubOpCollection().get().applyArg();
         Assert.assertEquals(2, subOps.unmodifiableCollection().size());
+    }
+
+    @Test
+    public void g_V_where_as() {
+        Traversal traversal = g.V().as("a").where(__.as("a"));
+        WhereTraversalStep step = (WhereTraversalStep) traversal.asAdmin().getEndStep();
+        SelectOp selectOp = (SelectOp) StepTransformFactory.WHERE_TRAVERSAL_STEP.apply(step);
+        Assert.assertEquals("@a", selectOp.getPredicate().get().applyArg());
+    }
+
+    @Test
+    public void g_V_where_as_out_as() {
+        Traversal traversal = g.V().as("a").out().as("b").where(__.as("a").out().as("b"));
+        WhereTraversalStep step = (WhereTraversalStep) traversal.asAdmin().getEndStep();
+        ApplyOp applyOp = (ApplyOp) StepTransformFactory.WHERE_TRAVERSAL_STEP.apply(step);
+        Assert.assertEquals(FfiJoinKind.Semi, applyOp.getJoinKind().get().applyArg());
+        InterOpCollection subOps = (InterOpCollection) applyOp.getSubOpCollection().get().applyArg();
+        Assert.assertEquals(3, subOps.unmodifiableCollection().size());
     }
 }

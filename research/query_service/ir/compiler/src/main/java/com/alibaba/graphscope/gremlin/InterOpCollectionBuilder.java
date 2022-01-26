@@ -28,6 +28,7 @@ import com.alibaba.graphscope.gremlin.transform.ProjectTraversalTransformFactory
 import com.google.common.collect.ImmutableMap;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
+import org.apache.tinkerpop.gremlin.process.traversal.lambda.IdentityTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.*;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.*;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.HasContainer;
@@ -344,11 +345,10 @@ public class InterOpCollectionBuilder {
                 return op;
             }
         },
-        TRAVERSAL_FILTER_STEP {
+        WHERE_TRAVERSAL_STEP {
             @Override
             public InterOpBase apply(Step step) {
-                TraversalFilterStep filterStep = (TraversalFilterStep) step;
-                Traversal.Admin subTraversal = filterStep.getFilterTraversal();
+                Traversal.Admin subTraversal = getWhereSubTraversal(step);
                 boolean isPropertyPattern = ProjectTraversalTransformFactory.isPropertyPattern(subTraversal);
                 boolean isTagPropertyPattern = ProjectTraversalTransformFactory.isTagPropertyPattern(subTraversal);
                 if (isPropertyPattern) {
@@ -368,6 +368,44 @@ public class InterOpCollectionBuilder {
                     applyOp.setSubOpCollection(new OpArg(subTraversal, OpArgTransformFactory.INTER_OPS_FROM_SUB_TRAVERSAL));
                     return applyOp;
                 }
+            }
+
+            private Traversal.Admin getWhereSubTraversal(Step step) {
+                if (step instanceof TraversalFilterStep) {
+                    return ((TraversalFilterStep) step).getFilterTraversal();
+                } else if (step instanceof WhereTraversalStep) {
+                    WhereTraversalStep whereStep = (WhereTraversalStep) step;
+                    List<Traversal.Admin> subTraversals = whereStep.getLocalChildren();
+                    Traversal.Admin subTraversal = subTraversals.isEmpty() ? null : subTraversals.get(0);
+                    return subTraversal;
+                } else {
+                    throw new OpArgIllegalException(OpArgIllegalException.Cause.INVALID_TYPE, "cannot get where traversal from " + step.getClass());
+                }
+            }
+        },
+        WHERE_START_STEP {
+            @Override
+            public InterOpBase apply(Step step) {
+                WhereTraversalStep.WhereStartStep startStep = (WhereTraversalStep.WhereStartStep) step;
+                Map<String, Traversal.Admin> projectTraversal = getProjectTraversals(startStep);
+
+                ProjectOp op = new ProjectOp();
+                op.setExprWithAlias(new OpArg(projectTraversal, OpArgTransformFactory.PROJECT_EXPR_FROM_BY_TRAVERSALS));
+                return op;
+            }
+
+            private Map<String, Traversal.Admin> getProjectTraversals(WhereTraversalStep.WhereStartStep startStep) {
+                String selectKey = (String) startStep.getScopeKeys().iterator().next();
+                return ImmutableMap.of(selectKey, new IdentityTraversal());
+            }
+        },
+        WHERE_END_STEP {
+            @Override
+            public InterOpBase apply(Step step) {
+                WhereTraversalStep.WhereEndStep endStep = (WhereTraversalStep.WhereEndStep) step;
+                SelectOp selectOp = new SelectOp();
+                selectOp.setPredicate(new OpArg(endStep, PredicateExprTransformFactory.EXPR_FROM_WHERE_END));
+                return selectOp;
             }
         }
     }
@@ -408,14 +446,18 @@ public class InterOpCollectionBuilder {
                 op = StepTransformFactory.VALUES_STEP.apply(step);
             } else if (Utils.equalClass(step, IsStep.class)) {
                 op = StepTransformFactory.IS_STEP.apply(step);
-            } else if (Utils.equalClass(step, WherePredicateStep.class)) {
-                op = StepTransformFactory.WHERE_PREDICATE_STEP.apply(step);
             } else if (Utils.equalClass(step, EdgeVertexStep.class)) {
                 op = StepTransformFactory.EDGE_VERTEX_STEP.apply(step);
             } else if (Utils.equalClass(step, EdgeOtherVertexStep.class)) {
                 op = StepTransformFactory.EDGE_OTHER_STEP.apply(step);
-            } else if (Utils.equalClass(step, TraversalFilterStep.class)) {
-                op = StepTransformFactory.TRAVERSAL_FILTER_STEP.apply(step);
+            } else if (Utils.equalClass(step, WherePredicateStep.class)) {
+                op = StepTransformFactory.WHERE_PREDICATE_STEP.apply(step);
+            } else if (Utils.equalClass(step, TraversalFilterStep.class) || Utils.equalClass(step, WhereTraversalStep.class)) {
+                op = StepTransformFactory.WHERE_TRAVERSAL_STEP.apply(step);
+            } else if (Utils.equalClass(step, WhereTraversalStep.WhereStartStep.class)) {
+                op = StepTransformFactory.WHERE_START_STEP.apply(step);
+            } else if (Utils.equalClass(step, WhereTraversalStep.WhereEndStep.class)) {
+                op = StepTransformFactory.WHERE_END_STEP.apply(step);
             } else {
                 throw new UnsupportedStepException(step.getClass(), "unimplemented yet");
             }
