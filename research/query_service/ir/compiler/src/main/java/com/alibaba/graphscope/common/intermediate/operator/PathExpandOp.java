@@ -14,6 +14,10 @@ public class PathExpandOp extends ExpandOp {
     }
 
     public PathExpandOp(ExpandOp other) {
+        super();
+        lower = Optional.empty();
+        upper = Optional.empty();
+
         if (other.getAlias().isPresent()) {
             setAlias(other.getAlias().get());
         }
