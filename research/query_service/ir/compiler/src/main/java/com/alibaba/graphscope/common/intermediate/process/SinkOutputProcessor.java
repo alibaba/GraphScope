@@ -18,6 +18,7 @@ package com.alibaba.graphscope.common.intermediate.process;
 
 import com.alibaba.graphscope.common.exception.InterOpUnsupportedException;
 import com.alibaba.graphscope.common.intermediate.ArgAggFn;
+import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.intermediate.InterOpCollection;
 import com.alibaba.graphscope.common.intermediate.operator.*;
 import com.alibaba.graphscope.common.jna.type.FfiAlias;
@@ -41,11 +42,12 @@ public class SinkOutputProcessor implements InterOpProcessor {
             if (cur instanceof DedupOp || cur instanceof LimitOp || cur instanceof OrderOp || cur instanceof SelectOp) {
                 continue;
             } else if (cur instanceof ExpandOp || cur instanceof ScanFusionOp || cur instanceof GetVOp) {
-                sinkArg = new SinkArg(true);
+                sinkArg = new SinkArg();
+                sinkArg.addColumnName(ArgUtils.asNoneNameOrId());
                 break;
             } else if (cur instanceof ProjectOp) {
                 ProjectOp op = (ProjectOp) cur;
-                sinkArg = new SinkArg(false);
+                sinkArg = new SinkArg();
                 List<Pair> exprWithAlias = (List<Pair>) op.getExprWithAlias().get().applyArg();
                 for (Pair pair : exprWithAlias) {
                     FfiAlias.ByValue alias = (FfiAlias.ByValue) pair.getValue1();
@@ -54,7 +56,7 @@ public class SinkOutputProcessor implements InterOpProcessor {
                 break;
             } else if (cur instanceof GroupOp) {
                 GroupOp op = (GroupOp) cur;
-                sinkArg = new SinkArg(false);
+                sinkArg = new SinkArg();
                 List<Pair> groupKeys = (List<Pair>) op.getGroupByKeys().get().applyArg();
                 for (Pair pair : groupKeys) {
                     FfiAlias.ByValue alias = (FfiAlias.ByValue) pair.getValue1();

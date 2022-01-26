@@ -34,9 +34,9 @@ public enum GremlinResultParserFactory implements GremlinResultParser {
         }
     },
     PROJECT_VALUE {
-        // values("name") -> key: name, value: "marko"
-        // valueMap("name") -> key: {name}, value: {name, "marko"}
-        // select("a").by("name") -> key: a, value: "marko"
+        // values("name") -> key: head, value: "marko"
+        // valueMap("name") -> key: head, value: {name, "marko"}
+        // select("a").by("name") -> key: head, value: "marko"
         // select("a", "b").by("name") -> key: a, value: "marko"; key: b, value: "josh"
         // select("a", "b").by(valueMap("name")) -> key: a, value: {name, "marko"}; key: b, value: {name, "josh"}
         @Override
@@ -76,7 +76,11 @@ public enum GremlinResultParserFactory implements GremlinResultParser {
         // project_a
         // a_name
         // name
+        // none -> head
         private String getTagFromColumnKey(OuterExpression.NameOrId columnKey) {
+            if (columnKey.getItemCase() == OuterExpression.NameOrId.ItemCase.ITEM_NOT_SET) {
+                return "";
+            }
             String key = columnKey.getName();
             String[] tagProperty = key.split("_");
             if (tagProperty.length == 0) {
