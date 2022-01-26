@@ -527,8 +527,7 @@ def _pre_process_for_create_graph_op(op, op_result_pool, key_to_op, **kwargs):
         key_of_parent_op = op.parents[0]
         parent_op = key_to_op[key_of_parent_op]
         if parent_op.op == types_pb2.DATA_SOURCE:
-            for key, value in parent_op.attr.items():
-                op.attr[key].CopyFrom(value)
+            op.large_attr.CopyFrom(parent_op.large_attr)
 
 
 def _pre_process_for_add_labels_op(op, op_result_pool, key_to_op, **kwargs):
@@ -542,7 +541,6 @@ def _pre_process_for_add_labels_op(op, op_result_pool, key_to_op, **kwargs):
             op.attr[types_pb2.GRAPH_NAME].CopyFrom(
                 utils.s_to_attr(result.graph_def.key)
             )
-    print("[DEBUG add_labels op]: ", op)
 
 
 def _pre_process_for_transform_op(op, op_result_pool, key_to_op, **kwargs):

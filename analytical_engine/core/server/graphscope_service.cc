@@ -36,6 +36,7 @@ Status GraphScopeService::HeartBeat(::grpc::ServerContext* context,
 ::grpc::Status GraphScopeService::RunStep(::grpc::ServerContext* context,
                                           const RunStepRequest* request,
                                           RunStepResponse* response) {
+  CHECK(request->has_dag_def());
   const DagDef& dag_def = request->dag_def();
   std::unordered_map<std::string, OpResult*> op_key_to_result;
 

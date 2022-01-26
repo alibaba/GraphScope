@@ -251,12 +251,9 @@ inline std::vector<rpc::LargeAttrValue> DistributeGraph(
 
 inline bl::result<std::shared_ptr<detail::Graph>> ParseCreatePropertyGraph(
     const GSParams& params) {
-  // BOOST_LEAF_AUTO(list, params.Get<rpc::AttrValue_ListValue>(
-  //                           rpc::ARROW_PROPERTY_DEFINITION));
   BOOST_LEAF_AUTO(directed, params.Get<bool>(rpc::DIRECTED));
   BOOST_LEAF_AUTO(generate_eid, params.Get<bool>(rpc::GENERATE_EID));
 
-  // auto& items = list.func();
   auto graph = std::make_shared<detail::Graph>();
   graph->directed = directed;
   graph->generate_eid = generate_eid;
