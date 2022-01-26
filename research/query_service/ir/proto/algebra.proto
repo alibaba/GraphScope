@@ -348,11 +348,9 @@ message Sink {
     MetaType meta_type = 3;
   }
   // Define the tags of columns to sink
-  repeated common.NameOrId tags = 1;
-  // The flag of sinking current entry
-  bool sink_current = 2;
+  repeated common.NameOrIdKey tags = 1;
   // The mapping of id to name given certain `MetaType`
-  repeated IdNameMapping id_name_mappings = 3;
+  repeated IdNameMapping id_name_mappings = 2;
 }
 
 // A logical plan of graph relation algebra forms a DAG, where each node is an operator and the
