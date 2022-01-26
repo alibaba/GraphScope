@@ -24,6 +24,7 @@ pub mod shuffle;
 pub mod sink;
 pub mod sort;
 pub mod source;
+pub mod subtask;
 
 use std::convert::TryFrom;
 use std::sync::Arc;
