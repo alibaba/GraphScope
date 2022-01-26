@@ -110,8 +110,7 @@ mod test {
             pb::logical_plan::Operator::from(pb::PathStart { start_tag: None, is_whole_path: false });
         let path_end_opr = pb::logical_plan::Operator::from(pb::PathEnd { alias: None });
         let sink_opr_bytes = pb::logical_plan::Operator::from(pb::Sink {
-            tags: vec![],
-            sink_current: true,
+            tags: vec![common_pb::NameOrIdKey { key: None }],
             id_name_mappings: vec![],
         })
         .encode_to_vec();
