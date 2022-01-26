@@ -18,11 +18,13 @@ package com.alibaba.graphscope.gremlin;
 
 import com.alibaba.graphscope.common.exception.OpArgIllegalException;
 import com.alibaba.graphscope.common.intermediate.InterOpCollection;
+import com.alibaba.graphscope.common.jna.type.FfiJoinKind;
 import com.alibaba.graphscope.gremlin.exception.UnsupportedStepException;
 import com.alibaba.graphscope.common.intermediate.operator.*;
 import com.alibaba.graphscope.common.jna.type.FfiScanOpt;
 import com.alibaba.graphscope.gremlin.transform.OpArgTransformFactory;
 import com.alibaba.graphscope.gremlin.transform.PredicateExprTransformFactory;
+import com.alibaba.graphscope.gremlin.transform.ProjectTraversalTransformFactory;
 import com.google.common.collect.ImmutableMap;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
@@ -32,6 +34,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.step.util.HasContainer;
 import org.apache.tinkerpop.gremlin.process.traversal.util.DefaultTraversal;
 import org.apache.tinkerpop.gremlin.structure.T;
 import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.step.sideEffect.TinkerGraphStep;
+import org.javatuples.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -340,6 +343,32 @@ public class InterOpCollectionBuilder {
                 op.setGetVOpt(new OpArg(otherStep, OpArgTransformFactory.GETV_OPT_FROM_STEP));
                 return op;
             }
+        },
+        TRAVERSAL_FILTER_STEP {
+            @Override
+            public InterOpBase apply(Step step) {
+                TraversalFilterStep filterStep = (TraversalFilterStep) step;
+                Traversal.Admin subTraversal = filterStep.getFilterTraversal();
+                boolean isPropertyPattern = ProjectTraversalTransformFactory.isPropertyPattern(subTraversal);
+                boolean isTagPropertyPattern = ProjectTraversalTransformFactory.isTagPropertyPattern(subTraversal);
+                if (isPropertyPattern) {
+                    String expr = ProjectTraversalTransformFactory.getTagProjectTraversalAsExpr("", subTraversal);
+                    SelectOp selectOp = new SelectOp();
+                    selectOp.setPredicate(new OpArg(expr, Function.identity()));
+                    return selectOp;
+                } else if (isTagPropertyPattern) {
+                    Pair<String, Traversal.Admin> pair = ProjectTraversalTransformFactory.getProjectTraversalAsTagProperty(subTraversal);
+                    String expr = ProjectTraversalTransformFactory.getTagProjectTraversalAsExpr(pair.getValue0(), pair.getValue1());
+                    SelectOp selectOp = new SelectOp();
+                    selectOp.setPredicate(new OpArg(expr, Function.identity()));
+                    return selectOp;
+                } else { // subtask
+                    ApplyOp applyOp = new ApplyOp();
+                    applyOp.setJoinKind(new OpArg(FfiJoinKind.Semi, Function.identity()));
+                    applyOp.setSubOpCollection(new OpArg(subTraversal, OpArgTransformFactory.INTER_OPS_FROM_SUB_TRAVERSAL));
+                    return applyOp;
+                }
+            }
         }
     }
 
@@ -385,6 +414,8 @@ public class InterOpCollectionBuilder {
                 op = StepTransformFactory.EDGE_VERTEX_STEP.apply(step);
             } else if (Utils.equalClass(step, EdgeOtherVertexStep.class)) {
                 op = StepTransformFactory.EDGE_OTHER_STEP.apply(step);
+            } else if (Utils.equalClass(step, TraversalFilterStep.class)) {
+                op = StepTransformFactory.TRAVERSAL_FILTER_STEP.apply(step);
             } else {
                 throw new UnsupportedStepException(step.getClass(), "unimplemented yet");
             }

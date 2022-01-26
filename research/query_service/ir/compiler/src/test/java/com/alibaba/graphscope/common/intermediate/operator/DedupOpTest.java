@@ -37,7 +37,7 @@ public class DedupOpTest {
         FfiVariable.ByValue dedupKey = ArgUtils.asNoneVar();
         op.setDedupKeys(new OpArg(Collections.singletonList(dedupKey), Function.identity()));
 
-        irPlan.appendInterOp(op);
+        irPlan.appendInterOp(0, op);
         Assert.assertEquals(FileUtils.readJsonFromResource("dedup.json"), irPlan.getPlanAsJson());
     }
 

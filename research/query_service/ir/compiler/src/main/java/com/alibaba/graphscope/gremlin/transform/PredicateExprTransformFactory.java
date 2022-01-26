@@ -66,7 +66,7 @@ public enum PredicateExprTransformFactory implements PredicateExprTransform {
             TraversalRing traversalRing = Utils.getFieldValue(WherePredicateStep.class, step, "traversalRing");
 
             String startTag = startKey.isPresent() ? startKey.get() : "";
-            String startBy = ByTraversalTransformFactory.getTagByTraversalAsExpr(startTag, traversalRing.next());
+            String startBy = ProjectTraversalTransformFactory.getTagProjectTraversalAsExpr(startTag, traversalRing.next());
 
             P predicate = (P) step.getPredicate().get();
             List<String> selectKeys = Utils.getFieldValue(WherePredicateStep.class, step, "selectKeys");
@@ -81,7 +81,7 @@ public enum PredicateExprTransformFactory implements PredicateExprTransform {
                     traverseAndUpdateP((P) p1, selectKeysIterator, traversalRing);
                 });
             } else {
-                String tagProperty = ByTraversalTransformFactory.getTagByTraversalAsExpr(selectKeysIterator.next(), traversalRing.next());
+                String tagProperty = ProjectTraversalTransformFactory.getTagProjectTraversalAsExpr(selectKeysIterator.next(), traversalRing.next());
                 predicate.setValue(new WherePredicateValue(tagProperty));
             }
         }

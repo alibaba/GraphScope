@@ -632,4 +632,21 @@ public class PositiveEvalTest {
     public void g_V_outE_as_outV_test() {
         Assert.assertEquals(g.V().outE().as("a").outV(), eval("g.V().outE().as(\"a\").outV()"));
     }
+
+    @Test
+    public void g_V_where_out_out() {
+        Assert.assertEquals(g.V().where(__.out().out()), eval("g.V().where(__.out().out())"));
+    }
+
+    @Test
+    public void g_V_where_as_out() {
+        Assert.assertEquals(g.V().as("a").where(__.as("a").out().out()),
+                eval("g.V().as(\"a\").where(__.as(\"a\").out().out())"));
+    }
+
+    @Test
+    public void g_V_where_out_as() {
+        Assert.assertEquals(g.V().as("a").where(__.out().out().as("a")),
+                eval("g.V().as(\"a\").where(__.out().out().as(\"a\"))"));
+    }
 }

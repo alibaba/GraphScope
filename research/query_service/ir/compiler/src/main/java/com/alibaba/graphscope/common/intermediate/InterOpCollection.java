@@ -17,7 +17,10 @@
 package com.alibaba.graphscope.common.intermediate;
 
 import com.alibaba.graphscope.common.IrPlan;
+import com.alibaba.graphscope.common.exception.InterOpIllegalArgException;
+import com.alibaba.graphscope.common.intermediate.operator.ApplyOp;
 import com.alibaba.graphscope.common.intermediate.operator.InterOpBase;
+import com.alibaba.graphscope.common.intermediate.operator.OpArg;
 import com.alibaba.graphscope.common.intermediate.process.InterOpProcessor;
 import com.alibaba.graphscope.common.intermediate.process.SinkOutputProcessor;
 import com.alibaba.graphscope.common.intermediate.strategy.InterOpStrategy;
@@ -27,6 +30,7 @@ import org.apache.commons.collections.list.UnmodifiableList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 // collection of intermediate operators
 public class InterOpCollection {
@@ -39,12 +43,10 @@ public class InterOpCollection {
     }
 
     public IrPlan buildIrPlan() {
-        applyStrategies();
-        process();
+        applyStrategies(this);
+        process(this);
         IrPlan irPlan = new IrPlan();
-        unmodifiableCollection().forEach(k -> {
-            irPlan.appendInterOp(k);
-        });
+        irPlan.appendInterOpCollection(this);
         return irPlan;
     }
 
@@ -56,19 +58,27 @@ public class InterOpCollection {
         this.opCollection.add(op);
     }
 
-    public void insertInterOp(int i, InterOpBase op) {
-        opCollection.add(i, op);
-    }
-
     public void removeInterOp(int i) {
         opCollection.remove(i);
     }
 
-    private void applyStrategies() {
-        strategies.forEach(k -> k.apply(this));
+    private void applyStrategies(InterOpCollection opCollection) {
+        opCollection.unmodifiableCollection().forEach(op -> {
+            if (op instanceof ApplyOp) {
+                ApplyOp applyOp = (ApplyOp) op;
+                Optional<OpArg> subOps = applyOp.getSubOpCollection();
+                if (!subOps.isPresent()) {
+                    throw new InterOpIllegalArgException(op.getClass(), "subOpCollection", "is not present in apply");
+                }
+                InterOpCollection subCollection = (InterOpCollection) subOps.get().applyArg();
+                applyStrategies(subCollection);
+            }
+        });
+        strategies.forEach(k -> k.apply(opCollection));
     }
 
-    private void process() {
-        processors.forEach(k -> k.process(this));
+    private void process(InterOpCollection opCollection) {
+        // only traverse root opCollection for SinkOutputProcessor
+        processors.forEach(k -> k.process(opCollection));
     }
 }

@@ -266,9 +266,11 @@ traversalMethod_is
 // where("c", P.eq("a"))
 // where(P.eq("a")).by("age")
 // where("c", P.eq("a")).by("id").by("age")
+// where(out().out()...)
 traversalMethod_where
 	: 'where' LPAREN traversalPredicate RPAREN (DOT traversalMethod_whereby_list)?
 	| 'where' LPAREN stringLiteral COMMA traversalPredicate RPAREN (DOT traversalMethod_whereby_list)?
+	| 'where' LPAREN nestedTraversal RPAREN
 	;
 
 traversalMethod_whereby
@@ -338,6 +340,11 @@ traversalPredicate
     | traversalPredicate_without
     | traversalPredicate DOT 'and' LPAREN traversalPredicate RPAREN
     | traversalPredicate DOT 'or' LPAREN traversalPredicate RPAREN
+    ;
+
+nestedTraversal
+    : chainedTraversal
+    | ANON_TRAVERSAL_ROOT DOT chainedTraversal
     ;
 
 traversalPredicate_eq

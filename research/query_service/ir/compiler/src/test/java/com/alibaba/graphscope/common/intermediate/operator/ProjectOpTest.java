@@ -44,7 +44,7 @@ public class ProjectOpTest {
         List<Pair> exprWithAlias = Collections.singletonList(Pair.with(projectExpr, alias));
 
         op.setExprWithAlias(new OpArg(exprWithAlias, Function.identity()));
-        irPlan.appendInterOp(op);
+        irPlan.appendInterOp(0, op);
         Assert.assertEquals(FileUtils.readJsonFromResource("project_tag.json"), irPlan.getPlanAsJson());
     }
 
@@ -53,7 +53,7 @@ public class ProjectOpTest {
         ScanFusionOp scanOp = new ScanFusionOp();
         scanOp.setScanOpt(new OpArg<>(FfiScanOpt.Entity, Function.identity()));
         scanOp.setAlias(new OpArg(ArgUtils.asFfiAlias("a", true), Function.identity()));
-        irPlan.appendInterOp(scanOp);
+        irPlan.appendInterOp(0, scanOp);
 
         ProjectOp op = new ProjectOp();
         op.setAlias(new OpArg(ArgUtils.asFfiAlias("b", true), Function.identity()));
@@ -63,7 +63,7 @@ public class ProjectOpTest {
         List<Pair> exprWithAlias = Arrays.asList(Pair.with(projectExpr, alias));
 
         op.setExprWithAlias(new OpArg(exprWithAlias, Function.identity()));
-        irPlan.appendInterOp(op);
+        irPlan.appendInterOp(0, op);
         Assert.assertEquals(FileUtils.readJsonFromResource("project_as.json"), irPlan.getPlanAsJson());
     }
 
@@ -76,7 +76,7 @@ public class ProjectOpTest {
         List<Pair> exprWithAlias = Collections.singletonList(Pair.with(projectExpr, alias));
 
         op.setExprWithAlias(new OpArg(exprWithAlias, Function.identity()));
-        irPlan.appendInterOp(op);
+        irPlan.appendInterOp(0, op);
         Assert.assertEquals(FileUtils.readJsonFromResource("project_key.json"), irPlan.getPlanAsJson());
     }
 
@@ -85,7 +85,7 @@ public class ProjectOpTest {
         ScanFusionOp scanOp = new ScanFusionOp();
         scanOp.setScanOpt(new OpArg<>(FfiScanOpt.Entity, Function.identity()));
         scanOp.setAlias(new OpArg(ArgUtils.asFfiAlias("a", true), Function.identity()));
-        irPlan.appendInterOp(scanOp);
+        irPlan.appendInterOp(0, scanOp);
 
         ProjectOp op = new ProjectOp();
 
@@ -94,7 +94,7 @@ public class ProjectOpTest {
         List<Pair> exprWithAlias = Collections.singletonList(Pair.with(projectExpr, alias));
 
         op.setExprWithAlias(new OpArg(exprWithAlias, Function.identity()));
-        irPlan.appendInterOp(op);
+        irPlan.appendInterOp(0, op);
         Assert.assertEquals(FileUtils.readJsonFromResource("project_tag_key.json"), irPlan.getPlanAsJson());
     }
 
@@ -103,7 +103,7 @@ public class ProjectOpTest {
         ScanFusionOp scanOp = new ScanFusionOp();
         scanOp.setScanOpt(new OpArg<>(FfiScanOpt.Entity, Function.identity()));
         scanOp.setAlias(new OpArg(ArgUtils.asFfiAlias("a", true), Function.identity()));
-        irPlan.appendInterOp(scanOp);
+        irPlan.appendInterOp(0, scanOp);
 
         ProjectOp op = new ProjectOp();
 
@@ -112,7 +112,7 @@ public class ProjectOpTest {
         List<Pair> exprWithAlias = Collections.singletonList(Pair.with(projectExpr, alias));
 
         op.setExprWithAlias(new OpArg(exprWithAlias, Function.identity()));
-        irPlan.appendInterOp(op);
+        irPlan.appendInterOp(0, op);
         Assert.assertEquals(FileUtils.readJsonFromResource("project_tag_keys.json"), irPlan.getPlanAsJson());
     }
 

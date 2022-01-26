@@ -124,6 +124,12 @@ public interface IrCoreLibrary extends Library {
 
     ResultCode appendGetvOperator(Pointer plan, Pointer getV, int parent, IntByReference oprIdx);
 
+    Pointer initApplyOperator(int subtaskRoot, FfiJoinKind joinKind);
+
+    ResultCode setApplyAlias(Pointer apply, FfiAlias.ByValue alias);
+
+    ResultCode appendApplyOperator(Pointer plan, Pointer apply, int parent, IntByReference oprIdx);
+
     FfiNameOrId.ByValue noneNameOrId();
 
     FfiNameOrId.ByValue cstrAsNameOrId(String name);

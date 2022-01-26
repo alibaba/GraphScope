@@ -26,6 +26,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.process.traversal.step.ByModulating;
+import org.apache.tinkerpop.gremlin.process.traversal.step.filter.WhereTraversalStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.OrderGlobalStep;
 
 public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal> {
@@ -380,8 +381,12 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
                     TraversalPredicateVisitor.getInstance().visitTraversalPredicate(ctx.traversalPredicate()));
         } else if (ctx.traversalPredicate() != null) {
             graphTraversal.where(TraversalPredicateVisitor.getInstance().visitTraversalPredicate(ctx.traversalPredicate()));
+        } else if (ctx.nestedTraversal() != null) {
+            Traversal whereTraversal = visitNestedTraversal(ctx.nestedTraversal());
+            graphTraversal.where(whereTraversal);
         } else {
-            throw new UnsupportedEvalException(ctx.getClass(), "supported pattern is [where(P.eq(...))] or [where(a, P.eq(...))]");
+            throw new UnsupportedEvalException(ctx.getClass(),
+                    "supported pattern is [where(P.eq(...))] or [where(a, P.eq(...))] or [where(sub_traversal)]");
         }
         if (ctx.traversalMethod_whereby_list() != null) {
             ByModulating byModulating = (ByModulating) graphTraversal.asAdmin().getEndStep();
