@@ -381,6 +381,8 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
                     TraversalPredicateVisitor.getInstance().visitTraversalPredicate(ctx.traversalPredicate()));
         } else if (ctx.traversalPredicate() != null) {
             graphTraversal.where(TraversalPredicateVisitor.getInstance().visitTraversalPredicate(ctx.traversalPredicate()));
+        } else if (ctx.traversalMethod_not() != null) {
+            visitTraversalMethod_not(ctx.traversalMethod_not());
         } else if (ctx.nestedTraversal() != null) {
             Traversal whereTraversal = visitNestedTraversal(ctx.nestedTraversal());
             graphTraversal.where(whereTraversal);
@@ -407,5 +409,15 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
             }
         }
         return graphTraversal;
+    }
+
+    @Override
+    public Traversal visitTraversalMethod_not(GremlinGSParser.TraversalMethod_notContext ctx) {
+        if (ctx.nestedTraversal() != null) {
+            Traversal whereTraversal = visitNestedTraversal(ctx.nestedTraversal());
+            return graphTraversal.not(whereTraversal);
+        } else {
+            throw new UnsupportedEvalException(ctx.getClass(), "supported pattern is [not(..out()..)]");
+        }
     }
 }

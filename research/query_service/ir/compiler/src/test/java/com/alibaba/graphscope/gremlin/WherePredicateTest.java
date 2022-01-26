@@ -8,6 +8,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
+import org.apache.tinkerpop.gremlin.process.traversal.step.filter.NotStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.TraversalFilterStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.WherePredicateStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.WhereTraversalStep;
@@ -124,5 +125,23 @@ public class WherePredicateTest {
         Assert.assertEquals(FfiJoinKind.Semi, applyOp.getJoinKind().get().applyArg());
         InterOpCollection subOps = (InterOpCollection) applyOp.getSubOpCollection().get().applyArg();
         Assert.assertEquals(3, subOps.unmodifiableCollection().size());
+    }
+
+    @Test
+    public void g_V_not_values() {
+        Traversal traversal = g.V().not(__.values("name"));
+        NotStep step = (NotStep) traversal.asAdmin().getEndStep();
+        SelectOp selectOp = (SelectOp) StepTransformFactory.WHERE_TRAVERSAL_STEP.apply(step);
+        Assert.assertEquals("!@.name", selectOp.getPredicate().get().applyArg());
+    }
+
+    @Test
+    public void g_V_not_out_out() {
+        Traversal traversal = g.V().not(__.out().out());
+        NotStep step = (NotStep) traversal.asAdmin().getEndStep();
+        ApplyOp applyOp = (ApplyOp) StepTransformFactory.WHERE_TRAVERSAL_STEP.apply(step);
+        Assert.assertEquals(FfiJoinKind.Anti, applyOp.getJoinKind().get().applyArg());
+        InterOpCollection subOps = (InterOpCollection) applyOp.getSubOpCollection().get().applyArg();
+        Assert.assertEquals(2, subOps.unmodifiableCollection().size());
     }
 }

@@ -354,17 +354,18 @@ public class InterOpCollectionBuilder {
                 if (isPropertyPattern) {
                     String expr = ProjectTraversalTransformFactory.getTagProjectTraversalAsExpr("", subTraversal);
                     SelectOp selectOp = new SelectOp();
-                    selectOp.setPredicate(new OpArg(expr, Function.identity()));
+                    selectOp.setPredicate(new OpArg(getNotExprIfNeed(step, expr), Function.identity()));
                     return selectOp;
                 } else if (isTagPropertyPattern) {
                     Pair<String, Traversal.Admin> pair = ProjectTraversalTransformFactory.getProjectTraversalAsTagProperty(subTraversal);
                     String expr = ProjectTraversalTransformFactory.getTagProjectTraversalAsExpr(pair.getValue0(), pair.getValue1());
                     SelectOp selectOp = new SelectOp();
-                    selectOp.setPredicate(new OpArg(expr, Function.identity()));
+                    selectOp.setPredicate(new OpArg(getNotExprIfNeed(step, expr), Function.identity()));
                     return selectOp;
                 } else { // subtask
                     ApplyOp applyOp = new ApplyOp();
-                    applyOp.setJoinKind(new OpArg(FfiJoinKind.Semi, Function.identity()));
+                    FfiJoinKind joinKind = (step instanceof NotStep) ? FfiJoinKind.Anti : FfiJoinKind.Semi;
+                    applyOp.setJoinKind(new OpArg(joinKind, Function.identity()));
                     applyOp.setSubOpCollection(new OpArg(subTraversal, OpArgTransformFactory.INTER_OPS_FROM_SUB_TRAVERSAL));
                     return applyOp;
                 }
@@ -376,10 +377,21 @@ public class InterOpCollectionBuilder {
                 } else if (step instanceof WhereTraversalStep) {
                     WhereTraversalStep whereStep = (WhereTraversalStep) step;
                     List<Traversal.Admin> subTraversals = whereStep.getLocalChildren();
-                    Traversal.Admin subTraversal = subTraversals.isEmpty() ? null : subTraversals.get(0);
-                    return subTraversal;
+                    return subTraversals.isEmpty() ? null : subTraversals.get(0);
+                } else if (step instanceof NotStep) {
+                    NotStep notStep = (NotStep) step;
+                    List<Traversal.Admin> subTraversals = notStep.getLocalChildren();
+                    return subTraversals.isEmpty() ? null : subTraversals.get(0);
                 } else {
                     throw new OpArgIllegalException(OpArgIllegalException.Cause.INVALID_TYPE, "cannot get where traversal from " + step.getClass());
+                }
+            }
+
+            private String getNotExprIfNeed(Step step, String expr) {
+                if (step instanceof NotStep) {
+                    return (expr.contains("&&") || expr.contains("||")) ? String.format("!(%s)", expr) : "!" + expr;
+                } else {
+                    return expr;
                 }
             }
         },
@@ -452,7 +464,8 @@ public class InterOpCollectionBuilder {
                 op = StepTransformFactory.EDGE_OTHER_STEP.apply(step);
             } else if (Utils.equalClass(step, WherePredicateStep.class)) {
                 op = StepTransformFactory.WHERE_PREDICATE_STEP.apply(step);
-            } else if (Utils.equalClass(step, TraversalFilterStep.class) || Utils.equalClass(step, WhereTraversalStep.class)) {
+            } else if (Utils.equalClass(step, TraversalFilterStep.class)
+                    || Utils.equalClass(step, WhereTraversalStep.class) || Utils.equalClass(step, NotStep.class)) {
                 op = StepTransformFactory.WHERE_TRAVERSAL_STEP.apply(step);
             } else if (Utils.equalClass(step, WhereTraversalStep.WhereStartStep.class)) {
                 op = StepTransformFactory.WHERE_START_STEP.apply(step);

@@ -69,8 +69,8 @@ public class SinkOutputProcessor implements InterOpProcessor {
             } else if (cur instanceof ApplyOp) {
                 ApplyOp applyOp = (ApplyOp) cur;
                 FfiJoinKind joinKind = (FfiJoinKind) applyOp.getJoinKind().get().applyArg();
-                // where
-                if (joinKind == FfiJoinKind.Semi) {
+                // where or not
+                if (joinKind == FfiJoinKind.Semi || joinKind == FfiJoinKind.Anti) {
                     continue;
                 } else {
                     throw new InterOpUnsupportedException(cur.getClass(), "join kind is unsupported yet");

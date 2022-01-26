@@ -74,6 +74,7 @@ traversalMethod
     | traversalMethod_inV   // inV()
     | traversalMethod_outV  // outV()
     | traversalMethod_otherV  // otherV()
+    | traversalMethod_not  // not()
     ;
 
 traversalSourceSpawnMethod_V
@@ -267,9 +268,12 @@ traversalMethod_is
 // where(P.eq("a")).by("age")
 // where("c", P.eq("a")).by("id").by("age")
 // where(out().out()...)
+// where(__.as("a")...as("b"))
+// where(__.not(__.out)) equal to not(__.out)
 traversalMethod_where
 	: 'where' LPAREN traversalPredicate RPAREN (DOT traversalMethod_whereby_list)?
 	| 'where' LPAREN stringLiteral COMMA traversalPredicate RPAREN (DOT traversalMethod_whereby_list)?
+    | 'where' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_not RPAREN // match not(__.out) as traversalMethod_not instead of nestedTraversal
 	| 'where' LPAREN nestedTraversal RPAREN
 	;
 
@@ -280,6 +284,10 @@ traversalMethod_whereby
 
 traversalMethod_whereby_list
     : traversalMethod_whereby (DOT traversalMethod_whereby)*
+    ;
+
+traversalMethod_not
+    : 'not' LPAREN nestedTraversal RPAREN
     ;
 
 // only permit non empty, \'\' or \"\" or \'null\' is meaningless as a parameter
