@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.graphscope.gremlin;
+package com.alibaba.graphscope.gremlin.transform;
 
+import com.alibaba.graphscope.gremlin.Utils;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.IsStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.WherePredicateStep;
@@ -38,7 +39,12 @@ public enum PredicateExprTransformFactory implements PredicateExprTransform {
                 }
                 HasContainer container = containers.get(i);
                 String key = "@." + container.getKey();
-                expr += flatPredicate(key, container.getPredicate());
+                String flatPredicate = flatPredicate(key, container.getPredicate());
+                if (i > 0) {
+                    expr += "(" + flatPredicate + ")";
+                } else {
+                    expr += flatPredicate;
+                }
             }
             return expr;
         }

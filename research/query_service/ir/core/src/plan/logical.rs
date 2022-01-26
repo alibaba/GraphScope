@@ -34,10 +34,10 @@ use crate::JsonIO;
 /// [`Node`]: crate::generated::algebra::logical_plan::Node
 #[derive(Clone, Debug, PartialEq)]
 pub struct Node {
-    pub id: u32,
-    pub opr: pb::logical_plan::Operator,
-    pub parents: BTreeSet<u32>,
-    pub children: BTreeSet<u32>,
+    pub(crate) id: u32,
+    pub(crate) opr: pb::logical_plan::Operator,
+    pub(crate) parents: BTreeSet<u32>,
+    pub(crate) children: BTreeSet<u32>,
 }
 
 #[allow(dead_code)]
@@ -66,12 +66,12 @@ pub(crate) type NodeType = Rc<RefCell<Node>>;
 /// [`LogicalPlan`]: crate::generated::algebra::LogicalPlan
 #[derive(Default, Clone)]
 pub struct LogicalPlan {
-    pub nodes: VecMap<NodeType>,
-    /// To record the total number of operators ever created in the logical plan,
-    /// **ignorant of the removed nodes**
-    pub total_size: usize,
+    pub(crate) nodes: VecMap<NodeType>,
+    /// To record the nodes' maximum id in the logical plan. Note that the nodes
+    /// **include the removed ones**
+    pub(crate) max_node_id: u32,
     /// The metadata of the logical plan
-    pub meta: PlanMeta,
+    pub(crate) meta: PlanMeta,
 }
 
 impl PartialEq for LogicalPlan {
@@ -222,7 +222,7 @@ impl LogicalPlan {
     pub fn with_root(node: Node) -> Self {
         let mut nodes = VecMap::new();
         nodes.insert(node.id as usize, Rc::new(RefCell::new(node)));
-        Self { nodes, total_size: 1, meta: PlanMeta::default() }
+        Self { nodes, max_node_id: 1, meta: PlanMeta::default() }
     }
 
     /// Get a node reference from the logical plan
@@ -230,14 +230,18 @@ impl LogicalPlan {
         self.nodes.get(id as usize).cloned()
     }
 
+    pub fn get_meta(&self) -> &PlanMeta {
+        &self.meta
+    }
+
     /// Append a new node into the logical plan, with specified `parent_ids`
-    /// as its parent node. In order to do so, all specified parents must present in the
+    /// as its parent nodes. In order to do so, all specified parents must present in the
     /// logical plan.
     ///
     /// # Return
     ///   * If succeed, the id of the newly added node
-    ///   * Otherwise, -1
-    pub fn append_node(&mut self, mut node: Node, parent_ids: Vec<u32>) -> i32 {
+    ///   * Otherwise, `IrError::ParentNodeNotExist`
+    pub fn append_node(&mut self, mut node: Node, parent_ids: Vec<u32>) -> IrResult<u32> {
         let id = node.id;
         if !self.is_empty() && !parent_ids.is_empty() {
             let mut parent_nodes = vec![];
@@ -245,7 +249,7 @@ impl LogicalPlan {
                 if let Some(parent_node) = self.get_node(parent_id) {
                     parent_nodes.push(parent_node);
                 } else {
-                    return -1;
+                    return Err(IrError::ParentNodeNotExist(parent_id));
                 }
             }
             for parent_node in parent_nodes {
@@ -255,59 +259,49 @@ impl LogicalPlan {
         }
         let node_rc = Rc::new(RefCell::new(node));
         self.nodes.insert(id as usize, node_rc.clone());
+        self.max_node_id = std::cmp::max(self.max_node_id, id) + 1;
 
-        match &node_rc.borrow().opr.opr {
-            Some(pb::logical_plan::operator::Opr::Scan(scan)) => {
-                if let Some(alias) = &scan.alias {
-                    self.meta
-                        .insert_tag_node(alias.clone().try_into().unwrap(), id);
-                }
-            }
-            Some(pb::logical_plan::operator::Opr::Vertex(vertex)) => {
-                if let Some(alias) = &vertex.alias {
-                    self.meta
-                        .insert_tag_node(alias.clone().try_into().unwrap(), id);
-                }
-            }
-            Some(pb::logical_plan::operator::Opr::Edge(edge)) => {
-                if let Some(alias) = &edge.alias {
-                    self.meta
-                        .insert_tag_node(alias.clone().try_into().unwrap(), id);
-                }
-            }
-            Some(pb::logical_plan::operator::Opr::Path(path)) => {
-                if let Some(alias) = &path.alias {
-                    self.meta
-                        .insert_tag_node(alias.clone().try_into().unwrap(), id);
-                }
-            }
-            Some(pb::logical_plan::operator::Opr::As(as_opr)) => {
-                if let Some(alias) = &as_opr.alias {
-                    self.meta
-                        .insert_tag_node(alias.clone().try_into().unwrap(), self.meta.get_curr_node());
-                }
-            }
-            _ => {}
-        }
-        self.total_size = id as usize + 1;
-
-        id as i32
+        Ok(id)
     }
 
-    /// Append an operator into the logical plan, as a new node with `self.total_size` as its id.
+    /// Append an operator into the logical plan, as a new node with `self.max_node_id` as its id.
     pub fn append_operator_as_node(
         &mut self, mut opr: pb::logical_plan::Operator, parent_ids: Vec<u32>,
-    ) -> IrResult<i32> {
+    ) -> IrResult<u32> {
         use common_pb::expr_opr::Item;
         use pb::logical_plan::operator::Opr;
 
         let old_curr_node = self.meta.get_curr_node();
         let mut is_update_curr = false;
         if let Ok(meta) = STORE_META.read() {
-            match opr.opr {
-                Some(Opr::Scan(_)) | Some(Opr::Edge(_)) | Some(Opr::Vertex(_)) | Some(Opr::Path(_)) => {
-                    // change current node before appending node
-                    self.meta.set_curr_node(self.total_size as u32);
+            match &opr.opr {
+                Some(Opr::Scan(scan)) => {
+                    if let Some(alias) = &scan.alias {
+                        self.meta
+                            .insert_tag_node(alias.clone().try_into().unwrap(), self.max_node_id);
+                    }
+                    self.meta.set_curr_node(self.max_node_id);
+                }
+                Some(Opr::Edge(edge)) => {
+                    if let Some(alias) = &edge.alias {
+                        self.meta
+                            .insert_tag_node(alias.clone().try_into().unwrap(), self.max_node_id);
+                    }
+                    self.meta.set_curr_node(self.max_node_id);
+                }
+                Some(Opr::Vertex(getv)) => {
+                    if let Some(alias) = &getv.alias {
+                        self.meta
+                            .insert_tag_node(alias.clone().try_into().unwrap(), self.max_node_id);
+                    }
+                    self.meta.set_curr_node(self.max_node_id);
+                }
+                Some(Opr::Path(path)) => {
+                    if let Some(alias) = &path.alias {
+                        self.meta
+                            .insert_tag_node(alias.clone().try_into().unwrap(), self.max_node_id);
+                    }
+                    self.meta.set_curr_node(self.max_node_id);
                 }
                 Some(Opr::Project(ref proj)) => {
                     is_update_curr = true;
@@ -318,9 +312,7 @@ impl LogicalPlan {
                                 if let common_pb::ExprOpr { item: Some(Item::Var(var)) } =
                                     expr.operators.get(0).unwrap()
                                 {
-                                    if proj.mappings[0].alias.is_none()
-                                        && var.tag.is_some()
-                                        && var.property.is_none()
+                                    if var.tag.is_some() && var.property.is_none()
                                     // tag as Head
                                     {
                                         if let Some(node) = self
@@ -336,8 +328,20 @@ impl LogicalPlan {
                         }
                     }
                 }
-                Some(Opr::As(_))
-                | Some(Opr::Select(_))
+                Some(Opr::Apply(apply_opr)) => {
+                    if let Some(alias) = &apply_opr.alias {
+                        self.meta
+                            .insert_tag_node(alias.clone().try_into().unwrap(), self.max_node_id);
+                    }
+                    is_update_curr = true
+                }
+                Some(Opr::As(as_opr)) => {
+                    if let Some(alias) = &as_opr.alias {
+                        self.meta
+                            .insert_tag_node(alias.clone().try_into().unwrap(), self.meta.get_curr_node());
+                    }
+                }
+                Some(Opr::Select(_))
                 | Some(Opr::OrderBy(_))
                 | Some(Opr::Dedup(_))
                 | Some(Opr::Limit(_))
@@ -346,17 +350,17 @@ impl LogicalPlan {
             }
             opr.preprocess(&meta, &mut self.meta)?;
         }
-        let new_curr_node = self.append_node(Node::new(self.total_size as u32, opr), parent_ids);
-        if new_curr_node < 0 {
-            // append node failed, revert to the old node
-            self.meta.set_curr_node(old_curr_node);
-        } else {
+
+        let new_curr_node_rst = self.append_node(Node::new(self.max_node_id, opr), parent_ids);
+        if let Ok(new_curr_node) = &new_curr_node_rst {
             if is_update_curr {
-                self.meta.set_curr_node(new_curr_node as u32);
+                self.meta.set_curr_node(*new_curr_node);
             }
+        } else {
+            self.meta.set_curr_node(old_curr_node);
         }
 
-        Ok(new_curr_node)
+        new_curr_node_rst
     }
 
     /// Remove a node from the logical plan, and do the following:
@@ -364,7 +368,7 @@ impl LogicalPlan {
     /// * For each of its children, remove this node's id reference from its `parent`, and if
     /// the child's parent becomes empty, the child must be removed recursively.
     ///
-    ///  Note that this does not decrease `self.total_size`, which serves as the indication
+    ///  Note that this does not decrease `self.node_max_id`, which serves as the indication
     /// of new id of the plan.
     pub fn remove_node(&mut self, id: u32) -> Option<NodeType> {
         let node = self.nodes.remove(id as usize);
@@ -469,6 +473,7 @@ impl LogicalPlan {
             return None;
         }
         let mut plan = LogicalPlan::with_root(clone_node(from_node.clone()));
+        plan.meta = self.meta.clone();
         let mut curr_node = from_node;
         while curr_node.borrow().id != to_node.borrow().id {
             if curr_node.borrow().children.is_empty() {
@@ -478,7 +483,8 @@ impl LogicalPlan {
                 let next_node_id = curr_node.borrow().get_first_child().unwrap();
                 if let Some(next_node) = self.get_node(next_node_id) {
                     if next_node.borrow().id != to_node.borrow().id {
-                        plan.append_node(clone_node(next_node.clone()), vec![curr_node.borrow().id]);
+                        plan.append_node(clone_node(next_node.clone()), vec![curr_node.borrow().id])
+                            .expect("append node to subplan error");
                     }
                     curr_node = next_node;
                 } else {
@@ -496,7 +502,8 @@ impl LogicalPlan {
                             .map(|x| *x)
                             .collect();
                         let merge_node_clone = clone_node(merge_node.clone());
-                        plan.append_node(merge_node_clone, merge_node_parent);
+                        plan.append_node(merge_node_clone, merge_node_parent)
+                            .expect("append node to subplan error");
                     }
                     curr_node = merge_node;
                 } else {
@@ -505,6 +512,44 @@ impl LogicalPlan {
             }
         }
         Some(plan)
+    }
+
+    /// Given a node that contains a subtask, which is typically an  `Apply` operator,
+    /// try to extract the subtask as a logical plan.
+    ///
+    /// TODO(longbin): There may be an issue when the last node of a subtask is a merge node.
+    pub fn extract_subplan(&self, node: NodeType) -> Option<LogicalPlan> {
+        let node_borrow = node.borrow();
+        match &node_borrow.opr.opr {
+            Some(pb::logical_plan::operator::Opr::Apply(apply_opr)) => {
+                if let Some(from_node) = self.get_node(apply_opr.subtask as u32) {
+                    let mut curr_node = from_node.clone();
+                    while let Some(to_node) = curr_node
+                        .clone()
+                        .borrow()
+                        .get_first_child()
+                        .and_then(|node_id| self.get_node(node_id))
+                    {
+                        curr_node = to_node.clone();
+                    }
+                    let parent_ids = curr_node
+                        .borrow()
+                        .parents
+                        .iter()
+                        .cloned()
+                        .collect();
+                    let mut subplan = self.subplan(from_node, curr_node.clone());
+                    if let Some(plan) = subplan.as_mut() {
+                        plan.append_node(curr_node.borrow().clone(), parent_ids)
+                            .expect("append node to subplan error!");
+                    }
+                    subplan
+                } else {
+                    None
+                }
+            }
+            _ => None,
+        }
     }
 }
 
@@ -872,6 +917,12 @@ impl AsLogical for pb::Sink {
     }
 }
 
+impl AsLogical for pb::Apply {
+    fn preprocess(&mut self, _meta: &StoreMeta, _plan_meta: &mut PlanMeta) -> IrResult<()> {
+        Ok(())
+    }
+}
+
 impl AsLogical for pb::logical_plan::Operator {
     fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
         use pb::logical_plan::operator::Opr;
@@ -889,6 +940,7 @@ impl AsLogical for pb::logical_plan::Operator {
                 Opr::Limit(opr) => opr.preprocess(meta, plan_meta)?,
                 Opr::Join(opr) => opr.preprocess(meta, plan_meta)?,
                 Opr::Sink(opr) => opr.preprocess(meta, plan_meta)?,
+                Opr::Apply(opr) => opr.preprocess(meta, plan_meta)?,
                 _ => {}
             }
         }
@@ -899,13 +951,14 @@ impl AsLogical for pb::logical_plan::Operator {
 #[cfg(test)]
 mod test {
     use ir_common::expr_parse::str_to_expr_pb;
+    use ir_common::generated::algebra::logical_plan::operator::Opr;
     use ir_common::generated::common::property::Item;
 
     use super::*;
     use crate::plan::meta::set_schema_simple;
 
     #[test]
-    fn test_logical_plan() {
+    fn logical_plan_construct() {
         let opr = pb::logical_plan::Operator { opr: None };
         let mut plan = LogicalPlan::default();
 
@@ -914,7 +967,7 @@ mod test {
             .unwrap();
         assert_eq!(id, 0);
         assert_eq!(plan.len(), 1);
-        assert_eq!(plan.total_size, 1);
+        assert_eq!(plan.max_node_id, 1);
         let node0 = plan.get_node(0).unwrap().clone();
 
         let id = plan
@@ -922,7 +975,7 @@ mod test {
             .unwrap();
         assert_eq!(id, 1);
         assert_eq!(plan.len(), 2);
-        assert_eq!(plan.total_size, 2);
+        assert_eq!(plan.max_node_id, 2);
         let node1 = plan.get_node(1).unwrap().clone();
 
         let parents = node1
@@ -946,7 +999,7 @@ mod test {
             .unwrap();
         assert_eq!(id, 2);
         assert_eq!(plan.len(), 3);
-        assert_eq!(plan.total_size, 3);
+        assert_eq!(plan.max_node_id, 3);
         let node2 = plan.get_node(2).unwrap().clone();
 
         let parents = node2
@@ -976,7 +1029,7 @@ mod test {
         let node2 = plan.remove_node(2);
         assert_eq!(node2.unwrap().borrow().id, 2);
         assert_eq!(plan.len(), 2);
-        assert_eq!(plan.total_size, 3);
+        assert_eq!(plan.max_node_id, 3);
         let children = node0
             .borrow()
             .children
@@ -993,12 +1046,13 @@ mod test {
             .collect::<Vec<u32>>();
         assert!(children.is_empty());
 
-        let _id = plan
-            .append_operator_as_node(opr.clone(), vec![0, 2])
-            .unwrap();
-        assert_eq!(_id, -1);
+        let _id = plan.append_operator_as_node(opr.clone(), vec![0, 2]);
+        match _id.err().unwrap() {
+            IrError::ParentNodeNotExist(node) => assert_eq!(node, 2),
+            _ => panic!("wrong error type"),
+        }
         assert_eq!(plan.len(), 2);
-        assert_eq!(plan.total_size, 3);
+        assert_eq!(plan.max_node_id, 3);
         let children = node0
             .borrow()
             .children
@@ -1014,7 +1068,7 @@ mod test {
         let node3 = plan.get_node(3).unwrap();
         let _ = plan.remove_node(1);
         assert_eq!(plan.len(), 2);
-        assert_eq!(plan.total_size, 4);
+        assert_eq!(plan.max_node_id, 4);
         let children = node0
             .borrow()
             .children
@@ -1033,7 +1087,7 @@ mod test {
     }
 
     #[test]
-    fn test_logical_plan_from_pb() {
+    fn logical_plan_from_pb() {
         let opr = pb::logical_plan::Operator { opr: None };
         let root_pb = pb::logical_plan::Node { opr: Some(opr.clone()), children: vec![1, 2] };
         let node1_pb = pb::logical_plan::Node { opr: Some(opr.clone()), children: vec![2] };
@@ -1080,7 +1134,7 @@ mod test {
     }
 
     #[test]
-    fn test_logical_plan_into_pb() {
+    fn logical_plan_into_pb() {
         let opr = pb::logical_plan::Operator { opr: None };
         let mut plan = LogicalPlan::default();
 
@@ -1108,7 +1162,7 @@ mod test {
     }
 
     #[test]
-    fn test_preprocess_expression() {
+    fn prep_expression() {
         let mut plan_meta = PlanMeta::default();
         plan_meta.set_preprocess(true);
         plan_meta.insert_tag_node("a".into(), 1);
@@ -1261,7 +1315,7 @@ mod test {
     }
 
     #[test]
-    fn test_preprocess_scan() {
+    fn preprocess_scan() {
         let mut plan_meta = PlanMeta::default();
         plan_meta.set_preprocess(true);
         plan_meta.insert_tag_node("a".into(), 1);
@@ -1348,7 +1402,7 @@ mod test {
     }
 
     #[test]
-    fn test_tag_maintain_simple() {
+    fn tag_maintain_case1() {
         let mut plan = LogicalPlan::default();
         // g.V().hasLabel("person").has("age", 27).valueMap("age", "name", "id")
 
@@ -1413,7 +1467,7 @@ mod test {
     }
 
     #[test]
-    fn test_tag_maintain_ci() {
+    fn tag_maintain_case2() {
         let mut plan = LogicalPlan::default();
         // g.V().out().as("here").has("lang", "java").select("here").values("name")
         let scan = pb::Scan {
@@ -1500,9 +1554,126 @@ mod test {
     }
 
     #[test]
-    fn test_tag_maintain_complex() {
+    fn tag_maintain_case3() {
         let mut plan = LogicalPlan::default();
+        // g.V().outE().as("e").inV().as("v").select("e").order().by("weight").select("v").values("name").dedup()
 
+        // g.V()
+        let scan = pb::Scan {
+            scan_opt: 0,
+            alias: None,
+            params: Some(pb::QueryParams {
+                table_names: vec![],
+                columns: vec![],
+                limit: None,
+                predicate: None,
+                requirements: vec![],
+            }),
+            idx_predicate: None,
+        };
+        plan.append_operator_as_node(scan.into(), vec![])
+            .unwrap();
+        assert_eq!(plan.meta.get_curr_node(), 0);
+
+        // .outE().as("e")
+        let expand = pb::EdgeExpand {
+            v_tag: None,
+            direction: 0,
+            params: Some(pb::QueryParams {
+                table_names: vec![],
+                columns: vec![],
+                limit: None,
+                predicate: None,
+                requirements: vec![],
+            }),
+            is_edge: true,
+            alias: Some("e".into()),
+        };
+        plan.append_operator_as_node(expand.into(), vec![0])
+            .unwrap();
+        assert_eq!(plan.meta.get_curr_node(), 1);
+        assert_eq!(plan.meta.get_tag_node(&"e".into()).unwrap(), 1);
+
+        // .inV().as("v")
+        let getv = pb::GetV { tag: None, opt: 1, alias: Some("v".into()) };
+        plan.append_operator_as_node(getv.into(), vec![1])
+            .unwrap();
+        assert_eq!(plan.meta.get_curr_node(), 2);
+        assert_eq!(plan.meta.get_tag_node(&"v".into()).unwrap(), 2);
+
+        // .select("e")
+        let project = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: str_to_expr_pb("@e".to_string()).ok(),
+                alias: Some("project_e".into()),
+            }],
+            is_append: true,
+        };
+        plan.append_operator_as_node(project.into(), vec![2])
+            .unwrap();
+        assert_eq!(plan.meta.get_curr_node(), 1);
+
+        // .order().by("weight")
+        let orderby = pb::OrderBy {
+            pairs: vec![pb::order_by::OrderingPair {
+                key: Some(common_pb::Variable {
+                    tag: None,
+                    property: Some(common_pb::Property {
+                        item: Some(common_pb::property::Item::Key("weight".into())),
+                    }),
+                }),
+                order: 1,
+            }],
+            limit: None,
+        };
+        plan.append_operator_as_node(orderby.into(), vec![3])
+            .unwrap();
+        assert_eq!(plan.meta.get_curr_node(), 1);
+        assert_eq!(
+            plan.meta
+                .curr_node_meta()
+                .unwrap()
+                .get_columns()
+                .clone(),
+            vec!["weight".into()].into_iter().collect()
+        );
+
+        // select("v")
+        let project = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: str_to_expr_pb("@v".to_string()).ok(),
+                alias: Some("project_v".into()),
+            }],
+            is_append: true,
+        };
+        plan.append_operator_as_node(project.into(), vec![4])
+            .unwrap();
+        assert_eq!(plan.meta.get_curr_node(), 2);
+
+        // .values("name")
+        let project = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: str_to_expr_pb("@.name".to_string()).ok(),
+                alias: Some("name".into()),
+            }],
+            is_append: true,
+        };
+        plan.append_operator_as_node(project.into(), vec![5])
+            .unwrap();
+        assert_eq!(plan.meta.get_curr_node(), 6);
+        assert_eq!(
+            plan.meta
+                .get_node_meta(2)
+                .unwrap()
+                .get_columns()
+                .clone(),
+            vec!["name".into()].into_iter().collect()
+        );
+    }
+
+    #[test]
+    fn tag_maintain_case4() {
+        let mut plan = LogicalPlan::default();
         // g.V("person").has("name", "John").as('a').outE("knows").as('b')
         //  .has("date", 20200101).inV().as('c').has('id', 10)
         //  .select('a').by(valueMap('age', "name"))
@@ -1639,6 +1810,100 @@ mod test {
         );
     }
 
+    #[test]
+    fn extract_subplan_from_apply() {
+        let mut plan = LogicalPlan::default();
+        // g.V().as("v").where(out().as("o").has("lang", "java")).select("v").values("name")
+
+        // g.V("person")
+        let scan = pb::Scan {
+            scan_opt: 0,
+            alias: Some("v".into()),
+            params: Some(pb::QueryParams {
+                table_names: vec![],
+                columns: vec![],
+                limit: None,
+                predicate: None,
+                requirements: vec![],
+            }),
+            idx_predicate: None,
+        };
+
+        let opr_id = plan
+            .append_operator_as_node(scan.into(), vec![])
+            .unwrap();
+
+        // .out().as("o")
+        let expand = pb::EdgeExpand {
+            v_tag: None,
+            direction: 0,
+            params: Some(pb::QueryParams {
+                table_names: vec![],
+                columns: vec![],
+                limit: None,
+                predicate: None,
+                requirements: vec![],
+            }),
+            is_edge: false,
+            alias: Some("o".into()),
+        };
+
+        let root_id = plan
+            .append_operator_as_node(expand.into(), vec![])
+            .unwrap();
+
+        // .has("lang", "Java")
+        let select = pb::Select { predicate: str_to_expr_pb("@.lang == \"Java\"".to_string()).ok() };
+        plan.append_operator_as_node(select.into(), vec![root_id])
+            .unwrap();
+
+        let apply = pb::Apply { join_kind: 4, tags: vec![], subtask: root_id as i32, alias: None };
+        let opr_id = plan
+            .append_operator_as_node(apply.into(), vec![opr_id])
+            .unwrap();
+
+        let project = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: str_to_expr_pb("@v.name".to_string()).ok(),
+                alias: None,
+            }],
+            is_append: true,
+        };
+        plan.append_operator_as_node(project.into(), vec![opr_id])
+            .unwrap();
+
+        let subplan = plan
+            .extract_subplan(plan.get_node(opr_id).unwrap())
+            .unwrap();
+        assert_eq!(subplan.len(), 2);
+        for (id, node) in &subplan.nodes {
+            let node_ref = node.borrow();
+            if id == root_id as usize {
+                match node_ref.opr.opr.as_ref().unwrap() {
+                    Opr::Edge(_) => {}
+                    _ => panic!("should be edge expand"),
+                }
+                assert_eq!(subplan.meta.get_tag_node(&"o".into()).unwrap(), root_id);
+                assert_eq!(
+                    subplan
+                        .meta
+                        .get_node_meta(root_id)
+                        .unwrap()
+                        .get_columns()
+                        .iter()
+                        .cloned()
+                        .collect::<Vec<_>>(),
+                    vec!["lang".into()]
+                )
+            } else {
+                match node_ref.opr.opr.as_ref().unwrap() {
+                    Opr::Select(_) => {}
+                    _ => panic!("should be select"),
+                }
+            }
+        }
+    }
+
     // The plan looks like:
     //       root
     //       / \
@@ -1675,7 +1940,7 @@ mod test {
     }
 
     #[test]
-    fn test_get_merge_node() {
+    fn get_merge_node() {
         let plan = create_logical_plan();
         let merge_node = plan.get_merge_node(plan.get_node(1).unwrap());
         assert_eq!(merge_node, plan.get_node(5));
@@ -1687,14 +1952,20 @@ mod test {
     }
 
     #[test]
-    fn test_merge_branch_plans() {
+    fn merge_branch_plans() {
         let opr = pb::logical_plan::Operator { opr: None };
         let mut plan = LogicalPlan::with_root(Node::new(0, opr.clone()));
 
         let mut subplan1 = LogicalPlan::with_root(Node::new(1, opr.clone()));
-        subplan1.append_node(Node::new(3, opr.clone()), vec![1]);
-        subplan1.append_node(Node::new(4, opr.clone()), vec![1]);
-        subplan1.append_node(Node::new(5, opr.clone()), vec![3, 4]);
+        subplan1
+            .append_node(Node::new(3, opr.clone()), vec![1])
+            .unwrap();
+        subplan1
+            .append_node(Node::new(4, opr.clone()), vec![1])
+            .unwrap();
+        subplan1
+            .append_node(Node::new(5, opr.clone()), vec![3, 4])
+            .unwrap();
 
         let subplan2 = LogicalPlan::with_root(Node::new(2, opr.clone()));
 
@@ -1702,19 +1973,23 @@ mod test {
         let mut expected_plan = create_logical_plan();
         expected_plan.remove_node(6);
 
-        plan.append_node(Node::new(6, opr.clone()), vec![2, 5]);
-        plan.append_node(Node::new(7, opr.clone()), vec![6]);
+        plan.append_node(Node::new(6, opr.clone()), vec![2, 5])
+            .unwrap();
+        plan.append_node(Node::new(7, opr.clone()), vec![6])
+            .unwrap();
 
         assert_eq!(plan, create_logical_plan());
     }
 
     #[test]
-    fn test_subplan() {
+    fn subplan() {
         let plan = create_logical_plan();
         let opr = pb::logical_plan::Operator { opr: None };
         let subplan = plan.subplan(plan.get_node(2).unwrap(), plan.get_node(7).unwrap());
         let mut expected_plan = LogicalPlan::with_root(Node::new(2, opr.clone()));
-        expected_plan.append_node(Node::new(6, opr.clone()), vec![2]);
+        expected_plan
+            .append_node(Node::new(6, opr.clone()), vec![2])
+            .unwrap();
         assert_eq!(subplan.unwrap(), expected_plan);
 
         // The node 3 is at one of the branches, which is incomplete and hence invalid subplan
@@ -1723,15 +1998,21 @@ mod test {
 
         let subplan = plan.subplan(plan.get_node(1).unwrap(), plan.get_node(6).unwrap());
         let mut expected_plan = LogicalPlan::with_root(Node::new(1, opr.clone()));
-        expected_plan.append_node(Node::new(3, opr.clone()), vec![1]);
-        expected_plan.append_node(Node::new(4, opr.clone()), vec![1]);
-        expected_plan.append_node(Node::new(5, opr.clone()), vec![3, 4]);
+        expected_plan
+            .append_node(Node::new(3, opr.clone()), vec![1])
+            .unwrap();
+        expected_plan
+            .append_node(Node::new(4, opr.clone()), vec![1])
+            .unwrap();
+        expected_plan
+            .append_node(Node::new(5, opr.clone()), vec![3, 4])
+            .unwrap();
 
         assert_eq!(subplan.unwrap(), expected_plan);
     }
 
     #[test]
-    fn test_get_branch_plans() {
+    fn get_branch_plans() {
         let plan = create_logical_plan();
         let (merge_node, subplans) = plan.get_branch_plans(plan.get_node(1).unwrap());
         let opr = pb::logical_plan::Operator { opr: None };
@@ -1744,9 +2025,15 @@ mod test {
 
         let (merge_node, subplans) = plan.get_branch_plans(plan.get_node(0).unwrap());
         let mut plan1 = LogicalPlan::with_root(Node::new(1, opr.clone()));
-        plan1.append_node(Node::new(3, opr.clone()), vec![1]);
-        plan1.append_node(Node::new(4, opr.clone()), vec![1]);
-        plan1.append_node(Node::new(5, opr.clone()), vec![3, 4]);
+        plan1
+            .append_node(Node::new(3, opr.clone()), vec![1])
+            .unwrap();
+        plan1
+            .append_node(Node::new(4, opr.clone()), vec![1])
+            .unwrap();
+        plan1
+            .append_node(Node::new(5, opr.clone()), vec![3, 4])
+            .unwrap();
         let plan2 = LogicalPlan::with_root(Node::new(2, opr.clone()));
 
         assert_eq!(merge_node, plan.get_node(6));

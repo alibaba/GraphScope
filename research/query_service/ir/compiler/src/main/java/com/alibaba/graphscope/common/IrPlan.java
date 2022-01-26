@@ -100,7 +100,6 @@ public class IrPlan implements Closeable {
                 }
                 // todo: add other predicates
                 // todo: add limit
-
                 Optional<OpArg> aliasOpt = baseOp.getAlias();
                 if (aliasOpt.isPresent()) {
                     FfiAlias.ByValue alias = (FfiAlias.ByValue) aliasOpt.get().applyArg();
@@ -313,6 +312,26 @@ public class IrPlan implements Closeable {
                 });
                 return ptrSink;
             }
+        },
+        GETV_OP {
+            @Override
+            public Pointer apply(InterOpBase baseOp) {
+                GetVOp getVOp = (GetVOp) baseOp;
+                Optional<OpArg> vOpt = getVOp.getGetVOpt();
+                if (!vOpt.isPresent()) {
+                    throw new InterOpIllegalArgException(baseOp.getClass(), "getVOpt", "not present");
+                }
+                FfiVOpt ffiVOpt = (FfiVOpt) vOpt.get().applyArg();
+                Pointer ptrGetV = irCoreLib.initGetvOperator(ffiVOpt);
+
+                // set alias
+                Optional<OpArg> aliasOpt = baseOp.getAlias();
+                if (aliasOpt.isPresent()) {
+                    FfiAlias.ByValue alias = (FfiAlias.ByValue) aliasOpt.get().applyArg();
+                    irCoreLib.setGetvAlias(ptrGetV, alias);
+                }
+                return ptrGetV;
+            }
         }
     }
 
@@ -374,6 +393,9 @@ public class IrPlan implements Closeable {
         } else if (base instanceof SinkOp) {
             Pointer ptrSink = TransformFactory.SINK_OP.apply(base);
             resultCode = irCoreLib.appendSinkOperator(ptrPlan, ptrSink, oprIdx.getValue(), oprIdx);
+        } else if (base instanceof GetVOp) {
+            Pointer ptrGetV = TransformFactory.GETV_OP.apply(base);
+            resultCode = irCoreLib.appendGetvOperator(ptrPlan, ptrGetV, oprIdx.getValue(), oprIdx);
         } else {
             throw new InterOpUnsupportedException(base.getClass(), "unimplemented yet");
         }
@@ -385,7 +407,8 @@ public class IrPlan implements Closeable {
     }
 
     private void setPostAlias(InterOpBase base) {
-        if (!(base instanceof ScanFusionOp || base instanceof ExpandOp || base instanceof ProjectOp || base instanceof GroupOp)
+        if (!(base instanceof ScanFusionOp || base instanceof ExpandOp
+                || base instanceof ProjectOp || base instanceof GroupOp || base instanceof GetVOp)
                 && base.getAlias().isPresent()) {
             FfiAlias.ByValue ffiAlias = (FfiAlias.ByValue) base.getAlias().get().applyArg();
             Pointer ptrAs = irCoreLib.initAsOperator();

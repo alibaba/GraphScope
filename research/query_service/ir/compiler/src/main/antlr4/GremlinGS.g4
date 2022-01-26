@@ -71,6 +71,9 @@ traversalMethod
     | traversalMethod_count // count()
     | traversalMethod_is    // is()
     | traversalMethod_where // where()
+    | traversalMethod_inV   // inV()
+    | traversalMethod_outV  // outV()
+    | traversalMethod_otherV  // otherV()
     ;
 
 traversalSourceSpawnMethod_V
@@ -98,11 +101,13 @@ traversalMethod_hasId
 // has("str", y), has("str", eq/neq/gt/gte/lt/lte(y))
 // has("person", "name", "marko")
 // has("person", "name", P.eq("marko"))
+// has("name")
 traversalMethod_has
     : 'has' LPAREN stringLiteral COMMA genericLiteral RPAREN  // indicate eq
     | 'has' LPAREN stringLiteral COMMA traversalPredicate RPAREN
     | 'has' LPAREN stringLiteral COMMA stringLiteral COMMA genericLiteral RPAREN
     | 'has' LPAREN stringLiteral COMMA stringLiteral COMMA traversalPredicate RPAREN
+    | 'has' LPAREN stringLiteral RPAREN
     ;
 
 // out('str1', ...)
@@ -169,9 +174,15 @@ traversalMethod_order
 
 // by('asc' | 'desc')
 // by('a', 'asc' | 'desc')
+// by(values(..), 'asc' | 'desc')
+// by(select("a"), 'asc' | 'desc')
+// by(select("a").by("name"), 'asc' | 'desc')
+// by(select("a").by(valueMap("name")), 'asc' | 'desc')
 traversalMethod_orderby
     : 'by' LPAREN traversalOrder RPAREN
-    | 'by' LPAREN stringLiteral COMMA traversalOrder RPAREN
+    | 'by' LPAREN stringLiteral (COMMA traversalOrder)? RPAREN
+    | 'by' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_values (COMMA traversalOrder)? RPAREN
+    | 'by' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_select (COMMA traversalOrder)? RPAREN
     ;
 
 traversalMethod_orderby_list
@@ -363,9 +374,9 @@ traversalPredicate_without
 
 // incr and decr is unsupported in 3.5.1
 traversalOrder
-    : 'asc'  | 'ASC'
-    | 'desc' | 'DESC'
-    // | 'shuffle' | 'SHUFFLE'
+    : 'asc'  | 'Order.asc'
+    | 'desc' | 'Order.desc'
+    | 'shuffle' | 'Order.shuffle'
     ;
 
 // Integer Literals

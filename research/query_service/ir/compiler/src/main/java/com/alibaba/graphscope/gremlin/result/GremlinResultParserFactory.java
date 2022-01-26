@@ -3,7 +3,7 @@ package com.alibaba.graphscope.gremlin.result;
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.alibaba.graphscope.gaia.proto.OuterExpression;
-import com.alibaba.graphscope.gremlin.OpArgTransformFactory;
+import com.alibaba.graphscope.gremlin.transform.OpArgTransformFactory;
 import com.alibaba.graphscope.gremlin.exception.GremlinResultParserException;
 import org.apache.tinkerpop.gremlin.structure.Element;
 import org.slf4j.Logger;

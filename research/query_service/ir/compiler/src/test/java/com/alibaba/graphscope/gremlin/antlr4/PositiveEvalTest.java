@@ -349,9 +349,30 @@ public class PositiveEvalTest {
     }
 
     @Test
-    public void g_V_order_by_keys() {
+    public void g_V_order_by_keys_test() {
         Assert.assertEquals(g.V().order().by("name", Order.desc).by("id", Order.asc),
                 eval("g.V().order().by('name', desc).by('id', asc)"));
+    }
+
+    @Test
+    public void g_V_order_by_key_test() {
+        Assert.assertEquals(g.V().order().by("name"), eval("g.V().order().by(\"name\")"));
+    }
+
+    @Test
+    public void g_V_order_by_values_test() {
+        Assert.assertEquals(g.V().order().by(__.values("name")), eval("g.V().order().by(__.values(\"name\"))"));
+    }
+
+    @Test
+    public void g_V_order_by_select_test() {
+        Assert.assertEquals(g.V().as("a").order().by(__.select("a")), eval("g.V().as(\"a\").order().by(__.select(\"a\"))"));
+    }
+
+    @Test
+    public void g_V_order_by_select_asc_test() {
+        Assert.assertEquals(g.V().as("a").order().by(__.select("a"), Order.asc),
+                eval("g.V().as(\"a\").order().by(__.select(\"a\"), asc)"));
     }
 
     @Test
@@ -595,5 +616,20 @@ public class PositiveEvalTest {
     public void g_V_where_a_eq_b_nested_value_age_test() {
         Assert.assertEquals(g.V().where("a", P.eq("b")).by("age").by(__.values("age")),
                 eval("g.V().where(\"a\", P.eq(\"b\")).by(\"age\").by(__.values(\"age\"))"));
+    }
+
+    @Test
+    public void g_V_outE_as_otherV_test() {
+        Assert.assertEquals(g.V().outE().as("a").otherV(), eval("g.V().outE().as(\"a\").otherV()"));
+    }
+
+    @Test
+    public void g_V_outE_as_inV_test() {
+        Assert.assertEquals(g.V().outE().as("a").inV(), eval("g.V().outE().as(\"a\").inV()"));
+    }
+
+    @Test
+    public void g_V_outE_as_outV_test() {
+        Assert.assertEquals(g.V().outE().as("a").outV(), eval("g.V().outE().as(\"a\").outV()"));
     }
 }

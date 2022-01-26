@@ -112,39 +112,6 @@ public class NegativeEvalTest {
     }
 
     @Test
-    public void g_V_otherV_test() {
-        try {
-            scriptEngine.eval("g.V().otherV()", context);
-        } catch (InvalidGremlinScriptException e) {
-            // expected error
-            return;
-        }
-        Assert.fail();
-    }
-
-    @Test
-    public void g_V_inV_test() {
-        try {
-            scriptEngine.eval("g.V().inV()", context);
-        } catch (InvalidGremlinScriptException e) {
-            // expected error
-            return;
-        }
-        Assert.fail();
-    }
-
-    @Test
-    public void g_V_outV_test() {
-        try {
-            scriptEngine.eval("g.V().outV()", context);
-        } catch (InvalidGremlinScriptException e) {
-            // expected error
-            return;
-        }
-        Assert.fail();
-    }
-
-    @Test
     public void g_V_bothV_test() {
         try {
             scriptEngine.eval("g.V().bothV()", context);

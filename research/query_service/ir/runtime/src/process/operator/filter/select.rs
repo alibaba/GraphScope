@@ -20,13 +20,13 @@ use ir_common::generated::algebra as algebra_pb;
 use pegasus::api::function::{FilterFunction, FnResult};
 
 use crate::error::{FnExecError, FnGenResult};
-use crate::expr::eval::Evaluator;
+use crate::expr::eval_pred::{EvalPred, PEvaluator};
 use crate::process::operator::filter::FilterFuncGen;
 use crate::process::record::Record;
 
 #[derive(Debug)]
 struct SelectOperator {
-    pub filter: Evaluator,
+    pub filter: PEvaluator,
 }
 
 impl FilterFunction<Record> for SelectOperator {

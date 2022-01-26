@@ -42,11 +42,22 @@ message Edge {
   repeated Property properties = 7;
 }
 
+message GraphPath {
+  message VertexOrEdge {
+    oneof inner {
+      Vertex vertex = 1;
+      Edge edge = 2;
+    }
+  }
+  repeated VertexOrEdge path = 1;
+}
+
 message Element {
   oneof inner {
     Vertex vertex = 1;
     Edge edge = 2;
-    common.Value object = 3;
+    GraphPath graph_path = 3;
+    common.Value object = 4;
   }
 }
 

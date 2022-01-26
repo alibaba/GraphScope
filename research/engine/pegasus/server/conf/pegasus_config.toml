@@ -1,3 +1,0 @@
-nonblocking = false
-read_timeout_ms = 8
-write_timeout_ms = 8

@@ -39,7 +39,7 @@ public class WherePredicateTest {
 
         WherePredicateStep step = (WherePredicateStep) traversal.asAdmin().getEndStep();
         SelectOp selectOp = (SelectOp) StepTransformFactory.WHERE_PREDICATE_STEP.apply(step);
-        Assert.assertEquals("@a == @b || @a == @c", selectOp.getPredicate().get().applyArg());
+        Assert.assertEquals("@a == @b || (@a == @c)", selectOp.getPredicate().get().applyArg());
     }
 
     @Test
@@ -47,7 +47,7 @@ public class WherePredicateTest {
         Traversal traversal = g.V().as("a").out().where(P.eq("a")).by("age");
         WherePredicateStep step = (WherePredicateStep) traversal.asAdmin().getEndStep();
         SelectOp selectOp = (SelectOp) StepTransformFactory.WHERE_PREDICATE_STEP.apply(step);
-        Assert.assertEquals("@.age == @a.age", selectOp.getPredicate().get().applyArg());
+        Assert.assertEquals("@.age && @a.age && @.age == @a.age", selectOp.getPredicate().get().applyArg());
     }
 
     @Test
@@ -55,7 +55,7 @@ public class WherePredicateTest {
         Traversal traversal = g.V().as("a").out().where(P.eq("a")).by(__.values("age"));
         WherePredicateStep step = (WherePredicateStep) traversal.asAdmin().getEndStep();
         SelectOp selectOp = (SelectOp) StepTransformFactory.WHERE_PREDICATE_STEP.apply(step);
-        Assert.assertEquals("@.age == @a.age", selectOp.getPredicate().get().applyArg());
+        Assert.assertEquals("@.age && @a.age && @.age == @a.age", selectOp.getPredicate().get().applyArg());
     }
 
     @Test
@@ -63,7 +63,7 @@ public class WherePredicateTest {
         Traversal traversal = g.V().as("a").out().as("b").where("a", P.eq("b")).by("id").by("age");
         WherePredicateStep step = (WherePredicateStep) traversal.asAdmin().getEndStep();
         SelectOp selectOp = (SelectOp) StepTransformFactory.WHERE_PREDICATE_STEP.apply(step);
-        Assert.assertEquals("@a.id == @b.age", selectOp.getPredicate().get().applyArg());
+        Assert.assertEquals("@a.id && @b.age && @a.id == @b.age", selectOp.getPredicate().get().applyArg());
     }
 
     @Test
@@ -72,6 +72,7 @@ public class WherePredicateTest {
                 .out().as("b").out().as("c").where("a", P.eq("b").or(P.eq("c"))).by("id").by("age").by("id");
         WherePredicateStep step = (WherePredicateStep) traversal.asAdmin().getEndStep();
         SelectOp selectOp = (SelectOp) StepTransformFactory.WHERE_PREDICATE_STEP.apply(step);
-        Assert.assertEquals("@a.id == @b.age || @a.id == @c.id", selectOp.getPredicate().get().applyArg());
+        Assert.assertEquals("@a.id && @b.age && @a.id == @b.age || (@a.id && @c.id && @a.id == @c.id)",
+                selectOp.getPredicate().get().applyArg());
     }
 }

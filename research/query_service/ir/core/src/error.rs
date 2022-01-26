@@ -27,6 +27,7 @@ pub enum IrError {
     // Logical Errors
     TableNotExist(String),
     ColumnNotExist(String),
+    ParentNodeNotExist(u32),
     TagNotExist(NameOrId),
     ParsePbError(ParsePbError),
     ParseExprError(ExprError),
@@ -48,6 +49,9 @@ impl fmt::Display for IrError {
             IrError::TableNotExist(s) => write!(f, "the given table(label): {:?} does not exist", s),
             IrError::ColumnNotExist(s) => write!(f, "the given column: {:?} does not exist", s),
             IrError::TagNotExist(tag) => write!(f, "the given tag: {:?} does not exist", tag),
+            IrError::ParentNodeNotExist(node) => {
+                write!(f, "the given parent node: {:?} does not exist", node)
+            }
             IrError::ParsePbError(err) => write!(f, "parse pb error: {:?}", err),
             IrError::ParseExprError(err) => write!(f, "parse expression error: {:?}", err),
             IrError::PbEncodeError(err) => write!(f, "encoding protobuf error: {:?}", err),
