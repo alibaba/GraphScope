@@ -387,8 +387,8 @@ public class IrPlan implements Closeable {
     // return id of the first operator
     public int appendInterOpCollection(InterOpCollection opCollection) {
         int rootId = 0;
-        // parent of the first op is always 0
-        IntByReference oprId = new IntByReference(0);
+        // parent of the first op is always -1
+        IntByReference oprId = new IntByReference(-1);
         List<InterOpBase> opList = opCollection.unmodifiableCollection();
         for (int i = 0; i < opList.size(); ++i) {
             InterOpBase op = opList.get(i);
