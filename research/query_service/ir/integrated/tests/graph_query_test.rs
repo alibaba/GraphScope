@@ -61,8 +61,7 @@ mod test {
         let select_opr_bytes = pb::logical_plan::Operator::from(select_opr).encode_to_vec();
         let expand_opr_bytes = pb::logical_plan::Operator::from(expand_opr).encode_to_vec();
         let sink_opr_bytes = pb::logical_plan::Operator::from(pb::Sink {
-            tags: vec![],
-            sink_current: true,
+            tags: vec![common_pb::NameOrIdKey { key: None }],
             id_name_mappings: vec![],
         })
         .encode_to_vec();
