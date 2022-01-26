@@ -375,7 +375,11 @@ impl NodeMeta {
     }
 }
 
-/// To record any tag-related data while processing the logical plan
+/// To record any metadata while processing the logical plan, including:
+/// * The tables/columns required by a given node
+/// * The tag-node mutual mappings
+/// * The tag-id mappings, if preprocessing tag to id
+/// * TODO etc.
 #[derive(Default, Clone, Debug)]
 pub struct PlanMeta {
     /// To record all possible tables/columns of a node, which is typically referred from a tag

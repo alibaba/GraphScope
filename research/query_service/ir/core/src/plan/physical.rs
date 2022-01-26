@@ -20,7 +20,6 @@
 //!
 
 use ir_common::generated::algebra as pb;
-use ir_common::generated::algebra::join::JoinKind;
 use ir_common::generated::common as common_pb;
 use pegasus_client::builder::*;
 use pegasus_server::pb as server_pb;
@@ -59,38 +58,21 @@ fn simple_add_job_builder<M: Message>(
     builder: &mut JobBuilder, ir_opr: &M, opr: SimpleOpr,
 ) -> IrResult<()> {
     let bytes = ir_opr.encode_to_vec();
-    match opr {
-        SimpleOpr::Source => {
-            builder.add_source(bytes);
-        }
-        SimpleOpr::Map => {
-            builder.map(bytes);
-        }
-        SimpleOpr::FilterMap => {
-            builder.filter_map(bytes);
-        }
-        SimpleOpr::Flatmap => {
-            builder.flat_map(bytes);
-        }
-        SimpleOpr::Filter => {
-            builder.filter(bytes);
-        }
-        SimpleOpr::SortBy => {
-            builder.sort_by(bytes);
-        }
-        SimpleOpr::Dedup => {
-            builder.dedup(bytes);
-        }
-        SimpleOpr::GroupBy => {
-            builder.group_by(pegasus_server::pb::AccumKind::Custom, bytes);
-        }
-        SimpleOpr::Fold => {
-            builder.fold_custom(pegasus_server::pb::AccumKind::Custom, bytes);
-        }
+    let _ = match opr {
+        SimpleOpr::Source => builder.add_source(bytes),
+        SimpleOpr::Map => builder.map(bytes),
+        SimpleOpr::FilterMap => builder.filter_map(bytes),
+        SimpleOpr::Flatmap => builder.flat_map(bytes),
+        SimpleOpr::Filter => builder.filter(bytes),
+        SimpleOpr::SortBy => builder.sort_by(bytes),
+        SimpleOpr::Dedup => builder.dedup(bytes),
+        SimpleOpr::GroupBy => builder.group_by(pegasus_server::pb::AccumKind::Custom, bytes),
+        SimpleOpr::Fold => builder.fold_custom(pegasus_server::pb::AccumKind::Custom, bytes),
         SimpleOpr::Sink => {
             builder.sink(bytes);
+            builder
         }
-    }
+    };
     Ok(())
 }
 
@@ -363,6 +345,7 @@ impl AsPhysical for pb::Dedup {
         simple_add_job_builder(builder, &pb::logical_plan::Operator::from(self.clone()), SimpleOpr::Dedup)
     }
 }
+
 impl AsPhysical for pb::GroupBy {
     fn add_job_builder(&self, builder: &mut JobBuilder, _plan_meta: &mut PlanMeta) -> IrResult<()> {
         let opr = pb::logical_plan::Operator::from(self.clone());
@@ -417,28 +400,37 @@ impl AsPhysical for NodeType {
 
 impl AsPhysical for LogicalPlan {
     fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
+        use pb::join::JoinKind;
         use pb::logical_plan::operator::Opr::*;
-        let mut prev_node_opt: Option<NodeType> = None;
+        let mut _prev_node_opt: Option<NodeType> = None;
         let mut curr_node_opt = self.root();
 
         while curr_node_opt.is_some() {
-            if plan_meta.is_partition() {
-                if let Some(prev) = &prev_node_opt {
-                    let prev_ref = prev.borrow();
-                    let node_ref = curr_node_opt.as_ref().unwrap().borrow();
-                    match (&prev_ref.opr.opr, &node_ref.opr.opr) {
-                        (Some(_), Some(Edge(edgexpd))) => {
-                            let key_pb = common_pb::NameOrIdKey { key: edgexpd.v_tag.clone() };
-                            builder.repartition(key_pb.encode_to_vec());
-                        }
-                        _ => {}
+            let curr_node = curr_node_opt.as_ref().unwrap();
+            if let Some(Apply(apply_opr)) = curr_node.borrow().opr.opr.as_ref() {
+                let mut sub_bldr = JobBuilder::default();
+                if let Some(subplan) = self.extract_subplan(curr_node.clone()) {
+                    let mut sub_meta = subplan.meta.clone();
+                    subplan.add_job_builder(&mut sub_bldr, &mut sub_meta)?;
+                    let plan = sub_bldr.take_plan();
+                    builder.apply_join(
+                        move |p| *p = plan.clone(),
+                        pb::logical_plan::Operator::from(apply_opr.clone()).encode_to_vec(),
+                    );
+                } else {
+                    return Err(IrError::MissingDataError);
+                }
+            } else {
+                if let Some(Edge(edgexpd)) = curr_node.borrow().opr.opr.as_ref() {
+                    let key_pb = common_pb::NameOrIdKey { key: edgexpd.v_tag.clone() };
+                    if plan_meta.is_partition() {
+                        builder.repartition(key_pb.encode_to_vec());
                     }
                 }
+                curr_node.add_job_builder(builder, plan_meta)?;
             }
 
-            let curr_node = curr_node_opt.as_ref().unwrap();
-            curr_node.add_job_builder(builder, plan_meta)?;
-            prev_node_opt = curr_node_opt.clone();
+            _prev_node_opt = curr_node_opt.clone();
 
             if curr_node.borrow().children.is_empty() {
                 break;
@@ -449,9 +441,9 @@ impl AsPhysical for LogicalPlan {
                 let (merge_node_opt, subplans) = self.get_branch_plans(curr_node.clone());
                 let mut plans: Vec<Plan> = vec![];
                 for subplan in subplans {
-                    let mut bldr = JobBuilder::new(builder.conf.clone());
-                    subplan.add_job_builder(&mut bldr, plan_meta)?;
-                    plans.push(bldr.take_plan());
+                    let mut sub_bldr = JobBuilder::new(builder.conf.clone());
+                    subplan.add_job_builder(&mut sub_bldr, plan_meta)?;
+                    plans.push(sub_bldr.take_plan());
                 }
 
                 if let Some(merge_node) = merge_node_opt.clone() {
@@ -486,6 +478,7 @@ impl AsPhysical for LogicalPlan {
 
                             builder.join(pegasus_join_kind, left_plan, right_plan, join_bytes);
                         }
+                        None => return Err(IrError::MissingDataError),
                         _ => {
                             return Err(IrError::Unsupported(
                                 "operators other than `Union` and `Join`".to_string(),
@@ -498,7 +491,7 @@ impl AsPhysical for LogicalPlan {
                 if let Some(curr_node_clone) = curr_node_opt.clone() {
                     if curr_node_clone.borrow().children.len() <= 1 {
                         let next_id_opt = curr_node_clone.borrow().get_first_child();
-                        prev_node_opt = curr_node_opt.clone();
+                        _prev_node_opt = curr_node_opt.clone();
                         // the current node has been processed in this round, should skip to the next node
                         curr_node_opt = next_id_opt.and_then(|id| self.get_node(id));
                     }
@@ -577,7 +570,7 @@ mod test {
     }
 
     #[test]
-    fn test_post_process_edgexpd() {
+    fn post_process_edgexpd() {
         // g.V().outE()
         let mut plan = LogicalPlan::default();
         plan.append_operator_as_node(build_scan(vec![]).into(), vec![])
@@ -614,7 +607,7 @@ mod test {
     }
 
     #[test]
-    fn test_post_process_edgexpd_columns_no_auxilia() {
+    fn post_process_edgexpd_columns_no_auxilia() {
         // g.V().outE().has("creationDate", 20220101)
         let mut plan = LogicalPlan::default();
         plan.append_operator_as_node(build_scan(vec![]).into(), vec![])
@@ -645,7 +638,7 @@ mod test {
     }
 
     #[test]
-    fn test_post_process_edgexpd_columns_auxilia_shuffle() {
+    fn post_process_edgexpd_columns_auxilia_shuffle() {
         // g.V().out().has("birthday", 20220101)
         let mut plan = LogicalPlan::default();
         plan.append_operator_as_node(build_scan(vec![]).into(), vec![])
@@ -717,7 +710,7 @@ mod test {
     }
 
     #[test]
-    fn test_post_process_edgexpd_tag_auxilia_shuffle() {
+    fn post_process_edgexpd_tag_auxilia_shuffle() {
         // g.V().out().as('a').select('a').by(valueMap("name", "id", "age")
         let mut plan = LogicalPlan::default();
         plan.append_operator_as_node(build_scan(vec![]).into(), vec![])
@@ -789,7 +782,7 @@ mod test {
     }
 
     #[test]
-    fn test_post_process_edgexpd_tag_no_auxilia() {
+    fn post_process_edgexpd_tag_no_auxilia() {
         // g.V().out().as('a').select('a')
         let mut plan = LogicalPlan::default();
         plan.append_operator_as_node(build_scan(vec![]).into(), vec![])
@@ -818,7 +811,7 @@ mod test {
     }
 
     #[test]
-    fn test_post_process_scan() {
+    fn post_process_scan() {
         let mut plan = LogicalPlan::default();
         // g.V().hasLabel("person").has("age", 27).valueMap("age", "name", "id")
         plan.append_operator_as_node(build_scan(vec![]).into(), vec![])
@@ -858,7 +851,7 @@ mod test {
     }
 
     #[test]
-    fn test_poc_plan() {
+    fn poc_plan_as_physical() {
         // g.V().hasLabel("person").has("id", 10).out("knows").limit(10)
         let source_opr = pb::logical_plan::Operator::from(pb::Scan {
             scan_opt: 0,
@@ -919,7 +912,7 @@ mod test {
     }
 
     #[test]
-    fn test_project() {
+    fn project_as_physical() {
         let source_opr = pb::logical_plan::Operator::from(pb::Scan {
             scan_opt: 0,
             alias: None,
@@ -961,7 +954,7 @@ mod test {
     }
 
     #[test]
-    fn test_path_expand() {
+    fn path_expand_as_physical() {
         let source_opr = pb::logical_plan::Operator::from(pb::Scan {
             scan_opt: 0,
             alias: None,
@@ -1044,7 +1037,7 @@ mod test {
     }
 
     #[test]
-    fn test_path_expand_exactly() {
+    fn path_expand_exactly_as_physical() {
         let source_opr = pb::logical_plan::Operator::from(pb::Scan {
             scan_opt: 0,
             alias: None,
@@ -1111,7 +1104,7 @@ mod test {
     }
 
     #[test]
-    fn test_orderby() {
+    fn orderby_as_physical() {
         let source_opr = pb::logical_plan::Operator::from(pb::Scan {
             scan_opt: 0,
             alias: None,
@@ -1156,7 +1149,107 @@ mod test {
     }
 
     #[test]
-    fn test_join_plan() {
+    fn apply_as_physical() {
+        let mut plan = LogicalPlan::default();
+        // g.V().as("v").where(out().as("o").has("lang", "java")).select("v").values("name")
+
+        // g.V("person")
+        let scan: pb::logical_plan::Operator = pb::Scan {
+            scan_opt: 0,
+            alias: Some("v".into()),
+            params: Some(pb::QueryParams {
+                table_names: vec![],
+                columns: vec!["name".into()],
+                limit: None,
+                predicate: None,
+                requirements: vec![],
+            }),
+            idx_predicate: None,
+        }
+        .into();
+
+        let opr_id = plan
+            .append_operator_as_node(scan.clone(), vec![])
+            .unwrap();
+
+        // .out().as("o")
+        let mut expand = pb::EdgeExpand {
+            v_tag: None,
+            direction: 0,
+            params: Some(pb::QueryParams {
+                table_names: vec![],
+                columns: vec![],
+                limit: None,
+                predicate: None,
+                requirements: vec![],
+            }),
+            is_edge: false,
+            alias: Some("o".into()),
+        };
+
+        let root_id = plan
+            .append_operator_as_node(expand.clone().into(), vec![])
+            .unwrap();
+
+        // .has("lang", "Java")
+        let select: pb::logical_plan::Operator =
+            pb::Select { predicate: str_to_expr_pb("@.lang == \"Java\"".to_string()).ok() }.into();
+        plan.append_operator_as_node(select.clone(), vec![root_id])
+            .unwrap();
+
+        let apply: pb::logical_plan::Operator =
+            pb::Apply { join_kind: 4, tags: vec![], subtask: root_id as i32, alias: None }.into();
+        let opr_id = plan
+            .append_operator_as_node(apply.clone(), vec![opr_id])
+            .unwrap();
+
+        let project: pb::logical_plan::Operator = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: str_to_expr_pb("@v.name".to_string()).ok(),
+                alias: None,
+            }],
+            is_append: true,
+        }
+        .into();
+        plan.append_operator_as_node(project.clone(), vec![opr_id])
+            .unwrap();
+
+        let mut builder = JobBuilder::default();
+        let mut meta = plan.meta.clone();
+        plan.add_job_builder(&mut builder, &mut meta)
+            .unwrap();
+
+        let mut expected_builder = JobBuilder::default();
+        expected_builder.add_source(scan.encode_to_vec());
+        expand.alias = None;
+        expected_builder.apply_join(
+            |plan| {
+                plan.flat_map(pb::logical_plan::Operator::from(expand.clone()).encode_to_vec())
+                    .filter_map(
+                        pb::logical_plan::Operator::from(pb::Auxilia {
+                            params: Some(pb::QueryParams {
+                                table_names: vec![],
+                                columns: vec!["lang".into()],
+                                limit: None,
+                                predicate: None,
+                                requirements: vec![],
+                            }),
+                            alias: Some("o".into()),
+                        })
+                        .encode_to_vec(),
+                    )
+                    .filter(select.encode_to_vec());
+            },
+            apply.encode_to_vec(),
+        );
+        expected_builder.map(project.encode_to_vec());
+        expected_builder.sink(vec![]);
+
+        assert_eq!(expected_builder, builder);
+    }
+
+    #[test]
+    fn join_plan_as_physical() {
         let source_opr = pb::logical_plan::Operator::from(pb::Scan {
             scan_opt: 0,
             alias: None,
