@@ -195,7 +195,7 @@ mod test {
         let expand_opr_bytes = pb::logical_plan::Operator::from(expand_opr).encode_to_vec();
         let fold_opr_bytes = pb::logical_plan::Operator::from(fold_opr).encode_to_vec();
         let sink_opr_bytes = pb::logical_plan::Operator::from(pb::Sink {
-            tags: vec![common_pb::NameOrIdKey { key: Some(alias) }],
+            tags: vec![common_pb::NameOrIdKey { key: None }, common_pb::NameOrIdKey { key: Some(alias) }],
             id_name_mappings: vec![],
         })
         .encode_to_vec();
