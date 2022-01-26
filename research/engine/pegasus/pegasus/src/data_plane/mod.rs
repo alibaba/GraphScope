@@ -328,7 +328,7 @@ mod test {
         loop {
             match pull.next() {
                 Ok(Some(_item)) => {
-                    // assert_eq!(item as usize % workers, ch_id.worker as usize);
+                    assert_eq!(_item as usize % workers, index as usize);
                     count += 1;
                 }
                 Ok(None) => {
@@ -440,5 +440,209 @@ mod test {
             .unwrap();
         s1.join().unwrap();
         s2.join().unwrap();
+    }
+
+    #[test]
+    fn multi_channels_test() {
+        pegasus_common::logs::init_log();
+        let mut servers = vec![];
+        servers.push(Server { id: 2, addr: "127.0.0.1:2335".parse().unwrap() });
+        servers.push(Server { id: 3, addr: "127.0.0.1:2336".parse().unwrap() });
+        let server_size = 2;
+        let mut server_list = Vec::with_capacity(server_size);
+        for _ in 0..server_size {
+            server_list.push(servers.clone());
+        }
+        // build two channels for each worker
+        let mut threads = vec![];
+        let mut index = 0;
+        let mut start_index = 2;
+        for server in server_list {
+            threads.push(std::thread::spawn(move || {
+                pegasus_network::start_up(
+                    index + start_index,
+                    ConnectionParams::nonblocking(),
+                    server[index as usize].addr,
+                    server,
+                )
+                .unwrap();
+                while !pegasus_network::check_ipc_ready(index + start_index, &vec![2, 3]) {
+                    std::thread::sleep(std::time::Duration::from_secs(1));
+                }
+                let worker_id = index as usize;
+                let local_workers = 1;
+                let server_conf = ServerConf::Partial(vec![2, 3]);
+                let mut ch_resources_first = build_channels::<Vec<u64>>(
+                    ChannelId::new(1, 0),
+                    local_workers,
+                    index as u32,
+                    &server_conf,
+                )
+                .unwrap();
+                let mut ch_resources_second = build_channels::<Vec<u64>>(
+                    ChannelId::new(1, 1),
+                    local_workers,
+                    index as u32,
+                    &server_conf,
+                )
+                .unwrap();
+                let mut channels = vec![];
+                channels.push(ch_resources_first.pop_front().unwrap());
+                channels.push(ch_resources_second.pop_front().unwrap());
+                let mut channel_threads = vec![];
+                let mut channel_index = 0;
+                for ch in channels {
+                    channel_threads.push(std::thread::spawn(move || {
+                        let (mut pushes, mut pull) = ch.take();
+                        let mut removed_push = pushes.swap_remove(worker_id);
+                        removed_push.close().unwrap();
+                        let message_size = 1024;
+                        for i in 0..pushes.len() {
+                            if i != worker_id {
+                                for j in 0..message_size {
+                                    let mut buffer = vec![];
+                                    buffer.push((channel_index << 32) + j as u64);
+                                    pushes[i].push(buffer).unwrap();
+                                }
+                            }
+                            pushes[i].close().unwrap();
+                        }
+                        let mut count = 0;
+                        loop {
+                            match pull.next() {
+                                Ok(Some(mut _item)) => {
+                                    for i in _item {
+                                        let recv_channel_index = i >> 32;
+                                        let message_index = i ^ (recv_channel_index << 32);
+                                        assert_eq!(recv_channel_index, channel_index);
+                                        assert_eq!(count, message_index);
+                                    }
+                                    count += 1;
+                                }
+                                Ok(None) => std::thread::sleep(std::time::Duration::from_millis(50)),
+                                Err(e) => {
+                                    if e.is_source_exhaust() {
+                                        info!(
+                                            "worker[{}] has received {}, expect {}",
+                                            worker_id, count, message_size
+                                        );
+                                        break;
+                                    } else {
+                                        panic!("get error {}", e);
+                                    }
+                                }
+                            }
+                        }
+                    }));
+                    channel_index += 1;
+                }
+                for g in channel_threads {
+                    g.join().unwrap();
+                }
+                pegasus_network::shutdown(index + start_index);
+            }));
+            index += 1;
+        }
+        for g in threads {
+            g.join().unwrap();
+        }
+    }
+
+    #[test]
+    fn large_buffer_test() {
+        pegasus_common::logs::init_log();
+        let mut servers = vec![];
+        servers.push(Server { id: 4, addr: "127.0.0.1:2337".parse().unwrap() });
+        servers.push(Server { id: 5, addr: "127.0.0.1:2338".parse().unwrap() });
+        let server_size = 2;
+        let mut server_list = Vec::with_capacity(server_size);
+        for _ in 0..server_size {
+            server_list.push(servers.clone());
+        }
+        // build two channels for each worker
+        let mut threads = vec![];
+        let mut index = 0;
+        let mut start_index = 4;
+        for server in server_list {
+            threads.push(std::thread::spawn(move || {
+                pegasus_network::start_up(
+                    index + start_index,
+                    ConnectionParams::nonblocking(),
+                    server[index as usize].addr,
+                    server,
+                )
+                .unwrap();
+                while !pegasus_network::check_ipc_ready(index + start_index, &vec![4, 5]) {
+                    std::thread::sleep(std::time::Duration::from_secs(1));
+                }
+                let local_workers = 2;
+                let server_conf = ServerConf::Partial(vec![4, 5]);
+                let mut ch_resources = build_channels::<Vec<u64>>(
+                    ChannelId::new(2, 0),
+                    local_workers,
+                    index as u32,
+                    &server_conf,
+                )
+                .unwrap();
+                let mut channel_threads = vec![];
+                let mut local_index = 0;
+                while let Some(ch) = ch_resources.pop_front() {
+                    channel_threads.push(std::thread::spawn(move || {
+                        let worker_id = index * local_workers as u64 + local_index;
+                        let (mut pushes, mut pull) = ch.take();
+                        let mut removed_push = pushes.swap_remove(worker_id as usize);
+                        removed_push.close().unwrap();
+                        let message_count = pushes.len() * 64;
+                        let message_size = 65536;
+                        for i in 0..message_count {
+                            let offset = i % pushes.len();
+                            let mut message = vec![];
+                            for j in 0..message_size {
+                                message.push((offset << 32) as u64 + j);
+                            }
+                            pushes[offset].push(message).unwrap();
+                        }
+                        for mut push in pushes {
+                            push.close().unwrap();
+                        }
+                        let mut count = 0;
+                        loop {
+                            match pull.next() {
+                                Ok(Some(mut _item)) => {
+                                    count += 1;
+                                }
+                                Ok(None) => {
+                                    info!(
+                                        "worker[{}] has received {}, expect {}",
+                                        worker_id, count, message_count
+                                    );
+                                    std::thread::sleep(std::time::Duration::from_millis(50))
+                                }
+                                Err(e) => {
+                                    if e.is_source_exhaust() {
+                                        info!(
+                                            "worker[{}] has received {}, expect {}",
+                                            worker_id, count, message_count
+                                        );
+                                        break;
+                                    } else {
+                                        panic!("get error {}", e);
+                                    }
+                                }
+                            }
+                        }
+                    }));
+                    local_index += 1;
+                }
+                for g in channel_threads {
+                    g.join().unwrap();
+                }
+                pegasus_network::shutdown(index + start_index);
+            }));
+            index += 1;
+        }
+        for g in threads {
+            g.join().unwrap();
+        }
     }
 }
