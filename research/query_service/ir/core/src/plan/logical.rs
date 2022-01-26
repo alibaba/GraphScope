@@ -1961,7 +1961,10 @@ mod test {
         plan.append_operator_as_node(project.into(), vec![2])
             .unwrap();
 
-        let sink = pb::Sink { tags: vec!["name".into()], sink_current: false, id_name_mappings: vec![] };
+        let sink = pb::Sink {
+            tags: vec![common_pb::NameOrIdKey { key: Some("name".into()) }],
+            id_name_mappings: vec![],
+        };
         plan.append_operator_as_node(sink.into(), vec![3])
             .unwrap();
 
