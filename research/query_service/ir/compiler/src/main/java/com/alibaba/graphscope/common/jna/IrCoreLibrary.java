@@ -112,7 +112,7 @@ public interface IrCoreLibrary extends Library {
 
     ResultCode appendDedupOperator(Pointer plan, Pointer dedup, int parent, IntByReference oprIdx);
 
-    Pointer initSinkOperator(boolean isCurrent);
+    Pointer initSinkOperator();
 
     ResultCode addSinkColumn(Pointer sink, FfiNameOrId.ByValue column);
 

@@ -23,16 +23,10 @@ import java.util.Collections;
 import java.util.List;
 
 public class SinkArg {
-    private boolean isCurrent;
     private List<FfiNameOrId.ByValue> columnNames;
 
-    public SinkArg(boolean isCurrent) {
-        this.isCurrent = isCurrent;
+    public SinkArg() {
         columnNames = new ArrayList<>();
-    }
-
-    public boolean isCurrent() {
-        return isCurrent;
     }
 
     public List<FfiNameOrId.ByValue> getColumnNames() {

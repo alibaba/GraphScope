@@ -199,6 +199,24 @@ impl TryFrom<FfiNameOrId> for Option<common_pb::NameOrId> {
     }
 }
 
+impl TryFrom<FfiNameOrId> for common_pb::NameOrIdKey {
+    type Error = ResultCode;
+
+    fn try_from(ffi: FfiNameOrId) -> FfiResult<Self> {
+        match &ffi.opt {
+            FfiNameIdOpt::None => Ok(common_pb::NameOrIdKey { key: None }),
+            FfiNameIdOpt::Name => Ok(common_pb::NameOrIdKey {
+                key: Some(common_pb::NameOrId {
+                    item: Some(common_pb::name_or_id::Item::Name(cstr_to_string(ffi.name)?)),
+                }),
+            }),
+            FfiNameIdOpt::Id => Ok(common_pb::NameOrIdKey {
+                key: Some(common_pb::NameOrId { item: Some(common_pb::name_or_id::Item::Id(ffi.name_id)) }),
+            }),
+        }
+    }
+}
+
 #[repr(i32)]
 #[derive(Copy, Clone)]
 pub enum FfiPropertyOpt {
@@ -1474,8 +1492,8 @@ mod sink {
 
     /// To initialize an Sink operator
     #[no_mangle]
-    pub extern "C" fn init_sink_operator(sink_current: bool) -> *const c_void {
-        let sink_opr = Box::new(pb::Sink { tags: vec![], sink_current, id_name_mappings: vec![] });
+    pub extern "C" fn init_sink_operator() -> *const c_void {
+        let sink_opr = Box::new(pb::Sink { tags: vec![], id_name_mappings: vec![] });
         Box::into_raw(sink_opr) as *const c_void
     }
 
@@ -1483,13 +1501,11 @@ mod sink {
     #[no_mangle]
     pub extern "C" fn add_sink_column(ptr_sink: *const c_void, ffi_tag: FfiNameOrId) -> ResultCode {
         let mut return_code = ResultCode::Success;
-        let tag_pb: FfiResult<Option<common_pb::NameOrId>> = ffi_tag.try_into();
+        let tag_pb: FfiResult<common_pb::NameOrIdKey> = ffi_tag.try_into();
         if tag_pb.is_ok() {
-            if let Some(tag) = tag_pb.unwrap() {
-                let mut sink = unsafe { Box::from_raw(ptr_sink as *mut pb::Sink) };
-                sink.tags.push(tag);
-                std::mem::forget(sink);
-            }
+            let mut sink = unsafe { Box::from_raw(ptr_sink as *mut pb::Sink) };
+            sink.tags.push(tag_pb.unwrap());
+            std::mem::forget(sink);
         } else {
             return_code = tag_pb.err().unwrap();
         }

@@ -32,19 +32,10 @@ use crate::process::record::{CommonObject, Entry, Record, RecordElement};
 #[derive(Debug)]
 pub struct RecordSinkEncoder {
     /// the given column tags to sink;
-    sink_keys: Vec<NameOrId>,
-    /// flag of sink head
-    is_output_head: bool,
+    sink_keys: Vec<Option<NameOrId>>,
     /// A map from id to name; including type of Entity (Vertex in Graph Database),
     /// Relation (Edge in Graph Database) and Column (Property in Graph Database)
     schema_map: Option<HashMap<(MetaType, i32), String>>,
-}
-
-// sink head by default
-impl Default for RecordSinkEncoder {
-    fn default() -> Self {
-        RecordSinkEncoder { sink_keys: vec![], is_output_head: true, schema_map: None }
-    }
 }
 
 impl RecordSinkEncoder {
@@ -184,17 +175,13 @@ impl RecordSinkEncoder {
 impl MapFunction<Record, result_pb::Results> for RecordSinkEncoder {
     fn exec(&self, input: Record) -> FnResult<result_pb::Results> {
         let mut sink_columns = Vec::with_capacity(self.sink_keys.len());
-        if self.is_output_head {
-            let entry = input.get(None);
-            let entry_pb = entry.map(|entry| self.entry_to_pb(entry.deref()));
-            let column_pb = result_pb::Column { name_or_id: None, entry: entry_pb };
-            sink_columns.push(column_pb);
-        }
         for sink_key in self.sink_keys.iter() {
-            let entry = input.get(Some(sink_key));
+            let entry = input.get(sink_key.as_ref());
             let entry_pb = entry.map(|entry| self.entry_to_pb(entry.deref()));
             let column_pb = result_pb::Column {
-                name_or_id: Some(common_pb::NameOrId::from(sink_key.clone())),
+                name_or_id: sink_key
+                    .clone()
+                    .map(|sink_key| common_pb::NameOrId::from(sink_key.clone())),
                 entry: entry_pb,
             };
             sink_columns.push(column_pb);
@@ -208,12 +195,15 @@ impl MapFunction<Record, result_pb::Results> for RecordSinkEncoder {
 
 impl SinkFunctionGen for algebra_pb::Sink {
     fn gen_sink(self) -> FnGenResult<Box<dyn MapFunction<Record, result_pb::Results>>> {
-        let sink_keys = self
-            .tags
-            .into_iter()
-            .map(|tag| tag.try_into())
-            .collect::<Result<_, _>>()?;
-        let is_output_head = self.sink_current;
+        let mut sink_keys = Vec::with_capacity(self.tags.len());
+        for sink_key_pb in self.tags.into_iter() {
+            let sink_key = sink_key_pb
+                .key
+                .map(|tag| tag.try_into())
+                .transpose()?;
+            sink_keys.push(sink_key);
+        }
+
         let mut schema_map = HashMap::new();
         for id_name_mappings_pb in self.id_name_mappings {
             let meta_type = unsafe { ::std::mem::transmute(id_name_mappings_pb.meta_type) };
@@ -221,7 +211,6 @@ impl SinkFunctionGen for algebra_pb::Sink {
         }
         let record_sinker = RecordSinkEncoder {
             sink_keys,
-            is_output_head,
             schema_map: if schema_map.is_empty() { None } else { Some(schema_map) },
         };
         debug!("Runtime sink operator: {:?}", record_sinker);
@@ -268,8 +257,7 @@ mod tests {
         let v2 = Vertex::new(2, Some(2.into()), DynDetails::new(DefaultDetails::default()));
 
         let sink_opr_pb = pb::Sink {
-            tags: vec![],
-            sink_current: true,
+            tags: vec![common_pb::NameOrIdKey { key: None }],
             id_name_mappings: vec![
                 pb::sink::IdNameMapping {
                     id: 1,
@@ -336,8 +324,7 @@ mod tests {
         e2.set_dst_label(Some(11.into()));
 
         let sink_opr_pb = pb::Sink {
-            tags: vec![],
-            sink_current: true,
+            tags: vec![common_pb::NameOrIdKey { key: None }],
             id_name_mappings: vec![
                 pb::sink::IdNameMapping {
                     id: 11,

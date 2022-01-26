@@ -296,12 +296,11 @@ public class IrPlan implements Closeable {
                     throw new InterOpIllegalArgException(baseOp.getClass(), "sinkArg", "not present");
                 }
                 SinkArg sinkArg = (SinkArg) argOpt.get().applyArg();
-                boolean isCurrent = sinkArg.isCurrent();
                 List<FfiNameOrId.ByValue> columns = sinkArg.getColumnNames();
-                if (!isCurrent && columns.isEmpty()) {
-                    throw new InterOpIllegalArgException(baseOp.getClass(), "selected columns", "is empty if not current");
+                if (columns.isEmpty()) {
+                    throw new InterOpIllegalArgException(baseOp.getClass(), "selected columns", "is empty");
                 }
-                Pointer ptrSink = irCoreLib.initSinkOperator(isCurrent);
+                Pointer ptrSink = irCoreLib.initSinkOperator();
                 columns.forEach(column -> {
                     ResultCode resultCode = irCoreLib.addSinkColumn(ptrSink, column);
                     if (resultCode != ResultCode.Success) {

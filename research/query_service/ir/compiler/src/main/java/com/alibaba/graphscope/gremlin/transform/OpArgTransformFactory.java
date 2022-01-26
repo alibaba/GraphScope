@@ -113,6 +113,11 @@ public class OpArgTransformFactory {
             String formatAlias = formatProjectAlias(expression);
             projectWithAliasList.add(Pair.with(expression, ArgUtils.asFfiAlias(formatAlias, false)));
         });
+        // optimize: set default alias of the single expression to head
+        if (projectWithAliasList.size() == 1) {
+            Pair<String, FfiAlias.ByValue> singleExprWithAlias = projectWithAliasList.get(0);
+            projectWithAliasList.set(0, singleExprWithAlias.setAt1(ArgUtils.asNoneAlias()));
+        }
         return projectWithAliasList;
     };
 
