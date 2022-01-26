@@ -493,7 +493,9 @@ impl TryFrom<result_pb::Element> for RecordElement {
                 result_pb::element::Inner::Edge(e) => {
                     Ok(RecordElement::OnGraph(GraphObject::E(e.try_into()?)))
                 }
-                // TODO(bingqing): may need add a path type in result pb
+                result_pb::element::Inner::GraphPath(p) => {
+                    Ok(RecordElement::OnGraph(GraphObject::P(p.try_into()?)))
+                }
                 result_pb::element::Inner::Object(o) => {
                     Ok(RecordElement::OffGraph(CommonObject::Prop(o.try_into()?)))
                 }
