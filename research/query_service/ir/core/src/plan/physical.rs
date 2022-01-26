@@ -19,7 +19,6 @@
 //! protobuf structure.
 //!
 
-use ir_common::expr_parse::str_to_expr_pb;
 use ir_common::generated::algebra as pb;
 use ir_common::generated::common as common_pb;
 use pegasus_client::builder::*;
@@ -412,27 +411,6 @@ impl AsPhysical for LogicalPlan {
                 let mut sub_bldr = JobBuilder::default();
                 if let Some(subplan) = self.extract_subplan(curr_node.clone()) {
                     let mut sub_meta = subplan.meta.clone();
-                    let mut project = pb::Project { mappings: vec![], is_append: false };
-                    if apply_opr.tags.is_empty() {
-                        project.mappings.push(pb::project::ExprAlias {
-                            expr: Some(str_to_expr_pb("@".to_string())?),
-                            alias: None,
-                        })
-                    } else {
-                        for tag in &apply_opr.tags {
-                            let expr_str = match &tag.item {
-                                Some(common_pb::name_or_id::Item::Name(name)) => format!("@{:?}", name),
-                                Some(common_pb::name_or_id::Item::Id(id)) => format!("@{:?}", id),
-                                None => "@".to_string(),
-                            };
-                            project.mappings.push(pb::project::ExprAlias {
-                                expr: Some(str_to_expr_pb(expr_str)?),
-                                alias: Some(tag.clone()),
-                            })
-                        }
-                    }
-                    pb::logical_plan::Operator::from(project)
-                        .add_job_builder(&mut sub_bldr, &mut sub_meta)?;
                     subplan.add_job_builder(&mut sub_bldr, &mut sub_meta)?;
                     let plan = sub_bldr.take_plan();
                     builder.apply_join(
@@ -1246,31 +1224,21 @@ mod test {
         expand.alias = None;
         expected_builder.apply_join(
             |plan| {
-                plan.map(
-                    pb::logical_plan::Operator::from(pb::Project {
-                        mappings: vec![pb::project::ExprAlias {
-                            expr: str_to_expr_pb("@".to_string()).ok(),
-                            alias: None,
-                        }],
-                        is_append: false,
-                    })
-                    .encode_to_vec(),
-                )
-                .flat_map(pb::logical_plan::Operator::from(expand.clone()).encode_to_vec())
-                .filter_map(
-                    pb::logical_plan::Operator::from(pb::Auxilia {
-                        params: Some(pb::QueryParams {
-                            table_names: vec![],
-                            columns: vec!["lang".into()],
-                            limit: None,
-                            predicate: None,
-                            requirements: vec![],
-                        }),
-                        alias: Some("o".into()),
-                    })
-                    .encode_to_vec(),
-                )
-                .filter(select.encode_to_vec());
+                plan.flat_map(pb::logical_plan::Operator::from(expand.clone()).encode_to_vec())
+                    .filter_map(
+                        pb::logical_plan::Operator::from(pb::Auxilia {
+                            params: Some(pb::QueryParams {
+                                table_names: vec![],
+                                columns: vec!["lang".into()],
+                                limit: None,
+                                predicate: None,
+                                requirements: vec![],
+                            }),
+                            alias: Some("o".into()),
+                        })
+                        .encode_to_vec(),
+                    )
+                    .filter(select.encode_to_vec());
             },
             apply.encode_to_vec(),
         );
