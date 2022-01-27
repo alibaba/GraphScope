@@ -68,6 +68,7 @@ mod test {
         };
 
         let source_opr_bytes = pb::logical_plan::Operator::from(source_opr).encode_to_vec();
+        let shuffle_opr_bytes = common_pb::NameOrIdKey { key: None }.encode_to_vec();
         let apply_opr_bytes = pb::logical_plan::Operator::from(apply_opr).encode_to_vec();
         let expand_opr_bytes = pb::logical_plan::Operator::from(expand_opr).encode_to_vec();
         let sink_opr_bytes = pb::logical_plan::Operator::from(pb::Sink {
@@ -80,6 +81,7 @@ mod test {
         job_builder.add_source(source_opr_bytes);
         job_builder.apply_join(
             move |plan| {
+                plan.repartition(shuffle_opr_bytes.clone());
                 plan.flat_map(expand_opr_bytes.clone());
             },
             apply_opr_bytes,
@@ -89,13 +91,11 @@ mod test {
         job_builder.build().unwrap()
     }
 
-    // g.V().where(out())
-    #[test]
-    fn apply_semi_join_test() {
+    fn apply_semi_join(worker_num: u32) {
         initialize();
         // join_kind: SemiJoin
         let request = init_apply_request(4);
-        let mut results = submit_query(request, 1);
+        let mut results = submit_query(request, worker_num);
         let mut result_collection = vec![];
         let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
         let v4: DefaultId = LDBCVertexParser::to_global_id(4, 0);
@@ -118,13 +118,23 @@ mod test {
         assert_eq!(result_collection, expected_result_ids)
     }
 
-    // g.V().where(not(out()))
+    // g.V().where(out())
     #[test]
-    fn apply_anti_join_test() {
+    fn apply_semi_join_test() {
+        apply_semi_join(1)
+    }
+
+    // g.V().where(out())
+    #[test]
+    fn apply_semi_join_w2_test() {
+        apply_semi_join(2)
+    }
+
+    fn apply_anti_join(worker_num: u32) {
         initialize();
         // join_kind: AntiJoin
         let request = init_apply_request(5);
-        let mut results = submit_query(request, 1);
+        let mut results = submit_query(request, worker_num);
         let mut result_collection = vec![];
         let v2: DefaultId = LDBCVertexParser::to_global_id(2, 0);
         let expected_result_ids = vec![v2];
@@ -143,6 +153,18 @@ mod test {
         }
         result_collection.sort();
         assert_eq!(result_collection, expected_result_ids)
+    }
+
+    // g.V().where(not(out()))
+    #[test]
+    fn apply_anti_join_test() {
+        apply_anti_join(1)
+    }
+
+    // g.V().where(not(out()))
+    #[test]
+    fn apply_anti_join_w2_test() {
+        apply_anti_join(2)
     }
 
     // apply with the result of subtask is a single value (count())
@@ -191,6 +213,7 @@ mod test {
         };
 
         let source_opr_bytes = pb::logical_plan::Operator::from(source_opr).encode_to_vec();
+        let shuffle_opr_bytes = common_pb::NameOrIdKey { key: None }.encode_to_vec();
         let apply_opr_bytes = pb::logical_plan::Operator::from(apply_opr).encode_to_vec();
         let expand_opr_bytes = pb::logical_plan::Operator::from(expand_opr).encode_to_vec();
         let fold_opr_bytes = pb::logical_plan::Operator::from(fold_opr).encode_to_vec();
@@ -204,6 +227,7 @@ mod test {
         job_builder.add_source(source_opr_bytes);
         job_builder.apply_join(
             move |plan| {
+                plan.repartition(shuffle_opr_bytes.clone());
                 plan.flat_map(expand_opr_bytes.clone())
                     .fold_custom(server_pb::AccumKind::Cnt, fold_opr_bytes.clone());
             },
@@ -214,13 +238,11 @@ mod test {
         job_builder.build().unwrap()
     }
 
-    // g.V().apply(out().count(), inner_join)
-    #[test]
-    fn apply_inner_join_test() {
+    fn apply_inner_join(worker_num: u32) {
         initialize();
         // join_kind: InnerJoin
         let request = init_apply_count_request(0, "a".into());
-        let mut results = submit_query(request, 1);
+        let mut results = submit_query(request, worker_num);
         let mut result_collection = vec![];
         let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
         let v2: DefaultId = LDBCVertexParser::to_global_id(2, 0);
@@ -259,13 +281,23 @@ mod test {
         assert_eq!(result_collection, expected_results)
     }
 
-    // g.V().apply(out().count(), left_outer_join)
+    // g.V().apply(out().count(), inner_join)
     #[test]
-    fn apply_left_out_join_test() {
+    fn apply_inner_join_test() {
+        apply_inner_join(1)
+    }
+
+    // g.V().apply(out().count(), inner_join)
+    #[test]
+    fn apply_inner_join_w2_test() {
+        apply_inner_join(2)
+    }
+
+    fn apply_left_out_join(worker_num: u32) {
         initialize();
         // join_kind: LeftOuterJoin
         let request = init_apply_count_request(1, "a".into());
-        let mut results = submit_query(request, 1);
+        let mut results = submit_query(request, worker_num);
         let mut result_collection = vec![];
         let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
         let v2: DefaultId = LDBCVertexParser::to_global_id(2, 0);
@@ -303,5 +335,17 @@ mod test {
         expected_result_ids.sort_by(|v1, v2| v1.0.cmp(&v2.0));
         result_collection.sort_by(|v1, v2| v1.0.cmp(&v2.0));
         assert_eq!(result_collection, expected_result_ids)
+    }
+
+    // g.V().apply(out().count(), left_outer_join)
+    #[test]
+    fn apply_left_out_join_test() {
+        apply_left_out_join(1)
+    }
+
+    // g.V().apply(out().count(), left_outer_join)
+    #[test]
+    fn apply_left_out_join_w2_test() {
+        apply_left_out_join(2)
     }
 }
