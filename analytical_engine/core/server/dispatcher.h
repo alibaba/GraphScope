@@ -130,7 +130,7 @@ class Subscriber {
   virtual ~Subscriber() = default;
 
   virtual bl::result<std::shared_ptr<DispatchResult>> OnReceive(
-      const CommandDetail& cmd) = 0;
+      std::shared_ptr<CommandDetail> cmd) = 0;
 };
 
 /**
@@ -144,28 +144,30 @@ class Dispatcher {
 
   void Stop();
 
-  std::vector<DispatchResult> Dispatch(CommandDetail& cmd);
+  std::vector<DispatchResult> Dispatch(std::shared_ptr<CommandDetail> cmd);
 
   void Subscribe(std::shared_ptr<Subscriber> subscriber);
 
-  void SetCommand(const CommandDetail& cmd);
+  void SetCommand(std::shared_ptr<CommandDetail> cmd);
 
  private:
-  std::shared_ptr<DispatchResult> processCmd(const CommandDetail& cmd);
+  std::shared_ptr<DispatchResult> processCmd(
+      std::shared_ptr<CommandDetail> cmd);
 
   void publisherLoop();
 
   void subscriberLoop();
 
-  void publisherPreprocessCmd(CommandDetail& cmd);
+  void publisherPreprocessCmd(std::shared_ptr<CommandDetail> cmd);
 
-  void subscriberPreprocessCmd(rpc::OperationType type, CommandDetail& cmd);
+  void subscriberPreprocessCmd(rpc::OperationType type,
+                               std::shared_ptr<CommandDetail>& cmd);
 
  private:
   bool running_;
   grape::CommSpec comm_spec_;
   std::shared_ptr<Subscriber> subscriber_;
-  vineyard::BlockingQueue<CommandDetail> cmd_queue_;
+  vineyard::BlockingQueue<std::shared_ptr<CommandDetail>> cmd_queue_;
   vineyard::BlockingQueue<std::vector<DispatchResult>> result_queue_;
 };
 

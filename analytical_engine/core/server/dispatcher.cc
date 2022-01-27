@@ -47,7 +47,8 @@ void Dispatcher::Start() {
 
 void Dispatcher::Stop() { running_ = false; }
 
-std::vector<DispatchResult> Dispatcher::Dispatch(CommandDetail& cmd) {
+std::vector<DispatchResult> Dispatcher::Dispatch(
+    std::shared_ptr<CommandDetail> cmd) {
   cmd_queue_.Push(cmd);
   return result_queue_.Pop();
 }
@@ -56,13 +57,13 @@ void Dispatcher::Subscribe(std::shared_ptr<Subscriber> subscriber) {
   subscriber_ = std::move(subscriber);
 }
 
-void Dispatcher::SetCommand(const CommandDetail& cmd) {
+void Dispatcher::SetCommand(std::shared_ptr<CommandDetail> cmd) {
   processCmd(cmd);
   MPI_Barrier(comm_spec_.comm());
 }
 
 std::shared_ptr<DispatchResult> Dispatcher::processCmd(
-    const CommandDetail& cmd) {
+    std::shared_ptr<CommandDetail> cmd) {
   // handle all errors and get error message
   auto r = bl::try_handle_all(
       [&, this]() -> bl::result<std::shared_ptr<DispatchResult>> {
@@ -96,31 +97,31 @@ std::shared_ptr<DispatchResult> Dispatcher::processCmd(
   return r;
 }
 
-void Dispatcher::publisherPreprocessCmd(CommandDetail& cmd) {
-  if (cmd.type == rpc::CREATE_GRAPH || cmd.type == rpc::ADD_LABELS) {
+void Dispatcher::publisherPreprocessCmd(std::shared_ptr<CommandDetail> cmd) {
+  if (cmd->type == rpc::CREATE_GRAPH || cmd->type == rpc::ADD_LABELS) {
     // Distribute raw bytes if there are some data from pandas
-    auto params_vec = DistributeGraph(cmd.params, comm_spec_.worker_num());
+    auto params_vec = DistributeGraph(cmd->large_attr, comm_spec_.worker_num());
     CHECK_EQ(static_cast<int>(params_vec.size()), comm_spec_.worker_num());
     for (int i = 1; i < comm_spec_.worker_num(); ++i) {
       grape::InArchive ia;
-      cmd.params = params_vec[i];
-      ia << cmd;
+      cmd->large_attr = params_vec[i];
+      ia << *(cmd.get());
       grape::SendArchive(ia, i, MPI_COMM_WORLD);
     }
-    cmd.params = params_vec[0];
+    cmd->large_attr = params_vec[0];
   } else {
-    grape::BcastSend(cmd, MPI_COMM_WORLD);
+    grape::BcastSend(*(cmd.get()), MPI_COMM_WORLD);
   }
 }
 
 void Dispatcher::subscriberPreprocessCmd(rpc::OperationType type,
-                                         CommandDetail& cmd) {
+                                         std::shared_ptr<CommandDetail>& cmd) {
   if (type == rpc::CREATE_GRAPH || type == rpc::ADD_LABELS) {
     grape::OutArchive oa;
     grape::RecvArchive(oa, grape::kCoordinatorRank, MPI_COMM_WORLD);
-    oa >> cmd;
+    oa >> *(cmd.get());
   } else {
-    grape::BcastRecv(cmd, MPI_COMM_WORLD, grape::kCoordinatorRank);
+    grape::BcastRecv(*(cmd.get()), MPI_COMM_WORLD, grape::kCoordinatorRank);
   }
 }
 
@@ -128,7 +129,7 @@ void Dispatcher::publisherLoop() {
   CHECK_EQ(comm_spec_.worker_id(), grape::kCoordinatorRank);
   while (running_) {
     auto cmd = cmd_queue_.Pop();
-    grape::BcastSend(cmd.type, MPI_COMM_WORLD);
+    grape::BcastSend(cmd->type, MPI_COMM_WORLD);
     publisherPreprocessCmd(cmd);
     // process local event
     auto r = processCmd(cmd);
@@ -146,7 +147,7 @@ void Dispatcher::subscriberLoop() {
   while (running_) {
     rpc::OperationType type;
     grape::BcastRecv(type, MPI_COMM_WORLD, grape::kCoordinatorRank);
-    CommandDetail cmd;
+    std::shared_ptr<CommandDetail> cmd = std::make_shared<CommandDetail>();
     subscriberPreprocessCmd(type, cmd);
     auto r = processCmd(cmd);
 

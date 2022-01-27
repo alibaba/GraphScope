@@ -26,6 +26,7 @@ import time
 
 import grpc
 
+from graphscope.client.utils import GS_GRPC_MAX_MESSAGE_LENGTH
 from graphscope.framework.errors import FatalError
 from graphscope.framework.errors import GRPCError
 from graphscope.proto import coordinator_service_pb2_grpc
@@ -89,9 +90,9 @@ class GRPCClient(object):
         """Connect to GRAPE engine at the given :code:`endpoint`."""
         # create the gRPC stub
         options = [
-            ("grpc.max_send_message_length", 2147483647),
-            ("grpc.max_receive_message_length", 2147483647),
-            ("grpc.max_metadata_size", 2147483647),
+            ("grpc.max_send_message_length", GS_GRPC_MAX_MESSAGE_LENGTH),
+            ("grpc.max_receive_message_length", GS_GRPC_MAX_MESSAGE_LENGTH),
+            ("grpc.max_metadata_size", GS_GRPC_MAX_MESSAGE_LENGTH),
         ]
         self._launcher = launcher
         self._channel = grpc.insecure_channel(endpoint, options=options)

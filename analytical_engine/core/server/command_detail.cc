@@ -28,6 +28,7 @@ grape::InArchive& operator<<(grape::InArchive& archive,
 
   archive << cd.type;
   archive << buffer;
+  archive << cd.large_attr.SerializeAsString();
   archive << cd.query_args.SerializeAsString();
 
   return archive;
@@ -35,10 +36,11 @@ grape::InArchive& operator<<(grape::InArchive& archive,
 
 grape::OutArchive& operator>>(grape::OutArchive& archive, CommandDetail& cd) {
   std::map<int, std::string> buffer;
-  std::string s_args;
+  std::string s_large_attr, s_args;
 
   archive >> cd.type;
   archive >> buffer;
+  archive >> s_large_attr;
   archive >> s_args;
 
   for (auto& pair : buffer) {
@@ -46,6 +48,7 @@ grape::OutArchive& operator>>(grape::OutArchive& archive, CommandDetail& cd) {
     attr_value.ParseFromString(pair.second);
     cd.params[pair.first] = attr_value;
   }
+  cd.large_attr.ParseFromString(s_large_attr);
   cd.query_args.ParseFromString(s_args);
 
   return archive;

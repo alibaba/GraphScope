@@ -44,7 +44,7 @@ Status GraphScopeService::HeartBeat(::grpc::ServerContext* context,
     OpResult* op_result = response->add_results();
     op_result->set_key(op.key());
     op_key_to_result.emplace(op.key(), op_result);
-    CommandDetail cmd = OpToCmd(op);
+    std::shared_ptr<CommandDetail> cmd = OpToCmd(op);
 
     bool success = true;
     std::string error_msgs;

@@ -1056,11 +1056,11 @@ bl::result<void> GrapeInstance::registerGraphType(const rpc::GSParams& params) {
 }
 
 bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
-    const CommandDetail& cmd) {
+    std::shared_ptr<CommandDetail> cmd) {
   auto r = std::make_shared<DispatchResult>(comm_spec_.worker_id());
-  rpc::GSParams params(cmd.params);
+  rpc::GSParams params(cmd->params, cmd->large_attr);
 
-  switch (cmd.type) {
+  switch (cmd->type) {
   case rpc::CREATE_GRAPH: {
     BOOST_LEAF_AUTO(graph_def, loadGraph(params));
     r->set_graph_def(graph_def);
@@ -1076,7 +1076,7 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
     break;
   }
   case rpc::RUN_APP: {
-    BOOST_LEAF_AUTO(context_key, query(params, cmd.query_args));
+    BOOST_LEAF_AUTO(context_key, query(params, cmd->query_args));
     r->set_data(context_key);
     break;
   }
@@ -1273,7 +1273,7 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
   }
   default:
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
-                    "Unsupported command type: " + std::to_string(cmd.type));
+                    "Unsupported command type: " + std::to_string(cmd->type));
   }
   return r;
 }

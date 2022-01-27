@@ -42,12 +42,16 @@ message OpDef {
   // Operation-specific configuration.
   map<int32, AttrValue> attr = 6;
 
+  // Operation-specific configuration for large chunk.
+  // e.g. dataframe or numpy data
+  LargeAttrValue large_attr = 7;
+
   // arguments that served as application querying parameters.
   // Such as source vertex id for SSSP.
-  QueryArgs query_args = 7;
+  QueryArgs query_args = 8;
 
   // mark fetch op or not
-  bool fetch = 8;
+  bool fetch = 9;
 };
 
 // Result of Op
