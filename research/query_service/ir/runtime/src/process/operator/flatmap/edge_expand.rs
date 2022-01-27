@@ -23,7 +23,7 @@ use crate::error::{FnExecError, FnGenError, FnGenResult};
 use crate::graph::element::{GraphElement, GraphObject};
 use crate::graph::{Direction, Statement, ID};
 use crate::process::operator::flatmap::FlatMapFuncGen;
-use crate::process::record::{Record, RecordExpandIter};
+use crate::process::record::{Record, RecordExpandIter, RecordPathExpandIter};
 
 pub struct EdgeExpandOperator<E: Into<GraphObject>> {
     start_v_tag: Option<NameOrId>,
@@ -38,12 +38,24 @@ impl<E: Into<GraphObject> + 'static> FlatMapFunction<Record, Record> for EdgeExp
         let entry = input
             .get(self.start_v_tag.as_ref())
             .ok_or(FnExecError::get_tag_error("get start_v failed"))?;
-        let v = entry
-            .as_graph_vertex()
-            .ok_or(FnExecError::unexpected_data_error("start_v does not refer to a graph vertex"))?;
-        let id = v.id();
-        let iter = self.stmt.exec(id)?;
-        Ok(Box::new(RecordExpandIter::new(input, self.edge_or_end_v_tag.as_ref(), iter)))
+        if let Some(v) = entry.as_graph_vertex() {
+            let id = v.id();
+            let iter = self.stmt.exec(id)?;
+            Ok(Box::new(RecordExpandIter::new(input, self.edge_or_end_v_tag.as_ref(), iter)))
+        } else if let Some(graph_path) = entry.as_graph_path() {
+            let path_end = graph_path
+                .get_path_end()
+                .ok_or(FnExecError::unexpected_data_error("Get path_end failed in path expand"))?;
+            let id = path_end.id();
+            let iter = self.stmt.exec(id)?;
+            let curr_path = graph_path.clone();
+            Ok(Box::new(RecordPathExpandIter::new(input, curr_path, iter)))
+        } else {
+            Err(FnExecError::unexpected_data_error(&format!(
+                "Cannot Expand from current entry {:?}",
+                entry
+            )))?
+        }
     }
 }
 

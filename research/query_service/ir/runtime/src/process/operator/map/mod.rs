@@ -14,6 +14,8 @@
 //! limitations under the License.
 mod auxilia;
 mod get_v;
+mod path_end;
+mod path_start;
 mod project;
 
 use ir_common::error::ParsePbError;
@@ -33,6 +35,8 @@ impl MapFuncGen for algebra_pb::logical_plan::Operator {
             match opr {
                 algebra_pb::logical_plan::operator::Opr::Project(project) => project.gen_map(),
                 algebra_pb::logical_plan::operator::Opr::Vertex(get_vertex) => get_vertex.gen_map(),
+                algebra_pb::logical_plan::operator::Opr::PathStart(path_start) => path_start.gen_map(),
+                algebra_pb::logical_plan::operator::Opr::PathEnd(path_end) => path_end.gen_map(),
                 algebra_pb::logical_plan::operator::Opr::Path(_path) => {
                     Err(FnGenError::unsupported_error("path is not supported yet"))?
                 }

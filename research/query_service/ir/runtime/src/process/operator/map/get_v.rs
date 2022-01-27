@@ -48,9 +48,17 @@ impl MapFunction<Record, Record> for GetVertexOperator {
                 Vertex::new(id, label.map(|l| l.clone()), DynDetails::new(DefaultDetails::default()));
             input.append(vertex, self.alias.clone());
             Ok(input)
-        } else if let Some(_p) = entry.as_graph_path() {
-            //TODO(bingqing): endV for path
-            todo!()
+        } else if let Some(graph_path) = entry.as_graph_path() {
+            if let VOpt::End = self.opt {
+                let path_end = graph_path
+                    .get_path_end()
+                    .ok_or(FnExecError::unexpected_data_error("Get path_end failed in path expand"))?
+                    .clone();
+                input.append(path_end, self.alias.clone());
+                Ok(input)
+            } else {
+                Err(FnExecError::unsupported_error("Only support `GetV` with VOpt::End on a path entry"))?
+            }
         } else {
             Err(FnExecError::unexpected_data_error(
                 "Can only apply `GetV` (`Auxilia` instead) on an edge or path entry",
