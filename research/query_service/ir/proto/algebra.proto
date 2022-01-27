@@ -72,7 +72,9 @@ message Join {
 }
 
 // Union two relations
-message Union {}
+message Union {
+  repeated int32 subtasks = 3;
+}
 
 message GroupBy {
   // To define the function to be applied on each group after performing grouping. For example,
