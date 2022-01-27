@@ -68,19 +68,17 @@ impl MapFunction<Record, Record> for ProjectOperator {
                 let entry = exec_projector(&input, &projector)?;
                 input.append_arc_entry(entry, alias.clone());
             } else {
-                for (idx, (projector, alias)) in self.projected_columns.iter().enumerate() {
-                    let entry = exec_projector(&input, &projector)?;
+                for (projector, alias) in self.projected_columns.iter() {
+                    let entry = exec_projector(&input, projector)?;
                     // Notice that if multiple columns, alias cannot be None
                     if let Some(alias) = alias {
                         let columns = input.get_columns_mut();
                         columns.insert(alias.clone(), entry);
                     }
-                    // set head as None when the last column is appended
-                    if idx == (self.projected_columns.len() - 1) {
-                        let curr = input.get_curr_mut();
-                        *curr = None;
-                    }
                 }
+                // set head as None when the last column is appended
+                let curr = input.get_curr_mut();
+                *curr = None;
             }
 
             Ok(input)
