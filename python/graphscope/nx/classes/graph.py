@@ -868,7 +868,7 @@ class Graph(_GraphBase):
                 self, types_pb2.HAS_NODE, node=json.dumps([n], default=json_encoder)
             )
             return bool(int(op.eval()))
-        except NetworkXError:
+        except (TypeError, NetworkXError, KeyError):
             return False
 
     @clear_cache
@@ -2266,14 +2266,14 @@ class Graph(_GraphBase):
             label_id = n[1]
             new_n = (self._schema.get_vertex_label_id(n[0]), n[1])
             if new_n[0] == self._default_label_id:
-                raise NetworkXError("default label's node must be non-tuple format.")
+                raise KeyError("default label's node must be non-tuple format.")
         elif self._default_label_id == -1:
             # the n is non-tuple, but default id is -1
-            raise NetworkXError("default label id is -1.")
+            raise KeyError("default label id is -1.")
         else:
             label_id = n
             new_n = (self._default_label_id, n)
         if not isinstance(label_id, utils.data_type_to_python(self._schema.oid_type)):
             # id is not oid type
-            raise NetworkXError("the node type is not arrow_property oid_type.")
+            raise KeyError("the node type is not arrow_property oid_type.")
         return new_n
