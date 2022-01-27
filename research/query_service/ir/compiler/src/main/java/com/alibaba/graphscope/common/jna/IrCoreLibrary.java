@@ -138,6 +138,12 @@ public interface IrCoreLibrary extends Library {
 
     ResultCode appendPathxpdOperator(Pointer plan, Pointer pathXpd, int parent, IntByReference oprIdx);
 
+    Pointer initUnionOperator();
+
+    ResultCode addUnionSubTask(Pointer union, int subRootId);
+
+    ResultCode appendUnionOperator(Pointer plan, Pointer union, int parent, IntByReference oprIdx);
+
     FfiNameOrId.ByValue noneNameOrId();
 
     FfiNameOrId.ByValue cstrAsNameOrId(String name);

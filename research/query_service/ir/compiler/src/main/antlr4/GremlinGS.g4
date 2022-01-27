@@ -75,6 +75,7 @@ traversalMethod
     | traversalMethod_outV  // outV()
     | traversalMethod_otherV  // otherV()
     | traversalMethod_not  // not()
+    | traversalMethod_union // union()
     ;
 
 traversalSourceSpawnMethod_V
@@ -304,6 +305,15 @@ traversalMethod_whereby_list
 
 traversalMethod_not
     : 'not' LPAREN nestedTraversal RPAREN
+    ;
+
+// union(__.out(), __.out().out())
+traversalMethod_union
+    : 'union' LPAREN nestedTraversalExpr RPAREN
+    ;
+
+nestedTraversalExpr
+    : nestedTraversal (COMMA nestedTraversal)*
     ;
 
 // only permit non empty, \'\' or \"\" or \'null\' is meaningless as a parameter

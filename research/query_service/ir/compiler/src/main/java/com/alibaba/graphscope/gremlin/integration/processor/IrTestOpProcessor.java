@@ -63,6 +63,8 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
                     String script = getScript(byteCode);
                     Traversal traversal = (Traversal) scriptEngine.eval(script, this.context);
 
+                    applyStrategies(traversal);
+
                     InterOpCollection opCollection = (new InterOpCollectionBuilder(traversal)).build();
                     IrPlan irPlan = opCollection.buildIrPlan();
 

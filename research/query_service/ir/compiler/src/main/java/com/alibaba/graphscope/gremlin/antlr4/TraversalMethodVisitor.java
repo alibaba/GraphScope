@@ -471,4 +471,15 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
             throw new UnsupportedEvalException(ctx.getClass(), "supported pattern is [not(..out()..)]");
         }
     }
+
+    @Override
+    public Traversal visitTraversalMethod_union(GremlinGSParser.TraversalMethod_unionContext ctx) {
+        if (ctx.nestedTraversalExpr() != null) {
+            Traversal[] unionTraversals = (new NestedTraversalSourceListVisitor((GremlinGSBaseVisitor) this))
+                    .visitNestedTraversalExpr(ctx.nestedTraversalExpr());
+            return graphTraversal.union(unionTraversals);
+        } else {
+            throw new UnsupportedEvalException(ctx.getClass(), "supported pattern is [union(__.out(), ...)]");
+        }
+    }
 }
