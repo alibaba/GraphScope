@@ -96,7 +96,7 @@ class GSParams {
  public:
   explicit GSParams(std::map<int, rpc::AttrValue> params,
                     const rpc::LargeAttrValue& large_attr)
-      : params_(std::move(params)), large_attr_(std::move(large_attr)) {}
+      : params_(std::move(params)), large_attr_(large_attr) {}
 
   template <typename T>
   bl::result<T> Get(rpc::ParamKey key) const {
@@ -115,7 +115,7 @@ class GSParams {
 
  private:
   const std::map<int, rpc::AttrValue> params_;
-  const rpc::LargeAttrValue large_attr_;
+  const rpc::LargeAttrValue& large_attr_;
 };
 
 inline bl::result<DagDef> ReadDagFromFile(const std::string& location) {
@@ -132,7 +132,7 @@ inline bl::result<DagDef> ReadDagFromFile(const std::string& location) {
   return dag_def;
 }
 
-inline CommandDetail OpToCmd(const OpDef& op) {
+inline std::shared_ptr<CommandDetail> OpToCmd(const OpDef& op) {
   auto op_type = op.op();
   std::map<int, rpc::AttrValue> params;
 
@@ -141,9 +141,10 @@ inline CommandDetail OpToCmd(const OpDef& op) {
   }
   // large attr
   return op.has_query_args()
-             ? CommandDetail(op_type, std::move(params), op.large_attr(),
-                             op.query_args())
-             : CommandDetail(op_type, std::move(params), op.large_attr());
+             ? std::make_shared<CommandDetail>(op_type, std::move(params),
+                                               op.large_attr(), op.query_args())
+             : std::make_shared<CommandDetail>(op_type, std::move(params),
+                                               op.large_attr());
 }
 }  // namespace rpc
 }  // namespace gs

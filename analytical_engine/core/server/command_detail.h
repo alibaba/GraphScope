@@ -39,17 +39,15 @@ struct CommandDetail {
 
   CommandDetail(const rpc::OperationType& op_type,
                 std::map<int, rpc::AttrValue>&& op_params,
-                rpc::LargeAttrValue large_attr)
-      : type(op_type),
-        params(std::move(op_params)),
-        large_attr(std::move(large_attr)) {}
+                const rpc::LargeAttrValue& large_attr)
+      : type(op_type), params(std::move(op_params)), large_attr(large_attr) {}
 
   CommandDetail(const rpc::OperationType& op_type,
                 std::map<int, rpc::AttrValue>&& op_params,
-                rpc::LargeAttrValue large_attr, rpc::QueryArgs args)
+                const rpc::LargeAttrValue& large_attr, rpc::QueryArgs args)
       : type(op_type),
         params(std::move(op_params)),
-        large_attr(std::move(large_attr)),
+        large_attr(large_attr),
         query_args(std::move(args)) {}
 
   rpc::OperationType type{};

@@ -77,7 +77,7 @@ class GrapeInstance : public Subscriber {
   void Init(const std::string& vineyard_socket);
 
   bl::result<std::shared_ptr<DispatchResult>> OnReceive(
-      const CommandDetail& cmd) override;
+      std::shared_ptr<CommandDetail> cmd) override;
 
  private:
   bl::result<rpc::graph::GraphDefPb> loadGraph(const rpc::GSParams& params);

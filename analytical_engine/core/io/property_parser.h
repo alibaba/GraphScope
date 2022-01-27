@@ -146,13 +146,13 @@ inline void ParseEdge(std::shared_ptr<detail::Graph>& graph,
                       const std::string& data, const AttrMap& attrs) {
   std::string label = attrs.at(rpc::LABEL).s();
 
-  bool label_edge_exists = false;
-  if (graph->edges.size() > 0 && graph->edges.back()->label == label) {
-    label_edge_exists = true;
+  bool has_edge_label = false;
+  if (!graph->edges.empty() && graph->edges.back()->label == label) {
+    has_edge_label = true;
   }
 
-  auto edge = label_edge_exists ? graph->edges.back()
-                                : std::make_shared<detail::Edge>();
+  auto edge =
+      has_edge_label ? graph->edges.back() : std::make_shared<detail::Edge>();
   edge->label = label;
 
   // sub_label: src_label / dst_label
@@ -166,14 +166,16 @@ inline void ParseEdge(std::shared_ptr<detail::Graph>& graph,
   sub_label.values = data;
   edge->sub_labels.push_back(sub_label);
 
-  if (!label_edge_exists) {
+  if (!has_edge_label) {
     graph->edges.push_back(edge);
   }
 }
 
 // The input string is the serialized bytes of an arrow::Table, this function
 // split the table to several small tables.
-inline std::vector<std::string> SplitTable(const std::string& data, int num) {
+inline void SplitTable(const std::string& data, int num,
+                       std::vector<std::string>& sliced_bytes) {
+  sliced_bytes.resize(num);
   std::shared_ptr<arrow::Buffer> buffer =
       arrow::Buffer::Wrap(data.data(), data.size());
   std::shared_ptr<arrow::Table> table;
@@ -190,7 +192,6 @@ inline std::vector<std::string> SplitTable(const std::string& data, int num) {
     sliced_tables[i] = sliced;
     cur += offset;
   }
-  std::vector<std::string> sliced_bytes(num);
   for (int i = 0; i < num; ++i) {
     if (sliced_tables[i]->num_rows() > 0) {
       std::shared_ptr<arrow::Buffer> out_buf;
@@ -198,29 +199,27 @@ inline std::vector<std::string> SplitTable(const std::string& data, int num) {
       sliced_bytes[i] = out_buf->ToString();
     }
   }
-  return sliced_bytes;
 }
 
-inline std::vector<rpc::Chunk> DistributeChunk(const rpc::Chunk& chunk,
-                                               int num) {
-  std::vector<rpc::Chunk> distributed_chunk(num);
+inline void DistributeChunk(const rpc::Chunk& chunk, int num,
+                            std::vector<rpc::Chunk>& distributed_chunk) {
+  distributed_chunk.resize(num);
   const auto& attrs = chunk.attr();
   std::string protocol = attrs.at(rpc::PROTOCOL).s();
   std::vector<std::string> distributed_values;
   const std::string& data = chunk.buffer();
   if (protocol == "pandas") {
-    distributed_values = SplitTable(data, num);
+    SplitTable(data, num, distributed_values);
   } else {
     distributed_values.resize(num, data);
   }
   for (int i = 0; i < num; ++i) {
-    distributed_chunk[i].set_buffer(distributed_values[i]);
+    distributed_chunk[i].set_buffer(std::move(distributed_values[i]));
     auto* attr = distributed_chunk[i].mutable_attr();
     for (auto& pair : attrs) {
       (*attr)[pair.first].CopyFrom(pair.second);
     }
   }
-  return distributed_chunk;
 }
 
 // If contains contents from numpy or pandas, then we should distribute those
@@ -230,11 +229,12 @@ inline std::vector<rpc::LargeAttrValue> DistributeGraph(
     const rpc::LargeAttrValue& large_attr, int num) {
   std::vector<rpc::LargeAttrValue> distributed_graph(num);
   if (large_attr.has_chunk_list()) {
-    std::vector<std::vector<rpc::Chunk>> distributed_vec;
+    size_t chunk_list_size = large_attr.chunk_list().items().size();
+    std::vector<std::vector<rpc::Chunk>> distributed_vec(chunk_list_size);
     // split
-    for (const auto& item : large_attr.chunk_list().items()) {
-      auto vec = DistributeChunk(item, num);
-      distributed_vec.emplace_back(std::move(vec));
+    for (size_t i = 0; i < chunk_list_size; ++i) {
+      DistributeChunk(large_attr.chunk_list().items(i), num,
+                      distributed_vec[i]);
     }
     for (int i = 0; i < num; ++i) {
       for (auto& vec : distributed_vec) {

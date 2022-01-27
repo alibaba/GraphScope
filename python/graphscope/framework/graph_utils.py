@@ -126,15 +126,6 @@ class VertexLabel(object):
         chunk.attr[types_pb2.CHUNK_TYPE].CopyFrom(utils.s_to_attr("loader"))
         chunk.attr[types_pb2.LABEL].CopyFrom(utils.s_to_attr(self.label))
         chunk.attr[types_pb2.VID].CopyFrom(utils.s_to_attr(str(self.vid_field)))
-        # properties
-        props = []
-        for prop in self.properties[1:]:
-            prop_attr = attr_value_pb2.NameAttrList()
-            prop_attr.name = prop[0]
-            # use index 0 is ok as only one attr(type) in property
-            prop_attr.attr[0].CopyFrom(utils.type_to_attr(prop[1]))
-            props.append(prop_attr)
-        chunk.attr[types_pb2.PROPERTIES].list.func.extend(props)
         # loader
         for k, v in self.loader.get_attr().items():
             # raw bytes for pandas/numpy data
@@ -236,15 +227,6 @@ class EdgeSubLabel(object):
         )
         chunk.attr[types_pb2.SRC_VID].CopyFrom(utils.s_to_attr(str(self.src_field)))
         chunk.attr[types_pb2.DST_VID].CopyFrom(utils.s_to_attr(str(self.dst_field)))
-        # properties
-        props = []
-        for prop in self.properties[2:]:
-            prop_attr = attr_value_pb2.NameAttrList()
-            prop_attr.name = prop[0]
-            # use index 0 is ok as only one attr(type) in property
-            prop_attr.attr[0].CopyFrom(utils.type_to_attr(prop[1]))
-            props.append(prop_attr)
-        chunk.attr[types_pb2.PROPERTIES].list.func.extend(props)
         # loader
         for k, v in self.loader.get_attr().items():
             # raw bytes for pandas/numpy data
