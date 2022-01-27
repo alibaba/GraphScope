@@ -666,4 +666,24 @@ public class PositiveEvalTest {
     public void g_V_not_values() {
         Assert.assertEquals(g.V().not(__.values("name")), eval("g.V().not(__.values(\"name\"))"));
     }
+
+    @Test
+    public void g_V_select_by_none_test() {
+        Assert.assertEquals(g.V().as("a").select("a").by(), eval("g.V().as(\"a\").select(\"a\").by()"));
+    }
+
+    @Test
+    public void g_V_order_by_none_test() {
+        Assert.assertEquals(g.V().order().by(), eval("g.V().order().by()"));
+    }
+
+    @Test
+    public void g_V_where_by_none_test() {
+        Assert.assertEquals(g.V().as("a").where(P.eq("a")).by(), eval("g.V().as(\"a\").where(P.eq(\"a\")).by()"));
+    }
+
+    @Test
+    public void g_V_group_key_by_none_value_by_none_test() {
+        Assert.assertEquals(g.V().group().by().by(), eval("g.V().group().by().by()"));
+    }
 }

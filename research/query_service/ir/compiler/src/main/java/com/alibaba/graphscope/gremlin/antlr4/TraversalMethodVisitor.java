@@ -203,11 +203,13 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
                 GremlinGSParser.TraversalMethod_selectbyContext byCtx =
                         ctx.traversalMethod_selectby_list().traversalMethod_selectby(i);
                 if (byCtx == null) continue;
-                // select(..).by('name')
-                if (byCtx.stringLiteral() != null) {
+                int byChildCount = byCtx.getChildCount();
+                // select(..).by()
+                if (byChildCount == 3) {
+                    step.modulateBy();
+                } else if (byChildCount == 4 && byCtx.stringLiteral() != null) { // select(..).by('name')
                     step.modulateBy(GenericLiteralVisitor.getStringLiteral(byCtx.stringLiteral()));
-                } else if (byCtx.traversalMethod_valueMap() != null) {
-                    // select(..).by(valueMap())
+                } else if (byCtx.traversalMethod_valueMap() != null) { // select(..).by(valueMap('name'))
                     TraversalMethodVisitor nestedVisitor = new TraversalMethodVisitor(gvisitor,
                             GremlinAntlrToJava.getTraversalSupplier().get());
                     Traversal nestedTraversal = nestedVisitor.visitTraversalMethod_valueMap(byCtx.traversalMethod_valueMap());
@@ -230,6 +232,10 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
                 Order orderOpt = null;
                 String strAsKey = null;
                 Traversal nestedTraversalAskey = null;
+                int byChildCount = byCtx.getChildCount();
+                if (byChildCount == 3) {
+                    orderOpt = Order.asc;
+                }
                 if (byCtx.traversalOrder() != null) {
                     orderOpt = TraversalEnumParser.parseTraversalEnumFromContext(Order.class, byCtx.traversalOrder());
                 }
@@ -296,7 +302,9 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
     @Override
     public Traversal visitTraversalMethod_group_keyby(GremlinGSParser.TraversalMethod_group_keybyContext ctx) {
         int childCount = ctx.getChildCount();
-        if (childCount == 4 && ctx.stringLiteral() != null) {
+        if (childCount == 3) {
+            return graphTraversal.by();
+        } else if (childCount == 4 && ctx.stringLiteral() != null) {
             return graphTraversal.by(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()));
         } else if (childCount == 4 && ctx.traversalMethod_values() != null) {
             TraversalMethodVisitor nestedVisitor = new TraversalMethodVisitor(gvisitor,
@@ -320,7 +328,9 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
     @Override
     public Traversal visitTraversalMethod_group_valueby(GremlinGSParser.TraversalMethod_group_valuebyContext ctx) {
         int childCount = ctx.getChildCount();
-        if (childCount == 4 && ctx.traversalMethod_aggregate_func() != null) {
+        if (childCount == 3) {
+            return graphTraversal.by();
+        } else if (childCount == 4 && ctx.traversalMethod_aggregate_func() != null) {
             TraversalMethodVisitor nestedVisitor = new TraversalMethodVisitor(gvisitor,
                     GremlinAntlrToJava.getTraversalSupplier().get());
             Traversal nestedTraversal = nestedVisitor.visitTraversalMethod_aggregate_func(ctx.traversalMethod_aggregate_func());
@@ -397,7 +407,10 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
                 GremlinGSParser.TraversalMethod_wherebyContext byCtx =
                         ctx.traversalMethod_whereby_list().traversalMethod_whereby(i);
                 if (byCtx == null) continue;
-                if (byCtx.stringLiteral() != null) {
+                int byChildCount = byCtx.getChildCount();
+                if (byChildCount == 3) { // by()
+                    byModulating.modulateBy();
+                } else if (byChildCount == 4 && byCtx.stringLiteral() != null) {
                     byModulating.modulateBy(GenericLiteralVisitor.getStringLiteral(byCtx.stringLiteral()));
                 } else if (byCtx.traversalMethod_values() != null) {
                     // select(..).by(valueMap())
