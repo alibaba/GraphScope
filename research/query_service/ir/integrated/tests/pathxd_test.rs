@@ -137,11 +137,10 @@ mod test {
         job_builder.build().unwrap()
     }
 
-    #[test]
-    fn test_path_expand_whole_query() {
+    fn path_expand_whole_query(worker_num: u32) {
         initialize();
         let request = init_path_expand_request(true);
-        let mut results = submit_query(request, 1);
+        let mut results = submit_query(request, worker_num);
         let mut result_collection: Vec<Vec<ID>> = vec![];
         let mut expected_result_paths = vec![
             vec![1, 2],
@@ -181,10 +180,19 @@ mod test {
     }
 
     #[test]
-    fn test_path_expand_end_query() {
+    fn path_expand_whole_query_test() {
+        path_expand_whole_query(1)
+    }
+
+    #[test]
+    fn path_expand_whole_query_w2_test() {
+        path_expand_whole_query(2)
+    }
+
+    fn path_expand_end_query(num_workers: u32) {
         initialize();
         let request = init_path_expand_request(false);
-        let mut results = submit_query(request, 1);
+        let mut results = submit_query(request, num_workers);
         let mut result_collection = vec![];
         let expected_result_path_ends = vec![1, 1, 1, 1, 2, 2, 2, 4, 4, 4];
         while let Some(result) = results.next() {
@@ -205,10 +213,19 @@ mod test {
     }
 
     #[test]
-    fn test_path_expand_exactly_whole_query() {
+    fn path_expand_end_query_test() {
+        path_expand_end_query(1)
+    }
+
+    #[test]
+    fn path_expand_end_query_w2_test() {
+        path_expand_end_query(2)
+    }
+
+    fn path_expand_exactly_whole_query(worker_num: u32) {
         initialize();
         let request = init_path_expand_exactly_request(true);
-        let mut results = submit_query(request, 1);
+        let mut results = submit_query(request, worker_num);
         let mut result_collection: Vec<Vec<ID>> = vec![];
         let mut expected_result_paths =
             vec![vec![1, 2, 1], vec![1, 4, 1], vec![2, 1, 2], vec![2, 1, 4], vec![4, 1, 2], vec![4, 1, 4]];
@@ -238,10 +255,19 @@ mod test {
     }
 
     #[test]
-    fn test_path_expand_exactly_end_query() {
+    fn path_expand_exactly_whole_query_test() {
+        path_expand_exactly_whole_query(1)
+    }
+
+    #[test]
+    fn path_expand_exactly_whole_query_w2_test() {
+        path_expand_exactly_whole_query(1)
+    }
+
+    fn path_expand_exactly_end_query(worker_num: u32) {
         initialize();
         let request = init_path_expand_exactly_request(false);
-        let mut results = submit_query(request, 1);
+        let mut results = submit_query(request, worker_num);
         let mut result_collection = vec![];
         let expected_result_path_ends = vec![1, 1, 2, 2, 4, 4];
         while let Some(result) = results.next() {
@@ -259,5 +285,15 @@ mod test {
         }
         result_collection.sort();
         assert_eq!(result_collection, expected_result_path_ends)
+    }
+
+    #[test]
+    fn path_expand_exactly_end_query_test() {
+        path_expand_exactly_end_query(1)
+    }
+
+    #[test]
+    fn path_expand_exactly_end_query_w2_test() {
+        path_expand_exactly_end_query(2)
     }
 }

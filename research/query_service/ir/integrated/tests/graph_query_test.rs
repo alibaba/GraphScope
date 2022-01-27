@@ -78,11 +78,10 @@ mod test {
         job_builder.build().unwrap()
     }
 
-    #[test]
-    fn poc_query_test() {
+    fn poc_query(worker_num: u32) {
         initialize();
         let request = init_poc_request();
-        let mut results = submit_query(request, 1);
+        let mut results = submit_query(request, worker_num);
         let mut result_collection = vec![];
         let expected_result_ids = vec![2, 4];
         while let Some(result) = results.next() {
@@ -100,5 +99,15 @@ mod test {
         }
         result_collection.sort();
         assert_eq!(result_collection, expected_result_ids)
+    }
+
+    #[test]
+    fn poc_query_test() {
+        poc_query(1)
+    }
+
+    #[test]
+    fn poc_query_w2_test() {
+        poc_query(2)
     }
 }
