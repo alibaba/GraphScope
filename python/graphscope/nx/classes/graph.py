@@ -32,6 +32,7 @@ from networkx.classes.reportviews import NodeView
 
 from graphscope import nx
 from graphscope.client.session import get_default_session
+from graphscope.client.session import get_session_by_id
 from graphscope.framework import dag_utils
 from graphscope.framework import utils
 from graphscope.framework.errors import InvalidArgumentError
@@ -315,8 +316,6 @@ class Graph(_GraphBase):
         >>> G = nx.Graph(g, default_label="person") # or DiGraph
 
         """
-        if self._session is None:
-            self._try_to_get_default_session()
 
         self.graph_attr_dict_factory = self.graph_attr_dict_factory
         self.node_dict_factory = self.node_dict_factory
@@ -343,7 +342,12 @@ class Graph(_GraphBase):
         if incoming_graph_data is not None and self._is_gs_graph(incoming_graph_data):
             # convert from gs graph always use distributed mode
             self._distributed = True
+            if self._session is None:
+                self._session = get_session_by_id(incoming_graph_data.session_id)
         self._default_label = default_label
+
+        if self._session is None:
+            self._try_to_get_default_session()
 
         if not self._is_gs_graph(incoming_graph_data) and create_empty_in_engine:
             graph_def = empty_graph_in_engine(
@@ -2196,7 +2200,6 @@ class Graph(_GraphBase):
                     "default label {} not existed in graph." % self._default_label
                 )
         else:
-            # default_label is None
             self._default_label_id = -1
         self._graph_type = graph_def_pb2.ARROW_PROPERTY
 

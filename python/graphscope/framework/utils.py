@@ -529,9 +529,9 @@ def data_type_to_python(t):
         return int
     elif t in (graph_def_pb2.FLOAT, graph_def_pb2.DOUBLE):
         return float
-    elif t in (graph_def_pb2.STRING):
+    elif t == graph_def_pb2.STRING:
         return str
-    elif t in (None, t == graph_def_pb2.NULLVALUE):
+    elif t in (None, graph_def_pb2.NULLVALUE):
         return None
     raise ValueError("Not support type {}".format(t))
 
