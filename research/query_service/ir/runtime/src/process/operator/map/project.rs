@@ -63,28 +63,41 @@ fn exec_projector(input: &Record, projector: &Projector) -> FnResult<Arc<Entry>>
 impl MapFunction<Record, Record> for ProjectOperator {
     fn exec(&self, mut input: Record) -> FnResult<Record> {
         if self.is_append {
-            for (idx, (projector, alias)) in self.projected_columns.iter().enumerate() {
+            if self.projected_columns.len() == 1 {
+                let (projector, alias) = self.projected_columns.get(0).unwrap();
                 let entry = exec_projector(&input, &projector)?;
-                // Only change head when the last column is appended
-                if idx == (self.projected_columns.len() - 1) {
-                    input.append_arc_entry(entry, alias.clone());
-                } else {
+                input.append_arc_entry(entry, alias.clone());
+            } else {
+                for (projector, alias) in self.projected_columns.iter() {
+                    let entry = exec_projector(&input, projector)?;
                     // Notice that if multiple columns, alias cannot be None
                     if let Some(alias) = alias {
                         let columns = input.get_columns_mut();
                         columns.insert(alias.clone(), entry);
                     }
                 }
+                // set head as None when the last column is appended
+                let curr = input.get_curr_mut();
+                *curr = None;
             }
 
             Ok(input)
         } else {
             let mut new_record = Record::default();
-            for (projector, alias) in self.projected_columns.iter() {
+            if self.projected_columns.len() == 1 {
+                let (projector, alias) = self.projected_columns.get(0).unwrap();
                 let entry = exec_projector(&input, &projector)?;
                 new_record.append_arc_entry(entry, alias.clone());
+            } else {
+                for (projector, alias) in self.projected_columns.iter() {
+                    let entry = exec_projector(&input, &projector)?;
+                    // Notice that if multiple columns, alias cannot be None
+                    if let Some(alias) = alias {
+                        let columns = new_record.get_columns_mut();
+                        columns.insert(alias.clone(), entry);
+                    }
+                }
             }
-
             Ok(new_record)
         }
     }
@@ -255,43 +268,10 @@ mod tests {
         let mut result = project_test(init_source(), project_opr_pb);
         let mut object_result = vec![];
         while let Some(Ok(res)) = result.next() {
+            // head should be None
+            assert_eq!(res.get(None), None);
             let age_val = res.get(Some(&"b".into())).unwrap();
             let name_val = res.get(Some(&"c".into())).unwrap();
-            match (age_val.as_ref(), name_val.as_ref()) {
-                (
-                    Entry::Element(RecordElement::OffGraph(CommonObject::Prop(age))),
-                    Entry::Element(RecordElement::OffGraph(CommonObject::Prop(name))),
-                ) => {
-                    object_result.push((age.clone(), name.clone()));
-                }
-                _ => {}
-            }
-        }
-        let expected_result = vec![(object!(29), object!("marko")), (object!(27), object!("vadas"))];
-        assert_eq!(object_result, expected_result);
-    }
-
-    // g.V().valueMap('age', 'name') with alias of 'age' as 'b' and 'name' as 'None' (head)
-    #[test]
-    fn project_multi_mapping_with_head_test() {
-        let project_opr_pb = pb::Project {
-            mappings: vec![
-                pb::project::ExprAlias {
-                    expr: Some(str_to_expr_pb("@.age".to_string()).unwrap()),
-                    alias: Some(NameOrId::Str("b".to_string()).into()),
-                },
-                pb::project::ExprAlias {
-                    expr: Some(str_to_expr_pb("@.name".to_string()).unwrap()),
-                    alias: None,
-                },
-            ],
-            is_append: false,
-        };
-        let mut result = project_test(init_source(), project_opr_pb);
-        let mut object_result = vec![];
-        while let Some(Ok(res)) = result.next() {
-            let age_val = res.get(Some(&"b".into())).unwrap();
-            let name_val = res.get(None).unwrap();
             match (age_val.as_ref(), name_val.as_ref()) {
                 (
                     Entry::Element(RecordElement::OffGraph(CommonObject::Prop(age))),
