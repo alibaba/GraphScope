@@ -274,7 +274,8 @@ class DiGraph(Graph):
         if incoming_graph_data is not None and self._is_gs_graph(incoming_graph_data):
             # convert from gs graph always use distributed mode
             self._distributed = True
-            self._session = get_session_by_id(incoming_graph_data.session_id)
+            if self._session is None:
+                self._session = get_session_by_id(incoming_graph_data.session_id)
         self._default_label = default_label
 
         if self._session is None:
