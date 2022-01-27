@@ -1,0 +1,33 @@
+{
+  "nodes": [
+    {
+      "opr": {
+        "opr": {
+          "Path": {
+            "base": {
+              "v_tag": null,
+              "direction": 0,
+              "params": {
+                "table_names": [],
+                "columns": [],
+                "limit": null,
+                "predicate": null,
+                "requirements": []
+              },
+              "is_edge": false,
+              "alias": null
+            },
+            "start_tag": null,
+            "is_whole_path": false,
+            "alias": null,
+            "hop_range": {
+              "lower": 1,
+              "upper": 5
+            }
+          }
+        }
+      },
+      "children": []
+    }
+  ]
+}

@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.gremlin.antlr4;
 
 import com.alibaba.graphscope.gremlin.plugin.script.AntlrToJavaScriptEngine;
+import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversalSource;
 import org.apache.tinkerpop.gremlin.process.traversal.Order;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
@@ -44,7 +45,7 @@ public class PositiveEvalTest {
     @Before
     public void before() {
         graph = TinkerFactory.createModern();
-        g = graph.traversal();
+        g = graph.traversal(IrCustomizedTraversalSource.class);
         Bindings globalBindings = new SimpleBindings();
         globalBindings.put("g", g);
         context = new SimpleScriptContext();
@@ -564,7 +565,7 @@ public class PositiveEvalTest {
 
     @Test
     public void g_V_groupCount_by_values_as_test() {
-        Assert.assertEquals(g.V().groupCount().by(__.values("name").as("a")), eval("g.V().groupCount().by(values(\"name\")).as(\"a\")"));
+        Assert.assertEquals(g.V().groupCount().by(__.values("name").as("a")), eval("g.V().groupCount().by(__.values(\"name\").as(\"a\"))"));
     }
 
     @Test
@@ -617,6 +618,23 @@ public class PositiveEvalTest {
     public void g_V_where_a_eq_b_nested_value_age_test() {
         Assert.assertEquals(g.V().where("a", P.eq("b")).by("age").by(__.values("age")),
                 eval("g.V().where(\"a\", P.eq(\"b\")).by(\"age\").by(__.values(\"age\"))"));
+    }
+
+    @Test
+    public void g_V_path_expand_test() {
+        Assert.assertEquals(((IrCustomizedTraversalSource) g).V().out(__.range(1, 2)), eval("g.V().out('1..2')"));
+    }
+
+    @Test
+    public void g_V_path_expand_label_test() {
+        Assert.assertEquals(((IrCustomizedTraversalSource) g).V().out(__.range(1, 2), "knows"),
+                eval("g.V().out('1..2', \"knows\"))"));
+    }
+
+    @Test
+    public void g_V_path_expand_labels_test() {
+        Assert.assertEquals(((IrCustomizedTraversalSource) g).V().out(__.range(1, 2), "knows", "person"),
+                eval("g.V().out(\"1..2\", \"knows\", \"person\"))"));
     }
 
     @Test

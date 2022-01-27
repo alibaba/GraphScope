@@ -131,6 +131,12 @@ public enum GremlinResultParserFactory implements GremlinResultParser {
                     throw new GremlinResultParserException(entry.getInnerCase() + " is invalid");
             }
         }
+    },
+    PATH_EXPAND {
+        @Override
+        public List<Element> parseFrom(IrResult.Results results) {
+            throw new GremlinResultParserException("the whole path is unsupported yet");
+        }
     };
 
     private static Logger logger = LoggerFactory.getLogger(GremlinResultParserFactory.class);

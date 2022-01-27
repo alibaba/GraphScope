@@ -112,16 +112,19 @@ traversalMethod_has
     ;
 
 // out('str1', ...)
+// out('1..5', 'str1')
 traversalMethod_out
 	: 'out' LPAREN stringLiteralList RPAREN
 	;
 
 // in('str1', ...)
+// in('1..5', 'str1')
 traversalMethod_in
 	: 'in' LPAREN stringLiteralList RPAREN
 	;
 
 // both('str1', ...)
+// both('1..5', 'str1', ...)
 traversalMethod_both
 	: 'both' LPAREN stringLiteralList RPAREN
 	;
