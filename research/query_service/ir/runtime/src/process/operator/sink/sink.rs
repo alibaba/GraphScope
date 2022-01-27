@@ -176,15 +176,16 @@ impl MapFunction<Record, result_pb::Results> for RecordSinkEncoder {
     fn exec(&self, input: Record) -> FnResult<result_pb::Results> {
         let mut sink_columns = Vec::with_capacity(self.sink_keys.len());
         for sink_key in self.sink_keys.iter() {
-            let entry = input.get(sink_key.as_ref());
-            let entry_pb = entry.map(|entry| self.entry_to_pb(entry.deref()));
-            let column_pb = result_pb::Column {
-                name_or_id: sink_key
-                    .clone()
-                    .map(|sink_key| common_pb::NameOrId::from(sink_key.clone())),
-                entry: entry_pb,
-            };
-            sink_columns.push(column_pb);
+            if let Some(entry) = input.get(sink_key.as_ref()) {
+                let entry_pb = self.entry_to_pb(entry.deref());
+                let column_pb = result_pb::Column {
+                    name_or_id: sink_key
+                        .clone()
+                        .map(|sink_key| common_pb::NameOrId::from(sink_key.clone())),
+                    entry: Some(entry_pb),
+                };
+                sink_columns.push(column_pb);
+            }
         }
 
         let record_pb = result_pb::Record { columns: sink_columns };
