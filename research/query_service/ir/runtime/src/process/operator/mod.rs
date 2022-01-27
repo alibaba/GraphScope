@@ -57,44 +57,65 @@ impl TagKey {
             )))?
             .clone();
         if let Some(prop_key) = self.key.as_ref() {
-            if let Entry::Element(RecordElement::OnGraph(element)) = entry.as_ref() {
-                let prop_obj = match prop_key {
-                    PropKey::Id => element.id().into(),
-                    PropKey::Label => element
-                        .label()
-                        .cloned()
-                        .map(|label| match label {
-                            NameOrId::Str(str) => str.into(),
-                            NameOrId::Id(id) => id.into(),
-                        })
-                        .unwrap_or(Object::None),
-                    PropKey::Len => (element.len() as u64).into(),
-                    PropKey::Key(key) => {
-                        let details = element
-                            .details()
-                            .ok_or(FnExecError::get_tag_error(
-                                "Get key failed since get details from a graph element failed",
-                            ))?;
-                        if let Some(properties) = details.get_property(key) {
-                            properties
-                                .try_to_owned()
-                                .ok_or(FnExecError::UnExpectedData(
-                                    "unable to own the `BorrowObject`".to_string(),
-                                ))?
-                        } else {
-                            Object::None
-                        }
-                    }
-                };
-
-                Ok(Arc::new(CommonObject::Prop(prop_obj).into()))
-            } else {
-                Err(FnExecError::get_tag_error(
-                    "Get key failed when attempt to get prop_key from a non-graph element",
-                ))
-            }
+            let prop = self.get_key(entry, prop_key)?;
+            Ok(Arc::new(prop))
         } else {
             Ok(entry)
+        }
+    }
+
+    /// This is for accum, which get the entry of the input Record according to the tag_key field
+    pub fn take_entry(&self, input: &Record) -> Result<Entry, FnExecError> {
+        let entry = input
+            .get(self.tag.as_ref())
+            .ok_or(FnExecError::get_tag_error(&format!(
+                "Get tag {:?} failed since it refers to an empty entry",
+                self.tag
+            )))?
+            .clone();
+        if let Some(prop_key) = self.key.as_ref() {
+            Ok(self.get_key(entry, prop_key)?)
+        } else {
+            Ok(entry.as_ref().clone())
+        }
+    }
+
+    fn get_key(&self, entry: Arc<Entry>, prop_key: &PropKey) -> Result<Entry, FnExecError> {
+        if let Entry::Element(RecordElement::OnGraph(element)) = entry.as_ref() {
+            let prop_obj = match prop_key {
+                PropKey::Id => element.id().into(),
+                PropKey::Label => element
+                    .label()
+                    .cloned()
+                    .map(|label| match label {
+                        NameOrId::Str(str) => str.into(),
+                        NameOrId::Id(id) => id.into(),
+                    })
+                    .unwrap_or(Object::None),
+                PropKey::Len => (element.len() as u64).into(),
+                PropKey::Key(key) => {
+                    let details = element
+                        .details()
+                        .ok_or(FnExecError::get_tag_error(
+                            "Get key failed since get details from a graph element failed",
+                        ))?;
+                    if let Some(properties) = details.get_property(key) {
+                        properties
+                            .try_to_owned()
+                            .ok_or(FnExecError::UnExpectedData(
+                                "unable to own the `BorrowObject`".to_string(),
+                            ))?
+                    } else {
+                        Object::None
+                    }
+                }
+            };
+
+            Ok(CommonObject::Prop(prop_obj).into())
+        } else {
+            Err(FnExecError::get_tag_error(
+                "Get key failed when attempt to get prop_key from a non-graph element",
+            ))
         }
     }
 }

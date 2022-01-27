@@ -14,7 +14,6 @@
 //! limitations under the License.
 
 use std::convert::{TryFrom, TryInto};
-use std::sync::Arc;
 
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
@@ -31,8 +30,8 @@ use crate::process::record::{CommonObject, Entry, Record};
 #[derive(Debug, Clone)]
 pub enum EntryAccumulator {
     // TODO(bingqing): more accum kind
-    ToCount(Count<Arc<Entry>>),
-    ToList(ToList<Arc<Entry>>),
+    ToCount(Count<Entry>),
+    ToList(ToList<Entry>),
 }
 
 #[derive(Debug, Clone)]
@@ -43,7 +42,7 @@ pub struct RecordAccumulator {
 impl Accumulator<Record, Record> for RecordAccumulator {
     fn accum(&mut self, mut next: Record) -> FnExecResult<()> {
         for (accumulator, tag_key, _) in self.accum_ops.iter_mut() {
-            let entry = tag_key.get_entry(&mut next)?;
+            let entry = tag_key.take_entry(&mut next)?;
             accumulator.accum(entry)?;
         }
         Ok(())
@@ -53,38 +52,38 @@ impl Accumulator<Record, Record> for RecordAccumulator {
         let mut record = Record::default();
         for (accumulator, _, alias) in self.accum_ops.iter_mut() {
             let entry = accumulator.finalize()?;
-            record.append_arc_entry(entry, Some(alias.clone()));
+            record.append(entry, Some(alias.clone()));
         }
         Ok(record)
     }
 }
 
-impl Accumulator<Arc<Entry>, Arc<Entry>> for EntryAccumulator {
-    fn accum(&mut self, next: Arc<Entry>) -> FnExecResult<()> {
+impl Accumulator<Entry, Entry> for EntryAccumulator {
+    fn accum(&mut self, next: Entry) -> FnExecResult<()> {
         match self {
             EntryAccumulator::ToCount(count) => count.accum(next),
             EntryAccumulator::ToList(list) => list.accum(next),
         }
     }
 
-    fn finalize(&mut self) -> FnExecResult<Arc<Entry>> {
+    fn finalize(&mut self) -> FnExecResult<Entry> {
         match self {
             EntryAccumulator::ToCount(count) => {
                 let cnt = count.finalize()?;
-                Ok(Arc::new(CommonObject::Count(cnt).into()))
+                Ok(CommonObject::Count(cnt).into())
             }
             EntryAccumulator::ToList(list) => {
                 let list_entry = list
                     .finalize()?
                     .into_iter()
-                    .map(|entry| match entry.as_ref() {
+                    .map(|entry| match entry {
                         Entry::Element(e) => Ok(e.clone()),
                         Entry::Collection(_) => {
                             Err(FnExecError::unsupported_error("fold collections is not supported yet"))
                         }
                     })
                     .collect::<Result<Vec<_>, _>>()?;
-                Ok(Arc::new(Entry::Collection(list_entry)))
+                Ok(Entry::Collection(list_entry))
             }
         }
     }
@@ -130,15 +129,62 @@ impl AccumFactoryGen for algebra_pb::GroupBy {
     }
 }
 
+impl Encode for EntryAccumulator {
+    fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
+        match self {
+            EntryAccumulator::ToCount(count) => {
+                writer.write_u8(0)?;
+                count.write_to(writer)?;
+            }
+            EntryAccumulator::ToList(list) => {
+                writer.write_u8(1)?;
+                list.write_to(writer)?;
+            }
+        }
+        Ok(())
+    }
+}
+
+impl Decode for EntryAccumulator {
+    fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
+        let e = reader.read_u8()?;
+        match e {
+            0 => {
+                let cnt = <Count<Entry>>::read_from(reader)?;
+                Ok(EntryAccumulator::ToCount(cnt))
+            }
+            1 => {
+                let list = <ToList<Entry>>::read_from(reader)?;
+                Ok(EntryAccumulator::ToList(list))
+            }
+            _ => Err(std::io::Error::new(std::io::ErrorKind::Other, "unreachable")),
+        }
+    }
+}
+
 impl Encode for RecordAccumulator {
-    fn write_to<W: WriteExt>(&self, _writer: &mut W) -> std::io::Result<()> {
-        todo!()
+    fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
+        writer.write_u32(self.accum_ops.len() as u32)?;
+        for (accumulator, tag_key, alias) in self.accum_ops.iter() {
+            accumulator.write_to(writer)?;
+            tag_key.write_to(writer)?;
+            alias.write_to(writer)?
+        }
+        Ok(())
     }
 }
 
 impl Decode for RecordAccumulator {
-    fn read_from<R: ReadExt>(_reader: &mut R) -> std::io::Result<Self> {
-        todo!()
+    fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
+        let len = reader.read_u32()?;
+        let mut accum_ops = Vec::with_capacity(len as usize);
+        for _ in 0..len {
+            let accumulator = <EntryAccumulator>::read_from(reader)?;
+            let tag_key = <TagKey>::read_from(reader)?;
+            let alias = <NameOrId>::read_from(reader)?;
+            accum_ops.push((accumulator, tag_key, alias));
+        }
+        Ok(RecordAccumulator { accum_ops })
     }
 }
 
