@@ -46,7 +46,7 @@ impl KeyFunction<Record, RecordKey, Record> for KeySelector {
         let keys = self
             .keys
             .iter()
-            .map(|key| key.get_entry(&mut input))
+            .map(|key| key.get_arc_entry(&mut input))
             .collect::<Result<Vec<_>, _>>()?;
         Ok((RecordKey::new(keys), input))
     }

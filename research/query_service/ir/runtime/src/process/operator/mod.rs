@@ -48,7 +48,7 @@ pub struct TagKey {
 
 impl TagKey {
     /// This is for key generation, which generate the key of the input Record according to the tag_key field
-    pub fn get_entry(&self, input: &Record) -> Result<Arc<Entry>, FnExecError> {
+    pub fn get_arc_entry(&self, input: &Record) -> Result<Arc<Entry>, FnExecError> {
         let entry = input
             .get(self.tag.as_ref())
             .ok_or(FnExecError::get_tag_error(&format!(
@@ -65,7 +65,7 @@ impl TagKey {
     }
 
     /// This is for accum, which get the entry of the input Record according to the tag_key field
-    pub fn take_entry(&self, input: &Record) -> Result<Entry, FnExecError> {
+    pub fn get_entry(&self, input: &Record) -> Result<Entry, FnExecError> {
         let entry = input
             .get(self.tag.as_ref())
             .ok_or(FnExecError::get_tag_error(&format!(
@@ -250,7 +250,7 @@ pub(crate) mod tests {
         let tag_key = TagKey { tag: None, key: None };
         let record = init_record();
         let expected = CommonObject::Count(10).into();
-        let entry = tag_key.get_entry(&record).unwrap();
+        let entry = tag_key.get_arc_entry(&record).unwrap();
         assert_eq!(entry.as_ref().clone(), expected)
     }
 
@@ -259,7 +259,7 @@ pub(crate) mod tests {
         let tag_key = TagKey { tag: Some((0 as KeyId).into()), key: None };
         let expected = init_vertex2();
         let record = init_record();
-        let entry = tag_key.get_entry(&record).unwrap();
+        let entry = tag_key.get_arc_entry(&record).unwrap();
         if let Some(element) = entry.as_graph_vertex() {
             assert_eq!(element.id(), expected.id());
         } else {
@@ -272,7 +272,7 @@ pub(crate) mod tests {
         let tag_key = TagKey { tag: Some((0 as KeyId).into()), key: Some(PropKey::Key("age".into())) };
         let expected = 27;
         let record = init_record();
-        let entry = tag_key.get_entry(&record).unwrap();
+        let entry = tag_key.get_arc_entry(&record).unwrap();
         match entry.as_ref() {
             Entry::Element(RecordElement::OffGraph(CommonObject::Prop(obj))) => {
                 assert_eq!(obj.clone(), object!(expected));

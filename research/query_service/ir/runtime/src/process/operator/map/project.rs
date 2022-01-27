@@ -55,7 +55,7 @@ fn exec_projector(input: &Record, projector: &Projector) -> FnResult<Arc<Entry>>
                 .into(),
             )
         }
-        Projector::GraphElementProjector(tag_key) => tag_key.get_entry(input)?,
+        Projector::GraphElementProjector(tag_key) => tag_key.get_arc_entry(input)?,
     };
     Ok(entry)
 }

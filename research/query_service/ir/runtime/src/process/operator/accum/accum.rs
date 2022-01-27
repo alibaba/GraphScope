@@ -42,7 +42,7 @@ pub struct RecordAccumulator {
 impl Accumulator<Record, Record> for RecordAccumulator {
     fn accum(&mut self, mut next: Record) -> FnExecResult<()> {
         for (accumulator, tag_key, _) in self.accum_ops.iter_mut() {
-            let entry = tag_key.take_entry(&mut next)?;
+            let entry = tag_key.get_entry(&mut next)?;
             accumulator.accum(entry)?;
         }
         Ok(())
