@@ -58,9 +58,9 @@ impl GraphPath {
         if is_whole_path {
             let mut path = Vec::new();
             path.push(entry.into());
-            GraphPath::WHOLE((path, 1))
+            GraphPath::WHOLE((path, 0))
         } else {
-            GraphPath::END((entry.into(), 1))
+            GraphPath::END((entry.into(), 0))
         }
     }
 
@@ -81,6 +81,13 @@ impl GraphPath {
         match self {
             GraphPath::WHOLE((ref w, _)) => w.last(),
             GraphPath::END((ref e, _)) => Some(e),
+        }
+    }
+
+    pub fn take_path(self) -> Option<Vec<VertexOrEdge>> {
+        match self {
+            GraphPath::WHOLE((w, _)) => Some(w),
+            GraphPath::END((_, _)) => None,
         }
     }
 }
