@@ -36,7 +36,7 @@ mod test {
             alias: None,
             params: Some(pb::QueryParams {
                 table_names: vec![common_pb::NameOrId::from("person".to_string())],
-                columns: vec![],
+                columns: vec![common_pb::NameOrId::from("id".to_string())],
                 limit: None,
                 predicate: None,
                 requirements: vec![],
@@ -59,6 +59,7 @@ mod test {
         };
         let source_opr_bytes = pb::logical_plan::Operator::from(source_opr).encode_to_vec();
         let select_opr_bytes = pb::logical_plan::Operator::from(select_opr).encode_to_vec();
+        let shuffle_opr_bytes = common_pb::NameOrIdKey { key: None }.encode_to_vec();
         let expand_opr_bytes = pb::logical_plan::Operator::from(expand_opr).encode_to_vec();
         let sink_opr_bytes = pb::logical_plan::Operator::from(pb::Sink {
             tags: vec![common_pb::NameOrIdKey { key: None }],
@@ -69,6 +70,7 @@ mod test {
         let mut job_builder = JobBuilder::default();
         job_builder.add_source(source_opr_bytes.clone());
         job_builder.filter(select_opr_bytes);
+        job_builder.repartition(shuffle_opr_bytes.clone());
         job_builder.flat_map(expand_opr_bytes.clone());
         job_builder.limit(10);
         job_builder.sink(sink_opr_bytes);
@@ -77,7 +79,7 @@ mod test {
     }
 
     #[test]
-    fn test_poc_query() {
+    fn poc_query_test() {
         initialize();
         let request = init_poc_request();
         let mut results = submit_query(request, 1);

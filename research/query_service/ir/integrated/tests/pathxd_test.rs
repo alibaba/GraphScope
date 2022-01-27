@@ -58,6 +58,7 @@ mod test {
             alias: None,
         };
 
+        let shuffle_opr = common_pb::NameOrIdKey { key: None };
         let expand_opr = pb::logical_plan::Operator::from(edge_expand.clone());
         let path_start_opr =
             pb::logical_plan::Operator::from(pb::PathStart { start_tag: None, is_whole_path });
@@ -72,6 +73,7 @@ mod test {
         job_builder.add_source(source_opr.encode_to_vec());
         job_builder.map(path_start_opr.encode_to_vec());
         job_builder.iterate_emit(2, |plan| {
+            plan.repartition(shuffle_opr.clone().encode_to_vec());
             plan.flat_map(expand_opr.clone().encode_to_vec());
         });
         job_builder.map(path_end_opr.encode_to_vec());
@@ -109,6 +111,7 @@ mod test {
             alias: None,
         };
 
+        let shuffle_opr = common_pb::NameOrIdKey { key: None };
         let expand_opr = pb::logical_plan::Operator::from(edge_expand.clone());
         let path_start_opr =
             pb::logical_plan::Operator::from(pb::PathStart { start_tag: None, is_whole_path });
@@ -122,8 +125,10 @@ mod test {
         let mut job_builder = JobBuilder::default();
         job_builder.add_source(source_opr.encode_to_vec());
         job_builder.map(path_start_opr.encode_to_vec());
+        job_builder.repartition(shuffle_opr.clone().encode_to_vec());
         job_builder.flat_map(expand_opr.clone().encode_to_vec());
         job_builder.iterate_emit(1, |plan| {
+            plan.repartition(shuffle_opr.clone().encode_to_vec());
             plan.flat_map(expand_opr.clone().encode_to_vec());
         });
         job_builder.map(path_end_opr.encode_to_vec());

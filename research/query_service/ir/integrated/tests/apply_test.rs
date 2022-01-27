@@ -68,6 +68,7 @@ mod test {
         };
 
         let source_opr_bytes = pb::logical_plan::Operator::from(source_opr).encode_to_vec();
+        let shuffle_opr_bytes = common_pb::NameOrIdKey { key: None }.encode_to_vec();
         let apply_opr_bytes = pb::logical_plan::Operator::from(apply_opr).encode_to_vec();
         let expand_opr_bytes = pb::logical_plan::Operator::from(expand_opr).encode_to_vec();
         let sink_opr_bytes = pb::logical_plan::Operator::from(pb::Sink {
@@ -80,6 +81,7 @@ mod test {
         job_builder.add_source(source_opr_bytes);
         job_builder.apply_join(
             move |plan| {
+                plan.repartition(shuffle_opr_bytes.clone());
                 plan.flat_map(expand_opr_bytes.clone());
             },
             apply_opr_bytes,
@@ -191,6 +193,7 @@ mod test {
         };
 
         let source_opr_bytes = pb::logical_plan::Operator::from(source_opr).encode_to_vec();
+        let shuffle_opr_bytes = common_pb::NameOrIdKey { key: None }.encode_to_vec();
         let apply_opr_bytes = pb::logical_plan::Operator::from(apply_opr).encode_to_vec();
         let expand_opr_bytes = pb::logical_plan::Operator::from(expand_opr).encode_to_vec();
         let fold_opr_bytes = pb::logical_plan::Operator::from(fold_opr).encode_to_vec();
@@ -204,6 +207,7 @@ mod test {
         job_builder.add_source(source_opr_bytes);
         job_builder.apply_join(
             move |plan| {
+                plan.repartition(shuffle_opr_bytes.clone());
                 plan.flat_map(expand_opr_bytes.clone())
                     .fold_custom(server_pb::AccumKind::Cnt, fold_opr_bytes.clone());
             },
