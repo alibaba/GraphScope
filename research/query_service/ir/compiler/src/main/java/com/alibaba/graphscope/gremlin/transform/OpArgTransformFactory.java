@@ -264,7 +264,8 @@ public class OpArgTransformFactory {
         FfiAggOpt aggOpt;
         FfiAlias.ByValue alias;
         String notice = "supported pattern is [group().by(..).by(count())] or [group().by(..).by(fold())]";
-        if (admin == null) { // group
+        if (admin == null || admin instanceof IdentityTraversal || admin.getSteps().size() == 2
+                && isMapIdentity(admin.getStartStep()) && admin.getEndStep() instanceof FoldStep) { // group, // group().by(..).by()
             aggOpt = FfiAggOpt.ToList;
             alias = getGroupValueAlias(noneVars, aggOpt);
         } else if (admin.getSteps().size() == 1) {
@@ -287,6 +288,16 @@ public class OpArgTransformFactory {
         }
         return Collections.singletonList(new ArgAggFn(aggOpt, alias));
     };
+
+    // TraversalMapStep(identity)
+    private static boolean isMapIdentity(Step step) {
+        if (!(step instanceof TraversalMapStep)) {
+            return false;
+        }
+        TraversalMapStep mapStep = (TraversalMapStep) step;
+        Traversal.Admin mapTraversal = mapStep.getLocalChildren().size() > 0 ? (Traversal.Admin) mapStep.getLocalChildren().get(0) : null;
+        return mapTraversal != null && mapTraversal instanceof IdentityTraversal;
+    }
 
     // keys or keys_a or keys_name or keys_a_name
     private static FfiAlias.ByValue getGroupKeyAlias(FfiVariable.ByValue key) {

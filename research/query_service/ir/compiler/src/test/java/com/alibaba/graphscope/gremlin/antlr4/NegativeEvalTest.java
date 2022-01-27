@@ -145,31 +145,9 @@ public class NegativeEvalTest {
     }
 
     @Test
-    public void g_V_select_by_none_test() {
-        try {
-            scriptEngine.eval("g.V().select('a').by()", context);
-        } catch (InvalidGremlinScriptException e) {
-            // expected error
-            return;
-        }
-        Assert.fail();
-    }
-
-    @Test
     public void g_V_select_by_keys_test() {
         try {
             scriptEngine.eval("g.V().select().by('name', 'id')", context);
-        } catch (InvalidGremlinScriptException e) {
-            // expected error
-            return;
-        }
-        Assert.fail();
-    }
-
-    @Test
-    public void g_V_order_by_none_test() {
-        try {
-            scriptEngine.eval("g.V().order().by()", context);
         } catch (InvalidGremlinScriptException e) {
             // expected error
             return;

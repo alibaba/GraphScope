@@ -173,6 +173,7 @@ traversalMethod_order
     : 'order' LPAREN RPAREN (DOT traversalMethod_orderby_list)?
     ;
 
+// by()
 // by('asc' | 'desc')
 // by('a', 'asc' | 'desc')
 // by(values(..), 'asc' | 'desc')
@@ -180,7 +181,8 @@ traversalMethod_order
 // by(select("a").by("name"), 'asc' | 'desc')
 // by(select("a").by(valueMap("name")), 'asc' | 'desc')
 traversalMethod_orderby
-    : 'by' LPAREN traversalOrder RPAREN
+    : 'by' LPAREN RPAREN
+    | 'by' LPAREN traversalOrder RPAREN
     | 'by' LPAREN stringLiteral (COMMA traversalOrder)? RPAREN
     | 'by' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_values (COMMA traversalOrder)? RPAREN
     | 'by' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_select (COMMA traversalOrder)? RPAREN
@@ -196,9 +198,12 @@ traversalMethod_select
     : 'select' LPAREN stringLiteral (COMMA stringLiteralList)? RPAREN (DOT traversalMethod_selectby_list)?
     ;
 
+// by()
+// by("name")
 // by(valueMap())
 traversalMethod_selectby
-    : 'by' LPAREN stringLiteral RPAREN
+    : 'by' LPAREN RPAREN
+    | 'by' LPAREN stringLiteral RPAREN
     | 'by' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_valueMap RPAREN
     ;
 
@@ -220,19 +225,23 @@ traversalMethod_groupCount
 	: 'groupCount' LPAREN RPAREN (DOT traversalMethod_group_keyby)?
 	;
 
+// group().by()
 // group().by('name')
 // group().by(values('name'))
 // group().by(values('name').as('key'))
 traversalMethod_group_keyby
-    : 'by' LPAREN stringLiteral RPAREN
+    : 'by' LPAREN RPAREN
+    | 'by' LPAREN stringLiteral RPAREN
     | 'by' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_values (DOT traversalMethod_as)? RPAREN
     ;
 
+// group().by(...).by()
 // group().by(...).by(fold().as("value"))
 // group().by(...).by(count())
 // group().by(...).by(count().as("value"))
 traversalMethod_group_valueby
-    : 'by' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_aggregate_func (DOT traversalMethod_as)? RPAREN
+    : 'by' LPAREN RPAREN
+    | 'by' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_aggregate_func (DOT traversalMethod_as)? RPAREN
     ;
 
 traversalMethod_aggregate_func
@@ -277,8 +286,12 @@ traversalMethod_where
 	| 'where' LPAREN nestedTraversal RPAREN
 	;
 
+// where().by()
+// where().by('name')
+// where().by(values('name'))
 traversalMethod_whereby
-    : 'by' LPAREN stringLiteral RPAREN
+    : 'by' LPAREN RPAREN
+    | 'by' LPAREN stringLiteral RPAREN
     | 'by' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_values RPAREN
     ;
 
