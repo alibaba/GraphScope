@@ -130,6 +130,10 @@ impl Record {
         }
     }
 
+    pub fn get_curr_mut(&mut self) -> &mut Option<Arc<Entry>> {
+        self.curr.borrow_mut()
+    }
+
     pub fn get_columns_mut(&mut self) -> &mut IndexMap<NameOrId, Arc<Entry>> {
         self.columns.borrow_mut()
     }
