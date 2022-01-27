@@ -35,7 +35,7 @@ test:
 	cd $(CUR_DIR) && mvn test
 
 gremlin_test:
-	mvn clean test -Dtest=com.alibaba.graphscope.integration.IrGremlinTest $(OSFLAG)
+	mvn test -Dtest=com.alibaba.graphscope.integration.IrGremlinTest $(OSFLAG)
 
 submit:
 	cd $(CUR_DIR) && $(java) \
