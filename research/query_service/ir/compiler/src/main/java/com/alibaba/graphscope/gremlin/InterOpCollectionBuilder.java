@@ -334,8 +334,8 @@ public class InterOpCollectionBuilder {
             public InterOpBase apply(Step step) {
                 PathExpandOp op = new PathExpandOp((ExpandOp) VERTEX_STEP.apply(step));
                 PathExpandStep pathStep = (PathExpandStep) step;
-                op.setLower(new OpArg(Integer.valueOf(pathStep.getLower() + 1), Function.identity()));
-                op.setUpper(new OpArg(Integer.valueOf(pathStep.getUpper() + 1), Function.identity()));
+                op.setLower(new OpArg(Integer.valueOf(pathStep.getLower()), Function.identity()));
+                op.setUpper(new OpArg(Integer.valueOf(pathStep.getUpper()), Function.identity()));
                 return op;
             }
         },

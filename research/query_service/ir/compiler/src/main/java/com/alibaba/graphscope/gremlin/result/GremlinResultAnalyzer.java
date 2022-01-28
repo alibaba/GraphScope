@@ -19,7 +19,8 @@ public class GremlinResultAnalyzer {
         for (Step step : steps) {
             if (Utils.equalClass(step, GraphStep.class)
                     || Utils.equalClass(step, TinkerGraphStep.class) || Utils.equalClass(step, VertexStep.class)
-                    || Utils.equalClass(step, EdgeVertexStep.class) || Utils.equalClass(step, EdgeOtherVertexStep.class)) {
+                    || Utils.equalClass(step, EdgeVertexStep.class) || Utils.equalClass(step, EdgeOtherVertexStep.class)
+                    || Utils.equalClass(step, PathExpandStep.class)) {
                 parserType = GremlinResultParserFactory.GRAPH_ELEMENT;
             } else if (Utils.equalClass(step, CountGlobalStep.class)) {
                 parserType = GremlinResultParserFactory.SINGLE_VALUE;
@@ -28,8 +29,6 @@ public class GremlinResultAnalyzer {
                 parserType = GremlinResultParserFactory.PROJECT_VALUE;
             } else if (Utils.equalClass(step, GroupCountStep.class) || Utils.equalClass(step, GroupStep.class)) {
                 parserType = GremlinResultParserFactory.GROUP;
-            } else if (Utils.equalClass(step, PathExpandStep.class)) {
-                parserType = GremlinResultParserFactory.PATH_EXPAND;
             } else if (Utils.equalClass(step, UnionStep.class)) {
                 parserType = GremlinResultParserFactory.UNION;
             } else if (Utils.equalClass(step, HasStep.class) || Utils.equalClass(step, DedupGlobalStep.class)

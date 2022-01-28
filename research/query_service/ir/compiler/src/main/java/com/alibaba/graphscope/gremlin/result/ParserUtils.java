@@ -3,6 +3,8 @@ package com.alibaba.graphscope.gremlin.result;
 import com.alibaba.graphscope.gaia.proto.Common;
 import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.alibaba.graphscope.gremlin.exception.GremlinResultParserException;
+import org.apache.tinkerpop.gremlin.structure.Edge;
+import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.structure.util.detached.DetachedEdge;
 import org.apache.tinkerpop.gremlin.structure.util.detached.DetachedVertex;
 import org.slf4j.Logger;
@@ -19,14 +21,20 @@ public class ParserUtils {
     public static Object parseElement(IrResult.Element element) {
         switch (element.getInnerCase()) {
             case VERTEX:
-                IrResult.Vertex vertex = element.getVertex();
-                Map<String, Object> properties = parseProperties(vertex.getPropertiesList());
-                return new DetachedVertex(vertex.getId(), vertex.getLabel().getName(), properties);
+                return parseVertex(element.getVertex());
             case EDGE:
-                IrResult.Edge edge = element.getEdge();
-                Map<String, Object> edgeProperties = parseProperties(edge.getPropertiesList());
-                return new DetachedEdge(edge.getId(), edge.getLabel().getName(), edgeProperties,
-                        edge.getSrcId(), edge.getSrcLabel().getName(), edge.getDstId(), edge.getDstLabel().getName());
+                return parseEdge(element.getEdge());
+            case GRAPH_PATH:
+                IrResult.GraphPath graphPath = element.getGraphPath();
+                return graphPath.getPathList().stream().map(k -> {
+                    if (k.getInnerCase() == IrResult.GraphPath.VertexOrEdge.InnerCase.VERTEX) {
+                        return parseVertex(k.getVertex());
+                    } else if (k.getInnerCase() == IrResult.GraphPath.VertexOrEdge.InnerCase.EDGE) {
+                        return parseEdge(k.getEdge());
+                    } else {
+                        throw new GremlinResultParserException(k.getInnerCase() + " is invalid");
+                    }
+                }).collect(Collectors.toList());
             case OBJECT:
                 return parseCommonValue(element.getObject());
             default:
@@ -69,6 +77,17 @@ public class ParserUtils {
                 throw new GremlinResultParserException(value.getItemCase() + " is unsupported yet");
 
         }
+    }
+
+    private static Vertex parseVertex(IrResult.Vertex vertex) {
+        Map<String, Object> properties = parseProperties(vertex.getPropertiesList());
+        return new DetachedVertex(vertex.getId(), vertex.getLabel().getName(), properties);
+    }
+
+    private static Edge parseEdge(IrResult.Edge edge) {
+        Map<String, Object> edgeProperties = parseProperties(edge.getPropertiesList());
+        return new DetachedEdge(edge.getId(), edge.getLabel().getName(), edgeProperties,
+                edge.getSrcId(), edge.getSrcLabel().getName(), edge.getDstId(), edge.getDstLabel().getName());
     }
 
     private static Map<String, Object> parseProperties(List<IrResult.Property> properties) {

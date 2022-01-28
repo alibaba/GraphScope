@@ -18,13 +18,13 @@ import java.util.Map;
 public enum GremlinResultParserFactory implements GremlinResultParser {
     GRAPH_ELEMENT {
         @Override
-        public Element parseFrom(IrResult.Results results) {
+        public Object parseFrom(IrResult.Results results) {
             IrResult.Element element = ParserUtils.getHeadEntry(results).getElement();
             Object graphElement = ParserUtils.parseElement(element);
-            if (!(graphElement instanceof Element)) {
-                throw new GremlinResultParserException(element.getInnerCase() + " is not Vertex or Edge type");
+            if (!(graphElement instanceof Element || graphElement instanceof List)) {
+                throw new GremlinResultParserException("parse element should return vertex or edge or graph path");
             }
-            return (Element) graphElement;
+            return graphElement;
         }
     },
     SINGLE_VALUE {
@@ -133,12 +133,6 @@ public enum GremlinResultParserFactory implements GremlinResultParser {
             }
         }
     },
-    PATH_EXPAND {
-        @Override
-        public List<Element> parseFrom(IrResult.Results results) {
-            throw new GremlinResultParserException("the whole path is unsupported yet");
-        }
-    },
     UNION {
         @Override
         public Object parseFrom(IrResult.Results results) {
@@ -149,14 +143,15 @@ public enum GremlinResultParserFactory implements GremlinResultParser {
         // try to infer from the results
         private GremlinResultParser inferFromIrResults(IrResult.Results results) {
             int columns = results.getRecord().getColumnsList().size();
-            logger.info("result is {}", results);
+            logger.debug("result is {}", results);
             if (columns == 1) {
                 IrResult.Entry entry = ParserUtils.getHeadEntry(results);
                 switch (entry.getInnerCase()) {
                     case ELEMENT:
                         IrResult.Element element = entry.getElement();
-                        if (element.getInnerCase() == IrResult.Element.InnerCase.VERTEX ||
-                                element.getInnerCase() == IrResult.Element.InnerCase.EDGE) {
+                        if (element.getInnerCase() == IrResult.Element.InnerCase.VERTEX
+                                || element.getInnerCase() == IrResult.Element.InnerCase.EDGE
+                                || element.getInnerCase() == IrResult.Element.InnerCase.GRAPH_PATH) {
                             return GRAPH_ELEMENT;
                         } else if (element.getInnerCase() == IrResult.Element.InnerCase.OBJECT) {
                             Common.Value value = element.getObject();
@@ -165,8 +160,8 @@ public enum GremlinResultParserFactory implements GremlinResultParser {
                             } else { // simple type
                                 return SINGLE_VALUE;
                             }
-                        } else { // todo: path expand in whole path
-                            throw new GremlinResultParserException(element.getInnerCase() + " is unsupported yet");
+                        } else {
+                            throw new GremlinResultParserException(element.getInnerCase() + " is invalid");
                         }
                     case COLLECTION: // path()
                     default:
