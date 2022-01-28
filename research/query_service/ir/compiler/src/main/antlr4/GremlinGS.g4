@@ -76,14 +76,15 @@ traversalMethod
     | traversalMethod_otherV  // otherV()
     | traversalMethod_not  // not()
     | traversalMethod_union // union()
+    | traversalMethod_range // range()
     ;
 
 traversalSourceSpawnMethod_V
-	: 'V' LPAREN genericLiteralList RPAREN
+	: 'V' LPAREN integerLiteralList RPAREN
 	;
 
 traversalSourceSpawnMethod_E
-    : 'E' LPAREN genericLiteralList RPAREN
+    : 'E' LPAREN integerLiteralList RPAREN
     ;
 
 traversalMethod_as
@@ -95,9 +96,9 @@ traversalMethod_hasLabel
     : 'hasLabel' LPAREN stringLiteral (COMMA stringLiteralList)?  RPAREN
     ;
 
-// hasId(1, 2, 3), or hasId("1", "2", "3")
+// hasId(1, 2, 3)
 traversalMethod_hasId
-    : 'hasId' LPAREN genericLiteral (COMMA genericLiteralList)? RPAREN
+    : 'hasId' LPAREN integerLiteral (COMMA integerLiteralList)? RPAREN
     ;
 
 // has("str", y), has("str", eq/neq/gt/gte/lt/lte(y))
@@ -316,6 +317,10 @@ nestedTraversalExpr
     : nestedTraversal (COMMA nestedTraversal)*
     ;
 
+traversalMethod_range
+    : 'range' LPAREN integerLiteral COMMA integerLiteral RPAREN
+    ;
+
 // only permit non empty, \'\' or \"\" or \'null\' is meaningless as a parameter
 stringLiteral
     : NonEmptyStringLiteral
@@ -348,6 +353,15 @@ genericLiteralExpr
 
 integerLiteral
     : IntegerLiteral
+    ;
+
+integerLiteralList
+    : integerLiteralExpr?
+    | LBRACK integerLiteralExpr? RBRACK
+    ;
+
+integerLiteralExpr
+    : integerLiteral (COMMA integerLiteral)*
     ;
 
 floatLiteral
