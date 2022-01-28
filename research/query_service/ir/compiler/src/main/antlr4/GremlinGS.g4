@@ -76,6 +76,7 @@ traversalMethod
     | traversalMethod_otherV  // otherV()
     | traversalMethod_not  // not()
     | traversalMethod_union // union()
+    | traversalMethod_range // range()
     ;
 
 traversalSourceSpawnMethod_V
@@ -314,6 +315,10 @@ traversalMethod_union
 
 nestedTraversalExpr
     : nestedTraversal (COMMA nestedTraversal)*
+    ;
+
+traversalMethod_range
+    : 'range' LPAREN integerLiteral COMMA integerLiteral RPAREN
     ;
 
 // only permit non empty, \'\' or \"\" or \'null\' is meaningless as a parameter
