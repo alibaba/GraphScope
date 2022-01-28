@@ -35,8 +35,8 @@ impl CompareFunction<Record> for RecordCompare {
     fn compare(&self, left: &Record, right: &Record) -> Ordering {
         let mut result = Ordering::Equal;
         for (tag_key, order) in self.tag_key_order.iter() {
-            let left_obj = tag_key.get_entry(left).ok();
-            let right_obj = tag_key.get_entry(right).ok();
+            let left_obj = tag_key.get_arc_entry(left).ok();
+            let right_obj = tag_key.get_arc_entry(right).ok();
             let ordering = left_obj.partial_cmp(&right_obj);
             if let Some(ordering) = ordering {
                 if Ordering::Equal != ordering {
