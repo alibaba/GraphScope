@@ -199,4 +199,37 @@ public class NegativeEvalTest {
         }
         Assert.fail();
     }
+
+    @Test
+    public void g_V_str_id_test() {
+        try {
+            scriptEngine.eval("g.V(\"1\")", context);
+        } catch (InvalidGremlinScriptException e) {
+            // expected error
+            return;
+        }
+        Assert.fail();
+    }
+
+    @Test
+    public void g_E_str_id_test() {
+        try {
+            scriptEngine.eval("g.E(\"1\")", context);
+        } catch (InvalidGremlinScriptException e) {
+            // expected error
+            return;
+        }
+        Assert.fail();
+    }
+
+    @Test
+    public void g_V_hasId_str_id_test() {
+        try {
+            scriptEngine.eval("g.V().hasId(\"1\")", context);
+        } catch (InvalidGremlinScriptException e) {
+            // expected error
+            return;
+        }
+        Assert.fail();
+    }
 }

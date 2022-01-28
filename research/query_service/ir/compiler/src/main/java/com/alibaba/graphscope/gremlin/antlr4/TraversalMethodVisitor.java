@@ -60,10 +60,10 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
     @Override
     public Traversal visitTraversalMethod_hasId(GremlinGSParser.TraversalMethod_hasIdContext ctx) {
         if (ctx.getChildCount() == 4) {
-            return graphTraversal.hasId(GenericLiteralVisitor.getInstance().visitGenericLiteral(ctx.genericLiteral()));
-        } else if (ctx.genericLiteralList() != null) {
-            return graphTraversal.hasId(GenericLiteralVisitor.getInstance().visitGenericLiteral(ctx.genericLiteral()),
-                    GenericLiteralVisitor.getGenericLiteralList(ctx.genericLiteralList()));
+            return graphTraversal.hasId(GenericLiteralVisitor.getInstance().visitIntegerLiteral(ctx.integerLiteral()));
+        } else if (ctx.integerLiteral() != null && ctx.integerLiteralList() != null) {
+            return graphTraversal.hasId(GenericLiteralVisitor.getInstance().visitIntegerLiteral(ctx.integerLiteral()),
+                    GenericLiteralVisitor.getIntegerLiteralList(ctx.integerLiteralList()));
         } else {
             throw new UnsupportedEvalException(ctx.getClass(),
                     "supported pattern is [hasId(1)] or hasId(1, 2, ...)");
@@ -213,7 +213,7 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
 
     @Override
     public Traversal visitTraversalMethod_valueMap(GremlinGSParser.TraversalMethod_valueMapContext ctx) {
-        return graphTraversal.valueMap(GenericLiteralVisitor.getstringLiteralExpr(ctx.stringLiteralExpr()));
+        return graphTraversal.valueMap(GenericLiteralVisitor.getStringLiteralExpr(ctx.stringLiteralExpr()));
     }
 
     @Override

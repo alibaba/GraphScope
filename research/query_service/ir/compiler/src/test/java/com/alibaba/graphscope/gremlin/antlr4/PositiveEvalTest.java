@@ -715,4 +715,9 @@ public class PositiveEvalTest {
     public void g_V_union_out_test() {
         Assert.assertEquals(g.V().union(__.out(), __.out()), eval("g.V().union(__.out(), __.out())"));
     }
+
+    @Test
+    public void g_V_id_list_test() {
+        Assert.assertEquals(g.V(1, 2, 3), eval("g.V([1, 2, 3])"));
+    }
 }

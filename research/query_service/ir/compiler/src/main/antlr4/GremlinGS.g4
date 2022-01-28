@@ -80,11 +80,11 @@ traversalMethod
     ;
 
 traversalSourceSpawnMethod_V
-	: 'V' LPAREN genericLiteralList RPAREN
+	: 'V' LPAREN integerLiteralList RPAREN
 	;
 
 traversalSourceSpawnMethod_E
-    : 'E' LPAREN genericLiteralList RPAREN
+    : 'E' LPAREN integerLiteralList RPAREN
     ;
 
 traversalMethod_as
@@ -96,9 +96,9 @@ traversalMethod_hasLabel
     : 'hasLabel' LPAREN stringLiteral (COMMA stringLiteralList)?  RPAREN
     ;
 
-// hasId(1, 2, 3), or hasId("1", "2", "3")
+// hasId(1, 2, 3)
 traversalMethod_hasId
-    : 'hasId' LPAREN genericLiteral (COMMA genericLiteralList)? RPAREN
+    : 'hasId' LPAREN integerLiteral (COMMA integerLiteralList)? RPAREN
     ;
 
 // has("str", y), has("str", eq/neq/gt/gte/lt/lte(y))
@@ -353,6 +353,15 @@ genericLiteralExpr
 
 integerLiteral
     : IntegerLiteral
+    ;
+
+integerLiteralList
+    : integerLiteralExpr?
+    | LBRACK integerLiteralExpr? RBRACK
+    ;
+
+integerLiteralExpr
+    : integerLiteral (COMMA integerLiteral)*
     ;
 
 floatLiteral
