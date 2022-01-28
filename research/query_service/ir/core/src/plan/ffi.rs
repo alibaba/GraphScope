@@ -993,16 +993,16 @@ mod union {
     /// To initialize a union operator
     #[no_mangle]
     pub extern "C" fn init_union_operator() -> *const c_void {
-        let union = Box::new(pb::Union { subtasks: vec![] });
+        let union = Box::new(pb::Union { parents: vec![] });
         Box::into_raw(union) as *const c_void
     }
 
     /// Add the subtask parent id to Union
     #[no_mangle]
-    pub extern "C" fn add_union_sub_task(ptr_union: *const c_void, parent_id: i32) -> ResultCode {
+    pub extern "C" fn add_union_parent(ptr_union: *const c_void, parent_id: i32) -> ResultCode {
         let return_code = ResultCode::Success;
         let mut union = unsafe { Box::from_raw(ptr_union as *mut pb::Union) };
-        union.subtasks.push(parent_id);
+        union.parents.push(parent_id);
         std::mem::forget(union);
 
         return_code
@@ -1014,7 +1014,7 @@ mod union {
         ptr_plan: *const c_void, ptr_union: *const c_void, id: *mut i32,
     ) -> ResultCode {
         let union_opr = unsafe { Box::from_raw(ptr_union as *mut pb::Union) };
-        append_operator(ptr_plan, union_opr.as_ref().clone().into(), union_opr.subtasks, id)
+        append_operator(ptr_plan, union_opr.as_ref().clone().into(), union_opr.parents, id)
     }
 
     #[no_mangle]
