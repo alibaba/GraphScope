@@ -73,7 +73,7 @@ message Join {
 
 // Union two relations
 message Union {
-  repeated int32 subtasks = 3;
+  repeated int32 parents = 3;
 }
 
 message GroupBy {
