@@ -388,7 +388,7 @@ public class IrPlan implements Closeable {
                 }
                 Pointer ptrUnion = irCoreLib.initUnionOperator();
                 parentIds.forEach(id -> {
-                    irCoreLib.addUnionSubTask(ptrUnion, id);
+                    irCoreLib.addUnionParent(ptrUnion, id);
                 });
                 return ptrUnion;
             }

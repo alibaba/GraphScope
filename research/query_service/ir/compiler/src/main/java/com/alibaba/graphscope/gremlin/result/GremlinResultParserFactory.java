@@ -149,6 +149,7 @@ public enum GremlinResultParserFactory implements GremlinResultParser {
         // try to infer from the results
         private GremlinResultParser inferFromIrResults(IrResult.Results results) {
             int columns = results.getRecord().getColumnsList().size();
+            logger.info("result is {}", results);
             if (columns == 1) {
                 IrResult.Entry entry = ParserUtils.getHeadEntry(results);
                 switch (entry.getInnerCase()) {

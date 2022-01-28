@@ -140,7 +140,7 @@ public interface IrCoreLibrary extends Library {
 
     Pointer initUnionOperator();
 
-    ResultCode addUnionSubTask(Pointer union, int subRootId);
+    ResultCode addUnionParent(Pointer union, int subRootId);
 
     ResultCode appendUnionOperator(Pointer plan, Pointer union, IntByReference oprIdx);
 
