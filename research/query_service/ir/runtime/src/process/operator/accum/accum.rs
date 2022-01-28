@@ -30,7 +30,7 @@ use crate::process::record::{CommonObject, Entry, Record};
 #[derive(Debug, Clone)]
 pub enum EntryAccumulator {
     // TODO(bingqing): more accum kind
-    ToCount(Count<Entry>),
+    ToCount(Count<()>),
     ToList(ToList<Entry>),
 }
 
@@ -61,7 +61,7 @@ impl Accumulator<Record, Record> for RecordAccumulator {
 impl Accumulator<Entry, Entry> for EntryAccumulator {
     fn accum(&mut self, next: Entry) -> FnExecResult<()> {
         match self {
-            EntryAccumulator::ToCount(count) => count.accum(next),
+            EntryAccumulator::ToCount(count) => count.accum(()),
             EntryAccumulator::ToList(list) => list.accum(next),
         }
     }
@@ -150,7 +150,7 @@ impl Decode for EntryAccumulator {
         let e = reader.read_u8()?;
         match e {
             0 => {
-                let cnt = <Count<Entry>>::read_from(reader)?;
+                let cnt = <Count<()>>::read_from(reader)?;
                 Ok(EntryAccumulator::ToCount(cnt))
             }
             1 => {
