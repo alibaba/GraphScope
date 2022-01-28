@@ -18,9 +18,7 @@ package com.alibaba.graphscope.common.intermediate.process;
 
 import com.alibaba.graphscope.common.jna.type.FfiNameOrId;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class SinkArg {
     private List<FfiNameOrId.ByValue> columnNames;
@@ -35,5 +33,11 @@ public class SinkArg {
 
     public void addColumnName(FfiNameOrId.ByValue columnName) {
         this.columnNames.add(columnName);
+    }
+
+    public void dedup() {
+        Set<FfiNameOrId.ByValue> uniqueColumnNames = new HashSet<>(columnNames);
+        columnNames.clear();
+        columnNames.addAll(uniqueColumnNames);
     }
 }

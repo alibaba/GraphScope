@@ -1,6 +1,7 @@
 package com.alibaba.graphscope.gremlin.result;
 
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
+import com.alibaba.graphscope.gaia.proto.Common;
 import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.alibaba.graphscope.gaia.proto.OuterExpression;
 import com.alibaba.graphscope.gremlin.transform.OpArgTransformFactory;
@@ -136,6 +137,57 @@ public enum GremlinResultParserFactory implements GremlinResultParser {
         @Override
         public List<Element> parseFrom(IrResult.Results results) {
             throw new GremlinResultParserException("the whole path is unsupported yet");
+        }
+    },
+    UNION {
+        @Override
+        public Object parseFrom(IrResult.Results results) {
+            GremlinResultParser resultParser = inferFromIrResults(results);
+            return resultParser.parseFrom(results);
+        }
+
+        // try to infer from the results
+        private GremlinResultParser inferFromIrResults(IrResult.Results results) {
+            int columns = results.getRecord().getColumnsList().size();
+            logger.info("result is {}", results);
+            if (columns == 1) {
+                IrResult.Entry entry = ParserUtils.getHeadEntry(results);
+                switch (entry.getInnerCase()) {
+                    case ELEMENT:
+                        IrResult.Element element = entry.getElement();
+                        if (element.getInnerCase() == IrResult.Element.InnerCase.VERTEX ||
+                                element.getInnerCase() == IrResult.Element.InnerCase.EDGE) {
+                            return GRAPH_ELEMENT;
+                        } else if (element.getInnerCase() == IrResult.Element.InnerCase.OBJECT) {
+                            Common.Value value = element.getObject();
+                            if (value.getItemCase() == Common.Value.ItemCase.PAIR_ARRAY) {  // project
+                                return PROJECT_VALUE;
+                            } else { // simple type
+                                return SINGLE_VALUE;
+                            }
+                        } else { // todo: path expand in whole path
+                            throw new GremlinResultParserException(element.getInnerCase() + " is unsupported yet");
+                        }
+                    case COLLECTION: // path()
+                    default:
+                        throw new GremlinResultParserException(entry.getInnerCase() + " is unsupported yet");
+                }
+            } else if (columns > 1) { // project or group
+                IrResult.Column column = results.getRecord().getColumnsList().get(0);
+                OuterExpression.NameOrId columnName = column.getNameOrId();
+                if (columnName.getItemCase() == OuterExpression.NameOrId.ItemCase.NAME) {
+                    String name = columnName.getName();
+                    if (name.startsWith(ArgUtils.groupKeys()) || name.startsWith(ArgUtils.groupValues())) {
+                        return GROUP;
+                    } else {
+                        return PROJECT_VALUE;
+                    }
+                } else {
+                    throw new GremlinResultParserException(columnName.getItemCase() + " is invalid");
+                }
+            } else {
+                throw new GremlinResultParserException("columns should not be empty");
+            }
         }
     };
 

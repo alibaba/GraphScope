@@ -5,6 +5,7 @@ import com.alibaba.graphscope.gremlin.exception.UnsupportedStepException;
 import com.alibaba.graphscope.gremlin.plugin.step.PathExpandStep;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
+import org.apache.tinkerpop.gremlin.process.traversal.step.branch.UnionStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.*;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.*;
 import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.step.sideEffect.TinkerGraphStep;
@@ -29,6 +30,8 @@ public class GremlinResultAnalyzer {
                 parserType = GremlinResultParserFactory.GROUP;
             } else if (Utils.equalClass(step, PathExpandStep.class)) {
                 parserType = GremlinResultParserFactory.PATH_EXPAND;
+            } else if (Utils.equalClass(step, UnionStep.class)) {
+                parserType = GremlinResultParserFactory.UNION;
             } else if (Utils.equalClass(step, HasStep.class) || Utils.equalClass(step, DedupGlobalStep.class)
                     || Utils.equalClass(step, RangeGlobalStep.class) || Utils.equalClass(step, OrderGlobalStep.class)
                     || Utils.equalClass(step, IsStep.class) || Utils.equalClass(step, WherePredicateStep.class)

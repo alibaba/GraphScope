@@ -853,7 +853,7 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
         method = "g_V_hasXperson_name_markoX_bothXknowsX_groupCount_byXvaluesXnameX_foldX",
         reason = "fold() excluding group().by(...).by(fold()) is unsupported")
 
-@Graph.OptOut(method="g_V_unionXout__inX_name" , test="org.apache.tinkerpop.gremlin.process.traversal.step.branch.UnionTest", reason = "will be supported")
+//@Graph.OptOut(method="g_V_unionXout__inX_name" , test="org.apache.tinkerpop.gremlin.process.traversal.step.branch.UnionTest", reason = "will be supported")
 //@Graph.OptOut(method="g_V_outE_asXeX_inV_asXvX_selectXeX_order_byXweight_ascX_selectXvX_valuesXnameX_dedup" , test="org.apache.tinkerpop.gremlin.process.traversal.step.filter.DedupTest", reason = "will be supported")
 //@Graph.OptOut(method="g_V_hasXperson_name_markoX_age" , test="org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest", reason = "will be supported")
 @Graph.OptOut(method="g_V_in_hasIdXneqX1XX" , test="org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest", reason = "will be supported")

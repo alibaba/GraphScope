@@ -16,6 +16,7 @@
 
 package com.alibaba.graphscope.gremlin.antlr4;
 
+import com.alibaba.graphscope.gremlin.plugin.processor.IrStandardOpProcessor;
 import com.alibaba.graphscope.gremlin.plugin.script.AntlrToJavaScriptEngine;
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversalSource;
 import org.apache.tinkerpop.gremlin.process.traversal.Order;
@@ -653,35 +654,35 @@ public class PositiveEvalTest {
     }
 
     @Test
-    public void g_V_where_out_out() {
+    public void g_V_where_out_out_test() {
         Assert.assertEquals(g.V().where(__.out().out()), eval("g.V().where(__.out().out())"));
     }
 
     @Test
-    public void g_V_where_as_out() {
+    public void g_V_where_as_out_test() {
         Assert.assertEquals(g.V().as("a").where(__.as("a").out().out()),
                 eval("g.V().as(\"a\").where(__.as(\"a\").out().out())"));
     }
 
     @Test
-    public void g_V_where_out_as() {
+    public void g_V_where_out_as_test() {
         Assert.assertEquals(g.V().as("a").where(__.out().out().as("a")),
                 eval("g.V().as(\"a\").where(__.out().out().as(\"a\"))"));
     }
 
     @Test
-    public void g_V_where_not() {
+    public void g_V_where_not_test() {
         Traversal.Admin traversal = (Traversal.Admin) eval("g.V().where(__.not(__.out()))");
         Assert.assertEquals(NotStep.class, traversal.getEndStep().getClass());
     }
 
     @Test
-    public void g_V_not_out() {
+    public void g_V_not_out_test() {
         Assert.assertEquals(g.V().not(__.out().out()), eval("g.V().not(__.out().out())"));
     }
 
     @Test
-    public void g_V_not_values() {
+    public void g_V_not_values_test() {
         Assert.assertEquals(g.V().not(__.values("name")), eval("g.V().not(__.values(\"name\"))"));
     }
 
@@ -703,5 +704,15 @@ public class PositiveEvalTest {
     @Test
     public void g_V_group_key_by_none_value_by_none_test() {
         Assert.assertEquals(g.V().group().by().by(), eval("g.V().group().by().by()"));
+    }
+
+    @Test
+    public void g_V_union_test() {
+        Assert.assertEquals(g.V().union(__.out()), eval("g.V().union(__.out())"));
+    }
+
+    @Test
+    public void g_V_union_out_test() {
+        Assert.assertEquals(g.V().union(__.out(), __.out()), eval("g.V().union(__.out(), __.out())"));
     }
 }
