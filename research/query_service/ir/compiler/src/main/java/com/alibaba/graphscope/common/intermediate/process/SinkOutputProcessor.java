@@ -96,6 +96,7 @@ public class SinkOutputProcessor implements InterOpProcessor {
                     SinkArg subSink = getSinkColumns(op);
                     subSink.getColumnNames().forEach(c -> sinkArg.addColumnName(c));
                 });
+                sinkArg.dedup();
                 break;
             } else {
                 throw new InterOpUnsupportedException(cur.getClass(), "unimplemented yet");
