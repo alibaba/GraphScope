@@ -142,7 +142,7 @@ public interface IrCoreLibrary extends Library {
 
     ResultCode addUnionSubTask(Pointer union, int subRootId);
 
-    ResultCode appendUnionOperator(Pointer plan, Pointer union, int parent, IntByReference oprIdx);
+    ResultCode appendUnionOperator(Pointer plan, Pointer union, IntByReference oprIdx);
 
     FfiNameOrId.ByValue noneNameOrId();
 

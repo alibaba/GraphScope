@@ -378,16 +378,16 @@ public class IrPlan implements Closeable {
         UNION_OP {
             public Pointer apply(InterOpBase baseOp) {
                 UnionOp unionOp = (UnionOp) baseOp;
-                Optional<OpArg> subRootIdsOpt = unionOp.getSubRootIdList();
-                if (!subRootIdsOpt.isPresent()) {
-                    throw new InterOpIllegalArgException(baseOp.getClass(), "subRootIdList", "not present");
+                Optional<OpArg> parentIdsOpt = unionOp.getParentIdList();
+                if (!parentIdsOpt.isPresent()) {
+                    throw new InterOpIllegalArgException(baseOp.getClass(), "parentIdList", "not present");
                 }
-                List<Integer> subRootIds = (List<Integer>) subRootIdsOpt.get().applyArg();
-                if (subRootIds.isEmpty()) {
-                    throw new InterOpIllegalArgException(baseOp.getClass(), "subRootIdList", "is empty");
+                List<Integer> parentIds = (List<Integer>) parentIdsOpt.get().applyArg();
+                if (parentIds.isEmpty()) {
+                    throw new InterOpIllegalArgException(baseOp.getClass(), "parentIdList", "is empty");
                 }
                 Pointer ptrUnion = irCoreLib.initUnionOperator();
-                subRootIds.forEach(id -> {
+                parentIds.forEach(id -> {
                     irCoreLib.addUnionSubTask(ptrUnion, id);
                 });
                 return ptrUnion;
@@ -422,20 +422,21 @@ public class IrPlan implements Closeable {
         return json;
     }
 
-    // return id of the first operator
-    public int appendInterOpCollection(InterOpCollection opCollection) {
-        int rootId = 0;
-        // parent of the first op is always -1
-        IntByReference oprId = new IntByReference(-1);
+    // return id of the first operator, id of the last operator
+    public Pair<Integer, Integer> appendInterOpCollection(int parentId, InterOpCollection opCollection) {
+        int subTaskRootId = 0;
+        int unionParentId = 0;
+        IntByReference oprId = new IntByReference(parentId);
         List<InterOpBase> opList = opCollection.unmodifiableCollection();
         for (int i = 0; i < opList.size(); ++i) {
             InterOpBase op = opList.get(i);
             oprId = appendInterOp(oprId.getValue(), op);
             if (i == 0) {
-                rootId = oprId.getValue();
+                subTaskRootId = oprId.getValue();
             }
+            unionParentId = oprId.getValue();
         }
-        return rootId;
+        return Pair.with(subTaskRootId, unionParentId);
     }
 
     // return id of the current operator
@@ -483,8 +484,8 @@ public class IrPlan implements Closeable {
                 throw new InterOpIllegalArgException(base.getClass(), "subOpCollection", "is not present in apply");
             }
             InterOpCollection opCollection = (InterOpCollection) subOps.get().applyArg();
-            int subRootId = appendInterOpCollection(opCollection);
-            applyOp.setSubRootId(new OpArg(Integer.valueOf(subRootId), Function.identity()));
+            Pair<Integer, Integer> oprIdPair = appendInterOpCollection(-1, opCollection);
+            applyOp.setSubRootId(new OpArg(Integer.valueOf(oprIdPair.getValue0()), Function.identity()));
 
             Pointer ptrApply = TransformFactory.APPLY_OP.apply(base);
             resultCode = irCoreLib.appendApplyOperator(ptrPlan, ptrApply, oprId.getValue(), oprId);
@@ -498,14 +499,14 @@ public class IrPlan implements Closeable {
             if (subOpsList.isEmpty()) {
                 throw new InterOpIllegalArgException(base.getClass(), "subOpCollectionList", "is empty in union");
             }
-            List<Integer> subRootIds = new ArrayList<>();
+            List<Integer> unionParentIds = new ArrayList<>();
             for (InterOpCollection opCollection : subOpsList) {
-                int subRootId = appendInterOpCollection(opCollection);
-                subRootIds.add(subRootId);
+                Pair<Integer, Integer> oprIdPair = appendInterOpCollection(parentId, opCollection);
+                unionParentIds.add(oprIdPair.getValue1());
             }
-            unionOp.setSubRootIdList(new OpArg(subRootIds, Function.identity()));
+            unionOp.setParentIdList(new OpArg(unionParentIds, Function.identity()));
             Pointer ptrUnion = TransformFactory.UNION_OP.apply(base);
-            resultCode = irCoreLib.appendUnionOperator(ptrPlan, ptrUnion, oprId.getValue(), oprId);
+            resultCode = irCoreLib.appendUnionOperator(ptrPlan, ptrUnion, oprId);
         } else {
             throw new InterOpUnsupportedException(base.getClass(), "unimplemented yet");
         }

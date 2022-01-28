@@ -7,27 +7,27 @@ public class UnionOp extends InterOpBase {
     private Optional<OpArg> subOpCollectionList;
 
     // List<Integer>
-    private Optional<OpArg> subRootIdList;
+    private Optional<OpArg> parentIdList;
 
     public UnionOp() {
         super();
         this.subOpCollectionList = Optional.empty();
-        this.subRootIdList = Optional.empty();
+        this.parentIdList = Optional.empty();
     }
 
     public Optional<OpArg> getSubOpCollectionList() {
         return subOpCollectionList;
     }
 
-    public Optional<OpArg> getSubRootIdList() {
-        return subRootIdList;
+    public Optional<OpArg> getParentIdList() {
+        return parentIdList;
     }
 
     public void setSubOpCollectionList(OpArg subOpCollectionList) {
         this.subOpCollectionList = Optional.of(subOpCollectionList);
     }
 
-    public void setSubRootIdList(OpArg subRootIdList) {
-        this.subRootIdList = Optional.of(subRootIdList);
+    public void setParentIdList(OpArg parentIdList) {
+        this.parentIdList = Optional.of(parentIdList);
     }
 }
