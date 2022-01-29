@@ -419,7 +419,6 @@ impl Evaluate for Operand {
                         if let Some(property) = prop_key {
                             match property {
                                 PropKey::Id => {
-                                    println!("{:?}", element.as_graph_element().unwrap().id());
                                     result = element
                                         .as_graph_element()
                                         .map(|g| g.id().into())
