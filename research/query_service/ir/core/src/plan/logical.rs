@@ -278,30 +278,51 @@ impl LogicalPlan {
                 Some(Opr::Scan(scan)) => {
                     if let Some(alias) = &scan.alias {
                         self.meta
-                            .insert_tag_node(alias.clone().try_into().unwrap(), self.max_node_id);
+                            .insert_tag_node(alias.clone().try_into()?, self.max_node_id);
                     }
                     self.meta.set_curr_node(self.max_node_id);
                 }
                 Some(Opr::Edge(edge)) => {
                     if let Some(alias) = &edge.alias {
                         self.meta
-                            .insert_tag_node(alias.clone().try_into().unwrap(), self.max_node_id);
+                            .insert_tag_node(alias.clone().try_into()?, self.max_node_id);
                     }
                     self.meta.set_curr_node(self.max_node_id);
                 }
                 Some(Opr::Vertex(getv)) => {
                     if let Some(alias) = &getv.alias {
                         self.meta
-                            .insert_tag_node(alias.clone().try_into().unwrap(), self.max_node_id);
+                            .insert_tag_node(alias.clone().try_into()?, self.max_node_id);
                     }
                     self.meta.set_curr_node(self.max_node_id);
                 }
                 Some(Opr::Path(path)) => {
                     if let Some(alias) = &path.alias {
                         self.meta
-                            .insert_tag_node(alias.clone().try_into().unwrap(), self.max_node_id);
+                            .insert_tag_node(alias.clone().try_into()?, self.max_node_id);
                     }
                     self.meta.set_curr_node(self.max_node_id);
+                }
+                Some(Opr::GroupBy(group)) => {
+                    for mapping in &group.mappings {
+                        if let Some(key) = mapping.key.as_ref() {
+                            if key.property.is_none() {
+                                let node_id = if let Some(tag_pb) = key.tag.clone() {
+                                    let tag = tag_pb.try_into()?;
+                                    self.meta
+                                        .get_tag_node(&tag)
+                                        .ok_or(IrError::TagNotExist(tag))?
+                                } else {
+                                    self.meta.get_curr_node()
+                                };
+                                if let Some(alias_pb) = mapping.alias.clone() {
+                                    self.meta
+                                        .insert_tag_node(alias_pb.try_into()?, node_id);
+                                }
+                            }
+                        }
+                    }
+                    is_update_curr = true;
                 }
                 Some(Opr::Project(ref proj)) => {
                     is_update_curr = true;
@@ -1814,6 +1835,66 @@ mod test {
                 .into_iter()
                 .collect::<BTreeSet<_>>()
         );
+    }
+
+    #[test]
+    fn tag_maintain_groupby() {
+        // groupBy contains tagging a keys that is further a vertex
+        let mut plan = LogicalPlan::default();
+        // g.V().groupCount().order().by(select('keys').by('name'))
+
+        // g.V()
+        let scan = pb::Scan {
+            scan_opt: 0,
+            alias: None,
+            params: Some(pb::QueryParams {
+                table_names: vec![],
+                columns: vec![],
+                limit: None,
+                predicate: None,
+                requirements: vec![],
+            }),
+            idx_predicate: None,
+        };
+        plan.append_operator_as_node(scan.into(), vec![])
+            .unwrap();
+        assert_eq!(plan.meta.get_curr_node(), 0);
+
+        let group = pb::GroupBy {
+            mappings: vec![pb::group_by::KeyAlias {
+                key: Some(common_pb::Variable { tag: None, property: None }),
+                alias: Some("keys".into()),
+            }],
+            functions: vec![pb::group_by::AggFunc {
+                vars: vec![],
+                aggregate: 3,
+                alias: Some("values".into()),
+            }],
+        };
+        plan.append_operator_as_node(group.into(), vec![0])
+            .unwrap();
+        assert_eq!(plan.meta.get_tag_node(&"keys".into()).unwrap(), 0);
+
+        let order = pb::OrderBy {
+            pairs: vec![pb::order_by::OrderingPair {
+                key: Some(common_pb::Variable {
+                    tag: Some("keys".into()),
+                    property: Some(common_pb::Property {
+                        item: Some(common_pb::property::Item::Key("name".into())),
+                    }),
+                }),
+                order: 0,
+            }],
+            limit: None,
+        };
+        plan.append_operator_as_node(order.into(), vec![1])
+            .unwrap();
+        assert!(plan
+            .meta
+            .get_node_meta(0)
+            .unwrap()
+            .get_columns()
+            .contains(&"name".into()));
     }
 
     #[test]
