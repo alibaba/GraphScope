@@ -1776,5 +1776,5 @@ def check_gremlin_server_ready(endpoint):
             return rlt
         time.sleep(3)
         if time.time() - begin_time > INTERAVTIVE_INSTANCE_TIMEOUT_SECONDS:
-            executor.shutdown(wait=False, cancel_futures=True)
+            executor.shutdown(wait=False)
             raise TimeoutError(f"Gremlin check query failed: {error_message}")
