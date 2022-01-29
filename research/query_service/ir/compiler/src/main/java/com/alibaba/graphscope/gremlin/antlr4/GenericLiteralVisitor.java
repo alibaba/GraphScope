@@ -85,7 +85,7 @@ public class GenericLiteralVisitor extends GremlinGSBaseVisitor<Object> {
     /**
      * Parse a String literal expr context and return a string array
      */
-    public static String[] getstringLiteralExpr(final GremlinGSParser.StringLiteralExprContext stringLiteralExpr) {
+    public static String[] getStringLiteralExpr(final GremlinGSParser.StringLiteralExprContext stringLiteralExpr) {
         return stringLiteralExpr.stringLiteral()
                 .stream()
                 .filter(Objects::nonNull)
@@ -104,6 +104,20 @@ public class GenericLiteralVisitor extends GremlinGSBaseVisitor<Object> {
                 .stream()
                 .filter(Objects::nonNull)
                 .map(genericLiteral -> getInstance().visitGenericLiteral(genericLiteral))
+                .toArray(Object[]::new);
+    }
+
+    /**
+     * Parse a Integer literal list context and return a Integer array
+     */
+    public static Object[] getIntegerLiteralList(final GremlinGSParser.IntegerLiteralListContext integerLiteralList) {
+        if (integerLiteralList == null || integerLiteralList.integerLiteralExpr() == null) {
+            return new Object[0];
+        }
+        return integerLiteralList.integerLiteralExpr().integerLiteral()
+                .stream()
+                .filter(Objects::nonNull)
+                .map(integerLiteral -> getInstance().visitIntegerLiteral(integerLiteral))
                 .toArray(Object[]::new);
     }
 

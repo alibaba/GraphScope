@@ -20,6 +20,7 @@ import com.alibaba.graphscope.common.exception.OpArgIllegalException;
 import com.alibaba.graphscope.common.intermediate.ArgAggFn;
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.intermediate.InterOpCollection;
+import com.alibaba.graphscope.common.intermediate.operator.UnionOp;
 import com.alibaba.graphscope.common.jna.type.*;
 import com.alibaba.graphscope.common.jna.type.FfiDirection;
 import com.alibaba.graphscope.common.jna.type.FfiNameOrId;
@@ -29,6 +30,7 @@ import com.alibaba.graphscope.gremlin.InterOpCollectionBuilder;
 import org.apache.tinkerpop.gremlin.process.traversal.*;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.IdentityTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.ValueTraversal;
+import org.apache.tinkerpop.gremlin.process.traversal.step.branch.UnionStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.*;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.HasContainer;
 import org.apache.tinkerpop.gremlin.structure.Direction;
@@ -371,4 +373,11 @@ public class OpArgTransformFactory {
 
     public static Function<Traversal.Admin, InterOpCollection>
             INTER_OPS_FROM_SUB_TRAVERSAL = (Traversal.Admin sub) -> (new InterOpCollectionBuilder(sub)).build();
+
+    public static Function<UnionStep, List<InterOpCollection>>
+            INTER_OPS_LIST_FROM_UNION = (UnionStep unionStep) -> {
+        List<Traversal.Admin> subTraversals = unionStep.getGlobalChildren();
+        return subTraversals.stream().filter(k -> k != null)
+                .map(k -> (new InterOpCollectionBuilder(k)).build()).collect(Collectors.toList());
+    };
 }

@@ -46,7 +46,7 @@ public class InterOpCollection {
         applyStrategies(this);
         process(this);
         IrPlan irPlan = new IrPlan();
-        irPlan.appendInterOpCollection(this);
+        irPlan.appendInterOpCollection(-1, this);
         return irPlan;
     }
 

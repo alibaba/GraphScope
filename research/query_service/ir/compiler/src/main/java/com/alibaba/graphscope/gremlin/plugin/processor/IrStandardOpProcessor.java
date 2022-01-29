@@ -31,7 +31,10 @@ import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.PegasusConfig;
 import com.alibaba.graphscope.common.intermediate.InterOpCollection;
 import com.alibaba.graphscope.gremlin.InterOpCollectionBuilder;
+import com.alibaba.graphscope.gremlin.Utils;
 import com.alibaba.graphscope.gremlin.plugin.script.AntlrToJavaScriptEngineFactory;
+import com.alibaba.graphscope.gremlin.plugin.strategy.RemoveUselessStepStrategy;
+import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversalSource;
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversalSource;
 import com.alibaba.graphscope.gremlin.result.GremlinResultAnalyzer;
 import com.alibaba.graphscope.gremlin.result.GremlinResultProcessor;
@@ -43,7 +46,10 @@ import org.apache.tinkerpop.gremlin.driver.message.ResponseStatusCode;
 import org.apache.tinkerpop.gremlin.groovy.engine.GremlinExecutor;
 import org.apache.tinkerpop.gremlin.groovy.jsr223.TimedInterruptTimeoutException;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
+import org.apache.tinkerpop.gremlin.process.traversal.TraversalStrategies;
+import org.apache.tinkerpop.gremlin.process.traversal.TraversalStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
+import org.apache.tinkerpop.gremlin.process.traversal.util.DefaultTraversalStrategies;
 import org.apache.tinkerpop.gremlin.server.Context;
 import org.apache.tinkerpop.gremlin.server.Settings;
 import org.apache.tinkerpop.gremlin.server.op.AbstractEvalOpProcessor;
@@ -151,6 +157,12 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                         throw new RuntimeException(ope);
                     }
                 })
+                .transformResult(o -> {
+                    if (o != null && o instanceof Traversal) {
+                        applyStrategies((Traversal) o);
+                    }
+                    return o;
+                })
                 .withResult(o -> {
                     try {
                         if (o != null && o instanceof Traversal) {
@@ -192,5 +204,14 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                         throw new RuntimeException(e);
                     }
                 }).create();
+    }
+
+    public static void applyStrategies(Traversal traversal) {
+        TraversalStrategies traversalStrategies = traversal.asAdmin().getStrategies();
+        Set<TraversalStrategy<?>> strategies = Utils.getFieldValue(DefaultTraversalStrategies.class,
+                traversalStrategies, "traversalStrategies");
+        strategies.clear();
+        strategies.add(RemoveUselessStepStrategy.instance());
+        traversal.asAdmin().applyStrategies();
     }
 }

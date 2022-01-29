@@ -993,18 +993,33 @@ mod union {
     /// To initialize a union operator
     #[no_mangle]
     pub extern "C" fn init_union_operator() -> *const c_void {
-        let union = Box::new(pb::Union {});
+        let union = Box::new(pb::Union { parents: vec![] });
         Box::into_raw(union) as *const c_void
     }
 
-    /// Append a union operator to the logical plan
+    /// Add the subtask parent id to Union
+    #[no_mangle]
+    pub extern "C" fn add_union_parent(ptr_union: *const c_void, parent_id: i32) -> ResultCode {
+        let return_code = ResultCode::Success;
+        let mut union = unsafe { Box::from_raw(ptr_union as *mut pb::Union) };
+        union.parents.push(parent_id);
+        std::mem::forget(union);
+
+        return_code
+    }
+
+    /// Append a Union operator to the logical plan
     #[no_mangle]
     pub extern "C" fn append_union_operator(
-        ptr_plan: *const c_void, ptr_union: *const c_void, parent_left: i32, parent_right: i32,
-        id: *mut i32,
+        ptr_plan: *const c_void, ptr_union: *const c_void, id: *mut i32,
     ) -> ResultCode {
-        let union = unsafe { Box::from_raw(ptr_union as *mut pb::Union) };
-        append_operator(ptr_plan, union.as_ref().clone().into(), vec![parent_left, parent_right], id)
+        let union_opr = unsafe { Box::from_raw(ptr_union as *mut pb::Union) };
+        append_operator(ptr_plan, union_opr.as_ref().clone().into(), union_opr.parents, id)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn destroy_union_operator(ptr: *const c_void) {
+        destroy_ptr::<pb::Union>(ptr)
     }
 }
 

@@ -5,6 +5,7 @@ import com.alibaba.graphscope.gremlin.exception.UnsupportedStepException;
 import com.alibaba.graphscope.gremlin.plugin.step.PathExpandStep;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
+import org.apache.tinkerpop.gremlin.process.traversal.step.branch.UnionStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.*;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.*;
 import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.step.sideEffect.TinkerGraphStep;
@@ -18,7 +19,8 @@ public class GremlinResultAnalyzer {
         for (Step step : steps) {
             if (Utils.equalClass(step, GraphStep.class)
                     || Utils.equalClass(step, TinkerGraphStep.class) || Utils.equalClass(step, VertexStep.class)
-                    || Utils.equalClass(step, EdgeVertexStep.class) || Utils.equalClass(step, EdgeOtherVertexStep.class)) {
+                    || Utils.equalClass(step, EdgeVertexStep.class) || Utils.equalClass(step, EdgeOtherVertexStep.class)
+                    || Utils.equalClass(step, PathExpandStep.class)) {
                 parserType = GremlinResultParserFactory.GRAPH_ELEMENT;
             } else if (Utils.equalClass(step, CountGlobalStep.class)) {
                 parserType = GremlinResultParserFactory.SINGLE_VALUE;
@@ -27,8 +29,8 @@ public class GremlinResultAnalyzer {
                 parserType = GremlinResultParserFactory.PROJECT_VALUE;
             } else if (Utils.equalClass(step, GroupCountStep.class) || Utils.equalClass(step, GroupStep.class)) {
                 parserType = GremlinResultParserFactory.GROUP;
-            } else if (Utils.equalClass(step, PathExpandStep.class)) {
-                parserType = GremlinResultParserFactory.PATH_EXPAND;
+            } else if (Utils.equalClass(step, UnionStep.class)) {
+                parserType = GremlinResultParserFactory.UNION;
             } else if (Utils.equalClass(step, HasStep.class) || Utils.equalClass(step, DedupGlobalStep.class)
                     || Utils.equalClass(step, RangeGlobalStep.class) || Utils.equalClass(step, OrderGlobalStep.class)
                     || Utils.equalClass(step, IsStep.class) || Utils.equalClass(step, WherePredicateStep.class)

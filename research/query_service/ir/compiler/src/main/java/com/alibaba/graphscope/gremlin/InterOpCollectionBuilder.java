@@ -30,6 +30,7 @@ import com.google.common.collect.ImmutableMap;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.IdentityTraversal;
+import org.apache.tinkerpop.gremlin.process.traversal.step.branch.UnionStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.*;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.*;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.HasContainer;
@@ -333,8 +334,8 @@ public class InterOpCollectionBuilder {
             public InterOpBase apply(Step step) {
                 PathExpandOp op = new PathExpandOp((ExpandOp) VERTEX_STEP.apply(step));
                 PathExpandStep pathStep = (PathExpandStep) step;
-                op.setLower(new OpArg(Integer.valueOf(pathStep.getLower() + 1), Function.identity()));
-                op.setUpper(new OpArg(Integer.valueOf(pathStep.getUpper() + 1), Function.identity()));
+                op.setLower(new OpArg(Integer.valueOf(pathStep.getLower()), Function.identity()));
+                op.setUpper(new OpArg(Integer.valueOf(pathStep.getUpper()), Function.identity()));
                 return op;
             }
         },
@@ -430,6 +431,14 @@ public class InterOpCollectionBuilder {
                 selectOp.setPredicate(new OpArg(endStep, PredicateExprTransformFactory.EXPR_FROM_WHERE_END));
                 return selectOp;
             }
+        },
+        UNION_STEP {
+            @Override
+            public InterOpBase apply(Step step) {
+                UnionOp unionOp = new UnionOp();
+                unionOp.setSubOpCollectionList(new OpArg(step, OpArgTransformFactory.INTER_OPS_LIST_FROM_UNION));
+                return unionOp;
+            }
         }
     }
 
@@ -484,6 +493,8 @@ public class InterOpCollectionBuilder {
                 op = StepTransformFactory.WHERE_START_STEP.apply(step);
             } else if (Utils.equalClass(step, WhereTraversalStep.WhereEndStep.class)) {
                 op = StepTransformFactory.WHERE_END_STEP.apply(step);
+            } else if (Utils.equalClass(step, UnionStep.class)) {
+                op = StepTransformFactory.UNION_STEP.apply(step);
             } else {
                 throw new UnsupportedStepException(step.getClass(), "unimplemented yet");
             }

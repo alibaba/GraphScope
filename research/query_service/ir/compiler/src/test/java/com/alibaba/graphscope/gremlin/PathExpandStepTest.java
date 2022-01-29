@@ -29,8 +29,8 @@ public class PathExpandStepTest {
 
         Assert.assertEquals(FfiDirection.Out, op.getDirection().get().applyArg());
         Assert.assertEquals(false, op.getIsEdge().get().applyArg());
-        Assert.assertEquals(2, op.getLower().get().applyArg());
-        Assert.assertEquals(3, op.getUpper().get().applyArg());
+        Assert.assertEquals(1, op.getLower().get().applyArg());
+        Assert.assertEquals(2, op.getUpper().get().applyArg());
     }
 
     @Test
@@ -42,8 +42,8 @@ public class PathExpandStepTest {
 
         Assert.assertEquals(FfiDirection.Out, op.getDirection().get().applyArg());
         Assert.assertEquals(false, op.getIsEdge().get().applyArg());
-        Assert.assertEquals(2, op.getLower().get().applyArg());
-        Assert.assertEquals(3, op.getUpper().get().applyArg());
+        Assert.assertEquals(1, op.getLower().get().applyArg());
+        Assert.assertEquals(2, op.getUpper().get().applyArg());
         FfiNameOrId.ByValue label = ((List<FfiNameOrId.ByValue>) op.getLabels().get().applyArg()).get(0);
         Assert.assertEquals("knows", label.name);
     }

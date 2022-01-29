@@ -37,4 +37,13 @@ public class LimitTest {
         LimitOp op = (LimitOp) StepTransformFactory.LIMIT_STEP.apply(limitStep);
         Assert.assertEquals(2, op.getUpper().get().applyArg());
     }
+
+    @Test
+    public void g_V_range_test() {
+        Traversal traversal = g.V().range(0, 1);
+        Step limitStep = traversal.asAdmin().getEndStep();
+        LimitOp op = (LimitOp) StepTransformFactory.LIMIT_STEP.apply(limitStep);
+        Assert.assertEquals(2, op.getUpper().get().applyArg());
+        Assert.assertEquals(1, op.getLower().get().applyArg());
+    }
 }
