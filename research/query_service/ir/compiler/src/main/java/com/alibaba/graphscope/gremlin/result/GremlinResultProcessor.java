@@ -61,7 +61,7 @@ public class GremlinResultProcessor extends StandardOpProcessor implements Resul
     // format group result as a single map
     protected void formatResultIfNeed() {
         if (resultParser == GremlinResultParserFactory.GROUP) {
-            Map groupResult = new HashMap();
+            Map groupResult = new LinkedHashMap();
             resultCollectors.forEach(k -> {
                 groupResult.putAll((Map) k);
             });

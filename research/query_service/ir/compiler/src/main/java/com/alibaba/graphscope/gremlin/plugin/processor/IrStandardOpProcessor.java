@@ -56,6 +56,7 @@ import org.apache.tinkerpop.gremlin.server.op.AbstractEvalOpProcessor;
 import org.apache.tinkerpop.gremlin.server.op.OpProcessorException;
 import org.apache.tinkerpop.gremlin.server.op.standard.StandardOpProcessor;
 import org.apache.tinkerpop.gremlin.structure.Graph;
+import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.strategy.optimization.TinkerGraphStepStrategy;
 import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
 import org.codehaus.groovy.control.MultipleCompilationErrorsException;
 import org.slf4j.Logger;
@@ -211,6 +212,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         Set<TraversalStrategy<?>> strategies = Utils.getFieldValue(DefaultTraversalStrategies.class,
                 traversalStrategies, "traversalStrategies");
         strategies.clear();
+        strategies.add(TinkerGraphStepStrategy.instance());
         strategies.add(RemoveUselessStepStrategy.instance());
         traversal.asAdmin().applyStrategies();
     }
