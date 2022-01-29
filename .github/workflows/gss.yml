@@ -43,7 +43,7 @@ jobs:
     # be configured manually when a new self-hosted runner is added.
     runs-on: self-hosted
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.3.16
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.3.17
     defaults:
       run:
         shell: bash --noprofile --norc -eo pipefail {0}
