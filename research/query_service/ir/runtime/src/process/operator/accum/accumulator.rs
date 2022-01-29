@@ -301,3 +301,49 @@ impl<D: Decode> Decode for DataSum<D> {
         Ok(DataSum { seed })
     }
 }
+
+#[derive(Clone)]
+pub struct DistinctCount<D: Eq + Hash> {
+    pub inner: HashSet<D>,
+}
+
+unsafe impl<D: Send + Eq + Hash> Send for DistinctCount<D> {}
+
+impl<D: Debug + Eq + Hash> Debug for DistinctCount<D> {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{:?}", self.inner)
+    }
+}
+
+impl<D: Debug + Eq + Hash + Send + 'static> Accumulator<D, u64> for DistinctCount<D> {
+    fn accum(&mut self, next: D) -> FnExecResult<()> {
+        self.inner.insert(next);
+        Ok(())
+    }
+
+    fn finalize(&mut self) -> FnExecResult<u64> {
+        Ok(self.inner.len() as u64)
+    }
+}
+
+impl<D: Encode + Eq + Hash> Encode for DistinctCount<D> {
+    fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
+        writer.write_u32(self.inner.len() as u32)?;
+        for data in self.inner.iter() {
+            data.write_to(writer)?;
+        }
+        Ok(())
+    }
+}
+
+impl<D: Decode + Eq + Hash> Decode for DistinctCount<D> {
+    fn read_from<R: ReadExt>(reader: &mut R) -> io::Result<Self> {
+        let len = reader.read_u32()?;
+        let mut inner = HashSet::with_capacity(len as usize);
+        for _ in 0..len {
+            let data = <D>::read_from(reader)?;
+            inner.insert(data);
+        }
+        Ok(DistinctCount { inner })
+    }
+}
