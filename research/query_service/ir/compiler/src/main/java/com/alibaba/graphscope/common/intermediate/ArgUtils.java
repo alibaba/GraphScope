@@ -24,6 +24,7 @@ public class ArgUtils {
     private static IrCoreLibrary irCoreLib = IrCoreLibrary.INSTANCE;
     private static String LABEL = "~label";
     private static String ID = "~id";
+    private static String LEN = "~len";
     private static String GROUP_KEYS = "keys";
     private static String GROUP_VALUES = "values";
 
@@ -44,6 +45,8 @@ public class ArgUtils {
             return irCoreLib.asLabelKey();
         } else if (key.equals(ID)) {
             return irCoreLib.asIdKey();
+        } else if (key.equals(LEN)) {
+            return irCoreLib.asLenKey();
         } else {
             return irCoreLib.asPropertyKey(irCoreLib.cstrAsNameOrId(key));
         }
