@@ -223,7 +223,8 @@ pub enum FfiPropertyOpt {
     None = 0,
     Id = 1,
     Label = 2,
-    Key = 3,
+    Len = 3,
+    Key = 4,
 }
 
 impl Default for FfiPropertyOpt {
@@ -250,6 +251,9 @@ impl TryFrom<FfiProperty> for Option<common_pb::Property> {
             }
             FfiPropertyOpt::Label => Some(common_pb::Property {
                 item: Some(common_pb::property::Item::Label(common_pb::LabelKey {})),
+            }),
+            FfiPropertyOpt::Len => Some(common_pb::Property {
+                item: Some(common_pb::property::Item::Len(common_pb::LengthKey {})),
             }),
             FfiPropertyOpt::Key => {
                 if let Some(key) = ffi.key.try_into()? {
@@ -329,6 +333,12 @@ pub extern "C" fn as_id_key() -> FfiProperty {
 #[no_mangle]
 pub extern "C" fn as_label_key() -> FfiProperty {
     FfiProperty { opt: FfiPropertyOpt::Label, key: FfiNameOrId::default() }
+}
+
+/// Build a length property
+#[no_mangle]
+pub extern "C" fn as_len_key() -> FfiProperty {
+    FfiProperty { opt: FfiPropertyOpt::Len, key: FfiNameOrId::default() }
 }
 
 /// Build a keyed property from a given key
