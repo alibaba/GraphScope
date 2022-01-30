@@ -405,14 +405,14 @@ impl AsPhysical for LogicalPlan {
         use pb::logical_plan::operator::Opr::*;
         let mut _prev_node_opt: Option<NodeType> = None;
         let mut curr_node_opt = self.root();
-        println!("add plan: {:#?}, is_partition: {:?}", self, plan_meta.is_partition());
+        debug!("plan: {:#?}", self);
+        debug!("is_partition: {:?}", self.meta.is_partition());
         while curr_node_opt.is_some() {
             let curr_node = curr_node_opt.as_ref().unwrap();
             if let Some(Apply(apply_opr)) = curr_node.borrow().opr.opr.as_ref() {
                 let mut sub_bldr = JobBuilder::default();
                 if let Some(subplan) = self.extract_subplan(curr_node.clone()) {
-                    let mut sub_meta = subplan.meta.clone();
-                    subplan.add_job_builder(&mut sub_bldr, &mut sub_meta)?;
+                    subplan.add_job_builder(&mut sub_bldr, plan_meta)?;
                     let plan = sub_bldr.take_plan();
                     builder.apply_join(
                         move |p| *p = plan.clone(),

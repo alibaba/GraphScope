@@ -496,7 +496,7 @@ impl LogicalPlan {
         let mut plan = LogicalPlan::with_root(clone_node(from_node.clone()));
         plan.meta = self.meta.clone();
         let mut curr_node = from_node;
-        while curr_node.borrow().id != to_node.borrow().id {
+        while curr_node != to_node {
             if curr_node.borrow().children.is_empty() {
                 // While still not locating to_node
                 return None;

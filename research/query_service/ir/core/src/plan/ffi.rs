@@ -544,9 +544,10 @@ impl From<BuildJobError> for FfiJobBuffer {
 pub extern "C" fn build_physical_plan(
     ptr_plan: *const c_void, num_workers: u32, num_servers: u32,
 ) -> FfiJobBuffer {
-    let plan = unsafe { Box::from_raw(ptr_plan as *mut LogicalPlan) };
+    let mut plan = unsafe { Box::from_raw(ptr_plan as *mut LogicalPlan) };
+    plan.meta
+        .set_partition(num_workers > 1 || num_servers > 1);
     let mut plan_meta = plan.meta.clone();
-    plan_meta.set_partition(num_workers > 1 || num_servers > 1);
     let mut builder = JobBuilder::default();
     let build_result = plan.add_job_builder(&mut builder, &mut plan_meta);
     let result = if build_result.is_ok() {
