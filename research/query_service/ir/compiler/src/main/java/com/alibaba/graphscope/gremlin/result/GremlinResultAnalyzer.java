@@ -3,12 +3,12 @@ package com.alibaba.graphscope.gremlin.result;
 import com.alibaba.graphscope.gremlin.Utils;
 import com.alibaba.graphscope.gremlin.exception.UnsupportedStepException;
 import com.alibaba.graphscope.gremlin.plugin.step.PathExpandStep;
+import com.alibaba.graphscope.gremlin.plugin.step.ScanFusionStep;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.step.branch.UnionStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.*;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.*;
-import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.step.sideEffect.TinkerGraphStep;
 
 import java.util.List;
 
@@ -18,7 +18,7 @@ public class GremlinResultAnalyzer {
         GremlinResultParser parserType = GremlinResultParserFactory.GRAPH_ELEMENT;
         for (Step step : steps) {
             if (Utils.equalClass(step, GraphStep.class)
-                    || Utils.equalClass(step, TinkerGraphStep.class) || Utils.equalClass(step, VertexStep.class)
+                    || Utils.equalClass(step, ScanFusionStep.class) || Utils.equalClass(step, VertexStep.class)
                     || Utils.equalClass(step, EdgeVertexStep.class) || Utils.equalClass(step, EdgeOtherVertexStep.class)
                     || Utils.equalClass(step, PathExpandStep.class)) {
                 parserType = GremlinResultParserFactory.GRAPH_ELEMENT;

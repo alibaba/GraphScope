@@ -23,6 +23,7 @@ import com.alibaba.graphscope.common.jna.type.FfiAlias;
 import com.alibaba.graphscope.common.jna.type.FfiConst;
 import com.alibaba.graphscope.common.jna.type.FfiNameOrId;
 import com.alibaba.graphscope.common.jna.type.FfiScanOpt;
+import com.alibaba.graphscope.gremlin.plugin.processor.IrStandardOpProcessor;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
@@ -57,9 +58,9 @@ public class GraphStepTest {
     @Test
     public void g_V_label_test() {
         Traversal traversal = g.V().hasLabel("person");
-        traversal.asAdmin().applyStrategies();
+        IrStandardOpProcessor.applyStrategies(traversal);
         Step graphStep = traversal.asAdmin().getStartStep();
-        ScanFusionOp op = (ScanFusionOp) StepTransformFactory.TINKER_GRAPH_STEP.apply(graphStep);
+        ScanFusionOp op = (ScanFusionOp) StepTransformFactory.SCAN_FUSION_STEP.apply(graphStep);
         FfiNameOrId.ByValue ffiLabel = ((List<FfiNameOrId.ByValue>) op.getLabels().get().applyArg()).get(0);
         Assert.assertEquals("person", ffiLabel.name);
     }
@@ -76,9 +77,9 @@ public class GraphStepTest {
     @Test
     public void g_V_property_test() {
         Traversal traversal = g.V().has("name", "marko");
-        traversal.asAdmin().applyStrategies();
+        IrStandardOpProcessor.applyStrategies(traversal);
         Step graphStep = traversal.asAdmin().getStartStep();
-        ScanFusionOp op = (ScanFusionOp) StepTransformFactory.TINKER_GRAPH_STEP.apply(graphStep);
+        ScanFusionOp op = (ScanFusionOp) StepTransformFactory.SCAN_FUSION_STEP.apply(graphStep);
         String expr = (String) op.getPredicate().get().applyArg();
         Assert.assertEquals("@.name && @.name == \"marko\"", expr);
     }

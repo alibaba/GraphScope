@@ -23,6 +23,7 @@ import com.alibaba.graphscope.gremlin.exception.UnsupportedStepException;
 import com.alibaba.graphscope.common.intermediate.operator.*;
 import com.alibaba.graphscope.common.jna.type.FfiScanOpt;
 import com.alibaba.graphscope.gremlin.plugin.step.PathExpandStep;
+import com.alibaba.graphscope.gremlin.plugin.step.ScanFusionStep;
 import com.alibaba.graphscope.gremlin.transform.OpArgTransformFactory;
 import com.alibaba.graphscope.gremlin.transform.PredicateExprTransformFactory;
 import com.alibaba.graphscope.gremlin.transform.ProjectTraversalTransformFactory;
@@ -35,15 +36,12 @@ import org.apache.tinkerpop.gremlin.process.traversal.step.filter.*;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.*;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.HasContainer;
 import org.apache.tinkerpop.gremlin.process.traversal.util.DefaultTraversal;
-import org.apache.tinkerpop.gremlin.structure.T;
-import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.step.sideEffect.TinkerGraphStep;
 import org.javatuples.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 // build IrPlan from gremlin traversal
 public class InterOpCollectionBuilder {
@@ -71,33 +69,27 @@ public class InterOpCollectionBuilder {
                 return op;
             }
         },
-        TINKER_GRAPH_STEP {
+        SCAN_FUSION_STEP {
             @Override
             public InterOpBase apply(Step step) {
-                TinkerGraphStep tinkerGraphStep = (TinkerGraphStep) step;
+                ScanFusionStep scanFusionStep = (ScanFusionStep) step;
                 ScanFusionOp op = new ScanFusionOp();
 
                 op.setScanOpt(new OpArg(step, OpArgTransformFactory.SCAN_OPT));
 
-                if (!tinkerGraphStep.getHasContainers().isEmpty()) {
-                    List<HasContainer> allContainers = tinkerGraphStep.getHasContainers();
-                    List<HasContainer> labels = allContainers.stream()
-                            .filter(k -> k.getKey().equals(T.label.getAccessor()))
-                            .collect(Collectors.toList());
-                    // add corner judgement
-                    if (!labels.isEmpty()) {
-                        op.setLabels(new OpArg(labels, OpArgTransformFactory.LABELS_FROM_CONTAINERS));
-                    }
-                    List<HasContainer> predicates = new ArrayList<>(allContainers);
-                    predicates.removeAll(labels);
-                    // add corner judgement
-                    if (!predicates.isEmpty()) {
-                        op.setPredicate(new OpArg(predicates, PredicateExprTransformFactory.EXPR_FROM_CONTAINERS));
-                    }
+                // set global ids
+                if (scanFusionStep.getIds() != null && scanFusionStep.getIds().length > 0) {
+                    op.setIds(new OpArg(scanFusionStep, OpArgTransformFactory.CONST_IDS_FROM_STEP));
                 }
-
-                if (tinkerGraphStep.getIds().length > 0) {
-                    op.setIds(new OpArg(step, OpArgTransformFactory.CONST_IDS_FROM_STEP));
+                // set labels
+                if (!scanFusionStep.getGraphLabels().isEmpty()) {
+                    List<String> labels = scanFusionStep.getGraphLabels();
+                    op.setLabels(new OpArg(scanFusionStep, OpArgTransformFactory.LABELS_FROM_STEP));
+                }
+                // set other containers as predicates
+                if (!scanFusionStep.getHasContainers().isEmpty()) {
+                    List<HasContainer> predicates = scanFusionStep.getHasContainers();
+                    op.setPredicate(new OpArg(predicates, PredicateExprTransformFactory.EXPR_FROM_CONTAINERS));
                 }
 
                 return op;
@@ -450,8 +442,8 @@ public class InterOpCollectionBuilder {
             InterOpBase op;
             if (Utils.equalClass(step, GraphStep.class)) {
                 op = StepTransformFactory.GRAPH_STEP.apply(step);
-            } else if (Utils.equalClass(step, TinkerGraphStep.class)) {
-                op = StepTransformFactory.TINKER_GRAPH_STEP.apply(step);
+            } else if (Utils.equalClass(step, ScanFusionStep.class)) {
+                op = StepTransformFactory.SCAN_FUSION_STEP.apply(step);
             } else if (Utils.equalClass(step, VertexStep.class)) {
                 op = StepTransformFactory.VERTEX_STEP.apply(step);
             } else if (Utils.equalClass(step, HasStep.class)) {

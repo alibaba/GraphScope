@@ -27,6 +27,7 @@ import com.alibaba.graphscope.common.jna.type.FfiNameOrId;
 import com.alibaba.graphscope.common.jna.type.FfiScanOpt;
 import com.alibaba.graphscope.gremlin.Utils;
 import com.alibaba.graphscope.gremlin.InterOpCollectionBuilder;
+import com.alibaba.graphscope.gremlin.plugin.step.ScanFusionStep;
 import org.apache.tinkerpop.gremlin.process.traversal.*;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.IdentityTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.ValueTraversal;
@@ -63,22 +64,8 @@ public class OpArgTransformFactory {
                 }
             }).collect(Collectors.toList());
 
-    public static Function<List<HasContainer>, List<FfiNameOrId.ByValue>> LABELS_FROM_CONTAINERS = (List<HasContainer> containers) -> {
-        List<String> labels = new ArrayList<>();
-        for (HasContainer container : containers) {
-            if (container.getKey().equals(T.label.getAccessor())) {
-                Object value = container.getValue();
-                if (value instanceof String) {
-                    labels.add((String) value);
-                } else if (value instanceof List
-                        && ((List) value).size() > 0 && ((List) value).get(0) instanceof String) {
-                    labels.addAll((List) value);
-                } else {
-                    throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
-                            "label should be string or list of string");
-                }
-            }
-        }
+    public static Function<ScanFusionStep, List<FfiNameOrId.ByValue>> LABELS_FROM_STEP = (ScanFusionStep step) -> {
+        List<String> labels = step.getGraphLabels();
         return labels.stream().map(k -> ArgUtils.strAsNameId(k)).collect(Collectors.toList());
     };
 
