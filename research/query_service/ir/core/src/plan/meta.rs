@@ -395,9 +395,12 @@ pub struct PlanMeta {
     /// To ease the processing, tag may be transformed to an internal id.
     /// This maintains the mappings
     tag_ids: BTreeMap<NameOrId, NameOrId>,
-    /// To record the current node's id in the logical plan. Note that nodes that have operators that
+    /// To record the current nodes' id in the logical plan. Note that nodes that have operators that
     /// of `As` or `Selection` does not alter curr_node.
-    curr_node: u32,
+    curr_node: Vec<u32>,
+    /// A union of multiple (tag) nodes that are merged by a `Union` operator, if any
+    /// Note that if tag is `None`, it refers to the current nodes.
+    union_tag_nodes: BTreeMap<Option<NameOrId>, Vec<u32>>,
     /// The maximal tag id that has been assigned, for mapping tag ids.
     max_tag_id: i32,
     /// Whether to preprocess the operator.
@@ -409,14 +412,14 @@ pub struct PlanMeta {
 impl PlanMeta {
     pub fn new(node_id: u32) -> Self {
         let mut plan_meta = PlanMeta::default();
-        plan_meta.curr_node = node_id;
+        plan_meta.curr_node = vec![node_id];
         plan_meta.node_metas.entry(node_id).or_default();
         plan_meta
     }
 
     pub fn curr_node_meta_mut(&mut self) -> &mut NodeMeta {
         self.node_metas
-            .entry(self.curr_node)
+            .entry(self.curr_node.get(0).cloned().unwrap_or(0))
             .or_default()
     }
 
@@ -441,11 +444,18 @@ impl PlanMeta {
     }
 
     pub fn curr_node_meta(&self) -> Option<&NodeMeta> {
-        self.get_node_meta(self.curr_node)
+        self.get_node_meta(self.curr_node[0])
     }
 
-    pub fn insert_tag_node(&mut self, tag: NameOrId, node: u32) {
-        self.tag_nodes.entry(tag).or_insert(node);
+    pub fn insert_tag_nodes(&mut self, tag: NameOrId, nodes: Vec<u32>) {
+        if nodes.len() == 1 {
+            self.tag_nodes.entry(tag).or_insert(nodes[0]);
+        } else if nodes.len() > 1 {
+            *(self
+                .union_tag_nodes
+                .entry(Some(tag))
+                .or_default()) = nodes.to_vec();
+        }
     }
 
     pub fn get_tag_node(&self, tag: &NameOrId) -> Option<u32> {
@@ -465,11 +475,32 @@ impl PlanMeta {
     }
 
     pub fn set_curr_node(&mut self, curr_node: u32) {
-        self.curr_node = curr_node;
+        if self.curr_node.is_empty() {
+            self.curr_node.push(curr_node);
+        } else {
+            *(self.curr_node.get_mut(0).unwrap()) = curr_node;
+        }
+        // If setting current node, it means the union of current nodes must be removed
+        self.union_tag_nodes.remove(&None);
     }
 
-    pub fn get_curr_node(&self) -> u32 {
-        self.curr_node
+    pub fn get_curr_nodes(&self) -> &[u32] {
+        if self.union_tag_nodes.get(&None).is_none() {
+            self.curr_node.as_slice()
+        } else {
+            self.union_tag_nodes
+                .get(&None)
+                .unwrap()
+                .as_slice()
+        }
+    }
+
+    pub fn get_union_tag_nodes(&self) -> &BTreeMap<Option<NameOrId>, Vec<u32>> {
+        &self.union_tag_nodes
+    }
+
+    pub fn get_union_tag_nodes_mut(&mut self) -> &mut BTreeMap<Option<NameOrId>, Vec<u32>> {
+        &mut self.union_tag_nodes
     }
 
     pub fn is_preprocess(&self) -> bool {
