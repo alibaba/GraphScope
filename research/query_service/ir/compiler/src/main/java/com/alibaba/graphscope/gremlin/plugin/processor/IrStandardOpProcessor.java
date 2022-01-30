@@ -34,6 +34,7 @@ import com.alibaba.graphscope.gremlin.InterOpCollectionBuilder;
 import com.alibaba.graphscope.gremlin.Utils;
 import com.alibaba.graphscope.gremlin.plugin.script.AntlrToJavaScriptEngineFactory;
 import com.alibaba.graphscope.gremlin.plugin.strategy.RemoveUselessStepStrategy;
+import com.alibaba.graphscope.gremlin.plugin.strategy.ScanFusionStepStrategy;
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversalSource;
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversalSource;
 import com.alibaba.graphscope.gremlin.result.GremlinResultAnalyzer;
@@ -212,7 +213,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         Set<TraversalStrategy<?>> strategies = Utils.getFieldValue(DefaultTraversalStrategies.class,
                 traversalStrategies, "traversalStrategies");
         strategies.clear();
-        strategies.add(TinkerGraphStepStrategy.instance());
+        strategies.add(ScanFusionStepStrategy.instance());
         strategies.add(RemoveUselessStepStrategy.instance());
         traversal.asAdmin().applyStrategies();
     }
