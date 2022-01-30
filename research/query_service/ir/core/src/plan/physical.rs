@@ -405,7 +405,7 @@ impl AsPhysical for LogicalPlan {
         use pb::logical_plan::operator::Opr::*;
         let mut _prev_node_opt: Option<NodeType> = None;
         let mut curr_node_opt = self.root();
-
+        println!("add plan: {:#?}, is_partition: {:?}", self, plan_meta.is_partition());
         while curr_node_opt.is_some() {
             let curr_node = curr_node_opt.as_ref().unwrap();
             if let Some(Apply(apply_opr)) = curr_node.borrow().opr.opr.as_ref() {
@@ -1153,6 +1153,7 @@ mod test {
     fn apply_as_physical_case1() {
         let mut plan = LogicalPlan::default();
         // g.V().as("v").where(out().as("o").has("lang", "java")).select("v").values("name")
+        plan.meta.set_partition(true);
 
         // g.V("person")
         let scan: pb::logical_plan::Operator = pb::Scan {
@@ -1225,7 +1226,9 @@ mod test {
         expand.alias = None;
         expected_builder.apply_join(
             |plan| {
-                plan.flat_map(pb::logical_plan::Operator::from(expand.clone()).encode_to_vec())
+                plan.repartition(vec![])
+                    .flat_map(pb::logical_plan::Operator::from(expand.clone()).encode_to_vec())
+                    .repartition(vec![])
                     .filter_map(
                         pb::logical_plan::Operator::from(pb::Auxilia {
                             params: Some(pb::QueryParams {
