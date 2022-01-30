@@ -160,6 +160,8 @@ public interface IrCoreLibrary extends Library {
 
     FfiProperty.ByValue asIdKey();
 
+    FfiProperty.ByValue asLenKey();
+
     FfiProperty.ByValue asPropertyKey(FfiNameOrId.ByValue key);
 
     FfiVariable.ByValue asVarTagOnly(FfiNameOrId.ByValue tag);

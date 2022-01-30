@@ -22,6 +22,7 @@ public enum FfiPropertyOpt implements IntEnum<FfiPropertyOpt> {
     None,
     Id,
     Label,
+    Len,
     Key;
 
     @Override
