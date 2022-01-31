@@ -307,23 +307,18 @@ impl LogicalPlan {
                     for mapping in &group.mappings {
                         if let Some(key) = mapping.key.as_ref() {
                             if key.property.is_none() {
-                                if let Some(tag_pb) = key.tag.clone() {
+                                let node_ids = if let Some(tag_pb) = key.tag.clone() {
                                     let tag = tag_pb.try_into()?;
-                                    let node_id = self
-                                        .meta
-                                        .get_tag_node(&tag)
-                                        .ok_or(IrError::TagNotExist(tag))?;
-                                    if let Some(alias_pb) = mapping.alias.clone() {
-                                        self.meta
-                                            .insert_tag_nodes(alias_pb.try_into()?, vec![node_id]);
-                                    }
+                                    self.meta
+                                        .get_tag_nodes(&tag)
+                                        .ok_or(IrError::TagNotExist(tag))?
                                 } else {
-                                    let node_ids = self.meta.get_curr_nodes().to_vec();
-                                    if let Some(alias_pb) = mapping.alias.clone() {
-                                        self.meta
-                                            .insert_tag_nodes(alias_pb.try_into()?, node_ids);
-                                    }
+                                    self.meta.get_curr_nodes()
                                 };
+                                if let Some(alias_pb) = mapping.alias.clone() {
+                                    self.meta
+                                        .insert_tag_nodes(alias_pb.try_into()?, node_ids);
+                                }
                             }
                         }
                     }
@@ -341,12 +336,16 @@ impl LogicalPlan {
                                     if var.tag.is_some() && var.property.is_none()
                                     // tag as Head
                                     {
-                                        if let Some(node) = self
+                                        if let Some(nodes) = self
                                             .meta
-                                            .get_tag_node(&var.tag.clone().unwrap().try_into()?)
+                                            .get_tag_nodes(&var.tag.clone().unwrap().try_into()?)
                                         {
                                             is_update_curr = false;
-                                            self.meta.set_curr_node(node);
+                                            if nodes.len() == 1 {
+                                                self.meta.set_curr_node(nodes[0]);
+                                            } else {
+                                                self.meta.set_union_curr_nodes(nodes);
+                                            }
                                         }
                                     }
                                 }
@@ -370,8 +369,8 @@ impl LogicalPlan {
                     }
                 }
                 Some(Opr::Union(_)) => {
-                    let union_nodes = self.meta.get_union_tag_nodes_mut();
-                    *(union_nodes.entry(None).or_default()) = parent_ids.clone();
+                    self.meta
+                        .set_union_curr_nodes(parent_ids.clone());
                 }
                 Some(Opr::Select(_))
                 | Some(Opr::OrderBy(_))
@@ -392,9 +391,7 @@ impl LogicalPlan {
             if old_curr_nodes.len() == 1 {
                 self.meta.set_curr_node(old_curr_nodes[0]);
             } else {
-                self.meta
-                    .get_union_tag_nodes_mut()
-                    .insert(None, old_curr_nodes);
+                self.meta.set_union_curr_nodes(old_curr_nodes);
             }
         }
 
@@ -633,15 +630,14 @@ fn preprocess_var(
                         }
                     }
                     debug!("add column ({:?}) to {:?}", key, var.tag);
-                    plan_meta
-                        .tag_node_meta_mut(
-                            var.tag
-                                .clone()
-                                .map(|tag| tag.try_into())
-                                .transpose()?
-                                .as_ref(),
-                        )?
-                        .insert_column(key.clone().try_into()?);
+                    let mut node_meta = plan_meta.tag_node_metas_mut(
+                        var.tag
+                            .clone()
+                            .map(|tag| tag.try_into())
+                            .transpose()?
+                            .as_ref(),
+                    )?;
+                    node_meta.insert_column(key.clone().try_into()?);
                 }
                 _ => {}
             }
@@ -715,15 +711,14 @@ fn preprocess_expression(
                                         }
                                     }
                                     debug!("add column ({:?}) to {:?}", key, var.tag);
-                                    plan_meta
-                                        .tag_node_meta_mut(
-                                            var.tag
-                                                .clone()
-                                                .map(|tag| tag.try_into())
-                                                .transpose()?
-                                                .as_ref(),
-                                        )?
-                                        .insert_column(key.clone().try_into()?);
+                                    let mut node_meta = plan_meta.tag_node_metas_mut(
+                                        var.tag
+                                            .clone()
+                                            .map(|tag| tag.try_into())
+                                            .transpose()?
+                                            .as_ref(),
+                                    )?;
+                                    node_meta.insert_column(key.clone().try_into()?);
                                 }
                                 common_pb::property::Item::Label(_) => count = 1,
                                 _ => count = 0,
@@ -794,7 +789,7 @@ fn preprocess_params(
         }
         debug!("add column ({:?}) to HEAD", column);
         plan_meta
-            .curr_node_meta_mut()
+            .curr_node_metas_mut()
             .insert_column(column.clone().try_into()?);
     }
     Ok(())
@@ -822,7 +817,9 @@ impl AsLogical for pb::Select {
 
 impl AsLogical for pb::Scan {
     fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
-        plan_meta.curr_node_meta_mut().is_add_column = true;
+        plan_meta
+            .curr_node_metas_mut()
+            .set_is_add_column(true);
         if let Some(params) = self.params.as_mut() {
             preprocess_params(params, meta, plan_meta)?;
         }
@@ -835,11 +832,15 @@ impl AsLogical for pb::Scan {
 
 impl AsLogical for pb::EdgeExpand {
     fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
-        plan_meta.curr_node_meta_mut().is_add_column = false;
+        plan_meta
+            .curr_node_metas_mut()
+            .set_is_add_column(false);
         if let Some(params) = self.params.as_mut() {
             preprocess_params(params, meta, plan_meta)?;
         }
-        plan_meta.curr_node_meta_mut().is_add_column = true;
+        plan_meta
+            .curr_node_metas_mut()
+            .set_is_add_column(true);
 
         Ok(())
     }
@@ -848,7 +849,9 @@ impl AsLogical for pb::EdgeExpand {
 impl AsLogical for pb::PathExpand {
     fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
         // PathExpand would never require adding columns
-        plan_meta.curr_node_meta_mut().is_add_column = false;
+        plan_meta
+            .curr_node_metas_mut()
+            .set_is_add_column(false);
         if let Some(base) = self.base.as_mut() {
             base.preprocess(meta, plan_meta)?;
         }
@@ -858,7 +861,9 @@ impl AsLogical for pb::PathExpand {
 
 impl AsLogical for pb::GetV {
     fn preprocess(&mut self, _meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
-        plan_meta.curr_node_meta_mut().is_add_column = true;
+        plan_meta
+            .curr_node_metas_mut()
+            .set_is_add_column(true);
         Ok(())
     }
 }
@@ -906,7 +911,7 @@ impl AsLogical for pb::IndexPredicate {
                                 }
                                 debug!("add column ({:?}) to HEAD", key);
                                 plan_meta
-                                    .curr_node_meta_mut()
+                                    .curr_node_metas_mut()
                                     .insert_column(key.clone().try_into()?);
                             }
                             common_pb::property::Item::Label(_) => {
@@ -1211,15 +1216,17 @@ mod test {
         plan_meta.set_preprocess(true);
         plan_meta.insert_tag_nodes("a".into(), vec![1]);
         plan_meta.insert_tag_nodes("b".into(), vec![2]);
-        plan_meta.curr_node_meta_mut().is_add_column = true;
         plan_meta
-            .tag_node_meta_mut(Some(&"a".into()))
-            .unwrap()
-            .is_add_column = true;
+            .curr_node_metas_mut()
+            .set_is_add_column(true);
         plan_meta
-            .tag_node_meta_mut(Some(&"b".into()))
+            .tag_node_metas_mut(Some(&"a".into()))
             .unwrap()
-            .is_add_column = true;
+            .set_is_add_column(true);
+        plan_meta
+            .tag_node_metas_mut(Some(&"b".into()))
+            .unwrap()
+            .set_is_add_column(true);
 
         set_schema_simple(
             vec![("person".to_string(), 0), ("software".to_string(), 1)],
@@ -1280,6 +1287,7 @@ mod test {
             plan_meta
                 .get_node_meta(0)
                 .unwrap()
+                .borrow()
                 .get_columns(),
             // has a new column "name", which is mapped to 1
             &vec![1.into()]
@@ -1307,6 +1315,7 @@ mod test {
             plan_meta
                 .get_node_meta(1)
                 .unwrap()
+                .borrow()
                 .get_columns(),
             // node1 with tag a has a new column "name", which is mapped to 1
             &vec![1.into()]
@@ -1340,6 +1349,7 @@ mod test {
             plan_meta
                 .get_node_meta(0)
                 .unwrap()
+                .borrow()
                 .get_columns(),
             // node1 with tag a has a new column "name", which is mapped to 1
             &vec![1.into()]
@@ -1350,6 +1360,7 @@ mod test {
             plan_meta
                 .get_node_meta(2)
                 .unwrap()
+                .borrow()
                 .get_columns(),
             // node2 with tag b has a new column "id", which is mapped to 0
             &vec![0.into()]
@@ -1363,11 +1374,13 @@ mod test {
         let mut plan_meta = PlanMeta::default();
         plan_meta.set_preprocess(true);
         plan_meta.insert_tag_nodes("a".into(), vec![1]);
-        plan_meta.curr_node_meta_mut().is_add_column = true;
         plan_meta
-            .tag_node_meta_mut(Some(&"a".into()))
+            .curr_node_metas_mut()
+            .set_is_add_column(true);
+        plan_meta
+            .tag_node_metas_mut(Some(&"a".into()))
             .unwrap()
-            .is_add_column = true;
+            .set_is_add_column(true);
         set_schema_simple(
             vec![("person".to_string(), 0), ("software".to_string(), 1)],
             vec![("knows".to_string(), 0), ("creates".to_string(), 1)],
@@ -1429,6 +1442,7 @@ mod test {
             plan_meta
                 .get_node_meta(0)
                 .unwrap()
+                .borrow()
                 .get_columns(),
             &vec![1.into(), 2.into()]
                 .into_iter()
@@ -1438,6 +1452,7 @@ mod test {
             plan_meta
                 .get_node_meta(1)
                 .unwrap()
+                .borrow()
                 .get_columns(),
             &vec![2.into()]
                 .into_iter()
@@ -1482,6 +1497,7 @@ mod test {
             plan.meta
                 .get_node_meta(0)
                 .unwrap()
+                .borrow()
                 .get_columns(),
             &vec!["age".into()]
                 .into_iter()
@@ -1503,6 +1519,7 @@ mod test {
             plan.meta
                 .get_node_meta(0)
                 .unwrap()
+                .borrow()
                 .get_columns(),
             &vec!["age".into(), "id".into(), "name".into()]
                 .into_iter()
@@ -1557,6 +1574,7 @@ mod test {
             plan.meta
                 .get_node_meta(1)
                 .unwrap()
+                .borrow()
                 .get_columns(),
             &vec!["lang".into()]
                 .into_iter()
@@ -1589,6 +1607,7 @@ mod test {
             plan.meta
                 .get_node_meta(1)
                 .unwrap()
+                .borrow()
                 .get_columns(),
             &vec!["lang".into(), "name".into()]
                 .into_iter()
@@ -1636,14 +1655,14 @@ mod test {
         plan.append_operator_as_node(expand.into(), vec![0])
             .unwrap();
         assert_eq!(plan.meta.get_curr_nodes(), &[1]);
-        assert_eq!(plan.meta.get_tag_node(&"e".into()).unwrap(), 1);
+        assert_eq!(plan.meta.get_tag_nodes(&"e".into()).unwrap(), vec![1]);
 
         // .inV().as("v")
         let getv = pb::GetV { tag: None, opt: 1, alias: Some("v".into()) };
         plan.append_operator_as_node(getv.into(), vec![1])
             .unwrap();
         assert_eq!(plan.meta.get_curr_nodes(), &[2]);
-        assert_eq!(plan.meta.get_tag_node(&"v".into()).unwrap(), 2);
+        assert_eq!(plan.meta.get_tag_nodes(&"v".into()).unwrap(), vec![2]);
 
         // .select("e")
         let project = pb::Project {
@@ -1675,7 +1694,7 @@ mod test {
         assert_eq!(plan.meta.get_curr_nodes(), &[1]);
         assert_eq!(
             plan.meta
-                .curr_node_meta()
+                .curr_node_metas()
                 .unwrap()
                 .get_columns()
                 .clone(),
@@ -1709,6 +1728,7 @@ mod test {
             plan.meta
                 .get_node_meta(2)
                 .unwrap()
+                .borrow()
                 .get_columns()
                 .clone(),
             vec!["name".into()].into_iter().collect()
@@ -1751,6 +1771,7 @@ mod test {
             plan.meta
                 .get_node_meta(0)
                 .unwrap()
+                .borrow()
                 .get_columns(),
             &vec!["name".into()]
                 .into_iter()
@@ -1763,7 +1784,7 @@ mod test {
             .append_operator_as_node(as_opr.into(), vec![opr_id as u32])
             .unwrap();
         assert_eq!(plan.meta.get_curr_nodes(), &[0]);
-        assert_eq!(plan.meta.get_tag_node(&"a".into()).unwrap(), 0);
+        assert_eq!(plan.meta.get_tag_nodes(&"a".into()).unwrap(), vec![0]);
 
         // outE("knows").as('b').has("date", 20200101)
         let expand = pb::EdgeExpand {
@@ -1783,7 +1804,7 @@ mod test {
             .append_operator_as_node(expand.into(), vec![opr_id as u32])
             .unwrap();
         assert_eq!(plan.meta.get_curr_nodes(), &[opr_id as u32]);
-        assert_eq!(plan.meta.get_tag_node(&"b".into()).unwrap(), opr_id as u32);
+        assert_eq!(plan.meta.get_tag_nodes(&"b".into()).unwrap(), vec![opr_id as u32]);
 
         //.inV().as('c')
         let getv = pb::GetV { tag: None, opt: 2, alias: Some("c".into()) };
@@ -1791,7 +1812,7 @@ mod test {
             .append_operator_as_node(getv.into(), vec![opr_id as u32])
             .unwrap();
         assert_eq!(plan.meta.get_curr_nodes(), &[opr_id as u32]);
-        assert_eq!(plan.meta.get_tag_node(&"c".into()).unwrap(), opr_id as u32);
+        assert_eq!(plan.meta.get_tag_nodes(&"c".into()).unwrap(), vec![opr_id as u32]);
 
         // .has("id", 10)
         let select = pb::Select { predicate: str_to_expr_pb("@.id == 10".to_string()).ok() };
@@ -1803,6 +1824,7 @@ mod test {
             plan.meta
                 .get_node_meta(opr_id as u32 - 1)
                 .unwrap()
+                .borrow()
                 .get_columns(),
             &vec!["id".into()]
                 .into_iter()
@@ -1823,8 +1845,9 @@ mod test {
         assert_eq!(plan.meta.get_curr_nodes(), &[opr_id as u32]);
         assert_eq!(
             plan.meta
-                .get_node_meta(plan.meta.get_tag_node(&"a".into()).unwrap())
+                .get_node_meta(plan.meta.get_tag_nodes(&"a".into()).unwrap()[0])
                 .unwrap()
+                .borrow()
                 .get_columns(),
             &vec!["age".into(), "name".into()]
                 .into_iter()
@@ -1845,8 +1868,9 @@ mod test {
         assert_eq!(plan.meta.get_curr_nodes(), &[opr_id as u32]);
         assert_eq!(
             plan.meta
-                .get_node_meta(plan.meta.get_tag_node(&"c".into()).unwrap())
+                .get_node_meta(plan.meta.get_tag_nodes(&"c".into()).unwrap()[0])
                 .unwrap()
+                .borrow()
                 .get_columns(),
             &vec!["age".into(), "id".into(), "name".into()]
                 .into_iter()
@@ -1890,7 +1914,7 @@ mod test {
         };
         plan.append_operator_as_node(group.into(), vec![0])
             .unwrap();
-        assert_eq!(plan.meta.get_tag_node(&"keys".into()).unwrap(), 0);
+        assert_eq!(plan.meta.get_tag_nodes(&"keys".into()).unwrap(), vec![0]);
 
         let order = pb::OrderBy {
             pairs: vec![pb::order_by::OrderingPair {
@@ -1910,6 +1934,7 @@ mod test {
             .meta
             .get_node_meta(0)
             .unwrap()
+            .borrow()
             .get_columns()
             .contains(&"name".into()));
     }
@@ -1987,12 +2012,13 @@ mod test {
                     Opr::Edge(_) => {}
                     _ => panic!("should be edge expand"),
                 }
-                assert_eq!(subplan.meta.get_tag_node(&"o".into()).unwrap(), root_id);
+                assert_eq!(subplan.meta.get_tag_nodes(&"o".into()).unwrap(), vec![root_id]);
                 assert_eq!(
                     subplan
                         .meta
                         .get_node_meta(root_id)
                         .unwrap()
+                        .borrow()
                         .get_columns()
                         .iter()
                         .cloned()
