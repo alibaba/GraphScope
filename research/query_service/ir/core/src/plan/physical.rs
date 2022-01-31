@@ -97,8 +97,8 @@ impl AsPhysical for pb::Scan {
 
     fn post_process(&mut self, _builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         if let Some(params) = &mut self.params {
-            if let Some(node_meta) = plan_meta.curr_node_meta() {
-                let columns = node_meta.get_columns();
+            if let Some(node_metas) = plan_meta.curr_node_metas() {
+                let columns = node_metas.get_columns();
                 if !columns.is_empty() {
                     params.columns.clear();
                     params.columns.extend(
@@ -109,8 +109,8 @@ impl AsPhysical for pb::Scan {
                 }
             }
         } else {
-            if let Some(node_meta) = plan_meta.curr_node_meta() {
-                let columns = node_meta.get_columns();
+            if let Some(node_metas) = plan_meta.curr_node_metas() {
+                let columns = node_metas.get_columns();
                 if !columns.is_empty() {
                     self.params = Some(pb::QueryParams {
                         table_names: vec![],
@@ -140,8 +140,8 @@ impl AsPhysical for pb::EdgeExpand {
     fn post_process(&mut self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         let mut is_adding_auxilia = false;
         let mut auxilia = pb::Auxilia { params: None, alias: None };
-        if let Some(node_meta) = plan_meta.curr_node_meta() {
-            let columns = node_meta.get_columns();
+        if let Some(node_metas) = plan_meta.curr_node_metas() {
+            let columns = node_metas.get_columns();
             if !columns.is_empty() {
                 if !self.is_edge {
                     // Vertex expansion
@@ -258,8 +258,8 @@ impl AsPhysical for pb::GetV {
     fn post_process(&mut self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         let mut is_adding_auxilia = false;
         let mut auxilia = pb::Auxilia { params: None, alias: None };
-        if let Some(node_meta) = plan_meta.curr_node_meta() {
-            let columns = node_meta.get_columns();
+        if let Some(node_metas) = plan_meta.curr_node_metas() {
+            let columns = node_metas.get_columns();
             if !columns.is_empty() {
                 auxilia.alias = self.alias.clone();
                 auxilia.params = Some(pb::QueryParams {
