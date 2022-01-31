@@ -699,8 +699,8 @@ fn preprocess_expression(
                         if let Some(key) = property.item.as_mut() {
                             match key {
                                 common_pb::property::Item::Key(key) => {
+                                    count = 0;
                                     if let Some(schema) = &meta.schema {
-                                        count = 0;
                                         if plan_meta.is_preprocess() && schema.is_column_id() {
                                             let new_key = schema
                                                 .get_column_id_from_pb(key)
@@ -1002,6 +1002,7 @@ mod test {
     use ir_common::expr_parse::str_to_expr_pb;
     use ir_common::generated::algebra::logical_plan::operator::Opr;
     use ir_common::generated::common::property::Item;
+    use ir_common::NameOrId;
 
     use super::*;
     use crate::plan::meta::set_schema_simple;
@@ -1937,6 +1938,93 @@ mod test {
             .borrow()
             .get_columns()
             .contains(&"name".into()));
+    }
+
+    #[test]
+    fn tag_maintain_union() {
+        let mut plan = LogicalPlan::default();
+        // g.V().union(out(), out().out()).as('a').select('a').by(valueMap('name', 'age'))
+        // g.V()
+        let scan = pb::Scan {
+            scan_opt: 0,
+            alias: None,
+            params: Some(pb::QueryParams {
+                table_names: vec![],
+                columns: vec![],
+                limit: None,
+                predicate: None,
+                requirements: vec![],
+            }),
+            idx_predicate: None,
+        };
+        plan.append_operator_as_node(scan.into(), vec![])
+            .unwrap();
+
+        let expand1 = pb::EdgeExpand {
+            v_tag: None,
+            direction: 0,
+            params: Some(pb::QueryParams {
+                table_names: vec![],
+                columns: vec![],
+                limit: None,
+                predicate: None,
+                requirements: vec![],
+            }),
+            is_edge: false,
+            alias: None,
+        };
+
+        let expand2 = expand1.clone();
+        let expand3 = expand1.clone();
+        let id1 = plan
+            .append_operator_as_node(expand1.into(), vec![0])
+            .unwrap();
+        let opr_id = plan
+            .append_operator_as_node(expand2.into(), vec![0])
+            .unwrap();
+        let id2 = plan
+            .append_operator_as_node(expand3.into(), vec![opr_id])
+            .unwrap();
+        let union = pb::Union { parents: vec![id1 as i32, id2 as i32] };
+        plan.append_operator_as_node(union.into(), vec![id1, id2])
+            .unwrap();
+        assert_eq!(plan.meta.get_curr_nodes(), vec![id1, id2]);
+
+        let as_opr = pb::As { alias: Some("a".into()) };
+        let opr_id = plan
+            .append_operator_as_node(as_opr.into(), vec![id1, id2])
+            .unwrap();
+        assert_eq!(plan.meta.get_tag_nodes(&"a".into()).unwrap(), vec![id1, id2]);
+
+        let project = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: str_to_expr_pb("{@a.name, @a.age}".to_string()).ok(),
+                alias: None,
+            }],
+            is_append: false,
+        };
+        plan.append_operator_as_node(project.into(), vec![opr_id])
+            .unwrap();
+        assert_eq!(
+            plan.meta
+                .get_node_meta(id1)
+                .unwrap()
+                .borrow()
+                .get_columns(),
+            &vec!["name".into(), "age".into()]
+                .into_iter()
+                .collect::<BTreeSet<NameOrId>>()
+        );
+        assert_eq!(
+            plan.meta
+                .get_node_meta(id2)
+                .unwrap()
+                .borrow()
+                .get_columns(),
+            &vec!["name".into(), "age".into()]
+                .into_iter()
+                .collect::<BTreeSet<NameOrId>>()
+        );
     }
 
     #[test]
