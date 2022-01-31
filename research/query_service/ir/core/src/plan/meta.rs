@@ -447,7 +447,7 @@ pub struct PlanMeta {
     /// with the storage to access the required column. Thus, such information can help
     /// the computation route and fetch columns.
     node_metas: BTreeMap<u32, Rc<RefCell<NodeMeta>>>,
-    /// The tag must refer to a valid node in the plan.
+    /// The tag must refer to some valid nodes in the plan.
     tag_nodes: BTreeMap<NameOrId, Vec<u32>>,
     /// To ease the processing, tag may be transformed to an internal id.
     /// This maintains the mappings
