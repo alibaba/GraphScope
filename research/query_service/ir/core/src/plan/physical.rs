@@ -103,8 +103,8 @@ impl AsPhysical for pb::Scan {
                     params.columns.clear();
                     params.columns.extend(
                         columns
-                            .iter()
-                            .map(|tag| common_pb::NameOrId::from(tag.clone())),
+                            .into_iter()
+                            .map(|tag| common_pb::NameOrId::from(tag)),
                     )
                 }
             }
@@ -115,8 +115,8 @@ impl AsPhysical for pb::Scan {
                     self.params = Some(pb::QueryParams {
                         table_names: vec![],
                         columns: columns
-                            .iter()
-                            .map(|tag| common_pb::NameOrId::from(tag.clone()))
+                            .into_iter()
+                            .map(|tag| common_pb::NameOrId::from(tag))
                             .collect(),
                         limit: None,
                         predicate: None,
@@ -149,8 +149,8 @@ impl AsPhysical for pb::EdgeExpand {
                     auxilia.params = Some(pb::QueryParams {
                         table_names: vec![],
                         columns: columns
-                            .iter()
-                            .map(|tag| common_pb::NameOrId::from(tag.clone()))
+                            .into_iter()
+                            .map(|tag| common_pb::NameOrId::from(tag))
                             .collect(),
                         limit: None,
                         predicate: None,
@@ -265,8 +265,8 @@ impl AsPhysical for pb::GetV {
                 auxilia.params = Some(pb::QueryParams {
                     table_names: vec![],
                     columns: columns
-                        .iter()
-                        .map(|tag| common_pb::NameOrId::from(tag.clone()))
+                        .into_iter()
+                        .map(|tag| common_pb::NameOrId::from(tag))
                         .collect(),
                     limit: None,
                     predicate: None,

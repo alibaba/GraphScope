@@ -354,7 +354,7 @@ pub struct NodeMeta {
     /// The required columns (columns)
     columns: BTreeSet<NameOrId>,
     /// Whether the current node accept columns
-    pub(crate) is_add_column: bool,
+    is_add_column: bool,
 }
 
 impl NodeMeta {
