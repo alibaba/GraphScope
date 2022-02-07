@@ -42,15 +42,21 @@ public abstract class AbstractLdbcWithSubQuery extends CommonQuery {
             int resultCount = 0;
             String resultStr = "";
 
-            for (Result result : resultSet) {
-                String subQuery = buildSubQuery(result, singleParameter);
-                ResultSet subQueryResult = client.submit(subQuery);
-                Pair<Integer, String> resultPair = processResult(subQueryResult);
-                resultCount += resultPair.getLeft();
-                if (printResult && !resultPair.getRight().isEmpty()) {
-                    resultStr = String.format("%s%s", resultStr, resultPair.getValue());
-                }
+            // TODO(bingqing): Parse result for subQuery. Ignore subquery for test.
+            Pair<Integer, String> resultPair = processResult(resultSet);
+            resultCount += resultPair.getLeft();
+            if (printResult && !resultPair.getRight().isEmpty()) {
+                resultStr = String.format("%s%s", resultStr, resultPair.getValue());
             }
+            //for (Result result : resultSet) {
+            //    String subQuery = buildSubQuery(result, singleParameter);
+            //    ResultSet subQueryResult = client.submit(subQuery);
+            //    Pair<Integer, String> resultPair = processResult(subQueryResult);
+            //    resultCount += resultPair.getLeft();
+            //    if (printResult && !resultPair.getRight().isEmpty()) {
+            //        resultStr = String.format("%s%s", resultStr, resultPair.getValue());
+            //    }
+            //}
             long endTime = System.currentTimeMillis();
             long executeTime = endTime - startTime;
             if (printQuery) {
