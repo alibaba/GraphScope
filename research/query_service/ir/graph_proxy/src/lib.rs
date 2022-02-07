@@ -18,6 +18,7 @@ extern crate log;
 #[macro_use]
 extern crate lazy_static;
 pub use exp_store::{create_demo_graph, QueryExpGraph, SimplePartition};
+pub use gs_store::{QueryMaxGraph, QueryVineyard};
 use pegasus::api::function::{DynIter, FnResult};
 use runtime::graph::Statement;
 use runtime::IRJobCompiler;
