@@ -34,6 +34,13 @@
             </includes>
         </fileSet>
         <fileSet>
+            <directory>ir_queries/</directory>
+            <outputDirectory>/ir_queries</outputDirectory>
+            <includes>
+                <include>*</include>
+            </includes>
+        </fileSet>
+        <fileSet>
             <directory>data/substitution_parameters</directory>
             <outputDirectory>/data/substitution_parameters</outputDirectory>
             <includes>
