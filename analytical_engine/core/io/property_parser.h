@@ -138,7 +138,11 @@ inline void ParseVertex(std::shared_ptr<detail::Graph>& graph,
   vertex->label = attrs.at(rpc::LABEL).s();
   vertex->vid = attrs.at(rpc::VID).s();
   vertex->protocol = attrs.at(rpc::PROTOCOL).s();
-  vertex->values = data;
+  if (vertex->protocol == "pandas") {
+    vertex->values = data;
+  } else {
+    vertex->values = attrs.at(rpc::SOURCE).s();
+  }
   graph->vertices.push_back(vertex);
 }
 
@@ -163,7 +167,11 @@ inline void ParseEdge(std::shared_ptr<detail::Graph>& graph,
   sub_label.dst_vid = attrs.at(rpc::DST_VID).s();
   sub_label.load_strategy = attrs.at(rpc::LOAD_STRATEGY).s();
   sub_label.protocol = attrs.at(rpc::PROTOCOL).s();
-  sub_label.values = data;
+  if (sub_label.protocol == "pandas") {
+    sub_label.values = data;
+  } else {
+    sub_label.values = attrs.at(rpc::SOURCE).s();
+  }
   edge->sub_labels.push_back(sub_label);
 
   if (!has_edge_label) {

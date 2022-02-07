@@ -46,6 +46,7 @@ from gscoordinator.io_utils import StdStreamWrapper
 sys.stdout = StdStreamWrapper(sys.stdout)
 sys.stderr = StdStreamWrapper(sys.stderr)
 
+from graphscope.client.utils import GRPCUtils
 from graphscope.framework import utils
 from graphscope.framework.dag_utils import create_graph
 from graphscope.framework.dag_utils import create_loader
@@ -118,6 +119,7 @@ class CoordinatorServiceServicer(
 
         self._request = None
         self._object_manager = ObjectManager()
+        self._grpc_utils = GRPCUtils()
         self._dangling_detecting_timer = None
         self._config_logging(log_level)
 
@@ -310,8 +312,27 @@ class CoordinatorServiceServicer(
         return message_pb2.HeartBeatResponse()
 
     def run_on_analytical_engine(  # noqa: C901
-        self, session_id, dag_def: op_def_pb2.DagDef, op_results: list
+        self,
+        dag_def: op_def_pb2.DagDef,
+        dag_bodies,
+        op_results: list,
+        loader_op_bodies: dict,
     ):
+        def _generate_runstep_request(session_id, dag_def, dag_bodies):
+            runstep_requests = []
+            # head
+            runstep_requests.append(
+                message_pb2.RunStepRequest(
+                    head=message_pb2.RunStepRequestHead(
+                        session_id=session_id, dag_def=dag_def
+                    )
+                )
+            )
+            runstep_requests.extend(dag_bodies)
+            for item in runstep_requests:
+                yield item
+
+        # preprocess of op
         for op in dag_def.op:
             self._key_to_op[op.key] = op
             op_pre_process(
@@ -321,6 +342,14 @@ class CoordinatorServiceServicer(
                 engine_hosts=self._engine_hosts,
                 engine_config=self._analytical_engine_config,
             )
+
+            # Handle op that depends on loader (data source)
+            if op.op == types_pb2.CREATE_GRAPH or op.op == types_pb2.ADD_LABELS:
+                for key_of_parent_op in op.parents:
+                    parent_op = self._key_to_op[key_of_parent_op]
+                    if parent_op.op == types_pb2.DATA_SOURCE:
+                        # handle bodies of loader op
+                        dag_bodies.extend(loader_op_bodies[parent_op.key])
 
             # Compile app or not.
             if op.op == types_pb2.BIND_APP:
@@ -340,14 +369,12 @@ class CoordinatorServiceServicer(
                 or op.op == types_pb2.PROJECT_TO_SIMPLE
                 or op.op == types_pb2.ADD_LABELS
             ):
-                op = self._maybe_register_graph(op, session_id)
+                op = self._maybe_register_graph(op, self._session_id)
 
-        request = message_pb2.RunStepRequest(
-            session_id=self._session_id, dag_def=dag_def
-        )
+        requests = _generate_runstep_request(self._session_id, dag_def, dag_bodies)
         error = None  # n.b.: avoid raising deep nested error stack to users
         try:
-            response = self._analytical_engine_stub.RunStep(request)
+            response = self._analytical_engine_stub.RunStep(requests)
         except grpc.RpcError as e:
             logger.error(
                 "Engine RunStep failed, code: %s, details: %s",
@@ -417,9 +444,7 @@ class CoordinatorServiceServicer(
                 self._object_manager.pop(op.attr[types_pb2.APP_NAME].s.decode())
         return response.results
 
-    def run_on_interactive_engine(
-        self, session_id, dag_def: op_def_pb2.DagDef, op_results: list
-    ):
+    def run_on_interactive_engine(self, dag_def: op_def_pb2.DagDef, op_results: list):
         for op in dag_def.op:
             self._key_to_op[op.key] = op
             op_pre_process(
@@ -448,9 +473,7 @@ class CoordinatorServiceServicer(
                 self._op_result_pool[op.key] = op_result
         return op_results
 
-    def run_on_learning_engine(
-        self, session_id, dag_def: op_def_pb2.DagDef, op_results: list
-    ):
+    def run_on_learning_engine(self, dag_def: op_def_pb2.DagDef, op_results: list):
         for op in dag_def.op:
             self._key_to_op[op.key] = op
             op_pre_process(
@@ -471,7 +494,11 @@ class CoordinatorServiceServicer(
         return op_results
 
     def run_on_coordinator(
-        self, session_id, dag_def: op_def_pb2.DagDef, op_results: list
+        self,
+        dag_def: op_def_pb2.DagDef,
+        dag_bodies,
+        op_results: list,
+        loader_op_bodies: dict,
     ):
         for op in dag_def.op:
             self._key_to_op[op.key] = op
@@ -483,7 +510,7 @@ class CoordinatorServiceServicer(
                 engine_config=self._analytical_engine_config,
             )
             if op.op == types_pb2.DATA_SOURCE:
-                op_result = self._process_data_source(op)
+                op_result = self._process_data_source(op, dag_bodies, loader_op_bodies)
             elif op.op == types_pb2.OUTPUT:
                 op_result = self._output(op)
             else:
@@ -498,30 +525,32 @@ class CoordinatorServiceServicer(
             code=code, error_msg=msg, full_exception=full_exc
         )
 
-    def RunStep(self, request, context):
-        op_results = list()
+    def RunStep(self, request_iterator, context):
         # split dag
-        dag_manager = DAGManager(request.dag_def)
+        dag_manager = DAGManager(request_iterator)
+        op_results = []
+        loader_op_bodies = {}
+
         while not dag_manager.empty():
-            next_dag = dag_manager.get_next_dag()
-            run_dag_on, dag_def = next_dag
+            run_dag_on, dag, dag_bodies = dag_manager.next_dag()
             try:
                 if run_dag_on == GSEngine.analytical_engine:
+                    # need dag_bodies to load graph from pandas/numpy
                     error_code = error_codes_pb2.ANALYTICAL_ENGINE_INTERNAL_ERROR
                     self.run_on_analytical_engine(
-                        request.session_id, dag_def, op_results
+                        dag, dag_bodies, op_results, loader_op_bodies
                     )
                 elif run_dag_on == GSEngine.interactive_engine:
                     error_code = error_codes_pb2.INTERACTIVE_ENGINE_INTERNAL_ERROR
-                    self.run_on_interactive_engine(
-                        request.session_id, dag_def, op_results
-                    )
+                    self.run_on_interactive_engine(dag, op_results)
                 elif run_dag_on == GSEngine.learning_engine:
                     error_code = error_codes_pb2.LEARNING_ENGINE_INTERNAL_ERROR
-                    self.run_on_learning_engine(request.session_id, dag_def, op_results)
+                    self.run_on_learning_engine(dag, op_results)
                 elif run_dag_on == GSEngine.coordinator:
                     error_code = error_codes_pb2.COORDINATOR_INTERNAL_ERROR
-                    self.run_on_coordinator(request.session_id, dag_def, op_results)
+                    self.run_on_coordinator(
+                        dag, dag_bodies, op_results, loader_op_bodies
+                    )
             except grpc.RpcError as exc:
                 # Not raised by graphscope, maybe socket closed, etc
                 context.set_code(exc.code())
@@ -594,7 +623,7 @@ class CoordinatorServiceServicer(
             )
             dag_def = op_def_pb2.DagDef()
             dag_def.op.extend([op_def])
-            register_request = message_pb2.RunStepRequest(
+            register_request = self._grpc_utils.generate_runstep_requests(
                 session_id=session_id, dag_def=dag_def
             )
             error = None  # n.b.: avoid raising deep nested error stack to users
@@ -785,7 +814,9 @@ class CoordinatorServiceServicer(
         )
         return op_def_pb2.OpResult(code=error_codes_pb2.OK, key=op.key)
 
-    def _process_data_source(self, op: op_def_pb2.OpDef):
+    def _process_data_source(
+        self, op: op_def_pb2.OpDef, dag_bodies, loader_op_bodies: dict
+    ):
         def _spawn_vineyard_io_stream(source, storage_options, read_options):
             import vineyard
             import vineyard.io
@@ -814,7 +845,7 @@ class CoordinatorServiceServicer(
             # loader is type of attr_value_pb2.Chunk
             protocol = loader.attr[types_pb2.PROTOCOL].s.decode()
             if protocol in ("hdfs", "hive", "oss", "s3"):
-                source = loader.buffer.decode()
+                source = loader.attr[types_pb2.SOURCE].s.decode()
                 storage_options = json.loads(
                     loader.attr[types_pb2.STORAGE_OPTIONS].s.decode()
                 )
@@ -824,12 +855,18 @@ class CoordinatorServiceServicer(
                 new_protocol, new_source = _spawn_vineyard_io_stream(
                     source, storage_options, read_options
                 )
-                loader.buffer = new_source.encode("utf-8")
                 loader.attr[types_pb2.PROTOCOL].CopyFrom(utils.s_to_attr(new_protocol))
+                loader.attr[types_pb2.SOURCE].CopyFrom(utils.s_to_attr(new_source))
 
-        for loader in op.large_attr.chunk_list.items:
+        for loader in op.large_attr.chunk_meta_list.items:
             # handle vertex or edge loader
             if loader.attr[types_pb2.CHUNK_TYPE].s.decode() == "loader":
+                # set op bodies, this is for loading graph from numpy/pandas
+                op_bodies = []
+                for bodies in dag_bodies:
+                    if bodies.body.op_key == op.key:
+                        op_bodies.append(bodies)
+                loader_op_bodies[op.key] = op_bodies
                 _process_loader_func(loader)
 
         return op_def_pb2.OpResult(code=error_codes_pb2.OK, key=op.key)
@@ -894,8 +931,8 @@ class CoordinatorServiceServicer(
             new_op_def.key = op.key
             dag = op_def_pb2.DagDef()
             dag.op.extend([new_op_def])
-            self.run_on_coordinator(self._session_id, coordinator_dag, [])
-            results = self.run_on_analytical_engine(self._session_id, dag, [])
+            self.run_on_coordinator(coordinator_dag, [], [], {})
+            results = self.run_on_analytical_engine(self._session_id, dag, [], [])
             logger.info("subgraph has been loaded")
             return results[-1]
 
@@ -1009,7 +1046,7 @@ class CoordinatorServiceServicer(
 
             if unload_type:
                 dag_def = create_single_op_dag(unload_type, config)
-                request = message_pb2.RunStepRequest(
+                request = self._grpc_utils.generate_runstep_requests(
                     session_id=self._session_id, dag_def=dag_def
                 )
                 try:
@@ -1051,12 +1088,12 @@ class CoordinatorServiceServicer(
 
     def _get_engine_config(self):
         dag_def = create_single_op_dag(types_pb2.GET_ENGINE_CONFIG)
-        request = message_pb2.RunStepRequest(
+        requests = self._grpc_utils.generate_runstep_requests(
             session_id=self._session_id, dag_def=dag_def
         )
         error = None  # n.b.: avoid raising deep nested error stack to users
         try:
-            response = self._analytical_engine_stub.RunStep(request)
+            response = self._analytical_engine_stub.RunStep(requests)
         except grpc.RpcError as e:
             logger.error(
                 "Get engine config failed, code: %s, details: %s",

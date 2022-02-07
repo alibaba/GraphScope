@@ -77,14 +77,26 @@ message HeartBeatResponse {
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-message RunStepRequest {
+message RunStepRequestHead {
   // REQUIRED: session_id must be returned by a CreateSession call
   // to the same master service.
   string session_id = 1;
 
   // REQUIRED: A Dag with op that will be evaluated.
-  // A DagDef will contain only 1 op(ideally).
   DagDef dag_def = 2;
+}
+
+message RunStepRequestBody {
+  bytes chunk = 1;
+  string op_key = 2;
+  bool has_next = 3;
+}
+
+message RunStepRequest {
+  oneof value {
+    RunStepRequestHead head = 1;
+    RunStepRequestBody body = 2;
+  }
 }
 
 message RunStepResponse {

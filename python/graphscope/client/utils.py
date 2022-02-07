@@ -23,11 +23,79 @@ import sys
 from functools import wraps
 
 from graphscope.config import GSConfig as gs_config
+from graphscope.proto import attr_value_pb2
+from graphscope.proto import message_pb2
 
 logger = logging.getLogger("graphscope")
 
 # 2GB
 GS_GRPC_MAX_MESSAGE_LENGTH = 2 * 1024 * 1024 * 1024 - 1
+
+
+class GRPCUtils(object):
+    CHUNK_SIZE = 256 * 1024 * 1024 - 1  # 256MB
+
+    def _generate_chunk_meta(self, chunk):
+        chunk_meta = attr_value_pb2.ChunkMeta()
+        chunk_meta.size = len(chunk.buffer)
+        for k, v in chunk.attr.items():
+            chunk_meta.attr[k].CopyFrom(v)
+        return chunk_meta
+
+    def split(self, dag_def):
+        """Traverse `large_attr` of op and split into a list of chunks.
+
+        Note that this method will modify `large_attr` attribute of op in dag_def.
+
+        Returns:
+            Sequence[Sequence[bytes]]: splited chunks.
+        """
+        chunks_list = []
+        for op in dag_def.op:
+            large_attr = attr_value_pb2.LargeAttrValue()
+            for chunk in op.large_attr.chunk_list.items:
+                # construct chunk meta
+                large_attr.chunk_meta_list.items.extend(
+                    [self._generate_chunk_meta(chunk)]
+                )
+                # split buffer
+                chunks_list.append(
+                    (
+                        [
+                            chunk.buffer[i : i + self.CHUNK_SIZE]
+                            for i in range(0, len(chunk.buffer), self.CHUNK_SIZE)
+                        ],
+                        op.key,
+                    )
+                )
+            # replace chunk with chunk_meta
+            op.large_attr.CopyFrom(large_attr)
+        return chunks_list
+
+    def generate_runstep_requests(self, session_id, dag_def):
+        runstep_requests = []
+        chunks_list = self.split(dag_def)
+        # head
+        runstep_request = message_pb2.RunStepRequest(
+            head=message_pb2.RunStepRequestHead(session_id=session_id, dag_def=dag_def)
+        )
+        runstep_requests.append(runstep_request)
+        # bodies
+        for chunks, op_key in chunks_list:
+            for i, chunk in enumerate(chunks):
+                # check the last element
+                has_next = True
+                if i + 1 == len(chunks):
+                    has_next = False
+                runstep_request = message_pb2.RunStepRequest(
+                    body=message_pb2.RunStepRequestBody(
+                        chunk=chunk, op_key=op_key, has_next=has_next
+                    )
+                )
+                runstep_requests.append(runstep_request)
+        # return a generator for stream request
+        for item in runstep_requests:
+            yield item
 
 
 class ConditionalFormatter(logging.Formatter):
