@@ -96,12 +96,12 @@ impl Accumulator<Entry, Entry> for EntryAccumulator {
                     .collect::<Result<Vec<_>, _>>()?;
                 Ok(Entry::Collection(list_entry))
             }
-            EntryAccumulator::ToMin(min) => {
-                min.finalize()?.ok_or(FnExecError::accum_error("min_entry is none"))
-            }
-            EntryAccumulator::ToMax(max) => {
-                max.finalize()?.ok_or(FnExecError::accum_error("max_entry is none"))
-            }
+            EntryAccumulator::ToMin(min) => min
+                .finalize()?
+                .ok_or(FnExecError::accum_error("min_entry is none")),
+            EntryAccumulator::ToMax(max) => max
+                .finalize()?
+                .ok_or(FnExecError::accum_error("max_entry is none")),
             EntryAccumulator::ToSet(set) => {
                 let set_entry = set
                     .finalize()?
@@ -140,8 +140,12 @@ impl AccumFactoryGen for algebra_pb::GroupBy {
                 .map(|v| TagKey::try_from(v.clone()))
                 .transpose()?
                 .unwrap_or(TagKey::default());
-            let alias =
-                Some(agg_func.alias.ok_or(ParsePbError::from("accum value alias is missing"))?.try_into()?);
+            let alias = Some(
+                agg_func
+                    .alias
+                    .ok_or(ParsePbError::from("accum value alias is missing"))?
+                    .try_into()?,
+            );
             // TODO: accum value alias in fold can be None;
             let alias = alias.ok_or(ParsePbError::from("accum value alias cannot be None"))?;
             let entry_accumulator = match agg_kind {
@@ -366,8 +370,16 @@ mod tests {
             CommonObject::Count(2).into(),
         );
         if let Some(Ok(record)) = result.next() {
-            let collection_entry = record.get(Some(&"a".into())).unwrap().as_ref().clone();
-            let count_entry = record.get(Some(&"b".into())).unwrap().as_ref().clone();
+            let collection_entry = record
+                .get(Some(&"a".into()))
+                .unwrap()
+                .as_ref()
+                .clone();
+            let count_entry = record
+                .get(Some(&"b".into()))
+                .unwrap()
+                .as_ref()
+                .clone();
             fold_result = (collection_entry, count_entry);
         }
         assert_eq!(fold_result, expected_result);
@@ -456,5 +468,32 @@ mod tests {
             }
         }
         assert_eq!(cnt, 2);
+    }
+
+    // g.V().fold().as("a") // fold by set
+    #[test]
+    fn fold_to_set_test() {
+        let mut source = init_source();
+        let v3 = init_vertex1();
+        let r3 = Record::new(v3, None);
+        source.push(r3);
+        let function = pb::group_by::AggFunc {
+            vars: vec![common_pb::Variable::from("@".to_string())],
+            aggregate: 6, // to_set
+            alias: Some("a".into()),
+        };
+        let fold_opr_pb = pb::GroupBy { mappings: vec![], functions: vec![function] };
+        let mut result = fold_test(source, fold_opr_pb);
+        let mut fold_result = Entry::Collection(vec![]);
+        let expected_result = Entry::Collection(vec![
+            RecordElement::OnGraph(init_vertex1().into()),
+            RecordElement::OnGraph(init_vertex2().into()),
+        ]);
+        if let Some(Ok(record)) = result.next() {
+            if let Some(entry) = record.get(Some(&"a".into())) {
+                fold_result = entry.as_ref().clone();
+            }
+        }
+        assert_eq!(fold_result, expected_result);
     }
 }
