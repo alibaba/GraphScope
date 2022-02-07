@@ -24,7 +24,6 @@ pub struct SimplePartition {
 
 impl Partitioner for SimplePartition {
     fn get_partition(&self, id: &ID, workers: usize) -> FnResult<u64> {
-        // let id_usize = (*id & (ID_MASK)) as usize;
         let id_usize = *id as usize;
         let magic_num = id_usize / self.num_servers;
         // The partitioning logics is as follows:

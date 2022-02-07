@@ -23,8 +23,6 @@ use runtime::error::FnExecError;
 use runtime::graph::partitioner::Partitioner;
 use runtime::graph::ID;
 
-use crate::exp_store::ID_MASK;
-
 /// A partition utility that one server contains multiple graph partitions for MaxGraph (V2) Store
 pub struct MaxGraphMultiPartition {
     graph_partition_manager: Arc<dyn GraphPartitionManager>,
@@ -47,7 +45,7 @@ impl Partitioner for MaxGraphMultiPartition {
         // 3. `worker_index = partition_id % worker_num_per_server` picks up one worker to do the computation.
         // 4. `server_index * worker_num_per_server + worker_index` computes the worker index in server R
         // to do the computation.
-        let vid = (*id & (ID_MASK)) as VertexId;
+        let vid = *id as VertexId;
         let worker_num_per_server = worker_num_per_server as u64;
         let partition_id = self
             .graph_partition_manager
@@ -140,7 +138,7 @@ impl Partitioner for VineyardMultiPartition {
                 ))?
             }
         } else {
-            let vid = (*id & (ID_MASK)) as VertexId;
+            let vid = *id as VertexId;
             let partition_id = self
                 .graph_partition_manager
                 .get_partition_id(vid) as PartitionId;
