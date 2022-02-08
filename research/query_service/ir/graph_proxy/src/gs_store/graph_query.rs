@@ -78,13 +78,13 @@ where
             let store = self.store.clone();
             let si = params
                 .get_extra_param(SNAPSHOT_ID)
-                .ok_or(FnExecError::unexpected_data_error("get snapshot_id failed"))?
+                .ok_or(FnExecError::query_store_error("get snapshot_id failed"))?
                 .as_i64()
-                .map_err(|e| FnExecError::unexpected_data_error(&e.to_string()))?
+                .map_err(|e| FnExecError::query_store_error(&e.to_string()))?
                 as SnapshotId;
             let schema = store
                 .get_schema(si)
-                .ok_or(FnExecError::unexpected_data_error("get schema failed"))?;
+                .ok_or(FnExecError::query_store_error("get schema failed"))?;
             let label_ids = encode_storage_label(params.labels.as_ref(), schema.clone());
             let prop_ids = encode_storage_prop_key(params.props.as_ref(), schema.clone());
             let filter = params.filter.clone();
@@ -119,13 +119,13 @@ where
             let store = self.store.clone();
             let si = params
                 .get_extra_param(SNAPSHOT_ID)
-                .ok_or(FnExecError::unexpected_data_error("get snapshot_id failed"))?
+                .ok_or(FnExecError::query_store_error("get snapshot_id failed"))?
                 .as_i64()
-                .map_err(|e| FnExecError::unexpected_data_error(&e.to_string()))?
+                .map_err(|e| FnExecError::query_store_error(&e.to_string()))?
                 as SnapshotId;
             let schema = store
                 .get_schema(si)
-                .ok_or(FnExecError::unexpected_data_error("get schema failed"))?;
+                .ok_or(FnExecError::query_store_error("get schema failed"))?;
             let label_ids = encode_storage_label(params.labels.as_ref(), schema.clone());
             let prop_ids = encode_storage_prop_key(params.props.as_ref(), schema.clone());
             let filter = params.filter.clone();
@@ -157,13 +157,12 @@ where
         let store = self.store.clone();
         let si = params
             .get_extra_param(SNAPSHOT_ID)
-            .ok_or(FnExecError::unexpected_data_error("get snapshot_id failed"))?
+            .ok_or(FnExecError::query_store_error("get snapshot_id failed"))?
             .as_i64()
-            .map_err(|e| FnExecError::unexpected_data_error(&e.to_string()))?
-            as SnapshotId;
+            .map_err(|e| FnExecError::query_store_error(&e.to_string()))? as SnapshotId;
         let schema = store
             .get_schema(si)
-            .ok_or(FnExecError::unexpected_data_error("get schema failed"))?;
+            .ok_or(FnExecError::query_store_error("get schema failed"))?;
         let prop_ids = encode_storage_prop_key(params.props.as_ref(), schema.clone());
         let filter = params.filter.clone();
         let partition_label_vertex_ids =
@@ -179,7 +178,7 @@ where
         &self, _ids: &[ID], _params: &QueryParams,
     ) -> FnResult<Box<dyn Iterator<Item = Edge> + Send>> {
         // TODO(bingqing): adapt get_edge when graphscope support this
-        Err(FnExecError::unexpected_data_error("GraphScope storage does not support get_edge for now"))?
+        Err(FnExecError::query_store_error("GraphScope storage does not support get_edge for now"))?
     }
 
     fn prepare_explore_vertex(
@@ -191,13 +190,12 @@ where
         let partition_manager = self.partition_manager.clone();
         let si = params
             .get_extra_param(SNAPSHOT_ID)
-            .ok_or(FnExecError::unexpected_data_error("get snapshot_id failed"))?
+            .ok_or(FnExecError::query_store_error("get snapshot_id failed"))?
             .as_i64()
-            .map_err(|e| FnExecError::unexpected_data_error(&e.to_string()))?
-            as SnapshotId;
+            .map_err(|e| FnExecError::query_store_error(&e.to_string()))? as SnapshotId;
         let schema = store
             .get_schema(si)
-            .ok_or(FnExecError::unexpected_data_error("get schema failed"))?;
+            .ok_or(FnExecError::query_store_error("get schema failed"))?;
         let edge_label_ids = encode_storage_label(params.labels.as_ref(), schema.clone());
 
         let stmt = from_fn(move |v: ID| {
@@ -255,14 +253,13 @@ where
         let store = self.store.clone();
         let si = params
             .get_extra_param(SNAPSHOT_ID)
-            .ok_or(FnExecError::unexpected_data_error("get snapshot_id failed"))?
+            .ok_or(FnExecError::query_store_error("get snapshot_id failed"))?
             .as_i64()
-            .map_err(|e| FnExecError::unexpected_data_error(&e.to_string()))?
-            as SnapshotId;
+            .map_err(|e| FnExecError::query_store_error(&e.to_string()))? as SnapshotId;
         let partition_manager = self.partition_manager.clone();
         let schema = store
             .get_schema(si)
-            .ok_or(FnExecError::unexpected_data_error("get schema failed"))?;
+            .ok_or(FnExecError::query_store_error("get schema failed"))?;
         let filter = params.filter.clone();
         let limit = params.limit.clone();
         let edge_label_ids = encode_storage_label(params.labels.as_ref(), schema.clone());

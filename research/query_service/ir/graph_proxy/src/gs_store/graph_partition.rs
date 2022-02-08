@@ -53,7 +53,7 @@ impl Partitioner for MaxGraphMultiPartition {
         let server_index = self
             .graph_partition_manager
             .get_server_id(partition_id as PartitionId)
-            .ok_or(FnExecError::unexpected_data_error("get server id failed in graph_partition_manager"))?
+            .ok_or(FnExecError::query_store_error("get server id failed in graph_partition_manager"))?
             as u64;
         let worker_index = partition_id % worker_num_per_server;
         Ok(server_index * worker_num_per_server + worker_index as u64)
@@ -133,7 +133,7 @@ impl Partitioner for VineyardMultiPartition {
             if worker_num_per_server == 1 {
                 Ok(self.server_index)
             } else {
-                Err(FnExecError::unexpected_data_error(
+                Err(FnExecError::query_store_error(
                     "Job parallelism is not identical to the pre-allocated parallelism",
                 ))?
             }
@@ -147,18 +147,17 @@ impl Partitioner for VineyardMultiPartition {
                     if let Some(worker_id) = partition_worker_mapping.get(&partition_id) {
                         Ok(*worker_id as u64)
                     } else {
-                        // TODO(bingqing): define a store related error kind
-                        Err(FnExecError::unexpected_data_error(
+                        Err(FnExecError::query_store_error(
                             "get worker id failed in VineyardMultiPartition",
                         ))?
                     }
                 } else {
-                    Err(FnExecError::unexpected_data_error(
+                    Err(FnExecError::query_store_error(
                         "partition_worker_mapping is not initialized in VineyardMultiPartition",
                     ))?
                 }
             } else {
-                Err(FnExecError::unexpected_data_error(
+                Err(FnExecError::query_store_error(
                     "read partition_worker_mapping in VineyardMultiPartition failed",
                 ))?
             }
@@ -187,17 +186,17 @@ impl Partitioner for VineyardMultiPartition {
                             .collect(),
                     ))
                 } else {
-                    Err(FnExecError::unexpected_data_error(
+                    Err(FnExecError::query_store_error(
                         "get worker partitions failed in VineyardMultiPartition",
                     ))?
                 }
             } else {
-                Err(FnExecError::unexpected_data_error(
+                Err(FnExecError::query_store_error(
                     "worker_partition_list is not initialized in VineyardMultiPartition",
                 ))?
             }
         } else {
-            Err(FnExecError::unexpected_data_error(
+            Err(FnExecError::query_store_error(
                 "read worker_partition_list failed in VineyardMultiPartition",
             ))?
         }
