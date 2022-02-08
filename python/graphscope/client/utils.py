@@ -18,6 +18,7 @@
 
 import inspect
 import logging
+import os
 import signal
 import sys
 from functools import wraps
@@ -33,7 +34,12 @@ GS_GRPC_MAX_MESSAGE_LENGTH = 2 * 1024 * 1024 * 1024 - 1
 
 
 class GRPCUtils(object):
-    CHUNK_SIZE = 256 * 1024 * 1024 - 1  # 256MB
+    # default to 256MB
+    CHUNK_SIZE = (
+        int(os.environ["GS_GRPC_CHUNK_SIZE"])
+        if "GS_GRPC_CHUNK_SIZE" in os.environ
+        else 256 * 1024 * 1024 - 1
+    )
 
     def _generate_chunk_meta(self, chunk):
         chunk_meta = attr_value_pb2.ChunkMeta()
