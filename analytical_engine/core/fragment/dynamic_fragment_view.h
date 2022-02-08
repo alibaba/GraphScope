@@ -269,8 +269,7 @@ class DynamicFragmentView : public DynamicFragment {
     return fragment_->GetEdgeData(u, v, ret);
   }
 
-  bl::result<folly::dynamic::Type> GetOidType(
-      const grape::CommSpec& comm_spec) const {
+  bl::result<dynamic::Type> GetOidType(const grape::CommSpec& comm_spec) const {
     return fragment_->GetOidType(comm_spec);
   }
 

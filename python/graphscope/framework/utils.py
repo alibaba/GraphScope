@@ -513,7 +513,7 @@ def data_type_to_cpp(t):
     elif t is None or t == graph_def_pb2.NULLVALUE:
         return "grape::EmptyType"
     elif t == graph_def_pb2.DYNAMIC:
-        return "folly::dynamic"
+        return "dynamic::Value"
     elif t == graph_def_pb2.UNKNOWN:
         return ""
     raise ValueError("Not support type {}".format(t))

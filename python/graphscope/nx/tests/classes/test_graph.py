@@ -16,7 +16,7 @@
 
 import os
 
-import numpy as np
+import networkx as nxa
 import pytest
 from networkx.classes.tests.test_graph import TestEdgeSubgraph as _TestEdgeSubgraph
 from networkx.classes.tests.test_graph import TestGraph as _TestGraph
@@ -345,7 +345,7 @@ class TestGraph(_TestGraph):
         assert ret == {0: 1.0, 1: 1.0, 2: 1.0}
 
         esG = G.edge_subgraph([(0, 1), (1, 2), (2, 3)])
-        ret = nx.builtin.closeness_centrality(esG)
+        ret = nxa.closeness_centrality(esG)
         expect1 = {
             0: 0.000,
             1: 0.333333,
@@ -394,8 +394,8 @@ class TestEdgeSubgraph(_TestEdgeSubgraph):
     def test_correct_edges(self):
         """Tests that the subgraph has the correct edges."""
         assert sorted(self.H.edges(data="name")) in (
-            [(1, 0, "edge01"), (4, 3, "edge34")],
             [(0, 1, "edge01"), (4, 3, "edge34")],
+            [(0, 1, "edge01"), (3, 4, "edge34")],
         )
 
     def test_remove_node(self):

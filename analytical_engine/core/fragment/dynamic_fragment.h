@@ -32,8 +32,6 @@
 #include <vector>
 
 #include "flat_hash_map/flat_hash_map.hpp"
-#include "folly/dynamic.h"
-#include "folly/json.h"
 
 #include "grape/config.h"
 #include "grape/fragment/immutable_edgecut_fragment.h"
@@ -46,11 +44,11 @@
 #include "grape/util.h"
 #include "grape/utils/vertex_array.h"
 #include "grape/worker/comm_spec.h"
-#include "vineyard/graph/utils/partitioner.h"
 
 #include "core/error.h"
-#include "core/io/dynamic_line_parser.h"
+#include "core/object/dynamic.h"
 #include "core/utils/mpi_utils.h"
+#include "core/utils/partitioner.h"
 #include "core/vertex_map/global_vertex_map.h"
 #include "proto/graphscope/proto/types.pb.h"
 
@@ -63,6 +61,57 @@ using grape::OutArchive;
 class DynamicFragmentView;
 
 namespace dynamic_fragment_impl {
+
+// A simple Vertex and Edge implementation that construct and get data without
+// copy.
+template <typename VID_T>
+class Vertex {
+  using data_t = gs::dynamic::Value;
+
+ public:
+  Vertex() = default;
+  explicit Vertex(const VID_T& vid) : vid_(vid), vdata_() {}
+  Vertex(const VID_T& id, const data_t& data) : vid_(id), vdata_(data) {}
+  Vertex(const VID_T& id, data_t& data) : vid_(id), vdata_(data) {}
+
+  inline const VID_T& vid() const { return vid_; }
+  inline const data_t& vdata() const { return vdata_; }
+  inline data_t& vdata() { return vdata_; }
+
+ private:
+  VID_T vid_;
+  data_t vdata_;
+};
+
+template <typename VID_T>
+class Edge {
+  using data_t = gs::dynamic::Value;
+
+ public:
+  Edge() = default;
+  ~Edge() {}
+  Edge(const VID_T& src, const VID_T& dst) : src_(src), dst_(dst), edata_() {}
+  Edge(const VID_T& src, const VID_T& dst, const data_t& edata)
+      : src_(src), dst_(dst), edata_(edata) {}
+  Edge(const VID_T& src, const VID_T& dst, data_t& edata)
+      : src_(src), dst_(dst), edata_(edata) {}
+
+  inline void SetEndpoint(const VID_T& src, const VID_T& dst) {
+    src_ = src;
+    dst_ = dst;
+  }
+
+  inline const VID_T& src() const { return src_; }
+  inline const VID_T& dst() const { return dst_; }
+  inline const data_t& edata() const { return edata_; }
+  inline data_t& edata() { return edata_; }
+
+ private:
+  VID_T src_;
+  VID_T dst_;
+  data_t edata_;
+};
+
 /**
  * @brief This is the counterpart of VertexArray. VertexArray requires a range
  * of vertices. But this class can store data attached with discontinuous
@@ -189,7 +238,7 @@ class Nbr {
 
   grape::Vertex<VID_T>& get_neighbor() { return neighbor_; }
 
-  void set_neighbor(grape::Vertex<VID_T>& neighbor) {
+  void set_neighbor(const grape::Vertex<VID_T>& neighbor) {
     this->neighbor_ = neighbor;
   }
 
@@ -201,15 +250,9 @@ class Nbr {
 
   EDATA_T& get_data() { return data_; }
 
-  void set_data(EDATA_T data) { this->data_ = data; }
+  void set_data(const EDATA_T& data) { this->data_ = data; }
 
-  void update_data(const EDATA_T& data) {
-    if (data_.isNull()) {
-      data_ = data;
-    } else if (data_.isObject()) {
-      data_.update(data);
-    }
-  }
+  void update_data(const EDATA_T& data) { data_.Update(data); }
 
  private:
   grape::Vertex<VID_T> neighbor_;
@@ -670,7 +713,7 @@ class NbrMapSpace {
 
 /**
  * @brief A mutable non-labeled fragment. The data attached with vertex or edge
- * are represented by folly::dynamic.
+ * are represented by dynamic::Value.
  *
  * DynamicFragment support two type of graph storage mode.
  *
@@ -682,14 +725,14 @@ class NbrMapSpace {
  */
 class DynamicFragment {
  public:
-  using oid_t = folly::dynamic;
+  using oid_t = dynamic::Value;
   using vid_t = vineyard::property_graph_types::VID_TYPE;
-  using edata_t = folly::dynamic;
-  using vdata_t = folly::dynamic;
-  using edge_t = grape::Edge<vid_t, edata_t>;
+  using edata_t = dynamic::Value;
+  using vdata_t = dynamic::Value;
   using nbr_t = dynamic_fragment_impl::Nbr<edata_t>;
   using vertex_t = grape::Vertex<vid_t>;
-  using internal_vertex_t = grape::internal::Vertex<vid_t, vdata_t>;
+  using internal_vertex_t = dynamic_fragment_impl::Vertex<vid_t>;
+  using edge_t = dynamic_fragment_impl::Edge<vid_t>;
   using const_adj_list_t = dynamic_fragment_impl::ConstAdjList<edata_t>;
   using adj_list_t = dynamic_fragment_impl::AdjList<edata_t>;
   using vertex_map_t = grape::GlobalVertexMap<oid_t, vid_t>;
@@ -818,7 +861,7 @@ class DynamicFragment {
   // nodes incident to induced_edges.
   void InduceSubgraph(
       std::shared_ptr<DynamicFragment> origin,
-      const std::unordered_set<oid_t>& induced_vertices,
+      const std::vector<oid_t>& induced_vertices,
       const std::vector<std::pair<oid_t, oid_t>>& induced_edges) {
     // copy base elements
     directed_ = origin->directed();
@@ -1061,7 +1104,7 @@ class DynamicFragment {
   inline virtual vid_t GetOuterVerticesNum() const { return alive_ovnum_; }
 
   inline virtual bool IsInnerVertex(const vertex_t& v) const {
-    return (v.GetValue() < ivnum_);
+    return v.GetValue() < ivnum_;
   }
 
   inline virtual bool IsOuterVertex(const vertex_t& v) const {
@@ -1471,47 +1514,48 @@ class DynamicFragment {
     return false;
   }
 
-  void ModifyEdges(const folly::dynamic& edges_to_modify,
-                   const folly::dynamic& common_attrs,
+  void ModifyEdges(dynamic::Value& edges_to_modify,
+                   const dynamic::Value& common_attrs,
                    const rpc::ModifyType modify_type,
                    const std::string weight) {
     std::vector<internal_vertex_t> vertices;
     std::vector<edge_t> edges;
 
-    edges.reserve(edges_to_modify.size());
+    edges.reserve(edges_to_modify.Size());
     if (modify_type == rpc::NX_ADD_EDGES) {
-      vertices.reserve(edges_to_modify.size() * 2);
+      vertices.reserve(edges_to_modify.Size() * 2);
     }
     invalidCache();
     {
       edata_t e_data;
-      vdata_t fake_data = folly::dynamic::object;
       oid_t src, dst;
       vid_t src_gid, dst_gid;
       fid_t src_fid, dst_fid;
       partitioner_t partitioner;
       partitioner.Init(fnum_);
-      for (const auto& e : edges_to_modify) {
-        src = std::move(e[0]);
-        dst = std::move(e[1]);
+      for (auto& e : edges_to_modify) {
+        // the edge could be [src, dst] or [srs, dst, value] or [src, dst,
+        // {"key": val}]
         e_data = common_attrs;
-        if (e.size() == 3) {
+        if (e.Size() == 3) {
           if (weight.empty()) {
-            e_data.update(std::move(e[2]));
+            e_data.Update(edata_t(e[2]));
           } else {
-            e_data.insert(weight, std::move(e[2]));
+            e_data.Insert(weight, edata_t(e[2]));
           }
         }
+        src = std::move(e[0]);
+        dst = std::move(e[1]);
         src_fid = partitioner.GetPartitionId(src);
         dst_fid = partitioner.GetPartitionId(dst);
         if (modify_type == rpc::NX_ADD_EDGES) {
           vm_ptr_->AddVertex(src_fid, src, src_gid);
           vm_ptr_->AddVertex(dst_fid, dst, dst_gid);
           if (src_fid == fid_ || duplicated()) {
-            vertices.emplace_back(src_gid, fake_data);
+            vertices.emplace_back(src_gid);
           }
           if (dst_fid == fid_ || duplicated()) {
-            vertices.emplace_back(dst_gid, fake_data);
+            vertices.emplace_back(dst_gid);
           }
         } else {
           if (!vm_ptr_->GetGid(src_fid, src, src_gid) ||
@@ -1521,9 +1565,6 @@ class DynamicFragment {
         }
         if (src_fid == fid_ || dst_fid == fid_ || duplicated()) {
           edges.emplace_back(src_gid, dst_gid, e_data);
-          if (!directed_ && src_gid != dst_gid) {
-            edges.emplace_back(dst_gid, src_gid, e_data);
-          }
         }
       }
     }
@@ -1543,13 +1584,13 @@ class DynamicFragment {
     }
   }
 
-  void ModifyVertices(const folly::dynamic& vertices_to_modify,
-                      const folly::dynamic& common_attrs,
+  void ModifyVertices(dynamic::Value& vertices_to_modify,
+                      const dynamic::Value& common_attrs,
                       const rpc::ModifyType& modify_type) {
     std::vector<internal_vertex_t> vertices;
     std::vector<edge_t> empty_edges;
 
-    vertices.reserve(vertices_to_modify.size());
+    vertices.reserve(vertices_to_modify.Size());
     invalidCache();
     {
       partitioner_t partitioner;
@@ -1558,14 +1599,13 @@ class DynamicFragment {
       vid_t gid;
       vdata_t v_data;
       fid_t v_fid;
-      for (const auto& v : vertices_to_modify) {
+      for (auto& v : vertices_to_modify) {
         v_data = common_attrs;
-        if (v.isArray() && v.size() == 2 && v[1].isObject()) {
-          // node id with data
+        // v could be [id, attrs] or id
+        if (v.IsArray() && v.Size() == 2 && v[1].IsObject()) {
           oid = std::move(v[0]);
-          v_data.update(std::move(v[1]));
+          v_data.Update(vdata_t(v[1]));
         } else {
-          // only node id
           oid = std::move(v);
         }
         v_fid = partitioner.GetPartitionId(oid);
@@ -1610,23 +1650,24 @@ class DynamicFragment {
    * value
    */
   auto CollectPropertyKeysOnVertices()
-      -> bl::result<std::map<std::string, folly::dynamic::Type>> {
+      -> bl::result<std::map<std::string, dynamic::Type>> {
     auto inner_vertices = grape::VertexRange<vid_t>(0, ivnum_);
-    std::map<std::string, folly::dynamic::Type> prop_keys;
+    std::map<std::string, dynamic::Type> prop_keys;
 
     for (auto v : inner_vertices) {
       if (IsAliveInnerVertex(v)) {
         auto& data = ivdata_[v.GetValue()];
 
-        CHECK(data.isObject());
-        for (auto& item : data.items()) {
-          auto s_k = item.first.asString();
+        CHECK(data.IsObject());
+        for (auto member = data.MemberBegin(); member != data.MemberEnd();
+             ++member) {
+          std::string s_k = member->name.GetString();
 
           if (prop_keys.find(s_k) == prop_keys.end()) {
-            prop_keys[s_k] = item.second.type();
+            prop_keys[s_k] = dynamic::GetType(member->value);
           } else {
             auto seen_type = prop_keys[s_k];
-            auto curr_type = item.second.type();
+            auto curr_type = dynamic::GetType(member->value);
 
             if (seen_type != curr_type) {
               std::stringstream ss;
@@ -1644,9 +1685,9 @@ class DynamicFragment {
   }
 
   auto CollectPropertyKeysOnEdges()
-      -> bl::result<std::map<std::string, folly::dynamic::Type>> {
+      -> bl::result<std::map<std::string, dynamic::Type>> {
     auto inner_vertices = grape::VertexRange<vid_t>(0, ivnum_);
-    std::map<std::string, folly::dynamic::Type> prop_keys;
+    std::map<std::string, dynamic::Type> prop_keys;
 
     auto extract_keys = [this, &prop_keys](
                             const vertex_t& u,
@@ -1657,15 +1698,16 @@ class DynamicFragment {
         auto& nbr = e.second;
         auto& data = nbr.data();
 
-        CHECK(data.isObject());
-        for (auto& item : data.items()) {
-          auto s_k = item.first.asString();
+        CHECK(data.IsObject());
+        for (auto member = data.MemberBegin(); member != data.MemberEnd();
+             ++member) {
+          std::string s_k = member->name.GetString();
 
           if (prop_keys.find(s_k) == prop_keys.end()) {
-            prop_keys[s_k] = item.second.type();
+            prop_keys[s_k] = dynamic::GetType(member->value);
           } else {
             auto seen_type = prop_keys[s_k];
-            auto curr_type = item.second.type();
+            auto curr_type = dynamic::GetType(member->value);
 
             if (seen_type != curr_type) {
               std::stringstream ss;
@@ -1724,27 +1766,28 @@ class DynamicFragment {
     return all_oids;
   }
 
-  virtual bl::result<folly::dynamic::Type> GetOidType(
+  virtual bl::result<dynamic::Type> GetOidType(
       const grape::CommSpec& comm_spec) const {
-    auto oid_type = folly::dynamic::Type::NULLT;
+    auto oid_type = dynamic::Type::kNullType;
     auto all_oids = GetAllOids(comm_spec);
 
     for (const auto& oids : all_oids) {
       for (const auto& oid : oids) {
-        if (oid_type == folly::dynamic::Type::NULLT) {
-          oid_type = oid.type();
-        } else if (oid.type() != oid_type) {
+        if (oid_type == dynamic::Type::kNullType) {
+          oid_type = dynamic::GetType(oid);
+        } else if (dynamic::GetType(oid) != oid_type) {
           RETURN_GS_ERROR(vineyard::ErrorCode::kDataTypeError,
                           "Previous oid type is " +
                               std::string(getTypeName(oid_type)) +
                               ", but the current is " +
-                              std::string(getTypeName(oid.type())));
+                              std::string(getTypeName(dynamic::GetType(oid))));
         }
       }
     }
-    if (oid_type != folly::dynamic::Type::INT64 &&
-        oid_type != folly::dynamic::Type::STRING &&
-        oid_type != folly::dynamic::Type::NULLT) {
+    if (oid_type != dynamic::Type::kInt64Type &&
+        oid_type != dynamic::Type::kDoubleType &&
+        oid_type != dynamic::Type::kStringType &&
+        oid_type != dynamic::Type::kNullType) {
       RETURN_GS_ERROR(
           vineyard::ErrorCode::kDataTypeError,
           "Unsupported oid type: " + std::string(getTypeName(oid_type)));
@@ -1835,7 +1878,7 @@ class DynamicFragment {
       for (auto& v : vertices) {
         vid_t gid = v.vid();
         if (is_iv_gid(gid)) {
-          ivdata_[(gid & id_mask_)] = v.vdata();
+          ivdata_[(gid & id_mask_)] = std::move(v.vdata());
         }
       }
     }
@@ -1850,7 +1893,7 @@ class DynamicFragment {
       for (auto& v : vertices) {
         vid_t gid = v.vid();
         if (is_iv_gid(gid)) {
-          ivdata_[(gid & id_mask_)] = v.vdata();
+          ivdata_[(gid & id_mask_)] = std::move(v.vdata());
         } else {
           auto iter = ovg2i_.find(gid);
           if (iter == ovg2i_.end()) {
@@ -1868,7 +1911,7 @@ class DynamicFragment {
 
   void Insert(std::vector<internal_vertex_t>& vertices,
               std::vector<edge_t>& edges) {
-    duplicated() ? addVerticesDuplicated(vertices, edges)
+    duplicated() ? addVerticesDuplicated(vertices)
                  : addVertices(vertices, edges);
     inner_ie_pos_.resize(ivnum_, -1);
     inner_oe_pos_.resize(ivnum_, -1);
@@ -1889,78 +1932,74 @@ class DynamicFragment {
     for (auto& v : vertices) {
       // the vertex exist
       if (is_iv_gid(v.vid())) {
-        ivdata_[(v.vid() & id_mask_)] = v.vdata();
+        ivdata_[(v.vid() & id_mask_)] = std::move(v.vdata());
       }
     }
 
     switch (load_strategy_) {
     case grape::LoadStrategy::kOnlyOut: {
+      vid_t src_lid, dst_lid;
       for (auto& e : edges) {
-        vid_t dst;
+        src_lid = gid_to_lid(e.src());
+        dst_lid = gid_to_lid(e.dst());
         if (is_iv_gid(e.src())) {
-          if (is_iv_gid(e.dst())) {
-            dst = iv_gid_to_lid(e.dst());
-          } else {
-            dst = ov_gid_to_lid(e.dst());
+          int pos = inner_oe_pos_[src_lid];
+          edge_space_.set_data(pos, dst_lid, e.edata());
+
+          if (src_lid != dst_lid && is_iv_gid(e.dst())) {
+            pos = inner_oe_pos_[dst_lid];
+            edge_space_.set_data(pos, src_lid, e.edata());
+          } else if (duplicated_) {
+            pos = outer_oe_pos_[id_mask_ - dst_lid];
+            edge_space_.set_data(pos, src_lid, e.edata());
           }
-          e.SetEndpoint(iv_gid_to_lid(e.src()), dst);
-          int pos = inner_oe_pos_[e.src()];
-          edge_space_.set_data(pos, e.dst(), e.edata());
+        } else if (is_iv_gid(e.dst())) {
+          int pos = inner_oe_pos_[dst_lid];
+          edge_space_.set_data(pos, src_lid, e.edata());
+          if (duplicated_) {
+            pos = outer_oe_pos_[id_mask_ - src_lid];
+            edge_space_.set_data(pos, dst_lid, e.edata());
+          }
         } else if (duplicated_) {
-          auto ov_index = id_mask_ - ov_gid_to_lid(e.src());
-          dst = gid_to_lid(e.dst());
-          int pos = outer_oe_pos_[ov_index];
-          edge_space_.set_data(pos, dst, e.edata());
+          int pos = outer_oe_pos_[id_mask_ - src_lid];
+          edge_space_.set_data(pos, dst_lid, e.edata());
+          pos = outer_oe_pos_[id_mask_ - dst_lid];
+          edge_space_.set_data(pos, src_lid, e.edata());
         }
       }
       break;
     }
     case grape::LoadStrategy::kBothOutIn: {
+      vid_t src_lid, dst_lid;
       for (auto& e : edges) {
+        src_lid = gid_to_lid(e.src());
+        dst_lid = gid_to_lid(e.dst());
         if (is_iv_gid(e.src()) && is_iv_gid(e.dst())) {
-          e.SetEndpoint(iv_gid_to_lid(e.src()), iv_gid_to_lid(e.dst()));
-          int pos = inner_oe_pos_[e.src()];
-          edge_space_.set_data(pos, e.dst(), e.edata());
+          int pos = inner_oe_pos_[src_lid];
+          edge_space_.set_data(pos, dst_lid, e.edata());
           pos = inner_ie_pos_[e.dst()];
-          edge_space_.set_data(pos, e.src(), e.edata());
+          edge_space_.set_data(pos, src_lid, e.edata());
         } else if (is_iv_gid(e.src())) {
-          vid_t dst;
-          if (is_iv_gid(e.dst())) {
-            dst = iv_gid_to_lid(e.dst());
-          } else {
-            dst = ov_gid_to_lid(e.dst());
-          }
-          e.SetEndpoint(iv_gid_to_lid(e.src()), dst);
-          int pos = inner_oe_pos_[e.src()];
-          edge_space_.set_data(pos, e.dst(), e.edata());
+          int pos = inner_oe_pos_[src_lid];
+          edge_space_.set_data(pos, dst_lid, e.edata());
 
           if (duplicated_) {
-            pos = outer_ie_pos_[id_mask_ - dst];
-            edge_space_.set_data(pos, e.src(), e.edata());
+            pos = outer_ie_pos_[id_mask_ - dst_lid];
+            edge_space_.set_data(pos, src_lid, e.edata());
           }
         } else if (is_iv_gid(e.dst())) {
-          vid_t src;
-          if (is_iv_gid(e.src())) {
-            src = iv_gid_to_lid(e.src());
-          } else {
-            src = ov_gid_to_lid(e.src());
-          }
-          e.SetEndpoint(src, iv_gid_to_lid(e.dst()));
-          int pos = inner_ie_pos_[e.dst()];
-          edge_space_.set_data(pos, e.src(), e.edata());
+          int pos = inner_ie_pos_[dst_lid];
+          edge_space_.set_data(pos, src_lid, e.edata());
 
           if (duplicated_) {
-            pos = outer_oe_pos_[id_mask_ - src];
-            edge_space_.set_data(pos, e.dst(), e.edata());
+            pos = outer_oe_pos_[id_mask_ - src_lid];
+            edge_space_.set_data(pos, dst_lid, e.edata());
           }
         } else if (duplicated_) {
-          vid_t src, dst;
-          src = ov_gid_to_lid(e.src());
-          dst = ov_gid_to_lid(e.dst());
-          int pos = outer_oe_pos_[id_mask_ - src];
-          edge_space_.set_data(pos, dst, e.edata());
-          pos = outer_ie_pos_[id_mask_ - dst];
-          edge_space_.set_data(pos, src, e.edata());
+          int pos = outer_oe_pos_[id_mask_ - src_lid];
+          edge_space_.set_data(pos, dst_lid, e.edata());
+          pos = outer_ie_pos_[id_mask_ - dst_lid];
+          edge_space_.set_data(pos, src_lid, e.edata());
         } else {
           CHECK(false);
         }
@@ -1972,9 +2011,8 @@ class DynamicFragment {
     }
   }
 
-  void Delete(
-      const std::vector<grape::internal::Vertex<vid_t, vdata_t>>& vertices,
-      const std::vector<grape::Edge<vid_t, edata_t>>& edges) {
+  void Delete(const std::vector<internal_vertex_t>& vertices,
+              const std::vector<edge_t>& edges) {
     deleteVertices(vertices);
     deleteEdges(edges);
   }
@@ -2035,23 +2073,15 @@ class DynamicFragment {
     std::vector<vid_t> outer_vertices;
 
     switch (strategy) {
-    case grape::LoadStrategy::kOnlyIn: {
-      for (auto& e : edges) {
-        if (is_iv_gid(e.dst())) {
-          if (!is_iv_gid(e.src())) {
-            outer_vertices.push_back(e.src());
-          }
-        } else {
-          e.SetEndpoint(invalid_vid, invalid_vid);
-        }
-      }
-      break;
-    }
     case grape::LoadStrategy::kOnlyOut: {
       for (auto& e : edges) {
         if (is_iv_gid(e.src())) {
           if (!is_iv_gid(e.dst())) {
             outer_vertices.push_back(e.dst());
+          }
+        } else if (is_iv_gid(e.dst())) {
+          if (!is_iv_gid(e.src())) {
+            outer_vertices.push_back(e.src());
           }
         } else {
           e.SetEndpoint(invalid_vid, invalid_vid);
@@ -2108,30 +2138,29 @@ class DynamicFragment {
     ovnum_ = new_ovnum;
     tvnum_ = ivnum_ + ovnum_;
 
-    ivdata_.resize(ivnum_, folly::dynamic::object);
+    ivdata_.resize(ivnum_, dynamic::Value(rapidjson::kObjectType));
     if (sizeof(internal_vertex_t) > sizeof(vid_t)) {
       for (auto& v : vertices) {
         vid_t gid = v.vid();
         if (gid >> fid_offset_ == fid_) {
-          ivdata_[(gid & id_mask_)].update(v.vdata());
+          ivdata_[(gid & id_mask_)].Update(v.vdata());
         }
       }
     }
   }
 
-  inline void addVerticesDuplicated(std::vector<internal_vertex_t>& vertices,
-                                    std::vector<edge_t>& edges) {
+  inline void addVerticesDuplicated(std::vector<internal_vertex_t>& vertices) {
     std::vector<vid_t> new_outer_vertices;
     vid_t new_ivnum = vm_ptr_->GetInnerVertexSize(fid_);
     vid_t new_ovnum = ovnum_;
     alive_ivnum_ += new_ivnum - ivnum_;
     ivnum_ = new_ivnum;
-    ivdata_.resize(ivnum_, folly::dynamic::object);
+    ivdata_.resize(ivnum_, dynamic::Value(rapidjson::kObjectType));
     if (sizeof(internal_vertex_t) > sizeof(vid_t)) {
       for (auto& v : vertices) {
         vid_t gid = v.vid();
         if (is_iv_gid(gid)) {
-          ivdata_[(gid & id_mask_)].update(v.vdata());
+          ivdata_[(gid & id_mask_)].Update(std::move(v.vdata()));
         } else {
           auto iter = ovg2i_.find(gid);
           if (iter == ovg2i_.end()) {
@@ -2152,43 +2181,30 @@ class DynamicFragment {
   }
 
   void addEdges(std::vector<edge_t>& edges) {
+    vid_t src_lid, dst_lid;
     switch (load_strategy_) {
-    case grape::LoadStrategy::kOnlyIn: {
-      for (auto& e : edges) {
-        if (e.src() != invalid_vid && is_iv_gid(e.dst())) {
-          vid_t src;
-          if (is_iv_gid(e.src())) {
-            src = iv_gid_to_lid(e.src());
-          } else {
-            src = ov_gid_to_lid(e.src());
-          }
-          e.SetEndpoint(src, iv_gid_to_lid(e.dst()));
-
-          if (addInnerIncomingEdge(e.src(), e.dst(), e.edata())) {
-            if (e.src() == e.dst()) {
-              addSelfLoop(e.src());
-            }
-            ++ienum_;
-          }
-        }
-      }
-      break;
-    }
     case grape::LoadStrategy::kOnlyOut: {
       for (auto& e : edges) {
-        if (e.src() != invalid_vid && is_iv_gid(e.src())) {
-          vid_t dst;
-          if (is_iv_gid(e.dst())) {
-            dst = iv_gid_to_lid(e.dst());
-          } else {
-            dst = ov_gid_to_lid(e.dst());
-          }
-          e.SetEndpoint(iv_gid_to_lid(e.src()), dst);
+        if (e.src() == invalid_vid) {
+          continue;
+        }
+        if (is_iv_gid(e.src())) {
+          src_lid = iv_gid_to_lid(e.src());
+          dst_lid = gid_to_lid(e.dst());
 
-          if (addInnerOutgoingEdge(e.src(), e.dst(), e.edata())) {
+          if (addInnerOutgoingEdge(src_lid, dst_lid, e.edata())) {
+            ++oenum_;
             if (e.src() == e.dst()) {
               addSelfLoop(e.src());
+              continue;
             }
+          }
+        }
+        if (is_iv_gid(e.dst())) {
+          dst_lid = iv_gid_to_lid(e.dst());
+          src_lid = gid_to_lid(e.src());
+
+          if (addInnerOutgoingEdge(dst_lid, src_lid, e.edata())) {
             ++oenum_;
           }
         }
@@ -2247,63 +2263,59 @@ class DynamicFragment {
   }
 
   void addEdgesDuplicated(std::vector<edge_t>& edges) {
+    vid_t src_lid, dst_lid;
     switch (load_strategy_) {
-    case grape::LoadStrategy::kOnlyIn: {
-      for (auto& e : edges) {
-        if (is_iv_gid(e.dst())) {
-          if (addInnerIncomingEdge(gid_to_lid(e.src()), gid_to_lid(e.dst()),
-                                   e.edata())) {
-            if (e.src() == e.dst()) {
-              addSelfLoop(e.src());
-            }
-            ++ienum_;
-          }
-        } else {
-          addOuterIncomingEdge(gid_to_lid(e.src()), gid_to_lid(e.dst()),
-                               e.edata());
-        }
-      }
-      break;
-    }
     case grape::LoadStrategy::kOnlyOut: {
       for (auto& e : edges) {
+        src_lid = gid_to_lid(e.src());
+        dst_lid = gid_to_lid(e.dst());
         if (is_iv_gid(e.src())) {
-          if (addInnerOutgoingEdge(gid_to_lid(e.src()), gid_to_lid(e.dst()),
-                                   e.edata())) {
+          if (addInnerOutgoingEdge(src_lid, dst_lid, e.edata())) {
+            ++oenum_;
             if (e.src() == e.dst()) {
               addSelfLoop(e.src());
+              continue;
             }
+          }
+          if (is_iv_gid(e.dst())) {
+            if (addInnerOutgoingEdge(dst_lid, src_lid, e.edata())) {
+              ++oenum_;
+            }
+          } else {
+            addOuterOutgoingEdge(dst_lid, src_lid, e.edata());
+          }
+        } else if (is_iv_gid(e.dst())) {
+          if (addInnerOutgoingEdge(dst_lid, src_lid, e.edata())) {
             ++oenum_;
           }
+          addOuterOutgoingEdge(src_lid, dst_lid, e.edata());
         } else {
-          addOuterOutgoingEdge(gid_to_lid(e.src()), gid_to_lid(e.dst()),
-                               e.edata());
+          addOuterOutgoingEdge(dst_lid, src_lid, e.edata());
+          addOuterOutgoingEdge(src_lid, dst_lid, e.edata());
         }
       }
       break;
     }
     case grape::LoadStrategy::kBothOutIn: {
       for (auto& e : edges) {
+        src_lid = gid_to_lid(e.src());
+        dst_lid = gid_to_lid(e.dst());
         if (is_iv_gid(e.src())) {
-          if (addInnerOutgoingEdge(gid_to_lid(e.src()), gid_to_lid(e.dst()),
-                                   e.edata())) {
+          if (addInnerOutgoingEdge(src_lid, dst_lid, e.edata())) {
             if (e.src() == e.dst()) {
               addSelfLoop(e.src());
             }
             ++oenum_;
           }
         } else {
-          addOuterOutgoingEdge(gid_to_lid(e.src()), gid_to_lid(e.dst()),
-                               e.edata());
+          addOuterOutgoingEdge(src_lid, dst_lid, e.edata());
         }
         if (is_iv_gid(e.dst())) {
-          if (addInnerIncomingEdge(gid_to_lid(e.src()), gid_to_lid(e.dst()),
-                                   e.edata())) {
+          if (addInnerIncomingEdge(src_lid, dst_lid, e.edata())) {
             ++ienum_;
           }
         } else {
-          addOuterIncomingEdge(gid_to_lid(e.src()), gid_to_lid(e.dst()),
-                               e.edata());
+          addOuterIncomingEdge(src_lid, dst_lid, e.edata());
         }
       }
       break;
@@ -2461,8 +2473,7 @@ class DynamicFragment {
     }
   }
 
-  void deleteVertices(
-      const std::vector<grape::internal::Vertex<vid_t, vdata_t>>& vertices) {
+  void deleteVertices(const std::vector<internal_vertex_t>& vertices) {
     std::unordered_set<vid_t> to_remove_lid_set;
     // remove vertices and attached edges
     for (auto& v : vertices) {
@@ -2470,8 +2481,7 @@ class DynamicFragment {
         auto lid = iv_gid_to_lid(v.vid());
         CHECK(lid < ivnum_);
         if (inner_vertex_alive_[lid]) {
-          if (load_strategy_ == grape::LoadStrategy::kOnlyIn ||
-              load_strategy_ == grape::LoadStrategy::kBothOutIn) {
+          if (load_strategy_ == grape::LoadStrategy::kBothOutIn) {
             auto ie_pos = inner_ie_pos_[lid];
             if (ie_pos != -1) {
               ienum_ -= edge_space_[ie_pos].size();
@@ -2504,8 +2514,7 @@ class DynamicFragment {
           to_remove_lid_set.insert(ov_gid_to_lid(v.vid()));
           alive_ovnum_--;
           if (duplicated()) {
-            if (load_strategy_ == grape::LoadStrategy::kOnlyIn ||
-                load_strategy_ == grape::LoadStrategy::kBothOutIn) {
+            if (load_strategy_ == grape::LoadStrategy::kBothOutIn) {
               auto ie_pos = outer_ie_pos_[iter->second];
               if (ie_pos != -1) {
                 edge_space_.remove_edges(ie_pos);
@@ -2530,8 +2539,7 @@ class DynamicFragment {
     for (auto v : inner_vertices) {
       if (IsAliveInnerVertex(v)) {
         auto lid = v.GetValue();
-        if (load_strategy_ == grape::LoadStrategy::kOnlyIn ||
-            load_strategy_ == grape::LoadStrategy::kBothOutIn) {
+        if (load_strategy_ == grape::LoadStrategy::kBothOutIn) {
           auto ie_pos = inner_ie_pos_[lid];
           if (ie_pos != -1) {
             for (auto to_remove_lid : to_remove_lid_set) {
@@ -2556,8 +2564,7 @@ class DynamicFragment {
       for (auto v : outer_vertices) {
         auto ov_index = v.GetValue();
         if (outer_vertex_alive_[ov_index]) {
-          if (load_strategy_ == grape::LoadStrategy::kOnlyIn ||
-              load_strategy_ == grape::LoadStrategy::kBothOutIn) {
+          if (load_strategy_ == grape::LoadStrategy::kBothOutIn) {
             auto ie_pos = outer_ie_pos_[ov_index];
             if (ie_pos != -1) {
               for (auto to_remove_lid : to_remove_lid_set) {
@@ -2580,42 +2587,14 @@ class DynamicFragment {
     }
   }
 
-  void deleteEdges(const std::vector<grape::Edge<vid_t, edata_t>>& edges) {
+  void deleteEdges(const std::vector<edge_t>& edges) {
+    vid_t src_lid, dst_lid;
     switch (load_strategy_) {
-    case grape::LoadStrategy::kOnlyIn: {
-      for (auto& e : edges) {
-        if (is_iv_gid(e.dst())) {
-          auto dst_lid = iv_gid_to_lid(e.dst());
-          auto src_lid = gid_to_lid(e.src());
-          auto ie_pos = inner_ie_pos_[dst_lid];
-
-          if (ie_pos != -1) {
-            auto remove_num = edge_space_.remove_edge(ie_pos, src_lid);
-            ienum_ -= remove_num;
-            if (src_lid == dst_lid && remove_num > 0) {
-              deleteSelfLoop(dst_lid);
-            }
-          }
-        } else {
-          if (!duplicated()) {
-            continue;
-          }
-          auto dst_lid = gid_to_lid(e.dst());
-          auto src_lid = gid_to_lid(e.src());
-          auto ie_pos = outer_ie_pos_[id_mask_ - dst_lid];
-
-          if (ie_pos != -1) {
-            edge_space_.remove_edge(ie_pos, src_lid);
-          }
-        }
-      }
-      break;
-    }
     case grape::LoadStrategy::kOnlyOut: {
-      for (auto& e : edges) {
+      for (const auto& e : edges) {
+        src_lid = gid_to_lid(e.src());
+        dst_lid = gid_to_lid(e.dst());
         if (is_iv_gid(e.src())) {
-          auto src_lid = iv_gid_to_lid(e.src());
-          auto dst_lid = gid_to_lid(e.dst());
           auto oe_pos = inner_oe_pos_[src_lid];
 
           if (oe_pos != -1) {
@@ -2623,28 +2602,53 @@ class DynamicFragment {
             oenum_ -= remove_num;
             if (src_lid == dst_lid && remove_num > 0) {
               deleteSelfLoop(src_lid);
+              continue;
             }
           }
-        } else {
-          if (!duplicated()) {
-            continue;
-          }
-          auto src_lid = gid_to_lid(e.src());
-          auto dst_lid = gid_to_lid(e.dst());
-          auto oe_pos = outer_oe_pos_[id_mask_ - src_lid];
 
+          if (is_iv_gid(e.dst())) {
+            oe_pos = inner_oe_pos_[dst_lid];
+            if (oe_pos != -1) {
+              auto remove_num = edge_space_.remove_edge(oe_pos, src_lid);
+              oenum_ -= remove_num;
+            }
+          } else if (duplicated_) {
+            oe_pos = outer_oe_pos_[id_mask_ - dst_lid];
+            if (oe_pos != -1) {
+              edge_space_.remove_edge(oe_pos, src_lid);
+            }
+          }
+        } else if (is_iv_gid(e.dst())) {
+          auto oe_pos = inner_oe_pos_[dst_lid];
+          if (oe_pos != -1) {
+            auto remove_num = edge_space_.remove_edge(oe_pos, src_lid);
+            oenum_ -= remove_num;
+          }
+          if (duplicated_) {
+            oe_pos = outer_oe_pos_[id_mask_ - src_lid];
+            if (oe_pos != -1) {
+              edge_space_.remove_edge(oe_pos, dst_lid);
+            }
+          }
+        } else if (duplicated_) {
+          auto oe_pos = outer_oe_pos_[id_mask_ - src_lid];
           if (oe_pos != -1) {
             edge_space_.remove_edge(oe_pos, dst_lid);
+          }
+
+          oe_pos = outer_oe_pos_[id_mask_ - dst_lid];
+          if (oe_pos != -1) {
+            edge_space_.remove_edge(oe_pos, src_lid);
           }
         }
       }
       break;
     }
     case grape::LoadStrategy::kBothOutIn: {
-      for (auto& e : edges) {
+      for (const auto& e : edges) {
+        src_lid = gid_to_lid(e.src());
+        dst_lid = gid_to_lid(e.dst());
         if (is_iv_gid(e.src()) && is_iv_gid(e.dst())) {
-          auto src_lid = iv_gid_to_lid(e.src());
-          auto dst_lid = iv_gid_to_lid(e.dst());
           auto ie_pos = inner_ie_pos_[dst_lid];
           auto oe_pos = inner_oe_pos_[src_lid];
           if (oe_pos != -1) {
@@ -2658,8 +2662,6 @@ class DynamicFragment {
             ienum_ -= edge_space_.remove_edge(ie_pos, src_lid);
           }
         } else if (is_iv_gid(e.src())) {
-          auto src_lid = iv_gid_to_lid(e.src());
-          auto dst_lid = gid_to_lid(e.dst());
           auto oe_pos = inner_oe_pos_[src_lid];
           if (oe_pos != -1) {
             oenum_ -= edge_space_.remove_edge(oe_pos, dst_lid);
@@ -2672,8 +2674,6 @@ class DynamicFragment {
             }
           }
         } else if (is_iv_gid(e.dst())) {
-          auto src_lid = gid_to_lid(e.src());
-          auto dst_lid = iv_gid_to_lid(e.dst());
           auto ie_pos = inner_ie_pos_[dst_lid];
           if (ie_pos != -1) {
             ienum_ -= edge_space_.remove_edge(ie_pos, src_lid);
@@ -2685,12 +2685,7 @@ class DynamicFragment {
               edge_space_.remove_edge(oe_pos, dst_lid);
             }
           }
-        } else {
-          if (!duplicated()) {
-            continue;
-          }
-          auto src_lid = gid_to_lid(e.src());
-          auto dst_lid = gid_to_lid(e.dst());
+        } else if (duplicated()) {
           auto ie_pos = outer_ie_pos_[id_mask_ - dst_lid];
           auto oe_pos = outer_oe_pos_[id_mask_ - src_lid];
           if (ie_pos != -1) {
@@ -2750,13 +2745,6 @@ class DynamicFragment {
     outer_vertex_alive_.resize(other->outer_vertex_alive_.size());
     memcpy(&outer_vertex_alive_[0], &(other->outer_vertex_alive_[0]),
            other->outer_vertex_alive_.size() * sizeof(bool));
-
-    /*
-    outer_vertices_of_frag_.resize(fnum_);
-    for (size_t i = 0; i < fnum_; ++i) {
-      outer_vertices_of_frag_[i] = other->outer_vertices_of_frag_[i];
-    }
-    */
   }
 
   void copyEdges(std::shared_ptr<DynamicFragment>& other,
@@ -2876,7 +2864,7 @@ class DynamicFragment {
   }
 
   void induceDist(std::shared_ptr<DynamicFragment> origin,
-                  const std::unordered_set<oid_t>& induced_vertices,
+                  const std::vector<oid_t>& induced_vertices,
                   const std::vector<std::pair<oid_t, oid_t>>& induced_edges) {
     // induce active edges
     std::vector<edge_t> edges;
@@ -2908,14 +2896,14 @@ class DynamicFragment {
 
   void induceDuplicated(
       std::shared_ptr<DynamicFragment> origin,
-      const std::unordered_set<oid_t>& induced_vertices,
+      const std::vector<oid_t>& induced_vertices,
       const std::vector<std::pair<oid_t, oid_t>>& induced_edges) {
     {
       // process outer vertices
       vertex_t vertex;
       vid_t gid;
       std::vector<vid_t> outer_vertices;
-      for (auto& oid : induced_vertices) {
+      for (const auto& oid : induced_vertices) {
         if (origin->GetVertex(oid, vertex) && origin->IsOuterVertex(vertex)) {
           CHECK(vm_ptr_->GetGid(oid, gid));
           outer_vertices.push_back(gid);
@@ -2947,11 +2935,11 @@ class DynamicFragment {
 
   // induce subgraph from induced_nodes
   void induceFromVertices(std::shared_ptr<DynamicFragment>& origin,
-                          const std::unordered_set<oid_t>& induced_vertices,
+                          const std::vector<oid_t>& induced_vertices,
                           std::vector<edge_t>& edges) {
     vertex_t vertex;
     vid_t gid, dst_gid;
-    for (auto& oid : induced_vertices) {
+    for (const auto& oid : induced_vertices) {
       if (origin->GetVertex(oid, vertex)) {
         if (origin->IsInnerVertex(vertex)) {
           // store the vertex data
@@ -2969,7 +2957,8 @@ class DynamicFragment {
 
         for (auto& e : origin->GetOutgoingAdjList(vertex)) {
           auto dst_oid = origin->GetId(e.get_neighbor());
-          if (induced_vertices.find(dst_oid) != induced_vertices.end()) {
+          if (std::find(induced_vertices.begin(), induced_vertices.end(),
+                        dst_oid) != induced_vertices.end()) {
             CHECK(Oid2Gid(dst_oid, dst_gid));
             edges.emplace_back(gid, dst_gid, e.get_data());
           }
@@ -2979,7 +2968,8 @@ class DynamicFragment {
           for (auto& e : origin->GetIncomingAdjList(vertex)) {
             if (origin->IsOuterVertex(e.get_neighbor())) {
               auto dst_oid = origin->GetId(e.get_neighbor());
-              if (induced_vertices.find(dst_oid) != induced_vertices.end()) {
+              if (std::find(induced_vertices.begin(), induced_vertices.end(),
+                            dst_oid) != induced_vertices.end()) {
                 CHECK(Oid2Gid(dst_oid, dst_gid));
                 edges.emplace_back(dst_gid, gid, e.get_data());
               }
@@ -3019,11 +3009,6 @@ class DynamicFragment {
             CHECK(origin->GetVertex(dst_oid, vertex));
             ivdata_[(dst_gid & id_mask_)] = origin->GetData(vertex);
             inner_vertex_alive_[(dst_gid & id_mask_)] = true;
-            if (!directed_) {
-              edges.emplace_back(dst_gid, gid, edata);
-            }
-          } else if (duplicated_ && !directed_) {
-            edges.emplace_back(dst_gid, gid, edata);
           }
         } else if (vm_ptr_->GetGid(fid_, dst_oid, dst_gid)) {
           // dst is inner vertex but src is outer vertex
@@ -3036,17 +3021,11 @@ class DynamicFragment {
             edges.emplace_back(gid, dst_gid, edata);
           } else {
             edges.emplace_back(dst_gid, gid, edata);
-            if (duplicated_) {
-              edges.emplace_back(gid, dst_gid, edata);
-            }
           }
         } else if (duplicated_) {
           CHECK(vm_ptr_->GetGid(src_oid, gid));
           CHECK(vm_ptr_->GetGid(dst_oid, dst_gid));
           edges.emplace_back(gid, dst_gid, edata);
-          if (!directed_ && gid != dst_gid) {
-            edges.emplace_back(dst_gid, gid, edata);
-          }
         }
       }
     }
@@ -3064,21 +3043,21 @@ class DynamicFragment {
     alive_vertices_.first = false;
   }
 
-  inline const char* getTypeName(folly::dynamic::Type type) const {
+  inline const char* getTypeName(dynamic::Type type) const {
     switch (type) {
-    case folly::dynamic::Type::INT64:
+    case dynamic::Type::kInt64Type:
       return "int64";
-    case folly::dynamic::Type::STRING:
-      return "string";
-    case folly::dynamic::Type::DOUBLE:
+    case dynamic::Type::kDoubleType:
       return "double";
-    case folly::dynamic::Type::BOOL:
+    case dynamic::Type::kStringType:
+      return "string";
+    case dynamic::Type::kBoolType:
       return "bool";
-    case folly::dynamic::Type::NULLT:
+    case dynamic::Type::kNullType:
       return "null";
-    case folly::dynamic::Type::ARRAY:
+    case dynamic::Type::kArrayType:
       return "array";
-    case folly::dynamic::Type::OBJECT:
+    case dynamic::Type::kObjectType:
       return "object";
     default:
       return "unknown";

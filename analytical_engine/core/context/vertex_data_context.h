@@ -24,8 +24,7 @@
 #include <vector>
 
 #ifdef NETWORKX
-#include "folly/dynamic.h"
-#include "folly/json.h"
+#include "core/object/dynamic.h"
 #endif
 
 #include "grape/app/vertex_data_context.h"
@@ -51,15 +50,15 @@
 #ifdef NETWORKX
 namespace grape {
 template <typename FRAG_T>
-class VertexDataContext<FRAG_T, folly::dynamic> : public ContextBase {
+class VertexDataContext<FRAG_T, gs::dynamic::Value> : public ContextBase {
   using fragment_t = FRAG_T;
   using oid_t = typename fragment_t::oid_t;
   using vertex_t = typename fragment_t::vertex_t;
   using vertex_array_t =
-      typename fragment_t::template vertex_array_t<folly::dynamic>;
+      typename fragment_t::template vertex_array_t<gs::dynamic::Value>;
 
  public:
-  using data_t = folly::dynamic;
+  using data_t = gs::dynamic::Value;
 
   explicit VertexDataContext(const fragment_t& fragment,
                              bool including_outer = false)
@@ -75,7 +74,7 @@ class VertexDataContext<FRAG_T, folly::dynamic> : public ContextBase {
 
   inline virtual vertex_array_t& data() { return data_; }
 
-  virtual const folly::dynamic& GetVertexResult(const vertex_t& v) {
+  virtual const gs::dynamic::Value& GetVertexResult(const vertex_t& v) {
     return data_[v];
   }
 
@@ -520,19 +519,19 @@ class VertexDataContextWrapper : public IVertexDataContextWrapper {
 
 #ifdef NETWORKX
 /**
- * @brief This is folly::dynamic specialization of VertexDataContext.
+ * @brief This is dynamic::Value specialization of VertexDataContext.
  *
  * @tparam FRAG_T The fragment class (Non-labeled fragment only)
  */
 template <typename FRAG_T>
-class VertexDataContextWrapper<FRAG_T, folly::dynamic>
+class VertexDataContextWrapper<FRAG_T, dynamic::Value>
     : public IVertexDataContextWrapper {
   using fragment_t = FRAG_T;
   using oid_t = typename fragment_t::oid_t;
   using vertex_t = typename fragment_t::vertex_t;
-  using context_t = grape::VertexDataContext<fragment_t, folly::dynamic>;
+  using context_t = grape::VertexDataContext<fragment_t, dynamic::Value>;
   using vdata_t = typename fragment_t::vdata_t;
-  using data_t = folly::dynamic;
+  using data_t = dynamic::Value;
 
  public:
   explicit VertexDataContextWrapper(
@@ -552,12 +551,13 @@ class VertexDataContextWrapper<FRAG_T, folly::dynamic>
 
   bl::result<std::string> GetContextData(const rpc::GSParams& params) override {
     BOOST_LEAF_AUTO(node_in_json, params.Get<std::string>(rpc::NODE));
-    oid_t node_id = folly::parseJson(node_in_json)[0];
+    oid_t oid;
+    dynamic::Parse(node_in_json, oid);
     auto& frag = ctx_->fragment();
-    if (frag.HasNode(node_id)) {
+    if (frag.HasNode(oid)) {
       vertex_t v;
-      frag.GetVertex(node_id, v);
-      return folly::json::serialize(ctx_->GetVertexResult(v), json_opts_);
+      frag.GetVertex(oid, v);
+      return dynamic::Stringify(ctx_->GetVertexResult(v));
     }
     return std::string("");
   }
@@ -604,7 +604,6 @@ class VertexDataContextWrapper<FRAG_T, folly::dynamic>
  private:
   std::shared_ptr<IFragmentWrapper> frag_wrapper_;
   std::shared_ptr<context_t> ctx_;
-  folly::json::serialization_opts json_opts_;
 };
 #endif  // NETWORKX
 

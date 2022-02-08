@@ -39,6 +39,7 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
   static constexpr grape::LoadStrategy load_strategy =
       grape::LoadStrategy::kBothOutIn;
   enum MsgType { init_msg, bfs_msg, edge_map_msg };
+  using oid_t = typename fragment_t::oid_t;
   using vertex_t = typename fragment_t::vertex_t;
   using vid_t = typename fragment_t::vid_t;
   using msg_t = typename std::tuple<enum MsgType, vid_t, vid_t>;
@@ -184,7 +185,7 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
     std::vector<size_t> shape{static_cast<size_t>(ctx.path_num),
                               static_cast<size_t>(ctx.cutoff + 1)};
     if (ctx.path_num == 0) {
-      data.push_back(1);
+      data.push_back(oid_t(1));
       shape.pop_back();
       shape[0] = 1;
     }
@@ -227,7 +228,7 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
           len_counter++;
           // fill path to cutoff with -1
           while (len_counter != ctx.cutoff + 1) {
-            data.push_back(-1);
+            data.push_back(oid_t(-1));
             len_counter++;
           }
           ctx.path_num++;
@@ -253,7 +254,7 @@ class AllSimplePaths : public AppBase<FRAG_T, AllSimplePathsContext<FRAG_T>>,
         len_counter++;
         // fill path length to cutoff with -1
         while (len_counter != ctx.cutoff + 1) {
-          data.push_back(-1);
+          data.push_back(oid_t(-1));
           len_counter++;
         }
         ctx.path_num++;

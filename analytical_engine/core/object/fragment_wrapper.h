@@ -122,7 +122,7 @@ gs::rpc::graph::DataTypePb PropertyTypeToPb(const std::string& type) {
     return gs::rpc::graph::DataTypePb::STRING_LIST;
   } else if (type == "grape::EmptyType" || type == "null") {
     return gs::rpc::graph::DataTypePb::NULLVALUE;
-  } else if (type == "folly::dynamic") {
+  } else if (type == "dynamic::Value") {
     return gs::rpc::graph::DataTypePb::DYNAMIC;
   }
   LOG(ERROR) << "Unsupported type " << type;

@@ -21,11 +21,11 @@
 #include <string>
 #include <type_traits>
 
-#ifdef NETWORKX
-#include "folly/dynamic.h"
-#endif
 #include "glog/logging.h"
 
+#ifdef NETWORKX
+#include "core/object/dynamic.h"
+#endif
 #include "core/config.h"
 #include "core/error.h"
 #include "proto/graphscope/proto/data_types.pb.h"
@@ -114,19 +114,19 @@ struct ArgsUnpacker<std::string> {
 
 #ifdef NETWORKX
 /**
- * @brief A specialized ArgsUnpacker with folly::dynamic type
+ * @brief A specialized ArgsUnpacker with dynamic::Value type
  */
 template <>
-struct ArgsUnpacker<folly::dynamic> {
-  static folly::dynamic unpack(const google::protobuf::Any& arg) {
+struct ArgsUnpacker<dynamic::Value> {
+  static dynamic::Value unpack(const google::protobuf::Any& arg) {
     if (arg.Is<rpc::Int64Value>()) {
       rpc::Int64Value proto_arg;
       arg.UnpackTo(&proto_arg);
-      return folly::dynamic(proto_arg.value());
+      return dynamic::Value(proto_arg.value());
     } else if (arg.Is<rpc::StringValue>()) {
       rpc::StringValue proto_arg;
       arg.UnpackTo(&proto_arg);
-      return folly::dynamic(proto_arg.value());
+      return dynamic::Value(proto_arg.value());
     } else {
       throw std::runtime_error("Not support oid type.");
     }

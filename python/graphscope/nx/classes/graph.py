@@ -495,13 +495,18 @@ class Graph(_GraphBase):
     @clear_cache
     @patch_docstring(RefGraph.__str__)
     def __str__(self):
-        return "".join(
-            [
-                type(self).__name__,
-                f" named {self.name!r}" if self.name else "",
-                f" with {self.number_of_nodes()} nodes and {self.number_of_edges()} edges",
-            ]
-        )
+        if self.graph_type in (
+            graph_def_pb2.ARROW_PROPERTY,
+            graph_def_pb2.DYNAMIC_PROPERTY,
+        ):
+            return "".join(
+                [
+                    type(self).__name__,
+                    f" named {self.name!r}" if self.name else "",
+                    f" with {self.number_of_nodes()} nodes and {self.number_of_edges()} edges",
+                ]
+            )
+        return f"graphscope.nx.Graph\n{graph_def_pb2.GraphTypePb.Name(self.graph_type)}"
 
     def __copy__(self):
         """override default __copy__"""
@@ -794,7 +799,7 @@ class Graph(_GraphBase):
         if self.graph_type == graph_def_pb2.ARROW_PROPERTY:
             n = self._convert_to_label_id_tuple(n)
         op = dag_utils.report_graph(
-            self, types_pb2.NODE_DATA, node=json.dumps([n], default=json_encoder)
+            self, types_pb2.NODE_DATA, node=json.dumps(n, default=json_encoder)
         )
         return op.eval()
 
@@ -862,11 +867,13 @@ class Graph(_GraphBase):
         True
 
         """
+        if isinstance(n, dict):
+            return False
         try:
             if self.graph_type == graph_def_pb2.ARROW_PROPERTY:
                 n = self._convert_to_label_id_tuple(n)
             op = dag_utils.report_graph(
-                self, types_pb2.HAS_NODE, node=json.dumps([n], default=json_encoder)
+                self, types_pb2.HAS_NODE, node=json.dumps(n, default=json_encoder)
             )
             return bool(int(op.eval()))
         except (TypeError, NetworkXError, KeyError):
@@ -1973,10 +1980,9 @@ class Graph(_GraphBase):
         if self.graph_type == graph_def_pb2.ARROW_PROPERTY:
             n = self._convert_to_label_id_tuple(n)
         op = dag_utils.report_graph(
-            self, report_type, node=json.dumps([n], default=json_encoder)
+            self, report_type, node=json.dumps(n, default=json_encoder)
         )
-        ret = op.eval()
-        return ret
+        return op.eval()
 
     def _batch_get_nbrs(self, location, report_type=types_pb2.SUCCS_BY_LOC):
         """Get neighbors of nodes by location in batch.
@@ -2034,7 +2040,7 @@ class Graph(_GraphBase):
         Raise NetworkxError if node not in graph.
         """
         op = dag_utils.report_graph(
-            self, report_type, node=json.dumps([n], default=json_encoder), key=weight
+            self, report_type, node=json.dumps(n, default=json_encoder), key=weight
         )
         degree = float(op.eval())
         return degree if weight is not None else int(degree)
