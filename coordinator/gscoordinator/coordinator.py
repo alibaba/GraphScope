@@ -932,7 +932,7 @@ class CoordinatorServiceServicer(
             dag = op_def_pb2.DagDef()
             dag.op.extend([new_op_def])
             self.run_on_coordinator(coordinator_dag, [], [], {})
-            results = self.run_on_analytical_engine(self._session_id, dag, [], [])
+            results = self.run_on_analytical_engine(dag, [], [], {})
             logger.info("subgraph has been loaded")
             return results[-1]
 
