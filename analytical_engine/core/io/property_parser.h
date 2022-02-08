@@ -219,7 +219,7 @@ inline void DistributeChunk(const rpc::Chunk& chunk, int num,
   if (protocol == "pandas") {
     SplitTable(data, num, distributed_values);
   } else {
-    distributed_values.resize(num, data);
+    distributed_values.resize(num, attrs.at(rpc::SOURCE).s());
   }
   for (int i = 0; i < num; ++i) {
     distributed_chunk[i].set_buffer(std::move(distributed_values[i]));
