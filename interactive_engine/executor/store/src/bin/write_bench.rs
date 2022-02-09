@@ -6,6 +6,9 @@ use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::collections::hash_map::DefaultHasher;
 use std::env;
+use std::sync::atomic::{AtomicU64, Ordering, AtomicI64};
+use std::sync::Arc;
+use std::time::Duration;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -13,8 +16,9 @@ fn main() {
     let write_buffer_mb = &args[1];
     let compaction_style = &args[2];
     let background_job = &args[3];
+    let thread_count = &args[4];
 
-    println!("write_buffer_mb {}, compaction_style {}, background_job {}", write_buffer_mb, compaction_style, background_job);
+    println!("write_buffer_mb {}, compaction_style {}, background_job {}, thread_count {}", write_buffer_mb, compaction_style, background_job, thread_count);
     let path = format!("write_bench_data_dir");
     fs::rmr(&path).unwrap();
     let mut builder = GraphConfigBuilder::new();
@@ -23,7 +27,7 @@ fn main() {
     builder.add_storage_option("compaction_style", compaction_style);
     builder.add_storage_option("background_jobs", background_job);
     let config = builder.build();
-    let store = GraphStore::open(&config, &path).unwrap();
+    let store = Arc::new(GraphStore::open(&config, &path).unwrap());
     println!("store opened.");
     let mut type_def_builer = TypeDefBuilder::new();
     type_def_builer.version(1);
@@ -33,39 +37,54 @@ fn main() {
     let label_id = 1;
     store.create_vertex_type(1, 1, label_id, &type_def, 1).unwrap();
     println!("schema created");
-    let mut i = 2;
     let str_len = 100;
     let timer = Timer::new();
     let mut tmp_time = 0.0;
     let mut tmp_count = 0;
     let val = "c".repeat(str_len);
+    let mut handles = Vec::new();
+    let total_count = Arc::new(AtomicU64::new(0));
+    let snapshot_idx = Arc::new(AtomicI64::new(1));
+    for i in 0..thread_count.parse().unwrap() {
+        let task_id = i;
+        let counter = total_count.clone();
+        let val = val.clone();
+        let store = store.clone();
+        let snapshot_idx = snapshot_idx.clone();
+        println!("task {} starting", task_id);
+        let handle = std::thread::spawn(move || {
+            let mut idx = i * 100000000000 + 2;
+            loop {
+                let snapshot_id = snapshot_idx.load(Ordering::Relaxed);
+                let vertex_id = idx;
+                let mut properties = HashMap::new();
+                properties.insert(1, Value::long(i));
+                properties.insert(2, Value::string(&val));
+                let mut hasher = DefaultHasher::new();
+                vertex_id.hash(&mut hasher);
+                let hash_id = hasher.finish();
+                store.insert_overwrite_vertex(snapshot_id, hash_id as i64, label_id, &properties).unwrap();
+                idx += 1;
+                counter.fetch_add(1, Ordering::Relaxed);
+            }
+        });
+        handles.push(handle);
+    }
     println!("{}\t{}\t{}", "time(sec)", "speed(record/s)", "total");
-    loop {
-        let snapshot_id = i;
-        let vertex_id = i;
-        let mut properties = HashMap::new();
-        properties.insert(1, Value::long(i));
-        properties.insert(2, Value::string(&val));
-        let mut hasher = DefaultHasher::new();
-        vertex_id.hash(&mut hasher);
-        let hash_id = hasher.finish();
-        store.insert_overwrite_vertex(snapshot_id, hash_id as i64, label_id, &properties).unwrap();
-        i += 1;
-        if i % 500000 == 0 {
-            let write_count = i - tmp_count;
+    std::thread::spawn(move || {
+        loop {
+            std::thread::sleep(Duration::from_secs(3));
+            let total_write = total_count.load(Ordering::Relaxed);
+            let write_count = total_write - tmp_count;
             let total_time = timer.elasped_secs();
             let t = total_time - tmp_time;
-            println!("{:.0}\t{:.2}\t{:.0}", total_time, write_count as f64 / t, i);
-            tmp_count = i;
+            println!("{:.0}\t{:.2}\t{:.0}", total_time, write_count as f64 / t, total_write);
+            tmp_count = total_write;
             tmp_time = total_time;
+            snapshot_idx.fetch_add(1, Ordering::Relaxed);
         }
+    });
+    for handle in handles {
+        handle.join().unwrap();
     }
 }
-
-fn open_graph_store(path: &str) -> GraphStore {
-    let mut builder = GraphConfigBuilder::new();
-    builder.set_storage_engine("rocksdb");
-    let config = builder.build();
-    GraphStore::open(&config, path).unwrap()
-}
-
