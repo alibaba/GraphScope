@@ -21,34 +21,78 @@ namespace gs {
 
 grape::InArchive& operator<<(grape::InArchive& archive,
                              const CommandDetail& cd) {
+  // type
+  archive << cd.type;
+  // params
   std::map<int, std::string> buffer;
   for (auto& pair : cd.params) {
     buffer[pair.first] = pair.second.SerializeAsString();
   }
-
-  archive << cd.type;
   archive << buffer;
-  archive << cd.large_attr.SerializeAsString();
+  // large attr
+  bool has_chunk_list = cd.large_attr.has_chunk_list();
+  archive << has_chunk_list;
+  if (has_chunk_list) {
+    size_t chunk_list_size = cd.large_attr.chunk_list().items().size();
+    archive << chunk_list_size;
+    for (size_t i = 0; i < chunk_list_size; ++i) {
+      const auto& chunk = cd.large_attr.chunk_list().items(i);
+      // buffer
+      archive << chunk.buffer();
+      // attr
+      std::map<int, std::string> attr;
+      for (auto& pair : chunk.attr()) {
+        attr[pair.first] = pair.second.SerializeAsString();
+      }
+      archive << attr;
+    }
+  }
+  // query_args
   archive << cd.query_args.SerializeAsString();
 
   return archive;
 }
 
 grape::OutArchive& operator>>(grape::OutArchive& archive, CommandDetail& cd) {
-  std::map<int, std::string> buffer;
-  std::string s_large_attr, s_args;
-
+  // type
   archive >> cd.type;
+  // params
+  std::map<int, std::string> buffer;
   archive >> buffer;
-  archive >> s_large_attr;
-  archive >> s_args;
-
   for (auto& pair : buffer) {
     rpc::AttrValue attr_value;
     attr_value.ParseFromString(pair.second);
     cd.params[pair.first] = attr_value;
   }
-  cd.large_attr.ParseFromString(s_large_attr);
+  // large attr
+  bool has_chunk_list;
+  archive >> has_chunk_list;
+  if (has_chunk_list) {
+    size_t chunk_list_size;
+    archive >> chunk_list_size;
+    if (chunk_list_size > 0) {
+      auto* chunk_list = cd.large_attr.mutable_chunk_list();
+      for (size_t i = 0; i < chunk_list_size; ++i) {
+        auto* chunk = chunk_list->add_items();
+        // buffer
+        std::string buf;
+        archive >> buf;
+        chunk->set_buffer(std::move(buf));
+        // attr
+        auto* mutable_attr = chunk->mutable_attr();
+        std::map<int, std::string> attr;
+        archive >> attr;
+        for (auto& pair : attr) {
+          rpc::AttrValue attr_value;
+          attr_value.ParseFromString(pair.second);
+          (*mutable_attr)[pair.first].CopyFrom(attr_value);
+        }
+      }
+    }
+  }
+  // query_args
+  std::string s_args;
+  archive >> s_args;
   cd.query_args.ParseFromString(s_args);
 
   return archive;
