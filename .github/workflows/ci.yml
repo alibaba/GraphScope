@@ -326,6 +326,8 @@ jobs:
       env:
         GS_TEST_DIR: ${{ github.workspace }}/gstest
       run: |
+        # Fix networkx version to 2.6.2 (fixme: weibin)
+        python3 -m pip install networkx==2.6.2
         # install graphscope-client
         cd artifacts
         tar -zxf ./wheel-${{ github.sha }}/client.tar.gz
