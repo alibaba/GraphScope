@@ -326,8 +326,6 @@ jobs:
       env:
         GS_TEST_DIR: ${{ github.workspace }}/gstest
       run: |
-        # Fix networkx version to 2.6.2 (fixme: weibin)
-        python3 -m pip install networkx==2.6.2
         # install graphscope-client
         cd artifacts
         tar -zxf ./wheel-${{ github.sha }}/client.tar.gz
@@ -357,7 +355,8 @@ jobs:
         GS_TEST_DIR: ${{ github.workspace }}/gstest
       run: |
         pip3 show networkx
-        python3 -m pytest --exitfirst -s -v \
+        # python3 -m pytest --exitfirst -s -v \
+        python3 -m pytest -s -v \
             $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/nx/tests \
             --ignore=$(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/nx/tests/convert
 

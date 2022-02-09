@@ -90,6 +90,10 @@ class TestToUndirected(test_gvs.TestToUndirected):
     def test_pickle(self):
         pass
 
+    @pytest.mark.skip(reason="not support pickle remote graph.")
+    def test_iter(self):
+        pass
+
     def test_already_directed(self):
         uu = nx.to_undirected(self.uv)
         assert_edges_equal(uu.edges, self.uv.edges)
