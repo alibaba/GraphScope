@@ -61,6 +61,10 @@ class TestReverseView(test_gvs.TestReverseView):
         assert RMC.has_edge(2, 1)
         assert RMC.my_method() == "me"
 
+    @pytest.mark.skip(reason="not support pickle remote graph.")
+    def test_pickle(self):
+        pass
+
 
 @pytest.mark.usefixtures("graphscope_session")
 class TestToDirected(test_gvs.TestToDirected):
@@ -84,6 +88,10 @@ class TestToUndirected(test_gvs.TestToUndirected):
 
     @pytest.mark.skip(reason="not support pickle remote graph.")
     def test_pickle(self):
+        pass
+
+    @pytest.mark.skip(reason="not support pickle remote graph.")
+    def test_iter(self):
         pass
 
     def test_already_directed(self):
