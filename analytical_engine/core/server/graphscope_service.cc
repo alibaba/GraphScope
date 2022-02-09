@@ -59,19 +59,21 @@ Status GraphScopeService::HeartBeat(ServerContext* context,
   auto* ops = dag_def.mutable_op();
   for (auto& op : *ops) {
     LargeAttrValue large_attr = op.large_attr();
-    auto* mutable_large_attr = op.mutable_large_attr();
-    auto* chunk_list = mutable_large_attr->mutable_chunk_list();
-    for (const auto& chunk_meta : large_attr.chunk_meta_list().items()) {
-      auto* chunk = chunk_list->add_items();
-      if (chunk_meta.size() > 0) {
-        // set buffer
-        chunk->set_buffer(std::move(chunks.front()));
-        chunks.pop();
-      }
-      // copy attr from chunk_meta
-      auto* mutable_attr = chunk->mutable_attr();
-      for (auto& attr : chunk_meta.attr()) {
-        (*mutable_attr)[attr.first].CopyFrom(attr.second);
+    if (large_attr.has_chunk_meta_list()) {
+      auto* mutable_large_attr = op.mutable_large_attr();
+      auto* chunk_list = mutable_large_attr->mutable_chunk_list();
+      for (const auto& chunk_meta : large_attr.chunk_meta_list().items()) {
+        auto* chunk = chunk_list->add_items();
+        if (chunk_meta.size() > 0) {
+          // set buffer
+          chunk->set_buffer(std::move(chunks.front()));
+          chunks.pop();
+        }
+        // copy attr from chunk_meta
+        auto* mutable_attr = chunk->mutable_attr();
+        for (auto& attr : chunk_meta.attr()) {
+          (*mutable_attr)[attr.first].CopyFrom(attr.second);
+        }
       }
     }
   }

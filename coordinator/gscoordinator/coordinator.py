@@ -349,7 +349,8 @@ class CoordinatorServiceServicer(
                     parent_op = self._key_to_op[key_of_parent_op]
                     if parent_op.op == types_pb2.DATA_SOURCE:
                         # handle bodies of loader op
-                        dag_bodies.extend(loader_op_bodies[parent_op.key])
+                        if parent_op.key in loader_op_bodies:
+                            dag_bodies.extend(loader_op_bodies[parent_op.key])
 
             # Compile app or not.
             if op.op == types_pb2.BIND_APP:
@@ -931,9 +932,8 @@ class CoordinatorServiceServicer(
             new_op_def.key = op.key
             dag = op_def_pb2.DagDef()
             dag.op.extend([new_op_def])
-            loader_op_bodies = {}
-            self.run_on_coordinator(coordinator_dag, [], [], loader_op_bodies)
-            results = self.run_on_analytical_engine(dag, [], [], loader_op_bodies)
+            self.run_on_coordinator(coordinator_dag, [], [], {})
+            results = self.run_on_analytical_engine(dag, [], [], {})
             logger.info("subgraph has been loaded")
             return results[-1]
 
