@@ -26,7 +26,7 @@ service CoordinatorService {
   rpc HeartBeat(HeartBeatRequest) returns (HeartBeatResponse);
 
   // Drives the graph computation.
-  rpc RunStep(RunStepRequest) returns (RunStepResponse);
+  rpc RunStep(stream RunStepRequest) returns (RunStepResponse);
 
   // Fetch engine logs.
   rpc FetchLogs(FetchLogsRequest) returns (stream FetchLogsResponse);

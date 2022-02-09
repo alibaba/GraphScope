@@ -234,6 +234,7 @@ enum ParamKey {
   STORAGE_OPTIONS = 321;
   READ_OPTIONS = 322;
   FD = 323;  // file descriptor
+  SOURCE = 324;
 
   // large attr
   CHUNK_NAME = 341;

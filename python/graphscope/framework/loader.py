@@ -246,11 +246,11 @@ class Loader(object):
         # Maybe handled by vineyard in the near future
         if self.protocol == "file":
             source = "{}#{}".format(self.source, self.options)
-            config[types_pb2.VALUES] = source.encode("utf-8")
+            config[types_pb2.SOURCE] = utils.s_to_attr(source)
         elif self.protocol == "pandas":
             config[types_pb2.VALUES] = self.source
         else:  # Let vineyard handle other data source.
-            config[types_pb2.VALUES] = self.source.encode("utf-8")
+            config[types_pb2.SOURCE] = utils.s_to_attr(self.source)
             if self.protocol != "vineyard":
                 # need spawn an io stream in coordinator
                 config[types_pb2.STORAGE_OPTIONS] = utils.s_to_attr(

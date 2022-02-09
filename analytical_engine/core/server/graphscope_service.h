@@ -22,6 +22,7 @@
 #include <utility>
 
 #include "core/server/dispatcher.h"
+#include "proto/graphscope/proto/attr_value.pb.h"
 #include "proto/graphscope/proto/engine_service.grpc.pb.h"
 #include "proto/graphscope/proto/graph_def.pb.h"
 #include "proto/graphscope/proto/op_def.pb.h"
@@ -30,6 +31,8 @@ namespace gs {
 namespace rpc {
 
 using grpc::ServerContext;
+using ::grpc::ServerReader;
+using ::grpc::ServerReaderWriter;
 using grpc::Status;
 using grpc::StatusCode;
 
@@ -43,7 +46,7 @@ class GraphScopeService final : public EngineService::Service {
       : dispatcher_(std::move(dispatcher)) {}
 
   ::grpc::Status RunStep(::grpc::ServerContext* context,
-                         const RunStepRequest* request,
+                         ServerReader<RunStepRequest>* stream,
                          RunStepResponse* response) override;
 
   ::grpc::Status HeartBeat(::grpc::ServerContext* context,

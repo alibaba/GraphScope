@@ -95,7 +95,7 @@ class _FetchHandler(object):
             if hasattr(fetch, "op"):
                 fetch = fetch.op
             if not isinstance(fetch, Operation):
-                raise ValueError("Expect a `Operation` in sess run method.")
+                raise ValueError("Expect an `Operation` in sess run method.")
             self._ops.append(fetch)
         # extract sub dag
         self._sub_dag = dag.extract_subdag_for(self._ops)
