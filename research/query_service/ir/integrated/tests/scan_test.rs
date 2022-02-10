@@ -72,6 +72,7 @@ mod test {
             params: Some(pb::QueryParams {
                 table_names: vec!["person".into()],
                 columns: vec![],
+                is_all_columns: false,
                 limit: None,
                 predicate: None,
                 requirements: vec![],
@@ -103,6 +104,7 @@ mod test {
             params: Some(pb::QueryParams {
                 table_names: vec!["person".into(), "software".into()],
                 columns: vec![],
+                is_all_columns: false,
                 limit: None,
                 predicate: None,
                 requirements: vec![],
