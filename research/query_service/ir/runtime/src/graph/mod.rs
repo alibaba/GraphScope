@@ -83,7 +83,7 @@ impl TryFrom<Option<algebra_pb::QueryParams>> for QueryParams {
                 .with_labels(query_params_pb.table_names)?
                 .with_filter(query_params_pb.predicate)?
                 .with_limit(query_params_pb.limit)?
-                .with_required_properties(query_params_pb.columns)?
+                .with_required_properties(query_params_pb.columns, query_params_pb.is_all_columns)?
                 .with_extra_params(query_params_pb.requirements)
         })
     }
@@ -122,16 +122,22 @@ impl QueryParams {
     // Some(vec![]) indicates we need all properties
     // and None indicates we do not need any property,
     fn with_required_properties(
-        mut self, required_properties_pb: Vec<common_pb::NameOrId>,
+        mut self, required_properties_pb: Vec<common_pb::NameOrId>, is_all_columns: bool,
     ) -> Result<Self, ParsePbError> {
-        // TODO: Specify whether we need all properties or None properties
-        // TODO: for now, we assume that empty required_properties_pb vec indicates all properties needed
-        self.props = Some(
-            required_properties_pb
-                .into_iter()
-                .map(|prop_key| prop_key.try_into())
-                .collect::<Result<Vec<_>, _>>()?,
-        );
+        if is_all_columns {
+            self.props = Some(vec![]);
+        } else {
+            if required_properties_pb.is_empty() {
+                self.props = None;
+            } else {
+                self.props = Some(
+                    required_properties_pb
+                        .into_iter()
+                        .map(|prop_key| prop_key.try_into())
+                        .collect::<Result<Vec<_>, _>>()?,
+                );
+            }
+        }
         Ok(self)
     }
 
