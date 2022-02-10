@@ -23,6 +23,8 @@ fn main() {
     fs::rmr(&path).unwrap();
     let mut builder = GraphConfigBuilder::new();
     builder.set_storage_engine("rocksdb");
+    builder.add_storage_option("compression_type", "none");
+    builder.add_storage_option("stats_dump_period_sec", "60");
     builder.add_storage_option("write_buffer_mb", write_buffer_mb);
     builder.add_storage_option("compaction_style", compaction_style);
     builder.add_storage_option("background_jobs", background_job);

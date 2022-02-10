@@ -202,8 +202,21 @@ fn init_options(options: &HashMap<String, String>) -> Options {
     let mut ret = Options::default();
     ret.create_if_missing(true);
     // TODO: Add other customized db options.
-    ret.set_compression_type(DBCompressionType::None);
-    ret.set_stats_dump_period_sec(60);
+    if let Some(conf_str) = options.get("compression_type") {
+        match conf_str.as_str() {
+            "none" => ret.set_compression_type(DBCompressionType::None),
+            "snappy" => ret.set_compression_type(DBCompressionType::Snappy),
+            "zlib" => ret.set_compression_type(DBCompressionType::Zlib),
+            "bz2" => ret.set_compression_type(DBCompressionType::Bz2),
+            "lz4" => ret.set_compression_type(DBCompressionType::Lz4),
+            "lz4hc" => ret.set_compression_type(DBCompressionType::Lz4hc),
+            "zstd" => ret.set_compression_type(DBCompressionType::Zstd),
+            _ => panic!("invalid compression_type config"),
+        }
+    }
+    if let Some(conf_str) = options.get("stats_dump_period_sec") {
+        ret.set_stats_dump_period_sec(conf_str.parse().unwrap());
+    }
 
     if let Some(conf_str) = options.get("compaction_style") {
         match conf_str.as_str() {
@@ -214,7 +227,13 @@ fn init_options(options: &HashMap<String, String>) -> Options {
     }
     if let Some(conf_str) = options.get("write_buffer_mb") {
         let size_mb: usize = conf_str.parse().unwrap();
-        ret.set_write_buffer_size(size_mb * 1024 * 1024);
+        let size_bytes = size_mb * 1024 * 1024;
+        ret.set_write_buffer_size(size_bytes);
+        let min_write_buffer_number_to_merge = 1;
+        let level0_file_num_compaction_trigger = 4;
+        ret.set_min_write_buffer_number(min_write_buffer_number_to_merge);
+        ret.set_level_zero_file_num_compaction_trigger(level0_file_num_compaction_trigger);
+        ret.set_max_bytes_for_level_base((size_bytes as i32 * min_write_buffer_number_to_merge * level0_file_num_compaction_trigger) as u64);
     }
     if let Some(conf_str) = options.get("background_jobs") {
         let background_jobs = conf_str.parse().unwrap();
