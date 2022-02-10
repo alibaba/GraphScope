@@ -79,12 +79,16 @@ impl TryFrom<Option<algebra_pb::QueryParams>> for QueryParams {
 
     fn try_from(query_params_pb: Option<algebra_pb::QueryParams>) -> Result<Self, Self::Error> {
         query_params_pb.map_or(Ok(QueryParams::default()), |query_params_pb| {
-            QueryParams::default()
+            let query_param = QueryParams::default()
                 .with_labels(query_params_pb.table_names)?
                 .with_filter(query_params_pb.predicate)?
                 .with_limit(query_params_pb.limit)?
-                .with_required_properties(query_params_pb.columns, query_params_pb.is_all_columns)?
-                .with_extra_params(query_params_pb.requirements)
+                .with_extra_params(query_params_pb.requirements)?;
+            if query_params_pb.is_all_columns {
+                query_param.with_all_properties()
+            } else {
+                query_param.with_required_properties(query_params_pb.columns)
+            }
         })
     }
 }
@@ -117,26 +121,27 @@ impl QueryParams {
         Ok(self)
     }
 
+    fn with_all_properties(mut self) -> Result<Self, ParsePbError> {
+        self.props = Some(vec![]);
+        Ok(self)
+    }
+
     // props specify the properties we query for, e.g.,
     // Some(vec![prop1, prop2]) indicates we need prop1 and prop2,
     // Some(vec![]) indicates we need all properties
     // and None indicates we do not need any property,
     fn with_required_properties(
-        mut self, required_properties_pb: Vec<common_pb::NameOrId>, is_all_columns: bool,
+        mut self, required_properties_pb: Vec<common_pb::NameOrId>,
     ) -> Result<Self, ParsePbError> {
-        if is_all_columns {
-            self.props = Some(vec![]);
+        if required_properties_pb.is_empty() {
+            self.props = None;
         } else {
-            if required_properties_pb.is_empty() {
-                self.props = None;
-            } else {
-                self.props = Some(
-                    required_properties_pb
-                        .into_iter()
-                        .map(|prop_key| prop_key.try_into())
-                        .collect::<Result<Vec<_>, _>>()?,
-                );
-            }
+            self.props = Some(
+                required_properties_pb
+                    .into_iter()
+                    .map(|prop_key| prop_key.try_into())
+                    .collect::<Result<Vec<_>, _>>()?,
+            );
         }
         Ok(self)
     }
