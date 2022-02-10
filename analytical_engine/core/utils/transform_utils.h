@@ -21,27 +21,33 @@ limitations under the License.
 #include <utility>
 #include <vector>
 
-#ifdef NETWORKX
-#include "folly/dynamic.h"
-#endif
 #include "boost/foreach.hpp"
 #include "boost/lexical_cast.hpp"
 
 #include "vineyard/basic/ds/dataframe.h"
 #include "vineyard/basic/ds/tensor.h"
 
+#ifdef NETWORKX
+#include "core/object/dynamic.h"
+#endif
 #include "core/context/column.h"
 #include "core/utils/trait_utils.h"
 
 #ifdef NETWORKX
 namespace grape {
 inline grape::InArchive& operator<<(grape::InArchive& archive,
-                                    const folly::dynamic& d) {
-  CHECK(d.isInt() || d.isString());
-  if (d.isInt()) {
-    archive << d.asInt();
-  } else if (d.isString()) {
-    archive << d.asString();
+                                    const gs::dynamic::Value& value) {
+  if (value.IsInt64()) {
+    archive << value.GetInt64();
+  } else if (value.IsDouble()) {
+    archive << value.GetDouble();
+  } else if (value.IsString()) {
+    size_t size = value.GetStringLength();
+    archive << size;
+    archive.AddBytes(value.GetString(), size);
+  } else {
+    std::string json = gs::dynamic::Stringify(value);
+    archive << json;
   }
   return archive;
 }
@@ -53,13 +59,13 @@ namespace gs {
 #ifdef NETWORKX
 template <typename T>
 struct is_dynamic {
-  constexpr static bool value = std::is_same<T, folly::dynamic>::value;
+  constexpr static bool value = std::is_same<T, dynamic::Value>::value;
 };
 
 template <typename FRAG_T>
 struct oid_is_dynamic {
   constexpr static bool value =
-      std::is_same<typename FRAG_T::oid_t, folly::dynamic>::value;
+      std::is_same<typename FRAG_T::oid_t, dynamic::Value>::value;
 };
 #else
 template <typename T>
@@ -148,7 +154,7 @@ typename std::enable_if<!is_dynamic<OID_T>::value, OID_T>::type string_to_oid(
 template <typename OID_T>
 typename std::enable_if<is_dynamic<OID_T>::value, OID_T>::type string_to_oid(
     const std::string& s_oid) {
-  return folly::dynamic(s_oid);
+  return dynamic::Value(s_oid);
 }
 #endif
 
@@ -854,7 +860,7 @@ class TransformUtils<
  * dynamic, like DynamicFragment, DynamicProjectedFragment. This utility
  * provides a bunch of methods to serialize/transform context data and the data
  * in the fragment.
- * @tparam FRAG_T Non-labeled fragment class, but with folly::dynamic oid
+ * @tparam FRAG_T Non-labeled fragment class, but with dynamic::Value oid
  */
 template <typename FRAG_T>
 class TransformUtils<
@@ -877,13 +883,13 @@ class TransformUtils<
     if (!r) {
       return -1;
     }
-    auto folly_type = r.value();
-    if (folly_type == folly::dynamic::INT64) {
+    auto dynamic_type = r.value();
+    if (dynamic_type == dynamic::Type::kInt64Type) {
       return vineyard::TypeToInt<int64_t>::value;
-    } else if (folly_type == folly::dynamic::STRING) {
+    } else if (dynamic_type == dynamic::Type::kStringType) {
       return vineyard::TypeToInt<std::string>::value;
     } else {
-      // if is folly::NULLT, return 0, means np.dtype(void) in numpy
+      // if is null, return 0, means np.dtype(void) in numpy
       return 0;
     }
     return -1;
@@ -917,19 +923,19 @@ class TransformUtils<
 
     BOOST_LEAF_AUTO(oid_type, frag_.GetOidType(comm_spec_));
 
-    if (oid_type == folly::dynamic::Type::INT64) {
+    if (oid_type == dynamic::Type::kInt64Type) {
       typename vineyard::ConvertToArrowType<int64_t>::BuilderType builder;
       for (auto v : inner_vertices) {
-        ARROW_OK_OR_RAISE(builder.Append(frag_.GetId(v).asInt()));
+        ARROW_OK_OR_RAISE(builder.Append(frag_.GetId(v).GetInt64()));
       }
       std::shared_ptr<typename vineyard::ConvertToArrowType<int64_t>::ArrayType>
           ret;
       ARROW_OK_OR_RAISE(builder.Finish(&ret));
       return std::dynamic_pointer_cast<arrow::Array>(ret);
-    } else if (oid_type == folly::dynamic::Type::STRING) {
+    } else if (oid_type == dynamic::Type::kStringType) {
       typename vineyard::ConvertToArrowType<std::string>::BuilderType builder;
       for (auto v : inner_vertices) {
-        ARROW_OK_OR_RAISE(builder.Append(frag_.GetId(v).asString()));
+        ARROW_OK_OR_RAISE(builder.Append(frag_.GetId(v).GetString()));
       }
       std::shared_ptr<
           typename vineyard::ConvertToArrowType<std::string>::ArrayType>
@@ -949,20 +955,20 @@ class TransformUtils<
 
     BOOST_LEAF_AUTO(oid_type, frag_.GetOidType(comm_spec_));
 
-    if (oid_type == folly::dynamic::Type::INT64) {
+    if (oid_type == dynamic::Type::kInt64Type) {
       auto tensor_builder = std::make_shared<vineyard::TensorBuilder<int64_t>>(
           client, shape, part_idx);
       for (size_t i = 0; i < vertices.size(); i++) {
-        tensor_builder->data()[i] = frag_.GetId(vertices[i]).asInt();
+        tensor_builder->data()[i] = frag_.GetId(vertices[i]).GetInt64();
       }
       return std::dynamic_pointer_cast<vineyard::ITensorBuilder>(
           tensor_builder);
-    } else if (oid_type == folly::dynamic::Type::STRING) {
+    } else if (oid_type == dynamic::Type::kStringType) {
       auto tensor_builder =
           std::make_shared<vineyard::TensorBuilder<std::string>>(client, shape,
                                                                  part_idx);
       for (size_t i = 0; i < vertices.size(); i++) {
-        tensor_builder->data()[i] = frag_.GetId(vertices[i]).asString();
+        tensor_builder->data()[i] = frag_.GetId(vertices[i]).GetString();
       }
       return std::dynamic_pointer_cast<vineyard::ITensorBuilder>(
           tensor_builder);
@@ -977,14 +983,14 @@ class TransformUtils<
     BOOST_LEAF_AUTO(base_builder, VertexIdToVYTensorBuilder(client, vertices));
     BOOST_LEAF_AUTO(oid_type, frag_.GetOidType(comm_spec_));
 
-    if (oid_type == folly::dynamic::Type::INT64) {
+    if (oid_type == dynamic::Type::kInt64Type) {
       auto builder =
           std::dynamic_pointer_cast<vineyard::TensorBuilder<int64_t>>(
               base_builder);
       auto tensor = builder->Seal(client);
       VY_OK_OR_RAISE(tensor->Persist(client));
       return tensor->id();
-    } else if (oid_type == folly::dynamic::Type::STRING) {
+    } else if (oid_type == dynamic::Type::kStringType) {
       auto builder =
           std::dynamic_pointer_cast<vineyard::TensorBuilder<std::string>>(
               base_builder);

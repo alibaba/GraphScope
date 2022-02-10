@@ -5,13 +5,13 @@ FROM ubuntu:20.04
 
 # shanghai zoneinfo
 ENV TZ=Asia/Shanghai
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone 
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # apt install dependencies
 # openjdk-8-jdk perl maven for GIE
 RUN apt update -y && apt install -y \
     ca-certificates ccache cmake curl etcd git \
-    libbrotli-dev libbz2-dev libcurl4-openssl-dev libdouble-conversion-dev libevent-dev libgflags-dev \
+    libbrotli-dev libbz2-dev libcurl4-openssl-dev libevent-dev libgflags-dev \
     libboost-all-dev libgoogle-glog-dev libgrpc-dev libgrpc++-dev libgtest-dev libgsasl7-dev \
     libtinfo5 libkrb5-dev liblz4-dev libprotobuf-dev librdkafka-dev libre2-dev libsnappy-dev \
     libssl-dev libunwind-dev libutf8proc-dev libxml2-dev libz-dev libzstd-dev lsb-release maven openjdk-8-jdk \
@@ -36,29 +36,6 @@ RUN wget https://apache.jfrog.io/artifactory/arrow/$(lsb_release --id --short | 
     apt update -y && \
     apt install -y libarrow-dev=3.0.0-1 libarrow-python-dev=3.0.0-1 && \
     rm ./apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
-
-# fmt v7.0.3, required by folly
-RUN cd /tmp && \
-    wget https://github.com/fmtlib/fmt/archive/7.0.3.tar.gz && \
-    tar zxvf 7.0.3.tar.gz && \
-    cd fmt-7.0.3/ && \
-    mkdir build && \
-    cd build && \
-    cmake .. -DBUILD_SHARED_LIBS=ON && \
-    make install -j && \
-    cd /tmp && \
-    rm -fr /tmp/7.0.3.tar.gz /tmp/fmt-7.0.3
-
-# folly v2020.10.19.00
-RUN cd /tmp && \
-    wget https://github.com/facebook/folly/archive/v2020.10.19.00.tar.gz && \
-    tar zxvf v2020.10.19.00.tar.gz && \
-    cd folly-2020.10.19.00 && mkdir _build && \
-    cd _build && \
-    cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON .. && \
-    make install -j && \
-    cd /tmp && \
-    rm -fr /tmp/v2020.10.19.00.tar.gz /tmp/folly-2020.10.19.00
 
 # zookeeper
 RUN wget https://archive.apache.org/dist/zookeeper/zookeeper-3.4.14/zookeeper-3.4.14.tar.gz && \

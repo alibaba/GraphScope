@@ -28,14 +28,13 @@ limitations under the License.
 namespace gs {
 
 template <typename FRAG_T>
-class KCoreContext
-    : public grape::VertexDataContext<FRAG_T, typename FRAG_T::oid_t> {
+class KCoreContext : public grape::VertexDataContext<FRAG_T, int> {
  public:
   using oid_t = typename FRAG_T::oid_t;
   using vid_t = typename FRAG_T::vid_t;
 
   explicit KCoreContext(const FRAG_T& fragment)
-      : grape::VertexDataContext<FRAG_T, typename FRAG_T::oid_t>(fragment) {}
+      : grape::VertexDataContext<FRAG_T, int>(fragment) {}
 
   typename FRAG_T::template vertex_array_t<std::shared_ptr<std::atomic_int>>
       degrees;

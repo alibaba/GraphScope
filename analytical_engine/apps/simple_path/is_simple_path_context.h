@@ -22,12 +22,11 @@
 #include <utility>
 #include <vector>
 
-#include "folly/dynamic.h"
-#include "folly/json.h"
 #include "grape/grape.h"
 
 #include "apps/boundary/utils.h"
 #include "core/context/tensor_context.h"
+#include "core/object/dynamic.h"
 
 namespace gs {
 
@@ -56,8 +55,9 @@ class IsSimplePathContext : public TensorContext<FRAG_T, bool> {
     vertex_t source;
     counter = 0;
     vid_t p1, p2;
-    folly::dynamic path_nodes_array = folly::parseJson(nodes_json);
-    for (const auto& node : path_nodes_array) {
+    dynamic::Value path_nodes_array;
+    dynamic::Parse(nodes_json, path_nodes_array);
+    for (auto& node : path_nodes_array) {
       counter++;
       if (!frag.Oid2Gid(dynamic_to_oid<oid_t>(node), p1)) {
         LOG(ERROR) << "Input oid error" << std::endl;

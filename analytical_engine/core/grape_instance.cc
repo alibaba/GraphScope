@@ -21,11 +21,6 @@
 #include "boost/algorithm/string.hpp"
 #include "boost/algorithm/string/split.hpp"
 
-#ifdef NETWORKX
-#include "folly/dynamic.h"
-#include "folly/json.h"
-#endif
-
 #include "vineyard/io/io/io_factory.h"
 
 #ifdef ENABLE_JAVA_SDK
@@ -33,6 +28,9 @@
 #include "core/context/java_pie_property_context.h"
 #endif
 
+#ifdef NETWORKX
+#include "core/object/dynamic.h"
+#endif
 #include "core/context/tensor_context.h"
 #include "core/context/vertex_data_context.h"
 #include "core/context/vertex_property_context.h"
@@ -45,6 +43,7 @@
 #include "core/object/i_fragment_wrapper.h"
 #include "core/object/projector.h"
 #include "core/server/rpc_utils.h"
+#include "core/utils/fragment_traits.h"
 #include "proto/graphscope/proto/types.pb.h"
 
 namespace gs {
@@ -280,12 +279,15 @@ bl::result<void> GrapeInstance::modifyVertices(const rpc::GSParams& params) {
             ", graph id: " + graph_name);
   }
 
-  BOOST_LEAF_AUTO(attr_json, params.Get<std::string>(rpc::PROPERTIES));
-  auto common_attr = folly::parseJson(attr_json);
+  BOOST_LEAF_AUTO(common_attr_json, params.Get<std::string>(rpc::PROPERTIES));
+  dynamic::Value common_attr, nodes;
+  // the common attribute for all nodes to be modified
+  dynamic::Parse(common_attr_json, common_attr);
   BOOST_LEAF_AUTO(nodes_json, params.Get<std::string>(rpc::NODES));
-  folly::dynamic nodes = folly::parseJson(nodes_json);
+  dynamic::Parse(nodes_json, nodes);
   auto fragment =
       std::static_pointer_cast<DynamicFragment>(wrapper->fragment());
+
   fragment->ModifyVertices(nodes, common_attr, modify_type);
   return {};
 #else
@@ -310,14 +312,16 @@ bl::result<void> GrapeInstance::modifyEdges(const rpc::GSParams& params) {
             std::to_string(graph_type) + ", graph name: " + graph_name);
   }
 
-  BOOST_LEAF_AUTO(attr_json, params.Get<std::string>(rpc::PROPERTIES));
-  auto common_attr = folly::parseJson(attr_json);
+  BOOST_LEAF_AUTO(common_attr_json, params.Get<std::string>(rpc::PROPERTIES));
+  dynamic::Value common_attr, edges;
+  // the common attribute for all edges to be modified
+  dynamic::Parse(common_attr_json, common_attr);
   std::string weight = "";
   if (params.HasKey(rpc::EDGE_KEY)) {
     BOOST_LEAF_AUTO(weight, params.Get<std::string>(rpc::EDGE_KEY));
   }
   BOOST_LEAF_AUTO(edges_json, params.Get<std::string>(rpc::EDGES));
-  folly::dynamic edges = folly::parseJson(edges_json);
+  dynamic::Parse(edges_json, edges);
   auto fragment =
       std::static_pointer_cast<DynamicFragment>(wrapper->fragment());
   fragment->ModifyEdges(edges, common_attr, modify_type, weight);
@@ -829,25 +833,27 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::induceSubGraph(
   VLOG(1) << "Inducing subgraph from " << src_graph_name
           << ", graph name: " << sub_graph_name;
 
-  std::unordered_set<DynamicFragment::oid_t> induced_vertices;
+  std::vector<DynamicFragment::oid_t> induced_vertices;
   std::vector<std::pair<DynamicFragment::oid_t, DynamicFragment::oid_t>>
       induced_edges;
   if (params.HasKey(rpc::NODES)) {
     // induce subgraph from nodes.
     BOOST_LEAF_AUTO(nodes_json, params.Get<std::string>(rpc::NODES));
-    folly::dynamic nodes = folly::parseJson(nodes_json);
-    induced_vertices.reserve(nodes.size());
-    for (const auto& v : nodes) {
-      induced_vertices.insert(std::move(v));
+    dynamic::Value nodes;
+    dynamic::Parse(nodes_json, nodes);
+    induced_vertices.reserve(nodes.Size());
+    for (auto& v : nodes) {
+      induced_vertices.push_back(dynamic::Value(v));
     }
   } else if (params.HasKey(rpc::EDGES)) {
     // induce subgraph from edges.
     BOOST_LEAF_AUTO(edges_json, params.Get<std::string>(rpc::EDGES));
-    folly::dynamic edges = folly::parseJson(edges_json);
-    induced_edges.reserve(edges.size());
+    dynamic::Value edges;
+    dynamic::Parse(edges_json, edges);
+    induced_edges.reserve(edges.Size());
     for (const auto& e : edges) {
-      induced_vertices.insert(e[0]);
-      induced_vertices.insert(e[1]);
+      induced_vertices.push_back(dynamic::Value(e[0]));
+      induced_vertices.push_back(dynamic::Value(e[1]));
       induced_edges.emplace_back(std::move(e[0]), std::move(e[1]));
     }
   }
@@ -857,16 +863,20 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::induceSubGraph(
   auto sub_vm_ptr =
       std::make_shared<typename DynamicFragment::vertex_map_t>(comm_spec_);
   sub_vm_ptr->Init();
+  grape::Communicator comm;
+  comm.InitCommunicator(comm_spec_.comm());
   typename DynamicFragment::partitioner_t partitioner;
   partitioner.Init(fragment->fnum());
   typename DynamicFragment::vid_t gid;
-  for (auto& v : induced_vertices) {
-    auto fid = partitioner.GetPartitionId(v);
-    if (fid == fragment->fid() && fragment->HasNode(v)) {
+  for (const auto& v : induced_vertices) {
+    bool alive_in_frag = fragment->HasNode(v);
+    bool alive = false;
+    comm.Sum(alive_in_frag, alive);
+    if (alive) {
+      auto fid = partitioner.GetPartitionId(v);
       sub_vm_ptr->AddVertex(fid, v, gid);
     }
   }
-  sub_vm_ptr->Construct();
 
   auto sub_graph_def = src_wrapper->graph_def();
   sub_graph_def.set_key(sub_graph_name);

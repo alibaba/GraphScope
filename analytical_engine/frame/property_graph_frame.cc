@@ -28,6 +28,7 @@
 #include "core/loader/dynamic_to_arrow_converter.h"
 #include "core/object/fragment_wrapper.h"
 #include "core/server/rpc_utils.h"
+#include "core/utils/fragment_traits.h"
 #include "core/vertex_map/arrow_projected_vertex_map.h"
 #include "proto/graphscope/proto/attr_value.pb.h"
 #include "proto/graphscope/proto/graph_def.pb.h"
@@ -173,7 +174,7 @@ void ToArrowFragment(
 
         BOOST_LEAF_AUTO(oid_type, dynamic_frag->GetOidType(comm_spec));
 
-        if (oid_type == folly::dynamic::Type::INT64 &&
+        if (oid_type == gs::dynamic::Type::kInt64Type &&
             !std::is_same<oid_t, int32_t>::value &&
             !std::is_same<oid_t, int64_t>::value) {
           RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
@@ -182,7 +183,7 @@ void ToArrowFragment(
                               std::string(vineyard::TypeName<oid_t>::Get()));
         }
 
-        if (oid_type == folly::dynamic::Type::STRING &&
+        if (oid_type == gs::dynamic::Type::kStringType &&
             !std::is_same<oid_t, std::string>::value) {
           RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
                           "The oid type of DynamicFragment is string, but the "

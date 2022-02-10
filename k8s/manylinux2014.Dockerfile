@@ -4,7 +4,7 @@
 FROM registry.cn-hongkong.aliyuncs.com/graphscope/manylinux2014:2021-10-14-14ac00e
 
 # yum install dependencies
-RUN yum install -y autoconf m4 git krb5-devel perl-IPC-Cmd \
+RUN yum install -y autoconf m4 git krb5-devel perl-IPC-Cmd rapidjson-devel \
         libcurl-devel libevent-devel libgsasl-devel libunwind-devel.x86_64 \
         libuuid-devel libxml2-devel libzip libzip-devel minizip minizip-devel \
         make net-tools rsync telnet unzip vim wget which zip bind-utils sudo && \
@@ -191,40 +191,6 @@ RUN cd /tmp && \
     make install && \
     cd /tmp && \
     rm -fr /tmp/grpc
-
-# fmt v7.0.3, required by folly
-RUN cd /tmp && \
-    wget -q https://github.com/fmtlib/fmt/archive/7.0.3.tar.gz && \
-    tar zxvf 7.0.3.tar.gz && \
-    cd fmt-7.0.3/ && \
-    mkdir build && \
-    cd build && \
-    cmake .. -DBUILD_SHARED_LIBS=ON -DFMT_TEST=OFF && \
-    make install -j && \
-    cd /tmp && \
-    rm -fr /tmp/7.0.3.tar.gz /tmp/fmt-7.0.3
-
-# double conversion v3.1.5, required by folly
-RUN cd /tmp && \
-  wget -q https://github.com/google/double-conversion/archive/refs/tags/v3.1.5.tar.gz && \
-  tar zxvf v3.1.5.tar.gz && \
-  cd double-conversion-3.1.5 && \
-  mkdir build && \
-  cd build && \
-  cmake -DBUILD_SHARED_LIBS=ON .. && \
-  make install -j && \
-  rm -fr /tmp/v3.1.5.tar.gz /tmp/double-conversion-3.1.5
-
-# folly v2020.10.19.00
-RUN cd /tmp && \
-    wget -q https://github.com/facebook/folly/archive/v2020.10.19.00.tar.gz && \
-    tar zxvf v2020.10.19.00.tar.gz && \
-    cd folly-2020.10.19.00 && mkdir _build && \
-    cd _build && \
-    cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON .. && \
-    make install -j && \
-    cd /tmp && \
-    rm -fr /tmp/v2020.10.19.00.tar.gz /tmp/folly-2020.10.19.00
 
 # install openmpi v4.0.5 to /opt/openmpi and link to /usr/local
 RUN cd /tmp && \
