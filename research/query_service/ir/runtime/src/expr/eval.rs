@@ -763,6 +763,8 @@ mod tests {
             "@0.hobbies within [\"football\", \"guitar\", \"chess\"]", // true
             "[@0.name, @0.age]",                           // [\"John\"", 31]
             "{@0.name, @0.age}",                           // {"name": "John", "age": 31}
+            "@0.~all", // {age = 31, name = John, birthday = 19900416, hobbies = [football, guitar]]}
+            "{@0.~all}", // {~all, {age = 31, name = John, birthday = 19900416, hobbies = [football, guitar]]}}
         ];
 
         let expected: Vec<Object> = vec![
@@ -783,6 +785,33 @@ mod tests {
                     (object!(vec![object!(0), object!("age")]), object!(31)),
                     (object!(vec![object!(0), object!("name")]), object!("John")),
                 ]
+                .into_iter()
+                .collect(),
+            ),
+            Object::KV(
+                vec![
+                    (object!("age"), object!(31)),
+                    (object!("name"), object!("John")),
+                    (object!("birthday"), object!(19900416)),
+                    (object!("hobbies"), object!(vec!["football", "guitar"])),
+                ]
+                .into_iter()
+                .collect(),
+            ),
+            Object::KV(
+                vec![(
+                    object!(vec![object!(0), object!("~all")]),
+                    Object::KV(
+                        vec![
+                            (object!("age"), object!(31)),
+                            (object!("name"), object!("John")),
+                            (object!("birthday"), object!(19900416)),
+                            (object!("hobbies"), object!(vec!["football", "guitar"])),
+                        ]
+                        .into_iter()
+                        .collect(),
+                    ),
+                )]
                 .into_iter()
                 .collect(),
             ),
