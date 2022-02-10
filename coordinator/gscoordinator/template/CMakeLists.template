@@ -228,17 +228,6 @@ if(LIBUNWIND_FOUND)
     add_definitions(-DWITH_LIBUNWIND)
 endif()
 
-# find folly--------------------------------------------------------------------
-if (NETWORKX)
-    if(GRAPHSCOPE_ANALYTICAL_HOME)
-        include("${ANALYTICAL_ENGINE_HOME}/${CMAKE_INSTALL_LIBDIR}/cmake/graphscope-analytical/cmake/FindFolly.cmake")
-        include("${ANALYTICAL_ENGINE_HOME}/${CMAKE_INSTALL_LIBDIR}/cmake/graphscope-analytical/cmake/FindDoubleConversion.cmake")
-    else()
-        include("${ANALYTICAL_ENGINE_HOME}/cmake/FindFolly.cmake")
-        include("${ANALYTICAL_ENGINE_HOME}/cmake/FindDoubleConversion.cmake")
-    endif()
-endif ()
-
 # include Analytical Engine-----------------------------------------------------
 if(GRAPHSCOPE_ANALYTICAL_HOME)
     include_directories("${GRAPHSCOPE_ANALYTICAL_INCLUDE_DIRS}")
