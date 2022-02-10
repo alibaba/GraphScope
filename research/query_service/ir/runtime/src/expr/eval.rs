@@ -23,7 +23,7 @@ use dyn_type::{BorrowObject, Object};
 use ir_common::error::{ParsePbError, ParsePbResult};
 use ir_common::expr_parse::to_suffix_expr;
 use ir_common::generated::common as common_pb;
-use ir_common::{NameOrId, ID_KEY, LABEL_KEY, LENGTH_KEY};
+use ir_common::{NameOrId, ALL_KEY, ID_KEY, LABEL_KEY, LENGTH_KEY};
 
 use crate::expr::eval_pred::EvalPred;
 use crate::expr::{ExprEvalError, ExprEvalResult};
@@ -435,6 +435,25 @@ impl Evaluate for Operand {
                                         .unwrap_or(Object::None)
                                 }
                                 PropKey::Len => result = element.len().into(),
+                                PropKey::All => {
+                                    if let Some(details) = element.details() {
+                                        result = details
+                                            .get_all_properties()
+                                            .map(|obj| {
+                                                obj.into_iter()
+                                                    .map(|(key, value)| {
+                                                        let obj_key: Object = match key {
+                                                            NameOrId::Str(str) => str.into(),
+                                                            NameOrId::Id(id) => id.into(),
+                                                        };
+                                                        (obj_key, value)
+                                                    })
+                                                    .collect::<Vec<(Object, Object)>>()
+                                                    .into()
+                                            })
+                                            .unwrap_or(Object::None)
+                                    }
+                                }
                                 PropKey::Key(key) => {
                                     if let Some(details) = element.details() {
                                         result = details
@@ -479,6 +498,7 @@ impl Evaluate for Operand {
                                     PropKey::Id => obj2 = object!(ID_KEY),
                                     PropKey::Label => obj2 = object!(LABEL_KEY),
                                     PropKey::Len => obj2 = object!(LENGTH_KEY),
+                                    PropKey::All => obj2 = object!(ALL_KEY),
                                     PropKey::Key(key) => match key {
                                         NameOrId::Str(str) => obj2 = object!(str.as_str()),
                                         NameOrId::Id(id) => obj2 = object!(*id),
