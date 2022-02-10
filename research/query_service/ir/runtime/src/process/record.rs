@@ -259,6 +259,18 @@ impl Element for RecordElement {
         }
     }
 
+    fn len(&self) -> usize {
+        match self {
+            RecordElement::OnGraph(graph_obj) => graph_obj.len(),
+            RecordElement::OffGraph(obj) => match obj {
+                CommonObject::None => 0,
+                CommonObject::Prop(obj) => obj.len(),
+                CommonObject::Count(_) => 1,
+                CommonObject::Agg(obj) => obj.len(),
+            },
+        }
+    }
+
     fn as_borrow_object(&self) -> BorrowObject {
         match self {
             RecordElement::OnGraph(graph_obj) => graph_obj.as_borrow_object(),

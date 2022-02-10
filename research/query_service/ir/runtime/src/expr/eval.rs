@@ -434,12 +434,7 @@ impl Evaluate for Operand {
                                         })
                                         .unwrap_or(Object::None)
                                 }
-                                PropKey::Len => {
-                                    result = element
-                                        .as_graph_element()
-                                        .map(|g| (g.len() as u64).into())
-                                        .unwrap_or(Object::None)
-                                }
+                                PropKey::Len => result = element.len().into(),
                                 PropKey::Key(key) => {
                                     if let Some(details) = element.details() {
                                         result = details

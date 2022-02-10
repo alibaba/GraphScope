@@ -51,6 +51,10 @@ impl Element for Vertex {
         Some(self)
     }
 
+    fn len(&self) -> usize {
+        1
+    }
+
     fn as_borrow_object(&self) -> BorrowObject {
         self.id().into()
     }
@@ -63,10 +67,6 @@ impl GraphElement for Vertex {
 
     fn label(&self) -> Option<&NameOrId> {
         self.label.as_ref()
-    }
-
-    fn len(&self) -> usize {
-        0
     }
 }
 

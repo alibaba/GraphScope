@@ -31,37 +31,65 @@ pub use vertex::Vertex;
 use crate::graph::property::DynDetails;
 use crate::graph::ID;
 
-/// A field that is an element
+/// An `Element` is an abstraction of the data filed in an IR `Record`.
 pub trait Element {
+    /// To obtain the data maintained by the element, mostly is a hash-table with key-value mappings,
+    /// `None` by default, if there is no data.
     fn details(&self) -> Option<&DynDetails> {
         None
     }
+    /// Try to turn the `Element` into a `GraphElement`,
+    /// `None` by default, if it is not a `GraphElement`
     fn as_graph_element(&self) -> Option<&dyn GraphElement> {
         None
     }
+    /// The length of the `Element`
+    fn len(&self) -> usize;
+    /// Turn the `Element` into a `BorrowObject`.
     fn as_borrow_object(&self) -> BorrowObject;
 }
 
-/// A field that is further a graph element
+/// `GraphElement` is a special `Element` with extra properties of `id` and `label`.
 pub trait GraphElement: Element {
     fn id(&self) -> ID;
     fn label(&self) -> Option<&NameOrId>;
-    fn len(&self) -> usize;
 }
 
 impl Element for () {
+    fn len(&self) -> usize {
+        0
+    }
+
     fn as_borrow_object(&self) -> BorrowObject {
         BorrowObject::None
     }
 }
 
 impl Element for Object {
+    fn len(&self) -> usize {
+        match self {
+            Object::None => 0,
+            Object::Vector(v) => v.len(),
+            Object::KV(kv) => kv.len(),
+            _ => 1,
+        }
+    }
+
     fn as_borrow_object(&self) -> BorrowObject {
         self.as_borrow()
     }
 }
 
 impl<'a> Element for BorrowObject<'a> {
+    fn len(&self) -> usize {
+        match self {
+            BorrowObject::None => 0,
+            BorrowObject::Vector(v) => v.len(),
+            BorrowObject::KV(kv) => kv.len(),
+            _ => 1,
+        }
+    }
+
     fn as_borrow_object(&self) -> BorrowObject<'a> {
         *self
     }
@@ -101,6 +129,14 @@ impl Element for GraphObject {
         }
     }
 
+    fn len(&self) -> usize {
+        match self {
+            GraphObject::V(v) => v.len(),
+            GraphObject::E(e) => e.len(),
+            GraphObject::P(p) => p.len(),
+        }
+    }
+
     fn as_borrow_object(&self) -> BorrowObject {
         match self {
             GraphObject::V(v) => v.as_borrow_object(),
@@ -124,14 +160,6 @@ impl GraphElement for GraphObject {
             GraphObject::V(v) => v.label(),
             GraphObject::E(e) => e.label(),
             GraphObject::P(p) => p.label(),
-        }
-    }
-
-    fn len(&self) -> usize {
-        match self {
-            GraphObject::V(v) => v.len(),
-            GraphObject::E(e) => e.len(),
-            GraphObject::P(p) => p.len(),
         }
     }
 }
