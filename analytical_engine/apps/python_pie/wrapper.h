@@ -275,7 +275,7 @@ class PythonPIEComputeContext {
   using vd_t = VD_T;
 
   explicit PythonPIEComputeContext(
-      std::vector<grape::VertexArray<VD_T, vid_t>>& data)
+      std::vector<grape::VertexArray<typename FRAG_T::vertices, VD_T>>& data)
       : superstep_(0), data_(data) {}
   ~PythonPIEComputeContext() {}
 
@@ -330,7 +330,7 @@ class PythonPIEComputeContext {
     return partial_result_[label].IsUpdated(v);
   }
 
-  grape::SyncBuffer<VD_T, vid_t>& partial_result(label_id_t label) {
+  grape::SyncBuffer<typename FRAG_T::vertices_t, VD_T>& partial_result(label_id_t label) {
     return partial_result_[label];
   }
 
@@ -356,8 +356,8 @@ class PythonPIEComputeContext {
   PropertyAutoMessageManager<fragment_t>* message_manager_;
 
   // message auto parallel
-  std::vector<grape::VertexArray<VD_T, vid_t>>& data_;
-  std::vector<grape::SyncBuffer<VD_T, vid_t>> partial_result_;
+  std::vector<grape::VertexArray<typename FRAG_T::vertices_t, VD_T>>& data_;
+  std::vector<grape::SyncBuffer<typename FRAG_T::vertices_t, VD_T>> partial_result_;
 };
 
 template <typename FRAG_T>

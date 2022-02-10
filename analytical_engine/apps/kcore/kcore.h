@@ -42,7 +42,7 @@ class KCore : public grape::ParallelAppBase<FRAG_T, KCoreContext<FRAG_T>>,
   using vid_t = typename FRAG_T::vid_t;
 
   void UpdateDegree(const fragment_t& frag,
-                    const grape::DenseVertexSet<vid_t>& frontier,
+                    const grape::DenseVertexSet<typename FRAG_T::vertices_t>& frontier,
                     typename FRAG_T::template vertex_array_t<
                         std::shared_ptr<std::atomic_int>>& degrees) {
     ForEach(frontier, [&degrees, &frag](int tid, vertex_t u) {

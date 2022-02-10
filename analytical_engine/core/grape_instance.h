@@ -192,10 +192,8 @@ class GrapeInstance : public Subscriber {
 
     if (comm_spec_.worker_id() == grape::kCoordinatorRank) {
       id = vineyard::random_string(8);
-      grape::BcastSend(id, MPI_COMM_WORLD);
-    } else {
-      grape::BcastRecv(id, MPI_COMM_WORLD, grape::kCoordinatorRank);
     }
+    grape::sync_comm::Bcast(id, grape::kCoordinatorRank, MPI_COMM_WORLD);
     return id;
   }
 

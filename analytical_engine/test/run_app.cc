@@ -99,9 +99,17 @@ int main(int argc, char* argv[]) {
   std::string name = FLAGS_application;
   if (name.find("sssp") != std::string::npos ||
       name.find("eigenvector") != std::string::npos) {
-    gs::Run<int64_t, uint32_t, grape::EmptyType, double>();
+    if (FLAGS_segmented_partition) {
+      gs::Run<int64_t, uint32_t, grape::EmptyType, double, grape::SegmentedPartitioner<int64_t>>();
+    } else {
+      gs::Run<int64_t, uint32_t, grape::EmptyType, double, grape::HashPartitioner<int64_t>>();
+    }
   } else {
-    gs::Run<int64_t, uint32_t, grape::EmptyType, grape::EmptyType>();
+    if (FLAGS_segmented_partition) {
+      gs::Run<int64_t, uint32_t, grape::EmptyType, grape::EmptyType, grape::SegmentedPartitioner<int64_t>>();
+    } else {
+      gs::Run<int64_t, uint32_t, grape::EmptyType, grape::EmptyType, grape::HashPartitioner<int64_t>>();
+    }
   }
 
   gs::Finalize();

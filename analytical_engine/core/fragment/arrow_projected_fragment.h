@@ -30,6 +30,7 @@
 #include "vineyard/common/util/version.h"
 #include "vineyard/graph/fragment/arrow_fragment.h"
 #include "vineyard/graph/vertex_map/arrow_vertex_map.h"
+#include "grape/fragment/fragment_base.h"
 
 #include "core/context/context_protocols.h"
 #include "core/fragment/arrow_projected_fragment_base.h"
@@ -341,11 +342,17 @@ class ArrowProjectedFragment
       public vineyard::BareRegistered<
           ArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T>> {
  public:
+
   using oid_t = OID_T;
   using vid_t = VID_T;
   using internal_oid_t = typename vineyard::InternalType<oid_t>::type;
   using eid_t = vineyard::property_graph_types::EID_TYPE;
   using vertex_range_t = grape::VertexRange<vid_t>;
+  using inner_vertices_t = vertex_range_t;
+  using outer_vertices_t = vertex_range_t;
+  using vertices_t = vertex_range_t;
+  using sub_vertices_t = vertex_range_t;
+
   using vertex_t = grape::Vertex<vid_t>;
   using nbr_t = arrow_projected_fragment_impl::Nbr<vid_t, eid_t, EDATA_T>;
   using nbr_unit_t = vineyard::property_graph_utils::NbrUnit<vid_t, eid_t>;
@@ -364,7 +371,13 @@ class ArrowProjectedFragment
   using eid_array_t = typename vineyard::ConvertToArrowType<eid_t>::ArrayType;
 
   template <typename DATA_T>
-  using vertex_array_t = grape::VertexArray<DATA_T, vid_t>;
+  using vertex_array_t = grape::VertexArray<vertices_t, DATA_T>;
+
+  template <typename DATA_T>
+  using inner_vertex_array_t = grape::VertexArray<inner_vertices_t, DATA_T>;
+
+  template <typename DATA_T>
+  using outer_vertex_array_t = grape::VertexArray<outer_vertices_t, DATA_T>;
 
   static constexpr grape::LoadStrategy load_strategy =
       grape::LoadStrategy::kBothOutIn;
@@ -606,18 +619,18 @@ class ArrowProjectedFragment
     initPointers();
   }
 
-  void PrepareToRunApp(grape::MessageStrategy strategy, bool need_split_edges) {
-    if (strategy == grape::MessageStrategy::kAlongEdgeToOuterVertex) {
+  void PrepareToRunApp(const grape::CommSpec& comm_spec, grape::PrepareConf conf) {
+    if (conf.message_strategy == grape::MessageStrategy::kAlongEdgeToOuterVertex) {
       initDestFidList(true, true, iodst_, iodoffset_);
-    } else if (strategy ==
+    } else if (conf.message_strategy ==
                grape::MessageStrategy::kAlongIncomingEdgeToOuterVertex) {
       initDestFidList(true, false, idst_, idoffset_);
-    } else if (strategy ==
+    } else if (conf.message_strategy ==
                grape::MessageStrategy::kAlongOutgoingEdgeToOuterVertex) {
       initDestFidList(false, true, odst_, odoffset_);
     }
 
-    if (need_split_edges) {
+    if (conf.need_split_edges || conf.need_split_edges_by_fragment) {
       ie_spliters_ptr_.clear();
       oe_spliters_ptr_.clear();
       if (directed_) {
@@ -639,7 +652,9 @@ class ArrowProjectedFragment
     }
 
     initOuterVertexRanges();
-    initMirrorInfo();
+    if (conf.need_mirror_info) {
+      initMirrorInfo();
+    }
   }
 
   inline fid_t fid() const { return fid_; }
@@ -946,7 +961,7 @@ class ArrowProjectedFragment
     std::set<fid_t> dstset;
     std::vector<int> id_num(ivnum_, 0);
 
-    vertex_t v = inner_vertices_.begin();
+    vertex_t v = *inner_vertices_.begin();
     for (vid_t i = 0; i < ivnum_; ++i) {
       dstset.clear();
       if (in_edge) {
@@ -1026,11 +1041,11 @@ class ArrowProjectedFragment
     }
     CHECK_EQ(outer_vnum[fid_], 0);
     outer_vertex_offsets_.resize(fnum_ + 1);
-    outer_vertex_offsets_[0] = outer_vertices_.begin().GetValue();
+    outer_vertex_offsets_[0] = outer_vertices_.begin_value();
     for (fid_t i = 0; i < fnum_; ++i) {
       outer_vertex_offsets_[i + 1] = outer_vertex_offsets_[i] + outer_vnum[i];
     }
-    CHECK_EQ(outer_vertex_offsets_[fnum_], outer_vertices_.end().GetValue());
+    CHECK_EQ(outer_vertex_offsets_[fnum_], outer_vertices_.end_value());
   }
 
   void initMirrorInfo() {

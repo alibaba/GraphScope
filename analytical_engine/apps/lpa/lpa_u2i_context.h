@@ -81,10 +81,10 @@ class LPAU2IContext : public LabeledVertexPropertyContext<FRAG_T> {
 
   uint32_t step;
   uint32_t max_round;
-  std::vector<grape::VertexArray<label_t, vid_t>> label;
-  std::vector<grape::VertexArray<vid_t, vid_t>> in_degree;
-  std::vector<grape::VertexArray<vid_t, vid_t>> out_degree;
-  std::vector<grape::VertexArray<vid_t, vid_t>> out_nbr_in_degree_sum;
+  std::vector<grape::VertexArray<typename FRAG_T::vertices_t, label_t>> label;
+  std::vector<grape::VertexArray<typename FRAG_T::inner_vertices_t, vid_t>> in_degree;
+  std::vector<grape::VertexArray<typename FRAG_T::inner_vertices_t, vid_t>> out_degree;
+  std::vector<grape::VertexArray<typename FRAG_T::inner_vertices_t, vid_t>> out_nbr_in_degree_sum;
   std::vector<int64_t> label_column_indices;
   static constexpr uint32_t prop_num = 2;
 };

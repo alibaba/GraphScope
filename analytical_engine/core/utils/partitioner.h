@@ -17,9 +17,9 @@
 #define ANALYTICAL_ENGINE_CORE_UTILS_PARTITIONER_H_
 
 #include "core/object/dynamic.h"
-#include "vineyard/graph/utils/partitioner.h"
+#include "grape/fragment/partitioner.h"
 
-namespace vineyard {
+namespace grape {
 
 #if defined(NETWORKX)
 template <>
@@ -28,12 +28,15 @@ class HashPartitioner<::gs::dynamic::Value> {
   using oid_t = ::gs::dynamic::Value;
 
   HashPartitioner() : fnum_(1) {}
-
-  void Init(fid_t fnum) { fnum_ = fnum; }
+  explicit HashPartitioner(size_t frag_num) : fnum_(frag_num) {}
 
   inline fid_t GetPartitionId(const oid_t& oid) const {
     size_t hash_value = std::hash<oid_t>()(oid);
     return static_cast<fid_t>(static_cast<uint64_t>(hash_value) % fnum_);
+  }
+
+  void SetPartitionId(const oid_t& oid, fid_t fid) {
+    LOG(FATAL) << "not support";
   }
 
   HashPartitioner& operator=(const HashPartitioner& other) {
@@ -52,10 +55,21 @@ class HashPartitioner<::gs::dynamic::Value> {
     return *this;
   }
 
+
+  template <typename IOADAPTOR_T>
+  void serialize(std::unique_ptr<IOADAPTOR_T>& writer) {
+    CHECK(writer->Write(&fnum_, sizeof(fid_t)));
+  }
+
+  template <typename IOADAPTOR_T>
+  void deserialize(std::unique_ptr<IOADAPTOR_T>& reader) {
+    CHECK(reader->Read(&fnum_, sizeof(fid_t)));
+  }
+
  private:
   fid_t fnum_;
 };
 #endif  // NETWORKX
 
-}  // namespace vineyard
+}  // namespace grape
 #endif  // ANALYTICAL_ENGINE_CORE_UTILS_PARTITIONER_H_

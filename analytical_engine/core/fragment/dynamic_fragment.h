@@ -736,7 +736,7 @@ class DynamicFragment {
   using const_adj_list_t = dynamic_fragment_impl::ConstAdjList<edata_t>;
   using adj_list_t = dynamic_fragment_impl::AdjList<edata_t>;
   using vertex_map_t = grape::GlobalVertexMap<oid_t, vid_t>;
-  using partitioner_t = vineyard::HashPartitioner<oid_t>;
+  using partitioner_t = typename vertex_map_t::partitioner_t;
   using vertex_range_t = grape::VertexVector<vid_t>;
   template <typename DATA_T>
   using vertex_array_t =
@@ -1531,8 +1531,6 @@ class DynamicFragment {
       oid_t src, dst;
       vid_t src_gid, dst_gid;
       fid_t src_fid, dst_fid;
-      partitioner_t partitioner;
-      partitioner.Init(fnum_);
       for (auto& e : edges_to_modify) {
         // the edge could be [src, dst] or [srs, dst, value] or [src, dst,
         // {"key": val}]
@@ -1546,11 +1544,11 @@ class DynamicFragment {
         }
         src = std::move(e[0]);
         dst = std::move(e[1]);
-        src_fid = partitioner.GetPartitionId(src);
-        dst_fid = partitioner.GetPartitionId(dst);
         if (modify_type == rpc::NX_ADD_EDGES) {
-          vm_ptr_->AddVertex(src_fid, src, src_gid);
-          vm_ptr_->AddVertex(dst_fid, dst, dst_gid);
+          vm_ptr_->AddVertex(src, src_gid);
+          vm_ptr_->AddVertex(dst, dst_gid);
+          src_fid = vm_ptr_->GetFidFromGid(src_gid);
+          dst_fid = vm_ptr_->GetFidFromGid(src_gid);
           if (src_fid == fid_ || duplicated()) {
             vertices.emplace_back(src_gid);
           }
@@ -1558,8 +1556,8 @@ class DynamicFragment {
             vertices.emplace_back(dst_gid);
           }
         } else {
-          if (!vm_ptr_->GetGid(src_fid, src, src_gid) ||
-              !vm_ptr_->GetGid(dst_fid, dst, dst_gid)) {
+          if (!vm_ptr_->GetGid(src, src_gid) ||
+              !vm_ptr_->GetGid(dst, dst_gid)) {
             continue;
           }
         }
@@ -1593,8 +1591,6 @@ class DynamicFragment {
     vertices.reserve(vertices_to_modify.Size());
     invalidCache();
     {
-      partitioner_t partitioner;
-      partitioner.Init(fnum_);
       oid_t oid;
       vid_t gid;
       vdata_t v_data;
@@ -1608,15 +1604,15 @@ class DynamicFragment {
         } else {
           oid = std::move(v);
         }
-        v_fid = partitioner.GetPartitionId(oid);
         if (modify_type == rpc::NX_ADD_NODES) {
-          vm_ptr_->AddVertex(v_fid, oid, gid);
+          vm_ptr_->AddVertex(oid, gid);
         } else {
           // UPDATE or DELETE, if not exist the node, continue.
-          if (!vm_ptr_->GetGid(v_fid, oid, gid)) {
+          if (!vm_ptr_->GetGid(oid, gid)) {
             continue;
           }
         }
+        v_fid = vm_ptr_->GetFidFromGid(gid);
         if (v_fid == fid_ ||
             (modify_type == rpc::NX_DEL_NODES &&
              ovg2i_.find(gid) != ovg2i_.end()) ||

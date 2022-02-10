@@ -47,7 +47,7 @@ using grape::MessageStrategy;
 using gs::PIEAggregateType;
 
 template <typename T>
-using VertexArray = grape::VertexArray<T, vid_t>;
+using VertexArray = grape::VertexArray<VertexRange, T>;
 }  // namespace python_grape
 
 #endif  // ANALYTICAL_ENGINE_APPS_PYTHON_PIE_EXPORT_H_

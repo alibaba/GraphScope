@@ -39,7 +39,7 @@ class KShellContext
 
   typename FRAG_T::template vertex_array_t<std::shared_ptr<std::atomic_int>>
       degrees;
-  grape::DenseVertexSet<vid_t> to_remove_vertices_k, to_remove_vertices_inc,
+  grape::DenseVertexSet<typename FRAG_T::inner_vertices_t> to_remove_vertices_k, to_remove_vertices_inc,
       remaining_vertices, next_remaining_vertices;
   int k;
   int curr_k;

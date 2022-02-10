@@ -67,7 +67,6 @@ class UnionIdParser {
   }
 
   ID_TYPE GenerateContinuousLid(ID_TYPE lid) const {
-    fid_t fid = vid_parser_.GetFid(lid);
     LabelIDT label_id = vid_parser_.GetLabelId(lid);
     int64_t offset = vid_parser_.GetOffset(lid);
 
@@ -347,7 +346,7 @@ class UnionDestList {
   explicit UnionDestList(const std::vector<grape::DestList>& dest_lists) {
     std::set<grape::fid_t> dstset;
     for (auto& dsts : dest_lists) {
-      grape::fid_t* ptr = dsts.begin;
+      const grape::fid_t* ptr = dsts.begin;
       while (ptr != dsts.end) {
         dstset.insert(*(ptr++));
       }
@@ -399,8 +398,19 @@ class ArrowFlattenedFragment {
   using label_id_t = typename fragment_t::label_id_t;
   using prop_id_t = vineyard::property_graph_types::PROP_ID_TYPE;
   using vertex_range_t = grape::VertexRange<vid_t>;
-  template <typename DATA_t>
-  using vertex_array_t = grape::VertexArray<DATA_t, vid_t>;
+  using inner_vertices_t = vertex_range_t;
+  using outer_vertices_t = vertex_range_t;
+  using vertices_t = vertex_range_t;
+
+  template <typename DATA_T>
+  using vertex_array_t = grape::VertexArray<vertices_t, DATA_T>;
+
+  template <typename DATA_T>
+  using inner_vertex_array_t = grape::VertexArray<inner_vertices_t, DATA_T>;
+
+  template <typename DATA_T>
+  using outer_vertex_array_t = grape::VertexArray<outer_vertices_t, DATA_T>;
+
   using adj_list_t =
       arrow_flattened_fragment_impl::UnionAdjList<vid_t, eid_t, edata_t>;
   using dest_list_t = arrow_flattened_fragment_impl::UnionDestList;

@@ -104,7 +104,7 @@ class SSSPAverageLength
     auto t1 = GetCurrentTime(), t2 = GetCurrentTime();
 #endif
     auto inner_vertices = frag.InnerVertices();
-    std::map<vid_t, grape::DenseVertexSet<vid_t>> updated_map;
+    std::map<vid_t, grape::DenseVertexSet<typename FRAG_T::inner_vertices_t>> updated_map;
     bool update_sum = false;
 
     pair_msg_t msg;

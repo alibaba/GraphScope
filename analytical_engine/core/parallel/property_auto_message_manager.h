@@ -306,7 +306,7 @@ class PropertyAutoMessageManager : public grape::DefaultMessageManager {
   template <typename T>
   inline void syncOnOuterVertexSend(const FRAG_T& frag, label_id_t label,
                                     grape::ISyncBuffer* buffer, int event_id) {
-    auto* bptr = dynamic_cast<grape::SyncBuffer<T, vid_t>*>(buffer);
+    auto* bptr = dynamic_cast<grape::SyncBuffer<typename FRAG_T::vertices_t, T>*>(buffer);
     auto inner_vertices = frag.InnerVertices(label);
     auto outer_vertices = frag.OuterVertices(label);
     std::vector<size_t> message_num(Base::fnum(), 0);
@@ -339,7 +339,7 @@ class PropertyAutoMessageManager : public grape::DefaultMessageManager {
 
   template <typename T>
   inline void syncOnVertexRecv(const FRAG_T& frag, grape::ISyncBuffer* buffer) {
-    auto* bptr = dynamic_cast<grape::SyncBuffer<T, vid_t>*>(buffer);
+    auto* bptr = dynamic_cast<grape::SyncBuffer<typename FRAG_T::vertices_t, T>*>(buffer);
 
     size_t message_num = 0;
     T rhs;

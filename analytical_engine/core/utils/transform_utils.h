@@ -216,7 +216,7 @@ inline void gather_archives(grape::InArchive& arc,
     char* ptr = arc.GetBuffer() + static_cast<ptrdiff_t>(old_length);
 
     for (grape::fid_t i = 1; i < comm_spec.fnum(); ++i) {
-      grape::recv_buffer<char>(ptr, static_cast<size_t>(gathered_length[i]),
+      grape::sync_comm::recv_buffer<char>(ptr, static_cast<size_t>(gathered_length[i]),
                                comm_spec.FragToWorker(i), comm_spec.comm(), 0);
       ptr += static_cast<ptrdiff_t>(gathered_length[i]);
     }
@@ -225,7 +225,7 @@ inline void gather_archives(grape::InArchive& arc,
     MPI_Gather(&local_length, 1, MPI_INT64_T, NULL, 1, MPI_INT64_T,
                comm_spec.FragToWorker(0), comm_spec.comm());
 
-    grape::send_buffer<char>(arc.GetBuffer() + static_cast<ptrdiff_t>(from),
+    grape::sync_comm::send_buffer<char>(arc.GetBuffer() + static_cast<ptrdiff_t>(from),
                              static_cast<size_t>(local_length),
                              comm_spec.FragToWorker(0), comm_spec.comm(), 0);
     arc.Resize(from);

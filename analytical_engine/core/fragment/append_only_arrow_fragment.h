@@ -277,6 +277,9 @@ class AppendOnlyArrowFragment
   using prop_id_t = vineyard::property_graph_types::PROP_ID_TYPE;
   using label_id_t = vineyard::property_graph_types::LABEL_ID_TYPE;
   using vertex_range_t = grape::VertexRange<vid_t>;
+  using inner_vertices_t = vertex_range_t;
+  using outer_vertices_t = vertex_range_t;
+  using vertices_t = vertex_range_t;
   using nbr_t = vineyard::property_graph_utils::OffsetNbr<vid_t, eid_t>;
   using nbr_unit_t = vineyard::property_graph_utils::NbrUnit<vid_t, eid_t>;
   using adj_list_t =
@@ -292,7 +295,13 @@ class AppendOnlyArrowFragment
   using eid_array_t = typename vineyard::ConvertToArrowType<eid_t>::ArrayType;
 
   template <typename DATA_T>
-  using vertex_array_t = grape::VertexArray<DATA_T, vid_t>;
+  using vertex_array_t = grape::VertexArray<vertices_t, DATA_T>;
+
+  template <typename DATA_T>
+  using inner_vertex_array_t = grape::VertexArray<inner_vertices_t, DATA_T>;
+
+  template <typename DATA_T>
+  using outer_vertex_array_t = grape::VertexArray<outer_vertices_t, DATA_T>;
 
 #if defined(VINEYARD_VERSION) && defined(VINEYARD_VERSION_MAJOR)
 #if VINEYARD_VERSION >= 2007
@@ -658,7 +667,7 @@ class AppendOnlyArrowFragment
 
   std::shared_ptr<vertex_map_t> GetVertexMap() { return vm_ptr_; }
 
-  void PrepareToRunApp(grape::MessageStrategy strategy, bool need_split_edges) {
+  void PrepareToRunApp(const grape::CommSpec& comm_spec, grape::PrepareConf conf) {
   }
 
   std::shared_ptr<extra_vertex_map_t> GetExtraVertexMap() {

@@ -160,17 +160,7 @@ void CreateAndQuery(const grape::CommSpec& comm_spec, const std::string efile,
   }
   std::shared_ptr<FRAG_T> fragment;
   if (datasource == "local") {
-    if (FLAGS_segmented_partition) {
-      fragment =
-          grape::LoadGraph<FRAG_T,
-                           grape::SegmentedPartitioner<typename FRAG_T::oid_t>>(
-              efile, vfile, comm_spec, graph_spec);
-    } else {
-      fragment =
-          grape::LoadGraph<FRAG_T,
-                           grape::HashPartitioner<typename FRAG_T::oid_t>>(
-              efile, vfile, comm_spec, graph_spec);
-    }
+    fragment = grape::LoadGraph<FRAG_T>(efile, vfile, comm_spec, graph_spec);
   } else {
     LOG(FATAL) << "Invalid datasource: " << datasource;
   }
@@ -193,7 +183,7 @@ void CreateAndQuery(const grape::CommSpec& comm_spec, const std::string efile,
   VLOG(1) << "Worker-" << comm_spec.worker_id() << " finished";
 }
 
-template <typename OID_T, typename VID_T, typename VDATA_T, typename EDATA_T>
+template <typename OID_T, typename VID_T, typename VDATA_T, typename EDATA_T, typename PARTITIONER_T>
 void Run() {
   grape::CommSpec comm_spec;
   comm_spec.Init(MPI_COMM_WORLD);
@@ -209,29 +199,30 @@ void Run() {
   }
   int fnum = comm_spec.fnum();
   std::string name = FLAGS_application;
+  using VertexMapType = grape::GlobalVertexMap<OID_T, VID_T, PARTITIONER_T>;
   if (name == "sssp") {
     using GraphType =
-        grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, double>;
+        grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, double, grape::LoadStrategy::kOnlyOut, VertexMapType>;
     using AppType = grape::SSSP<GraphType>;
     CreateAndQuery<GraphType, AppType, OID_T>(comm_spec, efile, vfile,
                                               out_prefix, FLAGS_datasource,
                                               fnum, spec, FLAGS_sssp_source);
   } else if (name == "sssp_has_path") {
     using GraphType =
-        grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, double>;
+        grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, double, grape::LoadStrategy::kOnlyOut, VertexMapType>;
     using AppType = gs::SSSPHasPath<GraphType>;
     CreateAndQuery<GraphType, AppType, OID_T>(
         comm_spec, efile, vfile, out_prefix, FLAGS_datasource, fnum, spec,
         FLAGS_sssp_source, FLAGS_sssp_target);
   } else if (name == "sssp_average_length") {
     using GraphType =
-        grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, double>;
+        grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, double, grape::LoadStrategy::kOnlyOut, VertexMapType>;
     using AppType = SSSPAverageLength<GraphType>;
     CreateAndQuery<GraphType, AppType>(comm_spec, efile, vfile, out_prefix,
                                        FLAGS_datasource, fnum, spec);
   } else if (name == "sssp_path") {
     using GraphType =
-        grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, double>;
+        grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, double, grape::LoadStrategy::kOnlyOut, VertexMapType>;
     using AppType = SSSPPath<GraphType>;
     CreateAndQuery<GraphType, AppType, OID_T>(comm_spec, efile, vfile,
                                               out_prefix, FLAGS_datasource,
@@ -239,21 +230,21 @@ void Run() {
   } else if (name == "cdlp_auto") {
     using GraphType =
         grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T,
-                                        grape::LoadStrategy::kBothOutIn>;
+                                        grape::LoadStrategy::kBothOutIn, VertexMapType>;
     using AppType = grape::CDLPAuto<GraphType>;
     CreateAndQuery<GraphType, AppType, int>(comm_spec, efile, vfile, out_prefix,
                                             FLAGS_datasource, fnum, spec, 10);
   } else if (name == "cdlp") {
     using GraphType =
         grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T,
-                                        grape::LoadStrategy::kBothOutIn>;
+                                        grape::LoadStrategy::kBothOutIn, VertexMapType>;
     using AppType = grape::CDLP<GraphType>;
     CreateAndQuery<GraphType, AppType, int>(comm_spec, efile, vfile, out_prefix,
                                             FLAGS_datasource, fnum, spec, 10);
   } else if (name == "sssp_auto") {
     using GraphType =
         grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, double,
-                                        grape::LoadStrategy::kBothOutIn>;
+                                        grape::LoadStrategy::kBothOutIn, VertexMapType>;
     using AppType = grape::SSSPAuto<GraphType>;
     CreateAndQuery<GraphType, AppType, OID_T>(comm_spec, efile, vfile,
                                               out_prefix, FLAGS_datasource,
@@ -261,35 +252,35 @@ void Run() {
   } else if (name == "wcc_auto") {
     using GraphType =
         grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T,
-                                        grape::LoadStrategy::kBothOutIn>;
+                                        grape::LoadStrategy::kBothOutIn, VertexMapType>;
     using AppType = grape::WCCAuto<GraphType>;
     CreateAndQuery<GraphType, AppType>(comm_spec, efile, vfile, out_prefix,
                                        FLAGS_datasource, fnum, spec);
   } else if (name == "wcc") {
     using GraphType =
         grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T,
-                                        grape::LoadStrategy::kBothOutIn>;
+                                        grape::LoadStrategy::kBothOutIn, VertexMapType>;
     using AppType = grape::WCC<GraphType>;
     CreateAndQuery<GraphType, AppType>(comm_spec, efile, vfile, out_prefix,
                                        FLAGS_datasource, fnum, spec);
   } else if (name == "lcc_auto") {
     using GraphType =
         grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T,
-                                        grape::LoadStrategy::kBothOutIn>;
+                                        grape::LoadStrategy::kBothOutIn, VertexMapType>;
     using AppType = grape::LCCAuto<GraphType>;
     CreateAndQuery<GraphType, AppType>(comm_spec, efile, vfile, out_prefix,
                                        FLAGS_datasource, fnum, spec);
   } else if (name == "lcc") {
     using GraphType =
         grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T,
-                                        grape::LoadStrategy::kBothOutIn>;
+                                        grape::LoadStrategy::kBothOutIn, VertexMapType>;
     using AppType = grape::LCC<GraphType>;
     CreateAndQuery<GraphType, AppType>(comm_spec, efile, vfile, out_prefix,
                                        FLAGS_datasource, fnum, spec);
   } else if (name == "bfs_auto") {
     using GraphType =
         grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T,
-                                        grape::LoadStrategy::kBothOutIn>;
+                                        grape::LoadStrategy::kBothOutIn, VertexMapType>;
     using AppType = grape::BFSAuto<GraphType>;
     CreateAndQuery<GraphType, AppType, OID_T>(comm_spec, efile, vfile,
                                               out_prefix, FLAGS_datasource,
@@ -297,7 +288,7 @@ void Run() {
   } else if (name == "bfs_parallel") {
     using GraphType =
         grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T,
-                                        grape::LoadStrategy::kBothOutIn>;
+                                        grape::LoadStrategy::kBothOutIn, VertexMapType>;
     using AppType = grape::BFS<GraphType>;
     CreateAndQuery<GraphType, AppType, OID_T>(comm_spec, efile, vfile,
                                               out_prefix, FLAGS_datasource,
@@ -305,7 +296,7 @@ void Run() {
   } else if (name == "pagerank_auto") {
     using GraphType =
         grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T,
-                                        grape::LoadStrategy::kBothOutIn>;
+                                        grape::LoadStrategy::kBothOutIn, VertexMapType>;
     using AppType = grape::PageRankAuto<GraphType>;
     CreateAndQuery<GraphType, AppType, double, int>(
         comm_spec, efile, vfile, out_prefix, FLAGS_datasource, fnum, spec, 0.85,
@@ -313,7 +304,7 @@ void Run() {
   } else if (name == "pagerank") {
     using GraphType =
         grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T,
-                                        grape::LoadStrategy::kBothOutIn>;
+                                        grape::LoadStrategy::kBothOutIn, VertexMapType>;
     using AppType = grape::PageRank<GraphType>;
     CreateAndQuery<GraphType, AppType, double, int>(
         comm_spec, efile, vfile, out_prefix, FLAGS_datasource, fnum, spec, 0.85,
@@ -321,7 +312,7 @@ void Run() {
   } else if (name == "kcore") {
     using GraphType =
         grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T,
-                                        grape::LoadStrategy::kBothOutIn>;
+                                        grape::LoadStrategy::kBothOutIn, VertexMapType>;
     using AppType = KCore<GraphType>;
     CreateAndQuery<GraphType, AppType>(comm_spec, efile, vfile, out_prefix,
                                        FLAGS_datasource, fnum, spec,
@@ -329,7 +320,7 @@ void Run() {
   } else if (name == "kshell") {
     using GraphType =
         grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T,
-                                        grape::LoadStrategy::kBothOutIn>;
+                                        grape::LoadStrategy::kBothOutIn, VertexMapType>;
     using AppType = KShell<GraphType>;
     CreateAndQuery<GraphType, AppType>(comm_spec, efile, vfile, out_prefix,
                                        FLAGS_datasource, fnum, spec,
@@ -337,7 +328,7 @@ void Run() {
   } else if (name == "hits") {
     using GraphType =
         grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T,
-                                        grape::LoadStrategy::kBothOutIn>;
+                                        grape::LoadStrategy::kBothOutIn, VertexMapType>;
     using AppType = HITS<GraphType>;
     CreateAndQuery<GraphType, AppType>(
         comm_spec, efile, vfile, out_prefix, FLAGS_datasource, fnum, spec,
@@ -368,7 +359,7 @@ void Run() {
   } else if (name == "bfs") {
     using GraphType =
         grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T,
-                                        grape::LoadStrategy::kBothOutIn>;
+                                        grape::LoadStrategy::kBothOutIn, VertexMapType>;
     using AppType = BFSGeneric<GraphType>;
     CreateAndQuery<GraphType, AppType>(
         comm_spec, efile, vfile, out_prefix, FLAGS_datasource, fnum, spec,
@@ -376,7 +367,7 @@ void Run() {
   } else if (name == "degree_centrality") {
     using GraphType =
         grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T,
-                                        grape::LoadStrategy::kBothOutIn>;
+                                        grape::LoadStrategy::kBothOutIn, VertexMapType>;
     using AppType = DegreeCentrality<GraphType>;
     CreateAndQuery<GraphType, AppType>(comm_spec, efile, vfile, out_prefix,
                                        FLAGS_datasource, fnum, spec,
@@ -384,35 +375,35 @@ void Run() {
   } else if (name == "triangles") {
     using GraphType =
         grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T,
-                                        grape::LoadStrategy::kOnlyOut>;
+                                        grape::LoadStrategy::kOnlyOut, VertexMapType>;
     using AppType = Triangles<GraphType>;
     CreateAndQuery<GraphType, AppType>(comm_spec, efile, vfile, out_prefix,
                                        FLAGS_datasource, fnum, spec);
   } else if (name == "clustering") {
     using GraphType =
         grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T,
-                                        grape::LoadStrategy::kBothOutIn>;
+                                        grape::LoadStrategy::kBothOutIn, VertexMapType>;
     using AppType = Clustering<GraphType>;
     CreateAndQuery<GraphType, AppType>(comm_spec, efile, vfile, out_prefix,
                                        FLAGS_datasource, fnum, spec);
   } else if (name == "avg_clustering") {
     using GraphType =
         grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T,
-                                        grape::LoadStrategy::kBothOutIn>;
+                                        grape::LoadStrategy::kBothOutIn, VertexMapType>;
     using AppType = AvgClustering<GraphType>;
     CreateAndQuery<GraphType, AppType>(comm_spec, efile, vfile, out_prefix,
                                        FLAGS_datasource, fnum, spec);
   } else if (name == "transitivity") {
     using GraphType =
         grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T,
-                                        grape::LoadStrategy::kBothOutIn>;
+                                        grape::LoadStrategy::kBothOutIn, VertexMapType>;
     using AppType = Transitivity<GraphType>;
     CreateAndQuery<GraphType, AppType>(comm_spec, efile, vfile, out_prefix,
                                        FLAGS_datasource, fnum, spec);
   } else if (name == "dfs") {
     using GraphType =
         grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T,
-                                        grape::LoadStrategy::kBothOutIn>;
+                                        grape::LoadStrategy::kBothOutIn, VertexMapType>;
     using AppType = DFS<GraphType>;
     CreateAndQuery<GraphType, AppType>(comm_spec, efile, vfile, out_prefix,
                                        FLAGS_datasource, fnum, spec,
@@ -420,7 +411,7 @@ void Run() {
   } else if (name == "bfs_original") {
     using GraphType =
         grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T,
-                                        grape::LoadStrategy::kBothOutIn>;
+                                        grape::LoadStrategy::kBothOutIn, VertexMapType>;
     using AppType = grape::BFS<GraphType>;
     CreateAndQuery<GraphType, AppType>(comm_spec, efile, vfile, out_prefix,
                                        FLAGS_datasource, fnum, spec,
@@ -449,7 +440,12 @@ void Run() {
 }
 
 extern "C" void RunApp() {
-  Run<int64_t, uint32_t, grape::EmptyType, grape::EmptyType>();
+  if (FLAGS_segmented_partition) {
+    Run<int64_t, uint32_t, grape::EmptyType, grape::EmptyType, grape::SegmentedPartitioner<int64_t>>();
+  } else {
+    FLAGS_rebalance = false;
+    Run<int64_t, uint32_t, grape::EmptyType, grape::EmptyType, grape::HashPartitioner<int64_t>>();
+  }
 }
 
 }  // namespace gs

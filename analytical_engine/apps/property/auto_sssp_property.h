@@ -82,8 +82,8 @@ class AutoSSSPPropertyContext
   }
 
   oid_t source_id;
-  std::vector<grape::VertexArray<double, vid_t>>& data_;
-  std::vector<grape::SyncBuffer<double, vid_t>> partial_result;
+  std::vector<grape::VertexArray<typename FRAG_T::vertices_t, double>>& data_;
+  std::vector<grape::SyncBuffer<typename FRAG_T::vertices_t, double>> partial_result;
 };
 
 template <typename FRAG_T>

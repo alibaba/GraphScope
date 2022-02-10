@@ -38,7 +38,7 @@ class KCoreContext : public grape::VertexDataContext<FRAG_T, int> {
 
   typename FRAG_T::template vertex_array_t<std::shared_ptr<std::atomic_int>>
       degrees;
-  grape::DenseVertexSet<vid_t> to_remove_vertices, remaining_vertices,
+  grape::DenseVertexSet<typename FRAG_T::inner_vertices_t> to_remove_vertices, remaining_vertices,
       next_remaining_vertices;
   int k;
   int curr_k;

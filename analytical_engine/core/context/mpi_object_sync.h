@@ -31,11 +31,7 @@ class MPIObjectSync {
  protected:
   void SyncGlobalObjectID(grape::CommSpec const& comm_spec,
                           vineyard::ObjectID& object_id) {
-    if (comm_spec.worker_id() == 0) {
-      grape::BcastSend(object_id, comm_spec.comm());
-    } else {
-      grape::BcastRecv(object_id, comm_spec.comm(), 0);
-    }
+    grape::sync_comm::Bcast(object_id, 0, comm_spec.comm());
   }
 
   void GatherWorkerObjectID(vineyard::Client& client,
@@ -48,12 +44,11 @@ class MPIObjectSync {
       for (int src_worker_id = 1; src_worker_id < comm_spec.worker_num();
            ++src_worker_id) {
         vineyard::ObjectID recv_object_id;
-        grape::recv_buffer(&recv_object_id, 1, src_worker_id, comm_spec.comm(),
-                           0x10);
+        grape::sync_comm::Recv(recv_object_id, src_worker_id, 0x10, comm_spec.comm());
         assembled_ids.push_back(recv_object_id);
       }
     } else {
-      grape::send_buffer(&object_id, 1, 0, comm_spec.comm(), 0x10);
+      grape::sync_comm::Send(object_id, 0, 0x10, comm_spec.comm());
     }
   }
 
@@ -68,23 +63,18 @@ class MPIObjectSync {
       for (int src_worker_id = 1; src_worker_id < comm_spec.worker_num();
            ++src_worker_id) {
         std::vector<vineyard::ObjectID> recv_object_ids;
-        grape::RecvVector(recv_object_ids, src_worker_id, comm_spec.comm(),
-                          0x12);
+        grape::sync_comm::Recv(recv_object_ids, src_worker_id, 0x12, comm_spec.comm());
         assembled_ids.insert(assembled_ids.end(), recv_object_ids.begin(),
                              recv_object_ids.end());
       }
     } else {
-      grape::SendVector(object_ids, 0, comm_spec.comm(), 0x12);
+      grape::sync_comm::Send(object_ids, 0, 0x12, comm_spec.comm());
     }
   }
 
   template <typename T>
   void SyncObjectMeta(grape::CommSpec const& comm_spec, T& destination) {
-    if (comm_spec.worker_id() == 0) {
-      grape::BcastSend(destination, comm_spec.comm());
-    } else {
-      grape::BcastRecv(destination, comm_spec.comm(), 0);
-    }
+    grape::sync_comm::Bcast(destination, 0, comm_spec.comm());
   }
 };
 

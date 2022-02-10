@@ -867,16 +867,13 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::induceSubGraph(
   sub_vm_ptr->Init();
   grape::Communicator comm;
   comm.InitCommunicator(comm_spec_.comm());
-  typename DynamicFragment::partitioner_t partitioner;
-  partitioner.Init(fragment->fnum());
   typename DynamicFragment::vid_t gid;
   for (const auto& v : induced_vertices) {
     bool alive_in_frag = fragment->HasNode(v);
     bool alive = false;
     comm.Sum(alive_in_frag, alive);
     if (alive) {
-      auto fid = partitioner.GetPartitionId(v);
-      sub_vm_ptr->AddVertex(fid, v, gid);
+      sub_vm_ptr->AddVertex(v, gid);
     }
   }
 

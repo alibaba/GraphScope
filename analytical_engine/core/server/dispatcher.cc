@@ -106,11 +106,11 @@ void Dispatcher::publisherPreprocessCmd(std::shared_ptr<CommandDetail> cmd) {
       grape::InArchive ia;
       cmd->large_attr = params_vec[i];
       ia << *(cmd.get());
-      grape::SendArchive(ia, i, MPI_COMM_WORLD);
+      grape::sync_comm::Send(ia, i, 0, MPI_COMM_WORLD);
     }
     cmd->large_attr = params_vec[0];
   } else {
-    grape::BcastSend(*(cmd.get()), MPI_COMM_WORLD);
+    grape::sync_comm::Bcast(*(cmd.get()), grape::kCoordinatorRank, MPI_COMM_WORLD);
   }
 }
 
@@ -118,10 +118,10 @@ void Dispatcher::subscriberPreprocessCmd(rpc::OperationType type,
                                          std::shared_ptr<CommandDetail>& cmd) {
   if (type == rpc::CREATE_GRAPH || type == rpc::ADD_LABELS) {
     grape::OutArchive oa;
-    grape::RecvArchive(oa, grape::kCoordinatorRank, MPI_COMM_WORLD);
+    grape::sync_comm::Recv(oa, grape::kCoordinatorRank, 0, MPI_COMM_WORLD);
     oa >> *(cmd.get());
   } else {
-    grape::BcastRecv(*(cmd.get()), MPI_COMM_WORLD, grape::kCoordinatorRank);
+    grape::sync_comm::Bcast(*(cmd.get()), grape::kCoordinatorRank, MPI_COMM_WORLD);
   }
 }
 
@@ -129,7 +129,7 @@ void Dispatcher::publisherLoop() {
   CHECK_EQ(comm_spec_.worker_id(), grape::kCoordinatorRank);
   while (running_) {
     auto cmd = cmd_queue_.Pop();
-    grape::BcastSend(cmd->type, MPI_COMM_WORLD);
+    grape::sync_comm::Bcast(cmd->type, grape::kCoordinatorRank, MPI_COMM_WORLD);
     publisherPreprocessCmd(cmd);
     // process local event
     auto r = processCmd(cmd);
@@ -146,7 +146,7 @@ void Dispatcher::subscriberLoop() {
   CHECK_NE(comm_spec_.worker_id(), grape::kCoordinatorRank);
   while (running_) {
     rpc::OperationType type;
-    grape::BcastRecv(type, MPI_COMM_WORLD, grape::kCoordinatorRank);
+    grape::sync_comm::Bcast(type, grape::kCoordinatorRank, MPI_COMM_WORLD);
     std::shared_ptr<CommandDetail> cmd = std::make_shared<CommandDetail>();
     subscriberPreprocessCmd(type, cmd);
     auto r = processCmd(cmd);

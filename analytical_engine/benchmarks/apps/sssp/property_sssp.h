@@ -74,7 +74,7 @@ class PropertySSSPContext : public LabeledVertexDataContext<FRAG_T, double> {
   oid_t source_id;
   typename FRAG_T::template vertex_array_t<double>& partial_result;
 
-  grape::DenseVertexSet<vid_t> curr_modified, next_modified;
+  grape::DenseVertexSet<typename FRAG_T::vertices_t> curr_modified, next_modified;
 };
 
 template <typename FRAG_T>
@@ -89,7 +89,6 @@ class PropertySSSP
 
   void PEval(const fragment_t& frag, context_t& ctx,
              message_manager_t& messages) {
-    auto inner_vertices = frag.InnerVertices(0);
     messages.InitChannels(thread_num());
 
     vertex_t source;

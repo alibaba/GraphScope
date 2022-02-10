@@ -107,7 +107,7 @@ class Triangles
             }
           });
 
-      std::vector<grape::DenseVertexSet<vid_t>> vertexsets(thread_num());
+      std::vector<grape::DenseVertexSet<typename FRAG_T::vertices_t>> vertexsets(thread_num());
 
       ForEach(
           inner_vertices,

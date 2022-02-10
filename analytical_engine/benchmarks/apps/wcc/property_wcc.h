@@ -57,7 +57,7 @@ class PropertyWCCContext
 
   typename FRAG_T::template vertex_array_t<vid_t>& comp_id;
 
-  grape::DenseVertexSet<vid_t> curr_modified, next_modified;
+  grape::DenseVertexSet<typename FRAG_T::vertices_t> curr_modified, next_modified;
 };
 
 template <typename FRAG_T>

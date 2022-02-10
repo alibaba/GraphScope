@@ -70,7 +70,7 @@ template <typename OID_T>
 using ArrowFragmentDefault = vineyard::ArrowFragment<OID_T, uint64_t>;
 
 template <typename DATA_T>
-using VertexArrayDefault = grape::VertexArray<DATA_T, uint64_t>;
+using VertexArrayDefault = grape::VertexArray<grape::VertexRange<uint64_t>, DATA_T>;
 
 template <typename FRAG_T>
 using DoubleColumn = Column<FRAG_T, double>;

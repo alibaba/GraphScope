@@ -42,7 +42,6 @@ class LPAU2I : public PropertyAppBase<FRAG_T, LPAU2IContext<FRAG_T>> {
   void PEval(const fragment_t& frag, context_t& ctx,
              message_manager_t& messages) {
     auto v_label_num = frag.vertex_label_num();
-    auto user_inner_vertices = frag.InnerVertices(0);
 
     for (auto v_label = 0; v_label != v_label_num; ++v_label) {
       auto inner_vertices = frag.InnerVertices(v_label);
@@ -185,8 +184,8 @@ class LPAU2I : public PropertyAppBase<FRAG_T, LPAU2IContext<FRAG_T>> {
 
       } else {
         // i2u stage
-        grape::VertexArray<label_t, vid_t> inner_tmp_label;
-        grape::VertexArray<label_t, vid_t> inner_new_label;
+        grape::VertexArray<typename FRAG_T::inner_vertices_t, label_t> inner_tmp_label;
+        grape::VertexArray<typename FRAG_T::inner_vertices_t, label_t> inner_new_label;
 
         inner_tmp_label.Init(inner_vertices);
         inner_new_label.Init(inner_vertices);

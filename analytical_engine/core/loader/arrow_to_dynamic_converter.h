@@ -127,10 +127,10 @@ class ArrowToDynamicConverter {
           CHECK(src_vm_ptr->GetOid(gid, oid));
           if (v_label == default_label_id_) {
             DynamicWrapper<oid_t>::to_dynamic(oid, to_oid);
-            dst_vm_ptr->AddVertex(fid, to_oid, gid);
+            dst_vm_ptr->AddVertex(to_oid, gid);
           } else {
             DynamicWrapper<oid_t>::to_dynamic_array(label_name, oid, to_oid);
-            dst_vm_ptr->AddVertex(fid, to_oid, gid);
+            dst_vm_ptr->AddVertex(to_oid, gid);
           }
         }
       }

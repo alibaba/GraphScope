@@ -47,7 +47,7 @@ class AutoWCCPropertyContext
 
     for (label_id_t v_label = 0; v_label != v_label_num; ++v_label) {
       auto vertices = frag.Vertices(v_label);
-      grape::SyncBuffer<vid_t, vid_t> tmp_buffer(this->data()[v_label]);
+      grape::SyncBuffer<typename FRAG_T::vertices_t, vid_t> tmp_buffer(this->data()[v_label]);
       partial_result[v_label].Swap(tmp_buffer);
       partial_result[v_label].Init(vertices, std::numeric_limits<vid_t>::max(),
                                    [](vid_t* lhs, vid_t rhs) {
@@ -74,7 +74,7 @@ class AutoWCCPropertyContext
     }
   }
 
-  std::vector<grape::SyncBuffer<vid_t, vid_t>> partial_result;
+  std::vector<grape::SyncBuffer<typename FRAG_T::vertices_t, vid_t>> partial_result;
 };
 
 template <typename FRAG_T>

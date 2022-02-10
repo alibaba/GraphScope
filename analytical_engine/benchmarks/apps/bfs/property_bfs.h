@@ -57,7 +57,7 @@ class PropertyBFSContext : public LabeledVertexDataContext<FRAG_T, int64_t> {
 
   oid_t source_id;
   typename FRAG_T::template vertex_array_t<depth_type>& partial_result;
-  grape::DenseVertexSet<vid_t> curr_inner_updated, next_inner_updated;
+  grape::DenseVertexSet<typename FRAG_T::inner_vertices_t> curr_inner_updated, next_inner_updated;
 
   depth_type current_depth = 0;
 };
@@ -83,7 +83,6 @@ class PropertyBFS
     bool native_source = frag.GetInnerVertex(0, ctx.source_id, source);
 
     auto inner_vertices = frag.InnerVertices(0);
-    auto outer_vertices = frag.OuterVertices(0);
 
     // init double buffer which contains updated vertices using bitmap
     ctx.curr_inner_updated.Init(inner_vertices, GetThreadPool());

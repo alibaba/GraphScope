@@ -70,7 +70,7 @@ class SSSPContext : public grape::VertexDataContext<FRAG_T, double> {
   oid_t source_id;
   typename FRAG_T::template vertex_array_t<double>& partial_result;
 
-  grape::DenseVertexSet<vid_t> curr_modified, next_modified;
+  grape::DenseVertexSet<typename FRAG_T::vertices_t> curr_modified, next_modified;
 };
 
 template <typename FRAG_T>
@@ -83,7 +83,6 @@ class SSSP : public grape::ParallelAppBase<FRAG_T, SSSPContext<FRAG_T>>,
 
   void PEval(const fragment_t& frag, context_t& ctx,
              message_manager_t& messages) {
-    auto inner_vertices = frag.InnerVertices();
     messages.InitChannels(thread_num());
 
     vertex_t source;

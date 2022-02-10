@@ -129,7 +129,7 @@ class LabeledVertexDataContext : public grape::ContextBase {
   using vid_t = typename fragment_t::vid_t;
   using oid_t = typename fragment_t::oid_t;
   using label_id_t = typename fragment_t::label_id_t;
-  using vertex_array_t = grape::VertexArray<DATA_T, vid_t>;
+  using vertex_array_t = grape::VertexArray<typename fragment_t::vertices_t, DATA_T>;
 
  public:
   using data_t = DATA_T;
