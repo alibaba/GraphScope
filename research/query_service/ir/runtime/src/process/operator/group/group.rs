@@ -381,4 +381,66 @@ mod tests {
         }
         assert_eq!(group_result, expected_result);
     }
+
+    // g.V().group().by("name").by(values('age').min()) with key as 'a', value as 'b'
+    #[test]
+    fn group_min_test() {
+        let function = pb::group_by::AggFunc {
+            vars: vec![common_pb::Variable::from("@.age".to_string())],
+            aggregate: 1, // min
+            alias: Some(NameOrId::Str("b".to_string()).into()),
+        };
+        let key_alias = pb::group_by::KeyAlias {
+            key: Some(common_pb::Variable::from("@.name".to_string())),
+            alias: Some(NameOrId::Str("a".to_string()).into()),
+        };
+        let group_opr_pb = pb::GroupBy { mappings: vec![key_alias], functions: vec![function] };
+        let mut result = group_test(group_opr_pb);
+        let mut group_result = HashSet::new();
+        let expected_result: HashSet<(Entry, Entry)> = [
+            (CommonObject::Prop("vadas".into()).into(), CommonObject::Prop(object!(27)).into()),
+            (CommonObject::Prop("marko".into()).into(), CommonObject::Prop(object!(27)).into()),
+        ]
+        .iter()
+        .cloned()
+        .collect();
+
+        while let Some(Ok(result)) = result.next() {
+            let key = result.get(Some(&"a".into())).unwrap().as_ref();
+            let val = result.get(Some(&"b".into())).unwrap().as_ref();
+            group_result.insert((key.clone(), val.clone()));
+        }
+        assert_eq!(group_result, expected_result);
+    }
+
+    // g.V().group().by("name").by(values('age').max()) with key as 'a', value as 'b'
+    #[test]
+    fn group_max_test() {
+        let function = pb::group_by::AggFunc {
+            vars: vec![common_pb::Variable::from("@.age".to_string())],
+            aggregate: 2, // max
+            alias: Some(NameOrId::Str("b".to_string()).into()),
+        };
+        let key_alias = pb::group_by::KeyAlias {
+            key: Some(common_pb::Variable::from("@.name".to_string())),
+            alias: Some(NameOrId::Str("a".to_string()).into()),
+        };
+        let group_opr_pb = pb::GroupBy { mappings: vec![key_alias], functions: vec![function] };
+        let mut result = group_test(group_opr_pb);
+        let mut group_result = HashSet::new();
+        let expected_result: HashSet<(Entry, Entry)> = [
+            (CommonObject::Prop("marko".into()).into(), CommonObject::Prop(object!(29)).into()),
+            (CommonObject::Prop("vadas".into()).into(), CommonObject::Prop(object!(27)).into()),
+        ]
+        .iter()
+        .cloned()
+        .collect();
+
+        while let Some(Ok(result)) = result.next() {
+            let key = result.get(Some(&"a".into())).unwrap().as_ref();
+            let val = result.get(Some(&"b".into())).unwrap().as_ref();
+            group_result.insert((key.clone(), val.clone()));
+        }
+        assert_eq!(group_result, expected_result);
+    }
 }
