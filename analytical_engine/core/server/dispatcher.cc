@@ -160,6 +160,7 @@ grape::InArchive& operator<<(grape::InArchive& archive,
   archive << result.worker_id_;
   archive << result.error_code_;
   archive << result.message_;
+  archive << result.has_large_data_;
   archive << result.data_;
   archive << result.aggregate_policy_;
   archive << result.graph_def_.SerializeAsString();
@@ -171,6 +172,7 @@ grape::OutArchive& operator>>(grape::OutArchive& archive,
   archive >> result.worker_id_;
   archive >> result.error_code_;
   archive >> result.message_;
+  archive >> result.has_large_data_;
   archive >> result.data_;
   archive >> result.aggregate_policy_;
   std::string buf;

@@ -69,6 +69,7 @@ from graphscope.proto import types_pb2
 from gscoordinator.cluster import KubernetesClusterLauncher
 from gscoordinator.dag_manager import DAGManager
 from gscoordinator.dag_manager import GSEngine
+from gscoordinator.dag_manager import split_op_result
 from gscoordinator.launcher import LocalLauncher
 from gscoordinator.object_manager import GraphMeta
 from gscoordinator.object_manager import GremlinResultSet
@@ -225,6 +226,9 @@ class CoordinatorServiceServicer(
             )
             return message_pb2.ConnectSessionResponse()
         # Connect to serving coordinator.
+        self._key_to_op = {}
+        # dict of op_def_pb2.OpResult
+        self._op_result_pool = {}
         self._request = request
         try:
             self._analytical_engine_config = self._get_engine_config()
@@ -239,10 +243,6 @@ class CoordinatorServiceServicer(
             return message_pb2.ConnectSessionResponse()
         # Generate session id
         self._session_id = self._generate_session_id()
-        self._key_to_op = dict()
-        # dict of op_def_pb2.OpResult
-        self._op_result_pool = dict()
-
         self._udf_app_workspace = os.path.join(
             WORKSPACE, self._instance_id, self._session_id
         )
@@ -315,7 +315,6 @@ class CoordinatorServiceServicer(
         self,
         dag_def: op_def_pb2.DagDef,
         dag_bodies,
-        op_results: list,
         loader_op_bodies: dict,
     ):
         def _generate_runstep_request(session_id, dag_def, dag_bodies):
@@ -332,7 +331,7 @@ class CoordinatorServiceServicer(
             for item in runstep_requests:
                 yield item
 
-        # preprocess of op
+        # preprocess of op before run on analytical engine
         for op in dag_def.op:
             self._key_to_op[op.key] = op
             op_pre_process(
@@ -372,10 +371,10 @@ class CoordinatorServiceServicer(
             ):
                 op = self._maybe_register_graph(op, self._session_id)
 
+        # generate runstep requests, and run on analytical engine
         requests = _generate_runstep_request(self._session_id, dag_def, dag_bodies)
-        error = None  # n.b.: avoid raising deep nested error stack to users
         try:
-            response = self._analytical_engine_stub.RunStep(requests)
+            responses = self._analytical_engine_stub.RunStep(requests)
         except grpc.RpcError as e:
             logger.error(
                 "Engine RunStep failed, code: %s, details: %s",
@@ -389,24 +388,28 @@ class CoordinatorServiceServicer(
                     msg = f"{e.details()[:3072]} ... [truncated]"
                 else:
                     msg = e.details()
-                error = AnalyticalEngineInternalError(msg)
+                raise AnalyticalEngineInternalError(msg)
             else:
                 raise
-        if error is not None:
-            raise error
-        op_results.extend(response.results)
-        for r in response.results:
-            op = self._key_to_op[r.key]
-            if op.op not in (
-                types_pb2.CONTEXT_TO_NUMPY,
-                types_pb2.CONTEXT_TO_DATAFRAME,
-                types_pb2.REPORT_GRAPH,
-            ):
-                self._op_result_pool[r.key] = r
 
-        for op_result in response.results:
-            key = op_result.key
-            op = self._key_to_op[key]
+        # handle result from response stream
+        response_head = None
+        response_bodies = []
+        for response in responses:
+            if response.HasField("head"):
+                response_head = response
+            else:
+                response_bodies.append(response)
+        if response_head is None:
+            raise AnalyticalEngineInternalError(
+                "Missing head from the response stream."
+            )
+        for op_result in response_head.head.results:
+            # record result in coordinator, which doesn't contains large data
+            self._op_result_pool[op_result.key] = op_result
+            # get the op corresponding to the result
+            op = self._key_to_op[op_result.key]
+            # register graph and dump graph schema
             if op.op in (
                 types_pb2.CREATE_GRAPH,
                 types_pb2.PROJECT_GRAPH,
@@ -434,18 +437,25 @@ class CoordinatorServiceServicer(
                     )
                     vy_info.schema_path = schema_path
                     op_result.graph_def.extension.Pack(vy_info)
+            # register app
             elif op.op == types_pb2.BIND_APP:
                 self._object_manager.put(
                     app_sig,
                     LibMeta(op_result.result.decode("utf-8"), "app", app_lib_path),
                 )
+            # unregister graph
             elif op.op == types_pb2.UNLOAD_GRAPH:
                 self._object_manager.pop(op.attr[types_pb2.GRAPH_NAME].s.decode())
+            # unregister app
             elif op.op == types_pb2.UNLOAD_APP:
                 self._object_manager.pop(op.attr[types_pb2.APP_NAME].s.decode())
-        return response.results
+        return response_head, response_bodies
 
-    def run_on_interactive_engine(self, dag_def: op_def_pb2.DagDef, op_results: list):
+    def run_on_interactive_engine(self, dag_def: op_def_pb2.DagDef):
+        response_head = message_pb2.RunStepResponse(
+            head=message_pb2.RunStepResponseHead()
+        )
+        response_bodies = []
         for op in dag_def.op:
             self._key_to_op[op.key] = op
             op_pre_process(
@@ -467,14 +477,28 @@ class CoordinatorServiceServicer(
                 op_result = self._gremlin_to_subgraph(op)
             else:
                 raise RuntimeError("Unsupport op type: " + str(op.op))
-            op_results.append(op_result)
-            # don't record the results of these ops to avoid
-            # taking up too much memory in coordinator
-            if op.op not in [types_pb2.FETCH_GREMLIN_RESULT]:
-                self._op_result_pool[op.key] = op_result
-        return op_results
+            splited_result = split_op_result(op_result)
+            response_head.head.results.append(op_result)
+            for i, chunk in enumerate(splited_result):
+                has_next = True
+                if i + 1 == len(splited_result):
+                    has_next = False
+                response_bodies.append(
+                    message_pb2.RunStepResponse(
+                        body=message_pb2.RunStepResponseBody(
+                            chunk=chunk, has_next=has_next
+                        )
+                    )
+                )
+            # record op result
+            self._op_result_pool[op.key] = op_result
+        return response_head, response_bodies
 
-    def run_on_learning_engine(self, dag_def: op_def_pb2.DagDef, op_results: list):
+    def run_on_learning_engine(self, dag_def: op_def_pb2.DagDef):
+        response_head = message_pb2.RunStepResponse(
+            head=message_pb2.RunStepResponseHead()
+        )
+        response_bodies = []
         for op in dag_def.op:
             self._key_to_op[op.key] = op
             op_pre_process(
@@ -490,17 +514,20 @@ class CoordinatorServiceServicer(
                 op_result = self._close_learning_instance(op)
             else:
                 raise RuntimeError("Unsupport op type: " + str(op.op))
-            op_results.append(op_result)
+            response_head.head.results.append(op_result)
             self._op_result_pool[op.key] = op_result
-        return op_results
+        return response_head, response_bodies
 
     def run_on_coordinator(
         self,
         dag_def: op_def_pb2.DagDef,
         dag_bodies,
-        op_results: list,
         loader_op_bodies: dict,
     ):
+        response_head = message_pb2.RunStepResponse(
+            head=message_pb2.RunStepResponseHead()
+        )
+        response_bodies = []
         for op in dag_def.op:
             self._key_to_op[op.key] = op
             op_pre_process(
@@ -516,54 +543,69 @@ class CoordinatorServiceServicer(
                 op_result = self._output(op)
             else:
                 raise RuntimeError("Unsupport op type: " + str(op.op))
-            op_results.append(op_result)
+            response_head.head.results.append(op_result)
             self._op_result_pool[op.key] = op_result
-        return op_results
-
-    @staticmethod
-    def _make_response(code, msg, full_exc=b""):
-        return message_pb2.RunStepResponse(
-            code=code, error_msg=msg, full_exception=full_exc
-        )
+        return response_head, response_bodies
 
     def RunStep(self, request_iterator, context):
         # split dag
         dag_manager = DAGManager(request_iterator)
-        op_results = []
         loader_op_bodies = {}
+
+        # response list for stream
+        responses = []
+        # head
+        responses.append(
+            message_pb2.RunStepResponse(head=message_pb2.RunStepResponseHead())
+        )
 
         while not dag_manager.empty():
             run_dag_on, dag, dag_bodies = dag_manager.next_dag()
             try:
+                # run on analytical engine
                 if run_dag_on == GSEngine.analytical_engine:
                     # need dag_bodies to load graph from pandas/numpy
                     error_code = error_codes_pb2.ANALYTICAL_ENGINE_INTERNAL_ERROR
-                    self.run_on_analytical_engine(
-                        dag, dag_bodies, op_results, loader_op_bodies
+                    head, bodies = self.run_on_analytical_engine(
+                        dag, dag_bodies, loader_op_bodies
                     )
+                # run on interactive engine
                 elif run_dag_on == GSEngine.interactive_engine:
                     error_code = error_codes_pb2.INTERACTIVE_ENGINE_INTERNAL_ERROR
-                    self.run_on_interactive_engine(dag, op_results)
+                    head, bodies = self.run_on_interactive_engine(dag)
+                # run on learning engine
                 elif run_dag_on == GSEngine.learning_engine:
                     error_code = error_codes_pb2.LEARNING_ENGINE_INTERNAL_ERROR
-                    self.run_on_learning_engine(dag, op_results)
+                    head, bodies = self.run_on_learning_engine(dag)
+                # run on coordinator
                 elif run_dag_on == GSEngine.coordinator:
                     error_code = error_codes_pb2.COORDINATOR_INTERNAL_ERROR
-                    self.run_on_coordinator(
-                        dag, dag_bodies, op_results, loader_op_bodies
+                    head, bodies = self.run_on_coordinator(
+                        dag, dag_bodies, loader_op_bodies
                     )
+                # merge the responses
+                responses[0].head.results.extend(head.head.results)
+                responses.extend(bodies)
             except grpc.RpcError as exc:
                 # Not raised by graphscope, maybe socket closed, etc
                 context.set_code(exc.code())
                 context.set_details(exc.details())
-                return message_pb2.RunStepResponse()
+                for response in responses:
+                    yield response
             except Exception as exc:
-                return self._make_response(
-                    error_code,
-                    f"Error occurred during preprocessing, The traceback is: {traceback.format_exc()}",
-                    pickle.dumps(exc),
+                response_head = responses[0]
+                response_head.head.code = error_code
+                response_head.head.error_msg = (
+                    "Error occurred during preprocessing, The traceback is: {0}".format(
+                        traceback.format_exc()
+                    )
                 )
-        return message_pb2.RunStepResponse(results=op_results)
+                response_head.head.full_exception = pickle.dumps(exc)
+                for response in responses:
+                    yield response
+
+        for response in responses:
+            yield response
 
     def _maybe_compile_app(self, op):
         app_sig = get_app_sha256(op.attr)
@@ -624,14 +666,8 @@ class CoordinatorServiceServicer(
             )
             dag_def = op_def_pb2.DagDef()
             dag_def.op.extend([op_def])
-            register_request = self._grpc_utils.generate_runstep_requests(
-                session_id=session_id, dag_def=dag_def
-            )
-            error = None  # n.b.: avoid raising deep nested error stack to users
             try:
-                register_response = self._analytical_engine_stub.RunStep(
-                    register_request
-                )
+                response_head, _ = self.run_on_analytical_engine(dag_def, [], {})
             except grpc.RpcError as e:
                 logger.error(
                     "Register graph failed, code: %s, details: %s",
@@ -639,15 +675,13 @@ class CoordinatorServiceServicer(
                     e.details(),
                 )
                 if e.code() == grpc.StatusCode.INTERNAL:
-                    error = AnalyticalEngineInternalError(e.details())
+                    raise AnalyticalEngineInternalError(e.details())
                 else:
                     raise
-            if error is not None:
-                raise error
             self._object_manager.put(
                 graph_sig,
                 LibMeta(
-                    register_response.results[0].result,
+                    response_head.head.results[0].result,
                     "graph_frame",
                     graph_lib_path,
                 ),
@@ -781,7 +815,10 @@ class CoordinatorServiceServicer(
             raise RuntimeError("Fetch gremlin result failed") from e
 
         return op_def_pb2.OpResult(
-            code=error_codes_pb2.OK, key=op.key, result=pickle.dumps(rlt)
+            code=error_codes_pb2.OK,
+            key=op.key,
+            has_large_result=True,
+            result=pickle.dumps(rlt),
         )
 
     def _output(self, op: op_def_pb2.OpDef):
@@ -932,10 +969,10 @@ class CoordinatorServiceServicer(
             new_op_def.key = op.key
             dag = op_def_pb2.DagDef()
             dag.op.extend([new_op_def])
-            self.run_on_coordinator(coordinator_dag, [], [], {})
-            results = self.run_on_analytical_engine(dag, [], [], {})
+            self.run_on_coordinator(coordinator_dag, [], {})
+            response_head, _ = self.run_on_analytical_engine(dag, [], {})
             logger.info("subgraph has been loaded")
-            return results[-1]
+            return response_head.head.results[-1]
 
         # generate a random graph name
         now_time = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
@@ -1089,12 +1126,8 @@ class CoordinatorServiceServicer(
 
     def _get_engine_config(self):
         dag_def = create_single_op_dag(types_pb2.GET_ENGINE_CONFIG)
-        requests = self._grpc_utils.generate_runstep_requests(
-            session_id=self._session_id, dag_def=dag_def
-        )
-        error = None  # n.b.: avoid raising deep nested error stack to users
         try:
-            response = self._analytical_engine_stub.RunStep(requests)
+            response_head, _ = self.run_on_analytical_engine(dag_def, [], {})
         except grpc.RpcError as e:
             logger.error(
                 "Get engine config failed, code: %s, details: %s",
@@ -1102,12 +1135,10 @@ class CoordinatorServiceServicer(
                 e.details(),
             )
             if e.code() == grpc.StatusCode.INTERNAL:
-                error = AnalyticalEngineInternalError(e.details())
+                raise AnalyticalEngineInternalError(e.details())
             else:
                 raise
-        if error is not None:
-            raise error
-        config = json.loads(response.results[0].result.decode("utf-8"))
+        config = json.loads(response_head.head.results[0].result.decode("utf-8"))
         config.update(self._launcher.get_engine_config())
         return config
 
