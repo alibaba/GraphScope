@@ -1104,6 +1104,7 @@ class CoordinatorServiceServicer(
         # cancel dangling detect timer
         if self._dangling_detecting_timer:
             self._dangling_detecting_timer.cancel()
+            self._dangling_detecting_timer = None
 
         # close engines
         if cleanup_instance:

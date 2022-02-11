@@ -176,9 +176,9 @@ class LocalLauncher(Launcher):
     def stop(self, is_dangling=False):
         if not self._closed:
             self._stop_interactive_engine_service()
+            self._stop_analytical_engine()
             self._stop_vineyard()
             self._stop_etcd()
-            self._stop_analytical_engine()
             self._closed = True
 
     def set_session_workspace(self, session_id):
