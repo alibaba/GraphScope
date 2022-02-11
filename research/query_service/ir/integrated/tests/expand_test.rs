@@ -110,6 +110,7 @@ mod test {
         let query_param = pb::QueryParams {
             table_names: vec!["knows".into()],
             columns: vec![],
+            is_all_columns: false,
             limit: None,
             predicate: None,
             requirements: vec![],
@@ -141,6 +142,7 @@ mod test {
         let query_param = pb::QueryParams {
             table_names: vec!["knows".into(), "created".into()],
             columns: vec![],
+            is_all_columns: false,
             limit: None,
             predicate: None,
             requirements: vec![],
@@ -177,6 +179,7 @@ mod test {
         let query_param = pb::QueryParams {
             table_names: vec!["knows".into()],
             columns: vec!["name".into()],
+            is_all_columns: false,
             limit: None,
             predicate: None,
             requirements: vec![],
@@ -217,6 +220,7 @@ mod test {
         let query_param = pb::QueryParams {
             table_names: vec![],
             columns: vec![],
+            is_all_columns: false,
             limit: None,
             predicate: None,
             requirements: vec![],
@@ -243,6 +247,7 @@ mod test {
         let query_param = pb::QueryParams {
             table_names: vec!["knows".into()],
             columns: vec![],
+            is_all_columns: false,
             limit: None,
             predicate: None,
             requirements: vec![],
@@ -279,6 +284,7 @@ mod test {
         let query_param = pb::QueryParams {
             table_names: vec!["knows".into()],
             columns: vec![],
+            is_all_columns: false,
             limit: None,
             predicate: None,
             requirements: vec![],
@@ -333,6 +339,7 @@ mod test {
         let query_param = pb::QueryParams {
             table_names: vec!["knows".into()],
             columns: vec![],
+            is_all_columns: false,
             limit: None,
             predicate: str_to_expr_pb("@.id == 2".to_string()).ok(),
             requirements: vec![],
@@ -365,6 +372,7 @@ mod test {
             params: Some(pb::QueryParams {
                 table_names: vec!["knows".into()],
                 columns: vec![],
+                is_all_columns: false,
                 limit: None,
                 predicate: None,
                 requirements: vec![],
@@ -419,6 +427,7 @@ mod test {
             params: Some(pb::QueryParams {
                 table_names: vec!["created".into()],
                 columns: vec![],
+                is_all_columns: false,
                 limit: None,
                 predicate: None,
                 requirements: vec![],
@@ -473,6 +482,7 @@ mod test {
             params: Some(pb::QueryParams {
                 table_names: vec!["knows".into()],
                 columns: vec![],
+                is_all_columns: false,
                 limit: None,
                 predicate: None,
                 requirements: vec![],

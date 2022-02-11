@@ -111,13 +111,15 @@ impl AsPhysical for pb::Scan {
         } else {
             if let Some(node_metas) = plan_meta.curr_node_metas() {
                 let columns = node_metas.get_columns();
-                if !columns.is_empty() {
+                let is_all_columns = node_metas.is_all_columns();
+                if !columns.is_empty() || is_all_columns {
                     self.params = Some(pb::QueryParams {
                         table_names: vec![],
                         columns: columns
                             .into_iter()
                             .map(|tag| common_pb::NameOrId::from(tag))
                             .collect(),
+                        is_all_columns,
                         limit: None,
                         predicate: None,
                         requirements: vec![],
@@ -142,7 +144,8 @@ impl AsPhysical for pb::EdgeExpand {
         let mut auxilia = pb::Auxilia { params: None, alias: None };
         if let Some(node_metas) = plan_meta.curr_node_metas() {
             let columns = node_metas.get_columns();
-            if !columns.is_empty() {
+            let is_all_columns = node_metas.is_all_columns();
+            if !columns.is_empty() || is_all_columns {
                 if !self.is_edge {
                     // Vertex expansion
                     // Move everything to Auxilia
@@ -152,6 +155,7 @@ impl AsPhysical for pb::EdgeExpand {
                             .into_iter()
                             .map(|tag| common_pb::NameOrId::from(tag))
                             .collect(),
+                        is_all_columns,
                         limit: None,
                         predicate: None,
                         requirements: vec![],
@@ -168,7 +172,8 @@ impl AsPhysical for pb::EdgeExpand {
                             columns
                                 .iter()
                                 .map(|tag| common_pb::NameOrId::from(tag.clone())),
-                        )
+                        );
+                        params.is_all_columns = is_all_columns;
                     }
                 }
             }
@@ -260,7 +265,8 @@ impl AsPhysical for pb::GetV {
         let mut auxilia = pb::Auxilia { params: None, alias: None };
         if let Some(node_metas) = plan_meta.curr_node_metas() {
             let columns = node_metas.get_columns();
-            if !columns.is_empty() {
+            let is_all_columns = node_metas.is_all_columns();
+            if !columns.is_empty() || is_all_columns {
                 auxilia.alias = self.alias.clone();
                 auxilia.params = Some(pb::QueryParams {
                     table_names: vec![],
@@ -268,6 +274,7 @@ impl AsPhysical for pb::GetV {
                         .into_iter()
                         .map(|tag| common_pb::NameOrId::from(tag))
                         .collect(),
+                    is_all_columns,
                     limit: None,
                     predicate: None,
                     requirements: vec![],
@@ -515,17 +522,25 @@ mod test {
     use crate::plan::logical::Node;
 
     #[allow(dead_code)]
+    fn query_params(
+        table_names: Vec<common_pb::NameOrId>, columns: Vec<common_pb::NameOrId>,
+    ) -> pb::QueryParams {
+        pb::QueryParams {
+            table_names,
+            columns,
+            is_all_columns: false,
+            limit: None,
+            predicate: None,
+            requirements: vec![],
+        }
+    }
+
+    #[allow(dead_code)]
     fn build_scan(columns: Vec<common_pb::NameOrId>) -> pb::Scan {
         pb::Scan {
             scan_opt: 0,
             alias: None,
-            params: Some(pb::QueryParams {
-                table_names: vec![],
-                columns,
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec![], columns)),
             idx_predicate: None,
         }
     }
@@ -537,13 +552,7 @@ mod test {
         pb::EdgeExpand {
             v_tag: None,
             direction: 0,
-            params: Some(pb::QueryParams {
-                table_names: vec![],
-                columns,
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec![], columns)),
             is_edge,
             alias,
         }
@@ -659,13 +668,7 @@ mod test {
             .flat_map(pb::logical_plan::Operator::from(build_edgexpd(false, vec![], None)).encode_to_vec());
         expected_builder.filter_map(
             pb::logical_plan::Operator::from(pb::Auxilia {
-                params: Some(pb::QueryParams {
-                    table_names: vec![],
-                    columns: vec!["birthday".into()],
-                    limit: None,
-                    predicate: None,
-                    requirements: vec![],
-                }),
+                params: Some(query_params(vec![], vec!["birthday".into()])),
                 alias: None,
             })
             .encode_to_vec(),
@@ -691,13 +694,7 @@ mod test {
         expected_builder.repartition(vec![]);
         expected_builder.filter_map(
             pb::logical_plan::Operator::from(pb::Auxilia {
-                params: Some(pb::QueryParams {
-                    table_names: vec![],
-                    columns: vec!["birthday".into()],
-                    limit: None,
-                    predicate: None,
-                    requirements: vec![],
-                }),
+                params: Some(query_params(vec![], vec!["birthday".into()])),
                 alias: None,
             })
             .encode_to_vec(),
@@ -731,13 +728,7 @@ mod test {
             .flat_map(pb::logical_plan::Operator::from(build_edgexpd(false, vec![], None)).encode_to_vec());
         expected_builder.filter_map(
             pb::logical_plan::Operator::from(pb::Auxilia {
-                params: Some(pb::QueryParams {
-                    table_names: vec![],
-                    columns: vec!["age".into(), "id".into(), "name".into()],
-                    limit: None,
-                    predicate: None,
-                    requirements: vec![],
-                }),
+                params: Some(query_params(vec![], vec!["age".into(), "id".into(), "name".into()])),
                 alias: Some("a".into()),
             })
             .encode_to_vec(),
@@ -763,13 +754,7 @@ mod test {
         expected_builder.repartition(vec![]);
         expected_builder.filter_map(
             pb::logical_plan::Operator::from(pb::Auxilia {
-                params: Some(pb::QueryParams {
-                    table_names: vec![],
-                    columns: vec!["age".into(), "id".into(), "name".into()],
-                    limit: None,
-                    predicate: None,
-                    requirements: vec![],
-                }),
+                params: Some(query_params(vec![], vec!["age".into(), "id".into(), "name".into()])),
                 alias: Some("a".into()),
             })
             .encode_to_vec(),
@@ -857,13 +842,7 @@ mod test {
         let source_opr = pb::logical_plan::Operator::from(pb::Scan {
             scan_opt: 0,
             alias: None,
-            params: Some(pb::QueryParams {
-                table_names: vec![common_pb::NameOrId::from("person".to_string())],
-                columns: vec![],
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec!["person".into()], vec![])),
             idx_predicate: None,
         });
         let select_opr = pb::logical_plan::Operator::from(pb::Select {
@@ -872,13 +851,7 @@ mod test {
         let expand_opr = pb::logical_plan::Operator::from(pb::EdgeExpand {
             v_tag: None,
             direction: 0,
-            params: Some(pb::QueryParams {
-                table_names: vec![common_pb::NameOrId::from("knows".to_string())],
-                columns: vec![],
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec!["knows".into()], vec![])),
             is_edge: false,
             alias: None,
         });
@@ -917,13 +890,7 @@ mod test {
         let source_opr = pb::logical_plan::Operator::from(pb::Scan {
             scan_opt: 0,
             alias: None,
-            params: Some(pb::QueryParams {
-                table_names: vec![common_pb::NameOrId::from("person".to_string())],
-                columns: vec![],
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec!["person".into()], vec![])),
             idx_predicate: None,
         });
 
@@ -959,26 +926,14 @@ mod test {
         let source_opr = pb::logical_plan::Operator::from(pb::Scan {
             scan_opt: 0,
             alias: None,
-            params: Some(pb::QueryParams {
-                table_names: vec![common_pb::NameOrId::from("person".to_string())],
-                columns: vec![],
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec!["person".into()], vec![])),
             idx_predicate: None,
         });
 
         let edge_expand = pb::EdgeExpand {
             v_tag: None,
             direction: 0,
-            params: Some(pb::QueryParams {
-                table_names: vec![common_pb::NameOrId::from("knows".to_string())],
-                columns: vec![],
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec!["knows".into()], vec![])),
             is_edge: false,
             alias: None,
         };
@@ -1042,26 +997,14 @@ mod test {
         let source_opr = pb::logical_plan::Operator::from(pb::Scan {
             scan_opt: 0,
             alias: None,
-            params: Some(pb::QueryParams {
-                table_names: vec![common_pb::NameOrId::from("person".to_string())],
-                columns: vec![],
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec!["person".into()], vec![])),
             idx_predicate: None,
         });
 
         let edge_expand = pb::EdgeExpand {
             v_tag: None,
             direction: 0,
-            params: Some(pb::QueryParams {
-                table_names: vec![common_pb::NameOrId::from("knows".to_string())],
-                columns: vec![],
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec!["knows".into()], vec![])),
             is_edge: false,
             alias: None,
         };
@@ -1109,13 +1052,7 @@ mod test {
         let source_opr = pb::logical_plan::Operator::from(pb::Scan {
             scan_opt: 0,
             alias: None,
-            params: Some(pb::QueryParams {
-                table_names: vec![],
-                columns: vec![],
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
         });
 
@@ -1159,13 +1096,7 @@ mod test {
         let scan: pb::logical_plan::Operator = pb::Scan {
             scan_opt: 0,
             alias: Some("v".into()),
-            params: Some(pb::QueryParams {
-                table_names: vec![],
-                columns: vec!["name".into()],
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec![], vec!["name".into()])),
             idx_predicate: None,
         }
         .into();
@@ -1178,13 +1109,7 @@ mod test {
         let mut expand = pb::EdgeExpand {
             v_tag: None,
             direction: 0,
-            params: Some(pb::QueryParams {
-                table_names: vec![],
-                columns: vec![],
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec![], vec![])),
             is_edge: false,
             alias: Some("o".into()),
         };
@@ -1231,13 +1156,7 @@ mod test {
                     .repartition(vec![])
                     .filter_map(
                         pb::logical_plan::Operator::from(pb::Auxilia {
-                            params: Some(pb::QueryParams {
-                                table_names: vec![],
-                                columns: vec!["lang".into()],
-                                limit: None,
-                                predicate: None,
-                                requirements: vec![],
-                            }),
+                            params: Some(query_params(vec![], vec!["lang".into()])),
                             alias: Some("o".into()),
                         })
                         .encode_to_vec(),
@@ -1257,13 +1176,7 @@ mod test {
         let source_opr = pb::logical_plan::Operator::from(pb::Scan {
             scan_opt: 0,
             alias: None,
-            params: Some(pb::QueryParams {
-                table_names: vec![],
-                columns: vec![],
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
         });
         let expand_opr = pb::logical_plan::Operator::from(pb::EdgeExpand {

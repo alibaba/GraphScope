@@ -1332,6 +1332,7 @@ mod scan {
             params: Some(pb::QueryParams {
                 table_names: vec![],
                 columns: vec![],
+                is_all_columns: false,
                 limit: None,
                 predicate: None,
                 requirements: vec![],
@@ -1425,10 +1426,20 @@ mod scan {
         process_params(ptr_scan, ParamsKey::Table, table_name, Opr::Scan)
     }
 
-    /// Add a data field to be scanned from the data source (vertex, edge, or a relational table)
+    /// Add a data column to be scanned from the data source (vertex, edge, or a relational table)
     #[no_mangle]
     pub extern "C" fn add_scan_column(ptr_scan: *const c_void, column: FfiNameOrId) -> ResultCode {
         process_params(ptr_scan, ParamsKey::Column, column, Opr::Scan)
+    }
+
+    /// Set getting all columns to be scanned from the data source
+    #[no_mangle]
+    pub extern "C" fn set_scan_is_all_columns(ptr_scan: *const c_void) -> ResultCode {
+        let mut scan = unsafe { Box::from_raw(ptr_scan as *mut pb::Scan) };
+        scan.params.as_mut().unwrap().is_all_columns = true;
+        std::mem::forget(scan);
+
+        ResultCode::Success
     }
 
     /// Set an alias for the data if it is a vertex/edge
@@ -1575,6 +1586,7 @@ mod graph {
             params: Some(pb::QueryParams {
                 table_names: vec![],
                 columns: vec![],
+                is_all_columns: false,
                 limit: None,
                 predicate: None,
                 requirements: vec![],
@@ -1604,6 +1616,16 @@ mod graph {
         ptr_edgexpd: *const c_void, property: FfiNameOrId,
     ) -> ResultCode {
         process_params(ptr_edgexpd, ParamsKey::Column, property, Opr::EdgeExpand)
+    }
+
+    /// Set getting all properties for this edge expansion
+    #[no_mangle]
+    pub extern "C" fn set_edgexpd_is_all_properties(ptr_edgexpd: *const c_void) -> ResultCode {
+        let mut edgexpd = unsafe { Box::from_raw(ptr_edgexpd as *mut pb::EdgeExpand) };
+        edgexpd.params.as_mut().unwrap().is_all_columns = true;
+        std::mem::forget(edgexpd);
+
+        ResultCode::Success
     }
 
     /// Set the size range limitation of this expansion
