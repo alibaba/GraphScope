@@ -474,8 +474,8 @@ class DynamicProjectedFragment {
                                                       e_prop);
   }
 
-  void PrepareToRunApp(grape::MessageStrategy strategy, bool need_split_edges) {
-    fragment_->PrepareToRunApp(strategy, need_split_edges);
+  void PrepareToRunApp(const grape::CommSpec& comm_spec, grape::PrepareConf conf) {
+    fragment_->PrepareToRunApp(comm_spec, conf);
   }
 
   inline fid_t fid() const { return fragment_->fid_; }

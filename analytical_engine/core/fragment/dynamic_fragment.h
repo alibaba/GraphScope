@@ -936,17 +936,16 @@ class DynamicFragment {
   template <typename IOADAPTOR_T>
   void Deserialize(const std::string& prefix, const fid_t fid) {}
 
-  virtual void PrepareToRunApp(grape::MessageStrategy strategy,
-                               bool need_split_edges) {
-    message_strategy_ = strategy;
-    if (strategy == grape::MessageStrategy::kAlongEdgeToOuterVertex ||
-        strategy == grape::MessageStrategy::kAlongIncomingEdgeToOuterVertex ||
-        strategy == grape::MessageStrategy::kAlongOutgoingEdgeToOuterVertex) {
-      initMessageDestination(strategy);
+  virtual void PrepareToRunApp(const grape::CommSpec& comm_spec, grape::PrepareConf conf) {
+    message_strategy_ = conf.message_strategy;
+    if (conf.message_strategy == grape::MessageStrategy::kAlongEdgeToOuterVertex ||
+        conf.message_strategy == grape::MessageStrategy::kAlongIncomingEdgeToOuterVertex ||
+        conf.message_strategy == grape::MessageStrategy::kAlongOutgoingEdgeToOuterVertex) {
+      initMessageDestination(conf.message_strategy);
     }
 
     // a naive implementation by copy edges
-    if (need_split_edges) {
+    if (conf.need_split_edges) {
       edge_space_.BuildSplitEdges(ivnum_);
     }
   }

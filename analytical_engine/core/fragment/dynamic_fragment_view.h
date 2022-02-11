@@ -247,8 +247,8 @@ class DynamicFragmentView : public DynamicFragment {
     return fragment_->MirrorVertices(fid);
   }
 
-  void PrepareToRunApp(grape::MessageStrategy strategy, bool need_split_edges) {
-    fragment_->PrepareToRunApp(strategy, need_split_edges);
+  void PrepareToRunApp(const grape::CommSpec& comm_spec, grape::PrepareConf conf) {
+    fragment_->PrepareToRunApp(comm_spec, conf);
   }
 
   inline bool HasNode(const oid_t& node) const {

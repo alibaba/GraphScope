@@ -275,7 +275,7 @@ class PythonPIEComputeContext {
   using vd_t = VD_T;
 
   explicit PythonPIEComputeContext(
-      std::vector<grape::VertexArray<typename FRAG_T::vertices, VD_T>>& data)
+      std::vector<grape::VertexArray<typename FRAG_T::vertices_t, VD_T>>& data)
       : superstep_(0), data_(data) {}
   ~PythonPIEComputeContext() {}
 

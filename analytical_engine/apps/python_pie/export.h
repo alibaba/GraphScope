@@ -42,6 +42,7 @@ using AdjList = typename gs::PIEAdjList<vineyard::ArrowFragment<
     _OID_TYPE, vineyard::property_graph_types::VID_TYPE>>;
 using VertexRange = typename vineyard::ArrowFragment<
     _OID_TYPE, vineyard::property_graph_types::VID_TYPE>::vertex_range_t;
+using VertexIterator = typename VertexRange::iterator;
 
 using grape::MessageStrategy;
 using gs::PIEAggregateType;
