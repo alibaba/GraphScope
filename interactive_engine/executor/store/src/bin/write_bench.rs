@@ -15,8 +15,11 @@ fn main() {
 
     let write_buffer_mb = &args[1];
     let compaction_style = &args[2];
-    let background_job = &args[3];
-    let thread_count = &args[4];
+    let max_write_buffer_num = &args[3];
+    let level_zero_compaction_trigger = &args[4];
+    let max_level_base_mb = &args[5];
+    let background_job = &args[6];
+    let thread_count = &args[7];
 
     println!("write_buffer_mb {}, compaction_style {}, background_job {}, thread_count {}", write_buffer_mb, compaction_style, background_job, thread_count);
     let path = format!("write_bench_data_dir");
@@ -28,6 +31,9 @@ fn main() {
     builder.add_storage_option("write_buffer_mb", write_buffer_mb);
     builder.add_storage_option("compaction_style", compaction_style);
     builder.add_storage_option("background_jobs", background_job);
+    builder.add_storage_option("max_write_buffer_num", max_write_buffer_num);
+    builder.add_storage_option("level_zero_compaction_trigger", level_zero_compaction_trigger);
+    builder.add_storage_option("max_level_base_mb", max_level_base_mb);
     let config = builder.build();
     let store = Arc::new(GraphStore::open(&config, &path).unwrap());
     println!("store opened.");

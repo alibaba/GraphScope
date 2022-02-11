@@ -217,7 +217,6 @@ fn init_options(options: &HashMap<String, String>) -> Options {
     if let Some(conf_str) = options.get("stats_dump_period_sec") {
         ret.set_stats_dump_period_sec(conf_str.parse().unwrap());
     }
-
     if let Some(conf_str) = options.get("compaction_style") {
         match conf_str.as_str() {
             "universal" => ret.set_compaction_style(DBCompactionStyle::Universal),
@@ -229,11 +228,16 @@ fn init_options(options: &HashMap<String, String>) -> Options {
         let size_mb: usize = conf_str.parse().unwrap();
         let size_bytes = size_mb * 1024 * 1024;
         ret.set_write_buffer_size(size_bytes);
-        let min_write_buffer_number_to_merge = 1;
-        let level0_file_num_compaction_trigger = 4;
-        ret.set_min_write_buffer_number(min_write_buffer_number_to_merge);
-        ret.set_level_zero_file_num_compaction_trigger(level0_file_num_compaction_trigger);
-        ret.set_max_bytes_for_level_base((size_bytes as i32 * min_write_buffer_number_to_merge * level0_file_num_compaction_trigger) as u64);
+    }
+    if let Some(conf_str) = options.get("max_write_buffer_num") {
+        ret.set_max_write_buffer_number(conf_str.parse().unwrap());
+    }
+    if let Some(conf_str) = options.get("level_zero_compaction_trigger") {
+        ret.set_level_zero_file_num_compaction_trigger(conf_str.parse().unwrap());
+    }
+    if let Some(conf_str) = options.get("max_level_base_mb") {
+        let size_mb: u64 = conf_str.parse().unwrap();
+        ret.set_max_bytes_for_level_base(size_mb * 1024 * 1024);
     }
     if let Some(conf_str) = options.get("background_jobs") {
         let background_jobs = conf_str.parse().unwrap();
