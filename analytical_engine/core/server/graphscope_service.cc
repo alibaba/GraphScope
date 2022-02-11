@@ -118,8 +118,6 @@ Status GraphScopeService::HeartBeat(ServerContext* context,
     switch (policy) {
     case DispatchResult::AggregatePolicy::kPickFirst: {
       splitOpResult(op_result, result[0], response_bodies);
-      // op_result->set_has_large_result(result[0].has_large_data());
-      // op_result->mutable_result()->assign(result[0].data());
       break;
     }
     case DispatchResult::AggregatePolicy::kPickFirstNonEmpty: {
@@ -128,8 +126,6 @@ Status GraphScopeService::HeartBeat(ServerContext* context,
 
         if (!data.empty()) {
           splitOpResult(op_result, e, response_bodies);
-          // op_result->set_has_large_result(e.has_large_data());
-          // op_result->mutable_result()->assign(data.begin(), data.end());
           break;
         }
       }
@@ -168,7 +164,6 @@ Status GraphScopeService::HeartBeat(ServerContext* context,
     case DispatchResult::AggregatePolicy::kConcat: {
       for (auto& e : result) {
         splitOpResult(op_result, e, response_bodies);
-        // op_result->mutable_result()->append(e.data());
       }
       break;
     }

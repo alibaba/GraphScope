@@ -83,7 +83,6 @@ class GraphScopeService final : public EngineService::Service {
         } else {
           body->mutable_chunk()->assign(data.begin() + i,
                                         data.begin() + i + chunk_size_);
-          // body->set_chunk(data.data() + i, chunk_size_);
           body->set_has_next(true);
         }
         response_bodies.push_back(std::move(response_body));
