@@ -56,6 +56,7 @@ mod test {
             params: Some(pb::QueryParams {
                 table_names: vec![common_pb::NameOrId::from("knows".to_string())],
                 columns: vec![],
+                is_all_columns: false,
                 limit: None,
                 predicate: None,
                 requirements: vec![],
@@ -68,6 +69,7 @@ mod test {
             params: Some(pb::QueryParams {
                 table_names: vec![],
                 columns: vec![],
+                is_all_columns: false,
                 limit: None,
                 predicate: None,
                 requirements: vec![],
@@ -114,6 +116,7 @@ mod test {
             params: Some(pb::QueryParams {
                 table_names: vec![common_pb::NameOrId::from("knows".to_string())],
                 columns: vec![],
+                is_all_columns: false,
                 limit: None,
                 predicate: None,
                 requirements: vec![],
@@ -125,7 +128,8 @@ mod test {
         let auxilia_opr = pb::Auxilia {
             params: Some(pb::QueryParams {
                 table_names: vec![],
-                columns: vec![common_pb::NameOrId::from("name".to_string())],
+                columns: vec!["name".into()],
+                is_all_columns: false,
                 limit: None,
                 predicate: None,
                 requirements: vec![],
@@ -175,7 +179,8 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(pb::QueryParams {
-                table_names: vec![common_pb::NameOrId::from("knows".to_string())],
+                table_names: vec!["knows".into()],
+                is_all_columns: false,
                 columns: vec![],
                 limit: None,
                 predicate: None,
@@ -188,7 +193,8 @@ mod test {
         let auxilia_opr = pb::Auxilia {
             params: Some(pb::QueryParams {
                 table_names: vec![],
-                columns: vec![common_pb::NameOrId::from("name".to_string())],
+                columns: vec!["name".into()],
+                is_all_columns: false,
                 limit: None,
                 predicate: None,
                 requirements: vec![],
@@ -242,7 +248,8 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(pb::QueryParams {
-                table_names: vec![common_pb::NameOrId::from("knows".to_string())],
+                table_names: vec!["knows".into()],
+                is_all_columns: false,
                 columns: vec![],
                 limit: None,
                 predicate: None,
@@ -255,7 +262,8 @@ mod test {
         let auxilia_opr = pb::Auxilia {
             params: Some(pb::QueryParams {
                 table_names: vec![],
-                columns: vec![common_pb::NameOrId::from("name".to_string())],
+                columns: vec!["name".into()],
+                is_all_columns: false,
                 limit: None,
                 predicate: str_to_expr_pb("@.name==\"vadas\"".to_string()).ok(),
                 requirements: vec![],
@@ -305,8 +313,9 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(pb::QueryParams {
-                table_names: vec![common_pb::NameOrId::from("knows".to_string())],
+                table_names: vec!["knows".into()],
                 columns: vec![],
+                is_all_columns: false,
                 limit: None,
                 predicate: None,
                 requirements: vec![],
@@ -318,7 +327,8 @@ mod test {
         let auxilia_opr = pb::Auxilia {
             params: Some(pb::QueryParams {
                 table_names: vec![],
-                columns: vec![common_pb::NameOrId::from("name".to_string())],
+                columns: vec!["name".into()],
+                is_all_columns: false,
                 limit: None,
                 predicate: str_to_expr_pb("@.name==\"vadas\"".to_string()).ok(),
                 requirements: vec![],

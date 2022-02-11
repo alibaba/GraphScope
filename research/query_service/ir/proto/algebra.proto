@@ -181,12 +181,14 @@ message QueryParams {
   repeated common.NameOrId table_names = 1;
   // The required columns of the table.
   repeated common.NameOrId columns = 2;
+  // Can specify to get all columns of the table
+  bool is_all_columns = 3;
   // The size limit
-  Range limit = 3;
+  Range limit = 4;
   // The optional predicate for the data tuple, which may be pushed down to the storage service
-  common.Expression predicate = 4;
+  common.Expression predicate = 5;
   // Extra requirements for general-purpose usage
-  repeated string requirements = 5;
+  repeated string requirements = 6;
 }
 
 // Scan is an operator that transforms the source data format (defined by the database)

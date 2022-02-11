@@ -353,6 +353,8 @@ pub struct NodeMeta {
     tables: BTreeSet<NameOrId>,
     /// The required columns (columns)
     columns: BTreeSet<NameOrId>,
+    /// A flag to indicate that all columns are required
+    is_all_columns: bool,
     /// Whether the current node accept columns
     is_add_column: bool,
 }
@@ -403,6 +405,31 @@ impl NodeMetaOpt {
                 for meta in metas {
                     meta.borrow_mut().insert_column(col.clone());
                 }
+            }
+        }
+    }
+
+    pub fn set_is_all_columns(&mut self, is_all_columns: bool) {
+        match self {
+            NodeMetaOpt::Single(meta) => meta.borrow_mut().is_all_columns = is_all_columns,
+            NodeMetaOpt::Union(metas) => {
+                for meta in metas {
+                    meta.borrow_mut().is_all_columns = is_all_columns;
+                }
+            }
+        }
+    }
+
+    pub fn is_all_columns(&self) -> bool {
+        match self {
+            NodeMetaOpt::Single(meta) => meta.borrow().is_all_columns,
+            NodeMetaOpt::Union(metas) => {
+                for meta in metas {
+                    if meta.borrow().is_all_columns {
+                        return true;
+                    }
+                }
+                false
             }
         }
     }
