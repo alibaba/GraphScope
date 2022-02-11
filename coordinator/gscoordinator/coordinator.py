@@ -373,8 +373,16 @@ class CoordinatorServiceServicer(
 
         # generate runstep requests, and run on analytical engine
         requests = _generate_runstep_request(self._session_id, dag_def, dag_bodies)
+        # response
+        response_head = None
+        response_bodies = []
         try:
             responses = self._analytical_engine_stub.RunStep(requests)
+            for response in responses:
+                if response.HasField("head"):
+                    response_head = response
+                else:
+                    response_bodies.append(response)
         except grpc.RpcError as e:
             logger.error(
                 "Engine RunStep failed, code: %s, details: %s",
@@ -393,13 +401,6 @@ class CoordinatorServiceServicer(
                 raise
 
         # handle result from response stream
-        response_head = None
-        response_bodies = []
-        for response in responses:
-            if response.HasField("head"):
-                response_head = response
-            else:
-                response_bodies.append(response)
         if response_head is None:
             raise AnalyticalEngineInternalError(
                 "Missing head from the response stream."

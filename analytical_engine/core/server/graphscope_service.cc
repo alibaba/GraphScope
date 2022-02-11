@@ -111,6 +111,7 @@ Status GraphScopeService::HeartBeat(ServerContext* context,
     if (!success) {
       op_result->set_error_msg(error_msgs);
       // break dag exection flow
+      stream->Write(response_head);
       return Status(StatusCode::INTERNAL, error_msgs);
     }
 
@@ -140,6 +141,7 @@ Status GraphScopeService::HeartBeat(ServerContext* context,
           op_result->set_code(rpc::Code::WORKER_RESULTS_INCONSISTENT_ERROR);
           op_result->set_error_msg(error_msg);
           LOG(ERROR) << error_msg;
+          stream->Write(response_head);
           return Status(StatusCode::INTERNAL, error_msg);
         }
 
@@ -156,6 +158,7 @@ Status GraphScopeService::HeartBeat(ServerContext* context,
           op_result->set_code(rpc::Code::WORKER_RESULTS_INCONSISTENT_ERROR);
           op_result->set_error_msg(ss.str());
           LOG(ERROR) << ss.str();
+          stream->Write(response_head);
           return Status(StatusCode::INTERNAL, ss.str());
         }
       }
