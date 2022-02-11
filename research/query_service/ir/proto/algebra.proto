@@ -224,8 +224,10 @@ message GetV {
   common.NameOrId tag = 1;
   // Determine what vertex to get from the tagged object
   VOpt opt = 2;
+  // The query parameters of getting vertices
+  QueryParams params = 3;
   // The alias of this vertex
-  common.NameOrId alias = 3;
+  common.NameOrId alias = 4;
 }
 
 // To tag the current data with an alias
@@ -291,6 +293,7 @@ message PathExpand {
   Range hop_range = 5;
 }
 
+/*
 message ShortestPathExpand {
   message WeightCal {
     enum Aggregate {
@@ -315,6 +318,7 @@ message ShortestPathExpand {
   // by default the length of the path.
   WeightCal weight_cal = 2;
 }
+ */
 
 // Apply is a relational operation where it first performs a inner correlated subtask for each tuple
 // of input relations, and then the result of the subtask will be joined back to each input tuple.
@@ -336,6 +340,24 @@ message SegmentApply {
   repeated common.NameOrId keys = 1;
   // A base of apply operation that is conducted on each group of the relations instead of tuple
   Apply apply_subtask = 2;
+}
+
+message Match {
+  message Binder {
+    oneof item {
+      EdgeExpand edge = 1;
+      PathExpand path = 2;
+      GetV vertex = 3;
+    }
+  }
+  // A sentence defines a match
+  message Sentence {
+    common.NameOrId start = 1;
+    repeated Binder binders = 2;
+    common.NameOrId end = 3;
+    bool is_anti = 4;
+  }
+  repeated Sentence sentences = 1;
 }
 
 message Sink {
@@ -379,9 +401,8 @@ message LogicalPlan {
       GetV vertex = 30;
       EdgeExpand edge = 31;
       PathExpand path = 32;
-      ShortestPathExpand shortest_path = 33;
-      PathStart path_start = 34;
-      PathEnd path_end = 35;
+      PathStart path_start = 33;
+      PathEnd path_end = 34;
     }
   }
   message Node {
