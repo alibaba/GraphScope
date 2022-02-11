@@ -177,9 +177,9 @@ impl<D: Debug> Debug for Maximum<D> {
 unsafe impl<D: Send> Send for Maximum<D> {}
 
 impl<D: Debug + Send + PartialOrd + 'static> Accumulator<D, Option<D>> for Maximum<D> {
-    fn accum(&mut self, mut next: D) -> FnExecResult<()> {
+    fn accum(&mut self, next: D) -> FnExecResult<()> {
         if let Some(pre) = self.max.as_mut() {
-            if pre < &mut next {
+            if (pre as &D) < &next {
                 *pre = next;
             }
         } else {
@@ -221,9 +221,9 @@ impl<D: Debug> Debug for Minimum<D> {
 unsafe impl<D: Send> Send for Minimum<D> {}
 
 impl<D: Debug + Send + PartialOrd + 'static> Accumulator<D, Option<D>> for Minimum<D> {
-    fn accum(&mut self, mut next: D) -> FnExecResult<()> {
+    fn accum(&mut self, next: D) -> FnExecResult<()> {
         if let Some(pre) = self.min.as_mut() {
-            if pre > &mut next {
+            if (pre as &D) > &next {
                 *pre = next;
             }
         } else {
