@@ -263,6 +263,9 @@ impl Decode for RecordAccumulator {
 #[cfg(test)]
 mod tests {
 
+    use std::borrow::BorrowMut;
+    use std::cmp::Ordering;
+
     use ir_common::generated::algebra as pb;
     use ir_common::generated::common as common_pb;
     use pegasus::api::{Fold, Sink};
@@ -493,6 +496,9 @@ mod tests {
             if let Some(entry) = record.get(Some(&"a".into())) {
                 fold_result = entry.as_ref().clone();
             }
+        }
+        if let Entry::Collection(collection) = fold_result.borrow_mut() {
+            collection.sort_by(|v1, v2| v1.partial_cmp(&v2).unwrap_or(Ordering::Equal));
         }
         assert_eq!(fold_result, expected_result);
     }
