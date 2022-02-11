@@ -631,6 +631,11 @@ fn set_range(ptr: *const c_void, lower: i32, upper: i32, opr: Opr) -> ResultCode
                 edgexpd.params.as_mut().unwrap().limit = Some(pb::Range { lower, upper });
                 std::mem::forget(edgexpd);
             }
+            Opr::GetV => {
+                let mut getv = unsafe { Box::from_raw(ptr as *mut pb::GetV) };
+                getv.params.as_mut().unwrap().limit = Some(pb::Range { lower, upper });
+                std::mem::forget(getv);
+            }
             Opr::PathExpand => {
                 let mut pathxpd = unsafe { Box::from_raw(ptr as *mut pb::PathExpand) };
                 pathxpd.hop_range = Some(pb::Range { lower, upper });
@@ -725,6 +730,11 @@ fn set_predicate(ptr: *const c_void, cstr_predicate: *const c_char, opr: Opr) ->
                 scan.params.as_mut().unwrap().predicate = predicate_pb.ok();
                 std::mem::forget(scan);
             }
+            Opr::GetV => {
+                let mut getv = unsafe { Box::from_raw(ptr as *mut pb::GetV) };
+                getv.params.as_mut().unwrap().predicate = predicate_pb.ok();
+                std::mem::forget(getv);
+            }
             _ => unreachable!(),
         }
     }
@@ -796,7 +806,20 @@ fn process_params(ptr: *const c_void, key: ParamsKey, val: FfiNameOrId, opr: Opr
                 let mut getv = unsafe { Box::from_raw(ptr as *mut pb::GetV) };
                 match key {
                     ParamsKey::Tag => getv.tag = pb.unwrap(),
-                    _ => unreachable!(),
+                    ParamsKey::Table => {
+                        if let Some(label) = pb.unwrap() {
+                            getv.params
+                                .as_mut()
+                                .unwrap()
+                                .table_names
+                                .push(label)
+                        }
+                    }
+                    ParamsKey::Column => {
+                        if let Some(ppt) = pb.unwrap() {
+                            getv.params.as_mut().unwrap().columns.push(ppt)
+                        }
+                    }
                 }
                 std::mem::forget(getv);
             }
@@ -1620,7 +1643,7 @@ mod graph {
 
     /// Set getting all properties for this edge expansion
     #[no_mangle]
-    pub extern "C" fn set_edgexpd_is_all_properties(ptr_edgexpd: *const c_void) -> ResultCode {
+    pub extern "C" fn set_edgexpd_all_properties(ptr_edgexpd: *const c_void) -> ResultCode {
         let mut edgexpd = unsafe { Box::from_raw(ptr_edgexpd as *mut pb::EdgeExpand) };
         edgexpd.params.as_mut().unwrap().is_all_columns = true;
         std::mem::forget(edgexpd);
@@ -1676,6 +1699,14 @@ mod graph {
         let getv = Box::new(pb::GetV {
             tag: None,
             opt: unsafe { std::mem::transmute::<FfiVOpt, i32>(opt) },
+            params: Some(pb::QueryParams {
+                table_names: vec![],
+                columns: vec![],
+                is_all_columns: false,
+                limit: None,
+                predicate: None,
+                requirements: vec![],
+            }),
             alias: None,
         });
         Box::into_raw(getv) as *const c_void
@@ -1685,6 +1716,42 @@ mod graph {
     #[no_mangle]
     pub extern "C" fn set_getv_tag(ptr_getv: *const c_void, tag: FfiNameOrId) -> ResultCode {
         process_params(ptr_getv, ParamsKey::Tag, tag, Opr::GetV)
+    }
+
+    /// Add a label of the edge that this expansion must satisfy
+    #[no_mangle]
+    pub extern "C" fn add_getv_label(ptr_getv: *const c_void, label: FfiNameOrId) -> ResultCode {
+        process_params(ptr_getv, ParamsKey::Table, label, Opr::EdgeExpand)
+    }
+
+    /// Add a property that this edge expansion must carry
+    #[no_mangle]
+    pub extern "C" fn add_getv_property(ptr_getv: *const c_void, property: FfiNameOrId) -> ResultCode {
+        process_params(ptr_getv, ParamsKey::Column, property, Opr::GetV)
+    }
+
+    /// Set getting all properties for this edge expansion
+    #[no_mangle]
+    pub extern "C" fn set_getv_all_properties(ptr_getv: *const c_void) -> ResultCode {
+        let mut getv = unsafe { Box::from_raw(ptr_getv as *mut pb::GetV) };
+        getv.params.as_mut().unwrap().is_all_columns = true;
+        std::mem::forget(getv);
+
+        ResultCode::Success
+    }
+
+    /// Set the size range limitation of this expansion
+    #[no_mangle]
+    pub extern "C" fn set_getv_limit(ptr_getv: *const c_void, lower: i32, upper: i32) -> ResultCode {
+        set_range(ptr_getv, lower, upper, Opr::GetV)
+    }
+
+    /// Set the edge predicate of this expansion
+    #[no_mangle]
+    pub extern "C" fn set_getv_predicate(
+        ptr_getv: *const c_void, cstr_predicate: *const c_char,
+    ) -> ResultCode {
+        set_predicate(ptr_getv, cstr_predicate, Opr::GetV)
     }
 
     /// Set vertex alias of this getting vertex

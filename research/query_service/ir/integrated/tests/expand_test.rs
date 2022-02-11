@@ -384,6 +384,14 @@ mod test {
         let getv_opr = pb::GetV {
             tag: None,
             opt: 1, // EndV
+            params: Some(pb::QueryParams {
+                table_names: vec![],
+                columns: vec![],
+                is_all_columns: false,
+                limit: None,
+                predicate: None,
+                requirements: vec![],
+            }),
             alias: None,
         };
 
@@ -439,6 +447,14 @@ mod test {
         let getv_opr = pb::GetV {
             tag: None,
             opt: 0, // StartV
+            params: Some(pb::QueryParams {
+                table_names: vec![],
+                columns: vec![],
+                is_all_columns: false,
+                limit: None,
+                predicate: None,
+                requirements: vec![],
+            }),
             alias: None,
         };
 
@@ -494,6 +510,14 @@ mod test {
         let getv_opr = pb::GetV {
             tag: None,
             opt: 2, // OtherV
+            params: Some(pb::QueryParams {
+                table_names: vec![],
+                columns: vec![],
+                is_all_columns: false,
+                limit: None,
+                predicate: None,
+                requirements: vec![],
+            }),
             alias: None,
         };
 

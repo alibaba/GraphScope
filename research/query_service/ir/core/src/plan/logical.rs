@@ -849,10 +849,13 @@ impl AsLogical for pb::PathExpand {
 }
 
 impl AsLogical for pb::GetV {
-    fn preprocess(&mut self, _meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
+    fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
         plan_meta
             .curr_node_metas_mut()
             .set_is_add_column(true);
+        if let Some(params) = self.params.as_mut() {
+            preprocess_params(params, meta, plan_meta)?;
+        }
         Ok(())
     }
 }
@@ -1633,7 +1636,12 @@ mod test {
         assert_eq!(plan.meta.get_tag_nodes(&"e".into()).unwrap(), vec![1]);
 
         // .inV().as("v")
-        let getv = pb::GetV { tag: None, opt: 1, alias: Some("v".into()) };
+        let getv = pb::GetV {
+            tag: None,
+            opt: 1,
+            params: Some(query_params(vec![], vec![])),
+            alias: Some("v".into()),
+        };
         plan.append_operator_as_node(getv.into(), vec![1])
             .unwrap();
         assert_eq!(plan.meta.get_curr_nodes(), &[2]);
@@ -1770,7 +1778,12 @@ mod test {
         assert_eq!(plan.meta.get_tag_nodes(&"b".into()).unwrap(), vec![opr_id as u32]);
 
         //.inV().as('c')
-        let getv = pb::GetV { tag: None, opt: 2, alias: Some("c".into()) };
+        let getv = pb::GetV {
+            tag: None,
+            opt: 2,
+            params: Some(query_params(vec![], vec![])),
+            alias: Some("c".into()),
+        };
         opr_id = plan
             .append_operator_as_node(getv.into(), vec![opr_id as u32])
             .unwrap();
