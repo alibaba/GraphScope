@@ -13,7 +13,6 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use std::cmp::Ordering;
 use std::collections::HashSet;
 use std::fmt::Debug;
 use std::hash::Hash;
@@ -22,7 +21,7 @@ use std::ops::Add;
 
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 
-use crate::error::{FnExecError, FnExecResult};
+use crate::error::FnExecResult;
 
 pub trait Accumulator<I, O>: Send + Debug {
     fn accum(&mut self, next: I) -> FnExecResult<()>;
@@ -144,7 +143,7 @@ impl<D: Debug + Eq + Hash + Send + 'static> Accumulator<D, Vec<D>> for ToSet<D> 
 
 impl<D: Encode + Eq + Hash> Encode for ToSet<D> {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
-        writer.write_u32(self.inner.len() as u32)?;
+        writer.write_u64(self.inner.len() as u64)?;
         for data in self.inner.iter() {
             data.write_to(writer)?;
         }
@@ -178,15 +177,10 @@ impl<D: Debug> Debug for Maximum<D> {
 unsafe impl<D: Send> Send for Maximum<D> {}
 
 impl<D: Debug + Send + PartialOrd + 'static> Accumulator<D, Option<D>> for Maximum<D> {
-    fn accum(&mut self, next: D) -> FnExecResult<()> {
-        if let Some(pre) = self.max.take() {
-            match &pre.partial_cmp(&next) {
-                Some(Ordering::Less) => {
-                    self.max = Some(next);
-                }
-                Some(Ordering::Equal) => self.max = Some(pre),
-                Some(Ordering::Greater) => self.max = Some(pre),
-                None => Err(FnExecError::accum_error("Data cannot be compared in Maximum Accumulator"))?,
+    fn accum(&mut self, mut next: D) -> FnExecResult<()> {
+        if let Some(pre) = self.max.as_mut() {
+            if pre < &mut next {
+                *pre = next;
             }
         } else {
             self.max = Some(next);
@@ -227,15 +221,10 @@ impl<D: Debug> Debug for Minimum<D> {
 unsafe impl<D: Send> Send for Minimum<D> {}
 
 impl<D: Debug + Send + PartialOrd + 'static> Accumulator<D, Option<D>> for Minimum<D> {
-    fn accum(&mut self, next: D) -> FnExecResult<()> {
-        if let Some(pre) = self.min.take() {
-            match &pre.partial_cmp(&next) {
-                Some(Ordering::Less) => {
-                    self.min = Some(pre);
-                }
-                Some(Ordering::Equal) => self.min = Some(pre),
-                Some(Ordering::Greater) => self.min = Some(next),
-                None => Err(FnExecError::accum_error("Data cannot be compared in Minimum Accumulator"))?,
+    fn accum(&mut self, mut next: D) -> FnExecResult<()> {
+        if let Some(pre) = self.min.as_mut() {
+            if pre > &mut next {
+                *pre = next;
             }
         } else {
             self.min = Some(next);
@@ -328,7 +317,7 @@ impl<D: Debug + Eq + Hash + Send + 'static> Accumulator<D, u64> for DistinctCoun
 
 impl<D: Encode + Eq + Hash> Encode for DistinctCount<D> {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
-        writer.write_u32(self.inner.len() as u32)?;
+        writer.write_u64(self.inner.len() as u64)?;
         for data in self.inner.iter() {
             data.write_to(writer)?;
         }
