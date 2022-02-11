@@ -134,6 +134,10 @@ impl AsPhysical for pb::EdgeExpand {
                         // Vertex expansion
                         // Move everything to Auxilia
                         let mut new_params = params.clone();
+                        params.columns.clear();
+                        params.is_all_columns = false;
+                        params.predicate = None;
+
                         new_params.table_names.clear();
                         new_params.columns = columns
                             .into_iter()
@@ -242,12 +246,16 @@ impl AsPhysical for pb::GetV {
     fn post_process(&mut self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         let mut is_adding_auxilia = false;
         let mut auxilia = pb::Auxilia { params: None, alias: None };
-        if let Some(params) = self.params.as_ref() {
+        if let Some(params) = self.params.as_mut() {
             if let Some(node_metas) = plan_meta.curr_node_metas() {
                 let columns = node_metas.get_columns();
                 let is_all_columns = node_metas.is_all_columns();
                 if !columns.is_empty() || is_all_columns {
                     let mut new_params = params.clone();
+                    params.columns.clear();
+                    params.is_all_columns = false;
+                    params.predicate = None;
+
                     new_params.columns = columns
                         .into_iter()
                         .map(|tag| common_pb::NameOrId::from(tag))
