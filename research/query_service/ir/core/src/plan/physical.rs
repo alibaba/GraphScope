@@ -76,6 +76,21 @@ fn simple_add_job_builder<M: Message>(
     Ok(())
 }
 
+fn update_query_params(
+    params: &mut pb::QueryParams, columns: Vec<common_pb::NameOrId>, is_all_columns: bool,
+) -> pb::QueryParams {
+    let mut new_params = params.clone();
+    params.columns.clear();
+    params.is_all_columns = false;
+    params.predicate = None;
+
+    new_params.table_names.clear();
+    new_params.columns = columns;
+    new_params.is_all_columns = is_all_columns;
+
+    new_params
+}
+
 impl AsPhysical for pb::Project {
     fn add_job_builder(&self, builder: &mut JobBuilder, _plan_meta: &mut PlanMeta) -> IrResult<()> {
         simple_add_job_builder(builder, &pb::logical_plan::Operator::from(self.clone()), SimpleOpr::Map)
@@ -133,19 +148,14 @@ impl AsPhysical for pb::EdgeExpand {
                     if !self.is_edge {
                         // Vertex expansion
                         // Move everything to Auxilia
-                        let mut new_params = params.clone();
-                        params.columns.clear();
-                        params.is_all_columns = false;
-                        params.predicate = None;
-
-                        new_params.table_names.clear();
-                        new_params.columns = columns
-                            .into_iter()
-                            .map(|tag| common_pb::NameOrId::from(tag))
-                            .collect();
-                        new_params.is_all_columns = is_all_columns;
-
-                        auxilia.params = Some(new_params);
+                        auxilia.params = Some(update_query_params(
+                            params,
+                            columns
+                                .into_iter()
+                                .map(|tag| common_pb::NameOrId::from(tag))
+                                .collect(),
+                            is_all_columns,
+                        ));
                         auxilia.alias = self.alias.clone();
                         self.alias = None;
                         is_adding_auxilia = true;
@@ -251,18 +261,14 @@ impl AsPhysical for pb::GetV {
                 let columns = node_metas.get_columns();
                 let is_all_columns = node_metas.is_all_columns();
                 if !columns.is_empty() || is_all_columns {
-                    let mut new_params = params.clone();
-                    params.columns.clear();
-                    params.is_all_columns = false;
-                    params.predicate = None;
-
-                    new_params.columns = columns
-                        .into_iter()
-                        .map(|tag| common_pb::NameOrId::from(tag))
-                        .collect();
-                    new_params.is_all_columns = is_all_columns;
-
-                    auxilia.params = Some(new_params);
+                    auxilia.params = Some(update_query_params(
+                        params,
+                        columns
+                            .into_iter()
+                            .map(|tag| common_pb::NameOrId::from(tag))
+                            .collect(),
+                        is_all_columns,
+                    ));
                     auxilia.alias = self.alias.clone();
                     self.alias = None;
                     is_adding_auxilia = true;
