@@ -610,7 +610,7 @@ class LocalLauncher(Launcher):
         self._stop_subprocess(self._etcd_process)
 
     def _stop_vineyard(self):
-        self._stop_subprocess(self._vineyardd_process)
+        self._stop_subprocess(self._vineyardd_process, kill=True)
 
     def _stop_interactive_engine_service(self):
         self._stop_subprocess(self._zetcd_process)
