@@ -19,7 +19,6 @@ mod common;
 
 #[cfg(test)]
 mod test {
-    use std::collections::HashMap;
     use std::sync::Arc;
 
     use graph_proxy::{create_demo_graph, SimplePartition};
@@ -29,6 +28,8 @@ mod test {
     use runtime::graph::element::GraphElement;
     use runtime::process::operator::source::SourceOperator;
     use runtime::process::record::Record;
+
+    use crate::common::test::*;
 
     // g.V()
     fn scan_gen(scan_opr_pb: pb::Scan) -> Box<dyn Iterator<Item = Record> + Send> {
@@ -70,14 +71,7 @@ mod test {
         let source_iter = scan_gen(pb::Scan {
             scan_opt: 0,
             alias: None,
-            params: Some(pb::QueryParams {
-                tables: vec!["person".into()],
-                columns: vec![],
-                is_all_columns: false,
-                limit: None,
-                predicate: None,
-                extra: HashMap::new(),
-            }),
+            params: Some(query_params(vec!["person".into()], vec![], None)),
             idx_predicate: None,
         });
         let mut result_ids = vec![];
@@ -102,14 +96,7 @@ mod test {
         let source_iter = scan_gen(pb::Scan {
             scan_opt: 0,
             alias: None,
-            params: Some(pb::QueryParams {
-                tables: vec!["person".into(), "software".into()],
-                columns: vec![],
-                is_all_columns: false,
-                limit: None,
-                predicate: None,
-                extra: HashMap::new(),
-            }),
+            params: Some(query_params(vec!["person".into(), "software".into()], vec![], None)),
             idx_predicate: None,
         });
         let mut result_ids = vec![];
