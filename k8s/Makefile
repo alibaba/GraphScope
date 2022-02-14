@@ -39,8 +39,8 @@ else
 					   -v ${HOME}/.cargo/registry:/home/graphscope/.cargo/registry
 endif
 
-VERSION ?= latest
-VINEYARD_VERSION ?= v0.3.18
+VERSION ?= mutable_fragment
+VINEYARD_VERSION ?= mutable_fragment
 PROFILE ?= release
 
 
@@ -96,13 +96,13 @@ graphscope-darwin-py3:
 	# Avoid copy vineyard library with the same basename by:
 	# 	1) reinstall vineyard to /usr/local and
 	# 	2) rm /opt/vineyard/lib
-	cd /tmp && git clone -b ${VINEYARD_VERSION} https://github.com/v6d-io/v6d.git --depth=1 && \
-		cd v6d && git submodule update --init && \
+	cd /tmp && git clone -b ${VINEYARD_VERSION} https://github.com/luoxiaojian/libvineyard.git --depth=1 && \
+		cd libvineyard && git submodule update --init && \
 		mkdir -p build && cd build && \
 		cmake .. -DCMAKE_INSTALL_PREFIX=/usr/local && \
 		sudo make install -j`nproc` && \
 		sudo rm -fr /opt/vineyard/lib
-	sudo rm -fr /tmp/v6d /tmp/libgrape-lite
+	sudo rm -fr /tmp/libvineyard /tmp/libgrape-lite
 	# build graphscope
 	cd $(WORKING_DIR)/../ && \
 		make install && \

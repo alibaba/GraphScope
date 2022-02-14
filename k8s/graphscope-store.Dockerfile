@@ -1,4 +1,4 @@
-ARG BASE_VERSION=v0.3.18
+ARG BASE_VERSION=mutable_fragment
 FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:$BASE_VERSION as builder
 
 ARG CI=true

@@ -14,8 +14,8 @@ readonly GREEN="\033[0;32m"
 readonly NC="\033[0m" # No Color
 
 readonly GRAPE_BRANCH="master" # libgrape-lite branch
-readonly V6D_VERSION="0.3.18"  # vineyard version
-readonly V6D_BRANCH="v0.3.18" # vineyard branch
+readonly V6D_VERSION="mutable_fragment"  # vineyard version
+readonly V6D_BRANCH="mutable_fragment" # vineyard branch
 
 readonly OUTPUT_ENV_FILE="${HOME}/.graphscope_env"
 IS_IN_WSL=false && [[ ! -z "${IS_WSL}" || ! -z "${WSL_DISTRO_NAME}" ]] && IS_IN_WSL=true
@@ -484,10 +484,10 @@ install_vineyard() {
     return 0
   fi
 
-  check_and_remove_dir "/tmp/v6d"
+  check_and_remove_dir "/tmp/libvineyard"
   git clone -b ${V6D_BRANCH} --single-branch --depth=1 \
-      https://github.com/v6d-io/v6d.git /tmp/v6d
-  pushd /tmp/v6d
+      https://github.com/luoxiaojian/libvineyard.git
+  pushd /tmp/libvineyard
   git submodule update --init
   mkdir -p build && pushd build
   cmake .. -DCMAKE_INSTALL_PREFIX=${DEPS_PREFIX} \
@@ -497,7 +497,7 @@ install_vineyard() {
   sudo make install && popd
   popd
 
-  rm -fr /tmp/v6d
+  rm -fr /tmp/libvineyard
 }
 
 ##########################
