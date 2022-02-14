@@ -99,13 +99,25 @@ message RunStepRequest {
   }
 }
 
-message RunStepResponse {
+message RunStepResponseHead {
   // list of result of ops in dag
   repeated OpResult results = 1;
 
   Code code = 2;
   string error_msg = 3;
   bytes full_exception = 4;
+}
+
+message RunStepResponseBody {
+  bytes chunk = 1;
+  bool has_next = 2;
+}
+
+message RunStepResponse {
+  oneof value {
+    RunStepResponseHead head = 1;
+    RunStepResponseBody body = 2;
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

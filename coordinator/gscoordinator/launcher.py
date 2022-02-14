@@ -176,9 +176,9 @@ class LocalLauncher(Launcher):
     def stop(self, is_dangling=False):
         if not self._closed:
             self._stop_interactive_engine_service()
+            self._stop_analytical_engine()
             self._stop_vineyard()
             self._stop_etcd()
-            self._stop_analytical_engine()
             self._closed = True
 
     def set_session_workspace(self, session_id):
@@ -610,7 +610,7 @@ class LocalLauncher(Launcher):
         self._stop_subprocess(self._etcd_process)
 
     def _stop_vineyard(self):
-        self._stop_subprocess(self._vineyardd_process)
+        self._stop_subprocess(self._vineyardd_process, kill=True)
 
     def _stop_interactive_engine_service(self):
         self._stop_subprocess(self._zetcd_process)

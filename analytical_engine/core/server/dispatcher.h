@@ -68,6 +68,8 @@ class DispatchResult {
 
   std::string message() { return message_; }
 
+  bool has_large_data() const { return has_large_data_; }
+
   /**
    * Set the graph metadata. The meta should be kept consistent among all
    * workers.
@@ -84,24 +86,28 @@ class DispatchResult {
   rpc::graph::GraphDefPb& graph_def() { return graph_def_; }
 
   void set_data(const std::string& data,
-                AggregatePolicy policy = AggregatePolicy::kRequireConsistent) {
+                AggregatePolicy policy = AggregatePolicy::kRequireConsistent,
+                bool large_data = false) {
     if (policy != AggregatePolicy::kPickFirst ||
         worker_id_ == grape::kCoordinatorRank) {
       data_ = data;
     }
+    has_large_data_ = large_data;
     aggregate_policy_ = policy;
   }
 
   void set_data(const grape::InArchive& arc,
-                AggregatePolicy policy = AggregatePolicy::kRequireConsistent) {
+                AggregatePolicy policy = AggregatePolicy::kRequireConsistent,
+                bool large_data = false) {
     if (policy != AggregatePolicy::kPickFirst ||
         worker_id_ == grape::kCoordinatorRank) {
       data_.assign(arc.GetBuffer(), arc.GetSize());
     }
+    has_large_data_ = large_data;
     aggregate_policy_ = policy;
   }
 
-  const std::string& data() { return data_; }
+  const std::string& data() const { return data_; }
 
   AggregatePolicy aggregate_policy() const { return aggregate_policy_; }
 
@@ -109,6 +115,7 @@ class DispatchResult {
   int worker_id_{};
   rpc::Code error_code_{};
   std::string message_;
+  bool has_large_data_{};
   std::string data_;
   AggregatePolicy aggregate_policy_{};
 
