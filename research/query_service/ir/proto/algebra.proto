@@ -347,7 +347,7 @@ message SegmentApply {
   Apply apply_subtask = 2;
 }
 
-message Match {
+message Patmat {
   message Binder {
     oneof item {
       EdgeExpand edge = 1;
@@ -408,7 +408,7 @@ message LogicalPlan {
       PathExpand path = 32;
       PathStart path_start = 33;
       PathEnd path_end = 34;
-      Match match = 35;
+      Patmat patmat = 35;
     }
   }
   message Node {

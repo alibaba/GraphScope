@@ -125,7 +125,7 @@ impl AsPhysical for pb::Scan {
             }
             Ok(())
         } else {
-            Err(IrError::MissingDataError("query params".to_string()))
+            Err(IrError::MissingDataError("Scan::params".to_string()))
         }
     }
 }
@@ -169,7 +169,7 @@ impl AsPhysical for pb::EdgeExpand {
                 }
             }
         } else {
-            return Err(IrError::MissingDataError("query params".to_string()));
+            return Err(IrError::MissingDataError("EdgeExpand::params".to_string()));
         }
         simple_add_job_builder(
             builder,
@@ -237,11 +237,11 @@ impl AsPhysical for pb::PathExpand {
                         SimpleOpr::Map,
                     )
                 } else {
-                    Err(IrError::MissingDataError("edge expand".to_string()))
+                    Err(IrError::MissingDataError("PathExpand::base".to_string()))
                 }
             }
         } else {
-            Err(IrError::MissingDataError("hop range".to_string()))
+            Err(IrError::MissingDataError("PathExpand::hop_range".to_string()))
         }
     }
 }
@@ -275,7 +275,7 @@ impl AsPhysical for pb::GetV {
                 }
             }
         } else {
-            return Err(IrError::MissingDataError("query params".to_string()));
+            return Err(IrError::MissingDataError("GetV::params".to_string()));
         }
         simple_add_job_builder(builder, &pb::logical_plan::Operator::from(self.clone()), SimpleOpr::Map)?;
         if is_adding_auxilia {
@@ -318,7 +318,7 @@ impl AsPhysical for pb::Limit {
                 Ok(())
             }
         } else {
-            Err(IrError::MissingDataError("limit range".to_string()))
+            Err(IrError::MissingDataError("Limit::range".to_string()))
         }
     }
 }
@@ -386,7 +386,7 @@ impl AsPhysical for pb::logical_plan::Operator {
                 _ => Err(IrError::Unsupported(format!("the operator {:?}", self))),
             }
         } else {
-            Err(IrError::MissingDataError("operator".to_string()))
+            Err(IrError::MissingDataError("logical_plan::Operator::opr".to_string()))
         }
     }
 }
@@ -420,7 +420,7 @@ impl AsPhysical for LogicalPlan {
                         pb::logical_plan::Operator::from(apply_opr.clone()).encode_to_vec(),
                     );
                 } else {
-                    return Err(IrError::MissingDataError("sub-plan".to_string()));
+                    return Err(IrError::MissingDataError("Apply::subplan".to_string()));
                 }
             } else {
                 if let Some(Edge(edgexpd)) = curr_node.borrow().opr.opr.as_ref() {
@@ -480,7 +480,9 @@ impl AsPhysical for LogicalPlan {
 
                             builder.join(pegasus_join_kind, left_plan, right_plan, join_bytes);
                         }
-                        None => return Err(IrError::MissingDataError("merge node".to_string())),
+                        None => {
+                            return Err(IrError::MissingDataError("Union/Join::merge_node".to_string()))
+                        }
                         _ => {
                             return Err(IrError::Unsupported(
                                 "operators other than `Union` and `Join`".to_string(),

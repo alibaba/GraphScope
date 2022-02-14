@@ -28,6 +28,7 @@ use vec_map::VecMap;
 
 use crate::error::{IrError, IrResult};
 use crate::plan::meta::{PlanMeta, StoreMeta, INVALID_META_ID, STORE_META};
+use crate::plan::patmat::{NaiveProposal, PatmatProposal};
 use crate::JsonIO;
 
 /// An internal representation of the pb-[`Node`].
@@ -265,6 +266,47 @@ impl LogicalPlan {
         Ok(id)
     }
 
+    /// Append an existing logical plan to the logical plan, with the specified
+    /// parent node's id. Note that we currently only allow appending a logical
+    /// plan to one single parent node.
+    pub fn append_plan(&mut self, plan: pb::LogicalPlan, parent: u32) -> IrResult<u32> {
+        let mut id_mappings: HashMap<u32, u32> = HashMap::new();
+        let mut parents: HashMap<u32, BTreeSet<u32>> = HashMap::new();
+        let mut result_id = 0_u32;
+        for (id, node) in plan.nodes.into_iter().enumerate() {
+            for child in &node.children {
+                parents
+                    .entry(*child as u32)
+                    .or_insert_with(BTreeSet::new)
+                    .insert(id as u32);
+            }
+            if let Some(opr) = node.opr {
+                let new_parents = if id == 0 {
+                    vec![parent]
+                } else {
+                    parents
+                        .get(&(id as u32))
+                        .cloned()
+                        .unwrap_or(BTreeSet::new())
+                        .into_iter()
+                        .map(|old| {
+                            id_mappings
+                                .get(&old)
+                                .ok_or(Err(IrError::ParentNodeNotExist(old)))
+                        })
+                        .collect::<IrResult<Vec<u32>>>()?
+                };
+                let new_id = self.append_operator_as_node(opr, new_parents)?;
+                id_mappings.insert(id as u32, new_id);
+                result_id = new_id;
+            } else {
+                return Err(IrError::MissingDataError("Node::opr".to_string()));
+            }
+        }
+
+        Ok(result_id)
+    }
+
     /// Append an operator into the logical plan, as a new node with `self.max_node_id` as its id.
     pub fn append_operator_as_node(
         &mut self, mut opr: pb::logical_plan::Operator, parent_ids: Vec<u32>,
@@ -274,37 +316,41 @@ impl LogicalPlan {
 
         let old_curr_nodes = self.meta.get_curr_nodes().to_vec();
         let mut is_update_curr = false;
+        if opr.opr.is_none() {
+            return Err(IrError::MissingDataError("Operator::opr".to_string()));
+        }
+        let opr_ref = opr.opr.as_ref().unwrap();
         if let Ok(meta) = STORE_META.read() {
-            match &opr.opr {
-                Some(Opr::Scan(scan)) => {
+            match opr_ref {
+                Opr::Scan(scan) => {
                     if let Some(alias) = &scan.alias {
                         self.meta
                             .insert_tag_nodes(alias.clone().try_into()?, vec![self.max_node_id]);
                     }
                     self.meta.set_curr_node(self.max_node_id);
                 }
-                Some(Opr::Edge(edge)) => {
+                Opr::Edge(edge) => {
                     if let Some(alias) = &edge.alias {
                         self.meta
                             .insert_tag_nodes(alias.clone().try_into()?, vec![self.max_node_id]);
                     }
                     self.meta.set_curr_node(self.max_node_id);
                 }
-                Some(Opr::Vertex(getv)) => {
+                Opr::Vertex(getv) => {
                     if let Some(alias) = &getv.alias {
                         self.meta
                             .insert_tag_nodes(alias.clone().try_into()?, vec![self.max_node_id]);
                     }
                     self.meta.set_curr_node(self.max_node_id);
                 }
-                Some(Opr::Path(path)) => {
+                Opr::Path(path) => {
                     if let Some(alias) = &path.alias {
                         self.meta
                             .insert_tag_nodes(alias.clone().try_into()?, vec![self.max_node_id]);
                     }
                     self.meta.set_curr_node(self.max_node_id);
                 }
-                Some(Opr::GroupBy(group)) => {
+                Opr::GroupBy(group) => {
                     for mapping in &group.mappings {
                         if let Some(key) = mapping.key.as_ref() {
                             if key.property.is_none() {
@@ -325,7 +371,7 @@ impl LogicalPlan {
                     }
                     is_update_curr = true;
                 }
-                Some(Opr::Project(ref proj)) => {
+                Opr::Project(ref proj) => {
                     is_update_curr = true;
                     if proj.mappings.len() == 1 {
                         // change current node as the tagged node
@@ -354,14 +400,14 @@ impl LogicalPlan {
                         }
                     }
                 }
-                Some(Opr::Apply(apply_opr)) => {
+                Opr::Apply(apply_opr) => {
                     if let Some(alias) = &apply_opr.alias {
                         self.meta
                             .insert_tag_nodes(alias.clone().try_into().unwrap(), vec![self.max_node_id]);
                     }
                     is_update_curr = true
                 }
-                Some(Opr::As(as_opr)) => {
+                Opr::As(as_opr) => {
                     if let Some(alias) = &as_opr.alias {
                         self.meta.insert_tag_nodes(
                             alias.clone().try_into().unwrap(),
@@ -369,21 +415,36 @@ impl LogicalPlan {
                         );
                     }
                 }
-                Some(Opr::Union(_)) => {
+                Opr::Union(_) => {
                     self.meta
                         .set_union_curr_nodes(parent_ids.clone());
                 }
-                Some(Opr::Select(_))
-                | Some(Opr::OrderBy(_))
-                | Some(Opr::Dedup(_))
-                | Some(Opr::Limit(_))
-                | Some(Opr::Sink(_)) => {} // do not change current node
+                Opr::Select(_)
+                | Opr::OrderBy(_)
+                | Opr::Dedup(_)
+                | Opr::Limit(_)
+                | Opr::Sink(_)
+                | Opr::Patmat(_) => {} // do not change current node
                 _ => is_update_curr = true,
             }
             opr.preprocess(&meta, &mut self.meta)?;
         }
 
-        let new_curr_node_rst = self.append_node(Node::new(self.max_node_id, opr), parent_ids);
+        let new_curr_node_rst = match opr_ref {
+            Opr::Patmat(patmat) => {
+                if parent_ids.len() == 1 {
+                    let proposal: NaiveProposal = patmat.try_into()?;
+                    let plan = proposal.construct_plan()?;
+                    self.append_plan(plan, parent_ids[0])
+                } else {
+                    Err(IrError::Unsupported(
+                        "only one single parent is supported for the `Patmat` operator".to_string(),
+                    ))
+                }
+            }
+            _ => self.append_node(Node::new(self.max_node_id, opr), parent_ids),
+        };
+
         if let Ok(new_curr_node) = &new_curr_node_rst {
             if is_update_curr {
                 self.meta.set_curr_node(*new_curr_node);
