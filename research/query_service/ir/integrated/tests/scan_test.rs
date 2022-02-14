@@ -19,6 +19,7 @@ mod common;
 
 #[cfg(test)]
 mod test {
+    use std::collections::HashMap;
     use std::sync::Arc;
 
     use graph_proxy::{create_demo_graph, SimplePartition};
@@ -70,12 +71,12 @@ mod test {
             scan_opt: 0,
             alias: None,
             params: Some(pb::QueryParams {
-                table_names: vec!["person".into()],
+                tables: vec!["person".into()],
                 columns: vec![],
                 is_all_columns: false,
                 limit: None,
                 predicate: None,
-                requirements: vec![],
+                extra: HashMap::new(),
             }),
             idx_predicate: None,
         });
@@ -102,12 +103,12 @@ mod test {
             scan_opt: 0,
             alias: None,
             params: Some(pb::QueryParams {
-                table_names: vec!["person".into(), "software".into()],
+                tables: vec!["person".into(), "software".into()],
                 columns: vec![],
                 is_all_columns: false,
                 limit: None,
                 predicate: None,
-                requirements: vec![],
+                extra: HashMap::new(),
             }),
             idx_predicate: None,
         });

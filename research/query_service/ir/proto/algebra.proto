@@ -178,7 +178,7 @@ message IndexPredicate {
 message QueryParams {
   // The tables to fetch data from. While this may sound arbitrary, but in graph db, we often use
   // label instead of table to refer to an entity (vertex/edge). They are semantically the same.
-  repeated common.NameOrId table_names = 1;
+  repeated common.NameOrId tables = 1;
   // The required columns of the table.
   repeated common.NameOrId columns = 2;
   // Can specify to get all columns of the table
@@ -187,8 +187,8 @@ message QueryParams {
   Range limit = 4;
   // The optional predicate for the data tuple, which may be pushed down to the storage service
   common.Expression predicate = 5;
-  // Extra requirements for general-purpose usage
-  repeated string requirements = 6;
+  // Extra parameters for general-purpose usage
+  map<string, string> extra = 6;
 }
 
 // Scan is an operator that transforms the source data format (defined by the database)
@@ -261,7 +261,10 @@ message EdgeExpand {
   common.NameOrId v_tag = 1;
   // The direction of the expanded edge
   Direction direction = 2;
-  // The query parameters define the condition that the edge/end vertex must satisfy
+  // The query parameters define the condition that the edge/end vertex must satisfy.
+  // Note that whether the query parameters apply to the edge or end vertex depends on
+  // the `is_edge` indicator, with one exception that the `tables` parameter in `EdgeExpand`
+  // **always** applies to the edge for now (may be fixed later) .
   QueryParams params = 3;
   // Whether the expansion is for edge?
   bool is_edge = 4;
@@ -405,6 +408,7 @@ message LogicalPlan {
       PathExpand path = 32;
       PathStart path_start = 33;
       PathEnd path_end = 34;
+      Match match = 35;
     }
   }
   message Node {

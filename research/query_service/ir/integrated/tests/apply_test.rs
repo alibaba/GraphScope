@@ -19,6 +19,8 @@ mod common;
 
 #[cfg(test)]
 mod test {
+    use std::collections::HashMap;
+
     use graph_store::common::DefaultId;
     use graph_store::ldbc::LDBCVertexParser;
     use ir_common::generated::algebra as pb;
@@ -37,12 +39,12 @@ mod test {
             scan_opt: 0,
             alias: None,
             params: Some(pb::QueryParams {
-                table_names: vec!["person".into()],
+                tables: vec!["person".into()],
                 columns: vec![],
                 is_all_columns: false,
                 limit: None,
                 predicate: None,
-                requirements: vec![],
+                extra: HashMap::new(),
             }),
             idx_predicate: None,
         };
@@ -58,12 +60,12 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(pb::QueryParams {
-                table_names: vec![],
+                tables: vec![],
                 columns: vec![],
                 is_all_columns: false,
                 limit: None,
                 predicate: None,
-                requirements: vec![],
+                extra: HashMap::new(),
             }),
             is_edge: false,
             alias: None,
@@ -175,12 +177,12 @@ mod test {
             scan_opt: 0,
             alias: None,
             params: Some(pb::QueryParams {
-                table_names: vec!["person".into()],
+                tables: vec!["person".into()],
                 columns: vec![],
                 is_all_columns: false,
                 limit: None,
                 predicate: None,
-                requirements: vec![],
+                extra: HashMap::new(),
             }),
             idx_predicate: None,
         };
@@ -196,12 +198,12 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(pb::QueryParams {
-                table_names: vec![],
+                tables: vec![],
                 columns: vec![],
                 is_all_columns: false,
                 limit: None,
                 predicate: None,
-                requirements: vec![],
+                extra: HashMap::new(),
             }),
             is_edge: false,
             alias: None,

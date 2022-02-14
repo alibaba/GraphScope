@@ -19,6 +19,8 @@ mod common;
 
 #[cfg(test)]
 mod test {
+    use std::collections::HashMap;
+
     use dyn_type::object;
     use dyn_type::Object;
     use ir_common::expr_parse::str_to_expr_pb;
@@ -38,12 +40,12 @@ mod test {
             scan_opt: 0,
             alias: None,
             params: Some(pb::QueryParams {
-                table_names: vec!["person".into()],
+                tables: vec!["person".into()],
                 columns: vec!["id".into()],
                 is_all_columns: false,
                 limit: None,
                 predicate: None,
-                requirements: vec![],
+                extra: HashMap::new(),
             }),
             idx_predicate: None,
         };
@@ -52,12 +54,12 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(pb::QueryParams {
-                table_names: vec!["knows".into()],
+                tables: vec!["knows".into()],
                 columns: vec![],
                 is_all_columns: false,
                 limit: None,
                 predicate: None,
-                requirements: vec![],
+                extra: HashMap::new(),
             }),
             is_edge: false,
             alias: None,
@@ -122,12 +124,12 @@ mod test {
             scan_opt: 0,
             alias: None,
             params: Some(pb::QueryParams {
-                table_names: vec!["person".into()],
+                tables: vec!["person".into()],
                 columns: vec![],
                 is_all_columns: true,
                 limit: None,
                 predicate: None,
-                requirements: vec![],
+                extra: HashMap::new(),
             }),
             idx_predicate: None,
         };
@@ -161,12 +163,12 @@ mod test {
             scan_opt: 0,
             alias: Some("a".into()),
             params: Some(pb::QueryParams {
-                table_names: vec![],
+                tables: vec![],
                 columns: vec![],
                 is_all_columns: true,
                 limit: None,
                 predicate: None,
-                requirements: vec![],
+                extra: HashMap::new(),
             }),
             idx_predicate: None,
         };
@@ -175,12 +177,12 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(pb::QueryParams {
-                table_names: vec!["knows".into()],
+                tables: vec!["knows".into()],
                 columns: vec![],
                 is_all_columns: false,
                 limit: None,
                 predicate: None,
-                requirements: vec![],
+                extra: HashMap::new(),
             }),
             is_edge: false,
             alias: None,

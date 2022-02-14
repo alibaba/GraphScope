@@ -765,7 +765,7 @@ fn process_params(ptr: *const c_void, key: ParamsKey, val: FfiNameOrId, opr: Opr
                                 .params
                                 .as_mut()
                                 .unwrap()
-                                .table_names
+                                .tables
                                 .push(label)
                         }
                     }
@@ -787,11 +787,7 @@ fn process_params(ptr: *const c_void, key: ParamsKey, val: FfiNameOrId, opr: Opr
                 match key {
                     ParamsKey::Table => {
                         if let Some(table) = pb.unwrap() {
-                            scan.params
-                                .as_mut()
-                                .unwrap()
-                                .table_names
-                                .push(table)
+                            scan.params.as_mut().unwrap().tables.push(table)
                         }
                     }
                     ParamsKey::Column => {
@@ -809,11 +805,7 @@ fn process_params(ptr: *const c_void, key: ParamsKey, val: FfiNameOrId, opr: Opr
                     ParamsKey::Tag => getv.tag = pb.unwrap(),
                     ParamsKey::Table => {
                         if let Some(label) = pb.unwrap() {
-                            getv.params
-                                .as_mut()
-                                .unwrap()
-                                .table_names
-                                .push(label)
+                            getv.params.as_mut().unwrap().tables.push(label)
                         }
                     }
                     ParamsKey::Column => {
@@ -1337,6 +1329,8 @@ mod unfold {
 }
 
 mod scan {
+    use std::collections::HashMap;
+
     use super::*;
 
     #[allow(dead_code)]
@@ -1354,12 +1348,12 @@ mod scan {
             scan_opt: unsafe { std::mem::transmute::<FfiScanOpt, i32>(scan_opt) },
             alias: None,
             params: Some(pb::QueryParams {
-                table_names: vec![],
+                tables: vec![],
                 columns: vec![],
                 is_all_columns: false,
                 limit: None,
                 predicate: None,
-                requirements: vec![],
+                extra: HashMap::new(),
             }),
             idx_predicate: None,
         });
@@ -1590,6 +1584,8 @@ mod sink {
 }
 
 mod graph {
+    use std::collections::HashMap;
+
     use super::*;
 
     #[allow(dead_code)]
@@ -1608,12 +1604,12 @@ mod graph {
             v_tag: None,
             direction: unsafe { std::mem::transmute::<FfiDirection, i32>(dir) },
             params: Some(pb::QueryParams {
-                table_names: vec![],
+                tables: vec![],
                 columns: vec![],
                 is_all_columns: false,
                 limit: None,
                 predicate: None,
-                requirements: vec![],
+                extra: HashMap::new(),
             }),
             is_edge,
             alias: None,
@@ -1701,12 +1697,12 @@ mod graph {
             tag: None,
             opt: unsafe { std::mem::transmute::<FfiVOpt, i32>(opt) },
             params: Some(pb::QueryParams {
-                table_names: vec![],
+                tables: vec![],
                 columns: vec![],
                 is_all_columns: false,
                 limit: None,
                 predicate: None,
-                requirements: vec![],
+                extra: HashMap::new(),
             }),
             alias: None,
         });

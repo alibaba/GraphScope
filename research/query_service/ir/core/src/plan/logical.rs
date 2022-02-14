@@ -755,7 +755,7 @@ fn preprocess_params(
     }
     if let Some(schema) = &meta.schema {
         if plan_meta.is_preprocess() && schema.is_table_id() {
-            for table in params.table_names.iter_mut() {
+            for table in params.tables.iter_mut() {
                 let new_table = schema
                     .get_table_id_from_pb(table)
                     .ok_or(IrError::TableNotExist(format!("{:?}", table)))?
@@ -1001,15 +1001,15 @@ mod test {
 
     #[allow(dead_code)]
     fn query_params(
-        table_names: Vec<common_pb::NameOrId>, columns: Vec<common_pb::NameOrId>,
+        tables: Vec<common_pb::NameOrId>, columns: Vec<common_pb::NameOrId>,
     ) -> pb::QueryParams {
         pb::QueryParams {
-            table_names,
+            tables,
             columns,
             is_all_columns: false,
             limit: None,
             predicate: None,
-            requirements: vec![],
+            extra: HashMap::new(),
         }
     }
 
@@ -1397,20 +1397,20 @@ mod test {
             scan_opt: 0,
             alias: None,
             params: Some(pb::QueryParams {
-                table_names: vec!["person".into()],
+                tables: vec!["person".into()],
                 columns: vec!["age".into(), "name".into()],
                 is_all_columns: false,
                 limit: None,
                 predicate: Some(
                     str_to_expr_pb("@a.~label > \"person\" && @a.age == 10".to_string()).unwrap(),
                 ),
-                requirements: vec![],
+                extra: HashMap::new(),
             }),
             idx_predicate: Some(vec!["software".to_string()].into()),
         };
         scan.preprocess(&STORE_META.read().unwrap(), &mut plan_meta)
             .unwrap();
-        assert_eq!(scan.clone().params.unwrap().table_names[0], 0.into());
+        assert_eq!(scan.clone().params.unwrap().tables[0], 0.into());
         assert_eq!(
             scan.idx_predicate.unwrap().or_predicates[0].predicates[0]
                 .value

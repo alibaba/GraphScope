@@ -84,7 +84,7 @@ fn update_query_params(
     params.is_all_columns = false;
     params.predicate = None;
 
-    new_params.table_names.clear();
+    new_params.tables.clear();
     new_params.columns = columns;
     new_params.is_all_columns = is_all_columns;
 
@@ -507,6 +507,8 @@ impl AsPhysical for LogicalPlan {
 
 #[cfg(test)]
 mod test {
+    use std::collections::HashMap;
+
     use ir_common::expr_parse::str_to_expr_pb;
     use ir_common::generated::algebra as pb;
     use ir_common::generated::algebra::project::ExprAlias;
@@ -517,15 +519,15 @@ mod test {
 
     #[allow(dead_code)]
     fn query_params(
-        table_names: Vec<common_pb::NameOrId>, columns: Vec<common_pb::NameOrId>,
+        tables: Vec<common_pb::NameOrId>, columns: Vec<common_pb::NameOrId>,
     ) -> pb::QueryParams {
         pb::QueryParams {
-            table_names,
+            tables,
             columns,
             is_all_columns: false,
             limit: None,
             predicate: None,
-            requirements: vec![],
+            extra: HashMap::new(),
         }
     }
 

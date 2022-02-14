@@ -19,6 +19,7 @@ mod common;
 
 #[cfg(test)]
 mod test {
+    use std::collections::HashMap;
     use std::sync::Arc;
 
     use graph_proxy::{create_demo_graph, SimplePartition};
@@ -54,12 +55,12 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(pb::QueryParams {
-                table_names: vec![common_pb::NameOrId::from("knows".to_string())],
+                tables: vec![common_pb::NameOrId::from("knows".to_string())],
                 columns: vec![],
                 is_all_columns: false,
                 limit: None,
                 predicate: None,
-                requirements: vec![],
+                extra: HashMap::new(),
             }),
             is_edge: false,
             alias: None,
@@ -67,12 +68,12 @@ mod test {
 
         let auxilia_opr = pb::Auxilia {
             params: Some(pb::QueryParams {
-                table_names: vec![],
+                tables: vec![],
                 columns: vec![],
                 is_all_columns: false,
                 limit: None,
                 predicate: None,
-                requirements: vec![],
+                extra: HashMap::new(),
             }),
             alias: Some("a".to_string().into()),
         };
@@ -114,12 +115,12 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(pb::QueryParams {
-                table_names: vec![common_pb::NameOrId::from("knows".to_string())],
+                tables: vec![common_pb::NameOrId::from("knows".to_string())],
                 columns: vec![],
                 is_all_columns: false,
                 limit: None,
                 predicate: None,
-                requirements: vec![],
+                extra: HashMap::new(),
             }),
             is_edge: false,
             alias: None,
@@ -127,12 +128,12 @@ mod test {
 
         let auxilia_opr = pb::Auxilia {
             params: Some(pb::QueryParams {
-                table_names: vec![],
+                tables: vec![],
                 columns: vec!["name".into()],
                 is_all_columns: false,
                 limit: None,
                 predicate: None,
-                requirements: vec![],
+                extra: HashMap::new(),
             }),
             alias: None,
         };
@@ -179,12 +180,12 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(pb::QueryParams {
-                table_names: vec!["knows".into()],
+                tables: vec!["knows".into()],
                 is_all_columns: false,
                 columns: vec![],
                 limit: None,
                 predicate: None,
-                requirements: vec![],
+                extra: HashMap::new(),
             }),
             is_edge: false,
             alias: None,
@@ -192,12 +193,12 @@ mod test {
 
         let auxilia_opr = pb::Auxilia {
             params: Some(pb::QueryParams {
-                table_names: vec![],
+                tables: vec![],
                 columns: vec!["name".into()],
                 is_all_columns: false,
                 limit: None,
                 predicate: None,
-                requirements: vec![],
+                extra: HashMap::new(),
             }),
             alias: Some("a".to_string().into()),
         };
@@ -248,12 +249,12 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(pb::QueryParams {
-                table_names: vec!["knows".into()],
+                tables: vec!["knows".into()],
                 is_all_columns: false,
                 columns: vec![],
                 limit: None,
                 predicate: None,
-                requirements: vec![],
+                extra: HashMap::new(),
             }),
             is_edge: false,
             alias: None,
@@ -261,12 +262,12 @@ mod test {
 
         let auxilia_opr = pb::Auxilia {
             params: Some(pb::QueryParams {
-                table_names: vec![],
+                tables: vec![],
                 columns: vec!["name".into()],
                 is_all_columns: false,
                 limit: None,
                 predicate: str_to_expr_pb("@.name==\"vadas\"".to_string()).ok(),
-                requirements: vec![],
+                extra: HashMap::new(),
             }),
             alias: None,
         };
@@ -313,12 +314,12 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(pb::QueryParams {
-                table_names: vec!["knows".into()],
+                tables: vec!["knows".into()],
                 columns: vec![],
                 is_all_columns: false,
                 limit: None,
                 predicate: None,
-                requirements: vec![],
+                extra: HashMap::new(),
             }),
             is_edge: false,
             alias: None,
@@ -326,12 +327,12 @@ mod test {
 
         let auxilia_opr = pb::Auxilia {
             params: Some(pb::QueryParams {
-                table_names: vec![],
+                tables: vec![],
                 columns: vec!["name".into()],
                 is_all_columns: false,
                 limit: None,
                 predicate: str_to_expr_pb("@.name==\"vadas\"".to_string()).ok(),
-                requirements: vec![],
+                extra: HashMap::new(),
             }),
             alias: Some("a".to_string().into()),
         };

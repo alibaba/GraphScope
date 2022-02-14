@@ -19,6 +19,7 @@ mod common;
 
 #[cfg(test)]
 mod test {
+    use std::collections::HashMap;
     use std::sync::Arc;
 
     use graph_proxy::{create_demo_graph, SimplePartition};
@@ -108,12 +109,12 @@ mod test {
     #[test]
     fn expand_oute_with_label_test() {
         let query_param = pb::QueryParams {
-            table_names: vec!["knows".into()],
+            tables: vec!["knows".into()],
             columns: vec![],
             is_all_columns: false,
             limit: None,
             predicate: None,
-            requirements: vec![],
+            extra: HashMap::new(),
         };
         let expand_opr_pb = pb::EdgeExpand {
             v_tag: None,
@@ -140,12 +141,12 @@ mod test {
     #[test]
     fn expand_oute_with_many_labels_test() {
         let query_param = pb::QueryParams {
-            table_names: vec!["knows".into(), "created".into()],
+            tables: vec!["knows".into(), "created".into()],
             columns: vec![],
             is_all_columns: false,
             limit: None,
             predicate: None,
-            requirements: vec![],
+            extra: HashMap::new(),
         };
         let expand_opr_pb = pb::EdgeExpand {
             v_tag: None,
@@ -177,12 +178,12 @@ mod test {
     #[test]
     fn expand_inv_with_label_property_test() {
         let query_param = pb::QueryParams {
-            table_names: vec!["knows".into()],
+            tables: vec!["knows".into()],
             columns: vec!["name".into()],
             is_all_columns: false,
             limit: None,
             predicate: None,
-            requirements: vec![],
+            extra: HashMap::new(),
         };
         let expand_opr_pb = pb::EdgeExpand {
             v_tag: None,
@@ -218,12 +219,12 @@ mod test {
     #[test]
     fn expand_bothv_test() {
         let query_param = pb::QueryParams {
-            table_names: vec![],
+            tables: vec![],
             columns: vec![],
             is_all_columns: false,
             limit: None,
             predicate: None,
-            requirements: vec![],
+            extra: HashMap::new(),
         };
         let expand_opr_pb = pb::EdgeExpand {
             v_tag: None,
@@ -245,12 +246,12 @@ mod test {
     #[test]
     fn expand_outv_from_tag_as_tag_test() {
         let query_param = pb::QueryParams {
-            table_names: vec!["knows".into()],
+            tables: vec!["knows".into()],
             columns: vec![],
             is_all_columns: false,
             limit: None,
             predicate: None,
-            requirements: vec![],
+            extra: HashMap::new(),
         };
         let expand_opr_pb = pb::EdgeExpand {
             v_tag: Some("a".into()),
@@ -282,12 +283,12 @@ mod test {
     #[test]
     fn expand_outv_from_select_tag_test() {
         let query_param = pb::QueryParams {
-            table_names: vec!["knows".into()],
+            tables: vec!["knows".into()],
             columns: vec![],
             is_all_columns: false,
             limit: None,
             predicate: None,
-            requirements: vec![],
+            extra: HashMap::new(),
         };
         let project = pb::Project {
             mappings: vec![pb::project::ExprAlias {
@@ -337,12 +338,12 @@ mod test {
     #[test]
     fn expand_outv_filter_test() {
         let query_param = pb::QueryParams {
-            table_names: vec!["knows".into()],
+            tables: vec!["knows".into()],
             columns: vec![],
             is_all_columns: false,
             limit: None,
             predicate: str_to_expr_pb("@.id == 2".to_string()).ok(),
-            requirements: vec![],
+            extra: HashMap::new(),
         };
         let expand_opr_pb = pb::EdgeExpand {
             v_tag: None,
@@ -370,12 +371,12 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(pb::QueryParams {
-                table_names: vec!["knows".into()],
+                tables: vec!["knows".into()],
                 columns: vec![],
                 is_all_columns: false,
                 limit: None,
                 predicate: None,
-                requirements: vec![],
+                extra: HashMap::new(),
             }),
             is_edge: true,
             alias: None,
@@ -385,12 +386,12 @@ mod test {
             tag: None,
             opt: 1, // EndV
             params: Some(pb::QueryParams {
-                table_names: vec![],
+                tables: vec![],
                 columns: vec![],
                 is_all_columns: false,
                 limit: None,
                 predicate: None,
-                requirements: vec![],
+                extra: HashMap::new(),
             }),
             alias: None,
         };
@@ -433,12 +434,12 @@ mod test {
             v_tag: None,
             direction: 1,
             params: Some(pb::QueryParams {
-                table_names: vec!["created".into()],
+                tables: vec!["created".into()],
                 columns: vec![],
                 is_all_columns: false,
                 limit: None,
                 predicate: None,
-                requirements: vec![],
+                extra: HashMap::new(),
             }),
             is_edge: true,
             alias: None,
@@ -448,12 +449,12 @@ mod test {
             tag: None,
             opt: 0, // StartV
             params: Some(pb::QueryParams {
-                table_names: vec![],
+                tables: vec![],
                 columns: vec![],
                 is_all_columns: false,
                 limit: None,
                 predicate: None,
-                requirements: vec![],
+                extra: HashMap::new(),
             }),
             alias: None,
         };
@@ -496,12 +497,12 @@ mod test {
             v_tag: None,
             direction: 2,
             params: Some(pb::QueryParams {
-                table_names: vec!["knows".into()],
+                tables: vec!["knows".into()],
                 columns: vec![],
                 is_all_columns: false,
                 limit: None,
                 predicate: None,
-                requirements: vec![],
+                extra: HashMap::new(),
             }),
             is_edge: true,
             alias: None,
@@ -511,12 +512,12 @@ mod test {
             tag: None,
             opt: 2, // OtherV
             params: Some(pb::QueryParams {
-                table_names: vec![],
+                tables: vec![],
                 columns: vec![],
                 is_all_columns: false,
                 limit: None,
                 predicate: None,
-                requirements: vec![],
+                extra: HashMap::new(),
             }),
             alias: None,
         };
