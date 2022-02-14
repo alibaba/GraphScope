@@ -186,7 +186,7 @@ message QueryParams {
   // The optional predicate for the data tuple, which may be pushed down to the storage service
   common.Expression predicate = 4;
   // Extra requirements for general-purpose usage
-  repeated string requirements = 5;
+  map<string, string> requirements = 5;
 }
 
 // Scan is an operator that transforms the source data format (defined by the database)

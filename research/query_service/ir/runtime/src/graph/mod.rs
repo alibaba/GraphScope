@@ -23,7 +23,6 @@ use std::io;
 use std::sync::atomic::{AtomicPtr, Ordering};
 use std::sync::Arc;
 
-use dyn_type::Object;
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::common as common_pb;
@@ -75,7 +74,7 @@ pub struct QueryParams {
     pub props: Option<Vec<NameOrId>>,
     pub partitions: Option<Vec<u64>>,
     pub filter: Option<Arc<PEvaluator>>,
-    pub extra_params: Option<HashMap<String, Object>>,
+    pub extra_params: Option<HashMap<String, String>>,
 }
 
 impl TryFrom<Option<algebra_pb::QueryParams>> for QueryParams {
@@ -140,10 +139,8 @@ impl QueryParams {
     }
 
     // Extra query params for different storages
-    fn with_extra_params(self, extra_params: Vec<String>) -> Result<Self, ParsePbError> {
-        if !extra_params.is_empty() {
-            Err(ParsePbError::NotSupported("extra_params in QueryParams is not supported yet".to_string()))?
-        }
+    fn with_extra_params(mut self, extra_params: HashMap<String, String>) -> Result<Self, ParsePbError> {
+        self.extra_params = Some(extra_params);
         Ok(self)
     }
 
@@ -155,7 +152,7 @@ impl QueryParams {
             && self.props.is_none())
     }
 
-    pub fn get_extra_param(&self, key: &str) -> Option<&Object> {
+    pub fn get_extra_param(&self, key: &str) -> Option<&String> {
         if let Some(ref extra_params) = self.extra_params {
             extra_params.get(key)
         } else {

@@ -79,9 +79,8 @@ where
             let si = params
                 .get_extra_param(SNAPSHOT_ID)
                 .ok_or(FnExecError::query_store_error("get snapshot_id failed"))?
-                .as_i64()
-                .map_err(|e| FnExecError::query_store_error(&e.to_string()))?
-                as SnapshotId;
+                .parse::<SnapshotId>()
+                .map_err(|e| FnExecError::query_store_error(&e.to_string()))?;
             let schema = store
                 .get_schema(si)
                 .ok_or(FnExecError::query_store_error("get schema failed"))?;
@@ -120,9 +119,8 @@ where
             let si = params
                 .get_extra_param(SNAPSHOT_ID)
                 .ok_or(FnExecError::query_store_error("get snapshot_id failed"))?
-                .as_i64()
-                .map_err(|e| FnExecError::query_store_error(&e.to_string()))?
-                as SnapshotId;
+                .parse::<SnapshotId>()
+                .map_err(|e| FnExecError::query_store_error(&e.to_string()))?;
             let schema = store
                 .get_schema(si)
                 .ok_or(FnExecError::query_store_error("get schema failed"))?;
@@ -158,8 +156,8 @@ where
         let si = params
             .get_extra_param(SNAPSHOT_ID)
             .ok_or(FnExecError::query_store_error("get snapshot_id failed"))?
-            .as_i64()
-            .map_err(|e| FnExecError::query_store_error(&e.to_string()))? as SnapshotId;
+            .parse::<SnapshotId>()
+            .map_err(|e| FnExecError::query_store_error(&e.to_string()))?;
         let schema = store
             .get_schema(si)
             .ok_or(FnExecError::query_store_error("get schema failed"))?;
@@ -191,8 +189,8 @@ where
         let si = params
             .get_extra_param(SNAPSHOT_ID)
             .ok_or(FnExecError::query_store_error("get snapshot_id failed"))?
-            .as_i64()
-            .map_err(|e| FnExecError::query_store_error(&e.to_string()))? as SnapshotId;
+            .parse::<SnapshotId>()
+            .map_err(|e| FnExecError::query_store_error(&e.to_string()))?;
         let schema = store
             .get_schema(si)
             .ok_or(FnExecError::query_store_error("get schema failed"))?;
@@ -254,8 +252,8 @@ where
         let si = params
             .get_extra_param(SNAPSHOT_ID)
             .ok_or(FnExecError::query_store_error("get snapshot_id failed"))?
-            .as_i64()
-            .map_err(|e| FnExecError::query_store_error(&e.to_string()))? as SnapshotId;
+            .parse::<SnapshotId>()
+            .map_err(|e| FnExecError::query_store_error(&e.to_string()))?;
         let partition_manager = self.partition_manager.clone();
         let schema = store
             .get_schema(si)
