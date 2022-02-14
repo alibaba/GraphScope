@@ -110,7 +110,8 @@ void Dispatcher::publisherPreprocessCmd(std::shared_ptr<CommandDetail> cmd) {
     }
     cmd->large_attr = params_vec[0];
   } else {
-    grape::sync_comm::Bcast(*(cmd.get()), grape::kCoordinatorRank, MPI_COMM_WORLD);
+    grape::sync_comm::Bcast(*(cmd.get()), grape::kCoordinatorRank,
+                            MPI_COMM_WORLD);
   }
 }
 
@@ -121,7 +122,8 @@ void Dispatcher::subscriberPreprocessCmd(rpc::OperationType type,
     grape::sync_comm::Recv(oa, grape::kCoordinatorRank, 0, MPI_COMM_WORLD);
     oa >> *(cmd.get());
   } else {
-    grape::sync_comm::Bcast(*(cmd.get()), grape::kCoordinatorRank, MPI_COMM_WORLD);
+    grape::sync_comm::Bcast(*(cmd.get()), grape::kCoordinatorRank,
+                            MPI_COMM_WORLD);
   }
 }
 

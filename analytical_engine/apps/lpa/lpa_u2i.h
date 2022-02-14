@@ -184,8 +184,10 @@ class LPAU2I : public PropertyAppBase<FRAG_T, LPAU2IContext<FRAG_T>> {
 
       } else {
         // i2u stage
-        grape::VertexArray<typename FRAG_T::inner_vertices_t, label_t> inner_tmp_label;
-        grape::VertexArray<typename FRAG_T::inner_vertices_t, label_t> inner_new_label;
+        grape::VertexArray<typename FRAG_T::inner_vertices_t, label_t>
+            inner_tmp_label;
+        grape::VertexArray<typename FRAG_T::inner_vertices_t, label_t>
+            inner_new_label;
 
         inner_tmp_label.Init(inner_vertices);
         inner_new_label.Init(inner_vertices);

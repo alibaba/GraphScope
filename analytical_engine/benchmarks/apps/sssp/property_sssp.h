@@ -74,7 +74,8 @@ class PropertySSSPContext : public LabeledVertexDataContext<FRAG_T, double> {
   oid_t source_id;
   typename FRAG_T::template vertex_array_t<double>& partial_result;
 
-  grape::DenseVertexSet<typename FRAG_T::vertices_t> curr_modified, next_modified;
+  grape::DenseVertexSet<typename FRAG_T::vertices_t> curr_modified,
+      next_modified;
 };
 
 template <typename FRAG_T>

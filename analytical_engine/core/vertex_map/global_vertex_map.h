@@ -38,6 +38,7 @@ class GlobalVertexMapBuilder<std::string, VID_T, PARTITIONER_T> {
         list_(list),
         partitioner_(partitioner),
         id_parser_(id_parser) {}
+
  public:
   ~GlobalVertexMapBuilder() {}
 
@@ -79,7 +80,8 @@ class GlobalVertexMapBuilder<std::string, VID_T, PARTITIONER_T> {
             if (comm_spec.FragToWorker(fid) != src_worker_id) {
               continue;
             }
-            vertex_map.string_collections_[fid].RecvFrom(src_worker_id, comm_spec.comm());
+            vertex_map.string_collections_[fid].RecvFrom(src_worker_id,
+                                                         comm_spec.comm());
           }
           src_worker_id = (src_worker_id + 1) % worker_num;
         }
@@ -91,7 +93,8 @@ class GlobalVertexMapBuilder<std::string, VID_T, PARTITIONER_T> {
             if (comm_spec.FragToWorker(fid) != worker_id) {
               continue;
             }
-            vertex_map.string_collections_[fid].SendTo(dst_worker_id, comm_spec.comm());
+            vertex_map.string_collections_[fid].SendTo(dst_worker_id,
+                                                       comm_spec.comm());
           }
           dst_worker_id = (dst_worker_id + worker_num - 1) % worker_num;
         }
@@ -119,7 +122,8 @@ class GlobalVertexMapBuilder<std::string, VID_T, PARTITIONER_T> {
               continue;
             }
             auto& rm = vertex_map.o2l_[got];
-            VID_T vnum = static_cast<VID_T>(vertex_map.string_collections_[got].Count());
+            VID_T vnum =
+                static_cast<VID_T>(vertex_map.string_collections_[got].Count());
             rm.reserve(vnum);
             for (VID_T lid = 0; lid < vnum; ++lid) {
               vertex_map.string_collections_[got].Get(lid, rs);
@@ -144,7 +148,6 @@ class GlobalVertexMapBuilder<std::string, VID_T, PARTITIONER_T> {
   const PARTITIONER_T& partitioner_;
   const IdParser<VID_T>& id_parser_;
 };
-
 
 /**
  * @brief A specialized GlobalVertexMap for string oid.

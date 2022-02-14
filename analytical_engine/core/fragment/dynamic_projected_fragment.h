@@ -474,7 +474,8 @@ class DynamicProjectedFragment {
                                                       e_prop);
   }
 
-  void PrepareToRunApp(const grape::CommSpec& comm_spec, grape::PrepareConf conf) {
+  void PrepareToRunApp(const grape::CommSpec& comm_spec,
+                       grape::PrepareConf conf) {
     fragment_->PrepareToRunApp(comm_spec, conf);
   }
 

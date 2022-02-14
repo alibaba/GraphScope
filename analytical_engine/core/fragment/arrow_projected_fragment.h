@@ -26,11 +26,11 @@
 #include "arrow/array.h"
 #include "boost/lexical_cast.hpp"
 
+#include "grape/fragment/fragment_base.h"
 #include "vineyard/basic/ds/arrow_utils.h"
 #include "vineyard/common/util/version.h"
 #include "vineyard/graph/fragment/arrow_fragment.h"
 #include "vineyard/graph/vertex_map/arrow_vertex_map.h"
-#include "grape/fragment/fragment_base.h"
 
 #include "core/context/context_protocols.h"
 #include "core/fragment/arrow_projected_fragment_base.h"
@@ -342,7 +342,6 @@ class ArrowProjectedFragment
       public vineyard::BareRegistered<
           ArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T>> {
  public:
-
   using oid_t = OID_T;
   using vid_t = VID_T;
   using internal_oid_t = typename vineyard::InternalType<oid_t>::type;
@@ -619,8 +618,10 @@ class ArrowProjectedFragment
     initPointers();
   }
 
-  void PrepareToRunApp(const grape::CommSpec& comm_spec, grape::PrepareConf conf) {
-    if (conf.message_strategy == grape::MessageStrategy::kAlongEdgeToOuterVertex) {
+  void PrepareToRunApp(const grape::CommSpec& comm_spec,
+                       grape::PrepareConf conf) {
+    if (conf.message_strategy ==
+        grape::MessageStrategy::kAlongEdgeToOuterVertex) {
       initDestFidList(true, true, iodst_, iodoffset_);
     } else if (conf.message_strategy ==
                grape::MessageStrategy::kAlongIncomingEdgeToOuterVertex) {

@@ -55,7 +55,6 @@ class HashPartitioner<::gs::dynamic::Value> {
     return *this;
   }
 
-
   template <typename IOADAPTOR_T>
   void serialize(std::unique_ptr<IOADAPTOR_T>& writer) {
     CHECK(writer->Write(&fnum_, sizeof(fid_t)));

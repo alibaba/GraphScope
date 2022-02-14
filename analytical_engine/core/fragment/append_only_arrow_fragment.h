@@ -667,8 +667,8 @@ class AppendOnlyArrowFragment
 
   std::shared_ptr<vertex_map_t> GetVertexMap() { return vm_ptr_; }
 
-  void PrepareToRunApp(const grape::CommSpec& comm_spec, grape::PrepareConf conf) {
-  }
+  void PrepareToRunApp(const grape::CommSpec& comm_spec,
+                       grape::PrepareConf conf) {}
 
   std::shared_ptr<extra_vertex_map_t> GetExtraVertexMap() {
     return extra_vm_ptr_;

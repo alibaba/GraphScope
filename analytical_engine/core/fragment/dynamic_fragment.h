@@ -936,11 +936,15 @@ class DynamicFragment {
   template <typename IOADAPTOR_T>
   void Deserialize(const std::string& prefix, const fid_t fid) {}
 
-  virtual void PrepareToRunApp(const grape::CommSpec& comm_spec, grape::PrepareConf conf) {
+  virtual void PrepareToRunApp(const grape::CommSpec& comm_spec,
+                               grape::PrepareConf conf) {
     message_strategy_ = conf.message_strategy;
-    if (conf.message_strategy == grape::MessageStrategy::kAlongEdgeToOuterVertex ||
-        conf.message_strategy == grape::MessageStrategy::kAlongIncomingEdgeToOuterVertex ||
-        conf.message_strategy == grape::MessageStrategy::kAlongOutgoingEdgeToOuterVertex) {
+    if (conf.message_strategy ==
+            grape::MessageStrategy::kAlongEdgeToOuterVertex ||
+        conf.message_strategy ==
+            grape::MessageStrategy::kAlongIncomingEdgeToOuterVertex ||
+        conf.message_strategy ==
+            grape::MessageStrategy::kAlongOutgoingEdgeToOuterVertex) {
       initMessageDestination(conf.message_strategy);
     }
 

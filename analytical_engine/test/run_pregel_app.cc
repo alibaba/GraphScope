@@ -89,13 +89,12 @@ void Run(vineyard::Client& client, const grape::CommSpec& comm_spec,
 void RunTC(grape::CommSpec const& comm_spec, std::string& efile,
            std::string& vfile, const std::string& query,
            std::string& output_prefix) {
-  using VertexMapType = grape::GlobalVertexMap<int64_t, uint32_t,
-                                               grape::SegmentedPartitioner<int64_t>>;
-  using GraphType =
-      grape::ImmutableEdgecutFragment<int64_t, uint32_t, grape::EmptyType,
-                                      grape::EmptyType,
-                                      grape::LoadStrategy::kBothOutIn,
-                                      VertexMapType>;
+  using VertexMapType =
+      grape::GlobalVertexMap<int64_t, uint32_t,
+                             grape::SegmentedPartitioner<int64_t>>;
+  using GraphType = grape::ImmutableEdgecutFragment<
+      int64_t, uint32_t, grape::EmptyType, grape::EmptyType,
+      grape::LoadStrategy::kBothOutIn, VertexMapType>;
   using AppType = gs::PregelAppBase<GraphType, gs::PregelTC<GraphType>>;
   auto load_spec = grape::DefaultLoadGraphSpec();
 

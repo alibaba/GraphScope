@@ -330,7 +330,8 @@ class PythonPIEComputeContext {
     return partial_result_[label].IsUpdated(v);
   }
 
-  grape::SyncBuffer<typename FRAG_T::vertices_t, VD_T>& partial_result(label_id_t label) {
+  grape::SyncBuffer<typename FRAG_T::vertices_t, VD_T>& partial_result(
+      label_id_t label) {
     return partial_result_[label];
   }
 
@@ -357,7 +358,8 @@ class PythonPIEComputeContext {
 
   // message auto parallel
   std::vector<grape::VertexArray<typename FRAG_T::vertices_t, VD_T>>& data_;
-  std::vector<grape::SyncBuffer<typename FRAG_T::vertices_t, VD_T>> partial_result_;
+  std::vector<grape::SyncBuffer<typename FRAG_T::vertices_t, VD_T>>
+      partial_result_;
 };
 
 template <typename FRAG_T>

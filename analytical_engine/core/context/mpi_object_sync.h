@@ -44,7 +44,8 @@ class MPIObjectSync {
       for (int src_worker_id = 1; src_worker_id < comm_spec.worker_num();
            ++src_worker_id) {
         vineyard::ObjectID recv_object_id;
-        grape::sync_comm::Recv(recv_object_id, src_worker_id, 0x10, comm_spec.comm());
+        grape::sync_comm::Recv(recv_object_id, src_worker_id, 0x10,
+                               comm_spec.comm());
         assembled_ids.push_back(recv_object_id);
       }
     } else {
@@ -63,7 +64,8 @@ class MPIObjectSync {
       for (int src_worker_id = 1; src_worker_id < comm_spec.worker_num();
            ++src_worker_id) {
         std::vector<vineyard::ObjectID> recv_object_ids;
-        grape::sync_comm::Recv(recv_object_ids, src_worker_id, 0x12, comm_spec.comm());
+        grape::sync_comm::Recv(recv_object_ids, src_worker_id, 0x12,
+                               comm_spec.comm());
         assembled_ids.insert(assembled_ids.end(), recv_object_ids.begin(),
                              recv_object_ids.end());
       }
