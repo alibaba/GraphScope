@@ -202,7 +202,7 @@ fn init_options(options: &HashMap<String, String>) -> Options {
     let mut ret = Options::default();
     ret.create_if_missing(true);
     // TODO: Add other customized db options.
-    if let Some(conf_str) = options.get("compression_type") {
+    if let Some(conf_str) = options.get("store.rocksdb.compression.type") {
         match conf_str.as_str() {
             "none" => ret.set_compression_type(DBCompressionType::None),
             "snappy" => ret.set_compression_type(DBCompressionType::Snappy),
@@ -214,32 +214,32 @@ fn init_options(options: &HashMap<String, String>) -> Options {
             _ => panic!("invalid compression_type config"),
         }
     }
-    if let Some(conf_str) = options.get("stats_dump_period_sec") {
+    if let Some(conf_str) = options.get("store.rocksdb.stats.dump.period.sec") {
         ret.set_stats_dump_period_sec(conf_str.parse().unwrap());
     }
-    if let Some(conf_str) = options.get("compaction_style") {
+    if let Some(conf_str) = options.get("store.rocksdb.compaction.style") {
         match conf_str.as_str() {
             "universal" => ret.set_compaction_style(DBCompactionStyle::Universal),
             "level" => ret.set_compaction_style(DBCompactionStyle::Level),
             _ => panic!("invalid compaction_style config"),
         }
     }
-    if let Some(conf_str) = options.get("write_buffer_mb") {
+    if let Some(conf_str) = options.get("store.rocksdb.write.buffer.mb") {
         let size_mb: usize = conf_str.parse().unwrap();
         let size_bytes = size_mb * 1024 * 1024;
         ret.set_write_buffer_size(size_bytes);
     }
-    if let Some(conf_str) = options.get("max_write_buffer_num") {
+    if let Some(conf_str) = options.get("store.rocksdb.max.write.buffer.num") {
         ret.set_max_write_buffer_number(conf_str.parse().unwrap());
     }
-    if let Some(conf_str) = options.get("level_zero_compaction_trigger") {
+    if let Some(conf_str) = options.get("store.rocksdb.level0.compaction.trigger") {
         ret.set_level_zero_file_num_compaction_trigger(conf_str.parse().unwrap());
     }
-    if let Some(conf_str) = options.get("max_level_base_mb") {
+    if let Some(conf_str) = options.get("store.rocksdb.max.level.base.mb") {
         let size_mb: u64 = conf_str.parse().unwrap();
         ret.set_max_bytes_for_level_base(size_mb * 1024 * 1024);
     }
-    if let Some(conf_str) = options.get("background_jobs") {
+    if let Some(conf_str) = options.get("store.rocksdb.background.jobs") {
         let background_jobs = conf_str.parse().unwrap();
         ret.set_max_background_jobs(background_jobs);
     }
