@@ -37,28 +37,14 @@ mod test {
         let source_opr = pb::Scan {
             scan_opt: 0,
             alias: None,
-            params: Some(pb::QueryParams {
-                table_names: vec!["person".into()],
-                columns: vec!["id".into()],
-                is_all_columns: false,
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec!["person".into()], vec!["id".into()], None)),
             idx_predicate: None,
         };
         let select_opr = pb::Select { predicate: Some(str_to_expr_pb("@.id == 1".to_string()).unwrap()) };
         let expand_opr = pb::EdgeExpand {
             v_tag: None,
             direction: 0,
-            params: Some(pb::QueryParams {
-                table_names: vec!["knows".into()],
-                columns: vec![],
-                is_all_columns: false,
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec!["knows".into()], vec![], None)),
             is_edge: false,
             alias: None,
         };
@@ -121,14 +107,7 @@ mod test {
         let source_opr = pb::Scan {
             scan_opt: 0,
             alias: None,
-            params: Some(pb::QueryParams {
-                table_names: vec!["person".into()],
-                columns: vec![],
-                is_all_columns: true,
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params_all_columns(vec!["person".into()], vec![], None)),
             idx_predicate: None,
         };
 
@@ -160,28 +139,14 @@ mod test {
         let source_opr = pb::Scan {
             scan_opt: 0,
             alias: Some("a".into()),
-            params: Some(pb::QueryParams {
-                table_names: vec![],
-                columns: vec![],
-                is_all_columns: true,
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params_all_columns(vec![], vec![], None)),
             idx_predicate: None,
         };
 
         let expand_opr = pb::EdgeExpand {
             v_tag: None,
             direction: 0,
-            params: Some(pb::QueryParams {
-                table_names: vec!["knows".into()],
-                columns: vec![],
-                is_all_columns: false,
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec!["knows".into()], vec![], None)),
             is_edge: false,
             alias: None,
         };

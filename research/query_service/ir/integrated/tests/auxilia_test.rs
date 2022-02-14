@@ -35,6 +35,8 @@ mod test {
     use runtime::process::operator::source::SourceOperator;
     use runtime::process::record::Record;
 
+    use crate::common::test::*;
+
     // g.V()
     fn source_gen(alias: Option<common_pb::NameOrId>) -> Box<dyn Iterator<Item = Record> + Send> {
         create_demo_graph();
@@ -53,27 +55,13 @@ mod test {
         let expand_opr = pb::EdgeExpand {
             v_tag: None,
             direction: 0,
-            params: Some(pb::QueryParams {
-                table_names: vec![common_pb::NameOrId::from("knows".to_string())],
-                columns: vec![],
-                is_all_columns: false,
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec!["knows".into()], vec![], None)),
             is_edge: false,
             alias: None,
         };
 
         let auxilia_opr = pb::Auxilia {
-            params: Some(pb::QueryParams {
-                table_names: vec![],
-                columns: vec![],
-                is_all_columns: false,
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec![], vec![], None)),
             alias: Some("a".to_string().into()),
         };
 
@@ -113,29 +101,13 @@ mod test {
         let expand_opr = pb::EdgeExpand {
             v_tag: None,
             direction: 0,
-            params: Some(pb::QueryParams {
-                table_names: vec![common_pb::NameOrId::from("knows".to_string())],
-                columns: vec![],
-                is_all_columns: false,
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec!["knows".into()], vec![], None)),
             is_edge: false,
             alias: None,
         };
 
-        let auxilia_opr = pb::Auxilia {
-            params: Some(pb::QueryParams {
-                table_names: vec![],
-                columns: vec!["name".into()],
-                is_all_columns: false,
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
-            alias: None,
-        };
+        let auxilia_opr =
+            pb::Auxilia { params: Some(query_params(vec![], vec!["name".into()], None)), alias: None };
 
         let conf = JobConf::new("auxilia_get_property_test");
         let mut result = pegasus::run(conf, || {
@@ -178,27 +150,13 @@ mod test {
         let expand_opr = pb::EdgeExpand {
             v_tag: None,
             direction: 0,
-            params: Some(pb::QueryParams {
-                table_names: vec!["knows".into()],
-                is_all_columns: false,
-                columns: vec![],
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec!["knows".into()], vec![], None)),
             is_edge: false,
             alias: None,
         };
 
         let auxilia_opr = pb::Auxilia {
-            params: Some(pb::QueryParams {
-                table_names: vec![],
-                columns: vec!["name".into()],
-                is_all_columns: false,
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec![], vec!["name".into()], None)),
             alias: Some("a".to_string().into()),
         };
 
@@ -247,27 +205,17 @@ mod test {
         let expand_opr = pb::EdgeExpand {
             v_tag: None,
             direction: 0,
-            params: Some(pb::QueryParams {
-                table_names: vec!["knows".into()],
-                is_all_columns: false,
-                columns: vec![],
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec!["knows".into()], vec![], None)),
             is_edge: false,
             alias: None,
         };
 
         let auxilia_opr = pb::Auxilia {
-            params: Some(pb::QueryParams {
-                table_names: vec![],
-                columns: vec!["name".into()],
-                is_all_columns: false,
-                limit: None,
-                predicate: str_to_expr_pb("@.name==\"vadas\"".to_string()).ok(),
-                requirements: vec![],
-            }),
+            params: Some(query_params(
+                vec![],
+                vec![],
+                str_to_expr_pb("@.name==\"vadas\"".to_string()).ok(),
+            )),
             alias: None,
         };
 
@@ -312,27 +260,17 @@ mod test {
         let expand_opr = pb::EdgeExpand {
             v_tag: None,
             direction: 0,
-            params: Some(pb::QueryParams {
-                table_names: vec!["knows".into()],
-                columns: vec![],
-                is_all_columns: false,
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec!["knows".into()], vec![], None)),
             is_edge: false,
             alias: None,
         };
 
         let auxilia_opr = pb::Auxilia {
-            params: Some(pb::QueryParams {
-                table_names: vec![],
-                columns: vec!["name".into()],
-                is_all_columns: false,
-                limit: None,
-                predicate: str_to_expr_pb("@.name==\"vadas\"".to_string()).ok(),
-                requirements: vec![],
-            }),
+            params: Some(query_params(
+                vec![],
+                vec!["name".into()],
+                str_to_expr_pb("@.name==\"vadas\"".to_string()).ok(),
+            )),
             alias: Some("a".to_string().into()),
         };
 

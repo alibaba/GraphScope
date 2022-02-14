@@ -37,6 +37,8 @@ mod test {
     use runtime::process::operator::source::SourceOperator;
     use runtime::process::record::Record;
 
+    use crate::common::test::*;
+
     // g.V()
     fn source_gen(alias: Option<common_pb::NameOrId>) -> Box<dyn Iterator<Item = Record> + Send> {
         create_demo_graph();
@@ -107,14 +109,7 @@ mod test {
     // g.V().outE().hasLabel("knows")
     #[test]
     fn expand_oute_with_label_test() {
-        let query_param = pb::QueryParams {
-            table_names: vec!["knows".into()],
-            columns: vec![],
-            is_all_columns: false,
-            limit: None,
-            predicate: None,
-            requirements: vec![],
-        };
+        let query_param = query_params(vec!["knows".into()], vec![], None);
         let expand_opr_pb = pb::EdgeExpand {
             v_tag: None,
             direction: 0,
@@ -139,14 +134,7 @@ mod test {
     // g.V().outE('knows', 'created')
     #[test]
     fn expand_oute_with_many_labels_test() {
-        let query_param = pb::QueryParams {
-            table_names: vec!["knows".into(), "created".into()],
-            columns: vec![],
-            is_all_columns: false,
-            limit: None,
-            predicate: None,
-            requirements: vec![],
-        };
+        let query_param = query_params(vec!["knows".into(), "created".into()], vec![], None);
         let expand_opr_pb = pb::EdgeExpand {
             v_tag: None,
             direction: 0,
@@ -176,14 +164,7 @@ mod test {
     // g.V().in('knows') with required properties
     #[test]
     fn expand_inv_with_label_property_test() {
-        let query_param = pb::QueryParams {
-            table_names: vec!["knows".into()],
-            columns: vec!["name".into()],
-            is_all_columns: false,
-            limit: None,
-            predicate: None,
-            requirements: vec![],
-        };
+        let query_param = query_params(vec!["knows".into()], vec!["name".into()], None);
         let expand_opr_pb = pb::EdgeExpand {
             v_tag: None,
             direction: 1,
@@ -217,14 +198,7 @@ mod test {
     // g.V().both()
     #[test]
     fn expand_bothv_test() {
-        let query_param = pb::QueryParams {
-            table_names: vec![],
-            columns: vec![],
-            is_all_columns: false,
-            limit: None,
-            predicate: None,
-            requirements: vec![],
-        };
+        let query_param = query_params(vec![], vec![], None);
         let expand_opr_pb = pb::EdgeExpand {
             v_tag: None,
             direction: 2,
@@ -244,14 +218,7 @@ mod test {
     // g.V().as('a').out('knows').as('b')
     #[test]
     fn expand_outv_from_tag_as_tag_test() {
-        let query_param = pb::QueryParams {
-            table_names: vec!["knows".into()],
-            columns: vec![],
-            is_all_columns: false,
-            limit: None,
-            predicate: None,
-            requirements: vec![],
-        };
+        let query_param = query_params(vec!["knows".into()], vec![], None);
         let expand_opr_pb = pb::EdgeExpand {
             v_tag: Some("a".into()),
             direction: 0,
@@ -281,14 +248,7 @@ mod test {
     // g.V().as("a").select('a').out("knows")
     #[test]
     fn expand_outv_from_select_tag_test() {
-        let query_param = pb::QueryParams {
-            table_names: vec!["knows".into()],
-            columns: vec![],
-            is_all_columns: false,
-            limit: None,
-            predicate: None,
-            requirements: vec![],
-        };
+        let query_param = query_params(vec!["knows".into()], vec![], None);
         let project = pb::Project {
             mappings: vec![pb::project::ExprAlias {
                 expr: str_to_expr_pb("@a".to_string()).ok(),
@@ -336,14 +296,8 @@ mod test {
     // g.V().out('knows').has('id',2)
     #[test]
     fn expand_outv_filter_test() {
-        let query_param = pb::QueryParams {
-            table_names: vec!["knows".into()],
-            columns: vec![],
-            is_all_columns: false,
-            limit: None,
-            predicate: str_to_expr_pb("@.id == 2".to_string()).ok(),
-            requirements: vec![],
-        };
+        let query_param =
+            query_params(vec!["knows".into()], vec![], str_to_expr_pb("@.id == 2".to_string()).ok());
         let expand_opr_pb = pb::EdgeExpand {
             v_tag: None,
             direction: 0,
@@ -369,14 +323,7 @@ mod test {
         let expand_opr = pb::EdgeExpand {
             v_tag: None,
             direction: 0,
-            params: Some(pb::QueryParams {
-                table_names: vec!["knows".into()],
-                columns: vec![],
-                is_all_columns: false,
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec!["knows".into()], vec![], None)),
             is_edge: true,
             alias: None,
         };
@@ -384,6 +331,7 @@ mod test {
         let getv_opr = pb::GetV {
             tag: None,
             opt: 1, // EndV
+            params: Some(query_params(vec![], vec![], None)),
             alias: None,
         };
 
@@ -424,14 +372,7 @@ mod test {
         let expand_opr = pb::EdgeExpand {
             v_tag: None,
             direction: 1,
-            params: Some(pb::QueryParams {
-                table_names: vec!["created".into()],
-                columns: vec![],
-                is_all_columns: false,
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec!["created".into()], vec![], None)),
             is_edge: true,
             alias: None,
         };
@@ -439,6 +380,7 @@ mod test {
         let getv_opr = pb::GetV {
             tag: None,
             opt: 0, // StartV
+            params: Some(query_params(vec![], vec![], None)),
             alias: None,
         };
 
@@ -479,14 +421,7 @@ mod test {
         let expand_opr = pb::EdgeExpand {
             v_tag: None,
             direction: 2,
-            params: Some(pb::QueryParams {
-                table_names: vec!["knows".into()],
-                columns: vec![],
-                is_all_columns: false,
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec!["knows".into()], vec![], None)),
             is_edge: true,
             alias: None,
         };
@@ -494,6 +429,7 @@ mod test {
         let getv_opr = pb::GetV {
             tag: None,
             opt: 2, // OtherV
+            params: Some(query_params(vec![], vec![], None)),
             alias: None,
         };
 

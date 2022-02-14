@@ -36,14 +36,7 @@ mod test {
         let source_opr = pb::Scan {
             scan_opt: 0,
             alias: None,
-            params: Some(pb::QueryParams {
-                table_names: vec!["person".into()],
-                columns: vec![],
-                is_all_columns: false,
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec!["person".into()], vec![], None)),
             idx_predicate: None,
         };
 
@@ -57,14 +50,7 @@ mod test {
         let expand_opr = pb::EdgeExpand {
             v_tag: None,
             direction: 0,
-            params: Some(pb::QueryParams {
-                table_names: vec![],
-                columns: vec![],
-                is_all_columns: false,
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec![], vec![], None)),
             is_edge: false,
             alias: None,
         };
@@ -174,14 +160,7 @@ mod test {
         let source_opr = pb::Scan {
             scan_opt: 0,
             alias: None,
-            params: Some(pb::QueryParams {
-                table_names: vec!["person".into()],
-                columns: vec![],
-                is_all_columns: false,
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec!["person".into()], vec![], None)),
             idx_predicate: None,
         };
 
@@ -195,14 +174,7 @@ mod test {
         let expand_opr = pb::EdgeExpand {
             v_tag: None,
             direction: 0,
-            params: Some(pb::QueryParams {
-                table_names: vec![],
-                columns: vec![],
-                is_all_columns: false,
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec![], vec![], None)),
             is_edge: false,
             alias: None,
         };

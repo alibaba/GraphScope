@@ -23,6 +23,7 @@ use std::rc::Rc;
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as pb;
 use ir_common::generated::common as common_pb;
+use ir_common::NameOrId;
 use vec_map::VecMap;
 
 use crate::error::{IrError, IrResult};
@@ -669,7 +670,7 @@ fn preprocess_const(
                         let new_item = common_pb::value::Item::I32(
                             schema
                                 .get_table_id(name)
-                                .ok_or(IrError::TableNotExist(name.to_string()))?,
+                                .ok_or(IrError::TableNotExist(NameOrId::Str(name.to_string())))?,
                         );
                         debug!("table: {:?} -> {:?}", item, new_item);
                         *item = new_item;
@@ -682,7 +683,7 @@ fn preprocess_const(
                                 .map(|name| {
                                     schema
                                         .get_table_id(name)
-                                        .ok_or(IrError::TableNotExist(name.to_string()))
+                                        .ok_or(IrError::TableNotExist(NameOrId::Str(name.to_string())))
                                 })
                                 .collect::<IrResult<Vec<i32>>>()?,
                         });
@@ -755,10 +756,10 @@ fn preprocess_params(
     }
     if let Some(schema) = &meta.schema {
         if plan_meta.is_preprocess() && schema.is_table_id() {
-            for table in params.table_names.iter_mut() {
+            for table in params.tables.iter_mut() {
                 let new_table = schema
                     .get_table_id_from_pb(table)
-                    .ok_or(IrError::TableNotExist(format!("{:?}", table)))?
+                    .ok_or(IrError::TableNotExist(table.clone().try_into()?))?
                     .into();
                 debug!("table: {:?} -> {:?}", table, new_table);
                 *table = new_table;
@@ -849,10 +850,13 @@ impl AsLogical for pb::PathExpand {
 }
 
 impl AsLogical for pb::GetV {
-    fn preprocess(&mut self, _meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
+    fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
         plan_meta
             .curr_node_metas_mut()
             .set_is_add_column(true);
+        if let Some(params) = self.params.as_mut() {
+            preprocess_params(params, meta, plan_meta)?;
+        }
         Ok(())
     }
 }
@@ -998,15 +1002,15 @@ mod test {
 
     #[allow(dead_code)]
     fn query_params(
-        table_names: Vec<common_pb::NameOrId>, columns: Vec<common_pb::NameOrId>,
+        tables: Vec<common_pb::NameOrId>, columns: Vec<common_pb::NameOrId>,
     ) -> pb::QueryParams {
         pb::QueryParams {
-            table_names,
+            tables,
             columns,
             is_all_columns: false,
             limit: None,
             predicate: None,
-            requirements: vec![],
+            extra: HashMap::new(),
         }
     }
 
@@ -1394,20 +1398,20 @@ mod test {
             scan_opt: 0,
             alias: None,
             params: Some(pb::QueryParams {
-                table_names: vec!["person".into()],
+                tables: vec!["person".into()],
                 columns: vec!["age".into(), "name".into()],
                 is_all_columns: false,
                 limit: None,
                 predicate: Some(
                     str_to_expr_pb("@a.~label > \"person\" && @a.age == 10".to_string()).unwrap(),
                 ),
-                requirements: vec![],
+                extra: HashMap::new(),
             }),
             idx_predicate: Some(vec!["software".to_string()].into()),
         };
         scan.preprocess(&STORE_META.read().unwrap(), &mut plan_meta)
             .unwrap();
-        assert_eq!(scan.clone().params.unwrap().table_names[0], 0.into());
+        assert_eq!(scan.clone().params.unwrap().tables[0], 0.into());
         assert_eq!(
             scan.idx_predicate.unwrap().or_predicates[0].predicates[0]
                 .value
@@ -1633,7 +1637,12 @@ mod test {
         assert_eq!(plan.meta.get_tag_nodes(&"e".into()).unwrap(), vec![1]);
 
         // .inV().as("v")
-        let getv = pb::GetV { tag: None, opt: 1, alias: Some("v".into()) };
+        let getv = pb::GetV {
+            tag: None,
+            opt: 1,
+            params: Some(query_params(vec![], vec![])),
+            alias: Some("v".into()),
+        };
         plan.append_operator_as_node(getv.into(), vec![1])
             .unwrap();
         assert_eq!(plan.meta.get_curr_nodes(), &[2]);
@@ -1770,7 +1779,12 @@ mod test {
         assert_eq!(plan.meta.get_tag_nodes(&"b".into()).unwrap(), vec![opr_id as u32]);
 
         //.inV().as('c')
-        let getv = pb::GetV { tag: None, opt: 2, alias: Some("c".into()) };
+        let getv = pb::GetV {
+            tag: None,
+            opt: 2,
+            params: Some(query_params(vec![], vec![])),
+            alias: Some("c".into()),
+        };
         opr_id = plan
             .append_operator_as_node(getv.into(), vec![opr_id as u32])
             .unwrap();

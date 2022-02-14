@@ -19,6 +19,7 @@
 #[allow(dead_code)]
 #[allow(unused_imports)]
 pub mod test {
+    use std::collections::HashMap;
     use std::convert::{TryFrom, TryInto};
     use std::sync::{Arc, Once};
 
@@ -101,6 +102,34 @@ pub mod test {
             Some(record)
         } else {
             None
+        }
+    }
+
+    pub fn query_params(
+        tables: Vec<common_pb::NameOrId>, columns: Vec<common_pb::NameOrId>,
+        predicate: Option<common_pb::Expression>,
+    ) -> pb::QueryParams {
+        pb::QueryParams {
+            tables,
+            columns,
+            is_all_columns: false,
+            limit: None,
+            predicate,
+            extra: HashMap::new(),
+        }
+    }
+
+    pub fn query_params_all_columns(
+        tables: Vec<common_pb::NameOrId>, columns: Vec<common_pb::NameOrId>,
+        predicate: Option<common_pb::Expression>,
+    ) -> pb::QueryParams {
+        pb::QueryParams {
+            tables,
+            columns,
+            is_all_columns: true,
+            limit: None,
+            predicate,
+            extra: HashMap::new(),
         }
     }
 }

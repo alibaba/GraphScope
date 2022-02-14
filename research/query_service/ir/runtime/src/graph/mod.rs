@@ -17,6 +17,7 @@ pub mod element;
 pub mod partitioner;
 pub mod property;
 
+use std::collections::HashMap;
 use std::convert::{TryFrom, TryInto};
 use std::io;
 use std::sync::atomic::{AtomicPtr, Ordering};
@@ -80,10 +81,10 @@ impl TryFrom<Option<algebra_pb::QueryParams>> for QueryParams {
     fn try_from(query_params_pb: Option<algebra_pb::QueryParams>) -> Result<Self, Self::Error> {
         query_params_pb.map_or(Ok(QueryParams::default()), |query_params_pb| {
             let query_param = QueryParams::default()
-                .with_labels(query_params_pb.table_names)?
+                .with_labels(query_params_pb.tables)?
                 .with_filter(query_params_pb.predicate)?
                 .with_limit(query_params_pb.limit)?
-                .with_extra_params(query_params_pb.requirements)?;
+                .with_extra_params(query_params_pb.extra)?;
             if query_params_pb.is_all_columns {
                 query_param.with_all_columns()
             } else {
@@ -147,7 +148,7 @@ impl QueryParams {
     }
 
     // Extra query params for different storages
-    fn with_extra_params(self, extra_params: Vec<String>) -> Result<Self, ParsePbError> {
+    fn with_extra_params(self, extra_params: HashMap<String, String>) -> Result<Self, ParsePbError> {
         if !extra_params.is_empty() {
             Err(ParsePbError::NotSupported("extra_params in QueryParams is not supported yet".to_string()))?
         }

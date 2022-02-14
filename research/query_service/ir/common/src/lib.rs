@@ -569,11 +569,13 @@ impl From<pb::PathEnd> for pb::logical_plan::Operator {
     }
 }
 
+/*
 impl From<pb::ShortestPathExpand> for pb::logical_plan::Operator {
     fn from(opr: pb::ShortestPathExpand) -> Self {
         pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::ShortestPath(opr)) }
     }
 }
+ */
 
 impl From<pb::GetV> for pb::logical_plan::Operator {
     fn from(opr: pb::GetV) -> Self {
