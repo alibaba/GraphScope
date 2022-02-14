@@ -85,7 +85,7 @@ where
                 .get_schema(si)
                 .ok_or(FnExecError::query_store_error("get schema failed"))?;
             let label_ids = encode_storage_label(params.labels.as_ref(), schema.clone());
-            let prop_ids = encode_storage_prop_key(params.columns.as_ref(), schema.clone());
+            let prop_ids = encode_storage_prop_keys(params.columns.as_ref(), schema.clone());
             let filter = params.filter.clone();
             let partitions: Vec<PartitionId> = partitions
                 .iter()
@@ -125,7 +125,7 @@ where
                 .get_schema(si)
                 .ok_or(FnExecError::query_store_error("get schema failed"))?;
             let label_ids = encode_storage_label(params.labels.as_ref(), schema.clone());
-            let prop_ids = encode_storage_prop_key(params.columns.as_ref(), schema.clone());
+            let prop_ids = encode_storage_prop_keys(params.columns.as_ref(), schema.clone());
             let filter = params.filter.clone();
             let partitions: Vec<PartitionId> = partitions
                 .iter()
@@ -161,7 +161,7 @@ where
         let schema = store
             .get_schema(si)
             .ok_or(FnExecError::query_store_error("get schema failed"))?;
-        let prop_ids = encode_storage_prop_key(params.columns.as_ref(), schema.clone());
+        let prop_ids = encode_storage_prop_keys(params.columns.as_ref(), schema.clone());
         let filter = params.filter.clone();
         let partition_label_vertex_ids =
             get_partition_label_vertex_ids(ids, self.partition_manager.clone());
@@ -261,7 +261,7 @@ where
         let filter = params.filter.clone();
         let limit = params.limit.clone();
         let edge_label_ids = encode_storage_label(params.labels.as_ref(), schema.clone());
-        let prop_ids = encode_storage_prop_key(params.columns.as_ref(), schema.clone());
+        let prop_ids = encode_storage_prop_keys(params.columns.as_ref(), schema.clone());
 
         let stmt = from_fn(move |v: ID| {
             let src_id = get_partition_vertex_ids(v, partition_manager.clone());
@@ -353,7 +353,7 @@ fn to_runtime_edge<E: StoreEdge>(e: &E) -> Edge {
 /// while in ir, None means we do not need any properties,
 /// and Some means we need given properties (and Some(vec![]) means we need all properties)
 #[inline]
-fn encode_storage_prop_key(
+fn encode_storage_prop_keys(
     prop_names: Option<&Vec<NameOrId>>, schema: Arc<dyn Schema>,
 ) -> Option<Vec<PropId>> {
     if let Some(prop_names) = prop_names {
@@ -363,17 +363,22 @@ fn encode_storage_prop_key(
             Some(
                 prop_names
                     .iter()
-                    .map(|prop_key| match prop_key {
-                        NameOrId::Str(prop_name) => schema
-                            .get_prop_id(prop_name)
-                            .unwrap_or(INVALID_PROP_ID),
-                        NameOrId::Id(prop_id) => (*prop_id as PropId),
-                    })
+                    .map(|prop_key| encode_storage_prop_key(prop_key, schema.clone()))
                     .collect(),
             )
         }
     } else {
         Some(vec![])
+    }
+}
+
+#[inline]
+fn encode_storage_prop_key(prop_key: &NameOrId, schema: Arc<dyn Schema>) -> PropId {
+    match prop_key {
+        NameOrId::Str(prop_name) => schema
+            .get_prop_id(prop_name)
+            .unwrap_or(INVALID_PROP_ID),
+        NameOrId::Id(prop_id) => (*prop_id as PropId),
     }
 }
 
@@ -403,7 +408,13 @@ fn encode_runtime_e_label<E: StoreEdge>(e: &E) -> NameOrId {
 #[inline]
 fn encode_runtime_property(prop_id: PropId, prop_val: Property) -> (NameOrId, Object) {
     let prop_key = NameOrId::Id(prop_id as KeyId);
-    let prop_val = match prop_val {
+    let prop_val = encode_runtime_prop_val(prop_val);
+    (prop_key, prop_val)
+}
+
+#[inline]
+fn encode_runtime_prop_val(prop_val: Property) -> Object {
+    match prop_val {
         Property::Bool(b) => b.into(),
         Property::Char(c) => {
             if c <= (i8::MAX as u8) {
@@ -420,8 +431,7 @@ fn encode_runtime_property(prop_id: PropId, prop_val: Property) -> (NameOrId, Ob
         Property::Bytes(v) => Object::Blob(v.into_boxed_slice()),
         Property::String(s) => Object::String(s),
         _ => unimplemented!(),
-    };
-    (prop_key, prop_val)
+    }
 }
 
 /// Transform type of ids to PartitionLabeledVertexIds as required by graphscope store,
@@ -455,3 +465,46 @@ fn get_partition_vertex_ids(
     let partition_id = graph_partition_manager.get_partition_id(id as VertexId) as PartitionId;
     vec![(partition_id, vec![id as VertexId])]
 }
+
+// // TODO(bingqing): try to impl LazyVertexDetails for gs StoreVertex and test the efficiency
+// /// LazyVertexDetails is used for local property fetching optimization.
+// /// That is, the required properties will not be materialized until LazyVertexDetails need to be shuffled.
+// struct LazyVertexDetails {
+//     inner: Arc<dyn StoreVertex<PI = Box<dyn Iterator<Item = (PropId, Property)>>>>,
+//     schema: Arc<dyn Schema>,
+// }
+//
+// impl_as_any!(LazyVertexDetails);
+//
+// #[allow(dead_code)]
+// impl LazyVertexDetails {
+//     fn new(
+//         vertex: Arc<dyn StoreVertex<PI = Box<dyn Iterator<Item = (PropId, Property)>>>>,
+//         schema: Arc<dyn Schema>,
+//     ) -> Self {
+//         LazyVertexDetails { inner: vertex, schema }
+//     }
+// }
+//
+// impl std::fmt::Debug for LazyVertexDetails {
+//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+//         f.debug_struct("LazyVertexDetails").field("id", &self.inner.get_id()).finish()
+//     }
+// }
+//
+// impl Details for LazyVertexDetails {
+//     fn get_property(&self, key: &NameOrId) -> Option<BorrowObject> {
+//         // TODO: failed to return BorrowObject as get_property() returns Property owned by the current function
+//         let prop_key = encode_storage_prop_key(key, self.schema.clone());
+//         self.inner.get_property(prop_key).map(|prop| encode_runtime_prop_val(prop).as_borrow())
+//     }
+//
+//     fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {
+//         Some(
+//             self.inner
+//                 .get_properties()
+//                 .map(|(prop_id, prop_val)| encode_runtime_property(prop_id, prop_val))
+//                 .collect(),
+//         )
+//     }
+// }
