@@ -261,7 +261,7 @@ message EdgeExpand {
   common.NameOrId v_tag = 1;
   // The direction of the expanded edge
   Direction direction = 2;
-  // The query parameters define the condition that the edge must satisfy
+  // The query parameters define the condition that the edge/end vertex must satisfy
   QueryParams params = 3;
   // Whether the expansion is for edge?
   bool is_edge = 4;

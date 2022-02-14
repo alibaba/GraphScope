@@ -749,6 +749,7 @@ enum ParamsKey {
     Column,
 }
 
+/// A unified processing of parameters with type `NameOrId`
 fn process_params(ptr: *const c_void, key: ParamsKey, val: FfiNameOrId, opr: Opr) -> ResultCode {
     let mut return_code = ResultCode::Success;
     let pb: FfiResult<Option<common_pb::NameOrId>> = val.try_into();
@@ -1712,25 +1713,25 @@ mod graph {
         Box::into_raw(getv) as *const c_void
     }
 
-    /// Set the tag of edge/path to get its end vertex
+    /// Set the tag of edge/path to get the vertex
     #[no_mangle]
     pub extern "C" fn set_getv_tag(ptr_getv: *const c_void, tag: FfiNameOrId) -> ResultCode {
         process_params(ptr_getv, ParamsKey::Tag, tag, Opr::GetV)
     }
 
-    /// Add a label of the edge that this expansion must satisfy
+    /// Add a label of the vertex
     #[no_mangle]
     pub extern "C" fn add_getv_label(ptr_getv: *const c_void, label: FfiNameOrId) -> ResultCode {
         process_params(ptr_getv, ParamsKey::Table, label, Opr::EdgeExpand)
     }
 
-    /// Add a property that this edge expansion must carry
+    /// Add a property that this vertex must carry
     #[no_mangle]
     pub extern "C" fn add_getv_property(ptr_getv: *const c_void, property: FfiNameOrId) -> ResultCode {
         process_params(ptr_getv, ParamsKey::Column, property, Opr::GetV)
     }
 
-    /// Set getting all properties for this edge expansion
+    /// Set getting all properties for the vertex
     #[no_mangle]
     pub extern "C" fn set_getv_all_properties(ptr_getv: *const c_void) -> ResultCode {
         let mut getv = unsafe { Box::from_raw(ptr_getv as *mut pb::GetV) };
@@ -1740,13 +1741,13 @@ mod graph {
         ResultCode::Success
     }
 
-    /// Set the size range limitation of this expansion
+    /// Set the size range limitation of the vertex
     #[no_mangle]
     pub extern "C" fn set_getv_limit(ptr_getv: *const c_void, lower: i32, upper: i32) -> ResultCode {
         set_range(ptr_getv, lower, upper, Opr::GetV)
     }
 
-    /// Set the edge predicate of this expansion
+    /// Set the edge predicate of the vertex
     #[no_mangle]
     pub extern "C" fn set_getv_predicate(
         ptr_getv: *const c_void, cstr_predicate: *const c_char,
@@ -1760,7 +1761,7 @@ mod graph {
         set_alias(ptr_getv, alias, Opr::GetV)
     }
 
-    /// Append an edge expand operator to the logical plan
+    /// Append the operator to the logical plan
     #[no_mangle]
     pub extern "C" fn append_getv_operator(
         ptr_plan: *const c_void, ptr_getv: *const c_void, parent: i32, id: *mut i32,
