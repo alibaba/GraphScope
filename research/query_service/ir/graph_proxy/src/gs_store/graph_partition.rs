@@ -120,8 +120,6 @@ impl Partitioner for VineyardMultiPartition {
         // 2. get worker_id by the prebuild partition_worker_map, which specifies partition_id -> worker_id
 
         // Firstly, we check if the job parallelism is identical to the pre-allocated parallelism,
-        // while one exception is that GAIA will optimize when the plan only have a source step (which may access the storage);
-        // Then we just follow the above routing rule.
         let parallelism = self
             .worker_partition_list_mapping
             .read()
@@ -129,14 +127,9 @@ impl Partitioner for VineyardMultiPartition {
             .as_ref()
             .map_or(0, |map| map.len());
         if self.num_servers * worker_num_per_server != parallelism {
-            // GAIA will optimize to directly query the storage if it only has a source step
-            if worker_num_per_server == 1 {
-                Ok(self.server_index)
-            } else {
-                Err(FnExecError::query_store_error(
-                    "Job parallelism is not identical to the pre-allocated parallelism",
-                ))?
-            }
+            Err(FnExecError::query_store_error(
+                "Job parallelism is not identical to the pre-allocated parallelism",
+            ))?
         } else {
             let vid = *id as VertexId;
             let partition_id = self

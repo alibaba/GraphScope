@@ -38,7 +38,7 @@ use crate::{filter_limit, limit_n};
 
 static INVALID_LABEL_ID: LabelId = 0xffffffff;
 static INVALID_PROP_ID: PropId = 0xffffffff;
-// TODO(bingqing): confirm with compiler, compiler should set the param_key as "SID"
+// Should be identical to the param_name given by compiler
 const SNAPSHOT_ID: &str = "SID";
 
 pub struct GraphScopeStore<V, VI, E, EI>
