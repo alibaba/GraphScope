@@ -130,7 +130,7 @@ impl From<IrError> for ResultCode {
             IrError::ColumnNotExist(_) => Self::ColumnNotExistError,
             IrError::TableNotExist(_) => Self::TableNotExistError,
             IrError::ParentNodeNotExist(_) => Self::ParentNotFoundError,
-            IrError::MissingDataError => Self::MissingDataError,
+            IrError::MissingDataError(_) => Self::MissingDataError,
             _ => Self::Unknown,
         }
     }

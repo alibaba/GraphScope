@@ -23,6 +23,7 @@ use std::rc::Rc;
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as pb;
 use ir_common::generated::common as common_pb;
+use ir_common::NameOrId;
 use vec_map::VecMap;
 
 use crate::error::{IrError, IrResult};
@@ -669,7 +670,7 @@ fn preprocess_const(
                         let new_item = common_pb::value::Item::I32(
                             schema
                                 .get_table_id(name)
-                                .ok_or(IrError::TableNotExist(name.to_string()))?,
+                                .ok_or(IrError::TableNotExist(NameOrId::Str(name.to_string())))?,
                         );
                         debug!("table: {:?} -> {:?}", item, new_item);
                         *item = new_item;
@@ -682,7 +683,7 @@ fn preprocess_const(
                                 .map(|name| {
                                     schema
                                         .get_table_id(name)
-                                        .ok_or(IrError::TableNotExist(name.to_string()))
+                                        .ok_or(IrError::TableNotExist(NameOrId::Str(name.to_string())))
                                 })
                                 .collect::<IrResult<Vec<i32>>>()?,
                         });
@@ -758,7 +759,7 @@ fn preprocess_params(
             for table in params.tables.iter_mut() {
                 let new_table = schema
                     .get_table_id_from_pb(table)
-                    .ok_or(IrError::TableNotExist(format!("{:?}", table)))?
+                    .ok_or(IrError::TableNotExist(table.clone().try_into()?))?
                     .into();
                 debug!("table: {:?} -> {:?}", table, new_table);
                 *table = new_table;
