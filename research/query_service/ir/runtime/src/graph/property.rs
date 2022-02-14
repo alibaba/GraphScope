@@ -33,6 +33,7 @@ pub enum PropKey {
     Id,
     Label,
     Len,
+    All,
     Key(NameOrId),
 }
 
@@ -49,6 +50,7 @@ impl TryFrom<pb::Property> for PropKey {
                 Item::Id(_) => Ok(PropKey::Id),
                 Item::Label(_) => Ok(PropKey::Label),
                 Item::Len(_) => Ok(PropKey::Len),
+                Item::All(_) => Ok(PropKey::All),
                 Item::Key(k) => Ok(PropKey::Key(NameOrId::try_from(k)?)),
             }
         } else {
@@ -69,8 +71,11 @@ impl Encode for PropKey {
             PropKey::Len => {
                 writer.write_u8(2)?;
             }
-            PropKey::Key(key) => {
+            PropKey::All => {
                 writer.write_u8(3)?;
+            }
+            PropKey::Key(key) => {
+                writer.write_u8(4)?;
                 key.write_to(writer)?;
             }
         }
@@ -85,7 +90,8 @@ impl Decode for PropKey {
             0 => Ok(PropKey::Id),
             1 => Ok(PropKey::Label),
             2 => Ok(PropKey::Len),
-            3 => {
+            3 => Ok(PropKey::All),
+            4 => {
                 let key = <NameOrId>::read_from(reader)?;
                 Ok(PropKey::Key(key))
             }

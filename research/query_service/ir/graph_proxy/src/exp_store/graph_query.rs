@@ -228,7 +228,7 @@ impl GraphProxy for DemoGraph {
         if params.partitions.is_some() {
             let label_ids = encode_storage_vertex_label(&params.labels);
             let store = self.store;
-            let props = params.props.clone();
+            let props = params.columns.clone();
             let result = self
                 .store
                 .get_all_vertices(label_ids.as_ref())
@@ -261,7 +261,7 @@ impl GraphProxy for DemoGraph {
         let mut result = Vec::with_capacity(ids.len());
         for id in ids {
             if let Some(local_vertex) = self.store.get_vertex(*id as DefaultId) {
-                let v = to_runtime_vertex(local_vertex, self.store, params.props.clone());
+                let v = to_runtime_vertex(local_vertex, self.store, params.columns.clone());
                 result.push(v);
             }
         }

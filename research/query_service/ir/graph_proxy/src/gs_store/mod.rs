@@ -62,7 +62,6 @@ pub struct QueryVineyard<V, VI, E, EI> {
     partition_worker_mapping: Arc<RwLock<Option<HashMap<u32, u32>>>>,
     worker_partition_list_mapping: Arc<RwLock<Option<HashMap<u32, Vec<u32>>>>>,
     num_servers: usize,
-    server_index: u64,
 }
 
 #[allow(dead_code)]
@@ -72,7 +71,6 @@ impl<V, VI, E, EI> QueryVineyard<V, VI, E, EI> {
         graph_partitioner: Arc<dyn GraphPartitionManager>,
         partition_worker_mapping: Arc<RwLock<Option<HashMap<u32, u32>>>>,
         worker_partition_list_mapping: Arc<RwLock<Option<HashMap<u32, Vec<u32>>>>>, num_servers: usize,
-        server_index: u64,
     ) -> Self {
         QueryVineyard {
             graph_query,
@@ -80,7 +78,6 @@ impl<V, VI, E, EI> QueryVineyard<V, VI, E, EI> {
             partition_worker_mapping,
             worker_partition_list_mapping,
             num_servers,
-            server_index,
         }
     }
 }
@@ -100,7 +97,6 @@ where
             self.partition_worker_mapping.clone(),
             self.worker_partition_list_mapping.clone(),
             self.num_servers,
-            self.server_index,
         );
         IRJobCompiler::new(partitioner)
     }

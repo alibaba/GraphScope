@@ -286,7 +286,6 @@ where
                 self.partition_worker_mapping.clone(),
                 self.worker_partition_list_mapping.clone(),
                 self.store_config.worker_num as usize,
-                self.store_config.worker_id as u64,
             );
             let job_compiler = query_vineyard.initialize_job_compiler();
             let service = Service::new(job_compiler);

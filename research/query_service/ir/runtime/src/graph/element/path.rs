@@ -105,6 +105,14 @@ impl Element for VertexOrEdge {
             VertexOrEdge::E(e) => e.as_graph_element(),
         }
     }
+
+    fn len(&self) -> usize {
+        match self {
+            VertexOrEdge::V(v) => v.len(),
+            VertexOrEdge::E(e) => e.len(),
+        }
+    }
+
     fn as_borrow_object(&self) -> BorrowObject {
         match self {
             VertexOrEdge::V(v) => v.as_borrow_object(),
@@ -127,13 +135,6 @@ impl GraphElement for VertexOrEdge {
             VertexOrEdge::E(e) => e.label(),
         }
     }
-
-    fn len(&self) -> usize {
-        match self {
-            VertexOrEdge::V(v) => v.len(),
-            VertexOrEdge::E(e) => e.len(),
-        }
-    }
 }
 
 impl Element for GraphPath {
@@ -143,6 +144,13 @@ impl Element for GraphPath {
 
     fn as_graph_element(&self) -> Option<&dyn GraphElement> {
         Some(self)
+    }
+
+    fn len(&self) -> usize {
+        match self {
+            GraphPath::WHOLE((_, weight)) => *weight,
+            GraphPath::END((_, weight)) => *weight,
+        }
     }
 
     fn as_borrow_object(&self) -> BorrowObject {
@@ -165,13 +173,6 @@ impl GraphElement for GraphPath {
 
     fn label(&self) -> Option<&NameOrId> {
         None
-    }
-
-    fn len(&self) -> usize {
-        match self {
-            GraphPath::WHOLE((_, weight)) => *weight,
-            GraphPath::END((_, weight)) => *weight,
-        }
     }
 }
 

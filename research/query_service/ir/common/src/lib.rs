@@ -287,6 +287,7 @@ impl From<String> for common_pb::NameOrId {
 pub const ID_KEY: &'static str = "~id";
 pub const LABEL_KEY: &'static str = "~label";
 pub const LENGTH_KEY: &'static str = "~len";
+pub const ALL_KEY: &'static str = "~all";
 
 impl From<String> for common_pb::Property {
     fn from(str: String) -> Self {
@@ -296,6 +297,8 @@ impl From<String> for common_pb::Property {
             common_pb::Property { item: Some(common_pb::property::Item::Label(common_pb::LabelKey {})) }
         } else if str == LENGTH_KEY {
             common_pb::Property { item: Some(common_pb::property::Item::Len(common_pb::LengthKey {})) }
+        } else if str == ALL_KEY {
+            common_pb::Property { item: Some(common_pb::property::Item::All(common_pb::AllKey {})) }
         } else {
             common_pb::Property { item: Some(common_pb::property::Item::Key(str.into())) }
         }
@@ -566,11 +569,13 @@ impl From<pb::PathEnd> for pb::logical_plan::Operator {
     }
 }
 
+/*
 impl From<pb::ShortestPathExpand> for pb::logical_plan::Operator {
     fn from(opr: pb::ShortestPathExpand) -> Self {
         pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::ShortestPath(opr)) }
     }
 }
+ */
 
 impl From<pb::GetV> for pb::logical_plan::Operator {
     fn from(opr: pb::GetV) -> Self {

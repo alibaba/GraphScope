@@ -76,6 +76,21 @@ fn simple_add_job_builder<M: Message>(
     Ok(())
 }
 
+fn update_query_params(
+    params: &mut pb::QueryParams, columns: Vec<common_pb::NameOrId>, is_all_columns: bool,
+) -> pb::QueryParams {
+    let mut new_params = params.clone();
+    params.columns.clear();
+    params.is_all_columns = false;
+    params.predicate = None;
+
+    new_params.tables.clear();
+    new_params.columns = columns;
+    new_params.is_all_columns = is_all_columns;
+
+    new_params
+}
+
 impl AsPhysical for pb::Project {
     fn add_job_builder(&self, builder: &mut JobBuilder, _plan_meta: &mut PlanMeta) -> IrResult<()> {
         simple_add_job_builder(builder, &pb::logical_plan::Operator::from(self.clone()), SimpleOpr::Map)
@@ -99,34 +114,19 @@ impl AsPhysical for pb::Scan {
         if let Some(params) = &mut self.params {
             if let Some(node_metas) = plan_meta.curr_node_metas() {
                 let columns = node_metas.get_columns();
-                if !columns.is_empty() {
-                    params.columns.clear();
-                    params.columns.extend(
-                        columns
-                            .into_iter()
-                            .map(|tag| common_pb::NameOrId::from(tag)),
-                    )
+                let is_all_columns = node_metas.is_all_columns();
+                if !columns.is_empty() || is_all_columns {
+                    params.columns = columns
+                        .into_iter()
+                        .map(|tag| common_pb::NameOrId::from(tag))
+                        .collect();
+                    params.is_all_columns = is_all_columns;
                 }
             }
+            Ok(())
         } else {
-            if let Some(node_metas) = plan_meta.curr_node_metas() {
-                let columns = node_metas.get_columns();
-                if !columns.is_empty() {
-                    self.params = Some(pb::QueryParams {
-                        table_names: vec![],
-                        columns: columns
-                            .into_iter()
-                            .map(|tag| common_pb::NameOrId::from(tag))
-                            .collect(),
-                        limit: None,
-                        predicate: None,
-                        requirements: vec![],
-                    })
-                }
-            }
+            Err(IrError::MissingDataError("query params".to_string()))
         }
-
-        Ok(())
     }
 }
 
@@ -140,38 +140,36 @@ impl AsPhysical for pb::EdgeExpand {
     fn post_process(&mut self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         let mut is_adding_auxilia = false;
         let mut auxilia = pb::Auxilia { params: None, alias: None };
-        if let Some(node_metas) = plan_meta.curr_node_metas() {
-            let columns = node_metas.get_columns();
-            if !columns.is_empty() {
-                if !self.is_edge {
-                    // Vertex expansion
-                    // Move everything to Auxilia
-                    auxilia.params = Some(pb::QueryParams {
-                        table_names: vec![],
-                        columns: columns
-                            .into_iter()
-                            .map(|tag| common_pb::NameOrId::from(tag))
-                            .collect(),
-                        limit: None,
-                        predicate: None,
-                        requirements: vec![],
-                    });
-                    if self.alias.is_some() {
+        if let Some(params) = self.params.as_mut() {
+            if let Some(node_metas) = plan_meta.curr_node_metas() {
+                let columns = node_metas.get_columns();
+                let is_all_columns = node_metas.is_all_columns();
+                if !columns.is_empty() || is_all_columns {
+                    if !self.is_edge {
+                        // Vertex expansion
+                        // Move everything to Auxilia
+                        auxilia.params = Some(update_query_params(
+                            params,
+                            columns
+                                .into_iter()
+                                .map(|tag| common_pb::NameOrId::from(tag))
+                                .collect(),
+                            is_all_columns,
+                        ));
                         auxilia.alias = self.alias.clone();
                         self.alias = None;
-                    }
-                    is_adding_auxilia = true;
-                } else {
-                    if let Some(params) = self.params.as_mut() {
-                        params.columns.clear();
-                        params.columns.extend(
-                            columns
-                                .iter()
-                                .map(|tag| common_pb::NameOrId::from(tag.clone())),
-                        )
+                        is_adding_auxilia = true;
+                    } else {
+                        params.columns = columns
+                            .into_iter()
+                            .map(|tag| common_pb::NameOrId::from(tag))
+                            .collect();
+                        params.is_all_columns = is_all_columns;
                     }
                 }
             }
+        } else {
+            return Err(IrError::MissingDataError("query params".to_string()));
         }
         simple_add_job_builder(
             builder,
@@ -239,11 +237,11 @@ impl AsPhysical for pb::PathExpand {
                         SimpleOpr::Map,
                     )
                 } else {
-                    Err(IrError::MissingDataError)
+                    Err(IrError::MissingDataError("edge expand".to_string()))
                 }
             }
         } else {
-            Err(IrError::MissingDataError)
+            Err(IrError::MissingDataError("hop range".to_string()))
         }
     }
 }
@@ -258,23 +256,26 @@ impl AsPhysical for pb::GetV {
     fn post_process(&mut self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         let mut is_adding_auxilia = false;
         let mut auxilia = pb::Auxilia { params: None, alias: None };
-        if let Some(node_metas) = plan_meta.curr_node_metas() {
-            let columns = node_metas.get_columns();
-            if !columns.is_empty() {
-                auxilia.alias = self.alias.clone();
-                auxilia.params = Some(pb::QueryParams {
-                    table_names: vec![],
-                    columns: columns
-                        .into_iter()
-                        .map(|tag| common_pb::NameOrId::from(tag))
-                        .collect(),
-                    limit: None,
-                    predicate: None,
-                    requirements: vec![],
-                });
-                self.alias = None;
-                is_adding_auxilia = true;
+        if let Some(params) = self.params.as_mut() {
+            if let Some(node_metas) = plan_meta.curr_node_metas() {
+                let columns = node_metas.get_columns();
+                let is_all_columns = node_metas.is_all_columns();
+                if !columns.is_empty() || is_all_columns {
+                    auxilia.params = Some(update_query_params(
+                        params,
+                        columns
+                            .into_iter()
+                            .map(|tag| common_pb::NameOrId::from(tag))
+                            .collect(),
+                        is_all_columns,
+                    ));
+                    auxilia.alias = self.alias.clone();
+                    self.alias = None;
+                    is_adding_auxilia = true;
+                }
             }
+        } else {
+            return Err(IrError::MissingDataError("query params".to_string()));
         }
         simple_add_job_builder(builder, &pb::logical_plan::Operator::from(self.clone()), SimpleOpr::Map)?;
         if is_adding_auxilia {
@@ -317,7 +318,7 @@ impl AsPhysical for pb::Limit {
                 Ok(())
             }
         } else {
-            Err(IrError::MissingDataError)
+            Err(IrError::MissingDataError("limit range".to_string()))
         }
     }
 }
@@ -385,7 +386,7 @@ impl AsPhysical for pb::logical_plan::Operator {
                 _ => Err(IrError::Unsupported(format!("the operator {:?}", self))),
             }
         } else {
-            Err(IrError::MissingDataError)
+            Err(IrError::MissingDataError("operator".to_string()))
         }
     }
 }
@@ -419,7 +420,7 @@ impl AsPhysical for LogicalPlan {
                         pb::logical_plan::Operator::from(apply_opr.clone()).encode_to_vec(),
                     );
                 } else {
-                    return Err(IrError::MissingDataError);
+                    return Err(IrError::MissingDataError("sub-plan".to_string()));
                 }
             } else {
                 if let Some(Edge(edgexpd)) = curr_node.borrow().opr.opr.as_ref() {
@@ -479,7 +480,7 @@ impl AsPhysical for LogicalPlan {
 
                             builder.join(pegasus_join_kind, left_plan, right_plan, join_bytes);
                         }
-                        None => return Err(IrError::MissingDataError),
+                        None => return Err(IrError::MissingDataError("merge node".to_string())),
                         _ => {
                             return Err(IrError::Unsupported(
                                 "operators other than `Union` and `Join`".to_string(),
@@ -506,6 +507,8 @@ impl AsPhysical for LogicalPlan {
 
 #[cfg(test)]
 mod test {
+    use std::collections::HashMap;
+
     use ir_common::expr_parse::str_to_expr_pb;
     use ir_common::generated::algebra as pb;
     use ir_common::generated::algebra::project::ExprAlias;
@@ -515,17 +518,25 @@ mod test {
     use crate::plan::logical::Node;
 
     #[allow(dead_code)]
+    fn query_params(
+        tables: Vec<common_pb::NameOrId>, columns: Vec<common_pb::NameOrId>,
+    ) -> pb::QueryParams {
+        pb::QueryParams {
+            tables,
+            columns,
+            is_all_columns: false,
+            limit: None,
+            predicate: None,
+            extra: HashMap::new(),
+        }
+    }
+
+    #[allow(dead_code)]
     fn build_scan(columns: Vec<common_pb::NameOrId>) -> pb::Scan {
         pb::Scan {
             scan_opt: 0,
             alias: None,
-            params: Some(pb::QueryParams {
-                table_names: vec![],
-                columns,
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec![], columns)),
             idx_predicate: None,
         }
     }
@@ -537,21 +548,15 @@ mod test {
         pb::EdgeExpand {
             v_tag: None,
             direction: 0,
-            params: Some(pb::QueryParams {
-                table_names: vec![],
-                columns,
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec![], columns)),
             is_edge,
             alias,
         }
     }
 
     #[allow(dead_code)]
-    fn build_getv() -> pb::GetV {
-        pb::GetV { tag: None, opt: 1, alias: None }
+    fn build_getv(alias: Option<common_pb::NameOrId>) -> pb::GetV {
+        pb::GetV { tag: None, opt: 1, params: Some(query_params(vec![], vec![])), alias }
     }
 
     #[allow(dead_code)]
@@ -659,13 +664,7 @@ mod test {
             .flat_map(pb::logical_plan::Operator::from(build_edgexpd(false, vec![], None)).encode_to_vec());
         expected_builder.filter_map(
             pb::logical_plan::Operator::from(pb::Auxilia {
-                params: Some(pb::QueryParams {
-                    table_names: vec![],
-                    columns: vec!["birthday".into()],
-                    limit: None,
-                    predicate: None,
-                    requirements: vec![],
-                }),
+                params: Some(query_params(vec![], vec!["birthday".into()])),
                 alias: None,
             })
             .encode_to_vec(),
@@ -691,13 +690,7 @@ mod test {
         expected_builder.repartition(vec![]);
         expected_builder.filter_map(
             pb::logical_plan::Operator::from(pb::Auxilia {
-                params: Some(pb::QueryParams {
-                    table_names: vec![],
-                    columns: vec!["birthday".into()],
-                    limit: None,
-                    predicate: None,
-                    requirements: vec![],
-                }),
+                params: Some(query_params(vec![], vec!["birthday".into()])),
                 alias: None,
             })
             .encode_to_vec(),
@@ -731,13 +724,7 @@ mod test {
             .flat_map(pb::logical_plan::Operator::from(build_edgexpd(false, vec![], None)).encode_to_vec());
         expected_builder.filter_map(
             pb::logical_plan::Operator::from(pb::Auxilia {
-                params: Some(pb::QueryParams {
-                    table_names: vec![],
-                    columns: vec!["age".into(), "id".into(), "name".into()],
-                    limit: None,
-                    predicate: None,
-                    requirements: vec![],
-                }),
+                params: Some(query_params(vec![], vec!["age".into(), "id".into(), "name".into()])),
                 alias: Some("a".into()),
             })
             .encode_to_vec(),
@@ -763,13 +750,7 @@ mod test {
         expected_builder.repartition(vec![]);
         expected_builder.filter_map(
             pb::logical_plan::Operator::from(pb::Auxilia {
-                params: Some(pb::QueryParams {
-                    table_names: vec![],
-                    columns: vec!["age".into(), "id".into(), "name".into()],
-                    limit: None,
-                    predicate: None,
-                    requirements: vec![],
-                }),
+                params: Some(query_params(vec![], vec!["age".into(), "id".into(), "name".into()])),
                 alias: Some("a".into()),
             })
             .encode_to_vec(),
@@ -852,18 +833,76 @@ mod test {
     }
 
     #[test]
+    fn post_process_getv_tag_auxilia_shuffle() {
+        // g.V().outE().inV().as('a').select('a').by(valueMap("name", "id", "age")
+        let mut plan = LogicalPlan::default();
+        plan.append_operator_as_node(build_scan(vec![]).into(), vec![])
+            .unwrap();
+        plan.append_operator_as_node(build_edgexpd(true, vec![], None).into(), vec![0])
+            .unwrap();
+        plan.append_operator_as_node(build_getv(Some("a".into())).into(), vec![1])
+            .unwrap();
+        plan.append_operator_as_node(build_project("{@a.name, @a.id, @a.age}").into(), vec![2])
+            .unwrap();
+        let mut job_builder = JobBuilder::default();
+        let mut plan_meta = plan.meta.clone();
+        plan.add_job_builder(&mut job_builder, &mut plan_meta)
+            .unwrap();
+
+        let mut expected_builder = JobBuilder::default();
+        expected_builder.add_source(pb::logical_plan::Operator::from(build_scan(vec![])).encode_to_vec());
+        expected_builder
+            .flat_map(pb::logical_plan::Operator::from(build_edgexpd(true, vec![], None)).encode_to_vec());
+        expected_builder.map(pb::logical_plan::Operator::from(build_getv(None)).encode_to_vec());
+        expected_builder.filter_map(
+            pb::logical_plan::Operator::from(pb::Auxilia {
+                params: Some(query_params(vec![], vec!["age".into(), "id".into(), "name".into()])),
+                alias: Some("a".into()),
+            })
+            .encode_to_vec(),
+        );
+        expected_builder.map(
+            pb::logical_plan::Operator::from(build_project("{@a.name, @a.id, @a.age}")).encode_to_vec(),
+        );
+        expected_builder.sink(vec![]);
+
+        assert_eq!(job_builder, expected_builder);
+
+        let mut job_builder = JobBuilder::default();
+        let mut plan_meta = plan.meta.clone();
+        plan_meta.set_partition(true);
+        plan.add_job_builder(&mut job_builder, &mut plan_meta)
+            .unwrap();
+
+        let mut expected_builder = JobBuilder::default();
+        expected_builder.add_source(pb::logical_plan::Operator::from(build_scan(vec![])).encode_to_vec());
+        expected_builder.repartition(vec![]);
+        expected_builder
+            .flat_map(pb::logical_plan::Operator::from(build_edgexpd(true, vec![], None)).encode_to_vec());
+        expected_builder.map(pb::logical_plan::Operator::from(build_getv(None)).encode_to_vec());
+        expected_builder.repartition(vec![]);
+        expected_builder.filter_map(
+            pb::logical_plan::Operator::from(pb::Auxilia {
+                params: Some(query_params(vec![], vec!["age".into(), "id".into(), "name".into()])),
+                alias: Some("a".into()),
+            })
+            .encode_to_vec(),
+        );
+        expected_builder.map(
+            pb::logical_plan::Operator::from(build_project("{@a.name, @a.id, @a.age}")).encode_to_vec(),
+        );
+        expected_builder.sink(vec![]);
+
+        assert_eq!(job_builder, expected_builder);
+    }
+
+    #[test]
     fn poc_plan_as_physical() {
         // g.V().hasLabel("person").has("id", 10).out("knows").limit(10)
         let source_opr = pb::logical_plan::Operator::from(pb::Scan {
             scan_opt: 0,
             alias: None,
-            params: Some(pb::QueryParams {
-                table_names: vec![common_pb::NameOrId::from("person".to_string())],
-                columns: vec![],
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec!["person".into()], vec![])),
             idx_predicate: None,
         });
         let select_opr = pb::logical_plan::Operator::from(pb::Select {
@@ -872,13 +911,7 @@ mod test {
         let expand_opr = pb::logical_plan::Operator::from(pb::EdgeExpand {
             v_tag: None,
             direction: 0,
-            params: Some(pb::QueryParams {
-                table_names: vec![common_pb::NameOrId::from("knows".to_string())],
-                columns: vec![],
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec!["knows".into()], vec![])),
             is_edge: false,
             alias: None,
         });
@@ -917,13 +950,7 @@ mod test {
         let source_opr = pb::logical_plan::Operator::from(pb::Scan {
             scan_opt: 0,
             alias: None,
-            params: Some(pb::QueryParams {
-                table_names: vec![common_pb::NameOrId::from("person".to_string())],
-                columns: vec![],
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec!["person".into()], vec![])),
             idx_predicate: None,
         });
 
@@ -959,26 +986,14 @@ mod test {
         let source_opr = pb::logical_plan::Operator::from(pb::Scan {
             scan_opt: 0,
             alias: None,
-            params: Some(pb::QueryParams {
-                table_names: vec![common_pb::NameOrId::from("person".to_string())],
-                columns: vec![],
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec!["person".into()], vec![])),
             idx_predicate: None,
         });
 
         let edge_expand = pb::EdgeExpand {
             v_tag: None,
             direction: 0,
-            params: Some(pb::QueryParams {
-                table_names: vec![common_pb::NameOrId::from("knows".to_string())],
-                columns: vec![],
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec!["knows".into()], vec![])),
             is_edge: false,
             alias: None,
         };
@@ -1042,26 +1057,14 @@ mod test {
         let source_opr = pb::logical_plan::Operator::from(pb::Scan {
             scan_opt: 0,
             alias: None,
-            params: Some(pb::QueryParams {
-                table_names: vec![common_pb::NameOrId::from("person".to_string())],
-                columns: vec![],
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec!["person".into()], vec![])),
             idx_predicate: None,
         });
 
         let edge_expand = pb::EdgeExpand {
             v_tag: None,
             direction: 0,
-            params: Some(pb::QueryParams {
-                table_names: vec![common_pb::NameOrId::from("knows".to_string())],
-                columns: vec![],
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec!["knows".into()], vec![])),
             is_edge: false,
             alias: None,
         };
@@ -1109,13 +1112,7 @@ mod test {
         let source_opr = pb::logical_plan::Operator::from(pb::Scan {
             scan_opt: 0,
             alias: None,
-            params: Some(pb::QueryParams {
-                table_names: vec![],
-                columns: vec![],
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
         });
 
@@ -1159,13 +1156,7 @@ mod test {
         let scan: pb::logical_plan::Operator = pb::Scan {
             scan_opt: 0,
             alias: Some("v".into()),
-            params: Some(pb::QueryParams {
-                table_names: vec![],
-                columns: vec!["name".into()],
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec![], vec!["name".into()])),
             idx_predicate: None,
         }
         .into();
@@ -1178,13 +1169,7 @@ mod test {
         let mut expand = pb::EdgeExpand {
             v_tag: None,
             direction: 0,
-            params: Some(pb::QueryParams {
-                table_names: vec![],
-                columns: vec![],
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec![], vec![])),
             is_edge: false,
             alias: Some("o".into()),
         };
@@ -1231,13 +1216,7 @@ mod test {
                     .repartition(vec![])
                     .filter_map(
                         pb::logical_plan::Operator::from(pb::Auxilia {
-                            params: Some(pb::QueryParams {
-                                table_names: vec![],
-                                columns: vec!["lang".into()],
-                                limit: None,
-                                predicate: None,
-                                requirements: vec![],
-                            }),
+                            params: Some(query_params(vec![], vec!["lang".into()])),
                             alias: Some("o".into()),
                         })
                         .encode_to_vec(),
@@ -1257,19 +1236,13 @@ mod test {
         let source_opr = pb::logical_plan::Operator::from(pb::Scan {
             scan_opt: 0,
             alias: None,
-            params: Some(pb::QueryParams {
-                table_names: vec![],
-                columns: vec![],
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
         });
         let expand_opr = pb::logical_plan::Operator::from(pb::EdgeExpand {
             v_tag: None,
             direction: 0,
-            params: None,
+            params: Some(query_params(vec![], vec![])),
             is_edge: false,
             alias: None,
         });

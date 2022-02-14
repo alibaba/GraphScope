@@ -23,6 +23,7 @@ use std::rc::Rc;
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as pb;
 use ir_common::generated::common as common_pb;
+use ir_common::NameOrId;
 use vec_map::VecMap;
 
 use crate::error::{IrError, IrResult};
@@ -639,6 +640,16 @@ fn preprocess_var(
                     )?;
                     node_meta.insert_column(key.clone().try_into()?);
                 }
+                common_pb::property::Item::All(_) => {
+                    let mut node_meta = plan_meta.tag_node_metas_mut(
+                        var.tag
+                            .clone()
+                            .map(|tag| tag.try_into())
+                            .transpose()?
+                            .as_ref(),
+                    )?;
+                    node_meta.set_is_all_columns(true);
+                }
                 _ => {}
             }
         }
@@ -659,7 +670,7 @@ fn preprocess_const(
                         let new_item = common_pb::value::Item::I32(
                             schema
                                 .get_table_id(name)
-                                .ok_or(IrError::TableNotExist(name.to_string()))?,
+                                .ok_or(IrError::TableNotExist(NameOrId::Str(name.to_string())))?,
                         );
                         debug!("table: {:?} -> {:?}", item, new_item);
                         *item = new_item;
@@ -672,7 +683,7 @@ fn preprocess_const(
                                 .map(|name| {
                                     schema
                                         .get_table_id(name)
-                                        .ok_or(IrError::TableNotExist(name.to_string()))
+                                        .ok_or(IrError::TableNotExist(NameOrId::Str(name.to_string())))
                                 })
                                 .collect::<IrResult<Vec<i32>>>()?,
                         });
@@ -698,31 +709,10 @@ fn preprocess_expression(
                     if let Some(property) = var.property.as_mut() {
                         if let Some(key) = property.item.as_mut() {
                             match key {
-                                common_pb::property::Item::Key(key) => {
-                                    count = 0;
-                                    if let Some(schema) = &meta.schema {
-                                        if plan_meta.is_preprocess() && schema.is_column_id() {
-                                            let new_key = schema
-                                                .get_column_id_from_pb(key)
-                                                .unwrap_or(INVALID_META_ID)
-                                                .into();
-                                            debug!("column: {:?} -> {:?}", key, new_key);
-                                            *key = new_key;
-                                        }
-                                    }
-                                    debug!("add column ({:?}) to {:?}", key, var.tag);
-                                    let mut node_meta = plan_meta.tag_node_metas_mut(
-                                        var.tag
-                                            .clone()
-                                            .map(|tag| tag.try_into())
-                                            .transpose()?
-                                            .as_ref(),
-                                    )?;
-                                    node_meta.insert_column(key.clone().try_into()?);
-                                }
                                 common_pb::property::Item::Label(_) => count = 1,
                                 _ => count = 0,
                             }
+                            preprocess_var(var, meta, plan_meta)?;
                         }
                     }
                 }
@@ -766,10 +756,10 @@ fn preprocess_params(
     }
     if let Some(schema) = &meta.schema {
         if plan_meta.is_preprocess() && schema.is_table_id() {
-            for table in params.table_names.iter_mut() {
+            for table in params.tables.iter_mut() {
                 let new_table = schema
                     .get_table_id_from_pb(table)
-                    .ok_or(IrError::TableNotExist(format!("{:?}", table)))?
+                    .ok_or(IrError::TableNotExist(table.clone().try_into()?))?
                     .into();
                 debug!("table: {:?} -> {:?}", table, new_table);
                 *table = new_table;
@@ -860,10 +850,13 @@ impl AsLogical for pb::PathExpand {
 }
 
 impl AsLogical for pb::GetV {
-    fn preprocess(&mut self, _meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
+    fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
         plan_meta
             .curr_node_metas_mut()
             .set_is_add_column(true);
+        if let Some(params) = self.params.as_mut() {
+            preprocess_params(params, meta, plan_meta)?;
+        }
         Ok(())
     }
 }
@@ -1006,6 +999,20 @@ mod test {
 
     use super::*;
     use crate::plan::meta::set_schema_simple;
+
+    #[allow(dead_code)]
+    fn query_params(
+        tables: Vec<common_pb::NameOrId>, columns: Vec<common_pb::NameOrId>,
+    ) -> pb::QueryParams {
+        pb::QueryParams {
+            tables,
+            columns,
+            is_all_columns: false,
+            limit: None,
+            predicate: None,
+            extra: HashMap::new(),
+        }
+    }
 
     #[test]
     fn logical_plan_construct() {
@@ -1391,19 +1398,20 @@ mod test {
             scan_opt: 0,
             alias: None,
             params: Some(pb::QueryParams {
-                table_names: vec!["person".into()],
+                tables: vec!["person".into()],
                 columns: vec!["age".into(), "name".into()],
+                is_all_columns: false,
                 limit: None,
                 predicate: Some(
                     str_to_expr_pb("@a.~label > \"person\" && @a.age == 10".to_string()).unwrap(),
                 ),
-                requirements: vec![],
+                extra: HashMap::new(),
             }),
             idx_predicate: Some(vec!["software".to_string()].into()),
         };
         scan.preprocess(&STORE_META.read().unwrap(), &mut plan_meta)
             .unwrap();
-        assert_eq!(scan.clone().params.unwrap().table_names[0], 0.into());
+        assert_eq!(scan.clone().params.unwrap().tables[0], 0.into());
         assert_eq!(
             scan.idx_predicate.unwrap().or_predicates[0].predicates[0]
                 .value
@@ -1470,13 +1478,7 @@ mod test {
         let scan = pb::Scan {
             scan_opt: 0,
             alias: None,
-            params: Some(pb::QueryParams {
-                table_names: vec![],
-                columns: vec![],
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
         };
         plan.append_operator_as_node(scan.into(), vec![])
@@ -1535,13 +1537,7 @@ mod test {
         let scan = pb::Scan {
             scan_opt: 0,
             alias: None,
-            params: Some(pb::QueryParams {
-                table_names: vec![],
-                columns: vec![],
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
         };
         plan.append_operator_as_node(scan.into(), vec![])
@@ -1552,13 +1548,7 @@ mod test {
         let expand = pb::EdgeExpand {
             v_tag: Some("a".into()),
             direction: 0,
-            params: Some(pb::QueryParams {
-                table_names: vec![],
-                columns: vec![],
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec![], vec![])),
             is_edge: false,
             alias: Some("here".into()),
         };
@@ -1626,13 +1616,7 @@ mod test {
         let scan = pb::Scan {
             scan_opt: 0,
             alias: None,
-            params: Some(pb::QueryParams {
-                table_names: vec![],
-                columns: vec![],
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
         };
         plan.append_operator_as_node(scan.into(), vec![])
@@ -1643,13 +1627,7 @@ mod test {
         let expand = pb::EdgeExpand {
             v_tag: None,
             direction: 0,
-            params: Some(pb::QueryParams {
-                table_names: vec![],
-                columns: vec![],
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec![], vec![])),
             is_edge: true,
             alias: Some("e".into()),
         };
@@ -1659,7 +1637,12 @@ mod test {
         assert_eq!(plan.meta.get_tag_nodes(&"e".into()).unwrap(), vec![1]);
 
         // .inV().as("v")
-        let getv = pb::GetV { tag: None, opt: 1, alias: Some("v".into()) };
+        let getv = pb::GetV {
+            tag: None,
+            opt: 1,
+            params: Some(query_params(vec![], vec![])),
+            alias: Some("v".into()),
+        };
         plan.append_operator_as_node(getv.into(), vec![1])
             .unwrap();
         assert_eq!(plan.meta.get_curr_nodes(), &[2]);
@@ -1748,13 +1731,7 @@ mod test {
         let scan = pb::Scan {
             scan_opt: 0,
             alias: None,
-            params: Some(pb::QueryParams {
-                table_names: vec!["person".into()],
-                columns: vec![],
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec!["person".into()], vec![])),
             idx_predicate: None,
         };
         let mut opr_id = plan
@@ -1791,13 +1768,7 @@ mod test {
         let expand = pb::EdgeExpand {
             v_tag: Some("a".into()),
             direction: 0,
-            params: Some(pb::QueryParams {
-                table_names: vec!["knows".into()],
-                columns: vec![],
-                limit: None,
-                predicate: str_to_expr_pb("@.date == 20200101".to_string()).ok(),
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec!["knows".into()], vec![])),
             is_edge: true,
             alias: Some("b".into()),
         };
@@ -1808,7 +1779,12 @@ mod test {
         assert_eq!(plan.meta.get_tag_nodes(&"b".into()).unwrap(), vec![opr_id as u32]);
 
         //.inV().as('c')
-        let getv = pb::GetV { tag: None, opt: 2, alias: Some("c".into()) };
+        let getv = pb::GetV {
+            tag: None,
+            opt: 2,
+            params: Some(query_params(vec![], vec![])),
+            alias: Some("c".into()),
+        };
         opr_id = plan
             .append_operator_as_node(getv.into(), vec![opr_id as u32])
             .unwrap();
@@ -1889,13 +1865,7 @@ mod test {
         let scan = pb::Scan {
             scan_opt: 0,
             alias: None,
-            params: Some(pb::QueryParams {
-                table_names: vec![],
-                columns: vec![],
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
         };
         plan.append_operator_as_node(scan.into(), vec![])
@@ -1948,13 +1918,7 @@ mod test {
         let scan = pb::Scan {
             scan_opt: 0,
             alias: None,
-            params: Some(pb::QueryParams {
-                table_names: vec![],
-                columns: vec![],
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
         };
         plan.append_operator_as_node(scan.into(), vec![])
@@ -1963,13 +1927,7 @@ mod test {
         let expand1 = pb::EdgeExpand {
             v_tag: None,
             direction: 0,
-            params: Some(pb::QueryParams {
-                table_names: vec![],
-                columns: vec![],
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec![], vec![])),
             is_edge: false,
             alias: None,
         };
@@ -2036,13 +1994,7 @@ mod test {
         let scan = pb::Scan {
             scan_opt: 0,
             alias: Some("v".into()),
-            params: Some(pb::QueryParams {
-                table_names: vec![],
-                columns: vec![],
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
         };
 
@@ -2054,13 +2006,7 @@ mod test {
         let expand = pb::EdgeExpand {
             v_tag: None,
             direction: 0,
-            params: Some(pb::QueryParams {
-                table_names: vec![],
-                columns: vec![],
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec![], vec![])),
             is_edge: false,
             alias: Some("o".into()),
         };
@@ -2129,13 +2075,7 @@ mod test {
         let scan = pb::Scan {
             scan_opt: 0,
             alias: None,
-            params: Some(pb::QueryParams {
-                table_names: vec![],
-                columns: vec![],
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
         };
 
@@ -2145,13 +2085,7 @@ mod test {
         let expand = pb::EdgeExpand {
             v_tag: None,
             direction: 0,
-            params: Some(pb::QueryParams {
-                table_names: vec![],
-                columns: vec![],
-                limit: None,
-                predicate: None,
-                requirements: vec![],
-            }),
+            params: Some(query_params(vec![], vec![])),
             is_edge: false,
             alias: None,
         };

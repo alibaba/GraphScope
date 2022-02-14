@@ -71,7 +71,7 @@ impl From<algebra_pb::edge_expand::Direction> for Direction {
 pub struct QueryParams {
     pub labels: Vec<NameOrId>,
     pub limit: Option<usize>,
-    pub props: Option<Vec<NameOrId>>,
+    pub columns: Option<Vec<NameOrId>>,
     pub partitions: Option<Vec<u64>>,
     pub filter: Option<Arc<PEvaluator>>,
     pub extra_params: Option<HashMap<String, String>>,
@@ -82,12 +82,16 @@ impl TryFrom<Option<algebra_pb::QueryParams>> for QueryParams {
 
     fn try_from(query_params_pb: Option<algebra_pb::QueryParams>) -> Result<Self, Self::Error> {
         query_params_pb.map_or(Ok(QueryParams::default()), |query_params_pb| {
-            QueryParams::default()
-                .with_labels(query_params_pb.table_names)?
+            let query_param = QueryParams::default()
+                .with_labels(query_params_pb.tables)?
                 .with_filter(query_params_pb.predicate)?
                 .with_limit(query_params_pb.limit)?
-                .with_required_properties(query_params_pb.columns)?
-                .with_extra_params(query_params_pb.requirements)
+                .with_extra_params(query_params_pb.extra)?;
+            if query_params_pb.is_all_columns {
+                query_param.with_all_columns()
+            } else {
+                query_param.with_required_columns(query_params_pb.columns)
+            }
         })
     }
 }
@@ -120,21 +124,28 @@ impl QueryParams {
         Ok(self)
     }
 
+    fn with_all_columns(mut self) -> Result<Self, ParsePbError> {
+        self.columns = Some(vec![]);
+        Ok(self)
+    }
+
     // props specify the properties we query for, e.g.,
     // Some(vec![prop1, prop2]) indicates we need prop1 and prop2,
     // Some(vec![]) indicates we need all properties
     // and None indicates we do not need any property,
-    fn with_required_properties(
-        mut self, required_properties_pb: Vec<common_pb::NameOrId>,
+    fn with_required_columns(
+        mut self, required_columns_pb: Vec<common_pb::NameOrId>,
     ) -> Result<Self, ParsePbError> {
-        // TODO: Specify whether we need all properties or None properties
-        // TODO: for now, we assume that empty required_properties_pb vec indicates all properties needed
-        self.props = Some(
-            required_properties_pb
-                .into_iter()
-                .map(|prop_key| prop_key.try_into())
-                .collect::<Result<Vec<_>, _>>()?,
-        );
+        if required_columns_pb.is_empty() {
+            self.columns = None;
+        } else {
+            self.columns = Some(
+                required_columns_pb
+                    .into_iter()
+                    .map(|prop_key| prop_key.try_into())
+                    .collect::<Result<Vec<_>, _>>()?,
+            );
+        }
         Ok(self)
     }
 
@@ -149,7 +160,7 @@ impl QueryParams {
             && self.filter.is_none()
             && self.limit.is_none()
             && self.partitions.is_none()
-            && self.props.is_none())
+            && self.columns.is_none())
     }
 
     pub fn get_extra_param(&self, key: &str) -> Option<&String> {

@@ -130,7 +130,7 @@ impl From<IrError> for ResultCode {
             IrError::ColumnNotExist(_) => Self::ColumnNotExistError,
             IrError::TableNotExist(_) => Self::TableNotExistError,
             IrError::ParentNodeNotExist(_) => Self::ParentNotFoundError,
-            IrError::MissingDataError => Self::MissingDataError,
+            IrError::MissingDataError(_) => Self::MissingDataError,
             _ => Self::Unknown,
         }
     }
@@ -631,6 +631,11 @@ fn set_range(ptr: *const c_void, lower: i32, upper: i32, opr: Opr) -> ResultCode
                 edgexpd.params.as_mut().unwrap().limit = Some(pb::Range { lower, upper });
                 std::mem::forget(edgexpd);
             }
+            Opr::GetV => {
+                let mut getv = unsafe { Box::from_raw(ptr as *mut pb::GetV) };
+                getv.params.as_mut().unwrap().limit = Some(pb::Range { lower, upper });
+                std::mem::forget(getv);
+            }
             Opr::PathExpand => {
                 let mut pathxpd = unsafe { Box::from_raw(ptr as *mut pb::PathExpand) };
                 pathxpd.hop_range = Some(pb::Range { lower, upper });
@@ -725,6 +730,11 @@ fn set_predicate(ptr: *const c_void, cstr_predicate: *const c_char, opr: Opr) ->
                 scan.params.as_mut().unwrap().predicate = predicate_pb.ok();
                 std::mem::forget(scan);
             }
+            Opr::GetV => {
+                let mut getv = unsafe { Box::from_raw(ptr as *mut pb::GetV) };
+                getv.params.as_mut().unwrap().predicate = predicate_pb.ok();
+                std::mem::forget(getv);
+            }
             _ => unreachable!(),
         }
     }
@@ -739,6 +749,7 @@ enum ParamsKey {
     Column,
 }
 
+/// A unified processing of parameters with type `NameOrId`
 fn process_params(ptr: *const c_void, key: ParamsKey, val: FfiNameOrId, opr: Opr) -> ResultCode {
     let mut return_code = ResultCode::Success;
     let pb: FfiResult<Option<common_pb::NameOrId>> = val.try_into();
@@ -754,7 +765,7 @@ fn process_params(ptr: *const c_void, key: ParamsKey, val: FfiNameOrId, opr: Opr
                                 .params
                                 .as_mut()
                                 .unwrap()
-                                .table_names
+                                .tables
                                 .push(label)
                         }
                     }
@@ -776,11 +787,7 @@ fn process_params(ptr: *const c_void, key: ParamsKey, val: FfiNameOrId, opr: Opr
                 match key {
                     ParamsKey::Table => {
                         if let Some(table) = pb.unwrap() {
-                            scan.params
-                                .as_mut()
-                                .unwrap()
-                                .table_names
-                                .push(table)
+                            scan.params.as_mut().unwrap().tables.push(table)
                         }
                     }
                     ParamsKey::Column => {
@@ -796,7 +803,16 @@ fn process_params(ptr: *const c_void, key: ParamsKey, val: FfiNameOrId, opr: Opr
                 let mut getv = unsafe { Box::from_raw(ptr as *mut pb::GetV) };
                 match key {
                     ParamsKey::Tag => getv.tag = pb.unwrap(),
-                    _ => unreachable!(),
+                    ParamsKey::Table => {
+                        if let Some(label) = pb.unwrap() {
+                            getv.params.as_mut().unwrap().tables.push(label)
+                        }
+                    }
+                    ParamsKey::Column => {
+                        if let Some(ppt) = pb.unwrap() {
+                            getv.params.as_mut().unwrap().columns.push(ppt)
+                        }
+                    }
                 }
                 std::mem::forget(getv);
             }
@@ -1313,6 +1329,8 @@ mod unfold {
 }
 
 mod scan {
+    use std::collections::HashMap;
+
     use super::*;
 
     #[allow(dead_code)]
@@ -1330,11 +1348,12 @@ mod scan {
             scan_opt: unsafe { std::mem::transmute::<FfiScanOpt, i32>(scan_opt) },
             alias: None,
             params: Some(pb::QueryParams {
-                table_names: vec![],
+                tables: vec![],
                 columns: vec![],
+                is_all_columns: false,
                 limit: None,
                 predicate: None,
-                requirements: vec![],
+                extra: HashMap::new(),
             }),
             idx_predicate: None,
         });
@@ -1425,10 +1444,20 @@ mod scan {
         process_params(ptr_scan, ParamsKey::Table, table_name, Opr::Scan)
     }
 
-    /// Add a data field to be scanned from the data source (vertex, edge, or a relational table)
+    /// Add a data column to be scanned from the data source (vertex, edge, or a relational table)
     #[no_mangle]
     pub extern "C" fn add_scan_column(ptr_scan: *const c_void, column: FfiNameOrId) -> ResultCode {
         process_params(ptr_scan, ParamsKey::Column, column, Opr::Scan)
+    }
+
+    /// Set getting all columns to be scanned from the data source
+    #[no_mangle]
+    pub extern "C" fn set_scan_is_all_columns(ptr_scan: *const c_void) -> ResultCode {
+        let mut scan = unsafe { Box::from_raw(ptr_scan as *mut pb::Scan) };
+        scan.params.as_mut().unwrap().is_all_columns = true;
+        std::mem::forget(scan);
+
+        ResultCode::Success
     }
 
     /// Set an alias for the data if it is a vertex/edge
@@ -1555,6 +1584,8 @@ mod sink {
 }
 
 mod graph {
+    use std::collections::HashMap;
+
     use super::*;
 
     #[allow(dead_code)]
@@ -1573,11 +1604,12 @@ mod graph {
             v_tag: None,
             direction: unsafe { std::mem::transmute::<FfiDirection, i32>(dir) },
             params: Some(pb::QueryParams {
-                table_names: vec![],
+                tables: vec![],
                 columns: vec![],
+                is_all_columns: false,
                 limit: None,
                 predicate: None,
-                requirements: vec![],
+                extra: HashMap::new(),
             }),
             is_edge,
             alias: None,
@@ -1604,6 +1636,16 @@ mod graph {
         ptr_edgexpd: *const c_void, property: FfiNameOrId,
     ) -> ResultCode {
         process_params(ptr_edgexpd, ParamsKey::Column, property, Opr::EdgeExpand)
+    }
+
+    /// Set getting all properties for this edge expansion
+    #[no_mangle]
+    pub extern "C" fn set_edgexpd_all_properties(ptr_edgexpd: *const c_void) -> ResultCode {
+        let mut edgexpd = unsafe { Box::from_raw(ptr_edgexpd as *mut pb::EdgeExpand) };
+        edgexpd.params.as_mut().unwrap().is_all_columns = true;
+        std::mem::forget(edgexpd);
+
+        ResultCode::Success
     }
 
     /// Set the size range limitation of this expansion
@@ -1654,15 +1696,59 @@ mod graph {
         let getv = Box::new(pb::GetV {
             tag: None,
             opt: unsafe { std::mem::transmute::<FfiVOpt, i32>(opt) },
+            params: Some(pb::QueryParams {
+                tables: vec![],
+                columns: vec![],
+                is_all_columns: false,
+                limit: None,
+                predicate: None,
+                extra: HashMap::new(),
+            }),
             alias: None,
         });
         Box::into_raw(getv) as *const c_void
     }
 
-    /// Set the tag of edge/path to get its end vertex
+    /// Set the tag of edge/path to get the vertex
     #[no_mangle]
     pub extern "C" fn set_getv_tag(ptr_getv: *const c_void, tag: FfiNameOrId) -> ResultCode {
         process_params(ptr_getv, ParamsKey::Tag, tag, Opr::GetV)
+    }
+
+    /// Add a label of the vertex
+    #[no_mangle]
+    pub extern "C" fn add_getv_label(ptr_getv: *const c_void, label: FfiNameOrId) -> ResultCode {
+        process_params(ptr_getv, ParamsKey::Table, label, Opr::EdgeExpand)
+    }
+
+    /// Add a property that this vertex must carry
+    #[no_mangle]
+    pub extern "C" fn add_getv_property(ptr_getv: *const c_void, property: FfiNameOrId) -> ResultCode {
+        process_params(ptr_getv, ParamsKey::Column, property, Opr::GetV)
+    }
+
+    /// Set getting all properties for the vertex
+    #[no_mangle]
+    pub extern "C" fn set_getv_all_properties(ptr_getv: *const c_void) -> ResultCode {
+        let mut getv = unsafe { Box::from_raw(ptr_getv as *mut pb::GetV) };
+        getv.params.as_mut().unwrap().is_all_columns = true;
+        std::mem::forget(getv);
+
+        ResultCode::Success
+    }
+
+    /// Set the size range limitation of the vertex
+    #[no_mangle]
+    pub extern "C" fn set_getv_limit(ptr_getv: *const c_void, lower: i32, upper: i32) -> ResultCode {
+        set_range(ptr_getv, lower, upper, Opr::GetV)
+    }
+
+    /// Set the edge predicate of the vertex
+    #[no_mangle]
+    pub extern "C" fn set_getv_predicate(
+        ptr_getv: *const c_void, cstr_predicate: *const c_char,
+    ) -> ResultCode {
+        set_predicate(ptr_getv, cstr_predicate, Opr::GetV)
     }
 
     /// Set vertex alias of this getting vertex
@@ -1671,7 +1757,7 @@ mod graph {
         set_alias(ptr_getv, alias, Opr::GetV)
     }
 
-    /// Append an edge expand operator to the logical plan
+    /// Append the operator to the logical plan
     #[no_mangle]
     pub extern "C" fn append_getv_operator(
         ptr_plan: *const c_void, ptr_getv: *const c_void, parent: i32, id: *mut i32,

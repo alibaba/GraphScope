@@ -281,6 +281,12 @@ impl EvalPred for Operand {
                                         .map(|g| g.len() > 0)
                                         .unwrap_or(false);
                                 }
+                                PropKey::All => {
+                                    if let Some(_) = elem.details() {
+                                        // TODO(longbin) Do we need to look into the properties?
+                                        result = true;
+                                    }
+                                }
                                 PropKey::Key(key) => {
                                     if let Some(details) = elem.details() {
                                         result = details.get_property(key).is_some();

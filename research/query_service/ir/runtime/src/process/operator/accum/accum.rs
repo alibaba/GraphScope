@@ -13,6 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::collections::HashSet;
 use std::convert::{TryFrom, TryInto};
 
 use ir_common::error::ParsePbError;
@@ -22,7 +23,9 @@ use ir_common::NameOrId;
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 
 use crate::error::{FnExecError, FnExecResult, FnGenError, FnGenResult};
-use crate::process::operator::accum::accumulator::{Accumulator, Count, ToList};
+use crate::process::operator::accum::accumulator::{
+    Accumulator, Count, DistinctCount, Maximum, Minimum, ToList, ToSet,
+};
 use crate::process::operator::accum::AccumFactoryGen;
 use crate::process::operator::TagKey;
 use crate::process::record::{CommonObject, Entry, Record};
@@ -32,6 +35,10 @@ pub enum EntryAccumulator {
     // TODO(bingqing): more accum kind
     ToCount(Count<()>),
     ToList(ToList<Entry>),
+    ToMin(Minimum<Entry>),
+    ToMax(Maximum<Entry>),
+    ToSet(ToSet<Entry>),
+    ToDistinctCount(DistinctCount<Entry>),
 }
 
 #[derive(Debug, Clone)]
@@ -63,6 +70,10 @@ impl Accumulator<Entry, Entry> for EntryAccumulator {
         match self {
             EntryAccumulator::ToCount(count) => count.accum(()),
             EntryAccumulator::ToList(list) => list.accum(next),
+            EntryAccumulator::ToMin(min) => min.accum(next),
+            EntryAccumulator::ToMax(max) => max.accum(next),
+            EntryAccumulator::ToSet(set) => set.accum(next),
+            EntryAccumulator::ToDistinctCount(distinct_count) => distinct_count.accum(next),
         }
     }
 
@@ -84,6 +95,29 @@ impl Accumulator<Entry, Entry> for EntryAccumulator {
                     })
                     .collect::<Result<Vec<_>, _>>()?;
                 Ok(Entry::Collection(list_entry))
+            }
+            EntryAccumulator::ToMin(min) => min
+                .finalize()?
+                .ok_or(FnExecError::accum_error("min_entry is none")),
+            EntryAccumulator::ToMax(max) => max
+                .finalize()?
+                .ok_or(FnExecError::accum_error("max_entry is none")),
+            EntryAccumulator::ToSet(set) => {
+                let set_entry = set
+                    .finalize()?
+                    .into_iter()
+                    .map(|entry| match entry {
+                        Entry::Element(e) => Ok(e.clone()),
+                        Entry::Collection(_) => {
+                            Err(FnExecError::unsupported_error("set of collections is not supported yet"))
+                        }
+                    })
+                    .collect::<Result<Vec<_>, _>>()?;
+                Ok(Entry::Collection(set_entry))
+            }
+            EntryAccumulator::ToDistinctCount(distinct_count) => {
+                let cnt = distinct_count.finalize()?;
+                Ok(CommonObject::Count(cnt).into())
             }
         }
     }
@@ -117,6 +151,12 @@ impl AccumFactoryGen for algebra_pb::GroupBy {
             let entry_accumulator = match agg_kind {
                 Aggregate::Count => EntryAccumulator::ToCount(Count { value: 0, _ph: Default::default() }),
                 Aggregate::ToList => EntryAccumulator::ToList(ToList { inner: vec![] }),
+                Aggregate::Min => EntryAccumulator::ToMin(Minimum { min: None }),
+                Aggregate::Max => EntryAccumulator::ToMax(Maximum { max: None }),
+                Aggregate::ToSet => EntryAccumulator::ToSet(ToSet { inner: HashSet::new() }),
+                Aggregate::CountDistinct => {
+                    EntryAccumulator::ToDistinctCount(DistinctCount { inner: HashSet::new() })
+                }
                 _ => Err(FnGenError::unsupported_error(&format!(
                     "Unsupported aggregate kind {:?}",
                     agg_kind
@@ -140,6 +180,22 @@ impl Encode for EntryAccumulator {
                 writer.write_u8(1)?;
                 list.write_to(writer)?;
             }
+            EntryAccumulator::ToMin(min) => {
+                writer.write_u8(2)?;
+                min.write_to(writer)?;
+            }
+            EntryAccumulator::ToMax(max) => {
+                writer.write_u8(3)?;
+                max.write_to(writer)?;
+            }
+            EntryAccumulator::ToSet(set) => {
+                writer.write_u8(4)?;
+                set.write_to(writer)?;
+            }
+            EntryAccumulator::ToDistinctCount(distinct_count) => {
+                writer.write_u8(5)?;
+                distinct_count.write_to(writer)?;
+            }
         }
         Ok(())
     }
@@ -156,6 +212,22 @@ impl Decode for EntryAccumulator {
             1 => {
                 let list = <ToList<Entry>>::read_from(reader)?;
                 Ok(EntryAccumulator::ToList(list))
+            }
+            2 => {
+                let min = <Minimum<Entry>>::read_from(reader)?;
+                Ok(EntryAccumulator::ToMin(min))
+            }
+            3 => {
+                let max = <Maximum<Entry>>::read_from(reader)?;
+                Ok(EntryAccumulator::ToMax(max))
+            }
+            4 => {
+                let set = <ToSet<Entry>>::read_from(reader)?;
+                Ok(EntryAccumulator::ToSet(set))
+            }
+            5 => {
+                let distinct_count = <DistinctCount<Entry>>::read_from(reader)?;
+                Ok(EntryAccumulator::ToDistinctCount(distinct_count))
             }
             _ => Err(std::io::Error::new(std::io::ErrorKind::Other, "unreachable")),
         }
@@ -190,6 +262,9 @@ impl Decode for RecordAccumulator {
 
 #[cfg(test)]
 mod tests {
+
+    use std::borrow::BorrowMut;
+    use std::cmp::Ordering;
 
     use ir_common::generated::algebra as pb;
     use ir_common::generated::common as common_pb;
@@ -309,6 +384,121 @@ mod tests {
                 .as_ref()
                 .clone();
             fold_result = (collection_entry, count_entry);
+        }
+        assert_eq!(fold_result, expected_result);
+    }
+
+    // g.V().values('age').min().as("a")
+    #[test]
+    fn min_test() {
+        let r1 = Record::new(CommonObject::Prop(29.into()), None);
+        let r2 = Record::new(CommonObject::Prop(27.into()), None);
+        let function = pb::group_by::AggFunc {
+            vars: vec![common_pb::Variable::from("@".to_string())],
+            aggregate: 1, // min
+            alias: Some("a".into()),
+        };
+        let fold_opr_pb = pb::GroupBy { mappings: vec![], functions: vec![function] };
+        let mut result = fold_test(vec![r1, r2], fold_opr_pb);
+        let mut res = 0.into();
+        if let Some(Ok(record)) = result.next() {
+            if let Some(entry) = record.get(Some(&"a".into())) {
+                res = match entry.as_ref() {
+                    // this is Prop, since get_entry returns entry type of prop
+                    Entry::Element(RecordElement::OffGraph(CommonObject::Prop(obj))) => obj.clone(),
+                    _ => {
+                        unreachable!()
+                    }
+                };
+            }
+        }
+        assert_eq!(res, object!(27));
+    }
+
+    // g.V().values('name').max().as("a")
+    #[test]
+    fn max_test() {
+        let r1 = Record::new(CommonObject::Prop("marko".into()), None);
+        let r2 = Record::new(CommonObject::Prop("vadas".into()), None);
+        let function = pb::group_by::AggFunc {
+            vars: vec![common_pb::Variable::from("@".to_string())],
+            aggregate: 2, // max
+            alias: Some("a".into()),
+        };
+        let fold_opr_pb = pb::GroupBy { mappings: vec![], functions: vec![function] };
+        let mut result = fold_test(vec![r1, r2], fold_opr_pb);
+        let mut res = "".into();
+        if let Some(Ok(record)) = result.next() {
+            if let Some(entry) = record.get(Some(&"a".into())) {
+                res = match entry.as_ref() {
+                    // this is Prop, since get_entry returns entry type of prop
+                    Entry::Element(RecordElement::OffGraph(CommonObject::Prop(obj))) => obj.clone(),
+                    _ => {
+                        unreachable!()
+                    }
+                };
+            }
+        }
+        assert_eq!(res, object!("vadas"));
+    }
+
+    // g.V().distinct_count().as("a")
+    #[test]
+    fn distinct_count_test() {
+        let v1 = init_vertex1();
+        let v2 = init_vertex2();
+        let r1 = Record::new(v1.clone(), None);
+        let r2 = Record::new(v2.clone(), None);
+        let r3 = Record::new(v1, None);
+        let r4 = Record::new(v2, None);
+
+        let function = pb::group_by::AggFunc {
+            vars: vec![common_pb::Variable::from("@".to_string())],
+            aggregate: 4, // distinct_count
+            alias: Some("a".into()),
+        };
+        let fold_opr_pb = pb::GroupBy { mappings: vec![], functions: vec![function] };
+        let mut result = fold_test(vec![r1, r2, r3, r4], fold_opr_pb);
+        let mut cnt = 0;
+        if let Some(Ok(record)) = result.next() {
+            if let Some(entry) = record.get(Some(&"a".into())) {
+                cnt = match entry.as_ref() {
+                    Entry::Element(RecordElement::OffGraph(CommonObject::Count(cnt))) => *cnt,
+                    _ => {
+                        unreachable!()
+                    }
+                };
+            }
+        }
+        assert_eq!(cnt, 2);
+    }
+
+    // g.V().fold().as("a") // fold by set
+    #[test]
+    fn fold_to_set_test() {
+        let mut source = init_source();
+        let v3 = init_vertex1();
+        let r3 = Record::new(v3, None);
+        source.push(r3);
+        let function = pb::group_by::AggFunc {
+            vars: vec![common_pb::Variable::from("@".to_string())],
+            aggregate: 6, // to_set
+            alias: Some("a".into()),
+        };
+        let fold_opr_pb = pb::GroupBy { mappings: vec![], functions: vec![function] };
+        let mut result = fold_test(source, fold_opr_pb);
+        let mut fold_result = Entry::Collection(vec![]);
+        let expected_result = Entry::Collection(vec![
+            RecordElement::OnGraph(init_vertex1().into()),
+            RecordElement::OnGraph(init_vertex2().into()),
+        ]);
+        if let Some(Ok(record)) = result.next() {
+            if let Some(entry) = record.get(Some(&"a".into())) {
+                fold_result = entry.as_ref().clone();
+            }
+        }
+        if let Entry::Collection(collection) = fold_result.borrow_mut() {
+            collection.sort_by(|v1, v2| v1.partial_cmp(&v2).unwrap_or(Ordering::Equal));
         }
         assert_eq!(fold_result, expected_result);
     }

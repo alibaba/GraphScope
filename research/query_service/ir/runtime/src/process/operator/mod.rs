@@ -93,6 +93,29 @@ impl TagKey {
                     })
                     .unwrap_or(Object::None),
                 PropKey::Len => (element.len() as u64).into(),
+                PropKey::All => {
+                    let details = element
+                        .details()
+                        .ok_or(FnExecError::get_tag_error(
+                            "Get key failed since get details from a graph element failed",
+                        ))?;
+
+                    if let Some(properties) = details.get_all_properties() {
+                        properties
+                            .into_iter()
+                            .map(|(key, value)| {
+                                let obj_key: Object = match key {
+                                    NameOrId::Str(str) => str.into(),
+                                    NameOrId::Id(id) => id.into(),
+                                };
+                                (obj_key, value)
+                            })
+                            .collect::<Vec<(Object, Object)>>()
+                            .into()
+                    } else {
+                        Object::None
+                    }
+                }
                 PropKey::Key(key) => {
                     let details = element
                         .details()

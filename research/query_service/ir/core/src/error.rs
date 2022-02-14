@@ -25,8 +25,8 @@ use prost::EncodeError;
 #[derive(Debug, Clone)]
 pub enum IrError {
     // Logical Errors
-    TableNotExist(String),
-    ColumnNotExist(String),
+    TableNotExist(NameOrId),
+    ColumnNotExist(NameOrId),
     ParentNodeNotExist(u32),
     TagNotExist(NameOrId),
     ParsePbError(ParsePbError),
@@ -34,7 +34,7 @@ pub enum IrError {
 
     // Physical Errors
     PbEncodeError(EncodeError),
-    MissingDataError,
+    MissingDataError(String),
     InvalidRangeError(i32, i32),
 
     // Common Errors
@@ -46,8 +46,12 @@ pub type IrResult<T> = Result<T, IrError>;
 impl fmt::Display for IrError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            IrError::TableNotExist(s) => write!(f, "the given table(label): {:?} does not exist", s),
-            IrError::ColumnNotExist(s) => write!(f, "the given column: {:?} does not exist", s),
+            IrError::TableNotExist(table) => {
+                write!(f, "the given table(label): {:?} does not exist", table)
+            }
+            IrError::ColumnNotExist(col) => {
+                write!(f, "the given column(property): {:?} does not exist", col)
+            }
             IrError::TagNotExist(tag) => write!(f, "the given tag: {:?} does not exist", tag),
             IrError::ParentNodeNotExist(node) => {
                 write!(f, "the given parent node: {:?} does not exist", node)
@@ -55,7 +59,7 @@ impl fmt::Display for IrError {
             IrError::ParsePbError(err) => write!(f, "parse pb error: {:?}", err),
             IrError::ParseExprError(err) => write!(f, "parse expression error: {:?}", err),
             IrError::PbEncodeError(err) => write!(f, "encoding protobuf error: {:?}", err),
-            IrError::MissingDataError => write!(f, "missing necessary data."),
+            IrError::MissingDataError(s) => write!(f, "missing necessary data: {:?}", s),
             IrError::InvalidRangeError(lo, up) => {
                 write!(f, "invalid range ({:?}, {:?})", lo, up)
             }

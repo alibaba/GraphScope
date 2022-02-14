@@ -23,7 +23,7 @@ use dyn_type::{BorrowObject, Object};
 use ir_common::error::{ParsePbError, ParsePbResult};
 use ir_common::expr_parse::to_suffix_expr;
 use ir_common::generated::common as common_pb;
-use ir_common::{NameOrId, ID_KEY, LABEL_KEY, LENGTH_KEY};
+use ir_common::{NameOrId, ALL_KEY, ID_KEY, LABEL_KEY, LENGTH_KEY};
 
 use crate::expr::eval_pred::EvalPred;
 use crate::expr::{ExprEvalError, ExprEvalResult};
@@ -434,11 +434,25 @@ impl Evaluate for Operand {
                                         })
                                         .unwrap_or(Object::None)
                                 }
-                                PropKey::Len => {
-                                    result = element
-                                        .as_graph_element()
-                                        .map(|g| (g.len() as u64).into())
-                                        .unwrap_or(Object::None)
+                                PropKey::Len => result = element.len().into(),
+                                PropKey::All => {
+                                    if let Some(details) = element.details() {
+                                        result = details
+                                            .get_all_properties()
+                                            .map(|obj| {
+                                                obj.into_iter()
+                                                    .map(|(key, value)| {
+                                                        let obj_key: Object = match key {
+                                                            NameOrId::Str(str) => str.into(),
+                                                            NameOrId::Id(id) => id.into(),
+                                                        };
+                                                        (obj_key, value)
+                                                    })
+                                                    .collect::<Vec<(Object, Object)>>()
+                                                    .into()
+                                            })
+                                            .unwrap_or(Object::None)
+                                    }
                                 }
                                 PropKey::Key(key) => {
                                     if let Some(details) = element.details() {
@@ -484,6 +498,7 @@ impl Evaluate for Operand {
                                     PropKey::Id => obj2 = object!(ID_KEY),
                                     PropKey::Label => obj2 = object!(LABEL_KEY),
                                     PropKey::Len => obj2 = object!(LENGTH_KEY),
+                                    PropKey::All => obj2 = object!(ALL_KEY),
                                     PropKey::Key(key) => match key {
                                         NameOrId::Str(str) => obj2 = object!(str.as_str()),
                                         NameOrId::Id(id) => obj2 = object!(*id),
@@ -748,6 +763,8 @@ mod tests {
             "@0.hobbies within [\"football\", \"guitar\", \"chess\"]", // true
             "[@0.name, @0.age]",                           // [\"John\"", 31]
             "{@0.name, @0.age}",                           // {"name": "John", "age": 31}
+            "@0.~all", // {age = 31, name = John, birthday = 19900416, hobbies = [football, guitar]]}
+            "{@0.~all}", // {~all, {age = 31, name = John, birthday = 19900416, hobbies = [football, guitar]]}}
         ];
 
         let expected: Vec<Object> = vec![
@@ -768,6 +785,33 @@ mod tests {
                     (object!(vec![object!(0), object!("age")]), object!(31)),
                     (object!(vec![object!(0), object!("name")]), object!("John")),
                 ]
+                .into_iter()
+                .collect(),
+            ),
+            Object::KV(
+                vec![
+                    (object!("age"), object!(31)),
+                    (object!("name"), object!("John")),
+                    (object!("birthday"), object!(19900416)),
+                    (object!("hobbies"), object!(vec!["football", "guitar"])),
+                ]
+                .into_iter()
+                .collect(),
+            ),
+            Object::KV(
+                vec![(
+                    object!(vec![object!(0), object!("~all")]),
+                    Object::KV(
+                        vec![
+                            (object!("age"), object!(31)),
+                            (object!("name"), object!("John")),
+                            (object!("birthday"), object!(19900416)),
+                            (object!("hobbies"), object!(vec!["football", "guitar"])),
+                        ]
+                        .into_iter()
+                        .collect(),
+                    ),
+                )]
                 .into_iter()
                 .collect(),
             ),

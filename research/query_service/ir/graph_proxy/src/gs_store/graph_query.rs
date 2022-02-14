@@ -85,7 +85,7 @@ where
                 .get_schema(si)
                 .ok_or(FnExecError::query_store_error("get schema failed"))?;
             let label_ids = encode_storage_label(params.labels.as_ref(), schema.clone());
-            let prop_ids = encode_storage_prop_key(params.props.as_ref(), schema.clone());
+            let prop_ids = encode_storage_prop_key(params.columns.as_ref(), schema.clone());
             let filter = params.filter.clone();
             let partitions: Vec<PartitionId> = partitions
                 .iter()
@@ -125,7 +125,7 @@ where
                 .get_schema(si)
                 .ok_or(FnExecError::query_store_error("get schema failed"))?;
             let label_ids = encode_storage_label(params.labels.as_ref(), schema.clone());
-            let prop_ids = encode_storage_prop_key(params.props.as_ref(), schema.clone());
+            let prop_ids = encode_storage_prop_key(params.columns.as_ref(), schema.clone());
             let filter = params.filter.clone();
             let partitions: Vec<PartitionId> = partitions
                 .iter()
@@ -161,7 +161,7 @@ where
         let schema = store
             .get_schema(si)
             .ok_or(FnExecError::query_store_error("get schema failed"))?;
-        let prop_ids = encode_storage_prop_key(params.props.as_ref(), schema.clone());
+        let prop_ids = encode_storage_prop_key(params.columns.as_ref(), schema.clone());
         let filter = params.filter.clone();
         let partition_label_vertex_ids =
             get_partition_label_vertex_ids(ids, self.partition_manager.clone());
@@ -261,7 +261,7 @@ where
         let filter = params.filter.clone();
         let limit = params.limit.clone();
         let edge_label_ids = encode_storage_label(params.labels.as_ref(), schema.clone());
-        let prop_ids = encode_storage_prop_key(params.props.as_ref(), schema.clone());
+        let prop_ids = encode_storage_prop_key(params.columns.as_ref(), schema.clone());
 
         let stmt = from_fn(move |v: ID| {
             let src_id = get_partition_vertex_ids(v, partition_manager.clone());
@@ -350,7 +350,7 @@ fn to_runtime_edge<E: StoreEdge>(e: &E) -> Edge {
 
 /// in maxgraph store, Option<Vec<PropId>>: None means we need all properties,
 /// and Some means we need given properties (and Some(vec![]) means we do not need any property)
-/// while in gaia, None means we do not need any properties,
+/// while in ir, None means we do not need any properties,
 /// and Some means we need given properties (and Some(vec![]) means we need all properties)
 #[inline]
 fn encode_storage_prop_key(

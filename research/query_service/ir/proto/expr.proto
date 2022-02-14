@@ -27,6 +27,8 @@ message LabelKey {}
 
 message LengthKey {}
 
+message AllKey {}
+
 // A indicator of an attribute or further its properties, which may present as a string-type name
 // or be encoded as a name identifier
 message NameOrId {
@@ -49,8 +51,10 @@ message Property {
     LabelKey label = 3;
     // Get length from the entity
     LengthKey len = 4;
+    // Get all properties
+    AllKey all = 5;
     // Get property of key from the entity
-    NameOrId key = 5;
+    NameOrId key = 6;
   }
 }
 

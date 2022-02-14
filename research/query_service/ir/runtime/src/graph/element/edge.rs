@@ -51,6 +51,10 @@ impl Element for Edge {
         Some(self)
     }
 
+    fn len(&self) -> usize {
+        1
+    }
+
     fn as_borrow_object(&self) -> BorrowObject {
         self.id().into()
     }
@@ -63,10 +67,6 @@ impl GraphElement for Edge {
 
     fn label(&self) -> Option<&NameOrId> {
         self.label.as_ref()
-    }
-
-    fn len(&self) -> usize {
-        0
     }
 }
 

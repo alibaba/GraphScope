@@ -92,7 +92,6 @@ pub struct VineyardMultiPartition {
     // mapping of worker id -> partition list
     worker_partition_list_mapping: Arc<RwLock<Option<HashMap<u32, Vec<u32>>>>>,
     num_servers: usize,
-    server_index: u64,
 }
 
 impl VineyardMultiPartition {
@@ -100,14 +99,12 @@ impl VineyardMultiPartition {
         graph_partition_manager: Arc<dyn GraphPartitionManager>,
         partition_worker_mapping: Arc<RwLock<Option<HashMap<u32, u32>>>>,
         worker_partition_list_mapping: Arc<RwLock<Option<HashMap<u32, Vec<u32>>>>>, num_servers: usize,
-        server_index: u64,
     ) -> VineyardMultiPartition {
         VineyardMultiPartition {
             graph_partition_manager,
             partition_worker_mapping,
             worker_partition_list_mapping,
             num_servers,
-            server_index,
         }
     }
 }
