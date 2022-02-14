@@ -63,7 +63,7 @@ fn main() {
         let handle = std::thread::spawn(move || {
             let mut idx = i * 100000000000 + 2;
             loop {
-                let snapshot_id = snapshot_idx.load(Ordering::Relaxed);
+                let snapshot_id = snapshot_idx.load(Ordering::SeqCst);
                 let vertex_id = idx;
                 let mut properties = HashMap::new();
                 properties.insert(1, Value::long(i));
@@ -89,7 +89,7 @@ fn main() {
             println!("{:.0}\t{:.2}\t{:.0}", total_time, write_count as f64 / t, total_write);
             tmp_count = total_write;
             tmp_time = total_time;
-            snapshot_idx.fetch_add(1, Ordering::Relaxed);
+            snapshot_idx.fetch_add(1, Ordering::SeqCst);
         }
     });
     for handle in handles {
