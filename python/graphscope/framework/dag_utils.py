@@ -329,7 +329,6 @@ def modify_vertices(graph, modify_type, vertices, attr={}):
     config = {}
     config[types_pb2.GRAPH_NAME] = utils.s_to_attr(graph.key)
     config[types_pb2.MODIFY_TYPE] = utils.modify_type_to_attr(modify_type)
-    # config[types_pb2.NODES] = utils.bytes_to_attr(vertices)
     config[types_pb2.PROPERTIES] = utils.s_to_attr(json.dumps(attr))
     op = Operation(
         graph.session_id,

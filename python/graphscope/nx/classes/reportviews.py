@@ -61,18 +61,24 @@ class NodeView(_NodeView):
 @patch_docstring(_OutEdgeDataView)
 class OutEdgeDataView(_OutEdgeDataView):
     def __len__(self):
+        if self._nbunch:
+            return _OutEdgeDataView.__len__()
         return self._viewer._graph.number_of_edges()
 
 
 @patch_docstring(_EdgeDataView)
 class EdgeDataView(_EdgeDataView):
     def __len__(self):
+        if self._nbunch:
+            return _EdgeDataView.__len__()
         return self._viewer._graph.number_of_edges()
 
 
 @patch_docstring(_InEdgeDataView)
 class InEdgeDataView(_InEdgeDataView):
     def __len__(self):
+        if self._nbunch:
+            return _InEdgeDataView.__len__()
         return self._viewer._graph.number_of_edges()
 
 
