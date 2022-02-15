@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# This file graph.py is referred and derived from project NetworkX,
+# This file reportviews.py is referred and derived from project NetworkX,
 #
 #  https://github.com/networkx/networkx/blob/master/networkx/classes/graph.py
 #
