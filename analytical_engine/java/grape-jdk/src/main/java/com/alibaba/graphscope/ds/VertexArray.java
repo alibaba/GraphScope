@@ -17,7 +17,7 @@
 package com.alibaba.graphscope.ds;
 
 import static com.alibaba.graphscope.utils.CppClassName.GRAPE_VERTEX_ARRAY;
-import static com.alibaba.graphscope.utils.CppHeaderName.GRAPE_VERTEX_ARRAY_H;
+import static com.alibaba.graphscope.utils.CppHeaderName.CORE_JAVA_TYPE_ALIAS_H;
 import static com.alibaba.graphscope.utils.JNILibraryName.JNI_LIBRARY_NAME;
 
 import com.alibaba.fastffi.CXXHead;
@@ -36,13 +36,15 @@ import com.alibaba.fastffi.FFITypeAlias;
  * An array which each slot binds to a vertex. Different from {@link GSVertexArray}, this class
  * VID_T as a template parameter rather than fixed to int64_t.
  *
+ * <p>In c++ the first type param is VertexRange, so be careful when specify templates.
+ *
  * @param <T> vertex data type.
  * @param <VID> vertex id type.
  */
 @FFIGen(library = JNI_LIBRARY_NAME)
-@CXXHead(GRAPE_VERTEX_ARRAY_H)
+@CXXHead(CORE_JAVA_TYPE_ALIAS_H)
 @FFITypeAlias(GRAPE_VERTEX_ARRAY)
-public interface VertexArray<T, VID> extends FFIPointer, CXXPointer {
+public interface VertexArray<VID, T> extends FFIPointer, CXXPointer {
 
     /**
      * Init a vertex array with a range of vertices.
@@ -113,7 +115,7 @@ public interface VertexArray<T, VID> extends FFIPointer, CXXPointer {
      * @param <VID> vertex id type.
      */
     @FFIFactory
-    interface Factory<T, VID> {
+    interface Factory<VID, T> {
 
         /**
          * Create an empty vertex Array. Please call {@link VertexArray#init(VertexRange)} to init
@@ -121,6 +123,6 @@ public interface VertexArray<T, VID> extends FFIPointer, CXXPointer {
          *
          * @return created vertex array.
          */
-        VertexArray<T, VID> create();
+        VertexArray<VID, T> create();
     }
 }
