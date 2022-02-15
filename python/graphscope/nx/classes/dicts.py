@@ -16,7 +16,6 @@
 # limitations under the License.
 #
 
-import collections
 from collections.abc import MutableMapping
 
 from graphscope.proto import types_pb2

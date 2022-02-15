@@ -26,9 +26,7 @@ from networkx.classes.coreviews import AdjacencyView
 from networkx.classes.digraph import DiGraph as RefDiGraph
 from networkx.classes.reportviews import DiDegreeView
 from networkx.classes.reportviews import InDegreeView
-from networkx.classes.reportviews import InEdgeView
 from networkx.classes.reportviews import OutDegreeView
-from networkx.classes.reportviews import OutEdgeView
 
 from graphscope.client.session import get_session_by_id
 from graphscope.framework import dag_utils
@@ -37,11 +35,12 @@ from graphscope.framework.errors import check_argument
 from graphscope.framework.graph_schema import GraphSchema
 from graphscope.nx import NetworkXError
 from graphscope.nx.classes.graph import Graph
+from graphscope.nx.classes.reportviews import InEdgeView
+from graphscope.nx.classes.reportviews import OutEdgeView
 from graphscope.nx.convert import to_networkx_graph
 from graphscope.nx.utils.compat import patch_docstring
 from graphscope.nx.utils.misc import clear_cache
 from graphscope.nx.utils.misc import empty_graph_in_engine
-from graphscope.proto import graph_def_pb2
 from graphscope.proto import types_pb2
 
 
