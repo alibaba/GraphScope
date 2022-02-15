@@ -47,8 +47,8 @@ public interface VertexRange<VID_T> extends FFIPointer, CXXPointer, CXXValueRang
      *
      * @return Vertex&lt;VID_T&lt; the first vertex
      */
-    @CXXReference
-    Vertex<VID_T> begin();
+//    @CXXReference
+//    Vertex<VID_T> begin();
 
     @FFINameAlias("begin_value")
     @CXXValue
@@ -62,7 +62,7 @@ public interface VertexRange<VID_T> extends FFIPointer, CXXPointer, CXXValueRang
      */
     //    @CXXReference
     //    Vertex<VID_T> end();
-    @FFITypeAlias("end_value")
+    @FFINameAlias("end_value")
     @CXXValue
     VID_T endValue();
 
