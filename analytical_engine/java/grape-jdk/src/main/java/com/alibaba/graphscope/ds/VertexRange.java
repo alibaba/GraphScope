@@ -28,6 +28,9 @@ import com.alibaba.fastffi.FFIGen;
 import com.alibaba.fastffi.FFINameAlias;
 import com.alibaba.fastffi.FFIPointer;
 import com.alibaba.fastffi.FFITypeAlias;
+import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
+
+import java.util.Iterator;
 
 /**
  * Vertex Range is an abstraction for a range of vertices. Corresponding C++ <a
@@ -71,6 +74,35 @@ public interface VertexRange<VID_T> extends FFIPointer, CXXPointer {
      * @param end right(end) VID_T.
      */
     void SetRange(@CXXValue VID_T begin, @CXXValue VID_T end);
+
+    /**
+     * Get iterator for vid=long
+     * @return
+     */
+    default Iterable<Vertex<VID_T>> longIterable() {
+        return () ->
+                new Iterator<Vertex<VID_T>>() {
+                    Vertex<Long> vertex = (Vertex<Long>) FFITypeFactoryhelper.newVertexLong();
+                    Long curValue;
+                    Long endValue;
+
+                    {
+                        vertex.SetValue((Long) beginValue());
+                        curValue = (Long) beginValue();
+                        endValue = (Long) endValue();
+                    }
+
+                    public boolean hasNext() {
+                        return !curValue.equals(endValue);
+                    }
+
+                    public Vertex<VID_T> next() {
+                        vertex.SetValue(curValue);
+                        curValue += 1;
+                        return (Vertex<VID_T>) vertex;
+                    }
+                };
+    }
 
     /**
      * Factory type for vertex range.
