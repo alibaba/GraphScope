@@ -21,13 +21,12 @@ use graph_store::utils::IterList;
 use ir_common::NameOrId as Label;
 use ir_common::{KeyId, NameOrId};
 use maxgraph_store::api::graph_partition::GraphPartitionManager;
-use maxgraph_store::api::graph_schema::Schema;
 use maxgraph_store::api::prelude::Property;
 use maxgraph_store::api::PropId;
 use maxgraph_store::api::*;
 use maxgraph_store::api::{Edge as StoreEdge, Vertex as StoreVertex};
 use pegasus::api::function::FnResult;
-use runtime::error::FnExecError;
+use runtime::error::{FnExecError, FnExecResult};
 use runtime::graph::element::{Edge, Vertex};
 use runtime::graph::property::{DefaultDetails, DynDetails};
 use runtime::graph::{Direction, GraphProxy, QueryParams, Statement, ID};
@@ -36,8 +35,6 @@ use runtime::register_graph;
 use crate::from_fn;
 use crate::{filter_limit, limit_n};
 
-static INVALID_LABEL_ID: LabelId = 0xffffffff;
-static INVALID_PROP_ID: PropId = 0xffffffff;
 // Should be identical to the param_name given by compiler
 const SNAPSHOT_ID: &str = "SID";
 
@@ -81,11 +78,8 @@ where
                 .ok_or(FnExecError::query_store_error("get snapshot_id failed"))?
                 .parse::<SnapshotId>()
                 .map_err(|e| FnExecError::query_store_error(&e.to_string()))?;
-            let schema = store
-                .get_schema(si)
-                .ok_or(FnExecError::query_store_error("get schema failed"))?;
-            let label_ids = encode_storage_label(params.labels.as_ref(), schema.clone());
-            let prop_ids = encode_storage_prop_keys(params.columns.as_ref(), schema.clone());
+            let label_ids = encode_storage_label(params.labels.as_ref())?;
+            let prop_ids = encode_storage_prop_keys(params.columns.as_ref())?;
             let filter = params.filter.clone();
             let partitions: Vec<PartitionId> = partitions
                 .iter()
@@ -121,11 +115,8 @@ where
                 .ok_or(FnExecError::query_store_error("get snapshot_id failed"))?
                 .parse::<SnapshotId>()
                 .map_err(|e| FnExecError::query_store_error(&e.to_string()))?;
-            let schema = store
-                .get_schema(si)
-                .ok_or(FnExecError::query_store_error("get schema failed"))?;
-            let label_ids = encode_storage_label(params.labels.as_ref(), schema.clone());
-            let prop_ids = encode_storage_prop_keys(params.columns.as_ref(), schema.clone());
+            let label_ids = encode_storage_label(params.labels.as_ref())?;
+            let prop_ids = encode_storage_prop_keys(params.columns.as_ref())?;
             let filter = params.filter.clone();
             let partitions: Vec<PartitionId> = partitions
                 .iter()
@@ -158,10 +149,7 @@ where
             .ok_or(FnExecError::query_store_error("get snapshot_id failed"))?
             .parse::<SnapshotId>()
             .map_err(|e| FnExecError::query_store_error(&e.to_string()))?;
-        let schema = store
-            .get_schema(si)
-            .ok_or(FnExecError::query_store_error("get schema failed"))?;
-        let prop_ids = encode_storage_prop_keys(params.columns.as_ref(), schema.clone());
+        let prop_ids = encode_storage_prop_keys(params.columns.as_ref())?;
         let filter = params.filter.clone();
         let partition_label_vertex_ids =
             get_partition_label_vertex_ids(ids, self.partition_manager.clone());
@@ -191,10 +179,7 @@ where
             .ok_or(FnExecError::query_store_error("get snapshot_id failed"))?
             .parse::<SnapshotId>()
             .map_err(|e| FnExecError::query_store_error(&e.to_string()))?;
-        let schema = store
-            .get_schema(si)
-            .ok_or(FnExecError::query_store_error("get schema failed"))?;
-        let edge_label_ids = encode_storage_label(params.labels.as_ref(), schema.clone());
+        let edge_label_ids = encode_storage_label(params.labels.as_ref())?;
 
         let stmt = from_fn(move |v: ID| {
             let src_id = get_partition_vertex_ids(v, partition_manager.clone());
@@ -255,13 +240,10 @@ where
             .parse::<SnapshotId>()
             .map_err(|e| FnExecError::query_store_error(&e.to_string()))?;
         let partition_manager = self.partition_manager.clone();
-        let schema = store
-            .get_schema(si)
-            .ok_or(FnExecError::query_store_error("get schema failed"))?;
         let filter = params.filter.clone();
         let limit = params.limit.clone();
-        let edge_label_ids = encode_storage_label(params.labels.as_ref(), schema.clone());
-        let prop_ids = encode_storage_prop_keys(params.columns.as_ref(), schema.clone());
+        let edge_label_ids = encode_storage_label(params.labels.as_ref())?;
+        let prop_ids = encode_storage_prop_keys(params.columns.as_ref())?;
 
         let stmt = from_fn(move |v: ID| {
             let src_id = get_partition_vertex_ids(v, partition_manager.clone());
@@ -353,46 +335,38 @@ fn to_runtime_edge<E: StoreEdge>(e: &E) -> Edge {
 /// while in ir, None means we do not need any properties,
 /// and Some means we need given properties (and Some(vec![]) means we need all properties)
 #[inline]
-fn encode_storage_prop_keys(
-    prop_names: Option<&Vec<NameOrId>>, schema: Arc<dyn Schema>,
-) -> Option<Vec<PropId>> {
+fn encode_storage_prop_keys(prop_names: Option<&Vec<NameOrId>>) -> FnExecResult<Option<Vec<PropId>>> {
     if let Some(prop_names) = prop_names {
         if prop_names.is_empty() {
-            None
+            Ok(None)
         } else {
-            Some(
-                prop_names
-                    .iter()
-                    .map(|prop_key| encode_storage_prop_key(prop_key, schema.clone()))
-                    .collect(),
-            )
+            let encoded_prop_ids = prop_names
+                .iter()
+                .map(|prop_key| match prop_key {
+                    NameOrId::Str(_) => Err(FnExecError::query_store_error(
+                        "encode storage prop key error, should provide prop_id",
+                    )),
+                    NameOrId::Id(prop_id) => Ok(*prop_id as PropId),
+                })
+                .collect::<Result<Vec<LabelId>, _>>()?;
+            Ok(Some(encoded_prop_ids))
         }
     } else {
-        Some(vec![])
+        Ok(Some(vec![]))
     }
 }
 
 #[inline]
-fn encode_storage_prop_key(prop_key: &NameOrId, schema: Arc<dyn Schema>) -> PropId {
-    match prop_key {
-        NameOrId::Str(prop_name) => schema
-            .get_prop_id(prop_name)
-            .unwrap_or(INVALID_PROP_ID),
-        NameOrId::Id(prop_id) => (*prop_id as PropId),
-    }
-}
-
-#[inline]
-fn encode_storage_label(labels: &Vec<Label>, schema: Arc<dyn Schema>) -> Vec<LabelId> {
+fn encode_storage_label(labels: &Vec<Label>) -> FnExecResult<Vec<LabelId>> {
     labels
         .iter()
         .map(|label| match label {
-            Label::Str(s) => schema
-                .get_label_id(s)
-                .unwrap_or(INVALID_LABEL_ID),
-            Label::Id(id) => *id as LabelId,
+            Label::Str(_) => {
+                Err(FnExecError::query_store_error("encode storage label error, should provide label_id"))
+            }
+            Label::Id(id) => Ok(*id as LabelId),
         })
-        .collect::<Vec<LabelId>>()
+        .collect::<Result<Vec<LabelId>, _>>()
 }
 
 #[inline]
