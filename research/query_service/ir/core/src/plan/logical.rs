@@ -20,8 +20,9 @@ use std::fmt;
 use std::io;
 use std::rc::Rc;
 
-use ir_common::error::ParsePbError;
+use ir_common::error::{ParsePbError, ParsePbResult};
 use ir_common::generated::algebra as pb;
+use ir_common::generated::algebra::logical_plan::Operator;
 use ir_common::generated::common as common_pb;
 use ir_common::NameOrId;
 use vec_map::VecMap;
@@ -110,6 +111,7 @@ impl TryFrom<pb::LogicalPlan> for LogicalPlan {
     fn try_from(pb: pb::LogicalPlan) -> Result<Self, Self::Error> {
         let nodes_pb = pb.nodes;
         let mut plan = LogicalPlan::default();
+        let mut id_map = HashMap::<u32, u32>::new();
         let mut parents = HashMap::<u32, Vec<u32>>::new();
         for (id, node) in nodes_pb.iter().enumerate() {
             for &child in &node.children {
@@ -127,15 +129,24 @@ impl TryFrom<pb::LogicalPlan> for LogicalPlan {
         }
 
         for (id, node) in nodes_pb.into_iter().enumerate() {
-            if let Some(opr) = node.opr {
-                plan.append_operator_as_node(
-                    opr,
-                    parents
-                        .get(&(id as u32))
-                        .cloned()
-                        .unwrap_or(Vec::new()),
-                )
-                .map_err(|err| ParsePbError::ParseError(format!("{:?}", err)))?;
+            if let Some(mut opr) = node.opr {
+                match opr.opr.as_mut() {
+                    Some(pb::logical_plan::operator::Opr::Apply(apply)) => {
+                        apply.subtask = id_map[&(apply.subtask as u32)] as i32;
+                    }
+                    _ => {}
+                }
+                let parent_ids = parents
+                    .get(&(id as u32))
+                    .cloned()
+                    .unwrap_or(Vec::new())
+                    .into_iter()
+                    .map(|old| id_map[&old])
+                    .collect::<Vec<u32>>();
+                let new_id = plan
+                    .append_operator_as_node(opr, parent_ids)
+                    .map_err(|err| ParsePbError::ParseError(format!("{:?}", err)))?;
+                id_map.insert(id as u32, new_id);
             } else {
                 return Err(ParsePbError::from("do not specify operator in a node"));
             }
@@ -148,19 +159,26 @@ impl TryFrom<pb::LogicalPlan> for LogicalPlan {
 impl From<LogicalPlan> for pb::LogicalPlan {
     fn from(plan: LogicalPlan) -> Self {
         let mut id_map: HashMap<u32, i32> = HashMap::with_capacity(plan.len());
-        // As there might be some nodes being removed, we gonna remap the nodes's ids
+        // As there might be some nodes being removed, we gonna remap the nodes' ids
         for (id, node) in plan.nodes.iter().enumerate() {
             id_map.insert(node.0 as u32, id as i32);
         }
         let mut plan_pb = pb::LogicalPlan { nodes: vec![] };
         for (_, node) in &plan.nodes {
             let mut node_pb = pb::logical_plan::Node { opr: None, children: vec![] };
-            node_pb.opr = Some(node.borrow().opr.clone());
+            let mut operator = node.borrow().opr.clone();
+            match operator.opr.as_mut() {
+                Some(pb::logical_plan::operator::Opr::Apply(apply)) => {
+                    apply.subtask = id_map[&(apply.subtask as u32)] as i32;
+                }
+                _ => {}
+            }
+            node_pb.opr = Some(operator);
             node_pb.children = node
                 .borrow()
                 .children
                 .iter()
-                .map(|old_id| *id_map.get(old_id).unwrap())
+                .map(|old_id| id_map[old_id])
                 .collect();
             plan_pb.nodes.push(node_pb);
         }
@@ -195,12 +213,12 @@ impl LogicalPlan {
                 if let Some(curr_node) = &curr_node_opt {
                     let curr_ref = curr_node.borrow();
                     if curr_ref.children.len() > 1 {
-                        layer += 1;
+                        layer += curr_ref.children.len();
                     }
                     if curr_ref.parents.len() > 1 {
                         // Every branch node must have a corresponding merge node in a valid plan
                         if layer > 0 {
-                            layer -= 1;
+                            layer -= curr_ref.parents.len();
                         } else {
                             break;
                         }
@@ -275,7 +293,7 @@ impl LogicalPlan {
                 "only support appending plan for one single parent!".to_string(),
             ));
         }
-        let mut id_mappings: HashMap<u32, u32> = HashMap::new();
+        let mut id_map: HashMap<u32, u32> = HashMap::new();
         let mut parents: HashMap<u32, BTreeSet<u32>> = HashMap::new();
         let mut result_id = 0_u32;
         for (id, node) in plan.nodes.into_iter().enumerate() {
@@ -295,7 +313,7 @@ impl LogicalPlan {
                         .unwrap_or(BTreeSet::new())
                         .into_iter()
                         .map(|old| {
-                            id_mappings
+                            id_map
                                 .get(&old)
                                 .cloned()
                                 .ok_or(IrError::ParentNodeNotExist(old))
@@ -303,7 +321,7 @@ impl LogicalPlan {
                         .collect::<IrResult<Vec<u32>>>()?
                 };
                 let new_id = self.append_operator_as_node(opr, new_parents)?;
-                id_mappings.insert(id as u32, new_id);
+                id_map.insert(id as u32, new_id);
                 result_id = new_id;
             } else {
                 return Err(IrError::MissingDataError("Node::opr".to_string()));
