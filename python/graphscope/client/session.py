@@ -804,7 +804,6 @@ class Session(object):
     def _close(self):
         if self._closed:
             return
-        time.sleep(5)
         self._closed = True
         self._coordinator_endpoint = None
 

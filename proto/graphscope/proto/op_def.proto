@@ -66,19 +66,25 @@ message OpResult {
 
   string error_msg = 4;
 
+  // result represents raw bytes if:
+  //  1) NDArray or DataFrame
+  //  2) Gremlin result
+  //  3) Graph report information of Networkx
+  bool has_large_result = 5;
+
   // result represents app_name or context_key or raw bytes If the op returns a NDArray or DataFrame
-  bytes result = 5;
+  bytes result = 6;
 
   // learning graph handle
-  bytes handle = 6;
+  bytes handle = 7;
 
   // learning graph config
-  bytes config = 7;
+  bytes config = 8;
 
   // extra info for specific op
   //  1) CREATE_INTERACTIVE_QUERY: object id
   //  2) CREATE_LEARNING_INSTANCE: object_id
-  bytes extra_info = 8;
+  bytes extra_info = 9;
 
   // if the op create a graph or modify a graph, return the meta data of the graph.
   gs.rpc.graph.GraphDefPb graph_def = 31;

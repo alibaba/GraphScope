@@ -6,6 +6,7 @@ kubernetes
 nest_asyncio
 networkx>=2.6
 numpy
+orjson
 packaging
 pandas
 protobuf>=3.15.0,<3.19.0

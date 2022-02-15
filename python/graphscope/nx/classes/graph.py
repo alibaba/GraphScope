@@ -20,15 +20,13 @@
 #
 
 import copy
-import json
 
+import orjson as json
 from networkx import freeze
 from networkx.classes.coreviews import AdjacencyView
 from networkx.classes.graph import Graph as RefGraph
 from networkx.classes.graphviews import generic_graph_view
 from networkx.classes.reportviews import DegreeView
-from networkx.classes.reportviews import EdgeView
-from networkx.classes.reportviews import NodeView
 
 from graphscope import nx
 from graphscope.client.session import get_default_session
@@ -41,11 +39,12 @@ from graphscope.framework.graph_schema import GraphSchema
 from graphscope.nx import NetworkXError
 from graphscope.nx.classes.dicts import AdjDict
 from graphscope.nx.classes.dicts import NodeDict
+from graphscope.nx.classes.reportviews import EdgeView
+from graphscope.nx.classes.reportviews import NodeView
 from graphscope.nx.convert import to_networkx_graph
 from graphscope.nx.utils.compat import patch_docstring
 from graphscope.nx.utils.misc import clear_cache
 from graphscope.nx.utils.misc import empty_graph_in_engine
-from graphscope.nx.utils.misc import json_encoder
 from graphscope.nx.utils.misc import parse_ret_as_dict
 from graphscope.proto import graph_def_pb2
 from graphscope.proto import types_pb2
@@ -263,8 +262,6 @@ class Graph(_GraphBase):
     adjlist_dict_factory = AdjDict
     graph_attr_dict_factory = dict
     _graph_type = graph_def_pb2.DYNAMIC_PROPERTY
-    node_cache_capacity = 100000000
-    edge_cache_capacity = 50000000
 
     @patch_docstring(RefGraph.to_directed_class)
     def to_directed_class(self):
@@ -632,8 +629,6 @@ class Graph(_GraphBase):
         self._add_node_cache.append(
             (node_for_adding, attr) if attr else node_for_adding
         )
-        if len(self._add_node_cache) == self.node_cache_capacity:
-            self._clear_adding_cache()
 
     @clear_cache
     def add_nodes_from(self, nodes_for_adding, **attr):
@@ -722,8 +717,6 @@ class Graph(_GraphBase):
         """
         self._convert_arrow_to_dynamic()
         self._remove_node_cache.append(n)
-        if len(self._remove_node_cache) == self.node_cache_capacity:
-            self._clear_removing_cache()
 
     @clear_cache
     def remove_nodes_from(self, nodes_for_removing):
@@ -798,9 +791,7 @@ class Graph(_GraphBase):
         """
         if self.graph_type == graph_def_pb2.ARROW_PROPERTY:
             n = self._convert_to_label_id_tuple(n)
-        op = dag_utils.report_graph(
-            self, types_pb2.NODE_DATA, node=json.dumps(n, default=json_encoder)
-        )
+        op = dag_utils.report_graph(self, types_pb2.NODE_DATA, node=json.dumps(n))
         return op.eval()
 
     @clear_cache
@@ -872,9 +863,7 @@ class Graph(_GraphBase):
         try:
             if self.graph_type == graph_def_pb2.ARROW_PROPERTY:
                 n = self._convert_to_label_id_tuple(n)
-            op = dag_utils.report_graph(
-                self, types_pb2.HAS_NODE, node=json.dumps(n, default=json_encoder)
-            )
+            op = dag_utils.report_graph(self, types_pb2.HAS_NODE, node=json.dumps(n))
             return bool(int(op.eval()))
         except (TypeError, NetworkXError, KeyError):
             return False
@@ -935,8 +924,6 @@ class Graph(_GraphBase):
         self._add_edge_cache.append(
             (u_of_edge, v_of_edge, attr) if attr else (u_of_edge, v_of_edge)
         )
-        if len(self._add_edge_cache) == self.edge_cache_capacity:
-            self._clear_adding_cache()
 
     @clear_cache
     def add_edges_from(self, ebunch_to_add, **attr):
@@ -1032,8 +1019,6 @@ class Graph(_GraphBase):
     def remove_edge(self, u, v):
         self._convert_arrow_to_dynamic()
         self._remove_edge_cache.append((u, v))
-        if len(self._remove_edge_cache) == self.edge_cache_capacity:
-            self._clear_removing_cache()
 
     @clear_cache
     def remove_edges_from(self, ebunch):
@@ -1099,7 +1084,7 @@ class Graph(_GraphBase):
         """
         self._convert_arrow_to_dynamic()
 
-        edge = json.dumps(((u, v, data),), default=json_encoder)
+        edge = json.dumps(((u, v, data),))
         self._schema.add_nx_edge_properties(data)
         self._op = dag_utils.modify_edges(self, types_pb2.NX_UPDATE_EDGES, edge)
         self._op.eval()
@@ -1135,7 +1120,7 @@ class Graph(_GraphBase):
         """
         self._convert_arrow_to_dynamic()
 
-        node = json.dumps(((n, data),), default=json_encoder)
+        node = json.dumps(((n, data),))
         self._op = dag_utils.modify_vertices(self, types_pb2.NX_UPDATE_NODES, node)
         self._op.eval()
 
@@ -1455,7 +1440,7 @@ class Graph(_GraphBase):
             op = dag_utils.report_graph(
                 self,
                 types_pb2.EDGE_DATA,
-                edge=json.dumps((u, v), default=json_encoder),
+                edge=json.dumps((u, v)),
                 key="",
             )
             ret = op.eval()
@@ -1848,7 +1833,7 @@ class Graph(_GraphBase):
         """
         self._convert_arrow_to_dynamic()
 
-        induced_nodes = json.dumps(list(nodes), default=json_encoder)
+        induced_nodes = json.dumps(list(nodes))
         g = self.__class__(create_empty_in_engine=False)
         g.graph.update(self.graph)
         op = dag_utils.create_subgraph(self, nodes=induced_nodes)
@@ -1893,7 +1878,7 @@ class Graph(_GraphBase):
         """
         self._convert_arrow_to_dynamic()
 
-        induced_edges = json.dumps(list(edges), default=json_encoder)
+        induced_edges = json.dumps(list(edges))
         g = self.__class__(create_empty_in_engine=False)
         g.graph.update(self.graph)
         op = dag_utils.create_subgraph(self, edges=induced_edges)
@@ -1979,9 +1964,7 @@ class Graph(_GraphBase):
             raise NetworkXError("The node %s is not in the graph." % (n,))
         if self.graph_type == graph_def_pb2.ARROW_PROPERTY:
             n = self._convert_to_label_id_tuple(n)
-        op = dag_utils.report_graph(
-            self, report_type, node=json.dumps(n, default=json_encoder)
-        )
+        op = dag_utils.report_graph(self, report_type, node=json.dumps(n))
         return op.eval()
 
     def _batch_get_nbrs(self, location, report_type=types_pb2.SUCCS_BY_LOC):
@@ -2039,9 +2022,7 @@ class Graph(_GraphBase):
         -----
         Raise NetworkxError if node not in graph.
         """
-        op = dag_utils.report_graph(
-            self, report_type, node=json.dumps(n, default=json_encoder), key=weight
-        )
+        op = dag_utils.report_graph(self, report_type, node=json.dumps(n), key=weight)
         degree = float(op.eval())
         return degree if weight is not None else int(degree)
 
@@ -2211,7 +2192,9 @@ class Graph(_GraphBase):
 
     def _clear_adding_cache(self):
         if self._add_node_cache:
-            nodes_to_modify = json.dumps(self._add_node_cache, default=json_encoder)
+            nodes_to_modify = json.dumps(
+                self._add_node_cache, option=json.OPT_SERIALIZE_NUMPY
+            )
             self._op = dag_utils.modify_vertices(
                 self, types_pb2.NX_ADD_NODES, nodes_to_modify
             )
@@ -2219,7 +2202,9 @@ class Graph(_GraphBase):
             self._add_node_cache.clear()
 
         if self._add_edge_cache:
-            edges_to_modify = json.dumps(self._add_edge_cache, default=json_encoder)
+            edges_to_modify = json.dumps(
+                self._add_edge_cache, option=json.OPT_SERIALIZE_NUMPY
+            )
             self._op = dag_utils.modify_edges(
                 self, types_pb2.NX_ADD_EDGES, edges_to_modify
             )
@@ -2228,7 +2213,9 @@ class Graph(_GraphBase):
 
     def _clear_removing_cache(self):
         if self._remove_node_cache:
-            nodes_to_modify = json.dumps(self._remove_node_cache, default=json_encoder)
+            nodes_to_modify = json.dumps(
+                self._remove_node_cache, option=json.OPT_SERIALIZE_NUMPY
+            )
             self._op = dag_utils.modify_vertices(
                 self, types_pb2.NX_DEL_NODES, nodes_to_modify
             )
@@ -2236,7 +2223,9 @@ class Graph(_GraphBase):
             self._remove_node_cache.clear()
 
         if self._remove_edge_cache:
-            edges_to_modify = json.dumps(self._remove_edge_cache, default=json_encoder)
+            edges_to_modify = json.dumps(
+                self._remove_edge_cache, option=json.OPT_SERIALIZE_NUMPY
+            )
             self._op = dag_utils.modify_edges(
                 self, types_pb2.NX_DEL_EDGES, edges_to_modify
             )

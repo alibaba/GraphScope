@@ -219,7 +219,9 @@ class GRPCClient(object):
 
     @catch_grpc_error
     def _run_step_impl(self, runstep_requests):
-        response = self._stub.RunStep(runstep_requests)
+        response = self._grpc_utils.parse_runstep_responses(
+            self._stub.RunStep(runstep_requests)
+        )
         if response.code != error_codes_pb2.OK:
             logger.error(
                 "Runstep failed with code: %s, message: %s",

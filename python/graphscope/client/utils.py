@@ -103,6 +103,26 @@ class GRPCUtils(object):
         for item in runstep_requests:
             yield item
 
+    def parse_runstep_responses(self, responses):
+        chunks = []
+        response_head = None
+        has_next = True
+        for response in responses:
+            if response.HasField("head"):
+                response_head = response
+            else:
+                if not chunks or not has_next:
+                    chunks.append(response.body.chunk)
+                else:
+                    chunks[-1] += response.body.chunk
+                has_next = response.body.has_next
+        cursor = 0
+        for op_result in response_head.head.results:
+            if op_result.has_large_result:
+                op_result.result = chunks[cursor]
+                cursor += 1
+        return response_head.head
+
 
 class ConditionalFormatter(logging.Formatter):
     """Provide an option to disable format for some messages.

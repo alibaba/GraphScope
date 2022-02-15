@@ -193,7 +193,11 @@ jobs:
     - name: Prepare Environment
       shell: bash
       run: |
-        dnf install -y gcc gcc-c++  make cmake
+        # fixed download metadata for repo 'appstream'
+        sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-Linux-*
+        sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-Linux-*
+
+        dnf install -y gcc gcc-c++ make cmake
 
         # install git and python3
         dnf install -y git python38 python38-devel

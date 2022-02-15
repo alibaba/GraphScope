@@ -17,6 +17,7 @@
 #
 
 import copy
+import os
 import queue
 from enum import Enum
 from typing import Sequence
@@ -24,6 +25,13 @@ from typing import Sequence
 from graphscope.proto import message_pb2
 from graphscope.proto import op_def_pb2
 from graphscope.proto import types_pb2
+
+# defaults to 256MB
+CHUNK_SIZE = (
+    int(os.environ["GS_GRPC_CHUNK_SIZE"])
+    if "GS_GRPC_CHUNK_SIZE" in os.environ
+    else 256 * 1024 * 1024 - 1
+)
 
 
 class GSEngine(Enum):
@@ -128,3 +136,19 @@ class DAGManager(object):
         if not self._dag_queue.empty():
             return self._dag_queue.get()
         raise RuntimeError("Get element from empty queue.")
+
+
+def split_op_result(op_result: op_def_pb2.OpResult):
+    """Split op result into a list of chunk.
+
+    Note that this function may modify `result` attribute of op_result.
+    """
+    if op_result.has_large_result:
+        result = op_result.result
+        splited_result = [
+            result[i : i + CHUNK_SIZE] for i in range(0, len(result), CHUNK_SIZE)
+        ]
+        # clear result
+        op_result.result = b""
+        return splited_result
+    return []

@@ -283,7 +283,8 @@ bl::result<void> GrapeInstance::modifyVertices(const rpc::GSParams& params) {
   dynamic::Value common_attr, nodes;
   // the common attribute for all nodes to be modified
   dynamic::Parse(common_attr_json, common_attr);
-  BOOST_LEAF_AUTO(nodes_json, params.Get<std::string>(rpc::NODES));
+  std::string nodes_json =
+      params.GetLargeAttr().chunk_list().items()[0].buffer();
   dynamic::Parse(nodes_json, nodes);
   auto fragment =
       std::static_pointer_cast<DynamicFragment>(wrapper->fragment());
@@ -320,7 +321,8 @@ bl::result<void> GrapeInstance::modifyEdges(const rpc::GSParams& params) {
   if (params.HasKey(rpc::EDGE_KEY)) {
     BOOST_LEAF_AUTO(weight, params.Get<std::string>(rpc::EDGE_KEY));
   }
-  BOOST_LEAF_AUTO(edges_json, params.Get<std::string>(rpc::EDGES));
+  std::string edges_json =
+      params.GetLargeAttr().chunk_list().items()[0].buffer();
   dynamic::Parse(edges_json, edges);
   auto fragment =
       std::static_pointer_cast<DynamicFragment>(wrapper->fragment());
@@ -1105,7 +1107,7 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
   case rpc::REPORT_GRAPH: {
     BOOST_LEAF_AUTO(report_in_json, reportGraph(params));
     r->set_data(report_in_json,
-                DispatchResult::AggregatePolicy::kPickFirstNonEmpty);
+                DispatchResult::AggregatePolicy::kPickFirstNonEmpty, true);
     break;
   }
   case rpc::PROJECT_GRAPH: {
@@ -1225,12 +1227,12 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
   }
   case rpc::CONTEXT_TO_NUMPY: {
     BOOST_LEAF_AUTO(arc, contextToNumpy(params));
-    r->set_data(*arc, DispatchResult::AggregatePolicy::kPickFirst);
+    r->set_data(*arc, DispatchResult::AggregatePolicy::kPickFirst, true);
     break;
   }
   case rpc::CONTEXT_TO_DATAFRAME: {
     BOOST_LEAF_AUTO(arc, contextToDataframe(params));
-    r->set_data(*arc, DispatchResult::AggregatePolicy::kPickFirst);
+    r->set_data(*arc, DispatchResult::AggregatePolicy::kPickFirst, true);
     break;
   }
   case rpc::TO_VINEYARD_TENSOR: {
@@ -1256,12 +1258,12 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
   }
   case rpc::GRAPH_TO_NUMPY: {
     BOOST_LEAF_AUTO(arc, graphToNumpy(params));
-    r->set_data(*arc, DispatchResult::AggregatePolicy::kPickFirst);
+    r->set_data(*arc, DispatchResult::AggregatePolicy::kPickFirst, true);
     break;
   }
   case rpc::GRAPH_TO_DATAFRAME: {
     BOOST_LEAF_AUTO(arc, graphToDataframe(params));
-    r->set_data(*arc, DispatchResult::AggregatePolicy::kPickFirst);
+    r->set_data(*arc, DispatchResult::AggregatePolicy::kPickFirst, true);
     break;
   }
   case rpc::REGISTER_GRAPH_TYPE: {
