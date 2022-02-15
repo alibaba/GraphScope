@@ -62,7 +62,7 @@ class NodeView(_NodeView):
 class OutEdgeDataView(_OutEdgeDataView):
     def __len__(self):
         if self._nbunch:
-            return _OutEdgeDataView.__len__()
+            return sum(len(nbrs) for n, nbrs in self._nodes_nbrs())
         return self._viewer._graph.number_of_edges()
 
 
@@ -70,7 +70,7 @@ class OutEdgeDataView(_OutEdgeDataView):
 class EdgeDataView(_EdgeDataView):
     def __len__(self):
         if self._nbunch:
-            return _EdgeDataView.__len__()
+            return sum(1 for e in self)
         return self._viewer._graph.number_of_edges()
 
 
@@ -78,7 +78,7 @@ class EdgeDataView(_EdgeDataView):
 class InEdgeDataView(_InEdgeDataView):
     def __len__(self):
         if self._nbunch:
-            return _InEdgeDataView.__len__()
+            return sum(len(nbrs) for n, nbrs in self._nodes_nbrs())
         return self._viewer._graph.number_of_edges()
 
 
