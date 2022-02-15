@@ -23,14 +23,12 @@ use ir_common::generated::algebra::Patmat;
 use ir_common::NameOrId;
 
 use crate::error::IrResult;
-use crate::plan::logical::{AsLogical, LogicalPlan};
-use crate::plan::meta::{PlanMeta, StoreMeta};
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Binder {
     Edge(pb::EdgeExpand),
     Path(pb::PathExpand),
-    vertex(pb::GetV),
+    Vertex(pb::GetV),
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -47,9 +45,9 @@ impl TryFrom<pb::patmat::Binder> for Binder {
     fn try_from(pb: pb::patmat::Binder) -> Result<Self, Self::Error> {
         if let Some(item) = pb.item {
             Ok(match item {
+                pb::patmat::binder::Item::Vertex(v) => Self::Vertex(v),
                 pb::patmat::binder::Item::Edge(e) => Self::Edge(e),
                 pb::patmat::binder::Item::Path(p) => Self::Path(p),
-                pb::patmat::binder::Item::Vertex(v) => Self::Vertex(v),
             })
         } else {
             Err(ParsePbError::EmptyFieldError("Binder::item".to_string()))
@@ -61,7 +59,7 @@ impl Binder {
     /// Return whether this binder connects to a vertex
     pub fn get_binding_opt(&self) -> BindingOpt {
         match self {
-            Binder::vertex(_) => BindingOpt::Vertex,
+            Binder::Vertex(_) => BindingOpt::Vertex,
             Binder::Edge(edge) => {
                 if edge.is_edge {
                     BindingOpt::Edge
@@ -102,7 +100,7 @@ impl TryFrom<pb::patmat::Sentence> for Sentence {
             let start = pb
                 .start
                 .clone()
-                .ok_or(Err(ParsePbError::EmptyFieldError("Sentence::start".to_string())))?
+                .ok_or(ParsePbError::EmptyFieldError("Sentence::start".to_string()))?
                 .try_into()?;
             let binders = pb
                 .binders
@@ -119,23 +117,26 @@ impl TryFrom<pb::patmat::Sentence> for Sentence {
 
             Ok(Self { start, binders, end, is_anti, end_as })
         } else {
-            Err(Err(ParsePbError::EmptyFieldError(Sentence::start)))
+            Err(ParsePbError::EmptyFieldError("Sentence::start".to_string()))
         }
     }
 }
 
-/// A trait to abstract how to parse a `pb::Patmat` operator into a logical plan.
-pub trait PatmatProposal {
-    fn construct_plan(&self) -> pb::LogicalPlan;
+/// A trait to abstract how to build a logical plan for `Patmat` operator.
+pub trait MatchingStrategy {
+    fn build_plan(&self) -> IrResult<pb::LogicalPlan>;
 }
 
-/// To generate the logical plan of a pattern matching operator in IR.
-pub struct NaiveProposal {
+/// A naive implementation of `MatchingStrategy`
+pub struct NaiveStrategy {
     /// Maintaining the frequencies each tag presents in the pattern matching sentences
     tag_freq: HashMap<NameOrId, usize>,
+    /// Derive a tag to start the pattern matching. For now, it is the `start_tag` among
+    /// all sentences with the largest frequency.
+    entry_tag: Option<NameOrId>,
 }
 
-impl TryFrom<pb::Patmat> for NaiveProposal {
+impl TryFrom<pb::Patmat> for NaiveStrategy {
     type Error = ParsePbError;
 
     fn try_from(_pb: Patmat) -> Result<Self, Self::Error> {
@@ -143,8 +144,8 @@ impl TryFrom<pb::Patmat> for NaiveProposal {
     }
 }
 
-impl PatmatProposal for NaiveProposal {
-    fn construct_plan(&self) -> pb::LogicalPlan {
+impl MatchingStrategy for NaiveStrategy {
+    fn build_plan(&self) -> IrResult<pb::LogicalPlan> {
         todo!()
     }
 }

@@ -28,7 +28,7 @@ use vec_map::VecMap;
 
 use crate::error::{IrError, IrResult};
 use crate::plan::meta::{PlanMeta, StoreMeta, INVALID_META_ID, STORE_META};
-use crate::plan::patmat::{NaiveProposal, PatmatProposal};
+use crate::plan::patmat::{MatchingStrategy, NaiveStrategy};
 use crate::JsonIO;
 
 /// An internal representation of the pb-[`Node`].
@@ -269,7 +269,12 @@ impl LogicalPlan {
     /// Append an existing logical plan to the logical plan, with the specified
     /// parent node's id. Note that we currently only allow appending a logical
     /// plan to one single parent node.
-    pub fn append_plan(&mut self, plan: pb::LogicalPlan, parent: u32) -> IrResult<u32> {
+    pub fn append_plan(&mut self, plan: pb::LogicalPlan, parent_ids: Vec<u32>) -> IrResult<u32> {
+        if parent_ids.len() != 1 {
+            return Err(IrError::Unsupported(
+                "only support appending plan for one single parent!".to_string(),
+            ));
+        }
         let mut id_mappings: HashMap<u32, u32> = HashMap::new();
         let mut parents: HashMap<u32, BTreeSet<u32>> = HashMap::new();
         let mut result_id = 0_u32;
@@ -282,7 +287,7 @@ impl LogicalPlan {
             }
             if let Some(opr) = node.opr {
                 let new_parents = if id == 0 {
-                    vec![parent]
+                    parent_ids.clone()
                 } else {
                     parents
                         .get(&(id as u32))
@@ -292,7 +297,8 @@ impl LogicalPlan {
                         .map(|old| {
                             id_mappings
                                 .get(&old)
-                                .ok_or(Err(IrError::ParentNodeNotExist(old)))
+                                .cloned()
+                                .ok_or(IrError::ParentNodeNotExist(old))
                         })
                         .collect::<IrResult<Vec<u32>>>()?
                 };
@@ -319,9 +325,8 @@ impl LogicalPlan {
         if opr.opr.is_none() {
             return Err(IrError::MissingDataError("Operator::opr".to_string()));
         }
-        let opr_ref = opr.opr.as_ref().unwrap();
         if let Ok(meta) = STORE_META.read() {
-            match opr_ref {
+            match opr.opr.as_ref().unwrap() {
                 Opr::Scan(scan) => {
                     if let Some(alias) = &scan.alias {
                         self.meta
@@ -427,15 +432,16 @@ impl LogicalPlan {
                 | Opr::Patmat(_) => {} // do not change current node
                 _ => is_update_curr = true,
             }
+
             opr.preprocess(&meta, &mut self.meta)?;
         }
 
-        let new_curr_node_rst = match opr_ref {
+        let new_curr_node_rst = match opr.opr.as_ref().unwrap() {
             Opr::Patmat(patmat) => {
                 if parent_ids.len() == 1 {
-                    let proposal: NaiveProposal = patmat.try_into()?;
-                    let plan = proposal.construct_plan()?;
-                    self.append_plan(plan, parent_ids[0])
+                    let strategy = NaiveStrategy::try_from(patmat.clone())?;
+                    let plan = strategy.build_plan()?;
+                    self.append_plan(plan, parent_ids)
                 } else {
                     Err(IrError::Unsupported(
                         "only one single parent is supported for the `Patmat` operator".to_string(),
@@ -780,7 +786,7 @@ fn preprocess_expression(
                 common_pb::expr_opr::Item::Logical(l) => {
                     if count == 1 {
                         // means previous one is LabelKey
-                        // The logical operator of Eq, Ne, Lt, Le, Gt, Ge
+                        // The logical operator of Eq, Ne, Lt, Le, Gt, Ge, Within, Without
                         if *l >= 0 && *l <= 7 {
                             count = 2; // indicates LabelKey <cmp>
                         }
@@ -1077,7 +1083,9 @@ mod test {
 
     #[test]
     fn logical_plan_construct() {
-        let opr = pb::logical_plan::Operator { opr: None };
+        let opr = pb::logical_plan::Operator {
+            opr: Some(pb::logical_plan::operator::Opr::As(pb::As { alias: None })),
+        };
         let mut plan = LogicalPlan::default();
 
         let id = plan
@@ -1206,7 +1214,9 @@ mod test {
 
     #[test]
     fn logical_plan_from_pb() {
-        let opr = pb::logical_plan::Operator { opr: None };
+        let opr = pb::logical_plan::Operator {
+            opr: Some(pb::logical_plan::operator::Opr::As(pb::As { alias: None })),
+        };
         let root_pb = pb::logical_plan::Node { opr: Some(opr.clone()), children: vec![1, 2] };
         let node1_pb = pb::logical_plan::Node { opr: Some(opr.clone()), children: vec![2] };
         let node2_pb = pb::logical_plan::Node { opr: Some(opr.clone()), children: vec![] };
@@ -1253,7 +1263,9 @@ mod test {
 
     #[test]
     fn logical_plan_into_pb() {
-        let opr = pb::logical_plan::Operator { opr: None };
+        let opr = pb::logical_plan::Operator {
+            opr: Some(pb::logical_plan::operator::Opr::As(pb::As { alias: None })),
+        };
         let mut plan = LogicalPlan::default();
 
         let _ = plan
@@ -2206,7 +2218,9 @@ mod test {
     //         |
     //         7
     fn create_logical_plan() -> LogicalPlan {
-        let opr = pb::logical_plan::Operator { opr: None };
+        let opr = pb::logical_plan::Operator {
+            opr: Some(pb::logical_plan::operator::Opr::As(pb::As { alias: None })),
+        };
         let mut plan = LogicalPlan::default();
         plan.append_operator_as_node(opr.clone(), vec![])
             .unwrap(); // root
@@ -2242,7 +2256,9 @@ mod test {
 
     #[test]
     fn merge_branch_plans() {
-        let opr = pb::logical_plan::Operator { opr: None };
+        let opr = pb::logical_plan::Operator {
+            opr: Some(pb::logical_plan::operator::Opr::As(pb::As { alias: None })),
+        };
         let mut plan = LogicalPlan::with_root(Node::new(0, opr.clone()));
 
         let mut subplan1 = LogicalPlan::with_root(Node::new(1, opr.clone()));
@@ -2273,7 +2289,9 @@ mod test {
     #[test]
     fn subplan() {
         let plan = create_logical_plan();
-        let opr = pb::logical_plan::Operator { opr: None };
+        let opr = pb::logical_plan::Operator {
+            opr: Some(pb::logical_plan::operator::Opr::As(pb::As { alias: None })),
+        };
         let subplan = plan.subplan(plan.get_node(2).unwrap(), plan.get_node(7).unwrap());
         let mut expected_plan = LogicalPlan::with_root(Node::new(2, opr.clone()));
         expected_plan
@@ -2304,7 +2322,9 @@ mod test {
     fn get_branch_plans() {
         let plan = create_logical_plan();
         let (merge_node, subplans) = plan.get_branch_plans(plan.get_node(1).unwrap());
-        let opr = pb::logical_plan::Operator { opr: None };
+        let opr = pb::logical_plan::Operator {
+            opr: Some(pb::logical_plan::operator::Opr::As(pb::As { alias: None })),
+        };
 
         let plan1 = LogicalPlan::with_root(Node::new(3, opr.clone()));
         let plan2 = LogicalPlan::with_root(Node::new(4, opr.clone()));
