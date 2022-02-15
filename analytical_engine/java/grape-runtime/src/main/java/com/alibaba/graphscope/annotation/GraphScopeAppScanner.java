@@ -25,10 +25,6 @@ import com.alibaba.fastffi.FFITypeAlias;
 import com.alibaba.fastffi.annotation.AnnotationProcessor;
 import com.google.testing.compile.Compilation;
 import com.google.testing.compile.JavaFileObjects;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -55,8 +51,9 @@ import java.util.Objects;
 import java.util.Properties;
 import java.util.Random;
 import java.util.stream.Collectors;
-
 import javax.tools.JavaFileObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This class accept

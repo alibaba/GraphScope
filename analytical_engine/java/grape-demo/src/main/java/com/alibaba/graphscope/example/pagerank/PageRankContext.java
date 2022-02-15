@@ -27,16 +27,14 @@ import com.alibaba.graphscope.parallel.ParallelMessageManager;
 import com.alibaba.graphscope.utils.DoubleArrayWrapper;
 import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
 import com.alibaba.graphscope.utils.IntArrayWrapper;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PageRankContext extends VertexDataContext<IFragment<Long, Long, Long, Double>, Double>
         implements ParallelContextBase<Long, Long, Long, Double> {

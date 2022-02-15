@@ -25,12 +25,10 @@ import com.alibaba.graphscope.context.LabeledVertexDataContext;
 import com.alibaba.graphscope.context.ParallelContextBase;
 import com.alibaba.graphscope.context.PropertyDefaultContextBase;
 import com.alibaba.graphscope.context.VertexDataContext;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AppContextGetter {
     private static Logger logger = LoggerFactory.getLogger(AppContextGetter.class.getName());

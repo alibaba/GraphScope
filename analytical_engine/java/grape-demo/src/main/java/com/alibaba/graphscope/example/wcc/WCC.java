@@ -29,12 +29,10 @@ import com.alibaba.graphscope.parallel.ParallelMessageManager;
 import com.alibaba.graphscope.parallel.message.DoubleMsg;
 import com.alibaba.graphscope.parallel.message.LongMsg;
 import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class WCC implements ParallelAppBase<Long, Long, Long, Double, WCCContext>, ParallelEngine {
     private static Logger logger = LoggerFactory.getLogger(WCC.class);

@@ -27,12 +27,10 @@ import com.alibaba.graphscope.fragment.IFragment;
 import com.alibaba.graphscope.parallel.ParallelEngine;
 import com.alibaba.graphscope.parallel.ParallelMessageManager;
 import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class BFS implements ParallelAppBase<Long, Long, Double, Long, BFSContext>, ParallelEngine {
     private static Logger logger = LoggerFactory.getLogger(BFS.class);

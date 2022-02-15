@@ -23,7 +23,6 @@ import com.alibaba.graphscope.context.PropertyDefaultContextBase;
 import com.alibaba.graphscope.ds.Vertex;
 import com.alibaba.graphscope.fragment.ArrowFragment;
 import com.alibaba.graphscope.parallel.PropertyMessageManager;
-
 import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;

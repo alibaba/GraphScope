@@ -2,7 +2,6 @@ package com.alibaba.graphscope.ds.adaptor;
 
 import com.alibaba.graphscope.ds.GrapeNbr;
 import com.alibaba.graphscope.ds.Vertex;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

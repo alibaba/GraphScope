@@ -17,7 +17,6 @@
 package com.alibaba.graphscope.utils;
 
 import com.alibaba.graphscope.ds.Vertex;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

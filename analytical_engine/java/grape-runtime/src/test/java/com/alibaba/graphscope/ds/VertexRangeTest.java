@@ -18,11 +18,9 @@ package com.alibaba.graphscope.ds;
 
 import com.alibaba.fastffi.FFITypeFactory;
 import com.alibaba.graphscope.ds.VertexRange.Factory;
-
+import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.Assert;
 import org.junit.Test;
-
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class VertexRangeTest {
 

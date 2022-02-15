@@ -25,15 +25,13 @@ import com.alibaba.graphscope.ds.VertexSet;
 import com.alibaba.graphscope.fragment.IFragment;
 import com.alibaba.graphscope.parallel.ParallelMessageManager;
 import com.alibaba.graphscope.utils.AtomicLongArrayWrapper;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class WCCContext extends VertexDataContext<IFragment<Long, Long, Long, Double>, Double>
         implements ParallelContextBase<Long, Long, Long, Double> {

@@ -25,7 +25,6 @@ import com.alibaba.fastffi.FFITypeAlias;
 import com.alibaba.graphscope.utils.CppClassName;
 import com.alibaba.graphscope.utils.CppHeaderName;
 import com.alibaba.graphscope.utils.JNILibraryName;
-
 import java.util.Iterator;
 
 @FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)

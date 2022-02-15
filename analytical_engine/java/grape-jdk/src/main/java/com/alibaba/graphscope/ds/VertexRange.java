@@ -27,10 +27,9 @@ import com.alibaba.fastffi.CXXValue;
 import com.alibaba.fastffi.CXXValueRange;
 import com.alibaba.fastffi.FFIFactory;
 import com.alibaba.fastffi.FFIGen;
+import com.alibaba.fastffi.FFINameAlias;
 import com.alibaba.fastffi.FFIPointer;
 import com.alibaba.fastffi.FFITypeAlias;
-
-import java.util.function.Consumer;
 
 /**
  * Vertex Range is an abstraction for a range of vertices. Corresponding C++ <a
@@ -51,14 +50,21 @@ public interface VertexRange<VID_T> extends FFIPointer, CXXPointer, CXXValueRang
     @CXXReference
     Vertex<VID_T> begin();
 
+    @FFINameAlias("begin_value")
+    @CXXValue
+    VID_T beginValue();
+
     /**
      * Return the last vertex for this VertexRange. Note that invoking this methods multiple times
      * will return the same reference, java object is not created when this method is called.
      *
      * @return Vertex&lt;VID_T&lt; the last vertex
      */
-    @CXXReference
-    Vertex<VID_T> end();
+    //    @CXXReference
+    //    Vertex<VID_T> end();
+    @FFITypeAlias("end_value")
+    @CXXValue
+    VID_T endValue();
 
     /**
      * Return the number of vertices in this vertex range.
@@ -74,20 +80,6 @@ public interface VertexRange<VID_T> extends FFIPointer, CXXPointer, CXXValueRang
      * @param end right(end) VID_T.
      */
     void SetRange(@CXXValue VID_T begin, @CXXValue VID_T end);
-
-    /**
-     * Takes one consumer function as input, apply to each vertex.
-     *
-     * @param action consumer.
-     */
-    default void forEachPlus(Consumer<Vertex<VID_T>> action) {
-        Vertex<VID_T> vertex = begin();
-        VID_T endValue = end().GetValue();
-        while (!vertex.GetValue().equals(endValue)) {
-            action.accept(vertex);
-            vertex.inc();
-        }
-    }
 
     /**
      * Factory type for vertex range.

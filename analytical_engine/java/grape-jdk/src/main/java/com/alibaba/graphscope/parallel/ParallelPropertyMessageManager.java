@@ -36,7 +36,6 @@ import com.alibaba.graphscope.fragment.ArrowFragment;
 import com.alibaba.graphscope.fragment.IFragment;
 import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
 import com.alibaba.graphscope.utils.TriConsumer;
-
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.function.BiConsumer;
