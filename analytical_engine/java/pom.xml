@@ -122,16 +122,16 @@
             <!-- optional: limit format enforcement to just the files changed by this feature branch -->
             <!--                        <ratchetFrom>origin/main</ratchetFrom>-->
             <!-- define a language-specific format -->
-            <java>
-              <googleJavaFormat>
-                <reflowLongStrings>false</reflowLongStrings>
-                <style>AOSP</style>
-                <version>${google-java-format.version}</version>
-              </googleJavaFormat>
+<!--            <java>-->
+<!--              <googleJavaFormat>-->
+<!--                <reflowLongStrings>false</reflowLongStrings>-->
+<!--                <style>AOSP</style>-->
+<!--                <version>${google-java-format.version}</version>-->
+<!--              </googleJavaFormat>-->
               <!--                            <licenseHeader>-->
               <!--                                <content>/* (C)$YEAR */</content>  &lt;!&ndash; or <file>${project.basedir}/license-header</file> &ndash;&gt;-->
               <!--                            </licenseHeader>-->
-            </java>
+<!--            </java>-->
             <pom>
               <!-- These are the defaults, you can override if you want -->
               <includes>

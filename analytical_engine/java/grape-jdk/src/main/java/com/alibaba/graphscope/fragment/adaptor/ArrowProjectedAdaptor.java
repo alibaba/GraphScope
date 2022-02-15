@@ -9,6 +9,7 @@ import com.alibaba.graphscope.ds.adaptor.AdjList;
 import com.alibaba.graphscope.ds.adaptor.ProjectedAdjListAdaptor;
 import com.alibaba.graphscope.fragment.ArrowProjectedFragment;
 import com.alibaba.graphscope.fragment.IFragment;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
