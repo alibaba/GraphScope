@@ -333,7 +333,7 @@ declare -a apps=(
   "wcc_auto" 
   "lcc_auto" 
   "bfs_auto" 
-  "pagerank_auto"
+  # "pagerank_auto"
   "kcore" 
   "hits" 
   # "bfs" 
