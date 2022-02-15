@@ -29,8 +29,7 @@ public class OrderOpTest {
     @Test
     public void orderByKeyTest() throws IOException {
         OrderOp op = new OrderOp();
-        FfiProperty.ByValue property = ArgUtils.asFfiProperty("name");
-        FfiVariable.ByValue var = ArgUtils.asVarPropertyOnly(property);
+        FfiVariable.ByValue var = ArgUtils.asVar("", "name");
         op.setOrderVarWithOrder(new OpArg(Arrays.asList(Pair.with(var, FfiOrderOpt.Asc)), Function.identity()));
         irPlan.appendInterOp(-1, op);
         Assert.assertEquals(FileUtils.readJsonFromResource("order_key.json"), irPlan.getPlanAsJson());
@@ -39,10 +38,8 @@ public class OrderOpTest {
     @Test
     public void orderByKeysTest() throws IOException {
         OrderOp op = new OrderOp();
-        FfiProperty.ByValue p1 = ArgUtils.asFfiProperty("name");
-        FfiVariable.ByValue v1 = ArgUtils.asVarPropertyOnly(p1);
-        FfiProperty.ByValue p2 = ArgUtils.asFfiProperty("id");
-        FfiVariable.ByValue v2 = ArgUtils.asVarPropertyOnly(p2);
+        FfiVariable.ByValue v1 = ArgUtils.asVar("", "name");
+        FfiVariable.ByValue v2 = ArgUtils.asVar("", "id");
         op.setOrderVarWithOrder(new OpArg(
                 Arrays.asList(Pair.with(v1, FfiOrderOpt.Asc), Pair.with(v2, FfiOrderOpt.Desc)), Function.identity()));
         irPlan.appendInterOp(-1, op);
@@ -52,8 +49,7 @@ public class OrderOpTest {
     @Test
     public void orderByLabelTest() throws IOException {
         OrderOp op = new OrderOp();
-        FfiProperty.ByValue property = ArgUtils.asFfiProperty("~label");
-        FfiVariable.ByValue var = ArgUtils.asVarPropertyOnly(property);
+        FfiVariable.ByValue var = ArgUtils.asVar("", "~label");
         op.setOrderVarWithOrder(new OpArg(Arrays.asList(Pair.with(var, FfiOrderOpt.Asc)), Function.identity()));
         irPlan.appendInterOp(-1, op);
         Assert.assertEquals(FileUtils.readJsonFromResource("order_label.json"), irPlan.getPlanAsJson());

@@ -40,24 +40,31 @@ public class ArgUtils {
         return irCoreLib.int64AsConst(id);
     }
 
-    public static FfiProperty.ByValue asFfiProperty(String key) {
-        if (key.equals(LABEL)) {
+    // "" indicates NONE
+    public static FfiProperty.ByValue asFfiProperty(String property) {
+        if (property.isEmpty()) {
+            return irCoreLib.asNoneKey();
+        } else if (property.equals(LABEL)) {
             return irCoreLib.asLabelKey();
-        } else if (key.equals(ID)) {
+        } else if (property.equals(ID)) {
             return irCoreLib.asIdKey();
-        } else if (key.equals(LEN)) {
+        } else if (property.equals(LEN)) {
             return irCoreLib.asLenKey();
         } else {
-            return irCoreLib.asPropertyKey(irCoreLib.cstrAsNameOrId(key));
+            return irCoreLib.asPropertyKey(irCoreLib.cstrAsNameOrId(property));
         }
     }
 
     public static String getPropertyName(FfiProperty.ByValue property) {
         switch (property.opt) {
+            case None:
+                return "";
             case Id:
                 return ID;
             case Label:
                 return LABEL;
+            case Len:
+                return LEN;
             case Key:
                 return property.key.name;
             default:
@@ -65,44 +72,34 @@ public class ArgUtils {
         }
     }
 
-    public static FfiVariable.ByValue asVarPropertyOnly(FfiProperty.ByValue property) {
-        return irCoreLib.asVarPropertyOnly(property);
+    // "" indicates NONE or HEAD
+    public static FfiNameOrId.ByValue asFfiTag(String tag) {
+        if (tag.isEmpty()) {
+            return irCoreLib.noneNameOrId();
+        } else {
+            return irCoreLib.cstrAsNameOrId(tag);
+        }
+    }
+
+    public static FfiNameOrId.ByValue asNoneTag() {
+        return irCoreLib.noneNameOrId();
+    }
+
+    public static FfiVariable.ByValue asVar(String tag, String property) {
+        FfiNameOrId.ByValue ffiTag = asFfiTag(tag);
+        FfiProperty.ByValue ffiProperty = asFfiProperty(property);
+        return irCoreLib.asVar(ffiTag, ffiProperty);
     }
 
     public static FfiVariable.ByValue asNoneVar() {
         return irCoreLib.asNoneVar();
     }
 
-    public static FfiVariable.ByValue asVarTagOnly(String tag) {
-        if (tag.isEmpty()) {
-            return irCoreLib.asNoneVar();
-        } else {
-            return irCoreLib.asVarTagOnly(irCoreLib.cstrAsNameOrId(tag));
-        }
-    }
-
-    public static FfiVariable.ByValue asVar(String tag, String property) {
-        FfiNameOrId.ByValue ffiTag;
-        if (tag.isEmpty()) {
-            ffiTag = asNoneNameOrId();
-        } else {
-            ffiTag = irCoreLib.cstrAsNameOrId(tag);
-        }
-        return irCoreLib.asVar(ffiTag, asFfiProperty(property));
-    }
-
-    public static FfiNameOrId.ByValue asNoneNameOrId() {
-        return irCoreLib.noneNameOrId();
-    }
-
-    public static FfiProperty.ByValue asNoneProperty() {
-        return irCoreLib.asNoneKey();
-    }
-
     public static FfiAlias.ByValue asNoneAlias() {
+        FfiNameOrId.ByValue alias = irCoreLib.noneNameOrId();
         FfiAlias.ByValue ffiAlias = new FfiAlias.ByValue();
+        ffiAlias.alias = alias;
         ffiAlias.isQueryGiven = false;
-        ffiAlias.alias = asNoneNameOrId();
         return ffiAlias;
     }
 

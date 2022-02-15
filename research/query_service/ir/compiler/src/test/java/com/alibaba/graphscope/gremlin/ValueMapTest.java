@@ -18,12 +18,12 @@ package com.alibaba.graphscope.gremlin;
 
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.intermediate.operator.ProjectOp;
+import com.alibaba.graphscope.gremlin.transform.StepTransformFactory;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
-import com.alibaba.graphscope.gremlin.InterOpCollectionBuilder.StepTransformFactory;
 import org.javatuples.Pair;
 import org.junit.Assert;
 import org.junit.Test;

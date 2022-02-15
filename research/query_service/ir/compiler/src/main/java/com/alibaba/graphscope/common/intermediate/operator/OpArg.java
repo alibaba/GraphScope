@@ -28,6 +28,11 @@ public class OpArg<T, R> {
         this.transform = transform;
     }
 
+    public OpArg(T arg) {
+        this.arg = arg;
+        this.transform = (T t) -> (R) t;
+    }
+
     public T getArg() {
         return arg;
     }

@@ -370,7 +370,8 @@ public class IrPlan implements Closeable {
                 // set alias
                 Optional<OpArg> aliasOpt = baseOp.getAlias();
                 if (aliasOpt.isPresent()) {
-                    throw new InterOpIllegalArgException(baseOp.getClass(), "subOpCollection", "the query given alias is unsupported");
+                    FfiAlias.ByValue alias = (FfiAlias.ByValue) aliasOpt.get().applyArg();
+                    irCoreLib.setApplyAlias(ptrApply, alias);
                 }
                 return ptrApply;
             }
