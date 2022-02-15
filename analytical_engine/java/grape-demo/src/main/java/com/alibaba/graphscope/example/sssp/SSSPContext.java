@@ -25,6 +25,7 @@ import com.alibaba.graphscope.ds.VertexSet;
 import com.alibaba.graphscope.fragment.IFragment;
 import com.alibaba.graphscope.parallel.ParallelMessageManager;
 import com.alibaba.graphscope.utils.AtomicDoubleArrayWrapper;
+import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -100,13 +101,14 @@ public class SSSPContext extends VertexDataContext<IFragment<Long, Long, Long, D
             logger.info(
                     frag.getInnerVerticesNum()
                             + " "
-                            + innerNodes.begin().GetValue()
+                            + innerNodes.beginValue()
                             + " "
-                            + innerNodes.end().GetValue());
+                            + innerNodes.endValue());
             // for (Vertex<Long> cur = innerNodes.begin(); cur.GetValue() !=
             // innerNodes.end().GetValue();
             // cur.inc()) {
-            Vertex<Long> cur = innerNodes.begin();
+//            Vertex<Long> cur = innerNodes.begin();
+            Vertex<Long> cur = FFITypeFactoryhelper.newVertexLong();
             for (long index = 0; index < frag.getInnerVerticesNum(); ++index) {
                 cur.SetValue(index);
                 Long oid = frag.getId(cur);
