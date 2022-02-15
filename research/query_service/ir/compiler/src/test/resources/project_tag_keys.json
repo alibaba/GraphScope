@@ -11,11 +11,12 @@
               }
             },
             "params": {
-              "table_names": [],
+              "tables": [],
               "columns": [],
+              "is_all_columns": false,
               "limit": null,
               "predicate": null,
-              "requirements": []
+              "extra": {}
             },
             "idx_predicate": null
           }

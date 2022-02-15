@@ -7,11 +7,12 @@
             "v_tag": null,
             "direction": 0,
             "params": {
-              "table_names": [],
+              "tables": [],
               "columns": [],
+              "is_all_columns": false,
               "limit": null,
               "predicate": null,
-              "requirements": []
+              "extra": {}
             },
             "is_edge": true,
             "alias": null

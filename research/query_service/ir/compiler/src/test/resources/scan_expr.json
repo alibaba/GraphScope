@@ -7,8 +7,9 @@
             "scan_opt": 0,
             "alias": null,
             "params": {
-              "table_names": [],
+              "tables": [],
               "columns": [],
+              "is_all_columns": false,
               "limit": null,
               "predicate": {
                 "operators": [
@@ -44,7 +45,7 @@
                   }
                 ]
               },
-              "requirements": []
+              "extra": {}
             },
             "idx_predicate": null
           }
