@@ -21,6 +21,14 @@ import sys
 
 import pytest
 
+try:
+    # https://www.tensorflow.org/guide/migrate
+    import tensorflow.compat.v1 as tf
+
+    tf.disable_v2_behavior()
+except ImportError:
+    import tensorflow as tf
+
 import graphscope
 import graphscope.nx as nx
 from graphscope.analytical.udf.decorators import pregel
@@ -59,6 +67,7 @@ def train(config, graph):
             full_graph_mode=config["full_graph_mode"],
         )
 
+    tf.reset_default_graph()
     trainer = LocalTFTrainer(
         model_fn,
         epoch=config["epoch"],
