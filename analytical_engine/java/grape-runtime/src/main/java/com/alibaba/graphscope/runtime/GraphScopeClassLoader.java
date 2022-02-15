@@ -16,6 +16,9 @@
 
 package com.alibaba.graphscope.runtime;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -30,8 +33,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Vector;
 import java.util.stream.Collectors;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * GraphScope Class Loader contains several static functions which will be used by GraphScope

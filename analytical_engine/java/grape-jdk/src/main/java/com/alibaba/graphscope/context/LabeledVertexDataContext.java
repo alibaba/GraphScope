@@ -24,9 +24,11 @@ import com.alibaba.graphscope.fragment.ArrowFragment;
 import com.alibaba.graphscope.stdcxx.StdVector;
 import com.alibaba.graphscope.utils.CppClassName;
 import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
-import java.util.Objects;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Objects;
 
 public abstract class LabeledVertexDataContext<OID_T, DATA_T> {
     private static Logger logger =

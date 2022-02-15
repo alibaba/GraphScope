@@ -25,9 +25,11 @@ import com.alibaba.graphscope.context.ffi.FFIVertexPropertyContext;
 import com.alibaba.graphscope.fragment.IFragment;
 import com.alibaba.graphscope.utils.CppClassName;
 import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
-import java.util.Objects;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Objects;
 
 /** VertexPropertyContext only compatible with simple graph, i.e. ArrowProjectedFragment @FRAG_T */
 public abstract class VertexPropertyContext<FRAG_T extends IFragment> {

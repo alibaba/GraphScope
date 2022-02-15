@@ -26,13 +26,15 @@ import com.alibaba.graphscope.fragment.IFragment;
 import com.alibaba.graphscope.parallel.ParallelMessageManager;
 import com.alibaba.graphscope.utils.AtomicLongArrayWrapper;
 import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class WCCContext extends VertexDataContext<IFragment<Long, Long, Long, Double>, Double>
         implements ParallelContextBase<Long, Long, Long, Double> {
@@ -73,7 +75,7 @@ public class WCCContext extends VertexDataContext<IFragment<Long, Long, Long, Do
             BufferedWriter bufferedWriter = new BufferedWriter(fileWritter);
             VertexRange<Long> innerNodes = frag.innerVertices();
 
-//            Vertex<Long> cur = innerNodes.begin();
+            //            Vertex<Long> cur = innerNodes.begin();
             Vertex<Long> cur = FFITypeFactoryhelper.newVertexLong();
             for (long index = 0; index < frag.getInnerVerticesNum(); ++index) {
                 cur.SetValue(index);

@@ -38,6 +38,7 @@ import com.alibaba.graphscope.fragment.ImmutableEdgecutFragment;
 import com.alibaba.graphscope.fragment.adaptor.ArrowProjectedAdaptor;
 import com.alibaba.graphscope.fragment.adaptor.ImmutableEdgecutFragmentAdaptor;
 import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
+
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.function.BiConsumer;

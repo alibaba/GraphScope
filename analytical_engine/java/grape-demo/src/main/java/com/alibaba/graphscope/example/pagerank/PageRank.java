@@ -28,10 +28,12 @@ import com.alibaba.graphscope.parallel.ParallelEngine;
 import com.alibaba.graphscope.parallel.ParallelMessageManager;
 import com.alibaba.graphscope.parallel.message.DoubleMsg;
 import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
-import java.util.function.BiConsumer;
-import java.util.function.Supplier;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.function.BiConsumer;
+import java.util.function.Supplier;
 
 public class PageRank extends Communicator
         implements ParallelAppBase<Long, Long, Long, Double, PageRankContext>, ParallelEngine {
