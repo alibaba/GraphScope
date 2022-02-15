@@ -40,26 +40,19 @@ import com.alibaba.fastffi.FFITypeAlias;
 @FFITypeAlias(GRAPE_VERTEX_RANGE)
 public interface VertexRange<VID_T> extends FFIPointer, CXXPointer {
     /**
-     * Return the Begin vertex for this VertexRange. Note that invoking this methods multiple times
-     * will return the same reference, java object is not created when this method is called.
+     * Return the Begin vertex id for this VertexRange.
      *
-     * @return Vertex&lt;VID_T&lt; the first vertex
+     * @return  the first vertex id
      */
-    //    @CXXReference
-    //    Vertex<VID_T> begin();
-
     @FFINameAlias("begin_value")
     @CXXValue
     VID_T beginValue();
 
     /**
-     * Return the last vertex for this VertexRange. Note that invoking this methods multiple times
-     * will return the same reference, java object is not created when this method is called.
+     * Return the last vertex for this VertexRange.
      *
-     * @return Vertex&lt;VID_T&lt; the last vertex
+     * @return the last vertex id
      */
-    //    @CXXReference
-    //    Vertex<VID_T> end();
     @FFINameAlias("end_value")
     @CXXValue
     VID_T endValue();
