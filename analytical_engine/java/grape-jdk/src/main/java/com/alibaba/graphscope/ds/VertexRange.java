@@ -22,9 +22,7 @@ import static com.alibaba.graphscope.utils.JNILibraryName.JNI_LIBRARY_NAME;
 
 import com.alibaba.fastffi.CXXHead;
 import com.alibaba.fastffi.CXXPointer;
-import com.alibaba.fastffi.CXXReference;
 import com.alibaba.fastffi.CXXValue;
-import com.alibaba.fastffi.CXXValueRange;
 import com.alibaba.fastffi.FFIFactory;
 import com.alibaba.fastffi.FFIGen;
 import com.alibaba.fastffi.FFINameAlias;
@@ -40,15 +38,15 @@ import com.alibaba.fastffi.FFITypeAlias;
 @FFIGen(library = JNI_LIBRARY_NAME)
 @CXXHead(GRAPE_VERTEX_ARRAY_H)
 @FFITypeAlias(GRAPE_VERTEX_RANGE)
-public interface VertexRange<VID_T> extends FFIPointer, CXXPointer, CXXValueRange<Vertex<VID_T>> {
+public interface VertexRange<VID_T> extends FFIPointer, CXXPointer {
     /**
      * Return the Begin vertex for this VertexRange. Note that invoking this methods multiple times
      * will return the same reference, java object is not created when this method is called.
      *
      * @return Vertex&lt;VID_T&lt; the first vertex
      */
-//    @CXXReference
-//    Vertex<VID_T> begin();
+    //    @CXXReference
+    //    Vertex<VID_T> begin();
 
     @FFINameAlias("begin_value")
     @CXXValue
