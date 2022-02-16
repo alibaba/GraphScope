@@ -34,10 +34,11 @@ class HashPartitioner<::gs::dynamic::Value> {
 
   inline fid_t GetPartitionId(const oid_t& oid) const {
     size_t hash_value;
-    if (oid.IsArray() && oid.Size() == 2 && oid[0].IsString()
-        && (oid[1].IsInt64() || oid[1].IsString())) {
-      hash_value = oid[1].IsInt64() ? std::hash<int64_t>()(oid[1].GetInt64())
-                                    : std::hash<std::string>()(oid[1].GetString());
+    if (oid.IsArray() && oid.Size() == 2 && oid[0].IsString() &&
+        (oid[1].IsInt64() || oid[1].IsString())) {
+      hash_value = oid[1].IsInt64()
+                       ? std::hash<int64_t>()(oid[1].GetInt64())
+                       : std::hash<std::string>()(oid[1].GetString());
     } else {
       hash_value = std::hash<oid_t>()(oid);
     }

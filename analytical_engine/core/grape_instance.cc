@@ -868,8 +868,9 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::induceSubGraph(
       std::make_shared<typename DynamicFragment::vertex_map_t>(comm_spec_);
   sub_vm_ptr->Init();
   {
-      typename DynamicFragment::vertex_map_t::partitioner_t partitioner(comm_spec_.fnum());
-      sub_vm_ptr->SetPartitioner(partitioner);
+    typename DynamicFragment::vertex_map_t::partitioner_t partitioner(
+        comm_spec_.fnum());
+    sub_vm_ptr->SetPartitioner(partitioner);
   }
   grape::Communicator comm;
   comm.InitCommunicator(comm_spec_.comm());
@@ -915,8 +916,9 @@ bl::result<void> GrapeInstance::clearGraph(const rpc::GSParams& params) {
       new DynamicFragment::vertex_map_t(comm_spec_));
   vm_ptr->Init();
   {
-      typename DynamicFragment::vertex_map_t::partitioner_t partitioner(comm_spec_.fnum());
-      vm_ptr->SetPartitioner(partitioner);
+    typename DynamicFragment::vertex_map_t::partitioner_t partitioner(
+        comm_spec_.fnum());
+    vm_ptr->SetPartitioner(partitioner);
   }
   auto fragment =
       std::static_pointer_cast<DynamicFragment>(wrapper->fragment());
