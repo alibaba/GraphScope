@@ -36,6 +36,8 @@ test:
 	cd $(CUR_DIR)/../ && cargo test && \
 	cd $(CUR_DIR) && mvn test
 
+# start rpc server
+# make run
 gremlin_test:
 	mvn test -Dtest=com.alibaba.graphscope.integration.IrGremlinTest $(OSFLAG)
 
