@@ -6,6 +6,7 @@ import com.alibaba.graphscope.common.intermediate.operator.ApplyOp;
 import com.alibaba.graphscope.common.intermediate.operator.InterOpBase;
 import com.alibaba.graphscope.common.intermediate.operator.ProjectOp;
 import com.alibaba.graphscope.common.jna.type.FfiJoinKind;
+import com.alibaba.graphscope.gremlin.InterOpCollectionBuilder;
 import com.alibaba.graphscope.gremlin.transform.TraversalParentTransformFactory;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
@@ -28,6 +29,10 @@ public class SelectStepTest {
         return TraversalParentTransformFactory.PROJECT_BY_STEP.apply(parent);
     }
 
+    private InterOpBase generateInterOpFromBuilder(Traversal traversal, int idx) {
+        return (new InterOpCollectionBuilder(traversal)).build().unmodifiableCollection().get(idx);
+    }
+
     @Test
     public void g_V_select_one_test() {
         Traversal traversal = g.V().as("a").select("a");
@@ -41,7 +46,7 @@ public class SelectStepTest {
     @Test
     public void g_V_select_one_as_test() {
         Traversal traversal = g.V().as("a").select("a").as("b");
-        ProjectOp op = (ProjectOp) getApplyWithProject(traversal).get(0);
+        ProjectOp op = (ProjectOp) generateInterOpFromBuilder(traversal, 1);
 
         List<Pair> exprWithAlias = (List<Pair>) op.getExprWithAlias().get().applyArg();
         Assert.assertEquals("@a", exprWithAlias.get(0).getValue0());
