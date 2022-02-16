@@ -455,8 +455,19 @@ class DynamicProjectedFragment {
   using const_adj_list_t =
       dynamic_projected_fragment_impl::ConstProjectedAdjLinkedList<edata_t>;
   using vertex_range_t = typename fragment_t::vertex_range_t;
+  using inner_vertices_t = vertex_range_t;
+  using outer_vertices_t = vertex_range_t;
+  using vertices_t = vertex_range_t;
+  using sub_vertices_t = vertex_range_t;
   template <typename DATA_T>
   using vertex_array_t = typename fragment_t::vertex_array_t<DATA_T>;
+
+  template <typename DATA_T>
+  using inner_vertex_array_t = typename fragment_t::vertex_array_t<DATA_T>;
+
+  template <typename DATA_T>
+  using outer_vertex_array_t = typename fragment_t::vertex_array_t<DATA_T>;
+
   // This member is used by grape::check_load_strategy_compatible()
   static constexpr grape::LoadStrategy load_strategy =
       grape::LoadStrategy::kBothOutIn;

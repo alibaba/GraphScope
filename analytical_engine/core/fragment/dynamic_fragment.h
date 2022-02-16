@@ -1551,7 +1551,7 @@ class DynamicFragment {
           vm_ptr_->AddVertex(src, src_gid);
           vm_ptr_->AddVertex(dst, dst_gid);
           src_fid = vm_ptr_->GetFidFromGid(src_gid);
-          dst_fid = vm_ptr_->GetFidFromGid(src_gid);
+          dst_fid = vm_ptr_->GetFidFromGid(dst_gid);
           if (src_fid == fid_ || duplicated()) {
             vertices.emplace_back(src_gid);
           }
@@ -1563,6 +1563,8 @@ class DynamicFragment {
               !vm_ptr_->GetGid(dst, dst_gid)) {
             continue;
           }
+          src_fid = vm_ptr_->GetFidFromGid(src_gid);
+          dst_fid = vm_ptr_->GetFidFromGid(dst_gid);
         }
         if (src_fid == fid_ || dst_fid == fid_ || duplicated()) {
           edges.emplace_back(src_gid, dst_gid, e_data);
