@@ -12,6 +12,8 @@ OSFLAG  :=
 UNAME_S := $(shell uname -s)
 UNAME_M := $(shell uname -m)
 
+GRAPH:=modern
+
 ifeq ($(UNAME_S),Darwin)
     ifeq ($(UNAME_M),arm64)
         OSFLAG += -Dos.detected.classifier=osx-x86_64
@@ -48,6 +50,10 @@ run:
 	cd $(CUR_DIR) && $(java) \
 	  -cp ".:./target/libs/*:./target/ir-compiler-1.0-SNAPSHOT.jar" \
 	  -Djna.library.path=../target/release \
+	  -Dgraph.schema=../core/resource/${GRAPH}_schema.json \
 	  com.alibaba.graphscope.gremlin.service.GraphServiceMain
+
+ldbc_test:
+	mvn test -Dtest=com.alibaba.graphscope.integration.ldbc.IrLdbcTest $(OSFLAG)
 
 .PHONY: build run
