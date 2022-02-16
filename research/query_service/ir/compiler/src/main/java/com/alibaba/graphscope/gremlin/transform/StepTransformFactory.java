@@ -133,7 +133,7 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
                     .getSubTraversalAsExpr("", getProjectTraversal(valueMapStep));
             op.setExprWithAlias(new OpArg<>(expr, (String expr1) -> {
                 FfiAlias.ByValue alias = ArgUtils.asNoneAlias();
-                return Collections.singletonList(Pair.with(expr1, alias));
+                return Arrays.asList(Pair.with(expr1, alias));
             }));
             return op;
         }
@@ -151,7 +151,7 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
                     .getSubTraversalAsExpr("", getProjectTraversal(valuesStep));
             op.setExprWithAlias(new OpArg<>(expr, (String expr1) -> {
                 FfiAlias.ByValue alias = ArgUtils.asNoneAlias();
-                return Collections.singletonList(Pair.with(expr1, alias));
+                return Arrays.asList(Pair.with(expr1, alias));
             }));
             return op;
         }

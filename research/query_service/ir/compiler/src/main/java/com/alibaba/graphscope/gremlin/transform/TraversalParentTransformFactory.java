@@ -1,6 +1,5 @@
 package com.alibaba.graphscope.gremlin.transform;
 
-import com.alibaba.graphscope.common.exception.InterOpIllegalArgException;
 import com.alibaba.graphscope.common.exception.OpArgIllegalException;
 import com.alibaba.graphscope.common.intermediate.ArgAggFn;
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
@@ -64,24 +63,19 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
                 ++byIdx;
             }
             ProjectOp op = new ProjectOp();
-            op.setExprWithAlias(new OpArg<>(projectExprList, (List<String> exprList) -> {
-                Set<String> labels = parent.asStep().getLabels();
-                return exprList.stream().map(k -> {
-                    FfiAlias.ByValue ffiAlias;
-                    // optimize: if there is only one expression, alias with NONE
-                    if (exprList.size() == 1) {
-                        ffiAlias = labels.isEmpty() ? ArgUtils.asNoneAlias() :
-                                ArgUtils.asFfiAlias(labels.iterator().next(), true);
-                    } else if (!labels.isEmpty()) {
-                        throw new InterOpIllegalArgException(op.getClass(),
-                                "exprWithAlias", "multiple columns as a single alias is unsupported");
-                    } else {
-                        String exprAsAlias = getUniqueAlias(k, parent.asStep());
-                        ffiAlias = ArgUtils.asFfiAlias(exprAsAlias, false);
-                    }
-                    return Pair.with(k, ffiAlias);
-                }).collect(Collectors.toList());
-            }));
+            op.setExprWithAlias(new OpArg<>(projectExprList, (List<String> exprList) ->
+                    exprList.stream().map(k -> {
+                        FfiAlias.ByValue ffiAlias;
+                        // optimize: if there is only one expression, alias with NONE
+                        if (exprList.size() == 1) {
+                            ffiAlias = ArgUtils.asNoneAlias();
+                        } else {
+                            String exprAsAlias = getUniqueAlias(k, parent.asStep());
+                            ffiAlias = ArgUtils.asFfiAlias(exprAsAlias, false);
+                        }
+                        return Pair.with(k, ffiAlias);
+                    }).collect(Collectors.toList())
+            ));
             interOpList.add(op);
             return interOpList;
         }
