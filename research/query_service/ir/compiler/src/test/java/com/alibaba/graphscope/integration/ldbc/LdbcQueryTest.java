@@ -26,7 +26,7 @@ public abstract class LdbcQueryTest extends AbstractGremlinProcessTest {
 
     public abstract Traversal<Vertex, Map<Object, Long>> get_ldbc_5_test();
 
-    public abstract Traversal<Vertex, Map<Object, Long>> get_ldbc_6_test();
+    public abstract Traversal<Vertex, Map<String, Object>> get_ldbc_6_test();
 
     public abstract Traversal<Vertex, Map<String, Object>> get_ldbc_7_test();
 
@@ -156,13 +156,29 @@ public abstract class LdbcQueryTest extends AbstractGremlinProcessTest {
 
     @Test
     public void run_ldbc_6_test() {
-        Traversal<Vertex, Map<Object, Long>> traversal = this.get_ldbc_6_test();
+        Traversal<Vertex, Map<String, Object>> traversal = this.get_ldbc_6_test();
         this.printTraversalForm(traversal);
+        int counter = 0;
 
-        String expected = "{v[504403158265497005]=28, v[504403158265496092]=9, v[504403158265502932]=5, v[504403158265496996]=5, v[504403158265495796]=5, v[504403158265497489]=5, v[504403158265497482]=4, v[504403158265496956]=4, v[504403158265497758]=4, v[504403158265497232]=3}";
-        Map<Object, Long> result = traversal.next();
-        Assert.assertEquals(expected, result.toString());
-        Assert.assertFalse(traversal.hasNext());
+        List<String> expected = Arrays.asList(
+                "{keys=Tom_Gehrels, values=28}",
+                "{keys=Sammy_Sosa, values=9}",
+                "{keys=Charles_Dickens, values=5}",
+                "{keys=Genghis_Khan, values=5}",
+                "{keys=Ivan_Ljubičić, values=5}",
+                "{keys=Marc_Gicquel, values=5}",
+                "{keys=Freddie_Mercury, values=4}",
+                "{keys=Peter_Hain, values=4}",
+                "{keys=Robert_Fripp, values=4}",
+                "{keys=Boris_Yeltsin, values=3}"
+        );
+        while (traversal.hasNext()) {
+            Map<String, Object> bindings = traversal.next();
+            Assert.assertTrue(bindings.toString().equals(expected.get(counter)));
+            ++counter;
+        }
+
+        Assert.assertEquals(expected.size(), (long) counter);
     }
 
     @Test
@@ -392,15 +408,16 @@ public abstract class LdbcQueryTest extends AbstractGremlinProcessTest {
         }
 
         @Override
-        public Traversal<Vertex, Map<Object, Long>> get_ldbc_6_test() {
-            return g.V().hasLabel("PERSON").has("id", 30786325583618L)
-                    .both("1..3", "KNOWS").inV().dedup().has("id", P.neq(30786325583618L))
-                    .in("HASCREATOR").hasLabel("POST")
-                    .where(__.out("HASTAG").has("name", P.eq("Angola"))).out("HASTAG")
-                    .has("name", P.neq("Angola"))
+        public Traversal<Vertex, Map<String, Object>> get_ldbc_6_test() {
+            return g.V().hasId(72088380363511554L).union(__.both("KNOWS"), __.both("KNOWS").both("KNOWS"))
+                    .dedup().has("id", P.neq(30786325583618L)).in("HASCREATOR")
+                    .hasLabel("POST").as("_t").out("HASTAG").has("name", P.eq("Angola"))
+                    .select("_t").dedup().out("HASTAG").has("name", P.neq("Angola"))
                     .groupCount()
-                    .order().by(__.select("values"), Order.desc)
-                    .by(__.select("keys").by("name"), Order.asc).limit(10);
+                    .order()
+                    .by(__.select("values"), Order.desc)
+                    .by(__.select("keys").by("name"), Order.asc).limit(10)
+                    .select("keys", "values").by("name").by();
         }
 
         @Override
