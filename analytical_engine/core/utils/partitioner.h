@@ -17,6 +17,7 @@
 #define ANALYTICAL_ENGINE_CORE_UTILS_PARTITIONER_H_
 
 #include <memory>
+#include <string>
 
 #include "core/object/dynamic.h"
 #include "grape/fragment/partitioner.h"
