@@ -40,6 +40,7 @@ if sys.version_info >= (3, 6):
             return os.fspath(path)
         return path
 
+
 elif sys.version_info >= (3, 4):
 
     def _path_to_string(path):
@@ -48,6 +49,7 @@ elif sys.version_info >= (3, 4):
         if isinstance(path, pathlib.Path):
             return str(path)
         return path
+
 
 else:
 
