@@ -14,26 +14,26 @@ RUN cd /tmp && \
     make -j`nproc` && \
     make install && \
     cd /tmp && \
-    git clone -b mutable_fragment https://github.com/luoxiaojian/libvineyard.git --depth=1 && \
-    cd libvineyard && \
+    git clone -b v0.3.19 https://github.com/v6d-io/v6d.git --depth=1 && \
+    cd v6d && \
     git submodule update --init && \
-    mkdir -p /tmp/libvineyard/build && \
-    cd /tmp/libvineyard/build && \
+    mkdir -p /tmp/v6d/build && \
+    cd /tmp/v6d/build && \
     cmake .. -DBUILD_VINEYARD_PYPI_PACKAGES=ON \
              -DBUILD_SHARED_LIBS=ON && \
     make install vineyard_client_python -j && \
-    cd /tmp/libvineyard && \
+    cd /tmp/v6d && \
     python3 setup.py bdist_wheel && \
     cd dist && \
     mkdir -p /opt/vineyard/dist && \
     cp -f ./*.whl /opt/vineyard/dist && \
     pip3 install ./*.whl && \
-    cd /tmp/libvineyard/modules/io && \
+    cd /tmp/v6d/modules/io && \
     python3 setup.py bdist_wheel && \
     cp -f dist/* /opt/vineyard/dist && \
     pip3 install dist/* && \
     cd /tmp && \
-    rm -fr /tmp/libvineyard /tmp/libgrape-lite && \
+    rm -fr /tmp/v6d /tmp/libgrape-lite && \
     useradd -m graphscope -u 1001 && \
     echo 'graphscope ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers && \
     cp -r ~/.cargo /home/graphscope/.cargo && \

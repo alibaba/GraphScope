@@ -27,26 +27,26 @@ RUN sudo mkdir -p /opt/vineyard && \
     make -j`nproc` && \
     make install && \
     cd /tmp && \
-    git clone -b mutable_fragment https://github.com/luoxiaojian/libvineyard.git --depth=1 && \
-    cd libvineyard && \
+    git clone -b v0.3.19 https://github.com/v6d-io/v6d.git --depth=1 && \
+    cd v6d && \
     git submodule update --init && \
-    mkdir -p /tmp/libvineyard/build && \
-    cd /tmp/libvineyard/build && \
+    mkdir -p /tmp/v6d/build && \
+    cd /tmp/v6d/build && \
     cmake .. -DCMAKE_PREFIX_PATH=/opt/vineyard \
              -DCMAKE_INSTALL_PREFIX=/opt/vineyard \
              -DBUILD_SHARED_LIBS=ON && \
     make install vineyard_client_python -j && \
-    cd /tmp/libvineyard && \
+    cd /tmp/v6d && \
     python3 setup.py bdist_wheel && \
     cd dist && \
     auditwheel repair --plat=manylinux2014_x86_64 ./*.whl && \
     mkdir -p /opt/vineyard/dist && \
     cp -f wheelhouse/* /opt/vineyard/dist && \
     pip3 install wheelhouse/*.whl && \
-    cd /tmp/libvineyard/modules/io && \
+    cd /tmp/v6d/modules/io && \
     python3 setup.py bdist_wheel && \
     cp -f dist/* /opt/vineyard/dist && \
     pip3 install dist/* && \
     sudo cp -r /opt/vineyard/* /usr/local/ && \
     cd /tmp && \
-    rm -fr /tmp/libvineyard /tmp/libgrape-lite
+    rm -fr /tmp/v6d /tmp/libgrape-lite
