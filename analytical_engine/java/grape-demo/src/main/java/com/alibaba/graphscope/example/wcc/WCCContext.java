@@ -75,7 +75,6 @@ public class WCCContext extends VertexDataContext<IFragment<Long, Long, Long, Do
             BufferedWriter bufferedWriter = new BufferedWriter(fileWritter);
             VertexRange<Long> innerNodes = frag.innerVertices();
 
-            //            Vertex<Long> cur = innerNodes.begin();
             Vertex<Long> cur = FFITypeFactoryhelper.newVertexLong();
             for (long index = 0; index < frag.getInnerVerticesNum(); ++index) {
                 cur.SetValue(index);

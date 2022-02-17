@@ -42,7 +42,6 @@ public class BFSContext extends VertexDataContext<IFragment<Long, Long, Double, 
 
     public long sourceOid;
     public IntArrayWrapper partialResults;
-    // public BooleanArrayWrapper currendInnerUpdated;
     public VertexSet currentInnerUpdated, nextInnerUpdated;
     public int currentDepth;
     public int threadNum;

@@ -54,8 +54,6 @@ public interface ParallelEngine {
             ExecutorService executor,
             BiConsumer<Vertex<Long>, Integer> consumer) {
         CountDownLatch countDownLatch = new CountDownLatch(threadNum);
-        //        AtomicInteger atomicInteger = new
-        // AtomicInteger(vertices.begin().GetValue().intValue());
         AtomicInteger atomicInteger = new AtomicInteger(vertices.beginValue().intValue());
         int originEnd = vertices.endValue().intValue();
         for (int tid = 0; tid < threadNum; ++tid) {
@@ -64,7 +62,6 @@ public interface ParallelEngine {
                     new Runnable() {
                         @Override
                         public void run() {
-                            // Vertex<Long> vertex = vertices.begin();
                             Vertex<Long> vertex = FFITypeFactoryhelper.newVertexLong();
                             while (true) {
                                 int curBegin =
@@ -126,7 +123,6 @@ public interface ParallelEngine {
             Supplier<MSG_T> msgSupplier) {
         CountDownLatch countDownLatch = new CountDownLatch(threadNum);
         AtomicInteger atomicInteger = new AtomicInteger(vertices.beginValue().intValue());
-        // int chunkSize = 1024;
         int originEnd = vertices.endValue().intValue();
         for (int tid = 0; tid < threadNum; ++tid) {
             final int finalTid = tid;
@@ -134,7 +130,6 @@ public interface ParallelEngine {
                     new Runnable() {
                         @Override
                         public void run() {
-                            // Vertex<Long> vertex = vertices.begin();
                             Vertex<Long> vertex = FFITypeFactoryhelper.newVertexLong();
                             PrimitiveMessage msg = msgSupplier.get();
                             while (true) {
@@ -181,8 +176,6 @@ public interface ParallelEngine {
             VertexSet vertexSet,
             BiConsumer<Vertex<Long>, Integer> consumer) {
         CountDownLatch countDownLatch = new CountDownLatch(threadNum);
-        //        AtomicInteger atomicInteger = new
-        // AtomicInteger(vertices.begin().GetValue().intValue());
         AtomicInteger atomicInteger = new AtomicInteger(vertices.beginValue().intValue());
         int originEnd = vertices.endValue().intValue();
         for (int tid = 0; tid < threadNum; ++tid) {
@@ -191,7 +184,6 @@ public interface ParallelEngine {
                     new Runnable() {
                         @Override
                         public void run() {
-                            // Vertex<Long> vertex = vertices.begin();
                             Vertex<Long> vertex = FFITypeFactoryhelper.newVertexLong();
                             while (true) {
                                 int curBegin =
@@ -241,8 +233,6 @@ public interface ParallelEngine {
             TriConsumer<Vertex<Long>, Integer, DoubleMsg> consumer,
             Supplier<DoubleMsg> msgSupplier) {
         CountDownLatch countDownLatch = new CountDownLatch(threadNum);
-        //        AtomicInteger atomicInteger = new
-        // AtomicInteger(vertices.begin().GetValue().intValue());
         AtomicInteger atomicInteger = new AtomicInteger(vertices.beginValue().intValue());
         // int chunkSize = 1024;
         int originEnd = vertices.endValue().intValue();
@@ -252,7 +242,6 @@ public interface ParallelEngine {
                     new Runnable() {
                         @Override
                         public void run() {
-                            // Vertex<Long> vertex = vertices.begin();
                             Vertex<Long> vertex = FFITypeFactoryhelper.newVertexLong();
                             DoubleMsg msg = msgSupplier.get();
                             while (true) {
@@ -316,10 +305,7 @@ public interface ParallelEngine {
             TriConsumer<Vertex<Long>, Integer, DoubleMsg> consumer,
             Supplier<DoubleMsg> msgSupplier) {
         CountDownLatch countDownLatch = new CountDownLatch(threadNum);
-        //        AtomicInteger atomicInteger = new
-        // AtomicInteger(vertices.begin().GetValue().intValue());
         AtomicInteger atomicInteger = new AtomicInteger(vertices.beginValue().intValue());
-        // int chunkSize = 1024;
         int originEnd = vertices.endValue().intValue();
         for (int tid = 0; tid < threadNum; ++tid) {
             final int finalTid = tid;
@@ -327,7 +313,6 @@ public interface ParallelEngine {
                     new Runnable() {
                         @Override
                         public void run() {
-                            // Vertex<Long> vertex = vertices.begin();
                             Vertex<Long> vertex = FFITypeFactoryhelper.newVertexLong();
                             DoubleMsg msg = msgSupplier.get();
                             while (true) {
@@ -390,11 +375,8 @@ public interface ParallelEngine {
             VertexSet vertexSet,
             TriConsumer<Vertex<Long>, Integer, Integer> consumer) {
         CountDownLatch countDownLatch = new CountDownLatch(threadNum);
-        //        AtomicInteger atomicInteger = new
-        // AtomicInteger(vertices.begin().GetValue().intValue());
         AtomicInteger atomicInteger = new AtomicInteger(vertices.beginValue().intValue());
 
-        // int chunkSize = 1024;
         int originEnd = vertices.endValue().intValue();
         for (int tid = 0; tid < threadNum; ++tid) {
             final int finalTid = tid;
@@ -402,7 +384,6 @@ public interface ParallelEngine {
                     new Runnable() {
                         @Override
                         public void run() {
-                            // Vertex<Long> vertex = vertices.begin();
                             Vertex<Long> vertex = FFITypeFactoryhelper.newVertexLong();
                             while (true) {
                                 int curBegin =
@@ -449,8 +430,6 @@ public interface ParallelEngine {
             ExecutorService executor,
             TriConsumer<Vertex<Long>, Integer, Integer> consumer) {
         CountDownLatch countDownLatch = new CountDownLatch(threadNum);
-        //        AtomicInteger atomicInteger = new
-        // AtomicInteger(vertices.begin().GetValue().intValue());
         AtomicInteger atomicInteger = new AtomicInteger(vertices.beginValue().intValue());
 
         // int chunkSize = 1024;
@@ -461,7 +440,6 @@ public interface ParallelEngine {
                     new Runnable() {
                         @Override
                         public void run() {
-                            // Vertex<Long> vertex = vertices.begin();
                             Vertex<Long> vertex = FFITypeFactoryhelper.newVertexLong();
                             while (true) {
                                 int curBegin =

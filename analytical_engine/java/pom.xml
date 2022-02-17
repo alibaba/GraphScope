@@ -115,46 +115,6 @@
     <pluginManagement>
       <plugins>
         <plugin>
-          <groupId>com.diffplug.spotless</groupId>
-          <artifactId>spotless-maven-plugin</artifactId>
-          <version>${maven-spotless-plugin.version}</version>
-          <configuration>
-            <!-- optional: limit format enforcement to just the files changed by this feature branch -->
-            <!--                        <ratchetFrom>origin/main</ratchetFrom>-->
-            <!-- define a language-specific format -->
-<!--            <java>-->
-<!--              <googleJavaFormat>-->
-<!--                <reflowLongStrings>false</reflowLongStrings>-->
-<!--                <style>AOSP</style>-->
-<!--                <version>${google-java-format.version}</version>-->
-<!--              </googleJavaFormat>-->
-              <!--                            <licenseHeader>-->
-              <!--                                <content>/* (C)$YEAR */</content>  &lt;!&ndash; or <file>${project.basedir}/license-header</file> &ndash;&gt;-->
-              <!--                            </licenseHeader>-->
-<!--            </java>-->
-            <pom>
-              <!-- These are the defaults, you can override if you want -->
-              <includes>
-                <include>pom.xml</include>
-              </includes>
-              <sortPom>
-                <encoding>UTF-8</encoding> <!-- The encoding of the pom files -->
-                <lineSeparator>${line.separator}</lineSeparator> <!-- line separator to use -->
-                <expandEmptyElements>true</expandEmptyElements> <!-- Should empty elements be expanded-->
-              </sortPom>
-              <!-- has its own section below -->
-            </pom>
-          </configuration>
-          <executions>
-            <execution>
-              <goals>
-                <goal>apply</goal>
-              </goals>
-              <phase>compile</phase>
-            </execution>
-          </executions>
-        </plugin>
-        <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
           <version>${maven-compiler-plugin.version}</version>

@@ -50,8 +50,6 @@ public class VertexSet {
     }
 
     public VertexSet(VertexRange<Long> vertices) {
-        //        left = vertices.begin().GetValue().intValue();
-        //        right = vertices.end().GetValue().intValue();
         left = vertices.beginValue().intValue();
         right = vertices.endValue().intValue();
         bs = new BitSet(right - left);
