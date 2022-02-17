@@ -101,7 +101,7 @@ def create_graph(session_id, graph_type, inputs=None, **kwargs):
 
     Args:
         session_id (str): Refer to session that the graph will be create on.
-        graph_type (:enum:`GraphType`): GraphType defined in proto.types.proto.
+        graph_type (:class:`GraphType`): GraphType defined in proto.types.proto.
         **kwargs: additional properties respect to different `graph_type`.
 
     Returns:

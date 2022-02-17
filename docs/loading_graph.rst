@@ -154,8 +154,8 @@ This will load an edge which label is ``_e`` (the default value), its source ver
 
 Similar to vertices, we can use parameter `label` to assign label name and `properties` to select properties.
 
-``label``: The label name of the edges, default to ``_e``. (It's recommended to use a meaningful label name.)
-``properties``: A list of properties, default to ``None``(add all columns as properties). 
+``label``: The label name of the edges, default to ``_e`` . (It's recommended to use a meaningful label name.)
+``properties``: A list of properties, default to ``None`` (add all columns as properties).
 
 .. code:: python
 

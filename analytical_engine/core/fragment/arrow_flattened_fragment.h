@@ -67,7 +67,6 @@ class UnionIdParser {
   }
 
   ID_TYPE GenerateContinuousLid(ID_TYPE lid) const {
-    fid_t fid = vid_parser_.GetFid(lid);
     LabelIDT label_id = vid_parser_.GetLabelId(lid);
     int64_t offset = vid_parser_.GetOffset(lid);
 

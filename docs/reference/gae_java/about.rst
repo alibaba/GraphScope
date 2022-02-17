@@ -18,10 +18,10 @@ Grape JDK has three subprojects
 - **grape-jdk**: Defines the interfaces you need to write you own java app.
 
 - **grape-runtime**: Contains the implementation for the interfaces defines in ``grape-jdk``. You never need it
-if you are just want to write a java app.
+  if you are just want to write a java app.
 
 - **grape-demo**: Having no idea how to implement your algorithm to fit Grape `PIE` programming model? Take a look
-at the provided sample apps, hopefully you will be inspired!
+  at the provided sample apps, hopefully you will be inspired!
 
 
 Building from source
