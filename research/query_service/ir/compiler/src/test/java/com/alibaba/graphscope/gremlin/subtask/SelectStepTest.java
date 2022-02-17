@@ -1,3 +1,19 @@
+/*
+ * Copyright 2020 Alibaba Group Holding Limited.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.alibaba.graphscope.gremlin.subtask;
 
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
@@ -40,7 +56,7 @@ public class SelectStepTest {
 
         List<Pair> exprWithAlias = (List<Pair>) op.getExprWithAlias().get().applyArg();
         Assert.assertEquals("@a", exprWithAlias.get(0).getValue0());
-        Assert.assertEquals(ArgUtils.asNoneAlias(), exprWithAlias.get(0).getValue1());
+        Assert.assertEquals(ArgUtils.asFfiNoneAlias(), exprWithAlias.get(0).getValue1());
     }
 
     @Test
@@ -60,7 +76,7 @@ public class SelectStepTest {
 
         List<Pair> exprWithAlias = (List<Pair>) op.getExprWithAlias().get().applyArg();
         Assert.assertEquals("@a.name", exprWithAlias.get(0).getValue0());
-        Assert.assertEquals(ArgUtils.asNoneAlias(), exprWithAlias.get(0).getValue1());
+        Assert.assertEquals(ArgUtils.asFfiNoneAlias(), exprWithAlias.get(0).getValue1());
     }
 
     @Test
@@ -70,7 +86,7 @@ public class SelectStepTest {
 
         List<Pair> exprWithAlias = (List<Pair>) op.getExprWithAlias().get().applyArg();
         Assert.assertEquals("{@a.name}", exprWithAlias.get(0).getValue0());
-        Assert.assertEquals(ArgUtils.asNoneAlias(), exprWithAlias.get(0).getValue1());
+        Assert.assertEquals(ArgUtils.asFfiNoneAlias(), exprWithAlias.get(0).getValue1());
     }
 
     @Test
@@ -80,7 +96,7 @@ public class SelectStepTest {
 
         List<Pair> exprWithAlias = (List<Pair>) op.getExprWithAlias().get().applyArg();
         Assert.assertEquals("{@a.name, @a.id}", exprWithAlias.get(0).getValue0());
-        Assert.assertEquals(ArgUtils.asNoneAlias(), exprWithAlias.get(0).getValue1());
+        Assert.assertEquals(ArgUtils.asFfiNoneAlias(), exprWithAlias.get(0).getValue1());
     }
 
     @Test
@@ -137,7 +153,7 @@ public class SelectStepTest {
         // expression
         Assert.assertEquals("@a_apply_0", firstEntry.getValue0());
         // alias
-        Assert.assertEquals(ArgUtils.asNoneAlias(), firstEntry.getValue1());
+        Assert.assertEquals(ArgUtils.asFfiNoneAlias(), firstEntry.getValue1());
     }
 
     @Test

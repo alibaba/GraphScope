@@ -1,3 +1,19 @@
+/*
+ * Copyright 2020 Alibaba Group Holding Limited.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.alibaba.graphscope.gremlin.transform;
 
 import com.alibaba.graphscope.common.exception.OpArgIllegalException;
@@ -107,7 +123,7 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
             // add corner judgement
             if (((VertexStep) step).getEdgeLabels().length > 0) {
                 op.setLabels(new OpArg<>((VertexStep) step, (VertexStep s1) ->
-                        Arrays.stream(s1.getEdgeLabels()).map(k -> ArgUtils.strAsNameId(k)).collect(Collectors.toList())));
+                        Arrays.stream(s1.getEdgeLabels()).map(k -> ArgUtils.asFfiTag(k)).collect(Collectors.toList())));
             }
             return op;
         }
@@ -132,7 +148,7 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
             String expr = TraversalParentTransformFactory.PROJECT_BY_STEP
                     .getSubTraversalAsExpr("", getProjectTraversal(valueMapStep));
             op.setExprWithAlias(new OpArg<>(expr, (String expr1) -> {
-                FfiAlias.ByValue alias = ArgUtils.asNoneAlias();
+                FfiAlias.ByValue alias = ArgUtils.asFfiNoneAlias();
                 return Arrays.asList(Pair.with(expr1, alias));
             }));
             return op;
@@ -150,7 +166,7 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
             String expr = TraversalParentTransformFactory.PROJECT_BY_STEP
                     .getSubTraversalAsExpr("", getProjectTraversal(valuesStep));
             op.setExprWithAlias(new OpArg<>(expr, (String expr1) -> {
-                FfiAlias.ByValue alias = ArgUtils.asNoneAlias();
+                FfiAlias.ByValue alias = ArgUtils.asFfiNoneAlias();
                 return Arrays.asList(Pair.with(expr1, alias));
             }));
             return op;
@@ -168,7 +184,7 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
             DedupOp op = new DedupOp();
             op.setDedupKeys(new OpArg<>(tagTraversals, (Map<String, Traversal.Admin> map) -> {
                 if (tagTraversals.isEmpty()) { // only support dedup()
-                    return Collections.singletonList(ArgUtils.asNoneVar());
+                    return Collections.singletonList(ArgUtils.asFfiNoneVar());
                 } else {
                     throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE, "supported pattern is [dedup()]");
                 }
@@ -271,7 +287,7 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
 
             ProjectOp op = new ProjectOp();
             op.setExprWithAlias(new OpArg<>(expr, (String expr1) -> {
-                FfiAlias.ByValue alias = ArgUtils.asNoneAlias();
+                FfiAlias.ByValue alias = ArgUtils.asFfiNoneAlias();
                 return Collections.singletonList(Pair.with(expr1, alias));
             }));
             return op;
@@ -307,9 +323,9 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
     protected Function<GraphStep, List<FfiConst.ByValue>> CONST_IDS_FROM_STEP = (GraphStep s1) ->
             Arrays.stream(s1.getIds()).map((id) -> {
                 if (id instanceof Integer) {
-                    return ArgUtils.intAsConst((Integer) id);
+                    return ArgUtils.asFfiConst((Integer) id);
                 } else if (id instanceof Long) {
-                    return ArgUtils.longAsConst((Long) id);
+                    return ArgUtils.asFfiConst((Long) id);
                 } else {
                     throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE, "unimplemented yet");
                 }
@@ -317,6 +333,6 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
 
     protected Function<ScanFusionStep, List<FfiNameOrId.ByValue>> LABELS_FROM_STEP = (ScanFusionStep step) -> {
         List<String> labels = step.getGraphLabels();
-        return labels.stream().map(k -> ArgUtils.strAsNameId(k)).collect(Collectors.toList());
+        return labels.stream().map(k -> ArgUtils.asFfiTag(k)).collect(Collectors.toList());
     };
 }

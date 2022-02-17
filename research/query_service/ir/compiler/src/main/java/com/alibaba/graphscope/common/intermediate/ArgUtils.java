@@ -28,15 +28,11 @@ public class ArgUtils {
     private static String GROUP_KEYS = "keys";
     private static String GROUP_VALUES = "values";
 
-    public static FfiNameOrId.ByValue strAsNameId(String value) {
-        return irCoreLib.cstrAsNameOrId(value);
-    }
-
-    public static FfiConst.ByValue intAsConst(int id) {
+    public static FfiConst.ByValue asFfiConst(int id) {
         return irCoreLib.int32AsConst(id);
     }
 
-    public static FfiConst.ByValue longAsConst(long id) {
+    public static FfiConst.ByValue asFfiConst(long id) {
         return irCoreLib.int64AsConst(id);
     }
 
@@ -55,23 +51,6 @@ public class ArgUtils {
         }
     }
 
-    public static String getPropertyName(FfiProperty.ByValue property) {
-        switch (property.opt) {
-            case None:
-                return "";
-            case Id:
-                return ID;
-            case Label:
-                return LABEL;
-            case Len:
-                return LEN;
-            case Key:
-                return property.key.name;
-            default:
-                throw new OpArgIllegalException(OpArgIllegalException.Cause.INVALID_TYPE, "invalid type");
-        }
-    }
-
     // "" indicates NONE or HEAD
     public static FfiNameOrId.ByValue asFfiTag(String tag) {
         if (tag.isEmpty()) {
@@ -81,21 +60,21 @@ public class ArgUtils {
         }
     }
 
-    public static FfiNameOrId.ByValue asNoneTag() {
+    public static FfiNameOrId.ByValue asFfiNoneTag() {
         return irCoreLib.noneNameOrId();
     }
 
-    public static FfiVariable.ByValue asVar(String tag, String property) {
+    public static FfiVariable.ByValue asFfiVar(String tag, String property) {
         FfiNameOrId.ByValue ffiTag = asFfiTag(tag);
         FfiProperty.ByValue ffiProperty = asFfiProperty(property);
         return irCoreLib.asVar(ffiTag, ffiProperty);
     }
 
-    public static FfiVariable.ByValue asNoneVar() {
+    public static FfiVariable.ByValue asFfiNoneVar() {
         return irCoreLib.asNoneVar();
     }
 
-    public static FfiAlias.ByValue asNoneAlias() {
+    public static FfiAlias.ByValue asFfiNoneAlias() {
         FfiNameOrId.ByValue alias = irCoreLib.noneNameOrId();
         FfiAlias.ByValue ffiAlias = new FfiAlias.ByValue();
         ffiAlias.alias = alias;
@@ -111,6 +90,12 @@ public class ArgUtils {
         return ffiAlias;
     }
 
+    public static FfiAggFn.ByValue asFfiAggFn(ArgAggFn aggFn) {
+        FfiAggFn.ByValue ffiAggFn = irCoreLib.initAggFn(aggFn.getAggregate(), aggFn.getAlias());
+        // todo: add var
+        return ffiAggFn;
+    }
+
     public static String groupKeys() {
         return GROUP_KEYS;
     }
@@ -119,10 +104,21 @@ public class ArgUtils {
         return GROUP_VALUES;
     }
 
-    public static FfiAggFn.ByValue asFfiAggFn(ArgAggFn aggFn) {
-        FfiAggFn.ByValue ffiAggFn = irCoreLib.initAggFn(aggFn.getAggregate(), aggFn.getAlias());
-        // todo: add var
-        return ffiAggFn;
+    public static String propertyName(FfiProperty.ByValue property) {
+        switch (property.opt) {
+            case None:
+                return "";
+            case Id:
+                return ID;
+            case Label:
+                return LABEL;
+            case Len:
+                return LEN;
+            case Key:
+                return property.key.name;
+            default:
+                throw new OpArgIllegalException(OpArgIllegalException.Cause.INVALID_TYPE, "invalid type");
+        }
     }
 }
 
