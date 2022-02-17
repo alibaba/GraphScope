@@ -35,6 +35,13 @@ public class Configs {
             default:
                 throw new NotImplementedException("unimplemented load type " + loadType);
         }
+        // replace with the value from system property
+        properties.keySet().forEach(k -> {
+            String value = System.getProperty((String) k);
+            if (value != null) {
+                properties.setProperty((String) k, value);
+            }
+        });
     }
 
     public String get(String name, String defaultValue) {
