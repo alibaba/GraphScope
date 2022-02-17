@@ -16,7 +16,6 @@
 
 package com.alibaba.graphscope.gremlin.antlr4;
 
-import com.alibaba.graphscope.gremlin.plugin.processor.IrStandardOpProcessor;
 import com.alibaba.graphscope.gremlin.plugin.script.AntlrToJavaScriptEngine;
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversalSource;
 import org.apache.tinkerpop.gremlin.process.traversal.Order;
@@ -719,5 +718,39 @@ public class PositiveEvalTest {
     @Test
     public void g_V_id_list_test() {
         Assert.assertEquals(g.V(1, 2, 3), eval("g.V([1, 2, 3])"));
+    }
+
+    // subtask
+    @Test
+    public void g_V_select_a_by_out_count_test() {
+        Assert.assertEquals(g.V().as("a").select("a").by(__.out().count()),
+                eval("g.V().as(\"a\").select(\"a\").by(__.out().count())"));
+    }
+
+    @Test
+    public void g_V_select_a_b_by_out_count_by_count_test() {
+        Assert.assertEquals(g.V().as("a").select("a", "b").by(__.out().count()).by(__.count()),
+                eval("g.V().as(\"a\").select(\"a\", \"b\").by(__.out().count()).by(__.count())"));
+    }
+
+    @Test
+    public void g_V_order_by_out_count_test() {
+        Assert.assertEquals(g.V().order().by(__.out().count()), eval("g.V().order().by(__.out().count())"));
+    }
+
+    @Test
+    public void g_V_order_by_out_count_by_count_test() {
+        Assert.assertEquals(g.V().order().by(__.out().count()).by(__.count(), Order.desc),
+                eval("g.V().order().by(__.out().count()).by(__.count(), Order.desc)"));
+    }
+
+    @Test
+    public void g_V_group_by_out_count_test() {
+        Assert.assertEquals(g.V().group().by(__.out().count()), eval("g.V().group().by(__.out().count())"));
+    }
+
+    @Test
+    public void g_V_groupCount_by_out_count_test() {
+        Assert.assertEquals(g.V().groupCount().by(__.out().count()), eval("g.V().groupCount().by(__.out().count())"));
     }
 }

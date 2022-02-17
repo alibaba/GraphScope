@@ -54,7 +54,7 @@ public class SinkOutputProcessor implements InterOpProcessor {
             if (cur instanceof DedupOp || cur instanceof LimitOp || cur instanceof OrderOp || cur instanceof SelectOp) {
                 continue;
             } else if (cur instanceof ExpandOp || cur instanceof ScanFusionOp || cur instanceof GetVOp) {
-                sinkArg.addColumnName(ArgUtils.asNoneNameOrId());
+                sinkArg.addColumnName(ArgUtils.asFfiNoneTag());
                 break;
             } else if (cur instanceof ProjectOp) {
                 ProjectOp op = (ProjectOp) cur;
@@ -80,7 +80,8 @@ public class SinkOutputProcessor implements InterOpProcessor {
                 ApplyOp applyOp = (ApplyOp) cur;
                 FfiJoinKind joinKind = (FfiJoinKind) applyOp.getJoinKind().get().applyArg();
                 // where or not
-                if (joinKind == FfiJoinKind.Semi || joinKind == FfiJoinKind.Anti) {
+                // order().by(), select().by(), group().by()
+                if (joinKind == FfiJoinKind.Semi || joinKind == FfiJoinKind.Anti || joinKind == FfiJoinKind.Inner) {
                     continue;
                 } else {
                     throw new InterOpUnsupportedException(cur.getClass(), "join kind is unsupported yet");

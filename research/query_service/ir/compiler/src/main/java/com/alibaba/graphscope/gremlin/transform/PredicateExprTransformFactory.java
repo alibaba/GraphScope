@@ -15,24 +15,21 @@
  */
 package com.alibaba.graphscope.gremlin.transform;
 
-import com.alibaba.graphscope.gremlin.Utils;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
+import org.apache.tinkerpop.gremlin.process.traversal.Step;
+import org.apache.tinkerpop.gremlin.process.traversal.step.HasContainerHolder;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.IsStep;
-import org.apache.tinkerpop.gremlin.process.traversal.step.filter.WherePredicateStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.WhereTraversalStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.HasContainer;
-import org.apache.tinkerpop.gremlin.process.traversal.util.ConnectiveP;
-import org.apache.tinkerpop.gremlin.process.traversal.util.TraversalRing;
 
-import java.util.Iterator;
 import java.util.List;
-import java.util.Optional;
 
 public enum PredicateExprTransformFactory implements PredicateExprTransform {
-    EXPR_FROM_CONTAINERS {
+    HAS_STEP {
         @Override
-        public String apply(Object arg) {
-            List<HasContainer> containers = (List<HasContainer>) arg;
+        public String apply(Step arg) {
+            HasContainerHolder hasStep = (HasContainerHolder) arg;
+            List<HasContainer> containers = hasStep.getHasContainers();
             String expr = "";
             for (int i = 0; i < containers.size(); ++i) {
                 if (i > 0) {
@@ -50,63 +47,22 @@ public enum PredicateExprTransformFactory implements PredicateExprTransform {
             return expr;
         }
     },
-    EXPR_FROM_IS_STEP {
+    IS_STEP {
         @Override
-        public String apply(Object arg) {
+        public String apply(Step arg) {
             IsStep isStep = (IsStep) arg;
             // current value
             String key = "@";
             return flatPredicate(key, isStep.getPredicate());
         }
     },
-    EXPR_FROM_WHERE_PREDICATE {
+    WHERE_END_STEP {
         @Override
-        public String apply(Object arg) {
-            WherePredicateStep step = (WherePredicateStep) arg;
-            Optional<String> startKey = step.getStartKey();
-            TraversalRing traversalRing = Utils.getFieldValue(WherePredicateStep.class, step, "traversalRing");
-
-            String startTag = startKey.isPresent() ? startKey.get() : "";
-            String startBy = ProjectTraversalTransformFactory.getTagProjectTraversalAsExpr(startTag, traversalRing.next());
-
-            P predicate = (P) step.getPredicate().get();
-            List<String> selectKeys = Utils.getFieldValue(WherePredicateStep.class, step, "selectKeys");
-            traverseAndUpdateP(predicate, selectKeys.iterator(), traversalRing);
-
-            return flatPredicate(startBy, predicate);
-        }
-
-        private void traverseAndUpdateP(P predicate, Iterator<String> selectKeysIterator, TraversalRing traversalRing) {
-            if (predicate instanceof ConnectiveP) {
-                ((ConnectiveP) predicate).getPredicates().forEach(p1 -> {
-                    traverseAndUpdateP((P) p1, selectKeysIterator, traversalRing);
-                });
-            } else {
-                String tagProperty = ProjectTraversalTransformFactory.getTagProjectTraversalAsExpr(selectKeysIterator.next(), traversalRing.next());
-                predicate.setValue(new WherePredicateValue(tagProperty));
-            }
-        }
-    },
-    EXPR_FROM_WHERE_END {
-        @Override
-        public String apply(Object arg) {
+        public String apply(Step arg) {
             WhereTraversalStep.WhereEndStep endStep = (WhereTraversalStep.WhereEndStep) arg;
             String matchTag = endStep.getScopeKeys().iterator().next();
             P predicate = P.eq(new WherePredicateValue("@" + matchTag));
             return flatPredicate("@", predicate);
-        }
-    };
-
-    public class WherePredicateValue {
-        private String predicateValue;
-
-        public WherePredicateValue(String predicateValue) {
-            this.predicateValue = predicateValue;
-        }
-
-        @Override
-        public String toString() {
-            return predicateValue;
         }
     }
 }

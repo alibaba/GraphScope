@@ -49,31 +49,12 @@ public class ProjectOpTest {
     }
 
     @Test
-    public void projectAsTest() throws IOException {
-        ScanFusionOp scanOp = new ScanFusionOp();
-        scanOp.setScanOpt(new OpArg<>(FfiScanOpt.Entity, Function.identity()));
-        scanOp.setAlias(new OpArg(ArgUtils.asFfiAlias("a", true), Function.identity()));
-        irPlan.appendInterOp(-1, scanOp);
-
-        ProjectOp op = new ProjectOp();
-        op.setAlias(new OpArg(ArgUtils.asFfiAlias("b", true), Function.identity()));
-
-        String projectExpr = "@a";
-        FfiAlias.ByValue alias = ArgUtils.asFfiAlias("project_a", false);
-        List<Pair> exprWithAlias = Arrays.asList(Pair.with(projectExpr, alias));
-
-        op.setExprWithAlias(new OpArg(exprWithAlias, Function.identity()));
-        irPlan.appendInterOp(0, op);
-        Assert.assertEquals(FileUtils.readJsonFromResource("project_as.json"), irPlan.getPlanAsJson());
-    }
-
-    @Test
     public void projectKeyTest() throws IOException {
         ProjectOp op = new ProjectOp();
 
         String projectExpr = "@.name";
         FfiAlias.ByValue alias = ArgUtils.asFfiAlias("name", false);
-        List<Pair> exprWithAlias = Collections.singletonList(Pair.with(projectExpr, alias));
+        List<Pair> exprWithAlias = Arrays.asList(Pair.with(projectExpr, alias));
 
         op.setExprWithAlias(new OpArg(exprWithAlias, Function.identity()));
         irPlan.appendInterOp(-1, op);

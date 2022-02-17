@@ -1,9 +1,24 @@
+/*
+ * Copyright 2020 Alibaba Group Holding Limited.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.alibaba.graphscope.gremlin.integration.result;
 
 import com.alibaba.graphscope.common.utils.FileUtils;
 import com.alibaba.graphscope.common.client.ResultParser;
 import com.alibaba.graphscope.common.utils.JsonUtils;
-import com.alibaba.graphscope.gremlin.result.GremlinResultParserFactory;
 import com.alibaba.graphscope.gremlin.result.GremlinResultProcessor;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.ImmutableMap;
@@ -70,19 +85,24 @@ public class GremlinTestResultProcessor extends GremlinResultProcessor {
     }
 
     private Map<String, Object> getVertexProperties(Vertex vertex) {
-        Map<String, Object> formatProperties = new HashMap<>();
         Map<String, Object> vertexProperties = (Map<String, Object>) cachedProperties.get(VERTEX_PROPERTIES);
         String idAsStr = String.valueOf(vertex.id());
         Map<String, Object> properties = (Map<String, Object>) vertexProperties.get(idAsStr);
-        properties.forEach((k, v) -> {
-            formatProperties.put(k, Collections.singletonList(ImmutableMap.of("id", 1L, "value", v)));
-        });
-        return formatProperties;
+        if (properties != null) {
+            Map<String, Object> formatProperties = new HashMap<>();
+            properties.forEach((k, v) -> {
+                formatProperties.put(k, Collections.singletonList(ImmutableMap.of("id", 1L, "value", v)));
+            });
+            return formatProperties;
+        } else {
+            return Collections.emptyMap();
+        }
     }
 
     private Map<String, Object> getEdgeProperties(Edge edge) {
         Map<String, Object> edgeProperties = (Map<String, Object>) cachedProperties.get(EDGE_PROPERTIES);
         String idAsStr = String.valueOf(edge.id());
-        return (Map<String, Object>) edgeProperties.get(idAsStr);
+        Map<String, Object> properties = (Map<String, Object>) edgeProperties.get(idAsStr);
+        return (properties == null) ? Collections.emptyMap() : properties;
     }
 }

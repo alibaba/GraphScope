@@ -28,81 +28,57 @@ public class ArgUtils {
     private static String GROUP_KEYS = "keys";
     private static String GROUP_VALUES = "values";
 
-    public static FfiNameOrId.ByValue strAsNameId(String value) {
-        return irCoreLib.cstrAsNameOrId(value);
-    }
-
-    public static FfiConst.ByValue intAsConst(int id) {
+    public static FfiConst.ByValue asFfiConst(int id) {
         return irCoreLib.int32AsConst(id);
     }
 
-    public static FfiConst.ByValue longAsConst(long id) {
+    public static FfiConst.ByValue asFfiConst(long id) {
         return irCoreLib.int64AsConst(id);
     }
 
-    public static FfiProperty.ByValue asFfiProperty(String key) {
-        if (key.equals(LABEL)) {
+    // "" indicates NONE
+    public static FfiProperty.ByValue asFfiProperty(String property) {
+        if (property.isEmpty()) {
+            return irCoreLib.asNoneKey();
+        } else if (property.equals(LABEL)) {
             return irCoreLib.asLabelKey();
-        } else if (key.equals(ID)) {
+        } else if (property.equals(ID)) {
             return irCoreLib.asIdKey();
-        } else if (key.equals(LEN)) {
+        } else if (property.equals(LEN)) {
             return irCoreLib.asLenKey();
         } else {
-            return irCoreLib.asPropertyKey(irCoreLib.cstrAsNameOrId(key));
+            return irCoreLib.asPropertyKey(irCoreLib.cstrAsNameOrId(property));
         }
     }
 
-    public static String getPropertyName(FfiProperty.ByValue property) {
-        switch (property.opt) {
-            case Id:
-                return ID;
-            case Label:
-                return LABEL;
-            case Key:
-                return property.key.name;
-            default:
-                throw new OpArgIllegalException(OpArgIllegalException.Cause.INVALID_TYPE, "invalid type");
-        }
-    }
-
-    public static FfiVariable.ByValue asVarPropertyOnly(FfiProperty.ByValue property) {
-        return irCoreLib.asVarPropertyOnly(property);
-    }
-
-    public static FfiVariable.ByValue asNoneVar() {
-        return irCoreLib.asNoneVar();
-    }
-
-    public static FfiVariable.ByValue asVarTagOnly(String tag) {
+    // "" indicates NONE or HEAD
+    public static FfiNameOrId.ByValue asFfiTag(String tag) {
         if (tag.isEmpty()) {
-            return irCoreLib.asNoneVar();
+            return irCoreLib.noneNameOrId();
         } else {
-            return irCoreLib.asVarTagOnly(irCoreLib.cstrAsNameOrId(tag));
+            return irCoreLib.cstrAsNameOrId(tag);
         }
     }
 
-    public static FfiVariable.ByValue asVar(String tag, String property) {
-        FfiNameOrId.ByValue ffiTag;
-        if (tag.isEmpty()) {
-            ffiTag = asNoneNameOrId();
-        } else {
-            ffiTag = irCoreLib.cstrAsNameOrId(tag);
-        }
-        return irCoreLib.asVar(ffiTag, asFfiProperty(property));
-    }
-
-    public static FfiNameOrId.ByValue asNoneNameOrId() {
+    public static FfiNameOrId.ByValue asFfiNoneTag() {
         return irCoreLib.noneNameOrId();
     }
 
-    public static FfiProperty.ByValue asNoneProperty() {
-        return irCoreLib.asNoneKey();
+    public static FfiVariable.ByValue asFfiVar(String tag, String property) {
+        FfiNameOrId.ByValue ffiTag = asFfiTag(tag);
+        FfiProperty.ByValue ffiProperty = asFfiProperty(property);
+        return irCoreLib.asVar(ffiTag, ffiProperty);
     }
 
-    public static FfiAlias.ByValue asNoneAlias() {
+    public static FfiVariable.ByValue asFfiNoneVar() {
+        return irCoreLib.asNoneVar();
+    }
+
+    public static FfiAlias.ByValue asFfiNoneAlias() {
+        FfiNameOrId.ByValue alias = irCoreLib.noneNameOrId();
         FfiAlias.ByValue ffiAlias = new FfiAlias.ByValue();
+        ffiAlias.alias = alias;
         ffiAlias.isQueryGiven = false;
-        ffiAlias.alias = asNoneNameOrId();
         return ffiAlias;
     }
 
@@ -114,6 +90,12 @@ public class ArgUtils {
         return ffiAlias;
     }
 
+    public static FfiAggFn.ByValue asFfiAggFn(ArgAggFn aggFn) {
+        FfiAggFn.ByValue ffiAggFn = irCoreLib.initAggFn(aggFn.getAggregate(), aggFn.getAlias());
+        // todo: add var
+        return ffiAggFn;
+    }
+
     public static String groupKeys() {
         return GROUP_KEYS;
     }
@@ -122,10 +104,21 @@ public class ArgUtils {
         return GROUP_VALUES;
     }
 
-    public static FfiAggFn.ByValue asFfiAggFn(ArgAggFn aggFn) {
-        FfiAggFn.ByValue ffiAggFn = irCoreLib.initAggFn(aggFn.getAggregate(), aggFn.getAlias());
-        // todo: add var
-        return ffiAggFn;
+    public static String propertyName(FfiProperty.ByValue property) {
+        switch (property.opt) {
+            case None:
+                return "";
+            case Id:
+                return ID;
+            case Label:
+                return LABEL;
+            case Len:
+                return LEN;
+            case Key:
+                return property.key.name;
+            default:
+                throw new OpArgIllegalException(OpArgIllegalException.Cause.INVALID_TYPE, "invalid type");
+        }
     }
 }
 

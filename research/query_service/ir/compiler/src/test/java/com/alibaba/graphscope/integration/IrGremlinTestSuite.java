@@ -22,6 +22,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package com.alibaba.graphscope.integration;
 
 import org.apache.tinkerpop.gremlin.AbstractGremlinSuite;

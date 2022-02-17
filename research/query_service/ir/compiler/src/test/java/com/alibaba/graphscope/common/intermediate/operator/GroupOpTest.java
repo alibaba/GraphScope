@@ -58,7 +58,7 @@ public class GroupOpTest {
     @Test
     public void groupTest() throws IOException {
         GroupOp op = new GroupOp();
-        Pair<FfiVariable.ByValue, FfiAlias.ByValue> groupKey = Pair.with(ArgUtils.asNoneVar(),
+        Pair<FfiVariable.ByValue, FfiAlias.ByValue> groupKey = Pair.with(ArgUtils.asFfiNoneVar(),
                 ArgUtils.asFfiAlias("keys", false));
         op.setGroupByKeys(new OpArg(Collections.singletonList(groupKey), Function.identity()));
 
@@ -72,8 +72,7 @@ public class GroupOpTest {
     @Test
     public void groupByKeyTest() throws IOException {
         GroupOp op = new GroupOp();
-        FfiProperty.ByValue keyP = ArgUtils.asFfiProperty("name");
-        Pair<FfiVariable.ByValue, FfiAlias.ByValue> groupKey = Pair.with((ArgUtils.asVarPropertyOnly(keyP)),
+        Pair<FfiVariable.ByValue, FfiAlias.ByValue> groupKey = Pair.with(ArgUtils.asFfiVar("", "name"),
                 ArgUtils.asFfiAlias("keys_name", false));
         op.setGroupByKeys(new OpArg(Collections.singletonList(groupKey), Function.identity()));
 
@@ -87,8 +86,7 @@ public class GroupOpTest {
     @Test
     public void groupByKeyByCountTest() throws IOException {
         GroupOp op = new GroupOp();
-        FfiProperty.ByValue keyP = ArgUtils.asFfiProperty("name");
-        Pair<FfiVariable.ByValue, FfiAlias.ByValue> groupKey = Pair.with((ArgUtils.asVarPropertyOnly(keyP)),
+        Pair<FfiVariable.ByValue, FfiAlias.ByValue> groupKey = Pair.with(ArgUtils.asFfiVar("", "name"),
                 ArgUtils.asFfiAlias("keys_name", false));
         op.setGroupByKeys(new OpArg(Collections.singletonList(groupKey), Function.identity()));
 
