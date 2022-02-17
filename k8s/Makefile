@@ -39,7 +39,7 @@ else
 					   -v ${HOME}/.cargo/registry:/home/graphscope/.cargo/registry
 endif
 
-VERSION ?= v0.3.19
+VERSION ?= latest
 VINEYARD_VERSION ?= v0.3.19
 PROFILE ?= release
 
