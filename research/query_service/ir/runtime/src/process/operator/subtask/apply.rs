@@ -33,9 +33,6 @@ struct ApplyOperator {
 
 impl BinaryFunction<Record, Vec<Record>, Option<Record>> for ApplyOperator {
     fn exec(&self, mut parent: Record, sub: Vec<Record>) -> FnResult<Option<Record>> {
-        if sub.len() > 1 {
-            Err(FnExecError::unsupported_error("Have not support multiple subtask outputs yet"))?
-        }
         match self.join_kind {
             JoinKind::Inner => {
                 if sub.is_empty() {

@@ -134,7 +134,10 @@ impl TagKey {
                 }
             };
 
-            Ok(CommonObject::Prop(prop_obj).into())
+            match prop_obj {
+                Object::None => Ok(CommonObject::None.into()),
+                _ => Ok(CommonObject::Prop(prop_obj).into()),
+            }
         } else {
             Err(FnExecError::get_tag_error(
                 "Get key failed when attempt to get prop_key from a non-graph element",
