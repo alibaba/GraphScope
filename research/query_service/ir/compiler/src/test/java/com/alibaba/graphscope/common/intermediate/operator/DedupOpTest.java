@@ -34,7 +34,7 @@ public class DedupOpTest {
     @Test
     public void dedupTest() throws IOException {
         DedupOp op = new DedupOp();
-        FfiVariable.ByValue dedupKey = ArgUtils.asNoneVar();
+        FfiVariable.ByValue dedupKey = ArgUtils.asFfiNoneVar();
         op.setDedupKeys(new OpArg(Collections.singletonList(dedupKey), Function.identity()));
 
         irPlan.appendInterOp(-1, op);

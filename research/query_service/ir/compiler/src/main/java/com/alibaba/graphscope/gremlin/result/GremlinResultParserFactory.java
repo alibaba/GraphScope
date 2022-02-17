@@ -1,10 +1,25 @@
+/*
+ * Copyright 2020 Alibaba Group Holding Limited.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.alibaba.graphscope.gremlin.result;
 
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.gaia.proto.Common;
 import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.alibaba.graphscope.gaia.proto.OuterExpression;
-import com.alibaba.graphscope.gremlin.transform.OpArgTransformFactory;
 import com.alibaba.graphscope.gremlin.exception.GremlinResultParserException;
 import org.apache.tinkerpop.gremlin.structure.Element;
 import org.slf4j.Logger;
@@ -45,7 +60,7 @@ public enum GremlinResultParserFactory implements GremlinResultParser {
             IrResult.Record record = results.getRecord();
             Map<String, Object> projectResult = new HashMap<>();
             record.getColumnsList().forEach(column -> {
-                String tag = getTagFromColumnKey(column.getNameOrId());
+                String tag = getColumnKeyAsResultKey(column.getNameOrId());
                 Object parseElement = ParserUtils.parseElement(column.getEntry().getElement());
                 if (parseElement instanceof Map) {
                     Map<List, Object> projectTags = (Map<List, Object>) parseElement;
@@ -74,11 +89,10 @@ public enum GremlinResultParserFactory implements GremlinResultParser {
             }
         }
 
-        // project_a
-        // a_name
-        // name
-        // none -> head
-        private String getTagFromColumnKey(OuterExpression.NameOrId columnKey) {
+        // a_1 -> a, i.e. g.V().as("a").select("a")
+        // name_1 -> name, i.e. g.V().values("name")
+        // a_name_1 -> a, i.e. g.V().as("a").select("a").by("name")
+        private String getColumnKeyAsResultKey(OuterExpression.NameOrId columnKey) {
             if (columnKey.getItemCase() == OuterExpression.NameOrId.ItemCase.ITEM_NOT_SET) {
                 return "";
             }
@@ -87,11 +101,8 @@ public enum GremlinResultParserFactory implements GremlinResultParser {
             if (tagProperty.length == 0) {
                 throw new GremlinResultParserException("column key " + key + " is invalid");
             }
-            // project self
-            if (key.startsWith(OpArgTransformFactory.PROJECT_SELF_PREFIX)) {
-                return tagProperty[1];
-            } else if (tagProperty.length == 1) {
-                // head
+            // head
+            if (tagProperty.length == 1) {
                 return "";
             } else {
                 return tagProperty[0];

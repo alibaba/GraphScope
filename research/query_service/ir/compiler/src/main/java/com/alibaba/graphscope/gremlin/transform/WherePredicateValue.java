@@ -14,10 +14,17 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.common.intermediate.strategy;
+package com.alibaba.graphscope.gremlin.transform;
 
-import com.alibaba.graphscope.common.intermediate.InterOpCollection;
+public class WherePredicateValue {
+    private String predicateValue;
 
-public interface InterOpStrategy {
-    void apply(InterOpCollection opCollection);
+    public WherePredicateValue(String predicateValue) {
+        this.predicateValue = predicateValue;
+    }
+
+    @Override
+    public String toString() {
+        return predicateValue;
+    }
 }

@@ -185,12 +185,14 @@ traversalMethod_order
 // by(select("a"), 'asc' | 'desc')
 // by(select("a").by("name"), 'asc' | 'desc')
 // by(select("a").by(valueMap("name")), 'asc' | 'desc')
+// by(out().count()), by(out().count(), desc)
 traversalMethod_orderby
     : 'by' LPAREN RPAREN
     | 'by' LPAREN traversalOrder RPAREN
     | 'by' LPAREN stringLiteral (COMMA traversalOrder)? RPAREN
     | 'by' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_values (COMMA traversalOrder)? RPAREN
     | 'by' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_select (COMMA traversalOrder)? RPAREN
+    | 'by' LPAREN nestedTraversal (COMMA traversalOrder)? RPAREN
     ;
 
 traversalMethod_orderby_list
@@ -206,10 +208,12 @@ traversalMethod_select
 // by()
 // by("name")
 // by(valueMap())
+// by(out().count())
 traversalMethod_selectby
     : 'by' LPAREN RPAREN
     | 'by' LPAREN stringLiteral RPAREN
     | 'by' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_valueMap RPAREN
+    | 'by' LPAREN nestedTraversal RPAREN
     ;
 
 traversalMethod_selectby_list
@@ -234,10 +238,12 @@ traversalMethod_groupCount
 // group().by('name')
 // group().by(values('name'))
 // group().by(values('name').as('key'))
+// group().by(out().count())
 traversalMethod_group_keyby
     : 'by' LPAREN RPAREN
     | 'by' LPAREN stringLiteral RPAREN
     | 'by' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_values (DOT traversalMethod_as)? RPAREN
+    | 'by' LPAREN nestedTraversal RPAREN
     ;
 
 // group().by(...).by()

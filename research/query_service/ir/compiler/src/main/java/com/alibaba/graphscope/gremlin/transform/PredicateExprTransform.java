@@ -20,6 +20,7 @@ import com.alibaba.graphscope.gremlin.antlr4.AnyValue;
 import org.apache.tinkerpop.gremlin.process.traversal.Compare;
 import org.apache.tinkerpop.gremlin.process.traversal.Contains;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
+import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.util.AndP;
 import org.apache.tinkerpop.gremlin.process.traversal.util.ConnectiveP;
 
@@ -28,7 +29,7 @@ import java.util.function.BiPredicate;
 import java.util.function.Function;
 
 // transform predicate into expression
-public interface PredicateExprTransform extends Function {
+public interface PredicateExprTransform extends Function<Step, String> {
     default String flatPredicate(String subject, P predicate) {
         String expr = "";
         if (predicate instanceof ConnectiveP) {
@@ -119,7 +120,7 @@ public interface PredicateExprTransform extends Function {
     default String getPredicateExpr(String subject, String predicate, Object value) {
         String subjectKeyExist = getExprIfPropertyExist(subject);
         String valueKeyExist = "";
-        if (value instanceof PredicateExprTransformFactory.WherePredicateValue) {
+        if (value instanceof WherePredicateValue) {
             valueKeyExist = getExprIfPropertyExist(value.toString());
         }
         String predicateExpr = String.format("%s %s %s", subject, predicate, getPredicateValue(value));
