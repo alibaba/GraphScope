@@ -158,14 +158,14 @@ def _get_extra_data():
             "/opt/vineyard/include/": os.path.join(RUNTIME_ROOT, "include"),
             "/usr/local/include/arrow": os.path.join(RUNTIME_ROOT, "include"),
             "/usr/local/include/boost": os.path.join(RUNTIME_ROOT, "include"),
-            "/usr/local/include/double-conversion": os.path.join(
-                RUNTIME_ROOT, "include"
-            ),
-            "/usr/local/include/folly": os.path.join(RUNTIME_ROOT, "include"),
             "/usr/local/include/glog": os.path.join(RUNTIME_ROOT, "include"),
             "/usr/local/include/gflags": os.path.join(RUNTIME_ROOT, "include"),
             "/usr/local/include/google": os.path.join(RUNTIME_ROOT, "include"),
         }
+        if platform.system() == "Linux":
+            data["/usr/include/rapidjson"] = os.path.join(RUNTIME_ROOT, "include")
+        elif platform.system() == "Darwin":
+            data["/usr/local/opt/rapidjson"] = os.path.join(RUNTIME_ROOT, "include")
         # precompiled
         data.update(
             {

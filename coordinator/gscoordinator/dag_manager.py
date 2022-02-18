@@ -17,11 +17,21 @@
 #
 
 import copy
+import os
 import queue
 from enum import Enum
+from typing import Sequence
 
+from graphscope.proto import message_pb2
 from graphscope.proto import op_def_pb2
 from graphscope.proto import types_pb2
+
+# defaults to 256MB
+CHUNK_SIZE = (
+    int(os.environ["GS_GRPC_CHUNK_SIZE"])
+    if "GS_GRPC_CHUNK_SIZE" in os.environ
+    else 256 * 1024 * 1024 - 1
+)
 
 
 class GSEngine(Enum):
@@ -68,42 +78,77 @@ class DAGManager(object):
         types_pb2.OUTPUT,  # spawn an io stream to read/write data from/to vineyard
     ]
 
-    def __init__(self, dag_def: op_def_pb2.DagDef):
-        self._dag_def = dag_def
-        self._split_dag_def_queue = queue.Queue()
-
+    def __init__(self, request_iterator: Sequence[message_pb2.RunStepRequest]):
+        self._dag_queue = queue.Queue()
+        req_head = None
+        # a list of chunks
+        req_bodies = []
+        for req in request_iterator:
+            if req.HasField("head"):
+                req_head = req
+            else:
+                req_bodies.append(req)
         # split dag
-        split_dag_def = op_def_pb2.DagDef()
-        split_dag_def_for = GSEngine.analytical_engine
-        for op in self._dag_def.op:
-            if op.op in self._analytical_engine_split_op:
-                if split_dag_def.op:
-                    self._split_dag_def_queue.put((split_dag_def_for, split_dag_def))
-                split_dag_def = op_def_pb2.DagDef()
-                split_dag_def_for = GSEngine.analytical_engine
-            if op.op in self._interactive_engine_split_op:
-                if split_dag_def.op:
-                    self._split_dag_def_queue.put((split_dag_def_for, split_dag_def))
-                split_dag_def = op_def_pb2.DagDef()
-                split_dag_def_for = GSEngine.interactive_engine
-            if op.op in self._learning_engine_split_op:
-                if split_dag_def.op:
-                    self._split_dag_def_queue.put((split_dag_def_for, split_dag_def))
-                split_dag_def = op_def_pb2.DagDef()
-                split_dag_def_for = GSEngine.learning_engine
-            if op.op in self._coordinator_split_op:
-                if split_dag_def.op:
-                    self._split_dag_def_queue.put((split_dag_def_for, split_dag_def))
-                split_dag_def = op_def_pb2.DagDef()
-                split_dag_def_for = GSEngine.coordinator
-            split_dag_def.op.extend([copy.deepcopy(op)])
-        if len(split_dag_def.op) > 0:
-            self._split_dag_def_queue.put((split_dag_def_for, split_dag_def))
+        dag = op_def_pb2.DagDef()
+        dag_for = GSEngine.analytical_engine
+        dag_bodies = []
+        for op in req_head.head.dag_def.op:
+            if self.is_splited_op(op):
+                if dag.op:
+                    self._dag_queue.put((dag_for, dag, dag_bodies))
+                # init empty dag
+                dag = op_def_pb2.DagDef()
+                dag_for = self.get_op_exec_engine(op)
+                dag_bodies = []
+            # select op
+            dag.op.extend([copy.deepcopy(op)])
+            for req_body in req_bodies:
+                # select chunks belong to this op
+                if req_body.body.op_key == op.key:
+                    dag_bodies.append(req_body)
+        if dag.op:
+            self._dag_queue.put((dag_for, dag, dag_bodies))
+
+    def is_splited_op(self, op):
+        return op.op in (
+            self._analytical_engine_split_op
+            + self._interactive_engine_split_op
+            + self._learning_engine_split_op
+            + self._coordinator_split_op
+        )
+
+    def get_op_exec_engine(self, op):
+        op_type = op.op
+        if op_type in self._analytical_engine_split_op:
+            return GSEngine.analytical_engine
+        if op_type in self._interactive_engine_split_op:
+            return GSEngine.interactive_engine
+        if op_type in self._learning_engine_split_op:
+            return GSEngine.learning_engine
+        if op_type in self._coordinator_split_op:
+            return GSEngine.coordinator
+        raise RuntimeError("Op {0} get execution engine failed.".format(op_type))
 
     def empty(self):
-        return self._split_dag_def_queue.empty()
+        return self._dag_queue.empty()
 
-    def get_next_dag(self):
-        if not self._split_dag_def_queue.empty():
-            return self._split_dag_def_queue.get()
-        return None
+    def next_dag(self):
+        if not self._dag_queue.empty():
+            return self._dag_queue.get()
+        raise RuntimeError("Get element from empty queue.")
+
+
+def split_op_result(op_result: op_def_pb2.OpResult):
+    """Split op result into a list of chunk.
+
+    Note that this function may modify `result` attribute of op_result.
+    """
+    if op_result.has_large_result:
+        result = op_result.result
+        splited_result = [
+            result[i : i + CHUNK_SIZE] for i in range(0, len(result), CHUNK_SIZE)
+        ]
+        # clear result
+        op_result.result = b""
+        return splited_result
+    return []

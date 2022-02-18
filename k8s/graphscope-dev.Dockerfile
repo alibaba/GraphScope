@@ -4,7 +4,7 @@
 # the result image includes all runtime stuffs of graphscope, with analytical engine,
 # learning engine and interactive engine installed.
 
-ARG BASE_VERSION=v0.3.16
+ARG BASE_VERSION=v0.3.19
 FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:$BASE_VERSION as builder
 
 ARG NETWORKX=ON
@@ -48,7 +48,7 @@ RUN export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/graphscope/lib:/opt/graphscope/
 RUN source ~/.bashrc \
     && echo "build with profile: $profile" \
     && cd ${HOME}/gs && make BUILD_TYPE=$profile gie
-    
+
 
 # # # # # # # # # # # # # # # # # # # # # #
 # generate final runtime image

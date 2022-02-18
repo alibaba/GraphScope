@@ -558,6 +558,7 @@ Details of the parameters are listed below:
 After data building completed, you can find the output files in the `output.path` of HDFS. The output files includes a meta file named `META`, an empty file named `_SUCCESS`, and some data files that one for each partition named in the pattern of `part-r-xxxxx.sst`. The layout of the output directory should look like:
 
 .. code:: plain-text
+
     /tmp/data_output
       |- META
       |- _SUCCESS

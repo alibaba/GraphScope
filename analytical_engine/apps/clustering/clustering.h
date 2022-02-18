@@ -25,7 +25,13 @@ limitations under the License.
 
 namespace gs {
 /**
- * @brief Compute the clustering coefficient for vertices
+ * @brief An implementation of Clustering Coefficient for vertices, which only
+ * works on directed graphs. For undirected graphs, see grape::LCC.
+ *
+ * This app inherits ParallelAppBase. Messages can be sent in
+ * parallel to the evaluation. This strategy improve performance by overlapping
+ * the communication time and the evaluation time.
+ *
  * @tparam FRAG_T
  */
 template <typename FRAG_T>

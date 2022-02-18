@@ -24,6 +24,7 @@ import com.alibaba.graphscope.ds.VertexRange;
 import com.alibaba.graphscope.ds.VertexSet;
 import com.alibaba.graphscope.fragment.IFragment;
 import com.alibaba.graphscope.parallel.ParallelMessageManager;
+import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
 import com.alibaba.graphscope.utils.IntArrayWrapper;
 
 import org.slf4j.Logger;
@@ -41,7 +42,6 @@ public class BFSContext extends VertexDataContext<IFragment<Long, Long, Double, 
 
     public long sourceOid;
     public IntArrayWrapper partialResults;
-    // public BooleanArrayWrapper currendInnerUpdated;
     public VertexSet currentInnerUpdated, nextInnerUpdated;
     public int currentDepth;
     public int threadNum;
@@ -82,7 +82,7 @@ public class BFSContext extends VertexDataContext<IFragment<Long, Long, Double, 
             BufferedWriter bufferedWriter = new BufferedWriter(fileWritter);
             VertexRange<Long> innerNodes = frag.innerVertices();
 
-            Vertex<Long> cur = innerNodes.begin();
+            Vertex<Long> cur = FFITypeFactoryhelper.newVertexLong();
             for (long index = 0; index < frag.getInnerVerticesNum(); ++index) {
                 cur.SetValue(index);
                 Long oid = frag.getId(cur);

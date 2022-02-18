@@ -128,7 +128,7 @@ def test_demo_on_hdfs(gs_session_distributed):
             "lastName",
             "gender",
             "birthday",
-            "creationDate",
+            # "creationDate",
             "locationIP",
             "browserUsed",
         ],
@@ -142,7 +142,7 @@ def test_demo_on_hdfs(gs_session_distributed):
             delimiter="|",
         ),
         "knows",
-        ["creationDate"],
+        [],
         src_label="person",
         dst_label="person",
     )

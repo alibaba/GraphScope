@@ -722,7 +722,7 @@ class DynamicVertexDataContext(collections.abc.Mapping):
     def __getitem__(self, key):
         if key not in self._graph._graph:
             raise KeyError(key)
-        op = dag_utils.get_context_data(self, json.dumps([key]))
+        op = dag_utils.get_context_data(self, json.dumps(key))
         return dict(json.loads(op.eval()))
 
     def __iter__(self):

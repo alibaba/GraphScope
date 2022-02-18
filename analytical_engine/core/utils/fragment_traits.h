@@ -13,31 +13,22 @@
  * limitations under the License.
  */
 
-#ifndef ANALYTICAL_ENGINE_APPS_BOUNDARY_UTILS_H_
-#define ANALYTICAL_ENGINE_APPS_BOUNDARY_UTILS_H_
+#ifndef ANALYTICAL_ENGINE_CORE_UTILS_FRAGMENT_TRAITS_H_
+#define ANALYTICAL_ENGINE_CORE_UTILS_FRAGMENT_TRAITS_H_
 
-#include <string>
+#include "vineyard/graph/fragment/fragment_traits.h"
 
 #include "core/object/dynamic.h"
 
-namespace gs {
-template <typename oid_t>
-oid_t dynamic_to_oid(const rapidjson::Value& node) {}
+namespace vineyard {
 
+#if defined(NETWORKX)
 template <>
-int64_t dynamic_to_oid<int64_t>(const rapidjson::Value& node) {
-  return node.GetInt64();
-}
+struct TypeName<gs::dynamic::Value> {
+  static const char* Get() { return "dynamic::Value"; }
+};
+#endif
 
-template <>
-std::string dynamic_to_oid<std::string>(const rapidjson::Value& node) {
-  return node.GetString();
-}
+}  // namespace vineyard
 
-template <>
-dynamic::Value dynamic_to_oid<dynamic::Value>(const rapidjson::Value& node) {
-  return dynamic::Value(node);
-}
-}  // namespace gs
-
-#endif  // ANALYTICAL_ENGINE_APPS_BOUNDARY_UTILS_H_
+#endif  // ANALYTICAL_ENGINE_CORE_UTILS_FRAGMENT_TRAITS_H_

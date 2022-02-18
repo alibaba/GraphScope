@@ -126,7 +126,7 @@ class BFSGeneric : public AppBase<FRAG_T, BFSGenericContext<FRAG_T>>,
     auto inner_vertices = frag.InnerVertices();
     auto& visited = ctx.visited;
     auto& predecessor = ctx.predecessor;
-    auto source_id = ctx.source_id;
+    auto& source_id = ctx.source_id;
     std::vector<std::pair<vid_t, vid_t>> bfs_edges;
 
     if (output_format == "edges") {

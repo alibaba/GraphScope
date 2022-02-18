@@ -239,7 +239,7 @@ In this example, we use ``IdentityEncoder`` that returns itself, because
 the features of Cora are already in vector formats. For both the
 discrete and continuous features, we can use ``WideNDeepEncoder``, To
 learn more encoders, please refer to
-`feature encoder <https://github.com/alibaba/graph-learn/blob/master/graphlearn/python/model/tf/encoders/feature_encoder.py>`_. 
+`feature encoder <https://github.com/alibaba/graph-learn/blob/graphscope/graphlearn/python/model/tf/encoders/feature_encoder.py>`_.
 Then, we use the
 ``GCNConv`` layer to construct the graph encoder. For each node in GCN,
 we sample all of its neighbors, and organize them in a sparse format.
@@ -314,7 +314,7 @@ Next, we use ``LocalTFTrainer`` to train on a single-machine.
        train(config, g)
 
 This concludes how to build a GCN model. 
-Please refer to `GCN example <https://github.com/alibaba/graph-learn/tree/master/examples/tf/gcn>`_ for the complete codes.
+Please refer to `GCN example <https://github.com/alibaba/graph-learn/tree/graphscope/examples/tf/gcn>`_ for the complete codes.
 
 We have implemented a rich set of popular models, 
 including GCN, GAT, GraphSage, DeepWalk, LINE, TransE,

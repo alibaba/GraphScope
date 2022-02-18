@@ -68,13 +68,6 @@ def parse_ret_as_dict(func):
     return wrapper
 
 
-def json_encoder(obj):
-    if isinstance(obj, (np.generic, np.ndarray)):
-        return obj.item()
-    else:
-        raise TypeError("Unserializable object {} of type {}".format(obj, type(obj)))
-
-
 def clear_cache(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):

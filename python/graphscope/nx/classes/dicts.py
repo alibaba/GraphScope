@@ -16,7 +16,6 @@
 # limitations under the License.
 #
 
-import collections
 from collections.abc import MutableMapping
 
 from graphscope.proto import types_pb2
@@ -61,7 +60,7 @@ class NodeDict(MutableMapping):
             batch = ret["batch"]
             count += len(batch)
             for node in batch:
-                yield tuple(node["id"]) if isinstance(node["id"], list) else node["id"]
+                yield tuple(node) if isinstance(node, list) else node
 
 
 class NodeAttrDict(MutableMapping):
@@ -140,7 +139,7 @@ class AdjDict(MutableMapping):
             batch = ret["batch"]
             count += len(batch)
             for node in batch:
-                yield tuple(node["id"]) if isinstance(node["id"], list) else node["id"]
+                yield tuple(node) if isinstance(node, list) else node
 
     def __repr__(self):
         return f"{type(self).__name__}"

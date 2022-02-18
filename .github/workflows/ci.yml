@@ -348,6 +348,10 @@ jobs:
         # download dataset
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
 
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
+      if: false
+
     - name: Basic Test
       if: steps.nx-filter.outputs.basic == 'true' || (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope')
       env:
@@ -355,7 +359,8 @@ jobs:
         GS_TEST_DIR: ${{ github.workspace }}/gstest
       run: |
         pip3 show networkx
-        python3 -m pytest --exitfirst -s -v \
+        # python3 -m pytest --exitfirst -s -v \
+        python3 -m pytest -s -v \
             $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/nx/tests \
             --ignore=$(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/nx/tests/convert
 

@@ -24,12 +24,11 @@
 #include <utility>
 #include <vector>
 
-#include "folly/dynamic.h"
-#include "folly/json.h"
 #include "grape/grape.h"
 
 #include "apps/boundary/utils.h"
 #include "core/context/tensor_context.h"
+#include "core/object/dynamic.h"
 
 namespace gs {
 
@@ -61,8 +60,9 @@ class AllSimplePathsContext
 
     // init targets.
     vid_t gid;
-    folly::dynamic target_nodes_array = folly::parseJson(targets_json);
-    for (const auto& node : target_nodes_array) {
+    dynamic::Value target_nodes_array;
+    dynamic::Parse(targets_json, target_nodes_array);
+    for (auto& node : target_nodes_array) {
       frag.Oid2Gid(dynamic_to_oid<oid_t>(node), gid);
       targets.insert(gid);
     }

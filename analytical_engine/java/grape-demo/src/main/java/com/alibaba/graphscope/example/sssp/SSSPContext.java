@@ -25,6 +25,7 @@ import com.alibaba.graphscope.ds.VertexSet;
 import com.alibaba.graphscope.fragment.IFragment;
 import com.alibaba.graphscope.parallel.ParallelMessageManager;
 import com.alibaba.graphscope.utils.AtomicDoubleArrayWrapper;
+import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,7 +75,6 @@ public class SSSPContext extends VertexDataContext<IFragment<Long, Long, Long, D
             threadNum = jsonObject.getInteger("threadNum");
         }
         Long allVertexNum = frag.getVerticesNum();
-        // partialResults = new AtomicDouble(allVertexNum.intValue(), Double.MAX_VALUE);
         partialResults = new AtomicDoubleArrayWrapper(allVertexNum.intValue(), Double.MAX_VALUE);
         curModified = new VertexSet(0, allVertexNum.intValue());
         nextModified = new VertexSet(0, allVertexNum.intValue());
@@ -97,18 +97,14 @@ public class SSSPContext extends VertexDataContext<IFragment<Long, Long, Long, D
             FileWriter fileWritter = new FileWriter(filePath);
             BufferedWriter bufferedWriter = new BufferedWriter(fileWritter);
             VertexRange<Long> innerNodes = frag.innerVertices();
-
-            // ArrayListWrapper<Long> partialResults = this.getPartialResults();
             logger.info(
                     frag.getInnerVerticesNum()
                             + " "
-                            + innerNodes.begin().GetValue()
+                            + innerNodes.beginValue()
                             + " "
-                            + innerNodes.end().GetValue());
-            // for (Vertex<Long> cur = innerNodes.begin(); cur.GetValue() !=
-            // innerNodes.end().GetValue();
-            // cur.inc()) {
-            Vertex<Long> cur = innerNodes.begin();
+                            + innerNodes.endValue());
+
+            Vertex<Long> cur = FFITypeFactoryhelper.newVertexLong();
             for (long index = 0; index < frag.getInnerVerticesNum(); ++index) {
                 cur.SetValue(index);
                 Long oid = frag.getId(cur);

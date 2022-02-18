@@ -22,13 +22,12 @@
 #include <utility>
 #include <vector>
 
-#ifdef NETWORKX
-#include "folly/dynamic.h"
-#endif
-
 #include "grape/app/context_base.h"
 #include "vineyard/basic/ds/tensor.h"
 
+#ifdef NETWORKX
+#include "core/object/dynamic.h"
+#endif
 #include "core/config.h"
 #include "core/context/context_protocols.h"
 #include "core/context/i_context.h"
@@ -57,18 +56,20 @@ inline InArchive& operator<<(InArchive& in_archive,
 
 #ifdef NETWORKX
 inline InArchive& operator<<(
-    InArchive& in_archive, const gs::trivial_tensor_t<folly::dynamic>& tensor) {
+    InArchive& in_archive,
+    const gs::trivial_tensor_t<gs::dynamic::Value>& tensor) {
   size_t size = tensor.size();
   if (size > 0) {
-    auto& first_elem = tensor.data()[0];
-    CHECK(first_elem.isInt() || first_elem.isDouble());
-    if (first_elem.isInt()) {
+    auto type = gs::dynamic::GetType(tensor.data()[0]);
+    CHECK(type == gs::dynamic::Type::kInt64Type ||
+          type == gs::dynamic::Type::kDoubleType);
+    if (type == gs::dynamic::Type::kInt64Type) {
       for (size_t i = 0; i < tensor.size(); i++) {
-        in_archive << tensor.data()[i].asInt();
+        in_archive << tensor.data()[i].GetInt64();
       }
-    } else if (first_elem.isDouble()) {
+    } else {
       for (size_t i = 0; i < tensor.size(); i++) {
-        in_archive << tensor.data()[i].asDouble();
+        in_archive << tensor.data()[i].GetDouble();
       }
     }
   }
@@ -474,7 +475,7 @@ class TensorContextWrapper : public ITensorContextWrapper {
 
 #ifdef NETWORKX
 /**
- * @brief This is the specialized TensorContextWrapper for folly::dynamic type
+ * @brief This is the specialized TensorContextWrapper for dynamic::Value type
  * of oid
  * @tparam FRAG_T
  * @tparam DATA_T
@@ -482,7 +483,7 @@ class TensorContextWrapper : public ITensorContextWrapper {
 template <typename FRAG_T, typename DATA_T>
 class TensorContextWrapper<
     FRAG_T, DATA_T,
-    typename std::enable_if<std::is_same<DATA_T, folly::dynamic>::value>::type>
+    typename std::enable_if<std::is_same<DATA_T, dynamic::Value>::value>::type>
     : public ITensorContextWrapper {
   using fragment_t = FRAG_T;
   using oid_t = typename fragment_t::oid_t;
@@ -521,14 +522,6 @@ class TensorContextWrapper<
     BOOST_LEAF_AUTO(first_shape, get_non_empty_shape(comm_spec, tensor, axis));
     BOOST_LEAF_AUTO(data_type, get_dynamic_type(comm_spec, tensor));
 
-    if (data_type != folly::dynamic::INT64 &&
-        data_type != folly::dynamic::DOUBLE &&
-        data_type != folly::dynamic::NULLT) {
-      RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
-                      "Only support folly::dynamic::INT64, "
-                      "folly::dynamic::DOUBLE or folly::dynamic::NULLT");
-    }
-
     int64_t local_num = shape.empty() ? 0 : shape[axis], total_num;
 
     if (comm_spec.fid() == 0) {
@@ -539,7 +532,14 @@ class TensorContextWrapper<
       for (auto dim_size : first_shape) {
         *arc << static_cast<int64_t>(dim_size);
       }
-      *arc << static_cast<int>(data_type);
+      if (data_type == dynamic::Type::kInt64Type) {
+        *arc << static_cast<int>(vineyard::TypeToInt<int64_t>::value);
+      } else if (data_type == dynamic::Type::kDoubleType) {
+        *arc << static_cast<int>(vineyard::TypeToInt<double>::value);
+      } else {
+        RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                        "Only support int64, double");
+      }
       size_t total_size = first_shape.empty() ? 0 : 1;
       for (auto e : first_shape) {
         total_size *= e;
@@ -587,7 +587,7 @@ class TensorContextWrapper<
 
     BOOST_LEAF_AUTO(data_type, get_dynamic_type(comm_spec, tensor));
 
-    if (data_type == folly::dynamic::INT64) {
+    if (data_type == dynamic::Type::kInt64Type) {
       for (size_t col_idx = 0; col_idx < n_col; col_idx++) {
         if (comm_spec.worker_id() == grape::kCoordinatorRank) {
           *arc << "Col " + std::to_string(col_idx);  // Column name
@@ -598,11 +598,11 @@ class TensorContextWrapper<
 
         for (size_t row_idx = 0; row_idx < n_row; row_idx++) {
           auto idx = row_idx * n_col + col_idx;
-          *arc << tensor.data()[idx].asInt();
+          *arc << tensor.data()[idx].GetInt64();
         }
         gather_archives(*arc, comm_spec, old_size);
       }
-    } else if (data_type == folly::dynamic::DOUBLE) {
+    } else if (data_type == dynamic::Type::kDoubleType) {
       for (size_t col_idx = 0; col_idx < n_col; col_idx++) {
         if (comm_spec.worker_id() == grape::kCoordinatorRank) {
           *arc << "Col " + std::to_string(col_idx);
@@ -614,14 +614,13 @@ class TensorContextWrapper<
         for (size_t row_idx = 0; row_idx < n_row; row_idx++) {
           auto idx = row_idx * n_col + col_idx;
 
-          *arc << tensor.data()[idx].asDouble();
+          *arc << tensor.data()[idx].GetDouble();
         }
         gather_archives(*arc, comm_spec, old_size);
       }
     } else {
-      RETURN_GS_ERROR(
-          vineyard::ErrorCode::kInvalidOperationError,
-          "Only support folly::dynamic::INT64 or folly::dynamic::DOUBLE");
+      RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                      "Only support int64 or double");
     }
     return arc;
   }
@@ -669,24 +668,24 @@ class TensorContextWrapper<
 
     vineyard::ObjectID tensor_chunk_id;
 
-    if (data_type == folly::dynamic::INT64) {
+    if (data_type == dynamic::Type::kInt64Type) {
       vineyard::TensorBuilder<int64_t> tensor_builder(client, vy_tensor_shape,
                                                       partition_index);
 
       for (size_t offset = 0; offset < tensor.size(); offset++) {
-        tensor_builder.data()[offset] = tensor.data()[offset].asInt();
+        tensor_builder.data()[offset] = tensor.data()[offset].GetInt64();
       }
 
       auto vy_tensor = std::dynamic_pointer_cast<vineyard::Tensor<int64_t>>(
           tensor_builder.Seal(client));
       VY_OK_OR_RAISE(vy_tensor->Persist(client));
       tensor_chunk_id = vy_tensor->id();
-    } else if (data_type == folly::dynamic::STRING) {
-      vineyard::TensorBuilder<std::string> tensor_builder(
-          client, vy_tensor_shape, partition_index);
+    } else if (data_type == dynamic::Type::kDoubleType) {
+      vineyard::TensorBuilder<double> tensor_builder(client, vy_tensor_shape,
+                                                     partition_index);
 
       for (size_t offset = 0; offset < tensor.size(); offset++) {
-        tensor_builder.data()[offset] = tensor.data()[offset].asString();
+        tensor_builder.data()[offset] = tensor.data()[offset].GetDouble();
       }
 
       auto vy_tensor = std::dynamic_pointer_cast<vineyard::Tensor<std::string>>(
@@ -694,9 +693,8 @@ class TensorContextWrapper<
       VY_OK_OR_RAISE(vy_tensor->Persist(client));
       tensor_chunk_id = vy_tensor->id();
     } else {
-      RETURN_GS_ERROR(
-          vineyard::ErrorCode::kInvalidOperationError,
-          "Only support folly::dynamic::INT64 or folly::dynamic::DOUBLE");
+      RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                      "Only support int64 or double");
     }
 
     std::vector<int64_t> global_shape;
@@ -740,7 +738,7 @@ class TensorContextWrapper<
 
     BOOST_LEAF_AUTO(data_type, get_dynamic_type(comm_spec, tensor));
 
-    if (data_type == folly::dynamic::INT64) {
+    if (data_type == dynamic::Type::kInt64Type) {
       for (size_t col_idx = 0; col_idx < n_col; col_idx++) {
         std::vector<int64_t> shape{static_cast<int64_t>(n_row)};
         auto tensor_builder =
@@ -748,11 +746,11 @@ class TensorContextWrapper<
 
         for (auto row_idx = 0; row_idx < n_row; row_idx++) {
           auto idx = row_idx * n_col + col_idx;
-          tensor_builder->data()[row_idx] = tensor.data()[idx].asInt();
+          tensor_builder->data()[row_idx] = tensor.data()[idx].GetInt64();
         }
         df_builder.AddColumn("Col " + std::to_string(col_idx), tensor_builder);
       }
-    } else if (data_type == folly::dynamic::DOUBLE) {
+    } else if (data_type == dynamic::Type::kDoubleType) {
       for (size_t col_idx = 0; col_idx < n_col; col_idx++) {
         std::vector<int64_t> shape{static_cast<int64_t>(n_row)};
         auto tensor_builder =
@@ -760,14 +758,13 @@ class TensorContextWrapper<
 
         for (auto row_idx = 0; row_idx < n_row; row_idx++) {
           auto idx = row_idx * n_col + col_idx;
-          tensor_builder->data()[row_idx] = tensor.data()[idx].asInt();
+          tensor_builder->data()[row_idx] = tensor.data()[idx].GetDouble();
         }
         df_builder.AddColumn("Col " + std::to_string(col_idx), tensor_builder);
       }
     } else {
-      RETURN_GS_ERROR(
-          vineyard::ErrorCode::kInvalidOperationError,
-          "Only support folly::dynamic::INT64 or folly::dynamic::DOUBLE");
+      RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                      "Only support int64 or double");
     }
 
     auto df = df_builder.Seal(client);
@@ -782,29 +779,29 @@ class TensorContextWrapper<
   }
 
  private:
-  bl::result<folly::dynamic::Type> get_dynamic_type(
+  bl::result<dynamic::Type> get_dynamic_type(
       const grape::CommSpec& comm_spec,
-      const trivial_tensor_t<folly::dynamic>& tensor) {
-    int type =
-        tensor.size() == 0 ? folly::dynamic::NULLT : tensor.data()[0].type();
+      const trivial_tensor_t<dynamic::Value>& tensor) {
+    int type = tensor.size() == 0 ? dynamic::Type::kNullType
+                                  : dynamic::GetType(tensor.data()[0]);
     std::vector<int> types;
     vineyard::GlobalAllGatherv<int>(type, types, comm_spec);
 
-    type = folly::dynamic::NULLT;
+    type = dynamic::Type::kNullType;
     for (auto e : types) {
-      if (e != folly::dynamic::NULLT) {
+      if (e != dynamic::Type::kNullType) {
         type = e;
         break;
       }
     }
 
     for (auto e : types) {
-      if (e != folly::dynamic::NULLT && e != type) {
+      if (e != dynamic::Type::kNullType && e != type) {
         RETURN_GS_ERROR(vineyard::ErrorCode::kIllegalStateError,
-                        "The types of folly:dynamic is not same.");
+                        "The types of dynamic::Value is not same.");
       }
     }
-    return static_cast<folly::dynamic::Type>(type);
+    return static_cast<dynamic::Type>(type);
   }
 
   std::shared_ptr<IFragmentWrapper> frag_wrapper_;

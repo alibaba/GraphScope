@@ -178,7 +178,7 @@ Pregel
 
         Get value from a aggregator.
 
-    .. py:method:: Context.superstep() -> str
+    .. py:method:: Context.superstep() -> int
        :noindex:
 
         Get current superstep, begin with 0.
@@ -529,6 +529,7 @@ PIE
 
    .. py:method:: AdjList.begin() -> Nbr
       :noindex:
+
         Return begin addr of the adj list.
 
    .. py:method:: AdjList.end() -> Nbr

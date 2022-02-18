@@ -63,11 +63,11 @@ bcast_oids(std::vector<std::shared_ptr<arrow::Table>>& v_tables,
       std::vector<oid_t> oids(array->raw_values(),
                               array->raw_values() + array->length());
 
-      grape::BcastSend(oids, comm_spec.comm());
+      grape::sync_comm::Bcast(oids, grape::kCoordinatorRank, comm_spec.comm());
       oids_list.push_back(oids);
     } else {
       std::vector<oid_t> oids;
-      grape::BcastRecv(oids, comm_spec.comm(), grape::kCoordinatorRank);
+      grape::sync_comm::Bcast(oids, grape::kCoordinatorRank, comm_spec.comm());
       oids_list.push_back(oids);
     }
   }
@@ -102,11 +102,11 @@ bcast_oids(std::vector<std::shared_ptr<arrow::Table>>& v_tables,
         oids[i] = array->GetString(i);
       }
 
-      grape::BcastSend(oids, comm_spec.comm());
+      grape::sync_comm::Bcast(oids, grape::kCoordinatorRank, comm_spec.comm());
       oids_list.push_back(oids);
     } else {
       std::vector<oid_t> oids;
-      grape::BcastRecv(oids, comm_spec.comm(), grape::kCoordinatorRank);
+      grape::sync_comm::Bcast(oids, grape::kCoordinatorRank, comm_spec.comm());
       oids_list.push_back(oids);
     }
   }

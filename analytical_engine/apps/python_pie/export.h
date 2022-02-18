@@ -42,12 +42,13 @@ using AdjList = typename gs::PIEAdjList<vineyard::ArrowFragment<
     _OID_TYPE, vineyard::property_graph_types::VID_TYPE>>;
 using VertexRange = typename vineyard::ArrowFragment<
     _OID_TYPE, vineyard::property_graph_types::VID_TYPE>::vertex_range_t;
+using VertexIterator = typename VertexRange::iterator;
 
 using grape::MessageStrategy;
 using gs::PIEAggregateType;
 
 template <typename T>
-using VertexArray = grape::VertexArray<T, vid_t>;
+using VertexArray = grape::VertexArray<VertexRange, T>;
 }  // namespace python_grape
 
 #endif  // ANALYTICAL_ENGINE_APPS_PYTHON_PIE_EXPORT_H_

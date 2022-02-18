@@ -21,7 +21,7 @@ import "graphscope/proto/message.proto";
 
 service EngineService {
   // Drives the graph computation.
-  rpc RunStep(RunStepRequest) returns (RunStepResponse);
+  rpc RunStep(stream RunStepRequest) returns (stream RunStepResponse);
 
   rpc HeartBeat(HeartBeatRequest) returns (HeartBeatResponse);
 }

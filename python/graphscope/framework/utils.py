@@ -265,6 +265,14 @@ def bytes_to_attr(s: bytes) -> attr_value_pb2.AttrValue:
     return attr_value_pb2.AttrValue(s=s)
 
 
+def bytes_to_large_attr(s: bytes) -> attr_value_pb2.LargeAttrValue:
+    check_argument(isinstance(s, bytes))
+    large_attr = attr_value_pb2.LargeAttrValue()
+    chunk = attr_value_pb2.Chunk(buffer=s)
+    large_attr.chunk_list.items.append(chunk)
+    return large_attr
+
+
 def f_to_attr(f: float) -> attr_value_pb2.AttrValue:
     check_argument(isinstance(f, float))
     return attr_value_pb2.AttrValue(f=f)
@@ -513,7 +521,7 @@ def data_type_to_cpp(t):
     elif t is None or t == graph_def_pb2.NULLVALUE:
         return "grape::EmptyType"
     elif t == graph_def_pb2.DYNAMIC:
-        return "folly::dynamic"
+        return "dynamic::Value"
     elif t == graph_def_pb2.UNKNOWN:
         return ""
     raise ValueError("Not support type {}".format(t))
@@ -529,9 +537,9 @@ def data_type_to_python(t):
         return int
     elif t in (graph_def_pb2.FLOAT, graph_def_pb2.DOUBLE):
         return float
-    elif t in (graph_def_pb2.STRING):
+    elif t == graph_def_pb2.STRING:
         return str
-    elif t in (None, t == graph_def_pb2.NULLVALUE):
+    elif t in (None, graph_def_pb2.NULLVALUE):
         return None
     raise ValueError("Not support type {}".format(t))
 

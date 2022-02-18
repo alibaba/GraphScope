@@ -51,7 +51,7 @@ public class CppClassName {
     public static final String GRAPE_NBR = "grape::Nbr";
     public static final String GRAPE_VERTEX = "grape::Vertex";
     public static final String GRAPE_LONG_VERTEX = "grape::Vertex<uint64_t>";
-    public static final String GRAPE_VERTEX_ARRAY = "grape::VertexArray";
+    public static final String GRAPE_VERTEX_ARRAY = "gs::JavaVertexArray";
     public static final String GRAPE_VERTEX_RANGE = "grape::VertexRange";
     public static final String GRAPE_IMMUTABLE_FRAGMENT = "grape::ImmutableEdgecutFragment";
     public static final String GRAPE_DEFAULT_MESSAGE_MANAGER = "grape::DefaultMessageManager";
