@@ -113,6 +113,8 @@ class ArrowToDynamicConverter {
 
     CHECK(src_vm_ptr->fnum() == comm_spec_.fnum());
     dst_vm_ptr->Init();
+    typename vertex_map_t::partitioner_t partitioner(comm_spec_.fnum());
+    dst_vm_ptr->SetPartitioner(partitioner);
     id_parser.Init(fnum, src_vm_ptr->label_num());
     dynamic::Value to_oid;
 
@@ -127,10 +129,10 @@ class ArrowToDynamicConverter {
           CHECK(src_vm_ptr->GetOid(gid, oid));
           if (v_label == default_label_id_) {
             DynamicWrapper<oid_t>::to_dynamic(oid, to_oid);
-            dst_vm_ptr->AddVertex(fid, to_oid, gid);
+            dst_vm_ptr->AddVertex(to_oid, gid);
           } else {
             DynamicWrapper<oid_t>::to_dynamic_array(label_name, oid, to_oid);
-            dst_vm_ptr->AddVertex(fid, to_oid, gid);
+            dst_vm_ptr->AddVertex(to_oid, gid);
           }
         }
       }

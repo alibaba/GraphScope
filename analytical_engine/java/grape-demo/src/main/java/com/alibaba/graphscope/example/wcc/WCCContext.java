@@ -25,6 +25,7 @@ import com.alibaba.graphscope.ds.VertexSet;
 import com.alibaba.graphscope.fragment.IFragment;
 import com.alibaba.graphscope.parallel.ParallelMessageManager;
 import com.alibaba.graphscope.utils.AtomicLongArrayWrapper;
+import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,7 +75,7 @@ public class WCCContext extends VertexDataContext<IFragment<Long, Long, Long, Do
             BufferedWriter bufferedWriter = new BufferedWriter(fileWritter);
             VertexRange<Long> innerNodes = frag.innerVertices();
 
-            Vertex<Long> cur = innerNodes.begin();
+            Vertex<Long> cur = FFITypeFactoryhelper.newVertexLong();
             for (long index = 0; index < frag.getInnerVerticesNum(); ++index) {
                 cur.SetValue(index);
                 Long oid = frag.getId(cur);

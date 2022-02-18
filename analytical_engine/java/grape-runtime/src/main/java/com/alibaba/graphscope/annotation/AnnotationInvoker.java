@@ -61,23 +61,14 @@ import com.alibaba.graphscope.utils.CppClassName;
                     type = "com.alibaba.graphscope.ds.VertexArray",
                     templates = {
                         @CXXTemplate(
-                                cxx = {"int64_t", "uint64_t"},
+                                cxx = {"uint64_t", "int64_t"},
                                 java = {"Long", "Long"}),
                         @CXXTemplate(
-                                cxx = {"int32_t", "uint64_t"},
-                                java = {"Integer", "Long"}),
+                                cxx = {"uint64_t", "int32_t"},
+                                java = {"Long", "Integer"}),
                         @CXXTemplate(
-                                cxx = {"double", "uint64_t"},
-                                java = {"Double", "Long"}),
-                        @CXXTemplate(
-                                cxx = {"uint64_t", "uint64_t"},
-                                java = {"Long", "Long"}),
-                        @CXXTemplate(
-                                cxx = {"uint32_t", "uint64_t"},
-                                java = {"Integer", "Long"}),
-                        @CXXTemplate(
-                                cxx = {"double", "uint64_t"},
-                                java = {"Double", "Long"}),
+                                cxx = {"uint64_t", "double"},
+                                java = {"Long", "Double"}),
                     }),
             @FFIGen(
                     type = "com.alibaba.graphscope.ds.GrapeNbr",

@@ -110,7 +110,7 @@ class ThreadLocalPropertyMessageBuffer {
                                    typename GRAPH_T::label_id_t label,
                                    const MESSAGE_T& msg) {
     grape::DestList dsts = frag.IEDests(v, label);
-    grape::fid_t* ptr = dsts.begin;
+    const grape::fid_t* ptr = dsts.begin;
     typename GRAPH_T::vid_t gid = frag.GetInnerVertexGid(v);
     while (ptr != dsts.end) {
       grape::fid_t fid = *(ptr++);
@@ -137,7 +137,7 @@ class ThreadLocalPropertyMessageBuffer {
                                    typename GRAPH_T::label_id_t label,
                                    const MESSAGE_T& msg) {
     grape::DestList dsts = frag.OEDests(v, label);
-    grape::fid_t* ptr = dsts.begin;
+    const grape::fid_t* ptr = dsts.begin;
     typename GRAPH_T::vid_t gid = frag.GetInnerVertexGid(v);
     while (ptr != dsts.end) {
       grape::fid_t fid = *(ptr++);
@@ -164,7 +164,7 @@ class ThreadLocalPropertyMessageBuffer {
                                   typename GRAPH_T::label_id_t label,
                                   const MESSAGE_T& msg) {
     grape::DestList dsts = frag.IOEDests(v, label);
-    grape::fid_t* ptr = dsts.begin;
+    const grape::fid_t* ptr = dsts.begin;
     typename GRAPH_T::vid_t gid = frag.GetInnerVertexGid(v);
     while (ptr != dsts.end) {
       grape::fid_t fid = *(ptr++);
