@@ -25,8 +25,6 @@ public class ArgUtils {
     private static String LABEL = "~label";
     private static String ID = "~id";
     private static String LEN = "~len";
-    private static String GROUP_KEYS = "keys";
-    private static String GROUP_VALUES = "values";
 
     public static FfiConst.ByValue asFfiConst(int id) {
         return irCoreLib.int32AsConst(id);
@@ -94,14 +92,6 @@ public class ArgUtils {
         FfiAggFn.ByValue ffiAggFn = irCoreLib.initAggFn(aggFn.getAggregate(), aggFn.getAlias());
         // todo: add var
         return ffiAggFn;
-    }
-
-    public static String groupKeys() {
-        return GROUP_KEYS;
-    }
-
-    public static String groupValues() {
-        return GROUP_VALUES;
     }
 
     public static String propertyName(FfiProperty.ByValue property) {

@@ -22,15 +22,19 @@ import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.intermediate.operator.*;
 import com.alibaba.graphscope.common.jna.type.*;
 import com.alibaba.graphscope.gremlin.InterOpCollectionBuilder;
+import com.alibaba.graphscope.gremlin.antlr4.GremlinAntlrToJava;
 import com.alibaba.graphscope.gremlin.plugin.step.PathExpandStep;
 import com.alibaba.graphscope.gremlin.plugin.step.ScanFusionStep;
+import com.alibaba.graphscope.gremlin.transform.alias.AliasManager;
+import com.alibaba.graphscope.gremlin.transform.alias.AliasPrefixType;
+import com.alibaba.graphscope.gremlin.transform.alias.GetAliasArg;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.IdentityTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.step.branch.UnionStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.*;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.*;
-import org.apache.tinkerpop.gremlin.process.traversal.util.DefaultTraversal;
+import org.apache.tinkerpop.gremlin.process.traversal.util.TraversalHelper;
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.javatuples.Pair;
 
@@ -155,7 +159,10 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
         }
 
         private Traversal.Admin getProjectTraversal(PropertyMapStep step) {
-            return (new DefaultTraversal()).addStep(step);
+            Traversal.Admin parent = GremlinAntlrToJava.getTraversalSupplier().get().asAdmin();
+            PropertyMapStep copy = new PropertyMapStep(parent, step.getReturnType(), step.getPropertyKeys());
+            parent.addStep(copy);
+            return parent;
         }
     },
     VALUES_STEP {
@@ -173,7 +180,10 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
         }
 
         private Traversal.Admin getProjectTraversal(PropertiesStep step) {
-            return (new DefaultTraversal()).addStep(step);
+            Traversal.Admin parent = GremlinAntlrToJava.getTraversalSupplier().get().asAdmin();
+            PropertiesStep copy = new PropertiesStep(parent, step.getReturnType(), step.getPropertyKeys());
+            parent.addStep(copy);
+            return parent;
         }
     },
     DEDUP_STEP {
@@ -224,14 +234,16 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
         }
 
         private List<ArgAggFn> getCountAgg(CountGlobalStep step1) {
-            FfiAlias.ByValue ffiAlias = ArgUtils.asFfiAlias(ArgUtils.groupValues(), false);
+            int stepIdx = TraversalHelper.stepIndex(step1, step1.getTraversal());
+            FfiAlias.ByValue valueAlias = AliasManager.getFfiAlias(
+                    new GetAliasArg(AliasPrefixType.GROUP_VALUES, stepIdx));
+            // count().as("a"), "a" is the alias of group value
             if (!step1.getLabels().isEmpty()) {
                 String label = (String) step1.getLabels().iterator().next();
-                ffiAlias = ArgUtils.asFfiAlias(label, true);
-                // count().as("a"), as is the alias of group_values
+                valueAlias = ArgUtils.asFfiAlias(label, true);
                 step1.removeLabel(label);
             }
-            ArgAggFn countAgg = new ArgAggFn(FfiAggOpt.Count, ffiAlias);
+            ArgAggFn countAgg = new ArgAggFn(FfiAggOpt.Count, valueAlias);
             return Collections.singletonList(countAgg);
         }
     },
