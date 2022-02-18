@@ -17,6 +17,7 @@ use std::collections::HashMap;
 use std::convert::TryInto;
 use std::ops::Deref;
 
+use dyn_type::Object;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::algebra::sink::MetaType;
 use ir_common::generated::common as common_pb;
@@ -74,7 +75,7 @@ impl RecordSinkEncoder {
                 Some(result_pb::element::Inner::GraphPath(path_pb))
             }
             RecordElement::OffGraph(o) => match o {
-                CommonObject::None => None,
+                CommonObject::None => Some(result_pb::element::Inner::Object(Object::None.into())),
                 CommonObject::Prop(obj) | CommonObject::Agg(obj) => {
                     Some(result_pb::element::Inner::Object(obj.clone().into()))
                 }
