@@ -31,7 +31,7 @@ def load_u2i(sess=None, prefix=None, directed=True):
     42876 edges represents with buying relationship. And this dataset is owned by graphlearn, you
     can downloads from here:
 
-        https://github.com/alibaba/graph-learn/blob/master/examples/data/u2i.py
+        https://github.com/alibaba/graph-learn/blob/graphscope/examples/data/u2i.py
 
     Args:
         sess (:class:`graphscope.Session`): Load graph within the session.
