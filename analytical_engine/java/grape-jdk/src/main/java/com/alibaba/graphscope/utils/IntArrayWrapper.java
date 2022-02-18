@@ -42,8 +42,8 @@ public class IntArrayWrapper {
     }
 
     public IntArrayWrapper(VertexRange<Long> vertices, int defaultValue) {
-        left = vertices.begin().GetValue().intValue();
-        right = vertices.end().GetValue().intValue();
+        left = vertices.beginValue().intValue();
+        right = vertices.endValue().intValue();
         size = right - left;
         data = new int[size];
         Arrays.fill(data, defaultValue);

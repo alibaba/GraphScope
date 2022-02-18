@@ -18,7 +18,7 @@ public class Traverse
             ParallelContextBase<Long, Long, Double, Long> context,
             ParallelMessageManager messageManager) {
         TraverseContext ctx = (TraverseContext) context;
-        for (Vertex<Long> vertex : fragment.innerVertices()) {
+        for (Vertex<Long> vertex : fragment.innerVertices().longIterable()) {
             AdjList<Long, Long> adjList = fragment.getOutgoingAdjList(vertex);
             for (Nbr<Long, Long> nbr : adjList.iterator()) {
                 Vertex<Long> dst = nbr.neighbor();
@@ -35,7 +35,7 @@ public class Traverse
             ParallelContextBase<Long, Long, Double, Long> context,
             ParallelMessageManager messageManager) {
         TraverseContext ctx = (TraverseContext) context;
-        for (Vertex<Long> vertex : fragment.innerVertices()) {
+        for (Vertex<Long> vertex : fragment.innerVertices().longIterable()) {
             AdjList<Long, Long> adjList = fragment.getOutgoingAdjList(vertex);
             for (Nbr<Long, Long> nbr : adjList.iterator()) {
                 Vertex<Long> dst = nbr.neighbor();

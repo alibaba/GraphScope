@@ -81,6 +81,8 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::loadGraph(
 
     auto vm_ptr = std::shared_ptr<vertex_map_t>(new vertex_map_t(comm_spec_));
     vm_ptr->Init();
+    typename vertex_map_t::partitioner_t partitioner(comm_spec_.fnum());
+    vm_ptr->SetPartitioner(partitioner);
 
     auto fragment = std::make_shared<fragment_t>(vm_ptr);
     bool duplicated = !distributed;
@@ -865,18 +867,20 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::induceSubGraph(
   auto sub_vm_ptr =
       std::make_shared<typename DynamicFragment::vertex_map_t>(comm_spec_);
   sub_vm_ptr->Init();
+  {
+    typename DynamicFragment::vertex_map_t::partitioner_t partitioner(
+        comm_spec_.fnum());
+    sub_vm_ptr->SetPartitioner(partitioner);
+  }
   grape::Communicator comm;
   comm.InitCommunicator(comm_spec_.comm());
-  typename DynamicFragment::partitioner_t partitioner;
-  partitioner.Init(fragment->fnum());
   typename DynamicFragment::vid_t gid;
   for (const auto& v : induced_vertices) {
     bool alive_in_frag = fragment->HasNode(v);
     bool alive = false;
     comm.Sum(alive_in_frag, alive);
     if (alive) {
-      auto fid = partitioner.GetPartitionId(v);
-      sub_vm_ptr->AddVertex(fid, v, gid);
+      sub_vm_ptr->AddVertex(v, gid);
     }
   }
 
@@ -911,6 +915,11 @@ bl::result<void> GrapeInstance::clearGraph(const rpc::GSParams& params) {
   auto vm_ptr = std::shared_ptr<DynamicFragment::vertex_map_t>(
       new DynamicFragment::vertex_map_t(comm_spec_));
   vm_ptr->Init();
+  {
+    typename DynamicFragment::vertex_map_t::partitioner_t partitioner(
+        comm_spec_.fnum());
+    vm_ptr->SetPartitioner(partitioner);
+  }
   auto fragment =
       std::static_pointer_cast<DynamicFragment>(wrapper->fragment());
   fragment->ClearGraph(vm_ptr);

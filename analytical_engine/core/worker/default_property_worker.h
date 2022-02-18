@@ -66,7 +66,11 @@ class DefaultPropertyWorker {
     auto& graph = const_cast<fragment_t&>(context_->fragment());
     // verify the consistency between app and graph
     // prepare for the query
-    graph.PrepareToRunApp(APP_T::message_strategy, APP_T::need_split_edges);
+    grape::PrepareConf conf;
+    conf.message_strategy = APP_T::message_strategy;
+    conf.need_split_edges = APP_T::need_split_edges;
+    conf.need_mirror_info = false;
+    graph.PrepareToRunApp(comm_spec, conf);
 
     comm_spec_ = comm_spec;
 

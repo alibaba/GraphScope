@@ -349,8 +349,8 @@ int get_vertices_next(GetVertexIteratorImpl* iter, Vertex* v_out) {
 static typename FRAGMENT_TYPE::vertex_range_t get_sub_range(
     const typename FRAGMENT_TYPE::vertex_range_t& super_range,
     VID_TYPE chunk_size, PartitionId channel_id) {
-  VID_TYPE super_range_begin = super_range.begin().GetValue();
-  VID_TYPE super_range_end = super_range.end().GetValue();
+  VID_TYPE super_range_begin = super_range.begin_value();
+  VID_TYPE super_range_end = super_range.end_value();
   VID_TYPE sub_range_begin =
       std::min(super_range_begin + chunk_size * channel_id, super_range_end);
   VID_TYPE sub_range_end =
@@ -393,7 +393,7 @@ void get_all_vertices(FRAGMENT_TYPE* frag, PartitionId channel_id,
       if (size == 0) {
         continue;
       }
-      out->ranges[range_index].first = frag->Vertex2Gid(range.begin());
+      out->ranges[range_index].first = frag->Vertex2Gid(*range.begin());
       out->ranges[range_index].second = out->ranges[range_index].first + size;
       if (size >= limit_remaining) {
         out->ranges[range_index].second =
@@ -424,7 +424,7 @@ void get_all_vertices(FRAGMENT_TYPE* frag, PartitionId channel_id,
       if (size == 0) {
         continue;
       }
-      out->ranges[range_index].first = frag->Vertex2Gid(range.begin());
+      out->ranges[range_index].first = frag->Vertex2Gid(*range.begin());
       out->ranges[range_index].second = out->ranges[range_index].first + size;
       if (size >= limit_remaining) {
         out->ranges[range_index].second =
@@ -795,7 +795,7 @@ void get_all_edges(FRAGMENT_TYPE* frag, PartitionId channel_id,
         get_sub_range(super_range, chunk_sizes[out->cur_v_label], channel_id);
   }
 
-  out->cur_range.first = frag->Vertex2Gid(range.begin());
+  out->cur_range.first = frag->Vertex2Gid(*range.begin());
   out->cur_range.second = out->cur_range.first + range.size();
 
   get_out_edges(frag, eid_parser, out->cur_range.first, out->e_labels,
@@ -852,7 +852,7 @@ int get_all_edges_next(GetAllEdgesIteratorImpl* iter, Edge* e_out) {
 #endif
         return -1;
       }
-      iter->cur_range.first = iter->fragment->Vertex2Gid(range.begin());
+      iter->cur_range.first = iter->fragment->Vertex2Gid(*range.begin());
       iter->cur_range.second = iter->cur_range.first + range.size();
       cur_vid = iter->cur_range.first;
     }
