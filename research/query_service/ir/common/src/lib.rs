@@ -446,14 +446,14 @@ impl TryFrom<pb::IndexPredicate> for Vec<i64> {
                     Some(common_pb::value::Item::I32Array(arr)) => {
                         global_ids.extend(arr.item.iter().map(|i| *i as i64));
                     }
-                    _ => Err(ParsePbError::NotSupported(
-                        "indexed value other than integer (I32, I64) and integer array is not supported"
+                    _ => Err(ParsePbError::Unsupported(
+                        "indexed value other than integer (I32, I64) and integer array"
                             .to_string(),
                     ))?,
                 }
             } else {
-                Err(ParsePbError::NotSupported(
-                    "indexed field other than `IdKey` is not supported yet".to_string(),
+                Err(ParsePbError::Unsupported(
+                    "indexed field other than `IdKey`".to_string(),
                 ))?
             }
         }
@@ -580,6 +580,12 @@ impl From<pb::ShortestPathExpand> for pb::logical_plan::Operator {
 impl From<pb::GetV> for pb::logical_plan::Operator {
     fn from(opr: pb::GetV) -> Self {
         pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::Vertex(opr)) }
+    }
+}
+
+impl From<pb::Pattern> for pb::logical_plan::Operator {
+    fn from(opr: pb::Pattern) -> Self {
+        pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::Pattern(opr)) }
     }
 }
 

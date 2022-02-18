@@ -31,6 +31,7 @@ pub enum IrError {
     TagNotExist(NameOrId),
     ParsePbError(ParsePbError),
     ParseExprError(ExprError),
+    InvalidPatternMatch(String),
 
     // Physical Errors
     PbEncodeError(EncodeError),
@@ -58,6 +59,7 @@ impl fmt::Display for IrError {
             }
             IrError::ParsePbError(err) => write!(f, "parse pb error: {:?}", err),
             IrError::ParseExprError(err) => write!(f, "parse expression error: {:?}", err),
+            IrError::InvalidPatternMatch(s) => write!(f, "invalid pattern match: {:?}", s),
             IrError::PbEncodeError(err) => write!(f, "encoding protobuf error: {:?}", err),
             IrError::MissingDataError(s) => write!(f, "missing necessary data: {:?}", s),
             IrError::InvalidRangeError(lo, up) => {

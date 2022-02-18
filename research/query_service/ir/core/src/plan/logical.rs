@@ -20,9 +20,8 @@ use std::fmt;
 use std::io;
 use std::rc::Rc;
 
-use ir_common::error::{ParsePbError, ParsePbResult};
+use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as pb;
-use ir_common::generated::algebra::logical_plan::Operator;
 use ir_common::generated::common as common_pb;
 use ir_common::NameOrId;
 use vec_map::VecMap;
@@ -112,7 +111,7 @@ impl TryFrom<pb::LogicalPlan> for LogicalPlan {
         let nodes_pb = pb.nodes;
         let mut plan = LogicalPlan::default();
         let mut id_map = HashMap::<u32, u32>::new();
-        let mut parents = HashMap::<u32, Vec<u32>>::new();
+        let mut parents = HashMap::<u32, BTreeSet<u32>>::new();
         for (id, node) in nodes_pb.iter().enumerate() {
             for &child in &node.children {
                 if child <= id as i32 {
@@ -123,8 +122,8 @@ impl TryFrom<pb::LogicalPlan> for LogicalPlan {
                 }
                 parents
                     .entry(child as u32)
-                    .or_insert_with(Vec::new)
-                    .push(id as u32);
+                    .or_insert_with(BTreeSet::new)
+                    .insert(id as u32);
             }
         }
 
@@ -139,7 +138,7 @@ impl TryFrom<pb::LogicalPlan> for LogicalPlan {
                 let parent_ids = parents
                     .get(&(id as u32))
                     .cloned()
-                    .unwrap_or(Vec::new())
+                    .unwrap_or_default()
                     .into_iter()
                     .map(|old| id_map[&old])
                     .collect::<Vec<u32>>();
@@ -148,7 +147,7 @@ impl TryFrom<pb::LogicalPlan> for LogicalPlan {
                     .map_err(|err| ParsePbError::ParseError(format!("{:?}", err)))?;
                 id_map.insert(id as u32, new_id);
             } else {
-                return Err(ParsePbError::from("do not specify operator in a node"));
+                return Err(ParsePbError::EmptyFieldError("Node::opr".to_string()));
             }
         }
 
@@ -310,7 +309,7 @@ impl LogicalPlan {
                     parents
                         .get(&(id as u32))
                         .cloned()
-                        .unwrap_or(BTreeSet::new())
+                        .unwrap_or_default()
                         .into_iter()
                         .map(|old| {
                             id_map
@@ -447,7 +446,7 @@ impl LogicalPlan {
                 | Opr::Dedup(_)
                 | Opr::Limit(_)
                 | Opr::Sink(_)
-                | Opr::Patmat(_) => {} // do not change current node
+                | Opr::Pattern(_) => {} // do not change current node
                 _ => is_update_curr = true,
             }
 
@@ -455,14 +454,14 @@ impl LogicalPlan {
         }
 
         let new_curr_node_rst = match opr.opr.as_ref().unwrap() {
-            Opr::Patmat(patmat) => {
+            Opr::Pattern(pattern) => {
                 if parent_ids.len() == 1 {
-                    let strategy = NaiveStrategy::try_from(patmat.clone())?;
-                    let plan = strategy.build_plan()?;
+                    let strategy = NaiveStrategy::try_from(pattern.clone())?;
+                    let plan = strategy.build_logical_plan()?;
                     self.append_plan(plan, parent_ids)
                 } else {
                     Err(IrError::Unsupported(
-                        "only one single parent is supported for the `Patmat` operator".to_string(),
+                        "only one single parent is supported for the `Pattern` operator".to_string(),
                     ))
                 }
             }

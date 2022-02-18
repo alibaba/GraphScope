@@ -71,7 +71,7 @@ impl SourceOperator {
                         Ok(source_op)
                     }
                 }
-                _ => Err(ParsePbError::NotSupported("Unsupported source op in pb_request".to_string()))?,
+                _ => Err(ParsePbError::Unsupported("unsupported source op in pb_request".to_string()))?,
             }
         } else {
             Err(ParsePbError::EmptyFieldError("Empty source op in pb_request".to_string()))?
@@ -139,7 +139,7 @@ impl SourceOperator {
                 Ok(Box::new(e_source.map(move |e| Record::new(e, self.alias.clone()))))
             }
             SourceType::Table => {
-                Err(FnGenError::unsupported_error("Source type of Table is not supported yet"))?
+                Err(FnGenError::unsupported_error("data source of `Table` type"))?
             }
         }
     }

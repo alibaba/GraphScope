@@ -203,18 +203,14 @@ pub fn to_suffix_expr<E: ExprToken + std::fmt::Debug>(expr: Vec<E>) -> ExprResul
     Ok(results)
 }
 
-pub fn to_expr_pb(tokens: Vec<Token>) -> ExprResult<pb::Expression> {
-    let mut operators = Vec::<pb::ExprOpr>::with_capacity(tokens.len());
 
-    for token in tokens {
+pub fn str_to_expr_pb(expr_str: String) -> ExprResult<pb::Expression> {
+    let mut operators = vec![];
+    for token in tokenize(&expr_str)? {
         operators.push(token.try_into()?);
     }
 
     Ok(pb::Expression { operators })
-}
-
-pub fn str_to_expr_pb(expr_str: String) -> ExprResult<pb::Expression> {
-    to_expr_pb(tokenize(&expr_str)?)
 }
 
 #[cfg(test)]
