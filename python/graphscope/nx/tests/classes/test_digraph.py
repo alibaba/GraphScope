@@ -22,12 +22,12 @@ from networkx.classes.tests.test_digraph import BaseAttrDiGraphTester
 from networkx.testing import assert_nodes_equal
 
 from graphscope import nx
-from graphscope.nx.tests.classes.test_graph import TestEdgeSubgraph
-from graphscope.nx.tests.classes.test_graph import TestGraph
+from graphscope.nx.tests.classes.test_graph import TestEdgeSubgraph as _TestEdgeSubgraph
+from graphscope.nx.tests.classes.test_graph import TestGraph as _TestGraph
 
 
 @pytest.mark.usefixtures("graphscope_session")
-class TestDiGraph(BaseAttrDiGraphTester, TestGraph):
+class TestDiGraph(BaseAttrDiGraphTester, _TestGraph):
     def setup_method(self):
         self.Graph = nx.DiGraph
         # build K3
@@ -145,7 +145,7 @@ class TestDiGraph(BaseAttrDiGraphTester, TestGraph):
 
 
 @pytest.mark.usefixtures("graphscope_session")
-class TestEdgeSubgraph(TestEdgeSubgraph):
+class TestEdgeSubgraph(_TestEdgeSubgraph):
     def setup_method(self):
         # Create a doubly-linked path graph on five nodes.
         # G = nx.DiGraph(nx.path_graph(5))

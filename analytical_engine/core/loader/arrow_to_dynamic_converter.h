@@ -25,6 +25,7 @@
 
 #include "vineyard/graph/fragment/arrow_fragment.h"
 
+#include "core/fragment/dynamic_fragment.h"
 #include "core/utils/convert_utils.h"
 
 namespace gs {
@@ -146,8 +147,7 @@ class ArrowToDynamicConverter {
       const std::shared_ptr<vertex_map_t>& dst_vm) {
     auto fid = src_frag->fid();
     const auto& schema = src_frag->schema();
-    std::vector<DynamicFragment::internal_vertex_t> processed_vertices;
-    std::vector<DynamicFragment::edge_t> processed_edges;
+    dst_fragment_t::mutation_t mutation;
 
     for (label_id_t v_label = 0; v_label < src_frag->vertex_label_num();
          v_label++) {
@@ -175,7 +175,7 @@ class ArrowToDynamicConverter {
           PropertyConverter<src_fragment_t>::NodeValue(src_frag, u, type,
                                                        prop_key, col_id, data);
         }
-        processed_vertices.emplace_back(u_gid, data);
+        mutation.vertices_to_add.emplace_back(u_gid, data);
 
         // traverse edges and extract data
         for (label_id_t e_label = 0; e_label < src_frag->edge_label_num();
@@ -183,7 +183,7 @@ class ArrowToDynamicConverter {
           auto oe = src_frag->GetOutgoingAdjList(u, e_label);
           auto e_data = src_frag->edge_data_table(e_label);
           for (auto& e : oe) {
-            auto v = e.neighbor();
+            auto v = e.get_neighbor();
             auto e_id = e.edge_id();
             auto v_label_id = src_frag->vertex_label(v);
             if (v_label_id == default_label_id_) {
@@ -196,13 +196,13 @@ class ArrowToDynamicConverter {
             CHECK(dst_vm->GetGid(v_oid, v_gid));
             data = dynamic::Value(rapidjson::kObjectType);
             PropertyConverter<src_fragment_t>::EdgeValue(e_data, e_id, data);
-            processed_edges.emplace_back(u_gid, v_gid, data);
+            mutation.edges_to_add.emplace_back(u_gid, v_gid, data);
           }
 
           if (src_frag->directed()) {
             auto ie = src_frag->GetIncomingAdjList(u, e_label);
             for (auto& e : ie) {
-              auto v = e.neighbor();
+              auto v = e.get_neighbor();
               if (src_frag->IsOuterVertex(v)) {
                 auto e_id = e.edge_id();
                 auto v_label_id = src_frag->vertex_label(v);
@@ -217,7 +217,7 @@ class ArrowToDynamicConverter {
                 data = dynamic::Value(rapidjson::kObjectType);
                 PropertyConverter<src_fragment_t>::EdgeValue(e_data, e_id,
                                                              data);
-                processed_edges.emplace_back(v_gid, u_gid, data);
+                mutation.edges_to_add.emplace_back(v_gid, u_gid, data);
               }
             }
           }
@@ -226,8 +226,8 @@ class ArrowToDynamicConverter {
     }
 
     auto dynamic_frag = std::make_shared<dst_fragment_t>(dst_vm);
-    dynamic_frag->Init(src_frag->fid(), processed_vertices, processed_edges,
-                       src_frag->directed());
+    dynamic_frag->Init(src_frag->fid(), src_frag->directed());
+    dynamic_frag->Mutate(mutation);
     return dynamic_frag;
   }
 

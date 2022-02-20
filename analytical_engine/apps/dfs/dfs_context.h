@@ -86,8 +86,8 @@ class DFSContext : public TensorContext<FRAG_T, typename FRAG_T::oid_t> {
     }
   }
 
-  typename FRAG_T::template vertex_array_t<vid_t> parent;
-  typename FRAG_T::template vertex_array_t<int> rank;
+  typename FRAG_T::template inner_vertex_array_t<vid_t> parent;
+  typename FRAG_T::template inner_vertex_array_t<int> rank;
   typename FRAG_T::template vertex_array_t<bool> is_visited;
   vertex_t current_vertex;
   std::vector<oid_t> results;

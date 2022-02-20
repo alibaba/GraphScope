@@ -25,7 +25,6 @@ import orjson as json
 from networkx import freeze
 from networkx.classes.coreviews import AdjacencyView
 from networkx.classes.graph import Graph as RefGraph
-from networkx.classes.graphviews import generic_graph_view
 from networkx.classes.reportviews import DegreeView
 
 from graphscope import nx
@@ -39,6 +38,7 @@ from graphscope.framework.graph_schema import GraphSchema
 from graphscope.nx import NetworkXError
 from graphscope.nx.classes.dicts import AdjDict
 from graphscope.nx.classes.dicts import NodeDict
+from graphscope.nx.classes.graphviews import generic_graph_view
 from graphscope.nx.classes.reportviews import EdgeView
 from graphscope.nx.classes.reportviews import NodeView
 from graphscope.nx.convert import to_networkx_graph
@@ -1781,17 +1781,12 @@ class Graph(_GraphBase):
             return self.copy(as_view=as_view)
         graph_class = self.to_directed_class()
         if as_view:
-            g = graph_class(create_empty_in_engine=False)
-            g.graph.update(self.graph)
-            op = dag_utils.create_graph_view(self, "directed")
-            graph_def = op.eval()
-            g._op = op
-            g._key = graph_def.key
+            g = generic_graph_view(self, graph_class)
+            g._op = self._op
+            g._key = self._key
             g._schema = copy.deepcopy(self._schema)
-            g._graph = self
             g._session = self._session
-            g._is_client_view = False
-            g = freeze(g)
+            g._is_client_view = True
             return g
         g = graph_class(create_empty_in_engine=False)
         g.graph = copy.deepcopy(self.graph)
@@ -1929,7 +1924,8 @@ class Graph(_GraphBase):
                 lid=location[1],
                 label_id=location[2],
             )
-        return op.eval()
+        ret = op.eval()
+        return ret
 
     @parse_ret_as_dict
     def _get_nbrs(self, n, report_type=types_pb2.SUCCS_BY_NODE):

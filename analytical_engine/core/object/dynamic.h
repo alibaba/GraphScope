@@ -56,8 +56,8 @@ class Value : public rapidjson::Value {
     Base::CopyFrom(rhs, allocator_);
   }
   // Constructor with move semantics.
-  Value(Value& rhs) : Base(std::move(rhs)) {}
-  explicit Value(rapidjson::Value& rhs) : Base(std::move(rhs)) {}
+  Value(Value& rhs) { Base::CopyFrom(rhs, allocator_); }
+  explicit Value(rapidjson::Value& rhs) { Base::CopyFrom(rhs, allocator_); }
   // Move constructor
   Value(Value&& rhs) : Base(std::move(rhs)) {}
   // Constructor with value type
@@ -76,7 +76,9 @@ class Value : public rapidjson::Value {
 
   // Copy assignment operator.
   Value& operator=(const Value& rhs) {
-    Base::CopyFrom(rhs, allocator_);
+    if (this != &rhs) {
+      Base::CopyFrom(rhs, allocator_);
+    }
     return *this;
   }
   Value& operator=(const rapidjson::Value& rhs) {
@@ -86,7 +88,9 @@ class Value : public rapidjson::Value {
 
   // Move assignment.
   Value& operator=(Value&& rhs) noexcept {
-    Base::operator=(rhs.Move());
+    if (this != &rhs) {
+      Base::operator=(rhs.Move());
+    }
     return *this;
   }
   Value& operator=(rapidjson::Value&& rhs) noexcept {
@@ -126,7 +130,11 @@ class Value : public rapidjson::Value {
   explicit Value(const std::string& s) : Base(s.c_str(), allocator_) {}
   explicit Value(const char* s) : Base(s, allocator_) {}
 
-  void CopyFrom(const Value& rhs) { Base::CopyFrom(rhs, allocator_); }
+  void CopyFrom(const Value& rhs) {
+    if (this != &rhs) {
+      Base::CopyFrom(rhs, allocator_);
+    }
+  }
 
   // Insert for object
   template <typename T>
@@ -215,7 +223,7 @@ class Value : public rapidjson::Value {
 // Stringify Value to json.
 static inline const char* Stringify(const Value& value) {
   static rapidjson::StringBuffer buffer;
-  static rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+  rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
   buffer.Clear();
   value.Accept(writer);
   return buffer.GetString();
