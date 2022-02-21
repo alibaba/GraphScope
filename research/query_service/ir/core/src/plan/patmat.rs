@@ -208,11 +208,11 @@ struct OrdSentence {
 impl OrdSentence {
     fn get_ord_meta(&self) -> (i32, i32, i32, i32, i32) {
         (
-            self.inner.num_hops as i32,       // less edge expansions is preferred
-            -(self.inner.num_filters as i32), // more filters is preferred
-            self.inner.end_as as i32,         // ending as vertex is preferred
-            -(self.inner.tags.len() as i32),  // more tags is preferred
-            self.inner.is_anti as i32,        // non anti-sentence is preferred
+            -(self.inner.num_hops as i32), // less edge expansions is preferred
+            self.inner.num_filters as i32, // more filters is preferred
+            -(self.inner.end_as as i32),   // ending as vertex is preferred
+            self.inner.tags.len() as i32,  // more tags is preferred
+            -(self.inner.is_anti as i32),  // non anti-sentence is preferred
         )
     }
 }
@@ -494,8 +494,12 @@ pub struct NaiveStrategy {
 impl TryFrom<pb::Pattern> for NaiveStrategy {
     type Error = ParsePbError;
 
-    fn try_from(_pb: pb::Pattern) -> Result<Self, Self::Error> {
-        todo!()
+    fn try_from(pb: pb::Pattern) -> Result<Self, Self::Error> {
+        let mut sentences = BinaryHeap::new();
+        for sentence in pb.sentences {
+            sentences.push(BaseSentence::try_from(sentence)?.into());
+        }
+        Ok(Self { sentences })
     }
 }
 
@@ -746,6 +750,26 @@ mod test {
         );
         assert_eq!(join.join_kind, pb::join::JoinKind::Inner);
 
+        let plan = join.build_logical_plan().unwrap();
+        assert_eq!(plan.nodes.len(), 7);
+        assert_eq!(plan.nodes.get(2).unwrap().children, vec![6]);
+        assert_eq!(plan.nodes.get(5).unwrap().children, vec![6]);
+        assert_eq!(
+            plan.nodes.last().unwrap().opr.clone().unwrap(),
+            pb::Join {
+                left_keys: vec![
+                    common_pb::Variable { tag: Some("a".into()), property: None },
+                    common_pb::Variable { tag: Some("b".into()), property: None }
+                ],
+                right_keys: vec![
+                    common_pb::Variable { tag: Some("a".into()), property: None },
+                    common_pb::Variable { tag: Some("b".into()), property: None }
+                ],
+                kind: 0
+            }
+            .into()
+        );
+
         // case 2.
         let a_out_b_anti = gen_sentence_x_out_y("a", Some("b"), false, true);
         let a_out_b = gen_sentence_x_out_y("a", Some("b"), false, false);
@@ -782,5 +806,93 @@ mod test {
         assert!(a_out_b_anti
             .join(Rc::new(a_out_b_anti2))
             .is_none());
+    }
+
+    #[test]
+    fn pattern_case1_into_logical_plan() {
+        let strategy = NaiveStrategy {
+            sentences: vec![
+                gen_sentence_x_out_y("a", Some("b"), false, false).into(),
+                gen_sentence_x_out_y("b", Some("c"), false, false).into(),
+                gen_sentence_x_out_y("b", Some("c"), false, false).into(),
+            ]
+            .into_iter()
+            .collect(),
+        };
+
+        // Join (opr_id = 8) (
+        //    As(a), Out(), As(b), Out(), As(c) (opr_id = 4)
+        //    As(b), Out(), As(c) (opr_id = 7)
+        // )
+        let plan = strategy.build_logical_plan().unwrap();
+        assert_eq!(plan.nodes.get(4).unwrap().children, vec![8]);
+        assert_eq!(
+            plan.nodes.get(4).unwrap().opr.clone().unwrap(),
+            pb::As { alias: "c".try_into().ok() }.into()
+        );
+        assert_eq!(plan.nodes.get(7).unwrap().children, vec![8]);
+        assert_eq!(
+            plan.nodes.get(7).unwrap().opr.clone().unwrap(),
+            pb::As { alias: "c".try_into().ok() }.into()
+        );
+        assert_eq!(
+            plan.nodes.last().unwrap().opr.clone().unwrap(),
+            pb::Join {
+                left_keys: vec![
+                    common_pb::Variable { tag: Some("b".into()), property: None },
+                    common_pb::Variable { tag: Some("c".into()), property: None }
+                ],
+                right_keys: vec![
+                    common_pb::Variable { tag: Some("b".into()), property: None },
+                    common_pb::Variable { tag: Some("c".into()), property: None }
+                ],
+                kind: 0
+            }
+            .into()
+        );
+    }
+
+    #[test]
+    fn pattern_case2_into_logical_plan() {
+        let strategy = NaiveStrategy {
+            sentences: vec![
+                gen_sentence_x_out_y("a", Some("b"), false, false).into(),
+                gen_sentence_x_out_y("b", Some("c"), false, false).into(),
+                gen_sentence_x_out_y("a", Some("c"), false, true).into(),
+            ]
+            .into_iter()
+            .collect(),
+        };
+
+        // AntiJoin (opr_id = 8) (
+        //    As(a), Out(), As(b), Out(), As(c) (opr_id = 4)
+        //    As(a), Out(), As(c) (opr_id = 7)
+        // )
+        let plan = strategy.build_logical_plan().unwrap();
+        assert_eq!(plan.nodes.get(4).unwrap().children, vec![8]);
+        assert_eq!(
+            plan.nodes.get(4).unwrap().opr.clone().unwrap(),
+            pb::As { alias: "c".try_into().ok() }.into()
+        );
+        assert_eq!(plan.nodes.get(7).unwrap().children, vec![8]);
+        assert_eq!(
+            plan.nodes.get(7).unwrap().opr.clone().unwrap(),
+            pb::As { alias: "c".try_into().ok() }.into()
+        );
+        assert_eq!(
+            plan.nodes.last().unwrap().opr.clone().unwrap(),
+            pb::Join {
+                left_keys: vec![
+                    common_pb::Variable { tag: Some("a".into()), property: None },
+                    common_pb::Variable { tag: Some("c".into()), property: None }
+                ],
+                right_keys: vec![
+                    common_pb::Variable { tag: Some("a".into()), property: None },
+                    common_pb::Variable { tag: Some("c".into()), property: None }
+                ],
+                kind: 5 // anti join
+            }
+            .into()
+        );
     }
 }
