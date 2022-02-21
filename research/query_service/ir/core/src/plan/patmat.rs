@@ -36,19 +36,24 @@ pub enum BindingOpt {
     Path = 2,
 }
 
+/// A trait to abstract how to build a logical plan for `Pattern` operator.
+pub trait MatchingStrategy {
+    fn build_logical_plan(&self) -> IrResult<pb::LogicalPlan>;
+}
+
 /// Define the behavior of concatenating two matching sentences
-pub trait Sentence: Debug {
+pub trait Sentence: Debug + MatchingStrategy {
     /// Composite works by extending the first sentence with the second one via
-    /// the **only** common tag. Composition cannot be apply when either sentence
+    /// the **only** common tag. Composition cannot be applied when either sentence
     /// has anti-semantics.
-    fn composite(&mut self, other: &BaseSentence) -> bool;
+    fn composite(&self, other: &BaseSentence) -> Option<BaseSentence>;
     /// Join works by joining two sentences via the common (at least one) tags
     /// and produce a `JoinSentence`
-    fn join(&self, other: &JoinSentence) -> Option<JoinSentence>;
-    /// Transform a `sentence` into a logical plan
-    fn build_logical_plan(&self) -> IrResult<pb::LogicalPlan>;
+    fn join(&self, other: Rc<dyn Sentence>) -> Option<JoinSentence>;
     /// Get base sentence if any
     fn get_base(&self) -> Option<&BaseSentence>;
+    /// Get tags for the sentence
+    fn get_tags(&self) -> &BTreeSet<NameOrId>;
 }
 
 /// An internal representation of `pb::Sentence`
@@ -60,7 +65,7 @@ pub struct BaseSentence {
     end_tag: Option<NameOrId>,
     /// The tags bound to this sentence
     tags: BTreeSet<NameOrId>,
-    /// Use `pb::logical_plan::Operator` rather than `pb::patmat::binder`,
+    /// Use `pb::logical_plan::Operator` rather than `pb::Pattern::binder`,
     /// to facilitate building the logical plan that may translate a tag into an `As` operator.
     operators: Vec<pb::logical_plan::Operator>,
     /// Is this a sentence with Anti(No)-semanatics
@@ -134,11 +139,8 @@ impl TryFrom<pb::pattern::Sentence> for BaseSentence {
             let start_tag: NameOrId = pb
                 .start
                 .clone()
-                .ok_or(ParsePbError::EmptyFieldError("patmat::Sentence::start".to_string()))?
+                .ok_or(ParsePbError::EmptyFieldError("Pattern::Sentence::start".to_string()))?
                 .try_into()?;
-
-            // Add an `As` operator to reflect the starting tag
-            operators.push(pb::As { alias: pb.start.clone() }.into());
 
             let end_tag: Option<NameOrId> = pb
                 .end
@@ -182,12 +184,9 @@ impl TryFrom<pb::pattern::Sentence> for BaseSentence {
                         }
                         Ok(p.into())
                     }
-                    None => Err(ParsePbError::EmptyFieldError("patmat::Binder::item".to_string())),
+                    None => Err(ParsePbError::EmptyFieldError("Pattern::Binder::item".to_string())),
                 }?;
                 operators.push(opr);
-            }
-            if end_tag.is_some() {
-                operators.push(pb::As { alias: pb.end.clone() }.into());
             }
             let is_anti = pb.is_anti;
             if end_as == BindingOpt::Path {
@@ -196,7 +195,7 @@ impl TryFrom<pb::pattern::Sentence> for BaseSentence {
                 Ok(Self { start_tag, end_tag, tags, operators, is_anti, end_as, num_filters, num_hops })
             }
         } else {
-            Err(ParsePbError::EmptyFieldError("patmat::Sentence::start".to_string()))
+            Err(ParsePbError::EmptyFieldError("Pattern::Sentence::start".to_string()))
         }
     }
 }
@@ -253,33 +252,77 @@ impl Ord for OrdSentence {
     }
 }
 
+impl MatchingStrategy for BaseSentence {
+    fn build_logical_plan(&self) -> IrResult<pb::LogicalPlan> {
+        let mut plan = pb::LogicalPlan { nodes: vec![] };
+        let size = self.operators.len();
+        if size == 0 {
+            Err(IrError::InvalidPattern("empty sentence".to_string()))
+        } else {
+            plan.nodes.push(pb::logical_plan::Node {
+                // pb::NameOrId -> NameOrId never fails.
+                opr: Some(pb::As { alias: self.start_tag.clone().try_into().ok() }.into()),
+                children: vec![1],
+            });
+            for (idx, opr) in self.operators.iter().enumerate() {
+                let child_id = idx as i32 + 2;
+                let node = if idx != size - 1 {
+                    // A sentence is definitely a chain
+                    pb::logical_plan::Node { opr: Some(opr.clone()), children: vec![child_id] }
+                } else {
+                    if self.end_tag.is_some() {
+                        pb::logical_plan::Node { opr: Some(opr.clone()), children: vec![child_id] }
+                    } else {
+                        pb::logical_plan::Node { opr: Some(opr.clone()), children: vec![] }
+                    }
+                };
+                plan.nodes.push(node);
+            }
+            if let Some(end_tag) = self.end_tag.clone() {
+                plan.nodes.push(pb::logical_plan::Node {
+                    // pb::NameOrId -> NameOrId never fails.
+                    opr: Some(pb::As { alias: end_tag.try_into().ok() }.into()),
+                    children: vec![],
+                });
+            }
+
+            Ok(plan)
+        }
+    }
+}
+
 impl Sentence for BaseSentence {
-    fn composite(&mut self, other: &BaseSentence) -> bool {
+    fn composite(&self, other: &BaseSentence) -> Option<BaseSentence> {
         // cannot composite anti-sentence
         if self.is_anti || other.is_anti {
-            return false;
+            return None;
         }
         // composition can happens if `self` sentence contains the start_tag of `other`
         if !self.tags.contains(&other.start_tag) {
-            return false;
+            return None;
         } else {
             // Two common tags at the same time must enable a join instead of composition
             if let Some(end_tag) = &other.end_tag {
                 if self.tags.contains(end_tag) {
-                    return false;
+                    return None;
                 }
             }
         }
-        self.end_tag = other.end_tag.clone();
-        self.tags.extend(other.tags.iter().cloned());
-        if self.end_tag.is_none() || self.end_tag.as_ref().unwrap() != &other.start_tag {
+        let mut compo = self.clone();
+        if let Some(end_tag) = self.end_tag.clone() {
+            // pb::NameOrId -> NameOrId never fails.
+            compo
+                .operators
+                .push(pb::As { alias: end_tag.try_into().ok() }.into());
+        }
+        if self.end_tag.is_none() || self.end_tag.as_ref() != Some(&other.start_tag) {
             let expr_str = match &other.start_tag {
                 NameOrId::Str(s) => format!("@{:?}", s),
                 NameOrId::Id(i) => format!("@{:?}", i),
             };
             // Projection is required to project other.start_tag as the head,
             // so that the traversal formed by the composition can continue.
-            self.operators.push(
+            compo.operators.push(
                 pb::Project {
                     mappings: vec![pb::project::ExprAlias {
                         // This cannot be wrong
@@ -291,104 +334,67 @@ impl Sentence for BaseSentence {
                 .into(),
             );
         }
-        self.operators
+        compo.end_tag = other.end_tag.clone();
+        compo.tags.extend(other.tags.iter().cloned());
+        compo
+            .operators
             .extend(other.operators.iter().cloned());
-        self.end_as = other.end_as.clone();
-        self.num_filters += other.num_filters;
-        self.num_hops += other.num_hops;
+        compo.end_as = other.end_as.clone();
+        compo.num_filters += other.num_filters;
+        compo.num_hops += other.num_hops;
 
-        true
+        Some(compo)
     }
 
-    fn join(&self, other: &JoinSentence) -> Option<JoinSentence> {
+    fn join(&self, other: Rc<dyn Sentence>) -> Option<JoinSentence> {
         let common_tags: BTreeSet<NameOrId> = self
             .tags
-            .intersection(&other.common_tags)
+            .intersection(&other.get_tags())
             .cloned()
             .collect();
         if common_tags.is_empty() {
             return None;
         }
-        if other.get_base().is_some() {
+        if let Some(base) = other.get_base() {
             // cannot join two base anti-sentences
-            if self.is_anti && other.join_kind == pb::join::JoinKind::Anti {
+            if self.is_anti && base.is_anti {
                 return None;
             }
         }
         if self.is_anti {
             Some(JoinSentence {
-                left: Rc::new(other.clone()),
+                left: other,
                 // anti-sentence must be placed on the right
                 right: Some(Rc::new(self.clone())),
                 common_tags,
                 join_kind: pb::join::JoinKind::Anti,
             })
         } else {
-            Some(JoinSentence {
-                left: Rc::new(self.clone()),
-                right: Some(Rc::new(other.clone())),
-                common_tags,
-                join_kind: if other.get_base().is_some() {
-                    // if other is a base sentence, follow its join kind,
-                    // which indicates whether the sentence is anti.
-                    other.join_kind
+            let join_kind = if let Some(base) = other.get_base() {
+                // if other is an anti sentence
+                if base.is_anti {
+                    pb::join::JoinKind::Anti
                 } else {
                     pb::join::JoinKind::Inner
-                },
-            })
-        }
-    }
-
-    fn build_logical_plan(&self) -> IrResult<pb::LogicalPlan> {
-        let mut plan = pb::LogicalPlan { nodes: vec![] };
-        let size = self.operators.len();
-        for (idx, opr) in self.operators.iter().enumerate() {
-            let node = if idx != size - 1 {
-                // A sentence is definitely a chain
-                pb::logical_plan::Node { opr: Some(opr.clone()), children: vec![idx as i32 + 1] }
+                }
             } else {
-                pb::logical_plan::Node { opr: Some(opr.clone()), children: vec![] }
+                pb::join::JoinKind::Inner
             };
-            plan.nodes.push(node);
-        }
 
-        Ok(plan)
+            Some(JoinSentence { left: Rc::new(self.clone()), right: Some(other), common_tags, join_kind })
+        }
     }
 
     fn get_base(&self) -> Option<&BaseSentence> {
         Some(self)
     }
+
+    fn get_tags(&self) -> &BTreeSet<NameOrId> {
+        &self.tags
+    }
 }
 
-impl Sentence for JoinSentence {
-    fn composite(&mut self, _: &BaseSentence) -> bool {
-        false
-    }
-
-    fn join(&self, other: &JoinSentence) -> Option<JoinSentence> {
-        let common_tags: BTreeSet<NameOrId> = self
-            .common_tags
-            .intersection(&other.common_tags)
-            .cloned()
-            .collect();
-        if !common_tags.is_empty() {
-            if let Some(base) = self.get_base() {
-                base.join(other)
-            } else if let Some(base) = other.get_base() {
-                base.join(&self.clone().into())
-            } else {
-                Some(JoinSentence {
-                    left: Rc::new(self.clone()),
-                    right: Some(Rc::new(other.clone())),
-                    common_tags,
-                    join_kind: pb::join::JoinKind::Inner,
-                })
-            }
-        } else {
-            None
-        }
-    }
-
+impl MatchingStrategy for JoinSentence {
     fn build_logical_plan(&self) -> IrResult<pb::LogicalPlan> {
         let (mut plan, right_plan_opt) = (
             self.left.build_logical_plan()?,
@@ -435,6 +441,36 @@ impl Sentence for JoinSentence {
 
         Ok(plan)
     }
+}
+
+impl Sentence for JoinSentence {
+    fn composite(&self, _: &BaseSentence) -> Option<BaseSentence> {
+        None
+    }
+
+    fn join(&self, other: Rc<dyn Sentence>) -> Option<JoinSentence> {
+        let common_tags: BTreeSet<NameOrId> = self
+            .common_tags
+            .intersection(&other.get_tags())
+            .cloned()
+            .collect();
+        if !common_tags.is_empty() {
+            if let Some(base) = self.get_base() {
+                base.join(other)
+            } else if let Some(base) = other.get_base() {
+                base.join(Rc::new(self.clone()))
+            } else {
+                Some(JoinSentence {
+                    left: Rc::new(self.clone()),
+                    right: Some(other),
+                    common_tags,
+                    join_kind: pb::join::JoinKind::Inner,
+                })
+            }
+        } else {
+            None
+        }
+    }
 
     fn get_base(&self) -> Option<&BaseSentence> {
         if self.right.is_none() {
@@ -443,11 +479,10 @@ impl Sentence for JoinSentence {
             None
         }
     }
-}
 
-/// A trait to abstract how to build a logical plan for `Pattern` operator.
-pub trait MatchingStrategy {
-    fn build_logical_plan(&self) -> IrResult<pb::LogicalPlan>;
+    fn get_tags(&self) -> &BTreeSet<NameOrId> {
+        &self.common_tags
+    }
 }
 
 /// A naive implementation of `MatchingStrategy`
@@ -472,12 +507,13 @@ impl NaiveStrategy {
         // sentences after composition remain for join
         let mut to_join = BinaryHeap::with_capacity(sentences.len());
         while !sentences.is_empty() {
-            let mut first = sentences.pop().unwrap();
+            let first = sentences.pop().unwrap();
             let mut matched = false;
             container.clear();
             while !sentences.is_empty() {
                 let second = sentences.pop().unwrap();
-                if first.inner.composite(&second.inner) {
+                if let Some(compo) = first.inner.composite(&second.inner) {
+                    sentences.push(compo.into());
                     matched = true;
                     break;
                 } else {
@@ -486,12 +522,8 @@ impl NaiveStrategy {
             }
             if !matched {
                 to_join.push(first);
-            } else {
-                sentences.push(first);
             }
-            if !container.is_empty() {
-                sentences.extend(container.drain(..));
-            }
+            sentences.extend(container.drain(..));
         }
         to_join
     }
@@ -507,7 +539,7 @@ impl MatchingStrategy for NaiveStrategy {
                 let old_count = sentences.len();
                 while !sentences.is_empty() {
                     let second = sentences.pop().unwrap().inner;
-                    if let Some(join) = second.join(&first) {
+                    if let Some(join) = second.join(Rc::new(first.clone())) {
                         first = join;
                     } else {
                         container.push(second.into());
@@ -515,7 +547,7 @@ impl MatchingStrategy for NaiveStrategy {
                 }
                 if !container.is_empty() {
                     if container.len() == old_count {
-                        return Err(IrError::InvalidPatternMatch(
+                        return Err(IrError::InvalidPattern(
                             "the matching pattern may be disconnected".to_string(),
                         ));
                     } else {
@@ -527,12 +559,228 @@ impl MatchingStrategy for NaiveStrategy {
             }
             first.build_logical_plan()
         } else {
-            Err(IrError::InvalidPatternMatch("sentences are empty after composition".to_string()))
+            Err(IrError::InvalidPattern("sentences are empty after composition".to_string()))
         }
     }
 }
 
 #[cfg(test)]
 mod test {
+    use std::collections::HashMap;
+
     use super::*;
+
+    #[allow(dead_code)]
+    fn query_params() -> pb::QueryParams {
+        pb::QueryParams {
+            tables: vec![],
+            columns: vec![],
+            is_all_columns: false,
+            limit: None,
+            predicate: None,
+            extra: HashMap::new(),
+        }
+    }
+
+    #[allow(dead_code)]
+    fn gen_sentence_x_out_y(x: &str, y: Option<&str>, is_edge: bool, is_anti: bool) -> BaseSentence {
+        let pb = pb::pattern::Sentence {
+            start: x.try_into().ok(),
+            binders: vec![pb::pattern::Binder {
+                item: Some(pb::pattern::binder::Item::Edge(pb::EdgeExpand {
+                    v_tag: None,
+                    direction: 0,
+                    params: Some(query_params()),
+                    is_edge,
+                    alias: None,
+                })),
+            }],
+            end: y.and_then(|s| s.try_into().ok()),
+            is_anti,
+        };
+
+        pb.try_into().unwrap()
+    }
+
+    #[allow(dead_code)]
+    fn get_sentence_x_inv_y(x: &str, y: Option<&str>, is_anti: bool) -> BaseSentence {
+        let pb = pb::pattern::Sentence {
+            start: x.try_into().ok(),
+            binders: vec![pb::pattern::Binder {
+                item: Some(pb::pattern::binder::Item::Vertex(pb::GetV {
+                    tag: None,
+                    opt: 0,
+                    params: Some(query_params()),
+                    alias: None,
+                })),
+            }],
+            end: y.and_then(|s| s.try_into().ok()),
+            is_anti,
+        };
+
+        pb.try_into().unwrap()
+    }
+
+    #[test]
+    fn sentence_composition() {
+        use ir_common::generated::algebra::logical_plan::operator::Opr;
+
+        // case 1.
+        let a_out_b = gen_sentence_x_out_y("a", Some("b"), false, false);
+        let b_out_c = gen_sentence_x_out_y("b", Some("c"), false, false);
+        let a_out_b_out_c = a_out_b.composite(&b_out_c).unwrap();
+        assert_eq!(
+            a_out_b_out_c.tags,
+            vec!["a".into(), "b".into(), "c".into()]
+                .into_iter()
+                .collect()
+        );
+        assert_eq!(a_out_b_out_c.start_tag, "a".into());
+        assert_eq!(a_out_b_out_c.end_tag.unwrap(), "c".into());
+        // out(), As(b), out()
+        assert_eq!(a_out_b_out_c.operators.len(), 3);
+
+        // case 2.
+        let a_out_b = gen_sentence_x_out_y("a", Some("b"), false, false);
+        let a_out_c = gen_sentence_x_out_y("a", Some("c"), false, false);
+        let a_out_b_out_c = a_out_b.composite(&a_out_c).unwrap();
+
+        assert_eq!(
+            a_out_b_out_c.tags,
+            vec!["a".into(), "b".into(), "c".into()]
+                .into_iter()
+                .collect()
+        );
+        assert_eq!(a_out_b_out_c.start_tag, "a".into());
+        assert_eq!(a_out_b_out_c.end_tag.unwrap(), "c".into());
+        // out(), As(b), Project(a), out()
+        assert_eq!(a_out_b_out_c.operators.len(), 4);
+        match a_out_b_out_c
+            .operators
+            .get(2)
+            .unwrap()
+            .opr
+            .as_ref()
+            .unwrap()
+        {
+            Opr::Project(_) => {}
+            _ => {
+                panic!("should be a `Project` operator.")
+            }
+        }
+
+        // case 3.
+        let a_out = gen_sentence_x_out_y("a", None, false, false);
+        let a_out_c = gen_sentence_x_out_y("a", Some("c"), false, false);
+        let a_out_out_c = a_out.composite(&a_out_c).unwrap();
+
+        assert_eq!(a_out_out_c.start_tag, "a".into());
+        assert_eq!(a_out_out_c.end_tag.unwrap(), "c".into());
+        // out(), Project(a), out()
+        assert_eq!(a_out_out_c.operators.len(), 3);
+        match a_out_out_c
+            .operators
+            .get(1)
+            .unwrap()
+            .opr
+            .as_ref()
+            .unwrap()
+        {
+            Opr::Project(_) => {}
+            _ => {
+                panic!("should be a `Project` operator.")
+            }
+        }
+
+        // case 4: cannot composite without sharing tags
+        let a_out_b = gen_sentence_x_out_y("a", Some("b"), false, false);
+        let c_out_d = gen_sentence_x_out_y("c", Some("d"), false, false);
+
+        assert!(a_out_b.composite(&c_out_d).is_none());
+
+        // case 5: cannot composite anti-sentence
+        let a_out_b = gen_sentence_x_out_y("a", Some("b"), false, false);
+        let b_out_c = gen_sentence_x_out_y("b", Some("c"), false, true);
+
+        assert!(a_out_b.composite(&b_out_c).is_none());
+
+        // case 6: cannot composite while sharing more than two tags
+        let a_out_b = gen_sentence_x_out_y("a", Some("b"), false, false);
+        let a_out_b2 = gen_sentence_x_out_y("a", Some("b"), false, false);
+
+        assert!(a_out_b.composite(&a_out_b2).is_none());
+    }
+
+    #[test]
+    fn sentence_into_logical_plan() {
+        // case 1.
+        let a_out_b = gen_sentence_x_out_y("a", Some("b"), false, false);
+
+        // As(a), Out(), As(b)
+        let plan = a_out_b.build_logical_plan().unwrap();
+        assert_eq!(plan.nodes.len(), 3);
+        println!("case 1: {:#?}", plan.nodes);
+
+        // case 2.
+        let a_out_b = gen_sentence_x_out_y("a", Some("b"), false, false);
+        let a_out_c = gen_sentence_x_out_y("a", Some("c"), false, false);
+        let a_out_b_out_c = a_out_b.composite(&a_out_c).unwrap();
+        // As(a), Out(), As(b), Project(a), out(), As(c)
+        let plan = a_out_b_out_c.build_logical_plan().unwrap();
+        assert_eq!(plan.nodes.len(), 6);
+        println!("case 2: {:#?}", plan.nodes);
+    }
+
+    #[test]
+    fn sentence_join() {
+        // case 1.
+        let a_out_b = gen_sentence_x_out_y("a", Some("b"), false, false);
+        let a_out_b2 = a_out_b.clone();
+
+        let join = a_out_b.join(Rc::new(a_out_b2)).unwrap();
+        assert_eq!(
+            join.common_tags,
+            vec!["a".into(), "b".into()]
+                .into_iter()
+                .collect()
+        );
+        assert_eq!(join.join_kind, pb::join::JoinKind::Inner);
+
+        // case 2.
+        let a_out_b_anti = gen_sentence_x_out_y("a", Some("b"), false, true);
+        let a_out_b = gen_sentence_x_out_y("a", Some("b"), false, false);
+
+        let join = a_out_b_anti.join(Rc::new(a_out_b)).unwrap();
+        assert!(!(join.left.get_base().unwrap().is_anti));
+        // anti-sentence moved to the right
+        assert!(
+            join.right
+                .as_ref()
+                .unwrap()
+                .get_base()
+                .unwrap()
+                .is_anti
+        );
+        assert_eq!(
+            join.common_tags,
+            vec!["a".into(), "b".into()]
+                .into_iter()
+                .collect()
+        );
+        assert_eq!(join.join_kind, pb::join::JoinKind::Anti);
+
+        // case 3: cannot join without sharing tags
+        let a_out_b = gen_sentence_x_out_y("a", Some("b"), false, false);
+        let c_out_d = gen_sentence_x_out_y("c", Some("d"), false, false);
+
+        assert!(a_out_b.join(Rc::new(c_out_d)).is_none());
+
+        // case 2.
+        let a_out_b_anti = gen_sentence_x_out_y("a", Some("b"), false, true);
+        let a_out_b_anti2 = a_out_b_anti.clone();
+
+        assert!(a_out_b_anti
+            .join(Rc::new(a_out_b_anti2))
+            .is_none());
+    }
 }

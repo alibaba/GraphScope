@@ -323,7 +323,7 @@ impl LogicalPlan {
                 id_map.insert(id as u32, new_id);
                 result_id = new_id;
             } else {
-                return Err(IrError::MissingDataError("Node::opr".to_string()));
+                return Err(IrError::MissingData("Node::opr".to_string()));
             }
         }
 
@@ -340,7 +340,7 @@ impl LogicalPlan {
         let old_curr_nodes = self.meta.get_curr_nodes().to_vec();
         let mut is_update_curr = false;
         if opr.opr.is_none() {
-            return Err(IrError::MissingDataError("Operator::opr".to_string()));
+            return Err(IrError::MissingData("Operator::opr".to_string()));
         }
         if let Ok(meta) = STORE_META.read() {
             match opr.opr.as_ref().unwrap() {
