@@ -28,13 +28,18 @@ import com.alibaba.graphscope.gremlin.plugin.step.ScanFusionStep;
 import com.alibaba.graphscope.gremlin.transform.alias.AliasManager;
 import com.alibaba.graphscope.gremlin.transform.alias.AliasPrefixType;
 import com.alibaba.graphscope.gremlin.transform.alias.GetAliasArg;
+import org.apache.tinkerpop.gremlin.process.traversal.Pop;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
+import org.apache.tinkerpop.gremlin.process.traversal.lambda.ColumnTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.IdentityTraversal;
+import org.apache.tinkerpop.gremlin.process.traversal.step.TraversalParent;
 import org.apache.tinkerpop.gremlin.process.traversal.step.branch.UnionStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.*;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.*;
+import org.apache.tinkerpop.gremlin.process.traversal.step.util.EmptyStep;
 import org.apache.tinkerpop.gremlin.process.traversal.util.TraversalHelper;
+import org.apache.tinkerpop.gremlin.structure.Column;
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.javatuples.Pair;
 
@@ -324,6 +329,62 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
                         .map(k -> (new InterOpCollectionBuilder(k)).build()).collect(Collectors.toList());
             }));
             return unionOp;
+        }
+    },
+    TRAVERSAL_MAP_STEP {
+        @Override
+        public InterOpBase apply(Step step) {
+            TraversalMapStep mapStep = (TraversalMapStep) step;
+            List<Traversal.Admin> mapTraversals = mapStep.getLocalChildren();
+            if (mapTraversals.size() != 1 || !(mapTraversals.get(0) instanceof ColumnTraversal)) {
+                throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
+                        "only support select(keys/values)");
+            }
+            Column column = ((ColumnTraversal) mapTraversals.get(0)).getColumn();
+            switch (column) {
+                case keys:
+                    String key = getMapKey(mapStep);
+                    SelectOneStep keySelect = new SelectOneStep(step.getTraversal(), Pop.last, key);
+                    TraversalHelper.copyLabels(mapStep, keySelect, false);
+                    return TraversalParentTransformFactory.PROJECT_BY_STEP.apply(keySelect).get(0);
+                case values:
+                    String value = getMapValue(mapStep);
+                    SelectOneStep valueSelect = new SelectOneStep(step.getTraversal(), Pop.last, value);
+                    TraversalHelper.copyLabels(mapStep, valueSelect, false);
+                    return TraversalParentTransformFactory.PROJECT_BY_STEP.apply(valueSelect).get(0);
+                default:
+                    throw new OpArgIllegalException(OpArgIllegalException.Cause.INVALID_TYPE, column.name() + " is invalid");
+            }
+        }
+
+        private String getMapKey(TraversalMapStep step) {
+            Step groupStep = getPreviousGroupStep(step);
+            int stepIdx = TraversalHelper.stepIndex(groupStep, groupStep.getTraversal());
+            FfiAlias.ByValue keyAlias = AliasManager.getFfiAlias(new GetAliasArg(AliasPrefixType.GROUP_KEYS, stepIdx));
+            return keyAlias.alias.name;
+        }
+
+        private String getMapValue(TraversalMapStep step) {
+            Step groupStep = getPreviousGroupStep(step);
+            int stepIdx = TraversalHelper.stepIndex(groupStep, groupStep.getTraversal());
+            FfiAlias.ByValue valueAlias = AliasManager.getFfiAlias(new GetAliasArg(AliasPrefixType.GROUP_VALUES, stepIdx));
+            return valueAlias.alias.name;
+        }
+
+        private Step getPreviousGroupStep(Step step) {
+            Step previous = step.getPreviousStep();
+            while (!(previous instanceof EmptyStep
+                    || previous instanceof GroupStep || previous instanceof GroupCountStep)) {
+                previous = previous.getPreviousStep();
+            }
+            if (!(previous instanceof EmptyStep)) {
+                return previous;
+            }
+            TraversalParent parent = step.getTraversal().getParent();
+            if (!(parent instanceof EmptyStep)) {
+                return getPreviousGroupStep(parent.asStep());
+            }
+            throw new OpArgIllegalException(OpArgIllegalException.Cause.INVALID_TYPE, "select keys or values should follow a group");
         }
     };
 

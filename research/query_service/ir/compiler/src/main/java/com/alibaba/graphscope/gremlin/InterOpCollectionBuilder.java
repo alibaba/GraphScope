@@ -83,6 +83,8 @@ public class InterOpCollectionBuilder {
                 opList.add(StepTransformFactory.WHERE_END_STEP.apply(step));
             } else if (Utils.equalClass(step, UnionStep.class)) {
                 opList.add(StepTransformFactory.UNION_STEP.apply(step));
+            } else if (Utils.equalClass(step, TraversalMapStep.class)) {
+                opList.add(StepTransformFactory.TRAVERSAL_MAP_STEP.apply(step));
             } else if (Utils.equalClass(step, SelectOneStep.class)) {
                 opList.addAll(TraversalParentTransformFactory.PROJECT_BY_STEP.apply((TraversalParent) step));
             } else if (Utils.equalClass(step, SelectStep.class)) {
