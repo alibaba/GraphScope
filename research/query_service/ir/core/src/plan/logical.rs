@@ -906,9 +906,16 @@ impl AsLogical for pb::Scan {
 
 impl AsLogical for pb::EdgeExpand {
     fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
-        plan_meta
-            .curr_node_metas_mut()
-            .set_is_add_column(false);
+        if self.is_edge {
+            // as edge is always local, do not need to add column for remote fetching
+            plan_meta
+                .curr_node_metas_mut()
+                .set_is_add_column(false);
+        } else {
+            plan_meta
+                .curr_node_metas_mut()
+                .set_is_add_column(true);
+        }
         if let Some(params) = self.params.as_mut() {
             preprocess_params(params, meta, plan_meta)?;
         }
@@ -922,13 +929,14 @@ impl AsLogical for pb::EdgeExpand {
 
 impl AsLogical for pb::PathExpand {
     fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
+        if let Some(base) = self.base.as_mut() {
+            base.preprocess(meta, plan_meta)?;
+        }
         // PathExpand would never require adding columns
         plan_meta
             .curr_node_metas_mut()
             .set_is_add_column(false);
-        if let Some(base) = self.base.as_mut() {
-            base.preprocess(meta, plan_meta)?;
-        }
+
         Ok(())
     }
 }

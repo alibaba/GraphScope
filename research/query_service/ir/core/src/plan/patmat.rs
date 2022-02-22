@@ -563,7 +563,7 @@ impl MatchingStrategy for NaiveStrategy {
             }
             first.build_logical_plan()
         } else {
-            Err(IrError::InvalidPattern("sentences are empty after composition".to_string()))
+            Err(IrError::InvalidPattern("empty sentences".to_string()))
         }
     }
 }
@@ -894,5 +894,24 @@ mod test {
             }
             .into()
         );
+    }
+
+    #[test]
+    fn pattern_disconnected_into_logical_plan() {
+        let strategy = NaiveStrategy {
+            sentences: vec![
+                gen_sentence_x_out_y("a", Some("b"), false, false).into(),
+                gen_sentence_x_out_y("b", Some("c"), false, false).into(),
+                gen_sentence_x_out_y("d", Some("e"), false, false).into(),
+            ]
+                .into_iter()
+                .collect(),
+        };
+
+        let result = strategy.build_logical_plan();
+        match result.err().unwrap() {
+            IrError::InvalidPattern(_) => {}
+            _ => panic!("should produce invalid pattern error")
+        }
     }
 }
