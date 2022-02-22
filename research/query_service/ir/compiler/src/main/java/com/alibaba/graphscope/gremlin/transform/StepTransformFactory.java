@@ -22,7 +22,6 @@ import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.intermediate.operator.*;
 import com.alibaba.graphscope.common.jna.type.*;
 import com.alibaba.graphscope.gremlin.InterOpCollectionBuilder;
-import com.alibaba.graphscope.gremlin.antlr4.GremlinAntlrToJava;
 import com.alibaba.graphscope.gremlin.plugin.step.PathExpandStep;
 import com.alibaba.graphscope.gremlin.plugin.step.ScanFusionStep;
 import com.alibaba.graphscope.gremlin.transform.alias.AliasManager;
@@ -32,7 +31,6 @@ import org.apache.tinkerpop.gremlin.process.traversal.Pop;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.ColumnTraversal;
-import org.apache.tinkerpop.gremlin.process.traversal.lambda.IdentityTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.step.TraversalParent;
 import org.apache.tinkerpop.gremlin.process.traversal.step.branch.UnionStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.*;
@@ -155,19 +153,12 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
             PropertyMapStep valueMapStep = (PropertyMapStep) step;
             ProjectOp op = new ProjectOp();
             String expr = TraversalParentTransformFactory.PROJECT_BY_STEP
-                    .getSubTraversalAsExpr("", getProjectTraversal(valueMapStep));
+                    .getSubTraversalAsExpr((new ExprArg()).addStep(valueMapStep)).getSingleExpr().get();
             op.setExprWithAlias(new OpArg<>(expr, (String expr1) -> {
                 FfiAlias.ByValue alias = ArgUtils.asFfiNoneAlias();
                 return Arrays.asList(Pair.with(expr1, alias));
             }));
             return op;
-        }
-
-        private Traversal.Admin getProjectTraversal(PropertyMapStep step) {
-            Traversal.Admin parent = GremlinAntlrToJava.getTraversalSupplier().get().asAdmin();
-            PropertyMapStep copy = new PropertyMapStep(parent, step.getReturnType(), step.getPropertyKeys());
-            parent.addStep(copy);
-            return parent;
         }
     },
     VALUES_STEP {
@@ -176,19 +167,12 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
             PropertiesStep valuesStep = (PropertiesStep) step;
             ProjectOp op = new ProjectOp();
             String expr = TraversalParentTransformFactory.PROJECT_BY_STEP
-                    .getSubTraversalAsExpr("", getProjectTraversal(valuesStep));
+                    .getSubTraversalAsExpr((new ExprArg()).addStep(valuesStep)).getSingleExpr().get();
             op.setExprWithAlias(new OpArg<>(expr, (String expr1) -> {
                 FfiAlias.ByValue alias = ArgUtils.asFfiNoneAlias();
                 return Arrays.asList(Pair.with(expr1, alias));
             }));
             return op;
-        }
-
-        private Traversal.Admin getProjectTraversal(PropertiesStep step) {
-            Traversal.Admin parent = GremlinAntlrToJava.getTraversalSupplier().get().asAdmin();
-            PropertiesStep copy = new PropertiesStep(parent, step.getReturnType(), step.getPropertyKeys());
-            parent.addStep(copy);
-            return parent;
         }
     },
     DEDUP_STEP {
@@ -299,8 +283,10 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
             WhereTraversalStep.WhereStartStep startStep = (WhereTraversalStep.WhereStartStep) step;
 
             String selectKey = (String) startStep.getScopeKeys().iterator().next();
-            String expr = TraversalParentTransformFactory.PROJECT_BY_STEP
-                    .getSubTraversalAsExpr(selectKey, new IdentityTraversal());
+            SelectOneStep selectOneStep = new SelectOneStep(step.getTraversal(), Pop.last, selectKey);
+            ExprRes exprRes = TraversalParentTransformFactory.PROJECT_BY_STEP
+                    .getSubTraversalAsExpr((new ExprArg()).addStep(selectOneStep));
+            String expr = exprRes.getSingleExpr().get();
 
             ProjectOp op = new ProjectOp();
             op.setExprWithAlias(new OpArg<>(expr, (String expr1) -> {

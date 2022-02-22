@@ -36,7 +36,6 @@ import com.alibaba.graphscope.gremlin.plugin.script.AntlrToJavaScriptEngineFacto
 import com.alibaba.graphscope.gremlin.plugin.strategy.RemoveUselessStepStrategy;
 import com.alibaba.graphscope.gremlin.plugin.strategy.ScanFusionStepStrategy;
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversalSource;
-import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversalSource;
 import com.alibaba.graphscope.gremlin.result.GremlinResultAnalyzer;
 import com.alibaba.graphscope.gremlin.result.GremlinResultProcessor;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
@@ -57,7 +56,6 @@ import org.apache.tinkerpop.gremlin.server.op.AbstractEvalOpProcessor;
 import org.apache.tinkerpop.gremlin.server.op.OpProcessorException;
 import org.apache.tinkerpop.gremlin.server.op.standard.StandardOpProcessor;
 import org.apache.tinkerpop.gremlin.structure.Graph;
-import org.apache.tinkerpop.gremlin.tinkergraph.process.traversal.strategy.optimization.TinkerGraphStepStrategy;
 import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
 import org.codehaus.groovy.control.MultipleCompilationErrorsException;
 import org.slf4j.Logger;
