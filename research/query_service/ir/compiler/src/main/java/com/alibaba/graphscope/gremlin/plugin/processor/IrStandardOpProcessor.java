@@ -66,7 +66,6 @@ import javax.script.SimpleBindings;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
@@ -100,44 +99,45 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
 
         GremlinExecutor.LifeCycle lifeCycle = createLifeCycle(ctx, gremlinExecutorSupplier, bindingsSupplier);
 
-        try {
-            CompletableFuture<Object> evalFuture = gremlinExecutor.eval(script, language, bindings, lifeCycle);
-            evalFuture.handle((v, t) -> {
-                long elapsed = timerContext.stop();
-                logger.info("query \"{}\" total execution time is {} ms", script, elapsed / 1000000.0f);
-                if (t != null) {
-                    Optional<Throwable> possibleTemporaryException = determineIfTemporaryException(t);
-                    if (possibleTemporaryException.isPresent()) {
-                        ctx.writeAndFlush(ResponseMessage.build(msg).code(ResponseStatusCode.SERVER_ERROR_TEMPORARY).statusMessage(((Throwable) possibleTemporaryException.get()).getMessage()).statusAttributeException((Throwable) possibleTemporaryException.get()).create());
-                    } else if (t instanceof OpProcessorException) {
-                        ctx.writeAndFlush(((OpProcessorException) t).getResponseMessage());
+        CompletableFuture<Object> evalFuture = gremlinExecutor.eval(script, language, bindings, lifeCycle);
+        evalFuture.handle((v, t) -> {
+            long elapsed = timerContext.stop();
+            logger.info("query \"{}\" total execution time is {} ms", script, elapsed / 1000000.0f);
+            if (t != null) {
+                if (t instanceof OpProcessorException) {
+                    ctx.writeAndFlush(((OpProcessorException) t).getResponseMessage());
+                } else if (t instanceof TimedInterruptTimeoutException) {
+                    // occurs when the TimedInterruptCustomizerProvider is in play
+                    final String errorMessage = String.format("A timeout occurred within the script during evaluation of [%s] - consider increasing the limit given to TimedInterruptCustomizerProvider", msg);
+                    logger.warn(errorMessage);
+                    ctx.writeAndFlush(ResponseMessage.build(msg).code(ResponseStatusCode.SERVER_ERROR_TIMEOUT)
+                            .statusMessage("Timeout during script evaluation triggered by TimedInterruptCustomizerProvider")
+                            .statusAttributeException(t).create());
+                } else if (t instanceof TimeoutException) {
+                    final String errorMessage = String.format("Script evaluation exceeded the configured threshold for request [%s]", msg);
+                    logger.warn(errorMessage, t);
+                    ctx.writeAndFlush(ResponseMessage.build(msg).code(ResponseStatusCode.SERVER_ERROR_TIMEOUT)
+                            .statusMessage(t.getMessage())
+                            .statusAttributeException(t).create());
+                } else {
+                    if (t instanceof MultipleCompilationErrorsException && t.getMessage().contains("Method too large") &&
+                            ((MultipleCompilationErrorsException) t).getErrorCollector().getErrorCount() == 1) {
+                        final String errorMessage = String.format("The Gremlin statement that was submitted exceeds the maximum compilation size allowed by the JVM, please split it into multiple smaller statements");
+                        logger.warn(errorMessage);
+                        ctx.writeAndFlush(ResponseMessage.build(msg).code(ResponseStatusCode.SERVER_ERROR_SCRIPT_EVALUATION)
+                                .statusMessage(errorMessage)
+                                .statusAttributeException(t).create());
                     } else {
-                        String errorMessage;
-                        if (t instanceof TimedInterruptTimeoutException) {
-                            errorMessage = String.format("A timeout occurred within the script during evaluation of [%s] - consider increasing the limit given to TimedInterruptCustomizerProvider", msg);
-                            logger.warn(errorMessage);
-                            ctx.writeAndFlush(ResponseMessage.build(msg).code(ResponseStatusCode.SERVER_ERROR_TIMEOUT).statusMessage("Timeout during script evaluation triggered by TimedInterruptCustomizerProvider").statusAttributeException(t).create());
-                        } else if (t instanceof TimeoutException) {
-                            errorMessage = String.format("Script evaluation exceeded the configured threshold for request [%s]", msg);
-                            logger.warn(errorMessage, t);
-                            ctx.writeAndFlush(ResponseMessage.build(msg).code(ResponseStatusCode.SERVER_ERROR_TIMEOUT).statusMessage(t.getMessage()).statusAttributeException(t).create());
-                        } else if (t instanceof MultipleCompilationErrorsException && t.getMessage().contains("Method too large") && ((MultipleCompilationErrorsException) t).getErrorCollector().getErrorCount() == 1) {
-                            errorMessage = String.format("The Gremlin statement that was submitted exceeds the maximum compilation size allowed by the JVM, please split it into multiple smaller statements - %s", msg);
-                            logger.warn(errorMessage);
-                            ctx.writeAndFlush(ResponseMessage.build(msg).code(ResponseStatusCode.SERVER_ERROR_EVALUATION).statusMessage(errorMessage).statusAttributeException(t).create());
-                        } else {
-                            errorMessage = t.getMessage() == null ? t.toString() : t.getMessage();
-                            logger.warn(String.format("Exception processing a script on request [%s].", msg), t);
-                            ctx.writeAndFlush(ResponseMessage.build(msg).code(ResponseStatusCode.SERVER_ERROR_EVALUATION).statusMessage(errorMessage).statusAttributeException(t).create());
-                        }
+                        final String errorMessage = (t.getMessage() == null) ? t.toString() : t.getMessage();
+                        logger.warn(String.format("Exception processing a script on request [%s].", msg), t);
+                        ctx.writeAndFlush(ResponseMessage.build(msg).code(ResponseStatusCode.SERVER_ERROR_SCRIPT_EVALUATION)
+                                .statusMessage(errorMessage)
+                                .statusAttributeException(t).create());
                     }
                 }
-                return null;
-            });
-        } catch (RejectedExecutionException var17) {
-            ctx.writeAndFlush(ResponseMessage.build(msg).code(ResponseStatusCode.TOO_MANY_REQUESTS).statusMessage("Rate limiting").create());
-        }
-
+            }
+            return null;
+        });
     }
 
     protected GremlinExecutor.LifeCycle createLifeCycle(Context ctx, Supplier<GremlinExecutor> gremlinExecutorSupplier, BindingSupplier bindingsSupplier) {
