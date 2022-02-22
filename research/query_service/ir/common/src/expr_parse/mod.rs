@@ -203,7 +203,6 @@ pub fn to_suffix_expr<E: ExprToken + std::fmt::Debug>(expr: Vec<E>) -> ExprResul
     Ok(results)
 }
 
-
 pub fn str_to_expr_pb(expr_str: String) -> ExprResult<pb::Expression> {
     let mut operators = vec![];
     for token in tokenize(&expr_str)? {

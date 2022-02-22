@@ -138,9 +138,7 @@ impl SourceOperator {
                 }
                 Ok(Box::new(e_source.map(move |e| Record::new(e, self.alias.clone()))))
             }
-            SourceType::Table => {
-                Err(FnGenError::unsupported_error("data source of `Table` type"))?
-            }
+            SourceType::Table => Err(FnGenError::unsupported_error("data source of `Table` type"))?,
         }
     }
 }

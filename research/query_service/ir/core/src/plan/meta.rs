@@ -478,12 +478,12 @@ pub struct PlanMeta {
     tag_nodes: BTreeMap<NameOrId, Vec<u32>>,
     /// To ease the processing, tag may be transformed to an internal id.
     /// This maintains the mappings
-    tag_ids: BTreeMap<NameOrId, NameOrId>,
+    tag_ids: BTreeMap<NameOrId, u32>,
     /// To record the current nodes' id in the logical plan. Note that nodes that have operators that
     /// of `As` or `Selection` does not alter curr_node.
     curr_node: CurrNodeOpt,
     /// The maximal tag id that has been assigned, for mapping tag ids.
-    max_tag_id: i32,
+    max_tag_id: u32,
     /// Whether to preprocess the operator.
     is_preprocess: bool,
     /// Whether to partition the task
@@ -586,14 +586,17 @@ impl PlanMeta {
         self.tag_nodes.get(tag).cloned()
     }
 
-    pub fn get_or_set_tag_id(&mut self, tag: NameOrId) -> NameOrId {
+    /// Get the id (with a `true` indicator) of the given tag if it already presents,
+    /// otherwise, set and return the id as `self.max_tag_id` (with a `false` indicator).
+    pub fn get_or_set_tag_id(&mut self, tag: NameOrId) -> (bool, u32) {
         let entry = self.tag_ids.entry(tag);
         match entry {
-            Entry::Occupied(o) => o.into_mut().clone(),
+            Entry::Occupied(o) => (true, *o.get()),
             Entry::Vacant(v) => {
-                let new_tag_id: NameOrId = self.max_tag_id.into();
+                let new_tag_id = self.max_tag_id;
+                v.insert(new_tag_id);
                 self.max_tag_id += 1;
-                v.insert(new_tag_id).clone()
+                (false, new_tag_id)
             }
         }
     }

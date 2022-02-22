@@ -59,9 +59,9 @@ pub trait Sentence: Debug + MatchingStrategy {
 /// An internal representation of `pb::Sentence`
 #[derive(Clone, Debug, PartialEq)]
 pub struct BaseSentence {
-    // The start tag of this sentence
+    /// The start tag of this sentence
     start_tag: NameOrId,
-    // The end tag, if any, of this sentence
+    /// The end tag, if any, of this sentence
     end_tag: Option<NameOrId>,
     /// The tags bound to this sentence
     tags: BTreeSet<NameOrId>,
@@ -491,6 +491,8 @@ pub struct NaiveStrategy {
     sentences: BinaryHeap<OrdSentence>,
 }
 
+// TODO(longbin) For now, the either the `start` tag or `end` tag of each sentence in
+// TODO(longbin) `pb::Pattern` does not exist outside of the match operator.
 impl TryFrom<pb::Pattern> for NaiveStrategy {
     type Error = ParsePbError;
 
@@ -904,14 +906,14 @@ mod test {
                 gen_sentence_x_out_y("b", Some("c"), false, false).into(),
                 gen_sentence_x_out_y("d", Some("e"), false, false).into(),
             ]
-                .into_iter()
-                .collect(),
+            .into_iter()
+            .collect(),
         };
 
         let result = strategy.build_logical_plan();
         match result.err().unwrap() {
             IrError::InvalidPattern(_) => {}
-            _ => panic!("should produce invalid pattern error")
+            _ => panic!("should produce invalid pattern error"),
         }
     }
 }

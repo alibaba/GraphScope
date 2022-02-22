@@ -875,6 +875,9 @@ impl AsLogical for pb::Project {
             if let Some(expr) = &mut mapping.expr {
                 preprocess_expression(expr, meta, plan_meta)?;
             }
+            if let Some(alias) = &mapping.alias {
+                plan_meta.get_or_set_tag_id(alias.clone().try_into()?);
+            }
         }
         Ok(())
     }
@@ -900,6 +903,9 @@ impl AsLogical for pb::Scan {
         if let Some(index_pred) = self.idx_predicate.as_mut() {
             index_pred.preprocess(meta, plan_meta)?;
         }
+        if let Some(alias) = &self.alias {
+            plan_meta.get_or_set_tag_id(alias.clone().try_into()?);
+        }
         Ok(())
     }
 }
@@ -919,6 +925,9 @@ impl AsLogical for pb::EdgeExpand {
         if let Some(params) = self.params.as_mut() {
             preprocess_params(params, meta, plan_meta)?;
         }
+        if let Some(alias) = &self.alias {
+            plan_meta.get_or_set_tag_id(alias.clone().try_into()?);
+        }
         plan_meta
             .curr_node_metas_mut()
             .set_is_add_column(true);
@@ -931,6 +940,9 @@ impl AsLogical for pb::PathExpand {
     fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
         if let Some(base) = self.base.as_mut() {
             base.preprocess(meta, plan_meta)?;
+        }
+        if let Some(alias) = &self.alias {
+            plan_meta.get_or_set_tag_id(alias.clone().try_into()?);
         }
         // PathExpand would never require adding columns
         plan_meta
@@ -949,6 +961,9 @@ impl AsLogical for pb::GetV {
         if let Some(params) = self.params.as_mut() {
             preprocess_params(params, meta, plan_meta)?;
         }
+        if let Some(alias) = &self.alias {
+            plan_meta.get_or_set_tag_id(alias.clone().try_into()?);
+        }
         Ok(())
     }
 }
@@ -965,10 +980,16 @@ impl AsLogical for pb::GroupBy {
             if let Some(key) = &mut mapping.key {
                 preprocess_var(key, meta, plan_meta)?;
             }
+            if let Some(alias) = &mapping.alias {
+                plan_meta.get_or_set_tag_id(alias.clone().try_into()?);
+            }
         }
         for agg_fn in self.functions.iter_mut() {
             for var in agg_fn.vars.iter_mut() {
                 preprocess_var(var, meta, plan_meta)?;
+            }
+            if let Some(alias) = &agg_fn.alias {
+                plan_meta.get_or_set_tag_id(alias.clone().try_into()?);
             }
         }
 
@@ -1052,7 +1073,45 @@ impl AsLogical for pb::Sink {
 }
 
 impl AsLogical for pb::Apply {
-    fn preprocess(&mut self, _meta: &StoreMeta, _plan_meta: &mut PlanMeta) -> IrResult<()> {
+    fn preprocess(&mut self, _meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
+        if let Some(alias) = &self.alias {
+            plan_meta.get_or_set_tag_id(alias.clone().try_into()?);
+        }
+        Ok(())
+    }
+}
+
+impl AsLogical for pb::Pattern {
+    fn preprocess(&mut self, _meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
+        for sentence in &self.sentences {
+            if let Some(alias) = &sentence.start {
+                if !plan_meta
+                    .get_or_set_tag_id(alias.clone().try_into()?)
+                    .0
+                {
+                    return Err(IrError::InvalidPattern(format!(
+                        "`pb::Pattern` cannot reference existing tag: {:?}",
+                        alias
+                    )));
+                }
+            } else {
+                return Err(IrError::InvalidPattern(
+                    "the start tag in `pb::Pattern` does not exist".to_string(),
+                ));
+            }
+            if let Some(alias) = &sentence.end {
+                if !plan_meta
+                    .get_or_set_tag_id(alias.clone().try_into()?)
+                    .0
+                {
+                    return Err(IrError::InvalidPattern(format!(
+                        "`pb::Pattern` cannot reference existing tag: {:?}",
+                        alias
+                    )));
+                }
+            }
+        }
+
         Ok(())
     }
 }
@@ -1075,6 +1134,7 @@ impl AsLogical for pb::logical_plan::Operator {
                 Opr::Join(opr) => opr.preprocess(meta, plan_meta)?,
                 Opr::Sink(opr) => opr.preprocess(meta, plan_meta)?,
                 Opr::Apply(opr) => opr.preprocess(meta, plan_meta)?,
+                Opr::Pattern(opr) => opr.preprocess(meta, plan_meta)?,
                 _ => {}
             }
         }

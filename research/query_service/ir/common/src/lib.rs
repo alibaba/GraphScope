@@ -447,14 +447,11 @@ impl TryFrom<pb::IndexPredicate> for Vec<i64> {
                         global_ids.extend(arr.item.iter().map(|i| *i as i64));
                     }
                     _ => Err(ParsePbError::Unsupported(
-                        "indexed value other than integer (I32, I64) and integer array"
-                            .to_string(),
+                        "indexed value other than integer (I32, I64) and integer array".to_string(),
                     ))?,
                 }
             } else {
-                Err(ParsePbError::Unsupported(
-                    "indexed field other than `IdKey`".to_string(),
-                ))?
+                Err(ParsePbError::Unsupported("indexed field other than `IdKey`".to_string()))?
             }
         }
         Ok(global_ids)
