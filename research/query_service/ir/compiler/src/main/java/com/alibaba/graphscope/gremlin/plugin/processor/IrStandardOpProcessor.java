@@ -76,14 +76,13 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
     protected Graph graph;
     protected GraphTraversalSource g;
     protected Configs configs;
-    protected AbstractBroadcastProcessor broadcastProcessor;
+    protected RpcBroadcastProcessor broadcastProcessor;
 
-    public IrStandardOpProcessor(Configs configs) {
+    public IrStandardOpProcessor(Configs configs, RpcChannelFetcher fetcher) {
         this.graph = TinkerFactory.createModern();
         this.g = graph.traversal(IrCustomizedTraversalSource.class);
         this.configs = configs;
-        RpcChannelFetcher channelFetcher = new HostsChannelFetcher(configs);
-        broadcastProcessor = new RpcBroadcastProcessor(channelFetcher);
+        broadcastProcessor = new RpcBroadcastProcessor(fetcher);
     }
 
     @Override

@@ -22,4 +22,7 @@ import java.util.List;
 
 public interface RpcChannelFetcher {
     List<RpcChannel> fetch();
+
+    // dynamic channel need update with the changes of host access url
+    boolean isDynamic();
 }

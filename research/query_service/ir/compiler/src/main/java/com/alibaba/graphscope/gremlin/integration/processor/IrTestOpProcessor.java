@@ -18,6 +18,7 @@ package com.alibaba.graphscope.gremlin.integration.processor;
 
 import com.alibaba.graphscope.common.IrPlan;
 import com.alibaba.graphscope.common.client.ResultParser;
+import com.alibaba.graphscope.common.client.RpcChannelFetcher;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.PegasusConfig;
 import com.alibaba.graphscope.common.intermediate.InterOpCollection;
@@ -53,8 +54,8 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
     private AntlrToJavaScriptEngine scriptEngine;
     private ScriptContext context;
 
-    public IrTestOpProcessor(Configs configs) {
-        super(configs);
+    public IrTestOpProcessor(Configs configs, RpcChannelFetcher fetcher) {
+        super(configs, fetcher);
         context = new SimpleScriptContext();
         Bindings globalBindings = new SimpleBindings();
         globalBindings.put("g", g);
