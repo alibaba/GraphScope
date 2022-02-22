@@ -501,9 +501,16 @@ pub extern "C" fn set_schema(cstr_json: *const c_char) -> ResultCode {
 /// **must not** process any operation, which includes but not limited to deallocate it.
 /// We have provided  the [`destroy_logical_plan`] api for deallocating the pointer of the logical plan.
 #[no_mangle]
-pub extern "C" fn init_logical_plan(is_preprocess: bool) -> *const c_void {
+pub extern "C" fn init_logical_plan() -> *const c_void {
+    use super::meta::STORE_META;
     let mut plan = Box::new(LogicalPlan::default());
-    plan.meta.set_preprocess(is_preprocess);
+    if let Ok(meta) = STORE_META.read() {
+        if let Some(schema) = &meta.schema {
+            plan.meta = plan
+                .meta
+                .with_store_conf(schema.is_table_id(), schema.is_column_id());
+        }
+    }
     Box::into_raw(plan) as *const c_void
 }
 
@@ -545,8 +552,9 @@ pub extern "C" fn build_physical_plan(
     ptr_plan: *const c_void, num_workers: u32, num_servers: u32,
 ) -> FfiJobBuffer {
     let mut plan = unsafe { Box::from_raw(ptr_plan as *mut LogicalPlan) };
-    plan.meta
-        .set_partition(num_workers > 1 || num_servers > 1);
+    if num_workers > 1 || num_servers > 1 {
+        plan.meta = plan.meta.with_partition();
+    }
     let mut plan_meta = plan.meta.clone();
     let mut builder = JobBuilder::default();
     let build_result = plan.add_job_builder(&mut builder, &mut plan_meta);

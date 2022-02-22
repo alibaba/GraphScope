@@ -28,7 +28,7 @@ public interface IrCoreLibrary extends Library {
             Library.OPTION_TYPE_MAPPER, IrTypeMapper.INSTANCE,
             Library.OPTION_FUNCTION_MAPPER, IrFunctionMapper.INSTANCE));
 
-    Pointer initLogicalPlan(boolean isPreprocess);
+    Pointer initLogicalPlan();
 
     void write_plan_to_json(Pointer plan, String jsonFile);
 

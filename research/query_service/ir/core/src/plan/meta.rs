@@ -484,12 +484,17 @@ pub struct PlanMeta {
     curr_node: CurrNodeOpt,
     /// The maximal tag id that has been assigned, for mapping tag ids.
     max_tag_id: u32,
-    /// Whether to preprocess the operator.
-    is_preprocess: bool,
+    /// Whether to preprocess the table name into id.
+    is_table_id: bool,
+    /// Whether to preprocess the column name into id.
+    is_column_id: bool,
+    /// Whether to preprocess the tag name into id.
+    is_tag_id: bool,
     /// Whether to partition the task
     is_partition: bool,
 }
 
+// Some constructors
 impl PlanMeta {
     pub fn new(node_id: u32) -> Self {
         let mut plan_meta = PlanMeta::default();
@@ -498,6 +503,24 @@ impl PlanMeta {
         plan_meta
     }
 
+    pub fn with_store_conf(mut self, is_table_id: bool, is_column_id: bool) -> Self {
+        self.is_table_id = is_table_id;
+        self.is_column_id = is_column_id;
+        self
+    }
+
+    pub fn with_tag_id(mut self) -> Self {
+        self.is_tag_id = true;
+        self
+    }
+
+    pub fn with_partition(mut self) -> Self {
+        self.is_partition = true;
+        self
+    }
+}
+
+impl PlanMeta {
     pub fn curr_node_metas_mut(&mut self) -> NodeMetaOpt {
         match &self.curr_node {
             CurrNodeOpt::Single(node) => NodeMetaOpt::Single(
@@ -620,19 +643,19 @@ impl PlanMeta {
         }
     }
 
-    pub fn is_preprocess(&self) -> bool {
-        self.is_preprocess
+    pub fn is_table_id(&self) -> bool {
+        self.is_table_id
     }
 
-    pub fn set_preprocess(&mut self, is_preprocess: bool) {
-        self.is_preprocess = is_preprocess;
+    pub fn is_column_id(&self) -> bool {
+        self.is_column_id
+    }
+
+    pub fn is_tag_id(&self) -> bool {
+        self.is_tag_id
     }
 
     pub fn is_partition(&self) -> bool {
         self.is_partition
-    }
-
-    pub fn set_partition(&mut self, is_partition: bool) {
-        self.is_partition = is_partition;
     }
 }

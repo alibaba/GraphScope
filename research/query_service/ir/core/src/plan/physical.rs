@@ -598,7 +598,7 @@ mod test {
 
         let mut job_builder = JobBuilder::default();
         let mut plan_meta = plan.meta.clone();
-        plan_meta.set_partition(true);
+        plan_meta = plan_meta.with_partition();
         plan.add_job_builder(&mut job_builder, &mut plan_meta)
             .unwrap();
 
@@ -624,7 +624,7 @@ mod test {
             .unwrap();
         let mut job_builder = JobBuilder::default();
         let mut plan_meta = plan.meta.clone();
-        plan_meta.set_partition(true);
+        plan_meta = plan_meta.with_partition();
         plan.add_job_builder(&mut job_builder, &mut plan_meta)
             .unwrap();
 
@@ -678,7 +678,7 @@ mod test {
 
         let mut job_builder = JobBuilder::default();
         let mut plan_meta = plan.meta.clone();
-        plan_meta.set_partition(true);
+        plan_meta = plan_meta.with_partition();
         plan.add_job_builder(&mut job_builder, &mut plan_meta)
             .unwrap();
 
@@ -738,7 +738,7 @@ mod test {
 
         let mut job_builder = JobBuilder::default();
         let mut plan_meta = plan.meta.clone();
-        plan_meta.set_partition(true);
+        plan_meta = plan_meta.with_partition();
         plan.add_job_builder(&mut job_builder, &mut plan_meta)
             .unwrap();
 
@@ -775,7 +775,7 @@ mod test {
             .unwrap();
         let mut job_builder = JobBuilder::default();
         let mut plan_meta = plan.meta.clone();
-        plan_meta.set_partition(true);
+        plan_meta = plan_meta.with_partition();
         plan.add_job_builder(&mut job_builder, &mut plan_meta)
             .unwrap();
 
@@ -870,7 +870,7 @@ mod test {
 
         let mut job_builder = JobBuilder::default();
         let mut plan_meta = plan.meta.clone();
-        plan_meta.set_partition(true);
+        plan_meta = plan_meta.with_partition();
         plan.add_job_builder(&mut job_builder, &mut plan_meta)
             .unwrap();
 
@@ -1035,7 +1035,7 @@ mod test {
         // Case with partition
         let mut builder = JobBuilder::default();
         let mut plan_meta = PlanMeta::default();
-        plan_meta.set_partition(true);
+        plan_meta = plan_meta.with_partition();
         logical_plan
             .add_job_builder(&mut builder, &mut plan_meta)
             .unwrap();
@@ -1087,8 +1087,7 @@ mod test {
             .unwrap(); // node 1
                        // Case with partition
         let mut builder = JobBuilder::default();
-        let mut plan_meta = PlanMeta::default();
-        plan_meta.set_partition(true);
+        let mut plan_meta = PlanMeta::default().with_partition();
         logical_plan
             .add_job_builder(&mut builder, &mut plan_meta)
             .unwrap();
@@ -1150,7 +1149,7 @@ mod test {
     fn apply_as_physical_case1() {
         let mut plan = LogicalPlan::default();
         // g.V().as("v").where(out().as("o").has("lang", "java")).select("v").values("name")
-        plan.meta.set_partition(true);
+        plan.meta = plan.meta.with_partition();
 
         // g.V("person")
         let scan: pb::logical_plan::Operator = pb::Scan {

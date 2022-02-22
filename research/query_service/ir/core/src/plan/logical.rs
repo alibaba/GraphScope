@@ -705,7 +705,7 @@ fn preprocess_var(
             match key {
                 common_pb::property::Item::Key(key) => {
                     if let Some(schema) = &meta.schema {
-                        if plan_meta.is_preprocess() && schema.is_column_id() {
+                        if plan_meta.is_column_id() && schema.is_column_id() {
                             let new_key = schema
                                 .get_column_id_from_pb(key)
                                 .unwrap_or(INVALID_META_ID)
@@ -747,7 +747,7 @@ fn preprocess_const(
 ) -> IrResult<()> {
     if let Some(schema) = &meta.schema {
         // A Const needs to be preprocessed only if it is while comparing a label (table)
-        if plan_meta.is_preprocess() && schema.is_table_id() {
+        if plan_meta.is_table_id() && schema.is_table_id() {
             if let Some(item) = val.item.as_mut() {
                 match item {
                     common_pb::value::Item::Str(name) => {
@@ -839,7 +839,7 @@ fn preprocess_params(
         preprocess_expression(pred, meta, plan_meta)?;
     }
     if let Some(schema) = &meta.schema {
-        if plan_meta.is_preprocess() && schema.is_table_id() {
+        if plan_meta.is_table_id() && schema.is_table_id() {
             for table in params.tables.iter_mut() {
                 let new_table = schema
                     .get_table_id_from_pb(table)
@@ -852,7 +852,7 @@ fn preprocess_params(
     }
     for column in params.columns.iter_mut() {
         if let Some(schema) = &meta.schema {
-            if plan_meta.is_preprocess() && schema.is_column_id() {
+            if plan_meta.is_column_id() && schema.is_column_id() {
                 let new_column = schema
                     .get_column_id_from_pb(column)
                     .unwrap_or(INVALID_META_ID)
@@ -1006,7 +1006,7 @@ impl AsLogical for pb::IndexPredicate {
                         match key_item {
                             common_pb::property::Item::Key(key) => {
                                 if let Some(schema) = &meta.schema {
-                                    if plan_meta.is_preprocess() && schema.is_column_id() {
+                                    if plan_meta.is_column_id() && schema.is_column_id() {
                                         let new_key = schema
                                             .get_column_id_from_pb(key)
                                             .unwrap_or(INVALID_META_ID)
@@ -1378,8 +1378,7 @@ mod test {
 
     #[test]
     fn prep_expression() {
-        let mut plan_meta = PlanMeta::default();
-        plan_meta.set_preprocess(true);
+        let mut plan_meta = PlanMeta::default().with_store_conf(true, true);
         plan_meta.insert_tag_nodes("a".into(), vec![1]);
         plan_meta.insert_tag_nodes("b".into(), vec![2]);
         plan_meta
@@ -1537,8 +1536,7 @@ mod test {
 
     #[test]
     fn preprocess_scan() {
-        let mut plan_meta = PlanMeta::default();
-        plan_meta.set_preprocess(true);
+        let mut plan_meta = PlanMeta::default().with_store_conf(true, true);
         plan_meta.insert_tag_nodes("a".into(), vec![1]);
         plan_meta
             .curr_node_metas_mut()
