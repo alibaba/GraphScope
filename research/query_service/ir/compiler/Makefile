@@ -12,7 +12,7 @@ OSFLAG  :=
 UNAME_S := $(shell uname -s)
 UNAME_M := $(shell uname -m)
 
-graph.schema:=../core/resource/modern_schema.json
+graph.schema:=
 
 ifeq ($(UNAME_S),Darwin)
     ifeq ($(UNAME_M),arm64)

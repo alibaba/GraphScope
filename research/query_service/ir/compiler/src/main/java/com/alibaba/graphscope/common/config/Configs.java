@@ -38,8 +38,9 @@ public class Configs {
         // replace with the value from system property
         properties.keySet().forEach(k -> {
             String value = System.getProperty((String) k);
-            if (value != null) {
-                properties.setProperty((String) k, value);
+            String trimValue;
+            if (value != null && !(trimValue = value.trim()).isEmpty()) {
+                properties.setProperty((String) k, trimValue);
             }
         });
     }

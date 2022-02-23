@@ -41,7 +41,8 @@ public class GremlinResultAnalyzer {
             } else if (Utils.equalClass(step, CountGlobalStep.class)) {
                 parserType = GremlinResultParserFactory.SINGLE_VALUE;
             } else if (Utils.equalClass(step, SelectOneStep.class) || Utils.equalClass(step, SelectStep.class)
-                    || Utils.equalClass(step, PropertiesStep.class) || Utils.equalClass(step, PropertyMapStep.class)) {
+                    || Utils.equalClass(step, PropertiesStep.class) || Utils.equalClass(step, PropertyMapStep.class)
+                    || Utils.equalClass(step, TraversalMapStep.class)) {
                 parserType = GremlinResultParserFactory.PROJECT_VALUE;
             } else if (Utils.equalClass(step, GroupCountStep.class) || Utils.equalClass(step, GroupStep.class)) {
                 parserType = GremlinResultParserFactory.GROUP;

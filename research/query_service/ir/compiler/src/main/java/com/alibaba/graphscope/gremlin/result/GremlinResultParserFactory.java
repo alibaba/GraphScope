@@ -16,11 +16,11 @@
 
 package com.alibaba.graphscope.gremlin.result;
 
-import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.gaia.proto.Common;
 import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.alibaba.graphscope.gaia.proto.OuterExpression;
 import com.alibaba.graphscope.gremlin.exception.GremlinResultParserException;
+import com.alibaba.graphscope.gremlin.transform.alias.AliasManager;
 import org.apache.tinkerpop.gremlin.structure.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -97,16 +97,7 @@ public enum GremlinResultParserFactory implements GremlinResultParser {
                 return "";
             }
             String key = columnKey.getName();
-            String[] tagProperty = key.split("_");
-            if (tagProperty.length == 0) {
-                throw new GremlinResultParserException("column key " + key + " is invalid");
-            }
-            // head
-            if (tagProperty.length == 1) {
-                return "";
-            } else {
-                return tagProperty[0];
-            }
+            return AliasManager.getPrefix(key);
         }
     },
     GROUP {
@@ -121,7 +112,7 @@ public enum GremlinResultParserFactory implements GremlinResultParser {
                 if (parseEntry instanceof EmptyValue) {
                     continue;
                 }
-                if (alias.startsWith(ArgUtils.groupKeys())) {
+                if (AliasManager.isGroupKeysPrefix(alias)) {
                     key = parseEntry;
                 } else {
                     value = parseEntry;
@@ -183,7 +174,7 @@ public enum GremlinResultParserFactory implements GremlinResultParser {
                 OuterExpression.NameOrId columnName = column.getNameOrId();
                 if (columnName.getItemCase() == OuterExpression.NameOrId.ItemCase.NAME) {
                     String name = columnName.getName();
-                    if (name.startsWith(ArgUtils.groupKeys()) || name.startsWith(ArgUtils.groupValues())) {
+                    if (AliasManager.isGroupKeysPrefix(name) || AliasManager.isGroupValuesPrefix(name)) {
                         return GROUP;
                     } else {
                         return PROJECT_VALUE;

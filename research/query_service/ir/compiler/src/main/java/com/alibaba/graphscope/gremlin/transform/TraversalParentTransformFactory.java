@@ -24,6 +24,9 @@ import com.alibaba.graphscope.common.jna.type.*;
 import com.alibaba.graphscope.gremlin.InterOpCollectionBuilder;
 import com.alibaba.graphscope.gremlin.Utils;
 import com.alibaba.graphscope.gremlin.antlr4.GremlinAntlrToJava;
+import com.alibaba.graphscope.gremlin.transform.alias.AliasManager;
+import com.alibaba.graphscope.gremlin.transform.alias.AliasPrefixType;
+import com.alibaba.graphscope.gremlin.transform.alias.AliasArg;
 import org.apache.tinkerpop.gremlin.process.traversal.*;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.IdentityTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.step.TraversalParent;
@@ -35,6 +38,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.step.map.*;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.EmptyStep;
 import org.apache.tinkerpop.gremlin.process.traversal.util.ConnectiveP;
 import org.apache.tinkerpop.gremlin.process.traversal.util.DefaultTraversal;
+import org.apache.tinkerpop.gremlin.process.traversal.util.TraversalHelper;
 import org.apache.tinkerpop.gremlin.process.traversal.util.TraversalRing;
 import org.javatuples.Pair;
 
@@ -52,13 +56,15 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
         public List<InterOpBase> apply(TraversalParent parent) {
             List<InterOpBase> interOpList = new ArrayList<>();
             Map<String, Traversal.Admin> byTraversals = getProjectTraversals(parent);
-            List<String> projectExprList = new ArrayList<>();
-            int byIdx = 0;
+            List<Pair<String, FfiAlias.ByValue>> projectExprWithAlias = new ArrayList<>();
+            int stepIdx = TraversalHelper.stepIndex(parent.asStep(), parent.asStep().getTraversal());
+            int subId = 0;
             for (Map.Entry<String, Traversal.Admin> entry : byTraversals.entrySet()) {
                 String k = entry.getKey();
                 Traversal.Admin v = entry.getValue();
+                String expr;
                 if (isExpressionPatten(k, v)) {
-                    projectExprList.add(getSubTraversalAsExpr(k, v));
+                    expr = getSubTraversalAsExpr(k, v);
                 } else { // use apply
                     ApplyOp applyOp = new ApplyOp();
                     applyOp.setJoinKind(new OpArg(FfiJoinKind.Inner));
@@ -71,33 +77,27 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
                             (new InterOpCollectionBuilder(traversal)).build()
                     ));
                     // column key of apply result
-                    String applyAlias = getApplyAlias(k, byIdx);
-                    applyOp.setAlias(new OpArg(ArgUtils.asFfiAlias(applyAlias, false), Function.identity()));
+                    FfiAlias.ByValue applyAlias = AliasManager.getFfiAlias(
+                            new AliasArg(AliasPrefixType.PROJECT_TAG, k, stepIdx, subId));
+                    applyOp.setAlias(new OpArg(applyAlias, Function.identity()));
                     interOpList.add(applyOp);
-                    projectExprList.add("@" + applyAlias);
+                    String aliasName = applyAlias.alias.name;
+                    expr = "@" + aliasName;
                 }
-                ++byIdx;
+                FfiAlias.ByValue alias = AliasManager.getFfiAlias(
+                        new AliasArg(AliasPrefixType.PROJECT_TAG, k, stepIdx, subId));
+                projectExprWithAlias.add(Pair.with(expr, alias));
+                ++subId;
+            }
+            // optimize: if there is only one expression, alias with NONE
+            if (projectExprWithAlias.size() == 1) {
+                Pair single = projectExprWithAlias.get(0);
+                projectExprWithAlias.set(0, single.setAt1(ArgUtils.asFfiNoneAlias()));
             }
             ProjectOp op = new ProjectOp();
-            op.setExprWithAlias(new OpArg<>(projectExprList, (List<String> exprList) ->
-                    exprList.stream().map(k -> {
-                        FfiAlias.ByValue ffiAlias;
-                        // optimize: if there is only one expression, alias with NONE
-                        if (exprList.size() == 1) {
-                            ffiAlias = ArgUtils.asFfiNoneAlias();
-                        } else {
-                            String exprAsAlias = getUniqueAlias(k, parent.asStep());
-                            ffiAlias = ArgUtils.asFfiAlias(exprAsAlias, false);
-                        }
-                        return Pair.with(k, ffiAlias);
-                    }).collect(Collectors.toList())
-            ));
+            op.setExprWithAlias(new OpArg(projectExprWithAlias));
             interOpList.add(op);
             return interOpList;
-        }
-
-        private String getApplyAlias(String tag, int byIdx) {
-            return tag + "_apply_" + byIdx;
         }
     },
     // order().by("name"), order().by(values("name")) -> [OrderOp("@.name")]
@@ -112,6 +112,7 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
             List<InterOpBase> interOpList = new ArrayList<>();
             List<Pair<String, FfiOrderOpt>> exprWithOrderList = new ArrayList<>();
             List<Pair> comparators = orderStep.getComparators();
+            int stepIdx = TraversalHelper.stepIndex(parent.asStep(), parent.asStep().getTraversal());
             for (int i = 0; i < comparators.size(); ++i) {
                 Pair pair = comparators.get(i);
                 Traversal.Admin admin = (Traversal.Admin) pair.getValue0();
@@ -130,20 +131,22 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
                     applyOp.setSubOpCollection(new OpArg<>(admin, (Traversal traversal) ->
                             (new InterOpCollectionBuilder(traversal)).build()
                     ));
-                    String applyAlias = getApplyAlias(i);
-                    applyOp.setAlias(new OpArg(ArgUtils.asFfiAlias(applyAlias, false), Function.identity()));
+                    FfiAlias.ByValue applyAlias = AliasManager.getFfiAlias(
+                            new AliasArg(AliasPrefixType.DEFAULT, stepIdx, i));
+                    applyOp.setAlias(new OpArg(applyAlias, Function.identity()));
                     interOpList.add(applyOp);
-                    exprWithOrderList.add(Pair.with("@" + applyAlias, orderOpt));
+                    String aliasName = applyAlias.alias.name;
+                    exprWithOrderList.add(Pair.with("@" + aliasName, orderOpt));
                 }
             }
             OrderOp orderOp = new OrderOp();
-            orderOp.setOrderVarWithOrder(new OpArg<>(exprWithOrderList, (List orderList) ->
-                    (List) orderList.stream().map(k -> {
+            List varWithOrder = exprWithOrderList.stream()
+                    .map(k -> {
                         String expr = (String) ((Pair) k).getValue0();
                         FfiVariable.ByValue var = getExpressionAsVar(expr);
                         return ((Pair) k).setAt0(var);
-                    }).collect(Collectors.toList())
-            ));
+                    }).collect(Collectors.toList());
+            orderOp.setOrderVarWithOrder(new OpArg(varWithOrder));
             interOpList.add(orderOp);
             return interOpList;
         }
@@ -160,10 +163,6 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
                     throw new OpArgIllegalException(OpArgIllegalException.Cause.INVALID_TYPE, "invalid order type");
             }
         }
-
-        private String getApplyAlias(int byIdx) {
-            return "apply_" + byIdx;
-        }
     },
     GROUP_BY_STEP {
         @Override
@@ -172,6 +171,7 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
             // handle group key by
             Traversal.Admin groupKeyTraversal = getKeyTraversal(parent);
             String groupKeyExpr;
+            int stepIdx = TraversalHelper.stepIndex(parent.asStep(), parent.asStep().getTraversal());
             // i.e. group().by("name")
             if (isExpressionPatten("", groupKeyTraversal)) {
                 groupKeyExpr = getSubTraversalAsExpr("", groupKeyTraversal);
@@ -183,27 +183,27 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
                 applyOp.setSubOpCollection(new OpArg<>(groupKeyTraversal, (Traversal traversal) ->
                         (new InterOpCollectionBuilder(traversal)).build()
                 ));
-                String applyAlias = getApplyAlias();
-                applyOp.setAlias(new OpArg(ArgUtils.asFfiAlias(applyAlias, false), Function.identity()));
+                FfiAlias.ByValue applyAlias = AliasManager.getFfiAlias(
+                        new AliasArg(AliasPrefixType.GROUP_KEYS, stepIdx));
+                applyOp.setAlias(new OpArg(applyAlias, Function.identity()));
                 interOpList.add(applyOp);
-                groupKeyExpr = "@" + applyAlias;
+                String aliasName = applyAlias.alias.name;
+                groupKeyExpr = "@" + aliasName;
+            }
+            FfiVariable.ByValue groupKeyVar = getExpressionAsVar(groupKeyExpr);
+            FfiAlias.ByValue groupKeyAlias = AliasManager.getFfiAlias(
+                    new AliasArg(AliasPrefixType.GROUP_KEYS, stepIdx));
+            Step endStep;
+            // group().by(values("name").as("a")), "a" is the query given alias of group key
+            if (groupKeyTraversal != null
+                    && !((endStep = groupKeyTraversal.getEndStep()) instanceof EmptyStep) && !endStep.getLabels().isEmpty()) {
+                String queryAlias = (String) endStep.getLabels().iterator().next();
+                groupKeyAlias = ArgUtils.asFfiAlias(queryAlias, true);
             }
             GroupOp groupOp = new GroupOp();
-            groupOp.setGroupByKeys(new OpArg<>(groupKeyExpr, (String keyExpr) -> {
-                FfiVariable.ByValue groupKeyVar = getExpressionAsVar(groupKeyExpr);
-                String groupKeyAlias = formatExprAsGroupKeyAlias(groupKeyExpr);
-                FfiAlias.ByValue ffiAlias = ArgUtils.asFfiAlias(groupKeyAlias, false);
-                Step endStep;
-                if (groupKeyTraversal != null
-                        && !((endStep = groupKeyTraversal.getEndStep()) instanceof EmptyStep) && !endStep.getLabels().isEmpty()) {
-                    groupKeyAlias = (String) endStep.getLabels().iterator().next();
-                    ffiAlias = ArgUtils.asFfiAlias(groupKeyAlias, true);
-                }
-                return Collections.singletonList(Pair.with(groupKeyVar, ffiAlias));
-            }));
+            groupOp.setGroupByKeys(new OpArg(Collections.singletonList(Pair.with(groupKeyVar, groupKeyAlias))));
             // handle group value by
-            Traversal.Admin valueTraversal = getValueTraversal(parent);
-            groupOp.setGroupByValues(new OpArg(getGroupValueAsAggFn(valueTraversal), Function.identity()));
+            groupOp.setGroupByValues(new OpArg(getGroupValueAsAggFn(parent)));
             interOpList.add(groupOp);
             return interOpList;
         }
@@ -234,40 +234,25 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
             }
         }
 
-        // @ -> keys
-        // @a -> keys_a
-        // @.name -> keys_name
-        // @a.name -> keys_a_name
-        // @apply -> keys_apply
-        private String formatExprAsGroupKeyAlias(String expr) {
-            String exprAsAlias = formatExprAsAlias(expr);
-            return exprAsAlias.isEmpty() ? ArgUtils.groupKeys() : ArgUtils.groupKeys() + "_" + exprAsAlias;
-        }
-
-        // keys or values
-        private String getApplyAlias() {
-            return "apply";
-        }
-
-        public List<ArgAggFn> getGroupValueAsAggFn(Traversal.Admin admin) {
-            List<FfiVariable.ByValue> noneVars = Collections.emptyList();
+        public List<ArgAggFn> getGroupValueAsAggFn(TraversalParent parent) {
+            Traversal.Admin admin = getValueTraversal(parent);
             FfiAggOpt aggOpt;
-            FfiAlias.ByValue alias;
+            int stepIdx = TraversalHelper.stepIndex(parent.asStep(), parent.asStep().getTraversal());
+            FfiAlias.ByValue alias = AliasManager.getFfiAlias(
+                    new AliasArg(AliasPrefixType.GROUP_VALUES, stepIdx));
             String notice = "supported pattern is [group().by(..).by(count())] or [group().by(..).by(fold())]";
             if (admin == null || admin instanceof IdentityTraversal || admin.getSteps().size() == 2
                     && isMapIdentity(admin.getStartStep()) && admin.getEndStep() instanceof FoldStep) { // group, // group().by(..).by()
                 aggOpt = FfiAggOpt.ToList;
-                alias = getGroupValueAlias(noneVars, aggOpt);
             } else if (admin.getSteps().size() == 1) {
                 if (admin.getStartStep() instanceof CountGlobalStep) { // group().by(..).by(count())
                     aggOpt = FfiAggOpt.Count;
-                    alias = getGroupValueAlias(noneVars, aggOpt);
                 } else if (admin.getStartStep() instanceof FoldStep) { // group().by(..).by(fold())
                     aggOpt = FfiAggOpt.ToList;
-                    alias = getGroupValueAlias(noneVars, aggOpt);
                 } else {
                     throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE, notice);
                 }
+                // group().by(..).by(count().as("a")), "a" is the query given alias of group value
                 Set<String> labels = admin.getStartStep().getLabels();
                 if (labels != null && !labels.isEmpty()) {
                     String label = labels.iterator().next();
@@ -287,16 +272,6 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
             TraversalMapStep mapStep = (TraversalMapStep) step;
             Traversal.Admin mapTraversal = mapStep.getLocalChildren().size() > 0 ? (Traversal.Admin) mapStep.getLocalChildren().get(0) : null;
             return mapTraversal != null && mapTraversal instanceof IdentityTraversal;
-        }
-
-        // values
-        private FfiAlias.ByValue getGroupValueAlias(List<FfiVariable.ByValue> vars, FfiAggOpt aggOpt) {
-            String alias = ArgUtils.groupValues();
-            // todo: add var into alias name
-            if (!vars.isEmpty()) {
-                throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE, "aggregate by vars is unsupported");
-            }
-            return ArgUtils.asFfiAlias(alias, false);
         }
     },
     // todo: where("a").by(out().count()), support subtask

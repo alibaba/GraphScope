@@ -108,11 +108,11 @@ public class SelectStepTest {
 
         Pair firstEntry = exprWithAlias.get(0);
         Assert.assertEquals("@a", firstEntry.getValue0());
-        Assert.assertEquals(ArgUtils.asFfiAlias("a_2", false), firstEntry.getValue1());
+        Assert.assertEquals(ArgUtils.asFfiAlias("a_2_0", false), firstEntry.getValue1());
 
         Pair sndEntry = exprWithAlias.get(1);
         Assert.assertEquals("@b", sndEntry.getValue0());
-        Assert.assertEquals(ArgUtils.asFfiAlias("b_2", false), sndEntry.getValue1());
+        Assert.assertEquals(ArgUtils.asFfiAlias("b_2_1", false), sndEntry.getValue1());
     }
 
     @Test
@@ -124,11 +124,11 @@ public class SelectStepTest {
 
         Pair firstEntry = exprWithAlias.get(0);
         Assert.assertEquals("@a.name", firstEntry.getValue0());
-        Assert.assertEquals(ArgUtils.asFfiAlias("a_name_2", false), firstEntry.getValue1());
+        Assert.assertEquals(ArgUtils.asFfiAlias("a_2_0", false), firstEntry.getValue1());
 
         Pair sndEntry = exprWithAlias.get(1);
         Assert.assertEquals("@b.name", sndEntry.getValue0());
-        Assert.assertEquals(ArgUtils.asFfiAlias("b_name_2", false), sndEntry.getValue1());
+        Assert.assertEquals(ArgUtils.asFfiAlias("b_2_1", false), sndEntry.getValue1());
     }
 
 
@@ -143,7 +143,7 @@ public class SelectStepTest {
         Assert.assertEquals(FfiJoinKind.Inner, applyOp.getJoinKind().get().applyArg());
         InterOpCollection subOps = (InterOpCollection) applyOp.getSubOpCollection().get().applyArg();
         Assert.assertEquals(3, subOps.unmodifiableCollection().size());
-        Assert.assertEquals(ArgUtils.asFfiAlias("a_apply_0", false), applyOp.getAlias().get().applyArg());
+        Assert.assertEquals(ArgUtils.asFfiAlias("a_1_0", false), applyOp.getAlias().get().applyArg());
 
         ProjectOp projectOp = (ProjectOp) ops.get(1);
         List<Pair> exprWithAlias = (List<Pair>) projectOp.getExprWithAlias().get().applyArg();
@@ -151,7 +151,7 @@ public class SelectStepTest {
 
         Pair firstEntry = exprWithAlias.get(0);
         // expression
-        Assert.assertEquals("@a_apply_0", firstEntry.getValue0());
+        Assert.assertEquals("@a_1_0", firstEntry.getValue0());
         // alias
         Assert.assertEquals(ArgUtils.asFfiNoneAlias(), firstEntry.getValue1());
     }
@@ -167,7 +167,7 @@ public class SelectStepTest {
         Assert.assertEquals(FfiJoinKind.Inner, applyOp.getJoinKind().get().applyArg());
         InterOpCollection subOps = (InterOpCollection) applyOp.getSubOpCollection().get().applyArg();
         Assert.assertEquals(3, subOps.unmodifiableCollection().size());
-        Assert.assertEquals(ArgUtils.asFfiAlias("b_apply_1", false), applyOp.getAlias().get().applyArg());
+        Assert.assertEquals(ArgUtils.asFfiAlias("b_2_1", false), applyOp.getAlias().get().applyArg());
 
         ProjectOp projectOp = (ProjectOp) ops.get(1);
         List<Pair> exprWithAlias = (List<Pair>) projectOp.getExprWithAlias().get().applyArg();
@@ -175,11 +175,11 @@ public class SelectStepTest {
 
         Pair firstEntry = exprWithAlias.get(0);
         Assert.assertEquals("@a.name", firstEntry.getValue0());
-        Assert.assertEquals(ArgUtils.asFfiAlias("a_name_2", false), firstEntry.getValue1());
+        Assert.assertEquals(ArgUtils.asFfiAlias("a_2_0", false), firstEntry.getValue1());
 
         Pair sndEntry = exprWithAlias.get(1);
-        Assert.assertEquals("@b_apply_1", sndEntry.getValue0());
-        Assert.assertEquals(ArgUtils.asFfiAlias("b_apply_1_2", false), sndEntry.getValue1());
+        Assert.assertEquals("@b_2_1", sndEntry.getValue0());
+        Assert.assertEquals(ArgUtils.asFfiAlias("b_2_1", false), sndEntry.getValue1());
     }
 
     @Test
@@ -193,24 +193,24 @@ public class SelectStepTest {
         Assert.assertEquals(FfiJoinKind.Inner, apply1.getJoinKind().get().applyArg());
         InterOpCollection subOps = (InterOpCollection) apply1.getSubOpCollection().get().applyArg();
         Assert.assertEquals(4, subOps.unmodifiableCollection().size());
-        Assert.assertEquals(ArgUtils.asFfiAlias("a_apply_0", false), apply1.getAlias().get().applyArg());
+        Assert.assertEquals(ArgUtils.asFfiAlias("a_2_0", false), apply1.getAlias().get().applyArg());
 
         ApplyOp apply2 = (ApplyOp) ops.get(1);
         Assert.assertEquals(FfiJoinKind.Inner, apply2.getJoinKind().get().applyArg());
         subOps = (InterOpCollection) apply2.getSubOpCollection().get().applyArg();
         Assert.assertEquals(4, subOps.unmodifiableCollection().size());
-        Assert.assertEquals(ArgUtils.asFfiAlias("b_apply_1", false), apply2.getAlias().get().applyArg());
+        Assert.assertEquals(ArgUtils.asFfiAlias("b_2_1", false), apply2.getAlias().get().applyArg());
 
         ProjectOp projectOp = (ProjectOp) ops.get(2);
         List<Pair> exprWithAlias = (List<Pair>) projectOp.getExprWithAlias().get().applyArg();
         Assert.assertEquals(2, exprWithAlias.size());
 
         Pair firstEntry = exprWithAlias.get(0);
-        Assert.assertEquals("@a_apply_0", firstEntry.getValue0());
-        Assert.assertEquals(ArgUtils.asFfiAlias("a_apply_0_2", false), firstEntry.getValue1());
+        Assert.assertEquals("@a_2_0", firstEntry.getValue0());
+        Assert.assertEquals(ArgUtils.asFfiAlias("a_2_0", false), firstEntry.getValue1());
 
         Pair sndEntry = exprWithAlias.get(1);
-        Assert.assertEquals("@b_apply_1", sndEntry.getValue0());
-        Assert.assertEquals(ArgUtils.asFfiAlias("b_apply_1_2", false), sndEntry.getValue1());
+        Assert.assertEquals("@b_2_1", sndEntry.getValue0());
+        Assert.assertEquals(ArgUtils.asFfiAlias("b_2_1", false), sndEntry.getValue1());
     }
 }
