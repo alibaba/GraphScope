@@ -16,8 +16,12 @@
 
 package com.alibaba.graphscope.gremlin.subtask;
 
+import com.alibaba.graphscope.common.intermediate.ArgUtils;
+import com.alibaba.graphscope.common.intermediate.InterOpCollection;
+import com.alibaba.graphscope.common.intermediate.operator.ApplyOp;
 import com.alibaba.graphscope.common.intermediate.operator.InterOpBase;
 import com.alibaba.graphscope.common.intermediate.operator.SelectOp;
+import com.alibaba.graphscope.common.jna.type.FfiJoinKind;
 import com.alibaba.graphscope.gremlin.transform.TraversalParentTransformFactory;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
@@ -99,5 +103,25 @@ public class WherePredicateTest {
                 selectOp.getPredicate().get().applyArg());
     }
 
-    //todo: support subtask, where("a", P.eq("b")).by(out().count())
+    @Test
+    public void g_V_where_a_eq_b_by_out_count() {
+        Traversal traversal = g.V().as("a")
+                .out().as("b").where("a", P.eq("b")).by(__.out().count());
+        List<InterOpBase> ops = getApplyWithSelect(traversal);
+
+        ApplyOp apply1 = (ApplyOp) ops.get(0);
+        Assert.assertEquals(FfiJoinKind.Inner, apply1.getJoinKind().get().applyArg());
+        InterOpCollection subOps = (InterOpCollection) apply1.getSubOpCollection().get().applyArg();
+        Assert.assertEquals(3, subOps.unmodifiableCollection().size());
+        Assert.assertEquals(ArgUtils.asFfiAlias("~alias_2_0", false), apply1.getAlias().get().applyArg());
+
+        ApplyOp apply2 = (ApplyOp) ops.get(1);
+        Assert.assertEquals(FfiJoinKind.Inner, apply2.getJoinKind().get().applyArg());
+        subOps = (InterOpCollection) apply2.getSubOpCollection().get().applyArg();
+        Assert.assertEquals(3, subOps.unmodifiableCollection().size());
+        Assert.assertEquals(ArgUtils.asFfiAlias("~alias_2_1", false), apply2.getAlias().get().applyArg());
+
+        SelectOp selectOp = (SelectOp) getApplyWithSelect(traversal).get(2);
+        Assert.assertEquals("@~alias_2_0 == @~alias_2_1", selectOp.getPredicate().get().applyArg());
+    }
 }

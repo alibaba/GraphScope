@@ -305,6 +305,7 @@ traversalMethod_whereby
     : 'by' LPAREN RPAREN
     | 'by' LPAREN stringLiteral RPAREN
     | 'by' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_values RPAREN
+    | 'by' LPAREN nestedTraversal RPAREN
     ;
 
 traversalMethod_whereby_list

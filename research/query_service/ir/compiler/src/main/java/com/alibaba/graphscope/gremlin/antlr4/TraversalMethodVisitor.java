@@ -471,6 +471,9 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
                             GremlinAntlrToJava.getTraversalSupplier().get());
                     Traversal nestedTraversal = nestedVisitor.visitTraversalMethod_values(byCtx.traversalMethod_values());
                     byModulating.modulateBy(nestedTraversal.asAdmin());
+                } else if (byChildCount == 4 && byCtx.nestedTraversal() != null) {
+                    Traversal byTraversal = visitNestedTraversal(byCtx.nestedTraversal());
+                    byModulating.modulateBy(byTraversal.asAdmin());
                 }
             }
         }
