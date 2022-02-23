@@ -203,6 +203,7 @@ traversalMethod_orderby_list
 // select('s', ...).by(...).by(...)
 traversalMethod_select
     : 'select' LPAREN stringLiteral (COMMA stringLiteralList)? RPAREN (DOT traversalMethod_selectby_list)?
+    | 'select' LPAREN traversalColumn RPAREN
     ;
 
 // by()
@@ -438,6 +439,11 @@ traversalOrder
     : 'asc'  | 'Order.asc'
     | 'desc' | 'Order.desc'
     | 'shuffle' | 'Order.shuffle'
+    ;
+
+traversalColumn
+    : 'keys' | 'Column.keys'
+    | 'values' | 'Column.values'
     ;
 
 // Integer Literals

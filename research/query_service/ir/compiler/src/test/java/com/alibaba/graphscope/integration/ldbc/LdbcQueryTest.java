@@ -6,6 +6,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.Order;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
+import org.apache.tinkerpop.gremlin.structure.Column;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.junit.Assert;
 import org.junit.Test;
@@ -388,10 +389,10 @@ public abstract class LdbcQueryTest extends AbstractGremlinProcessTest {
                             .out("HASTAG").where(P.eq("tag")))
                     .select("tag")
                     .groupCount()
-                    .order().by(__.select("values"), Order.desc)
-                    .by(__.select("keys").by("name"), Order.asc).limit(10).as("ordered")
-                    .select("keys").by("name").as("tagName")
-                    .select("ordered").select("values").as("postCount")
+                    .order().by(__.select(Column.values), Order.desc)
+                    .by(__.select(Column.keys).values("name"), Order.asc).limit(10)
+                    .select(Column.keys).values("name").as("tagName")
+                    .select(Column.values).as("postCount")
                     .select("tagName", "postCount");
         }
 
@@ -403,8 +404,8 @@ public abstract class LdbcQueryTest extends AbstractGremlinProcessTest {
                     .out("CONTAINEROF").hasLabel("POST").out("HASCREATOR").where(P.eq("p"))
                     .select("forum")
                     .groupCount()
-                    .order().by(__.select("values"), Order.desc)
-                    .by(__.select("keys").by("id"), Order.asc).limit(20);
+                    .order().by(__.select(Column.values), Order.desc)
+                    .by(__.select(Column.keys).values("id"), Order.asc).limit(20);
         }
 
         @Override
@@ -415,9 +416,11 @@ public abstract class LdbcQueryTest extends AbstractGremlinProcessTest {
                     .select("_t").dedup().out("HASTAG").has("name", P.neq("Angola"))
                     .groupCount()
                     .order()
-                    .by(__.select("values"), Order.desc)
-                    .by(__.select("keys").by("name"), Order.asc).limit(10)
-                    .select("keys", "values").by("name").by();
+                    .by(__.select(Column.values), Order.desc)
+                    .by(__.select(Column.keys).values("name"), Order.asc).limit(10)
+                    .select(Column.keys).values("name").as("keys")
+                    .select(Column.values).as("values")
+                    .select("keys", "values");
         }
 
         @Override
@@ -475,8 +478,8 @@ public abstract class LdbcQueryTest extends AbstractGremlinProcessTest {
                     .where(__.out("REPLYOF").hasLabel("POST").out("HASTAG").out("HASTYPE")
                             .has("name", P.eq("BasketballPlayer"))).select("friend")
                     .groupCount()
-                    .order().by(__.select("values"), Order.desc)
-                    .by(__.select("keys").by("id"), Order.asc).limit(20);
+                    .order().by(__.select(Column.values), Order.desc)
+                    .by(__.select(Column.keys).values("id"), Order.asc).limit(20);
         }
     }
 }

@@ -21,6 +21,7 @@ import com.alibaba.graphscope.common.intermediate.InterOpCollection;
 import com.alibaba.graphscope.common.intermediate.operator.ApplyOp;
 import com.alibaba.graphscope.common.intermediate.operator.InterOpBase;
 import com.alibaba.graphscope.common.intermediate.operator.OrderOp;
+import com.alibaba.graphscope.common.jna.type.FfiAlias;
 import com.alibaba.graphscope.common.jna.type.FfiJoinKind;
 import com.alibaba.graphscope.common.jna.type.FfiOrderOpt;
 import com.alibaba.graphscope.gremlin.transform.TraversalParentTransformFactory;
@@ -111,10 +112,10 @@ public class OrderStepTest {
         Assert.assertEquals(FfiJoinKind.Inner, applyOp.getJoinKind().get().applyArg());
         InterOpCollection subOps = (InterOpCollection) applyOp.getSubOpCollection().get().applyArg();
         Assert.assertEquals(2, subOps.unmodifiableCollection().size());
-        Assert.assertEquals(ArgUtils.asFfiAlias("apply_0", false), applyOp.getAlias().get().applyArg());
+        Assert.assertEquals(ArgUtils.asFfiAlias("~alias_1_0", false), applyOp.getAlias().get().applyArg());
 
         OrderOp orderOp = (OrderOp) ops.get(1);
-        List<Pair> expected = Arrays.asList(Pair.with(ArgUtils.asFfiVar("apply_0", ""), FfiOrderOpt.Asc));
+        List<Pair> expected = Arrays.asList(Pair.with(ArgUtils.asFfiVar("~alias_1_0", ""), FfiOrderOpt.Asc));
         Assert.assertEquals(expected, orderOp.getOrderVarWithOrder().get().applyArg());
     }
 
@@ -128,12 +129,12 @@ public class OrderStepTest {
         Assert.assertEquals(FfiJoinKind.Inner, applyOp.getJoinKind().get().applyArg());
         InterOpCollection subOps = (InterOpCollection) applyOp.getSubOpCollection().get().applyArg();
         Assert.assertEquals(2, subOps.unmodifiableCollection().size());
-        Assert.assertEquals(ArgUtils.asFfiAlias("apply_1", false), applyOp.getAlias().get().applyArg());
+        Assert.assertEquals(ArgUtils.asFfiAlias("~alias_1_1", false), applyOp.getAlias().get().applyArg());
 
         OrderOp orderOp = (OrderOp) ops.get(1);
         List<Pair> expected = Arrays.asList(
                 Pair.with(ArgUtils.asFfiVar("", "name"), FfiOrderOpt.Asc),
-                Pair.with(ArgUtils.asFfiVar("apply_1", ""), FfiOrderOpt.Asc));
+                Pair.with(ArgUtils.asFfiVar("~alias_1_1", ""), FfiOrderOpt.Asc));
         Assert.assertEquals(expected, orderOp.getOrderVarWithOrder().get().applyArg());
     }
 
@@ -147,18 +148,18 @@ public class OrderStepTest {
         Assert.assertEquals(FfiJoinKind.Inner, apply1.getJoinKind().get().applyArg());
         InterOpCollection subOps = (InterOpCollection) apply1.getSubOpCollection().get().applyArg();
         Assert.assertEquals(3, subOps.unmodifiableCollection().size());
-        Assert.assertEquals(ArgUtils.asFfiAlias("apply_0", false), apply1.getAlias().get().applyArg());
+        Assert.assertEquals(ArgUtils.asFfiAlias("~alias_1_0", false), apply1.getAlias().get().applyArg());
 
         ApplyOp apply2 = (ApplyOp) ops.get(1);
         Assert.assertEquals(FfiJoinKind.Inner, apply2.getJoinKind().get().applyArg());
         subOps = (InterOpCollection) apply2.getSubOpCollection().get().applyArg();
         Assert.assertEquals(2, subOps.unmodifiableCollection().size());
-        Assert.assertEquals(ArgUtils.asFfiAlias("apply_1", false), apply2.getAlias().get().applyArg());
+        Assert.assertEquals(ArgUtils.asFfiAlias("~alias_1_1", false), apply2.getAlias().get().applyArg());
 
         OrderOp orderOp = (OrderOp) ops.get(2);
         List<Pair> expected = Arrays.asList(
-                Pair.with(ArgUtils.asFfiVar("apply_0", ""), FfiOrderOpt.Desc),
-                Pair.with(ArgUtils.asFfiVar("apply_1", ""), FfiOrderOpt.Asc));
+                Pair.with(ArgUtils.asFfiVar("~alias_1_0", ""), FfiOrderOpt.Desc),
+                Pair.with(ArgUtils.asFfiVar("~alias_1_1", ""), FfiOrderOpt.Asc));
         Assert.assertEquals(expected, orderOp.getOrderVarWithOrder().get().applyArg());
     }
 }
