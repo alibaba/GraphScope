@@ -28,6 +28,7 @@
     <module>benchmark</module>
     <module>distribution</module>
     <module>../research/query_service/gremlin/compiler</module>
+    <module>../research/query_service/ir/compiler</module>
   </modules>
 
   <properties>
