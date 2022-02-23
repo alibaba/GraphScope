@@ -19,6 +19,7 @@
     <module>executor</module>
     <module>frontendservice</module>
     <module>gaia-adaptor</module>
+    <module>ir-adaptor</module>
     <module>groot</module>
     <module>groot-server</module>
     <module>lgraph</module>
