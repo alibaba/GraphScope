@@ -16,10 +16,10 @@
 
 package com.alibaba.graphscope.gremlin.transform.alias;
 
-public class GetAliasArg {
-    public static String GROUP_KEYS = "keys";
-    public static String GROUP_VALUES = "values";
-    public static String DEFAULT = "default";
+public class AliasArg {
+    public static String GROUP_KEYS = "~keys";
+    public static String GROUP_VALUES = "~values";
+    public static String DEFAULT = "~alias";
 
     // the prefix is composed of the type and the tag
     // there are 4 kinds of alias prefix, {keys, values, default, tag}
@@ -31,29 +31,29 @@ public class GetAliasArg {
     private int stepIdx;
     private int subTraversalIdx;
 
-    private GetAliasArg() {
+    private AliasArg() {
         this.tag = "";
         this.type = AliasPrefixType.DEFAULT;
         this.stepIdx = 0;
         this.subTraversalIdx = 0;
     }
 
-    public GetAliasArg(AliasPrefixType type) {
+    public AliasArg(AliasPrefixType type) {
         super();
         this.type = type;
     }
 
-    public GetAliasArg(AliasPrefixType type, int stepIdx) {
+    public AliasArg(AliasPrefixType type, int stepIdx) {
         this(type);
         this.stepIdx = stepIdx;
     }
 
-    public GetAliasArg(AliasPrefixType type, int stepIdx, int subTraversalIdx) {
+    public AliasArg(AliasPrefixType type, int stepIdx, int subTraversalIdx) {
         this(type, stepIdx);
         this.subTraversalIdx = subTraversalIdx;
     }
 
-    public GetAliasArg(AliasPrefixType type, String tag) {
+    public AliasArg(AliasPrefixType type, String tag) {
         super();
         if (tag.isEmpty()) {
             this.type = AliasPrefixType.DEFAULT;
@@ -63,12 +63,12 @@ public class GetAliasArg {
         }
     }
 
-    public GetAliasArg(AliasPrefixType type, String tag, int stepIdx) {
+    public AliasArg(AliasPrefixType type, String tag, int stepIdx) {
         this(type, tag);
         this.stepIdx = stepIdx;
     }
 
-    public GetAliasArg(AliasPrefixType type, String tag, int stepIdx, int subTraversalIdx) {
+    public AliasArg(AliasPrefixType type, String tag, int stepIdx, int subTraversalIdx) {
         this(type, tag, stepIdx);
         this.subTraversalIdx = subTraversalIdx;
     }

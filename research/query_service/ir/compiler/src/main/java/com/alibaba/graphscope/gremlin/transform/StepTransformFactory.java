@@ -27,7 +27,7 @@ import com.alibaba.graphscope.gremlin.plugin.step.PathExpandStep;
 import com.alibaba.graphscope.gremlin.plugin.step.ScanFusionStep;
 import com.alibaba.graphscope.gremlin.transform.alias.AliasManager;
 import com.alibaba.graphscope.gremlin.transform.alias.AliasPrefixType;
-import com.alibaba.graphscope.gremlin.transform.alias.GetAliasArg;
+import com.alibaba.graphscope.gremlin.transform.alias.AliasArg;
 import org.apache.tinkerpop.gremlin.process.traversal.Pop;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
@@ -241,7 +241,7 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
         private List<ArgAggFn> getCountAgg(CountGlobalStep step1) {
             int stepIdx = TraversalHelper.stepIndex(step1, step1.getTraversal());
             FfiAlias.ByValue valueAlias = AliasManager.getFfiAlias(
-                    new GetAliasArg(AliasPrefixType.GROUP_VALUES, stepIdx));
+                    new AliasArg(AliasPrefixType.GROUP_VALUES, stepIdx));
             // count().as("a"), "a" is the alias of group value
             if (!step1.getLabels().isEmpty()) {
                 String label = (String) step1.getLabels().iterator().next();
@@ -360,14 +360,14 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
         private String getMapKey(TraversalMapStep step) {
             Step groupStep = getPreviousGroupStep(step);
             int stepIdx = TraversalHelper.stepIndex(groupStep, groupStep.getTraversal());
-            FfiAlias.ByValue keyAlias = AliasManager.getFfiAlias(new GetAliasArg(AliasPrefixType.GROUP_KEYS, stepIdx));
+            FfiAlias.ByValue keyAlias = AliasManager.getFfiAlias(new AliasArg(AliasPrefixType.GROUP_KEYS, stepIdx));
             return keyAlias.alias.name;
         }
 
         private String getMapValue(TraversalMapStep step) {
             Step groupStep = getPreviousGroupStep(step);
             int stepIdx = TraversalHelper.stepIndex(groupStep, groupStep.getTraversal());
-            FfiAlias.ByValue valueAlias = AliasManager.getFfiAlias(new GetAliasArg(AliasPrefixType.GROUP_VALUES, stepIdx));
+            FfiAlias.ByValue valueAlias = AliasManager.getFfiAlias(new AliasArg(AliasPrefixType.GROUP_VALUES, stepIdx));
             return valueAlias.alias.name;
         }
 

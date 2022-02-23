@@ -42,7 +42,7 @@ public class CountStepTest {
         GroupOp op = (GroupOp) StepTransformFactory.COUNT_STEP.apply(step);
 
         Assert.assertEquals(Collections.emptyList(), op.getGroupByKeys().get().applyArg());
-        ArgAggFn expectedValue = new ArgAggFn(FfiAggOpt.Count, ArgUtils.asFfiAlias("values_1_0", false));
+        ArgAggFn expectedValue = new ArgAggFn(FfiAggOpt.Count, ArgUtils.asFfiAlias("~values_1_0", false));
         Assert.assertEquals(Collections.singletonList(expectedValue), op.getGroupByValues().get().applyArg());
     }
 

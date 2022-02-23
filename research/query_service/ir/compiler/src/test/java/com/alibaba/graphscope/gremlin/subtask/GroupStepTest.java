@@ -56,8 +56,10 @@ public class GroupStepTest {
 
         Pair<FfiVariable.ByValue, FfiAlias.ByValue> expectedKey = Pair.with(
                 ArgUtils.asFfiNoneVar(),
-                ArgUtils.asFfiAlias("keys_1_0", false));
-        ArgAggFn expectedValue = new ArgAggFn(FfiAggOpt.ToList, ArgUtils.asFfiAlias("values_1_0", false));
+                ArgUtils.asFfiAlias("~keys_1_0", false));
+        ArgAggFn expectedValue = new ArgAggFn(
+                FfiAggOpt.ToList,
+                ArgUtils.asFfiAlias("~values_1_0", false));
 
         Assert.assertEquals(Collections.singletonList(expectedKey), op.getGroupByKeys().get().applyArg());
         Assert.assertEquals(Collections.singletonList(expectedValue), op.getGroupByValues().get().applyArg());
@@ -70,10 +72,10 @@ public class GroupStepTest {
 
         Pair<FfiVariable.ByValue, FfiAlias.ByValue> expectedKey = Pair.with(
                 ArgUtils.asFfiVar("", "name"),
-                ArgUtils.asFfiAlias("keys_1_0", false));
+                ArgUtils.asFfiAlias("~keys_1_0", false));
         ArgAggFn expectedValue = new ArgAggFn(
                 FfiAggOpt.ToList,
-                ArgUtils.asFfiAlias("values_1_0", false));
+                ArgUtils.asFfiAlias("~values_1_0", false));
 
         Assert.assertEquals(Collections.singletonList(expectedKey), op.getGroupByKeys().get().applyArg());
         Assert.assertEquals(Collections.singletonList(expectedValue), op.getGroupByValues().get().applyArg());
@@ -86,10 +88,10 @@ public class GroupStepTest {
 
         Pair<FfiVariable.ByValue, FfiAlias.ByValue> expectedKey = Pair.with(
                 ArgUtils.asFfiVar("", "name"),
-                ArgUtils.asFfiAlias("keys_1_0", false));
+                ArgUtils.asFfiAlias("~keys_1_0", false));
         ArgAggFn expectedValue = new ArgAggFn(
                 FfiAggOpt.ToList,
-                ArgUtils.asFfiAlias("values_1_0", false));
+                ArgUtils.asFfiAlias("~values_1_0", false));
 
         Assert.assertEquals(Collections.singletonList(expectedKey), op.getGroupByKeys().get().applyArg());
         Assert.assertEquals(Collections.singletonList(expectedValue), op.getGroupByValues().get().applyArg());
@@ -105,7 +107,7 @@ public class GroupStepTest {
                 ArgUtils.asFfiAlias("a", true));
         ArgAggFn expectedValue = new ArgAggFn(
                 FfiAggOpt.ToList,
-                ArgUtils.asFfiAlias("values_1_0", false));
+                ArgUtils.asFfiAlias("~values_1_0", false));
 
         Assert.assertEquals(Collections.singletonList(expectedKey), op.getGroupByKeys().get().applyArg());
         Assert.assertEquals(Collections.singletonList(expectedValue), op.getGroupByValues().get().applyArg());
@@ -118,10 +120,10 @@ public class GroupStepTest {
 
         Pair<FfiVariable.ByValue, FfiAlias.ByValue> expectedKey = Pair.with(
                 ArgUtils.asFfiVar("", "name"),
-                ArgUtils.asFfiAlias("keys_1_0", false));
+                ArgUtils.asFfiAlias("~keys_1_0", false));
         ArgAggFn expectedValue = new ArgAggFn(
                 FfiAggOpt.Count,
-                ArgUtils.asFfiAlias("values_1_0", false));
+                ArgUtils.asFfiAlias("~values_1_0", false));
 
         Assert.assertEquals(Collections.singletonList(expectedKey), op.getGroupByKeys().get().applyArg());
         Assert.assertEquals(Collections.singletonList(expectedValue), op.getGroupByValues().get().applyArg());
@@ -134,7 +136,7 @@ public class GroupStepTest {
 
         Pair<FfiVariable.ByValue, FfiAlias.ByValue> expectedKey = Pair.with(
                 ArgUtils.asFfiVar("", "name"),
-                ArgUtils.asFfiAlias("keys_1_0", false));
+                ArgUtils.asFfiAlias("~keys_1_0", false));
         ArgAggFn expectedValue = new ArgAggFn(
                 FfiAggOpt.Count,
                 ArgUtils.asFfiAlias("b", true));
@@ -150,9 +152,9 @@ public class GroupStepTest {
 
         Pair<FfiVariable.ByValue, FfiAlias.ByValue> expectedKey = Pair.with(
                 ArgUtils.asFfiVar("", "name"),
-                ArgUtils.asFfiAlias("keys_1_0", false));
+                ArgUtils.asFfiAlias("~keys_1_0", false));
         ArgAggFn expectedValue = new ArgAggFn(
-                FfiAggOpt.ToList, ArgUtils.asFfiAlias("values_1_0", false));
+                FfiAggOpt.ToList, ArgUtils.asFfiAlias("~values_1_0", false));
 
         Assert.assertEquals(Collections.singletonList(expectedKey), op.getGroupByKeys().get().applyArg());
         Assert.assertEquals(Collections.singletonList(expectedValue), op.getGroupByValues().get().applyArg());
@@ -165,7 +167,7 @@ public class GroupStepTest {
 
         Pair<FfiVariable.ByValue, FfiAlias.ByValue> expectedKey = Pair.with(
                 ArgUtils.asFfiVar("", "name"),
-                ArgUtils.asFfiAlias("keys_1_0", false));
+                ArgUtils.asFfiAlias("~keys_1_0", false));
         ArgAggFn expectedValue = new ArgAggFn(
                 FfiAggOpt.ToList,
                 ArgUtils.asFfiAlias("b", true));
@@ -181,7 +183,7 @@ public class GroupStepTest {
 
         Pair<FfiVariable.ByValue, FfiAlias.ByValue> expectedKey = Pair.with(
                 ArgUtils.asFfiVar("a", "name"),
-                ArgUtils.asFfiAlias("keys_1_0", false));
+                ArgUtils.asFfiAlias("~keys_1_0", false));
         ArgAggFn expectedValue = new ArgAggFn(
                 FfiAggOpt.ToList,
                 ArgUtils.asFfiAlias("b", true));
@@ -197,10 +199,10 @@ public class GroupStepTest {
 
         Pair<FfiVariable.ByValue, FfiAlias.ByValue> expectedKey = Pair.with(
                 ArgUtils.asFfiNoneVar(),
-                ArgUtils.asFfiAlias("keys_1_0", false));
+                ArgUtils.asFfiAlias("~keys_1_0", false));
         ArgAggFn expectedValue = new ArgAggFn(
                 FfiAggOpt.Count,
-                ArgUtils.asFfiAlias("values_1_0", false));
+                ArgUtils.asFfiAlias("~values_1_0", false));
 
         Assert.assertEquals(Collections.singletonList(expectedKey), op.getGroupByKeys().get().applyArg());
         Assert.assertEquals(Collections.singletonList(expectedValue), op.getGroupByValues().get().applyArg());
@@ -213,10 +215,10 @@ public class GroupStepTest {
 
         Pair<FfiVariable.ByValue, FfiAlias.ByValue> expectedKey = Pair.with(
                 ArgUtils.asFfiVar("", "name"),
-                ArgUtils.asFfiAlias("keys_1_0", false));
+                ArgUtils.asFfiAlias("~keys_1_0", false));
         ArgAggFn expectedValue = new ArgAggFn(
                 FfiAggOpt.Count,
-                ArgUtils.asFfiAlias("values_1_0", false));
+                ArgUtils.asFfiAlias("~values_1_0", false));
 
         Assert.assertEquals(Collections.singletonList(expectedKey), op.getGroupByKeys().get().applyArg());
         Assert.assertEquals(Collections.singletonList(expectedValue), op.getGroupByValues().get().applyArg());
@@ -229,10 +231,10 @@ public class GroupStepTest {
 
         Pair<FfiVariable.ByValue, FfiAlias.ByValue> expectedKey = Pair.with(
                 ArgUtils.asFfiVar("", "name"),
-                ArgUtils.asFfiAlias("keys_1_0", false));
+                ArgUtils.asFfiAlias("~keys_1_0", false));
         ArgAggFn expectedValue = new ArgAggFn(
                 FfiAggOpt.Count,
-                ArgUtils.asFfiAlias("values_1_0", false));
+                ArgUtils.asFfiAlias("~values_1_0", false));
 
         Assert.assertEquals(Collections.singletonList(expectedKey), op.getGroupByKeys().get().applyArg());
         Assert.assertEquals(Collections.singletonList(expectedValue), op.getGroupByValues().get().applyArg());
@@ -248,7 +250,7 @@ public class GroupStepTest {
                 ArgUtils.asFfiAlias("a", true));
         ArgAggFn expectedValue = new ArgAggFn(
                 FfiAggOpt.Count,
-                ArgUtils.asFfiAlias("values_1_0", false));
+                ArgUtils.asFfiAlias("~values_1_0", false));
 
         Assert.assertEquals(Collections.singletonList(expectedKey), op.getGroupByKeys().get().applyArg());
         Assert.assertEquals(Collections.singletonList(expectedValue), op.getGroupByValues().get().applyArg());
@@ -261,10 +263,10 @@ public class GroupStepTest {
 
         Pair<FfiVariable.ByValue, FfiAlias.ByValue> expectedKey = Pair.with(
                 ArgUtils.asFfiVar("a", "name"),
-                ArgUtils.asFfiAlias("keys_1_0", false));
+                ArgUtils.asFfiAlias("~keys_1_0", false));
         ArgAggFn expectedValue = new ArgAggFn(
                 FfiAggOpt.Count,
-                ArgUtils.asFfiAlias("values_1_0", false));
+                ArgUtils.asFfiAlias("~values_1_0", false));
 
         Assert.assertEquals(Collections.singletonList(expectedKey), op.getGroupByKeys().get().applyArg());
         Assert.assertEquals(Collections.singletonList(expectedValue), op.getGroupByValues().get().applyArg());
@@ -280,15 +282,15 @@ public class GroupStepTest {
         Assert.assertEquals(FfiJoinKind.Inner, applyOp.getJoinKind().get().applyArg());
         InterOpCollection subOps = (InterOpCollection) applyOp.getSubOpCollection().get().applyArg();
         Assert.assertEquals(2, subOps.unmodifiableCollection().size());
-        Assert.assertEquals(ArgUtils.asFfiAlias("keys_1_0", false), applyOp.getAlias().get().applyArg());
+        Assert.assertEquals(ArgUtils.asFfiAlias("~keys_1_0", false), applyOp.getAlias().get().applyArg());
 
         GroupOp groupOp = (GroupOp) ops.get(1);
         Pair<FfiVariable.ByValue, FfiAlias.ByValue> expectedKey = Pair.with(
-                ArgUtils.asFfiVar("keys_1_0", ""),
-                ArgUtils.asFfiAlias("keys_1_0", false));
+                ArgUtils.asFfiVar("~keys_1_0", ""),
+                ArgUtils.asFfiAlias("~keys_1_0", false));
         ArgAggFn expectedValue = new ArgAggFn(
                 FfiAggOpt.ToList,
-                ArgUtils.asFfiAlias("values_1_0", false));
+                ArgUtils.asFfiAlias("~values_1_0", false));
         Assert.assertEquals(Collections.singletonList(expectedKey), groupOp.getGroupByKeys().get().applyArg());
         Assert.assertEquals(Collections.singletonList(expectedValue), groupOp.getGroupByValues().get().applyArg());
     }

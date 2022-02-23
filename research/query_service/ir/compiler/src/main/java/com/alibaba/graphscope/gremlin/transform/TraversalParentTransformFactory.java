@@ -26,7 +26,7 @@ import com.alibaba.graphscope.gremlin.Utils;
 import com.alibaba.graphscope.gremlin.antlr4.GremlinAntlrToJava;
 import com.alibaba.graphscope.gremlin.transform.alias.AliasManager;
 import com.alibaba.graphscope.gremlin.transform.alias.AliasPrefixType;
-import com.alibaba.graphscope.gremlin.transform.alias.GetAliasArg;
+import com.alibaba.graphscope.gremlin.transform.alias.AliasArg;
 import org.apache.tinkerpop.gremlin.process.traversal.*;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.IdentityTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.step.TraversalParent;
@@ -78,14 +78,14 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
                     ));
                     // column key of apply result
                     FfiAlias.ByValue applyAlias = AliasManager.getFfiAlias(
-                            new GetAliasArg(AliasPrefixType.PROJECT_TAG, k, stepIdx, subId));
+                            new AliasArg(AliasPrefixType.PROJECT_TAG, k, stepIdx, subId));
                     applyOp.setAlias(new OpArg(applyAlias, Function.identity()));
                     interOpList.add(applyOp);
                     String aliasName = applyAlias.alias.name;
                     expr = "@" + aliasName;
                 }
                 FfiAlias.ByValue alias = AliasManager.getFfiAlias(
-                        new GetAliasArg(AliasPrefixType.PROJECT_TAG, k, stepIdx, subId));
+                        new AliasArg(AliasPrefixType.PROJECT_TAG, k, stepIdx, subId));
                 projectExprWithAlias.add(Pair.with(expr, alias));
                 ++subId;
             }
@@ -132,7 +132,7 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
                             (new InterOpCollectionBuilder(traversal)).build()
                     ));
                     FfiAlias.ByValue applyAlias = AliasManager.getFfiAlias(
-                            new GetAliasArg(AliasPrefixType.DEFAULT, stepIdx, i));
+                            new AliasArg(AliasPrefixType.DEFAULT, stepIdx, i));
                     applyOp.setAlias(new OpArg(applyAlias, Function.identity()));
                     interOpList.add(applyOp);
                     String aliasName = applyAlias.alias.name;
@@ -184,7 +184,7 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
                         (new InterOpCollectionBuilder(traversal)).build()
                 ));
                 FfiAlias.ByValue applyAlias = AliasManager.getFfiAlias(
-                        new GetAliasArg(AliasPrefixType.GROUP_KEYS, stepIdx));
+                        new AliasArg(AliasPrefixType.GROUP_KEYS, stepIdx));
                 applyOp.setAlias(new OpArg(applyAlias, Function.identity()));
                 interOpList.add(applyOp);
                 String aliasName = applyAlias.alias.name;
@@ -192,7 +192,7 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
             }
             FfiVariable.ByValue groupKeyVar = getExpressionAsVar(groupKeyExpr);
             FfiAlias.ByValue groupKeyAlias = AliasManager.getFfiAlias(
-                    new GetAliasArg(AliasPrefixType.GROUP_KEYS, stepIdx));
+                    new AliasArg(AliasPrefixType.GROUP_KEYS, stepIdx));
             Step endStep;
             // group().by(values("name").as("a")), "a" is the query given alias of group key
             if (groupKeyTraversal != null
@@ -239,7 +239,7 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
             FfiAggOpt aggOpt;
             int stepIdx = TraversalHelper.stepIndex(parent.asStep(), parent.asStep().getTraversal());
             FfiAlias.ByValue alias = AliasManager.getFfiAlias(
-                    new GetAliasArg(AliasPrefixType.GROUP_VALUES, stepIdx));
+                    new AliasArg(AliasPrefixType.GROUP_VALUES, stepIdx));
             String notice = "supported pattern is [group().by(..).by(count())] or [group().by(..).by(fold())]";
             if (admin == null || admin instanceof IdentityTraversal || admin.getSteps().size() == 2
                     && isMapIdentity(admin.getStartStep()) && admin.getEndStep() instanceof FoldStep) { // group, // group().by(..).by()

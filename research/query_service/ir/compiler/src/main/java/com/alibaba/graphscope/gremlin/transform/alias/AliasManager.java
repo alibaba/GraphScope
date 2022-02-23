@@ -20,7 +20,7 @@ import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.jna.type.FfiAlias;
 
 public class AliasManager {
-    public static FfiAlias.ByValue getFfiAlias(GetAliasArg prefix) {
+    public static FfiAlias.ByValue getFfiAlias(AliasArg prefix) {
         int stepIdx = prefix.getStepIdx();
         int subTraversalId = prefix.getSubTraversalIdx();
         String alias = prefix.getPrefix() + "_" + stepIdx + "_" + subTraversalId;
@@ -34,10 +34,10 @@ public class AliasManager {
     }
 
     public static boolean isGroupKeysPrefix(String aliasName) {
-        return aliasName.startsWith(GetAliasArg.GROUP_KEYS);
+        return aliasName.startsWith(AliasArg.GROUP_KEYS);
     }
 
     public static boolean isGroupValuesPrefix(String aliasName) {
-        return aliasName.startsWith(GetAliasArg.GROUP_VALUES);
+        return aliasName.startsWith(AliasArg.GROUP_VALUES);
     }
 }
