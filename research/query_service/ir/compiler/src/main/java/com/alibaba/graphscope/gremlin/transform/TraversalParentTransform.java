@@ -43,8 +43,8 @@ public interface TraversalParentTransform extends Function<TraversalParent, List
         if (size <= 1) {
             if (exprArg.isIdentityTraversal()) { // by()
                 return (new ExprRes(true)).addTagExpr("", "@");
-            } else if (exprArg.isValueTraversal()) { // by('name')
-                String property = exprArg.getValueOfTraversal();
+            } else if (exprArg.getPropertyKeyOpt().isPresent()) { // by('name')
+                String property = exprArg.getPropertyKeyOpt().get();
                 return (new ExprRes(true)).addTagExpr("", "@." + property);
             } else {
                 Step step = exprArg.getStartStep();

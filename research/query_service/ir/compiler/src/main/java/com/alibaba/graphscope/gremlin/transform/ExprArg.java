@@ -33,11 +33,11 @@ public class ExprArg {
     private boolean isIdentityTraversal;
     // judge whether the traversal is instance of ValueTraversal, i.e. by('name'),
     // a property name is present if it is
-    private Optional<String> valueOfTraversal;
+    private Optional<String> propertyKeyOpt;
 
     public ExprArg() {
         isIdentityTraversal = false;
-        valueOfTraversal = Optional.empty();
+        propertyKeyOpt = Optional.empty();
         stepsInTraversal = new ArrayList<>();
     }
 
@@ -46,7 +46,7 @@ public class ExprArg {
         if (traversal == null || traversal instanceof IdentityTraversal) {
             isIdentityTraversal = true;
         } else if (traversal instanceof ValueTraversal) {
-            valueOfTraversal = Optional.of(((ValueTraversal) traversal).getPropertyKey());
+            propertyKeyOpt = Optional.of(((ValueTraversal) traversal).getPropertyKey());
         } else {
             traversal.asAdmin().getSteps().forEach(k -> {
                 stepsInTraversal.add((Step) k);
@@ -56,10 +56,6 @@ public class ExprArg {
 
     public boolean isIdentityTraversal() {
         return isIdentityTraversal;
-    }
-
-    public boolean isValueTraversal() {
-        return valueOfTraversal.isPresent();
     }
 
     public int size() {
@@ -74,8 +70,8 @@ public class ExprArg {
         return stepsInTraversal.isEmpty() ? EmptyStep.instance() : stepsInTraversal.get(size() - 1);
     }
 
-    public String getValueOfTraversal() {
-        return valueOfTraversal.get();
+    public Optional<String> getPropertyKeyOpt() {
+        return propertyKeyOpt;
     }
 
     public ExprArg addStep(Step step) {
