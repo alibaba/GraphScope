@@ -84,8 +84,10 @@ pub struct JoinSentence {
     left: Rc<dyn Sentence>,
     /// The right sentence
     right: Option<Rc<dyn Sentence>>,
-    /// The common tags for join
+    /// The common tags of left and right for join
     common_tags: BTreeSet<NameOrId>,
+    /// The union tags of left and right
+    tags: BTreeSet<NameOrId>,
     /// The join kind, either `Inner`, or `Anti`
     join_kind: pb::join::JoinKind,
 }
@@ -97,7 +99,8 @@ impl From<BaseSentence> for JoinSentence {
         Self {
             left: Rc::new(base),
             right: None,
-            common_tags: tags,
+            common_tags: tags.clone(),
+            tags,
             join_kind: if is_anti {
                 // use the join_kind to represent whether it is an anti-sentence
                 pb::join::JoinKind::Anti
@@ -200,13 +203,26 @@ impl TryFrom<pb::pattern::Sentence> for BaseSentence {
     }
 }
 
+/// A trait to define how to order some matching `Sentence`s
+pub trait SentenceOrd: Into<BaseSentence> {
+    /// A type of `OrdMeta` that maintains the ordering meta information
+    type OrdMeta: PartialEq + Eq + PartialOrd + Ord;
+
+    fn get_ord_meta(&self) -> Self::OrdMeta;
+
+    fn as_sentence(&self) -> &BaseSentence;
+}
+
+/// Ordering applied while compositing the `Sentence`s.
 #[derive(Clone, Debug, PartialEq)]
-struct OrdSentence {
+struct CompositeOrd {
     inner: BaseSentence,
 }
 
-impl OrdSentence {
-    fn get_ord_meta(&self) -> (i32, i32, i32, i32, i32) {
+impl SentenceOrd for CompositeOrd {
+    type OrdMeta = (i32, i32, i32, i32, i32);
+
+    fn get_ord_meta(&self) -> Self::OrdMeta {
         (
             -(self.inner.num_hops as i32), // less edge expansions is preferred
             self.inner.num_filters as i32, // more filters is preferred
@@ -215,30 +231,93 @@ impl OrdSentence {
             -(self.inner.is_anti as i32),  // non anti-sentence is preferred
         )
     }
+
+    fn as_sentence(&self) -> &BaseSentence {
+        &self.inner
+    }
 }
 
-impl From<BaseSentence> for OrdSentence {
+impl From<BaseSentence> for CompositeOrd {
     fn from(inner: BaseSentence) -> Self {
         Self { inner }
     }
 }
 
-impl From<OrdSentence> for BaseSentence {
-    fn from(os: OrdSentence) -> Self {
-        os.inner
+impl From<CompositeOrd> for BaseSentence {
+    fn from(ord: CompositeOrd) -> Self {
+        ord.inner
     }
 }
 
-impl Eq for OrdSentence {}
+impl Eq for CompositeOrd {}
 
-impl PartialOrd for OrdSentence {
+impl PartialOrd for CompositeOrd {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         self.get_ord_meta()
             .partial_cmp(&other.get_ord_meta())
     }
 }
 
-impl Ord for OrdSentence {
+impl Ord for CompositeOrd {
+    fn cmp(&self, other: &Self) -> Ordering {
+        if let Some(ord) = self.partial_cmp(other) {
+            ord
+        } else {
+            if self == other {
+                Ordering::Equal
+            } else {
+                Ordering::Less
+            }
+        }
+    }
+}
+
+/// Ordering applied while joining the `Sentence`s.
+#[derive(Clone, Debug, PartialEq)]
+struct JoinOrd {
+    inner: BaseSentence,
+}
+
+impl SentenceOrd for JoinOrd {
+    type OrdMeta = (i32, i32, i32, i32, i32);
+
+    fn get_ord_meta(&self) -> Self::OrdMeta {
+        (
+            self.inner.tags.len() as i32,  // more tags is preferred
+            self.inner.num_filters as i32, // more filters is preferred
+            -(self.inner.num_hops as i32), // less edge expansions is preferred
+            -(self.inner.end_as as i32),   // ending as vertex is preferred
+            -(self.inner.is_anti as i32),  // non anti-sentence is preferred
+        )
+    }
+
+    fn as_sentence(&self) -> &BaseSentence {
+        &self.inner
+    }
+}
+
+impl From<BaseSentence> for JoinOrd {
+    fn from(inner: BaseSentence) -> Self {
+        Self { inner }
+    }
+}
+
+impl From<JoinOrd> for BaseSentence {
+    fn from(ord: JoinOrd) -> Self {
+        ord.inner
+    }
+}
+
+impl Eq for JoinOrd {}
+
+impl PartialOrd for JoinOrd {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        self.get_ord_meta()
+            .partial_cmp(&other.get_ord_meta())
+    }
+}
+
+impl Ord for JoinOrd {
     fn cmp(&self, other: &Self) -> Ordering {
         if let Some(ord) = self.partial_cmp(other) {
             ord
@@ -300,14 +379,11 @@ impl Sentence for BaseSentence {
         // composition can happens if `self` sentence contains the start_tag of `other`
         if !self.tags.contains(&other.start_tag) {
             return None;
-        } else {
-            // Two common tags at the same time must enable a join instead of composition
-            if let Some(end_tag) = &other.end_tag {
-                if self.tags.contains(end_tag) {
-                    return None;
-                }
-            }
         }
+        if self.tags.intersection(&other.tags).count() > 1 {
+            return None;
+        }
+
         let mut compo = self.clone();
         if let Some(end_tag) = self.end_tag.clone() {
             // pb::NameOrId -> NameOrId never fails.
@@ -316,9 +392,10 @@ impl Sentence for BaseSentence {
                 .push(pb::As { alias: end_tag.try_into().ok() }.into());
         }
         if self.end_tag.is_none() || self.end_tag.as_ref() != Some(&other.start_tag) {
-            let expr_str = match &other.start_tag {
-                NameOrId::Str(s) => format!("@{:?}", s),
-                NameOrId::Id(i) => format!("@{:?}", i),
+            let mut expr_str = "@".to_string();
+            match &other.start_tag {
+                NameOrId::Str(s) => expr_str += s.as_str(),
+                NameOrId::Id(i) => expr_str += i.to_string().as_str(),
             };
             // Projection is required to project other.start_tag as the head,
             // so that the traversal formed by the composition can continue.
@@ -352,9 +429,15 @@ impl Sentence for BaseSentence {
             .intersection(&other.get_tags())
             .cloned()
             .collect();
+        let tags: BTreeSet<NameOrId> = self
+            .tags
+            .union(&other.get_tags())
+            .cloned()
+            .collect();
         if common_tags.is_empty() {
             return None;
         }
+
         if let Some(base) = other.get_base() {
             // cannot join two base anti-sentences
             if self.is_anti && base.is_anti {
@@ -367,6 +450,7 @@ impl Sentence for BaseSentence {
                 // anti-sentence must be placed on the right
                 right: Some(Rc::new(self.clone())),
                 common_tags,
+                tags,
                 join_kind: pb::join::JoinKind::Anti,
             })
         } else {
@@ -381,7 +465,13 @@ impl Sentence for BaseSentence {
                 pb::join::JoinKind::Inner
             };
 
-            Some(JoinSentence { left: Rc::new(self.clone()), right: Some(other), common_tags, join_kind })
+            Some(JoinSentence {
+                left: Rc::new(self.clone()),
+                right: Some(other),
+                common_tags,
+                tags,
+                join_kind,
+            })
         }
     }
 
@@ -450,25 +540,30 @@ impl Sentence for JoinSentence {
 
     fn join(&self, other: Rc<dyn Sentence>) -> Option<JoinSentence> {
         let common_tags: BTreeSet<NameOrId> = self
-            .common_tags
+            .tags
             .intersection(&other.get_tags())
             .cloned()
             .collect();
-        if !common_tags.is_empty() {
-            if let Some(base) = self.get_base() {
-                base.join(other)
-            } else if let Some(base) = other.get_base() {
-                base.join(Rc::new(self.clone()))
-            } else {
-                Some(JoinSentence {
-                    left: Rc::new(self.clone()),
-                    right: Some(other),
-                    common_tags,
-                    join_kind: pb::join::JoinKind::Inner,
-                })
-            }
+        let tags: BTreeSet<NameOrId> = self
+            .tags
+            .union(&other.get_tags())
+            .cloned()
+            .collect();
+        if common_tags.is_empty() {
+            return None;
+        }
+        if let Some(base) = self.get_base() {
+            base.join(other)
+        } else if let Some(base) = other.get_base() {
+            base.join(Rc::new(self.clone()))
         } else {
-            None
+            Some(JoinSentence {
+                left: Rc::new(self.clone()),
+                right: Some(other),
+                common_tags,
+                tags,
+                join_kind: pb::join::JoinKind::Inner,
+            })
         }
     }
 
@@ -481,14 +576,14 @@ impl Sentence for JoinSentence {
     }
 
     fn get_tags(&self) -> &BTreeSet<NameOrId> {
-        &self.common_tags
+        &self.tags
     }
 }
 
 /// A naive implementation of `MatchingStrategy`
 pub struct NaiveStrategy {
     /// The matching sentence
-    sentences: BinaryHeap<OrdSentence>,
+    sentences: BinaryHeap<CompositeOrd>,
 }
 
 // TODO(longbin) For now, the either the `start` tag or `end` tag of each sentence in
@@ -506,12 +601,12 @@ impl TryFrom<pb::Pattern> for NaiveStrategy {
 }
 
 impl NaiveStrategy {
-    fn do_composition(&self) -> BinaryHeap<OrdSentence> {
+    fn do_composition(&self) -> Vec<BaseSentence> {
         let mut sentences = self.sentences.clone();
         // a temporary container
         let mut container = Vec::with_capacity(sentences.len());
         // sentences after composition remain for join
-        let mut to_join = BinaryHeap::with_capacity(sentences.len());
+        let mut to_join = Vec::with_capacity(sentences.len());
         while !sentences.is_empty() {
             let first = sentences.pop().unwrap();
             let mut matched = false;
@@ -527,7 +622,7 @@ impl NaiveStrategy {
                 }
             }
             if !matched {
-                to_join.push(first);
+                to_join.push(first.inner);
             }
             sentences.extend(container.drain(..));
         }
@@ -537,7 +632,11 @@ impl NaiveStrategy {
 
 impl MatchingStrategy for NaiveStrategy {
     fn build_logical_plan(&self) -> IrResult<pb::LogicalPlan> {
-        let mut sentences = self.do_composition();
+        let mut sentences: BinaryHeap<JoinOrd> = self
+            .do_composition()
+            .into_iter()
+            .map(|base| base.into())
+            .collect();
         let mut container = vec![];
         if !sentences.is_empty() {
             let mut first: JoinSentence = sentences.pop().unwrap().inner.into();
@@ -545,7 +644,7 @@ impl MatchingStrategy for NaiveStrategy {
                 let old_count = sentences.len();
                 while !sentences.is_empty() {
                     let second = sentences.pop().unwrap().inner;
-                    if let Some(join) = second.join(Rc::new(first.clone())) {
+                    if let Some(join) = first.join(Rc::new(second.clone())) {
                         first = join;
                     } else {
                         container.push(second.into());
@@ -893,6 +992,63 @@ mod test {
                     common_pb::Variable { tag: Some("c".into()), property: None }
                 ],
                 kind: 5 // anti join
+            }
+            .into()
+        );
+    }
+
+    #[test]
+    fn pattern_case3_into_logical_plan() {
+        let strategy = NaiveStrategy {
+            sentences: vec![
+                gen_sentence_x_out_y("a", Some("b"), false, false).into(),
+                gen_sentence_x_out_y("b", Some("c"), false, false).into(),
+                gen_sentence_x_out_y("d", Some("c"), false, false).into(),
+                gen_sentence_x_out_y("a", Some("d"), false, false).into(),
+                gen_sentence_x_out_y("b", Some("d"), false, false).into(),
+            ]
+            .into_iter()
+            .collect(),
+        };
+        // Join (opr_id = 14)
+        //      As(b), Out(), as(c), (opr_id = 2),
+        //      Join (opr_id = 13) (
+        //          As(a), Out(), As(d), Out(), As(c) (opr_id = 7)
+        //          As(a), Out(), As(d), Out(), As(b) (opr_id = 12)
+        //      )
+        // )
+        let plan = strategy.build_logical_plan().unwrap();
+        assert_eq!(plan.nodes.get(7).unwrap().children, vec![13]);
+        assert_eq!(plan.nodes.get(12).unwrap().children, vec![13]);
+        assert_eq!(
+            plan.nodes.get(13).unwrap().opr.clone().unwrap(),
+            pb::Join {
+                left_keys: vec![
+                    common_pb::Variable { tag: Some("a".into()), property: None },
+                    common_pb::Variable { tag: Some("d".into()), property: None }
+                ],
+                right_keys: vec![
+                    common_pb::Variable { tag: Some("a".into()), property: None },
+                    common_pb::Variable { tag: Some("d".into()), property: None }
+                ],
+                kind: 0 // inner join
+            }
+            .into()
+        );
+        assert_eq!(plan.nodes.get(2).unwrap().children, vec![14]);
+        assert_eq!(plan.nodes.get(13).unwrap().children, vec![14]);
+        assert_eq!(
+            plan.nodes.last().unwrap().opr.clone().unwrap(),
+            pb::Join {
+                left_keys: vec![
+                    common_pb::Variable { tag: Some("b".into()), property: None },
+                    common_pb::Variable { tag: Some("c".into()), property: None }
+                ],
+                right_keys: vec![
+                    common_pb::Variable { tag: Some("b".into()), property: None },
+                    common_pb::Variable { tag: Some("c".into()), property: None }
+                ],
+                kind: 0 // inner join
             }
             .into()
         );

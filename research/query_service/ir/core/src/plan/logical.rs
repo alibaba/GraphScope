@@ -14,7 +14,7 @@
 //! limitations under the License.
 
 use std::cell::RefCell;
-use std::collections::{BTreeSet, HashMap};
+use std::collections::{BTreeSet, HashMap, HashSet};
 use std::convert::{TryFrom, TryInto};
 use std::fmt;
 use std::io;
@@ -295,15 +295,17 @@ impl LogicalPlan {
         let mut id_map: HashMap<u32, u32> = HashMap::new();
         let mut parents: HashMap<u32, BTreeSet<u32>> = HashMap::new();
         let mut result_id = 0_u32;
-        for (id, node) in plan.nodes.into_iter().enumerate() {
+        for (id, node) in plan.nodes.iter().enumerate() {
             for child in &node.children {
                 parents
                     .entry(*child as u32)
                     .or_insert_with(BTreeSet::new)
                     .insert(id as u32);
             }
+        }
+        for (id, node) in plan.nodes.into_iter().enumerate() {
             if let Some(opr) = node.opr {
-                let new_parents = if id == 0 {
+                let new_parents = if !parents.contains_key(&(id as u32)) {
                     parent_ids.clone()
                 } else {
                     parents
@@ -1081,34 +1083,37 @@ impl AsLogical for pb::Apply {
     }
 }
 
+fn check_refer_existing_tag(
+    tag_pb: common_pb::NameOrId, plan_meta: &mut PlanMeta, pattern_tags: &mut HashSet<NameOrId>,
+) -> IrResult<()> {
+    let tag: NameOrId = tag_pb.try_into()?;
+    let mut is_existing_tag = plan_meta.get_or_set_tag_id(tag.clone()).0;
+
+    if is_existing_tag {
+        is_existing_tag = !pattern_tags.contains(&tag);
+    }
+    if is_existing_tag {
+        Err(IrError::InvalidPattern(format!("`pb::Pattern` cannot reference existing tag: {:?}", tag)))
+    } else {
+        pattern_tags.insert(tag);
+
+        Ok(())
+    }
+}
+
 impl AsLogical for pb::Pattern {
     fn preprocess(&mut self, _meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
+        let mut pattern_tags = HashSet::new();
         for sentence in &self.sentences {
             if let Some(alias) = &sentence.start {
-                if !plan_meta
-                    .get_or_set_tag_id(alias.clone().try_into()?)
-                    .0
-                {
-                    return Err(IrError::InvalidPattern(format!(
-                        "`pb::Pattern` cannot reference existing tag: {:?}",
-                        alias
-                    )));
-                }
+                check_refer_existing_tag(alias.clone(), plan_meta, &mut pattern_tags)?;
             } else {
                 return Err(IrError::InvalidPattern(
                     "the start tag in `pb::Pattern` does not exist".to_string(),
                 ));
             }
             if let Some(alias) = &sentence.end {
-                if !plan_meta
-                    .get_or_set_tag_id(alias.clone().try_into()?)
-                    .0
-                {
-                    return Err(IrError::InvalidPattern(format!(
-                        "`pb::Pattern` cannot reference existing tag: {:?}",
-                        alias
-                    )));
-                }
+                check_refer_existing_tag(alias.clone(), plan_meta, &mut pattern_tags)?;
             }
         }
 
