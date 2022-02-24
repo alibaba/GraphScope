@@ -31,10 +31,10 @@
 
 // These files are not used in this file need to be compiled along with
 // javasdk.cc to be used by java.
-#include "ffi_byte_vec_vector.h"
-#include "ffi_byte_vector.h"
-#include "ffi_int_vec_vector.h"
-#include "ffi_int_vector.h"
+//#include "ffi_byte_vec_vector.h"
+//#include "ffi_byte_vector.h"
+//#include "ffi_int_vec_vector.h"
+//#include "ffi_int_vector.h"
 
 #include "grape/grape.h"
 
