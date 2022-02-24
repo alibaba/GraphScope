@@ -1827,6 +1827,115 @@ mod graph {
     pub extern "C" fn destroy_pathxpd_operator(ptr: *const c_void) {
         destroy_ptr::<pb::PathExpand>(ptr)
     }
+
+    #[no_mangle]
+    pub extern "C" fn init_pattern_operator() -> *const c_void {
+        let pattern = Box::new(pb::Pattern { sentences: vec![] });
+
+        Box::into_raw(pattern) as *const c_void
+    }
+
+    #[no_mangle]
+    pub extern "C" fn add_pattern_sentence(
+        ptr_pattern: *const c_void, ptr_sentence: *const c_void,
+    ) -> ResultCode {
+        let mut pattern = unsafe { Box::from_raw(ptr_pattern as *mut pb::Pattern) };
+        let sentence = unsafe { Box::from_raw(ptr_sentence as *mut pb::pattern::Sentence) };
+        pattern
+            .sentences
+            .push(sentence.as_ref().clone());
+        std::mem::forget(pattern);
+
+        ResultCode::Success
+    }
+
+    #[no_mangle]
+    pub extern "C" fn init_pattern_sentence(is_anti: bool) -> *const c_void {
+        let sentence = Box::new(pb::pattern::Sentence { start: None, binders: vec![], end: None, is_anti });
+
+        Box::into_raw(sentence) as *const c_void
+    }
+
+    fn set_sentence_tag(ptr_sentence: *const c_void, tag: FfiNameOrId, is_start: bool) -> ResultCode {
+        let mut sentence = unsafe { Box::from_raw(ptr_sentence as *mut pb::pattern::Sentence) };
+        let pb: FfiResult<Option<common_pb::NameOrId>> = tag.try_into();
+        let result_code = if pb.is_ok() {
+            if is_start {
+                sentence.start = pb.unwrap();
+            } else {
+                sentence.end = pb.unwrap();
+            }
+            ResultCode::Success
+        } else {
+            pb.err().unwrap()
+        };
+        std::mem::forget(sentence);
+
+        result_code
+    }
+
+    #[no_mangle]
+    pub extern "C" fn set_sentence_start(ptr_sentence: *const c_void, tag: FfiNameOrId) -> ResultCode {
+        set_sentence_tag(ptr_sentence, tag, true)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn set_sentence_end(ptr_sentence: *const c_void, tag: FfiNameOrId) -> ResultCode {
+        set_sentence_tag(ptr_sentence, tag, false)
+    }
+
+    #[derive(Copy, Clone, Debug)]
+    #[repr(i32)]
+    #[allow(dead_code)]
+    pub enum FfiBinderOpt {
+        Edge = 0,
+        Path = 1,
+        Vertex = 2,
+    }
+
+    #[no_mangle]
+    pub extern "C" fn add_sentence_binder(
+        ptr_sentence: *const c_void, ptr: *const c_void, binder: FfiBinderOpt,
+    ) -> ResultCode {
+        let mut sentence = unsafe { Box::from_raw(ptr_sentence as *mut pb::pattern::Sentence) };
+        match binder {
+            FfiBinderOpt::Edge => {
+                let edgexpd = unsafe { Box::from_raw(ptr as *mut pb::EdgeExpand) };
+                sentence.binders.push(pb::pattern::Binder {
+                    item: Some(pb::pattern::binder::Item::Edge(edgexpd.as_ref().clone())),
+                });
+            }
+            FfiBinderOpt::Path => {
+                let pathxpd = unsafe { Box::from_raw(ptr as *mut pb::PathExpand) };
+                sentence.binders.push(pb::pattern::Binder {
+                    item: Some(pb::pattern::binder::Item::Path(pathxpd.as_ref().clone())),
+                });
+            }
+            FfiBinderOpt::Vertex => {
+                let getv = unsafe { Box::from_raw(ptr as *mut pb::GetV) };
+                sentence.binders.push(pb::pattern::Binder {
+                    item: Some(pb::pattern::binder::Item::Vertex(getv.as_ref().clone())),
+                });
+            }
+        }
+        std::mem::forget(sentence);
+
+        ResultCode::Success
+    }
+
+    /// Append a pattern operator to the logical plan
+    #[no_mangle]
+    pub extern "C" fn append_pattern_operator(
+        ptr_plan: *const c_void, ptr_pattern: *const c_void, parent: i32, id: *mut i32,
+    ) -> ResultCode {
+        let pattern = unsafe { Box::from_raw(ptr_pattern as *mut pb::Pattern) };
+        append_operator(ptr_plan, pattern.as_ref().clone().into(), vec![parent], id)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn destroy_pattern_operator(ptr: *const c_void) {
+        destroy_ptr::<pb::Pattern>(ptr)
+    }
 }
 
 mod subtask {
