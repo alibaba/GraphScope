@@ -34,7 +34,7 @@ using ProjectedFragmentType =
 using FragmentLoaderType =
     gs::ArrowFragmentLoader<int64_t,
                             vineyard::property_graph_types::VID_TYPE>;
-using APP_TYPE = gs::JavaPIEProjectedDefaultAppV2<ProjectedFragmentType>;
+using APP_TYPE = gs::JavaPIEProjectedDefaultApp<ProjectedFragmentType>;
 // using LOADER_TYPE = grape::GiraphFragmentLoader<FragmentType>;
 
 void Init(const std::string& params) {
@@ -134,13 +134,12 @@ void Query(grape::CommSpec& comm_spec, std::shared_ptr<FRAG_T> fragment,
     auto spec = DefaultParallelEngineSpec();
 
     worker->Init(comm_spec, spec);
-    worker->Query0(params_str, user_lib_path, frag_id);
-    MPI_Barrier(comm_spec.comm());
 
-    double t = -GetCurrentTime();
-    worker->Query1();
     MPI_Barrier(comm_spec.comm());
+    double t = -GetCurrentTime();
+    worker->Query(params_str, user_lib_path, frag_id);
     t += GetCurrentTime();
+    MPI_Barrier(comm_spec.comm());
 
     total_time += t;
     query_time[i] = t;
