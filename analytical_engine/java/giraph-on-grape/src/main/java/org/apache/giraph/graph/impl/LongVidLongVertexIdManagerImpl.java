@@ -56,7 +56,7 @@ public class LongVidLongVertexIdManagerImpl<
 
         vertexIds = new LongWritable[(int) vertexNum];
         int index = 0;
-        for (Vertex<GRAPE_VID_T> vertex : fragment.vertices().locals()) {
+        for (Vertex<GRAPE_VID_T> vertex : fragment.vertices().longIterable()) {
             Long value = (Long) fragment.getId(vertex);
             vertexIds[index++] = new LongWritable(value);
         }

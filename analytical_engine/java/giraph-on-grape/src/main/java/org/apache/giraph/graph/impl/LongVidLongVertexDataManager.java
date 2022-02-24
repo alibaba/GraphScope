@@ -58,7 +58,7 @@ public class LongVidLongVertexDataManager<GRAPE_OID_T, GRAPE_VID_T, GRAPE_VDATA_
                     .size() + ", " + vertexNum);
         }
         int index = 0;
-        for (Vertex<GRAPE_VID_T> vertex : fragment.innerVertices().locals()) {
+        for (Vertex<GRAPE_VID_T> vertex : fragment.innerVertices().longIterable()) {
             Long value = (Long) fragment.getData(vertex);
             vdatas[index++] = new LongWritable(value);
         }

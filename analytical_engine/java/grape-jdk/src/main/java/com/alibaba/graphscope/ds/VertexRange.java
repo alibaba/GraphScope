@@ -81,27 +81,27 @@ public interface VertexRange<VID_T> extends FFIPointer, CXXPointer {
      */
     default Iterable<Vertex<VID_T>> longIterable() {
         return () ->
-                new Iterator<Vertex<VID_T>>() {
-                    Vertex<Long> vertex = (Vertex<Long>) FFITypeFactoryhelper.newVertexLong();
-                    Long curValue;
-                    Long endValue;
+            new Iterator<Vertex<VID_T>>() {
+                Vertex<Long> vertex = (Vertex<Long>) FFITypeFactoryhelper.newVertexLong();
+                Long curValue;
+                Long endValue;
 
-                    {
-                        vertex.SetValue((Long) beginValue());
-                        curValue = (Long) beginValue();
-                        endValue = (Long) endValue();
-                    }
+                {
+                    vertex.SetValue((Long) beginValue());
+                    curValue = (Long) beginValue();
+                    endValue = (Long) endValue();
+                }
 
-                    public boolean hasNext() {
-                        return !curValue.equals(endValue);
-                    }
+                public boolean hasNext() {
+                    return !curValue.equals(endValue);
+                }
 
-                    public Vertex<VID_T> next() {
-                        vertex.SetValue(curValue);
-                        curValue += 1;
-                        return (Vertex<VID_T>) vertex;
-                    }
-                };
+                public Vertex<VID_T> next() {
+                    vertex.SetValue(curValue);
+                    curValue += 1;
+                    return (Vertex<VID_T>) vertex;
+                }
+            };
     }
 
     /**

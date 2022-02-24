@@ -111,22 +111,22 @@ public class VertexDataManagerImpl<
             // We need to form all vdata as a stream, so java writables can read from this stream.
             // TODO: better solution?
             if (conf.getGrapeVdataClass().equals(Long.class)) {
-                for (Vertex<GRAPE_VID_T> vertex : fragment.vertices().locals()) {
+                for (Vertex<GRAPE_VID_T> vertex : fragment.vertices().longIterable()) {
                     Long value = (Long) fragment.getData(vertex);
                     outputStream.writeLong(value);
                 }
             } else if (conf.getGrapeVdataClass().equals(Integer.class)) {
-                for (Vertex<GRAPE_VID_T> vertex : fragment.vertices().locals()) {
+                for (Vertex<GRAPE_VID_T> vertex : fragment.vertices().longIterable()) {
                     Integer value = (Integer) fragment.getData(vertex);
                     outputStream.writeInt(value);
                 }
             } else if (conf.getGrapeVdataClass().equals(Double.class)) {
-                for (Vertex<GRAPE_VID_T> vertex : fragment.vertices().locals()) {
+                for (Vertex<GRAPE_VID_T> vertex : fragment.vertices().longIterable()) {
                     Double value = (Double) fragment.getData(vertex);
                     outputStream.writeDouble(value);
                 }
             } else if (conf.getGrapeVdataClass().equals(Float.class)) {
-                for (Vertex<GRAPE_VID_T> vertex : fragment.vertices().locals()) {
+                for (Vertex<GRAPE_VID_T> vertex : fragment.vertices().longIterable()) {
                     Float value = (Float) fragment.getData(vertex);
                     outputStream.writeFloat(value);
                 }

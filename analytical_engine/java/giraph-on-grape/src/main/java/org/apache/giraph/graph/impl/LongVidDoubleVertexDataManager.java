@@ -57,7 +57,7 @@ public class LongVidDoubleVertexDataManager<GRAPE_OID_T, GRAPE_VID_T, GRAPE_VDAT
                     .size() + ", " + vertexNum);
         }
         int index = 0;
-        for (Vertex<GRAPE_VID_T> vertex : fragment.innerVertices().locals()) {
+        for (Vertex<GRAPE_VID_T> vertex : fragment.innerVertices().longIterable()) {
             Double value = (Double) fragment.getData(vertex);
             vdatas[index++] = new DoubleWritable(value);
         }

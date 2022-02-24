@@ -78,22 +78,22 @@ public class VertexIdManagerImpl<
         FFIByteVectorOutputStream outputStream = new FFIByteVectorOutputStream();
         try {
             if (conf.getGrapeOidClass().equals(Long.class)) {
-                for (Vertex<GRAPE_VID_T> vertex : fragment.vertices().locals()) {
+                for (Vertex<GRAPE_VID_T> vertex : fragment.vertices().longIterable()) {
                     Long value = (Long) fragment.getId(vertex);
                     outputStream.writeLong(value);
                 }
             } else if (conf.getGrapeOidClass().equals(Integer.class)) {
-                for (Vertex<GRAPE_VID_T> vertex : fragment.vertices().locals()) {
+                for (Vertex<GRAPE_VID_T> vertex : fragment.vertices().longIterable()) {
                     Integer value = (Integer) fragment.getId(vertex);
                     outputStream.writeInt(value);
                 }
             } else if (conf.getGrapeOidClass().equals(Double.class)) {
-                for (Vertex<GRAPE_VID_T> vertex : fragment.vertices().locals()) {
+                for (Vertex<GRAPE_VID_T> vertex : fragment.vertices().longIterable()) {
                     Double value = (Double) fragment.getId(vertex);
                     outputStream.writeDouble(value);
                 }
             } else if (conf.getGrapeOidClass().equals(Float.class)) {
-                for (Vertex<GRAPE_VID_T> vertex : fragment.vertices().locals()) {
+                for (Vertex<GRAPE_VID_T> vertex : fragment.vertices().longIterable()) {
                     Float value = (Float) fragment.getId(vertex);
                     outputStream.writeFloat(value);
                 }

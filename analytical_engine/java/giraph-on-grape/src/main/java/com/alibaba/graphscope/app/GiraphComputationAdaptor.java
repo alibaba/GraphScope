@@ -101,7 +101,7 @@ public class GiraphComputationAdaptor<OID_T, VID_T, VDATA_T, EDATA_T> extends Co
         VertexDataManager vertexDataManager = ctx.vertex.getVertexDataManager();
         VertexIdManager vertexIdManager = ctx.vertex.getVertexIdManager();
         int cnt = 0;
-        for (Vertex<VID_T> grapeVertex : graph.innerVertices().locals()) {
+        for (Vertex<VID_T> grapeVertex : graph.innerVertices().longIterable()) {
             if (cnt > 5) {
                 break;
             }
