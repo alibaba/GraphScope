@@ -18,7 +18,7 @@ package com.alibaba.graphscope.gremlin.transform;
 
 import java.util.*;
 
-public class ExprRes {
+public class ExprResult {
     // if all of the by_traversals can be converted to expressions, return true
     // otherwise false
     private boolean isExprPattern;
@@ -26,12 +26,12 @@ public class ExprRes {
     // especially, tag is "" if no tag exists, i.e. values(..), valueMap(..)
     private Map<String, String> tagExprMap;
 
-    public ExprRes() {
+    public ExprResult() {
         this.isExprPattern = false;
         this.tagExprMap = new LinkedHashMap<>();
     }
 
-    public ExprRes(boolean isExprPattern) {
+    public ExprResult(boolean isExprPattern) {
         this.tagExprMap = new LinkedHashMap<>();
         this.isExprPattern = isExprPattern;
     }
@@ -54,12 +54,12 @@ public class ExprRes {
         return this.isExprPattern;
     }
 
-    public ExprRes addTagExpr(String tag, String expr) {
+    public ExprResult addTagExpr(String tag, String expr) {
         tagExprMap.put(tag, expr);
         return this;
     }
 
-    public ExprRes setExprPattern(boolean exprPattern) {
+    public ExprResult setExprPattern(boolean exprPattern) {
         isExprPattern = exprPattern;
         return this;
     }

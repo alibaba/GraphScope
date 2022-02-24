@@ -284,7 +284,7 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
 
             String selectKey = (String) startStep.getScopeKeys().iterator().next();
             SelectOneStep selectOneStep = new SelectOneStep(step.getTraversal(), Pop.last, selectKey);
-            ExprRes exprRes = TraversalParentTransformFactory.PROJECT_BY_STEP
+            ExprResult exprRes = TraversalParentTransformFactory.PROJECT_BY_STEP
                     .getSubTraversalAsExpr((new ExprArg()).addStep(selectOneStep));
             String expr = exprRes.getSingleExpr().get();
 

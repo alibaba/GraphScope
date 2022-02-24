@@ -37,15 +37,15 @@ import java.util.function.Function;
  **/
 
 public interface TraversalParentTransform extends Function<TraversalParent, List<InterOpBase>> {
-    default ExprRes getSubTraversalAsExpr(ExprArg exprArg) {
+    default ExprResult getSubTraversalAsExpr(ExprArg exprArg) {
         int size = exprArg.size();
         // the followings are considered as expressions instead of apply
         if (size <= 1) {
             if (exprArg.isIdentityTraversal()) { // by()
-                return (new ExprRes(true)).addTagExpr("", "@");
+                return (new ExprResult(true)).addTagExpr("", "@");
             } else if (exprArg.getPropertyKeyOpt().isPresent()) { // by('name')
                 String property = exprArg.getPropertyKeyOpt().get();
-                return (new ExprRes(true)).addTagExpr("", "@." + property);
+                return (new ExprResult(true)).addTagExpr("", "@." + property);
             } else {
                 Step step = exprArg.getStartStep();
                 if (step instanceof PropertyMapStep) { // valueMap(..)
@@ -60,7 +60,7 @@ public interface TraversalParentTransform extends Function<TraversalParent, List
                             stringBuilder.append("@." + mapKeys[i]);
                         }
                         stringBuilder.append("}");
-                        return (new ExprRes(true)).addTagExpr("", stringBuilder.toString());
+                        return (new ExprResult(true)).addTagExpr("", stringBuilder.toString());
                     } else {
                         throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE, "valueMap() is unsupported");
                     }
@@ -73,14 +73,14 @@ public interface TraversalParentTransform extends Function<TraversalParent, List
                         throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
                                 "use valueMap(..) instead if there are multiple project keys");
                     }
-                    return (new ExprRes(true)).addTagExpr("", "@." + mapKeys[0]);
+                    return (new ExprResult(true)).addTagExpr("", "@." + mapKeys[0]);
                 } else if (step instanceof SelectOneStep || step instanceof SelectStep) {
                     // select('a'), select('a').by()
                     // select('a').by('name'/values/valueMap)
                     // select('a', 'b'), select('a', 'b').by()
                     // select('a', 'b').by('name'/values/valueMap).by('name'/values/valueMap)
                     Map<String, Traversal.Admin> selectBys = getProjectTraversals((TraversalParent) step);
-                    ExprRes exprRes = new ExprRes();
+                    ExprResult exprRes = new ExprResult();
                     boolean isExprPattern = true;
                     for (Map.Entry<String, Traversal.Admin> entry : selectBys.entrySet()) {
                         String k = entry.getKey();
@@ -97,15 +97,15 @@ public interface TraversalParentTransform extends Function<TraversalParent, List
                 } else if (step instanceof WhereTraversalStep.WhereStartStep) { // where(as('a'))
                     WhereTraversalStep.WhereStartStep startStep = (WhereTraversalStep.WhereStartStep) step;
                     String selectKey = (String) startStep.getScopeKeys().iterator().next();
-                    return (new ExprRes(true)).addTagExpr(selectKey, "@" + selectKey);
+                    return (new ExprResult(true)).addTagExpr(selectKey, "@" + selectKey);
                 } else if (step instanceof TraversalMapStep) { // select(keys), select(values)
                     ProjectOp mapOp = (ProjectOp) StepTransformFactory.TRAVERSAL_MAP_STEP.apply(step);
                     List<Pair> pairs = (List<Pair>) mapOp.getExprWithAlias().get().applyArg();
                     String mapExpr = (String) pairs.get(0).getValue0();
                     String mapKey = mapExpr.substring(1);
-                    return (new ExprRes(true)).addTagExpr(mapKey, mapExpr);
+                    return (new ExprResult(true)).addTagExpr(mapKey, mapExpr);
                 } else {
-                    return new ExprRes(false);
+                    return new ExprResult(false);
                 }
             }
         } else if (size == 2) {
@@ -115,7 +115,7 @@ public interface TraversalParentTransform extends Function<TraversalParent, List
                     && (endStep instanceof PropertiesStep || endStep instanceof PropertyMapStep)) {
                 Optional<String> propertyExpr = getSubTraversalAsExpr((new ExprArg()).addStep(endStep)).getSingleExpr();
                 if (!propertyExpr.isPresent()) {
-                    return new ExprRes(false);
+                    return new ExprResult(false);
                 }
                 String selectKey = null;
                 if (startStep instanceof SelectOneStep) { // select('a').values(..), select('a').valueMap(..)
@@ -127,12 +127,12 @@ public interface TraversalParentTransform extends Function<TraversalParent, List
                     selectKey = mapExpr.substring(1);
                 }
                 String expr = propertyExpr.get().replace("@", "@" + selectKey);
-                return (new ExprRes(true)).addTagExpr(selectKey, expr);
+                return (new ExprResult(true)).addTagExpr(selectKey, expr);
             } else {
-                return new ExprRes(false);
+                return new ExprResult(false);
             }
         } else {
-            return new ExprRes(false);
+            return new ExprResult(false);
         }
     }
 

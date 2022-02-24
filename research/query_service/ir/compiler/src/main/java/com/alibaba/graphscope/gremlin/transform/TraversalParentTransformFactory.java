@@ -59,7 +59,7 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
             List<Pair<String, FfiAlias.ByValue>> projectExprWithAlias = new ArrayList<>();
             int stepIdx = TraversalHelper.stepIndex(parent.asStep(), parent.asStep().getTraversal());
             int subId = 0;
-            ExprRes exprRes = getSubTraversalAsExpr((new ExprArg()).addStep(parent.asStep()));
+            ExprResult exprRes = getSubTraversalAsExpr((new ExprArg()).addStep(parent.asStep()));
             for (Map.Entry<String, Traversal.Admin> entry : byTraversals.entrySet()) {
                 String k = entry.getKey();
                 Traversal.Admin v = entry.getValue();
@@ -119,7 +119,7 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
                 Pair pair = comparators.get(i);
                 Traversal.Admin admin = (Traversal.Admin) pair.getValue0();
                 FfiOrderOpt orderOpt = getFfiOrderOpt((Order) pair.getValue1());
-                ExprRes exprRes = getSubTraversalAsExpr(new ExprArg(admin));
+                ExprResult exprRes = getSubTraversalAsExpr(new ExprArg(admin));
                 // i.e. order().by(values("name"))
                 if (exprRes.isExprPattern()) {
                     List<String> exprs = exprRes.getExprs();
@@ -173,7 +173,7 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
             Traversal.Admin groupKeyTraversal = getKeyTraversal(parent);
             List<String> groupKeyExprs = new ArrayList<>();
             int stepIdx = TraversalHelper.stepIndex(parent.asStep(), parent.asStep().getTraversal());
-            ExprRes exprRes = getSubTraversalAsExpr(new ExprArg(groupKeyTraversal));
+            ExprResult exprRes = getSubTraversalAsExpr(new ExprArg(groupKeyTraversal));
             // i.e. group().by("name")
             if (exprRes.isExprPattern()) {
                 groupKeyExprs.addAll(exprRes.getExprs());
@@ -296,7 +296,7 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
 
             String startTag = startKey.isPresent() ? startKey.get() : "";
             Traversal.Admin startSelectBy = asSelectTraversal(startTag, traversalRing.next());
-            ExprRes startExprRes = getSubTraversalAsExpr(new ExprArg(startSelectBy));
+            ExprResult startExprRes = getSubTraversalAsExpr(new ExprArg(startSelectBy));
             if (!startExprRes.isExprPattern()) {
                 throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE, "where().by(subtask) is unsupported");
             }
@@ -321,7 +321,7 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
                 });
             } else {
                 Traversal.Admin selectBy = asSelectTraversal(selectKeysIterator.next(), traversalRing.next());
-                ExprRes exprRes = getSubTraversalAsExpr(new ExprArg(selectBy));
+                ExprResult exprRes = getSubTraversalAsExpr(new ExprArg(selectBy));
                 if (!exprRes.isExprPattern()) {
                     throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE, "where().by(subtask) is unsupported");
                 }
@@ -341,7 +341,7 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
         @Override
         public List<InterOpBase> apply(TraversalParent parent) {
             Traversal.Admin subTraversal = getWhereSubTraversal(parent.asStep());
-            ExprRes exprRes = getSubTraversalAsExpr(new ExprArg(subTraversal));
+            ExprResult exprRes = getSubTraversalAsExpr(new ExprArg(subTraversal));
             if (exprRes.isExprPattern()) {
                 String expr = exprRes.getSingleExpr().get();
                 SelectOp selectOp = new SelectOp();
@@ -374,7 +374,7 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
         @Override
         public List<InterOpBase> apply(TraversalParent parent) {
             Traversal.Admin subTraversal = getNotSubTraversal(parent.asStep());
-            ExprRes exprRes = getSubTraversalAsExpr(new ExprArg(subTraversal));
+            ExprResult exprRes = getSubTraversalAsExpr(new ExprArg(subTraversal));
             if (exprRes.isExprPattern()) { // not(select("a").by("name"))
                 String notExpr = getNotExpr(exprRes.getSingleExpr().get());
                 SelectOp selectOp = new SelectOp();
