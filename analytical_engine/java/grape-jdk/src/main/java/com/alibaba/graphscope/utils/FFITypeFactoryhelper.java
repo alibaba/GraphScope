@@ -41,6 +41,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.HashMap;
+import jnr.ffi.annotations.In;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -182,6 +183,10 @@ public class FFITypeFactoryhelper {
 
     public static Vertex<Long> newVertexLong() {
         return getVertexLongFactory().create();
+    }
+
+    public static Vertex<Integer> newVertexInt(){
+        return getVertexIntegerFactory().create();
     }
 
     public static <T> Vertex<T> newVertex(Class<? extends T> vidClass) {
