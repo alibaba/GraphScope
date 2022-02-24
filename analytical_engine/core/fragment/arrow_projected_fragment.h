@@ -907,8 +907,8 @@ class ArrowProjectedFragment
 
   inline bool directed() const { return directed_; }
 
-  inline nbr_unit_t& get_out_edges_ptr() {
-    return *(const_cast<nbr_unit_t*>(oe_ptr_));
+  inline int64_t get_out_edges_ptr() {
+    return reinterpret_cast<int64_t>(oe_ptr_);
   }
 
   inline int64_t get_oe_offsets_begin_ptr_() {
