@@ -19,15 +19,14 @@ package com.alibaba.graphscope.gremlin.transform;
 import com.alibaba.graphscope.common.exception.OpArgIllegalException;
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.intermediate.operator.InterOpBase;
+import com.alibaba.graphscope.common.intermediate.operator.ProjectOp;
 import com.alibaba.graphscope.common.jna.type.FfiVariable;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.step.TraversalParent;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.WhereTraversalStep;
-import org.apache.tinkerpop.gremlin.process.traversal.step.map.PropertiesStep;
-import org.apache.tinkerpop.gremlin.process.traversal.step.map.PropertyMapStep;
-import org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectOneStep;
-import org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectStep;
+import org.apache.tinkerpop.gremlin.process.traversal.step.map.*;
+import org.javatuples.Pair;
 
 import java.util.*;
 import java.util.function.Function;
@@ -99,20 +98,34 @@ public interface TraversalParentTransform extends Function<TraversalParent, List
                     WhereTraversalStep.WhereStartStep startStep = (WhereTraversalStep.WhereStartStep) step;
                     String selectKey = (String) startStep.getScopeKeys().iterator().next();
                     return (new ExprRes(true)).addTagExpr(selectKey, "@" + selectKey);
+                } else if (step instanceof TraversalMapStep) { // select(keys), select(values)
+                    ProjectOp mapOp = (ProjectOp) StepTransformFactory.TRAVERSAL_MAP_STEP.apply(step);
+                    List<Pair> pairs = (List<Pair>) mapOp.getExprWithAlias().get().applyArg();
+                    String mapExpr = (String) pairs.get(0).getValue0();
+                    String mapKey = mapExpr.substring(1);
+                    return (new ExprRes(true)).addTagExpr(mapKey, mapExpr);
                 } else {
                     return new ExprRes(false);
                 }
             }
-        } else if (size == 2) { // select('a').values(..), select('a').valueMap(..)
+        } else if (size == 2) {
             Step startStep = exprArg.getStartStep();
             Step endStep = exprArg.getEndStep();
-            if (startStep instanceof SelectOneStep
+            if ((startStep instanceof SelectOneStep || startStep instanceof TraversalMapStep)
                     && (endStep instanceof PropertiesStep || endStep instanceof PropertyMapStep)) {
                 Optional<String> propertyExpr = getSubTraversalAsExpr((new ExprArg()).addStep(endStep)).getSingleExpr();
                 if (!propertyExpr.isPresent()) {
                     return new ExprRes(false);
                 }
-                String selectKey = (String) ((SelectOneStep) startStep).getScopeKeys().iterator().next();
+                String selectKey = null;
+                if (startStep instanceof SelectOneStep) { // select('a').values(..), select('a').valueMap(..)
+                    selectKey = (String) ((SelectOneStep) startStep).getScopeKeys().iterator().next();
+                } else if (startStep instanceof TraversalMapStep) { // select(keys).values(..), select(values).valueMap(..)
+                    ProjectOp mapOp = (ProjectOp) StepTransformFactory.TRAVERSAL_MAP_STEP.apply(startStep);
+                    List<Pair> pairs = (List<Pair>) mapOp.getExprWithAlias().get().applyArg();
+                    String mapExpr = (String) pairs.get(0).getValue0();
+                    selectKey = mapExpr.substring(1);
+                }
                 String expr = propertyExpr.get().replace("@", "@" + selectKey);
                 return (new ExprRes(true)).addTagExpr(selectKey, expr);
             } else {
