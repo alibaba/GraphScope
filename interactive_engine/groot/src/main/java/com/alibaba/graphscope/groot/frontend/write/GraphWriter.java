@@ -33,6 +33,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class GraphWriter implements MetricsAgent {
@@ -41,6 +42,7 @@ public class GraphWriter implements MetricsAgent {
     public static final String WRITE_REQUESTS_PER_SECOND = "write.requests.per.second";
     public static final String INGESTOR_BLOCK_TIME_MS = "ingestor.block.time.ms";
     public static final String INGESTOR_BLOCK_TIME_AVG_MS = "ingestor.block.time.avg.ms";
+    public static final String PENDING_WRITE_COUNT = "pending.write.count";
 
     private AtomicLong writeRequestsTotal;
     private volatile long lastUpdateWriteRequestsTotal;
@@ -49,6 +51,7 @@ public class GraphWriter implements MetricsAgent {
     private AtomicLong ingestorBlockTimeNano;
     private volatile long ingestorBlockTimeAvgMs;
     private volatile long lastUpdateIngestorBlockTimeNano;
+    private AtomicInteger pendingWriteCount;
 
     private SnapshotCache snapshotCache;
     private EdgeIdGenerator edgeIdGenerator;
@@ -100,6 +103,7 @@ public class GraphWriter implements MetricsAgent {
             String writeSession,
             List<WriteRequest> writeRequests,
             CompletionCallback<Long> callback) {
+        this.pendingWriteCount.incrementAndGet();
         GraphSchema schema = snapshotCache.getSnapshotWithSchema().getGraphDef();
         OperationBatch.Builder batchBuilder = OperationBatch.newBuilder();
         for (WriteRequest writeRequest : writeRequests) {
@@ -142,19 +146,25 @@ public class GraphWriter implements MetricsAgent {
                         new CompletionCallback<Long>() {
                             @Override
                             public void onCompleted(Long res) {
-                                long ingestorCompleteTimeNano = System.nanoTime();
                                 long writeSnapshotId = res;
                                 lastWrittenSnapshotId.updateAndGet(
                                         x -> x < writeSnapshotId ? writeSnapshotId : x);
                                 writeRequestsTotal.addAndGet(writeRequests.size());
-                                ingestorBlockTimeNano.addAndGet(
-                                        ingestorCompleteTimeNano - startTimeNano);
+                                finish();
                                 callback.onCompleted(res);
                             }
 
                             @Override
                             public void onError(Throwable t) {
+                                finish();
                                 callback.onError(t);
+                            }
+
+                            void finish() {
+                                long ingestorCompleteTimeNano = System.nanoTime();
+                                ingestorBlockTimeNano.addAndGet(
+                                        ingestorCompleteTimeNano - startTimeNano);
+                                pendingWriteCount.decrementAndGet();
                             }
                         });
     }
@@ -405,6 +415,7 @@ public class GraphWriter implements MetricsAgent {
         this.writeRequestsPerSecond = 0L;
         this.ingestorBlockTimeNano = new AtomicLong(0L);
         this.lastUpdateIngestorBlockTimeNano = 0L;
+        this.pendingWriteCount = new AtomicInteger(0);
     }
 
     @Override
@@ -415,6 +426,7 @@ public class GraphWriter implements MetricsAgent {
                 put(WRITE_REQUESTS_PER_SECOND, String.valueOf(writeRequestsPerSecond));
                 put(INGESTOR_BLOCK_TIME_MS, String.valueOf(ingestorBlockTimeNano.get() / 1000000));
                 put(INGESTOR_BLOCK_TIME_AVG_MS, String.valueOf(ingestorBlockTimeAvgMs));
+                put(PENDING_WRITE_COUNT, String.valueOf(pendingWriteCount.get()));
             }
         };
     }
@@ -425,7 +437,8 @@ public class GraphWriter implements MetricsAgent {
             WRITE_REQUESTS_TOTAL,
             WRITE_REQUESTS_PER_SECOND,
             INGESTOR_BLOCK_TIME_MS,
-            INGESTOR_BLOCK_TIME_AVG_MS
+            INGESTOR_BLOCK_TIME_AVG_MS,
+            PENDING_WRITE_COUNT,
         };
     }
 
