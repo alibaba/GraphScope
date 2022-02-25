@@ -1,5 +1,6 @@
 package com.alibaba.graphscope.groot.frontend.write;
 
+import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.SnapshotCache;
 import com.alibaba.graphscope.groot.frontend.IngestorWriteClient;
 import com.alibaba.graphscope.groot.meta.MetaService;
@@ -17,6 +18,7 @@ import com.alibaba.graphscope.groot.schema.EdgeKind;
 import com.alibaba.graphscope.groot.schema.PropertyValue;
 import com.alibaba.maxgraph.common.util.PkHashUtils;
 import com.alibaba.maxgraph.common.util.WriteSessionUtil;
+import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
 import com.alibaba.maxgraph.compiler.api.exception.PropertyDefNotFoundException;
 import com.alibaba.maxgraph.compiler.api.schema.DataType;
 import com.alibaba.maxgraph.compiler.api.schema.GraphElement;
@@ -27,7 +29,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -68,6 +72,34 @@ public class GraphWriter implements MetricsAgent {
 
     public long writeBatch(
             String requestId, String writeSession, List<WriteRequest> writeRequests) {
+        CompletableFuture<Long> future = new CompletableFuture<>();
+        writeBatch(
+                requestId,
+                writeSession,
+                writeRequests,
+                new CompletionCallback<Long>() {
+                    @Override
+                    public void onCompleted(Long res) {
+                        future.complete(res);
+                    }
+
+                    @Override
+                    public void onError(Throwable t) {
+                        future.completeExceptionally(t);
+                    }
+                });
+        try {
+            return future.get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new MaxGraphException(e);
+        }
+    }
+
+    public void writeBatch(
+            String requestId,
+            String writeSession,
+            List<WriteRequest> writeRequests,
+            CompletionCallback<Long> callback) {
         GraphSchema schema = snapshotCache.getSnapshotWithSchema().getGraphDef();
         OperationBatch.Builder batchBuilder = OperationBatch.newBuilder();
         for (WriteRequest writeRequest : writeRequests) {
@@ -101,16 +133,30 @@ public class GraphWriter implements MetricsAgent {
         int writeQueueId = getWriteQueueId(writeSession);
         int ingestorId = this.metaService.getIngestorIdForQueue(writeQueueId);
         long startTimeNano = System.nanoTime();
-        BatchId batchId =
-                this.ingestWriteClients
-                        .getClient(ingestorId)
-                        .writeIngestor(requestId, writeQueueId, operationBatch);
-        long ingestorCompleteTimeNano = System.nanoTime();
-        long writeSnapshotId = batchId.getSnapshotId();
-        this.lastWrittenSnapshotId.updateAndGet(x -> x < writeSnapshotId ? writeSnapshotId : x);
-        this.writeRequestsTotal.addAndGet(writeRequests.size());
-        this.ingestorBlockTimeNano.addAndGet(ingestorCompleteTimeNano - startTimeNano);
-        return writeSnapshotId;
+        this.ingestWriteClients
+                .getClient(ingestorId)
+                .writeIngestorAsync(
+                        requestId,
+                        writeQueueId,
+                        operationBatch,
+                        new CompletionCallback<Long>() {
+                            @Override
+                            public void onCompleted(Long res) {
+                                long ingestorCompleteTimeNano = System.nanoTime();
+                                long writeSnapshotId = res;
+                                lastWrittenSnapshotId.updateAndGet(
+                                        x -> x < writeSnapshotId ? writeSnapshotId : x);
+                                writeRequestsTotal.addAndGet(writeRequests.size());
+                                ingestorBlockTimeNano.addAndGet(
+                                        ingestorCompleteTimeNano - startTimeNano);
+                                callback.onCompleted(res);
+                            }
+
+                            @Override
+                            public void onError(Throwable t) {
+                                callback.onError(t);
+                            }
+                        });
     }
 
     public boolean flushSnapshot(long snapshotId, long waitTimeMs) throws InterruptedException {
