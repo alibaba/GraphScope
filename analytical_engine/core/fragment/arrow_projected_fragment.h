@@ -416,28 +416,38 @@ class ArrowProjectedFragment
     if (v_prop == -1) {
       if (!std::is_same<vdata_t, grape::EmptyType>::value) {
         LOG(ERROR) << "Vertex data type of projected fragment is not "
-                      "consistent with property.";
+                      "consistent with property, expect "
+                   << type_name<grape::EmptyType>() << ", got "
+                   << type_name<vdata_t>();
         return nullptr;
       }
     } else {
-      if (!fragment->vertex_tables_[v_label]->field(v_prop)->type()->Equals(
-              vineyard::ConvertToArrowType<vdata_t>::TypeValue())) {
+      auto prop_type = fragment->vertex_tables_[v_label]->field(v_prop)->type();
+      auto vdata_type = vineyard::ConvertToArrowType<vdata_t>::TypeValue();
+      if (!prop_type->Equals(vdata_type)) {
         LOG(ERROR) << "Vertex data type of projected fragment is not "
-                      "consistent with property.";
+                      "consistent with property, expect "
+                   << prop_type->ToString() << ", got "
+                   << vdata_type->ToString();
         return nullptr;
       }
     }
     if (e_prop == -1) {
       if (!std::is_same<edata_t, grape::EmptyType>::value) {
         LOG(ERROR) << "Edge data type of projected fragment is not "
-                      "consistent with property.";
+                      "consistent with property, expect "
+                   << type_name<grape::EmptyType>() << ", got "
+                   << type_name<edata_t>();
         return nullptr;
       }
     } else {
-      if (!fragment->edge_tables_[e_label]->field(e_prop)->type()->Equals(
-              vineyard::ConvertToArrowType<edata_t>::TypeValue())) {
+      auto prop_type = fragment->edge_tables_[e_label]->field(e_prop)->type();
+      auto edata_type = vineyard::ConvertToArrowType<edata_t>::TypeValue();
+      if (!prop_type->Equals(edata_type)) {
         LOG(ERROR) << "Edge data type of projected fragment is not "
-                      "consistent with property.";
+                      "consistent with property, expect "
+                   << prop_type->ToString() << ", got "
+                   << edata_type->ToString();
         return nullptr;
       }
     }

@@ -78,6 +78,8 @@ void VineyardServer::Start() {
   std::error_code ec;
   proc_ = std::make_unique<bp::child>(cmd, bp::std_out > stdout,
                                       bp::std_err > stderr, env, ec);
+  // If vineyardd failed to launch, make sure the ec is set before checking
+  std::this_thread::sleep_for(std::chrono::seconds(2));
   if (ec) {
     // NB: currently we just leave a error message, and don't require the
     // vineyard instance is successfully launched.
