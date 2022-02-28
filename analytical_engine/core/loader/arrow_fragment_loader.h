@@ -455,8 +455,8 @@ class ArrowFragmentLoader {
 #ifdef ENABLE_JAVA_SDK
   // Location like giraph://filename#input_format_class=className
   boost::leaf::result<std::shared_ptr<arrow::Table>> readTableFromGiraph(
-      bool load_vertex, const std::string& params_json_str, int index,
-      int total_parts) {
+      bool load_vertex, const std::string& file_path, int index,
+      int total_parts, const std::string formatter) {
     // VLOG(1) << "location: " << params_json_str;
     // static JavaLoaderInvoker java_loader_invoker(index, total_parts);
     if (load_vertex) {
@@ -464,10 +464,10 @@ class ArrowFragmentLoader {
       // In this case, we load the data in this function, and suppose call
       // add_edges will be called(empty location),
       // if location is empty, we just return the previous loaded data.
-      java_loader_invoker.load_vertices_and_edges(params_json_str);
+      java_loader_invoker.load_vertices_and_edges(file_path, formatter);
       return java_loader_invoker.get_vertex_table();
     } else {
-      java_loader_invoker.load_edges(params_json_str);
+      java_loader_invoker.load_edges(file_path, formatter);
       return java_loader_invoker.get_edge_table();
     }
     // once set, we will read.
@@ -619,11 +619,12 @@ class ArrowFragmentLoader {
             VLOG(2) << "vertex table is null";
           }
 #ifdef ENABLE_JAVA_SDK
-        } else if (vertices[i]->protocol == "giraph") {
+        } else if (vertices[i]->protocol == "file" &&
+                   vertices[i]->vformat.find("giraph") != std::string::npos) {
           BOOST_LEAF_ASSIGN(
-              table,
-              readTableFromGiraph(true, vertices[i]->values, index,
-                                  total_parts));  // true means to load vertex.
+              table, readTableFromGiraph(
+                         true, vertices[i]->values, index, total_parts,
+                         vertices[i]->eformat));  // true means to load vertex.
 #endif
         } else {
           // Let the IOFactory to parse other protocols.
@@ -820,10 +821,12 @@ class ArrowFragmentLoader {
                       << table->schema()->ToString();
             }
 #ifdef ENABLE_JAVA_SDK
-          } else if (sub_labels[j].protocol == "giraph") {
-            BOOST_LEAF_ASSIGN(
-                table, readTableFromGiraph(false, sub_labels[j].values, index,
-                                           total_parts));
+          } else if (sub_labels[j].protocol == "file" &&
+                     sub_labels[j]->eformat.find("giraph") !=
+                         std::string::npos) {
+            BOOST_LEAF_ASSIGN(table, readTableFromGiraph(
+                                         false, sub_labels[j].values, index,
+                                         total_parts, sub_labels[j]->eformat));
 #endif
           } else {
             // Let the IOFactory to parse other protocols.

@@ -241,6 +241,9 @@ enum ParamKey {
   CHUNK_TYPE = 342;
 
   GRAPH_LIBRARY_PATH = 400;
+
+  VFORMAT = 500;
+  EFORMAT = 501;
 }
 
 enum ModifyType {
