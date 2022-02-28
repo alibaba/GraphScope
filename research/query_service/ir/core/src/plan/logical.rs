@@ -616,6 +616,13 @@ pub trait AsLogical {
 fn preprocess_var(
     var: &mut common_pb::Variable, meta: &StoreMeta, plan_meta: &mut PlanMeta,
 ) -> IrResult<()> {
+    let mut node_meta = plan_meta.tag_node_metas_mut(
+        var.tag
+            .clone()
+            .map(|tag| tag.try_into())
+            .transpose()?
+            .as_ref(),
+    )?;
     if let Some(property) = var.property.as_mut() {
         if let Some(key) = property.item.as_mut() {
             match key {
@@ -631,25 +638,9 @@ fn preprocess_var(
                         }
                     }
                     debug!("add column ({:?}) to {:?}", key, var.tag);
-                    let mut node_meta = plan_meta.tag_node_metas_mut(
-                        var.tag
-                            .clone()
-                            .map(|tag| tag.try_into())
-                            .transpose()?
-                            .as_ref(),
-                    )?;
                     node_meta.insert_column(key.clone().try_into()?);
                 }
-                common_pb::property::Item::All(_) => {
-                    let mut node_meta = plan_meta.tag_node_metas_mut(
-                        var.tag
-                            .clone()
-                            .map(|tag| tag.try_into())
-                            .transpose()?
-                            .as_ref(),
-                    )?;
-                    node_meta.set_is_all_columns(true);
-                }
+                common_pb::property::Item::All(_) => node_meta.set_is_all_columns(true),
                 _ => {}
             }
         }
@@ -712,9 +703,9 @@ fn preprocess_expression(
                                 common_pb::property::Item::Label(_) => count = 1,
                                 _ => count = 0,
                             }
-                            preprocess_var(var, meta, plan_meta)?;
                         }
                     }
+                    preprocess_var(var, meta, plan_meta)?;
                 }
                 common_pb::expr_opr::Item::Logical(l) => {
                     if count == 1 {
@@ -1983,6 +1974,23 @@ mod test {
                 .into_iter()
                 .collect::<BTreeSet<NameOrId>>()
         );
+    }
+
+    #[test]
+    fn tag_projection_not_exist() {
+        let mut plan = LogicalPlan::default();
+        let project = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: str_to_expr_pb("@keys".to_string()).ok(),
+                alias: None,
+            }],
+            is_append: false,
+        };
+        let result = plan.append_operator_as_node(project.into(), vec![0]);
+        match result.err() {
+            Some(IrError::TagNotExist(_)) => {}
+            _ => panic!("should produce `IrError::TagNotExist`"),
+        }
     }
 
     #[test]
