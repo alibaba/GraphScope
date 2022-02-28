@@ -163,20 +163,15 @@ public class FileLoader implements LoaderBase {
      * @param params    the json params contains giraph configuration.
      * @return Return an integer contains type params info.
      */
-    public int loadVerticesAndEdges(String inputPath, String params)
+    public int loadVerticesAndEdges(String inputPath, String vformatClass)
         throws ExecutionException, InterruptedException, ClassNotFoundException {
         logger.debug("vertex input path {}", inputPath);
         //        FileLoader.inputPath = inputPath;
         // Vertex input format class has already been verified, just load.
-        JSONObject jsonObject = JSONObject.parseObject(params);
+        // JSONObject jsonObject = JSONObject.parseObject(params);
         //try to Load user library
-        loadUserLibrary(jsonObject);
-
-        //        try {
-        ConfigurationUtils.parseArgs(giraphConfiguration, jsonObject);
-        //        } catch (ClassNotFoundException e) {
-        //            e.printStackTrace();
-        //        }
+        // loadUserLibrary(jsonObject);
+        giraphConfiguration.setVertexInputFormatClass((Class<? extends VertexInputFormat>) Class.forName(vformatClass));
         ImmutableClassesGiraphConfiguration conf =
             new ImmutableClassesGiraphConfiguration(giraphConfiguration);
         try {
@@ -202,21 +197,15 @@ public class FileLoader implements LoaderBase {
         return generateTypeInt(giraphOidClass, giraphVDataClass, giraphEDataClass);
     }
 
-    public void loadEdges(String inputPath, String params)
+    public void loadEdges(String inputPath, String eformatClass)
         throws ExecutionException, InterruptedException, ClassNotFoundException {
         logger.debug("edge input path {}", inputPath);
-        JSONObject jsonObject = JSONObject.parseObject(params);
-        // try to Load user library
-        loadUserLibrary(jsonObject);
-
-        ConfigurationUtils.parseArgs(giraphConfiguration, jsonObject);
+        giraphConfiguration.setEdgeInputFormatClass((Class<? extends EdgeInputFormat>) Class.forName(eformatClass));
 
         ImmutableClassesGiraphConfiguration conf =
             new ImmutableClassesGiraphConfiguration(giraphConfiguration);
         try {
             edgeInputFormatClz = conf.getEdgeInputFormatClass();
-
-//            inferGiraphTypesFromJSON(vertexInputFormatClz);//already infered in loading vertex
 
             edgeInputFormat = edgeInputFormatClz.newInstance();
             edgeInputFormat.setConf(conf);
@@ -475,10 +464,10 @@ public class FileLoader implements LoaderBase {
         }
     }
 
-    private static void loadUserLibrary(JSONObject object) {
-        String libPath = object.getString(LIB_PATH);
-        LoadLibrary.invoke(libPath);
-    }
+    // private static void loadUserLibrary(JSONObject object) {
+    //     String libPath = object.getString(LIB_PATH);
+    //     LoadLibrary.invoke(libPath);
+    // }
 
     private void inferGiraphTypesFromJSON(Class<? extends VertexInputFormat> child) {
         Class<?>[] classList = getTypeArguments(VertexInputFormat.class, child);

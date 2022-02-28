@@ -26,14 +26,12 @@
 
 namespace gs {
 using FragmentType =
-    vineyard::ArrowFragment<int64_t,
-                            vineyard::property_graph_types::VID_TYPE>;
+    vineyard::ArrowFragment<int64_t, vineyard::property_graph_types::VID_TYPE>;
 using ProjectedFragmentType =
     gs::ArrowProjectedFragment<int64_t, uint64_t, int64_t, int64_t>;
 
 using FragmentLoaderType =
-    gs::ArrowFragmentLoader<int64_t,
-                            vineyard::property_graph_types::VID_TYPE>;
+    gs::ArrowFragmentLoader<int64_t, vineyard::property_graph_types::VID_TYPE>;
 using APP_TYPE = gs::JavaPIEProjectedDefaultApp<ProjectedFragmentType>;
 // using LOADER_TYPE = grape::GiraphFragmentLoader<FragmentType>;
 
@@ -51,7 +49,7 @@ vineyard::ObjectID LoadGiraphFragment(
     const grape::CommSpec& comm_spec, const std::string& vfile,
     const std::string& efile, const std::string& vertex_input_format_class,
     const std::string& edge_input_format_class, vineyard::Client& client,
-    bool directed, const std::string params) {
+    bool directed, const std::string vif, const std::string eif) {
   // construct graph info
   auto graph = std::make_shared<gs::detail::Graph>();
   graph->directed = directed;
@@ -60,13 +58,9 @@ vineyard::ObjectID LoadGiraphFragment(
   auto vertex = std::make_shared<gs::detail::Vertex>();
   vertex->label = "label1";
   vertex->vid = "0";
-  vertex->protocol = "giraph";
+  vertex->protocol = "file";
   vertex->values = vfile;
-  // vertex->values += "#";
-  // vertex->values += vertex_input_format_class;
-  vertex->values += "#";
-  vertex->values += params;  // vif
-  // VLOG(1) << "vertex->values " << vertex->values;
+  vertex->vformat = vertex_input_format_class;  // vif
 
   graph->vertices.push_back(vertex);
 
@@ -79,8 +73,7 @@ vineyard::ObjectID LoadGiraphFragment(
   subLabel->dst_vid = "0";
   subLabel->protocol = "giraph";
   subLabel->values = efile;
-  subLabel->values += "#";
-  subLabel->values += params;  // eif
+  subLabel->eformat += edge_input_format_class;  // eif
   edge->sub_labels.push_back(*subLabel.get());
 
   graph->edges.push_back(edge);
@@ -213,7 +206,7 @@ void CreateAndQuery(std::string params) {
     }
     fragment_id =
         LoadGiraphFragment(comm_spec, vfile, efile, vertex_input_format_class,
-                           edge_input_format_class, client, directed, params);
+                           edge_input_format_class, client, directed);
     VLOG(1) << "[worker " << comm_spec.worker_id()
             << "] loaded frag id: " << fragment_id;
   }
@@ -249,8 +242,8 @@ void CreateAndQuery(std::string params) {
   std::shared_ptr<ProjectedFragmentType> projected_fragment =
       ProjectedFragmentType::Project(fragment, "0", "0", "0", "0");
 
-  Query<ProjectedFragmentType>(comm_spec, projected_fragment, new_params,
-                               user_lib_path, fragment_id, query_times);
+  // Query<ProjectedFragmentType>(comm_spec, projected_fragment, new_params,
+  //                              user_lib_path, fragment_id, query_times);
 }
 void Finalize() {
   grape::FinalizeMPIComm();

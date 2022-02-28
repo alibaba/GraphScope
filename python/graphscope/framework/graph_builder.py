@@ -52,6 +52,8 @@ def load_from(
     directed=True,
     oid_type="int64_t",
     generate_eid=True,
+    vformat=None,
+    eformat=None,
 ) -> Graph:
     """Load a Arrow property graph using a list of vertex/edge specifications.
 
@@ -161,8 +163,8 @@ def load_from(
     oid_type = utils.normalize_data_type_str(oid_type)
     if oid_type not in ("int64_t", "std::string"):
         raise ValueError("oid_type can only be int64_t or string.")
-    v_labels = normalize_parameter_vertices(vertices, oid_type)
-    e_labels = normalize_parameter_edges(edges, oid_type)
+    v_labels = normalize_parameter_vertices(vertices, oid_type, vformat)
+    e_labels = normalize_parameter_edges(edges, oid_type, eformat)
     # generate and add a loader op to dag
     loader_op = dag_utils.create_loader(v_labels + e_labels)
     sess.dag.add_op(loader_op)

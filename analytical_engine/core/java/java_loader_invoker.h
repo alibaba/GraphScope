@@ -216,40 +216,26 @@ class JavaLoaderInvoker {
     }
     VLOG(1) << "Successfully init java loader with params ";
   }
-  void load_vertices_and_edges(const std::string& vertex_location) {
-    size_t arg_pos = vertex_location.find_first_of('#');
-    if (arg_pos != std::string::npos) {
-      std::string file_path = vertex_location.substr(0, arg_pos);
-      std::string json_params = vertex_location.substr(arg_pos + 1);
-      VLOG(1) << "vertex input path: " << file_path;
+  void load_vertices_and_edges(const std::string& vertex_location,
+                               const std::string vformatter) {
+    VLOG(2) << "vertex file: " << vertex_location
+            << ", formatter: " << vformatter;
+    int giraph_type_int =
+        callJavaLoaderVertices(vertex_location.c_str(), vformatter.c_str());
+    CHECK(giraph_type_int >= 0);
 
-      int giraph_type_int =
-          callJavaLoaderVertices(file_path.c_str(), json_params.c_str());
-      CHECK(giraph_type_int >= 0);
-
-      // fetch giraph graph types infos, so we can optimizing graph store by use
-      // primitive types for LongWritable.
-      parseGiraphTypeInt(giraph_type_int);
-
-    } else {
-      LOG(ERROR) << "No # found in vertex location";
-    }
+    // fetch giraph graph types infos, so we can optimizing graph store by use
+    // primitive types for LongWritable.
+    parseGiraphTypeInt(giraph_type_int);
   }
 
   // load vertices must be called before load edge, since we assume giraph type
   // int has been calculated.
-  void load_edges(const std::string& edge_location) {
-    size_t arg_pos = edge_location.find_first_of('#');
-    if (arg_pos != std::string::npos) {
-      std::string file_path = edge_location.substr(0, arg_pos);
-      std::string json_params = edge_location.substr(arg_pos + 1);
-      VLOG(1) << "edge input path: " << file_path;
+  void load_edges(const std::string& edge_location,
+                  const std::string eformatter) {
+    VLOG(2) << "edge file: " << edge_location << " eformatter: " << eformatter;
 
-      callJavaLoaderEdges(file_path.c_str(), json_params.c_str());
-
-    } else {
-      LOG(ERROR) << "No # found in edge location";
-    }
+    callJavaLoaderEdges(edge_location.c_str(), eformatter.c_str());
   }
 
   std::shared_ptr<arrow::Table> get_edge_table() {

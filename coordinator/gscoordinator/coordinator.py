@@ -883,7 +883,7 @@ class CoordinatorServiceServicer(
         def _process_loader_func(loader):
             # loader is type of attr_value_pb2.Chunk
             protocol = loader.attr[types_pb2.PROTOCOL].s.decode()
-            if protocol in ("hdfs", "hive", "oss", "s3", "giraph"):
+            if protocol in ("hdfs", "hive", "oss", "s3"):
                 source = loader.attr[types_pb2.SOURCE].s.decode()
                 storage_options = json.loads(
                     loader.attr[types_pb2.STORAGE_OPTIONS].s.decode()
@@ -891,12 +891,8 @@ class CoordinatorServiceServicer(
                 read_options = json.loads(
                     loader.attr[types_pb2.READ_OPTIONS].s.decode()
                 )
-                if protocol in ("giraph"):
-                    new_protocol = protocol
-                    new_source = "{}#{}".format(source, storage_options)
-                else:
-                    new_protocol, new_source = _spawn_vineyard_io_stream(
-                    source, storage_options, read_options
+                new_protocol, new_source = _spawn_vineyard_io_stream(
+                source, storage_options, read_options
                 )
                 loader.attr[types_pb2.PROTOCOL].CopyFrom(utils.s_to_attr(new_protocol))
                 loader.attr[types_pb2.SOURCE].CopyFrom(utils.s_to_attr(new_source))
