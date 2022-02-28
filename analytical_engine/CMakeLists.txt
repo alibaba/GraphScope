@@ -219,7 +219,7 @@ add_executable(grape_engine
         "core/grape_engine.cc"
         "core/grape_instance.cc"
         "core/java/javasdk.cc"
-        "core/java/dynamic.cc"
+        "core/object/dynamic.cc"
         ${CORE_RPC_SRC_FILES}
     )
 target_include_directories(grape_engine PRIVATE proto utils)
