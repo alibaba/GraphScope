@@ -35,3 +35,6 @@ rev = "082dfcfbb4b51e61d1c01672951b84cb464601e2"
 
 [build-dependencies]
 protoc-grpcio = "0.3.0"
+
+[[bin]]
+name = "write_bench"
