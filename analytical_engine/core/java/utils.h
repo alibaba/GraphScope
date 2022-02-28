@@ -11,7 +11,7 @@
 #include "boost/property_tree/json_parser.hpp"
 #include "boost/property_tree/ptree.hpp"
 
-namespace grape {
+namespace gs {
 
 // data vector contains all bytes, can be used to hold oid and vdata, edata.
 using byte_vector = std::vector<char>;
@@ -79,12 +79,12 @@ void verifyClasses(const std::string& params) {
   // Before we proceed, check integrity of input params, then we go on to load
   // fragment.
   // init JVM, try to load classes and verify them
-  JavaVM* jvm = gs::GetJavaVM();
+  JavaVM* jvm = GetJavaVM();
   (void) jvm;
   CHECK_NOTNULL(jvm);
   VLOG(1) << "Successfully get jvm to verify classes";
 
-  gs::JNIEnvMark m;
+  JNIEnvMark m;
   if (m.env()) {
     JNIEnv* env = m.env();
 

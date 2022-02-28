@@ -126,26 +126,6 @@
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-antrun-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>make</id>
-            <goals>
-              <goal>run</goal>
-            </goals>
-            <phase>compile</phase>
-            <configuration>
-              <target>
-                <ant antfile="${basedir}/build.xml">
-                  <target name="giraph-jni"></target>
-                </ant>
-              </target>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
           <skipTests>true</skipTests>

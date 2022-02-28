@@ -118,6 +118,6 @@ class JavaPIEProjectedDefaultApp
     }
   }
 };
-
+}
 #endif
 #endif  // ANALYTICAL_ENGINE_APPS_JAVA_PIE_JAVA_PIE_PROJECTED_DEFAULT_APP_H_

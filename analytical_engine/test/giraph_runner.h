@@ -16,11 +16,11 @@
 #include "grape/fragment/loader.h"
 #include "grape/grape.h"
 
+#include "core/loader/arrow_fragment_loader.h"
 // #include "apps/java_pie/java_pie_default_app.h"
 #include "apps/java_pie/java_pie_projected_default_app.h"
 #include "core/fragment/arrow_projected_fragment.h"
 #include "core/io/property_parser.h"
-#include "core/loader/arrow_fragment_loader.h"
 
 #include "core/java/utils.h"
 
@@ -29,12 +29,12 @@ using FragmentType =
     vineyard::ArrowFragment<int64_t,
                             vineyard::property_graph_types::VID_TYPE>;
 using ProjectedFragmentType =
-    gs::ArrowProjectedFragment<int64_t, uint64_t, int64_t, int64_t>;
+    ArrowProjectedFragment<int64_t, uint64_t, int64_t, int64_t>;
 
 using FragmentLoaderType =
-    gs::ArrowFragmentLoader<int64_t,
+    ArrowFragmentLoader<int64_t,
                             vineyard::property_graph_types::VID_TYPE>;
-using APP_TYPE = gs::JavaPIEProjectedDefaultApp<ProjectedFragmentType>;
+using APP_TYPE = JavaPIEProjectedDefaultApp<ProjectedFragmentType>;
 // using LOADER_TYPE = grape::GiraphFragmentLoader<FragmentType>;
 
 void Init(const std::string& params) {
@@ -53,11 +53,11 @@ vineyard::ObjectID LoadGiraphFragment(
     const std::string& edge_input_format_class, vineyard::Client& client,
     bool directed, const std::string params) {
   // construct graph info
-  auto graph = std::make_shared<gs::detail::Graph>();
+  auto graph = std::make_shared<detail::Graph>();
   graph->directed = directed;
   graph->generate_eid = false;
 
-  auto vertex = std::make_shared<gs::detail::Vertex>();
+  auto vertex = std::make_shared<detail::Vertex>();
   vertex->label = "label1";
   vertex->vid = "0";
   vertex->protocol = "giraph";
@@ -70,9 +70,9 @@ vineyard::ObjectID LoadGiraphFragment(
 
   graph->vertices.push_back(vertex);
 
-  auto edge = std::make_shared<gs::detail::Edge>();
+  auto edge = std::make_shared<detail::Edge>();
   edge->label = "label2";
-  auto subLabel = std::make_shared<gs::detail::Edge::SubLabel>();
+  auto subLabel = std::make_shared<detail::Edge::SubLabel>();
   subLabel->src_label = "label1";
   subLabel->src_vid = "0";
   subLabel->dst_label = "label1";
@@ -131,14 +131,14 @@ void Query(grape::CommSpec& comm_spec, std::shared_ptr<FRAG_T> fragment,
   for (auto i = 0; i < query_times; ++i) {
     auto app = std::make_shared<APP_TYPE>();
     auto worker = APP_TYPE::CreateWorker(app, fragment);
-    auto spec = DefaultParallelEngineSpec();
+    auto spec = grape::DefaultParallelEngineSpec();
 
     worker->Init(comm_spec, spec);
 
     MPI_Barrier(comm_spec.comm());
-    double t = -GetCurrentTime();
+    double t = -grape::GetCurrentTime();
     worker->Query(params_str, user_lib_path, frag_id);
-    t += GetCurrentTime();
+    t += grape::GetCurrentTime();
     MPI_Barrier(comm_spec.comm());
 
     total_time += t;
@@ -171,22 +171,23 @@ void CreateAndQuery(std::string params) {
   grape::CommSpec comm_spec;
   comm_spec.Init(MPI_COMM_WORLD);
 
+  ptree pt;
+  string2ptree(params, pt);
+
   std::string ipc_socket = getFromPtree<std::string>(pt, OPTION_IPC_SOCKET);
   vineyard::Client client;
   vineyard::ObjectID fragment_id;
   VINEYARD_CHECK_OK(client.Connect(ipc_socket));
   VLOG(1) << "Connected to IPCServer: " << ipc_socket;
 
-  ptree pt;
-  string2ptree(params, pt);
 
   std::string frag_ids = getFromPtree<std::string>(pt, OPTION_FRAG_IDS);
-  vector<std::string> frag_ids_vec;
+  std::vector<vineyard::ObjectID> frag_ids_vec;
   if (!frag_ids.empty()) {
     std::stringstream ss(frag_ids);
-    for (vineyard::ObjectID frag_id; ss >> frag_id) {
+    for (vineyard::ObjectID frag_id; ss >> frag_id;) {
       frag_ids_vec.push_back(frag_id);
-      if (ss.peek() == ",") {
+      if (ss.peek() == ',') {
         ss.ignore();
       }
     }

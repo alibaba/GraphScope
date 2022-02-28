@@ -25,7 +25,8 @@
 #include "core/java/javasdk.h"
 #include "grape/grape.h"
 #include "grape/util.h"
-#include "vineyard/graph/loader/arrow_fragment_loader.h"
+#include "core/java/utils.h"
+//#include "vineyard/graph/loader/arrow_fragment_loader.h"
 
 namespace gs {
 
@@ -143,10 +144,6 @@ static constexpr const char* JAVA_LOADER_INIT_SIG =
     "Lcom/alibaba/graphscope/stdcxx/FFIIntVecVector;"
     "Lcom/alibaba/graphscope/stdcxx/FFIIntVecVector;"
     "Lcom/alibaba/graphscope/stdcxx/FFIIntVecVector;)V";
-static constexpr const char* DATA_VECTOR_VECTOR =
-    "std::vector<std::vector<char>>";
-static constexpr const char* OFFSET_VECTOR_VECTOR =
-    "std::vector<std::vector<int>>";
 static constexpr int GIRAPH_TYPE_CODE_LENGTH = 4;
 class JavaLoaderInvoker {
  public:

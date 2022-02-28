@@ -105,8 +105,8 @@ int main(int argc, char* argv[]) {
 
   VLOG(1) << "Finish option parsing";
 
-  std::string params = flags2JsonStr()
-  gs::Init();
+  std::string params = flags2JsonStr();
+  gs::Init(params);
   gs::CreateAndQuery(params);
   gs::Finalize();
   VLOG(1) << "Finish Querying.";
