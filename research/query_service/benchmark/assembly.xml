@@ -34,8 +34,15 @@
             </includes>
         </fileSet>
         <fileSet>
-            <directory>ir_queries/</directory>
-            <outputDirectory>/ir_queries</outputDirectory>
+            <directory>queries/ir_ldbc</directory>
+            <outputDirectory>/queries/ir_ldbc</outputDirectory>
+            <includes>
+                <include>*</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <directory>queries/gaiax_ldbc</directory>
+            <outputDirectory>/queries/gaiax_ldbc</outputDirectory>
             <includes>
                 <include>*</include>
             </includes>
