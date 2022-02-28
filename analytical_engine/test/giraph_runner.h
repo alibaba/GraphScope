@@ -50,7 +50,7 @@ vineyard::ObjectID LoadGiraphFragment(
     const grape::CommSpec& comm_spec, const std::string& vfile,
     const std::string& efile, const std::string& vertex_input_format_class,
     const std::string& edge_input_format_class, vineyard::Client& client,
-    bool directed, const std::string vif, const std::string eif) {
+    bool directed) {
   // construct graph info
   auto graph = std::make_shared<detail::Graph>();
   graph->directed = directed;

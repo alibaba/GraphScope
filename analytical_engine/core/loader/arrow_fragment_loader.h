@@ -624,7 +624,7 @@ class ArrowFragmentLoader {
           BOOST_LEAF_ASSIGN(
               table, readTableFromGiraph(
                          true, vertices[i]->values, index, total_parts,
-                         vertices[i]->eformat));  // true means to load vertex.
+                         vertices[i]->vformat));  // true means to load vertex.
 #endif
         } else {
           // Let the IOFactory to parse other protocols.
@@ -822,11 +822,11 @@ class ArrowFragmentLoader {
             }
 #ifdef ENABLE_JAVA_SDK
           } else if (sub_labels[j].protocol == "file" &&
-                     sub_labels[j]->eformat.find("giraph") !=
+                     sub_labels[j].eformat.find("giraph") !=
                          std::string::npos) {
             BOOST_LEAF_ASSIGN(table, readTableFromGiraph(
                                          false, sub_labels[j].values, index,
-                                         total_parts, sub_labels[j]->eformat));
+                                         total_parts, sub_labels[j].eformat));
 #endif
           } else {
             // Let the IOFactory to parse other protocols.
