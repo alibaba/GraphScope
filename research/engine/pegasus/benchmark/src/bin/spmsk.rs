@@ -20,6 +20,8 @@ struct Config {
     starts: u32,
     #[structopt(short = "f")]
     use_loop: bool,
+    #[structopt(short = "l")]
+    is_limit_one: bool,
     /// specify the ids of start vertices;
     #[structopt(short = "i")]
     id_from_std: bool,
@@ -79,6 +81,7 @@ fn main() {
     pegasus::wait_servers_ready(conf.servers());
 
     let k_hop = config.k;
+    let is_limit_one = config.is_limit_one;
     let nums = src.len();
     if nums == 0 {
         return;
@@ -89,7 +92,14 @@ fn main() {
     assert!(k_hop > 0);
     let use_loop = config.use_loop;
     let start = Instant::now();
-    let res = pegasus_benchmark::queries::khop::packed_multi_src_k_hop(src, k_hop, use_loop, conf, graph);
+    let res = pegasus_benchmark::queries::khop::packed_multi_src_k_hop(
+        src,
+        k_hop,
+        use_loop,
+        is_limit_one,
+        conf,
+        graph,
+    );
 
     let mut cnt_list = Vec::new();
     let mut elp_list = Vec::new();
