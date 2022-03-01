@@ -70,7 +70,7 @@ vineyard::ObjectID LoadGiraphFragment(
   subLabel->src_vid = "0";
   subLabel->dst_label = "label1";
   subLabel->dst_vid = "0";
-  subLabel->protocol = "giraph";
+  subLabel->protocol = "file";
   subLabel->values = efile;
   subLabel->eformat += edge_input_format_class;  // eif
   edge->sub_labels.push_back(*subLabel.get());
