@@ -965,15 +965,7 @@ mod join {
     /// To initialize a join operator
     #[no_mangle]
     pub extern "C" fn init_join_operator(join_kind: FfiJoinKind) -> *const c_void {
-        let kind = match join_kind {
-            FfiJoinKind::Inner => 0,
-            FfiJoinKind::LeftOuter => 1,
-            FfiJoinKind::RightOuter => 2,
-            FfiJoinKind::FullOuter => 3,
-            FfiJoinKind::Semi => 4,
-            FfiJoinKind::Anti => 5,
-            FfiJoinKind::Times => 6,
-        };
+        let kind = unsafe { std::mem::transmute(join_kind) };
         let join = Box::new(pb::Join { left_keys: vec![], right_keys: vec![], kind });
         Box::into_raw(join) as *const c_void
     }
@@ -1595,6 +1587,7 @@ mod graph {
     use std::collections::HashMap;
 
     use super::*;
+    use crate::plan::ffi::join::FfiJoinKind;
 
     #[allow(dead_code)]
     #[derive(Copy, Clone)]
@@ -1850,8 +1843,13 @@ mod graph {
     }
 
     #[no_mangle]
-    pub extern "C" fn init_pattern_sentence(is_anti: bool) -> *const c_void {
-        let sentence = Box::new(pb::pattern::Sentence { start: None, binders: vec![], end: None, is_anti });
+    pub extern "C" fn init_pattern_sentence(join_kind: FfiJoinKind) -> *const c_void {
+        let sentence = Box::new(pb::pattern::Sentence {
+            start: None,
+            binders: vec![],
+            end: None,
+            join_kind: unsafe { std::mem::transmute(join_kind) },
+        });
 
         Box::into_raw(sentence) as *const c_void
     }

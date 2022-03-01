@@ -69,7 +69,7 @@ pub struct BaseSentence {
     /// to facilitate building the logical plan that may translate a tag into an `As` operator.
     operators: Vec<pb::logical_plan::Operator>,
     /// Is this a sentence with Anti(No)-semanatics
-    is_anti: bool,
+    join_kind: pb::join::JoinKind,
     /// What kind of entities this sentence binds to
     end_as: BindingOpt,
     /// The number of filters contained by the sentence
@@ -94,20 +94,9 @@ pub struct JoinSentence {
 
 impl From<BaseSentence> for JoinSentence {
     fn from(base: BaseSentence) -> Self {
-        let is_anti = base.is_anti;
+        let join_kind = base.join_kind;
         let tags = base.tags.clone();
-        Self {
-            left: Rc::new(base),
-            right: None,
-            common_tags: tags.clone(),
-            tags,
-            join_kind: if is_anti {
-                // use the join_kind to represent whether it is an anti-sentence
-                pb::join::JoinKind::Anti
-            } else {
-                pb::join::JoinKind::Inner
-            },
-        }
+        Self { left: Rc::new(base), right: None, common_tags: tags.clone(), tags, join_kind }
     }
 }
 
@@ -191,11 +180,11 @@ impl TryFrom<pb::pattern::Sentence> for BaseSentence {
                 }?;
                 operators.push(opr);
             }
-            let is_anti = pb.is_anti;
+            let join_kind = unsafe { std::mem::transmute(pb.join_kind) };
             if end_as == BindingOpt::Path {
                 Err(ParsePbError::Unsupported("binding a sentence to a path".to_string()))
             } else {
-                Ok(Self { start_tag, end_tag, tags, operators, is_anti, end_as, num_filters, num_hops })
+                Ok(Self { start_tag, end_tag, tags, operators, join_kind, end_as, num_filters, num_hops })
             }
         } else {
             Err(ParsePbError::EmptyFieldError("Pattern::Sentence::start".to_string()))
@@ -224,11 +213,11 @@ impl SentenceOrd for CompositeOrd {
 
     fn get_ord_meta(&self) -> Self::OrdMeta {
         (
-            -(self.inner.num_hops as i32), // less edge expansions is preferred
-            self.inner.num_filters as i32, // more filters is preferred
-            -(self.inner.end_as as i32),   // ending as vertex is preferred
-            self.inner.tags.len() as i32,  // more tags is preferred
-            -(self.inner.is_anti as i32),  // non anti-sentence is preferred
+            -(self.inner.num_hops as i32),  // less edge expansions is preferred
+            self.inner.num_filters as i32,  // more filters is preferred
+            -(self.inner.end_as as i32),    // ending as vertex is preferred
+            self.inner.tags.len() as i32,   // more tags is preferred
+            -(self.inner.join_kind as i32), // inner > left outer > semi > anti > times
         )
     }
 
@@ -283,11 +272,11 @@ impl SentenceOrd for JoinOrd {
 
     fn get_ord_meta(&self) -> Self::OrdMeta {
         (
-            self.inner.tags.len() as i32,  // more tags is preferred
-            self.inner.num_filters as i32, // more filters is preferred
-            -(self.inner.num_hops as i32), // less edge expansions is preferred
-            -(self.inner.end_as as i32),   // ending as vertex is preferred
-            -(self.inner.is_anti as i32),  // non anti-sentence is preferred
+            self.inner.tags.len() as i32,   // more tags is preferred
+            self.inner.num_filters as i32,  // more filters is preferred
+            -(self.inner.num_hops as i32),  // less edge expansions is preferred
+            -(self.inner.end_as as i32),    // ending as vertex is preferred
+            -(self.inner.join_kind as i32), // inner > left join > semi > anti > times
         )
     }
 
@@ -372,8 +361,8 @@ impl MatchingStrategy for BaseSentence {
 
 impl Sentence for BaseSentence {
     fn composite(&self, other: &BaseSentence) -> Option<BaseSentence> {
-        // cannot composite anti-sentence
-        if self.is_anti || other.is_anti {
+        // can only composite two sentences that are both inner-join
+        if self.join_kind != pb::join::JoinKind::Inner || other.join_kind != pb::join::JoinKind::Inner {
             return None;
         }
         // composition can happens if `self` sentence contains the start_tag of `other`
@@ -439,12 +428,12 @@ impl Sentence for BaseSentence {
         }
 
         if let Some(base) = other.get_base() {
-            // cannot join two base anti-sentences
-            if self.is_anti && base.is_anti {
+            // cannot join two sentences that both have Non-inner join_type
+            if self.join_kind != pb::join::JoinKind::Inner && base.join_kind != pb::join::JoinKind::Inner {
                 return None;
             }
         }
-        if self.is_anti {
+        if self.join_kind != pb::join::JoinKind::Inner {
             Some(JoinSentence {
                 left: other,
                 // anti-sentence must be placed on the right
@@ -455,12 +444,8 @@ impl Sentence for BaseSentence {
             })
         } else {
             let join_kind = if let Some(base) = other.get_base() {
-                // if other is an anti sentence
-                if base.is_anti {
-                    pb::join::JoinKind::Anti
-                } else {
-                    pb::join::JoinKind::Inner
-                }
+                // if other is an non-inner sentence
+                base.join_kind
             } else {
                 pb::join::JoinKind::Inner
             };
@@ -701,7 +686,7 @@ mod test {
                 })),
             }],
             end: y.and_then(|s| s.try_into().ok()),
-            is_anti,
+            join_kind: if is_anti { 5 } else { 0 },
         };
 
         pb.try_into().unwrap()
@@ -720,7 +705,7 @@ mod test {
                 })),
             }],
             end: y.and_then(|s| s.try_into().ok()),
-            is_anti,
+            join_kind: if is_anti { 5 } else { 0 },
         };
 
         pb.try_into().unwrap()
@@ -876,15 +861,16 @@ mod test {
         let a_out_b = gen_sentence_x_out_y("a", Some("b"), false, false);
 
         let join = a_out_b_anti.join(Rc::new(a_out_b)).unwrap();
-        assert!(!(join.left.get_base().unwrap().is_anti));
+        assert_ne!(join.left.get_base().unwrap().join_kind, pb::join::JoinKind::Anti);
         // anti-sentence moved to the right
-        assert!(
+        assert_eq!(
             join.right
                 .as_ref()
                 .unwrap()
                 .get_base()
                 .unwrap()
-                .is_anti
+                .join_kind,
+            pb::join::JoinKind::Anti
         );
         assert_eq!(
             join.common_tags,

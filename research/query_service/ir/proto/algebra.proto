@@ -360,7 +360,8 @@ message Pattern {
     common.NameOrId start = 1;
     repeated Binder binders = 2;
     common.NameOrId end = 3;
-    bool is_anti = 4;
+    /// Define how to attach this sentence to the other one
+    algebra.Join.JoinKind join_kind = 4;
   }
   repeated Sentence sentences = 1;
 }

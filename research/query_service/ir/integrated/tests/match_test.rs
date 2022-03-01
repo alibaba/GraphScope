@@ -70,7 +70,7 @@ mod test {
                         item: Some(pb::pattern::binder::Item::Edge(out_knows)),
                     }],
                     end: Some("b".into()),
-                    is_anti: false,
+                    join_kind: 0,
                 },
                 pb::pattern::Sentence {
                     start: Some("a".into()),
@@ -78,7 +78,7 @@ mod test {
                         item: Some(pb::pattern::binder::Item::Edge(out_created.clone())),
                     }],
                     end: Some("c".into()),
-                    is_anti: false,
+                    join_kind: 0,
                 },
                 pb::pattern::Sentence {
                     start: Some("b".into()),
@@ -86,7 +86,7 @@ mod test {
                         item: Some(pb::pattern::binder::Item::Edge(out_created.clone())),
                     }],
                     end: Some("c".into()),
-                    is_anti: false,
+                    join_kind: 0,
                 },
             ],
         };
