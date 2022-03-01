@@ -1,37 +1,19 @@
 name: Build GraphScope Wheels on MacOS
 
 on:
-  # Trigger the workflow on push or pull request,
-  # but only for the main branch
+  workflow_dispatch:
+  schedule:
+    # The notifications for scheduled workflows are sent to the user who
+    # last modified the cron syntax in the workflow file.
+    # Trigger the workflow at 03:00(CST) every day.
+    - cron:  '00 19 * * *'
   push:
-    branches:
-      - main
-    paths-ignore:
-      - 'CONTRIBUTORS'
-      - 'LICENSE'
-      - 'NOTICE.txt'
-      - '**.md'
-      - '**.rst'
-      - 'docs/**'
-      - 'demo/**'
-      - 'scripts/**'
-      - 'tutorials/**'
-  pull_request:
-    branches:
-      - main
-    paths-ignore:
-      - 'CONTRIBUTORS'
-      - 'LICENSE'
-      - 'NOTICE.txt'
-      - '**.md'
-      - '**.rst'
-      - 'docs/**'
-      - 'demo/**'
-      - 'scripts/**'
-      - 'tutorials/**'
+    tags:
+      - "v*"
 
 jobs:
   build-wheels:
+    if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope')
     runs-on: macos-10.15
     steps:
     - uses: actions/checkout@v2
@@ -72,6 +54,7 @@ jobs:
         retention-days: 5
 
   build-client-wheels:
+    if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope')
     runs-on: macos-10.15
     strategy:
       matrix:
@@ -115,7 +98,54 @@ jobs:
         path: client.tar.gz
         retention-days: 5
 
+  # Action gh-action-pypi-publish not support non-linux os.
+  publish-wheels:
+    if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope' }}
+    runs-on: ubuntu-20.04
+    needs: [build-wheels, build-client-wheels]
+    strategy:
+      matrix:
+        python-version: ['3.7', '3.8', '3.9']
+
+    steps:
+    - uses: actions/download-artifact@v2
+      with:
+        path: artifacts
+
+    - name: Prepare Wheels
+      env:
+        PYTHON: ${{ matrix.python-version }}
+      run: |
+        # move wheels into one floder to upload to PyPI
+        mkdir ${GITHUB_WORKSPACE}/upload_pypi
+
+        cd ${GITHUB_WORKSPACE}/artifacts
+        tar -zxf ./wheel-macos-${{ github.sha }}-${{ matrix.python-version }}/client.tar.gz
+        mv ${GITHUB_WORKSPACE}/artifacts/python/dist/wheelhouse/*.whl ${GITHUB_WORKSPACE}/upload_pypi/
+
+        if [ "$PYTHON" == "3.7" ]; then
+          tar -zxf ./wheel-macos-${{ github.sha }}/graphscope.tar.gz
+          mv ${GITHUB_WORKSPACE}/artifacts/coordinator/dist/wheelhouse/*.whl ${GITHUB_WORKSPACE}/upload_pypi/
+        fi
+
+    # We do this, since failures on test.pypi aren't that bad
+    - name: Publish to Test PyPI
+      uses: pypa/gh-action-pypi-publish@v1.4.2
+      with:
+        user: __token__
+        password: ${{ secrets.TEST_PYPI_PASSWORD }}
+        repository_url: https://test.pypi.org/legacy/
+        packages_dir: upload_pypi/
+
+    - name: Publish distribution to PyPI
+      uses: pypa/gh-action-pypi-publish@v1.4.2
+      with:
+        user: __token__
+        password: ${{ secrets.PYPI_PASSWORD }}
+        packages_dir: upload_pypi/
+
   python-test:
+    if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
     runs-on: macos-10.15
     needs: [build-wheels, build-client-wheels]
     strategy:
