@@ -148,7 +148,7 @@ bl::result<void> GrapeInstance::unloadGraph(const rpc::GSParams& params) {
   if (params.HasKey(rpc::VINEYARD_ID)) {
     BOOST_LEAF_AUTO(frag_group_id, params.Get<int64_t>(rpc::VINEYARD_ID));
     bool exists = false;
-    client_->Exists(frag_group_id, exists);
+    VY_OK_OR_RAISE(client_->Exists(frag_group_id, exists));
     if (exists) {
       auto fg = std::dynamic_pointer_cast<vineyard::ArrowFragmentGroup>(
           client_->GetObject(frag_group_id));
@@ -608,7 +608,7 @@ bl::result<std::string> GrapeInstance::contextToVineyardTensor(
 
   auto s_id = vineyard::ObjectIDToString(id);
 
-  client_->PutName(id, s_id);
+  VY_OK_OR_RAISE(client_->PutName(id, s_id));
 
   return toJson({{"object_id", s_id}});
 }
@@ -709,7 +709,7 @@ bl::result<std::string> GrapeInstance::contextToVineyardDataFrame(
 
   auto s_id = vineyard::ObjectIDToString(id);
 
-  client_->PutName(id, s_id);
+  VY_OK_OR_RAISE(client_->PutName(id, s_id));
 
   return toJson({{"object_id", s_id}});
 }

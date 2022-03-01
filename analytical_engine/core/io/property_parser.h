@@ -187,7 +187,7 @@ inline void SplitTable(const std::string& data, int num,
   std::shared_ptr<arrow::Buffer> buffer =
       arrow::Buffer::Wrap(data.data(), data.size());
   std::shared_ptr<arrow::Table> table;
-  vineyard::DeserializeTable(buffer, &table);
+  VINEYARD_CHECK_OK(vineyard::DeserializeTable(buffer, &table));
   std::vector<std::shared_ptr<arrow::Table>> sliced_tables(num);
   int num_rows = table->num_rows();
   int offset = num_rows / num;
@@ -203,7 +203,7 @@ inline void SplitTable(const std::string& data, int num,
   for (int i = 0; i < num; ++i) {
     if (sliced_tables[i]->num_rows() > 0) {
       std::shared_ptr<arrow::Buffer> out_buf;
-      vineyard::SerializeTable(sliced_tables[i], &out_buf);
+      VINEYARD_CHECK_OK(vineyard::SerializeTable(sliced_tables[i], &out_buf));
       sliced_bytes[i] = out_buf->ToString();
     }
   }

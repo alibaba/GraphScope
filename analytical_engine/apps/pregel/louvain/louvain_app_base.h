@@ -145,7 +145,6 @@ class LouvainAppBase
     uint32_t thrd_num = thread_num();
 
     auto inner_vertices = frag.InnerVertices();
-    auto outer_vertices = frag.OuterVertices();
 
     int current_super_step = ctx.compute_context().superstep();
     // the minor step in phase 1
