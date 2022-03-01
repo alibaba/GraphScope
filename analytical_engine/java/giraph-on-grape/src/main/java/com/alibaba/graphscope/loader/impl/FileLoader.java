@@ -179,7 +179,8 @@ public class FileLoader implements LoaderBase {
         // JSONObject jsonObject = JSONObject.parseObject(params);
         //try to Load user library
         // loadUserLibrary(jsonObject);
-        giraphConfiguration.setVertexInputFormatClass((Class<? extends VertexInputFormat>) Class.forName(vformatClass));
+        // giraphConfiguration.setVertexInputFormatClass((Class<? extends VertexInputFormat>) Class.forName(vformatClass));
+        giraphConfiguration.setVertexInputFormatClass((Class<? extends VertexInputFormat>) this.getClass().getClassLoader().loadClass(vformatClass));
         ImmutableClassesGiraphConfiguration conf =
             new ImmutableClassesGiraphConfiguration(giraphConfiguration);
         try {
@@ -208,7 +209,7 @@ public class FileLoader implements LoaderBase {
     public void loadEdges(String inputPath, String eformatClass)
         throws ExecutionException, InterruptedException, ClassNotFoundException {
         logger.debug("edge input path {}", inputPath);
-        giraphConfiguration.setEdgeInputFormatClass((Class<? extends EdgeInputFormat>) Class.forName(eformatClass));
+        giraphConfiguration.setEdgeInputFormatClass((Class<? extends EdgeInputFormat>) this.getClass().getClassLoader().loadClass(eformatClass));
 
         ImmutableClassesGiraphConfiguration conf =
             new ImmutableClassesGiraphConfiguration(giraphConfiguration);
