@@ -54,7 +54,7 @@ public class FileLoader implements LoaderBase {
     static{
         String gsHome = System.getenv("GRAPHSCOPE_HOME");
         if (Objects.nonNull(gsHome) && !gsHome.isEmpty()){
-            LIB_PATH = LIB_PATH + "/lib/libgrape-jni.so";
+            LIB_PATH = gsHome + "/lib/libgrape-jni.so";
             LoadLibrary.invoke(LIB_PATH);
         }
     }
