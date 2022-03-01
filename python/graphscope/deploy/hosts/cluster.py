@@ -28,6 +28,7 @@ from graphscope.config import GSConfig as gs_config
 from graphscope.deploy.launcher import Launcher
 from graphscope.framework.utils import PipeWatcher
 from graphscope.framework.utils import get_free_port
+from graphscope.framework.utils import in_notebook
 from graphscope.framework.utils import is_free_port
 from graphscope.framework.utils import random_string
 
@@ -126,9 +127,10 @@ class HostsClusterLauncher(Launcher):
 
         # Param `start_new_session=True` is for putting child process to a new process group
         # so it won't get the signals from parent.
+        # In notebook environment, we need to accept the signal from kernel restarted/stoped.
         process = subprocess.Popen(
             cmd,
-            start_new_session=True,
+            start_new_session=False if in_notebook() else True,
             cwd=COORDINATOR_HOME,
             env=env,
             encoding="utf-8",
