@@ -217,8 +217,13 @@ class JavaLoaderInvoker {
                                const std::string vformatter) {
     VLOG(2) << "vertex file: " << vertex_location
             << ", formatter: " << vformatter;
-    int giraph_type_int =
-        callJavaLoaderVertices(vertex_location.c_str(), vformatter.c_str());
+    if (vformatter.find("giraph:") == std::string::npos) {
+      LOG(ERROR) << "Expect a giraph formatter: giraph:your.class.name";
+      return;
+    }
+    std::string vformatter_class = vformatter.substr(7, std::string::npos);
+    int giraph_type_int = callJavaLoaderVertices(vertex_location.c_str(),
+                                                 vformatter_class.c_str());
     CHECK(giraph_type_int >= 0);
 
     // fetch giraph graph types infos, so we can optimizing graph store by use
@@ -231,8 +236,13 @@ class JavaLoaderInvoker {
   void load_edges(const std::string& edge_location,
                   const std::string eformatter) {
     VLOG(2) << "edge file: " << edge_location << " eformatter: " << eformatter;
+    if (eformatter.find("giraph:") == std::string::npos) {
+      LOG(ERROR) << "Expect a giraph formatter: giraph:your.class.name";
+      return;
+    }
+    std::string eformatter_class = eformatter.substr(7, std::string::npos);
 
-    callJavaLoaderEdges(edge_location.c_str(), eformatter.c_str());
+    callJavaLoaderEdges(edge_location.c_str(), eformatter_class.c_str());
   }
 
   std::shared_ptr<arrow::Table> get_edge_table() {
