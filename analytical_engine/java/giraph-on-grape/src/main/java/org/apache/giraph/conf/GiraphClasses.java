@@ -107,15 +107,15 @@ public class GiraphClasses<I extends WritableComparable,
 //            (Class<? extends ComputationFactory<I, V, E,
 //                ? extends Writable, ? extends Writable>>)
 //                COMPUTATION_FACTORY_CLASS.get(conf);
-        logger.info(
-            "vertexId class: " + giraphTypes.getVertexIdClass().getName() + ", vertex value class: "
-                + giraphTypes.getVertexValueClass().getName() + ", edge value class: " + giraphTypes
-                .getEdgeValueClass().getName());
+        // logger.info(
+        //     "vertexId class: " + giraphTypes.getVertexIdClass().getName() + ", vertex value class: "
+        //         + giraphTypes.getVertexValueClass().getName() + ", edge value class: " + giraphTypes
+        //         .getEdgeValueClass().getName());
         computationClass =
             (Class<? extends Computation<I, V, E,
                 ? extends Writable, ? extends Writable>>)
                 COMPUTATION_CLASS.get(conf);
-        logger.info("Setting computation class to: " + computationClass.getSimpleName());
+        // logger.info("Setting computation class to: " + computationClass.getSimpleName());
 
 //        outEdgesClass = (Class<? extends OutEdges<I, E>>)
 //            VERTEX_EDGES_CLASS.get(conf);

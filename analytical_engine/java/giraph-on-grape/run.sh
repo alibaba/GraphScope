@@ -294,3 +294,7 @@ GLOG_v=2 mpiexec --mca btl_tcp_if_include bond0 --host d50,d51,d52,d53 -np 4 -x 
 --query_times 1 -edge_manager lazy 
 
 226391108423929904,226393404684229300,226393899694124916,226405696511023304
+
+GLOG_v=10 ./giraph_runner --vertex_input_format_class giraph:com.alibaba.graphscope.example.giraph.format.P2PVertexInputFormat \
+--edge_input_format_class giraph:com.alibaba.graphscope.example.giraph.format.P2PEdgeInputFormat \
+--efile ~/data/gstest/p2p-31.e --vfile  ~/data/gstest/p2p-31.v 
