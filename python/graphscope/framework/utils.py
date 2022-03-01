@@ -123,6 +123,21 @@ class PipeMerger(object):
         self._stop = True
 
 
+def in_notebook():
+    try:
+        from IPython import get_ipython
+
+        shell = get_ipython().__class__.__name__
+        if shell == "ZMQInteractiveShell":
+            return True  # Jupyter notebook or qtconsole
+        if shell == "TerminalInteractiveShell":
+            return False  # Terminal running IPython
+        return False  # Other type or standard python interpreter
+    except Exception:
+        return False
+    return False
+
+
 def is_free_port(port, host="localhost", timeout=0.2):
     """Check if a port on a given host is in use or not.
 
