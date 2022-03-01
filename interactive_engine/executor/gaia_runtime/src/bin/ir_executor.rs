@@ -20,7 +20,7 @@ extern crate grpcio;
 #[macro_use]
 extern crate log;
 extern crate gaia_pegasus;
-extern crate gs_gremlin;
+extern crate graph_proxy;
 extern crate log4rs;
 extern crate maxgraph_common;
 extern crate maxgraph_runtime;
@@ -33,10 +33,9 @@ extern crate structopt;
 
 use gaia_runtime::server::init_with_rpc_service;
 use gaia_runtime::server::manager::GaiaServerManager;
-use gremlin_core::register_gremlin_types;
+use graph_proxy::{InitializeJobCompiler, QueryVineyard};
 use grpcio::ChannelBuilder;
 use grpcio::EnvBuilder;
-use gs_gremlin::{InitializeJobCompiler, QueryVineyard};
 use maxgraph_common::proto::data::*;
 use maxgraph_common::proto::hb::*;
 use maxgraph_common::proto::query_flow::*;
@@ -94,7 +93,11 @@ fn main() {
         use maxgraph_runtime::store::ffi::FFIGraphStore;
         let ffi_store = FFIGraphStore::new(store_config.vineyard_graph_id, worker_num as i32);
         let partition_manager = ffi_store.get_partition_manager();
-        run_main(store_config, Arc::new(ffi_store), Arc::new(partition_manager));
+        run_main(
+            store_config,
+            Arc::new(ffi_store),
+            Arc::new(partition_manager),
+        );
     } else {
         unimplemented!("only start vineyard graph from executor")
     }
@@ -131,10 +134,6 @@ fn run_main<V, VI, E, EI>(
         Box::new(recover_prepare),
     )
     .unwrap();
-
-    if let Err(err) = register_gremlin_types() {
-        error!("register_gremlin_types failed {:?}", err);
-    }
 
     let gaia_service = GaiaService::new(
         store_config.clone(),
@@ -287,14 +286,15 @@ where
                 self.partition_worker_mapping.clone(),
                 self.worker_partition_list_mapping.clone(),
                 self.store_config.worker_num as usize,
-                self.store_config.worker_id as u64,
             );
             let job_compiler = query_vineyard.initialize_job_compiler();
             let service = Service::new(job_compiler);
             let addr = format!("{}:{}", "0.0.0.0", self.store_config.rpc_port);
             // TODO: add report in store_config
             let rpc_service = RpcService::new(service, true);
-            let local_addr =  start_rpc_server(addr.parse().unwrap(), rpc_service, false).await.unwrap();
+            let local_addr = start_rpc_server(addr.parse().unwrap(), rpc_service, false)
+                .await
+                .unwrap();
             local_addr.port()
         });
         let ip = get_local_ip();

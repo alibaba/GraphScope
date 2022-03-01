@@ -29,6 +29,7 @@ use ir_common::generated::common as common_pb;
 use ir_common::NameOrId;
 use pegasus::api::function::{DynIter, FnResult};
 use pegasus::codec::{ReadExt, WriteExt};
+pub use property::DefaultDetails;
 
 use crate::expr::eval_pred::PEvaluator;
 use crate::graph::element::{Edge, Vertex};
@@ -73,6 +74,7 @@ pub struct QueryParams {
     pub columns: Option<Vec<NameOrId>>,
     pub partitions: Option<Vec<u64>>,
     pub filter: Option<Arc<PEvaluator>>,
+    pub extra_params: Option<HashMap<String, String>>,
 }
 
 impl TryFrom<Option<algebra_pb::QueryParams>> for QueryParams {
@@ -148,10 +150,8 @@ impl QueryParams {
     }
 
     // Extra query params for different storages
-    fn with_extra_params(self, extra_params: HashMap<String, String>) -> Result<Self, ParsePbError> {
-        if !extra_params.is_empty() {
-            Err(ParsePbError::NotSupported("extra_params in QueryParams is not supported yet".to_string()))?
-        }
+    fn with_extra_params(mut self, extra_params: HashMap<String, String>) -> Result<Self, ParsePbError> {
+        self.extra_params = Some(extra_params);
         Ok(self)
     }
 
@@ -161,6 +161,14 @@ impl QueryParams {
             && self.limit.is_none()
             && self.partitions.is_none()
             && self.columns.is_none())
+    }
+
+    pub fn get_extra_param(&self, key: &str) -> Option<&String> {
+        if let Some(ref extra_params) = self.extra_params {
+            extra_params.get(key)
+        } else {
+            None
+        }
     }
 }
 

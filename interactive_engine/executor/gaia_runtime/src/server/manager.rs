@@ -37,7 +37,6 @@ use std::sync::{Arc, Mutex, RwLock};
 use std::thread;
 use std::time;
 use std::vec::Vec;
-use gremlin_core::register_gremlin_types;
 
 pub struct GaiaServerManager {
     server_manager_common: ServerManagerCommon,
@@ -139,9 +138,6 @@ impl ServerManager for GaiaServerManager {
                 }
                 if !address_list.is_empty() && !task_partition_list.is_empty() {
                     // start gaia_pegasus
-                    if let Err(err) = register_gremlin_types() {
-                        error!("register_gremlin_types failed {:?}", err);
-                    }
                     let configuration = build_gaia_config(worker_id as usize, address_list, store_config.clone());
                     info!("gaia configuration {:?}", configuration);
                     if let Err(err) = gaia_pegasus::startup(configuration) {
