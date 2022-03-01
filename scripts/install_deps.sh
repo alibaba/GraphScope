@@ -765,6 +765,8 @@ install_dependencies() {
       brew install ${packages_to_install[*]}
     fi
 
+
+
     if [[ "$(uname -m)" == "x86_64" ]]; then
       declare -r homebrew_prefix="/usr/local"
     else
@@ -776,9 +778,6 @@ install_dependencies() {
     export CC=${homebrew_prefix}/opt/llvm/bin/clang
     export CXX=${homebrew_prefix}/opt/llvm/bin/clang++
     export CPPFLAGS=-I${homebrew_prefix}/opt/llvm/include
-
-    # remove binutils installed by brew
-    brew uninstall binutils || true
   fi
 
   log "Installing python packages for vineyard codegen."
