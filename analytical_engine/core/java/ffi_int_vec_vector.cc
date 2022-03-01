@@ -1,8 +1,3 @@
-#ifndef ANALYTICAL_ENGINE_CORE_JAVA_FFI_INT_VEC_VECTOR_H_
-#define ANALYTICAL_ENGINE_CORE_JAVA_FFI_INT_VEC_VECTOR_H_
-
-#ifdef ENABLE_JAVA_SDK
-
 #include <jni.h>
 #include <new>
 #include <string>
@@ -97,7 +92,4 @@ Java_com_alibaba_graphscope_stdcxx_FFIIntVecVector_nativeCreateFactory0(
 
 #ifdef __cplusplus
 }
-#endif
-
-#endif
 #endif
