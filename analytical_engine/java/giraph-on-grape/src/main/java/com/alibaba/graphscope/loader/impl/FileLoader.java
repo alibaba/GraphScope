@@ -180,6 +180,7 @@ public class FileLoader implements LoaderBase {
         //try to Load user library
         // loadUserLibrary(jsonObject);
         // giraphConfiguration.setVertexInputFormatClass((Class<? extends VertexInputFormat>) Class.forName(vformatClass));
+        logger.info("class loader: {}", getClass().getClassLoader());
         giraphConfiguration.setVertexInputFormatClass((Class<? extends VertexInputFormat>) this.getClass().getClassLoader().loadClass(vformatClass));
         ImmutableClassesGiraphConfiguration conf =
             new ImmutableClassesGiraphConfiguration(giraphConfiguration);
