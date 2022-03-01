@@ -17,6 +17,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -49,7 +50,14 @@ import org.slf4j.LoggerFactory;
  */
 public class FileLoader implements LoaderBase {
 
-    private static final String LIB_PATH = "lib_path";
+    private static String LIB_PATH = "/opt/graphscope/lib/libgrape-jni.so";
+    static{
+        String gsHome = System.getenv("GRAPHSCOPE_HOME");
+        if (Objects.nonNull(gsHome) && !gsHome.isEmpty()){
+            LIB_PATH = LIB_PATH + "/lib/libgrape-jni.so";
+            LoadLibrary.invoke(LIB_PATH);
+        }
+    }
     private static AtomicInteger LOADER_ID = new AtomicInteger(0);
     private static AtomicInteger V_CALLABLE_ID = new AtomicInteger(0);
     private static AtomicInteger E_CALLABLE_ID = new AtomicInteger(0);
@@ -463,11 +471,6 @@ public class FileLoader implements LoaderBase {
             return cnt - start;
         }
     }
-
-    // private static void loadUserLibrary(JSONObject object) {
-    //     String libPath = object.getString(LIB_PATH);
-    //     LoadLibrary.invoke(libPath);
-    // }
 
     private void inferGiraphTypesFromJSON(Class<? extends VertexInputFormat> child) {
         Class<?>[] classList = getTypeArguments(VertexInputFormat.class, child);
