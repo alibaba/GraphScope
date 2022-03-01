@@ -19,6 +19,7 @@
     <module>executor</module>
     <module>frontendservice</module>
     <module>gaia-adaptor</module>
+    <module>ir-adaptor</module>
     <module>groot</module>
     <module>groot-server</module>
     <module>lgraph</module>
@@ -28,6 +29,7 @@
     <module>benchmark</module>
     <module>distribution</module>
     <module>../research/query_service/gremlin/compiler</module>
+    <module>../research/query_service/ir/compiler</module>
   </modules>
 
   <properties>

@@ -18,8 +18,8 @@ package com.alibaba.graphscope.gremlin.transform;
 
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
+import org.apache.tinkerpop.gremlin.process.traversal.lambda.ElementValueTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.IdentityTraversal;
-import org.apache.tinkerpop.gremlin.process.traversal.lambda.ValueTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.EmptyStep;
 
 import java.util.ArrayList;
@@ -45,8 +45,8 @@ public class ExprArg {
         this();
         if (traversal == null || traversal instanceof IdentityTraversal) {
             isIdentityTraversal = true;
-        } else if (traversal instanceof ValueTraversal) {
-            propertyKeyOpt = Optional.of(((ValueTraversal) traversal).getPropertyKey());
+        } else if (traversal instanceof ElementValueTraversal) {
+            propertyKeyOpt = Optional.of(((ElementValueTraversal) traversal).getPropertyKey());
         } else {
             traversal.asAdmin().getSteps().forEach(k -> {
                 stepsInTraversal.add((Step) k);

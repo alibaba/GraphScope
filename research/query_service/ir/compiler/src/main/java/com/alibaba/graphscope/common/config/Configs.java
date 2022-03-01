@@ -21,6 +21,7 @@ import org.apache.commons.lang3.NotImplementedException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Map;
 import java.util.Properties;
 
 public class Configs {
@@ -43,6 +44,15 @@ public class Configs {
                 properties.setProperty((String) k, trimValue);
             }
         });
+    }
+
+    public Configs(Map<String, String> configs) {
+        this.properties = new Properties();
+        if (configs != null && !configs.isEmpty()) {
+            configs.forEach((k, v) -> {
+                this.properties.setProperty(k, v);
+            });
+        }
     }
 
     public String get(String name, String defaultValue) {
