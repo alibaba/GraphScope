@@ -174,7 +174,7 @@ class GRPCClient(object):
         return self._stub.HeartBeat(request)
 
     @catch_grpc_error
-    def add_lib_impl(self, lib_path):
+    def _add_lib_impl(self, lib_path):
         request = message_pb2.AddLibRequest(session_id=self._session_id, lib_path=lib_path)
         return self._stub.AddLib(request)
 
