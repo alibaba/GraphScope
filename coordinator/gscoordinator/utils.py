@@ -402,6 +402,7 @@ def compile_graph_frame(workspace: str, library_name, attr: dict, engine_config:
         f"-DENABLE_JAVA_SDK={engine_config['enable_java_sdk']}",
         f"-DCMAKE_PREFIX_PATH='{GRAPHSCOPE_HOME};{OPAL_PREFIX}'",
     ]
+    logger.info("enable java sdk {}".format(engine_config['enable_java_sdk']))
     if graph_type == graph_def_pb2.ARROW_PROPERTY:
         cmake_commands += ["-DPROPERTY_GRAPH_FRAME=True"]
     elif graph_type in (
