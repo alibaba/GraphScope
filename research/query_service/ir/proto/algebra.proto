@@ -361,7 +361,7 @@ message Pattern {
     repeated Binder binders = 2;
     common.NameOrId end = 3;
     /// Define how to attach this sentence to the other one
-    algebra.Join.JoinKind join_kind = 4;
+    Join.JoinKind join_kind = 4;
   }
   repeated Sentence sentences = 1;
 }
