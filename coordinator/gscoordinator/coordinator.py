@@ -707,6 +707,16 @@ class CoordinatorServiceServicer(
                         info_message=info_message, error_message=error_message
                     )
 
+    def AddLib(self, request, context):
+        if request.session_id != self._session_id:
+            context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
+            context.set_details(
+                f"Session handle not matched, {request.session_id} versus {self._session_id}"
+            )
+        lib_path = request.lib_path
+        logger.info("Coordinator recieved add lib request {}", lib_path)
+        return message_pb2.AddLibResponse()
+
     def CloseSession(self, request, context):
         """
         Disconnect session, note that it doesn't clean up any resources.
