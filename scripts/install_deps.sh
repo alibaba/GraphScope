@@ -404,8 +404,6 @@ write_envs_config() {
     {
       echo "export CC=${homebrew_prefix}/opt/llvm/bin/clang"
       echo "export CXX=${homebrew_prefix}/opt/llvm/bin/clang++"
-      echo "export CPPFLAGS=-I${homebrew_prefix}/opt/llvm/include"
-      echo "export PATH=${homebrew_prefix}/opt/llvm/bin:\$PATH"
       if [ -z "${JAVA_HOME}" ]; then
         echo "export JAVA_HOME=\$(/usr/libexec/java_home -v11)"
       fi
