@@ -753,4 +753,10 @@ public class PositiveEvalTest {
     public void g_V_groupCount_by_out_count_test() {
         Assert.assertEquals(g.V().groupCount().by(__.out().count()), eval("g.V().groupCount().by(__.out().count())"));
     }
+
+    @Test
+    public void g_V_where_by_out_count() {
+        Assert.assertEquals(g.V().as("a").out().as("b").where("a", P.eq("b")).by(__.out().count()),
+                eval("g.V().as(\"a\").out().as(\"b\").where(\"a\", P.eq(\"b\")).by(__.out().count())"));
+    }
 }
