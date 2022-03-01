@@ -131,7 +131,7 @@ class VertexLabel(object):
         chunk.attr[types_pb2.CHUNK_TYPE].CopyFrom(utils.s_to_attr("loader"))
         chunk.attr[types_pb2.LABEL].CopyFrom(utils.s_to_attr(self.label))
         chunk.attr[types_pb2.VID].CopyFrom(utils.s_to_attr(str(self.vid_field)))
-        if self._vformat in [str]:
+        if isinstance(self._vformat, str):
             chunk.attr[types_pb2.VFORMAT].CopyFrom(utils.s_to_attr(self._vformat))
         else: 
             chunk.attr[types_pb2.VFORMAT].CopyFrom(utils.s_to_attr(format_enum_to_str(self._vformat)))
@@ -238,7 +238,7 @@ class EdgeSubLabel(object):
         )
         chunk.attr[types_pb2.SRC_VID].CopyFrom(utils.s_to_attr(str(self.src_field)))
         chunk.attr[types_pb2.DST_VID].CopyFrom(utils.s_to_attr(str(self.dst_field)))
-        if self._eformat in [str]:
+        if isinstance(self._eformat):
             chunk.attr[types_pb2.EFORMAT].CopyFrom(utils.s_to_attr(self._eformat))
         else:
             chunk.attr[types_pb2.EFORMAT].CopyFrom(utils.s_to_attr(format_enum_to_str(self._eformat)))

@@ -715,6 +715,7 @@ class CoordinatorServiceServicer(
             )
         lib_path = request.lib_path
         logger.info("Coordinator recieved add lib request {}".format(lib_path))
+        self._launcher.distribute_file(lib_path)
         return message_pb2.AddLibResponse()
 
     def CloseSession(self, request, context):
