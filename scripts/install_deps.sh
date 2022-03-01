@@ -402,15 +402,17 @@ write_envs_config() {
       declare -r homebrew_prefix=/opt/homebrew
     fi
     {
+      # ensure we search /usr/bin at the first priority
+      echo "export PATH=/usr/bin:\$PATH"
       echo "export CC=${homebrew_prefix}/opt/llvm/bin/clang"
       echo "export CXX=${homebrew_prefix}/opt/llvm/bin/clang++"
       echo "export CPPFLAGS=-I${homebrew_prefix}/opt/llvm/include"
-      echo "export PATH=${homebrew_prefix}/opt/llvm/bin:\$PATH"
+      echo "export PATH=\$PATH:${homebrew_prefix}/opt/llvm/bin"
       if [ -z "${JAVA_HOME}" ]; then
         echo "export JAVA_HOME=\$(/usr/libexec/java_home -v11)"
       fi
-      echo "export PATH=\$HOME/.cargo/bin:\${JAVA_HOME}/bin:/usr/local/go/bin:\$PATH"
-      echo "export PATH=\$(go env GOPATH)/bin:\$PATH"
+      echo "export PATH=\$PATH:\$HOME/.cargo/bin:\${JAVA_HOME}/bin:/usr/local/go/bin"
+      echo "export PATH=\$PATH:\$(go env GOPATH)/bin"
       echo "export OPENSSL_ROOT_DIR=${homebrew_prefix}/opt/openssl"
       echo "export OPENSSL_LIBRARIES=${homebrew_prefix}/opt/openssl/lib"
       echo "export OPENSSL_SSL_LIBRARY=${homebrew_prefix}/opt/openssl/lib/libssl.dylib"
@@ -422,8 +424,8 @@ write_envs_config() {
       if [ -z "${JAVA_HOME}" ]; then
         echo "export JAVA_HOME=/usr/lib/jvm/default-java"
       fi
-      echo "export PATH=\${JAVA_HOME}/bin:\$HOME/.cargo/bin:/usr/local/go/bin:\$PATH"
-      echo "export PATH=\$(go env GOPATH)/bin:\$PATH"
+      echo "export PATH=\$PATH:\${JAVA_HOME}/bin:\$HOME/.cargo/bin:/usr/local/go/bin"
+      echo "export PATH=\$PATH:\$(go env GOPATH)/bin"
     } >> ${OUTPUT_ENV_FILE}
   else
     {
@@ -431,8 +433,8 @@ write_envs_config() {
       if [ -z "${JAVA_HOME}" ]; then
         echo "export JAVA_HOME=/usr/lib/jvm/java"
       fi
-      echo "export PATH=\${JAVA_HOME}/bin:\$HOME/.cargo/bin:\$PATH:/usr/local/go/bin"
-      echo "export PATH=\$(go env GOPATH)/bin:\$PATH"
+      echo "export PATH=\$PATH:\${JAVA_HOME}/bin:\$HOME/.cargo/bin:/usr/local/go/bin"
+      echo "export PATH=\$PATH:\$(go env GOPATH)/bin"
     } >> ${OUTPUT_ENV_FILE}
   fi
 }
