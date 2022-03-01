@@ -43,7 +43,6 @@ void Init(const std::string& params) {
   if (comm_spec.worker_id() == grape::kCoordinatorRank) {
     VLOG(1) << "Workers of libgrape-lite initialized.";
   }
-  verifyClasses(params);
 }
 
 vineyard::ObjectID LoadGiraphFragment(
