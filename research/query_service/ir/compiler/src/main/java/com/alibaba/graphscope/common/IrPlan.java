@@ -22,11 +22,13 @@ import com.alibaba.graphscope.common.exception.*;
 import com.alibaba.graphscope.common.intermediate.ArgAggFn;
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.intermediate.InterOpCollection;
+import com.alibaba.graphscope.common.intermediate.MatchSentence;
 import com.alibaba.graphscope.common.intermediate.operator.*;
 import com.alibaba.graphscope.common.intermediate.process.SinkArg;
 import com.alibaba.graphscope.common.jna.IrCoreLibrary;
 import com.alibaba.graphscope.common.jna.type.*;
 import com.alibaba.graphscope.common.utils.ClassUtils;
+import com.alibaba.graphscope.gremlin.Utils;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 import org.apache.commons.io.FileUtils;
@@ -393,6 +395,46 @@ public class IrPlan implements Closeable {
                 });
                 return ptrUnion;
             }
+        },
+        MATCH_OP {
+            public Pointer apply(InterOpBase baseOp) {
+                MatchOp matchOp = (MatchOp) baseOp;
+                List<MatchSentence> sentences = (List<MatchSentence>) matchOp.getSentences().get().applyArg();
+                if (sentences.isEmpty()) {
+                    throw new InterOpIllegalArgException(baseOp.getClass(), "sentences", "is empty");
+                }
+                Pointer ptrMatch = irCoreLib.initPatternOperator();
+                sentences.forEach(s -> {
+                    InterOpCollection ops = s.getBinders();
+                    Pointer ptrSentence = irCoreLib.initPatternSentence(s.isAnti());
+                    irCoreLib.setSentenceStart(ptrSentence, s.getStartTag().alias);
+                    irCoreLib.setSentenceEnd(ptrSentence, s.getEndTag().alias);
+                    ops.unmodifiableCollection().forEach(o -> {
+                        Pointer binder;
+                        FfiBinderOpt opt;
+                        if (Utils.equalClass(o, ExpandOp.class)) {
+                            binder = EXPAND_OP.apply(o);
+                            opt = FfiBinderOpt.Edge;
+                        } else if (Utils.equalClass(o, PathExpandOp.class)) {
+                            binder = PATH_EXPAND_OP.apply(o);
+                            opt = FfiBinderOpt.Path;
+                        } else if (Utils.equalClass(o, GetVOp.class)) {
+                            binder = GETV_OP.apply(o);
+                            opt = FfiBinderOpt.Vertex;
+                        } else {
+                            throw new InterOpIllegalArgException(baseOp.getClass(),
+                                    "sentences", "binder " + o.getClass() + " is unsupported yet");
+                        }
+                        irCoreLib.addSentenceBinder(ptrSentence, binder, opt);
+                    });
+                    irCoreLib.addPatternSentence(ptrMatch, ptrSentence);
+                });
+                Optional<OpArg> aliasOpt = baseOp.getAlias();
+                if (aliasOpt.isPresent()) {
+                    throw new InterOpIllegalArgException(baseOp.getClass(), "match", "the query given alias is unsupported");
+                }
+                return ptrMatch;
+            }
         }
     }
 
@@ -490,7 +532,7 @@ public class IrPlan implements Closeable {
 
             Pointer ptrApply = TransformFactory.APPLY_OP.apply(base);
             resultCode = irCoreLib.appendApplyOperator(ptrPlan, ptrApply, oprId.getValue(), oprId);
-        } else if (base instanceof UnionOp) {
+        } else if (ClassUtils.equalClass(base, UnionOp.class)) {
             UnionOp unionOp = (UnionOp) base;
             Optional<OpArg> subOpsListOpt = unionOp.getSubOpCollectionList();
             if (!subOpsListOpt.isPresent()) {
@@ -508,6 +550,9 @@ public class IrPlan implements Closeable {
             unionOp.setParentIdList(new OpArg(unionParentIds, Function.identity()));
             Pointer ptrUnion = TransformFactory.UNION_OP.apply(base);
             resultCode = irCoreLib.appendUnionOperator(ptrPlan, ptrUnion, oprId);
+        } else if (ClassUtils.equalClass(base, MatchOp.class)) {
+            Pointer ptrMatch = TransformFactory.MATCH_OP.apply(base);
+            resultCode = irCoreLib.appendPatternOperator(ptrPlan, ptrMatch, oprId.getValue(), oprId);
         } else {
             throw new InterOpUnsupportedException(base.getClass(), "unimplemented yet");
         }
@@ -522,7 +567,8 @@ public class IrPlan implements Closeable {
         IntByReference oprId = new IntByReference(parentId);
         // PathExpandOp is instance of ExpandOp
         if (!(base instanceof ScanFusionOp || base instanceof ExpandOp
-                || base instanceof ProjectOp || base instanceof GroupOp || base instanceof ApplyOp || base instanceof GetVOp)
+                || base instanceof ProjectOp || base instanceof GroupOp
+                || base instanceof ApplyOp || base instanceof GetVOp || base instanceof MatchOp)
                 && base.getAlias().isPresent()) {
             FfiAlias.ByValue ffiAlias = (FfiAlias.ByValue) base.getAlias().get().applyArg();
             Pointer ptrAs = irCoreLib.initAsOperator();

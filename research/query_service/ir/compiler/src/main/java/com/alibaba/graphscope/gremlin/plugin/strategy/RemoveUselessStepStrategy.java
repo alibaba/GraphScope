@@ -16,6 +16,7 @@
 
 package com.alibaba.graphscope.gremlin.plugin.strategy;
 
+import com.alibaba.graphscope.gremlin.Utils;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalStrategy;
@@ -40,7 +41,7 @@ public class RemoveUselessStepStrategy extends AbstractTraversalStrategy<Travers
         List<Step> steps = traversal.getSteps();
         for (int i = 0; i < steps.size(); ++i) {
             Step step = steps.get(i);
-            if (step instanceof ComputerAwareStep.EndStep || step instanceof NoOpBarrierStep) {
+            if (Utils.equalClass(step, ComputerAwareStep.EndStep.class) || Utils.equalClass(step, NoOpBarrierStep.class)) {
                 traversal.removeStep(step);
             }
         }
