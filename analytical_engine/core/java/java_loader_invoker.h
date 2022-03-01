@@ -123,7 +123,8 @@ static constexpr const char* JAVA_LOADER_CLASS =
     "com/alibaba/graphscope/loader/impl/FileLoader";
 static constexpr const char* JAVA_LOADER_CREATE_METHOD = "create";
 static constexpr const char* JAVA_LOADER_CREATE_SIG =
-    "()Lcom/alibaba/graphscope/loader/impl/FileLoader;";
+    "(Ljava/net/URLClassLoader;)Lcom/alibaba/graphscope/loader/impl/"
+    "FileLoader;";
 static constexpr const char* JAVA_LOADER_LOAD_VE_METHOD =
     "loadVerticesAndEdges";
 static constexpr const char* JAVA_LOADER_LOAD_VE_SIG =
@@ -194,8 +195,8 @@ class JavaLoaderInvoker {
           loader_class, JAVA_LOADER_CREATE_METHOD, JAVA_LOADER_CREATE_SIG);
       CHECK(create_method);
 
-      java_loader_obj = env->NewGlobalRef(
-          env->CallStaticObjectMethod(loader_class, create_method));
+      java_loader_obj = env->NewGlobalRef(env->CallStaticObjectMethod(
+          loader_class, create_method, gs_class_loader_obj));
       CHECK(java_loader_obj);
 
       jmethodID loader_method = env->GetMethodID(

@@ -17,6 +17,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.net.URLClassLoader;
 import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -106,12 +107,14 @@ public class FileLoader implements LoaderBase {
     private Class<? extends WritableComparable> giraphOidClass;
     private Class<? extends Writable> giraphVDataClass;
     private Class<? extends Writable> giraphEDataClass;
+    private URLClassLoader classLoader;
 
-    public static synchronized FileLoader create() {
-        return new FileLoader(LOADER_ID.getAndAdd(1));
+    public static synchronized FileLoader create(URLClassLoader cl) {
+        return new FileLoader(LOADER_ID.getAndAdd(1), cl);
     }
 
-    public FileLoader(int id) {
+    public FileLoader(int id, URLClassLoader classLoader) {
+        this.classLoader = classLoader;
         loaderId = id;
         try {
             vertexIdField = VertexImpl.class.getDeclaredField("initializeOid");
@@ -180,8 +183,7 @@ public class FileLoader implements LoaderBase {
         //try to Load user library
         // loadUserLibrary(jsonObject);
         // giraphConfiguration.setVertexInputFormatClass((Class<? extends VertexInputFormat>) Class.forName(vformatClass));
-        logger.info("class loader: {}", getClass().getClassLoader());
-        giraphConfiguration.setVertexInputFormatClass((Class<? extends VertexInputFormat>) this.getClass().getClassLoader().loadClass(vformatClass));
+        giraphConfiguration.setVertexInputFormatClass((Class<? extends VertexInputFormat>) this.classLoader.loadClass(vformatClass));
         ImmutableClassesGiraphConfiguration conf =
             new ImmutableClassesGiraphConfiguration(giraphConfiguration);
         try {
@@ -210,7 +212,7 @@ public class FileLoader implements LoaderBase {
     public void loadEdges(String inputPath, String eformatClass)
         throws ExecutionException, InterruptedException, ClassNotFoundException {
         logger.debug("edge input path {}", inputPath);
-        giraphConfiguration.setEdgeInputFormatClass((Class<? extends EdgeInputFormat>) this.getClass().getClassLoader().loadClass(eformatClass));
+        giraphConfiguration.setEdgeInputFormatClass((Class<? extends EdgeInputFormat>) this.classLoader.loadClass(eformatClass));
 
         ImmutableClassesGiraphConfiguration conf =
             new ImmutableClassesGiraphConfiguration(giraphConfiguration);
