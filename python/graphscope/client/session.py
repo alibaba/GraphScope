@@ -1267,7 +1267,7 @@ class Session(object):
         """
         add the specified resource to the k8s cluster from client machine.
         """
-        logger.info("client: adding lib {}", resource_name)
+        logger.info("client: adding lib {}".format(resource_name))
         self._grpc_client.add_lib(resource_name)
 
 
