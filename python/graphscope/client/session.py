@@ -1263,6 +1263,13 @@ class Session(object):
         setattr(mod, "DiGraph", digraph)
         self._nx = mod
         return self._nx
+    def add_lib(self, resource_name):
+        """
+        add the specified resource to the k8s cluster from client machine.
+        """
+        logger.info("client: adding lib {}", resource_name)
+        self._grpc_client.add_lib(resource_name)
+
 
 
 session = Session
