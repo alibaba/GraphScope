@@ -111,7 +111,7 @@ graphscope-darwin-py3:
 	cd $(WORKING_DIR)/../coordinator && \
 		export WITH_EXTRA_DATA=ON && \
 		rm -fr build dist/*.whl || true && \
-		sudo strip /opt/graphscope/bin/grape_engine && \
+		sudo strip -s $(WORKING_DIR)/analytical_engine/exported_symbols_osx.lds /opt/graphscope/bin/grape_engine && \
 		sudo strip /opt/graphscope/bin/executor && \
 		sudo strip /opt/graphscope/bin/gaia_executor && \
 		export DYLD_LIBRARY_PATH=/usr/local/lib:$$DYLD_LIBRARY_PATH && \
