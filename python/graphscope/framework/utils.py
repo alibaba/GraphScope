@@ -133,7 +133,7 @@ def in_notebook():
         if shell == "TerminalInteractiveShell":
             return False  # Terminal running IPython
         return False  # Other type or standard python interpreter
-    except:  # noqa: E722
+    except Exception:
         return False
     return False
 
