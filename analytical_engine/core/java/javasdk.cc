@@ -161,9 +161,12 @@ JavaVM* CreateJavaVM() {
   char *p, *q;
   char* jvm_opts = getenv("GRAPE_JVM_OPTS");
   std::string jvm_opts_str = jvm_opts;
-  VLOG(1) << "Jvm opts str: " << jvm_opts_str;
-  if (jvm_opts == NULL)
+  if (jvm_opts == NULL){
+    LOG(ERROR) << "Expect GRAPE_JVM_OPTS set before initiate jvm";
     return NULL;
+  }
+    
+  VLOG(1) << "Jvm opts str: " << jvm_opts_str;
 
   if (*jvm_opts == '\0')
     return NULL;
