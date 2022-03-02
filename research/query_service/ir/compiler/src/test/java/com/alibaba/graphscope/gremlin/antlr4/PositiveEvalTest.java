@@ -759,4 +759,10 @@ public class PositiveEvalTest {
         Assert.assertEquals(g.V().as("a").out().as("b").where("a", P.eq("b")).by(__.out().count()),
                 eval("g.V().as(\"a\").out().as(\"b\").where(\"a\", P.eq(\"b\")).by(__.out().count())"));
     }
+
+    @Test
+    public void g_V_match_test() {
+        Assert.assertEquals(g.V().match(__.as("a").out().as("b"), __.as("b").out().as("c")),
+                eval("g.V().match(__.as(\"a\").out().as(\"b\"), __.as(\"b\").out().as(\"c\"))"));
+    }
 }

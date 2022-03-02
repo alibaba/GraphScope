@@ -42,7 +42,7 @@ public class GremlinResultAnalyzer {
                 parserType = GremlinResultParserFactory.SINGLE_VALUE;
             } else if (Utils.equalClass(step, SelectOneStep.class) || Utils.equalClass(step, SelectStep.class)
                     || Utils.equalClass(step, PropertiesStep.class) || Utils.equalClass(step, PropertyMapStep.class)
-                    || Utils.equalClass(step, TraversalMapStep.class)) {
+                    || Utils.equalClass(step, TraversalMapStep.class) || Utils.equalClass(step, MatchStep.class)) {
                 parserType = GremlinResultParserFactory.PROJECT_VALUE;
             } else if (Utils.equalClass(step, GroupCountStep.class) || Utils.equalClass(step, GroupStep.class)) {
                 parserType = GremlinResultParserFactory.GROUP;

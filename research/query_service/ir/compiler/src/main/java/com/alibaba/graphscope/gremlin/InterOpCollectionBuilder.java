@@ -102,6 +102,8 @@ public class InterOpCollectionBuilder {
                 opList.addAll(TraversalParentTransformFactory.WHERE_TRAVERSAL_STEP.apply((TraversalParent) step));
             } else if (Utils.equalClass(step, NotStep.class)) {
                 opList.addAll(TraversalParentTransformFactory.NOT_TRAVERSAL_STEP.apply((TraversalParent) step));
+            } else if (Utils.equalClass(step, MatchStep.class)) {
+                opList.add(StepTransformFactory.MATCH_STEP.apply(step));
             } else {
                 throw new UnsupportedStepException(step.getClass(), "unimplemented yet");
             }

@@ -511,4 +511,15 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
             throw new UnsupportedEvalException(ctx.getClass(), "supported pattern is [range(1, 2)]");
         }
     }
+
+    @Override
+    public Traversal visitTraversalMethod_match(GremlinGSParser.TraversalMethod_matchContext ctx) {
+        if (ctx.nestedTraversalExpr() != null) {
+            Traversal[] matchTraversals = (new NestedTraversalSourceListVisitor((GremlinGSBaseVisitor) this))
+                    .visitNestedTraversalExpr(ctx.nestedTraversalExpr());
+            return graphTraversal.match(matchTraversals);
+        } else {
+            throw new UnsupportedEvalException(ctx.getClass(), "supported pattern is [match(as('a').out()..., ...)]");
+        }
+    }
 }

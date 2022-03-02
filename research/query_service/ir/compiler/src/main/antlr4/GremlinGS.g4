@@ -77,6 +77,7 @@ traversalMethod
     | traversalMethod_not  // not()
     | traversalMethod_union // union()
     | traversalMethod_range // range()
+    | traversalMethod_match // match()
     ;
 
 traversalSourceSpawnMethod_V
@@ -328,6 +329,10 @@ nestedTraversalExpr
 traversalMethod_range
     : 'range' LPAREN integerLiteral COMMA integerLiteral RPAREN
     ;
+
+traversalMethod_match
+	: 'match' LPAREN nestedTraversalExpr RPAREN
+	;
 
 // only permit non empty, \'\' or \"\" or \'null\' is meaningless as a parameter
 stringLiteral

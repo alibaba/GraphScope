@@ -19,9 +19,12 @@ package com.alibaba.graphscope.gremlin.transform;
 import com.alibaba.graphscope.common.exception.OpArgIllegalException;
 import com.alibaba.graphscope.common.intermediate.ArgAggFn;
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
+import com.alibaba.graphscope.common.intermediate.InterOpCollection;
+import com.alibaba.graphscope.common.intermediate.MatchSentence;
 import com.alibaba.graphscope.common.intermediate.operator.*;
 import com.alibaba.graphscope.common.jna.type.*;
 import com.alibaba.graphscope.gremlin.InterOpCollectionBuilder;
+import com.alibaba.graphscope.gremlin.antlr4.GremlinAntlrToJava;
 import com.alibaba.graphscope.gremlin.plugin.step.PathExpandStep;
 import com.alibaba.graphscope.gremlin.plugin.step.ScanFusionStep;
 import com.alibaba.graphscope.gremlin.transform.alias.AliasManager;
@@ -371,6 +374,100 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
                 return getPreviousGroupStep(parent.asStep());
             }
             throw new OpArgIllegalException(OpArgIllegalException.Cause.INVALID_TYPE, "select keys or values should follow a group");
+        }
+    },
+    MATCH_STEP {
+        @Override
+        public InterOpBase apply(Step step) {
+            MatchStep matchStep = (MatchStep) step;
+            List<MatchSentence> sentences = getSentences(matchStep);
+            MatchOp matchOp = new MatchOp();
+            matchOp.setSentences(new OpArg(sentences));
+            return matchOp;
+        }
+
+        private List<MatchSentence> getSentences(MatchStep matchStep) {
+            List<Traversal.Admin> matchTraversals = matchStep.getGlobalChildren();
+            List<MatchSentence> sentences = new ArrayList<>();
+            matchTraversals.forEach(traversal -> {
+                List<Step> binderSteps = new ArrayList<>();
+                Optional<String> startTag = Optional.empty();
+                Optional<String> endTag = Optional.empty();
+                FfiJoinKind joinKind = FfiJoinKind.Inner;
+                for (Object o : traversal.getSteps()) {
+                    Step s = (Step) o;
+                    if (s instanceof MatchStep.MatchStartStep) { // match(__.as("a")...)
+                        Optional<String> selectKey = ((MatchStep.MatchStartStep) s).getSelectKey();
+                        if (!startTag.isPresent() && selectKey.isPresent()) {
+                            startTag = selectKey;
+                        }
+                    } else if (s instanceof MatchStep.MatchEndStep) { // match(...as("b"))
+                        Optional<String> matchKey = ((MatchStep.MatchEndStep) s).getMatchKey();
+                        if (!endTag.isPresent() && matchKey.isPresent()) {
+                            endTag = matchKey;
+                        }
+                    } else if (s instanceof WhereTraversalStep && binderSteps.isEmpty()) { // where(__.as("a")...) or not(...)
+                        List<Traversal.Admin> children = ((WhereTraversalStep) s).getLocalChildren();
+                        Traversal.Admin whereTraversal = children.isEmpty() ? null : children.get(0);
+                        // not(as("a").out().as("b"))
+                        if (whereTraversal != null
+                                && whereTraversal.getSteps().size() == 1 && whereTraversal.getStartStep() instanceof NotStep) {
+                            NotStep notStep = (NotStep) whereTraversal.getStartStep();
+                            List<Traversal.Admin> notChildren = notStep.getLocalChildren();
+                            whereTraversal = (notChildren.isEmpty()) ? null : notChildren.get(0);
+                            joinKind = FfiJoinKind.Anti;
+                        } else { // where(as("a").out().as("b"))
+                            joinKind = FfiJoinKind.Semi;
+                        }
+                        if (whereTraversal != null) {
+                            for (Object o1 : whereTraversal.getSteps()) {
+                                Step s1 = (Step) o1;
+                                if (s1 instanceof WhereTraversalStep.WhereStartStep) { // not(__.as("a")...)
+                                    Set<String> scopeKeys;
+                                    if (!startTag.isPresent()
+                                            && !(scopeKeys = ((WhereTraversalStep.WhereStartStep) s1).getScopeKeys()).isEmpty()) {
+                                        startTag = Optional.of(scopeKeys.iterator().next());
+                                    }
+                                } else if (s1 instanceof WhereTraversalStep.WhereEndStep) { // not(....as("b"))
+                                    Set<String> scopeKeys;
+                                    if (!endTag.isPresent()
+                                            && !(scopeKeys = ((WhereTraversalStep.WhereEndStep) s1).getScopeKeys()).isEmpty()) {
+                                        endTag = Optional.of(scopeKeys.iterator().next());
+                                    }
+                                } else if (isValidBinderStep(s1)) {
+                                    binderSteps.add(s1);
+                                } else {
+                                    throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
+                                            s1.getClass() + " is unsupported yet in match");
+                                }
+                            }
+                        }
+                    } else if (isValidBinderStep(s)) {
+                        binderSteps.add(s);
+                    } else {
+                        throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
+                                s.getClass() + " is unsupported yet in match");
+                    }
+                }
+                if (!startTag.isPresent() || !endTag.isPresent()) {
+                    throw new OpArgIllegalException(OpArgIllegalException.Cause.INVALID_TYPE,
+                            "startTag or endTag not exist in match");
+                }
+                Traversal binderTraversal = GremlinAntlrToJava.getTraversalSupplier().get();
+                binderSteps.forEach(b -> {
+                    binderTraversal.asAdmin().addStep(b);
+                });
+                InterOpCollection ops = (new InterOpCollectionBuilder(binderTraversal)).build();
+                sentences.add(new MatchSentence(startTag.get(), endTag.get(), ops, joinKind));
+            });
+            return sentences;
+        }
+
+        private boolean isValidBinderStep(Step step) {
+            return step instanceof VertexStep // in()/out()/both()/inE()/outE()/bothE()
+                    || step instanceof PathExpandStep // out/in/both('1..5', 'knows')
+                    || step instanceof EdgeOtherVertexStep // otherV()
+                    || step instanceof EdgeVertexStep; // inV()/outV()/endV()(todo)
         }
     };
 

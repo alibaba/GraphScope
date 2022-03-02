@@ -144,6 +144,20 @@ public interface IrCoreLibrary extends Library {
 
     ResultCode appendUnionOperator(Pointer plan, Pointer union, IntByReference oprIdx);
 
+    Pointer initPatternOperator();
+
+    Pointer initPatternSentence(FfiJoinKind joinKind);
+
+    ResultCode setSentenceStart(Pointer sentence, FfiNameOrId.ByValue tag);
+
+    ResultCode setSentenceEnd(Pointer sentence, FfiNameOrId.ByValue tag);
+
+    ResultCode addSentenceBinder(Pointer sentence, Pointer binder, FfiBinderOpt opt);
+
+    ResultCode addPatternSentence(Pointer pattern, Pointer sentence);
+
+    ResultCode appendPatternOperator(Pointer plan, Pointer pattern, int parent, IntByReference oprIdx);
+
     FfiNameOrId.ByValue noneNameOrId();
 
     FfiNameOrId.ByValue cstrAsNameOrId(String name);

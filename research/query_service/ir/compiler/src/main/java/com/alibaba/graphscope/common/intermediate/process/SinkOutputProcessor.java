@@ -21,6 +21,7 @@ import com.alibaba.graphscope.common.exception.InterOpUnsupportedException;
 import com.alibaba.graphscope.common.intermediate.ArgAggFn;
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.intermediate.InterOpCollection;
+import com.alibaba.graphscope.common.intermediate.MatchSentence;
 import com.alibaba.graphscope.common.intermediate.operator.*;
 import com.alibaba.graphscope.common.jna.type.FfiAlias;
 import com.alibaba.graphscope.common.jna.type.FfiJoinKind;
@@ -96,6 +97,14 @@ public class SinkOutputProcessor implements InterOpProcessor {
                 subOpsList.forEach(op -> {
                     SinkArg subSink = getSinkColumns(op);
                     subSink.getColumnNames().forEach(c -> sinkArg.addColumnName(c));
+                });
+                sinkArg.dedup();
+                break;
+            } else if (cur instanceof MatchOp) {
+                List<MatchSentence> sentences = (List<MatchSentence>) ((MatchOp) cur).getSentences().get().applyArg();
+                sentences.forEach(s -> {
+                    sinkArg.addColumnName(s.getStartTag().alias);
+                    sinkArg.addColumnName(s.getEndTag().alias);
                 });
                 sinkArg.dedup();
                 break;
