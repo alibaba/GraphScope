@@ -92,12 +92,13 @@ from gscoordinator.utils import get_lib_path
 from gscoordinator.utils import op_pre_process
 from gscoordinator.utils import str2bool
 from gscoordinator.utils import to_maxgraph_schema
+from gscoordinator.utils import RESOURCE_DIR_NAME
+from gscoordinator.utils import ANALYTICAL_ENGINE_JAVA_INIT_CLASS_PATH
 from gscoordinator.version import __version__
 
 # endpoint of prelaunch analytical engine
 GS_DEBUG_ENDPOINT = os.environ.get("GS_DEBUG_ENDPOINT", "")
 
-RESOURCE_DIR_NAME = "resource"
 # 2 GB
 GS_GRPC_MAX_MESSAGE_LENGTH = 2 * 1024 * 1024 * 1024 - 1
 
@@ -157,6 +158,11 @@ class CoordinatorServiceServicer(
         self._builtin_workspace = os.path.join(WORKSPACE, "builtin")
         # udf app workspace should be bound to a specific session when client connect.
         self._udf_app_workspace = None
+        # java class path should contains
+        # 1) java runtime path
+        # 2) add resources, the recents added resource will be placed first.
+        self._java_class_path = ANALYTICAL_ENGINE_JAVA_INIT_CLASS_PATH
+        logger.info("Java initial class path set to: {}".format(self._java_class_path))
 
         # control log fetching
         self._streaming_logs = True
@@ -730,6 +736,10 @@ class CoordinatorServiceServicer(
         full_filename = os.path.join(self._resource_dir, filename)
         self._launcher.distribute_file(full_filename)
         logger.info("Successfully distributed {}".format(full_filename))
+        if (full_filename.endswith(".jar")):
+            logger.info("adding lib to java class path since it ends with .jar")
+            self._java_class_path = full_filename + ":" + self._java_class_path
+            logger.info("current java class path: {}".format(self._java_class_path))
         return message_pb2.AddLibResponse()
 
     def CloseSession(self, request, context):
@@ -1175,7 +1185,7 @@ class CoordinatorServiceServicer(
         if types_pb2.GAR in op.attr:
             space = self._udf_app_workspace
         app_lib_path, java_jar_path, java_ffi_path, app_type = compile_func(
-            space, lib_name, op.attr, self._analytical_engine_config
+            space, lib_name, op.attr, self._analytical_engine_config, self._java_class_path
         )
         # for java app compilation, we need to distribute the jar and ffi generated
         if app_type == "java_pie":

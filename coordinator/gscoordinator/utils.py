@@ -59,6 +59,7 @@ from graphscope.proto import types_pb2
 
 logger = logging.getLogger("graphscope")
 
+RESOURCE_DIR_NAME = "resource"
 
 # runtime workspace
 try:
@@ -116,6 +117,11 @@ if not os.path.isfile(ANALYTICAL_ENGINE_PATH):
     ANALYTICAL_ENGINE_PATH = os.path.join(
         ANALYTICAL_ENGINE_HOME, "build", "grape_engine"
     )
+
+# ANALYTICAL_ENGINE_JAVA_HOME
+ANALYTICAL_ENGINE_JAVA_HOME=os.path.join(ANALYTICAL_ENGINE_HOME, "lib")
+# There maybe serveral jars in our gae java home, wildcards match
+ANALYTICAL_ENGINE_JAVA_INIT_CLASS_PATH=glob.glob(ANALYTICAL_ENGINE_JAVA_HOME + "/*")
 
 # INTERACTIVE_ENGINE_SCRIPT
 INTERAVTIVE_INSTANCE_TIMEOUT_SECONDS = 600  # 10 mins
@@ -192,7 +198,7 @@ def get_graph_sha256(attr):
     return hashlib.sha256(graph_class.encode("utf-8")).hexdigest()
 
 
-def compile_app(workspace: str, library_name, attr, engine_config: dict):
+def compile_app(workspace: str, library_name, attr, engine_config: dict, java_class_path : str):
     """Compile an application.
 
     Args:
@@ -327,10 +333,12 @@ def compile_app(workspace: str, library_name, attr, engine_config: dict):
             f.write(content)
 
     # compile
+    compile_env = os.environ.copy()
+    compile_env["USER_JAR_PATH"] = java_class_path
     logger.info("Building app ...")
     cmake_process = subprocess.Popen(
         cmake_commands,
-        env=os.environ.copy(),
+        env=compile_env,
         encoding="utf-8",
         errors="replace",
         stdout=subprocess.DEVNULL,
@@ -344,7 +352,7 @@ def compile_app(workspace: str, library_name, attr, engine_config: dict):
 
     make_process = subprocess.Popen(
         [shutil.which("make"), "-j4"],
-        env=os.environ.copy(),
+        env=compile_env,
         encoding="utf-8",
         errors="replace",
         stdout=subprocess.DEVNULL,
@@ -363,7 +371,7 @@ def compile_app(workspace: str, library_name, attr, engine_config: dict):
     return lib_path, java_jar_path, java_codegen_out_dir, app_type
 
 
-def compile_graph_frame(workspace: str, library_name, attr: dict, engine_config: dict):
+def compile_graph_frame(workspace: str, library_name, attr: dict, engine_config: dict, java_class_path : str):
     """Compile an application.
 
     Args:
@@ -427,10 +435,12 @@ def compile_graph_frame(workspace: str, library_name, attr: dict, engine_config:
             f.write(content)
 
     # compile
+    compile_env = os.environ.copy()
+    compile_env["USER_JAR_PATH"] = java_class_path
     logger.info("Building graph library ...")
     cmake_process = subprocess.Popen(
         cmake_commands,
-        env=os.environ.copy(),
+        env=compile_env,
         encoding="utf-8",
         errors="replace",
         stdout=subprocess.DEVNULL,
@@ -444,7 +454,7 @@ def compile_graph_frame(workspace: str, library_name, attr: dict, engine_config:
 
     make_process = subprocess.Popen(
         [shutil.which("make"), "-j4"],
-        env=os.environ.copy(),
+        env=compile_env,
         encoding="utf-8",
         errors="replace",
         stdout=subprocess.DEVNULL,
