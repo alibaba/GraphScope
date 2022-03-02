@@ -515,9 +515,14 @@ and <cite>n</cite> is the number of nodes in <cite>G</cite>.</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>G</strong> (<em>NetworkX graph</em>) – </p></li>
-<li><p><strong>weight</strong> (<em>None</em><em> or </em><em>string</em><em>, </em><em>optional</em><em> (</em><em>default = None</em><em>)</em>) – If None, every edge has weight/distance/cost 1.
+<li><p><strong>weight</strong> (<em>None</em><em>, </em><em>string</em><em> or </em><em>function</em><em>, </em><em>optional</em><em> (</em><em>default = None</em><em>)</em>) – If None, every edge has weight/distance/cost 1.
 If a string, use this edge attribute as the edge weight.
-Any edge attribute not present defaults to 1.</p></li>
+Any edge attribute not present defaults to 1.
+If this is a function, the weight of an edge is the value
+returned by the function. The function must accept exactly
+three positional arguments: the two endpoints of an edge and
+the dictionary of edge attributes for that edge.
+The function must return a number.</p></li>
 <li><p><strong>method</strong> (<em>string</em><em>, </em><em>optional</em><em> (</em><em>default = 'unweighted'</em><em> or </em><em>'djikstra'</em><em>)</em>) – The algorithm to use to compute the path lengths.
 Supported options are ‘unweighted’, ‘dijkstra’, ‘bellman-ford’,
 ‘floyd-warshall’ and ‘floyd-warshall-numpy’.
@@ -837,6 +842,26 @@ nodes and leafs on clustering measures for small-world networks.
             
               
                 <dd><a href="../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.11.0/index.html">v0.11.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.10.1/index.html">v0.10.1</a></dd>
               
             
 

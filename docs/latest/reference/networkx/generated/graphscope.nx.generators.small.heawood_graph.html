@@ -174,7 +174,36 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.nx.generators.small.heawood_graph">
 <span class="sig-prename descclassname"><span class="pre">graphscope.nx.generators.small.</span></span><span class="sig-name descname"><span class="pre">heawood_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">create_using</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/graphscope/nx/generators/small.html#heawood_graph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.generators.small.heawood_graph" title="Permalink to this definition"></a></dt>
-<dd><p>Return the Heawood graph, a (3,6) cage.</p>
+<dd><p>Returns the Heawood Graph, a (3,6) cage.</p>
+<p>The Heawood Graph is an undirected graph with 14 nodes and 21 edges,
+named after Percy John Heawood <a class="footnote-reference brackets" href="#id4" id="id1">1</a>.
+It is cubic symmetric, nonplanar, Hamiltonian, and can be represented
+in LCF notation as <code class="docutils literal notranslate"><span class="pre">[5,-5]^7</span></code> <a class="footnote-reference brackets" href="#id5" id="id2">2</a>.
+It is the unique (3,6)-cage: the regular cubic graph of girth 6 with
+minimal number of vertices <a class="footnote-reference brackets" href="#id6" id="id3">3</a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>create_using</strong> (<em>NetworkX graph constructor</em><em>, </em><em>optional</em><em> (</em><em>default=nx.Graph</em><em>)</em>) – Graph type to create. If graph instance, then cleared before populated.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>G</strong> – Heawood Graph with 14 nodes and 21 edges</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>networkx Graph</p>
+</dd>
+</dl>
+<p class="rubric">References</p>
+<dl class="footnote brackets">
+<dt class="label" id="id4"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
+<dd><p><a class="reference external" href="https://en.wikipedia.org/wiki/Heawood_graph">https://en.wikipedia.org/wiki/Heawood_graph</a></p>
+</dd>
+<dt class="label" id="id5"><span class="brackets"><a class="fn-backref" href="#id2">2</a></span></dt>
+<dd><p><a class="reference external" href="https://mathworld.wolfram.com/HeawoodGraph.html">https://mathworld.wolfram.com/HeawoodGraph.html</a></p>
+</dd>
+<dt class="label" id="id6"><span class="brackets"><a class="fn-backref" href="#id3">3</a></span></dt>
+<dd><p><a class="reference external" href="https://www.win.tue.nl/~aeb/graphs/Heawood.html">https://www.win.tue.nl/~aeb/graphs/Heawood.html</a></p>
+</dd>
+</dl>
 </dd></dl>
 
 </div>
@@ -235,6 +264,26 @@
             
               
                 <dd><a href="../../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.11.0/index.html">v0.11.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.10.1/index.html">v0.10.1</a></dd>
               
             
 

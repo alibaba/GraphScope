@@ -98,12 +98,14 @@ In addition to local cluster setup script, we also provide a interactive script 
 You can use the script as follows or use `./script/launch_cluster.py --help` to get the useage.
 
 * AWS
+
 .. code:: shell
 
     pip3 install click PyYAML boto3
     ./scripts/launch_cluster.py --type aws --id your_access_key_id --secret your_access_key_secret --region your_region_name --output kube_config_path
 
 * Aliyun
+
 .. code:: shell
 
     pip3 install click PyYAML alibabacloud_cs20151215 alibabacloud_ecs20140526 alibabacloud_vpc20160428
@@ -116,11 +118,13 @@ We provide script to install dependencies of GraphScope on
 Ubuntu 20.04+ or MacOS.
 
 * install development independencies of GraphScope
+
 .. code:: shell
 
     ./scripts/install_deps.sh --dev
 
 * then you can build and deploy GraphScope locally
+
 .. code:: shell
 
     source ~/.graphscope_env
