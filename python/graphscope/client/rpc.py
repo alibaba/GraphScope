@@ -156,9 +156,9 @@ class GRPCClient(object):
             )
             self._logs_fetching_thread.daemon = True
             self._logs_fetching_thread.start()
-    def add_lib(self, lib_path):
+    def add_lib(self, gar):
         if self._session_id:
-            return self._add_lib_impl(lib_path)
+            return self._add_lib_impl(gar)
         logger.error("adding lib to a closed session")
 
     def close(self):
@@ -174,8 +174,8 @@ class GRPCClient(object):
         return self._stub.HeartBeat(request)
 
     @catch_grpc_error
-    def _add_lib_impl(self, lib_path):
-        request = message_pb2.AddLibRequest(session_id=self._session_id, lib_path=lib_path)
+    def _add_lib_impl(self, gar):
+        request = message_pb2.AddLibRequest(session_id=self._session_id, gar=gar)
         return self._stub.AddLib(request)
 
     # @catch_grpc_error

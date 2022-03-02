@@ -161,7 +161,7 @@ message CloseSessionResponse {
 
 message AddLibRequest{
   string session_id = 1;
-  string lib_path = 2;
+  bytes gar = 2;
 }
 
 message AddLibResponse{
