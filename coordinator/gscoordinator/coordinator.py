@@ -723,10 +723,10 @@ class CoordinatorServiceServicer(
         filename = None
         with zipfile.ZipFile(fp, "r") as zip_ref:
             zip_ref.extractall(self._resource_dir)
-            logger.info("Coordinator recieved add lib request contains file {}".format(zip_ref.namelist))
-            if len(zip_ref.namelist) != 1:
+            logger.info("Coordinator recieved add lib request contains file {}".format(zip_ref.namelist()))
+            if len(zip_ref.namelist()) != 1:
                 raise RuntimeError("Expect only one resource in one gar")
-            filename = zip_ref.namelist[0]
+            filename = zip_ref.namelist()[0]
         full_filename = os.path.join(self._resource_dir, filename)
         self._launcher.distribute_file(full_filename)
         logger.info("Successfully distributed {}".format(full_filename))
