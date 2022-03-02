@@ -37,7 +37,6 @@ export GRAPE_JVM_OPTS="-Dcom.alibaba.fastffi.rvBuffer=2147483648 -XX:+StartAttac
 
 export MAX_SUPER_STEP=10
 export MESSAGE_MANAGER_TYPE=mpi
-export USER_JAR_PATH=~/GraphScope/analytical_engine/java/grape-demo/target/grape-demo-0.1-shaded.jar
 export OUT_MESSAGE_CACHE_TYPE=ByteBuf
 export MESSAGE_STORE_TYPE=primitive
 export LOADING_THREAD_NUM=1
