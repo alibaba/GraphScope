@@ -222,6 +222,10 @@ class JavaLoaderInvoker {
       LOG(ERROR) << "Expect a giraph formatter: giraph:your.class.name";
       return;
     }
+    if (vertex_location.find("#") != std::string::npos) {
+      vertex_location =
+          vertex_location.substr(0, vertex_location.find("#") + 1);
+    }
     std::string vformatter_class = vformatter.substr(7, std::string::npos);
     int giraph_type_int = callJavaLoaderVertices(vertex_location.c_str(),
                                                  vformatter_class.c_str());
@@ -240,6 +244,9 @@ class JavaLoaderInvoker {
     if (eformatter.find("giraph:") == std::string::npos) {
       LOG(ERROR) << "Expect a giraph formatter: giraph:your.class.name";
       return;
+    }
+    if (edge_location.find("#") != std::string::npos) {
+      edge_location = edge_location.substr(0, edge_location.find("#") + 1);
     }
     std::string eformatter_class = eformatter.substr(7, std::string::npos);
 
