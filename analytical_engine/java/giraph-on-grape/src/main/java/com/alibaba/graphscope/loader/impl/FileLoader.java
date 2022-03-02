@@ -50,20 +50,21 @@ import org.slf4j.LoggerFactory;
  * Load from a file on system.
  */
 public class FileLoader implements LoaderBase {
+    private static Logger logger = LoggerFactory.getLogger(FileLoader.class);
 
     private static String LIB_PATH = "/opt/graphscope/lib/libgrape-jni.so";
     static{
         String gsHome = System.getenv("GRAPHSCOPE_HOME");
+        logger.info("graphscope home: {}", gsHome);
         if (Objects.nonNull(gsHome) && !gsHome.isEmpty()){
             LIB_PATH = gsHome + "/lib/libgrape-jni.so";
-            LoadLibrary.invoke(LIB_PATH);
         }
+        LoadLibrary.invoke(LIB_PATH);
     }
     private static AtomicInteger LOADER_ID = new AtomicInteger(0);
     private static AtomicInteger V_CALLABLE_ID = new AtomicInteger(0);
     private static AtomicInteger E_CALLABLE_ID = new AtomicInteger(0);
 
-    private static Logger logger = LoggerFactory.getLogger(FileLoader.class);
     private int loaderId;
     private int threadNum;
     private int workerId;

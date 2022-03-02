@@ -23,9 +23,9 @@
 #include "arrow/array.h"
 #include "arrow/array/builder_binary.h"
 #include "core/java/javasdk.h"
+#include "core/java/utils.h"
 #include "grape/grape.h"
 #include "grape/util.h"
-#include "core/java/utils.h"
 //#include "vineyard/graph/loader/arrow_fragment_loader.h"
 
 namespace gs {
