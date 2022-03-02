@@ -120,7 +120,7 @@ public class TraversalOpProcessor extends AbstractOpProcessor {
                             }
                         });
                 return op;
-            case Tokens.OPS_KEYS:
+            case Tokens.OPS_EVAL:
                 GaiaGraphOpProcessor.writeResultList(
                         ctx, Collections.EMPTY_LIST, ResponseStatusCode.SUCCESS);
                 return null;

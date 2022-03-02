@@ -21,10 +21,10 @@ import com.alibaba.graphscope.gaia.plan.PlanUtils;
 import com.alibaba.graphscope.gaia.plan.strategy.PreBySubTraversal;
 import com.alibaba.graphscope.gaia.plan.strategy.global.property.cache.ToFetchProperties;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.ColumnTraversal;
-import org.apache.tinkerpop.gremlin.process.traversal.lambda.ElementValueTraversal;
+import org.apache.tinkerpop.gremlin.process.traversal.lambda.ValueTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.IdentityTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.TokenTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.PropertiesStep;
@@ -41,8 +41,8 @@ public interface TagKeyExtractor {
         Gremlin.ByKey.Builder builder = Gremlin.ByKey.newBuilder();
         if (value == null || value instanceof IdentityTraversal) {
             return Gremlin.ByKey.newBuilder().build();
-        } else if (value instanceof ElementValueTraversal) {
-            String propertyKey = ((ElementValueTraversal) value).getPropertyKey();
+        } else if (value instanceof ValueTraversal) {
+            String propertyKey = ((ValueTraversal) value).getPropertyKey();
             if (StringUtils.isNumeric(propertyKey)) {
                 builder.setKey(Common.Key.newBuilder().setNameId(Integer.valueOf(propertyKey)));
             } else {
@@ -152,7 +152,7 @@ public interface TagKeyExtractor {
     default boolean isSimpleValue(Traversal.Admin value) {
         return value == null
                 || value instanceof IdentityTraversal
-                || value instanceof ElementValueTraversal
+                || value instanceof ValueTraversal
                 || value instanceof TokenTraversal
                 || value instanceof ColumnTraversal
                 || value instanceof PreBySubTraversal

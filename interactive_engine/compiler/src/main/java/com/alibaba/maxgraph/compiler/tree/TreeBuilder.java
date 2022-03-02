@@ -118,9 +118,9 @@ import org.apache.tinkerpop.gremlin.process.traversal.step.filter.SampleGlobalSt
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.TraversalFilterStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.WherePredicateStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.*;
+import org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.AggregateLocalStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.IdentityStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.SideEffectCapStep;
-import org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.StoreStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.SubgraphStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.ComputerAwareStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.EmptyStep;
@@ -255,8 +255,8 @@ public class TreeBuilder {
     private <S, E> TreeNode travelTraversalDirectly(Traversal.Admin<S, E> admin, TreeNode parent) {
         if (admin instanceof TokenTraversal) {
             return new TokenTreeNode(parent, schema, TokenTraversal.class.cast(admin).getToken());
-        } else if (admin instanceof ElementValueTraversal) {
-            ElementValueTraversal elementValueTraversal = ElementValueTraversal.class.cast(admin);
+        } else if (admin instanceof ValueTraversal) {
+            ValueTraversal elementValueTraversal = ValueTraversal.class.cast(admin);
             String propKey = elementValueTraversal.getPropertyKey();
             TreeNode bypassTreeNode = null;
             Traversal.Admin<?, ?> bypassTraversal =
@@ -439,7 +439,7 @@ public class TreeBuilder {
                 case VertexWithByStep:
                     return visitVertexWithByStep((VertexWithByStep) step, prev);
                 case StoreStep:
-                    return visitStoreStep((StoreStep) step, prev);
+                    return visitStoreStep((AggregateLocalStep) step, prev);
                 case LoopsStep:
                     return visitLoopsStep((LoopsStep) step, prev);
                 case EdgeVertexWithByStep:
@@ -597,10 +597,10 @@ public class TreeBuilder {
         return prev;
     }
 
-    private TreeNode visitStoreStep(StoreStep step, TreeNode prev) {
+    private TreeNode visitStoreStep(AggregateLocalStep step, TreeNode prev) {
         String sideEffectKey = checkNotNull(step.getSideEffectKey());
         Traversal.Admin<?, ?> storeTraversal =
-                ReflectionUtils.getFieldValue(StoreStep.class, step, "storeTraversal");
+                ReflectionUtils.getFieldValue(AggregateLocalStep.class, step, "storeTraversal");
         storeSubgraphKeyList.add(sideEffectKey);
 
         boolean saveFlag = rootPathFlag;
@@ -1428,7 +1428,7 @@ public class TreeBuilder {
         String[] propertyKeys = step.getPropertyKeys();
         PropertyType propertyType = step.getReturnType();
         return new PropertyMapTreeNode(
-                prev, schema, propertyKeys, propertyType, step.isIncludeTokens());
+                prev, schema, propertyKeys, propertyType, step.getIncludedTokens() != 0);
     }
 
     private TreeNode visitPropertiesStep(PropertiesStep step, TreeNode prev) {

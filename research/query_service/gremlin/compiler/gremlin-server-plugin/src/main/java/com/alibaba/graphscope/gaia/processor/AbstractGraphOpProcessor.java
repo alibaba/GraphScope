@@ -47,7 +47,6 @@ import org.apache.tinkerpop.gremlin.groovy.engine.GremlinExecutor;
 import org.apache.tinkerpop.gremlin.groovy.jsr223.TimedInterruptTimeoutException;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.server.Context;
-import org.apache.tinkerpop.gremlin.server.ResponseHandlerContext;
 import org.apache.tinkerpop.gremlin.server.handler.Frame;
 import org.apache.tinkerpop.gremlin.server.handler.StateKey;
 import org.apache.tinkerpop.gremlin.server.op.OpProcessorException;
@@ -88,8 +87,7 @@ public abstract class AbstractGraphOpProcessor extends StandardOpProcessor {
     protected void evalOpInternal(
             Context ctx,
             Supplier<GremlinExecutor> gremlinExecutorSupplier,
-            BindingSupplier bindingsSupplier)
-            throws OpProcessorException {
+            BindingSupplier bindingsSupplier) {
         final Timer.Context timerContext = evalOpTimer.time();
         final RequestMessage msg = ctx.getRequestMessage();
         final GremlinExecutor gremlinExecutor = gremlinExecutorSupplier.get();
@@ -114,10 +112,9 @@ public abstract class AbstractGraphOpProcessor extends StandardOpProcessor {
                     long elapsed = timerContext.stop();
                     logger.info(
                             "query {} total execution time is {} ms", script, elapsed / 1000000.0f);
-                    ResponseHandlerContext rhc = new ResponseHandlerContext(ctx);
                     if (t != null) {
                         if (t instanceof OpProcessorException) {
-                            rhc.writeAndFlush(((OpProcessorException) t).getResponseMessage());
+                            ctx.writeAndFlush(((OpProcessorException) t).getResponseMessage());
                         } else if (t instanceof TimedInterruptTimeoutException) {
                             // occurs when the TimedInterruptCustomizerProvider is in play
                             final String errorMessage =
@@ -127,7 +124,7 @@ public abstract class AbstractGraphOpProcessor extends StandardOpProcessor {
                                                 + " to TimedInterruptCustomizerProvider",
                                             msg);
                             logger.warn(errorMessage);
-                            rhc.writeAndFlush(
+                            ctx.writeAndFlush(
                                     ResponseMessage.build(msg)
                                             .code(ResponseStatusCode.SERVER_ERROR_TIMEOUT)
                                             .statusMessage(
@@ -142,7 +139,7 @@ public abstract class AbstractGraphOpProcessor extends StandardOpProcessor {
                                                     + " for request [%s]",
                                             msg);
                             logger.warn(errorMessage, t);
-                            rhc.writeAndFlush(
+                            ctx.writeAndFlush(
                                     ResponseMessage.build(msg)
                                             .code(ResponseStatusCode.SERVER_ERROR_TIMEOUT)
                                             .statusMessage(t.getMessage())
@@ -165,11 +162,11 @@ public abstract class AbstractGraphOpProcessor extends StandardOpProcessor {
                                                     + " JVM, please split it into multiple smaller"
                                                     + " statements");
                                 logger.warn(errorMessage);
-                                rhc.writeAndFlush(
+                                ctx.writeAndFlush(
                                         ResponseMessage.build(msg)
                                                 .code(
                                                         ResponseStatusCode
-                                                                .SERVER_ERROR_SCRIPT_EVALUATION)
+                                                                .SERVER_ERROR_EVALUATION)
                                                 .statusMessage(errorMessage)
                                                 .statusAttributeException(t)
                                                 .create());
@@ -181,11 +178,11 @@ public abstract class AbstractGraphOpProcessor extends StandardOpProcessor {
                                                 "Exception processing a script on request [%s].",
                                                 msg),
                                         t);
-                                rhc.writeAndFlush(
+                                ctx.writeAndFlush(
                                         ResponseMessage.build(msg)
                                                 .code(
                                                         ResponseStatusCode
-                                                                .SERVER_ERROR_SCRIPT_EVALUATION)
+                                                                .SERVER_ERROR_EVALUATION)
                                                 .statusMessage(errorMessage)
                                                 .statusAttributeException(t)
                                                 .create());
@@ -222,7 +219,7 @@ public abstract class AbstractGraphOpProcessor extends StandardOpProcessor {
                 try {
                     frame =
                             makeFrame(
-                                    ctx,
+                                    context,
                                     msg,
                                     serializer,
                                     useBinary,

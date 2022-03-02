@@ -58,7 +58,6 @@ import org.apache.tinkerpop.gremlin.server.op.AbstractOpProcessor;
 import org.apache.tinkerpop.gremlin.server.op.OpProcessorException;
 import org.apache.tinkerpop.gremlin.server.op.traversal.TraversalOpProcessor;
 import org.apache.tinkerpop.gremlin.server.util.MetricManager;
-import org.apache.tinkerpop.gremlin.server.util.SideEffectIterator;
 import org.apache.tinkerpop.gremlin.server.util.TraverserIterator;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.io.graphson.GraphSONMapper;
@@ -154,18 +153,18 @@ public abstract class AbstractMixedTraversalOpProcessor extends AbstractOpProces
                                         p.className.equals(
                                                 TraversalOpProcessor.class.getCanonicalName()))
                         .findAny()
-                        .orElse(TraversalOpProcessor.DEFAULT_SETTINGS);
+                        .orElse(DEFAULT_SETTINGS);
         final long maxSize =
                 Long.parseLong(
                         processorSettings
                                 .config
-                                .get(TraversalOpProcessor.CONFIG_CACHE_MAX_SIZE)
+                                .get(CONFIG_CACHE_MAX_SIZE)
                                 .toString());
         final long expirationTime =
                 Long.parseLong(
                         processorSettings
                                 .config
-                                .get(TraversalOpProcessor.CONFIG_CACHE_EXPIRATION_TIME)
+                                .get(DEFAULT_CACHE_EXPIRATION_TIME)
                                 .toString());
 
         cache =
@@ -192,129 +191,129 @@ public abstract class AbstractMixedTraversalOpProcessor extends AbstractOpProces
                 validateTraversalSourceAlias(ctx, message, validateTraversalRequest(message));
                 op = this::iterateBytecodeTraversal;
                 break;
-            case Tokens.OPS_GATHER:
-                final Optional<String> sideEffectForGather =
-                        message.optionalArgs(Tokens.ARGS_SIDE_EFFECT);
-                if (!sideEffectForGather.isPresent()) {
-                    final String msg =
-                            String.format(
-                                    "A message with an [%s] op code requires a [%s] argument.",
-                                    Tokens.OPS_GATHER, Tokens.ARGS_SIDE_EFFECT);
-                    throw new OpProcessorException(
-                            msg,
-                            ResponseMessage.build(message)
-                                    .code(
-                                            ResponseStatusCode
-                                                    .REQUEST_ERROR_INVALID_REQUEST_ARGUMENTS)
-                                    .statusMessage(msg)
-                                    .create());
-                }
-
-                final Optional<String> sideEffectKey =
-                        message.optionalArgs(Tokens.ARGS_SIDE_EFFECT_KEY);
-                if (!sideEffectKey.isPresent()) {
-                    final String msg =
-                            String.format(
-                                    "A message with an [%s] op code requires a [%s] argument.",
-                                    Tokens.OPS_GATHER, Tokens.ARGS_SIDE_EFFECT_KEY);
-                    throw new OpProcessorException(
-                            msg,
-                            ResponseMessage.build(message)
-                                    .code(
-                                            ResponseStatusCode
-                                                    .REQUEST_ERROR_INVALID_REQUEST_ARGUMENTS)
-                                    .statusMessage(msg)
-                                    .create());
-                }
-
-                validateTraversalSourceAlias(ctx, message, validatedAliases(message).get());
-
-                op = this::gatherSideEffect;
-
-                break;
-            case Tokens.OPS_KEYS:
-                final Optional<String> sideEffectForKeys =
-                        message.optionalArgs(Tokens.ARGS_SIDE_EFFECT);
-                if (!sideEffectForKeys.isPresent()) {
-                    final String msg =
-                            String.format(
-                                    "A message with an [%s] op code requires a [%s] argument.",
-                                    Tokens.OPS_GATHER, Tokens.ARGS_SIDE_EFFECT);
-                    throw new OpProcessorException(
-                            msg,
-                            ResponseMessage.build(message)
-                                    .code(
-                                            ResponseStatusCode
-                                                    .REQUEST_ERROR_INVALID_REQUEST_ARGUMENTS)
-                                    .statusMessage(msg)
-                                    .create());
-                }
-
-                op =
-                        context -> {
-                            final RequestMessage msg = context.getRequestMessage();
-                            final Optional<UUID> sideEffect =
-                                    msg.optionalArgs(Tokens.ARGS_SIDE_EFFECT);
-                            final TraversalSideEffects sideEffects =
-                                    cache.getIfPresent(sideEffect.get());
-
-                            if (null == sideEffects)
-                                logger.warn(
-                                        "Request for side-effect keys on {} returned no"
-                                                + " side-effects in the cache",
-                                        sideEffect.get());
-
-                            handleIterator(
-                                    context,
-                                    null == sideEffects
-                                            ? Collections.emptyIterator()
-                                            : sideEffects.keys().iterator());
-                        };
-
-                break;
-            case Tokens.OPS_CLOSE:
-                final Optional<String> sideEffectForClose =
-                        message.optionalArgs(Tokens.ARGS_SIDE_EFFECT);
-                if (!sideEffectForClose.isPresent()) {
-                    final String msg =
-                            String.format(
-                                    "A message with an [%s] op code requires a [%s] argument.",
-                                    Tokens.OPS_CLOSE, Tokens.ARGS_SIDE_EFFECT);
-                    throw new OpProcessorException(
-                            msg,
-                            ResponseMessage.build(message)
-                                    .code(
-                                            ResponseStatusCode
-                                                    .REQUEST_ERROR_INVALID_REQUEST_ARGUMENTS)
-                                    .statusMessage(msg)
-                                    .create());
-                }
-
-                op =
-                        context -> {
-                            final RequestMessage msg = context.getRequestMessage();
-                            logger.debug(
-                                    "Close request {} for in thread {}",
-                                    msg.getRequestId(),
-                                    Thread.currentThread().getName());
-
-                            final Optional<UUID> sideEffect =
-                                    msg.optionalArgs(Tokens.ARGS_SIDE_EFFECT);
-                            cache.invalidate(sideEffect.get());
-
-                            final String successMessage =
-                                    String.format(
-                                            "Successfully cleared side effect cache for [%s].",
-                                            Tokens.ARGS_SIDE_EFFECT);
-                            ctx.getChannelHandlerContext()
-                                    .writeAndFlush(
-                                            ResponseMessage.build(message)
-                                                    .code(ResponseStatusCode.NO_CONTENT)
-                                                    .statusMessage(successMessage)
-                                                    .create());
-                        };
-
-                break;
+//            case Tokens.OPS_GATHER:
+//                final Optional<String> sideEffectForGather =
+//                        message.optionalArgs(Tokens.ARGS_SIDE_EFFECT);
+//                if (!sideEffectForGather.isPresent()) {
+//                    final String msg =
+//                            String.format(
+//                                    "A message with an [%s] op code requires a [%s] argument.",
+//                                    Tokens.OPS_GATHER, Tokens.ARGS_SIDE_EFFECT);
+//                    throw new OpProcessorException(
+//                            msg,
+//                            ResponseMessage.build(message)
+//                                    .code(
+//                                            ResponseStatusCode
+//                                                    .REQUEST_ERROR_INVALID_REQUEST_ARGUMENTS)
+//                                    .statusMessage(msg)
+//                                    .create());
+//                }
+//
+//                final Optional<String> sideEffectKey =
+//                        message.optionalArgs(Tokens.ARGS_SIDE_EFFECT_KEY);
+//                if (!sideEffectKey.isPresent()) {
+//                    final String msg =
+//                            String.format(
+//                                    "A message with an [%s] op code requires a [%s] argument.",
+//                                    Tokens.OPS_GATHER, Tokens.ARGS_SIDE_EFFECT_KEY);
+//                    throw new OpProcessorException(
+//                            msg,
+//                            ResponseMessage.build(message)
+//                                    .code(
+//                                            ResponseStatusCode
+//                                                    .REQUEST_ERROR_INVALID_REQUEST_ARGUMENTS)
+//                                    .statusMessage(msg)
+//                                    .create());
+//                }
+//
+//                validateTraversalSourceAlias(ctx, message, validatedAliases(message).get());
+//
+//                op = this::gatherSideEffect;
+//
+//                break;
+//            case Tokens.OPS_EVAL:
+//                final Optional<String> sideEffectForKeys =
+//                        message.optionalArgs(Tokens.ARGS_SIDE_EFFECT);
+//                if (!sideEffectForKeys.isPresent()) {
+//                    final String msg =
+//                            String.format(
+//                                    "A message with an [%s] op code requires a [%s] argument.",
+//                                    Tokens.OPS_GATHER, Tokens.ARGS_SIDE_EFFECT);
+//                    throw new OpProcessorException(
+//                            msg,
+//                            ResponseMessage.build(message)
+//                                    .code(
+//                                            ResponseStatusCode
+//                                                    .REQUEST_ERROR_INVALID_REQUEST_ARGUMENTS)
+//                                    .statusMessage(msg)
+//                                    .create());
+//                }
+//
+//                op =
+//                        context -> {
+//                            final RequestMessage msg = context.getRequestMessage();
+//                            final Optional<UUID> sideEffect =
+//                                    msg.optionalArgs(Tokens.ARGS_SIDE_EFFECT);
+//                            final TraversalSideEffects sideEffects =
+//                                    cache.getIfPresent(sideEffect.get());
+//
+//                            if (null == sideEffects)
+//                                logger.warn(
+//                                        "Request for side-effect keys on {} returned no"
+//                                                + " side-effects in the cache",
+//                                        sideEffect.get());
+//
+//                            handleIterator(
+//                                    context,
+//                                    null == sideEffects
+//                                            ? Collections.emptyIterator()
+//                                            : sideEffects.keys().iterator());
+//                        };
+//
+//                break;
+//            case Tokens.OPS_CLOSE:
+//                final Optional<String> sideEffectForClose =
+//                        message.optionalArgs(Tokens.ARGS_SIDE_EFFECT);
+//                if (!sideEffectForClose.isPresent()) {
+//                    final String msg =
+//                            String.format(
+//                                    "A message with an [%s] op code requires a [%s] argument.",
+//                                    Tokens.OPS_CLOSE, Tokens.ARGS_SIDE_EFFECT);
+//                    throw new OpProcessorException(
+//                            msg,
+//                            ResponseMessage.build(message)
+//                                    .code(
+//                                            ResponseStatusCode
+//                                                    .REQUEST_ERROR_INVALID_REQUEST_ARGUMENTS)
+//                                    .statusMessage(msg)
+//                                    .create());
+//                }
+//
+//                op =
+//                        context -> {
+//                            final RequestMessage msg = context.getRequestMessage();
+//                            logger.debug(
+//                                    "Close request {} for in thread {}",
+//                                    msg.getRequestId(),
+//                                    Thread.currentThread().getName());
+//
+//                            final Optional<UUID> sideEffect =
+//                                    msg.optionalArgs(Tokens.ARGS_SIDE_EFFECT);
+//                            cache.invalidate(sideEffect.get());
+//
+//                            final String successMessage =
+//                                    String.format(
+//                                            "Successfully cleared side effect cache for [%s].",
+//                                            Tokens.ARGS_SIDE_EFFECT);
+//                            ctx.getChannelHandlerContext()
+//                                    .writeAndFlush(
+//                                            ResponseMessage.build(message)
+//                                                    .code(ResponseStatusCode.NO_CONTENT)
+//                                                    .statusMessage(successMessage)
+//                                                    .create());
+//                        };
+//
+//                break;
             case Tokens.OPS_INVALID:
                 final String msgInvalid =
                         String.format(
@@ -419,121 +418,121 @@ public abstract class AbstractMixedTraversalOpProcessor extends AbstractOpProces
         return aliases;
     }
 
-    private void gatherSideEffect(final Context context) throws OpProcessorException {
-        final RequestMessage msg = context.getRequestMessage();
-        logger.debug(
-                "Side-effect request {} for in thread {}",
-                msg.getRequestId(),
-                Thread.currentThread().getName());
-
-        // earlier validation in selection of this op method should free us to cast this without
-        // worry
-        final Optional<UUID> sideEffect = msg.optionalArgs(Tokens.ARGS_SIDE_EFFECT);
-        final Optional<String> sideEffectKey = msg.optionalArgs(Tokens.ARGS_SIDE_EFFECT_KEY);
-        final Map<String, String> aliases =
-                (Map<String, String>) msg.optionalArgs(Tokens.ARGS_ALIASES).get();
-
-        final GraphManager graphManager = context.getGraphManager();
-        final String traversalSourceName = aliases.entrySet().iterator().next().getValue();
-        final TraversalSource g = graphManager.getTraversalSource(traversalSourceName);
-
-        final Timer.Context timerContext = traversalOpTimer.time();
-        try {
-            final ChannelHandlerContext ctx = context.getChannelHandlerContext();
-            final Graph graph = g.getGraph();
-
-            context.getGremlinExecutor()
-                    .getExecutorService()
-                    .submit(
-                            () -> {
-                                try {
-                                    beforeProcessing(graph, context);
-
-                                    try {
-                                        final TraversalSideEffects sideEffects =
-                                                cache.getIfPresent(sideEffect.get());
-
-                                        if (null == sideEffects) {
-                                            final String errorMessage =
-                                                    String.format(
-                                                            "Could not find side-effects for %s.",
-                                                            sideEffect.get());
-                                            logger.warn(errorMessage);
-                                            ctx.writeAndFlush(
-                                                    ResponseMessage.build(msg)
-                                                            .code(ResponseStatusCode.SERVER_ERROR)
-                                                            .statusMessage(errorMessage)
-                                                            .create());
-                                            onError(graph, context);
-                                            return;
-                                        }
-
-                                        if (!sideEffects.exists(sideEffectKey.get())) {
-                                            final String errorMessage =
-                                                    String.format(
-                                                            "Could not find side-effect key for %s"
-                                                                    + " in %s.",
-                                                            sideEffectKey.get(), sideEffect.get());
-                                            logger.warn(errorMessage);
-                                            ctx.writeAndFlush(
-                                                    ResponseMessage.build(msg)
-                                                            .code(ResponseStatusCode.SERVER_ERROR)
-                                                            .statusMessage(errorMessage)
-                                                            .create());
-                                            onError(graph, context);
-                                            return;
-                                        }
-
-                                        handleIterator(
-                                                context,
-                                                new SideEffectIterator(
-                                                        sideEffects.get(sideEffectKey.get()),
-                                                        sideEffectKey.get()));
-                                    } catch (Exception ex) {
-                                        logger.warn(
-                                                String.format(
-                                                        "Exception processing a side-effect on"
-                                                                + " iteration for request [%s].",
-                                                        msg.getRequestId()),
-                                                ex);
-                                        ctx.writeAndFlush(
-                                                ResponseMessage.build(msg)
-                                                        .code(ResponseStatusCode.SERVER_ERROR)
-                                                        .statusMessage(ex.getMessage())
-                                                        .create());
-                                        onError(graph, context);
-                                        return;
-                                    }
-
-                                    onSideEffectSuccess(graph, context);
-                                } catch (Exception ex) {
-                                    logger.warn(
-                                            String.format(
-                                                    "Exception processing a side-effect on request"
-                                                            + " [%s].",
-                                                    msg.getRequestId()),
-                                            ex);
-                                    ctx.writeAndFlush(
-                                            ResponseMessage.build(msg)
-                                                    .code(ResponseStatusCode.SERVER_ERROR)
-                                                    .statusMessage(ex.getMessage())
-                                                    .create());
-                                    onError(graph, context);
-                                } finally {
-                                    timerContext.stop();
-                                }
-                            });
-
-        } catch (Exception ex) {
-            timerContext.stop();
-            throw new OpProcessorException(
-                    "Could not iterate the side-effect instance",
-                    ResponseMessage.build(msg)
-                            .code(ResponseStatusCode.SERVER_ERROR)
-                            .statusMessage(ex.getMessage())
-                            .create());
-        }
-    }
+//    private void gatherSideEffect(final Context context) throws OpProcessorException {
+//        final RequestMessage msg = context.getRequestMessage();
+//        logger.debug(
+//                "Side-effect request {} for in thread {}",
+//                msg.getRequestId(),
+//                Thread.currentThread().getName());
+//
+//        // earlier validation in selection of this op method should free us to cast this without
+//        // worry
+//        final Optional<UUID> sideEffect = msg.optionalArgs(Tokens.ARGS_SIDE_EFFECT);
+//        final Optional<String> sideEffectKey = msg.optionalArgs(Tokens.ARGS_SIDE_EFFECT_KEY);
+//        final Map<String, String> aliases =
+//                (Map<String, String>) msg.optionalArgs(Tokens.ARGS_ALIASES).get();
+//
+//        final GraphManager graphManager = context.getGraphManager();
+//        final String traversalSourceName = aliases.entrySet().iterator().next().getValue();
+//        final TraversalSource g = graphManager.getTraversalSource(traversalSourceName);
+//
+//        final Timer.Context timerContext = traversalOpTimer.time();
+//        try {
+//            final ChannelHandlerContext ctx = context.getChannelHandlerContext();
+//            final Graph graph = g.getGraph();
+//
+//            context.getGremlinExecutor()
+//                    .getExecutorService()
+//                    .submit(
+//                            () -> {
+//                                try {
+//                                    beforeProcessing(graph, context);
+//
+//                                    try {
+//                                        final TraversalSideEffects sideEffects =
+//                                                cache.getIfPresent(sideEffect.get());
+//
+//                                        if (null == sideEffects) {
+//                                            final String errorMessage =
+//                                                    String.format(
+//                                                            "Could not find side-effects for %s.",
+//                                                            sideEffect.get());
+//                                            logger.warn(errorMessage);
+//                                            ctx.writeAndFlush(
+//                                                    ResponseMessage.build(msg)
+//                                                            .code(ResponseStatusCode.SERVER_ERROR)
+//                                                            .statusMessage(errorMessage)
+//                                                            .create());
+//                                            onError(graph, context);
+//                                            return;
+//                                        }
+//
+//                                        if (!sideEffects.exists(sideEffectKey.get())) {
+//                                            final String errorMessage =
+//                                                    String.format(
+//                                                            "Could not find side-effect key for %s"
+//                                                                    + " in %s.",
+//                                                            sideEffectKey.get(), sideEffect.get());
+//                                            logger.warn(errorMessage);
+//                                            ctx.writeAndFlush(
+//                                                    ResponseMessage.build(msg)
+//                                                            .code(ResponseStatusCode.SERVER_ERROR)
+//                                                            .statusMessage(errorMessage)
+//                                                            .create());
+//                                            onError(graph, context);
+//                                            return;
+//                                        }
+//
+//                                        handleIterator(
+//                                                context,
+//                                                new SideEffectIterator(
+//                                                        sideEffects.get(sideEffectKey.get()),
+//                                                        sideEffectKey.get()));
+//                                    } catch (Exception ex) {
+//                                        logger.warn(
+//                                                String.format(
+//                                                        "Exception processing a side-effect on"
+//                                                                + " iteration for request [%s].",
+//                                                        msg.getRequestId()),
+//                                                ex);
+//                                        ctx.writeAndFlush(
+//                                                ResponseMessage.build(msg)
+//                                                        .code(ResponseStatusCode.SERVER_ERROR)
+//                                                        .statusMessage(ex.getMessage())
+//                                                        .create());
+//                                        onError(graph, context);
+//                                        return;
+//                                    }
+//
+//                                    onSideEffectSuccess(graph, context);
+//                                } catch (Exception ex) {
+//                                    logger.warn(
+//                                            String.format(
+//                                                    "Exception processing a side-effect on request"
+//                                                            + " [%s].",
+//                                                    msg.getRequestId()),
+//                                            ex);
+//                                    ctx.writeAndFlush(
+//                                            ResponseMessage.build(msg)
+//                                                    .code(ResponseStatusCode.SERVER_ERROR)
+//                                                    .statusMessage(ex.getMessage())
+//                                                    .create());
+//                                    onError(graph, context);
+//                                } finally {
+//                                    timerContext.stop();
+//                                }
+//                            });
+//
+//        } catch (Exception ex) {
+//            timerContext.stop();
+//            throw new OpProcessorException(
+//                    "Could not iterate the side-effect instance",
+//                    ResponseMessage.build(msg)
+//                            .code(ResponseStatusCode.SERVER_ERROR)
+//                            .statusMessage(ex.getMessage())
+//                            .create());
+//        }
+//    }
 
     private void iterateBytecodeTraversal(final Context context)
             throws OpProcessorException, Exception {
@@ -548,10 +547,10 @@ public abstract class AbstractMixedTraversalOpProcessor extends AbstractOpProces
         // deserialized Bytecode object.
         final Object bytecodeObj = msg.getArgs().get(Tokens.ARGS_GREMLIN);
         final long timeout =
-                msg.getArgs().containsKey(Tokens.ARGS_SCRIPT_EVAL_TIMEOUT)
+                msg.getArgs().containsKey(Tokens.ARGS_EVAL_TIMEOUT)
                         ? Long.parseLong(
-                                msg.getArgs().get(Tokens.ARGS_SCRIPT_EVAL_TIMEOUT).toString())
-                        : context.getSettings().scriptEvaluationTimeout;
+                                msg.getArgs().get(Tokens.ARGS_EVAL_TIMEOUT).toString())
+                        : context.getSettings().evaluationTimeout;
         final Bytecode bytecode =
                 bytecodeObj instanceof DfsRequest
                         ? Bytecode.class.cast(((DfsRequest) bytecodeObj).getBytecode())
@@ -722,22 +721,22 @@ public abstract class AbstractMixedTraversalOpProcessor extends AbstractOpProces
             graph.tx().rollback();
     }
 
-    @Override
+//    @Override
     protected Map<String, Object> generateMetaData(
             final ChannelHandlerContext ctx,
             final RequestMessage msg,
             final ResponseStatusCode code,
             final Iterator itty) {
         Map<String, Object> metaData = Collections.emptyMap();
-        if (itty instanceof SideEffectIterator) {
-            final SideEffectIterator traversalIterator = (SideEffectIterator) itty;
-            final String key = traversalIterator.getSideEffectKey();
-            if (key != null) {
-                metaData = new HashMap<>();
-                metaData.put(Tokens.ARGS_SIDE_EFFECT_KEY, key);
-                metaData.put(Tokens.ARGS_AGGREGATE_TO, traversalIterator.getSideEffectAggregator());
-            }
-        }
+//        if (itty instanceof SideEffectIterator) {
+//            final SideEffectIterator traversalIterator = (SideEffectIterator) itty;
+//            final String key = traversalIterator.getSideEffectKey();
+//            if (key != null) {
+//                metaData = new HashMap<>();
+//                metaData.put(Tokens.ARGS_SIDE_EFFECT_KEY, key);
+//                metaData.put(Tokens.ARGS_AGGREGATE_TO, traversalIterator.getSideEffectAggregator());
+//            }
+//        }
 
         return metaData;
     }
@@ -831,7 +830,7 @@ public abstract class AbstractMixedTraversalOpProcessor extends AbstractOpProces
                     try {
                         frame =
                                 makeFrame(
-                                        ctx,
+                                        context,
                                         msg,
                                         serializer,
                                         useBinary,

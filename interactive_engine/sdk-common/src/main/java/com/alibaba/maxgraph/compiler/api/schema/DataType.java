@@ -19,8 +19,8 @@ import com.alibaba.maxgraph.proto.DataTypePb;
 import com.alibaba.maxgraph.sdkcommon.meta.InternalDataType;
 import com.google.common.collect.Lists;
 
-import org.apache.commons.lang.math.RandomUtils;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Date;
@@ -211,39 +211,45 @@ public enum DataType {
     public Object getRandomValue() {
         switch (this) {
             case BOOL:
-                return RandomUtils.nextBoolean();
+                return RandomUtils.nextInt(0, 2) == 0 ? false : true;
             case CHAR:
-                return (char) Math.abs(RandomUtils.nextInt()) % 127;
+                return (char) Math.abs(RandomUtils.nextInt(Integer.MIN_VALUE, Integer.MAX_VALUE)) % 127;
             case DATE:
                 return new Date().toString();
             case SHORT:
-                return (short) RandomUtils.nextInt();
+                return (short) RandomUtils.nextInt(Integer.MIN_VALUE, Integer.MAX_VALUE);
             case INT:
-                return RandomUtils.nextInt();
+                return RandomUtils.nextInt(Integer.MIN_VALUE, Integer.MAX_VALUE);
             case LONG:
-                return RandomUtils.nextLong();
+                return RandomUtils.nextLong(Long.MIN_VALUE, Long.MAX_VALUE);
             case FLOAT:
-                return RandomUtils.nextFloat();
+                return RandomUtils.nextFloat(Float.MIN_VALUE, Float.MAX_VALUE);
             case DOUBLE:
-                return RandomUtils.nextDouble();
+                return RandomUtils.nextDouble(Double.MIN_VALUE, Double.MAX_VALUE);
             case STRING:
                 return RandomStringUtils.randomAlphanumeric(64);
             case BYTES:
                 return RandomStringUtils.random(64).getBytes();
             case INT_LIST:
                 return Lists.newArrayList(
-                        RandomUtils.nextInt(), RandomUtils.nextInt(), RandomUtils.nextInt());
+                        RandomUtils.nextInt(Integer.MIN_VALUE, Integer.MAX_VALUE),
+                        RandomUtils.nextInt(Integer.MIN_VALUE, Integer.MAX_VALUE),
+                        RandomUtils.nextInt(Integer.MIN_VALUE, Integer.MAX_VALUE));
             case LONG_LIST:
                 return Lists.newArrayList(
-                        RandomUtils.nextLong(), RandomUtils.nextLong(), RandomUtils.nextLong());
+                        RandomUtils.nextLong(Long.MIN_VALUE, Long.MAX_VALUE),
+                        RandomUtils.nextLong(Long.MIN_VALUE, Long.MAX_VALUE),
+                        RandomUtils.nextLong(Long.MIN_VALUE, Long.MAX_VALUE));
             case FLOAT_LIST:
                 return Lists.newArrayList(
-                        RandomUtils.nextFloat(), RandomUtils.nextFloat(), RandomUtils.nextFloat());
+                        RandomUtils.nextFloat(Float.MIN_VALUE, Float.MAX_VALUE),
+                        RandomUtils.nextFloat(Float.MIN_VALUE, Float.MAX_VALUE),
+                        RandomUtils.nextFloat(Float.MIN_VALUE, Float.MAX_VALUE));
             case DOUBLE_LIST:
                 return Lists.newArrayList(
-                        RandomUtils.nextDouble(),
-                        RandomUtils.nextDouble(),
-                        RandomUtils.nextDouble());
+                        RandomUtils.nextDouble(Double.MIN_VALUE, Double.MAX_VALUE),
+                        RandomUtils.nextDouble(Double.MIN_VALUE, Double.MAX_VALUE),
+                        RandomUtils.nextDouble(Double.MIN_VALUE, Double.MAX_VALUE));
             case STRING_LIST:
                 return Lists.newArrayList(
                         RandomStringUtils.randomAlphanumeric(64),

@@ -74,9 +74,4 @@ public class GraphTraversalStrategies extends DefaultTraversalStrategies {
             strategies.add(priority, toAdd);
         }
     }
-
-    @Override
-    public void applyStrategies(final Traversal.Admin<?, ?> traversal) {
-        strategies.forEach(s -> s.apply(traversal));
-    }
 }

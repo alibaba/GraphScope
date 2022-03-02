@@ -15,8 +15,8 @@
  */
 package com.alibaba.graphscope.gaia;
 
-import org.apache.commons.configuration.BaseConfiguration;
-import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration2.BaseConfiguration;
+import org.apache.commons.configuration2.Configuration;
 
 import java.util.ArrayList;
 import java.util.Iterator;
