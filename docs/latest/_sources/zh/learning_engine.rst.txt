@@ -189,7 +189,7 @@ GCN模型继承自基本的学习模型类 ``LearningBasedModel``，只需要重
 
 接下来，首先使用特征编码器来编码原始特征。这里我们使用 ``IdentityEncoder``，即返回自身即可，因为
 Cora的特征已经是处理过的向量格式了。对于既有离散特征由于连续特征的情况，可以使用 ``WideNDeepEncoder``。
-更多encoder请参考 `feature encoder <https://github.com/alibaba/graph-learn/blob/master/graphlearn/python/model/tf/encoders/feature_encoder.py>`_。
+更多encoder请参考 `feature encoder <https://github.com/alibaba/graph-learn/blob/graphscope/graphlearn/python/model/tf/encoders/feature_encoder.py>`_。
 然后用 ``GCNConv`` 层构建图编码器，GCN每个节点采样全部邻居，邻居以稀疏格式组织，所以这里使用
 ``SparseEgoGraphEncoder``, 邻居对齐的模型可以参考GraphSAGE的实现。
 
@@ -258,7 +258,7 @@ Cora的特征已经是处理过的向量格式了。对于既有离散特征由�
        g.init(server_id=0, server_count=1, tracker='../../data/')
        train(config, g)
 
-这样就完成了一个GCN模型的编写。完整代码请参考 `GCN example <https://github.com/alibaba/graph-learn/tree/master/examples/tf/gcn>`_ 目录。
+这样就完成了一个GCN模型的编写。完整代码请参考 `GCN example <https://github.com/alibaba/graph-learn/tree/graphscope/examples/tf/gcn>`_ 目录。
 
 我们实现了GCN, GAT, GraphSage, DeepWalk, LINE, TransE, Bipartite GraphSage,
 sample-based GCN and GAT等模型，你可以参考相似的模型代码做为开始。

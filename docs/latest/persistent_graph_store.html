@@ -738,6 +738,15 @@ For an edge type, the mapping info should includes 1) label of the edge type, 2)
 </tbody>
 </table>
 <p>After data building completed, you can find the output files in the <cite>output.path</cite> of HDFS. The output files includes a meta file named <cite>META</cite>, an empty file named <cite>_SUCCESS</cite>, and some data files that one for each partition named in the pattern of <cite>part-r-xxxxx.sst</cite>. The layout of the output directory should look like:</p>
+<div class="highlight-plain-text notranslate"><div class="highlight"><pre><span></span>/tmp/data_output
+  |- META
+  |- _SUCCESS
+  |- part-r-00000.sst
+  |- part-r-00001.sst
+  |- part-r-00002.sst
+  ...
+</pre></div>
+</div>
 </div>
 <div class="section" id="loading-graph-partitions">
 <h4>2. Loading graph partitions<a class="headerlink" href="#loading-graph-partitions" title="Permalink to this headline"></a></h4>
@@ -816,6 +825,26 @@ For an edge type, the mapping info should includes 1) label of the edge type, 2)
             
               
                 <dd><a href="../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.11.0/index.html">v0.11.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.10.1/index.html">v0.10.1</a></dd>
               
             
 

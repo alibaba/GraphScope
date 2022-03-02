@@ -251,8 +251,8 @@ will be added as properties. If it equals to a empty list <code class="docutils 
 </div>
 <p>This will load an edge which label is <code class="docutils literal notranslate"><span class="pre">_e</span></code> (the default value), its source vertex and destination vertex will be <code class="docutils literal notranslate"><span class="pre">person</span></code>, using the <strong>first column</strong> as the source vertex ID, the <strong>second column</strong> as the destination vertex ID, the others as properties.</p>
 <p>Similar to vertices, we can use parameter <cite>label</cite> to assign label name and <cite>properties</cite> to select properties.</p>
-<p><code class="docutils literal notranslate"><span class="pre">label</span></code>: The label name of the edges, default to <code class="docutils literal notranslate"><span class="pre">_e</span></code>. (It’s recommended to use a meaningful label name.)
-<code class="docutils literal notranslate"><span class="pre">properties</span></code>: A list of properties, default to <a href="#id3"><span class="problematic" id="id4">``</span></a>None``(add all columns as properties).</p>
+<p><code class="docutils literal notranslate"><span class="pre">label</span></code>: The label name of the edges, default to <code class="docutils literal notranslate"><span class="pre">_e</span></code> . (It’s recommended to use a meaningful label name.)
+<code class="docutils literal notranslate"><span class="pre">properties</span></code>: A list of properties, default to <code class="docutils literal notranslate"><span class="pre">None</span></code> (add all columns as properties).</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">graph</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
 <span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_vertices</span><span class="p">(</span><span class="s1">&#39;/home/ldbc_sample/person_0_0.csv&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;person&#39;</span><span class="p">)</span>
 <span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_edges</span><span class="p">(</span><span class="s1">&#39;/home/ldbc_sample/person_knows_person_0_0.csv&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;knows&#39;</span><span class="p">,</span> <span class="n">src_label</span><span class="o">=</span><span class="s1">&#39;person&#39;</span><span class="p">,</span> <span class="n">dst_label</span><span class="o">=</span><span class="s1">&#39;person&#39;</span><span class="p">)</span>
@@ -479,6 +479,26 @@ The only methods user need to override is <code class="docutils literal notransl
             
               
                 <dd><a href="../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.11.0/index.html">v0.11.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.10.1/index.html">v0.10.1</a></dd>
               
             
 

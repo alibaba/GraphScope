@@ -290,7 +290,7 @@ node_table, edge_table_with_self_loop, train_table, val_table and test_table。
 <h3>模型<a class="headerlink" href="#id8" title="Permalink to this headline"></a></h3>
 <p>接下来，首先使用特征编码器来编码原始特征。这里我们使用 <code class="docutils literal notranslate"><span class="pre">IdentityEncoder</span></code>，即返回自身即可，因为
 Cora的特征已经是处理过的向量格式了。对于既有离散特征由于连续特征的情况，可以使用 <code class="docutils literal notranslate"><span class="pre">WideNDeepEncoder</span></code>。
-更多encoder请参考 <a class="reference external" href="https://github.com/alibaba/graph-learn/blob/master/graphlearn/python/model/tf/encoders/feature_encoder.py">feature encoder</a>。
+更多encoder请参考 <a class="reference external" href="https://github.com/alibaba/graph-learn/blob/graphscope/graphlearn/python/model/tf/encoders/feature_encoder.py">feature encoder</a>。
 然后用 <code class="docutils literal notranslate"><span class="pre">GCNConv</span></code> 层构建图编码器，GCN每个节点采样全部邻居，邻居以稀疏格式组织，所以这里使用
 <code class="docutils literal notranslate"><span class="pre">SparseEgoGraphEncoder</span></code>, 邻居对齐的模型可以参考GraphSAGE的实现。</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">GCN</span><span class="p">(</span><span class="n">gle</span><span class="o">.</span><span class="n">LearningBasedModel</span><span class="p">):</span>
@@ -353,7 +353,7 @@ Cora的特征已经是处理过的向量格式了。对于既有离散特征由�
     <span class="n">train</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">g</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>这样就完成了一个GCN模型的编写。完整代码请参考 <a class="reference external" href="https://github.com/alibaba/graph-learn/tree/master/examples/tf/gcn">GCN example</a> 目录。</p>
+<p>这样就完成了一个GCN模型的编写。完整代码请参考 <a class="reference external" href="https://github.com/alibaba/graph-learn/tree/graphscope/examples/tf/gcn">GCN example</a> 目录。</p>
 <p>我们实现了GCN, GAT, GraphSage, DeepWalk, LINE, TransE, Bipartite GraphSage,
 sample-based GCN and GAT等模型，你可以参考相似的模型代码做为开始。</p>
 </div>
@@ -416,6 +416,26 @@ sample-based GCN and GAT等模型，你可以参考相似的模型代码做为�
             
               
                 <dd><a href="../../zh/index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.11.0/zh/index.html">v0.11.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.10.1/zh/index.html">v0.10.1</a></dd>
               
             
 

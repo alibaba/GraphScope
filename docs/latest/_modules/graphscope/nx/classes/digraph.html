@@ -149,21 +149,21 @@
 <span class="kn">from</span> <span class="nn">networkx.classes.digraph</span> <span class="kn">import</span> <span class="n">DiGraph</span> <span class="k">as</span> <span class="n">RefDiGraph</span>
 <span class="kn">from</span> <span class="nn">networkx.classes.reportviews</span> <span class="kn">import</span> <span class="n">DiDegreeView</span>
 <span class="kn">from</span> <span class="nn">networkx.classes.reportviews</span> <span class="kn">import</span> <span class="n">InDegreeView</span>
-<span class="kn">from</span> <span class="nn">networkx.classes.reportviews</span> <span class="kn">import</span> <span class="n">InEdgeView</span>
 <span class="kn">from</span> <span class="nn">networkx.classes.reportviews</span> <span class="kn">import</span> <span class="n">OutDegreeView</span>
-<span class="kn">from</span> <span class="nn">networkx.classes.reportviews</span> <span class="kn">import</span> <span class="n">OutEdgeView</span>
 
+<span class="kn">from</span> <span class="nn">graphscope.client.session</span> <span class="kn">import</span> <span class="n">get_session_by_id</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework</span> <span class="kn">import</span> <span class="n">dag_utils</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.dag_utils</span> <span class="kn">import</span> <span class="n">copy_graph</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.errors</span> <span class="kn">import</span> <span class="n">check_argument</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.graph_schema</span> <span class="kn">import</span> <span class="n">GraphSchema</span>
 <span class="kn">from</span> <span class="nn">graphscope.nx</span> <span class="kn">import</span> <span class="n">NetworkXError</span>
 <span class="kn">from</span> <span class="nn">graphscope.nx.classes.graph</span> <span class="kn">import</span> <span class="n">Graph</span>
+<span class="kn">from</span> <span class="nn">graphscope.nx.classes.reportviews</span> <span class="kn">import</span> <span class="n">InEdgeView</span>
+<span class="kn">from</span> <span class="nn">graphscope.nx.classes.reportviews</span> <span class="kn">import</span> <span class="n">OutEdgeView</span>
 <span class="kn">from</span> <span class="nn">graphscope.nx.convert</span> <span class="kn">import</span> <span class="n">to_networkx_graph</span>
 <span class="kn">from</span> <span class="nn">graphscope.nx.utils.compat</span> <span class="kn">import</span> <span class="n">patch_docstring</span>
 <span class="kn">from</span> <span class="nn">graphscope.nx.utils.misc</span> <span class="kn">import</span> <span class="n">clear_cache</span>
 <span class="kn">from</span> <span class="nn">graphscope.nx.utils.misc</span> <span class="kn">import</span> <span class="n">empty_graph_in_engine</span>
-<span class="kn">from</span> <span class="nn">graphscope.proto</span> <span class="kn">import</span> <span class="n">graph_def_pb2</span>
 <span class="kn">from</span> <span class="nn">graphscope.proto</span> <span class="kn">import</span> <span class="n">types_pb2</span>
 
 
@@ -365,8 +365,6 @@
 
 <div class="viewcode-block" id="DiGraph.__init__"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.DiGraph.__init__">[docs]</a>    <span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">Graph</span><span class="o">.</span><span class="fm">__init__</span><span class="p">)</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">incoming_graph_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">default_label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">attr</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_try_to_get_default_session</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">graph_attr_dict_factory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_attr_dict_factory</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">node_dict_factory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_dict_factory</span>
@@ -398,7 +396,12 @@
         <span class="k">if</span> <span class="n">incoming_graph_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_gs_graph</span><span class="p">(</span><span class="n">incoming_graph_data</span><span class="p">):</span>
             <span class="c1"># convert from gs graph always use distributed mode</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_distributed</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="n">get_session_by_id</span><span class="p">(</span><span class="n">incoming_graph_data</span><span class="o">.</span><span class="n">session_id</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_default_label</span> <span class="o">=</span> <span class="n">default_label</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_try_to_get_default_session</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_gs_graph</span><span class="p">(</span><span class="n">incoming_graph_data</span><span class="p">)</span> <span class="ow">and</span> <span class="n">create_empty_in_engine</span><span class="p">:</span>
             <span class="n">graph_def</span> <span class="o">=</span> <span class="n">empty_graph_in_engine</span><span class="p">(</span>
@@ -683,6 +686,26 @@
             
               
                 <dd><a href="../../../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../../v0.11.0/index.html">v0.11.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../../v0.10.1/index.html">v0.10.1</a></dd>
               
             
 
