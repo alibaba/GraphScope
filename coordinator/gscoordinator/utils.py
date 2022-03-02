@@ -439,7 +439,7 @@ def compile_graph_frame(workspace: str, library_name, attr: dict, engine_config:
     compile_env = os.environ.copy()
     compile_env["USER_JAR_PATH"] = java_class_path
     compile_env["GLOG_v"] = "10"
-    compile_env["GRAPE_JVM_OPTS"] = "-Djava.library.path={}/lib -Djava.class.path={}".format(GRAPHSCOPE_HOME, java_class_path)
+    compile_env["GRAPE_JVM_OPTS"] = "\"-Djava.library.path={}/lib -Djava.class.path={}\"".format(GRAPHSCOPE_HOME, java_class_path)
     logger.info("Building graph library ...")
     logger.info("Env: {}".format(compile_env.items()))
     cmake_process = subprocess.Popen(
