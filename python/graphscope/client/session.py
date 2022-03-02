@@ -1283,7 +1283,7 @@ class Session(object):
             raise KeyError("Expect a non-empty file.")
         #the uploaded file may be placed in the same directory
         garfile.append("{}".format(resource_name.split("/")[-1]), bytes)
-        self._grpc_client.add_lib(garfile)
+        self._grpc_client.add_lib(garfile.read_bytes().getvalue())
 
 
 

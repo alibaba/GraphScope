@@ -23,9 +23,9 @@ fi
 if [[ "${RUNTIME_LLVM4JNI_OUTPUT}"x != x ]];
 then
     echo "find env RUNTIME_LLVM4JNI_OUTPUT, append to init java class path"
-    class_path=${RUNTIME_LLVM4JNI_OUTPUT}:${GRAPHSCOPE_HOME}/lib/grape-runtime-0.1-shaded.jar
+    class_path=${RUNTIME_LLVM4JNI_OUTPUT}:${GRAPHSCOPE_HOME}/lib/grape-runtime-0.1-shaded.jar:${GRAPHSCOPE_HOME}/lib/giraph-on-grape-shaded.jar:~/GraphScope/analytical_engine/java/grape-demo/target/grape-demo-0.1-shaded.jar
 else 
-    class_path=${GRAPHSCOPE_HOME}/lib/grape-runtime-0.1-shaded.jar:
+    class_path=${GRAPHSCOPE_HOME}/lib/grape-runtime-0.1-shaded.jar:${GRAPHSCOPE_HOME}/lib/giraph-on-grape-shaded.jar:~/GraphScope/analytical_engine/java/grape-demo/target/grape-demo-0.1-shaded.jar
 fi
 
 export GRAPE_JVM_OPTS="-Dcom.alibaba.fastffi.rvBuffer=2147483648 -XX:+StartAttachListener -XX:+PreserveFramePointer \
@@ -37,7 +37,7 @@ export GRAPE_JVM_OPTS="-Dcom.alibaba.fastffi.rvBuffer=2147483648 -XX:+StartAttac
 
 export MAX_SUPER_STEP=10
 export MESSAGE_MANAGER_TYPE=mpi
-export USER_JAR_PATH=/home/graphscope/gs/analytical_engine/java/giraph-on-grape/target/giraph-on-grape-shaded.jar
+export USER_JAR_PATH=~/GraphScope/analytical_engine/java/grape-demo/target/grape-demo-0.1-shaded.jar
 export OUT_MESSAGE_CACHE_TYPE=ByteBuf
 export MESSAGE_STORE_TYPE=primitive
 export LOADING_THREAD_NUM=1

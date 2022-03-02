@@ -238,7 +238,7 @@ class EdgeSubLabel(object):
         )
         chunk.attr[types_pb2.SRC_VID].CopyFrom(utils.s_to_attr(str(self.src_field)))
         chunk.attr[types_pb2.DST_VID].CopyFrom(utils.s_to_attr(str(self.dst_field)))
-        if isinstance(self._eformat):
+        if isinstance(self._eformat, str):
             chunk.attr[types_pb2.EFORMAT].CopyFrom(utils.s_to_attr(self._eformat))
         else:
             chunk.attr[types_pb2.EFORMAT].CopyFrom(utils.s_to_attr(format_enum_to_str(self._eformat)))

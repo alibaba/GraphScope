@@ -35,5 +35,5 @@ service CoordinatorService {
   rpc CloseSession(CloseSessionRequest) returns (CloseSessionResponse);
 
   // Distribute the specified lib to servers
-  rpc AddLib(AddLibRequest) return (AddLibResponse);
+  rpc AddLib(AddLibRequest) returns (AddLibResponse);
 }
