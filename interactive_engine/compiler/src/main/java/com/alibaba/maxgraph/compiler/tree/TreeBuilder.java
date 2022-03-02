@@ -438,7 +438,7 @@ public class TreeBuilder {
                     return visitBranchStep((BranchStep) step, prev);
                 case VertexWithByStep:
                     return visitVertexWithByStep((VertexWithByStep) step, prev);
-                case StoreStep:
+                case AggregateLocalStep:
                     return visitStoreStep((AggregateLocalStep) step, prev);
                 case LoopsStep:
                     return visitLoopsStep((LoopsStep) step, prev);

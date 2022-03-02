@@ -190,9 +190,7 @@ public abstract class AbstractMixedOpProcessor extends StandardOpProcessor {
                                         t);
                                 ctx.writeAndFlush(
                                         ResponseMessage.build(msg)
-                                                .code(
-                                                        ResponseStatusCode
-                                                                .SERVER_ERROR_EVALUATION)
+                                                .code(ResponseStatusCode.SERVER_ERROR_EVALUATION)
                                                 .statusMessage(t.getMessage())
                                                 .create());
                             }
@@ -322,9 +320,7 @@ public abstract class AbstractMixedOpProcessor extends StandardOpProcessor {
                                 logger.warn("query " + script + " fail.", e);
                                 ctx.writeAndFlush(
                                         ResponseMessage.build(msg)
-                                                .code(
-                                                        ResponseStatusCode
-                                                                .SERVER_ERROR_EVALUATION)
+                                                .code(ResponseStatusCode.SERVER_ERROR_EVALUATION)
                                                 .statusMessage(e.getMessage())
                                                 .create());
                             }

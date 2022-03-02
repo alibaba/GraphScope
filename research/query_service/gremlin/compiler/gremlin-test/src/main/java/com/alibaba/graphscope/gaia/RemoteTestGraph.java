@@ -1029,7 +1029,8 @@ public class RemoteTestGraph extends DummyGraph {
     @Override
     public GraphTraversalSource traversal() {
         GraphTraversalSource graphTraversalSource =
-                AnonymousTraversalSource.traversal().withRemote(this.remoteGremlinConnection);;
+                AnonymousTraversalSource.traversal().withRemote(this.remoteGremlinConnection);
+        ;
         TraversalStrategies strategies = graphTraversalSource.getStrategies();
         strategies.removeStrategies(ProfileStrategy.class, FilterRankingStrategy.class);
         return graphTraversalSource;

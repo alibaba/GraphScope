@@ -84,8 +84,7 @@ public class MxGraphStepStrategy extends AbstractTraversalStrategy<ProviderOptim
                 Set<String> keys = new HashSet<>();
                 comparators.forEach(
                         c -> {
-                            String propertyKey =
-                                    ((ValueTraversal) c.getLeft()).getPropertyKey();
+                            String propertyKey = ((ValueTraversal) c.getLeft()).getPropertyKey();
                             keys.add(propertyKey);
                         });
 

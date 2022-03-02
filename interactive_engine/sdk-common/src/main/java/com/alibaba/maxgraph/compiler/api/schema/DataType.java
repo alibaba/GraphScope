@@ -213,7 +213,8 @@ public enum DataType {
             case BOOL:
                 return RandomUtils.nextInt(0, 2) == 0 ? false : true;
             case CHAR:
-                return (char) Math.abs(RandomUtils.nextInt(Integer.MIN_VALUE, Integer.MAX_VALUE)) % 127;
+                return (char) Math.abs(RandomUtils.nextInt(Integer.MIN_VALUE, Integer.MAX_VALUE))
+                        % 127;
             case DATE:
                 return new Date().toString();
             case SHORT:

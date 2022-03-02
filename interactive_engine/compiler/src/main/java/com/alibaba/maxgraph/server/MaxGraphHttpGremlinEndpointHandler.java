@@ -255,8 +255,7 @@ public class MaxGraphHttpGremlinEndpointHandler extends HttpGremlinEndpointHandl
             if (bindingsNode != null)
                 bindingsNode
                         .fields()
-                        .forEachRemaining(
-                                kv -> bindings.put(kv.getKey(), kv.getValue()));
+                        .forEachRemaining(kv -> bindings.put(kv.getKey(), kv.getValue()));
 
             final JsonNode aliasesNode = body.get(Tokens.ARGS_ALIASES);
             if (aliasesNode != null && !aliasesNode.isObject())

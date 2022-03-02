@@ -164,9 +164,7 @@ public abstract class AbstractGraphOpProcessor extends StandardOpProcessor {
                                 logger.warn(errorMessage);
                                 ctx.writeAndFlush(
                                         ResponseMessage.build(msg)
-                                                .code(
-                                                        ResponseStatusCode
-                                                                .SERVER_ERROR_EVALUATION)
+                                                .code(ResponseStatusCode.SERVER_ERROR_EVALUATION)
                                                 .statusMessage(errorMessage)
                                                 .statusAttributeException(t)
                                                 .create());
@@ -180,9 +178,7 @@ public abstract class AbstractGraphOpProcessor extends StandardOpProcessor {
                                         t);
                                 ctx.writeAndFlush(
                                         ResponseMessage.build(msg)
-                                                .code(
-                                                        ResponseStatusCode
-                                                                .SERVER_ERROR_EVALUATION)
+                                                .code(ResponseStatusCode.SERVER_ERROR_EVALUATION)
                                                 .statusMessage(errorMessage)
                                                 .statusAttributeException(t)
                                                 .create());
