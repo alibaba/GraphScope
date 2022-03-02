@@ -109,8 +109,10 @@ public class FileLoader implements LoaderBase {
     private Class<? extends Writable> giraphEDataClass;
     private URLClassLoader classLoader;
 
-    public static synchronized FileLoader create(URLClassLoader cl) {
-        return new FileLoader(LOADER_ID.getAndAdd(1), cl);
+    public static FileLoader create(URLClassLoader cl) {
+        synchronized(FileLoader.class){
+            return new FileLoader(LOADER_ID.getAndAdd(1), cl);
+        }
     }
 
     public FileLoader(int id, URLClassLoader classLoader) {
