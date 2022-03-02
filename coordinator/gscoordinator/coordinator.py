@@ -21,6 +21,7 @@
 import argparse
 import atexit
 import datetime
+from io import BytesIO
 import json
 import logging
 import os
@@ -36,6 +37,7 @@ import traceback
 import urllib.parse
 import urllib.request
 from concurrent import futures
+import zipfile
 
 import grpc
 from packaging import version
@@ -95,6 +97,7 @@ from gscoordinator.version import __version__
 # endpoint of prelaunch analytical engine
 GS_DEBUG_ENDPOINT = os.environ.get("GS_DEBUG_ENDPOINT", "")
 
+RESOURCE_DIR_NAME = "resource"
 # 2 GB
 GS_GRPC_MAX_MESSAGE_LENGTH = 2 * 1024 * 1024 * 1024 - 1
 
@@ -246,6 +249,7 @@ class CoordinatorServiceServicer(
         self._udf_app_workspace = os.path.join(
             WORKSPACE, self._instance_id, self._session_id
         )
+        self._resource_dir = os.path.join(WORKSPACE, self._instance_id, self._session_id, RESOURCE_DIR_NAME)
         self._launcher.set_session_workspace(self._session_id)
 
         # Session connected, fetch logs via gRPC.
@@ -713,9 +717,19 @@ class CoordinatorServiceServicer(
             context.set_details(
                 f"Session handle not matched, {request.session_id} versus {self._session_id}"
             )
-        lib_path = request.lib_path
-        logger.info("Coordinator recieved add lib request {}".format(lib_path))
-        self._launcher.distribute_file(lib_path)
+        os.makedirs(self._resource_dir, exist_ok=True)
+        gar = request.gar
+        fp = BytesIO(gar)
+        filename = None
+        with zipfile.ZipFile(fp, "r") as zip_ref:
+            zip_ref.extractall(self._resource_dir)
+            logger.info("Coordinator recieved add lib request contains file {}".format(zip_ref.namelist))
+            if len(zip_ref.namelist) != 1:
+                raise RuntimeError("Expect only one resource in one gar")
+            filename = zip_ref.namelist[0]
+        full_filename = os.path.join(self._resource_dir, filename)
+        self._launcher.distribute_file(full_filename)
+        logger.info("Successfully distributed {}".format(full_filename))
         return message_pb2.AddLibResponse()
 
     def CloseSession(self, request, context):

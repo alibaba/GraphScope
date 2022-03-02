@@ -65,6 +65,7 @@ from graphscope.proto import graph_def_pb2
 from graphscope.proto import message_pb2
 from graphscope.proto import op_def_pb2
 from graphscope.proto import types_pb2
+from graphscope.analytical.udf.utils import InMemoryZip
 
 DEFAULT_CONFIG_FILE = os.environ.get(
     "GS_CONFIG_PATH", os.path.expanduser("~/.graphscope/session.json")
@@ -1268,7 +1269,21 @@ class Session(object):
         add the specified resource to the k8s cluster from client machine.
         """
         logger.info("client: adding lib {}".format(resource_name))
-        self._grpc_client.add_lib(resource_name)
+        if not os.path.exists(resource_name):
+            raise FileNotFoundError("resource file not found in {}.".format(resource_name))
+        if not os.path.isfile(resource_name):
+            raise RuntimeError(
+                "Provided resource {} can not be found".format(resource_name)
+            )
+        # pack into a gar file
+        garfile = InMemoryZip()
+        resource_reader = open(resource_name, "rb")
+        bytes = resource_reader.read()
+        if len(bytes) <= 0:
+            raise KeyError("Expect a non-empty file.")
+        #the uploaded file may be placed in the same directory
+        garfile.append("{}".format(resource_name.split("/")[-1]), bytes)
+        self._grpc_client.add_lib(garfile)
 
 
 
