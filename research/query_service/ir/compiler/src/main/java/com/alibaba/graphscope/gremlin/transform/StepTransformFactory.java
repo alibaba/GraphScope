@@ -393,7 +393,7 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
                 List<Step> binderSteps = new ArrayList<>();
                 Optional<String> startTag = Optional.empty();
                 Optional<String> endTag = Optional.empty();
-                boolean isAnti = false;
+                FfiJoinKind joinKind = FfiJoinKind.Inner;
                 for (Object o : traversal.getSteps()) {
                     Step s = (Step) o;
                     if (s instanceof MatchStep.MatchStartStep) { // match(__.as("a")...)
@@ -406,7 +406,7 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
                         if (!endTag.isPresent() && matchKey.isPresent()) {
                             endTag = matchKey;
                         }
-                    } else if (s instanceof WhereTraversalStep) { // where(...) or not(...)
+                    } else if (s instanceof WhereTraversalStep && binderSteps.isEmpty()) { // where(__.as("a")...) or not(...)
                         List<Traversal.Admin> children = ((WhereTraversalStep) s).getLocalChildren();
                         Traversal.Admin whereTraversal = children.isEmpty() ? null : children.get(0);
                         // not(as("a").out().as("b"))
@@ -414,34 +414,33 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
                                 && whereTraversal.getSteps().size() == 1 && whereTraversal.getStartStep() instanceof NotStep) {
                             NotStep notStep = (NotStep) whereTraversal.getStartStep();
                             List<Traversal.Admin> notChildren = notStep.getLocalChildren();
-                            Traversal.Admin notTraversal = (notChildren.isEmpty()) ? null : notChildren.get(0);
-                            if (notTraversal != null) {
-                                for (Object o1 : notTraversal.getSteps()) {
-                                    Step s1 = (Step) o1;
-                                    if (s1 instanceof WhereTraversalStep.WhereStartStep) { // not(__.as("a")...)
-                                        Set<String> scopeKeys;
-                                        if (!startTag.isPresent()
-                                                && !(scopeKeys = ((WhereTraversalStep.WhereStartStep) s1).getScopeKeys()).isEmpty()) {
-                                            startTag = Optional.of(scopeKeys.iterator().next());
-                                        }
-                                    } else if (s1 instanceof WhereTraversalStep.WhereEndStep) { // not(....as("b"))
-                                        Set<String> scopeKeys;
-                                        if (!endTag.isPresent()
-                                                && !(scopeKeys = ((WhereTraversalStep.WhereEndStep) s1).getScopeKeys()).isEmpty()) {
-                                            endTag = Optional.of(scopeKeys.iterator().next());
-                                        }
-                                    } else if (isValidBinderStep(s1)) {
-                                        binderSteps.add(s1);
-                                    } else {
-                                        throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
-                                                s1.getClass() + " is unsupported yet in match");
+                            whereTraversal = (notChildren.isEmpty()) ? null : notChildren.get(0);
+                            joinKind = FfiJoinKind.Anti;
+                        } else { // where(as("a").out().as("b"))
+                            joinKind = FfiJoinKind.Semi;
+                        }
+                        if (whereTraversal != null) {
+                            for (Object o1 : whereTraversal.getSteps()) {
+                                Step s1 = (Step) o1;
+                                if (s1 instanceof WhereTraversalStep.WhereStartStep) { // not(__.as("a")...)
+                                    Set<String> scopeKeys;
+                                    if (!startTag.isPresent()
+                                            && !(scopeKeys = ((WhereTraversalStep.WhereStartStep) s1).getScopeKeys()).isEmpty()) {
+                                        startTag = Optional.of(scopeKeys.iterator().next());
                                     }
+                                } else if (s1 instanceof WhereTraversalStep.WhereEndStep) { // not(....as("b"))
+                                    Set<String> scopeKeys;
+                                    if (!endTag.isPresent()
+                                            && !(scopeKeys = ((WhereTraversalStep.WhereEndStep) s1).getScopeKeys()).isEmpty()) {
+                                        endTag = Optional.of(scopeKeys.iterator().next());
+                                    }
+                                } else if (isValidBinderStep(s1)) {
+                                    binderSteps.add(s1);
+                                } else {
+                                    throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
+                                            s1.getClass() + " is unsupported yet in match");
                                 }
                             }
-                            isAnti = true;
-                        } else { // where(as("a").out().as("b"))
-                            throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
-                                    "semi join is unsupported yet in match");
                         }
                     } else if (isValidBinderStep(s)) {
                         binderSteps.add(s);
@@ -459,7 +458,7 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
                     binderTraversal.asAdmin().addStep(b);
                 });
                 InterOpCollection ops = (new InterOpCollectionBuilder(binderTraversal)).build();
-                sentences.add(new MatchSentence(startTag.get(), endTag.get(), ops, isAnti));
+                sentences.add(new MatchSentence(startTag.get(), endTag.get(), ops, joinKind));
             });
             return sentences;
         }

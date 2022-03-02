@@ -1,17 +1,18 @@
 package com.alibaba.graphscope.common.intermediate;
 
 import com.alibaba.graphscope.common.jna.type.FfiAlias;
+import com.alibaba.graphscope.common.jna.type.FfiJoinKind;
 
 public class MatchSentence {
     private FfiAlias.ByValue startTag;
     private FfiAlias.ByValue endTag;
     private InterOpCollection binders;
-    private boolean isAnti;
+    private FfiJoinKind joinKind;
 
-    public MatchSentence(String startTag, String endTag, InterOpCollection binders, boolean isAnti) {
+    public MatchSentence(String startTag, String endTag, InterOpCollection binders, FfiJoinKind joinKind) {
         this.startTag = ArgUtils.asFfiAlias(startTag, true);
         this.endTag = ArgUtils.asFfiAlias(endTag, true);
-        this.isAnti = isAnti;
+        this.joinKind = joinKind;
         this.binders = binders;
     }
 
@@ -27,7 +28,7 @@ public class MatchSentence {
         return binders;
     }
 
-    public boolean isAnti() {
-        return isAnti;
+    public FfiJoinKind getJoinKind() {
+        return joinKind;
     }
 }

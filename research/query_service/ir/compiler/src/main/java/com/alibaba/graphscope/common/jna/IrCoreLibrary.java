@@ -146,7 +146,7 @@ public interface IrCoreLibrary extends Library {
 
     Pointer initPatternOperator();
 
-    Pointer initPatternSentence(boolean isAnti);
+    Pointer initPatternSentence(FfiJoinKind joinKind);
 
     ResultCode setSentenceStart(Pointer sentence, FfiNameOrId.ByValue tag);
 

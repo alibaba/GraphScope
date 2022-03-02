@@ -406,7 +406,7 @@ public class IrPlan implements Closeable {
                 Pointer ptrMatch = irCoreLib.initPatternOperator();
                 sentences.forEach(s -> {
                     InterOpCollection ops = s.getBinders();
-                    Pointer ptrSentence = irCoreLib.initPatternSentence(s.isAnti());
+                    Pointer ptrSentence = irCoreLib.initPatternSentence(s.getJoinKind());
                     irCoreLib.setSentenceStart(ptrSentence, s.getStartTag().alias);
                     irCoreLib.setSentenceEnd(ptrSentence, s.getEndTag().alias);
                     ops.unmodifiableCollection().forEach(o -> {
