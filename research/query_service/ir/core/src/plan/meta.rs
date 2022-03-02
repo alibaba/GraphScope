@@ -478,18 +478,23 @@ pub struct PlanMeta {
     tag_nodes: BTreeMap<NameOrId, Vec<u32>>,
     /// To ease the processing, tag may be transformed to an internal id.
     /// This maintains the mappings
-    tag_ids: BTreeMap<NameOrId, NameOrId>,
+    tag_ids: BTreeMap<NameOrId, u32>,
     /// To record the current nodes' id in the logical plan. Note that nodes that have operators that
     /// of `As` or `Selection` does not alter curr_node.
     curr_node: CurrNodeOpt,
     /// The maximal tag id that has been assigned, for mapping tag ids.
-    max_tag_id: i32,
-    /// Whether to preprocess the operator.
-    is_preprocess: bool,
+    max_tag_id: u32,
+    /// Whether to preprocess the table name into id.
+    is_table_id: bool,
+    /// Whether to preprocess the column name into id.
+    is_column_id: bool,
+    /// Whether to preprocess the tag name into id.
+    is_tag_id: bool,
     /// Whether to partition the task
     is_partition: bool,
 }
 
+// Some constructors
 impl PlanMeta {
     pub fn new(node_id: u32) -> Self {
         let mut plan_meta = PlanMeta::default();
@@ -498,6 +503,24 @@ impl PlanMeta {
         plan_meta
     }
 
+    pub fn with_store_conf(mut self, is_table_id: bool, is_column_id: bool) -> Self {
+        self.is_table_id = is_table_id;
+        self.is_column_id = is_column_id;
+        self
+    }
+
+    pub fn with_tag_id(mut self) -> Self {
+        self.is_tag_id = true;
+        self
+    }
+
+    pub fn with_partition(mut self) -> Self {
+        self.is_partition = true;
+        self
+    }
+}
+
+impl PlanMeta {
     pub fn curr_node_metas_mut(&mut self) -> NodeMetaOpt {
         match &self.curr_node {
             CurrNodeOpt::Single(node) => NodeMetaOpt::Single(
@@ -586,14 +609,17 @@ impl PlanMeta {
         self.tag_nodes.get(tag).cloned()
     }
 
-    pub fn get_or_set_tag_id(&mut self, tag: NameOrId) -> NameOrId {
+    /// Get the id (with a `true` indicator) of the given tag if it already presents,
+    /// otherwise, set and return the id as `self.max_tag_id` (with a `false` indicator).
+    pub fn get_or_set_tag_id(&mut self, tag: NameOrId) -> (bool, u32) {
         let entry = self.tag_ids.entry(tag);
         match entry {
-            Entry::Occupied(o) => o.into_mut().clone(),
+            Entry::Occupied(o) => (true, *o.get()),
             Entry::Vacant(v) => {
-                let new_tag_id: NameOrId = self.max_tag_id.into();
+                let new_tag_id = self.max_tag_id;
+                v.insert(new_tag_id);
                 self.max_tag_id += 1;
-                v.insert(new_tag_id).clone()
+                (false, new_tag_id)
             }
         }
     }
@@ -617,19 +643,19 @@ impl PlanMeta {
         }
     }
 
-    pub fn is_preprocess(&self) -> bool {
-        self.is_preprocess
+    pub fn is_table_id(&self) -> bool {
+        self.is_table_id
     }
 
-    pub fn set_preprocess(&mut self, is_preprocess: bool) {
-        self.is_preprocess = is_preprocess;
+    pub fn is_column_id(&self) -> bool {
+        self.is_column_id
+    }
+
+    pub fn is_tag_id(&self) -> bool {
+        self.is_tag_id
     }
 
     pub fn is_partition(&self) -> bool {
         self.is_partition
-    }
-
-    pub fn set_partition(&mut self, is_partition: bool) {
-        self.is_partition = is_partition;
     }
 }

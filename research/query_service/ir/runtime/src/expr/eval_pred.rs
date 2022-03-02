@@ -282,7 +282,7 @@ impl EvalPred for Operand {
                                         .unwrap_or(false);
                                 }
                                 PropKey::All => {
-                                    if let Some(_) = elem.details() {
+                                    if elem.details().is_some() {
                                         // TODO(longbin) Do we need to look into the properties?
                                         result = true;
                                     }

@@ -130,7 +130,7 @@ impl From<IrError> for ResultCode {
             IrError::ColumnNotExist(_) => Self::ColumnNotExistError,
             IrError::TableNotExist(_) => Self::TableNotExistError,
             IrError::ParentNodeNotExist(_) => Self::ParentNotFoundError,
-            IrError::MissingDataError(_) => Self::MissingDataError,
+            IrError::MissingData(_) => Self::MissingDataError,
             _ => Self::Unknown,
         }
     }
@@ -501,9 +501,16 @@ pub extern "C" fn set_schema(cstr_json: *const c_char) -> ResultCode {
 /// **must not** process any operation, which includes but not limited to deallocate it.
 /// We have provided  the [`destroy_logical_plan`] api for deallocating the pointer of the logical plan.
 #[no_mangle]
-pub extern "C" fn init_logical_plan(is_preprocess: bool) -> *const c_void {
+pub extern "C" fn init_logical_plan() -> *const c_void {
+    use super::meta::STORE_META;
     let mut plan = Box::new(LogicalPlan::default());
-    plan.meta.set_preprocess(is_preprocess);
+    if let Ok(meta) = STORE_META.read() {
+        if let Some(schema) = &meta.schema {
+            plan.meta = plan
+                .meta
+                .with_store_conf(schema.is_table_id(), schema.is_column_id());
+        }
+    }
     Box::into_raw(plan) as *const c_void
 }
 
@@ -545,8 +552,9 @@ pub extern "C" fn build_physical_plan(
     ptr_plan: *const c_void, num_workers: u32, num_servers: u32,
 ) -> FfiJobBuffer {
     let mut plan = unsafe { Box::from_raw(ptr_plan as *mut LogicalPlan) };
-    plan.meta
-        .set_partition(num_workers > 1 || num_servers > 1);
+    if num_workers > 1 || num_servers > 1 {
+        plan.meta = plan.meta.with_partition();
+    }
     let mut plan_meta = plan.meta.clone();
     let mut builder = JobBuilder::default();
     let build_result = plan.add_job_builder(&mut builder, &mut plan_meta);
@@ -957,15 +965,7 @@ mod join {
     /// To initialize a join operator
     #[no_mangle]
     pub extern "C" fn init_join_operator(join_kind: FfiJoinKind) -> *const c_void {
-        let kind = match join_kind {
-            FfiJoinKind::Inner => 0,
-            FfiJoinKind::LeftOuter => 1,
-            FfiJoinKind::RightOuter => 2,
-            FfiJoinKind::FullOuter => 3,
-            FfiJoinKind::Semi => 4,
-            FfiJoinKind::Anti => 5,
-            FfiJoinKind::Times => 6,
-        };
+        let kind = unsafe { std::mem::transmute(join_kind) };
         let join = Box::new(pb::Join { left_keys: vec![], right_keys: vec![], kind });
         Box::into_raw(join) as *const c_void
     }
@@ -1587,6 +1587,7 @@ mod graph {
     use std::collections::HashMap;
 
     use super::*;
+    use crate::plan::ffi::join::FfiJoinKind;
 
     #[allow(dead_code)]
     #[derive(Copy, Clone)]
@@ -1818,6 +1819,120 @@ mod graph {
     #[no_mangle]
     pub extern "C" fn destroy_pathxpd_operator(ptr: *const c_void) {
         destroy_ptr::<pb::PathExpand>(ptr)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn init_pattern_operator() -> *const c_void {
+        let pattern = Box::new(pb::Pattern { sentences: vec![] });
+
+        Box::into_raw(pattern) as *const c_void
+    }
+
+    #[no_mangle]
+    pub extern "C" fn add_pattern_sentence(
+        ptr_pattern: *const c_void, ptr_sentence: *const c_void,
+    ) -> ResultCode {
+        let mut pattern = unsafe { Box::from_raw(ptr_pattern as *mut pb::Pattern) };
+        let sentence = unsafe { Box::from_raw(ptr_sentence as *mut pb::pattern::Sentence) };
+        pattern
+            .sentences
+            .push(sentence.as_ref().clone());
+        std::mem::forget(pattern);
+
+        ResultCode::Success
+    }
+
+    #[no_mangle]
+    pub extern "C" fn init_pattern_sentence(join_kind: FfiJoinKind) -> *const c_void {
+        let sentence = Box::new(pb::pattern::Sentence {
+            start: None,
+            binders: vec![],
+            end: None,
+            join_kind: unsafe { std::mem::transmute(join_kind) },
+        });
+
+        Box::into_raw(sentence) as *const c_void
+    }
+
+    fn set_sentence_tag(ptr_sentence: *const c_void, tag: FfiNameOrId, is_start: bool) -> ResultCode {
+        let mut sentence = unsafe { Box::from_raw(ptr_sentence as *mut pb::pattern::Sentence) };
+        let pb: FfiResult<Option<common_pb::NameOrId>> = tag.try_into();
+        let result_code = if pb.is_ok() {
+            if is_start {
+                sentence.start = pb.unwrap();
+            } else {
+                sentence.end = pb.unwrap();
+            }
+            ResultCode::Success
+        } else {
+            pb.err().unwrap()
+        };
+        std::mem::forget(sentence);
+
+        result_code
+    }
+
+    #[no_mangle]
+    pub extern "C" fn set_sentence_start(ptr_sentence: *const c_void, tag: FfiNameOrId) -> ResultCode {
+        set_sentence_tag(ptr_sentence, tag, true)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn set_sentence_end(ptr_sentence: *const c_void, tag: FfiNameOrId) -> ResultCode {
+        set_sentence_tag(ptr_sentence, tag, false)
+    }
+
+    #[derive(Copy, Clone, Debug)]
+    #[repr(i32)]
+    #[allow(dead_code)]
+    pub enum FfiBinderOpt {
+        Edge = 0,
+        Path = 1,
+        Vertex = 2,
+    }
+
+    #[no_mangle]
+    pub extern "C" fn add_sentence_binder(
+        ptr_sentence: *const c_void, ptr: *const c_void, binder: FfiBinderOpt,
+    ) -> ResultCode {
+        let mut sentence = unsafe { Box::from_raw(ptr_sentence as *mut pb::pattern::Sentence) };
+        match binder {
+            FfiBinderOpt::Edge => {
+                let edgexpd = unsafe { Box::from_raw(ptr as *mut pb::EdgeExpand) };
+                sentence.binders.push(pb::pattern::Binder {
+                    item: Some(pb::pattern::binder::Item::Edge(edgexpd.as_ref().clone())),
+                });
+            }
+            FfiBinderOpt::Path => {
+                let pathxpd = unsafe { Box::from_raw(ptr as *mut pb::PathExpand) };
+                sentence.binders.push(pb::pattern::Binder {
+                    item: Some(pb::pattern::binder::Item::Path(pathxpd.as_ref().clone())),
+                });
+            }
+            FfiBinderOpt::Vertex => {
+                let getv = unsafe { Box::from_raw(ptr as *mut pb::GetV) };
+                sentence.binders.push(pb::pattern::Binder {
+                    item: Some(pb::pattern::binder::Item::Vertex(getv.as_ref().clone())),
+                });
+            }
+        }
+        std::mem::forget(sentence);
+
+        ResultCode::Success
+    }
+
+    /// Append a pattern operator to the logical plan
+    #[no_mangle]
+    pub extern "C" fn append_pattern_operator(
+        ptr_plan: *const c_void, ptr_pattern: *const c_void, parent: i32, id: *mut i32,
+    ) -> ResultCode {
+        let pattern = unsafe { Box::from_raw(ptr_pattern as *mut pb::Pattern) };
+        append_operator(ptr_plan, pattern.as_ref().clone().into(), vec![parent], id)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn destroy_pattern_operator(ptr: *const c_void) {
+        destroy_ptr::<pb::Pattern>(ptr)
     }
 }
 

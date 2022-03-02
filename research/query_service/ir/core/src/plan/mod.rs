@@ -16,4 +16,5 @@
 pub mod ffi;
 pub mod logical;
 pub mod meta;
+pub mod patmat;
 pub mod physical;
