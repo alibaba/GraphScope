@@ -30,7 +30,7 @@ pub type EngineHandle = *const c_void;
 pub type GraphHandle = *const c_void;
 
 #[no_mangle]
-pub extern "C" fn initialize(config_bytes: *const u8, len: usize) -> EngineHandle {
+pub extern "C" fn initializeIR(config_bytes: *const u8, len: usize) -> EngineHandle {
     let config_buf = unsafe { ::std::slice::from_raw_parts(config_bytes, len) };
     let config_pb = parse_pb::<ConfigPb>(config_buf).expect("parse config pb failed");
     let mut config_builder = GraphConfigBuilder::new();
@@ -41,7 +41,7 @@ pub extern "C" fn initialize(config_bytes: *const u8, len: usize) -> EngineHandl
 }
 
 #[no_mangle]
-pub extern "C" fn addPartition(
+pub extern "C" fn addIRPartition(
     engine_handle: EngineHandle,
     partition_id: i32,
     graph_handle: GraphHandle,
@@ -52,7 +52,7 @@ pub extern "C" fn addPartition(
 }
 
 #[no_mangle]
-pub extern "C" fn updatePartitionRouting(
+pub extern "C" fn updateIRPartitionRouting(
     engine_handle: EngineHandle,
     partition_id: i32,
     server_id: i32,
@@ -62,7 +62,7 @@ pub extern "C" fn updatePartitionRouting(
 }
 
 #[no_mangle]
-pub extern "C" fn startEngine(engine_handle: EngineHandle) -> Box<EnginePortsResponse> {
+pub extern "C" fn startIREngine(engine_handle: EngineHandle) -> Box<EnginePortsResponse> {
     let engine_ptr = unsafe { to_mut(&*(engine_handle as *const IRServer)) };
     match engine_ptr.start() {
         Ok((engine_port, server_port)) => {
@@ -76,13 +76,16 @@ pub extern "C" fn startEngine(engine_handle: EngineHandle) -> Box<EnginePortsRes
 }
 
 #[no_mangle]
-pub extern "C" fn stopEngine(engine_handle: EngineHandle) {
+pub extern "C" fn stopIREngine(engine_handle: EngineHandle) {
     let engine_ptr = unsafe { to_mut(&*(engine_handle as *const IRServer)) };
     engine_ptr.stop();
 }
 
 #[no_mangle]
-pub extern "C" fn updatePeerView(engine_handle: EngineHandle, peer_view_string_raw: *const c_char) {
+pub extern "C" fn updateIRPeerView(
+    engine_handle: EngineHandle,
+    peer_view_string_raw: *const c_char,
+) {
     let slice = unsafe { CStr::from_ptr(peer_view_string_raw) }.to_bytes();
     let peer_view_string = std::str::from_utf8(slice).unwrap();
     let peer_view = peer_view_string
