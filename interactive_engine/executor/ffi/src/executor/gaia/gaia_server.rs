@@ -26,9 +26,9 @@ use pegasus_server::service::Service;
 use pegasus_server::rpc::{start_rpc_server, RpcService};
 use pegasus_network::SimpleServerDetector;
 use pegasus_network::config::{NetworkConfig, ServerAddr};
-use gs_gremlin::{InitializeJobCompiler, QueryMaxGraph};
+use graph_proxy::{InitializeJobCompiler, QueryMaxGraph};
 use maxgraph_store::api::PartitionId;
-use gremlin_core::register_gremlin_types;
+//use gremlin_core::register_gremlin_types;
 
 pub struct GaiaServer {
     config: Arc<GraphConfig>,
@@ -58,13 +58,12 @@ impl GaiaServer {
     }
 
     pub fn start(&self) -> GraphResult<(u16, u16)> {
-        register_gremlin_types().map_err(|e| GraphError::new(EngineError, format!("{:?}", e)))?;
         let report = match self.config.get_storage_option("gaia.report") {
             None => false,
             Some(report_string) => report_string.parse()
                 .map_err(|e| GraphError::new(EngineError, format!("{:?}", e)))?,
         };
-        let worker_num = match self.config.get_storage_option("worker.num") {
+        let _worker_num = match self.config.get_storage_option("worker.num") {
             None => 1,
             Some(worker_num_string) => worker_num_string.parse()
                 .map_err(|e| GraphError::new(EngineError, format!("{:?}", e)))?,
@@ -78,13 +77,13 @@ impl GaiaServer {
         let addr = format!("{}:{}", "0.0.0.0", rpc_port).parse()
             .map_err(|e| GraphError::new(EngineError, format!("{:?}", e)))?;
         let gaia_config = make_gaia_config(self.config.clone());
-        let server_id = gaia_config.server_id();
+        let _server_id = gaia_config.server_id();
         let socket_addr = gaia_pegasus::startup_with(gaia_config, self.detector.clone())
             .map_err(|e| GraphError::new(EngineError, format!("{:?}", e)))?
             .ok_or(GraphError::new(EngineError, "gaia engine return None addr".to_string()))?;
 
         let rpc_port = self.rpc_runtime.block_on(async{
-            let query_maxgraph = QueryMaxGraph::new(self.graph.clone(), self.graph.clone(), worker_num, server_id);
+            let query_maxgraph = QueryMaxGraph::new(self.graph.clone(), self.graph.clone());
             let job_compiler = query_maxgraph.initialize_job_compiler();
             let service = Service::new(job_compiler);
             let rpc_service = RpcService::new(service, report);
