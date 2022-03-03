@@ -61,4 +61,4 @@ impl Drop for EnginePortsResponse {
 
 #[no_mangle]
 #[allow(non_snake_case)]
-pub extern fn dropEnginePortsResponse(_: Box<EnginePortsResponse>) {}
+pub extern "C" fn dropIREnginePortsResponse(_: Box<EnginePortsResponse>) {}
