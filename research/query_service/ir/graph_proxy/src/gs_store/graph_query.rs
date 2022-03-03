@@ -22,9 +22,9 @@ use ir_common::NameOrId as Label;
 use ir_common::{KeyId, NameOrId};
 use maxgraph_store::api::graph_partition::GraphPartitionManager;
 use maxgraph_store::api::prelude::Property;
-use maxgraph_store::api::PropId;
 use maxgraph_store::api::*;
 use maxgraph_store::api::{Edge as StoreEdge, Vertex as StoreVertex};
+use maxgraph_store::api::{PropId, SnapshotId};
 use pegasus::api::function::FnResult;
 use runtime::error::{FnExecError, FnExecResult};
 use runtime::graph::element::{Edge, Vertex};
@@ -37,6 +37,8 @@ use crate::{filter_limit, limit_n};
 
 // Should be identical to the param_name given by compiler
 const SNAPSHOT_ID: &str = "SID";
+// This will refer to the latest graph
+const DEFAULT_SNAPSHOT_ID: SnapshotId = SnapshotId::max_value() - 1;
 
 pub struct GraphScopeStore<V, VI, E, EI>
 where
@@ -75,9 +77,11 @@ where
             let store = self.store.clone();
             let si = params
                 .get_extra_param(SNAPSHOT_ID)
-                .ok_or(FnExecError::query_store_error("get snapshot_id failed"))?
-                .parse::<SnapshotId>()
-                .map_err(|e| FnExecError::query_store_error(&e.to_string()))?;
+                .map(|s| {
+                    s.parse::<SnapshotId>()
+                        .unwrap_or(DEFAULT_SNAPSHOT_ID)
+                })
+                .unwrap_or(DEFAULT_SNAPSHOT_ID);
             let label_ids = encode_storage_label(params.labels.as_ref())?;
             let prop_ids = encode_storage_prop_keys(params.columns.as_ref())?;
             let filter = params.filter.clone();
@@ -112,9 +116,11 @@ where
             let store = self.store.clone();
             let si = params
                 .get_extra_param(SNAPSHOT_ID)
-                .ok_or(FnExecError::query_store_error("get snapshot_id failed"))?
-                .parse::<SnapshotId>()
-                .map_err(|e| FnExecError::query_store_error(&e.to_string()))?;
+                .map(|s| {
+                    s.parse::<SnapshotId>()
+                        .unwrap_or(DEFAULT_SNAPSHOT_ID)
+                })
+                .unwrap_or(DEFAULT_SNAPSHOT_ID);
             let label_ids = encode_storage_label(params.labels.as_ref())?;
             let prop_ids = encode_storage_prop_keys(params.columns.as_ref())?;
             let filter = params.filter.clone();
@@ -146,9 +152,11 @@ where
         let store = self.store.clone();
         let si = params
             .get_extra_param(SNAPSHOT_ID)
-            .ok_or(FnExecError::query_store_error("get snapshot_id failed"))?
-            .parse::<SnapshotId>()
-            .map_err(|e| FnExecError::query_store_error(&e.to_string()))?;
+            .map(|s| {
+                s.parse::<SnapshotId>()
+                    .unwrap_or(DEFAULT_SNAPSHOT_ID)
+            })
+            .unwrap_or(DEFAULT_SNAPSHOT_ID);
         let prop_ids = encode_storage_prop_keys(params.columns.as_ref())?;
         let filter = params.filter.clone();
         let partition_label_vertex_ids =
@@ -176,9 +184,11 @@ where
         let partition_manager = self.partition_manager.clone();
         let si = params
             .get_extra_param(SNAPSHOT_ID)
-            .ok_or(FnExecError::query_store_error("get snapshot_id failed"))?
-            .parse::<SnapshotId>()
-            .map_err(|e| FnExecError::query_store_error(&e.to_string()))?;
+            .map(|s| {
+                s.parse::<SnapshotId>()
+                    .unwrap_or(DEFAULT_SNAPSHOT_ID)
+            })
+            .unwrap_or(DEFAULT_SNAPSHOT_ID);
         let edge_label_ids = encode_storage_label(params.labels.as_ref())?;
 
         let stmt = from_fn(move |v: ID| {
@@ -236,9 +246,11 @@ where
         let store = self.store.clone();
         let si = params
             .get_extra_param(SNAPSHOT_ID)
-            .ok_or(FnExecError::query_store_error("get snapshot_id failed"))?
-            .parse::<SnapshotId>()
-            .map_err(|e| FnExecError::query_store_error(&e.to_string()))?;
+            .map(|s| {
+                s.parse::<SnapshotId>()
+                    .unwrap_or(DEFAULT_SNAPSHOT_ID)
+            })
+            .unwrap_or(DEFAULT_SNAPSHOT_ID);
         let partition_manager = self.partition_manager.clone();
         let filter = params.filter.clone();
         let limit = params.limit.clone();
