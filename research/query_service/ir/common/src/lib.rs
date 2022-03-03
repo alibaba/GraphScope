@@ -70,6 +70,12 @@ pub enum NameOrId {
     Id(KeyId),
 }
 
+impl Default for NameOrId {
+    fn default() -> Self {
+        Self::Str("".to_string())
+    }
+}
+
 impl NameOrId {
     pub fn as_object(&self) -> Object {
         match self {

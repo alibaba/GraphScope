@@ -643,6 +643,11 @@ impl PlanMeta {
         }
     }
 
+    /// Return a dummy node for maintaining tag that refers to neither vertex nor edge
+    pub fn get_dummy_nodes(&self) -> Vec<u32> {
+        vec![0xffffffff]
+    }
+
     pub fn is_table_id(&self) -> bool {
         self.is_table_id
     }

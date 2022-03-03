@@ -393,6 +393,12 @@ impl LogicalPlan {
                             }
                         }
                     }
+                    for functions in &group.functions {
+                        if let Some(alias_pb) = functions.alias.clone() {
+                            self.meta
+                                .insert_tag_nodes(alias_pb.try_into()?, self.meta.get_dummy_nodes());
+                        }
+                    }
                     is_update_curr = true;
                 }
                 Opr::Project(ref proj) => {
@@ -423,11 +429,19 @@ impl LogicalPlan {
                             }
                         }
                     }
+                    for mapping in &proj.mappings {
+                        if let Some(alias_pb) = mapping.alias.clone() {
+                            self.meta
+                                .insert_tag_nodes(alias_pb.try_into()?, self.meta.get_dummy_nodes());
+                        }
+                    }
                 }
                 Opr::Apply(apply_opr) => {
                     if let Some(alias) = &apply_opr.alias {
-                        self.meta
-                            .insert_tag_nodes(alias.clone().try_into().unwrap(), vec![self.max_node_id]);
+                        self.meta.insert_tag_nodes(
+                            alias.clone().try_into().unwrap(),
+                            self.meta.get_dummy_nodes(),
+                        );
                     }
                     is_update_curr = true
                 }
@@ -702,13 +716,12 @@ pub trait AsLogical {
 fn preprocess_var(
     var: &mut common_pb::Variable, meta: &StoreMeta, plan_meta: &mut PlanMeta,
 ) -> IrResult<()> {
-    let mut node_meta = plan_meta.tag_node_metas_mut(
-        var.tag
-            .clone()
-            .map(|tag| tag.try_into())
-            .transpose()?
-            .as_ref(),
-    )?;
+    let tag = var
+        .tag
+        .clone()
+        .map(|tag| tag.try_into())
+        .transpose()?;
+    let mut node_meta = plan_meta.tag_node_metas_mut(tag.as_ref())?;
     if let Some(property) = var.property.as_mut() {
         if let Some(key) = property.item.as_mut() {
             match key {
@@ -2008,10 +2021,10 @@ mod test {
     }
 
     #[test]
-    fn tag_maintain_groupby() {
+    fn tag_maintain_groupby_case1() {
         // groupBy contains tagging a keys that is further a vertex
         let mut plan = LogicalPlan::default();
-        // g.V().groupCount().order().by(select('keys').by('name'))
+        // g.V().groupCount().order().by(select(keys).by('name'))
 
         // g.V()
         let scan = pb::Scan {
@@ -2027,22 +2040,27 @@ mod test {
         let group = pb::GroupBy {
             mappings: vec![pb::group_by::KeyAlias {
                 key: Some(common_pb::Variable { tag: None, property: None }),
-                alias: Some("keys".into()),
+                alias: Some("~keys_2_0".into()),
             }],
             functions: vec![pb::group_by::AggFunc {
                 vars: vec![],
                 aggregate: 3,
-                alias: Some("values".into()),
+                alias: Some("~values_2_0".into()),
             }],
         };
         plan.append_operator_as_node(group.into(), vec![0])
             .unwrap();
-        assert_eq!(plan.meta.get_tag_nodes(&"keys".into()).unwrap(), vec![0]);
+        assert_eq!(
+            plan.meta
+                .get_tag_nodes(&"~keys_2_0".into())
+                .unwrap(),
+            vec![0]
+        );
 
         let order = pb::OrderBy {
             pairs: vec![pb::order_by::OrderingPair {
                 key: Some(common_pb::Variable {
-                    tag: Some("keys".into()),
+                    tag: Some("~keys_2_0".into()),
                     property: Some(common_pb::Property {
                         item: Some(common_pb::property::Item::Key("name".into())),
                     }),
@@ -2060,6 +2078,99 @@ mod test {
             .borrow()
             .get_columns()
             .contains(&"name".into()));
+    }
+
+    #[test]
+    fn tag_maintain_groupby_case2() {
+        // groupBy contains tagging a keys that is further a vertex
+        let mut plan = LogicalPlan::default();
+        // g.V().groupCount().select(values)
+
+        // g.V()
+        let scan = pb::Scan {
+            scan_opt: 0,
+            alias: None,
+            params: Some(query_params(vec![], vec![])),
+            idx_predicate: None,
+        };
+        plan.append_operator_as_node(scan.into(), vec![])
+            .unwrap();
+        assert_eq!(plan.meta.get_curr_nodes(), &[0]);
+
+        let group = pb::GroupBy {
+            mappings: vec![pb::group_by::KeyAlias {
+                key: Some(common_pb::Variable { tag: None, property: None }),
+                alias: Some("~keys_2_0".into()),
+            }],
+            functions: vec![pb::group_by::AggFunc {
+                vars: vec![],
+                aggregate: 3,
+                alias: Some("~values_2_0".into()),
+            }],
+        };
+        plan.append_operator_as_node(group.into(), vec![0])
+            .unwrap();
+        assert_eq!(
+            plan.meta
+                .get_tag_nodes(&"~keys_2_0".into())
+                .unwrap(),
+            vec![0]
+        );
+
+        let project = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: str_to_expr_pb("@~values_2_0".to_string()).ok(),
+                alias: None,
+            }],
+            is_append: true,
+        };
+        plan.append_operator_as_node(project.into(), vec![1])
+            .unwrap();
+    }
+
+    #[test]
+    fn tag_maintain_orderby() {
+        let mut plan = LogicalPlan::default();
+        // g.E(xx).values("workFrom").as("a").order().by(select("a"))
+
+        let scan = pb::Scan {
+            scan_opt: 1,
+            alias: None,
+            params: Some(query_params(vec![], vec![])),
+            idx_predicate: None,
+        };
+        plan.append_operator_as_node(scan.into(), vec![])
+            .unwrap();
+        assert_eq!(plan.meta.get_curr_nodes(), &[0]);
+
+        let project = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: str_to_expr_pb("@.workFrom".to_string()).ok(),
+                alias: Some("a".into()),
+            }],
+            is_append: true,
+        };
+        plan.append_operator_as_node(project.into(), vec![0])
+            .unwrap();
+        assert_eq!(plan.meta.get_curr_nodes(), &[1]);
+        assert!(plan
+            .meta
+            .get_node_meta(0)
+            .unwrap()
+            .borrow()
+            .get_columns()
+            .contains(&"workFrom".into()));
+
+        let order = pb::OrderBy {
+            pairs: vec![pb::order_by::OrderingPair {
+                key: Some(common_pb::Variable { tag: Some("a".into()), property: None }),
+                order: 0,
+            }],
+            limit: None,
+        };
+        plan.append_operator_as_node(order.into(), vec![1])
+            .unwrap();
+        assert_eq!(plan.meta.get_curr_nodes(), &[1]);
     }
 
     #[test]
@@ -2142,7 +2253,7 @@ mod test {
         let mut plan = LogicalPlan::default();
         let project = pb::Project {
             mappings: vec![pb::project::ExprAlias {
-                expr: str_to_expr_pb("@keys".to_string()).ok(),
+                expr: str_to_expr_pb("@keys.name".to_string()).ok(),
                 alias: None,
             }],
             is_append: false,
