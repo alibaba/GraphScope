@@ -25,6 +25,7 @@ import com.alibaba.graphscope.common.intermediate.operator.*;
 import com.alibaba.graphscope.common.jna.type.*;
 import com.alibaba.graphscope.gremlin.InterOpCollectionBuilder;
 import com.alibaba.graphscope.gremlin.antlr4.GremlinAntlrToJava;
+import com.alibaba.graphscope.gremlin.plugin.step.ExprStep;
 import com.alibaba.graphscope.gremlin.plugin.step.PathExpandStep;
 import com.alibaba.graphscope.gremlin.plugin.step.ScanFusionStep;
 import com.alibaba.graphscope.gremlin.transform.alias.AliasManager;
@@ -284,17 +285,13 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
         @Override
         public InterOpBase apply(Step step) {
             WhereTraversalStep.WhereStartStep startStep = (WhereTraversalStep.WhereStartStep) step;
-
             String selectKey = (String) startStep.getScopeKeys().iterator().next();
-            SelectOneStep selectOneStep = new SelectOneStep(step.getTraversal(), Pop.last, selectKey);
-            ExprResult exprRes = TraversalParentTransformFactory.PROJECT_BY_STEP
-                    .getSubTraversalAsExpr((new ExprArg()).addStep(selectOneStep));
-            String expr = exprRes.getSingleExpr().get();
 
             ProjectOp op = new ProjectOp();
-            op.setExprWithAlias(new OpArg<>(expr, (String expr1) -> {
+            op.setExprWithAlias(new OpArg<>(selectKey, (String key) -> {
+                String expr = "@" + selectKey;
                 FfiAlias.ByValue alias = ArgUtils.asFfiNoneAlias();
-                return Collections.singletonList(Pair.with(expr1, alias));
+                return Collections.singletonList(Pair.with(expr, alias));
             }));
             return op;
         }
@@ -468,6 +465,18 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
                     || step instanceof PathExpandStep // out/in/both('1..5', 'knows')
                     || step instanceof EdgeOtherVertexStep // otherV()
                     || step instanceof EdgeVertexStep; // inV()/outV()/endV()(todo)
+        }
+    },
+
+    EXPR_STEP {
+        @Override
+        public InterOpBase apply(Step step) {
+            ExprStep exprStep = (ExprStep) step;
+            ProjectOp projectOp = new ProjectOp();
+            projectOp.setExprWithAlias(new OpArg<>(exprStep.getExpr(), (String expr) ->
+                    Arrays.asList(Pair.with(expr, ArgUtils.asFfiNoneAlias()))
+            ));
+            return projectOp;
         }
     };
 

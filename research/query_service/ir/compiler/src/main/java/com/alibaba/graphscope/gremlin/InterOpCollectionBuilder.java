@@ -21,6 +21,7 @@ import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.intermediate.InterOpCollection;
 import com.alibaba.graphscope.gremlin.exception.UnsupportedStepException;
 import com.alibaba.graphscope.common.intermediate.operator.*;
+import com.alibaba.graphscope.gremlin.plugin.step.ExprStep;
 import com.alibaba.graphscope.gremlin.plugin.step.PathExpandStep;
 import com.alibaba.graphscope.gremlin.plugin.step.ScanFusionStep;
 import com.alibaba.graphscope.gremlin.transform.StepTransformFactory;
@@ -104,6 +105,8 @@ public class InterOpCollectionBuilder {
                 opList.addAll(TraversalParentTransformFactory.NOT_TRAVERSAL_STEP.apply((TraversalParent) step));
             } else if (Utils.equalClass(step, MatchStep.class)) {
                 opList.add(StepTransformFactory.MATCH_STEP.apply(step));
+            } else if (Utils.equalClass(step, ExprStep.class)) {
+                opList.add(StepTransformFactory.EXPR_STEP.apply(step));
             } else {
                 throw new UnsupportedStepException(step.getClass(), "unimplemented yet");
             }

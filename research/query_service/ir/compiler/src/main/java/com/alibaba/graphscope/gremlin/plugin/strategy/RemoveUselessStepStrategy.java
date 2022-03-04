@@ -20,6 +20,7 @@ import com.alibaba.graphscope.gremlin.Utils;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalStrategy;
+import org.apache.tinkerpop.gremlin.process.traversal.step.filter.WhereTraversalStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.NoOpBarrierStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.ComputerAwareStep;
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.AbstractTraversalStrategy;
@@ -42,6 +43,9 @@ public class RemoveUselessStepStrategy extends AbstractTraversalStrategy<Travers
         for (int i = 0; i < steps.size(); ++i) {
             Step step = steps.get(i);
             if (Utils.equalClass(step, ComputerAwareStep.EndStep.class) || Utils.equalClass(step, NoOpBarrierStep.class)) {
+                traversal.removeStep(step);
+            } else if (Utils.equalClass(step, WhereTraversalStep.WhereStartStep.class)
+                    && ((WhereTraversalStep.WhereStartStep) step).getScopeKeys().isEmpty()) {
                 traversal.removeStep(step);
             }
         }

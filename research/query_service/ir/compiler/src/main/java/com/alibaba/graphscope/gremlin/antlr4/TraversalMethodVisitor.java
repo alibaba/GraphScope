@@ -446,6 +446,9 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
             graphTraversal.where(TraversalPredicateVisitor.getInstance().visitTraversalPredicate(ctx.traversalPredicate()));
         } else if (ctx.traversalMethod_not() != null) {
             visitTraversalMethod_not(ctx.traversalMethod_not());
+        } else if (ctx.traversalMethod_expr() != null) { // where(expr(...))
+            GremlinGSParser.TraversalMethod_exprContext exprCtx = ctx.traversalMethod_expr();
+            graphTraversal.where(new ExprP(GenericLiteralVisitor.getStringLiteral(exprCtx.stringLiteral())));
         } else if (ctx.nestedTraversal() != null) {
             Traversal whereTraversal = visitNestedTraversal(ctx.nestedTraversal());
             graphTraversal.where(whereTraversal);
@@ -520,6 +523,16 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
             return graphTraversal.match(matchTraversals);
         } else {
             throw new UnsupportedEvalException(ctx.getClass(), "supported pattern is [match(as('a').out()..., ...)]");
+        }
+    }
+
+    @Override
+    public Traversal visitTraversalMethod_expr(GremlinGSParser.TraversalMethod_exprContext ctx) {
+        if (ctx.stringLiteral() != null) {
+            IrCustomizedTraversal traversal = (IrCustomizedTraversal) graphTraversal;
+            return traversal.expr(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()));
+        } else {
+            throw new UnsupportedEvalException(ctx.getClass(), "supported pattern is [expr(...)]");
         }
     }
 }
