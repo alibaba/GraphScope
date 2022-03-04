@@ -346,60 +346,8 @@ impl LogicalPlan {
         }
         if let Ok(meta) = STORE_META.read() {
             match opr.opr.as_ref().unwrap() {
-                Opr::Scan(scan) => {
-                    if let Some(alias) = &scan.alias {
-                        self.meta
-                            .insert_tag_nodes(alias.clone().try_into()?, vec![self.max_node_id]);
-                    }
+                Opr::Scan(_) | Opr::Edge(_) | Opr::Vertex(_) | Opr::Path(_) => {
                     self.meta.set_curr_node(self.max_node_id);
-                }
-                Opr::Edge(edge) => {
-                    if let Some(alias) = &edge.alias {
-                        self.meta
-                            .insert_tag_nodes(alias.clone().try_into()?, vec![self.max_node_id]);
-                    }
-                    self.meta.set_curr_node(self.max_node_id);
-                }
-                Opr::Vertex(getv) => {
-                    if let Some(alias) = &getv.alias {
-                        self.meta
-                            .insert_tag_nodes(alias.clone().try_into()?, vec![self.max_node_id]);
-                    }
-                    self.meta.set_curr_node(self.max_node_id);
-                }
-                Opr::Path(path) => {
-                    if let Some(alias) = &path.alias {
-                        self.meta
-                            .insert_tag_nodes(alias.clone().try_into()?, vec![self.max_node_id]);
-                    }
-                    self.meta.set_curr_node(self.max_node_id);
-                }
-                Opr::GroupBy(group) => {
-                    for mapping in &group.mappings {
-                        if let Some(key) = mapping.key.as_ref() {
-                            if key.property.is_none() {
-                                let node_ids = if let Some(tag_pb) = key.tag.clone() {
-                                    let tag = tag_pb.try_into()?;
-                                    self.meta
-                                        .get_tag_nodes(&tag)
-                                        .ok_or(IrError::TagNotExist(tag))?
-                                } else {
-                                    self.meta.get_curr_nodes()
-                                };
-                                if let Some(alias_pb) = mapping.alias.clone() {
-                                    self.meta
-                                        .insert_tag_nodes(alias_pb.try_into()?, node_ids);
-                                }
-                            }
-                        }
-                    }
-                    for functions in &group.functions {
-                        if let Some(alias_pb) = functions.alias.clone() {
-                            self.meta
-                                .insert_tag_nodes(alias_pb.try_into()?, self.meta.get_dummy_nodes());
-                        }
-                    }
-                    is_update_curr = true;
                 }
                 Opr::Project(ref proj) => {
                     is_update_curr = true;
@@ -413,51 +361,19 @@ impl LogicalPlan {
                                     if var.tag.is_some() && var.property.is_none()
                                     // tag as Head
                                     {
-                                        if let Some(nodes) = self
-                                            .meta
-                                            .get_tag_nodes(&var.tag.clone().unwrap().try_into()?)
-                                        {
-                                            is_update_curr = false;
-                                            if nodes.len() == 1 {
-                                                self.meta.set_curr_node(nodes[0]);
-                                            } else {
-                                                self.meta.set_union_curr_nodes(nodes);
-                                            }
-                                        }
+                                        is_update_curr = false;
                                     }
                                 }
                             }
                         }
-                    }
-                    for mapping in &proj.mappings {
-                        if let Some(alias_pb) = mapping.alias.clone() {
-                            self.meta
-                                .insert_tag_nodes(alias_pb.try_into()?, self.meta.get_dummy_nodes());
-                        }
-                    }
-                }
-                Opr::Apply(apply_opr) => {
-                    if let Some(alias) = &apply_opr.alias {
-                        self.meta.insert_tag_nodes(
-                            alias.clone().try_into().unwrap(),
-                            self.meta.get_dummy_nodes(),
-                        );
-                    }
-                    is_update_curr = true
-                }
-                Opr::As(as_opr) => {
-                    if let Some(alias) = &as_opr.alias {
-                        self.meta.insert_tag_nodes(
-                            alias.clone().try_into().unwrap(),
-                            self.meta.get_curr_nodes().to_vec(),
-                        );
                     }
                 }
                 Opr::Union(_) => {
                     self.meta
                         .set_union_curr_nodes(parent_ids.clone());
                 }
-                Opr::Select(_)
+                Opr::As(_)
+                | Opr::Select(_)
                 | Opr::OrderBy(_)
                 | Opr::Dedup(_)
                 | Opr::Limit(_)
@@ -716,6 +632,10 @@ pub trait AsLogical {
 fn preprocess_var(
     var: &mut common_pb::Variable, meta: &StoreMeta, plan_meta: &mut PlanMeta,
 ) -> IrResult<()> {
+    var.tag
+        .as_mut()
+        .map(|tag| get_or_set_tag_id(tag, true, plan_meta))
+        .transpose()?;
     let tag = var
         .tag
         .clone()
@@ -875,14 +795,49 @@ fn preprocess_params(
     Ok(())
 }
 
+fn get_or_set_tag_id(
+    tag_pb: &mut common_pb::NameOrId, should_exist: bool, plan_meta: &mut PlanMeta,
+) -> IrResult<bool> {
+    let tag = tag_pb.clone().try_into()?;
+    let (is_exist, tag_id) = plan_meta.get_or_set_tag_id(&tag);
+    if should_exist && !is_exist {
+        return Err(IrError::TagNotExist(tag));
+    }
+    if plan_meta.is_tag_id() {
+        *tag_pb = common_pb::NameOrId { item: Some(common_pb::name_or_id::Item::Id(tag_id as i32)) }
+    }
+    Ok(is_exist)
+}
+
 impl AsLogical for pb::Project {
     fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
-        for mapping in self.mappings.iter_mut() {
+        use common_pb::expr_opr::Item;
+        let len = self.mappings.len();
+        for (idx, mapping) in self.mappings.iter_mut().enumerate() {
+            if let Some(alias) = mapping.alias.as_mut() {
+                get_or_set_tag_id(alias, false, plan_meta)?;
+                plan_meta.insert_tag_nodes(alias.clone().try_into()?, plan_meta.get_dummy_nodes());
+            }
             if let Some(expr) = &mut mapping.expr {
                 preprocess_expression(expr, meta, plan_meta)?;
-            }
-            if let Some(alias) = &mapping.alias {
-                plan_meta.get_or_set_tag_id(alias.clone().try_into()?);
+                // Verify if it is the case of project("@a"), which changes the current nodes
+                // to where the tag "a" points to.
+                if len == 1 && idx == 0 && expr.operators.len() == 1 {
+                    if let Some(common_pb::ExprOpr { item: Some(Item::Var(var)) }) = expr.operators.first()
+                    {
+                        if var.tag.is_some() && var.property.is_none() {
+                            if let Some(nodes) =
+                                plan_meta.get_tag_nodes(&var.tag.clone().unwrap().try_into()?)
+                            {
+                                if nodes.len() == 1 {
+                                    plan_meta.set_curr_node(nodes[0]);
+                                } else {
+                                    plan_meta.set_union_curr_nodes(nodes);
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
         Ok(())
@@ -903,14 +858,15 @@ impl AsLogical for pb::Scan {
         plan_meta
             .curr_node_metas_mut()
             .set_is_add_column(true);
+        if let Some(alias) = self.alias.as_mut() {
+            get_or_set_tag_id(alias, false, plan_meta)?;
+            plan_meta.insert_tag_nodes(alias.clone().try_into()?, plan_meta.get_curr_nodes());
+        }
         if let Some(params) = self.params.as_mut() {
             preprocess_params(params, meta, plan_meta)?;
         }
         if let Some(index_pred) = self.idx_predicate.as_mut() {
             index_pred.preprocess(meta, plan_meta)?;
-        }
-        if let Some(alias) = &self.alias {
-            plan_meta.get_or_set_tag_id(alias.clone().try_into()?);
         }
         Ok(())
     }
@@ -931,8 +887,9 @@ impl AsLogical for pb::EdgeExpand {
         if let Some(params) = self.params.as_mut() {
             preprocess_params(params, meta, plan_meta)?;
         }
-        if let Some(alias) = &self.alias {
-            plan_meta.get_or_set_tag_id(alias.clone().try_into()?);
+        if let Some(alias) = self.alias.as_mut() {
+            get_or_set_tag_id(alias, false, plan_meta)?;
+            plan_meta.insert_tag_nodes(alias.clone().try_into()?, plan_meta.get_curr_nodes());
         }
         plan_meta
             .curr_node_metas_mut()
@@ -947,8 +904,9 @@ impl AsLogical for pb::PathExpand {
         if let Some(base) = self.base.as_mut() {
             base.preprocess(meta, plan_meta)?;
         }
-        if let Some(alias) = &self.alias {
-            plan_meta.get_or_set_tag_id(alias.clone().try_into()?);
+        if let Some(alias) = self.alias.as_mut() {
+            get_or_set_tag_id(alias, false, plan_meta)?;
+            plan_meta.insert_tag_nodes(alias.clone().try_into()?, plan_meta.get_curr_nodes());
         }
         // PathExpand would never require adding columns
         plan_meta
@@ -967,8 +925,9 @@ impl AsLogical for pb::GetV {
         if let Some(params) = self.params.as_mut() {
             preprocess_params(params, meta, plan_meta)?;
         }
-        if let Some(alias) = &self.alias {
-            plan_meta.get_or_set_tag_id(alias.clone().try_into()?);
+        if let Some(alias) = self.alias.as_mut() {
+            get_or_set_tag_id(alias, false, plan_meta)?;
+            plan_meta.insert_tag_nodes(alias.clone().try_into()?, plan_meta.get_curr_nodes());
         }
         Ok(())
     }
@@ -985,17 +944,31 @@ impl AsLogical for pb::GroupBy {
         for mapping in self.mappings.iter_mut() {
             if let Some(key) = &mut mapping.key {
                 preprocess_var(key, meta, plan_meta)?;
-            }
-            if let Some(alias) = &mapping.alias {
-                plan_meta.get_or_set_tag_id(alias.clone().try_into()?);
+                if let Some(alias) = mapping.alias.as_mut() {
+                    get_or_set_tag_id(alias, false, plan_meta)?;
+                }
+                if key.property.is_none() {
+                    let node_ids = if let Some(tag_pb) = key.tag.clone() {
+                        let tag = tag_pb.try_into()?;
+                        plan_meta
+                            .get_tag_nodes(&tag)
+                            .ok_or(IrError::TagNotExist(tag))?
+                    } else {
+                        plan_meta.get_curr_nodes()
+                    };
+                    if let Some(alias) = mapping.alias.as_mut() {
+                        plan_meta.insert_tag_nodes(alias.clone().try_into()?, node_ids);
+                    }
+                }
             }
         }
         for agg_fn in self.functions.iter_mut() {
             for var in agg_fn.vars.iter_mut() {
                 preprocess_var(var, meta, plan_meta)?;
             }
-            if let Some(alias) = &agg_fn.alias {
-                plan_meta.get_or_set_tag_id(alias.clone().try_into()?);
+            if let Some(alias) = agg_fn.alias.as_mut() {
+                get_or_set_tag_id(alias, false, plan_meta)?;
+                plan_meta.insert_tag_nodes(alias.clone().try_into()?, plan_meta.get_dummy_nodes());
             }
         }
 
@@ -1060,6 +1033,16 @@ impl AsLogical for pb::Limit {
     }
 }
 
+impl AsLogical for pb::As {
+    fn preprocess(&mut self, _meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
+        if let Some(alias) = self.alias.as_mut() {
+            get_or_set_tag_id(alias, false, plan_meta)?;
+            plan_meta.insert_tag_nodes(alias.clone().try_into().unwrap(), plan_meta.get_curr_nodes());
+        }
+        Ok(())
+    }
+}
+
 impl AsLogical for pb::Join {
     fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
         for left_key in self.left_keys.iter_mut() {
@@ -1080,18 +1063,19 @@ impl AsLogical for pb::Sink {
 
 impl AsLogical for pb::Apply {
     fn preprocess(&mut self, _meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
-        if let Some(alias) = &self.alias {
-            plan_meta.get_or_set_tag_id(alias.clone().try_into()?);
+        if let Some(alias) = self.alias.as_mut() {
+            get_or_set_tag_id(alias, false, plan_meta)?;
+            plan_meta.insert_tag_nodes(alias.clone().try_into().unwrap(), plan_meta.get_dummy_nodes());
         }
         Ok(())
     }
 }
 
 fn check_refer_existing_tag(
-    tag_pb: common_pb::NameOrId, plan_meta: &mut PlanMeta, pattern_tags: &mut HashSet<NameOrId>,
+    mut tag_pb: common_pb::NameOrId, plan_meta: &mut PlanMeta, pattern_tags: &mut HashSet<NameOrId>,
 ) -> IrResult<()> {
+    let mut is_existing_tag = get_or_set_tag_id(&mut tag_pb, false, plan_meta)?;
     let tag: NameOrId = tag_pb.try_into()?;
-    let mut is_existing_tag = plan_meta.get_or_set_tag_id(tag.clone()).0;
 
     if is_existing_tag {
         is_existing_tag = !pattern_tags.contains(&tag);
@@ -1140,6 +1124,7 @@ impl AsLogical for pb::logical_plan::Operator {
                 Opr::GroupBy(opr) => opr.preprocess(meta, plan_meta)?,
                 Opr::OrderBy(opr) => opr.preprocess(meta, plan_meta)?,
                 Opr::Limit(opr) => opr.preprocess(meta, plan_meta)?,
+                Opr::As(opr) => opr.preprocess(meta, plan_meta)?,
                 Opr::Join(opr) => opr.preprocess(meta, plan_meta)?,
                 Opr::Sink(opr) => opr.preprocess(meta, plan_meta)?,
                 Opr::Apply(opr) => opr.preprocess(meta, plan_meta)?,
@@ -1386,10 +1371,12 @@ mod test {
     }
 
     #[test]
-    fn prep_expression() {
+    fn preprocess_expr() {
         let mut plan_meta = PlanMeta::default().with_store_conf(true, true);
         plan_meta.insert_tag_nodes("a".into(), vec![1]);
         plan_meta.insert_tag_nodes("b".into(), vec![2]);
+        plan_meta.get_or_set_tag_id(&"a".into());
+        plan_meta.get_or_set_tag_id(&"b".into());
         plan_meta
             .curr_node_metas_mut()
             .set_is_add_column(true);
@@ -1547,6 +1534,7 @@ mod test {
     fn preprocess_scan() {
         let mut plan_meta = PlanMeta::default().with_store_conf(true, true);
         plan_meta.insert_tag_nodes("a".into(), vec![1]);
+        plan_meta.get_or_set_tag_id(&"a".into());
         plan_meta
             .curr_node_metas_mut()
             .set_is_add_column(true);

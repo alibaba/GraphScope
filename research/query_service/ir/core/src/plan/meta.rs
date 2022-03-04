@@ -611,8 +611,8 @@ impl PlanMeta {
 
     /// Get the id (with a `true` indicator) of the given tag if it already presents,
     /// otherwise, set and return the id as `self.max_tag_id` (with a `false` indicator).
-    pub fn get_or_set_tag_id(&mut self, tag: NameOrId) -> (bool, u32) {
-        let entry = self.tag_ids.entry(tag);
+    pub fn get_or_set_tag_id(&mut self, tag: &NameOrId) -> (bool, u32) {
+        let entry = self.tag_ids.entry(tag.clone());
         match entry {
             Entry::Occupied(o) => (true, *o.get()),
             Entry::Vacant(v) => {
