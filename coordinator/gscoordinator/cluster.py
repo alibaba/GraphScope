@@ -916,11 +916,12 @@ class KubernetesClusterLauncher(Launcher):
             for i in range(self._etcd_num_pods):
                 etcd_addrs.append("%s-%d:%s" % (self._etcd_name, i, port))
         else:
-            for i in range(self._etcd_addrs.split(sep=",")):
+            for i in self._etcd_addrs.split(sep=","):
                 etcd_addrs.append(i)
         etcd_endpoints = []
         for i in etcd_addrs:
-            etcd_endpoints.append("http://%s" % (i))
+            if len(i) != 0:
+                etcd_endpoints.append("http://%s" % (i))
         return etcd_endpoints
 
     def _create_services(self):
