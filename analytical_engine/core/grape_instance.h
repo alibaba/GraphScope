@@ -89,7 +89,11 @@ class GrapeInstance : public Subscriber {
   bl::result<void> unloadApp(const rpc::GSParams& params);
 
   bl::result<std::string> query(const rpc::GSParams& params,
-                                const rpc::QueryArgs& query_args);
+                                const rpc::QueryArgs& query_args,
+      				const std::string& out_context_key,
+                                std::shared_ptr<IFragmentWrapper>& wrapper);
+
+  bl::result<rpc::graph::GraphDefPb> merge_ctx_to_new_graph(const std::string context_key, const std::shared_ptr<IFragmentWrapper>& frag_wrapper,const rpc::GSParams& params); 
 
   bl::result<void> unloadContext(const rpc::GSParams& params);
 
