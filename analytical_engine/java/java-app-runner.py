@@ -210,3 +210,15 @@ if __name__ == "__main__":
         args.app,
         args.arguments,
     )
+
+
+import graphscope 
+from graphscope.dataset import load_p2p_network
+from graphscope import sssp
+
+graphscope.set_option(show_log=True) 
+graph = load_p2p_network(directed=False)
+print(graph.schema)
+simple_graph = graph.project(vertices={"host": []}, edges={"connect": ["dist"]})
+
+sssp_context = sssp(simple_graph, src=6)

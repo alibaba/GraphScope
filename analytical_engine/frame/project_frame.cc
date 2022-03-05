@@ -87,7 +87,7 @@ class ProjectSimpleFrame<
     return std::dynamic_pointer_cast<IFragmentWrapper>(wrapper);
   }
 
-  static bl::rsult<std::shared_ptr<IFragmentWrapper>> MergeGraphAndContext(
+  static bl::result<std::shared_ptr<IFragmentWrapper>> MergeGraphAndContext(
       const grape::CommSpec& comm_spec,
       const std::shared_ptr<IFragmentWrapper>& frag_wrapper_in,
       const std::shared_ptr<IContextWrapper>& ctx_wrapper_in,
@@ -120,7 +120,6 @@ class ProjectSimpleFrame<
 
     graph_def.set_directed(
         static_cast<bool>(meta.template GetKeyValue<int>("directed")));
-    graph_def.set_key(graph_name);
 
     gs::rpc::graph::VineyardInfoPb vy_info;
     if (graph_def.has_extension()) {
@@ -296,10 +295,10 @@ void Project(
 }
 
 void MergeGraphAndContext(
-    const std::shared_ptr<IFragmentWrapper>& frag_wrapper_in,
-    const std::shared_ptr<IContextWrapper>& ctx_wrapper_in,
+    const std::shared_ptr<gs::IFragmentWrapper>& frag_wrapper_in,
+    const std::shared_ptr<gs::IContextWrapper>& ctx_wrapper_in,
     const std::string& dst_graph_name,
-    bl::result<std::shared_ptr<IFragmentWrapper>>& wrapper_out) {
+    gs::bl::result<std::shared_ptr<gs::IFragmentWrapper>>& wrapper_out) {
   wrapper_out =
       gs::ProjectSimpleFrame<_PROJECTED_GRAPH_TYPE>::MergeGraphAndContext(
           wrapper_in, ctx_wrapper_in, dst_graph_name);

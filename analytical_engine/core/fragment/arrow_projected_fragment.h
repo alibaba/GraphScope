@@ -33,6 +33,8 @@
 #include "vineyard/graph/vertex_map/arrow_vertex_map.h"
 
 #include "core/context/context_protocols.h"
+#include "core/context/i_context.h"
+#include "core/context/selector.h"
 #include "core/fragment/arrow_projected_fragment_base.h"
 #include "core/vertex_map/arrow_projected_vertex_map.h"
 
