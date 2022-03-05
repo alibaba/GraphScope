@@ -402,9 +402,10 @@ class ArrowProjectedFragment
   static std::shared_ptr<vineyard::ArrowFragment<oid_t, vid_t>>
   MergeGraphAndContext(
       const grape::CommSpec comm_spec,
-      std::shared_ptr<ArrowProjectedFragment<oid_t, vid_t, vdata_t, edata_t>>
+      const std::shared_ptr<
+          ArrowProjectedFragment<oid_t, vid_t, vdata_t, edata_t>>&
           projected_fragment,
-      std::shared_ptr<IVertexDataContextWrapper> ctx_wrapper) {
+      const& std::shared_ptr<IVertexDataContextWrapper> ctx_wrapper) {
     vineyard::ObjectMeta projected_frag_meta = projected_fragment->meta();
     label_id_t projected_label_id =
         projected_frag_meta.GetKeyValue<label_id_t>("projected_v_label");

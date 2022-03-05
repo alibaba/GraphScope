@@ -76,8 +76,8 @@ class Projector : public GSObject {
 
   bl::result<std::shared_ptr<IFragmentWrapper>> MergeGraphAndContext(
       const grape::CommSpec& comm_spec,
-      std::shared_ptr<IFragmentWrapper>& frag_wrapper_in,
-      std::shared_ptr<IContextWrapper>& ctx_wrapper_in,
+      const std::shared_ptr<IFragmentWrapper>& frag_wrapper_in,
+      const std::shared_ptr<IContextWrapper>& ctx_wrapper_in,
       const std::string& dst_graph_name) {
     bl::result<std::shared_ptr<IFragmentWrapper>> wrapper_out;
     merge_func_(comm_spec, frag_wrapper_in, ctx_wrapper_in, dst_graph_name,
