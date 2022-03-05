@@ -96,8 +96,9 @@ class ProjectSimpleFrame<
         frag_wrapper_in->fragment());
     auto base_ctx_wrapper =
         std::dynamic_pointer_cast<IVertexDataContextWrapper>(ctx_wrapper_in);
-    auto new_arrow_fragment = projected_fragment_t::MergeGraphAndContext(comm_spec,
-        projected_fragment, base_ctx_wrapper);
+    BOOST_LEAF_AUTO(new_arrow_fragment =
+                        projected_fragment_t::MergeGraphAndContext(
+                            comm_spec, projected_fragment, base_ctx_wrapper));
 
     rpc::graph::GraphDefPb graph_def;
     graph_def.set_key(dst_graph_name);
@@ -111,8 +112,8 @@ class ProjectSimpleFrame<
   }
 
  private:
-  static void setGraphDef(const grape::CommSpec& comm_spec,
-                          std::shared_ptr<fragment_t>& fragment,
+  static bl::result<void> setGraphDef(const grape::CommSpec& comm_spec,
+                          const std::shared_ptr<fragment_t>& fragment,
                           rpc::graph::GraphDefPb& graph_def) {
     auto& meta = fragment->meta();
     vineyard::Client& client =
@@ -131,6 +132,7 @@ class ProjectSimpleFrame<
     // vy_info.set_generate_eid(graph_info->generate_eid);
     graph_def.mutable_extension()->PackFrom(vy_info);
     gs::set_graph_def(fragment, graph_def);
+    return {};
   }
   static void setGraphDef(std::shared_ptr<projected_fragment_t>& fragment,
                           std::string& v_label, std::string& e_label,
@@ -295,14 +297,14 @@ void Project(
 }
 
 void MergeGraphAndContext(
-  const grape::CommSpec& comm_spec,
+    const grape::CommSpec& comm_spec,
     const std::shared_ptr<gs::IFragmentWrapper>& frag_wrapper_in,
     const std::shared_ptr<gs::IContextWrapper>& ctx_wrapper_in,
     const std::string& dst_graph_name,
     gs::bl::result<std::shared_ptr<gs::IFragmentWrapper>>& wrapper_out) {
   wrapper_out =
-      gs::ProjectSimpleFrame<_PROJECTED_GRAPH_TYPE>::MergeGraphAndContext(comm_spec,
-          frag_wrapper_in, ctx_wrapper_in, dst_graph_name);
+      gs::ProjectSimpleFrame<_PROJECTED_GRAPH_TYPE>::MergeGraphAndContext(
+          comm_spec, frag_wrapper_in, ctx_wrapper_in, dst_graph_name);
 }
 
 template class _PROJECTED_GRAPH_TYPE;
