@@ -88,9 +88,9 @@ class ProjectSimpleFrame<
   }
 
   static bl::rsult<std::shared_ptr<IFragmentWrapper>> MergeGraphAndContext(
-    const grape::CommSpec& comm_spec,
-      std::shared_ptr<IFragmentWrapper>& frag_wrapper_in,
-      std::shared_ptr<IContextWrapper>* ctx_wrapper_in,
+      const grape::CommSpec& comm_spec,
+      const std::shared_ptr<IFragmentWrapper>& frag_wrapper_in,
+      const std::shared_ptr<IContextWrapper>& ctx_wrapper_in,
       const std::string& dst_graph_name) {
     auto project_fragment = std::static_pointer_cast<projected_fragment_t>(
         frag_wrapper_in->fragment());
@@ -220,8 +220,8 @@ class ProjectSimpleFrame<gs::DynamicProjectedFragment<VDATA_T, EDATA_T>> {
     return std::dynamic_pointer_cast<IFragmentWrapper>(wrapper);
   }
   static bl::rsult<std::shared_ptr<IFragmentWrapper>> MergeGraphAndContext(
-      std::shared_ptr<IFragmentWrapper>& frag_wrapper_in,
-      std::shared_ptr<IContextWrapper>* ctx_wrapper_in,
+      const std::shared_ptr<IFragmentWrapper>& frag_wrapper_in,
+      const std::shared_ptr<IContextWrapper>& ctx_wrapper_in,
       const std::string& dst_graph_name) {
     RETURN_GS_ERROR(vineyard::ErrorCode::kUnimplementedMethod,
                     "DynamicProjectedFragment doesn't support merge operation");
@@ -276,8 +276,8 @@ class ProjectSimpleFrame<
   }
 
   static bl::rsult<std::shared_ptr<IFragmentWrapper>> MergeGraphAndContext(
-      std::shared_ptr<IFragmentWrapper>& frag_wrapper_in,
-      std::shared_ptr<IContextWrapper>* ctx_wrapper_in,
+      const std::shared_ptr<IFragmentWrapper>& frag_wrapper_in,
+      const std::shared_ptr<IContextWrapper>& ctx_wrapper_in,
       const std::string& dst_graph_name) {
     RETURN_GS_ERROR(vineyard::ErrorCode::kUnimplementedMethod,
                     "DynamicProjectedFragment doesn't support merge operation");
@@ -296,8 +296,8 @@ void Project(
 }
 
 void MergeGraphAndContext(
-    std::shared_ptr<IFragmentWrapper>& frag_wrapper_in,
-    std::shared_ptr<IContextWrapper>* ctx_wrapper_in,
+    const std::shared_ptr<IFragmentWrapper>& frag_wrapper_in,
+    const std::shared_ptr<IContextWrapper>& ctx_wrapper_in,
     const std::string& dst_graph_name,
     bl::result<std::shared_ptr<IFragmentWrapper>>& wrapper_out) {
   wrapper_out =
