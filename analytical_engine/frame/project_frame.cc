@@ -96,7 +96,7 @@ class ProjectSimpleFrame<
         frag_wrapper_in->fragment());
     auto base_ctx_wrapper =
         std::dynamic_pointer_cast<IVertexDataContextWrapper>(ctx_wrapper_in);
-    auto new_arrow_fragment = projected_fragment_t::MergeGraphAndContext(
+    auto new_arrow_fragment = projected_fragment_t::MergeGraphAndContext(comm_spec,
         projected_fragment, base_ctx_wrapper);
 
     rpc::graph::GraphDefPb graph_def;
@@ -128,7 +128,7 @@ class ProjectSimpleFrame<
     BOOST_LEAF_AUTO(frag_group_id, vineyard::ConstructFragmentGroup(
                                        client, fragment->id(), comm_spec));
     vy_info.set_vineyard_id(frag_group_id);
-    vy_info.set_generate_eid(graph_info->generate_eid);
+    // vy_info.set_generate_eid(graph_info->generate_eid);
     graph_def.mutable_extension()->PackFrom(vy_info);
     gs::set_graph_def(fragment, graph_def);
   }
@@ -301,7 +301,7 @@ void MergeGraphAndContext(
     gs::bl::result<std::shared_ptr<gs::IFragmentWrapper>>& wrapper_out) {
   wrapper_out =
       gs::ProjectSimpleFrame<_PROJECTED_GRAPH_TYPE>::MergeGraphAndContext(
-          wrapper_in, ctx_wrapper_in, dst_graph_name);
+          frag_wrapper_in, ctx_wrapper_in, dst_graph_name);
 }
 
 template class _PROJECTED_GRAPH_TYPE;

@@ -403,7 +403,7 @@ class ArrowProjectedFragment
 
   static std::shared_ptr<vineyard::ArrowFragment<oid_t, vid_t>>
   MergeGraphAndContext(
-      const grape::CommSpec comm_spec,
+      const grape::CommSpec& comm_spec,
       const std::shared_ptr<
           ArrowProjectedFragment<oid_t, vid_t, vdata_t, edata_t>>&
           projected_fragment,
@@ -443,8 +443,8 @@ class ArrowProjectedFragment
         *dynamic_cast<vineyard::Client*>(fragment_->meta().GetClient());
     BOOST_LEAF_AUTO(frag_id, fragment_->AddVertexColumns(client, columns));
     VLOG(1) << "construct frag id: " << frag_id;
-    return std::dynamic_pointer_cast <
-           vineyard::ArrowFragment<oid_t, vid_t>>(client.GetObject(frag_id));
+    return std::dynamic_pointer_cast<vineyard::ArrowFragment<oid_t, vid_t>>(
+        client.GetObject(frag_id));
   }
 
   static std::shared_ptr<ArrowProjectedFragment<oid_t, vid_t, vdata_t, edata_t>>
