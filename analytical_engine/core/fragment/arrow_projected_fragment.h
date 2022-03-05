@@ -401,7 +401,7 @@ class ArrowProjectedFragment
 
   ~ArrowProjectedFragment() {}
 
-  static std::shared_ptr<vineyard::ArrowFragment<oid_t, vid_t>>
+  static bl::result<std::shared_ptr<vineyard::ArrowFragment<oid_t, vid_t>>>
   MergeGraphAndContext(
       const grape::CommSpec& comm_spec,
       const std::shared_ptr<
