@@ -295,12 +295,13 @@ void Project(
 }
 
 void MergeGraphAndContext(
+  const grape::CommSpec& comm_spec,
     const std::shared_ptr<gs::IFragmentWrapper>& frag_wrapper_in,
     const std::shared_ptr<gs::IContextWrapper>& ctx_wrapper_in,
     const std::string& dst_graph_name,
     gs::bl::result<std::shared_ptr<gs::IFragmentWrapper>>& wrapper_out) {
   wrapper_out =
-      gs::ProjectSimpleFrame<_PROJECTED_GRAPH_TYPE>::MergeGraphAndContext(
+      gs::ProjectSimpleFrame<_PROJECTED_GRAPH_TYPE>::MergeGraphAndContext(comm_spec,
           frag_wrapper_in, ctx_wrapper_in, dst_graph_name);
 }
 
