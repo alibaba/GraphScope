@@ -36,7 +36,7 @@ typedef void ProjectT(
     bl::result<std::shared_ptr<IFragmentWrapper>>& wrapper_out);
 typedef void MergeT(const grape::CommSpec& comm_spec,
                     std::shared_ptr<IFragmentWrapper>& frag_wrapper_in,
-                    std::shared_ptr<IContextWrapper>* ctx_wrapper_in,
+                    std::shared_ptr<IContextWrapper>& ctx_wrapper_in,
                     const std::string& dst_graph_name,
                     bl::result<std::shared_ptr<IFragmentWrapper>>& wrapper_out);
 
@@ -80,7 +80,7 @@ class Projector : public GSObject {
       std::shared_ptr<IContextWrapper>& ctx_wrapper_in,
       const std::string& dst_graph_name) {
     bl::result<std::shared_ptr<IFragmentWrapper>> wrapper_out;
-    merge_func_(comm_spec, wrapper_in, ctx_wrapper_in, dst_graph_name,
+    merge_func_(comm_spec, frag_wrapper_in, ctx_wrapper_in, dst_graph_name,
                 wrapper_out);
     return wrapper_out;
   }

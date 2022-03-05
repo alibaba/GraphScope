@@ -406,7 +406,7 @@ class ArrowProjectedFragment
           projected_fragment,
       std::shared_ptr<IVertexDataContextWrapper> ctx_wrapper) {
     vineyard::ObjectMeta projected_frag_meta = projected_fragment->meta();
-    lable_id_t projected_label_id =
+    label_id_t projected_label_id =
         projected_frag_meta.GetKeyValue<label_id_t>("projected_v_label");
     VLOG(1) << "projected label id: " << projected_label_id;
 
@@ -416,7 +416,7 @@ class ArrowProjectedFragment
     std::string selector_string = generate_selectors(selector_list);
     auto selector = Selector::ParseSelectors(selector_string).value();
     BOOST_LEAF_AUTO(arrow_arrays,
-                    ctx_wrapper->ToArrowArrays(comm_spec, selector))
+                    ctx_wrapper->ToArrowArrays(comm_spec, selector));
     std::map<label_id_t,
              std::vector<std::pair<std::string, std::shared_ptr<arrow::Array>>>>
         columns;
@@ -437,11 +437,11 @@ class ArrowProjectedFragment
     }
 
     vineyard::Client& client =
-        *dynamic_cast<vineyard::Client*>(fragment->meta().GetClient());
+        *dynamic_cast<vineyard::Client*>(fragment_->meta().GetClient());
     BOOST_LEAF_AUTO(frag_id, fragment_->AddVertexColumns(client, columns));
     VLOG(1) << "construct frag id: " << frag_id;
     return std::dynamic_pointer_cast <
-           vineyard::ArrowFragment<oid_t, vid_t>(client.GetObject(frag_id));
+           vineyard::ArrowFragment<oid_t, vid_t>>(client.GetObject(frag_id));
   }
 
   static std::shared_ptr<ArrowProjectedFragment<oid_t, vid_t, vdata_t, edata_t>>

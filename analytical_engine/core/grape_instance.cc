@@ -228,7 +228,7 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::projectToSimple(
 bl::result<std::string> GrapeInstance::query(const rpc::GSParams& params,
                                              const rpc::QueryArgs& query_args,
                                              const std::string& out_context_key,
-                                             const IFragmentWrapper wrapper) {
+                                             std::shared_ptr<IFragmentWrapper>& wrapper) {
   BOOST_LEAF_AUTO(app_name, params.Get<std::string>(rpc::APP_NAME));
   BOOST_LEAF_AUTO(app, object_manager_.GetObject<AppEntry>(app_name));
 
@@ -1073,7 +1073,7 @@ bl::result<void> GrapeInstance::registerGraphType(const rpc::GSParams& params) {
         "Unsupported graph type: " + rpc::graph::GraphTypePb_Name(graph_type));
   }
 }
-bl::result<rpc::graph::GraphDefPb> merge_ctx_to_new_graph(const std::string context_key, const IFragmentWrapper frag_wrapper,const rpc::GSParams& params) {
+bl::result<rpc::graph::GraphDefPb> GrapeInstance::merge_ctx_to_new_graph(const std::string context_key, const std::shared_ptr<IFragmentWrapper>& frag_wrapper,const rpc::GSParams& params) {
   if (frag_wrapper->graph_def().graph_type() != rpc::graph::ARROW_PROJECTED) {
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
                     "Return graph is only available for projected graph");
@@ -1092,7 +1092,7 @@ bl::result<rpc::graph::GraphDefPb> merge_ctx_to_new_graph(const std::string cont
 
   BOOST_LEAF_AUTO(projector, object_manager_.GetObject<Projector>(type_sig));
   BOOST_LEAF_AUTO(out_graph_wrapper,
-                  projector->MergeGraphAndContext(comm_spec_, wrapper, ctx_wrapper, graph_name));
+                  projector->MergeGraphAndContext(comm_spec_, frag_wrapper, ctx_wrapper, graph_name));
   BOOST_LEAF_CHECK(object_manager_.PutObject(out_graph_wrapper));
   return out_graph_wrapper->graph_def();
 }
