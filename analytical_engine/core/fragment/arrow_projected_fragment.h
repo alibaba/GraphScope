@@ -405,7 +405,7 @@ class ArrowProjectedFragment
       const std::shared_ptr<
           ArrowProjectedFragment<oid_t, vid_t, vdata_t, edata_t>>&
           projected_fragment,
-      const& std::shared_ptr<IVertexDataContextWrapper> ctx_wrapper) {
+      const std::shared_ptr<IVertexDataContextWrapper>& ctx_wrapper) {
     vineyard::ObjectMeta projected_frag_meta = projected_fragment->meta();
     label_id_t projected_label_id =
         projected_frag_meta.GetKeyValue<label_id_t>("projected_v_label");
