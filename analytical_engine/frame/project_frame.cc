@@ -92,7 +92,7 @@ class ProjectSimpleFrame<
       const std::shared_ptr<IFragmentWrapper>& frag_wrapper_in,
       const std::shared_ptr<IContextWrapper>& ctx_wrapper_in,
       const std::string& dst_graph_name) {
-    auto project_fragment = std::static_pointer_cast<projected_fragment_t>(
+    auto projected_fragment = std::static_pointer_cast<projected_fragment_t>(
         frag_wrapper_in->fragment());
     auto base_ctx_wrapper =
         std::dynamic_pointer_cast<IVertexDataContextWrapper>(ctx_wrapper_in);
