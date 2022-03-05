@@ -21,6 +21,7 @@
 #include <string>
 #include <utility>
 
+#include "core/context/i_context.h"
 #include "core/error.h"
 #include "core/object/fragment_wrapper.h"
 #include "core/object/gs_object.h"
@@ -33,6 +34,11 @@ typedef void ProjectT(
     std::shared_ptr<IFragmentWrapper>& wrapper_in,
     const std::string& projected_graph_name, const rpc::GSParams& params,
     bl::result<std::shared_ptr<IFragmentWrapper>>& wrapper_out);
+typedef void MergeT(const grape::CommSpec& comm_spec,
+                    std::shared_ptr<IFragmentWrapper>& frag_wrapper_in,
+                    std::shared_ptr<IContextWrapper>* ctx_wrapper_in,
+                    const std::string& dst_graph_name,
+                    bl::result<std::shared_ptr<IFragmentWrapper>>& wrapper_out);
 
 /**
  * @brief Projector is a invoker of the project_frame library. A method
@@ -53,6 +59,9 @@ class Projector : public GSObject {
       BOOST_LEAF_AUTO(project_fun,
                       get_func_ptr(lib_path_, dl_handle_, "Project"));
       project_func_ = reinterpret_cast<ProjectT*>(project_fun);
+      BOOST_LEAF_AUTO(merge_fun, get_func_ptr(lib_path_, dl_handle_,
+                                              "MergeGraphAndContext"));
+      merge_func_ = reinterpret_cast<MergeT*>(merge_fun);
     }
     return {};
   }
@@ -65,10 +74,22 @@ class Projector : public GSObject {
     return wrapper_out;
   }
 
+  bl::result<std::shared_ptr<IFragmentWrapper>> MergeGraphAndContext(
+      const grape::CommSpec& comm_spec,
+      std::shared_ptr<IFragmentWrapper>& frag_wrapper_in,
+      std::shared_ptr<IContextWrapper>& ctx_wrapper_in,
+      const std::string& dst_graph_name) {
+    bl::result<std::shared_ptr<IFragmentWrapper>> wrapper_out;
+    merge_func_(comm_spec, wrapper_in, ctx_wrapper_in, dst_graph_name,
+                wrapper_out);
+    return wrapper_out;
+  }
+
  private:
   std::string lib_path_;
   void* dl_handle_;
   ProjectT* project_func_;
+  MergeT* merge_func_;
 };
 
 }  // namespace gs

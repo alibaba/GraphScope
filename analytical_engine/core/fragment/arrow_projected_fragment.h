@@ -399,6 +399,51 @@ class ArrowProjectedFragment
 
   ~ArrowProjectedFragment() {}
 
+  static std::shared_ptr<vineyard::ArrowFragment<oid_t, vid_t>>
+  MergeGraphAndContext(
+      const grape::CommSpec comm_spec,
+      std::shared_ptr<ArrowProjectedFragment<oid_t, vid_t, vdata_t, edata_t>>
+          projected_fragment,
+      std::shared_ptr<IVertexDataContextWrapper> ctx_wrapper) {
+    vineyard::ObjectMeta projected_frag_meta = projected_fragment->meta();
+    lable_id_t projected_label_id =
+        projected_frag_meta.GetKeyValue<label_id_t>("projected_v_label");
+    VLOG(1) << "projected label id: " << projected_label_id;
+
+    // First get out arrow array
+    std::vector<std::pair<std::string, std::string>> selector_list;
+    selector_list.emplace_back("result", "r");
+    std::string selector_string = generate_selectors(selector_list);
+    auto selector = Selector::ParseSelectors(selector_string).value();
+    BOOST_LEAF_AUTO(arrow_arrays,
+                    ctx_wrapper->ToArrowArrays(comm_spec, selector))
+    std::map<label_id_t,
+             std::vector<std::pair<std::string, std::shared_ptr<arrow::Array>>>>
+        columns;
+    columns.insert(std::make_pair(projected_label_id, arrow_arrays));
+    VLOG(1) << "Finish getting arrow array output of ctx";
+    // First get the arrowFragment from which this projected fragment is
+    // projected from.
+
+    vineyard::ObjectMeta old_arrow_frag_meta =
+        projected_frag_meta.GetMemberMeta("arrow_fragment");
+    auto fragment_ = std::make_shared<vineyard::ArrowFragment<oid_t, vid_t>>();
+    fragment_->Construct(old_arrow_frag_meta);
+    if (fragment_->vertex_label_num() != 1 ||
+        fragment_->edge_label_num() != 1) {
+      LOG(ERROR) << "Not possible, vertex label num: "
+                 << fragment_->vertex_label_num()
+                 << " edge label num: " << fragment_->edge_label_num();
+    }
+
+    vineyard::Client& client =
+        *dynamic_cast<vineyard::Client*>(fragment->meta().GetClient());
+    BOOST_LEAF_AUTO(frag_id, fragment_->AddVertexColumns(client, columns));
+    VLOG(1) << "construct frag id: " << frag_id;
+    return std::dynamic_pointer_cast <
+           vineyard::ArrowFragment<oid_t, vid_t>(client.GetObject(frag_id));
+  }
+
   static std::shared_ptr<ArrowProjectedFragment<oid_t, vid_t, vdata_t, edata_t>>
   Project(std::shared_ptr<vineyard::ArrowFragment<oid_t, vid_t>> fragment,
           const std::string& v_label_str, const std::string& v_prop_str,

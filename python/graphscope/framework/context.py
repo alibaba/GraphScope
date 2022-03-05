@@ -31,6 +31,7 @@ from graphscope.framework.dag import DAGNode
 from graphscope.framework.dag_utils import run_app
 from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.errors import check_argument
+from graphscope.framework.graph import Graph
 
 
 class ResultDAGNode(DAGNode):
@@ -744,6 +745,14 @@ def create_context_node(context_type, bound_app, graph, *args, **kwargs):
     else:
         # dynamic_vertex_data for networkx
         return BaseContextDAGNode(bound_app, graph, *args, **kwargs)
+
+def create_graph(bound_app, graph, *args, **kwargs):
+    session = bound_app.session
+    # add op to dag
+    kwargs_extend = dict(kwargs, return_graph=True)
+    op = run_app(bound_app, *args, **kwargs_extend)
+    session.dag.add_op(op)
+    return Graph(session, op, graph._oid_type, graph._directed, graph._generate_eid)
 
 
 def _get_property_v_context_schema(schema):

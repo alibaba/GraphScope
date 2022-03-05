@@ -87,7 +87,52 @@ class ProjectSimpleFrame<
     return std::dynamic_pointer_cast<IFragmentWrapper>(wrapper);
   }
 
+  static bl::rsult<std::shared_ptr<IFragmentWrapper>> MergeGraphAndContext(
+    const grape::CommSpec& comm_spec,
+      std::shared_ptr<IFragmentWrapper>& frag_wrapper_in,
+      std::shared_ptr<IContextWrapper>* ctx_wrapper_in,
+      const std::string& dst_graph_name) {
+    auto project_fragment = std::static_pointer_cast<projected_fragment_t>(
+        frag_wrapper_in->fragment());
+    auto base_ctx_wrapper =
+        std::dynamic_pointer_cast<IVertexDataContextWrapper>(ctx_wrapper_in);
+    auto new_arrow_fragment = projected_fragment_t::MergeGraphAndContext(
+        projected_fragment, base_ctx_wrapper);
+
+    rpc::graph::GraphDefPb graph_def;
+    graph_def.set_key(dst_graph_name);
+    graph_def.set_graph_type(rpc::graph::ARROW_PROPERTY);
+
+    setGraphDef(comm_spec, new_arrow_fragment, graph_def);
+
+    auto wrapper = std::make_shared<FragmentWrapper<fragment_t>>(
+        dst_graph_name, graph_def, new_arrow_fragment);
+    return std::dynamic_pointer_cast<IFragmentWrapper>(wrapper);
+  }
+
  private:
+  static void setGraphDef(const grape::CommSpec& comm_spec,
+                          std::shared_ptr<fragment_t>& fragment,
+                          rpc::graph::GraphDefPb& graph_def) {
+    auto& meta = fragment->meta();
+    vineyard::Client& client =
+        *dynamic_cast<vineyard::Client*>(meta.GetClient());
+
+    graph_def.set_directed(
+        static_cast<bool>(meta.template GetKeyValue<int>("directed")));
+    graph_def.set_key(graph_name);
+
+    gs::rpc::graph::VineyardInfoPb vy_info;
+    if (graph_def.has_extension()) {
+      graph_def.extension().UnpackTo(&vy_info);
+    }
+    BOOST_LEAF_AUTO(frag_group_id, vineyard::ConstructFragmentGroup(
+                                       client, fragment->id(), comm_spec));
+    vy_info.set_vineyard_id(frag_group_id);
+    vy_info.set_generate_eid(graph_info->generate_eid);
+    graph_def.mutable_extension()->PackFrom(vy_info);
+    gs::set_graph_def(fragment, graph_def);
+  }
   static void setGraphDef(std::shared_ptr<projected_fragment_t>& fragment,
                           std::string& v_label, std::string& e_label,
                           std::string& v_prop, std::string& e_prop,
@@ -174,6 +219,13 @@ class ProjectSimpleFrame<gs::DynamicProjectedFragment<VDATA_T, EDATA_T>> {
         projected_graph_name, graph_def, projected_frag);
     return std::dynamic_pointer_cast<IFragmentWrapper>(wrapper);
   }
+  static bl::rsult<std::shared_ptr<IFragmentWrapper>> MergeGraphAndContext(
+      std::shared_ptr<IFragmentWrapper>& frag_wrapper_in,
+      std::shared_ptr<IContextWrapper>* ctx_wrapper_in,
+      const std::string& dst_graph_name) {
+    RETURN_GS_ERROR(vineyard::ErrorCode::kUnimplementedMethod,
+                    "DynamicProjectedFragment doesn't support merge operation");
+  }
 };
 
 template <typename OID_T, typename VID_T, typename VDATA_T, typename EDATA_T>
@@ -222,6 +274,14 @@ class ProjectSimpleFrame<
         projected_graph_name, graph_def, projected_frag);
     return std::dynamic_pointer_cast<IFragmentWrapper>(wrapper);
   }
+
+  static bl::rsult<std::shared_ptr<IFragmentWrapper>> MergeGraphAndContext(
+      std::shared_ptr<IFragmentWrapper>& frag_wrapper_in,
+      std::shared_ptr<IContextWrapper>* ctx_wrapper_in,
+      const std::string& dst_graph_name) {
+    RETURN_GS_ERROR(vineyard::ErrorCode::kUnimplementedMethod,
+                    "DynamicProjectedFragment doesn't support merge operation");
+  }
 };
 #endif
 }  // namespace gs
@@ -233,6 +293,16 @@ void Project(
     gs::bl::result<std::shared_ptr<gs::IFragmentWrapper>>& wrapper_out) {
   wrapper_out = gs::ProjectSimpleFrame<_PROJECTED_GRAPH_TYPE>::Project(
       wrapper_in, projected_graph_name, params);
+}
+
+void MergeGraphAndContext(
+    std::shared_ptr<IFragmentWrapper>& frag_wrapper_in,
+    std::shared_ptr<IContextWrapper>* ctx_wrapper_in,
+    const std::string& dst_graph_name,
+    bl::result<std::shared_ptr<IFragmentWrapper>>& wrapper_out) {
+  wrapper_out =
+      gs::ProjectSimpleFrame<_PROJECTED_GRAPH_TYPE>::MergeGraphAndContext(
+          wrapper_in, ctx_wrapper_in, dst_graph_name);
 }
 
 template class _PROJECTED_GRAPH_TYPE;

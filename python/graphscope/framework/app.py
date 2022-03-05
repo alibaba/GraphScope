@@ -29,6 +29,7 @@ from io import BytesIO
 import yaml
 
 from graphscope.framework.context import create_context_node
+from graphscope.framework.context import create_graph
 from graphscope.framework.dag import DAGNode
 from graphscope.framework.dag_utils import bind_app
 from graphscope.framework.dag_utils import create_app
@@ -371,6 +372,10 @@ class AppDAGNode(DAGNode):
 
         if not isinstance(self._graph, DAGNode) and not self._graph.loaded():
             raise RuntimeError("The graph is not loaded")
+
+        # if context type is vertex_data and graph is projected_fragment, we automatically add the column back as a new graph.
+        if context_type == "vertex_data" and self._graph.graph_type == graph_def_pb2.ARROW_PROJECTED:
+            return create_graph(self, self._graph, *args, **kwargs)
 
         if self._app_assets.type in ["cython_pie", "cython_pregel", "java_pie"]:
             # cython app support kwargs only
