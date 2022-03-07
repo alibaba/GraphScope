@@ -42,6 +42,7 @@ jobs:
     # can `ssh localhost` without password, which may need to
     # be configured manually when a new self-hosted runner is added.
     runs-on: self-hosted
+    if: ${{ github.repository == 'alibaba/GraphScope' }}
     container:
       image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.3.19
     defaults:
@@ -117,6 +118,7 @@ jobs:
 
   helm-test:
     runs-on: self-hosted
+    if: ${{ github.repository == 'alibaba/GraphScope' }}
     needs: [gremlin-test]
     strategy:
       matrix:
