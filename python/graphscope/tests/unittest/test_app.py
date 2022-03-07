@@ -94,7 +94,7 @@ def test_run_app_on_directed_graph(
     # sssp
     ctx1 = sssp(p2p_project_directed_graph, src=6)
     r1 = (
-        ctx1.to_dataframe({"node": "v.id", "r": "r"})
+        ctx1.to_dataframe({"node": "v:person.id", "r": "v:person.r"})
         .sort_values(by=["node"])
         .to_numpy(dtype=float)
     )
@@ -102,7 +102,7 @@ def test_run_app_on_directed_graph(
     assert np.allclose(r1, sssp_result["directed"])
     ctx2 = sssp(p2p_project_directed_graph, 6)
     r2 = (
-        ctx2.to_dataframe({"node": "v.id", "r": "r"})
+        ctx2.to_dataframe({"node": "v:person.id", "r": "v:person.r"})
         .sort_values(by=["node"])
         .to_numpy(dtype=float)
     )
@@ -110,7 +110,7 @@ def test_run_app_on_directed_graph(
     assert np.allclose(r2, sssp_result["directed"])
     assert np.allclose(
         ctx2.to_dataframe(
-            {"node": "v.id", "r": "r"}, vertex_range={"begin": 1, "end": 4}
+            {"node": "v:person.id", "r": "v:person.r"}, vertex_range={"begin": 1, "end": 4}
         )
         .sort_values(by=["node"])
         .to_numpy(),
@@ -127,7 +127,7 @@ def test_run_app_on_directed_graph(
     # pagerank
     ctx_pr = pagerank(p2p_project_directed_graph, delta=0.85, max_round=10)
     ret_pr = (
-        ctx_pr.to_dataframe({"node": "v.id", "r": "r"})
+        ctx_pr.to_dataframe({"node": "v:person.id", "r": "v:person.r"})
         .sort_values(by=["node"])
         .to_numpy(dtype=float)
     )
@@ -151,7 +151,7 @@ def test_run_app_on_directed_graph(
     # bfs
     ctx4 = bfs(p2p_project_directed_graph, src=6)
     r4 = (
-        ctx4.to_dataframe({"node": "v.id", "r": "r"})
+        ctx4.to_dataframe({"node": "v:person.id", "r": "v:person.r"})
         .sort_values(by=["node"])
         .to_numpy(dtype=int)
     )
@@ -165,7 +165,7 @@ def test_run_app_on_directed_graph(
     assert np.all(r5 == bfs_result["directed"])
     assert np.all(
         ctx5.to_dataframe(
-            {"node": "v.id", "r": "r"}, vertex_range={"begin": 1, "end": 4}
+            {"node": "v:person.id", "r": "v:person.r"}, vertex_range={"begin": 1, "end": 4}
         )
         .sort_values(by=["node"])
         .to_numpy()
@@ -186,7 +186,7 @@ def test_run_app_on_directed_graph(
     # clustering
     ctx_clustering = clustering(p2p_project_directed_graph)
     ret_clustering = (
-        ctx_clustering.to_dataframe({"node": "v.id", "r": "r"})
+        ctx_clustering.to_dataframe({"node": "v:person.id", "r": "v:person.r"})
         .sort_values(by=["node"])
         .to_numpy(dtype=float)
     )
@@ -195,7 +195,7 @@ def test_run_app_on_directed_graph(
     # degree_centrality
     ctx_dc = degree_centrality(p2p_project_directed_graph)
     ret_dc = (
-        ctx_dc.to_dataframe({"node": "v.id", "r": "r"})
+        ctx_dc.to_dataframe({"node": "v:person.id", "r": "v:person.r"})
         .sort_values(by=["node"])
         .to_numpy(dtype=float)
     )
@@ -204,7 +204,7 @@ def test_run_app_on_directed_graph(
     # eigenvector_centrality
     ctx_ev = eigenvector_centrality(p2p_project_directed_graph)
     ret_ev = (
-        ctx_ev.to_dataframe({"node": "v.id", "r": "r"})
+        ctx_ev.to_dataframe({"node": "v:person.id", "r": "v:person.r"})
         .sort_values(by=["node"])
         .to_numpy(dtype=float)
     )
