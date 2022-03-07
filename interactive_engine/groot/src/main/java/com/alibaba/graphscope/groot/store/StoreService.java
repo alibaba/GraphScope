@@ -27,7 +27,6 @@ import com.alibaba.maxgraph.common.config.StoreConfig;
 import com.alibaba.maxgraph.common.util.ThreadFactoryUtils;
 import com.alibaba.maxgraph.proto.groot.GraphDefPb;
 
-import java.util.stream.Collectors;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -49,6 +48,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 public class StoreService implements MetricsAgent {
     private static final Logger logger = LoggerFactory.getLogger(StoreService.class);
