@@ -45,7 +45,7 @@ def test_sssp():
 
         ctx = sssp(sg, 6)
         curr_result = (
-            ctx.to_dataframe({"node": "v.id", "result": "r"})
+            ctx.to_dataframe({"node": "v:person.id", "result": "v:person.r"})
             .sort_values(by=["node"])
             .to_numpy(dtype=int)
         )

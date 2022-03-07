@@ -65,7 +65,7 @@ def test_serialize_roundtrip(gs_session_local):
     pg = new_graph.project(vertices={"person": []}, edges={"knows": ["dist"]})
     ctx = graphscope.sssp(pg, src=6)
     ret = (
-        ctx.to_dataframe({"node": "v.id", "r": "r"}, vertex_range={"end": 6})
+        ctx.to_dataframe({"node": "v:person.id", "r": "v:person.r"}, vertex_range={"end": 6})
         .sort_values(by=["node"])
         .to_numpy(dtype=float)
     )
