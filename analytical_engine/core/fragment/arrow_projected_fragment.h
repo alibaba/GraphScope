@@ -416,7 +416,7 @@ class ArrowProjectedFragment
 
     // First get out arrow array
     std::vector<std::pair<std::string, std::string>> selector_list;
-    selector_list.emplace_back("result", "r");
+    selector_list.emplace_back("r", "r");
     // TODO(@zhanglei) avoid arrow array copy and allocate context on vineyard
     // directly.
     std::string selector_string = generate_selectors(selector_list);

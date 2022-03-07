@@ -222,6 +222,7 @@ class ProjectSimpleFrame<gs::DynamicProjectedFragment<VDATA_T, EDATA_T>> {
     return std::dynamic_pointer_cast<IFragmentWrapper>(wrapper);
   }
   static bl::result<std::shared_ptr<IFragmentWrapper>> MergeGraphAndContext(
+      const grape::CommSpec& comm_spec,
       const std::shared_ptr<IFragmentWrapper>& frag_wrapper_in,
       const std::shared_ptr<IContextWrapper>& ctx_wrapper_in,
       const std::string& dst_graph_name) {
@@ -278,11 +279,12 @@ class ProjectSimpleFrame<
   }
 
   static bl::result<std::shared_ptr<IFragmentWrapper>> MergeGraphAndContext(
+      const grape::CommSpec& comm_spec,
       const std::shared_ptr<IFragmentWrapper>& frag_wrapper_in,
       const std::shared_ptr<IContextWrapper>& ctx_wrapper_in,
       const std::string& dst_graph_name) {
     RETURN_GS_ERROR(vineyard::ErrorCode::kUnimplementedMethod,
-                    "DynamicProjectedFragment doesn't support merge operation");
+                    "ArrowFlattenedFragment doesn't support merge operation");
   }
 };
 #endif
