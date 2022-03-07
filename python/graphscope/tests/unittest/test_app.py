@@ -23,6 +23,7 @@ import numpy as np
 import pytest
 
 import graphscope
+graphscope.set_option(show_log=True)
 from graphscope import bfs
 from graphscope import clustering
 from graphscope import degree_centrality
@@ -100,12 +101,14 @@ def test_run_app_on_directed_graph(
     )
     r1[r1 == 1.7976931348623157e308] = float("inf")  # replace limit::max with inf
     assert np.allclose(r1, sssp_result["directed"])
+    print("first sssp")
     ctx2 = sssp(p2p_project_directed_graph, 6)
     r2 = (
         ctx2.to_dataframe({"node": "v:person.id", "r": "v:person.r"})
         .sort_values(by=["node"])
         .to_numpy(dtype=float)
     )
+    print("second sssp")
     r2[r2 == 1.7976931348623157e308] = float("inf")  # replace limit::max with inf
     assert np.allclose(r2, sssp_result["directed"])
     assert np.allclose(
@@ -122,6 +125,7 @@ def test_run_app_on_directed_graph(
     )
 
     r3 = sssp(p2p_project_directed_graph, 100000000)
+    print("thrid sssp")
     assert r3 is not None
 
     # pagerank
