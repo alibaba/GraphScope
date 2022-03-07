@@ -8,6 +8,14 @@
     <pubDate>Mon, 31 May 2021 15:01:12 +0800</pubDate>
     <lastBuildDate>Mon, 31 May 2021 15:01:12 +0800</lastBuildDate>
     <generator>Jekyll v4.1.1</generator>
+    <item>
+<title>Release Notes: v0.11.0</title>
+<description><p><img src="/blog/assets/images/release_note_t.png" alt="release-note" /> We are glad to announce a number of new features and improvements to GraphScope, alongside the GraphScope v0.11.0 release. This major release introduces mutable graphs into GraphScope, and adds GPU supports for graph analytics engine (GAE). It also focuses on user-friendly improvements, code quality, and a series of bug fixes.</p> <p>We highlight the following improvements included in this release:</p> <ol> <li>Supporting mutable graphs: <ul> <li>Providing a set of interfaces (e.g., <code class="language-plaintext highlighter-rouge">add_vertex</code>, <code class="language-plaintext highlighter-rouge">add_edge</code> and <code class="language-plaintext highlighter-rouge">update_vertex</code>) to modify the topology of an existing graph;</li> <li>Adopting existing apps to mutable graphs.</li> </ul> </li> <li>Accelerating graph analytics apps with GPUs: <ul> <li>Adding new <code class="language-plaintext highlighter-rouge">fragment</code>, <code class="language-plaintext highlighter-rouge">worker</code>, <code class="language-plaintext highlighter-rouge">message_manager</code> and <code class="language-plaintext highlighter-rouge">apps</code> to utilize GPUs to process graph analytics tasks faster;</li> <li>On top of these new infrastructures, 6 example algorithms (BFS, WCC, SSSP, PageRank, CDLP and LCC) are implemented;</li> <li>Our GPU-based graph algorithms are about 2x faster compared with state-of-the-art GPU-based graph processing systems. See detals in <a href="https://github.com/alibaba/libgrape-lite/blob/master/Performance.md#performance-on-gpus">performance report</a>.</li> </ul> </li> <li>Optimizations and enhancements: <ul> <li>Stream grpc request (response) to support loading graph (fetching result) from (to) numpy/pandas more than 2GB;</li> <li>Accelerating manipulation of graph topology by replacing folly::dynamicwith <code class="language-plaintext highlighter-rouge">rapidjson::value</code>.</li> </ul> </li> </ol> <p>For more detailed improvements that have been made in this release, please refer to the complete <a href="https://github.com/alibaba/GraphScope/releases/tag/v0.11.0">changelog</a>.</p> </description>
+<pubDate>Sun, 06 Mar 2022 03:33:20 +0000</pubDate>
+<link>https://graphscope.io/blog/releasenotes/2022/03/06/release-notes-0.11.0.html</link>
+<guid isPermaLink="true">https://graphscope.io/blog/releasenotes/2022/03/06/release-notes.html</guid>
+<category>ReleaseNotes</category>
+</item>
 
     <item>
         <title>Release Notes: v0.10.0</title>
