@@ -1073,7 +1073,7 @@ bl::result<void> GrapeInstance::registerGraphType(const rpc::GSParams& params) {
         "Unsupported graph type: " + rpc::graph::GraphTypePb_Name(graph_type));
   }
 }
-bl::result<rpc::graph::GraphDefPb> GrapeInstance::merge_ctx_to_new_graph(
+bl::result<rpc::graph::GraphDefPb> GrapeInstance::mergeCtxToNewGraph(
     const std::string context_key,
     const std::shared_ptr<IFragmentWrapper>& frag_wrapper,
     const rpc::GSParams& params) {
@@ -1133,7 +1133,7 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
       VLOG(1) << "Return graph";
       // new frag_wrapper should be put in object manager.
       BOOST_LEAF_AUTO(
-          graph_def, merge_ctx_to_new_graph(context_key, frag_wrapper, params));
+          graph_def, mergeCtxToNewGraph(context_key, frag_wrapper, params));
       r->set_graph_def(graph_def);
     } else {
       r->set_data(context_key);

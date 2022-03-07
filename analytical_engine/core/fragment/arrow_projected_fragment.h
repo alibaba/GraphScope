@@ -417,6 +417,8 @@ class ArrowProjectedFragment
     // First get out arrow array
     std::vector<std::pair<std::string, std::string>> selector_list;
     selector_list.emplace_back("result", "r");
+    // TODO(@zhanglei) avoid arrow array copy and allocate context on vineyard
+    // directly.
     std::string selector_string = generate_selectors(selector_list);
     auto selector = Selector::ParseSelectors(selector_string).value();
     BOOST_LEAF_AUTO(arrow_arrays,
