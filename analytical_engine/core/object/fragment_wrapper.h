@@ -542,10 +542,11 @@ class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T>>
       auto prop_id = selector.property_id();
       auto vertex_prop_num = fragment_->vertex_property_num(label_id);
 
-      if (prop_id >= vertex_prop_num) {
-        RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
-                        "property id out of range: " + std::to_string(prop_id));
-      }
+      // if (prop_id >= vertex_prop_num) {
+      //   RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
+      //                   "property id out of range: " +
+      //                   std::to_string(prop_id));
+      // }
 
       if (comm_spec.fid() == 0) {
         *arc << vineyard::ArrowDataTypeToInt(
