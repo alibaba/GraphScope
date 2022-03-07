@@ -22,18 +22,22 @@ import com.alibaba.graphscope.common.intermediate.operator.ApplyOp;
 import com.alibaba.graphscope.common.intermediate.operator.InterOpBase;
 import com.alibaba.graphscope.common.intermediate.operator.SelectOp;
 import com.alibaba.graphscope.common.jna.type.FfiJoinKind;
+import com.alibaba.graphscope.gremlin.antlr4.ExprP;
 import com.alibaba.graphscope.gremlin.transform.TraversalParentTransformFactory;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
+import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
 import org.apache.tinkerpop.gremlin.process.traversal.step.TraversalParent;
+import org.apache.tinkerpop.gremlin.process.traversal.step.filter.WherePredicateStep;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.List;
+import java.util.Optional;
 
 public class WherePredicateTest {
     private Graph graph = TinkerFactory.createModern();
@@ -123,5 +127,18 @@ public class WherePredicateTest {
 
         SelectOp selectOp = (SelectOp) getApplyWithSelect(traversal).get(2);
         Assert.assertEquals("@~alias_2_0 == @~alias_2_1", selectOp.getPredicate().get().applyArg());
+    }
+
+    @Test
+    public void g_V_where_expr_test() {
+        // g.V().where(expr("@.age"))
+        Traversal traversal = g.V();
+        Step exprStep = new WherePredicateStep(traversal.asAdmin(), Optional.empty(), new ExprP("@.age"));
+
+        List ops = TraversalParentTransformFactory.WHERE_BY_STEP.apply((TraversalParent) exprStep);
+        SelectOp selectOp = (SelectOp) ops.get(0);
+
+        String predicate = (String) selectOp.getPredicate().get().applyArg();
+        Assert.assertEquals("@.age", predicate);
     }
 }
