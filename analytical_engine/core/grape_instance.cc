@@ -1132,8 +1132,8 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
     if (return_graph) {
       VLOG(1) << "Return graph";
       // new frag_wrapper should be put in object manager.
-      BOOST_LEAF_AUTO(
-          graph_def, mergeCtxToNewGraph(context_key, frag_wrapper, params));
+      BOOST_LEAF_AUTO(graph_def,
+                      mergeCtxToNewGraph(context_key, frag_wrapper, params));
       r->set_graph_def(graph_def);
     } else {
       r->set_data(context_key);
