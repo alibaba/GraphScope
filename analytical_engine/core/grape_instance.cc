@@ -1136,7 +1136,7 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
                       mergeCtxToNewGraph(context_key, frag_wrapper, params));
       r->set_graph_def(graph_def);
     } else {
-      r->set_data(context_key);
+      r->set_data(context_result);
     }
 
     break;
