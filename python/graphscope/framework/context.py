@@ -31,7 +31,6 @@ from graphscope.framework.dag import DAGNode
 from graphscope.framework.dag_utils import run_app
 from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.errors import check_argument
-from graphscope.framework.graph import Graph
 from graphscope.framework.graph import GraphDAGNode
 
 
