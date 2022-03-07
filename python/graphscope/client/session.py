@@ -110,10 +110,14 @@ class _FetchHandler(object):
         if isinstance(self._fetches[seq], Operation):
             # for nx Graph
             return op_result.graph_def
+        # run_app op also can return graph result, so judge here
+
         # get graph dag node as base
-        graph_dag_node = self._fetches[seq]
+        dag_node = self._fetches[seq]
+        if dag_node.type == types_pb2.RUN_APP:
+            logger.info("run app returns a graph")
         # construct graph
-        g = Graph(graph_dag_node)
+        g = Graph(dag_node)
         # update graph flied from graph_def
         g.update_from_graph_def(op_result.graph_def)
         return g

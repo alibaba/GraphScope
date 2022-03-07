@@ -83,8 +83,10 @@ def run_app(app, *args, **kwargs):
     config[types_pb2.OUTPUT_PREFIX] = utils.s_to_attr(output_prefix)
     if "return_graph" in kwargs:
         config[types_pb2.RETURN_GRAPH] = utils.b_to_attr(True)
+        return_graph=True
     else:
         config[types_pb2.RETURN_GRAPH] = utils.b_to_attr(False)
+        return_graph=False
     # optional query arguments.
     params = utils.pack_query_params(*args, **kwargs)
     query_args = query_args_pb2.QueryArgs()
@@ -94,7 +96,7 @@ def run_app(app, *args, **kwargs):
         types_pb2.RUN_APP,
         inputs=inputs,
         config=config,
-        output_types=types_pb2.RESULTS,
+        output_types=types_pb2.GRAPH if return_graph else types_pb2.RESULTS,
         query_args=query_args,
     )
     return op
