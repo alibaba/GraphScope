@@ -1131,7 +1131,7 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
       BOOST_LEAF_AUTO(graph_def, merge_ctx_to_new_graph(context_key, frag_wrapper, params));
       r->set_graph_def(graph_def);
     } else {
-      r->set_data(context_key);
+      r->set_data(context_key); 
     }
 
     break;
