@@ -15,6 +15,9 @@ package com.alibaba.graphscope.groot.store;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.meta.MetaService;
+import com.alibaba.graphscope.groot.metrics.AvgMetric;
+import com.alibaba.graphscope.groot.metrics.MetricsAgent;
+import com.alibaba.graphscope.groot.metrics.MetricsCollector;
 import com.alibaba.graphscope.groot.operation.OperationBatch;
 import com.alibaba.graphscope.groot.operation.StoreDataBatch;
 import com.alibaba.graphscope.groot.store.jna.JnaGraphStore;
@@ -24,6 +27,7 @@ import com.alibaba.maxgraph.common.config.StoreConfig;
 import com.alibaba.maxgraph.common.util.ThreadFactoryUtils;
 import com.alibaba.maxgraph.proto.groot.GraphDefPb;
 
+import java.util.stream.Collectors;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -46,8 +50,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class StoreService {
+public class StoreService implements MetricsAgent {
     private static final Logger logger = LoggerFactory.getLogger(StoreService.class);
+
+    private static final String PARTITION_WRITE_PER_SECOND_MS = "partition.write.per.second.ms";
 
     private Configs configs;
     private int storeId;
@@ -57,11 +63,17 @@ public class StoreService {
     private ExecutorService writeExecutor, ingestExecutor;
     private volatile boolean shouldStop = true;
 
-    public StoreService(Configs configs, MetaService metaService) {
+    private volatile long lastUpdateTime;
+    private Map<Integer, AvgMetric> partitionToMetric;
+
+    public StoreService(
+            Configs configs, MetaService metaService, MetricsCollector metricsCollector) {
         this.configs = configs;
         this.storeId = CommonConfig.NODE_IDX.get(configs);
         this.writeThreadCount = StoreConfig.STORE_WRITE_THREAD_COUNT.get(configs);
         this.metaService = metaService;
+        initMetrics();
+        metricsCollector.register(this, () -> updateMetrics());
     }
 
     public void start() throws IOException {
@@ -202,6 +214,7 @@ public class StoreService {
                             if (partitionId != -1) {
                                 // Ignore Marker
                                 // Only support partition operation for now
+                                long beforeWriteTime = System.nanoTime();
                                 GraphPartition partition = this.idToPartition.get(partitionId);
                                 if (partition == null) {
                                     throw new IllegalStateException(
@@ -212,6 +225,10 @@ public class StoreService {
                                 if (partition.writeBatch(snapshotId, batch)) {
                                     hasDdl.set(true);
                                 }
+                                long afterWriteTime = System.nanoTime();
+                                this.partitionToMetric
+                                        .get(partitionId)
+                                        .add(afterWriteTime - beforeWriteTime);
                             }
                         } catch (Exception ex) {
                             logger.error(
@@ -273,5 +290,44 @@ public class StoreService {
             Path realPath = new Path(dataDir, fileName);
             partition.ingestHdfsFile(fs, realPath);
         }
+    }
+
+    private void updateMetrics() {
+        long currentTime = System.nanoTime();
+        long interval = currentTime - this.lastUpdateTime;
+        this.partitionToMetric.values().forEach(m -> m.update(interval));
+        this.lastUpdateTime = currentTime;
+    }
+
+    @Override
+    public void initMetrics() {
+        this.lastUpdateTime = System.nanoTime();
+        this.partitionToMetric = new HashMap<>();
+        for (Integer id : this.idToPartition.keySet()) {
+            this.partitionToMetric.put(id, new AvgMetric());
+        }
+    }
+
+    @Override
+    public Map<String, String> getMetrics() {
+        List<String> partitionWritePerSecondMs =
+                partitionToMetric.entrySet().stream()
+                        .map(
+                                entry ->
+                                        String.format(
+                                                "%s:%s",
+                                                entry.getKey(),
+                                                (int) (1000 * entry.getValue().getAvg())))
+                        .collect(Collectors.toList());
+        return new HashMap<String, String>() {
+            {
+                put(PARTITION_WRITE_PER_SECOND_MS, String.valueOf(partitionWritePerSecondMs));
+            }
+        };
+    }
+
+    @Override
+    public String[] getMetricKeys() {
+        return new String[] {PARTITION_WRITE_PER_SECOND_MS};
     }
 }
