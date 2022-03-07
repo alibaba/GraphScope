@@ -675,6 +675,12 @@ def _pre_process_for_run_app_op(op, op_result_pool, key_to_op, **kwargs):
     op.attr[types_pb2.APP_NAME].CopyFrom(
         attr_value_pb2.AttrValue(s=result.result.decode("utf-8").encode("utf-8"))
     )
+    # set type_signature: use this signature to fetch projector from object manager,
+    # and possibly merge ctx into graph
+    key_of_grand_parent_op = parent_op.parents[0]
+    grand_parent_op = key_to_op[key_of_grand_parent_op]
+    assert grand_parent_op.op == types_pb2.PROJECT_TO_SIMPLE
+    op.attr[types_pb2.TYPE_SIGNATURE].CopyFrom(grand_parent_op.attr[types_pb2.TYPE_SIGNATURE])
 
     app_type = parent_op.attr[types_pb2.APP_ALGO].s.decode("utf-8")
     if app_type == "java_app":
