@@ -472,11 +472,19 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
         @Override
         public InterOpBase apply(Step step) {
             ExprStep exprStep = (ExprStep) step;
-            ProjectOp projectOp = new ProjectOp();
-            projectOp.setExprWithAlias(new OpArg<>(exprStep.getExpr(), (String expr) ->
-                    Arrays.asList(Pair.with(expr, ArgUtils.asFfiNoneAlias()))
-            ));
-            return projectOp;
+            switch (exprStep.getType()) {
+                case PROJECTION:
+                    ProjectOp projectOp = new ProjectOp();
+                    projectOp.setExprWithAlias(new OpArg<>(exprStep.getExpr(), (String expr) ->
+                            Arrays.asList(Pair.with(expr, ArgUtils.asFfiNoneAlias()))
+                    ));
+                    return projectOp;
+                case FILTER:
+                default:
+                    SelectOp selectOp = new SelectOp();
+                    selectOp.setPredicate(new OpArg(exprStep.getExpr()));
+                    return selectOp;
+            }
         }
     };
 

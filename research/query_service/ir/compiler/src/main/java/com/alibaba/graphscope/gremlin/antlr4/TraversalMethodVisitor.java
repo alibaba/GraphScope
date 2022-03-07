@@ -18,6 +18,7 @@ package com.alibaba.graphscope.gremlin.antlr4;
 
 import com.alibaba.graphscope.gremlin.Utils;
 import com.alibaba.graphscope.gremlin.exception.UnsupportedEvalException;
+import com.alibaba.graphscope.gremlin.plugin.step.ExprStep;
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversal;
 import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSBaseVisitor;
 import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSParser;
@@ -162,6 +163,7 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
         }
     }
 
+    @Override
     public Traversal visitTraversalMethod_outE(GremlinGSParser.TraversalMethod_outEContext ctx) {
         String[] labels = GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList());
         if (ctx.traversalMethod_inV() != null) {
@@ -238,6 +240,8 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
         } else if (ctx.traversalColumn() != null) {
             Column column = TraversalEnumParser.parseTraversalEnumFromContext(Column.class, ctx.traversalColumn());
             graphTraversal.select(column);
+        } else if (ctx.traversalMethod_expr() != null) {
+            visitExpr(ctx.traversalMethod_expr(), ExprStep.Type.PROJECTION);
         }
         // set by traversal
         if (ctx.traversalMethod_selectby_list() != null) {
@@ -447,8 +451,7 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
         } else if (ctx.traversalMethod_not() != null) {
             visitTraversalMethod_not(ctx.traversalMethod_not());
         } else if (ctx.traversalMethod_expr() != null) { // where(expr(...))
-            GremlinGSParser.TraversalMethod_exprContext exprCtx = ctx.traversalMethod_expr();
-            graphTraversal.where(new ExprP(GenericLiteralVisitor.getStringLiteral(exprCtx.stringLiteral())));
+            visitExpr(ctx.traversalMethod_expr(), ExprStep.Type.FILTER);
         } else if (ctx.nestedTraversal() != null) {
             Traversal whereTraversal = visitNestedTraversal(ctx.nestedTraversal());
             graphTraversal.where(whereTraversal);
@@ -526,11 +529,10 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
         }
     }
 
-    @Override
-    public Traversal visitTraversalMethod_expr(GremlinGSParser.TraversalMethod_exprContext ctx) {
+    public Traversal visitExpr(GremlinGSParser.TraversalMethod_exprContext ctx, ExprStep.Type type) {
         if (ctx.stringLiteral() != null) {
             IrCustomizedTraversal traversal = (IrCustomizedTraversal) graphTraversal;
-            return traversal.expr(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()));
+            return traversal.expr(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()), type);
         } else {
             throw new UnsupportedEvalException(ctx.getClass(), "supported pattern is [expr(...)]");
         }

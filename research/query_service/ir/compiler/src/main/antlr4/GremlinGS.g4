@@ -78,7 +78,6 @@ traversalMethod
     | traversalMethod_union // union()
     | traversalMethod_range // range()
     | traversalMethod_match // match()
-    | traversalMethod_expr // expr()
     ;
 
 traversalSourceSpawnMethod_V
@@ -203,9 +202,11 @@ traversalMethod_orderby_list
 
 // select('s', ...)
 // select('s', ...).by(...).by(...)
+// select(expr('@.age'))
 traversalMethod_select
     : 'select' LPAREN stringLiteral (COMMA stringLiteralList)? RPAREN (DOT traversalMethod_selectby_list)?
     | 'select' LPAREN traversalColumn RPAREN
+    | 'select' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_expr RPAREN
     ;
 
 // by()

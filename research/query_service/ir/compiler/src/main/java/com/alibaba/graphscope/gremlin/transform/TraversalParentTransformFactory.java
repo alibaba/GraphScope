@@ -23,7 +23,6 @@ import com.alibaba.graphscope.common.intermediate.operator.*;
 import com.alibaba.graphscope.common.jna.type.*;
 import com.alibaba.graphscope.gremlin.InterOpCollectionBuilder;
 import com.alibaba.graphscope.gremlin.Utils;
-import com.alibaba.graphscope.gremlin.antlr4.ExprP;
 import com.alibaba.graphscope.gremlin.antlr4.GremlinAntlrToJava;
 import com.alibaba.graphscope.gremlin.transform.alias.AliasManager;
 import com.alibaba.graphscope.gremlin.transform.alias.AliasPrefixType;
@@ -293,30 +292,24 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
             List<InterOpBase> interOpList = new ArrayList<>();
 
             WherePredicateStep step = (WherePredicateStep) parent;
+            Optional<String> startKey = step.getStartKey();
+            TraversalRing traversalRing = Utils.getFieldValue(WherePredicateStep.class, step, "traversalRing");
+
+            int stepId = TraversalHelper.stepIndex(parent.asStep(), parent.asStep().getTraversal());
+            AtomicInteger subId = new AtomicInteger(0);
+
+            String startTag = startKey.isPresent() ? startKey.get() : "";
+            String startExpr = getExprWithApplys(startTag, traversalRing.next(), stepId, subId, interOpList);
+
             P predicate = (P) step.getPredicate().get();
-            String expr;
-            if (predicate instanceof ExprP) {
-                expr = (String) predicate.getValue();
-            } else {
-                Optional<String> startKey = step.getStartKey();
-                TraversalRing traversalRing = Utils.getFieldValue(WherePredicateStep.class, step, "traversalRing");
+            List<String> selectKeys = Utils.getFieldValue(WherePredicateStep.class, step, "selectKeys");
+            traverseAndUpdateP(predicate, selectKeys.iterator(), traversalRing, stepId, subId, interOpList);
 
-                int stepId = TraversalHelper.stepIndex(parent.asStep(), parent.asStep().getTraversal());
-                AtomicInteger subId = new AtomicInteger(0);
+            String expr = PredicateExprTransformFactory.HAS_STEP.flatPredicate(startExpr, predicate);
+            SelectOp selectOp = new SelectOp();
+            selectOp.setPredicate(new OpArg(expr));
 
-                String startTag = startKey.isPresent() ? startKey.get() : "";
-                String startExpr = getExprWithApplys(startTag, traversalRing.next(), stepId, subId, interOpList);
-
-                List<String> selectKeys = Utils.getFieldValue(WherePredicateStep.class, step, "selectKeys");
-                traverseAndUpdateP(predicate, selectKeys.iterator(), traversalRing, stepId, subId, interOpList);
-
-                expr = PredicateExprTransformFactory.HAS_STEP.flatPredicate(startExpr, predicate);
-            }
-            if (expr != null && !expr.isEmpty()) {
-                SelectOp selectOp = new SelectOp();
-                selectOp.setPredicate(new OpArg(expr));
-                interOpList.add(selectOp);
-            }
+            interOpList.add(selectOp);
             return interOpList;
         }
 
