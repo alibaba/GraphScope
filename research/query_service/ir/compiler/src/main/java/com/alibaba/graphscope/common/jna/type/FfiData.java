@@ -44,7 +44,7 @@ public class FfiData extends Structure {
         @Override
         public void close() {
             setAutoSynch(false);
-            IrCoreLibrary.INSTANCE.destroyJobBuffer(this);
+            IrCoreLibrary.INSTANCE.destroyFfiData(this);
         }
     }
 
