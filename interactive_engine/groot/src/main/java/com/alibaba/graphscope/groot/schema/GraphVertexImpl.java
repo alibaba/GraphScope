@@ -53,8 +53,9 @@ public class GraphVertexImpl implements GraphVertex {
 
     @Override
     public List<GraphProperty> getPrimaryKeyList() {
+        List<GraphProperty> propertyList = getPropertyList();
         return getPkPropertyIndices().stream()
-                .map(i -> getProperty(i))
+                .map(i -> propertyList.get(i))
                 .collect(Collectors.toList());
     }
 

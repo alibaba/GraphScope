@@ -188,6 +188,10 @@ public class Client implements Closeable {
 
     public String loadJsonSchema(Path jsonFile) throws IOException {
         String json = new String(Files.readAllBytes(jsonFile), StandardCharsets.UTF_8);
+        return loadJsonSchema(json);
+    }
+
+    public String loadJsonSchema(String json) {
         LoadJsonSchemaResponse response =
                 this.stub.loadJsonSchema(
                         LoadJsonSchemaRequest.newBuilder().setSchemaJson(json).build());
