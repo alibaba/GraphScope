@@ -34,6 +34,7 @@ from graphscope.framework.errors import check_argument
 from graphscope.framework.graph import Graph
 from graphscope.framework.graph import GraphDAGNode
 
+
 class ResultDAGNode(DAGNode):
     """A class represents a result node in a DAG.
 
