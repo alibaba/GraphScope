@@ -210,6 +210,12 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
     }
 
     @Override
+    public Traversal visitTraversalMethod_endV(GremlinGSParser.TraversalMethod_endVContext ctx) {
+        IrCustomizedTraversal traversal = (IrCustomizedTraversal) graphTraversal;
+        return traversal.endV();
+    }
+
+    @Override
     public Traversal visitTraversalMethod_otherV(GremlinGSParser.TraversalMethod_otherVContext ctx) {
         return graphTraversal.otherV();
     }

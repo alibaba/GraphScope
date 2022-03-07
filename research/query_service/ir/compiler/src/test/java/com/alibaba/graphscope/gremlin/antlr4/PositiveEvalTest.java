@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.gremlin.antlr4;
 
 import com.alibaba.graphscope.gremlin.plugin.script.AntlrToJavaScriptEngine;
+import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversal;
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversalSource;
 import org.apache.tinkerpop.gremlin.process.traversal.Order;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
@@ -24,6 +25,8 @@ import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.NotStep;
+import org.apache.tinkerpop.gremlin.process.traversal.step.map.EdgeVertexStep;
+import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
 import org.junit.Assert;
@@ -764,5 +767,13 @@ public class PositiveEvalTest {
     public void g_V_match_test() {
         Assert.assertEquals(g.V().match(__.as("a").out().as("b"), __.as("b").out().as("c")),
                 eval("g.V().match(__.as(\"a\").out().as(\"b\"), __.as(\"b\").out().as(\"c\"))"));
+    }
+
+    @Test
+    public void g_V_out_endV_test() {
+        IrCustomizedTraversalSource g1 = (IrCustomizedTraversalSource) g;
+        Traversal traversal = ((IrCustomizedTraversal) (g1.V().out("1..5"))).endV();
+        EdgeVertexStep endVStep = (EdgeVertexStep) traversal.asAdmin().getEndStep();
+        Assert.assertEquals(Direction.IN, endVStep.getDirection());
     }
 }
