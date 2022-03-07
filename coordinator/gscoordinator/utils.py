@@ -680,7 +680,9 @@ def _pre_process_for_run_app_op(op, op_result_pool, key_to_op, **kwargs):
     key_of_grand_parent_op = parent_op.parents[0]
     grand_parent_op = key_to_op[key_of_grand_parent_op]
     assert grand_parent_op.op == types_pb2.PROJECT_TO_SIMPLE
-    op.attr[types_pb2.TYPE_SIGNATURE].CopyFrom(grand_parent_op.attr[types_pb2.TYPE_SIGNATURE])
+    op.attr[types_pb2.TYPE_SIGNATURE].CopyFrom(
+        grand_parent_op.attr[types_pb2.TYPE_SIGNATURE]
+    )
 
     app_type = parent_op.attr[types_pb2.APP_ALGO].s.decode("utf-8")
     if app_type == "java_app":

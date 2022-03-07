@@ -747,6 +747,7 @@ def create_context_node(context_type, bound_app, graph, *args, **kwargs):
         # dynamic_vertex_data for networkx
         return BaseContextDAGNode(bound_app, graph, *args, **kwargs)
 
+
 def create_graph(bound_app, graph, *args, **kwargs):
     session = bound_app.session
     # add op to dag

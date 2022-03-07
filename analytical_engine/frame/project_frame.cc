@@ -97,8 +97,8 @@ class ProjectSimpleFrame<
     auto base_ctx_wrapper =
         std::dynamic_pointer_cast<IVertexDataContextWrapper>(ctx_wrapper_in);
     BOOST_LEAF_AUTO(new_arrow_fragment,
-                        projected_fragment_t::MergeGraphAndContext(
-                            comm_spec, projected_fragment, base_ctx_wrapper));
+                    projected_fragment_t::MergeGraphAndContext(
+                        comm_spec, projected_fragment, base_ctx_wrapper));
 
     rpc::graph::GraphDefPb graph_def;
     graph_def.set_key(dst_graph_name);
@@ -112,9 +112,10 @@ class ProjectSimpleFrame<
   }
 
  private:
-  static bl::result<void> setGraphDef(const grape::CommSpec& comm_spec,
-                          const std::shared_ptr<fragment_t>& fragment,
-                          rpc::graph::GraphDefPb& graph_def) {
+  static bl::result<void> setGraphDef(
+      const grape::CommSpec& comm_spec,
+      const std::shared_ptr<fragment_t>& fragment,
+      rpc::graph::GraphDefPb& graph_def) {
     auto& meta = fragment->meta();
     vineyard::Client& client =
         *dynamic_cast<vineyard::Client*>(meta.GetClient());

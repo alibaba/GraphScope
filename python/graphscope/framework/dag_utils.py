@@ -81,7 +81,7 @@ def run_app(app, *args, **kwargs):
     config = {}
     output_prefix = kwargs.pop("output_prefix", ".")
     config[types_pb2.OUTPUT_PREFIX] = utils.s_to_attr(output_prefix)
-    return_graph=False
+    return_graph = False
     if "return_graph" in kwargs:
         return_graph = kwargs.pop("return_graph", False)
     if return_graph:
