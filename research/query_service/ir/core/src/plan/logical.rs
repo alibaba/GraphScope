@@ -934,7 +934,10 @@ impl AsLogical for pb::GetV {
 }
 
 impl AsLogical for pb::Dedup {
-    fn preprocess(&mut self, _meta: &StoreMeta, _plan_meta: &mut PlanMeta) -> IrResult<()> {
+    fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
+        for var in self.keys.iter_mut() {
+            preprocess_var(var, meta, plan_meta)?;
+        }
         Ok(())
     }
 }
