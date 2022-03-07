@@ -23,13 +23,13 @@ import com.sun.jna.Structure;
 
 import java.io.Closeable;
 
-@Structure.FieldOrder({"buffer", "len"})
-public class FfiJobBuffer extends Structure {
-    public FfiJobBuffer() {
+@Structure.FieldOrder({"buffer", "len", "error"})
+public class FfiData extends Structure {
+    public FfiData() {
         super(IrTypeMapper.INSTANCE);
     }
 
-    public static class ByValue extends FfiJobBuffer implements Structure.ByValue, Closeable {
+    public static class ByValue extends FfiData implements Structure.ByValue, Closeable {
         public byte[] getBytes() {
             if (buffer != null && len > 0) {
                 byte[] bytes = new byte[len];
@@ -44,10 +44,11 @@ public class FfiJobBuffer extends Structure {
         @Override
         public void close() {
             setAutoSynch(false);
-            IrCoreLibrary.INSTANCE.destroyJobBuffer(this);
+            IrCoreLibrary.INSTANCE.destroyFfiData(this);
         }
     }
 
     public Pointer buffer;
     public int len;
+    public FfiError.ByValue error;
 }

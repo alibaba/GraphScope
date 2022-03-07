@@ -16,6 +16,7 @@
 
 package com.alibaba.graphscope.common.jna.type;
 
+import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.google.common.base.Objects;
 import com.sun.jna.Structure;
 
@@ -39,5 +40,16 @@ public class FfiVariable extends Structure {
     @Override
     public int hashCode() {
         return Objects.hashCode(tag, property);
+    }
+
+    @Override
+    public String toString() {
+        String tagName = ArgUtils.tagName(tag);
+        String propertyName = ArgUtils.propertyName(property);
+        if (propertyName.isEmpty()) {
+            return "@" + tagName;
+        } else {
+            return "@" + tagName + "." + propertyName;
+        }
     }
 }

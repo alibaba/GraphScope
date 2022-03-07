@@ -321,7 +321,8 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
                 });
             } else {
                 String expr = getExprWithApplys(selectKeysIterator.next(), traversalRing.next(), stepId, subId, applys);
-                predicate.setValue(new WherePredicateValue(expr));
+                FfiVariable.ByValue var = getExpressionAsVar(expr);
+                predicate.setValue(var);
             }
         }
 

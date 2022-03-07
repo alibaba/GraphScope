@@ -33,8 +33,6 @@ import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 import org.apache.commons.io.FileUtils;
 import org.javatuples.Pair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.Closeable;
 import java.io.File;
@@ -46,7 +44,6 @@ import java.util.function.Function;
 // represent ir plan as a chain of operators
 public class IrPlan implements Closeable {
     private static IrCoreLibrary irCoreLib = IrCoreLibrary.INSTANCE;
-    private static Logger logger = LoggerFactory.getLogger(IrPlan.class);
     private static String PLAN_JSON_FILE = "plan.json";
     private Pointer ptrPlan;
 
@@ -66,20 +63,20 @@ public class IrPlan implements Closeable {
                 if (labels.isPresent()) {
                     List<FfiNameOrId.ByValue> ffiLabels = (List<FfiNameOrId.ByValue>) labels.get().applyArg();
                     for (FfiNameOrId.ByValue label : ffiLabels) {
-                        ResultCode resultCode = irCoreLib.addScanTableName(scan, label);
-                        if (resultCode != ResultCode.Success) {
+                        FfiError error = irCoreLib.addScanTableName(scan, label);
+                        if (error.code != ResultCode.Success) {
                             throw new InterOpIllegalArgException(baseOp.getClass(),
-                                    "labels", "addScanTableName returns " + resultCode.name());
+                                    "labels", "addScanTableName returns " + error.msg);
                         }
                     }
                 }
                 Optional<OpArg> predicate = op.getPredicate();
                 if (predicate.isPresent()) {
                     String expr = (String) predicate.get().applyArg();
-                    ResultCode resultCode = irCoreLib.setScanPredicate(scan, expr);
-                    if (resultCode != ResultCode.Success) {
+                    FfiError error = irCoreLib.setScanPredicate(scan, expr);
+                    if (error.code != ResultCode.Success) {
                         throw new InterOpIllegalArgException(baseOp.getClass(),
-                                "predicate", "setScanPredicate returns " + resultCode.name());
+                                "predicate", "setScanPredicate returns " + error.msg);
                     }
                 }
                 // set index predicate
@@ -88,10 +85,10 @@ public class IrPlan implements Closeable {
                     Pointer idsPredicate = irCoreLib.initIndexPredicate();
                     List<FfiConst.ByValue> ffiIds = (List<FfiConst.ByValue>) ids.get().applyArg();
                     for (int i = 0; i < ffiIds.size(); ++i) {
-                        ResultCode resultCode = irCoreLib.orEquivPredicate(idsPredicate, irCoreLib.asIdKey(), ffiIds.get(i));
-                        if (resultCode != ResultCode.Success) {
+                        FfiError error = irCoreLib.orEquivPredicate(idsPredicate, irCoreLib.asIdKey(), ffiIds.get(i));
+                        if (error.code != ResultCode.Success) {
                             throw new InterOpIllegalArgException(baseOp.getClass(),
-                                    "ids", "orEquivPredicate returns " + resultCode.name());
+                                    "ids", "orEquivPredicate returns " + error.msg);
                         }
                     }
                     if (!ffiIds.isEmpty()) {
@@ -119,10 +116,10 @@ public class IrPlan implements Closeable {
                 }
                 String expr = (String) predicate.get().applyArg();
                 Pointer select = irCoreLib.initSelectOperator();
-                ResultCode resultCode = irCoreLib.setSelectPredicate(select, expr);
-                if (resultCode != ResultCode.Success) {
+                FfiError error = irCoreLib.setSelectPredicate(select, expr);
+                if (error.code != ResultCode.Success) {
                     throw new InterOpIllegalArgException(baseOp.getClass(),
-                            "predicate", "setSelectPredicate returns " + resultCode.name());
+                            "predicate", "setSelectPredicate returns " + error.msg);
                 }
                 return select;
             }
@@ -146,10 +143,10 @@ public class IrPlan implements Closeable {
                 if (labels.isPresent()) {
                     List<FfiNameOrId.ByValue> ffiLabels = (List<FfiNameOrId.ByValue>) labels.get().applyArg();
                     for (FfiNameOrId.ByValue label : ffiLabels) {
-                        ResultCode resultCode = irCoreLib.addEdgexpdLabel(expand, label);
-                        if (resultCode != ResultCode.Success) {
+                        FfiError error = irCoreLib.addEdgexpdLabel(expand, label);
+                        if (error.code != ResultCode.Success) {
                             throw new InterOpIllegalArgException(baseOp.getClass(),
-                                    "labels", "addEdgexpdLabel returns " + resultCode.name());
+                                    "labels", "addEdgexpdLabel returns " + error.msg);
                         }
                     }
                 }
@@ -177,11 +174,11 @@ public class IrPlan implements Closeable {
                     throw new InterOpIllegalArgException(baseOp.getClass(), "upper", "not present");
                 }
                 Pointer ptrLimit = irCoreLib.initLimitOperator();
-                ResultCode resultCode = irCoreLib.setLimitRange(ptrLimit,
+                FfiError error = irCoreLib.setLimitRange(ptrLimit,
                         (Integer) lower.get().applyArg(), (Integer) upper.get().applyArg());
-                if (resultCode != ResultCode.Success) {
+                if (error.code != ResultCode.Success) {
                     throw new InterOpIllegalArgException(baseOp.getClass(),
-                            "lower+upper", "setLimitRange returns " + resultCode.name());
+                            "lower+upper", "setLimitRange returns " + error.msg);
                 }
                 return ptrLimit;
             }
@@ -200,9 +197,9 @@ public class IrPlan implements Closeable {
                 exprWithAlias.forEach(p -> {
                     String expr = (String) p.getValue0();
                     FfiAlias.ByValue alias = (FfiAlias.ByValue) p.getValue1();
-                    ResultCode resultCode = irCoreLib.addProjectExprAlias(ptrProject, expr, alias);
-                    if (resultCode != ResultCode.Success) {
-                        throw new InterOpIllegalArgException(baseOp.getClass(), "exprWithAlias", "append returns " + resultCode.name());
+                    FfiError error = irCoreLib.addProjectExprAlias(ptrProject, expr, alias);
+                    if (error.code != ResultCode.Success) {
+                        throw new InterOpIllegalArgException(baseOp.getClass(), "exprWithAlias", "append returns " + error.msg);
                     }
                 });
                 return ptrProject;
@@ -305,9 +302,9 @@ public class IrPlan implements Closeable {
                 }
                 Pointer ptrSink = irCoreLib.initSinkOperator();
                 columns.forEach(column -> {
-                    ResultCode resultCode = irCoreLib.addSinkColumn(ptrSink, column);
-                    if (resultCode != ResultCode.Success) {
-                        throw new InterOpIllegalArgException(baseOp.getClass(), "columns", "addSinkColumn returns " + resultCode.name());
+                    FfiError error = irCoreLib.addSinkColumn(ptrSink, column);
+                    if (error.code != ResultCode.Success) {
+                        throw new InterOpIllegalArgException(baseOp.getClass(), "columns", "addSinkColumn returns " + error.msg);
                     }
                 });
                 return ptrSink;
@@ -485,41 +482,41 @@ public class IrPlan implements Closeable {
     // return id of the current operator
     public IntByReference appendInterOp(int parentId, InterOpBase base) throws
             InterOpIllegalArgException, InterOpUnsupportedException, AppendInterOpException {
-        ResultCode resultCode;
+        FfiError error;
         IntByReference oprId = new IntByReference(parentId);
         if (ClassUtils.equalClass(base, ScanFusionOp.class)) {
             Pointer ptrScan = TransformFactory.SCAN_FUSION_OP.apply(base);
-            resultCode = irCoreLib.appendScanOperator(ptrPlan, ptrScan, oprId.getValue(), oprId);
+            error = irCoreLib.appendScanOperator(ptrPlan, ptrScan, oprId.getValue(), oprId);
         } else if (ClassUtils.equalClass(base, SelectOp.class)) {
             Pointer ptrSelect = TransformFactory.SELECT_OP.apply(base);
-            resultCode = irCoreLib.appendSelectOperator(ptrPlan, ptrSelect, oprId.getValue(), oprId);
+            error = irCoreLib.appendSelectOperator(ptrPlan, ptrSelect, oprId.getValue(), oprId);
         } else if (ClassUtils.equalClass(base, ExpandOp.class)) {
             Pointer ptrExpand = TransformFactory.EXPAND_OP.apply(base);
-            resultCode = irCoreLib.appendEdgexpdOperator(ptrPlan, ptrExpand, oprId.getValue(), oprId);
+            error = irCoreLib.appendEdgexpdOperator(ptrPlan, ptrExpand, oprId.getValue(), oprId);
         } else if (ClassUtils.equalClass(base, LimitOp.class)) {
             Pointer ptrLimit = TransformFactory.LIMIT_OP.apply(base);
-            resultCode = irCoreLib.appendLimitOperator(ptrPlan, ptrLimit, oprId.getValue(), oprId);
+            error = irCoreLib.appendLimitOperator(ptrPlan, ptrLimit, oprId.getValue(), oprId);
         } else if (ClassUtils.equalClass(base, ProjectOp.class)) {
             Pointer ptrProject = TransformFactory.PROJECT_OP.apply(base);
-            resultCode = irCoreLib.appendProjectOperator(ptrPlan, ptrProject, oprId.getValue(), oprId);
+            error = irCoreLib.appendProjectOperator(ptrPlan, ptrProject, oprId.getValue(), oprId);
         } else if (ClassUtils.equalClass(base, OrderOp.class)) {
             Pointer ptrOrder = TransformFactory.ORDER_OP.apply(base);
-            resultCode = irCoreLib.appendOrderbyOperator(ptrPlan, ptrOrder, oprId.getValue(), oprId);
+            error = irCoreLib.appendOrderbyOperator(ptrPlan, ptrOrder, oprId.getValue(), oprId);
         } else if (ClassUtils.equalClass(base, GroupOp.class)) {
             Pointer ptrGroup = TransformFactory.GROUP_OP.apply(base);
-            resultCode = irCoreLib.appendGroupbyOperator(ptrPlan, ptrGroup, oprId.getValue(), oprId);
+            error = irCoreLib.appendGroupbyOperator(ptrPlan, ptrGroup, oprId.getValue(), oprId);
         } else if (ClassUtils.equalClass(base, DedupOp.class)) {
             Pointer ptrDedup = TransformFactory.DEDUP_OP.apply(base);
-            resultCode = irCoreLib.appendDedupOperator(ptrPlan, ptrDedup, oprId.getValue(), oprId);
+            error = irCoreLib.appendDedupOperator(ptrPlan, ptrDedup, oprId.getValue(), oprId);
         } else if (ClassUtils.equalClass(base, SinkOp.class)) {
             Pointer ptrSink = TransformFactory.SINK_OP.apply(base);
-            resultCode = irCoreLib.appendSinkOperator(ptrPlan, ptrSink, oprId.getValue(), oprId);
+            error = irCoreLib.appendSinkOperator(ptrPlan, ptrSink, oprId.getValue(), oprId);
         } else if (ClassUtils.equalClass(base, PathExpandOp.class)) {
             Pointer ptrPathXPd = TransformFactory.PATH_EXPAND_OP.apply(base);
-            resultCode = irCoreLib.appendPathxpdOperator(ptrPlan, ptrPathXPd, oprId.getValue(), oprId);
+            error = irCoreLib.appendPathxpdOperator(ptrPlan, ptrPathXPd, oprId.getValue(), oprId);
         } else if (ClassUtils.equalClass(base, GetVOp.class)) {
             Pointer ptrGetV = TransformFactory.GETV_OP.apply(base);
-            resultCode = irCoreLib.appendGetvOperator(ptrPlan, ptrGetV, oprId.getValue(), oprId);
+            error = irCoreLib.appendGetvOperator(ptrPlan, ptrGetV, oprId.getValue(), oprId);
         } else if (ClassUtils.equalClass(base, ApplyOp.class)) {
             ApplyOp applyOp = (ApplyOp) base;
             Optional<OpArg> subOps = applyOp.getSubOpCollection();
@@ -531,7 +528,7 @@ public class IrPlan implements Closeable {
             applyOp.setSubRootId(new OpArg(Integer.valueOf(oprIdPair.getValue0()), Function.identity()));
 
             Pointer ptrApply = TransformFactory.APPLY_OP.apply(base);
-            resultCode = irCoreLib.appendApplyOperator(ptrPlan, ptrApply, oprId.getValue(), oprId);
+            error = irCoreLib.appendApplyOperator(ptrPlan, ptrApply, oprId.getValue(), oprId);
         } else if (ClassUtils.equalClass(base, UnionOp.class)) {
             UnionOp unionOp = (UnionOp) base;
             Optional<OpArg> subOpsListOpt = unionOp.getSubOpCollectionList();
@@ -549,15 +546,15 @@ public class IrPlan implements Closeable {
             }
             unionOp.setParentIdList(new OpArg(unionParentIds, Function.identity()));
             Pointer ptrUnion = TransformFactory.UNION_OP.apply(base);
-            resultCode = irCoreLib.appendUnionOperator(ptrPlan, ptrUnion, oprId);
+            error = irCoreLib.appendUnionOperator(ptrPlan, ptrUnion, oprId);
         } else if (ClassUtils.equalClass(base, MatchOp.class)) {
             Pointer ptrMatch = TransformFactory.MATCH_OP.apply(base);
-            resultCode = irCoreLib.appendPatternOperator(ptrPlan, ptrMatch, oprId.getValue(), oprId);
+            error = irCoreLib.appendPatternOperator(ptrPlan, ptrMatch, oprId.getValue(), oprId);
         } else {
             throw new InterOpUnsupportedException(base.getClass(), "unimplemented yet");
         }
-        if (resultCode != null && resultCode != ResultCode.Success) {
-            throw new AppendInterOpException(base.getClass(), resultCode);
+        if (error != null && error.code != ResultCode.Success) {
+            throw new AppendInterOpException(base.getClass(), error.code.name() + ", msg is " + error.msg);
         }
         // add alias after the op if necessary
         return setPostAlias(oprId.getValue(), base);
@@ -565,23 +562,24 @@ public class IrPlan implements Closeable {
 
     private IntByReference setPostAlias(int parentId, InterOpBase base) {
         IntByReference oprId = new IntByReference(parentId);
-        // PathExpandOp is instance of ExpandOp
-        if (!(base instanceof ScanFusionOp || base instanceof ExpandOp
-                || base instanceof ProjectOp || base instanceof GroupOp
-                || base instanceof ApplyOp || base instanceof GetVOp || base instanceof MatchOp)
-                && base.getAlias().isPresent()) {
+        if (isPostAliasOp(base) && base.getAlias().isPresent()) {
             FfiAlias.ByValue ffiAlias = (FfiAlias.ByValue) base.getAlias().get().applyArg();
             Pointer ptrAs = irCoreLib.initAsOperator();
-            ResultCode asResult = irCoreLib.setAsAlias(ptrAs, ffiAlias);
-            if (asResult != null && asResult != ResultCode.Success) {
-                throw new AppendInterOpException(base.getClass(), asResult);
+            FfiError error = irCoreLib.setAsAlias(ptrAs, ffiAlias);
+            if (error != null && error.code != ResultCode.Success) {
+                throw new AppendInterOpException(base.getClass(), error.msg);
             }
-            ResultCode appendResult = irCoreLib.appendAsOperator(ptrPlan, ptrAs, parentId, oprId);
-            if (appendResult != null && appendResult != ResultCode.Success) {
-                throw new AppendInterOpException(base.getClass(), appendResult);
+            FfiError appendOp = irCoreLib.appendAsOperator(ptrPlan, ptrAs, parentId, oprId);
+            if (appendOp != null && appendOp.code != ResultCode.Success) {
+                throw new AppendInterOpException(base.getClass(), appendOp.msg);
             }
         }
         return oprId;
+    }
+
+    private boolean isPostAliasOp(InterOpBase base) {
+        return base instanceof SelectOp || base instanceof LimitOp
+                || base instanceof OrderOp || base instanceof DedupOp || base instanceof UnionOp;
     }
 
     public byte[] toPhysicalBytes(Configs configs) throws BuildPhysicalException {
@@ -591,9 +589,10 @@ public class IrPlan implements Closeable {
         // hack way to notify shuffle
         int servers = PegasusConfig.PEGASUS_HOSTS.get(configs).split(",").length;
         int workers = PegasusConfig.PEGASUS_WORKER_NUM.get(configs);
-        FfiJobBuffer.ByValue buffer = irCoreLib.buildPhysicalPlan(ptrPlan, workers, servers);
-        if (buffer.len == 0) {
-            throw new BuildPhysicalException("call libc returns " + ResultCode.BuildJobError.name());
+        FfiData.ByValue buffer = irCoreLib.buildPhysicalPlan(ptrPlan, workers, servers);
+        FfiError error = buffer.error;
+        if (error.code != ResultCode.Success) {
+            throw new BuildPhysicalException("call libc returns " + error.code.name() + ", msg is " + error.msg);
         }
         byte[] bytes = buffer.getBytes();
         buffer.close();

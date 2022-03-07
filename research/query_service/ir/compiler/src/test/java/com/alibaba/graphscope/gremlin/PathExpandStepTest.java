@@ -23,7 +23,6 @@ import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversalSour
 import com.alibaba.graphscope.gremlin.transform.StepTransformFactory;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
-import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
@@ -34,12 +33,11 @@ import java.util.List;
 
 public class PathExpandStepTest {
     private Graph graph = TinkerFactory.createModern();
-    private GraphTraversalSource g = graph.traversal(IrCustomizedTraversalSource.class);
+    private IrCustomizedTraversalSource g = graph.traversal(IrCustomizedTraversalSource.class);
 
     @Test
     public void g_V_path_expand_test() {
-        IrCustomizedTraversalSource g1 = (IrCustomizedTraversalSource) g;
-        Traversal traversal = g1.V().out(__.range(1, 2));
+        Traversal traversal = g.V().out(__.range(1, 2));
         Step step = traversal.asAdmin().getEndStep();
         PathExpandOp op = (PathExpandOp) StepTransformFactory.PATH_EXPAND_STEP.apply(step);
 
@@ -51,8 +49,7 @@ public class PathExpandStepTest {
 
     @Test
     public void g_V_path_expand_label_test() {
-        IrCustomizedTraversalSource g1 = (IrCustomizedTraversalSource) g;
-        Traversal traversal = g1.V().out(__.range(1, 2), "knows");
+        Traversal traversal = g.V().out(__.range(1, 2), "knows");
         Step step = traversal.asAdmin().getEndStep();
         PathExpandOp op = (PathExpandOp) StepTransformFactory.PATH_EXPAND_STEP.apply(step);
 

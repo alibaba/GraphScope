@@ -110,5 +110,17 @@ public class ArgUtils {
                 throw new OpArgIllegalException(OpArgIllegalException.Cause.INVALID_TYPE, "invalid type");
         }
     }
+
+    public static String tagName(FfiNameOrId.ByValue tag) {
+        switch (tag.opt) {
+            case None:
+                return "";
+            case Name:
+                return tag.name;
+            case Id:
+            default:
+                throw new OpArgIllegalException(OpArgIllegalException.Cause.INVALID_TYPE, "invalid type");
+        }
+    }
 }
 
