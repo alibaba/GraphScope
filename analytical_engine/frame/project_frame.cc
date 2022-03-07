@@ -221,7 +221,7 @@ class ProjectSimpleFrame<gs::DynamicProjectedFragment<VDATA_T, EDATA_T>> {
         projected_graph_name, graph_def, projected_frag);
     return std::dynamic_pointer_cast<IFragmentWrapper>(wrapper);
   }
-  static bl::rsult<std::shared_ptr<IFragmentWrapper>> MergeGraphAndContext(
+  static bl::result<std::shared_ptr<IFragmentWrapper>> MergeGraphAndContext(
       const std::shared_ptr<IFragmentWrapper>& frag_wrapper_in,
       const std::shared_ptr<IContextWrapper>& ctx_wrapper_in,
       const std::string& dst_graph_name) {
@@ -277,7 +277,7 @@ class ProjectSimpleFrame<
     return std::dynamic_pointer_cast<IFragmentWrapper>(wrapper);
   }
 
-  static bl::rsult<std::shared_ptr<IFragmentWrapper>> MergeGraphAndContext(
+  static bl::result<std::shared_ptr<IFragmentWrapper>> MergeGraphAndContext(
       const std::shared_ptr<IFragmentWrapper>& frag_wrapper_in,
       const std::shared_ptr<IContextWrapper>& ctx_wrapper_in,
       const std::string& dst_graph_name) {
