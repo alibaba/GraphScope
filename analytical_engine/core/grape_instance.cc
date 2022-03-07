@@ -1087,7 +1087,6 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::merge_ctx_to_new_graph(
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
                     "Illegal context type: " + ctx_wrapper->context_type());
   }
-  // TODO
   BOOST_LEAF_AUTO(type_sig, params.Get<std::string>(rpc::TYPE_SIGNATURE));
   std::string graph_name = "graph_" + generateId();
   VLOG(1) << "Merging ctx to graph, dst graph name: " << graph_name
