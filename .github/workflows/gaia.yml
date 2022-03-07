@@ -20,6 +20,7 @@ on:
 jobs:
   gaia-test:
     runs-on: ubuntu-20.04
+    if: ${{ github.repository == 'alibaba/GraphScope' }}
     defaults:
       run:
         shell: bash --noprofile --norc -eo pipefail {0}
