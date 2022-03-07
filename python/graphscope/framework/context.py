@@ -32,7 +32,7 @@ from graphscope.framework.dag_utils import run_app
 from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.errors import check_argument
 from graphscope.framework.graph import Graph
-
+from graphscope.framework.graph import GraphDAGNode
 
 class ResultDAGNode(DAGNode):
     """A class represents a result node in a DAG.
@@ -751,7 +751,7 @@ def create_graph(bound_app, graph, *args, **kwargs):
     # add op to dag
     kwargs_extend = dict(kwargs, return_graph=True)
     op = run_app(bound_app, *args, **kwargs_extend)
-    session.dag.add_op(op)
+    return GraphDAGNode(session, op)
     # return Graph(session, op, graph._oid_type, graph._directed, graph._generate_eid)
 
 
