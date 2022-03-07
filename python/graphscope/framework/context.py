@@ -752,7 +752,7 @@ def create_graph(bound_app, graph, *args, **kwargs):
     kwargs_extend = dict(kwargs, return_graph=True)
     op = run_app(bound_app, *args, **kwargs_extend)
     session.dag.add_op(op)
-    return Graph(session, op, graph._oid_type, graph._directed, graph._generate_eid)
+    # return Graph(session, op, graph._oid_type, graph._directed, graph._generate_eid)
 
 
 def _get_property_v_context_schema(schema):
