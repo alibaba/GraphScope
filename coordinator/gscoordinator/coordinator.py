@@ -102,11 +102,11 @@ GS_GRPC_MAX_MESSAGE_LENGTH = 2 * 1024 * 1024 * 1024 - 1
 logger = logging.getLogger("graphscope")
 
 
-
 def catch_unknown_errors(response_on_error=None, using_yield=False):
-    ''' A catcher that catches all (unknown) exceptions in gRPC handlers to ensure
-        the client not think the coordinator services is crashed.
-    '''
+    """A catcher that catches all (unknown) exceptions in gRPC handlers to ensure
+    the client not think the coordinator services is crashed.
+    """
+
     def catch_exceptions(handler):
         @functools.wraps(handler)
         def handler_execution(self, request, context):
@@ -116,13 +116,18 @@ def catch_unknown_errors(response_on_error=None, using_yield=False):
                 error_message = repr(exc)
                 error_traceback = traceback.format_exc()
                 context.set_code(error_codes_pb2.COORDINATOR_INTERNAL_ERROR)
-                context.set_details('Error occurs in handler: "%s", with traceback: ' % error_message + error_traceback)
+                context.set_details(
+                    'Error occurs in handler: "%s", with traceback: ' % error_message
+                    + error_traceback
+                )
                 if response_on_error is not None:
                     if using_yield:
                         yield response_on_error
                     else:
                         return response_on_error
+
         return handler_execution
+
     return catch_exceptions
 
 
@@ -575,7 +580,9 @@ class CoordinatorServiceServicer(
             self._op_result_pool[op.key] = op_result
         return response_head, response_bodies
 
-    @catch_unknown_errors(message_pb2.RunStepResponse(head=message_pb2.RunStepResponseHead()), True)
+    @catch_unknown_errors(
+        message_pb2.RunStepResponse(head=message_pb2.RunStepResponseHead()), True
+    )
     def RunStep(self, request_iterator, context):
         # split dag
         dag_manager = DAGManager(request_iterator)
