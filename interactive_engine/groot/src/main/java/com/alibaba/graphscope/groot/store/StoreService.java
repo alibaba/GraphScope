@@ -73,6 +73,11 @@ public class StoreService implements MetricsAgent {
         this.storeId = CommonConfig.NODE_IDX.get(configs);
         this.writeThreadCount = StoreConfig.STORE_WRITE_THREAD_COUNT.get(configs);
         this.metaService = metaService;
+        metricsCollector.register(this, () -> updateMetrics());
+    }
+
+    public void start() throws IOException {
+        logger.info("starting StoreService...");
         List<Integer> partitionIds = this.metaService.getPartitionsByStoreId(this.storeId);
         this.idToPartition = new HashMap<>(partitionIds.size());
         for (int partitionId : partitionIds) {
@@ -84,11 +89,6 @@ public class StoreService implements MetricsAgent {
             }
         }
         initMetrics();
-        metricsCollector.register(this, () -> updateMetrics());
-    }
-
-    public void start() throws IOException {
-        logger.info("starting StoreService...");
         this.shouldStop = false;
         this.writeExecutor =
                 new ThreadPoolExecutor(
@@ -300,7 +300,9 @@ public class StoreService implements MetricsAgent {
     private void updateMetrics() {
         long currentTime = System.nanoTime();
         long interval = currentTime - this.lastUpdateTime;
-        this.partitionToMetric.values().forEach(m -> m.update(interval));
+        if (this.partitionToMetric != null) {
+            this.partitionToMetric.values().forEach(m -> m.update(interval));
+        }
         this.lastUpdateTime = currentTime;
     }
 
