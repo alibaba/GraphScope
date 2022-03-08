@@ -125,6 +125,9 @@ jobs:
         sudo docker tag graphscope/graphscope:${SHORT_SHA} \
             ${{ env.GS_IMAGE }}:${{ steps.tag.outputs.TAG }}
         sudo docker push ${{ env.GS_IMAGE }}:${{ steps.tag.outputs.TAG }}
+        sudo docker tag graphscope/graphscope:${SHORT_SHA} \
+            ${{ env.GS_IMAGE }}:latest
+        sudo docker push ${{ env.GS_IMAGE }}:latest
 
   ubuntu-python-test:
     if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
