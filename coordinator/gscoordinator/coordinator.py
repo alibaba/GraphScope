@@ -21,6 +21,7 @@
 import argparse
 import atexit
 import datetime
+import functools
 import json
 import logging
 import os
@@ -99,6 +100,30 @@ GS_DEBUG_ENDPOINT = os.environ.get("GS_DEBUG_ENDPOINT", "")
 GS_GRPC_MAX_MESSAGE_LENGTH = 2 * 1024 * 1024 * 1024 - 1
 
 logger = logging.getLogger("graphscope")
+
+
+
+def catch_unknown_errors(response_on_error=None, using_yield=False):
+    ''' A catcher that catches all (unknown) exceptions in gRPC handlers to ensure
+        the client not think the coordinator services is crashed.
+    '''
+    def catch_exceptions(handler):
+        @functools.wraps(handler)
+        def handler_execution(self, request, context):
+            try:
+                return handler(self, request, context)
+            except Exception as exc:
+                error_message = repr(exc)
+                error_traceback = traceback.format_exc()
+                context.set_code(error_codes_pb2.COORDINATOR_INTERNAL_ERROR)
+                context.set_details('Error occurs in handler: "%s", with traceback: ' % error_message + error_traceback)
+                if response_on_error is not None:
+                    if using_yield:
+                        yield response_on_error
+                    else:
+                        return response_on_error
+        return handler_execution
+    return catch_exceptions
 
 
 class CoordinatorServiceServicer(
@@ -207,6 +232,7 @@ class CoordinatorServiceServicer(
         logger.addHandler(stdout_handler)
         logger.addHandler(stderr_handler)
 
+    @catch_unknown_errors(message_pb2.ConnectSessionResponse())
     def ConnectSession(self, request, context):
         # A session is already connected.
         if self._request:
@@ -271,6 +297,7 @@ class CoordinatorServiceServicer(
             namespace=self._k8s_namespace,
         )
 
+    @catch_unknown_errors(message_pb2.HeartBeatResponse())
     def HeartBeat(self, request, context):
         if self._request and self._request.dangling_timeout_seconds >= 0:
             # Reset dangling detect timer
@@ -548,6 +575,7 @@ class CoordinatorServiceServicer(
             self._op_result_pool[op.key] = op_result
         return response_head, response_bodies
 
+    @catch_unknown_errors(message_pb2.RunStepResponse(head=message_pb2.RunStepResponseHead()), True)
     def RunStep(self, request_iterator, context):
         # split dag
         dag_manager = DAGManager(request_iterator)
@@ -707,6 +735,7 @@ class CoordinatorServiceServicer(
                         info_message=info_message, error_message=error_message
                     )
 
+    @catch_unknown_errors(message_pb2.CloseSessionResponse())
     def CloseSession(self, request, context):
         """
         Disconnect session, note that it doesn't clean up any resources.
