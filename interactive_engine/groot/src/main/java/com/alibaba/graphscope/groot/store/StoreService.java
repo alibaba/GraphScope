@@ -25,6 +25,7 @@ import com.alibaba.maxgraph.common.config.CommonConfig;
 import com.alibaba.maxgraph.common.config.Configs;
 import com.alibaba.maxgraph.common.config.StoreConfig;
 import com.alibaba.maxgraph.common.util.ThreadFactoryUtils;
+import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
 import com.alibaba.maxgraph.proto.groot.GraphDefPb;
 
 import org.apache.hadoop.conf.Configuration;
@@ -72,6 +73,16 @@ public class StoreService implements MetricsAgent {
         this.storeId = CommonConfig.NODE_IDX.get(configs);
         this.writeThreadCount = StoreConfig.STORE_WRITE_THREAD_COUNT.get(configs);
         this.metaService = metaService;
+        List<Integer> partitionIds = this.metaService.getPartitionsByStoreId(this.storeId);
+        this.idToPartition = new HashMap<>(partitionIds.size());
+        for (int partitionId : partitionIds) {
+            try {
+                GraphPartition partition = makeGraphPartition(this.configs, partitionId);
+                this.idToPartition.put(partitionId, partition);
+            } catch (IOException e) {
+                throw new MaxGraphException(e);
+            }
+        }
         initMetrics();
         metricsCollector.register(this, () -> updateMetrics());
     }
@@ -97,12 +108,6 @@ public class StoreService implements MetricsAgent {
                         new LinkedBlockingQueue<>(1),
                         ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
                                 "store-ingest", logger));
-        List<Integer> partitionIds = this.metaService.getPartitionsByStoreId(this.storeId);
-        this.idToPartition = new HashMap<>(partitionIds.size());
-        for (int partitionId : partitionIds) {
-            GraphPartition partition = makeGraphPartition(this.configs, partitionId);
-            this.idToPartition.put(partitionId, partition);
-        }
         logger.info("StoreService started. storeId [" + this.storeId + "]");
     }
 
