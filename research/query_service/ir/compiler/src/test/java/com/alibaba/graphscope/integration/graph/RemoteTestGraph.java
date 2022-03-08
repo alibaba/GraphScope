@@ -16,6 +16,7 @@
 
 package com.alibaba.graphscope.integration.graph;
 
+import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversalSource;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.tinkerpop.gremlin.process.traversal.AnonymousTraversalSource;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalStrategies;
@@ -979,7 +980,8 @@ public class RemoteTestGraph extends DummyGraph {
 
     @Override
     public GraphTraversalSource traversal() {
-        GraphTraversalSource graphTraversalSource = AnonymousTraversalSource.traversal().withRemote(this.remoteGremlinConnection);
+        GraphTraversalSource graphTraversalSource = AnonymousTraversalSource.traversal(IrCustomizedTraversalSource.class)
+                .withRemote(this.remoteGremlinConnection);
         TraversalStrategies strategies = graphTraversalSource.getStrategies();
         strategies.removeStrategies(
                 ProfileStrategy.class,

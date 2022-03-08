@@ -73,6 +73,7 @@ traversalMethod
     | traversalMethod_where // where()
     | traversalMethod_inV   // inV()
     | traversalMethod_outV  // outV()
+    | traversalMethod_endV  // endV()
     | traversalMethod_otherV  // otherV()
     | traversalMethod_not  // not()
     | traversalMethod_union // union()
@@ -160,6 +161,11 @@ traversalMethod_inV
 // otherV()
 traversalMethod_otherV
 	: 'otherV' LPAREN RPAREN
+	;
+
+// endV()
+traversalMethod_endV
+	: 'endV' LPAREN RPAREN
 	;
 
 // limit(n)
