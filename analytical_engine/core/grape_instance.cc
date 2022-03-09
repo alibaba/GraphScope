@@ -225,19 +225,21 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::projectToSimple(
   return projected_wrapper->graph_def();
 }
 
-bl::result<std::string> GrapeInstance::query(
-    const rpc::GSParams& params, const rpc::QueryArgs& query_args,
-    const std::string& out_context_key,
-    std::shared_ptr<IFragmentWrapper>& wrapper) {
+bl::result<std::string> GrapeInstance::query(const rpc::GSParams& params,
+                                             const rpc::QueryArgs& query_args) {
   BOOST_LEAF_AUTO(app_name, params.Get<std::string>(rpc::APP_NAME));
+  BOOST_LEAF_AUTO(graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
   BOOST_LEAF_AUTO(app, object_manager_.GetObject<AppEntry>(app_name));
+  BOOST_LEAF_AUTO(wrapper,
+                  object_manager_.GetObject<IFragmentWrapper>(graph_name));
 
   auto fragment = wrapper->fragment();
   auto spec = grape::DefaultParallelEngineSpec();
+  std::string context_key = "ctx_" + generateId();
 
   BOOST_LEAF_AUTO(worker, app->CreateWorker(fragment, comm_spec_, spec));
-  BOOST_LEAF_AUTO(ctx_wrapper, app->Query(worker.get(), query_args,
-                                          out_context_key, wrapper));
+  BOOST_LEAF_AUTO(ctx_wrapper,
+                  app->Query(worker.get(), query_args, context_key, wrapper));
   std::string context_type;
   std::string context_schema;
   if (ctx_wrapper != nullptr) {
@@ -246,7 +248,7 @@ bl::result<std::string> GrapeInstance::query(
     BOOST_LEAF_CHECK(object_manager_.PutObject(ctx_wrapper));
   }
   return toJson({{"context_type", context_type},
-                 {"context_key", out_context_key},
+                 {"context_key", context_key},
                  {"context_schema", context_schema}});
 }
 
@@ -1073,32 +1075,6 @@ bl::result<void> GrapeInstance::registerGraphType(const rpc::GSParams& params) {
         "Unsupported graph type: " + rpc::graph::GraphTypePb_Name(graph_type));
   }
 }
-bl::result<rpc::graph::GraphDefPb> GrapeInstance::mergeCtxToNewGraph(
-    const std::string context_key,
-    const std::shared_ptr<IFragmentWrapper>& frag_wrapper,
-    const rpc::GSParams& params) {
-  if (frag_wrapper->graph_def().graph_type() != rpc::graph::ARROW_PROJECTED) {
-    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
-                    "Return graph is only available for projected graph");
-  }
-  BOOST_LEAF_AUTO(ctx_wrapper,
-                  object_manager_.GetObject<IContextWrapper>(context_key));
-  if (ctx_wrapper->context_type() != CONTEXT_TYPE_VERTEX_DATA) {
-    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
-                    "Illegal context type: " + ctx_wrapper->context_type());
-  }
-  BOOST_LEAF_AUTO(type_sig, params.Get<std::string>(rpc::TYPE_SIGNATURE));
-  std::string graph_name = "graph_" + generateId();
-  VLOG(1) << "Merging ctx to graph, dst graph name: " << graph_name
-          << ", type sig: " << type_sig;
-
-  BOOST_LEAF_AUTO(projector, object_manager_.GetObject<Projector>(type_sig));
-  BOOST_LEAF_AUTO(out_graph_wrapper,
-                  projector->MergeGraphAndContext(comm_spec_, frag_wrapper,
-                                                  ctx_wrapper, graph_name));
-  BOOST_LEAF_CHECK(object_manager_.PutObject(out_graph_wrapper));
-  return out_graph_wrapper->graph_def();
-}
 
 bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
     std::shared_ptr<CommandDetail> cmd) {
@@ -1121,24 +1097,8 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
     break;
   }
   case rpc::RUN_APP: {
-    // For vertex context and arrowprojected fragment we return a new graph.
-    BOOST_LEAF_AUTO(graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
-    BOOST_LEAF_AUTO(frag_wrapper,
-                    object_manager_.GetObject<IFragmentWrapper>(graph_name));
-    BOOST_LEAF_AUTO(return_graph, params.Get<bool>(rpc::RETURN_GRAPH));
-    std::string context_key = "ctx_" + generateId();
-    BOOST_LEAF_AUTO(context_result,
-                    query(params, cmd->query_args, context_key, frag_wrapper));
-    if (return_graph) {
-      VLOG(1) << "Return graph";
-      // new frag_wrapper should be put in object manager.
-      BOOST_LEAF_AUTO(graph_def,
-                      mergeCtxToNewGraph(context_key, frag_wrapper, params));
-      r->set_graph_def(graph_def);
-    } else {
-      r->set_data(context_result);
-    }
-
+    BOOST_LEAF_AUTO(context_key, query(params, cmd->query_args));
+    r->set_data(context_key);
     break;
   }
   case rpc::UNLOAD_APP: {
