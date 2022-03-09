@@ -18,6 +18,7 @@ Session Functions
 
    graphscope.session
    graphscope.get_default_session
+   graphscope.has_default_session
    graphscope.set_option
    graphscope.get_option
    graphscope.g
