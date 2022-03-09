@@ -15,7 +15,9 @@
 
 #include "core/server/graphscope_service.h"
 
+#include <queue>
 #include <unordered_map>
+#include <vector>
 
 #include "google/protobuf/util/message_differencer.h"
 
@@ -24,27 +26,70 @@
 namespace gs {
 namespace rpc {
 
-using ::grpc::Status;
-using ::grpc::StatusCode;
-
-Status GraphScopeService::HeartBeat(::grpc::ServerContext* context,
+Status GraphScopeService::HeartBeat(ServerContext* context,
                                     const HeartBeatRequest* request,
                                     HeartBeatResponse* response) {
   return Status::OK;
 }
 
-::grpc::Status GraphScopeService::RunStep(::grpc::ServerContext* context,
-                                          const RunStepRequest* request,
-                                          RunStepResponse* response) {
-  CHECK(request->has_dag_def());
-  const DagDef& dag_def = request->dag_def();
-  std::unordered_map<std::string, OpResult*> op_key_to_result;
+::grpc::Status GraphScopeService::RunStep(
+    ServerContext* context,
+    ServerReaderWriter<RunStepResponse, RunStepRequest>* stream) {
+  DagDef dag_def;
+  std::queue<std::string> chunks;
+  RunStepRequest request;
+  bool has_next = true;
+  // read stream request and join the chunk
+  while (stream->Read(&request)) {
+    if (request.has_head()) {
+      // head is always the first in the stream
+      // get a copy of 'dag_def' and set the 'large_attr' from body later.
+      dag_def = request.head().dag_def();
+    } else {
+      // body
+      if (chunks.empty() || has_next == false) {
+        chunks.push("");
+      }
+      auto& chunk = chunks.back();
+      chunk += request.body().chunk();
+      has_next = request.body().has_next();
+    }
+  }
+  // fill the chunks into dag_def
+  auto* ops = dag_def.mutable_op();
+  for (auto& op : *ops) {
+    LargeAttrValue large_attr = op.large_attr();
+    if (large_attr.has_chunk_meta_list()) {
+      auto* mutable_large_attr = op.mutable_large_attr();
+      auto* chunk_list = mutable_large_attr->mutable_chunk_list();
+      for (const auto& chunk_meta : large_attr.chunk_meta_list().items()) {
+        auto* chunk = chunk_list->add_items();
+        if (chunk_meta.size() > 0) {
+          // set buffer
+          chunk->set_buffer(std::move(chunks.front()));
+          chunks.pop();
+        }
+        // copy attr from chunk_meta
+        auto* mutable_attr = chunk->mutable_attr();
+        for (auto& attr : chunk_meta.attr()) {
+          (*mutable_attr)[attr.first].CopyFrom(attr.second);
+        }
+      }
+    }
+  }
+  assert(chunks.empty());
 
+  // construct ops result
+  RunStepResponse response_head;
+  auto* head = response_head.mutable_head();
+  // a list of chunks as response body for large result
+  std::vector<RunStepResponse> response_bodies;
+
+  // execute the dag
   for (const auto& op : dag_def.op()) {
-    OpResult* op_result = response->add_results();
+    OpResult* op_result = head->add_results();
     op_result->set_key(op.key());
-    op_key_to_result.emplace(op.key(), op_result);
-    CommandDetail cmd = OpToCmd(op);
+    std::shared_ptr<CommandDetail> cmd = OpToCmd(op);
 
     bool success = true;
     std::string error_msgs;
@@ -66,13 +111,14 @@ Status GraphScopeService::HeartBeat(::grpc::ServerContext* context,
     if (!success) {
       op_result->set_error_msg(error_msgs);
       // break dag exection flow
+      stream->Write(response_head);
       return Status(StatusCode::INTERNAL, error_msgs);
     }
 
     // Second pass: aggregate graph def or data result according to the policy
     switch (policy) {
     case DispatchResult::AggregatePolicy::kPickFirst: {
-      op_result->mutable_result()->assign(result[0].data());
+      splitOpResult(op_result, result[0], response_bodies);
       break;
     }
     case DispatchResult::AggregatePolicy::kPickFirstNonEmpty: {
@@ -80,7 +126,7 @@ Status GraphScopeService::HeartBeat(::grpc::ServerContext* context,
         auto& data = e.data();
 
         if (!data.empty()) {
-          op_result->mutable_result()->assign(data.begin(), data.end());
+          splitOpResult(op_result, e, response_bodies);
           break;
         }
       }
@@ -88,8 +134,18 @@ Status GraphScopeService::HeartBeat(::grpc::ServerContext* context,
     }
     case DispatchResult::AggregatePolicy::kRequireConsistent: {
       for (auto& e : result) {
-        auto& data = e.data();
+        if (e.has_large_data()) {
+          std::string error_msg =
+              "Error: Result require consistenct among multiple workers can "
+              "not be large data.";
+          op_result->set_code(rpc::Code::WORKER_RESULTS_INCONSISTENT_ERROR);
+          op_result->set_error_msg(error_msg);
+          LOG(ERROR) << error_msg;
+          stream->Write(response_head);
+          return Status(StatusCode::INTERNAL, error_msg);
+        }
 
+        auto& data = e.data();
         if (op_result->result().empty()) {
           op_result->mutable_result()->assign(data.begin(), data.end());
         } else if (op_result->result() != data) {
@@ -102,6 +158,7 @@ Status GraphScopeService::HeartBeat(::grpc::ServerContext* context,
           op_result->set_code(rpc::Code::WORKER_RESULTS_INCONSISTENT_ERROR);
           op_result->set_error_msg(ss.str());
           LOG(ERROR) << ss.str();
+          stream->Write(response_head);
           return Status(StatusCode::INTERNAL, ss.str());
         }
       }
@@ -109,7 +166,7 @@ Status GraphScopeService::HeartBeat(::grpc::ServerContext* context,
     }
     case DispatchResult::AggregatePolicy::kConcat: {
       for (auto& e : result) {
-        op_result->mutable_result()->append(e.data());
+        splitOpResult(op_result, e, response_bodies);
       }
       break;
     }
@@ -136,6 +193,12 @@ Status GraphScopeService::HeartBeat(::grpc::ServerContext* context,
       break;
     }
     }
+  }
+
+  // write responses as stream
+  stream->Write(response_head);
+  for (auto& response_body : response_bodies) {
+    stream->Write(response_body);
   }
 
   return ::grpc::Status::OK;

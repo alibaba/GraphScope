@@ -31,8 +31,9 @@ concurrency:
 jobs:
   build-gae:
     runs-on: ubuntu-20.04
+    if: ${{ github.repository == 'alibaba/GraphScope' }}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.3.16
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.3.19
       options:
         --shm-size 4096m
     steps:

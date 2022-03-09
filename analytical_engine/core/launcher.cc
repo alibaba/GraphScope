@@ -39,14 +39,12 @@ void VineyardServer::Start() {
     ts = std::chrono::duration_cast<std::chrono::milliseconds>(
              std::chrono::system_clock::now().time_since_epoch())
              .count();
-    grape::BcastSend(ts, comm_spec_.comm());
-  } else {
-    grape::BcastRecv(ts, comm_spec_.comm(), 0);
   }
+  grape::sync_comm::Bcast(ts, 0, comm_spec_.comm());
 
   if (comm_spec_.local_id() != 0) {
     // Only launch one vineyard instance at each machine.
-    grape::BcastRecv(vineyard_socket_, comm_spec_.local_comm(), 0);
+    grape::sync_comm::Bcast(vineyard_socket_, 0, comm_spec_.local_comm());
     return;
   }
 
@@ -80,6 +78,8 @@ void VineyardServer::Start() {
   std::error_code ec;
   proc_ = std::make_unique<bp::child>(cmd, bp::std_out > stdout,
                                       bp::std_err > stderr, env, ec);
+  // If vineyardd failed to launch, make sure the ec is set before checking
+  std::this_thread::sleep_for(std::chrono::seconds(2));
   if (ec) {
     // NB: currently we just leave a error message, and don't require the
     // vineyard instance is successfully launched.
@@ -91,7 +91,7 @@ void VineyardServer::Start() {
               << ", listening on " << vineyard_socket_;
   }
 
-  grape::BcastSend(vineyard_socket_, comm_spec_.local_comm());
+  grape::sync_comm::Bcast(vineyard_socket_, 0, comm_spec_.local_comm());
 }
 
 void VineyardServer::Stop() {

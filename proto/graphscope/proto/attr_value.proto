@@ -69,3 +69,30 @@ message NameAttrList {
   string name = 1;
   map<int32, AttrValue> attr = 2;
 }
+
+message Chunk {
+  bytes buffer = 1;
+  map<int32, AttrValue> attr = 2;
+}
+
+message ChunkMeta {
+  // total buffer size of the chunk
+  int64 size = 1;
+  map<int32, AttrValue> attr = 3;
+}
+
+// AttrValue for large chunk.
+message LargeAttrValue {
+  message ChunkList {
+    repeated Chunk items = 1;
+  }
+
+  message ChunkMetaList {
+    repeated ChunkMeta items = 1;
+  }
+
+  oneof large_value {
+    ChunkList chunk_list = 1;
+    ChunkMetaList chunk_meta_list = 2;
+  }
+}

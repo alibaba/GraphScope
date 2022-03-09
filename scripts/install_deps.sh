@@ -14,8 +14,8 @@ readonly GREEN="\033[0;32m"
 readonly NC="\033[0m" # No Color
 
 readonly GRAPE_BRANCH="master" # libgrape-lite branch
-readonly V6D_VERSION="0.3.16"  # vineyard version
-readonly V6D_BRANCH="v0.3.16" # vineyard branch
+readonly V6D_VERSION="0.3.19"  # vineyard version
+readonly V6D_BRANCH="v0.3.19" # vineyard branch
 
 readonly OUTPUT_ENV_FILE="${HOME}/.graphscope_env"
 IS_IN_WSL=false && [[ ! -z "${IS_WSL}" || ! -z "${WSL_DISTRO_NAME}" ]] && IS_IN_WSL=true
@@ -27,7 +27,6 @@ OS_VERSION=
 VERBOSE=false
 CN_MIRROR=false
 packages_to_install=()
-install_folly=false
 
 err() {
   echo -e "${RED}[$(date +'%Y-%m-%dT%H:%M:%S%z')]: [ERROR] $*${NC}" >&2
@@ -156,7 +155,6 @@ init_basic_packages() {
       libbz2-dev
       libclang-dev
       libcurl4-openssl-dev
-      libdouble-conversion-dev
       protobuf-compiler-grpc
       libevent-dev
       libgflags-dev
@@ -185,13 +183,13 @@ init_basic_packages() {
       perl
       python3-pip
       git
+      rapidjson-dev
     )
   elif [[ "${PLATFORM}" == *"CentOS"* ]]; then
     BASIC_PACKGES_TO_INSTALL=(
       autoconf
       automake
       clang-devel
-      double-conversion-devel
       git
       zlib-devel
       libcurl-devel
@@ -222,11 +220,11 @@ init_basic_packages() {
       make
       wget
       curl
+      rapidjson-devel
     )
   else
     BASIC_PACKGES_TO_INSTALL=(
       coreutils
-      double-conversion
       protobuf
       glog
       gflags
@@ -240,6 +238,7 @@ init_basic_packages() {
       autoconf
       wget
       libomp
+      rapidjson
     )
   fi
   readonly BASIC_PACKGES_TO_INSTALL
@@ -358,11 +357,6 @@ check_dependencies() {
     fi
   fi
 
-  # check folly
-  if [[ ! -f "/usr/local/include/folly/dynamic.h" && ! -f "/opt/homebrew/include/folly/dynamic.h" ]]; then
-    packages_to_install+=(folly)
-  fi
-
   # check zetcd
   if ! command -v zetcd &> /dev/null && ! command -v ${HOME}/go/bin/zetcd &> /dev/null && \
      ! command -v /usr/local/go/bin/zetcd &> /dev/null; then
@@ -410,8 +404,6 @@ write_envs_config() {
     {
       echo "export CC=${homebrew_prefix}/opt/llvm/bin/clang"
       echo "export CXX=${homebrew_prefix}/opt/llvm/bin/clang++"
-      echo "export CPPFLAGS=-I${homebrew_prefix}/opt/llvm/include"
-      echo "export PATH=${homebrew_prefix}/opt/llvm/bin:\$PATH"
       if [ -z "${JAVA_HOME}" ]; then
         echo "export JAVA_HOME=\$(/usr/libexec/java_home -v11)"
       fi
@@ -589,12 +581,6 @@ install_dependencies() {
       packages_to_install=("${packages_to_install[@]/apache-arrow}")
     fi
 
-    if [[ "${packages_to_install[*]}" =~ "folly" ]]; then
-      install_folly=true  # set folly install flag
-      # remove folly from packages_to_install
-      packages_to_install=("${packages_to_install[@]/folly}")
-    fi
-
     if [[ "${packages_to_install[*]}" =~ "zetcd" ]]; then
       log "Installing zetcd."
       export PATH=${PATH}:/usr/local/go/bin
@@ -667,18 +653,10 @@ install_dependencies() {
       packages_to_install=("${packages_to_install[@]/etcd}")
     fi
 
-    if [[ "${packages_to_install[*]}" =~ "folly" ]]; then
-      install_folly=true  # set folly install flag
-      # remove folly from packages_to_install
-      packages_to_install=("${packages_to_install[@]/folly}")
-      # add fmt to packages_to_install
-      packages_to_install+=(fmt-devel)
-    fi
-
     if [[ "${packages_to_install[*]}" =~ "rust" ]]; then
       # packages_to_install contains rust
       log "Installing rust."
-      curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.54.0
+      curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.54.0
       # remove rust from packages_to_install
       packages_to_install=("${packages_to_install[@]/rust}")
     fi
@@ -800,33 +778,6 @@ install_dependencies() {
     export CC=${homebrew_prefix}/opt/llvm/bin/clang
     export CXX=${homebrew_prefix}/opt/llvm/bin/clang++
     export CPPFLAGS=-I${homebrew_prefix}/opt/llvm/include
-  fi
-
-  if [[ ${install_folly} == true ]]; then
-    if [[ "${PLATFORM}" == *"Ubuntu"* ]]; then
-      log "Installing fmt."
-      wget -c https://github.com/fmtlib/fmt/archive/7.0.3.tar.gz -P /tmp
-      check_and_remove_dir "/tmp/fmt-7.0.3"
-      tar xf /tmp/7.0.3.tar.gz -C /tmp/
-      pushd /tmp/fmt-7.0.3
-      mkdir -p build && cd build
-      cmake .. -DBUILD_SHARED_LIBS=ON
-      make -j$(nproc)
-      sudo make install
-      popd
-      rm -fr /tmp/7.0.3.tar.gz /tmp/fmt-7.0.3
-    fi
-    log "Installing folly."
-    wget -c https://github.com/facebook/folly/archive/v2020.10.19.00.tar.gz -P /tmp
-    check_and_remove_dir "/tmp/folly-2020.10.19.00"
-    tar xf /tmp/v2020.10.19.00.tar.gz -C /tmp/
-    pushd /tmp/folly-2020.10.19.00
-    mkdir -p _build && cd _build
-    cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON ..
-    make -j$(nproc)
-    sudo make install
-    popd
-    rm -fr /tmp/v2020.10.19.00.tar.gz /tmp/folly-2020.10.19.00
   fi
 
   log "Installing python packages for vineyard codegen."

@@ -101,7 +101,7 @@ def create_graph(session_id, graph_type, inputs=None, **kwargs):
 
     Args:
         session_id (str): Refer to session that the graph will be create on.
-        graph_type (:enum:`GraphType`): GraphType defined in proto.types.proto.
+        graph_type (:class:`GraphType`): GraphType defined in proto.types.proto.
         **kwargs: additional properties respect to different `graph_type`.
 
     Returns:
@@ -146,14 +146,14 @@ def create_loader(vertex_or_edge_label_list):
     """
     if not isinstance(vertex_or_edge_label_list, list):
         vertex_or_edge_label_list = [vertex_or_edge_label_list]
-    attr = attr_value_pb2.AttrValue()
-    attr.list.func.extend([label.attr() for label in vertex_or_edge_label_list])
-    config = {}
-    config[types_pb2.ARROW_PROPERTY_DEFINITION] = attr
+    large_attr = attr_value_pb2.LargeAttrValue()
+    for label in vertex_or_edge_label_list:
+        large_attr.chunk_list.items.extend(label.attr())
     op = Operation(
         vertex_or_edge_label_list[0]._session_id,
         types_pb2.DATA_SOURCE,
-        config=config,
+        config={},
+        large_attr=large_attr,
         output_types=types_pb2.NULL_OUTPUT,
     )
     return op
@@ -301,7 +301,6 @@ def modify_edges(graph, modify_type, edges, attr={}, weight=None):
     config = {}
     config[types_pb2.GRAPH_NAME] = utils.s_to_attr(graph.key)
     config[types_pb2.MODIFY_TYPE] = utils.modify_type_to_attr(modify_type)
-    config[types_pb2.EDGES] = utils.s_to_attr(edges)
     config[types_pb2.PROPERTIES] = utils.s_to_attr(json.dumps(attr))
     if weight:
         config[types_pb2.EDGE_KEY] = utils.s_to_attr(weight)
@@ -309,6 +308,7 @@ def modify_edges(graph, modify_type, edges, attr={}, weight=None):
         graph.session_id,
         types_pb2.MODIFY_EDGES,
         config=config,
+        large_attr=utils.bytes_to_large_attr(edges),
         output_types=types_pb2.GRAPH,
     )
     return op
@@ -329,12 +329,12 @@ def modify_vertices(graph, modify_type, vertices, attr={}):
     config = {}
     config[types_pb2.GRAPH_NAME] = utils.s_to_attr(graph.key)
     config[types_pb2.MODIFY_TYPE] = utils.modify_type_to_attr(modify_type)
-    config[types_pb2.NODES] = utils.s_to_attr(vertices)
     config[types_pb2.PROPERTIES] = utils.s_to_attr(json.dumps(attr))
     op = Operation(
         graph.session_id,
         types_pb2.MODIFY_VERTICES,
         config=config,
+        large_attr=utils.bytes_to_large_attr(vertices),
         output_types=types_pb2.GRAPH,
     )
     return op
@@ -394,9 +394,9 @@ def report_graph(
         config[types_pb2.DEFAULT_LABEL_ID] = utils.i_to_attr(graph._default_label_id)
 
     if node is not None:
-        config[types_pb2.NODE] = utils.s_to_attr(node)
+        config[types_pb2.NODE] = utils.bytes_to_attr(node)
     if edge is not None:
-        config[types_pb2.EDGE] = utils.s_to_attr(edge)
+        config[types_pb2.EDGE] = utils.bytes_to_attr(edge)
     if fid is not None:
         config[types_pb2.FID] = utils.i_to_attr(fid)
     if lid is not None:
@@ -711,9 +711,9 @@ def create_subgraph(graph, nodes=None, edges=None):
         types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
     }
     if nodes is not None:
-        config[types_pb2.NODES] = utils.s_to_attr(nodes)
+        config[types_pb2.NODES] = utils.bytes_to_attr(nodes)
     if edges is not None:
-        config[types_pb2.EDGES] = utils.s_to_attr(edges)
+        config[types_pb2.EDGES] = utils.bytes_to_attr(edges)
 
     op = Operation(
         graph.session_id,

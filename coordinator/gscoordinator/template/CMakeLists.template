@@ -38,6 +38,10 @@ endif ()
 
 if (NETWORKX)
     add_definitions(-DNETWORKX)
+    add_definitions(-DRAPIDJSON_HAS_CXX11=1)
+    add_definitions(-DRAPIDJSON_HAS_STDSTRING=1)
+    add_definitions(-DRAPIDJSON_HAS_CXX11_RVALUE_REFS=1)
+    add_definitions(-DRAPIDJSON_HAS_CXX11_RANGE_FOR=1)
 endif ()
 
 if (ENABLE_PREGEL_COMBINE)
@@ -223,17 +227,6 @@ endif()
 if(LIBUNWIND_FOUND)
     add_definitions(-DWITH_LIBUNWIND)
 endif()
-
-# find folly--------------------------------------------------------------------
-if (NETWORKX)
-    if(GRAPHSCOPE_ANALYTICAL_HOME)
-        include("${ANALYTICAL_ENGINE_HOME}/${CMAKE_INSTALL_LIBDIR}/cmake/graphscope-analytical/cmake/FindFolly.cmake")
-        include("${ANALYTICAL_ENGINE_HOME}/${CMAKE_INSTALL_LIBDIR}/cmake/graphscope-analytical/cmake/FindDoubleConversion.cmake")
-    else()
-        include("${ANALYTICAL_ENGINE_HOME}/cmake/FindFolly.cmake")
-        include("${ANALYTICAL_ENGINE_HOME}/cmake/FindDoubleConversion.cmake")
-    endif()
-endif ()
 
 # include Analytical Engine-----------------------------------------------------
 if(GRAPHSCOPE_ANALYTICAL_HOME)

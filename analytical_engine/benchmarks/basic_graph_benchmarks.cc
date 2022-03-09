@@ -56,9 +56,7 @@ void LoadAndRunApp(const grape::CommSpec& comm_spec, const std::string& efile,
   graph_spec.set_rebalance(false, 0);
 
   std::shared_ptr<GRAPH_T> fragment;
-  fragment = grape::LoadGraph<GRAPH_T,
-                              grape::HashPartitioner<typename GRAPH_T::oid_t>>(
-      efile, vfile, comm_spec, graph_spec);
+  fragment = grape::LoadGraph<GRAPH_T>(efile, vfile, comm_spec, graph_spec);
 
   auto app = std::make_shared<APP_T>();
 

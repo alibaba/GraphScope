@@ -31,14 +31,14 @@ namespace gs {
 
 template <typename FRAG_T>
 class AllPairsShortestPathLengthContext
-    : public grape::VertexDataContext<FRAG_T, folly::dynamic> {
+    : public grape::VertexDataContext<FRAG_T, dynamic::Value> {
  public:
   using oid_t = typename FRAG_T::oid_t;
   using vid_t = typename FRAG_T::vid_t;
   using vertex_t = typename FRAG_T::vertex_t;
 
   explicit AllPairsShortestPathLengthContext(const FRAG_T& fragment)
-      : grape::VertexDataContext<FRAG_T, folly::dynamic>(fragment) {}
+      : grape::VertexDataContext<FRAG_T, dynamic::Value>(fragment) {}
 
   void Init(grape::ParallelMessageManager& messages) {
     auto& frag = this->fragment();
@@ -59,15 +59,17 @@ class AllPairsShortestPathLengthContext
     }
   }
 
-  const folly::dynamic& GetVertexResult(const vertex_t& v) override {
+  const dynamic::Value& GetVertexResult(const vertex_t& v) override {
     auto& frag = this->fragment();
     CHECK(frag.IsInnerVertex(v));
-    if (this->data()[v].isNull()) {
-      this->data()[v] = folly::dynamic::array;
+    if (this->data()[v].IsNull()) {
+      this->data()[v] = dynamic::Value(rapidjson::kArrayType);
       for (auto& t : frag.Vertices()) {
         if (length[v][t] < std::numeric_limits<double>::max()) {
-          this->data()[v].push_back(
-              folly::dynamic::array(frag.GetId(t), length[v][t]));
+          oid_t oid = frag.GetId(t);  // avoid to be moved.
+          this->data()[v].PushBack(dynamic::Value(rapidjson::kArrayType)
+                                       .PushBack(oid)
+                                       .PushBack(length[v][t]));
         }
       }
     }

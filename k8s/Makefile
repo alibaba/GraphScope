@@ -40,7 +40,7 @@ else
 endif
 
 VERSION ?= latest
-VINEYARD_VERSION ?= v0.3.16
+VINEYARD_VERSION ?= v0.3.19
 PROFILE ?= release
 
 
@@ -111,7 +111,7 @@ graphscope-darwin-py3:
 	cd $(WORKING_DIR)/../coordinator && \
 		export WITH_EXTRA_DATA=ON && \
 		rm -fr build dist/*.whl || true && \
-		sudo strip /opt/graphscope/bin/grape_engine && \
+		sudo strip -s $(WORKING_DIR)/../analytical_engine/exported_symbols_osx.lds /opt/graphscope/bin/grape_engine && \
 		sudo strip /opt/graphscope/bin/executor && \
 		sudo strip /opt/graphscope/bin/gaia_executor && \
 		export DYLD_LIBRARY_PATH=/usr/local/lib:$$DYLD_LIBRARY_PATH && \
@@ -201,7 +201,7 @@ graphscope-client-manylinux2014-py3:
 			cmake -DWITH_VINEYARD=ON .. && \
 			make graphlearn_shared -j`nproc` && \
 			export LD_LIBRARY_PATH=/work/learning_engine/graph-learn/built/lib:$$LD_LIBRARY_PATH && \
-			for py in cp36-cp36m cp37-cp37m cp38-cp38 cp39-cp39 ; do \
+			for py in cp37-cp37m cp38-cp38 cp39-cp39 ; do \
 				cd /work/python; \
 				export PATH=/opt/python/$$py/bin:$$PATH; \
 				pip3 install -U pip numpy==1.18.5 auditwheel==5.0.0 grpcio grpcio_tools wheel ; \

@@ -53,10 +53,10 @@ struct VertexArrayBuilder<arrow::Int64Builder> {
     for (const auto& u : src_frag->InnerVertices()) {
       auto& data = src_frag->GetData(u);
 
-      if (data.count(prop_key) == 0) {
+      if (data.HasMember(prop_key) == 0) {
         ARROW_OK_OR_RAISE(builder.AppendNull());
       } else {
-        ARROW_OK_OR_RAISE(builder.Append(data[prop_key].asInt()));
+        ARROW_OK_OR_RAISE(builder.Append(data[prop_key].GetInt64()));
       }
     }
 
@@ -78,10 +78,10 @@ struct VertexArrayBuilder<arrow::DoubleBuilder> {
     for (const auto& u : src_frag->InnerVertices()) {
       auto& data = src_frag->GetData(u);
 
-      if (data.count(prop_key) == 0) {
+      if (data.HasMember(prop_key) == 0) {
         ARROW_OK_OR_RAISE(builder.AppendNull());
       } else {
-        ARROW_OK_OR_RAISE(builder.Append(data[prop_key].asDouble()));
+        ARROW_OK_OR_RAISE(builder.Append(data[prop_key].GetDouble()));
       }
     }
 
@@ -103,10 +103,10 @@ struct VertexArrayBuilder<arrow::LargeStringBuilder> {
     for (const auto& u : src_frag->InnerVertices()) {
       auto& data = src_frag->GetData(u);
 
-      if (data.count(prop_key) == 0) {
+      if (data.HasMember(prop_key) == 0) {
         ARROW_OK_OR_RAISE(builder.AppendNull());
       } else {
-        ARROW_OK_OR_RAISE(builder.Append(data[prop_key].asString()));
+        ARROW_OK_OR_RAISE(builder.Append(data[prop_key].GetString()));
       }
     }
 
@@ -141,10 +141,10 @@ struct EdgeArrayBuilder<arrow::Int64Builder> {
         }
 
         auto& data = e.data();
-        if (data.count(prop_key) == 0) {
+        if (data.HasMember(prop_key) == 0) {
           ARROW_OK_OR_RAISE(builder.AppendNull());
         } else {
-          ARROW_OK_OR_RAISE(builder.Append(data[prop_key].asInt()));
+          ARROW_OK_OR_RAISE(builder.Append(data[prop_key].GetInt64()));
         }
       }
       if (src_frag->directed()) {
@@ -152,10 +152,10 @@ struct EdgeArrayBuilder<arrow::Int64Builder> {
           auto& v = e.neighbor();
           if (src_frag->IsOuterVertex(v)) {
             auto& data = e.data();
-            if (data.count(prop_key) == 0) {
+            if (data.HasMember(prop_key) == 0) {
               ARROW_OK_OR_RAISE(builder.AppendNull());
             } else {
-              ARROW_OK_OR_RAISE(builder.Append(data[prop_key].asInt()));
+              ARROW_OK_OR_RAISE(builder.Append(data[prop_key].GetInt64()));
             }
           }
         }
@@ -184,10 +184,10 @@ struct EdgeArrayBuilder<arrow::DoubleBuilder> {
         }
 
         auto& data = e.data();
-        if (data.count(prop_key) == 0) {
+        if (data.HasMember(prop_key) == 0) {
           ARROW_OK_OR_RAISE(builder.AppendNull());
         } else {
-          ARROW_OK_OR_RAISE(builder.Append(data[prop_key].asDouble()));
+          ARROW_OK_OR_RAISE(builder.Append(data[prop_key].GetDouble()));
         }
       }
       if (src_frag->directed()) {
@@ -195,10 +195,10 @@ struct EdgeArrayBuilder<arrow::DoubleBuilder> {
           auto& v = e.neighbor();
           if (src_frag->IsOuterVertex(v)) {
             auto& data = e.data();
-            if (data.count(prop_key) == 0) {
+            if (data.HasMember(prop_key) == 0) {
               ARROW_OK_OR_RAISE(builder.AppendNull());
             } else {
-              ARROW_OK_OR_RAISE(builder.Append(data[prop_key].asDouble()));
+              ARROW_OK_OR_RAISE(builder.Append(data[prop_key].GetDouble()));
             }
           }
         }
@@ -228,10 +228,10 @@ struct EdgeArrayBuilder<arrow::LargeStringBuilder> {
         }
 
         auto& data = e.data();
-        if (data.count(prop_key) == 0) {
+        if (data.HasMember(prop_key) == 0) {
           ARROW_OK_OR_RAISE(builder.AppendNull());
         } else {
-          ARROW_OK_OR_RAISE(builder.Append(data[prop_key].asString()));
+          ARROW_OK_OR_RAISE(builder.Append(data[prop_key].GetString()));
         }
       }
       if (src_frag->directed()) {
@@ -239,10 +239,10 @@ struct EdgeArrayBuilder<arrow::LargeStringBuilder> {
           auto& v = e.neighbor();
           if (src_frag->IsOuterVertex(v)) {
             auto& data = e.data();
-            if (data.count(prop_key) == 0) {
+            if (data.HasMember(prop_key) == 0) {
               ARROW_OK_OR_RAISE(builder.AppendNull());
             } else {
-              ARROW_OK_OR_RAISE(builder.Append(data[prop_key].asString()));
+              ARROW_OK_OR_RAISE(builder.Append(data[prop_key].GetString()));
             }
           }
         }
@@ -287,7 +287,7 @@ struct COOBuilder<DST_FRAG_T, int64_t> {
       auto u_oid = src_frag->GetId(u);
       vineyard::property_graph_types::VID_TYPE u_gid;
 
-      CHECK(dst_vm->GetGid(fid, 0, u_oid.asInt(), u_gid));
+      CHECK(dst_vm->GetGid(fid, 0, u_oid.GetInt64(), u_gid));
 
       for (auto& e : src_frag->GetOutgoingAdjList(u)) {
         auto& v = e.neighbor();
@@ -297,7 +297,7 @@ struct COOBuilder<DST_FRAG_T, int64_t> {
         auto v_oid = src_frag->GetId(v);
         vineyard::property_graph_types::VID_TYPE v_gid;
 
-        CHECK(dst_vm->GetGid(0, v_oid.asInt(), v_gid));
+        CHECK(dst_vm->GetGid(0, v_oid.GetInt64(), v_gid));
         ARROW_OK_OR_RAISE(src_builder.Append(u_gid));
         ARROW_OK_OR_RAISE(dst_builder.Append(v_gid));
       }
@@ -308,7 +308,7 @@ struct COOBuilder<DST_FRAG_T, int64_t> {
             auto v_oid = src_frag->GetId(v);
             vineyard::property_graph_types::VID_TYPE v_gid;
 
-            CHECK(dst_vm->GetGid(0, v_oid.asInt(), v_gid));
+            CHECK(dst_vm->GetGid(0, v_oid.GetInt64(), v_gid));
             ARROW_OK_OR_RAISE(src_builder.Append(v_gid));
             ARROW_OK_OR_RAISE(dst_builder.Append(u_gid));
           }
@@ -348,7 +348,7 @@ struct COOBuilder<DST_FRAG_T, std::string> {
       auto u_oid = src_frag->GetId(u);
       vineyard::property_graph_types::VID_TYPE u_gid;
 
-      CHECK(dst_vm->GetGid(fid, 0, u_oid.asString(), u_gid));
+      CHECK(dst_vm->GetGid(fid, 0, u_oid.GetString(), u_gid));
 
       for (auto& e : src_frag->GetOutgoingAdjList(u)) {
         auto& v = e.neighbor();
@@ -358,7 +358,7 @@ struct COOBuilder<DST_FRAG_T, std::string> {
         auto v_oid = src_frag->GetId(v);
         vineyard::property_graph_types::VID_TYPE v_gid;
 
-        CHECK(dst_vm->GetGid(0, v_oid.asString(), v_gid));
+        CHECK(dst_vm->GetGid(0, v_oid.GetString(), v_gid));
         ARROW_OK_OR_RAISE(src_builder.Append(u_gid));
         ARROW_OK_OR_RAISE(dst_builder.Append(v_gid));
       }
@@ -369,7 +369,7 @@ struct COOBuilder<DST_FRAG_T, std::string> {
             auto v_oid = src_frag->GetId(v);
             vineyard::property_graph_types::VID_TYPE v_gid;
 
-            CHECK(dst_vm->GetGid(0, v_oid.asString(), v_gid));
+            CHECK(dst_vm->GetGid(0, v_oid.GetString(), v_gid));
             ARROW_OK_OR_RAISE(src_builder.Append(v_gid));
             ARROW_OK_OR_RAISE(dst_builder.Append(u_gid));
           }
@@ -419,7 +419,7 @@ class VertexMapConverter<int64_t> {
       std::shared_ptr<oid_array_t> oid_array;
       oid_builder_t builder;
       for (const auto& oid : oids) {
-        ARROW_OK_OR_RAISE(builder.Append(oid.asInt()));
+        ARROW_OK_OR_RAISE(builder.Append(oid.GetInt64()));
       }
       ARROW_OK_OR_RAISE(builder.Finish(&oid_array));
       oid_lists[0].push_back(oid_array);
@@ -464,7 +464,7 @@ class VertexMapConverter<std::string> {
       std::shared_ptr<oid_array_t> oid_array;
       oid_builder_t builder;
       for (const auto& oid : oids) {
-        ARROW_OK_OR_RAISE(builder.Append(oid.asString()));
+        ARROW_OK_OR_RAISE(builder.Append(oid.GetString()));
       }
       ARROW_OK_OR_RAISE(builder.Finish(&oid_array));
       oid_lists[0].push_back(oid_array);
@@ -526,7 +526,7 @@ class DynamicToArrowConverter {
       auto type = p.second;
 
       switch (type) {
-      case folly::dynamic::Type::INT64: {
+      case dynamic::Type::kInt64Type: {
         auto r = VertexArrayBuilder<arrow::Int64Builder>::build(src_frag, key);
 
         BOOST_LEAF_AUTO(array, r);
@@ -534,7 +534,7 @@ class DynamicToArrowConverter {
         arrays.push_back(array);
         break;
       }
-      case folly::dynamic::Type::DOUBLE: {
+      case dynamic::Type::kDoubleType: {
         auto r = VertexArrayBuilder<arrow::DoubleBuilder>::build(src_frag, key);
 
         BOOST_LEAF_AUTO(array, r);
@@ -542,7 +542,7 @@ class DynamicToArrowConverter {
         arrays.push_back(array);
         break;
       }
-      case folly::dynamic::Type::STRING: {
+      case dynamic::Type::kStringType: {
         auto r =
             VertexArrayBuilder<arrow::LargeStringBuilder>::build(src_frag, key);
 
@@ -589,7 +589,7 @@ class DynamicToArrowConverter {
       auto type = e.second;
 
       switch (type) {
-      case folly::dynamic::Type::INT64: {
+      case dynamic::Type::kInt64Type: {
         auto r = EdgeArrayBuilder<arrow::Int64Builder>::build(src_frag, key);
 
         BOOST_LEAF_AUTO(array, r);
@@ -598,7 +598,7 @@ class DynamicToArrowConverter {
         arrays.push_back(array);
         break;
       }
-      case folly::dynamic::Type::DOUBLE: {
+      case dynamic::Type::kDoubleType: {
         auto r = EdgeArrayBuilder<arrow::DoubleBuilder>::build(src_frag, key);
 
         BOOST_LEAF_AUTO(array, r);
@@ -606,7 +606,7 @@ class DynamicToArrowConverter {
         arrays.push_back(array);
         break;
       }
-      case folly::dynamic::Type::STRING: {
+      case dynamic::Type::kStringType: {
         auto r =
             EdgeArrayBuilder<arrow::LargeStringBuilder>::build(src_frag, key);
 

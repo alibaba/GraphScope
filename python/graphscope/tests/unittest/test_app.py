@@ -68,6 +68,18 @@ def test_run_app_on_property_graph(arrow_property_graph, twitter_sssp_result):
     assert np.allclose(r1, twitter_sssp_result)
 
 
+@pytest.mark.skipif("FULL_TEST_SUITE" not in os.environ, reason="Run in nightly CI")
+def test_run_app_on_pandas_graph(p2p_graph_from_pandas, sssp_result):
+    ctx1 = sssp(p2p_graph_from_pandas, src=6, weight="dist")
+    r1 = (
+        ctx1.to_dataframe({"node": "v.id", "r": "r"})
+        .sort_values(by=["node"])
+        .to_numpy(dtype=float)
+    )
+    r1[r1 == 1.7976931348623157e308] = float("inf")  # replace limit::max with inf
+    assert np.allclose(r1, sssp_result["directed"])
+
+
 def test_run_app_on_directed_graph(
     p2p_project_directed_graph,
     sssp_result,

@@ -529,6 +529,7 @@ PIE
 
    .. py:method:: AdjList.begin() -> Nbr
       :noindex:
+
         Return begin addr of the adj list.
 
    .. py:method:: AdjList.end() -> Nbr

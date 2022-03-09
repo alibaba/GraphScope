@@ -120,20 +120,20 @@ class VertexLabel(object):
             else:
                 self.add_property(prop[0], prop[1])
 
-    def attr(self) -> attr_value_pb2.NameAttrList:
-        attr_list = attr_value_pb2.NameAttrList()
-        attr_list.name = "vertex"
-        attr_list.attr[types_pb2.LABEL].CopyFrom(utils.s_to_attr(self.label))
-        attr_list.attr[types_pb2.VID].CopyFrom(utils.s_to_attr(str(self.vid_field)))
-        props = []
-        for prop in self.properties[1:]:
-            prop_attr = attr_value_pb2.NameAttrList()
-            prop_attr.name = prop[0]
-            prop_attr.attr[0].CopyFrom(utils.type_to_attr(prop[1]))
-            props.append(prop_attr)
-        attr_list.attr[types_pb2.PROPERTIES].list.func.extend(props)
-        attr_list.attr[types_pb2.LOADER].CopyFrom(self.loader.get_attr())
-        return attr_list
+    def attr(self) -> Sequence[attr_value_pb2.Chunk]:
+        chunk = attr_value_pb2.Chunk()
+        chunk.attr[types_pb2.CHUNK_NAME].CopyFrom(utils.s_to_attr("vertex"))
+        chunk.attr[types_pb2.CHUNK_TYPE].CopyFrom(utils.s_to_attr("loader"))
+        chunk.attr[types_pb2.LABEL].CopyFrom(utils.s_to_attr(self.label))
+        chunk.attr[types_pb2.VID].CopyFrom(utils.s_to_attr(str(self.vid_field)))
+        # loader
+        for k, v in self.loader.get_attr().items():
+            # raw bytes for pandas/numpy data
+            if k == types_pb2.VALUES:
+                chunk.buffer = v
+            else:
+                chunk.attr[k].CopyFrom(v)
+        return [chunk]
 
 
 class EdgeSubLabel(object):
@@ -215,27 +215,26 @@ class EdgeSubLabel(object):
             else:
                 self.add_property(prop[0], prop[1])
 
-    def get_attr(self):
-        attr_list = attr_value_pb2.NameAttrList()
-        attr_list.name = "{}_{}".format(self.src_label, self.dst_label)
-        attr_list.attr[types_pb2.SRC_LABEL].CopyFrom(utils.s_to_attr(self.src_label))
-        attr_list.attr[types_pb2.DST_LABEL].CopyFrom(utils.s_to_attr(self.dst_label))
-        attr_list.attr[types_pb2.LOAD_STRATEGY].CopyFrom(
+    def get_attr(self) -> attr_value_pb2.Chunk:
+        chunk = attr_value_pb2.Chunk()
+        chunk.attr[types_pb2.SUB_LABEL].CopyFrom(
+            utils.s_to_attr("{}_{}".format(self.src_label, self.dst_label))
+        )
+        chunk.attr[types_pb2.SRC_LABEL].CopyFrom(utils.s_to_attr(self.src_label))
+        chunk.attr[types_pb2.DST_LABEL].CopyFrom(utils.s_to_attr(self.dst_label))
+        chunk.attr[types_pb2.LOAD_STRATEGY].CopyFrom(
             utils.s_to_attr(self.load_strategy)
         )
-        attr_list.attr[types_pb2.SRC_VID].CopyFrom(utils.s_to_attr(str(self.src_field)))
-        attr_list.attr[types_pb2.DST_VID].CopyFrom(utils.s_to_attr(str(self.dst_field)))
-
-        attr_list.attr[types_pb2.LOADER].CopyFrom(self.loader.get_attr())
-
-        props = []
-        for prop in self.properties[2:]:
-            prop_attr = attr_value_pb2.NameAttrList()
-            prop_attr.name = prop[0]
-            prop_attr.attr[0].CopyFrom(utils.type_to_attr(prop[1]))
-            props.append(prop_attr)
-        attr_list.attr[types_pb2.PROPERTIES].list.func.extend(props)
-        return attr_list
+        chunk.attr[types_pb2.SRC_VID].CopyFrom(utils.s_to_attr(str(self.src_field)))
+        chunk.attr[types_pb2.DST_VID].CopyFrom(utils.s_to_attr(str(self.dst_field)))
+        # loader
+        for k, v in self.loader.get_attr().items():
+            # raw bytes for pandas/numpy data
+            if k == types_pb2.VALUES:
+                chunk.buffer = v
+            else:
+                chunk.attr[k].CopyFrom(v)
+        return chunk
 
 
 class EdgeLabel(object):
@@ -275,15 +274,15 @@ class EdgeLabel(object):
             )
         self.sub_labels[(src, dst)] = sub_label
 
-    def attr(self) -> attr_value_pb2.NameAttrList:
-        attr_list = attr_value_pb2.NameAttrList()
-        attr_list.name = "edge"
-        attr_list.attr[types_pb2.LABEL].CopyFrom(utils.s_to_attr(self.label))
-        sub_label_attr = [
-            sub_label.get_attr() for sub_label in self.sub_labels.values()
-        ]
-        attr_list.attr[types_pb2.SUB_LABEL].list.func.extend(sub_label_attr)
-        return attr_list
+    def attr(self) -> Sequence[attr_value_pb2.Chunk]:
+        chunk_list = []
+        for sub_label in self.sub_labels.values():
+            chunk = sub_label.get_attr()
+            chunk.attr[types_pb2.CHUNK_NAME].CopyFrom(utils.s_to_attr("edge"))
+            chunk.attr[types_pb2.CHUNK_TYPE].CopyFrom(utils.s_to_attr("loader"))
+            chunk.attr[types_pb2.LABEL].CopyFrom(utils.s_to_attr(self.label))
+            chunk_list.append(chunk)
+        return chunk_list
 
 
 def _convert_array_to_deprecated_form(items):

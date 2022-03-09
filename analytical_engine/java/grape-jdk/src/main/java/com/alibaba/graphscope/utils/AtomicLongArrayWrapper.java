@@ -38,8 +38,8 @@ public class AtomicLongArrayWrapper {
     }
 
     public AtomicLongArrayWrapper(VertexRange<Long> vertices, long defaultValue) {
-        left = vertices.begin().GetValue().intValue();
-        right = vertices.end().GetValue().intValue();
+        left = vertices.beginValue().intValue();
+        right = vertices.endValue().intValue();
         size = right - left;
         long tmp[] = new long[size];
         Arrays.fill(tmp, defaultValue);

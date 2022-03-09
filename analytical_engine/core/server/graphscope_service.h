@@ -20,16 +20,22 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "core/server/dispatcher.h"
+#include "proto/graphscope/proto/attr_value.pb.h"
 #include "proto/graphscope/proto/engine_service.grpc.pb.h"
 #include "proto/graphscope/proto/graph_def.pb.h"
+#include "proto/graphscope/proto/message.pb.h"
 #include "proto/graphscope/proto/op_def.pb.h"
+
+#include "boost/lexical_cast.hpp"
 
 namespace gs {
 namespace rpc {
 
 using grpc::ServerContext;
+using ::grpc::ServerReaderWriter;
 using grpc::Status;
 using grpc::StatusCode;
 
@@ -40,18 +46,59 @@ using grpc::StatusCode;
 class GraphScopeService final : public EngineService::Service {
  public:
   explicit GraphScopeService(std::shared_ptr<Dispatcher> dispatcher)
-      : dispatcher_(std::move(dispatcher)) {}
+      : dispatcher_(std::move(dispatcher)) {
+    if (getenv("GS_GRPC_CHUNK_SIZE")) {
+      chunk_size_ = boost::lexical_cast<size_t>(
+          std::string(getenv("GS_GRPC_CHUNK_SIZE")));
+    } else {
+      // chunk_size defaults to 256MB
+      chunk_size_ = 256 * 1024 * 1024 - 1;
+    }
+  }
 
-  ::grpc::Status RunStep(::grpc::ServerContext* context,
-                         const RunStepRequest* request,
-                         RunStepResponse* response) override;
+  ::grpc::Status RunStep(
+      ::grpc::ServerContext* context,
+      ServerReaderWriter<RunStepResponse, RunStepRequest>* stream) override;
 
   ::grpc::Status HeartBeat(::grpc::ServerContext* context,
                            const HeartBeatRequest* request,
                            HeartBeatResponse* response) override;
 
  private:
+  void splitOpResult(OpResult* op_result, const DispatchResult& result,
+                     std::vector<RunStepResponse>& response_bodies) {
+    auto policy = result.aggregate_policy();
+    const std::string& data = result.data();
+
+    // has_large_result
+    op_result->set_has_large_result(result.has_large_data());
+    if (op_result->has_large_result()) {
+      // split
+      for (size_t i = 0; i < data.size(); i += chunk_size_) {
+        RunStepResponse response_body;
+        auto* body = response_body.mutable_body();
+        if ((i + chunk_size_) >= data.size()) {
+          body->mutable_chunk()->assign(data.begin() + i, data.end());
+          body->set_has_next(false);
+        } else {
+          body->mutable_chunk()->assign(data.begin() + i,
+                                        data.begin() + i + chunk_size_);
+          body->set_has_next(true);
+        }
+        response_bodies.push_back(std::move(response_body));
+      }
+    } else {
+      if (policy == DispatchResult::AggregatePolicy::kConcat) {
+        op_result->mutable_result()->append(data);
+      } else {
+        op_result->mutable_result()->assign(data.begin(), data.end());
+      }
+    }
+  }
+
+ private:
   std::shared_ptr<Dispatcher> dispatcher_;
+  size_t chunk_size_;
 };
 }  // namespace rpc
 }  // namespace gs

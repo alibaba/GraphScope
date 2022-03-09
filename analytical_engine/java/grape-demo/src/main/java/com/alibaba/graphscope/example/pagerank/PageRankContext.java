@@ -109,7 +109,7 @@ public class PageRankContext extends VertexDataContext<IFragment<Long, Long, Lon
             BufferedWriter bufferedWriter = new BufferedWriter(fileWritter);
             VertexRange<Long> innerNodes = frag.innerVertices();
 
-            Vertex<Long> cur = innerNodes.begin();
+            Vertex<Long> cur = FFITypeFactoryhelper.newVertexLong();
             for (long index = 0; index < frag.getInnerVerticesNum(); ++index) {
                 cur.SetValue(index);
                 Long oid = frag.getId(cur);
