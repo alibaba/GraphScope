@@ -23,10 +23,10 @@ from graphscope.client.connection import conn
 from graphscope.client.session import Session
 from graphscope.client.session import g
 from graphscope.client.session import get_default_session
-from graphscope.client.session import has_default_session
 from graphscope.client.session import get_option
 from graphscope.client.session import graphlearn
 from graphscope.client.session import gremlin
+from graphscope.client.session import has_default_session
 from graphscope.client.session import session
 from graphscope.client.session import set_option
 from graphscope.framework.errors import *
