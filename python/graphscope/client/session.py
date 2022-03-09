@@ -1389,14 +1389,19 @@ def default_session(session):
     return _default_session_stack.get_controller(session)
 
 
+def has_default_session():
+    """True if default session exists in current context."""
+    return not _default_session_stack.empty()
+
+
 def get_default_session():
     """Returns the default session for the current context.
 
-    Raises:
-        RuntimeError: Default session is not exist.
+    Note that a new session will be created if there is no
+    default session in current context.
 
     Returns:
-        The default :class:`Session`.
+        The default :class:`graphscope.Session`.
     """
     return _default_session_stack.get_default()
 
@@ -1421,6 +1426,9 @@ class _DefaultSessionStack(object):
             sess = session(cluster_type="hosts", num_workers=1)
             sess.as_default()
         return self.stack[-1]
+
+    def empty(self):
+        return len(self.stack) == 0
 
     def reset(self):
         self.stack = []
