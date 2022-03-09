@@ -202,11 +202,18 @@ impl From<FfiError> for FfiData {
 }
 
 pub(crate) fn cstr_to_string(cstr: *const c_char) -> Result<String, FfiError> {
-    let str_result = unsafe { CStr::from_ptr(cstr) }.to_str();
-    if let Ok(str) = str_result {
-        Ok(str.to_string())
+    if !cstr.is_null() {
+        let str_result = unsafe { CStr::from_ptr(cstr) }.to_str();
+        if let Ok(str) = str_result {
+            Ok(str.to_string())
+        } else {
+            Err(FfiError::new(
+                ResultCode::CStringError,
+                "error parsing C string into Rust string".to_string(),
+            ))
+        }
     } else {
-        Err(FfiError::new(ResultCode::CStringError, "error parsing C string into Rust string".to_string()))
+        Ok("".to_string())
     }
 }
 
