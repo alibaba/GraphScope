@@ -53,6 +53,7 @@ class HostsClusterLauncher(Launcher):
         self,
         hosts=None,
         port=None,
+        etcd_addrs=None,
         num_workers=None,
         vineyard_socket=None,
         timeout_seconds=None,
@@ -61,6 +62,7 @@ class HostsClusterLauncher(Launcher):
     ):
         self._hosts = hosts
         self._port = port
+        self._etcd_addrs = etcd_addrs
         self._num_workers = num_workers
         self._vineyard_socket = vineyard_socket
         self._timeout_seconds = timeout_seconds
@@ -93,6 +95,8 @@ class HostsClusterLauncher(Launcher):
             "{}".format(str(self._num_workers)),
             "--hosts",
             "{}".format(",".join(self._hosts)),
+            "--etcd_addrs",
+            self._etcd_addrs,
             "--log_level",
             "{}".format(gs_config.log_level),
             "--timeout_seconds",
