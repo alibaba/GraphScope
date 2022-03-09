@@ -436,12 +436,7 @@ class LocalLauncher(Launcher):
             cmd = self._find_vineyardd()
             cmd.extend(["--socket", vineyard_socket])
             cmd.extend(["--size", self._shared_mem])
-            cmd.extend(
-                [
-                    "-etcd_endpoint",
-                    self._etcd_endpoint
-                ]
-            )
+            cmd.extend(["-etcd_endpoint", self._etcd_endpoint])
             cmd.extend(["-etcd_prefix", f"vineyard.gsa.{ts}"])
             env = os.environ.copy()
             env["GLOG_v"] = str(self._glog_level)
