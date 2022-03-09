@@ -21,6 +21,7 @@
 import argparse
 import atexit
 import datetime
+import functools
 import json
 import logging
 import os
@@ -99,6 +100,36 @@ GS_DEBUG_ENDPOINT = os.environ.get("GS_DEBUG_ENDPOINT", "")
 GS_GRPC_MAX_MESSAGE_LENGTH = 2 * 1024 * 1024 * 1024 - 1
 
 logger = logging.getLogger("graphscope")
+
+
+def catch_unknown_errors(response_on_error=None, using_yield=False):
+    """A catcher that catches all (unknown) exceptions in gRPC handlers to ensure
+    the client not think the coordinator services is crashed.
+    """
+
+    def catch_exceptions(handler):
+        @functools.wraps(handler)
+        def handler_execution(self, request, context):
+            try:
+                if using_yield:
+                    for result in handler(self, request, context):
+                        yield result
+                else:
+                    yield handler(self, request, context)
+            except Exception as exc:
+                error_message = repr(exc)
+                error_traceback = traceback.format_exc()
+                context.set_code(error_codes_pb2.COORDINATOR_INTERNAL_ERROR)
+                context.set_details(
+                    'Error occurs in handler: "%s", with traceback: ' % error_message
+                    + error_traceback
+                )
+                if response_on_error is not None:
+                    yield response_on_error
+
+        return handler_execution
+
+    return catch_exceptions
 
 
 class CoordinatorServiceServicer(
@@ -208,6 +239,10 @@ class CoordinatorServiceServicer(
         logger.addHandler(stderr_handler)
 
     def ConnectSession(self, request, context):
+        for result in self.ConnectSessionWrapped(request, context):
+            return result
+
+    def _ConnectSession(self, request, context):
         # A session is already connected.
         if self._request:
             if getattr(request, "reconnect", False):
@@ -271,7 +306,15 @@ class CoordinatorServiceServicer(
             namespace=self._k8s_namespace,
         )
 
+    ConnectSessionWrapped = catch_unknown_errors(message_pb2.ConnectSessionResponse())(
+        _ConnectSession
+    )
+
     def HeartBeat(self, request, context):
+        for result in self.HeartBeatWrapped(request, context):
+            return result
+
+    def _HeartBeat(self, request, context):
         if self._request and self._request.dangling_timeout_seconds >= 0:
             # Reset dangling detect timer
             if self._dangling_detecting_timer:
@@ -310,6 +353,8 @@ class CoordinatorServiceServicer(
             )
 
         return message_pb2.HeartBeatResponse()
+
+    HeartBeatWrapped = catch_unknown_errors(message_pb2.HeartBeatResponse())(_HeartBeat)
 
     def run_on_analytical_engine(  # noqa: C901
         self,
@@ -549,6 +594,10 @@ class CoordinatorServiceServicer(
         return response_head, response_bodies
 
     def RunStep(self, request_iterator, context):
+        for response in self.RunStepWrapped(request_iterator, context):
+            yield response
+
+    def _RunStep(self, request_iterator, context):
         # split dag
         dag_manager = DAGManager(request_iterator)
         loader_op_bodies = {}
@@ -607,6 +656,10 @@ class CoordinatorServiceServicer(
 
         for response in responses:
             yield response
+
+    RunStepWrapped = catch_unknown_errors(
+        message_pb2.RunStepResponse(head=message_pb2.RunStepResponseHead()), True
+    )(_RunStep)
 
     def _maybe_compile_app(self, op):
         app_sig = get_app_sha256(op.attr)
@@ -708,6 +761,10 @@ class CoordinatorServiceServicer(
                     )
 
     def CloseSession(self, request, context):
+        for result in self.CloseSessionWrapped(request, context):
+            return result
+
+    def _CloseSession(self, request, context):
         """
         Disconnect session, note that it doesn't clean up any resources.
         """
@@ -726,6 +783,10 @@ class CoordinatorServiceServicer(
         sys.stdout.drop(True)
         self._streaming_logs = False
         return message_pb2.CloseSessionResponse()
+
+    CloseSessionWrapped = catch_unknown_errors(message_pb2.CloseSessionResponse())(
+        _CloseSession
+    )
 
     def _create_interactive_instance(self, op: op_def_pb2.OpDef):
         def _match_frontend_endpoint(pattern, lines):
