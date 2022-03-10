@@ -269,3 +269,7 @@ gexf.net/1.2draft http://www.gexf.net/1.2draft/gexf.xsd" version="1.2">
         fh.seek(0)
         H = nx.read_gexf(fh, node_type=int)
         assert H.nodes[1]["networkx_key"] == list_value
+
+    @pytest.mark.skip(reason="rapidjson not support inf.")
+    def test_specials(self):
+        pass
