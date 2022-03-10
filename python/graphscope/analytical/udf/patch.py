@@ -143,9 +143,9 @@ def patch_cython_codewriter(writer):  # noqa: C901
 
     # 1
     def visit_ReturnStatNode(self, node):
-        self.startline(u"return")
+        self.startline("return")
         if node.value is not None:
-            self.put(u" ")
+            self.put(" ")
             self.visit(node.value)
         self.endline()
 
@@ -155,7 +155,7 @@ def patch_cython_codewriter(writer):  # noqa: C901
 
     # 2
     def visit_DelStatNode(self, node):
-        self.startline(u"del ")
+        self.startline("del ")
         for arg in node.args:
             self.visit(arg)
         self.endline()
@@ -166,14 +166,14 @@ def patch_cython_codewriter(writer):  # noqa: C901
     def visit_NameNode(self, node):
         self.put(node.name)
         if node.annotation:
-            self.put(u" : ")
+            self.put(" : ")
             self.visit(node.annotation)
 
     setattr(writer, "visit_NameNode", functools.partial(visit_NameNode, writer))
 
     # 4
     def visit_RaiseStatNode(self, node):
-        self.startline(u"raise ")
+        self.startline("raise ")
         self.visit(node.exc_type)
         self.endline()
 
@@ -183,14 +183,14 @@ def patch_cython_codewriter(writer):  # noqa: C901
 
     # 5
     def visit_TryExceptStatNode(self, node):
-        self.line(u"try:")
+        self.line("try:")
         self.indent()
         self.visit(node.body)
         self.dedent()
         for x in node.except_clauses:
             self.visit(x)
         if node.else_clause is not None:
-            self.line(u"else:")
+            self.line("else:")
             self.indent()
             self.visit(node.else_clause)
             self.dedent()
@@ -204,12 +204,12 @@ def patch_cython_codewriter(writer):  # noqa: C901
     # 6
     def visit_ExceptClauseNode(self, node):
         # node.pattern is a list
-        self.startline(u"except")
+        self.startline("except")
         if node.pattern is not None:
-            self.put(u" ")
+            self.put(" ")
             self.visit(node.pattern[0])
         if node.target is not None:
-            self.put(u" as ")
+            self.put(" as ")
             self.visit(node.target)
         self.endline(":")
         self.indent()
@@ -225,7 +225,7 @@ def patch_cython_codewriter(writer):  # noqa: C901
     # 7
     def visit_TryFinallyStatNode(self, node):
         self.visit(node.body)
-        self.line(u"finally:")
+        self.line("finally:")
         self.indent()
         self.visit(node.finally_clause)
         self.dedent()
@@ -238,10 +238,10 @@ def patch_cython_codewriter(writer):  # noqa: C901
 
     # 8
     def visit_AssertStatNode(self, node):
-        self.startline(u"assert ")
+        self.startline("assert ")
         self.visit(node.cond)
         if node.value:
-            self.put(u", ")
+            self.put(", ")
             self.visit(node.value)
         self.endline()
 
@@ -251,10 +251,10 @@ def patch_cython_codewriter(writer):  # noqa: C901
 
     # 9
     def visit_GlobalNode(self, node):
-        self.startline(u"global ")
+        self.startline("global ")
         for item in node.names[:-1]:
             self.put(item)
-            self.put(u", ")
+            self.put(", ")
         self.put(node.names[-1])
         self.endline()
 
@@ -262,10 +262,10 @@ def patch_cython_codewriter(writer):  # noqa: C901
 
     # 9
     def visit_NonlocalNode(self, node):
-        self.startline(u"nonlocal ")
+        self.startline("nonlocal ")
         for item in node.names[:-1]:
             self.put(item)
-            self.put(u", ")
+            self.put(", ")
         self.put(node.names[-1])
         self.endline()
 
@@ -273,7 +273,7 @@ def patch_cython_codewriter(writer):  # noqa: C901
 
     # 10
     def visit_YieldExprNode(self, node):
-        self.put(u"yield ")
+        self.put("yield ")
         self.visit(node.expr)
 
     setattr(
@@ -282,7 +282,7 @@ def patch_cython_codewriter(writer):  # noqa: C901
 
     # 10
     def visit_YieldFromExprNode(self, node):
-        self.put(u"yield from ")
+        self.put("yield from ")
         self.visit(node.expr)
 
     setattr(
@@ -300,16 +300,16 @@ def patch_cython_codewriter(writer):  # noqa: C901
 
     # 12
     def visit_LambdaNode(self, node):
-        self.startline(u"lambda ")
+        self.startline("lambda ")
         self.comma_separated_list(node.args)
-        self.put(u" : ")
+        self.put(" : ")
         self.visit(node.retult_expr)
 
     setattr(writer, "visit_LambdaNode", functools.partial(visit_LambdaNode, writer))
 
     # 13
     def visit_CascadedCmpNode(self, node):
-        self.put(u" %s " % node.operator)
+        self.put(" %s " % node.operator)
         self.visit(node.operand2)
         if node.cascade:
             # recursion
