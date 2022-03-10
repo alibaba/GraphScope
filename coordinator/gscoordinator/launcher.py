@@ -453,7 +453,11 @@ class LocalLauncher(Launcher):
             )
 
             logger.info("Server is initializing vineyardd.")
-            stdout_watcher = PipeWatcher(process.stdout, sys.stdout)
+            stdout_watcher = PipeWatcher(
+                process.stdout,
+                sys.stdout,
+                suppressed=(not logger.isEnabledFor(logging.DEBUG)),
+            )
             setattr(process, "stdout_watcher", stdout_watcher)
 
             self._vineyard_socket = vineyard_socket
@@ -579,7 +583,7 @@ class LocalLauncher(Launcher):
                 config,
                 str(index),
             ]
-            logger.info("launching learning server: %s", " ".join(cmd))
+            logger.debug("launching learning server: %s", " ".join(cmd))
 
             proc = subprocess.Popen(
                 cmd,
@@ -591,7 +595,11 @@ class LocalLauncher(Launcher):
                 universal_newlines=True,
                 bufsize=1,
             )
-            stdout_watcher = PipeWatcher(proc.stdout, sys.stdout)
+            stdout_watcher = PipeWatcher(
+                proc.stdout,
+                sys.stdout,
+                suppressed=(not logger.isEnabledFor(logging.DEBUG)),
+            )
             setattr(proc, "stdout_watcher", stdout_watcher)
             self._learning_instance_processes[object_id].append(proc)
 

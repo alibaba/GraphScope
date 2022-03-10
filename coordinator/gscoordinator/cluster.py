@@ -1274,7 +1274,7 @@ class KubernetesClusterLauncher(Launcher):
                 config,
                 str(pod_index),
             ]
-            logging.info("launching learning server: %s", " ".join(cmd))
+            logging.debug("launching learning server: %s", " ".join(cmd))
             proc = subprocess.Popen(
                 cmd,
                 stdout=subprocess.PIPE,
@@ -1284,7 +1284,12 @@ class KubernetesClusterLauncher(Launcher):
                 universal_newlines=True,
                 bufsize=1,
             )
-            stdout_watcher = PipeWatcher(proc.stdout, sys.stdout, drop=True)
+            stdout_watcher = PipeWatcher(
+                proc.stdout,
+                sys.stdout,
+                drop=True,
+                suppressed=(not logger.isEnabledFor(logging.DEBUG)),
+            )
             setattr(proc, "stdout_watcher", stdout_watcher)
             self._learning_instance_processes[object_id].append(proc)
 

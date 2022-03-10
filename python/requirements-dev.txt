@@ -1,8 +1,8 @@
 tomli
-black==20.8b1
+black==22.1.0
 breathe==4.30.0
-flake8==3.8.4
-isort==5.5.4
+flake8==4.0.1
+isort==5.10.1
 m2r2
 pylint
 pytest

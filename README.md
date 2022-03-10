@@ -147,6 +147,7 @@ Then we define the training process, and run it.
 ```python
 # Note: Here we use tensorflow as NN backend to train GNN model. so please
 # install tensorflow.
+import graphscope.learning
 from graphscope.learning.examples import GCN
 from graphscope.learning.graphlearn.python.model.tf.trainer import LocalTFTrainer
 from graphscope.learning.graphlearn.python.model.tf.optimizer import get_tf_optimizer
@@ -171,6 +172,7 @@ def train(config, graph):
             edge_type=config["edge_type"],
             full_graph_mode=config["full_graph_mode"],
         )
+    graphscope.learning.reset_default_tf_graph()
     trainer = LocalTFTrainer(
         model_fn,
         epoch=config["epoch"],
