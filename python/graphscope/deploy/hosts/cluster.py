@@ -95,8 +95,6 @@ class HostsClusterLauncher(Launcher):
             "{}".format(str(self._num_workers)),
             "--hosts",
             "{}".format(",".join(self._hosts)),
-            "--etcd_addrs",
-            self._etcd_addrs,
             "--log_level",
             "{}".format(gs_config.log_level),
             "--timeout_seconds",
@@ -108,6 +106,9 @@ class HostsClusterLauncher(Launcher):
             "--instance_id",
             self._instance_id,
         ]
+
+        if self._etcd_addrs is not None:
+            cmd.extend(["--etcd_addrs", self._etcd_addrs])
 
         if self._vineyard_shared_mem is not None:
             cmd.extend(["--vineyard_shared_mem", self._vineyard_shared_mem])
