@@ -26,7 +26,7 @@ try:
     import vineyard
 
     # suppress the warnings of tensorflow
-    with vineyard.envvars("TF_CPP_MIN_LOG_LEVEL", "3"):
+    with vineyard.envvars({"TF_CPP_MIN_LOG_LEVEL": "3", "GRPC_VERBOSITY": "NONE"}):
         import tensorflow as tf
 
         try:
@@ -38,7 +38,15 @@ try:
         except:
             pass
 
-    ctx = dict()
+        try:
+            # https://www.tensorflow.org/guide/migrate
+            import tensorflow.compat.v1 as tf
+
+            tf.disable_v2_behavior()
+        except ImportError:
+            pass
+
+    ctx = {"GRPC_VERBOSITY": "NONE"}
     if platform.system() != "Darwin":
         ctx["VINEYARD_USE_LOCAL_REGISTRY"] = "TRUE"
     with vineyard.envvars(ctx):
