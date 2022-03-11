@@ -166,6 +166,10 @@ class GSLogger(object):
         logger.addHandler(stdout_handler)
         logger.propagate = False
 
+        # disable gremlin python's logs
+        gremlin_python_logger = logging.getLogger("gremlinpython")
+        gremlin_python_logger.setLevel(logging.CRITICAL)
+
     @staticmethod
     def update():
         if gs_config.show_log:
