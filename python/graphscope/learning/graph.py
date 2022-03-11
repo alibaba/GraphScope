@@ -119,7 +119,8 @@ class Graph(GLGraph):
                 node_view_label, node_label, nsplit=nsplit, split_range=split_range
             )
 
-        self.init_vineyard(worker_index=0, worker_count=1)
+        # server_own=False: make sure the glog inside graph-learn get initialized
+        self.init_vineyard(worker_index=0, worker_count=1, server_own=False)
 
     def decode_arg(self, arg):
         if arg is None or isinstance(arg, dict):

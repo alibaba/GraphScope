@@ -25,7 +25,28 @@ try:
 
     import vineyard
 
-    ctx = dict()
+    # suppress the warnings of tensorflow
+    with vineyard.envvars({"TF_CPP_MIN_LOG_LEVEL": "3", "GRPC_VERBOSITY": "NONE"}):
+        import tensorflow as tf
+
+        try:
+            tf.get_logger().setLevel("ERROR")
+        except:
+            pass
+        try:
+            tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
+        except:
+            pass
+
+        try:
+            # https://www.tensorflow.org/guide/migrate
+            import tensorflow.compat.v1 as tf
+
+            tf.disable_v2_behavior()
+        except ImportError:
+            pass
+
+    ctx = {"GRPC_VERBOSITY": "NONE"}
     if platform.system() != "Darwin":
         ctx["VINEYARD_USE_LOCAL_REGISTRY"] = "TRUE"
     with vineyard.envvars(ctx):
@@ -37,6 +58,16 @@ try:
         pass
 
     from graphscope.learning.graph import Graph
+
+    def reset_default_tf_graph():
+        """A method to reset the tf graph to make sure we can train twice
+        (or even more times) inside a single program, e.g., a jupyter notebook.
+        """
+        try:
+            tf.reset_default_graph()
+        except:
+            pass
+
 except ImportError:
     pass
 finally:

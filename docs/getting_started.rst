@@ -237,6 +237,7 @@ Then we define the training and testing process, and run it.
 
 .. code:: python
 
+    import graphscope.learning
     from graphscope.learning.examples import GCN
     from graphscope.learning.graphlearn.python.model.tf.trainer import LocalTFTrainer
     from graphscope.learning.graphlearn.python.model.tf.optimizer import get_tf_optimizer
@@ -260,6 +261,7 @@ Then we define the training and testing process, and run it.
                        edge_type=config["edge_type"],
                        full_graph_mode=config["full_graph_mode"])
 
+        graphscope.learning.reset_default_tf_graph()
         trainer = LocalTFTrainer(model_fn,
                                  epoch=config["epoch"],
                                  optimizer=gl.get_tf_optimizer(
