@@ -125,7 +125,6 @@ public class LongDoubleMessageStore<OID_T extends WritableComparable>
      * @param buf
      */
     public void digestByteBuf(ByteBuf buf) {
-        // FIXME: why we are copying?
         buf.skipBytes(5);
         if (buf.readableBytes() % 16 != 0) {
             throw new IllegalStateException("Expect number of bytes times of 16");

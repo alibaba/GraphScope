@@ -192,7 +192,6 @@ public class NettyClient {
     public void connectToAllAddress() {
         for (int dstWorkerId = 0; dstWorkerId < networkMap.getWorkerNum(); ++dstWorkerId) {
             if (dstWorkerId == networkMap.getSelfWorkerId()) {
-                // TODO: better way also good performace?
                 connections[dstWorkerId] = null;
                 continue;
             }

@@ -85,15 +85,6 @@ public class GraphScopeClassLoader {
         return urlClassLoader;
     }
 
-    private static String urlsToString(URL[] urls) {
-        StringBuilder sb = new StringBuilder();
-        for (URL url : urls) {
-            sb.append(url);
-            sb.append(",");
-        }
-        return sb.toString();
-    }
-
     /**
      * Return a default URLClassLoader with no classPath.
      *
@@ -306,6 +297,15 @@ public class GraphScopeClassLoader {
         Method getTypeMethod =
                 ffiTypeFactoryClass.getDeclaredMethod("getType", ClassLoader.class, String.class);
         return (Class<?>) getTypeMethod.invoke(null, classLoader, foreignName);
+    }
+
+    private static String urlsToString(URL[] urls) {
+        StringBuilder sb = new StringBuilder();
+        for (URL url : urls) {
+            sb.append(url);
+            sb.append(",");
+        }
+        return sb.toString();
     }
 
     private static class ClassScope {

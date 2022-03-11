@@ -77,7 +77,6 @@ public class BatchWritableMessageCache<I extends WritableComparable, M extends W
 
     @Override
     public void sendMessage(int dstFragId, GS_VID_T gid, M message) {
-        // TODO: GS_VID_T can be types other than long.
         if (!cache[dstFragId].add((Long) gid, message)) {
             if (dstFragId == fragId) {
                 throw new IllegalStateException("message to self can not be failed");
@@ -99,10 +98,6 @@ public class BatchWritableMessageCache<I extends WritableComparable, M extends W
             cache[dstFragId] = Gid2Data.newFixed(cacheSize);
             // resend
             cache[dstFragId].add((Long) gid, message);
-        } else {
-            // if add success, invoke log.
-            //            logger.debug("frag [" + fragId + "] Send msg to [" + dstFragId + "], gid:"
-            // + gid + ", msg:" + message);
         }
     }
 

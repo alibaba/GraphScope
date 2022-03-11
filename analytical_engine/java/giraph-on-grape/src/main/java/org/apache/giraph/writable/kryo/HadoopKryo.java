@@ -257,7 +257,7 @@ public class HadoopKryo extends Kryo {
      */
     public static void readWithKryoIntoObject(
             final HadoopKryo kryo, final Input in, Object object) {
-        kryo.readIntoObject(in, object);
+        kryo.readIntoObjectImpl(in, object);
         in.close();
     }
 
@@ -495,7 +495,7 @@ public class HadoopKryo extends Kryo {
 
                         T object;
                         if (into) {
-                            hkryo.readIntoObject(hkryo.input, outObject);
+                            hkryo.readIntoObjectImpl(hkryo.input, outObject);
                             object = outObject;
                         } else {
                             object = (T) hkryo.readClassAndObject(hkryo.input);
@@ -549,7 +549,7 @@ public class HadoopKryo extends Kryo {
      * @param input  Input stream
      * @param object Object to fill from input
      */
-    private void readIntoObject(Input input, Object object) {
+    private void readIntoObjectImpl(Input input, Object object) {
         Preconditions.checkNotNull(object);
 
         Class<?> type = object.getClass();

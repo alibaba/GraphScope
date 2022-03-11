@@ -172,7 +172,7 @@ public class AggregatorManagerNettyImpl implements AggregatorManager, Communicat
     public <A extends Writable> boolean registerAggregator(
             String name, Class<? extends Aggregator<A>> aggregatorClass)
             throws InstantiationException, IllegalAccessException {
-        return registerAggregator(name, aggregatorClass, false);
+        return registerAggregatorImpl(name, aggregatorClass, false);
     }
 
     /**
@@ -185,7 +185,7 @@ public class AggregatorManagerNettyImpl implements AggregatorManager, Communicat
     public <A extends Writable> boolean registerPersistentAggregator(
             String name, Class<? extends Aggregator<A>> aggregatorClass)
             throws InstantiationException, IllegalAccessException {
-        return registerAggregator(name, aggregatorClass, true);
+        return registerAggregatorImpl(name, aggregatorClass, true);
     }
 
     /**
@@ -436,7 +436,7 @@ public class AggregatorManagerNettyImpl implements AggregatorManager, Communicat
         //        initAggregatorValues.clear();
     }
 
-    private <A extends Writable> boolean registerAggregator(
+    private <A extends Writable> boolean registerAggregatorImpl(
             String name, Class<? extends Aggregator<A>> aggregatorClass, boolean persistent) {
         if (aggregators.containsKey(name)) {
             logger.error("Name: " + name + " has already been registered " + aggregators.get(name));

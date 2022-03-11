@@ -108,11 +108,6 @@ public class ExtendedByteArrayDataOutput extends ByteArrayOutputStream
     }
 
     @Override
-    public void writeInt(int v) throws IOException {
-        dataOutput.writeInt(v);
-    }
-
-    @Override
     public void writeLong(long v) throws IOException {
         dataOutput.writeLong(v);
     }
@@ -153,6 +148,11 @@ public class ExtendedByteArrayDataOutput extends ByteArrayOutputStream
     public void skipBytes(int bytesToSkip) {
         ensureWritable(bytesToSkip);
         count += bytesToSkip;
+    }
+
+    @Override
+    public void writeInt(int v) throws IOException {
+        dataOutput.writeInt(v);
     }
 
     @Override

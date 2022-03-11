@@ -126,7 +126,6 @@ public class NettyServer {
 
         } catch (InterruptedException e) {
             e.printStackTrace();
-        } finally {
         }
     }
 

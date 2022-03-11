@@ -49,9 +49,6 @@ public class GiraphMessageManagerFactory {
             ImmutableClassesGiraphConfiguration conf,
             FFICommunicator communicator,
             VertexIdManager idManager) {
-        // TODO: get ip or address from mpi.
-        //        NetworkMap networkMap = new NetworkMap(conf.getWorkerId(), conf.getWorkerNum(),
-        //            conf.getInitServerPort(), new String[]{"1"});
         if (mmType.equals("netty")) {
             return createGiraphNettyMM(
                     fragment,

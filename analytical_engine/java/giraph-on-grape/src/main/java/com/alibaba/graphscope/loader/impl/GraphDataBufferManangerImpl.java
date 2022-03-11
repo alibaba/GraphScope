@@ -207,12 +207,7 @@ public class GraphDataBufferManangerImpl implements GraphDataBufferManager {
             edge.getValue().write(edgeDataOutStream[threadId]);
             bytesDataOffsets += edgeDataOutStream[threadId].bytesWriten();
             edgeDataOffsetsArr[threadId].push_back(bytesDataOffsets);
-
-            // logger.debug("worker [{}] adding edge [{}]->[{}], value {}", workerId, id,
-            // edge.getTargetVertexId(), edge.getValue());
         }
-        // logger.debug("esrc/dst/data Total length : {} {} {}", bytesEdgeSrcOffset,
-        // bytesEdgeDstOffset, bytesDataOffsets);
     }
 
     @Override
@@ -253,23 +248,11 @@ public class GraphDataBufferManangerImpl implements GraphDataBufferManager {
             vidOutputStream[i].getVector().touch();
             vdataOutputStream[i].getVector().resize(leastSize);
             vdataOutputStream[i].getVector().touch();
-            //            edgeSrcIdOutputStream[i].getVector().resize(leastSize);
-            //            edgeSrcIdOutputStream[i].getVector().touch();
-            //            edgeDstOutputStream[i].getVector().resize(leastSize);
-            //            edgeDstOutputStream[i].getVector().touch();
-            //            edgeDataOutStream[i].getVector().resize(leastSize);
-            //            edgeDataOutStream[i].getVector().touch();
 
             idOffsetsArr[i].reserve(length); // may not enough
             idOffsetsArr[i].touch();
             vdataOffsetsArr[i].reserve(length);
             vdataOffsetsArr[i].touch();
-            //            edgeSrcIdOffsetArr[i].reserve(length);
-            //            edgeSrcIdOffsetArr[i].touch();
-            //            edgeDstIdOffsetArr[i].reserve(length);
-            //            edgeDstIdOffsetArr[i].touch();
-            //            edgeDataOffsetsArr[i].reserve(length);
-            //            edgeDataOffsetsArr[i].touch();
         }
     }
 

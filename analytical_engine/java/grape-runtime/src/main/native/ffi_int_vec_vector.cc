@@ -30,35 +30,15 @@ extern "C" {
 // modified for optimization.
 
 JNIEXPORT
-jlong JNICALL Java_com_alibaba_graphscope_stdcxx_FFIIntVecVector_nativeCapacity(
-    JNIEnv*, jclass, jlong ptr) {
-  return (jlong)(
-      reinterpret_cast<std::vector<std::vector<int>>*>(ptr)->capacity());
-}
-
-JNIEXPORT
 void JNICALL Java_com_alibaba_graphscope_stdcxx_FFIIntVecVector_nativeClear(
     JNIEnv*, jclass, jlong ptr) {
   reinterpret_cast<std::vector<std::vector<int>>*>(ptr)->clear();
 }
 
 JNIEXPORT
-jlong JNICALL Java_com_alibaba_graphscope_stdcxx_FFIIntVecVector_nativeData(
-    JNIEnv*, jclass, jlong ptr) {
-  return (jlong)(reinterpret_cast<std::vector<std::vector<int>>*>(ptr)->data());
-}
-
-JNIEXPORT
 void JNICALL Java_com_alibaba_graphscope_stdcxx_FFIIntVecVector_nativeDelete(
     JNIEnv*, jclass, jlong ptr) {
   delete reinterpret_cast<std::vector<std::vector<int>>*>(ptr);
-}
-
-JNIEXPORT
-jlong JNICALL Java_com_alibaba_graphscope_stdcxx_FFIIntVecVector_nativeGet(
-    JNIEnv*, jclass, jlong ptr, jlong arg0 /* arg00 */) {
-  return reinterpret_cast<jlong>(
-      &((*reinterpret_cast<std::vector<std::vector<int>>*>(ptr))[arg0]));
 }
 
 JNIEXPORT

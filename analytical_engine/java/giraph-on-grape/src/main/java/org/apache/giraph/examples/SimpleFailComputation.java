@@ -38,9 +38,7 @@ public class SimpleFailComputation
      * Class logger
      */
     private static Logger LOG = LoggerFactory.getLogger(SimpleFailComputation.class);
-    /**
-     * TODO: Change this behavior to WorkerContext
-     */
+
     private static long SUPERSTEP = 0;
 
     /**

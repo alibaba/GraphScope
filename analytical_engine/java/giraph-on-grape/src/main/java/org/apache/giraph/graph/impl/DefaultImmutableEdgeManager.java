@@ -39,8 +39,6 @@ import org.apache.hadoop.io.WritableComparable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import sun.misc.Unsafe;
-
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
@@ -294,7 +292,7 @@ public class DefaultImmutableEdgeManager<
 
     public class OnHeapEdgeIterator implements ImmutableEdgeIterator {
 
-        private Unsafe unsafe = JavaRuntime.UNSAFE;
+        private sun.misc.Unsafe unsafe = JavaRuntime.UNSAFE;
         private DefaultEdge<GIRAPH_OID_T, GIRAPH_EDATA_T> edge = new DefaultEdge<>();
         private long[] nbrUnitAddrs, numOfEdges;
         private GIRAPH_OID_T[] dstOids;

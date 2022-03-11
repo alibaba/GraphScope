@@ -79,9 +79,6 @@ void string2ptree(const std::string& params, ptree& pt) {
       LOG(ERROR) << "Parsing json failed: " << params;
     }
   }
-
-  //   VLOG(2) << "Received json: " << params;
-  //   std::string frag_name = pt.get<std::string>("frag_name");
 }
 
 template <typename T>

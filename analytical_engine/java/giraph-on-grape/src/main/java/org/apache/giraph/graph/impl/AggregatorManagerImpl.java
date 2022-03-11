@@ -112,7 +112,7 @@ public class AggregatorManagerImpl implements AggregatorManager, Communicator {
     public <A extends Writable> boolean registerAggregator(
             String name, Class<? extends Aggregator<A>> aggregatorClass)
             throws InstantiationException, IllegalAccessException {
-        return registerAggregator(name, aggregatorClass, false);
+        return registerAggregatorImpl(name, aggregatorClass, false);
     }
 
     /**
@@ -125,7 +125,7 @@ public class AggregatorManagerImpl implements AggregatorManager, Communicator {
     public <A extends Writable> boolean registerPersistentAggregator(
             String name, Class<? extends Aggregator<A>> aggregatorClass)
             throws InstantiationException, IllegalAccessException {
-        return registerAggregator(name, aggregatorClass, true);
+        return registerAggregatorImpl(name, aggregatorClass, true);
     }
 
     /**
@@ -381,7 +381,6 @@ public class AggregatorManagerImpl implements AggregatorManager, Communicator {
         }
     }
 
-    // TODO: figure out how this works
     public void postMasterCompute() {
         // broadcast what master set, or if it didn't broadcast reduced value
         // register reduce with the same value
@@ -410,7 +409,7 @@ public class AggregatorManagerImpl implements AggregatorManager, Communicator {
         //        initAggregatorValues.clear();
     }
 
-    private <A extends Writable> boolean registerAggregator(
+    private <A extends Writable> boolean registerAggregatorImpl(
             String name, Class<? extends Aggregator<A>> aggregatorClass, boolean persistent) {
         if (aggregators.containsKey(name)) {
             logger.error("Name: " + name + " has already been registered " + aggregators.get(name));

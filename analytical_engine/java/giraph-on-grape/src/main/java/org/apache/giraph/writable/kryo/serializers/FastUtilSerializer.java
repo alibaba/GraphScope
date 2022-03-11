@@ -119,29 +119,6 @@ public class FastUtilSerializer<T> extends Serializer<T> {
     }
 
     /**
-     * Registers serializers for all possible fastutil classes.
-     * <p>
-     * There are many fastutil classes, so it is recommended to call this function at the end, so
-     * they fastutil classes don't use up small registration numbers.
-     *
-     * @param kryo Kryo instance
-     */
-    public static void registerAll(Kryo kryo) {
-        registerArrayLists(kryo);
-        registerArrayBigList(kryo);
-        registerOpenHashSets(kryo);
-        registerArraySets(kryo);
-        registerRBTreeSets(kryo);
-        registerAVLTreeSets(kryo);
-        registerOpenHashMaps(kryo);
-        registerRBTreeMaps(kryo);
-        registerAVLTreeMaps(kryo);
-
-        // Note - HeapPriorityQueues don't extend boxed collection,
-        // and so they work out of the box correctly
-    }
-
-    /**
      * Register all Fastutil ArrayLists.
      *
      * @param kryo Kryo instance
@@ -243,6 +220,29 @@ public class FastUtilSerializer<T> extends Serializer<T> {
                         "it.unimi.dsi.fastutil._t1_s._T1_2_T2_AVLTreeMap",
                         PRIMITIVE_KEY_TYPES,
                         PRIMITIVE_TYPES));
+    }
+
+    /**
+     * Registers serializers for all possible fastutil classes.
+     * <p>
+     * There are many fastutil classes, so it is recommended to call this function at the end, so
+     * they fastutil classes don't use up small registration numbers.
+     *
+     * @param kryo Kryo instance
+     */
+    public static void registerAll(Kryo kryo) {
+        registerArrayLists(kryo);
+        registerArrayBigList(kryo);
+        registerOpenHashSets(kryo);
+        registerArraySets(kryo);
+        registerRBTreeSets(kryo);
+        registerAVLTreeSets(kryo);
+        registerOpenHashMaps(kryo);
+        registerRBTreeMaps(kryo);
+        registerAVLTreeMaps(kryo);
+
+        // Note - HeapPriorityQueues don't extend boxed collection,
+        // and so they work out of the box correctly
     }
 
     /**

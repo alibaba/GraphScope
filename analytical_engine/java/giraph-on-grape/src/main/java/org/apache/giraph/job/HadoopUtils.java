@@ -84,6 +84,20 @@ public class HadoopUtils {
     }
 
     /**
+     * Get Job ID from job. May return null for hadoop 0.20.203
+     *
+     * @param job submitted job
+     * @return JobId for submitted job.
+     */
+    public static JobID getJobID(Job job) {
+        /*if[HADOOP_JOB_ID_AVAILABLE]
+            return job.getID();
+        else[HADOOP_JOB_ID_AVAILABLE]*/
+        return job.getJobID();
+        /*end[HADOOP_JOB_ID_AVAILABLE]*/
+    }
+
+    /**
      * Create a JobContext, supporting many Hadoops.
      *
      * @param conf  Configuration
@@ -98,20 +112,6 @@ public class HadoopUtils {
         context = new JobContextImpl(conf, jobID);
         /*end[HADOOP_NON_JOBCONTEXT_IS_INTERFACE]*/
         return context;
-    }
-
-    /**
-     * Get Job ID from job. May return null for hadoop 0.20.203
-     *
-     * @param job submitted job
-     * @return JobId for submitted job.
-     */
-    public static JobID getJobID(Job job) {
-        /*if[HADOOP_JOB_ID_AVAILABLE]
-            return job.getID();
-        else[HADOOP_JOB_ID_AVAILABLE]*/
-        return job.getJobID();
-        /*end[HADOOP_JOB_ID_AVAILABLE]*/
     }
 
     /**

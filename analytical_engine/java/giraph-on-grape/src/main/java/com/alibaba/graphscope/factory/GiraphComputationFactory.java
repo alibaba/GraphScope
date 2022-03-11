@@ -83,7 +83,7 @@ public class GiraphComputationFactory {
             logger.error("Expected 4 type params, parsed: {}", classes.length);
             return null;
         }
-        return createGiraphComputationAdaptorContext(
+        return createGiraphComputationAdaptorContextImpl(
                 classes[0], classes[1], classes[2], classes[3]);
     }
 
@@ -296,7 +296,7 @@ public class GiraphComputationFactory {
 
     private static <OID_T, VID_T, VDATA_T, EDATA_T>
             GiraphComputationAdaptorContext<OID_T, VID_T, VDATA_T, EDATA_T>
-                    createGiraphComputationAdaptorContext(
+                    createGiraphComputationAdaptorContextImpl(
                             Class<? extends OID_T> oidClass,
                             Class<? extends VID_T> vidClass,
                             Class<? extends VDATA_T> vdataClass,

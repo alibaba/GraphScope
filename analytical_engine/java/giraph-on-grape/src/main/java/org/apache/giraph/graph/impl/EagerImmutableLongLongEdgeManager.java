@@ -84,7 +84,6 @@ public class EagerImmutableLongLongEdgeManager<
             grapeVertex.SetValue((GRAPE_VID_T) lid);
             AdjList<GRAPE_VID_T, GRAPE_EDATA_T> adjList = fragment.getOutgoingAdjList(grapeVertex);
 
-            // TODO: make this faster
             List<Long> targetIds = new ArrayList<Long>((int) adjList.size());
             List<Long> edgeValues = new ArrayList<Long>((int) adjList.size());
             for (NbrBase<GRAPE_VID_T, GRAPE_EDATA_T> nbr : adjList.nbrBases()) {

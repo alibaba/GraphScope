@@ -12,7 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#include "giraph_runner.h"
+#include "test/giraph_runner.h"
 
 #include <dlfcn.h>
 #include <unistd.h>

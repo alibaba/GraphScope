@@ -396,29 +396,15 @@ class CoordinatorServiceServicer(
         # preprocess of op before run on analytical engine
         for op in dag_def.op:
             self._key_to_op[op.key] = op
-            if (
-                op.op == types_pb2.CREATE_GRAPH or op.op == types_pb2.RUN_APP
-            ) and self._analytical_engine_config["enable_java_sdk"] == "ON":
-                logger.info(
-                    "op preprocess for java sdk enabled, and op is one of create graph and run app"
-                )
-                op_pre_process(
-                    op,
-                    self._op_result_pool,
-                    self._key_to_op,
-                    engine_hosts=self._engine_hosts,
-                    engine_config=self._analytical_engine_config,
-                    engine_java_class_path=self._java_class_path,
-                    engine_jvm_opts=self._jvm_opts,
-                )
-            else:
-                op_pre_process(
-                    op,
-                    self._op_result_pool,
-                    self._key_to_op,
-                    engine_hosts=self._engine_hosts,
-                    engine_config=self._analytical_engine_config,
-                )
+            op_pre_process(
+                op,
+                self._op_result_pool,
+                self._key_to_op,
+                engine_hosts=self._engine_hosts,
+                engine_config=self._analytical_engine_config,
+                engine_java_class_path=self._java_class_path, # may be needed in CREATE_GRAPH or RUN_APP
+                engine_jvm_opts=self._jvm_opts,
+            )
 
             # Handle op that depends on loader (data source)
             if op.op == types_pb2.CREATE_GRAPH or op.op == types_pb2.ADD_LABELS:
@@ -795,6 +781,10 @@ class CoordinatorServiceServicer(
                     )
 
     def AddLib(self, request, context):
+        for result in self.AddLibWrapped(request, context):
+            return result
+
+    def _AddLib(self, request, context):
         if request.session_id != self._session_id:
             context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
             context.set_details(
@@ -822,6 +812,10 @@ class CoordinatorServiceServicer(
             self._java_class_path = full_filename + ":" + self._java_class_path
             logger.info("current java class path: {}".format(self._java_class_path))
         return message_pb2.AddLibResponse()
+
+    AddLibWrapped = catch_unknown_errors(message_pb2.AddLibResponse())(
+        _AddLib
+    )
 
     def CloseSession(self, request, context):
         for result in self.CloseSessionWrapped(request, context):

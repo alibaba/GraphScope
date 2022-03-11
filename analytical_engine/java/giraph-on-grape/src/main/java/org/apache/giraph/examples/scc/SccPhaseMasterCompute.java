@@ -56,7 +56,6 @@ public class SccPhaseMasterCompute extends DefaultMasterCompute {
     public static Phases getPhase(IntWritable phaseInt) {
         return Phases.values()[phaseInt.get()];
     }
-    ;
 
     @Override
     public void initialize() throws InstantiationException, IllegalAccessException {

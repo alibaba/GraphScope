@@ -1345,11 +1345,6 @@ def _parse_giraph_app_type(java_class_path, real_algo):
     return _java_app_type, _frag_param_str, _java_inner_context_type
 
 
-"""
-Need two class, one java driver class, one user computation class.
-"""
-
-
 def _probe_for_giraph_app(attr, java_class_path, real_algo):
     _java_app_type, _frag_param_str, _java_inner_context_type = _parse_giraph_app_type(
         java_class_path, real_algo
@@ -1358,8 +1353,7 @@ def _probe_for_giraph_app(attr, java_class_path, real_algo):
         driver_header = "apps/java_pie/java_pie_projected_default_app.h"
         class_name = "gs::JavaPIEProjectedDefaultApp"
         return driver_header, class_name
-    else:
-        raise RuntimeError("Not a supported java_app_type: {}".format(_java_app_type))
+    raise RuntimeError("Not a supported java_app_type: {}".format(_java_app_type))
 
 
 def _codegen_app_info(attr, meta_file: str, java_class_path: str):
