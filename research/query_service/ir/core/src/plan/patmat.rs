@@ -15,7 +15,7 @@
 //!
 
 use std::collections::btree_map::Entry;
-use std::collections::{BTreeMap, BTreeSet, BinaryHeap};
+use std::collections::{BTreeMap, BTreeSet, BinaryHeap, VecDeque};
 use std::convert::{TryFrom, TryInto};
 use std::fmt::Debug;
 use std::rc::Rc;
@@ -771,14 +771,14 @@ impl Sentence for JoinSentence {
 #[derive(Clone, Default)]
 pub struct NaiveStrategy {
     /// To record the set of tags a given tag may connect to
-    tag_adj_list: BTreeMap<NameOrId, BinaryHeap<Option<NameOrId>>>,
+    tag_adj_list: BTreeMap<NameOrId, VecDeque<Option<NameOrId>>>,
     /// The matching sentence
     sentences: BTreeMap<(NameOrId, Option<NameOrId>), MergedSentence>,
 }
 
 impl From<Vec<BaseSentence>> for NaiveStrategy {
     fn from(bases: Vec<BaseSentence>) -> Self {
-        let mut tag_adj_list = BTreeMap::new();
+        let mut tag_adj_set = BTreeMap::new();
         let mut sentences: BTreeMap<_, MergedSentence> = BTreeMap::new();
         for base in bases {
             let start_tag = base.start_tag.clone();
@@ -787,7 +787,7 @@ impl From<Vec<BaseSentence>> for NaiveStrategy {
             match entry {
                 Entry::Vacant(vac) => {
                     vac.insert(base.into());
-                    tag_adj_list
+                    tag_adj_set
                         .entry(start_tag.clone())
                         .or_insert_with(BinaryHeap::new)
                         .push(end_tag.clone());
@@ -797,6 +797,16 @@ impl From<Vec<BaseSentence>> for NaiveStrategy {
                 }
             }
         }
+        let mut tag_adj_list = BTreeMap::new();
+        for (k, v) in tag_adj_set {
+            tag_adj_list.insert(
+                k,
+                v.into_sorted_vec()
+                    .into_iter()
+                    .collect::<VecDeque<_>>(),
+            );
+        }
+
         Self { tag_adj_list, sentences }
     }
 }
@@ -833,11 +843,37 @@ impl NaiveStrategy {
         self.sentences.is_empty()
     }
 
-    fn do_dfs(&mut self, start_tag: NameOrId, is_initial: bool) -> Option<CompoSentence> {
+    fn do_dfs(
+        &mut self, start_tag: NameOrId, is_initial: bool, visited: &mut BTreeSet<NameOrId>,
+    ) -> Option<CompoSentence> {
         let mut result = None;
         let mut should_remove = false;
+        visited.insert(start_tag.clone());
         if let Some(nbrs) = self.tag_adj_list.get_mut(&start_tag) {
-            if let Some(end_tag) = nbrs.pop() {
+            let mut end_tag_opt = None;
+            let nbr_len = nbrs.len();
+            let mut count = 0;
+            should_remove = nbr_len == 0;
+            while !nbrs.is_empty() {
+                let test_tag = nbrs.pop_front().unwrap();
+                let mut is_visited = false;
+                if let Some(tag) = &test_tag {
+                    is_visited = visited.contains(tag);
+                }
+                if is_visited {
+                    nbrs.push_back(test_tag);
+                    count += 1;
+                    if count == nbr_len {
+                        // means all the neighbors have been visited
+                        break;
+                    }
+                } else {
+                    end_tag_opt = Some(test_tag);
+                    break;
+                }
+            }
+
+            if let Some(end_tag) = end_tag_opt {
                 if let Some(mut sentence) = self
                     .sentences
                     .remove(&(start_tag.clone(), end_tag.clone()))
@@ -846,7 +882,7 @@ impl NaiveStrategy {
                         sentence.set_has_as_opr(false);
                     }
                     if let Some(new_start_tag) = end_tag {
-                        if let Some(next_sentence) = self.do_dfs(new_start_tag, false) {
+                        if let Some(next_sentence) = self.do_dfs(new_start_tag, false, visited) {
                             result = sentence.composite(Rc::new(next_sentence));
                         } else {
                             result = Some(sentence.into())
@@ -855,23 +891,23 @@ impl NaiveStrategy {
                         result = Some(sentence.into())
                     }
                 }
-            } else {
-                should_remove = true;
             }
         }
         if should_remove {
             self.tag_adj_list.remove(&start_tag);
         }
+        visited.remove(&start_tag);
 
         result
     }
 
-    fn do_composition(&mut self) -> IrResult<Vec<CompoSentence>> {
-        let mut results = vec![];
+    fn do_composition(&mut self) -> IrResult<VecDeque<CompoSentence>> {
+        let mut results = VecDeque::new();
         while !self.is_empty() {
+            let mut visited = BTreeSet::new();
             if let Some(start_tag) = self.get_start_tag() {
-                if let Some(sentence) = self.do_dfs(start_tag, true) {
-                    results.push(sentence);
+                if let Some(sentence) = self.do_dfs(start_tag, true, &mut visited) {
+                    results.push_back(sentence);
                 } else {
                     return Err(IrError::InvalidPattern("the pattern may be disconnected".to_string()));
                 }
@@ -892,27 +928,27 @@ impl MatchingStrategy for NaiveStrategy {
             .do_composition()?
             .into_iter()
             .map(|s| JoinSentence::from(s))
-            .collect::<Vec<JoinSentence>>();
-        let mut container = vec![];
+            .collect::<VecDeque<JoinSentence>>();
+
         if !sentences.is_empty() {
-            let mut first = sentences.pop().unwrap();
-            loop {
+            let mut first = sentences.pop_front().unwrap();
+            while !sentences.is_empty() {
                 let old_count = sentences.len();
-                while !sentences.is_empty() {
-                    let second = sentences.pop().unwrap();
+                let mut new_count = 0;
+                for _ in 0..old_count {
+                    let second = sentences.pop_front().unwrap();
                     if let Some(join) = first.join(Rc::new(second.clone())) {
                         first = join;
                     } else {
-                        container.push(second);
+                        sentences.push_back(second);
+                        new_count += 1;
                     }
                 }
-                if !container.is_empty() {
-                    if container.len() == old_count {
+                if new_count != 0 {
+                    if new_count == old_count {
                         return Err(IrError::InvalidPattern(
                             "the matching pattern may be disconnected".to_string(),
                         ));
-                    } else {
-                        sentences.extend(container.drain(..));
                     }
                 } else {
                     break;
@@ -1238,39 +1274,75 @@ mod test {
             gen_sentence_x_out_y("b", Some("d"), false, false),
         ]);
         // Join (opr_id = 14)
-        //      As(a), Out(), as(d), Out(), as(c) (opr_id = 13),
-        //      Join (opr_id = 8) (
+        //      As(b), Out(), as(d), (opr_id = 13),
+        //      Join (opr_id = 10) (
         //          As(a), Out(), As(b), Out(), As(c) (opr_id = 4)
-        //          As(b), Out(), As(d), (opr_id = 7)
+        //          As(a), Out(), As(d), Out(), As(c), (opr_id = 9)
         //      )
         // )
         let plan = strategy.build_logical_plan().unwrap();
+        println!("{:#?}", plan.nodes);
 
-        assert_eq!(plan.nodes.get(4).unwrap().children, vec![8]);
-        assert_eq!(plan.nodes.get(7).unwrap().children, vec![8]);
+        assert_eq!(plan.nodes.get(4).unwrap().children, vec![10]);
+        assert_eq!(plan.nodes.get(9).unwrap().children, vec![10]);
         assert_eq!(
-            plan.nodes.get(8).unwrap().opr.clone().unwrap(),
+            plan.nodes.get(10).unwrap().opr.clone().unwrap(),
             pb::Join {
-                left_keys: vec![common_pb::Variable { tag: Some("b".into()), property: None },],
-                right_keys: vec![common_pb::Variable { tag: Some("b".into()), property: None },],
+                left_keys: vec![
+                    common_pb::Variable { tag: Some("a".into()), property: None },
+                    common_pb::Variable { tag: Some("c".into()), property: None },
+                ],
+                right_keys: vec![
+                    common_pb::Variable { tag: Some("a".into()), property: None },
+                    common_pb::Variable { tag: Some("c".into()), property: None },
+                ],
                 kind: 0 // inner join
             }
             .into()
         );
-        assert_eq!(plan.nodes.get(8).unwrap().children, vec![14]);
+        assert_eq!(plan.nodes.get(10).unwrap().children, vec![14]);
         assert_eq!(plan.nodes.get(13).unwrap().children, vec![14]);
         assert_eq!(
             plan.nodes.last().unwrap().opr.clone().unwrap(),
             pb::Join {
                 left_keys: vec![
-                    common_pb::Variable { tag: Some("a".into()), property: None },
-                    common_pb::Variable { tag: Some("c".into()), property: None },
+                    common_pb::Variable { tag: Some("b".into()), property: None },
                     common_pb::Variable { tag: Some("d".into()), property: None }
                 ],
                 right_keys: vec![
-                    common_pb::Variable { tag: Some("a".into()), property: None },
-                    common_pb::Variable { tag: Some("c".into()), property: None },
+                    common_pb::Variable { tag: Some("b".into()), property: None },
                     common_pb::Variable { tag: Some("d".into()), property: None }
+                ],
+                kind: 0 // inner join
+            }
+            .into()
+        );
+    }
+
+    #[test]
+    fn pattern_case4_into_logical_plan() {
+        let strategy = NaiveStrategy::from(vec![
+            gen_sentence_x_out_y("a", Some("b"), false, false),
+            gen_sentence_x_out_y("b", Some("a"), false, false),
+        ]);
+        // Join (id = 6) (
+        //    As(a), Out(), As(b) (id = 2),
+        //    As(b), Out(), As(a) (id = 5),
+        // )
+        let plan = strategy.build_logical_plan().unwrap();
+        assert_eq!(plan.nodes.len(), 7);
+        assert_eq!(plan.nodes.get(2).unwrap().children, vec![6]);
+        assert_eq!(plan.nodes.get(5).unwrap().children, vec![6]);
+        assert_eq!(
+            plan.nodes.last().unwrap().opr.clone().unwrap(),
+            pb::Join {
+                left_keys: vec![
+                    common_pb::Variable { tag: Some("a".into()), property: None },
+                    common_pb::Variable { tag: Some("b".into()), property: None },
+                ],
+                right_keys: vec![
+                    common_pb::Variable { tag: Some("a".into()), property: None },
+                    common_pb::Variable { tag: Some("b".into()), property: None },
                 ],
                 kind: 0 // inner join
             }
