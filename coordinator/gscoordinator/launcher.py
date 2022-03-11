@@ -121,6 +121,7 @@ class LocalLauncher(Launcher):
         self,
         num_workers,
         hosts,
+        etcd_addrs,
         vineyard_socket,
         shared_mem,
         log_level,
@@ -130,6 +131,7 @@ class LocalLauncher(Launcher):
         super().__init__()
         self._num_workers = num_workers
         self._hosts = hosts
+        self._etcd_addrs = etcd_addrs
         self._vineyard_socket = vineyard_socket
         self._shared_mem = shared_mem
         self._glog_level = parse_as_glog_level(log_level)
@@ -310,10 +312,18 @@ class LocalLauncher(Launcher):
             etcd = [etcd]
         return etcd
 
+    def _config_etcd(self):
+        if self._etcd_addrs is None:
+            self._launch_etcd()
+        else:
+            self._etcd_endpoint = "http://" + self._etcd_addrs
+            logger.info("External Etcd endpoint is %s", self._etcd_endpoint)
+
     def _launch_etcd(self):
         etcd_exec = self._find_etcd()
         self._etcd_peer_port = 2380 if is_free_port(2380) else get_free_port()
         self._etcd_client_port = 2379 if is_free_port(2379) else get_free_port()
+        self._etcd_endpoint = "http://127.0.0.1:{0}".format(str(self._etcd_client_port))
 
         env = os.environ.copy()
         env.update({"ETCD_MAX_TXN_OPS": "102400"})
@@ -326,7 +336,7 @@ class LocalLauncher(Launcher):
             "--listen-client-urls",
             "http://0.0.0.0:{0}".format(str(self._etcd_client_port)),
             "--advertise-client-urls",
-            "http://127.0.0.1:{0}".format(str(self._etcd_client_port)),
+            self._etcd_endpoint,
             "--initial-cluster",
             "default=http://127.0.0.1:{0}".format(str(self._etcd_peer_port)),
             "--initial-advertise-peer-urls",
@@ -375,7 +385,7 @@ class LocalLauncher(Launcher):
             "--zkaddr",
             "0.0.0.0:{}".format(self._zookeeper_port),
             "--endpoints",
-            "localhost:{0}".format(self._etcd_client_port),
+            self._etcd_endpoint,
         ]
 
         process = subprocess.Popen(
@@ -426,12 +436,7 @@ class LocalLauncher(Launcher):
             cmd = self._find_vineyardd()
             cmd.extend(["--socket", vineyard_socket])
             cmd.extend(["--size", self._shared_mem])
-            cmd.extend(
-                [
-                    "-etcd_endpoint",
-                    "http://localhost:{0}".format(self._etcd_client_port),
-                ]
-            )
+            cmd.extend(["-etcd_endpoint", self._etcd_endpoint])
             cmd.extend(["-etcd_prefix", f"vineyard.gsa.{ts}"])
             env = os.environ.copy()
             env["GLOG_v"] = str(self._glog_level)
@@ -477,7 +482,7 @@ class LocalLauncher(Launcher):
 
     def _create_services(self):
         # create etcd
-        self._launch_etcd()
+        self._config_etcd()
         # create vineyard
         self._create_vineyard()
         # create GAE rpc service

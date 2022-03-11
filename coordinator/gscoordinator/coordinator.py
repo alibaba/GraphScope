@@ -1359,6 +1359,12 @@ def parse_sys_args():
         help="Memory of engine container, suffix with ['Mi', 'Gi', 'Ti'].",
     )
     parser.add_argument(
+        "--etcd_addrs",
+        type=str,
+        default=None,
+        help="The addr of external etcd cluster, with formats like 'etcd01:port,etcd02:port,etcd03:port' ",
+    )
+    parser.add_argument(
         "--k8s_etcd_num_pods",
         type=int,
         default=3,
@@ -1470,6 +1476,7 @@ def launch_graphscope():
             dataset_image=args.k8s_dataset_image,
             coordinator_name=args.k8s_coordinator_name,
             coordinator_service_name=args.k8s_coordinator_service_name,
+            etcd_addrs=args.etcd_addrs,
             etcd_num_pods=args.k8s_etcd_num_pods,
             etcd_cpu=args.k8s_etcd_cpu,
             etcd_mem=args.k8s_etcd_mem,
@@ -1500,6 +1507,7 @@ def launch_graphscope():
         launcher = LocalLauncher(
             num_workers=args.num_workers,
             hosts=args.hosts,
+            etcd_addrs=args.etcd_addrs,
             vineyard_socket=args.vineyard_socket,
             shared_mem=args.vineyard_shared_mem,
             log_level=args.log_level,
