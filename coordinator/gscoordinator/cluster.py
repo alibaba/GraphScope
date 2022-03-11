@@ -27,7 +27,7 @@ import socket
 import subprocess
 import sys
 import time
-import uuid
+import traceback
 
 try:
     from kubernetes import client as kube_client
@@ -900,7 +900,7 @@ class KubernetesClusterLauncher(Launcher):
         )
 
     def _config_etcd_endpoint(self):
-        if self._etcd_addrs is not None:
+        if self._etcd_addrs is None:
             self._create_etcd()
             self._etcd_endpoint = self._get_etcd_service_endpoint()
             logger.info("Etcd is ready, endpoint is {}".format(self._etcd_endpoint))
@@ -1183,8 +1183,9 @@ class KubernetesClusterLauncher(Launcher):
         except Exception as e:
             time.sleep(1)
             logger.error(
-                "Error when launching GraphScope on kubernetes cluster: %s",
-                str(e),
+                "Error when launching GraphScope on kubernetes cluster: %s, with traceback: %s",
+                repr(e),
+                traceback.format_exc(),
             )
             self.stop()
             return False
