@@ -903,14 +903,14 @@ class KubernetesClusterLauncher(Launcher):
         if self._etcd_addrs is None:
             self._create_etcd()
             self._etcd_endpoint = self._get_etcd_service_endpoint()
-            logger.info("Etcd is ready, endpoint is {}".format(self._etcd_endpoint))
+            logger.info("Etcd created, endpoint is %s", self._etcd_endpoint)
         else:
             self._etcd_endpoint = self._etcd_addrs
-            logger.info("Etcd endpoint is {}".format(self._etcd_endpoint))
+            logger.info("External Etcd endpoint is %s", self._etcd_endpoint)
 
     def _get_etcd_endpoints(self):
         etcd_addrs = []
-        if self._etcd_addrs is not None:
+        if self._etcd_addrs is None:
             port = self._random_etcd_listen_client_service_port
             etcd_addrs.append("%s:%s" % (self._etcd_service_name, port))
             for i in range(self._etcd_num_pods):

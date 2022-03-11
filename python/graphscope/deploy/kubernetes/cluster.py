@@ -413,8 +413,6 @@ class KubernetesClusterLauncher(Launcher):
             self._coordinator_name,
             "--k8s_coordinator_service_name",
             self._coordinator_service_name,
-            "--etcd_addrs",
-            str(self._saved_locals["etcd_addrs"]),
             "--k8s_etcd_num_pods",
             str(self._saved_locals["k8s_etcd_num_pods"]),
             "--k8s_etcd_cpu",
@@ -463,6 +461,8 @@ class KubernetesClusterLauncher(Launcher):
                     self._saved_locals["k8s_dataset_image"],
                 ]
             )
+        if self._saved_locals["etcd_addrs"] is not None:
+            cmd.extend(["--etcd_addrs", self._saved_locals["etcd_addrs"]])
         return ["-c", " ".join(cmd)]
 
     def _create_services(self):

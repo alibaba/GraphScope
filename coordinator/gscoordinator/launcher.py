@@ -313,11 +313,11 @@ class LocalLauncher(Launcher):
         return etcd
 
     def _config_etcd(self):
-        if not self._etcd_addrs:
+        if self._etcd_addrs is None:
             self._launch_etcd()
         else:
-            self._etcd_endpoint = self._etcd_addrs
-            logger.info("Etcd endpoint is {}".format(self._etcd_endpoint))
+            self._etcd_endpoint = "http://" + self._etcd_addrs
+            logger.info("External Etcd endpoint is %s", self._etcd_endpoint)
 
     def _launch_etcd(self):
         etcd_exec = self._find_etcd()
