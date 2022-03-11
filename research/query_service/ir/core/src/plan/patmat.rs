@@ -365,29 +365,48 @@ impl From<MergedSentence> for CompoSentence {
     }
 }
 
-impl From<MergedSentence> for JoinSentence {
-    fn from(mut merged: MergedSentence) -> Self {
-        assert!(!merged.bases.is_empty());
-        if merged.bases.len() == 1 {
-            merged.bases.get(0).unwrap().clone().into()
+impl TryFrom<MergedSentence> for JoinSentence {
+    type Error = IrError;
+
+    fn try_from(merged: MergedSentence) -> IrResult<Self> {
+        if merged.bases.is_empty() {
+            Err(IrError::InvalidPattern("empty `MergedSentence` is not allowed".to_string()))
         } else {
-            let left_base = merged.bases.remove(0);
             let tags = merged.tags.clone();
-            let join_kind = left_base.join_kind;
-            Self {
-                left: Rc::new(left_base),
-                right: Some(Rc::new(JoinSentence::from(merged))),
-                common_tags: tags.clone(),
-                tags,
-                join_kind,
+            let mut queue = merged
+                .bases
+                .into_iter()
+                .collect::<VecDeque<_>>();
+            let mut first: JoinSentence = queue.pop_front().unwrap().into();
+            if first.join_kind != pb::join::JoinKind::Inner {
+                return Err(IrError::InvalidPattern(
+                    "the first sentence of `MergedSentence` must have InnerJoin".to_string(),
+                ));
             }
+
+            while !queue.is_empty() {
+                let second = queue.pop_front().unwrap();
+                let join_kind = second.join_kind;
+                first = JoinSentence {
+                    left: Rc::new(first),
+                    right: Some(Rc::new(second)),
+                    common_tags: tags.clone(),
+                    tags: tags.clone(),
+                    join_kind,
+                };
+            }
+
+            Ok(first)
         }
     }
 }
 
 impl MergedSentence {
-    pub fn new(s1: BaseSentence, s2: BaseSentence) -> Option<Self> {
+    pub fn new(mut s1: BaseSentence, mut s2: BaseSentence) -> Option<Self> {
         if s1.start_tag == s2.start_tag && s1.end_tag == s2.end_tag {
+            if s1.join_kind != pb::join::JoinKind::Inner {
+                std::mem::swap(&mut s1, &mut s2);
+            }
             Some(Self {
                 start_tag: s1.start_tag.clone(),
                 end_tag: s1.end_tag.clone(),
@@ -402,6 +421,15 @@ impl MergedSentence {
     pub fn merge(&mut self, base: BaseSentence) -> bool {
         if self.start_tag == base.start_tag && self.end_tag == base.end_tag {
             self.bases.push(base);
+            for i in self.bases.len() - 1..1 {
+                if self.bases[i].join_kind == pb::join::JoinKind::Inner
+                    && self.bases[i - 1].join_kind != pb::join::JoinKind::Inner
+                {
+                    self.bases.swap(i, i - 1);
+                } else {
+                    break;
+                }
+            }
             true
         } else {
             false
@@ -411,7 +439,7 @@ impl MergedSentence {
 
 impl MatchingStrategy for MergedSentence {
     fn build_logical_plan(&self) -> IrResult<pb::LogicalPlan> {
-        JoinSentence::from(self.clone()).build_logical_plan()
+        JoinSentence::try_from(self.clone())?.build_logical_plan()
     }
 }
 
@@ -463,7 +491,11 @@ impl BasicSentence for MergedSentence {
 
 impl Sentence for MergedSentence {
     fn join(&self, other: Rc<dyn Sentence>) -> Option<JoinSentence> {
-        JoinSentence::from(self.clone()).join(other)
+        if let Ok(this) = JoinSentence::try_from(self.clone()) {
+            this.join(other)
+        } else {
+            None
+        }
     }
 }
 
@@ -1345,6 +1377,37 @@ mod test {
                     common_pb::Variable { tag: Some("b".into()), property: None },
                 ],
                 kind: 0 // inner join
+            }
+            .into()
+        );
+    }
+
+    #[test]
+    fn pattern_case5_into_logical_plan() {
+        let strategy = NaiveStrategy::from(vec![
+            gen_sentence_x_out_y("a", Some("b"), false, false),
+            gen_sentence_x_out_y("a", Some("b"), false, true),
+        ]);
+        // Join (id = 6) (
+        //    As(a), Out(), As(b) (id = 2),
+        //    As(a), Out(), As(b) (id = 5),
+        // )
+        let plan = strategy.build_logical_plan().unwrap();
+        assert_eq!(plan.nodes.len(), 7);
+        assert_eq!(plan.nodes.get(2).unwrap().children, vec![6]);
+        assert_eq!(plan.nodes.get(5).unwrap().children, vec![6]);
+        assert_eq!(
+            plan.nodes.last().unwrap().opr.clone().unwrap(),
+            pb::Join {
+                left_keys: vec![
+                    common_pb::Variable { tag: Some("a".into()), property: None },
+                    common_pb::Variable { tag: Some("b".into()), property: None },
+                ],
+                right_keys: vec![
+                    common_pb::Variable { tag: Some("a".into()), property: None },
+                    common_pb::Variable { tag: Some("b".into()), property: None },
+                ],
+                kind: 5 // anti join
             }
             .into()
         );
