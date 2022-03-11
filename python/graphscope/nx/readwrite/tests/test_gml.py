@@ -145,3 +145,7 @@ class TestGraph:
   ]
 ]"""
         assert data == answer
+
+    @pytest.mark.skip(reason="rapidjson not support inf.")
+    def test_special_float_label(self):
+        pass

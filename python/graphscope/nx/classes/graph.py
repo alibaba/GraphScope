@@ -1084,7 +1084,7 @@ class Graph(_GraphBase):
         """
         self._convert_arrow_to_dynamic()
 
-        edge = json.dumps(((u, v, data),))
+        edge = json.dumps(((u, v, data),), option=json.OPT_SERIALIZE_NUMPY)
         self._schema.add_nx_edge_properties(data)
         self._op = dag_utils.modify_edges(self, types_pb2.NX_UPDATE_EDGES, edge)
         self._op.eval()
@@ -1120,7 +1120,7 @@ class Graph(_GraphBase):
         """
         self._convert_arrow_to_dynamic()
 
-        node = json.dumps(((n, data),))
+        node = json.dumps(((n, data),), option=json.OPT_SERIALIZE_NUMPY)
         self._op = dag_utils.modify_vertices(self, types_pb2.NX_UPDATE_NODES, node)
         self._op.eval()
 
