@@ -218,6 +218,8 @@ class CoordinatorServiceServicer(
         Args:
             log_level (str): Log level of stdout handler
         """
+        logging.basicConfig(level=logging.CRITICAL)
+
         if log_level:
             log_level = log_level.upper()
 
@@ -238,10 +240,6 @@ class CoordinatorServiceServicer(
 
         logger.addHandler(stdout_handler)
         logger.addHandler(stderr_handler)
-
-        # disable gremlin python's logs
-        gremlin_python_logger = logging.getLogger("gremlinpython")
-        gremlin_python_logger.setLevel(logging.CRITICAL)
 
     def ConnectSession(self, request, context):
         for result in self.ConnectSessionWrapped(request, context):

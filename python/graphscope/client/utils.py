@@ -153,6 +153,7 @@ class ConditionalFormatter(logging.Formatter):
 class GSLogger(object):
     @staticmethod
     def init():
+        logging.basicConfig(level=logging.CRITICAL)
         # Default logger configuration
         stdout_handler = logging.StreamHandler(sys.stdout)
         formatter = ConditionalFormatter(
@@ -165,10 +166,6 @@ class GSLogger(object):
             stdout_handler.setLevel(logging.ERROR)
         logger.addHandler(stdout_handler)
         logger.propagate = False
-
-        # disable gremlin python's logs
-        gremlin_python_logger = logging.getLogger("gremlinpython")
-        gremlin_python_logger.setLevel(logging.CRITICAL)
 
     @staticmethod
     def update():
