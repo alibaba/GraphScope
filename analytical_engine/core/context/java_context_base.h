@@ -113,6 +113,7 @@ class JavaContextBase : public grape::ContextBase {
 
   // copy context data stored in java back to cpp context by invoking this
   // method.
+  // FIXME(zhanglei) wrap the result
   void WriteBackJVMHeapToCppContext() {
     JNIEnvMark m;
     if (m.env()) {
