@@ -802,7 +802,7 @@ impl Sentence for JoinSentence {
 /// A naive implementation of `MatchingStrategy`
 #[derive(Clone, Default)]
 pub struct NaiveStrategy {
-    /// To record the set of tags a given tag may connect to
+    /// To record the set of tags a given tag may connect to (out)
     tag_adj_list: BTreeMap<NameOrId, VecDeque<Option<NameOrId>>>,
     /// The matching sentence
     sentences: BTreeMap<(NameOrId, Option<NameOrId>), MergedSentence>,
@@ -910,9 +910,7 @@ impl NaiveStrategy {
                     .sentences
                     .remove(&(start_tag.clone(), end_tag.clone()))
                 {
-                    if !is_initial {
-                        sentence.set_has_as_opr(false);
-                    }
+                    sentence.set_has_as_opr(is_initial);
                     if let Some(new_start_tag) = end_tag {
                         if let Some(next_sentence) = self.do_dfs(new_start_tag, false, visited) {
                             result = sentence.composite(Rc::new(next_sentence));
