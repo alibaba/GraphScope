@@ -375,16 +375,27 @@ class AppDAGNode(DAGNode):
         if not isinstance(self._graph, DAGNode) and not self._graph.loaded():
             raise RuntimeError("The graph is not loaded")
 
+        context = None
         if self._app_assets.type in ["cython_pie", "cython_pregel", "java_pie"]:
             # cython app support kwargs only
             check_argument(
                 not args, "Only support using keyword arguments in cython app."
             )
-            return create_context_node(
+            context = create_context_node(
                 context_type, self, self._graph, json.dumps(kwargs)
             )
-
-        return create_context_node(context_type, self, self._graph, *args, **kwargs)
+        else:
+            context = create_context_node(
+                context_type, self, self._graph, *args, **kwargs
+            )
+        # For apps with `vertex_data` context, append the result back to input grpah as a property,
+        # then return the new graph.
+        if context_type == "vertex_data":
+            new_graph_node = self._graph._base_graph.add_column(
+                context, {"result": "r"}, replace=True
+            )
+            return new_graph_node
+        return context
 
     def unload(self):
         """Unload this app from graphscope engine.

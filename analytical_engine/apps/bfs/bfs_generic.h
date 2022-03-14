@@ -74,7 +74,6 @@ class BFSGeneric : public AppBase<FRAG_T, BFSGenericContext<FRAG_T>>,
 
   void IncEval(const fragment_t& frag, context_t& ctx,
                message_manager_t& messages) {
-    auto inner_vertices = frag.InnerVertices();
 #ifdef PROFILING
     ctx.pre_time -= GetCurrentTime();
 #endif
@@ -112,7 +111,7 @@ class BFSGeneric : public AppBase<FRAG_T, BFSGenericContext<FRAG_T>>,
       Sum(0, terminate_worker_num);
       messages.ForceContinue();
     }
-    if (terminate_worker_num == frag.fnum()) {
+    if (terminate_worker_num == static_cast<int>(frag.fnum())) {
       writeToCtx(frag, ctx);
     }
 #ifdef PROFILING

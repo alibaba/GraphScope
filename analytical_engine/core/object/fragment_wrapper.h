@@ -315,7 +315,7 @@ class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T>>
   bl::result<std::shared_ptr<ILabeledFragmentWrapper>> AddColumn(
       const grape::CommSpec& comm_spec, const std::string& dst_graph_name,
       std::shared_ptr<IContextWrapper>& ctx_wrapper,
-      const std::string& s_selectors) override {
+      const std::string& s_selectors, bool replace = false) override {
     const auto& context_type = ctx_wrapper->context_type();
     auto& meta = fragment_->meta();
     auto* client = dynamic_cast<vineyard::Client*>(meta.GetClient());
@@ -483,7 +483,8 @@ class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T>>
       }
     }
 
-    BOOST_LEAF_AUTO(new_frag_id, fragment_->AddVertexColumns(*client, columns));
+    BOOST_LEAF_AUTO(new_frag_id,
+                    fragment_->AddVertexColumns(*client, columns, replace));
 
     VINEYARD_CHECK_OK(client->Persist(new_frag_id));
     BOOST_LEAF_AUTO(frag_group_id, vineyard::ConstructFragmentGroup(

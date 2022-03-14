@@ -200,6 +200,7 @@ enum ParamKey {
   AXIS = 106;
   GAR = 107;
   TYPE_SIGNATURE = 108;
+  REPLACE = 109;
 
   REPORT_TYPE = 200;
   MODIFY_TYPE = 201;

@@ -734,6 +734,7 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::addColumn(
   BOOST_LEAF_AUTO(graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
   BOOST_LEAF_AUTO(context_key, params.Get<std::string>(rpc::CONTEXT_KEY));
   BOOST_LEAF_AUTO(s_selectors, params.Get<std::string>(rpc::SELECTOR));
+  BOOST_LEAF_AUTO(replace, params.Get<bool>(rpc::REPLACE));
   BOOST_LEAF_AUTO(
       frag_wrapper,
       object_manager_.GetObject<ILabeledFragmentWrapper>(graph_name));
@@ -748,7 +749,7 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::addColumn(
 
   BOOST_LEAF_AUTO(new_frag_wrapper,
                   frag_wrapper->AddColumn(comm_spec_, dst_graph_name,
-                                          ctx_wrapper, s_selectors));
+                                          ctx_wrapper, s_selectors, replace));
   BOOST_LEAF_CHECK(object_manager_.PutObject(new_frag_wrapper));
   return new_frag_wrapper->graph_def();
 }

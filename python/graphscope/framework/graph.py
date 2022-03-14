@@ -578,7 +578,7 @@ class GraphDAGNode(DAGNode, GraphInterface):
                 return graph_dag_node
             graph_dag_node = graph_dag_node._base_graph
 
-    def add_column(self, results, selector):
+    def add_column(self, results, selector, replace=False):
         """Add the results as a column to the graph. Modification rules are given by the selector.
 
         Args:
@@ -586,6 +586,7 @@ class GraphDAGNode(DAGNode, GraphInterface):
                 A context that created by doing an app query on a graph, and holds the corresponding results.
             selector (dict): Select results to add as column.
                 Format is similar to selectors in :class:`graphscope.framework.context.Context`
+            replace (bool): If True, will always replace the last property (if has any).
 
         Returns:
             :class:`graphscope.framework.graph.GraphDAGNode`:
@@ -594,10 +595,10 @@ class GraphDAGNode(DAGNode, GraphInterface):
         check_argument(
             isinstance(selector, Mapping), "selector of add column must be a dict"
         )
-        for key, value in selector.items():
+        for _, value in selector.items():
             results._check_selector(value)
         selector = json.dumps(selector)
-        op = dag_utils.add_column(self, results, selector)
+        op = dag_utils.add_column(self, results, selector, replace)
         graph_dag_node = GraphDAGNode(self._session, op)
         graph_dag_node._base_graph = self
         return graph_dag_node

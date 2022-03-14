@@ -83,7 +83,7 @@ class ILabeledFragmentWrapper : public IFragmentWrapper {
   virtual bl::result<std::shared_ptr<ILabeledFragmentWrapper>> AddColumn(
       const grape::CommSpec& comm_spec, const std::string& dst_graph_name,
       std::shared_ptr<IContextWrapper>& ctx_wrapper,
-      const std::string& s_selectors) = 0;
+      const std::string& s_selectors, bool replace = false) = 0;
 
   virtual bl::result<std::unique_ptr<grape::InArchive>> ToNdArray(
       const grape::CommSpec& comm_spec, const LabeledSelector& selector,

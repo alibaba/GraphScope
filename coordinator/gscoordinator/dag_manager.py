@@ -141,7 +141,7 @@ class DAGManager(object):
 def split_op_result(op_result: op_def_pb2.OpResult):
     """Split op result into a list of chunk.
 
-    Note that this function may modify `result` attribute of op_result.
+    Note that this function will clear the `result` field of op_result.
     """
     if op_result.has_large_result:
         result = op_result.result

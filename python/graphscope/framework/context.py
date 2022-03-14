@@ -630,7 +630,7 @@ class Context(object):
         return s.hexdigest()
 
     def __repr__(self):
-        return f"graphscope.framework.context.{self.__class__.__name__} from graph {str(self._graph)}"
+        return f"graphscope.framework.context.{self.__class__.__name__} from graph {self._graph.vineyard_id}"
 
     def _check_unmodified(self):
         check_argument(self._saved_signature == self.signature)

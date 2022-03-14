@@ -83,8 +83,10 @@ class Dag(object):
         op_keys = list()
         # assert op is not present in current dag
         for op in ops:
-            assert op.key in self._ops_by_key, "%s is not in the dag" % op.key
-            assert not self._ops_by_key[op.key].evaluated, "%is is evaluated" % op.key
+            assert op.key in self._ops_by_key, f"{op.key} is not in the dag"
+            assert not self._ops_by_key[
+                op.key
+            ].evaluated, f"{op.key} has already been evaluated"
             op_keys.append(op.key)
         op_keys_to_keep = self._bfs_for_reachable_ops(op_keys)
         op_keys_to_keep = sorted(op_keys_to_keep, key=lambda n: self._ops_seq_by_key[n])
