@@ -51,6 +51,7 @@ from graphscope.framework.graph_schema import GraphSchema
 from graphscope.framework.utils import PipeWatcher
 from graphscope.framework.utils import get_platform_info
 from graphscope.framework.utils import get_tempdir
+from graphscope.framework.utils import find_java
 from graphscope.proto import attr_value_pb2
 from graphscope.proto import data_types_pb2
 from graphscope.proto import graph_def_pb2
@@ -1290,16 +1291,8 @@ def _parse_giraph_app_type(java_class_path, real_algo):
     _java_app_type = ""
     _frag_param_str = ""
     _java_inner_context_type = ""
-    _java_executable = "java"
-    if shutil.which("java") is None:
-        if os.environ.get("JAVA_HOME", None) is not None:
-            _java_executable = os.path.join(os.environ.get("JAVA_HOME"), "bin", "java")
-        if not os.path.isfile(_java_executable) or not os.access(
-            _java_executable, os.X_OK
-        ):
-            raise RuntimeError(
-                "Java executable not found, you shall install a java runtime."
-            )
+    _java_executable = find_java()
+    
     parse_user_app_cmd = [
         _java_executable,
         "-cp",
@@ -1319,7 +1312,7 @@ def _parse_giraph_app_type(java_class_path, real_algo):
         bufsize=1,
     )
     out, err = parse_user_app_process.communicate()
-    logger.info(err)
+    logger.error(err)
     for line in out.split("\n"):
         logger.info(line)
         if len(line) == 0:

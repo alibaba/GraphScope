@@ -61,8 +61,7 @@ struct Vertex {
   // id. Otherwise, it represents column name
   std::string protocol;  // file/oss/numpy/pandas/vineyard
   std::string values;    // from location, vineyard or pandas
-  std::string vformat =
-      "";  // defines vertex format, no ENABLE_JAVA_SDK guard needed.
+  std::string vformat;   // defines vertex format,
 
   std::string SerializeToString() const {
     std::stringstream ss;
@@ -89,7 +88,7 @@ class Edge {
     std::string values;
     // This doesn't need to be guarded by eformat
     // eformat is not requires, initialized to empty.
-    std::string eformat = "";
+    std::string eformat;
 
     std::string SerializeToString() const {
       std::stringstream ss;

@@ -169,7 +169,7 @@ class AppAssets(DAGNode):
         """
         self._algo = algo
         self._context_type = context
-        if isinstance(self._algo, str) and "." in self._algo:
+        if isinstance(self._algo, str) and "giraph:" in self._algo:
             self._type = "java_pie"
         else:
             self._type = "cpp_pie"  # default is builtin app with `built_in` type
