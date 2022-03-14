@@ -49,9 +49,9 @@ from graphscope.framework import utils
 from graphscope.framework.errors import CompilationError
 from graphscope.framework.graph_schema import GraphSchema
 from graphscope.framework.utils import PipeWatcher
+from graphscope.framework.utils import find_java
 from graphscope.framework.utils import get_platform_info
 from graphscope.framework.utils import get_tempdir
-from graphscope.framework.utils import find_java
 from graphscope.proto import attr_value_pb2
 from graphscope.proto import data_types_pb2
 from graphscope.proto import graph_def_pb2
@@ -1292,7 +1292,7 @@ def _parse_giraph_app_type(java_class_path, real_algo):
     _frag_param_str = ""
     _java_inner_context_type = ""
     _java_executable = find_java()
-    
+
     parse_user_app_cmd = [
         _java_executable,
         "-cp",

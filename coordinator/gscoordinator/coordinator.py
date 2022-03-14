@@ -402,7 +402,7 @@ class CoordinatorServiceServicer(
                 self._key_to_op,
                 engine_hosts=self._engine_hosts,
                 engine_config=self._analytical_engine_config,
-                engine_java_class_path=self._java_class_path, # may be needed in CREATE_GRAPH or RUN_APP
+                engine_java_class_path=self._java_class_path,  # may be needed in CREATE_GRAPH or RUN_APP
                 engine_jvm_opts=self._jvm_opts,
             )
 
@@ -813,9 +813,7 @@ class CoordinatorServiceServicer(
             logger.info("current java class path: {}".format(self._java_class_path))
         return message_pb2.AddLibResponse()
 
-    AddLibWrapped = catch_unknown_errors(message_pb2.AddLibResponse())(
-        _AddLib
-    )
+    AddLibWrapped = catch_unknown_errors(message_pb2.AddLibResponse())(_AddLib)
 
     def CloseSession(self, request, context):
         for result in self.CloseSessionWrapped(request, context):
