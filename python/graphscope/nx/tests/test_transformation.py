@@ -213,12 +213,12 @@ class TestGraphTransformation(object):
             weight=3.14,
         )
         gs_g = g(nx_g)
-        # self.assert_convert_success(gs_g, nx_g)
+        self.assert_convert_success(gs_g, nx_g)
 
     def test_str_node_nx_to_gs(self):
         nx_g = nx.les_miserables_graph()
         gs_g = g(nx_g)
-        # self.assert_convert_success(gs_g, nx_g)
+        self.assert_convert_success(gs_g, nx_g)
 
     def test_complete_nx_to_gs(self):
         # multi-propery, node propery and edge propty both aligned
@@ -235,26 +235,26 @@ class TestGraphTransformation(object):
         nx_g = self.NXGraph(dist=True)
         nx_g.update(edges, nodes)
         gs_g = g(nx_g)
-        # self.assert_convert_success(gs_g, nx_g)
+        self.assert_convert_success(gs_g, nx_g)
 
         # node property aliged, edge not aliged
         nx_g2 = nx_g.copy()
         nx_g2.add_edge(0, 1, ep4="new propery")
         gs_g2 = g(nx_g2)
-        # self.assert_convert_success(gs_g2, nx_g2)
+        self.assert_convert_success(gs_g2, nx_g2)
 
         # edge property aliged, node not aliged
         nx_g3 = nx_g.copy()
         nx_g3.add_node(2, vp4="new propery")
         gs_g3 = g(nx_g3)
-        # self.assert_convert_success(gs_g3, nx_g3)
+        self.assert_convert_success(gs_g3, nx_g3)
 
         # both not aliged
         nx_g4 = nx_g.copy()
         nx_g4.add_edge(0, 1, ep4="new propery")
         nx_g4.add_node(2, vp4="new propery")
         gs_g4 = g(nx_g4)
-        # self.assert_convert_success(gs_g4, nx_g4)
+        self.assert_convert_success(gs_g4, nx_g4)
 
     def test_nx_to_gs_after_modify(self):
         nx_g = self.NXGraph(dist=True)
@@ -266,7 +266,7 @@ class TestGraphTransformation(object):
         # add nodes
         nx_g.add_nodes_from(nodes)
         gs_g = g(nx_g)
-        # self.assert_convert_success(gs_g, nx_g)
+        self.assert_convert_success(gs_g, nx_g)
 
         # add_edges
         edges = [
@@ -276,22 +276,22 @@ class TestGraphTransformation(object):
         ]
         nx_g.add_edges_from(edges)
         gs_g = g(nx_g)
-        # self.assert_convert_success(gs_g, nx_g)
+        self.assert_convert_success(gs_g, nx_g)
 
         # remove edge
         nx_g.remove_edge(0, 1)
         gs_g = g(nx_g)
-        # self.assert_convert_success(gs_g, nx_g)
+        self.assert_convert_success(gs_g, nx_g)
 
         # remove node
         nx_g.remove_node(0)
         gs_g = g(nx_g)
-        # self.assert_convert_success(gs_g, nx_g)
+        self.assert_convert_success(gs_g, nx_g)
 
         # clear
         nx_g.clear()
         gs_g = g(nx_g)
-        # self.assert_convert_success(gs_g, nx_g)
+        self.assert_convert_success(gs_g, nx_g)
 
     def test_nx_to_gs_remove_nodes(self):
         nx_g = self.NXGraph(dist=True)
