@@ -28,6 +28,8 @@ import com.alibaba.fastffi.FFIGen;
 import com.alibaba.fastffi.FFINameAlias;
 import com.alibaba.fastffi.FFITypeAlias;
 import com.alibaba.graphscope.ds.ProjectedAdjList;
+import com.alibaba.graphscope.ds.PropertyNbrUnit;
+import com.alibaba.graphscope.ds.TypedArray;
 import com.alibaba.graphscope.ds.Vertex;
 
 /**
@@ -53,4 +55,17 @@ public interface ArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T>
     @FFINameAlias("GetOutgoingAdjList")
     @CXXValue
     ProjectedAdjList<VID_T, EDATA_T> getOutgoingAdjList(@CXXReference Vertex<VID_T> vertex);
+
+    @FFINameAlias("get_out_edges_ptr")
+    PropertyNbrUnit<VID_T> getOutEdgesPtr();
+
+    @FFINameAlias("get_oe_offsets_begin_ptr_")
+    long getOEOffsetsBeginPtr();
+
+    @FFINameAlias("get_oe_offsets_end_ptr_")
+    long getOEOffsetsEndPtr();
+
+    @FFINameAlias("get_edata_array_accessor")
+    @CXXReference
+    TypedArray<EDATA_T> getEdataArrayAccessor();
 }

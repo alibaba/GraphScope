@@ -34,6 +34,7 @@ public abstract class VertexDataContext<FRAG_T extends IFragment, DATA_T> {
     private long ffiContextAddress;
     private FFIVertexDataContext<FRAG_T, DATA_T> ffiVertexDataContext;
     private FFIVertexDataContext.Factory factory;
+    private Class<? extends DATA_T> dataClass;
 
     /**
      * Must be called by jni, to create ffi context.
@@ -42,10 +43,12 @@ public abstract class VertexDataContext<FRAG_T extends IFragment, DATA_T> {
      * @param dataClass the class obj for the data type.
      * @param includeOuter whether to include outer vertices or not.
      */
-    protected void createFFIContext(FRAG_T fragment, Class<?> dataClass, boolean includeOuter) {
+    protected void createFFIContext(
+            FRAG_T fragment, Class<? extends DATA_T> dataClass, boolean includeOuter) {
         // String fragmentTemplateStr = FFITypeFactory.getFFITypeName(fragment.getClass(), true);
         String fragmentTemplateStr = FFITypeFactoryhelper.getForeignName(fragment.getFFIPointer());
         logger.info("fragment: " + fragmentTemplateStr);
+        this.dataClass = dataClass;
         String contextName =
                 FFITypeFactoryhelper.makeParameterize(
                         CppClassName.VERTEX_DATA_CONTEXT,
@@ -63,5 +66,9 @@ public abstract class VertexDataContext<FRAG_T extends IFragment, DATA_T> {
             return null;
         }
         return ffiVertexDataContext.data();
+    }
+
+    public Class<? extends DATA_T> getDataClass() {
+        return dataClass;
     }
 }

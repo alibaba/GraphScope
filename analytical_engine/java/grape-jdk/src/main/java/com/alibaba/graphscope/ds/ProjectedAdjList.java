@@ -90,7 +90,7 @@ public interface ProjectedAdjList<VID_T, EDATA_T> extends FFIPointer {
      *
      * @return the iterator.
      */
-    default Iterable<ProjectedNbr<VID_T, EDATA_T>> iterator() {
+    default Iterable<ProjectedNbr<VID_T, EDATA_T>> iterable() {
         return () ->
                 new Iterator<ProjectedNbr<VID_T, EDATA_T>>() {
                     ProjectedNbr<VID_T, EDATA_T> cur = begin().dec();

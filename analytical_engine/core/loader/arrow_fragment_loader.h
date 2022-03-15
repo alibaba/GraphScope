@@ -16,6 +16,10 @@
 #ifndef ANALYTICAL_ENGINE_CORE_LOADER_ARROW_FRAGMENT_LOADER_H_
 #define ANALYTICAL_ENGINE_CORE_LOADER_ARROW_FRAGMENT_LOADER_H_
 
+#ifdef ENABLE_JAVA_SDK
+#include <jni.h>
+#endif
+
 #include <algorithm>
 #include <map>
 #include <memory>
@@ -39,6 +43,9 @@
 
 #include "core/error.h"
 #include "core/io/property_parser.h"
+#ifdef ENABLE_JAVA_SDK
+#include "core/java/java_loader_invoker.h"
+#endif
 
 #define HASH_PARTITION
 
@@ -97,7 +104,15 @@ class ArrowFragmentLoader {
         vfiles_(),
         graph_info_(graph_info),
         directed_(graph_info->directed),
-        generate_eid_(graph_info->generate_eid) {}
+        generate_eid_(graph_info->generate_eid) {
+#ifdef ENABLE_JAVA_SDK
+    java_loader_invoker.SetWorkerInfo(comm_spec_.worker_id(),
+                                      comm_spec_.worker_num());
+    VLOG(1) << "workerid: " << comm_spec_.worker_id()
+            << ", worker num: " << comm_spec_.worker_num();
+    java_loader_invoker.InitJavaLoader();
+#endif
+  }
 
   ~ArrowFragmentLoader() = default;
 
@@ -437,6 +452,28 @@ class ArrowFragmentLoader {
   }
 
  private:
+#ifdef ENABLE_JAVA_SDK
+  // Location like giraph://filename#input_format_class=className
+  boost::leaf::result<std::shared_ptr<arrow::Table>> readTableFromGiraph(
+      bool load_vertex, const std::string& file_path, int index,
+      int total_parts, const std::string formatter) {
+    // VLOG(1) << "location: " << params_json_str;
+    // static JavaLoaderInvoker java_loader_invoker(index, total_parts);
+    if (load_vertex) {
+      // There are cases both vertex and edges are specified in vertex file.
+      // In this case, we load the data in this function, and suppose call
+      // add_edges will be called(empty location),
+      // if location is empty, we just return the previous loaded data.
+      java_loader_invoker.load_vertices_and_edges(file_path, formatter);
+      return java_loader_invoker.get_vertex_table();
+    } else {
+      java_loader_invoker.load_edges(file_path, formatter);
+      return java_loader_invoker.get_edge_table();
+    }
+    // once set, we will read.
+  }
+#endif
+
   boost::leaf::result<std::shared_ptr<arrow::Table>> readTableFromPandas(
       const std::string& data) {
     std::shared_ptr<arrow::Table> table;
@@ -581,6 +618,14 @@ class ArrowFragmentLoader {
           } else {
             VLOG(2) << "vertex table is null";
           }
+#ifdef ENABLE_JAVA_SDK
+        } else if (vertices[i]->protocol == "file" &&
+                   vertices[i]->vformat.find("giraph") != std::string::npos) {
+          BOOST_LEAF_ASSIGN(
+              table, readTableFromGiraph(
+                         true, vertices[i]->values, index, total_parts,
+                         vertices[i]->vformat));  // true means to load vertex.
+#endif
         } else {
           // Let the IOFactory to parse other protocols.
           auto path = vertices[i]->values;
@@ -775,6 +820,14 @@ class ArrowFragmentLoader {
               VLOG(2) << "schema of edge table: "
                       << table->schema()->ToString();
             }
+#ifdef ENABLE_JAVA_SDK
+          } else if (sub_labels[j].protocol == "file" &&
+                     sub_labels[j].eformat.find("giraph") !=
+                         std::string::npos) {
+            BOOST_LEAF_ASSIGN(
+                table, readTableFromGiraph(false, sub_labels[j].values, index,
+                                           total_parts, sub_labels[j].eformat));
+#endif
           } else {
             // Let the IOFactory to parse other protocols.
             BOOST_LEAF_ASSIGN(table, readTableFromLocation(sub_labels[j].values,
@@ -925,6 +978,10 @@ class ArrowFragmentLoader {
 
   bool directed_;
   bool generate_eid_;
+
+#ifdef ENABLE_JAVA_SDK
+  JavaLoaderInvoker java_loader_invoker;
+#endif
 
   std::function<void(vineyard::IIOAdaptor*)> io_deleter_ =
       [](vineyard::IIOAdaptor* adaptor) {

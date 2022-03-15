@@ -917,6 +917,22 @@ class ArrowProjectedFragment
 
   inline bool directed() const { return directed_; }
 
+  inline int64_t get_out_edges_ptr() {
+    return reinterpret_cast<int64_t>(oe_ptr_);
+  }
+
+  inline int64_t get_oe_offsets_begin_ptr_() {
+    return reinterpret_cast<int64_t>(oe_offsets_begin_ptr_);
+  }
+  inline int64_t get_oe_offsets_end_ptr_() {
+    return reinterpret_cast<int64_t>(oe_offsets_end_ptr_);
+  }
+
+  inline arrow_projected_fragment_impl::TypedArray<EDATA_T>&
+  get_edata_array_accessor() {
+    return edge_data_array_accessor_;
+  }
+
  private:
   inline static std::pair<int64_t, int64_t> getRangeOfLabel(
       std::shared_ptr<property_graph_t> fragment, label_id_t v_label,

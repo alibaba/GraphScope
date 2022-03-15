@@ -62,6 +62,7 @@ class JavaPIEProjectedContext : public JavaContextBase<FRAG_T> {
       : JavaContextBase<FRAG_T>(fragment) {}
 
   virtual ~JavaPIEProjectedContext() {}
+
   void init(jlong messages_addr, const char* java_message_manager_name,
             const std::string& params, const std::string& lib_path) {
     JavaContextBase<FRAG_T>::init(messages_addr, java_message_manager_name,
@@ -197,6 +198,11 @@ class JavaPIEProjectedContext : public JavaContextBase<FRAG_T> {
       // Pass app class's class object
       jstring context_class_jstring = (jstring) m.env()->CallStaticObjectMethod(
           app_context_getter_class, getter_method, ctx_object);
+      if (m.env()->ExceptionCheck()) {
+        LOG(ERROR) << "Exception in get vertex data type";
+        m.env()->ExceptionDescribe();
+        m.env()->ExceptionClear();
+      }
       CHECK_NOTNULL(context_class_jstring);
       return JString2String(m.env(), context_class_jstring);
     }

@@ -63,6 +63,7 @@ import com.alibaba.graphscope.ds.PropertyAdjList;
 import com.alibaba.graphscope.ds.PropertyNbr;
 import com.alibaba.graphscope.ds.PropertyNbrUnit;
 import com.alibaba.graphscope.ds.PropertyRawAdjList;
+import com.alibaba.graphscope.ds.TypedArray;
 import com.alibaba.graphscope.ds.Vertex;
 import com.alibaba.graphscope.ds.VertexArray;
 import com.alibaba.graphscope.ds.VertexRange;
@@ -133,6 +134,7 @@ import javax.tools.StandardLocation;
 })
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
 public class GraphScopeAnnotationProcessor extends javax.annotation.processing.AbstractProcessor {
+
     public static final String GraphTypeWrapperSuffix = "$$GraphTypeDefinitions";
     static final String JNI_HEADER = "<jni.h>";
     private static Logger logger =
@@ -359,11 +361,14 @@ public class GraphScopeAnnotationProcessor extends javax.annotation.processing.A
 
         AnnotationSpec.Builder ffiGenBatchBuilder = AnnotationSpec.builder(FFIGenBatch.class);
 
+        addTypedArray(ffiGenBatchBuilder);
         addVertexGen(ffiGenBatchBuilder);
         addVertexRange(ffiGenBatchBuilder);
         addGSVertexRange(ffiGenBatchBuilder);
         addNbr(ffiGenBatchBuilder);
         addAdjList(ffiGenBatchBuilder);
+        // projected fragment also needed
+        addPropertyNbrUnit(ffiGenBatchBuilder);
 
         addMessageTypes(ffiGenBatchBuilder);
 
@@ -376,7 +381,6 @@ public class GraphScopeAnnotationProcessor extends javax.annotation.processing.A
             {
                 addPropertyNbr(ffiGenBatchBuilder);
                 addPropertyAdjList(ffiGenBatchBuilder);
-                addPropertyNbrUnit(ffiGenBatchBuilder);
                 addPropertyRawAdjList(ffiGenBatchBuilder);
                 addArrowFragment(ffiGenBatchBuilder);
                 // add column
@@ -449,6 +453,15 @@ public class GraphScopeAnnotationProcessor extends javax.annotation.processing.A
         addIntCXXTemplate(ffiGenVertex);
         addLongCXXTemplate(ffiGenVertex);
         ffiGenBatchBuilder.addMember("value", "$L", ffiGenVertex.build());
+    }
+
+    private void addTypedArray(AnnotationSpec.Builder ffiGenBatchBuilder) {
+        AnnotationSpec.Builder ffiGenTypedArray = AnnotationSpec.builder(FFIGen.class);
+        ffiGenTypedArray.addMember("type", "$S", TypedArray.class.getName());
+        addSignedIntCXXTemplate(ffiGenTypedArray);
+        addSignedLongCXXTemplate(ffiGenTypedArray);
+        addDoubleCXXTemplate(ffiGenTypedArray);
+        ffiGenBatchBuilder.addMember("value", "$L", ffiGenTypedArray.build());
     }
 
     private void addVertexRange(AnnotationSpec.Builder ffiGenBatchBuilder) {
@@ -667,9 +680,9 @@ public class GraphScopeAnnotationProcessor extends javax.annotation.processing.A
     private void addVertexArray(AnnotationSpec.Builder batchBuilder) {
         AnnotationSpec.Builder ffiGenVertex = AnnotationSpec.builder(FFIGen.class);
         ffiGenVertex.addMember("type", "$S", VertexArray.class.getName());
-        addCXXTemplate(ffiGenVertex, "double", "uint64_t", "Double", "Long");
-        addCXXTemplate(ffiGenVertex, "int64_t", "uint64_t", "Long", "Long");
-        addCXXTemplate(ffiGenVertex, "int32_t", "uint64_t", "Integer", "Long");
+        addCXXTemplate(ffiGenVertex, "uint64_t", "double", "Long", "Double");
+        addCXXTemplate(ffiGenVertex, "uint64_t", "int64_t", "Long", "Long");
+        addCXXTemplate(ffiGenVertex, "uint64_t", "int32_t", "Long", "Integer");
         batchBuilder.addMember("value", "$L", ffiGenVertex.build());
     }
 
