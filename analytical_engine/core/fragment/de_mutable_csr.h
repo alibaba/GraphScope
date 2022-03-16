@@ -28,17 +28,24 @@ limitations under the License.
 
 namespace grape {
 
+/**
+ * @brief Dedupe mutable CSR specialized for DynamicFragment
+ *
+ * This is specialzed DeMutableCSR class definition for DynamicFragment which
+ * is a wrapper of MutableCSR and provides batch add/remove/reserve edges
+ * operations.
+ *
+ */
 template <>
 class DeMutableCSR<
     vineyard::property_graph_types::VID_TYPE,
     Nbr<vineyard::property_graph_types::VID_TYPE, gs::dynamic::Value>> {
  public:
-  using VID_T = vineyard::property_graph_types::VID_TYPE;
-  using EDATA_T = gs::dynamic::Value;
-  using vid_t = VID_T;
-  using nbr_t = Nbr<vid_t, EDATA_T>;
-  using edge_t = Edge<vid_t, EDATA_T>;
-  using adj_list_t = AdjList<vid_t, EDATA_T>;
+  using vid_t = vineyard::property_graph_types::VID_TYPE;
+  using edata_t = gs::dynamic::Value;
+  using nbr_t = Nbr<vid_t, edata_t>;
+  using edge_t = Edge<vid_t, edata_t>;
+  using adj_list_t = AdjList<vid_t, edata_t>;
 
   static constexpr double dense_threshold = 0.003;
 
@@ -66,24 +73,24 @@ class DeMutableCSR<
     enable_tail_ = enable_tail;
   }
 
-  VID_T vertex_num() const {
+  vid_t vertex_num() const {
     return (max_id_ - min_tail_id_) + (max_head_id_ - min_id_);
   }
 
-  VID_T head_vertex_num() const { return (max_head_id_ - min_id_); }
+  vid_t head_vertex_num() const { return (max_head_id_ - min_id_); }
 
-  VID_T tail_vertex_num() const { return (max_id_ - min_tail_id_); }
+  vid_t tail_vertex_num() const { return (max_id_ - min_tail_id_); }
 
   bool empty() const { return head_.empty() && tail_.empty(); }
 
   size_t edge_num() const { return head_.edge_num() + tail_.edge_num(); }
 
-  int degree(VID_T i) const {
+  int degree(vid_t i) const {
     return in_head(i) ? head_.degree(head_index(i))
                       : tail_.degree(tail_index(i));
   }
 
-  void remove_vertex(VID_T i) {
+  void remove_vertex(vid_t i) {
     if (in_head(i)) {
       head_.remove_vertex(head_index(i));
     } else if (enable_tail_) {
@@ -91,7 +98,7 @@ class DeMutableCSR<
     }
   }
 
-  bool is_empty(VID_T i) const {
+  bool is_empty(vid_t i) const {
     return in_head(i) ? head_.is_empty(head_index(i))
                       : tail_.is_empty(tail_index(i));
   }
@@ -145,6 +152,16 @@ class DeMutableCSR<
       add_edges_sparse(edges);
     } else {
       add_edges_dense(edges);
+    }
+  }
+
+  void add_forward_edges(const std::vector<edge_t>& edges) {
+    double rate =
+        static_cast<double>(edges.size()) / static_cast<double>(edge_num());
+    if (rate < dense_threshold) {
+      add_forward_edges_sparse(edges);
+    } else {
+      add_forward_edges_dense(edges);
     }
   }
 
@@ -533,11 +550,35 @@ class DeMutableCSR<
   }
 
  private:
+  void add_edges_dense(const std::vector<edge_t>& edges) {
+    std::vector<int> head_degree_to_add, tail_degree_to_add;
+    reserve_edges_dense(edges, head_degree_to_add, tail_degree_to_add);
+
+    static constexpr vid_t invalid_vid = std::numeric_limits<vid_t>::max();
+    for (auto& e : edges) {
+      if (e.src == invalid_vid) {
+        continue;
+      }
+      if (in_head(e.src)) {
+        head_.put_edge(head_index(e.src), nbr_t(e.dst, e.edata));
+      } else if (enable_tail_) {
+        tail_.put_edge(tail_index(e.src), nbr_t(e.dst, e.edata));
+      }
+      if (in_head(e.dst)) {
+        head_.put_edge(head_index(e.dst), nbr_t(e.src, e.edata));
+      } else if (enable_tail_) {
+        tail_.put_edge(tail_index(e.dst), nbr_t(e.src, e.edata));
+      }
+    }
+
+    dedup_or_sort_neighbors_dense(head_degree_to_add, tail_degree_to_add);
+  }
+
   void add_reversed_edges_dense(const std::vector<edge_t>& edges) {
     std::vector<int> head_degree_to_add, tail_degree_to_add;
     reserve_reversed_edges_dense(edges, head_degree_to_add, tail_degree_to_add);
 
-    static constexpr VID_T invalid_vid = std::numeric_limits<VID_T>::max();
+    static constexpr vid_t invalid_vid = std::numeric_limits<vid_t>::max();
     for (auto& e : edges) {
       if (e.src == invalid_vid) {
         continue;
@@ -552,11 +593,11 @@ class DeMutableCSR<
     dedup_or_sort_neighbors_dense(head_degree_to_add, tail_degree_to_add);
   }
 
-  void add_edges_dense(const std::vector<edge_t>& edges) {
+  void add_forward_edges_dense(const std::vector<edge_t>& edges) {
     std::vector<int> head_degree_to_add, tail_degree_to_add;
     reserve_forward_edges_dense(edges, head_degree_to_add, tail_degree_to_add);
 
-    static constexpr VID_T invalid_vid = std::numeric_limits<VID_T>::max();
+    static constexpr vid_t invalid_vid = std::numeric_limits<vid_t>::max();
     for (auto& e : edges) {
       if (e.src == invalid_vid) {
         continue;
@@ -573,9 +614,33 @@ class DeMutableCSR<
 
   void add_edges_sparse(const std::vector<edge_t>& edges) {
     std::map<vid_t, int> head_degree_to_add, tail_degree_to_add;
+    reserve_edges_sparse(edges, head_degree_to_add, tail_degree_to_add);
+
+    static constexpr vid_t invalid_vid = std::numeric_limits<vid_t>::max();
+    for (auto& e : edges) {
+      if (e.src == invalid_vid) {
+        continue;
+      }
+      if (in_head(e.src)) {
+        head_.put_edge(head_index(e.src), nbr_t(e.dst, e.edata));
+      } else if (enable_tail_) {
+        tail_.put_edge(tail_index(e.src), nbr_t(e.dst, e.edata));
+      }
+      if (in_head(e.dst)) {
+        head_.put_edge(head_index(e.dst), nbr_t(e.src, e.edata));
+      } else if (enable_tail_) {
+        tail_.put_edge(tail_index(e.dst), nbr_t(e.src, e.edata));
+      }
+    }
+
+    dedup_or_sort_neighbors_sparse(head_degree_to_add, tail_degree_to_add);
+  }
+
+  void add_forward_edges_sparse(const std::vector<edge_t>& edges) {
+    std::map<vid_t, int> head_degree_to_add, tail_degree_to_add;
     reserve_forward_edges_sparse(edges, head_degree_to_add, tail_degree_to_add);
 
-    static constexpr VID_T invalid_vid = std::numeric_limits<VID_T>::max();
+    static constexpr vid_t invalid_vid = std::numeric_limits<vid_t>::max();
     for (auto& e : edges) {
       if (e.src == invalid_vid) {
         continue;
@@ -595,7 +660,7 @@ class DeMutableCSR<
     reserve_reversed_edges_sparse(edges, head_degree_to_add,
                                   tail_degree_to_add);
 
-    static constexpr VID_T invalid_vid = std::numeric_limits<VID_T>::max();
+    static constexpr vid_t invalid_vid = std::numeric_limits<vid_t>::max();
     for (auto& e : edges) {
       if (e.src == invalid_vid) {
         continue;
@@ -618,7 +683,7 @@ class DeMutableCSR<
 
     head_degree_to_add.resize(head_num, 0);
     tail_degree_to_add.resize(tail_num, 0);
-    static constexpr VID_T invalid_vid = std::numeric_limits<VID_T>::max();
+    static constexpr vid_t invalid_vid = std::numeric_limits<vid_t>::max();
     for (auto& e : edges) {
       if (e.src == invalid_vid) {
         continue;
@@ -649,7 +714,7 @@ class DeMutableCSR<
 
     head_degree_to_add.resize(head_num, 0);
     tail_degree_to_add.resize(tail_num, 0);
-    static constexpr VID_T invalid_vid = std::numeric_limits<VID_T>::max();
+    static constexpr vid_t invalid_vid = std::numeric_limits<vid_t>::max();
     for (auto& e : edges) {
       if (e.src == invalid_vid) {
         continue;
@@ -675,7 +740,7 @@ class DeMutableCSR<
 
     head_degree_to_add.resize(head_num, 0);
     tail_degree_to_add.resize(tail_num, 0);
-    static constexpr VID_T invalid_vid = std::numeric_limits<VID_T>::max();
+    static constexpr vid_t invalid_vid = std::numeric_limits<vid_t>::max();
     for (auto& e : edges) {
       if (e.src == invalid_vid) {
         continue;
@@ -696,7 +761,7 @@ class DeMutableCSR<
   void reserve_edges_sparse(const std::vector<edge_t>& edges,
                             std::map<vid_t, int>& head_degree_to_add,
                             std::map<vid_t, int>& tail_degree_to_add) {
-    static constexpr VID_T invalid_vid = std::numeric_limits<VID_T>::max();
+    static constexpr vid_t invalid_vid = std::numeric_limits<vid_t>::max();
     for (auto& e : edges) {
       if (e.src == invalid_vid) {
         continue;
@@ -722,7 +787,7 @@ class DeMutableCSR<
   void reserve_forward_edges_sparse(const std::vector<edge_t>& edges,
                                     std::map<vid_t, int>& head_degree_to_add,
                                     std::map<vid_t, int>& tail_degree_to_add) {
-    static constexpr VID_T invalid_vid = std::numeric_limits<VID_T>::max();
+    static constexpr vid_t invalid_vid = std::numeric_limits<vid_t>::max();
     for (auto& e : edges) {
       if (e.src == invalid_vid) {
         continue;
@@ -743,7 +808,7 @@ class DeMutableCSR<
   void reserve_reversed_edges_sparse(const std::vector<edge_t>& edges,
                                      std::map<vid_t, int>& head_degree_to_add,
                                      std::map<vid_t, int>& tail_degree_to_add) {
-    static constexpr VID_T invalid_vid = std::numeric_limits<VID_T>::max();
+    static constexpr vid_t invalid_vid = std::numeric_limits<vid_t>::max();
     for (auto& e : edges) {
       if (e.src == invalid_vid) {
         continue;
@@ -761,7 +826,7 @@ class DeMutableCSR<
     }
   }
 
-  template <typename _VID_T, typename _NBR_T>
+  template <typename _vid_t, typename _NBR_T>
   friend class DeMutableCSRBuilder;
 
   vid_t min_id_;
@@ -772,7 +837,7 @@ class DeMutableCSR<
   bool dedup_;
   bool enable_tail_;
 
-  MutableCSR<VID_T, Nbr<VID_T, EDATA_T>> head_, tail_;
+  MutableCSR<vid_t, Nbr<vid_t, edata_t>> head_, tail_;
 };
 
 }  // namespace grape

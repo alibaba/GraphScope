@@ -156,8 +156,6 @@ class DynamicFragment
           }
         }
       }
-    } else {
-      LOG(FATAL) << "Invalid load strategy.";
     }
 
     alive_ivnum_ = ivnum_;
@@ -406,7 +404,7 @@ class DynamicFragment
                        grape::PrepareConf conf) override {
     base_t::PrepareToRunApp(comm_spec, conf);
     if (conf.need_split_edges_by_fragment) {
-      LOG(FATAL) << "MutableEdgecutFragment cannot split edges by fragment";
+      LOG(ERROR) << "MutableEdgecutFragment cannot split edges by fragment";
     } else if (conf.need_split_edges) {
       splitEdges();
     }
@@ -518,7 +516,7 @@ class DynamicFragment
       ie_.copy_from(source->oe_);
       oe_.copy_from(source->ie_);
     } else {
-      LOG(FATAL) << "Unsupported copy type: " << copy_type;
+      LOG(ERROR) << "Unsupported copy type: " << copy_type;
     }
   }
 
@@ -758,7 +756,8 @@ class DynamicFragment
         max_type != dynamic::Type::kDoubleType &&
         max_type != dynamic::Type::kStringType &&
         max_type != dynamic::Type::kNullType) {
-      LOG(FATAL) << "Unsupported oid type.";
+      LOG(ERROR) << "Unsupported oid type.";
+      return dynamic::Type::kNullType;
     }
     return max_type;
   }
