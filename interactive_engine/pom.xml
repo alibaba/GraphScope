@@ -49,7 +49,7 @@
     <protoc.version>3.18.0</protoc.version>
     <protobuf.version>3.18.0</protobuf.version>
     <logback.version>1.2.3</logback.version>
-    <zookeeper.version>3.6.1</zookeeper.version>
+    <zookeeper.version>3.6.3</zookeeper.version>
     <kafka.version>2.5.0</kafka.version>
     <kafka.junit.version>3.2.1</kafka.junit.version>
     <jna.version>5.5.0</jna.version>
