@@ -10,7 +10,7 @@ echo "servers_size = ${REPLICAS}" >> server.toml
 for i in $(seq 0 $(( $REPLICAS - 1 ))); do
   while true
   do
-    ip=`host ${POD_PREFIX}-${i}.${SERVICE_NAME}.${NAMESPACE}.svc.cluster.local | awk '{print $4}'`
+    ip=$(host ${POD_PREFIX}-${i}.${SERVICE_NAME}.${NAMESPACE}.svc.cluster.local | awk '{print $4}')
     if [[ ${ip} != "found:" ]]; then
       break
     fi
