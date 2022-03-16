@@ -13,97 +13,88 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-#![allow(dead_code)]
-#![allow(unused_imports)]
-#![allow(unused_variables)]
-use std::fmt::Debug;
-use std::path::Path;
+use std::io::Read;
+use std::path::PathBuf;
 
-use pegasus::{Configuration, StartupError};
-use pegasus_network::config::{NetworkConfig, ServerAddr};
-use serde::Deserialize;
+use crate::rpc::RPCServerConfig;
 
-#[derive(Debug, Deserialize)]
-pub struct HostsConfig {
-    pub peers: Vec<ServerAddr>,
+pub fn load_configs<P>(config_dir: P) -> std::io::Result<(pegasus::Configuration, RPCServerConfig)>
+where
+    P: Into<PathBuf>,
+{
+    let dir = config_dir.into();
+    let server_config = {
+        let mut server_config_file = dir.clone();
+        server_config_file.push("server_config.toml");
+        let mut f = std::fs::File::open(server_config_file.as_path())?;
+        let mut buf = String::new();
+        f.read_to_string(&mut buf)?;
+        pegasus::Configuration::parse(buf.as_str())?
+    };
+
+    let rpc_config: RPCServerConfig = {
+        let mut rpc_config_file = dir.clone();
+        rpc_config_file.push("rpc_config.toml");
+        let mut f = std::fs::File::open(rpc_config_file.as_path())?;
+        let mut buf = String::new();
+        f.read_to_string(&mut buf)?;
+        toml::from_str(buf.as_str())?
+    };
+
+    Ok((server_config, rpc_config))
 }
 
-impl HostsConfig {
-    pub fn parse(content: &str) -> Result<Self, toml::de::Error> {
-        toml::from_str(&content)
+#[cfg(test)]
+mod test {
+    use std::path::PathBuf;
+
+    use super::load_configs;
+
+    #[test]
+    fn parse_config_test() {
+        let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        if !path.ends_with("server") {
+            path.push("server");
+        }
+        path.push("config");
+        path.push("tests");
+        path.push("standalone2");
+        let (server_conf, rpc_conf) = load_configs(path).unwrap();
+        assert_eq!(server_conf.max_pool_size, Some(8));
+        assert_eq!(server_conf.server_id(), 0);
+        assert_eq!(server_conf.servers_size(), 2);
+        if let Some(net_conf) = server_conf.network_config() {
+            let servers = net_conf.get_servers().unwrap().unwrap();
+            assert_eq!(servers.len(), 2);
+            assert_eq!(servers[0].id, 0);
+            assert_eq!(servers[1].id, 1);
+            assert_eq!(servers[0].addr, "192.168.1.1:8080".parse().unwrap());
+            assert_eq!(servers[1].addr, "192.168.1.2:8080".parse().unwrap());
+            let params = net_conf.get_connection_param();
+            assert!(!params.is_nonblocking);
+            assert_eq!(params.get_read_params().slab_size, 65535);
+            assert_eq!(
+                params
+                    .get_read_params()
+                    .mode
+                    .get_block_timeout_ms(),
+                1
+            );
+            assert!(params.get_write_params().nodelay);
+            assert_eq!(params.get_write_params().heartbeat, 5);
+            assert_eq!(params.get_write_params().buffer, 4096);
+            assert_eq!(
+                params
+                    .get_write_params()
+                    .mode
+                    .get_block_timeout_ms(),
+                1
+            );
+        } else {
+            panic!("Network configuration should not be None;")
+        }
+
+        assert_eq!(rpc_conf.rpc_host.unwrap(), "0.0.0.0");
+        assert_eq!(rpc_conf.rpc_port.unwrap(), 5000);
     }
-
-    pub fn read_from<P: AsRef<Path>>(path: P) -> Result<HostsConfig, StartupError> {
-        let config_str = std::fs::read_to_string(path)?;
-        Ok(HostsConfig::parse(&config_str)?)
-    }
-}
-
-#[derive(Debug, Deserialize)]
-pub struct CommonConfig {
-    pub max_pool_size: Option<u32>,
-    pub nonblocking: Option<bool>,
-    pub read_timeout_ms: Option<u32>,
-    pub write_timeout_ms: Option<u32>,
-    pub read_slab_size: Option<u32>,
-    pub no_delay: Option<bool>,
-    pub send_buffer: Option<u32>,
-    pub heartbeat_sec: Option<u32>,
-}
-
-impl CommonConfig {
-    pub fn parse(content: &str) -> Result<Self, toml::de::Error> {
-        toml::from_str(&content)
-    }
-
-    pub fn read_from<P: AsRef<Path>>(path: P) -> Result<CommonConfig, StartupError> {
-        let config_str = std::fs::read_to_string(path)?;
-        Ok(CommonConfig::parse(&config_str)?)
-    }
-}
-
-pub fn combine_config(
-    server_id: u64, host_config: Option<HostsConfig>, common_config: Option<CommonConfig>,
-) -> Option<Configuration> {
-    // if let Some(host_config) = host_config {
-    //     let local_host = &host_config.peers[server_id as usize];
-    //     let ip = local_host.ip.to_owned();
-    //     let port = local_host.port;
-    //     let config = if let Some(common_config) = common_config {
-    //         let network_config = NetworkConfig {
-    //             server_id,
-    //             ip,
-    //             port,
-    //             nonblocking: common_config.nonblocking,
-    //             read_timeout_ms: common_config.read_timeout_ms,
-    //             write_timeout_ms: common_config.write_timeout_ms,
-    //             read_slab_size: common_config.read_slab_size,
-    //             no_delay: common_config.no_delay,
-    //             send_buffer: common_config.send_buffer,
-    //             heartbeat_sec: common_config.heartbeat_sec,
-    //             peers: Some(host_config.peers),
-    //         };
-    //         Configuration {
-    //             network: Some(network_config),
-    //             max_pool_size: common_config.max_pool_size,
-    //         }
-    //     } else {
-    //         let network_config =
-    //             NetworkConfig::with_default_config(server_id, ip, port, host_config.peers);
-    //         Configuration { network: Some(network_config), max_pool_size: None }
-    //     };
-    //     Some(config)
-    // } else {
-    //     if let Some(common_config) = common_config {
-    //         Some(Configuration { network: None, max_pool_size: common_config.max_pool_size })
-    //     } else {
-    //         None
-    //     }
-    // }
-    unimplemented!()
-}
-
-pub struct RpcServerConfig {
-    host: String,
-    port: u16,
 }

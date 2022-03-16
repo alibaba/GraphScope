@@ -13,10 +13,11 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::config::ConnectionParams;
-use crate::{NetError, Server};
 use std::net::{SocketAddr, ToSocketAddrs};
 use std::sync::{Arc, Mutex};
+
+use crate::config::ConnectionParams;
+use crate::{NetError, Server};
 
 pub trait ServerDetect: Send {
     fn fetch(&self) -> Vec<Server>;
@@ -73,15 +74,23 @@ impl SimpleServerDetector {
     }
 
     pub fn update_peer_view<Iter: Iterator<Item = (u64, SocketAddr)>>(&self, peer_view: Iter) {
-        let new_peers = peer_view.map(|(id, addr)| Server { id, addr }).collect::<Vec<Server>>();
-        let mut peers = self.peers_mutex.lock().expect("unexpected error locking when update peer view");
+        let new_peers = peer_view
+            .map(|(id, addr)| Server { id, addr })
+            .collect::<Vec<Server>>();
+        let mut peers = self
+            .peers_mutex
+            .lock()
+            .expect("unexpected error locking when update peer view");
         *peers = new_peers;
     }
 }
 
 impl ServerDetect for SimpleServerDetector {
     fn fetch(&self) -> Vec<Server> {
-        let peers = self.peers_mutex.lock().expect("unexpected error locking when fetch servers");
+        let peers = self
+            .peers_mutex
+            .lock()
+            .expect("unexpected error locking when fetch servers");
         peers.clone()
     }
 }

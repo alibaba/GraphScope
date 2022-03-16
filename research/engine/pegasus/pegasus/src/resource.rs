@@ -1,19 +1,162 @@
 use std::any::{Any, TypeId};
-use std::cell::RefCell;
+use std::cell::{RefCell, UnsafeCell};
 use std::collections::HashMap;
 use std::ops::{Deref, DerefMut};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+use std::sync::Arc;
 
 use crossbeam_utils::sync::ShardedLock;
 
-use crate::JobConf;
+use crate::{JobConf, ServerConf};
 
-pub type ResourceMap = HashMap<TypeId, Box<dyn Any + Send + Sync>>;
-pub type KeyedResources = HashMap<String, Box<dyn Any + Send + Sync>>;
+pub type ResourceMap = HashMap<TypeId, Box<dyn Any + Send>>;
+pub type KeyedResources = HashMap<String, Box<dyn Any + Send>>;
+pub type SharedResourceMap = HashMap<TypeId, Box<dyn Any + Send + Sync>>;
+pub type SharedKeyedResourceMap = HashMap<String, Box<dyn Any + Send + Sync>>;
+
+struct REntry {
+    ref_cnt: Arc<AtomicUsize>,
+    entry: Box<dyn Any + Send + Sync>,
+    freezed: AtomicBool,
+}
+
+impl REntry {
+    fn new<T: Any + Send + Sync>(e: T) -> Self {
+        REntry {
+            ref_cnt: Arc::new(AtomicUsize::new(0)),
+            entry: Box::new(e) as Box<dyn Any + Send + Sync>,
+            freezed: AtomicBool::new(false),
+        }
+    }
+
+    fn get_ref<T: Any>(&self) -> Option<ArcRef<T>> {
+        if self.freezed.load(Ordering::SeqCst) {
+            return None;
+        }
+        let r = self.entry.downcast_ref::<T>()?;
+        let ref_cnt = self.ref_cnt.clone();
+        ref_cnt.fetch_add(1, Ordering::SeqCst);
+        Some(ArcRef { cnt: ref_cnt, inner: r })
+    }
+
+    fn get_ref_cnt(&self) -> usize {
+        self.ref_cnt.load(Ordering::SeqCst)
+    }
+
+    fn freeze(&self) {
+        self.freezed.store(true, Ordering::SeqCst);
+    }
+
+    fn is_idle(&self) -> bool {
+        self.ref_cnt.load(Ordering::SeqCst) == 0 && self.freezed.load(Ordering::SeqCst)
+    }
+}
+
+struct KeyedResourceMap {
+    index: ShardedLock<HashMap<String, usize>>,
+    values: UnsafeCell<Vec<Option<REntry>>>,
+}
+
+unsafe impl Sync for KeyedResourceMap {}
+
+pub struct ArcRef<'a, T> {
+    inner: &'a T,
+    cnt: Arc<AtomicUsize>,
+}
+
+impl<'a, T> Deref for ArcRef<'a, T> {
+    type Target = T;
+    fn deref(&self) -> &Self::Target {
+        self.inner
+    }
+}
+
+impl<'a, T> Drop for ArcRef<'a, T> {
+    fn drop(&mut self) {
+        self.cnt.fetch_sub(1, Ordering::SeqCst);
+    }
+}
+
+impl KeyedResourceMap {
+    fn new() -> Self {
+        KeyedResourceMap { index: ShardedLock::new(HashMap::new()), values: UnsafeCell::new(Vec::new()) }
+    }
+
+    pub fn add_resource<T: Send + Sync + 'static>(&self, key: String, res: T) -> Option<(String, T)> {
+        let mut locked = self.index.write().expect("lock write poisoned");
+        if locked.contains_key(&key) {
+            return Some((key, res));
+        }
+        let offset = unsafe {
+            let v = &mut *self.values.get();
+            if v.len() < 1024 {
+                v.push(Some(REntry::new(res)));
+                v.len() - 1
+            } else {
+                let mut found = None;
+                for (i, slot) in v.iter_mut().enumerate() {
+                    match slot {
+                        Some(e) => {
+                            if e.is_idle() {
+                                found = Some(i);
+                                break;
+                            }
+                        }
+                        None => {
+                            found = Some(i);
+                            break;
+                        }
+                    }
+                }
+                if let Some(idle) = found {
+                    v[idle] = Some(REntry::new(res));
+                    idle
+                } else {
+                    v.push(Some(REntry::new(res)));
+                    v.len() - 1
+                }
+            }
+        };
+        locked.insert(key, offset);
+        None
+    }
+
+    pub fn get_resource<T: Any>(&self, key: &str) -> Option<ArcRef<T>> {
+        let locked = self.index.read().expect("lock read poisioned");
+        if let Some(offset) = locked.get(key) {
+            let v = unsafe { &*self.values.get() };
+            if *offset >= v.len() {
+                return None;
+            }
+            if let Some(entry) = &v[*offset] {
+                entry.get_ref()
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    }
+
+    pub fn remove_resource(&self, key: &str) {
+        let mut locked = self.index.write().expect("lock read poisioned");
+        if let Some(offset) = locked.remove(key) {
+            let v = unsafe { &mut *self.values.get() };
+            if offset < v.len() {
+                if let Some(entry) = v[offset].take() {
+                    if entry.get_ref_cnt() > 0 {
+                        entry.freeze();
+                        v[offset].replace(entry);
+                    }
+                }
+            }
+        }
+    }
+}
 
 lazy_static! {
-    pub static ref GLOBAL_RESOURCE_MAP: ShardedLock<ResourceMap> = ShardedLock::new(Default::default());
-    pub static ref GLOBAL_KEYED_RESOURCES: ShardedLock<KeyedResources> =
-        ShardedLock::new(Default::default());
+    static ref GLOBAL_RESOURCE_MAP: ShardedLock<SharedResourceMap> = ShardedLock::new(Default::default());
+    static ref GLOBAL_KEYED_RESOURCES: KeyedResourceMap = KeyedResourceMap::new();
 }
 
 thread_local! {
@@ -32,6 +175,10 @@ impl<T> Deref for Resource<T> {
         unsafe { self.ptr.as_ref().expect("resource lost") }
     }
 }
+
+unsafe impl<T: Send> Send for Resource<T> {}
+
+unsafe impl<T: Send + Sync> Sync for Resource<T> {}
 
 pub struct ResourceMut<T> {
     ptr: *mut T,
@@ -127,18 +274,43 @@ pub fn set_global_resource<T: Any + Send + Sync>(res: T) {
     store.insert(type_id, Box::new(res));
 }
 
-pub fn add_global_resource<T: Any + Send + Sync>(key: String, res: T) {
-    let mut store = GLOBAL_KEYED_RESOURCES
-        .write()
-        .expect("global resource write lock poisoned");
-    store.insert(key, Box::new(res));
+pub fn add_global_resource<T: Any + Send + Sync>(key: String, res: T) -> Option<(String, T)> {
+    GLOBAL_KEYED_RESOURCES.add_resource(key, res)
 }
 
-pub struct PartitionedResource<T> {
+pub fn get_global_resource<T: Any + Send + Sync>(key: &str) -> Option<ArcRef<'static, T>> {
+    GLOBAL_KEYED_RESOURCES.get_resource(key)
+}
+
+pub fn remove_global_resource(key: &str) {
+    GLOBAL_KEYED_RESOURCES.remove_resource(key)
+}
+
+pub trait PartitionedResource {
+    type Res: Send + 'static;
+
+    fn get_resource(&self, par: usize) -> Option<&Self::Res>;
+
+    fn take_resource(&mut self, par: usize) -> Option<Self::Res>;
+}
+
+impl<T: ?Sized + Send + Sync + 'static> PartitionedResource for std::sync::Arc<T> {
+    type Res = std::sync::Arc<T>;
+
+    fn get_resource(&self, _par: usize) -> Option<&Self::Res> {
+        Some(&self)
+    }
+
+    fn take_resource(&mut self, _par: usize) -> Option<Self::Res> {
+        Some(self.clone())
+    }
+}
+
+pub struct DefaultParResource<T> {
     partitions: Vec<Option<T>>,
 }
 
-impl<T> PartitionedResource<T> {
+impl<T> DefaultParResource<T> {
     pub fn new(conf: &JobConf, res: Vec<T>) -> Result<Self, Vec<T>> {
         if res.len() as u32 != conf.workers {
             Err(res)
@@ -147,14 +319,86 @@ impl<T> PartitionedResource<T> {
             for r in res {
                 partitions.push(Some(r));
             }
-            let pr = PartitionedResource { partitions };
+            let pr = DefaultParResource { partitions };
             Ok(pr)
         }
     }
+}
 
-    pub(crate) fn take_partition_of(&mut self, index: usize) -> Option<T> {
-        if index < self.partitions.len() {
-            self.partitions[index].take()
+impl<T: Send + Sync + 'static> PartitionedResource for DefaultParResource<T> {
+    type Res = T;
+
+    fn get_resource(&self, par: usize) -> Option<&Self::Res> {
+        if par < self.partitions.len() {
+            self.partitions[par].as_ref()
+        } else {
+            None
+        }
+    }
+
+    fn take_resource(&mut self, par: usize) -> Option<Self::Res> {
+        if par < self.partitions.len() {
+            self.partitions[par].take()
+        } else {
+            None
+        }
+    }
+}
+
+pub struct DistributedParResource<T> {
+    partitions: Vec<Option<T>>,
+    start_index: usize,
+}
+
+impl<T> DistributedParResource<T> {
+    pub fn new(conf: &JobConf, res: Vec<T>) -> Result<Self, Vec<T>> {
+        if res.len() as u32 != conf.workers {
+            Err(res)
+        } else {
+            let mut partitions = Vec::with_capacity(res.len());
+            for r in res {
+                partitions.push(Some(r));
+            }
+            let server_conf = conf.servers();
+            let servers = match server_conf {
+                ServerConf::Local => vec![0],
+                ServerConf::Partial(ids) => ids.clone(),
+                ServerConf::All => crate::get_servers(),
+            };
+            let mut start_index = 0 as usize;
+            if !servers.is_empty() && (servers.len() > 1) {
+                if let Some(my_id) = crate::server_id() {
+                    let mut my_index = -1;
+                    for (index, id) in servers.iter().enumerate() {
+                        if *id == my_id {
+                            my_index = index as i64;
+                        }
+                    }
+                    if my_index >= 0 {
+                        start_index = (conf.workers * (my_index as u32)) as usize;
+                    }
+                }
+            }
+            let pr = DistributedParResource { partitions, start_index };
+            Ok(pr)
+        }
+    }
+}
+
+impl<T: Send + Sync + 'static> PartitionedResource for DistributedParResource<T> {
+    type Res = T;
+
+    fn get_resource(&self, par: usize) -> Option<&Self::Res> {
+        if par >= self.start_index && par < self.start_index + self.partitions.len() {
+            self.partitions[par - self.start_index].as_ref()
+        } else {
+            None
+        }
+    }
+
+    fn take_resource(&mut self, par: usize) -> Option<Self::Res> {
+        if par >= self.start_index && par < self.start_index + self.partitions.len() {
+            self.partitions[par - self.start_index].take()
         } else {
             None
         }

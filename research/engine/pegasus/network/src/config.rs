@@ -32,8 +32,17 @@ pub enum BlockMode {
     Nonblocking,
 }
 
+impl BlockMode {
+    pub fn get_block_timeout_ms(&self) -> usize {
+        match self {
+            BlockMode::Blocking(Some(d)) => d.as_millis() as usize,
+            BlockMode::Blocking(None) | BlockMode::Nonblocking => 0,
+        }
+    }
+}
+
 #[derive(Clone, Copy, Debug)]
-pub(crate) struct WriteParams {
+pub struct WriteParams {
     pub mode: BlockMode,
     pub buffer: usize,
     pub nodelay: bool,
@@ -54,7 +63,7 @@ impl Default for WriteParams {
 }
 
 #[derive(Clone, Copy, Debug)]
-pub(crate) struct ReadParams {
+pub struct ReadParams {
     pub mode: BlockMode,
     pub slab_size: usize,
 }
@@ -119,11 +128,11 @@ impl ConnectionParams {
         self.write.heartbeat = interval;
     }
 
-    pub(crate) fn get_write_params(&self) -> &WriteParams {
+    pub fn get_write_params(&self) -> &WriteParams {
         &self.write
     }
 
-    pub(crate) fn get_read_params(&self) -> &ReadParams {
+    pub fn get_read_params(&self) -> &ReadParams {
         &self.read
     }
 
@@ -132,6 +141,7 @@ impl ConnectionParams {
     }
 }
 
+/// Check "../server/config/server_config.toml" for configuration descriptions;
 #[derive(Debug, Deserialize)]
 pub struct NetworkConfig {
     pub server_id: u64,
@@ -154,10 +164,7 @@ pub struct ServerAddr {
 
 impl ServerAddr {
     pub fn new(ip: String, port: u16) -> Self {
-        ServerAddr {
-            ip,
-            port
-        }
+        ServerAddr { ip, port }
     }
 
     pub fn get_ip(&self) -> &str {
@@ -184,7 +191,12 @@ impl NetworkConfig {
             servers[server_id as usize] = Some(addr);
             Some(servers)
         } else {
-            assert!((server_id as usize) < servers_size, "index out of bound, server_id({}) can't larger than server_size({})", server_id, servers_size);
+            assert!(
+                (server_id as usize) < servers_size,
+                "index out of bound, server_id({}) can't larger than server_size({})",
+                server_id,
+                servers_size
+            );
             None
         };
         NetworkConfig {
@@ -197,11 +209,11 @@ impl NetworkConfig {
             no_delay: None,
             send_buffer: None,
             heartbeat_sec: None,
-            servers
+            servers,
         }
     }
 
-    pub fn with(server_id: u64,  addrs: Vec<ServerAddr>) -> Self {
+    pub fn with(server_id: u64, addrs: Vec<ServerAddr>) -> Self {
         let servers_size = addrs.len();
         let servers = if servers_size > 0 {
             let mut servers = Vec::with_capacity(servers_size);
@@ -210,7 +222,12 @@ impl NetworkConfig {
             }
             Some(servers)
         } else {
-            assert!((server_id as usize) < servers_size, "index out of bound, server_id({}) can't larger than server_size({})", server_id, servers_size);
+            assert!(
+                (server_id as usize) < servers_size,
+                "index out of bound, server_id({}) can't larger than server_size({})",
+                server_id,
+                servers_size
+            );
             None
         };
         NetworkConfig {
@@ -223,7 +240,7 @@ impl NetworkConfig {
             no_delay: None,
             send_buffer: None,
             heartbeat_sec: None,
-            servers
+            servers,
         }
     }
 
@@ -236,7 +253,7 @@ impl NetworkConfig {
             Some(true) => {
                 self.set_nonblocking();
             }
-            _ => ()
+            _ => (),
         }
         self
     }
@@ -282,13 +299,12 @@ impl NetworkConfig {
         self
     }
 
-
     pub fn no_delay(&mut self, v: Option<bool>) -> &mut Self {
         match v {
             Some(true) => {
                 self.set_no_delay();
-            },
-            _ => ()
+            }
+            _ => (),
         }
         self
     }
@@ -324,10 +340,13 @@ impl NetworkConfig {
 
     pub fn set_server_addr(&mut self, server_id: u64, addr: ServerAddr) -> Result<&mut Self, NetError> {
         if server_id as usize >= self.servers_size {
-            Err(NetError::InvalidConfig(Some(format!("invalid server_id({}) larger than server size {}", server_id, self.servers_size))))
+            Err(NetError::InvalidConfig(Some(format!(
+                "invalid server_id({}) larger than server size {}",
+                server_id, self.servers_size
+            ))))
         } else {
             if let Some(ref mut servers) = self.servers {
-               servers[server_id as usize] = Some(addr);
+                servers[server_id as usize] = Some(addr);
             } else {
                 unreachable!("servers is none while server size = {}", self.servers_size);
             }
@@ -400,12 +419,27 @@ impl NetworkConfig {
                     let server = Server { id: id as u64, addr };
                     servers.push(server);
                 } else {
-                    return Err(NetError::InvalidConfig(Some(format!("addredd of server {} not found", id))));
+                    return Err(NetError::InvalidConfig(Some(format!(
+                        "address of server {} not found",
+                        id
+                    ))));
                 }
             }
             Ok(Some(servers))
         } else {
             Ok(None)
+        }
+    }
+
+    pub fn get_server_addr(&self, server_id: u64) -> Option<&ServerAddr> {
+        if let Some(servers) = self.servers.as_ref() {
+            if server_id >= servers.len() as u64 {
+                None
+            } else {
+                servers[server_id as usize].as_ref()
+            }
+        } else {
+            None
         }
     }
 }
@@ -419,6 +453,7 @@ mod test {
     fn toml_config_test() {
         let content = r#"
             server_id = 0
+            servers_size = 2
             nonblocking = false
             read_timeout_ms = 8
             write_timeout_ms = 8

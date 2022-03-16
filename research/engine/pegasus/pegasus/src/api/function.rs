@@ -36,6 +36,10 @@ pub trait MapFunction<I, O>: Send + 'static {
     fn exec(&self, input: I) -> FnResult<O>;
 }
 
+pub trait FilterMapFunction<I, O>: Send + 'static {
+    fn exec(&self, input: I) -> FnResult<Option<O>>;
+}
+
 pub trait FlatMapFunction<I, O>: Send + 'static {
     type Target: Iterator<Item = O> + Send + 'static;
 
@@ -78,6 +82,12 @@ mod box_impl {
 
     impl<I, O, M: MapFunction<I, O> + ?Sized> MapFunction<I, O> for Box<M> {
         fn exec(&self, input: I) -> FnResult<O> {
+            (**self).exec(input)
+        }
+    }
+
+    impl<I, O, M: FilterMapFunction<I, O> + ?Sized> FilterMapFunction<I, O> for Box<M> {
+        fn exec(&self, input: I) -> FnResult<Option<O>> {
             (**self).exec(input)
         }
     }
