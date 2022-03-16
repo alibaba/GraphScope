@@ -27,11 +27,11 @@
 #include "grape/communication/communicator.h"
 #include "grape/fragment/basic_fragment_mutator.h"
 #include "grape/fragment/csr_edgecut_fragment_base.h"
+#include "grape/graph/mutable_csr.h"
 #include "grape/util.h"
 #include "grape/utils/bitset.h"
 #include "grape/utils/vertex_set.h"
 
-#include "core/fragment/de_mutable_csr.h"
 #include "core/object/dynamic.h"
 #include "core/utils/partitioner.h"
 #include "proto/graphscope/proto/types.pb.h"
@@ -56,8 +56,8 @@ struct DynamicFragmentTraits {
       grape::FilterConstAdjList<vid_t, edata_t,
                                 std::function<bool(const nbr_t&)>>;
 
-  using csr_t = grape::DeMutableCSR<vid_t, nbr_t>;
-  using csr_builder_t = grape::DeMutableCSRBuilder<vid_t, nbr_t>;
+  using csr_t = grape::MutableCSR<vid_t, nbr_t>;
+  using csr_builder_t = grape::MutableCSRBuilder<vid_t, nbr_t>;
   using mirror_vertices_t = std::vector<grape::Vertex<vid_t>>;
 };
 
@@ -80,6 +80,8 @@ class DynamicFragment
 
   static constexpr grape::LoadStrategy load_strategy =
       grape::LoadStrategy::kOnlyOut;
+
+  static constexpr double dense_threshold = 0.003;
 
   using vertex_map_t = typename traits_t::vertex_map_t;
   using partitioner_t = typename vertex_map_t::partitioner_t;
@@ -218,20 +220,18 @@ class DynamicFragment
       std::set<vertex_t> sparse_set;
       for (auto gid : mutation.vertices_to_remove) {
         if (Gid2Vertex(gid, v)) {
-          if (load_strategy_ == grape::LoadStrategy::kBothOutIn) {
-            ie_.remove_vertex(v.GetValue());
-          }
-          oe_.remove_vertex(v.GetValue());
-          sparse_set.insert(v);
-
-          // remove vertex
-          if (IsInnerVertex(v)) {
+          if (IsInnerVertex(v) && IsAliveInnerVertex(v)) {
+            if (load_strategy_ == grape::LoadStrategy::kBothOutIn) {
+              ie_.remove_vertex(v.GetValue());
+            }
+            oe_.remove_vertex(v.GetValue());
             iv_alive_.reset_bit(v.GetValue());
             --alive_ivnum_;
+            is_selfloops_.reset_bit(v.GetValue());
           } else {
             ov_alive_.reset_bit(outerVertexLidToIndex(v.GetValue()));
-            --alive_ovnum_;
           }
+          sparse_set.insert(v);
         }
       }
       if (!sparse_set.empty()) {
@@ -247,21 +247,18 @@ class DynamicFragment
       grape::DenseVertexSet<vertices_t> dense_bitset(Vertices());
       for (auto gid : mutation.vertices_to_remove) {
         if (Gid2Vertex(gid, v)) {
-          if (load_strategy_ == grape::LoadStrategy::kBothOutIn) {
-            ie_.remove_vertex(v.GetValue());
-          }
-          oe_.remove_vertex(v.GetValue());
-          dense_bitset.Insert(v);
-
-          // remove vertex
           if (IsInnerVertex(v) && IsAliveInnerVertex(v)) {
+            if (load_strategy_ == grape::LoadStrategy::kBothOutIn) {
+              ie_.remove_vertex(v.GetValue());
+            }
+            oe_.remove_vertex(v.GetValue());
             iv_alive_.reset_bit(v.GetValue());
             --alive_ivnum_;
             is_selfloops_.reset_bit(v.GetValue());
           } else {
             ov_alive_.reset_bit(outerVertexLidToIndex(v.GetValue()));
-            --alive_ovnum_;
           }
+          dense_bitset.Insert(v);
         }
       }
       auto func = [&dense_bitset](vid_t i, const nbr_t& e) {
@@ -275,35 +272,12 @@ class DynamicFragment
       }
     }
     if (!mutation.edges_to_remove.empty()) {
-      static constexpr vid_t sentinel = std::numeric_limits<vid_t>::max();
-      for (auto& e : mutation.edges_to_remove) {
-        if (!(Gid2Lid(e.first, e.first) && Gid2Lid(e.second, e.second))) {
-          e.first = sentinel;
-        }
-        if (e.first == e.second) {
-          this->is_selfloops_.reset_bit(e.first);
-        }
-      }
-      if (load_strategy_ == grape::LoadStrategy::kBothOutIn) {
-        ie_.remove_reversed_edges(mutation.edges_to_remove);
-      }
-      oe_.remove_edges(mutation.edges_to_remove);
+      removeEdges(mutation.edges_to_remove);
     }
     if (!mutation.edges_to_update.empty()) {
-      static constexpr vid_t sentinel = std::numeric_limits<vid_t>::max();
-      for (auto& e : mutation.edges_to_update) {
-        if (!(Gid2Lid(e.src, e.src) && Gid2Lid(e.dst, e.dst))) {
-          e.src = sentinel;
-        }
-      }
-      if (load_strategy_ == grape::LoadStrategy::kBothOutIn) {
-        ie_.update_reversed_edges(mutation.edges_to_update);
-      }
-      oe_.update_edges(mutation.edges_to_update);
+      updateEdges(mutation.edges_to_update);
     }
     {
-      vid_t ivnum = this->GetInnerVerticesNum();
-      vid_t ovnum = this->GetOuterVerticesNum();
       auto& edges_to_add = mutation.edges_to_add;
       static constexpr vid_t invalid_vid = std::numeric_limits<vid_t>::max();
       for (auto& e : edges_to_add) {
@@ -326,34 +300,15 @@ class DynamicFragment
       vid_t new_ivnum = vm_ptr_->GetInnerVertexSize(fid_);
       vid_t new_ovnum = ovgid_.size();
       is_selfloops_.resize(new_ivnum);
-      // reserve edges
-      ie_.add_vertices(new_ivnum - ivnum, new_ovnum - ovnum);
-      oe_.add_vertices(new_ivnum - ivnum, new_ovnum - ovnum);
+      ie_.reserve_vertices(new_ivnum);
+      oe_.reserve_vertices(new_ivnum);
       this->ivnum_ = new_ivnum;
       if (ovnum_ != new_ovnum) {
         ovnum_ = new_ovnum;
         initOuterVerticesOfFragment();
       }
       if (!edges_to_add.empty()) {
-        if (load_strategy_ == grape::LoadStrategy::kBothOutIn) {
-          oe_.reserve_forward_edges(edges_to_add);
-          ie_.reserve_reversed_edges(edges_to_add);
-        } else {
-          oe_.reserve_edges(edges_to_add);
-        }
-        double rate = 0;
-        if (directed_) {
-          rate = static_cast<double>(edges_to_add.size()) /
-                 static_cast<double>(oe_.edge_num());
-        } else {
-          rate = 2.0 * static_cast<double>(edges_to_add.size()) /
-                 static_cast<double>(oe_.edge_num());
-        }
-        if (rate < oe_.dense_threshold) {
-          addEdgesSparse(edges_to_add);
-        } else {
-          addEdgesDense(edges_to_add);
-        }
+        addEdges(edges_to_add);
       }
 
       this->inner_vertices_.SetRange(0, new_ivnum);
@@ -367,6 +322,7 @@ class DynamicFragment
     ovdata_.resize(this->ovnum_);
     iv_alive_.resize(this->ivnum_);
     ov_alive_.resize(this->ovnum_);
+    alive_ovnum_ = this->ovnum_;
     for (auto& v : mutation.vertices_to_add) {
       vid_t lid;
       if (IsInnerVertexGid(v.vid)) {
@@ -382,7 +338,6 @@ class DynamicFragment
           ovdata_[index] = std::move(v.vdata);
           if (ov_alive_.get_bit(index) == false) {
             ov_alive_.set_bit(index);
-            ++alive_ovnum_;
           }
         }
       }
@@ -508,13 +463,49 @@ class DynamicFragment
     copyVertices(source);
 
     // copy edges
+    ie_.reserve_vertices(ivnum_);
+    oe_.reserve_vertices(ivnum_);
     if (copy_type == "identical") {
-      ie_.copy_from(source->ie_);
-      oe_.copy_from(source->oe_);
+      std::vector<int> oe_degree_to_add(ivnum_, 0), ie_degree_to_add(ivnum_, 0);
+      for (vid_t i = 0; i < ivnum_; ++i) {
+        oe_degree_to_add[i] = source->oe_.degree(i);
+        ie_degree_to_add[i] = source->ie_.degree(i);
+      }
+      ie_.reserve_edges_dense(ie_degree_to_add);
+      oe_.reserve_edges_dense(oe_degree_to_add);
+      for (vid_t i = 0; i < ivnum_; ++i) {
+        auto ie_begin = source->ie_.get_begin(i);
+        auto ie_end = source->ie_.get_end(i);
+        auto oe_begin = source->oe_.get_begin(i);
+        auto oe_end = source->oe_.get_end(i);
+        for (auto iter = ie_begin; iter != ie_end; ++iter) {
+          ie_.put_edge(i, *iter);
+        }
+        for (auto iter = oe_begin; iter != oe_end; ++iter) {
+          oe_.put_edge(i, *iter);
+        }
+      }
     } else if (copy_type == "reverse") {
       assert(directed_);
-      ie_.copy_from(source->oe_);
-      oe_.copy_from(source->ie_);
+      std::vector<int> oe_degree_to_add(ivnum_, 0), ie_degree_to_add(ivnum_, 0);
+      for (vid_t i = 0; i < ivnum_; ++i) {
+        oe_degree_to_add[i] = source->ie_.degree(i);
+        ie_degree_to_add[i] = source->oe_.degree(i);
+      }
+      ie_.reserve_edges_dense(ie_degree_to_add);
+      oe_.reserve_edges_dense(oe_degree_to_add);
+      for (vid_t i = 0; i < ivnum_; ++i) {
+        auto ie_begin = source->ie_.get_begin(i);
+        auto ie_end = source->ie_.get_end(i);
+        auto oe_begin = source->oe_.get_begin(i);
+        auto oe_end = source->oe_.get_end(i);
+        for (auto iter = oe_begin; iter != oe_end; ++iter) {
+          ie_.put_edge(i, *iter);
+        }
+        for (auto iter = ie_begin; iter != ie_end; ++iter) {
+          oe_.put_edge(i, *iter);
+        }
+      }
     } else {
       LOG(ERROR) << "Unsupported copy type: " << copy_type;
     }
@@ -527,20 +518,30 @@ class DynamicFragment
     load_strategy_ = grape::LoadStrategy::kBothOutIn;
     copyVertices(source);
 
-    ie_.copy_from(source->oe_);
-    oe_.copy_from(source->oe_);
+    ie_.reserve_vertices(ivnum_);
+    oe_.reserve_vertices(ivnum_);
+    std::vector<int> degree_to_add(ivnum_, 0);
+    for (vid_t i = 0; i < ivnum_; ++i) {
+      degree_to_add[i] = source->oe_.degree(i);
+    }
+    ie_.reserve_edges_dense(degree_to_add);
+    oe_.reserve_edges_dense(degree_to_add);
+    for (vid_t i = 0; i < ivnum_; ++i) {
+      auto begin = source->oe_.get_begin(i);
+      auto end = source->oe_.get_end(i);
+      for (auto iter = begin; iter != end; ++iter) {
+        ie_.put_edge(i, *iter);
+        oe_.put_edge(i, *iter);
+      }
+    }
   }
 
   // generate undirected graph from original directed graph.
   void ToUndirectedFrom(std::shared_ptr<DynamicFragment> source) {
     assert(source->directed_);
     init(source->fid_, false);
-    ie_.Init(0, 0);
-    oe_.Init(0, 0);
     load_strategy_ = grape::LoadStrategy::kOnlyOut;
     copyVertices(source);
-    ie_.add_vertices(ivnum_, ovnum_);
-    oe_.add_vertices(ivnum_, ovnum_);
 
     mutation_t mutation;
     vid_t gid;
@@ -596,19 +597,15 @@ class DynamicFragment
       vid_t ulid, vlid;
       if (IsInnerVertexGid(uid) && InnerVertexGid2Lid(uid, ulid) &&
           Gid2Lid(vid, vlid) && iv_alive_.get_bit(ulid)) {
-        auto begin = oe_.get_begin(ulid);
-        auto end = oe_.get_end(ulid);
-        auto iter =
-            grape::mutable_csr_impl::binary_search_one(begin, end, vlid);
-        if (iter != end) {
+        auto iter = oe_.binary_find(ulid, vlid);
+        if (iter != oe_.get_end(ulid)) {
           return true;
         }
       } else if (IsInnerVertexGid(vid) && InnerVertexGid2Lid(vid, vlid) &&
                  Gid2Lid(uid, ulid) && iv_alive_.get_bit(vlid)) {
-        auto begin = directed_ ? ie_.get_begin(vlid) : oe_.get_begin(vlid);
+        auto iter = directed_ ? ie_.binary_find(vlid, ulid)
+                              : oe_.binary_find(vlid, ulid);
         auto end = directed_ ? ie_.get_end(vlid) : oe_.get_end(vlid);
-        auto iter =
-            grape::mutable_csr_impl::binary_search_one(begin, end, ulid);
         if (iter != end) {
           return true;
         }
@@ -624,20 +621,16 @@ class DynamicFragment
       vid_t ulid, vlid;
       if (IsInnerVertexGid(uid) && InnerVertexGid2Lid(uid, ulid) &&
           Gid2Lid(vid, vlid) && iv_alive_.get_bit(ulid)) {
-        auto begin = oe_.get_begin(ulid);
-        auto end = oe_.get_end(ulid);
-        auto iter =
-            grape::mutable_csr_impl::binary_search_one(begin, end, vlid);
-        if (iter != end) {
+        auto iter = oe_.binary_find(ulid, vlid);
+        if (iter != oe_.get_end(ulid)) {
           data = iter->data;
           return true;
         }
       } else if (IsInnerVertexGid(vid) && InnerVertexGid2Lid(vid, vlid) &&
                  Gid2Lid(uid, ulid) && iv_alive_.get_bit(vlid)) {
-        auto begin = directed_ ? ie_.get_begin(vlid) : oe_.get_begin(vlid);
+        auto iter = directed_ ? ie_.binary_find(vlid, ulid)
+                              : oe_.binary_find(vlid, ulid);
         auto end = directed_ ? ie_.get_end(vlid) : oe_.get_end(vlid);
-        auto iter =
-            grape::mutable_csr_impl::binary_search_one(begin, end, ulid);
         if (iter != end) {
           data = iter->data;
           return true;
@@ -649,6 +642,12 @@ class DynamicFragment
 
   inline bool IsAliveInnerVertex(const vertex_t& v) const {
     return iv_alive_.get_bit(v.GetValue());
+  }
+
+  inline bool IsAliveVertex(const vertex_t& v) const {
+    return IsInnerVertex(v)
+               ? iv_alive_.get_bit(v.GetValue())
+               : ov_alive_.get_bit(outerVertexLidToIndex(v.GetValue()));
   }
 
   auto CollectPropertyKeysOnVertices()
@@ -937,25 +936,165 @@ class DynamicFragment
     }
   }
 
+  void addEdges(std::vector<edge_t>& edges) {
+    double rate = 0;
+    if (directed_) {
+      rate = static_cast<double>(edges.size()) /
+             static_cast<double>(oe_.edge_num());
+    } else {
+      rate = 2.0 * static_cast<double>(edges.size()) /
+             static_cast<double>(oe_.edge_num());
+    }
+
+    if (rate < dense_threshold) {
+      addEdgesSparse(edges);
+    } else {
+      addEdgesDense(edges);
+    }
+  }
+
+  void addEdgesDense(std::vector<edge_t>& edges) {
+    static constexpr vid_t invalid_vid = std::numeric_limits<vid_t>::max();
+    if (load_strategy_ == grape::LoadStrategy::kBothOutIn) {
+      std::vector<int> oe_degree_to_add(ivnum_, 0), ie_degree_to_add(ivnum_, 0);
+      // reserve edges
+      for (auto& e : edges) {
+        if (e.src == invalid_vid) {
+          continue;
+        }
+        if (e.src < ivnum_) {
+          ++oe_degree_to_add[e.src];
+        }
+        if (e.dst < ivnum_) {
+          ++ie_degree_to_add[e.dst];
+        }
+      }
+      oe_.reserve_edges_dense(oe_degree_to_add);
+      ie_.reserve_edges_dense(ie_degree_to_add);
+
+      // add edges
+      std::fill(oe_degree_to_add.begin(), oe_degree_to_add.end(), 0);
+      std::fill(ie_degree_to_add.begin(), ie_degree_to_add.end(), 0);
+      for (auto& e : edges) {
+        if (updateOrAddEdgeOutIn(e)) {
+          if (e.src < ivnum_) {
+            ++oe_degree_to_add[e.src];
+          }
+          if (e.dst < ivnum_) {
+            ++ie_degree_to_add[e.dst];
+          }
+        }
+      }
+      oe_.sort_neighbors_dense(oe_degree_to_add);
+      ie_.sort_neighbors_dense(ie_degree_to_add);
+    } else {
+      std::vector<int> oe_degree_to_add(ivnum_, 0);
+      // reserve edges
+      for (auto& e : edges) {
+        if (e.src == invalid_vid) {
+          continue;
+        }
+        if (e.src < ivnum_) {
+          ++oe_degree_to_add[e.src];
+        }
+        if (e.dst < ivnum_) {
+          ++oe_degree_to_add[e.dst];
+        }
+      }
+      oe_.reserve_edges_dense(oe_degree_to_add);
+
+      // add edges
+      std::fill(oe_degree_to_add.begin(), oe_degree_to_add.end(), 0);
+      for (auto& e : edges) {
+        if (updateOrAddEdgeOut(e)) {
+          if (e.src < ivnum_) {
+            ++oe_degree_to_add[e.src];
+          }
+          if (e.dst < ivnum_ && e.src != e.dst) {
+            ++oe_degree_to_add[e.dst];
+          }
+        }
+      }
+      oe_.sort_neighbors_dense(oe_degree_to_add);
+    }
+  }
+
+  void addEdgesSparse(std::vector<edge_t>& edges) {
+    static constexpr vid_t invalid_vid = std::numeric_limits<vid_t>::max();
+    if (load_strategy_ == grape::LoadStrategy::kBothOutIn) {
+      std::map<vid_t, int> oe_degree_to_add, ie_degree_to_add;
+      // reserve edges
+      for (auto& e : edges) {
+        if (e.src == invalid_vid) {
+          continue;
+        }
+        if (e.src < ivnum_) {
+          ++oe_degree_to_add[e.src];
+        }
+        if (e.dst < ivnum_) {
+          ++ie_degree_to_add[e.dst];
+        }
+      }
+      oe_.reserve_edges_sparse(oe_degree_to_add);
+      ie_.reserve_edges_sparse(ie_degree_to_add);
+
+      // add edges
+      oe_degree_to_add.clear();
+      ie_degree_to_add.clear();
+      for (auto& e : edges) {
+        if (updateOrAddEdgeOutIn(e)) {
+          if (e.src < ivnum_) {
+            ++oe_degree_to_add[e.src];
+          }
+          if (e.dst < ivnum_) {
+            ++ie_degree_to_add[e.dst];
+          }
+        }
+      }
+      oe_.sort_neighbors_sparse(oe_degree_to_add);
+      ie_.sort_neighbors_sparse(ie_degree_to_add);
+    } else {
+      std::map<vid_t, int> oe_degree_to_add;
+      // reserve edges
+      for (auto& e : edges) {
+        if (e.src == invalid_vid) {
+          continue;
+        }
+        if (e.src < ivnum_) {
+          ++oe_degree_to_add[e.src];
+        }
+        if (e.dst < ivnum_) {
+          ++oe_degree_to_add[e.dst];
+        }
+      }
+      oe_.reserve_edges_sparse(oe_degree_to_add);
+
+      // add edges
+      oe_degree_to_add.clear();
+      for (auto& e : edges) {
+        if (updateOrAddEdgeOut(e)) {
+          if (e.src < ivnum_) {
+            ++oe_degree_to_add[e.src];
+          }
+          if (e.dst < ivnum_ && e.src != e.dst) {
+            ++oe_degree_to_add[e.dst];
+          }
+        }
+      }
+      oe_.sort_neighbors_sparse(oe_degree_to_add);
+    }
+  }
+
   // Return true if add a new edge, otherwise false.
   bool updateOrAddEdgeOut(const edge_t& e) {
     bool ret = false;  // assume it just update existed edge.
     if (e.src < ivnum_) {
-      auto begin = oe_.get_begin(e.src);
-      auto end = oe_.get_end(e.src);
-      if (begin == end) {
-        oe_.add_edge(e);
+      auto iter = oe_.find(e.src, e.dst);
+      if (iter == oe_.get_end(e.src)) {
+        oe_.put_edge(e.src, nbr_t(e.dst, e.edata));
         ret = true;
       } else {
-        auto iter = std::find_if(begin, end, [&e](const auto& val) {
-          return val.neighbor.GetValue() == e.dst;
-        });
-        if (iter != end) {
-          iter->data.Update(e.edata);
-        } else {
-          oe_.add_edge(e);
-          ret = true;
-        }
+        iter->data.Update(e.edata);
       }
       if (ret && e.src == e.dst) {
         is_selfloops_.set_bit(e.src);
@@ -964,21 +1103,12 @@ class DynamicFragment
     }
 
     if (e.dst < ivnum_) {
-      auto begin = oe_.get_begin(e.dst);
-      auto end = oe_.get_end(e.dst);
-      if (begin == end) {
-        oe_.add_reversed_edge(e);
+      auto iter = oe_.find(e.dst, e.src);
+      if (iter == oe_.get_end(e.dst)) {
+        oe_.put_edge(e.dst, nbr_t(e.src, e.edata));
         ret = true;
       } else {
-        auto iter = std::find_if(begin, end, [&e](const auto& val) {
-          return val.neighbor.GetValue() == e.src;
-        });
-        if (iter != end) {
-          iter->data.Update(e.edata);
-        } else {
-          oe_.add_reversed_edge(e);
-          ret = true;
-        }
+        iter->data.Update(e.edata);
       }
     }
     return ret;
@@ -988,23 +1118,12 @@ class DynamicFragment
   bool updateOrAddEdgeOutIn(const edge_t& e) {
     bool ret = false;  // assume it just update existed edge.
     if (e.src < ivnum_) {
-      // src is inner vertex.
-      auto begin = oe_.get_begin(e.src);
-      auto end = oe_.get_end(e.src);
-      if (begin == end) {
-        oe_.add_edge(e);
+      auto iter = oe_.find(e.src, e.dst);
+      if (iter == oe_.get_end(e.src)) {
+        oe_.put_edge(e.src, nbr_t(e.dst, e.edata));
         ret = true;
       } else {
-        auto iter = std::find_if(begin, end, [&e](const auto& val) {
-          return val.neighbor.GetValue() == e.dst;
-        });
-        if (iter != end) {
-          // edge existed, update it.
-          iter->data.Update(e.edata);
-        } else {
-          oe_.add_edge(e);
-          ret = true;
-        }
+        iter->data.Update(e.edata);
       }
       if (ret && e.src == e.dst) {
         is_selfloops_.set_bit(e.src);
@@ -1012,94 +1131,95 @@ class DynamicFragment
     }
 
     if (e.dst < ivnum_) {
-      // dst is the inner vertex;
-      auto begin = ie_.get_begin(e.dst);
-      auto end = ie_.get_end(e.dst);
-      if (begin == end) {
-        ie_.add_reversed_edge(e);
+      auto iter = ie_.find(e.dst, e.src);
+      if (iter == ie_.get_end(e.dst)) {
+        ie_.put_edge(e.dst, nbr_t(e.src, e.edata));
         ret = true;
       } else {
-        auto iter = std::find_if(begin, end, [&e](const auto& val) {
-          return val.neighbor.GetValue() == e.src;
-        });
-        if (iter != end) {
-          iter->data.Update(e.edata);
-        } else {
-          ie_.add_reversed_edge(e);
-          ret = true;
-        }
+        iter->data.Update(e.edata);
       }
     }
     return ret;
   }
 
-  void addEdgesDense(std::vector<edge_t>& edges) {
+  void removeEdges(std::vector<std::pair<vid_t, vid_t>>& edges) {
     if (load_strategy_ == grape::LoadStrategy::kBothOutIn) {
-      std::vector<int> oe_head_degree_to_add(oe_.head_vertex_num(), 0),
-          ie_head_degree_to_add(ie_.head_vertex_num(), 0), dummy_tail_degree;
+      std::vector<bool> oe_modified(ivnum_, false), ie_modified(ivnum_, false);
       for (auto& e : edges) {
-        if (updateOrAddEdgeOutIn(e)) {
-          if (e.src < ivnum_) {
-            ++oe_head_degree_to_add[oe_.head_index(e.src)];
-          }
-          if (e.dst < ivnum_) {
-            ++ie_head_degree_to_add[ie_.head_index(e.dst)];
-          }
+        if (!(Gid2Lid(e.first, e.first) && Gid2Lid(e.second, e.second))) {
+          continue;
+        }
+        if (e.first == e.second) {
+          this->is_selfloops_.reset_bit(e.first);
+        }
+        if (e.first < ivnum_) {
+          oe_modified[e.first] =
+              oe_.remove_with_tomb(e.first, e.second) || oe_modified[e.first];
+        }
+        if (e.second < ivnum_) {
+          ie_modified[e.second] =
+              ie_.remove_with_tomb(e.second, e.first) || ie_modified[e.second];
         }
       }
-      oe_.dedup_or_sort_neighbors_dense(oe_head_degree_to_add,
-                                        dummy_tail_degree);
-      ie_.dedup_or_sort_neighbors_dense(ie_head_degree_to_add,
-                                        dummy_tail_degree);
+      for (vid_t i = 0; i < ivnum_; ++i) {
+        if (oe_modified[i]) {
+          oe_.remove_tombs(i);
+        }
+        if (ie_modified[i]) {
+          ie_.remove_tombs(i);
+        }
+      }
     } else {
-      std::vector<int> oe_head_degree_to_add(ivnum_, 0), dummy_tail_degree;
+      std::vector<bool> oe_modified(ivnum_, false);
       for (auto& e : edges) {
-        if (updateOrAddEdgeOut(e)) {
-          if (e.src < ivnum_) {
-            ++oe_head_degree_to_add[oe_.head_index(e.src)];
-          }
-          if (e.dst < ivnum_ && e.src != e.dst) {
-            ++oe_head_degree_to_add[oe_.head_index(e.dst)];
-          }
+        if (!(Gid2Lid(e.first, e.first) && Gid2Lid(e.second, e.second))) {
+          continue;
+        }
+        if (e.first == e.second) {
+          this->is_selfloops_.reset_bit(e.first);
+        }
+        if (e.first < ivnum_) {
+          oe_modified[e.first] =
+              oe_.remove_with_tomb(e.first, e.second) || oe_modified[e.first];
+        }
+        if (e.second < ivnum_ && e.first != e.second) {
+          oe_modified[e.second] =
+              oe_.remove_with_tomb(e.second, e.first) || oe_modified[e.second];
         }
       }
-      oe_.dedup_or_sort_neighbors_dense(oe_head_degree_to_add,
-                                        dummy_tail_degree);
+      for (vid_t i = 0; i < ivnum_; ++i) {
+        if (oe_modified[i]) {
+          oe_.remove_tombs(i);
+        }
+      }
     }
   }
 
-  void addEdgesSparse(std::vector<edge_t>& edges) {
+  void updateEdges(std::vector<edge_t>& edges) {
     if (load_strategy_ == grape::LoadStrategy::kBothOutIn) {
-      std::map<vid_t, int> oe_head_degree_to_add, ie_head_degree_to_add,
-          dummy_tail_degree;
       for (auto& e : edges) {
-        if (updateOrAddEdgeOutIn(e)) {
-          if (e.src < ivnum_) {
-            ++oe_head_degree_to_add[oe_.head_index(e.src)];
-          }
-          if (e.dst < ivnum_) {
-            ++ie_head_degree_to_add[ie_.head_index(e.dst)];
-          }
+        if (!(Gid2Lid(e.src, e.src) && Gid2Lid(e.dst, e.dst))) {
+          continue;
+        }
+        if (e.src < ivnum_) {
+          oe_.update(e.src, e.dst, e.edata);
+        }
+        if (e.dst < ivnum_) {
+          ie_.update(e.dst, e.src, e.edata);
         }
       }
-      oe_.dedup_or_sort_neighbors_sparse(oe_head_degree_to_add,
-                                         dummy_tail_degree);
-      ie_.dedup_or_sort_neighbors_sparse(ie_head_degree_to_add,
-                                         dummy_tail_degree);
     } else {
-      std::map<vid_t, int> oe_head_degree_to_add, dummy_tail_degree;
       for (auto& e : edges) {
-        if (updateOrAddEdgeOut(e)) {
-          if (e.src < ivnum_) {
-            ++oe_head_degree_to_add[oe_.head_index(e.src)];
-          }
-          if (e.dst < ivnum_ && e.src != e.dst) {
-            ++oe_head_degree_to_add[oe_.head_index(e.dst)];
-          }
+        if (!(Gid2Lid(e.src, e.src) && Gid2Lid(e.dst, e.dst))) {
+          continue;
+        }
+        if (e.src < ivnum_) {
+          oe_.update(e.src, e.dst, e.edata);
+        }
+        if (e.dst < ivnum_ && e.src != e.dst) {
+          oe_.update(e.dst, e.src, e.edata);
         }
       }
-      oe_.dedup_or_sort_neighbors_sparse(oe_head_degree_to_add,
-                                         dummy_tail_degree);
     }
   }
 
@@ -1352,16 +1472,10 @@ class DynamicFragmentMutator {
       } else if (modify_type == rpc::NX_DEL_EDGES) {
         if (src_fid == fid || dst_fid == fid) {
           mutation.edges_to_remove.emplace_back(src_gid, dst_gid);
-          if (!fragment_->directed() && src_gid != dst_gid) {
-            mutation.edges_to_remove.emplace_back(dst_gid, src_gid);
-          }
         }
       } else if (modify_type == rpc::NX_UPDATE_EDGES) {
         if (src_fid == fid || dst_fid == fid) {
           mutation.edges_to_update.emplace_back(src_gid, dst_gid, e_data);
-          if (!fragment_->directed()) {
-            mutation.edges_to_update.emplace_back(dst_gid, src_gid, e_data);
-          }
         }
       }
     }
