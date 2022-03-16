@@ -1,0 +1,70 @@
+name: GraphScope GAIA CI
+
+on:
+  # Trigger the workflow on push or pull request, but only for the main branch
+  push:
+    branches:
+      - main
+    paths:
+      - 'research/gaia/**'
+      - '.github/workflows/gaia.yml'
+      - '!research/gaia/**.md'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'research/gaia/**'
+      - '.github/workflows/gaia.yml'
+      - '!research/gaia/**.md'
+
+jobs:
+  gaia-test:
+    runs-on: ubuntu-20.04
+    if: false
+    defaults:
+      run:
+        shell: bash --noprofile --norc -eo pipefail {0}
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+
+    - name: Install Dependencies
+      run: |
+        # Due to an observation of changing hostname in github runners,
+        # append 127.0.0.1 to etc/hosts to avoid DNS lookup.
+        r=`cat /etc/hosts | grep $(hostname) || true`
+        if [ -z "${r}" ];then export hn=$(hostname); sudo -E bash -c 'echo "127.0.0.1 ${hn}" >> /etc/hosts'; fi
+        cat /etc/hosts
+
+        # install dependencies
+        ${GITHUB_WORKSPACE}/scripts/install_deps.sh --dev --verbose
+
+    - name: Build GraphScope
+      run: |
+        source ${HOME}/.graphscope_env
+        make BUILD_TYPE=debug
+
+    - name: Build MaxGraph Store
+      run: |
+        source ${HOME}/.graphscope_env
+        cd ${GITHUB_WORKSPACE}/interactive_engine
+        mvn clean install -DskipTests -Pv2
+
+    - name: Gaia test on MaxGraph Store
+      run: |
+        source ${HOME}/.graphscope_env
+        cd ${GITHUB_WORKSPACE}/interactive_engine/gaia-adaptor && ./gremlin_test.sh
+
+    - name: Run Backup Test on Maxgraph Store
+      run: |
+        source ${HOME}/.graphscope_env
+        cd ${GITHUB_WORKSPACE}/interactive_engine/sdk && ./backup_test.sh
+
+    - name: Gaia runtime test
+      run: |
+        source ${HOME}/.graphscope_env
+
+        cd ${GITHUB_WORKSPACE}/research/query_service/gremlin/gremlin_core/tests
+        sh prepare_all_test_plan.sh
+        cargo test
