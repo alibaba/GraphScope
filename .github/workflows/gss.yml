@@ -44,7 +44,8 @@ jobs:
     runs-on: self-hosted
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.3.19
+      # image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.3.19
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:mutable_rf2
     defaults:
       run:
         shell: bash --noprofile --norc -eo pipefail {0}
