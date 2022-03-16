@@ -107,7 +107,7 @@ class DynamicFragmentReporter : public grape::Communicator {
       return batchGetNodes(fragment, fid, lid);
     }
     default:
-      LOG(FATAL) << "Invalid report type";
+      LOG(ERROR) << "Invalid report type";
     }
     return std::string("");
   }
