@@ -706,7 +706,7 @@ def create_subgraph(graph, nodes=None, edges=None):
     Returns:
         Operation
     """
-    # check_argument(graph.graph_type == graph_def_pb2.DYNAMIC_PROPERTY)
+    check_argument(graph.graph_type == graph_def_pb2.DYNAMIC_PROPERTY)
     config = {
         types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
     }
