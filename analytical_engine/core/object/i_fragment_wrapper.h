@@ -49,8 +49,8 @@ class IFragmentWrapper : public GSObject {
       const grape::CommSpec& comm_spec, const std::string& dst_graph_name,
       const std::string& copy_type) = 0;
 
-  virtual bl::result<std::string> ReportGraph(const grape::CommSpec& comm_spec,
-                                              const rpc::GSParams& params) = 0;
+  virtual bl::result<std::unique_ptr<grape::InArchive>> ReportGraph(
+      const grape::CommSpec& comm_spec, const rpc::GSParams& params) = 0;
 
   virtual bl::result<std::shared_ptr<IFragmentWrapper>> ToDirected(
       const grape::CommSpec& comm_spec, const std::string& dst_graph_name) = 0;

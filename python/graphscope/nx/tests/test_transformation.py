@@ -366,10 +366,10 @@ class TestGraphTransformation(object):
         assert 618475290624 not in G2  # post node is (label, id) format
         assert ("post", 618475290624) in G
 
-    @pytest.mark.skipif(
-        os.environ.get("DEPLOYMENT", None) == "standalone",
-        reason="FIXME(weibin): ci runner failed",
-    )
+    # @pytest.mark.skipif(
+    #     os.environ.get("DEPLOYMENT", None) == "standalone",
+    #     reason="FIXME(weibin): ci runner failed",
+    # )
     def test_report_methods_on_copy_on_write_strategy(self):
         G = self.NXGraph(self.multi_label_g, default_label="person")
         assert G.graph_type == graph_def_pb2.ARROW_PROPERTY

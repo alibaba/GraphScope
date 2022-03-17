@@ -61,6 +61,12 @@ class OutArchive(object):
         block = self.get_block(size)
         return block
 
+    def get_bytes(self):
+        """Peek bytes"""
+        size = self.get_size()
+        byt = self.get_block(size).tobytes()
+        return byt
+
     def get_string(self):
         """Peek a string.
         Get string's length first (stored as a size_t), then get number of bytes
@@ -75,3 +81,21 @@ class OutArchive(object):
         size_of_int = struct.calcsize("i")
         i = struct.unpack("i", self.get_block(size_of_int))[0]
         return i
+
+    def get_uint64(self):
+        """Peek a uint64."""
+        size_of_uint64 = struct.calcsize("Q")
+        Q = struct.unpack("Q", self.get_block(size_of_uint64))[0]
+        return Q
+
+    def get_uint32(self):
+        """Peek a uint64."""
+        size_of_uint64 = struct.calcsize("I")
+        u = struct.unpack("I", self.get_block(size_of_uint64))[0]
+        return u
+
+    def get_bool(self):
+        """Peek a bool."""
+        size_of_bool = struct.calcsize("?")
+        b = struct.unpack("?", self.get_block(size_of_bool))[0]
+        return b

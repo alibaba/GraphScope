@@ -831,9 +831,7 @@ class Graph(GraphInterface):
 
     def loaded(self):
         """True if current graph has been loaded in the session."""
-        if self._session.info["status"] == "active" and self._key is not None:
-            return True
-        return False
+        return self._session.info["status"] == "active" and self._key is not None
 
     def __str__(self):
         v_str = "\n".join([f"VERTEX: {label}" for label in self._v_labels])

@@ -21,7 +21,6 @@
 
 from copy import deepcopy
 
-from networkx import freeze
 from networkx.classes.coreviews import AdjacencyView
 from networkx.classes.digraph import DiGraph as RefDiGraph
 from networkx.classes.reportviews import DiDegreeView
@@ -29,7 +28,6 @@ from networkx.classes.reportviews import InDegreeView
 from networkx.classes.reportviews import OutDegreeView
 
 from graphscope.client.session import get_session_by_id
-from graphscope.framework import dag_utils
 from graphscope.framework.dag_utils import copy_graph
 from graphscope.framework.errors import check_argument
 from graphscope.framework.graph_schema import GraphSchema
@@ -42,8 +40,6 @@ from graphscope.nx.convert import to_networkx_graph
 from graphscope.nx.utils.compat import patch_docstring
 from graphscope.nx.utils.misc import clear_cache
 from graphscope.nx.utils.misc import empty_graph_in_engine
-from graphscope.proto import graph_def_pb2
-from graphscope.proto import types_pb2
 
 
 class DiGraph(Graph):
@@ -248,11 +244,13 @@ class DiGraph(Graph):
         self.graph_attr_dict_factory = self.graph_attr_dict_factory
         self.node_dict_factory = self.node_dict_factory
         self.adjlist_dict_factory = self.adjlist_dict_factory
-
         self.graph = self.graph_attr_dict_factory()
+        self.cache = self.graph_cache_factory(self)
+
+        # init node and adj (must be after cache)
         self._node = self.node_dict_factory(self)
         self._adj = self.adjlist_dict_factory(self)
-        self._pred = self.adjlist_dict_factory(self, types_pb2.PREDS_BY_NODE)
+        self._pred = self.adjlist_dict_factory(self, pred=True)
         self._succ = self._adj
 
         self._key = None
@@ -292,6 +290,7 @@ class DiGraph(Graph):
         if incoming_graph_data is not None:
             if self._is_gs_graph(incoming_graph_data):
                 self._init_with_arrow_property_graph(incoming_graph_data)
+                self.cache.warmup()
             else:
                 g = to_networkx_graph(incoming_graph_data, create_using=self)
                 check_argument(isinstance(g, Graph))
@@ -504,5 +503,6 @@ class DiGraph(Graph):
             graph_def = op.eval()
             g._key = graph_def.key
             g._schema = deepcopy(self._schema)
+            g.cache.warmup()
         g._session = self._session
         return g

@@ -349,6 +349,7 @@ def report_graph(
     lid=None,
     key=None,
     label_id=None,
+    gid=None,
 ):
     """Create report operation for nx graph.
 
@@ -403,6 +404,8 @@ def report_graph(
         config[types_pb2.LID] = utils.i_to_attr(lid)
     if label_id is not None:
         config[types_pb2.V_LABEL_ID] = utils.i_to_attr(label_id)
+    if gid is not None:
+        config[types_pb2.GID] = utils.u_to_attr(gid)
 
     config[types_pb2.EDGE_KEY] = utils.s_to_attr(str(key) if key is not None else "")
     op = Operation(

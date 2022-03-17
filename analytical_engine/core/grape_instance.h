@@ -95,7 +95,8 @@ class GrapeInstance : public Subscriber {
 
   bl::result<void> unloadContext(const rpc::GSParams& params);
 
-  bl::result<std::string> reportGraph(const rpc::GSParams& params);
+  bl::result<std::shared_ptr<grape::InArchive>> reportGraph(
+      const rpc::GSParams& params);
 
   bl::result<rpc::graph::GraphDefPb> projectGraph(const rpc::GSParams& params);
 

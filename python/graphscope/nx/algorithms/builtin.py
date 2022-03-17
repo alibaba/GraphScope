@@ -172,8 +172,7 @@ def hits(G, max_iter=100, tol=1.0e-8, nstart=None, normalized=True):
     return _hits(G, max_iter, tol, normalized)
 
 
-def hits_scipy(G, max_iter=100, tol=1.0e-8, normalized=True):
-    return hits(G, max_iter=max_iter, tol=tol, normalized=normalized)
+hits_scipy = hits
 
 
 @context_to_dict
@@ -221,6 +220,9 @@ def eigenvector_centrality(G, max_iter=100, tol=1e-06, nstart=None, weight=None)
     if max_iter == 0:
         raise nx.PowerIterationFailedConvergence(max_iter)
     return _eigenvector_centrality(G, max_iter=max_iter, tol=tol, weight=weight)
+
+
+eigenvector_centrality_numpy = eigenvector_centrality
 
 
 @not_implemented_for("multigraph")

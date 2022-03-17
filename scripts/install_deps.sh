@@ -184,6 +184,7 @@ init_basic_packages() {
       python3-pip
       git
       rapidjson-dev
+      libmsgpack-dev
     )
   elif [[ "${PLATFORM}" == *"CentOS"* ]]; then
     BASIC_PACKGES_TO_INSTALL=(
@@ -221,6 +222,7 @@ init_basic_packages() {
       wget
       curl
       rapidjson-devel
+      msgpack-devel
     )
   else
     BASIC_PACKGES_TO_INSTALL=(
