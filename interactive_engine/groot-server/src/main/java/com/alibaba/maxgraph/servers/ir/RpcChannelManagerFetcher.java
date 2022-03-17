@@ -18,7 +18,7 @@ public class RpcChannelManagerFetcher implements RpcChannelFetcher {
         this.manager = manager;
         this.pegasusServerNum = pegasusServerNum;
         this.targetRole = targetRole;
-        manager.registerRole(this.targetRole);
+        this.manager.registerRole(this.targetRole);
     }
 
     @Override
