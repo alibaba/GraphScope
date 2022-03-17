@@ -19,31 +19,7 @@ GraphScope rely on some permissions to delete resources.
 
 ```shell
 # example for `default` ServiceAccount with `default` namespace
-$ cat role_and_binding.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  name: grole
-  namespace: default
-rules:
-- apiGroups: ["apps", "extensions", ""]
-  resources: ["configmaps", "deployments", "deployments/status", "endpoints", "events", "pods", "pods/log", "pods/exec", "pods/status", "services", "replicasets"]
-  verbs: ["*"]
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: grole-binding
-  namespace: default
-subjects:
-- kind: ServiceAccount
-  name: default
-  namespace: default
-roleRef:
-  kind: Role
-  name: grole
-  apiGroup: rbac.authorization.k8s.io
-
+$ wget https://raw.githubusercontent.com/alibaba/GraphScope/main/charts/role_and_binding.yaml
 $ kubectl create -f ./role_and_binding.yaml
 ```
 
