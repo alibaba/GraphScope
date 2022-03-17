@@ -7,6 +7,7 @@ from networkx.testing import almost_equal
 import graphscope.nx as nx
 
 
+@pytest.mark.skip(reason="DynamicFragment duplicated mode not ready.")
 @pytest.mark.usefixtures("graphscope_session")
 class TestClosenessCentrality:
     @classmethod

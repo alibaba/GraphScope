@@ -24,7 +24,6 @@ from networkx.testing.utils import assert_graphs_equal
 
 import graphscope
 import graphscope.nx as nx
-from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.loader import Loader
 from graphscope.nx import NetworkXError
 from graphscope.nx.tests.classes.test_digraph import TestDiGraph as _TestDiGraph
@@ -136,7 +135,7 @@ class TestGraphCopyOnWrite(_TestGraph):
         self.K3 = nx.Graph(self.k3, default_label="vertex")
 
     def test_update(self):
-        # specify both edgees and nodes
+        # specify both edges and nodes
         G = self.K3.copy()
         G.update(nodes=[3, (4, {"size": 2})], edges=[(4, 5), (6, 7, {"weight": 2})])
         nlist = [

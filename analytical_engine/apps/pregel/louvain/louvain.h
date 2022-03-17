@@ -37,7 +37,7 @@ namespace gs {
  *    and sends its information to its community hub.
  * 2. Each community hub re-calculates community totals and sends the updates
  *    to each community member.
- * repeate phase 1 process until a local maxima of the modularity attained.
+ * repeat phase 1 process until a local maxima of the modularity attained.
  * phase-2
  *  -2 Community hub calls its member to gather the community sigma tot.
  *  -1 Compress each community such that they are represented by one node.

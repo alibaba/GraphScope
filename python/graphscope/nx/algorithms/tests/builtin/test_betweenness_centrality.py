@@ -41,6 +41,7 @@ def weighted_G():
     return G
 
 
+@pytest.mark.skip(reason="DynamicFragment duplicated mode not ready.")
 @pytest.mark.usefixtures("graphscope_session")
 class TestBetweennessCentrality:
     def test_K5(self):
@@ -331,6 +332,7 @@ class TestBetweennessCentrality:
             assert almost_equal(b[n], b_answer[n])
 
 
+@pytest.mark.skip(reason="DynamicFragment duplicated mode not ready.")
 @pytest.mark.usefixtures("graphscope_session")
 class TestWeightedBetweennessCentrality:
     def test_K5(self):

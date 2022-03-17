@@ -35,12 +35,14 @@ from graphscope.framework.errors import check_argument
 from graphscope.framework.graph_schema import GraphSchema
 from graphscope.nx import NetworkXError
 from graphscope.nx.classes.graph import Graph
+from graphscope.nx.classes.graphviews import reverse_view
 from graphscope.nx.classes.reportviews import InEdgeView
 from graphscope.nx.classes.reportviews import OutEdgeView
 from graphscope.nx.convert import to_networkx_graph
 from graphscope.nx.utils.compat import patch_docstring
 from graphscope.nx.utils.misc import clear_cache
 from graphscope.nx.utils.misc import empty_graph_in_engine
+from graphscope.proto import graph_def_pb2
 from graphscope.proto import types_pb2
 
 
@@ -488,16 +490,11 @@ class DiGraph(Graph):
         self._convert_arrow_to_dynamic()
 
         if not copy:
-            g = self.__class__(create_empty_in_engine=False)
-            g.graph.update(self.graph)
-            op = dag_utils.create_graph_view(self, "reversed")
-            g._op = op
-            graph_def = op.eval()
-            g._key = graph_def.key
+            g = reverse_view(self)
+            g._op = self._op
+            g._key = self._key
             g._schema = deepcopy(self._schema)
-            g._graph = self
-            g._is_client_view = False
-            g = freeze(g)
+            g._is_client_view = True
         else:
             g = self.__class__(create_empty_in_engine=False)
             g.graph = self.graph

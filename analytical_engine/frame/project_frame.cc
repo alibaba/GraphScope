@@ -133,7 +133,7 @@ class ProjectSimpleFrame<
 #ifdef NETWORKX
 template <typename VDATA_T, typename EDATA_T>
 class ProjectSimpleFrame<gs::DynamicProjectedFragment<VDATA_T, EDATA_T>> {
-  using fragment_t = gs::DynamicFragment;
+  using fragment_t = DynamicFragment;
   using projected_fragment_t = gs::DynamicProjectedFragment<VDATA_T, EDATA_T>;
 
  public:

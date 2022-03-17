@@ -85,19 +85,21 @@ class WCCProjected : public AppBase<FRAG_T, WCCProjectedContext<FRAG_T>> {
 
       auto es = frag.GetOutgoingAdjList(v);
       for (auto& e : es) {
-        auto u = e.neighbor();
+        auto u = e.get_neighbor();
         if (ctx.comp_id[u] > cid) {
           ctx.comp_id[u] = cid;
           ctx.next_modified[u] = true;
         }
       }
 
-      es = frag.GetIncomingAdjList(v);
-      for (auto& e : es) {
-        auto u = e.neighbor();
-        if (ctx.comp_id[u] > cid) {
-          ctx.comp_id[u] = cid;
-          ctx.next_modified[u] = true;
+      if (frag.directed()) {
+        es = frag.GetIncomingAdjList(v);
+        for (auto& e : es) {
+          auto u = e.get_neighbor();
+          if (ctx.comp_id[u] > cid) {
+            ctx.comp_id[u] = cid;
+            ctx.next_modified[u] = true;
+          }
         }
       }
     }
@@ -144,19 +146,21 @@ class WCCProjected : public AppBase<FRAG_T, WCCProjectedContext<FRAG_T>> {
 
       auto es = frag.GetOutgoingAdjList(v);
       for (auto& e : es) {
-        auto u = e.neighbor();
+        auto u = e.get_neighbor();
         if (ctx.comp_id[u] > cid) {
           ctx.comp_id[u] = cid;
           ctx.next_modified[u] = true;
         }
       }
 
-      es = frag.GetIncomingAdjList(v);
-      for (auto& e : es) {
-        auto u = e.neighbor();
-        if (ctx.comp_id[u] > cid) {
-          ctx.comp_id[u] = cid;
-          ctx.next_modified[u] = true;
+      if (frag.directed()) {
+        es = frag.GetIncomingAdjList(v);
+        for (auto& e : es) {
+          auto u = e.get_neighbor();
+          if (ctx.comp_id[u] > cid) {
+            ctx.comp_id[u] = cid;
+            ctx.next_modified[u] = true;
+          }
         }
       }
     }

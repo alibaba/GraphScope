@@ -68,8 +68,8 @@ class SSSPPathContext : public TensorContext<FRAG_T, typename FRAG_T::oid_t> {
 
   oid_t source_id;
 
-  typename FRAG_T::template vertex_array_t<vertex_t> predecessor;
-  typename FRAG_T::template vertex_array_t<double> path_distance;
+  typename FRAG_T::template inner_vertex_array_t<vertex_t> predecessor;
+  typename FRAG_T::template inner_vertex_array_t<double> path_distance;
   grape::DenseVertexSet<typename FRAG_T::inner_vertices_t> curr_updated,
       prev_updated;
 

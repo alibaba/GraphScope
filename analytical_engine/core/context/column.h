@@ -57,7 +57,8 @@ class Column : public IColumn {
   using vid_t = typename fragment_t::vid_t;
   using vertex_t = typename fragment_t::vertex_t;
   using vertex_range_t = typename fragment_t::vertex_range_t;
-  using vertex_array_t = typename fragment_t::template vertex_array_t<DATA_T>;
+  using vertex_array_t =
+      typename fragment_t::template inner_vertex_array_t<DATA_T>;
   static_assert(std::is_pod<DATA_T>::value ||
                     std::is_same<DATA_T, std::string>::value,
                 "Unsupported data type in Column, expect POD value or string.");

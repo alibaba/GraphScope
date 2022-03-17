@@ -3,7 +3,7 @@
 #
 # This file reportviews.py is referred and derived from project NetworkX,
 #
-#  https://github.com/networkx/networkx/blob/master/networkx/classes/graph.py
+#  https://github.com/networkx/networkx/blob/master/networkx/classes/reportviews.py
 #
 # which has the following license:
 #

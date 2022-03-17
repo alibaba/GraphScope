@@ -39,7 +39,7 @@ class TestRunGenericPath:
             3.0: 1.0,
             4.0: float("inf"),
         }
-        RDG = self.DG.reverse(copy=False)
+        RDG = self.DG.reverse(copy=True)
         ret2 = nx.builtin.single_source_dijkstra_path_length(
             RDG, source=2, weight="weight"
         )
@@ -62,6 +62,7 @@ class TestRunGenericPath:
         )
         assert ret2 == {0.0: 1.0, 1.0: 1.0, 2.0: 0.0, 3.0: 1.0, 4.0: 2.0}
 
+    @pytest.mark.skip(reason="DynamicFragment duplicated mode not ready.")
     def test_all_pairs_shortest_path_length(self):
         cycle = nx.cycle_graph(7)
         pl = nx.builtin.all_pairs_shortest_path_length(cycle)

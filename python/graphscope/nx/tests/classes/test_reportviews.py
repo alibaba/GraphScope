@@ -86,6 +86,7 @@ class TestNodeView(_TestNodeView):
         pass
 
 
+@pytest.mark.usefixtures("graphscope_session")
 class TestNodeDataView(_TestNodeDataView):
     def setup_class(cls):
         cls.G = nx.path_graph(9)
@@ -161,6 +162,7 @@ class TestNodeDataView(_TestNodeDataView):
                 assert d == 1
 
 
+@pytest.mark.usefixtures("graphscope_session")
 class TestNodeViewSetOps(_TestNodeViewSetOps):
     @classmethod
     def setup_class(cls):
@@ -169,6 +171,7 @@ class TestNodeViewSetOps(_TestNodeViewSetOps):
         cls.nv = cls.G.nodes
 
 
+@pytest.mark.usefixtures("graphscope_session")
 class TestNodeDataViewSetOps(TestNodeViewSetOps):
     @classmethod
     def setup_class(cls):
@@ -193,6 +196,7 @@ class TestNodeDataViewDefaultSetOps(TestNodeDataViewSetOps):
 
 
 # Edges Data View
+@pytest.mark.usefixtures("graphscope_session")
 class TestEdgeDataView(_TestEdgeDataView):
     @classmethod
     def setup_class(cls):
@@ -209,6 +213,7 @@ class TestEdgeDataView(_TestEdgeDataView):
         pass
 
 
+@pytest.mark.usefixtures("graphscope_session")
 class TestOutEdgeDataView(_TestOutEdgeDataView):
     @classmethod
     def setup_class(cls):
@@ -225,6 +230,7 @@ class TestOutEdgeDataView(_TestOutEdgeDataView):
         pass
 
 
+@pytest.mark.usefixtures("graphscope_session")
 class TestInEdgeDataView(_TestInEdgeDataView):
     @classmethod
     def setup_class(cls):
@@ -251,6 +257,7 @@ class TestInEdgeDataView(_TestInEdgeDataView):
         pass
 
 
+@pytest.mark.usefixtures("graphscope_session")
 class TestEdgeView(_TestEdgeView):
     @classmethod
     def setup_class(cls):
@@ -311,6 +318,7 @@ class TestEdgeView(_TestEdgeView):
         pass
 
 
+@pytest.mark.usefixtures("graphscope_session")
 class TestOutEdgeView(_TestOutEdgeView):
     @classmethod
     def setup_class(cls):
@@ -339,6 +347,7 @@ class TestOutEdgeView(_TestOutEdgeView):
         pass
 
 
+@pytest.mark.usefixtures("graphscope_session")
 class TestInEdgeView(_TestInEdgeView):
     @classmethod
     def setup_class(cls):
@@ -374,6 +383,7 @@ class TestInEdgeView(_TestInEdgeView):
         pass
 
 
+@pytest.mark.usefixtures("graphscope_session")
 class TestDegreeView(_TestDegreeView):
     GRAPH = nx.Graph
     dview = networkx.reportviews.DegreeView
@@ -434,6 +444,7 @@ class TestDiDegreeView(TestDegreeView):
         assert repr(dv) in rep
 
 
+@pytest.mark.usefixtures("graphscope_session")
 class TestOutDegreeView(_TestOutDegreeView):
     GRAPH = nx.DiGraph
     dview = networkx.reportviews.OutDegreeView
@@ -481,6 +492,7 @@ class TestOutDegreeView(_TestOutDegreeView):
         pass
 
 
+@pytest.mark.usefixtures("graphscope_session")
 class TestInDegreeView(_TestInDegreeView):
     GRAPH = nx.DiGraph
     dview = networkx.reportviews.InDegreeView
