@@ -20,13 +20,13 @@ import com.alibaba.graphscope.common.client.HostsChannelFetcher;
 import com.alibaba.graphscope.common.client.RpcChannelFetcher;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FileLoadType;
-import com.alibaba.graphscope.common.store.ExperimentalStoreConfigs;
-import com.alibaba.graphscope.common.store.StoreConfigs;
+import com.alibaba.graphscope.common.store.ExperimentalMetaFetcher;
+import com.alibaba.graphscope.common.store.IrMetaFetcher;
 
 public class GraphServiceMain {
     public static void main(String[] args) throws Exception {
         Configs configs = new Configs("conf/ir.compiler.properties", FileLoadType.RELATIVE_PATH);
-        StoreConfigs storeConfigs = new ExperimentalStoreConfigs(configs);
+        IrMetaFetcher storeConfigs = new ExperimentalMetaFetcher(configs);
         RpcChannelFetcher fetcher = new HostsChannelFetcher(configs);
 
         IrGremlinServer server = new IrGremlinServer();

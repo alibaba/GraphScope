@@ -30,6 +30,7 @@ import com.alibaba.graphscope.common.client.*;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.PegasusConfig;
 import com.alibaba.graphscope.common.intermediate.InterOpCollection;
+import com.alibaba.graphscope.common.store.IrMetaFetcher;
 import com.alibaba.graphscope.gremlin.InterOpCollectionBuilder;
 import com.alibaba.graphscope.gremlin.Utils;
 import com.alibaba.graphscope.gremlin.plugin.script.AntlrToJavaScriptEngineFactory;
@@ -77,12 +78,14 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
     protected GraphTraversalSource g;
     protected Configs configs;
     protected RpcBroadcastProcessor broadcastProcessor;
+    protected IrMetaFetcher irMetaFetcher;
 
-    public IrStandardOpProcessor(Configs configs, RpcChannelFetcher fetcher) {
+    public IrStandardOpProcessor(Configs configs, IrMetaFetcher irMetaFetcher, RpcChannelFetcher fetcher) {
         this.graph = TinkerFactory.createModern();
         this.g = graph.traversal(IrCustomizedTraversalSource.class);
         this.configs = configs;
-        broadcastProcessor = new RpcBroadcastProcessor(fetcher);
+        this.irMetaFetcher = irMetaFetcher;
+        this.broadcastProcessor = new RpcBroadcastProcessor(fetcher);
     }
 
     @Override
@@ -165,6 +168,9 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                 .withResult(o -> {
                     try {
                         if (o != null && o instanceof Traversal) {
+                            // update the schema before the query is submitted
+                            irMetaFetcher.fetch();
+
                             InterOpCollection opCollection = (new InterOpCollectionBuilder((Traversal) o)).build();
                             IrPlan irPlan = opCollection.buildIrPlan();
 
@@ -172,10 +178,10 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                             byte[] physicalPlanBytes = irPlan.toPhysicalBytes(configs);
                             irPlan.close();
 
-                            int serverNum = PegasusConfig.PEGASUS_HOSTS.get(configs).split(",").length;
+                            String[] splits = PegasusConfig.PEGASUS_SERVERS.get(configs).split(",");
                             List<Long> servers = new ArrayList<>();
-                            for (long i = 0; i < serverNum; ++i) {
-                                servers.add(i);
+                            for (int i = 0; i < splits.length; ++i) {
+                                servers.add(Long.valueOf(splits[i]));
                             }
 
                             long jobId = JOB_ID_COUNTER.incrementAndGet();

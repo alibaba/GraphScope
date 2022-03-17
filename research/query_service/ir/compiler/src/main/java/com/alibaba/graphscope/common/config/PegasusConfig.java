@@ -34,5 +34,8 @@ public class PegasusConfig {
 
     public static final Config<String> PEGASUS_HOSTS =
             Config.stringConfig("pegasus.hosts", "localhost:8080");
+
+    public static final Config<String> PEGASUS_SERVERS =
+            Config.stringConfig("pegasus.servers", "0");
 }
 
