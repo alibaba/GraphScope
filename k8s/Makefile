@@ -40,7 +40,6 @@ else
 endif
 
 VERSION ?= latest
-# VINEYARD_VERSION ?= v0.3.19
 VINEYARD_VERSION ?= mutable_rf2
 PROFILE ?= release
 
