@@ -3,7 +3,7 @@ package com.alibaba.graphscope.ir.maxgraph;
 import com.alibaba.graphscope.common.client.RpcChannelFetcher;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.PegasusConfig;
-import com.alibaba.graphscope.common.store.StoreConfigs;
+import com.alibaba.graphscope.common.store.IrMetaFetcher;
 import com.alibaba.graphscope.gremlin.service.IrGremlinServer;
 import com.alibaba.maxgraph.common.cluster.InstanceConfig;
 import com.alibaba.maxgraph.common.rpc.RpcAddressFetcher;
@@ -18,14 +18,14 @@ public class IrGremlinServiceMain {
     public IrGremlinServiceMain(InstanceConfig instanceConfig) throws Exception {
         Configs configs = getConfigs(instanceConfig);
 
-        StoreConfigs storeConfigs = getStoreConfigs(instanceConfig);
+        IrMetaFetcher irMetaFetcher = getStoreConfigs(instanceConfig);
 
         ClientManager clientManager = new ClientManager(instanceConfig);
         RpcAddressFetcher addressFetcher = new ExecutorAddressFetcher(clientManager);
         RpcChannelFetcher channelFetcher = new RpcAddressChannelFetcher(addressFetcher);
 
-        IrGremlinServer gremlinServer = new IrGremlinServer();
-        gremlinServer.start(configs, storeConfigs, channelFetcher);
+        IrGremlinServer gremlinServer = new IrGremlinServer(instanceConfig.getGremlinServerPort());
+        gremlinServer.start(configs, irMetaFetcher, channelFetcher);
     }
 
     private Configs getConfigs(InstanceConfig instanceConfig) {
@@ -35,10 +35,11 @@ public class IrGremlinServiceMain {
         configMap.put(PegasusConfig.PEGASUS_BATCH_SIZE.getKey(), String.valueOf(instanceConfig.getPegasusBatchSize()));
         configMap.put(PegasusConfig.PEGASUS_OUTPUT_CAPACITY.getKey(), String.valueOf(instanceConfig.getPegasusOutputCapacity()));
         configMap.put(PegasusConfig.PEGASUS_MEMORY_LIMIT.getKey(), String.valueOf(instanceConfig.getPegasusMemoryLimit()));
+        configMap.put(PegasusConfig.PEGASUS_SERVERS.getKey(), String.valueOf(instanceConfig.getPegasusServers()));
         return new Configs(configMap);
     }
 
-    private StoreConfigs getStoreConfigs(InstanceConfig instanceConfig) {
-        return new VineyardStoreConfigs(instanceConfig);
+    private IrMetaFetcher getStoreConfigs(InstanceConfig instanceConfig) {
+        return new VineyardMetaFetcher(instanceConfig);
     }
 }

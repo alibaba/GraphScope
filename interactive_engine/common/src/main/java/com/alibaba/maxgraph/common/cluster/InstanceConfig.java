@@ -57,6 +57,7 @@ public class InstanceConfig extends MaxGraphConfiguration {
     public static final String PEGASUS_BATCH_SIZE = "pegasus.batch.size";
     public static final String PEGASUS_OUTPUT_CAPACITY = "pegasus.output.capacity";
     public static final String PEGASUS_MEMORY_LIMIT = "pegasus.memory.limit";
+    public static final String PEGASUS_SERVERS = "pegasus.servers";
 
     /**
      * machine count
@@ -396,6 +397,10 @@ public class InstanceConfig extends MaxGraphConfiguration {
 
     public int getPegasusMemoryLimit() {
         return getInt(PEGASUS_MEMORY_LIMIT, Integer.MAX_VALUE);
+    }
+
+    public String getPegasusServers() {
+        return getString(PEGASUS_SERVERS, "0");
     }
 
     public String getJuteMaxbuffer() {
