@@ -802,27 +802,40 @@ impl Sentence for JoinSentence {
 /// A naive implementation of `MatchingStrategy`
 #[derive(Clone, Default)]
 pub struct NaiveStrategy {
-    /// To record the set of tags a given tag may connect to (out)
-    tag_adj_list: BTreeMap<NameOrId, VecDeque<Option<NameOrId>>>,
+    /// To record the set of tags a given tag may connect to (out) and be connected with (in)
+    tag_adj_list: BTreeMap<NameOrId, (VecDeque<Option<NameOrId>>, VecDeque<Option<NameOrId>>)>,
     /// The matching sentence
     sentences: BTreeMap<(NameOrId, Option<NameOrId>), MergedSentence>,
+    /// The start tag is the start_tag of the first matching sentence
+    start_tag: NameOrId,
 }
 
 impl From<Vec<BaseSentence>> for NaiveStrategy {
     fn from(bases: Vec<BaseSentence>) -> Self {
-        let mut tag_adj_set = BTreeMap::new();
+        let mut tag_out_set = BTreeMap::new();
+        let mut tag_in_set = BTreeMap::new();
         let mut sentences: BTreeMap<_, MergedSentence> = BTreeMap::new();
+        let mut match_start_tag = None;
         for base in bases {
             let start_tag = base.start_tag.clone();
-            let end_tag = base.end_tag.clone();
-            let entry = sentences.entry((start_tag.clone(), end_tag.clone()));
+            if match_start_tag.is_none() {
+                match_start_tag = Some(start_tag.clone());
+            }
+            let end_tag_opt = base.end_tag.clone();
+            let entry = sentences.entry((start_tag.clone(), end_tag_opt.clone()));
             match entry {
                 Entry::Vacant(vac) => {
                     vac.insert(base.into());
-                    tag_adj_set
+                    tag_out_set
                         .entry(start_tag.clone())
                         .or_insert_with(BinaryHeap::new)
-                        .push(end_tag.clone());
+                        .push(end_tag_opt.clone());
+                    if let Some(end_tag) = end_tag_opt {
+                        tag_in_set
+                            .entry(end_tag.clone())
+                            .or_insert_with(BinaryHeap::new)
+                            .push(Some(start_tag.clone()));
+                    }
                 }
                 Entry::Occupied(mut occ) => {
                     occ.get_mut().merge(base);
@@ -830,16 +843,20 @@ impl From<Vec<BaseSentence>> for NaiveStrategy {
             }
         }
         let mut tag_adj_list = BTreeMap::new();
-        for (k, v) in tag_adj_set {
-            tag_adj_list.insert(
-                k,
-                v.into_sorted_vec()
-                    .into_iter()
-                    .collect::<VecDeque<_>>(),
-            );
+        for (k, v) in tag_out_set {
+            let out_list = v
+                .into_sorted_vec()
+                .into_iter()
+                .collect::<VecDeque<_>>();
+            tag_adj_list.insert(k, (out_list, VecDeque::new()));
+        }
+        for (k, v) in tag_in_set {
+            (tag_adj_list.entry(k).or_default())
+                .1
+                .extend(v.into_sorted_vec().into_iter());
         }
 
-        Self { tag_adj_list, sentences }
+        Self { tag_adj_list, sentences, start_tag: match_start_tag.unwrap_or_default() }
     }
 }
 
@@ -854,21 +871,47 @@ impl TryFrom<pb::Pattern> for NaiveStrategy {
             .into_iter()
             .map(|s| s.try_into())
             .collect::<ParsePbResult<Vec<BaseSentence>>>()?;
-        Ok(Self::from(bases))
+        if !bases.is_empty() {
+            Ok(Self::from(bases))
+        } else {
+            Err(ParsePbError::EmptyFieldError("empty sentences in `Pattern`".to_string()))
+        }
     }
+}
+
+fn get_next_tag(nbrs: &mut VecDeque<Option<NameOrId>>, visited: &BTreeSet<NameOrId>) -> Option<Option<NameOrId>> {
+    let mut end_tag_opt = None;
+    let len = nbrs.len();
+    let mut count = 0;
+    while !nbrs.is_empty() {
+        let test_tag = nbrs.pop_front().unwrap();
+        let mut is_visited = false;
+        if let Some(tag) = &test_tag {
+            is_visited = visited.contains(tag);
+        }
+        if is_visited {
+            nbrs.push_back(test_tag);
+            count += 1;
+            if count == len {
+                // means all the neighbors have been visited
+                break;
+            }
+        } else {
+            end_tag_opt = Some(test_tag);
+            break;
+        }
+    }
+
+    end_tag_opt
 }
 
 impl NaiveStrategy {
     fn get_start_tag(&self) -> Option<NameOrId> {
-        let mut max_cnt = 0;
-        let mut start_tag = None;
-        for (tag, nbrs) in &self.tag_adj_list {
-            if max_cnt < nbrs.len() {
-                max_cnt = nbrs.len();
-                start_tag = Some(tag.clone());
-            }
+        if self.tag_adj_list.contains_key(&self.start_tag) {
+            Some(self.start_tag.clone())
+        } else {
+            None
         }
-        start_tag
     }
 
     fn is_empty(&self) -> bool {
@@ -881,36 +924,21 @@ impl NaiveStrategy {
         let mut result = None;
         let mut should_remove = false;
         visited.insert(start_tag.clone());
-        if let Some(nbrs) = self.tag_adj_list.get_mut(&start_tag) {
-            let mut end_tag_opt = None;
-            let nbr_len = nbrs.len();
-            let mut count = 0;
-            should_remove = nbr_len == 0;
-            while !nbrs.is_empty() {
-                let test_tag = nbrs.pop_front().unwrap();
-                let mut is_visited = false;
-                if let Some(tag) = &test_tag {
-                    is_visited = visited.contains(tag);
-                }
-                if is_visited {
-                    nbrs.push_back(test_tag);
-                    count += 1;
-                    if count == nbr_len {
-                        // means all the neighbors have been visited
-                        break;
-                    }
-                } else {
-                    end_tag_opt = Some(test_tag);
-                    break;
-                }
+        if let Some((out_nbrs, in_nbrs)) = self.tag_adj_list.get_mut(&start_tag) {
+            should_remove = out_nbrs.is_empty() && in_nbrs.is_empty();
+            let mut is_in_tag = false;
+            let mut end_tag_opt = get_next_tag(out_nbrs, visited);
+            if end_tag_opt.is_none() {
+                end_tag_opt = get_next_tag(in_nbrs, visited);
+                is_in_tag = true;
             }
-
             if let Some(end_tag) = end_tag_opt {
                 if let Some(mut sentence) = self
                     .sentences
                     .remove(&(start_tag.clone(), end_tag.clone()))
                 {
                     sentence.set_has_as_opr(is_initial);
+                    sentence.
                     if let Some(new_start_tag) = end_tag {
                         if let Some(next_sentence) = self.do_dfs(new_start_tag, false, visited) {
                             result = sentence.composite(Rc::new(next_sentence));
