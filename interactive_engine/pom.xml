@@ -37,8 +37,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <log4j2.version>[2.17.1,)</log4j2.version>
     <hadoop.version>2.10.1</hadoop.version>
-    <grpc.version>1.30.1</grpc.version>
-    <protobuf.version>3.16.1</protobuf.version>
+    <grpc.version>1.42.1</grpc.version>
     <tinkerpop.version>3.4.12</tinkerpop.version>
     <slf4j.version>1.7.21</slf4j.version>
     <groovy.version>2.5.14</groovy.version>
@@ -47,10 +46,10 @@
     <jackson.version>2.11.1</jackson.version>
     <maven.surefire.version>2.22.2</maven.surefire.version>
     <os.maven.plugin.version>1.6.2</os.maven.plugin.version>
-    <protoc.version>3.12.2</protoc.version>
-    <protobuf.version>3.12.2</protobuf.version>
+    <protoc.version>3.18.0</protoc.version>
+    <protobuf.version>3.18.0</protobuf.version>
     <logback.version>1.2.3</logback.version>
-    <zookeeper.version>3.6.1</zookeeper.version>
+    <zookeeper.version>3.6.3</zookeeper.version>
     <kafka.version>2.5.0</kafka.version>
     <kafka.junit.version>3.2.1</kafka.junit.version>
     <jna.version>5.5.0</jna.version>
