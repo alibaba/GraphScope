@@ -179,7 +179,7 @@ class DynamicFragment
                              id_parser_.max_local_id());
     initOuterVerticesOfFragment();
 
-    buildCSR(edges, load_strategy_);
+    buildCSR(this->InnerVertices(), edges, load_strategy_);
 
     ivdata_.clear();
     ivdata_.resize(ivnum_, dynamic::Value(rapidjson::kObjectType));
