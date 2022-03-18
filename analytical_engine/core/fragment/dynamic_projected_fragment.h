@@ -29,20 +29,7 @@
 #include "proto/graphscope/proto/types.pb.h"
 
 namespace gs {
-
 namespace dynamic_projected_fragment_impl {
-template <typename T>
-typename std::enable_if<!std::is_same<T, grape::EmptyType>::value>::type
-pack_dynamic(dynamic::Value& d, const T& val) {
-  d = dynamic::Value(val);
-}
-
-template <typename T>
-typename std::enable_if<std::is_same<T, grape::EmptyType>::value>::type
-pack_dynamic(dynamic::Value& d, const T& val) {
-  d = dynamic::Value();
-}
-
 /**
  * @brief A specialized UnpackDynamicVData for int32_t type
  */
@@ -76,53 +63,41 @@ unpack_dynamic(const dynamic::Value& data, const std::string& v_prop_key) {
   return grape::EmptyType();
 }
 
-template <typename T>
+template <typename VID_T, typename T>
 typename std::enable_if<std::is_integral<T>::value>::type unpack_nbr(
-    dynamic_fragment_impl::Nbr<T>& nbr, const dynamic::Value& d,
-    const std::string& key) {
-  nbr.set_data(d[key].GetInt64());
+    grape::Nbr<VID_T, T>& nbr, const dynamic::Value& d, const char* key) {
+  nbr.data = d[key].GetInt64();
 }
 
-template <typename T>
+template <typename VID_T, typename T>
 typename std::enable_if<std::is_floating_point<T>::value>::type unpack_nbr(
-    dynamic_fragment_impl::Nbr<T>& nbr, const dynamic::Value& d,
-    const std::string& key) {
-  nbr.set_data(d[key].GetDouble());
+    grape::Nbr<VID_T, T>& nbr, const dynamic::Value& d, const char* key) {
+  nbr.data = d[key].GetDouble();
 }
 
-template <typename T>
+template <typename VID_T, typename T>
 typename std::enable_if<std::is_same<std::string, T>::value>::type unpack_nbr(
-    dynamic_fragment_impl::Nbr<T>& nbr, const dynamic::Value& d,
-    const std::string& key) {
-  nbr.set_data(d[key].GetString());
+    grape::Nbr<VID_T, T>& nbr, const dynamic::Value& d, const char* key) {
+  nbr.data = d[key].GetString();
 }
 
-template <typename T>
+template <typename VID_T, typename T>
 typename std::enable_if<std::is_same<bool, T>::value>::type unpack_nbr(
-    dynamic_fragment_impl::Nbr<T>& nbr, const dynamic::Value& d,
-    const std::string& key) {
-  nbr.set_data(d[key].GetBool());
+    grape::Nbr<VID_T, T>& nbr, const dynamic::Value& d, const char* key) {
+  nbr.data = d[key].GetBool();
 }
 
-template <typename T>
+template <typename VID_T, typename T>
 typename std::enable_if<std::is_same<grape::EmptyType, T>::value>::type
-unpack_nbr(dynamic_fragment_impl::Nbr<T>& nbr, const dynamic::Value& d,
+unpack_nbr(grape::Nbr<VID_T, T>& nbr, const dynamic::Value& d,
            const std::string& key) {
-  nbr.set_data(grape::EmptyType());
+  return;
 }
 
-#define SET_PROJECTED_NBR                               \
-  void set_nbr() {                                      \
-    const auto& original_nbr = map_current_->second;    \
-    const auto& data = original_nbr.data();             \
-                                                        \
-    unpack_nbr<EDATA_T>(internal_nbr, data, prop_key_); \
-    internal_nbr.set_neighbor(original_nbr.neighbor()); \
-    auto v = internal_nbr.neighbor();                   \
-    if (v.GetValue() >= ivnum_) {                       \
-      v.SetValue(ivnum_ + id_mask_ - v.GetValue());     \
-    }                                                   \
-    internal_nbr.set_neighbor(v);                       \
+#define SET_PROJECTED_POC_NBR                                            \
+  void set_nbr() {                                                       \
+    unpack_nbr<VID_T, EDATA_T>(internal_nbr, current_->data, prop_key_); \
+    internal_nbr.neighbor = current_->neighbor;                          \
   }
 
 /**
@@ -131,47 +106,39 @@ unpack_nbr(dynamic_fragment_impl::Nbr<T>& nbr, const dynamic::Value& d,
  *
  * @tparam EDATA_T Data type of edge
  */
-template <typename EDATA_T>
-class ProjectedAdjLinkedList {
-  using VID_T = vineyard::property_graph_types::VID_TYPE;
-  using NbrT = dynamic_fragment_impl::Nbr<dynamic::Value>;
-  using ProjectedNbrT = dynamic_fragment_impl::Nbr<EDATA_T>;
+template <typename VID_T, typename EDATA_T>
+class AdjList {
+  using NbrT = grape::Nbr<VID_T, dynamic::Value>;
+  using InternalNbrT = grape::Nbr<VID_T, EDATA_T>;
 
  public:
-  ProjectedAdjLinkedList() = default;
-  ProjectedAdjLinkedList(
-      VID_T id_mask, VID_T ivnum, std::string prop_key,
-      typename std::map<VID_T, NbrT>::iterator map_iter_begin,
-      typename std::map<VID_T, NbrT>::iterator map_iter_end)
-      : id_mask_(id_mask),
-        ivnum_(ivnum),
-        prop_key_(std::move(prop_key)),
-        map_iter_begin_(map_iter_begin),
-        map_iter_end_(map_iter_end) {}
-  ~ProjectedAdjLinkedList() = default;
+  AdjList() = default;
+  AdjList(NbrT* b, NbrT* e, const std::string& prop_key)
+      : begin_(b), end_(e), prop_key_(prop_key.data()) {}
 
-  inline bool Empty() const { return map_iter_begin_ == map_iter_end_; }
+  ~AdjList() = default;
+
+  inline bool Empty() const { return begin_ == end_; }
 
   inline bool NotEmpty() const { return !Empty(); }
 
-  inline size_t Size() const {
-    return std::distance(map_iter_begin_, map_iter_end_);
-  }
+  inline size_t Size() const { return end_ - begin_; }
 
   class iterator {
-    using pointer_type = ProjectedNbrT*;
-    using reference_type = ProjectedNbrT&;
+    using pointer_type = InternalNbrT*;
+    using reference_type = InternalNbrT&;
 
-    SET_PROJECTED_NBR
+   private:
+    NbrT* current_;
+    const char* prop_key_;
+    InternalNbrT internal_nbr;
+
+    SET_PROJECTED_POC_NBR
 
    public:
     iterator() = default;
-    iterator(VID_T id_mask, VID_T ivnum, std::string prop_key,
-             typename std::map<VID_T, NbrT>::iterator map_current) noexcept
-        : id_mask_(id_mask),
-          ivnum_(ivnum),
-          prop_key_(std::move(prop_key)),
-          map_current_(map_current) {}
+    iterator(NbrT* c, const char* prop_key) noexcept
+        : current_(c), prop_key_(prop_key) {}
 
     reference_type operator*() noexcept {
       set_nbr();
@@ -184,250 +151,198 @@ class ProjectedAdjLinkedList {
     }
 
     iterator& operator++() noexcept {
-      ++map_current_;
+      ++current_;
       return *this;
     }
 
     iterator operator++(int) noexcept {
-      return iterator(id_mask_, ivnum_, map_current_++);
+      return iterator(current_++, prop_key_);
     }
 
     iterator& operator--() noexcept {
-      --map_current_;
+      --current_;
       return *this;
     }
 
     iterator operator--(int) noexcept {
-      return iterator(id_mask_, ivnum_, map_current_--);
+      return iterator(current_--, prop_key_);
     }
 
     iterator operator+(size_t offset) noexcept {
-      auto curr = map_current_;
-      for (int i = 0; i < offset; i++)
-        curr++;
-      return iterator(id_mask_, ivnum_, curr);
+      return iterator(current_ + offset, prop_key_);
     }
 
     bool operator==(const iterator& rhs) noexcept {
-      return map_current_ == rhs.map_current_;
+      return current_ == rhs.current_;
     }
 
     bool operator!=(const iterator& rhs) noexcept {
-      return map_current_ != rhs.map_current_;
+      return current_ != rhs.current_;
     }
-
-   private:
-    VID_T id_mask_;
-    VID_T ivnum_;
-    std::string prop_key_;
-    ProjectedNbrT internal_nbr;
-    typename std::map<VID_T, NbrT>::iterator map_current_;
   };
 
   class const_iterator {
-    using pointer_type = const ProjectedNbrT*;
-    using reference_type = const ProjectedNbrT&;
+    using pointer_type = const InternalNbrT*;
+    using reference_type = const InternalNbrT&;
 
-    SET_PROJECTED_NBR
+   private:
+    const NbrT* current_;
+    const char* prop_key_;
+    InternalNbrT internal_nbr;
+
+    SET_PROJECTED_POC_NBR
 
    public:
     const_iterator() = default;
-    const_iterator(
-        VID_T id_mask, VID_T ivnum, std::string prop_key,
-        typename std::map<VID_T, NbrT>::iterator map_current) noexcept
-        : id_mask_(id_mask),
-          ivnum_(ivnum),
-          prop_key_(std::move(prop_key)),
-          map_current_(map_current) {}
+    const_iterator(const NbrT* c, const char* prop_key) noexcept
+        : current_(c), prop_key_(prop_key) {}
 
-    reference_type operator*() const noexcept {
-      const_cast<const_iterator*>(this)->set_nbr();
+    reference_type operator*() noexcept {
+      set_nbr();
       return internal_nbr;
     }
 
-    pointer_type operator->() const noexcept {
-      const_cast<const_iterator*>(this)->set_nbr();
+    pointer_type operator->() noexcept {
+      set_nbr();
       return &internal_nbr;
     }
 
     const_iterator& operator++() noexcept {
-      ++map_current_;
+      ++current_;
       return *this;
     }
 
     const_iterator operator++(int) noexcept {
-      return const_iterator(id_mask_, ivnum_, map_current_++);
+      return const_iterator(current_++, prop_key_);
     }
 
     const_iterator& operator--() noexcept {
-      --map_current_;
+      --current_;
       return *this;
     }
 
     const_iterator operator--(int) noexcept {
-      return const_iterator(id_mask_, ivnum_, map_current_--);
+      return const_iterator(current_--, prop_key_);
     }
 
     const_iterator operator+(size_t offset) noexcept {
-      auto curr = map_current_;
-      for (int i = 0; i < offset; i++)
-        curr++;
-      return const_iterator(id_mask_, ivnum_, curr);
+      return const_iterator(current_ + offset, prop_key_);
     }
 
     bool operator==(const const_iterator& rhs) noexcept {
-      return map_current_ == rhs.map_current_;
-    }
-    bool operator!=(const const_iterator& rhs) noexcept {
-      return map_current_ != rhs.map_current_;
+      return current_ == rhs.current_;
     }
 
-   private:
-    VID_T id_mask_;
-    VID_T ivnum_;
-    std::string prop_key_;
-    ProjectedNbrT internal_nbr;
-    typename std::map<VID_T, NbrT>::iterator map_current_;
+    bool operator!=(const const_iterator& rhs) noexcept {
+      return current_ != rhs.current_;
+    }
   };
 
-  iterator begin() {
-    return iterator(id_mask_, ivnum_, prop_key_, map_iter_begin_);
-  }
+  iterator begin() { return iterator(begin_, prop_key_); }
 
-  iterator end() {
-    return iterator(id_mask_, ivnum_, prop_key_, map_iter_end_);
-  }
+  iterator end() { return iterator(end_, prop_key_); }
 
-  const_iterator cbegin() const {
-    return const_iterator(id_mask_, ivnum_, prop_key_, map_iter_begin_);
-  }
-  const_iterator cend() const {
-    return const_iterator(id_mask_, ivnum_, prop_key_, map_iter_end_);
-  }
+  iterator begin() const { return const_iterator(begin_, prop_key_); }
 
-  bool empty() const { return map_iter_begin_ == map_iter_end_; }
+  iterator end() const { return const_iterator(end_, prop_key_); }
+
+  bool empty() const { return begin_ == end_; }
 
  private:
-  VID_T id_mask_{};
-  VID_T ivnum_{};
-  std::string prop_key_;
-  typename std::map<VID_T, NbrT>::iterator map_iter_begin_;
-  typename std::map<VID_T, NbrT>::iterator map_iter_end_;
+  NbrT* begin_;
+  NbrT* end_;
+  const char* prop_key_;
 };
 
 /**
  * @brief primitive adj linked list
  * @tparam EDATA_T
  */
-template <typename EDATA_T>
-class ConstProjectedAdjLinkedList {
-  using VID_T = vineyard::property_graph_types::VID_TYPE;
-  using NbrT = dynamic_fragment_impl::Nbr<dynamic::Value>;
-  using ProjectedNbrT = dynamic_fragment_impl::Nbr<EDATA_T>;
+template <typename VID_T, typename EDATA_T>
+class ConstAdjList {
+  using NbrT = grape::Nbr<VID_T, dynamic::Value>;
+  using InternalNbrT = grape::Nbr<VID_T, EDATA_T>;
 
  public:
-  ConstProjectedAdjLinkedList() = default;
-  ConstProjectedAdjLinkedList(
-      VID_T id_mask, VID_T ivnum, std::string prop_key,
-      typename std::map<VID_T, NbrT>::const_iterator map_iter_begin,
-      typename std::map<VID_T, NbrT>::const_iterator map_iter_end)
-      : id_mask_(id_mask),
-        ivnum_(ivnum),
-        prop_key_(std::move(prop_key)),
-        map_iter_begin_(map_iter_begin),
-        map_iter_end_(map_iter_end) {}
-  ~ConstProjectedAdjLinkedList() = default;
+  ConstAdjList() = default;
+  ConstAdjList(const NbrT* b, const NbrT* e, const std::string& prop_key)
+      : begin_(b), end_(e), prop_key_(prop_key.data()) {}
 
-  inline bool Empty() const { return map_iter_begin_ == map_iter_end_; }
+  ~ConstAdjList() = default;
+
+  inline bool Empty() const { return begin_ == end_; }
 
   inline bool NotEmpty() const { return !Empty(); }
 
-  inline size_t Size() const {
-    return std::distance(map_iter_begin_, map_iter_end_);
-  }
+  inline size_t Size() const { return end_ - begin_; }
 
   class const_iterator {
-    using pointer_type = const ProjectedNbrT*;
-    using reference_type = const ProjectedNbrT&;
+    using pointer_type = const InternalNbrT*;
+    using reference_type = const InternalNbrT&;
 
-    SET_PROJECTED_NBR
+   private:
+    const NbrT* current_;
+    const char* prop_key_;
+    InternalNbrT internal_nbr;
+
+    SET_PROJECTED_POC_NBR
 
    public:
     const_iterator() = default;
-    const_iterator(
-        VID_T id_mask, VID_T ivnum, std::string prop_key,
-        typename std::map<VID_T, NbrT>::const_iterator map_current) noexcept
-        : id_mask_(id_mask),
-          ivnum_(ivnum),
-          prop_key_(std::move(prop_key)),
-          map_current_(map_current) {}
+    const_iterator(const NbrT* c, const char* prop_key) noexcept
+        : current_(c), prop_key_(prop_key) {}
 
-    reference_type operator*() const noexcept {
-      const_cast<const_iterator*>(this)->set_nbr();
+    reference_type operator*() noexcept {
+      set_nbr();
       return internal_nbr;
     }
 
-    pointer_type operator->() const noexcept {
-      const_cast<const_iterator*>(this)->set_nbr();
+    pointer_type operator->() noexcept {
+      set_nbr();
       return &internal_nbr;
     }
 
     const_iterator& operator++() noexcept {
-      ++map_current_;
+      ++current_;
       return *this;
     }
 
     const_iterator operator++(int) noexcept {
-      return const_iterator(id_mask_, ivnum_, map_current_++);
+      return const_iterator(current_++, prop_key_);
     }
 
     const_iterator& operator--() noexcept {
-      --map_current_;
+      --current_;
       return *this;
     }
 
     const_iterator operator--(int) noexcept {
-      return const_iterator(id_mask_, ivnum_, map_current_--);
+      return const_iterator(current_--, prop_key_);
     }
 
     const_iterator operator+(size_t offset) noexcept {
-      auto curr = map_current_;
-      for (int i = 0; i < offset; i++)
-        curr++;
-      return const_iterator(id_mask_, ivnum_, curr);
+      return const_iterator(current_ + offset, prop_key_);
     }
 
     bool operator==(const const_iterator& rhs) noexcept {
-      return map_current_ == rhs.map_current_;
+      return current_ == rhs.current_;
     }
 
     bool operator!=(const const_iterator& rhs) noexcept {
-      return map_current_ != rhs.map_current_;
+      return current_ != rhs.current_;
     }
-
-   private:
-    VID_T id_mask_{};
-    VID_T ivnum_{};
-    std::string prop_key_;
-    ProjectedNbrT internal_nbr;
-    typename std::map<VID_T, NbrT>::const_iterator map_current_;
   };
 
-  const_iterator begin() const {
-    return const_iterator(id_mask_, ivnum_, prop_key_, map_iter_begin_);
-  }
-  const_iterator end() const {
-    return const_iterator(id_mask_, ivnum_, prop_key_, map_iter_end_);
-  }
+  const_iterator begin() { return const_iterator(begin_, prop_key_); }
 
-  bool empty() const { return map_iter_begin_ == map_iter_end_; }
+  const_iterator end() { return const_iterator(end_, prop_key_); }
+
+  bool empty() const { return begin_ == end_; }
 
  private:
-  VID_T id_mask_{};
-  VID_T ivnum_{};
-  std::string prop_key_;
-  typename std::map<VID_T, NbrT>::const_iterator map_iter_begin_;
-  typename std::map<VID_T, NbrT>::const_iterator map_iter_end_;
+  const NbrT* begin_;
+  const NbrT* end_;
+  const char* prop_key_;
 };
 
 }  // namespace dynamic_projected_fragment_impl
@@ -450,30 +365,32 @@ class DynamicProjectedFragment {
   using vertex_t = typename fragment_t::vertex_t;
   using vdata_t = VDATA_T;
   using edata_t = EDATA_T;
-  using adj_list_t =
-      dynamic_projected_fragment_impl::ProjectedAdjLinkedList<edata_t>;
+  using adj_list_t = dynamic_projected_fragment_impl::AdjList<vid_t, edata_t>;
   using const_adj_list_t =
-      dynamic_projected_fragment_impl::ConstProjectedAdjLinkedList<edata_t>;
-  using vertex_range_t = typename fragment_t::vertex_range_t;
-  using inner_vertices_t = vertex_range_t;
-  using outer_vertices_t = vertex_range_t;
-  using vertices_t = vertex_range_t;
-  using sub_vertices_t = vertex_range_t;
+      dynamic_projected_fragment_impl::ConstAdjList<vid_t, edata_t>;
+  using inner_vertices_t = typename fragment_t::inner_vertices_t;
+  using outer_vertices_t = typename fragment_t::outer_vertices_t;
+  using vertices_t = typename fragment_t::vertices_t;
+  using sub_vertices_t = typename fragment_t::sub_vertices_t;
   template <typename DATA_T>
   using vertex_array_t = typename fragment_t::vertex_array_t<DATA_T>;
 
   template <typename DATA_T>
-  using inner_vertex_array_t = typename fragment_t::vertex_array_t<DATA_T>;
+  using inner_vertex_array_t =
+      typename fragment_t::inner_vertex_array_t<DATA_T>;
 
   template <typename DATA_T>
-  using outer_vertex_array_t = typename fragment_t::vertex_array_t<DATA_T>;
+  using outer_vertex_array_t =
+      typename fragment_t::outer_vertex_array_t<DATA_T>;
+
+  using vertex_range_t = inner_vertices_t;
 
   // This member is used by grape::check_load_strategy_compatible()
   static constexpr grape::LoadStrategy load_strategy =
       grape::LoadStrategy::kBothOutIn;
 
-  DynamicProjectedFragment(fragment_t* frag, std::string v_prop_key,
-                           std::string e_prop_key)
+  DynamicProjectedFragment(fragment_t* frag, const std::string& v_prop_key,
+                           const std::string& e_prop_key)
       : fragment_(frag),
         v_prop_key_(std::move(v_prop_key)),
         e_prop_key_(std::move(e_prop_key)) {}
@@ -490,32 +407,24 @@ class DynamicProjectedFragment {
     fragment_->PrepareToRunApp(comm_spec, conf);
   }
 
-  inline fid_t fid() const { return fragment_->fid_; }
+  inline fid_t fid() const { return fragment_->fid(); }
 
-  inline fid_t fnum() const { return fragment_->fnum_; }
-
-  inline vid_t id_mask() const { return fragment_->id_mask_; }
-
-  inline int fid_offset() const { return fragment_->fid_offset_; }
+  inline fid_t fnum() const { return fragment_->fnum(); }
 
   inline bool directed() const { return fragment_->directed(); }
 
-  inline vertex_range_t Vertices() const { return fragment_->Vertices(); }
+  inline const vertices_t& Vertices() const { return fragment_->Vertices(); }
 
-  inline vertex_range_t InnerVertices() const {
+  inline const inner_vertices_t& InnerVertices() const {
     return fragment_->InnerVertices();
   }
 
-  inline vertex_range_t OuterVertices() const {
+  inline const outer_vertices_t& OuterVertices() const {
     return fragment_->OuterVertices();
   }
 
   inline bool GetVertex(const oid_t& oid, vertex_t& v) const {
     return fragment_->GetVertex(oid, v);
-  }
-
-  inline const vid_t* GetOuterVerticesGid() const {
-    return fragment_->GetOuterVerticesGid();
   }
 
   inline oid_t GetId(const vertex_t& v) const { return fragment_->GetId(v); }
@@ -534,7 +443,7 @@ class DynamicProjectedFragment {
 
   inline vdata_t GetData(const vertex_t& v) const {
     assert(fragment_->IsInnerVertex(v));
-    auto data = fragment_->vdata()[v.GetValue()];
+    auto data = fragment_->GetData(v);
     return dynamic_projected_fragment_impl::unpack_dynamic<vdata_t>(
         data, v_prop_key_);
   }
@@ -567,24 +476,12 @@ class DynamicProjectedFragment {
     return fragment_->GetInnerVertex(oid, v);
   }
 
-  inline bool GetOuterVertex(const oid_t& oid, vertex_t& v) const {
-    return fragment_->GetOuterVertex(oid, v);
-  }
-
-  inline oid_t GetInnerVertexId(const vertex_t& v) const {
-    return fragment_->GetInnerVertexId(v);
-  }
-
   inline oid_t GetOuterVertexId(const vertex_t& v) const {
     return fragment_->GetOuterVertexId(v);
   }
 
   inline oid_t Gid2Oid(const vid_t& gid) const {
     return fragment_->Gid2Oid(gid);
-  }
-
-  inline bool Oid2Gid(const oid_t& oid, vid_t& gid) const {
-    return fragment_->Oid2Gid(oid, gid);
   }
 
   inline bool InnerVertexGid2Vertex(const vid_t& gid, vertex_t& v) const {
@@ -603,16 +500,8 @@ class DynamicProjectedFragment {
     return fragment_->GetInnerVertexGid(v);
   }
 
-  inline bool IsAliveVertex(const vertex_t& v) const {
-    return fragment_->IsAliveVertex(v);
-  }
-
   inline bool IsAliveInnerVertex(const vertex_t& v) const {
     return fragment_->IsAliveInnerVertex(v);
-  }
-
-  inline bool IsAliveOuterVertex(const vertex_t& v) const {
-    return fragment_->IsAliveOuterVertex(v);
   }
 
   inline bool HasChild(const vertex_t& v) const {
@@ -624,153 +513,31 @@ class DynamicProjectedFragment {
   }
 
   inline adj_list_t GetIncomingAdjList(const vertex_t& v) {
-    int32_t ie_pos;
-    if (fragment_->duplicated() && fragment_->IsOuterVertex(v)) {
-      ie_pos = fragment_->outer_ie_pos()[v.GetValue() - fragment_->ivnum()];
-    } else {
-      ie_pos = fragment_->inner_ie_pos()[v.GetValue()];
+    if (!fragment_->directed()) {
+      return adj_list_t(fragment_->get_oe_begin(v), fragment_->get_oe_end(v),
+                        e_prop_key_);
     }
-    if (ie_pos == -1) {
-      return adj_list_t();
-    }
-    return adj_list_t(fragment_->id_mask(), fragment_->ivnum(), e_prop_key_,
-                      fragment_->inner_edge_space()[ie_pos].begin(),
-                      fragment_->inner_edge_space()[ie_pos].end());
+    return adj_list_t(fragment_->get_ie_begin(v), fragment_->get_ie_end(v),
+                      e_prop_key_);
   }
 
   inline const_adj_list_t GetIncomingAdjList(const vertex_t& v) const {
-    int32_t ie_pos;
-    if (fragment_->duplicated() && fragment_->IsOuterVertex(v)) {
-      ie_pos = fragment_->outer_ie_pos()[v.GetValue() - fragment_->ivnum()];
-    } else {
-      ie_pos = fragment_->inner_ie_pos()[v.GetValue()];
+    if (!fragment_->directed()) {
+      return const_adj_list_t(fragment_->get_oe_begin(v),
+                              fragment_->get_oe_end(v), e_prop_key_);
     }
-    if (ie_pos == -1) {
-      return const_adj_list_t();
-    }
-    return const_adj_list_t(fragment_->id_mask(), fragment_->ivnum(),
-                            e_prop_key_,
-                            fragment_->inner_edge_space()[ie_pos].cbegin(),
-                            fragment_->inner_edge_space()[ie_pos].cend());
-  }
-
-  inline adj_list_t GetIncomingInnerVertexAdjList(const vertex_t& v) {
-    auto ie_pos = fragment_->inner_ie_pos()[v.GetValue()];
-    if (ie_pos == -1) {
-      return adj_list_t();
-    }
-    return adj_list_t(fragment_->id_mask(), fragment_->ivnum(), e_prop_key_,
-                      fragment_->inner_edge_space().InnerNbr(ie_pos).begin(),
-                      fragment_->inner_edge_space().InnerNbr(ie_pos).end());
-  }
-
-  inline const_adj_list_t GetIncomingInnerVertexAdjList(
-      const vertex_t& v) const {
-    auto ie_pos = fragment_->inner_ie_pos()[v.GetValue()];
-    if (ie_pos == -1) {
-      return const_adj_list_t();
-    }
-    return const_adj_list_t(
-        fragment_->id_mask(), fragment_->ivnum(), e_prop_key_,
-        fragment_->inner_edge_space().InnerNbr(ie_pos).cbegin(),
-        fragment_->inner_edge_space().InnerNbr(ie_pos).cend());
-  }
-
-  inline adj_list_t GetIncomingOuterVertexAdjList(const vertex_t& v) {
-    auto ie_pos = fragment_->inner_ie_pos()[v.GetValue()];
-    if (ie_pos == -1) {
-      return adj_list_t();
-    }
-    return adj_list_t(fragment_->id_mask(), fragment_->ivnum(), e_prop_key_,
-                      fragment_->inner_edge_space().OuterNbr(ie_pos).begin(),
-                      fragment_->inner_edge_space().OuterNbr(ie_pos).end());
-  }
-
-  inline const_adj_list_t GetIncomingOuterVertexAdjList(
-      const vertex_t& v) const {
-    auto ie_pos = fragment_->inner_ie_pos()[v.GetValue()];
-    if (ie_pos == -1) {
-      return const_adj_list_t();
-    }
-    return const_adj_list_t(
-        fragment_->id_mask(), fragment_->ivnum(), e_prop_key_,
-        fragment_->inner_edge_space().OuterNbr(ie_pos).cbegin(),
-        fragment_->inner_edge_space().OuterNbr(ie_pos).cend());
+    return const_adj_list_t(fragment_->get_ie_begin(v),
+                            fragment_->get_ie_end(v), e_prop_key_);
   }
 
   inline adj_list_t GetOutgoingAdjList(const vertex_t& v) {
-    int32_t oe_pos;
-    if (fragment_->duplicated() && fragment_->IsOuterVertex(v)) {
-      oe_pos = fragment_->outer_oe_pos()[v.GetValue() - fragment_->ivnum()];
-    } else {
-      oe_pos = fragment_->inner_oe_pos()[v.GetValue()];
-    }
-    if (oe_pos == -1) {
-      return adj_list_t();
-    }
-    return adj_list_t(fragment_->id_mask(), fragment_->ivnum(), e_prop_key_,
-                      fragment_->inner_edge_space()[oe_pos].begin(),
-                      fragment_->inner_edge_space()[oe_pos].end());
+    return adj_list_t(fragment_->get_oe_begin(v), fragment_->get_oe_end(v),
+                      e_prop_key_);
   }
 
   inline const_adj_list_t GetOutgoingAdjList(const vertex_t& v) const {
-    int32_t oe_pos;
-    if (fragment_->duplicated() && fragment_->IsOuterVertex(v)) {
-      oe_pos = fragment_->outer_oe_pos()[v.GetValue() - fragment_->ivnum()];
-    } else {
-      oe_pos = fragment_->inner_oe_pos()[v.GetValue()];
-    }
-    if (oe_pos == -1) {
-      return const_adj_list_t();
-    }
-    return const_adj_list_t(fragment_->id_mask(), fragment_->ivnum(),
-                            e_prop_key_,
-                            fragment_->inner_edge_space()[oe_pos].cbegin(),
-                            fragment_->inner_edge_space()[oe_pos].cend());
-  }
-
-  inline adj_list_t GetOutgoingInnerVertexAdjList(const vertex_t& v) {
-    auto oe_pos = fragment_->inner_oe_pos()[v.GetValue()];
-    if (oe_pos == -1) {
-      return adj_list_t();
-    }
-    return adj_list_t(fragment_->id_mask(), fragment_->ivnum(), e_prop_key_,
-                      fragment_->inner_edge_space().InnerNbr(oe_pos).begin(),
-                      fragment_->inner_edge_space().InnerNbr(oe_pos).end());
-  }
-
-  inline const_adj_list_t GetOutgoingInnerVertexAdjList(
-      const vertex_t& v) const {
-    auto oe_pos = fragment_->inner_oe_pos()[v.GetValue()];
-    if (oe_pos == -1) {
-      return const_adj_list_t();
-    }
-    return const_adj_list_t(
-        fragment_->id_mask(), fragment_->ivnum(), e_prop_key_,
-        fragment_->inner_edge_space().InnerNbr(oe_pos).cbegin(),
-        fragment_->inner_edge_space().InnerNbr(oe_pos).cend());
-  }
-
-  inline adj_list_t GetOutgoingOuterVertexAdjList(const vertex_t& v) {
-    auto oe_pos = fragment_->inner_oe_pos()[v.GetValue()];
-    if (oe_pos == -1) {
-      return adj_list_t();
-    }
-    return adj_list_t(fragment_->id_mask(), fragment_->ivnum(), e_prop_key_,
-                      fragment_->inner_edge_space().OuterNbr(oe_pos).begin(),
-                      fragment_->inner_edge_space().OuterNbr(oe_pos).end());
-  }
-
-  inline const_adj_list_t GetOutgoingOuterVertexAdjList(
-      const vertex_t& v) const {
-    auto oe_pos = fragment_->inner_oe_pos()[v.GetValue()];
-    if (oe_pos == -1) {
-      return const_adj_list_t();
-    }
-    return const_adj_list_t(
-        fragment_->id_mask(), fragment_->ivnum(), e_prop_key_,
-        fragment_->inner_edge_space().OuterNbr(oe_pos).cbegin(),
-        fragment_->inner_edge_space().OuterNbr(oe_pos).cend());
+    return const_adj_list_t(fragment_->get_oe_begin(v),
+                            fragment_->get_oe_end(v), e_prop_key_);
   }
 
   inline int GetLocalOutDegree(const vertex_t& v) const {
@@ -797,12 +564,16 @@ class DynamicProjectedFragment {
     return fragment_->MirrorVertices(fid);
   }
 
-  bl::result<dynamic::Type> GetOidType(const grape::CommSpec& comm_spec) const {
-    return fragment_->GetOidType(comm_spec);
+  inline bool Oid2Gid(const oid_t& oid, vid_t& gid) const {
+    return fragment_->Oid2Gid(oid, gid);
   }
 
   inline bool HasNode(const oid_t& node) const {
     return fragment_->HasNode(node);
+  }
+
+  bl::result<dynamic::Type> GetOidType(const grape::CommSpec& comm_spec) const {
+    return fragment_->GetOidType(comm_spec);
   }
 
  private:
@@ -823,6 +594,235 @@ class DynamicProjectedFragment {
                     std::is_same<std::string, EDATA_T>::value ||
                     std::is_same<grape::EmptyType, EDATA_T>::value,
                 "unsupported type");
+};
+
+/**
+ * @brief A wrapper class of DynamicFragment.
+ * Inheritance does not work because of different return type of some methods.
+ * We forward most of methods to DynamicFragment but enact
+ * GetIncoming(Outgoing)AdjList, Get(Set)Data...
+ *
+ * @tparam VDATA_T The type of data attached with the vertex
+ * @tparam EDATA_T The type of data attached with the edge
+ */
+template <>
+class DynamicProjectedFragment<grape::EmptyType, grape::EmptyType> {
+ public:
+  using fragment_t = DynamicFragment;
+  using oid_t = typename fragment_t::oid_t;
+  using vid_t = typename fragment_t::vid_t;
+  using vertex_t = typename fragment_t::vertex_t;
+  using vdata_t = grape::EmptyType;
+  using edata_t = grape::EmptyType;
+  using adj_list_t = typename fragment_t::adj_list_t;
+  using const_adj_list_t = typename fragment_t::const_adj_list_t;
+  using inner_vertices_t = typename fragment_t::inner_vertices_t;
+  using outer_vertices_t = typename fragment_t::outer_vertices_t;
+  using vertices_t = typename fragment_t::vertices_t;
+  using sub_vertices_t = typename fragment_t::sub_vertices_t;
+  template <typename DATA_T>
+  using vertex_array_t = typename fragment_t::vertex_array_t<DATA_T>;
+
+  template <typename DATA_T>
+  using inner_vertex_array_t =
+      typename fragment_t::inner_vertex_array_t<DATA_T>;
+
+  template <typename DATA_T>
+  using outer_vertex_array_t =
+      typename fragment_t::outer_vertex_array_t<DATA_T>;
+
+  using vertex_range_t = inner_vertices_t;
+
+  // This member is used by grape::check_load_strategy_compatible()
+  static constexpr grape::LoadStrategy load_strategy =
+      grape::LoadStrategy::kBothOutIn;
+
+  DynamicProjectedFragment(fragment_t* frag, const std::string& v_prop_key,
+                           const std::string& e_prop_key)
+      : fragment_(frag),
+        v_prop_key_(std::move(v_prop_key)),
+        e_prop_key_(std::move(e_prop_key)) {}
+
+  static std::shared_ptr<DynamicProjectedFragment<vdata_t, edata_t>> Project(
+      const std::shared_ptr<DynamicFragment>& frag, const std::string& v_prop,
+      const std::string& e_prop) {
+    return std::make_shared<DynamicProjectedFragment>(frag.get(), v_prop,
+                                                      e_prop);
+  }
+
+  void PrepareToRunApp(const grape::CommSpec& comm_spec,
+                       grape::PrepareConf conf) {
+    fragment_->PrepareToRunApp(comm_spec, conf);
+  }
+
+  inline fid_t fid() const { return fragment_->fid(); }
+
+  inline fid_t fnum() const { return fragment_->fnum(); }
+
+  inline bool directed() const { return fragment_->directed(); }
+
+  inline const vertices_t& Vertices() const { return fragment_->Vertices(); }
+
+  inline const inner_vertices_t& InnerVertices() const {
+    return fragment_->InnerVertices();
+  }
+
+  inline const outer_vertices_t& OuterVertices() const {
+    return fragment_->OuterVertices();
+  }
+
+  inline bool GetVertex(const oid_t& oid, vertex_t& v) const {
+    return fragment_->GetVertex(oid, v);
+  }
+
+  inline oid_t GetId(const vertex_t& v) const { return fragment_->GetId(v); }
+
+  inline fid_t GetFragId(const vertex_t& u) const {
+    return fragment_->GetFragId(u);
+  }
+
+  inline bool Gid2Vertex(const vid_t& gid, vertex_t& v) const {
+    return fragment_->Gid2Vertex(gid, v);
+  }
+
+  inline vid_t Vertex2Gid(const vertex_t& v) const {
+    return fragment_->Vertex2Gid(v);
+  }
+
+  inline vdata_t GetData(const vertex_t& v) const {
+    assert(fragment_->IsInnerVertex(v));
+    return grape::EmptyType();
+  }
+
+  inline vid_t GetInnerVerticesNum() const {
+    return fragment_->GetInnerVerticesNum();
+  }
+
+  inline vid_t GetOuterVerticesNum() const {
+    return fragment_->GetOuterVerticesNum();
+  }
+
+  inline vid_t GetVerticesNum() const { return fragment_->GetVerticesNum(); }
+
+  size_t GetTotalVerticesNum() const {
+    return fragment_->GetTotalVerticesNum();
+  }
+
+  inline size_t GetEdgeNum() const { return fragment_->GetEdgeNum(); }
+
+  inline bool IsInnerVertex(const vertex_t& v) const {
+    return fragment_->IsInnerVertex(v);
+  }
+
+  inline bool IsOuterVertex(const vertex_t& v) const {
+    return fragment_->IsOuterVertex(v);
+  }
+
+  inline bool GetInnerVertex(const oid_t& oid, vertex_t& v) const {
+    return fragment_->GetInnerVertex(oid, v);
+  }
+
+  inline oid_t GetOuterVertexId(const vertex_t& v) const {
+    return fragment_->GetOuterVertexId(v);
+  }
+
+  inline oid_t Gid2Oid(const vid_t& gid) const {
+    return fragment_->Gid2Oid(gid);
+  }
+
+  inline bool InnerVertexGid2Vertex(const vid_t& gid, vertex_t& v) const {
+    return fragment_->InnerVertexGid2Vertex(gid, v);
+  }
+
+  inline bool OuterVertexGid2Vertex(const vid_t& gid, vertex_t& v) const {
+    return fragment_->OuterVertexGid2Vertex(gid, v);
+  }
+
+  inline vid_t GetOuterVertexGid(const vertex_t& v) const {
+    return fragment_->GetOuterVertexGid(v);
+  }
+
+  inline vid_t GetInnerVertexGid(const vertex_t& v) const {
+    return fragment_->GetInnerVertexGid(v);
+  }
+
+  inline bool IsAliveInnerVertex(const vertex_t& v) const {
+    return fragment_->IsAliveInnerVertex(v);
+  }
+
+  inline bool HasChild(const vertex_t& v) const {
+    return fragment_->HasChild(v);
+  }
+
+  inline bool HasParent(const vertex_t& v) const {
+    return fragment_->HasParent(v);
+  }
+
+  inline adj_list_t GetIncomingAdjList(const vertex_t& v) {
+    if (!fragment_->directed_) {
+      return adj_list_t(fragment_->get_oe_begin(v), fragment_->get_oe_end(v));
+    }
+    return adj_list_t(fragment_->get_ie_begin(v), fragment_->get_ie_end(v));
+  }
+
+  inline const_adj_list_t GetIncomingAdjList(const vertex_t& v) const {
+    if (!fragment_->directed()) {
+      return const_adj_list_t(fragment_->get_oe_begin(v),
+                              fragment_->get_oe_end(v));
+    }
+    return const_adj_list_t(fragment_->get_ie_begin(v),
+                            fragment_->get_ie_end(v));
+  }
+
+  inline adj_list_t GetOutgoingAdjList(const vertex_t& v) {
+    return adj_list_t(fragment_->get_oe_begin(v), fragment_->get_oe_end(v));
+  }
+
+  inline const_adj_list_t GetOutgoingAdjList(const vertex_t& v) const {
+    return const_adj_list_t(fragment_->get_oe_begin(v),
+                            fragment_->get_oe_end(v));
+  }
+
+  inline int GetLocalOutDegree(const vertex_t& v) const {
+    return fragment_->GetLocalOutDegree(v);
+  }
+
+  inline int GetLocalInDegree(const vertex_t& v) const {
+    return fragment_->GetLocalInDegree(v);
+  }
+
+  inline grape::DestList IEDests(const vertex_t& v) const {
+    return fragment_->IEDests(v);
+  }
+
+  inline grape::DestList OEDests(const vertex_t& v) const {
+    return fragment_->OEDests(v);
+  }
+
+  inline grape::DestList IOEDests(const vertex_t& v) const {
+    return fragment_->IOEDests(v);
+  }
+
+  inline const std::vector<vertex_t>& MirrorVertices(fid_t fid) const {
+    return fragment_->MirrorVertices(fid);
+  }
+
+  inline bool Oid2Gid(const oid_t& oid, vid_t& gid) const {
+    return fragment_->Oid2Gid(oid, gid);
+  }
+
+  inline bool HasNode(const oid_t& node) const {
+    return fragment_->HasNode(node);
+  }
+
+  bl::result<dynamic::Type> GetOidType(const grape::CommSpec& comm_spec) const {
+    return fragment_->GetOidType(comm_spec);
+  }
+
+ private:
+  fragment_t* fragment_;
+  std::string v_prop_key_;
+  std::string e_prop_key_;
 };
 
 }  // namespace gs

@@ -93,7 +93,7 @@ class SSSPProjected : public AppBase<FRAG_T, SSSPProjectedContext<FRAG_T>> {
 
       auto es = frag.GetOutgoingAdjList(u);
       for (auto& e : es) {
-        v = e.neighbor();
+        v = e.get_neighbor();
         distv = ctx.partial_result[v];
         double edata = 1.0;
         static_if<!std::is_same<edata_t, grape::EmptyType>{}>(

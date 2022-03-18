@@ -159,9 +159,11 @@ typename std::enable_if<is_dynamic<OID_T>::value, OID_T>::type string_to_oid(
 #endif
 
 template <typename FRAG_T>
-std::vector<typename FRAG_T::vertex_t> select_vertices_impl(
-    const FRAG_T& frag, const typename FRAG_T::vertex_range_t& iv,
-    const std::pair<std::string, std::string>& range) {
+typename std::enable_if<!oid_is_dynamic<FRAG_T>::value,
+                        typename std::vector<typename FRAG_T::vertex_t>>::type
+select_vertices_impl(const FRAG_T& frag,
+                     const typename FRAG_T::vertex_range_t& iv,
+                     const std::pair<std::string, std::string>& range) {
   using vertex_t = typename FRAG_T::vertex_t;
   using oid_t = typename FRAG_T::oid_t;
 
@@ -170,19 +172,19 @@ std::vector<typename FRAG_T::vertex_t> select_vertices_impl(
   auto& end = range.second;
 
   if (begin.empty() && end.empty()) {
-    for (auto v : iv) {
+    for (auto& v : iv) {
       vertices.emplace_back(v);
     }
   } else if (begin.empty() && !end.empty()) {
     oid_t end_id = string_to_oid<oid_t>(end);
-    for (auto v : iv) {
+    for (auto& v : iv) {
       if (frag.GetId(v) < end_id) {
         vertices.emplace_back(v);
       }
     }
   } else if (!begin.empty() && end.empty()) {
     oid_t begin_id = string_to_oid<oid_t>(begin);
-    for (auto v : iv) {
+    for (auto& v : iv) {
       if (frag.GetId(v) >= begin_id) {
         vertices.emplace_back(v);
       }
@@ -190,9 +192,55 @@ std::vector<typename FRAG_T::vertex_t> select_vertices_impl(
   } else if (!begin.empty() && !end.empty()) {
     oid_t begin_id = string_to_oid<oid_t>(begin);
     oid_t end_id = string_to_oid<oid_t>(end);
-    for (auto v : iv) {
+    for (auto& v : iv) {
       oid_t id = frag.GetId(v);
       if (id >= begin_id && id < end_id) {
+        vertices.emplace_back(v);
+      }
+    }
+  }
+  return vertices;
+}
+
+template <typename FRAG_T>
+typename std::enable_if<oid_is_dynamic<FRAG_T>::value,
+                        typename std::vector<typename FRAG_T::vertex_t>>::type
+select_vertices_impl(const FRAG_T& frag,
+                     const typename FRAG_T::vertex_range_t& iv,
+                     const std::pair<std::string, std::string>& range) {
+  using vertex_t = typename FRAG_T::vertex_t;
+  using oid_t = typename FRAG_T::oid_t;
+
+  std::vector<vertex_t> vertices;
+  auto& begin = range.first;
+  auto& end = range.second;
+
+  if (begin.empty() && end.empty()) {
+    for (auto& v : iv) {
+      if (frag.IsAliveInnerVertex(v)) {
+        vertices.emplace_back(v);
+      }
+    }
+  } else if (begin.empty() && !end.empty()) {
+    oid_t end_id = string_to_oid<oid_t>(end);
+    for (auto& v : iv) {
+      if (frag.GetId(v) < end_id && frag.IsAliveInnerVertex(v)) {
+        vertices.emplace_back(v);
+      }
+    }
+  } else if (!begin.empty() && end.empty()) {
+    oid_t begin_id = string_to_oid<oid_t>(begin);
+    for (auto& v : iv) {
+      if (frag.GetId(v) >= begin_id && frag.IsAliveInnerVertex(v)) {
+        vertices.emplace_back(v);
+      }
+    }
+  } else if (!begin.empty() && !end.empty()) {
+    oid_t begin_id = string_to_oid<oid_t>(begin);
+    oid_t end_id = string_to_oid<oid_t>(end);
+    for (auto& v : iv) {
+      oid_t id = frag.GetId(v);
+      if (id >= begin_id && id < end_id && frag.IsAliveInnerVertex(v)) {
         vertices.emplace_back(v);
       }
     }
@@ -243,7 +291,7 @@ vertex_data_to_arrow_array_impl(const FRAG_T& frag) {
   typename vineyard::ConvertToArrowType<vdata_t>::BuilderType builder;
   auto iv = frag.InnerVertices();
 
-  for (auto v : iv) {
+  for (auto& v : iv) {
     ARROW_OK_OR_RAISE(builder.Append(frag.GetData(v)));
   }
   std::shared_ptr<typename vineyard::ConvertToArrowType<vdata_t>::ArrayType>
@@ -454,7 +502,7 @@ void serialize_context_property_impl(
     const std::shared_ptr<IColumn>& base_column) {
   auto column = std::dynamic_pointer_cast<Column<FRAG_T, DATA_T>>(base_column);
 
-  for (auto v : range) {
+  for (auto& v : range) {
     arc << column->at(v);
   }
 }
@@ -542,14 +590,14 @@ class TransformUtils<FRAG_T,
 
   void SerializeVertexId(const std::vector<vertex_t>& range,
                          grape::InArchive& arc) {
-    for (auto v : range) {
+    for (auto& v : range) {
       arc << frag_.GetId(v);
     }
   }
 
   bl::result<void> SerializeVertexLabelId(const std::vector<vertex_t>& range,
                                           grape::InArchive& arc) {
-    for (auto v : range) {
+    for (auto& v : range) {
       arc << frag_.vertex_label(v);
     }
     return {};
@@ -559,7 +607,7 @@ class TransformUtils<FRAG_T,
       label_id_t label_id) {
     typename vineyard::ConvertToArrowType<oid_t>::BuilderType builder;
     auto iv = frag_.InnerVertices(label_id);
-    for (auto v : iv) {
+    for (auto& v : iv) {
       ARROW_OK_OR_RAISE(builder.Append(frag_.GetId(v)));
     }
     std::shared_ptr<typename vineyard::ConvertToArrowType<oid_t>::ArrayType>
@@ -700,7 +748,7 @@ class TransformUtils<FRAG_T,
       grape::InArchive& arc,
       const std::vector<typename FRAG_T::vertex_t>& range,
       typename FRAG_T::prop_id_t prop_id) {
-    for (auto v : range) {
+    for (auto& v : range) {
       arc << frag_.template GetData<DATA_T>(v, prop_id);
     }
   }
@@ -768,14 +816,14 @@ class TransformUtils<
 
   void SerializeVertexId(const std::vector<vertex_t>& range,
                          grape::InArchive& arc) {
-    for (auto v : range) {
+    for (auto& v : range) {
       arc << frag_.GetId(v);
     }
   }
 
   bl::result<void> SerializeVertexLabelId(const std::vector<vertex_t>& range,
                                           grape::InArchive& arc) {
-    for (auto v : range) {
+    for (auto& v : range) {
       int label_id = 0;
       static_if<is_flattened_fragment<FRAG_T>::value>(
           [&](auto& frag, auto& v, auto& label_id) {
@@ -790,7 +838,7 @@ class TransformUtils<
     typename vineyard::ConvertToArrowType<oid_t>::BuilderType builder;
     auto inner_vertices = frag_.InnerVertices();
 
-    for (auto v : inner_vertices) {
+    for (auto& v : inner_vertices) {
       ARROW_OK_OR_RAISE(builder.Append(frag_.GetId(v)));
     }
     std::shared_ptr<typename vineyard::ConvertToArrowType<oid_t>::ArrayType>
@@ -826,7 +874,7 @@ class TransformUtils<
 
   void SerializeVertexData(const std::vector<vertex_t>& range,
                            grape::InArchive& arc) {
-    for (auto v : range) {
+    for (auto& v : range) {
       arc << frag_.GetData(v);
     }
   }
@@ -906,7 +954,7 @@ class TransformUtils<
 
   void SerializeVertexId(const std::vector<vertex_t>& range,
                          grape::InArchive& arc) {
-    for (auto v : range) {
+    for (auto& v : range) {
       arc << frag_.GetId(v);
     }
   }
@@ -927,7 +975,7 @@ class TransformUtils<
 
     if (oid_type == dynamic::Type::kInt64Type) {
       typename vineyard::ConvertToArrowType<int64_t>::BuilderType builder;
-      for (auto v : inner_vertices) {
+      for (auto& v : inner_vertices) {
         ARROW_OK_OR_RAISE(builder.Append(frag_.GetId(v).GetInt64()));
       }
       std::shared_ptr<typename vineyard::ConvertToArrowType<int64_t>::ArrayType>
@@ -1007,7 +1055,7 @@ class TransformUtils<
 
   void SerializeVertexData(const std::vector<vertex_t>& range,
                            grape::InArchive& arc) {
-    for (auto v : range) {
+    for (auto& v : range) {
       arc << frag_.GetData(v);
     }
   }

@@ -525,9 +525,7 @@ class TestGraphProjectTest(object):
     def setup_class(cls):
         cls.NXGraph = nx.Graph
         edgelist = os.path.expandvars("${GS_TEST_DIR}/dynamic/p2p-31_dynamic.edgelist")
-        cls.g = nx.read_edgelist(
-            edgelist, nodetype=int, data=True, create_using=cls.NXGraph
-        )
+        cls.g = nx.read_edgelist(edgelist, nodetype=int, data=True)
         cls.g.add_node(1, vdata_str="kdjfao")
         cls.g.add_node(1, vdata_int=123)
 

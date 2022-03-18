@@ -85,8 +85,7 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::loadGraph(
     vm_ptr->SetPartitioner(partitioner);
 
     auto fragment = std::make_shared<fragment_t>(vm_ptr);
-    bool duplicated = !distributed;
-    fragment->Init(comm_spec_.fid(), directed, duplicated);
+    fragment->Init(comm_spec_.fid(), directed);
 
     rpc::graph::GraphDefPb graph_def;
 
@@ -305,8 +304,8 @@ bl::result<void> GrapeInstance::modifyVertices(const rpc::GSParams& params) {
   dynamic::Parse(nodes_json, nodes);
   auto fragment =
       std::static_pointer_cast<DynamicFragment>(wrapper->fragment());
-
-  fragment->ModifyVertices(nodes, common_attr, modify_type);
+  DynamicFragmentMutator mutator(comm_spec_, fragment);
+  mutator.ModifyVertices(nodes, common_attr, modify_type);
   return {};
 #else
   RETURN_GS_ERROR(vineyard::ErrorCode::kUnimplementedMethod,
@@ -329,7 +328,6 @@ bl::result<void> GrapeInstance::modifyEdges(const rpc::GSParams& params) {
         "GraphType must be DYNAMIC_PROPERTY, the origin graph type is: " +
             std::to_string(graph_type) + ", graph name: " + graph_name);
   }
-
   BOOST_LEAF_AUTO(common_attr_json, params.Get<std::string>(rpc::PROPERTIES));
   dynamic::Value common_attr, edges;
   // the common attribute for all edges to be modified
@@ -343,7 +341,8 @@ bl::result<void> GrapeInstance::modifyEdges(const rpc::GSParams& params) {
   dynamic::Parse(edges_json, edges);
   auto fragment =
       std::static_pointer_cast<DynamicFragment>(wrapper->fragment());
-  fragment->ModifyEdges(edges, common_attr, modify_type, weight);
+  DynamicFragmentMutator mutator(comm_spec_, fragment);
+  mutator.ModifyEdges(edges, common_attr, modify_type, weight);
 #else
   RETURN_GS_ERROR(vineyard::ErrorCode::kUnimplementedMethod,
                   "GraphScope is built with NETWORKX=OFF, please recompile it "
@@ -773,8 +772,7 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::convertGraph(
 
   auto src_graph_type = src_frag_wrapper->graph_def().graph_type();
 
-  if (src_graph_type == rpc::graph::ARROW_PROPERTY &&
-      dst_graph_type == rpc::graph::DYNAMIC_PROPERTY) {
+  if (src_graph_type == rpc::graph::ARROW_PROPERTY) {
     BOOST_LEAF_AUTO(default_label_id,
                     params.Get<int64_t>(rpc::DEFAULT_LABEL_ID));
     BOOST_LEAF_AUTO(dst_graph_wrapper, g_utils->ToDynamicFragment(
@@ -782,8 +780,7 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::convertGraph(
                                            dst_graph_name, default_label_id));
     BOOST_LEAF_CHECK(object_manager_.PutObject(dst_graph_wrapper));
     return dst_graph_wrapper->graph_def();
-  } else if (src_graph_type == rpc::graph::DYNAMIC_PROPERTY &&
-             dst_graph_type == rpc::graph::ARROW_PROPERTY) {
+  } else if (src_graph_type == rpc::graph::DYNAMIC_PROPERTY) {
     BOOST_LEAF_AUTO(dst_graph_wrapper,
                     g_utils->ToArrowFragment(*client_, comm_spec_,
                                              src_frag_wrapper, dst_graph_name));
@@ -814,7 +811,6 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::copyGraph(
 bl::result<rpc::graph::GraphDefPb> GrapeInstance::toDirected(
     const rpc::GSParams& params) {
   BOOST_LEAF_AUTO(src_graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
-  // BOOST_LEAF_AUTO(copy_type, params.Get<std::string>(rpc::COPY_TYPE));
 
   BOOST_LEAF_AUTO(src_wrapper,
                   object_manager_.GetObject<IFragmentWrapper>(src_graph_name));
@@ -852,9 +848,8 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::induceSubGraph(
   VLOG(1) << "Inducing subgraph from " << src_graph_name
           << ", graph name: " << sub_graph_name;
 
-  std::vector<DynamicFragment::oid_t> induced_vertices;
-  std::vector<std::pair<DynamicFragment::oid_t, DynamicFragment::oid_t>>
-      induced_edges;
+  std::vector<dynamic::Value> induced_vertices;
+  std::vector<std::pair<dynamic::Value, dynamic::Value>> induced_edges;
   if (params.HasKey(rpc::NODES)) {
     // induce subgraph from nodes.
     BOOST_LEAF_AUTO(nodes_json, params.Get<std::string>(rpc::NODES));
@@ -876,6 +871,7 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::induceSubGraph(
       induced_edges.emplace_back(std::move(e[0]), std::move(e[1]));
     }
   }
+
   auto fragment =
       std::static_pointer_cast<DynamicFragment>(src_wrapper->fragment());
 

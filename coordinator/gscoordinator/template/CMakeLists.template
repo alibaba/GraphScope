@@ -60,6 +60,12 @@ else ()
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath,$ORIGIN")
 endif ()
 
+# Thread_NOT_FOUND
+set(CMAKE_THREAD_LIBS_INIT "-lpthread")
+set(CMAKE_HAVE_THREADS_LIBRARY 1)
+set(CMAKE_USE_PTHREADS_INIT 1)
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+
 check_cxx_compiler_flag(-Wno-deprecated-declarations W_NO_DEPRECATED_DECLARATIONS)
 check_cxx_compiler_flag(-Wno-attributes W_NO_ATTRIBUTES)
 check_cxx_compiler_flag(-Wno-sign-compare W_NO_SIGN_COMPARE)
