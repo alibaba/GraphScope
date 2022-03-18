@@ -104,31 +104,6 @@ public interface VertexRange<VID_T> extends FFIPointer, CXXPointer {
                 };
     }
 
-    default Iterable<Vertex<VID_T>> intIterable() {
-        return () ->
-                new Iterator<Vertex<VID_T>>() {
-                    Vertex<Integer> vertex = (Vertex<Integer>) FFITypeFactoryhelper.newVertexInt();
-                    Integer curValue;
-                    Integer endValue;
-
-                    {
-                        vertex.SetValue((Integer) beginValue());
-                        curValue = (Integer) beginValue();
-                        endValue = (Integer) endValue();
-                    }
-
-                    public boolean hasNext() {
-                        return !curValue.equals(endValue);
-                    }
-
-                    public Vertex<VID_T> next() {
-                        vertex.SetValue(curValue);
-                        curValue += 1;
-                        return (Vertex<VID_T>) vertex;
-                    }
-                };
-    }
-
     /**
      * Factory type for vertex range.
      *

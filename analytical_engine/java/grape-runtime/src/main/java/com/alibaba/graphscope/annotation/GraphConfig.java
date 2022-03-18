@@ -19,11 +19,8 @@ package com.alibaba.graphscope.annotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Defines the configuration for code generation.
- */
+/** Defines the configuration for code generation. */
 public class GraphConfig {
-
     private static Logger logger = LoggerFactory.getLogger(GraphConfig.class.getName());
 
     final String vidType;

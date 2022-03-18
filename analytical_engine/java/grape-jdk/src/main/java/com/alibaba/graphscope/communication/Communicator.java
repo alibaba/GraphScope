@@ -30,7 +30,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Objects;
 
 /** Communicator providing useful distributed aggregation methods such as min/min/sum. */
-public class Communicator {
+public abstract class Communicator {
     private static Logger logger = LoggerFactory.getLogger(Communicator.class.getName());
     private FFICommunicator communicatorImpl;
 

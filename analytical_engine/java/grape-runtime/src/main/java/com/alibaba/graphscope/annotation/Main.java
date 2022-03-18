@@ -19,14 +19,12 @@ package com.alibaba.graphscope.annotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * A main class demostrate the usage of GraphScopeAppScanner.
- */
+/** A main class demostrate the usage of GraphScopeAppScanner. */
 public class Main {
+    private static Logger logger = LoggerFactory.getLogger(Main.class.getName());
 
     public static final boolean ignoreError = true;
     public static final boolean verbose = false;
-    private static Logger logger = LoggerFactory.getLogger(Main.class.getName());
 
     public static void main(String[] args) {
         if (args.length != 3) {

@@ -59,9 +59,9 @@ public class ContextUtilsTest {
          * Called by grape framework, before any PEval. You can initiating data structures need
          * during super steps here.
          *
-         * @param frag           The graph fragment providing accesses to graph data.
+         * @param frag The graph fragment providing accesses to graph data.
          * @param messageManager The message manger which manages messages between fragments.
-         * @param jsonObject     String args from cmdline.
+         * @param jsonObject String args from cmdline.
          * @see IFragment
          * @see DefaultMessageManager
          */

@@ -25,7 +25,6 @@ import java.lang.annotation.Target;
 @Retention(value = RUNTIME)
 @Target(ElementType.TYPE)
 public @interface GraphType {
-
     Class<?> oidType();
 
     Class<?> vidType();
