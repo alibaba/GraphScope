@@ -11,11 +11,8 @@ import com.alibaba.graphscope.fragment.adaptor.ImmutableEdgecutFragmentAdaptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Util functions to wrap immutableEdgecutFragment and ArrowProjected fragment as IFragment.
- */
+/** Util functions to wrap immutableEdgecutFragment and ArrowProjected fragment as IFragment. */
 public class IFragmentHelper {
-
     private static Logger logger = LoggerFactory.getLogger(IFragmentHelper.class);
 
     public static IFragment adapt2SimpleFragment(Object fragmentImpl) {
@@ -52,15 +49,15 @@ public class IFragmentHelper {
     /**
      * Create a parameterized arrowProjectedFragment Adaptor.
      *
-     * @param oidClass   oidclass
-     * @param vidClass   vidclass
+     * @param oidClass oidclass
+     * @param vidClass vidclass
      * @param vdataClass vertex data class
      * @param edataClass edge data class
-     * @param fragment   actual fragment obj
-     * @param <OID_T>    oid
-     * @param <VID_T>    vid
-     * @param <VDATA_T>  vdata
-     * @param <EDATA_T>  edata
+     * @param fragment actual fragment obj
+     * @param <OID_T> oid
+     * @param <VID_T> vid
+     * @param <VDATA_T> vdata
+     * @param <EDATA_T> edata
      * @return created adaptor.
      */
     private static <OID_T, VID_T, VDATA_T, EDATA_T>
@@ -76,15 +73,15 @@ public class IFragmentHelper {
     /**
      * Create a parameterized immutableFragment Adaptor.
      *
-     * @param oidClass   oidclass
-     * @param vidClass   vidclass
+     * @param oidClass oidclass
+     * @param vidClass vidclass
      * @param vdataClass vertex data class
      * @param edataClass edge data class
-     * @param fragment   actual fragment obj
-     * @param <OID_T>    oid
-     * @param <VID_T>    vid
-     * @param <VDATA_T>  vdata
-     * @param <EDATA_T>  edata
+     * @param fragment actual fragment obj
+     * @param <OID_T> oid
+     * @param <VID_T> vid
+     * @param <VDATA_T> vdata
+     * @param <EDATA_T> edata
      * @return created adaptor.
      */
     private static <OID_T, VID_T, VDATA_T, EDATA_T>

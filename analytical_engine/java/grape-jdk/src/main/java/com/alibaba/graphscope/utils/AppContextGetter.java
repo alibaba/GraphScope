@@ -90,20 +90,14 @@ public class AppContextGetter {
     }
 
     /**
-     * For ProjectedDefaultApp, the context should be the index 4
+     * For ProjectedDefaultApp, the context should be the 2rd, i.e. index of 1.
      *
      * @param appClass user-defined app class object.
      * @return the base class name.
      */
     public static String getDefaultContextName(Class<? extends DefaultAppBase> appClass) {
-        // There is a special case: GiraphComputation, which is a driver, since ctx type is
-        // not specified at compile time, so it is not possible to retrive in a normal way.
-        if (appClass.getName().equals("com.alibaba.graphscope.app.GiraphComputationAdaptor")) {
-            return "com.alibaba.graphscope.context.GiraphComputationAdaptorContext";
-        }
         Class<? extends DefaultContextBase> clz =
                 (Class<? extends DefaultContextBase>) getInterfaceTemplateType(appClass, 4);
-        logger.info("app class {}, context class {}", appClass.getName(), clz.getName());
         return clz.getName();
     }
 
@@ -181,16 +175,7 @@ public class AppContextGetter {
 
     public static String getVertexDataContextDataType(VertexDataContext ctxObj) {
         Class<? extends VertexDataContext> ctxClass = ctxObj.getClass();
-        Class<?> ret;
-        try {
-            ret = getBaseClassTemplateType(ctxClass, 1);
-        } catch (Exception exception) {
-            logger.info("Exception ocurred: ");
-            exception.printStackTrace();
-            ret = ctxObj.getDataClass();
-            logger.info("vertex data context class: " + ret.getName());
-        }
-
+        Class<?> ret = getBaseClassTemplateType(ctxClass, 1);
         if (ret.getName() == "java.lang.Double") {
             return "double";
         } else if (ret.getName() == "java.lang.Integer") {

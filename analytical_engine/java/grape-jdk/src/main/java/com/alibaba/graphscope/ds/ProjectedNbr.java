@@ -27,6 +27,7 @@ import com.alibaba.fastffi.CXXReference;
 import com.alibaba.fastffi.CXXValue;
 import com.alibaba.fastffi.FFIGen;
 import com.alibaba.fastffi.FFINameAlias;
+import com.alibaba.fastffi.FFIPointer;
 import com.alibaba.fastffi.FFITypeAlias;
 
 /**
@@ -41,14 +42,13 @@ import com.alibaba.fastffi.FFITypeAlias;
 @CXXHead(ARROW_PROJECTED_FRAGMENT_H)
 @CXXHead(CORE_JAVA_TYPE_ALIAS_H)
 @FFITypeAlias(PROJECTED_NBR)
-public interface ProjectedNbr<VID_T, EDATA_T> extends NbrBase<VID_T, EDATA_T> {
+public interface ProjectedNbr<VID_T, EDATA_T> extends FFIPointer {
 
     /**
      * Get the neighbor vertex.
      *
      * @return vertex.
      */
-    @Override
     @CXXValue
     Vertex<VID_T> neighbor();
 
@@ -65,7 +65,6 @@ public interface ProjectedNbr<VID_T, EDATA_T> extends NbrBase<VID_T, EDATA_T> {
      *
      * @return edge data.
      */
-    @Override
     EDATA_T data();
 
     /**

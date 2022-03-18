@@ -45,6 +45,33 @@ import java.util.stream.Collectors;
 
 public class FFITypeFactory {
 
+    static class TypeRegistry {
+        Map<String, Object> ffiTypeNameToFFIPointerJavaClassName = new ConcurrentHashMap<>();
+        Map<String, Object> ffiTypeNameToFFILibraryJavaClassName = new ConcurrentHashMap<>();
+
+        public String toString() {
+            return String.format(
+                    "{ffiPointers=%s, ffiLibraries=%s}",
+                    ffiTypeNameToFFIPointerJavaClassName, ffiTypeNameToFFILibraryJavaClassName);
+        }
+
+        public Object getFFIPointer(String ffiTypeName) {
+            Object value = this.ffiTypeNameToFFIPointerJavaClassName.get(ffiTypeName);
+            if (value == null) {
+                throw new IllegalArgumentException("Cannot get FFIPointer for " + ffiTypeName);
+            }
+            return value;
+        }
+
+        public Object getFFILibrary(String ffiTypeName) {
+            Object value = this.ffiTypeNameToFFILibraryJavaClassName.get(ffiTypeName);
+            if (value == null) {
+                throw new IllegalArgumentException("Cannot get FFILibrary for " + ffiTypeName);
+            }
+            return value;
+        }
+    }
+
     static ConcurrentHashMap<ClassLoader, TypeRegistry> loaded = new ConcurrentHashMap<>();
 
     static {
@@ -160,6 +187,41 @@ public class FFITypeFactory {
     private static void ensureFFIType(Class<?> ffiType) {
         if (!FFIType.class.isAssignableFrom(ffiType)) {
             throw new IllegalStateException("Type " + ffiType + " is not a valid FFIType.");
+        }
+    }
+
+    public static class ParameterizedTypeImpl implements ParameterizedType {
+
+        final Type[] typeArguments;
+        final Class<?> rawType;
+
+        public ParameterizedTypeImpl(Class<?> rawType, Type[] typeArguments) {
+            this.rawType = rawType;
+            this.typeArguments = typeArguments;
+        }
+
+        @Override
+        public Type[] getActualTypeArguments() {
+            return typeArguments;
+        }
+
+        @Override
+        public Type getRawType() {
+            return rawType;
+        }
+
+        @Override
+        public Type getOwnerType() {
+            throw new IllegalStateException("Not implemented yet");
+        }
+
+        public String toString() {
+            return getRawType().getTypeName()
+                    + "<"
+                    + Arrays.stream(getActualTypeArguments())
+                            .map(t -> t.getTypeName())
+                            .collect(Collectors.joining(","))
+                    + ">";
         }
     }
 
@@ -526,68 +588,5 @@ public class FFITypeFactory {
         return getFactory(
                 CXXStdVector.class,
                 "std::vector<" + getFFIVectorElementTypeName(elementType) + ">");
-    }
-
-    static class TypeRegistry {
-
-        Map<String, Object> ffiTypeNameToFFIPointerJavaClassName = new ConcurrentHashMap<>();
-        Map<String, Object> ffiTypeNameToFFILibraryJavaClassName = new ConcurrentHashMap<>();
-
-        public String toString() {
-            return String.format(
-                    "{ffiPointers=%s, ffiLibraries=%s}",
-                    ffiTypeNameToFFIPointerJavaClassName, ffiTypeNameToFFILibraryJavaClassName);
-        }
-
-        public Object getFFIPointer(String ffiTypeName) {
-            Object value = this.ffiTypeNameToFFIPointerJavaClassName.get(ffiTypeName);
-            if (value == null) {
-                throw new IllegalArgumentException("Cannot get FFIPointer for " + ffiTypeName);
-            }
-            return value;
-        }
-
-        public Object getFFILibrary(String ffiTypeName) {
-            Object value = this.ffiTypeNameToFFILibraryJavaClassName.get(ffiTypeName);
-            if (value == null) {
-                throw new IllegalArgumentException("Cannot get FFILibrary for " + ffiTypeName);
-            }
-            return value;
-        }
-    }
-
-    public static class ParameterizedTypeImpl implements ParameterizedType {
-
-        final Type[] typeArguments;
-        final Class<?> rawType;
-
-        public ParameterizedTypeImpl(Class<?> rawType, Type[] typeArguments) {
-            this.rawType = rawType;
-            this.typeArguments = typeArguments;
-        }
-
-        @Override
-        public Type[] getActualTypeArguments() {
-            return typeArguments;
-        }
-
-        @Override
-        public Type getRawType() {
-            return rawType;
-        }
-
-        @Override
-        public Type getOwnerType() {
-            throw new IllegalStateException("Not implemented yet");
-        }
-
-        public String toString() {
-            return getRawType().getTypeName()
-                    + "<"
-                    + Arrays.stream(getActualTypeArguments())
-                            .map(t -> t.getTypeName())
-                            .collect(Collectors.joining(","))
-                    + ">";
-        }
     }
 }

@@ -61,14 +61,12 @@ struct Vertex {
   // id. Otherwise, it represents column name
   std::string protocol;  // file/oss/numpy/pandas/vineyard
   std::string values;    // from location, vineyard or pandas
-  std::string vformat;   // defines vertex format,
 
   std::string SerializeToString() const {
     std::stringstream ss;
     ss << "V ";
     ss << label << " " << vid << " ";
-    ss << protocol << " " << values << " ";
-    ss << vformat << "\n";
+    ss << protocol << " " << values << "\n";
     return ss.str();
   }
 };
@@ -86,16 +84,12 @@ class Edge {
     std::string load_strategy;
     std::string protocol;
     std::string values;
-    // This doesn't need to be guarded by eformat
-    // eformat is not requires, initialized to empty.
-    std::string eformat;
 
     std::string SerializeToString() const {
       std::stringstream ss;
       ss << src_label << " " << dst_label << " ";
       ss << src_vid << " " << dst_vid << " ";
-      ss << protocol << " " << values << " ";
-      ss << eformat;
+      ss << protocol << " " << values;
       return ss.str();
     }
   };
@@ -144,9 +138,6 @@ inline void ParseVertex(std::shared_ptr<detail::Graph>& graph,
   vertex->label = attrs.at(rpc::LABEL).s();
   vertex->vid = attrs.at(rpc::VID).s();
   vertex->protocol = attrs.at(rpc::PROTOCOL).s();
-  if (attrs.find(rpc::VFORMAT) != attrs.end()) {
-    vertex->vformat = attrs.at(rpc::VFORMAT).s();
-  }
   if (vertex->protocol == "pandas") {
     vertex->values = data;
   } else {
@@ -176,9 +167,6 @@ inline void ParseEdge(std::shared_ptr<detail::Graph>& graph,
   sub_label.dst_vid = attrs.at(rpc::DST_VID).s();
   sub_label.load_strategy = attrs.at(rpc::LOAD_STRATEGY).s();
   sub_label.protocol = attrs.at(rpc::PROTOCOL).s();
-  if (attrs.find(rpc::EFORMAT) != attrs.end()) {
-    sub_label.eformat = attrs.at(rpc::EFORMAT).s();
-  }
   if (sub_label.protocol == "pandas") {
     sub_label.values = data;
   } else {

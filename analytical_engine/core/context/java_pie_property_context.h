@@ -202,7 +202,6 @@ class JavaPIEPropertyDefaultContext : public JavaPIEPropertyContext<FRAG_T> {
   explicit JavaPIEPropertyDefaultContext(const FRAG_T& fragment)
       : JavaPIEPropertyContext<FRAG_T>(fragment) {}
   virtual ~JavaPIEPropertyDefaultContext() {}
-
   void Init(PropertyMessageManager& messages, const std::string& params,
             const std::string& lib_path) {
     VLOG(1) << "lib path: " << lib_path;
@@ -234,7 +233,6 @@ class JavaPIEPropertyParallelContext : public JavaPIEPropertyContext<FRAG_T> {
   explicit JavaPIEPropertyParallelContext(const FRAG_T& fragment)
       : JavaPIEPropertyContext<FRAG_T>(fragment) {}
   virtual ~JavaPIEPropertyParallelContext() {}
-
   void Init(ParallelPropertyMessageManager& messages, const std::string& params,
             const std::string& lib_path) {
     VLOG(1) << "lib path: " << lib_path;

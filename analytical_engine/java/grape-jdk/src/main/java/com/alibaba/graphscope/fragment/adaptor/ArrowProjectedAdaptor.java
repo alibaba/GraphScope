@@ -211,8 +211,8 @@ public class ArrowProjectedAdaptor<OID_T, VID_T, VDATA_T, EDATA_T>
      */
     @Override
     public VDATA_T getData(Vertex<VID_T> vertex) {
-        //        throw new IllegalStateException("Not implemented");
-        return fragment.getData(vertex);
+        logger.error("Method not implemented");
+        return null;
     }
 
     /**

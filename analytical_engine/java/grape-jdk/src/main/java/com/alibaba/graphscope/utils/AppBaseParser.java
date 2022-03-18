@@ -31,12 +31,9 @@ import org.slf4j.LoggerFactory;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.Objects;
 
 public class AppBaseParser {
     private static Logger logger = LoggerFactory.getLogger(AppBaseParser.class.getName());
-    private static String GIRAPH_APP_ABSTRACT_NAME = "org.apache.giraph.graph.AbstractComputation";
-    private static String GIRAPH_APP_BASIC_NAME = "org.apache.giraph.graph.BasicComputation";
 
     public static void main(String[] args) {
         if (args.length != 1) {
@@ -48,17 +45,8 @@ public class AppBaseParser {
 
     private static void loadClassAndParse(String className) {
         try {
-            // we don't giraphAppBaseClass is defined in giraph-sdk, and we don't want to introduce
-            // circular dependency.
-            Class<?> giraphDefaultAppBase = Class.forName(GIRAPH_APP_BASIC_NAME);
-            logger.info("loaded giraph defaul app base: " + giraphDefaultAppBase.getName());
             Class<?> clz = Class.forName(className);
             Type[] typeParams;
-            // Input class name can be a giraph app, But we can use isAssignableFrom, since it
-            // will introduce circular dependency. We judge by using get super class.
-            if (tryGiraphClass(clz)) {
-                return;
-            }
             if (DefaultAppBase.class.isAssignableFrom(clz)) {
                 logger.info("DefaultAppBase");
                 typeParams = getTypeParams(clz, 5);
@@ -94,34 +82,6 @@ public class AppBaseParser {
         }
     }
 
-    private static boolean tryGiraphClass(Class<?> claz) {
-        Class<?> father = claz.getSuperclass();
-        if (Objects.isNull(father)) {
-            logger.info("Received an interface");
-            return false;
-        } else if (father.equals(Object.class)) {
-            logger.info("super class is object");
-            return false;
-        }
-        Type[] types;
-        if (father.getName().equals(GIRAPH_APP_ABSTRACT_NAME)) {
-            logger.info("Giraph");
-            types = getTypeParams(father, 5);
-        } else if (father.getName().equals(GIRAPH_APP_BASIC_NAME)) {
-            logger.info("Giraph");
-            types = getExtendTypeParams(father, 5);
-        } else {
-            return false;
-        }
-        String typeParamNames[] = new String[types.length];
-        for (int i = 0; i < types.length; ++i) {
-            typeParamNames[i] = types[i].getTypeName();
-        }
-        logger.info("TypeParams: " + String.join(",", typeParamNames));
-        logger.info("ContextType:vertex_data");
-        return true;
-    }
-
     private static String javaContextToCppContextName(Class<?> ctxClass) {
         if (LabeledVertexDataContext.class.isAssignableFrom(ctxClass)) {
             return "labeled_vertex_data";
@@ -133,20 +93,6 @@ public class AppBaseParser {
             return "vertex_property";
         }
         return "null";
-    }
-
-    private static Type[] getExtendTypeParams(Class<?> klass, int expectedSize) {
-        ParameterizedType type = (ParameterizedType) (klass.getGenericSuperclass());
-        Type[] classes = type.getActualTypeArguments();
-        if (classes.length != expectedSize) {
-            logger.error(
-                    "Error: Number of params error, expected "
-                            + expectedSize
-                            + ", actual "
-                            + classes.length);
-            throw new IllegalStateException("Type params size not match");
-        }
-        return classes;
     }
 
     private static Type[] getTypeParams(Class<?> clz, int size) {

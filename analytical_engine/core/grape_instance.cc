@@ -126,21 +126,6 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::loadGraph(
 
     VLOG(1) << "Loading graph, graph name: " << graph_name
             << ", graph type: ArrowFragment, type sig: " << type_sig;
-#ifdef ENABLE_JAVA_SDK
-    // It is possible to has no JAVA_CLASS_PATH and JVM_OPTS when we loading
-    // graph via addLabels, e.t.c.
-    if (params.HasKey(rpc::JAVA_CLASS_PATH)) {
-      BOOST_LEAF_AUTO(user_jar_path,
-                      params.Get<std::string>(rpc::JAVA_CLASS_PATH));
-      setenv("USER_JAR_PATH", user_jar_path.c_str(), true);
-      VLOG(10) << "USER_JAR_PATH: " << user_jar_path;
-    }
-    if (params.HasKey(rpc::JVM_OPTS)) {
-      BOOST_LEAF_AUTO(jvm_opts, params.Get<std::string>(rpc::JVM_OPTS));
-      setenv("GRAPE_JVM_OPTS", jvm_opts.c_str(), true);
-      VLOG(10) << "GRAPE_JVM_OPTS:" << jvm_opts;
-    }
-#endif
 
     BOOST_LEAF_AUTO(graph_utils,
                     object_manager_.GetObject<PropertyGraphUtils>(type_sig));
@@ -1296,12 +1281,6 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
     conf.networkx = "ON";
 #else
     conf.networkx = "OFF";
-#endif
-
-#ifdef ENABLE_JAVA_SDK
-    conf.enable_java_sdk = "ON";
-#else
-    conf.enable_java_sdk = "OFF";
 #endif
     conf.vineyard_socket = client_->IPCSocket();
     conf.vineyard_rpc_endpoint = client_->RPCEndpoint();
