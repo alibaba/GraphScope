@@ -35,7 +35,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
 public class BFS implements ParallelAppBase<Long, Long, Double, Long, BFSContext>, ParallelEngine {
-
     private static Logger logger = LoggerFactory.getLogger(BFS.class);
 
     @Override
@@ -50,7 +49,7 @@ public class BFS implements ParallelAppBase<Long, Long, Double, Long, BFSContext
         if (inThisFrag) {
             ctx.partialResults.set(vertex, 0);
             AdjList<Long, Long> adjList = fragment.getOutgoingAdjList(vertex);
-            for (Nbr<Long, Long> nbr : adjList.iterable()) {
+            for (Nbr<Long, Long> nbr : adjList.iterator()) {
                 Vertex<Long> neighbor = nbr.neighbor();
                 if (ctx.partialResults.get(neighbor) == Integer.MAX_VALUE) {
                     ctx.partialResults.set(neighbor, 1);
@@ -89,7 +88,7 @@ public class BFS implements ParallelAppBase<Long, Long, Double, Long, BFSContext
         BiConsumer<Vertex<Long>, Integer> vertexProcessConsumer =
                 (cur, finalTid) -> {
                     AdjList<Long, Long> adjList = fragment.getOutgoingAdjList(cur);
-                    for (Nbr<Long, Long> nbr : adjList.iterable()) {
+                    for (Nbr<Long, Long> nbr : adjList.iterator()) {
                         Vertex<Long> vertex = nbr.neighbor();
                         if (ctx.partialResults.get(vertex) == Integer.MAX_VALUE) {
                             ctx.partialResults.set(vertex, nextDepth);

@@ -20,7 +20,7 @@ public class Traverse
         TraverseContext ctx = (TraverseContext) context;
         for (Vertex<Long> vertex : fragment.innerVertices().longIterable()) {
             AdjList<Long, Long> adjList = fragment.getOutgoingAdjList(vertex);
-            for (Nbr<Long, Long> nbr : adjList.iterable()) {
+            for (Nbr<Long, Long> nbr : adjList.iterator()) {
                 Vertex<Long> dst = nbr.neighbor();
                 // Update largest distance for current vertex
                 ctx.vertexArray.setValue(vertex, Math.max(nbr.data(), ctx.vertexArray.get(vertex)));
@@ -37,7 +37,7 @@ public class Traverse
         TraverseContext ctx = (TraverseContext) context;
         for (Vertex<Long> vertex : fragment.innerVertices().longIterable()) {
             AdjList<Long, Long> adjList = fragment.getOutgoingAdjList(vertex);
-            for (Nbr<Long, Long> nbr : adjList.iterable()) {
+            for (Nbr<Long, Long> nbr : adjList.iterator()) {
                 Vertex<Long> dst = nbr.neighbor();
                 // Update largest distance for current vertex
                 ctx.vertexArray.setValue(vertex, Math.max(nbr.data(), ctx.vertexArray.get(vertex)));

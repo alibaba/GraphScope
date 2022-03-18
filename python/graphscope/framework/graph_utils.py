@@ -68,7 +68,6 @@ class VertexLabel(object):
         vid_field: Union[str, int] = 0,
         session_id=None,
         id_type: str = "int64_t",
-        vformat=None,
     ):
         self.label = label
         # loader to take various data source
@@ -86,7 +85,6 @@ class VertexLabel(object):
         # should be consistent with the original graph
         self.id_type = id_type
         self._session_id = session_id
-        self._vformat = vformat
         # normalize properties
         # add vid to property list
         self.add_property(str(self.vid_field), self.id_type)
@@ -128,8 +126,6 @@ class VertexLabel(object):
         chunk.attr[types_pb2.CHUNK_TYPE].CopyFrom(utils.s_to_attr("loader"))
         chunk.attr[types_pb2.LABEL].CopyFrom(utils.s_to_attr(self.label))
         chunk.attr[types_pb2.VID].CopyFrom(utils.s_to_attr(str(self.vid_field)))
-        if isinstance(self._vformat, str):
-            chunk.attr[types_pb2.VFORMAT].CopyFrom(utils.s_to_attr(self._vformat))
         # loader
         for k, v in self.loader.get_attr().items():
             # raw bytes for pandas/numpy data
@@ -155,7 +151,6 @@ class EdgeSubLabel(object):
         dst_field: Union[str, int] = 1,
         load_strategy="both_out_in",
         id_type: str = "int64_t",
-        eformat=None,
     ):
         if isinstance(loader, Loader):
             self.loader = loader
@@ -197,7 +192,6 @@ class EdgeSubLabel(object):
         self.loader.select_columns(
             self.properties, include_all=bool(self.raw_properties is None)
         )
-        self._eformat = eformat
 
     def __str__(self) -> str:
         s = "\ntype: EdgeSubLabel"
@@ -233,8 +227,6 @@ class EdgeSubLabel(object):
         )
         chunk.attr[types_pb2.SRC_VID].CopyFrom(utils.s_to_attr(str(self.src_field)))
         chunk.attr[types_pb2.DST_VID].CopyFrom(utils.s_to_attr(str(self.dst_field)))
-        if isinstance(self._eformat, str):
-            chunk.attr[types_pb2.EFORMAT].CopyFrom(utils.s_to_attr(self._eformat))
         # loader
         for k, v in self.loader.get_attr().items():
             # raw bytes for pandas/numpy data
@@ -345,7 +337,6 @@ def normalize_parameter_edges(
         Mapping[str, Union[Sequence, LoaderVariants, Mapping]], Tuple, LoaderVariants
     ],
     id_type: str,
-    eformat: Union[str, None] = None,
 ):
     """Normalize parameters user passed in. Since parameters are very flexible, we need to be
     careful about it.
@@ -358,21 +349,17 @@ def normalize_parameter_edges(
 
     def process_sub_label(items):
         if isinstance(items, (Loader, str, pd.DataFrame, *VineyardObjectTypes)):
-            return EdgeSubLabel(
-                items, None, "_", "_", 0, 1, id_type=id_type, eformat=eformat
-            )
+            return EdgeSubLabel(items, None, "_", "_", 0, 1, id_type=id_type)
         elif isinstance(items, Sequence):
             if all([isinstance(item, np.ndarray) for item in items]):
-                return EdgeSubLabel(
-                    items, None, "_", "_", 0, 1, id_type=id_type, eformat=eformat
-                )
+                return EdgeSubLabel(items, None, "_", "_", 0, 1, id_type=id_type)
             else:
                 check_argument(len(items) < 6, "Too many arguments for a edge label")
                 compat_items = _convert_array_to_deprecated_form(items)
-                return EdgeSubLabel(*compat_items, id_type=id_type, eformat=eformat)
+                return EdgeSubLabel(*compat_items, id_type=id_type)
         elif isinstance(items, Mapping):
             items = _convert_dict_to_compat_form(items)
-            return EdgeSubLabel(**items, id_type=id_type, eformat=eformat)
+            return EdgeSubLabel(**items, id_type=id_type)
         else:
             raise SyntaxError("Wrong format of e sub label: " + str(items))
 
@@ -413,7 +400,6 @@ def normalize_parameter_vertices(
         None,
     ],
     id_type: str,
-    vformat: Union[str, None] = None,
 ):
     """Normalize parameters user passed in. Since parameters are very flexible, we need to be
     careful about it.
@@ -426,22 +412,18 @@ def normalize_parameter_vertices(
 
     def process_label(label, items):
         if isinstance(items, (Loader, str, pd.DataFrame, *VineyardObjectTypes)):
-            return VertexLabel(
-                label=label, id_type=id_type, loader=items, vformat=vformat
-            )
+            return VertexLabel(label=label, id_type=id_type, loader=items)
         elif isinstance(items, Sequence):
             if all([isinstance(item, np.ndarray) for item in items]):
-                return VertexLabel(
-                    label=label, id_type=id_type, loader=items, vformat=vformat
-                )
+                return VertexLabel(label=label, id_type=id_type, loader=items)
             else:
                 check_argument(len(items) < 4, "Too many arguments for a vertex label")
-                return VertexLabel(label, *items, id_type=id_type, vformat=vformat)
+                return VertexLabel(label, *items, id_type=id_type)
         elif isinstance(items, Mapping):
             if "vid" in items:
                 items["vid_field"] = items["vid"]
                 items.pop("vid")
-            return VertexLabel(label, id_type=id_type, vformat=vformat, **items)
+            return VertexLabel(label, id_type=id_type, **items)
         else:
             raise RuntimeError("Wrong format of v label: " + str(items))
 

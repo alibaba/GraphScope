@@ -22,9 +22,7 @@ import static com.alibaba.graphscope.utils.CppClassName.DOUBLE_MSG;
 import static com.alibaba.graphscope.utils.CppClassName.GS_PRIMITIVE_MESSAGE;
 import static com.alibaba.graphscope.utils.CppClassName.GS_VERTEX_ARRAY;
 import static com.alibaba.graphscope.utils.CppClassName.LONG_MSG;
-import static com.alibaba.graphscope.utils.CppHeaderName.ARROW_PROJECTED_FRAGMENT_H;
 
-import com.alibaba.fastffi.CXXHead;
 import com.alibaba.fastffi.CXXTemplate;
 import com.alibaba.fastffi.FFIFunGen;
 import com.alibaba.fastffi.FFIGen;
@@ -41,13 +39,6 @@ import com.alibaba.graphscope.utils.CppClassName;
             @FFIGen(type = "com.alibaba.graphscope.ds.EmptyType"),
             @FFIGen(type = "com.alibaba.graphscope.parallel.message.DoubleMsg"),
             @FFIGen(type = "com.alibaba.graphscope.parallel.message.LongMsg"),
-            @FFIGen(
-                    type = "com.alibaba.graphscope.ds.TypedArray",
-                    templates = {
-                        @CXXTemplate(cxx = "int64_t", java = "Long"),
-                        @CXXTemplate(cxx = "int32_t", java = "Integer"),
-                        @CXXTemplate(cxx = "double", java = "Double"),
-                    }),
             @FFIGen(
                     type = "com.alibaba.graphscope.parallel.message.PrimitiveMessage",
                     templates = {
@@ -390,8 +381,7 @@ import com.alibaba.graphscope.utils.CppClassName;
                                 java = {
                                     "com.alibaba.graphscope.fragment.ArrowProjectedFragment<java.lang.Long,java.lang.Long,java.lang.Long,java.lang.Long>",
                                     "Long"
-                                },
-                                include = @CXXHead(ARROW_PROJECTED_FRAGMENT_H)),
+                                }),
                     }),
             @FFIGen(
                     type = "com.alibaba.graphscope.context.ffi.FFIVertexPropertyContext",
@@ -410,28 +400,6 @@ import com.alibaba.graphscope.utils.CppClassName;
                                 java = {
                                     "com.alibaba.graphscope.fragment.ArrowProjectedFragment<java.lang.Long,java.lang.Long,java.lang.Long,java.lang.Long>"
                                 })
-                    }),
-            @FFIGen(
-                    type = "com.alibaba.graphscope.parallel.DefaultMessageManager",
-                    functionTemplates = {
-                        @FFIFunGen(
-                                name = "sendToFragment",
-                                returnType = "void",
-                                parameterTypes = {"int", "MSG_T"},
-                                templates = {
-                                    @CXXTemplate(
-                                            cxx = {"std::vector<char>"},
-                                            java = {"com.alibaba.graphscope.stdcxx.FFIByteVector"})
-                                }),
-                        @FFIFunGen(
-                                name = "getPureMessage",
-                                returnType = "boolean",
-                                parameterTypes = {"MSG_T"},
-                                templates = {
-                                    @CXXTemplate(
-                                            cxx = {"std::vector<char>"},
-                                            java = {"com.alibaba.graphscope.stdcxx.FFIByteVector"})
-                                }),
                     }),
             @FFIGen(
                     type = "com.alibaba.graphscope.parallel.ParallelMessageManager",
@@ -656,24 +624,6 @@ import com.alibaba.graphscope.utils.CppClassName;
                                             cxx = LONG_MSG,
                                             java =
                                                     "com.alibaba.graphscope.parallel.message.LongMsg")
-                                }),
-                        @FFIFunGen(
-                                name = "sendTo",
-                                returnType = "void",
-                                parameterTypes = {"int", "MSG_T"},
-                                templates = {
-                                    @CXXTemplate(
-                                            cxx = "std::vector<char>",
-                                            java = "com.alibaba.graphscope.stdcxx.FFIByteVector")
-                                }),
-                        @FFIFunGen(
-                                name = "receiveFrom",
-                                returnType = "void",
-                                parameterTypes = {"int", "MSG_T"},
-                                templates = {
-                                    @CXXTemplate(
-                                            cxx = "std::vector<char>",
-                                            java = "com.alibaba.graphscope.stdcxx.FFIByteVector")
                                 }),
                     }),
             @FFIGen(

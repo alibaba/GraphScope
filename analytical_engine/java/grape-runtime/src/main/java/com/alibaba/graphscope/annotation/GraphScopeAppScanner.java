@@ -65,7 +65,6 @@ import javax.tools.JavaFileObject;
  * annotated with FFIGen, FFIMirror, do the code generation.
  */
 public class GraphScopeAppScanner {
-
     private static Logger logger = LoggerFactory.getLogger(GraphScopeAppScanner.class.getName());
     private String classpath;
     private String configPath;
@@ -106,7 +105,7 @@ public class GraphScopeAppScanner {
      * all from FFIMirror,(later we should scan the jar to find all usage of the message send
      * function) For Grape, we still run the main method to generate the configuration file.
      *
-     * @param classpath       java class path
+     * @param classpath java class path
      * @param outputDirectory where to output
      * @return absolute output path
      */
@@ -375,7 +374,6 @@ public class GraphScopeAppScanner {
     }
 
     class ClassFileVisitor extends SimpleFileVisitor<Path> {
-
         Path root;
 
         ClassFileVisitor(Path root) {

@@ -19,16 +19,15 @@
       <os arch="amd64" family="unix"/>
     </condition>
 
+    <mkdir dir="${project.build.directory}/native"/>
+
     <condition property="platform" value="mac">
       <os arch="x86_64" family="mac"/>
     </condition>
 
-    <fail message="Not a supported platform." unless="platform"/>
     <echo level="info" message="Make graphscope java sdk jni code"/>
 
     <echo level="info" message="Native Library Name: ${jni.library.name}"/>
-
-    <mkdir dir="${project.build.directory}/native"/>
 
     <exec dir="${project.build.directory}/native" executable="cmake" failonerror="true" os="Linux">
       <arg line="-DCMAKE_PREFIX_PATH=/opt/graphscope;${env.GRAPHSCOPE_HOME} ${basedir}"/>
@@ -42,5 +41,9 @@
     <exec dir="${project.build.directory}/native" executable="make" failonerror="true">
       <arg line="VERBOSE=1 -j4"/>
     </exec>
+
+    <fail message="Not a supported platform." unless="platform"/>
+
+    <mkdir dir="${project.build.directory}/native"/>
   </target>
 </project>

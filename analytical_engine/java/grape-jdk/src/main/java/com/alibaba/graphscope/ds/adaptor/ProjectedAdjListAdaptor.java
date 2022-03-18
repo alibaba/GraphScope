@@ -15,10 +15,6 @@ public class ProjectedAdjListAdaptor<VID_T, EDATA_T> implements AdjList<VID_T, E
         adjList = adj;
     }
 
-    public ProjectedAdjList getProjectedAdjList() {
-        return adjList;
-    }
-
     @Override
     public Nbr<VID_T, EDATA_T> begin() {
         return new ProjectedNbrAdaptor<>(adjList.begin());

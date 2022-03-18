@@ -21,13 +21,11 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Vector;
 
-/**
- * Load JNI library with library name.
- */
+/** Load JNI library with library name. */
 public class LoadLibrary {
 
-    static java.lang.reflect.Field LIBRARIES = null;
     private static Logger logger = LoggerFactory.getLogger(LoadLibrary.class);
+    static java.lang.reflect.Field LIBRARIES = null;
 
     static {
         System.loadLibrary("grape-jni");

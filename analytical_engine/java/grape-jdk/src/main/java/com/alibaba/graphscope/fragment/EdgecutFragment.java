@@ -249,7 +249,4 @@ public interface EdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T>
     //    @CXXValue
     //    GrapeAdjList<VID_T, EDATA_T> getOutgoingInnerVertexAdjList(@CXXReference Vertex<VID_T>
     // vertex);
-    @FFINameAlias("GetData")
-    @CXXReference
-    VDATA_T getData(@CXXReference Vertex<VID_T> vertex);
 }

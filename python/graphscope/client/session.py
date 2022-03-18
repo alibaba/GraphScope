@@ -40,7 +40,6 @@ except ImportError:
     kube_config = None
 
 import graphscope
-from graphscope.analytical.udf.utils import InMemoryZip
 from graphscope.client.rpc import GRPCClient
 from graphscope.client.utils import CaptureKeyboardInterrupt
 from graphscope.client.utils import GSLogger
@@ -111,8 +110,6 @@ class _FetchHandler(object):
         if isinstance(self._fetches[seq], Operation):
             # for nx Graph
             return op_result.graph_def
-        # run_app op also can return graph result, so judge here
-
         # get graph dag node as base
         graph_dag_node = self._fetches[seq]
         # construct graph
@@ -1268,29 +1265,6 @@ class Session(object):
         setattr(mod, "DiGraph", digraph)
         self._nx = mod
         return self._nx
-
-    def add_lib(self, resource_name):
-        """
-        add the specified resource to the k8s cluster from client machine.
-        """
-        logger.info("client: adding lib {}".format(resource_name))
-        if not os.path.exists(resource_name):
-            raise FileNotFoundError(
-                "resource file not found in {}.".format(resource_name)
-            )
-        if not os.path.isfile(resource_name):
-            raise RuntimeError(
-                "Provided resource {} can not be found".format(resource_name)
-            )
-        # pack into a gar file
-        garfile = InMemoryZip()
-        resource_reader = open(resource_name, "rb")
-        bytes_ = resource_reader.read()
-        if len(bytes_) <= 0:
-            raise KeyError("Expect a non-empty file.")
-        # the uploaded file may be placed in the same directory
-        garfile.append("{}".format(resource_name.split("/")[-1]), bytes_)
-        self._grpc_client.add_lib(garfile.read_bytes().getvalue())
 
 
 session = Session
