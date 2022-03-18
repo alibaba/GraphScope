@@ -178,12 +178,6 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                             byte[] physicalPlanBytes = irPlan.toPhysicalBytes(configs);
                             irPlan.close();
 
-                            String[] splits = PegasusConfig.PEGASUS_SERVERS.get(configs).split(",");
-                            List<Long> servers = new ArrayList<>();
-                            for (int i = 0; i < splits.length; ++i) {
-                                servers.add(Long.valueOf(splits[i]));
-                            }
-
                             long jobId = JOB_ID_COUNTER.incrementAndGet();
                             String jobName = "ir_plan_" + jobId;
 
@@ -196,7 +190,6 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                                     .setMemoryLimit(PegasusConfig.PEGASUS_MEMORY_LIMIT.get(configs))
                                     .setOutputCapacity(PegasusConfig.PEGASUS_OUTPUT_CAPACITY.get(configs))
                                     .setTimeLimit(PegasusConfig.PEGASUS_TIMEOUT.get(configs))
-                                    .addAllServers(servers)
                                     .build();
                             request = request.toBuilder().setConf(jobConfig).build();
 

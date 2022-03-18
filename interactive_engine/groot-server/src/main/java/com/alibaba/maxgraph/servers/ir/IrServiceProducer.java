@@ -19,14 +19,11 @@ import com.alibaba.maxgraph.compiler.api.schema.SchemaFetcher;
 import com.alibaba.maxgraph.servers.AbstractService;
 import com.alibaba.maxgraph.servers.ComputeServiceProducer;
 import com.alibaba.maxgraph.servers.gaia.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class IrServiceProducer implements ComputeServiceProducer {
-    private Logger logger = LoggerFactory.getLogger(IrServiceProducer.class);
     private Configs configs;
 
     public IrServiceProducer(Configs configs) {
@@ -52,7 +49,6 @@ public class IrServiceProducer implements ComputeServiceProducer {
                 new RpcChannelManagerFetcher(channelManager, executorCount, RoleType.GAIA_RPC);
         com.alibaba.graphscope.common.config.Configs irConfigs = getConfigs();
         IrMetaFetcher irMetaFetcher = new GrootMetaFetcher(schemaFetcher);
-        logger.info("servers is {}", PegasusConfig.PEGASUS_SERVERS.get(irConfigs));
 
         return new AbstractService() {
             private IrGremlinServer irGremlinServer = new IrGremlinServer(GremlinConfig.GREMLIN_PORT.get(configs));
@@ -91,7 +87,6 @@ public class IrServiceProducer implements ComputeServiceProducer {
         addToConfigMapIfExist(PegasusConfig.PEGASUS_BATCH_SIZE.getKey(), configMap);
         addToConfigMapIfExist(PegasusConfig.PEGASUS_OUTPUT_CAPACITY.getKey(), configMap);
         addToConfigMapIfExist(PegasusConfig.PEGASUS_MEMORY_LIMIT.getKey(), configMap);
-        addToConfigMapIfExist(PegasusConfig.PEGASUS_SERVERS.getKey(), configMap);
         return new com.alibaba.graphscope.common.config.Configs(configMap);
     }
 

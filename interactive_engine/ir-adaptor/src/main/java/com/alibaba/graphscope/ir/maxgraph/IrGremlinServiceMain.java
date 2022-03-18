@@ -35,7 +35,6 @@ public class IrGremlinServiceMain {
         configMap.put(PegasusConfig.PEGASUS_BATCH_SIZE.getKey(), String.valueOf(instanceConfig.getPegasusBatchSize()));
         configMap.put(PegasusConfig.PEGASUS_OUTPUT_CAPACITY.getKey(), String.valueOf(instanceConfig.getPegasusOutputCapacity()));
         configMap.put(PegasusConfig.PEGASUS_MEMORY_LIMIT.getKey(), String.valueOf(instanceConfig.getPegasusMemoryLimit()));
-        configMap.put(PegasusConfig.PEGASUS_SERVERS.getKey(), String.valueOf(instanceConfig.getPegasusServers()));
         return new Configs(configMap);
     }
 
