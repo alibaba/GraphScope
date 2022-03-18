@@ -60,7 +60,7 @@
     <dep.kryo.version>4.0.0</dep.kryo.version>
     <dep.json.version>20160810</dep.json.version>
     <dep.kryo-serializers.version>0.42</dep.kryo-serializers.version>
-    <dep.zookeeper.version>3.4.14</dep.zookeeper.version>
+    <dep.zookeeper.version>3.4.5</dep.zookeeper.version>
   </properties>
   <dependencyManagement>
     <dependencies>
