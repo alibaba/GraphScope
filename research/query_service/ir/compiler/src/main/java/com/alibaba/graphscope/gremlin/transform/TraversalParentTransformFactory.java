@@ -43,6 +43,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.util.TraversalRing;
 import org.javatuples.Pair;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -294,19 +295,17 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
             Optional<String> startKey = step.getStartKey();
             TraversalRing traversalRing = Utils.getFieldValue(WherePredicateStep.class, step, "traversalRing");
 
+            int stepId = TraversalHelper.stepIndex(parent.asStep(), parent.asStep().getTraversal());
+            AtomicInteger subId = new AtomicInteger(0);
+
             String startTag = startKey.isPresent() ? startKey.get() : "";
-            Traversal.Admin startSelectBy = asSelectTraversal(startTag, traversalRing.next());
-            ExprResult startExprRes = getSubTraversalAsExpr(new ExprArg(startSelectBy));
-            if (!startExprRes.isExprPattern()) {
-                throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE, "where().by(subtask) is unsupported");
-            }
-            String startBy = startExprRes.getSingleExpr().get();
+            String startExpr = getExprWithApplys(startTag, traversalRing.next(), stepId, subId, interOpList);
 
             P predicate = (P) step.getPredicate().get();
             List<String> selectKeys = Utils.getFieldValue(WherePredicateStep.class, step, "selectKeys");
-            traverseAndUpdateP(predicate, selectKeys.iterator(), traversalRing);
+            traverseAndUpdateP(predicate, selectKeys.iterator(), traversalRing, stepId, subId, interOpList);
 
-            String expr = PredicateExprTransformFactory.HAS_STEP.flatPredicate(startBy, predicate);
+            String expr = PredicateExprTransformFactory.HAS_STEP.flatPredicate(startExpr, predicate);
             SelectOp selectOp = new SelectOp();
             selectOp.setPredicate(new OpArg(expr));
 
@@ -314,19 +313,41 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
             return interOpList;
         }
 
-        private void traverseAndUpdateP(P predicate, Iterator<String> selectKeysIterator, TraversalRing traversalRing) {
+        private void traverseAndUpdateP(P predicate, Iterator<String> selectKeysIterator, TraversalRing traversalRing,
+                                        int stepId, AtomicInteger subId, List<InterOpBase> applys) {
             if (predicate instanceof ConnectiveP) {
                 ((ConnectiveP) predicate).getPredicates().forEach(p1 -> {
-                    traverseAndUpdateP((P) p1, selectKeysIterator, traversalRing);
+                    traverseAndUpdateP((P) p1, selectKeysIterator, traversalRing, stepId, subId, applys);
                 });
             } else {
-                Traversal.Admin selectBy = asSelectTraversal(selectKeysIterator.next(), traversalRing.next());
-                ExprResult exprRes = getSubTraversalAsExpr(new ExprArg(selectBy));
-                if (!exprRes.isExprPattern()) {
-                    throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE, "where().by(subtask) is unsupported");
-                }
-                String tagProperty = exprRes.getSingleExpr().get();
-                predicate.setValue(new WherePredicateValue(tagProperty));
+                String expr = getExprWithApplys(selectKeysIterator.next(), traversalRing.next(), stepId, subId, applys);
+                FfiVariable.ByValue var = getExpressionAsVar(expr);
+                predicate.setValue(var);
+            }
+        }
+
+        private String getExprWithApplys(String tag, Traversal.Admin whereby,
+                                         int stepId, AtomicInteger subId, List<InterOpBase> applys) {
+            Traversal.Admin tagBy = asSelectTraversal(tag, whereby);
+            ExprResult exprRes = getSubTraversalAsExpr(new ExprArg(tagBy));
+            if (!exprRes.isExprPattern()) {
+                ApplyOp applyOp = new ApplyOp();
+                applyOp.setJoinKind(new OpArg(FfiJoinKind.Inner));
+                // put select("") in apply
+                Traversal copy = GremlinAntlrToJava.getTraversalSupplier().get();
+                copy.asAdmin().addStep(new SelectOneStep(copy.asAdmin(), Pop.last, tag));
+                // copy steps in by(..) to apply
+                whereby.getSteps().forEach(s -> copy.asAdmin().addStep((Step) s));
+                applyOp.setSubOpCollection(new OpArg<>(copy, (Traversal traversal) ->
+                        (new InterOpCollectionBuilder(traversal)).build()
+                ));
+                FfiAlias.ByValue applyAlias = AliasManager.getFfiAlias(
+                        new AliasArg(AliasPrefixType.DEFAULT, stepId, subId.getAndIncrement()));
+                applyOp.setAlias(new OpArg(applyAlias));
+                applys.add(applyOp);
+                return "@" + applyAlias.alias.name;
+            } else {
+                return exprRes.getSingleExpr().get();
             }
         }
 
@@ -334,7 +355,8 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
             Traversal.Admin traversal = (Traversal.Admin) GremlinAntlrToJava.getTraversalSupplier().get();
             SelectOneStep oneStep = new SelectOneStep(traversal, Pop.last, selectKey);
             oneStep.modulateBy(byTraversal);
-            return traversal.addStep(oneStep);
+            traversal.addStep(oneStep);
+            return traversal;
         }
     },
     WHERE_TRAVERSAL_STEP {

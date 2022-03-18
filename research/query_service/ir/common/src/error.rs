@@ -25,7 +25,7 @@ pub enum ParsePbError {
     /// Empty pb fields error
     EmptyFieldError(String),
     /// Not supported
-    NotSupported(String),
+    Unsupported(String),
 }
 
 impl std::fmt::Display for ParsePbError {
@@ -40,7 +40,7 @@ impl std::fmt::Display for ParsePbError {
             ParsePbError::EmptyFieldError(e) => {
                 write!(f, "empty protobuf field: {}", e)
             }
-            ParsePbError::NotSupported(e) => {
+            ParsePbError::Unsupported(e) => {
                 write!(f, "Not supported: {}", e)
             }
         }

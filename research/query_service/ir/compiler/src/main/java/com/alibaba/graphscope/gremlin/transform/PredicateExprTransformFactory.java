@@ -13,8 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.alibaba.graphscope.gremlin.transform;
 
+import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.step.HasContainerHolder;
@@ -61,7 +63,7 @@ public enum PredicateExprTransformFactory implements PredicateExprTransform {
         public String apply(Step arg) {
             WhereTraversalStep.WhereEndStep endStep = (WhereTraversalStep.WhereEndStep) arg;
             String matchTag = endStep.getScopeKeys().iterator().next();
-            P predicate = P.eq(new WherePredicateValue("@" + matchTag));
+            P predicate = P.eq(ArgUtils.asFfiVar(matchTag, ""));
             return flatPredicate("@", predicate);
         }
     }

@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.gremlin.transform;
 
 import com.alibaba.graphscope.common.exception.OpArgIllegalException;
+import com.alibaba.graphscope.common.jna.type.FfiVariable;
 import com.alibaba.graphscope.gremlin.antlr4.AnyValue;
 import org.apache.tinkerpop.gremlin.process.traversal.Compare;
 import org.apache.tinkerpop.gremlin.process.traversal.Contains;
@@ -121,7 +122,7 @@ public interface PredicateExprTransform extends Function<Step, String> {
     default String getPredicateExpr(String subject, String predicate, Object value) {
         String subjectKeyExist = getExprIfPropertyExist(subject);
         String valueKeyExist = "";
-        if (value instanceof WherePredicateValue) {
+        if (value instanceof FfiVariable.ByValue) {
             valueKeyExist = getExprIfPropertyExist(value.toString());
         }
         String predicateExpr = String.format("%s %s %s", subject, predicate, getPredicateValue(value));

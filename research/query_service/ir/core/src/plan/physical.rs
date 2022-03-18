@@ -125,7 +125,7 @@ impl AsPhysical for pb::Scan {
             }
             Ok(())
         } else {
-            Err(IrError::MissingDataError("query params".to_string()))
+            Err(IrError::MissingData("Scan::params".to_string()))
         }
     }
 }
@@ -169,7 +169,7 @@ impl AsPhysical for pb::EdgeExpand {
                 }
             }
         } else {
-            return Err(IrError::MissingDataError("query params".to_string()));
+            return Err(IrError::MissingData("EdgeExpand::params".to_string()));
         }
         simple_add_job_builder(
             builder,
@@ -192,7 +192,7 @@ impl AsPhysical for pb::PathExpand {
     fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         if let Some(range) = &self.hop_range {
             if range.upper <= range.lower || range.lower <= 0 || range.upper <= 0 {
-                Err(IrError::InvalidRangeError(range.lower, range.upper))
+                Err(IrError::InvalidRange(range.lower, range.upper))
             } else {
                 if let Some(base) = &self.base {
                     let path_start = pb::PathStart {
@@ -237,11 +237,11 @@ impl AsPhysical for pb::PathExpand {
                         SimpleOpr::Map,
                     )
                 } else {
-                    Err(IrError::MissingDataError("edge expand".to_string()))
+                    Err(IrError::MissingData("PathExpand::base".to_string()))
                 }
             }
         } else {
-            Err(IrError::MissingDataError("hop range".to_string()))
+            Err(IrError::MissingData("PathExpand::hop_range".to_string()))
         }
     }
 }
@@ -275,7 +275,7 @@ impl AsPhysical for pb::GetV {
                 }
             }
         } else {
-            return Err(IrError::MissingDataError("query params".to_string()));
+            return Err(IrError::MissingData("GetV::params".to_string()));
         }
         simple_add_job_builder(builder, &pb::logical_plan::Operator::from(self.clone()), SimpleOpr::Map)?;
         if is_adding_auxilia {
@@ -312,13 +312,13 @@ impl AsPhysical for pb::Limit {
     fn add_job_builder(&self, builder: &mut JobBuilder, _plan_meta: &mut PlanMeta) -> IrResult<()> {
         if let Some(range) = &self.range {
             if range.upper <= range.lower || range.lower < 0 || range.upper <= 0 {
-                Err(IrError::InvalidRangeError(range.lower, range.upper))
+                Err(IrError::InvalidRange(range.lower, range.upper))
             } else {
                 builder.limit((range.upper - 1) as u32);
                 Ok(())
             }
         } else {
-            Err(IrError::MissingDataError("limit range".to_string()))
+            Err(IrError::MissingData("Limit::range".to_string()))
         }
     }
 }
@@ -331,7 +331,7 @@ impl AsPhysical for pb::OrderBy {
         } else {
             let range = self.limit.clone().unwrap();
             if range.upper <= range.lower || range.lower < 0 || range.upper <= 0 {
-                Err(IrError::InvalidRangeError(range.lower, range.upper))
+                Err(IrError::InvalidRange(range.lower, range.upper))
             } else {
                 let bytes = opr.encode_to_vec();
                 builder.sort_limit_by((range.upper - 1) as i64, bytes);
@@ -386,7 +386,7 @@ impl AsPhysical for pb::logical_plan::Operator {
                 _ => Err(IrError::Unsupported(format!("the operator {:?}", self))),
             }
         } else {
-            Err(IrError::MissingDataError("operator".to_string()))
+            Err(IrError::MissingData("logical_plan::Operator::opr".to_string()))
         }
     }
 }
@@ -420,7 +420,7 @@ impl AsPhysical for LogicalPlan {
                         pb::logical_plan::Operator::from(apply_opr.clone()).encode_to_vec(),
                     );
                 } else {
-                    return Err(IrError::MissingDataError("sub-plan".to_string()));
+                    return Err(IrError::MissingData("Apply::subplan".to_string()));
                 }
             } else {
                 if let Some(Edge(edgexpd)) = curr_node.borrow().opr.opr.as_ref() {
@@ -480,7 +480,7 @@ impl AsPhysical for LogicalPlan {
 
                             builder.join(pegasus_join_kind, left_plan, right_plan, join_bytes);
                         }
-                        None => return Err(IrError::MissingDataError("merge node".to_string())),
+                        None => return Err(IrError::MissingData("Union/Join::merge_node".to_string())),
                         _ => {
                             return Err(IrError::Unsupported(
                                 "operators other than `Union` and `Join`".to_string(),
@@ -598,7 +598,7 @@ mod test {
 
         let mut job_builder = JobBuilder::default();
         let mut plan_meta = plan.meta.clone();
-        plan_meta.set_partition(true);
+        plan_meta = plan_meta.with_partition();
         plan.add_job_builder(&mut job_builder, &mut plan_meta)
             .unwrap();
 
@@ -624,7 +624,7 @@ mod test {
             .unwrap();
         let mut job_builder = JobBuilder::default();
         let mut plan_meta = plan.meta.clone();
-        plan_meta.set_partition(true);
+        plan_meta = plan_meta.with_partition();
         plan.add_job_builder(&mut job_builder, &mut plan_meta)
             .unwrap();
 
@@ -678,7 +678,7 @@ mod test {
 
         let mut job_builder = JobBuilder::default();
         let mut plan_meta = plan.meta.clone();
-        plan_meta.set_partition(true);
+        plan_meta = plan_meta.with_partition();
         plan.add_job_builder(&mut job_builder, &mut plan_meta)
             .unwrap();
 
@@ -738,7 +738,7 @@ mod test {
 
         let mut job_builder = JobBuilder::default();
         let mut plan_meta = plan.meta.clone();
-        plan_meta.set_partition(true);
+        plan_meta = plan_meta.with_partition();
         plan.add_job_builder(&mut job_builder, &mut plan_meta)
             .unwrap();
 
@@ -775,7 +775,7 @@ mod test {
             .unwrap();
         let mut job_builder = JobBuilder::default();
         let mut plan_meta = plan.meta.clone();
-        plan_meta.set_partition(true);
+        plan_meta = plan_meta.with_partition();
         plan.add_job_builder(&mut job_builder, &mut plan_meta)
             .unwrap();
 
@@ -870,7 +870,7 @@ mod test {
 
         let mut job_builder = JobBuilder::default();
         let mut plan_meta = plan.meta.clone();
-        plan_meta.set_partition(true);
+        plan_meta = plan_meta.with_partition();
         plan.add_job_builder(&mut job_builder, &mut plan_meta)
             .unwrap();
 
@@ -1035,7 +1035,7 @@ mod test {
         // Case with partition
         let mut builder = JobBuilder::default();
         let mut plan_meta = PlanMeta::default();
-        plan_meta.set_partition(true);
+        plan_meta = plan_meta.with_partition();
         logical_plan
             .add_job_builder(&mut builder, &mut plan_meta)
             .unwrap();
@@ -1087,8 +1087,7 @@ mod test {
             .unwrap(); // node 1
                        // Case with partition
         let mut builder = JobBuilder::default();
-        let mut plan_meta = PlanMeta::default();
-        plan_meta.set_partition(true);
+        let mut plan_meta = PlanMeta::default().with_partition();
         logical_plan
             .add_job_builder(&mut builder, &mut plan_meta)
             .unwrap();
@@ -1150,7 +1149,7 @@ mod test {
     fn apply_as_physical_case1() {
         let mut plan = LogicalPlan::default();
         // g.V().as("v").where(out().as("o").has("lang", "java")).select("v").values("name")
-        plan.meta.set_partition(true);
+        plan.meta = plan.meta.with_partition();
 
         // g.V("person")
         let scan: pb::logical_plan::Operator = pb::Scan {

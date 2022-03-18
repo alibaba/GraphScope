@@ -1,5 +1,6 @@
 package com.alibaba.graphscope.integration.ldbc;
 
+import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversal;
 import com.google.common.collect.Sets;
 import org.apache.tinkerpop.gremlin.process.AbstractGremlinProcessTest;
 import org.apache.tinkerpop.gremlin.process.traversal.Order;
@@ -335,10 +336,11 @@ public abstract class LdbcQueryTest extends AbstractGremlinProcessTest {
     }
 
     public static class Traversals extends LdbcQueryTest {
+
         @Override
         public Traversal<Vertex, Map<String, Object>> get_ldbc_1_test() {
-            return g.V().hasLabel("PERSON").has("id", 30786325583618L)
-                    .both("1..4", "KNOWS").as("p").inV()
+            return ((IrCustomizedTraversal) g.V().hasLabel("PERSON").has("id", 30786325583618L)
+                    .both("1..4", "KNOWS").as("p")).endV()
                     .has("id", P.neq(30786325583618L)).has("firstName", P.eq("Chau")).as("a")
                     .order().by(__.select("p").by("~len"), Order.asc)
                     .dedup()
@@ -398,8 +400,8 @@ public abstract class LdbcQueryTest extends AbstractGremlinProcessTest {
 
         @Override
         public Traversal<Vertex, Map<Object, Long>> get_ldbc_5_test() {
-            return g.V().hasLabel("PERSON").has("id", 21990232560302L)
-                    .both("1..3", "KNOWS").inV().dedup().as("p")
+            return ((IrCustomizedTraversal) g.V().hasLabel("PERSON").has("id", 21990232560302L)
+                    .both("1..3", "KNOWS")).endV().dedup().as("p")
                     .inE("HASMEMBER").has("joinDate", P.gt(20120901000000000L)).outV().as("forum")
                     .out("CONTAINEROF").hasLabel("POST").out("HASCREATOR").where(P.eq("p"))
                     .select("forum")
@@ -447,8 +449,8 @@ public abstract class LdbcQueryTest extends AbstractGremlinProcessTest {
 
         @Override
         public Traversal<Vertex, Map<String, Object>> get_ldbc_9_test() {
-            return g.V().hasLabel("PERSON").has("id", 13194139542834L)
-                    .both("1..3", "KNOWS").inV().dedup().has("id", P.neq(13194139542834L)).as("friends")
+            return ((IrCustomizedTraversal) g.V().hasLabel("PERSON").has("id", 13194139542834L)
+                    .both("1..3", "KNOWS")).endV().dedup().has("id", P.neq(13194139542834L)).as("friends")
                     .in("HASCREATOR").has("creationDate", P.lt(20111217000000000L)).as("post")
                     .order().by("creationDate", Order.desc).by("id", Order.asc).limit(20)
                     .select("friends", "post")
@@ -458,8 +460,8 @@ public abstract class LdbcQueryTest extends AbstractGremlinProcessTest {
 
         @Override
         public Traversal<Vertex, Map<String, Object>> get_ldbc_11_test() {
-            return g.V().hasLabel("PERSON").has("id", 30786325583618L).as("root")
-                    .both("1..3", "KNOWS").inV().dedup().has("id", P.neq(30786325583618L)).as("friends")
+            return ((IrCustomizedTraversal) g.V().hasLabel("PERSON").has("id", 30786325583618L).as("root")
+                    .both("1..3", "KNOWS")).endV().dedup().has("id", P.neq(30786325583618L)).as("friends")
                     .outE("WORKAT").has("workFrom", P.lt(2010)).as("startWork")
                     .values("workFrom").as("works").select("startWork").inV().as("comp")
                     .values("name").as("orgname")

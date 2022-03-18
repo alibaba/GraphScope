@@ -14,17 +14,12 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.gremlin.transform;
+package com.alibaba.graphscope.gremlin.antlr4;
 
-public class WherePredicateValue {
-    private String predicateValue;
+import org.apache.tinkerpop.gremlin.process.traversal.P;
 
-    public WherePredicateValue(String predicateValue) {
-        this.predicateValue = predicateValue;
-    }
-
-    @Override
-    public String toString() {
-        return predicateValue;
+public class ExprP extends P<String> {
+    public ExprP(String expr) {
+        super(null, expr);
     }
 }

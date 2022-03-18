@@ -16,10 +16,12 @@
 
 package com.alibaba.graphscope.gremlin.plugin.traversal;
 
+import com.alibaba.graphscope.gremlin.plugin.step.ExprStep;
 import com.alibaba.graphscope.gremlin.plugin.step.PathExpandStep;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
+import org.apache.tinkerpop.gremlin.process.traversal.step.map.EdgeVertexStep;
 import org.apache.tinkerpop.gremlin.process.traversal.util.DefaultTraversal;
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.apache.tinkerpop.gremlin.structure.Graph;
@@ -66,5 +68,15 @@ public class IrCustomizedTraversal<S, E> extends DefaultTraversal<S, E> implemen
     public GraphTraversal<S, Vertex> both(Traversal rangeTraversal, String... labels) {
         this.asAdmin().getBytecode().addStep("flatMap", rangeTraversal, labels);
         return this.asAdmin().addStep(new PathExpandStep(this.asAdmin(), Direction.BOTH, rangeTraversal, labels));
+    }
+
+    public GraphTraversal<S, Vertex> expr(String expr, ExprStep.Type type) {
+        this.asAdmin().getBytecode().addStep("expr", expr, type);
+        return this.asAdmin().addStep(new ExprStep(this.asAdmin(), expr, type));
+    }
+
+    public GraphTraversal<S, Vertex> endV() {
+        this.asAdmin().getBytecode().addStep("endV", new Object[0]);
+        return this.asAdmin().addStep(new EdgeVertexStep(this.asAdmin(), Direction.IN));
     }
 }

@@ -73,10 +73,12 @@ traversalMethod
     | traversalMethod_where // where()
     | traversalMethod_inV   // inV()
     | traversalMethod_outV  // outV()
+    | traversalMethod_endV  // endV()
     | traversalMethod_otherV  // otherV()
     | traversalMethod_not  // not()
     | traversalMethod_union // union()
     | traversalMethod_range // range()
+    | traversalMethod_match // match()
     ;
 
 traversalSourceSpawnMethod_V
@@ -161,6 +163,11 @@ traversalMethod_otherV
 	: 'otherV' LPAREN RPAREN
 	;
 
+// endV()
+traversalMethod_endV
+	: 'endV' LPAREN RPAREN
+	;
+
 // limit(n)
 traversalMethod_limit
 	: 'limit' LPAREN integerLiteral RPAREN
@@ -201,9 +208,11 @@ traversalMethod_orderby_list
 
 // select('s', ...)
 // select('s', ...).by(...).by(...)
+// select(expr('@.age'))
 traversalMethod_select
     : 'select' LPAREN stringLiteral (COMMA stringLiteralList)? RPAREN (DOT traversalMethod_selectby_list)?
     | 'select' LPAREN traversalColumn RPAREN
+    | 'select' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_expr RPAREN
     ;
 
 // by()
@@ -291,10 +300,12 @@ traversalMethod_is
 // where(out().out()...)
 // where(__.as("a")...as("b"))
 // where(__.not(__.out)) equal to not(__.out)
+// where(expr("@.age && @.age > 20"))
 traversalMethod_where
 	: 'where' LPAREN traversalPredicate RPAREN (DOT traversalMethod_whereby_list)?
 	| 'where' LPAREN stringLiteral COMMA traversalPredicate RPAREN (DOT traversalMethod_whereby_list)?
     | 'where' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_not RPAREN // match not(__.out) as traversalMethod_not instead of nestedTraversal
+    | 'where' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_expr RPAREN
 	| 'where' LPAREN nestedTraversal RPAREN
 	;
 
@@ -305,6 +316,7 @@ traversalMethod_whereby
     : 'by' LPAREN RPAREN
     | 'by' LPAREN stringLiteral RPAREN
     | 'by' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_values RPAREN
+    | 'by' LPAREN nestedTraversal RPAREN
     ;
 
 traversalMethod_whereby_list
@@ -326,6 +338,14 @@ nestedTraversalExpr
 
 traversalMethod_range
     : 'range' LPAREN integerLiteral COMMA integerLiteral RPAREN
+    ;
+
+traversalMethod_match
+	: 'match' LPAREN nestedTraversalExpr RPAREN
+	;
+
+traversalMethod_expr
+    : 'expr' LPAREN stringLiteral RPAREN
     ;
 
 // only permit non empty, \'\' or \"\" or \'null\' is meaningless as a parameter

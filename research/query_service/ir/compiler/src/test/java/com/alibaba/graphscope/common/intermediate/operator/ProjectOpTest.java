@@ -36,19 +36,6 @@ public class ProjectOpTest {
     private IrPlan irPlan = new IrPlan();
 
     @Test
-    public void projectTagTest() throws IOException {
-        ProjectOp op = new ProjectOp();
-
-        String projectExpr = "@a";
-        FfiAlias.ByValue alias = ArgUtils.asFfiAlias("project_a", false);
-        List<Pair> exprWithAlias = Collections.singletonList(Pair.with(projectExpr, alias));
-
-        op.setExprWithAlias(new OpArg(exprWithAlias, Function.identity()));
-        irPlan.appendInterOp(-1, op);
-        Assert.assertEquals(FileUtils.readJsonFromResource("project_tag.json"), irPlan.getPlanAsJson());
-    }
-
-    @Test
     public void projectKeyTest() throws IOException {
         ProjectOp op = new ProjectOp();
 
