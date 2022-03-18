@@ -222,7 +222,7 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
         private Traversal.Admin getKeyTraversal(TraversalParent step) {
             if (step instanceof GroupStep) {
                 GroupStep groupStep = (GroupStep) step;
-                return Utils.getFieldValue(GroupStep.class, groupStep, "keyTraversal");
+                return groupStep.getKeyTraversal();
             } else if (step instanceof GroupCountStep) {
                 GroupCountStep groupStep = (GroupCountStep) step;
                 List<Traversal.Admin> keyTraversals = groupStep.getLocalChildren();
@@ -235,7 +235,7 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
         private Traversal.Admin getValueTraversal(TraversalParent step) {
             if (step instanceof GroupStep) {
                 GroupStep groupStep = (GroupStep) step;
-                return Utils.getFieldValue(GroupStep.class, groupStep, "valueTraversal");
+                return groupStep.getValueTraversal();
             } else if (step instanceof GroupCountStep) {
                 Traversal.Admin countTraversal = new DefaultTraversal();
                 countTraversal.addStep(new CountGlobalStep(countTraversal));

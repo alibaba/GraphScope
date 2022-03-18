@@ -66,7 +66,6 @@ public class IrGremlinTestSuite extends AbstractGremlinSuite {
 
             GroupTest.Traversals.class,
             GroupCountTest.Traversals.class,
-            IrAdditionalQueryTest.Traversals.class,
     };
 
     private static final Class<?>[] testsToEnforce = new Class<?>[]{
@@ -97,7 +96,6 @@ public class IrGremlinTestSuite extends AbstractGremlinSuite {
 
             GroupTest.Traversals.class,
             GroupCountTest.Traversals.class,
-            IrAdditionalQueryTest.Traversals.class,
     };
 
     public IrGremlinTestSuite(final Class<?> klass, final RunnerBuilder builder) throws InitializationError {

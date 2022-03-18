@@ -121,8 +121,7 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
             default:
                 RequestMessage msg = ctx.getRequestMessage();
                 String errorMsg = message.getOp() + " is unsupported";
-                ctx.writeAndFlush(ResponseMessage.build(msg).code(ResponseStatusCode.REQUEST_ERROR_INVALID_REQUEST_ARGUMENTS)
-                        .statusMessage(errorMsg).create());
+                ctx.writeAndFlush(ResponseMessage.build(msg).code(ResponseStatusCode.SERVER_ERROR_EVALUATION).statusMessage(errorMsg).create());
                 return null;
         }
     }
@@ -133,7 +132,7 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
     }
 
     private String getScript(Bytecode byteCode) {
-        String script = GroovyTranslator.of("g").translate(byteCode);
+        String script = GroovyTranslator.of("g").translate(byteCode).getScript();
         // remove type cast from original script, g.V().has("age",P.gt((int) 30))
         List<String> typeCastStrs = Arrays.asList("\\(int\\)", "\\(long\\)", "\\(double\\)", "\\(boolean\\)");
         for (String type : typeCastStrs) {
