@@ -14,8 +14,6 @@ public class ServiceProducerFactory {
             case "MAXGRAPH":
                 return new MaxGraphServiceProducer(configs);
             case "GAIA":
-                return new GaiaServiceProducer(configs);
-            case "IR":
                 return new IrServiceProducer(configs);
             default:
                 throw new IllegalArgumentException("Unknown engine type [" + engineType + "]");
