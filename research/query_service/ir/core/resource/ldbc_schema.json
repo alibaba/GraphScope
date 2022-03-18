@@ -833,5 +833,5 @@
     }
   ],
   "is_table_id": true,
-  "is_column_id": false
+  "is_column_id": true 
 }
