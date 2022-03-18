@@ -241,11 +241,6 @@ enum ParamKey {
   CHUNK_TYPE = 342;
 
   GRAPH_LIBRARY_PATH = 400;
-
-  VFORMAT = 500; // vertex input format 
-  EFORMAT = 501; // edge input format
-  JAVA_CLASS_PATH = 502; // java class path
-  JVM_OPTS = 503; // opts str to start a jvm
 }
 
 enum ModifyType {

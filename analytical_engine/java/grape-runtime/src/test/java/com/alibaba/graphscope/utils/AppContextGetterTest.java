@@ -30,7 +30,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class AppContextGetterTest {
-
     private static Logger logger = LoggerFactory.getLogger(AppContextGetterTest.class.getName());
 
     @Test
@@ -63,7 +62,6 @@ public class AppContextGetterTest {
 
     public static class SampleContext extends LabeledVertexDataContext<Long, Double>
             implements PropertyDefaultContextBase<Long> {
-
         public SampleContext() {}
 
         @Override
@@ -74,7 +72,6 @@ public class AppContextGetterTest {
     }
 
     public static class SamplePropertyApp implements DefaultPropertyAppBase<Long, SampleContext> {
-
         @Override
         public void PEval(
                 ArrowFragment<Long> fragment,
