@@ -120,10 +120,6 @@ public class TraversalOpProcessor extends AbstractOpProcessor {
                             }
                         });
                 return op;
-            case Tokens.OPS_KEYS:
-                GaiaGraphOpProcessor.writeResultList(
-                        ctx, Collections.EMPTY_LIST, ResponseStatusCode.SUCCESS);
-                return null;
             default:
                 String errorMsg = "not support " + message.getOp();
                 GaiaGraphOpProcessor.writeResultList(

@@ -18,7 +18,6 @@ package com.alibaba.graphscope.gaia.plan.strategy;
 import com.alibaba.graphscope.gaia.config.GaiaConfig;
 import com.alibaba.graphscope.gaia.store.GraphStoreService;
 
-import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalStrategies;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.optimization.EarlyLimitStrategy;
@@ -73,10 +72,5 @@ public class GraphTraversalStrategies extends DefaultTraversalStrategies {
         if (!strategies.contains(toAdd)) {
             strategies.add(priority, toAdd);
         }
-    }
-
-    @Override
-    public void applyStrategies(final Traversal.Admin<?, ?> traversal) {
-        strategies.forEach(s -> s.apply(traversal));
     }
 }

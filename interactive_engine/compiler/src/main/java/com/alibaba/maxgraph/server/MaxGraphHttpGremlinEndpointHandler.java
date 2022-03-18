@@ -131,14 +131,14 @@ public class MaxGraphHttpGremlinEndpointHandler extends HttpGremlinEndpointHandl
     private static final ObjectMapper mapper = new ObjectMapper();
 
     private Settings settings;
-    private Map<String, MessageSerializer> serializers;
+    private Map<String, MessageSerializer<?>> serializers;
     private GraphManager graphManager;
     private GremlinExecutor gremlinExecutor;
 
     private AbstractMixedOpProcessor opProcessor;
 
     public MaxGraphHttpGremlinEndpointHandler(
-            Map<String, MessageSerializer> serializers,
+            Map<String, MessageSerializer<?>> serializers,
             GremlinExecutor gremlinExecutor,
             GraphManager graphManager,
             Settings settings,
@@ -255,8 +255,7 @@ public class MaxGraphHttpGremlinEndpointHandler extends HttpGremlinEndpointHandl
             if (bindingsNode != null)
                 bindingsNode
                         .fields()
-                        .forEachRemaining(
-                                kv -> bindings.put(kv.getKey(), fromJsonNode(kv.getValue())));
+                        .forEachRemaining(kv -> bindings.put(kv.getKey(), kv.getValue()));
 
             final JsonNode aliasesNode = body.get(Tokens.ARGS_ALIASES);
             if (aliasesNode != null && !aliasesNode.isObject())
@@ -498,7 +497,7 @@ public class MaxGraphHttpGremlinEndpointHandler extends HttpGremlinEndpointHandl
                                                     opProcessor.processHttpGraphTraversal(
                                                             script,
                                                             o,
-                                                            settings.scriptEvaluationTimeout,
+                                                            settings.evaluationTimeout,
                                                             req);
                                             final ResponseMessage responseMessage =
                                                     ResponseMessage.build(UUID.randomUUID())

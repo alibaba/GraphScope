@@ -5,7 +5,7 @@ import com.alibaba.graphscope.gaia.plan.PlanUtils;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalStrategy;
-import org.apache.tinkerpop.gremlin.process.traversal.lambda.ElementValueTraversal;
+import org.apache.tinkerpop.gremlin.process.traversal.lambda.ValueTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.step.ComparatorHolder;
 import org.apache.tinkerpop.gremlin.process.traversal.step.TraversalParent;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.WherePredicateStep;
@@ -40,29 +40,29 @@ public class ValueTraversalParentStrategy
                                 k -> {
                                     Traversal.Admin admin =
                                             (Traversal.Admin) ((Pair) k).getValue0();
-                                    if (admin instanceof ElementValueTraversal) {
-                                        setParent((ElementValueTraversal) admin, step);
+                                    if (admin instanceof ValueTraversal) {
+                                        setParent((ValueTraversal) admin, step);
                                     }
                                 });
             } else if (step instanceof GroupCountStep) {
                 Traversal.Admin keyTraversal = PlanUtils.getKeyTraversal(step);
-                if (keyTraversal != null && keyTraversal instanceof ElementValueTraversal) {
-                    setParent((ElementValueTraversal) keyTraversal, step);
+                if (keyTraversal != null && keyTraversal instanceof ValueTraversal) {
+                    setParent((ValueTraversal) keyTraversal, step);
                 }
             } else if (step instanceof GroupStep) {
                 Traversal.Admin keyTraversal = PlanUtils.getKeyTraversal(step);
-                if (keyTraversal != null && keyTraversal instanceof ElementValueTraversal) {
-                    setParent((ElementValueTraversal) keyTraversal, step);
+                if (keyTraversal != null && keyTraversal instanceof ValueTraversal) {
+                    setParent((ValueTraversal) keyTraversal, step);
                 }
                 Traversal.Admin valueTraversal = PlanUtils.getValueTraversal(step);
-                if (valueTraversal != null && valueTraversal instanceof ElementValueTraversal) {
-                    setParent((ElementValueTraversal) valueTraversal, step);
+                if (valueTraversal != null && valueTraversal instanceof ValueTraversal) {
+                    setParent((ValueTraversal) valueTraversal, step);
                 }
             } else if (step instanceof SelectOneStep || step instanceof SelectStep) {
                 Map<String, Traversal.Admin> entries = PlanUtils.getSelectTraversalMap(step);
                 for (Traversal.Admin admin : entries.values()) {
-                    if (admin != null && admin instanceof ElementValueTraversal) {
-                        setParent((ElementValueTraversal) admin, step);
+                    if (admin != null && admin instanceof ValueTraversal) {
+                        setParent((ValueTraversal) admin, step);
                     }
                 }
             } else if (step instanceof WherePredicateStep) {
@@ -71,22 +71,22 @@ public class ValueTraversalParentStrategy
                                 ((WherePredicateStep) step).getLocalChildren(), true);
                 for (int k = 0; k < modulateBy.size(); ++k) {
                     Traversal.Admin current = modulateBy.next();
-                    if (current != null && current instanceof ElementValueTraversal) {
-                        setParent((ElementValueTraversal) current, step);
+                    if (current != null && current instanceof ValueTraversal) {
+                        setParent((ValueTraversal) current, step);
                     }
                 }
             } else if (step instanceof TraversalMapStep) {
                 Traversal.Admin admin =
                         (Traversal.Admin)
                                 ((TraversalMapStep) step).getLocalChildren().iterator().next();
-                if (admin != null && admin instanceof ElementValueTraversal) {
-                    setParent((ElementValueTraversal) admin, step);
+                if (admin != null && admin instanceof ValueTraversal) {
+                    setParent((ValueTraversal) admin, step);
                 }
             }
         }
     }
 
-    protected void setParent(ElementValueTraversal child, Step parent) {
+    protected void setParent(ValueTraversal child, Step parent) {
         child.setBypassTraversal(new DefaultTraversal());
         child.setParent((TraversalParent) parent);
     }

@@ -38,7 +38,7 @@
     <log4j2.version>[2.17.1,)</log4j2.version>
     <hadoop.version>2.10.1</hadoop.version>
     <grpc.version>1.42.1</grpc.version>
-    <tinkerpop.version>3.4.12</tinkerpop.version>
+    <tinkerpop.version>3.5.1</tinkerpop.version>
     <slf4j.version>1.7.21</slf4j.version>
     <groovy.version>2.5.14</groovy.version>
     <curator.new.version>5.1.0</curator.new.version>

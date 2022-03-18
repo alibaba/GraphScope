@@ -77,7 +77,7 @@ public enum TreeNodeStep {
     OrStep,
     CustomVertexProgramStep,
     VertexWithByStep,
-    StoreStep,
+    AggregateLocalStep,
     LoopsStep,
     EdgeVertexWithByStep,
     IdentityStep,

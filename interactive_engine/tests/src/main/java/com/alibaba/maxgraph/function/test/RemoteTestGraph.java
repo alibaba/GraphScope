@@ -24,7 +24,8 @@
  */
 package com.alibaba.maxgraph.function.test;
 
-import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration2.Configuration;
+import org.apache.tinkerpop.gremlin.process.traversal.AnonymousTraversalSource;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalStrategies;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.finalization.ProfileStrategy;
@@ -457,6 +458,34 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
         method = "g_V_hasXperson_name_markoX_count_asXaX_unionXidentity_identityX_selectXaX",
         reason = "Not support select traversal")
+@Graph.OptOut(
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
+        method = "g_EX11X_propertiesXweightX_asXaX_selectXaX_byXkeyX",
+        reason = "Not support select traversal")
+@Graph.OptOut(
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
+        method = "g_EX11X_propertiesXweightX_asXaX_selectXaX_byXvalueX",
+        reason = "Not support select traversal")
+@Graph.OptOut(
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.DedupTest",
+        method = "g_V_both_properties_dedup_count",
+        reason = "Not support select traversal")
+@Graph.OptOut(
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.DedupTest",
+        method = "g_V_bothE_properties_dedup_count",
+        reason = "Not support select traversal")
+@Graph.OptOut(
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.DedupTest",
+        method = "g_V_both_properties_properties_dedup_count",
+        reason = "Not support select traversal")
+@Graph.OptOut(
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
+        method = "g_V_hasXk_withinXcXX_valuesXkX",
+        reason = "Not support select traversal")
+@Graph.OptOut(
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.ConstantTest",
+        method = "g_V_constantXnullX",
+        reason = "Not support select traversal")
 public class RemoteTestGraph extends DummyGraph {
     public static final String GRAPH_NAME = "test.graph.name";
     private RemoteGremlinConnection remoteGremlinConnection;
@@ -487,9 +516,7 @@ public class RemoteTestGraph extends DummyGraph {
     @Override
     public GraphTraversalSource traversal() {
         GraphTraversalSource graphTraversalSource =
-                new GraphTraversalSource(
-                                this,
-                                TraversalStrategies.GlobalCache.getStrategies(this.getClass()))
+                AnonymousTraversalSource.traversal(GraphTraversalSource.class)
                         .withRemote(remoteGremlinConnection);
         TraversalStrategies strategies = graphTraversalSource.getStrategies();
         strategies.removeStrategies(ProfileStrategy.class, FilterRankingStrategy.class);

@@ -25,9 +25,9 @@ import com.alibaba.graphscope.gaia.plan.translator.builder.TraversalMetaBuilder;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.ColumnTraversal;
-import org.apache.tinkerpop.gremlin.process.traversal.lambda.ElementValueTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.IdentityTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.TokenTraversal;
+import org.apache.tinkerpop.gremlin.process.traversal.lambda.ValueTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.util.TraversalHelper;
 import org.apache.tinkerpop.gremlin.structure.Column;
 
@@ -57,9 +57,9 @@ public class TraversalMetaCollector
             Meta<GraphElement, StepPropertiesMeta> elementProperties =
                     (Meta) t.getConfig(MetaConfig.ELEMENT_PROPERTIES);
             if (elementProperties != null
-                    && admin instanceof ElementValueTraversal
+                    && admin instanceof ValueTraversal
                     && head.getObject().isGraphElement()) {
-                ElementValueTraversal admin1 = (ElementValueTraversal) admin;
+                ValueTraversal admin1 = (ValueTraversal) admin;
                 Step parent = StepMetaCollector.getParentOfTraversalId(t.getMetaId(), admin1);
                 int stepIdx = TraversalHelper.stepIndex(parent, parent.getTraversal());
                 elementProperties.add(
@@ -84,7 +84,7 @@ public class TraversalMetaCollector
                     return new TraverserElement(head.getObject().getSub(1));
                 }
             }
-            if (admin instanceof ElementValueTraversal || admin instanceof TokenTraversal) {
+            if (admin instanceof ValueTraversal || admin instanceof TokenTraversal) {
                 return new TraverserElement(new CompositeObject(String.class));
             }
             List<Step> steps = t.getAdmin().getSteps();

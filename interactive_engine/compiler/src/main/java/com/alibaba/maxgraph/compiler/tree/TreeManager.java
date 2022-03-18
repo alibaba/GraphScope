@@ -245,7 +245,7 @@ public class TreeManager {
                             new OrderGlobalTreeNode(
                                     inputUnaryTreeNode,
                                     schema,
-                                    Lists.newArrayList(Pair.of(selectOneTreeNode, Order.incr)));
+                                    Lists.newArrayList(Pair.of(selectOneTreeNode, Order.asc)));
                     UnaryTreeNode.class.cast(aggTreeNode).setInputNode(addOrderTreeNode);
                 }
             } else {
@@ -297,7 +297,7 @@ public class TreeManager {
                         new OrderGlobalTreeNode(
                                 treeLeaf,
                                 schema,
-                                Lists.newArrayList(Pair.of(selectOneTreeNode, Order.incr)));
+                                Lists.newArrayList(Pair.of(selectOneTreeNode, Order.asc)));
             }
         }
     }

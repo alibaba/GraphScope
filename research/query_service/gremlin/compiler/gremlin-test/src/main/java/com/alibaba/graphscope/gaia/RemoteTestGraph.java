@@ -15,7 +15,8 @@
  */
 package com.alibaba.graphscope.gaia;
 
-import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration2.Configuration;
+import org.apache.tinkerpop.gremlin.process.traversal.AnonymousTraversalSource;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalStrategies;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.finalization.ProfileStrategy;
@@ -1028,10 +1029,7 @@ public class RemoteTestGraph extends DummyGraph {
     @Override
     public GraphTraversalSource traversal() {
         GraphTraversalSource graphTraversalSource =
-                new GraphTraversalSource(
-                                this,
-                                TraversalStrategies.GlobalCache.getStrategies(this.getClass()))
-                        .withRemote(this.remoteGremlinConnection);
+                AnonymousTraversalSource.traversal().withRemote(this.remoteGremlinConnection);
         TraversalStrategies strategies = graphTraversalSource.getStrategies();
         strategies.removeStrategies(ProfileStrategy.class, FilterRankingStrategy.class);
         return graphTraversalSource;
