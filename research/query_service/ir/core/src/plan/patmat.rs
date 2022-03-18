@@ -54,7 +54,6 @@ pub trait BasicSentence: AsBaseSentence {
     /// the **only** common tag. Composition cannot be applied when either sentence
     /// has anti-semantics.
     fn composite(&self, other: Rc<dyn BasicSentence>) -> Option<CompoSentence>;
-
     /// Get the start tag of the `BasicSentence`, must present
     fn get_start_tag(&self) -> &NameOrId;
     /// Get the end tag of the `BasicSentence`, which is optional
@@ -62,6 +61,9 @@ pub trait BasicSentence: AsBaseSentence {
     /// Get the join kind, for identifying if the basic sentence carries the
     /// anti/semi join semantics, which can not be composited
     fn get_join_kind(&self) -> pb::join::JoinKind;
+    /// Get the reverse sentence, which not only reverse the start and end tag (must present),
+    /// and the direction of all edge/path expansions if possible.
+    fn reverse(&mut self) -> bool;
 }
 
 /// Define the behavior of concatenating two matching sentences via `Join`
@@ -237,6 +239,16 @@ impl AsBaseSentence for BaseSentence {
     }
 }
 
+fn reverse_dir(dir: i32) -> i32 {
+    if dir == 0 {
+        1
+    } else if dir == 1 {
+        0
+    } else {
+        2
+    }
+}
+
 impl BasicSentence for BaseSentence {
     fn composite(&self, other: Rc<dyn BasicSentence>) -> Option<CompoSentence> {
         // can only composite two sentences that are both inner-join
@@ -267,8 +279,55 @@ impl BasicSentence for BaseSentence {
     fn get_end_tag(&self) -> Option<&NameOrId> {
         self.end_tag.as_ref()
     }
+
     fn get_join_kind(&self) -> pb::join::JoinKind {
         self.join_kind
+    }
+
+    fn reverse(&mut self) -> bool {
+        use pb::logical_plan::operator::Opr;
+        if let Some(end_tag) = self.end_tag.clone() {
+            let mut result = true;
+            let mut new_operators = self.operators.clone();
+            for operator in new_operators.iter_mut() {
+                if let Some(opr) = operator.opr.as_mut() {
+                    match opr {
+                        Opr::Vertex(_) => {}
+                        Opr::Edge(edge) => {
+                            if edge.is_edge {
+                                result = false;
+                                break;
+                            }
+                            if let Some(params) = edge.params.as_mut() {
+                                if !params.columns.is_empty()
+                                    || params.is_all_columns
+                                    || params.predicate.is_some()
+                                {
+                                    result = false;
+                                    break;
+                                }
+                            }
+                            edge.direction = reverse_dir(edge.direction);
+                        }
+                        Opr::Path(path) => {
+                            if let Some(base) = path.base.as_mut() {
+                                base.direction = reverse_dir(base.direction);
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+            }
+            if result {
+                self.end_tag = Some(self.start_tag.clone());
+                self.start_tag = end_tag;
+                self.operators = new_operators;
+            }
+
+            result
+        } else {
+            false
+        }
     }
 }
 
@@ -487,6 +546,28 @@ impl BasicSentence for MergedSentence {
     fn get_join_kind(&self) -> pb::join::JoinKind {
         pb::join::JoinKind::Inner
     }
+
+    fn reverse(&mut self) -> bool {
+        if let Some(end_tag) = self.end_tag.clone() {
+            let mut result = true;
+            let mut rev_bases = self.bases.clone();
+            for base in rev_bases.iter_mut() {
+                if !base.reverse() {
+                    result = false;
+                    break;
+                }
+            }
+            if result {
+                self.end_tag = Some(self.start_tag.clone());
+                self.start_tag = end_tag;
+                self.bases = rev_bases;
+            }
+
+            result
+        } else {
+            false
+        }
+    }
 }
 
 impl Sentence for MergedSentence {
@@ -625,6 +706,10 @@ impl BasicSentence for CompoSentence {
 
     fn get_join_kind(&self) -> pb::join::JoinKind {
         pb::join::JoinKind::Inner
+    }
+
+    fn reverse(&mut self) -> bool {
+        false
     }
 }
 
@@ -879,7 +964,9 @@ impl TryFrom<pb::Pattern> for NaiveStrategy {
     }
 }
 
-fn get_next_tag(nbrs: &mut VecDeque<Option<NameOrId>>, visited: &BTreeSet<NameOrId>) -> Option<Option<NameOrId>> {
+fn get_next_tag(
+    nbrs: &mut VecDeque<Option<NameOrId>>, visited: &BTreeSet<NameOrId>,
+) -> Option<Option<NameOrId>> {
     let mut end_tag_opt = None;
     let len = nbrs.len();
     let mut count = 0;
@@ -910,7 +997,15 @@ impl NaiveStrategy {
         if self.tag_adj_list.contains_key(&self.start_tag) {
             Some(self.start_tag.clone())
         } else {
-            None
+            let mut max_cnt = 0;
+            let mut start_tag = None;
+            for (tag, (nbrs, _)) in &self.tag_adj_list {
+                if max_cnt < nbrs.len() {
+                    max_cnt = nbrs.len();
+                    start_tag = Some(tag.clone());
+                }
+            }
+            start_tag
         }
     }
 
@@ -925,22 +1020,31 @@ impl NaiveStrategy {
         let mut should_remove = false;
         visited.insert(start_tag.clone());
         if let Some((out_nbrs, in_nbrs)) = self.tag_adj_list.get_mut(&start_tag) {
-            should_remove = out_nbrs.is_empty() && in_nbrs.is_empty();
             let mut is_in_tag = false;
-            let mut end_tag_opt = get_next_tag(out_nbrs, visited);
-            if end_tag_opt.is_none() {
-                end_tag_opt = get_next_tag(in_nbrs, visited);
+            let mut next_tag_opt = get_next_tag(out_nbrs, visited);
+            if next_tag_opt.is_none() {
+                next_tag_opt = get_next_tag(in_nbrs, visited);
                 is_in_tag = true;
             }
-            if let Some(end_tag) = end_tag_opt {
-                if let Some(mut sentence) = self
-                    .sentences
-                    .remove(&(start_tag.clone(), end_tag.clone()))
-                {
+            should_remove = out_nbrs.is_empty() && in_nbrs.is_empty();
+            if let Some(next_tag) = next_tag_opt {
+                let tag_key = if is_in_tag {
+                    // it is fine to unwrap as it must present
+                    (next_tag.clone().unwrap(), Some(start_tag.clone()))
+                } else {
+                    (start_tag.clone(), next_tag.clone())
+                };
+                if let Some(mut sentence) = self.sentences.remove(&tag_key) {
                     sentence.set_has_as_opr(is_initial);
-                    sentence.
-                    if let Some(new_start_tag) = end_tag {
-                        if let Some(next_sentence) = self.do_dfs(new_start_tag, false, visited) {
+                    if is_in_tag {
+                        if !sentence.reverse() {
+                            in_nbrs.push_back(next_tag.clone());
+                            self.sentences.insert(tag_key, sentence);
+                            return None;
+                        }
+                    }
+                    if let Some(next_start_tag) = next_tag {
+                        if let Some(next_sentence) = self.do_dfs(next_start_tag, false, visited) {
                             result = sentence.composite(Rc::new(next_sentence));
                         } else {
                             result = Some(sentence.into())
@@ -1052,6 +1156,28 @@ mod test {
             }],
             end: y.and_then(|s| s.try_into().ok()),
             join_kind: if is_anti { 5 } else { 0 },
+        };
+
+        pb.try_into().unwrap()
+    }
+
+    #[allow(dead_code)]
+    fn gen_sentence_x_out_y_all_columns(x: &str, y: Option<&str>) -> BaseSentence {
+        let mut params = query_params();
+        params.is_all_columns = true;
+        let pb = pb::pattern::Sentence {
+            start: x.try_into().ok(),
+            binders: vec![pb::pattern::Binder {
+                item: Some(pb::pattern::binder::Item::Edge(pb::EdgeExpand {
+                    v_tag: None,
+                    direction: 0,
+                    params: Some(params),
+                    is_edge: false,
+                    alias: None,
+                })),
+            }],
+            end: y.and_then(|s| s.try_into().ok()),
+            join_kind: 0,
         };
 
         pb.try_into().unwrap()
@@ -1334,8 +1460,74 @@ mod test {
         // Join (opr_id = 14)
         //      As(b), Out(), as(d), (opr_id = 13),
         //      Join (opr_id = 10) (
-        //          As(a), Out(), As(b), Out(), As(c) (opr_id = 4)
-        //          As(a), Out(), As(d), Out(), As(c), (opr_id = 9)
+        //          As(a), Out(), As(b), Out(), As(c), In(), (this has been reversed), As(d) (opr_id = 6)
+        //          As(a), Out(), As(d), (opr_id = 9)
+        //      )
+        // )
+        let plan = strategy.build_logical_plan().unwrap();
+        println!("{:#?}", plan.nodes);
+
+        assert_eq!(
+            plan.nodes.get(5).unwrap().opr.clone().unwrap(),
+            pb::EdgeExpand {
+                v_tag: None,
+                direction: 1, // check this has been reversed from 0 to 1
+                params: Some(query_params()),
+                is_edge: false,
+                alias: None
+            }
+            .into()
+        );
+        assert_eq!(plan.nodes.get(6).unwrap().children, vec![10]);
+        assert_eq!(plan.nodes.get(9).unwrap().children, vec![10]);
+        assert_eq!(
+            plan.nodes.get(10).unwrap().opr.clone().unwrap(),
+            pb::Join {
+                left_keys: vec![
+                    common_pb::Variable { tag: Some("a".into()), property: None },
+                    common_pb::Variable { tag: Some("d".into()), property: None },
+                ],
+                right_keys: vec![
+                    common_pb::Variable { tag: Some("a".into()), property: None },
+                    common_pb::Variable { tag: Some("d".into()), property: None },
+                ],
+                kind: 0 // inner join
+            }
+            .into()
+        );
+        assert_eq!(plan.nodes.get(10).unwrap().children, vec![14]);
+        assert_eq!(plan.nodes.get(13).unwrap().children, vec![14]);
+        assert_eq!(
+            plan.nodes.last().unwrap().opr.clone().unwrap(),
+            pb::Join {
+                left_keys: vec![
+                    common_pb::Variable { tag: Some("b".into()), property: None },
+                    common_pb::Variable { tag: Some("d".into()), property: None }
+                ],
+                right_keys: vec![
+                    common_pb::Variable { tag: Some("b".into()), property: None },
+                    common_pb::Variable { tag: Some("d".into()), property: None }
+                ],
+                kind: 0 // inner join
+            }
+            .into()
+        );
+    }
+
+    #[test]
+    fn pattern_case3_no_reverse_into_logical_plan() {
+        let strategy = NaiveStrategy::from(vec![
+            gen_sentence_x_out_y("a", Some("b"), false, false),
+            gen_sentence_x_out_y("b", Some("c"), false, false),
+            gen_sentence_x_out_y_all_columns("d", Some("c")),
+            gen_sentence_x_out_y("a", Some("d"), false, false),
+            gen_sentence_x_out_y("b", Some("d"), false, false),
+        ]);
+        // Join (opr_id = 14)
+        //      As(b), Out(), as(d), (opr_id = 13),
+        //      Join (opr_id = 10) (
+        //          As(a), Out(), As(b), Out(), As(c), (opr_id = 4)
+        //          As(a), Out(), As(d), Out(), As(c) (opr_id = 9)
         //      )
         // )
         let plan = strategy.build_logical_plan().unwrap();
@@ -1434,6 +1626,38 @@ mod test {
                     common_pb::Variable { tag: Some("b".into()), property: None },
                 ],
                 kind: 5 // anti join
+            }
+            .into()
+        );
+    }
+
+    #[test]
+    fn pattern_case6_into_logical_plan() {
+        let strategy = NaiveStrategy::from(vec![
+            gen_sentence_x_out_y("a", Some("b"), false, false),
+            gen_sentence_x_out_y("b", Some("c"), false, false),
+            gen_sentence_x_out_y("c", Some("a"), false, false),
+        ]);
+        // Join (id = 8) (
+        //    As(a), Out(), As(b), Out(), As(c) (id = 4),
+        //    As(c), Out(), As(a) (id = 7),
+        // )
+        let plan = strategy.build_logical_plan().unwrap();
+        assert_eq!(plan.nodes.len(), 9);
+        assert_eq!(plan.nodes.get(4).unwrap().children, vec![8]);
+        assert_eq!(plan.nodes.get(7).unwrap().children, vec![8]);
+        assert_eq!(
+            plan.nodes.last().unwrap().opr.clone().unwrap(),
+            pb::Join {
+                left_keys: vec![
+                    common_pb::Variable { tag: Some("a".into()), property: None },
+                    common_pb::Variable { tag: Some("c".into()), property: None },
+                ],
+                right_keys: vec![
+                    common_pb::Variable { tag: Some("a".into()), property: None },
+                    common_pb::Variable { tag: Some("c".into()), property: None },
+                ],
+                kind: 0 // inner join
             }
             .into()
         );
