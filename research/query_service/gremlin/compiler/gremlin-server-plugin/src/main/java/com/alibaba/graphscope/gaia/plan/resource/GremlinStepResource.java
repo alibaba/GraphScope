@@ -26,7 +26,7 @@ import com.alibaba.pegasus.builder.AbstractBuilder;
 import com.alibaba.pegasus.builder.JobBuilder;
 import com.google.protobuf.ByteString;
 
-import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration2.Configuration;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 
 public abstract class GremlinStepResource implements StepResource {

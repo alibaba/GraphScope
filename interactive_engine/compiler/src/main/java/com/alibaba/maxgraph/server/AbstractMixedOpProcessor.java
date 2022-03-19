@@ -38,7 +38,6 @@ import org.apache.tinkerpop.gremlin.groovy.engine.GremlinExecutor;
 import org.apache.tinkerpop.gremlin.groovy.jsr223.TimedInterruptTimeoutException;
 import org.apache.tinkerpop.gremlin.process.traversal.Path;
 import org.apache.tinkerpop.gremlin.server.Context;
-import org.apache.tinkerpop.gremlin.server.ResponseHandlerContext;
 import org.apache.tinkerpop.gremlin.server.Settings;
 import org.apache.tinkerpop.gremlin.server.handler.Frame;
 import org.apache.tinkerpop.gremlin.server.handler.StateKey;
@@ -83,8 +82,7 @@ public abstract class AbstractMixedOpProcessor extends StandardOpProcessor {
     protected void evalOpInternal(
             Context context,
             Supplier<GremlinExecutor> gremlinExecutorSupplier,
-            AbstractEvalOpProcessor.BindingSupplier bindingsSupplier)
-            throws OpProcessorException {
+            AbstractEvalOpProcessor.BindingSupplier bindingsSupplier) {
         final Timer.Context timerContext = evalOpTimer.time();
         final ChannelHandlerContext ctx = context.getChannelHandlerContext();
         final RequestMessage msg = context.getRequestMessage();
@@ -109,9 +107,9 @@ public abstract class AbstractMixedOpProcessor extends StandardOpProcessor {
 
         // timeout override
         final long seto =
-                args.containsKey(Tokens.ARGS_SCRIPT_EVAL_TIMEOUT)
-                        ? Long.parseLong(args.get(Tokens.ARGS_SCRIPT_EVAL_TIMEOUT).toString())
-                        : settings.scriptEvaluationTimeout;
+                args.containsKey(Tokens.ARGS_EVAL_TIMEOUT)
+                        ? Long.parseLong(args.get(Tokens.ARGS_EVAL_TIMEOUT).toString())
+                        : settings.evaluationTimeout;
 
         logger.info("Receive query=>" + script);
         if (StringUtils.isEmpty(script) || StringUtils.equalsIgnoreCase(script, "''")) {
@@ -192,9 +190,7 @@ public abstract class AbstractMixedOpProcessor extends StandardOpProcessor {
                                         t);
                                 ctx.writeAndFlush(
                                         ResponseMessage.build(msg)
-                                                .code(
-                                                        ResponseStatusCode
-                                                                .SERVER_ERROR_SCRIPT_EVALUATION)
+                                                .code(ResponseStatusCode.SERVER_ERROR_EVALUATION)
                                                 .statusMessage(t.getMessage())
                                                 .create());
                             }
@@ -299,7 +295,7 @@ public abstract class AbstractMixedOpProcessor extends StandardOpProcessor {
             BindingSupplier bindingsSupplier,
             ChannelHandlerContext ctx) {
         return GremlinExecutor.LifeCycle.build()
-                .scriptEvaluationTimeoutOverride(0L)
+                .evaluationTimeoutOverride(0L)
                 .afterFailure(
                         (b, t) -> {
                             if (managedTransactionsForRequest)
@@ -324,9 +320,7 @@ public abstract class AbstractMixedOpProcessor extends StandardOpProcessor {
                                 logger.warn("query " + script + " fail.", e);
                                 ctx.writeAndFlush(
                                         ResponseMessage.build(msg)
-                                                .code(
-                                                        ResponseStatusCode
-                                                                .SERVER_ERROR_SCRIPT_EVALUATION)
+                                                .code(ResponseStatusCode.SERVER_ERROR_EVALUATION)
                                                 .statusMessage(e.getMessage())
                                                 .create());
                             }
@@ -343,7 +337,7 @@ public abstract class AbstractMixedOpProcessor extends StandardOpProcessor {
             BindingSupplier bindingsSupplier,
             ChannelHandlerContext ctx) {
         return GremlinExecutor.LifeCycle.build()
-                .scriptEvaluationTimeoutOverride(seto)
+                .evaluationTimeoutOverride(seto)
                 .afterFailure(
                         (b, t) -> {
                             if (managedTransactionsForRequest)
@@ -422,9 +416,8 @@ public abstract class AbstractMixedOpProcessor extends StandardOpProcessor {
     }
 
     @Override
-    protected void handleIterator(final ResponseHandlerContext rhc, final Iterator itty)
+    protected void handleIterator(final Context context, final Iterator itty)
             throws InterruptedException {
-        Context context = rhc.getContext();
         ChannelHandlerContext ctx = context.getChannelHandlerContext();
         RequestMessage msg = context.getRequestMessage();
         Settings settings = context.getSettings();
@@ -440,7 +433,7 @@ public abstract class AbstractMixedOpProcessor extends StandardOpProcessor {
                 attemptCommit(msg, context.getGraphManager(), settings.strictTransactionManagement);
             }
 
-            rhc.writeAndFlush(
+            ctx.writeAndFlush(
                     ResponseMessage.build(msg)
                             .code(ResponseStatusCode.NO_CONTENT)
                             .statusAttributes(
@@ -494,7 +487,7 @@ public abstract class AbstractMixedOpProcessor extends StandardOpProcessor {
                     try {
                         frame =
                                 makeFrame(
-                                        rhc,
+                                        context,
                                         msg,
                                         serializer,
                                         useBinary,
@@ -545,7 +538,7 @@ public abstract class AbstractMixedOpProcessor extends StandardOpProcessor {
                         this.iterateComplete(ctx, msg, itty);
                     }
 
-                    rhc.writeAndFlush(code, frame);
+                    context.writeAndFlush(code, frame);
                 }
             }
         }
@@ -578,7 +571,7 @@ public abstract class AbstractMixedOpProcessor extends StandardOpProcessor {
                 try {
                     frame =
                             makeFrame(
-                                    ctx,
+                                    context,
                                     msg,
                                     serializer,
                                     useBinary,

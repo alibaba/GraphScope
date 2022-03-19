@@ -28,7 +28,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal.Admin;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalStrategy.ProviderOptimizationStrategy;
-import org.apache.tinkerpop.gremlin.process.traversal.lambda.ElementValueTraversal;
+import org.apache.tinkerpop.gremlin.process.traversal.lambda.ValueTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.step.HasContainerHolder;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.RangeGlobalStep;
@@ -84,8 +84,7 @@ public class MxGraphStepStrategy extends AbstractTraversalStrategy<ProviderOptim
                 Set<String> keys = new HashSet<>();
                 comparators.forEach(
                         c -> {
-                            String propertyKey =
-                                    ((ElementValueTraversal) c.getLeft()).getPropertyKey();
+                            String propertyKey = ((ValueTraversal) c.getLeft()).getPropertyKey();
                             keys.add(propertyKey);
                         });
 
@@ -103,13 +102,13 @@ public class MxGraphStepStrategy extends AbstractTraversalStrategy<ProviderOptim
     private boolean testHasLambdaComparator(final List<Pair<Admin, Comparator>> comparators) {
         return comparators.stream()
                 .map(Pair::getRight)
-                .anyMatch(c -> c != Order.incr && c != Order.decr);
+                .anyMatch(c -> c != Order.asc && c != Order.desc);
     }
 
     private boolean testHasSubTraversal(final List<Pair<Admin, Comparator>> comparators) {
         return comparators.stream()
                 .map(Pair::getLeft)
-                .anyMatch(t -> !(t instanceof ElementValueTraversal));
+                .anyMatch(t -> !(t instanceof ValueTraversal));
     }
 
     public static MxGraphStepStrategy instance() {

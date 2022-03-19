@@ -88,7 +88,7 @@ query_plan {
       id: 9
       operator_type: ORDER
       argument {
-        payload: "\n\v\b\230\370\377\377\377\377\377\377\377\001"
+        payload: "\n\r\b\230\370\377\377\377\377\377\377\377\001\020\003"
       }
       after_requirement {
         req_type: LABEL_DEL

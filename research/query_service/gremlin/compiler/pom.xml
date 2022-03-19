@@ -19,7 +19,7 @@
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
-        <tinkerpop.version>3.4.12</tinkerpop.version>
+        <tinkerpop.version>3.5.1</tinkerpop.version>
         <protobuf.version>3.18.2</protobuf.version>
         <protoc.grpc.version>1.42.1</protoc.grpc.version>
     </properties>
@@ -100,6 +100,11 @@
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
                 <version>4.13.1</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-configuration2</artifactId>
+                <version>2.7</version>
             </dependency>
             <dependency>
                 <groupId>com.alibaba.pegasus</groupId>

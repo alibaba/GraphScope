@@ -15,7 +15,7 @@
  */
 package com.alibaba.maxgraph.function.test;
 
-import com.alibaba.maxgraph.io.MaxGraphIORegistry;
+import com.alibaba.maxgraph.sdkcommon.io.MaxGraphIORegistry;
 
 import org.apache.tinkerpop.gremlin.driver.Cluster;
 import org.apache.tinkerpop.gremlin.driver.MessageSerializer;
@@ -40,7 +40,7 @@ public class RemoteGremlinConnection implements RemoteConnection {
 
     private static Cluster createCluster(String endpoint) throws Exception {
         String[] split = endpoint.split(":");
-        GryoMapper.Builder kryo = GryoMapper.build().addRegistry(MaxGraphIORegistry.getInstance());
+        GryoMapper.Builder kryo = GryoMapper.build().addRegistry(MaxGraphIORegistry.instance());
         MessageSerializer serializer = new GryoMessageSerializerV1d0(kryo);
         Cluster cluster =
                 Cluster.build()

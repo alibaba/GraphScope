@@ -21,13 +21,13 @@ import com.alibaba.graphscope.gaia.store.GraphStoreService;
 import com.alibaba.graphscope.gaia.store.GraphType;
 import com.alibaba.graphscope.gaia.store.SchemaNotFoundException;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalStrategy;
-import org.apache.tinkerpop.gremlin.process.traversal.lambda.ElementValueTraversal;
+import org.apache.tinkerpop.gremlin.process.traversal.lambda.ValueTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.step.ByModulating;
 import org.apache.tinkerpop.gremlin.process.traversal.step.HasContainerHolder;
 import org.apache.tinkerpop.gremlin.process.traversal.step.TraversalParent;
@@ -146,8 +146,8 @@ public class SchemaIdMakerStrategy
                     } else if (step instanceof ByModulating) {
                         TraversalParent byParent = (TraversalParent) step;
                         for (Traversal.Admin k : byParent.getLocalChildren()) {
-                            if (k instanceof ElementValueTraversal) {
-                                ElementValueTraversal value = (ElementValueTraversal) k;
+                            if (k instanceof ValueTraversal) {
+                                ValueTraversal value = (ValueTraversal) k;
                                 String propertyId =
                                         PlanUtils.convertToPropertyId(
                                                 graphStore, value.getPropertyKey());
