@@ -1411,7 +1411,9 @@ class DynamicFragmentMutator {
       }
       v_fid = partitioner.GetPartitionId(oid);
       if (modify_type == rpc::NX_ADD_NODES) {
-        vm_ptr_->AddVertex(oid, gid);
+        if (!vm_ptr_->AddVertex(oid, gid)) {
+          vm_ptr_->GetGid(v_fid, oid, gid);
+        }
         if (v_fid == fid) {
           mutation.vertices_to_add.emplace_back(gid, std::move(v_data));
         }
@@ -1460,15 +1462,21 @@ class DynamicFragmentMutator {
       src_fid = partitioner.GetPartitionId(src);
       dst_fid = partitioner.GetPartitionId(dst);
       if (modify_type == rpc::NX_ADD_EDGES) {
-        bool src_added = vm_ptr_->AddVertex(src, src_gid);
-        bool dst_added = vm_ptr_->AddVertex(dst, dst_gid);
-        if (src_fid == fid && src_added) {
-          vdata_t empty_data(rapidjson::kObjectType);
-          mutation.vertices_to_add.emplace_back(src_gid, std::move(empty_data));
+        if (vm_ptr_->AddVertex(src, src_gid)) {
+          if (src_fid == fid) {
+            vdata_t empty_data(rapidjson::kObjectType);
+            mutation.vertices_to_add.emplace_back(src_gid, std::move(empty_data));
+          }
+        } else {
+          vm_ptr_->GetGid(src_fid, src, src_gid);
         }
-        if (dst_fid == fid && dst_added) {
-          vdata_t empty_data(rapidjson::kObjectType);
-          mutation.vertices_to_add.emplace_back(dst_gid, std::move(empty_data));
+        if (vm_ptr_->AddVertex(dst, dst_gid)) {
+          if (dst_fid == fid) {
+            vdata_t empty_data(rapidjson::kObjectType);
+            mutation.vertices_to_add.emplace_back(dst_gid, std::move(empty_data));
+          }
+        } else {
+          vm_ptr_->GetGid(dst_fid, dst, dst_gid);
         }
       } else {
         if (!vm_ptr_->GetGid(src_fid, src, src_gid) ||
