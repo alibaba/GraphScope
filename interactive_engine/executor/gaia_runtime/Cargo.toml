@@ -42,8 +42,6 @@ futures = { version = "0.3.0", features = ["thread-pool"] }
 gaia_pegasus = { path = "../../../research/engine/pegasus/pegasus", package = "pegasus" }
 pegasus_network = { path = "../../../research/engine/pegasus/network" }
 pegasus_server = { path = "../../../research/engine/pegasus/server-v0" }
-gremlin_core = { path = "../../../research/query_service/gremlin/gremlin_core" }
-gs_gremlin = { path = "../../../research/query_service/gremlin/gs_gremlin" }
 graph_proxy =  { path = "../../../research/query_service/ir/graph_proxy" }
 
 [dev-dependencies]

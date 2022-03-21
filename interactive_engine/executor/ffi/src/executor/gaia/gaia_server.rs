@@ -28,7 +28,6 @@ use pegasus_network::SimpleServerDetector;
 use pegasus_network::config::{NetworkConfig, ServerAddr};
 use graph_proxy::{InitializeJobCompiler, QueryMaxGraph};
 use maxgraph_store::api::PartitionId;
-//use gremlin_core::register_gremlin_types;
 
 pub struct GaiaServer {
     config: Arc<GraphConfig>,
@@ -63,11 +62,6 @@ impl GaiaServer {
             Some(report_string) => report_string.parse()
                 .map_err(|e| GraphError::new(EngineError, format!("{:?}", e)))?,
         };
-        let _worker_num = match self.config.get_storage_option("worker.num") {
-            None => 1,
-            Some(worker_num_string) => worker_num_string.parse()
-                .map_err(|e| GraphError::new(EngineError, format!("{:?}", e)))?,
-        };
         let rpc_port = match self.config.get_storage_option("gaia.rpc.port") {
             None => { 0 },
             Some(server_port_string) => {
@@ -77,7 +71,6 @@ impl GaiaServer {
         let addr = format!("{}:{}", "0.0.0.0", rpc_port).parse()
             .map_err(|e| GraphError::new(EngineError, format!("{:?}", e)))?;
         let gaia_config = make_gaia_config(self.config.clone());
-        let _server_id = gaia_config.server_id();
         let socket_addr = gaia_pegasus::startup_with(gaia_config, self.detector.clone())
             .map_err(|e| GraphError::new(EngineError, format!("{:?}", e)))?
             .ok_or(GraphError::new(EngineError, "gaia engine return None addr".to_string()))?;
