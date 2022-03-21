@@ -18,7 +18,6 @@
     <module>data_load_tools</module>
     <module>executor</module>
     <module>frontendservice</module>
-    <module>gaia-adaptor</module>
     <module>groot</module>
     <module>groot-server</module>
     <module>lgraph</module>
@@ -27,7 +26,6 @@
     <module>tests</module>
     <module>benchmark</module>
     <module>distribution</module>
-    <module>../research/query_service/gremlin/compiler</module>
   </modules>
 
   <properties>
