@@ -12,6 +12,7 @@ maxgraph-runtime = { path = "../runtime" }
 maxgraph-store = { path = "../store" }
 maxgraph-common = { path = "../../rust-common" }
 maxgraph-server = { path = "../server" }
+pegasus = { path = "../Pegasus", package = "pegasus" }
 itertools = "0.7.8"
 log = "0.3"
 log4rs = "0.8.0"
