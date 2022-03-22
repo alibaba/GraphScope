@@ -19,8 +19,6 @@ import com.alibaba.graphscope.parallel.netty.request.RequestType;
 import com.alibaba.graphscope.parallel.netty.request.WritableRequest;
 import com.alibaba.graphscope.parallel.netty.request.impl.ByteBufRequest;
 
-import com.alibaba.graphscope.parallel.netty.request.impl.ByteBufRequest;
-
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.channel.ChannelHandlerContext;
