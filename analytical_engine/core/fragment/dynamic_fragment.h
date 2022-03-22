@@ -1465,7 +1465,8 @@ class DynamicFragmentMutator {
         if (vm_ptr_->AddVertex(src, src_gid)) {
           if (src_fid == fid) {
             vdata_t empty_data(rapidjson::kObjectType);
-            mutation.vertices_to_add.emplace_back(src_gid, std::move(empty_data));
+            mutation.vertices_to_add.emplace_back(src_gid,
+                                                  std::move(empty_data));
           }
         } else {
           vm_ptr_->GetGid(src_fid, src, src_gid);
@@ -1473,7 +1474,8 @@ class DynamicFragmentMutator {
         if (vm_ptr_->AddVertex(dst, dst_gid)) {
           if (dst_fid == fid) {
             vdata_t empty_data(rapidjson::kObjectType);
-            mutation.vertices_to_add.emplace_back(dst_gid, std::move(empty_data));
+            mutation.vertices_to_add.emplace_back(dst_gid,
+                                                  std::move(empty_data));
           }
         } else {
           vm_ptr_->GetGid(dst_fid, dst, dst_gid);
