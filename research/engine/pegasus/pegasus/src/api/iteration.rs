@@ -18,6 +18,12 @@ use crate::errors::BuildJobError;
 use crate::stream::Stream;
 use crate::Data;
 
+
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub enum EmitKind {
+    Before,
+    After,
+}
 /// Define the cyclic dataflow
 pub trait Iteration<D: Data> {
     /// To iterate through a sub-dataflow given by `func` by at most `max_iters` times.
@@ -95,6 +101,12 @@ pub trait Iteration<D: Data> {
     ///     assert_eq!(expected, [1, 1, 1, 1]);
     /// ```
     fn iterate_until<F>(self, until: IterCondition<D>, func: F) -> Result<Stream<D>, BuildJobError>
+    where
+        F: FnOnce(Stream<D>) -> Result<Stream<D>, BuildJobError>;
+
+    fn iterate_emit_until<F>(
+        self, until: IterCondition<D>, emit_kind: EmitKind, func: F,
+    ) -> Result<Stream<D>, BuildJobError>
     where
         F: FnOnce(Stream<D>) -> Result<Stream<D>, BuildJobError>;
 }

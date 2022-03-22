@@ -62,7 +62,7 @@ pub use pegasus_memory::alloc::check_current_task_memory;
 pub use pegasus_network::ServerDetect;
 pub use tag::Tag;
 pub use worker::Worker;
-pub use worker_id::{get_current_worker, WorkerId};
+pub use worker_id::{get_current_worker, WorkerId, set_current_worker};
 
 use crate::api::Source;
 pub use crate::errors::{BuildJobError, JobSubmitError, SpawnJobError, StartupError};
@@ -222,12 +222,12 @@ where
 }
 
 pub fn run_with_resources<DI, DO, F, FN, R>(
-    conf: JobConf, mut resource: PartitionedResource<R>, func: F,
+    conf: JobConf, mut resource: R, func: F,
 ) -> Result<ResultStream<DO>, JobSubmitError>
 where
     DI: Data,
     DO: Debug + Send + 'static,
-    R: Send + Sync + 'static,
+    R: PartitionedResource,
     F: Fn() -> FN,
     FN: FnOnce(&mut Source<DI>, ResultSink<DO>) -> Result<(), BuildJobError> + 'static,
 {
@@ -237,7 +237,7 @@ where
     let results = ResultStream::new(conf.job_id, cancel_hook, rx);
     run_opt(conf, sink, |worker| {
         let index = worker.id.index as usize;
-        if let Some(r) = resource.take_partition_of(index) {
+        if let Some(r) = resource.take_resource(index) {
             worker.add_resource(r);
         }
         worker.dataflow(func())

@@ -64,10 +64,10 @@ fn has_any<T: Data>(mut stream: Stream<T>) -> Result<SingleItem<bool>, BuildJobE
                         if end.peers_contains(worker) {
                             output
                                 .new_session(batch.tag())?
-                                .give(Single(false))?;
-                        } else {
-                            output.notify_end(end)?;
+                                .give_last(Single(false), end)?;
                         }
+                    } else {
+                        output.notify_end(end)?;
                     }
                 }
                 Ok(())

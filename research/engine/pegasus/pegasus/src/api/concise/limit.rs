@@ -13,10 +13,11 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::cmp::Ordering;
+
 use crate::errors::BuildJobError;
 use crate::stream::Stream;
 use crate::Data;
-use std::cmp::Ordering;
 
 /// Produce certain number of data in the output stream
 pub trait Limit<D: Data> {
@@ -75,6 +76,6 @@ pub trait SortLimit<D: Data + Ord> {
 /// An alternative of `SortLimit` but requires a comparator of the data.
 pub trait SortLimitBy<D: Data> {
     fn sort_limit_by<F>(self, size: u32, cmp: F) -> Result<Stream<D>, BuildJobError>
-        where
-            F: Fn(&D, &D) -> Ordering + Send + 'static;
+    where
+        F: Fn(&D, &D) -> Ordering + Send + 'static;
 }
