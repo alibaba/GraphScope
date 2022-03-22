@@ -976,6 +976,9 @@ class DynamicFragment
       std::fill(oe_degree_to_add.begin(), oe_degree_to_add.end(), 0);
       std::fill(ie_degree_to_add.begin(), ie_degree_to_add.end(), 0);
       for (auto& e : edges) {
+        if (e.src == invalid_vid) {
+          continue;
+        }
         if (updateOrAddEdgeOutIn(e)) {
           if (e.src < ivnum_) {
             ++oe_degree_to_add[e.src];
@@ -1006,6 +1009,9 @@ class DynamicFragment
       // add edges
       std::fill(oe_degree_to_add.begin(), oe_degree_to_add.end(), 0);
       for (auto& e : edges) {
+        if (e.src == invalid_vid) {
+          continue;
+        }
         if (updateOrAddEdgeOut(e)) {
           if (e.src < ivnum_) {
             ++oe_degree_to_add[e.src];
@@ -1042,6 +1048,9 @@ class DynamicFragment
       oe_degree_to_add.clear();
       ie_degree_to_add.clear();
       for (auto& e : edges) {
+        if (e.src == invalid_vid) {
+          continue;
+        }
         if (updateOrAddEdgeOutIn(e)) {
           if (e.src < ivnum_) {
             ++oe_degree_to_add[e.src];
@@ -1072,6 +1081,9 @@ class DynamicFragment
       // add edges
       oe_degree_to_add.clear();
       for (auto& e : edges) {
+        if (e.src == invalid_vid) {
+          continue;
+        }
         if (updateOrAddEdgeOut(e)) {
           if (e.src < ivnum_) {
             ++oe_degree_to_add[e.src];
