@@ -536,6 +536,8 @@ class TensorContextWrapper<
         *arc << static_cast<int>(vineyard::TypeToInt<int64_t>::value);
       } else if (data_type == dynamic::Type::kDoubleType) {
         *arc << static_cast<int>(vineyard::TypeToInt<double>::value);
+      } else if (data_type == dynamic::Type::kNullType) {
+        *arc << static_cast<int>(vineyard::TypeToInt<void>::value);
       } else {
         RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
                         "Only support int64, double");
