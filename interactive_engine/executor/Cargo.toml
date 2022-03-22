@@ -5,8 +5,7 @@ members = [
     "store",
     "server",
     "Pegasus",
-    "ffi",
-    "gaia_runtime"
+    "ffi"
 ]
 
 [profile.release]
