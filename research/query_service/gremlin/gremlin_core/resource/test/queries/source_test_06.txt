@@ -1,1 +1,0 @@
-g.E().hasLabel("knows").has("weight",gt(0.5))

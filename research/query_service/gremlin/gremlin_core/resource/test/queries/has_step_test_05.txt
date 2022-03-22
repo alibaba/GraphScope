@@ -1,1 +1,0 @@
-g.V().has("age", lte(28).or(gte(32)))
