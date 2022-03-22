@@ -274,39 +274,4 @@ public class DefaultMessageStore<OID_T extends WritableComparable, MSG_T extends
             throw new IllegalStateException("readable bytes no subtracted by 16");
         }
     }
-
-    @Override
-    public void digestByteBuffer(ByteBuf buf, boolean fromSelf) {
-        ByteBufInputStream inputStream = new ByteBufInputStream(buf);
-        if (fromSelf) {
-            buf.skipBytes(5);
-        }
-        logger.debug(
-                "DefaultMessageStore digest bytebuf size {} direct {}",
-                buf.readableBytes(),
-                buf.isDirect());
-        try {
-            while (buf.readableBytes() > 8) {
-                GS_VID_T gid;
-                switch (vid_t) {
-                    case 0:
-                        gid = (GS_VID_T) (Long) buf.readLong();
-                        break;
-                    case 1:
-                        gid = (GS_VID_T) (Integer) buf.readInt();
-                        break;
-                    default:
-                        throw new IllegalStateException("Unknown flag " + vid_t);
-                }
-                MSG_T msg = ReflectionUtils.newInstance(conf.getIncomingMessageValueClass());
-                msg.readFields(inputStream);
-                addGidMessage(gid, msg);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        if (buf.readableBytes() != 0) {
-            throw new IllegalStateException("readable bytes no subtracted by 16");
-        }
-    }
 }
