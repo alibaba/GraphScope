@@ -21,6 +21,7 @@
 #include <memory>
 #include <string>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 #include "vineyard/graph/fragment/arrow_fragment.h"
