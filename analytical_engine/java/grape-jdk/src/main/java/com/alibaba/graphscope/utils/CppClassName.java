@@ -69,4 +69,7 @@ public class CppClassName {
     public static final String GS_VERTEX_ARRAY = "gs::VertexArrayDefault";
     public static final String GRAPE_IN_ARCHIVE = "grape::InArchive";
     public static final String GRAPE_OUT_ARCHIVE = "grape::OutArchive";
+
+    public static final String GS_ARROW_PROJECTED_FRAGMENT_IMPL_TYPED_ARRAY =
+            "gs::arrow_projected_fragment_impl::TypedArray";
 }

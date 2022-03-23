@@ -28,7 +28,6 @@ import com.alibaba.fastffi.CXXValue;
 import com.alibaba.fastffi.FFIFactory;
 import com.alibaba.fastffi.FFIGen;
 import com.alibaba.fastffi.FFIGetter;
-import com.alibaba.fastffi.FFIPointer;
 import com.alibaba.fastffi.FFITypeAlias;
 
 /**
@@ -43,7 +42,7 @@ import com.alibaba.fastffi.FFITypeAlias;
 @CXXHead(GRAPE_ADJ_LIST_H)
 @FFITypeAlias(GRAPE_NBR)
 public interface GrapeNbr<VID_T, EDATA_T>
-        extends FFIPointer, CXXPointerRangeElement<GrapeNbr<VID_T, EDATA_T>> {
+        extends NbrBase<VID_T, EDATA_T>, CXXPointerRangeElement<GrapeNbr<VID_T, EDATA_T>> {
 
     /**
      * Deep copy for current Nbr object.
@@ -59,6 +58,7 @@ public interface GrapeNbr<VID_T, EDATA_T>
      *
      * @return vertex.
      */
+    @Override
     @FFIGetter
     @CXXReference
     Vertex<VID_T> neighbor();
@@ -68,6 +68,7 @@ public interface GrapeNbr<VID_T, EDATA_T>
      *
      * @return edge data.
      */
+    @Override
     @FFIGetter
     @CXXReference
     EDATA_T data();

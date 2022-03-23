@@ -37,6 +37,7 @@ import java.util.function.Supplier;
 
 public class PageRank extends Communicator
         implements ParallelAppBase<Long, Long, Long, Double, PageRankContext>, ParallelEngine {
+
     private static Logger logger = LoggerFactory.getLogger(PageRank.class);
 
     @Override
@@ -114,7 +115,6 @@ public class PageRank extends Communicator
             parallelMessageManager.parallelProcess(
                     fragment, ctx.thread_num, ctx.executor, msgSupplier, consumer, 2L);
         } // finish receive data
-        // logger.info("end of receiving data");
 
         BiConsumer<Vertex<Long>, Integer> calc =
                 ((vertex, finalTid) -> {
@@ -123,7 +123,7 @@ public class PageRank extends Communicator
                     } else {
                         double cur = 0.0;
                         AdjList<Long, Double> nbrs = fragment.getIncomingAdjList(vertex);
-                        for (Nbr<Long, Double> nbr : nbrs.iterator()) {
+                        for (Nbr<Long, Double> nbr : nbrs.iterable()) {
                             cur += ctx.pagerank.get(nbr.neighbor());
                         }
                         cur = (cur * ctx.alpha + base) / ctx.degree.get(vertex);
@@ -146,7 +146,6 @@ public class PageRank extends Communicator
             ctx.swapTime += (System.nanoTime() - timeSwapStart);
         }
 
-        // logger.info("end of sending msg");
         double time0 = System.nanoTime();
         DoubleMsg msgDanglingSum = FFITypeFactoryhelper.newDoubleMsg(0.0);
         DoubleMsg localSumMsg = FFITypeFactoryhelper.newDoubleMsg(base * ctx.danglingVNum);

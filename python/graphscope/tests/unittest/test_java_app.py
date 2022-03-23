@@ -25,6 +25,7 @@ import pandas as pd
 import pytest
 
 from graphscope import JavaApp
+from graphscope.framework.app import load_app
 
 
 @pytest.fixture(scope="module")
@@ -129,3 +130,39 @@ def test_sssp_property_vertex_data(
 ):
     sssp = JavaApp(full_jar_path=demo_jar, java_app_class=projected_graph_sssp_class)
     sssp(p2p_project_directed_graph, src=6, threadNum=1)
+
+
+def projected_p2p_graph_loaded_by_giraph(
+    graphscope_session, demo_jar, vformat, eformat
+):
+    graphscope_session.add_lib(demo_jar)
+    graph = graphscope_session.load_from(
+        vertices=os.path.expandvars("${GS_TEST_DIR}/p2p-31.v"),
+        vformat=vformat,
+        edges=os.path.expandvars("${GS_TEST_DIR}/p2p-31.e"),
+        eformat=eformat,
+    )
+    graph = graph._project_to_simple(v_prop="vdata", e_prop="data")
+    return graph
+
+
+# also test a giraph app
+@pytest.mark.skipif(
+    os.environ.get("RUN_JAVA_TESTS") != "ON",
+    reason="Java SDK is disabled, skip this test.",
+)
+def test_giraph_app(
+    demo_jar,
+    graphscope_session,
+    projected_graph_sssp_class,
+):
+    graphscope_session.add_lib(demo_jar)
+    vformat = "giraph:com.alibaba.graphscope.example.giraph.format.P2PVertexInputFormat"
+    eformat = "giraph:com.alibaba.graphscope.example.giraph.format.P2PEdgeInputFormat"
+    g = projected_p2p_graph_loaded_by_giraph(
+        graphscope_session, demo_jar, vformat, eformat
+    )
+
+    giraph_sssp = load_app(algo="giraph:com.alibaba.graphscope.example.giraph.SSSP")
+    giraph_sssp(g, sourceId=6)
+    g.unload()

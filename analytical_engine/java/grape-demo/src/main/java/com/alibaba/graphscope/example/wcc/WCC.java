@@ -37,6 +37,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
 public class WCC implements ParallelAppBase<Long, Long, Long, Double, WCCContext>, ParallelEngine {
+
     private static Logger logger = LoggerFactory.getLogger(WCC.class);
 
     private void PropagateLabelPush(
@@ -49,9 +50,8 @@ public class WCC implements ParallelAppBase<Long, Long, Long, Double, WCCContext
         BiConsumer<Vertex<Long>, Integer> consumer =
                 (vertex, finalTid) -> {
                     long cid = ctx.comp_id.get(vertex);
-                    // AdjListv2<Long, Double> adjListv2 = frag.GetOutgoingAdjListV2(vertex);
                     AdjList<Long, Double> adjList = fragment.getOutgoingAdjList(vertex);
-                    for (Nbr<Long, Double> nbr : adjList.iterator()) {
+                    for (Nbr<Long, Double> nbr : adjList.iterable()) {
                         Vertex<Long> cur = nbr.neighbor();
                         if (Long.compareUnsigned(ctx.comp_id.get(cur), cid) > 0) {
                             ctx.comp_id.compareAndSetMinUnsigned(cur, cid);
@@ -88,7 +88,7 @@ public class WCC implements ParallelAppBase<Long, Long, Long, Double, WCCContext
                     long oldCid = ctx.comp_id.get(vertex);
                     long newCid = oldCid;
                     AdjList<Long, Double> adjList = fragment.getIncomingAdjList(vertex);
-                    for (Nbr<Long, Double> nbr : adjList.iterator()) {
+                    for (Nbr<Long, Double> nbr : adjList.iterable()) {
                         long value = ctx.comp_id.get(nbr.neighbor());
                         if (Long.compareUnsigned(value, newCid) < 0) {
                             newCid = value;
@@ -104,7 +104,7 @@ public class WCC implements ParallelAppBase<Long, Long, Long, Double, WCCContext
                     long oldCid = ctx.comp_id.get(vertex);
                     long newCid = oldCid;
                     AdjList<Long, Double> adjList = fragment.getIncomingAdjList(vertex);
-                    for (Nbr<Long, Double> nbr : adjList.iterator()) {
+                    for (Nbr<Long, Double> nbr : adjList.iterable()) {
                         long value = ctx.comp_id.get(nbr.neighbor());
                         if (Long.compareUnsigned(value, newCid) < 0) {
                             newCid = value;

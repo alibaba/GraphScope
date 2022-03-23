@@ -57,6 +57,8 @@ static constexpr const char* CONTEXT_UTILS_CLASS =
 static constexpr const char* JSON_CLASS_NAME = "com.alibaba.fastjson.JSON";
 static constexpr const char* IFRAGMENT_HELPER_CLASS =
     "com.alibaba.graphscope.runtime.IFragmentHelper";
+static constexpr const char* SET_CLASS_LOADER_METHOD_SIG =
+    "(Ljava/net/URLClassLoader;)V";
 
 /**
  * @brief JavaContextBase is the base class for JavaPropertyContext and
@@ -109,8 +111,37 @@ class JavaContextBase : public grape::ContextBase {
 
   virtual void Output(std::ostream& os) = 0;
 
+  // copy context data stored in java back to cpp context by invoking this
+  // method.
+  // FIXME(zhanglei) wrap the result
+  void WriteBackJVMHeapToCppContext() {
+    JNIEnvMark m;
+    if (m.env()) {
+      JNIEnv* env = m.env();
+      CHECK_NOTNULL(context_object_);
+      jclass context_class = env->GetObjectClass(context_object_);
+      CHECK_NOTNULL(context_class);
+
+      jmethodID write_back_method_id =
+          env->GetMethodID(context_class, "writeBackVertexData", "()V");
+      if (write_back_method_id) {
+        env->CallVoidMethod(context_object_, write_back_method_id);
+        if (env->ExceptionCheck()) {
+          LOG(ERROR) << "Exception occurred when loading user library";
+          env->ExceptionDescribe();
+          env->ExceptionClear();
+          LOG(ERROR) << "Exception occurred when calling write back method";
+        }
+      } else {
+        VLOG(2) << "Not write back method found";
+      }
+    }
+  }
+
  protected:
   virtual const char* evalDescriptor() = 0;
+
+  // Set frag_group_id to zero inidicate not available.
   void init(jlong messages_addr, const char* java_message_manager_name,
             const std::string& params, const std::string& lib_path) {
     if (params.empty()) {
@@ -136,9 +167,9 @@ class JavaContextBase : public grape::ContextBase {
     if (m.env()) {
       JNIEnv* env = m.env();
 
-      // Create a graphscope class loader to load app_class and ctx_class. This
-      // means will create a new class loader for each for run_app.
-      // The intent is to provide isolation, and avoid class conflicts。
+      // Create a graphscope class loader to load app_class and ctx_class.
+      // This means will create a new class loader for each for run_app. The
+      // intent is to provide isolation, and avoid class conflicts。
       {
         jobject gs_class_loader_obj = CreateClassLoader(env, user_class_path);
         CHECK_NOTNULL(gs_class_loader_obj);
@@ -148,8 +179,8 @@ class JavaContextBase : public grape::ContextBase {
       {
         if (!user_library_name.empty()) {
           // Since we load loadLibraryClass with urlClassLoader, the
-          // fromClass.classLoader literal, which is used in System.load, should
-          // be urlClassLoader.
+          // fromClass.classLoader literal, which is used in System.load,
+          // should be urlClassLoader.
           jclass load_library_class = (jclass) LoadClassWithClassLoader(
               env, url_class_loader_object_, LOAD_LIBRARY_CLASS);
           CHECK_NOTNULL(load_library_class);
@@ -211,7 +242,8 @@ class JavaContextBase : public grape::ContextBase {
         CHECK_NOTNULL(ifragment_helper_clz);
         jmethodID adapt2SimpleFragment_methodID = env->GetStaticMethodID(
             ifragment_helper_clz, "adapt2SimpleFragment",
-            "(Ljava/lang/Object;)Lcom/alibaba/graphscope/fragment/IFragment;");
+            "(Ljava/lang/Object;)Lcom/alibaba/graphscope/fragment/"
+            "IFragment;");
         CHECK_NOTNULL(adapt2SimpleFragment_methodID);
 
         jobject res = (jobject) env->CallStaticObjectMethod(
@@ -249,6 +281,25 @@ class JavaContextBase : public grape::ContextBase {
         jobject json_object =
             env->CallStaticObjectMethod(json_class, parse_method, args_jstring);
         CHECK_NOTNULL(json_object);
+        // 3.1 If we find a setClassLoaderMethod, then we invoke.(NOt
+        // neccessary) this is specially for giraph adaptors
+        {
+          jmethodID set_class_loader_method = env->GetMethodID(
+              context_class, "setClassLoader", SET_CLASS_LOADER_METHOD_SIG);
+          if (set_class_loader_method) {
+            env->CallVoidMethod(context_object_, set_class_loader_method,
+                                url_class_loader_object_);
+            if (env->ExceptionCheck()) {
+              env->ExceptionDescribe();
+              env->ExceptionClear();
+              LOG(ERROR) << "Exception in context Init";
+              return;
+            }
+            VLOG(1) << "Successfully set class loader";
+          } else {
+            VLOG(2) << "No class loader available to set for ctx";
+          }
+        }
 
         // 4. Invoke java method
         env->CallVoidMethod(context_object_, init_method_id, fragment_object_,
@@ -259,7 +310,8 @@ class JavaContextBase : public grape::ContextBase {
           LOG(ERROR) << "Exception in context Init";
         }
         VLOG(1) << "Successfully invokd ctx init method.";
-        // 5. to output the result, we need the c++ context held by java object.
+        // 5. to output the result, we need the c++ context held by java
+        // object.
         jfieldID inner_ctx_address_field =
             env->GetFieldID(context_class, "ffiContextAddress", "J");
         CHECK_NOTNULL(inner_ctx_address_field);
@@ -279,9 +331,9 @@ class JavaContextBase : public grape::ContextBase {
    * @brief Generate user class path, i.e. URLClassLoader class path, from lib
    * path.
    *
-   * @note lib_path is the path to user_app lib, if empty, we will skip llvm4jni
-   * and gs-ffi-gen in generated class path, and we will take jar_name as full
-   * path.
+   * @note lib_path is the path to user_app lib, if empty, we will skip
+   * llvm4jni and gs-ffi-gen in generated class path, and we will take
+   * jar_name as full path.
    *
    */
   std::string libPath2UserClassPath(const boost::filesystem::path& lib_dir,
@@ -300,15 +352,24 @@ class JavaContextBase : public grape::ContextBase {
       std::string lib_path_str = lib_path.filename().string();
       java_codegen_cp += lib_path_str.substr(3, lib_path_str.size() - 6);
 
-      std::string jar_unpack_path = lib_dir.string();
-      jar_unpack_path += "/";
-      jar_unpack_path += jar_name;
+      // There are cases(giraph) where jar_name can be full
+      // path(/tmp/gs/session/resource/....), so we judge whether this case.
+      std::string jar_unpack_path;
+      if (preprocess_jar_name(jar_name)) {
+        jar_unpack_path = jar_name;
+        VLOG(1) << "using raw jar name since it is absolute";
+      } else {
+        jar_unpack_path = lib_dir.string();
+        jar_unpack_path += "/";
+        jar_unpack_path += jar_name;
+      }
 
       snprintf(user_class_path, sizeof(user_class_path),
                "%s:/usr/local/lib:/opt/graphscope/lib:%s:%s/CLASS_OUTPUT/:%s",
                lib_dir.string().c_str(), llvm4jni_output_dir.c_str(),
                java_codegen_cp.c_str(), jar_unpack_path.c_str());
     } else {
+      // for giraph_runner testing, user jar can be absolute path.
       snprintf(user_class_path, sizeof(user_class_path),
                "/usr/local/lib:/opt/graphscope/lib:%s", jar_name.c_str());
     }
@@ -320,6 +381,7 @@ class JavaContextBase : public grape::ContextBase {
                                         const std::string lib_path,
                                         std::string& user_library_name,
                                         std::string& user_class_path) {
+    VLOG(10) << "received params: " << params;
     boost::property_tree::ptree pt;
     std::stringstream ss;
     {
@@ -331,12 +393,12 @@ class JavaContextBase : public grape::ContextBase {
       }
     }
 
-    VLOG(1) << "Received json: " << params;
+    VLOG(10) << "Received json: " << params;
     std::string frag_name = pt.get<std::string>("frag_name");
     CHECK(!frag_name.empty());
-    VLOG(1) << "Parse frag name: " << frag_name;
+    VLOG(10) << "Parse frag name: " << frag_name;
     graph_type_str_ = frag_name;
-    pt.erase("frag_name");
+    // pt.erase("frag_name");
 
     std::string jar_name = pt.get<std::string>("jar_name");
     CHECK(!jar_name.empty());
@@ -363,6 +425,10 @@ class JavaContextBase : public grape::ContextBase {
 
     user_class_path = libPath2UserClassPath(lib_dir, lib_path_fs, jar_name);
     VLOG(1) << "user cp: " << user_class_path;
+
+    // Giraph adaptor context need to map java graph data to
+    // vineyard_id(frag_group_id)
+    // pt.put("vineyard_id", frag_group_id);
 
     // JVM runtime opt should consists of java.libaray.path and
     // java.class.path maybe this should be set by the backend not user.
@@ -398,8 +464,40 @@ class JavaContextBase : public grape::ContextBase {
     // Pass app class's class object
     jstring context_class_jstring = (jstring) env->CallStaticObjectMethod(
         app_context_getter_class, app_context_getter_method, app_object_);
+    if (env->ExceptionCheck()) {
+      LOG(ERROR) << "Exception occurred when get context class string";
+      env->ExceptionDescribe();
+      env->ExceptionClear();
+    }
     CHECK_NOTNULL(context_class_jstring);
     return JString2String(env, context_class_jstring);
+  }
+  // Judge the jar contained in jar_name actually exists
+  bool preprocess_jar_name(const std::string jar_name) {
+    // first split by ";"
+    std::string delimiter_char = ":";
+    std::string token;
+    size_t pos = 0, first = 0;
+    std::vector<std::string> res;
+    while ((pos = jar_name.find(delimiter_char, first)) != std::string::npos) {
+      token = jar_name.substr(first, pos - first);
+      res.push_back(token);
+      first = pos + 1;
+    }
+    res.push_back(jar_name.substr(first));
+    //
+    if (res.empty()) {
+      LOG(ERROR) << "Empty jar name";
+      return false;
+    }
+    for (auto jar : res) {
+      std::ifstream f(jar.c_str());
+      if (!f.good()) {
+        return false;
+      }
+      f.close();
+    }
+    return true;
   }
 
   std::string graph_type_str_;

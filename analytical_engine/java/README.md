@@ -12,6 +12,9 @@ enables Java programmers to write and run graph algorithms with these benefits.
   GRAPE-JDK substantially narrows the gap between apps written in Java and in C++. As [experiments](#performance) shows, the overall performance gap 
   between native C++ and GRAPE-JDK are lower than 2x, and in some scenarios like PageRank, GRAPE-JDK runs nearly as fast as native C++ implementation. 
 
+- **Support Giraph app**. We also prvide user with a Giraph SDK, giraph-on-grape. The algorithms user implemented on [Giraph](https://github.com/apache/giraph)
+ interface can be run on GRAPE-JDK without any modification.
+
 <!-- - **Seamless integration with GraphScope**.
 
   To run a Java app developed with GRAPE-JDK, the user just need to pack Java app into ```jar``` and
@@ -22,8 +25,9 @@ enables Java programmers to write and run graph algorithms with these benefits.
 ## Organization
 
 - **grape-demo** provides example apps and [FFIMirrors](#user-defined-data-structure).
-- **grape-jdk** provides the SDK with graph computing interfaces.
+- **grape-jdk** provides the PIE SDK with graph computing interfaces.
 - **grape-runtime** contains the essential files for JNI code-gen and the glue code invoked by the analytcial engine (building with `ENABLE_JAVA_SDK`). 
+- **giraph-on-grape** provides the Pregel SDK for Giraph apps.
 
 -----
 (To be revise)

@@ -60,8 +60,6 @@ public interface Bitset extends FFIPointer, CXXPointer {
      */
     boolean empty();
 
-    // void parallel_clear(int thread_num);
-
     /**
      * Check empty or not in parallel.
      *
