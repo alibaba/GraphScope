@@ -580,20 +580,20 @@ class DynamicFragment
   }
 
   inline bool Oid2Gid(const oid_t& oid, vid_t& gid) const {
-    return vm_ptr_->GetGid(oid, gid);
+    return vm_ptr_->_GetGid(oid, gid);
   }
 
   inline size_t selfloops_num() const { return is_selfloops_.count(); }
 
   inline bool HasNode(const oid_t& node) const {
     vid_t gid;
-    return this->vm_ptr_->GetGid(fid_, node, gid) &&
+    return this->vm_ptr_->_GetGid(fid_, node, gid) &&
            iv_alive_.get_bit(id_parser_.get_local_id(gid));
   }
 
   inline bool HasEdge(const oid_t& u, const oid_t& v) const {
     vid_t uid, vid;
-    if (vm_ptr_->GetGid(u, uid) && vm_ptr_->GetGid(v, vid)) {
+    if (vm_ptr_->_GetGid(u, uid) && vm_ptr_->_GetGid(v, vid)) {
       vid_t ulid, vlid;
       if (IsInnerVertexGid(uid) && InnerVertexGid2Lid(uid, ulid) &&
           Gid2Lid(vid, vlid) && iv_alive_.get_bit(ulid)) {
@@ -617,7 +617,7 @@ class DynamicFragment
   inline bool GetEdgeData(const oid_t& u_oid, const oid_t& v_oid,
                           edata_t& data) const {
     vid_t uid, vid;
-    if (vm_ptr_->GetGid(u_oid, uid) && vm_ptr_->GetGid(v_oid, vid)) {
+    if (vm_ptr_->_GetGid(u_oid, uid) && vm_ptr_->_GetGid(v_oid, vid)) {
       vid_t ulid, vlid;
       if (IsInnerVertexGid(uid) && InnerVertexGid2Lid(uid, ulid) &&
           Gid2Lid(vid, vlid) && iv_alive_.get_bit(ulid)) {
@@ -1272,7 +1272,7 @@ class DynamicFragment
       if (source->GetVertex(oid, vertex)) {
         if (source->IsInnerVertex(vertex)) {
           // store the vertex data
-          CHECK(vm_ptr_->GetGid(fid_, oid, gid));
+          CHECK(vm_ptr_->_GetGid(fid_, oid, gid));
           auto lid = id_parser_.get_local_id(gid);
           ivdata_[lid] = source->GetData(vertex);
         } else {
@@ -1316,12 +1316,12 @@ class DynamicFragment
       const auto& src_oid = e.first;
       const auto& dst_oid = e.second;
       if (source->HasEdge(src_oid, dst_oid)) {
-        if (vm_ptr_->GetGid(fid_, src_oid, gid)) {
+        if (vm_ptr_->_GetGid(fid_, src_oid, gid)) {
           // src is inner vertex
           auto lid = id_parser_.get_local_id(gid);
           CHECK(source->GetVertex(src_oid, vertex));
           ivdata_[lid] = source->GetData(vertex);
-          CHECK(vm_ptr_->GetGid(dst_oid, dst_gid));
+          CHECK(vm_ptr_->_GetGid(dst_oid, dst_gid));
           CHECK(source->GetEdgeData(src_oid, dst_oid, edata));
           edges.emplace_back(gid, dst_gid, edata);
           if (gid != dst_gid && id_parser_.get_fragment_id(dst_gid) == fid_) {
@@ -1329,11 +1329,11 @@ class DynamicFragment
             CHECK(source->GetVertex(dst_oid, vertex));
             ivdata_[id_parser_.get_local_id(dst_gid)] = source->GetData(vertex);
           }
-        } else if (vm_ptr_->GetGid(fid_, dst_oid, dst_gid)) {
+        } else if (vm_ptr_->_GetGid(fid_, dst_oid, dst_gid)) {
           // dst is inner vertex but src is outer vertex
           CHECK(source->GetVertex(dst_oid, vertex));
           ivdata_[id_parser_.get_local_id(dst_gid)] = source->GetData(vertex);
-          CHECK(vm_ptr_->GetGid(src_oid, gid));
+          CHECK(vm_ptr_->_GetGid(src_oid, gid));
           source->GetEdgeData(src_oid, dst_oid, edata);
           if (directed_) {
             edges.emplace_back(gid, dst_gid, edata);
@@ -1411,13 +1411,13 @@ class DynamicFragmentMutator {
       }
       v_fid = partitioner.GetPartitionId(oid);
       if (modify_type == rpc::NX_ADD_NODES) {
-        vm_ptr_->AddVertex(oid, gid);
+        vm_ptr_->AddVertex(std::move(oid), gid);
         if (v_fid == fid) {
           mutation.vertices_to_add.emplace_back(gid, std::move(v_data));
         }
       } else {
         // UPDATE or DELETE, if not exist the node, continue.
-        if (!vm_ptr_->GetGid(v_fid, oid, gid)) {
+        if (!vm_ptr_->_GetGid(v_fid, oid, gid)) {
           continue;
         }
       }
@@ -1460,8 +1460,8 @@ class DynamicFragmentMutator {
       src_fid = partitioner.GetPartitionId(src);
       dst_fid = partitioner.GetPartitionId(dst);
       if (modify_type == rpc::NX_ADD_EDGES) {
-        bool src_added = vm_ptr_->AddVertex(src, src_gid);
-        bool dst_added = vm_ptr_->AddVertex(dst, dst_gid);
+        bool src_added = vm_ptr_->AddVertex(std::move(src), src_gid);
+        bool dst_added = vm_ptr_->AddVertex(std::move(dst), dst_gid);
         if (src_fid == fid && src_added) {
           vdata_t empty_data(rapidjson::kObjectType);
           mutation.vertices_to_add.emplace_back(src_gid, std::move(empty_data));
@@ -1471,8 +1471,8 @@ class DynamicFragmentMutator {
           mutation.vertices_to_add.emplace_back(dst_gid, std::move(empty_data));
         }
       } else {
-        if (!vm_ptr_->GetGid(src_fid, src, src_gid) ||
-            !vm_ptr_->GetGid(dst_fid, dst, dst_gid)) {
+        if (!vm_ptr_->_GetGid(src_fid, src, src_gid) ||
+            !vm_ptr_->_GetGid(dst_fid, dst, dst_gid)) {
           continue;
         }
       }

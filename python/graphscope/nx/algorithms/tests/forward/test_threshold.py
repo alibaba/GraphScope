@@ -9,11 +9,12 @@ from graphscope.nx.utils.compat import with_graphscope_nx_context
 import_as_graphscope_nx(networkx.algorithms.tests.test_threshold,
                         decorators=pytest.mark.usefixtures("graphscope_session"))
 
-from networkx.algorithms.tests.test_threshold import TestGeneratorThreshold
+from networkx.algorithms.tests.test_threshold import \
+    TestGeneratorThreshold as _TestGeneratorThreshold
 
 
 @pytest.mark.usefixtures("graphscope_session")
-@with_graphscope_nx_context(TestGeneratorThreshold)
+@with_graphscope_nx_context(_TestGeneratorThreshold)
 class TestGeneratorThreshold:
     def test_eigenvectors(self):
         np = pytest.importorskip('numpy')

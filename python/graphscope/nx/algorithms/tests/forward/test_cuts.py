@@ -7,12 +7,12 @@ from graphscope.nx.utils.compat import with_graphscope_nx_context
 import_as_graphscope_nx(networkx.algorithms.tests.test_cuts,
                         decorators=pytest.mark.usefixtures("graphscope_session"))
 
-from networkx.algorithms.tests.test_cuts import TestCutSize
-from networkx.algorithms.tests.test_cuts import TestVolume
+from networkx.algorithms.tests.test_cuts import TestCutSize as _TestCutSize
+from networkx.algorithms.tests.test_cuts import TestVolume as _TestVolume
 
 
 @pytest.mark.usefixtures("graphscope_session")
-@with_graphscope_nx_context(TestVolume)
+@with_graphscope_nx_context(_TestVolume)
 class TestVolume:
     @pytest.mark.skip(reason="not support multigraph")
     def test_multigraph(self):
@@ -24,7 +24,7 @@ class TestVolume:
 
 
 @pytest.mark.usefixtures("graphscope_session")
-@with_graphscope_nx_context(TestCutSize)
+@with_graphscope_nx_context(_TestCutSize)
 class TestCutSize:
     @pytest.mark.skip(reason="not support multigraph")
     def test_multigraph(self):
