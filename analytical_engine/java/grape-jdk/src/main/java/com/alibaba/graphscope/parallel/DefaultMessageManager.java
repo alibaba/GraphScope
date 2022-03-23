@@ -19,6 +19,7 @@ package com.alibaba.graphscope.parallel;
 import static com.alibaba.graphscope.utils.CppClassName.GRAPE_DEFAULT_MESSAGE_MANAGER;
 import static com.alibaba.graphscope.utils.CppClassName.GRAPE_LONG_VERTEX;
 import static com.alibaba.graphscope.utils.CppHeaderName.ARROW_PROJECTED_FRAGMENT_H;
+import static com.alibaba.graphscope.utils.CppHeaderName.CORE_JAVA_GRAPHX_GRAPHX_FRAGMENT_H;
 import static com.alibaba.graphscope.utils.CppHeaderName.CORE_JAVA_JAVA_MESSAGES_H;
 import static com.alibaba.graphscope.utils.CppHeaderName.GRAPE_ADJ_LIST_H;
 import static com.alibaba.graphscope.utils.CppHeaderName.GRAPE_FRAGMENT_IMMUTABLE_EDGECUT_FRAGMENT_H;
@@ -33,6 +34,7 @@ import com.alibaba.fastffi.FFITypeAlias;
 import com.alibaba.graphscope.app.DefaultAppBase;
 import com.alibaba.graphscope.ds.Vertex;
 import com.alibaba.graphscope.fragment.ArrowProjectedFragment;
+import com.alibaba.graphscope.fragment.BaseGraphXFragment;
 import com.alibaba.graphscope.fragment.FragmentType;
 import com.alibaba.graphscope.fragment.IFragment;
 import com.alibaba.graphscope.fragment.ImmutableEdgecutFragment;
@@ -50,6 +52,7 @@ import com.alibaba.graphscope.utils.JNILibraryName;
     GRAPE_FRAGMENT_IMMUTABLE_EDGECUT_FRAGMENT_H,
     ARROW_PROJECTED_FRAGMENT_H,
     CORE_JAVA_JAVA_MESSAGES_H,
+    CORE_JAVA_GRAPHX_GRAPHX_FRAGMENT_H
 })
 public interface DefaultMessageManager extends MessageManagerBase {
 
@@ -206,6 +209,13 @@ public interface DefaultMessageManager extends MessageManagerBase {
             @CXXReference FRAG_T frag,
             @CXXReference @FFITypeAlias(GRAPE_LONG_VERTEX) Vertex<Long> vertex,
             @CXXReference MSG_T msg);
+
+    @FFINameAlias("SyncStateOnOuterVertex")
+    <FRAG_T extends BaseGraphXFragment, MSG_T, @FFISkip SKIP_T> void syncStateOnOuterVertexGraphX(
+            @CXXReference FRAG_T frag,
+            @CXXReference @FFITypeAlias(GRAPE_LONG_VERTEX) Vertex<Long> vertex,
+            @CXXReference MSG_T msg,
+            @FFISkip SKIP_T skip);
 
     /**
      * Send the a vertex's data to other fragment througn outgoing edges.
