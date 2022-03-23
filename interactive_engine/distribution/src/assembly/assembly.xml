@@ -14,6 +14,13 @@
       <outputDirectory>native</outputDirectory>
     </fileSet>
     <fileSet>
+      <directory>${project.parent.basedir}/../research/query_service/ir/target/release</directory>
+      <includes>
+        <include>libir_core*</include>
+      </includes>
+      <outputDirectory>native</outputDirectory>
+    </fileSet>
+    <fileSet>
       <directory>${project.parent.basedir}/lgraph/build/install</directory>
       <excludes>
         <exclude>${project.parent.basedir}/lgraph/build/install/lib/libmaxgraph_ffi*</exclude>

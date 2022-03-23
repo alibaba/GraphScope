@@ -30,6 +30,7 @@ import com.alibaba.graphscope.common.client.*;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.PegasusConfig;
 import com.alibaba.graphscope.common.intermediate.InterOpCollection;
+import com.alibaba.graphscope.common.store.IrMetaFetcher;
 import com.alibaba.graphscope.gremlin.InterOpCollectionBuilder;
 import com.alibaba.graphscope.gremlin.Utils;
 import com.alibaba.graphscope.gremlin.plugin.script.AntlrToJavaScriptEngineFactory;
@@ -77,14 +78,15 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
     protected Graph graph;
     protected GraphTraversalSource g;
     protected Configs configs;
-    protected AbstractBroadcastProcessor broadcastProcessor;
+    protected RpcBroadcastProcessor broadcastProcessor;
+    protected IrMetaFetcher irMetaFetcher;
 
-    public IrStandardOpProcessor(Configs configs) {
+    public IrStandardOpProcessor(Configs configs, IrMetaFetcher irMetaFetcher, RpcChannelFetcher fetcher) {
         this.graph = TinkerFactory.createModern();
         this.g = graph.traversal(IrCustomizedTraversalSource.class);
         this.configs = configs;
-        RpcChannelFetcher channelFetcher = new HostsChannelFetcher(configs);
-        broadcastProcessor = new RpcBroadcastProcessor(channelFetcher);
+        this.irMetaFetcher = irMetaFetcher;
+        this.broadcastProcessor = new RpcBroadcastProcessor(fetcher);
     }
 
     @Override
@@ -166,6 +168,9 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                 .withResult(o -> {
                     try {
                         if (o != null && o instanceof Traversal) {
+                            // update the schema before the query is submitted
+                            irMetaFetcher.fetch();
+
                             InterOpCollection opCollection = (new InterOpCollectionBuilder((Traversal) o)).build();
                             IrPlan irPlan = opCollection.buildIrPlan();
 
@@ -173,7 +178,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                             byte[] physicalPlanBytes = irPlan.toPhysicalBytes(configs);
                             irPlan.close();
 
-                            int serverNum = PegasusConfig.PEGASUS_HOSTS.get(configs).split(",").length;
+                            int serverNum = PegasusConfig.PEGASUS_SERVER_NUM.get(configs);
                             List<Long> servers = new ArrayList<>();
                             for (long i = 0; i < serverNum; ++i) {
                                 servers.add(i);

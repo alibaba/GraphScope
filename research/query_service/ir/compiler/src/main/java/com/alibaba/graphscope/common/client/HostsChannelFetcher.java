@@ -43,4 +43,9 @@ public class HostsChannelFetcher implements RpcChannelFetcher {
         });
         return rpcChannels;
     }
+
+    @Override
+    public boolean isDynamic() {
+        return false;
+    }
 }

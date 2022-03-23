@@ -14,18 +14,23 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.common.client;
+package com.alibaba.graphscope.common.store;
 
-import com.alibaba.pegasus.RpcClient;
-import com.alibaba.pegasus.intf.ResultProcessor;
-import com.alibaba.pegasus.service.protocol.PegasusClient;
+import com.alibaba.graphscope.common.jna.IrCoreLibrary;
 
-public abstract class AbstractBroadcastProcessor implements AutoCloseable {
-    protected RpcClient rpcClient;
+import java.util.Optional;
 
-    public abstract void broadcast(PegasusClient.JobRequest request, ResultProcessor resultProcessor);
+public abstract class IrMetaFetcher {
+    private static IrCoreLibrary irCoreLib = IrCoreLibrary.INSTANCE;
 
-    public AbstractBroadcastProcessor(RpcChannelFetcher fetcher) {
-        this.rpcClient = new RpcClient(fetcher.fetch());
+    protected abstract Optional<String> getIrMeta();
+
+    public void fetch() {
+        Optional<String> irMetaOpt = getIrMeta();
+        if (irMetaOpt.isPresent()) {
+            irCoreLib.setSchema(irMetaOpt.get());
+        } else {
+            throw new RuntimeException("ir meta is not ready, retry please");
+        }
     }
 }

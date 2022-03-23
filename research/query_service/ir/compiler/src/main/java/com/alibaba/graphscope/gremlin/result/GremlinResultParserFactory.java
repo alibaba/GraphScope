@@ -58,6 +58,7 @@ public enum GremlinResultParserFactory implements GremlinResultParser {
         @Override
         public Object parseFrom(IrResult.Results results) {
             IrResult.Record record = results.getRecord();
+            logger.info("{}", record);
             Map<String, Object> projectResult = new HashMap<>();
             record.getColumnsList().forEach(column -> {
                 String tag = getColumnKeyAsResultKey(column.getNameOrId());
@@ -96,8 +97,17 @@ public enum GremlinResultParserFactory implements GremlinResultParser {
             if (columnKey.getItemCase() == OuterExpression.NameOrId.ItemCase.ITEM_NOT_SET) {
                 return "";
             }
-            String key = columnKey.getName();
-            return AliasManager.getPrefix(key);
+            switch (columnKey.getItemCase()) {
+                case ITEM_NOT_SET:
+                    return "";
+                case NAME:
+                    String key = columnKey.getName();
+                    return AliasManager.getPrefix(key);
+                case ID:
+                    return String.valueOf(columnKey.getId());
+                default:
+                    throw new GremlinResultParserException(columnKey.getItemCase() + " is invalid");
+            }
         }
     },
     GROUP {
@@ -107,7 +117,11 @@ public enum GremlinResultParserFactory implements GremlinResultParser {
             Object key = null;
             Object value = null;
             for (IrResult.Column column : record.getColumnsList()) {
-                String alias = column.getNameOrId().getName();
+                OuterExpression.NameOrId columnName = column.getNameOrId();
+                if (columnName.getItemCase() != OuterExpression.NameOrId.ItemCase.NAME) {
+                    throw new GremlinResultParserException("column key in group should be ItemCase.NAME");
+                }
+                String alias = columnName.getName();
                 Object parseEntry = parseGroupEntry(column.getEntry());
                 if (parseEntry instanceof EmptyValue) {
                     continue;
@@ -180,7 +194,8 @@ public enum GremlinResultParserFactory implements GremlinResultParser {
                         return PROJECT_VALUE;
                     }
                 } else {
-                    throw new GremlinResultParserException(columnName.getItemCase() + " is invalid");
+                    throw new GremlinResultParserException(
+                            "column key should be ItemCase.NAME to differentiate between group and project");
                 }
             } else {
                 throw new GremlinResultParserException("columns should not be empty");

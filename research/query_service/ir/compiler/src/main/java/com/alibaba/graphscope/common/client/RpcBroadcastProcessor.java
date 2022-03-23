@@ -16,6 +16,7 @@
 
 package com.alibaba.graphscope.common.client;
 
+import com.alibaba.pegasus.RpcClient;
 import com.alibaba.pegasus.intf.CloseableIterator;
 import com.alibaba.pegasus.intf.ResultProcessor;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
@@ -25,17 +26,25 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-public class RpcBroadcastProcessor extends AbstractBroadcastProcessor {
+public class RpcBroadcastProcessor implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(RpcBroadcastProcessor.class);
 
+    protected RpcClient rpcClient;
+    protected RpcChannelFetcher fetcher;
+
     public RpcBroadcastProcessor(RpcChannelFetcher fetcher) {
-        super(fetcher);
+        this.fetcher = fetcher;
+        if (!fetcher.isDynamic()) {
+            this.rpcClient = new RpcClient(fetcher.fetch());
+        }
     }
 
-    @Override
     public void broadcast(PegasusClient.JobRequest request, ResultProcessor processor) {
         CloseableIterator<PegasusClient.JobResponse> iterator = null;
         try {
+            if (fetcher.isDynamic()) {
+                this.rpcClient = new RpcClient(fetcher.fetch());
+            }
             iterator = rpcClient.submit(request);
             // process response
             while (iterator.hasNext()) {

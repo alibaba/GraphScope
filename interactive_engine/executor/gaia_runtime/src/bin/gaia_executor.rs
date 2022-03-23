@@ -20,7 +20,7 @@ extern crate grpcio;
 #[macro_use]
 extern crate log;
 extern crate gaia_pegasus;
-extern crate gs_gremlin;
+extern crate graph_proxy;
 extern crate log4rs;
 extern crate maxgraph_common;
 extern crate maxgraph_runtime;
@@ -33,9 +33,9 @@ extern crate structopt;
 
 use gaia_runtime::server::init_with_rpc_service;
 use gaia_runtime::server::manager::GaiaServerManager;
+use graph_proxy::{InitializeJobCompiler, QueryVineyard};
 use grpcio::ChannelBuilder;
 use grpcio::EnvBuilder;
-use gs_gremlin::{InitializeJobCompiler, QueryVineyard};
 use maxgraph_common::proto::data::*;
 use maxgraph_common::proto::hb::*;
 use maxgraph_common::proto::query_flow::*;
@@ -282,7 +282,6 @@ where
                 self.partition_worker_mapping.clone(),
                 self.worker_partition_list_mapping.clone(),
                 self.store_config.worker_num as usize,
-                self.store_config.worker_id as u64,
             );
             let job_compiler = query_vineyard.initialize_job_compiler();
             let service = Service::new(job_compiler);

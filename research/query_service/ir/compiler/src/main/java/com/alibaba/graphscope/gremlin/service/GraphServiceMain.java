@@ -16,39 +16,20 @@
 
 package com.alibaba.graphscope.gremlin.service;
 
+import com.alibaba.graphscope.common.client.HostsChannelFetcher;
+import com.alibaba.graphscope.common.client.RpcChannelFetcher;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FileLoadType;
-import com.alibaba.graphscope.common.config.GraphConfig;
-import com.alibaba.graphscope.common.jna.IrCoreLibrary;
-import com.alibaba.graphscope.gremlin.Utils;
-import com.alibaba.graphscope.gremlin.integration.processor.IrTestOpProcessor;
-import com.alibaba.graphscope.gremlin.plugin.processor.IrOpLoader;
-import com.alibaba.graphscope.gremlin.plugin.processor.IrStandardOpProcessor;
-import org.apache.tinkerpop.gremlin.server.GremlinServer;
-import org.apache.tinkerpop.gremlin.server.Settings;
-import org.apache.tinkerpop.gremlin.server.op.AbstractOpProcessor;
+import com.alibaba.graphscope.common.store.ExperimentalMetaFetcher;
+import com.alibaba.graphscope.common.store.IrMetaFetcher;
 
 public class GraphServiceMain {
-    private static IrCoreLibrary INSTANCE = IrCoreLibrary.INSTANCE;
-
     public static void main(String[] args) throws Exception {
         Configs configs = new Configs("conf/ir.compiler.properties", FileLoadType.RELATIVE_PATH);
+        IrMetaFetcher storeConfigs = new ExperimentalMetaFetcher(configs);
+        RpcChannelFetcher fetcher = new HostsChannelFetcher(configs);
 
-        AbstractOpProcessor standardProcessor = new IrStandardOpProcessor(configs);
-        IrOpLoader.addProcessor(standardProcessor.getName(), standardProcessor);
-        AbstractOpProcessor testProcessor = new IrTestOpProcessor(configs);
-        IrOpLoader.addProcessor(testProcessor.getName(), testProcessor);
-
-        // set graph schema
-        String schemaFilePath = GraphConfig.GRAPH_SCHEMA.get(configs);
-        INSTANCE.setSchema(Utils.readStringFromFile(schemaFilePath));
-
-        Settings settings = loadSettings();
-        GremlinServer server = new GremlinServer(settings);
-        server.start();
-    }
-
-    private static Settings loadSettings() throws Exception {
-        return Settings.read("conf/gremlin-server.yaml");
+        IrGremlinServer server = new IrGremlinServer();
+        server.start(configs, storeConfigs, fetcher);
     }
 }

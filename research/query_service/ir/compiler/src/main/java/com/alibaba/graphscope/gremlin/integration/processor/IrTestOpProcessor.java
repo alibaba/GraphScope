@@ -18,9 +18,11 @@ package com.alibaba.graphscope.gremlin.integration.processor;
 
 import com.alibaba.graphscope.common.IrPlan;
 import com.alibaba.graphscope.common.client.ResultParser;
+import com.alibaba.graphscope.common.client.RpcChannelFetcher;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.PegasusConfig;
 import com.alibaba.graphscope.common.intermediate.InterOpCollection;
+import com.alibaba.graphscope.common.store.IrMetaFetcher;
 import com.alibaba.graphscope.gremlin.InterOpCollectionBuilder;
 import com.alibaba.graphscope.gremlin.integration.result.GremlinTestResultProcessor;
 import com.alibaba.graphscope.gremlin.plugin.processor.IrStandardOpProcessor;
@@ -53,8 +55,8 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
     private AntlrToJavaScriptEngine scriptEngine;
     private ScriptContext context;
 
-    public IrTestOpProcessor(Configs configs) {
-        super(configs);
+    public IrTestOpProcessor(Configs configs, IrMetaFetcher irMetaFetcher, RpcChannelFetcher fetcher) {
+        super(configs, irMetaFetcher, fetcher);
         context = new SimpleScriptContext();
         Bindings globalBindings = new SimpleBindings();
         globalBindings.put("g", g);
@@ -80,6 +82,9 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
                     Traversal traversal = (Traversal) scriptEngine.eval(script, this.context);
 
                     applyStrategies(traversal);
+
+                    // update the schema before the query is submitted
+                    irMetaFetcher.fetch();
 
                     InterOpCollection opCollection = (new InterOpCollectionBuilder(traversal)).build();
                     IrPlan irPlan = opCollection.buildIrPlan();

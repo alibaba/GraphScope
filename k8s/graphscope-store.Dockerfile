@@ -29,6 +29,7 @@ RUN sudo chown -R $(id -u):$(id -g) /home/graphscope/gs /home/graphscope/.m2 && 
     && cmake .. && make -j && sudo make install \
     && rm -fr /tmp/cppkafka \
     && echo "build with profile: $profile" \
+    && cd /home/graphscope/gs/research/query_service/ir/core && cargo build --release \
     && cd /home/graphscope/gs/interactive_engine \
     && if [ "$profile" = "release" ]; then \
           echo "release mode"; \
