@@ -135,8 +135,8 @@ def test_unload(graphscope_session):
 
     assert not g.loaded()
 
-    with pytest.raises(RuntimeError, match="The graph is not loaded"):
-        g.unload()
+    # unload twice
+    g.unload()
 
     with pytest.raises(RuntimeError, match="The graph is not loaded"):
         pg = g.project(vertices={"host": []}, edges={"connect": []})

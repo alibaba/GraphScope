@@ -51,9 +51,9 @@ public class Store extends NodeBase {
         NameResolver.Factory nameResolverFactory = new MaxGraphNameResolverFactory(this.discovery);
         this.channelManager = new ChannelManager(configs, nameResolverFactory);
         this.metaService = new DefaultMetaService(configs);
-        this.storeService = new StoreService(configs, this.metaService);
-        SnapshotCommitter snapshotCommitter = new DefaultSnapshotCommitter(this.channelManager);
         MetricsCollector metricsCollector = new MetricsCollector(configs);
+        this.storeService = new StoreService(configs, this.metaService, metricsCollector);
+        SnapshotCommitter snapshotCommitter = new DefaultSnapshotCommitter(this.channelManager);
         MetricsCollectService metricsCollectService = new MetricsCollectService(metricsCollector);
         this.writerAgent =
                 new WriterAgent(

@@ -1,0 +1,9 @@
+
+# Stable
+edition = "2018"
+unstable_features = true
+chain_width = 48
+max_width = 108
+use_small_heuristics = "Max"
+fn_args_layout = "Compressed"
+group_imports = "StdExternalCrate"

@@ -1,0 +1,16 @@
+<configuration>
+  <appender class="ch.qos.logback.core.ConsoleAppender" name="STDOUT">
+    　　　　　
+    <encoder>
+      　　　　　　　　　
+      <pattern>[%d{ISO8601}][%p][%t][%c:%L] %m%n</pattern>
+      　　　　　
+    </encoder>
+    　　　
+  </appender>
+  <root level="info">
+    <appender-ref ref="STDOUT"/>
+  </root>
+</configuration>
+
+

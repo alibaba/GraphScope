@@ -1,1 +1,0 @@
-g.V().has("age", inside(28,32))

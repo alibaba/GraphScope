@@ -4,7 +4,7 @@ grpcio
 grpcio-tools
 kubernetes
 nest_asyncio
-networkx>=2.6
+networkx==2.6
 numpy
 orjson
 packaging
@@ -15,5 +15,5 @@ pyarrow
 PyYAML
 scipy
 tqdm
-vineyard>=0.3.16; sys_platform != "win32"
-vineyard-io>=0.3.16; sys_platform != "win32"
+vineyard>=0.3.21; sys_platform != "win32"
+vineyard-io>=0.3.21; sys_platform != "win32"

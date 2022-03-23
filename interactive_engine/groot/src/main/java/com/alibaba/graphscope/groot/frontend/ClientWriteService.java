@@ -1,5 +1,6 @@
 package com.alibaba.graphscope.groot.frontend;
 
+import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.frontend.write.GraphWriter;
 import com.alibaba.graphscope.groot.frontend.write.WriteRequest;
 import com.alibaba.graphscope.proto.write.*;
@@ -53,10 +54,34 @@ public class ClientWriteService extends ClientWriteGrpc.ClientWriteImplBase {
             for (WriteRequestPb writeRequestPb : request.getWriteRequestsList()) {
                 writeRequests.add(WriteRequest.parseProto(writeRequestPb));
             }
-            long snapshotId = graphWriter.writeBatch(requestId, writeSession, writeRequests);
-            responseObserver.onNext(
-                    BatchWriteResponse.newBuilder().setSnapshotId(snapshotId).build());
-            responseObserver.onCompleted();
+            graphWriter.writeBatch(
+                    requestId,
+                    writeSession,
+                    writeRequests,
+                    new CompletionCallback<Long>() {
+                        @Override
+                        public void onCompleted(Long res) {
+                            responseObserver.onNext(
+                                    BatchWriteResponse.newBuilder().setSnapshotId(res).build());
+                            responseObserver.onCompleted();
+                        }
+
+                        @Override
+                        public void onError(Throwable t) {
+                            logger.error(
+                                    "batch write callback error. request ["
+                                            + requestId
+                                            + "] session ["
+                                            + writeSession
+                                            + "]",
+                                    t);
+                            responseObserver.onError(
+                                    Status.INTERNAL
+                                            .withDescription(t.getMessage())
+                                            .asRuntimeException());
+                        }
+                    });
+
         } catch (Exception e) {
             logger.error(
                     "batchWrite failed. request [" + requestId + "] session [" + writeSession + "]",

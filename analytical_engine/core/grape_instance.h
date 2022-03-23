@@ -52,12 +52,14 @@ struct EngineConfig {
   std::string networkx;
   std::string vineyard_socket;
   std::string vineyard_rpc_endpoint;
+  std::string enable_java_sdk;
 
   std::string ToJsonString() const {
     boost::property_tree::ptree pt;
     pt.put("networkx", networkx);
     pt.put("vineyard_socket", vineyard_socket);
     pt.put("vineyard_rpc_endpoint", vineyard_rpc_endpoint);
+    pt.put("enable_java_sdk", enable_java_sdk);
     std::stringstream ss;
     boost::property_tree::json_parser::write_json(ss, pt);
     return ss.str();

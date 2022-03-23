@@ -43,4 +43,8 @@ impl<D: Data> Source<D> {
         let stream = Stream::new(output, &self.dfb);
         source.into_dataflow(stream)
     }
+
+    pub fn get_worker_index(&self) -> u32 {
+        self.dfb.worker_id.index
+    }
 }

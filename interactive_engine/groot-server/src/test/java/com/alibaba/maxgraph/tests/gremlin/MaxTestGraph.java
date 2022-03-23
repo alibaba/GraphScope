@@ -32,7 +32,7 @@ import com.alibaba.maxgraph.tinkerpop.traversal.MaxGraphTraversalSource;
 
 import io.grpc.stub.StreamObserver;
 
-import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration2.Configuration;
 import org.apache.tinkerpop.gremlin.LoadGraphWith;
 import org.apache.tinkerpop.gremlin.driver.Cluster;
 import org.apache.tinkerpop.gremlin.driver.MessageSerializer;
@@ -485,6 +485,34 @@ import java.util.concurrent.CompletableFuture;
 @Graph.OptOut(
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
         method = "g_V_hasXperson_name_markoX_count_asXaX_unionXidentity_identityX_selectXaX",
+        reason = "Not support select traversal")
+@Graph.OptOut(
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
+        method = "g_EX11X_propertiesXweightX_asXaX_selectXaX_byXkeyX",
+        reason = "Not support select traversal")
+@Graph.OptOut(
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
+        method = "g_EX11X_propertiesXweightX_asXaX_selectXaX_byXvalueX",
+        reason = "Not support select traversal")
+@Graph.OptOut(
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.DedupTest",
+        method = "g_V_both_properties_dedup_count",
+        reason = "Not support select traversal")
+@Graph.OptOut(
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.DedupTest",
+        method = "g_V_bothE_properties_dedup_count",
+        reason = "Not support select traversal")
+@Graph.OptOut(
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.DedupTest",
+        method = "g_V_both_properties_properties_dedup_count",
+        reason = "Not support select traversal")
+@Graph.OptOut(
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
+        method = "g_V_hasXk_withinXcXX_valuesXkX",
+        reason = "Not support select traversal")
+@Graph.OptOut(
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.ConstantTest",
+        method = "g_V_constantXnullX",
         reason = "Not support select traversal")
 public class MaxTestGraph implements Graph {
     private static final Logger logger = LoggerFactory.getLogger(MaxTestGraph.class);

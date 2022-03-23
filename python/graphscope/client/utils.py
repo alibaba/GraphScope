@@ -153,6 +153,7 @@ class ConditionalFormatter(logging.Formatter):
 class GSLogger(object):
     @staticmethod
     def init():
+        logging.basicConfig(level=logging.CRITICAL)
         # Default logger configuration
         stdout_handler = logging.StreamHandler(sys.stdout)
         formatter = ConditionalFormatter(

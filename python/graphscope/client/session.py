@@ -40,6 +40,7 @@ except ImportError:
     kube_config = None
 
 import graphscope
+from graphscope.analytical.udf.utils import InMemoryZip
 from graphscope.client.rpc import GRPCClient
 from graphscope.client.utils import CaptureKeyboardInterrupt
 from graphscope.client.utils import GSLogger
@@ -110,6 +111,8 @@ class _FetchHandler(object):
         if isinstance(self._fetches[seq], Operation):
             # for nx Graph
             return op_result.graph_def
+        # run_app op also can return graph result, so judge here
+
         # get graph dag node as base
         graph_dag_node = self._fetches[seq]
         # construct graph
@@ -328,6 +331,7 @@ class Session(object):
         k8s_image_pull_secrets=gs_config.k8s_image_pull_secrets,
         k8s_coordinator_cpu=gs_config.k8s_coordinator_cpu,
         k8s_coordinator_mem=gs_config.k8s_coordinator_mem,
+        etcd_addrs=gs_config.etcd_addrs,
         k8s_etcd_num_pods=gs_config.k8s_etcd_num_pods,
         k8s_etcd_cpu=gs_config.k8s_etcd_cpu,
         k8s_etcd_mem=gs_config.k8s_etcd_mem,
@@ -557,6 +561,7 @@ class Session(object):
             "k8s_image_pull_secrets",
             "k8s_coordinator_cpu",
             "k8s_coordinator_mem",
+            "etcd_addrs",
             "k8s_etcd_num_pods",
             "k8s_etcd_cpu",
             "k8s_etcd_mem",
@@ -1264,6 +1269,29 @@ class Session(object):
         self._nx = mod
         return self._nx
 
+    def add_lib(self, resource_name):
+        """
+        add the specified resource to the k8s cluster from client machine.
+        """
+        logger.info("client: adding lib {}".format(resource_name))
+        if not os.path.exists(resource_name):
+            raise FileNotFoundError(
+                "resource file not found in {}.".format(resource_name)
+            )
+        if not os.path.isfile(resource_name):
+            raise RuntimeError(
+                "Provided resource {} can not be found".format(resource_name)
+            )
+        # pack into a gar file
+        garfile = InMemoryZip()
+        resource_reader = open(resource_name, "rb")
+        bytes_ = resource_reader.read()
+        if len(bytes_) <= 0:
+            raise KeyError("Expect a non-empty file.")
+        # the uploaded file may be placed in the same directory
+        garfile.append("{}".format(resource_name.split("/")[-1]), bytes_)
+        self._grpc_client.add_lib(garfile.read_bytes().getvalue())
+
 
 session = Session
 
@@ -1389,14 +1417,19 @@ def default_session(session):
     return _default_session_stack.get_controller(session)
 
 
+def has_default_session():
+    """True if default session exists in current context."""
+    return not _default_session_stack.empty()
+
+
 def get_default_session():
     """Returns the default session for the current context.
 
-    Raises:
-        RuntimeError: Default session is not exist.
+    Note that a new session will be created if there is no
+    default session in current context.
 
     Returns:
-        The default :class:`Session`.
+        The default :class:`graphscope.Session`.
     """
     return _default_session_stack.get_default()
 
@@ -1421,6 +1454,9 @@ class _DefaultSessionStack(object):
             sess = session(cluster_type="hosts", num_workers=1)
             sess.as_default()
         return self.stack[-1]
+
+    def empty(self):
+        return len(self.stack) == 0
 
     def reset(self):
         self.stack = []

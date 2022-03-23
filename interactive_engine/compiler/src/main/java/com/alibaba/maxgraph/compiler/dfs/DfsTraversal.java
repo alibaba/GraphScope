@@ -129,7 +129,7 @@ public class DfsTraversal {
                             Lists.newArrayList(
                                     Pair.of(
                                             new SourceDelegateNode(bodyLeafTreeNode, schema),
-                                            Order.incr)));
+                                            Order.asc)));
             repeatTreeNode.setDfsEmitTreeNode(orderTreeNode);
         }
         repeatTreeNode.setDfsFeedTreeNode(

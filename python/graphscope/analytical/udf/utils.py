@@ -44,14 +44,14 @@ class ExpectFuncDef(Enum):
 class LinesWrapper(object):
     def __init__(self):
         self._lines = []
-        self._s = u""
+        self._s = ""
 
     def put(self, s):
         self._s += s
 
     def newline(self):
         self._lines.append(self._s)
-        self._s = u""
+        self._s = ""
 
     def putline(self, s):
         self.put(s)

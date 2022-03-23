@@ -14,9 +14,9 @@
 //! limitations under the License.
 //
 
-use pegasus::api::{Map, Sink, Filter};
-use pegasus::JobConf;
+use pegasus::api::{Filter, Map, Sink};
 use pegasus::result::ResultStream;
+use pegasus::JobConf;
 
 #[macro_use]
 extern crate lazy_static;
@@ -51,11 +51,11 @@ fn modern_graph_filter_flatmap_test() -> ResultStream<u32> {
                 .repartition(|x| Ok(*x as u64))
                 .filter(|x| Ok(*x == 5))?
                 .repartition(|x| Ok(*x as u64))
-                .flat_map(|x|Ok(MAP.get(&x).unwrap().1.iter().cloned()))?
+                .flat_map(|x| Ok(MAP.get(&x).unwrap().1.iter().cloned()))?
                 .sink_into(output)
         }
     })
-        .expect("submit job failure");
+    .expect("submit job failure");
     result_stream
 }
 
@@ -68,7 +68,7 @@ fn modern_graph_filter_test_twice() {
         while let Some(item) = result_stream.next() {
             result.push(item.unwrap());
         }
-        assert_eq!(result, expected );
+        assert_eq!(result, expected);
     }
 }
 
@@ -81,6 +81,6 @@ fn modern_graph_filter_test_five_times() {
         while let Some(item) = result_stream.next() {
             result.push(item.unwrap());
         }
-        assert_eq!(result, expected );
+        assert_eq!(result, expected);
     }
 }

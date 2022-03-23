@@ -38,7 +38,7 @@
 #include "core/context/vertex_property_context.h"
 #include "core/error.h"
 #include "core/fragment/arrow_flattened_fragment.h"
-#include "core/fragment/dynamic_fragment_view.h"
+#include "core/fragment/dynamic_fragment.h"
 #include "core/fragment/dynamic_projected_fragment.h"
 #include "core/fragment/fragment_reporter.h"
 #include "core/loader/arrow_fragment_loader.h"
@@ -759,7 +759,6 @@ class FragmentWrapper<ArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T>>
 template <>
 class FragmentWrapper<DynamicFragment> : public IFragmentWrapper {
   using fragment_t = DynamicFragment;
-  using fragment_view_t = DynamicFragmentView;
 
  public:
   FragmentWrapper(const std::string& id, rpc::graph::GraphDefPb graph_def,
@@ -904,14 +903,8 @@ class FragmentWrapper<DynamicFragment> : public IFragmentWrapper {
   bl::result<std::shared_ptr<IFragmentWrapper>> CreateGraphView(
       const grape::CommSpec& comm_spec, const std::string& view_graph_id,
       const std::string& view_type) override {
-    auto frag_view = std::make_shared<fragment_view_t>(
-        fragment_.get(), parse_fragment_view_type(view_type));
-
-    auto dst_graph_def = graph_def_;
-    dst_graph_def.set_key(view_graph_id);
-    auto wrapper = std::make_shared<FragmentWrapper<fragment_t>>(
-        view_graph_id, dst_graph_def, frag_view);
-    return std::dynamic_pointer_cast<IFragmentWrapper>(wrapper);
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "Cannot generate a view over the DynamicFragment");
   }
 
  private:

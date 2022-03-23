@@ -4,7 +4,7 @@
 # the result image includes all runtime stuffs of graphscope, with analytical engine,
 # learning engine and interactive engine installed.
 
-ARG BASE_VERSION=v0.3.19
+ARG BASE_VERSION=v0.3.21
 FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:$BASE_VERSION as builder
 
 ARG NETWORKX=ON
@@ -63,7 +63,6 @@ COPY --from=builder /usr/local/bin/zetcd /opt/graphscope/bin/zetcd
 COPY --from=builder /home/graphscope/gs/k8s/precompile.py /tmp/precompile.py
 COPY --from=builder /home/graphscope/gs/k8s/kube_ssh /opt/graphscope/bin/kube_ssh
 COPY --from=builder /home/graphscope/gs/interactive_engine/executor/target/$profile/executor /opt/graphscope/bin/executor
-COPY --from=builder /home/graphscope/gs/interactive_engine/executor/target/$profile/gaia_executor /opt/graphscope/bin/gaia_executor
 COPY --from=builder /home/graphscope/gs/interactive_engine/assembly/target/maxgraph-assembly-0.0.1-SNAPSHOT.tar.gz /opt/graphscope/maxgraph-assembly-0.0.1-SNAPSHOT.tar.gz
 
 # install mars

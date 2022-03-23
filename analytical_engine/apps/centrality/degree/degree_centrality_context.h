@@ -40,8 +40,6 @@ class DegreeCentralityContext
     auto& frag = this->fragment();
     auto inner_vertices = frag.InnerVertices();
 
-    centrality.Init(inner_vertices);
-
     if (centrality_type == "in") {
       degree_centrality_type = DegreeCentralityType::IN;
     } else if (centrality_type == "out") {

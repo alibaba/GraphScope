@@ -122,7 +122,7 @@ pub mod route {
 
 #[macro_use]
 pub mod map {
-    pub use crate::api::function::{DynError, FlatMapFunction, FnResult, MapFunction};
+    pub use crate::api::function::{DynError, FilterMapFunction, FlatMapFunction, FnResult, MapFunction};
 
     pub struct MapClosure<I, O, F: Fn(I) -> FnResult<O>> {
         func: F,
@@ -152,6 +152,40 @@ pub mod map {
     macro_rules! map {
         ($func: expr) => {
             MapClosure::new($func)
+        };
+    }
+
+    pub struct FilterMapClosure<I, O, F: Fn(I) -> FnResult<Option<O>>> {
+        func: F,
+        _ph: std::marker::PhantomData<(I, O)>,
+    }
+
+    impl<I, O, F: Fn(I) -> FnResult<Option<O>>> FilterMapClosure<I, O, F> {
+        pub fn new(func: F) -> Self {
+            FilterMapClosure { func, _ph: std::marker::PhantomData }
+        }
+    }
+
+    impl<I, O, F> FilterMapFunction<I, O> for FilterMapClosure<I, O, F>
+    where
+        I: Send + 'static,
+        O: Send + 'static,
+        F: Fn(I) -> FnResult<Option<O>> + Send + 'static,
+    {
+        fn exec(&self, input: I) -> FnResult<Option<O>> {
+            (self.func)(input)
+        }
+    }
+
+    unsafe impl<I, O, F: Fn(I) -> FnResult<Option<O>> + Send + Sync + 'static> Sync
+        for FilterMapClosure<I, O, F>
+    {
+    }
+
+    #[macro_export]
+    macro_rules! filter_map {
+        ($func: expr) => {
+            FilterMapClosure::new($func)
         };
     }
 

@@ -49,6 +49,7 @@ class GSConfig(object):
     k8s_coordinator_mem = "2Gi"
 
     # etcd resource configuration
+    etcd_addrs = None
     k8s_etcd_num_pods = 1
     k8s_etcd_cpu = 1.0
     k8s_etcd_mem = "512Mi"

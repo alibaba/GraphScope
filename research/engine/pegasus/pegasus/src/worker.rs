@@ -107,13 +107,13 @@ impl<D: Data, T: Debug + Send + 'static> Worker<D, T> {
         Ok(())
     }
 
-    pub fn add_resource<R: Send + Sync + 'static>(&mut self, resource: R) {
+    pub fn add_resource<R: Send + 'static>(&mut self, resource: R) {
         let type_id = TypeId::of::<R>();
         self.resources
             .insert(type_id, Box::new(resource));
     }
 
-    pub fn add_resource_with_key<R: Send + Sync + 'static>(&mut self, key: String, resource: R) {
+    pub fn add_resource_with_key<R: Send + 'static>(&mut self, key: String, resource: R) {
         self.keyed_resources
             .insert(key, Box::new(resource));
     }

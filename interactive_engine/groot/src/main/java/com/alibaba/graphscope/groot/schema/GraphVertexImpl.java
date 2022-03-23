@@ -20,6 +20,7 @@ import com.alibaba.maxgraph.compiler.api.schema.PrimaryKeyConstraint;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class GraphVertexImpl implements GraphVertex {
 
@@ -52,7 +53,10 @@ public class GraphVertexImpl implements GraphVertex {
 
     @Override
     public List<GraphProperty> getPrimaryKeyList() {
-        return null;
+        List<GraphProperty> propertyList = getPropertyList();
+        return getPkPropertyIndices().stream()
+                .map(i -> propertyList.get(i))
+                .collect(Collectors.toList());
     }
 
     @Override

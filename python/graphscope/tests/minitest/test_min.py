@@ -30,6 +30,7 @@ except ImportError:
     import tensorflow as tf
 
 import graphscope
+import graphscope.learning
 import graphscope.nx as nx
 from graphscope.analytical.udf.decorators import pregel
 from graphscope.dataset import load_ogbn_mag
@@ -67,7 +68,7 @@ def train(config, graph):
             full_graph_mode=config["full_graph_mode"],
         )
 
-    tf.reset_default_graph()
+    graphscope.learning.reset_default_tf_graph()
     trainer = LocalTFTrainer(
         model_fn,
         epoch=config["epoch"],

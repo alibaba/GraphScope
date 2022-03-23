@@ -28,6 +28,7 @@
 #include "grape/communication/communicator.h"
 #include "grape/worker/comm_spec.h"
 
+#include "core/fragment/dynamic_fragment.h"
 #include "core/server/rpc_utils.h"
 #include "core/utils/convert_utils.h"
 #include "proto/graphscope/proto/types.pb.h"
@@ -69,6 +70,7 @@ class DynamicFragmentReporter : public grape::Communicator {
       dynamic::Parse(node_in_json, node_id);
       return std::to_string(hasNode(fragment, node_id));
     }
+
     case rpc::HAS_EDGE: {
       BOOST_LEAF_AUTO(edge_in_json, params.Get<std::string>(rpc::EDGE));
       dynamic::Value edge;
@@ -105,7 +107,7 @@ class DynamicFragmentReporter : public grape::Communicator {
       return batchGetNodes(fragment, fid, lid);
     }
     default:
-      CHECK(false);
+      LOG(ERROR) << "Invalid report type";
     }
     return std::string("");
   }
@@ -168,16 +170,16 @@ class DynamicFragmentReporter : public grape::Communicator {
                            const rpc::ReportType& report_type) {
     vertex_t v;
     dynamic::Value nbrs(rapidjson::kArrayType);
-    if (fragment->GetInnerVertex(node, v) && fragment->IsAliveInnerVertex(v)) {
+    if (fragment->GetInnerVertex(node, v)) {
       adj_list_t edges;
       dynamic::Value id_array(rapidjson::kArrayType);
       dynamic::Value data_array(rapidjson::kArrayType);
       report_type == rpc::PREDS_BY_NODE
           ? edges = fragment->GetIncomingAdjList(v)
           : edges = fragment->GetOutgoingAdjList(v);
-      for (auto& e : edges) {
-        id_array.PushBack(fragment->GetId(e.neighbor()));
-        data_array.PushBack(e.data());
+      for (const auto& e : edges) {
+        id_array.PushBack(fragment->GetId(e.neighbor));
+        data_array.PushBack(e.data);
       }
       nbrs.PushBack(id_array).PushBack(data_array);
     }
@@ -191,8 +193,9 @@ class DynamicFragmentReporter : public grape::Communicator {
       vertex_t v(start_lid);
       dynamic::Value nodes(rapidjson::kObjectType);
       dynamic::Value batch_nodes(rapidjson::kArrayType);
-      while (fragment->IsInnerVertex(v) && cnt < batch_num_) {
-        if (fragment->IsAliveInnerVertex(v)) {
+      auto end_value = fragment->InnerVertices().end_value();
+      while (v.GetValue() < end_value && cnt < batch_num_) {
+        if (fragment->IsInnerVertex(v) && fragment->IsAliveInnerVertex(v)) {
           batch_nodes.PushBack(fragment->GetId(v));
           ++cnt;
         }

@@ -63,7 +63,7 @@ class TransitivityContext : public TensorContext<FRAG_T, double> {
   }
 
   typename FRAG_T::template vertex_array_t<int> global_degree;
-  typename FRAG_T::template vertex_array_t<int> rec_degree;
+  typename FRAG_T::template inner_vertex_array_t<int> rec_degree;
   typename FRAG_T::template vertex_array_t<
       std::vector<std::pair<vertex_t, uint32_t>>>
       complete_neighbor;

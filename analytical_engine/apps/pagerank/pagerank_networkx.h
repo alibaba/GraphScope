@@ -118,9 +118,16 @@ class PageRankNetworkX
     ForEach(inner_vertices.begin(), inner_vertices.end(),
             [&ctx, base, &frag](int tid, vertex_t u) {
               double cur = 0;
-              auto es = frag.GetIncomingAdjList(u);
-              for (auto& e : es) {
-                cur += ctx.pre_result[e.get_neighbor()];
+              if (frag.directed()) {
+                auto es = frag.GetIncomingAdjList(u);
+                for (auto& e : es) {
+                  cur += ctx.pre_result[e.get_neighbor()];
+                }
+              } else {
+                auto es = frag.GetOutgoingAdjList(u);
+                for (auto& e : es) {
+                  cur += ctx.pre_result[e.get_neighbor()];
+                }
               }
               ctx.result[u] = cur * ctx.alpha + base;
             });

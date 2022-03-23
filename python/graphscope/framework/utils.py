@@ -44,11 +44,12 @@ from graphscope.proto import types_pb2
 
 
 class PipeWatcher(object):
-    def __init__(self, pipe, sink, queue=None, drop=True):
+    def __init__(self, pipe, sink, queue=None, drop=True, suppressed=False):
         """Watch a pipe, and buffer its output if drop is False."""
         self._pipe = pipe
         self._sink = sink
         self._drop = drop
+        self._suppressed = suppressed
         self._filters = []
 
         if queue is None:
@@ -58,7 +59,7 @@ class PipeWatcher(object):
 
         def read_and_poll(self):
             for line in self._pipe:
-                if self._filter(line):
+                if self._filter(line) and not self._suppressed:
                     try:
                         self._sink.write(line)
                         self._sink.flush()

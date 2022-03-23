@@ -33,7 +33,12 @@ import_as_graphscope_nx(networkx.readwrite.edgelist)
 
 @patch_docstring(_parse_edgelist)
 def parse_edgelist(
-    lines, comments="#", delimiter=None, create_using=None, nodetype=None, data=True
+    lines,
+    comments="#",
+    delimiter=None,
+    create_using=None,
+    nodetype=None,
+    data=True,
 ):
     from ast import literal_eval
 

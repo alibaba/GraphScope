@@ -89,7 +89,7 @@ public class MxGraphStep<S, E extends Element> extends GraphStep<S, E>
 
     public void setOrder(@Nonnull Order order, @Nonnull final Set<String> key) {
         Set<String> keys = Collections.unmodifiableSet(key);
-        this.order = Pair.of(order == Order.incr, keys);
+        this.order = Pair.of(order == Order.asc, keys);
     }
 
     public void setLimit(int limit) {

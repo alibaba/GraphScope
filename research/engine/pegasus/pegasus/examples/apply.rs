@@ -56,7 +56,7 @@ fn main() {
         conf.reset_servers(ServerConf::All);
     }
 
-    let src = graph.sample_vertices(config.source as usize);
+    let src = graph.sample_vertices(config.source as usize, 0.1);
     let inner_hop = config.inner_hop;
     let outer_hop = config.outer_hop;
     let conf = conf.clone();

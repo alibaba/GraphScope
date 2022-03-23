@@ -30,7 +30,7 @@ use crate::errors::BuildJobError;
 use crate::graph::{Edge, Port};
 use crate::macros::route::*;
 use crate::operator::{NotifiableOperator, OperatorCore};
-use crate::{Data, JobConf};
+use crate::{Data, JobConf, WorkerId};
 
 #[must_use = "this `Stream` must be consumed"]
 pub struct Stream<D: Data> {
@@ -55,6 +55,10 @@ impl<D: Data> Stream<D> {
 impl<D: Data> Stream<D> {
     pub fn get_job_conf(&self) -> Arc<JobConf> {
         self.builder.config.clone()
+    }
+
+    pub fn get_worker_id(&self) -> WorkerId {
+        self.builder.worker_id
     }
 
     pub fn get_upstream_port(&self) -> Port {
