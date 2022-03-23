@@ -802,7 +802,7 @@ class FragmentWrapper<DynamicFragment> : public IFragmentWrapper {
                 ori_vm_ptr->GetInnerVertexSize(fid);
             for (typename fragment_t::vid_t lid = 0; lid < fvnum; lid++) {
               ori_vm_ptr->GetOid(fid, lid, oid);
-              CHECK(new_vm_ptr->AddVertex(oid, gid));
+              CHECK(new_vm_ptr->AddVertex(std::move(oid), gid));
             }
           },
           fid);
@@ -841,7 +841,7 @@ class FragmentWrapper<DynamicFragment> : public IFragmentWrapper {
                 ori_vm_ptr->GetInnerVertexSize(fid);
             for (typename fragment_t::vid_t lid = 0; lid < fvnum; lid++) {
               ori_vm_ptr->GetOid(fid, lid, oid);
-              CHECK(new_vm_ptr->AddVertex(oid, gid));
+              CHECK(new_vm_ptr->AddVertex(std::move(oid), gid));
             }
           },
           fid);
@@ -880,7 +880,7 @@ class FragmentWrapper<DynamicFragment> : public IFragmentWrapper {
                 ori_vm_ptr->GetInnerVertexSize(fid);
             for (typename fragment_t::vid_t lid = 0; lid < fvnum; lid++) {
               ori_vm_ptr->GetOid(fid, lid, oid);
-              CHECK(new_vm_ptr->AddVertex(oid, gid));
+              CHECK(new_vm_ptr->AddVertex(std::move(oid), gid));
             }
           },
           fid);

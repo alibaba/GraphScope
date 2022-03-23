@@ -1460,8 +1460,8 @@ class DynamicFragmentMutator {
       src_fid = partitioner.GetPartitionId(src);
       dst_fid = partitioner.GetPartitionId(dst);
       if (modify_type == rpc::NX_ADD_EDGES) {
-        bool src_added = vm_ptr_->AddVertex(src, src_gid);
-        bool dst_added = vm_ptr_->AddVertex(dst, dst_gid);
+        bool src_added = vm_ptr_->AddVertex(std::move(src), src_gid);
+        bool dst_added = vm_ptr_->AddVertex(std::move(dst), dst_gid);
         if (src_fid == fid && src_added) {
           vdata_t empty_data(rapidjson::kObjectType);
           mutation.vertices_to_add.emplace_back(src_gid, std::move(empty_data));
