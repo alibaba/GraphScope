@@ -34,7 +34,6 @@ import com.alibaba.maxgraph.common.config.GremlinConfig;
 import com.alibaba.maxgraph.compiler.api.schema.SchemaFetcher;
 import com.alibaba.maxgraph.servers.AbstractService;
 import com.alibaba.maxgraph.servers.ComputeServiceProducer;
-import com.alibaba.maxgraph.servers.gaia.*;
 
 import java.util.HashMap;
 import java.util.Map;

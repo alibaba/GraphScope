@@ -26,6 +26,8 @@
     <module>tests</module>
     <module>benchmark</module>
     <module>distribution</module>
+    <module>ir-adaptor</module>
+    <module>../research/query_service/ir/compiler</module>
   </modules>
 
   <properties>
