@@ -301,9 +301,7 @@ jobs:
         shell: bash
     strategy:
       matrix:
-        # the networkx implementation under distributed setting is broken
-        # deployment: ["standalone", "distributed"]
-        deployment: ["standalone"]
+        deployment: ["standalone", "distributed"]
     steps:
     - uses: actions/checkout@v2.3.2
     - uses: dorny/paths-filter@v2
