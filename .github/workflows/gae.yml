@@ -31,8 +31,9 @@ concurrency:
 jobs:
   build-gae:
     runs-on: ubuntu-20.04
+    if: ${{ github.repository == 'alibaba/GraphScope' }}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.3.12
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.3.21
       options:
         --shm-size 4096m
     steps:
@@ -44,7 +45,7 @@ jobs:
       run: |
         # default install to "/opt/graphscope"
         make gae ENABLE_JAVA_SDK=ON BUILD_TEST=ON
-        # also make coordinator andclient for python test
+        # also make coordinator and client for python test
         make coordinator && make client
 
 
@@ -76,4 +77,11 @@ jobs:
         source ${GRAPHSCOPE_HOME}/conf/grape_jvm_opts
 
         cd ${GITHUB_WORKSPACE}/python
-        python3 -m pytest --exitfirst -s -v graphscope/tests/unittest/test_java_app.py
+        python3 -m pytest --cov=graphscope --cov-config=.coveragerc --cov-report=xml \
+          --cov-report=term --exitfirst -s -v graphscope/tests/unittest/test_java_app.py
+
+    - name: Upload Coverage
+      uses: codecov/codecov-action@v2
+      with:
+        file: ./python/coverage.xml
+        fail_ci_if_error: true

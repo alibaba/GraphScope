@@ -17,16 +17,23 @@
 package com.alibaba.graphscope.utils;
 
 import com.alibaba.graphscope.app.DefaultAppBase;
-import com.alibaba.graphscope.app.DefaultContextBase;
 import com.alibaba.graphscope.app.DefaultPropertyAppBase;
+import com.alibaba.graphscope.app.ParallelAppBase;
 import com.alibaba.graphscope.app.ParallelPropertyAppBase;
+import com.alibaba.graphscope.context.DefaultContextBase;
 import com.alibaba.graphscope.context.LabeledVertexDataContext;
+import com.alibaba.graphscope.context.ParallelContextBase;
 import com.alibaba.graphscope.context.PropertyDefaultContextBase;
 import com.alibaba.graphscope.context.VertexDataContext;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
 public class AppContextGetter {
+    private static Logger logger = LoggerFactory.getLogger(AppContextGetter.class.getName());
     /**
      * Get the type parameter for the implemented interface
      *
@@ -36,17 +43,15 @@ public class AppContextGetter {
      */
     private static Class<?> getInterfaceTemplateType(Class<?> clz, int index) {
         Type[] genericType = clz.getGenericInterfaces();
-        // System.out.println(genericType[0].getTypeName());
         if (!(genericType[0] instanceof ParameterizedType)) {
-            System.err.println("not parameterize type");
+            logger.error("not parameterize type");
             return null;
         }
         Type[] typeParams = ((ParameterizedType) genericType[0]).getActualTypeArguments();
         if (index >= typeParams.length || index < 0) {
-            System.err.println("only " + typeParams.length + " params , out of index");
+            logger.error("only " + typeParams.length + " params , out of index");
             return null;
         }
-        // System.out.println(typeParams[index].getTypeName());
         return (Class<?>) typeParams[index];
     }
 
@@ -58,19 +63,16 @@ public class AppContextGetter {
      * @return
      */
     private static Class<?> getBaseClassTemplateType(Class<?> clz, int index) {
-        // Type[] genericType = clz.getGenericInterfaces();
         Type genericType = clz.getGenericSuperclass();
-        // System.out.println(genericType[0].getTypeName());
         if (!(genericType instanceof ParameterizedType)) {
-            System.err.println("not parameterize type");
+            logger.error("not parameterize type");
             return null;
         }
         Type[] typeParams = ((ParameterizedType) genericType).getActualTypeArguments();
         if (index >= typeParams.length || index < 0) {
-            System.err.println("only " + typeParams.length + " params , out of index");
+            logger.error("only " + typeParams.length + " params , out of index");
             return null;
         }
-        // System.out.println(typeParams[index].getTypeName());
         return (Class<?>) typeParams[index];
     }
 
@@ -88,14 +90,32 @@ public class AppContextGetter {
     }
 
     /**
-     * For ProjectedDefaultApp, the context should be the 2rd, i.e. index of 1.
+     * For ProjectedDefaultApp, the context should be the index 4
      *
      * @param appClass user-defined app class object.
      * @return the base class name.
      */
     public static String getDefaultContextName(Class<? extends DefaultAppBase> appClass) {
+        // There is a special case: GiraphComputation, which is a driver, since ctx type is
+        // not specified at compile time, so it is not possible to retrive in a normal way.
+        if (appClass.getName().equals("com.alibaba.graphscope.app.GiraphComputationAdaptor")) {
+            return "com.alibaba.graphscope.context.GiraphComputationAdaptorContext";
+        }
         Class<? extends DefaultContextBase> clz =
                 (Class<? extends DefaultContextBase>) getInterfaceTemplateType(appClass, 4);
+        logger.info("app class {}, context class {}", appClass.getName(), clz.getName());
+        return clz.getName();
+    }
+
+    /**
+     * For ProjectedDefaultApp, the context should be the 2rd, i.e. index of 1.
+     *
+     * @param appClass user-defined app class object.
+     * @return the base class name.
+     */
+    public static String getParallelContextName(Class<? extends ParallelAppBase> appClass) {
+        Class<? extends ParallelContextBase> clz =
+                (Class<? extends ParallelContextBase>) getInterfaceTemplateType(appClass, 4);
         return clz.getName();
     }
 
@@ -113,31 +133,36 @@ public class AppContextGetter {
     }
 
     public static String getContextName(Object obj) {
-        System.out.println("obj class " + obj.getClass().getName());
+        logger.info("Get context name for obj class " + obj.getClass().getName());
         if (obj instanceof DefaultPropertyAppBase) {
+            logger.info(
+                    "obj class"
+                            + obj.getClass().getName()
+                            + " is instance of DefaultPropertyAppBase.");
             return getPropertyDefaultContextName(
                     (Class<? extends DefaultPropertyAppBase>) obj.getClass());
         }
-        System.out.println(
-                "obj class"
-                        + obj.getClass().getName()
-                        + " is not instance of DefaultPropertyAppBase.");
-        if (obj instanceof DefaultAppBase) {
-            return getDefaultContextName((Class<? extends DefaultAppBase>) obj.getClass());
-        }
-        System.out.println(
-                "obj class"
-                        + obj.getClass().getName()
-                        + " is not instance of ProjectedDefaultAppBase.");
 
         if (obj instanceof ParallelPropertyAppBase) {
+            logger.info(
+                    "obj class"
+                            + obj.getClass().getName()
+                            + " is instance of ParallelPropertyAppBase.");
             return getParallelPropertyContextName(
                     (Class<? extends ParallelPropertyAppBase>) obj.getClass());
         }
-        System.out.println(
-                "obj class"
-                        + obj.getClass().getName()
-                        + " is not instance of ParallelPropertyAppBase.");
+
+        if (obj instanceof DefaultAppBase) {
+            logger.info("obj class" + obj.getClass().getName() + " is instance of DefaultAppBase.");
+            return getDefaultContextName((Class<? extends DefaultAppBase>) obj.getClass());
+        }
+
+        if (obj instanceof ParallelAppBase) {
+            logger.info(
+                    "obj class" + obj.getClass().getName() + " is instance of ParallelAppBase.");
+            return getParallelContextName((Class<? extends ParallelAppBase>) obj.getClass());
+        }
+
         return null;
     }
 
@@ -156,7 +181,16 @@ public class AppContextGetter {
 
     public static String getVertexDataContextDataType(VertexDataContext ctxObj) {
         Class<? extends VertexDataContext> ctxClass = ctxObj.getClass();
-        Class<?> ret = getBaseClassTemplateType(ctxClass, 1);
+        Class<?> ret;
+        try {
+            ret = getBaseClassTemplateType(ctxClass, 1);
+        } catch (Exception exception) {
+            logger.info("Exception ocurred: ");
+            exception.printStackTrace();
+            ret = ctxObj.getDataClass();
+            logger.info("vertex data context class: " + ret.getName());
+        }
+
         if (ret.getName() == "java.lang.Double") {
             return "double";
         } else if (ret.getName() == "java.lang.Integer") {

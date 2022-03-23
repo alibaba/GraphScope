@@ -13,14 +13,15 @@
  */
 package com.alibaba.maxgraph.tests.coordinator;
 
+import static org.mockito.Mockito.*;
+
 import com.alibaba.graphscope.groot.CompletionCallback;
-import com.alibaba.graphscope.groot.schema.GraphDef;
 import com.alibaba.graphscope.groot.coordinator.FrontendSnapshotClient;
 import com.alibaba.graphscope.groot.coordinator.NotifyFrontendListener;
 import com.alibaba.graphscope.groot.coordinator.SchemaManager;
-import org.junit.jupiter.api.Test;
+import com.alibaba.graphscope.groot.schema.GraphDef;
 
-import static org.mockito.Mockito.*;
+import org.junit.jupiter.api.Test;
 
 public class NotifyFrontendListenerTest {
 

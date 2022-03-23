@@ -26,6 +26,8 @@ import time
 
 import grpc
 
+from graphscope.client.utils import GS_GRPC_MAX_MESSAGE_LENGTH
+from graphscope.client.utils import GRPCUtils
 from graphscope.framework.errors import FatalError
 from graphscope.framework.errors import GRPCError
 from graphscope.proto import coordinator_service_pb2_grpc
@@ -89,11 +91,12 @@ class GRPCClient(object):
         """Connect to GRAPE engine at the given :code:`endpoint`."""
         # create the gRPC stub
         options = [
-            ("grpc.max_send_message_length", 2147483647),
-            ("grpc.max_receive_message_length", 2147483647),
-            ("grpc.max_metadata_size", 2147483647),
+            ("grpc.max_send_message_length", GS_GRPC_MAX_MESSAGE_LENGTH),
+            ("grpc.max_receive_message_length", GS_GRPC_MAX_MESSAGE_LENGTH),
+            ("grpc.max_metadata_size", GS_GRPC_MAX_MESSAGE_LENGTH),
         ]
         self._launcher = launcher
+        self._grpc_utils = GRPCUtils()
         self._channel = grpc.insecure_channel(endpoint, options=options)
         self._stub = coordinator_service_pb2_grpc.CoordinatorServiceStub(self._channel)
         self._session_id = None
@@ -141,7 +144,10 @@ class GRPCClient(object):
         return str(self)
 
     def run(self, dag_def):
-        return self._run_step_impl(dag_def)
+        runstep_requests = self._grpc_utils.generate_runstep_requests(
+            self._session_id, dag_def
+        )
+        return self._run_step_impl(runstep_requests)
 
     def fetch_logs(self):
         if self._logs_fetching_thread is None:
@@ -150,6 +156,11 @@ class GRPCClient(object):
             )
             self._logs_fetching_thread.daemon = True
             self._logs_fetching_thread.start()
+
+    def add_lib(self, gar):
+        if self._session_id:
+            return self._add_lib_impl(gar)
+        logger.error("adding lib to a closed session")
 
     def close(self):
         if self._session_id:
@@ -163,7 +174,12 @@ class GRPCClient(object):
         request = message_pb2.HeartBeatRequest()
         return self._stub.HeartBeat(request)
 
-    # @catch_grpc_error
+    @catch_grpc_error
+    def _add_lib_impl(self, gar):
+        request = message_pb2.AddLibRequest(session_id=self._session_id, gar=gar)
+        return self._stub.AddLib(request)
+
+    @catch_grpc_error
     def _connect_session_impl(self, cleanup_instance=True, dangling_timeout_seconds=60):
         """
         Args:
@@ -212,11 +228,10 @@ class GRPCClient(object):
         return response
 
     @catch_grpc_error
-    def _run_step_impl(self, dag_def):
-        request = message_pb2.RunStepRequest(
-            session_id=self._session_id, dag_def=dag_def
+    def _run_step_impl(self, runstep_requests):
+        response = self._grpc_utils.parse_runstep_responses(
+            self._stub.RunStep(runstep_requests)
         )
-        response = self._stub.RunStep(request)
         if response.code != error_codes_pb2.OK:
             logger.error(
                 "Runstep failed with code: %s, message: %s",

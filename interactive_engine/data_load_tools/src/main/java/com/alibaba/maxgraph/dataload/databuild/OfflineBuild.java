@@ -13,14 +13,15 @@
  */
 package com.alibaba.maxgraph.dataload.databuild;
 
+import com.alibaba.graphscope.groot.schema.GraphSchemaMapper;
 import com.alibaba.graphscope.groot.sdk.Client;
 import com.alibaba.maxgraph.compiler.api.schema.GraphEdge;
 import com.alibaba.maxgraph.compiler.api.schema.GraphElement;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
-import com.alibaba.graphscope.groot.schema.GraphSchemaMapper;
 import com.alibaba.maxgraph.sdkcommon.common.DataLoadTarget;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -66,7 +67,7 @@ public class OfflineBuild {
         String outputPath = properties.getProperty(OUTPUT_PATH);
         String columnMappingConfigStr = properties.getProperty(COLUMN_MAPPING_CONFIG);
         String graphEndpoint = properties.getProperty(GRAPH_ENDPOINT);
-        Client client = new Client(graphEndpoint, "");
+        Client client = new Client(graphEndpoint);
         ObjectMapper objectMapper = new ObjectMapper();
         Map<String, FileColumnMapping> columnMappingConfig =
                 objectMapper.readValue(

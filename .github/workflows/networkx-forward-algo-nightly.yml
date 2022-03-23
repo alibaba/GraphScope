@@ -16,7 +16,7 @@ jobs:
       run:
         shell: bash --noprofile --norc -eo pipefail {0}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.3.12
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.3.21
       options:
         --shm-size 4096m
 
@@ -37,4 +37,11 @@ jobs:
       run: |
         python3 -m pip install pytest-cov networkx==2.5
         cd ${GITHUB_WORKSPACE}/python
-        python3 -m pytest -s -v -m "not slow" graphscope/nx/algorithms/tests/forward
+        python3 -m pytest --cov=graphscope --cov-config=.coveragerc --cov-report=xml \
+          --cov-report=term -s -v -m "not slow" graphscope/nx/algorithms/tests/forward
+
+    - name: Upload Coverage
+      uses: codecov/codecov-action@v2
+      with:
+        file: ./python/coverage.xml
+        fail_ci_if_error: true

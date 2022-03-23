@@ -14,10 +14,11 @@
 package com.alibaba.maxgraph.compiler.tree;
 
 import com.alibaba.maxgraph.QueryFlowOuterClass;
-import com.alibaba.maxgraph.compiler.tree.value.ValueType;
 import com.alibaba.maxgraph.compiler.logical.LogicalSubQueryPlan;
 import com.alibaba.maxgraph.compiler.logical.LogicalVertex;
 import com.alibaba.maxgraph.compiler.optimizer.ContextManager;
+import com.alibaba.maxgraph.compiler.tree.value.ValueType;
+
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.HasContainer;
 
 import java.util.List;

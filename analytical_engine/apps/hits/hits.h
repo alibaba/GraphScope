@@ -23,7 +23,6 @@ limitations under the License.
 #include "grape/grape.h"
 
 #include "core/app/app_base.h"
-#include "core/worker/default_worker.h"
 #include "hits/hits_context.h"
 
 namespace gs {

@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,6 +19,7 @@ import com.alibaba.maxgraph.Message;
 import com.alibaba.maxgraph.Message.PropertyEntityProto;
 import com.alibaba.maxgraph.common.util.SchemaUtils;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
+import com.alibaba.maxgraph.result.BulkResult;
 import com.alibaba.maxgraph.result.EdgeResult;
 import com.alibaba.maxgraph.result.ListResult;
 import com.alibaba.maxgraph.result.MapValueResult;
@@ -27,7 +28,6 @@ import com.alibaba.maxgraph.result.PropertyResult;
 import com.alibaba.maxgraph.result.PropertyValueResult;
 import com.alibaba.maxgraph.result.VertexPropertyResult;
 import com.alibaba.maxgraph.result.VertexResult;
-import com.alibaba.maxgraph.result.BulkResult;
 import com.alibaba.maxgraph.sdkcommon.graph.EntryValueResult;
 import com.alibaba.maxgraph.sdkcommon.graph.QueryResult;
 import com.google.common.collect.Lists;
@@ -35,6 +35,7 @@ import com.google.common.collect.Sets;
 import com.google.protobuf.BoolValue;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
+
 import org.apache.tinkerpop.gremlin.structure.Element;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.slf4j.Logger;
@@ -52,7 +53,9 @@ public class ResultParserUtils {
         try {
             return schema.getElement(labelId).getLabel();
         } catch (Exception e) {
-            throw new RuntimeException("get label name for labelId[" + labelId + "] in vertex[" + vertexId + "] fail", e);
+            throw new RuntimeException(
+                    "get label name for labelId[" + labelId + "] in vertex[" + vertexId + "] fail",
+                    e);
         }
     }
 
@@ -60,7 +63,8 @@ public class ResultParserUtils {
         try {
             return schema.getElement(labelId).getLabel();
         } catch (Exception e) {
-            throw new RuntimeException("get label name for labelId[" + labelId + "] in edge[" + edgeId + "] fail", e);
+            throw new RuntimeException(
+                    "get label name for labelId[" + labelId + "] in edge[" + edgeId + "] fail", e);
         }
     }
 
@@ -72,7 +76,8 @@ public class ResultParserUtils {
         }
     }
 
-    private static VertexResult parseVertex(long id, int typeId, GraphSchema schema, Graph graph, int storeId) {
+    private static VertexResult parseVertex(
+            long id, int typeId, GraphSchema schema, Graph graph, int storeId) {
         try {
             return new VertexResult(id, typeId, getVertexLabel(typeId, id, schema), graph, storeId);
         } catch (Exception e) {
@@ -80,11 +85,12 @@ public class ResultParserUtils {
         }
     }
 
-    private static VertexResult parseVertex(Message.RawMessageProto message, GraphSchema schema, Graph graph) {
+    private static VertexResult parseVertex(
+            Message.RawMessageProto message, GraphSchema schema, Graph graph) {
         long id = message.getId();
         int typeId = message.getTypeId();
         int storeId = message.getStoreId();
-        VertexResult v =  parseVertex(id, typeId, schema, graph, storeId);
+        VertexResult v = parseVertex(id, typeId, schema, graph, storeId);
         for (PropertyEntityProto p : message.getExtra().getExtraValueProp().getPropListList()) {
             Object value = parseValue(p.getPropValue(), schema, graph);
             String name = getPropertyName(p.getPropId(), schema);
@@ -93,17 +99,23 @@ public class ResultParserUtils {
         return v;
     }
 
-    private static EdgeResult parseEdge(Message.RawMessageProto message, GraphSchema schema, Graph graph) {
+    private static EdgeResult parseEdge(
+            Message.RawMessageProto message, GraphSchema schema, Graph graph) {
         long id = message.getId();
         int typeId = message.getTypeId();
 
         Message.ExtraEdgeEntityProto edgeEntity = message.getExtra().getExtraEdge();
-        List<Message.PropertyEntityProto> propertyList = message.getExtra().getExtraValueProp().getPropListList();
+        List<Message.PropertyEntityProto> propertyList =
+                message.getExtra().getExtraValueProp().getPropListList();
 
-        EdgeResult edgeResult = new EdgeResult(id,
-                parseVertex(edgeEntity.getSrcId(), edgeEntity.getSrcTypeId(), schema, graph, 0),
-                parseVertex(edgeEntity.getDstId(), edgeEntity.getDstTypeId(), schema, graph, 0),
-                getEdgeLabel(typeId, id, schema));
+        EdgeResult edgeResult =
+                new EdgeResult(
+                        id,
+                        parseVertex(
+                                edgeEntity.getSrcId(), edgeEntity.getSrcTypeId(), schema, graph, 0),
+                        parseVertex(
+                                edgeEntity.getDstId(), edgeEntity.getDstTypeId(), schema, graph, 0),
+                        getEdgeLabel(typeId, id, schema));
         if (null != propertyList) {
             for (Message.PropertyEntityProto propertyEntity : propertyList) {
                 edgeResult.addProperty(parseProperty(propertyEntity, edgeResult, schema, graph));
@@ -113,38 +125,55 @@ public class ResultParserUtils {
         return edgeResult;
     }
 
-    private static PropertyResult parseProperty(Message.PropertyEntityProto propertyEntity, Element element, GraphSchema schema, Graph graph) {
-        return new PropertyResult(getPropertyName(propertyEntity.getPropId(), schema), parseValue(propertyEntity.getPropValue(), schema, graph), element);
+    private static PropertyResult parseProperty(
+            Message.PropertyEntityProto propertyEntity,
+            Element element,
+            GraphSchema schema,
+            Graph graph) {
+        return new PropertyResult(
+                getPropertyName(propertyEntity.getPropId(), schema),
+                parseValue(propertyEntity.getPropValue(), schema, graph),
+                element);
     }
 
-    private static QueryResult parseProperty(Message.RawMessageProto message, GraphSchema schema, Graph graph) {
+    private static QueryResult parseProperty(
+            Message.RawMessageProto message, GraphSchema schema, Graph graph) {
         String propName = getPropertyName((int) message.getId(), schema);
-        Object propValue = parseValue(message.getExtra().getExtraValueProp().getValueEntity(), schema, graph);
+        Object propValue =
+                parseValue(message.getExtra().getExtraValueProp().getValueEntity(), schema, graph);
         if (message.getTypeId() == 0) {
-            return new VertexPropertyResult<>((int) message.getId(), propName, propValue, new VertexResult(0, 0, "", graph, 0));
+            return new VertexPropertyResult<>(
+                    (int) message.getId(),
+                    propName,
+                    propValue,
+                    new VertexResult(0, 0, "", graph, 0));
         } else {
             return new PropertyResult<>(propName, propValue, new VertexResult(0, 0, "", graph, 0));
         }
     }
 
-    private static Object parseValue(Message.ValueEntityProto valueEntity, GraphSchema schema, Graph graph) {
+    private static Object parseValue(
+            Message.ValueEntityProto valueEntity, GraphSchema schema, Graph graph) {
         ByteString byteString = valueEntity.getPayload();
         ByteBuffer byteBuffer = byteString.asReadOnlyByteBuffer();
         switch (valueEntity.getValueType()) {
-            case VT_BOOL: {
-                try {
-                    BoolValue boolValue = BoolValue.parseFrom(byteString);
-                    return boolValue.getValue();
-                } catch (InvalidProtocolBufferException e) {
-                    throw new RuntimeException(e);
+            case VT_BOOL:
+                {
+                    try {
+                        BoolValue boolValue = BoolValue.parseFrom(byteString);
+                        return boolValue.getValue();
+                    } catch (InvalidProtocolBufferException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
-            }
-            case VT_CHAR: {
-                return byteBuffer.getChar();
-            }
-            case VT_SHORT: {
-                return byteBuffer.getShort();
-            }
+            case VT_CHAR:
+                {
+                    return byteBuffer.getChar();
+                }
+            case VT_SHORT:
+                {
+                    return byteBuffer.getShort();
+                }
             case VT_INT:
                 return byteBuffer.getInt();
             case VT_LONG:
@@ -158,55 +187,66 @@ public class ResultParserUtils {
                 return byteBuffer.getDouble();
             case VT_BINARY:
                 return byteString.toByteArray();
-            case VT_INT_LIST: {
-                try {
-                    Message.ListInt listIntValue = Message.ListInt.parseFrom(byteString);
-                    return Lists.newArrayList(listIntValue.getValueList());
-                } catch (InvalidProtocolBufferException e) {
-                    throw new RuntimeException(e);
+            case VT_INT_LIST:
+                {
+                    try {
+                        Message.ListInt listIntValue = Message.ListInt.parseFrom(byteString);
+                        return Lists.newArrayList(listIntValue.getValueList());
+                    } catch (InvalidProtocolBufferException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
-            }
-            case VT_LONG_LIST: {
-                try {
-                    Message.ListLong listLongValue = Message.ListLong.parseFrom(byteString);
-                    return Lists.newArrayList(listLongValue.getValueList());
-                } catch (InvalidProtocolBufferException e) {
-                    throw new RuntimeException(e);
+            case VT_LONG_LIST:
+                {
+                    try {
+                        Message.ListLong listLongValue = Message.ListLong.parseFrom(byteString);
+                        return Lists.newArrayList(listLongValue.getValueList());
+                    } catch (InvalidProtocolBufferException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
-            }
-            case VT_FLOAT_LIST: {
-                try {
-                    Message.ListFloat listFloatValue = Message.ListFloat.parseFrom(byteString);
-                    return Lists.newArrayList(listFloatValue.getValueList());
-                } catch (InvalidProtocolBufferException e) {
-                    throw new RuntimeException(e);
+            case VT_FLOAT_LIST:
+                {
+                    try {
+                        Message.ListFloat listFloatValue = Message.ListFloat.parseFrom(byteString);
+                        return Lists.newArrayList(listFloatValue.getValueList());
+                    } catch (InvalidProtocolBufferException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
-            }
-            case VT_DOUBLE_LIST: {
-                try {
-                    Message.ListDouble listDoubleValue = Message.ListDouble.parseFrom(byteString);
-                    return Lists.newArrayList(listDoubleValue.getValueList());
-                } catch (InvalidProtocolBufferException e) {
-                    throw new RuntimeException(e);
+            case VT_DOUBLE_LIST:
+                {
+                    try {
+                        Message.ListDouble listDoubleValue =
+                                Message.ListDouble.parseFrom(byteString);
+                        return Lists.newArrayList(listDoubleValue.getValueList());
+                    } catch (InvalidProtocolBufferException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
-            }
-            case VT_BYTES_LIST: {
-                try {
-                    Message.ListBinary listBinaryValue = Message.ListBinary.parseFrom(byteString);
-                    return Lists.newArrayList(listBinaryValue.getValueList());
-                } catch (InvalidProtocolBufferException e) {
-                    throw new RuntimeException(e);
+            case VT_BYTES_LIST:
+                {
+                    try {
+                        Message.ListBinary listBinaryValue =
+                                Message.ListBinary.parseFrom(byteString);
+                        return Lists.newArrayList(listBinaryValue.getValueList());
+                    } catch (InvalidProtocolBufferException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
-            }
-            default: {
-                throw new UnsupportedOperationException(valueEntity.getValueType().toString());
-            }
+            default:
+                {
+                    throw new UnsupportedOperationException(valueEntity.getValueType().toString());
+                }
         }
     }
 
-    private static QueryResult parseEntry(Message.RawMessageProto message, GraphSchema schema, Graph graph) {
+    private static QueryResult parseEntry(
+            Message.RawMessageProto message, GraphSchema schema, Graph graph) {
         try {
-            Message.EntryProto entry = Message.EntryProto.parseFrom(message.getExtra().getExtraValueProp().getValueEntity().getPayload());
+            Message.EntryProto entry =
+                    Message.EntryProto.parseFrom(
+                            message.getExtra().getExtraValueProp().getValueEntity().getPayload());
             EntryValueResult entryValueResult = new EntryValueResult();
             entryValueResult.setKey(parseRawMessage(entry.getKey(), schema, graph));
             entryValueResult.setValue(parseRawMessage(entry.getValue(), schema, graph));
@@ -216,98 +256,135 @@ public class ResultParserUtils {
         }
     }
 
-    private static QueryResult parsePathEntry(Message.RawMessageProto message, GraphSchema schema, Graph graph) {
+    private static QueryResult parsePathEntry(
+            Message.RawMessageProto message, GraphSchema schema, Graph graph) {
         try {
-            Message.PathEntityProto pathEntity = Message.PathEntityProto.parseFrom(message.getExtra().getExtraValueProp().getValueEntity().getPayload());
+            Message.PathEntityProto pathEntity =
+                    Message.PathEntityProto.parseFrom(
+                            message.getExtra().getExtraValueProp().getValueEntity().getPayload());
             QueryResult pathValue = parseRawMessage(pathEntity.getMessage(), schema, graph);
-            PathValueResult pathValueResult = new PathValueResult(pathValue, Sets.newHashSet(pathEntity.getLabelListList()));
+            PathValueResult pathValueResult =
+                    new PathValueResult(pathValue, Sets.newHashSet(pathEntity.getLabelListList()));
             return pathValueResult;
         } catch (InvalidProtocolBufferException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public static QueryResult parseRawMessage(Message.RawMessageProto message, GraphSchema schema, Graph graph) {
+    public static QueryResult parseRawMessage(
+            Message.RawMessageProto message, GraphSchema schema, Graph graph) {
         QueryResult queryResult = null;
         long bulkValue = message.getBulk() > 0 ? message.getBulk() : 1;
         switch (message.getMessageType()) {
-            case MSG_VERTEX_TYPE: {
-                queryResult = parseVertex(message, schema, graph);
-                break;
-            }
-            case MSG_EDGE_TYPE: {
-                queryResult = parseEdge(message, schema, graph);
-                break;
-            }
-            case MSG_PROP_TYPE: {
-                queryResult = parseProperty(message, schema, graph);
-                break;
-            }
-            case MSG_VALUE_TYPE: {
-                Object value = parseValue(message.getExtra().getExtraValueProp().getValueEntity(), schema, graph);
-                if (value instanceof QueryResult) {
-                    queryResult = (QueryResult)value;
-                } else {
-                    queryResult = new PropertyValueResult(value);
+            case MSG_VERTEX_TYPE:
+                {
+                    queryResult = parseVertex(message, schema, graph);
+                    break;
                 }
-                break;
-            }
-            case MSG_ENTRY_TYPE: {
-                queryResult = parseEntry(message, schema, graph);
-                break;
-            }
-            case MSG_PATH_ENTRY_TYPE: {
-                queryResult = parsePathEntry(message, schema, graph);
-                break;
-            }
-            case MSG_LIST_TYPE: {
-                try {
-                    Message.ListProto listProto = Message.ListProto.parseFrom(message.getExtra().getExtraValueProp().getValueEntity().getPayload());
-                    List<QueryResult> resultList = Lists.newArrayList();
-                    for (Message.RawMessageProto listEntry : listProto.getValueList()) {
-                        QueryResult result = parseRawMessage(listEntry, schema, graph);
-                        if(result instanceof BulkResult) {
-                            resultList.addAll(((BulkResult)result).getResultList());
-                        }
-                        else {
-                            resultList.add(result);
-                        }
+            case MSG_EDGE_TYPE:
+                {
+                    queryResult = parseEdge(message, schema, graph);
+                    break;
+                }
+            case MSG_PROP_TYPE:
+                {
+                    queryResult = parseProperty(message, schema, graph);
+                    break;
+                }
+            case MSG_VALUE_TYPE:
+                {
+                    Object value =
+                            parseValue(
+                                    message.getExtra().getExtraValueProp().getValueEntity(),
+                                    schema,
+                                    graph);
+                    if (value instanceof QueryResult) {
+                        queryResult = (QueryResult) value;
+                    } else {
+                        queryResult = new PropertyValueResult(value);
                     }
-                    queryResult = new ListResult(resultList);
-                } catch (InvalidProtocolBufferException e) {
-                    throw new RuntimeException(e);
+                    break;
                 }
-                break;
-            }
-            case MSG_MAP_TYPE: {
-                try {
-                    Message.MapProto mapProto = Message.MapProto.parseFrom(message.getExtra().getExtraValueProp().getValueEntity().getPayload());
-                    MapValueResult mapList = new MapValueResult();
-                    for (Message.EntryProto mapEntry : mapProto.getEntryListList()) {
-                        mapList.addMapValue(parseRawMessage(mapEntry.getKey(), schema, graph), parseRawMessage(mapEntry.getValue(), schema, graph));
+            case MSG_ENTRY_TYPE:
+                {
+                    queryResult = parseEntry(message, schema, graph);
+                    break;
+                }
+            case MSG_PATH_ENTRY_TYPE:
+                {
+                    queryResult = parsePathEntry(message, schema, graph);
+                    break;
+                }
+            case MSG_LIST_TYPE:
+                {
+                    try {
+                        Message.ListProto listProto =
+                                Message.ListProto.parseFrom(
+                                        message.getExtra()
+                                                .getExtraValueProp()
+                                                .getValueEntity()
+                                                .getPayload());
+                        List<QueryResult> resultList = Lists.newArrayList();
+                        for (Message.RawMessageProto listEntry : listProto.getValueList()) {
+                            QueryResult result = parseRawMessage(listEntry, schema, graph);
+                            if (result instanceof BulkResult) {
+                                resultList.addAll(((BulkResult) result).getResultList());
+                            } else {
+                                resultList.add(result);
+                            }
+                        }
+                        queryResult = new ListResult(resultList);
+                    } catch (InvalidProtocolBufferException e) {
+                        throw new RuntimeException(e);
                     }
-                    queryResult = mapList;
-                } catch (InvalidProtocolBufferException e) {
-                    throw new RuntimeException(e);
+                    break;
                 }
-                break;
-            }
-            case MSG_ERROR_TYPE: {
-                String errorMessage = new String(message.getExtra().getExtraValueProp().getValueEntity().getPayload().toByteArray());
-                throw new RuntimeException(errorMessage);
-            }
+            case MSG_MAP_TYPE:
+                {
+                    try {
+                        Message.MapProto mapProto =
+                                Message.MapProto.parseFrom(
+                                        message.getExtra()
+                                                .getExtraValueProp()
+                                                .getValueEntity()
+                                                .getPayload());
+                        MapValueResult mapList = new MapValueResult();
+                        for (Message.EntryProto mapEntry : mapProto.getEntryListList()) {
+                            mapList.addMapValue(
+                                    parseRawMessage(mapEntry.getKey(), schema, graph),
+                                    parseRawMessage(mapEntry.getValue(), schema, graph));
+                        }
+                        queryResult = mapList;
+                    } catch (InvalidProtocolBufferException e) {
+                        throw new RuntimeException(e);
+                    }
+                    break;
+                }
+            case MSG_ERROR_TYPE:
+                {
+                    String errorMessage =
+                            new String(
+                                    message.getExtra()
+                                            .getExtraValueProp()
+                                            .getValueEntity()
+                                            .getPayload()
+                                            .toByteArray());
+                    throw new RuntimeException(errorMessage);
+                }
             case MSG_DFS_CMD_TYPE:
-            case UNRECOGNIZED: {
-                throw new RuntimeException(message.getMessageType().toString());
-            }
+            case UNRECOGNIZED:
+                {
+                    throw new RuntimeException(message.getMessageType().toString());
+                }
         }
         if (queryResult != null && bulkValue > 1) {
-            return new BulkResult(Collections.nCopies((int)bulkValue, queryResult));
+            return new BulkResult(Collections.nCopies((int) bulkValue, queryResult));
         }
         return queryResult;
     }
 
-    public static Message.PropertyEntityProto buildPropertyMessage(VertexPropertyResult propertyResult){
+    public static Message.PropertyEntityProto buildPropertyMessage(
+            VertexPropertyResult propertyResult) {
         Message.PropertyEntityProto.Builder prop = Message.PropertyEntityProto.newBuilder();
         prop.setPropId((Integer) propertyResult.getPropId());
 
@@ -316,7 +393,7 @@ public class ResultParserUtils {
         return prop.build();
     }
 
-    public static Message.ValueEntityProto buildValueMessage(Object value){
+    public static Message.ValueEntityProto buildValueMessage(Object value) {
         Message.ValueEntityProto.Builder valueEntity = Message.ValueEntityProto.newBuilder();
         if (value instanceof Boolean) {
             valueEntity.setValueType(Message.VariantType.VT_BOOL);
@@ -353,24 +430,29 @@ public class ResultParserUtils {
             List listValue = (List) value;
             if (listValue.isEmpty() || listValue.get(0) instanceof Integer) {
                 valueEntity.setValueType(Message.VariantType.VT_INT_LIST);
-                Message.ListInt listInt = Message.ListInt.newBuilder().addAllValue(listValue).build();
+                Message.ListInt listInt =
+                        Message.ListInt.newBuilder().addAllValue(listValue).build();
                 valueEntity.setPayload(listInt.toByteString());
             } else if (listValue.get(0) instanceof Long) {
                 valueEntity.setValueType(Message.VariantType.VT_LONG_LIST);
-                Message.ListLong listLong = Message.ListLong.newBuilder().addAllValue(listValue).build();
+                Message.ListLong listLong =
+                        Message.ListLong.newBuilder().addAllValue(listValue).build();
                 valueEntity.setPayload(listLong.toByteString());
             } else if (listValue.get(0) instanceof Float) {
                 valueEntity.setValueType(Message.VariantType.VT_FLOAT_LIST);
-                Message.ListFloat listFloat = Message.ListFloat.newBuilder().addAllValue(listValue).build();
+                Message.ListFloat listFloat =
+                        Message.ListFloat.newBuilder().addAllValue(listValue).build();
                 valueEntity.setPayload(listFloat.toByteString());
 
             } else if (listValue.get(0) instanceof Double) {
                 valueEntity.setValueType(Message.VariantType.VT_DOUBLE_LIST);
-                Message.ListDouble listDouble = Message.ListDouble.newBuilder().addAllValue(listValue).build();
+                Message.ListDouble listDouble =
+                        Message.ListDouble.newBuilder().addAllValue(listValue).build();
                 valueEntity.setPayload(listDouble.toByteString());
             } else if (listValue.get(0) instanceof Byte) {
                 valueEntity.setValueType(Message.VariantType.VT_BYTES_LIST);
-                Message.ListBinary listBinary = Message.ListBinary.newBuilder().addAllValue(listValue).build();
+                Message.ListBinary listBinary =
+                        Message.ListBinary.newBuilder().addAllValue(listValue).build();
                 valueEntity.setPayload(listBinary.toByteString());
             } else {
                 throw new UnsupportedOperationException("Prop Value type is not supported");
@@ -382,7 +464,8 @@ public class ResultParserUtils {
         return valueEntity.build();
     }
 
-    public static QueryResult parseResponse(ByteString bytes, GraphSchema schema, Graph graph) throws InvalidProtocolBufferException {
+    public static QueryResult parseResponse(ByteString bytes, GraphSchema schema, Graph graph)
+            throws InvalidProtocolBufferException {
         Message.RawMessageProto message = Message.RawMessageProto.parseFrom(bytes);
         return parseRawMessage(message, schema, graph);
     }

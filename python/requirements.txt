@@ -1,18 +1,19 @@
 Cython==3.0a6
-decorator>=5.1.0
 gremlinpython>=3.4.9
 grpcio
 grpcio-tools
 kubernetes
 nest_asyncio
-networkx<2.6
+networkx==2.6
 numpy
+orjson
 packaging
 pandas
 protobuf>=3.15.0,<3.19.0
 psutil
+pyarrow
 PyYAML
 scipy
 tqdm
-vineyard>=0.3.12; sys_platform != "win32" and platform_machine == 'x86_64'
-vineyard-io>=0.3.12; sys_platform != "win32" and platform_machine == 'x86_64'
+vineyard>=0.3.21; sys_platform != "win32"
+vineyard-io>=0.3.21; sys_platform != "win32"

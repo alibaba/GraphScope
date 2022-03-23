@@ -1,16 +1,8 @@
 cmake_minimum_required(VERSION 3.1)
 
-if ("${GRAPHSCOPE_VERSION}" STREQUAL "")
-    set(GRAPHSCOPE_ANALYTICAL_MAJOR_VERSION 0)
-    set(GRAPHSCOPE_ANALYTICAL_MINOR_VERSION 9)
-    set(GRAPHSCOPE_ANALYTICAL_PATCH_VERSION 0)
-    set(GRAPHSCOPE_ANALYTICAL_VERSION ${GRAPHSCOPE_ANALYTICAL_MAJOR_VERSION}.${GRAPHSCOPE_ANALYTICAL_MINOR_VERSION}.${GRAPHSCOPE_ANALYTICAL_PATCH_VERSION})
-else ()
-    set(GRAPHSCOPE_ANALYTICAL_MAJOR_VERSION ${GRAPHSCOPE_MAJOR_VERSION})
-    set(GRAPHSCOPE_ANALYTICAL_MINOR_VERSION ${GRAPHSCOPE_MINOR_VERSION})
-    set(GRAPHSCOPE_ANALYTICAL_PATCH_VERSION ${GRAPHSCOPE_PATCH_VERSION})
-    set(GRAPHSCOPE_ANALYTICAL_VERSION ${GRAPHSCOPE_VERSION})
-endif ()
+file(READ ${CMAKE_CURRENT_SOURCE_DIR}/../VERSION GRAPHSCOPE_ANALYTICAL_VERSION)
+# Strip trailing newline
+string(REGEX REPLACE "\n$" "" GRAPHSCOPE_ANALYTICAL_VERSION "${GRAPHSCOPE_ANALYTICAL_VERSION}")
 
 if (POLICY CMP0048)
     cmake_policy(SET CMP0048 NEW)
@@ -20,6 +12,10 @@ project(analytical_engine LANGUAGES C CXX VERSION ${GRAPHSCOPE_ANALYTICAL_VERSIO
 option(NETWORKX "networkx on?" ON)
 option(BUILD_TESTS "Build unit test" ON)
 option(ENABLE_JAVA_SDK "Build with support for java sdk" OFF)
+
+# Get system processor
+execute_process(COMMAND uname -m OUTPUT_VARIABLE SYSTEM_PROCESSOR)
+string(REGEX REPLACE "\n$" "" SYSTEM_PROCESSOR "${SYSTEM_PROCESSOR}")
 
 if (APPLE AND ENABLE_JAVA_SDK)
     message(FATAL_ERROR "Java SDK is currently not supported on macos.")
@@ -39,6 +35,10 @@ endif()
 
 if (NETWORKX)
     add_definitions(-DNETWORKX)
+    add_definitions(-DRAPIDJSON_HAS_CXX11=1)
+    add_definitions(-DRAPIDJSON_HAS_STDSTRING=1)
+    add_definitions(-DRAPIDJSON_HAS_CXX11_RVALUE_REFS=1)
+    add_definitions(-DRAPIDJSON_HAS_CXX11_RANGE_FOR=1)
 endif ()
 
 set(DEFAULT_BUILD_TYPE "Release")
@@ -62,6 +62,7 @@ include(CheckLibraryExists)
 include(CheckCXXSourceRuns)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 include_directories(${PROJECT_SOURCE_DIR})
+include_directories(${PROJECT_SOURCE_DIR}/proto)
 
 # Set flags
 set(CMAKE_CXX_STANDARD 14)
@@ -113,7 +114,23 @@ if (APPLE)
     if (POLICY CMP0056)
         cmake_policy(SET CMP0056 NEW)
     endif ()
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L/usr/local/lib")
+    if (SYSTEM_PROCESSOR MATCHES "arm64")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L/opt/homebrew/lib")
+        if(CMAKE_C_COMPILER_ID MATCHES "Clang")
+            set(OpenMP_C "${CMAKE_C_COMPILER}" CACHE STRING "" FORCE)
+            set(OpenMP_C_FLAGS "-fopenmp=libomp -Wno-unused-command-line-argument" CACHE STRING "" FORCE)
+            set(OpenMP_C_LIB_NAMES "libomp" CACHE STRING "" FORCE)
+            set(OpenMP_libomp_LIBRARY "omp" CACHE STRING "" FORCE)
+        endif()
+        if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+            set(OpenMP_CXX "${CMAKE_CXX_COMPILER}" CACHE STRING "" FORCE)
+            set(OpenMP_CXX_FLAGS "-fopenmp=libomp -Wno-unused-command-line-argument" CACHE STRING "" FORCE)
+            set(OpenMP_CXX_LIB_NAMES "libomp" CACHE STRING "" FORCE)
+            set(OpenMP_libomp_LIBRARY "omp" CACHE STRING "" FORCE)
+        endif()
+    else()
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L/usr/local/lib")
+    endif()
 endif ()
 find_package(OpenMP REQUIRED)
 
@@ -153,7 +170,7 @@ endif ()
 find_package(libgrapelite REQUIRED)
 include_directories(${LIBGRAPELITE_INCLUDE_DIRS})
 
-find_package(vineyard 0.3.12 REQUIRED)
+find_package(vineyard 0.3.21 REQUIRED)
 include_directories(${VINEYARD_INCLUDE_DIRS})
 add_compile_options(-DENABLE_SELECTOR)
 
@@ -170,56 +187,48 @@ endif()
 include("cmake/FindGRPC.cmake")
 include_directories(${GRPC_INCLUDE_DIR})
 
-if (NETWORKX)
-    include("cmake/FindFolly.cmake")
-    include("cmake/FindDoubleConversion.cmake")
-    if (FOLLY_FOUND)
-        include_directories(${FOLLY_INCLUDE_DIRS})
-
-        set(CMAKE_REQUIRED_INCLUDES "${FOLLY_INCLUDE_DIRS}")
-        set(CMAKE_REQUIRED_LIBRARIES "${CMAKE_REQUIRED_LIBRARIES} ${FOLLY_LIBRARIES}")
-        check_cxx_source_runs("
-        #include <iostream>
-        #include \"folly/container/detail/F14Table.h\"
-
-        int main() {
-          folly::f14::detail::F14LinkCheck<folly::f14::detail::getF14IntrinsicsMode()>::check();
-        }
-        " FOLLY_COMPILE_SUCCESS)
-        if (NOT FOLLY_COMPILE_SUCCESS)
-          set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse -msse2 -msse3 -msse4")
-        endif()
-    else ()
-        message(FATAL_ERROR "folly not found")
-    endif ()
-else ()
-    set(FOLLY_LIBRARIES "")
-    set(DOUBLE_CONVERSION_LIBRARY "")
-endif ()
-
 # Generate proto
-execute_process(COMMAND python3 proto/proto_generator.py "${PROJECT_SOURCE_DIR}" --cpp
+execute_process(COMMAND python3 proto/graphscope/proto/proto_generator.py "${PROJECT_SOURCE_DIR}/proto" --cpp
         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/..)
-execute_process(COMMAND python3 proto/proto_generator.py "${PROJECT_SOURCE_DIR}/../python/graphscope" --python
+execute_process(COMMAND python3 proto/graphscope/proto/proto_generator.py "${PROJECT_SOURCE_DIR}/../python" --python
         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/..)
 
-file(GLOB PROTO_CPP_FILES "proto/*.cc")
-file(GLOB CORE_GS_FILES "core/*.cc" "core/java/javasdk.cc")
+file(GLOB PROTO_CPP_FILES "proto/graphscope/proto/*.cc")
 file(GLOB CORE_RPC_SRC_FILES "core/server/*.cc")
 
 # Add targets
 add_library(gs_proto SHARED ${PROTO_CPP_FILES})
 set_source_files_properties(${PROTO_CPP_FILES} PROPERTIES COMPILE_FLAGS -Wno-array-bounds)
 target_include_directories(gs_proto PRIVATE "${PROJECT_SOURCE_DIR}/proto")
-target_link_libraries(gs_proto ${Protobuf_LIBRARIES} ${GRPC_LIBRARY}
-    ${GRPC_GRPC++_LIBRARY} ${GRPC_GRPC++_REFLECTION_LIBRARY})
+target_link_libraries(gs_proto
+        ${Protobuf_LIBRARIES}
+        ${GRPC_LIBRARY}
+        ${GRPC_GRPC++_LIBRARY}
+        ${GRPC_GRPC++_REFLECTION_LIBRARY}
+    )
 
-add_executable(grape_engine ${CORE_GS_FILES} ${CORE_RPC_SRC_FILES})
+add_library(gs_util SHARED "core/flags.cc" "core/launcher.cc")
+target_link_libraries(gs_util PRIVATE
+        ${LIBGRAPELITE_LIBRARIES}
+        ${GFLAGS_LIBRARIES}
+        ${VINEYARD_LIBRARIES}
+        ${Boost_LIBRARIES}
+    )
+
+add_executable(grape_engine
+        "core/grape_engine.cc"
+        "core/grape_instance.cc"
+        "core/java/javasdk.cc"
+        "core/object/dynamic.cc"
+        ${CORE_RPC_SRC_FILES}
+    )
 target_include_directories(grape_engine PRIVATE proto utils)
 
 if (ENABLE_JAVA_SDK)
     target_compile_definitions(grape_engine PUBLIC ENABLE_JAVA_SDK)
-    target_link_libraries(grape_engine PRIVATE gs_proto
+    target_link_libraries(grape_engine PRIVATE
+        gs_proto
+        gs_util
         ${LIBGRAPELITE_LIBRARIES}
         ${GFLAGS_LIBRARIES}
         ${CMAKE_DL_LIBS}
@@ -229,7 +238,9 @@ if (ENABLE_JAVA_SDK)
         ${JNI_LIBRARIES}
         )
 else()
-    target_link_libraries(grape_engine PRIVATE gs_proto
+    target_link_libraries(grape_engine PRIVATE
+        gs_proto
+        gs_util
         ${LIBGRAPELITE_LIBRARIES}
         ${GFLAGS_LIBRARIES}
         ${CMAKE_DL_LIBS}
@@ -243,45 +254,37 @@ if (${LIBUNWIND_FOUND})
     target_link_libraries(grape_engine PRIVATE ${LIBUNWIND_LIBRARIES})
 endif ()
 
-if (NETWORKX)
-    target_include_directories(grape_engine PUBLIC ${FOLLY_INCLUDE_DIRS})
-    target_link_libraries(grape_engine PRIVATE ${FOLLY_LIBRARIES} ${DOUBLE_CONVERSION_LIBRARY})
-endif ()
-
 # Test targets
 if (BUILD_TESTS)
-    add_executable(run_app test/run_app.cc)
+    add_executable(run_app test/run_app.cc core/object/dynamic.cc)
     target_include_directories(run_app PRIVATE ${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps utils apps)
     target_link_libraries(run_app ${LIBGRAPELITE_LIBRARIES} ${GFLAGS_LIBRARIES} ${CMAKE_DL_LIBS} ${Boost_LIBRARIES} ${VINEYARD_LIBRARIES})
-    if (NETWORKX)
-        target_include_directories(run_app PUBLIC ${FOLLY_INCLUDE_DIRS})
-        target_link_libraries(run_app ${FOLLY_LIBRARIES} ${DOUBLE_CONVERSION_LIBRARY})
-    endif ()
     target_link_libraries(run_app OpenMP::OpenMP_CXX)
 
     if (ENABLE_JAVA_SDK)
-        add_executable(run_java_app test/run_java_app.cc core/java/javasdk.cc)
+        add_executable(run_java_app test/run_java_app.cc core/java/javasdk.cc core/object/dynamic.cc)
         target_include_directories(run_java_app PRIVATE core utils apps)
         target_compile_definitions(run_java_app PUBLIC ENABLE_JAVA_SDK)
         target_link_libraries(run_java_app gs_proto ${GFLAGS_LIBRARIES} ${MPI_CXX_LIBRARIES} ${JNI_LIBRARIES} ${Boost_LIBRARIES}
-                                        ${CMAKE_DL_LIBS} ${GLOG_LIBRARIES} ${VINEYARD_LIBRARIES})
+                                       ${CMAKE_DL_LIBS} ${GLOG_LIBRARIES} ${VINEYARD_LIBRARIES})
 
-        # java app benchmark
-        add_executable(property_graph_java_app_benchmarks benchmarks/property_graph_java_app_benchmarks.cc core/java/javasdk.cc)
+        #java app benchmark
+        add_executable(property_graph_java_app_benchmarks benchmarks/property_graph_java_app_benchmarks.cc core/java/javasdk.cc core/object/dynamic.cc)
         target_include_directories(property_graph_java_app_benchmarks PRIVATE core utils apps)
         target_compile_definitions(property_graph_java_app_benchmarks PUBLIC ENABLE_JAVA_SDK)
         target_link_libraries(property_graph_java_app_benchmarks gs_proto ${JNI_LIBRARIES} ${Boost_LIBRARIES} ${CMAKE_DL_LIBS}  ${VINEYARD_LIBRARIES})
         
+        # giraph runner
+        add_executable(giraph_runner test/giraph_runner.cc core/java/javasdk.cc)
+        target_include_directories(giraph_runner PRIVATE core utils apps)
+        target_compile_definitions(giraph_runner PUBLIC ENABLE_JAVA_SDK)
+        target_link_libraries(giraph_runner ${CMAKE_DL_LIBS} gs_proto ${VINEYARD_LIBRARIES} ${Boost_LIBRARIES} ${GFLAGS_LIBRARIES}  ${JNI_LIBRARIES})
+
         if (${LIBUNWIND_FOUND})
             target_link_libraries(run_java_app ${LIBUNWIND_LIBRARIES})
             target_link_libraries(property_graph_java_app_benchmarks ${LIBUNWIND_LIBRARIES})
+            target_link_libraries(giraph_runner ${LIBUNWIND_LIBRARIES})
         endif ()
-        if (NETWORKX)
-            target_include_directories(run_java_app PUBLIC ${FOLLY_ROOT_DIR}/include)
-            target_include_directories(property_graph_java_app_benchmarks PUBLIC ${FOLLY_ROOT_DIR}/include)
-            target_link_libraries(run_java_app ${FOLLY_LIBRARIES} ${DOUBLE_CONVERSION_LIBRARY})
-            target_link_libraries(property_graph_java_app_benchmarks ${FOLLY_LIBRARIES} ${DOUBLE_CONVERSION_LIBRARY})
-        endif()
     endif()
 
     macro(add_vineyard_app target)
@@ -289,7 +292,7 @@ if (BUILD_TESTS)
         set(oneValueArgs)
         set(multiValueArgs SRCS)
         cmake_parse_arguments(add_vineyard_app "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
-        add_executable(${target} ${add_vineyard_app_SRCS})
+        add_executable(${target} ${add_vineyard_app_SRCS} core/object/dynamic.cc)
         target_include_directories(${target} PRIVATE ${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps)
         target_link_libraries(${target} gs_proto ${LIBGRAPELITE_LIBRARIES} ${VINEYARD_LIBRARIES})
         if (${LIBUNWIND_FOUND})
@@ -335,11 +338,6 @@ if (BUILD_TESTS)
 
     if (NETWORKX)
         add_vineyard_app(test_convert SRCS test/test_convert.cc)
-        target_include_directories(test_convert PRIVATE ${FOLLY_INCLUDE_DIRS})
-        target_link_libraries(test_convert ${FOLLY_LIBRARIES} ${DOUBLE_CONVERSION_LIBRARY})
-
-        target_include_directories(run_ctx PUBLIC ${FOLLY_INCLUDE_DIRS})
-        target_link_libraries(run_ctx ${FOLLY_LIBRARIES} ${DOUBLE_CONVERSION_LIBRARY})
     endif ()
 endif ()
 
@@ -409,6 +407,7 @@ endmacro()
 
 install_gsa_binary(grape_engine)
 install_gsa_binary(gs_proto)
+install_gsa_binary(gs_util)
 
 install_gsa_headers("${PROJECT_SOURCE_DIR}/apps")
 install_gsa_headers("${PROJECT_SOURCE_DIR}/benchmarks")

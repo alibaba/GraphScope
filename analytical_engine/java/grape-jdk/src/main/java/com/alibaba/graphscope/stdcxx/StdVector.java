@@ -17,7 +17,6 @@
 package com.alibaba.graphscope.stdcxx;
 
 import static com.alibaba.graphscope.utils.CppHeaderName.CORE_JAVA_TYPE_ALIAS_H;
-import static com.alibaba.graphscope.utils.JNILibraryName.JNI_LIBRARY_NAME;
 
 import com.alibaba.fastffi.CXXHead;
 import com.alibaba.fastffi.CXXOperator;
@@ -25,14 +24,13 @@ import com.alibaba.fastffi.CXXPointer;
 import com.alibaba.fastffi.CXXReference;
 import com.alibaba.fastffi.CXXValue;
 import com.alibaba.fastffi.FFIFactory;
-import com.alibaba.fastffi.FFIGen;
+import com.alibaba.fastffi.FFISettablePointer;
 import com.alibaba.fastffi.FFITypeAlias;
 
-@FFIGen(library = JNI_LIBRARY_NAME)
 @CXXHead(system = {"vector", "string"})
 @CXXHead(CORE_JAVA_TYPE_ALIAS_H)
 @FFITypeAlias("std::vector")
-public interface StdVector<E> extends CXXPointer {
+public interface StdVector<E> extends CXXPointer, FFISettablePointer {
     long size();
 
     @CXXOperator("[]")

@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,8 +18,9 @@ package com.alibaba.maxgraph.compiler.api.schema;
 import com.alibaba.maxgraph.proto.DataTypePb;
 import com.alibaba.maxgraph.sdkcommon.meta.InternalDataType;
 import com.google.common.collect.Lists;
-import org.apache.commons.lang.math.RandomUtils;
+
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Date;
@@ -65,7 +66,9 @@ public enum DataType {
     public static DataType parseString(String type) {
         String upperType = StringUtils.upperCase(type);
         if (StringUtils.startsWith(upperType, "LIST<")) {
-            String typeValue = StringUtils.removeEnd(StringUtils.removeStart(upperType, "LIST<"), ">") + "_LIST";
+            String typeValue =
+                    StringUtils.removeEnd(StringUtils.removeStart(upperType, "LIST<"), ">")
+                            + "_LIST";
             return DataType.valueOf(typeValue);
         } else {
             return DataType.valueOf(type);
@@ -123,103 +126,139 @@ public enum DataType {
         }
     }
 
-    public static DataType parseFromDataType(com.alibaba.maxgraph.sdkcommon.meta.DataType dataType) {
+    public static DataType parseFromDataType(
+            com.alibaba.maxgraph.sdkcommon.meta.DataType dataType) {
         InternalDataType internalDataType = dataType.getType();
         switch (internalDataType) {
-            case BOOL: {
-                return DataType.BOOL;
-            }
-            case CHAR: {
-                return DataType.CHAR;
-            }
-            case SHORT: {
-                return DataType.SHORT;
-            }
-            case INT: {
-                return DataType.INT;
-            }
-            case LONG: {
-                return DataType.LONG;
-            }
-            case FLOAT: {
-                return DataType.FLOAT;
-            }
-            case DOUBLE: {
-                return DataType.DOUBLE;
-            }
-            case STRING: {
-                return DataType.STRING;
-            }
-            case BYTES: {
-                return DataType.BYTES;
-            }
-            case DATE: {
-                return DataType.STRING;
-            }
-            case LIST: {
-                switch (InternalDataType.valueOf(dataType.getExpression())) {
-                    case INT: {
-                        return DataType.INT_LIST;
-                    }
-                    case LONG: {
-                        return DataType.LONG_LIST;
-                    }
-                    case FLOAT: {
-                        return DataType.FLOAT_LIST;
-                    }
-                    case DOUBLE: {
-                        return DataType.DOUBLE_LIST;
-                    }
-                    case STRING: {
-                        return DataType.STRING_LIST;
-                    }
-                    default: {
-                        throw new IllegalArgumentException("Unsupport property data type " + dataType.toString());
+            case BOOL:
+                {
+                    return DataType.BOOL;
+                }
+            case CHAR:
+                {
+                    return DataType.CHAR;
+                }
+            case SHORT:
+                {
+                    return DataType.SHORT;
+                }
+            case INT:
+                {
+                    return DataType.INT;
+                }
+            case LONG:
+                {
+                    return DataType.LONG;
+                }
+            case FLOAT:
+                {
+                    return DataType.FLOAT;
+                }
+            case DOUBLE:
+                {
+                    return DataType.DOUBLE;
+                }
+            case STRING:
+                {
+                    return DataType.STRING;
+                }
+            case BYTES:
+                {
+                    return DataType.BYTES;
+                }
+            case DATE:
+                {
+                    return DataType.STRING;
+                }
+            case LIST:
+                {
+                    switch (InternalDataType.valueOf(dataType.getExpression())) {
+                        case INT:
+                            {
+                                return DataType.INT_LIST;
+                            }
+                        case LONG:
+                            {
+                                return DataType.LONG_LIST;
+                            }
+                        case FLOAT:
+                            {
+                                return DataType.FLOAT_LIST;
+                            }
+                        case DOUBLE:
+                            {
+                                return DataType.DOUBLE_LIST;
+                            }
+                        case STRING:
+                            {
+                                return DataType.STRING_LIST;
+                            }
+                        default:
+                            {
+                                throw new IllegalArgumentException(
+                                        "Unsupport property data type " + dataType.toString());
+                            }
                     }
                 }
-            }
-            default: {
-                throw new IllegalArgumentException("Unsupport property data type " + dataType.toString());
-            }
+            default:
+                {
+                    throw new IllegalArgumentException(
+                            "Unsupport property data type " + dataType.toString());
+                }
         }
     }
 
     public Object getRandomValue() {
         switch (this) {
             case BOOL:
-                return RandomUtils.nextBoolean();
+                return RandomUtils.nextInt(0, 2) == 0 ? false : true;
             case CHAR:
-                return (char) Math.abs(RandomUtils.nextInt()) % 127;
+                return (char) Math.abs(RandomUtils.nextInt(Integer.MIN_VALUE, Integer.MAX_VALUE))
+                        % 127;
             case DATE:
                 return new Date().toString();
             case SHORT:
-                return (short) RandomUtils.nextInt();
+                return (short) RandomUtils.nextInt(Integer.MIN_VALUE, Integer.MAX_VALUE);
             case INT:
-                return RandomUtils.nextInt();
+                return RandomUtils.nextInt(Integer.MIN_VALUE, Integer.MAX_VALUE);
             case LONG:
-                return RandomUtils.nextLong();
+                return RandomUtils.nextLong(Long.MIN_VALUE, Long.MAX_VALUE);
             case FLOAT:
-                return RandomUtils.nextFloat();
+                return RandomUtils.nextFloat(Float.MIN_VALUE, Float.MAX_VALUE);
             case DOUBLE:
-                return RandomUtils.nextDouble();
+                return RandomUtils.nextDouble(Double.MIN_VALUE, Double.MAX_VALUE);
             case STRING:
                 return RandomStringUtils.randomAlphanumeric(64);
             case BYTES:
                 return RandomStringUtils.random(64).getBytes();
             case INT_LIST:
-                return Lists.newArrayList(RandomUtils.nextInt(), RandomUtils.nextInt(), RandomUtils.nextInt());
+                return Lists.newArrayList(
+                        RandomUtils.nextInt(Integer.MIN_VALUE, Integer.MAX_VALUE),
+                        RandomUtils.nextInt(Integer.MIN_VALUE, Integer.MAX_VALUE),
+                        RandomUtils.nextInt(Integer.MIN_VALUE, Integer.MAX_VALUE));
             case LONG_LIST:
-                return Lists.newArrayList(RandomUtils.nextLong(), RandomUtils.nextLong(), RandomUtils.nextLong());
+                return Lists.newArrayList(
+                        RandomUtils.nextLong(Long.MIN_VALUE, Long.MAX_VALUE),
+                        RandomUtils.nextLong(Long.MIN_VALUE, Long.MAX_VALUE),
+                        RandomUtils.nextLong(Long.MIN_VALUE, Long.MAX_VALUE));
             case FLOAT_LIST:
-                return Lists.newArrayList(RandomUtils.nextFloat(), RandomUtils.nextFloat(), RandomUtils.nextFloat());
+                return Lists.newArrayList(
+                        RandomUtils.nextFloat(Float.MIN_VALUE, Float.MAX_VALUE),
+                        RandomUtils.nextFloat(Float.MIN_VALUE, Float.MAX_VALUE),
+                        RandomUtils.nextFloat(Float.MIN_VALUE, Float.MAX_VALUE));
             case DOUBLE_LIST:
-                return Lists.newArrayList(RandomUtils.nextDouble(), RandomUtils.nextDouble(), RandomUtils.nextDouble());
+                return Lists.newArrayList(
+                        RandomUtils.nextDouble(Double.MIN_VALUE, Double.MAX_VALUE),
+                        RandomUtils.nextDouble(Double.MIN_VALUE, Double.MAX_VALUE),
+                        RandomUtils.nextDouble(Double.MIN_VALUE, Double.MAX_VALUE));
             case STRING_LIST:
-                return Lists.newArrayList(RandomStringUtils.randomAlphanumeric(64),
+                return Lists.newArrayList(
+                        RandomStringUtils.randomAlphanumeric(64),
                         RandomStringUtils.randomAlphanumeric(64),
                         RandomStringUtils.randomAlphanumeric(64));
             case BYTES_LIST:
-                return Lists.newArrayList(RandomStringUtils.randomAlphanumeric(64).getBytes(),
+                return Lists.newArrayList(
+                        RandomStringUtils.randomAlphanumeric(64).getBytes(),
                         RandomStringUtils.randomAlphanumeric(64).getBytes(),
                         RandomStringUtils.randomAlphanumeric(64).getBytes());
         }

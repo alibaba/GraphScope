@@ -38,15 +38,15 @@
 #include "core/context/vertex_property_context.h"
 #include "core/error.h"
 #include "core/fragment/arrow_flattened_fragment.h"
-#include "core/fragment/dynamic_fragment_view.h"
+#include "core/fragment/dynamic_fragment.h"
 #include "core/fragment/dynamic_projected_fragment.h"
 #include "core/fragment/fragment_reporter.h"
 #include "core/loader/arrow_fragment_loader.h"
 #include "core/object/gs_object.h"
 #include "core/object/i_fragment_wrapper.h"
 #include "core/utils/transform_utils.h"
-#include "proto/attr_value.pb.h"
-#include "proto/graph_def.pb.h"
+#include "proto/graphscope/proto/attr_value.pb.h"
+#include "proto/graphscope/proto/graph_def.pb.h"
 
 namespace gs {
 
@@ -122,7 +122,7 @@ gs::rpc::graph::DataTypePb PropertyTypeToPb(const std::string& type) {
     return gs::rpc::graph::DataTypePb::STRING_LIST;
   } else if (type == "grape::EmptyType" || type == "null") {
     return gs::rpc::graph::DataTypePb::NULLVALUE;
-  } else if (type == "folly::dynamic") {
+  } else if (type == "dynamic::Value") {
     return gs::rpc::graph::DataTypePb::DYNAMIC;
   }
   LOG(ERROR) << "Unsupported type " << type;
@@ -759,7 +759,6 @@ class FragmentWrapper<ArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T>>
 template <>
 class FragmentWrapper<DynamicFragment> : public IFragmentWrapper {
   using fragment_t = DynamicFragment;
-  using fragment_view_t = DynamicFragmentView;
 
  public:
   FragmentWrapper(const std::string& id, rpc::graph::GraphDefPb graph_def,
@@ -791,6 +790,7 @@ class FragmentWrapper<DynamicFragment> : public IFragmentWrapper {
     auto ori_vm_ptr = fragment_->GetVertexMap();
     auto new_vm_ptr =
         std::make_shared<typename fragment_t::vertex_map_t>(comm_spec);
+    new_vm_ptr->SetPartitioner(ori_vm_ptr->GetPartitioner());
     new_vm_ptr->Init();
     std::vector<std::thread> copy_vm_threads(comm_spec.fnum());
     for (size_t fid = 0; fid < comm_spec.fnum(); ++fid) {
@@ -802,7 +802,7 @@ class FragmentWrapper<DynamicFragment> : public IFragmentWrapper {
                 ori_vm_ptr->GetInnerVertexSize(fid);
             for (typename fragment_t::vid_t lid = 0; lid < fvnum; lid++) {
               ori_vm_ptr->GetOid(fid, lid, oid);
-              CHECK(new_vm_ptr->AddVertex(fid, oid, gid));
+              CHECK(new_vm_ptr->AddVertex(oid, gid));
             }
           },
           fid);
@@ -829,6 +829,7 @@ class FragmentWrapper<DynamicFragment> : public IFragmentWrapper {
     auto ori_vm_ptr = fragment_->GetVertexMap();
     auto new_vm_ptr =
         std::make_shared<typename fragment_t::vertex_map_t>(comm_spec);
+    new_vm_ptr->SetPartitioner(ori_vm_ptr->GetPartitioner());
     new_vm_ptr->Init();
     std::vector<std::thread> copy_vm_threads(comm_spec.fnum());
     for (size_t fid = 0; fid < comm_spec.fnum(); ++fid) {
@@ -840,7 +841,7 @@ class FragmentWrapper<DynamicFragment> : public IFragmentWrapper {
                 ori_vm_ptr->GetInnerVertexSize(fid);
             for (typename fragment_t::vid_t lid = 0; lid < fvnum; lid++) {
               ori_vm_ptr->GetOid(fid, lid, oid);
-              CHECK(new_vm_ptr->AddVertex(fid, oid, gid));
+              CHECK(new_vm_ptr->AddVertex(oid, gid));
             }
           },
           fid);
@@ -867,6 +868,7 @@ class FragmentWrapper<DynamicFragment> : public IFragmentWrapper {
     auto ori_vm_ptr = fragment_->GetVertexMap();
     auto new_vm_ptr =
         std::make_shared<typename fragment_t::vertex_map_t>(comm_spec);
+    new_vm_ptr->SetPartitioner(ori_vm_ptr->GetPartitioner());
     new_vm_ptr->Init();
     std::vector<std::thread> copy_vm_threads(comm_spec.fnum());
     for (size_t fid = 0; fid < comm_spec.fnum(); ++fid) {
@@ -878,7 +880,7 @@ class FragmentWrapper<DynamicFragment> : public IFragmentWrapper {
                 ori_vm_ptr->GetInnerVertexSize(fid);
             for (typename fragment_t::vid_t lid = 0; lid < fvnum; lid++) {
               ori_vm_ptr->GetOid(fid, lid, oid);
-              CHECK(new_vm_ptr->AddVertex(fid, oid, gid));
+              CHECK(new_vm_ptr->AddVertex(oid, gid));
             }
           },
           fid);
@@ -901,14 +903,8 @@ class FragmentWrapper<DynamicFragment> : public IFragmentWrapper {
   bl::result<std::shared_ptr<IFragmentWrapper>> CreateGraphView(
       const grape::CommSpec& comm_spec, const std::string& view_graph_id,
       const std::string& view_type) override {
-    auto frag_view = std::make_shared<fragment_view_t>(
-        fragment_.get(), parse_fragment_view_type(view_type));
-
-    auto dst_graph_def = graph_def_;
-    dst_graph_def.set_key(view_graph_id);
-    auto wrapper = std::make_shared<FragmentWrapper<fragment_t>>(
-        view_graph_id, dst_graph_def, frag_view);
-    return std::dynamic_pointer_cast<IFragmentWrapper>(wrapper);
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "Cannot generate a view over the DynamicFragment");
   }
 
  private:

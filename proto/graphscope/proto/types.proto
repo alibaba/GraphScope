@@ -1,0 +1,283 @@
+// Copyright 2020 Alibaba Group Holding Limited. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
+syntax = "proto3";
+
+package gs.rpc;
+
+enum ClusterType {
+  HOSTS = 0;
+  K8S  = 1;
+
+  UNDEFINED = 100;
+};
+
+// Basic data types
+enum DataType {
+  NULLVALUE = 0;
+  INT8 = 1;
+  INT16 = 2;
+  INT32 = 3;
+  INT64 = 4;
+  INT128 = 5;
+  UINT8 = 6;
+  UINT16 = 7;
+  UINT32 = 8;
+  UINT64 = 9;
+  UINT128 = 10;
+  INT = 11;
+  LONG = 12;
+  LONGLONG = 13;
+  UINT = 14;
+  ULONG = 15;
+  ULONGLONG = 16;
+  FLOAT = 18;
+  DOUBLE = 19;
+  BOOLEAN = 20;
+  STRING = 21;
+  DATETIME = 22;
+  LIST = 23;
+  INVALID = 536870911;
+};
+
+enum Direction {
+  NONE = 0;
+  IN = 1;
+  OUT = 2;
+};
+
+// defined by GRAPE
+enum OutputType {
+  GRAPH = 0;
+  APP = 1;
+  BOUND_APP = 2;
+  RESULTS = 3;
+  TENSOR = 4;
+  DATAFRAME = 5;
+  VINEYARD_TENSOR = 6;
+  VINEYARD_DATAFRAME = 7;
+  INTERACTIVE_QUERY = 8;
+  GREMLIN_RESULTS = 9;
+  LEARNING_GRAPH = 10;
+  NULL_OUTPUT = 101;
+};
+
+enum OperationType {
+  // command
+  CREATE_GRAPH = 0;  // return output_type = graph
+  BIND_APP = 1;      // return app
+  CREATE_APP = 2;    // do nothing
+  MODIFY_VERTICES = 3;  // return graph
+  MODIFY_EDGES = 4;     // return graph
+  RUN_APP = 5;       // return result
+  UNLOAD_APP = 6;
+  UNLOAD_GRAPH = 7;
+  REPARTITION = 8;  // return graph
+  TRANSFORM_GRAPH = 9;  // return graph or nx_graph
+  REPORT_GRAPH = 10;  // return scalar
+  PROJECT_GRAPH = 11;  // return graph, general form project
+  PROJECT_TO_SIMPLE = 12;  // return graph, specifically project to a simple graph
+  COPY_GRAPH = 13;
+  ADD_VERTICES = 14;  // not used, leaves room for future development
+  ADD_EDGES = 15;  // not used, leaves room for future development
+  ADD_LABELS = 16;  // return graph, add new label of vertices or label of edges to existed graph
+  TO_DIRECTED = 17;  // return graph, generate directed graph from undirected graph
+  TO_UNDIRECTED = 18;  // return graph, generate undirected graph from directed graph
+  CLEAR_EDGES = 19;  // clear edges
+  CLEAR_GRAPH = 20;  // clear graph
+  VIEW_GRAPH = 21;  // create graph view
+  INDUCE_SUBGRAPH = 22;  // induce subgraph
+  UNLOAD_CONTEXT = 23;  // unload context
+
+  CREATE_INTERACTIVE_QUERY = 31;  // interactive query
+  SUBGRAPH = 32;  // subgraph in interactive query
+  GREMLIN_QUERY = 33;  // queries on gremlin engine
+  FETCH_GREMLIN_RESULT = 34;
+  CLOSE_INTERACTIVE_QUERY = 35;
+
+  CREATE_LEARNING_INSTANCE = 41;  // learning graph
+  CLOSE_LEARNING_INSTANCE = 42;
+
+  DATA_SOURCE = 46;  // loader
+
+  // data
+  CONTEXT_TO_NUMPY = 50;
+  CONTEXT_TO_DATAFRAME = 51;
+  TO_VINEYARD_TENSOR=53;
+  TO_VINEYARD_DATAFRAME=54;
+  ADD_COLUMN=55;  // return graph, add a property to a kind of vertex.
+
+  GRAPH_TO_NUMPY = 56;
+  GRAPH_TO_DATAFRAME = 57;
+
+  REGISTER_GRAPH_TYPE = 58;
+
+  GET_CONTEXT_DATA = 59;
+  OUTPUT = 60;  // dump result to fd
+
+  FROM_NUMPY = 80;
+  FROM_DATAFRAME = 81;
+  FROM_FILE = 82;
+
+  GET_ENGINE_CONFIG = 90;
+};
+
+enum ParamKey {
+  GRAPH_NAME = 0;
+  DST_GRAPH_NAME = 1;
+  CONTEXT_KEY = 2;
+  GRAPH_TYPE = 3;
+  DST_GRAPH_TYPE = 4;
+
+  OID_TYPE = 5;
+  VID_TYPE = 6;
+  V_DATA_TYPE = 7;
+  E_DATA_TYPE = 8;
+  V_LABEL_ID = 9;
+  E_LABEL_ID = 10;
+  V_PROP_ID = 11;
+  E_PROP_ID = 12;
+  LINE_PARSER = 13;
+
+  E_FILE = 14;
+  V_FILE = 15;
+
+  VERTEX_LABEL_NUM = 16;
+  EDGE_LABEL_NUM = 17;
+  DIRECTED = 18;
+
+  V_PROP_KEY = 19;
+  E_PROP_KEY = 20;
+  V_DEFAULT_VAL = 21;
+  E_DEFAULT_VAL = 22;
+
+  GRAPH_TEMPLATE_CLASS = 23;
+
+  REPARTITION_STRATEGY = 24;
+  NFRAG = 25;
+  PARAM = 26;
+
+  DISTRIBUTED = 27;
+  SCHEMA_PATH = 31;
+  GIE_GREMLIN_ENGINE_PARAMS = 34;
+  GIE_GREMLIN_QUERY_MESSAGE = 35;
+  GIE_GREMLIN_REQUEST_OPTIONS = 36;
+  GIE_GREMLIN_FETCH_RESULT_TYPE = 37;
+
+  APP_SIGNATURE = 40;
+  GRAPH_SIGNATURE = 41;
+  IS_FROM_VINEYARD_ID = 42;
+  VINEYARD_ID = 43;
+  VINEYARD_NAME = 44;
+
+  // project
+  VERTEX_COLLECTIONS = 51;
+  EDGE_COLLECTIONS = 52;
+
+  // learning graph
+  GLE_HANDLE = 60;
+  GLE_CONFIG = 61;
+  GLE_GEN_LABELS = 62;
+
+  APP_NAME = 100;
+  APP_ALGO = 101;
+  APP_LIBRARY_PATH = 102;
+  OUTPUT_PREFIX = 103;
+  VERTEX_RANGE = 104;
+  SELECTOR = 105;
+  AXIS = 106;
+  GAR = 107;
+  TYPE_SIGNATURE = 108;
+
+  REPORT_TYPE = 200;
+  MODIFY_TYPE = 201;
+  NODE = 202;
+  EDGE = 203;
+  FID = 204;
+  LID = 205;
+  EDGE_KEY = 206;
+  NODES = 207;
+  EDGES = 208;
+  COPY_TYPE = 209;
+  VIEW_TYPE = 210;
+
+  ARROW_PROPERTY_DEFINITION = 300;
+  PROTOCOL = 301;
+  VALUES = 302;
+  VID = 303;
+  SRC_VID = 304;
+  DST_VID = 305;
+  LABEL = 306;
+  SRC_LABEL = 307;
+  DST_LABEL = 308;
+  PROPERTIES = 309;
+  LOADER = 310;
+  LOAD_STRATEGY = 311;
+  ROW_NUM = 312;
+  COLUMN_NUM = 313;
+  SUB_LABEL = 315;
+  GENERATE_EID = 316;
+  DEFAULT_LABEL_ID = 317;
+
+  STORAGE_OPTIONS = 321;
+  READ_OPTIONS = 322;
+  FD = 323;  // file descriptor
+  SOURCE = 324;
+
+  // large attr
+  CHUNK_NAME = 341;
+  CHUNK_TYPE = 342;
+
+  GRAPH_LIBRARY_PATH = 400;
+
+  VFORMAT = 500; // vertex input format 
+  EFORMAT = 501; // edge input format
+  JAVA_CLASS_PATH = 502; // java class path
+  JVM_OPTS = 503; // opts str to start a jvm
+}
+
+enum ModifyType {
+  NX_ADD_NODES = 0;
+  NX_ADD_EDGES = 1;
+  NX_DEL_NODES = 2;
+  NX_DEL_EDGES = 3;
+  NX_UPDATE_NODES = 4;
+  NX_UPDATE_EDGES = 5;
+}
+
+enum ReportType {
+  NODE_NUM = 0;
+  EDGE_NUM = 1;
+  HAS_NODE = 2;
+  HAS_EDGE = 3;
+  NODE_DATA = 4;
+  EDGE_DATA = 5;
+  NEIGHBORS_BY_NODE = 6;
+  SUCCS_BY_NODE = 7;
+  PREDS_BY_NODE = 8;
+  NEIGHBORS_BY_LOC = 9;
+  SUCCS_BY_LOC = 10;
+  PREDS_BY_LOC = 11;
+  DEG_BY_NODE = 12;
+  IN_DEG_BY_NODE = 13;
+  OUT_DEG_BY_NODE = 14;
+  DEG_BY_LOC = 15;
+  IN_DEG_BY_LOC = 16;
+  OUT_DEG_BY_LOC = 17;
+  NODES_BY_LOC = 18;
+  SELFLOOPS_NUM = 19;
+}
+
+message PlaceHolder {}

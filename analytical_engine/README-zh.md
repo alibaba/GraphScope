@@ -7,7 +7,7 @@ GraphScope 中的图分析引擎继承自 **GRAPE**，该系统实现了论文 [
 
 与现有系统不同，GRAPE 通过自动并行化整体的单机顺序图算法，[即插即用](https://github.com/alibaba/libgrape-lite/blob/master/examples/analytical_apps/sssp/sssp_auto.h)已有的图算法程序，使其很容易的运行在分布式环境，高效处理大规模图。除了易于编程之外，**GRAPE** 还被设计为[高效](https://github.com/alibaba/libgrape-lite/blob/master/Performance.md)和[高度可拓展](https://github.com/alibaba/libgrape-lite/blob/master/examples/gnn_sampler)的，以应对现实图应用程序多变的规模，多样性和复杂性。
 
-GRAPE 的核心轻量版本以 [libgrape-lite](https://github.com/alibaba/libgrape-lite/) 开源。GraphScope 中的分析引擎扩展了 libgrape-lite 的功能，支持了可变子图，[vineyard](https://github.com/alibaba/libvineyard/) 支持以及引擎的服务模式等。
+GRAPE 的核心轻量版本以 [libgrape-lite](https://github.com/alibaba/libgrape-lite/) 开源。GraphScope 中的分析引擎扩展了 libgrape-lite 的功能，支持了可变子图，[vineyard](https://github.com/v6d-io/v6d) 支持以及引擎的服务模式等。
 
 ## Java PIE SDK
 

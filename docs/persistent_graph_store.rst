@@ -216,7 +216,7 @@ Then we get the graph and graph schema
 
 .. code:: python
 
-    graph = gs_conn.g()
+    graph = conn.g()
     # Create schema
     schema = graph.schema()
 
@@ -226,8 +226,8 @@ The schema have defined several method
 
 .. code:: python
 
-    schema.add_vertex_label('v_label_name').partition_by('primary_key_name', 'property_type').property('property_name_1', 'property_type').property('property_name_2', 'property_type')
-    schema.add_edge_label('e_label_name').from('source_label').to('destination_label').property('property_name_3', 'property_type')
+    schema.add_vertex_label('v_label_name').add_primary_key('primary_key_name', 'property_type').property('property_name_1', 'property_type').property('property_name_2', 'property_type')
+    schema.add_edge_label('e_label_name').source('source_label').destination('destination_label').property('property_name_3', 'property_type')
     schema.update()
     schema.drop('label')
     schema.drop('label', 'src_label', 'dst_label')
@@ -235,11 +235,11 @@ The schema have defined several method
 
 Here the `label_name`, `primary_key_name`, `property_type` is specified by user, the `property_type` can be one of `int`, `float`, `str`, and one label can have multiple `property` statement.
 
-For vertices, the `partitioned_by` is to specify the primary key of the label, also be called ID.
+For vertices, the `add_primary_key` is to specify the primary key of the label, also be called ID.
 
-For edges, the `from` and `to` will specify the source label and destination label of the edge kind, respectively.
+For edges, the `source` and `destination` will specify the source label and destination label of the edge kind, respectively.
 
-The `update()` method will issue a transction to the store.
+The `update()` method will issue a transaction to the store.
 
 The `drop()` method can drop a label from the store, Note for edge label you must drop all relations first by using the `src_label` and `dst_label`, then call the `drop(label)` to final drop the entire label.
 
@@ -264,7 +264,7 @@ It's simple just use one line to get the traversal source,
 
 .. code:: python
 
-    g = gs_conn.gremlin()
+    g = conn.gremlin()
     print(g.V().count().toList())
 
 The graph is empty for now, so the count should be 0. Let's write some data.
@@ -377,11 +377,11 @@ We give some examples to illustrate the usage, note when deleting edges or updat
     graph.insert_vertices(v_srcs)
     snapshot_id = graph.insert_vertices(v_dsts)
 
-    assert gs_conn.remote_flush(snapshot_id)
+    assert conn.remote_flush(snapshot_id)
 
     snapshot_id = graph.update_vertex_properties(*v_update)
 
-    assert gs_conn.remote_flush(snapshot_id)
+    assert conn.remote_flush(snapshot_id)
 
     assert (
         g.V().has("id", v_src[0].primary_key["id"]).values("name").toList()[0]
@@ -396,7 +396,7 @@ We give some examples to illustrate the usage, note when deleting edges or updat
     edge_update = [edge[0], {"date": "ci_edge_4000"}]
     snapshot_id = graph.insert_edge(*edge)
 
-    assert gs_conn.remote_flush(snapshot_id)
+    assert conn.remote_flush(snapshot_id)
 
     edge[0].eid = (
         g.V()
@@ -408,7 +408,7 @@ We give some examples to illustrate the usage, note when deleting edges or updat
 
     snapshot_id = graph.insert_edges(edges)
 
-    assert gs_conn.remote_flush(snapshot_id)
+    assert conn.remote_flush(snapshot_id)
 
     for e in edges:
         e[0].eid = (
@@ -420,7 +420,7 @@ We give some examples to illustrate the usage, note when deleting edges or updat
         )
     snapshot_id = graph.update_edge_properties(*edge_update)
 
-    assert gs_conn.remote_flush(snapshot_id)
+    assert conn.remote_flush(snapshot_id)
 
     assert (
         g.V()
@@ -439,7 +439,7 @@ We give some examples to illustrate the usage, note when deleting edges or updat
     graph.delete_vertices([key[0] for key in v_srcs])
     snapshot_id = graph.delete_vertices([key[0] for key in v_dsts])
 
-    assert gs_conn.remote_flush(snapshot_id)
+    assert conn.remote_flush(snapshot_id)
 
 
 Bulk Loading
@@ -558,6 +558,7 @@ Details of the parameters are listed below:
 After data building completed, you can find the output files in the `output.path` of HDFS. The output files includes a meta file named `META`, an empty file named `_SUCCESS`, and some data files that one for each partition named in the pattern of `part-r-xxxxx.sst`. The layout of the output directory should look like:
 
 .. code:: plain-text
+
     /tmp/data_output
       |- META
       |- _SUCCESS

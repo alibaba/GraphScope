@@ -52,13 +52,7 @@ class GraphDAGNode(DAGNode):
 
     def __init__(self, session, graph, nodes=None, edges=None, gen_labels=None):
         """
-        Args:
-            session (:class:`Session`): instance of GraphScope session.
-            graph (:class:`graphscope.framework.graph.GraphDAGNode`):
-                Source property graph.
-            nodes (list): The node types that will be used for gnn training.
-            edges (list): The edge types that will be used for gnn training.
-            gen_labels (list): Extra node and edge labels on original graph for gnn training.
+        See params detail in :meth:`graphscope.Session.graphlearn`
         """
         self._session = session
         self._graph = graph
@@ -125,7 +119,8 @@ class Graph(GLGraph):
                 node_view_label, node_label, nsplit=nsplit, split_range=split_range
             )
 
-        self.init_vineyard(worker_index=0, worker_count=1)
+        # server_own=False: make sure the glog inside graph-learn get initialized
+        self.init_vineyard(worker_index=0, worker_count=1, server_own=False)
 
     def decode_arg(self, arg):
         if arg is None or isinstance(arg, dict):

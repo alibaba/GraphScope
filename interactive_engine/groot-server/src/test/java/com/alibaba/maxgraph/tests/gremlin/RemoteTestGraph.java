@@ -13,12 +13,13 @@
  */
 package com.alibaba.maxgraph.tests.gremlin;
 
+import com.alibaba.graphscope.groot.schema.GraphDef;
 import com.alibaba.graphscope.groot.sdk.Client;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.sdkcommon.io.MaxGraphIORegistry;
 import com.alibaba.maxgraph.tinkerpop.traversal.MaxGraphTraversalSource;
-import com.alibaba.graphscope.groot.schema.GraphDef;
-import org.apache.commons.configuration.Configuration;
+
+import org.apache.commons.configuration2.Configuration;
 import org.apache.tinkerpop.gremlin.LoadGraphWith;
 import org.apache.tinkerpop.gremlin.driver.Cluster;
 import org.apache.tinkerpop.gremlin.driver.MessageSerializer;

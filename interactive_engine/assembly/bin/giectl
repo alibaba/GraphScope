@@ -180,10 +180,18 @@ start_frontend() {
       -e "s@SERVER_PORT@${frontend_port}@g" \
       ${GRAPHSCOPE_HOME}/conf/frontend.vineyard.properties > ${config_dir}/frontend.vineyard.properties
 
+  if [[ -z "${USE_GAIA_ENGINE}" ]]; then
+    declare gaia_frontend_jar=""
+    declare gaia_frontend_mainclass="com.alibaba.maxgraph.frontendservice.FrontendServiceMain"
+  else
+    declare gaia_frontend_jar="${GRAPHSCOPE_HOME}/gaia-adaptor-0.0.1-SNAPSHOT.jar"
+    declare gaia_frontend_mainclass="com.alibaba.graphscope.gaia.vineyard.store.FrontendServiceMain"
+  fi
+
   # maxgraph frontend service hold a handle client of coordinator
   java ${java_opt} \
-    -cp ${GRAPHSCOPE_HOME}/maxgraph-frontendservice-0.0.1-SNAPSHOT.jar:${GRAPHSCOPE_HOME}/maxgraph-coordinator-0.0.1-SNAPSHOT.jar:${GRAPHSCOPE_HOME}/lib/*: \
-    com.alibaba.maxgraph.frontendservice.FrontendServiceMain \
+    -cp $gaia_frontend_jar:${GRAPHSCOPE_HOME}/maxgraph-frontendservice-0.0.1-SNAPSHOT.jar:${GRAPHSCOPE_HOME}/maxgraph-coordinator-0.0.1-SNAPSHOT.jar:${GRAPHSCOPE_HOME}/lib/*: \
+    $gaia_frontend_mainclass \
     ${config_dir}/frontend.vineyard.properties \
     ${object_id} 1>${log_dir}/maxgraph-frontend.out 2>${log_dir}/maxgraph-frontend.err&
   echo $! >> ${pid_dir}/frontend.pid
@@ -241,9 +249,15 @@ start_executor() {
     done
   fi
 
+  if [[ -z "${USE_GAIA_ENGINE}" ]]; then
+    declare executor_binary="executor"
+  else
+    declare executor_binary="gaia_executor"
+  fi
+
   # launch executor
   declare flag="maxgraph${object_id}executor"
-  RUST_BACKTRACE=full ${GRAPHSCOPE_HOME}/bin/executor --config ${config_dir}/executor.vineyard.properties \
+  RUST_BACKTRACE=full ${GRAPHSCOPE_HOME}/bin/${executor_binary} --config ${config_dir}/executor.vineyard.properties \
     ${flag} ${server_id} 1>> ${log_dir}/maxgraph-executor.out 2>> ${log_dir}/maxgraph-executor.err &
   echo $! >> ${pid_dir}/executor.pid
 }

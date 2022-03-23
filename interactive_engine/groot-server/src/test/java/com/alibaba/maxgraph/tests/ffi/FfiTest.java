@@ -16,17 +16,21 @@
 
 package com.alibaba.maxgraph.tests.ffi;
 
-import com.alibaba.maxgraph.tests.gremlin.MaxTestGraph;
-import com.alibaba.maxgraph.tests.gremlin.MaxTestGraphProvider;
-import com.alibaba.maxgraph.servers.MaxNode;
-import com.alibaba.maxgraph.servers.NodeBase;
-import com.alibaba.maxgraph.common.config.CommonConfig;
-import com.alibaba.maxgraph.servers.Store;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import com.alibaba.graphscope.groot.store.StoreService;
 import com.alibaba.graphscope.groot.store.jna.GraphLibrary;
 import com.alibaba.graphscope.groot.store.jna.JnaGraphStore;
+import com.alibaba.maxgraph.common.config.CommonConfig;
+import com.alibaba.maxgraph.servers.MaxNode;
+import com.alibaba.maxgraph.servers.NodeBase;
+import com.alibaba.maxgraph.servers.Store;
+import com.alibaba.maxgraph.tests.gremlin.MaxTestGraph;
+import com.alibaba.maxgraph.tests.gremlin.MaxTestGraphProvider;
 import com.sun.jna.Pointer;
-import org.apache.commons.configuration.Configuration;
+
+import org.apache.commons.configuration2.Configuration;
 import org.apache.tinkerpop.gremlin.GraphProvider;
 import org.apache.tinkerpop.gremlin.LoadGraphWith;
 import org.apache.tinkerpop.gremlin.structure.Graph;
@@ -38,9 +42,6 @@ import java.lang.annotation.Annotation;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 public class FfiTest {
     private static final Logger logger = LoggerFactory.getLogger(FfiTest.class);

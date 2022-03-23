@@ -18,6 +18,7 @@ import com.alibaba.maxgraph.common.rpc.RpcAddressFetcher;
 import com.alibaba.maxgraph.common.rpc.RpcConfig;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.sdkcommon.client.Endpoint;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

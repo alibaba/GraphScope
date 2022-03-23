@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 package com.alibaba.maxgraph.compiler.utils;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.alibaba.maxgraph.Message;
 import com.alibaba.maxgraph.QueryFlowOuterClass;
@@ -50,6 +52,7 @@ import com.alibaba.maxgraph.compiler.tree.addition.PropertyNode;
 import com.alibaba.maxgraph.compiler.tree.source.SourceDelegateNode;
 import com.alibaba.maxgraph.compiler.tree.source.SourceTreeNode;
 import com.google.common.collect.Lists;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
@@ -63,8 +66,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 public class TreeNodeUtils {
     /**
      * Parse and get property/label id from tree node
@@ -74,18 +75,30 @@ public class TreeNodeUtils {
      * @param labelManager The given label manager
      * @return The optional property/label id
      */
-    public static Optional<Integer> parseValueDirectlyNode(TreeNode treeNode, GraphSchema schema, TreeNodeLabelManager labelManager) {
+    public static Optional<Integer> parseValueDirectlyNode(
+            TreeNode treeNode, GraphSchema schema, TreeNodeLabelManager labelManager) {
         if (null == treeNode || treeNode instanceof SourceDelegateNode) {
             return Optional.of(0);
         } else if (treeNode instanceof PropertyMapTreeNode) {
             return Optional.empty();
         } else if (((UnaryTreeNode) treeNode).getInputNode() instanceof SourceDelegateNode) {
             if (treeNode instanceof PropertyNode) {
-                return Optional.of(SchemaUtils.getPropId(PropertyNode.class.cast(treeNode).getPropKeyList().iterator().next(), schema));
+                return Optional.of(
+                        SchemaUtils.getPropId(
+                                PropertyNode.class
+                                        .cast(treeNode)
+                                        .getPropKeyList()
+                                        .iterator()
+                                        .next(),
+                                schema));
             } else if (treeNode instanceof SelectOneTreeNode) {
-                return Optional.of(labelManager.getLabelIndex(((SelectOneTreeNode) treeNode).getSelectLabel()));
+                return Optional.of(
+                        labelManager.getLabelIndex(
+                                ((SelectOneTreeNode) treeNode).getSelectLabel()));
             } else if (treeNode instanceof TokenTreeNode) {
-                return Optional.of(labelManager.getLabelIndex(((TokenTreeNode) treeNode).getToken().getAccessor()));
+                return Optional.of(
+                        labelManager.getLabelIndex(
+                                ((TokenTreeNode) treeNode).getToken().getAccessor()));
             } else {
                 return Optional.empty();
             }
@@ -112,7 +125,8 @@ public class TreeNodeUtils {
         } else if (treeNode instanceof FoldTreeNode) {
             return QueryFlowOuterClass.OperatorType.FOLD;
         } else {
-            throw new IllegalArgumentException("Only support aggregate here for input " + treeNode.toString());
+            throw new IllegalArgumentException(
+                    "Only support aggregate here for input " + treeNode.toString());
         }
     }
 
@@ -145,36 +159,48 @@ public class TreeNodeUtils {
      * @return The enter key argument
      */
     public static Optional<QueryFlowOuterClass.EnterKeyArgumentProto> parseEnterKeyArgument(
-            TreeNode treeNode,
-            GraphSchema schema,
-            TreeNodeLabelManager treeNodeLabelManager) {
+            TreeNode treeNode, GraphSchema schema, TreeNodeLabelManager treeNodeLabelManager) {
         if (treeNode instanceof PropertyMapTreeNode) {
-            QueryFlowOuterClass.EnterKeyArgumentProto.Builder builder = QueryFlowOuterClass.EnterKeyArgumentProto.newBuilder()
-                    .setEnterKeyType(QueryFlowOuterClass.EnterKeyTypeProto.KEY_PROP_VAL_MAP)
-                    .setUniqFlag(false)
-                    .addAllPropIdList(((PropertyMapTreeNode) treeNode).getPropKeyList()
-                            .stream()
-                            .map(v -> SchemaUtils.getPropId(v, schema))
-                            .collect(Collectors.toList()));
+            QueryFlowOuterClass.EnterKeyArgumentProto.Builder builder =
+                    QueryFlowOuterClass.EnterKeyArgumentProto.newBuilder()
+                            .setEnterKeyType(QueryFlowOuterClass.EnterKeyTypeProto.KEY_PROP_VAL_MAP)
+                            .setUniqFlag(false)
+                            .addAllPropIdList(
+                                    ((PropertyMapTreeNode) treeNode)
+                                            .getPropKeyList().stream()
+                                                    .map(v -> SchemaUtils.getPropId(v, schema))
+                                                    .collect(Collectors.toList()));
             return Optional.of(builder.build());
         } else if (treeNode instanceof PropertyNode) {
             String propName = PropertyNode.class.cast(treeNode).getPropKeyList().iterator().next();
-            QueryFlowOuterClass.EnterKeyArgumentProto.Builder builder = QueryFlowOuterClass.EnterKeyArgumentProto.newBuilder()
-                    .setEnterKeyType(QueryFlowOuterClass.EnterKeyTypeProto.KEY_PROP_LABEL)
-                    .setUniqFlag(false)
-                    .setPropLabelId(SchemaUtils.getPropId(propName, schema));
+            QueryFlowOuterClass.EnterKeyArgumentProto.Builder builder =
+                    QueryFlowOuterClass.EnterKeyArgumentProto.newBuilder()
+                            .setEnterKeyType(QueryFlowOuterClass.EnterKeyTypeProto.KEY_PROP_LABEL)
+                            .setUniqFlag(false)
+                            .setPropLabelId(SchemaUtils.getPropId(propName, schema));
             return Optional.of(builder.build());
         } else if (treeNode instanceof SelectOneTreeNode) {
-            QueryFlowOuterClass.EnterKeyArgumentProto.Builder builder = QueryFlowOuterClass.EnterKeyArgumentProto.newBuilder()
-                    .setEnterKeyType(QueryFlowOuterClass.EnterKeyTypeProto.KEY_PROP_LABEL)
-                    .setUniqFlag(false)
-                    .setPropLabelId(treeNodeLabelManager.getLabelIndex(SelectOneTreeNode.class.cast(treeNode).getSelectLabel()));
+            QueryFlowOuterClass.EnterKeyArgumentProto.Builder builder =
+                    QueryFlowOuterClass.EnterKeyArgumentProto.newBuilder()
+                            .setEnterKeyType(QueryFlowOuterClass.EnterKeyTypeProto.KEY_PROP_LABEL)
+                            .setUniqFlag(false)
+                            .setPropLabelId(
+                                    treeNodeLabelManager.getLabelIndex(
+                                            SelectOneTreeNode.class
+                                                    .cast(treeNode)
+                                                    .getSelectLabel()));
             return Optional.of(builder.build());
         } else if (treeNode instanceof TokenTreeNode) {
-            QueryFlowOuterClass.EnterKeyArgumentProto.Builder builder = QueryFlowOuterClass.EnterKeyArgumentProto.newBuilder()
-                    .setEnterKeyType(QueryFlowOuterClass.EnterKeyTypeProto.KEY_PROP_LABEL)
-                    .setUniqFlag(false)
-                    .setPropLabelId(treeNodeLabelManager.getLabelIndex(TokenTreeNode.class.cast(treeNode).getToken().getAccessor()));
+            QueryFlowOuterClass.EnterKeyArgumentProto.Builder builder =
+                    QueryFlowOuterClass.EnterKeyArgumentProto.newBuilder()
+                            .setEnterKeyType(QueryFlowOuterClass.EnterKeyTypeProto.KEY_PROP_LABEL)
+                            .setUniqFlag(false)
+                            .setPropLabelId(
+                                    treeNodeLabelManager.getLabelIndex(
+                                            TokenTreeNode.class
+                                                    .cast(treeNode)
+                                                    .getToken()
+                                                    .getAccessor()));
             return Optional.of(builder.build());
         } else {
             return Optional.empty();
@@ -190,18 +216,20 @@ public class TreeNodeUtils {
      * @param vertexIdManager      The vertex id manager
      * @return The query plan of sub query
      */
-    public static LogicalSubQueryPlan buildQueryPlanWithSource(TreeNode treeNode,
-                                                               TreeNodeLabelManager treeNodeLabelManager,
-                                                               ContextManager contextManager,
-                                                               VertexIdManager vertexIdManager,
-                                                               LogicalVertex sourceVertex) {
+    public static LogicalSubQueryPlan buildQueryPlanWithSource(
+            TreeNode treeNode,
+            TreeNodeLabelManager treeNodeLabelManager,
+            ContextManager contextManager,
+            VertexIdManager vertexIdManager,
+            LogicalVertex sourceVertex) {
         List<TreeNode> treeNodeList = buildTreeNodeListFromLeaf(treeNode);
         LogicalSubQueryPlan logicalSubQueryPlan = new LogicalSubQueryPlan(contextManager);
         for (TreeNode currentNode : treeNodeList) {
             if (currentNode instanceof SourceDelegateNode) {
                 currentNode.setFinishVertex(sourceVertex, treeNodeLabelManager);
             }
-            logicalSubQueryPlan.mergeLogicalQueryPlan(currentNode.buildLogicalQueryPlan(contextManager));
+            logicalSubQueryPlan.mergeLogicalQueryPlan(
+                    currentNode.buildLogicalQueryPlan(contextManager));
         }
         return logicalSubQueryPlan;
     }
@@ -215,14 +243,16 @@ public class TreeNodeUtils {
      * @param vertexIdManager      The vertex id manager
      * @return The query plan of sub query
      */
-    public static LogicalSubQueryPlan buildQueryPlan(TreeNode treeNode,
-                                                     TreeNodeLabelManager treeNodeLabelManager,
-                                                     ContextManager contextManager,
-                                                     VertexIdManager vertexIdManager) {
+    public static LogicalSubQueryPlan buildQueryPlan(
+            TreeNode treeNode,
+            TreeNodeLabelManager treeNodeLabelManager,
+            ContextManager contextManager,
+            VertexIdManager vertexIdManager) {
         List<TreeNode> treeNodeList = buildTreeNodeListFromLeaf(treeNode);
         LogicalSubQueryPlan logicalSubQueryPlan = new LogicalSubQueryPlan(contextManager);
         for (TreeNode currentNode : treeNodeList) {
-            logicalSubQueryPlan.mergeLogicalQueryPlan(currentNode.buildLogicalQueryPlan(contextManager));
+            logicalSubQueryPlan.mergeLogicalQueryPlan(
+                    currentNode.buildLogicalQueryPlan(contextManager));
         }
         return logicalSubQueryPlan;
     }
@@ -251,9 +281,8 @@ public class TreeNodeUtils {
      * @param contextManager The context manager
      * @return The query plan of sub query
      */
-    public static LogicalSubQueryPlan buildSubQueryPlan(TreeNode treeNode,
-                                                        LogicalVertex sourceVertex,
-                                                        ContextManager contextManager) {
+    public static LogicalSubQueryPlan buildSubQueryPlan(
+            TreeNode treeNode, LogicalVertex sourceVertex, ContextManager contextManager) {
         return buildSubQueryPlan(treeNode, sourceVertex, contextManager, true);
     }
 
@@ -266,10 +295,11 @@ public class TreeNodeUtils {
      * @param generateUseKey The flag of generated use key, it may be generated outside such as group
      * @return The query plan of sub query
      */
-    public static LogicalSubQueryPlan buildSubQueryPlan(TreeNode treeNode,
-                                                        LogicalVertex sourceVertex,
-                                                        ContextManager contextManager,
-                                                        boolean generateUseKey) {
+    public static LogicalSubQueryPlan buildSubQueryPlan(
+            TreeNode treeNode,
+            LogicalVertex sourceVertex,
+            ContextManager contextManager,
+            boolean generateUseKey) {
         TreeNodeLabelManager treeNodeLabelManager = contextManager.getTreeNodeLabelManager();
         VertexIdManager vertexIdManager = contextManager.getVertexIdManager();
 
@@ -283,28 +313,38 @@ public class TreeNodeUtils {
             }
             if (currentNode instanceof SourceDelegateNode) {
                 if (useKeyFlag && generateUseKey) {
-                    LogicalVertex enterKeyVertex = new LogicalUnaryVertex(
-                            vertexIdManager.getId(),
-                            new ProcessorFunction(
-                                    QueryFlowOuterClass.OperatorType.ENTER_KEY,
-                                    Message.Value.newBuilder().setPayload(
-                                            QueryFlowOuterClass.EnterKeyArgumentProto.newBuilder()
-                                                    .setEnterKeyType(QueryFlowOuterClass.EnterKeyTypeProto.KEY_SELF)
-                                                    .setUniqFlag(true)
-                                                    .build().toByteString())),
-                            false,
-                            currentSourceVertex);
+                    LogicalVertex enterKeyVertex =
+                            new LogicalUnaryVertex(
+                                    vertexIdManager.getId(),
+                                    new ProcessorFunction(
+                                            QueryFlowOuterClass.OperatorType.ENTER_KEY,
+                                            Message.Value.newBuilder()
+                                                    .setPayload(
+                                                            QueryFlowOuterClass
+                                                                    .EnterKeyArgumentProto
+                                                                    .newBuilder()
+                                                                    .setEnterKeyType(
+                                                                            QueryFlowOuterClass
+                                                                                    .EnterKeyTypeProto
+                                                                                    .KEY_SELF)
+                                                                    .setUniqFlag(true)
+                                                                    .build()
+                                                                    .toByteString())),
+                                    false,
+                                    currentSourceVertex);
                     currentNode.setFinishVertex(enterKeyVertex, treeNodeLabelManager);
                     logicalSubQueryPlan.addLogicalVertex(currentSourceVertex);
                     logicalSubQueryPlan.addLogicalVertex(enterKeyVertex);
-                    logicalSubQueryPlan.addLogicalEdge(currentSourceVertex, enterKeyVertex, new LogicalEdge());
+                    logicalSubQueryPlan.addLogicalEdge(
+                            currentSourceVertex, enterKeyVertex, new LogicalEdge());
                     currentSourceVertex = enterKeyVertex;
                 } else {
                     currentNode.setFinishVertex(currentSourceVertex, treeNodeLabelManager);
                     logicalSubQueryPlan.addLogicalVertex(currentSourceVertex);
                 }
             }
-            logicalSubQueryPlan.mergeLogicalQueryPlan(currentNode.buildLogicalQueryPlan(contextManager));
+            logicalSubQueryPlan.mergeLogicalQueryPlan(
+                    currentNode.buildLogicalQueryPlan(contextManager));
         }
 
         return logicalSubQueryPlan;
@@ -318,9 +358,8 @@ public class TreeNodeUtils {
      * @param contextManager The given context manager
      * @return The result query plan and label id
      */
-    public static Pair<LogicalQueryPlan, Integer> buildSubQueryWithLabel(TreeNode treeNode,
-                                                                         LogicalVertex sourceVertex,
-                                                                         ContextManager contextManager) {
+    public static Pair<LogicalQueryPlan, Integer> buildSubQueryWithLabel(
+            TreeNode treeNode, LogicalVertex sourceVertex, ContextManager contextManager) {
         boolean joinFlag = checkJoinSourceFlag(treeNode);
         List<TreeNode> treeNodeList = buildTreeNodeListFromLeaf(treeNode);
         LogicalQueryPlan queryPlan = new LogicalQueryPlan(contextManager);
@@ -330,29 +369,38 @@ public class TreeNodeUtils {
             if (currentNode instanceof SourceDelegateNode) {
                 queryPlan.addLogicalVertex(sourceVertex);
                 if (joinFlag) {
-                    LogicalVertex enterKeyVertex = new LogicalUnaryVertex(
-                            contextManager.getVertexIdManager().getId(),
-                            new ProcessorFunction(
-                                    QueryFlowOuterClass.OperatorType.ENTER_KEY,
-                                    Message.Value.newBuilder().setPayload(
-                                            QueryFlowOuterClass.EnterKeyArgumentProto.newBuilder()
-                                                    .setEnterKeyType(QueryFlowOuterClass.EnterKeyTypeProto.KEY_SELF)
-                                                    .setUniqFlag(true)
-                                                    .build().toByteString())),
-                            false,
-                            currentSourceVertex);
-                    currentNode.setFinishVertex(enterKeyVertex, contextManager.getTreeNodeLabelManager());
+                    LogicalVertex enterKeyVertex =
+                            new LogicalUnaryVertex(
+                                    contextManager.getVertexIdManager().getId(),
+                                    new ProcessorFunction(
+                                            QueryFlowOuterClass.OperatorType.ENTER_KEY,
+                                            Message.Value.newBuilder()
+                                                    .setPayload(
+                                                            QueryFlowOuterClass
+                                                                    .EnterKeyArgumentProto
+                                                                    .newBuilder()
+                                                                    .setEnterKeyType(
+                                                                            QueryFlowOuterClass
+                                                                                    .EnterKeyTypeProto
+                                                                                    .KEY_SELF)
+                                                                    .setUniqFlag(true)
+                                                                    .build()
+                                                                    .toByteString())),
+                                    false,
+                                    currentSourceVertex);
+                    currentNode.setFinishVertex(
+                            enterKeyVertex, contextManager.getTreeNodeLabelManager());
                     queryPlan.addLogicalVertex(enterKeyVertex);
                     queryPlan.addLogicalEdge(sourceVertex, enterKeyVertex, new LogicalEdge());
                     currentSourceVertex = enterKeyVertex;
                     originalVertex = enterKeyVertex;
                 } else {
-                    currentNode.setFinishVertex(sourceVertex, contextManager.getTreeNodeLabelManager());
+                    currentNode.setFinishVertex(
+                            sourceVertex, contextManager.getTreeNodeLabelManager());
                     originalVertex = sourceVertex;
                 }
             } else {
-                queryPlan.mergeLogicalQueryPlan(currentNode.buildLogicalQueryPlan(
-                        contextManager));
+                queryPlan.mergeLogicalQueryPlan(currentNode.buildLogicalQueryPlan(contextManager));
             }
         }
         checkNotNull(originalVertex, "original vertex can't be null");
@@ -363,36 +411,53 @@ public class TreeNodeUtils {
         if (joinFlag) {
             LogicalVertex joinVertex;
             if (treeNode instanceof CountGlobalTreeNode || treeNode instanceof SumTreeNode) {
-                joinVertex = new LogicalBinaryVertex(
-                        contextManager.getVertexIdManager().getId(),
-                        new ProcessorFunction(QueryFlowOuterClass.OperatorType.JOIN_COUNT_LABEL,
-                                Message.Value.newBuilder().setIntValue(valueLabelId)),
-                        false,
-                        originalVertex,
-                        valueVertex);
+                joinVertex =
+                        new LogicalBinaryVertex(
+                                contextManager.getVertexIdManager().getId(),
+                                new ProcessorFunction(
+                                        QueryFlowOuterClass.OperatorType.JOIN_COUNT_LABEL,
+                                        Message.Value.newBuilder().setIntValue(valueLabelId)),
+                                false,
+                                originalVertex,
+                                valueVertex);
             } else {
-                joinVertex = new LogicalBinaryVertex(
-                        contextManager.getVertexIdManager().getId(),
-                        new ProcessorFunction(QueryFlowOuterClass.OperatorType.JOIN_LABEL,
-                                Message.Value.newBuilder().setIntValue(valueLabelId)),
-                        false,
-                        originalVertex,
-                        valueVertex);
+                joinVertex =
+                        new LogicalBinaryVertex(
+                                contextManager.getVertexIdManager().getId(),
+                                new ProcessorFunction(
+                                        QueryFlowOuterClass.OperatorType.JOIN_LABEL,
+                                        Message.Value.newBuilder().setIntValue(valueLabelId)),
+                                false,
+                                originalVertex,
+                                valueVertex);
             }
             queryPlan.addLogicalVertex(joinVertex);
             queryPlan.addLogicalEdge(originalVertex, joinVertex, LogicalEdge.shuffleByKey(0));
             queryPlan.addLogicalEdge(valueVertex, joinVertex, LogicalEdge.forwardEdge());
         } else {
             LogicalVertex originalOutputVertex = queryPlan.getTargetVertex(originalVertex);
-            String originalLabel = contextManager.getTreeNodeLabelManager().createBeforeSysLabelStart(originalOutputVertex, "original");
-            ProcessorFunction selectFunction = createSelectOneFunction(originalLabel, Pop.first, contextManager.getTreeNodeLabelManager().getLabelIndexList());
-            LogicalVertex selectVertex = new LogicalUnaryVertex(contextManager.getVertexIdManager().getId(),
-                    selectFunction,
-                    valueVertex);
-            selectVertex.getBeforeRequirementList().add(QueryFlowOuterClass.RequirementValue.newBuilder()
-                    .setReqType(QueryFlowOuterClass.RequirementType.LABEL_START)
-                    .setReqArgument(Message.Value.newBuilder()
-                            .addIntValueList(valueLabelId)));
+            String originalLabel =
+                    contextManager
+                            .getTreeNodeLabelManager()
+                            .createBeforeSysLabelStart(originalOutputVertex, "original");
+            ProcessorFunction selectFunction =
+                    createSelectOneFunction(
+                            originalLabel,
+                            Pop.first,
+                            contextManager.getTreeNodeLabelManager().getLabelIndexList());
+            LogicalVertex selectVertex =
+                    new LogicalUnaryVertex(
+                            contextManager.getVertexIdManager().getId(),
+                            selectFunction,
+                            valueVertex);
+            selectVertex
+                    .getBeforeRequirementList()
+                    .add(
+                            QueryFlowOuterClass.RequirementValue.newBuilder()
+                                    .setReqType(QueryFlowOuterClass.RequirementType.LABEL_START)
+                                    .setReqArgument(
+                                            Message.Value.newBuilder()
+                                                    .addIntValueList(valueLabelId)));
             queryPlan.addLogicalVertex(selectVertex);
             queryPlan.addLogicalEdge(valueVertex, selectVertex, LogicalEdge.forwardEdge());
         }
@@ -408,11 +473,12 @@ public class TreeNodeUtils {
      * @param vertexIdManager      The vertex id manager
      * @return The sub query with enter key vertex
      */
-    public static LogicalSubQueryPlan buildSubQueryPlanWithKey(TreeNode treeNode,
-                                                               LogicalVertex sourceVertex,
-                                                               TreeNodeLabelManager treeNodeLabelManager,
-                                                               ContextManager contextManager,
-                                                               VertexIdManager vertexIdManager) {
+    public static LogicalSubQueryPlan buildSubQueryPlanWithKey(
+            TreeNode treeNode,
+            LogicalVertex sourceVertex,
+            TreeNodeLabelManager treeNodeLabelManager,
+            ContextManager contextManager,
+            VertexIdManager vertexIdManager) {
         List<TreeNode> treeNodeList = buildTreeNodeListFromLeaf(treeNode);
         LogicalSubQueryPlan logicalSubQueryPlan = new LogicalSubQueryPlan(contextManager);
         LogicalVertex currentSourceVertex = sourceVertex;
@@ -421,25 +487,33 @@ public class TreeNodeUtils {
                 ((AbstractUseKeyNode) currentNode).enableUseKeyFlag(currentSourceVertex);
             }
             if (currentNode instanceof SourceDelegateNode) {
-                LogicalVertex enterKeyVertex = new LogicalUnaryVertex(
-                        vertexIdManager.getId(),
-                        new ProcessorFunction(
-                                QueryFlowOuterClass.OperatorType.ENTER_KEY,
-                                Message.Value.newBuilder().setPayload(
-                                        QueryFlowOuterClass.EnterKeyArgumentProto.newBuilder()
-                                                .setEnterKeyType(QueryFlowOuterClass.EnterKeyTypeProto.KEY_SELF)
-                                                .setUniqFlag(true)
-                                                .build().toByteString())),
-                        false,
-                        currentSourceVertex);
+                LogicalVertex enterKeyVertex =
+                        new LogicalUnaryVertex(
+                                vertexIdManager.getId(),
+                                new ProcessorFunction(
+                                        QueryFlowOuterClass.OperatorType.ENTER_KEY,
+                                        Message.Value.newBuilder()
+                                                .setPayload(
+                                                        QueryFlowOuterClass.EnterKeyArgumentProto
+                                                                .newBuilder()
+                                                                .setEnterKeyType(
+                                                                        QueryFlowOuterClass
+                                                                                .EnterKeyTypeProto
+                                                                                .KEY_SELF)
+                                                                .setUniqFlag(true)
+                                                                .build()
+                                                                .toByteString())),
+                                false,
+                                currentSourceVertex);
                 currentNode.setFinishVertex(enterKeyVertex, treeNodeLabelManager);
                 logicalSubQueryPlan.addLogicalVertex(currentSourceVertex);
                 logicalSubQueryPlan.addLogicalVertex(enterKeyVertex);
-                logicalSubQueryPlan.addLogicalEdge(currentSourceVertex, enterKeyVertex, new LogicalEdge());
+                logicalSubQueryPlan.addLogicalEdge(
+                        currentSourceVertex, enterKeyVertex, new LogicalEdge());
                 currentSourceVertex = enterKeyVertex;
-
             }
-            logicalSubQueryPlan.mergeLogicalQueryPlan(currentNode.buildLogicalQueryPlan(contextManager));
+            logicalSubQueryPlan.mergeLogicalQueryPlan(
+                    currentNode.buildLogicalQueryPlan(contextManager));
         }
 
         return logicalSubQueryPlan;
@@ -487,7 +561,8 @@ public class TreeNodeUtils {
                 return true;
             }
             if (currTreeNode instanceof RangeGlobalTreeNode) {
-                RangeGlobalTreeNode rangeGlobalTreeNode = RangeGlobalTreeNode.class.cast(currTreeNode);
+                RangeGlobalTreeNode rangeGlobalTreeNode =
+                        RangeGlobalTreeNode.class.cast(currTreeNode);
                 return (rangeGlobalTreeNode.getHigh() - rangeGlobalTreeNode.getLow() > 1);
             }
             if (currTreeNode.getNodeType() == NodeType.AGGREGATE) {
@@ -506,7 +581,8 @@ public class TreeNodeUtils {
      * @return The flag
      */
     public static boolean checkJoinSourceFlag(TreeNode treeNode) {
-        return checkMultipleOutput(treeNode) || checkNodeListUseKey(buildTreeNodeListFromLeaf(treeNode));
+        return checkMultipleOutput(treeNode)
+                || checkNodeListUseKey(buildTreeNodeListFromLeaf(treeNode));
     }
 
     /**
@@ -544,9 +620,11 @@ public class TreeNodeUtils {
                     TreeNode outputNode = vertexTreeNode.getOutputNode();
                     if (null == outputNode) {
                         vertexTreeNode.enableCountFlag();
-                        TreeNode hasTreeNode = new HasTreeNode(vertexTreeNode,
-                                Lists.newArrayList(new HasContainer("", P.gt(0L))),
-                                vertexTreeNode.getSchema());
+                        TreeNode hasTreeNode =
+                                new HasTreeNode(
+                                        vertexTreeNode,
+                                        Lists.newArrayList(new HasContainer("", P.gt(0L))),
+                                        vertexTreeNode.getSchema());
                         hasTreeNode.setOutputNode(null);
                         break;
                     }
@@ -582,68 +660,85 @@ public class TreeNodeUtils {
     /**
      * Build logical plan with filter tree node and output the input value
      */
-    public static LogicalVertex buildFilterTreeNode(TreeNode treeNode,
-                                                    ContextManager contextManager,
-                                                    LogicalQueryPlan logicalQueryPlan,
-                                                    LogicalVertex sourceVertex,
-                                                    GraphSchema schema) {
+    public static LogicalVertex buildFilterTreeNode(
+            TreeNode treeNode,
+            ContextManager contextManager,
+            LogicalQueryPlan logicalQueryPlan,
+            LogicalVertex sourceVertex,
+            GraphSchema schema) {
         TreeNodeLabelManager labelManager = contextManager.getTreeNodeLabelManager();
         VertexIdManager vertexIdManager = contextManager.getVertexIdManager();
         TreeNode filterTreeNode = TreeNodeUtils.optimizeSubFilterNode(treeNode);
         UnaryTreeNode unaryTreeNode = UnaryTreeNode.class.cast(filterTreeNode);
         LogicalVertex outputVertex;
-        if (unaryTreeNode.getInputNode() instanceof SourceTreeNode &&
-                (unaryTreeNode instanceof SelectOneTreeNode ||
-                        unaryTreeNode instanceof PropertyNode)) {
+        if (unaryTreeNode.getInputNode() instanceof SourceTreeNode
+                && (unaryTreeNode instanceof SelectOneTreeNode
+                        || unaryTreeNode instanceof PropertyNode)) {
             // optimize traversal filter to filter operator
             int propId;
             if (unaryTreeNode instanceof SelectOneTreeNode) {
-                propId = labelManager.getLabelIndex(SelectOneTreeNode.class.cast(unaryTreeNode).getSelectLabel());
+                propId =
+                        labelManager.getLabelIndex(
+                                SelectOneTreeNode.class.cast(unaryTreeNode).getSelectLabel());
             } else {
-                propId = SchemaUtils.getPropId(PropertyNode.class.cast(unaryTreeNode).getPropKeyList().iterator().next(), schema);
+                propId =
+                        SchemaUtils.getPropId(
+                                PropertyNode.class
+                                        .cast(unaryTreeNode)
+                                        .getPropKeyList()
+                                        .iterator()
+                                        .next(),
+                                schema);
             }
-            Message.LogicalCompare logicalCompare = Message.LogicalCompare.newBuilder()
-                    .setCompare(Message.CompareType.EXIST)
-                    .setPropId(propId).build();
-            ProcessorFilterFunction processorFunction = new ProcessorFilterFunction(QueryFlowOuterClass.OperatorType.HAS);
+            Message.LogicalCompare logicalCompare =
+                    Message.LogicalCompare.newBuilder()
+                            .setCompare(Message.CompareType.EXIST)
+                            .setPropId(propId)
+                            .build();
+            ProcessorFilterFunction processorFunction =
+                    new ProcessorFilterFunction(QueryFlowOuterClass.OperatorType.HAS);
             if (propId < 0) {
                 processorFunction.getUsedLabelList().add(propId);
             }
             processorFunction.getLogicalCompareList().add(logicalCompare);
-            outputVertex = new LogicalUnaryVertex(vertexIdManager.getId(), processorFunction, false, sourceVertex);
+            outputVertex =
+                    new LogicalUnaryVertex(
+                            vertexIdManager.getId(), processorFunction, false, sourceVertex);
             logicalQueryPlan.addLogicalVertex(outputVertex);
             logicalQueryPlan.addLogicalEdge(sourceVertex, outputVertex, new LogicalEdge());
         } else {
-            TreeNode currentFilterTreeNode = TreeNodeUtils.buildSingleOutputNode(filterTreeNode, schema);
+            TreeNode currentFilterTreeNode =
+                    TreeNodeUtils.buildSingleOutputNode(filterTreeNode, schema);
             // build filter plan, and use join direct filter vertex to filter left stream
-            LogicalSubQueryPlan filterPlan = TreeNodeUtils.buildSubQueryPlan(
-                    currentFilterTreeNode,
-                    sourceVertex,
-                    contextManager);
+            LogicalSubQueryPlan filterPlan =
+                    TreeNodeUtils.buildSubQueryPlan(
+                            currentFilterTreeNode, sourceVertex, contextManager);
             TreeNode filterSourceNode = TreeNodeUtils.getSourceTreeNode(currentFilterTreeNode);
             sourceVertex = filterSourceNode.getOutputVertex();
 
             LogicalVertex rightVertex = filterPlan.getOutputVertex();
             logicalQueryPlan.mergeLogicalQueryPlan(filterPlan);
             if (TreeNodeUtils.checkJoinSourceFlag(currentFilterTreeNode)) {
-                LogicalBinaryVertex filterJoinVertex = new LogicalBinaryVertex(
-                        vertexIdManager.getId(),
-                        new ProcessorFunction(QueryFlowOuterClass.OperatorType.JOIN_DIRECT_FILTER),
-                        false,
-                        sourceVertex,
-                        rightVertex);
+                LogicalBinaryVertex filterJoinVertex =
+                        new LogicalBinaryVertex(
+                                vertexIdManager.getId(),
+                                new ProcessorFunction(
+                                        QueryFlowOuterClass.OperatorType.JOIN_DIRECT_FILTER),
+                                false,
+                                sourceVertex,
+                                rightVertex);
                 logicalQueryPlan.addLogicalVertex(filterJoinVertex);
                 logicalQueryPlan.addLogicalEdge(sourceVertex, filterJoinVertex, new LogicalEdge());
                 logicalQueryPlan.addLogicalEdge(rightVertex, filterJoinVertex, new LogicalEdge());
                 outputVertex = filterJoinVertex;
             } else if (TreeNodeUtils.checkSelectFlag(currentFilterTreeNode)) {
                 String inputLabel = labelManager.createSysLabelStart(sourceVertex, "input");
-                ProcessorFunction selectFunction = createSelectOneFunction(inputLabel, Pop.last, labelManager.getLabelIndexList());
-                LogicalUnaryVertex selectVertex = new LogicalUnaryVertex(
-                        vertexIdManager.getId(),
-                        selectFunction,
-                        false,
-                        rightVertex);
+                ProcessorFunction selectFunction =
+                        createSelectOneFunction(
+                                inputLabel, Pop.last, labelManager.getLabelIndexList());
+                LogicalUnaryVertex selectVertex =
+                        new LogicalUnaryVertex(
+                                vertexIdManager.getId(), selectFunction, false, rightVertex);
                 logicalQueryPlan.addLogicalVertex(selectVertex);
                 logicalQueryPlan.addLogicalEdge(rightVertex, selectVertex, new LogicalEdge());
                 outputVertex = logicalQueryPlan.getOutputVertex();
@@ -663,15 +758,27 @@ public class TreeNodeUtils {
      * @param labelIndexList The given label index list
      * @return The select function
      */
-    public static ProcessorFunction createSelectOneFunction(String selectLabel, Pop pop, Map<String, Integer> labelIndexList) {
+    public static ProcessorFunction createSelectOneFunction(
+            String selectLabel, Pop pop, Map<String, Integer> labelIndexList) {
         boolean labelExist = labelIndexList.containsKey(selectLabel);
-        Message.Value.Builder argumentBuilder = Message.Value.newBuilder()
-                .setBoolValue(labelExist)
-                .setIntValue(null == pop ? Message.PopType.POP_EMPTY.getNumber() : Message.PopType.valueOf(StringUtils.upperCase(pop.name())).getNumber())
-                .addIntValueList(labelExist ? labelIndexList.get(selectLabel) : TreeConstants.MAGIC_LABEL_ID)
-                .setStrValue(selectLabel);
-        ProcessorFunction processorFunction = new ProcessorFunction(QueryFlowOuterClass.OperatorType.SELECT_ONE, argumentBuilder);
-        processorFunction.getUsedLabelList().add(labelExist ? labelIndexList.get(selectLabel) : TreeConstants.MAGIC_LABEL_ID);
+        Message.Value.Builder argumentBuilder =
+                Message.Value.newBuilder()
+                        .setBoolValue(labelExist)
+                        .setIntValue(
+                                null == pop
+                                        ? Message.PopType.POP_EMPTY.getNumber()
+                                        : Message.PopType.valueOf(StringUtils.upperCase(pop.name()))
+                                                .getNumber())
+                        .addIntValueList(
+                                labelExist
+                                        ? labelIndexList.get(selectLabel)
+                                        : TreeConstants.MAGIC_LABEL_ID)
+                        .setStrValue(selectLabel);
+        ProcessorFunction processorFunction =
+                new ProcessorFunction(QueryFlowOuterClass.OperatorType.SELECT_ONE, argumentBuilder);
+        processorFunction
+                .getUsedLabelList()
+                .add(labelExist ? labelIndexList.get(selectLabel) : TreeConstants.MAGIC_LABEL_ID);
         return processorFunction;
     }
 }

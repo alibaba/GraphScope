@@ -22,50 +22,41 @@ from graphscope.framework.app import project_to_simple
 
 __all__ = [
     "sssp",
-    "property_sssp",
 ]
 
 
 @project_to_simple
 @not_compatible_for("arrow_property", "dynamic_property")
-def sssp(graph, src=0):
-    """Compute single source shortest path on the `graph`.
+def sssp(graph, src=0, weight=None):
+    """Compute single source shortest path length on the `graph`.
 
-    Note that SSSP requires an numerical property on the edge.
+    Note that the `sssp` algorithm requires an numerical property on the edge.
 
     Args:
-        graph (:class:`Graph`): A projected simple graph.
-        src (int, optional): The source vertex. Defaults to 0.
+        graph (:class:`graphscope.Graph`): A simple graph.
+        src (optional): The source vertex. The type should be consistent
+            with the id type of the `graph`, that is, it's `int` or `str` depending
+            on the `oid_type` is `int64_t` or `string` of the `graph`. Defaults to 0.
+        weight (str, optional): The edge data key corresponding to the edge weight.
+            Note that property under multiple labels should have the consistent index.
+            Defaults to None.
 
     Returns:
         :class:`graphscope.framework.context.VertexDataContextDAGNode`:
-            A context with each vertex assigned with the shortest distance from the src, evaluated in eager mode.
+            A context with each vertex assigned with the shortest distance from the `src`,
+            evaluated in eager mode.
 
     Examples:
 
     .. code:: python
 
-        import graphscope as gs
-        g = gs.g()
-        # Load some data, then project to a simple graph (if needed).
-        pg = g.project(vertices={"vlabel": []}, edges={"elabel": ["e_property"]})
-        r = gs.sssp(pg, src=0)
-        s.close()
-
+        >>> import graphscope
+        >>> from graphscope.dataset import load_p2p_network
+        >>> sess = graphscope.session(cluster_type="hosts", mode="eager")
+        >>> g = load_p2p_network(sess)
+        >>> # project to a simple graph (if needed)
+        >>> pg = g.project(vertices={"host": ["id"]}, edges={"connect": ["dist"]})
+        >>> c = graphscope.sssp(pg, src=6)
+        >>> sess.close()
     """
     return AppAssets(algo="sssp", context="vertex_data")(graph, src)
-
-
-@not_compatible_for("dynamic_property", "arrow_projected", "dynamic_projected")
-def property_sssp(graph, src=0):
-    """Compute single source shortest path on graph G.
-
-    Args:
-        graph (Graph): a property graph.
-        src (int, optional): the source. Defaults to 0.
-
-    Returns:
-        :class:`graphscope.framework.context.LabeledVertexDataContext`:
-            A context with each vertex assigned with the shortest distance from the src, evaluated in eager mode.
-    """
-    return AppAssets(algo="property_sssp", context="labeled_vertex_data")(graph, src)

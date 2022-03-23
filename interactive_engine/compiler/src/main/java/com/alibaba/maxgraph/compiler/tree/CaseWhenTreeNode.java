@@ -14,11 +14,12 @@
 package com.alibaba.maxgraph.compiler.tree;
 
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
-import com.alibaba.maxgraph.compiler.tree.value.ValueType;
-import com.alibaba.maxgraph.compiler.tree.value.VarietyValueType;
 import com.alibaba.maxgraph.compiler.logical.LogicalSubQueryPlan;
 import com.alibaba.maxgraph.compiler.optimizer.ContextManager;
+import com.alibaba.maxgraph.compiler.tree.value.ValueType;
+import com.alibaba.maxgraph.compiler.tree.value.VarietyValueType;
 import com.google.common.collect.Sets;
+
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;

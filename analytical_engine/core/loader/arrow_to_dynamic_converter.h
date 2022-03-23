@@ -25,19 +25,36 @@
 
 #include "vineyard/graph/fragment/arrow_fragment.h"
 
+#include "core/fragment/dynamic_fragment.h"
 #include "core/utils/convert_utils.h"
 
 namespace gs {
 /**
- * @brief A utility class to pack basic C++ data type to folly::dynamic
+ * @brief A utility class to pack basic C++ data type to dynamic::Value
  * @tparam T
  */
 template <typename T>
 struct DynamicWrapper {
-  static folly::dynamic to_dynamic(T e) { return folly::dynamic(e); }
+  static void to_dynamic(T s, dynamic::Value& t) { t = dynamic::Value(s); }
 
-  static folly::dynamic to_dynamic_array(const std::string& label, T e) {
-    return folly::dynamic::array(label, e);
+  static void to_dynamic_array(const std::string& label, T s,
+                               dynamic::Value& t) {
+    t.SetArray();
+    t.PushBack(label).PushBack(s);
+  }
+};
+
+/**
+ * @brief This is a specialized DynamicWrapper for int64
+ */
+template <>
+struct DynamicWrapper<int64_t> {
+  static void to_dynamic(int64_t s, dynamic::Value& t) { t.SetInt64(s); }
+
+  static void to_dynamic_array(const std::string& label, int64_t s,
+                               dynamic::Value& t) {
+    t.SetArray();
+    t.PushBack(label).PushBack(s);
   }
 };
 
@@ -46,13 +63,14 @@ struct DynamicWrapper {
  */
 template <>
 struct DynamicWrapper<std::string> {
-  static folly::dynamic to_dynamic(arrow::util::string_view e) {
-    return folly::dynamic(e.to_string());
+  static void to_dynamic(arrow::util::string_view s, dynamic::Value& t) {
+    t.SetString(s.to_string());
   }
 
-  static folly::dynamic to_dynamic_array(const std::string& label,
-                                         arrow::util::string_view e) {
-    return folly::dynamic::array(label, e.to_string());
+  static void to_dynamic_array(const std::string& label,
+                               arrow::util::string_view s, dynamic::Value& t) {
+    t.SetArray();
+    t.PushBack(label).PushBack(s.to_string());
   }
 };
 
@@ -96,7 +114,10 @@ class ArrowToDynamicConverter {
 
     CHECK(src_vm_ptr->fnum() == comm_spec_.fnum());
     dst_vm_ptr->Init();
+    typename vertex_map_t::partitioner_t partitioner(comm_spec_.fnum());
+    dst_vm_ptr->SetPartitioner(partitioner);
     id_parser.Init(fnum, src_vm_ptr->label_num());
+    dynamic::Value to_oid;
 
     for (label_id_t v_label = 0; v_label < src_vm_ptr->label_num(); v_label++) {
       std::string label_name = schema.GetVertexLabelName(v_label);
@@ -108,12 +129,11 @@ class ArrowToDynamicConverter {
 
           CHECK(src_vm_ptr->GetOid(gid, oid));
           if (v_label == default_label_id_) {
-            dst_vm_ptr->AddVertex(fid, DynamicWrapper<oid_t>::to_dynamic(oid),
-                                  gid);
+            DynamicWrapper<oid_t>::to_dynamic(oid, to_oid);
+            dst_vm_ptr->AddVertex(to_oid, gid);
           } else {
-            dst_vm_ptr->AddVertex(
-                fid, DynamicWrapper<oid_t>::to_dynamic_array(label_name, oid),
-                gid);
+            DynamicWrapper<oid_t>::to_dynamic_array(label_name, oid, to_oid);
+            dst_vm_ptr->AddVertex(to_oid, gid);
           }
         }
       }
@@ -127,26 +147,26 @@ class ArrowToDynamicConverter {
       const std::shared_ptr<vertex_map_t>& dst_vm) {
     auto fid = src_frag->fid();
     const auto& schema = src_frag->schema();
-    std::vector<grape::internal::Vertex<vid_t, vdata_t>> processed_vertices;
-    std::vector<grape::Edge<vid_t, edata_t>> processed_edges;
+    dst_fragment_t::mutation_t mutation;
 
     for (label_id_t v_label = 0; v_label < src_frag->vertex_label_num();
          v_label++) {
       auto label_name = schema.GetVertexLabelName(v_label);
       auto v_data = src_frag->vertex_data_table(v_label);
-      folly::dynamic u_oid, v_oid, data;
+      dynamic::Value u_oid, v_oid, data;
       vid_t u_gid, v_gid;
 
       // traverse vertices and extract data from ArrowFragment
       for (const auto& u : src_frag->InnerVertices(v_label)) {
         if (v_label == default_label_id_) {
-          u_oid = folly::dynamic(src_frag->GetId(u));
+          u_oid = dynamic::Value(src_frag->GetId(u));
         } else {
-          u_oid = folly::dynamic::array(label_name, src_frag->GetId(u));
+          u_oid = dynamic::Value(rapidjson::kArrayType);
+          u_oid.PushBack(label_name).PushBack(src_frag->GetId(u));
         }
 
         CHECK(dst_vm->GetGid(fid, u_oid, u_gid));
-        data = folly::dynamic::object();
+        data = dynamic::Value(rapidjson::kObjectType);
         // N.B: th last column is id, we ignore it.
         for (auto col_id = 0; col_id < v_data->num_columns() - 1; col_id++) {
           auto column = v_data->column(col_id);
@@ -155,7 +175,7 @@ class ArrowToDynamicConverter {
           PropertyConverter<src_fragment_t>::NodeValue(src_frag, u, type,
                                                        prop_key, col_id, data);
         }
-        processed_vertices.emplace_back(u_gid, data);
+        mutation.vertices_to_add.emplace_back(u_gid, data);
 
         // traverse edges and extract data
         for (label_id_t e_label = 0; e_label < src_frag->edge_label_num();
@@ -163,40 +183,41 @@ class ArrowToDynamicConverter {
           auto oe = src_frag->GetOutgoingAdjList(u, e_label);
           auto e_data = src_frag->edge_data_table(e_label);
           for (auto& e : oe) {
-            auto v = e.neighbor();
+            auto v = e.get_neighbor();
             auto e_id = e.edge_id();
             auto v_label_id = src_frag->vertex_label(v);
             if (v_label_id == default_label_id_) {
-              v_oid = folly::dynamic(src_frag->GetId(v));
+              v_oid = dynamic::Value(src_frag->GetId(v));
             } else {
-              v_oid = folly::dynamic::array(
-                  schema.GetVertexLabelName(v_label_id), src_frag->GetId(v));
+              v_oid = dynamic::Value(rapidjson::kArrayType);
+              v_oid.PushBack(schema.GetVertexLabelName(v_label_id))
+                  .PushBack(src_frag->GetId(v));
             }
             CHECK(dst_vm->GetGid(v_oid, v_gid));
-            data = folly::dynamic::object();
+            data = dynamic::Value(rapidjson::kObjectType);
             PropertyConverter<src_fragment_t>::EdgeValue(e_data, e_id, data);
-            processed_edges.emplace_back(u_gid, v_gid, data);
+            mutation.edges_to_add.emplace_back(u_gid, v_gid, data);
           }
 
           if (src_frag->directed()) {
             auto ie = src_frag->GetIncomingAdjList(u, e_label);
             for (auto& e : ie) {
-              auto v = e.neighbor();
+              auto v = e.get_neighbor();
               if (src_frag->IsOuterVertex(v)) {
                 auto e_id = e.edge_id();
                 auto v_label_id = src_frag->vertex_label(v);
                 if (v_label_id == default_label_id_) {
-                  v_oid = folly::dynamic(src_frag->GetId(v));
+                  v_oid = dynamic::Value(src_frag->GetId(v));
                 } else {
-                  v_oid = folly::dynamic::array(
-                      schema.GetVertexLabelName(v_label_id),
-                      src_frag->GetId(v));
+                  v_oid = dynamic::Value(rapidjson::kArrayType);
+                  v_oid.PushBack(schema.GetVertexLabelName(v_label_id))
+                      .PushBack(src_frag->GetId(v));
                 }
                 CHECK(dst_vm->GetGid(v_oid, v_gid));
-                data = folly::dynamic::object();
+                data = dynamic::Value(rapidjson::kObjectType);
                 PropertyConverter<src_fragment_t>::EdgeValue(e_data, e_id,
                                                              data);
-                processed_edges.emplace_back(v_gid, u_gid, data);
+                mutation.edges_to_add.emplace_back(v_gid, u_gid, data);
               }
             }
           }
@@ -205,8 +226,8 @@ class ArrowToDynamicConverter {
     }
 
     auto dynamic_frag = std::make_shared<dst_fragment_t>(dst_vm);
-    dynamic_frag->Init(src_frag->fid(), processed_vertices, processed_edges,
-                       src_frag->directed());
+    dynamic_frag->Init(src_frag->fid(), src_frag->directed());
+    dynamic_frag->Mutate(mutation);
     return dynamic_frag;
   }
 

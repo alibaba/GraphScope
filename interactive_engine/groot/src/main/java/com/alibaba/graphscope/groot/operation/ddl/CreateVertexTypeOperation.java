@@ -13,11 +13,11 @@
  */
 package com.alibaba.graphscope.groot.operation.ddl;
 
-import com.alibaba.maxgraph.proto.groot.CreateVertexTypePb;
-import com.alibaba.maxgraph.proto.groot.DdlOperationPb;
 import com.alibaba.graphscope.groot.operation.Operation;
 import com.alibaba.graphscope.groot.operation.OperationType;
 import com.alibaba.graphscope.groot.schema.TypeDef;
+import com.alibaba.maxgraph.proto.groot.CreateVertexTypePb;
+import com.alibaba.maxgraph.proto.groot.DdlOperationPb;
 import com.google.protobuf.ByteString;
 
 public class CreateVertexTypeOperation extends Operation {

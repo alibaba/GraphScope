@@ -19,6 +19,8 @@ limitations under the License.
 #include <string>
 #include <utility>
 
+#include "boost/lexical_cast.hpp"
+
 #include "grape/grape.h"
 
 namespace gs {
@@ -46,7 +48,9 @@ class PregelVertex {
 
   PregelVertex() = default;
 
-  std::string id() { return std::to_string(fragment_->GetId(vertex_)); }
+  std::string id() {
+    return boost::lexical_cast<std::string>(fragment_->GetId(vertex_));
+  }
 
   void set_value(const VD_T& value) {
     compute_context_->set_vertex_value(*this, value);

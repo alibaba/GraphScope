@@ -16,8 +16,6 @@
 # limitations under the License.
 #
 
-import sys
-import threading
 from queue import Queue
 
 from tqdm import tqdm
@@ -28,6 +26,7 @@ class LoadingProgressTracker:
     cur_stub = 0
 
     stubs = [
+        "PROGRESS--GRAPH-LOADING-DESCRIPTION-",
         "PROGRESS--GRAPH-LOADING-READ-VERTEX-0",
         "PROGRESS--GRAPH-LOADING-READ-VERTEX-100",
         "PROGRESS--GRAPH-LOADING-READ-EDGE-0",
@@ -67,6 +66,7 @@ class StdStreamWrapper(object):
             return
         line = line.encode("ascii", "ignore").decode("ascii")
         self._stream_backup.write(line)
+        self._stream_backup.flush()
         if not self._drop:
             self._lines.put(line)
 
@@ -76,23 +76,27 @@ class StdStreamWrapper(object):
     def poll(self, block=True, timeout=None):
         return self._lines.get(block=block, timeout=timeout)
 
-    def _show_progress(self):
-        total = len(LoadingProgressTracker.stubs)
-        if LoadingProgressTracker.progbar is None:
+    def _show_progress(self, line):
+        total = len(LoadingProgressTracker.stubs) - 1
+        if "PROGRESS--GRAPH-LOADING-DESCRIPTION-" in line:
+            if LoadingProgressTracker.progbar is not None:
+                LoadingProgressTracker.progbar.close()
+            desc = line.split("-")[-1].strip()
             LoadingProgressTracker.progbar = tqdm(
-                desc="Loading Graph", total=total, file=sys.stderr
+                desc=desc, total=total, file=self._stream_backup
             )
-        LoadingProgressTracker.progbar.update(1)
-        LoadingProgressTracker.cur_stub += 1
-        if LoadingProgressTracker.cur_stub == total:
-            LoadingProgressTracker.cur_stub = 0
-            LoadingProgressTracker.progbar.close()
-            LoadingProgressTracker.progbar = None
-            sys.stderr.flush()
+        elif LoadingProgressTracker.progbar is not None:
+            LoadingProgressTracker.progbar.update(1)
+            LoadingProgressTracker.cur_stub += 1
+            if LoadingProgressTracker.cur_stub == total:
+                LoadingProgressTracker.cur_stub = 0
+                LoadingProgressTracker.progbar.close()
+                LoadingProgressTracker.progbar = None
+                self.flush()
 
     def _filter_progress(self, line):
         # print('show_progress: ', len(line), ", ", line)
         if "PROGRESS--GRAPH" not in line:
             return line
-        self._show_progress()
+        self._show_progress(line)
         return None

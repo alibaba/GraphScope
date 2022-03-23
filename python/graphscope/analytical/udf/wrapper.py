@@ -23,6 +23,7 @@ from graphscope.analytical.udf.utils import InMemoryZip
 from graphscope.analytical.udf.utils import LinesWrapper
 from graphscope.analytical.udf.utils import ProgramModel
 from graphscope.framework.app import load_app
+from graphscope.framework.utils import get_timestamp
 
 
 def wrap_init(
@@ -30,11 +31,13 @@ def wrap_init(
 ):
     """Wrapper :code:`__init__` function in algo."""
     algo_name = getattr(algo, "__name__")
+    module_name = algo_name + "_" + get_timestamp(with_milliseconds=False)
+
     pyx_code = "\n\n".join(pyx_header.dump() + pyx_body.dump())
     gs_config = {
         "app": [
             {
-                "algo": algo_name,
+                "algo": module_name,
                 "context_type": "labeled_vertex_data",
                 "type": "cython_pie"
                 if program_model == ProgramModel.PIE
@@ -47,15 +50,16 @@ def wrap_init(
             }
         ]
     }
+
     garfile = InMemoryZip()
-    garfile.append("{}.pyx".format(algo_name), pyx_code)
+    garfile.append("{}.pyx".format(module_name), pyx_code)
     garfile.append(".gs_conf.yaml", yaml.dump(gs_config))
 
     def init(self):
         pass
 
     def call(self, graph, **kwargs):
-        app_assets = load_app(algo=algo_name, gar=garfile.read_bytes())
+        app_assets = load_app(gar=garfile.read_bytes(), algo=module_name)
         return app_assets(graph, **kwargs)
 
     setattr(algo, "__decorated__", True)  # can't decorate on a decorated class

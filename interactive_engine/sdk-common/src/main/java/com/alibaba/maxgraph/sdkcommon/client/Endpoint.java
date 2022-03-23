@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,15 +15,15 @@
  */
 package com.alibaba.maxgraph.sdkcommon.client;
 
-import java.util.Objects;
-
 import com.alibaba.maxgraph.proto.EndpointProto;
-
 import com.alibaba.maxgraph.sdkcommon.Protoable;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.google.common.base.Joiner;
 import com.google.protobuf.InvalidProtocolBufferException;
+
 import org.apache.commons.lang3.StringUtils;
+
+import java.util.Objects;
 
 public class Endpoint implements Protoable<EndpointProto> {
 
@@ -112,11 +112,16 @@ public class Endpoint implements Protoable<EndpointProto> {
 
     @Override
     public String toString() {
-        return Joiner.on(":").join(ip, port, gremlinServerPort, runtimePort, runtimeCtrlAndAsyncPort);
+        return Joiner.on(":")
+                .join(ip, port, gremlinServerPort, runtimePort, runtimeCtrlAndAsyncPort);
     }
 
     public static Endpoint fromProto(EndpointProto proto) {
-        return new Endpoint(proto.getHost(), proto.getPort(), proto.getGremlinServerPort(), proto.getRuntimCtrlAndAsyncPort());
+        return new Endpoint(
+                proto.getHost(),
+                proto.getPort(),
+                proto.getGremlinServerPort(),
+                proto.getRuntimCtrlAndAsyncPort());
     }
 
     @Override
@@ -141,14 +146,18 @@ public class Endpoint implements Protoable<EndpointProto> {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) { return true; }
-        if (o == null || getClass() != o.getClass()) { return false; }
-        Endpoint endpoint = (Endpoint)o;
-        return port == endpoint.port &&
-            gremlinServerPort == endpoint.gremlinServerPort &&
-            runtimePort == endpoint.runtimePort &&
-                runtimeCtrlAndAsyncPort == endpoint.runtimeCtrlAndAsyncPort &&
-            Objects.equals(ip, endpoint.ip);
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        Endpoint endpoint = (Endpoint) o;
+        return port == endpoint.port
+                && gremlinServerPort == endpoint.gremlinServerPort
+                && runtimePort == endpoint.runtimePort
+                && runtimeCtrlAndAsyncPort == endpoint.runtimeCtrlAndAsyncPort
+                && Objects.equals(ip, endpoint.ip);
     }
 
     @Override

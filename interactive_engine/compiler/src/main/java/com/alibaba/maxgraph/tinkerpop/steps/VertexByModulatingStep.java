@@ -28,11 +28,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.Order;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
-import org.apache.tinkerpop.gremlin.process.traversal.lambda.ColumnTraversal;
-import org.apache.tinkerpop.gremlin.process.traversal.lambda.ElementValueTraversal;
-import org.apache.tinkerpop.gremlin.process.traversal.lambda.FunctionTraverser;
-import org.apache.tinkerpop.gremlin.process.traversal.lambda.IdentityTraversal;
-import org.apache.tinkerpop.gremlin.process.traversal.lambda.TokenTraversal;
+import org.apache.tinkerpop.gremlin.process.traversal.lambda.*;
 import org.apache.tinkerpop.gremlin.process.traversal.step.ByModulating;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.SampleGlobalStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexStep;
@@ -45,10 +41,15 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
 
-public class VertexByModulatingStep<E extends Element> extends VertexStep<E> implements ByModulating {
+public class VertexByModulatingStep<E extends Element> extends VertexStep<E>
+        implements ByModulating {
     private SampleGlobalStep sampleGlobalStep;
 
-    public VertexByModulatingStep(Traversal.Admin traversal, Class<E> returnClass, Direction direction, String... edgeLabels) {
+    public VertexByModulatingStep(
+            Traversal.Admin traversal,
+            Class<E> returnClass,
+            Direction direction,
+            String... edgeLabels) {
         super(traversal, returnClass, direction, edgeLabels);
     }
 
@@ -56,7 +57,8 @@ public class VertexByModulatingStep<E extends Element> extends VertexStep<E> imp
         return sampleGlobalStep;
     }
 
-    public void modulateBy(final Traversal.Admin<?, ?> traversal) throws UnsupportedOperationException {
+    public void modulateBy(final Traversal.Admin<?, ?> traversal)
+            throws UnsupportedOperationException {
         List<Step> byStepList = traversal.getSteps();
         if (byStepList.size() != 1 || !(byStepList.get(0) instanceof SampleGlobalStep)) {
             throw new UnsupportedOperationException("Only support outE().by(sample(N).by('attr'))");
@@ -65,27 +67,33 @@ public class VertexByModulatingStep<E extends Element> extends VertexStep<E> imp
     }
 
     public void modulateBy(final String string) throws UnsupportedOperationException {
-        throw new UnsupportedOperationException("The by()-modulating step does not support traversal-based modulation: " + this);
+        throw new UnsupportedOperationException(
+                "The by()-modulating step does not support traversal-based modulation: " + this);
     }
 
     public void modulateBy(final T token) throws UnsupportedOperationException {
-        throw new UnsupportedOperationException("The by()-modulating step does not support traversal-based modulation: " + this);
+        throw new UnsupportedOperationException(
+                "The by()-modulating step does not support traversal-based modulation: " + this);
     }
 
     public void modulateBy(final Function function) throws UnsupportedOperationException {
-        throw new UnsupportedOperationException("The by()-modulating step does not support traversal-based modulation: " + this);
+        throw new UnsupportedOperationException(
+                "The by()-modulating step does not support traversal-based modulation: " + this);
     }
 
     public void modulateBy() throws UnsupportedOperationException {
-        throw new UnsupportedOperationException("The by()-modulating step does not support traversal-based modulation: " + this);
+        throw new UnsupportedOperationException(
+                "The by()-modulating step does not support traversal-based modulation: " + this);
     }
 
     public void modulateBy(final Traversal.Admin<?, ?> traversal, final Comparator comparator) {
-        throw new UnsupportedOperationException("The by()-modulating step does not support traversal/comparator-based modulation: " + this);
+        throw new UnsupportedOperationException(
+                "The by()-modulating step does not support traversal/comparator-based modulation: "
+                        + this);
     }
 
     public void modulateBy(final String key, final Comparator comparator) {
-        this.modulateBy(new ElementValueTraversal<>(key), comparator);
+        this.modulateBy(new ValueTraversal<>(key), comparator);
     }
 
     public void modulateBy(final Comparator comparator) {
@@ -105,11 +113,8 @@ public class VertexByModulatingStep<E extends Element> extends VertexStep<E> imp
     }
 
     public void modulateBy(final Function function, final Comparator comparator) {
-        if (function instanceof T)
-            this.modulateBy((T) function, comparator);
-        else if (function instanceof Column)
-            this.modulateBy((Column) function, comparator);
-        else
-            this.modulateBy(__.map(new FunctionTraverser<>(function)).asAdmin(), comparator);
+        if (function instanceof T) this.modulateBy((T) function, comparator);
+        else if (function instanceof Column) this.modulateBy((Column) function, comparator);
+        else this.modulateBy(__.map(new FunctionTraverser<>(function)).asAdmin(), comparator);
     }
 }

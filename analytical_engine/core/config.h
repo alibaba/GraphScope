@@ -18,7 +18,7 @@
 
 #include <cstdint>
 
-#include "boost/leaf/all.hpp"
+#include "boost/leaf.hpp"
 
 #include "grape/config.h"
 

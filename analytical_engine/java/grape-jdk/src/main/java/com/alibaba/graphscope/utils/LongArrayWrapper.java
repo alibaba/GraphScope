@@ -18,6 +18,7 @@ package com.alibaba.graphscope.utils;
 
 import com.alibaba.graphscope.ds.Vertex;
 import com.alibaba.graphscope.ds.VertexRange;
+
 import java.util.Arrays;
 
 public class LongArrayWrapper {
@@ -41,8 +42,8 @@ public class LongArrayWrapper {
     }
 
     public LongArrayWrapper(VertexRange<Long> vertices, long defaultValue) {
-        left = vertices.begin().GetValue().intValue();
-        right = vertices.end().GetValue().intValue();
+        left = vertices.beginValue().intValue();
+        right = vertices.endValue().intValue();
         size = right - left;
         data = new long[size];
         Arrays.fill(data, defaultValue);

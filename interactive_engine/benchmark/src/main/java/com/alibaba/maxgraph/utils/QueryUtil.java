@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,11 +26,11 @@ public class QueryUtil {
         String parameterDir = configuration.getString(Configuration.PARAMETER_DIR);
         List<LdbcQuery> queryList = new ArrayList<>();
 
-        for(int index = 1; index <= 100; index++) {
+        for (int index = 1; index <= 100; index++) {
             String enableQuery = String.format("ldbc.snb.interactive.LdbcQuery%d_enable", index);
             String queryFileName = String.format("interactive-complex-%d.gremlin", index);
             String parameterFileName = String.format("interactive_%d_param.txt", index);
-            if(configuration.getBoolean(enableQuery, false)) {
+            if (configuration.getBoolean(enableQuery, false)) {
                 String queryFilePath = String.format("%s/%s", queryDir, queryFileName);
                 String parameterFilePath = String.format("%s/%s", parameterDir, parameterFileName);
                 String queryName = String.format("LDBC_QUERY_%d", index);
@@ -63,12 +63,12 @@ public class QueryUtil {
         }
 
         // for k hop
-        for(int index = 1; index < 5; index++) {
+        for (int index = 1; index < 5; index++) {
             String enableQuery = String.format("ldbc.snb.interactive.%dhop_enable", index);
             String queryFileName = String.format("%d-hop.gremlin", index);
             String parameterFileName = String.format("%d_hop_param.txt", index);
 
-            if(configuration.getBoolean(enableQuery, false)) {
+            if (configuration.getBoolean(enableQuery, false)) {
                 String queryFilePath = String.format("%s/%s", queryDir, queryFileName);
                 String parameterFilePath = String.format("%s/%s", parameterDir, parameterFileName);
                 String queryName = String.format("%d-hop", index);
@@ -77,11 +77,12 @@ public class QueryUtil {
             }
         }
 
-        for(int index = 1; index < 100; index++) {
-            String enableQuery = String.format("ldbc.snb.interactive.query_%d_without_parameter_enable", index);
+        for (int index = 1; index < 100; index++) {
+            String enableQuery =
+                    String.format("ldbc.snb.interactive.query_%d_without_parameter_enable", index);
             String queryFileName = String.format("query_%d_without_parameter.gremlin", index);
 
-            if(configuration.getBoolean(enableQuery, false)) {
+            if (configuration.getBoolean(enableQuery, false)) {
                 String queryFilePath = String.format("%s/%s", queryDir, queryFileName);
                 String queryName = String.format("query_%d_without_parameter", index);
 

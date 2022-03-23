@@ -23,22 +23,22 @@ import com.alibaba.graphscope.context.PropertyDefaultContextBase;
 import com.alibaba.graphscope.ds.Vertex;
 import com.alibaba.graphscope.fragment.ArrowFragment;
 import com.alibaba.graphscope.parallel.PropertyMessageManager;
+
 import org.junit.Assert;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AppContextGetterTest {
+
+    private static Logger logger = LoggerFactory.getLogger(AppContextGetterTest.class.getName());
+
     @Test
     public void test() {
         Class<? extends DefaultPropertyAppBase> appClass = SamplePropertyApp.class;
         SamplePropertyApp sampleApp = new SamplePropertyApp();
 
-        // Class<?> ctxClass = AppContextGetter.getPropertyDefaultContext(appClass);
-        try {
-            // Assert.assertTrue(ctxClass.newInstance() instanceof PropertyDefaultContextBase);
-            System.out.println(AppContextGetter.getContextName(sampleApp));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        logger.info(AppContextGetter.getContextName(sampleApp));
     }
 
     @Test
@@ -52,21 +52,23 @@ public class AppContextGetterTest {
     @Test
     public void test2() {
         Vertex<Long> prev = FFITypeFactoryhelper.newVertexLong();
-        System.out.println("Vertex<Long>: " + FFITypeFactoryhelper.getForeignName(prev));
+        logger.info("Vertex<Long>: " + FFITypeFactoryhelper.getForeignName(prev));
     }
 
     public static class SampleContext extends LabeledVertexDataContext<Long, Double>
             implements PropertyDefaultContextBase<Long> {
+
         public SampleContext() {}
 
         @Override
-        public void init(
+        public void Init(
                 ArrowFragment<Long> fragment,
                 PropertyMessageManager messageManager,
                 JSONObject jsonObject) {}
     }
 
     public static class SamplePropertyApp implements DefaultPropertyAppBase<Long, SampleContext> {
+
         @Override
         public void PEval(
                 ArrowFragment<Long> fragment,

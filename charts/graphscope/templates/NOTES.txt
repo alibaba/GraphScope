@@ -4,7 +4,6 @@ The GraphScope has been deployed.
 Get service address by:
   export NODE_IP=$(kubectl --namespace {{ .Release.Namespace }}  get pod -l {{ template "graphscope.coordinator.labelSelector" . }} --no-headers=true | awk '/ /{print $1}' | xargs kubectl --namespace {{ .Release.Namespace }} get pod -o jsonpath="{.status.hostIP}")
   export NODE_PORT=$(kubectl --namespace {{ .Release.Namespace }} get services -o jsonpath="{.spec.ports[0].nodePort}" {{ template "graphscope.fullname" . }}-coordinator-service)
-  export JUPYTER_PORT=
   echo "GraphScope service listen on ${NODE_IP}:${NODE_PORT}"
 
 {{- if .Values.jupyter }}

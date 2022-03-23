@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,15 +19,16 @@ import com.alibaba.maxgraph.Message;
 import com.alibaba.maxgraph.QueryFlowOuterClass;
 import com.alibaba.maxgraph.common.util.SchemaUtils;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
-import com.alibaba.maxgraph.compiler.tree.value.VertexValueType;
-import com.alibaba.maxgraph.compiler.optimizer.ContextManager;
-import com.alibaba.maxgraph.compiler.tree.value.ValueType;
 import com.alibaba.maxgraph.compiler.logical.LogicalSubQueryPlan;
 import com.alibaba.maxgraph.compiler.logical.VertexIdManager;
 import com.alibaba.maxgraph.compiler.logical.function.ProcessorFunction;
+import com.alibaba.maxgraph.compiler.optimizer.ContextManager;
 import com.alibaba.maxgraph.compiler.tree.source.SourceTreeNode;
+import com.alibaba.maxgraph.compiler.tree.value.ValueType;
+import com.alibaba.maxgraph.compiler.tree.value.VertexValueType;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.tinkerpop.gremlin.process.traversal.Order;
@@ -40,7 +41,8 @@ public class OrderLocalTreeNode extends UnaryTreeNode {
     private List<Pair<TreeNode, Order>> orderTreeNodeList;
     private List<Pair<Integer, Message.OrderType>> orderList = Lists.newArrayList();
 
-    public OrderLocalTreeNode(TreeNode prev, GraphSchema schema, List<Pair<TreeNode, Order>> orderTreeNodeList) {
+    public OrderLocalTreeNode(
+            TreeNode prev, GraphSchema schema, List<Pair<TreeNode, Order>> orderTreeNodeList) {
         super(prev, NodeType.MAP, schema);
 
         Set<String> reqPropList = checkReqPropList(orderTreeNodeList);
@@ -52,7 +54,8 @@ public class OrderLocalTreeNode extends UnaryTreeNode {
                     PropFillTreeNode.class.cast(prevInput).getPropKeyList().addAll(reqPropList);
                     break;
                 } else if (prevInput.getOutputValueType() instanceof VertexValueType) {
-                    PropFillTreeNode propFillTreeNode = new PropFillTreeNode(prevInput, reqPropList, schema);
+                    PropFillTreeNode propFillTreeNode =
+                            new PropFillTreeNode(prevInput, reqPropList, schema);
                     ((UnaryTreeNode) currentPrev).setInputNode(propFillTreeNode);
                     break;
                 } else if (prevInput instanceof GroupTreeNode) {
@@ -95,9 +98,15 @@ public class OrderLocalTreeNode extends UnaryTreeNode {
                 if (unaryTreeNode instanceof SelectOneTreeNode) {
                     return labelIndexList.get(((SelectOneTreeNode) unaryTreeNode).getSelectLabel());
                 } else if (unaryTreeNode instanceof ColumnTreeNode) {
-                    return labelIndexList.get(ColumnTreeNode.class.cast(unaryTreeNode).getColumn().name());
+                    return labelIndexList.get(
+                            ColumnTreeNode.class.cast(unaryTreeNode).getColumn().name());
                 } else {
-                    return SchemaUtils.getPropId(ElementValueTreeNode.class.cast(unaryTreeNode).getPropKeyList().iterator().next(),
+                    return SchemaUtils.getPropId(
+                            ElementValueTreeNode.class
+                                    .cast(unaryTreeNode)
+                                    .getPropKeyList()
+                                    .iterator()
+                                    .next(),
                             schema);
                 }
             } else {
@@ -111,16 +120,26 @@ public class OrderLocalTreeNode extends UnaryTreeNode {
         TreeNodeLabelManager labelManager = contextManager.getTreeNodeLabelManager();
         VertexIdManager vertexIdManager = contextManager.getVertexIdManager();
 
-        Message.OrderComparatorList.Builder comparatorList = Message.OrderComparatorList.newBuilder();
-        orderTreeNodeList.forEach(v -> {
-            comparatorList.addOrderComparator(Message.OrderComparator.newBuilder()
-                    .setPropId(getPropLabelId(v.getLeft(), labelManager.getLabelIndexList()))
-                    .setOrderType(Message.OrderType.valueOf(StringUtils.upperCase(v.getRight().name()))));
-        });
-        ProcessorFunction processorFunction = new ProcessorFunction(
-                QueryFlowOuterClass.OperatorType.ORDER_LOCAL,
-                Message.Value.newBuilder().setPayload(comparatorList.build().toByteString()));
-        return parseSingleUnaryVertex(vertexIdManager, labelManager, processorFunction, contextManager);
+        Message.OrderComparatorList.Builder comparatorList =
+                Message.OrderComparatorList.newBuilder();
+        orderTreeNodeList.forEach(
+                v -> {
+                    comparatorList.addOrderComparator(
+                            Message.OrderComparator.newBuilder()
+                                    .setPropId(
+                                            getPropLabelId(
+                                                    v.getLeft(), labelManager.getLabelIndexList()))
+                                    .setOrderType(
+                                            Message.OrderType.valueOf(
+                                                    StringUtils.upperCase(v.getRight().name()))));
+                });
+        ProcessorFunction processorFunction =
+                new ProcessorFunction(
+                        QueryFlowOuterClass.OperatorType.ORDER_LOCAL,
+                        Message.Value.newBuilder()
+                                .setPayload(comparatorList.build().toByteString()));
+        return parseSingleUnaryVertex(
+                vertexIdManager, labelManager, processorFunction, contextManager);
     }
 
     @Override

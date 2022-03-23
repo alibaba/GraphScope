@@ -18,7 +18,9 @@
 
 import functools
 import hashlib
+import inspect
 import json
+import logging
 import os
 import zipfile
 from copy import deepcopy
@@ -36,17 +38,39 @@ from graphscope.framework.errors import check_argument
 from graphscope.framework.utils import graph_type_to_cpp_class
 from graphscope.proto import graph_def_pb2
 
+logger = logging.getLogger("graphscope")
+
 DEFAULT_GS_CONFIG_FILE = ".gs_conf.yaml"
 
 
 def project_to_simple(func):
+    """Decorator to project a property graph to the simple graph.
+
+    Default to uses `weight` as edge data key to correspond to the edge weight,
+    and uses `attribute` as node data key to correspond to the node attribute.
+
+    Examples:
+        >>> @project_to_simple
+        >>> def sssp(G, src, weight="dist")
+        >>>     pass
+    """
+
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         graph = args[0]
         if not hasattr(graph, "graph_type"):
             raise InvalidArgumentError("Missing graph_type attribute in graph object.")
         if graph.graph_type == graph_def_pb2.ARROW_PROPERTY:
-            graph = graph._project_to_simple()
+            if "weight" in kwargs:
+                # func has 'weight' argument
+                weight = kwargs.get("weight", None)
+                graph = graph._project_to_simple(e_prop=weight)
+            elif "attribute" in kwargs:
+                # func has 'attribute' argument
+                attribute = kwargs.get("attribute", None)
+                graph = graph._project_to_simple(v_prop=attribute)
+            else:
+                graph = graph._project_to_simple()
         return func(graph, *args[1:], **kwargs)
 
     return wrapper
@@ -72,11 +96,11 @@ def not_compatible_for(*graph_types):
 
     Examples:
         >>> @not_compatible_for('arrow_property', 'dynamic_property')
-        >>> def sssp(G, src):
+        >>> def sssp(G, src, weight="dist"):
         >>>     pass
     """
 
-    def _not_compatible_for(not_compatible_for_func):
+    def _not_compatible_for(not_compatible_for_func, *args, **kwargs):
         @functools.wraps(not_compatible_for_func)
         def wrapper(*args, **kwargs):
             graph = args[0]
@@ -145,7 +169,10 @@ class AppAssets(DAGNode):
         """
         self._algo = algo
         self._context_type = context
-        self._type = "cpp_pie"  # default is builtin app with `built_in` type
+        if isinstance(self._algo, str) and "giraph:" in self._algo:
+            self._type = "java_pie"
+        else:
+            self._type = "cpp_pie"  # default is builtin app with `built_in` type
         self._meta = {}
 
         # used for gar resource
@@ -176,6 +203,10 @@ class AppAssets(DAGNode):
         fp = BytesIO(self._gar)
         archive = zipfile.ZipFile(fp, "r")
         config = yaml.safe_load(archive.read(DEFAULT_GS_CONFIG_FILE))
+        # default app will used if there is only one app in it
+        if self._algo is None and len(config["app"]) == 1:
+            self._algo = config["app"][0]["algo"]
+            logger.info("Default app %s will be used.", self._algo)
         for meta in config["app"]:
             if self._algo == meta["algo"]:
                 if "context_type" in meta:
@@ -305,7 +336,7 @@ class AppDAGNode(DAGNode):
         self._session.dag.add_op(self._op)
 
     def __repr__(self):
-        s = f"graphscope.App <type: {self._app_assets.type}, algorithm: {self._app_assets.algo}"
+        s = f"graphscope.App <type: {self._app_assets.type}, algorithm: {self._app_assets.algo} "
         s += f"bounded_graph: {str(self._graph)}>"
         return s
 
@@ -423,15 +454,18 @@ class UnloadedApp(DAGNode):
         self._session.dag.add_op(self._op)
 
 
-def load_app(algo, gar=None, context=None, **kwargs):
+def load_app(gar=None, algo=None, context=None, **kwargs):
     """Load an app from gar.
     bytes or the resource of the specified path or bytes.
 
     Args:
         algo: str
-          Algo name inside resource.
+          Algo name inside resource. None will extract name from gar resource
+          if there is only one app in it.
         gar: bytes or BytesIO or str
           str represent the path of resource.
+          for java apps, gar can be none to indicate we should find the app in
+          previouse added libs.
 
     Returns:
         Instance of <graphscope.framework.app.AppAssets>
@@ -442,7 +476,7 @@ def load_app(algo, gar=None, context=None, **kwargs):
         TypeError: File is not a zip file.
 
     Examples:
-        >>> sssp = load_app('sssp', gar='./resource.gar')
+        >>> sssp = load_app(gar='./resource.gar', algo='sssp')
         >>> sssp(src=4)
 
         which will have following `.gs_conf.yaml` in resource.gar:
@@ -450,17 +484,22 @@ def load_app(algo, gar=None, context=None, **kwargs):
             - algo: sssp
               type: cpp_pie
               class_name: grape:SSSP
+              context_type: vertex_data
               src: sssp/sssp.h
               compatible_graph:
                 - gs::ArrowProjectedFragment
     """
     if isinstance(gar, (BytesIO, bytes)):
-        return AppAssets(str(algo), context, gar, **kwargs)
+        return AppAssets(algo, context, gar, **kwargs)
     elif isinstance(gar, str):
         with open(gar, "rb") as f:
             content = f.read()
         if not zipfile.is_zipfile(gar):
             raise InvalidArgumentError("{} is not a zip file.".format(gar))
-        return AppAssets(str(algo), context, content, **kwargs)
+        return AppAssets(algo, context, content, **kwargs)
+    elif isinstance(algo, str) and algo.startswith("giraph:"):
+        if gar is not None:
+            raise InvalidArgumentError("Running giraph app expect no gar resource")
+        return AppAssets(algo, "vertex_data", None, **kwargs)
     else:
         raise InvalidArgumentError("Wrong type with {}".format(gar))

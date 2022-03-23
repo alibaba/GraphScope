@@ -4,8 +4,8 @@ import com.alibaba.graphscope.groot.sdk.Client;
 import com.alibaba.maxgraph.compiler.api.schema.GraphEdge;
 import com.alibaba.maxgraph.compiler.api.schema.GraphElement;
 import com.alibaba.maxgraph.dataload.databuild.ColumnMappingInfo;
-
 import com.alibaba.maxgraph.sdkcommon.common.DataLoadTarget;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -17,7 +17,7 @@ public class CommitDataCommand extends DataCommand {
     }
 
     public void run() {
-        Client client = new Client(graphEndpoint, "");
+        Client client = new Client(graphEndpoint);
         Map<Long, DataLoadTarget> tableToTarget = new HashMap<>();
         for (ColumnMappingInfo columnMappingInfo : columnMappingInfos.values()) {
             long tableId = columnMappingInfo.getTableId();

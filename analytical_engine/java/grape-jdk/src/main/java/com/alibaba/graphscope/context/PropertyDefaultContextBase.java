@@ -25,8 +25,8 @@ import com.alibaba.graphscope.parallel.PropertyMessageManager;
  *
  * @param <OID_T> original id type.
  */
-public interface PropertyDefaultContextBase<OID_T> {
-    void init(
+public interface PropertyDefaultContextBase<OID_T> extends ContextBase {
+    void Init(
             ArrowFragment<OID_T> fragment,
             PropertyMessageManager messageManager,
             JSONObject jsonObject);

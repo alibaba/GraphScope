@@ -26,11 +26,10 @@ import java.util.Properties;
  * @author lvshuang.xjs@alibaba-inc.com
  * @create 2018-05-08 上午9:57
  **/
-
 public class InstanceConfig extends MaxGraphConfiguration {
 
-    public final static String NAME_REGEX = "^\\w{1,128}$";
-    public final static String CLOUD_NAME_REGEX = "^[a-zA-Z]\\w{3,63}$";
+    public static final String NAME_REGEX = "^\\w{1,128}$";
+    public static final String CLOUD_NAME_REGEX = "^[a-zA-Z]\\w{3,63}$";
 
     public static final int SNAPSHOT_SPLIT_SIZE = 20000;
 
@@ -43,7 +42,6 @@ public class InstanceConfig extends MaxGraphConfiguration {
     private static final String INGESTNODE = "ingestnode";
     private static final String AM = "am";
 
-
     private static final String RESOURCE_COUNT = "resource.%s.count";
     private static final String RESOURCE_MEM = "resource.%s.heapmem.mb";
     private static final String RESOURCE_CPU = "resource.%s.cpu.cores";
@@ -53,6 +51,7 @@ public class InstanceConfig extends MaxGraphConfiguration {
      * pegasus config per query
      */
     public static final String PEGASUS_WORKER_NUM = "pegasus.worker.num";
+
     public static final String PEGASUS_TIMEOUT = "pegasus.timeout";
     public static final String PEGASUS_BATCH_SIZE = "pegasus.batch.size";
     public static final String PEGASUS_OUTPUT_CAPACITY = "pegasus.output.capacity";
@@ -62,45 +61,62 @@ public class InstanceConfig extends MaxGraphConfiguration {
      * machine count
      */
     public static final String RESOURCE_EXECUTOR_COUNT = String.format(RESOURCE_COUNT, EXECUTOR);
-    public static final String RESOURCE_COORDINATOR_COUNT = String.format(RESOURCE_COUNT, COORDINATOR);
+
+    public static final String RESOURCE_COORDINATOR_COUNT =
+            String.format(RESOURCE_COUNT, COORDINATOR);
     public static final String RESOURCE_IDSERVICE_COUNT = String.format(RESOURCE_COUNT, IDSERVICE);
     public static final String RESOURCE_FRONTEND_COUNT = String.format(RESOURCE_COUNT, FRONTEND);
-    public static final String RESOURCE_INGESTNODE_COUNT = String.format(RESOURCE_COUNT, INGESTNODE);
+    public static final String RESOURCE_INGESTNODE_COUNT =
+            String.format(RESOURCE_COUNT, INGESTNODE);
 
     /**
      * memory used
      */
     public static final String RESOURCE_AM_HEAP_MEM_MB = String.format(RESOURCE_MEM, AM);
-    public static final String RESOURCE_EXECUTOR_HEAP_MEM_MB = String.format(RESOURCE_MEM, EXECUTOR);
-    public static final String RESOURCE_COORDINATOR_HEAP_MEM_MB = String.format(RESOURCE_MEM, COORDINATOR);
-    public static final String RESOURCE_IDSERVICE_HEAP_MEM_MB = String.format(RESOURCE_MEM, IDSERVICE);
-    public static final String RESOURCE_FRONTEND_HEAP_MEM_MB = String.format(RESOURCE_MEM, FRONTEND);
-    public static final String RESOURCE_INGESTNODE_HEAP_MEM_MB = String.format(RESOURCE_MEM, INGESTNODE);
+
+    public static final String RESOURCE_EXECUTOR_HEAP_MEM_MB =
+            String.format(RESOURCE_MEM, EXECUTOR);
+    public static final String RESOURCE_COORDINATOR_HEAP_MEM_MB =
+            String.format(RESOURCE_MEM, COORDINATOR);
+    public static final String RESOURCE_IDSERVICE_HEAP_MEM_MB =
+            String.format(RESOURCE_MEM, IDSERVICE);
+    public static final String RESOURCE_FRONTEND_HEAP_MEM_MB =
+            String.format(RESOURCE_MEM, FRONTEND);
+    public static final String RESOURCE_INGESTNODE_HEAP_MEM_MB =
+            String.format(RESOURCE_MEM, INGESTNODE);
 
     /**
      * cpu cores used
      */
     public static final String RESOURCE_AM_CPU_CORES = String.format(RESOURCE_CPU, AM);
+
     public static final String RESOURCE_EXECUTOR_CPU_CORES = String.format(RESOURCE_CPU, EXECUTOR);
-    public static final String RESOURCE_COORDINATOR_CPU_CORES = String.format(RESOURCE_CPU, COORDINATOR);
-    public static final String RESOURCE_IDSERVICE_CPU_CORES = String.format(RESOURCE_CPU, IDSERVICE);
+    public static final String RESOURCE_COORDINATOR_CPU_CORES =
+            String.format(RESOURCE_CPU, COORDINATOR);
+    public static final String RESOURCE_IDSERVICE_CPU_CORES =
+            String.format(RESOURCE_CPU, IDSERVICE);
     public static final String RESOURCE_FRONTEND_CPU_CORES = String.format(RESOURCE_CPU, FRONTEND);
-    public static final String RESOURCE_INGESTNODE_CPU_CORES = String.format(RESOURCE_CPU, INGESTNODE);
+    public static final String RESOURCE_INGESTNODE_CPU_CORES =
+            String.format(RESOURCE_CPU, INGESTNODE);
 
     /**
      * disk
      */
     public static final String RESOURCE_AM_DISK_MB = String.format(RESOURCE_DISK, AM);
+
     public static final String RESOURCE_EXECUTOR_DISK_MB = String.format(RESOURCE_DISK, EXECUTOR);
-    public static final String RESOURCE_COORDINATOR_DISK_MB = String.format(RESOURCE_DISK, COORDINATOR);
+    public static final String RESOURCE_COORDINATOR_DISK_MB =
+            String.format(RESOURCE_DISK, COORDINATOR);
     public static final String RESOURCE_IDSERVICE_DISK_MB = String.format(RESOURCE_DISK, IDSERVICE);
     public static final String RESOURCE_FRONTEND_DISK_MB = String.format(RESOURCE_DISK, FRONTEND);
-    public static final String RESOURCE_INGESTNODE_DISK_MB = String.format(RESOURCE_DISK, INGESTNODE);
+    public static final String RESOURCE_INGESTNODE_DISK_MB =
+            String.format(RESOURCE_DISK, INGESTNODE);
 
     /**
      * yarn
      */
     public static final String YARN_HDFS_PACKAGE_PATH = "yarn.hdfs.package.path";
+
     public static final String YARN_PACKAGE_DIR_NAME = "yarn.package.dir.name";
     public static final String YARN_AM_MAX_ATTEMPTS = "yarn.am.max.attempts";
     public static final String YARN_QUEUE = "yarn.queue";
@@ -140,7 +156,8 @@ public class InstanceConfig extends MaxGraphConfiguration {
     public static final String JAVAROLE_MEMORY_USE_PERCENTAGE = "javarole.memory.use.percentage";
 
     public static final String FUXI_WORKER_MAX_RETRY_TIMES = "fuxi.worker.max.retry";
-    public static final String FUXI_WORKER_RETRY_INTERVAL_SECONDS = "fuxi.worker.retry.interval.seconds";
+    public static final String FUXI_WORKER_RETRY_INTERVAL_SECONDS =
+            "fuxi.worker.retry.interval.seconds";
 
     public static final String SCHEDULER_START_INTERVAL_MS = "scheduler.start.interval.ms";
     public static final String SCHEDULER_BLACKLIST_INTERVAL_MS = "scheduler.blacklist.interval.ms";
@@ -160,7 +177,8 @@ public class InstanceConfig extends MaxGraphConfiguration {
 
     public static final String COORDINATOR_SNAPSHOT_GC_TIME = "coordinator.snapshot.gc.time";
 
-    public static final String COORDINATOR_SNAPSHOT_ONLINE_SIZE = "coordinator.snapshot.online.size";
+    public static final String COORDINATOR_SNAPSHOT_ONLINE_SIZE =
+            "coordinator.snapshot.online.size";
 
     public static final String BLOCK_GRPC_ENABLE = "block.grpc.enable";
 
@@ -186,7 +204,8 @@ public class InstanceConfig extends MaxGraphConfiguration {
 
     public static final String RPC_MAX_MESSAGE_SIZE = "rpc.max.message.size";
 
-    public static final String FRONTEND_SERVICE_MEMORY_THRESHOLD_PERCENT = "frontendservice.memory.threshold.percent";
+    public static final String FRONTEND_SERVICE_MEMORY_THRESHOLD_PERCENT =
+            "frontendservice.memory.threshold.percent";
 
     public static final String SERVER_ID = "server.id";
 
@@ -196,7 +215,8 @@ public class InstanceConfig extends MaxGraphConfiguration {
 
     public static final String FRONTEND_SERVICE_SESSION_MAX_NUM = "frontendservice.session.max.num";
 
-    public static final String FRONTEND_SERVICE_SESSION_TIMEOUT_SECONDS = "frontendservice.session.timeout.seconds";
+    public static final String FRONTEND_SERVICE_SESSION_TIMEOUT_SECONDS =
+            "frontendservice.session.timeout.seconds";
 
     public static final String KAFKA_BOOTSTRAP_SERVERS = "kafka.bootstrap.servers";
 
@@ -204,7 +224,8 @@ public class InstanceConfig extends MaxGraphConfiguration {
 
     public static final String DATA_PRODUCER_MODE = "data.producer.mode";
 
-    public static final String DATA_DECIDER_THREAD_INTERVAL_SECONDS = "coordinator.data.decider.interval.seconds";
+    public static final String DATA_DECIDER_THREAD_INTERVAL_SECONDS =
+            "coordinator.data.decider.interval.seconds";
     public static final String DATA_SNAPSHOT_MODE = "coordinator.data.snapshot.mode";
 
     public static final String IDSERVICE_PARALLEL_NUM = "idservice.parallel.num";
@@ -213,7 +234,8 @@ public class InstanceConfig extends MaxGraphConfiguration {
 
     public static final String WORKER_LOCAL_RETRY_MAX_TIMES = "worker.local.retry.max.times";
 
-    public static final String WORKER_OPERATION_THREAD_POOL_SIZE = "worker.operation.thread.pool.size";
+    public static final String WORKER_OPERATION_THREAD_POOL_SIZE =
+            "worker.operation.thread.pool.size";
 
     public static final String STORE_WRITE_BUFFER_SIZE = "store.write.buffer.size";
     public static final String STORE_PRECOMMIT_BUFFER_SIZE = "store.precommit.buffer.size";
@@ -229,7 +251,8 @@ public class InstanceConfig extends MaxGraphConfiguration {
 
     public static final String WORKER_HB_TIMEOUT_SECONDS = "worker.hb.timeout.seconds";
 
-    public static final String WORKER_UNREGISTERED_TIMEOUT_SECONDS = "worker.unregistered.timeout.seconds";
+    public static final String WORKER_UNREGISTERED_TIMEOUT_SECONDS =
+            "worker.unregistered.timeout.seconds";
 
     public static final String LOCAL_WORKER_PATH = "local.worker.path";
 
@@ -237,7 +260,8 @@ public class InstanceConfig extends MaxGraphConfiguration {
 
     public static final String REALTIME_INSERT_THREAD_NUM = "realtime.insert.thread.num";
 
-    public static final String EXECUTOR_DOWNLOAD_DATA_THREAD_NUM = "executor.download.data.thread.num";
+    public static final String EXECUTOR_DOWNLOAD_DATA_THREAD_NUM =
+            "executor.download.data.thread.num";
 
     public static final String EXECUTOR_LOAD_DATA_THREAD_NUM = "executor.load.data.thread.num";
 
@@ -247,7 +271,8 @@ public class InstanceConfig extends MaxGraphConfiguration {
 
     public static final String GREMLIN_SERVICE_MODE = "gremlin.service.mode";
 
-    public static final String GREMLIN_SERVER_VERTEX_CACHE_ENABLE = "gremlin.server.vertex.cache.enable";
+    public static final String GREMLIN_SERVER_VERTEX_CACHE_ENABLE =
+            "gremlin.server.vertex.cache.enable";
 
     // compiler related config
 
@@ -261,7 +286,8 @@ public class InstanceConfig extends MaxGraphConfiguration {
 
     public static final String TIMELY_DAG_CHAIN_BINARY = "timely.dag.chain.binary";
 
-    public static final String TIMELY_DAG_CHAIN_GLOBAL_AGGREGATE = "timely.dag.chain.global.aggregate";
+    public static final String TIMELY_DAG_CHAIN_GLOBAL_AGGREGATE =
+            "timely.dag.chain.global.aggregate";
 
     public static final String TIMELY_QUERY_TIMEOUT_SEC = "timely.query.timeout.sec";
 
@@ -275,25 +301,32 @@ public class InstanceConfig extends MaxGraphConfiguration {
 
     public static final String TIMELY_FETCH_PROP_FLAG = "timely.fetch.prop.flag";
 
-    public static final String TIMELY_RESULT_ITERATION_BATCH_SIZE = "timely.result.iteration.batch.size";
+    public static final String TIMELY_RESULT_ITERATION_BATCH_SIZE =
+            "timely.result.iteration.batch.size";
 
     public static final String TIMELY_GLOBAL_PULL_GRAPH_FLAG = "timely.global.pull.graph.flag";
 
-    public static final String REQUEST_CONTAINER_MAX_RETRY_TIMES = "request.container.max.retry.times";
+    public static final String REQUEST_CONTAINER_MAX_RETRY_TIMES =
+            "request.container.max.retry.times";
 
-    public static final String REQUEST_CONTAINER_RETRY_INTERVAL_SECONDS = "request.container.retry.interval.seconds";
+    public static final String REQUEST_CONTAINER_RETRY_INTERVAL_SECONDS =
+            "request.container.retry.interval.seconds";
 
-    public static final String YARN_REQUEST_CONTAINER_TIME_INTERVAL_MS = "yarn.request.container.interval.ms";
+    public static final String YARN_REQUEST_CONTAINER_TIME_INTERVAL_MS =
+            "yarn.request.container.interval.ms";
 
-    public static final String YARN_WAIT_CONTAINER_ALLOCATED_TIMEOUT_MS = "yarn.wait.container.allocated.timeout.ms";
+    public static final String YARN_WAIT_CONTAINER_ALLOCATED_TIMEOUT_MS =
+            "yarn.wait.container.allocated.timeout.ms";
 
     public static final String TIMELY_PREPARE_PERSIS_DIR = "timely.prepare.persist.directory";
 
-    public static final String TIMELY_PREPARE_PERSIS_LOCK_DIR = "timely.prepare.persist.lock.directory";
+    public static final String TIMELY_PREPARE_PERSIS_LOCK_DIR =
+            "timely.prepare.persist.lock.directory";
 
     public static final String COMPILER_PREPARE_PERSIS_DIR = "compiler.prepare.persist.directory";
 
-    public static final String COMPILER_PREPARE_PERSIS_LOCK_DIR = "compiler.prepare.persist.lock.directory";
+    public static final String COMPILER_PREPARE_PERSIS_LOCK_DIR =
+            "compiler.prepare.persist.lock.directory";
 
     public static final String EXECUTOR_GRPC_THREAD_COUNT = "executor.grpc.thread.count";
 
@@ -330,10 +363,11 @@ public class InstanceConfig extends MaxGraphConfiguration {
 
     public static final String PANGU_DIR = "dfs.dir";
 
-    public static final String COORDINATOR_NETWORK_THREAD_COUNT = "coordinator.network.thread.count";
-    public static final String COORDINATOR_NETWORK_THREAD_QUEUE = "coordinator.network.thread.queue";
+    public static final String COORDINATOR_NETWORK_THREAD_COUNT =
+            "coordinator.network.thread.count";
+    public static final String COORDINATOR_NETWORK_THREAD_QUEUE =
+            "coordinator.network.thread.queue";
     public static final String CLIENT_RETRY_TIMES = "client.retry.times";
-
 
     public static final String EXECUTOR_WORKER_OVERLAP_ENABLED = "executor.machine.overlap.enabled";
     public static final String STORE_WRITE_BUFFER_MB = "store.write.buffer.mb";
@@ -345,11 +379,13 @@ public class InstanceConfig extends MaxGraphConfiguration {
     public static final String QUEUE_TIME_BOUND_SECOND = "queue.time.bound.second";
 
     public static final String GRPC_THREAD_COUNT = "%s.grpc.thread.count";
-    public static final int DEFAULT_GRPC_THREAD_COUNT = Math.min(Runtime.getRuntime().availableProcessors() * 2, 64);
+    public static final int DEFAULT_GRPC_THREAD_COUNT =
+            Math.min(Runtime.getRuntime().availableProcessors() * 2, 64);
 
     public static final String SNAPSHOT_PERSIST_SPLIT_SIZE = "snapshot.persist.split.size";
     // enable use user's odps project to sumbit bulk load job
-    public static final String BULKLOAD_ENABLE_USER_ODPS_PROJECT = "bulkload.enable.user.odps.project";
+    public static final String BULKLOAD_ENABLE_USER_ODPS_PROJECT =
+            "bulkload.enable.user.odps.project";
     public static final String SHUFFLE_EVENT_THREAD_POOL_SIZE = "shuffle.event.thread.pool.size";
 
     public static final String VPC_ENDPOINT = "vpc.endpoint";
@@ -872,7 +908,6 @@ public class InstanceConfig extends MaxGraphConfiguration {
         return getLong(CONTAINER_REQUEST_WAITING_MS, 120 * 1000L);
     }
 
-
     public int getWorkerOperationThreadPoolSize() {
         return getInt(WORKER_OPERATION_THREAD_POOL_SIZE, 4);
     }
@@ -894,9 +929,9 @@ public class InstanceConfig extends MaxGraphConfiguration {
     }
 
     public String getDfsRootDir() {
-        return String.format("%s/%s_%s", getString(DFS_ROOT_DIR, "."),
-                this.getGraphName(),
-                this.getInstanceUniqueId());
+        return String.format(
+                "%s/%s_%s",
+                getString(DFS_ROOT_DIR, "."), this.getGraphName(), this.getInstanceUniqueId());
     }
 
     public String getComputeDfsRootDir() {

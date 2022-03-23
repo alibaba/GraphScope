@@ -18,7 +18,12 @@ package com.alibaba.graphscope.utils;
 
 import com.alibaba.graphscope.ds.Vertex;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class BooleanArrayWrapper {
+    private static Logger logger = LoggerFactory.getLogger(BooleanArrayWrapper.class.getName());
+
     private boolean data[];
     private int size;
 
@@ -41,7 +46,7 @@ public class BooleanArrayWrapper {
      */
     public boolean partialEmpty(int start, int end) {
         if (end >= size) {
-            System.err.println("Error: out of bound" + end + "," + size);
+            logger.error("Error: out of bound" + end + "," + size);
         }
         for (int i = start; i <= end; ++i) {
             if (data[i]) return false;
@@ -51,7 +56,7 @@ public class BooleanArrayWrapper {
 
     public boolean partialEmpty(long start, long end) {
         if (end >= size) {
-            System.err.println("Error: out of bound" + end + "," + size);
+            logger.error("Error: out of bound" + end + "," + size);
         }
         for (int i = (int) start; i <= end; ++i) {
             if (data[i]) return false;
@@ -61,7 +66,7 @@ public class BooleanArrayWrapper {
 
     public void assign(BooleanArrayWrapper other) {
         if (other.getSize() != size) {
-            System.err.println("cannot be assigned since size don't equal");
+            logger.error("cannot be assigned since size don't equal");
             return;
         }
         for (int i = 0; i < size; ++i) {

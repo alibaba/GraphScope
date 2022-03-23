@@ -24,13 +24,11 @@ from networkx.testing.utils import assert_graphs_equal
 
 import graphscope
 import graphscope.nx as nx
-from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.loader import Loader
 from graphscope.nx import NetworkXError
 from graphscope.nx.tests.classes.test_digraph import TestDiGraph as _TestDiGraph
 from graphscope.nx.tests.classes.test_graph import TestGraph as _TestGraph
 from graphscope.nx.tests.utils import almost_equal
-from graphscope.nx.tests.utils import replace_with_inf
 
 
 def k3_graph(prefix, directed):
@@ -137,7 +135,7 @@ class TestGraphCopyOnWrite(_TestGraph):
         self.K3 = nx.Graph(self.k3, default_label="vertex")
 
     def test_update(self):
-        # specify both edgees and nodes
+        # specify both edges and nodes
         G = self.K3.copy()
         G.update(nodes=[3, (4, {"size": 2})], edges=[(4, 5), (6, 7, {"weight": 2})])
         nlist = [
@@ -244,6 +242,7 @@ class TestBuiltinCopyOnWrite:
 
         self.simple = simple_label_graph(data_dir, True)
         self.multi_simple = simple_label_multigraph(data_dir, True)
+        self.K3 = k3_graph(data_dir, False)
         self.SG = nx.DiGraph(self.simple, default_label="v-0")
         self.SG.pagerank = {
             1: 0.03721197,
@@ -355,10 +354,7 @@ class TestBuiltinCopyOnWrite:
         assert nx.builtin.has_path(self.SG, source=1, target=6)
 
     def test_average_shortest_path_length(self):
-        # average_shortest_path_length implementation contain grape::VertexDenseSet which
-        # can not use with ArrowFlattenedFragment
-        with pytest.raises(InvalidArgumentError):
-            nx.builtin.average_shortest_path_length(self.SG)
+        assert nx.builtin.average_shortest_path_length(self.SG) == 0.8
 
     def test_bfs_edges(self):
         ret = nx.builtin.bfs_edges(self.SG, 1, depth_limit=10)
@@ -369,20 +365,16 @@ class TestBuiltinCopyOnWrite:
         assert sorted(ret) == [1, 2, 3, 4, 5, 6]
 
     def test_k_core(self):
-        # k_core implementation contain grape::VertexDenseSet which
-        # can not use with ArrowFlattenedFragment
-        with pytest.raises(InvalidArgumentError):
-            nx.builtin.k_core(self.SG, k=1)
+        ret = nx.builtin.k_core(self.SG, k=1)
+        assert ret is not None
 
     def test_clustering(self):
         ret = nx.builtin.clustering(self.SG)
         assert ret == {1: 0.5, 2: 1.0, 3: 0.2, 5: 0.4, 4: 0.5, 6: 1.0}
 
     def test_triangles(self):
-        # triangles implementation contain grape::VertexDenseSet which
-        # can not use with ArrowFlattenedFragment
-        with pytest.raises(InvalidArgumentError):
-            nx.builtin.triangles(self.SG)
+        ret = nx.builtin.triangles(self.K3)
+        assert ret == {2: 1, 0: 1, 1: 1}
 
     def test_average_clustering(self):
         ret = nx.builtin.average_clustering(self.SG)
@@ -394,11 +386,11 @@ class TestBuiltinCopyOnWrite:
 
     def test_node_boundary(self):
         ret = nx.builtin.node_boundary(self.SG, [1, 2])
-        assert ret == [3]
+        assert ret == {3}
 
     def test_edge_boundary(self):
         ret = nx.builtin.edge_boundary(self.SG, [1, 2])
-        assert ret == [[1, 3]]
+        assert list(ret) == [(1, 3)]
 
     def test_attribute_assortativity_coefficient(self):
         ret = nx.builtin.attribute_assortativity_coefficient(self.SG, attribute="attr")

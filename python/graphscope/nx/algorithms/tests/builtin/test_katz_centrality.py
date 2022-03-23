@@ -15,6 +15,7 @@
 # NetworkX is distributed under a BSD license; see LICENSE.txt for more
 # information.
 #
+
 import math
 
 import pytest
@@ -24,29 +25,14 @@ from graphscope.nx.tests.utils import almost_equal
 
 
 @pytest.mark.usefixtures("graphscope_session")
-class TestRunKatzCentrality(object):
-    def test_run_katz(self):
-        G1 = nx.complete_graph(10)
-        G = nx.Graph()
-        G.add_edges_from(G1.edges, weight=1)
-        alpha = 0.1
-        nx.builtin.katz_centrality(G, alpha)
-
-
-@pytest.mark.usefixtures("graphscope_session")
-@pytest.mark.skip(reason="wait to check.")
 class TestKatzCentrality(object):
     def test_K5(self):
         """Katz centrality: K5"""
         G = nx.complete_graph(5)
         alpha = 0.1
-        b = nx.katz_centrality(G, alpha)
+        b = nx.builtin.katz_centrality(G, alpha)
         v = math.sqrt(1 / 5.0)
         b_answer = dict.fromkeys(G, v)
-        for n in sorted(G):
-            assert almost_equal(b[n], b_answer[n])
-        nstart = dict([(n, 1) for n in G])
-        b = nx.katz_centrality(G, alpha, nstart=nstart)
         for n in sorted(G):
             assert almost_equal(b[n], b_answer[n])
 
@@ -55,7 +41,7 @@ class TestKatzCentrality(object):
         alpha = 0.1
         G = nx.path_graph(3)
         b_answer = {0: 0.5598852584152165, 1: 0.6107839182711449, 2: 0.5598852584152162}
-        b = nx.katz_centrality(G, alpha)
+        b = nx.builtin.katz_centrality(G, alpha)
         for n in sorted(G):
             assert almost_equal(b[n], b_answer[n], places=4)
 
@@ -65,7 +51,7 @@ class TestKatzCentrality(object):
             G = nx.path_graph(3)
             max_iter = 0
             try:
-                b = nx.katz_centrality(G, alpha, max_iter=max_iter)
+                b = nx.builtin.katz_centrality(G, alpha, max_iter=max_iter)
             except nx.NetworkXError as e:
                 assert str(max_iter) in e.args[0], "max_iter value not in error msg"
                 raise  # So that the decorater sees the exception.
@@ -75,16 +61,17 @@ class TestKatzCentrality(object):
         beta = 0.1
         b_answer = {0: 0.5598852584152165, 1: 0.6107839182711449, 2: 0.5598852584152162}
         G = nx.path_graph(3)
-        b = nx.katz_centrality(G, alpha, beta)
+        b = nx.builtin.katz_centrality(G, alpha, beta)
         for n in sorted(G):
             assert almost_equal(b[n], b_answer[n], places=4)
 
+    @pytest.mark.skip(reason="not support beta as dict")
     def test_beta_as_dict(self):
         alpha = 0.1
         beta = {0: 1.0, 1: 1.0, 2: 1.0}
         b_answer = {0: 0.5598852584152165, 1: 0.6107839182711449, 2: 0.5598852584152162}
         G = nx.path_graph(3)
-        b = nx.katz_centrality(G, alpha, beta)
+        b = nx.builtin.katz_centrality(G, alpha, beta)
         for n in sorted(G):
             assert almost_equal(b[n], b_answer[n], places=4)
 
@@ -124,28 +111,29 @@ class TestKatzCentrality(object):
                 },
             }
             G = nx.path_graph(3)
-            b = nx.katz_centrality(G, alpha)
+            b = nx.builtin.katz_centrality(G, alpha)
             for n in sorted(G):
                 assert almost_equal(b[n], b_answer[alpha][n], places=4)
 
     def test_multigraph(self):
         with pytest.raises(nx.NetworkXException):
-            e = nx.katz_centrality(nx.MultiGraph(), 0.1)
+            e = nx.builtin.katz_centrality(nx.MultiGraph(), 0.1)
 
     def test_empty(self):
-        e = nx.katz_centrality(nx.Graph(), 0.1)
+        e = nx.builtin.katz_centrality(nx.Graph(), 0.1)
         assert e == {}
 
+    @pytest.mark.skip(reason="not support beta as dict")
     def test_bad_beta(self):
         with pytest.raises(nx.NetworkXException):
             G = nx.Graph([(0, 1)])
             beta = {0: 77}
-            e = nx.katz_centrality(G, 0.1, beta=beta)
+            e = nx.builtin.katz_centrality(G, 0.1, beta=beta)
 
     def test_bad_beta_numbe(self):
         with pytest.raises(nx.NetworkXException):
             G = nx.Graph([(0, 1)])
-            e = nx.katz_centrality(G, 0.1, beta="foo")
+            e = nx.builtin.katz_centrality(G, 0.1, beta="foo")
 
 
 @pytest.mark.usefixtures("graphscope_session")
@@ -282,7 +270,6 @@ class TestKatzCentralityNumpy(object):
 
 
 @pytest.mark.usefixtures("graphscope_session")
-@pytest.mark.skip(reason="wait to check.")
 class TestKatzCentralityDirected(object):
     @classmethod
     def setup_class(cls):
@@ -337,20 +324,20 @@ class TestKatzCentralityDirected(object):
     def test_katz_centrality_weighted(self):
         G = self.G
         alpha = self.G.alpha
-        p = nx.katz_centrality(G, alpha, weight="weight")
-        for (a, b) in zip(list(p.values()), self.G.evc):
+        p = nx.builtin.katz_centrality(G, alpha, weight="weight")
+        for (a, b) in zip(list(dict(sorted(p.items())).values()), self.G.evc):
             assert almost_equal(a, b)
 
     def test_katz_centrality_unweighted(self):
         H = self.H
         alpha = self.H.alpha
-        p = nx.katz_centrality(H, alpha, weight="weight")
-        for (a, b) in zip(list(p.values()), self.H.evc):
+        p = nx.builtin.katz_centrality(H, alpha, weight="weight")
+        for (a, b) in zip(list(dict(sorted(p.items())).values()), self.H.evc):
             assert almost_equal(a, b)
 
 
 @pytest.mark.usefixtures("graphscope_session")
-@pytest.mark.skip(reason="wait to check.")
+@pytest.mark.skip(reason="not support katz_centrality_numpy")
 class TestKatzCentralityDirectedNumpy(TestKatzCentralityDirected):
     @classmethod
     def setup_class(cls):
@@ -374,7 +361,7 @@ class TestKatzCentralityDirectedNumpy(TestKatzCentralityDirected):
 
 
 @pytest.mark.usefixtures("graphscope_session")
-@pytest.mark.skip(reason="wait to check.")
+@pytest.mark.skip(reason="not support katz_centrality_numpy")
 class TestKatzEigenvectorVKatz(object):
     @classmethod
     def setup_class(cls):

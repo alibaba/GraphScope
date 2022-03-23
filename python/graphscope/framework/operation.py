@@ -24,6 +24,7 @@ import uuid
 
 from google.protobuf.json_format import MessageToJson
 
+from graphscope.proto import attr_value_pb2
 from graphscope.proto import op_def_pb2
 
 
@@ -45,6 +46,7 @@ class Operation(object):
         inputs=None,
         output_types=None,
         config=None,
+        large_attr=None,
         query_args=None,
     ):
         """Creates an :code:`graphscope.framework.operation.Operation`.
@@ -60,6 +62,8 @@ class Operation(object):
                 Dictionary where the key is the attribute name (a string)
                 and the value is the respective "attr" attribute of the OpDef proto (an
                 AttrValue).
+            large_attr:
+                List of `LargeAttrValue` for large chunk.
             query_args:
                 Values that used as query parameters when evaluating app.
 
@@ -71,6 +75,8 @@ class Operation(object):
             op=op_type, key=uuid.uuid4().hex, output_type=output_types
         )
         self._parents = list()
+        if large_attr:
+            self._op_def.large_attr.CopyFrom(large_attr)
         if config:
             for k, v in config.items():
                 self._op_def.attr[k].CopyFrom(v)

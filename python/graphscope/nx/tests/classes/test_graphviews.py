@@ -30,7 +30,7 @@ from graphscope.nx.tests.utils import assert_nodes_equal
 
 @pytest.mark.usefixtures("graphscope_session")
 class TestReverseView(test_gvs.TestReverseView):
-    def setup_method(self):
+    def setup(self):
         self.G = nx.path_graph(9, create_using=nx.DiGraph())
         self.rv = self.G.reverse(copy=False)
         # self.rv = nx.reverse_view(self.G)
@@ -61,10 +61,14 @@ class TestReverseView(test_gvs.TestReverseView):
         assert RMC.has_edge(2, 1)
         assert RMC.my_method() == "me"
 
+    @pytest.mark.skip(reason="not support pickle remote graph.")
+    def test_pickle(self):
+        pass
+
 
 @pytest.mark.usefixtures("graphscope_session")
 class TestToDirected(test_gvs.TestToDirected):
-    def setup_method(self):
+    def setup(self):
         self.G = nx.path_graph(9)
         self.dv = nx.to_directed(self.G)
 
@@ -78,7 +82,7 @@ class TestToDirected(test_gvs.TestToDirected):
 
 @pytest.mark.usefixtures("graphscope_session")
 class TestToUndirected(test_gvs.TestToUndirected):
-    def setup_method(self):
+    def setup(self):
         self.DG = nx.path_graph(9, create_using=nx.DiGraph())
         self.uv = nx.to_undirected(self.DG)
 
@@ -89,6 +93,9 @@ class TestToUndirected(test_gvs.TestToUndirected):
     def test_already_directed(self):
         uu = nx.to_undirected(self.uv)
         assert_edges_equal(uu.edges, self.uv.edges)
+
+    def test_iter(self):
+        assert_edges_equal(self.uv.edges, self.DG.edges)
 
 
 @pytest.mark.usefixtures("graphscope_session")
@@ -137,7 +144,11 @@ class TestChainsOfViews(test_gvs.TestChainsOfViews):
         SG = self.G.subgraph([4, 5, 6])
         SSG = SG.to_undirected()
         assert sorted(list(SSG)) == [4, 5, 6]
-        assert sorted(SSG.edges) in ([(5, 4), (6, 5)], [(4, 5), (6, 5)])
+        assert sorted(SSG.edges) in (
+            [(5, 4), (6, 5)],
+            [(4, 5), (5, 6)],
+            [(4, 5), (6, 5)],
+        )
 
     def test_reverse_subgraph_toundirected(self):
         # a view can not project subgraph in graphscope.nx
@@ -145,7 +156,7 @@ class TestChainsOfViews(test_gvs.TestChainsOfViews):
         SG = G.subgraph([4, 5, 6])
         SSG = SG.to_undirected()
         assert sorted(list(SSG)) == [4, 5, 6]
-        assert sorted(SSG.edges) in ([(5, 4), (6, 5)], [(4, 5), (6, 5)])
+        assert sorted(SSG.edges) in ([(4, 5), (5, 6)], [(4, 5), (6, 5)])
 
     def test_reverse_reverse_copy(self):
         G = self.DG.reverse(copy=False)

@@ -158,14 +158,14 @@ def _get_extra_data():
             "/opt/vineyard/include/": os.path.join(RUNTIME_ROOT, "include"),
             "/usr/local/include/arrow": os.path.join(RUNTIME_ROOT, "include"),
             "/usr/local/include/boost": os.path.join(RUNTIME_ROOT, "include"),
-            "/usr/local/include/double-conversion": os.path.join(
-                RUNTIME_ROOT, "include"
-            ),
-            "/usr/local/include/folly": os.path.join(RUNTIME_ROOT, "include"),
             "/usr/local/include/glog": os.path.join(RUNTIME_ROOT, "include"),
             "/usr/local/include/gflags": os.path.join(RUNTIME_ROOT, "include"),
             "/usr/local/include/google": os.path.join(RUNTIME_ROOT, "include"),
         }
+        if platform.system() == "Linux":
+            data["/usr/include/rapidjson"] = os.path.join(RUNTIME_ROOT, "include")
+        elif platform.system() == "Darwin":
+            data["/usr/local/include/rapidjson"] = os.path.join(RUNTIME_ROOT, "include")
         # precompiled
         data.update(
             {
@@ -310,7 +310,7 @@ def parsed_packages():
     return ["foo"]
 
 
-def parsed_packge_data():
+def parsed_package_data():
     name = os.environ.get("package_name", "gs-coordinator")
     if name == "gs-coordinator":
         return {
@@ -318,6 +318,7 @@ def parsed_packge_data():
                 "builtin/app/builtin_app.gar",
                 "builtin/app/*.yaml",
                 "template/*.template",
+                "VERSION",
             ],
         }
     return {}
@@ -361,41 +362,6 @@ def parse_version(root, **kwargs):
     return parse(root, **kwargs)
 
 
-version_template = """#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-#
-# Copyright 2020 Alibaba Group Holding Limited. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-import os
-
-version_file_path = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), "..", "..", "VERSION"
-)
-
-if os.path.isfile(version_file_path):
-    with open(version_file_path, "r", encoding="utf-8") as fp:
-        __version__ = fp.read().strip()
-    __version_tuple__ = (int(v) for v in __version__.split("."))
-else:
-    __version__ = "{version}"
-    __version_tuple__ = {version_tuple}
-
-del version_file_path
-"""
-
-
 setup(
     name=os.environ.get("package_name", "gs-coordinator"),
     description="",
@@ -416,7 +382,6 @@ setup(
         "Operating System :: POSIX",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
@@ -425,13 +390,11 @@ setup(
     use_scm_version={
         "root": repo_root,
         "parse": parse_version,
-        "write_to": os.path.join(repo_root, "gscoordinator/version.py"),
-        "write_to_template": version_template,
     },
     setup_requires=["setuptools_scm>=5.0.0", "grpcio", "grpcio-tools"],
     package_dir=parsed_package_dir(),
     packages=parsed_packages(),
-    package_data=parsed_packge_data(),
+    package_data=parsed_package_data(),
     cmdclass={
         "build_builtin": BuildBuiltin,
         "build_py": CustomBuildPy,
@@ -442,3 +405,25 @@ setup(
     install_requires=parsed_reqs(),
     extras_require=parsed_dev_reqs(),
 )
+
+
+if os.name == "nt":
+
+    class _ReprableString(str):
+        def __repr__(self) -> str:
+            return self
+
+    raise RuntimeError(
+        _ReprableString(
+            """
+            ====================================================================
+
+            GraphScope doesn't support Windows natively, please try to install graphscope in WSL
+
+                https://docs.microsoft.com/en-us/windows/wsl/install
+
+            with pip.
+
+            ===================================================================="""
+        )
+    )

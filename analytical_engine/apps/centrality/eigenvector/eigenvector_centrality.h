@@ -16,13 +16,14 @@ limitations under the License.
 #ifndef ANALYTICAL_ENGINE_APPS_CENTRALITY_EIGENVECTOR_EIGENVECTOR_CENTRALITY_H_
 #define ANALYTICAL_ENGINE_APPS_CENTRALITY_EIGENVECTOR_EIGENVECTOR_CENTRALITY_H_
 
+#include <vector>
+
 #include "grape/grape.h"
 
 #include "apps/centrality/eigenvector/eigenvector_centrality_context.h"
 
 #include "core/app/app_base.h"
 #include "core/utils/trait_utils.h"
-#include "core/worker/default_worker.h"
 
 namespace gs {
 /**
@@ -35,139 +36,144 @@ namespace gs {
  */
 template <typename FRAG_T>
 class EigenvectorCentrality
-    : public AppBase<FRAG_T, EigenvectorCentralityContext<FRAG_T>>,
+    : public grape::ParallelAppBase<FRAG_T,
+                                    EigenvectorCentralityContext<FRAG_T>>,
+      public grape::ParallelEngine,
       public grape::Communicator {
  public:
-  INSTALL_DEFAULT_WORKER(EigenvectorCentrality<FRAG_T>,
-                         EigenvectorCentralityContext<FRAG_T>, FRAG_T)
+  INSTALL_PARALLEL_WORKER(EigenvectorCentrality<FRAG_T>,
+                          EigenvectorCentralityContext<FRAG_T>, FRAG_T)
   static constexpr grape::MessageStrategy message_strategy =
-      grape::MessageStrategy::kAlongEdgeToOuterVertex;
+      grape::MessageStrategy::kAlongOutgoingEdgeToOuterVertex;
   static constexpr grape::LoadStrategy load_strategy =
       grape::LoadStrategy::kBothOutIn;
   using vertex_t = typename fragment_t::vertex_t;
   using edata_t = typename fragment_t::edata_t;
   using vid_t = typename FRAG_T::vid_t;
 
-  bool NormAndCheckTerm(const fragment_t& frag, context_t& ctx) {
+  bool NormAndCheckTerm(const fragment_t& frag, context_t& ctx, int thrd_num) {
     auto inner_vertices = frag.InnerVertices();
-    double frag_sum = 0.0;
-
-    for (auto& v : inner_vertices) {
-      frag_sum += ctx.x[v] * ctx.x[v];
+    std::vector<double> thread_local_sum(thrd_num, 0.0);
+    double local_sum = 0.0, global_sum = 0;
+    ForEach(inner_vertices.begin(), inner_vertices.end(),
+            [&thread_local_sum, &ctx](int tid, vertex_t v) {
+              thread_local_sum[tid] += ctx.x[v] * ctx.x[v];
+            });
+    for (int tid = 0; tid < thrd_num; tid++) {
+      local_sum += thread_local_sum[tid];
     }
+    Sum(local_sum, global_sum);
 
-    double total_sum = 0;
-    Sum(frag_sum, total_sum);
-
-    double norm = sqrt(total_sum);
+    double norm = sqrt(global_sum);
     CHECK_GT(norm, 0);
 
-    double local_delta_sum = 0, total_delta_sum = 0;
-    for (auto& v : inner_vertices) {
-      ctx.x[v] /= norm;
-      local_delta_sum += std::abs(ctx.x[v] - ctx.x_last[v]);
+    std::vector<double> thread_local_delta_sum(thrd_num, 0.0);
+    double local_delta_sum = 0, global_delta_sum = 0;
+    ForEach(inner_vertices.begin(), inner_vertices.end(),
+            [&thread_local_delta_sum, &ctx, &norm](int tid, vertex_t v) {
+              ctx.x[v] /= norm;
+              thread_local_delta_sum[tid] += std::abs(ctx.x[v] - ctx.x_last[v]);
+            });
+    for (int tid = 0; tid < thrd_num; tid++) {
+      local_delta_sum += thread_local_delta_sum[tid];
     }
-
-    Sum(local_delta_sum, total_delta_sum);
-    VLOG(1) << "[step - " << ctx.curr_round << " ] Diff: " << total_delta_sum;
-    if (total_delta_sum < frag.GetTotalVerticesNum() * ctx.tolerance ||
+    Sum(local_delta_sum, global_delta_sum);
+    VLOG(1) << "[step - " << ctx.curr_round << " ] Diff: " << global_delta_sum;
+    if (global_delta_sum < frag.GetTotalVerticesNum() * ctx.tolerance ||
         ctx.curr_round >= ctx.max_round) {
       VLOG(1) << "Eigenvector centrality terminates after " << ctx.curr_round
-              << " iterations. Diff: " << total_delta_sum;
+              << " iterations. Diff: " << global_delta_sum;
       return true;
     }
     return false;
   }
 
-  template <typename FRAG_T_, typename = void>
-  struct Pull {
-    void operator()(const fragment_t& frag, context_t& ctx,
-                    message_manager_t& messages) {
-      auto inner_vertices = frag.InnerVertices();
-      auto& x = ctx.x;
-      auto& x_last = ctx.x_last;
+  void Pull(const fragment_t& frag, context_t& ctx,
+            message_manager_t& messages) {
+    auto inner_vertices = frag.InnerVertices();
+    auto& x = ctx.x;
+    auto& x_last = ctx.x_last;
 
-      for (auto& v : inner_vertices) {
-        auto es = frag.GetIncomingAdjList(v);
-        x[v] = x_last[v];
-        for (auto& e : es) {
-          x[v] += x_last[e.get_neighbor()];
-        }
-      }
+    if (frag.directed()) {
+      ForEach(inner_vertices.begin(), inner_vertices.end(),
+              [&x, &x_last, &frag](int tid, vertex_t v) {
+                auto es = frag.GetIncomingAdjList(v);
+                x[v] = x_last[v];
+                for (auto& e : es) {
+                  double edata = 1.0;
+                  static_if<!std::is_same<edata_t, grape::EmptyType>{}>(
+                      [&](auto& e, auto& data) {
+                        data = static_cast<double>(e.get_data());
+                      })(e, edata);
+                  x[v] += x_last[e.get_neighbor()] * edata;
+                }
+              });
+    } else {
+      ForEach(inner_vertices.begin(), inner_vertices.end(),
+              [&x, &x_last, &frag](int tid, vertex_t v) {
+                auto es = frag.GetOutgoingAdjList(v);
+                x[v] = x_last[v];
+                for (auto& e : es) {
+                  double edata = 1.0;
+                  static_if<!std::is_same<edata_t, grape::EmptyType>{}>(
+                      [&](auto& e, auto& data) {
+                        data = static_cast<double>(e.get_data());
+                      })(e, edata);
+                  x[v] += x_last[e.get_neighbor()] * edata;
+                }
+              });
     }
-  };
-
-  template <typename FRAG_T_>
-  struct Pull<FRAG_T_,
-              typename std::enable_if<!std::is_same<
-                  typename FRAG_T_::edata_t, grape::EmptyType>::value>::type> {
-    void operator()(const fragment_t& frag, context_t& ctx,
-                    message_manager_t& messages) {
-      auto inner_vertices = frag.InnerVertices();
-      auto& x = ctx.x;
-      auto& x_last = ctx.x_last;
-
-      for (auto& v : inner_vertices) {
-        auto es = frag.GetIncomingAdjList(v);
-        for (auto& e : es) {
-          double edata = 1.0;
-          static_if<!std::is_same<edata_t, grape::EmptyType>{}>(
-              [&](auto& e, auto& data) {
-                data = static_cast<double>(e.get_data());
-              })(e, edata);
-          x[v] += x_last[e.get_neighbor()] * edata;
-        }
-      }
-    }
-  };
+  }
 
   void PEval(const fragment_t& frag, context_t& ctx,
              message_manager_t& messages) {
-    Pull<fragment_t>{}(frag, ctx, messages);
+    int thrd_num = thread_num();
+    messages.InitChannels(thread_num());
+    Pull(frag, ctx, messages);
     auto inner_vertices = frag.InnerVertices();
 
     // call NormAndCheckTerm before send. because we normalize the vector 'x' in
     // the function.
-    if (NormAndCheckTerm(frag, ctx))
+    if (NormAndCheckTerm(frag, ctx, thrd_num))
       return;
 
     if (frag.fnum() == 1) {
       messages.ForceContinue();
     } else {
-      for (auto& v : inner_vertices) {
-        messages.SendMsgThroughEdges(frag, v, ctx.x[v]);
-      }
+      ForEach(inner_vertices.begin(), inner_vertices.end(),
+              [&ctx, &frag, &messages](int tid, vertex_t v) {
+                messages.Channels()[tid].SendMsgThroughOEdges(frag, v,
+                                                              ctx.x[v]);
+              });
     }
     ctx.curr_round++;
   }
 
   void IncEval(const fragment_t& frag, context_t& ctx,
                message_manager_t& messages) {
+    int thrd_num = thread_num();
     auto& x = ctx.x;
     auto& x_last = ctx.x_last;
     auto inner_vertices = frag.InnerVertices();
 
-    {
-      double msg;
-      vertex_t u;
-      while (messages.GetMessage(frag, u, msg)) {
-        x[u] = msg;
-      }
-    }
+    messages.ParallelProcess<fragment_t, double>(
+        thrd_num, frag, [&x](int tid, vertex_t v, double msg) { x[v] = msg; });
 
     x_last.Swap(x);
 
-    Pull<fragment_t>{}(frag, ctx, messages);
+    Pull(frag, ctx, messages);
 
-    if (NormAndCheckTerm(frag, ctx))
+    if (NormAndCheckTerm(frag, ctx, thrd_num))
       return;
 
     if (frag.fnum() == 1) {
       messages.ForceContinue();
     } else {
-      for (auto& v : inner_vertices) {
-        messages.SendMsgThroughEdges(frag, v, x[v]);
-      }
+      ForEach(inner_vertices.begin(), inner_vertices.end(),
+              [&ctx, &frag, &messages](int tid, vertex_t v) {
+                messages.Channels()[tid].SendMsgThroughOEdges(frag, v,
+                                                              ctx.x[v]);
+              });
     }
     ctx.curr_round++;
   }

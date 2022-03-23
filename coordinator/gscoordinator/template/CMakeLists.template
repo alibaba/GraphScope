@@ -38,6 +38,10 @@ endif ()
 
 if (NETWORKX)
     add_definitions(-DNETWORKX)
+    add_definitions(-DRAPIDJSON_HAS_CXX11=1)
+    add_definitions(-DRAPIDJSON_HAS_STDSTRING=1)
+    add_definitions(-DRAPIDJSON_HAS_CXX11_RVALUE_REFS=1)
+    add_definitions(-DRAPIDJSON_HAS_CXX11_RANGE_FOR=1)
 endif ()
 
 if (ENABLE_PREGEL_COMBINE)
@@ -55,6 +59,12 @@ if (APPLE)
 else ()
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath,$ORIGIN")
 endif ()
+
+# Thread_NOT_FOUND
+set(CMAKE_THREAD_LIBS_INIT "-lpthread")
+set(CMAKE_HAVE_THREADS_LIBRARY 1)
+set(CMAKE_USE_PTHREADS_INIT 1)
+set(THREADS_PREFER_PTHREAD_FLAG ON)
 
 check_cxx_compiler_flag(-Wno-deprecated-declarations W_NO_DEPRECATED_DECLARATIONS)
 check_cxx_compiler_flag(-Wno-attributes W_NO_ATTRIBUTES)
@@ -128,6 +138,7 @@ include_directories("${ANALYTICAL_ENGINE_HOME}/openmpi/include"
                     "${ANALYTICAL_ENGINE_HOME}/include/vineyard"
                     "${ANALYTICAL_ENGINE_HOME}/include/graphscope"
                     "${ANALYTICAL_ENGINE_HOME}/include/graphscope/apps"
+                    "${ANALYTICAL_ENGINE_HOME}/include/graphscope/proto"
                     "${ANALYTICAL_ENGINE_HOME}/include/grape/analytical_apps")
 
 # find Threads------------------------------------------------------------------
@@ -154,7 +165,7 @@ if (libgrapelite_FOUND)
 endif()
 
 # find vineyard-----------------------------------------
-find_package(vineyard 0.3.12 QUIET)
+find_package(vineyard 0.3.21 QUIET)
 if (vineyard_FOUND)
   include_directories(AFTER SYSTEM ${VINEYARD_INCLUDE_DIRS})
 endif()
@@ -223,17 +234,6 @@ if(LIBUNWIND_FOUND)
     add_definitions(-DWITH_LIBUNWIND)
 endif()
 
-# find folly--------------------------------------------------------------------
-if (NETWORKX)
-    if(GRAPHSCOPE_ANALYTICAL_HOME)
-        include("${ANALYTICAL_ENGINE_HOME}/${CMAKE_INSTALL_LIBDIR}/cmake/graphscope-analytical/cmake/FindFolly.cmake")
-        include("${ANALYTICAL_ENGINE_HOME}/${CMAKE_INSTALL_LIBDIR}/cmake/graphscope-analytical/cmake/FindDoubleConversion.cmake")
-    else()
-        include("${ANALYTICAL_ENGINE_HOME}/cmake/FindFolly.cmake")
-        include("${ANALYTICAL_ENGINE_HOME}/cmake/FindDoubleConversion.cmake")
-    endif()
-endif ()
-
 # include Analytical Engine-----------------------------------------------------
 if(GRAPHSCOPE_ANALYTICAL_HOME)
     include_directories("${GRAPHSCOPE_ANALYTICAL_INCLUDE_DIRS}")
@@ -272,7 +272,8 @@ if (CYTHON_PREGEL_APP)
     file(GLOB_RECURSE FILES_NEED_COMPILE "*.cc")
     add_library(${FRAME_NAME} SHARED ${FILES_NEED_COMPILE}
                                      ${ANALYTICAL_ENGINE_FRAME_DIR}/cython_app_frame.cc)
-    target_compile_definitions(${FRAME_NAME} PRIVATE _VD_TYPE=$_vd_type
+    target_compile_definitions(${FRAME_NAME} PRIVATE _OID_TYPE=$_oid_type
+                                                     _VD_TYPE=$_vd_type
                                                      _MD_TYPE=$_md_type
                                                      _MODULE_NAME=$_module_name
                                                      _GRAPH_TYPE=$_graph_type
@@ -284,7 +285,8 @@ elseif (CYTHON_PIE_APP)
     file(GLOB_RECURSE FILES_NEED_COMPILE "*.cc")
     add_library(${FRAME_NAME} SHARED ${FILES_NEED_COMPILE}
                                      ${ANALYTICAL_ENGINE_FRAME_DIR}/cython_pie_app_frame.cc)
-    target_compile_definitions(${FRAME_NAME} PRIVATE _VD_TYPE=$_vd_type
+    target_compile_definitions(${FRAME_NAME} PRIVATE _OID_TYPE=$_oid_type
+                                                     _VD_TYPE=$_vd_type
                                                      _MD_TYPE=$_md_type
                                                      _MODULE_NAME=$_module_name
                                                      _GRAPH_TYPE=$_graph_type
@@ -337,6 +339,9 @@ elseif (JAVA_PIE_APP)
 elseif (PROPERTY_GRAPH_FRAME)
     add_library(${FRAME_NAME} SHARED ${ANALYTICAL_ENGINE_FRAME_DIR}/property_graph_frame.cc)
     target_compile_definitions(${FRAME_NAME} PRIVATE _GRAPH_TYPE=$_graph_type)
+    if (ENABLE_JAVA_SDK)
+        target_compile_definitions(${FRAME_NAME} PRIVATE ENABLE_JAVA_SDK)
+    endif()
     target_include_directories(${FRAME_NAME} PRIVATE utils)
     set_target_properties(${FRAME_NAME} PROPERTIES COMPILE_FLAGS "-fPIC")
 elseif (PROJECT_FRAME)

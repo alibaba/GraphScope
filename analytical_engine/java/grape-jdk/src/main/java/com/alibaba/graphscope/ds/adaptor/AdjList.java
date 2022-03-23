@@ -1,10 +1,20 @@
 package com.alibaba.graphscope.ds.adaptor;
 
-import com.alibaba.graphscope.ds.GrapeNbr;
-import java.util.Iterator;
+import com.alibaba.graphscope.ds.NbrBase;
 
+import java.util.Iterator;
+import java.util.Objects;
+
+/**
+ * This interface define the neighboring vertices and edge data for a vertex.
+ *
+ * @param <VID_T> vertex id type.
+ * @param <EDATA_T> edge data type.
+ */
 public interface AdjList<VID_T, EDATA_T> {
+
     String type();
+
     /**
      * Get the begin Nbr.
      *
@@ -27,26 +37,34 @@ public interface AdjList<VID_T, EDATA_T> {
     long size();
 
     /**
-     * The iterator for ProjectedAdjList. You can use enhanced for loop instead of directly using
-     * this.
+     * The iterator for adjlist. You can use enhanced for loop instead of directly using this.
      *
      * @return the iterator.
      */
-    default Iterable<Nbr<VID_T, EDATA_T>> iterator() {
+    default Iterable<Nbr<VID_T, EDATA_T>> iterable() {
         if (type().equals(GrapeAdjListAdaptor.TYPE)) {
-            return new Iterable<Nbr<VID_T, EDATA_T>>() {
-                public Iterator<Nbr<VID_T, EDATA_T>> iterator() {
-                    return new Iterator<Nbr<VID_T, EDATA_T>>() {
-                        GrapeNbr<VID_T, EDATA_T> beginPtr = (GrapeNbr<VID_T, EDATA_T>) begin();
-                        GrapeNbr<VID_T, EDATA_T> endPtr = (GrapeNbr<VID_T, EDATA_T>) end();
-                        long currentAddress;
-                        long endAddress;
-                        long elementSize;
+            return () ->
+                    new Iterator<Nbr<VID_T, EDATA_T>>() {
+                        GrapeNbrAdaptor<VID_T, EDATA_T> beginPtr =
+                                (GrapeNbrAdaptor<VID_T, EDATA_T>) begin();
+                        GrapeNbrAdaptor<VID_T, EDATA_T> endPtr =
+                                (GrapeNbrAdaptor<VID_T, EDATA_T>) end();
+                        GrapeNbrAdaptor<VID_T, EDATA_T> curPtr =
+                                (GrapeNbrAdaptor<VID_T, EDATA_T>) begin();
+                        long currentAddress = 0;
+                        long endAddress = 0;
+                        long elementSize = 0;
 
+                        // There are cases where begin() and end() nbrs are null.
                         {
-                            this.currentAddress = beginPtr.getAddress();
-                            this.endAddress = endPtr.getAddress();
-                            this.elementSize = beginPtr.elementSize();
+                            if (Objects.nonNull(beginPtr.getGrapeNbr())
+                                    && beginPtr.getAddress() > 0) {
+                                this.currentAddress = beginPtr.getAddress();
+                                this.elementSize = beginPtr.getGrapeNbr().elementSize();
+                            }
+                            if (Objects.nonNull(endPtr.getGrapeNbr()) && endPtr.getAddress() > 0) {
+                                this.endAddress = endPtr.getAddress();
+                            }
                         }
 
                         public boolean hasNext() {
@@ -54,36 +72,48 @@ public interface AdjList<VID_T, EDATA_T> {
                         }
 
                         public Nbr<VID_T, EDATA_T> next() {
-                            beginPtr.moveToV(this.currentAddress);
+                            curPtr.setAddress(this.currentAddress);
                             this.currentAddress += this.elementSize;
-                            return (Nbr<VID_T, EDATA_T>) beginPtr;
+                            return curPtr;
                         }
                     };
-                }
-            };
         } else if (type().equals(ProjectedAdjListAdaptor.TYPE)) {
             return () ->
                     new Iterator<Nbr<VID_T, EDATA_T>>() {
-                        Nbr<VID_T, EDATA_T> cur = begin().dec();
-                        Nbr<VID_T, EDATA_T> end = end();
+                        ProjectedNbrAdaptor<VID_T, EDATA_T> end =
+                                (ProjectedNbrAdaptor<VID_T, EDATA_T>) end();
+                        Nbr<VID_T, EDATA_T> curPtr = begin().dec();
                         boolean flag = false;
 
                         @Override
                         public boolean hasNext() {
                             if (!flag) {
-                                cur = cur.inc();
-                                flag = !cur.eq(end);
+                                curPtr = curPtr.inc();
+                                flag = !curPtr.eq(end);
                             }
                             return flag;
                         }
-
+                        //
                         @Override
                         public Nbr<VID_T, EDATA_T> next() {
                             flag = false;
-                            return cur;
+                            return curPtr;
                         }
                     };
         }
         return null;
+    }
+
+    default Iterable<? extends NbrBase<VID_T, EDATA_T>> nbrBases() {
+        if (this
+                instanceof GrapeAdjListAdaptor) { // use string equal cause performance degradation.
+            return ((GrapeAdjListAdaptor<VID_T, EDATA_T>) this).getAdjList().locals();
+        } else if (this instanceof ProjectedAdjListAdaptor) {
+            return ((ProjectedAdjListAdaptor<VID_T, EDATA_T>) this)
+                    .getProjectedAdjList()
+                    .iterable();
+        } else {
+            throw new IllegalStateException("not supported");
+        }
     }
 }

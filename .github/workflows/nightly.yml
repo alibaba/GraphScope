@@ -41,13 +41,20 @@ jobs:
     - name: Run Python Test
       if: matrix.os == 'ubuntu-20.04'
       env:
-        FULL-TEST-SUITE: ON
+        FULL_TEST_SUITE: ON
         GS_TEST_DIR: ${{ github.workspace }}/gstest
       run: |
         # download dataset
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
         # run test
         make unittest
+
+    - name: Upload Coverage
+      uses: codecov/codecov-action@v2
+      if: matrix.os == 'ubuntu-20.04'
+      with:
+        file: ./python/coverage.xml
+        fail_ci_if_error: true
 
   build-gss-image:
     if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}

@@ -29,7 +29,7 @@ __all__ = ["is_simple_path"]
 
 @project_to_simple
 @not_compatible_for("arrow_property")
-def is_simple_path(G, nodes):
+def is_simple_path(graph, nodes):
     """Returns True if and only if `nodes` form a simple path in `G`.
 
     A *simple path* in a graph is a nonempty sequence of nodes in which
@@ -38,6 +38,7 @@ def is_simple_path(G, nodes):
 
     Parameters
     ----------
+    graph (:class:`graphscope.Graph`): A simple graph.
     nodes : list
         A list of one or more nodes in the graph `G`.
 
@@ -74,15 +75,20 @@ def is_simple_path(G, nodes):
 
     Examples
     --------
-    >>> G = nx.cycle_graph(4)
-    >>> nx.is_simple_path(G, [2, 3, 0])
-    True
-    >>> nx.is_simple_path(G, [0, 2])
-    False
+    .. code:: python
 
+        >>> import graphscope
+        >>> from graphscope.dataset import load_p2p_network
+        >>> sess = graphscope.session(cluster_type="hosts", mode="eager")
+        >>> g = load_p2p_network(sess)
+        >>> # project to a simple graph (if needed)
+        >>> pg = g.project(vertices={"host": ["id"]}, edges={"connect": ["dist"]})
+        >>> c = graphscope.is_simple_path(pg, [2, 3, 8])
+        >>> print(c)
+        >>> sess.close()
     """
     if isinstance(nodes, list):
         n1json = json.dumps(nodes)
-        ctx = AppAssets(algo="is_simple_path", context="tensor")(G, n1json)
+        ctx = AppAssets(algo="is_simple_path", context="tensor")(graph, n1json)
         return ctx.to_numpy("r", axis=0)[0]
     raise ValueError("input nodes is not a list object!")

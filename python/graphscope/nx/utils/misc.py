@@ -17,10 +17,11 @@
 #
 
 
+import functools
 import json
 
 import networkx.utils.misc
-from networkx.exception import NetworkXError
+import numpy as np
 
 from graphscope.client.session import get_session_by_id
 from graphscope.framework import dag_utils
@@ -67,32 +68,28 @@ def parse_ret_as_dict(func):
     return wrapper
 
 
-def check_node_is_legal(n):
-    """check the node is legal or not.
-
-    Parameters:
-    -----------
-    n: node
-
-    Raises
-    ------
-    NetworkXError
-        If the type of node is illegal.
-    """
-
-    def check_node_type(n):
-        if not isinstance(n, (int, float, str, bool, type(None))):
-            raise NetworkXError(
-                "Node %s is illegal. Type of node must be one of [int, float, str, bool, NoneType], but got %s"
-                % (n, type(n))
-            )
-
-    if isinstance(n, tuple):
-        if len(n) != 2 or not isinstance(n[0], str):
-            raise NetworkXError(
-                "Labeled node %s must be a 2-tuple and label must be str" % (n,)
-            )
+def clear_cache(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        g = args[0]
+        if func.__name__ in (
+            "add_node",
+            "add_edge",
+            "add_nodes_from",
+            "add_edges_from",
+            "add_weighted_edges_from",
+        ):
+            g._clear_removing_cache()
+        elif func.__name__ in (
+            "remove_node",
+            "remove_edge",
+            "remove_nodes_from",
+            "remove_edges_from",
+        ):
+            g._clear_adding_cache()
         else:
-            check_node_type(n[1])
-    else:
-        check_node_type(n)
+            g._clear_removing_cache()
+            g._clear_adding_cache()
+        return func(*args, **kwargs)
+
+    return wrapper

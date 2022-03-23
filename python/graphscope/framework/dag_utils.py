@@ -101,7 +101,7 @@ def create_graph(session_id, graph_type, inputs=None, **kwargs):
 
     Args:
         session_id (str): Refer to session that the graph will be create on.
-        graph_type (:enum:`GraphType`): GraphType defined in proto.types.proto.
+        graph_type (:class:`GraphType`): GraphType defined in proto.types.proto.
         **kwargs: additional properties respect to different `graph_type`.
 
     Returns:
@@ -146,14 +146,14 @@ def create_loader(vertex_or_edge_label_list):
     """
     if not isinstance(vertex_or_edge_label_list, list):
         vertex_or_edge_label_list = [vertex_or_edge_label_list]
-    attr = attr_value_pb2.AttrValue()
-    attr.list.func.extend([label.attr() for label in vertex_or_edge_label_list])
-    config = {}
-    config[types_pb2.ARROW_PROPERTY_DEFINITION] = attr
+    large_attr = attr_value_pb2.LargeAttrValue()
+    for label in vertex_or_edge_label_list:
+        large_attr.chunk_list.items.extend(label.attr())
     op = Operation(
         vertex_or_edge_label_list[0]._session_id,
         types_pb2.DATA_SOURCE,
-        config=config,
+        config={},
+        large_attr=large_attr,
         output_types=types_pb2.NULL_OUTPUT,
     )
     return op
@@ -286,7 +286,7 @@ def arrow_to_dynamic(graph):
     return op
 
 
-def modify_edges(graph, modify_type, edges):
+def modify_edges(graph, modify_type, edges, attr={}, weight=None):
     """Create modify edges operation for nx graph.
 
     Args:
@@ -301,17 +301,20 @@ def modify_edges(graph, modify_type, edges):
     config = {}
     config[types_pb2.GRAPH_NAME] = utils.s_to_attr(graph.key)
     config[types_pb2.MODIFY_TYPE] = utils.modify_type_to_attr(modify_type)
-    config[types_pb2.EDGES] = utils.list_str_to_attr(edges)
+    config[types_pb2.PROPERTIES] = utils.s_to_attr(json.dumps(attr))
+    if weight:
+        config[types_pb2.EDGE_KEY] = utils.s_to_attr(weight)
     op = Operation(
         graph.session_id,
         types_pb2.MODIFY_EDGES,
         config=config,
+        large_attr=utils.bytes_to_large_attr(edges),
         output_types=types_pb2.GRAPH,
     )
     return op
 
 
-def modify_vertices(graph, modify_type, vertices):
+def modify_vertices(graph, modify_type, vertices, attr={}):
     """Create modify vertices operation for nx graph.
 
     Args:
@@ -326,11 +329,12 @@ def modify_vertices(graph, modify_type, vertices):
     config = {}
     config[types_pb2.GRAPH_NAME] = utils.s_to_attr(graph.key)
     config[types_pb2.MODIFY_TYPE] = utils.modify_type_to_attr(modify_type)
-    config[types_pb2.NODES] = utils.list_str_to_attr(vertices)
+    config[types_pb2.PROPERTIES] = utils.s_to_attr(json.dumps(attr))
     op = Operation(
         graph.session_id,
         types_pb2.MODIFY_VERTICES,
         config=config,
+        large_attr=utils.bytes_to_large_attr(vertices),
         output_types=types_pb2.GRAPH,
     )
     return op
@@ -390,9 +394,9 @@ def report_graph(
         config[types_pb2.DEFAULT_LABEL_ID] = utils.i_to_attr(graph._default_label_id)
 
     if node is not None:
-        config[types_pb2.NODE] = utils.s_to_attr(node)
+        config[types_pb2.NODE] = utils.bytes_to_attr(node)
     if edge is not None:
-        config[types_pb2.EDGE] = utils.s_to_attr(edge)
+        config[types_pb2.EDGE] = utils.bytes_to_attr(edge)
     if fid is not None:
         config[types_pb2.FID] = utils.i_to_attr(fid)
     if lid is not None:
@@ -433,30 +437,24 @@ def project_arrow_property_graph(graph, vertex_collections, edge_collections):
 
 def project_arrow_property_graph_to_simple(
     graph,
-    v_label_id=None,
-    v_prop_id=None,
-    e_label_id=None,
-    e_prop_id=None,
-    v_data_type=None,
-    e_data_type=None,
-    oid_type=None,
-    vid_type=None,
+    v_prop,
+    e_prop,
 ):
     """Project arrow property graph to a simple graph.
 
     Args:
-        graph (:class:`Graph`): Source graph, which type should be ARROW_PROPERTY
-        dst_graph_key (str): The key of projected graph.
-        v_label_id (int): Label id of vertex used to project.
-        v_prop_id (int): Property id of vertex used to project.
-        e_label_id (int): Label id of edge used to project.
-        e_prop_id (int): Property id of edge used to project.
+        graph (:class:`graphscope.Graph`): Source graph, which type should be ARROW_PROPERTY
+        v_prop (str): The node attribute key to project.
+        e_prop (str): The edge attribute key to project.
 
     Returns:
-        An op to project `graph`, results in a simple ARROW_PROJECTED graph.
+        Operation to project a property graph, results in a simple ARROW_PROJECTED graph.
     """
     check_argument(graph.graph_type == graph_def_pb2.ARROW_PROPERTY)
-    config = {}
+    config = {
+        types_pb2.V_PROP_KEY: utils.s_to_attr(v_prop),
+        types_pb2.E_PROP_KEY: utils.s_to_attr(e_prop),
+    }
     op = Operation(
         graph.session_id,
         types_pb2.PROJECT_TO_SIMPLE,
@@ -713,9 +711,9 @@ def create_subgraph(graph, nodes=None, edges=None):
         types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
     }
     if nodes is not None:
-        config[types_pb2.NODES] = utils.list_str_to_attr(nodes)
+        config[types_pb2.NODES] = utils.bytes_to_attr(nodes)
     if edges is not None:
-        config[types_pb2.EDGES] = utils.list_str_to_attr(edges)
+        config[types_pb2.EDGES] = utils.bytes_to_attr(edges)
 
     op = Operation(
         graph.session_id,

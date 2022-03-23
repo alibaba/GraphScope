@@ -13,9 +13,9 @@
  */
 package com.alibaba.maxgraph.servers;
 
+import com.alibaba.maxgraph.common.RoleType;
 import com.alibaba.maxgraph.common.config.CommonConfig;
 import com.alibaba.maxgraph.common.config.Configs;
-import com.alibaba.maxgraph.common.RoleType;
 
 import java.io.Closeable;
 
@@ -40,6 +40,9 @@ public abstract class NodeBase implements Closeable {
     }
 
     protected Configs reConfig(Configs configs) {
+        int nettyThreadCount = CommonConfig.NETTY_THREAD_COUNT.get(configs);
+        System.setProperty(
+                "io.grpc.netty.shaded.io.netty.eventLoopThreads", String.valueOf(nettyThreadCount));
         int storeCount = CommonConfig.STORE_NODE_COUNT.get(configs);
         int ingestorCount = CommonConfig.INGESTOR_NODE_COUNT.get(configs);
         return Configs.newBuilder(configs)

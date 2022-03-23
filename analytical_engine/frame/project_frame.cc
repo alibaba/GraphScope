@@ -24,7 +24,8 @@
 #include "core/fragment/dynamic_projected_fragment.h"
 #include "core/object/fragment_wrapper.h"
 #include "core/server/rpc_utils.h"
-#include "proto/attr_value.pb.h"
+#include "core/utils/fragment_traits.h"
+#include "proto/graphscope/proto/attr_value.pb.h"
 
 #if !defined(_PROJECTED_GRAPH_TYPE)
 #error "_PROJECTED_GRAPH_TYPE is undefined"
@@ -132,7 +133,7 @@ class ProjectSimpleFrame<
 #ifdef NETWORKX
 template <typename VDATA_T, typename EDATA_T>
 class ProjectSimpleFrame<gs::DynamicProjectedFragment<VDATA_T, EDATA_T>> {
-  using fragment_t = gs::DynamicFragment;
+  using fragment_t = DynamicFragment;
   using projected_fragment_t = gs::DynamicProjectedFragment<VDATA_T, EDATA_T>;
 
  public:

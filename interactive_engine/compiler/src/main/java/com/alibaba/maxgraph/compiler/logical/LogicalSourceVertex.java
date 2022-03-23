@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,13 +24,14 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class LogicalSourceVertex extends LogicalVertex {
-    private static final long SOURCE_VALUE_SIZE = 12; //int label + long id
+    private static final long SOURCE_VALUE_SIZE = 12; // int label + long id
 
     public LogicalSourceVertex(int id, ProcessorSourceFunction processorSourceFunction) {
         this(id, processorSourceFunction, true);
     }
 
-    public LogicalSourceVertex(int id, ProcessorSourceFunction processorSourceFunction, boolean propLocalFlag) {
+    public LogicalSourceVertex(
+            int id, ProcessorSourceFunction processorSourceFunction, boolean propLocalFlag) {
         super(id, processorSourceFunction, propLocalFlag);
     }
 
@@ -46,24 +47,27 @@ public class LogicalSourceVertex extends LogicalVertex {
         long idCount = argumentBuilder.getLongValueListCount();
         switch (sourceFunction.getOperatorType()) {
             case V:
-            case E: {
-                if (idCount > 0) {
-                    estimatedNumRecords = idCount;
-                } else {
-                    estimatedNumRecords = statistics.getLabelEdgeCount(
-                            argumentBuilder
-                                    .getIntValueListList()
-                                    .stream()
-                                    .map(v -> schema.getElement(v).getLabel())
-                                    .collect(Collectors.toList()));
+            case E:
+                {
+                    if (idCount > 0) {
+                        estimatedNumRecords = idCount;
+                    } else {
+                        estimatedNumRecords =
+                                statistics.getLabelEdgeCount(
+                                        argumentBuilder.getIntValueListList().stream()
+                                                .map(v -> schema.getElement(v).getLabel())
+                                                .collect(Collectors.toList()));
+                    }
+                    List<Message.LogicalCompare> logicalCompareList =
+                            sourceFunction.getLogicalCompareList();
+                    estimatedNumRecords *= Math.pow(0.5, logicalCompareList.size());
+                    break;
                 }
-                List<Message.LogicalCompare> logicalCompareList = sourceFunction.getLogicalCompareList();
-                estimatedNumRecords *= Math.pow(0.5, logicalCompareList.size());
-                break;
-            }
-            default: {
-                throw new IllegalArgumentException(processorFunction.getOperatorType().toString());
-            }
+            default:
+                {
+                    throw new IllegalArgumentException(
+                            processorFunction.getOperatorType().toString());
+                }
         }
         super.estimatedValueSize = SOURCE_VALUE_SIZE;
     }

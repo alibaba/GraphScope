@@ -16,9 +16,11 @@
 # limitations under the License.
 #
 
-# forward
 import networkx.exception as exception
 import networkx.testing as testing
+
+# forward
+from networkx import __version__
 from networkx.exception import *
 
 from graphscope.nx.classes import *

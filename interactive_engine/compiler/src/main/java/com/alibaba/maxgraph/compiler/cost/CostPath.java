@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,6 +16,7 @@
 package com.alibaba.maxgraph.compiler.cost;
 
 import com.google.common.collect.Lists;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -50,9 +51,10 @@ public class CostPath {
         return pathList.get(pathList.size() - 1);
     }
 
-    public double computeCost(List<Double> stepCountList,
-                              List<Double> shuffleThresholdList,
-                              CostMappingManager costMappingManager) {
+    public double computeCost(
+            List<Double> stepCountList,
+            List<Double> shuffleThresholdList,
+            CostMappingManager costMappingManager) {
         double totalCost = 0.0;
         int stepIndex = 0;
         for (int i = 0; i < pathList.size(); i++) {
@@ -60,14 +62,25 @@ public class CostPath {
             RowFieldManager parentManager = fieldManager.getParent();
             double stepTotal = 0.0;
             for (String field : fieldManager.getRowField().getFieldList()) {
-                if (null == parentManager || !parentManager.getRowField().getFieldList().contains(field)) {
+                if (null == parentManager
+                        || !parentManager.getRowField().getFieldList().contains(field)) {
                     String parentValue = costMappingManager.getValueParent(field);
-                    stepTotal += (stepCountList.get(stepIndex) * costMappingManager.getComputeCost(
-                            Pair.of(StringUtils.isEmpty(parentValue) ? field : parentValue, field))) *
-                            (StringUtils.isEmpty(parentValue) ? 1.0 : shuffleThresholdList.get(stepIndex));
+                    stepTotal +=
+                            (stepCountList.get(stepIndex)
+                                            * costMappingManager.getComputeCost(
+                                                    Pair.of(
+                                                            StringUtils.isEmpty(parentValue)
+                                                                    ? field
+                                                                    : parentValue,
+                                                            field)))
+                                    * (StringUtils.isEmpty(parentValue)
+                                            ? 1.0
+                                            : shuffleThresholdList.get(stepIndex));
                 }
                 if (i < pathList.size() - 1) {
-                    stepTotal += (stepCountList.get(stepIndex) * costMappingManager.getValueNetworkCost(field));
+                    stepTotal +=
+                            (stepCountList.get(stepIndex)
+                                    * costMappingManager.getValueNetworkCost(field));
                 }
             }
             totalCost += stepTotal;

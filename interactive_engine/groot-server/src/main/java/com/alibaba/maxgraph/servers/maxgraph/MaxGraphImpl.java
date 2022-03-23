@@ -13,6 +13,20 @@
  */
 package com.alibaba.maxgraph.servers.maxgraph;
 
+import static java.util.stream.Collectors.*;
+
+import com.alibaba.graphscope.groot.discovery.MaxGraphNode;
+import com.alibaba.graphscope.groot.discovery.NodeDiscovery;
+import com.alibaba.graphscope.groot.frontend.WriteSessionGenerator;
+import com.alibaba.graphscope.groot.frontend.write.*;
+import com.alibaba.graphscope.groot.meta.MetaService;
+import com.alibaba.graphscope.groot.operation.EdgeId;
+import com.alibaba.graphscope.groot.operation.LabelId;
+import com.alibaba.graphscope.groot.operation.OperationType;
+import com.alibaba.graphscope.groot.operation.VertexId;
+import com.alibaba.graphscope.groot.schema.EdgeKind;
+import com.alibaba.maxgraph.common.RoleType;
+import com.alibaba.maxgraph.common.util.PartitionUtils;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.compiler.api.schema.SchemaFetcher;
 import com.alibaba.maxgraph.frontendservice.RemoteProxy;
@@ -22,20 +36,9 @@ import com.alibaba.maxgraph.sdkcommon.graph.ElementId;
 import com.alibaba.maxgraph.structure.Edge;
 import com.alibaba.maxgraph.structure.Vertex;
 import com.alibaba.maxgraph.structure.graph.MaxGraph;
-import com.alibaba.graphscope.groot.meta.MetaService;
-import com.alibaba.graphscope.groot.discovery.MaxGraphNode;
-import com.alibaba.graphscope.groot.discovery.NodeDiscovery;
-import com.alibaba.maxgraph.common.RoleType;
-import com.alibaba.graphscope.groot.operation.EdgeId;
-import com.alibaba.graphscope.groot.operation.LabelId;
-import com.alibaba.graphscope.groot.operation.OperationType;
-import com.alibaba.graphscope.groot.operation.VertexId;
-import com.alibaba.graphscope.groot.schema.EdgeKind;
-import com.alibaba.maxgraph.common.util.PartitionUtils;
-import com.alibaba.graphscope.groot.frontend.WriteSessionGenerator;
-import com.alibaba.graphscope.groot.frontend.write.*;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.tinkerpop.gremlin.structure.Direction;
@@ -46,8 +49,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-
-import static java.util.stream.Collectors.*;
 
 public class MaxGraphImpl implements MaxGraph, NodeDiscovery.Listener {
     private static final Logger logger = LoggerFactory.getLogger(MaxGraphImpl.class);

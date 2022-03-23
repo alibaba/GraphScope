@@ -28,7 +28,7 @@
 #include <vector>
 
 #include "arrow/api.h"
-#include "boost/leaf/all.hpp"
+#include "boost/leaf.hpp"
 
 #include "vineyard/common/util/json.h"
 #include "vineyard/graph/fragment/property_graph_types.h"

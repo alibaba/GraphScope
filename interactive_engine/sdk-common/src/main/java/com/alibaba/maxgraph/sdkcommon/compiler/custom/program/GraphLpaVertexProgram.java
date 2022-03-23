@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,6 +16,7 @@
 package com.alibaba.maxgraph.sdkcommon.compiler.custom.program;
 
 import com.google.common.collect.Lists;
+
 import org.apache.tinkerpop.gremlin.process.computer.*;
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
@@ -27,7 +28,6 @@ public class GraphLpaVertexProgram implements CustomProgram, VertexProgram {
     public static final String TARGET_LABEL = "label";
     public static final String SEED_LABEL = "id";
     public static final int MAX_ITERATION = 20;
-
 
     private int maxIterations = MAX_ITERATION;
     private String property = TARGET_LABEL;
@@ -45,12 +45,12 @@ public class GraphLpaVertexProgram implements CustomProgram, VertexProgram {
         return this;
     }
 
-    public GraphLpaVertexProgram edges(String... edgeLabels){
+    public GraphLpaVertexProgram edges(String... edgeLabels) {
         this.edgeLabels = Lists.newArrayList(edgeLabels);
         return this;
     }
 
-    public GraphLpaVertexProgram direction(Direction direction){
+    public GraphLpaVertexProgram direction(Direction direction) {
         this.direction = direction;
         return this;
     }
@@ -63,8 +63,7 @@ public class GraphLpaVertexProgram implements CustomProgram, VertexProgram {
         return this;
     }
 
-
-    public GraphLpaVertexProgram build(){
+    public GraphLpaVertexProgram build() {
         return this;
     }
 
@@ -76,21 +75,23 @@ public class GraphLpaVertexProgram implements CustomProgram, VertexProgram {
         return maxIterations;
     }
 
-    public List<String> getEdgeLabels() { return edgeLabels; }
+    public List<String> getEdgeLabels() {
+        return edgeLabels;
+    }
 
-    public Direction getDirection() { return direction; }
+    public Direction getDirection() {
+        return direction;
+    }
 
-    public String getSeed() { return seed; }
-
-    @Override
-    public void setup(Memory memory) {
-
+    public String getSeed() {
+        return seed;
     }
 
     @Override
-    public void execute(Vertex vertex, Messenger messenger, Memory memory) {
+    public void setup(Memory memory) {}
 
-    }
+    @Override
+    public void execute(Vertex vertex, Messenger messenger, Memory memory) {}
 
     @Override
     public boolean terminate(Memory memory) {

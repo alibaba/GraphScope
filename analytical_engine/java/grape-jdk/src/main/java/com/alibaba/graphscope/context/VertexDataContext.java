@@ -19,15 +19,22 @@ package com.alibaba.graphscope.context;
 import com.alibaba.fastffi.FFITypeFactory;
 import com.alibaba.graphscope.context.ffi.FFIVertexDataContext;
 import com.alibaba.graphscope.ds.GSVertexArray;
-import com.alibaba.graphscope.fragment.EdgecutFragment;
+import com.alibaba.graphscope.fragment.IFragment;
 import com.alibaba.graphscope.utils.CppClassName;
 import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Objects;
 
-public abstract class VertexDataContext<FRAG_T extends EdgecutFragment, DATA_T> {
+public abstract class VertexDataContext<FRAG_T extends IFragment, DATA_T> {
+    private static Logger logger = LoggerFactory.getLogger(VertexDataContext.class.getName());
+
     private long ffiContextAddress;
     private FFIVertexDataContext<FRAG_T, DATA_T> ffiVertexDataContext;
     private FFIVertexDataContext.Factory factory;
+    private Class<? extends DATA_T> dataClass;
 
     /**
      * Must be called by jni, to create ffi context.
@@ -36,20 +43,21 @@ public abstract class VertexDataContext<FRAG_T extends EdgecutFragment, DATA_T> 
      * @param dataClass the class obj for the data type.
      * @param includeOuter whether to include outer vertices or not.
      */
-    protected void createFFIContext(FRAG_T fragment, Class<?> dataClass, boolean includeOuter) {
-        // String fragmentTemplateStr = FFITypeFactory.getFFITypeName(fragment.getClass(), true);
-        String fragmentTemplateStr = FFITypeFactoryhelper.getForeignName(fragment);
-        System.out.println("fragment: " + fragmentTemplateStr);
+    protected void createFFIContext(
+            FRAG_T fragment, Class<? extends DATA_T> dataClass, boolean includeOuter) {
+        String fragmentTemplateStr = FFITypeFactoryhelper.getForeignName(fragment.getFFIPointer());
+        logger.info("fragment: " + fragmentTemplateStr);
+        this.dataClass = dataClass;
         String contextName =
                 FFITypeFactoryhelper.makeParameterize(
                         CppClassName.VERTEX_DATA_CONTEXT,
                         fragmentTemplateStr,
                         FFITypeFactoryhelper.javaType2CppType(dataClass));
-        System.out.println("context name: " + contextName);
+        logger.info("context name: " + contextName);
         factory = FFITypeFactory.getFactory(FFIVertexDataContext.class, contextName);
-        ffiVertexDataContext = factory.create(fragment, includeOuter);
+        ffiVertexDataContext = factory.create(fragment.getFFIPointer(), includeOuter);
         ffiContextAddress = ffiVertexDataContext.getAddress();
-        System.out.println(contextName + ", " + ffiContextAddress);
+        logger.info(contextName + ", " + ffiContextAddress);
     }
 
     public GSVertexArray<DATA_T> data() {
@@ -57,5 +65,9 @@ public abstract class VertexDataContext<FRAG_T extends EdgecutFragment, DATA_T> 
             return null;
         }
         return ffiVertexDataContext.data();
+    }
+
+    public Class<? extends DATA_T> getDataClass() {
+        return dataClass;
     }
 }

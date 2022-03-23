@@ -20,8 +20,8 @@ limitations under the License.
 #include <iostream>
 #include <unordered_map>
 
-#include <boost/leaf/all.hpp>
 #include <boost/dynamic_bitset.hpp>
+#include <boost/leaf.hpp>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

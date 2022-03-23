@@ -16,12 +16,12 @@
 package com.alibaba.graphscope.groot.coordinator;
 
 import com.alibaba.maxgraph.proto.groot.*;
+
 import io.grpc.stub.StreamObserver;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class BackupService extends BackupGrpc.BackupImplBase {
     private BackupManager backupManager;
@@ -31,10 +31,15 @@ public class BackupService extends BackupGrpc.BackupImplBase {
     }
 
     @Override
-    public void createNewBackup(CreateNewBackupRequest request, StreamObserver<CreateNewBackupResponse> responseObserver) {
+    public void createNewBackup(
+            CreateNewBackupRequest request,
+            StreamObserver<CreateNewBackupResponse> responseObserver) {
         try {
             int newGlobalBackupId = this.backupManager.createNewBackup();
-            responseObserver.onNext(CreateNewBackupResponse.newBuilder().setGlobalBackupId(newGlobalBackupId).build());
+            responseObserver.onNext(
+                    CreateNewBackupResponse.newBuilder()
+                            .setGlobalBackupId(newGlobalBackupId)
+                            .build());
             responseObserver.onCompleted();
         } catch (IOException e) {
             responseObserver.onError(e);
@@ -42,7 +47,8 @@ public class BackupService extends BackupGrpc.BackupImplBase {
     }
 
     @Override
-    public void deleteBackup(DeleteBackupRequest request, StreamObserver<DeleteBackupResponse> responseObserver) {
+    public void deleteBackup(
+            DeleteBackupRequest request, StreamObserver<DeleteBackupResponse> responseObserver) {
         try {
             this.backupManager.deleteBackup(request.getGlobalBackupId());
             responseObserver.onNext(DeleteBackupResponse.newBuilder().build());
@@ -53,7 +59,9 @@ public class BackupService extends BackupGrpc.BackupImplBase {
     }
 
     @Override
-    public void purgeOldBackups(PurgeOldBackupsRequest request, StreamObserver<PurgeOldBackupsResponse> responseObserver) {
+    public void purgeOldBackups(
+            PurgeOldBackupsRequest request,
+            StreamObserver<PurgeOldBackupsResponse> responseObserver) {
         try {
             this.backupManager.purgeOldBackups(request.getKeepAliveNumber());
             responseObserver.onNext(PurgeOldBackupsResponse.newBuilder().build());
@@ -64,7 +72,9 @@ public class BackupService extends BackupGrpc.BackupImplBase {
     }
 
     @Override
-    public void restoreFromBackup(RestoreFromBackupRequest request, StreamObserver<RestoreFromBackupResponse> responseObserver) {
+    public void restoreFromBackup(
+            RestoreFromBackupRequest request,
+            StreamObserver<RestoreFromBackupResponse> responseObserver) {
         try {
             this.backupManager.restoreFromBackup(
                     request.getGlobalBackupId(),
@@ -78,7 +88,8 @@ public class BackupService extends BackupGrpc.BackupImplBase {
     }
 
     @Override
-    public void verifyBackup(VerifyBackupRequest request, StreamObserver<VerifyBackupResponse> responseObserver) {
+    public void verifyBackup(
+            VerifyBackupRequest request, StreamObserver<VerifyBackupResponse> responseObserver) {
         try {
             this.backupManager.verifyBackup(request.getGlobalBackupId());
             responseObserver.onNext(VerifyBackupResponse.newBuilder().build());
@@ -89,14 +100,16 @@ public class BackupService extends BackupGrpc.BackupImplBase {
     }
 
     @Override
-    public void getBackupInfo(GetBackupInfoRequest request, StreamObserver<GetBackupInfoResponse> responseObserver) {
+    public void getBackupInfo(
+            GetBackupInfoRequest request, StreamObserver<GetBackupInfoResponse> responseObserver) {
         try {
             List<BackupInfo> infoList = this.backupManager.getBackupInfoList();
             List<BackupInfoPb> infoPbList = new ArrayList<>(infoList.size());
             for (BackupInfo info : this.backupManager.getBackupInfoList()) {
                 infoPbList.add(info.toProto());
             }
-            responseObserver.onNext(GetBackupInfoResponse.newBuilder().addAllBackupInfoList(infoPbList).build());
+            responseObserver.onNext(
+                    GetBackupInfoResponse.newBuilder().addAllBackupInfoList(infoPbList).build());
             responseObserver.onCompleted();
         } catch (Exception e) {
             responseObserver.onError(e);

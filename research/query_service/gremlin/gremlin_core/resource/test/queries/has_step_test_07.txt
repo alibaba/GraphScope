@@ -1,1 +1,0 @@
-g.V().has("age", P.without(27))

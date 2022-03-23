@@ -16,7 +16,15 @@
 
 package com.alibaba.graphscope.annotation;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * Defines the configuration for code generation.
+ */
 public class GraphConfig {
+
+    private static Logger logger = LoggerFactory.getLogger(GraphConfig.class.getName());
 
     final String vidType;
     final String oidType;
@@ -50,7 +58,7 @@ public class GraphConfig {
         this.cppOidType = cppOidType;
         this.cppVdataType = cppVdataType;
         this.cppEdataType = cppEdataType;
-        System.out.println(
+        logger.info(
                 "init graph config with: "
                         + this.oidType
                         + " "

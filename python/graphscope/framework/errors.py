@@ -45,14 +45,25 @@ __all__ = [
 ]
 
 
+class _ReprableString(str):
+    """A special class that prevents `repr()` adding extra `""` to `str`.
+
+    It is used to optimize the user experiences to preseve `\n` when printing exceptions.
+    """
+
+    def __repr__(self) -> str:
+        return self
+
+
 class GSError(Exception):
     """Base class of GraphScope errors."""
 
     def __init__(self, message=None, detail=None):
-        message = repr(message) if message is not None else None
+        if message is not None and not isinstance(message, str):
+            message = repr(message)
         if isinstance(detail, op_def_pb2.OpDef):
             message = f'{message or ""} op={detail}'
-        super().__init__(message)
+        super().__init__(_ReprableString(message))
 
     def __str__(self):
         return self.args[0] or ""

@@ -13,19 +13,21 @@
  */
 package com.alibaba.maxgraph.server.query;
 
+import com.alibaba.maxgraph.cache.CacheFactory;
 import com.alibaba.maxgraph.compiler.api.schema.GraphElement;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.proto.GremlinQuery;
 import com.alibaba.maxgraph.sdk.exception.ExceptionHolder;
 import com.alibaba.maxgraph.sdkcommon.graph.CompositeId;
 import com.alibaba.maxgraph.sdkcommon.graph.ElementId;
-import com.alibaba.maxgraph.cache.CacheFactory;
-import com.alibaba.maxgraph.structure.Vertex;
 import com.alibaba.maxgraph.structure.MxVertex;
+import com.alibaba.maxgraph.structure.Vertex;
 import com.alibaba.maxgraph.structure.graph.TinkerMaxGraph;
 import com.google.common.cache.Cache;
 import com.google.common.collect.Maps;
+
 import io.grpc.stub.StreamObserver;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

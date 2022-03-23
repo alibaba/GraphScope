@@ -13,21 +13,28 @@
  */
 package com.alibaba.graphscope.groot.store;
 
+import com.alibaba.graphscope.groot.coordinator.SnapshotInfo;
 import com.alibaba.graphscope.groot.meta.MetaService;
+import com.alibaba.graphscope.groot.metrics.AvgMetric;
+import com.alibaba.graphscope.groot.metrics.MetricsAgent;
+import com.alibaba.graphscope.groot.metrics.MetricsCollector;
 import com.alibaba.graphscope.groot.operation.StoreDataBatch;
 import com.alibaba.maxgraph.common.config.CommonConfig;
 import com.alibaba.maxgraph.common.config.Configs;
 import com.alibaba.maxgraph.common.util.ThreadFactoryUtils;
-import com.alibaba.graphscope.groot.coordinator.SnapshotInfo;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -35,8 +42,16 @@ import java.util.concurrent.atomic.AtomicReference;
  * store engine in the order of (snapshotId, queueId). WriterAgent will also send the ingest
  * progress to the SnapshotManager.
  */
-public class WriterAgent {
+public class WriterAgent implements MetricsAgent {
     private static final Logger logger = LoggerFactory.getLogger(WriterAgent.class);
+
+    public static final String POLL_LATENCY_MAX_MS = "poll.latency.max.ms";
+    public static final String POLL_LATENCY_PER_SECOND_MS = "poll.latency.per.second.ms";
+    public static final String STORE_BUFFER_BATCH_COUNT = "store.buffer.batch.count";
+    public static final String STORE_QUEUE_BATCH_COUNT = "store.queue.batch.count";
+    public static final String STORE_WRITE_PER_SECOND = "store.write.per.second";
+    public static final String STORE_WRITE_TOTAL = "store.write.total";
+    public static final String BUFFER_WRITE_PER_SECOND_MS = "buffer.write.per.second.ms";
 
     private Configs configs;
     private int storeId;
@@ -55,11 +70,23 @@ public class WriterAgent {
     private List<Long> consumedQueueOffsets;
     private Thread consumeThread;
 
+    private volatile long lastUpdateTime;
+    private volatile long totalWrite;
+    private volatile long writePerSecond;
+    private volatile long lastUpdateWrite;
+    private AtomicLong maxPollLatencyNano;
+    private volatile long maxPollLatencyMs;
+    private volatile long lastUpdatePollLatencyNano;
+    private volatile long totalPollLatencyNano;
+    private volatile long pollLatencyPerSecondMs;
+    private AvgMetric bufferWritePerSecondMetric;
+
     public WriterAgent(
             Configs configs,
             StoreService storeService,
             MetaService metaService,
-            SnapshotCommitter snapshotCommitter) {
+            SnapshotCommitter snapshotCommitter,
+            MetricsCollector metricsCollector) {
         this.configs = configs;
         this.storeId = CommonConfig.NODE_IDX.get(configs);
         this.queueCount = metaService.getQueueCount();
@@ -67,6 +94,8 @@ public class WriterAgent {
         this.metaService = metaService;
         this.snapshotCommitter = snapshotCommitter;
         this.availSnapshotInfoRef = new AtomicReference<>();
+        initMetrics();
+        metricsCollector.register(this, () -> updateMetrics());
     }
 
     /** should be called once, before start */
@@ -135,20 +164,44 @@ public class WriterAgent {
      */
     public boolean writeStore(StoreDataBatch storeDataBatch) throws InterruptedException {
         int queueId = storeDataBatch.getQueueId();
+        long beforeOfferTime = System.nanoTime();
         boolean suc = this.bufferQueue.offerQueue(queueId, storeDataBatch);
+        long afterOfferTime = System.nanoTime();
+        this.bufferWritePerSecondMetric.add(afterOfferTime - beforeOfferTime);
         return suc;
+    }
+
+    public boolean writeStore2(List<StoreDataBatch> storeDataBatches) throws InterruptedException {
+        long beforeOfferTime = System.nanoTime();
+        for (StoreDataBatch storeDataBatch : storeDataBatches) {
+            int queueId = storeDataBatch.getQueueId();
+            if (!this.bufferQueue.offerQueue(queueId, storeDataBatch)) {
+                return false;
+            }
+        }
+        long afterOfferTime = System.nanoTime();
+        this.bufferWritePerSecondMetric.add(afterOfferTime - beforeOfferTime);
+        return true;
     }
 
     private void processBatches() {
         while (!shouldStop) {
             try {
+                long beforePollNano = System.nanoTime();
                 StoreDataBatch storeDataBatch = this.bufferQueue.poll();
+                long afterPollNano = System.nanoTime();
+                long pollNano = afterPollNano - beforePollNano;
+                this.totalPollLatencyNano += pollNano;
+                this.maxPollLatencyNano.updateAndGet(
+                        curMax -> (pollNano > curMax) ? pollNano : curMax);
                 if (storeDataBatch == null) {
                     continue;
                 }
                 long batchSnapshotId = storeDataBatch.getSnapshotId();
                 logger.debug("polled one batch [" + batchSnapshotId + "]");
                 boolean hasDdl = writeEngineWithRetry(storeDataBatch);
+                int writeCount = storeDataBatch.getSize();
+                this.totalWrite += writeCount;
                 if (this.consumeSnapshotId < batchSnapshotId) {
                     SnapshotInfo availSnapshotInfo = this.availSnapshotInfoRef.get();
                     long availDdlSnapshotId = availSnapshotInfo.getDdlSnapshotId();
@@ -226,5 +279,64 @@ public class WriterAgent {
             }
         }
         return false;
+    }
+
+    @Override
+    public void initMetrics() {
+        this.lastUpdateTime = System.nanoTime();
+        this.totalWrite = 0L;
+        this.writePerSecond = 0L;
+        this.lastUpdateWrite = 0L;
+        this.maxPollLatencyNano = new AtomicLong(0L);
+        this.maxPollLatencyMs = 0L;
+        this.lastUpdatePollLatencyNano = 0L;
+        this.totalPollLatencyNano = 0L;
+        this.pollLatencyPerSecondMs = 0L;
+        this.bufferWritePerSecondMetric = new AvgMetric();
+    }
+
+    private void updateMetrics() {
+        long currentTime = System.nanoTime();
+        long write = this.totalWrite;
+        long interval = currentTime - this.lastUpdateTime;
+        this.writePerSecond = 1000000000 * (write - this.lastUpdateWrite) / interval;
+        this.maxPollLatencyMs = this.maxPollLatencyNano.getAndSet(0L) / 1000000;
+        long pollLatencyNano = this.totalPollLatencyNano;
+        this.pollLatencyPerSecondMs =
+                1000 * (pollLatencyNano - this.lastUpdatePollLatencyNano) / interval;
+        this.bufferWritePerSecondMetric.update(interval);
+        this.lastUpdatePollLatencyNano = pollLatencyNano;
+        this.lastUpdateWrite = write;
+        this.lastUpdateTime = currentTime;
+    }
+
+    @Override
+    public Map<String, String> getMetrics() {
+        return new HashMap<String, String>() {
+            {
+                put(STORE_BUFFER_BATCH_COUNT, String.valueOf(bufferQueue.size()));
+                put(STORE_QUEUE_BATCH_COUNT, String.valueOf(bufferQueue.innerQueueSizes()));
+                put(POLL_LATENCY_PER_SECOND_MS, String.valueOf(pollLatencyPerSecondMs));
+                put(POLL_LATENCY_MAX_MS, String.valueOf(maxPollLatencyMs));
+                put(STORE_WRITE_PER_SECOND, String.valueOf(writePerSecond));
+                put(STORE_WRITE_TOTAL, String.valueOf(totalWrite));
+                put(
+                        BUFFER_WRITE_PER_SECOND_MS,
+                        String.valueOf((int) (1000 * bufferWritePerSecondMetric.getAvg())));
+            }
+        };
+    }
+
+    @Override
+    public String[] getMetricKeys() {
+        return new String[] {
+            STORE_BUFFER_BATCH_COUNT,
+            STORE_QUEUE_BATCH_COUNT,
+            POLL_LATENCY_MAX_MS,
+            POLL_LATENCY_PER_SECOND_MS,
+            STORE_WRITE_PER_SECOND,
+            STORE_WRITE_TOTAL,
+            BUFFER_WRITE_PER_SECOND_MS
+        };
     }
 }

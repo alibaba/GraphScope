@@ -24,8 +24,10 @@ import com.alibaba.maxgraph.common.cluster.InstanceConfig;
 import com.alibaba.maxgraph.compiler.exception.RetryGremlinException;
 import com.codahale.metrics.Timer;
 import com.google.common.collect.Lists;
+
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.FullHttpRequest;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.tinkerpop.gremlin.driver.MessageSerializer;
 import org.apache.tinkerpop.gremlin.driver.Tokens;
@@ -36,7 +38,6 @@ import org.apache.tinkerpop.gremlin.groovy.engine.GremlinExecutor;
 import org.apache.tinkerpop.gremlin.groovy.jsr223.TimedInterruptTimeoutException;
 import org.apache.tinkerpop.gremlin.process.traversal.Path;
 import org.apache.tinkerpop.gremlin.server.Context;
-import org.apache.tinkerpop.gremlin.server.ResponseHandlerContext;
 import org.apache.tinkerpop.gremlin.server.Settings;
 import org.apache.tinkerpop.gremlin.server.handler.Frame;
 import org.apache.tinkerpop.gremlin.server.handler.StateKey;
@@ -48,8 +49,6 @@ import org.apache.tinkerpop.gremlin.util.iterator.IteratorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.script.Bindings;
-import javax.script.SimpleBindings;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -59,6 +58,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
+
+import javax.script.Bindings;
+import javax.script.SimpleBindings;
 
 public abstract class AbstractMixedOpProcessor extends StandardOpProcessor {
     private static final long CHANNEL_WRITABLE_TIMEOUT = 10000;
@@ -80,8 +82,7 @@ public abstract class AbstractMixedOpProcessor extends StandardOpProcessor {
     protected void evalOpInternal(
             Context context,
             Supplier<GremlinExecutor> gremlinExecutorSupplier,
-            AbstractEvalOpProcessor.BindingSupplier bindingsSupplier)
-            throws OpProcessorException {
+            AbstractEvalOpProcessor.BindingSupplier bindingsSupplier) {
         final Timer.Context timerContext = evalOpTimer.time();
         final ChannelHandlerContext ctx = context.getChannelHandlerContext();
         final RequestMessage msg = context.getRequestMessage();
@@ -106,9 +107,9 @@ public abstract class AbstractMixedOpProcessor extends StandardOpProcessor {
 
         // timeout override
         final long seto =
-                args.containsKey(Tokens.ARGS_SCRIPT_EVAL_TIMEOUT)
-                        ? Long.parseLong(args.get(Tokens.ARGS_SCRIPT_EVAL_TIMEOUT).toString())
-                        : settings.scriptEvaluationTimeout;
+                args.containsKey(Tokens.ARGS_EVAL_TIMEOUT)
+                        ? Long.parseLong(args.get(Tokens.ARGS_EVAL_TIMEOUT).toString())
+                        : settings.evaluationTimeout;
 
         logger.info("Receive query=>" + script);
         if (StringUtils.isEmpty(script) || StringUtils.equalsIgnoreCase(script, "''")) {
@@ -156,19 +157,24 @@ public abstract class AbstractMixedOpProcessor extends StandardOpProcessor {
                             if (t instanceof TimedInterruptTimeoutException) {
                                 errorMessage =
                                         String.format(
-                                                "A timeout occurred within the script during evaluation of [%s] - consider increasing the limit given to TimedInterruptCustomizerProvider",
+                                                "A timeout occurred within the script during"
+                                                    + " evaluation of [%s] - consider increasing"
+                                                    + " the limit given to"
+                                                    + " TimedInterruptCustomizerProvider",
                                                 msg);
                                 logger.warn(errorMessage);
                                 ctx.writeAndFlush(
                                         ResponseMessage.build(msg)
                                                 .code(ResponseStatusCode.SERVER_ERROR_TIMEOUT)
                                                 .statusMessage(
-                                                        "Timeout during script evaluation triggered by TimedInterruptCustomizerProvider")
+                                                        "Timeout during script evaluation triggered"
+                                                            + " by TimedInterruptCustomizerProvider")
                                                 .create());
                             } else if (t instanceof TimeoutException) {
                                 errorMessage =
                                         String.format(
-                                                "Response evaluation exceeded the configured threshold for request [%s] - %s",
+                                                "Response evaluation exceeded the configured"
+                                                        + " threshold for request [%s] - %s",
                                                 msg, t.getMessage());
                                 logger.warn(errorMessage, t);
                                 ctx.writeAndFlush(
@@ -184,9 +190,7 @@ public abstract class AbstractMixedOpProcessor extends StandardOpProcessor {
                                         t);
                                 ctx.writeAndFlush(
                                         ResponseMessage.build(msg)
-                                                .code(
-                                                        ResponseStatusCode
-                                                                .SERVER_ERROR_SCRIPT_EVALUATION)
+                                                .code(ResponseStatusCode.SERVER_ERROR_EVALUATION)
                                                 .statusMessage(t.getMessage())
                                                 .create());
                             }
@@ -233,19 +237,24 @@ public abstract class AbstractMixedOpProcessor extends StandardOpProcessor {
                             if (tt instanceof TimedInterruptTimeoutException) {
                                 errorMessage =
                                         String.format(
-                                                "A timeout occurred within the script during evaluation of [%s] - consider increasing the limit given to TimedInterruptCustomizerProvider",
+                                                "A timeout occurred within the script during"
+                                                    + " evaluation of [%s] - consider increasing"
+                                                    + " the limit given to"
+                                                    + " TimedInterruptCustomizerProvider",
                                                 msg);
                                 logger.warn(errorMessage);
                                 ctx.writeAndFlush(
                                         ResponseMessage.build(msg)
                                                 .code(ResponseStatusCode.SERVER_ERROR_TIMEOUT)
                                                 .statusMessage(
-                                                        "Timeout during script evaluation triggered by TimedInterruptCustomizerProvider")
+                                                        "Timeout during script evaluation triggered"
+                                                            + " by TimedInterruptCustomizerProvider")
                                                 .create());
                             } else if (tt instanceof TimeoutException) {
                                 errorMessage =
                                         String.format(
-                                                "Response evaluation exceeded the configured threshold for request [%s] - %s",
+                                                "Response evaluation exceeded the configured"
+                                                        + " threshold for request [%s] - %s",
                                                 msg, t.getMessage());
                                 logger.warn(errorMessage, tt);
                                 ctx.writeAndFlush(
@@ -286,7 +295,7 @@ public abstract class AbstractMixedOpProcessor extends StandardOpProcessor {
             BindingSupplier bindingsSupplier,
             ChannelHandlerContext ctx) {
         return GremlinExecutor.LifeCycle.build()
-                .scriptEvaluationTimeoutOverride(0L)
+                .evaluationTimeoutOverride(0L)
                 .afterFailure(
                         (b, t) -> {
                             if (managedTransactionsForRequest)
@@ -311,9 +320,7 @@ public abstract class AbstractMixedOpProcessor extends StandardOpProcessor {
                                 logger.warn("query " + script + " fail.", e);
                                 ctx.writeAndFlush(
                                         ResponseMessage.build(msg)
-                                                .code(
-                                                        ResponseStatusCode
-                                                                .SERVER_ERROR_SCRIPT_EVALUATION)
+                                                .code(ResponseStatusCode.SERVER_ERROR_EVALUATION)
                                                 .statusMessage(e.getMessage())
                                                 .create());
                             }
@@ -330,7 +337,7 @@ public abstract class AbstractMixedOpProcessor extends StandardOpProcessor {
             BindingSupplier bindingsSupplier,
             ChannelHandlerContext ctx) {
         return GremlinExecutor.LifeCycle.build()
-                .scriptEvaluationTimeoutOverride(seto)
+                .evaluationTimeoutOverride(seto)
                 .afterFailure(
                         (b, t) -> {
                             if (managedTransactionsForRequest)
@@ -361,7 +368,8 @@ public abstract class AbstractMixedOpProcessor extends StandardOpProcessor {
                             } catch (InterruptedException var12) {
                                 logger.warn(
                                         String.format(
-                                                "Interruption during result iteration on request [%s].",
+                                                "Interruption during result iteration on request"
+                                                        + " [%s].",
                                                 msg),
                                         var12);
                                 err = var12.getMessage();
@@ -408,9 +416,8 @@ public abstract class AbstractMixedOpProcessor extends StandardOpProcessor {
     }
 
     @Override
-    protected void handleIterator(final ResponseHandlerContext rhc, final Iterator itty)
+    protected void handleIterator(final Context context, final Iterator itty)
             throws InterruptedException {
-        Context context = rhc.getContext();
         ChannelHandlerContext ctx = context.getChannelHandlerContext();
         RequestMessage msg = context.getRequestMessage();
         Settings settings = context.getSettings();
@@ -426,7 +433,7 @@ public abstract class AbstractMixedOpProcessor extends StandardOpProcessor {
                 attemptCommit(msg, context.getGraphManager(), settings.strictTransactionManagement);
             }
 
-            rhc.writeAndFlush(
+            ctx.writeAndFlush(
                     ResponseMessage.build(msg)
                             .code(ResponseStatusCode.NO_CONTENT)
                             .statusAttributes(
@@ -461,7 +468,8 @@ public abstract class AbstractMixedOpProcessor extends StandardOpProcessor {
                 if (!ctx.channel().isWritable()) {
                     if (!warnOnce) {
                         logger.warn(
-                                "Pausing response writing as writeBufferHighWaterMark exceeded on {} - writing will continue once client has caught up",
+                                "Pausing response writing as writeBufferHighWaterMark exceeded on"
+                                        + " {} - writing will continue once client has caught up",
                                 msg);
                         warnOnce = true;
                     }
@@ -479,7 +487,7 @@ public abstract class AbstractMixedOpProcessor extends StandardOpProcessor {
                     try {
                         frame =
                                 makeFrame(
-                                        rhc,
+                                        context,
                                         msg,
                                         serializer,
                                         useBinary,
@@ -530,7 +538,7 @@ public abstract class AbstractMixedOpProcessor extends StandardOpProcessor {
                         this.iterateComplete(ctx, msg, itty);
                     }
 
-                    rhc.writeAndFlush(code, frame);
+                    context.writeAndFlush(code, frame);
                 }
             }
         }
@@ -563,7 +571,7 @@ public abstract class AbstractMixedOpProcessor extends StandardOpProcessor {
                 try {
                     frame =
                             makeFrame(
-                                    ctx,
+                                    context,
                                     msg,
                                     serializer,
                                     useBinary,

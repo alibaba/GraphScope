@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,13 +17,8 @@ package com.alibaba.maxgraph.frontendservice.service;
 
 import com.alibaba.maxgraph.api.query.QueryCallbackManager;
 import com.alibaba.maxgraph.api.query.QueryStatus;
-import com.alibaba.maxgraph.common.component.AbstractLifecycleComponent;
-
-import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.*;
-
 import com.alibaba.maxgraph.common.cluster.InstanceConfig;
+import com.alibaba.maxgraph.common.component.AbstractLifecycleComponent;
 import com.alibaba.maxgraph.common.rpc.RpcConfig;
 import com.alibaba.maxgraph.common.util.CommonUtil;
 import com.alibaba.maxgraph.coordinator.client.ServerDataApiClient;
@@ -34,14 +29,19 @@ import com.alibaba.maxgraph.sdkcommon.client.Endpoint;
 import com.alibaba.maxgraph.server.query.PegasusRpcConnector;
 import com.alibaba.maxgraph.server.query.RpcConnector;
 
-public class FrontendQueryManager extends AbstractLifecycleComponent implements QueryCallbackManager {
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.*;
+
+public class FrontendQueryManager extends AbstractLifecycleComponent
+        implements QueryCallbackManager {
     // manage queries <snapshotId, is_done>
     private BlockingQueue<QueryStatus> queryQueue;
     private ClientManager clientManager;
     private int frontId;
     private ScheduledExecutorService updateExecutor;
     private RpcConnector rpcConnector;
-    private final static int QUEUE_SZIE = 1024 * 1024;
+    private static final int QUEUE_SZIE = 1024 * 1024;
 
     public FrontendQueryManager(InstanceConfig instanceConfig, ClientManager clientManager) {
         super(instanceConfig);
@@ -58,18 +58,27 @@ public class FrontendQueryManager extends AbstractLifecycleComponent implements 
         List<Endpoint> endpointList = new ArrayList<>();
         ServerDataApiClient serverDataApiClient = clientManager.getServerDataApiClient();
         // rpc to coordinator to fetch latest routing server workerInfo and serverIdList
-        RoutingServerInfoResp routingServerInfoResp = serverDataApiClient.getWorkerInfoAndRoutingServerList();
+        RoutingServerInfoResp routingServerInfoResp =
+                serverDataApiClient.getWorkerInfoAndRoutingServerList();
         // transform workerInfoList to serverId2Endpoint Map
         Map<Integer, Endpoint> serverId2Endpoint = new HashMap<>();
-        routingServerInfoResp.getWorkerInfoProtos().getInfosList().forEach(workerInfoProto -> {
-            int id = workerInfoProto.getId();
-            if (!serverId2Endpoint.containsKey(id)) {
-                serverId2Endpoint.put(id, Endpoint.fromProto(workerInfoProto.getAddress()));
-            }
-        });
-        routingServerInfoResp.getServingServerIdList().forEach((serverId) -> {
-            endpointList.add(serverId2Endpoint.get(serverId));
-        });
+        routingServerInfoResp
+                .getWorkerInfoProtos()
+                .getInfosList()
+                .forEach(
+                        workerInfoProto -> {
+                            int id = workerInfoProto.getId();
+                            if (!serverId2Endpoint.containsKey(id)) {
+                                serverId2Endpoint.put(
+                                        id, Endpoint.fromProto(workerInfoProto.getAddress()));
+                            }
+                        });
+        routingServerInfoResp
+                .getServingServerIdList()
+                .forEach(
+                        (serverId) -> {
+                            endpointList.add(serverId2Endpoint.get(serverId));
+                        });
         return endpointList;
     }
 
@@ -92,7 +101,8 @@ public class FrontendQueryManager extends AbstractLifecycleComponent implements 
         // cancelDataflowByFront is async, check whether really cancelled
         while (true) {
             try {
-                if (!rpcConnector.hasCancelDataFlowByFrontCompleted(frontId, getRoutingServerEndpointList())) {
+                if (!rpcConnector.hasCancelDataFlowByFrontCompleted(
+                        frontId, getRoutingServerEndpointList())) {
                     try {
                         Thread.sleep(3000);
                     } catch (InterruptedException e1) {
@@ -108,13 +118,19 @@ public class FrontendQueryManager extends AbstractLifecycleComponent implements 
                 } catch (InterruptedException e1) {
                     logger.error("Interrupt retry sleep fail ", e1);
                 }
-                logger.error("hasCancelDataFlowByFrontCompleted by frontId {} fail. retry again.", frontId, e);
+                logger.error(
+                        "hasCancelDataFlowByFrontCompleted by frontId {} fail. retry again.",
+                        frontId,
+                        e);
             }
         }
         logger.info("cancel data flow by front {} success", frontId);
-        updateExecutor = Executors.newSingleThreadScheduledExecutor(
-                CommonUtil.createFactoryWithDefaultExceptionHandler("maxgraph-frontend-query-manager", logger));
-        updateExecutor.scheduleWithFixedDelay(new UpdateSnapshot(), 5000, 2000, TimeUnit.MILLISECONDS);
+        updateExecutor =
+                Executors.newSingleThreadScheduledExecutor(
+                        CommonUtil.createFactoryWithDefaultExceptionHandler(
+                                "maxgraph-frontend-query-manager", logger));
+        updateExecutor.scheduleWithFixedDelay(
+                new UpdateSnapshot(), 5000, 2000, TimeUnit.MILLISECONDS);
     }
 
     @Override
@@ -132,9 +148,7 @@ public class FrontendQueryManager extends AbstractLifecycleComponent implements 
     }
 
     @Override
-    protected void doClose() throws IOException {
-
-    }
+    protected void doClose() throws IOException {}
 
     public QueryStatus beforeExecution(Long snapshotId) {
         QueryStatus query = new QueryStatus(snapshotId, false);
@@ -160,6 +174,4 @@ public class FrontendQueryManager extends AbstractLifecycleComponent implements 
             }
         }
     }
-
-
 }

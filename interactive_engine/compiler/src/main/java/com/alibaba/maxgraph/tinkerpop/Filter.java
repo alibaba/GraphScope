@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,6 +15,13 @@
  */
 package com.alibaba.maxgraph.tinkerpop;
 
+import com.google.common.base.Joiner;
+
+import org.apache.tinkerpop.gremlin.process.traversal.Contains;
+import org.apache.tinkerpop.gremlin.process.traversal.P;
+import org.apache.tinkerpop.gremlin.process.traversal.step.util.HasContainer;
+import org.apache.tinkerpop.gremlin.process.traversal.util.AndP;
+import org.apache.tinkerpop.gremlin.process.traversal.util.OrP;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -23,13 +30,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import com.google.common.base.Joiner;
-import org.apache.tinkerpop.gremlin.process.traversal.Contains;
-import org.apache.tinkerpop.gremlin.process.traversal.P;
-import org.apache.tinkerpop.gremlin.process.traversal.step.util.HasContainer;
-import org.apache.tinkerpop.gremlin.process.traversal.util.AndP;
-import org.apache.tinkerpop.gremlin.process.traversal.util.OrP;
-
 /**
  * @author xiafei.qiuxf
  * @date 16/6/27
@@ -37,8 +37,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.util.OrP;
 public class Filter {
 
     public enum Compare implements IntEnum {
-        /* = */
-        EQUAL(0, false),
+        /* = */ EQUAL(0, false),
         /* != */
         NOT_EQUAL(1, false),
         /* > */
@@ -97,11 +96,15 @@ public class Filter {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) {return true;}
-        if (o == null || getClass() != o.getClass()) {return false;}
-        Filter filter = (Filter)o;
-        return Objects.equals(property, filter.property) &&
-            Objects.equals(predicate, filter.predicate);
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        Filter filter = (Filter) o;
+        return Objects.equals(property, filter.property)
+                && Objects.equals(predicate, filter.predicate);
     }
 
     @Override
@@ -113,7 +116,6 @@ public class Filter {
     public String toString() {
         return Joiner.on(" ").join("[", property, predicate, "]");
     }
-
 
     public static Filter fromHasContain(final HasContainer has) {
         Predicate translate = Predicate.translate(has.getPredicate());
@@ -132,8 +134,8 @@ public class Filter {
         public Predicate(String compare, Object value) {
             this.compare = Compare.valueOf(compare);
             if ((this.compare == Compare.AND || this.compare == Compare.OR)
-                && value instanceof Collection) {
-                this.value = deserialize((Collection)value);
+                    && value instanceof Collection) {
+                this.value = deserialize((Collection) value);
             } else {
                 this.value = value;
             }
@@ -143,7 +145,10 @@ public class Filter {
             ArrayList<Predicate> predicates = new ArrayList<>(value.size());
             Collection<Map<String, Object>> v = value;
             for (Map<String, Object> stringObjectMap : v) {
-                predicates.add(new Predicate((String)stringObjectMap.get("compare"), stringObjectMap.get("value")));
+                predicates.add(
+                        new Predicate(
+                                (String) stringObjectMap.get("compare"),
+                                stringObjectMap.get("value")));
             }
             return predicates;
         }
@@ -183,19 +188,20 @@ public class Filter {
 
         private int compare(Object v1, Object v2) {
             if (v1 instanceof String && v2 instanceof String) {
-                return ((String)v1).compareTo((String)v2);
+                return ((String) v1).compareTo((String) v2);
             } else if (v1 instanceof Long && v2 instanceof Number) {
-                return ((Long)v1).compareTo(((Number)v2).longValue());
+                return ((Long) v1).compareTo(((Number) v2).longValue());
             } else if (v1 instanceof Integer && v2 instanceof Number) {
-                return ((Integer)v1).compareTo(((Number)v2).intValue());
+                return ((Integer) v1).compareTo(((Number) v2).intValue());
             } else if (v1 instanceof Double && v2 instanceof Number) {
-                return ((Double)v1).compareTo(((Number)v2).doubleValue());
+                return ((Double) v1).compareTo(((Number) v2).doubleValue());
             } else if (v1 instanceof Float && v2 instanceof Number) {
-                return ((Float)v1).compareTo(((Number)v2).floatValue());
+                return ((Float) v1).compareTo(((Number) v2).floatValue());
             } else if (v1 instanceof Short && v2 instanceof Number) {
-                return ((Short)v1).compareTo(((Number)v2).shortValue());
+                return ((Short) v1).compareTo(((Number) v2).shortValue());
             } else {
-                throw new UnsupportedOperationException("Unsupported compare on type : " + v1.getClass() + " and " + v2.getClass());
+                throw new UnsupportedOperationException(
+                        "Unsupported compare on type : " + v1.getClass() + " and " + v2.getClass());
             }
         }
 
@@ -209,32 +215,37 @@ public class Filter {
 
         @Override
         public boolean equals(Object o) {
-            if (this == o) {return true;}
-            if (o == null || getClass() != o.getClass()) {return false;}
-            Predicate p = (Predicate)o;
-            return Objects.equals(compare, p.compare) &&
-                Objects.equals(value, p.value);
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            Predicate p = (Predicate) o;
+            return Objects.equals(compare, p.compare) && Objects.equals(value, p.value);
         }
 
         private boolean containsInCollection(Object v) {
             if (this.value instanceof Collection) {
-                return ((Collection)this.value).contains(v);
+                return ((Collection) this.value).contains(v);
             } else {
-                throw new UnsupportedOperationException("Unsupported 'in/not in' operator on : " + this.value);
+                throw new UnsupportedOperationException(
+                        "Unsupported 'in/not in' operator on : " + this.value);
             }
         }
 
         private boolean containsInText(Object v) {
             if (value instanceof String) {
-                return ((String)v).contains(this.value.toString());
+                return ((String) v).contains(this.value.toString());
             } else {
-                throw new UnsupportedOperationException("Unsupported 'contains' operator on : " + v);
+                throw new UnsupportedOperationException(
+                        "Unsupported 'contains' operator on : " + v);
             }
         }
 
         private boolean and(Object v) {
             if (this.value instanceof Collection) {
-                Collection<Predicate> ps = (Collection<Predicate>)this.value;
+                Collection<Predicate> ps = (Collection<Predicate>) this.value;
                 return ps.stream().allMatch(p -> p.test(v));
             }
             return false;
@@ -242,7 +253,7 @@ public class Filter {
 
         private boolean or(Object v) {
             if (this.value instanceof Collection) {
-                Collection<Predicate> ps = (Collection<Predicate>)this.value;
+                Collection<Predicate> ps = (Collection<Predicate>) this.value;
                 return ps.stream().anyMatch(p -> p.test(v));
             }
             return false;
@@ -255,22 +266,28 @@ public class Filter {
 
         public static Predicate translate(P p) {
             if (p instanceof AndP) {
-                return new Predicate(Compare.AND, translate(((AndP)p).getPredicates()));
+                return new Predicate(Compare.AND, translate(((AndP) p).getPredicates()));
             } else if (p instanceof OrP) {
-                return new Predicate(Compare.OR, translate(((OrP)p).getPredicates()));
+                return new Predicate(Compare.OR, translate(((OrP) p).getPredicates()));
             }
 
-            if (org.apache.tinkerpop.gremlin.process.traversal.Compare.eq.equals(p.getBiPredicate())) {
+            if (org.apache.tinkerpop.gremlin.process.traversal.Compare.eq.equals(
+                    p.getBiPredicate())) {
                 return new Predicate(Compare.EQUAL, p.getValue());
-            } else if (org.apache.tinkerpop.gremlin.process.traversal.Compare.neq.equals(p.getBiPredicate())) {
+            } else if (org.apache.tinkerpop.gremlin.process.traversal.Compare.neq.equals(
+                    p.getBiPredicate())) {
                 return new Predicate(Compare.NOT_EQUAL, p.getValue());
-            } else if (org.apache.tinkerpop.gremlin.process.traversal.Compare.lt.equals(p.getBiPredicate())) {
+            } else if (org.apache.tinkerpop.gremlin.process.traversal.Compare.lt.equals(
+                    p.getBiPredicate())) {
                 return new Predicate(Compare.LESS_THAN, p.getValue());
-            } else if (org.apache.tinkerpop.gremlin.process.traversal.Compare.lte.equals(p.getBiPredicate())) {
+            } else if (org.apache.tinkerpop.gremlin.process.traversal.Compare.lte.equals(
+                    p.getBiPredicate())) {
                 return new Predicate(Compare.LESS_THAN_EQUAL, p.getValue());
-            } else if (org.apache.tinkerpop.gremlin.process.traversal.Compare.gt.equals(p.getBiPredicate())) {
+            } else if (org.apache.tinkerpop.gremlin.process.traversal.Compare.gt.equals(
+                    p.getBiPredicate())) {
                 return new Predicate(Compare.GREATER_THAN, p.getValue());
-            } else if (org.apache.tinkerpop.gremlin.process.traversal.Compare.gte.equals(p.getBiPredicate())) {
+            } else if (org.apache.tinkerpop.gremlin.process.traversal.Compare.gte.equals(
+                    p.getBiPredicate())) {
                 return new Predicate(Compare.GREATER_THAN_EQUAL, p.getValue());
             } else if (Contains.within.equals(p.getBiPredicate())) {
                 return new Predicate(Compare.IN, p.getValue());
@@ -285,12 +302,9 @@ public class Filter {
             return ps.stream().map(p -> translate(p)).collect(Collectors.toList());
         }
 
-
         @Override
         public String toString() {
             return this.compare + "(" + this.value + ")";
         }
-
     }
 }
-

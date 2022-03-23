@@ -26,6 +26,7 @@ import copy
 import functools
 import imp
 import inspect
+from enum import Enum
 from types import FunctionType
 from types import LambdaType
 from types import ModuleType
@@ -61,10 +62,41 @@ def copy_function(func, global_ctx=None):
         argdefs=func.__defaults__,
         closure=func.__closure__,
     )
+    # functools.update_wrapper would update all the metadata other then __kwdefaults__
+    fn.__kwdefaults__ = copy.copy(func.__kwdefaults__)
     return functools.update_wrapper(fn, func)
 
 
+def copy_property(prop, global_ctx=None):
+    """
+    Copy the property, with given base global_ctx.
+
+    References
+    ----------
+    1. https://stackoverflow.com/q/28613518
+    """
+    fget = (
+        copy_function(prop.fget, global_ctx)
+        if isinstance(prop.fget, FunctionType)
+        else prop.fget
+    )
+    fset = (
+        copy_function(prop.fset, global_ctx)
+        if isinstance(prop.fset, FunctionType)
+        else prop.fset
+    )
+    fdel = (
+        copy_function(prop.fdel, global_ctx)
+        if isinstance(prop.fdel, FunctionType)
+        else prop.fdel
+    )
+    return property(fget, fset, fdel)
+
+
 def copy_class(cls):
+    if issubclass(cls, Enum):
+        return cls
+
     class T(*cls.__bases__):
         pass
 
@@ -347,7 +379,7 @@ def with_module_map(  # noqa: C901
                         global_ctx[k] = v
 
         for name, meth in source_methods.items():
-            if name in existing_methods:
+            if name in existing_methods or isinstance(meth, ModuleType):
                 continue
 
             if isinstance(meth, classmethod):
@@ -370,7 +402,11 @@ def with_module_map(  # noqa: C901
 
                 # run replacing module context again for accurance
                 global_ctx = replace_context(global_ctx, source_module, target_module)
-                fn = copy_function(meth, global_ctx)
+                fn = (
+                    copy_property(meth, global_ctx)
+                    if isinstance(meth, property)
+                    else copy_function(meth, global_ctx)
+                )
                 if patch_docstring:
                     setattr(fn, "__doc__", getattr(meth, "__doc__"))
 

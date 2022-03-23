@@ -35,7 +35,8 @@ public class Config<T> {
             T val = parseFunc.apply(valStr);
             return val;
         } catch (Exception e) {
-            throw new IllegalArgumentException("key [" + key + "] val [" + valStr + "] parse failed", e);
+            throw new IllegalArgumentException(
+                    "key [" + key + "] val [" + valStr + "] parse failed", e);
         }
     }
 

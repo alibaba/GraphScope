@@ -1,1 +1,0 @@
-g.V().group().by(id).unfold().order().by(keys)

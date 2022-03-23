@@ -13,13 +13,14 @@
  */
 package com.alibaba.maxgraph.tests.frontend;
 
-import com.alibaba.graphscope.groot.SnapshotListener;
-import com.alibaba.graphscope.groot.schema.GraphDef;
-import com.alibaba.graphscope.groot.SnapshotCache;
-import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
+
+import com.alibaba.graphscope.groot.SnapshotCache;
+import com.alibaba.graphscope.groot.SnapshotListener;
+import com.alibaba.graphscope.groot.schema.GraphDef;
+
+import org.junit.jupiter.api.Test;
 
 public class SnapshotCacheTest {
 

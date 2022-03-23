@@ -23,7 +23,6 @@ import numpy as np
 import pandas as pd
 import pytest
 
-import graphscope
 from graphscope import nx
 from graphscope.nx.tests.utils import almost_equal
 from graphscope.nx.tests.utils import replace_with_inf
@@ -127,7 +126,7 @@ class TestBuiltInApp:
         cls.p2p_ev_ans = dict(
             pd.read_csv(
                 "{}/p2p-31-eigenvector".format(data_dir),
-                sep="\t",
+                sep=" ",
                 header=None,
                 prefix="",
             ).values
@@ -163,6 +162,7 @@ class TestBuiltInApp:
                 "{}/p2p-31-kcore".format(data_dir), sep=" ", header=None, prefix=""
             ).values
         )
+        cls.empty_pagerank_ans = {}
 
     def assert_result_almost_equal(self, r1, r2):
         assert len(r1) == len(r2)
@@ -180,6 +180,7 @@ class TestBuiltInApp:
         )
         assert replace_with_inf(ret) == self.p2p_length_ans
 
+    @pytest.mark.skip(reason="TODO: subgraph not ready")
     def test_subgraph_single_source_dijkstra_path_length(self):
         # test subgraph and edge_subgraph with p2p_subgraph_undirected
         ret = nx.builtin.single_source_dijkstra_path_length(
@@ -335,8 +336,14 @@ class TestBuiltInApp:
         ans = nx.builtin.average_degree_connectivity(self.p2p_undirected)
         assert gt == ans
 
+    @pytest.mark.skip(reason="TODO: the app not compatible with DynamicFragment")
     def test_all_simple_paths(self):
         ans = nx.builtin.all_simple_paths(self.p2p, 1, 4, cutoff=10)
         assert len(ans) == 1022
         ans = nx.builtin.all_simple_paths(self.p2p_undirected, 1, [4, 6], cutoff=5)
         assert len(ans) == 1675
+
+    def test_pagerank_on_empty(self):
+        eg = nx.null_graph()
+        ans = nx.builtin.pagerank(eg)
+        self.assert_result_almost_equal(ans, self.empty_pagerank_ans)

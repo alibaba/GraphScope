@@ -82,7 +82,7 @@ class SSSPAverageLengthContext : public TensorContext<FRAG_T, double> {
   double inner_sum;
 
   std::priority_queue<std::pair<double, vertex_t>> next_queue;
-  grape::DenseVertexSet<vid_t> updated;
+  grape::DenseVertexSet<typename FRAG_T::inner_vertices_t> updated;
 
 #ifdef PROFILING
   double preprocess_time = 0;

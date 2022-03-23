@@ -64,8 +64,6 @@ class KubernetesClusterLauncher(Launcher):
     _cluster_role_binding_name_prefix = "gs-cluster-reader-binding-"
 
     _random_coordinator_service_port = random.randint(59001, 60000)
-    # placeholder port sometime is needed, such as sshd service
-    _random_coordinator_placeholder_port = random.randint(60001, 61000)
 
     _url_pattern = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"  # noqa: E501
     _endpoint_pattern = r"(?:http.*://)?(?P<host>[^:/ ]+).?(?P<port>[0-9]*).*"
@@ -89,6 +87,7 @@ class KubernetesClusterLauncher(Launcher):
         k8s_engine_mem=None,
         k8s_coordinator_cpu=None,
         k8s_coordinator_mem=None,
+        etcd_addrs=None,
         k8s_etcd_num_pods=None,
         k8s_etcd_cpu=None,
         k8s_etcd_mem=None,
@@ -351,6 +350,13 @@ class KubernetesClusterLauncher(Launcher):
 
         coordinator_builder.add_simple_envs(envs)
 
+        if "GSCOORDINATOR_PORTS" in os.environ:
+            # a list of port, comma separated
+            # e.g. 50001,50002,50003,50004
+            ports = [int(p) for p in os.environ["GSCOORDINATOR_PORTS"].split(",")]
+        else:
+            ports = [self._random_coordinator_service_port]
+
         coordinator_builder.add_coordinator_container(
             cmd=["/bin/bash"],
             args=self._build_coordinator_cmd(),
@@ -359,10 +365,7 @@ class KubernetesClusterLauncher(Launcher):
             cpu=self._saved_locals["k8s_coordinator_cpu"],
             mem=self._saved_locals["k8s_coordinator_mem"],
             preemptive=self._saved_locals["preemptive"],
-            ports=[
-                self._random_coordinator_service_port,
-                self._random_coordinator_placeholder_port,
-            ],
+            ports=ports,
             module_name=self._coordinator_module_name,
         )
 
@@ -458,6 +461,8 @@ class KubernetesClusterLauncher(Launcher):
                     self._saved_locals["k8s_dataset_image"],
                 ]
             )
+        if self._saved_locals["etcd_addrs"] is not None:
+            cmd.extend(["--etcd_addrs", self._saved_locals["etcd_addrs"]])
         return ["-c", " ".join(cmd)]
 
     def _create_services(self):

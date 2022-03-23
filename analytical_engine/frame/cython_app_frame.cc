@@ -21,6 +21,8 @@
 #include "grape/app/context_base.h"
 #include "grape/util.h"
 
+#include "vineyard/graph/fragment/arrow_fragment.h"
+
 #include "core/app/app_invoker.h"
 #include "core/app/pregel/cython_vertex_program.h"
 #include "core/app/pregel/export.h"
@@ -28,8 +30,8 @@
 #include "core/app/pregel/pregel_property_app_base.h"
 #include "core/error.h"
 #include "frame/ctx_wrapper_builder.h"
-#include "proto/data_types.pb.h"
-#include "proto/query_args.pb.h"
+#include "proto/graphscope/proto/data_types.pb.h"
+#include "proto/graphscope/proto/query_args.pb.h"
 
 using string = std::string;
 
@@ -40,6 +42,10 @@ using string = std::string;
 #include QUOTE(_GRAPH_HEADER)
 #else
 #error "Missing macro _GRAPH_TYPE or _GRAPH_HEADER"
+#endif
+
+#if !defined(_OID_TYPE)
+#define _OID_TYPE vineyard::property_graph_types::OID_TYPE
 #endif
 
 #if defined(_VD_TYPE) && defined(_MD_TYPE)
@@ -158,12 +164,17 @@ void DeleteWorker(void* worker_handler) {
 void Query(void* worker_handler, const gs::rpc::QueryArgs& query_args,
            const std::string& context_key,
            std::shared_ptr<gs::IFragmentWrapper> frag_wrapper,
-           std::shared_ptr<gs::IContextWrapper>& ctx_wrapper) {
+           std::shared_ptr<gs::IContextWrapper>& ctx_wrapper,
+           gs::bl::result<nullptr_t>& wrapper_error) {
   auto worker = static_cast<worker_handler_t*>(worker_handler)->worker;
-  gs::AppInvoker<_APP_TYPE>::Query(worker, query_args);
-  auto ctx = worker->GetContext();
+  auto result = gs::AppInvoker<_APP_TYPE>::Query(worker, query_args);
+  if (!result) {
+    wrapper_error = std::move(result);
+    return;
+  }
 
   if (!context_key.empty()) {
+    auto ctx = worker->GetContext();
     ctx_wrapper = gs::CtxWrapperBuilder<typename _APP_TYPE::context_t>::build(
         context_key, frag_wrapper, ctx);
   }

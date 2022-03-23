@@ -13,8 +13,9 @@
  */
 package com.alibaba.graphscope.groot.store;
 
-import com.alibaba.maxgraph.proto.groot.GraphDefPb;
 import com.alibaba.graphscope.groot.operation.OperationBatch;
+import com.alibaba.maxgraph.proto.groot.GraphDefPb;
+
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 

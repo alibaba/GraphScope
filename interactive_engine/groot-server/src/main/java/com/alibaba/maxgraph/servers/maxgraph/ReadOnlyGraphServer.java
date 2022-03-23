@@ -13,17 +13,21 @@
  */
 package com.alibaba.maxgraph.servers.maxgraph;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
+import com.alibaba.maxgraph.common.config.Configs;
+import com.alibaba.maxgraph.common.config.GremlinConfig;
 import com.alibaba.maxgraph.common.rpc.RpcAddressFetcher;
+import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
 import com.alibaba.maxgraph.compiler.api.schema.SchemaFetcher;
 import com.alibaba.maxgraph.server.MaxGraphWsAndHttpSocketChannelizer;
 import com.alibaba.maxgraph.server.ProcessorLoader;
 import com.alibaba.maxgraph.servers.AbstractService;
 import com.alibaba.maxgraph.structure.graph.TinkerMaxGraph;
 import com.alibaba.maxgraph.tinkerpop.Utils;
-import com.alibaba.maxgraph.common.config.Configs;
-import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
-import com.alibaba.maxgraph.common.config.GremlinConfig;
+
 import io.netty.channel.Channel;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.tinkerpop.gremlin.groovy.engine.GremlinExecutor;
@@ -34,7 +38,6 @@ import org.apache.tinkerpop.gremlin.server.util.ServerGremlinExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.script.Bindings;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -45,7 +48,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import javax.script.Bindings;
 
 public class ReadOnlyGraphServer implements AbstractService {
     private static final Logger logger = LoggerFactory.getLogger(ReadOnlyGraphServer.class);
@@ -116,7 +119,8 @@ public class ReadOnlyGraphServer implements AbstractService {
                     .exceptionally(
                             t -> {
                                 logger.error(
-                                        "Gremlin Server was unable to start and will now begin shutdown: {}",
+                                        "Gremlin Server was unable to start and will now begin"
+                                                + " shutdown: {}",
                                         t.getMessage());
                                 this.server.stop().join();
                                 return null;

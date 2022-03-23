@@ -51,12 +51,15 @@ struct VertexArrayBuilder<arrow::Int64Builder> {
     std::shared_ptr<arrow::Array> array;
 
     for (const auto& u : src_frag->InnerVertices()) {
+      if (!src_frag->IsAliveInnerVertex(u)) {
+        continue;
+      }
       auto& data = src_frag->GetData(u);
 
-      if (data.count(prop_key) == 0) {
+      if (data.HasMember(prop_key) == 0) {
         ARROW_OK_OR_RAISE(builder.AppendNull());
       } else {
-        ARROW_OK_OR_RAISE(builder.Append(data[prop_key].asInt()));
+        ARROW_OK_OR_RAISE(builder.Append(data[prop_key].GetInt64()));
       }
     }
 
@@ -76,12 +79,16 @@ struct VertexArrayBuilder<arrow::DoubleBuilder> {
     std::shared_ptr<arrow::Array> array;
 
     for (const auto& u : src_frag->InnerVertices()) {
+      if (!src_frag->IsAliveInnerVertex(u)) {
+        continue;
+      }
+
       auto& data = src_frag->GetData(u);
 
-      if (data.count(prop_key) == 0) {
+      if (data.HasMember(prop_key) == 0) {
         ARROW_OK_OR_RAISE(builder.AppendNull());
       } else {
-        ARROW_OK_OR_RAISE(builder.Append(data[prop_key].asDouble()));
+        ARROW_OK_OR_RAISE(builder.Append(data[prop_key].GetDouble()));
       }
     }
 
@@ -101,12 +108,15 @@ struct VertexArrayBuilder<arrow::LargeStringBuilder> {
     std::shared_ptr<arrow::Array> array;
 
     for (const auto& u : src_frag->InnerVertices()) {
-      auto& data = src_frag->GetData(u);
+      if (!src_frag->IsAliveInnerVertex(u)) {
+        continue;
+      }
 
-      if (data.count(prop_key) == 0) {
+      auto& data = src_frag->GetData(u);
+      if (data.HasMember(prop_key) == 0) {
         ARROW_OK_OR_RAISE(builder.AppendNull());
       } else {
-        ARROW_OK_OR_RAISE(builder.Append(data[prop_key].asString()));
+        ARROW_OK_OR_RAISE(builder.Append(data[prop_key].GetString()));
       }
     }
 
@@ -135,27 +145,30 @@ struct EdgeArrayBuilder<arrow::Int64Builder> {
     std::shared_ptr<arrow::Array> array;
 
     for (const auto& u : inner_vertices) {
+      if (!src_frag->IsAliveInnerVertex(u)) {
+        continue;
+      }
       for (auto& e : src_frag->GetOutgoingAdjList(u)) {
-        if (!src_frag->directed() && (u.GetValue() > e.neighbor().GetValue())) {
+        if (!src_frag->directed() && (u.GetValue() > e.neighbor.GetValue())) {
           continue;  // if src_frag is undirected, just append one edge.
         }
 
-        auto& data = e.data();
-        if (data.count(prop_key) == 0) {
+        auto& data = e.data;
+        if (data.HasMember(prop_key) == 0) {
           ARROW_OK_OR_RAISE(builder.AppendNull());
         } else {
-          ARROW_OK_OR_RAISE(builder.Append(data[prop_key].asInt()));
+          ARROW_OK_OR_RAISE(builder.Append(data[prop_key].GetInt64()));
         }
       }
       if (src_frag->directed()) {
         for (auto& e : src_frag->GetIncomingAdjList(u)) {
-          auto& v = e.neighbor();
+          auto& v = e.neighbor;
           if (src_frag->IsOuterVertex(v)) {
-            auto& data = e.data();
-            if (data.count(prop_key) == 0) {
+            auto& data = e.data;
+            if (data.HasMember(prop_key) == 0) {
               ARROW_OK_OR_RAISE(builder.AppendNull());
             } else {
-              ARROW_OK_OR_RAISE(builder.Append(data[prop_key].asInt()));
+              ARROW_OK_OR_RAISE(builder.Append(data[prop_key].GetInt64()));
             }
           }
         }
@@ -178,27 +191,30 @@ struct EdgeArrayBuilder<arrow::DoubleBuilder> {
     arrow::DoubleBuilder builder;
     std::shared_ptr<arrow::Array> array;
     for (const auto& u : inner_vertices) {
+      if (!src_frag->IsAliveInnerVertex(u)) {
+        continue;
+      }
       for (auto& e : src_frag->GetOutgoingAdjList(u)) {
-        if (!src_frag->directed() && (u.GetValue() > e.neighbor().GetValue())) {
+        if (!src_frag->directed() && (u.GetValue() > e.neighbor.GetValue())) {
           continue;  // if src_frag is undirected, just append one edge.
         }
 
-        auto& data = e.data();
-        if (data.count(prop_key) == 0) {
+        auto& data = e.data;
+        if (data.HasMember(prop_key) == 0) {
           ARROW_OK_OR_RAISE(builder.AppendNull());
         } else {
-          ARROW_OK_OR_RAISE(builder.Append(data[prop_key].asDouble()));
+          ARROW_OK_OR_RAISE(builder.Append(data[prop_key].GetDouble()));
         }
       }
       if (src_frag->directed()) {
         for (auto& e : src_frag->GetIncomingAdjList(u)) {
-          auto& v = e.neighbor();
+          auto& v = e.neighbor;
           if (src_frag->IsOuterVertex(v)) {
-            auto& data = e.data();
-            if (data.count(prop_key) == 0) {
+            auto& data = e.data;
+            if (data.HasMember(prop_key) == 0) {
               ARROW_OK_OR_RAISE(builder.AppendNull());
             } else {
-              ARROW_OK_OR_RAISE(builder.Append(data[prop_key].asDouble()));
+              ARROW_OK_OR_RAISE(builder.Append(data[prop_key].GetDouble()));
             }
           }
         }
@@ -222,27 +238,30 @@ struct EdgeArrayBuilder<arrow::LargeStringBuilder> {
     std::shared_ptr<arrow::Array> array;
 
     for (const auto& u : inner_vertices) {
+      if (!src_frag->IsAliveInnerVertex(u)) {
+        continue;
+      }
       for (auto& e : src_frag->GetOutgoingAdjList(u)) {
-        if (!src_frag->directed() && (u.GetValue() > e.neighbor().GetValue())) {
+        if (!src_frag->directed() && (u.GetValue() > e.neighbor.GetValue())) {
           continue;  // if src_frag is undirected, just append one edge.
         }
 
-        auto& data = e.data();
-        if (data.count(prop_key) == 0) {
+        auto& data = e.data;
+        if (data.HasMember(prop_key) == 0) {
           ARROW_OK_OR_RAISE(builder.AppendNull());
         } else {
-          ARROW_OK_OR_RAISE(builder.Append(data[prop_key].asString()));
+          ARROW_OK_OR_RAISE(builder.Append(data[prop_key].GetString()));
         }
       }
       if (src_frag->directed()) {
         for (auto& e : src_frag->GetIncomingAdjList(u)) {
-          auto& v = e.neighbor();
+          auto& v = e.neighbor;
           if (src_frag->IsOuterVertex(v)) {
-            auto& data = e.data();
-            if (data.count(prop_key) == 0) {
+            auto& data = e.data;
+            if (data.HasMember(prop_key) == 0) {
               ARROW_OK_OR_RAISE(builder.AppendNull());
             } else {
-              ARROW_OK_OR_RAISE(builder.Append(data[prop_key].asString()));
+              ARROW_OK_OR_RAISE(builder.Append(data[prop_key].GetString()));
             }
           }
         }
@@ -284,31 +303,34 @@ struct COOBuilder<DST_FRAG_T, int64_t> {
     std::shared_ptr<arrow::Array> src_array, dst_array;
 
     for (const auto& u : inner_vertices) {
+      if (!src_frag->IsAliveInnerVertex(u)) {
+        continue;
+      }
       auto u_oid = src_frag->GetId(u);
       vineyard::property_graph_types::VID_TYPE u_gid;
 
-      CHECK(dst_vm->GetGid(fid, 0, u_oid.asInt(), u_gid));
+      CHECK(dst_vm->GetGid(fid, 0, u_oid.GetInt64(), u_gid));
 
       for (auto& e : src_frag->GetOutgoingAdjList(u)) {
-        auto& v = e.neighbor();
+        auto& v = e.neighbor;
         if (!src_frag->directed() && u.GetValue() > v.GetValue()) {
           continue;
         }
         auto v_oid = src_frag->GetId(v);
         vineyard::property_graph_types::VID_TYPE v_gid;
 
-        CHECK(dst_vm->GetGid(0, v_oid.asInt(), v_gid));
+        CHECK(dst_vm->GetGid(0, v_oid.GetInt64(), v_gid));
         ARROW_OK_OR_RAISE(src_builder.Append(u_gid));
         ARROW_OK_OR_RAISE(dst_builder.Append(v_gid));
       }
       if (src_frag->directed()) {
         for (auto& e : src_frag->GetIncomingAdjList(u)) {
-          auto& v = e.neighbor();
+          auto& v = e.neighbor;
           if (src_frag->IsOuterVertex(v)) {
             auto v_oid = src_frag->GetId(v);
             vineyard::property_graph_types::VID_TYPE v_gid;
 
-            CHECK(dst_vm->GetGid(0, v_oid.asInt(), v_gid));
+            CHECK(dst_vm->GetGid(0, v_oid.GetInt64(), v_gid));
             ARROW_OK_OR_RAISE(src_builder.Append(v_gid));
             ARROW_OK_OR_RAISE(dst_builder.Append(u_gid));
           }
@@ -345,31 +367,34 @@ struct COOBuilder<DST_FRAG_T, std::string> {
     std::shared_ptr<arrow::Array> src_array, dst_array;
 
     for (const auto& u : inner_vertices) {
+      if (!src_frag->IsAliveInnerVertex(u)) {
+        continue;
+      }
       auto u_oid = src_frag->GetId(u);
       vineyard::property_graph_types::VID_TYPE u_gid;
 
-      CHECK(dst_vm->GetGid(fid, 0, u_oid.asString(), u_gid));
+      CHECK(dst_vm->GetGid(fid, 0, u_oid.GetString(), u_gid));
 
       for (auto& e : src_frag->GetOutgoingAdjList(u)) {
-        auto& v = e.neighbor();
+        auto& v = e.neighbor;
         if (!src_frag->directed() && u.GetValue() > v.GetValue()) {
           continue;
         }
         auto v_oid = src_frag->GetId(v);
         vineyard::property_graph_types::VID_TYPE v_gid;
 
-        CHECK(dst_vm->GetGid(0, v_oid.asString(), v_gid));
+        CHECK(dst_vm->GetGid(0, v_oid.GetString(), v_gid));
         ARROW_OK_OR_RAISE(src_builder.Append(u_gid));
         ARROW_OK_OR_RAISE(dst_builder.Append(v_gid));
       }
       if (src_frag->directed()) {
         for (auto& e : src_frag->GetIncomingAdjList(u)) {
-          auto& v = e.neighbor();
+          auto& v = e.neighbor;
           if (src_frag->IsOuterVertex(v)) {
             auto v_oid = src_frag->GetId(v);
             vineyard::property_graph_types::VID_TYPE v_gid;
 
-            CHECK(dst_vm->GetGid(0, v_oid.asString(), v_gid));
+            CHECK(dst_vm->GetGid(0, v_oid.GetString(), v_gid));
             ARROW_OK_OR_RAISE(src_builder.Append(v_gid));
             ARROW_OK_OR_RAISE(dst_builder.Append(u_gid));
           }
@@ -398,6 +423,7 @@ struct VertexMapConverter {};
 template <>
 class VertexMapConverter<int64_t> {
   using oid_t = int64_t;
+  using origin_oid_t = typename DynamicFragment::oid_t;
   using vid_t = typename DynamicFragment::vid_t;
   using oid_array_t = typename vineyard::ConvertToArrowType<oid_t>::ArrayType;
   using oid_builder_t =
@@ -410,20 +436,26 @@ class VertexMapConverter<int64_t> {
 
   bl::result<vineyard::ObjectID> Convert(
       const std::shared_ptr<DynamicFragment>& dynamic_frag) {
-    // label id->frag id->oid array
+    // label_id->frag_id->oid array
     std::vector<std::vector<std::shared_ptr<oid_array_t>>> oid_lists(1);
-    auto all_oids = dynamic_frag->GetAllOids(comm_spec_);
-    auto fnum = all_oids.size();
-
-    for (const auto& oids : all_oids) {
-      std::shared_ptr<oid_array_t> oid_array;
-      oid_builder_t builder;
-      for (const auto& oid : oids) {
-        ARROW_OK_OR_RAISE(builder.Append(oid.asInt()));
+    std::shared_ptr<oid_array_t> local_oid_array;
+    const auto& vm_ptr = dynamic_frag->GetVertexMap();
+    auto fid = dynamic_frag->fid();
+    auto fnum = dynamic_frag->fnum();
+    origin_oid_t origin_id;
+    oid_builder_t builder;
+    for (auto& v : dynamic_frag->InnerVertices()) {
+      if (!dynamic_frag->IsAliveInnerVertex(v)) {
+        continue;
       }
-      ARROW_OK_OR_RAISE(builder.Finish(&oid_array));
-      oid_lists[0].push_back(oid_array);
+      CHECK(vm_ptr->GetOid(fid, v.GetValue(), origin_id));
+      CHECK(origin_id.IsInt64());
+      ARROW_OK_OR_RAISE(builder.Append(origin_id.GetInt64()));
     }
+    ARROW_OK_OR_RAISE(builder.Finish(&local_oid_array));
+
+    VY_OK_OR_RAISE(vineyard::FragmentAllGatherArray<oid_t>(
+        comm_spec_, local_oid_array, oid_lists[0]));
 
     vineyard::BasicArrowVertexMapBuilder<
         typename vineyard::InternalType<oid_t>::type, vid_t>
@@ -443,6 +475,7 @@ class VertexMapConverter<int64_t> {
 template <>
 class VertexMapConverter<std::string> {
   using oid_t = std::string;
+  using origin_oid_t = typename DynamicFragment::oid_t;
   using vid_t = typename DynamicFragment::vid_t;
   using oid_array_t = typename vineyard::ConvertToArrowType<oid_t>::ArrayType;
   using oid_builder_t =
@@ -455,20 +488,26 @@ class VertexMapConverter<std::string> {
 
   bl::result<vineyard::ObjectID> Convert(
       const std::shared_ptr<DynamicFragment>& dynamic_frag) {
-    // label id->frag id->oid array
+    // label_id->frag_id->oid array
     std::vector<std::vector<std::shared_ptr<oid_array_t>>> oid_lists(1);
-    auto all_oids = dynamic_frag->GetAllOids(comm_spec_);
-    auto fnum = all_oids.size();
-
-    for (const auto& oids : all_oids) {
-      std::shared_ptr<oid_array_t> oid_array;
-      oid_builder_t builder;
-      for (const auto& oid : oids) {
-        ARROW_OK_OR_RAISE(builder.Append(oid.asString()));
+    std::shared_ptr<oid_array_t> local_oid_array;
+    const auto& vm_ptr = dynamic_frag->GetVertexMap();
+    auto fid = dynamic_frag->fid();
+    auto fnum = dynamic_frag->fnum();
+    origin_oid_t origin_id;
+    oid_builder_t builder;
+    for (auto& v : dynamic_frag->InnerVertices()) {
+      if (!dynamic_frag->IsAliveInnerVertex(v)) {
+        continue;
       }
-      ARROW_OK_OR_RAISE(builder.Finish(&oid_array));
-      oid_lists[0].push_back(oid_array);
+      CHECK(vm_ptr->GetOid(fid, v.GetValue(), origin_id));
+      CHECK(origin_id.IsString());
+      ARROW_OK_OR_RAISE(builder.Append(origin_id.GetString()));
     }
+    ARROW_OK_OR_RAISE(builder.Finish(&local_oid_array));
+
+    VY_OK_OR_RAISE(vineyard::FragmentAllGatherArray<oid_t>(
+        comm_spec_, local_oid_array, oid_lists[0]));
 
     vineyard::BasicArrowVertexMapBuilder<
         typename vineyard::InternalType<oid_t>::type, vid_t>
@@ -510,135 +549,17 @@ class DynamicToArrowConverter {
         typename vineyard::InternalType<oid_t>::type, vid_t>>(
         client_.GetObject(vm_id));
 
-    return ConvertFragment(dynamic_frag, dst_vm);
+    return convertFragment(dynamic_frag, dst_vm);
   }
 
  private:
-  bl::result<std::shared_ptr<arrow::Table>> BuildVTable(
-      const std::shared_ptr<src_fragment_t>& src_frag) {
-    std::vector<std::shared_ptr<arrow::Field>> schema_vector;
-    std::vector<std::shared_ptr<arrow::Array>> arrays;
-    BOOST_LEAF_AUTO(prop_keys, src_frag->CollectPropertyKeysOnVertices());
-
-    // build schema and array
-    for (const auto& p : prop_keys) {
-      auto key = p.first;
-      auto type = p.second;
-
-      switch (type) {
-      case folly::dynamic::Type::INT64: {
-        auto r = VertexArrayBuilder<arrow::Int64Builder>::build(src_frag, key);
-
-        BOOST_LEAF_AUTO(array, r);
-        schema_vector.push_back(arrow::field(key, arrow::int64()));
-        arrays.push_back(array);
-        break;
-      }
-      case folly::dynamic::Type::DOUBLE: {
-        auto r = VertexArrayBuilder<arrow::DoubleBuilder>::build(src_frag, key);
-
-        BOOST_LEAF_AUTO(array, r);
-        schema_vector.push_back(arrow::field(key, arrow::float64()));
-        arrays.push_back(array);
-        break;
-      }
-      case folly::dynamic::Type::STRING: {
-        auto r =
-            VertexArrayBuilder<arrow::LargeStringBuilder>::build(src_frag, key);
-
-        BOOST_LEAF_AUTO(array, r);
-        schema_vector.push_back(arrow::field(key, arrow::large_utf8()));
-        arrays.push_back(array);
-        break;
-      }
-      default:
-        RETURN_GS_ERROR(vineyard::ErrorCode::kDataTypeError,
-                        "Unsupported dynamic type: " + std::to_string(type));
-      }
-    }
-
-    auto schema = std::make_shared<arrow::Schema>(schema_vector);
-    auto v_table = arrow::Table::Make(schema, arrays);
-    std::shared_ptr<arrow::KeyValueMetadata> meta(
-        new arrow::KeyValueMetadata());
-    meta->Append("type", "VERTEX");
-    meta->Append("label_index", "0");
-    meta->Append("label", "default_0");
-
-    return v_table->ReplaceSchemaMetadata(meta);
-  }
-
-  bl::result<std::shared_ptr<arrow::Table>> BuildETable(
-      const std::shared_ptr<src_fragment_t>& src_frag,
-      const std::shared_ptr<typename dst_fragment_t::vertex_map_t>& dst_vm) {
-    std::vector<std::shared_ptr<arrow::Field>> schema_vector = {
-        std::make_shared<arrow::Field>("src", arrow::uint64()),
-        std::make_shared<arrow::Field>("dst", arrow::uint64())};
-    auto inner_vertices = src_frag->InnerVertices();
-    COOBuilder<dst_fragment_t, oid_t> builder;
-    BOOST_LEAF_AUTO(src_dst_array, builder.Build(src_frag, dst_vm));
-    std::shared_ptr<arrow::Array> src_array = src_dst_array.first,
-                                  dst_array = src_dst_array.second;
-    CHECK_EQ(src_array->length(), dst_array->length());
-    std::vector<std::shared_ptr<arrow::Array>> arrays{src_array, dst_array};
-
-    BOOST_LEAF_AUTO(prop_keys, src_frag->CollectPropertyKeysOnEdges());
-    // build schema and array
-    for (const auto& e : prop_keys) {
-      auto key = e.first;
-      auto type = e.second;
-
-      switch (type) {
-      case folly::dynamic::Type::INT64: {
-        auto r = EdgeArrayBuilder<arrow::Int64Builder>::build(src_frag, key);
-
-        BOOST_LEAF_AUTO(array, r);
-        schema_vector.push_back(arrow::field(key, arrow::int64()));
-        CHECK_EQ(array->length(), src_array->length());
-        arrays.push_back(array);
-        break;
-      }
-      case folly::dynamic::Type::DOUBLE: {
-        auto r = EdgeArrayBuilder<arrow::DoubleBuilder>::build(src_frag, key);
-
-        BOOST_LEAF_AUTO(array, r);
-        schema_vector.push_back(arrow::field(key, arrow::float64()));
-        arrays.push_back(array);
-        break;
-      }
-      case folly::dynamic::Type::STRING: {
-        auto r =
-            EdgeArrayBuilder<arrow::LargeStringBuilder>::build(src_frag, key);
-
-        BOOST_LEAF_AUTO(array, r);
-        schema_vector.push_back(arrow::field(key, arrow::large_utf8()));
-        arrays.push_back(array);
-        break;
-      }
-      default:
-        RETURN_GS_ERROR(vineyard::ErrorCode::kDataTypeError,
-                        "Unsupported dynamic type: " + std::to_string(type));
-      }
-    }
-
-    auto schema = std::make_shared<arrow::Schema>(schema_vector);
-    auto e_table = arrow::Table::Make(schema, arrays);
-    std::shared_ptr<arrow::KeyValueMetadata> meta(
-        new arrow::KeyValueMetadata());
-    meta->Append("type", "EDGE");
-    meta->Append("label_index", "0");
-    meta->Append("label", "default_0");
-
-    return e_table->ReplaceSchemaMetadata(meta);
-  }
-
-  bl::result<std::shared_ptr<dst_fragment_t>> ConvertFragment(
+  bl::result<std::shared_ptr<dst_fragment_t>> convertFragment(
       const std::shared_ptr<src_fragment_t>& src_frag,
       const std::shared_ptr<typename dst_fragment_t::vertex_map_t>& dst_vm) {
     auto fid = src_frag->fid();
     auto fnum = src_frag->fnum();
-    BOOST_LEAF_AUTO(v_table, BuildVTable(src_frag));
-    BOOST_LEAF_AUTO(e_table, BuildETable(src_frag, dst_vm));
+    BOOST_LEAF_AUTO(v_table, buildVTable(src_frag));
+    BOOST_LEAF_AUTO(e_table, buildETable(src_frag, dst_vm));
 
     {
       std::shared_ptr<arrow::KeyValueMetadata> meta(
@@ -705,6 +626,124 @@ class DynamicToArrowConverter {
 
     return std::dynamic_pointer_cast<dst_fragment_t>(
         frag_builder->Seal(client_));
+  }
+
+  bl::result<std::shared_ptr<arrow::Table>> buildVTable(
+      const std::shared_ptr<src_fragment_t>& src_frag) {
+    std::vector<std::shared_ptr<arrow::Field>> schema_vector;
+    std::vector<std::shared_ptr<arrow::Array>> arrays;
+    // TODO(weibin): Replace with schema of DynamicFragment.
+    BOOST_LEAF_AUTO(prop_keys, src_frag->CollectPropertyKeysOnVertices());
+
+    // build schema and array
+    for (const auto& p : prop_keys) {
+      auto key = p.first;
+      auto type = p.second;
+
+      switch (type) {
+      case dynamic::Type::kInt64Type: {
+        auto r = VertexArrayBuilder<arrow::Int64Builder>::build(src_frag, key);
+
+        BOOST_LEAF_AUTO(array, r);
+        schema_vector.push_back(arrow::field(key, arrow::int64()));
+        arrays.push_back(array);
+        break;
+      }
+      case dynamic::Type::kDoubleType: {
+        auto r = VertexArrayBuilder<arrow::DoubleBuilder>::build(src_frag, key);
+
+        BOOST_LEAF_AUTO(array, r);
+        schema_vector.push_back(arrow::field(key, arrow::float64()));
+        arrays.push_back(array);
+        break;
+      }
+      case dynamic::Type::kStringType: {
+        auto r =
+            VertexArrayBuilder<arrow::LargeStringBuilder>::build(src_frag, key);
+
+        BOOST_LEAF_AUTO(array, r);
+        schema_vector.push_back(arrow::field(key, arrow::large_utf8()));
+        arrays.push_back(array);
+        break;
+      }
+      default:
+        RETURN_GS_ERROR(vineyard::ErrorCode::kDataTypeError,
+                        "Unsupported dynamic type: " + std::to_string(type));
+      }
+    }
+
+    auto schema = std::make_shared<arrow::Schema>(schema_vector);
+    auto v_table = arrow::Table::Make(schema, arrays);
+    std::shared_ptr<arrow::KeyValueMetadata> meta(
+        new arrow::KeyValueMetadata());
+    meta->Append("type", "VERTEX");
+    meta->Append("label_index", "0");
+    meta->Append("label", "default_0");
+
+    return v_table->ReplaceSchemaMetadata(meta);
+  }
+
+  bl::result<std::shared_ptr<arrow::Table>> buildETable(
+      const std::shared_ptr<src_fragment_t>& src_frag,
+      const std::shared_ptr<typename dst_fragment_t::vertex_map_t>& dst_vm) {
+    std::vector<std::shared_ptr<arrow::Field>> schema_vector = {
+        std::make_shared<arrow::Field>("src", arrow::uint64()),
+        std::make_shared<arrow::Field>("dst", arrow::uint64())};
+    COOBuilder<dst_fragment_t, oid_t> builder;
+    BOOST_LEAF_AUTO(src_dst_array, builder.Build(src_frag, dst_vm));
+    std::shared_ptr<arrow::Array> src_array = src_dst_array.first,
+                                  dst_array = src_dst_array.second;
+    CHECK_EQ(src_array->length(), dst_array->length());
+    std::vector<std::shared_ptr<arrow::Array>> arrays{src_array, dst_array};
+
+    BOOST_LEAF_AUTO(prop_keys, src_frag->CollectPropertyKeysOnEdges());
+    // build schema and array
+    for (const auto& e : prop_keys) {
+      auto key = e.first;
+      auto type = e.second;
+
+      switch (type) {
+      case dynamic::Type::kInt64Type: {
+        auto r = EdgeArrayBuilder<arrow::Int64Builder>::build(src_frag, key);
+
+        BOOST_LEAF_AUTO(array, r);
+        schema_vector.push_back(arrow::field(key, arrow::int64()));
+        CHECK_EQ(array->length(), src_array->length());
+        arrays.push_back(array);
+        break;
+      }
+      case dynamic::Type::kDoubleType: {
+        auto r = EdgeArrayBuilder<arrow::DoubleBuilder>::build(src_frag, key);
+
+        BOOST_LEAF_AUTO(array, r);
+        schema_vector.push_back(arrow::field(key, arrow::float64()));
+        arrays.push_back(array);
+        break;
+      }
+      case dynamic::Type::kStringType: {
+        auto r =
+            EdgeArrayBuilder<arrow::LargeStringBuilder>::build(src_frag, key);
+
+        BOOST_LEAF_AUTO(array, r);
+        schema_vector.push_back(arrow::field(key, arrow::large_utf8()));
+        arrays.push_back(array);
+        break;
+      }
+      default:
+        RETURN_GS_ERROR(vineyard::ErrorCode::kDataTypeError,
+                        "Unsupported dynamic type: " + std::to_string(type));
+      }
+    }
+
+    auto schema = std::make_shared<arrow::Schema>(schema_vector);
+    auto e_table = arrow::Table::Make(schema, arrays);
+    std::shared_ptr<arrow::KeyValueMetadata> meta(
+        new arrow::KeyValueMetadata());
+    meta->Append("type", "EDGE");
+    meta->Append("label_index", "0");
+    meta->Append("label", "default_0");
+
+    return e_table->ReplaceSchemaMetadata(meta);
   }
 
   grape::CommSpec comm_spec_;

@@ -17,7 +17,6 @@
         <exclude>com.carrotsearch:junit-benchmarks</exclude>
         <exclude>com.alibaba.maxgraph:maxgraph-coordinator</exclude>
         <exclude>com.alibaba.maxgraph:maxgraph-frontendservice</exclude>
-        <exclude>com.alibaba.maxgraph:gaia-adaptor</exclude>
       </excludes>
     </dependencySet>
   </dependencySets>
@@ -51,13 +50,6 @@
       <outputDirectory>/</outputDirectory>
       <includes>
         <include>maxgraph*.jar</include>
-      </includes>
-    </fileSet>
-    <fileSet>
-      <directory>${project.basedir}/../gaia-adaptor/target</directory>
-      <outputDirectory>/</outputDirectory>
-      <includes>
-        <include>gaia*.jar</include>
       </includes>
     </fileSet>
   </fileSets>

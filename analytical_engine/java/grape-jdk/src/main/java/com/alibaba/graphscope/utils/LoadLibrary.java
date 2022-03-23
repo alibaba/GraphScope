@@ -16,15 +16,18 @@
 
 package com.alibaba.graphscope.utils;
 
-public class LoadLibrary {
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+public class LoadLibrary {
+    private static Logger logger = LoggerFactory.getLogger(LoadLibrary.class.getName());
     /**
      * Used by c++ to load compiled user app.
      *
      * @param userLibrary library to load, fully-specified path
      */
     public static void invoke(String userLibrary) throws UnsatisfiedLinkError {
-        System.out.println("loading library " + userLibrary);
+        logger.info("loading library " + userLibrary);
         System.load(userLibrary);
     }
 }

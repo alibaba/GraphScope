@@ -27,7 +27,7 @@ import socket
 import subprocess
 import sys
 import time
-import uuid
+import traceback
 
 try:
     from kubernetes import client as kube_client
@@ -147,8 +147,8 @@ class KubernetesClusterLauncher(Launcher):
     _etcd_container_name = "etcd"
     _engine_container_name = "engine"  # fixed
 
-    _mars_scheduler_container_name = "marsscheduler"  # fixed
-    _mars_worker_container_name = "marsworker"  # fixed
+    _mars_scheduler_container_name = "mars"  # fixed
+    _mars_worker_container_name = "mars"  # fixed
     _mars_scheduler_name_prefix = "marsscheduler-"
     _mars_service_name_prefix = "mars-"
 
@@ -159,7 +159,8 @@ class KubernetesClusterLauncher(Launcher):
 
     _vineyard_service_port = 9600  # fixed
     _mars_scheduler_port = 7103  # fixed
-    _mars_worker_port = 7104  # fixed
+    _mars_scheduler_web_port = 7104  # fixed
+    _mars_worker_port = 7105  # fixed
 
     def __init__(
         self,
@@ -170,6 +171,7 @@ class KubernetesClusterLauncher(Launcher):
         dataset_image=None,
         coordinator_name=None,
         coordinator_service_name=None,
+        etcd_addrs=None,
         etcd_num_pods=None,
         etcd_cpu=None,
         etcd_mem=None,
@@ -209,6 +211,7 @@ class KubernetesClusterLauncher(Launcher):
 
         # random for multiple k8s cluster in the same namespace
         self._engine_name = self._engine_name_prefix + self._saved_locals["instance_id"]
+        self._etcd_addrs = etcd_addrs
         self._etcd_name = self._etcd_name_prefix + self._saved_locals["instance_id"]
         self._etcd_service_name = (
             self._etcd_service_name_prefix + self._saved_locals["instance_id"]
@@ -432,7 +435,7 @@ class KubernetesClusterLauncher(Launcher):
         service_builder = ServiceBuilder(
             self._mars_service_name,
             service_type=self._saved_locals["service_type"],
-            port=self._mars_scheduler_port,
+            port=[self._mars_scheduler_port, self._mars_scheduler_web_port],
             selector=labels,
         )
         self._resource_object.append(
@@ -496,10 +499,6 @@ class KubernetesClusterLauncher(Launcher):
         if not self._exists_vineyard_daemonset(
             self._saved_locals["vineyard_daemonset"]
         ):
-            port = self._random_etcd_listen_client_service_port
-            etcd_endpoints = ["http://%s:%s" % (self._etcd_service_name, port)]
-            for i in range(self._etcd_num_pods):
-                etcd_endpoints.append("http://%s-%d:%s" % (self._etcd_name, i, port))
             scheduler_builder.add_vineyard_container(
                 name=self._vineyard_container_name,
                 image=self._saved_locals["gs_image"],
@@ -507,7 +506,7 @@ class KubernetesClusterLauncher(Launcher):
                 mem=self._saved_locals["vineyard_mem"],
                 shared_mem=self._saved_locals["vineyard_shared_mem"],
                 preemptive=self._saved_locals["preemptive"],
-                etcd_endpoints=etcd_endpoints,
+                etcd_endpoints=self._get_etcd_endpoints(),
                 port=self._vineyard_service_port,
             )
 
@@ -520,6 +519,7 @@ class KubernetesClusterLauncher(Launcher):
                 mem=self._saved_locals["mars_scheduler_mem"],
                 preemptive=self._saved_locals["preemptive"],
                 port=self._mars_scheduler_port,
+                web_port=self._mars_scheduler_web_port,
             )
         for name in self._image_pull_secrets:
             scheduler_builder.add_image_pull_secret(name)
@@ -632,10 +632,6 @@ class KubernetesClusterLauncher(Launcher):
         if not self._exists_vineyard_daemonset(
             self._saved_locals["vineyard_daemonset"]
         ):
-            port = self._random_etcd_listen_client_service_port
-            etcd_endpoints = ["http://%s:%s" % (self._etcd_service_name, port)]
-            for i in range(self._etcd_num_pods):
-                etcd_endpoints.append("http://%s-%d:%s" % (self._etcd_name, i, port))
             engine_builder.add_vineyard_container(
                 name=self._vineyard_container_name,
                 image=self._saved_locals["gs_image"],
@@ -643,7 +639,7 @@ class KubernetesClusterLauncher(Launcher):
                 mem=self._saved_locals["vineyard_mem"],
                 shared_mem=self._saved_locals["vineyard_shared_mem"],
                 preemptive=self._saved_locals["preemptive"],
-                etcd_endpoints=etcd_endpoints,
+                etcd_endpoints=self._get_etcd_endpoints(),
                 port=self._vineyard_service_port,
             )
 
@@ -790,6 +786,7 @@ class KubernetesClusterLauncher(Launcher):
             namespace=self._saved_locals["namespace"],
             name=self._mars_service_name,
             service_type=self._saved_locals["service_type"],
+            query_port=self._mars_scheduler_web_port,
         )
         return endpoints[0]
 
@@ -859,10 +856,7 @@ class KubernetesClusterLauncher(Launcher):
         zetcd_exec = shutil.which("zetcd")
         if not zetcd_exec:
             raise RuntimeError("zetcd command not found.")
-        port = self._random_etcd_listen_client_service_port
-        etcd_endpoints = ["http://%s:%s" % (self._etcd_service_name, port)]
-        for i in range(self._etcd_num_pods):
-            etcd_endpoints.append("http://%s-%d:%s" % (self._etcd_name, i, port))
+        etcd_endpoints = self._get_etcd_endpoints()
         cmd = [
             zetcd_exec,
             "--zkaddr",
@@ -905,10 +899,29 @@ class KubernetesClusterLauncher(Launcher):
             )
         )
 
+    def _config_etcd_endpoint(self):
+        if self._etcd_addrs is None:
+            self._create_etcd()
+            self._etcd_endpoint = self._get_etcd_service_endpoint()
+            logger.info("Etcd created, endpoint is %s", self._etcd_endpoint)
+        else:
+            self._etcd_endpoint = self._etcd_addrs
+            logger.info("External Etcd endpoint is %s", self._etcd_endpoint)
+
+    def _get_etcd_endpoints(self):
+        etcd_addrs = []
+        if self._etcd_addrs is None:
+            port = self._random_etcd_listen_client_service_port
+            etcd_addrs.append("%s:%s" % (self._etcd_service_name, port))
+            for i in range(self._etcd_num_pods):
+                etcd_addrs.append("%s-%d:%s" % (self._etcd_name, i, port))
+        else:
+            etcd_addrs = self._etcd_addrs.split(",")
+        etcd_endpoints = ["http://%s" % i for i in etcd_addrs if i]
+        return etcd_endpoints
+
     def _create_services(self):
-        self._create_etcd()
-        self._etcd_endpoint = self._get_etcd_service_endpoint()
-        logger.info("Etcd is ready, endpoint is {}".format(self._etcd_endpoint))
+        self._config_etcd_endpoint()
 
         # create interactive engine service
         logger.info("Creating interactive engine service...")
@@ -1005,7 +1018,9 @@ class KubernetesClusterLauncher(Launcher):
         self._vineyard_service_endpoint = self._get_vineyard_service_endpoint()
         logger.debug("vineyard rpc runs on %s", self._vineyard_service_endpoint)
         if self._saved_locals["with_mars"]:
-            self._mars_service_endpoint = self._get_mars_scheduler_service_endpoint()
+            self._mars_service_endpoint = (
+                "http://" + self._get_mars_scheduler_service_endpoint()
+            )
             logger.debug("mars scheduler runs on %s", self._mars_service_endpoint)
         logger.info("GraphScope engines pod is ready.")
 
@@ -1168,8 +1183,9 @@ class KubernetesClusterLauncher(Launcher):
         except Exception as e:
             time.sleep(1)
             logger.error(
-                "Error when launching GraphScope on kubernetes cluster: %s",
-                str(e),
+                "Error when launching GraphScope on kubernetes cluster: %s, with traceback: %s",
+                repr(e),
+                traceback.format_exc(),
             )
             self.stop()
             return False
@@ -1269,7 +1285,7 @@ class KubernetesClusterLauncher(Launcher):
                 config,
                 str(pod_index),
             ]
-            logging.info("launching learning server: %s", " ".join(cmd))
+            logging.debug("launching learning server: %s", " ".join(cmd))
             proc = subprocess.Popen(
                 cmd,
                 stdout=subprocess.PIPE,
@@ -1279,7 +1295,12 @@ class KubernetesClusterLauncher(Launcher):
                 universal_newlines=True,
                 bufsize=1,
             )
-            stdout_watcher = PipeWatcher(proc.stdout, sys.stdout, drop=True)
+            stdout_watcher = PipeWatcher(
+                proc.stdout,
+                sys.stdout,
+                drop=True,
+                suppressed=(not logger.isEnabledFor(logging.DEBUG)),
+            )
             setattr(proc, "stdout_watcher", stdout_watcher)
             self._learning_instance_processes[object_id].append(proc)
 

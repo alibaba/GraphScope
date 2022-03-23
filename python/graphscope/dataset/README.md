@@ -36,7 +36,7 @@ Currently, the supported graph datasets are listed as below.
 - [ogbn-proteins](https://ogb.stanford.edu/docs/nodeprop/#ogbn-proteins)
 - [p2p-network](http://snap.stanford.edu/data/p2p-Gnutella31.html)
 - [ppi](https://humgenomics.biomedcentral.com/articles/10.1186/1479-7364-3-3-291)
-- [u2i](https://github.com/alibaba/graph-learn/blob/master/examples/data/u2i.py)
+- [u2i](https://github.com/alibaba/graph-learn/blob/graphscope/examples/data/u2i.py)
 
 The list is growing. Hopefully, it would support all datasets from [ogb](https://ogb.stanford.edu) and [snap](https://snap.stanford.edu/data/index.html). 
 

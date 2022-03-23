@@ -14,6 +14,7 @@
 package com.alibaba.maxgraph.compiler.logical;
 
 import com.alibaba.maxgraph.compiler.optimizer.ContextManager;
+
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;

@@ -28,7 +28,7 @@
 #include "core/error.h"
 #include "core/object/gs_object.h"
 #include "core/utils/lib_utils.h"
-#include "proto/query_args.pb.h"
+#include "proto/graphscope/proto/query_args.pb.h"
 
 namespace gs {
 
@@ -41,7 +41,8 @@ typedef void DeleteWorkerT(void* worker_handler);
 typedef void QueryT(void* worker_handler, const rpc::QueryArgs& query_args,
                     const std::string& context_key,
                     std::shared_ptr<IFragmentWrapper> frag_wrapper,
-                    std::shared_ptr<IContextWrapper>& ctx_wrapper);
+                    std::shared_ptr<IContextWrapper>& ctx_wrapper,
+                    bl::result<nullptr_t>& wrapper_error);
 
 /**
  * @brief AppEntry is a class manages an application.
@@ -91,7 +92,12 @@ class AppEntry : public GSObject {
       const std::string& context_key,
       std::shared_ptr<IFragmentWrapper>& frag_wrapper) {
     std::shared_ptr<IContextWrapper> ctx_wrapper;
-    query_(worker_handler, query_args, context_key, frag_wrapper, ctx_wrapper);
+    bl::result<nullptr_t> wrapper_error;
+    query_(worker_handler, query_args, context_key, frag_wrapper, ctx_wrapper,
+           wrapper_error);
+    if (!wrapper_error) {
+      return std::move(wrapper_error);
+    }
     return ctx_wrapper;
   }
 

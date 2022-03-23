@@ -28,6 +28,7 @@ from graphscope.config import GSConfig as gs_config
 from graphscope.deploy.launcher import Launcher
 from graphscope.framework.utils import PipeWatcher
 from graphscope.framework.utils import get_free_port
+from graphscope.framework.utils import in_notebook
 from graphscope.framework.utils import is_free_port
 from graphscope.framework.utils import random_string
 
@@ -52,6 +53,7 @@ class HostsClusterLauncher(Launcher):
         self,
         hosts=None,
         port=None,
+        etcd_addrs=None,
         num_workers=None,
         vineyard_socket=None,
         timeout_seconds=None,
@@ -60,6 +62,7 @@ class HostsClusterLauncher(Launcher):
     ):
         self._hosts = hosts
         self._port = port
+        self._etcd_addrs = etcd_addrs
         self._num_workers = num_workers
         self._vineyard_socket = vineyard_socket
         self._timeout_seconds = timeout_seconds
@@ -104,6 +107,9 @@ class HostsClusterLauncher(Launcher):
             self._instance_id,
         ]
 
+        if self._etcd_addrs is not None:
+            cmd.extend(["--etcd_addrs", self._etcd_addrs])
+
         if self._vineyard_shared_mem is not None:
             cmd.extend(["--vineyard_shared_mem", self._vineyard_shared_mem])
 
@@ -126,22 +132,26 @@ class HostsClusterLauncher(Launcher):
 
         # Param `start_new_session=True` is for putting child process to a new process group
         # so it won't get the signals from parent.
+        # In notebook environment, we need to accept the signal from kernel restarted/stoped.
         process = subprocess.Popen(
             cmd,
-            start_new_session=True,
+            start_new_session=False if in_notebook() else True,
             cwd=COORDINATOR_HOME,
             env=env,
             encoding="utf-8",
             errors="replace",
             stdin=subprocess.DEVNULL,
-            stdout=subprocess.PIPE if gs_config.show_log else subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             universal_newlines=True,
             bufsize=1,
         )
-        if gs_config.show_log:
-            stdout_watcher = PipeWatcher(process.stdout, sys.stdout)
-            setattr(process, "stdout_watcher", stdout_watcher)
+        stdout_watcher = PipeWatcher(process.stdout, sys.stdout)
+        if not gs_config.show_log:
+            stdout_watcher.add_filter(
+                lambda line: "Loading" in line and "it/s]" in line
+            )
+        setattr(process, "stdout_watcher", stdout_watcher)
         stderr_watcher = PipeWatcher(process.stderr, sys.stderr)
         setattr(process, "stderr_watcher", stderr_watcher)
         self._proc = process

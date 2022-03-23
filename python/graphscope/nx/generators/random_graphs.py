@@ -183,7 +183,7 @@ def gnm_random_graph(n, m, seed=None, directed=False):
         # generate random edge,u,v
         u = seed.choice(nlist)
         v = seed.choice(nlist)
-        if u == v or G.has_edge(u, v):
+        if u == v:
             continue
         else:
             G.add_edge(u, v)
@@ -363,38 +363,45 @@ def _random_subset(seq, m, rng):
 
 @patch_docstring(nxa.barabasi_albert_graph)
 @py_random_state(2)
-def barabasi_albert_graph(n, m, seed=None):
+def barabasi_albert_graph(n, m, seed=None, initial_graph=None):
     if m < 1 or m >= n:
         raise nx.NetworkXError(
             "Barabási–Albert network must have m >= 1"
             " and m < n, m = %d, n = %d" % (m, n)
         )
 
-    # Add m initial nodes (m0 in barabasi-speak)
-    G = empty_graph(m)
-    # Target nodes for new edges
-    targets = list(range(m))
+    if initial_graph is None:
+        # Default initial graph : star graph on (m + 1) nodes
+        G = nx.star_graph(m)
+    else:
+        if len(initial_graph) < m or len(initial_graph) > n:
+            raise nx.NetworkXError(
+                f"Barabási–Albert initial graph needs between m={m} and n={n} nodes"
+            )
+        G = initial_graph.copy()
+
     # List of existing nodes, with nodes repeated once for each adjacent edge
-    repeated_nodes = []
-    # Start adding the other n-m nodes. The first node is m.
-    source = m
+    repeated_nodes = [n for n, d in G.degree() for _ in range(d)]
+    # Start adding the other n - m0 nodes.
+    source = len(G)
     while source < n:
+        # Now choose m unique nodes from the existing nodes
+        # Pick uniformly from repeated_nodes (preferential attachment)
+        targets = _random_subset(repeated_nodes, m, seed)
         # Add edges to m nodes from the source.
         G.add_edges_from(zip([source] * m, targets))
         # Add one node to the list for each new edge just created.
         repeated_nodes.extend(targets)
         # And the new node "source" has m edges to add to the list.
         repeated_nodes.extend([source] * m)
-        # Now choose m unique nodes from the existing nodes
-        # Pick uniformly from repeated_nodes (preferential attachment)
-        targets = _random_subset(repeated_nodes, m, seed)
+
         source += 1
     return G
 
 
 @patch_docstring(nxa.dual_barabasi_albert_graph)
 @py_random_state(4)
-def dual_barabasi_albert_graph(n, m1, m2, p, seed=None):
+def dual_barabasi_albert_graph(n, m1, m2, p, seed=None, initial_graph=None):
     if m1 < 1 or m1 >= n:
         raise nx.NetworkXError(
             "Dual Barabási–Albert network must have m1 >= 1"
@@ -416,27 +423,25 @@ def dual_barabasi_albert_graph(n, m1, m2, p, seed=None):
     if p == 0:
         return barabasi_albert_graph(n, m2, seed)
 
-    # Add max(m1,m2) initial nodes (m0 in barabasi-speak)
-    G = empty_graph(max(m1, m2))
-    # Target nodes for new edges
-    targets = list(range(max(m1, m2)))
-    # List of existing nodes, with nodes repeated once for each adjacent edge
-    repeated_nodes = []
-    # Start adding the remaining nodes.
-    source = max(m1, m2)
-    # Pick which m to use first time (m1 or m2)
-    if seed.random() < p:
-        m = m1
+    if initial_graph is None:
+        # Default initial graph : empty graph on max(m1, m2) nodes
+        G = nx.star_graph(max(m1, m2))
     else:
-        m = m2
+        if len(initial_graph) < max(m1, m2) or len(initial_graph) > n:
+            raise nx.NetworkXError(
+                f"Barabási–Albert initial graph must have between "
+                f"max(m1, m2) = {max(m1, m2)} and n = {n} nodes"
+            )
+        G = initial_graph.copy()
+
+    # Target nodes for new edges
+    targets = list(G)
+    # List of existing nodes, with nodes repeated once for each adjacent edge
+    repeated_nodes = [n for n, d in G.degree() for _ in range(d)]
+    # Start adding the remaining nodes.
+    source = len(G)
     while source < n:
-        # Add edges to m nodes from the source.
-        G.add_edges_from(zip([source] * m, targets))
-        # Add one node to the list for each new edge just created.
-        repeated_nodes.extend(targets)
-        # And the new node "source" has m edges to add to the list.
-        repeated_nodes.extend([source] * m)
-        # Pick which m to use next time (m1 or m2)
+        # Pick which m to use (m1 or m2)
         if seed.random() < p:
             m = m1
         else:
@@ -444,6 +449,13 @@ def dual_barabasi_albert_graph(n, m1, m2, p, seed=None):
         # Now choose m unique nodes from the existing nodes
         # Pick uniformly from repeated_nodes (preferential attachment)
         targets = _random_subset(repeated_nodes, m, seed)
+        # Add edges to m nodes from the source.
+        G.add_edges_from(zip([source] * m, targets))
+        # Add one node to the list for each new edge just created.
+        repeated_nodes.extend(targets)
+        # And the new node "source" has m edges to add to the list.
+        repeated_nodes.extend([source] * m)
+
         source += 1
     return G
 

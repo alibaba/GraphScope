@@ -1,16 +1,17 @@
 package com.alibaba.graphscope.fragment.adaptor;
 
 import com.alibaba.fastffi.CXXReference;
+import com.alibaba.fastffi.FFIPointer;
 import com.alibaba.graphscope.ds.DestList;
 import com.alibaba.graphscope.ds.Vertex;
 import com.alibaba.graphscope.ds.VertexRange;
 import com.alibaba.graphscope.ds.adaptor.AdjList;
 import com.alibaba.graphscope.ds.adaptor.GrapeAdjListAdaptor;
+import com.alibaba.graphscope.fragment.IFragment;
 import com.alibaba.graphscope.fragment.ImmutableEdgecutFragment;
-import com.alibaba.graphscope.fragment.SimpleFragment;
 
 public class ImmutableEdgecutFragmentAdaptor<OID_T, VID_T, VDATA_T, EDATA_T>
-        implements SimpleFragment<OID_T, VID_T, VDATA_T, EDATA_T> {
+        implements IFragment<OID_T, VID_T, VDATA_T, EDATA_T> {
     public static String fragmentType = "ImmutableEdgecutFragment";
     private ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T> fragment;
 
@@ -19,9 +20,23 @@ public class ImmutableEdgecutFragmentAdaptor<OID_T, VID_T, VDATA_T, EDATA_T>
         fragment = frag;
     }
 
+    public ImmutableEdgecutFragment getImmutableFragment() {
+        return fragment;
+    }
+
     @Override
     public String fragmentType() {
         return fragmentType;
+    }
+
+    /**
+     * Get the actual fragment FFIPointer we are using.
+     *
+     * @return a ffipointer
+     */
+    @Override
+    public FFIPointer getFFIPointer() {
+        return fragment;
     }
 
     @Override
@@ -90,12 +105,12 @@ public class ImmutableEdgecutFragmentAdaptor<OID_T, VID_T, VDATA_T, EDATA_T>
     }
 
     @Override
-    public VID_T getInnerVerticesNum() {
+    public long getInnerVerticesNum() {
         return fragment.getInnerVerticesNum();
     }
 
     @Override
-    public VID_T getOuterVerticesNum() {
+    public long getOuterVerticesNum() {
         return fragment.getOuterVerticesNum();
     }
 
@@ -182,5 +197,27 @@ public class ImmutableEdgecutFragmentAdaptor<OID_T, VID_T, VDATA_T, EDATA_T>
     @Override
     public AdjList<VID_T, EDATA_T> getOutgoingAdjList(Vertex<VID_T> vertex) {
         return new GrapeAdjListAdaptor<>(fragment.getOutgoingAdjList(vertex));
+    }
+
+    /**
+     * Get the data on vertex.
+     *
+     * @param vertex querying vertex.
+     * @return vertex data
+     */
+    @Override
+    public VDATA_T getData(Vertex<VID_T> vertex) {
+        return fragment.getData(vertex);
+    }
+
+    /**
+     * Update vertex data with a new value.
+     *
+     * @param vertex querying vertex.
+     * @param vdata new vertex data.
+     */
+    @Override
+    public void setData(Vertex<VID_T> vertex, VDATA_T vdata) {
+        fragment.setData(vertex, vdata);
     }
 }

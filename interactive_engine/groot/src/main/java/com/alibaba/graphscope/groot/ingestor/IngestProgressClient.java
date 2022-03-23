@@ -13,10 +13,11 @@
  */
 package com.alibaba.graphscope.groot.ingestor;
 
+import com.alibaba.graphscope.groot.rpc.RpcClient;
 import com.alibaba.maxgraph.proto.groot.GetTailOffsetsRequest;
 import com.alibaba.maxgraph.proto.groot.GetTailOffsetsResponse;
 import com.alibaba.maxgraph.proto.groot.IngestProgressGrpc;
-import com.alibaba.graphscope.groot.rpc.RpcClient;
+
 import io.grpc.ManagedChannel;
 
 import java.util.List;

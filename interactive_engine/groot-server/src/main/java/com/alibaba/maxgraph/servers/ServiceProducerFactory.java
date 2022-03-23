@@ -2,7 +2,6 @@ package com.alibaba.maxgraph.servers;
 
 import com.alibaba.maxgraph.common.config.CommonConfig;
 import com.alibaba.maxgraph.common.config.Configs;
-import com.alibaba.maxgraph.servers.gaia.GaiaServiceProducer;
 import com.alibaba.maxgraph.servers.ir.IrServiceProducer;
 import com.alibaba.maxgraph.servers.maxgraph.MaxGraphServiceProducer;
 

@@ -24,15 +24,14 @@
 #include <utility>
 
 #include "boost/lexical_cast.hpp"
-#include "folly/dynamic.h"
-#include "folly/json.h"
 
 #include "grape/communication/communicator.h"
 #include "grape/worker/comm_spec.h"
 
+#include "core/fragment/dynamic_fragment.h"
 #include "core/server/rpc_utils.h"
 #include "core/utils/convert_utils.h"
-#include "proto/types.pb.h"
+#include "proto/graphscope/proto/types.pb.h"
 
 namespace gs {
 /**
@@ -50,8 +49,6 @@ class DynamicFragmentReporter : public grape::Communicator {
   explicit DynamicFragmentReporter(const grape::CommSpec& comm_spec)
       : comm_spec_(comm_spec) {
     InitCommunicator(comm_spec.comm());
-    json_opts_.allow_non_string_keys = true;
-    json_opts_.allow_nan_inf = true;
   }
 
   bl::result<std::string> Report(std::shared_ptr<fragment_t>& fragment,
@@ -69,59 +66,40 @@ class DynamicFragmentReporter : public grape::Communicator {
     }
     case rpc::HAS_NODE: {
       BOOST_LEAF_AUTO(node_in_json, params.Get<std::string>(rpc::NODE));
-      oid_t node_id = folly::parseJson(node_in_json, json_opts_)[0];
+      oid_t node_id;
+      dynamic::Parse(node_in_json, node_id);
       return std::to_string(hasNode(fragment, node_id));
     }
+
     case rpc::HAS_EDGE: {
       BOOST_LEAF_AUTO(edge_in_json, params.Get<std::string>(rpc::EDGE));
-      oid_t edge = folly::parseJson(edge_in_json, json_opts_);
-      auto& src_id = edge[0];
-      auto& dst_id = edge[1];
+      dynamic::Value edge;
+      dynamic::Parse(edge_in_json, edge);
+      dynamic::Value src_id(edge[0]);
+      dynamic::Value dst_id(edge[1]);
       return std::to_string(hasEdge(fragment, src_id, dst_id));
     }
     case rpc::NODE_DATA: {
       BOOST_LEAF_AUTO(node_in_json, params.Get<std::string>(rpc::NODE));
-      oid_t node_id = folly::parseJson(node_in_json, json_opts_)[0];
+      oid_t node_id;
+      dynamic::Parse(node_in_json, node_id);
       return getNodeData(fragment, node_id);
     }
     case rpc::EDGE_DATA: {
       BOOST_LEAF_AUTO(edge_in_json, params.Get<std::string>(rpc::EDGE));
-      oid_t edge = folly::parseJson(edge_in_json, json_opts_);
-      auto& src_id = edge[0];
-      auto& dst_id = edge[1];
+      dynamic::Value edge;
+      dynamic::Parse(edge_in_json, edge);
+      dynamic::Value src_id(edge[0]);
+      dynamic::Value dst_id(edge[1]);
       return getEdgeData(fragment, src_id, dst_id);
-    }
-    case rpc::DEG_BY_NODE:
-    case rpc::IN_DEG_BY_NODE:
-    case rpc::OUT_DEG_BY_NODE: {
-      BOOST_LEAF_AUTO(node_in_json, params.Get<std::string>(rpc::NODE));
-      BOOST_LEAF_AUTO(edge_key, params.Get<std::string>(rpc::EDGE_KEY));
-      oid_t node_id = folly::parseJson(node_in_json, json_opts_)[0];
-      return std::to_string(
-          getDegree(fragment, node_id, report_type, edge_key));
-    }
-    case rpc::DEG_BY_LOC:
-    case rpc::IN_DEG_BY_LOC:
-    case rpc::OUT_DEG_BY_LOC: {
-      BOOST_LEAF_AUTO(fid, params.Get<int64_t>(rpc::FID));
-      BOOST_LEAF_AUTO(lid, params.Get<int64_t>(rpc::LID));
-      BOOST_LEAF_AUTO(edge_key, params.Get<std::string>(rpc::EDGE_KEY));
-
-      return batchGetDegree(fragment, fid, lid, report_type, edge_key);
     }
     case rpc::NEIGHBORS_BY_NODE:
     case rpc::SUCCS_BY_NODE:
     case rpc::PREDS_BY_NODE: {
       BOOST_LEAF_AUTO(node_in_json, params.Get<std::string>(rpc::NODE));
-      oid_t node_id = folly::parseJson(node_in_json, json_opts_)[0];
+      oid_t node_id;
+      dynamic::Parse(node_in_json, node_id);
       return getNeighbors(fragment, node_id, report_type);
-    }
-    case rpc::NEIGHBORS_BY_LOC:
-    case rpc::SUCCS_BY_LOC:
-    case rpc::PREDS_BY_LOC: {
-      BOOST_LEAF_AUTO(fid, params.Get<int64_t>(rpc::FID));
-      BOOST_LEAF_AUTO(lid, params.Get<int64_t>(rpc::LID));
-      return batchGetNeighbors(fragment, fid, lid, report_type);
     }
     case rpc::NODES_BY_LOC: {
       BOOST_LEAF_AUTO(fid, params.Get<int64_t>(rpc::FID));
@@ -129,7 +107,7 @@ class DynamicFragmentReporter : public grape::Communicator {
       return batchGetNodes(fragment, fid, lid);
     }
     default:
-      CHECK(false);
+      LOG(ERROR) << "Invalid report type";
     }
     return std::string("");
   }
@@ -175,50 +153,37 @@ class DynamicFragmentReporter : public grape::Communicator {
                           const oid_t& n) {
     vertex_t v;
     if (fragment->GetInnerVertex(n, v) && fragment->IsAliveInnerVertex(v)) {
-      return folly::toJson(fragment->GetData(v));
+      return dynamic::Stringify(fragment->GetData(v));
     }
     return std::string();
   }
 
   std::string getEdgeData(std::shared_ptr<fragment_t>& fragment, const oid_t& u,
                           const oid_t& v) {
-    folly::dynamic ref_data;
+    dynamic::Value ref_data;
     fragment->GetEdgeData(u, v, ref_data);
-    return ref_data.isNull() ? std::string()
-                             : folly::json::serialize(ref_data, json_opts_);
-  }
-
-  double getDegree(std::shared_ptr<fragment_t>& fragment, const oid_t& node,
-                   const rpc::ReportType& type, const std::string& weight) {
-    vertex_t v;
-    double degree = 0, sum_degree = 0;
-    if (fragment->GetInnerVertex(node, v) && fragment->IsAliveInnerVertex(v)) {
-      degree = getGraphDegree(fragment, v, type, weight);
-    }
-    Sum(degree, sum_degree);
-    return sum_degree;
+    return ref_data.IsNull() ? std::string() : dynamic::Stringify(ref_data);
   }
 
   std::string getNeighbors(std::shared_ptr<fragment_t>& fragment,
                            const oid_t& node,
                            const rpc::ReportType& report_type) {
     vertex_t v;
-    folly::dynamic nbrs = folly::dynamic::array;
-    if (fragment->GetInnerVertex(node, v) && fragment->IsAliveInnerVertex(v)) {
+    dynamic::Value nbrs(rapidjson::kArrayType);
+    if (fragment->GetInnerVertex(node, v)) {
       adj_list_t edges;
-      nbrs.resize(2, folly::dynamic::array);
+      dynamic::Value id_array(rapidjson::kArrayType);
+      dynamic::Value data_array(rapidjson::kArrayType);
       report_type == rpc::PREDS_BY_NODE
           ? edges = fragment->GetIncomingAdjList(v)
           : edges = fragment->GetOutgoingAdjList(v);
-      for (auto& e : edges) {
-        // nbrs[0] store the neighbors id array
-        nbrs[0].push_back(fragment->GetId(e.neighbor()));
-        // nbrs[1] store the neighbors data array
-        nbrs[1].push_back(e.data());
+      for (const auto& e : edges) {
+        id_array.PushBack(fragment->GetId(e.neighbor));
+        data_array.PushBack(e.data);
       }
+      nbrs.PushBack(id_array).PushBack(data_array);
     }
-    return nbrs.empty() ? std::string()
-                        : folly::json::serialize(nbrs, json_opts_);
+    return nbrs.Empty() ? std::string() : dynamic::Stringify(nbrs);
   }
 
   std::string batchGetNodes(std::shared_ptr<fragment_t>& fragment, vid_t fid,
@@ -226,14 +191,12 @@ class DynamicFragmentReporter : public grape::Communicator {
     if (fragment->fid() == fid) {
       int cnt = 0;
       vertex_t v(start_lid);
-      folly::dynamic nodes = folly::dynamic::object;
-      folly::dynamic batch_nodes = folly::dynamic::array;
-      while (fragment->IsInnerVertex(v) && cnt < batch_num_) {
-        if (fragment->IsAliveInnerVertex(v)) {
-          folly::dynamic one_item = folly::dynamic::object;
-          one_item.insert("id", fragment->GetId(v));
-          one_item.insert("data", fragment->GetData(v));
-          batch_nodes.push_back(one_item);
+      dynamic::Value nodes(rapidjson::kObjectType);
+      dynamic::Value batch_nodes(rapidjson::kArrayType);
+      auto end_value = fragment->InnerVertices().end_value();
+      while (v.GetValue() < end_value && cnt < batch_num_) {
+        if (fragment->IsInnerVertex(v) && fragment->IsAliveInnerVertex(v)) {
+          batch_nodes.PushBack(fragment->GetId(v));
           ++cnt;
         }
         ++v;
@@ -242,153 +205,40 @@ class DynamicFragmentReporter : public grape::Communicator {
       // to fetch, set false;  nodes["batch"] store the nodes.
       // nodes["next"] store the start vertex location of next batch_get_nodes
       // operation.
-      if (!batch_nodes.empty()) {
-        nodes["status"] = true;
-        nodes["batch"] = batch_nodes;
+      dynamic::Value next(rapidjson::kArrayType);
+      if (!batch_nodes.Empty()) {
+        nodes.Insert("status", true);
+        nodes.Insert("batch", batch_nodes);
         if (fragment->IsInnerVertex(v)) {
-          nodes["next"] = folly::dynamic::array(fid, v.GetValue());
+          next.PushBack(fid).PushBack(v.GetValue());
         } else {
-          nodes["next"] = folly::dynamic::array(fid + 1, 0);
+          next.PushBack(fid + 1).PushBack(0);
         }
       } else {
-        nodes["status"] = false;
-        nodes["next"] = folly::dynamic::array(fid + 1, 0);
+        nodes.Insert("status", false);
+        next.PushBack(fid + 1).PushBack(0);
       }
-      return folly::json::serialize(nodes, json_opts_);
+      nodes.Insert("next", next);
+      return dynamic::Stringify(nodes);
     }
     return std::string();
-  }
-
-  std::string batchGetDegree(std::shared_ptr<fragment_t>& fragment, vid_t fid,
-                             vid_t start_lid, const rpc::ReportType& type,
-                             const std::string& weight) {
-    std::string ret;
-    if (fragment->fid() == fid) {
-      int cnt = 0;
-      vertex_t v(start_lid);
-      folly::dynamic ret_dy = folly::dynamic::object;
-      folly::dynamic batch_degs = folly::dynamic::array;
-      while (fragment->IsInnerVertex(v) && cnt < batch_num_) {
-        if (fragment->IsAliveInnerVertex(v)) {
-          folly::dynamic one_item = folly::dynamic::object;
-          double degree = 0;
-          one_item.insert("node", fragment->GetId(v));
-          degree = getGraphDegree(fragment, v, type, weight);
-          one_item["deg"] = degree;
-          batch_degs.push_back(one_item);
-          ++cnt;
-        }
-        ++v;
-      }
-      if (!batch_degs.empty()) {
-        ret_dy["status"] = true;
-        ret_dy["batch"] = batch_degs;
-        if (fragment->IsInnerVertex(v)) {
-          ret_dy["next"] = folly::dynamic::array(fid, v.GetValue());
-        } else {
-          ret_dy["next"] = folly::dynamic::array(fid + 1, 0);
-        }
-      } else {
-        ret_dy["status"] = false;
-        ret_dy["next"] = folly::dynamic::array(fid + 1, 0);
-      }
-      ret = folly::json::serialize(ret_dy, json_opts_);
-    }
-    return ret;
-  }
-
-  std::string batchGetNeighbors(std::shared_ptr<fragment_t>& fragment,
-                                vid_t fid, vid_t start_lid,
-                                const rpc::ReportType& type) {
-    if (fragment->fid() == fid) {
-      int cnt = 0;
-      vertex_t v(start_lid);
-      folly::dynamic ret_dy = folly::dynamic::object;
-      folly::dynamic all_nbrs = folly::dynamic::array;
-      while (fragment->IsInnerVertex(v) && cnt < batch_num_) {
-        if (fragment->IsAliveInnerVertex(v)) {
-          folly::dynamic one_item = folly::dynamic::object;
-          one_item.insert("node", fragment->GetId(v));
-          one_item["nbrs"] = folly::dynamic::object;
-          if (type == rpc::NEIGHBORS_BY_LOC || type == rpc::SUCCS_BY_LOC) {
-            auto oe = fragment->GetOutgoingAdjList(v);
-            for (auto& e : oe) {
-              one_item["nbrs"].insert(fragment->GetId(e.neighbor()), e.data());
-            }
-          }
-          if (type == rpc::NEIGHBORS_BY_LOC || type == rpc::PREDS_BY_LOC) {
-            auto ie = fragment->GetIncomingAdjList(v);
-            for (auto& e : ie) {
-              one_item["nbrs"].insert(fragment->GetId(e.neighbor()), e.data());
-            }
-          }
-          all_nbrs.push_back(one_item);
-          ++cnt;
-        }
-        ++v;
-      }
-      if (!all_nbrs.empty()) {
-        ret_dy["status"] = true;
-        ret_dy["batch"] = all_nbrs;
-        if (fragment->IsInnerVertex(v)) {
-          ret_dy["next"] = folly::dynamic::array(fid, v.GetValue());
-        } else {
-          ret_dy["next"] = folly::dynamic::array(fid + 1, 0);
-        }
-      } else {
-        ret_dy["status"] = false;
-        ret_dy["next"] = folly::dynamic::array(fid + 1, 0);
-      }
-      return folly::json::serialize(ret_dy, json_opts_);
-    }
-    return std::string();
-  }
-
-  double getGraphDegree(std::shared_ptr<fragment_t>& fragment, vertex_t& v,
-                        const rpc::ReportType& type,
-                        const std::string& weight) {
-    double degree = 0;
-    if (type == rpc::IN_DEG_BY_NODE || type == rpc::DEG_BY_NODE ||
-        type == rpc::IN_DEG_BY_LOC || type == rpc::DEG_BY_LOC) {
-      if (weight.empty()) {
-        degree += static_cast<double>(fragment->GetLocalInDegree(v));
-      } else {
-        auto ie = fragment->GetIncomingAdjList(v);
-        for (auto& e : ie) {
-          degree += e.data().getDefault(weight, 1).asDouble();
-        }
-      }
-    }
-    if (type == rpc::OUT_DEG_BY_NODE || type == rpc::DEG_BY_NODE ||
-        type == rpc::OUT_DEG_BY_LOC || type == rpc::DEG_BY_LOC) {
-      if (weight.empty()) {
-        degree += static_cast<double>(fragment->GetLocalOutDegree(v));
-      } else {
-        auto oe = fragment->GetOutgoingAdjList(v);
-        for (auto& e : oe) {
-          degree += e.data().getDefault(weight, 1).asDouble();
-        }
-      }
-    }
-    return degree;
   }
 
   grape::CommSpec comm_spec_;
   static const int batch_num_ = 100;
-  folly::json::serialization_opts json_opts_;
 };
 
 template <typename T>
-T ExtractOidFromDynamic(folly::dynamic node_id) {}
+T ExtractOidFromDynamic(dynamic::Value& node_id) {}
 
 template <>
-int64_t ExtractOidFromDynamic(folly::dynamic node_id) {
-  return node_id.asInt();
+int64_t ExtractOidFromDynamic(dynamic::Value& node_id) {
+  return node_id.GetInt64();
 }
 
 template <>
-std::string ExtractOidFromDynamic(folly::dynamic node_id) {
-  return node_id.asString();
+std::string ExtractOidFromDynamic(dynamic::Value& node_id) {
+  return node_id.GetString();
 }
 
 template <typename FRAG_T>
@@ -413,8 +263,6 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
                                  label_id_t default_label_id)
       : comm_spec_(comm_spec), default_label_id_(default_label_id) {
     InitCommunicator(comm_spec.comm());
-    json_opts_.allow_non_string_keys = true;
-    json_opts_.allow_nan_inf = true;
   }
 
   bl::result<std::string> Report(std::shared_ptr<fragment_t>& fragment,
@@ -434,38 +282,48 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
     case rpc::HAS_NODE: {
       BOOST_LEAF_AUTO(node_in_json, params.Get<std::string>(rpc::NODE));
       // the input node format: (label_id, oid)
-      folly::dynamic node = folly::parseJson(node_in_json, json_opts_)[0];
-      label_id_t label_id = node[0].asInt();
-      oid_t oid = ExtractOidFromDynamic<oid_t>(node[1]);
+      dynamic::Value node;
+      dynamic::Parse(node_in_json, node);
+      label_id_t label_id = node[0].GetInt64();
+      dynamic::Value dynamic_oid(node[1]);
+      oid_t oid = ExtractOidFromDynamic<oid_t>(dynamic_oid);
       return std::to_string(hasNode(fragment, label_id, oid));
     }
     case rpc::HAS_EDGE: {
       BOOST_LEAF_AUTO(edge_in_json, params.Get<std::string>(rpc::EDGE));
       // the input edge format: ((u_label_id, u_oid), (v_label_id, v_oid))
-      folly::dynamic edge = folly::parseJson(edge_in_json, json_opts_);
-      label_id_t u_label_id = edge[0][0].asInt();
-      label_id_t v_label_id = edge[1][0].asInt();
-      auto u_oid = ExtractOidFromDynamic<oid_t>(edge[0][1]);
-      auto v_oid = ExtractOidFromDynamic<oid_t>(edge[1][1]);
+      dynamic::Value edge;
+      dynamic::Parse(edge_in_json, edge);
+      label_id_t u_label_id = edge[0][0].GetInt64();
+      label_id_t v_label_id = edge[1][0].GetInt64();
+      dynamic::Value u_dy_oid(edge[0][1]);
+      dynamic::Value v_dy_oid(edge[1][1]);
+      auto u_oid = ExtractOidFromDynamic<oid_t>(u_dy_oid);
+      auto v_oid = ExtractOidFromDynamic<oid_t>(v_dy_oid);
       return std::to_string(
           hasEdge(fragment, u_label_id, u_oid, v_label_id, v_oid));
     }
     case rpc::NODE_DATA: {
       BOOST_LEAF_AUTO(node_in_json, params.Get<std::string>(rpc::NODE));
       // the input node format: (label_id, oid)
-      folly::dynamic node = folly::parseJson(node_in_json, json_opts_)[0];
-      label_id_t label_id = node[0].asInt();
-      oid_t oid = ExtractOidFromDynamic<oid_t>(node[1]);
+      dynamic::Value node;
+      dynamic::Parse(node_in_json, node);
+      label_id_t label_id = node[0].GetInt64();
+      dynamic::Value dynamic_oid(node[1]);
+      oid_t oid = ExtractOidFromDynamic<oid_t>(dynamic_oid);
       return getNodeData(fragment, label_id, oid);
     }
     case rpc::EDGE_DATA: {
       BOOST_LEAF_AUTO(edge_in_json, params.Get<std::string>(rpc::EDGE));
       // the input edge format: ((u_label_id, u_oid), (v_label_id, v_oid))
-      folly::dynamic edge = folly::parseJson(edge_in_json, json_opts_);
-      label_id_t u_label_id = edge[0][0].asInt();
-      label_id_t v_label_id = edge[1][0].asInt();
-      auto u_oid = ExtractOidFromDynamic<oid_t>(edge[0][1]);
-      auto v_oid = ExtractOidFromDynamic<oid_t>(edge[1][1]);
+      dynamic::Value edge;
+      dynamic::Parse(edge_in_json, edge);
+      label_id_t u_label_id = edge[0][0].GetInt64();
+      label_id_t v_label_id = edge[1][0].GetInt64();
+      dynamic::Value u_dy_oid(edge[0][1]);
+      dynamic::Value v_dy_oid(edge[1][1]);
+      auto u_oid = ExtractOidFromDynamic<oid_t>(u_dy_oid);
+      auto v_oid = ExtractOidFromDynamic<oid_t>(v_dy_oid);
       return getEdgeData(fragment, u_label_id, u_oid, v_label_id, v_oid);
     }
     case rpc::NEIGHBORS_BY_NODE:
@@ -473,9 +331,11 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
     case rpc::PREDS_BY_NODE: {
       BOOST_LEAF_AUTO(node_in_json, params.Get<std::string>(rpc::NODE));
       // the input node format: (label_id, oid)
-      folly::dynamic node = folly::parseJson(node_in_json, json_opts_)[0];
-      label_id_t label_id = node[0].asInt();
-      oid_t oid = ExtractOidFromDynamic<oid_t>(node[1]);
+      dynamic::Value node;
+      dynamic::Parse(node_in_json, node);
+      label_id_t label_id = node[0].GetInt64();
+      dynamic::Value dynamic_oid(node[1]);
+      oid_t oid = ExtractOidFromDynamic<oid_t>(dynamic_oid);
       return getNeighbors(fragment, label_id, oid, report_type);
     }
     case rpc::NODES_BY_LOC: {
@@ -541,13 +401,12 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
 
   std::string getNodeData(std::shared_ptr<fragment_t>& fragment,
                           label_id_t label_id, const oid_t& n) {
-    folly::dynamic ref_data;
     vid_t gid;
     vertex_t v;
     auto vm_ptr = fragment->GetVertexMap();
     if (vm_ptr->GetGid(fragment->fid(), label_id, n, gid) &&
         fragment->InnerVertexGid2Vertex(gid, v)) {
-      ref_data = folly::dynamic::object;
+      dynamic::Value ref_data(rapidjson::kObjectType);
       auto vertex_data = fragment->vertex_data_table(label_id);
       // N.B: th last column is id, we ignore it.
       for (auto col_id = 0; col_id < vertex_data->num_columns() - 1; col_id++) {
@@ -556,14 +415,15 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
         PropertyConverter<fragment_t>::NodeValue(fragment, v, type, prop_name,
                                                  col_id, ref_data);
       }
+      return dynamic::Stringify(ref_data);
     }
-    return ref_data.isNull() ? std::string() : folly::toJson(ref_data);
+    return std::string();
   }
 
   std::string getEdgeData(std::shared_ptr<fragment_t>& fragment,
                           label_id_t u_label_id, const oid_t& u_oid,
                           label_id_t v_label_id, const oid_t& v_oid) {
-    folly::dynamic ref_data;
+    dynamic::Value ref_data;
     vid_t u_gid, v_gid;
     vertex_t u, v;
     auto vm_ptr = fragment->GetVertexMap();
@@ -576,15 +436,16 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
         auto oe = fragment->GetOutgoingAdjList(u, e_label);
         for (auto& e : oe) {
           if (v == e.neighbor()) {
-            ref_data = folly::dynamic::object;
+            ref_data = dynamic::Value(rapidjson::kObjectType);
             auto edge_data = fragment->edge_data_table(e_label);
             PropertyConverter<fragment_t>::EdgeValue(edge_data, e.edge_id(),
                                                      ref_data);
+            return dynamic::Stringify(ref_data);
           }
         }
       }
     }
-    return ref_data.isNull() ? std::string() : folly::toJson(ref_data);
+    return std::string();
   }
 
   std::string getNeighbors(std::shared_ptr<fragment_t>& fragment,
@@ -592,65 +453,55 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
                            const rpc::ReportType& report_type) {
     vid_t gid;
     vertex_t v;
-    folly::dynamic nbrs = folly::dynamic::array;
+    dynamic::Value nbrs(rapidjson::kArrayType);
     auto vm_ptr = fragment->GetVertexMap();
     if (vm_ptr->GetGid(fragment->fid(), label_id, n, gid) &&
         fragment->InnerVertexGid2Vertex(gid, v)) {
-      nbrs.resize(2, folly::dynamic::array);
+      dynamic::Value id_array(rapidjson::kArrayType);
+      dynamic::Value data_array(rapidjson::kArrayType);
       for (label_id_t e_label = 0; e_label < fragment->edge_label_num();
            e_label++) {
         adj_list_t edges;
         auto edge_data = fragment->edge_data_table(e_label);
-        if (report_type == rpc::PREDS_BY_NODE) {
-          edges = fragment->GetIncomingAdjList(v, e_label);
-        } else {
-          edges = fragment->GetOutgoingAdjList(v, e_label);
-        }
+        report_type == rpc::PREDS_BY_NODE
+            ? edges = fragment->GetIncomingAdjList(v, e_label)
+            : edges = fragment->GetOutgoingAdjList(v, e_label);
         for (auto& e : edges) {
           auto n_label_id = fragment->vertex_label(e.neighbor());
-          // nbrs[0] store the neighbors id array
           if (n_label_id == default_label_id_) {
-            nbrs[0].push_back(fragment->GetId(e.neighbor()));
+            id_array.PushBack(fragment->GetId(e.neighbor()));
           } else {
-            nbrs[0].push_back(folly::dynamic::array(
-                fragment->schema().GetVertexLabelName(n_label_id),
-                fragment->GetId(e.neighbor())));
+            id_array.PushBack(
+                dynamic::Value(rapidjson::kArrayType)
+                    .PushBack(fragment->schema().GetVertexLabelName(n_label_id))
+                    .PushBack(fragment->GetId(e.neighbor())));
           }
-          folly::dynamic ob = folly::dynamic::object;
-          PropertyConverter<fragment_t>::EdgeValue(edge_data, e.edge_id(), ob);
-          // nbrs[1] store the neighbors data array
-          nbrs[1].push_back(ob);
+          dynamic::Value data(rapidjson::kObjectType);
+          PropertyConverter<fragment_t>::EdgeValue(edge_data, e.edge_id(),
+                                                   data);
+          data_array.PushBack(data);
         }
       }
+      nbrs.PushBack(id_array).PushBack(data_array);
     }
-    return nbrs.empty() ? std::string() : folly::toJson(nbrs);
+    std::string ret = dynamic::Stringify(nbrs);
+    return nbrs.Empty() ? std::string() : dynamic::Stringify(nbrs);
   }
 
   std::string batchGetNodes(std::shared_ptr<fragment_t>& fragment, vid_t fid,
                             label_id_t label_id, vid_t start, vid_t end) {
-    folly::dynamic ob = folly::dynamic::object;
     if (fragment->fid() == fid) {
-      folly::dynamic batch_nodes = folly::dynamic::array;
+      dynamic::Value nodes(rapidjson::kObjectType);
+      dynamic::Value batch_nodes(rapidjson::kArrayType);
       auto label_name = fragment->schema().GetVertexLabelName(label_id);
       for (auto v : fragment->InnerVerticesSlice(label_id, start, end)) {
-        folly::dynamic one_item = folly::dynamic::object;
         if (label_id == default_label_id_) {
-          one_item["id"] = fragment->GetId(v);
+          batch_nodes.PushBack(fragment->GetId(v));
         } else {
-          one_item["id"] =
-              folly::dynamic::array(label_name, fragment->GetId(v));
+          batch_nodes.PushBack(dynamic::Value(rapidjson::kArrayType)
+                                   .PushBack(label_name)
+                                   .PushBack(fragment->GetId(v)));
         }
-        one_item["data"] = folly::dynamic::object;
-        auto vertex_data = fragment->vertex_data_table(label_id);
-        // N.B: th last column is id, we ignore it.
-        for (auto col_id = 0; col_id < vertex_data->num_columns() - 1;
-             col_id++) {
-          auto prop_name = vertex_data->field(col_id)->name();
-          auto type = vertex_data->column(col_id)->type();
-          PropertyConverter<fragment_t>::NodeValue(fragment, v, type, prop_name,
-                                                   col_id, one_item["data"]);
-        }
-        batch_nodes.push_back(one_item);
       }
       if (end >= fragment->GetInnerVerticesNum(label_id)) {
         // switch to next label
@@ -667,21 +518,23 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
       }
       // ob["status"] store this batch_get_nodes operation status, if no node
       // to fetch, set false;  ob["batch"] store the nodes
-      if (batch_nodes.empty()) {
-        ob["status"] = false;
+      if (batch_nodes.Empty()) {
+        nodes.Insert("status", false);
       } else {
-        ob["status"] = true;
-        ob["batch"] = batch_nodes;
+        nodes.Insert("status", true);
+        nodes.Insert("batch", batch_nodes);
       }
       // the start vertex location of next batch_get_nodes operation.
-      ob["next"] = folly::dynamic::array(fid, start, label_id);
+      dynamic::Value next(rapidjson::kArrayType);
+      next.PushBack(fid).PushBack(start).PushBack(label_id);
+      nodes.Insert("next", next);
+      return dynamic::Stringify(nodes);
     }
-    return ob.empty() ? std::string() : folly::toJson(ob);
+    return std::string();
   }
 
   grape::CommSpec comm_spec_;
   label_id_t default_label_id_;
-  folly::json::serialization_opts json_opts_;
   static const int batch_num_ = 100;
 };
 }  // namespace gs

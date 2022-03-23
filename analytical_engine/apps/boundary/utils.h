@@ -18,25 +18,25 @@
 
 #include <string>
 
-#include "folly/dynamic.h"
+#include "core/object/dynamic.h"
 
 namespace gs {
 template <typename oid_t>
-oid_t dynamic_to_oid(const folly::dynamic& node) {}
+oid_t dynamic_to_oid(const rapidjson::Value& node) {}
 
 template <>
-int64_t dynamic_to_oid<int64_t>(const folly::dynamic& node) {
-  return node.asInt();
+int64_t dynamic_to_oid<int64_t>(const rapidjson::Value& node) {
+  return node.GetInt64();
 }
 
 template <>
-std::string dynamic_to_oid<std::string>(const folly::dynamic& node) {
-  return node.asString();
+std::string dynamic_to_oid<std::string>(const rapidjson::Value& node) {
+  return node.GetString();
 }
 
 template <>
-folly::dynamic dynamic_to_oid<folly::dynamic>(const folly::dynamic& node) {
-  return node;
+dynamic::Value dynamic_to_oid<dynamic::Value>(const rapidjson::Value& node) {
+  return dynamic::Value(node);
 }
 }  // namespace gs
 

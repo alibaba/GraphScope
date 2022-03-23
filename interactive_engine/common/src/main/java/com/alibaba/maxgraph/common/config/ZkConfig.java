@@ -34,14 +34,11 @@ public class ZkConfig {
     public static final Config<Integer> ZK_MAX_SLEEP_MS =
             Config.intConfig("zk.max.sleep.ms", 45000);
 
-    public static final Config<Integer> ZK_MAX_RETRY =
-            Config.intConfig("zk.max.retry", 29);
+    public static final Config<Integer> ZK_MAX_RETRY = Config.intConfig("zk.max.retry", 29);
 
-    public static final Config<Boolean> ZK_AUTH_ENABLE =
-            Config.boolConfig("zk.auth.enable", false);
+    public static final Config<Boolean> ZK_AUTH_ENABLE = Config.boolConfig("zk.auth.enable", false);
 
-    public static final Config<String> ZK_AUTH_USER =
-            Config.stringConfig("zk.auth.user", "");
+    public static final Config<String> ZK_AUTH_USER = Config.stringConfig("zk.auth.user", "");
 
     public static final Config<String> ZK_AUTH_PASSWORD =
             Config.stringConfig("zk.auth.password", "");

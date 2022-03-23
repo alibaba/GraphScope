@@ -1,35 +1,56 @@
 package com.alibaba.graphscope.groot.frontend.write;
 
+import com.alibaba.graphscope.groot.CompletionCallback;
+import com.alibaba.graphscope.groot.SnapshotCache;
+import com.alibaba.graphscope.groot.frontend.IngestorWriteClient;
+import com.alibaba.graphscope.groot.meta.MetaService;
+import com.alibaba.graphscope.groot.metrics.MetricsAgent;
+import com.alibaba.graphscope.groot.metrics.MetricsCollector;
 import com.alibaba.graphscope.groot.operation.EdgeId;
 import com.alibaba.graphscope.groot.operation.LabelId;
+import com.alibaba.graphscope.groot.operation.OperationBatch;
 import com.alibaba.graphscope.groot.operation.OperationType;
 import com.alibaba.graphscope.groot.operation.VertexId;
-import com.alibaba.maxgraph.compiler.api.schema.DataType;
-import com.alibaba.maxgraph.compiler.api.schema.GraphElement;
-import com.alibaba.maxgraph.compiler.api.schema.GraphProperty;
-import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
-import com.alibaba.graphscope.groot.operation.BatchId;
-import com.alibaba.graphscope.groot.meta.MetaService;
-import com.alibaba.graphscope.groot.operation.OperationBatch;
-import com.alibaba.maxgraph.compiler.api.exception.PropertyDefNotFoundException;
 import com.alibaba.graphscope.groot.operation.dml.*;
 import com.alibaba.graphscope.groot.rpc.RoleClients;
 import com.alibaba.graphscope.groot.schema.EdgeKind;
 import com.alibaba.graphscope.groot.schema.PropertyValue;
 import com.alibaba.maxgraph.common.util.PkHashUtils;
-import com.alibaba.graphscope.groot.frontend.IngestorWriteClient;
-import com.alibaba.graphscope.groot.SnapshotCache;
 import com.alibaba.maxgraph.common.util.WriteSessionUtil;
+import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
+import com.alibaba.maxgraph.compiler.api.exception.PropertyDefNotFoundException;
+import com.alibaba.maxgraph.compiler.api.schema.DataType;
+import com.alibaba.maxgraph.compiler.api.schema.GraphElement;
+import com.alibaba.maxgraph.compiler.api.schema.GraphProperty;
+import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class GraphWriter {
+public class GraphWriter implements MetricsAgent {
+
+    public static final String WRITE_REQUESTS_TOTAL = "write.requests.total";
+    public static final String WRITE_REQUESTS_PER_SECOND = "write.requests.per.second";
+    public static final String INGESTOR_BLOCK_TIME_MS = "ingestor.block.time.ms";
+    public static final String INGESTOR_BLOCK_TIME_AVG_MS = "ingestor.block.time.avg.ms";
+    public static final String PENDING_WRITE_COUNT = "pending.write.count";
+
+    private AtomicLong writeRequestsTotal;
+    private volatile long lastUpdateWriteRequestsTotal;
+    private volatile long writeRequestsPerSecond;
+    private volatile long lastUpdateTime;
+    private AtomicLong ingestorBlockTimeNano;
+    private volatile long ingestorBlockTimeAvgMs;
+    private volatile long lastUpdateIngestorBlockTimeNano;
+    private AtomicInteger pendingWriteCount;
 
     private SnapshotCache snapshotCache;
     private EdgeIdGenerator edgeIdGenerator;
@@ -41,15 +62,47 @@ public class GraphWriter {
             SnapshotCache snapshotCache,
             EdgeIdGenerator edgeIdGenerator,
             MetaService metaService,
-            RoleClients<IngestorWriteClient> ingestWriteClients) {
+            RoleClients<IngestorWriteClient> ingestWriteClients,
+            MetricsCollector metricsCollector) {
         this.snapshotCache = snapshotCache;
         this.edgeIdGenerator = edgeIdGenerator;
         this.metaService = metaService;
         this.ingestWriteClients = ingestWriteClients;
+        initMetrics();
+        metricsCollector.register(this, () -> updateMetrics());
     }
 
     public long writeBatch(
             String requestId, String writeSession, List<WriteRequest> writeRequests) {
+        CompletableFuture<Long> future = new CompletableFuture<>();
+        writeBatch(
+                requestId,
+                writeSession,
+                writeRequests,
+                new CompletionCallback<Long>() {
+                    @Override
+                    public void onCompleted(Long res) {
+                        future.complete(res);
+                    }
+
+                    @Override
+                    public void onError(Throwable t) {
+                        future.completeExceptionally(t);
+                    }
+                });
+        try {
+            return future.get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new MaxGraphException(e);
+        }
+    }
+
+    public void writeBatch(
+            String requestId,
+            String writeSession,
+            List<WriteRequest> writeRequests,
+            CompletionCallback<Long> callback) {
+        this.pendingWriteCount.incrementAndGet();
         GraphSchema schema = snapshotCache.getSnapshotWithSchema().getGraphDef();
         OperationBatch.Builder batchBuilder = OperationBatch.newBuilder();
         for (WriteRequest writeRequest : writeRequests) {
@@ -82,13 +135,37 @@ public class GraphWriter {
         OperationBatch operationBatch = batchBuilder.build();
         int writeQueueId = getWriteQueueId(writeSession);
         int ingestorId = this.metaService.getIngestorIdForQueue(writeQueueId);
-        BatchId batchId =
-                this.ingestWriteClients
-                        .getClient(ingestorId)
-                        .writeIngestor(requestId, writeQueueId, operationBatch);
-        long writeSnapshotId = batchId.getSnapshotId();
-        this.lastWrittenSnapshotId.updateAndGet(x -> x < writeSnapshotId ? writeSnapshotId : x);
-        return writeSnapshotId;
+        long startTimeNano = System.nanoTime();
+        this.ingestWriteClients
+                .getClient(ingestorId)
+                .writeIngestorAsync(
+                        requestId,
+                        writeQueueId,
+                        operationBatch,
+                        new CompletionCallback<Long>() {
+                            @Override
+                            public void onCompleted(Long res) {
+                                long writeSnapshotId = res;
+                                lastWrittenSnapshotId.updateAndGet(
+                                        x -> x < writeSnapshotId ? writeSnapshotId : x);
+                                writeRequestsTotal.addAndGet(writeRequests.size());
+                                finish();
+                                callback.onCompleted(res);
+                            }
+
+                            @Override
+                            public void onError(Throwable t) {
+                                finish();
+                                callback.onError(t);
+                            }
+
+                            void finish() {
+                                long ingestorCompleteTimeNano = System.nanoTime();
+                                ingestorBlockTimeNano.addAndGet(
+                                        ingestorCompleteTimeNano - startTimeNano);
+                                pendingWriteCount.decrementAndGet();
+                            }
+                        });
     }
 
     public boolean flushSnapshot(long snapshotId, long waitTimeMs) throws InterruptedException {
@@ -328,5 +405,55 @@ public class GraphWriter {
             pks.add(valBytes);
         }
         return PkHashUtils.hash(labelId, pks);
+    }
+
+    @Override
+    public void initMetrics() {
+        this.lastUpdateTime = System.nanoTime();
+        this.writeRequestsTotal = new AtomicLong(0L);
+        this.writeRequestsPerSecond = 0L;
+        this.ingestorBlockTimeNano = new AtomicLong(0L);
+        this.lastUpdateIngestorBlockTimeNano = 0L;
+        this.pendingWriteCount = new AtomicInteger(0);
+    }
+
+    @Override
+    public Map<String, String> getMetrics() {
+        return new HashMap<String, String>() {
+            {
+                put(WRITE_REQUESTS_TOTAL, String.valueOf(writeRequestsTotal.get()));
+                put(WRITE_REQUESTS_PER_SECOND, String.valueOf(writeRequestsPerSecond));
+                put(INGESTOR_BLOCK_TIME_MS, String.valueOf(ingestorBlockTimeNano.get() / 1000000));
+                put(INGESTOR_BLOCK_TIME_AVG_MS, String.valueOf(ingestorBlockTimeAvgMs));
+                put(PENDING_WRITE_COUNT, String.valueOf(pendingWriteCount.get()));
+            }
+        };
+    }
+
+    @Override
+    public String[] getMetricKeys() {
+        return new String[] {
+            WRITE_REQUESTS_TOTAL,
+            WRITE_REQUESTS_PER_SECOND,
+            INGESTOR_BLOCK_TIME_MS,
+            INGESTOR_BLOCK_TIME_AVG_MS,
+            PENDING_WRITE_COUNT,
+        };
+    }
+
+    private void updateMetrics() {
+        long currentTime = System.nanoTime();
+        long writeRequests = this.writeRequestsTotal.get();
+        long ingestBlockTime = this.ingestorBlockTimeNano.get();
+
+        long interval = currentTime - this.lastUpdateTime;
+        this.writeRequestsPerSecond =
+                1000000000 * (writeRequests - this.lastUpdateWriteRequestsTotal) / interval;
+        this.ingestorBlockTimeAvgMs =
+                1000 * (ingestBlockTime - this.lastUpdateIngestorBlockTimeNano) / interval;
+
+        this.lastUpdateWriteRequestsTotal = writeRequests;
+        this.lastUpdateIngestorBlockTimeNano = ingestBlockTime;
+        this.lastUpdateTime = currentTime;
     }
 }

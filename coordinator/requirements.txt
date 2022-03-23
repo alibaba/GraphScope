@@ -5,5 +5,5 @@ grpcio
 kubernetes
 protobuf
 PyYAML
-vineyard>=0.3.12
-vineyard-io>=0.3.12
+vineyard>=0.3.21; sys_platform != "win32"
+vineyard-io>=0.3.21; sys_platform != "win32"

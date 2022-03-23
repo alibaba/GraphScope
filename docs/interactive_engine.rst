@@ -158,7 +158,7 @@ GIE supports the property graph model and Gremlin traversal language defined by 
 Property graph constraints
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The current release (MaxGraph) leverages `Vineyard <https://github.com/alibaba/libvineyard>`_ to supply an in-memory store for *immutable* graph data that can be partitioned across multiple servers.  By design, it introduces the following constraints:
+The current release (MaxGraph) leverages `Vineyard <https://github.com/v6d-io/v6d>`_ to supply an in-memory store for *immutable* graph data that can be partitioned across multiple servers.  By design, it introduces the following constraints:
 
 - Each graph has a schema comprised of the edge labels, property keys, and vertex labels used therein.
 

@@ -28,81 +28,71 @@ __all__ = ["attribute_assortativity_coefficient", "numeric_assortativity_coeffic
 
 @project_to_simple
 @not_compatible_for("arrow_property")
-def attribute_assortativity_coefficient(G):
+def attribute_assortativity_coefficient(graph, attribute):
     """Compute assortativity for node attributes.
 
-    Assortativity measures the similarity of connections
-    in the graph with respect to the given attribute.
+    Assortativity measures the similarity of connections in the graph with
+    respect to the given attribute.
 
-    Parameters
-    ----------
-    G : NetworkX graph
+    Args:
+        graph (:class:`graphscope.Graph`): A simple graph.
+        attribute (str): Node attribute key.
 
-    Returns
-    -------
-    r: float
-       Assortativity of graph for given attribute
+    Returns:
+        r (float): Assortativity of graph for given attribute
 
-    Examples
-    --------
+    Notes:
+        This computes Eq. (2) in Ref. [1]_ , (trace(M)-sum(M^2))/(1-sum(M^2)),
+        where M is the joint probability distribution (mixing matrix)
+        of the specified attribute.
+
+    References:
+        [1] M. E. J. Newman, Mixing patterns in networks, Physical Review E, 67 026126, 2003
+
+    Examples:
+
     .. code:: python
 
-        import graphscope as gs
-        sess = gs.session()
-        g = sess.g()
-        pg = g.project(vertices={"vlabel": []}, edges={"elabel": []})
-        r = gs.attribute_assortativity_coefficient(pg)
-        s.close()
-
-    Notes
-    -----
-    This computes Eq. (2) in Ref. [1]_ , (trace(M)-sum(M^2))/(1-sum(M^2)),
-    where M is the joint probability distribution (mixing matrix)
-    of the specified attribute.
-
-    References
-    ----------
-    .. [1] M. E. J. Newman, Mixing patterns in networks,
-       Physical Review E, 67 026126, 2003
+        >>> import graphscope
+        >>> from graphscope.dataset import load_modern_graph
+        >>> sess = graphscope.session(cluster_type="hosts", mode="eager")
+        >>> g = load_modern_graph(sess)
+        >>> g.schema
+        >>> c = graphscope.attribute_assortativity_coefficient(g, attribute="name")
+        >>> sess.close()
     """
-
     ctx = AppAssets(algo="attribute_assortativity_coefficient", context="tensor")(
-        G, False
+        graph, False
     )
     return ctx.to_numpy("r", axis=0)[0]
 
 
 @project_to_simple
 @not_compatible_for("arrow_property")
-def numeric_assortativity_coefficient(G):
+def numeric_assortativity_coefficient(graph, attribute):
     """Compute assortativity for numerical node attributes.
 
     Assortativity measures the similarity of connections
     in the graph with respect to the given numeric attribute.
 
-    Parameters
-    ----------
-    G : NetworkX graph
+    Args:
+        graph (:class:`graphscope.Graph`): A simple graph.
+        attribute (str): Node attribute key.
 
-    attribute : string
-        Node attribute key.
-
-    Returns
-    -------
-    r: float
-       Assortativity of graph for given attribute
+    Returns:
+        r (float): Assortativity of graph for given attribute
 
     Examples
     --------
     .. code:: python
 
-        import graphscope as gs
-        sess = gs.session()
-        g = sess.g()
-        pg = g.project(vertices={"vlabel": []}, edges={"elabel": []})
-        r = gs.numeric_assortativity_coefficient(pg)
-        s.close()
-
+        >>> import graphscope
+        >>> from graphscope.dataset import load_modern_graph
+        >>> sess = graphscope.session(cluster_type="hosts", mode="eager")
+        >>> g = load_modern_graph(sess)
+        >>> g.schema
+        >>> c = graphscope.numeric_assortativity_coefficient(g, attribute="name")
+        >>> sess.close()
 
     Notes
     -----
@@ -116,6 +106,6 @@ def numeric_assortativity_coefficient(G):
     """
 
     ctx = AppAssets(algo="attribute_assortativity_coefficient", context="tensor")(
-        G, True
+        graph, True
     )
     return ctx.to_numpy("r", axis=0)[0]

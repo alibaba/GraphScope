@@ -37,9 +37,7 @@ public final class BigGraphVariables implements Graph.Variables {
 
     private final Map<String, Object> variables = new ConcurrentHashMap<>();
 
-    public BigGraphVariables() {
-
-    }
+    public BigGraphVariables() {}
 
     @Override
     public Set<String> keys() {

@@ -2,6 +2,7 @@ package com.alibaba.graphscope.ds.adaptor;
 
 import com.alibaba.graphscope.ds.GrapeNbr;
 import com.alibaba.graphscope.ds.Vertex;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,6 +18,23 @@ public class GrapeNbrAdaptor<VID_T, EDATA_T> implements Nbr<VID_T, EDATA_T> {
 
     public GrapeNbrAdaptor(GrapeNbr<VID_T, EDATA_T> n) {
         nbr = n;
+    }
+
+    public void setAddress(long address) {
+        nbr.setAddress(address);
+    }
+
+    public long getAddress() {
+        return nbr.getAddress();
+    }
+
+    /**
+     * Get the underlying grape nbr.
+     *
+     * @return the underlying grape nbr.
+     */
+    public GrapeNbr<VID_T, EDATA_T> getGrapeNbr() {
+        return nbr;
     }
 
     @Override

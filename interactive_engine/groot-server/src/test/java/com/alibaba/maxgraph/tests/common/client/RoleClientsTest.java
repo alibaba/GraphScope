@@ -13,18 +13,20 @@
  */
 package com.alibaba.maxgraph.tests.common.client;
 
-import com.alibaba.maxgraph.tests.common.rpc.MockFactory;
-import com.alibaba.maxgraph.common.config.CommonConfig;
-import com.alibaba.maxgraph.common.config.Configs;
-import com.alibaba.maxgraph.common.RoleType;
-import com.alibaba.maxgraph.compiler.api.exception.NodeConnectException;
+import static org.junit.jupiter.api.Assertions.*;
+
 import com.alibaba.graphscope.groot.rpc.ChannelManager;
 import com.alibaba.graphscope.groot.rpc.RoleClients;
 import com.alibaba.graphscope.groot.rpc.RpcClient;
-import io.grpc.ManagedChannel;
-import org.junit.jupiter.api.Test;
+import com.alibaba.maxgraph.common.RoleType;
+import com.alibaba.maxgraph.common.config.CommonConfig;
+import com.alibaba.maxgraph.common.config.Configs;
+import com.alibaba.maxgraph.compiler.api.exception.NodeConnectException;
+import com.alibaba.maxgraph.tests.common.rpc.MockFactory;
 
-import static org.junit.jupiter.api.Assertions.*;
+import io.grpc.ManagedChannel;
+
+import org.junit.jupiter.api.Test;
 
 public class RoleClientsTest {
 

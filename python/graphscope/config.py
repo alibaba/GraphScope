@@ -49,6 +49,7 @@ class GSConfig(object):
     k8s_coordinator_mem = "2Gi"
 
     # etcd resource configuration
+    etcd_addrs = None
     k8s_etcd_num_pods = 1
     k8s_etcd_cpu = 1.0
     k8s_etcd_mem = "512Mi"
@@ -65,9 +66,9 @@ class GSConfig(object):
 
     # mars resource configuration
     mars_worker_cpu = 0.2
-    mars_worker_mem = "512Mi"
+    mars_worker_mem = "4Mi"
     mars_scheduler_cpu = 0.2
-    mars_scheduler_mem = "512Mi"
+    mars_scheduler_mem = "2Mi"
 
     # launch graphscope with mars
     with_mars = False

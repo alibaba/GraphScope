@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,20 +15,33 @@
  */
 package com.alibaba.maxgraph.compiler.tree;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.alibaba.maxgraph.Message;
 import com.alibaba.maxgraph.common.util.SchemaUtils;
-import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.compiler.api.schema.DataType;
+import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
+import com.alibaba.maxgraph.compiler.optimizer.OptimizeConfig;
+import com.alibaba.maxgraph.compiler.strategy.traversal.MaxGraphFilterRankingStrategy;
+import com.alibaba.maxgraph.compiler.tree.addition.CountFlagNode;
 import com.alibaba.maxgraph.compiler.tree.addition.JoinZeroNode;
+import com.alibaba.maxgraph.compiler.tree.addition.PropertyNode;
+import com.alibaba.maxgraph.compiler.tree.addition.SampleNode;
 import com.alibaba.maxgraph.compiler.tree.source.EstimateCountTreeNode;
 import com.alibaba.maxgraph.compiler.tree.source.SourceCreateGraphTreeNode;
+import com.alibaba.maxgraph.compiler.tree.source.SourceDelegateNode;
+import com.alibaba.maxgraph.compiler.tree.source.SourceEdgeTreeNode;
+import com.alibaba.maxgraph.compiler.tree.source.SourceTreeNode;
+import com.alibaba.maxgraph.compiler.tree.source.SourceVertexTreeNode;
+import com.alibaba.maxgraph.compiler.tree.value.ListValueType;
+import com.alibaba.maxgraph.compiler.tree.value.ValueType;
+import com.alibaba.maxgraph.compiler.tree.value.ValueValueType;
+import com.alibaba.maxgraph.compiler.tree.value.VarietyValueType;
+import com.alibaba.maxgraph.compiler.tree.value.VertexValueType;
+import com.alibaba.maxgraph.compiler.utils.CompilerUtils;
+import com.alibaba.maxgraph.compiler.utils.ReflectionUtils;
 import com.alibaba.maxgraph.compiler.utils.TreeNodeUtils;
-import com.alibaba.maxgraph.sdkcommon.compiler.custom.aggregate.CustomAggregationListTraversal;
-import com.alibaba.maxgraph.sdkcommon.compiler.custom.branch.CustomCaseWhenFunction;
-import com.alibaba.maxgraph.sdkcommon.compiler.custom.branch.CustomWhenThenFunction;
-import com.alibaba.maxgraph.sdkcommon.compiler.custom.map.MapPropFillFunction;
-import com.alibaba.maxgraph.sdkcommon.compiler.custom.map.RangeSumFunction;
-import com.alibaba.maxgraph.sdkcommon.compiler.custom.program.VertexRatioProgram;
 import com.alibaba.maxgraph.sdkcommon.compiler.custom.CustomPredicate;
 import com.alibaba.maxgraph.sdkcommon.compiler.custom.ListKeyPredicate;
 import com.alibaba.maxgraph.sdkcommon.compiler.custom.ListPredicate;
@@ -37,22 +50,12 @@ import com.alibaba.maxgraph.sdkcommon.compiler.custom.RegexKeyPredicate;
 import com.alibaba.maxgraph.sdkcommon.compiler.custom.RegexPredicate;
 import com.alibaba.maxgraph.sdkcommon.compiler.custom.StringKeyPredicate;
 import com.alibaba.maxgraph.sdkcommon.compiler.custom.StringPredicate;
-import com.alibaba.maxgraph.compiler.tree.value.ListValueType;
-import com.alibaba.maxgraph.compiler.tree.value.ValueType;
-import com.alibaba.maxgraph.compiler.tree.value.ValueValueType;
-import com.alibaba.maxgraph.compiler.tree.value.VarietyValueType;
-import com.alibaba.maxgraph.compiler.tree.value.VertexValueType;
-import com.alibaba.maxgraph.compiler.optimizer.OptimizeConfig;
-import com.alibaba.maxgraph.compiler.strategy.traversal.MaxGraphFilterRankingStrategy;
-import com.alibaba.maxgraph.compiler.tree.addition.CountFlagNode;
-import com.alibaba.maxgraph.compiler.tree.addition.PropertyNode;
-import com.alibaba.maxgraph.compiler.tree.addition.SampleNode;
-import com.alibaba.maxgraph.compiler.tree.source.SourceDelegateNode;
-import com.alibaba.maxgraph.compiler.tree.source.SourceEdgeTreeNode;
-import com.alibaba.maxgraph.compiler.tree.source.SourceTreeNode;
-import com.alibaba.maxgraph.compiler.tree.source.SourceVertexTreeNode;
-import com.alibaba.maxgraph.compiler.utils.CompilerUtils;
-import com.alibaba.maxgraph.compiler.utils.ReflectionUtils;
+import com.alibaba.maxgraph.sdkcommon.compiler.custom.aggregate.CustomAggregationListTraversal;
+import com.alibaba.maxgraph.sdkcommon.compiler.custom.branch.CustomCaseWhenFunction;
+import com.alibaba.maxgraph.sdkcommon.compiler.custom.branch.CustomWhenThenFunction;
+import com.alibaba.maxgraph.sdkcommon.compiler.custom.map.MapPropFillFunction;
+import com.alibaba.maxgraph.sdkcommon.compiler.custom.map.RangeSumFunction;
+import com.alibaba.maxgraph.sdkcommon.compiler.custom.program.VertexRatioProgram;
 import com.alibaba.maxgraph.tinkerpop.steps.AllPathStep;
 import com.alibaba.maxgraph.tinkerpop.steps.ConnectedComponentsStep;
 import com.alibaba.maxgraph.tinkerpop.steps.CreateGraphStep;
@@ -74,6 +77,7 @@ import com.alibaba.maxgraph.tinkerpop.strategies.MxGraphStepStrategy;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+
 import org.apache.commons.configuration.MapConfiguration;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
@@ -81,9 +85,9 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.tinkerpop.gremlin.process.computer.VertexProgram;
 import org.apache.tinkerpop.gremlin.process.computer.traversal.step.map.ConnectedComponentVertexProgramStep;
 import org.apache.tinkerpop.gremlin.process.computer.traversal.step.map.PageRankVertexProgramStep;
+import org.apache.tinkerpop.gremlin.process.computer.traversal.step.map.PeerPressureVertexProgramStep;
 import org.apache.tinkerpop.gremlin.process.computer.traversal.step.map.ShortestPathVertexProgramStep;
 import org.apache.tinkerpop.gremlin.process.computer.traversal.step.map.TraversalVertexProgramStep;
-import org.apache.tinkerpop.gremlin.process.computer.traversal.step.map.PeerPressureVertexProgramStep;
 import org.apache.tinkerpop.gremlin.process.traversal.Compare;
 import org.apache.tinkerpop.gremlin.process.traversal.Contains;
 import org.apache.tinkerpop.gremlin.process.traversal.Order;
@@ -108,15 +112,15 @@ import org.apache.tinkerpop.gremlin.process.traversal.step.filter.IsStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.LambdaFilterStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.NotStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.OrStep;
+import org.apache.tinkerpop.gremlin.process.traversal.step.filter.PathFilterStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.RangeGlobalStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.SampleGlobalStep;
-import org.apache.tinkerpop.gremlin.process.traversal.step.filter.PathFilterStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.TraversalFilterStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.WherePredicateStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.*;
+import org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.AggregateLocalStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.IdentityStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.SideEffectCapStep;
-import org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.StoreStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.SubgraphStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.ComputerAwareStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.EmptyStep;
@@ -144,9 +148,6 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
-
 /**
  * Syntax tree builder
  */
@@ -165,11 +166,13 @@ public class TreeBuilder {
     // query config
     private Map<String, Object> queryConfig = Maps.newHashMap();
 
-    public static TreeBuilder newTreeBuilder(GraphSchema schema, OptimizeConfig optimizeConfig, boolean lambdaEnableFlag) {
+    public static TreeBuilder newTreeBuilder(
+            GraphSchema schema, OptimizeConfig optimizeConfig, boolean lambdaEnableFlag) {
         return new TreeBuilder(schema, optimizeConfig, lambdaEnableFlag);
     }
 
-    private TreeBuilder(GraphSchema schema, OptimizeConfig optimizeConfig, boolean lambdaEnableFlag) {
+    private TreeBuilder(
+            GraphSchema schema, OptimizeConfig optimizeConfig, boolean lambdaEnableFlag) {
         this.schema = schema;
         this.optimizeConfig = optimizeConfig;
         this.treeNodeLabelManager = TreeNodeLabelManager.createLabelManager();
@@ -181,18 +184,17 @@ public class TreeBuilder {
     }
 
     public <S, E> TreeManager build(GraphTraversal<S, E> traversal) {
-        checkNotNull(traversal, "The 'traversal' argument must be a non-null instance of MaxGraph.");
+        checkNotNull(
+                traversal, "The 'traversal' argument must be a non-null instance of MaxGraph.");
 
         GraphTraversal.Admin admin = traversal.asAdmin();
         TreeNode treeNode = travelTraversalAdmin(admin, null);
-        if (!admin.getSideEffects().isEmpty() && !admin.getSideEffects().keys().equals(storeSubgraphKeyList)) {
+        if (!admin.getSideEffects().isEmpty()
+                && !admin.getSideEffects().keys().equals(storeSubgraphKeyList)) {
             throw new UnsupportedOperationException("Not support query with SideEffects");
         }
         return new TreeManager(
-                treeNode,
-                schema,
-                treeNodeLabelManager,
-                new MapConfiguration(this.queryConfig));
+                treeNode, schema, treeNodeLabelManager, new MapConfiguration(this.queryConfig));
     }
 
     private <S, E> TreeNode travelTraversalAdmin(Traversal.Admin<S, E> admin, TreeNode parent) {
@@ -201,25 +203,26 @@ public class TreeBuilder {
             List<Step> originalStepList = admin.getSteps();
             List<Step> replaceStepList = Lists.newArrayList();
             for (Step step : originalStepList) {
-                if (step instanceof EdgeVertexWithByStep &&
-                        null == ((EdgeVertexWithByStep) step).getFunction()) {
+                if (step instanceof EdgeVertexWithByStep
+                        && null == ((EdgeVertexWithByStep) step).getFunction()) {
                     replaceStepList.add(step);
                 }
             }
             for (Step step : replaceStepList) {
-                TraversalHelper.replaceStep(step, ((EdgeVertexWithByStep) step).getEdgeVertexStep(), admin);
+                TraversalHelper.replaceStep(
+                        step, ((EdgeVertexWithByStep) step).getEdgeVertexStep(), admin);
             }
-            admin.getStrategies().removeStrategies(
-                    ProfileStrategy.class,
-                    MxGraphStepStrategy.class,
-                    FilterRankingStrategy.class,
-                    StandardVerificationStrategy.class,
-                    IncidentToAdjacentStrategy.class,
-                    AdjacentToIncidentStrategy.class);
+            admin.getStrategies()
+                    .removeStrategies(
+                            ProfileStrategy.class,
+                            MxGraphStepStrategy.class,
+                            FilterRankingStrategy.class,
+                            StandardVerificationStrategy.class,
+                            IncidentToAdjacentStrategy.class,
+                            AdjacentToIncidentStrategy.class);
             if (this.disableBarrierOptimizer) {
-                admin.getStrategies().removeStrategies(
-                        RepeatUnrollStrategy.class,
-                        LazyBarrierStrategy.class);
+                admin.getStrategies()
+                        .removeStrategies(RepeatUnrollStrategy.class, LazyBarrierStrategy.class);
             }
             admin.getStrategies().addStrategies(MaxGraphFilterRankingStrategy.instance());
             admin.applyStrategies();
@@ -252,13 +255,19 @@ public class TreeBuilder {
     private <S, E> TreeNode travelTraversalDirectly(Traversal.Admin<S, E> admin, TreeNode parent) {
         if (admin instanceof TokenTraversal) {
             return new TokenTreeNode(parent, schema, TokenTraversal.class.cast(admin).getToken());
-        } else if (admin instanceof ElementValueTraversal) {
-            ElementValueTraversal elementValueTraversal = ElementValueTraversal.class.cast(admin);
+        } else if (admin instanceof ValueTraversal) {
+            ValueTraversal elementValueTraversal = ValueTraversal.class.cast(admin);
             String propKey = elementValueTraversal.getPropertyKey();
             TreeNode bypassTreeNode = null;
-            Traversal.Admin<?, ?> bypassTraversal = ReflectionUtils.getFieldValue(AbstractLambdaTraversal.class, elementValueTraversal, "bypassTraversal");
+            Traversal.Admin<?, ?> bypassTraversal =
+                    ReflectionUtils.getFieldValue(
+                            AbstractLambdaTraversal.class,
+                            elementValueTraversal,
+                            "bypassTraversal");
             if (null != bypassTraversal) {
-                bypassTreeNode = travelTraversalAdmin(bypassTraversal, new SourceDelegateNode(parent, schema));
+                bypassTreeNode =
+                        travelTraversalAdmin(
+                                bypassTraversal, new SourceDelegateNode(parent, schema));
             }
             return new ElementValueTreeNode(parent, propKey, bypassTreeNode, schema);
         } else if (admin instanceof ColumnTraversal) {
@@ -271,16 +280,20 @@ public class TreeBuilder {
         } else if (admin instanceof ConstantTraversal) {
             return new ConstantTreeNode(parent, schema, admin.next());
         } else if (admin instanceof CustomAggregationListTraversal) {
-            CustomAggregationListTraversal customAggregationListTraversal = CustomAggregationListTraversal.class.cast(admin);
+            CustomAggregationListTraversal customAggregationListTraversal =
+                    CustomAggregationListTraversal.class.cast(admin);
             List<TreeNode> aggNodeList = Lists.newArrayList();
             boolean saveFlag = this.rootPathFlag;
             this.rootPathFlag = false;
             List<Traversal<?, ?>> traversalList = customAggregationListTraversal.getTraversalList();
             for (Traversal<?, ?> aggTraversal : traversalList) {
-                aggNodeList.add(travelTraversalAdmin(aggTraversal.asAdmin(), new SourceDelegateNode(parent, schema)));
+                aggNodeList.add(
+                        travelTraversalAdmin(
+                                aggTraversal.asAdmin(), new SourceDelegateNode(parent, schema)));
             }
             this.rootPathFlag = saveFlag;
-            return new AggregationListTreeNode(parent, schema, customAggregationListTraversal.getNameList(), aggNodeList);
+            return new AggregationListTreeNode(
+                    parent, schema, customAggregationListTraversal.getNameList(), aggNodeList);
         } else {
             throw new IllegalArgumentException("Not deal with direct traversal => " + admin);
         }
@@ -303,19 +316,22 @@ public class TreeBuilder {
         try {
             switch (TreeNodeStep.valueOf(step.getClass().getSimpleName())) {
                 case MaxGraphStep:
-                case GraphStep: {
-                    if (null != prev) {
-                        throw new IllegalArgumentException("Not support multiple source operator");
-                    }
+                case GraphStep:
+                    {
+                        if (null != prev) {
+                            throw new IllegalArgumentException(
+                                    "Not support multiple source operator");
+                        }
 
-                    return visitGraphStep((GraphStep) step);
-                }
-                case TraversalVertexProgramStep: {
-                    if (null != prev) {
-                        return prev;
+                        return visitGraphStep((GraphStep) step);
                     }
-                    return visitGraphStep((TraversalVertexProgramStep) step);
-                }
+                case TraversalVertexProgramStep:
+                    {
+                        if (null != prev) {
+                            return prev;
+                        }
+                        return visitGraphStep((TraversalVertexProgramStep) step);
+                    }
                 case EstimateCountStep:
                     return visitEstimateCountStep((EstimateCountStep) step);
                 case CreateGraphStep:
@@ -422,8 +438,8 @@ public class TreeBuilder {
                     return visitBranchStep((BranchStep) step, prev);
                 case VertexWithByStep:
                     return visitVertexWithByStep((VertexWithByStep) step, prev);
-                case StoreStep:
-                    return visitStoreStep((StoreStep) step, prev);
+                case AggregateLocalStep:
+                    return visitStoreStep((AggregateLocalStep) step, prev);
                 case LoopsStep:
                     return visitLoopsStep((LoopsStep) step, prev);
                 case EdgeVertexWithByStep:
@@ -434,12 +450,13 @@ public class TreeBuilder {
                     return visitSubgraphStep((SubgraphStep) step, prev);
                 case SideEffectCapStep:
                     return visitSideEffectCapStep((SideEffectCapStep) step, prev);
-//                case CacheStep:
-//                    return visitCacheStep((CacheStep) step, prev);
+                    //                case CacheStep:
+                    //                    return visitCacheStep((CacheStep) step, prev);
                 case ConnectedComponentsStep:
                     return visitConnectedComponentsStep((ConnectedComponentsStep) step, prev);
                 case ConnectedComponentVertexProgramStep:
-                    return visitConnectedComponentsStep((ConnectedComponentVertexProgramStep) step, prev);
+                    return visitConnectedComponentsStep(
+                            (ConnectedComponentVertexProgramStep) step, prev);
                 case LabelPropagationStep:
                     return visitLabelPropagationStep((LabelPropagationStep) step, prev);
                 case LpaVertexProgramStep:
@@ -459,33 +476,39 @@ public class TreeBuilder {
                 case ShortestPathVertexProgramStep:
                     return visitShortestPathStep((ShortestPathVertexProgramStep) step, prev);
                 case PeerPressureVertexProgramStep:
-                    return visitPeerPressureVertexProgramStep((PeerPressureVertexProgramStep) step, prev);
+                    return visitPeerPressureVertexProgramStep(
+                            (PeerPressureVertexProgramStep) step, prev);
                 case OutputStep:
                     return visitOutputStep((OutputStep) step, prev);
                 case MathStep:
                     return visitMathStep((MathStep) step, prev);
-//                case SackStep:
-//                    return visitSackStep((SackStep) step, prev);
-//                case SackValueStep:
-//                    return visitSackValueStep((SackValueStep) step, prev);
+                    //                case SackStep:
+                    //                    return visitSackStep((SackStep) step, prev);
+                    //                case SackValueStep:
+                    //                    return visitSackValueStep((SackValueStep) step, prev);
                 case TraversalFlatMapStep:
                     return visitFlatMapStep((TraversalFlatMapStep) step, prev);
-                case HasNextStep: {
-                    return prev;
-                }
-                case ComputerResultStep: {
-                    return prev;
-                }
-                case OutputVineyardStep: {
-                    return visitOutputVineyardStep((OutputVineyardStep) step, prev);
-                }
+                case HasNextStep:
+                    {
+                        return prev;
+                    }
+                case ComputerResultStep:
+                    {
+                        return prev;
+                    }
+                case OutputVineyardStep:
+                    {
+                        return visitOutputVineyardStep((OutputVineyardStep) step, prev);
+                    }
                 default:
                     throw new NotImplementedException(step.toString());
             }
         } catch (NotImplementedException e) {
-            throw new UnsupportedOperationException("Support invalid for step of " + step.getClass().getSimpleName(), e);
+            throw new UnsupportedOperationException(
+                    "Support invalid for step of " + step.getClass().getSimpleName(), e);
         } catch (Exception e) {
-            throw new IllegalArgumentException("Something error in " + step.getClass().getSimpleName() + " operator", e);
+            throw new IllegalArgumentException(
+                    "Something error in " + step.getClass().getSimpleName() + " operator", e);
         }
     }
 
@@ -494,38 +517,50 @@ public class TreeBuilder {
         if (prev instanceof SubgraphTreeNode) {
             ((SubgraphTreeNode) prev).enableVertexFlag();
         } else {
-            throw new IllegalArgumentException("The previous operator before outputVineyard must be subgraph('graphName')");
+            throw new IllegalArgumentException(
+                    "The previous operator before outputVineyard must be subgraph('graphName')");
         }
         return new OutputVineyardTreeNode(prev, schema, graphName);
     }
 
     private TreeNode visitCreateGraphStep(CreateGraphStep step) {
-        return new SourceCreateGraphTreeNode(this.schema, step.getGraphName(), step.getConfiguration());
+        return new SourceCreateGraphTreeNode(
+                this.schema, step.getGraphName(), step.getConfiguration());
     }
 
     private TreeNode visitFlatMapStep(TraversalFlatMapStep step, TreeNode prev) {
-        Traversal.Admin<?, ?> flatMapTraversal = ReflectionUtils.getFieldValue(TraversalFlatMapStep.class, step, "flatMapTraversal");
+        Traversal.Admin<?, ?> flatMapTraversal =
+                ReflectionUtils.getFieldValue(TraversalFlatMapStep.class, step, "flatMapTraversal");
 
         boolean saveFlag = rootPathFlag;
         rootPathFlag = false;
-        TreeNode flatMapNode = travelTraversalAdmin(flatMapTraversal, new SourceDelegateNode(prev, schema));
+        TreeNode flatMapNode =
+                travelTraversalAdmin(flatMapTraversal, new SourceDelegateNode(prev, schema));
         rootPathFlag = saveFlag;
 
         return new TraversalFlatMapTreeNode(prev, schema, flatMapNode);
     }
 
     private TreeNode visitMathStep(MathStep step, TreeNode prev) {
-        MathStep.TinkerExpression tinkerExpression = ReflectionUtils.getFieldValue(MathStep.class, step, "expression");
-        TraversalRing<?, Number> traversalRing = ReflectionUtils.getFieldValue(MathStep.class, step, "traversalRing");
+        MathStep.TinkerExpression tinkerExpression =
+                ReflectionUtils.getFieldValue(MathStep.class, step, "expression");
+        TraversalRing<?, Number> traversalRing =
+                ReflectionUtils.getFieldValue(MathStep.class, step, "traversalRing");
         List<TreeNode> ringTreeNodeList = Lists.newArrayList();
-        traversalRing.getTraversals().forEach(v -> ringTreeNodeList.add(travelTraversalAdmin(v, new SourceDelegateNode(prev, schema))));
+        traversalRing
+                .getTraversals()
+                .forEach(
+                        v ->
+                                ringTreeNodeList.add(
+                                        travelTraversalAdmin(
+                                                v, new SourceDelegateNode(prev, schema))));
 
         return new MathTreeNode(prev, schema, ringTreeNodeList, tinkerExpression);
     }
 
-//    private TreeNode visitCacheStep(CacheStep step, TreeNode prev) {
-//        return new CacheTreeNode(prev, Sets.newHashSet(step.getPropertyKeys()), schema);
-//    }
+    //    private TreeNode visitCacheStep(CacheStep step, TreeNode prev) {
+    //        return new CacheTreeNode(prev, Sets.newHashSet(step.getPropertyKeys()), schema);
+    //    }
 
     private TreeNode visitSideEffectCapStep(SideEffectCapStep step, TreeNode prev) {
         if (prev instanceof SubgraphTreeNode) {
@@ -552,10 +587,7 @@ public class TreeBuilder {
         if (function instanceof VertexRatioProgram) {
             VertexRatioProgram vertexRatioProgram = VertexRatioProgram.class.cast(function);
             return new RatioEdgeVertexTreeNode(
-                    prev,
-                    schema,
-                    step.getDirection(),
-                    vertexRatioProgram.getPredicate());
+                    prev, schema, step.getDirection(), vertexRatioProgram.getPredicate());
         } else {
             throw new UnsupportedOperationException();
         }
@@ -565,16 +597,18 @@ public class TreeBuilder {
         return prev;
     }
 
-    private TreeNode visitStoreStep(StoreStep step, TreeNode prev) {
+    private TreeNode visitStoreStep(AggregateLocalStep step, TreeNode prev) {
         String sideEffectKey = checkNotNull(step.getSideEffectKey());
-        Traversal.Admin<?, ?> storeTraversal = ReflectionUtils.getFieldValue(StoreStep.class, step, "storeTraversal");
+        Traversal.Admin<?, ?> storeTraversal =
+                ReflectionUtils.getFieldValue(AggregateLocalStep.class, step, "storeTraversal");
         storeSubgraphKeyList.add(sideEffectKey);
 
         boolean saveFlag = rootPathFlag;
         rootPathFlag = false;
         TreeNode storeTreeNode = null;
         if (null != storeTraversal) {
-            storeTreeNode = travelTraversalAdmin(storeTraversal, new SourceDelegateNode(prev, schema));
+            storeTreeNode =
+                    travelTraversalAdmin(storeTraversal, new SourceDelegateNode(prev, schema));
         }
         rootPathFlag = saveFlag;
         return new StoreTreeNode(prev, schema, sideEffectKey, storeTreeNode);
@@ -592,7 +626,9 @@ public class TreeBuilder {
                         schema,
                         step.getDirection(),
                         vertexRatioProgram.getPredicate(),
-                        null == step.getEdgeLabels() ? Lists.newArrayList() : Lists.newArrayList(step.getEdgeLabels()));
+                        null == step.getEdgeLabels()
+                                ? Lists.newArrayList()
+                                : Lists.newArrayList(step.getEdgeLabels()));
             } else {
                 throw new UnsupportedOperationException(function.toString());
             }
@@ -600,45 +636,59 @@ public class TreeBuilder {
     }
 
     private TreeNode visitBranchStep(BranchStep step, TreeNode prev) {
-        Traversal.Admin<?, ?> branchTraversal = ReflectionUtils.getFieldValue(BranchStep.class, step, "branchTraversal");
+        Traversal.Admin<?, ?> branchTraversal =
+                ReflectionUtils.getFieldValue(BranchStep.class, step, "branchTraversal");
         Map<TraversalOptionParent.Pick, List<Traversal.Admin<?, ?>>> traversalPickOptions =
                 ReflectionUtils.getFieldValue(BranchStep.class, step, "traversalPickOptions");
         List<org.javatuples.Pair<Traversal.Admin, Traversal.Admin<?, ?>>> traversalOptions =
                 ReflectionUtils.getFieldValue(BranchStep.class, step, "traversalOptions");
         checkNotNull(branchTraversal, "branch traversal can't be null");
-        checkArgument(!traversalPickOptions.isEmpty() || !traversalOptions.isEmpty(),
+        checkArgument(
+                !traversalPickOptions.isEmpty() || !traversalOptions.isEmpty(),
                 "traversal options can't be empty");
 
         Map<Object, List<Traversal.Admin<?, ?>>> traversalAllOptions = new HashMap<>();
         traversalAllOptions.putAll(traversalPickOptions);
-        traversalOptions.forEach(pair -> {
-            Traversal.Admin left = pair.getValue0();
-            if (left instanceof PredicateTraversal.Admin) {
-                PredicateTraversal predicateTraversal = (PredicateTraversal) left;
-                P p = ReflectionUtils.getFieldValue(PredicateTraversal.class, predicateTraversal, "predicate");
-                traversalAllOptions.computeIfAbsent(p.getValue(), k -> Lists.newArrayList()).add(pair.getValue1());
-            }
-        });
+        traversalOptions.forEach(
+                pair -> {
+                    Traversal.Admin left = pair.getValue0();
+                    if (left instanceof PredicateTraversal.Admin) {
+                        PredicateTraversal predicateTraversal = (PredicateTraversal) left;
+                        P p =
+                                ReflectionUtils.getFieldValue(
+                                        PredicateTraversal.class, predicateTraversal, "predicate");
+                        traversalAllOptions
+                                .computeIfAbsent(p.getValue(), k -> Lists.newArrayList())
+                                .add(pair.getValue1());
+                    }
+                });
 
         boolean saveFlag = rootPathFlag;
         rootPathFlag = false;
-        TreeNode branchTreeNode = travelTraversalAdmin(branchTraversal, new SourceDelegateNode(prev, schema));
+        TreeNode branchTreeNode =
+                travelTraversalAdmin(branchTraversal, new SourceDelegateNode(prev, schema));
         rootPathFlag = saveFlag;
 
         TreeNode noneTreeNode = null, anyTreeNode = null;
         Map<Object, List<TreeNode>> branchOptionList = Maps.newHashMap();
         BranchTreeNode branchOptionTreeNode = new BranchTreeNode(prev, schema, branchTreeNode);
-        for (Map.Entry<Object, List<Traversal.Admin<?, ?>>> entry : traversalAllOptions.entrySet()) {
+        for (Map.Entry<Object, List<Traversal.Admin<?, ?>>> entry :
+                traversalAllOptions.entrySet()) {
             if (entry.getKey() == TraversalOptionParent.Pick.none) {
                 checkArgument(entry.getValue().size() == 1);
-                noneTreeNode = travelTraversalAdmin(entry.getValue().get(0), new SourceDelegateNode(prev, schema));
+                noneTreeNode =
+                        travelTraversalAdmin(
+                                entry.getValue().get(0), new SourceDelegateNode(prev, schema));
             } else if (entry.getKey() == TraversalOptionParent.Pick.any) {
                 checkArgument(entry.getValue().size() == 1);
-                anyTreeNode = travelTraversalAdmin(entry.getValue().get(0), new SourceDelegateNode(prev, schema));
+                anyTreeNode =
+                        travelTraversalAdmin(
+                                entry.getValue().get(0), new SourceDelegateNode(prev, schema));
             } else {
                 List<TreeNode> optionTreeNodeList = Lists.newArrayList();
                 for (Traversal.Admin<?, ?> v : entry.getValue()) {
-                    TreeNode optionTreeNode = travelTraversalAdmin(v, new SourceDelegateNode(prev, schema));
+                    TreeNode optionTreeNode =
+                            travelTraversalAdmin(v, new SourceDelegateNode(prev, schema));
                     optionTreeNodeList.add(optionTreeNode);
                 }
                 branchOptionList.put(entry.getKey(), optionTreeNodeList);
@@ -661,12 +711,20 @@ public class TreeBuilder {
 
             boolean saveFlag = this.rootPathFlag;
             this.rootPathFlag = false;
-            Traversal.Admin<?, ?> branchTraversal = ReflectionUtils.getFieldValue(BranchStep.class, step, "branchTraversal");
-            TreeNode branchNode = branchTraversal == null ? null : travelTraversalAdmin(branchTraversal, new SourceDelegateNode(prev, schema));
+            Traversal.Admin<?, ?> branchTraversal =
+                    ReflectionUtils.getFieldValue(BranchStep.class, step, "branchTraversal");
+            TreeNode branchNode =
+                    branchTraversal == null
+                            ? null
+                            : travelTraversalAdmin(
+                                    branchTraversal, new SourceDelegateNode(prev, schema));
             this.rootPathFlag = saveFlag;
 
-            TreeNode trueOptionNode = travelTraversalAdmin(trueOptionTraversal, new SourceDelegateNode(prev, schema));
-            TreeNode falseOptionNode = travelTraversalAdmin(falseOptionTraversal, new SourceDelegateNode(prev, schema));
+            TreeNode trueOptionNode =
+                    travelTraversalAdmin(trueOptionTraversal, new SourceDelegateNode(prev, schema));
+            TreeNode falseOptionNode =
+                    travelTraversalAdmin(
+                            falseOptionTraversal, new SourceDelegateNode(prev, schema));
 
             return new OptionalTreeNode(prev, schema, branchNode, trueOptionNode, falseOptionNode);
         } else {
@@ -674,14 +732,18 @@ public class TreeBuilder {
         }
     }
 
-    private Traversal.Admin<?, ?> getTraversalOption(boolean predicate, List<org.javatuples.Pair<Traversal.Admin,
-            Traversal.Admin<?, ?>>> traversalOptions) {
+    private Traversal.Admin<?, ?> getTraversalOption(
+            boolean predicate,
+            List<org.javatuples.Pair<Traversal.Admin, Traversal.Admin<?, ?>>> traversalOptions) {
         for (int i = 0; i < 2; ++i) {
-            org.javatuples.Pair<Traversal.Admin, Traversal.Admin<?, ?>> pair = traversalOptions.get(i);
+            org.javatuples.Pair<Traversal.Admin, Traversal.Admin<?, ?>> pair =
+                    traversalOptions.get(i);
             Traversal.Admin left = pair.getValue0();
             if (left instanceof PredicateTraversal.Admin) {
                 PredicateTraversal predicateTraversal = (PredicateTraversal) left;
-                P p = ReflectionUtils.getFieldValue(PredicateTraversal.class, predicateTraversal, "predicate");
+                P p =
+                        ReflectionUtils.getFieldValue(
+                                PredicateTraversal.class, predicateTraversal, "predicate");
                 if (p.getValue().equals(predicate)) {
                     return pair.getValue1();
                 }
@@ -691,12 +753,16 @@ public class TreeBuilder {
     }
 
     private TreeNode visitOrStep(OrStep step, TreeNode prev) {
-        List<Traversal.Admin<?, ?>> traversals = ReflectionUtils.getFieldValue(ConnectiveStep.class, step, "traversals");
+        List<Traversal.Admin<?, ?>> traversals =
+                ReflectionUtils.getFieldValue(ConnectiveStep.class, step, "traversals");
         List<TreeNode> orTreeNodeList = Lists.newArrayList();
 
         boolean saveFlag = rootPathFlag;
         rootPathFlag = false;
-        traversals.forEach(v -> orTreeNodeList.add(travelTraversalAdmin(v, new SourceDelegateNode(prev, schema))));
+        traversals.forEach(
+                v ->
+                        orTreeNodeList.add(
+                                travelTraversalAdmin(v, new SourceDelegateNode(prev, schema))));
         rootPathFlag = saveFlag;
 
         return new OrTreeNode(orTreeNodeList, prev, schema);
@@ -711,7 +777,8 @@ public class TreeBuilder {
         return new ConnectComponetsTreeNode(prev, schema, step.outPropId, step.iteration);
     }
 
-    private TreeNode visitConnectedComponentsStep(ConnectedComponentVertexProgramStep step, TreeNode prev) {
+    private TreeNode visitConnectedComponentsStep(
+            ConnectedComponentVertexProgramStep step, TreeNode prev) {
         return new ConnectComponetsVertexProgramTreeNode(prev, schema, step);
     }
 
@@ -732,7 +799,8 @@ public class TreeBuilder {
     }
 
     private TreeNode visitHitsStep(HitsStep step, TreeNode prev) {
-        return new HitsTreeNode(prev, schema, step.outPropAuthId, step.outPropHubId, step.iteration);
+        return new HitsTreeNode(
+                prev, schema, step.outPropAuthId, step.outPropHubId, step.iteration);
     }
 
     private TreeNode visitHitsStep(HitsVertexProgramStep step, TreeNode prev) {
@@ -752,17 +820,34 @@ public class TreeBuilder {
         Step targetStep = targetVertexFilter.getSteps().get(0);
         if (targetStep instanceof HasStep) {
             List<HasContainer> targetHasContainerList = ((HasStep) targetStep).getHasContainers();
-            List<HasContainer> convertContainerList = targetHasContainerList.stream()
-                    .map(v -> convertHasContainer(v.getKey(), v.getPredicate(), prev.getOutputValueType()))
-                    .collect(Collectors.toList());
+            List<HasContainer> convertContainerList =
+                    targetHasContainerList.stream()
+                            .map(
+                                    v ->
+                                            convertHasContainer(
+                                                    v.getKey(),
+                                                    v.getPredicate(),
+                                                    prev.getOutputValueType()))
+                            .collect(Collectors.toList());
             HasContainer targetHascontainer = convertContainerList.get(0);
             if (prev instanceof SourceTreeNode) {
-                List<HasContainer> sourceHasContainerList = ((SourceTreeNode) prev).hasContainerList;
+                List<HasContainer> sourceHasContainerList =
+                        ((SourceTreeNode) prev).hasContainerList;
                 int idx = sourceHasContainerList.size() - 1;
                 if (idx >= 0) {
                     HasContainer sourceHasContainer = sourceHasContainerList.get(idx);
                     if (targetHascontainer.getKey().equals(sourceHasContainer.getKey())) {
-                        HasContainer targetContainer = new HasContainer(targetHascontainer.getKey(), P.within(Lists.newArrayList(sourceHasContainer.getPredicate().getValue(), targetHascontainer.getPredicate().getValue())));
+                        HasContainer targetContainer =
+                                new HasContainer(
+                                        targetHascontainer.getKey(),
+                                        P.within(
+                                                Lists.newArrayList(
+                                                        sourceHasContainer
+                                                                .getPredicate()
+                                                                .getValue(),
+                                                        targetHascontainer
+                                                                .getPredicate()
+                                                                .getValue())));
                         ((SourceTreeNode) prev).hasContainerList.set(idx, targetContainer);
                     } else {
                         throw new UnsupportedOperationException(targetStep.toString());
@@ -780,7 +865,8 @@ public class TreeBuilder {
         return new ShortestPathVertexProgramTreeNode(prev, schema, step);
     }
 
-    private TreeNode visitPeerPressureVertexProgramStep(PeerPressureVertexProgramStep step, TreeNode prev) {
+    private TreeNode visitPeerPressureVertexProgramStep(
+            PeerPressureVertexProgramStep step, TreeNode prev) {
         return new PeerPressureVertexProgramTreeNode(prev, schema, step);
     }
 
@@ -801,17 +887,30 @@ public class TreeBuilder {
             sampleNode = new EdgeTreeNode(prev, direction, edgeLabels, schema);
         }
         if (null != sampleGlobalStep) {
-            int amountToSample = ReflectionUtils.getFieldValue(SampleGlobalStep.class, sampleGlobalStep, "amountToSample");
-            Traversal.Admin<?, ?> probabilityTraversal = ReflectionUtils.getFieldValue(SampleGlobalStep.class, sampleGlobalStep, "probabilityTraversal");
+            int amountToSample =
+                    ReflectionUtils.getFieldValue(
+                            SampleGlobalStep.class, sampleGlobalStep, "amountToSample");
+            Traversal.Admin<?, ?> probabilityTraversal =
+                    ReflectionUtils.getFieldValue(
+                            SampleGlobalStep.class, sampleGlobalStep, "probabilityTraversal");
             boolean saveFlag = rootPathFlag;
             rootPathFlag = false;
             String probabilityProperty = null;
-            TreeNode probabilityTreeNode = travelTraversalAdmin(probabilityTraversal, new SourceDelegateNode((TreeNode) sampleNode, schema));
+            TreeNode probabilityTreeNode =
+                    travelTraversalAdmin(
+                            probabilityTraversal,
+                            new SourceDelegateNode((TreeNode) sampleNode, schema));
             if (probabilityTreeNode instanceof SourceTreeNode) {
                 probabilityProperty = "";
-            } else if ((UnaryTreeNode.class.cast(probabilityTreeNode).getInputNode() instanceof SourceTreeNode &&
-                    (probabilityTreeNode instanceof PropertyNode))) {
-                probabilityProperty = PropertyNode.class.cast(probabilityTreeNode).getPropKeyList().iterator().next();
+            } else if ((UnaryTreeNode.class.cast(probabilityTreeNode).getInputNode()
+                            instanceof SourceTreeNode
+                    && (probabilityTreeNode instanceof PropertyNode))) {
+                probabilityProperty =
+                        PropertyNode.class
+                                .cast(probabilityTreeNode)
+                                .getPropKeyList()
+                                .iterator()
+                                .next();
             } else {
                 throw new IllegalArgumentException("Only support sample by property here.");
             }
@@ -822,11 +921,13 @@ public class TreeBuilder {
     }
 
     private TreeNode visitSampleGlobalStep(SampleGlobalStep step, TreeNode prev) {
-        int amountToSample = ReflectionUtils.getFieldValue(SampleGlobalStep.class, step, "amountToSample");
+        int amountToSample =
+                ReflectionUtils.getFieldValue(SampleGlobalStep.class, step, "amountToSample");
         if (amountToSample != 1) {
             throw new IllegalArgumentException("Only support sample 1");
         }
-        Traversal.Admin<?, ?> probabilityTraversal = ReflectionUtils.getFieldValue(SampleGlobalStep.class, step, "probabilityTraversal");
+        Traversal.Admin<?, ?> probabilityTraversal =
+                ReflectionUtils.getFieldValue(SampleGlobalStep.class, step, "probabilityTraversal");
         if (!(probabilityTraversal instanceof ConstantTraversal)) {
             throw new IllegalArgumentException("Not support sample by probability yet");
         }
@@ -850,16 +951,19 @@ public class TreeBuilder {
     }
 
     private TreeNode visitRepeatStep(RepeatStep step, TreeNode prev) {
-        Traversal.Admin<?, ?> repeatTraversal = ReflectionUtils.getFieldValue(RepeatStep.class, step, "repeatTraversal");
-        Traversal.Admin<?, ?> untilTraversal = ReflectionUtils.getFieldValue(RepeatStep.class, step, "untilTraversal");
-        Traversal.Admin<?, ?> emitTraversal = ReflectionUtils.getFieldValue(RepeatStep.class, step, "emitTraversal");
+        Traversal.Admin<?, ?> repeatTraversal =
+                ReflectionUtils.getFieldValue(RepeatStep.class, step, "repeatTraversal");
+        Traversal.Admin<?, ?> untilTraversal =
+                ReflectionUtils.getFieldValue(RepeatStep.class, step, "untilTraversal");
+        Traversal.Admin<?, ?> emitTraversal =
+                ReflectionUtils.getFieldValue(RepeatStep.class, step, "emitTraversal");
 
         String repeatTraversalString = repeatTraversal.toString();
         String untilTraversalString = untilTraversal == null ? "" : untilTraversal.toString();
         String emitTraversalString = emitTraversal == null ? "" : emitTraversal.toString();
-        if (StringUtils.contains(repeatTraversalString, "RepeatStep") ||
-                StringUtils.contains(untilTraversalString, "RepeatStep") ||
-                StringUtils.contains(emitTraversalString, "RepeatStep")) {
+        if (StringUtils.contains(repeatTraversalString, "RepeatStep")
+                || StringUtils.contains(untilTraversalString, "RepeatStep")
+                || StringUtils.contains(emitTraversalString, "RepeatStep")) {
             throw new UnsupportedOperationException("Not support nest repeat");
         }
 
@@ -869,44 +973,60 @@ public class TreeBuilder {
         RepeatTreeNode repeatTreeNode = new RepeatTreeNode(prev, schema, this.queryConfig);
         SourceDelegateNode sourceDelegateNode = new SourceDelegateNode(prev, schema);
         sourceDelegateNode.enableRepeatFlag();
-        repeatTreeNode.setRepeatBodyTreeNode(travelTraversalAdmin(repeatTraversal, sourceDelegateNode));
+        repeatTreeNode.setRepeatBodyTreeNode(
+                travelTraversalAdmin(repeatTraversal, sourceDelegateNode));
 
         boolean saveFlag = rootPathFlag;
         this.rootPathFlag = false;
         if (null != untilTraversal) {
             if (untilTraversal instanceof LoopTraversal) {
-                repeatTreeNode.setMaxLoopTimes(LoopTraversal.class.cast(untilTraversal).getMaxLoops());
+                repeatTreeNode.setMaxLoopTimes(
+                        LoopTraversal.class.cast(untilTraversal).getMaxLoops());
             } else {
                 if (untilFirst) {
-                    repeatTreeNode.setUntilFirstTreeNode(travelTraversalAdmin(untilTraversal, new SourceDelegateNode(prev, schema)));
+                    repeatTreeNode.setUntilFirstTreeNode(
+                            travelTraversalAdmin(
+                                    untilTraversal, new SourceDelegateNode(prev, schema)));
                 }
                 Step finalEndStep = untilTraversal.getEndStep();
                 if (finalEndStep instanceof OrStep) {
                     OrStep orStep = OrStep.class.cast(finalEndStep);
-                    List<Traversal.Admin<?, ?>> traversals = ReflectionUtils.getFieldValue(ConnectiveStep.class, orStep, "traversals");
-                    checkArgument(traversals.size() == 2, "Only support two condition in until yet");
+                    List<Traversal.Admin<?, ?>> traversals =
+                            ReflectionUtils.getFieldValue(
+                                    ConnectiveStep.class, orStep, "traversals");
+                    checkArgument(
+                            traversals.size() == 2, "Only support two condition in until yet");
                     Traversal.Admin<?, ?> firstTraversal = traversals.get(0);
                     Traversal.Admin<?, ?> secondTraversal = traversals.get(1);
                     Traversal.Admin<?, ?> loopTraversal;
-                    if (firstTraversal.getSteps().get(0) instanceof LoopsStep &&
-                            !(secondTraversal.getSteps().get(0) instanceof LoopsStep)) {
-                        repeatTreeNode.setUntilTreeNode(travelTraversalAdmin(secondTraversal, new SourceDelegateNode(prev, schema)));
+                    if (firstTraversal.getSteps().get(0) instanceof LoopsStep
+                            && !(secondTraversal.getSteps().get(0) instanceof LoopsStep)) {
+                        repeatTreeNode.setUntilTreeNode(
+                                travelTraversalAdmin(
+                                        secondTraversal, new SourceDelegateNode(prev, schema)));
                         loopTraversal = firstTraversal;
-                    } else if (secondTraversal.getSteps().get(0) instanceof LoopsStep &&
-                            !(firstTraversal.getSteps().get(0) instanceof LoopsStep)) {
-                        repeatTreeNode.setUntilTreeNode(travelTraversalAdmin(firstTraversal, new SourceDelegateNode(prev, schema)));
+                    } else if (secondTraversal.getSteps().get(0) instanceof LoopsStep
+                            && !(firstTraversal.getSteps().get(0) instanceof LoopsStep)) {
+                        repeatTreeNode.setUntilTreeNode(
+                                travelTraversalAdmin(
+                                        firstTraversal, new SourceDelegateNode(prev, schema)));
                         loopTraversal = secondTraversal;
                     } else {
-                        throw new UnsupportedOperationException("There's no looop condition in until");
+                        throw new UnsupportedOperationException(
+                                "There's no looop condition in until");
                     }
 
                     List<Step> loopStepList = loopTraversal.getSteps();
-                    checkArgument(loopStepList.size() == 2 && loopStepList.get(1) instanceof IsStep,
+                    checkArgument(
+                            loopStepList.size() == 2 && loopStepList.get(1) instanceof IsStep,
                             "Only support loops().is(gt(loop count)) yet.");
                     IsStep isStep = (IsStep) loopStepList.get(1);
                     P predicate = isStep.getPredicate();
                     BiPredicate biPredicate = predicate.getBiPredicate();
-                    checkArgument(biPredicate == Compare.gt || biPredicate == Compare.gte || biPredicate == Compare.eq,
+                    checkArgument(
+                            biPredicate == Compare.gt
+                                    || biPredicate == Compare.gte
+                                    || biPredicate == Compare.eq,
                             "Only support loops().is(gt/eq/gte(loop count)) yet.");
                     long loopCount = Long.parseLong(predicate.getValue().toString());
                     if (biPredicate == Compare.gt) {
@@ -917,15 +1037,19 @@ public class TreeBuilder {
                 } else if (finalEndStep instanceof AndStep) {
                     throw new IllegalArgumentException("Not support and operator in until yet.");
                 } else {
-                    repeatTreeNode.setUntilTreeNode(travelTraversalAdmin(untilTraversal, new SourceDelegateNode(prev, schema)));
+                    repeatTreeNode.setUntilTreeNode(
+                            travelTraversalAdmin(
+                                    untilTraversal, new SourceDelegateNode(prev, schema)));
                 }
             }
         }
         if (null != emitTraversal) {
             if (emitFirst) {
-                repeatTreeNode.setEmitFirstTreeNode(travelTraversalAdmin(emitTraversal, new SourceDelegateNode(prev, schema)));
+                repeatTreeNode.setEmitFirstTreeNode(
+                        travelTraversalAdmin(emitTraversal, new SourceDelegateNode(prev, schema)));
             }
-            repeatTreeNode.setEmitTreeNode(travelTraversalAdmin(emitTraversal, new SourceDelegateNode(prev, schema)));
+            repeatTreeNode.setEmitTreeNode(
+                    travelTraversalAdmin(emitTraversal, new SourceDelegateNode(prev, schema)));
         }
         rootPathFlag = saveFlag;
 
@@ -936,26 +1060,34 @@ public class TreeBuilder {
         Function functionObj = step.getMapFunction();
         Function mapFunction;
         if (functionObj instanceof FunctionTraverser) {
-            mapFunction = ReflectionUtils.getFieldValue(FunctionTraverser.class, functionObj, "function");
+            mapFunction =
+                    ReflectionUtils.getFieldValue(FunctionTraverser.class, functionObj, "function");
         } else {
             mapFunction = functionObj;
         }
 
         if (mapFunction instanceof CustomCaseWhenFunction) {
-            CustomCaseWhenFunction customCaseWhenFunction = CustomCaseWhenFunction.class.cast(mapFunction);
+            CustomCaseWhenFunction customCaseWhenFunction =
+                    CustomCaseWhenFunction.class.cast(mapFunction);
             return processCaseWhenFunction(prev, customCaseWhenFunction);
         } else if (mapFunction instanceof CustomAggregationListTraversal) {
-            CustomAggregationListTraversal customAggregationListTraversal = CustomAggregationListTraversal.class.cast(mapFunction);
-            List<Traversal<?, ?>> aggregateTraversalList = customAggregationListTraversal.getTraversalList();
+            CustomAggregationListTraversal customAggregationListTraversal =
+                    CustomAggregationListTraversal.class.cast(mapFunction);
+            List<Traversal<?, ?>> aggregateTraversalList =
+                    customAggregationListTraversal.getTraversalList();
             List<TreeNode> aggregateNodeList = Lists.newArrayList();
             boolean saveFlag = rootPathFlag;
             this.rootPathFlag = false;
             for (Traversal<?, ?> traversal : aggregateTraversalList) {
-                aggregateNodeList.add(travelTraversalAdmin(traversal.asAdmin(), new SourceDelegateNode(prev, schema)));
+                aggregateNodeList.add(
+                        travelTraversalAdmin(
+                                traversal.asAdmin(), new SourceDelegateNode(prev, schema)));
             }
             this.rootPathFlag = saveFlag;
-            return new AggregationListTreeNode(prev, schema, customAggregationListTraversal.getNameList(), aggregateNodeList);
-        } else if (mapFunction instanceof MapPropFillFunction || mapFunction instanceof RangeSumFunction) {
+            return new AggregationListTreeNode(
+                    prev, schema, customAggregationListTraversal.getNameList(), aggregateNodeList);
+        } else if (mapFunction instanceof MapPropFillFunction
+                || mapFunction instanceof RangeSumFunction) {
             return new LambdaMapTreeNode(prev, schema, mapFunction, null);
         } else {
             if (this.lambdaEnableFlag) {
@@ -966,23 +1098,36 @@ public class TreeBuilder {
         }
     }
 
-    private TreeNode processCaseWhenFunction(TreeNode prev, CustomCaseWhenFunction customCaseWhenFunction) {
+    private TreeNode processCaseWhenFunction(
+            TreeNode prev, CustomCaseWhenFunction customCaseWhenFunction) {
         Traversal<?, ?> caseTraversal = customCaseWhenFunction.getCaseTraversal();
-        List<CustomWhenThenFunction> whenThenFunctionList = customCaseWhenFunction.getWhenThenFunctionList();
+        List<CustomWhenThenFunction> whenThenFunctionList =
+                customCaseWhenFunction.getWhenThenFunctionList();
         Traversal<?, ?> elseEndTraversal = customCaseWhenFunction.getElseEndTraversal();
 
         boolean saveFlag = rootPathFlag;
         this.rootPathFlag = false;
 
-        TreeNode caseTreeNode = travelTraversalAdmin(caseTraversal.asAdmin(), new SourceDelegateNode(prev, schema));
+        TreeNode caseTreeNode =
+                travelTraversalAdmin(caseTraversal.asAdmin(), new SourceDelegateNode(prev, schema));
         List<Pair<TreeNode, TreeNode>> whenThenNodeList = Lists.newArrayList();
         for (CustomWhenThenFunction whenThenFunction : whenThenFunctionList) {
-            Pair<TreeNode, TreeNode> whenThenPair = Pair.of(
-                    travelTraversalAdmin(whenThenFunction.getWhenPredicate().asAdmin(), new SourceDelegateNode(caseTreeNode, schema)),
-                    travelTraversalAdmin(whenThenFunction.getThenTraversal().asAdmin(), new SourceDelegateNode(caseTreeNode, schema)));
+            Pair<TreeNode, TreeNode> whenThenPair =
+                    Pair.of(
+                            travelTraversalAdmin(
+                                    whenThenFunction.getWhenPredicate().asAdmin(),
+                                    new SourceDelegateNode(caseTreeNode, schema)),
+                            travelTraversalAdmin(
+                                    whenThenFunction.getThenTraversal().asAdmin(),
+                                    new SourceDelegateNode(caseTreeNode, schema)));
             whenThenNodeList.add(whenThenPair);
         }
-        TreeNode elseEndTreeNode = elseEndTraversal == null ? null : travelTraversalAdmin(elseEndTraversal.asAdmin(), new SourceDelegateNode(caseTreeNode, schema));
+        TreeNode elseEndTreeNode =
+                elseEndTraversal == null
+                        ? null
+                        : travelTraversalAdmin(
+                                elseEndTraversal.asAdmin(),
+                                new SourceDelegateNode(caseTreeNode, schema));
 
         this.rootPathFlag = saveFlag;
         return new CaseWhenTreeNode(prev, schema, caseTreeNode, whenThenNodeList, elseEndTreeNode);
@@ -1001,26 +1146,33 @@ public class TreeBuilder {
     }
 
     private TreeNode visitGroupStep(GroupStep step, TreeNode prev) {
-        Traversal.Admin<?, ?> keyTraversal = ReflectionUtils.getFieldValue(GroupStep.class, step, "keyTraversal");
-        Traversal.Admin<?, ?> valueTraversal = ReflectionUtils.getFieldValue(GroupStep.class, step, "valueTraversal");
-        if (null != keyTraversal &&
-                (StringUtils.contains(keyTraversal.toString(), "GroupStep") ||
-                        StringUtils.contains(keyTraversal.toString(), "GroupCountStep"))) {
-            throw new IllegalArgumentException("Not support group by (group or group count) in key");
+        Traversal.Admin<?, ?> keyTraversal =
+                ReflectionUtils.getFieldValue(GroupStep.class, step, "keyTraversal");
+        Traversal.Admin<?, ?> valueTraversal =
+                ReflectionUtils.getFieldValue(GroupStep.class, step, "valueTraversal");
+        if (null != keyTraversal
+                && (StringUtils.contains(keyTraversal.toString(), "GroupStep")
+                        || StringUtils.contains(keyTraversal.toString(), "GroupCountStep"))) {
+            throw new IllegalArgumentException(
+                    "Not support group by (group or group count) in key");
         }
-        if (null != valueTraversal && (StringUtils.contains(valueTraversal.toString(), "GroupStep") ||
-                StringUtils.contains(valueTraversal.toString(), "GroupCountStep"))) {
-            throw new IllegalArgumentException("Not support group by (group or group count) in value");
+        if (null != valueTraversal
+                && (StringUtils.contains(valueTraversal.toString(), "GroupStep")
+                        || StringUtils.contains(valueTraversal.toString(), "GroupCountStep"))) {
+            throw new IllegalArgumentException(
+                    "Not support group by (group or group count) in value");
         }
 
         GroupTreeNode groupTreeNode = new GroupTreeNode(prev, schema);
         boolean saveFlag = rootPathFlag;
         rootPathFlag = false;
         if (null != keyTraversal) {
-            groupTreeNode.setKeyTreeNode(travelTraversalAdmin(keyTraversal, new SourceDelegateNode(prev, schema)));
+            groupTreeNode.setKeyTreeNode(
+                    travelTraversalAdmin(keyTraversal, new SourceDelegateNode(prev, schema)));
         }
         if (null != valueTraversal) {
-            groupTreeNode.setValueTreeNode(travelTraversalAdmin(valueTraversal, new SourceDelegateNode(prev, schema)));
+            groupTreeNode.setValueTreeNode(
+                    travelTraversalAdmin(valueTraversal, new SourceDelegateNode(prev, schema)));
         }
         rootPathFlag = saveFlag;
 
@@ -1028,14 +1180,19 @@ public class TreeBuilder {
     }
 
     private TreeNode visitConstantStep(ConstantStep step, TreeNode prev) {
-        return new ConstantTreeNode(prev, schema, ReflectionUtils.getFieldValue(ConstantStep.class, step, "constant"));
+        return new ConstantTreeNode(
+                prev, schema, ReflectionUtils.getFieldValue(ConstantStep.class, step, "constant"));
     }
 
     private TreeNode visitTraversalMapStep(TraversalMapStep step, TreeNode prev) {
-        TreeNode mapTreeNode = travelTraversalAdmin(ReflectionUtils.getFieldValue(TraversalMapStep.class, step, "mapTraversal"), new SourceDelegateNode(prev, schema));
+        TreeNode mapTreeNode =
+                travelTraversalAdmin(
+                        ReflectionUtils.getFieldValue(TraversalMapStep.class, step, "mapTraversal"),
+                        new SourceDelegateNode(prev, schema));
         List<TreeNode> mapTreeNodeList = TreeNodeUtils.buildTreeNodeListFromLeaf(mapTreeNode);
         for (TreeNode treeNode : mapTreeNodeList) {
-            if (treeNode.getNodeType() == NodeType.AGGREGATE || treeNode instanceof DedupGlobalTreeNode) {
+            if (treeNode.getNodeType() == NodeType.AGGREGATE
+                    || treeNode instanceof DedupGlobalTreeNode) {
                 throw new UnsupportedOperationException("Not support traversal in map");
             }
         }
@@ -1043,25 +1200,29 @@ public class TreeBuilder {
     }
 
     private TreeNode visitAndStep(AndStep step, TreeNode prev) {
-        List<Traversal.Admin<?, ?>> traversals = ReflectionUtils.getFieldValue(ConnectiveStep.class, step, "traversals");
+        List<Traversal.Admin<?, ?>> traversals =
+                ReflectionUtils.getFieldValue(ConnectiveStep.class, step, "traversals");
         List<TreeNode> andTreeNodeList = Lists.newArrayList();
         boolean saveFlag = rootPathFlag;
         rootPathFlag = false;
-        traversals.forEach(v -> {
-            TreeNode treeNode = travelTraversalAdmin(v, new SourceDelegateNode(prev, schema));
-            if (treeNode instanceof HasTreeNode) {
-                TreeNode hasInputNode = ((HasTreeNode) treeNode).getInputNode();
-                if (hasInputNode instanceof SourceVertexTreeNode ||
-                        hasInputNode instanceof SourceEdgeTreeNode ||
-                        hasInputNode instanceof EdgeTreeNode) {
-                    prev.addHasContainerList(((HasTreeNode) treeNode).getHasContainerList());
-                } else {
-                    andTreeNodeList.add(treeNode);
-                }
-            } else {
-                andTreeNodeList.add(treeNode);
-            }
-        });
+        traversals.forEach(
+                v -> {
+                    TreeNode treeNode =
+                            travelTraversalAdmin(v, new SourceDelegateNode(prev, schema));
+                    if (treeNode instanceof HasTreeNode) {
+                        TreeNode hasInputNode = ((HasTreeNode) treeNode).getInputNode();
+                        if (hasInputNode instanceof SourceVertexTreeNode
+                                || hasInputNode instanceof SourceEdgeTreeNode
+                                || hasInputNode instanceof EdgeTreeNode) {
+                            prev.addHasContainerList(
+                                    ((HasTreeNode) treeNode).getHasContainerList());
+                        } else {
+                            andTreeNodeList.add(treeNode);
+                        }
+                    } else {
+                        andTreeNodeList.add(treeNode);
+                    }
+                });
         rootPathFlag = saveFlag;
 
         if (andTreeNodeList.isEmpty()) {
@@ -1078,7 +1239,10 @@ public class TreeBuilder {
         List<Traversal.Admin<?, ?>> unionTraversalList = step.getGlobalChildren();
         List<TreeNode> unionTreeNodeList = Lists.newArrayList();
 
-        unionTraversalList.forEach(v -> unionTreeNodeList.add(travelTraversalAdmin(v, new SourceDelegateNode(prev, schema))));
+        unionTraversalList.forEach(
+                v ->
+                        unionTreeNodeList.add(
+                                travelTraversalAdmin(v, new SourceDelegateNode(prev, schema))));
 
         UnionTreeNode unionTreeNode = new UnionTreeNode(prev, schema, unionTreeNodeList);
         return unionTreeNode;
@@ -1089,7 +1253,8 @@ public class TreeBuilder {
     }
 
     private TreeNode visitNotStep(NotStep step, TreeNode prev) {
-        Traversal.Admin<?, ?> notTraversal = ReflectionUtils.getFieldValue(NotStep.class, step, "notTraversal");
+        Traversal.Admin<?, ?> notTraversal =
+                ReflectionUtils.getFieldValue(NotStep.class, step, "notTraversal");
         TreeNode notTreeNode;
 
         boolean saveFlag = rootPathFlag;
@@ -1100,41 +1265,47 @@ public class TreeBuilder {
         return new NotTreeNode(prev, schema, notTreeNode);
     }
 
-    private HasContainer convertPredicateToHasContainer(Predicate<Traversal<?, ?>> predicate, ValueType valueType) {
+    private HasContainer convertPredicateToHasContainer(
+            Predicate<Traversal<?, ?>> predicate, ValueType valueType) {
         if (predicate instanceof CustomPredicate) {
             switch (((CustomPredicate) predicate).getPredicateType()) {
-                case REGEX: {
-                    RegexPredicate regexPredicate = RegexPredicate.class.cast(predicate);
-                    if (predicate instanceof RegexKeyPredicate) {
-                        RegexKeyPredicate regexKeyPredicate = RegexKeyPredicate.class.cast(regexPredicate);
-                        String key = regexKeyPredicate.getKey();
-                        return convertHasContainer(key, regexKeyPredicate, valueType);
-                    } else {
-                        return convertHasContainer("", regexPredicate, valueType);
+                case REGEX:
+                    {
+                        RegexPredicate regexPredicate = RegexPredicate.class.cast(predicate);
+                        if (predicate instanceof RegexKeyPredicate) {
+                            RegexKeyPredicate regexKeyPredicate =
+                                    RegexKeyPredicate.class.cast(regexPredicate);
+                            String key = regexKeyPredicate.getKey();
+                            return convertHasContainer(key, regexKeyPredicate, valueType);
+                        } else {
+                            return convertHasContainer("", regexPredicate, valueType);
+                        }
                     }
-                }
-                case STRING: {
-                    StringPredicate stringPredicate = StringPredicate.class.cast(predicate);
-                    if (predicate instanceof StringKeyPredicate) {
-                        String key = StringKeyPredicate.class.cast(predicate).getKey();
-                        return convertHasContainer(key, stringPredicate, valueType);
-                    } else {
-                        return convertHasContainer("", stringPredicate, valueType);
+                case STRING:
+                    {
+                        StringPredicate stringPredicate = StringPredicate.class.cast(predicate);
+                        if (predicate instanceof StringKeyPredicate) {
+                            String key = StringKeyPredicate.class.cast(predicate).getKey();
+                            return convertHasContainer(key, stringPredicate, valueType);
+                        } else {
+                            return convertHasContainer("", stringPredicate, valueType);
+                        }
                     }
-
-                }
-                case LIST: {
-                    ListPredicate listPredicate = ListPredicate.class.cast(predicate);
-                    if (listPredicate instanceof ListKeyPredicate) {
-                        String key = ListKeyPredicate.class.cast(listPredicate).getKey();
-                        return convertHasContainer(key, listPredicate, valueType);
-                    } else {
-                        return convertHasContainer("", listPredicate, valueType);
+                case LIST:
+                    {
+                        ListPredicate listPredicate = ListPredicate.class.cast(predicate);
+                        if (listPredicate instanceof ListKeyPredicate) {
+                            String key = ListKeyPredicate.class.cast(listPredicate).getKey();
+                            return convertHasContainer(key, listPredicate, valueType);
+                        } else {
+                            return convertHasContainer("", listPredicate, valueType);
+                        }
                     }
-                }
-                default: {
-                    throw new UnsupportedOperationException("Only support custom predicate in lambda filter yet.");
-                }
+                default:
+                    {
+                        throw new UnsupportedOperationException(
+                                "Only support custom predicate in lambda filter yet.");
+                    }
             }
         } else if (predicate instanceof ConnectiveP) {
             throw new UnsupportedOperationException("Not support or/and here");
@@ -1147,11 +1318,12 @@ public class TreeBuilder {
         if (step.getPredicate() instanceof P) {
             Predicate predicate = step.getPredicate();
             List<HasContainer> hasContainerList = Lists.newArrayList();
-            hasContainerList.add(convertPredicateToHasContainer(predicate, prev.getOutputValueType()));
+            hasContainerList.add(
+                    convertPredicateToHasContainer(predicate, prev.getOutputValueType()));
 
-            if (prev instanceof SourceVertexTreeNode ||
-                    prev instanceof SourceEdgeTreeNode ||
-                    prev instanceof EdgeTreeNode) {
+            if (prev instanceof SourceVertexTreeNode
+                    || prev instanceof SourceEdgeTreeNode
+                    || prev instanceof EdgeTreeNode) {
                 prev.addHasContainerList(hasContainerList);
                 return prev;
             } else {
@@ -1184,7 +1356,8 @@ public class TreeBuilder {
             Traversal.Admin currentTraversal = current.getTraversal();
             TraversalParent parent = currentTraversal.getParent();
             lambdaIndex.append('#');
-            if (!parent.getGlobalChildren().isEmpty() && -1 != parent.getGlobalChildren().get(0).getSteps().indexOf(current)) {
+            if (!parent.getGlobalChildren().isEmpty()
+                    && -1 != parent.getGlobalChildren().get(0).getSteps().indexOf(current)) {
                 lambdaIndex.append('G');
             } else {
                 lambdaIndex.append('L');
@@ -1197,12 +1370,20 @@ public class TreeBuilder {
     }
 
     private TreeNode visitOrderLocalStep(OrderLocalStep step, TreeNode prev) {
-        List<org.javatuples.Pair<Traversal.Admin<?, ?>, Comparator<?>>> comparatorList = step.getComparators();
+        List<org.javatuples.Pair<Traversal.Admin<?, ?>, Comparator<?>>> comparatorList =
+                step.getComparators();
         List<Pair<TreeNode, Order>> orderTreeNodeList = Lists.newArrayList();
 
         boolean saveFlag = rootPathFlag;
         rootPathFlag = false;
-        comparatorList.forEach(v -> orderTreeNodeList.add(Pair.of(travelTraversalAdmin(v.getValue0(), new SourceDelegateNode(prev, schema)), Order.class.cast(v.getValue1()))));
+        comparatorList.forEach(
+                v ->
+                        orderTreeNodeList.add(
+                                Pair.of(
+                                        travelTraversalAdmin(
+                                                v.getValue0(),
+                                                new SourceDelegateNode(prev, schema)),
+                                        Order.class.cast(v.getValue1()))));
         rootPathFlag = saveFlag;
 
         return new OrderLocalTreeNode(prev, schema, orderTreeNodeList);
@@ -1217,12 +1398,13 @@ public class TreeBuilder {
     private TreeNode visitSimplePathStep(PathFilterStep step, TreeNode prev) {
         String fromLabel = ReflectionUtils.getFieldValue(PathFilterStep.class, step, "fromLabel");
         String toLabel = ReflectionUtils.getFieldValue(PathFilterStep.class, step, "toLabel");
-        TraversalRing<?, ?> traversalRing = ReflectionUtils.getFieldValue(PathFilterStep.class, step, "traversalRing");
-        if (StringUtils.isNotEmpty(fromLabel) ||
-                StringUtils.isNotEmpty(toLabel) ||
-                (null != traversalRing
-                        && traversalRing.size() > 0)) {
-            throw new IllegalArgumentException("Not support fromLabel/toLabel/traversalRing in path filter step");
+        TraversalRing<?, ?> traversalRing =
+                ReflectionUtils.getFieldValue(PathFilterStep.class, step, "traversalRing");
+        if (StringUtils.isNotEmpty(fromLabel)
+                || StringUtils.isNotEmpty(toLabel)
+                || (null != traversalRing && traversalRing.size() > 0)) {
+            throw new IllegalArgumentException(
+                    "Not support fromLabel/toLabel/traversalRing in path filter step");
         }
         boolean isSimple = ReflectionUtils.getFieldValue(PathFilterStep.class, step, "isSimple");
         Set<String> propKeyList = Sets.newHashSet();
@@ -1233,14 +1415,20 @@ public class TreeBuilder {
     }
 
     private TreeNode visitPropertyMapStep(PropertyMapStep step, TreeNode prev) {
-        Traversal.Admin<?, ?> propertyTraversal = step.getLocalChildren().isEmpty() ? null : (Traversal.Admin<?, ?>) step.getLocalChildren().get(0);
-        TraversalRing<?, ?> traversalRing = ReflectionUtils.getFieldValue(PropertyMapStep.class, step, "traversalRing");
+        Traversal.Admin<?, ?> propertyTraversal =
+                step.getLocalChildren().isEmpty()
+                        ? null
+                        : (Traversal.Admin<?, ?>) step.getLocalChildren().get(0);
+        TraversalRing<?, ?> traversalRing =
+                ReflectionUtils.getFieldValue(PropertyMapStep.class, step, "traversalRing");
         if (null != propertyTraversal || !traversalRing.isEmpty()) {
-            throw new UnsupportedOperationException("Not support value map with property traversal or traversal ring");
+            throw new UnsupportedOperationException(
+                    "Not support value map with property traversal or traversal ring");
         }
         String[] propertyKeys = step.getPropertyKeys();
         PropertyType propertyType = step.getReturnType();
-        return new PropertyMapTreeNode(prev, schema, propertyKeys, propertyType, step.isIncludeTokens());
+        return new PropertyMapTreeNode(
+                prev, schema, propertyKeys, propertyType, step.getIncludedTokens() != 0);
     }
 
     private TreeNode visitPropertiesStep(PropertiesStep step, TreeNode prev) {
@@ -1251,9 +1439,11 @@ public class TreeBuilder {
         P predicate = step.getPredicate();
         Object value = predicate.getValue();
         if (prev instanceof JoinZeroNode) {
-            if (Double.parseDouble(value.toString()) > 0.0 && predicate.getBiPredicate() == Compare.gte) {
+            if (Double.parseDouble(value.toString()) > 0.0
+                    && predicate.getBiPredicate() == Compare.gte) {
                 ((JoinZeroNode) prev).disableJoinZero();
-            } else if (Double.parseDouble(value.toString()) >= 0.0 && predicate.getBiPredicate() == Compare.gt) {
+            } else if (Double.parseDouble(value.toString()) >= 0.0
+                    && predicate.getBiPredicate() == Compare.gt) {
                 ((JoinZeroNode) prev).disableJoinZero();
             }
         }
@@ -1261,18 +1451,30 @@ public class TreeBuilder {
         return new HasTreeNode(prev, Lists.newArrayList(hasContainer), schema);
     }
 
-    private HasContainer convertHasContainer(String key, Predicate<?> predicate, ValueType inputValueType) {
+    private HasContainer convertHasContainer(
+            String key, Predicate<?> predicate, ValueType inputValueType) {
         if (null == predicate) {
             return new HasContainer(key, null);
         }
         if (predicate instanceof CustomPredicate) {
             if (StringUtils.isEmpty(key)) {
-                checkArgument(inputValueType instanceof ListValueType || inputValueType instanceof ValueValueType,
-                        "Output value for predicate must be value while current type=>" + inputValueType);
+                checkArgument(
+                        inputValueType instanceof ListValueType
+                                || inputValueType instanceof ValueValueType,
+                        "Output value for predicate must be value while current type=>"
+                                + inputValueType);
                 PredicateType predicateType = ((CustomPredicate) predicate).getPredicateType();
-                Message.VariantType variantType = inputValueType instanceof ListValueType ?
-                        Message.VariantType.valueOf(ValueValueType.class.cast(((ListValueType) inputValueType).getListValue()).getDataType().name() + "_LIST") :
-                        ValueValueType.class.cast(inputValueType).getDataType();
+                Message.VariantType variantType =
+                        inputValueType instanceof ListValueType
+                                ? Message.VariantType.valueOf(
+                                        ValueValueType.class
+                                                        .cast(
+                                                                ((ListValueType) inputValueType)
+                                                                        .getListValue())
+                                                        .getDataType()
+                                                        .name()
+                                                + "_LIST")
+                                : ValueValueType.class.cast(inputValueType).getDataType();
                 validPredicateVariantType(variantType, predicateType);
                 return new HasContainer(key, CustomPredicate.class.cast(predicate));
             } else {
@@ -1281,11 +1483,15 @@ public class TreeBuilder {
                     return new HasContainer(key, CustomPredicate.class.cast(predicate));
                 } else {
                     if (dataTypeSet.size() > 1) {
-                        logger.warn("There's multiple type=>" + dataTypeSet + " for property=>" + key);
+                        logger.warn(
+                                "There's multiple type=>" + dataTypeSet + " for property=>" + key);
                         return new HasContainer(key, CustomPredicate.class.cast(predicate));
                     } else {
-                        Message.VariantType variantType = CompilerUtils.parseVariantFromDataType(dataTypeSet.iterator().next());
-                        PredicateType predicateType = ((CustomPredicate) predicate).getPredicateType();
+                        Message.VariantType variantType =
+                                CompilerUtils.parseVariantFromDataType(
+                                        dataTypeSet.iterator().next());
+                        PredicateType predicateType =
+                                ((CustomPredicate) predicate).getPredicateType();
                         validPredicateVariantType(variantType, predicateType);
                         return new HasContainer(key, CustomPredicate.class.cast(predicate));
                     }
@@ -1293,7 +1499,8 @@ public class TreeBuilder {
             }
         } else {
             if (StringUtils.isEmpty(key)) {
-                Message.VariantType variantType = ValueValueType.class.cast(inputValueType).getDataType();
+                Message.VariantType variantType =
+                        ValueValueType.class.cast(inputValueType).getDataType();
                 return createContainerFromVariantyType(key, P.class.cast(predicate), variantType);
             } else {
                 Set<DataType> dataTypeSet = SchemaUtils.getPropDataTypeList(key, schema);
@@ -1301,18 +1508,23 @@ public class TreeBuilder {
                     return new HasContainer(key, P.class.cast(predicate));
                 } else {
                     if (dataTypeSet.size() > 1) {
-                        logger.warn("There's multiple type=>" + dataTypeSet + " for property=>" + key);
+                        logger.warn(
+                                "There's multiple type=>" + dataTypeSet + " for property=>" + key);
                         return new HasContainer(key, P.class.cast(predicate));
                     } else {
-                        Message.VariantType variantType = CompilerUtils.parseVariantFromDataType(dataTypeSet.iterator().next());
-                        return createContainerFromVariantyType(key, P.class.cast(predicate), variantType);
+                        Message.VariantType variantType =
+                                CompilerUtils.parseVariantFromDataType(
+                                        dataTypeSet.iterator().next());
+                        return createContainerFromVariantyType(
+                                key, P.class.cast(predicate), variantType);
                     }
                 }
             }
         }
     }
 
-    private HasContainer createContainerFromVariantyType(String key, P<?> predicate, Message.VariantType variantType) {
+    private HasContainer createContainerFromVariantyType(
+            String key, P<?> predicate, Message.VariantType variantType) {
         if (Message.VariantType.VT_UNKNOWN == variantType) {
             return new HasContainer(key, predicate);
         }
@@ -1321,7 +1533,10 @@ public class TreeBuilder {
             P currentPredicate = new P(predicate.getBiPredicate(), value);
             return new HasContainer(key, currentPredicate);
         } else if (predicate.getBiPredicate() instanceof Contains) {
-            Object value = CompilerUtils.convertValueWithType(predicate.getValue(), Message.VariantType.valueOf(variantType.name() + "_LIST"));
+            Object value =
+                    CompilerUtils.convertValueWithType(
+                            predicate.getValue(),
+                            Message.VariantType.valueOf(variantType.name() + "_LIST"));
             P currentPredicate = new P(predicate.getBiPredicate(), value);
             return new HasContainer(key, currentPredicate);
         } else if (predicate instanceof ConnectiveP) {
@@ -1335,7 +1550,8 @@ public class TreeBuilder {
 
     private void convertConnectiveValueType(P<Object> predicate, Message.VariantType variantType) {
         if (predicate instanceof ConnectiveP) {
-            List<P<Object>> predicateList = ReflectionUtils.getFieldValue(ConnectiveP.class, predicate, "predicates");
+            List<P<Object>> predicateList =
+                    ReflectionUtils.getFieldValue(ConnectiveP.class, predicate, "predicates");
             for (P<Object> currentPredicate : predicateList) {
                 convertConnectiveValueType(currentPredicate, variantType);
             }
@@ -1345,34 +1561,47 @@ public class TreeBuilder {
         }
     }
 
-    private void validPredicateVariantType(Message.VariantType variantType, PredicateType predicateType) {
+    private void validPredicateVariantType(
+            Message.VariantType variantType, PredicateType predicateType) {
         switch (predicateType) {
             case STRING:
-            case REGEX: {
-                checkArgument(variantType == Message.VariantType.VT_STRING,
-                        "Text and Regex predicate only support string output while current value type=>" + variantType);
-                break;
-            }
-            case LIST: {
-                checkArgument(variantType == Message.VariantType.VT_INT_LIST ||
-                                variantType == Message.VariantType.VT_LONG_LIST ||
-                                variantType == Message.VariantType.VT_STRING_LIST,
-                        "List predicate only support list output while current value type=>" + variantType);
-                break;
-            }
-            default: {
-                break;
-            }
+            case REGEX:
+                {
+                    checkArgument(
+                            variantType == Message.VariantType.VT_STRING,
+                            "Text and Regex predicate only support string output while current"
+                                    + " value type=>"
+                                    + variantType);
+                    break;
+                }
+            case LIST:
+                {
+                    checkArgument(
+                            variantType == Message.VariantType.VT_INT_LIST
+                                    || variantType == Message.VariantType.VT_LONG_LIST
+                                    || variantType == Message.VariantType.VT_STRING_LIST,
+                            "List predicate only support list output while current value type=>"
+                                    + variantType);
+                    break;
+                }
+            default:
+                {
+                    break;
+                }
         }
     }
 
     private TreeNode visitGroupCountStep(GroupCountStep step, TreeNode prev) {
         GroupCountTreeNode groupCountTreeNode = new GroupCountTreeNode(prev, schema);
-        Traversal.Admin<?, ?> keyTraversal = step.getLocalChildren().isEmpty() ? null : (Traversal.Admin<?, ?>) step.getLocalChildren().get(0);
+        Traversal.Admin<?, ?> keyTraversal =
+                step.getLocalChildren().isEmpty()
+                        ? null
+                        : (Traversal.Admin<?, ?>) step.getLocalChildren().get(0);
         if (null != keyTraversal) {
             boolean saveFlag = rootPathFlag;
             rootPathFlag = false;
-            groupCountTreeNode.setKeyTreeNode(travelTraversalAdmin(keyTraversal, new SourceDelegateNode(prev, schema)));
+            groupCountTreeNode.setKeyTreeNode(
+                    travelTraversalAdmin(keyTraversal, new SourceDelegateNode(prev, schema)));
             rootPathFlag = saveFlag;
         }
         return groupCountTreeNode;
@@ -1411,7 +1640,8 @@ public class TreeBuilder {
         }
 
         TreeNode outputNode = lastRangeNode.getOutputNode();
-        RangeGlobalTreeNode rangeGlobalTreeNode = new RangeGlobalTreeNode(lastRangeNode, schema, low, high);
+        RangeGlobalTreeNode rangeGlobalTreeNode =
+                new RangeGlobalTreeNode(lastRangeNode, schema, low, high);
 
         if (null == outputNode) {
             return rangeGlobalTreeNode;
@@ -1426,13 +1656,19 @@ public class TreeBuilder {
     }
 
     private TreeNode visitOrderGlobalStep(OrderGlobalStep step, TreeNode prev) {
-        List<org.javatuples.Pair<Traversal.Admin<?, ?>, Comparator<?>>> comparatorList = step.getComparators();
+        List<org.javatuples.Pair<Traversal.Admin<?, ?>, Comparator<?>>> comparatorList =
+                step.getComparators();
         List<Pair<TreeNode, Order>> treeNodeOrderList = Lists.newArrayList();
 
         boolean saveFlag = rootPathFlag;
         rootPathFlag = false;
         SourceDelegateNode sourceDelegateNode = new SourceDelegateNode(prev, schema);
-        comparatorList.forEach(v -> treeNodeOrderList.add(Pair.of(travelTraversalAdmin(v.getValue0(), sourceDelegateNode), Order.class.cast(v.getValue1()))));
+        comparatorList.forEach(
+                v ->
+                        treeNodeOrderList.add(
+                                Pair.of(
+                                        travelTraversalAdmin(v.getValue0(), sourceDelegateNode),
+                                        Order.class.cast(v.getValue1()))));
         rootPathFlag = saveFlag;
 
         return new OrderGlobalTreeNode(prev, schema, treeNodeOrderList);
@@ -1440,16 +1676,23 @@ public class TreeBuilder {
 
     private TreeNode visitDedupGlobalStep(DedupGlobalStep step, TreeNode prev) {
         Set<String> dedupLabelList = step.getScopeKeys();
-        Traversal.Admin<?, ?> dedupTraversal = step.getLocalChildren().isEmpty() ? null : (Traversal.Admin<?, ?>) step.getLocalChildren().get(0);
-        DedupGlobalTreeNode dedupGlobalTreeNode = new DedupGlobalTreeNode(prev, schema, dedupLabelList);
+        Traversal.Admin<?, ?> dedupTraversal =
+                step.getLocalChildren().isEmpty()
+                        ? null
+                        : (Traversal.Admin<?, ?>) step.getLocalChildren().get(0);
+        DedupGlobalTreeNode dedupGlobalTreeNode =
+                new DedupGlobalTreeNode(prev, schema, dedupLabelList);
 
         if (null != dedupTraversal) {
             boolean saveFlag = rootPathFlag;
             rootPathFlag = false;
-            dedupGlobalTreeNode.setDedupTreeNode(travelTraversalAdmin(dedupTraversal, new SourceDelegateNode(dedupGlobalTreeNode, schema)));
+            dedupGlobalTreeNode.setDedupTreeNode(
+                    travelTraversalAdmin(
+                            dedupTraversal, new SourceDelegateNode(dedupGlobalTreeNode, schema)));
             rootPathFlag = saveFlag;
         }
-        List<TreeNode> treeNodeList = Lists.reverse(TreeNodeUtils.buildTreeNodeListFromLeaf(dedupGlobalTreeNode));
+        List<TreeNode> treeNodeList =
+                Lists.reverse(TreeNodeUtils.buildTreeNodeListFromLeaf(dedupGlobalTreeNode));
         TreeNode sourceTreeNode = treeNodeList.get(treeNodeList.size() - 1);
         boolean subQueryNodeFlag = sourceTreeNode instanceof SourceDelegateNode;
         for (TreeNode treeNode : treeNodeList) {
@@ -1457,10 +1700,13 @@ public class TreeBuilder {
                 treeNode.setSubqueryNode();
             }
             treeNode.enableDedupLocal();
-            if (treeNode instanceof SelectTreeNode ||
-                    treeNode instanceof SelectOneTreeNode ||
-                    (treeNode instanceof WherePredicateTreeNode &&
-                            !treeNodeLabelManager.getLabelIndexList().containsKey(((WherePredicateTreeNode) treeNode).getStartKey()))) {
+            if (treeNode instanceof SelectTreeNode
+                    || treeNode instanceof SelectOneTreeNode
+                    || (treeNode instanceof WherePredicateTreeNode
+                            && !treeNodeLabelManager
+                                    .getLabelIndexList()
+                                    .containsKey(
+                                            ((WherePredicateTreeNode) treeNode).getStartKey()))) {
                 break;
             }
         }
@@ -1471,36 +1717,44 @@ public class TreeBuilder {
     private TreeNode visitWherePredicateStep(WherePredicateStep step, TreeNode prev) {
         Optional<String> startKeyOptional = step.getStartKey();
         Optional<P<?>> predicateOptional = step.getPredicate();
-        List<String> selectKeys = ReflectionUtils.getFieldValue(WherePredicateStep.class, step, "selectKeys");
+        List<String> selectKeys =
+                ReflectionUtils.getFieldValue(WherePredicateStep.class, step, "selectKeys");
         List<Traversal.Admin<?, ?>> ringTraversalList = step.getLocalChildren();
         String sourceKey = startKeyOptional.isPresent() ? startKeyOptional.get() : null;
         String targetKey = selectKeys.iterator().next();
-        WherePredicateTreeNode wherePredicateTreeNode = new WherePredicateTreeNode(
-                prev,
-                schema,
-                predicateOptional.get(),
-                sourceKey,
-                ringTraversalList.isEmpty());
+        WherePredicateTreeNode wherePredicateTreeNode =
+                new WherePredicateTreeNode(
+                        prev,
+                        schema,
+                        predicateOptional.get(),
+                        sourceKey,
+                        ringTraversalList.isEmpty());
 
         boolean saveFlag = rootPathFlag;
         rootPathFlag = false;
         if (!ringTraversalList.isEmpty()) {
             Traversal.Admin<?, ?> sourceAdmin = ringTraversalList.get(0);
             Traversal.Admin<?, ?> targetAdmin = ringTraversalList.get(1 % ringTraversalList.size());
-            TreeNode sourceNode = travelTraversalAdmin(sourceAdmin,
-                    null == sourceKey ? new SourceDelegateNode(prev, schema) :
+            TreeNode sourceNode =
+                    travelTraversalAdmin(
+                            sourceAdmin,
+                            null == sourceKey
+                                    ? new SourceDelegateNode(prev, schema)
+                                    : new SelectOneTreeNode(
+                                            new SourceDelegateNode(prev, schema),
+                                            sourceKey,
+                                            Pop.last,
+                                            treeNodeLabelManager.getTreeNodeList(sourceKey),
+                                            schema));
+            TreeNode targetNode =
+                    travelTraversalAdmin(
+                            targetAdmin,
                             new SelectOneTreeNode(
                                     new SourceDelegateNode(prev, schema),
-                                    sourceKey,
+                                    targetKey,
                                     Pop.last,
-                                    treeNodeLabelManager.getTreeNodeList(sourceKey),
+                                    treeNodeLabelManager.getTreeNodeList(targetKey),
                                     schema));
-            TreeNode targetNode = travelTraversalAdmin(targetAdmin, new SelectOneTreeNode(
-                    new SourceDelegateNode(prev, schema),
-                    targetKey,
-                    Pop.last,
-                    treeNodeLabelManager.getTreeNodeList(targetKey),
-                    schema));
             wherePredicateTreeNode.setSourceTargetNode(sourceNode, targetNode);
         }
         rootPathFlag = saveFlag;
@@ -1509,13 +1763,14 @@ public class TreeBuilder {
     }
 
     private TreeNode visitTraversalFilterStep(TraversalFilterStep step, TreeNode prev) {
-        Traversal.Admin<?, ?> filterTraversal = (Traversal.Admin<?, ?>) step.getLocalChildren().get(0);
+        Traversal.Admin<?, ?> filterTraversal =
+                (Traversal.Admin<?, ?>) step.getLocalChildren().get(0);
         TreeNode filterTreeNode;
-
 
         boolean saveFlag = rootPathFlag;
         rootPathFlag = false;
-        filterTreeNode = travelTraversalAdmin(filterTraversal, new SourceDelegateNode(prev, schema));
+        filterTreeNode =
+                travelTraversalAdmin(filterTraversal, new SourceDelegateNode(prev, schema));
         rootPathFlag = saveFlag;
         if (!(filterTreeNode instanceof RangeGlobalTreeNode)) {
             TreeNode currentTreeNode = filterTreeNode;
@@ -1539,7 +1794,8 @@ public class TreeBuilder {
         if (filterTreeNode instanceof SourceTreeNode) {
             throw new IllegalArgumentException();
         } else if (UnaryTreeNode.class.cast(filterTreeNode).getInputNode() instanceof SourceTreeNode
-                && (filterTreeNode instanceof SelectOneTreeNode || filterTreeNode instanceof PropertyNode)) {
+                && (filterTreeNode instanceof SelectOneTreeNode
+                        || filterTreeNode instanceof PropertyNode)) {
             String key;
             if (filterTreeNode instanceof SelectOneTreeNode) {
                 key = SelectOneTreeNode.class.cast(filterTreeNode).getSelectLabel();
@@ -1554,14 +1810,16 @@ public class TreeBuilder {
                 return new HasTreeNode(prev, Lists.newArrayList(hasContainer), schema);
             }
         } else {
-            TraversalFilterTreeNode traversalFilterTreeNode = new TraversalFilterTreeNode(prev, schema);
+            TraversalFilterTreeNode traversalFilterTreeNode =
+                    new TraversalFilterTreeNode(prev, schema);
             traversalFilterTreeNode.setFilterTreeNode(filterTreeNode);
             return traversalFilterTreeNode;
         }
     }
 
     private TreeNode visitSelectStep(SelectStep step, TreeNode prev) {
-        List<String> selectKeyList = ReflectionUtils.getFieldValue(SelectStep.class, step, "selectKeys");
+        List<String> selectKeyList =
+                ReflectionUtils.getFieldValue(SelectStep.class, step, "selectKeys");
         Pop pop = step.getPop();
         List<Traversal.Admin<?, ?>> ringTraversalList = step.getLocalChildren();
 
@@ -1569,23 +1827,34 @@ public class TreeBuilder {
             throw new IllegalArgumentException("select key size < 2 for select operator");
         }
         Map<String, List<TreeNode>> labelTreeNodeList = Maps.newHashMap();
-        selectKeyList.forEach(v -> {
-            if (treeNodeLabelManager.getLabelIndexList().containsKey(v)) {
-                labelTreeNodeList.put(v, treeNodeLabelManager.getTreeNodeList(v));
-            }
-        });
-        SelectTreeNode selectTreeNode = new SelectTreeNode(prev, selectKeyList, pop, labelTreeNodeList, schema);
+        selectKeyList.forEach(
+                v -> {
+                    if (treeNodeLabelManager.getLabelIndexList().containsKey(v)) {
+                        labelTreeNodeList.put(v, treeNodeLabelManager.getTreeNodeList(v));
+                    }
+                });
+        SelectTreeNode selectTreeNode =
+                new SelectTreeNode(prev, selectKeyList, pop, labelTreeNodeList, schema);
 
         boolean saveFlag = rootPathFlag;
         rootPathFlag = false;
         if (!ringTraversalList.isEmpty()) {
-            Set<ValueType> valueTypeList = selectKeyList.stream().map(v -> treeNodeLabelManager.getValueType(v, pop)).collect(Collectors.toSet());
-            ValueType selectValueType = valueTypeList.size() > 1 ? new VarietyValueType(valueTypeList) : valueTypeList.iterator().next();
-            ringTraversalList.forEach(v -> {
-                SourceDelegateNode sourceDelegateNode = new SourceDelegateNode(selectTreeNode, schema);
-                sourceDelegateNode.setDelegateOutputValueType(selectValueType);
-                selectTreeNode.addTraversalTreeNode(travelTraversalAdmin(v, sourceDelegateNode));
-            });
+            Set<ValueType> valueTypeList =
+                    selectKeyList.stream()
+                            .map(v -> treeNodeLabelManager.getValueType(v, pop))
+                            .collect(Collectors.toSet());
+            ValueType selectValueType =
+                    valueTypeList.size() > 1
+                            ? new VarietyValueType(valueTypeList)
+                            : valueTypeList.iterator().next();
+            ringTraversalList.forEach(
+                    v -> {
+                        SourceDelegateNode sourceDelegateNode =
+                                new SourceDelegateNode(selectTreeNode, schema);
+                        sourceDelegateNode.setDelegateOutputValueType(selectValueType);
+                        selectTreeNode.addTraversalTreeNode(
+                                travelTraversalAdmin(v, sourceDelegateNode));
+                    });
         }
         rootPathFlag = saveFlag;
 
@@ -1631,14 +1900,23 @@ public class TreeBuilder {
     private TreeNode visitSelectOneStep(SelectOneStep step, TreeNode prev) {
         Pop pop = step.getPop();
         String selectLabel = (String) Lists.newArrayList(step.getScopeKeys()).get(0);
-        Traversal.Admin<?, ?> selectTraversal = ReflectionUtils.getFieldValue(SelectOneStep.class, step, "selectTraversal");
+        Traversal.Admin<?, ?> selectTraversal =
+                ReflectionUtils.getFieldValue(SelectOneStep.class, step, "selectTraversal");
 
-        SelectOneTreeNode selectOneTreeNode = new SelectOneTreeNode(prev, selectLabel, pop, treeNodeLabelManager.getLabelTreeNodeList(selectLabel), schema);
+        SelectOneTreeNode selectOneTreeNode =
+                new SelectOneTreeNode(
+                        prev,
+                        selectLabel,
+                        pop,
+                        treeNodeLabelManager.getLabelTreeNodeList(selectLabel),
+                        schema);
 
         boolean saveFlag = rootPathFlag;
         rootPathFlag = false;
         if (null != selectTraversal) {
-            selectOneTreeNode.setTraversalTreeNode(travelTraversalAdmin(selectTraversal, new SourceDelegateNode(selectOneTreeNode, schema)));
+            selectOneTreeNode.setTraversalTreeNode(
+                    travelTraversalAdmin(
+                            selectTraversal, new SourceDelegateNode(selectOneTreeNode, schema)));
         }
         rootPathFlag = saveFlag;
 
@@ -1647,9 +1925,15 @@ public class TreeBuilder {
 
     private TreeNode visitHasStep(HasStep step, TreeNode prev) {
         List<HasContainer> hasContainerList = step.getHasContainers();
-        List<HasContainer> convertContainerList = hasContainerList.stream()
-                .map(v -> convertHasContainer(v.getKey(), v.getPredicate(), prev.getOutputValueType()))
-                .collect(Collectors.toList());
+        List<HasContainer> convertContainerList =
+                hasContainerList.stream()
+                        .map(
+                                v ->
+                                        convertHasContainer(
+                                                v.getKey(),
+                                                v.getPredicate(),
+                                                prev.getOutputValueType()))
+                        .collect(Collectors.toList());
         if (prev instanceof SourceVertexTreeNode
                 || prev instanceof SourceEdgeTreeNode
                 || prev instanceof EdgeTreeNode) {
@@ -1668,10 +1952,9 @@ public class TreeBuilder {
         String from = ReflectionUtils.getFieldValue(PathStep.class, step, "fromLabel");
         String to = ReflectionUtils.getFieldValue(PathStep.class, step, "toLabel");
         Set<String> keepLabels = ReflectionUtils.getFieldValue(PathStep.class, step, "keepLabels");
-        if (StringUtils.isNotEmpty(from) ||
-                StringUtils.isNotEmpty(to) ||
-                (null != keepLabels &&
-                        keepLabels.size() > 0)) {
+        if (StringUtils.isNotEmpty(from)
+                || StringUtils.isNotEmpty(to)
+                || (null != keepLabels && keepLabels.size() > 0)) {
             throw new UnsupportedOperationException("Not support from/to/keepLabels in path step");
         }
 
@@ -1697,17 +1980,19 @@ public class TreeBuilder {
         processPathRequirement(pathTreeNode, propKeyList, pathValueList);
         pathTreeNode.setPathValueList(pathValueList);
 
-        ringSourceNodeList.forEach(v -> {
-            if (pathValueList.size() > 1) {
-                v.setDelegateOutputValueType(new VarietyValueType(pathValueList));
-            } else {
-                v.setDelegateOutputValueType(pathValueList.iterator().next());
-            }
-        });
+        ringSourceNodeList.forEach(
+                v -> {
+                    if (pathValueList.size() > 1) {
+                        v.setDelegateOutputValueType(new VarietyValueType(pathValueList));
+                    } else {
+                        v.setDelegateOutputValueType(pathValueList.iterator().next());
+                    }
+                });
 
         if (!propKeyList.isEmpty()) {
             if (pathTreeNode.getInputNode() instanceof PropFillTreeNode) {
-                PropFillTreeNode propFillTreeNode = PropFillTreeNode.class.cast(pathTreeNode.getInputNode());
+                PropFillTreeNode propFillTreeNode =
+                        PropFillTreeNode.class.cast(pathTreeNode.getInputNode());
                 propFillTreeNode.getPropKeyList().addAll(propKeyList);
             } else {
                 PropFillTreeNode propFillTreeNode = new PropFillTreeNode(prev, propKeyList, schema);
@@ -1719,9 +2004,13 @@ public class TreeBuilder {
         return pathTreeNode;
     }
 
-    private void processPathRequirement(TreeNode treeNode, Set<String> propKeyList, Set<ValueType> pathValueList) {
+    private void processPathRequirement(
+            TreeNode treeNode, Set<String> propKeyList, Set<ValueType> pathValueList) {
         if (treeNode instanceof SourceDelegateNode) {
-            processPathRequirement(SourceDelegateNode.class.cast(treeNode).getDelegate(), propKeyList, pathValueList);
+            processPathRequirement(
+                    SourceDelegateNode.class.cast(treeNode).getDelegate(),
+                    propKeyList,
+                    pathValueList);
             return;
         }
         if (treeNode instanceof SourceTreeNode || treeNode.getNodeType() == NodeType.AGGREGATE) {
@@ -1741,18 +2030,21 @@ public class TreeBuilder {
                 }
                 ValueType inputValueType = unaryTreeNode.getInputNode().getOutputValueType();
                 pathValueList.add(inputValueType);
-                if (null != propKeyList && !propKeyList.isEmpty() && inputValueType instanceof VertexValueType) {
+                if (null != propKeyList
+                        && !propKeyList.isEmpty()
+                        && inputValueType instanceof VertexValueType) {
                     if (unaryTreeNode.getInputNode() instanceof PropFillTreeNode) {
-                        PropFillTreeNode propFillTreeNode = PropFillTreeNode.class.cast(unaryTreeNode.getInputNode());
+                        PropFillTreeNode propFillTreeNode =
+                                PropFillTreeNode.class.cast(unaryTreeNode.getInputNode());
                         propFillTreeNode.getPropKeyList().addAll(propKeyList);
                     } else {
-                        PropFillTreeNode propFillTreeNode = new PropFillTreeNode(null, propKeyList, schema);
+                        PropFillTreeNode propFillTreeNode =
+                                new PropFillTreeNode(null, propKeyList, schema);
                         TreeNode inputTreeNode = unaryTreeNode.getInputNode();
                         unaryTreeNode.setInputNode(propFillTreeNode);
                         propFillTreeNode.setInputNode(inputTreeNode);
                     }
                 }
-
             }
         }
         processPathRequirement(unaryTreeNode.getInputNode(), propKeyList, pathValueList);
@@ -1771,7 +2063,8 @@ public class TreeBuilder {
     }
 
     private TreeNode visitEstimateCountStep(EstimateCountStep step) {
-        TreeNode estimateCountNode = new EstimateCountTreeNode(step.isVertexFlag(), step.getLabelList(), schema);
+        TreeNode estimateCountNode =
+                new EstimateCountTreeNode(step.isVertexFlag(), step.getLabelList(), schema);
         return new SumTreeNode(estimateCountNode, schema);
     }
 

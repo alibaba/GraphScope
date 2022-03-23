@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,11 +15,12 @@
  */
 package com.alibaba.maxgraph.dataload.databuild;
 
+import com.alibaba.graphscope.groot.schema.*;
 import com.alibaba.maxgraph.compiler.api.exception.PropertyDefNotFoundException;
 import com.alibaba.maxgraph.compiler.api.schema.*;
-import com.alibaba.graphscope.groot.schema.*;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.LongWritable;
@@ -37,7 +38,8 @@ import java.util.*;
 public class DataBuildMapper extends Mapper<LongWritable, Text, BytesWritable, BytesWritable> {
     private static final Logger logger = LoggerFactory.getLogger(DataBuildMapper.class);
 
-    public static final SimpleDateFormat SRC_FMT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+    public static final SimpleDateFormat SRC_FMT =
+            new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
     public static final SimpleDateFormat DST_FMT = new SimpleDateFormat("yyyyMMddHHmmssSSS");
 
     private GraphSchema graphSchema;
@@ -60,15 +62,17 @@ public class DataBuildMapper extends Mapper<LongWritable, Text, BytesWritable, B
         this.graphSchema = GraphSchemaMapper.parseFromJson(schemaJson).toGraphSchema();
         this.dataEncoder = new DataEncoder(this.graphSchema);
         String columnMappingsJson = conf.get(OfflineBuild.COLUMN_MAPPINGS);
-        this.fileToColumnMappingInfo = this.objectMapper.readValue(columnMappingsJson,
-                new TypeReference<Map<String, ColumnMappingInfo>>() {});
+        this.fileToColumnMappingInfo =
+                this.objectMapper.readValue(
+                        columnMappingsJson, new TypeReference<Map<String, ColumnMappingInfo>>() {});
         this.ldbcCustomize = conf.getBoolean(OfflineBuild.LDBC_CUSTOMIZE, false);
         this.skipHeader = conf.getBoolean(OfflineBuild.SKIP_HEADER, true);
         DST_FMT.setTimeZone(TimeZone.getTimeZone("GMT+00:00"));
     }
 
     @Override
-    protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
+    protected void map(LongWritable key, Text value, Context context)
+            throws IOException, InterruptedException {
         if (skipHeader && key.get() == 0L) {
             return;
         }
@@ -85,12 +89,15 @@ public class DataBuildMapper extends Mapper<LongWritable, Text, BytesWritable, B
         Map<Integer, Integer> propertiesColumnMapping = columnMappingInfo.getPropertiesColMap();
         String[] items = value.toString().split(separator);
         GraphElement type = this.graphSchema.getElement(labelId);
-        Map<Integer, PropertyValue> propertiesMap = buildPropertiesMap(type, items, propertiesColumnMapping);
+        Map<Integer, PropertyValue> propertiesMap =
+                buildPropertiesMap(type, items, propertiesColumnMapping);
         BytesRef valRef = this.dataEncoder.encodeProperties(labelId, propertiesMap);
         this.outVal.set(valRef.getArray(), valRef.getOffset(), valRef.getLength());
         if (type instanceof GraphVertex) {
-            BytesRef keyBytesRef = this.dataEncoder.encodeVertexKey((GraphVertex) type, propertiesMap, tableId);
-            this.outKey.set(keyBytesRef.getArray(), keyBytesRef.getOffset(), keyBytesRef.getLength());
+            BytesRef keyBytesRef =
+                    this.dataEncoder.encodeVertexKey((GraphVertex) type, propertiesMap, tableId);
+            this.outKey.set(
+                    keyBytesRef.getArray(), keyBytesRef.getOffset(), keyBytesRef.getLength());
             context.write(this.outKey, this.outVal);
         } else if (type instanceof GraphEdge) {
             int srcLabelId = columnMappingInfo.getSrcLabelId();
@@ -103,50 +110,82 @@ public class DataBuildMapper extends Mapper<LongWritable, Text, BytesWritable, B
             GraphElement dstType = this.graphSchema.getElement(dstLabelId);
             Map<Integer, PropertyValue> dstPkMap = buildPropertiesMap(dstType, items, dstPkColMap);
 
-            BytesRef outEdgeKeyRef = this.dataEncoder.encodeEdgeKey((GraphVertex) srcType, srcPkMap,
-                    (GraphVertex) dstType, dstPkMap, (GraphEdge) type, propertiesMap, tableId, true);
-            this.outKey.set(outEdgeKeyRef.getArray(), outEdgeKeyRef.getOffset(), outEdgeKeyRef.getLength());
+            BytesRef outEdgeKeyRef =
+                    this.dataEncoder.encodeEdgeKey(
+                            (GraphVertex) srcType,
+                            srcPkMap,
+                            (GraphVertex) dstType,
+                            dstPkMap,
+                            (GraphEdge) type,
+                            propertiesMap,
+                            tableId,
+                            true);
+            this.outKey.set(
+                    outEdgeKeyRef.getArray(), outEdgeKeyRef.getOffset(), outEdgeKeyRef.getLength());
             context.write(this.outKey, this.outVal);
-            BytesRef inEdgeKeyRef = this.dataEncoder.encodeEdgeKey((GraphVertex) srcType, srcPkMap, (GraphVertex) dstType,
-                    dstPkMap, (GraphEdge) type, propertiesMap, tableId, false);
-            this.outKey.set(inEdgeKeyRef.getArray(), inEdgeKeyRef.getOffset(), inEdgeKeyRef.getLength());
+            BytesRef inEdgeKeyRef =
+                    this.dataEncoder.encodeEdgeKey(
+                            (GraphVertex) srcType,
+                            srcPkMap,
+                            (GraphVertex) dstType,
+                            dstPkMap,
+                            (GraphEdge) type,
+                            propertiesMap,
+                            tableId,
+                            false);
+            this.outKey.set(
+                    inEdgeKeyRef.getArray(), inEdgeKeyRef.getOffset(), inEdgeKeyRef.getLength());
             context.write(this.outKey, this.outVal);
         } else {
-            throw new IllegalArgumentException("invalid label [" + labelId + "], only support VertexType and EdgeType");
+            throw new IllegalArgumentException(
+                    "invalid label [" + labelId + "], only support VertexType and EdgeType");
         }
     }
 
-    private Map<Integer, PropertyValue> buildPropertiesMap(GraphElement typeDef, String[] items,
-                                                           Map<Integer, Integer> columnMapping) {
+    private Map<Integer, PropertyValue> buildPropertiesMap(
+            GraphElement typeDef, String[] items, Map<Integer, Integer> columnMapping) {
         Map<Integer, PropertyValue> operationProperties = new HashMap<>(columnMapping.size());
-        columnMapping.forEach((colIdx, propertyId) -> {
-            GraphProperty propertyDef = typeDef.getProperty(propertyId);
-            if (propertyDef == null) {
-                throw new PropertyDefNotFoundException("property [" + propertyId + "] not found in [" +
-                        typeDef.getLabel() + "]");
-            }
-            if (colIdx >= items.length) {
-                throw new IllegalArgumentException("label [" + typeDef.getLabel() + "], invalid mapping [" + colIdx +
-                        "] -> [" + propertyId + "], data [" + items + "]");
-            }
-            DataType dataType = propertyDef.getDataType();
+        columnMapping.forEach(
+                (colIdx, propertyId) -> {
+                    GraphProperty propertyDef = typeDef.getProperty(propertyId);
+                    if (propertyDef == null) {
+                        throw new PropertyDefNotFoundException(
+                                "property ["
+                                        + propertyId
+                                        + "] not found in ["
+                                        + typeDef.getLabel()
+                                        + "]");
+                    }
+                    if (colIdx >= items.length) {
+                        throw new IllegalArgumentException(
+                                "label ["
+                                        + typeDef.getLabel()
+                                        + "], invalid mapping ["
+                                        + colIdx
+                                        + "] -> ["
+                                        + propertyId
+                                        + "], data ["
+                                        + items
+                                        + "]");
+                    }
+                    DataType dataType = propertyDef.getDataType();
 
-            String val = items[colIdx];
-            if (ldbcCustomize) {
-                String name = propertyDef.getName();
-                switch (name) {
-                    case "creationDate":
-                    case "joinDate":
-                        val = converteDate(val);
-                        break;
-                    case "birthday":
-                        val = val.replace("-", "");
-                        break;
-                }
-            }
-            PropertyValue propertyValue = new PropertyValue(dataType, val);
-            operationProperties.put(propertyId, propertyValue);
-        });
+                    String val = items[colIdx];
+                    if (ldbcCustomize) {
+                        String name = propertyDef.getName();
+                        switch (name) {
+                            case "creationDate":
+                            case "joinDate":
+                                val = converteDate(val);
+                                break;
+                            case "birthday":
+                                val = val.replace("-", "");
+                                break;
+                        }
+                    }
+                    PropertyValue propertyValue = new PropertyValue(dataType, val);
+                    operationProperties.put(propertyId, propertyValue);
+                });
         return operationProperties;
     }
 

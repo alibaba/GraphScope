@@ -580,7 +580,7 @@ class SSSP_PIE(AppAssets):
 
     @staticmethod
     def PEval(frag, context):
-        src = int(context.get_config(b"src"))
+        src = context.get_config(b"src")
         graphscope.declare(graphscope.Vertex, source)
         native_source = False
         v_label_num = frag.vertex_label_num()
@@ -936,38 +936,42 @@ def test_dump_gar(random_gar, not_exist_gar):
 def test_load_app_from_gar(random_gar, not_exist_gar, non_zipfile_gar):
     # file not exist, also works with permission denied
     with pytest.raises(FileNotFoundError, match="No such file or directory"):
-        ast1 = load_app("SSSP_Pregel", not_exist_gar)
+        ast1 = load_app(not_exist_gar)
     # not a zip file
     with pytest.raises(ValueError, match="not a zip file"):
-        ast2 = load_app("SSSP_Pregel", non_zipfile_gar)
+        ast2 = load_app(non_zipfile_gar)
     # type error
     with pytest.raises(ValueError, match="Wrong type"):
-        ast3 = load_app("SSSP_Pregel", [1, 2, 3, 4])
+        ast3 = load_app([1, 2, 3, 4])
     with pytest.raises(ValueError, match="Wrong type"):
-        ast4 = load_app("SSSP_Pregel", gar=None)
+        ast4 = load_app(gar=None)
     SSSP_Pregel.to_gar(random_gar)
-    ast1 = load_app("SSSP_Pregel", random_gar)
+    ast1 = load_app(random_gar)
     assert isinstance(ast1, AppAssets)
 
 
 def test_error_on_create_cython_app(
-    graphscope_session, dynamic_property_graph, random_gar, empty_gar
+    graphscope_session,
+    p2p_property_graph,
+    dynamic_property_graph,
+    random_gar,
+    empty_gar,
 ):
     SSSP_Pregel.to_gar(random_gar)
     with pytest.raises(InvalidArgumentError, match="App is uncompatible with graph"):
-        a1 = load_app("SSSP_Pregel", random_gar)
+        a1 = load_app(random_gar)
         a1(dynamic_property_graph, src=4)
     # algo not found in gar resource
     with pytest.raises(InvalidArgumentError, match="App not found in gar: sssp"):
-        a2 = load_app("sssp", random_gar)
+        a2 = load_app(gar=random_gar, algo="sssp")
         a2(p2p_property_graph, src=6)
     # no `.gs_conf.yaml` in empty gar, raise KeyError exception
     with pytest.raises(KeyError):
-        a3 = load_app("SSSP_Pregel", empty_gar)
+        a3 = load_app(gar=empty_gar, algo="SSSP_Pregel")
         a3(p2p_property_graph, src=6)
 
 
-@pytest.mark.skipif("FULL-TEST-SUITE" not in os.environ, reason="Run in nightly CI")
+@pytest.mark.skipif("FULL_TEST_SUITE" not in os.environ, reason="Run in nightly CI")
 def test_get_schema(graphscope_session, arrow_property_graph):
     # pregel
     a1 = Pregel_GetSchema()
@@ -989,7 +993,27 @@ def test_get_schema(graphscope_session, arrow_property_graph):
     ]
 
 
-@pytest.mark.skipif("FULL-TEST-SUITE" not in os.environ, reason="Run in nightly CI")
+@pytest.mark.skipif("FULL_TEST_SUITE" not in os.environ, reason="Run in nightly CI")
+def test_property_context(graphscope_session, p2p_property_graph):
+    a1 = SSSP_Pregel()
+    ctx = a1(p2p_property_graph, src=6)
+    # property context to numpy
+    np_out = ctx.to_numpy("r:person")
+    # property context to tensor
+    df_out = ctx.to_dataframe({"result": "r:person"})
+    # property context to vineyard tensor
+    vt_out = ctx.to_vineyard_tensor("r:person")
+    assert vt_out is not None
+    # property context to vineyard dataframe
+    vdf_out = ctx.to_vineyard_dataframe({"node": "v:person.id", "r": "r:person"})
+    assert vdf_out is not None
+    # add column
+    g = p2p_property_graph.add_column(ctx, {"result0": "r:person"})
+    g_out_df = g.to_dataframe({"result": "v:person.result0"})
+    assert g_out_df.equals(df_out)
+
+
+@pytest.mark.skipif("FULL_TEST_SUITE" not in os.environ, reason="Run in nightly CI")
 def test_run_cython_pregel_app(
     graphscope_session, p2p_property_graph, sssp_result, random_gar
 ):
@@ -1013,7 +1037,7 @@ def test_run_cython_pregel_app(
     r2[r2 == 1000000000.0] = float("inf")
     assert np.allclose(r2, sssp_result["directed"])
     # load from gar
-    a2 = load_app("SSSP_Pregel", random_gar)
+    a2 = load_app(random_gar)
     ctx3 = a2(p2p_property_graph, src=6)
     r3 = (
         ctx3.to_dataframe({"node": "v:person.id", "r": "r:person"})
@@ -1026,7 +1050,7 @@ def test_run_cython_pregel_app(
     with pytest.raises(
         InvalidArgumentError, match="Only support using keyword arguments in cython app"
     ):
-        a3 = load_app("SSSP_Pregel", random_gar)
+        a3 = load_app(random_gar)
         ctx4 = a3(p2p_property_graph, 6, src=6)
     # combine
     a5 = SSSP_Pregel_Combine()
@@ -1047,7 +1071,7 @@ def test_run_cython_pregel_app(
     a7(p2p_property_graph)
 
 
-@pytest.mark.skipif("FULL-TEST-SUITE" not in os.environ, reason="Run in nightly CI")
+@pytest.mark.skipif("FULL_TEST_SUITE" not in os.environ, reason="Run in nightly CI")
 def test_run_cython_pie_app(
     graphscope_session, p2p_property_graph, sssp_result, random_gar
 ):
@@ -1070,7 +1094,7 @@ def test_run_cython_pie_app(
     r2[r2 == 1000000000.0] = float("inf")
     assert np.allclose(r2, sssp_result["directed"])
     # load from gar
-    a2 = load_app("SSSP_PIE", random_gar)
+    a2 = load_app(random_gar)
     ctx3 = a2(p2p_property_graph, src=6)
     r3 = (
         ctx3.to_dataframe({"node": "v:person.id", "r": "r:person"})
@@ -1083,11 +1107,11 @@ def test_run_cython_pie_app(
     with pytest.raises(
         InvalidArgumentError, match="Only support using keyword arguments in cython app"
     ):
-        a3 = load_app("SSSP_PIE", random_gar)
+        a3 = load_app(random_gar)
         ctx4 = a3(p2p_property_graph, 6, src=6)
 
 
-@pytest.mark.skipif("FULL-TEST-SUITE" not in os.environ, reason="Run in nightly CI")
+@pytest.mark.skipif("FULL_TEST_SUITE" not in os.environ, reason="Run in nightly CI")
 def test_vertex_traversal(arrow_property_graph, twitter_v_0, twitter_v_1):
     traversal = PregelVertexTraversal()
     ctx = traversal(arrow_property_graph)
@@ -1114,7 +1138,7 @@ def test_vertex_traversal(arrow_property_graph, twitter_v_0, twitter_v_1):
     compare_result(r1, twitter_v_1)
 
 
-@pytest.mark.skipif("FULL-TEST-SUITE" not in os.environ, reason="Run in nightly CI")
+@pytest.mark.skipif("FULL_TEST_SUITE" not in os.environ, reason="Run in nightly CI")
 def test_modern_graph_vertex_traversal(arrow_modern_graph):
     traversal = PregelVertexTraversal()
     ctx = traversal(arrow_modern_graph)
@@ -1134,7 +1158,7 @@ def test_modern_graph_vertex_traversal(arrow_modern_graph):
     compare_id(r1, ["name", "lang"])
 
 
-@pytest.mark.skipif("FULL-TEST-SUITE" not in os.environ, reason="Run in nightly CI")
+@pytest.mark.skipif("FULL_TEST_SUITE" not in os.environ, reason="Run in nightly CI")
 def test_edge_traversal(
     arrow_property_graph,
     twitter_e_0_0_0,
@@ -1187,6 +1211,28 @@ def test_edge_traversal(
         twitter_e_1_0_1,
         twitter_e_1_1_1,
     )
+
+
+@pytest.mark.skipif("FULL_TEST_SUITE" not in os.environ, reason="Run in nightly CI")
+def test_run_on_string_oid_graph(
+    graphscope_session, p2p_property_graph_string, sssp_result
+):
+    # pregel
+    a1 = SSSP_Pregel()
+    ctx1 = a1(p2p_property_graph_string, src="6")
+    r1 = ctx1.to_dataframe({"node": "v:person.id", "r": "r:person"})
+    r1["node"] = r1["node"].astype(int)
+    r1 = r1.sort_values(by=["node"]).to_numpy(dtype=float)
+    r1[r1 == 1000000000.0] = float("inf")
+    assert np.allclose(r1, sssp_result["directed"])
+    # pie
+    a2 = SSSP_PIE()
+    ctx2 = a2(p2p_property_graph_string, src="6")
+    r2 = ctx2.to_dataframe({"node": "v:person.id", "r": "r:person"})
+    r2["node"] = r2["node"].astype(int)
+    r2 = r2.sort_values(by=["node"]).to_numpy(dtype=float)
+    r2[r2 == 1000000000.0] = float("inf")
+    assert np.allclose(r2, sssp_result["directed"])
 
 
 def test_pregel_api(graphscope_session, ldbc_graph):

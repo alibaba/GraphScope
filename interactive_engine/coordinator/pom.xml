@@ -14,11 +14,6 @@
   <artifactId>maxgraph-coordinator</artifactId>
   <name>coordinator</name>
 
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <log4j2.version>2.6.1</log4j2.version>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>com.alibaba.maxgraph</groupId>

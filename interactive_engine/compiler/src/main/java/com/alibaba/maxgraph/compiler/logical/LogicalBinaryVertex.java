@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,7 +27,12 @@ public class LogicalBinaryVertex extends LogicalVertex {
     private LogicalVertex leftInput;
     private LogicalVertex rightInput;
 
-    public LogicalBinaryVertex(int id, ProcessorFunction processorFunction, boolean propLocalFlag, LogicalVertex leftInput, LogicalVertex rightInput) {
+    public LogicalBinaryVertex(
+            int id,
+            ProcessorFunction processorFunction,
+            boolean propLocalFlag,
+            LogicalVertex leftInput,
+            LogicalVertex rightInput) {
         super(id, processorFunction, propLocalFlag);
         this.leftInput = leftInput;
         this.rightInput = rightInput;
@@ -37,7 +42,9 @@ public class LogicalBinaryVertex extends LogicalVertex {
                 && operatorType != QueryFlowOuterClass.OperatorType.DFS_FINISH_JOIN
                 && operatorType != QueryFlowOuterClass.OperatorType.JOIN_STORE_FILTER) {
             this.getAfterRequirementList()
-                    .add(QueryFlowOuterClass.RequirementValue.newBuilder().setReqType(QueryFlowOuterClass.RequirementType.KEY_DEL));
+                    .add(
+                            QueryFlowOuterClass.RequirementValue.newBuilder()
+                                    .setReqType(QueryFlowOuterClass.RequirementType.KEY_DEL));
         }
     }
 
@@ -66,17 +73,17 @@ public class LogicalBinaryVertex extends LogicalVertex {
     }
 
     public void removeAfterKeyDelete() {
-        List<QueryFlowOuterClass.RequirementValue.Builder> builderList = this.getAfterRequirementList()
-                .stream()
-                .filter(v -> v.getReqType() != QueryFlowOuterClass.RequirementType.KEY_DEL)
-                .collect(Collectors.toList());
+        List<QueryFlowOuterClass.RequirementValue.Builder> builderList =
+                this.getAfterRequirementList().stream()
+                        .filter(v -> v.getReqType() != QueryFlowOuterClass.RequirementType.KEY_DEL)
+                        .collect(Collectors.toList());
         this.getAfterRequirementList().clear();
         this.getAfterRequirementList().addAll(builderList);
-
     }
 
     public boolean containsAfterKeyDelete() {
-        for (QueryFlowOuterClass.RequirementValue.Builder builder : this.getAfterRequirementList()) {
+        for (QueryFlowOuterClass.RequirementValue.Builder builder :
+                this.getAfterRequirementList()) {
             if (builder.getReqType() == QueryFlowOuterClass.RequirementType.KEY_DEL) {
                 return true;
             }

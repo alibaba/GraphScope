@@ -97,7 +97,10 @@ public class Configs {
 
         private Builder(Configs fromConfigs) {
             this.properties = new Properties();
-            fromConfigs.properties.entrySet().forEach(e -> this.properties.put(e.getKey(), e.getValue()));
+            fromConfigs
+                    .properties
+                    .entrySet()
+                    .forEach(e -> this.properties.put(e.getKey(), e.getValue()));
         }
 
         private Builder(Properties properties) {

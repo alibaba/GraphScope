@@ -13,17 +13,18 @@
  */
 package com.alibaba.graphscope.groot.ingestor;
 
-import com.alibaba.graphscope.groot.operation.OperationBatch;
-import com.alibaba.maxgraph.common.config.Configs;
-import com.alibaba.maxgraph.common.config.IngestorConfig;
-import com.alibaba.maxgraph.compiler.api.exception.IngestRejectException;
 import com.alibaba.graphscope.groot.metrics.MetricsAgent;
 import com.alibaba.graphscope.groot.metrics.MetricsCollector;
+import com.alibaba.graphscope.groot.operation.OperationBatch;
 import com.alibaba.graphscope.groot.wal.LogEntry;
 import com.alibaba.graphscope.groot.wal.LogReader;
 import com.alibaba.graphscope.groot.wal.LogService;
 import com.alibaba.graphscope.groot.wal.LogWriter;
 import com.alibaba.graphscope.groot.wal.ReadLogEntry;
+import com.alibaba.maxgraph.common.config.Configs;
+import com.alibaba.maxgraph.common.config.IngestorConfig;
+import com.alibaba.maxgraph.compiler.api.exception.IngestRejectException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,9 +42,10 @@ public class IngestProcessor implements MetricsAgent {
 
     public static final String WRITE_RECORDS_PER_SECOND = "write.records.per.second";
     public static final String WRITE_RECORDS_TOTAL = "write.records.total";
-    public static final String WAL_BLOCK_TIME_MS = "wal.block.time.ms";
-    public static final String STORE_BLOCK_TIME_MS = "store.block.time.ms";
+    public static final String WAL_BLOCK_PER_SECOND_MS = "wal.block.per.second.ms";
+    public static final String STORE_BLOCK_PER_SECOND_MS = "store.block.per.second.ms";
     public static final String INGESTOR_REJECT_COUNT = "ingestor.reject.count";
+    public static final String INGEST_BUFFER_TASKS_COUNT = "ingest.buffer.tasks.count";
 
     private volatile boolean shouldStop = true;
     private volatile long tailOffset;
@@ -66,6 +68,10 @@ public class IngestProcessor implements MetricsAgent {
     private volatile long walBlockTimeNano;
     private volatile long storeBlockTimeNano;
     private AtomicLong ingestorRejectCount;
+    private volatile long lastUpdateWalBlockTimeNano;
+    private volatile long walBlockPerSecondMs;
+    private volatile long lastUpdateStoreBlockTimeNano;
+    private volatile long storeBlockPerSecondMs;
 
     public IngestProcessor(
             Configs configs,
@@ -101,7 +107,8 @@ public class IngestProcessor implements MetricsAgent {
                                     break;
                                 } catch (Exception e) {
                                     logger.error(
-                                            "error occurred before ingest process, will retry after 1s",
+                                            "error occurred before ingest process, will retry after"
+                                                    + " 1s",
                                             e);
                                     try {
                                         Thread.sleep(1000L);
@@ -163,6 +170,7 @@ public class IngestProcessor implements MetricsAgent {
 
         boolean suc = this.ingestBuffer.offer(new IngestTask(requestId, operationBatch, callback));
         if (!suc) {
+            logger.warn("ingest buffer is full");
             this.ingestorRejectCount.incrementAndGet();
             throw new IngestRejectException("add ingestTask to buffer failed");
         }
@@ -214,30 +222,24 @@ public class IngestProcessor implements MetricsAgent {
             try {
                 walOffset = logWriter.append(new LogEntry(batchSnapshotId, task.operationBatch));
                 break;
-            } catch (IOException e) {
+            } catch (Exception e) {
                 // write failed, just throw out to fail this task
                 logger.error("write WAL failed. requestId [" + task.requestId + "]", e);
                 throw e;
-            } catch (Exception e) {
-                // Timeout, uncertain error, etc
-                logger.error("unexpected logWriter exception, will retry after 100ms", e);
-                try {
-                    Thread.sleep(100L);
-                } catch (InterruptedException ie) {
-                    // Ignore
-                }
             }
         }
         long walCompleteTimeNano = System.nanoTime();
-        this.walBlockTimeNano += (walCompleteTimeNano - startTimeNano);
         if (shouldStop) {
             throw new IllegalStateException("ingestProcessor queue#[" + this.queueId + "] stopped");
         }
         this.batchSender.asyncSendWithRetry(
                 task.requestId, this.queueId, batchSnapshotId, walOffset, task.operationBatch);
         long storeCompleteTimeNano = System.nanoTime();
-        this.storeBlockTimeNano += (storeCompleteTimeNano - walCompleteTimeNano);
-        this.totalProcessed += task.operationBatch.getOperationCount();
+        if (!task.operationBatch.equals(IngestService.MARKER_BATCH)) {
+            this.walBlockTimeNano += (walCompleteTimeNano - startTimeNano);
+            this.storeBlockTimeNano += (storeCompleteTimeNano - walCompleteTimeNano);
+            this.totalProcessed += task.operationBatch.getOperationCount();
+        }
         return batchSnapshotId;
     }
 
@@ -249,15 +251,27 @@ public class IngestProcessor implements MetricsAgent {
         this.walBlockTimeNano = 0L;
         this.storeBlockTimeNano = 0L;
         this.ingestorRejectCount = new AtomicLong(0L);
+        this.lastUpdateStoreBlockTimeNano = 0L;
+        this.walBlockPerSecondMs = 0L;
+        this.lastUpdateStoreBlockTimeNano = 0L;
+        this.storeBlockPerSecondMs = 0L;
     }
 
     private void updateMetrics() {
         long currentTime = System.nanoTime();
         long propcessed = this.totalProcessed;
+        long interval = currentTime - this.lastUpdateTime;
         this.writeRecordsPerSecond =
-                1000000000
-                        * (propcessed - this.lastUpdateProcessed)
-                        / (currentTime - this.lastUpdateTime);
+                1000000000 * (propcessed - this.lastUpdateProcessed) / interval;
+        long walBlockTime = this.walBlockTimeNano;
+        this.walBlockPerSecondMs =
+                1000 * (walBlockTime - this.lastUpdateWalBlockTimeNano) / interval;
+        long storeBlockTime = this.storeBlockTimeNano;
+        this.storeBlockPerSecondMs =
+                1000 * (storeBlockTime - this.lastUpdateStoreBlockTimeNano) / interval;
+
+        this.lastUpdateStoreBlockTimeNano = storeBlockTime;
+        this.lastUpdateWalBlockTimeNano = walBlockTime;
         this.lastUpdateProcessed = propcessed;
         this.lastUpdateTime = currentTime;
     }
@@ -268,9 +282,10 @@ public class IngestProcessor implements MetricsAgent {
             {
                 put(WRITE_RECORDS_PER_SECOND, String.valueOf(writeRecordsPerSecond));
                 put(WRITE_RECORDS_TOTAL, String.valueOf(totalProcessed));
-                put(WAL_BLOCK_TIME_MS, String.valueOf(walBlockTimeNano / 1000000));
-                put(STORE_BLOCK_TIME_MS, String.valueOf(storeBlockTimeNano / 1000000));
+                put(WAL_BLOCK_PER_SECOND_MS, String.valueOf(walBlockPerSecondMs));
+                put(STORE_BLOCK_PER_SECOND_MS, String.valueOf(storeBlockPerSecondMs));
                 put(INGESTOR_REJECT_COUNT, String.valueOf(ingestorRejectCount));
+                put(INGEST_BUFFER_TASKS_COUNT, String.valueOf(ingestBuffer.size()));
             }
         };
     }
@@ -280,9 +295,10 @@ public class IngestProcessor implements MetricsAgent {
         return new String[] {
             WRITE_RECORDS_PER_SECOND,
             WRITE_RECORDS_TOTAL,
-            WAL_BLOCK_TIME_MS,
-            STORE_BLOCK_TIME_MS,
-            INGESTOR_REJECT_COUNT
+            WAL_BLOCK_PER_SECOND_MS,
+            STORE_BLOCK_PER_SECOND_MS,
+            INGESTOR_REJECT_COUNT,
+            INGEST_BUFFER_TASKS_COUNT
         };
     }
 

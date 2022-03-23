@@ -47,8 +47,15 @@ class BuildProto(Command):
         subprocess.check_call(
             [
                 sys.executable,
-                os.path.join(repo_root, "..", "proto", "proto_generator.py"),
-                os.path.join(repo_root, "graphscope"),
+                os.path.join(
+                    repo_root,
+                    "..",
+                    "proto",
+                    "graphscope",
+                    "proto",
+                    "proto_generator.py",
+                ),
+                repo_root,
                 "--python",
             ],
             env=os.environ.copy(),
@@ -174,6 +181,14 @@ def resolve_graphscope_package_dir():
     return package_dir
 
 
+def parsed_packge_data():
+    return {
+        "graphscope": [
+            "VERSION",
+        ],
+    }
+
+
 def build_learning_engine():
     import numpy
 
@@ -195,6 +210,8 @@ def build_learning_engine():
     include_dirs.append(ROOT_PATH + "/third_party/glog/build")
     include_dirs.append(ROOT_PATH + "/third_party/protobuf/build/include")
     include_dirs.append(numpy.get_include())
+    # mac M1 support
+    include_dirs.append("/opt/homebrew/include")
 
     library_dirs.append(ROOT_PATH + "/built/lib")
 
@@ -235,41 +252,6 @@ def parse_version(root, **kwargs):
     return parse(root, **kwargs)
 
 
-version_template = """#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-#
-# Copyright 2020 Alibaba Group Holding Limited. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-import os
-
-version_file_path = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), "..", "..", "VERSION"
-)
-
-if os.path.isfile(version_file_path):
-    with open(version_file_path, "r", encoding="utf-8") as fp:
-        __version__ = fp.read().strip()
-    __version_tuple__ = (int(v) for v in __version__.split("."))
-else:
-    __version__ = "{version}"
-    __version_tuple__ = {version_tuple}
-
-del version_file_path
-"""
-
-
 setup(
     name="graphscope-client",
     description="GraphScope: A One-Stop Large-Scale Graph Computing System from Alibaba",
@@ -299,12 +281,11 @@ setup(
     use_scm_version={
         "root": repo_root,
         "parse": parse_version,
-        "write_to": os.path.join(repo_root, "graphscope/version.py"),
-        "write_to_template": version_template,
     },
     setup_requires=["setuptools_scm>=5.0.0", "grpcio", "grpcio-tools"],
     package_dir=resolve_graphscope_package_dir(),
     packages=find_graphscope_packages(),
+    package_data=parsed_packge_data(),
     ext_modules=build_learning_engine(),
     cmdclass={
         "build_ext": CustomBuildExt,
@@ -325,3 +306,24 @@ setup(
         "Tracker": "https://github.com/alibaba/GraphScope/issues",
     },
 )
+
+if os.name == "nt":
+
+    class _ReprableString(str):
+        def __repr__(self) -> str:
+            return self
+
+    raise RuntimeError(
+        _ReprableString(
+            """
+            ====================================================================
+
+            GraphScope doesn't support Windows natively, please try to install graphscope in WSL
+
+                https://docs.microsoft.com/en-us/windows/wsl/install
+
+            with pip.
+
+            ===================================================================="""
+        )
+    )

@@ -13,14 +13,15 @@
  */
 package com.alibaba.maxgraph.compiler.operator;
 
+import static com.alibaba.maxgraph.sdkcommon.compiler.custom.map.Mapper.rangeSum;
+
 import com.alibaba.maxgraph.sdkcommon.compiler.custom.map.Prop;
+
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.structure.Column;
 import org.junit.Test;
 
 import java.io.IOException;
-
-import static com.alibaba.maxgraph.sdkcommon.compiler.custom.map.Mapper.rangeSum;
 
 public class MapOperatorTest extends AbstractOperatorTest {
 

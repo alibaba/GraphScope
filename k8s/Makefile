@@ -40,7 +40,7 @@ else
 endif
 
 VERSION ?= latest
-VINEYARD_VERSION ?= v0.3.12
+VINEYARD_VERSION ?= v0.3.21
 PROFILE ?= release
 
 
@@ -96,13 +96,13 @@ graphscope-darwin-py3:
 	# Avoid copy vineyard library with the same basename by:
 	# 	1) reinstall vineyard to /usr/local and
 	# 	2) rm /opt/vineyard/lib
-	cd /tmp && git clone -b ${VINEYARD_VERSION} https://github.com/alibaba/libvineyard.git --depth=1 && \
-		cd libvineyard && git submodule update --init && \
+	cd /tmp && git clone -b ${VINEYARD_VERSION} https://github.com/v6d-io/v6d.git --depth=1 && \
+		cd v6d && git submodule update --init && \
 		mkdir -p build && cd build && \
 		cmake .. -DCMAKE_INSTALL_PREFIX=/usr/local && \
 		sudo make install -j`nproc` && \
 		sudo rm -fr /opt/vineyard/lib
-	sudo rm -fr /tmp/libvineyard /tmp/libgrape-lite
+	sudo rm -fr /tmp/v6d /tmp/libgrape-lite
 	# build graphscope
 	cd $(WORKING_DIR)/../ && \
 		make install && \
@@ -111,9 +111,8 @@ graphscope-darwin-py3:
 	cd $(WORKING_DIR)/../coordinator && \
 		export WITH_EXTRA_DATA=ON && \
 		rm -fr build dist/*.whl || true && \
-		sudo strip /opt/graphscope/bin/grape_engine && \
+		sudo strip -s $(WORKING_DIR)/../analytical_engine/exported_symbols_osx.lds /opt/graphscope/bin/grape_engine && \
 		sudo strip /opt/graphscope/bin/executor && \
-		sudo strip /opt/graphscope/bin/gaia_executor && \
 		export DYLD_LIBRARY_PATH=/usr/local/lib:$$DYLD_LIBRARY_PATH && \
 		package_name=gs-lib python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
 		rm -fr build && \
@@ -153,7 +152,6 @@ graphscope-manylinux2014-py3:
 			rm -fr build dist/*.whl && \
 			sudo strip /opt/graphscope/bin/grape_engine && \
 			sudo strip /opt/graphscope/bin/executor && \
-			sudo strip /opt/graphscope/bin/gaia_executor && \
 			sudo strip /opt/graphscope/lib/*.so && \
 			strip /tmp/gs/builtin/*/*.so && \
 			package_name=gs-lib python3 setup.py bdist_wheel && \
@@ -201,10 +199,10 @@ graphscope-client-manylinux2014-py3:
 			cmake -DWITH_VINEYARD=ON .. && \
 			make graphlearn_shared -j`nproc` && \
 			export LD_LIBRARY_PATH=/work/learning_engine/graph-learn/built/lib:$$LD_LIBRARY_PATH && \
-			for py in cp36-cp36m cp37-cp37m cp38-cp38 cp39-cp39 ; do \
+			for py in cp37-cp37m cp38-cp38 cp39-cp39 ; do \
 				cd /work/python; \
 				export PATH=/opt/python/$$py/bin:$$PATH; \
-				pip3 install -U pip numpy==1.18.5 auditwheel grpcio grpcio_tools wheel ; \
+				pip3 install -U pip numpy==1.18.5 auditwheel==5.0.0 grpcio grpcio_tools wheel ; \
 				rm -rf build; \
 				rm -rf dist/*.whl; \
 				python3 setup.py bdist_wheel; \

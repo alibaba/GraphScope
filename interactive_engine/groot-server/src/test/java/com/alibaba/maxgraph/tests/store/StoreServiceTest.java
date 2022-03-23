@@ -13,22 +13,24 @@
  */
 package com.alibaba.maxgraph.tests.store;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.*;
+
 import com.alibaba.graphscope.groot.meta.MetaService;
+import com.alibaba.graphscope.groot.metrics.MetricsCollector;
 import com.alibaba.graphscope.groot.operation.OperationBatch;
 import com.alibaba.graphscope.groot.operation.OperationBlob;
 import com.alibaba.graphscope.groot.operation.StoreDataBatch;
-import com.alibaba.maxgraph.common.config.CommonConfig;
-import com.alibaba.maxgraph.common.config.Configs;
 import com.alibaba.graphscope.groot.store.GraphPartition;
 import com.alibaba.graphscope.groot.store.StoreService;
+import com.alibaba.maxgraph.common.config.CommonConfig;
+import com.alibaba.maxgraph.common.config.Configs;
+
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.*;
 
 public class StoreServiceTest {
 
@@ -39,7 +41,8 @@ public class StoreServiceTest {
         MetaService mockMetaService = mock(MetaService.class);
         when(mockMetaService.getPartitionsByStoreId(0)).thenReturn(Arrays.asList(0));
 
-        StoreService spyStoreService = spy(new StoreService(configs, mockMetaService));
+        StoreService spyStoreService =
+                spy(new StoreService(configs, mockMetaService, new MetricsCollector(configs)));
 
         GraphPartition mockGraphPartition = mock(GraphPartition.class);
         when(mockGraphPartition.recover()).thenReturn(10L);

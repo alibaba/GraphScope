@@ -84,4 +84,7 @@ public interface ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T>
     @FFINameAlias("GetOutgoingAdjList")
     @CXXValue
     GrapeAdjList<VID_T, EDATA_T> getOutgoingAdjList(@CXXReference Vertex<VID_T> vertex);
+
+    @FFINameAlias("SetData")
+    void setData(@CXXReference Vertex<VID_T> vertex, @CXXReference VDATA_T val);
 }

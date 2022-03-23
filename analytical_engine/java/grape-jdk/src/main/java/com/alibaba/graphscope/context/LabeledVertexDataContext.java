@@ -24,10 +24,15 @@ import com.alibaba.graphscope.fragment.ArrowFragment;
 import com.alibaba.graphscope.stdcxx.StdVector;
 import com.alibaba.graphscope.utils.CppClassName;
 import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Objects;
 
 public abstract class LabeledVertexDataContext<OID_T, DATA_T> {
-
+    private static Logger logger =
+            LoggerFactory.getLogger(LabeledVertexDataContext.class.getName());
     private long ffiContextAddress;
     private FFILabeledVertexDataContext<ArrowFragment<OID_T>, DATA_T> ffiLabeledVertexDataContext;
     private FFILabeledVertexDataContext.Factory factory;
@@ -41,19 +46,17 @@ public abstract class LabeledVertexDataContext<OID_T, DATA_T> {
      */
     protected void createFFIContext(
             ArrowFragment<OID_T> fragment, Class<?> oidClass, Class<?> dataClass) {
-        // System.out.println("fragment: " + FFITypeFactoryhelper.makeParameterize(ARROW_FRAGMENT,
-        // FFITypeFactoryhelper.javaType2CppType(oidClass)));
         String fragmentTemplateStr = FFITypeFactoryhelper.getForeignName(fragment);
         String contextName =
                 FFITypeFactoryhelper.makeParameterize(
                         CppClassName.LABELED_VERTEX_DATA_CONTEXT,
                         fragmentTemplateStr,
                         FFITypeFactoryhelper.javaType2CppType(dataClass));
-        System.out.println("context name: " + contextName);
+        logger.info("context name: " + contextName);
         factory = FFITypeFactory.getFactory(FFILabeledVertexDataContext.class, contextName);
         ffiLabeledVertexDataContext = factory.create(fragment, true);
         ffiContextAddress = ffiLabeledVertexDataContext.getAddress();
-        System.out.println(contextName + ", " + ffiContextAddress);
+        logger.info(contextName + ", " + ffiContextAddress);
     }
 
     public DATA_T getValue(Vertex<Long> vertex) {

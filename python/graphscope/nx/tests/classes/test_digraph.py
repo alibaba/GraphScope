@@ -22,12 +22,12 @@ from networkx.classes.tests.test_digraph import BaseAttrDiGraphTester
 from networkx.testing import assert_nodes_equal
 
 from graphscope import nx
-from graphscope.nx.tests.classes.test_graph import TestEdgeSubgraph
-from graphscope.nx.tests.classes.test_graph import TestGraph
+from graphscope.nx.tests.classes.test_graph import TestEdgeSubgraph as _TestEdgeSubgraph
+from graphscope.nx.tests.classes.test_graph import TestGraph as _TestGraph
 
 
 @pytest.mark.usefixtures("graphscope_session")
-class TestDiGraph(BaseAttrDiGraphTester, TestGraph):
+class TestDiGraph(BaseAttrDiGraphTester, _TestGraph):
     def setup_method(self):
         self.Graph = nx.DiGraph
         # build K3
@@ -83,8 +83,6 @@ class TestDiGraph(BaseAttrDiGraphTester, TestGraph):
         G.remove_edge(0, 1)
         assert G.succ == {0: {2: {}}, 1: {0: {}, 2: {}}, 2: {0: {}, 1: {}}}
         assert G.pred == {0: {1: {}, 2: {}}, 1: {2: {}}, 2: {0: {}, 1: {}}}
-        with pytest.raises(nx.NetworkXError):
-            G.remove_edge(-1, 0)
 
     def test_remove_edges_from(self):
         G = self.K3
@@ -126,6 +124,16 @@ class TestDiGraph(BaseAttrDiGraphTester, TestGraph):
         with pytest.raises(nx.NetworkXError):
             R.remove_edge(1, 0)
 
+    # replace the nx
+    def test_to_undirected_as_view(self):
+        H = nx.path_graph(2, create_using=self.Graph)
+        H2 = H.to_undirected(as_view=True)
+        assert H is H2._graph
+        assert H2.has_edge(0, 1)
+        assert H2.has_edge(1, 0)
+        pytest.raises(nx.NetworkXError, H2.add_node, -1)
+        pytest.raises(nx.NetworkXError, H2.add_edge, 1, 2)
+
     # original test use function object as node, here we change to bool and int.
     def test_reverse_hashable(self):
         x = True
@@ -137,7 +145,7 @@ class TestDiGraph(BaseAttrDiGraphTester, TestGraph):
 
 
 @pytest.mark.usefixtures("graphscope_session")
-class TestEdgeSubgraph(TestEdgeSubgraph):
+class TestEdgeSubgraph(_TestEdgeSubgraph):
     def setup_method(self):
         # Create a doubly-linked path graph on five nodes.
         # G = nx.DiGraph(nx.path_graph(5))

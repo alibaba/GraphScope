@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,18 +27,19 @@ import com.alibaba.maxgraph.compiler.cost.CostUtils;
 import com.alibaba.maxgraph.compiler.cost.statistics.CostDataStatistics;
 import com.alibaba.maxgraph.compiler.cost.statistics.NodeLabelList;
 import com.alibaba.maxgraph.compiler.cost.statistics.NodeLabelManager;
+import com.alibaba.maxgraph.compiler.strategy.GraphTreeStrategy;
 import com.alibaba.maxgraph.compiler.strategy.tree.LabelPushDownStrategy;
 import com.alibaba.maxgraph.compiler.strategy.tree.MaxGraphLimitStopStrategy;
-import com.alibaba.maxgraph.compiler.tree.value.EdgeValueType;
-import com.alibaba.maxgraph.compiler.tree.value.ValueValueType;
-import com.alibaba.maxgraph.compiler.strategy.GraphTreeStrategy;
 import com.alibaba.maxgraph.compiler.tree.addition.PropertyNode;
 import com.alibaba.maxgraph.compiler.tree.source.SourceDelegateNode;
 import com.alibaba.maxgraph.compiler.tree.source.SourceTreeNode;
 import com.alibaba.maxgraph.compiler.tree.source.SourceVertexTreeNode;
+import com.alibaba.maxgraph.compiler.tree.value.EdgeValueType;
+import com.alibaba.maxgraph.compiler.tree.value.ValueValueType;
 import com.alibaba.maxgraph.compiler.utils.CompilerUtils;
 import com.alibaba.maxgraph.compiler.utils.TreeNodeUtils;
 import com.google.common.collect.Lists;
+
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -53,19 +54,19 @@ import java.util.List;
 public class TreeManager {
     private static final Logger logger = LoggerFactory.getLogger(TreeManager.class);
 
-    private List<GraphTreeStrategy> graphTreeStrategyList = Lists.newArrayList(
-            LabelPushDownStrategy.INSTANCE,
-            MaxGraphLimitStopStrategy.INSTANCE);
+    private List<GraphTreeStrategy> graphTreeStrategyList =
+            Lists.newArrayList(LabelPushDownStrategy.INSTANCE, MaxGraphLimitStopStrategy.INSTANCE);
 
     private TreeNode treeLeaf;
     private GraphSchema schema;
     private TreeNodeLabelManager labelManager;
     private Configuration configuration;
 
-    public TreeManager(TreeNode treeLeaf,
-                       GraphSchema schema,
-                       TreeNodeLabelManager labelManager,
-                       Configuration configuration) {
+    public TreeManager(
+            TreeNode treeLeaf,
+            GraphSchema schema,
+            TreeNodeLabelManager labelManager,
+            Configuration configuration) {
         this.treeLeaf = treeLeaf;
         this.schema = schema;
         this.labelManager = labelManager;
@@ -75,12 +76,16 @@ public class TreeManager {
     }
 
     private void validExecuteMode() {
-        ExecuteMode executeMode = ExecuteMode.valueOf(StringUtils.upperCase(
-                configuration.getString(
-                        CompilerConstant.QUERY_EXECUTE_MODE,
-                        ExecuteMode.AUTO.name())));
+        ExecuteMode executeMode =
+                ExecuteMode.valueOf(
+                        StringUtils.upperCase(
+                                configuration.getString(
+                                        CompilerConstant.QUERY_EXECUTE_MODE,
+                                        ExecuteMode.AUTO.name())));
         if (executeMode == ExecuteMode.TINKERPOP) {
-            throw new IllegalArgumentException("Use tinkerpop to execute this query for execute mode is " + executeMode.toString());
+            throw new IllegalArgumentException(
+                    "Use tinkerpop to execute this query for execute mode is "
+                            + executeMode.toString());
         }
     }
 
@@ -112,16 +117,19 @@ public class TreeManager {
         NodeLabelManager nodeLabelManager = new NodeLabelManager();
         NodeLabelList previousNodeLabel = null;
         for (TreeNode treeNode : treeNodeList) {
-            NodeLabelList nodeLabelList = NodeLabelList.buildNodeLabel(previousNodeLabel, treeNode, schema);
+            NodeLabelList nodeLabelList =
+                    NodeLabelList.buildNodeLabel(previousNodeLabel, treeNode, schema);
             nodeLabelManager.addNodeLabelList(nodeLabelList);
             previousNodeLabel = nodeLabelList;
         }
-        int pathIndex = this.getQueryConfig().getInt(CompilerConstant.QUERY_COSTMODEL_PLAN_PATH, -1);
+        int pathIndex =
+                this.getQueryConfig().getInt(CompilerConstant.QUERY_COSTMODEL_PLAN_PATH, -1);
         List<CostPath> costPathList = costGraph.getCostPathList();
         CostPath useCostPath;
         if (pathIndex < 0 || pathIndex >= costPathList.size()) {
             CostDataStatistics costDataStatistics = CostDataStatistics.getInstance();
-            List<Double> stepCountList = costDataStatistics.computeStepCountList(nodeLabelManager, treeNodeList);
+            List<Double> stepCountList =
+                    costDataStatistics.computeStepCountList(nodeLabelManager, treeNodeList);
             List<Double> shuffleThresholdList = Lists.newArrayList(1.0);
             for (int i = 1; i < stepCountList.size(); i++) {
                 shuffleThresholdList.add(1.5);
@@ -143,15 +151,14 @@ public class TreeManager {
             if (currentTreeNode instanceof EdgeTreeNode) {
                 EdgeTreeNode edgeTreeNode = EdgeTreeNode.class.cast(currentTreeNode);
                 TreeNode nextTreeNode = edgeTreeNode.getOutputNode();
-                if (null != nextTreeNode &&
-                        edgeTreeNode.beforeRequirementList.isEmpty() &&
-                        edgeTreeNode.afterRequirementList.isEmpty()) {
-                    if (nextTreeNode instanceof EdgeVertexTreeNode ||
-                            (nextTreeNode.getNodeType() == NodeType.AGGREGATE &&
-                                    !(nextTreeNode instanceof GroupTreeNode))) {
+                if (null != nextTreeNode
+                        && edgeTreeNode.beforeRequirementList.isEmpty()
+                        && edgeTreeNode.afterRequirementList.isEmpty()) {
+                    if (nextTreeNode instanceof EdgeVertexTreeNode
+                            || (nextTreeNode.getNodeType() == NodeType.AGGREGATE
+                                    && !(nextTreeNode instanceof GroupTreeNode))) {
                         edgeTreeNode.setFetchPropFlag(true);
                     }
-
                 }
             }
             currentTreeNode = UnaryTreeNode.class.cast(currentTreeNode).getInputNode();
@@ -165,15 +172,21 @@ public class TreeManager {
         TreeNode currentTreeNode = treeLeaf;
         while (!(currentTreeNode instanceof SourceTreeNode)) {
             if (currentTreeNode instanceof OrderGlobalTreeNode) {
-                OrderGlobalTreeNode orderGlobalTreeNode = OrderGlobalTreeNode.class.cast(currentTreeNode);
+                OrderGlobalTreeNode orderGlobalTreeNode =
+                        OrderGlobalTreeNode.class.cast(currentTreeNode);
                 TreeNode orderInputNode = orderGlobalTreeNode.getInputNode();
                 if (orderInputNode instanceof SourceVertexTreeNode
-                        && ((SourceVertexTreeNode) orderInputNode).getBeforeRequirementList().isEmpty()
-                        && ((SourceVertexTreeNode) orderInputNode).getAfterRequirementList().isEmpty()
+                        && ((SourceVertexTreeNode) orderInputNode)
+                                .getBeforeRequirementList()
+                                .isEmpty()
+                        && ((SourceVertexTreeNode) orderInputNode)
+                                .getAfterRequirementList()
+                                .isEmpty()
                         && orderGlobalTreeNode.isEmptyOrderNode()
                         && !orderGlobalTreeNode.orderFlag
                         && null != orderGlobalTreeNode.rangeLimit) {
-                    QueryFlowOuterClass.RangeLimit.Builder orderRangeBuilder = orderGlobalTreeNode.rangeLimit;
+                    QueryFlowOuterClass.RangeLimit.Builder orderRangeBuilder =
+                            orderGlobalTreeNode.rangeLimit;
                     orderInputNode.setRangeLimit(0, orderRangeBuilder.getRangeEnd(), true);
                     ((SourceVertexTreeNode) orderInputNode).enablePartitionIdFlag();
                     orderGlobalTreeNode.enablePartitionIdFlag();
@@ -210,16 +223,29 @@ public class TreeManager {
                         return;
                     }
                     UnaryTreeNode inputUnaryTreeNode = UnaryTreeNode.class.cast(inputTreeNode);
-                    if (inputUnaryTreeNode.getInputNode() == orderTreeNode &&
-                            (inputUnaryTreeNode instanceof EdgeVertexTreeNode &&
-                                    EdgeVertexTreeNode.class.cast(inputUnaryTreeNode).getDirection() != Direction.BOTH)) {
+                    if (inputUnaryTreeNode.getInputNode() == orderTreeNode
+                            && (inputUnaryTreeNode instanceof EdgeVertexTreeNode
+                                    && EdgeVertexTreeNode.class
+                                                    .cast(inputUnaryTreeNode)
+                                                    .getDirection()
+                                            != Direction.BOTH)) {
                         return;
                     }
                     String orderLabel = orderGlobalTreeNode.enableOrderFlag(labelManager);
-                    SelectOneTreeNode selectOneTreeNode = new SelectOneTreeNode(new SourceDelegateNode(inputUnaryTreeNode, schema), orderLabel, Pop.last, Lists.newArrayList(), schema);
-                    selectOneTreeNode.setConstantValueType(new ValueValueType(Message.VariantType.VT_INT));
-                    OrderGlobalTreeNode addOrderTreeNode = new OrderGlobalTreeNode(inputUnaryTreeNode, schema,
-                            Lists.newArrayList(Pair.of(selectOneTreeNode, Order.incr)));
+                    SelectOneTreeNode selectOneTreeNode =
+                            new SelectOneTreeNode(
+                                    new SourceDelegateNode(inputUnaryTreeNode, schema),
+                                    orderLabel,
+                                    Pop.last,
+                                    Lists.newArrayList(),
+                                    schema);
+                    selectOneTreeNode.setConstantValueType(
+                            new ValueValueType(Message.VariantType.VT_INT));
+                    OrderGlobalTreeNode addOrderTreeNode =
+                            new OrderGlobalTreeNode(
+                                    inputUnaryTreeNode,
+                                    schema,
+                                    Lists.newArrayList(Pair.of(selectOneTreeNode, Order.asc)));
                     UnaryTreeNode.class.cast(aggTreeNode).setInputNode(addOrderTreeNode);
                 }
             } else {
@@ -230,8 +256,12 @@ public class TreeManager {
                 boolean hasSimpleShuffle = false;
                 while (currTreeNode != null) {
                     if (currTreeNode.getNodeType() == NodeType.FLATMAP
-                            || (currTreeNode instanceof PropertyNode &&
-                            !(UnaryTreeNode.class.cast(currTreeNode).getInputNode().getOutputValueType() instanceof EdgeValueType))) {
+                            || (currTreeNode instanceof PropertyNode
+                                    && !(UnaryTreeNode.class
+                                                    .cast(currTreeNode)
+                                                    .getInputNode()
+                                                    .getOutputValueType()
+                                            instanceof EdgeValueType))) {
                         hasSimpleShuffle = true;
                         break;
                     }
@@ -243,19 +273,31 @@ public class TreeManager {
 
                 UnaryTreeNode outputTreeNode = UnaryTreeNode.class.cast(treeLeaf);
                 if (outputTreeNode.getInputNode() == orderTreeNode) {
-                    if (outputTreeNode instanceof EdgeVertexTreeNode &&
-                            EdgeVertexTreeNode.class.cast(outputTreeNode).getDirection() != Direction.BOTH) {
+                    if (outputTreeNode instanceof EdgeVertexTreeNode
+                            && EdgeVertexTreeNode.class.cast(outputTreeNode).getDirection()
+                                    != Direction.BOTH) {
                         return;
                     }
-                    if (orderTreeNode.getOutputValueType() instanceof EdgeValueType && outputTreeNode instanceof PropertyNode) {
+                    if (orderTreeNode.getOutputValueType() instanceof EdgeValueType
+                            && outputTreeNode instanceof PropertyNode) {
                         return;
                     }
                 }
                 String orderLabel = orderGlobalTreeNode.enableOrderFlag(labelManager);
-                SelectOneTreeNode selectOneTreeNode = new SelectOneTreeNode(new SourceDelegateNode(treeLeaf, schema), orderLabel, Pop.last, Lists.newArrayList(), schema);
-                selectOneTreeNode.setConstantValueType(new ValueValueType(Message.VariantType.VT_INT));
-                treeLeaf = new OrderGlobalTreeNode(treeLeaf, schema,
-                        Lists.newArrayList(Pair.of(selectOneTreeNode, Order.incr)));
+                SelectOneTreeNode selectOneTreeNode =
+                        new SelectOneTreeNode(
+                                new SourceDelegateNode(treeLeaf, schema),
+                                orderLabel,
+                                Pop.last,
+                                Lists.newArrayList(),
+                                schema);
+                selectOneTreeNode.setConstantValueType(
+                        new ValueValueType(Message.VariantType.VT_INT));
+                treeLeaf =
+                        new OrderGlobalTreeNode(
+                                treeLeaf,
+                                schema,
+                                Lists.newArrayList(Pair.of(selectOneTreeNode, Order.asc)));
             }
         }
     }
@@ -267,19 +309,22 @@ public class TreeManager {
         TreeNode currentTreeNode = treeLeaf;
         while (!(currentTreeNode instanceof SourceTreeNode)) {
             if (currentTreeNode instanceof CountGlobalTreeNode) {
-                CountGlobalTreeNode countGlobalTreeNode = CountGlobalTreeNode.class.cast(currentTreeNode);
-                if (countGlobalTreeNode.getAfterRequirementList().isEmpty() &&
-                        countGlobalTreeNode.getBeforeRequirementList().isEmpty() &&
-                        countGlobalTreeNode.getInputNode() instanceof RangeGlobalTreeNode) {
-                    RangeGlobalTreeNode rangeGlobalTreeNode = RangeGlobalTreeNode.class.cast(countGlobalTreeNode.getInputNode());
-                    if (rangeGlobalTreeNode.getAfterRequirementList().isEmpty() &&
-                            rangeGlobalTreeNode.getBeforeRequirementList().isEmpty() &&
-                            rangeGlobalTreeNode.getLow() == 0 &&
-                            rangeGlobalTreeNode.getHigh() > 0) {
+                CountGlobalTreeNode countGlobalTreeNode =
+                        CountGlobalTreeNode.class.cast(currentTreeNode);
+                if (countGlobalTreeNode.getAfterRequirementList().isEmpty()
+                        && countGlobalTreeNode.getBeforeRequirementList().isEmpty()
+                        && countGlobalTreeNode.getInputNode() instanceof RangeGlobalTreeNode) {
+                    RangeGlobalTreeNode rangeGlobalTreeNode =
+                            RangeGlobalTreeNode.class.cast(countGlobalTreeNode.getInputNode());
+                    if (rangeGlobalTreeNode.getAfterRequirementList().isEmpty()
+                            && rangeGlobalTreeNode.getBeforeRequirementList().isEmpty()
+                            && rangeGlobalTreeNode.getLow() == 0
+                            && rangeGlobalTreeNode.getHigh() > 0) {
                         countGlobalTreeNode.setLimitCount(rangeGlobalTreeNode.getHigh());
                         countGlobalTreeNode.setInputNode(rangeGlobalTreeNode.getInputNode());
                         if (countGlobalTreeNode.getInputNode() instanceof EdgeTreeNode) {
-                            ((EdgeTreeNode) countGlobalTreeNode.getInputNode()).setFetchPropFlag(true);
+                            ((EdgeTreeNode) countGlobalTreeNode.getInputNode())
+                                    .setFetchPropFlag(true);
                         }
                     }
                 }

@@ -29,21 +29,32 @@ public class StoreBackupTaskSender {
         this.storeBackupClients = storeBackupClients;
     }
 
-    public void createStoreBackup(int storeId, int globalBackupId, CompletionCallback<StoreBackupId> callback) {
+    public void createStoreBackup(
+            int storeId, int globalBackupId, CompletionCallback<StoreBackupId> callback) {
         this.storeBackupClients.getClient(storeId).createStoreBackup(globalBackupId, callback);
     }
 
-    public void clearUnavailableBackups(int storeId, Map<Integer, List<Integer>> readyPartitionBackupIdsList,
-                                        CompletionCallback<Void> callback) {
-        this.storeBackupClients.getClient(storeId).clearUnavailableBackups(readyPartitionBackupIdsList, callback);
+    public void clearUnavailableBackups(
+            int storeId,
+            Map<Integer, List<Integer>> readyPartitionBackupIdsList,
+            CompletionCallback<Void> callback) {
+        this.storeBackupClients
+                .getClient(storeId)
+                .clearUnavailableBackups(readyPartitionBackupIdsList, callback);
     }
 
-    public void restoreFromStoreBackup(int storeId, StoreBackupId storeBackupId, String storeRestoreRootPath,
-                                       CompletionCallback<Void> callback) {
-        this.storeBackupClients.getClient(storeId).restoreFromStoreBackup(storeBackupId, storeRestoreRootPath, callback);
+    public void restoreFromStoreBackup(
+            int storeId,
+            StoreBackupId storeBackupId,
+            String storeRestoreRootPath,
+            CompletionCallback<Void> callback) {
+        this.storeBackupClients
+                .getClient(storeId)
+                .restoreFromStoreBackup(storeBackupId, storeRestoreRootPath, callback);
     }
 
-    public void verifyStoreBackup(int storeId, StoreBackupId storeBackupId, CompletionCallback<Void> callback) {
+    public void verifyStoreBackup(
+            int storeId, StoreBackupId storeBackupId, CompletionCallback<Void> callback) {
         this.storeBackupClients.getClient(storeId).verifyStoreBackup(storeBackupId, callback);
     }
 }

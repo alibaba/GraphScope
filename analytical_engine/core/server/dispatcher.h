@@ -22,7 +22,7 @@
 #include <utility>
 #include <vector>
 
-#include "boost/leaf/handle_exception.hpp"
+#include "boost/leaf/handle_errors.hpp"
 
 #include "grape/util.h"
 #include "grape/worker/comm_spec.h"
@@ -32,7 +32,7 @@
 #include "core/error.h"
 #include "core/server/command_detail.h"
 #include "core/utils/mpi_utils.h"
-#include "proto/graph_def.pb.h"
+#include "proto/graphscope/proto/graph_def.pb.h"
 
 namespace gs {
 
@@ -68,6 +68,8 @@ class DispatchResult {
 
   std::string message() { return message_; }
 
+  bool has_large_data() const { return has_large_data_; }
+
   /**
    * Set the graph metadata. The meta should be kept consistent among all
    * workers.
@@ -84,24 +86,28 @@ class DispatchResult {
   rpc::graph::GraphDefPb& graph_def() { return graph_def_; }
 
   void set_data(const std::string& data,
-                AggregatePolicy policy = AggregatePolicy::kRequireConsistent) {
+                AggregatePolicy policy = AggregatePolicy::kRequireConsistent,
+                bool large_data = false) {
     if (policy != AggregatePolicy::kPickFirst ||
         worker_id_ == grape::kCoordinatorRank) {
       data_ = data;
     }
+    has_large_data_ = large_data;
     aggregate_policy_ = policy;
   }
 
   void set_data(const grape::InArchive& arc,
-                AggregatePolicy policy = AggregatePolicy::kRequireConsistent) {
+                AggregatePolicy policy = AggregatePolicy::kRequireConsistent,
+                bool large_data = false) {
     if (policy != AggregatePolicy::kPickFirst ||
         worker_id_ == grape::kCoordinatorRank) {
       data_.assign(arc.GetBuffer(), arc.GetSize());
     }
+    has_large_data_ = large_data;
     aggregate_policy_ = policy;
   }
 
-  const std::string& data() { return data_; }
+  const std::string& data() const { return data_; }
 
   AggregatePolicy aggregate_policy() const { return aggregate_policy_; }
 
@@ -109,6 +115,7 @@ class DispatchResult {
   int worker_id_{};
   rpc::Code error_code_{};
   std::string message_;
+  bool has_large_data_{};
   std::string data_;
   AggregatePolicy aggregate_policy_{};
 
@@ -130,7 +137,7 @@ class Subscriber {
   virtual ~Subscriber() = default;
 
   virtual bl::result<std::shared_ptr<DispatchResult>> OnReceive(
-      const CommandDetail& cmd) = 0;
+      std::shared_ptr<CommandDetail> cmd) = 0;
 };
 
 /**
@@ -144,28 +151,30 @@ class Dispatcher {
 
   void Stop();
 
-  std::vector<DispatchResult> Dispatch(CommandDetail& cmd);
+  std::vector<DispatchResult> Dispatch(std::shared_ptr<CommandDetail> cmd);
 
   void Subscribe(std::shared_ptr<Subscriber> subscriber);
 
-  void SetCommand(const CommandDetail& cmd);
+  void SetCommand(std::shared_ptr<CommandDetail> cmd);
 
  private:
-  std::shared_ptr<DispatchResult> processCmd(const CommandDetail& cmd);
+  std::shared_ptr<DispatchResult> processCmd(
+      std::shared_ptr<CommandDetail> cmd);
 
   void publisherLoop();
 
   void subscriberLoop();
 
-  void publisherPreprocessCmd(CommandDetail& cmd);
+  void publisherPreprocessCmd(std::shared_ptr<CommandDetail> cmd);
 
-  void subscriberPreprocessCmd(rpc::OperationType type, CommandDetail& cmd);
+  void subscriberPreprocessCmd(rpc::OperationType type,
+                               std::shared_ptr<CommandDetail>& cmd);
 
  private:
   bool running_;
   grape::CommSpec comm_spec_;
   std::shared_ptr<Subscriber> subscriber_;
-  vineyard::BlockingQueue<CommandDetail> cmd_queue_;
+  vineyard::BlockingQueue<std::shared_ptr<CommandDetail>> cmd_queue_;
   vineyard::BlockingQueue<std::vector<DispatchResult>> result_queue_;
 };
 

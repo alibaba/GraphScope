@@ -4,10 +4,10 @@
 GraphScope 目前支持的平台如下:
 
 - gcc 7.1+
-- Python 3.6 - 3.9
+- Python 3.7 - 3.9
 - Ubuntu 18.04 or later
 - CentOS 7 or later
-- macOS 11.2.1 (Big Sur) or later (Apple M1 is not support yet!)
+- macOS 11.2.1 (Big Sur) or later, with both Intel chip and Apple M1 chip
 
 
 单机环境下安装
@@ -33,7 +33,7 @@ GraphScope 以 `Python 程序包 <https://pypi.org/project/graphscope>`_ 的形�
 
 首先需要预先安装以下依赖。
 
-- Python 3.6 - 3.9 (with pip)
+- Python 3.7 - 3.9 (with pip)
 - Local Kubernetes cluster set-up tool (e.g. `Kind <https://kind.sigs.k8s.io>`_)
 
 对于 Windows 和 MacOS 的用户，可通过官方文档来安装上述依赖, 并在 Docker 中开启 Kubernetes 功能。

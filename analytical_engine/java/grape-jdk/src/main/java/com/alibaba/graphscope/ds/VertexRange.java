@@ -22,14 +22,15 @@ import static com.alibaba.graphscope.utils.JNILibraryName.JNI_LIBRARY_NAME;
 
 import com.alibaba.fastffi.CXXHead;
 import com.alibaba.fastffi.CXXPointer;
-import com.alibaba.fastffi.CXXReference;
 import com.alibaba.fastffi.CXXValue;
-import com.alibaba.fastffi.CXXValueRange;
 import com.alibaba.fastffi.FFIFactory;
 import com.alibaba.fastffi.FFIGen;
+import com.alibaba.fastffi.FFINameAlias;
 import com.alibaba.fastffi.FFIPointer;
 import com.alibaba.fastffi.FFITypeAlias;
-import java.util.function.Consumer;
+import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
+
+import java.util.Iterator;
 
 /**
  * Vertex Range is an abstraction for a range of vertices. Corresponding C++ <a
@@ -40,24 +41,24 @@ import java.util.function.Consumer;
 @FFIGen(library = JNI_LIBRARY_NAME)
 @CXXHead(GRAPE_VERTEX_ARRAY_H)
 @FFITypeAlias(GRAPE_VERTEX_RANGE)
-public interface VertexRange<VID_T> extends FFIPointer, CXXPointer, CXXValueRange<Vertex<VID_T>> {
+public interface VertexRange<VID_T> extends FFIPointer, CXXPointer {
     /**
-     * Return the Begin vertex for this VertexRange. Note that invoking this methods multiple times
-     * will return the same reference, java object is not created when this method is called.
+     * Return the Begin vertex id for this VertexRange.
      *
-     * @return Vertex&lt;VID_T&lt; the first vertex
+     * @return  the first vertex id
      */
-    @CXXReference
-    Vertex<VID_T> begin();
+    @FFINameAlias("begin_value")
+    @CXXValue
+    VID_T beginValue();
 
     /**
-     * Return the last vertex for this VertexRange. Note that invoking this methods multiple times
-     * will return the same reference, java object is not created when this method is called.
+     * Return the last vertex for this VertexRange.
      *
-     * @return Vertex&lt;VID_T&lt; the last vertex
+     * @return the last vertex id
      */
-    @CXXReference
-    Vertex<VID_T> end();
+    @FFINameAlias("end_value")
+    @CXXValue
+    VID_T endValue();
 
     /**
      * Return the number of vertices in this vertex range.
@@ -75,17 +76,57 @@ public interface VertexRange<VID_T> extends FFIPointer, CXXPointer, CXXValueRang
     void SetRange(@CXXValue VID_T begin, @CXXValue VID_T end);
 
     /**
-     * Takes one consumer function as input, apply to each vertex.
-     *
-     * @param action consumer.
+     * Get iterator for vid=long
+     * @return
      */
-    default void forEachPlus(Consumer<Vertex<VID_T>> action) {
-        Vertex<VID_T> vertex = begin();
-        VID_T endValue = end().GetValue();
-        while (!vertex.GetValue().equals(endValue)) {
-            action.accept(vertex);
-            vertex.inc();
-        }
+    default Iterable<Vertex<VID_T>> longIterable() {
+        return () ->
+                new Iterator<Vertex<VID_T>>() {
+                    Vertex<Long> vertex = (Vertex<Long>) FFITypeFactoryhelper.newVertexLong();
+                    Long curValue;
+                    Long endValue;
+
+                    {
+                        vertex.SetValue((Long) beginValue());
+                        curValue = (Long) beginValue();
+                        endValue = (Long) endValue();
+                    }
+
+                    public boolean hasNext() {
+                        return !curValue.equals(endValue);
+                    }
+
+                    public Vertex<VID_T> next() {
+                        vertex.SetValue(curValue);
+                        curValue += 1;
+                        return (Vertex<VID_T>) vertex;
+                    }
+                };
+    }
+
+    default Iterable<Vertex<VID_T>> intIterable() {
+        return () ->
+                new Iterator<Vertex<VID_T>>() {
+                    Vertex<Integer> vertex = (Vertex<Integer>) FFITypeFactoryhelper.newVertexInt();
+                    Integer curValue;
+                    Integer endValue;
+
+                    {
+                        vertex.SetValue((Integer) beginValue());
+                        curValue = (Integer) beginValue();
+                        endValue = (Integer) endValue();
+                    }
+
+                    public boolean hasNext() {
+                        return !curValue.equals(endValue);
+                    }
+
+                    public Vertex<VID_T> next() {
+                        vertex.SetValue(curValue);
+                        curValue += 1;
+                        return (Vertex<VID_T>) vertex;
+                    }
+                };
     }
 
     /**

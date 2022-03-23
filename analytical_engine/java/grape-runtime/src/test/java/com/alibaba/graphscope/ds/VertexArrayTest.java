@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.ds;
 
 import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
+
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -28,10 +29,10 @@ public class VertexArrayTest {
         vertices.SetRange(0L, 100L);
         VertexArray<Long, Long> vertexArray = FFITypeFactoryhelper.newVertexArray(Long.class);
         vertexArray.init(vertices);
-        for (Vertex<Long> vertex : vertices) {
+        for (Vertex<Long> vertex : vertices.longIterable()) {
             vertexArray.setValue(vertex, 1L);
         }
-        for (Vertex<Long> vertex : vertices) {
+        for (Vertex<Long> vertex : vertices.longIterable()) {
             Assert.assertTrue(vertexArray.get(vertex).equals(1L));
         }
     }
@@ -42,11 +43,11 @@ public class VertexArrayTest {
         vertices.SetRange(0L, 100L);
         VertexArray<Long, Long> vertexArray = FFITypeFactoryhelper.newVertexArray(Long.class);
         vertexArray.init(vertices, 1L);
-        for (Vertex<Long> vertex : vertices) {
+        for (Vertex<Long> vertex : vertices.longIterable()) {
             Assert.assertTrue(vertexArray.get(vertex).equals(1L));
         }
         vertexArray.setValue(vertices, 2L);
-        for (Vertex<Long> vertex : vertices) {
+        for (Vertex<Long> vertex : vertices.longIterable()) {
             Assert.assertTrue(vertexArray.get(vertex).equals(2L));
         }
     }

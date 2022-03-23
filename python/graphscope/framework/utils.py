@@ -18,9 +18,13 @@
 
 import json
 import os
+import platform
 import random
+import re
+import shutil
 import socket
 import string
+import subprocess
 import tempfile
 import threading
 import time
@@ -40,11 +44,14 @@ from graphscope.proto import types_pb2
 
 
 class PipeWatcher(object):
-    def __init__(self, pipe, sink, queue=None, drop=True):
+    def __init__(self, pipe, sink, queue=None, drop=True, suppressed=False):
         """Watch a pipe, and buffer its output if drop is False."""
         self._pipe = pipe
         self._sink = sink
         self._drop = drop
+        self._suppressed = suppressed
+        self._filters = []
+
         if queue is None:
             self._lines = Queue()
         else:
@@ -52,15 +59,14 @@ class PipeWatcher(object):
 
         def read_and_poll(self):
             for line in self._pipe:
-                try:
-                    self._sink.write(line)
-                except:  # noqa: E722
-                    pass
-                try:
-                    if not self._drop:
-                        self._lines.put(line)
-                except:  # noqa: E722
-                    pass
+                if self._filter(line) and not self._suppressed:
+                    try:
+                        self._sink.write(line)
+                        self._sink.flush()
+                        if not self._drop:
+                            self._lines.put(line)
+                    except:  # noqa: E722
+                        pass
 
         self._polling_thread = threading.Thread(target=read_and_poll, args=(self,))
         self._polling_thread.daemon = True
@@ -72,6 +78,16 @@ class PipeWatcher(object):
     def drop(self, drop=True):
         self._drop = drop
 
+    def add_filter(self, func):
+        if not (func in self._filters):
+            self._filters.append(func)
+
+    def _filter(self, line):
+        for func in self._filters:
+            if not func(line):  # assume callable - will raise if not
+                return False
+        return True
+
 
 class PipeMerger(object):
     def __init__(self, pipe1, pipe2):
@@ -81,7 +97,8 @@ class PipeMerger(object):
         def read_and_pool(self, tag, pipe, target: Queue):
             while True:
                 try:
-                    target.put((tag, pipe.poll()))
+                    msg = (pipe.poll(), "")
+                    target.put(msg if tag == "out" else msg[::-1])
                 except Exception:
                     time.sleep(1)
                 if self._stop:
@@ -105,6 +122,21 @@ class PipeMerger(object):
 
     def stop(self):
         self._stop = True
+
+
+def in_notebook():
+    try:
+        from IPython import get_ipython
+
+        shell = get_ipython().__class__.__name__
+        if shell == "ZMQInteractiveShell":
+            return True  # Jupyter notebook or qtconsole
+        if shell == "TerminalInteractiveShell":
+            return False  # Terminal running IPython
+        return False  # Other type or standard python interpreter
+    except Exception:
+        return False
+    return False
 
 
 def is_free_port(port, host="localhost", timeout=0.2):
@@ -154,6 +186,44 @@ def get_free_port(host="localhost", port_range=(32768, 64999)):
             return port
 
 
+def find_java():
+    java_exec = ""
+    if "JAVA_HOME" in os.environ:
+        java_exec = os.path.expandvars("$JAVA_HOME/bin/java")
+    if not java_exec:
+        java_exec = shutil.which("java")
+    if not java_exec:
+        raise RuntimeError("java command not found.")
+    return java_exec
+
+
+def get_java_version():
+    java_exec = find_java()
+    pattern = r'"(\d+\.\d+\.\d+).*"'
+    version = subprocess.check_output([java_exec, "-version"], stderr=subprocess.STDOUT)
+    return re.search(pattern, version.decode("utf-8")).groups()[0]
+
+
+def get_platform_info():
+    def _get_gcc_version():
+        gcc = shutil.which("gcc")
+        if gcc is None:
+            raise RuntimeError("gcc command not found.")
+        return subprocess.check_output([gcc, "--version"], stderr=subprocess.STDOUT)
+
+    platform_info = (
+        f"system: {platform.system()}\n"
+        f"machine: {platform.machine()}\n"
+        f"platform: {platform.platform()}\n"
+        f"uname: {platform.uname()}\n"
+        f"kernel_ver: {platform.version()}\n"
+        f"mac_ver: {platform.mac_ver()}\n"
+        f"gcc_ver: {_get_gcc_version()}\n"
+        f"python_ver: {platform.python_version()}\n"
+    )
+    return platform_info
+
+
 def random_string(nlen):
     """Create random string which length is `nlen`."""
     return "".join([random.choice(string.ascii_lowercase) for _ in range(nlen)])
@@ -161,6 +231,25 @@ def random_string(nlen):
 
 def get_tempdir():
     return os.path.join("/", tempfile.gettempprefix())
+
+
+def get_timestamp(with_milliseconds=True):
+    """Get current timestamp.
+
+    Returns:
+        Str of current time in seconds since the Epoch.
+
+    Examples:
+        >>> get_timestamp()
+        '1639108065.941239'
+
+        >>> get_timestamp(with_milliseconds=False)
+        '1639108065'
+    """
+    t = str(time.time())
+    if not with_milliseconds:
+        t = t.split(".")[0]
+    return t
 
 
 def read_file_to_bytes(file_path):
@@ -190,6 +279,14 @@ def s_to_attr(s: str) -> attr_value_pb2.AttrValue:
 def bytes_to_attr(s: bytes) -> attr_value_pb2.AttrValue:
     check_argument(isinstance(s, bytes))
     return attr_value_pb2.AttrValue(s=s)
+
+
+def bytes_to_large_attr(s: bytes) -> attr_value_pb2.LargeAttrValue:
+    check_argument(isinstance(s, bytes))
+    large_attr = attr_value_pb2.LargeAttrValue()
+    chunk = attr_value_pb2.Chunk(buffer=s)
+    large_attr.chunk_list.items.append(chunk)
+    return large_attr
 
 
 def f_to_attr(f: float) -> attr_value_pb2.AttrValue:
@@ -287,6 +384,7 @@ def is_file(*args):
 
 def _context_protocol_to_numpy_dtype(dtype):
     dtype_map = {
+        0: np.dtype("void"),
         1: np.dtype("bool"),
         2: np.dtype("int32"),
         3: np.dtype("uint32"),
@@ -400,11 +498,20 @@ def unify_type(t):
     elif isinstance(t, type):
         unify_types = {
             int: graph_def_pb2.LONG,
+            np.int32: graph_def_pb2.INT,
+            np.int64: graph_def_pb2.LONG,
+            np.uint32: graph_def_pb2.UINT,
+            np.uint64: graph_def_pb2.ULONG,
             float: graph_def_pb2.DOUBLE,
+            np.float32: graph_def_pb2.FLOAT,
+            np.float64: graph_def_pb2.DOUBLE,
             str: graph_def_pb2.STRING,
+            np.str_: graph_def_pb2.STRING,
             bool: graph_def_pb2.BOOL,
+            np.bool8: graph_def_pb2.BOOL,
             list: graph_def_pb2.INT_LIST,
             tuple: graph_def_pb2.INT_LIST,
+            dict: graph_def_pb2.DYNAMIC,
         }
         return unify_types[t]
     elif isinstance(t, int):  # graph_def_pb2.DataType
@@ -430,7 +537,7 @@ def data_type_to_cpp(t):
     elif t is None or t == graph_def_pb2.NULLVALUE:
         return "grape::EmptyType"
     elif t == graph_def_pb2.DYNAMIC:
-        return "folly::dynamic"
+        return "dynamic::Value"
     elif t == graph_def_pb2.UNKNOWN:
         return ""
     raise ValueError("Not support type {}".format(t))
@@ -446,9 +553,9 @@ def data_type_to_python(t):
         return int
     elif t in (graph_def_pb2.FLOAT, graph_def_pb2.DOUBLE):
         return float
-    elif t in (graph_def_pb2.STRING):
+    elif t == graph_def_pb2.STRING:
         return str
-    elif t in (None, t == graph_def_pb2.NULLVALUE):
+    elif t in (None, graph_def_pb2.NULLVALUE):
         return None
     raise ValueError("Not support type {}".format(t))
 

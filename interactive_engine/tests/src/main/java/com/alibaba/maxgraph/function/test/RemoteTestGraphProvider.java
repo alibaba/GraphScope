@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,7 +15,7 @@
  */
 package com.alibaba.maxgraph.function.test;
 
-import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration2.Configuration;
 import org.apache.tinkerpop.gremlin.AbstractGraphProvider;
 import org.apache.tinkerpop.gremlin.LoadGraphWith;
 import org.apache.tinkerpop.gremlin.structure.Graph;
@@ -39,11 +39,17 @@ public class RemoteTestGraphProvider extends AbstractGraphProvider {
      * @return
      */
     @Override
-    public Map<String, Object> getBaseConfiguration(String graphName, Class<?> test, String testMethodName, LoadGraphWith.GraphData loadGraphWith) {
+    public Map<String, Object> getBaseConfiguration(
+            String graphName,
+            Class<?> test,
+            String testMethodName,
+            LoadGraphWith.GraphData loadGraphWith) {
         return new HashMap<String, Object>() {
             {
                 put(Graph.GRAPH, RemoteTestGraph.class.getName());
-                put(RemoteTestGraph.GRAPH_NAME, TestGlobalMeta.getGraphEndpoint(loadGraphWith.name()));
+                put(
+                        RemoteTestGraph.GRAPH_NAME,
+                        TestGlobalMeta.getGraphEndpoint(loadGraphWith.name()));
             }
         };
     }
@@ -59,7 +65,11 @@ public class RemoteTestGraphProvider extends AbstractGraphProvider {
     }
 
     @Override
-    public void loadGraphData(final Graph graph, final LoadGraphWith loadGraphWith, final Class testClass, final String testName) {
+    public void loadGraphData(
+            final Graph graph,
+            final LoadGraphWith loadGraphWith,
+            final Class testClass,
+            final String testName) {
         // do nothing
     }
 }

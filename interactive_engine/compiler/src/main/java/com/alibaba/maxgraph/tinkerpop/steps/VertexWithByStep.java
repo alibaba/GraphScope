@@ -27,11 +27,7 @@ package com.alibaba.maxgraph.tinkerpop.steps;
 import org.apache.tinkerpop.gremlin.process.traversal.Order;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
-import org.apache.tinkerpop.gremlin.process.traversal.lambda.ColumnTraversal;
-import org.apache.tinkerpop.gremlin.process.traversal.lambda.ElementValueTraversal;
-import org.apache.tinkerpop.gremlin.process.traversal.lambda.FunctionTraverser;
-import org.apache.tinkerpop.gremlin.process.traversal.lambda.IdentityTraversal;
-import org.apache.tinkerpop.gremlin.process.traversal.lambda.TokenTraversal;
+import org.apache.tinkerpop.gremlin.process.traversal.lambda.*;
 import org.apache.tinkerpop.gremlin.process.traversal.step.ByModulating;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexStep;
 import org.apache.tinkerpop.gremlin.structure.Column;
@@ -46,7 +42,11 @@ public class VertexWithByStep<E extends Element> extends VertexStep<E> implement
     private static final long serialVersionUID = -4061246771715369013L;
     private Function function = null;
 
-    public VertexWithByStep(Traversal.Admin traversal, Class<E> returnClass, Direction direction, String... edgeLabels) {
+    public VertexWithByStep(
+            Traversal.Admin traversal,
+            Class<E> returnClass,
+            Direction direction,
+            String... edgeLabels) {
         super(traversal, returnClass, direction, edgeLabels);
     }
 
@@ -59,7 +59,7 @@ public class VertexWithByStep<E extends Element> extends VertexStep<E> implement
     }
 
     public void modulateBy(final String key, final Comparator comparator) {
-        this.modulateBy(new ElementValueTraversal<>(key), comparator);
+        this.modulateBy(new ValueTraversal<>(key), comparator);
     }
 
     public void modulateBy(final Comparator comparator) {
@@ -79,11 +79,8 @@ public class VertexWithByStep<E extends Element> extends VertexStep<E> implement
     }
 
     public void modulateBy(final Function function, final Comparator comparator) {
-        if (function instanceof T)
-            this.modulateBy((T) function, comparator);
-        else if (function instanceof Column)
-            this.modulateBy((Column) function, comparator);
-        else
-            this.modulateBy(__.map(new FunctionTraverser<>(function)).asAdmin(), comparator);
+        if (function instanceof T) this.modulateBy((T) function, comparator);
+        else if (function instanceof Column) this.modulateBy((Column) function, comparator);
+        else this.modulateBy(__.map(new FunctionTraverser<>(function)).asAdmin(), comparator);
     }
 }

@@ -18,19 +18,29 @@ package com.alibaba.graphscope.utils;
 
 import com.alibaba.graphscope.app.DefaultAppBase;
 import com.alibaba.graphscope.app.DefaultPropertyAppBase;
+import com.alibaba.graphscope.app.ParallelAppBase;
 import com.alibaba.graphscope.app.ParallelPropertyAppBase;
 import com.alibaba.graphscope.context.LabeledVertexDataContext;
 import com.alibaba.graphscope.context.LabeledVertexPropertyContext;
 import com.alibaba.graphscope.context.VertexDataContext;
 import com.alibaba.graphscope.context.VertexPropertyContext;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.Objects;
 
 public class AppBaseParser {
+    private static Logger logger = LoggerFactory.getLogger(AppBaseParser.class.getName());
+    private static String GIRAPH_APP_ABSTRACT_NAME = "org.apache.giraph.graph.AbstractComputation";
+    private static String GIRAPH_APP_BASIC_NAME = "org.apache.giraph.graph.BasicComputation";
+
     public static void main(String[] args) {
         if (args.length != 1) {
-            System.out.println("Error: Expected only one class, fully named.");
+            logger.error("Error: Expected only one class, fully named.");
             return;
         }
         loadClassAndParse(args[0]);
@@ -38,86 +48,78 @@ public class AppBaseParser {
 
     private static void loadClassAndParse(String className) {
         try {
+            // we don't giraphAppBaseClass is defined in giraph-sdk, and we don't want to introduce
+            // circular dependency.
+            Class<?> giraphDefaultAppBase = Class.forName(GIRAPH_APP_BASIC_NAME);
+            logger.info("loaded giraph defaul app base: " + giraphDefaultAppBase.getName());
             Class<?> clz = Class.forName(className);
-            boolean flag = DefaultPropertyAppBase.class.isAssignableFrom(clz);
-            if (flag == true) {
-                System.out.println("DefaultPropertyApp");
-                Class<? extends DefaultPropertyAppBase> clzCasted =
-                        (Class<? extends DefaultPropertyAppBase>) clz;
-                Type type = clzCasted.getGenericInterfaces()[0];
-                if (type instanceof ParameterizedType) {
-                    ParameterizedType parameterizedType = (ParameterizedType) type;
-                    Type[] typeParams = parameterizedType.getActualTypeArguments();
-                    if (typeParams.length != 2) {
-                        System.out.println(
-                                "Error: Number of params error, expected 2, actuval "
-                                        + typeParams.length);
-                        return;
-                    }
-                    System.out.println("TypeParams: " + typeParams[0].getTypeName());
-                    Class<?> ctxType = (Class<?>) typeParams[1];
-                    System.out.println("ContextType:" + javaContextToCppContextName(ctxType));
-                    return;
-                }
-                System.out.println("Error: Not a parameterized type " + type.getTypeName());
+            Type[] typeParams;
+            // Input class name can be a giraph app, But we can use isAssignableFrom, since it
+            // will introduce circular dependency. We judge by using get super class.
+            if (tryGiraphClass(clz)) {
                 return;
             }
-
-            flag = ParallelPropertyAppBase.class.isAssignableFrom(clz);
-            if (flag == true) {
-                System.out.println("ParallelPropertyApp");
-                Class<? extends ParallelPropertyAppBase> clzCasted =
-                        (Class<? extends ParallelPropertyAppBase>) clz;
-                Type type = clzCasted.getGenericInterfaces()[0];
-                if (type instanceof ParameterizedType) {
-                    ParameterizedType parameterizedType = (ParameterizedType) type;
-                    Type[] typeParams = parameterizedType.getActualTypeArguments();
-                    if (typeParams.length != 2) {
-                        System.out.println(
-                                "Error: Number of params error, expected 2, actuval "
-                                        + typeParams.length);
-                        return;
-                    }
-                    System.out.println("TypeParams: " + typeParams[0].getTypeName());
-                    Class<?> ctxType = (Class<?>) typeParams[1];
-                    System.out.println("ContextType:" + javaContextToCppContextName(ctxType));
-                    return;
-                }
-                System.out.println("Error: Not a parameterized type " + type.getTypeName());
+            if (DefaultAppBase.class.isAssignableFrom(clz)) {
+                logger.info("DefaultAppBase");
+                typeParams = getTypeParams(clz, 5);
+            } else if (ParallelAppBase.class.isAssignableFrom(clz)) {
+                logger.info("ParallelAppBase");
+                typeParams = getTypeParams(clz, 5);
+            } else if (DefaultPropertyAppBase.class.isAssignableFrom(clz)) {
+                logger.info("DefaultPropertyAppBase");
+                typeParams = getTypeParams(clz, 2);
+            } else if (ParallelPropertyAppBase.class.isAssignableFrom(clz)) {
+                logger.info("ParallelPropertyAppBase");
+                typeParams = getTypeParams(clz, 2);
+            } else {
+                logger.error("No matching app bases");
                 return;
             }
-            // try Projected
-            flag = DefaultAppBase.class.isAssignableFrom(clz);
-            if (flag == true) {
-                System.out.println("DefaultAppBase");
-                Class<? extends DefaultAppBase> clzCasted = (Class<? extends DefaultAppBase>) clz;
-                Type type = clzCasted.getGenericInterfaces()[0];
-                if (type instanceof ParameterizedType) {
-                    ParameterizedType parameterizedType = (ParameterizedType) type;
-                    Type[] typeParams = parameterizedType.getActualTypeArguments();
-                    String[] typeParamNames = new String[4];
-                    if (typeParams.length != 5) {
-                        System.out.println(
-                                "Error: Number of params error, expected 5, actuval "
-                                        + typeParams.length);
-                        return;
-                    }
-                    for (int i = 0; i < 4; ++i) {
-                        typeParamNames[i] = typeParams[i].getTypeName();
-                    }
-                    System.out.println("TypeParams: " + String.join(",", typeParamNames));
-                    Class<?> ctxType = (Class<?>) typeParams[4];
-                    System.out.println("ContextType:" + javaContextToCppContextName(ctxType));
-                    return;
+            if (typeParams.length == 2) {
+                logger.info("TypeParams: " + typeParams[0].getTypeName());
+                Class<?> ctxType = (Class<?>) typeParams[1];
+                logger.info("ContextType:" + javaContextToCppContextName(ctxType));
+            } else {
+                String typeParamNames[] = new String[4];
+                for (int i = 0; i < 4; ++i) {
+                    typeParamNames[i] = typeParams[i].getTypeName();
                 }
-                System.out.println("Error: Not a parameterized type " + type.getTypeName());
-                return;
+                logger.info("TypeParams: " + String.join(",", typeParamNames));
+                Class<?> ctxType = (Class<?>) typeParams[4];
+                logger.info("ContextType:" + javaContextToCppContextName(ctxType));
             }
-            System.out.println("Unrecognizable class Name");
         } catch (Exception e) {
-            System.out.println("Exception occurred");
+            logger.info("Exception occurred");
             e.printStackTrace();
         }
+    }
+
+    private static boolean tryGiraphClass(Class<?> claz) {
+        Class<?> father = claz.getSuperclass();
+        if (Objects.isNull(father)) {
+            logger.info("Received an interface");
+            return false;
+        } else if (father.equals(Object.class)) {
+            logger.info("super class is object");
+            return false;
+        }
+        Type[] types;
+        if (father.getName().equals(GIRAPH_APP_ABSTRACT_NAME)) {
+            logger.info("Giraph");
+            types = getTypeParams(father, 5);
+        } else if (father.getName().equals(GIRAPH_APP_BASIC_NAME)) {
+            logger.info("Giraph");
+            types = getExtendTypeParams(father, 5);
+        } else {
+            return false;
+        }
+        String typeParamNames[] = new String[types.length];
+        for (int i = 0; i < types.length; ++i) {
+            typeParamNames[i] = types[i].getTypeName();
+        }
+        logger.info("TypeParams: " + String.join(",", typeParamNames));
+        logger.info("ContextType:vertex_data");
+        return true;
     }
 
     private static String javaContextToCppContextName(Class<?> ctxClass) {
@@ -133,6 +135,39 @@ public class AppBaseParser {
         return "null";
     }
 
+    private static Type[] getExtendTypeParams(Class<?> klass, int expectedSize) {
+        ParameterizedType type = (ParameterizedType) (klass.getGenericSuperclass());
+        Type[] classes = type.getActualTypeArguments();
+        if (classes.length != expectedSize) {
+            logger.error(
+                    "Error: Number of params error, expected "
+                            + expectedSize
+                            + ", actual "
+                            + classes.length);
+            throw new IllegalStateException("Type params size not match");
+        }
+        return classes;
+    }
+
+    private static Type[] getTypeParams(Class<?> clz, int size) {
+        Type type = clz.getGenericInterfaces()[0];
+        if (!(type instanceof ParameterizedType)) {
+            logger.error("Not a parameterized type" + type.getTypeName());
+            throw new IllegalStateException("not a parameterized type" + type.getTypeName());
+        }
+        ParameterizedType parameterizedType = (ParameterizedType) type;
+        Type[] typeParams = parameterizedType.getActualTypeArguments();
+        if (typeParams.length != size) {
+            logger.error(
+                    "Error: Number of params error, expected "
+                            + size
+                            + ", actual "
+                            + typeParams.length);
+            throw new IllegalStateException("Type params size not match");
+        }
+        return typeParams;
+    }
+
     private static Method getMethod(Class<?> clz) {
         Method[] methods = clz.getDeclaredMethods();
         for (Method method : methods) {
@@ -146,7 +181,7 @@ public class AppBaseParser {
     private static Class<?> getFragmentClassFromMethod(Method method) {
         Class<?>[] params = method.getParameterTypes();
         if (params.length != 3) {
-            System.err.println("Expected 3 parameters for this method: " + method.getName());
+            logger.error("Expected 3 parameters for this method: " + method.getName());
             return null;
         }
         return params[0];

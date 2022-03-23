@@ -1,7 +1,9 @@
 package com.alibaba.graphscope.groot.sdk;
 
-import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.graphscope.groot.schema.GraphDef;
+import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
+
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -10,7 +12,6 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import org.junit.jupiter.api.Test;
 
 public class DataLoadingTest {
     String host = "localhost";

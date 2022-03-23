@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,16 +30,19 @@ public class FileColumnMapping {
     private Map<Integer, String> dstPkColMap;
     private Map<Integer, String> propertiesColMap;
 
-    public FileColumnMapping() {
-
-    }
+    public FileColumnMapping() {}
 
     public FileColumnMapping(String label, Map<Integer, String> propertiesColMap) {
         this(label, null, null, null, null, propertiesColMap);
     }
 
-    public FileColumnMapping(String label, String srcLabel, String dstLabel, Map<Integer, String> srcPkColMap,
-                             Map<Integer, String> dstPkColMap, Map<Integer, String> propertiesColMap) {
+    public FileColumnMapping(
+            String label,
+            String srcLabel,
+            String dstLabel,
+            Map<Integer, String> srcPkColMap,
+            Map<Integer, String> dstPkColMap,
+            Map<Integer, String> propertiesColMap) {
         this.label = label;
         this.srcLabel = srcLabel;
         this.dstLabel = dstLabel;
@@ -75,7 +78,8 @@ public class FileColumnMapping {
     public ColumnMappingInfo toColumnMappingInfo(GraphSchema graphSchema) {
         GraphElement type = graphSchema.getElement(this.label);
         int labelId = type.getLabelId();
-        Map<Integer, Integer> propertiesMap = convertMapValueToId(this.propertiesColMap, graphSchema);
+        Map<Integer, Integer> propertiesMap =
+                convertMapValueToId(this.propertiesColMap, graphSchema);
         if (type instanceof GraphVertex) {
             long tableId = ((GraphVertex) type).getTableId();
             return new ColumnMappingInfo(labelId, tableId, propertiesMap);
@@ -87,28 +91,38 @@ public class FileColumnMapping {
             int dstLabelId = dstType.getLabelId();
             Map<Integer, Integer> dstPkMap = convertMapValueToId(this.dstPkColMap, graphSchema);
             for (EdgeRelation relation : ((GraphEdge) type).getRelationList()) {
-                if (relation.getSource().getLabelId() == srcLabelId &&
-                        relation.getTarget().getLabelId() == dstLabelId) {
+                if (relation.getSource().getLabelId() == srcLabelId
+                        && relation.getTarget().getLabelId() == dstLabelId) {
                     long tableId = relation.getTableId();
-                    return new ColumnMappingInfo(labelId, srcLabelId, dstLabelId, tableId, srcPkMap, dstPkMap,
+                    return new ColumnMappingInfo(
+                            labelId,
+                            srcLabelId,
+                            dstLabelId,
+                            tableId,
+                            srcPkMap,
+                            dstPkMap,
                             propertiesMap);
                 }
             }
-            throw new InvalidSchemaException("invalid mapping for label [" + this.label + "] srcLabel [" + this.srcLabel
-                    + "] dstLabel [" + this.dstLabel + "]");
+            throw new InvalidSchemaException(
+                    "invalid mapping for label ["
+                            + this.label
+                            + "] srcLabel ["
+                            + this.srcLabel
+                            + "] dstLabel ["
+                            + this.dstLabel
+                            + "]");
         }
     }
 
-    private Map<Integer, Integer> convertMapValueToId(Map<Integer, String> colNameMap, GraphSchema graphSchema) {
+    private Map<Integer, Integer> convertMapValueToId(
+            Map<Integer, String> colNameMap, GraphSchema graphSchema) {
         Map<Integer, Integer> res = new HashMap<>(colNameMap.size());
-        colNameMap.forEach((colIdx, propName) -> {
-            int propertyId = graphSchema.getPropertyId(propName);
-            res.put(colIdx, propertyId);
-        });
+        colNameMap.forEach(
+                (colIdx, propName) -> {
+                    int propertyId = graphSchema.getPropertyId(propName);
+                    res.put(colIdx, propertyId);
+                });
         return res;
     }
-
-
-
-
 }

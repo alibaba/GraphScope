@@ -19,31 +19,7 @@ GraphScope rely on some permissions to delete resources.
 
 ```shell
 # example for `default` ServiceAccount with `default` namespace
-$ cat role_and_binding.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  name: grole
-  namespace: default
-rules:
-- apiGroups: ["apps", "extensions", ""]
-  resources: ["configmaps", "deployments", "deployments/status", "endpoints", "events", "pods", "pods/log", "pods/exec", "pods/status", "services", "replicasets"]
-  verbs: ["*"]
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: grole-binding
-  namespace: default
-subjects:
-- kind: ServiceAccount
-  name: default
-  namespace: default
-roleRef:
-  kind: Role
-  name: grole
-  apiGroup: rbac.authorization.k8s.io
-
+$ wget https://raw.githubusercontent.com/alibaba/GraphScope/main/charts/role_and_binding.yaml
 $ kubectl create -f ./role_and_binding.yaml
 ```
 
@@ -58,12 +34,12 @@ See configuration below.
 See [*helm install*](https://helm.sh/docs/helm/helm_install/) for command documentation.
 
 
-## Get GraphScope Service Endpoint 
+## Get GraphScope Service Endpoint
 
 Note that it may take a few minutes for pulling image at first time, you can watch the status by running `helm test` many times.
 
 ```shell
-# Helm 3 or 2 
+# Helm 3 or 2
 # After installation, you can check service availability by:
 $ helm test [RELEASE_NAME]
 
@@ -124,12 +100,14 @@ $ helm inspect values graphscope/graphscope
 # Helm 3
 $ helm show values graphscope/graphscope
 ```
+
+### configure volumes for loading graph
 In most cases, you want to mount volumes into GraphScope's pod for loading graph. Here is an example to do it:
 
 ```yaml
 # Mount hostpath `/testingdata` to `/tmp/testingdata` in pod.
 # cat values.yaml
-# 
+#
 volumes:
   enabled: true
   items:
@@ -140,8 +118,58 @@ volumes:
         path: /testingdata
       mounts:
       - mountPath: /tmp/testingdata
-  
-# pass that values file during installation.    
+
+# pass that values file during installation.
+$ helm install -f values.yaml graphscope/graphscope --generate-name
+```
+
+### configure resource (cpu/memory)
+
+By default, one graphscope instance contains a coordinator pod with 4 CPUs/4Gi memory, 2 engine pods with 2 CPUs/4Gi memory in engine container and 0.5 CPUs/512M in vineyard container respectively, and 3 etcd pods with 0.5 CPU and 128M memory respectively, You can adjust these resources in `values.yaml`.
+
+```
+# cat values.yaml
+coordinator:
+  resources:
+    requests:
+      cpu: 3.0
+      memory: 4Gi
+    limits:
+      cpu: 3.0
+      memory: 4Gi
+
+# one engine pod contains a engine container and a vineyard container
+engines:
+  resources:
+    requests:
+      cpu: 2.0
+      memory: 4Gi
+    limits:
+      cpu: 2.0
+      memory: 4Gi
+
+vineyard:
+  resources:
+    requests:
+      cpu: 0.5
+      memory: 512Mi
+    limits:
+      cpu: 0.5
+      memory: 512Mi
+  ## Init size of vineyard shared memory.
+  shared_mem: 8Gi
+
+
+etcd:
+  resources:
+    requests:
+      cpu: 0.5
+      memory: 128Mi
+    limits:
+      cpu: 0.5
+      memory: 128Mi
+
+# pass that values file during installation.
 $ helm install -f values.yaml graphscope/graphscope --generate-name
 ```
 

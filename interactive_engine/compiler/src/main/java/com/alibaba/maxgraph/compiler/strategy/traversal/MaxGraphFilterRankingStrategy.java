@@ -62,14 +62,18 @@ import java.util.Set;
  * __.dedup().filter(out()).has("value", 0)  // is replaced by __.has("value", 0).filter(out()).dedup()
  * </pre>
  */
-public final class MaxGraphFilterRankingStrategy extends AbstractTraversalStrategy<TraversalStrategy.OptimizationStrategy> implements TraversalStrategy.OptimizationStrategy {
+public final class MaxGraphFilterRankingStrategy
+        extends AbstractTraversalStrategy<TraversalStrategy.OptimizationStrategy>
+        implements TraversalStrategy.OptimizationStrategy {
 
-    private static final MaxGraphFilterRankingStrategy INSTANCE = new MaxGraphFilterRankingStrategy();
-    private static final Set<Class<? extends OptimizationStrategy>> PRIORS = Collections.singleton(IdentityRemovalStrategy.class);
-    private static final Set<Class<? extends OptimizationStrategy>> POSTS = Collections.singleton(LazyBarrierStrategy.class);
+    private static final MaxGraphFilterRankingStrategy INSTANCE =
+            new MaxGraphFilterRankingStrategy();
+    private static final Set<Class<? extends OptimizationStrategy>> PRIORS =
+            Collections.singleton(IdentityRemovalStrategy.class);
+    private static final Set<Class<? extends OptimizationStrategy>> POSTS =
+            Collections.singleton(LazyBarrierStrategy.class);
 
-    private MaxGraphFilterRankingStrategy() {
-    }
+    private MaxGraphFilterRankingStrategy() {}
 
     @Override
     public void apply(final Traversal.Admin<?, ?> traversal) {
@@ -107,35 +111,24 @@ public final class MaxGraphFilterRankingStrategy extends AbstractTraversalStrate
      */
     private static int getStepRank(final Step step) {
         final int rank;
-        if (!(step instanceof FilterStep || step instanceof OrderGlobalStep) || step instanceof TraversalFilterStep)
-            return 0;
-        else if (step instanceof IsStep || step instanceof ClassFilterStep)
-            rank = 1;
-        else if (step instanceof HasStep)
-            rank = 2;
-        else if (step instanceof WherePredicateStep && ((WherePredicateStep) step).getLocalChildren().isEmpty())
-            rank = 3;
-        else if (step instanceof NotStep)
-            rank = 4;
-        else if (step instanceof WhereTraversalStep)
-            rank = 5;
-        else if (step instanceof OrStep)
-            rank = 6;
-        else if (step instanceof AndStep)
-            rank = 7;
+        if (!(step instanceof FilterStep || step instanceof OrderGlobalStep)
+                || step instanceof TraversalFilterStep) return 0;
+        else if (step instanceof IsStep || step instanceof ClassFilterStep) rank = 1;
+        else if (step instanceof HasStep) rank = 2;
+        else if (step instanceof WherePredicateStep
+                && ((WherePredicateStep) step).getLocalChildren().isEmpty()) rank = 3;
+        else if (step instanceof NotStep) rank = 4;
+        else if (step instanceof WhereTraversalStep) rank = 5;
+        else if (step instanceof OrStep) rank = 6;
+        else if (step instanceof AndStep) rank = 7;
         else if (step instanceof WherePredicateStep) // has by()-modulation
-            rank = 8;
-        else if (step instanceof DedupGlobalStep)
-            rank = 9;
-        else if (step instanceof OrderGlobalStep)
-            rank = 10;
-        else
-            return 0;
+        rank = 8;
+        else if (step instanceof DedupGlobalStep) rank = 9;
+        else if (step instanceof OrderGlobalStep) rank = 10;
+        else return 0;
         ////////////
-        if (step instanceof TraversalParent)
-            return getMaxStepRank((TraversalParent) step, rank);
-        else
-            return rank;
+        if (step instanceof TraversalParent) return getMaxStepRank((TraversalParent) step, rank);
+        else return rank;
     }
 
     private static int getMaxStepRank(final TraversalParent parent, final int startRank) {
@@ -144,26 +137,23 @@ public final class MaxGraphFilterRankingStrategy extends AbstractTraversalStrate
         for (final Traversal.Admin<?, ?> traversal : parent.getLocalChildren()) {
             for (final Step<?, ?> step : traversal.getSteps()) {
                 final int stepRank = getStepRank(step);
-                if (stepRank > maxStepRank)
-                    maxStepRank = stepRank;
+                if (stepRank > maxStepRank) maxStepRank = stepRank;
             }
         }
         return maxStepRank;
     }
 
     private static boolean usesLabels(final Step<?, ?> step, final Set<String> labels) {
-        if (step instanceof LambdaHolder)
-            return true;
+        if (step instanceof LambdaHolder) return true;
         if (step instanceof Scoping) {
             final Set<String> scopes = ((Scoping) step).getScopeKeys();
             for (final String label : labels) {
-                if (scopes.contains(label))
-                    return true;
+                if (scopes.contains(label)) return true;
             }
         }
         if (step instanceof TraversalParent) {
-            if (TraversalHelper.anyStepRecursively(s -> usesLabels(s, labels), (TraversalParent) step))
-                return true;
+            if (TraversalHelper.anyStepRecursively(
+                    s -> usesLabels(s, labels), (TraversalParent) step)) return true;
         }
         return false;
     }

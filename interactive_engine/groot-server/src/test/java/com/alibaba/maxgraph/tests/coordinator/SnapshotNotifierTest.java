@@ -13,22 +13,23 @@
  */
 package com.alibaba.maxgraph.tests.coordinator;
 
-import com.alibaba.maxgraph.common.config.CommonConfig;
-import com.alibaba.maxgraph.common.config.Configs;
-import com.alibaba.graphscope.groot.discovery.MaxGraphNode;
-import com.alibaba.graphscope.groot.discovery.NodeDiscovery;
-import com.alibaba.maxgraph.common.RoleType;
-import com.alibaba.graphscope.groot.rpc.RoleClients;
+import static org.mockito.Mockito.*;
+
 import com.alibaba.graphscope.groot.coordinator.FrontendSnapshotClient;
 import com.alibaba.graphscope.groot.coordinator.NotifyFrontendListener;
 import com.alibaba.graphscope.groot.coordinator.SnapshotManager;
 import com.alibaba.graphscope.groot.coordinator.SnapshotNotifier;
+import com.alibaba.graphscope.groot.discovery.MaxGraphNode;
+import com.alibaba.graphscope.groot.discovery.NodeDiscovery;
+import com.alibaba.graphscope.groot.rpc.RoleClients;
+import com.alibaba.maxgraph.common.RoleType;
+import com.alibaba.maxgraph.common.config.CommonConfig;
+import com.alibaba.maxgraph.common.config.Configs;
+
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 import java.util.Collections;
-
-import static org.mockito.Mockito.*;
 
 public class SnapshotNotifierTest {
 

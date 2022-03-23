@@ -24,6 +24,7 @@
 package com.alibaba.maxgraph.structure;
 
 import com.google.common.base.Objects;
+
 import org.apache.tinkerpop.gremlin.process.traversal.Path;
 import org.apache.tinkerpop.gremlin.process.traversal.Pop;
 
@@ -51,7 +52,8 @@ public class MxPath implements Path {
     @SuppressWarnings("CloneDoesntCallSuperClone,CloneDoesntDeclareCloneNotSupportedException")
     public MxPath clone() {
         final MxPath clone = new MxPath(this.objects.size());
-        // TODO: Why is this not working Hadoop serialization-wise?... Its cause DetachedPath's clone needs to detach on clone.
+        // TODO: Why is this not working Hadoop serialization-wise?... Its cause DetachedPath's
+        // clone needs to detach on clone.
         /*final MutablePath clone = (MutablePath) super.clone();
         clone.objects = new ArrayList<>();
         clone.labels = new ArrayList<>();*/
@@ -61,7 +63,6 @@ public class MxPath implements Path {
         }
         return clone;
     }
-
 
     @Override
     public int size() {
@@ -77,8 +78,7 @@ public class MxPath implements Path {
 
     @Override
     public Path extend(final Set<String> labels) {
-        if (!labels.isEmpty())
-            this.labels.get(this.labels.size() - 1).addAll(labels);
+        if (!labels.isEmpty()) this.labels.get(this.labels.size() - 1).addAll(labels);
         return this;
     }
 
@@ -104,24 +104,21 @@ public class MxPath implements Path {
         if (Pop.all == pop) {
             if (this.hasLabel(label)) {
                 final Object object = this.get(label);
-                if (object instanceof List)
-                    return (A) object;
-                else
-                    return (A) Collections.singletonList(object);
+                if (object instanceof List) return (A) object;
+                else return (A) Collections.singletonList(object);
             } else {
                 return (A) Collections.emptyList();
             }
         } else {
-            // Override default to avoid building temporary list, and to stop looking when we find the label.
+            // Override default to avoid building temporary list, and to stop looking when we find
+            // the label.
             if (Pop.last == pop) {
                 for (int i = this.labels.size() - 1; i >= 0; i--) {
-                    if (labels.get(i).contains(label))
-                        return (A) objects.get(i);
+                    if (labels.get(i).contains(label)) return (A) objects.get(i);
                 }
             } else {
                 for (int i = 0; i != this.labels.size(); i++) {
-                    if (labels.get(i).contains(label))
-                        return (A) objects.get(i);
+                    if (labels.get(i).contains(label)) return (A) objects.get(i);
                 }
             }
             throw Path.Exceptions.stepWithProvidedLabelDoesNotExist(label);
@@ -158,8 +155,7 @@ public class MxPath implements Path {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         MxPath objects1 = (MxPath) o;
-        return Objects.equal(objects, objects1.objects) &&
-                Objects.equal(labels, objects1.labels);
+        return Objects.equal(objects, objects1.objects) && Objects.equal(labels, objects1.labels);
     }
 
     @Override

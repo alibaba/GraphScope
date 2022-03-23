@@ -23,9 +23,9 @@
 #include "grape/serialization/in_archive.h"
 #include "grape/serialization/out_archive.h"
 
-#include "proto/attr_value.pb.h"
-#include "proto/query_args.pb.h"
-#include "proto/types.pb.h"
+#include "proto/graphscope/proto/attr_value.pb.h"
+#include "proto/graphscope/proto/query_args.pb.h"
+#include "proto/graphscope/proto/types.pb.h"
 
 namespace gs {
 
@@ -38,17 +38,21 @@ struct CommandDetail {
   CommandDetail() = default;
 
   CommandDetail(const rpc::OperationType& op_type,
-                std::map<int, rpc::AttrValue>&& op_params)
-      : type(op_type), params(std::move(op_params)) {}
+                std::map<int, rpc::AttrValue>&& op_params,
+                const rpc::LargeAttrValue& large_attr)
+      : type(op_type), params(std::move(op_params)), large_attr(large_attr) {}
 
   CommandDetail(const rpc::OperationType& op_type,
-                std::map<int, rpc::AttrValue>&& op_params, rpc::QueryArgs args)
+                std::map<int, rpc::AttrValue>&& op_params,
+                const rpc::LargeAttrValue& large_attr, rpc::QueryArgs args)
       : type(op_type),
         params(std::move(op_params)),
+        large_attr(large_attr),
         query_args(std::move(args)) {}
 
   rpc::OperationType type{};
   std::map<int, rpc::AttrValue> params;
+  rpc::LargeAttrValue large_attr;
   rpc::QueryArgs query_args;
 };
 

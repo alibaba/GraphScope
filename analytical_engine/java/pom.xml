@@ -29,6 +29,7 @@
     <module>grape-jdk</module>
     <module>grape-demo</module>
     <module>grape-runtime</module>
+    <module>giraph-on-grape</module>
   </modules>
 
   <properties>
@@ -54,6 +55,12 @@
     <odps.sdk.version>0.36.4</odps.sdk.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <slf4j-api.version>1.7.25</slf4j-api.version>
+    <dep.netty.version>4.1.36.Final</dep.netty.version>
+    <dep.fastutil.version>6.5.4</dep.fastutil.version>
+    <dep.kryo.version>4.0.0</dep.kryo.version>
+    <dep.json.version>20160810</dep.json.version>
+    <dep.kryo-serializers.version>0.42</dep.kryo-serializers.version>
+    <dep.zookeeper.version>3.4.5</dep.zookeeper.version>
   </properties>
   <dependencyManagement>
     <dependencies>
@@ -108,52 +115,65 @@
         <artifactId>guava</artifactId>
         <version>30.1.1-jre</version>
       </dependency>
+      <dependency>
+        <groupId>org.mockito</groupId>
+        <artifactId>mockito-core</artifactId>
+        <version>2.18.3</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>it.unimi.dsi</groupId>
+        <artifactId>fastutil</artifactId>
+        <version>${dep.fastutil.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.esotericsoftware</groupId>
+        <artifactId>kryo</artifactId>
+        <version>${dep.kryo.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.json</groupId>
+        <artifactId>json</artifactId>
+        <version>${dep.json.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>de.javakaffee</groupId>
+        <artifactId>kryo-serializers</artifactId>
+        <version>${dep.kryo-serializers.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.zookeeper</groupId>
+        <artifactId>zookeeper</artifactId>
+        <version>${dep.zookeeper.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>com.sun.jmx</groupId>
+            <artifactId>jmxri</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.sun.jdmk</groupId>
+            <artifactId>jmxtools</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.jboss.netty</groupId>
+            <artifactId>netty</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>javax.jms</groupId>
+            <artifactId>jms</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
   <build>
     <pluginManagement>
       <plugins>
-        <plugin>
-          <groupId>com.diffplug.spotless</groupId>
-          <artifactId>spotless-maven-plugin</artifactId>
-          <version>${maven-spotless-plugin.version}</version>
-          <configuration>
-            <!-- optional: limit format enforcement to just the files changed by this feature branch -->
-            <!--                        <ratchetFrom>origin/main</ratchetFrom>-->
-            <!-- define a language-specific format -->
-            <java>
-              <googleJavaFormat>
-                <reflowLongStrings>false</reflowLongStrings>
-                <style>AOSP</style>
-                <version>${google-java-format.version}</version>
-              </googleJavaFormat>
-              <!--                            <licenseHeader>-->
-              <!--                                <content>/* (C)$YEAR */</content>  &lt;!&ndash; or <file>${project.basedir}/license-header</file> &ndash;&gt;-->
-              <!--                            </licenseHeader>-->
-            </java>
-            <pom>
-              <!-- These are the defaults, you can override if you want -->
-              <includes>
-                <include>pom.xml</include>
-              </includes>
-              <sortPom>
-                <encoding>UTF-8</encoding> <!-- The encoding of the pom files -->
-                <lineSeparator>${line.separator}</lineSeparator> <!-- line separator to use -->
-                <expandEmptyElements>true</expandEmptyElements> <!-- Should empty elements be expanded-->
-              </sortPom>
-              <!-- has its own section below -->
-            </pom>
-          </configuration>
-          <executions>
-            <execution>
-              <goals>
-                <goal>apply</goal>
-              </goals>
-              <phase>compile</phase>
-            </execution>
-          </executions>
-        </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
@@ -162,6 +182,7 @@
             <encoding>UTF-8</encoding>
             <source>1.8</source>
             <target>1.8</target>
+            <showWarnings>true</showWarnings>
           </configuration>
         </plugin>
         <plugin>

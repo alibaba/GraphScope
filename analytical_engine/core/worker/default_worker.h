@@ -33,6 +33,9 @@ namespace gs {
 template <typename FRAG_T, typename CONTEXT_T>
 class AppBase;
 
+template <typename FRAG_T>
+class JavaContextBase;
+
 /**
  * @brief DefaultWorker manages the computation cycle. DefaultWorker is a kind
  * of serial worker for apps derived from AppBase.
@@ -63,7 +66,11 @@ class DefaultWorker {
     auto& graph = const_cast<fragment_t&>(context_->fragment());
 
     // prepare for the query
-    graph.PrepareToRunApp(APP_T::message_strategy, APP_T::need_split_edges);
+    grape::PrepareConf conf;
+    conf.message_strategy = APP_T::message_strategy;
+    conf.need_split_edges = APP_T::need_split_edges;
+    conf.need_mirror_info = false;
+    graph.PrepareToRunApp(comm_spec, conf);
 
     comm_spec_ = comm_spec;
 
@@ -118,6 +125,7 @@ class DefaultWorker {
     MPI_Barrier(comm_spec_.comm());
 
     messages_.Finalize();
+    finishQuery();
   }
 
   std::shared_ptr<context_t> GetContext() { return context_; }
@@ -125,6 +133,24 @@ class DefaultWorker {
   void Output(std::ostream& os) { context_->Output(os); }
 
  private:
+  template <typename T = context_t>
+  typename std::enable_if<
+      std::is_base_of<JavaContextBase<fragment_t>, T>::value>::type
+  finishQuery() {
+    auto java_context =
+        std::dynamic_pointer_cast<JavaContextBase<fragment_t>>(context_);
+    if (java_context) {
+      VLOG(1) << "Write java heap data back to cpp context since it is java "
+                 "context";
+      java_context->WriteBackJVMHeapToCppContext();
+    }
+  }
+
+  template <typename T = context_t>
+  typename std::enable_if<
+      !std::is_base_of<JavaContextBase<fragment_t>, T>::value>::type
+  finishQuery() {}
+
   std::shared_ptr<APP_T> app_;
   std::shared_ptr<context_t> context_;
   message_manager_t messages_;

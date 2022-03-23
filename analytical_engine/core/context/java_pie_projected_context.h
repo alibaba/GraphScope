@@ -62,6 +62,7 @@ class JavaPIEProjectedContext : public JavaContextBase<FRAG_T> {
       : JavaContextBase<FRAG_T>(fragment) {}
 
   virtual ~JavaPIEProjectedContext() {}
+
   void init(jlong messages_addr, const char* java_message_manager_name,
             const std::string& params, const std::string& lib_path) {
     JavaContextBase<FRAG_T>::init(messages_addr, java_message_manager_name,
@@ -76,8 +77,7 @@ class JavaPIEProjectedContext : public JavaContextBase<FRAG_T> {
       jclass context_class = env->GetObjectClass(this->context_object());
       CHECK_NOTNULL(context_class);
 
-      const char* descriptor =
-          "(Lcom/alibaba/graphscope/fragment/ArrowProjectedFragment;)V";
+      const char* descriptor = "(Lcom/alibaba/graphscope/fragment/IFragment;)V";
       jmethodID output_methodID =
           env->GetMethodID(context_class, "Output", descriptor);
       if (output_methodID) {
@@ -161,7 +161,7 @@ class JavaPIEProjectedContext : public JavaContextBase<FRAG_T> {
   }
 
  protected:
-  virtual const char* getPropertyCtxObjBaseClazNameDesc() = 0;
+  virtual const char* getSimpleCtxObjBaseClzNameDesc() = 0;
 
  private:
   std::string getJavaCtxTypeName(const jobject& ctx_object) {
@@ -172,8 +172,8 @@ class JavaPIEProjectedContext : public JavaContextBase<FRAG_T> {
           m.env(), this->url_class_loader_object(), CONTEXT_UTILS_CLASS);
       CHECK_NOTNULL(context_utils_class);
       jmethodID ctx_base_class_name_get_method = m.env()->GetStaticMethodID(
-          context_utils_class, "getProjectedCtxObjBaseClzName",
-          getPropertyCtxObjBaseClazNameDesc());
+          context_utils_class, "getCtxObjBaseClzName",
+          getSimpleCtxObjBaseClzNameDesc());
 
       CHECK_NOTNULL(ctx_base_class_name_get_method);
       jstring ctx_base_clz_name = (jstring) m.env()->CallStaticObjectMethod(
@@ -198,6 +198,11 @@ class JavaPIEProjectedContext : public JavaContextBase<FRAG_T> {
       // Pass app class's class object
       jstring context_class_jstring = (jstring) m.env()->CallStaticObjectMethod(
           app_context_getter_class, getter_method, ctx_object);
+      if (m.env()->ExceptionCheck()) {
+        LOG(ERROR) << "Exception in get vertex data type";
+        m.env()->ExceptionDescribe();
+        m.env()->ExceptionClear();
+      }
       CHECK_NOTNULL(context_class_jstring);
       return JString2String(m.env(), context_class_jstring);
     }
@@ -223,12 +228,12 @@ class JavaPIEProjectedDefaultContext : public JavaPIEProjectedContext<FRAG_T> {
 
  protected:
   const char* evalDescriptor() override {
-    return "(Lcom/alibaba/graphscope/fragment/ArrowProjectedFragment;"
+    return "(Lcom/alibaba/graphscope/fragment/IFragment;"
            "Lcom/alibaba/graphscope/parallel/DefaultMessageManager;"
            "Lcom/alibaba/fastjson/JSONObject;)V";
   }
-  const char* getPropertyCtxObjBaseClazNameDesc() override {
-    return "(Lcom/alibaba/graphscope/context/ProjectedDefaultContextBase;)"
+  const char* getSimpleCtxObjBaseClzNameDesc() override {
+    return "(Lcom/alibaba/graphscope/context/ContextBase;)"
            "Ljava/lang/String;";
   }
 };
@@ -250,12 +255,12 @@ class JavaPIEProjectedParallelContext : public JavaPIEProjectedContext<FRAG_T> {
 
  protected:
   const char* evalDescriptor() override {
-    return "(Lcom/alibaba/graphscope/fragment/ArrowProjectedFragment;"
+    return "(Lcom/alibaba/graphscope/fragment/IFragment;"
            "Lcom/alibaba/graphscope/parallel/ParallelMessageManager;"
            "Lcom/alibaba/fastjson/JSONObject;)V";
   }
-  const char* getPropertyCtxObjBaseClazNameDesc() override {
-    return "(Lcom/alibaba/graphscope/context/ProjectedParallelContextBase;)"
+  const char* getSimpleCtxObjBaseClzNameDesc() override {
+    return "(Lcom/alibaba/graphscope/context/ContextBase;)"
            "Ljava/lang/String;";
   }
 };

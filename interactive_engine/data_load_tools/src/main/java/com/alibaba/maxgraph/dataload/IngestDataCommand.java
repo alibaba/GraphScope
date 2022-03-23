@@ -11,7 +11,7 @@ public class IngestDataCommand extends DataCommand {
     }
 
     public void run() {
-        Client client = new Client(graphEndpoint, "");
+        Client client = new Client(graphEndpoint);
         client.ingestData(dataPath);
     }
 }

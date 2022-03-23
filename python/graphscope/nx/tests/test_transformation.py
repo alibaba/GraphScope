@@ -20,8 +20,6 @@ import os
 
 import pytest
 from networkx.exception import NetworkXError
-from networkx.testing.utils import assert_graphs_equal
-from networkx.utils.misc import default_opener
 
 import graphscope
 import graphscope.nx as nx
@@ -368,6 +366,10 @@ class TestGraphTransformation(object):
         assert 618475290624 not in G2  # post node is (label, id) format
         assert ("post", 618475290624) in G
 
+    @pytest.mark.skipif(
+        os.environ.get("DEPLOYMENT", None) == "standalone",
+        reason="FIXME(weibin): ci runner failed",
+    )
     def test_report_methods_on_copy_on_write_strategy(self):
         G = self.NXGraph(self.multi_label_g, default_label="person")
         assert G.graph_type == graph_def_pb2.ARROW_PROPERTY
@@ -448,7 +450,8 @@ class TestGraphTransformation(object):
 
     def test_str_oid_gs_to_nx(self):
         g = self.str_oid_g
-        nx_g = self.NXGraph(g)
+        nx_g = self.NXGraph(g, default_label="comment")
+        assert "618475290625" in nx_g
         self.assert_convert_success(g, nx_g)
 
     @pytest.mark.skip(reason="TODO: open after supporting run app on arrow_property")
@@ -522,9 +525,7 @@ class TestGraphProjectTest(object):
     def setup_class(cls):
         cls.NXGraph = nx.Graph
         edgelist = os.path.expandvars("${GS_TEST_DIR}/dynamic/p2p-31_dynamic.edgelist")
-        cls.g = nx.read_edgelist(
-            edgelist, nodetype=int, data=True, create_using=cls.NXGraph
-        )
+        cls.g = nx.read_edgelist(edgelist, nodetype=int, data=True)
         cls.g.add_node(1, vdata_str="kdjfao")
         cls.g.add_node(1, vdata_int=123)
 

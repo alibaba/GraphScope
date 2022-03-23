@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.alibaba.graphscope.parallel;
 
 import static com.alibaba.graphscope.utils.CppClassName.GRAPE_LONG_VERTEX;
@@ -20,6 +21,7 @@ import static com.alibaba.graphscope.utils.CppClassName.GS_PARALLEL_PROPERTY_MES
 import static com.alibaba.graphscope.utils.CppHeaderName.ARROW_FRAGMENT_H;
 import static com.alibaba.graphscope.utils.CppHeaderName.CORE_JAVA_JAVA_MESSAGES_H;
 import static com.alibaba.graphscope.utils.CppHeaderName.CORE_JAVA_TYPE_ALIAS_H;
+import static com.alibaba.graphscope.utils.CppHeaderName.CORE_PARALLEL_PARALLEL_PROPERTY_MESSAGE_MANAGER_H;
 import static com.alibaba.graphscope.utils.CppHeaderName.GRAPE_PARALLEL_MESSAGE_IN_BUFFER_H;
 import static com.alibaba.graphscope.utils.JNILibraryName.JNI_LIBRARY_NAME;
 
@@ -31,26 +33,28 @@ import com.alibaba.fastffi.FFISkip;
 import com.alibaba.fastffi.FFITypeAlias;
 import com.alibaba.graphscope.ds.Vertex;
 import com.alibaba.graphscope.fragment.ArrowFragment;
+import com.alibaba.graphscope.fragment.IFragment;
 import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
 import com.alibaba.graphscope.utils.TriConsumer;
+
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
-/**
- * As PropertyParalleMessager.h has not much difference from ParallelMessageManager, here will use
- * ParallelMessageManager.h as underlying implementation.
- */
+/** As PropertyParalleMessager.h has not much difference from ParallelMessageManager. */
 @FFIGen(library = JNI_LIBRARY_NAME)
 @FFITypeAlias(GS_PARALLEL_PROPERTY_MESSAGE_MANAGER)
 @CXXHead({
+    CORE_PARALLEL_PARALLEL_PROPERTY_MESSAGE_MANAGER_H,
     GRAPE_PARALLEL_MESSAGE_IN_BUFFER_H,
     ARROW_FRAGMENT_H,
     CORE_JAVA_TYPE_ALIAS_H,
-    CORE_JAVA_JAVA_MESSAGES_H
+    CORE_JAVA_JAVA_MESSAGES_H,
+    CORE_PARALLEL_PARALLEL_PROPERTY_MESSAGE_MANAGER_H
 })
 public interface ParallelPropertyMessageManager extends MessageManagerBase {
+
     @FFINameAlias("InitChannels")
     void initChannels(int channel_num);
 
@@ -68,7 +72,6 @@ public interface ParallelPropertyMessageManager extends MessageManagerBase {
      * @param vertex query vertex.
      * @param channel_id message channel id.
      * @param <FRAG_T> fragment type.
-     * @param unused unused variable for allowing method overloading in generated code.
      */
     @FFINameAlias("SyncStateOnOuterVertex")
     <FRAG_T extends ArrowFragment, @FFISkip OID> void syncStateOnOuterVertexNoMsg(
@@ -104,13 +107,14 @@ public interface ParallelPropertyMessageManager extends MessageManagerBase {
     @FFINameAlias("GetMessages")
     boolean getMessageInBuffer(@CXXReference MessageInBuffer buf);
 
-    default <FRAG_T, MSG_T> void parallelProcess(
+    default <FRAG_T extends IFragment, MSG_T, @FFISkip VDATA_T> void parallelProcess(
             FRAG_T frag,
             int vertexLabelId,
             int threadNum,
             ExecutorService executor,
             Supplier<MSG_T> msgSupplier,
-            TriConsumer<Vertex<Long>, MSG_T, Integer> consumer) {
+            TriConsumer<Vertex<Long>, MSG_T, Integer> consumer,
+            @FFISkip VDATA_T unused) {
         CountDownLatch countDownLatch = new CountDownLatch(threadNum);
         MessageInBuffer.Factory bufferFactory = FFITypeFactoryhelper.newMessageInBuffer();
         int chunkSize = 1024;
@@ -125,11 +129,10 @@ public interface ParallelPropertyMessageManager extends MessageManagerBase {
                             MSG_T msg = msgSupplier.get();
                             boolean result;
                             while (true) {
-                                synchronized (ParallelMessageManager.class) {
-                                    result = getMessageInBuffer(messageInBuffer);
-                                }
+                                result = getMessageInBuffer(messageInBuffer);
+
                                 if (result) {
-                                    while (messageInBuffer.getMessage(frag, vertex, msg)) {
+                                    while (messageInBuffer.getMessage(frag, vertex, msg, unused)) {
                                         consumer.accept(vertex, msg, vertexLabelId);
                                     }
                                 } else {
@@ -159,12 +162,13 @@ public interface ParallelPropertyMessageManager extends MessageManagerBase {
      * @param msgSupplier lambda for msg creation.
      * @param consumer consumer.
      */
-    default <FRAG_T, MSG_T> void parallelProcess(
+    default <FRAG_T extends ArrowFragment, MSG_T, @FFISkip VDATA_T> void parallelProcess(
             FRAG_T frag,
             int threadNum,
             ExecutorService executor,
             Supplier<MSG_T> msgSupplier,
-            BiConsumer<Vertex<Long>, MSG_T> consumer) {
+            BiConsumer<Vertex<Long>, MSG_T> consumer,
+            @FFISkip VDATA_T unused) {
         CountDownLatch countDownLatch = new CountDownLatch(threadNum);
         MessageInBuffer.Factory bufferFactory = FFITypeFactoryhelper.newMessageInBuffer();
         for (int tid = 0; tid < threadNum; ++tid) {
@@ -178,9 +182,11 @@ public interface ParallelPropertyMessageManager extends MessageManagerBase {
                             MSG_T msg = msgSupplier.get();
                             boolean result;
                             while (true) {
+                                // not need for synchronization
                                 result = getMessageInBuffer(messageInBuffer);
+
                                 if (result) {
-                                    while (messageInBuffer.getMessage(frag, vertex, msg)) {
+                                    while (messageInBuffer.getMessage(frag, vertex, msg, unused)) {
                                         consumer.accept(vertex, msg);
                                     }
                                 } else {

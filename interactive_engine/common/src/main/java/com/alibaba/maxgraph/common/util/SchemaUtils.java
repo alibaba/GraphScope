@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,6 +17,7 @@ package com.alibaba.maxgraph.common.util;
 
 import com.alibaba.maxgraph.compiler.api.schema.*;
 import com.google.common.collect.Sets;
+
 import org.apache.tinkerpop.gremlin.structure.T;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +28,12 @@ import java.util.stream.Collectors;
 
 public class SchemaUtils {
     private static final Logger logger = LoggerFactory.getLogger(SchemaUtils.class);
-    private static final Set<String> tokenNameList = Sets.newHashSet(T.label.getAccessor(), T.id.getAccessor(), T.key.getAccessor(), T.value.getAccessor());
+    private static final Set<String> tokenNameList =
+            Sets.newHashSet(
+                    T.label.getAccessor(),
+                    T.id.getAccessor(),
+                    T.key.getAccessor(),
+                    T.value.getAccessor());
 
     /**
      * Get primary key list for the given vertex type
@@ -36,7 +42,9 @@ public class SchemaUtils {
      * @return The primary key id list
      */
     public static List<Integer> getVertexPrimaryKeyList(GraphVertex vertexType) {
-        return vertexType.getPrimaryKeyConstraint().getPrimaryKeyList().stream().map(v -> vertexType.getProperty(v).getId()).collect(Collectors.toList());
+        return vertexType.getPrimaryKeyConstraint().getPrimaryKeyList().stream()
+                .map(v -> vertexType.getProperty(v).getId())
+                .collect(Collectors.toList());
     }
 
     public static List<Integer> getEdgePrimaryKeyList(GraphEdge edgeType) {
@@ -45,7 +53,8 @@ public class SchemaUtils {
             return null;
         }
         return primaryKeyConstraint.getPrimaryKeyList().stream()
-                .map(v -> edgeType.getProperty(v).getId()).collect(Collectors.toList());
+                .map(v -> edgeType.getProperty(v).getId())
+                .collect(Collectors.toList());
     }
 
     /**

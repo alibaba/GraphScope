@@ -18,8 +18,8 @@ sys.path.append(os.path.abspath('./'))
 # -- Project information -----------------------------------------------------
 
 project = 'GraphScope'
-copyright = '2020-2023, Damo Academy, Alibaba Inc.'
-author = 'Damo Academy, Alibaba Inc.'
+copyright = '2020-2023, DAMO Academy, Alibaba Inc.'
+author = 'DAMO Academy, Alibaba Inc.'
 
 master_doc = 'index'
 
@@ -48,7 +48,7 @@ breathe_debug_trace_directives = True
 breathe_debug_trace_doxygen_ids = True
 breathe_debug_trace_qualification = True
 
-autodoc_mock_imports = ['vineyard', "graphlearn"]
+autodoc_mock_imports = ["graphlearn"]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -64,6 +64,16 @@ exclude_patterns = []
 # a list of builtin themes.
 #
 html_theme = 'sphinx_rtd_theme'
+
+# replace "view page source" with "edit on github" in Read The Docs theme
+#  * https://github.com/readthedocs/sphinx_rtd_theme/issues/529
+html_context = {
+    'display_github': True,
+    'github_user': 'alibaba',
+    'github_repo': 'graphscope',
+    'github_version': 'main/docs/',
+    'theme_vcs_pageview_mode': 'edit'
+}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

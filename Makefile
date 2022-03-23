@@ -23,11 +23,11 @@ all: graphscope
 graphscope: install
 
 .PHONY: gsruntime-image
-gsruntime:
+gsruntime-image:
 	$(MAKE) -C $(WORKING_DIR)/k8s/ gsruntime-image VERSION=$(VERSION)
 
 .PHONY: gsvineyard-image
-gsvineyard:
+gsvineyard-image:
 	$(MAKE) -C $(WORKING_DIR)/k8s/ gsvineyard-image VERSION=$(VERSION)
 
 .PHONY: graphscope-image
@@ -95,7 +95,6 @@ ifeq (${ENABLE_JAVA_SDK}, ON)
 	sudo cp ${WORKING_DIR}/analytical_engine/java/grape-runtime/target/native/libgrape-jni.so ${INSTALL_PREFIX}/lib/ && \
 	sudo cp ${WORKING_DIR}/analytical_engine/java/grape-runtime/target/grape-runtime-0.1-shaded.jar ${INSTALL_PREFIX}/lib/ && \
 	sudo mkdir -p ${INSTALL_PREFIX}/conf/ && \
-	sudo cp ${WORKING_DIR}/analytical_engine/java/compile-commands.txt ${INSTALL_PREFIX}/conf/
 	sudo cp ${WORKING_DIR}/analytical_engine/java/grape_jvm_opts ${INSTALL_PREFIX}/conf/
 endif
 
@@ -116,7 +115,6 @@ gie:
 	mkdir -p $(WORKING_DIR)/.install_prefix && \
 	tar -xf $(WORKING_DIR)/interactive_engine/assembly/target/maxgraph-assembly-0.0.1-SNAPSHOT.tar.gz --strip-components 1 -C $(WORKING_DIR)/.install_prefix && \
 	cp $(WORKING_DIR)/interactive_engine/executor/target/$(BUILD_TYPE)/executor $(WORKING_DIR)/.install_prefix/bin/executor && \
-	cp $(WORKING_DIR)/interactive_engine/executor/target/$(BUILD_TYPE)/gaia_executor $(WORKING_DIR)/.install_prefix/bin/gaia_executor && \
 	sudo cp -r $(WORKING_DIR)/.install_prefix/* $(INSTALL_PREFIX) && \
 	rm -fr $(WORKING_DIR)/.install_prefix
 
@@ -161,16 +159,16 @@ test: unittest minitest k8stest
 .PHONY: unittest
 unittest:
 	cd $(WORKING_DIR)/python && \
-	python3 -m pytest -s -v ./graphscope/tests/unittest
+	python3 -m pytest --cov=graphscope --cov-config=.coveragerc --cov-report=xml --cov-report=term -s -v ./graphscope/tests/unittest
 
 .PHONY: minitest
 minitest:
 	cd $(WORKING_DIR)/python && \
 	pip3 install tensorflow==2.5.2 && \
-	python3 -m pytest -s -v ./graphscope/tests/minitest
+	python3 -m pytest --cov=graphscope --cov-config=.coveragerc --cov-report=xml --cov-report=term -s -v ./graphscope/tests/minitest
 
 .PHONY: k8stest
 k8stest:
 	cd $(WORKING_DIR)/python && \
 	pip3 install tensorflow==2.5.2 && \
-	python3 -m pytest -s -v ./graphscope/tests/kubernetes
+	python3 -m pytest --cov=graphscope --cov-config=.coveragerc --cov-report=xml --cov-report=term -s -v ./graphscope/tests/kubernetes

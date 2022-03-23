@@ -13,13 +13,14 @@
  */
 package com.alibaba.maxgraph.compiler.cost;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.alibaba.maxgraph.compiler.tree.TreeNode;
 import com.google.common.collect.Maps;
+
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Map;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 public class CostMappingManager {
     private Map<String, String> valueParentList = Maps.newHashMap();

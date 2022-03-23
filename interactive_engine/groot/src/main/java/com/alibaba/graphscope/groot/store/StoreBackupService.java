@@ -17,6 +17,7 @@ package com.alibaba.graphscope.groot.store;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.maxgraph.proto.groot.*;
+
 import io.grpc.stub.StreamObserver;
 
 import java.util.HashMap;
@@ -31,70 +32,18 @@ public class StoreBackupService extends StoreBackupGrpc.StoreBackupImplBase {
     }
 
     @Override
-    public void createStoreBackup(CreateStoreBackupRequest request,
-                                  StreamObserver<CreateStoreBackupResponse> responseObserver) {
-        this.backupAgent.createNewStoreBackup(request.getGlobalBackupId(), new CompletionCallback<StoreBackupId>() {
-            @Override
-            public void onCompleted(StoreBackupId res) {
-                responseObserver.onNext(CreateStoreBackupResponse.newBuilder().setStoreBackupId(res.toProto()).build());
-                responseObserver.onCompleted();
-            }
-
-            @Override
-            public void onError(Throwable t) {
-                responseObserver.onError(t);
-            }
-        });
-    }
-
-    @Override
-    public void verifyStoreBackup(VerifyStoreBackupRequest request,
-                                  StreamObserver<VerifyStoreBackupResponse> responseObserver) {
-        this.backupAgent.verifyStoreBackup(StoreBackupId.parseProto(request.getStoreBackupId()), new CompletionCallback<Void>() {
-            @Override
-            public void onCompleted(Void res) {
-                responseObserver.onNext(VerifyStoreBackupResponse.newBuilder().build());
-                responseObserver.onCompleted();
-            }
-
-            @Override
-            public void onError(Throwable t) {
-                responseObserver.onError(t);
-            }
-        });
-    }
-
-    @Override
-    public void clearUnavailableStoreBackups(ClearUnavailableStoreBackupsRequest request,
-                                        StreamObserver<ClearUnavailableStoreBackupsResponse> responseObserver) {
-        Map<Integer, List<Integer>> readyPartitionBackupIds = new HashMap<>(request.getPartitionToReadyBackupIdsCount());
-        for (Map.Entry<Integer, PartitionBackupIdListPb> entry : request.getPartitionToReadyBackupIdsMap().entrySet()) {
-            readyPartitionBackupIds.put(entry.getKey(), entry.getValue().getReadyPartitionBackupIdsList());
-        }
-        this.backupAgent.clearUnavailableStoreBackups(readyPartitionBackupIds, new CompletionCallback<Void>() {
-            @Override
-            public void onCompleted(Void res) {
-                responseObserver.onNext(ClearUnavailableStoreBackupsResponse.newBuilder().build());
-                responseObserver.onCompleted();
-            }
-
-            @Override
-            public void onError(Throwable t) {
-                responseObserver.onError(t);
-            }
-        });
-    }
-
-    @Override
-    public void restoreFromStoreBackup(RestoreFromStoreBackupRequest request,
-                                       StreamObserver<RestoreFromStoreBackupResponse> responseObserver) {
-        this.backupAgent.restoreFromStoreBackup(
-                StoreBackupId.parseProto(request.getStoreBackupId()),
-                request.getRestoreRootPath(),
-                new CompletionCallback<Void>() {
+    public void createStoreBackup(
+            CreateStoreBackupRequest request,
+            StreamObserver<CreateStoreBackupResponse> responseObserver) {
+        this.backupAgent.createNewStoreBackup(
+                request.getGlobalBackupId(),
+                new CompletionCallback<StoreBackupId>() {
                     @Override
-                    public void onCompleted(Void res) {
-                        responseObserver.onNext(RestoreFromStoreBackupResponse.newBuilder().build());
+                    public void onCompleted(StoreBackupId res) {
+                        responseObserver.onNext(
+                                CreateStoreBackupResponse.newBuilder()
+                                        .setStoreBackupId(res.toProto())
+                                        .build());
                         responseObserver.onCompleted();
                     }
 
@@ -102,8 +51,76 @@ public class StoreBackupService extends StoreBackupGrpc.StoreBackupImplBase {
                     public void onError(Throwable t) {
                         responseObserver.onError(t);
                     }
-                }
-        );
+                });
     }
 
+    @Override
+    public void verifyStoreBackup(
+            VerifyStoreBackupRequest request,
+            StreamObserver<VerifyStoreBackupResponse> responseObserver) {
+        this.backupAgent.verifyStoreBackup(
+                StoreBackupId.parseProto(request.getStoreBackupId()),
+                new CompletionCallback<Void>() {
+                    @Override
+                    public void onCompleted(Void res) {
+                        responseObserver.onNext(VerifyStoreBackupResponse.newBuilder().build());
+                        responseObserver.onCompleted();
+                    }
+
+                    @Override
+                    public void onError(Throwable t) {
+                        responseObserver.onError(t);
+                    }
+                });
+    }
+
+    @Override
+    public void clearUnavailableStoreBackups(
+            ClearUnavailableStoreBackupsRequest request,
+            StreamObserver<ClearUnavailableStoreBackupsResponse> responseObserver) {
+        Map<Integer, List<Integer>> readyPartitionBackupIds =
+                new HashMap<>(request.getPartitionToReadyBackupIdsCount());
+        for (Map.Entry<Integer, PartitionBackupIdListPb> entry :
+                request.getPartitionToReadyBackupIdsMap().entrySet()) {
+            readyPartitionBackupIds.put(
+                    entry.getKey(), entry.getValue().getReadyPartitionBackupIdsList());
+        }
+        this.backupAgent.clearUnavailableStoreBackups(
+                readyPartitionBackupIds,
+                new CompletionCallback<Void>() {
+                    @Override
+                    public void onCompleted(Void res) {
+                        responseObserver.onNext(
+                                ClearUnavailableStoreBackupsResponse.newBuilder().build());
+                        responseObserver.onCompleted();
+                    }
+
+                    @Override
+                    public void onError(Throwable t) {
+                        responseObserver.onError(t);
+                    }
+                });
+    }
+
+    @Override
+    public void restoreFromStoreBackup(
+            RestoreFromStoreBackupRequest request,
+            StreamObserver<RestoreFromStoreBackupResponse> responseObserver) {
+        this.backupAgent.restoreFromStoreBackup(
+                StoreBackupId.parseProto(request.getStoreBackupId()),
+                request.getRestoreRootPath(),
+                new CompletionCallback<Void>() {
+                    @Override
+                    public void onCompleted(Void res) {
+                        responseObserver.onNext(
+                                RestoreFromStoreBackupResponse.newBuilder().build());
+                        responseObserver.onCompleted();
+                    }
+
+                    @Override
+                    public void onError(Throwable t) {
+                        responseObserver.onError(t);
+                    }
+                });
+    }
 }

@@ -18,7 +18,7 @@ package com.alibaba.graphscope.ds;
 
 import com.alibaba.fastffi.FFITypeFactory;
 import com.alibaba.graphscope.ds.VertexRange.Factory;
-import java.util.concurrent.atomic.AtomicInteger;
+
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -31,24 +31,7 @@ public class VertexRangeTest {
     public void test1() {
         VertexRange<Long> vertices = factory.create();
         vertices.SetRange(0L, 101L);
-        int expectedSum = 5050;
-        int cnt = 0;
-        for (Vertex<Long> vertex : vertices) {
-            cnt += vertex.GetValue();
-        }
-        Assert.assertEquals(expectedSum, cnt);
-    }
-
-    @Test
-    public void tes2() {
-        VertexRange<Long> vertices = factory.create();
-        vertices.SetRange(0L, 101L);
-        int expectedSum = 5050;
-        AtomicInteger cnt = new AtomicInteger(0);
-        vertices.forEach(
-                (vertex) -> {
-                    cnt.getAndAdd(vertex.GetValue().intValue());
-                });
-        Assert.assertEquals(expectedSum, cnt.get());
+        Assert.assertEquals(0L, vertices.beginValue().longValue());
+        Assert.assertEquals(101L, vertices.endValue().longValue());
     }
 }

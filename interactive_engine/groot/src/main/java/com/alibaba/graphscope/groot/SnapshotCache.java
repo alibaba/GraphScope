@@ -14,6 +14,7 @@
 package com.alibaba.graphscope.groot;
 
 import com.alibaba.graphscope.groot.schema.GraphDef;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

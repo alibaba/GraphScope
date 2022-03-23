@@ -19,19 +19,21 @@ import com.alibaba.maxgraph.compiler.api.schema.SchemaFetcher;
 import com.alibaba.maxgraph.iterator.IteratorList;
 import com.alibaba.maxgraph.iterator.function.EdgeResponseFunction;
 import com.alibaba.maxgraph.iterator.function.VertexResponseFunction;
+import com.alibaba.maxgraph.proto.GremlinQuery.*;
 import com.alibaba.maxgraph.proto.GremlinServiceGrpc;
 import com.alibaba.maxgraph.proto.StoreApi;
 import com.alibaba.maxgraph.proto.StoreServiceGrpc;
 import com.alibaba.maxgraph.sdkcommon.graph.ElementId;
-import com.alibaba.maxgraph.proto.GremlinQuery.*;
 import com.alibaba.maxgraph.structure.Edge;
 import com.alibaba.maxgraph.structure.Vertex;
 import com.alibaba.maxgraph.structure.graph.MaxGraph;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+
 import io.grpc.ManagedChannel;
 import io.grpc.netty.NegotiationType;
 import io.grpc.netty.NettyChannelBuilder;
+
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.*;

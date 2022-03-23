@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,41 +15,42 @@
  */
 package com.alibaba.maxgraph.compiler.utils;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.alibaba.maxgraph.Message;
 import com.alibaba.maxgraph.Message.LogicalCompare;
 import com.alibaba.maxgraph.common.util.SchemaUtils;
-import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.compiler.api.schema.DataType;
+import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
+import com.alibaba.maxgraph.compiler.optimizer.CompilerConfig;
+import com.alibaba.maxgraph.compiler.optimizer.OperatorListManager;
+import com.alibaba.maxgraph.compiler.prepare.store.PrepareCompareEntity;
+import com.alibaba.maxgraph.compiler.prepare.store.PrepareEntity;
 import com.alibaba.maxgraph.compiler.tree.TreeConstants;
+import com.alibaba.maxgraph.compiler.tree.value.ElementType;
+import com.alibaba.maxgraph.compiler.tree.value.ElementValueType;
+import com.alibaba.maxgraph.compiler.tree.value.ListValueType;
+import com.alibaba.maxgraph.compiler.tree.value.MapEntryValueType;
+import com.alibaba.maxgraph.compiler.tree.value.MapValueType;
+import com.alibaba.maxgraph.compiler.tree.value.ValueType;
+import com.alibaba.maxgraph.compiler.tree.value.VarietyValueType;
 import com.alibaba.maxgraph.sdkcommon.compiler.custom.CustomPredicate;
 import com.alibaba.maxgraph.sdkcommon.compiler.custom.ListMatchType;
 import com.alibaba.maxgraph.sdkcommon.compiler.custom.ListPredicate;
 import com.alibaba.maxgraph.sdkcommon.compiler.custom.MatchType;
-import com.alibaba.maxgraph.sdkcommon.compiler.custom.PredicateType;
 import com.alibaba.maxgraph.sdkcommon.compiler.custom.NegatePredicate;
+import com.alibaba.maxgraph.sdkcommon.compiler.custom.PredicateType;
 import com.alibaba.maxgraph.sdkcommon.compiler.custom.RegexPredicate;
 import com.alibaba.maxgraph.sdkcommon.compiler.custom.StringPredicate;
 import com.alibaba.maxgraph.sdkcommon.compiler.custom.dim.DimMatchType;
 import com.alibaba.maxgraph.sdkcommon.compiler.custom.dim.DimPredicate;
 import com.alibaba.maxgraph.sdkcommon.compiler.custom.dim.DimTable;
-import com.alibaba.maxgraph.compiler.tree.value.ElementType;
-import com.alibaba.maxgraph.compiler.tree.value.ElementValueType;
-import com.alibaba.maxgraph.compiler.tree.value.MapEntryValueType;
-import com.alibaba.maxgraph.compiler.optimizer.CompilerConfig;
-import com.alibaba.maxgraph.compiler.optimizer.OperatorListManager;
-import com.alibaba.maxgraph.compiler.tree.value.ListValueType;
-import com.alibaba.maxgraph.compiler.tree.value.MapValueType;
-import com.alibaba.maxgraph.compiler.tree.value.ValueType;
-import com.alibaba.maxgraph.compiler.tree.value.VarietyValueType;
-
-import com.alibaba.maxgraph.compiler.prepare.store.PrepareCompareEntity;
-import com.alibaba.maxgraph.compiler.prepare.store.PrepareEntity;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
-import org.apache.commons.lang3.StringUtils;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.tinkerpop.gremlin.process.traversal.Compare;
 import org.apache.tinkerpop.gremlin.process.traversal.Contains;
 import org.apache.tinkerpop.gremlin.process.traversal.Order;
@@ -69,9 +70,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
-
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Expression/Function related util
@@ -93,7 +91,14 @@ public class MaxGraphUtils {
             CompilerConfig compilerConfig) {
         List<LogicalCompare> logicalCompareList = Lists.newArrayList();
         for (HasContainer hasContainer : hasContainers) {
-            parseLogicalCompare(hasContainer.getKey(), hasContainer.getPredicate(), schema, logicalCompareList, operatorListManager, labelIndexMap, compilerConfig);
+            parseLogicalCompare(
+                    hasContainer.getKey(),
+                    hasContainer.getPredicate(),
+                    schema,
+                    logicalCompareList,
+                    operatorListManager,
+                    labelIndexMap,
+                    compilerConfig);
         }
 
         return logicalCompareList;
@@ -107,7 +112,8 @@ public class MaxGraphUtils {
      * @param schema    The graph schema
      */
     private static void parseLogicalCompare(
-            String key, P<?> predicate,
+            String key,
+            P<?> predicate,
             GraphSchema schema,
             List<LogicalCompare> logicalCompareList,
             OperatorListManager operatorListManager,
@@ -119,15 +125,29 @@ public class MaxGraphUtils {
             AndP andP = AndP.class.cast(predicate);
             List<P> predicateList = andP.getPredicates();
             for (P p : predicateList) {
-                parseLogicalCompare(key, p, schema, logicalCompareList, operatorListManager, labelIndexMap, compilerConfig);
+                parseLogicalCompare(
+                        key,
+                        p,
+                        schema,
+                        logicalCompareList,
+                        operatorListManager,
+                        labelIndexMap,
+                        compilerConfig);
             }
         } else {
             Object value = parsePredicateValue(predicate);
-            BiPredicate biPredicate = null == predicate ? null : (predicate instanceof CustomPredicate ? null : predicate.getBiPredicate());
-            boolean isNegate = predicate instanceof NegatePredicate && ((NegatePredicate) predicate).isNegate();
+            BiPredicate biPredicate =
+                    null == predicate
+                            ? null
+                            : (predicate instanceof CustomPredicate
+                                    ? null
+                                    : predicate.getBiPredicate());
+            boolean isNegate =
+                    predicate instanceof NegatePredicate
+                            && ((NegatePredicate) predicate).isNegate();
             LogicalCompare.Builder builder = LogicalCompare.newBuilder();
-            if (value != null &&
-                    (OperatorListManager.isPrepareValue(key)
+            if (value != null
+                    && (OperatorListManager.isPrepareValue(key)
                             || OperatorListManager.isPrepareValue(value.toString()))) {
                 int prepareKeyIndex = PrepareEntity.CONSTANT_INDEX;
                 if (OperatorListManager.isPrepareValue(key)) {
@@ -144,7 +164,12 @@ public class MaxGraphUtils {
                 int argumentIndex = operatorListManager.getAndIncrementArgumentIndex();
                 builder.setIndex(argumentIndex);
 
-                PrepareCompareEntity prepareCompareEntity = new PrepareCompareEntity(argumentIndex, prepareKeyIndex, prepareValueIndex, parseCompareType(predicate, biPredicate));
+                PrepareCompareEntity prepareCompareEntity =
+                        new PrepareCompareEntity(
+                                argumentIndex,
+                                prepareKeyIndex,
+                                prepareValueIndex,
+                                parseCompareType(predicate, biPredicate));
                 prepareCompareEntity.setNegate(isNegate);
                 if (prepareKeyIndex == PrepareEntity.CONSTANT_INDEX) {
                     prepareCompareEntity.setCompareKey(parsePropIdByKey(key, schema));
@@ -159,10 +184,19 @@ public class MaxGraphUtils {
                     builder.setPropId(propId);
                 }
                 value = parsePropLabelValue(key, schema, value);
-                Message.VariantType variantType = null == value ? Message.VariantType.VT_UNKNOWN : parseVariantType(value.getClass(), value);
-                Message.Value.Builder valueBuilder = null == value ? Message.Value.newBuilder() : createValueFromType(value, variantType, compilerConfig);
+                Message.VariantType variantType =
+                        null == value
+                                ? Message.VariantType.VT_UNKNOWN
+                                : parseVariantType(value.getClass(), value);
+                Message.Value.Builder valueBuilder =
+                        null == value
+                                ? Message.Value.newBuilder()
+                                : createValueFromType(value, variantType, compilerConfig);
                 valueBuilder.setBoolFlag(isNegate);
-                builder.setCompare((null == value && null == predicate) ? Message.CompareType.EXIST : parseCompareType(predicate, biPredicate))
+                builder.setCompare(
+                                (null == value && null == predicate)
+                                        ? Message.CompareType.EXIST
+                                        : parseCompareType(predicate, biPredicate))
                         .setValue(valueBuilder.build())
                         .setType(variantType);
             }
@@ -177,25 +211,31 @@ public class MaxGraphUtils {
             predicateType = CustomPredicate.class.cast(predicate).getPredicateType();
         }
         switch (predicateType) {
-            case REGEX: {
-                return RegexPredicate.class.cast(predicate).getRegex();
-            }
-            case STRING: {
-                return StringPredicate.class.cast(predicate).getContent();
-            }
-            case LIST: {
-                return ListPredicate.class.cast(predicate).getListValue();
-            }
-            case DIM: {
-                return DimPredicate.class.cast(predicate).getDimTable();
-            }
-            default: {
-                return predicate == null ? null : predicate.getValue();
-            }
+            case REGEX:
+                {
+                    return RegexPredicate.class.cast(predicate).getRegex();
+                }
+            case STRING:
+                {
+                    return StringPredicate.class.cast(predicate).getContent();
+                }
+            case LIST:
+                {
+                    return ListPredicate.class.cast(predicate).getListValue();
+                }
+            case DIM:
+                {
+                    return DimPredicate.class.cast(predicate).getDimTable();
+                }
+            default:
+                {
+                    return predicate == null ? null : predicate.getValue();
+                }
         }
     }
 
-    public static int parsePropLabelIdByKey(String key, GraphSchema schema, Map<String, Integer> labelIndexMap) {
+    public static int parsePropLabelIdByKey(
+            String key, GraphSchema schema, Map<String, Integer> labelIndexMap) {
         try {
             return parsePropIdByKeyOption(key, schema);
         } catch (Exception e) {
@@ -207,7 +247,8 @@ public class MaxGraphUtils {
         }
     }
 
-    public static List<Integer> parsePropLabelIdByKey(Collection<String> keyList, GraphSchema schema, Map<String, Integer> labelIndexMap) {
+    public static List<Integer> parsePropLabelIdByKey(
+            Collection<String> keyList, GraphSchema schema, Map<String, Integer> labelIndexMap) {
         List<Integer> keyIndexList = Lists.newArrayList();
         for (String keyVal : keyList) {
             keyIndexList.add(parsePropLabelIdByKey(keyVal, schema, labelIndexMap));
@@ -222,7 +263,9 @@ public class MaxGraphUtils {
             if (value instanceof Collection) {
                 resultValue = Lists.newArrayList();
                 for (Object labelObject : Collection.class.cast(value)) {
-                    List.class.cast(resultValue).add(schema.getElement(String.class.cast(labelObject)).getLabelId());
+                    List.class
+                            .cast(resultValue)
+                            .add(schema.getElement(String.class.cast(labelObject)).getLabelId());
                 }
             } else {
                 resultValue = schema.getElement(String.class.cast(value)).getLabelId();
@@ -250,7 +293,10 @@ public class MaxGraphUtils {
         String strValue = object.toString();
         long value;
         if (StringUtils.contains(strValue, ".")) {
-            value = Long.parseLong(StringUtils.substring(strValue, StringUtils.indexOf(strValue, ".") + 1));
+            value =
+                    Long.parseLong(
+                            StringUtils.substring(
+                                    strValue, StringUtils.indexOf(strValue, ".") + 1));
         } else {
             value = Long.parseLong(strValue);
         }
@@ -288,9 +334,13 @@ public class MaxGraphUtils {
         if (value instanceof List) {
             List<Object> valueList = List.class.cast(value);
             Object valueObject = valueList.get(0);
-            return Message.VariantType.valueOf("VT_" + StringUtils.upperCase(valueObject.getClass().getSimpleName()) + "_LIST");
+            return Message.VariantType.valueOf(
+                    "VT_"
+                            + StringUtils.upperCase(valueObject.getClass().getSimpleName())
+                            + "_LIST");
         } else {
-            return Message.VariantType.valueOf("VT_" + StringUtils.upperCase(valueClazz.getSimpleName()));
+            return Message.VariantType.valueOf(
+                    "VT_" + StringUtils.upperCase(valueClazz.getSimpleName()));
         }
     }
 
@@ -300,7 +350,8 @@ public class MaxGraphUtils {
      * @param biPredicate The given BiPredicate instance
      * @return The CompareType result
      */
-    public static Message.CompareType parseCompareType(Predicate predicate, BiPredicate<?, ?> biPredicate) {
+    public static Message.CompareType parseCompareType(
+            Predicate predicate, BiPredicate<?, ?> biPredicate) {
         if (predicate instanceof RegexPredicate) {
             return Message.CompareType.REGEX;
         } else if (predicate instanceof StringPredicate) {
@@ -330,7 +381,8 @@ public class MaxGraphUtils {
      * @param variantType The value type
      * @return The byte[] result
      */
-    public static Message.Value.Builder createValueFromType(Object value, Message.VariantType variantType, CompilerConfig compilerConfig) {
+    public static Message.Value.Builder createValueFromType(
+            Object value, Message.VariantType variantType, CompilerConfig compilerConfig) {
         Message.Value.Builder valueBuilder = Message.Value.newBuilder();
         switch (variantType) {
             case VT_INT:
@@ -358,7 +410,8 @@ public class MaxGraphUtils {
                 valueBuilder.addAllIntValueList((List<Integer>) value);
                 break;
             default:
-                throw new UnsupportedOperationException("value=>" + value + " type=>" + variantType.toString());
+                throw new UnsupportedOperationException(
+                        "value=>" + value + " type=>" + variantType.toString());
         }
 
         return valueBuilder;
@@ -371,16 +424,18 @@ public class MaxGraphUtils {
      * @param functionRequirementList The given function requirements
      * @return The operator type
      */
-//    public static QueryFlowOuterClass.OperatorType parseOperatorType(FunctionType functionType, Set<FunctionRequirement> functionRequirementList) {
-//        String operatorTypeValue = functionType.toString();
-//        if (null != functionRequirementList && !functionRequirementList.isEmpty()) {
-//            List<FunctionRequirement> functionRequirements = Lists.newArrayList(functionRequirementList);
-//            Collections.sort(functionRequirements);
-//            operatorTypeValue = operatorTypeValue + "_" + org.apache.commons.lang.StringUtils.join(functionRequirements, "_");
-//        }
-//        return QueryFlowOuterClass.OperatorType.valueOf(operatorTypeValue);
-//    }
-
+    //    public static QueryFlowOuterClass.OperatorType parseOperatorType(FunctionType
+    // functionType, Set<FunctionRequirement> functionRequirementList) {
+    //        String operatorTypeValue = functionType.toString();
+    //        if (null != functionRequirementList && !functionRequirementList.isEmpty()) {
+    //            List<FunctionRequirement> functionRequirements =
+    // Lists.newArrayList(functionRequirementList);
+    //            Collections.sort(functionRequirements);
+    //            operatorTypeValue = operatorTypeValue + "_" +
+    // org.apache.commons.lang.StringUtils.join(functionRequirements, "_");
+    //        }
+    //        return QueryFlowOuterClass.OperatorType.valueOf(operatorTypeValue);
+    //    }
 
     /**
      * Convert pop to pop type in proto
@@ -399,10 +454,12 @@ public class MaxGraphUtils {
      * @param order      The given Comparator
      * @return The result OrderComparator
      */
-    public static Message.OrderComparator.Builder parseOrderComparator(int labelIndex, Order order) {
+    public static Message.OrderComparator.Builder parseOrderComparator(
+            int labelIndex, Order order) {
         Message.OrderComparator.Builder comparatorBuilder = Message.OrderComparator.newBuilder();
         comparatorBuilder.setPropId(labelIndex);
-        comparatorBuilder.setOrderType(Message.OrderType.valueOf(StringUtils.upperCase(order.name())));
+        comparatorBuilder.setOrderType(
+                Message.OrderType.valueOf(StringUtils.upperCase(order.name())));
 
         return comparatorBuilder;
     }
@@ -463,7 +520,8 @@ public class MaxGraphUtils {
      * @param byteString  The value payload
      * @return The property value result
      */
-    public static Object parsePropertyValueResult(Message.VariantType variantType, ByteString byteString) {
+    public static Object parsePropertyValueResult(
+            Message.VariantType variantType, ByteString byteString) {
         ByteBuffer byteBuffer = ByteBuffer.wrap(byteString.toByteArray());
         Object value;
         switch (variantType) {
@@ -482,48 +540,58 @@ public class MaxGraphUtils {
             case VT_DOUBLE:
                 value = byteBuffer.getDouble();
                 break;
-            case VT_INT_LIST: {
-                try {
-                    Message.ListInt listIntValue = Message.ListInt.parseFrom(byteString);
-                    return Lists.newArrayList(listIntValue.getValueList());
-                } catch (InvalidProtocolBufferException e) {
-                    throw new RuntimeException(e);
+            case VT_INT_LIST:
+                {
+                    try {
+                        Message.ListInt listIntValue = Message.ListInt.parseFrom(byteString);
+                        return Lists.newArrayList(listIntValue.getValueList());
+                    } catch (InvalidProtocolBufferException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
-            }
-            case VT_LONG_LIST: {
-                try {
-                    Message.ListLong listLongValue = Message.ListLong.parseFrom(byteString);
-                    return Lists.newArrayList(listLongValue.getValueList());
-                } catch (InvalidProtocolBufferException e) {
-                    throw new RuntimeException(e);
+            case VT_LONG_LIST:
+                {
+                    try {
+                        Message.ListLong listLongValue = Message.ListLong.parseFrom(byteString);
+                        return Lists.newArrayList(listLongValue.getValueList());
+                    } catch (InvalidProtocolBufferException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
-            }
-            case VT_STRING_LIST: {
-                try {
-                    Message.ListString listStringValue = Message.ListString.parseFrom(byteString);
-                    List<String> stringValueList = Lists.newArrayList();
-                    listStringValue.getValueList().asByteStringList().forEach(v -> stringValueList.add(new String(v.toByteArray())));
-                    return stringValueList;
-                } catch (InvalidProtocolBufferException e) {
-                    throw new RuntimeException(e);
+            case VT_STRING_LIST:
+                {
+                    try {
+                        Message.ListString listStringValue =
+                                Message.ListString.parseFrom(byteString);
+                        List<String> stringValueList = Lists.newArrayList();
+                        listStringValue
+                                .getValueList()
+                                .asByteStringList()
+                                .forEach(v -> stringValueList.add(new String(v.toByteArray())));
+                        return stringValueList;
+                    } catch (InvalidProtocolBufferException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
-            }
-            case VT_FLOAT_LIST: {
-                try {
-                    Message.ListFloat listFloatValue = Message.ListFloat.parseFrom(byteString);
-                    return Lists.newArrayList(listFloatValue.getValueList());
-                } catch (InvalidProtocolBufferException e) {
-                    throw new RuntimeException(e);
+            case VT_FLOAT_LIST:
+                {
+                    try {
+                        Message.ListFloat listFloatValue = Message.ListFloat.parseFrom(byteString);
+                        return Lists.newArrayList(listFloatValue.getValueList());
+                    } catch (InvalidProtocolBufferException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
-            }
-            case VT_DOUBLE_LIST: {
-                try {
-                    Message.ListDouble listDoubleValue = Message.ListDouble.parseFrom(byteString);
-                    return Lists.newArrayList(listDoubleValue.getValueList());
-                } catch (InvalidProtocolBufferException e) {
-                    throw new RuntimeException(e);
+            case VT_DOUBLE_LIST:
+                {
+                    try {
+                        Message.ListDouble listDoubleValue =
+                                Message.ListDouble.parseFrom(byteString);
+                        return Lists.newArrayList(listDoubleValue.getValueList());
+                    } catch (InvalidProtocolBufferException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
-            }
             default:
                 throw new UnsupportedOperationException(variantType.toString());
         }
@@ -531,18 +599,22 @@ public class MaxGraphUtils {
         return value;
     }
 
-    private static int parseLabelIdByKeyOption(String labelName, Map<String, Integer> labelIndexMap) {
+    private static int parseLabelIdByKeyOption(
+            String labelName, Map<String, Integer> labelIndexMap) {
         return labelIndexMap.get(labelName);
     }
 
     private static ValueType parseValueTypeFromDataType(Message.VariantType variantType) {
         switch (variantType) {
             case VT_INT_LIST:
-                return new ListValueType(new ElementValueType(ElementType.VALUE, Message.VariantType.VT_INT));
+                return new ListValueType(
+                        new ElementValueType(ElementType.VALUE, Message.VariantType.VT_INT));
             case VT_LONG_LIST:
-                return new ListValueType(new ElementValueType(ElementType.VALUE, Message.VariantType.VT_LONG));
+                return new ListValueType(
+                        new ElementValueType(ElementType.VALUE, Message.VariantType.VT_LONG));
             case VT_STRING_LIST:
-                return new ListValueType(new ElementValueType(ElementType.VALUE, Message.VariantType.VT_STRING));
+                return new ListValueType(
+                        new ElementValueType(ElementType.VALUE, Message.VariantType.VT_STRING));
             default:
                 return new ElementValueType(ElementType.VALUE, variantType);
         }
@@ -552,7 +624,8 @@ public class MaxGraphUtils {
         try {
             Set<DataType> dataTypeSet = SchemaUtils.getPropDataTypeList(propKey, schema);
             if (dataTypeSet.size() != 1) {
-                throw new IllegalArgumentException("invalid data type " + dataTypeSet + " for prop " + propKey);
+                throw new IllegalArgumentException(
+                        "invalid data type " + dataTypeSet + " for prop " + propKey);
             }
             return CompilerUtils.parseVariantFromDataType(dataTypeSet.iterator().next());
         } catch (Exception e) {

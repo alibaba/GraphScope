@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,17 +15,17 @@
  */
 package com.alibaba.maxgraph.compiler.operator;
 
+import static org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__.has;
+import static org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__.hasLabel;
+
 import com.alibaba.maxgraph.sdkcommon.compiler.custom.Text;
+
 import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
 import org.junit.Test;
 
-import static org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__.has;
-import static org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__.hasLabel;
-
 public class FilterOperatorTest extends AbstractOperatorTest {
-    public FilterOperatorTest() throws Exception {
-    }
+    public FilterOperatorTest() throws Exception {}
 
     @Test
     public void testFilterHasPropCase() {
@@ -39,7 +39,13 @@ public class FilterOperatorTest extends AbstractOperatorTest {
 
     @Test
     public void testFilterOutEInVHasPropCase() {
-        executeTreeQuery(g.V().hasLabel("person").has("firstname").outE().has("weight", 1.0).inV().has("firstname", "tom"));
+        executeTreeQuery(
+                g.V().hasLabel("person")
+                        .has("firstname")
+                        .outE()
+                        .has("weight", 1.0)
+                        .inV()
+                        .has("firstname", "tom"));
     }
 
     @Test
@@ -69,19 +75,30 @@ public class FilterOperatorTest extends AbstractOperatorTest {
 
     @Test
     public void testFilterOrCustomTextCase() {
-        executeTreeQuery(g.V().both().where(__.or(has("lastname", "tom"),
-                has("firstname", Text.startsWith("jack")))).valueMap());
+        executeTreeQuery(
+                g.V().both()
+                        .where(
+                                __.or(
+                                        has("lastname", "tom"),
+                                        has("firstname", Text.startsWith("jack"))))
+                        .valueMap());
     }
 
     @Test
     public void testFilterOrSameFieldCustomTextCase() {
-        executeTreeQuery(g.V().both().where(__.or(has("firstname", "tom"),
-                has("firstname", Text.startsWith("jack")))).valueMap());
+        executeTreeQuery(
+                g.V().both()
+                        .where(
+                                __.or(
+                                        has("firstname", "tom"),
+                                        has("firstname", Text.startsWith("jack"))))
+                        .valueMap());
     }
 
     @Test
     public void testFilterAndPredicateTraversalCase() {
-        executeTreeQuery(g.V().and(__.has("age", P.gt(27)), __.outE().count().is(P.gte(2L))).values("name"));
+        executeTreeQuery(
+                g.V().and(__.has("age", P.gt(27)), __.outE().count().is(P.gte(2L))).values("name"));
     }
 
     @Test

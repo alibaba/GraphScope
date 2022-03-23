@@ -14,68 +14,91 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-
-  <parent>
-    <groupId>com.alibaba.graphscope</groupId>
-    <artifactId>grape-jdk-parent</artifactId>
-    <version>0.1</version>
-  </parent>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="http://maven.apache.org/POM/4.0.0"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <artifactId>grape-demo</artifactId>
-
-  <version>0.1</version>
-
-  <packaging>jar</packaging>
-  <name>grape-demo</name>
-
-  <dependencies>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.alibaba</groupId>
-      <artifactId>fastjson</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.alibaba.graphscope</groupId>
-      <artifactId>grape-jdk</artifactId>
-      <version>0.1</version>
-      <classifier>shaded</classifier>
-    </dependency>
-    <dependency>
-      <groupId>com.alibaba.fastffi</groupId>
-      <artifactId>annotation-processor</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-classic</artifactId>
-    </dependency>
-  </dependencies>
 
   <build>
     <plugins>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
-      </plugin>
-      <plugin>
-        <groupId>com.diffplug.spotless</groupId>
-        <artifactId>spotless-maven-plugin</artifactId>
-      </plugin>
-      <plugin>
+        <executions>
+          <execution>
+            <configuration>
+              <artifactSet>
+                <excludes>
+                  <exclude>org.slf4j:slf4j-log4j12:jar:</exclude>
+                </excludes>
+              </artifactSet>
+            </configuration>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <phase>package</phase>
+          </execution>
+        </executions>
         <groupId>org.apache.maven.plugins</groupId>
+      </plugin>
+      <plugin>
+        <artifactId>spotless-maven-plugin</artifactId>
+        <groupId>com.diffplug.spotless</groupId>
+      </plugin>
+      <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
           <skipTests>true</skipTests>
         </configuration>
+        <groupId>org.apache.maven.plugins</groupId>
       </plugin>
     </plugins>
   </build>
+  <dependencies>
+    <dependency>
+      <artifactId>junit</artifactId>
+      <groupId>junit</groupId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <artifactId>fastjson</artifactId>
+      <groupId>com.alibaba</groupId>
+    </dependency>
+    <dependency>
+      <artifactId>grape-jdk</artifactId>
+      <classifier>shaded</classifier>
+      <groupId>com.alibaba.graphscope</groupId>
+      <version>0.1</version>
+    </dependency>
+    <dependency>
+      <artifactId>giraph-on-grape</artifactId>
+      <classifier>shaded</classifier>
+      <groupId>com.alibaba.graphscope</groupId>
+      <version>0.1</version>
+    </dependency>
+    <dependency>
+      <artifactId>annotation-processor</artifactId>
+      <groupId>com.alibaba.fastffi</groupId>
+    </dependency>
+    <dependency>
+      <artifactId>slf4j-api</artifactId>
+      <groupId>org.slf4j</groupId>
+    </dependency>
+    <dependency>
+      <artifactId>logback-classic</artifactId>
+      <groupId>ch.qos.logback</groupId>
+    </dependency>
+  </dependencies>
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <name>grape-demo</name>
+  <packaging>jar</packaging>
+
+  <parent>
+    <artifactId>grape-jdk-parent</artifactId>
+    <groupId>com.alibaba.graphscope</groupId>
+    <version>0.1</version>
+  </parent>
+
+  <version>0.1</version>
 </project>

@@ -63,11 +63,10 @@ class JavaPIEProjectedDefaultApp
                            reinterpret_cast<jlong>(communicator));
 
       jclass app_class = env->GetObjectClass(app_object);
-      CHECK_NOTNULL(app_class);
 
       const char* descriptor =
-          "(Lcom/alibaba/graphscope/fragment/ArrowProjectedFragment;"
-          "Lcom/alibaba/graphscope/context/ProjectedDefaultContextBase;"
+          "(Lcom/alibaba/graphscope/fragment/IFragment;"
+          "Lcom/alibaba/graphscope/context/DefaultContextBase;"
           "Lcom/alibaba/graphscope/parallel/DefaultMessageManager;)V";
       jmethodID pEval_methodID =
           env->GetMethodID(app_class, "PEval", descriptor);
@@ -99,11 +98,10 @@ class JavaPIEProjectedDefaultApp
       jobject app_object = ctx.app_object();
 
       jclass app_class = env->GetObjectClass(app_object);
-      CHECK_NOTNULL(app_class);
 
       const char* descriptor =
-          "(Lcom/alibaba/graphscope/fragment/ArrowProjectedFragment;"
-          "Lcom/alibaba/graphscope/context/ProjectedDefaultContextBase;"
+          "(Lcom/alibaba/graphscope/fragment/IFragment;"
+          "Lcom/alibaba/graphscope/context/DefaultContextBase;"
           "Lcom/alibaba/graphscope/parallel/DefaultMessageManager;)V";
       jmethodID incEval_methodID =
           env->GetMethodID(app_class, "IncEval", descriptor);

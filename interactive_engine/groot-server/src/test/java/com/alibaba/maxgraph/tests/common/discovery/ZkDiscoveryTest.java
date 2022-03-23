@@ -13,14 +13,18 @@
  */
 package com.alibaba.maxgraph.tests.common.discovery;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.*;
+
+import com.alibaba.graphscope.groot.discovery.LocalNodeProvider;
+import com.alibaba.graphscope.groot.discovery.NodeDiscovery;
+import com.alibaba.graphscope.groot.discovery.ZkDiscovery;
+import com.alibaba.maxgraph.common.RoleType;
 import com.alibaba.maxgraph.common.config.CommonConfig;
 import com.alibaba.maxgraph.common.config.Configs;
 import com.alibaba.maxgraph.common.config.ZkConfig;
-import com.alibaba.graphscope.groot.discovery.LocalNodeProvider;
-import com.alibaba.graphscope.groot.discovery.NodeDiscovery;
-import com.alibaba.maxgraph.common.RoleType;
-import com.alibaba.graphscope.groot.discovery.ZkDiscovery;
 import com.alibaba.maxgraph.common.util.CuratorUtils;
+
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.test.TestingServer;
 import org.junit.jupiter.api.Test;
@@ -28,9 +32,6 @@ import org.junit.jupiter.api.Test;
 import java.util.Collections;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.*;
 
 public class ZkDiscoveryTest {
 

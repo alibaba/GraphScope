@@ -68,6 +68,7 @@ class VertexLabel(object):
         vid_field: Union[str, int] = 0,
         session_id=None,
         id_type: str = "int64_t",
+        vformat=None,
     ):
         self.label = label
         # loader to take various data source
@@ -85,6 +86,7 @@ class VertexLabel(object):
         # should be consistent with the original graph
         self.id_type = id_type
         self._session_id = session_id
+        self._vformat = vformat
         # normalize properties
         # add vid to property list
         self.add_property(str(self.vid_field), self.id_type)
@@ -120,20 +122,22 @@ class VertexLabel(object):
             else:
                 self.add_property(prop[0], prop[1])
 
-    def attr(self) -> attr_value_pb2.NameAttrList:
-        attr_list = attr_value_pb2.NameAttrList()
-        attr_list.name = "vertex"
-        attr_list.attr[types_pb2.LABEL].CopyFrom(utils.s_to_attr(self.label))
-        attr_list.attr[types_pb2.VID].CopyFrom(utils.s_to_attr(str(self.vid_field)))
-        props = []
-        for prop in self.properties[1:]:
-            prop_attr = attr_value_pb2.NameAttrList()
-            prop_attr.name = prop[0]
-            prop_attr.attr[0].CopyFrom(utils.type_to_attr(prop[1]))
-            props.append(prop_attr)
-        attr_list.attr[types_pb2.PROPERTIES].list.func.extend(props)
-        attr_list.attr[types_pb2.LOADER].CopyFrom(self.loader.get_attr())
-        return attr_list
+    def attr(self) -> Sequence[attr_value_pb2.Chunk]:
+        chunk = attr_value_pb2.Chunk()
+        chunk.attr[types_pb2.CHUNK_NAME].CopyFrom(utils.s_to_attr("vertex"))
+        chunk.attr[types_pb2.CHUNK_TYPE].CopyFrom(utils.s_to_attr("loader"))
+        chunk.attr[types_pb2.LABEL].CopyFrom(utils.s_to_attr(self.label))
+        chunk.attr[types_pb2.VID].CopyFrom(utils.s_to_attr(str(self.vid_field)))
+        if isinstance(self._vformat, str):
+            chunk.attr[types_pb2.VFORMAT].CopyFrom(utils.s_to_attr(self._vformat))
+        # loader
+        for k, v in self.loader.get_attr().items():
+            # raw bytes for pandas/numpy data
+            if k == types_pb2.VALUES:
+                chunk.buffer = v
+            else:
+                chunk.attr[k].CopyFrom(v)
+        return [chunk]
 
 
 class EdgeSubLabel(object):
@@ -151,6 +155,7 @@ class EdgeSubLabel(object):
         dst_field: Union[str, int] = 1,
         load_strategy="both_out_in",
         id_type: str = "int64_t",
+        eformat=None,
     ):
         if isinstance(loader, Loader):
             self.loader = loader
@@ -192,6 +197,7 @@ class EdgeSubLabel(object):
         self.loader.select_columns(
             self.properties, include_all=bool(self.raw_properties is None)
         )
+        self._eformat = eformat
 
     def __str__(self) -> str:
         s = "\ntype: EdgeSubLabel"
@@ -215,27 +221,28 @@ class EdgeSubLabel(object):
             else:
                 self.add_property(prop[0], prop[1])
 
-    def get_attr(self):
-        attr_list = attr_value_pb2.NameAttrList()
-        attr_list.name = "{}_{}".format(self.src_label, self.dst_label)
-        attr_list.attr[types_pb2.SRC_LABEL].CopyFrom(utils.s_to_attr(self.src_label))
-        attr_list.attr[types_pb2.DST_LABEL].CopyFrom(utils.s_to_attr(self.dst_label))
-        attr_list.attr[types_pb2.LOAD_STRATEGY].CopyFrom(
+    def get_attr(self) -> attr_value_pb2.Chunk:
+        chunk = attr_value_pb2.Chunk()
+        chunk.attr[types_pb2.SUB_LABEL].CopyFrom(
+            utils.s_to_attr("{}_{}".format(self.src_label, self.dst_label))
+        )
+        chunk.attr[types_pb2.SRC_LABEL].CopyFrom(utils.s_to_attr(self.src_label))
+        chunk.attr[types_pb2.DST_LABEL].CopyFrom(utils.s_to_attr(self.dst_label))
+        chunk.attr[types_pb2.LOAD_STRATEGY].CopyFrom(
             utils.s_to_attr(self.load_strategy)
         )
-        attr_list.attr[types_pb2.SRC_VID].CopyFrom(utils.s_to_attr(str(self.src_field)))
-        attr_list.attr[types_pb2.DST_VID].CopyFrom(utils.s_to_attr(str(self.dst_field)))
-
-        attr_list.attr[types_pb2.LOADER].CopyFrom(self.loader.get_attr())
-
-        props = []
-        for prop in self.properties[2:]:
-            prop_attr = attr_value_pb2.NameAttrList()
-            prop_attr.name = prop[0]
-            prop_attr.attr[0].CopyFrom(utils.type_to_attr(prop[1]))
-            props.append(prop_attr)
-        attr_list.attr[types_pb2.PROPERTIES].list.func.extend(props)
-        return attr_list
+        chunk.attr[types_pb2.SRC_VID].CopyFrom(utils.s_to_attr(str(self.src_field)))
+        chunk.attr[types_pb2.DST_VID].CopyFrom(utils.s_to_attr(str(self.dst_field)))
+        if isinstance(self._eformat, str):
+            chunk.attr[types_pb2.EFORMAT].CopyFrom(utils.s_to_attr(self._eformat))
+        # loader
+        for k, v in self.loader.get_attr().items():
+            # raw bytes for pandas/numpy data
+            if k == types_pb2.VALUES:
+                chunk.buffer = v
+            else:
+                chunk.attr[k].CopyFrom(v)
+        return chunk
 
 
 class EdgeLabel(object):
@@ -275,15 +282,15 @@ class EdgeLabel(object):
             )
         self.sub_labels[(src, dst)] = sub_label
 
-    def attr(self) -> attr_value_pb2.NameAttrList:
-        attr_list = attr_value_pb2.NameAttrList()
-        attr_list.name = "edge"
-        attr_list.attr[types_pb2.LABEL].CopyFrom(utils.s_to_attr(self.label))
-        sub_label_attr = [
-            sub_label.get_attr() for sub_label in self.sub_labels.values()
-        ]
-        attr_list.attr[types_pb2.SUB_LABEL].list.func.extend(sub_label_attr)
-        return attr_list
+    def attr(self) -> Sequence[attr_value_pb2.Chunk]:
+        chunk_list = []
+        for sub_label in self.sub_labels.values():
+            chunk = sub_label.get_attr()
+            chunk.attr[types_pb2.CHUNK_NAME].CopyFrom(utils.s_to_attr("edge"))
+            chunk.attr[types_pb2.CHUNK_TYPE].CopyFrom(utils.s_to_attr("loader"))
+            chunk.attr[types_pb2.LABEL].CopyFrom(utils.s_to_attr(self.label))
+            chunk_list.append(chunk)
+        return chunk_list
 
 
 def _convert_array_to_deprecated_form(items):
@@ -338,6 +345,7 @@ def normalize_parameter_edges(
         Mapping[str, Union[Sequence, LoaderVariants, Mapping]], Tuple, LoaderVariants
     ],
     id_type: str,
+    eformat: Union[str, None] = None,
 ):
     """Normalize parameters user passed in. Since parameters are very flexible, we need to be
     careful about it.
@@ -350,17 +358,21 @@ def normalize_parameter_edges(
 
     def process_sub_label(items):
         if isinstance(items, (Loader, str, pd.DataFrame, *VineyardObjectTypes)):
-            return EdgeSubLabel(items, None, "_", "_", 0, 1, id_type=id_type)
+            return EdgeSubLabel(
+                items, None, "_", "_", 0, 1, id_type=id_type, eformat=eformat
+            )
         elif isinstance(items, Sequence):
             if all([isinstance(item, np.ndarray) for item in items]):
-                return EdgeSubLabel(items, None, "_", "_", 0, 1, id_type=id_type)
+                return EdgeSubLabel(
+                    items, None, "_", "_", 0, 1, id_type=id_type, eformat=eformat
+                )
             else:
                 check_argument(len(items) < 6, "Too many arguments for a edge label")
                 compat_items = _convert_array_to_deprecated_form(items)
-                return EdgeSubLabel(*compat_items, id_type=id_type)
+                return EdgeSubLabel(*compat_items, id_type=id_type, eformat=eformat)
         elif isinstance(items, Mapping):
             items = _convert_dict_to_compat_form(items)
-            return EdgeSubLabel(**items, id_type=id_type)
+            return EdgeSubLabel(**items, id_type=id_type, eformat=eformat)
         else:
             raise SyntaxError("Wrong format of e sub label: " + str(items))
 
@@ -401,6 +413,7 @@ def normalize_parameter_vertices(
         None,
     ],
     id_type: str,
+    vformat: Union[str, None] = None,
 ):
     """Normalize parameters user passed in. Since parameters are very flexible, we need to be
     careful about it.
@@ -413,18 +426,22 @@ def normalize_parameter_vertices(
 
     def process_label(label, items):
         if isinstance(items, (Loader, str, pd.DataFrame, *VineyardObjectTypes)):
-            return VertexLabel(label=label, id_type=id_type, loader=items)
+            return VertexLabel(
+                label=label, id_type=id_type, loader=items, vformat=vformat
+            )
         elif isinstance(items, Sequence):
             if all([isinstance(item, np.ndarray) for item in items]):
-                return VertexLabel(label=label, id_type=id_type, loader=items)
+                return VertexLabel(
+                    label=label, id_type=id_type, loader=items, vformat=vformat
+                )
             else:
                 check_argument(len(items) < 4, "Too many arguments for a vertex label")
-                return VertexLabel(label, *items, id_type=id_type)
+                return VertexLabel(label, *items, id_type=id_type, vformat=vformat)
         elif isinstance(items, Mapping):
             if "vid" in items:
                 items["vid_field"] = items["vid"]
                 items.pop("vid")
-            return VertexLabel(label, id_type=id_type, **items)
+            return VertexLabel(label, id_type=id_type, vformat=vformat, **items)
         else:
             raise RuntimeError("Wrong format of v label: " + str(items))
 

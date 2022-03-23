@@ -14,10 +14,10 @@
 package com.alibaba.graphscope.groot.metrics;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
+import com.alibaba.graphscope.groot.rpc.RoleClients;
+import com.alibaba.maxgraph.common.RoleType;
 import com.alibaba.maxgraph.common.config.CommonConfig;
 import com.alibaba.maxgraph.common.config.Configs;
-import com.alibaba.maxgraph.common.RoleType;
-import com.alibaba.graphscope.groot.rpc.RoleClients;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -32,17 +32,21 @@ public class MetricsAggregator {
     private ObjectMapper objectMapper;
     private int frontendCount;
     private int ingestorCount;
+    private int storeCount;
 
     public MetricsAggregator(
             Configs configs,
             RoleClients<MetricsCollectClient> frontendMetricsCollectClients,
-            RoleClients<MetricsCollectClient> ingestorMetricsCollectClients) {
+            RoleClients<MetricsCollectClient> ingestorMetricsCollectClients,
+            RoleClients<MetricsCollectClient> storeMetricsCollectClients) {
         this.roleToClients.put(RoleType.FRONTEND, frontendMetricsCollectClients);
         this.roleToClients.put(RoleType.INGESTOR, ingestorMetricsCollectClients);
+        this.roleToClients.put(RoleType.STORE, storeMetricsCollectClients);
 
         this.objectMapper = new ObjectMapper();
         this.frontendCount = CommonConfig.FRONTEND_NODE_COUNT.get(configs);
         this.ingestorCount = CommonConfig.INGESTOR_NODE_COUNT.get(configs);
+        this.storeCount = CommonConfig.STORE_NODE_COUNT.get(configs);
     }
 
     public void aggregateMetricsJson(String roleNames, CompletionCallback<String> callback) {
@@ -59,6 +63,10 @@ public class MetricsAggregator {
                 case INGESTOR:
                     totalNode += this.ingestorCount;
                     roleTypeToCount.put(roleType, this.ingestorCount);
+                    break;
+                case STORE:
+                    totalNode += this.storeCount;
+                    roleTypeToCount.put(roleType, this.storeCount);
                     break;
                 default:
                     throw new IllegalArgumentException(
@@ -99,6 +107,9 @@ public class MetricsAggregator {
 
                                             private void finish() {
                                                 try {
+                                                    aggregated.put(
+                                                            "timestamp",
+                                                            System.currentTimeMillis());
                                                     String jsonResult =
                                                             objectMapper.writeValueAsString(
                                                                     aggregated);

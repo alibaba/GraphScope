@@ -195,7 +195,7 @@ data format is described through ``gl.Decoder``.
 
    N_FEATURE = 1433
 
-   # Describe the vertex data format，with lable and attributes
+   # Describe the vertex data format，with label and attributes
    node_decoder = gl.Decoder(labeled=True, attr_types=["float"] * N_FEATURE)
 
    # Describe the edge data format, with weights.

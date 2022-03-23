@@ -13,12 +13,14 @@
  */
 package com.alibaba.graphscope.groot.rpc;
 
-import com.alibaba.maxgraph.common.config.*;
 import com.alibaba.maxgraph.common.RoleType;
+import com.alibaba.maxgraph.common.config.*;
 import com.alibaba.maxgraph.compiler.api.exception.NodeConnectException;
+
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.NameResolver;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

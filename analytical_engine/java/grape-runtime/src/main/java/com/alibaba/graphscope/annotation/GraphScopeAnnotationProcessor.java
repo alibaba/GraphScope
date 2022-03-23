@@ -63,6 +63,7 @@ import com.alibaba.graphscope.ds.PropertyAdjList;
 import com.alibaba.graphscope.ds.PropertyNbr;
 import com.alibaba.graphscope.ds.PropertyNbrUnit;
 import com.alibaba.graphscope.ds.PropertyRawAdjList;
+import com.alibaba.graphscope.ds.TypedArray;
 import com.alibaba.graphscope.ds.Vertex;
 import com.alibaba.graphscope.ds.VertexArray;
 import com.alibaba.graphscope.ds.VertexRange;
@@ -80,6 +81,10 @@ import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -92,8 +97,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
+
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
@@ -114,9 +121,12 @@ import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
 import javax.tools.FileObject;
 import javax.tools.StandardLocation;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+/**
+ * GraphScopeAnnotationProcessor define the process procedure for classes annotated with FFIMirror,
+ * FFIMirrorDefinition and GraphType. User shall not use this annotation, as it is mainly used for
+ * code generation.
+ */
 @SupportedAnnotationTypes({
     "com.alibaba.fastffi.FFIMirror",
     "com.alibaba.fastffi.FFIMirrorDefinition",
@@ -124,6 +134,7 @@ import org.slf4j.LoggerFactory;
 })
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
 public class GraphScopeAnnotationProcessor extends javax.annotation.processing.AbstractProcessor {
+
     public static final String GraphTypeWrapperSuffix = "$$GraphTypeDefinitions";
     static final String JNI_HEADER = "<jni.h>";
     private static Logger logger =
@@ -161,7 +172,7 @@ public class GraphScopeAnnotationProcessor extends javax.annotation.processing.A
     public List<String> getMessageTypes() {
         List<String> messageTypes = new ArrayList<>();
         String messageTypeString = System.getProperty("grape.messageTypes");
-        if (messageTypeString != null) {
+        if (messageTypeString != null && !messageTypeString.isEmpty()) {
             Arrays.asList(parseMessageTypes(messageTypeString)).forEach(p -> messageTypes.add(p));
         }
         return messageTypes;
@@ -306,13 +317,10 @@ public class GraphScopeAnnotationProcessor extends javax.annotation.processing.A
      */
     private void addGrapeWrapper(TypeSpec.Builder classBuilder) {
         DeclaredType edataType = getEdataType();
-        // String foreignEdataType = getForeignTypeName(edataType);
         String javaEdataType = getTypeName(edataType);
         DeclaredType oidType = getOidType();
-        // String foreignOidType = getForeignTypeName(oidType);
         String javaOidType = getTypeName(oidType);
         DeclaredType vdataType = getVdataType();
-        // String foreignVdataType = getForeignTypeName(vdataType);
         String javaVdataType = getTypeName(vdataType);
         String foreignVidType = getGraphTypeMemberForeign("cppVidType");
         String foreignOidType = getGraphTypeMemberForeign("cppOidType");
@@ -350,11 +358,14 @@ public class GraphScopeAnnotationProcessor extends javax.annotation.processing.A
 
         AnnotationSpec.Builder ffiGenBatchBuilder = AnnotationSpec.builder(FFIGenBatch.class);
 
+        addTypedArray(ffiGenBatchBuilder);
         addVertexGen(ffiGenBatchBuilder);
         addVertexRange(ffiGenBatchBuilder);
         addGSVertexRange(ffiGenBatchBuilder);
         addNbr(ffiGenBatchBuilder);
         addAdjList(ffiGenBatchBuilder);
+        // projected fragment also needed
+        addPropertyNbrUnit(ffiGenBatchBuilder);
 
         addMessageTypes(ffiGenBatchBuilder);
 
@@ -367,7 +378,6 @@ public class GraphScopeAnnotationProcessor extends javax.annotation.processing.A
             {
                 addPropertyNbr(ffiGenBatchBuilder);
                 addPropertyAdjList(ffiGenBatchBuilder);
-                addPropertyNbrUnit(ffiGenBatchBuilder);
                 addPropertyRawAdjList(ffiGenBatchBuilder);
                 addArrowFragment(ffiGenBatchBuilder);
                 // add column
@@ -440,6 +450,15 @@ public class GraphScopeAnnotationProcessor extends javax.annotation.processing.A
         addIntCXXTemplate(ffiGenVertex);
         addLongCXXTemplate(ffiGenVertex);
         ffiGenBatchBuilder.addMember("value", "$L", ffiGenVertex.build());
+    }
+
+    private void addTypedArray(AnnotationSpec.Builder ffiGenBatchBuilder) {
+        AnnotationSpec.Builder ffiGenTypedArray = AnnotationSpec.builder(FFIGen.class);
+        ffiGenTypedArray.addMember("type", "$S", TypedArray.class.getName());
+        addSignedIntCXXTemplate(ffiGenTypedArray);
+        addSignedLongCXXTemplate(ffiGenTypedArray);
+        addDoubleCXXTemplate(ffiGenTypedArray);
+        ffiGenBatchBuilder.addMember("value", "$L", ffiGenTypedArray.build());
     }
 
     private void addVertexRange(AnnotationSpec.Builder ffiGenBatchBuilder) {
@@ -658,9 +677,9 @@ public class GraphScopeAnnotationProcessor extends javax.annotation.processing.A
     private void addVertexArray(AnnotationSpec.Builder batchBuilder) {
         AnnotationSpec.Builder ffiGenVertex = AnnotationSpec.builder(FFIGen.class);
         ffiGenVertex.addMember("type", "$S", VertexArray.class.getName());
-        addCXXTemplate(ffiGenVertex, "double", "uint64_t", "Double", "Long");
-        addCXXTemplate(ffiGenVertex, "int64_t", "uint64_t", "Long", "Long");
-        addCXXTemplate(ffiGenVertex, "int32_t", "uint64_t", "Integer", "Long");
+        addCXXTemplate(ffiGenVertex, "uint64_t", "double", "Long", "Double");
+        addCXXTemplate(ffiGenVertex, "uint64_t", "int64_t", "Long", "Long");
+        addCXXTemplate(ffiGenVertex, "uint64_t", "int32_t", "Long", "Integer");
         batchBuilder.addMember("value", "$L", ffiGenVertex.build());
     }
 
@@ -781,7 +800,8 @@ public class GraphScopeAnnotationProcessor extends javax.annotation.processing.A
         AnnotationSpec.Builder ffiGenVertexPropertyContext = AnnotationSpec.builder(FFIGen.class);
         ffiGenVertexPropertyContext.addMember(
                 "type", "$S", FFIVertexPropertyContext.class.getName());
-        vertexDataContextAddTemplate(ffiGenVertexPropertyContext, foreignFragName, javaFragName);
+        vertexPropertyContextAddTemplate(
+                ffiGenVertexPropertyContext, foreignFragName, javaFragName);
         ffiGenBatchBuilder.addMember("value", "$L", ffiGenVertexPropertyContext.build());
     }
 
@@ -825,7 +845,7 @@ public class GraphScopeAnnotationProcessor extends javax.annotation.processing.A
             // sendMsgThroughIEdges
             AnnotationSpec.Builder sendIEdgesBuilder =
                     AnnotationSpec.builder(FFIFunGen.class)
-                            .addMember("name", "$S", "sendMsgThroughIEdges")
+                            .addMember("name", "$S", "sendMsgThroughIEdgesArrowProjected")
                             .addMember("returnType", "$S", "void")
                             .addMember("parameterTypes", "$S", "FRAG_T")
                             .addMember("parameterTypes", "$S", "MSG_T");
@@ -845,7 +865,7 @@ public class GraphScopeAnnotationProcessor extends javax.annotation.processing.A
             // sendMsgThroughOEdges
             AnnotationSpec.Builder sendOEdgesBuilder =
                     AnnotationSpec.builder(FFIFunGen.class)
-                            .addMember("name", "$S", "sendMsgThroughOEdges")
+                            .addMember("name", "$S", "sendMsgThroughOEdgesArrowProjected")
                             .addMember("returnType", "$S", "void")
                             .addMember("parameterTypes", "$S", "FRAG_T")
                             .addMember("parameterTypes", "$S", "MSG_T");
@@ -865,7 +885,7 @@ public class GraphScopeAnnotationProcessor extends javax.annotation.processing.A
             // sendMsgThroughEdges
             AnnotationSpec.Builder sendEdgesBuilder =
                     AnnotationSpec.builder(FFIFunGen.class)
-                            .addMember("name", "$S", "sendMsgThroughEdges")
+                            .addMember("name", "$S", "sendMsgThroughEdgesArrowProjected")
                             .addMember("returnType", "$S", "void")
                             .addMember("parameterTypes", "$S", "FRAG_T")
                             .addMember("parameterTypes", "$S", "MSG_T");
@@ -885,7 +905,7 @@ public class GraphScopeAnnotationProcessor extends javax.annotation.processing.A
             // syncStateOnOuterVertex
             AnnotationSpec.Builder sendEdgesBuilder =
                     AnnotationSpec.builder(FFIFunGen.class)
-                            .addMember("name", "$S", "syncStateOnOuterVertex")
+                            .addMember("name", "$S", "syncStateOnOuterVertexArrowProjected")
                             .addMember("returnType", "$S", "void")
                             .addMember("parameterTypes", "$S", "MSG_T");
             for (String messageType : messageTypes) {
@@ -904,7 +924,7 @@ public class GraphScopeAnnotationProcessor extends javax.annotation.processing.A
             // getMessage
             AnnotationSpec.Builder sendEdgesBuilder =
                     AnnotationSpec.builder(FFIFunGen.class)
-                            .addMember("name", "$S", "getMessage")
+                            .addMember("name", "$S", "getMessageArrowProjected")
                             .addMember("returnType", "$S", "boolean")
                             .addMember("parameterTypes", "$S", "FRAG_T")
                             .addMember("parameterTypes", "$S", "MSG_T");
@@ -1466,6 +1486,34 @@ public class GraphScopeAnnotationProcessor extends javax.annotation.processing.A
         return getForeignTypeNameOrHeader(typeMirror, false);
     }
 
+    private String getForeignTypeNameOrHeaderBoxed(TypeMirror typeMirror) {
+        if (isSameType(typeMirror, Byte.class)) {
+            return "jbyte";
+        }
+        if (isSameType(typeMirror, Boolean.class)) {
+            return "jboolean";
+        }
+        if (isSameType(typeMirror, Short.class)) {
+            return "jshort";
+        }
+        if (isSameType(typeMirror, Character.class)) {
+            return "jchar";
+        }
+        if (isSameType(typeMirror, Integer.class)) {
+            return "jint";
+        }
+        if (isSameType(typeMirror, Long.class)) {
+            return "jlong";
+        }
+        if (isSameType(typeMirror, Float.class)) {
+            return "jfloat";
+        }
+        if (isSameType(typeMirror, Double.class)) {
+            return "jdouble";
+        }
+        return null;
+    }
+
     private String getForeignTypeNameOrHeader(TypeMirror typeMirror, boolean name) {
         if (typeMirror instanceof PrimitiveType) {
             throw new IllegalStateException("Please use boxed type instead.");
@@ -1473,34 +1521,18 @@ public class GraphScopeAnnotationProcessor extends javax.annotation.processing.A
         if (typeMirror instanceof ArrayType) {
             throw new IllegalStateException("No array is supported: " + typeMirror);
         }
-
-        if (isSameType(typeMirror, Byte.class)) {
-            return name ? "jbyte" : JNI_HEADER;
-        }
-        if (isSameType(typeMirror, Boolean.class)) {
-            return name ? "jboolean" : JNI_HEADER;
-        }
-        if (isSameType(typeMirror, Short.class)) {
-            return name ? "jshort" : JNI_HEADER;
-        }
-        if (isSameType(typeMirror, Character.class)) {
-            return name ? "jchar" : JNI_HEADER;
-        }
-        if (isSameType(typeMirror, Integer.class)) {
-            return name ? "jint" : JNI_HEADER;
-        }
-        if (isSameType(typeMirror, Long.class)) {
-            return name ? "jlong" : JNI_HEADER;
-        }
-        if (isSameType(typeMirror, Float.class)) {
-            return name ? "jfloat" : JNI_HEADER;
-        }
-        if (isSameType(typeMirror, Double.class)) {
-            return name ? "jdouble" : JNI_HEADER;
-        }
         if (isSameType(typeMirror, FFIByteString.class)) {
             return name ? "std::string" : "<string>";
         }
+        if (!name) {
+            return JNI_HEADER;
+        }
+
+        String tryBoxedRes = getForeignTypeNameOrHeaderBoxed(typeMirror);
+        if (Objects.nonNull(tryBoxedRes)) {
+            return tryBoxedRes;
+        }
+
         if (typeMirror instanceof DeclaredType) {
             DeclaredType declaredType = (DeclaredType) typeMirror;
             if (!declaredType.getTypeArguments().isEmpty()) {
@@ -1591,7 +1623,8 @@ public class GraphScopeAnnotationProcessor extends javax.annotation.processing.A
                     }
                     // outarchive
                     writer.format(
-                            "inline grape::OutArchive& operator>>(grape::OutArchive& out_archive, %s& data) {\n",
+                            "inline grape::OutArchive& operator>>(grape::OutArchive& out_archive,"
+                                    + " %s& data) {\n",
                             m.name());
                     List<FFIMirrorFieldDefinition> fields = sortedFields(m);
                     fields.forEach(
@@ -1601,7 +1634,8 @@ public class GraphScopeAnnotationProcessor extends javax.annotation.processing.A
                     writer.format("\treturn out_archive;\n}\n");
                     // inarchive
                     writer.format(
-                            "inline grape::InArchive& operator<<(grape::InArchive& in_archive, const %s& data) {\n",
+                            "inline grape::InArchive& operator<<(grape::InArchive& in_archive,"
+                                    + " const %s& data) {\n",
                             m.name());
                     fields.forEach(
                             f -> {

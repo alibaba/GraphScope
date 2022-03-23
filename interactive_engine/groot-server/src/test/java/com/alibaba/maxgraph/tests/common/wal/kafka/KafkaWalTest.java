@@ -13,24 +13,25 @@
  */
 package com.alibaba.maxgraph.tests.common.wal.kafka;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import com.alibaba.graphscope.groot.operation.OperationBatch;
 import com.alibaba.graphscope.groot.operation.OperationBlob;
-import com.alibaba.maxgraph.common.config.CommonConfig;
-import com.alibaba.maxgraph.common.config.Configs;
-import com.alibaba.maxgraph.common.config.KafkaConfig;
 import com.alibaba.graphscope.groot.wal.LogEntry;
 import com.alibaba.graphscope.groot.wal.LogReader;
 import com.alibaba.graphscope.groot.wal.LogService;
 import com.alibaba.graphscope.groot.wal.LogWriter;
 import com.alibaba.graphscope.groot.wal.ReadLogEntry;
 import com.alibaba.graphscope.groot.wal.kafka.KafkaLogService;
+import com.alibaba.maxgraph.common.config.CommonConfig;
+import com.alibaba.maxgraph.common.config.Configs;
+import com.alibaba.maxgraph.common.config.KafkaConfig;
 import com.salesforce.kafka.test.junit5.SharedKafkaTestResource;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.io.IOException;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 public class KafkaWalTest {
 

@@ -29,6 +29,7 @@ from abc import abstractmethod
 
 from graphscope.framework.utils import PipeWatcher
 from graphscope.framework.utils import get_free_port
+from graphscope.framework.utils import get_java_version
 from graphscope.framework.utils import get_tempdir
 from graphscope.framework.utils import is_free_port
 from graphscope.proto import types_pb2
@@ -38,7 +39,6 @@ from gscoordinator.utils import GRAPHSCOPE_HOME
 from gscoordinator.utils import INTERACTIVE_ENGINE_SCRIPT
 from gscoordinator.utils import WORKSPACE
 from gscoordinator.utils import ResolveMPICmdPrefix
-from gscoordinator.utils import get_java_version
 from gscoordinator.utils import get_timestamp
 from gscoordinator.utils import parse_as_glog_level
 
@@ -121,6 +121,7 @@ class LocalLauncher(Launcher):
         self,
         num_workers,
         hosts,
+        etcd_addrs,
         vineyard_socket,
         shared_mem,
         log_level,
@@ -130,6 +131,7 @@ class LocalLauncher(Launcher):
         super().__init__()
         self._num_workers = num_workers
         self._hosts = hosts
+        self._etcd_addrs = etcd_addrs
         self._vineyard_socket = vineyard_socket
         self._shared_mem = shared_mem
         self._glog_level = parse_as_glog_level(log_level)
@@ -176,9 +178,9 @@ class LocalLauncher(Launcher):
     def stop(self, is_dangling=False):
         if not self._closed:
             self._stop_interactive_engine_service()
+            self._stop_analytical_engine()
             self._stop_vineyard()
             self._stop_etcd()
-            self._stop_analytical_engine()
             self._closed = True
 
     def set_session_workspace(self, session_id):
@@ -310,10 +312,18 @@ class LocalLauncher(Launcher):
             etcd = [etcd]
         return etcd
 
+    def _config_etcd(self):
+        if self._etcd_addrs is None:
+            self._launch_etcd()
+        else:
+            self._etcd_endpoint = "http://" + self._etcd_addrs
+            logger.info("External Etcd endpoint is %s", self._etcd_endpoint)
+
     def _launch_etcd(self):
         etcd_exec = self._find_etcd()
         self._etcd_peer_port = 2380 if is_free_port(2380) else get_free_port()
         self._etcd_client_port = 2379 if is_free_port(2379) else get_free_port()
+        self._etcd_endpoint = "http://127.0.0.1:{0}".format(str(self._etcd_client_port))
 
         env = os.environ.copy()
         env.update({"ETCD_MAX_TXN_OPS": "102400"})
@@ -326,7 +336,7 @@ class LocalLauncher(Launcher):
             "--listen-client-urls",
             "http://0.0.0.0:{0}".format(str(self._etcd_client_port)),
             "--advertise-client-urls",
-            "http://127.0.0.1:{0}".format(str(self._etcd_client_port)),
+            self._etcd_endpoint,
             "--initial-cluster",
             "default=http://127.0.0.1:{0}".format(str(self._etcd_peer_port)),
             "--initial-advertise-peer-urls",
@@ -375,7 +385,7 @@ class LocalLauncher(Launcher):
             "--zkaddr",
             "0.0.0.0:{}".format(self._zookeeper_port),
             "--endpoints",
-            "localhost:{0}".format(self._etcd_client_port),
+            self._etcd_endpoint,
         ]
 
         process = subprocess.Popen(
@@ -426,12 +436,7 @@ class LocalLauncher(Launcher):
             cmd = self._find_vineyardd()
             cmd.extend(["--socket", vineyard_socket])
             cmd.extend(["--size", self._shared_mem])
-            cmd.extend(
-                [
-                    "-etcd_endpoint",
-                    "http://localhost:{0}".format(self._etcd_client_port),
-                ]
-            )
+            cmd.extend(["-etcd_endpoint", self._etcd_endpoint])
             cmd.extend(["-etcd_prefix", f"vineyard.gsa.{ts}"])
             env = os.environ.copy()
             env["GLOG_v"] = str(self._glog_level)
@@ -453,7 +458,11 @@ class LocalLauncher(Launcher):
             )
 
             logger.info("Server is initializing vineyardd.")
-            stdout_watcher = PipeWatcher(process.stdout, sys.stdout)
+            stdout_watcher = PipeWatcher(
+                process.stdout,
+                sys.stdout,
+                suppressed=(not logger.isEnabledFor(logging.DEBUG)),
+            )
             setattr(process, "stdout_watcher", stdout_watcher)
 
             self._vineyard_socket = vineyard_socket
@@ -473,7 +482,7 @@ class LocalLauncher(Launcher):
 
     def _create_services(self):
         # create etcd
-        self._launch_etcd()
+        self._config_etcd()
         # create vineyard
         self._create_vineyard()
         # create GAE rpc service
@@ -579,7 +588,7 @@ class LocalLauncher(Launcher):
                 config,
                 str(index),
             ]
-            logger.info("launching learning server: %s", " ".join(cmd))
+            logger.debug("launching learning server: %s", " ".join(cmd))
 
             proc = subprocess.Popen(
                 cmd,
@@ -591,7 +600,11 @@ class LocalLauncher(Launcher):
                 universal_newlines=True,
                 bufsize=1,
             )
-            stdout_watcher = PipeWatcher(proc.stdout, sys.stdout)
+            stdout_watcher = PipeWatcher(
+                proc.stdout,
+                sys.stdout,
+                suppressed=(not logger.isEnabledFor(logging.DEBUG)),
+            )
             setattr(proc, "stdout_watcher", stdout_watcher)
             self._learning_instance_processes[object_id].append(proc)
 
@@ -610,7 +623,7 @@ class LocalLauncher(Launcher):
         self._stop_subprocess(self._etcd_process)
 
     def _stop_vineyard(self):
-        self._stop_subprocess(self._vineyardd_process)
+        self._stop_subprocess(self._vineyardd_process, kill=True)
 
     def _stop_interactive_engine_service(self):
         self._stop_subprocess(self._zetcd_process)

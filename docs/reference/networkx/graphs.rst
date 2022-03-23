@@ -34,6 +34,3 @@ Directed graphs with self loops
    :inherited-members:
    :members:
    :exclude-members: __repr__, __copy__, __deepcopy__, __str__, __weakref__
-
-
-.. include:: cython_sdk.rst

@@ -13,10 +13,7 @@
  */
 package com.alibaba.maxgraph.structure.graph;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import static com.google.common.base.Preconditions.checkArgument;
 
 import com.alibaba.maxgraph.common.cluster.MaxGraphConfiguration;
 import com.alibaba.maxgraph.compiler.api.schema.GraphElement;
@@ -32,19 +29,19 @@ import com.alibaba.maxgraph.sdkcommon.graph.ShowProcessListQuery;
 import com.alibaba.maxgraph.sdkcommon.graph.StatisticsRequest;
 import com.alibaba.maxgraph.structure.MxEdge;
 import com.alibaba.maxgraph.structure.MxVertex;
+import com.alibaba.maxgraph.structure.dfs.GraphDfs;
 import com.alibaba.maxgraph.tinkerpop.MaxGraphFeatures;
 import com.alibaba.maxgraph.tinkerpop.MaxGraphVariables;
 import com.alibaba.maxgraph.tinkerpop.Utils;
-import com.alibaba.maxgraph.structure.dfs.GraphDfs;
 import com.alibaba.maxgraph.tinkerpop.strategies.MxGraphStepStrategy;
 import com.alibaba.maxgraph.tinkerpop.traversal.MaxGraphTraversalSource;
-
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import org.apache.commons.configuration.BaseConfiguration;
-import org.apache.commons.configuration.Configuration;
+
+import org.apache.commons.configuration2.BaseConfiguration;
+import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.tinkerpop.gremlin.process.computer.GraphComputer;
@@ -60,7 +57,10 @@ import org.apache.tinkerpop.gremlin.structure.util.AbstractThreadLocalTransactio
 import org.apache.tinkerpop.gremlin.structure.util.TransactionException;
 import org.apache.tinkerpop.gremlin.structure.util.wrapped.WrappedGraph;
 
-import static com.google.common.base.Preconditions.checkArgument;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class TinkerMaxGraph implements Graph, WrappedGraph<MaxGraph> {
     private MaxGraph graph;

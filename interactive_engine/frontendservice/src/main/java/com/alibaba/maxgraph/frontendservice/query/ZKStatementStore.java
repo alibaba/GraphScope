@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,6 +20,7 @@ import com.alibaba.maxgraph.common.zookeeper.ZKPaths;
 import com.alibaba.maxgraph.common.zookeeper.ZkUtils;
 import com.alibaba.maxgraph.compiler.prepare.store.PrepareStoreEntity;
 import com.alibaba.maxgraph.compiler.prepare.store.StatementStore;
+
 import org.apache.zookeeper.CreateMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +36,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ZKStatementStore implements StatementStore {
     private static final Logger LOGGER = LoggerFactory.getLogger(ZKStatementStore.class);
     private final String prepare_query_info_path;
-    //prepared cache
+    // prepared cache
     private Map<String, PrepareStoreEntity> prepareStoreEntityMap = new ConcurrentHashMap<>();
     private ZkUtils zkUtilsStore;
 
@@ -51,17 +52,21 @@ public class ZKStatementStore implements StatementStore {
      * @throws Exception
      */
     @Override
-    public void save(String prepareId, PrepareStoreEntity prepareStoreEntity) throws Exception{
+    public void save(String prepareId, PrepareStoreEntity prepareStoreEntity) throws Exception {
         String subPreparePath = buildSubPreparePath(prepareId);
         String subCompilePath = buildSubCompilePath(prepareId);
         try {
-            this.zkUtilsStore.createOrUpdatePath(subPreparePath, prepareStoreEntity.getQueryFlow().toByteArray(), CreateMode.PERSISTENT);
+            this.zkUtilsStore.createOrUpdatePath(
+                    subPreparePath,
+                    prepareStoreEntity.getQueryFlow().toByteArray(),
+                    CreateMode.PERSISTENT);
         } catch (Exception e) {
             LOGGER.error("Persist prepare query " + prepareId + " failed: " + e);
             throw new RuntimeException("Store prepare query " + prepareId + " failed: " + e);
         }
         try {
-            this.zkUtilsStore.createOrUpdatePath(subCompilePath, prepareStoreEntity.toByteArray(), CreateMode.PERSISTENT);
+            this.zkUtilsStore.createOrUpdatePath(
+                    subCompilePath, prepareStoreEntity.toByteArray(), CreateMode.PERSISTENT);
         } catch (Exception e) {
             LOGGER.error("Persist compile query " + prepareId + " failed: " + e);
             String preparePath = buildPreparePath(prepareId);
@@ -82,7 +87,7 @@ public class ZKStatementStore implements StatementStore {
     @Override
     public PrepareStoreEntity get(String prepareId) {
         // first get prepareStoreEntity from cache
-        if(prepareStoreEntityMap.containsKey(prepareId)) {
+        if (prepareStoreEntityMap.containsKey(prepareId)) {
             return prepareStoreEntityMap.get(prepareId);
         }
 
@@ -90,7 +95,7 @@ public class ZKStatementStore implements StatementStore {
         try {
             byte[] bytes = this.zkUtilsStore.readBinaryData(subCompilePath);
             PrepareStoreEntity prepareStoreEntity = PrepareStoreEntity.toPrepareStoreEntity(bytes);
-            this.prepareStoreEntityMap.put(prepareId, prepareStoreEntity);  // cache prepare query
+            this.prepareStoreEntityMap.put(prepareId, prepareStoreEntity); // cache prepare query
             return prepareStoreEntity;
         } catch (Exception e) {
             LOGGER.error("Get compile query from ZK failed: " + e);
@@ -104,14 +109,15 @@ public class ZKStatementStore implements StatementStore {
      */
     @Override
     public void delete(String prepareId) {
-        this.prepareStoreEntityMap.remove(prepareId);    // remove prepare from cache
+        this.prepareStoreEntityMap.remove(prepareId); // remove prepare from cache
 
         String preparePath = buildPreparePath(prepareId);
         try {
             this.zkUtilsStore.deletePath(preparePath);
         } catch (Exception e) {
-            LOGGER.error("Delete prepare path " + preparePath + " failed, caused: " + e );
-            throw new RuntimeException("Delete prepare path " + preparePath + "failed, caused: " + e);
+            LOGGER.error("Delete prepare path " + preparePath + " failed, caused: " + e);
+            throw new RuntimeException(
+                    "Delete prepare path " + preparePath + "failed, caused: " + e);
         }
     }
 
@@ -122,12 +128,12 @@ public class ZKStatementStore implements StatementStore {
      */
     @Override
     public boolean checkExist(String prepareId) {
-        if(this.prepareStoreEntityMap.containsKey(prepareId)) {
+        if (this.prepareStoreEntityMap.containsKey(prepareId)) {
             return true;
         }
 
         String subLockPath = this.buildSubLockPath(prepareId);
-        if(this.zkUtilsStore.pathExists(subLockPath)) {
+        if (this.zkUtilsStore.pathExists(subLockPath)) {
             return true;
         } else {
             try {
@@ -159,5 +165,4 @@ public class ZKStatementStore implements StatementStore {
         String lockPath = this.prepare_query_info_path + "/" + prepareId + "/lock";
         return lockPath;
     }
-
 }

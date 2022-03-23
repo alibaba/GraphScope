@@ -30,16 +30,22 @@ cdef extern from "apps/python_pie/export.h" namespace "python_grape":
 
     cdef cppclass Vertex:
         Vertex() except +
-        Vertex& operator*()
         Vertex& operator++()
         bool operator==(const Vertex&)
         bool operator!=(const Vertex&)
 
+    cdef cppclass VertexIterator:
+        VertexIterator() except +
+        Vertex& operator*()
+        Vertex& operator++()
+        bool operator==(const VertexIterator&)
+        bool operator!=(const VertexIterator&)
+
     cdef cppclass VertexRange:
         VertexRange()
         size_t size()
-        Vertex& begin()
-        Vertex& end()
+        VertexIterator begin()
+        VertexIterator end()
 
     cdef cppclass VertexArray[T]:
         VertexArray() except +
@@ -81,10 +87,10 @@ cdef extern from "apps/python_pie/export.h" namespace "python_grape":
         int get_node_fid(const Vertex&)
         bool is_inner_node(const Vertex&)
         bool is_outer_node(const Vertex&)
-        bool get_node(int, const int64_t&, Vertex&)
-        bool get_inner_node(int, const int64_t&, Vertex&)
-        bool get_outer_node(int, const int64_t&, Vertex&)
-        int64_t get_node_id(const Vertex&)
+        bool get_node(int, const string&, Vertex&)
+        bool get_inner_node(int, const string&, Vertex&)
+        bool get_outer_node(int, const string&, Vertex&)
+        string get_node_id(const Vertex&)
         AdjList get_outgoing_edges(const Vertex&, int)
         AdjList get_incoming_edges(const Vertex&, int)
         bool has_child(const Vertex&, int)

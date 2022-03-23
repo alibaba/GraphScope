@@ -14,26 +14,25 @@
 package com.alibaba.maxgraph.tests.gremlin;
 
 import com.alibaba.graphscope.groot.frontend.ClientService;
+import com.alibaba.graphscope.groot.schema.GraphDef;
+import com.alibaba.maxgraph.common.config.CommonConfig;
+import com.alibaba.maxgraph.common.config.Configs;
+import com.alibaba.maxgraph.common.config.GremlinConfig;
+import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
-import com.alibaba.maxgraph.servers.Frontend;
 import com.alibaba.maxgraph.proto.groot.DropSchemaRequest;
 import com.alibaba.maxgraph.proto.groot.DropSchemaResponse;
 import com.alibaba.maxgraph.proto.groot.LoadJsonSchemaRequest;
 import com.alibaba.maxgraph.proto.groot.LoadJsonSchemaResponse;
 import com.alibaba.maxgraph.sdkcommon.io.MaxGraphIORegistry;
-import com.alibaba.maxgraph.tinkerpop.traversal.MaxGraphTraversalSource;
+import com.alibaba.maxgraph.servers.Frontend;
 import com.alibaba.maxgraph.servers.MaxNode;
 import com.alibaba.maxgraph.servers.NodeBase;
-import com.alibaba.maxgraph.common.config.CommonConfig;
-import com.alibaba.maxgraph.common.config.Configs;
-import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
-import com.alibaba.graphscope.groot.schema.GraphDef;
-import com.alibaba.maxgraph.common.config.GremlinConfig;
+import com.alibaba.maxgraph.tinkerpop.traversal.MaxGraphTraversalSource;
+
 import io.grpc.stub.StreamObserver;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.util.concurrent.CompletableFuture;
-import org.apache.commons.configuration.Configuration;
+
+import org.apache.commons.configuration2.Configuration;
 import org.apache.tinkerpop.gremlin.LoadGraphWith;
 import org.apache.tinkerpop.gremlin.driver.Cluster;
 import org.apache.tinkerpop.gremlin.driver.MessageSerializer;
@@ -55,9 +54,12 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
+import java.util.concurrent.CompletableFuture;
 
 @Graph.OptIn("com.alibaba.maxgraph.tests.gremlin.GremlinStandardTestSuite")
 @Graph.OptOut(
@@ -483,6 +485,34 @@ import java.util.Iterator;
 @Graph.OptOut(
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
         method = "g_V_hasXperson_name_markoX_count_asXaX_unionXidentity_identityX_selectXaX",
+        reason = "Not support select traversal")
+@Graph.OptOut(
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
+        method = "g_EX11X_propertiesXweightX_asXaX_selectXaX_byXkeyX",
+        reason = "Not support select traversal")
+@Graph.OptOut(
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
+        method = "g_EX11X_propertiesXweightX_asXaX_selectXaX_byXvalueX",
+        reason = "Not support select traversal")
+@Graph.OptOut(
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.DedupTest",
+        method = "g_V_both_properties_dedup_count",
+        reason = "Not support select traversal")
+@Graph.OptOut(
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.DedupTest",
+        method = "g_V_bothE_properties_dedup_count",
+        reason = "Not support select traversal")
+@Graph.OptOut(
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.DedupTest",
+        method = "g_V_both_properties_properties_dedup_count",
+        reason = "Not support select traversal")
+@Graph.OptOut(
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
+        method = "g_V_hasXk_withinXcXX_valuesXkX",
+        reason = "Not support select traversal")
+@Graph.OptOut(
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.ConstantTest",
+        method = "g_V_constantXnullX",
         reason = "Not support select traversal")
 public class MaxTestGraph implements Graph {
     private static final Logger logger = LoggerFactory.getLogger(MaxTestGraph.class);

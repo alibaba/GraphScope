@@ -15,11 +15,12 @@ package com.alibaba.maxgraph.compiler.tree;
 
 import com.alibaba.maxgraph.QueryFlowOuterClass;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
+import com.alibaba.maxgraph.compiler.logical.LogicalSubQueryPlan;
+import com.alibaba.maxgraph.compiler.logical.function.ProcessorFunction;
 import com.alibaba.maxgraph.compiler.optimizer.ContextManager;
 import com.alibaba.maxgraph.compiler.tree.value.ValueType;
 import com.alibaba.maxgraph.compiler.tree.value.VertexValueType;
-import com.alibaba.maxgraph.compiler.logical.LogicalSubQueryPlan;
-import com.alibaba.maxgraph.compiler.logical.function.ProcessorFunction;
+
 import org.apache.tinkerpop.gremlin.structure.Direction;
 
 public class EdgeVertexTreeNode extends UnaryTreeNode {
