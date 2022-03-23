@@ -26,12 +26,21 @@ import org.apache.spark.internal.Logging
 
 import scala.reflect.ClassTag
 
-abstract class AbstractGraphStructure extends GraphStructure with Logging{
+abstract class AbstractGraphStructure extends GraphStructure with Logging {
 
-  def getTripletIterator[VD: ClassTag, ED : ClassTag]
-  (myNbr : PropertyNbrUnit[Long],startLid : Long, endLid : Long, vertexDataStore: VertexDataStore[VD], edatas : EdgeDataStore[ED],
-   activeEdgeSet : BitSetWithOffset, edgeReversed : Boolean = false,
-   includeSrc: Boolean = true, includeDst: Boolean = true, reuseTriplet : Boolean = false, includeLid : Boolean = false): Iterator[EdgeTriplet[VD,ED]] = {
+  def getTripletIterator[VD: ClassTag, ED: ClassTag](
+      myNbr: PropertyNbrUnit[Long],
+      startLid: Long,
+      endLid: Long,
+      vertexDataStore: VertexDataStore[VD],
+      edatas: EdgeDataStore[ED],
+      activeEdgeSet: BitSetWithOffset,
+      edgeReversed: Boolean = false,
+      includeSrc: Boolean = true,
+      includeDst: Boolean = true,
+      reuseTriplet: Boolean = false,
+      includeLid: Boolean = false
+  ): Iterator[EdgeTriplet[VD, ED]] = {
     new Iterator[EdgeTriplet[VD, ED]] {
       var curLid = startLid.toInt
       val myAddress = myNbr.getAddress
@@ -45,22 +54,20 @@ abstract class AbstractGraphStructure extends GraphStructure with Logging{
       var srcId = innerVertexLid2Oid(vertex)
       var srcAttr = vertexDataStore.get(curLid)
       override def hasNext: Boolean = {
-        if (curOffset < 0){
+        if (curOffset < 0) {
           return false
         }
-        if (curOffset < endOffset){
+        if (curOffset < endOffset) {
           true
-        }
-        else {
+        } else {
           curLid += 1
           var flag = true
-          while (flag && curLid < endLid){
+          while (flag && curLid < endLid) {
             curOffset = activeEdgeSet.nextSetBit(getOEBeginOffset(curLid).toInt)
             endOffset = getOEEndOffset(curLid)
-            if (curOffset >= endOffset){
+            if (curOffset >= endOffset) {
               curLid += 1
-            }
-            else flag = false
+            } else flag = false
           }
           if (curLid >= endLid || curOffset < 0) false
           else {
@@ -78,13 +85,12 @@ abstract class AbstractGraphStructure extends GraphStructure with Logging{
         val dstLid = myNbr.vid().toInt
         val eid = myNbr.eid().toInt
         vertex.SetValue(dstLid)
-        if (edgeReversed){
+        if (edgeReversed) {
           edgeTriplet.dstId = srcId
           edgeTriplet.dstAttr = srcAttr
           edgeTriplet.srcId = getId(vertex)
           edgeTriplet.srcAttr = vertexDataStore.get(dstLid)
-        }
-        else {
+        } else {
           edgeTriplet.srcId = srcId
           edgeTriplet.srcAttr = srcAttr
           edgeTriplet.dstId = getId(vertex)
@@ -97,7 +103,14 @@ abstract class AbstractGraphStructure extends GraphStructure with Logging{
     }
   }
 
-  def getEdgeIterator[ED: ClassTag](myNbr : PropertyNbrUnit[Long], startLid : Long, endLid : Long, edatas: EdgeDataStore[ED], activeEdgeSet : BitSetWithOffset, edgeReversed : Boolean = false) : Iterator[Edge[ED]] = {
+  def getEdgeIterator[ED: ClassTag](
+      myNbr: PropertyNbrUnit[Long],
+      startLid: Long,
+      endLid: Long,
+      edatas: EdgeDataStore[ED],
+      activeEdgeSet: BitSetWithOffset,
+      edgeReversed: Boolean = false
+  ): Iterator[Edge[ED]] = {
     new Iterator[Edge[ED]] {
       var curLid = startLid.toInt
       val myAddress = myNbr.getAddress
@@ -112,22 +125,19 @@ abstract class AbstractGraphStructure extends GraphStructure with Logging{
       val edge = new ReusableEdgeImpl[ED]
 
       override def hasNext: Boolean = {
-        if (curOffset < 0){
+        if (curOffset < 0) {
           return false
-        }
-        else if (curOffset < endOffset){
+        } else if (curOffset < endOffset) {
           true
-        }
-        else {
+        } else {
           curLid += 1
           var flag = true
-          while (flag && curLid < endLid){
+          while (flag && curLid < endLid) {
             curOffset = activeEdgeSet.nextSetBit(getOEBeginOffset(curLid).toInt)
             endOffset = getOEEndOffset(curLid)
-            if (curOffset >= endOffset){
+            if (curOffset >= endOffset) {
               curLid += 1
-            }
-            else flag = false
+            } else flag = false
           }
           if (curLid >= endLid || curOffset < 0) false
           else {
@@ -147,8 +157,7 @@ abstract class AbstractGraphStructure extends GraphStructure with Logging{
         if (edgeReversed) {
           edge.dstId = srcId
           edge.srcId = getId(vertex)
-        }
-        else {
+        } else {
           edge.srcId = srcId
           edge.dstId = getId(vertex)
         }

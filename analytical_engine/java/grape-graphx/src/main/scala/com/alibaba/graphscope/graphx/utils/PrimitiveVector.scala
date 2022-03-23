@@ -18,10 +18,11 @@ package com.alibaba.graphscope.graphx.utils
 
 import scala.reflect.ClassTag
 
-/**
- * An append-only, non-threadsafe, array-backed vector that is optimized for primitive types.
- */
-class PrimitiveVector[@specialized(Long, Int, Double) V: ClassTag](initialSize: Int = 64) extends Serializable {
+/** An append-only, non-threadsafe, array-backed vector that is optimized for primitive types.
+  */
+class PrimitiveVector[@specialized(Long, Int, Double) V: ClassTag](
+    initialSize: Int = 64
+) extends Serializable {
   private var _numElements = 0
   private var _array: Array[V] = _
 
@@ -49,8 +50,6 @@ class PrimitiveVector[@specialized(Long, Int, Double) V: ClassTag](initialSize: 
   def capacity: Int = _array.length
 
   def length: Int = _numElements
-
-  def size: Int = _numElements
 
   def iterator: Iterator[V] = new Iterator[V] {
     var index = 0
@@ -80,15 +79,16 @@ class PrimitiveVector[@specialized(Long, Int, Double) V: ClassTag](initialSize: 
     this
   }
 
-  /** Return a trimmed version of the underlying array. */
-  def toArray: Array[V] = {
-    copyArrayWithLength(size)
-  }
-
   private def copyArrayWithLength(length: Int): Array[V] = {
     val copy = new Array[V](length)
     _array.copyToArray(copy)
     copy
   }
-}
 
+  def size: Int = _numElements
+
+  /** Return a trimmed version of the underlying array. */
+  def toArray: Array[V] = {
+    copyArrayWithLength(size)
+  }
+}

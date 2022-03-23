@@ -363,10 +363,6 @@ class AdjList<VID_T, EID_T, grape::EmptyType> {
 
 }  // namespace arrow_projected_fragment_impl
 
-template <typename OID_T, typename VID_T, typename OLD_VDATA_T,
-          typename NEW_VDATA_T, typename OLD_EDATA_T, typename NEW_EDATA_T>
-class ArrowProjectedFragmentMapper;
-
 /**
  * @brief This class represents the fragment projected from ArrowFragment which
  * contains only one vertex label and edge label. The fragment has no label and
@@ -711,6 +707,14 @@ class ArrowProjectedFragment
 
   inline fid_t fnum() const { return fnum_; }
 
+  inline label_id_t vertex_label() const { return vertex_label_; }
+
+  inline label_id_t edge_label() const { return edge_label_; }
+
+  inline prop_id_t vertex_prop_id() const { return vertex_prop_; }
+
+  inline prop_id_t edge_prop_id() const { return edge_prop_; }
+
   inline vertex_range_t Vertices() const { return vertices_; }
 
   inline vertex_range_t InnerVertices() const { return inner_vertices_; }
@@ -769,6 +773,18 @@ class ArrowProjectedFragment
   inline size_t GetInEdgeNum() const { return ienum_; }
 
   inline size_t GetOutEdgeNum() const { return oenum_; }
+
+  /* Get outging edges num from this frag*/
+  inline size_t GetOutgoingEdgeNum() const {
+    return static_cast<size_t>(oe_offsets_end_->Value(ivnum_ - 1) -
+                               oe_offsets_begin_->Value(0));
+  }
+
+  /* Get incoming edges num to this frag*/
+  inline size_t GetIncomingEdgeNum() const {
+    return static_cast<size_t>(ie_offsets_end_->Value(ivnum_ - 1) -
+                               ie_offsets_begin_->Value(0));
+  }
 
   inline size_t GetTotalVerticesNum() const {
     return vm_ptr_->GetTotalVerticesNum();
@@ -982,6 +998,15 @@ class ArrowProjectedFragment
   inline arrow_projected_fragment_impl::TypedArray<EDATA_T>&
   get_edata_array_accessor() {
     return edge_data_array_accessor_;
+  }
+
+  inline arrow_projected_fragment_impl::TypedArray<VDATA_T>&
+  get_vdata_array_accessor() {
+    return vertex_data_array_accessor_;
+  }
+
+  std::shared_ptr<vineyard::ArrowFragment<oid_t, vid_t>> get_arrow_fragment() {
+    return fragment_;
   }
 
  private:
@@ -1230,8 +1255,8 @@ class ArrowProjectedFragment
   std::vector<vid_t> outer_vertex_offsets_;
   std::vector<std::vector<vertex_t>> mirrors_of_frag_;
 
-  template <typename _OID_T, typename _VID_T, typename _OLD_VDATA_T,
-            typename _NEW_VDATA_T, typename _OLD_EDATA_T, typename _NEW_EDATA_T>
+  template <typename _OID_T, typename _VID_T, typename _NEW_VDATA_T,
+            typename _NEW_EDATA_T>
   friend class ArrowProjectedFragmentMapper;
 };
 

@@ -19,38 +19,38 @@ package com.alibaba.graphscope.graphx.store
 import org.apache.spark.internal.Logging
 import org.apache.spark.util.KnownSizeEstimationPorter
 
-import java.util.concurrent.{ConcurrentHashMap, LinkedBlockingQueue, TimeUnit}
+import java.util.concurrent.{ConcurrentHashMap, LinkedBlockingQueue}
 import scala.reflect.ClassTag
 
-trait EdgeDataStore[T] extends KnownSizeEstimationPorter{
-  def size() : Int
-  def getWithEID(eid : Int) : T
+trait EdgeDataStore[T] extends KnownSizeEstimationPorter {
+  def size(): Int
+  def getWithEID(eid: Int): T
   def getWithOffset(offset: Int): T
-  def setWithEID(ind : Int, ed : T) : Unit
-  def setWithOffset(ind : Int, ed: T) : Unit
-  def mapToNew[T2 : ClassTag] : EdgeDataStore[T2]
-  def getLocalNum : Int
-  def setLocalNum(localNum : Int) : Unit
+  def setWithEID(ind: Int, ed: T): Unit
+  def setWithOffset(ind: Int, ed: T): Unit
+  def mapToNew[T2: ClassTag]: EdgeDataStore[T2]
+  def getLocalNum: Int
+  def setLocalNum(localNum: Int): Unit
 }
 
 object EdgeDataStore extends Logging {
-  val map = new ConcurrentHashMap[Int,LinkedBlockingQueue[EdgeDataStore[_]]]
+  val map = new ConcurrentHashMap[Int, LinkedBlockingQueue[EdgeDataStore[_]]]
 
-  def enqueue(pid : Int, edgeStore: EdgeDataStore[_]) : Unit = {
+  def enqueue(pid: Int, edgeStore: EdgeDataStore[_]): Unit = {
     createQueue(pid)
     val q = map.get(pid)
     q.offer(edgeStore)
   }
 
-  def dequeue(pid : Int) : EdgeDataStore[_] = {
+  def dequeue(pid: Int): EdgeDataStore[_] = {
     createQueue(pid)
     require(map.containsKey(pid), s"no queue available for ${pid}")
     val res = map.get(pid).take()
     res
   }
 
-  def createQueue(pid : Int) : Unit = synchronized{
-    if (!map.containsKey(pid)){
+  def createQueue(pid: Int): Unit = synchronized {
+    if (!map.containsKey(pid)) {
       map.put(pid, new LinkedBlockingQueue)
     }
   }

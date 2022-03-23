@@ -28,45 +28,52 @@ import org.apache.spark.internal.Logging
 
 import scala.reflect.ClassTag
 
-object TriangleCount extends Logging with Serializable{
+object TriangleCount extends Logging with Serializable {
   var stage = 0
 
   def run[VD: ClassTag, ED: ClassTag](graph: Graph[VD, ED]): Graph[Int, ED] = {
 
-    val tmp = graph.outerJoinVertices(graph.collectNeighborIds(edgeDirection = EdgeDirection.Either))((vid, vd, nbrIds) => nbrIds.get)
+    val tmp = graph.outerJoinVertices(
+      graph.collectNeighborIds(edgeDirection = EdgeDirection.Either)
+    )((vid, vd, nbrIds) => nbrIds.get)
 
     val triangleGraph = tmp.mapVertices((vid, vd) => (0, vd.toSet))
     stage = 0
 
-    def vp(id : VertexId, attr : (Int, Set[VertexId]), msg : Array[VertexId]) : (Int,Set[VertexId]) = {
-      if (stage == 0){
+    def vp(
+        id: VertexId,
+        attr: (Int, Set[VertexId]),
+        msg: Array[VertexId]
+    ): (Int, Set[VertexId]) = {
+      if (stage == 0) {
         attr
-      }
-      else if (stage == 1){
+      } else if (stage == 1) {
         val prevCnt = attr._1
         var curCnt = 0
         var i = 0
         val size = msg.size
-        while (i < size){
-          if (attr._2.contains(msg(i))){
+        while (i < size) {
+          if (attr._2.contains(msg(i))) {
             curCnt += 1
           }
           i += 1
         }
         (prevCnt + curCnt, attr._2)
-      }
-      else {
+      } else {
         attr
       }
     }
 
-    def sendMsg(edge: EdgeTriplet[(Int, Set[VertexId]), ED]) : Iterator[(VertexId,Array[VertexId])] = {
-      if (stage == 0){
+    def sendMsg(
+        edge: EdgeTriplet[(Int, Set[VertexId]), ED]
+    ): Iterator[(VertexId, Array[VertexId])] = {
+      if (stage == 0) {
         stage = 1
-        log.info(s"${edge.srcId} send msg to ${edge.dstId}, ${edge.srcAttr._2.toArray.mkString(",")}")
+        log.info(
+          s"${edge.srcId} send msg to ${edge.dstId}, ${edge.srcAttr._2.toArray.mkString(",")}"
+        )
         Iterator((edge.dstId, edge.srcAttr._2.toArray))
-      }
-      else {
+      } else {
         Iterator.empty
       }
     }
@@ -77,7 +84,8 @@ object TriangleCount extends Logging with Serializable{
     }
 
     val initialMsg = new Array[VertexId](1)
-    triangleGraph.pregel(initialMsg)(vp, sendMsg, mergeMsg).mapVertices((vid,vd) => vd._1)
+    triangleGraph
+      .pregel(initialMsg)(vp, sendMsg, mergeMsg)
+      .mapVertices((vid, vd) => vd._1)
   }
 }
-

@@ -21,25 +21,28 @@ import org.apache.spark.graphx.impl.GraphImpl
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.{GSSparkSession, SparkSession}
 
-object GraphConvertTest extends Logging{
-  def main(array: Array[String]) : Unit = {
+object GraphConvertTest extends Logging {
+  def main(array: Array[String]): Unit = {
     require(array.length == 2)
-    val path = array(0)
+    val path    = array(0)
     val numPart = array(1).toInt
-    val spark = SparkSession
-      .builder
+    val spark = GSSparkSession.builder
       .appName(s"${this.getClass.getSimpleName}")
       .getOrCreate()
     val sc = spark.sparkContext
 
-    val graphxGraph = GraphLoader.edgeListFile(sc, path,false, numPart).mapVertices((id,vd)=> id).mapEdges(edge => edge.dstId).cache()
+    val graphxGraph = GraphLoader
+      .edgeListFile(sc, path, false, numPart)
+      .mapVertices((id, vd) => id)
+      .mapEdges(edge => edge.dstId)
+      .cache()
     log.info(s"Loaded graphx graph ${graphxGraph.numVertices} vertices, ${graphxGraph.numEdges} edges")
 
-    val grapeGraph = GSSparkSession.graphXtoGSGraph(graphxGraph.asInstanceOf[GraphImpl[Long,Long]])
+    val grapeGraph = GSSparkSession.graphXtoGSGraph(graphxGraph.asInstanceOf[GraphImpl[Long, Long]])
     log.info(s"Converted to grape graph ${grapeGraph.numVertices} vertices, ${grapeGraph.numEdges} edges")
-    val res = grapeGraph.mapVertices((id,vd) => vd + 10).mapTriplets(triplet => triplet.attr + 1).cache()
+    val res = grapeGraph.mapVertices((id, vd) => vd + 10).mapTriplets(triplet => triplet.attr + 1).cache()
     log.info(s"Converted to grape graph ${res.numVertices} vertices, ${res.numEdges} edges")
 
-    sc.stop()
+    spark.close()
   }
 }

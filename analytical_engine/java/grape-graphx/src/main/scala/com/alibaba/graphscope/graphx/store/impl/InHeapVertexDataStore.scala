@@ -17,24 +17,29 @@
 package com.alibaba.graphscope.graphx.store.impl
 
 import com.alibaba.graphscope.graphx.VineyardClient
-import com.alibaba.graphscope.graphx.utils.GrapeUtils
 import org.apache.spark.internal.Logging
 import org.apache.spark.util.SizeEstimator
 
 import scala.reflect.ClassTag
 
-class InHeapVertexDataStore[VD: ClassTag](length : Int, localNum : Int, client : VineyardClient, val array :Array[VD]) extends AbstractVertexDataStore[VD](length, localNum,client) with Logging{
-  def this(length: Int, localNum : Int, client : VineyardClient){
-    this(length, localNum, client,new Array[VD](length));
+class InHeapVertexDataStore[VD: ClassTag](
+    length: Int,
+    localNum: Int,
+    client: VineyardClient,
+    val array: Array[VD]
+) extends AbstractVertexDataStore[VD](length, localNum, client)
+    with Logging {
+  def this(length: Int, localNum: Int, client: VineyardClient) {
+    this(length, localNum, client, new Array[VD](length));
   }
 
   override def get(ind: Int): VD = array(ind)
 
-  override def set(ind: Int,vd : VD): Unit = array(ind) = vd
+  override def set(ind: Int, vd: VD): Unit = array(ind) = vd
 
   override def estimatedSize: Long = {
     val arraySize = SizeEstimator.estimate(array)
-    val res = SizeEstimator.estimate(client) +  arraySize/ localNum +8
+    val res       = SizeEstimator.estimate(client) + arraySize / localNum + 8
     res
   }
 }

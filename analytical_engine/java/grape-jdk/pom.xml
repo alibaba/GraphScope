@@ -53,6 +53,10 @@
       <artifactId>annotation-processor</artifactId>
     </dependency>
     <dependency>
+      <groupId>com.alibaba.graphscope</groupId>
+      <artifactId>grape-annotation</artifactId>
+    </dependency>
+    <dependency>
       <groupId>com.alibaba</groupId>
       <artifactId>fastjson</artifactId>
     </dependency>

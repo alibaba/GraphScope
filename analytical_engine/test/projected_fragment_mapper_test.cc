@@ -27,7 +27,7 @@
 
 #include "core/fragment/arrow_projected_fragment.h"
 #include "core/fragment/arrow_projected_fragment_mapper.h"
-#include "core/java/graphx/fragment_getter.h"
+#include "core/java/fragment_getter.h"
 #include "core/loader/arrow_fragment_loader.h"
 
 std::string getHostName() { return boost::asio::ip::host_name(); }
@@ -103,15 +103,14 @@ int main(int argc, char** argv) {
       LOG(INFO) << "After projection: " << getHostName() << ":"
                 << projected_fragment->id();
 
-      gs::ArrowProjectedFragmentMapper<int64_t, uint64_t, double, int64_t,
-                                       int64_t, double>
-          mapper;
-      arrow::Int64Builder vdata_builder;
-      arrow::DoubleBuilder edata_builder;
-      vdata_builder.Reserve(projected_fragment->GetInnerVerticesNum());
       LOG(INFO) << "ivnum: " << projected_fragment->GetInnerVerticesNum()
                 << ",enum: " << projected_fragment->GetOutEdgeNum();
       {
+        gs::ArrowProjectedFragmentMapper<int64_t, uint64_t, int64_t, double>
+            mapper;
+        arrow::Int64Builder vdata_builder;
+        arrow::DoubleBuilder edata_builder;
+        vdata_builder.Reserve(projected_fragment->GetInnerVerticesNum());
         auto ivnum = projected_fragment->GetInnerVerticesNum();
         for (size_t i = 0; i < ivnum; ++i) {
           vdata_builder.UnsafeAppend(static_cast<int64_t>(i));
@@ -122,13 +121,34 @@ int main(int argc, char** argv) {
         for (size_t i = 0; i < edge_num; ++i) {
           edata_builder.UnsafeAppend(static_cast<double>(i));
         }
+        auto mapped_fragment =
+            mapper.Map(projected_fragment->get_arrow_fragment(),
+                       projected_fragment->vertex_label(),
+                       projected_fragment->edge_label(), vdata_builder,
+                       edata_builder, client);
+        LOG(INFO) << "Got mapped fragment " << mapped_fragment->id();
+        grape::Vertex<uint64_t> vertex;
+        vertex.SetValue(10);
+        LOG(INFO) << "new data: " << mapped_fragment->GetData(vertex);
       }
-      auto mapped_fragment =
-          mapper.Map(*projected_fragment, vdata_builder, edata_builder, client);
-      LOG(INFO) << "Got mapped fragment " << mapped_fragment->id();
-      grape::Vertex<uint64_t> vertex;
-      vertex.SetValue(10);
-      LOG(INFO) << "new data: " << mapped_fragment->GetData(vertex);
+      {
+        gs::ArrowProjectedFragmentMapper<int64_t, uint64_t, int64_t, int64_t>
+            mapper;
+        arrow::Int64Builder vdata_builder;
+        auto ivnum = projected_fragment->GetInnerVerticesNum();
+        vdata_builder.Reserve(ivnum);
+        for (size_t i = 0; i < ivnum; ++i) {
+          vdata_builder.UnsafeAppend(static_cast<int64_t>(i));
+        }
+        auto mapped_fragment = mapper.Map(
+            projected_fragment->get_arrow_fragment(),
+            projected_fragment->vertex_label(),
+            projected_fragment->edge_prop_id(), vdata_builder, client);
+        LOG(INFO) << "Got mapped fragment " << mapped_fragment->id();
+        grape::Vertex<uint64_t> vertex;
+        vertex.SetValue(10);
+        LOG(INFO) << "new data: " << mapped_fragment->GetData(vertex);
+      }
     }
 
     MPI_Barrier(comm_spec.comm());

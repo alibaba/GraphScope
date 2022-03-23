@@ -16,7 +16,6 @@
 
 package org.apache.spark.util
 
-/**
- * The KnownSizeEstimation is private in package. port this out.
- */
+/** The KnownSizeEstimation is private in package. port this out.
+  */
 trait KnownSizeEstimationPorter extends KnownSizeEstimation

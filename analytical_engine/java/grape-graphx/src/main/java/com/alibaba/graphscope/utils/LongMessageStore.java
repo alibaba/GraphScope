@@ -16,9 +16,11 @@
 
 package com.alibaba.graphscope.utils;
 
-import com.alibaba.graphscope.ds.TypedArray;
 import com.alibaba.graphscope.ds.Vertex;
-import com.alibaba.graphscope.fragment.BaseGraphXFragment;
+import com.alibaba.graphscope.fragment.IFragment;
+import com.alibaba.graphscope.graphx.GraphXConf;
+import com.alibaba.graphscope.parallel.MessageInBuffer;
+import com.alibaba.graphscope.parallel.message.LongMsg;
 import com.alibaba.graphscope.serialization.FFIByteVectorInputStream;
 import com.alibaba.graphscope.stdcxx.FFIByteVector;
 
@@ -35,16 +37,23 @@ public class LongMessageStore extends AbstractMessageStore<Long> {
 
     private AtomicLongArrayWrapper values;
     private Function2<Long, Long, Long> mergeMessage;
+    private LongMsg[] msgWrappers;
 
     public LongMessageStore(
             int len,
             int fnum,
             int numCores,
+            int ivnum,
             Function2<Long, Long, Long> mergeMessage,
-            ThreadSafeBitSet nextSet) {
-        super(fnum, numCores, nextSet);
+            ThreadSafeBitSet nextSet,
+            GraphXConf<?, ?, ?> conf) {
+        super(fnum, numCores, nextSet, conf, ivnum);
         values = new AtomicLongArrayWrapper(len);
         this.mergeMessage = mergeMessage;
+        msgWrappers = new LongMsg[numCores];
+        for (int i = 0; i < numCores; ++i) {
+            msgWrappers[i] = LongMsg.factory.create();
+        }
     }
 
     @Override
@@ -75,18 +84,17 @@ public class LongMessageStore extends AbstractMessageStore<Long> {
     }
 
     @Override
-    void writeMessageToStream(BaseGraphXFragment<Long, Long, ?, ?> fragment) throws IOException {
+    void writeMessageToStream(IFragment<Long, Long, ?, ?> fragment) throws IOException {
         int ivnum = (int) fragment.getInnerVerticesNum();
         int cnt = 0;
         Vertex<Long> vertex = tmpVertex[0];
-        TypedArray<Long> outerLid2Gids = fragment.getVM().getOuterLid2GidAccessor();
 
         for (int i = nextSet.nextSetBit(ivnum); i >= 0; i = nextSet.nextSetBit(i + 1)) {
             vertex.SetValue((long) i);
-            long outerGid = outerLid2Gids.get(i - ivnum);
+            long outerGid = fragment.getOuterVertexGid(vertex);
             int dstFid = idParser.getFragId(outerGid);
-            long dstLid = idParser.getLocalId(outerGid);
-            outputStream[dstFid].writeLong(dstLid);
+            //            long dstLid = idParser.getLocalId(outerGid);
+            outputStream[dstFid].writeLong(outerGid);
             outputStream[dstFid].writeLong(values.get(i));
             cnt += 1;
         }
@@ -95,18 +103,24 @@ public class LongMessageStore extends AbstractMessageStore<Long> {
 
     @Override
     public void digest(
+            IFragment<Long, Long, ?, ?> fragment,
             FFIByteVector vector,
-            BaseGraphXFragment<Long, Long, ?, ?> fragment,
-            ThreadSafeBitSet curSet) {
+            ThreadSafeBitSet curSet,
+            int threadId) {
         FFIByteVectorInputStream inputStream = new FFIByteVectorInputStream(vector);
         int size = (int) vector.size();
         if (size <= 0) {
             throw new IllegalStateException("The received vector can not be empty");
         }
+        Vertex<Long> vertex = tmpVertex[threadId];
 
         try {
             while (inputStream.available() > 0) {
-                int lid = (int) inputStream.readLong();
+                long gid = inputStream.readLong();
+                if (!fragment.gid2Vertex(gid, vertex)) {
+                    throw new IllegalStateException("Error in gid 2 vertex conversion " + gid);
+                }
+                int lid = Math.toIntExact(vertex.GetValue());
                 long msg = inputStream.readLong();
                 if (curSet.get(lid)) {
                     values.set(lid, mergeMessage.apply(values.get(lid), msg));
@@ -118,5 +132,37 @@ public class LongMessageStore extends AbstractMessageStore<Long> {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public long digest(
+            IFragment<Long, Long, ?, ?> fragment,
+            MessageInBuffer messageInBuffer,
+            ThreadSafeBitSet curSet,
+            int threadId) {
+
+        Vertex<Long> myVertex = tmpVertex[threadId];
+        LongMsg msg = msgWrappers[threadId];
+        long msgCnt = 0;
+        while (true) {
+            boolean res =
+                    messageInBuffer.getMessage(
+                            fragment,
+                            myVertex,
+                            msg,
+                            Unused.getUnused(
+                                    conf.getVdClass(), conf.getEdClass(), conf.getMsgClass()));
+            if (!res) break;
+            if (myVertex.GetValue() > fragment.getVerticesNum()) {
+                throw new IllegalStateException(
+                        "received lid "
+                                + myVertex.GetValue()
+                                + " , greater than tvnum: "
+                                + fragment.getVerticesNum());
+            }
+            values.set(myVertex.GetValue().intValue(), msg.getData());
+            msgCnt += 1;
+        }
+        return msgCnt;
     }
 }

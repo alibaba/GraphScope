@@ -17,23 +17,35 @@
 package com.alibaba.graphscope.graphx.store.impl
 
 import com.alibaba.graphscope.graphx.VineyardClient
-import com.alibaba.graphscope.graphx.utils.{EIDAccessor, GrapeUtils}
+import com.alibaba.graphscope.graphx.utils.EIDAccessor
 import org.apache.spark.internal.Logging
 import org.apache.spark.util.SizeEstimator
 
 import scala.reflect.ClassTag
 
-class InHeapEdgeDataStore[ED: ClassTag](length : Int, localNum : Int, client : VineyardClient, val edataArray : Array[ED], eidAccessor : EIDAccessor) extends AbstractEdgeDataStore[ED](length, localNum,client,eidAccessor) with Logging{
-  def this(length : Int,localNum : Int, client : VineyardClient, eidAccessor: EIDAccessor) = {
-    this(length, localNum, client,new Array[ED](length), eidAccessor)
+class InHeapEdgeDataStore[ED: ClassTag](
+    length: Int,
+    localNum: Int,
+    client: VineyardClient,
+    val edataArray: Array[ED],
+    eidAccessor: EIDAccessor
+) extends AbstractEdgeDataStore[ED](length, localNum, client, eidAccessor)
+    with Logging {
+  def this(
+      length: Int,
+      localNum: Int,
+      client: VineyardClient,
+      eidAccessor: EIDAccessor
+  ) = {
+    this(length, localNum, client, new Array[ED](length), eidAccessor)
   }
 
-  override def getWithOffset(offset : Int) : ED = {
+  override def getWithOffset(offset: Int): ED = {
     val eid = eidAccessor.getEid(offset).toInt
     edataArray(eid)
   }
 
-  override def setWithOffset(offset : Int, value : ED) : Unit = {
+  override def setWithOffset(offset: Int, value: ED): Unit = {
     val eid = eidAccessor.getEid(offset).toInt
     edataArray(eid) = value
   }
@@ -47,7 +59,7 @@ class InHeapEdgeDataStore[ED: ClassTag](length : Int, localNum : Int, client : V
   }
   override def estimatedSize: Long = {
     val arraySize = SizeEstimator.estimate(edataArray)
-    val res = SizeEstimator.estimate(client) +  (arraySize/ localNum) + 8
+    val res       = SizeEstimator.estimate(client) + (arraySize / localNum) + 8
     res
   }
 }

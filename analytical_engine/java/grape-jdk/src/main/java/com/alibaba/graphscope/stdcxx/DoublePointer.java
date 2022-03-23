@@ -31,7 +31,7 @@ public interface DoublePointer extends FFIPointer, CXXPointer {
     Factory factory = FFITypeFactory.getFactory(Factory.class, DoublePointer.class);
 
     @CXXOperator("*&")
-    double toDouble();
+    double get();
 
     @CXXOperator("=")
     void SetValue(double value);

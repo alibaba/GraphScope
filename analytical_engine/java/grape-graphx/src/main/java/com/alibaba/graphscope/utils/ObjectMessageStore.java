@@ -16,9 +16,10 @@
 
 package com.alibaba.graphscope.utils;
 
-import com.alibaba.graphscope.ds.TypedArray;
 import com.alibaba.graphscope.ds.Vertex;
-import com.alibaba.graphscope.fragment.BaseGraphXFragment;
+import com.alibaba.graphscope.fragment.IFragment;
+import com.alibaba.graphscope.graphx.GraphXConf;
+import com.alibaba.graphscope.parallel.MessageInBuffer;
 import com.alibaba.graphscope.parallel.ParallelMessageManager;
 import com.alibaba.graphscope.serialization.FFIByteVectorInputStream;
 import com.alibaba.graphscope.stdcxx.FFIByteVector;
@@ -46,10 +47,12 @@ public class ObjectMessageStore<T> extends AbstractMessageStore<T> {
             int len,
             int fnum,
             int numCores,
+            int ivnum,
             Class<? extends T> clz,
             Function2<T, T, T> function2,
-            ThreadSafeBitSet nextSet) {
-        super(fnum, numCores, nextSet);
+            ThreadSafeBitSet nextSet,
+            GraphXConf<?, ?, ?> conf) {
+        super(fnum, numCores, nextSet, conf, ivnum);
         this.clz = clz;
         values = new AtomicObjectArrayWrapper<>(len);
         mergeMessage = function2;
@@ -91,18 +94,17 @@ public class ObjectMessageStore<T> extends AbstractMessageStore<T> {
     }
 
     @Override
-    void writeMessageToStream(BaseGraphXFragment<Long, Long, ?, ?> fragment) throws IOException {
+    void writeMessageToStream(IFragment<Long, Long, ?, ?> fragment) throws IOException {
         int ivnum = (int) fragment.getInnerVerticesNum();
         int cnt = 0;
         Vertex<Long> vertex = tmpVertex[0];
-        TypedArray<Long> outerLid2Gids = fragment.getVM().getOuterLid2GidAccessor();
 
         for (int i = nextSet.nextSetBit(ivnum); i >= 0; i = nextSet.nextSetBit(i + 1)) {
             vertex.SetValue((long) i);
-            long outerGid = outerLid2Gids.get(i - ivnum);
+            long outerGid = fragment.getOuterVertexGid(vertex);
             int dstFid = idParser.getFragId(outerGid);
-            long dstLid = idParser.getLocalId(outerGid);
-            objectOutputStreams[dstFid].writeLong(dstLid);
+            //            long dstLid = idParser.getLocalId(outerGid);
+            objectOutputStreams[dstFid].writeLong(outerGid);
             objectOutputStreams[dstFid].writeObject(values.get(i));
             cnt += 1;
         }
@@ -113,7 +115,7 @@ public class ObjectMessageStore<T> extends AbstractMessageStore<T> {
     public void flushMessages(
             ThreadSafeBitSet nextSet,
             ParallelMessageManager messageManager,
-            BaseGraphXFragment<Long, Long, ?, ?> fragment,
+            IFragment<Long, Long, ?, ?> fragment,
             int[] fid2WorkerId,
             ExecutorService executorService)
             throws IOException {
@@ -133,9 +135,11 @@ public class ObjectMessageStore<T> extends AbstractMessageStore<T> {
 
     @Override
     public void digest(
+            IFragment<Long, Long, ?, ?> fragment,
             FFIByteVector vector,
-            BaseGraphXFragment<Long, Long, ?, ?> fragment,
-            ThreadSafeBitSet curSet) {
+            //            BaseGraphXFragment<Long, Long, ?, ?> fragment,
+            ThreadSafeBitSet curSet,
+            int threadId) {
         ObjectInputStream inputStream = null;
         try {
             inputStream = new ObjectInputStream(new FFIByteVectorInputStream(vector));
@@ -147,9 +151,14 @@ public class ObjectMessageStore<T> extends AbstractMessageStore<T> {
             throw new IllegalStateException("The received vector can not be empty");
         }
 
+        Vertex<Long> vertex = tmpVertex[threadId];
         try {
             while (inputStream.available() > 0) {
-                int lid = (int) inputStream.readLong();
+                long gid = inputStream.readLong();
+                if (!fragment.gid2Vertex(gid, vertex)) {
+                    throw new IllegalStateException("Error in gid 2 vertex conversion " + gid);
+                }
+                int lid = Math.toIntExact(vertex.GetValue());
                 T msg = (T) inputStream.readObject();
                 if (curSet.get(lid)) {
                     values.set(lid, mergeMessage.apply(values.get(lid), msg));
@@ -161,5 +170,14 @@ public class ObjectMessageStore<T> extends AbstractMessageStore<T> {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public long digest(
+            IFragment<Long, Long, ?, ?> fragment,
+            MessageInBuffer messageInBuffer,
+            ThreadSafeBitSet curSet,
+            int threadId) {
+        throw new IllegalStateException("Current not supported");
     }
 }

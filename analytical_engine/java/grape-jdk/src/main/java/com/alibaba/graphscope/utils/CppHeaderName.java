@@ -58,7 +58,6 @@ public class CppHeaderName {
     public static final String GRAPE_LONG_VECTOR_H = "core/utils/long_vector.h";
     // this header contains the self-defined-ds generate ffi cpp files,
     // this header should be include in message managers
-    public static final String JAVA_APP_JNI_FFI_H = "java-app-jni-ffi.h";
     public static final String GS_CORE_CONFIG_H = "core/config.h";
     public static final String GRAPE_COMMUNICATOR_H = "grape/communication/communicator.h";
     public static final String ARROW_PROJECTED_FRAGMENT_H =
@@ -67,25 +66,9 @@ public class CppHeaderName {
             "core/fragment/arrow_projected_fragment_mapper.h";
     // public static final String CORE_JAVA_TYPE_ALIAS_H = "core/java/type_alias.h";
     public static final String GRAPE_WORKER_COMM_SPEC_H = "grape/worker/comm_spec.h";
-    public static final String GRAPE_SERIALIZATION_IN_ARCHIVE = "grape/serialization/in_archive.h";
-    public static final String GRAPE_SERIALIZATION_OUT_ARCHIVE =
-            "grpae/serialization/out_archive.h";
 
-    public static final String JAVA_LOADER_INVOKER_H = "core/java/java_loader_invoker.h";
-
-    public static final String GS_MEMORY_MAPPED_BUFFER_H = "core/java/memory_mapped_buffer.h";
-    public static final String CORE_JAVA_GRAPHX_EDGE_PARTITION_H =
-            "core/java/graphx/edge_partition.h";
-    public static final String CORE_JAVA_GRAPHX_GRAPHX_CSR_H = "core/java/graphx/graphx_csr.h";
-    public static final String CORE_JAVA_GRAPHX_LOCAL_VERTEX_MAP_H =
-            "core/java/graphx/local_vertex_map.h";
-    public static final String CORE_JAVA_GRAPHX_GRAPHX_VERTEX_MAP_H =
-            "core/java/graphx/graphx_vertex_map.h";
-    public static final String CORE_JAVA_GRAPHX_VERTEX_DATA_H = "core/java/graphx/vertex_data.h";
-    public static final String CORE_JAVA_GRAPHX_EDGE_DATA_H = "core/java/graphx/edge_data.h";
-    public static final String CORE_JAVA_GRAPHX_GRAPHX_FRAGMENT_H =
-            "core/java/graphx/graphx_fragment.h";
-    public static final String CORE_JAVA_FRAGMENT_GETTER_H = "core/java/graphx/fragment_getter.h";
+    public static final String CORE_JAVA_FRAGMENT_GETTER_H = "core/java/fragment_getter.h";
+    public static final String CORE_JAVA_GRAPHX_RAW_DATA_H = "core/java/graphx_raw_data.h";
 
     public static final String VINEYARD_CLIENT_H = "vineyard/client/client.h";
     public static final String VINEYARD_STATUS_H = "vineyard/common/util/status.h";

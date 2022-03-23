@@ -28,6 +28,7 @@ import com.alibaba.graphscope.parallel.ParallelMessageManager;
 import com.alibaba.graphscope.parallel.message.LongMsg;
 import com.alibaba.graphscope.utils.AtomicLongArrayWrapper;
 import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
+import com.alibaba.graphscope.utils.Unused;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,7 +72,12 @@ public class SSSP implements ParallelAppBase<Long, Long, Long, Long, SSSPContext
                 partialResults.set(vertex, Math.min(nbr.data(), partialResults.get(vertex)));
                 if (fragment.isOuterVertex(vertex)) {
                     msg.setData(partialResults.get(vertex));
-                    mm.syncStateOnOuterVertex(fragment, vertex, msg, 0, 2L);
+                    mm.syncStateOnOuterVertex(
+                            fragment,
+                            vertex,
+                            msg,
+                            0,
+                            Unused.getUnused(Long.class, Long.class, Long.class));
                 } else {
                     nextModified.set(vertex);
                 }
@@ -124,7 +130,12 @@ public class SSSP implements ParallelAppBase<Long, Long, Long, Long, SSSPContext
                     }
                 };
         messageManager.parallelProcess(
-                frag, context.threadNum, context.executor, msgSupplier, messageConsumer, 2L);
+                frag,
+                context.threadNum,
+                context.executor,
+                msgSupplier,
+                messageConsumer,
+                Unused.getUnused(Long.class, Long.class, Long.class));
     }
 
     private void execute(SSSPContext context, IFragment<Long, Long, Long, Long> frag) {
@@ -160,7 +171,12 @@ public class SSSP implements ParallelAppBase<Long, Long, Long, Long, SSSPContext
                 (vertex, finalTid) -> {
                     LongMsg msg =
                             FFITypeFactoryhelper.newLongMsg(context.partialResults.get(vertex));
-                    messageManager.syncStateOnOuterVertex(frag, vertex, msg, finalTid, 2L);
+                    messageManager.syncStateOnOuterVertex(
+                            frag,
+                            vertex,
+                            msg,
+                            finalTid,
+                            Unused.getUnused(Long.class, Long.class, Long.class));
                 };
         forEachVertex(
                 frag.outerVertices(),
