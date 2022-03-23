@@ -287,9 +287,9 @@ if (BUILD_TESTS)
         target_include_directories(run_java_app PRIVATE core utils apps)
         target_compile_definitions(run_java_app PUBLIC ENABLE_JAVA_SDK)
         target_link_libraries(run_java_app gs_proto ${GFLAGS_LIBRARIES} ${MPI_CXX_LIBRARIES} ${JNI_LIBRARIES} ${Boost_LIBRARIES}
-                                       ${CMAKE_DL_LIBS} ${VINEYARD_LIBRARIES})
+                                       ${CMAKE_DL_LIBS} ${GLOG_LIBRARIES} ${VINEYARD_LIBRARIES})
 
-        #java app benchmark
+        # java app benchmark
         add_executable(property_graph_java_app_benchmarks benchmarks/property_graph_java_app_benchmarks.cc core/java/javasdk.cc core/object/dynamic.cc)
         target_include_directories(property_graph_java_app_benchmarks PRIVATE core utils apps)
         target_compile_definitions(property_graph_java_app_benchmarks PUBLIC ENABLE_JAVA_SDK)
@@ -301,6 +301,7 @@ if (BUILD_TESTS)
         target_compile_definitions(giraph_runner PUBLIC ENABLE_JAVA_SDK)
         target_link_libraries(giraph_runner ${CMAKE_DL_LIBS} gs_proto ${VINEYARD_LIBRARIES} ${Boost_LIBRARIES} ${GFLAGS_LIBRARIES}  ${JNI_LIBRARIES})
 
+
         if (${LIBUNWIND_FOUND})
             target_link_libraries(run_java_app ${LIBUNWIND_LIBRARIES})
             target_link_libraries(property_graph_java_app_benchmarks ${LIBUNWIND_LIBRARIES})
@@ -308,56 +309,56 @@ if (BUILD_TESTS)
         endif ()
     endif()
 
-    macro(add_vineyard_app target)
-        set(options)
-        set(oneValueArgs)
-        set(multiValueArgs SRCS)
-        cmake_parse_arguments(add_vineyard_app "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
-        add_executable(${target} ${add_vineyard_app_SRCS} core/object/dynamic.cc)
-        target_include_directories(${target} PRIVATE ${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps)
-        target_link_libraries(${target} gs_proto ${LIBGRAPELITE_LIBRARIES} ${VINEYARD_LIBRARIES})
-        if (${LIBUNWIND_FOUND})
-            target_link_libraries(${target} ${LIBUNWIND_LIBRARIES})
-        endif ()
-        target_link_libraries(${target} OpenMP::OpenMP_CXX)
-    endmacro()
+    # macro(add_vineyard_app target)
+    #     set(options)
+    #     set(oneValueArgs)
+    #     set(multiValueArgs SRCS)
+    #     cmake_parse_arguments(add_vineyard_app "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+    #     add_executable(${target} ${add_vineyard_app_SRCS} core/object/dynamic.cc)
+    #     target_include_directories(${target} PRIVATE ${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps)
+    #     target_link_libraries(${target} gs_proto ${LIBGRAPELITE_LIBRARIES} ${VINEYARD_LIBRARIES})
+    #     if (${LIBUNWIND_FOUND})
+    #         target_link_libraries(${target} ${LIBUNWIND_LIBRARIES})
+    #     endif ()
+    #     target_link_libraries(${target} OpenMP::OpenMP_CXX)
+    # endmacro()
 
-    add_vineyard_app(run_vy_app SRCS test/run_vy_app.cc)
+    # add_vineyard_app(run_vy_app SRCS test/run_vy_app.cc)
 
-    add_vineyard_app(run_load_from_stream SRCS test/run_load_from_stream.cc)
+    # add_vineyard_app(run_load_from_stream SRCS test/run_load_from_stream.cc)
 
-    add_vineyard_app(run_vy_ldbc SRCS test/run_vy_ldbc.cc)
-    target_include_directories(run_vy_ldbc PRIVATE ${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps)
+    # add_vineyard_app(run_vy_ldbc SRCS test/run_vy_ldbc.cc)
+    # target_include_directories(run_vy_ldbc PRIVATE ${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps)
 
-    add_vineyard_app(run_ctx SRCS test/run_ctx.cc)
-    target_include_directories(run_ctx PRIVATE ${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps)
-    target_link_libraries(run_ctx gs_proto)
+    # add_vineyard_app(run_ctx SRCS test/run_ctx.cc)
+    # target_include_directories(run_ctx PRIVATE ${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps)
+    # target_link_libraries(run_ctx gs_proto)
 
-    add_vineyard_app(run_property_ctx SRCS test/run_property_ctx.cc)
-    target_include_directories(run_property_ctx PRIVATE ${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps)
-    target_link_libraries(run_property_ctx gs_proto)
+    # add_vineyard_app(run_property_ctx SRCS test/run_property_ctx.cc)
+    # target_include_directories(run_property_ctx PRIVATE ${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps)
+    # target_link_libraries(run_property_ctx gs_proto)
 
-    add_vineyard_app(run_pregel_app SRCS test/run_pregel_app.cc)
+    # add_vineyard_app(run_pregel_app SRCS test/run_pregel_app.cc)
 
-    add_vineyard_app(run_string_oid SRCS test/run_string_oid.cc)
-    target_include_directories(run_string_oid PRIVATE ${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps)
+    # add_vineyard_app(run_string_oid SRCS test/run_string_oid.cc)
+    # target_include_directories(run_string_oid PRIVATE ${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps)
 
-    add_vineyard_app(run_empty_property SRCS test/run_empty_property.cc)
-    target_include_directories(run_empty_property PRIVATE ${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps)
+    # add_vineyard_app(run_empty_property SRCS test/run_empty_property.cc)
+    # target_include_directories(run_empty_property PRIVATE ${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps)
 
-    add_vineyard_app(test_project_string SRCS test/test_project_string.cc)
+    # add_vineyard_app(test_project_string SRCS test/test_project_string.cc)
 
-    add_vineyard_app(basic_graph_benchmarks SRCS benchmarks/basic_graph_benchmarks.cc)
+    # add_vineyard_app(basic_graph_benchmarks SRCS benchmarks/basic_graph_benchmarks.cc)
 
-    add_vineyard_app(property_graph_loader SRCS benchmarks/property_graph_loader.cc)
+    # add_vineyard_app(property_graph_loader SRCS benchmarks/property_graph_loader.cc)
 
-    add_vineyard_app(property_graph_benchmarks SRCS benchmarks/property_graph_benchmarks.cc)
+    # add_vineyard_app(property_graph_benchmarks SRCS benchmarks/property_graph_benchmarks.cc)
 
-    add_vineyard_app(projected_graph_benchmarks SRCS benchmarks/projected_graph_benchmarks.cc)
+    # add_vineyard_app(projected_graph_benchmarks SRCS benchmarks/projected_graph_benchmarks.cc)
 
-    if (NETWORKX)
-        add_vineyard_app(test_convert SRCS test/test_convert.cc)
-    endif ()
+    # if (NETWORKX)
+    #     add_vineyard_app(test_convert SRCS test/test_convert.cc)
+    # endif ()
 endif ()
 
 # Cpplint
@@ -383,26 +384,26 @@ add_custom_target(gsa_clformat
     VERBATIM)
 
 # Install GAE Java SDK
-if(ENABLE_JAVA_SDK)
-    set(GAE_JAVA_DIR "${CMAKE_CURRENT_SOURCE_DIR}/java/")
-    set(GAE_JAVA_RUNTIME_DIR "${GAE_JAVA_DIR}/grape-runtime/")
-    set(GAE_JAVA_RUNTIME_JAR "${GAE_JAVA_RUNTIME_DIR}/target/grape-runtime-${GRAPHSCOPE_ANALYTICAL_VERSION}-shaded.jar")
-    add_custom_command(
-        OUTPUT "${GAE_JAVA_RUNTIME_DIR}/target/native/libgrape-jni.so"
-        COMMAND mvn clean install -DskipTests --quiet
-        DEPENDS gs_proto
-        WORKING_DIRECTORY ${GAE_JAVA_DIR}
-        COMMENT "Building GAE-java..."
-        VERBATIM
-    )
-    add_custom_target(grape_jni ALL
-        DEPENDS "${GAE_JAVA_RUNTIME_DIR}/target/native/libgrape-jni.so"
-    )
-    install(FILES DESTINATION lib)
-    install(FILES "${GAE_JAVA_RUNTIME_DIR}/target/native/libgrape-jni.so" DESTINATION lib)
-    install(FILES "${GAE_JAVA_RUNTIME_JAR}" DESTINATION lib)
-    install(FILES "${GAE_JAVA_DIR}/grape_jvm_opts" DESTINATION conf)
-endif()
+# if(ENABLE_JAVA_SDK)
+#     set(GAE_JAVA_DIR "${CMAKE_CURRENT_SOURCE_DIR}/java/")
+#     set(GAE_JAVA_RUNTIME_DIR "${GAE_JAVA_DIR}/grape-runtime/")
+#     set(GAE_JAVA_RUNTIME_JAR "${GAE_JAVA_RUNTIME_DIR}/target/grape-runtime-${GRAPHSCOPE_ANALYTICAL_VERSION}-shaded.jar")
+#     add_custom_command(
+#         OUTPUT "${GAE_JAVA_RUNTIME_DIR}/target/native/libgrape-jni.so"
+#         COMMAND mvn clean install -DskipTests --quiet
+#         DEPENDS gs_proto
+#         WORKING_DIRECTORY ${GAE_JAVA_DIR}
+#         COMMENT "Building GAE-java..."
+#         VERBATIM
+#     )
+#     add_custom_target(grape_jni ALL
+#         DEPENDS "${GAE_JAVA_RUNTIME_DIR}/target/native/libgrape-jni.so"
+#     )
+#     install(FILES DESTINATION lib)
+#     install(FILES "${GAE_JAVA_RUNTIME_DIR}/target/native/libgrape-jni.so" DESTINATION lib)
+#     install(FILES "${GAE_JAVA_RUNTIME_JAR}" DESTINATION lib)
+#     install(FILES "${GAE_JAVA_DIR}/grape_jvm_opts" DESTINATION conf)
+# endif()
 
 # Install binaries
 macro(install_gsa_binary target)

@@ -377,7 +377,7 @@ Run a Demo Java Algorithm
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 We provide some sample java app implementation, and you can directly run them on Graphscope Analytical Engine. First you 
-need to download a `grape-demo.jar <https://github.com/GraphScope/gstest/blob/master/jars/graphscope-demo-0.1-shaded.jar>`_。
+need to download a `grape-demo.jar <https://github.com/GraphScope/gstest/blob/master/jars/graphscope-demo-0.16.0-shaded.jar>`_。
 
 Then open your GraphScope python client, try to load a graph, and run the sample sssp algorithm.
 

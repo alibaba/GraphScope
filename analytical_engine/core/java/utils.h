@@ -20,7 +20,6 @@
 #include <jni.h>
 #include <string>
 #include <vector>
-
 #include "boost/algorithm/string.hpp"
 #include "boost/algorithm/string/split.hpp"
 #include "boost/filesystem/path.hpp"
@@ -28,22 +27,18 @@
 #include "boost/property_tree/ptree.hpp"
 
 namespace gs {
-
 // data vector contains all bytes, can be used to hold oid and vdata, edata.
 using byte_vector = std::vector<char>;
 // offset vector contains offsets to deserialize data vector.
 using offset_vector = std::vector<int>;
-
 static constexpr const char* OFFSET_VECTOR_VECTOR =
     "std::vector<std::vector<int>>";
 static constexpr const char* DATA_VECTOR_VECTOR =
     "std::vector<std::vector<char>>";
-
 static constexpr const char* GIRAPH_PARAMS_CHECK_CLASS =
     "org/apache/giraph/utils/GiraphParamsChecker";
 static constexpr const char* VERIFY_CLASSES_SIGN =
     "(Ljava/lang/String;Ljava/lang/String;)V";
-
 static constexpr const char* OPTION_LOADING_THREAD_NUM = "loading_thread_num";
 static constexpr const char* OPTION_VERTEX_INPUT_FORMAT_CLASS =
     "vertex_input_format_class";
@@ -68,7 +63,6 @@ static constexpr const char* OPTION_IPC_SOCKET = "ipc_socket";
 static constexpr const char* OPTION_FRAG_IDS = "frag_ids";
 
 using ptree = boost::property_tree::ptree;
-
 void string2ptree(const std::string& params, ptree& pt) {
   std::stringstream ss;
   {
@@ -80,13 +74,38 @@ void string2ptree(const std::string& params, ptree& pt) {
     }
   }
 }
-
 template <typename T>
 static T getFromPtree(const ptree& pt, const char* key) {
   return pt.get<T>(key);
 }
+template <typename T>
+struct TypeName {
+  static std::string Get() { return "std::string"; }
+};
+
+// a specialization for each type of those you want to support
+// and don't like the string returned by typeid
+template <>
+struct TypeName<int32_t> {
+  static std::string Get() { return "int32_t"; }
+};
+template <>
+struct TypeName<int64_t> {
+  static std::string Get() { return "int64_t"; }
+};
+template <>
+struct TypeName<double> {
+  static std::string Get() { return "double"; }
+};
+template <>
+struct TypeName<uint32_t> {
+  static std::string Get() { return "uint32_t"; }
+};
+template <>
+struct TypeName<uint64_t> {
+  static std::string Get() { return "uint64_t"; }
+};
 
 }  // namespace gs
-
 #endif
 #endif  // ANALYTICAL_ENGINE_CORE_JAVA_UTILS_H_

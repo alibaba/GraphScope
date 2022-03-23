@@ -17,7 +17,6 @@
 package com.alibaba.graphscope.utils;
 
 import com.alibaba.graphscope.ds.Vertex;
-import com.alibaba.graphscope.ds.VertexRange;
 
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicLongArray;
@@ -25,50 +24,42 @@ import java.util.concurrent.atomic.AtomicLongArray;
 public class AtomicLongArrayWrapper {
     private AtomicLongArray data;
     private int size;
-    private int left;
-    private int right;
 
     public AtomicLongArrayWrapper(int s, long defaultValue) {
         size = s;
-        left = 0;
-        right = s;
         long tmp[] = new long[s];
         Arrays.fill(tmp, defaultValue);
         data = new AtomicLongArray(tmp);
     }
 
-    public AtomicLongArrayWrapper(VertexRange<Long> vertices, long defaultValue) {
-        left = vertices.beginValue().intValue();
-        right = vertices.endValue().intValue();
-        size = right - left;
-        long tmp[] = new long[size];
-        Arrays.fill(tmp, defaultValue);
-        data = new AtomicLongArray(tmp);
+    public AtomicLongArrayWrapper(int s) {
+        size = s;
+        data = new AtomicLongArray(s);
     }
 
     public long get(int ind) {
-        return data.get(ind - left);
+        return data.get(ind);
     }
 
     public long get(long ind) {
-        return data.get((int) ind - left);
+        return data.get((int) ind);
     }
 
     public long get(Vertex<Long> vertex) {
-        return data.get(vertex.GetValue().intValue() - left);
+        return data.get(vertex.GetValue().intValue());
     }
 
     public void set(int ind, long newValue) {
-        data.set(ind - left, newValue);
+        data.set(ind, newValue);
     }
 
     public void set(long ind, long newValue) {
-        data.set((int) ind - left, newValue);
+        data.set((int) ind, newValue);
     }
 
     public void set(Vertex<Long> vertex, long newValue) {
         int lid = vertex.GetValue().intValue();
-        data.set(lid - left, newValue);
+        data.set(lid, newValue);
     }
 
     public void set(long newValue) {
@@ -83,23 +74,30 @@ public class AtomicLongArrayWrapper {
     public void compareAndSetMin(int ind, long newValue) {
         long preValue;
         do {
-            preValue = data.get(ind - left);
-        } while (preValue > newValue && !data.compareAndSet(ind - left, preValue, newValue));
+            preValue = data.get(ind);
+        } while (preValue > newValue && !data.compareAndSet(ind, preValue, newValue));
     }
 
     public void compareAndSetMin(long ind, long newValue) {
         long preValue;
         do {
-            preValue = data.get((int) ind - left);
-        } while (preValue > newValue && !data.compareAndSet((int) ind - left, preValue, newValue));
+            preValue = data.get((int) ind);
+        } while (preValue > newValue && !data.compareAndSet((int) ind, preValue, newValue));
     }
 
     public void compareAndSetMin(Vertex<Long> vertex, long newValue) {
         int lid = vertex.GetValue().intValue();
         long preValue;
         do {
-            preValue = data.get(lid - left);
-        } while (preValue > newValue && !data.compareAndSet(lid - left, preValue, newValue));
+            preValue = data.get(lid);
+        } while (preValue > newValue && !data.compareAndSet(lid, preValue, newValue));
+    }
+
+    public void compareAndSet(int ind, long newValue) {
+        long preValue;
+        do {
+            preValue = data.get(ind);
+        } while (preValue != newValue && !data.compareAndSet(ind, preValue, newValue));
     }
 
     /**
@@ -112,9 +110,9 @@ public class AtomicLongArrayWrapper {
         int lid = vertex.GetValue().intValue();
         long preValue;
         do {
-            preValue = data.get(lid - left);
+            preValue = data.get(lid);
         } while (Long.compareUnsigned(preValue, newValue) > 0
-                && !data.compareAndSet(lid - left, preValue, newValue));
+                && !data.compareAndSet(lid, preValue, newValue));
     }
 
     /**
@@ -127,9 +125,9 @@ public class AtomicLongArrayWrapper {
         int vid = (int) vertexId;
         long preValue;
         do {
-            preValue = data.get(vid - left);
+            preValue = data.get(vid);
         } while (Long.compareUnsigned(preValue, newValue) > 0
-                && !data.compareAndSet(vid - left, preValue, newValue));
+                && !data.compareAndSet(vid, preValue, newValue));
     }
 
     public int getSize() {

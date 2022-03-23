@@ -17,7 +17,7 @@ package com.alibaba.graphscope.graph.impl;
 
 import com.alibaba.graphscope.ds.Vertex;
 import com.alibaba.graphscope.fragment.IFragment;
-import com.alibaba.graphscope.graph.VertexIdManager;
+import com.alibaba.graphscope.graph.GiraphVertexIdManager;
 import com.alibaba.graphscope.serialization.FFIByteVectorInputStream;
 import com.alibaba.graphscope.serialization.FFIByteVectorOutputStream;
 
@@ -41,21 +41,22 @@ import java.util.List;
  * @param <GRAPE_VDATA_T> grape vertex data
  * @param <GRAPE_EDATA_T> grape edge data
  */
-public class VertexIdManagerImpl<
+public class GiraphVertexIdManagerImpl<
                 OID_T extends WritableComparable,
                 GRAPE_OID_T,
                 GRAPE_VID_T,
                 GRAPE_VDATA_T,
                 GRAPE_EDATA_T>
-        implements VertexIdManager<GRAPE_VID_T, OID_T> {
+        implements GiraphVertexIdManager<GRAPE_VID_T, OID_T> {
 
-    private static Logger logger = LoggerFactory.getLogger(VertexIdManagerImpl.class);
+    private static Logger logger = LoggerFactory.getLogger(GiraphVertexIdManagerImpl.class);
 
     private IFragment<GRAPE_OID_T, GRAPE_VID_T, GRAPE_VDATA_T, GRAPE_EDATA_T> fragment;
     private long vertexNum;
     private List<OID_T> vertexIdList;
     private Object2ObjectArrayMap oid2lid;
     private ImmutableClassesGiraphConfiguration<OID_T, ?, ?> conf;
+    private int vid_t; // 0 for long, 1 for int
 
     /**
      * To provide giraph users with all oids, we need to get all oids out of c++ memory, then let
@@ -65,7 +66,7 @@ public class VertexIdManagerImpl<
      * @param vertexNum number of vertices
      * @param conf      configuration to use.
      */
-    public VertexIdManagerImpl(
+    public GiraphVertexIdManagerImpl(
             IFragment<GRAPE_OID_T, GRAPE_VID_T, GRAPE_VDATA_T, GRAPE_EDATA_T> fragment,
             long vertexNum,
             ImmutableClassesGiraphConfiguration<OID_T, ?, ?> conf) {
@@ -78,6 +79,7 @@ public class VertexIdManagerImpl<
         FFIByteVectorInputStream inputStream = generateVertexIdStream();
         try {
             if (conf.getGrapeVidClass().equals(Long.class)) {
+                vid_t = 0;
                 for (long i = 0; i < vertexNum; ++i) {
                     WritableComparable oid = conf.createVertexId();
                     oid.readFields(inputStream);
@@ -85,6 +87,7 @@ public class VertexIdManagerImpl<
                     oid2lid.put(oid, i);
                 }
             } else {
+                vid_t = 1;
                 for (int i = 0; i < vertexNum; ++i) {
                     WritableComparable oid = conf.createVertexId();
                     oid.readFields(inputStream);
@@ -100,12 +103,14 @@ public class VertexIdManagerImpl<
     }
 
     @Override
-    public OID_T getId(long lid) {
-        return vertexIdList.get((int) lid);
+    public OID_T lid2Oid(GRAPE_VID_T lid) {
+        if (vid_t == 0) {
+            return vertexIdList.get(((Long) lid).intValue());
+        } else return vertexIdList.get(((Integer) lid));
     }
 
     @Override
-    public GRAPE_VID_T getLid(OID_T oid) {
+    public GRAPE_VID_T oid2Lid(OID_T oid) {
         return (GRAPE_VID_T) oid2lid.get(oid);
     }
 

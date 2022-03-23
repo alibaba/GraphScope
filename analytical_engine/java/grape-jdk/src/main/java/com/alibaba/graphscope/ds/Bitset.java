@@ -19,7 +19,6 @@ package com.alibaba.graphscope.ds;
 import static com.alibaba.graphscope.utils.CppClassName.GRAPE_BIT_SET;
 import static com.alibaba.graphscope.utils.CppHeaderName.GRAPE_BIT_SET_H;
 import static com.alibaba.graphscope.utils.CppHeaderName.GRAPE_WORKER_COMM_SPEC_H;
-import static com.alibaba.graphscope.utils.JNILibraryName.JNI_LIBRARY_NAME;
 
 import com.alibaba.fastffi.CXXHead;
 import com.alibaba.fastffi.CXXPointer;
@@ -30,8 +29,9 @@ import com.alibaba.fastffi.FFINameAlias;
 import com.alibaba.fastffi.FFIPointer;
 import com.alibaba.fastffi.FFITypeAlias;
 import com.alibaba.fastffi.FFITypeFactory;
+import com.alibaba.graphscope.utils.JNILibraryName;
 
-@FFIGen(library = JNI_LIBRARY_NAME)
+@FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
 @CXXHead(value = {GRAPE_WORKER_COMM_SPEC_H, GRAPE_BIT_SET_H})
 @FFITypeAlias(GRAPE_BIT_SET)
 /**

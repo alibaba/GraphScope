@@ -373,18 +373,18 @@ done
 
 start_vineyard
 
-run_vy ${np} ./run_vy_app "${socket_file}" 2 "${test_dir}"/new_property/v2_e2/twitter_e 2 "${test_dir}"/new_property/v2_e2/twitter_v 0 
-run_vy_2 ${np} ./run_vy_app "${socket_file}" 4 "${test_dir}"/projected_property/twitter_property_e "${test_dir}"/projected_property/twitter_property_v 1
-run_lpa ${np} ./run_vy_app "${socket_file}" 1 "${test_dir}"/property/lpa_dataset/lpa_3000_e 2 "${test_dir}"/property/lpa_dataset/lpa_3000_v 0 1 lpa 
-run_sampling_path 2 ./run_vy_app "${socket_file}" "${test_dir}"/property/sampling_path 0 1 sampling_path 0-0-1-4-2 
+# run_vy ${np} ./run_vy_app "${socket_file}" 2 "${test_dir}"/new_property/v2_e2/twitter_e 2 "${test_dir}"/new_property/v2_e2/twitter_v 0 
+# run_vy_2 ${np} ./run_vy_app "${socket_file}" 4 "${test_dir}"/projected_property/twitter_property_e "${test_dir}"/projected_property/twitter_property_v 1
+# run_lpa ${np} ./run_vy_app "${socket_file}" 1 "${test_dir}"/property/lpa_dataset/lpa_3000_e 2 "${test_dir}"/property/lpa_dataset/lpa_3000_v 0 1 lpa 
+# run_sampling_path 2 ./run_vy_app "${socket_file}" "${test_dir}"/property/sampling_path 0 1 sampling_path 0-0-1-4-2 
 
-run_vy ${np} ./run_pregel_app "${socket_file}" 2 "${test_dir}"/new_property/v2_e2/twitter_e 2 "${test_dir}"/new_property/v2_e2/twitter_v
-rm -rf ./test_output/*
-cp ./outputs_pregel_sssp/* ./test_output
-exact_verify "${test_dir}"/twitter-sssp-4
+# run_vy ${np} ./run_pregel_app "${socket_file}" 2 "${test_dir}"/new_property/v2_e2/twitter_e 2 "${test_dir}"/new_property/v2_e2/twitter_v
+# rm -rf ./test_output/*
+# cp ./outputs_pregel_sssp/* ./test_output
+# exact_verify "${test_dir}"/twitter-sssp-4
 
-run ${np} ./run_pregel_app tc "${test_dir}"/p2p-31.e "${test_dir}"/p2p-31.v ./test_output 
-exact_verify "${test_dir}/p2p-31"-triangles
+# run ${np} ./run_pregel_app tc "${test_dir}"/p2p-31.e "${test_dir}"/p2p-31.v ./test_output 
+# exact_verify "${test_dir}/p2p-31"-triangles
 
 if [[ "${RUN_JAVA_TESTS}" == "ON" ]];
 then

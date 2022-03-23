@@ -66,7 +66,7 @@ jobject CreateFFIPointer(JNIEnv* env, const char* type_name,
                          const jobject& url_class_loader, jlong pointer);
 
 jobject LoadAndCreate(JNIEnv* env, const jobject& url_class_loader_obj,
-                      const char* class_name);
+                      const char* class_name, const char* serial_path = "");
 
 void InvokeGC(JNIEnv* env);
 

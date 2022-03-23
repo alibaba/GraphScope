@@ -28,7 +28,7 @@ import org.apache.hadoop.io.WritableComparable;
  * @param <OID_T>   vertex id type
  * @param <EDATA_T> edge data type.
  */
-public interface EdgeManager<OID_T extends WritableComparable, EDATA_T extends Writable> {
+public interface GiraphEdgeManager<OID_T extends WritableComparable, EDATA_T extends Writable> {
 
     /**
      * Get the number of outgoing edges on a vertex with its lid.

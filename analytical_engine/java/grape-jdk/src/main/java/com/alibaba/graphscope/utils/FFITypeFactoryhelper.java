@@ -25,6 +25,7 @@ import com.alibaba.fastffi.FFIPointer;
 import com.alibaba.fastffi.FFITypeFactory;
 import com.alibaba.fastffi.FFIVector;
 import com.alibaba.fastffi.impl.CXXStdVector;
+import com.alibaba.graphscope.arrow.array.ArrowArrayBuilder;
 import com.alibaba.graphscope.ds.DenseVertexSet;
 import com.alibaba.graphscope.ds.EmptyType;
 import com.alibaba.graphscope.ds.GSVertexArray;
@@ -37,11 +38,11 @@ import com.alibaba.graphscope.parallel.message.LongMsg;
 import com.alibaba.graphscope.parallel.message.PrimitiveMessage;
 import com.alibaba.graphscope.stdcxx.StdString;
 import com.alibaba.graphscope.stdcxx.StdString.Factory;
+import com.alibaba.graphscope.stdcxx.StdVector;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.HashMap;
@@ -55,6 +56,8 @@ public class FFITypeFactoryhelper {
     private static volatile EmptyType.Factory emptyTypeFactory;
     private static volatile VertexRange.Factory vertexRangeLongFactory;
     private static volatile DenseVertexSet.Factory denseVertexSetFactory;
+    private static volatile HashMap<String, ArrowArrayBuilder.Factory> arrowArrayBuilderMap =
+            new HashMap<>();
 
     private static volatile HashMap<String, VertexArray.Factory> vertexArrayFactoryMap =
             new HashMap<>();
@@ -137,6 +140,35 @@ public class FFITypeFactoryhelper {
         return vertexArrayFactoryMap.get(foreignTypeName);
     }
 
+    public static ArrowArrayBuilder.Factory getArrowArrayBuilderFactory(String foreignTypeName) {
+        if (!arrowArrayBuilderMap.containsKey(foreignTypeName)) {
+            synchronized (arrowArrayBuilderMap) {
+                if (!arrowArrayBuilderMap.containsKey(foreignTypeName)) {
+                    arrowArrayBuilderMap.put(
+                            foreignTypeName,
+                            FFITypeFactory.getFactory(ArrowArrayBuilder.class, foreignTypeName));
+                }
+            }
+        }
+        return arrowArrayBuilderMap.get(foreignTypeName);
+    }
+
+    public static <T> ArrowArrayBuilder<T> newArrowArrayBuilder(Class<T> clz) {
+        if (clz.equals(Long.class) || clz.equals(long.class)) {
+            return getArrowArrayBuilderFactory("gs::ArrowArrayBuilder<int64_t>").create();
+        } else if (clz.equals(Double.class) || clz.equals(double.class)) {
+            return getArrowArrayBuilderFactory("gs::ArrowArrayBuilder<double>").create();
+        } else if (clz.equals(Integer.class) || clz.equals(int.class)) {
+            return getArrowArrayBuilderFactory("gs::ArrowArrayBuilder<int32_t>").create();
+        } else {
+            throw new IllegalStateException("Not recognized " + clz.getName());
+        }
+    }
+
+    public static ArrowArrayBuilder<Long> newUnsignedLongArrayBuilder() {
+        return getArrowArrayBuilderFactory("gs::ArrowArrayBuilder<uint64_t>").create();
+    }
+
     public static GSVertexArray.Factory getGSVertexArrayFactory(String foreignTypeName) {
         if (!gsVertexArrayFactoryMap.containsKey(foreignTypeName)) {
             synchronized (gsVertexArrayFactoryMap) {
@@ -180,6 +212,10 @@ public class FFITypeFactoryhelper {
             }
         }
         return ffiVectorFactoryMap.get(foreignTypeName);
+    }
+
+    public static StdVector.Factory getStdVectorFactory(String foreignName) {
+        return FFITypeFactory.getFactory(StdVector.class, foreignName);
     }
 
     public static Vertex<Long> newVertexLong() {
@@ -377,16 +413,16 @@ public class FFITypeFactoryhelper {
      */
     public static String getForeignName(FFIPointer ffiPointer) {
         Class<?> clz = ffiPointer.getClass();
-        Annotation[] annotations = clz.getDeclaredAnnotations();
-        for (Annotation annotation : annotations) {
-            logger.info(
-                    "Annotation: "
-                            + annotation.toString()
-                            + ", "
-                            + annotation.annotationType().getName()
-                            + ","
-                            + clz.getAnnotation(annotation.annotationType()));
-        }
+        //        Annotation[] annotations = clz.getDeclaredAnnotations();
+        //        for (Annotation annotation : annotations) {
+        //            logger.info(
+        //                    "Annotation: "
+        //                            + annotation.toString()
+        //                            + ", "
+        //                            + annotation.annotationType().getName()
+        //                            + ","
+        //                            + clz.getAnnotation(annotation.annotationType()));
+        //        }
         FFIForeignType ffiForeignType = clz.getAnnotation(FFIForeignType.class);
         if (ffiForeignType == null) {
             logger.error("No FFIForeign type annotation found");
