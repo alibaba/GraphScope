@@ -82,7 +82,6 @@ jobs:
   python-unittest:
     runs-on: ubuntu-20.04
     needs: [build-wheels, changes]
-    if: ${{ (needs.changes.outputs.gae-python == 'false' || github.ref == 'refs/heads/main') && github.repository == 'alibaba/GraphScope' }}
     strategy:
       matrix:
         deployment: ["standalone", "distributed"]
@@ -92,7 +91,6 @@ jobs:
   networkx-basic-test:
     runs-on: ubuntu-20.04
     needs: [build-wheels, changes]
-    if: ${{ (needs.changes.outputs.networkx == 'false' || github.ref == 'refs/heads/main') && github.repository == 'alibaba/GraphScope' }}
     strategy:
       matrix:
         deployment: ["standalone", "distributed"]
@@ -102,7 +100,6 @@ jobs:
   networkx-algo-and-generator-test:
     runs-on: ubuntu-20.04
     needs: [build-wheels, changes]
-    if: ${{ needs.changes.outputs.networkx == 'false' && github.repository == 'alibaba/GraphScope' }}
     strategy:
       matrix:
         deployment: ["standalone", "distributed"]
