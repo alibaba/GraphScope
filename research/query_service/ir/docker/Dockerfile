@@ -6,7 +6,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # apt install dependencies
 # openjdk-8-jdk perl maven for GIE
-RUN apt update -y && apt install -y \
+RUN apt-get update -y && apt install -y \
     ca-certificates ccache cmake curl etcd git \
     libbrotli-dev libbz2-dev libcurl4-openssl-dev libdouble-conversion-dev libevent-dev libgflags-dev \
     libboost-all-dev libgoogle-glog-dev libgrpc-dev libgrpc++-dev libgtest-dev libgsasl7-dev \

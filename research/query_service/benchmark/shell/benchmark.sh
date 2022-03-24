@@ -13,11 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-CURR_DIR=`pwd`
+CURR_DIR=$(pwd)
 
-BIN_DIR=`dirname $0`
+BIN_DIR=$(dirname $0)
 cd $BIN_DIR/../
-BASE_DIR=`pwd`
+BASE_DIR=$(pwd)
 
 CONF_DIR=$BASE_DIR/config/interactive-benchmark.properties
 LIB_DIR=$BASE_DIR/lib
