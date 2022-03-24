@@ -108,6 +108,11 @@ public class AntlrToJavaScriptEngine extends AbstractScriptEngine implements Gre
     }
 
     @Override
+    public Traversal.Admin eval(Bytecode bytecode, Bindings bindings, String traversalSource) {
+        throw new NotImplementedException("use eval(String, ScriptContext) instead");
+    }
+
+    @Override
     public Bindings createBindings() {
         return new SimpleBindings();
     }
@@ -122,10 +127,5 @@ public class AntlrToJavaScriptEngine extends AbstractScriptEngine implements Gre
             }
         }
         return this.factory;
-    }
-
-    @Override
-    public Traversal.Admin eval(Bytecode bytecode, Bindings bindings, String traversalSource) {
-        throw new NotImplementedException("use eval(String, ScriptContext) instead");
     }
 }

@@ -18,6 +18,7 @@ package com.alibaba.graphscope.gremlin.plugin.step;
 
 import com.alibaba.graphscope.gremlin.exception.ExtendGremlinStepException;
 
+import com.google.common.base.Objects;
 import org.apache.tinkerpop.gremlin.process.traversal.Compare;
 import org.apache.tinkerpop.gremlin.process.traversal.Contains;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
@@ -28,8 +29,6 @@ import org.apache.tinkerpop.gremlin.process.traversal.util.AndP;
 import org.apache.tinkerpop.gremlin.structure.Element;
 import org.apache.tinkerpop.gremlin.structure.T;
 import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -39,7 +38,6 @@ import java.util.List;
 // fuse global ids and labels with the scan operator
 public class ScanFusionStep<S, E extends Element> extends GraphStep<S, E>
         implements HasContainerHolder, AutoCloseable {
-    private static final Logger logger = LoggerFactory.getLogger(ScanFusionStep.class);
     private final List<HasContainer> hasContainers = new ArrayList<>();
     private final List<String> graphLabels = new ArrayList<>();
 
@@ -70,8 +68,18 @@ public class ScanFusionStep<S, E extends Element> extends GraphStep<S, E>
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        ScanFusionStep<?, ?> that = (ScanFusionStep<?, ?>) o;
+        return Objects.equal(hasContainers, that.hasContainers) &&
+                Objects.equal(graphLabels, that.graphLabels);
+    }
+
+    @Override
     public int hashCode() {
-        return super.hashCode() ^ this.hasContainers.hashCode();
+        return Objects.hashCode(super.hashCode(), hasContainers, graphLabels);
     }
 
     @Override
