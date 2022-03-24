@@ -23,7 +23,7 @@ CONF_DIR=$BASE_DIR/config/interactive-benchmark.properties
 LIB_DIR=$BASE_DIR/lib
 
 JAVA_CLASSPATH="."
-for libfile in `ls $LIB_DIR`; do
+for libfile in $LIB_DIR; do
     JAVA_CLASSPATH=$JAVA_CLASSPATH":$LIB_DIR/$libfile"
 done
 
