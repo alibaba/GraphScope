@@ -733,6 +733,11 @@ fn set_range(ptr: *const c_void, lower: i32, upper: i32, target: Target) -> FfiE
                 params.limit = Some(pb::Range { lower, upper });
                 std::mem::forget(params);
             }
+            Target::PathExpand => {
+                let mut pathxpd = unsafe { Box::from_raw(ptr as *mut pb::PathExpand) };
+                pathxpd.hop_range = Some(pb::Range { lower, upper });
+                std::mem::forget(pathxpd);
+            }
             _ => unreachable!(),
         }
 
