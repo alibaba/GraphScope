@@ -692,9 +692,10 @@ pub extern "C" fn write_plan_to_json(ptr_plan: *const c_void, cstr_file: *const 
     std::mem::forget(box_plan);
 }
 
+/// Define the target operator/parameter while setting certain parameters
 #[allow(dead_code)]
-#[derive(PartialEq)]
-enum Opr {
+#[derive(PartialEq, Copy, Clone)]
+enum Target {
     Select,
     Scan,
     GetV,
@@ -705,46 +706,32 @@ enum Opr {
     OrderBy,
     Apply,
     Sink,
+    Params,
 }
 
 /// Set the size range limitation for certain operators
-fn set_range(ptr: *const c_void, lower: i32, upper: i32, opr: Opr) -> FfiError {
+fn set_range(ptr: *const c_void, lower: i32, upper: i32, target: Target) -> FfiError {
     if lower < 0 || upper < 0 || upper < lower {
         FfiError::new(
             ResultCode::InvalidRangeError,
             format!("the range ({:?}, {:?}) is invalid", lower, upper),
         )
     } else {
-        match opr {
-            Opr::EdgeExpand => {
-                let mut edgexpd = unsafe { Box::from_raw(ptr as *mut pb::EdgeExpand) };
-                edgexpd.params.as_mut().unwrap().limit = Some(pb::Range { lower, upper });
-                std::mem::forget(edgexpd);
-            }
-            Opr::GetV => {
-                let mut getv = unsafe { Box::from_raw(ptr as *mut pb::GetV) };
-                getv.params.as_mut().unwrap().limit = Some(pb::Range { lower, upper });
-                std::mem::forget(getv);
-            }
-            Opr::PathExpand => {
-                let mut pathxpd = unsafe { Box::from_raw(ptr as *mut pb::PathExpand) };
-                pathxpd.hop_range = Some(pb::Range { lower, upper });
-                std::mem::forget(pathxpd);
-            }
-            Opr::Scan => {
-                let mut scan = unsafe { Box::from_raw(ptr as *mut pb::Scan) };
-                scan.params.as_mut().unwrap().limit = Some(pb::Range { lower, upper });
-                std::mem::forget(scan);
-            }
-            Opr::Limit => {
+        match target {
+            Target::Limit => {
                 let mut limit = unsafe { Box::from_raw(ptr as *mut pb::Limit) };
                 limit.range = Some(pb::Range { lower, upper });
                 std::mem::forget(limit);
             }
-            Opr::OrderBy => {
+            Target::OrderBy => {
                 let mut orderby = unsafe { Box::from_raw(ptr as *mut pb::OrderBy) };
                 orderby.limit = Some(pb::Range { lower, upper });
                 std::mem::forget(orderby);
+            }
+            Target::Params => {
+                let mut params = unsafe { Box::from_raw(ptr as *mut pb::QueryParams) };
+                params.limit = Some(pb::Range { lower, upper });
+                std::mem::forget(params);
             }
             _ => unreachable!(),
         }
@@ -753,36 +740,36 @@ fn set_range(ptr: *const c_void, lower: i32, upper: i32, opr: Opr) -> FfiError {
     }
 }
 
-fn set_alias(ptr: *const c_void, alias: FfiAlias, opr: Opr) -> FfiError {
+fn set_alias(ptr: *const c_void, alias: FfiAlias, target: Target) -> FfiError {
     let alias_pb = alias.try_into();
     if alias_pb.is_ok() {
-        match &opr {
-            Opr::Scan => {
+        match target {
+            Target::Scan => {
                 let mut scan = unsafe { Box::from_raw(ptr as *mut pb::Scan) };
                 scan.alias = alias_pb.unwrap();
                 std::mem::forget(scan);
             }
-            Opr::EdgeExpand => {
+            Target::EdgeExpand => {
                 let mut edgexpd = unsafe { Box::from_raw(ptr as *mut pb::EdgeExpand) };
                 edgexpd.alias = alias_pb.unwrap();
                 std::mem::forget(edgexpd);
             }
-            Opr::PathExpand => {
+            Target::PathExpand => {
                 let mut pathxpd = unsafe { Box::from_raw(ptr as *mut pb::PathExpand) };
                 pathxpd.alias = alias_pb.unwrap();
                 std::mem::forget(pathxpd);
             }
-            Opr::GetV => {
+            Target::GetV => {
                 let mut getv = unsafe { Box::from_raw(ptr as *mut pb::GetV) };
                 getv.alias = alias_pb.unwrap();
                 std::mem::forget(getv);
             }
-            Opr::Apply => {
+            Target::Apply => {
                 let mut apply = unsafe { Box::from_raw(ptr as *mut pb::Apply) };
                 apply.alias = alias_pb.unwrap();
                 std::mem::forget(apply);
             }
-            Opr::As => {
+            Target::As => {
                 let mut as_opr = unsafe { Box::from_raw(ptr as *mut pb::As) };
                 as_opr.alias = alias_pb.unwrap();
                 std::mem::forget(as_opr);
@@ -796,29 +783,19 @@ fn set_alias(ptr: *const c_void, alias: FfiAlias, opr: Opr) -> FfiError {
 }
 
 /// To set an operator's predicate.
-fn set_predicate(ptr: *const c_void, cstr_predicate: *const c_char, opr: Opr) -> FfiError {
+fn set_predicate(ptr: *const c_void, cstr_predicate: *const c_char, target: Target) -> FfiError {
     let predicate_pb = cstr_to_expr_pb(cstr_predicate);
     if predicate_pb.is_ok() {
-        match opr {
-            Opr::Select => {
+        match target {
+            Target::Select => {
                 let mut select = unsafe { Box::from_raw(ptr as *mut pb::Select) };
                 select.predicate = predicate_pb.ok();
                 std::mem::forget(select);
             }
-            Opr::EdgeExpand => {
-                let mut edgexpd = unsafe { Box::from_raw(ptr as *mut pb::EdgeExpand) };
-                edgexpd.params.as_mut().unwrap().predicate = predicate_pb.ok();
-                std::mem::forget(edgexpd);
-            }
-            Opr::Scan => {
-                let mut scan = unsafe { Box::from_raw(ptr as *mut pb::Scan) };
-                scan.params.as_mut().unwrap().predicate = predicate_pb.ok();
-                std::mem::forget(scan);
-            }
-            Opr::GetV => {
-                let mut getv = unsafe { Box::from_raw(ptr as *mut pb::GetV) };
-                getv.params.as_mut().unwrap().predicate = predicate_pb.ok();
-                std::mem::forget(getv);
+            Target::Params => {
+                let mut params = unsafe { Box::from_raw(ptr as *mut pb::QueryParams) };
+                params.predicate = predicate_pb.ok();
+                std::mem::forget(params);
             }
             _ => unreachable!(),
         }
@@ -836,72 +813,27 @@ enum ParamsKey {
 }
 
 /// A unified processing of parameters with type `NameOrId`
-fn process_params(ptr: *const c_void, key: ParamsKey, val: FfiNameOrId, opr: Opr) -> FfiError {
+fn process_params(ptr: *const c_void, key: ParamsKey, val: FfiNameOrId, target: Target) -> FfiError {
     let pb = val.try_into();
     if pb.is_ok() {
-        match opr {
-            Opr::EdgeExpand => {
+        match target {
+            Target::EdgeExpand => {
                 let mut expand = unsafe { Box::from_raw(ptr as *mut pb::EdgeExpand) };
                 match key {
                     ParamsKey::Tag => expand.v_tag = pb.unwrap(),
-                    ParamsKey::Table => {
-                        if let Some(label) = pb.unwrap() {
-                            expand
-                                .params
-                                .as_mut()
-                                .unwrap()
-                                .tables
-                                .push(label)
-                        }
-                    }
-                    ParamsKey::Column => {
-                        if let Some(ppt) = pb.unwrap() {
-                            expand
-                                .params
-                                .as_mut()
-                                .unwrap()
-                                .columns
-                                .push(ppt)
-                        }
-                    }
+                    _ => unreachable!(),
                 }
                 std::mem::forget(expand);
             }
-            Opr::Scan => {
-                let mut scan = unsafe { Box::from_raw(ptr as *mut pb::Scan) };
-                match key {
-                    ParamsKey::Table => {
-                        if let Some(table) = pb.unwrap() {
-                            scan.params.as_mut().unwrap().tables.push(table)
-                        }
-                    }
-                    ParamsKey::Column => {
-                        if let Some(col) = pb.unwrap() {
-                            scan.params.as_mut().unwrap().columns.push(col)
-                        }
-                    }
-                    _ => unreachable!(),
-                }
-                std::mem::forget(scan);
-            }
-            Opr::GetV => {
+            Target::GetV => {
                 let mut getv = unsafe { Box::from_raw(ptr as *mut pb::GetV) };
                 match key {
                     ParamsKey::Tag => getv.tag = pb.unwrap(),
-                    ParamsKey::Table => {
-                        if let Some(label) = pb.unwrap() {
-                            getv.params.as_mut().unwrap().tables.push(label)
-                        }
-                    }
-                    ParamsKey::Column => {
-                        if let Some(ppt) = pb.unwrap() {
-                            getv.params.as_mut().unwrap().columns.push(ppt)
-                        }
-                    }
+                    _ => unreachable!(),
                 }
                 std::mem::forget(getv);
             }
-            Opr::PathExpand => {
+            Target::PathExpand => {
                 let mut pathxpd = unsafe { Box::from_raw(ptr as *mut pb::PathExpand) };
                 match key {
                     ParamsKey::Tag => pathxpd.start_tag = pb.unwrap(),
@@ -909,11 +841,81 @@ fn process_params(ptr: *const c_void, key: ParamsKey, val: FfiNameOrId, opr: Opr
                 }
                 std::mem::forget(pathxpd);
             }
+            Target::Params => {
+                let mut params = unsafe { Box::from_raw(ptr as *mut pb::QueryParams) };
+                match key {
+                    ParamsKey::Table => {
+                        if let Some(table) = pb.unwrap() {
+                            params.tables.push(table)
+                        }
+                    }
+                    ParamsKey::Column => {
+                        if let Some(col) = pb.unwrap() {
+                            params.columns.push(col)
+                        }
+                    }
+                    _ => unreachable!(),
+                }
+                std::mem::forget(params);
+            }
             _ => unreachable!(),
         }
         FfiError::success()
     } else {
         pb.err().unwrap()
+    }
+}
+
+mod params {
+    use std::collections::HashMap;
+
+    use super::*;
+
+    /// To initialize a query parameters
+    #[no_mangle]
+    pub extern "C" fn init_query_params() -> *const c_void {
+        let query_params = Box::new(pb::QueryParams {
+            tables: vec![],
+            columns: vec![],
+            is_all_columns: false,
+            limit: None,
+            predicate: None,
+            extra: HashMap::new(),
+        });
+
+        Box::into_raw(query_params) as *const c_void
+    }
+
+    #[no_mangle]
+    pub extern "C" fn add_params_table(ptr_params: *const c_void, table: FfiNameOrId) -> FfiError {
+        process_params(ptr_params, ParamsKey::Table, table, Target::Params)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn add_params_column(ptr_params: *const c_void, col: FfiNameOrId) -> FfiError {
+        process_params(ptr_params, ParamsKey::Column, col, Target::Params)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn set_params_range(ptr_params: *const c_void, lower: i32, upper: i32) -> FfiError {
+        set_range(ptr_params, lower, upper, Target::Params)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn set_params_predicate(
+        ptr_params: *const c_void, cstr_pred: *const c_char,
+    ) -> FfiError {
+        set_predicate(ptr_params, cstr_pred, Target::Params)
+    }
+
+    /// Set getting all columns
+    #[no_mangle]
+    pub extern "C" fn set_params_is_all_columns(ptr_params: *const c_void) -> FfiError {
+        let mut params = unsafe { Box::from_raw(ptr_params as *mut pb::QueryParams) };
+        params.is_all_columns = true;
+        std::mem::forget(params);
+
+        FfiError::success()
     }
 }
 
@@ -997,7 +999,7 @@ mod select {
     pub extern "C" fn set_select_predicate(
         ptr_select: *const c_void, cstr_predicate: *const c_char,
     ) -> FfiError {
-        set_predicate(ptr_select, cstr_predicate, Opr::Select)
+        set_predicate(ptr_select, cstr_predicate, Target::Select)
     }
 
     /// Append a select operator to the logical plan
@@ -1298,7 +1300,7 @@ mod orderby {
     /// Set the size limit of the orderby operator, which will turn it into topk
     #[no_mangle]
     pub extern "C" fn set_orderby_limit(ptr_orderby: *const c_void, lower: i32, upper: i32) -> FfiError {
-        set_range(ptr_orderby, lower, upper, Opr::OrderBy)
+        set_range(ptr_orderby, lower, upper, Target::OrderBy)
     }
 
     /// Append an orderby operator to the logical plan
@@ -1508,33 +1510,10 @@ mod scan {
     }
 
     #[no_mangle]
-    pub extern "C" fn set_scan_limit(ptr_scan: *const c_void, lower: i32, upper: i32) -> FfiError {
-        set_range(ptr_scan, lower, upper, Opr::Scan)
-    }
-
-    #[no_mangle]
-    pub extern "C" fn set_scan_predicate(
-        ptr_scan: *const c_void, cstr_predicate: *const c_char,
-    ) -> FfiError {
-        set_predicate(ptr_scan, cstr_predicate, Opr::Scan)
-    }
-
-    #[no_mangle]
-    pub extern "C" fn add_scan_table_name(ptr_scan: *const c_void, table_name: FfiNameOrId) -> FfiError {
-        process_params(ptr_scan, ParamsKey::Table, table_name, Opr::Scan)
-    }
-
-    /// Add a data column to be scanned from the data source (vertex, edge, or a relational table)
-    #[no_mangle]
-    pub extern "C" fn add_scan_column(ptr_scan: *const c_void, column: FfiNameOrId) -> FfiError {
-        process_params(ptr_scan, ParamsKey::Column, column, Opr::Scan)
-    }
-
-    /// Set getting all columns to be scanned from the data source
-    #[no_mangle]
-    pub extern "C" fn set_scan_is_all_columns(ptr_scan: *const c_void) -> FfiError {
+    pub extern "C" fn set_scan_params(ptr_scan: *const c_void, ptr_params: *const c_void) -> FfiError {
         let mut scan = unsafe { Box::from_raw(ptr_scan as *mut pb::Scan) };
-        scan.params.as_mut().unwrap().is_all_columns = true;
+        let mut params = unsafe { Box::from_raw(ptr_params as *mut pb::QueryParams) };
+        std::mem::swap(scan.params.as_mut().unwrap(), params.as_mut());
         std::mem::forget(scan);
 
         FfiError::success()
@@ -1543,7 +1522,7 @@ mod scan {
     /// Set an alias for the data if it is a vertex/edge
     #[no_mangle]
     pub extern "C" fn set_scan_alias(ptr_scan: *const c_void, alias: FfiAlias) -> FfiError {
-        set_alias(ptr_scan, alias, Opr::Scan)
+        set_alias(ptr_scan, alias, Target::Scan)
     }
 
     /// Append a scan operator to the logical plan
@@ -1572,7 +1551,7 @@ mod limit {
 
     #[no_mangle]
     pub extern "C" fn set_limit_range(ptr_limit: *const c_void, lower: i32, upper: i32) -> FfiError {
-        set_range(ptr_limit, lower, upper, Opr::Limit)
+        set_range(ptr_limit, lower, upper, Target::Limit)
     }
 
     /// Append an indexed scan operator to the logical plan
@@ -1604,7 +1583,7 @@ mod as_opr {
     /// Set the alias of the entity to As
     #[no_mangle]
     pub extern "C" fn set_as_alias(ptr_as: *const c_void, alias: FfiAlias) -> FfiError {
-        set_alias(ptr_as, alias, Opr::As)
+        set_alias(ptr_as, alias, Target::As)
     }
 
     /// Append an As operator to the logical plan
@@ -1702,49 +1681,25 @@ mod graph {
     /// Set the start-vertex's tag to conduct this expansion
     #[no_mangle]
     pub extern "C" fn set_edgexpd_vtag(ptr_edgexpd: *const c_void, v_tag: FfiNameOrId) -> FfiError {
-        process_params(ptr_edgexpd, ParamsKey::Tag, v_tag, Opr::EdgeExpand)
+        process_params(ptr_edgexpd, ParamsKey::Tag, v_tag, Target::EdgeExpand)
     }
 
-    /// Add a label of the edge that this expansion must satisfy
     #[no_mangle]
-    pub extern "C" fn add_edgexpd_label(ptr_edgexpd: *const c_void, label: FfiNameOrId) -> FfiError {
-        process_params(ptr_edgexpd, ParamsKey::Table, label, Opr::EdgeExpand)
-    }
-
-    /// Add a property that this edge expansion must carry
-    #[no_mangle]
-    pub extern "C" fn add_edgexpd_property(ptr_edgexpd: *const c_void, property: FfiNameOrId) -> FfiError {
-        process_params(ptr_edgexpd, ParamsKey::Column, property, Opr::EdgeExpand)
-    }
-
-    /// Set getting all properties for this edge expansion
-    #[no_mangle]
-    pub extern "C" fn set_edgexpd_all_properties(ptr_edgexpd: *const c_void) -> FfiError {
+    pub extern "C" fn set_edgexpd_params(
+        ptr_edgexpd: *const c_void, ptr_params: *const c_void,
+    ) -> FfiError {
         let mut edgexpd = unsafe { Box::from_raw(ptr_edgexpd as *mut pb::EdgeExpand) };
-        edgexpd.params.as_mut().unwrap().is_all_columns = true;
+        let mut params = unsafe { Box::from_raw(ptr_params as *mut pb::QueryParams) };
+        std::mem::swap(edgexpd.params.as_mut().unwrap(), params.as_mut());
         std::mem::forget(edgexpd);
 
         FfiError::success()
     }
 
-    /// Set the size range limitation of this expansion
-    #[no_mangle]
-    pub extern "C" fn set_edgexpd_limit(ptr_edgexpd: *const c_void, lower: i32, upper: i32) -> FfiError {
-        set_range(ptr_edgexpd, lower, upper, Opr::EdgeExpand)
-    }
-
-    /// Set the edge predicate of this expansion
-    #[no_mangle]
-    pub extern "C" fn set_edgexpd_predicate(
-        ptr_edgexpd: *const c_void, cstr_predicate: *const c_char,
-    ) -> FfiError {
-        set_predicate(ptr_edgexpd, cstr_predicate, Opr::EdgeExpand)
-    }
-
     /// Set edge alias of this edge expansion
     #[no_mangle]
     pub extern "C" fn set_edgexpd_alias(ptr_edgexpd: *const c_void, alias: FfiAlias) -> FfiError {
-        set_alias(ptr_edgexpd, alias, Opr::EdgeExpand)
+        set_alias(ptr_edgexpd, alias, Target::EdgeExpand)
     }
 
     /// Append an edge expand operator to the logical plan
@@ -1791,49 +1746,23 @@ mod graph {
     /// Set the tag of edge/path to get the vertex
     #[no_mangle]
     pub extern "C" fn set_getv_tag(ptr_getv: *const c_void, tag: FfiNameOrId) -> FfiError {
-        process_params(ptr_getv, ParamsKey::Tag, tag, Opr::GetV)
+        process_params(ptr_getv, ParamsKey::Tag, tag, Target::GetV)
     }
 
-    /// Add a label of the vertex
     #[no_mangle]
-    pub extern "C" fn add_getv_label(ptr_getv: *const c_void, label: FfiNameOrId) -> FfiError {
-        process_params(ptr_getv, ParamsKey::Table, label, Opr::EdgeExpand)
-    }
-
-    /// Add a property that this vertex must carry
-    #[no_mangle]
-    pub extern "C" fn add_getv_property(ptr_getv: *const c_void, property: FfiNameOrId) -> FfiError {
-        process_params(ptr_getv, ParamsKey::Column, property, Opr::GetV)
-    }
-
-    /// Set getting all properties for the vertex
-    #[no_mangle]
-    pub extern "C" fn set_getv_all_properties(ptr_getv: *const c_void) -> FfiError {
+    pub extern "C" fn set_getv_params(ptr_getv: *const c_void, ptr_params: *const c_void) -> FfiError {
         let mut getv = unsafe { Box::from_raw(ptr_getv as *mut pb::GetV) };
-        getv.params.as_mut().unwrap().is_all_columns = true;
+        let mut params = unsafe { Box::from_raw(ptr_params as *mut pb::QueryParams) };
+        std::mem::swap(getv.params.as_mut().unwrap(), params.as_mut());
         std::mem::forget(getv);
 
         FfiError::success()
     }
 
-    /// Set the size range limitation of the vertex
-    #[no_mangle]
-    pub extern "C" fn set_getv_limit(ptr_getv: *const c_void, lower: i32, upper: i32) -> FfiError {
-        set_range(ptr_getv, lower, upper, Opr::GetV)
-    }
-
-    /// Set the edge predicate of the vertex
-    #[no_mangle]
-    pub extern "C" fn set_getv_predicate(
-        ptr_getv: *const c_void, cstr_predicate: *const c_char,
-    ) -> FfiError {
-        set_predicate(ptr_getv, cstr_predicate, Opr::GetV)
-    }
-
     /// Set vertex alias of this getting vertex
     #[no_mangle]
     pub extern "C" fn set_getv_alias(ptr_getv: *const c_void, alias: FfiAlias) -> FfiError {
-        set_alias(ptr_getv, alias, Opr::GetV)
+        set_alias(ptr_getv, alias, Target::GetV)
     }
 
     /// Append the operator to the logical plan
@@ -1870,19 +1799,19 @@ mod graph {
     /// Set path alias of this path expansion
     #[no_mangle]
     pub extern "C" fn set_pathxpd_tag(ptr_pathxpd: *const c_void, tag: FfiNameOrId) -> FfiError {
-        process_params(ptr_pathxpd, ParamsKey::Tag, tag, Opr::PathExpand)
+        process_params(ptr_pathxpd, ParamsKey::Tag, tag, Target::PathExpand)
     }
 
     /// Set path alias of this path expansion
     #[no_mangle]
     pub extern "C" fn set_pathxpd_alias(ptr_pathxpd: *const c_void, alias: FfiAlias) -> FfiError {
-        set_alias(ptr_pathxpd, alias, Opr::PathExpand)
+        set_alias(ptr_pathxpd, alias, Target::PathExpand)
     }
 
     /// Set the hop-range limitation of expanding path
     #[no_mangle]
     pub extern "C" fn set_pathxpd_hops(ptr_pathxpd: *const c_void, lower: i32, upper: i32) -> FfiError {
-        set_range(ptr_pathxpd, lower, upper, Opr::PathExpand)
+        set_range(ptr_pathxpd, lower, upper, Target::PathExpand)
     }
 
     /// Append an path-expand operator to the logical plan
@@ -2052,7 +1981,7 @@ mod subtask {
 
     #[no_mangle]
     pub extern "C" fn set_apply_alias(ptr_apply: *const c_void, alias: FfiAlias) -> FfiError {
-        set_alias(ptr_apply, alias, Opr::Apply)
+        set_alias(ptr_apply, alias, Target::Apply)
     }
 
     /// Append an apply operator to the logical plan.
