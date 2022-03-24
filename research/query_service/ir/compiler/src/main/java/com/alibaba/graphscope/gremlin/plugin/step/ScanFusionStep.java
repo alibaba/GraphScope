@@ -17,8 +17,8 @@
 package com.alibaba.graphscope.gremlin.plugin.step;
 
 import com.alibaba.graphscope.gremlin.exception.ExtendGremlinStepException;
-
 import com.google.common.base.Objects;
+
 import org.apache.tinkerpop.gremlin.process.traversal.Compare;
 import org.apache.tinkerpop.gremlin.process.traversal.Contains;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
@@ -73,8 +73,8 @@ public class ScanFusionStep<S, E extends Element> extends GraphStep<S, E>
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
         ScanFusionStep<?, ?> that = (ScanFusionStep<?, ?>) o;
-        return Objects.equal(hasContainers, that.hasContainers) &&
-                Objects.equal(graphLabels, that.graphLabels);
+        return Objects.equal(hasContainers, that.hasContainers)
+                && Objects.equal(graphLabels, that.graphLabels);
     }
 
     @Override
