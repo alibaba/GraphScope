@@ -18,6 +18,7 @@ package com.alibaba.graphscope.gremlin.plugin.traversal;
 
 import com.alibaba.graphscope.gremlin.plugin.step.ExprStep;
 import com.alibaba.graphscope.gremlin.plugin.step.PathExpandStep;
+
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
@@ -27,7 +28,8 @@ import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 
-public class IrCustomizedTraversal<S, E> extends DefaultTraversal<S, E> implements GraphTraversal.Admin<S, E> {
+public class IrCustomizedTraversal<S, E> extends DefaultTraversal<S, E>
+        implements GraphTraversal.Admin<S, E> {
     public IrCustomizedTraversal() {
         super();
     }
@@ -57,17 +59,21 @@ public class IrCustomizedTraversal<S, E> extends DefaultTraversal<S, E> implemen
 
     public GraphTraversal<S, Vertex> out(Traversal rangeTraversal, String... labels) {
         this.asAdmin().getBytecode().addStep("flatMap", rangeTraversal, labels);
-        return this.asAdmin().addStep(new PathExpandStep(this.asAdmin(), Direction.OUT, rangeTraversal, labels));
+        return this.asAdmin()
+                .addStep(new PathExpandStep(this.asAdmin(), Direction.OUT, rangeTraversal, labels));
     }
 
     public GraphTraversal<S, Vertex> in(Traversal rangeTraversal, String... labels) {
         this.asAdmin().getBytecode().addStep("flatMap", rangeTraversal, labels);
-        return this.asAdmin().addStep(new PathExpandStep(this.asAdmin(), Direction.IN, rangeTraversal, labels));
+        return this.asAdmin()
+                .addStep(new PathExpandStep(this.asAdmin(), Direction.IN, rangeTraversal, labels));
     }
 
     public GraphTraversal<S, Vertex> both(Traversal rangeTraversal, String... labels) {
         this.asAdmin().getBytecode().addStep("flatMap", rangeTraversal, labels);
-        return this.asAdmin().addStep(new PathExpandStep(this.asAdmin(), Direction.BOTH, rangeTraversal, labels));
+        return this.asAdmin()
+                .addStep(
+                        new PathExpandStep(this.asAdmin(), Direction.BOTH, rangeTraversal, labels));
     }
 
     public GraphTraversal<S, Vertex> expr(String expr, ExprStep.Type type) {

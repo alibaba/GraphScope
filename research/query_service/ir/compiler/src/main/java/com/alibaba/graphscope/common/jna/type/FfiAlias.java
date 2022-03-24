@@ -21,8 +21,7 @@ import com.sun.jna.Structure;
 
 @Structure.FieldOrder({"alias", "isQueryGiven"})
 public class FfiAlias extends Structure {
-    public static class ByValue extends FfiAlias implements Structure.ByValue {
-    }
+    public static class ByValue extends FfiAlias implements Structure.ByValue {}
 
     public FfiNameOrId.ByValue alias;
     public boolean isQueryGiven;
@@ -32,8 +31,7 @@ public class FfiAlias extends Structure {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         FfiAlias ffiAlias = (FfiAlias) o;
-        return isQueryGiven == ffiAlias.isQueryGiven &&
-                Objects.equal(alias, ffiAlias.alias);
+        return isQueryGiven == ffiAlias.isQueryGiven && Objects.equal(alias, ffiAlias.alias);
     }
 
     @Override

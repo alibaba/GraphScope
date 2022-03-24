@@ -29,8 +29,7 @@ import java.util.Optional;
 public class TopKStrategy implements InterOpStrategy {
     public static TopKStrategy INSTANCE = new TopKStrategy();
 
-    private TopKStrategy() {
-    }
+    private TopKStrategy() {}
 
     @Override
     public void apply(InterOpCollection opCollection) {
@@ -53,7 +52,8 @@ public class TopKStrategy implements InterOpStrategy {
     // return LimitOp if next is, otherwise null
     private LimitOp nextLimit(List<InterOpBase> original, int cur) {
         int next = cur + 1;
-        return (next >= 0 && next < original.size() &&
-                original.get(next) instanceof LimitOp) ? (LimitOp) original.get(next) : null;
+        return (next >= 0 && next < original.size() && original.get(next) instanceof LimitOp)
+                ? (LimitOp) original.get(next)
+                : null;
     }
 }

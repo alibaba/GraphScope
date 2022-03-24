@@ -31,6 +31,7 @@ import com.alibaba.graphscope.common.utils.ClassUtils;
 import com.alibaba.graphscope.gremlin.Utils;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
+
 import org.apache.commons.io.FileUtils;
 import org.javatuples.Pair;
 
@@ -55,7 +56,8 @@ public class IrPlan implements Closeable {
                 ScanFusionOp op = (ScanFusionOp) baseOp;
                 Optional<OpArg> scanOpt = op.getScanOpt();
                 if (!scanOpt.isPresent()) {
-                    throw new InterOpIllegalArgException(baseOp.getClass(), "scanOpt", "not present");
+                    throw new InterOpIllegalArgException(
+                            baseOp.getClass(), "scanOpt", "not present");
                 }
                 FfiScanOpt ffiScanOpt = (FfiScanOpt) scanOpt.get().applyArg();
                 Pointer scan = irCoreLib.initScanOperator(ffiScanOpt);
@@ -63,7 +65,8 @@ public class IrPlan implements Closeable {
                 // set params
                 FfiError e1 = irCoreLib.setScanParams(scan, getQueryParams(op));
                 if (e1.code != ResultCode.Success) {
-                    throw new InterOpIllegalArgException(baseOp.getClass(), "params", "setScanParams returns " + e1.msg);
+                    throw new InterOpIllegalArgException(
+                            baseOp.getClass(), "params", "setScanParams returns " + e1.msg);
                 }
 
                 // set index predicate
@@ -72,9 +75,12 @@ public class IrPlan implements Closeable {
                     Pointer idsPredicate = irCoreLib.initIndexPredicate();
                     List<FfiConst.ByValue> ffiIds = (List<FfiConst.ByValue>) ids.get().applyArg();
                     for (int i = 0; i < ffiIds.size(); ++i) {
-                        FfiError e2 = irCoreLib.orEquivPredicate(idsPredicate, irCoreLib.asIdKey(), ffiIds.get(i));
+                        FfiError e2 =
+                                irCoreLib.orEquivPredicate(
+                                        idsPredicate, irCoreLib.asIdKey(), ffiIds.get(i));
                         if (e2.code != ResultCode.Success) {
-                            throw new InterOpIllegalArgException(baseOp.getClass(), "ids", "orEquivPredicate returns " + e2.msg);
+                            throw new InterOpIllegalArgException(
+                                    baseOp.getClass(), "ids", "orEquivPredicate returns " + e2.msg);
                         }
                     }
                     if (!ffiIds.isEmpty()) {
@@ -96,11 +102,13 @@ public class IrPlan implements Closeable {
                 Optional<OpArg> labels = op.getLabels();
                 Pointer ptrParams = irCoreLib.initQueryParams();
                 if (labels.isPresent()) {
-                    List<FfiNameOrId.ByValue> ffiLabels = (List<FfiNameOrId.ByValue>) labels.get().applyArg();
+                    List<FfiNameOrId.ByValue> ffiLabels =
+                            (List<FfiNameOrId.ByValue>) labels.get().applyArg();
                     for (FfiNameOrId.ByValue label : ffiLabels) {
                         FfiError error = irCoreLib.addParamsTable(ptrParams, label);
                         if (error.code != ResultCode.Success) {
-                            throw new InterOpIllegalArgException(op.getClass(), "tables", "addParamsTable returns " + error.msg);
+                            throw new InterOpIllegalArgException(
+                                    op.getClass(), "tables", "addParamsTable returns " + error.msg);
                         }
                     }
                 }
@@ -109,7 +117,10 @@ public class IrPlan implements Closeable {
                     String expr = (String) predicate.get().applyArg();
                     FfiError error = irCoreLib.setParamsPredicate(ptrParams, expr);
                     if (error.code != ResultCode.Success) {
-                        throw new InterOpIllegalArgException(op.getClass(), "predicate", "setParamsPredicate returns " + error.msg);
+                        throw new InterOpIllegalArgException(
+                                op.getClass(),
+                                "predicate",
+                                "setParamsPredicate returns " + error.msg);
                     }
                 }
                 return ptrParams;
@@ -121,14 +132,17 @@ public class IrPlan implements Closeable {
                 SelectOp op = (SelectOp) baseOp;
                 Optional<OpArg> predicate = op.getPredicate();
                 if (!predicate.isPresent()) {
-                    throw new InterOpIllegalArgException(baseOp.getClass(), "predicate", "not present");
+                    throw new InterOpIllegalArgException(
+                            baseOp.getClass(), "predicate", "not present");
                 }
                 String expr = (String) predicate.get().applyArg();
                 Pointer select = irCoreLib.initSelectOperator();
                 FfiError error = irCoreLib.setSelectPredicate(select, expr);
                 if (error.code != ResultCode.Success) {
-                    throw new InterOpIllegalArgException(baseOp.getClass(),
-                            "predicate", "setSelectPredicate returns " + error.msg);
+                    throw new InterOpIllegalArgException(
+                            baseOp.getClass(),
+                            "predicate",
+                            "setSelectPredicate returns " + error.msg);
                 }
                 return select;
             }
@@ -139,19 +153,22 @@ public class IrPlan implements Closeable {
                 ExpandOp op = (ExpandOp) baseOp;
                 Optional<OpArg> direction = op.getDirection();
                 if (!direction.isPresent()) {
-                    throw new InterOpIllegalArgException(baseOp.getClass(), "direction", "not present");
+                    throw new InterOpIllegalArgException(
+                            baseOp.getClass(), "direction", "not present");
                 }
                 FfiDirection ffiDirection = (FfiDirection) direction.get().applyArg();
                 Optional<OpArg> edgeOpt = op.getIsEdge();
                 if (!edgeOpt.isPresent()) {
-                    throw new InterOpIllegalArgException(baseOp.getClass(), "edgeOpt", "not present");
+                    throw new InterOpIllegalArgException(
+                            baseOp.getClass(), "edgeOpt", "not present");
                 }
                 Boolean isEdge = (Boolean) edgeOpt.get().applyArg();
                 Pointer expand = irCoreLib.initEdgexpdOperator(isEdge, ffiDirection);
 
                 FfiError e1 = irCoreLib.setEdgexpdParams(expand, getQueryParams(op));
                 if (e1.code != ResultCode.Success) {
-                    throw new InterOpIllegalArgException(op.getClass(), "params", "setEdgexpdParams returns " + e1.msg);
+                    throw new InterOpIllegalArgException(
+                            op.getClass(), "params", "setEdgexpdParams returns " + e1.msg);
                 }
                 // todo: add properties
                 // todo: add predicates
@@ -168,11 +185,13 @@ public class IrPlan implements Closeable {
                 Pointer ptrParams = irCoreLib.initQueryParams();
                 Optional<OpArg> labels = op.getLabels();
                 if (labels.isPresent()) {
-                    List<FfiNameOrId.ByValue> ffiLabels = (List<FfiNameOrId.ByValue>) labels.get().applyArg();
+                    List<FfiNameOrId.ByValue> ffiLabels =
+                            (List<FfiNameOrId.ByValue>) labels.get().applyArg();
                     for (FfiNameOrId.ByValue label : ffiLabels) {
                         FfiError error = irCoreLib.addParamsTable(ptrParams, label);
                         if (error.code != ResultCode.Success) {
-                            throw new InterOpIllegalArgException(op.getClass(), "tables", "addParamsTable returns " + error.msg);
+                            throw new InterOpIllegalArgException(
+                                    op.getClass(), "tables", "addParamsTable returns " + error.msg);
                         }
                     }
                 }
@@ -192,11 +211,14 @@ public class IrPlan implements Closeable {
                     throw new InterOpIllegalArgException(baseOp.getClass(), "upper", "not present");
                 }
                 Pointer ptrLimit = irCoreLib.initLimitOperator();
-                FfiError error = irCoreLib.setLimitRange(ptrLimit,
-                        (Integer) lower.get().applyArg(), (Integer) upper.get().applyArg());
+                FfiError error =
+                        irCoreLib.setLimitRange(
+                                ptrLimit,
+                                (Integer) lower.get().applyArg(),
+                                (Integer) upper.get().applyArg());
                 if (error.code != ResultCode.Success) {
-                    throw new InterOpIllegalArgException(baseOp.getClass(),
-                            "lower+upper", "setLimitRange returns " + error.msg);
+                    throw new InterOpIllegalArgException(
+                            baseOp.getClass(), "lower+upper", "setLimitRange returns " + error.msg);
                 }
                 return ptrLimit;
             }
@@ -207,19 +229,24 @@ public class IrPlan implements Closeable {
                 ProjectOp op = (ProjectOp) baseOp;
                 Optional<OpArg> exprOpt = op.getExprWithAlias();
                 if (!exprOpt.isPresent()) {
-                    throw new InterOpIllegalArgException(baseOp.getClass(), "exprWithAlias", "not present");
+                    throw new InterOpIllegalArgException(
+                            baseOp.getClass(), "exprWithAlias", "not present");
                 }
                 List<Pair> exprWithAlias = (List<Pair>) exprOpt.get().applyArg();
                 // append always and sink by parameters
                 Pointer ptrProject = irCoreLib.initProjectOperator(true);
-                exprWithAlias.forEach(p -> {
-                    String expr = (String) p.getValue0();
-                    FfiAlias.ByValue alias = (FfiAlias.ByValue) p.getValue1();
-                    FfiError error = irCoreLib.addProjectExprAlias(ptrProject, expr, alias);
-                    if (error.code != ResultCode.Success) {
-                        throw new InterOpIllegalArgException(baseOp.getClass(), "exprWithAlias", "append returns " + error.msg);
-                    }
-                });
+                exprWithAlias.forEach(
+                        p -> {
+                            String expr = (String) p.getValue0();
+                            FfiAlias.ByValue alias = (FfiAlias.ByValue) p.getValue1();
+                            FfiError error = irCoreLib.addProjectExprAlias(ptrProject, expr, alias);
+                            if (error.code != ResultCode.Success) {
+                                throw new InterOpIllegalArgException(
+                                        baseOp.getClass(),
+                                        "exprWithAlias",
+                                        "append returns " + error.msg);
+                            }
+                        });
                 return ptrProject;
             }
         },
@@ -229,23 +256,29 @@ public class IrPlan implements Closeable {
                 OrderOp op = (OrderOp) baseOp;
                 Optional<OpArg> varWithOpt = op.getOrderVarWithOrder();
                 if (!varWithOpt.isPresent()) {
-                    throw new InterOpIllegalArgException(baseOp.getClass(), "varWithOrder", "not present");
+                    throw new InterOpIllegalArgException(
+                            baseOp.getClass(), "varWithOrder", "not present");
                 }
                 List<Pair> orderList = (List<Pair>) varWithOpt.get().applyArg();
                 if (orderList.isEmpty()) {
-                    throw new InterOpIllegalArgException(baseOp.getClass(), "varWithOrder", "should not be empty");
+                    throw new InterOpIllegalArgException(
+                            baseOp.getClass(), "varWithOrder", "should not be empty");
                 }
                 Pointer ptrOrder = irCoreLib.initOrderbyOperator();
-                orderList.forEach(pair -> {
-                    FfiVariable.ByValue var = (FfiVariable.ByValue) pair.getValue0();
-                    FfiOrderOpt opt = (FfiOrderOpt) pair.getValue1();
-                    irCoreLib.addOrderbyPair(ptrOrder, var, opt);
-                });
+                orderList.forEach(
+                        pair -> {
+                            FfiVariable.ByValue var = (FfiVariable.ByValue) pair.getValue0();
+                            FfiOrderOpt opt = (FfiOrderOpt) pair.getValue1();
+                            irCoreLib.addOrderbyPair(ptrOrder, var, opt);
+                        });
                 // top k
                 Optional<OpArg> lower = op.getLower();
                 Optional<OpArg> upper = op.getUpper();
                 if (lower.isPresent() && upper.isPresent()) {
-                    irCoreLib.setOrderbyLimit(ptrOrder, (Integer) lower.get().applyArg(), (Integer) upper.get().applyArg());
+                    irCoreLib.setOrderbyLimit(
+                            ptrOrder,
+                            (Integer) lower.get().applyArg(),
+                            (Integer) upper.get().applyArg());
                 }
                 return ptrOrder;
             }
@@ -257,31 +290,39 @@ public class IrPlan implements Closeable {
                 GroupOp op = (GroupOp) baseOp;
                 Optional<OpArg> groupKeysOpt = op.getGroupByKeys();
                 if (!groupKeysOpt.isPresent()) {
-                    throw new InterOpIllegalArgException(baseOp.getClass(), "groupKeys", "not present");
+                    throw new InterOpIllegalArgException(
+                            baseOp.getClass(), "groupKeys", "not present");
                 }
                 Optional<OpArg> groupValuesOpt = op.getGroupByValues();
                 if (!groupValuesOpt.isPresent()) {
-                    throw new InterOpIllegalArgException(baseOp.getClass(), "groupValues", "not present");
+                    throw new InterOpIllegalArgException(
+                            baseOp.getClass(), "groupValues", "not present");
                 }
                 // groupKeys is empty -> count
                 List<Pair> groupKeys = (List<Pair>) groupKeysOpt.get().applyArg();
                 // set group key
-                groupKeys.forEach(p -> {
-                    FfiVariable.ByValue key = (FfiVariable.ByValue) p.getValue0();
-                    FfiAlias.ByValue alias = (FfiAlias.ByValue) p.getValue1();
-                    irCoreLib.addGroupbyKeyAlias(ptrGroup, key, alias);
-                });
+                groupKeys.forEach(
+                        p -> {
+                            FfiVariable.ByValue key = (FfiVariable.ByValue) p.getValue0();
+                            FfiAlias.ByValue alias = (FfiAlias.ByValue) p.getValue1();
+                            irCoreLib.addGroupbyKeyAlias(ptrGroup, key, alias);
+                        });
                 List<ArgAggFn> groupValues = (List<ArgAggFn>) groupValuesOpt.get().applyArg();
                 if (groupValues.isEmpty()) {
-                    throw new InterOpIllegalArgException(baseOp.getClass(), "groupValues", "not present");
+                    throw new InterOpIllegalArgException(
+                            baseOp.getClass(), "groupValues", "not present");
                 }
                 // set group value
-                groupValues.forEach(p -> {
-                    irCoreLib.addGroupbyAggFn(ptrGroup, ArgUtils.asFfiAggFn(p));
-                });
+                groupValues.forEach(
+                        p -> {
+                            irCoreLib.addGroupbyAggFn(ptrGroup, ArgUtils.asFfiAggFn(p));
+                        });
                 Optional<OpArg> aliasOpt = baseOp.getAlias();
                 if (aliasOpt.isPresent()) {
-                    throw new InterOpIllegalArgException(baseOp.getClass(), "groupKeys+groupValues", "the query given alias is unsupported");
+                    throw new InterOpIllegalArgException(
+                            baseOp.getClass(),
+                            "groupKeys+groupValues",
+                            "the query given alias is unsupported");
                 }
                 return ptrGroup;
             }
@@ -293,15 +334,19 @@ public class IrPlan implements Closeable {
                 DedupOp op = (DedupOp) baseOp;
                 Optional<OpArg> dedupKeysOpt = op.getDedupKeys();
                 if (!dedupKeysOpt.isPresent()) {
-                    throw new InterOpIllegalArgException(baseOp.getClass(), "dedupKeys", "not present");
+                    throw new InterOpIllegalArgException(
+                            baseOp.getClass(), "dedupKeys", "not present");
                 }
-                List<FfiVariable.ByValue> dedupKeys = (List<FfiVariable.ByValue>) dedupKeysOpt.get().applyArg();
+                List<FfiVariable.ByValue> dedupKeys =
+                        (List<FfiVariable.ByValue>) dedupKeysOpt.get().applyArg();
                 if (dedupKeys.isEmpty()) {
-                    throw new InterOpIllegalArgException(baseOp.getClass(), "dedupKeys", "should not be empty if present");
+                    throw new InterOpIllegalArgException(
+                            baseOp.getClass(), "dedupKeys", "should not be empty if present");
                 }
-                dedupKeys.forEach(k -> {
-                    irCoreLib.addDedupKey(ptrDedup, k);
-                });
+                dedupKeys.forEach(
+                        k -> {
+                            irCoreLib.addDedupKey(ptrDedup, k);
+                        });
                 return ptrDedup;
             }
         },
@@ -311,20 +356,26 @@ public class IrPlan implements Closeable {
                 SinkOp sinkOp = (SinkOp) baseOp;
                 Optional<OpArg> argOpt = sinkOp.getSinkArg();
                 if (!argOpt.isPresent()) {
-                    throw new InterOpIllegalArgException(baseOp.getClass(), "sinkArg", "not present");
+                    throw new InterOpIllegalArgException(
+                            baseOp.getClass(), "sinkArg", "not present");
                 }
                 SinkArg sinkArg = (SinkArg) argOpt.get().applyArg();
                 List<FfiNameOrId.ByValue> columns = sinkArg.getColumnNames();
                 if (columns.isEmpty()) {
-                    throw new InterOpIllegalArgException(baseOp.getClass(), "selected columns", "is empty");
+                    throw new InterOpIllegalArgException(
+                            baseOp.getClass(), "selected columns", "is empty");
                 }
                 Pointer ptrSink = irCoreLib.initSinkOperator();
-                columns.forEach(column -> {
-                    FfiError error = irCoreLib.addSinkColumn(ptrSink, column);
-                    if (error.code != ResultCode.Success) {
-                        throw new InterOpIllegalArgException(baseOp.getClass(), "columns", "addSinkColumn returns " + error.msg);
-                    }
-                });
+                columns.forEach(
+                        column -> {
+                            FfiError error = irCoreLib.addSinkColumn(ptrSink, column);
+                            if (error.code != ResultCode.Success) {
+                                throw new InterOpIllegalArgException(
+                                        baseOp.getClass(),
+                                        "columns",
+                                        "addSinkColumn returns " + error.msg);
+                            }
+                        });
                 return ptrSink;
             }
         },
@@ -354,7 +405,8 @@ public class IrPlan implements Closeable {
                 GetVOp getVOp = (GetVOp) baseOp;
                 Optional<OpArg> vOpt = getVOp.getGetVOpt();
                 if (!vOpt.isPresent()) {
-                    throw new InterOpIllegalArgException(baseOp.getClass(), "getVOpt", "not present");
+                    throw new InterOpIllegalArgException(
+                            baseOp.getClass(), "getVOpt", "not present");
                 }
                 FfiVOpt ffiVOpt = (FfiVOpt) vOpt.get().applyArg();
                 Pointer ptrGetV = irCoreLib.initGetvOperator(ffiVOpt);
@@ -374,11 +426,13 @@ public class IrPlan implements Closeable {
                 ApplyOp applyOp = (ApplyOp) baseOp;
                 Optional<OpArg> subRootOpt = applyOp.getSubRootId();
                 if (!subRootOpt.isPresent()) {
-                    throw new InterOpIllegalArgException(baseOp.getClass(), "subRootId", "not present");
+                    throw new InterOpIllegalArgException(
+                            baseOp.getClass(), "subRootId", "not present");
                 }
                 Optional<OpArg> joinKindOpt = applyOp.getJoinKind();
                 if (!joinKindOpt.isPresent()) {
-                    throw new InterOpIllegalArgException(baseOp.getClass(), "joinKind", "not present");
+                    throw new InterOpIllegalArgException(
+                            baseOp.getClass(), "joinKind", "not present");
                 }
                 int subRootId = (Integer) subRootOpt.get().applyArg();
                 FfiJoinKind joinKind = (FfiJoinKind) joinKindOpt.get().applyArg();
@@ -398,55 +452,70 @@ public class IrPlan implements Closeable {
                 UnionOp unionOp = (UnionOp) baseOp;
                 Optional<OpArg> parentIdsOpt = unionOp.getParentIdList();
                 if (!parentIdsOpt.isPresent()) {
-                    throw new InterOpIllegalArgException(baseOp.getClass(), "parentIdList", "not present");
+                    throw new InterOpIllegalArgException(
+                            baseOp.getClass(), "parentIdList", "not present");
                 }
                 List<Integer> parentIds = (List<Integer>) parentIdsOpt.get().applyArg();
                 if (parentIds.isEmpty()) {
-                    throw new InterOpIllegalArgException(baseOp.getClass(), "parentIdList", "is empty");
+                    throw new InterOpIllegalArgException(
+                            baseOp.getClass(), "parentIdList", "is empty");
                 }
                 Pointer ptrUnion = irCoreLib.initUnionOperator();
-                parentIds.forEach(id -> {
-                    irCoreLib.addUnionParent(ptrUnion, id);
-                });
+                parentIds.forEach(
+                        id -> {
+                            irCoreLib.addUnionParent(ptrUnion, id);
+                        });
                 return ptrUnion;
             }
         },
         MATCH_OP {
             public Pointer apply(InterOpBase baseOp) {
                 MatchOp matchOp = (MatchOp) baseOp;
-                List<MatchSentence> sentences = (List<MatchSentence>) matchOp.getSentences().get().applyArg();
+                List<MatchSentence> sentences =
+                        (List<MatchSentence>) matchOp.getSentences().get().applyArg();
                 if (sentences.isEmpty()) {
-                    throw new InterOpIllegalArgException(baseOp.getClass(), "sentences", "is empty");
+                    throw new InterOpIllegalArgException(
+                            baseOp.getClass(), "sentences", "is empty");
                 }
                 Pointer ptrMatch = irCoreLib.initPatternOperator();
-                sentences.forEach(s -> {
-                    InterOpCollection ops = s.getBinders();
-                    Pointer ptrSentence = irCoreLib.initPatternSentence(s.getJoinKind());
-                    irCoreLib.setSentenceStart(ptrSentence, s.getStartTag().alias);
-                    irCoreLib.setSentenceEnd(ptrSentence, s.getEndTag().alias);
-                    ops.unmodifiableCollection().forEach(o -> {
-                        Pointer binder;
-                        FfiBinderOpt opt;
-                        if (Utils.equalClass(o, ExpandOp.class)) {
-                            binder = EXPAND_OP.apply(o);
-                            opt = FfiBinderOpt.Edge;
-                        } else if (Utils.equalClass(o, PathExpandOp.class)) {
-                            binder = PATH_EXPAND_OP.apply(o);
-                            opt = FfiBinderOpt.Path;
-                        } else if (Utils.equalClass(o, GetVOp.class)) {
-                            binder = GETV_OP.apply(o);
-                            opt = FfiBinderOpt.Vertex;
-                        } else {
-                            throw new InterOpIllegalArgException(baseOp.getClass(),
-                                    "sentences", "binder " + o.getClass() + " is unsupported yet");
-                        }
-                        irCoreLib.addSentenceBinder(ptrSentence, binder, opt);
-                    });
-                    irCoreLib.addPatternSentence(ptrMatch, ptrSentence);
-                });
+                sentences.forEach(
+                        s -> {
+                            InterOpCollection ops = s.getBinders();
+                            Pointer ptrSentence = irCoreLib.initPatternSentence(s.getJoinKind());
+                            irCoreLib.setSentenceStart(ptrSentence, s.getStartTag().alias);
+                            irCoreLib.setSentenceEnd(ptrSentence, s.getEndTag().alias);
+                            ops.unmodifiableCollection()
+                                    .forEach(
+                                            o -> {
+                                                Pointer binder;
+                                                FfiBinderOpt opt;
+                                                if (Utils.equalClass(o, ExpandOp.class)) {
+                                                    binder = EXPAND_OP.apply(o);
+                                                    opt = FfiBinderOpt.Edge;
+                                                } else if (Utils.equalClass(
+                                                        o, PathExpandOp.class)) {
+                                                    binder = PATH_EXPAND_OP.apply(o);
+                                                    opt = FfiBinderOpt.Path;
+                                                } else if (Utils.equalClass(o, GetVOp.class)) {
+                                                    binder = GETV_OP.apply(o);
+                                                    opt = FfiBinderOpt.Vertex;
+                                                } else {
+                                                    throw new InterOpIllegalArgException(
+                                                            baseOp.getClass(),
+                                                            "sentences",
+                                                            "binder "
+                                                                    + o.getClass()
+                                                                    + " is unsupported yet");
+                                                }
+                                                irCoreLib.addSentenceBinder(
+                                                        ptrSentence, binder, opt);
+                                            });
+                            irCoreLib.addPatternSentence(ptrMatch, ptrSentence);
+                        });
                 Optional<OpArg> aliasOpt = baseOp.getAlias();
                 if (aliasOpt.isPresent()) {
-                    throw new InterOpIllegalArgException(baseOp.getClass(), "match", "the query given alias is unsupported");
+                    throw new InterOpIllegalArgException(
+                            baseOp.getClass(), "match", "the query given alias is unsupported");
                 }
                 return ptrMatch;
             }
@@ -481,7 +550,8 @@ public class IrPlan implements Closeable {
     }
 
     // return id of the first operator, id of the last operator
-    public Pair<Integer, Integer> appendInterOpCollection(int parentId, InterOpCollection opCollection) {
+    public Pair<Integer, Integer> appendInterOpCollection(
+            int parentId, InterOpCollection opCollection) {
         int subTaskRootId = 0;
         int unionParentId = 0;
         IntByReference oprId = new IntByReference(parentId);
@@ -498,8 +568,8 @@ public class IrPlan implements Closeable {
     }
 
     // return id of the current operator
-    public IntByReference appendInterOp(int parentId, InterOpBase base) throws
-            InterOpIllegalArgException, InterOpUnsupportedException, AppendInterOpException {
+    public IntByReference appendInterOp(int parentId, InterOpBase base)
+            throws InterOpIllegalArgException, InterOpUnsupportedException, AppendInterOpException {
         FfiError error;
         IntByReference oprId = new IntByReference(parentId);
         if (ClassUtils.equalClass(base, ScanFusionOp.class)) {
@@ -539,11 +609,13 @@ public class IrPlan implements Closeable {
             ApplyOp applyOp = (ApplyOp) base;
             Optional<OpArg> subOps = applyOp.getSubOpCollection();
             if (!subOps.isPresent()) {
-                throw new InterOpIllegalArgException(base.getClass(), "subOpCollection", "is not present in apply");
+                throw new InterOpIllegalArgException(
+                        base.getClass(), "subOpCollection", "is not present in apply");
             }
             InterOpCollection opCollection = (InterOpCollection) subOps.get().applyArg();
             Pair<Integer, Integer> oprIdPair = appendInterOpCollection(-1, opCollection);
-            applyOp.setSubRootId(new OpArg(Integer.valueOf(oprIdPair.getValue0()), Function.identity()));
+            applyOp.setSubRootId(
+                    new OpArg(Integer.valueOf(oprIdPair.getValue0()), Function.identity()));
 
             Pointer ptrApply = TransformFactory.APPLY_OP.apply(base);
             error = irCoreLib.appendApplyOperator(ptrPlan, ptrApply, oprId.getValue(), oprId);
@@ -551,11 +623,14 @@ public class IrPlan implements Closeable {
             UnionOp unionOp = (UnionOp) base;
             Optional<OpArg> subOpsListOpt = unionOp.getSubOpCollectionList();
             if (!subOpsListOpt.isPresent()) {
-                throw new InterOpIllegalArgException(base.getClass(), "subOpCollectionList", "is not present in union");
+                throw new InterOpIllegalArgException(
+                        base.getClass(), "subOpCollectionList", "is not present in union");
             }
-            List<InterOpCollection> subOpsList = (List<InterOpCollection>) subOpsListOpt.get().applyArg();
+            List<InterOpCollection> subOpsList =
+                    (List<InterOpCollection>) subOpsListOpt.get().applyArg();
             if (subOpsList.isEmpty()) {
-                throw new InterOpIllegalArgException(base.getClass(), "subOpCollectionList", "is empty in union");
+                throw new InterOpIllegalArgException(
+                        base.getClass(), "subOpCollectionList", "is empty in union");
             }
             List<Integer> unionParentIds = new ArrayList<>();
             for (InterOpCollection opCollection : subOpsList) {
@@ -572,7 +647,8 @@ public class IrPlan implements Closeable {
             throw new InterOpUnsupportedException(base.getClass(), "unimplemented yet");
         }
         if (error != null && error.code != ResultCode.Success) {
-            throw new AppendInterOpException(base.getClass(), error.code.name() + ", msg is " + error.msg);
+            throw new AppendInterOpException(
+                    base.getClass(), error.code.name() + ", msg is " + error.msg);
         }
         // add alias after the op if necessary
         return setPostAlias(oprId.getValue(), base);
@@ -596,8 +672,11 @@ public class IrPlan implements Closeable {
     }
 
     private boolean isPostAliasOp(InterOpBase base) {
-        return base instanceof SelectOp || base instanceof LimitOp
-                || base instanceof OrderOp || base instanceof DedupOp || base instanceof UnionOp;
+        return base instanceof SelectOp
+                || base instanceof LimitOp
+                || base instanceof OrderOp
+                || base instanceof DedupOp
+                || base instanceof UnionOp;
     }
 
     public byte[] toPhysicalBytes(Configs configs) throws BuildPhysicalException {
@@ -610,7 +689,8 @@ public class IrPlan implements Closeable {
         FfiData.ByValue buffer = irCoreLib.buildPhysicalPlan(ptrPlan, workers, servers);
         FfiError error = buffer.error;
         if (error.code != ResultCode.Success) {
-            throw new BuildPhysicalException("call libc returns " + error.code.name() + ", msg is " + error.msg);
+            throw new BuildPhysicalException(
+                    "call libc returns " + error.code.name() + ", msg is " + error.msg);
         }
         byte[] bytes = buffer.getBytes();
         buffer.close();

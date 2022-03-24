@@ -38,4 +38,3 @@ public class PegasusConfig {
     public static final Config<Integer> PEGASUS_SERVER_NUM =
             Config.intConfig("pegasus.server.num", 1);
 }
-

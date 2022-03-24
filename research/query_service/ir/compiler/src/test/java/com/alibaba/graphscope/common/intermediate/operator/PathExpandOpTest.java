@@ -19,6 +19,7 @@ package com.alibaba.graphscope.common.intermediate.operator;
 import com.alibaba.graphscope.common.IrPlan;
 import com.alibaba.graphscope.common.jna.type.FfiDirection;
 import com.alibaba.graphscope.common.utils.FileUtils;
+
 import org.junit.Assert;
 import org.junit.Test;
 

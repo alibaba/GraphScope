@@ -21,6 +21,7 @@ import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.intermediate.operator.InterOpBase;
 import com.alibaba.graphscope.common.intermediate.operator.ProjectOp;
 import com.alibaba.graphscope.common.jna.type.FfiVariable;
+
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.step.TraversalParent;
@@ -35,7 +36,6 @@ import java.util.function.Function;
  * judge whether the sub-traversal is the real apply. Especially, judge select('a', 'b').by(..) as a whole,
  * thus group().by(select('a', 'b').by(..)) can get multiple expressions as different group key or consider it as a apply
  **/
-
 public interface TraversalParentTransform extends Function<TraversalParent, List<InterOpBase>> {
     default ExprResult getSubTraversalAsExpr(ExprArg exprArg) {
         int size = exprArg.size();
@@ -62,15 +62,20 @@ public interface TraversalParentTransform extends Function<TraversalParent, List
                         stringBuilder.append("}");
                         return (new ExprResult(true)).addTagExpr("", stringBuilder.toString());
                     } else {
-                        throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE, "valueMap() is unsupported");
+                        throw new OpArgIllegalException(
+                                OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
+                                "valueMap() is unsupported");
                     }
                 } else if (step instanceof PropertiesStep) { // values(..)
                     String[] mapKeys = ((PropertiesStep) step).getPropertyKeys();
                     if (mapKeys.length == 0) {
-                        throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE, "values() is unsupported");
+                        throw new OpArgIllegalException(
+                                OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
+                                "values() is unsupported");
                     }
                     if (mapKeys.length > 1) {
-                        throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
+                        throw new OpArgIllegalException(
+                                OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
                                 "use valueMap(..) instead if there are multiple project keys");
                     }
                     return (new ExprResult(true)).addTagExpr("", "@." + mapKeys[0]);
@@ -79,13 +84,15 @@ public interface TraversalParentTransform extends Function<TraversalParent, List
                     // select('a').by('name'/values/valueMap)
                     // select('a', 'b'), select('a', 'b').by()
                     // select('a', 'b').by('name'/values/valueMap).by('name'/values/valueMap)
-                    Map<String, Traversal.Admin> selectBys = getProjectTraversals((TraversalParent) step);
+                    Map<String, Traversal.Admin> selectBys =
+                            getProjectTraversals((TraversalParent) step);
                     ExprResult exprRes = new ExprResult();
                     boolean isExprPattern = true;
                     for (Map.Entry<String, Traversal.Admin> entry : selectBys.entrySet()) {
                         String k = entry.getKey();
                         Traversal.Admin v = entry.getValue();
-                        Optional<String> byExpr = getSubTraversalAsExpr(new ExprArg(v)).getSingleExpr();
+                        Optional<String> byExpr =
+                                getSubTraversalAsExpr(new ExprArg(v)).getSingleExpr();
                         if (byExpr.isPresent()) {
                             String expr = byExpr.get().replace("@", "@" + k);
                             exprRes.addTagExpr(k, expr);
@@ -95,11 +102,13 @@ public interface TraversalParentTransform extends Function<TraversalParent, List
                     }
                     return exprRes.setExprPattern(isExprPattern);
                 } else if (step instanceof WhereTraversalStep.WhereStartStep) { // where(as('a'))
-                    WhereTraversalStep.WhereStartStep startStep = (WhereTraversalStep.WhereStartStep) step;
+                    WhereTraversalStep.WhereStartStep startStep =
+                            (WhereTraversalStep.WhereStartStep) step;
                     String selectKey = (String) startStep.getScopeKeys().iterator().next();
                     return (new ExprResult(true)).addTagExpr(selectKey, "@" + selectKey);
                 } else if (step instanceof TraversalMapStep) { // select(keys), select(values)
-                    ProjectOp mapOp = (ProjectOp) StepTransformFactory.TRAVERSAL_MAP_STEP.apply(step);
+                    ProjectOp mapOp =
+                            (ProjectOp) StepTransformFactory.TRAVERSAL_MAP_STEP.apply(step);
                     List<Pair> pairs = (List<Pair>) mapOp.getExprWithAlias().get().applyArg();
                     String mapExpr = (String) pairs.get(0).getValue0();
                     String mapKey = mapExpr.substring(1);
@@ -113,15 +122,22 @@ public interface TraversalParentTransform extends Function<TraversalParent, List
             Step endStep = exprArg.getEndStep();
             if ((startStep instanceof SelectOneStep || startStep instanceof TraversalMapStep)
                     && (endStep instanceof PropertiesStep || endStep instanceof PropertyMapStep)) {
-                Optional<String> propertyExpr = getSubTraversalAsExpr((new ExprArg()).addStep(endStep)).getSingleExpr();
+                Optional<String> propertyExpr =
+                        getSubTraversalAsExpr((new ExprArg()).addStep(endStep)).getSingleExpr();
                 if (!propertyExpr.isPresent()) {
                     return new ExprResult(false);
                 }
                 String selectKey = null;
-                if (startStep instanceof SelectOneStep) { // select('a').values(..), select('a').valueMap(..)
-                    selectKey = (String) ((SelectOneStep) startStep).getScopeKeys().iterator().next();
-                } else if (startStep instanceof TraversalMapStep) { // select(keys).values(..), select(values).valueMap(..)
-                    ProjectOp mapOp = (ProjectOp) StepTransformFactory.TRAVERSAL_MAP_STEP.apply(startStep);
+                if (startStep
+                        instanceof
+                        SelectOneStep) { // select('a').values(..), select('a').valueMap(..)
+                    selectKey =
+                            (String) ((SelectOneStep) startStep).getScopeKeys().iterator().next();
+                } else if (startStep
+                        instanceof
+                        TraversalMapStep) { // select(keys).values(..), select(values).valueMap(..)
+                    ProjectOp mapOp =
+                            (ProjectOp) StepTransformFactory.TRAVERSAL_MAP_STEP.apply(startStep);
                     List<Pair> pairs = (List<Pair>) mapOp.getExprWithAlias().get().applyArg();
                     String mapExpr = (String) pairs.get(0).getValue0();
                     selectKey = mapExpr.substring(1);
@@ -143,11 +159,14 @@ public interface TraversalParentTransform extends Function<TraversalParent, List
     default FfiVariable.ByValue getExpressionAsVar(String expr) {
         // {@a.name} can not be represented as variable
         if (expr.startsWith("{") && expr.endsWith("}")) {
-            throw new OpArgIllegalException(OpArgIllegalException.Cause.INVALID_TYPE, "can not convert expression of valueMap to variable");
+            throw new OpArgIllegalException(
+                    OpArgIllegalException.Cause.INVALID_TYPE,
+                    "can not convert expression of valueMap to variable");
         }
         String[] splitExpr = expr.split("\\.");
         if (splitExpr.length == 0) {
-            throw new OpArgIllegalException(OpArgIllegalException.Cause.INVALID_TYPE, "expr " + expr + " is invalid");
+            throw new OpArgIllegalException(
+                    OpArgIllegalException.Cause.INVALID_TYPE, "expr " + expr + " is invalid");
         }
         // remove first "@"
         String tag = (splitExpr[0].length() > 0) ? splitExpr[0].substring(1) : splitExpr[0];
@@ -173,7 +192,8 @@ public interface TraversalParentTransform extends Function<TraversalParent, List
             return step.getByTraversals();
         } else {
             throw new OpArgIllegalException(
-                    OpArgIllegalException.Cause.INVALID_TYPE, "cannot get project traversals from " + parent.getClass());
+                    OpArgIllegalException.Cause.INVALID_TYPE,
+                    "cannot get project traversals from " + parent.getClass());
         }
     }
 }

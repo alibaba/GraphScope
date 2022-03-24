@@ -16,11 +16,12 @@
 
 package com.alibaba.graphscope.common.intermediate.operator;
 
-import com.alibaba.graphscope.common.jna.type.FfiAlias;
-import com.alibaba.graphscope.common.utils.FileUtils;
 import com.alibaba.graphscope.common.IrPlan;
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
+import com.alibaba.graphscope.common.jna.type.FfiAlias;
 import com.alibaba.graphscope.common.jna.type.FfiScanOpt;
+import com.alibaba.graphscope.common.utils.FileUtils;
+
 import org.javatuples.Pair;
 import org.junit.After;
 import org.junit.Assert;
@@ -45,7 +46,8 @@ public class ProjectOpTest {
 
         op.setExprWithAlias(new OpArg(exprWithAlias, Function.identity()));
         irPlan.appendInterOp(-1, op);
-        Assert.assertEquals(FileUtils.readJsonFromResource("project_key.json"), irPlan.getPlanAsJson());
+        Assert.assertEquals(
+                FileUtils.readJsonFromResource("project_key.json"), irPlan.getPlanAsJson());
     }
 
     @Test
@@ -63,7 +65,8 @@ public class ProjectOpTest {
 
         op.setExprWithAlias(new OpArg(exprWithAlias, Function.identity()));
         irPlan.appendInterOp(0, op);
-        Assert.assertEquals(FileUtils.readJsonFromResource("project_tag_key.json"), irPlan.getPlanAsJson());
+        Assert.assertEquals(
+                FileUtils.readJsonFromResource("project_tag_key.json"), irPlan.getPlanAsJson());
     }
 
     @Test
@@ -81,7 +84,8 @@ public class ProjectOpTest {
 
         op.setExprWithAlias(new OpArg(exprWithAlias, Function.identity()));
         irPlan.appendInterOp(0, op);
-        Assert.assertEquals(FileUtils.readJsonFromResource("project_tag_keys.json"), irPlan.getPlanAsJson());
+        Assert.assertEquals(
+                FileUtils.readJsonFromResource("project_tag_keys.json"), irPlan.getPlanAsJson());
     }
 
     @After

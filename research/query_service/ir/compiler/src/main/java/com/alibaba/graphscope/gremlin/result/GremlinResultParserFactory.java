@@ -21,6 +21,7 @@ import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.alibaba.graphscope.gaia.proto.OuterExpression;
 import com.alibaba.graphscope.gremlin.exception.GremlinResultParserException;
 import com.alibaba.graphscope.gremlin.transform.alias.AliasManager;
+
 import org.apache.tinkerpop.gremlin.structure.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +38,8 @@ public enum GremlinResultParserFactory implements GremlinResultParser {
             IrResult.Element element = ParserUtils.getHeadEntry(results).getElement();
             Object graphElement = ParserUtils.parseElement(element);
             if (!(graphElement instanceof Element || graphElement instanceof List)) {
-                throw new GremlinResultParserException("parse element should return vertex or edge or graph path");
+                throw new GremlinResultParserException(
+                        "parse element should return vertex or edge or graph path");
             }
             return graphElement;
         }
@@ -54,33 +56,46 @@ public enum GremlinResultParserFactory implements GremlinResultParser {
         // valueMap("name") -> key: head, value: {name, "marko"}
         // select("a").by("name") -> key: head, value: "marko"
         // select("a", "b").by("name") -> key: a, value: "marko"; key: b, value: "josh"
-        // select("a", "b").by(valueMap("name")) -> key: a, value: {name, "marko"}; key: b, value: {name, "josh"}
+        // select("a", "b").by(valueMap("name")) -> key: a, value: {name, "marko"}; key: b, value:
+        // {name, "josh"}
         @Override
         public Object parseFrom(IrResult.Results results) {
             IrResult.Record record = results.getRecord();
             logger.info("{}", record);
             Map<String, Object> projectResult = new HashMap<>();
-            record.getColumnsList().forEach(column -> {
-                String tag = getColumnKeyAsResultKey(column.getNameOrId());
-                Object parseElement = ParserUtils.parseElement(column.getEntry().getElement());
-                if (parseElement instanceof Map) {
-                    Map<List, Object> projectTags = (Map<List, Object>) parseElement;
-                    projectTags.forEach((k, v) -> {
-                        if (!(v instanceof EmptyValue)) {
-                            String property = (String) k.get(1);
-                            if (property.isEmpty()) {
-                                throw new GremlinResultParserException("map value should have property key");
-                            }
-                            Map tagEntry = (Map) projectResult.computeIfAbsent(tag, k1 -> new HashMap<>());
-                            tagEntry.put(property, Collections.singletonList(v));
-                        }
-                    });
-                } else {
-                    if (!(parseElement instanceof EmptyValue)) {
-                        projectResult.put(tag, parseElement);
-                    }
-                }
-            });
+            record.getColumnsList()
+                    .forEach(
+                            column -> {
+                                String tag = getColumnKeyAsResultKey(column.getNameOrId());
+                                Object parseElement =
+                                        ParserUtils.parseElement(column.getEntry().getElement());
+                                if (parseElement instanceof Map) {
+                                    Map<List, Object> projectTags =
+                                            (Map<List, Object>) parseElement;
+                                    projectTags.forEach(
+                                            (k, v) -> {
+                                                if (!(v instanceof EmptyValue)) {
+                                                    String property = (String) k.get(1);
+                                                    if (property.isEmpty()) {
+                                                        throw new GremlinResultParserException(
+                                                                "map value should have property"
+                                                                        + " key");
+                                                    }
+                                                    Map tagEntry =
+                                                            (Map)
+                                                                    projectResult.computeIfAbsent(
+                                                                            tag,
+                                                                            k1 -> new HashMap<>());
+                                                    tagEntry.put(
+                                                            property, Collections.singletonList(v));
+                                                }
+                                            });
+                                } else {
+                                    if (!(parseElement instanceof EmptyValue)) {
+                                        projectResult.put(tag, parseElement);
+                                    }
+                                }
+                            });
             if (projectResult.isEmpty()) {
                 return EmptyValue.INSTANCE;
             } else if (projectResult.size() == 1) {
@@ -119,7 +134,8 @@ public enum GremlinResultParserFactory implements GremlinResultParser {
             for (IrResult.Column column : record.getColumnsList()) {
                 OuterExpression.NameOrId columnName = column.getNameOrId();
                 if (columnName.getItemCase() != OuterExpression.NameOrId.ItemCase.NAME) {
-                    throw new GremlinResultParserException("column key in group should be ItemCase.NAME");
+                    throw new GremlinResultParserException(
+                            "column key in group should be ItemCase.NAME");
                 }
                 String alias = columnName.getName();
                 Object parseEntry = parseGroupEntry(column.getEntry());
@@ -167,35 +183,41 @@ public enum GremlinResultParserFactory implements GremlinResultParser {
                         IrResult.Element element = entry.getElement();
                         if (element.getInnerCase() == IrResult.Element.InnerCase.VERTEX
                                 || element.getInnerCase() == IrResult.Element.InnerCase.EDGE
-                                || element.getInnerCase() == IrResult.Element.InnerCase.GRAPH_PATH) {
+                                || element.getInnerCase()
+                                        == IrResult.Element.InnerCase.GRAPH_PATH) {
                             return GRAPH_ELEMENT;
                         } else if (element.getInnerCase() == IrResult.Element.InnerCase.OBJECT) {
                             Common.Value value = element.getObject();
-                            if (value.getItemCase() == Common.Value.ItemCase.PAIR_ARRAY) {  // project
+                            if (value.getItemCase()
+                                    == Common.Value.ItemCase.PAIR_ARRAY) { // project
                                 return PROJECT_VALUE;
                             } else { // simple type
                                 return SINGLE_VALUE;
                             }
                         } else {
-                            throw new GremlinResultParserException(element.getInnerCase() + " is invalid");
+                            throw new GremlinResultParserException(
+                                    element.getInnerCase() + " is invalid");
                         }
                     case COLLECTION: // path()
                     default:
-                        throw new GremlinResultParserException(entry.getInnerCase() + " is unsupported yet");
+                        throw new GremlinResultParserException(
+                                entry.getInnerCase() + " is unsupported yet");
                 }
             } else if (columns > 1) { // project or group
                 IrResult.Column column = results.getRecord().getColumnsList().get(0);
                 OuterExpression.NameOrId columnName = column.getNameOrId();
                 if (columnName.getItemCase() == OuterExpression.NameOrId.ItemCase.NAME) {
                     String name = columnName.getName();
-                    if (AliasManager.isGroupKeysPrefix(name) || AliasManager.isGroupValuesPrefix(name)) {
+                    if (AliasManager.isGroupKeysPrefix(name)
+                            || AliasManager.isGroupValuesPrefix(name)) {
                         return GROUP;
                     } else {
                         return PROJECT_VALUE;
                     }
                 } else {
                     throw new GremlinResultParserException(
-                            "column key should be ItemCase.NAME to differentiate between group and project");
+                            "column key should be ItemCase.NAME to differentiate between group and"
+                                    + " project");
                 }
             } else {
                 throw new GremlinResultParserException("columns should not be empty");

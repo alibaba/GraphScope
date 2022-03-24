@@ -19,6 +19,7 @@ package com.alibaba.graphscope.common.jna;
 import com.sun.jna.FromNativeContext;
 import com.sun.jna.ToNativeContext;
 import com.sun.jna.TypeConverter;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +34,9 @@ public class EnumConverter implements TypeConverter {
         }
         Object[] enums = targetClass.getEnumConstants();
         if (enums.length == 0) {
-            logger.error("Could not convert desired enum type (), no valid values are defined.", targetClass.getName());
+            logger.error(
+                    "Could not convert desired enum type (), no valid values are defined.",
+                    targetClass.getName());
             return null;
         }
         IntEnum instance = (IntEnum) enums[0];

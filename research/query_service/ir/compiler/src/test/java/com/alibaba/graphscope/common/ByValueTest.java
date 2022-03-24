@@ -18,6 +18,7 @@ package com.alibaba.graphscope.common;
 
 import com.alibaba.graphscope.common.jna.IrCoreLibrary;
 import com.alibaba.graphscope.common.jna.type.*;
+
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -81,8 +82,8 @@ public class ByValueTest {
     @Test
     public void asVarPropertyOnlyTest() {
         String key = "age";
-        FfiVariable.ByValue variable = irCoreLib.asVarPropertyOnly(
-                irCoreLib.asPropertyKey(irCoreLib.cstrAsNameOrId(key)));
+        FfiVariable.ByValue variable =
+                irCoreLib.asVarPropertyOnly(irCoreLib.asPropertyKey(irCoreLib.cstrAsNameOrId(key)));
         Assert.assertEquals(FfiPropertyOpt.Key, variable.property.opt);
         Assert.assertEquals(FfiNameIdOpt.Name, variable.property.key.opt);
         Assert.assertEquals(key, variable.property.key.name);
@@ -93,8 +94,10 @@ public class ByValueTest {
     public void asVarTest() {
         String tag = "p";
         String key = "age";
-        FfiVariable.ByValue variable = irCoreLib.asVar(irCoreLib.cstrAsNameOrId(tag),
-                irCoreLib.asPropertyKey(irCoreLib.cstrAsNameOrId(key)));
+        FfiVariable.ByValue variable =
+                irCoreLib.asVar(
+                        irCoreLib.cstrAsNameOrId(tag),
+                        irCoreLib.asPropertyKey(irCoreLib.cstrAsNameOrId(key)));
         Assert.assertEquals(FfiNameIdOpt.Name, variable.tag.opt);
         Assert.assertEquals(tag, variable.tag.name);
         Assert.assertEquals(FfiPropertyOpt.Key, variable.property.opt);

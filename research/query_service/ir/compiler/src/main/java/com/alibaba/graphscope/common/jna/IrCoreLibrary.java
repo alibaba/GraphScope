@@ -24,9 +24,13 @@ import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 
 public interface IrCoreLibrary extends Library {
-    IrCoreLibrary INSTANCE = Native.load("ir_core", IrCoreLibrary.class, ImmutableMap.of(
-            Library.OPTION_TYPE_MAPPER, IrTypeMapper.INSTANCE,
-            Library.OPTION_FUNCTION_MAPPER, IrFunctionMapper.INSTANCE));
+    IrCoreLibrary INSTANCE =
+            Native.load(
+                    "ir_core",
+                    IrCoreLibrary.class,
+                    ImmutableMap.of(
+                            Library.OPTION_TYPE_MAPPER, IrTypeMapper.INSTANCE,
+                            Library.OPTION_FUNCTION_MAPPER, IrFunctionMapper.INSTANCE));
 
     Pointer initLogicalPlan();
 
@@ -38,14 +42,17 @@ public interface IrCoreLibrary extends Library {
 
     Pointer initScanOperator(FfiScanOpt opt);
 
-    FfiError.ByValue appendScanOperator(Pointer plan, Pointer scan, int parent, IntByReference oprIdx);
+    FfiError.ByValue appendScanOperator(
+            Pointer plan, Pointer scan, int parent, IntByReference oprIdx);
 
     // set primary index
     Pointer initIndexPredicate();
 
-    FfiError.ByValue andEquivPredicate(Pointer predicate, FfiProperty.ByValue key, FfiConst.ByValue value);
+    FfiError.ByValue andEquivPredicate(
+            Pointer predicate, FfiProperty.ByValue key, FfiConst.ByValue value);
 
-    FfiError.ByValue orEquivPredicate(Pointer predicate, FfiProperty.ByValue key, FfiConst.ByValue value);
+    FfiError.ByValue orEquivPredicate(
+            Pointer predicate, FfiProperty.ByValue key, FfiConst.ByValue value);
 
     FfiError.ByValue addScanIndexPredicate(Pointer scan, Pointer predicate);
 
@@ -55,7 +62,8 @@ public interface IrCoreLibrary extends Library {
 
     Pointer initEdgexpdOperator(boolean isEdge, FfiDirection direction);
 
-    FfiError.ByValue appendEdgexpdOperator(Pointer plan, Pointer edgeXpd, int parent, IntByReference oprIdx);
+    FfiError.ByValue appendEdgexpdOperator(
+            Pointer plan, Pointer edgeXpd, int parent, IntByReference oprIdx);
 
     FfiError.ByValue setEdgexpdParams(Pointer edgeXpd, Pointer params);
 
@@ -65,27 +73,32 @@ public interface IrCoreLibrary extends Library {
 
     FfiError.ByValue setLimitRange(Pointer limit, int lower, int upper);
 
-    FfiError.ByValue appendLimitOperator(Pointer plan, Pointer limit, int parent, IntByReference oprIdx);
+    FfiError.ByValue appendLimitOperator(
+            Pointer plan, Pointer limit, int parent, IntByReference oprIdx);
 
     Pointer initSelectOperator();
 
     FfiError.ByValue setSelectPredicate(Pointer select, String predicate);
 
-    FfiError.ByValue appendSelectOperator(Pointer plan, Pointer select, int parent, IntByReference oprIdx);
+    FfiError.ByValue appendSelectOperator(
+            Pointer plan, Pointer select, int parent, IntByReference oprIdx);
 
     Pointer initOrderbyOperator();
 
-    FfiError.ByValue addOrderbyPair(Pointer orderBy, FfiVariable.ByValue variable, FfiOrderOpt orderOpt);
+    FfiError.ByValue addOrderbyPair(
+            Pointer orderBy, FfiVariable.ByValue variable, FfiOrderOpt orderOpt);
 
     FfiError.ByValue setOrderbyLimit(Pointer orderBy, int lower, int upper);
 
-    FfiError.ByValue appendOrderbyOperator(Pointer plan, Pointer orderBy, int parent, IntByReference oprIdx);
+    FfiError.ByValue appendOrderbyOperator(
+            Pointer plan, Pointer orderBy, int parent, IntByReference oprIdx);
 
     Pointer initProjectOperator(boolean isAppend);
 
     FfiError.ByValue addProjectExprAlias(Pointer project, String expr, FfiAlias.ByValue alias);
 
-    FfiError.ByValue appendProjectOperator(Pointer plan, Pointer project, int parent, IntByReference oprIdx);
+    FfiError.ByValue appendProjectOperator(
+            Pointer plan, Pointer project, int parent, IntByReference oprIdx);
 
     /// To initialize an As operator
     Pointer initAsOperator();
@@ -98,29 +111,34 @@ public interface IrCoreLibrary extends Library {
 
     Pointer initGroupbyOperator();
 
-    FfiError.ByValue addGroupbyKeyAlias(Pointer groupBy, FfiVariable.ByValue key, FfiAlias.ByValue alias);
+    FfiError.ByValue addGroupbyKeyAlias(
+            Pointer groupBy, FfiVariable.ByValue key, FfiAlias.ByValue alias);
 
     FfiError.ByValue addGroupbyAggFn(Pointer groupBy, FfiAggFn.ByValue aggFn);
 
-    FfiError.ByValue appendGroupbyOperator(Pointer plan, Pointer groupBy, int parent, IntByReference oprIdx);
+    FfiError.ByValue appendGroupbyOperator(
+            Pointer plan, Pointer groupBy, int parent, IntByReference oprIdx);
 
     Pointer initDedupOperator();
 
     FfiError.ByValue addDedupKey(Pointer dedup, FfiVariable.ByValue var);
 
-    FfiError.ByValue appendDedupOperator(Pointer plan, Pointer dedup, int parent, IntByReference oprIdx);
+    FfiError.ByValue appendDedupOperator(
+            Pointer plan, Pointer dedup, int parent, IntByReference oprIdx);
 
     Pointer initSinkOperator();
 
     FfiError.ByValue addSinkColumn(Pointer sink, FfiNameOrId.ByValue column);
 
-    FfiError.ByValue appendSinkOperator(Pointer plan, Pointer sink, int parent, IntByReference oprIdx);
+    FfiError.ByValue appendSinkOperator(
+            Pointer plan, Pointer sink, int parent, IntByReference oprIdx);
 
     Pointer initGetvOperator(FfiVOpt vOpt);
 
     FfiError.ByValue setGetvAlias(Pointer getV, FfiAlias.ByValue alias);
 
-    FfiError.ByValue appendGetvOperator(Pointer plan, Pointer getV, int parent, IntByReference oprIdx);
+    FfiError.ByValue appendGetvOperator(
+            Pointer plan, Pointer getV, int parent, IntByReference oprIdx);
 
     FfiError.ByValue setGetvParams(Pointer getV, Pointer params);
 
@@ -128,7 +146,8 @@ public interface IrCoreLibrary extends Library {
 
     FfiError.ByValue setApplyAlias(Pointer apply, FfiAlias.ByValue alias);
 
-    FfiError.ByValue appendApplyOperator(Pointer plan, Pointer apply, int parent, IntByReference oprIdx);
+    FfiError.ByValue appendApplyOperator(
+            Pointer plan, Pointer apply, int parent, IntByReference oprIdx);
 
     Pointer initPathxpdOperator(Pointer expand, boolean isWholePath);
 
@@ -136,7 +155,8 @@ public interface IrCoreLibrary extends Library {
 
     FfiError.ByValue setPathxpdHops(Pointer pathXpd, int lower, int upper);
 
-    FfiError.ByValue appendPathxpdOperator(Pointer plan, Pointer pathXpd, int parent, IntByReference oprIdx);
+    FfiError.ByValue appendPathxpdOperator(
+            Pointer plan, Pointer pathXpd, int parent, IntByReference oprIdx);
 
     Pointer initUnionOperator();
 
@@ -156,7 +176,8 @@ public interface IrCoreLibrary extends Library {
 
     FfiError.ByValue addPatternSentence(Pointer pattern, Pointer sentence);
 
-    FfiError.ByValue appendPatternOperator(Pointer plan, Pointer pattern, int parent, IntByReference oprIdx);
+    FfiError.ByValue appendPatternOperator(
+            Pointer plan, Pointer pattern, int parent, IntByReference oprIdx);
 
     FfiNameOrId.ByValue noneNameOrId();
 

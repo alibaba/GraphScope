@@ -28,9 +28,10 @@ import com.alibaba.graphscope.gremlin.antlr4.GremlinAntlrToJava;
 import com.alibaba.graphscope.gremlin.plugin.step.ExprStep;
 import com.alibaba.graphscope.gremlin.plugin.step.PathExpandStep;
 import com.alibaba.graphscope.gremlin.plugin.step.ScanFusionStep;
+import com.alibaba.graphscope.gremlin.transform.alias.AliasArg;
 import com.alibaba.graphscope.gremlin.transform.alias.AliasManager;
 import com.alibaba.graphscope.gremlin.transform.alias.AliasPrefixType;
-import com.alibaba.graphscope.gremlin.transform.alias.AliasArg;
+
 import org.apache.tinkerpop.gremlin.process.traversal.Pop;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
@@ -111,30 +112,43 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
         @Override
         public InterOpBase apply(Step step) {
             ExpandOp op = new ExpandOp();
-            op.setDirection(new OpArg<>((VertexStep) step, (VertexStep s1) -> {
-                Direction direction = s1.getDirection();
-                switch (direction) {
-                    case IN:
-                        return FfiDirection.In;
-                    case BOTH:
-                        return FfiDirection.Both;
-                    case OUT:
-                        return FfiDirection.Out;
-                    default:
-                        throw new OpArgIllegalException(OpArgIllegalException.Cause.INVALID_TYPE, "invalid direction type");
-                }
-            }));
-            op.setEdgeOpt(new OpArg<>((VertexStep) step, (VertexStep s1) -> {
-                if (s1.returnsEdge()) {
-                    return Boolean.valueOf(true);
-                } else {
-                    return Boolean.valueOf(false);
-                }
-            }));
+            op.setDirection(
+                    new OpArg<>(
+                            (VertexStep) step,
+                            (VertexStep s1) -> {
+                                Direction direction = s1.getDirection();
+                                switch (direction) {
+                                    case IN:
+                                        return FfiDirection.In;
+                                    case BOTH:
+                                        return FfiDirection.Both;
+                                    case OUT:
+                                        return FfiDirection.Out;
+                                    default:
+                                        throw new OpArgIllegalException(
+                                                OpArgIllegalException.Cause.INVALID_TYPE,
+                                                "invalid direction type");
+                                }
+                            }));
+            op.setEdgeOpt(
+                    new OpArg<>(
+                            (VertexStep) step,
+                            (VertexStep s1) -> {
+                                if (s1.returnsEdge()) {
+                                    return Boolean.valueOf(true);
+                                } else {
+                                    return Boolean.valueOf(false);
+                                }
+                            }));
             // add corner judgement
             if (((VertexStep) step).getEdgeLabels().length > 0) {
-                op.setLabels(new OpArg<>((VertexStep) step, (VertexStep s1) ->
-                        Arrays.stream(s1.getEdgeLabels()).map(k -> ArgUtils.asFfiTag(k)).collect(Collectors.toList())));
+                op.setLabels(
+                        new OpArg<>(
+                                (VertexStep) step,
+                                (VertexStep s1) ->
+                                        Arrays.stream(s1.getEdgeLabels())
+                                                .map(k -> ArgUtils.asFfiTag(k))
+                                                .collect(Collectors.toList())));
             }
             return op;
         }
@@ -156,12 +170,18 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
         public InterOpBase apply(Step step) {
             PropertyMapStep valueMapStep = (PropertyMapStep) step;
             ProjectOp op = new ProjectOp();
-            String expr = TraversalParentTransformFactory.PROJECT_BY_STEP
-                    .getSubTraversalAsExpr((new ExprArg()).addStep(valueMapStep)).getSingleExpr().get();
-            op.setExprWithAlias(new OpArg<>(expr, (String expr1) -> {
-                FfiAlias.ByValue alias = ArgUtils.asFfiNoneAlias();
-                return Arrays.asList(Pair.with(expr1, alias));
-            }));
+            String expr =
+                    TraversalParentTransformFactory.PROJECT_BY_STEP
+                            .getSubTraversalAsExpr((new ExprArg()).addStep(valueMapStep))
+                            .getSingleExpr()
+                            .get();
+            op.setExprWithAlias(
+                    new OpArg<>(
+                            expr,
+                            (String expr1) -> {
+                                FfiAlias.ByValue alias = ArgUtils.asFfiNoneAlias();
+                                return Arrays.asList(Pair.with(expr1, alias));
+                            }));
             return op;
         }
     },
@@ -170,12 +190,18 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
         public InterOpBase apply(Step step) {
             PropertiesStep valuesStep = (PropertiesStep) step;
             ProjectOp op = new ProjectOp();
-            String expr = TraversalParentTransformFactory.PROJECT_BY_STEP
-                    .getSubTraversalAsExpr((new ExprArg()).addStep(valuesStep)).getSingleExpr().get();
-            op.setExprWithAlias(new OpArg<>(expr, (String expr1) -> {
-                FfiAlias.ByValue alias = ArgUtils.asFfiNoneAlias();
-                return Arrays.asList(Pair.with(expr1, alias));
-            }));
+            String expr =
+                    TraversalParentTransformFactory.PROJECT_BY_STEP
+                            .getSubTraversalAsExpr((new ExprArg()).addStep(valuesStep))
+                            .getSingleExpr()
+                            .get();
+            op.setExprWithAlias(
+                    new OpArg<>(
+                            expr,
+                            (String expr1) -> {
+                                FfiAlias.ByValue alias = ArgUtils.asFfiNoneAlias();
+                                return Arrays.asList(Pair.with(expr1, alias));
+                            }));
             return op;
         }
     },
@@ -185,13 +211,18 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
             DedupGlobalStep dedupStep = (DedupGlobalStep) step;
             Map<String, Traversal.Admin> tagTraversals = getDedupTagTraversal(dedupStep);
             DedupOp op = new DedupOp();
-            op.setDedupKeys(new OpArg<>(tagTraversals, (Map<String, Traversal.Admin> map) -> {
-                if (tagTraversals.isEmpty()) { // only support dedup()
-                    return Collections.singletonList(ArgUtils.asFfiNoneVar());
-                } else {
-                    throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE, "supported pattern is [dedup()]");
-                }
-            }));
+            op.setDedupKeys(
+                    new OpArg<>(
+                            tagTraversals,
+                            (Map<String, Traversal.Admin> map) -> {
+                                if (tagTraversals.isEmpty()) { // only support dedup()
+                                    return Collections.singletonList(ArgUtils.asFfiNoneVar());
+                                } else {
+                                    throw new OpArgIllegalException(
+                                            OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
+                                            "supported pattern is [dedup()]");
+                                }
+                            }));
             return op;
         }
 
@@ -208,10 +239,12 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
                 // set as head
                 dedupTags.add("");
             }
-            dedupTags.forEach(k -> {
-                Traversal.Admin dedupTraversal = dedupTraversals.isEmpty() ? null : dedupTraversals.get(0);
-                tagTraversals.put(k, dedupTraversal);
-            });
+            dedupTags.forEach(
+                    k -> {
+                        Traversal.Admin dedupTraversal =
+                                dedupTraversals.isEmpty() ? null : dedupTraversals.get(0);
+                        tagTraversals.put(k, dedupTraversal);
+                    });
             tagTraversals.entrySet().removeIf(e -> e.getKey().equals("") && e.getValue() == null);
             return tagTraversals;
         }
@@ -228,8 +261,8 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
 
         private List<ArgAggFn> getCountAgg(CountGlobalStep step1) {
             int stepIdx = TraversalHelper.stepIndex(step1, step1.getTraversal());
-            FfiAlias.ByValue valueAlias = AliasManager.getFfiAlias(
-                    new AliasArg(AliasPrefixType.GROUP_VALUES, stepIdx));
+            FfiAlias.ByValue valueAlias =
+                    AliasManager.getFfiAlias(new AliasArg(AliasPrefixType.GROUP_VALUES, stepIdx));
             // count().as("a"), "a" is the alias of group value
             if (!step1.getLabels().isEmpty()) {
                 String label = (String) step1.getLabels().iterator().next();
@@ -255,18 +288,23 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
         public InterOpBase apply(Step step) {
             EdgeVertexStep vertexStep = (EdgeVertexStep) step;
             GetVOp op = new GetVOp();
-            op.setGetVOpt(new OpArg<>(vertexStep, (EdgeVertexStep edgeVertexStep) -> {
-                Direction direction = edgeVertexStep.getDirection();
-                switch (direction) {
-                    case OUT:
-                        return FfiVOpt.Start;
-                    case IN:
-                        return FfiVOpt.End;
-                    case BOTH:
-                    default:
-                        throw new OpArgIllegalException(OpArgIllegalException.Cause.INVALID_TYPE, direction + " cannot be converted to FfiVOpt");
-                }
-            }));
+            op.setGetVOpt(
+                    new OpArg<>(
+                            vertexStep,
+                            (EdgeVertexStep edgeVertexStep) -> {
+                                Direction direction = edgeVertexStep.getDirection();
+                                switch (direction) {
+                                    case OUT:
+                                        return FfiVOpt.Start;
+                                    case IN:
+                                        return FfiVOpt.End;
+                                    case BOTH:
+                                    default:
+                                        throw new OpArgIllegalException(
+                                                OpArgIllegalException.Cause.INVALID_TYPE,
+                                                direction + " cannot be converted to FfiVOpt");
+                                }
+                            }));
             return op;
         }
     },
@@ -275,9 +313,8 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
         public InterOpBase apply(Step step) {
             EdgeOtherVertexStep otherStep = (EdgeOtherVertexStep) step;
             GetVOp op = new GetVOp();
-            op.setGetVOpt(new OpArg<>(otherStep, (EdgeOtherVertexStep otherStep1) ->
-                    FfiVOpt.Other
-            ));
+            op.setGetVOpt(
+                    new OpArg<>(otherStep, (EdgeOtherVertexStep otherStep1) -> FfiVOpt.Other));
             return op;
         }
     },
@@ -288,11 +325,14 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
             String selectKey = (String) startStep.getScopeKeys().iterator().next();
 
             ProjectOp op = new ProjectOp();
-            op.setExprWithAlias(new OpArg<>(selectKey, (String key) -> {
-                String expr = "@" + selectKey;
-                FfiAlias.ByValue alias = ArgUtils.asFfiNoneAlias();
-                return Collections.singletonList(Pair.with(expr, alias));
-            }));
+            op.setExprWithAlias(
+                    new OpArg<>(
+                            selectKey,
+                            (String key) -> {
+                                String expr = "@" + selectKey;
+                                FfiAlias.ByValue alias = ArgUtils.asFfiNoneAlias();
+                                return Collections.singletonList(Pair.with(expr, alias));
+                            }));
             return op;
         }
     },
@@ -309,11 +349,16 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
         @Override
         public InterOpBase apply(Step step) {
             UnionOp unionOp = new UnionOp();
-            unionOp.setSubOpCollectionList(new OpArg<>((UnionStep) step, (UnionStep unionStep) -> {
-                List<Traversal.Admin> subTraversals = unionStep.getGlobalChildren();
-                return subTraversals.stream().filter(k -> k != null)
-                        .map(k -> (new InterOpCollectionBuilder(k)).build()).collect(Collectors.toList());
-            }));
+            unionOp.setSubOpCollectionList(
+                    new OpArg<>(
+                            (UnionStep) step,
+                            (UnionStep unionStep) -> {
+                                List<Traversal.Admin> subTraversals = unionStep.getGlobalChildren();
+                                return subTraversals.stream()
+                                        .filter(k -> k != null)
+                                        .map(k -> (new InterOpCollectionBuilder(k)).build())
+                                        .collect(Collectors.toList());
+                            }));
             return unionOp;
         }
     },
@@ -323,7 +368,8 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
             TraversalMapStep mapStep = (TraversalMapStep) step;
             List<Traversal.Admin> mapTraversals = mapStep.getLocalChildren();
             if (mapTraversals.size() != 1 || !(mapTraversals.get(0) instanceof ColumnTraversal)) {
-                throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
+                throw new OpArgIllegalException(
+                        OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
                         "only support select(keys/values)");
             }
             Column column = ((ColumnTraversal) mapTraversals.get(0)).getColumn();
@@ -335,32 +381,40 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
                     return TraversalParentTransformFactory.PROJECT_BY_STEP.apply(keySelect).get(0);
                 case values:
                     String value = getMapValue(mapStep);
-                    SelectOneStep valueSelect = new SelectOneStep(step.getTraversal(), Pop.last, value);
+                    SelectOneStep valueSelect =
+                            new SelectOneStep(step.getTraversal(), Pop.last, value);
                     TraversalHelper.copyLabels(mapStep, valueSelect, false);
-                    return TraversalParentTransformFactory.PROJECT_BY_STEP.apply(valueSelect).get(0);
+                    return TraversalParentTransformFactory.PROJECT_BY_STEP
+                            .apply(valueSelect)
+                            .get(0);
                 default:
-                    throw new OpArgIllegalException(OpArgIllegalException.Cause.INVALID_TYPE, column.name() + " is invalid");
+                    throw new OpArgIllegalException(
+                            OpArgIllegalException.Cause.INVALID_TYPE,
+                            column.name() + " is invalid");
             }
         }
 
         private String getMapKey(TraversalMapStep step) {
             Step groupStep = getPreviousGroupStep(step);
             int stepIdx = TraversalHelper.stepIndex(groupStep, groupStep.getTraversal());
-            FfiAlias.ByValue keyAlias = AliasManager.getFfiAlias(new AliasArg(AliasPrefixType.GROUP_KEYS, stepIdx));
+            FfiAlias.ByValue keyAlias =
+                    AliasManager.getFfiAlias(new AliasArg(AliasPrefixType.GROUP_KEYS, stepIdx));
             return keyAlias.alias.name;
         }
 
         private String getMapValue(TraversalMapStep step) {
             Step groupStep = getPreviousGroupStep(step);
             int stepIdx = TraversalHelper.stepIndex(groupStep, groupStep.getTraversal());
-            FfiAlias.ByValue valueAlias = AliasManager.getFfiAlias(new AliasArg(AliasPrefixType.GROUP_VALUES, stepIdx));
+            FfiAlias.ByValue valueAlias =
+                    AliasManager.getFfiAlias(new AliasArg(AliasPrefixType.GROUP_VALUES, stepIdx));
             return valueAlias.alias.name;
         }
 
         private Step getPreviousGroupStep(Step step) {
             Step previous = step.getPreviousStep();
             while (!(previous instanceof EmptyStep
-                    || previous instanceof GroupStep || previous instanceof GroupCountStep)) {
+                    || previous instanceof GroupStep
+                    || previous instanceof GroupCountStep)) {
                 previous = previous.getPreviousStep();
             }
             if (!(previous instanceof EmptyStep)) {
@@ -370,7 +424,9 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
             if (!(parent instanceof EmptyStep)) {
                 return getPreviousGroupStep(parent.asStep());
             }
-            throw new OpArgIllegalException(OpArgIllegalException.Cause.INVALID_TYPE, "select keys or values should follow a group");
+            throw new OpArgIllegalException(
+                    OpArgIllegalException.Cause.INVALID_TYPE,
+                    "select keys or values should follow a group");
         }
     },
     MATCH_STEP {
@@ -386,77 +442,107 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
         private List<MatchSentence> getSentences(MatchStep matchStep) {
             List<Traversal.Admin> matchTraversals = matchStep.getGlobalChildren();
             List<MatchSentence> sentences = new ArrayList<>();
-            matchTraversals.forEach(traversal -> {
-                List<Step> binderSteps = new ArrayList<>();
-                Optional<String> startTag = Optional.empty();
-                Optional<String> endTag = Optional.empty();
-                FfiJoinKind joinKind = FfiJoinKind.Inner;
-                for (Object o : traversal.getSteps()) {
-                    Step s = (Step) o;
-                    if (s instanceof MatchStep.MatchStartStep) { // match(__.as("a")...)
-                        Optional<String> selectKey = ((MatchStep.MatchStartStep) s).getSelectKey();
-                        if (!startTag.isPresent() && selectKey.isPresent()) {
-                            startTag = selectKey;
-                        }
-                    } else if (s instanceof MatchStep.MatchEndStep) { // match(...as("b"))
-                        Optional<String> matchKey = ((MatchStep.MatchEndStep) s).getMatchKey();
-                        if (!endTag.isPresent() && matchKey.isPresent()) {
-                            endTag = matchKey;
-                        }
-                    } else if (s instanceof WhereTraversalStep && binderSteps.isEmpty()) { // where(__.as("a")...) or not(...)
-                        List<Traversal.Admin> children = ((WhereTraversalStep) s).getLocalChildren();
-                        Traversal.Admin whereTraversal = children.isEmpty() ? null : children.get(0);
-                        // not(as("a").out().as("b"))
-                        if (whereTraversal != null
-                                && whereTraversal.getSteps().size() == 1 && whereTraversal.getStartStep() instanceof NotStep) {
-                            NotStep notStep = (NotStep) whereTraversal.getStartStep();
-                            List<Traversal.Admin> notChildren = notStep.getLocalChildren();
-                            whereTraversal = (notChildren.isEmpty()) ? null : notChildren.get(0);
-                            joinKind = FfiJoinKind.Anti;
-                        } else { // where(as("a").out().as("b"))
-                            joinKind = FfiJoinKind.Semi;
-                        }
-                        if (whereTraversal != null) {
-                            for (Object o1 : whereTraversal.getSteps()) {
-                                Step s1 = (Step) o1;
-                                if (s1 instanceof WhereTraversalStep.WhereStartStep) { // not(__.as("a")...)
-                                    Set<String> scopeKeys;
-                                    if (!startTag.isPresent()
-                                            && !(scopeKeys = ((WhereTraversalStep.WhereStartStep) s1).getScopeKeys()).isEmpty()) {
-                                        startTag = Optional.of(scopeKeys.iterator().next());
-                                    }
-                                } else if (s1 instanceof WhereTraversalStep.WhereEndStep) { // not(....as("b"))
-                                    Set<String> scopeKeys;
-                                    if (!endTag.isPresent()
-                                            && !(scopeKeys = ((WhereTraversalStep.WhereEndStep) s1).getScopeKeys()).isEmpty()) {
-                                        endTag = Optional.of(scopeKeys.iterator().next());
-                                    }
-                                } else if (isValidBinderStep(s1)) {
-                                    binderSteps.add(s1);
-                                } else {
-                                    throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
-                                            s1.getClass() + " is unsupported yet in match");
+            matchTraversals.forEach(
+                    traversal -> {
+                        List<Step> binderSteps = new ArrayList<>();
+                        Optional<String> startTag = Optional.empty();
+                        Optional<String> endTag = Optional.empty();
+                        FfiJoinKind joinKind = FfiJoinKind.Inner;
+                        for (Object o : traversal.getSteps()) {
+                            Step s = (Step) o;
+                            if (s instanceof MatchStep.MatchStartStep) { // match(__.as("a")...)
+                                Optional<String> selectKey =
+                                        ((MatchStep.MatchStartStep) s).getSelectKey();
+                                if (!startTag.isPresent() && selectKey.isPresent()) {
+                                    startTag = selectKey;
                                 }
+                            } else if (s instanceof MatchStep.MatchEndStep) { // match(...as("b"))
+                                Optional<String> matchKey =
+                                        ((MatchStep.MatchEndStep) s).getMatchKey();
+                                if (!endTag.isPresent() && matchKey.isPresent()) {
+                                    endTag = matchKey;
+                                }
+                            } else if (s instanceof WhereTraversalStep
+                                    && binderSteps.isEmpty()) { // where(__.as("a")...) or not(...)
+                                List<Traversal.Admin> children =
+                                        ((WhereTraversalStep) s).getLocalChildren();
+                                Traversal.Admin whereTraversal =
+                                        children.isEmpty() ? null : children.get(0);
+                                // not(as("a").out().as("b"))
+                                if (whereTraversal != null
+                                        && whereTraversal.getSteps().size() == 1
+                                        && whereTraversal.getStartStep() instanceof NotStep) {
+                                    NotStep notStep = (NotStep) whereTraversal.getStartStep();
+                                    List<Traversal.Admin> notChildren = notStep.getLocalChildren();
+                                    whereTraversal =
+                                            (notChildren.isEmpty()) ? null : notChildren.get(0);
+                                    joinKind = FfiJoinKind.Anti;
+                                } else { // where(as("a").out().as("b"))
+                                    joinKind = FfiJoinKind.Semi;
+                                }
+                                if (whereTraversal != null) {
+                                    for (Object o1 : whereTraversal.getSteps()) {
+                                        Step s1 = (Step) o1;
+                                        if (s1
+                                                instanceof
+                                                WhereTraversalStep
+                                                        .WhereStartStep) { // not(__.as("a")...)
+                                            Set<String> scopeKeys;
+                                            if (!startTag.isPresent()
+                                                    && !(scopeKeys =
+                                                                    ((WhereTraversalStep
+                                                                                            .WhereStartStep)
+                                                                                    s1)
+                                                                            .getScopeKeys())
+                                                            .isEmpty()) {
+                                                startTag = Optional.of(scopeKeys.iterator().next());
+                                            }
+                                        } else if (s1
+                                                instanceof
+                                                WhereTraversalStep
+                                                        .WhereEndStep) { // not(....as("b"))
+                                            Set<String> scopeKeys;
+                                            if (!endTag.isPresent()
+                                                    && !(scopeKeys =
+                                                                    ((WhereTraversalStep
+                                                                                            .WhereEndStep)
+                                                                                    s1)
+                                                                            .getScopeKeys())
+                                                            .isEmpty()) {
+                                                endTag = Optional.of(scopeKeys.iterator().next());
+                                            }
+                                        } else if (isValidBinderStep(s1)) {
+                                            binderSteps.add(s1);
+                                        } else {
+                                            throw new OpArgIllegalException(
+                                                    OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
+                                                    s1.getClass() + " is unsupported yet in match");
+                                        }
+                                    }
+                                }
+                            } else if (isValidBinderStep(s)) {
+                                binderSteps.add(s);
+                            } else {
+                                throw new OpArgIllegalException(
+                                        OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
+                                        s.getClass() + " is unsupported yet in match");
                             }
                         }
-                    } else if (isValidBinderStep(s)) {
-                        binderSteps.add(s);
-                    } else {
-                        throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
-                                s.getClass() + " is unsupported yet in match");
-                    }
-                }
-                if (!startTag.isPresent() || !endTag.isPresent()) {
-                    throw new OpArgIllegalException(OpArgIllegalException.Cause.INVALID_TYPE,
-                            "startTag or endTag not exist in match");
-                }
-                Traversal binderTraversal = GremlinAntlrToJava.getTraversalSupplier().get();
-                binderSteps.forEach(b -> {
-                    binderTraversal.asAdmin().addStep(b);
-                });
-                InterOpCollection ops = (new InterOpCollectionBuilder(binderTraversal)).build();
-                sentences.add(new MatchSentence(startTag.get(), endTag.get(), ops, joinKind));
-            });
+                        if (!startTag.isPresent() || !endTag.isPresent()) {
+                            throw new OpArgIllegalException(
+                                    OpArgIllegalException.Cause.INVALID_TYPE,
+                                    "startTag or endTag not exist in match");
+                        }
+                        Traversal binderTraversal = GremlinAntlrToJava.getTraversalSupplier().get();
+                        binderSteps.forEach(
+                                b -> {
+                                    binderTraversal.asAdmin().addStep(b);
+                                });
+                        InterOpCollection ops =
+                                (new InterOpCollectionBuilder(binderTraversal)).build();
+                        sentences.add(
+                                new MatchSentence(startTag.get(), endTag.get(), ops, joinKind));
+                    });
             return sentences;
         }
 
@@ -475,9 +561,12 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
             switch (exprStep.getType()) {
                 case PROJECTION:
                     ProjectOp projectOp = new ProjectOp();
-                    projectOp.setExprWithAlias(new OpArg<>(exprStep.getExpr(), (String expr) ->
-                            Arrays.asList(Pair.with(expr, ArgUtils.asFfiNoneAlias()))
-                    ));
+                    projectOp.setExprWithAlias(
+                            new OpArg<>(
+                                    exprStep.getExpr(),
+                                    (String expr) ->
+                                            Arrays.asList(
+                                                    Pair.with(expr, ArgUtils.asFfiNoneAlias()))));
                     return projectOp;
                 case FILTER:
                 default:
@@ -488,24 +577,32 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
         }
     };
 
-    protected Function<GraphStep, FfiScanOpt> SCAN_OPT = (GraphStep s1) -> {
-        if (s1.returnsVertex()) return FfiScanOpt.Entity;
-        else return FfiScanOpt.Relation;
-    };
+    protected Function<GraphStep, FfiScanOpt> SCAN_OPT =
+            (GraphStep s1) -> {
+                if (s1.returnsVertex()) return FfiScanOpt.Entity;
+                else return FfiScanOpt.Relation;
+            };
 
-    protected Function<GraphStep, List<FfiConst.ByValue>> CONST_IDS_FROM_STEP = (GraphStep s1) ->
-            Arrays.stream(s1.getIds()).map((id) -> {
-                if (id instanceof Integer) {
-                    return ArgUtils.asFfiConst((Integer) id);
-                } else if (id instanceof Long) {
-                    return ArgUtils.asFfiConst((Long) id);
-                } else {
-                    throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE, "unimplemented yet");
-                }
-            }).collect(Collectors.toList());
+    protected Function<GraphStep, List<FfiConst.ByValue>> CONST_IDS_FROM_STEP =
+            (GraphStep s1) ->
+                    Arrays.stream(s1.getIds())
+                            .map(
+                                    (id) -> {
+                                        if (id instanceof Integer) {
+                                            return ArgUtils.asFfiConst((Integer) id);
+                                        } else if (id instanceof Long) {
+                                            return ArgUtils.asFfiConst((Long) id);
+                                        } else {
+                                            throw new OpArgIllegalException(
+                                                    OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
+                                                    "unimplemented yet");
+                                        }
+                                    })
+                            .collect(Collectors.toList());
 
-    protected Function<ScanFusionStep, List<FfiNameOrId.ByValue>> LABELS_FROM_STEP = (ScanFusionStep step) -> {
-        List<String> labels = step.getGraphLabels();
-        return labels.stream().map(k -> ArgUtils.asFfiTag(k)).collect(Collectors.toList());
-    };
+    protected Function<ScanFusionStep, List<FfiNameOrId.ByValue>> LABELS_FROM_STEP =
+            (ScanFusionStep step) -> {
+                List<String> labels = step.getGraphLabels();
+                return labels.stream().map(k -> ArgUtils.asFfiTag(k)).collect(Collectors.toList());
+            };
 }

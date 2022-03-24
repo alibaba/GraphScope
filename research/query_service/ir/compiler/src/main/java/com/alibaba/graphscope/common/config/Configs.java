@@ -37,21 +37,25 @@ public class Configs {
                 throw new NotImplementedException("unimplemented load type " + loadType);
         }
         // replace with the value from system property
-        properties.keySet().forEach(k -> {
-            String value = System.getProperty((String) k);
-            String trimValue;
-            if (value != null && !(trimValue = value.trim()).isEmpty()) {
-                properties.setProperty((String) k, trimValue);
-            }
-        });
+        properties
+                .keySet()
+                .forEach(
+                        k -> {
+                            String value = System.getProperty((String) k);
+                            String trimValue;
+                            if (value != null && !(trimValue = value.trim()).isEmpty()) {
+                                properties.setProperty((String) k, trimValue);
+                            }
+                        });
     }
 
     public Configs(Map<String, String> configs) {
         this.properties = new Properties();
         if (configs != null && !configs.isEmpty()) {
-            configs.forEach((k, v) -> {
-                this.properties.setProperty(k, v);
-            });
+            configs.forEach(
+                    (k, v) -> {
+                        this.properties.setProperty(k, v);
+                    });
         }
     }
 

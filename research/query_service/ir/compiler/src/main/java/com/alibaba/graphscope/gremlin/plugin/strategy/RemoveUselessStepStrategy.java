@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.gremlin.plugin.strategy;
 
 import com.alibaba.graphscope.gremlin.Utils;
+
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalStrategy;
@@ -27,11 +28,12 @@ import org.apache.tinkerpop.gremlin.process.traversal.strategy.AbstractTraversal
 
 import java.util.List;
 
-public class RemoveUselessStepStrategy extends AbstractTraversalStrategy<TraversalStrategy.ProviderOptimizationStrategy> implements TraversalStrategy.ProviderOptimizationStrategy {
+public class RemoveUselessStepStrategy
+        extends AbstractTraversalStrategy<TraversalStrategy.ProviderOptimizationStrategy>
+        implements TraversalStrategy.ProviderOptimizationStrategy {
     private static final RemoveUselessStepStrategy INSTANCE = new RemoveUselessStepStrategy();
 
-    private RemoveUselessStepStrategy() {
-    }
+    private RemoveUselessStepStrategy() {}
 
     public static RemoveUselessStepStrategy instance() {
         return INSTANCE;
@@ -42,7 +44,8 @@ public class RemoveUselessStepStrategy extends AbstractTraversalStrategy<Travers
         List<Step> steps = traversal.getSteps();
         for (int i = 0; i < steps.size(); ++i) {
             Step step = steps.get(i);
-            if (Utils.equalClass(step, ComputerAwareStep.EndStep.class) || Utils.equalClass(step, NoOpBarrierStep.class)) {
+            if (Utils.equalClass(step, ComputerAwareStep.EndStep.class)
+                    || Utils.equalClass(step, NoOpBarrierStep.class)) {
                 traversal.removeStep(step);
             } else if (Utils.equalClass(step, WhereTraversalStep.WhereStartStep.class)
                     && ((WhereTraversalStep.WhereStartStep) step).getScopeKeys().isEmpty()) {

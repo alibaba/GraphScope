@@ -17,8 +17,10 @@
 package com.alibaba.graphscope.gremlin.service;
 
 import com.alibaba.graphscope.gremlin.plugin.processor.IrOpLoader;
+
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
+
 import org.apache.tinkerpop.gremlin.driver.message.RequestMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseStatusCode;
@@ -43,8 +45,12 @@ public class IrOpSelectorHandler extends OpSelectorHandler {
     private final GremlinExecutor gremlinExecutor;
     private final ScheduledExecutorService scheduledExecutorService;
 
-    public IrOpSelectorHandler(final Settings settings, final GraphManager graphManager, final GremlinExecutor gremlinExecutor,
-                               final ScheduledExecutorService scheduledExecutorService, final Channelizer channelizer) {
+    public IrOpSelectorHandler(
+            final Settings settings,
+            final GraphManager graphManager,
+            final GremlinExecutor gremlinExecutor,
+            final ScheduledExecutorService scheduledExecutorService,
+            final Channelizer channelizer) {
         super(settings, graphManager, gremlinExecutor, scheduledExecutorService, channelizer);
         this.settings = settings;
         this.graphManager = graphManager;
@@ -54,14 +60,25 @@ public class IrOpSelectorHandler extends OpSelectorHandler {
 
     @Override
     protected void decode(ChannelHandlerContext ctx, RequestMessage msg, List<Object> objects) {
-        Context gremlinServerContext = new Context(msg, ctx,
-                this.settings, this.graphManager, this.gremlinExecutor, this.scheduledExecutorService);
+        Context gremlinServerContext =
+                new Context(
+                        msg,
+                        ctx,
+                        this.settings,
+                        this.graphManager,
+                        this.gremlinExecutor,
+                        this.scheduledExecutorService);
         try {
             Optional<OpProcessor> processor = IrOpLoader.getProcessor(msg.getProcessor());
             if (!processor.isPresent()) {
-                String errorMessage = String.format("Invalid OpProcessor requested [%s]", msg.getProcessor());
-                throw new OpProcessorException(errorMessage, ResponseMessage.build(msg).code(
-                        ResponseStatusCode.REQUEST_ERROR_INVALID_REQUEST_ARGUMENTS).statusMessage(errorMessage).create());
+                String errorMessage =
+                        String.format("Invalid OpProcessor requested [%s]", msg.getProcessor());
+                throw new OpProcessorException(
+                        errorMessage,
+                        ResponseMessage.build(msg)
+                                .code(ResponseStatusCode.REQUEST_ERROR_INVALID_REQUEST_ARGUMENTS)
+                                .statusMessage(errorMessage)
+                                .create());
             }
 
             objects.add(Pair.with(msg, (processor.get()).select(gremlinServerContext)));

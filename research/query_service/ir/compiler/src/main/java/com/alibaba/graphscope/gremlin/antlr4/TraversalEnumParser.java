@@ -27,7 +27,8 @@ public class TraversalEnumParser {
      * @param context  : parse tree context
      * @return enum object
      */
-    public static <E extends Enum<E>, C extends ParseTree> E parseTraversalEnumFromContext(final Class<E> enumType, final C context) {
+    public static <E extends Enum<E>, C extends ParseTree> E parseTraversalEnumFromContext(
+            final Class<E> enumType, final C context) {
         final String text = context.getText();
         final String className = enumType.getSimpleName();
 

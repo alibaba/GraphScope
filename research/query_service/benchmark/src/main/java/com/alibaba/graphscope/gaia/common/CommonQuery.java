@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -47,10 +47,11 @@ public class CommonQuery {
         return parameters.get(index % parameters.size());
     }
 
-    public void processGremlinQuery(Client client,
-                                    HashMap<String, String> singleParameter,
-                                    boolean printResult,
-                                    boolean printQuery) {
+    public void processGremlinQuery(
+            Client client,
+            HashMap<String, String> singleParameter,
+            boolean printResult,
+            boolean printQuery) {
         try {
             String gremlinQuery = generateGremlinQuery(singleParameter, queryPattern);
 
@@ -60,34 +61,35 @@ public class CommonQuery {
             long endTime = System.currentTimeMillis();
             long executeTime = endTime - startTime;
             if (printQuery) {
-                String printInfo = String.format("QueryName[%s], Parameter[%s], ResultCount[%d], ExecuteTimeMS[%d].",
-                        queryName,
-                        singleParameter.toString(),
-                        result.getLeft(),
-                        executeTime);
+                String printInfo =
+                        String.format(
+                                "QueryName[%s], Parameter[%s], ResultCount[%d], ExecuteTimeMS[%d].",
+                                queryName,
+                                singleParameter.toString(),
+                                result.getLeft(),
+                                executeTime);
                 if (printResult) {
-                    printInfo = String.format("%s Result: { %s }",
-                            printInfo,
-                            result.getRight());
+                    printInfo = String.format("%s Result: { %s }", printInfo, result.getRight());
                 }
                 System.out.println(printInfo);
             }
 
         } catch (Exception e) {
-            System.out.println(String.format("Timeout or failed: QueryName[%s], Parameter[%s].",
-                    queryName,
-                    singleParameter.toString()));
+            System.out.println(
+                    String.format(
+                            "Timeout or failed: QueryName[%s], Parameter[%s].",
+                            queryName, singleParameter.toString()));
             e.printStackTrace();
         }
     }
 
-    String generateGremlinQuery(HashMap<String, String> singleParameter,
-                                String gremlinQueryPattern) {
+    String generateGremlinQuery(
+            HashMap<String, String> singleParameter, String gremlinQueryPattern) {
         for (String parameter : singleParameter.keySet()) {
-            gremlinQueryPattern = gremlinQueryPattern.replace(
-                    getParameterPrefix() + parameter + getParameterPostfix(),
-                    singleParameter.get(parameter)
-            );
+            gremlinQueryPattern =
+                    gremlinQueryPattern.replace(
+                            getParameterPrefix() + parameter + getParameterPostfix(),
+                            singleParameter.get(parameter));
         }
         return gremlinQueryPattern;
     }
@@ -109,7 +111,8 @@ public class CommonQuery {
         return bufferedReader.readLine();
     }
 
-    private static ArrayList<HashMap<String, String>> getParameters(String parameterFilePath) throws Exception {
+    private static ArrayList<HashMap<String, String>> getParameters(String parameterFilePath)
+            throws Exception {
         ArrayList<HashMap<String, String>> parameters = new ArrayList<>();
         FileInputStream fileInputStream = new FileInputStream(parameterFilePath);
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(fileInputStream));
@@ -133,18 +136,24 @@ public class CommonQuery {
         return parameters;
     }
 
-    protected String getParameterPrefix() { return "$"; }
+    protected String getParameterPrefix() {
+        return "$";
+    }
 
-    protected String getParameterPostfix() { return ""; }
+    protected String getParameterPostfix() {
+        return "";
+    }
 
-    protected String getEndDate(String startDate, String durationDays){
+    protected String getEndDate(String startDate, String durationDays) {
         DateFormat format = new SimpleDateFormat("yyyyMMddHHmmssSSS"); // date format
         try {
             Date sDate = format.parse(startDate);
             sDate.after(new Date(Long.parseLong(durationDays) * 24 * 3600 * 1000));
-            return format.format(new Date(sDate.getTime() + (Long.parseLong(durationDays) * 24 * 3600 * 1000)));
+            return format.format(
+                    new Date(sDate.getTime() + (Long.parseLong(durationDays) * 24 * 3600 * 1000)));
         } catch (Exception e) {
-            return String.valueOf(Long.parseLong(startDate) + (Long.parseLong(durationDays) * 24 * 3600 * 1000));
+            return String.valueOf(
+                    Long.parseLong(startDate) + (Long.parseLong(durationDays) * 24 * 3600 * 1000));
         }
     }
 

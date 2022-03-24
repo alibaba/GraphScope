@@ -16,13 +16,14 @@
 
 package com.alibaba.graphscope.common.intermediate.operator;
 
-import com.alibaba.graphscope.common.utils.FileUtils;
 import com.alibaba.graphscope.common.IrPlan;
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.jna.IrCoreLibrary;
 import com.alibaba.graphscope.common.jna.type.FfiConst;
 import com.alibaba.graphscope.common.jna.type.FfiNameOrId;
 import com.alibaba.graphscope.common.jna.type.FfiScanOpt;
+import com.alibaba.graphscope.common.utils.FileUtils;
+
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
@@ -70,7 +71,8 @@ public class ScanFusionOpTest {
     public void idsTest() throws IOException {
         ScanFusionOp op = new ScanFusionOp();
         op.setScanOpt(new OpArg<>(FfiScanOpt.Entity, Function.identity()));
-        List<FfiConst.ByValue> values = Arrays.asList(irCoreLib.int64AsConst(1L), irCoreLib.int64AsConst(2L));
+        List<FfiConst.ByValue> values =
+                Arrays.asList(irCoreLib.int64AsConst(1L), irCoreLib.int64AsConst(2L));
         op.setIds(new OpArg<List, List>(values, Function.identity()));
         irPlan.appendInterOp(-1, op);
         String actual = irPlan.getPlanAsJson();

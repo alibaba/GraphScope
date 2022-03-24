@@ -19,6 +19,7 @@ package com.alibaba.graphscope.gremlin.result;
 import com.alibaba.graphscope.gaia.proto.Common;
 import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.alibaba.graphscope.gremlin.exception.GremlinResultParserException;
+
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.structure.util.detached.DetachedEdge;
@@ -42,15 +43,21 @@ public class ParserUtils {
                 return parseEdge(element.getEdge());
             case GRAPH_PATH:
                 IrResult.GraphPath graphPath = element.getGraphPath();
-                return graphPath.getPathList().stream().map(k -> {
-                    if (k.getInnerCase() == IrResult.GraphPath.VertexOrEdge.InnerCase.VERTEX) {
-                        return parseVertex(k.getVertex());
-                    } else if (k.getInnerCase() == IrResult.GraphPath.VertexOrEdge.InnerCase.EDGE) {
-                        return parseEdge(k.getEdge());
-                    } else {
-                        throw new GremlinResultParserException(k.getInnerCase() + " is invalid");
-                    }
-                }).collect(Collectors.toList());
+                return graphPath.getPathList().stream()
+                        .map(
+                                k -> {
+                                    if (k.getInnerCase()
+                                            == IrResult.GraphPath.VertexOrEdge.InnerCase.VERTEX) {
+                                        return parseVertex(k.getVertex());
+                                    } else if (k.getInnerCase()
+                                            == IrResult.GraphPath.VertexOrEdge.InnerCase.EDGE) {
+                                        return parseEdge(k.getEdge());
+                                    } else {
+                                        throw new GremlinResultParserException(
+                                                k.getInnerCase() + " is invalid");
+                                    }
+                                })
+                        .collect(Collectors.toList());
             case OBJECT:
                 return parseCommonValue(element.getObject());
             default:
@@ -59,7 +66,9 @@ public class ParserUtils {
     }
 
     public static List<Object> parseCollection(IrResult.Collection collection) {
-        return collection.getCollectionList().stream().map(k -> parseElement(k)).collect(Collectors.toList());
+        return collection.getCollectionList().stream()
+                .map(k -> parseElement(k))
+                .collect(Collectors.toList());
     }
 
     public static IrResult.Entry getHeadEntry(IrResult.Results results) {
@@ -81,9 +90,13 @@ public class ParserUtils {
             case PAIR_ARRAY:
                 Common.PairArray pairs = value.getPairArray();
                 Map pairInMap = new HashMap();
-                pairs.getItemList().forEach(pair -> {
-                    pairInMap.put(parseCommonValue(pair.getKey()), parseCommonValue(pair.getVal()));
-                });
+                pairs.getItemList()
+                        .forEach(
+                                pair -> {
+                                    pairInMap.put(
+                                            parseCommonValue(pair.getKey()),
+                                            parseCommonValue(pair.getVal()));
+                                });
                 return pairInMap;
             case STR_ARRAY:
                 return value.getStrArray().getItemList();
@@ -91,7 +104,6 @@ public class ParserUtils {
                 return EmptyValue.INSTANCE;
             default:
                 throw new GremlinResultParserException(value.getItemCase() + " is unsupported yet");
-
         }
     }
 
@@ -102,8 +114,14 @@ public class ParserUtils {
 
     private static Edge parseEdge(IrResult.Edge edge) {
         Map<String, Object> edgeProperties = parseProperties(edge.getPropertiesList());
-        return new DetachedEdge(edge.getId(), edge.getLabel().getName(), edgeProperties,
-                edge.getSrcId(), edge.getSrcLabel().getName(), edge.getDstId(), edge.getDstLabel().getName());
+        return new DetachedEdge(
+                edge.getId(),
+                edge.getLabel().getName(),
+                edgeProperties,
+                edge.getSrcId(),
+                edge.getSrcLabel().getName(),
+                edge.getDstId(),
+                edge.getDstLabel().getName());
     }
 
     private static Map<String, Object> parseProperties(List<IrResult.Property> properties) {

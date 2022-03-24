@@ -27,6 +27,7 @@ package com.alibaba.graphscope.gremlin.plugin.script;
 
 import com.alibaba.graphscope.gremlin.antlr4.GremlinAntlrToJava;
 import com.alibaba.graphscope.gremlin.exception.InvalidGremlinScriptException;
+
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.atn.PredictionMode;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
@@ -34,16 +35,17 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.tinkerpop.gremlin.jsr223.GremlinScriptEngine;
 import org.apache.tinkerpop.gremlin.jsr223.GremlinScriptEngineFactory;
-import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSParser;
 import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSLexer;
+import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSParser;
 import org.apache.tinkerpop.gremlin.process.traversal.Bytecode;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.script.*;
 import java.io.Reader;
+
+import javax.script.*;
 
 public class AntlrToJavaScriptEngine extends AbstractScriptEngine implements GremlinScriptEngine {
     private Logger logger = LoggerFactory.getLogger(AntlrToJavaScriptEngine.class);
@@ -59,13 +61,19 @@ public class AntlrToJavaScriptEngine extends AbstractScriptEngine implements Gre
         try {
             GremlinGSLexer lexer = new GremlinGSLexer(CharStreams.fromString(script));
             lexer.removeErrorListeners();
-            lexer.addErrorListener(new BaseErrorListener() {
-                @Override
-                public void syntaxError(final Recognizer<?, ?> recognizer, final Object offendingSymbol, final int line,
-                                        final int charPositionInLine, final String msg, final RecognitionException e) {
-                    throw new ParseCancellationException();
-                }
-            });
+            lexer.addErrorListener(
+                    new BaseErrorListener() {
+                        @Override
+                        public void syntaxError(
+                                final Recognizer<?, ?> recognizer,
+                                final Object offendingSymbol,
+                                final int line,
+                                final int charPositionInLine,
+                                final String msg,
+                                final RecognitionException e) {
+                            throw new ParseCancellationException();
+                        }
+                    });
             // setup error handler on parser
             final GremlinGSParser parser = new GremlinGSParser(new CommonTokenStream(lexer));
             parser.setErrorHandler(new BailErrorStrategy());
@@ -74,11 +82,19 @@ public class AntlrToJavaScriptEngine extends AbstractScriptEngine implements Gre
         } catch (ParseCancellationException e) {
             Throwable t = ExceptionUtils.getRootCause(e);
             // todo: return user-friendly errors from different exceptions
-            String error = String.format("query [%s] is invalid, check the grammar in GremlinGS.g4, ", script);
+            String error =
+                    String.format(
+                            "query [%s] is invalid, check the grammar in GremlinGS.g4, ", script);
             if (t instanceof LexerNoViableAltException) {
-                error += String.format("failed at index: %s.", ((LexerNoViableAltException) t).getStartIndex());
+                error +=
+                        String.format(
+                                "failed at index: %s.",
+                                ((LexerNoViableAltException) t).getStartIndex());
             } else if (t instanceof NoViableAltException) {
-                error += String.format("token: %s.", ((NoViableAltException) t).getStartToken().toString());
+                error +=
+                        String.format(
+                                "token: %s.",
+                                ((NoViableAltException) t).getStartToken().toString());
             } else {
                 error += String.format("message: %s.", t.getMessage());
             }

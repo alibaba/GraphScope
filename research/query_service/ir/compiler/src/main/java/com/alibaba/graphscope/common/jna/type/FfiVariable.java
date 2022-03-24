@@ -22,8 +22,7 @@ import com.sun.jna.Structure;
 
 @Structure.FieldOrder({"tag", "property"})
 public class FfiVariable extends Structure {
-    public static class ByValue extends FfiVariable implements Structure.ByValue {
-    }
+    public static class ByValue extends FfiVariable implements Structure.ByValue {}
 
     public FfiNameOrId.ByValue tag;
     public FfiProperty.ByValue property;
@@ -33,8 +32,7 @@ public class FfiVariable extends Structure {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         FfiVariable that = (FfiVariable) o;
-        return Objects.equal(tag, that.tag) &&
-                Objects.equal(property, that.property);
+        return Objects.equal(tag, that.tag) && Objects.equal(property, that.property);
     }
 
     @Override

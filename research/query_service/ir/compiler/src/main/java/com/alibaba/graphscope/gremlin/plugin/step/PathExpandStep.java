@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.gremlin.plugin.step;
 
 import com.alibaba.graphscope.gremlin.exception.ExtendGremlinStepException;
+
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.Traverser;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.RangeGlobalStep;
@@ -32,8 +33,11 @@ public class PathExpandStep extends VertexStep<Vertex> {
     private Direction direction;
     private Traversal rangeTraversal;
 
-    public PathExpandStep(final Traversal.Admin traversal, final Direction direction,
-                          final Traversal rangeTraversal, final String... edgeLabels) {
+    public PathExpandStep(
+            final Traversal.Admin traversal,
+            final Direction direction,
+            final Traversal rangeTraversal,
+            final String... edgeLabels) {
         super(traversal, Vertex.class, direction, edgeLabels);
         this.direction = direction;
         this.rangeTraversal = rangeTraversal;
@@ -54,7 +58,8 @@ public class PathExpandStep extends VertexStep<Vertex> {
             RangeGlobalStep range = (RangeGlobalStep) admin.getStartStep();
             return (int) range.getLowRange();
         } else {
-            throw new ExtendGremlinStepException("rangeTraversal should only have one RangeGlobalStep");
+            throw new ExtendGremlinStepException(
+                    "rangeTraversal should only have one RangeGlobalStep");
         }
     }
 
@@ -64,7 +69,8 @@ public class PathExpandStep extends VertexStep<Vertex> {
             RangeGlobalStep range = (RangeGlobalStep) admin.getStartStep();
             return (int) range.getHighRange();
         } else {
-            throw new ExtendGremlinStepException("rangeTraversal should only have one RangeGlobalStep");
+            throw new ExtendGremlinStepException(
+                    "rangeTraversal should only have one RangeGlobalStep");
         }
     }
 

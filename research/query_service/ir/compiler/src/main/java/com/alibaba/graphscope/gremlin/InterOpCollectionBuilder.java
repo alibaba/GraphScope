@@ -19,13 +19,14 @@ package com.alibaba.graphscope.gremlin;
 import com.alibaba.graphscope.common.exception.OpArgIllegalException;
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.intermediate.InterOpCollection;
-import com.alibaba.graphscope.gremlin.exception.UnsupportedStepException;
 import com.alibaba.graphscope.common.intermediate.operator.*;
+import com.alibaba.graphscope.gremlin.exception.UnsupportedStepException;
 import com.alibaba.graphscope.gremlin.plugin.step.ExprStep;
 import com.alibaba.graphscope.gremlin.plugin.step.PathExpandStep;
 import com.alibaba.graphscope.gremlin.plugin.step.ScanFusionStep;
 import com.alibaba.graphscope.gremlin.transform.StepTransformFactory;
 import com.alibaba.graphscope.gremlin.transform.TraversalParentTransformFactory;
+
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.step.TraversalParent;
@@ -87,22 +88,38 @@ public class InterOpCollectionBuilder {
             } else if (Utils.equalClass(step, TraversalMapStep.class)) {
                 opList.add(StepTransformFactory.TRAVERSAL_MAP_STEP.apply(step));
             } else if (Utils.equalClass(step, SelectOneStep.class)) {
-                opList.addAll(TraversalParentTransformFactory.PROJECT_BY_STEP.apply((TraversalParent) step));
+                opList.addAll(
+                        TraversalParentTransformFactory.PROJECT_BY_STEP.apply(
+                                (TraversalParent) step));
             } else if (Utils.equalClass(step, SelectStep.class)) {
-                opList.addAll(TraversalParentTransformFactory.PROJECT_BY_STEP.apply((TraversalParent) step));
+                opList.addAll(
+                        TraversalParentTransformFactory.PROJECT_BY_STEP.apply(
+                                (TraversalParent) step));
             } else if (Utils.equalClass(step, OrderGlobalStep.class)) {
-                opList.addAll(TraversalParentTransformFactory.ORDER_BY_STEP.apply((TraversalParent) step));
+                opList.addAll(
+                        TraversalParentTransformFactory.ORDER_BY_STEP.apply(
+                                (TraversalParent) step));
             } else if (Utils.equalClass(step, GroupStep.class)) {
-                opList.addAll(TraversalParentTransformFactory.GROUP_BY_STEP.apply((TraversalParent) step));
+                opList.addAll(
+                        TraversalParentTransformFactory.GROUP_BY_STEP.apply(
+                                (TraversalParent) step));
             } else if (Utils.equalClass(step, GroupCountStep.class)) {
-                opList.addAll(TraversalParentTransformFactory.GROUP_BY_STEP.apply((TraversalParent) step));
+                opList.addAll(
+                        TraversalParentTransformFactory.GROUP_BY_STEP.apply(
+                                (TraversalParent) step));
             } else if (Utils.equalClass(step, WherePredicateStep.class)) {
-                opList.addAll(TraversalParentTransformFactory.WHERE_BY_STEP.apply((TraversalParent) step));
+                opList.addAll(
+                        TraversalParentTransformFactory.WHERE_BY_STEP.apply(
+                                (TraversalParent) step));
             } else if (Utils.equalClass(step, TraversalFilterStep.class)
                     || Utils.equalClass(step, WhereTraversalStep.class)) {
-                opList.addAll(TraversalParentTransformFactory.WHERE_TRAVERSAL_STEP.apply((TraversalParent) step));
+                opList.addAll(
+                        TraversalParentTransformFactory.WHERE_TRAVERSAL_STEP.apply(
+                                (TraversalParent) step));
             } else if (Utils.equalClass(step, NotStep.class)) {
-                opList.addAll(TraversalParentTransformFactory.NOT_TRAVERSAL_STEP.apply((TraversalParent) step));
+                opList.addAll(
+                        TraversalParentTransformFactory.NOT_TRAVERSAL_STEP.apply(
+                                (TraversalParent) step));
             } else if (Utils.equalClass(step, MatchStep.class)) {
                 opList.add(StepTransformFactory.MATCH_STEP.apply(step));
             } else if (Utils.equalClass(step, ExprStep.class)) {
@@ -116,7 +133,9 @@ public class InterOpCollectionBuilder {
                 if (i == opList.size() - 1) {
                     // set alias
                     if (step.getLabels().size() > 1) {
-                        logger.error("multiple aliases of one object is unsupported, take the first and ignore others");
+                        logger.error(
+                                "multiple aliases of one object is unsupported, take the first and"
+                                        + " ignore others");
                     }
                     if (!step.getLabels().isEmpty()) {
                         String label = (String) step.getLabels().iterator().next();

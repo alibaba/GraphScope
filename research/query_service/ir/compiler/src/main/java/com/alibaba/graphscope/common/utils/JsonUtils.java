@@ -16,6 +16,8 @@
 
 package com.alibaba.graphscope.common.utils;
 
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.*;
@@ -24,8 +26,6 @@ import com.fasterxml.jackson.module.paranamer.ParanamerModule;
 
 import java.io.IOException;
 import java.util.List;
-
-import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 public class JsonUtils {
 
@@ -79,4 +79,3 @@ public class JsonUtils {
         return OBJECT_MAPPER.readValue(json, t);
     }
 }
-

@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.gremlin.antlr4;
 
 import com.alibaba.graphscope.gremlin.exception.UnsupportedEvalException;
+
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSBaseVisitor;
 import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSParser;
@@ -39,14 +40,19 @@ public class TraversalRootVisitor<G extends Traversal> extends GremlinGSBaseVisi
             throw new UnsupportedEvalException(ctx.getClass(), notice);
         }
         ParseTree first = ctx.getChild(0);
-        GraphTraversalSource g = this.gvisitor.visitTraversalSource((GremlinGSParser.TraversalSourceContext) first);
+        GraphTraversalSource g =
+                this.gvisitor.visitTraversalSource((GremlinGSParser.TraversalSourceContext) first);
         ParseTree third = ctx.getChild(2);
-        GraphTraversal graphTraversal = (new TraversalSourceSpawnMethodVisitor(g)).visitTraversalSourceSpawnMethod(
-                (GremlinGSParser.TraversalSourceSpawnMethodContext) third);
+        GraphTraversal graphTraversal =
+                (new TraversalSourceSpawnMethodVisitor(g))
+                        .visitTraversalSourceSpawnMethod(
+                                (GremlinGSParser.TraversalSourceSpawnMethodContext) third);
         if (childCount == 5) {
             ParseTree forth = ctx.getChild(4);
-            TraversalMethodVisitor methodVisitor = new TraversalMethodVisitor(this.gvisitor, graphTraversal);
-            return methodVisitor.visitChainedTraversal((GremlinGSParser.ChainedTraversalContext) forth);
+            TraversalMethodVisitor methodVisitor =
+                    new TraversalMethodVisitor(this.gvisitor, graphTraversal);
+            return methodVisitor.visitChainedTraversal(
+                    (GremlinGSParser.ChainedTraversalContext) forth);
         } else {
             return graphTraversal;
         }
@@ -69,7 +75,9 @@ public class TraversalRootVisitor<G extends Traversal> extends GremlinGSBaseVisi
 
     @Override
     public Traversal visitNestedTraversal(final GremlinGSParser.NestedTraversalContext ctx) {
-        TraversalMethodVisitor nestedTraversal = new TraversalMethodVisitor(gvisitor, GremlinAntlrToJava.getTraversalSupplier().get());
+        TraversalMethodVisitor nestedTraversal =
+                new TraversalMethodVisitor(
+                        gvisitor, GremlinAntlrToJava.getTraversalSupplier().get());
         return nestedTraversal.visitChainedTraversal(ctx.chainedTraversal());
     }
 }

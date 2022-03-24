@@ -19,6 +19,7 @@ package com.alibaba.graphscope.gremlin.transform;
 import com.alibaba.graphscope.common.exception.OpArgIllegalException;
 import com.alibaba.graphscope.common.jna.type.FfiVariable;
 import com.alibaba.graphscope.gremlin.antlr4.AnyValue;
+
 import org.apache.tinkerpop.gremlin.process.traversal.Compare;
 import org.apache.tinkerpop.gremlin.process.traversal.Contains;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
@@ -42,7 +43,8 @@ public interface PredicateExprTransform extends Function<Step, String> {
                 P cur = predicates.get(i);
                 if (cur instanceof ConnectiveP) {
                     throw new OpArgIllegalException(
-                            OpArgIllegalException.Cause.UNSUPPORTED_TYPE, "composition of and & or is unsupported");
+                            OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
+                            "composition of and & or is unsupported");
                 }
                 if (i > 0) {
                     expr += connector;
@@ -78,7 +80,8 @@ public interface PredicateExprTransform extends Function<Step, String> {
                     expr += getPredicateExpr(subject, "without", predicateValue);
                 } else {
                     throw new OpArgIllegalException(
-                            OpArgIllegalException.Cause.UNSUPPORTED_TYPE, "predicate type is unsupported");
+                            OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
+                            "predicate type is unsupported");
                 }
             }
         }
@@ -98,7 +101,8 @@ public interface PredicateExprTransform extends Function<Step, String> {
                 }
                 Object v = values.get(i);
                 if (v instanceof List) {
-                    throw new OpArgIllegalException(OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
+                    throw new OpArgIllegalException(
+                            OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
                             "nested list of predicate value is unsupported");
                 }
                 content += getPredicateValue(v);
@@ -125,7 +129,8 @@ public interface PredicateExprTransform extends Function<Step, String> {
         if (value instanceof FfiVariable.ByValue) {
             valueKeyExist = getExprIfPropertyExist(value.toString());
         }
-        String predicateExpr = String.format("%s %s %s", subject, predicate, getPredicateValue(value));
+        String predicateExpr =
+                String.format("%s %s %s", subject, predicate, getPredicateValue(value));
         StringBuilder builder = new StringBuilder(predicateExpr);
         if (!valueKeyExist.isEmpty()) {
             builder.insert(0, String.format("%s && ", valueKeyExist));

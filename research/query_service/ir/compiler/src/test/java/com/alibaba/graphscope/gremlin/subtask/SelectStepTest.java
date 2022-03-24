@@ -24,6 +24,7 @@ import com.alibaba.graphscope.common.intermediate.operator.ProjectOp;
 import com.alibaba.graphscope.common.jna.type.FfiJoinKind;
 import com.alibaba.graphscope.gremlin.InterOpCollectionBuilder;
 import com.alibaba.graphscope.gremlin.transform.TraversalParentTransformFactory;
+
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
@@ -131,7 +132,6 @@ public class SelectStepTest {
         Assert.assertEquals(ArgUtils.asFfiAlias("b_2_1", false), sndEntry.getValue1());
     }
 
-
     @Test
     public void g_V_select_a_by_out_count_test() {
         Traversal traversal = g.V().as("a").select("a").by(__.out().count());
@@ -141,9 +141,11 @@ public class SelectStepTest {
 
         ApplyOp applyOp = (ApplyOp) ops.get(0);
         Assert.assertEquals(FfiJoinKind.Inner, applyOp.getJoinKind().get().applyArg());
-        InterOpCollection subOps = (InterOpCollection) applyOp.getSubOpCollection().get().applyArg();
+        InterOpCollection subOps =
+                (InterOpCollection) applyOp.getSubOpCollection().get().applyArg();
         Assert.assertEquals(3, subOps.unmodifiableCollection().size());
-        Assert.assertEquals(ArgUtils.asFfiAlias("a_1_0", false), applyOp.getAlias().get().applyArg());
+        Assert.assertEquals(
+                ArgUtils.asFfiAlias("a_1_0", false), applyOp.getAlias().get().applyArg());
 
         ProjectOp projectOp = (ProjectOp) ops.get(1);
         List<Pair> exprWithAlias = (List<Pair>) projectOp.getExprWithAlias().get().applyArg();
@@ -158,16 +160,19 @@ public class SelectStepTest {
 
     @Test
     public void g_V_select_a_b_by_name_by_out_count_test() {
-        Traversal traversal = g.V().as("a").out().as("b").select("a", "b").by("name").by(__.out().count());
+        Traversal traversal =
+                g.V().as("a").out().as("b").select("a", "b").by("name").by(__.out().count());
         List<InterOpBase> ops = getApplyWithProject(traversal);
 
         Assert.assertEquals(2, ops.size());
 
         ApplyOp applyOp = (ApplyOp) ops.get(0);
         Assert.assertEquals(FfiJoinKind.Inner, applyOp.getJoinKind().get().applyArg());
-        InterOpCollection subOps = (InterOpCollection) applyOp.getSubOpCollection().get().applyArg();
+        InterOpCollection subOps =
+                (InterOpCollection) applyOp.getSubOpCollection().get().applyArg();
         Assert.assertEquals(3, subOps.unmodifiableCollection().size());
-        Assert.assertEquals(ArgUtils.asFfiAlias("b_2_1", false), applyOp.getAlias().get().applyArg());
+        Assert.assertEquals(
+                ArgUtils.asFfiAlias("b_2_1", false), applyOp.getAlias().get().applyArg());
 
         ProjectOp projectOp = (ProjectOp) ops.get(1);
         List<Pair> exprWithAlias = (List<Pair>) projectOp.getExprWithAlias().get().applyArg();
@@ -184,7 +189,8 @@ public class SelectStepTest {
 
     @Test
     public void g_V_select_a_b_by_out_out_count_test() {
-        Traversal traversal = g.V().as("a").out().as("b").select("a", "b").by(__.out().out().count());
+        Traversal traversal =
+                g.V().as("a").out().as("b").select("a", "b").by(__.out().out().count());
         List<InterOpBase> ops = getApplyWithProject(traversal);
 
         Assert.assertEquals(3, ops.size());
@@ -193,13 +199,15 @@ public class SelectStepTest {
         Assert.assertEquals(FfiJoinKind.Inner, apply1.getJoinKind().get().applyArg());
         InterOpCollection subOps = (InterOpCollection) apply1.getSubOpCollection().get().applyArg();
         Assert.assertEquals(4, subOps.unmodifiableCollection().size());
-        Assert.assertEquals(ArgUtils.asFfiAlias("a_2_0", false), apply1.getAlias().get().applyArg());
+        Assert.assertEquals(
+                ArgUtils.asFfiAlias("a_2_0", false), apply1.getAlias().get().applyArg());
 
         ApplyOp apply2 = (ApplyOp) ops.get(1);
         Assert.assertEquals(FfiJoinKind.Inner, apply2.getJoinKind().get().applyArg());
         subOps = (InterOpCollection) apply2.getSubOpCollection().get().applyArg();
         Assert.assertEquals(4, subOps.unmodifiableCollection().size());
-        Assert.assertEquals(ArgUtils.asFfiAlias("b_2_1", false), apply2.getAlias().get().applyArg());
+        Assert.assertEquals(
+                ArgUtils.asFfiAlias("b_2_1", false), apply2.getAlias().get().applyArg());
 
         ProjectOp projectOp = (ProjectOp) ops.get(2);
         List<Pair> exprWithAlias = (List<Pair>) projectOp.getExprWithAlias().get().applyArg();

@@ -1,6 +1,6 @@
 package com.alibaba.graphscope.common.intermediate.operator;
 
-        import java.util.Optional;
+import java.util.Optional;
 
 public class MatchOp extends InterOpBase {
     // List<MatchSentence>

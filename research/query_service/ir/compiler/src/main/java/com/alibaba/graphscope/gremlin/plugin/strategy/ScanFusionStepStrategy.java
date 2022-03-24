@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.gremlin.plugin.strategy;
 
 import com.alibaba.graphscope.gremlin.plugin.step.ScanFusionStep;
+
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalStrategy;
@@ -30,11 +31,12 @@ import org.apache.tinkerpop.gremlin.process.traversal.util.TraversalHelper;
 
 import java.util.List;
 
-public class ScanFusionStepStrategy extends AbstractTraversalStrategy<TraversalStrategy.ProviderOptimizationStrategy> implements TraversalStrategy.ProviderOptimizationStrategy {
+public class ScanFusionStepStrategy
+        extends AbstractTraversalStrategy<TraversalStrategy.ProviderOptimizationStrategy>
+        implements TraversalStrategy.ProviderOptimizationStrategy {
     private static final ScanFusionStepStrategy INSTANCE = new ScanFusionStepStrategy();
 
-    private ScanFusionStepStrategy() {
-    }
+    private ScanFusionStepStrategy() {}
 
     public static ScanFusionStepStrategy instance() {
         return INSTANCE;
@@ -42,16 +44,19 @@ public class ScanFusionStepStrategy extends AbstractTraversalStrategy<TraversalS
 
     @Override
     public void apply(Traversal.Admin<?, ?> traversal) {
-        for (final GraphStep originalGraphStep : TraversalHelper.getStepsOfClass(GraphStep.class, traversal)) {
+        for (final GraphStep originalGraphStep :
+                TraversalHelper.getStepsOfClass(GraphStep.class, traversal)) {
             final ScanFusionStep<?, ?> scanFusionStep = new ScanFusionStep<>(originalGraphStep);
             TraversalHelper.replaceStep(originalGraphStep, scanFusionStep, traversal);
             Step<?, ?> currentStep = scanFusionStep.getNextStep();
             while (currentStep instanceof HasStep || currentStep instanceof NoOpBarrierStep) {
                 if (currentStep instanceof HasStep) {
-                    List<HasContainer> originalContainers = ((HasContainerHolder) currentStep).getHasContainers();
+                    List<HasContainer> originalContainers =
+                            ((HasContainerHolder) currentStep).getHasContainers();
                     for (final HasContainer hasContainer : originalContainers) {
                         if (!GraphStep.processHasContainerIds(scanFusionStep, hasContainer)
-                                && !ScanFusionStep.processHasLabels(scanFusionStep, hasContainer, originalContainers)) {
+                                && !ScanFusionStep.processHasLabels(
+                                        scanFusionStep, hasContainer, originalContainers)) {
                             scanFusionStep.addHasContainer(hasContainer);
                         }
                     }

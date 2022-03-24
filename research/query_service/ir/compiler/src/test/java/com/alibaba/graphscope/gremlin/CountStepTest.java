@@ -21,6 +21,7 @@ import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.intermediate.operator.GroupOp;
 import com.alibaba.graphscope.common.jna.type.FfiAggOpt;
 import com.alibaba.graphscope.gremlin.transform.StepTransformFactory;
+
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
@@ -42,8 +43,10 @@ public class CountStepTest {
         GroupOp op = (GroupOp) StepTransformFactory.COUNT_STEP.apply(step);
 
         Assert.assertEquals(Collections.emptyList(), op.getGroupByKeys().get().applyArg());
-        ArgAggFn expectedValue = new ArgAggFn(FfiAggOpt.Count, ArgUtils.asFfiAlias("~values_1_0", false));
-        Assert.assertEquals(Collections.singletonList(expectedValue), op.getGroupByValues().get().applyArg());
+        ArgAggFn expectedValue =
+                new ArgAggFn(FfiAggOpt.Count, ArgUtils.asFfiAlias("~values_1_0", false));
+        Assert.assertEquals(
+                Collections.singletonList(expectedValue), op.getGroupByValues().get().applyArg());
     }
 
     @Test
@@ -54,6 +57,7 @@ public class CountStepTest {
 
         Assert.assertEquals(Collections.emptyList(), op.getGroupByKeys().get().applyArg());
         ArgAggFn expectedValue = new ArgAggFn(FfiAggOpt.Count, ArgUtils.asFfiAlias("a", true));
-        Assert.assertEquals(Collections.singletonList(expectedValue), op.getGroupByValues().get().applyArg());
+        Assert.assertEquals(
+                Collections.singletonList(expectedValue), op.getGroupByValues().get().applyArg());
     }
 }

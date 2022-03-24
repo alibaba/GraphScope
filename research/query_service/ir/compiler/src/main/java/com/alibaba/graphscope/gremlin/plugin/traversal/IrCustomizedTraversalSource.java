@@ -28,7 +28,8 @@ import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
 
 public class IrCustomizedTraversalSource extends GraphTraversalSource {
-    public IrCustomizedTraversalSource(final Graph graph, final TraversalStrategies traversalStrategies) {
+    public IrCustomizedTraversalSource(
+            final Graph graph, final TraversalStrategies traversalStrategies) {
         super(graph, traversalStrategies);
     }
 
@@ -53,7 +54,8 @@ public class IrCustomizedTraversalSource extends GraphTraversalSource {
         IrCustomizedTraversalSource clone = this.clone();
         clone.bytecode.addStep("V", vertexIds);
         Admin<Vertex, Vertex> traversal = new IrCustomizedTraversal(clone);
-        return (IrCustomizedTraversal<Vertex, Vertex>) traversal.addStep(new GraphStep(traversal, Vertex.class, true, vertexIds));
+        return (IrCustomizedTraversal<Vertex, Vertex>)
+                traversal.addStep(new GraphStep(traversal, Vertex.class, true, vertexIds));
     }
 
     @Override
@@ -61,7 +63,8 @@ public class IrCustomizedTraversalSource extends GraphTraversalSource {
         IrCustomizedTraversalSource clone = this.clone();
         clone.bytecode.addStep("E", edgesIds);
         Admin<Edge, Edge> traversal = new IrCustomizedTraversal(clone);
-        return (IrCustomizedTraversal<Edge, Edge>) traversal.addStep(new GraphStep(traversal, Edge.class, true, edgesIds));
+        return (IrCustomizedTraversal<Edge, Edge>)
+                traversal.addStep(new GraphStep(traversal, Edge.class, true, edgesIds));
     }
 
     @Override
@@ -69,7 +72,6 @@ public class IrCustomizedTraversalSource extends GraphTraversalSource {
         if (this.connection != null) {
             this.connection.close();
         }
-
     }
 
     @Override

@@ -19,6 +19,7 @@ package com.alibaba.graphscope.gremlin.antlr4;
 import com.alibaba.graphscope.gremlin.plugin.script.AntlrToJavaScriptEngine;
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversal;
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversalSource;
+
 import org.apache.tinkerpop.gremlin.process.traversal.Order;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
@@ -31,7 +32,6 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
 import org.junit.Assert;
 import org.junit.Before;
-
 import org.junit.Test;
 
 import javax.script.Bindings;
@@ -160,7 +160,8 @@ public class PositiveEvalTest {
 
     @Test
     public void g_V_hasLabels_test() {
-        Assert.assertEquals(g.V().hasLabel("person", "software"), eval("g.V().hasLabel('person', 'software')"));
+        Assert.assertEquals(
+                g.V().hasLabel("person", "software"), eval("g.V().hasLabel('person', 'software')"));
     }
 
     @Test
@@ -234,7 +235,8 @@ public class PositiveEvalTest {
 
     @Test
     public void g_V_limit_hasLabel_test() {
-        Assert.assertEquals(g.V().hasLabel("person").limit(1), eval("g.V().hasLabel('person').limit(1)"));
+        Assert.assertEquals(
+                g.V().hasLabel("person").limit(1), eval("g.V().hasLabel('person').limit(1)"));
     }
 
     @Test
@@ -244,12 +246,15 @@ public class PositiveEvalTest {
 
     @Test
     public void g_V_hasLabel_out_limit_test() {
-        Assert.assertEquals(g.V().hasLabel("person").out().limit(1), eval("g.V().hasLabel('person').out().limit(1)"));
+        Assert.assertEquals(
+                g.V().hasLabel("person").out().limit(1),
+                eval("g.V().hasLabel('person').out().limit(1)"));
     }
 
     @Test
     public void g_V_limit_out_out_limit_test() {
-        Assert.assertEquals(g.V().limit(1).out().out().limit(1), eval("g.V().limit(1).out().out().limit(1)"));
+        Assert.assertEquals(
+                g.V().limit(1).out().out().limit(1), eval("g.V().limit(1).out().out().limit(1)"));
     }
 
     @Test
@@ -283,49 +288,70 @@ public class PositiveEvalTest {
     @Test
     public void g_V_select_a_by_valueMap_key_1_test() {
         Traversal expected = g.V().as("a").select("a").by(__.valueMap("name"));
-        Assert.assertEquals(expected, eval("g.V().as(\"a\").select(\"a\").by(__.valueMap(\"name\"))"));
+        Assert.assertEquals(
+                expected, eval("g.V().as(\"a\").select(\"a\").by(__.valueMap(\"name\"))"));
     }
 
     @Test
     public void g_V_select_a_by_valueMap_keys_test() {
         Traversal expected = g.V().as("a").select("a").by(__.valueMap("name", "id"));
-        Assert.assertEquals(expected, eval("g.V().as(\"a\").select(\"a\").by(valueMap(\"name\", \"id\"))"));
+        Assert.assertEquals(
+                expected, eval("g.V().as(\"a\").select(\"a\").by(valueMap(\"name\", \"id\"))"));
     }
 
     @Test
     public void g_V_select_a_b_test() {
-        Assert.assertEquals(g.V().as("a").out().as("b").select("a", "b"),
+        Assert.assertEquals(
+                g.V().as("a").out().as("b").select("a", "b"),
                 eval("g.V().as(\"a\").out().as(\"b\").select(\"a\", \"b\")"));
     }
 
     @Test
     public void g_V_select_a_b_by_strs_test() {
-        Assert.assertEquals(g.V().as("a").out().as("b").select("a", "b").by("name").by("id"),
-                eval("g.V().as(\"a\").out().as(\"b\").select(\"a\", \"b\").by(\"name\").by(\"id\")"));
+        Assert.assertEquals(
+                g.V().as("a").out().as("b").select("a", "b").by("name").by("id"),
+                eval(
+                        "g.V().as(\"a\").out().as(\"b\").select(\"a\","
+                                + " \"b\").by(\"name\").by(\"id\")"));
     }
 
     @Test
     public void g_V_select_a_b_c_test() {
-        Assert.assertEquals(g.V().as("a").out().as("b").out().as("c").select("a", "b", "c"),
-                eval("g.V().as(\"a\").out().as(\"b\").out().as(\"c\").select(\"a\", \"b\", \"c\")"));
+        Assert.assertEquals(
+                g.V().as("a").out().as("b").out().as("c").select("a", "b", "c"),
+                eval(
+                        "g.V().as(\"a\").out().as(\"b\").out().as(\"c\").select(\"a\", \"b\","
+                                + " \"c\")"));
     }
 
     @Test
     public void g_V_select_a_b_by_str_test() {
-        Assert.assertEquals(g.V().as("a").out().as("b").select("a", "b").by("name"),
+        Assert.assertEquals(
+                g.V().as("a").out().as("b").select("a", "b").by("name"),
                 eval("g.V().as(\"a\").out().as(\"b\").select(\"a\", \"b\").by(\"name\")"));
     }
 
     @Test
     public void g_V_select_a_b_by_valueMap_key_test() {
-        Assert.assertEquals(g.V().as("a").out().as("b").select("a", "b").by(__.valueMap("name")),
-                eval("g.V().as(\"a\").out().as(\"b\").select(\"a\", \"b\").by(valueMap(\"name\"))"));
+        Assert.assertEquals(
+                g.V().as("a").out().as("b").select("a", "b").by(__.valueMap("name")),
+                eval(
+                        "g.V().as(\"a\").out().as(\"b\").select(\"a\","
+                                + " \"b\").by(valueMap(\"name\"))"));
     }
 
     @Test
     public void g_V_select_a_b_by_valueMap_keys_test() {
-        Assert.assertEquals(g.V().as("a").out().as("b").select("a", "b").by(__.valueMap("name", "id")).by(__.valueMap("age")),
-                eval("g.V().as(\"a\").out().as(\"b\").select(\"a\", \"b\").by(valueMap(\"name\", \"id\")).by(valueMap(\"age\"))"));
+        Assert.assertEquals(
+                g.V().as("a")
+                        .out()
+                        .as("b")
+                        .select("a", "b")
+                        .by(__.valueMap("name", "id"))
+                        .by(__.valueMap("age")),
+                eval(
+                        "g.V().as(\"a\").out().as(\"b\").select(\"a\", \"b\").by(valueMap(\"name\","
+                                + " \"id\")).by(valueMap(\"age\"))"));
     }
 
     @Test
@@ -345,17 +371,20 @@ public class PositiveEvalTest {
 
     @Test
     public void g_V_order_by_key_asc_test() {
-        Assert.assertEquals(g.V().order().by("name", Order.asc), eval("g.V().order().by('name', asc)"));
+        Assert.assertEquals(
+                g.V().order().by("name", Order.asc), eval("g.V().order().by('name', asc)"));
     }
 
     @Test
     public void g_V_order_by_key_desc_test() {
-        Assert.assertEquals(g.V().order().by("name", Order.desc), eval("g.V().order().by('name', desc)"));
+        Assert.assertEquals(
+                g.V().order().by("name", Order.desc), eval("g.V().order().by('name', desc)"));
     }
 
     @Test
     public void g_V_order_by_keys_test() {
-        Assert.assertEquals(g.V().order().by("name", Order.desc).by("id", Order.asc),
+        Assert.assertEquals(
+                g.V().order().by("name", Order.desc).by("id", Order.asc),
                 eval("g.V().order().by('name', desc).by('id', asc)"));
     }
 
@@ -366,17 +395,21 @@ public class PositiveEvalTest {
 
     @Test
     public void g_V_order_by_values_test() {
-        Assert.assertEquals(g.V().order().by(__.values("name")), eval("g.V().order().by(__.values(\"name\"))"));
+        Assert.assertEquals(
+                g.V().order().by(__.values("name")), eval("g.V().order().by(__.values(\"name\"))"));
     }
 
     @Test
     public void g_V_order_by_select_test() {
-        Assert.assertEquals(g.V().as("a").order().by(__.select("a")), eval("g.V().as(\"a\").order().by(__.select(\"a\"))"));
+        Assert.assertEquals(
+                g.V().as("a").order().by(__.select("a")),
+                eval("g.V().as(\"a\").order().by(__.select(\"a\"))"));
     }
 
     @Test
     public void g_V_order_by_select_asc_test() {
-        Assert.assertEquals(g.V().as("a").order().by(__.select("a"), Order.asc),
+        Assert.assertEquals(
+                g.V().as("a").order().by(__.select("a"), Order.asc),
                 eval("g.V().as(\"a\").order().by(__.select(\"a\"), asc)"));
     }
 
@@ -387,12 +420,14 @@ public class PositiveEvalTest {
 
     @Test
     public void g_V_has_eq_test() {
-        Assert.assertEquals(g.V().has("name", P.eq("marko")), eval("g.V().has('name', eq('marko'))"));
+        Assert.assertEquals(
+                g.V().has("name", P.eq("marko")), eval("g.V().has('name', eq('marko'))"));
     }
 
     @Test
     public void g_V_has_neq_test() {
-        Assert.assertEquals(g.V().has("name", P.neq("marko")), eval("g.V().has('name', neq('marko'))"));
+        Assert.assertEquals(
+                g.V().has("name", P.neq("marko")), eval("g.V().has('name', neq('marko'))"));
     }
 
     @Test
@@ -422,12 +457,14 @@ public class PositiveEvalTest {
 
     @Test
     public void g_V_has_within_ints_test() {
-        Assert.assertEquals(g.V().has("age", P.within(10, 11)), eval("g.V().has('age', within(10, 11))"));
+        Assert.assertEquals(
+                g.V().has("age", P.within(10, 11)), eval("g.V().has('age', within(10, 11))"));
     }
 
     @Test
     public void g_V_has_within_ints_1_test() {
-        Assert.assertEquals(g.V().has("age", P.within(10, 11)), eval("g.V().has('age', within([10, 11]))"));
+        Assert.assertEquals(
+                g.V().has("age", P.within(10, 11)), eval("g.V().has('age', within([10, 11]))"));
     }
 
     @Test
@@ -437,37 +474,49 @@ public class PositiveEvalTest {
 
     @Test
     public void g_V_has_without_ints_test() {
-        Assert.assertEquals(g.V().has("age", P.without(10, 11)), eval("g.V().has('age', without(10, 11))"));
+        Assert.assertEquals(
+                g.V().has("age", P.without(10, 11)), eval("g.V().has('age', without(10, 11))"));
     }
 
     @Test
     public void g_V_has_within_strs_test() {
-        Assert.assertEquals(g.V().has("name", P.within("marko", "josh")), eval("g.V().has('name', within('marko', 'josh'))"));
+        Assert.assertEquals(
+                g.V().has("name", P.within("marko", "josh")),
+                eval("g.V().has('name', within('marko', 'josh'))"));
     }
 
     @Test
     public void g_V_has_without_strs_test() {
-        Assert.assertEquals(g.V().has("name", P.without("marko", "josh")), eval("g.V().has('name', without('marko', 'josh'))"));
+        Assert.assertEquals(
+                g.V().has("name", P.without("marko", "josh")),
+                eval("g.V().has('name', without('marko', 'josh'))"));
     }
 
     @Test
     public void g_V_has_and_p_test() {
-        Assert.assertEquals(g.V().has("age", P.gt(25).and(P.lt(32))), eval("g.V().has(\"age\", P.gt(25).and(P.lt(32)))"));
+        Assert.assertEquals(
+                g.V().has("age", P.gt(25).and(P.lt(32))),
+                eval("g.V().has(\"age\", P.gt(25).and(P.lt(32)))"));
     }
 
     @Test
     public void g_V_has_or_p_test() {
-        Assert.assertEquals(g.V().has("age", P.gt(25).or(P.lt(32))), eval("g.V().has(\"age\", P.gt(25).or(P.lt(32)))"));
+        Assert.assertEquals(
+                g.V().has("age", P.gt(25).or(P.lt(32))),
+                eval("g.V().has(\"age\", P.gt(25).or(P.lt(32)))"));
     }
 
     @Test
     public void g_V_has_label_property_test() {
-        Assert.assertEquals(g.V().has("person", "age", 25), eval("g.V().has(\"person\", \"age\", 25)"));
+        Assert.assertEquals(
+                g.V().has("person", "age", 25), eval("g.V().has(\"person\", \"age\", 25)"));
     }
 
     @Test
     public void g_V_has_label_property_eq_test() {
-        Assert.assertEquals(g.V().has("person", "age", P.eq(25)), eval("g.V().has(\"person\", \"age\", P.eq(25))"));
+        Assert.assertEquals(
+                g.V().has("person", "age", P.eq(25)),
+                eval("g.V().has(\"person\", \"age\", P.eq(25))"));
     }
 
     @Test
@@ -477,7 +526,8 @@ public class PositiveEvalTest {
 
     @Test
     public void g_V_values_is_p_test() {
-        Assert.assertEquals(g.V().values("name").is(P.eq(27)), eval("g.V().values(\"name\").is(P.eq(27))"));
+        Assert.assertEquals(
+                g.V().values("name").is(P.eq(27)), eval("g.V().values(\"name\").is(P.eq(27))"));
     }
 
     @Test
@@ -492,7 +542,8 @@ public class PositiveEvalTest {
 
     @Test
     public void g_V_has_as_test() {
-        Assert.assertEquals(g.V().has("name", P.without("marko", "josh")).as("c"),
+        Assert.assertEquals(
+                g.V().has("name", P.without("marko", "josh")).as("c"),
                 eval("g.V().has('name', without('marko', 'josh')).as('c')"));
     }
 
@@ -508,46 +559,55 @@ public class PositiveEvalTest {
 
     @Test
     public void g_V_group_by_key_values_test() {
-        Assert.assertEquals(g.V().group().by(__.values("name")), eval("g.V().group().by(values(\"name\"))"));
+        Assert.assertEquals(
+                g.V().group().by(__.values("name")), eval("g.V().group().by(values(\"name\"))"));
     }
 
     @Test
     public void g_V_group_by_key_values_1_test() {
-        Assert.assertEquals(g.V().group().by(__.values("name")), eval("g.V().group().by(__.values(\"name\"))"));
+        Assert.assertEquals(
+                g.V().group().by(__.values("name")), eval("g.V().group().by(__.values(\"name\"))"));
     }
 
     @Test
     public void g_V_group_by_key_values_as_test() {
-        Assert.assertEquals(g.V().group().by(__.values("name").as("name")),
+        Assert.assertEquals(
+                g.V().group().by(__.values("name").as("name")),
                 eval("g.V().group().by(values(\"name\").as(\"name\"))"));
     }
 
     @Test
     public void g_V_group_by_key_str_by_value_count_test() {
-        Assert.assertEquals(g.V().group().by("name").by(__.count()), eval("g.V().group().by(\"name\").by(count())"));
+        Assert.assertEquals(
+                g.V().group().by("name").by(__.count()),
+                eval("g.V().group().by(\"name\").by(count())"));
     }
 
     @Test
     public void g_V_group_by_key_values_by_value_fold_test() {
-        Assert.assertEquals(g.V().group().by(__.values("name")).by(__.fold()),
+        Assert.assertEquals(
+                g.V().group().by(__.values("name")).by(__.fold()),
                 eval("g.V().group().by(values(\"name\")).by(fold())"));
     }
 
     @Test
     public void g_V_group_by_key_values_by_value_fold_1_test() {
-        Assert.assertEquals(g.V().group().by(__.values("name")).by(__.fold()),
+        Assert.assertEquals(
+                g.V().group().by(__.values("name")).by(__.fold()),
                 eval("g.V().group().by(values(\"name\")).by(__.fold())"));
     }
 
     @Test
     public void g_V_group_by_key_str_by_value_count_as_test() {
-        Assert.assertEquals(g.V().group().by("name").by(__.count().as("a")),
+        Assert.assertEquals(
+                g.V().group().by("name").by(__.count().as("a")),
                 eval("g.V().group().by(\"name\").by(count().as(\"a\"))"));
     }
 
     @Test
     public void g_V_group_by_key_values_by_value_fold_as_test() {
-        Assert.assertEquals(g.V().group().by(__.values("name")).by(__.fold().as("a")),
+        Assert.assertEquals(
+                g.V().group().by(__.values("name")).by(__.fold().as("a")),
                 eval("g.V().group().by(values(\"name\")).by(fold().as(\"a\"))"));
     }
 
@@ -563,12 +623,16 @@ public class PositiveEvalTest {
 
     @Test
     public void g_V_groupCount_by_values_test() {
-        Assert.assertEquals(g.V().groupCount().by(__.values("name")), eval("g.V().groupCount().by(values(\"name\"))"));
+        Assert.assertEquals(
+                g.V().groupCount().by(__.values("name")),
+                eval("g.V().groupCount().by(values(\"name\"))"));
     }
 
     @Test
     public void g_V_groupCount_by_values_as_test() {
-        Assert.assertEquals(g.V().groupCount().by(__.values("name").as("a")), eval("g.V().groupCount().by(__.values(\"name\").as(\"a\"))"));
+        Assert.assertEquals(
+                g.V().groupCount().by(__.values("name").as("a")),
+                eval("g.V().groupCount().by(__.values(\"name\").as(\"a\"))"));
     }
 
     @Test
@@ -598,7 +662,8 @@ public class PositiveEvalTest {
 
     @Test
     public void g_V_where_eq_a_age_test() {
-        Assert.assertEquals(g.V().where(P.eq("a")).by("age"), eval("g.V().where(P.eq(\"a\")).by(\"age\")"));
+        Assert.assertEquals(
+                g.V().where(P.eq("a")).by("age"), eval("g.V().where(P.eq(\"a\")).by(\"age\")"));
     }
 
     @Test
@@ -608,35 +673,43 @@ public class PositiveEvalTest {
 
     @Test
     public void g_V_where_a_eq_b_age_test() {
-        Assert.assertEquals(g.V().where("a", P.eq("b")).by("age"), eval("g.V().where(\"a\", P.eq(\"b\")).by(\"age\")"));
+        Assert.assertEquals(
+                g.V().where("a", P.eq("b")).by("age"),
+                eval("g.V().where(\"a\", P.eq(\"b\")).by(\"age\")"));
     }
 
     @Test
     public void g_V_where_a_eq_b_value_age_test() {
-        Assert.assertEquals(g.V().where("a", P.eq("b")).by("age").by(__.values("age")),
+        Assert.assertEquals(
+                g.V().where("a", P.eq("b")).by("age").by(__.values("age")),
                 eval("g.V().where(\"a\", P.eq(\"b\")).by(\"age\").by(values(\"age\"))"));
     }
 
     @Test
     public void g_V_where_a_eq_b_nested_value_age_test() {
-        Assert.assertEquals(g.V().where("a", P.eq("b")).by("age").by(__.values("age")),
+        Assert.assertEquals(
+                g.V().where("a", P.eq("b")).by("age").by(__.values("age")),
                 eval("g.V().where(\"a\", P.eq(\"b\")).by(\"age\").by(__.values(\"age\"))"));
     }
 
     @Test
     public void g_V_path_expand_test() {
-        Assert.assertEquals(((IrCustomizedTraversalSource) g).V().out(__.range(1, 2)), eval("g.V().out('1..2')"));
+        Assert.assertEquals(
+                ((IrCustomizedTraversalSource) g).V().out(__.range(1, 2)),
+                eval("g.V().out('1..2')"));
     }
 
     @Test
     public void g_V_path_expand_label_test() {
-        Assert.assertEquals(((IrCustomizedTraversalSource) g).V().out(__.range(1, 2), "knows"),
+        Assert.assertEquals(
+                ((IrCustomizedTraversalSource) g).V().out(__.range(1, 2), "knows"),
                 eval("g.V().out('1..2', \"knows\"))"));
     }
 
     @Test
     public void g_V_path_expand_labels_test() {
-        Assert.assertEquals(((IrCustomizedTraversalSource) g).V().out(__.range(1, 2), "knows", "person"),
+        Assert.assertEquals(
+                ((IrCustomizedTraversalSource) g).V().out(__.range(1, 2), "knows", "person"),
                 eval("g.V().out(\"1..2\", \"knows\", \"person\"))"));
     }
 
@@ -662,13 +735,15 @@ public class PositiveEvalTest {
 
     @Test
     public void g_V_where_as_out_test() {
-        Assert.assertEquals(g.V().as("a").where(__.as("a").out().out()),
+        Assert.assertEquals(
+                g.V().as("a").where(__.as("a").out().out()),
                 eval("g.V().as(\"a\").where(__.as(\"a\").out().out())"));
     }
 
     @Test
     public void g_V_where_out_as_test() {
-        Assert.assertEquals(g.V().as("a").where(__.out().out().as("a")),
+        Assert.assertEquals(
+                g.V().as("a").where(__.out().out().as("a")),
                 eval("g.V().as(\"a\").where(__.out().out().as(\"a\"))"));
     }
 
@@ -690,7 +765,8 @@ public class PositiveEvalTest {
 
     @Test
     public void g_V_select_by_none_test() {
-        Assert.assertEquals(g.V().as("a").select("a").by(), eval("g.V().as(\"a\").select(\"a\").by()"));
+        Assert.assertEquals(
+                g.V().as("a").select("a").by(), eval("g.V().as(\"a\").select(\"a\").by()"));
     }
 
     @Test
@@ -700,7 +776,9 @@ public class PositiveEvalTest {
 
     @Test
     public void g_V_where_by_none_test() {
-        Assert.assertEquals(g.V().as("a").where(P.eq("a")).by(), eval("g.V().as(\"a\").where(P.eq(\"a\")).by()"));
+        Assert.assertEquals(
+                g.V().as("a").where(P.eq("a")).by(),
+                eval("g.V().as(\"a\").where(P.eq(\"a\")).by()"));
     }
 
     @Test
@@ -715,7 +793,8 @@ public class PositiveEvalTest {
 
     @Test
     public void g_V_union_out_test() {
-        Assert.assertEquals(g.V().union(__.out(), __.out()), eval("g.V().union(__.out(), __.out())"));
+        Assert.assertEquals(
+                g.V().union(__.out(), __.out()), eval("g.V().union(__.out(), __.out())"));
     }
 
     @Test
@@ -726,46 +805,57 @@ public class PositiveEvalTest {
     // subtask
     @Test
     public void g_V_select_a_by_out_count_test() {
-        Assert.assertEquals(g.V().as("a").select("a").by(__.out().count()),
+        Assert.assertEquals(
+                g.V().as("a").select("a").by(__.out().count()),
                 eval("g.V().as(\"a\").select(\"a\").by(__.out().count())"));
     }
 
     @Test
     public void g_V_select_a_b_by_out_count_by_count_test() {
-        Assert.assertEquals(g.V().as("a").select("a", "b").by(__.out().count()).by(__.count()),
+        Assert.assertEquals(
+                g.V().as("a").select("a", "b").by(__.out().count()).by(__.count()),
                 eval("g.V().as(\"a\").select(\"a\", \"b\").by(__.out().count()).by(__.count())"));
     }
 
     @Test
     public void g_V_order_by_out_count_test() {
-        Assert.assertEquals(g.V().order().by(__.out().count()), eval("g.V().order().by(__.out().count())"));
+        Assert.assertEquals(
+                g.V().order().by(__.out().count()), eval("g.V().order().by(__.out().count())"));
     }
 
     @Test
     public void g_V_order_by_out_count_by_count_test() {
-        Assert.assertEquals(g.V().order().by(__.out().count()).by(__.count(), Order.desc),
+        Assert.assertEquals(
+                g.V().order().by(__.out().count()).by(__.count(), Order.desc),
                 eval("g.V().order().by(__.out().count()).by(__.count(), Order.desc)"));
     }
 
     @Test
     public void g_V_group_by_out_count_test() {
-        Assert.assertEquals(g.V().group().by(__.out().count()), eval("g.V().group().by(__.out().count())"));
+        Assert.assertEquals(
+                g.V().group().by(__.out().count()), eval("g.V().group().by(__.out().count())"));
     }
 
     @Test
     public void g_V_groupCount_by_out_count_test() {
-        Assert.assertEquals(g.V().groupCount().by(__.out().count()), eval("g.V().groupCount().by(__.out().count())"));
+        Assert.assertEquals(
+                g.V().groupCount().by(__.out().count()),
+                eval("g.V().groupCount().by(__.out().count())"));
     }
 
     @Test
     public void g_V_where_by_out_count() {
-        Assert.assertEquals(g.V().as("a").out().as("b").where("a", P.eq("b")).by(__.out().count()),
-                eval("g.V().as(\"a\").out().as(\"b\").where(\"a\", P.eq(\"b\")).by(__.out().count())"));
+        Assert.assertEquals(
+                g.V().as("a").out().as("b").where("a", P.eq("b")).by(__.out().count()),
+                eval(
+                        "g.V().as(\"a\").out().as(\"b\").where(\"a\","
+                                + " P.eq(\"b\")).by(__.out().count())"));
     }
 
     @Test
     public void g_V_match_test() {
-        Assert.assertEquals(g.V().match(__.as("a").out().as("b"), __.as("b").out().as("c")),
+        Assert.assertEquals(
+                g.V().match(__.as("a").out().as("b"), __.as("b").out().as("c")),
                 eval("g.V().match(__.as(\"a\").out().as(\"b\"), __.as(\"b\").out().as(\"c\"))"));
     }
 

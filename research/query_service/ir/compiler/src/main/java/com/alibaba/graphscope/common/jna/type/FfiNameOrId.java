@@ -26,8 +26,7 @@ public class FfiNameOrId extends Structure {
         super(IrTypeMapper.INSTANCE);
     }
 
-    public static class ByValue extends FfiNameOrId implements Structure.ByValue {
-    }
+    public static class ByValue extends FfiNameOrId implements Structure.ByValue {}
 
     public FfiNameIdOpt opt;
     public String name;
@@ -38,9 +37,7 @@ public class FfiNameOrId extends Structure {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         FfiNameOrId that = (FfiNameOrId) o;
-        return nameId == that.nameId &&
-                opt == that.opt &&
-                Objects.equal(name, that.name);
+        return nameId == that.nameId && opt == that.opt && Objects.equal(name, that.name);
     }
 
     // as map key

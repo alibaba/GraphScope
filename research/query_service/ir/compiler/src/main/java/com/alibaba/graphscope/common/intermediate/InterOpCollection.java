@@ -25,6 +25,7 @@ import com.alibaba.graphscope.common.intermediate.process.InterOpProcessor;
 import com.alibaba.graphscope.common.intermediate.process.SinkOutputProcessor;
 import com.alibaba.graphscope.common.intermediate.strategy.InterOpStrategy;
 import com.alibaba.graphscope.common.intermediate.strategy.TopKStrategy;
+
 import org.apache.commons.collections.list.UnmodifiableList;
 
 import java.util.ArrayList;
@@ -63,17 +64,24 @@ public class InterOpCollection {
     }
 
     private void applyStrategies(InterOpCollection opCollection) {
-        opCollection.unmodifiableCollection().forEach(op -> {
-            if (op instanceof ApplyOp) {
-                ApplyOp applyOp = (ApplyOp) op;
-                Optional<OpArg> subOps = applyOp.getSubOpCollection();
-                if (!subOps.isPresent()) {
-                    throw new InterOpIllegalArgException(op.getClass(), "subOpCollection", "is not present in apply");
-                }
-                InterOpCollection subCollection = (InterOpCollection) subOps.get().applyArg();
-                applyStrategies(subCollection);
-            }
-        });
+        opCollection
+                .unmodifiableCollection()
+                .forEach(
+                        op -> {
+                            if (op instanceof ApplyOp) {
+                                ApplyOp applyOp = (ApplyOp) op;
+                                Optional<OpArg> subOps = applyOp.getSubOpCollection();
+                                if (!subOps.isPresent()) {
+                                    throw new InterOpIllegalArgException(
+                                            op.getClass(),
+                                            "subOpCollection",
+                                            "is not present in apply");
+                                }
+                                InterOpCollection subCollection =
+                                        (InterOpCollection) subOps.get().applyArg();
+                                applyStrategies(subCollection);
+                            }
+                        });
         strategies.forEach(k -> k.apply(opCollection));
     }
 

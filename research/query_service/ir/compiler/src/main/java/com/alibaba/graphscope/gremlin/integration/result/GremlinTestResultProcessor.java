@@ -16,12 +16,13 @@
 
 package com.alibaba.graphscope.gremlin.integration.result;
 
-import com.alibaba.graphscope.common.utils.FileUtils;
 import com.alibaba.graphscope.common.client.ResultParser;
+import com.alibaba.graphscope.common.utils.FileUtils;
 import com.alibaba.graphscope.common.utils.JsonUtils;
 import com.alibaba.graphscope.gremlin.result.GremlinResultProcessor;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.ImmutableMap;
+
 import org.apache.tinkerpop.gremlin.driver.message.ResponseStatusCode;
 import org.apache.tinkerpop.gremlin.process.remote.traversal.DefaultRemoteTraverser;
 import org.apache.tinkerpop.gremlin.server.Context;
@@ -46,9 +47,10 @@ public class GremlinTestResultProcessor extends GremlinResultProcessor {
 
     public GremlinTestResultProcessor(Context writeResult, ResultParser resultParser) {
         super(writeResult, resultParser);
-        String propertiesJson = FileUtils.readJsonFromResource("integration/ir.modern.properties.json");
-        cachedProperties = JsonUtils.fromJson(propertiesJson, new TypeReference<Map<String, Object>>() {
-        });
+        String propertiesJson =
+                FileUtils.readJsonFromResource("integration/ir.modern.properties.json");
+        cachedProperties =
+                JsonUtils.fromJson(propertiesJson, new TypeReference<Map<String, Object>>() {});
     }
 
     @Override
@@ -66,33 +68,51 @@ public class GremlinTestResultProcessor extends GremlinResultProcessor {
     @Override
     protected void formatResultIfNeed() {
         super.formatResultIfNeed();
-        List<Object> testTraversers = resultCollectors.stream().map(k -> {
-            if (k instanceof DetachedVertex) {
-                DetachedVertex vertex = (DetachedVertex) k;
-                return new DetachedVertex(vertex.id(), vertex.label(), getVertexProperties(vertex));
-            } else if (k instanceof DetachedEdge) {
-                DetachedEdge edge = (DetachedEdge) k;
-                Vertex outVertex = edge.outVertex();
-                Vertex inVertex = edge.inVertex();
-                return new DetachedEdge(edge.id(), edge.label(), getEdgeProperties(edge),
-                        outVertex.id(), outVertex.label(), inVertex.id(), inVertex.label());
-            } else {
-                return k;
-            }
-        }).map(k -> new DefaultRemoteTraverser(k, 1)).collect(Collectors.toList());
+        List<Object> testTraversers =
+                resultCollectors.stream()
+                        .map(
+                                k -> {
+                                    if (k instanceof DetachedVertex) {
+                                        DetachedVertex vertex = (DetachedVertex) k;
+                                        return new DetachedVertex(
+                                                vertex.id(),
+                                                vertex.label(),
+                                                getVertexProperties(vertex));
+                                    } else if (k instanceof DetachedEdge) {
+                                        DetachedEdge edge = (DetachedEdge) k;
+                                        Vertex outVertex = edge.outVertex();
+                                        Vertex inVertex = edge.inVertex();
+                                        return new DetachedEdge(
+                                                edge.id(),
+                                                edge.label(),
+                                                getEdgeProperties(edge),
+                                                outVertex.id(),
+                                                outVertex.label(),
+                                                inVertex.id(),
+                                                inVertex.label());
+                                    } else {
+                                        return k;
+                                    }
+                                })
+                        .map(k -> new DefaultRemoteTraverser(k, 1))
+                        .collect(Collectors.toList());
         resultCollectors.clear();
         resultCollectors.addAll(testTraversers);
     }
 
     private Map<String, Object> getVertexProperties(Vertex vertex) {
-        Map<String, Object> vertexProperties = (Map<String, Object>) cachedProperties.get(VERTEX_PROPERTIES);
+        Map<String, Object> vertexProperties =
+                (Map<String, Object>) cachedProperties.get(VERTEX_PROPERTIES);
         String idAsStr = String.valueOf(vertex.id());
         Map<String, Object> properties = (Map<String, Object>) vertexProperties.get(idAsStr);
         if (properties != null) {
             Map<String, Object> formatProperties = new HashMap<>();
-            properties.forEach((k, v) -> {
-                formatProperties.put(k, Collections.singletonList(ImmutableMap.of("id", 1L, "value", v)));
-            });
+            properties.forEach(
+                    (k, v) -> {
+                        formatProperties.put(
+                                k,
+                                Collections.singletonList(ImmutableMap.of("id", 1L, "value", v)));
+                    });
             return formatProperties;
         } else {
             return Collections.emptyMap();
@@ -100,7 +120,8 @@ public class GremlinTestResultProcessor extends GremlinResultProcessor {
     }
 
     private Map<String, Object> getEdgeProperties(Edge edge) {
-        Map<String, Object> edgeProperties = (Map<String, Object>) cachedProperties.get(EDGE_PROPERTIES);
+        Map<String, Object> edgeProperties =
+                (Map<String, Object>) cachedProperties.get(EDGE_PROPERTIES);
         String idAsStr = String.valueOf(edge.id());
         Map<String, Object> properties = (Map<String, Object>) edgeProperties.get(idAsStr);
         return (properties == null) ? Collections.emptyMap() : properties;

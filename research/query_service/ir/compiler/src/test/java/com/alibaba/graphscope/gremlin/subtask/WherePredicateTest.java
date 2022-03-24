@@ -23,6 +23,7 @@ import com.alibaba.graphscope.common.intermediate.operator.InterOpBase;
 import com.alibaba.graphscope.common.intermediate.operator.SelectOp;
 import com.alibaba.graphscope.common.jna.type.FfiJoinKind;
 import com.alibaba.graphscope.gremlin.transform.TraversalParentTransformFactory;
+
 import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
@@ -62,8 +63,8 @@ public class WherePredicateTest {
 
     @Test
     public void g_V_where_a_eq_b_or_eq_c() {
-        Traversal traversal = g.V().as("a")
-                .out().as("b").out().as("c").where("a", P.eq("b").or(P.eq("c")));
+        Traversal traversal =
+                g.V().as("a").out().as("b").out().as("c").where("a", P.eq("b").or(P.eq("c")));
         SelectOp selectOp = (SelectOp) getApplyWithSelect(traversal).get(0);
 
         Assert.assertEquals("@a == @b || (@a == @c)", selectOp.getPredicate().get().applyArg());
@@ -74,7 +75,8 @@ public class WherePredicateTest {
         Traversal traversal = g.V().as("a").out().where(P.eq("a")).by("age");
         SelectOp selectOp = (SelectOp) getApplyWithSelect(traversal).get(0);
 
-        Assert.assertEquals("@.age && @a.age && @.age == @a.age", selectOp.getPredicate().get().applyArg());
+        Assert.assertEquals(
+                "@.age && @a.age && @.age == @a.age", selectOp.getPredicate().get().applyArg());
     }
 
     @Test
@@ -82,7 +84,8 @@ public class WherePredicateTest {
         Traversal traversal = g.V().as("a").out().where(P.eq("a")).by(__.values("age"));
         SelectOp selectOp = (SelectOp) getApplyWithSelect(traversal).get(0);
 
-        Assert.assertEquals("@.age && @a.age && @.age == @a.age", selectOp.getPredicate().get().applyArg());
+        Assert.assertEquals(
+                "@.age && @a.age && @.age == @a.age", selectOp.getPredicate().get().applyArg());
     }
 
     @Test
@@ -90,36 +93,48 @@ public class WherePredicateTest {
         Traversal traversal = g.V().as("a").out().as("b").where("a", P.eq("b")).by("id").by("age");
         SelectOp selectOp = (SelectOp) getApplyWithSelect(traversal).get(0);
 
-        Assert.assertEquals("@a.id && @b.age && @a.id == @b.age", selectOp.getPredicate().get().applyArg());
+        Assert.assertEquals(
+                "@a.id && @b.age && @a.id == @b.age", selectOp.getPredicate().get().applyArg());
     }
 
     @Test
     public void g_V_where_a_id_eq_b_age_or_c_id() {
-        Traversal traversal = g.V().as("a")
-                .out().as("b").out().as("c").where("a", P.eq("b").or(P.eq("c"))).by("id").by("age").by("id");
+        Traversal traversal =
+                g.V().as("a")
+                        .out()
+                        .as("b")
+                        .out()
+                        .as("c")
+                        .where("a", P.eq("b").or(P.eq("c")))
+                        .by("id")
+                        .by("age")
+                        .by("id");
         SelectOp selectOp = (SelectOp) getApplyWithSelect(traversal).get(0);
 
-        Assert.assertEquals("@a.id && @b.age && @a.id == @b.age || (@a.id && @c.id && @a.id == @c.id)",
+        Assert.assertEquals(
+                "@a.id && @b.age && @a.id == @b.age || (@a.id && @c.id && @a.id == @c.id)",
                 selectOp.getPredicate().get().applyArg());
     }
 
     @Test
     public void g_V_where_a_eq_b_by_out_count() {
-        Traversal traversal = g.V().as("a")
-                .out().as("b").where("a", P.eq("b")).by(__.out().count());
+        Traversal traversal =
+                g.V().as("a").out().as("b").where("a", P.eq("b")).by(__.out().count());
         List<InterOpBase> ops = getApplyWithSelect(traversal);
 
         ApplyOp apply1 = (ApplyOp) ops.get(0);
         Assert.assertEquals(FfiJoinKind.Inner, apply1.getJoinKind().get().applyArg());
         InterOpCollection subOps = (InterOpCollection) apply1.getSubOpCollection().get().applyArg();
         Assert.assertEquals(3, subOps.unmodifiableCollection().size());
-        Assert.assertEquals(ArgUtils.asFfiAlias("~alias_2_0", false), apply1.getAlias().get().applyArg());
+        Assert.assertEquals(
+                ArgUtils.asFfiAlias("~alias_2_0", false), apply1.getAlias().get().applyArg());
 
         ApplyOp apply2 = (ApplyOp) ops.get(1);
         Assert.assertEquals(FfiJoinKind.Inner, apply2.getJoinKind().get().applyArg());
         subOps = (InterOpCollection) apply2.getSubOpCollection().get().applyArg();
         Assert.assertEquals(3, subOps.unmodifiableCollection().size());
-        Assert.assertEquals(ArgUtils.asFfiAlias("~alias_2_1", false), apply2.getAlias().get().applyArg());
+        Assert.assertEquals(
+                ArgUtils.asFfiAlias("~alias_2_1", false), apply2.getAlias().get().applyArg());
 
         SelectOp selectOp = (SelectOp) getApplyWithSelect(traversal).get(2);
         Assert.assertEquals("@~alias_2_0 == @~alias_2_1", selectOp.getPredicate().get().applyArg());

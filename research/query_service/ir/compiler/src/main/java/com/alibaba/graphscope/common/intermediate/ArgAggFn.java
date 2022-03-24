@@ -57,9 +57,9 @@ public class ArgAggFn {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         ArgAggFn argAggFn = (ArgAggFn) o;
-        return Objects.equal(vars, argAggFn.vars) &&
-                aggregate == argAggFn.aggregate &&
-                Objects.equal(alias, argAggFn.alias);
+        return Objects.equal(vars, argAggFn.vars)
+                && aggregate == argAggFn.aggregate
+                && Objects.equal(alias, argAggFn.alias);
     }
 
     @Override

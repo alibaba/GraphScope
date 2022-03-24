@@ -34,7 +34,9 @@ public class RpcAddressChannelFetcher implements RpcChannelFetcher {
     @Override
     public List<RpcChannel> fetch() {
         List<Endpoint> endpoints = addressFetcher.getServiceAddress();
-        return endpoints.stream().map(k -> new RpcChannel(k.getIp(), k.getRuntimeCtrlAndAsyncPort())).collect(Collectors.toList());
+        return endpoints.stream()
+                .map(k -> new RpcChannel(k.getIp(), k.getRuntimeCtrlAndAsyncPort()))
+                .collect(Collectors.toList());
     }
 
     @Override

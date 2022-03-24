@@ -46,12 +46,24 @@ public class IrGremlinServiceMain {
 
     private Configs getConfigs(InstanceConfig instanceConfig) {
         Map<String, String> configMap = new HashMap<>();
-        configMap.put(PegasusConfig.PEGASUS_WORKER_NUM.getKey(), String.valueOf(instanceConfig.getPegasusWorkerNum()));
-        configMap.put(PegasusConfig.PEGASUS_TIMEOUT.getKey(), String.valueOf(instanceConfig.getPegasusTimeoutMS()));
-        configMap.put(PegasusConfig.PEGASUS_BATCH_SIZE.getKey(), String.valueOf(instanceConfig.getPegasusBatchSize()));
-        configMap.put(PegasusConfig.PEGASUS_OUTPUT_CAPACITY.getKey(), String.valueOf(instanceConfig.getPegasusOutputCapacity()));
-        configMap.put(PegasusConfig.PEGASUS_MEMORY_LIMIT.getKey(), String.valueOf(instanceConfig.getPegasusMemoryLimit()));
-        configMap.put(PegasusConfig.PEGASUS_SERVER_NUM.getKey(), String.valueOf(instanceConfig.getResourceExecutorCount()));
+        configMap.put(
+                PegasusConfig.PEGASUS_WORKER_NUM.getKey(),
+                String.valueOf(instanceConfig.getPegasusWorkerNum()));
+        configMap.put(
+                PegasusConfig.PEGASUS_TIMEOUT.getKey(),
+                String.valueOf(instanceConfig.getPegasusTimeoutMS()));
+        configMap.put(
+                PegasusConfig.PEGASUS_BATCH_SIZE.getKey(),
+                String.valueOf(instanceConfig.getPegasusBatchSize()));
+        configMap.put(
+                PegasusConfig.PEGASUS_OUTPUT_CAPACITY.getKey(),
+                String.valueOf(instanceConfig.getPegasusOutputCapacity()));
+        configMap.put(
+                PegasusConfig.PEGASUS_MEMORY_LIMIT.getKey(),
+                String.valueOf(instanceConfig.getPegasusMemoryLimit()));
+        configMap.put(
+                PegasusConfig.PEGASUS_SERVER_NUM.getKey(),
+                String.valueOf(instanceConfig.getResourceExecutorCount()));
         return new Configs(configMap);
     }
 

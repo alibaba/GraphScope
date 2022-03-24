@@ -26,8 +26,7 @@ public class FfiAggFn extends Structure {
         super(IrTypeMapper.INSTANCE);
     }
 
-    public static class ByValue extends FfiAggFn implements Structure.ByValue {
-    }
+    public static class ByValue extends FfiAggFn implements Structure.ByValue {}
 
     public Pointer vars;
     public FfiAggOpt aggregate;

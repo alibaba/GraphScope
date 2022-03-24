@@ -16,10 +16,11 @@
 
 package com.alibaba.graphscope.common.intermediate.operator;
 
-import com.alibaba.graphscope.common.utils.FileUtils;
 import com.alibaba.graphscope.common.IrPlan;
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.jna.type.FfiVariable;
+import com.alibaba.graphscope.common.utils.FileUtils;
+
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;

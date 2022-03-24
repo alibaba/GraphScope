@@ -48,9 +48,13 @@ public class ExprArg {
         } else if (traversal instanceof ValueTraversal) {
             propertyKeyOpt = Optional.of(((ValueTraversal) traversal).getPropertyKey());
         } else {
-            traversal.asAdmin().getSteps().forEach(k -> {
-                stepsInTraversal.add((Step) k);
-            });
+            traversal
+                    .asAdmin()
+                    .getSteps()
+                    .forEach(
+                            k -> {
+                                stepsInTraversal.add((Step) k);
+                            });
         }
     }
 

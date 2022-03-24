@@ -25,6 +25,7 @@ import com.alibaba.graphscope.common.jna.type.FfiNameOrId;
 import com.alibaba.graphscope.common.jna.type.FfiScanOpt;
 import com.alibaba.graphscope.gremlin.plugin.processor.IrStandardOpProcessor;
 import com.alibaba.graphscope.gremlin.transform.StepTransformFactory;
+
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
@@ -61,7 +62,8 @@ public class GraphStepTest {
         IrStandardOpProcessor.applyStrategies(traversal);
         Step graphStep = traversal.asAdmin().getStartStep();
         ScanFusionOp op = (ScanFusionOp) StepTransformFactory.SCAN_FUSION_STEP.apply(graphStep);
-        FfiNameOrId.ByValue ffiLabel = ((List<FfiNameOrId.ByValue>) op.getLabels().get().applyArg()).get(0);
+        FfiNameOrId.ByValue ffiLabel =
+                ((List<FfiNameOrId.ByValue>) op.getLabels().get().applyArg()).get(0);
         Assert.assertEquals("person", ffiLabel.name);
     }
 

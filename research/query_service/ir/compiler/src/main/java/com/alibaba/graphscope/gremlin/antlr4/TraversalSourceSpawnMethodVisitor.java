@@ -29,12 +29,14 @@ public class TraversalSourceSpawnMethodVisitor extends GremlinGSBaseVisitor<Grap
     }
 
     @Override
-    public GraphTraversal visitTraversalSourceSpawnMethod(GremlinGSParser.TraversalSourceSpawnMethodContext ctx) {
+    public GraphTraversal visitTraversalSourceSpawnMethod(
+            GremlinGSParser.TraversalSourceSpawnMethodContext ctx) {
         return visitChildren(ctx);
     }
 
     @Override
-    public GraphTraversal visitTraversalSourceSpawnMethod_V(GremlinGSParser.TraversalSourceSpawnMethod_VContext ctx) {
+    public GraphTraversal visitTraversalSourceSpawnMethod_V(
+            GremlinGSParser.TraversalSourceSpawnMethod_VContext ctx) {
         if (ctx.integerLiteralList().getChildCount() > 0) {
             return g.V(GenericLiteralVisitor.getIntegerLiteralList(ctx.integerLiteralList()));
         } else {
@@ -43,7 +45,8 @@ public class TraversalSourceSpawnMethodVisitor extends GremlinGSBaseVisitor<Grap
     }
 
     @Override
-    public GraphTraversal visitTraversalSourceSpawnMethod_E(GremlinGSParser.TraversalSourceSpawnMethod_EContext ctx) {
+    public GraphTraversal visitTraversalSourceSpawnMethod_E(
+            GremlinGSParser.TraversalSourceSpawnMethod_EContext ctx) {
         if (ctx.integerLiteralList().getChildCount() > 0) {
             return g.E(GenericLiteralVisitor.getIntegerLiteralList(ctx.integerLiteralList()));
         } else {

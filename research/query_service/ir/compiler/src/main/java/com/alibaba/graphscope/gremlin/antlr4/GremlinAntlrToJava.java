@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.gremlin.antlr4;
 
 import com.alibaba.graphscope.gremlin.exception.UnsupportedEvalException;
+
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSBaseVisitor;
 import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSParser;
@@ -62,7 +63,8 @@ public class GremlinAntlrToJava extends GremlinGSBaseVisitor<Object> {
         final ParseTree firstChild = ctx.getChild(0);
 
         if (firstChild instanceof GremlinGSParser.RootTraversalContext) {
-            return this.tvisitor.visitRootTraversal((GremlinGSParser.RootTraversalContext) firstChild);
+            return this.tvisitor.visitRootTraversal(
+                    (GremlinGSParser.RootTraversalContext) firstChild);
         } else {
             throw new UnsupportedEvalException(firstChild.getClass(), notice);
         }

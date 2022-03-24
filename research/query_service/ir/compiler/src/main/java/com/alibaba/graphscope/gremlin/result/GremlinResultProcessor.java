@@ -19,8 +19,10 @@ package com.alibaba.graphscope.gremlin.result;
 import com.alibaba.graphscope.common.client.ResultParser;
 import com.alibaba.pegasus.intf.ResultProcessor;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
+
 import io.grpc.Status;
 import io.netty.channel.ChannelHandlerContext;
+
 import org.apache.tinkerpop.gremlin.driver.MessageSerializer;
 import org.apache.tinkerpop.gremlin.driver.message.RequestMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseMessage;
@@ -55,7 +57,10 @@ public class GremlinResultProcessor extends StandardOpProcessor implements Resul
                     resultCollectors.addAll(resultParser.parseFrom(response));
                 }
             } catch (Exception e) {
-                writeResultList(writeResult, Collections.singletonList(e.getMessage()), ResponseStatusCode.SERVER_ERROR);
+                writeResultList(
+                        writeResult,
+                        Collections.singletonList(e.getMessage()),
+                        ResponseStatusCode.SERVER_ERROR);
                 // cannot write to this context any more
                 locked = true;
                 throw new RuntimeException(e);
@@ -78,9 +83,10 @@ public class GremlinResultProcessor extends StandardOpProcessor implements Resul
     protected void formatResultIfNeed() {
         if (resultParser == GremlinResultParserFactory.GROUP) {
             Map groupResult = new LinkedHashMap();
-            resultCollectors.forEach(k -> {
-                groupResult.putAll((Map) k);
-            });
+            resultCollectors.forEach(
+                    k -> {
+                        groupResult.putAll((Map) k);
+                    });
             resultCollectors.clear();
             resultCollectors.add(groupResult);
         }
@@ -90,20 +96,27 @@ public class GremlinResultProcessor extends StandardOpProcessor implements Resul
     public void error(Status status) {
         synchronized (this) {
             if (!locked) {
-                writeResultList(writeResult, Collections.singletonList(status.toString()), ResponseStatusCode.SERVER_ERROR);
+                writeResultList(
+                        writeResult,
+                        Collections.singletonList(status.toString()),
+                        ResponseStatusCode.SERVER_ERROR);
                 locked = true;
             }
         }
     }
 
-    protected void writeResultList(final Context context, final List<Object> resultList, final ResponseStatusCode statusCode) {
+    protected void writeResultList(
+            final Context context,
+            final List<Object> resultList,
+            final ResponseStatusCode statusCode) {
         final ChannelHandlerContext ctx = context.getChannelHandlerContext();
         final RequestMessage msg = context.getRequestMessage();
         final MessageSerializer serializer = ctx.channel().attr(StateKey.SERIALIZER).get();
         final boolean useBinary = ctx.channel().attr(StateKey.USE_BINARY).get();
 
         if (statusCode == ResponseStatusCode.SERVER_ERROR) {
-            ResponseMessage.Builder builder = ResponseMessage.build(msg).code(ResponseStatusCode.SERVER_ERROR);
+            ResponseMessage.Builder builder =
+                    ResponseMessage.build(msg).code(ResponseStatusCode.SERVER_ERROR);
             if (resultList.size() > 0) {
                 builder.statusMessage((String) resultList.get(0));
             }
@@ -116,23 +129,44 @@ public class GremlinResultProcessor extends StandardOpProcessor implements Resul
             if (ctx.channel().isWritable()) {
                 Frame frame = null;
                 try {
-                    frame = makeFrame(context, msg, serializer, useBinary, resultList, statusCode, Collections.emptyMap(), Collections.emptyMap());
+                    frame =
+                            makeFrame(
+                                    context,
+                                    msg,
+                                    serializer,
+                                    useBinary,
+                                    resultList,
+                                    statusCode,
+                                    Collections.emptyMap(),
+                                    Collections.emptyMap());
                     ctx.writeAndFlush(frame).get();
                     break;
                 } catch (Exception e) {
                     if (frame != null) {
                         frame.tryRelease();
                     }
-                    logger.error("write " + resultList.size() + " result to context " + context + " status code=>" + statusCode + " fail", e);
+                    logger.error(
+                            "write "
+                                    + resultList.size()
+                                    + " result to context "
+                                    + context
+                                    + " status code=>"
+                                    + statusCode
+                                    + " fail",
+                            e);
                     throw new RuntimeException(e);
                 }
             } else {
                 if (retryOnce) {
-                    String message = "write result to context fail for context " + msg + " is too busy";
+                    String message =
+                            "write result to context fail for context " + msg + " is too busy";
                     logger.error(message);
                     throw new RuntimeException(message);
                 } else {
-                    logger.warn("Pausing response writing as writeBufferHighWaterMark exceeded on " + msg + " - writing will continue once client has caught up");
+                    logger.warn(
+                            "Pausing response writing as writeBufferHighWaterMark exceeded on "
+                                    + msg
+                                    + " - writing will continue once client has caught up");
                     retryOnce = true;
                     try {
                         TimeUnit.MILLISECONDS.sleep(10L);

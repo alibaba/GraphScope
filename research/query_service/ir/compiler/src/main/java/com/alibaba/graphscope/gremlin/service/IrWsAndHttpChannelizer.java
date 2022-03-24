@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.gremlin.service;
 
 import com.alibaba.graphscope.gremlin.Utils;
+
 import org.apache.tinkerpop.gremlin.server.AbstractChannelizer;
 import org.apache.tinkerpop.gremlin.server.channel.WsAndHttpChannelizer;
 import org.apache.tinkerpop.gremlin.server.handler.HttpGremlinEndpointHandler;
@@ -32,10 +33,18 @@ public class IrWsAndHttpChannelizer extends WsAndHttpChannelizer {
     public void init(ServerGremlinExecutor serverGremlinExecutor) {
         super.init(serverGremlinExecutor);
         this.handler = new WsAndHttpChannelizerHandler();
-        this.handler.init(serverGremlinExecutor,
-                new HttpGremlinEndpointHandler(this.serializers, this.gremlinExecutor, this.graphManager, this.settings));
-        OpSelectorHandler irOpSelectorHandler = new IrOpSelectorHandler(
-                this.settings, this.graphManager, this.gremlinExecutor, this.scheduledExecutorService, this);
-        Utils.setFieldValue(AbstractChannelizer.class, this, "opSelectorHandler", irOpSelectorHandler);
+        this.handler.init(
+                serverGremlinExecutor,
+                new HttpGremlinEndpointHandler(
+                        this.serializers, this.gremlinExecutor, this.graphManager, this.settings));
+        OpSelectorHandler irOpSelectorHandler =
+                new IrOpSelectorHandler(
+                        this.settings,
+                        this.graphManager,
+                        this.gremlinExecutor,
+                        this.scheduledExecutorService,
+                        this);
+        Utils.setFieldValue(
+                AbstractChannelizer.class, this, "opSelectorHandler", irOpSelectorHandler);
     }
 }

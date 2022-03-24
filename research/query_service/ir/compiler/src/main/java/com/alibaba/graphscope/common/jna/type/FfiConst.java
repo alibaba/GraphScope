@@ -26,8 +26,7 @@ public class FfiConst extends Structure {
         super(IrTypeMapper.INSTANCE);
     }
 
-    public static class ByValue extends FfiConst implements Structure.ByValue {
-    }
+    public static class ByValue extends FfiConst implements Structure.ByValue {}
 
     public FfiDataType dataType;
     public boolean bool;

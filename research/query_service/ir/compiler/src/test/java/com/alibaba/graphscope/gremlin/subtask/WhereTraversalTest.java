@@ -22,6 +22,7 @@ import com.alibaba.graphscope.common.intermediate.operator.InterOpBase;
 import com.alibaba.graphscope.common.intermediate.operator.SelectOp;
 import com.alibaba.graphscope.common.jna.type.FfiJoinKind;
 import com.alibaba.graphscope.gremlin.transform.TraversalParentTransformFactory;
+
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
@@ -80,7 +81,8 @@ public class WhereTraversalTest {
         ApplyOp applyOp = (ApplyOp) getApplyOrSelect(traversal).get(0);
 
         Assert.assertEquals(FfiJoinKind.Semi, applyOp.getJoinKind().get().applyArg());
-        InterOpCollection subOps = (InterOpCollection) applyOp.getSubOpCollection().get().applyArg();
+        InterOpCollection subOps =
+                (InterOpCollection) applyOp.getSubOpCollection().get().applyArg();
         Assert.assertEquals(2, subOps.unmodifiableCollection().size());
     }
 
@@ -90,7 +92,8 @@ public class WhereTraversalTest {
         ApplyOp applyOp = (ApplyOp) getApplyOrSelect(traversal).get(0);
 
         Assert.assertEquals(FfiJoinKind.Semi, applyOp.getJoinKind().get().applyArg());
-        InterOpCollection subOps = (InterOpCollection) applyOp.getSubOpCollection().get().applyArg();
+        InterOpCollection subOps =
+                (InterOpCollection) applyOp.getSubOpCollection().get().applyArg();
         Assert.assertEquals(3, subOps.unmodifiableCollection().size());
     }
 }

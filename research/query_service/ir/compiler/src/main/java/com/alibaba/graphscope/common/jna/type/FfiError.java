@@ -9,8 +9,7 @@ public class FfiError extends Structure {
         super(IrTypeMapper.INSTANCE);
     }
 
-    public static class ByValue extends FfiError implements Structure.ByValue {
-    }
+    public static class ByValue extends FfiError implements Structure.ByValue {}
 
     public ResultCode code;
     public String msg;

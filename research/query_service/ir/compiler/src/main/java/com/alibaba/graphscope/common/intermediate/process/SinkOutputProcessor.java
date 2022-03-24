@@ -25,6 +25,7 @@ import com.alibaba.graphscope.common.intermediate.MatchSentence;
 import com.alibaba.graphscope.common.intermediate.operator.*;
 import com.alibaba.graphscope.common.jna.type.FfiAlias;
 import com.alibaba.graphscope.common.jna.type.FfiJoinKind;
+
 import org.javatuples.Pair;
 
 import java.util.List;
@@ -34,8 +35,7 @@ import java.util.function.Function;
 public class SinkOutputProcessor implements InterOpProcessor {
     public static SinkOutputProcessor INSTANCE = new SinkOutputProcessor();
 
-    private SinkOutputProcessor() {
-    }
+    private SinkOutputProcessor() {}
 
     @Override
     public void process(InterOpCollection opCollection) {
@@ -52,9 +52,14 @@ public class SinkOutputProcessor implements InterOpProcessor {
         SinkArg sinkArg = new SinkArg();
         for (int i = collections.size() - 1; i >= 0; --i) {
             InterOpBase cur = collections.get(i);
-            if (cur instanceof DedupOp || cur instanceof LimitOp || cur instanceof OrderOp || cur instanceof SelectOp) {
+            if (cur instanceof DedupOp
+                    || cur instanceof LimitOp
+                    || cur instanceof OrderOp
+                    || cur instanceof SelectOp) {
                 continue;
-            } else if (cur instanceof ExpandOp || cur instanceof ScanFusionOp || cur instanceof GetVOp) {
+            } else if (cur instanceof ExpandOp
+                    || cur instanceof ScanFusionOp
+                    || cur instanceof GetVOp) {
                 sinkArg.addColumnName(ArgUtils.asFfiNoneTag());
                 break;
             } else if (cur instanceof ProjectOp) {
@@ -72,7 +77,8 @@ public class SinkOutputProcessor implements InterOpProcessor {
                     FfiAlias.ByValue alias = (FfiAlias.ByValue) pair.getValue1();
                     sinkArg.addColumnName(alias.alias);
                 }
-                List<ArgAggFn> groupValues = (List<ArgAggFn>) op.getGroupByValues().get().applyArg();
+                List<ArgAggFn> groupValues =
+                        (List<ArgAggFn>) op.getGroupByValues().get().applyArg();
                 for (ArgAggFn aggFn : groupValues) {
                     sinkArg.addColumnName(aggFn.getAlias().alias);
                 }
@@ -82,30 +88,38 @@ public class SinkOutputProcessor implements InterOpProcessor {
                 FfiJoinKind joinKind = (FfiJoinKind) applyOp.getJoinKind().get().applyArg();
                 // where or not
                 // order().by(), select().by(), group().by()
-                if (joinKind == FfiJoinKind.Semi || joinKind == FfiJoinKind.Anti || joinKind == FfiJoinKind.Inner) {
+                if (joinKind == FfiJoinKind.Semi
+                        || joinKind == FfiJoinKind.Anti
+                        || joinKind == FfiJoinKind.Inner) {
                     continue;
                 } else {
-                    throw new InterOpUnsupportedException(cur.getClass(), "join kind is unsupported yet");
+                    throw new InterOpUnsupportedException(
+                            cur.getClass(), "join kind is unsupported yet");
                 }
             } else if (cur instanceof UnionOp) {
                 UnionOp unionOp = (UnionOp) cur;
                 Optional<OpArg> subOpsListOpt = unionOp.getSubOpCollectionList();
                 if (!subOpsListOpt.isPresent()) {
-                    throw new InterOpIllegalArgException(cur.getClass(), "subOpCollectionList", "is not present in union");
+                    throw new InterOpIllegalArgException(
+                            cur.getClass(), "subOpCollectionList", "is not present in union");
                 }
-                List<InterOpCollection> subOpsList = (List<InterOpCollection>) subOpsListOpt.get().applyArg();
-                subOpsList.forEach(op -> {
-                    SinkArg subSink = getSinkColumns(op);
-                    subSink.getColumnNames().forEach(c -> sinkArg.addColumnName(c));
-                });
+                List<InterOpCollection> subOpsList =
+                        (List<InterOpCollection>) subOpsListOpt.get().applyArg();
+                subOpsList.forEach(
+                        op -> {
+                            SinkArg subSink = getSinkColumns(op);
+                            subSink.getColumnNames().forEach(c -> sinkArg.addColumnName(c));
+                        });
                 sinkArg.dedup();
                 break;
             } else if (cur instanceof MatchOp) {
-                List<MatchSentence> sentences = (List<MatchSentence>) ((MatchOp) cur).getSentences().get().applyArg();
-                sentences.forEach(s -> {
-                    sinkArg.addColumnName(s.getStartTag().alias);
-                    sinkArg.addColumnName(s.getEndTag().alias);
-                });
+                List<MatchSentence> sentences =
+                        (List<MatchSentence>) ((MatchOp) cur).getSentences().get().applyArg();
+                sentences.forEach(
+                        s -> {
+                            sinkArg.addColumnName(s.getStartTag().alias);
+                            sinkArg.addColumnName(s.getEndTag().alias);
+                        });
                 sinkArg.dedup();
                 break;
             } else {

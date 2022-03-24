@@ -66,7 +66,8 @@ public class IrServiceProducer implements ComputeServiceProducer {
         IrMetaFetcher irMetaFetcher = new GrootMetaFetcher(schemaFetcher);
 
         return new AbstractService() {
-            private IrGremlinServer irGremlinServer = new IrGremlinServer(GremlinConfig.GREMLIN_PORT.get(configs));
+            private IrGremlinServer irGremlinServer =
+                    new IrGremlinServer(GremlinConfig.GREMLIN_PORT.get(configs));
 
             @Override
             public void start() {
@@ -106,7 +107,7 @@ public class IrServiceProducer implements ComputeServiceProducer {
         addToConfigMapIfExist(PegasusConfig.PEGASUS_BATCH_SIZE.getKey(), configMap);
         addToConfigMapIfExist(PegasusConfig.PEGASUS_OUTPUT_CAPACITY.getKey(), configMap);
         addToConfigMapIfExist(PegasusConfig.PEGASUS_MEMORY_LIMIT.getKey(), configMap);
-        
+
         return new com.alibaba.graphscope.common.config.Configs(configMap);
     }
 

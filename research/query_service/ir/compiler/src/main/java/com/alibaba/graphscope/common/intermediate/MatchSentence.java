@@ -9,7 +9,8 @@ public class MatchSentence {
     private InterOpCollection binders;
     private FfiJoinKind joinKind;
 
-    public MatchSentence(String startTag, String endTag, InterOpCollection binders, FfiJoinKind joinKind) {
+    public MatchSentence(
+            String startTag, String endTag, InterOpCollection binders, FfiJoinKind joinKind) {
         this.startTag = ArgUtils.asFfiAlias(startTag, true);
         this.endTag = ArgUtils.asFfiAlias(endTag, true);
         this.joinKind = joinKind;

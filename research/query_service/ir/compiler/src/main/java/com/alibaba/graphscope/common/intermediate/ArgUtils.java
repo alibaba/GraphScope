@@ -107,7 +107,8 @@ public class ArgUtils {
             case Key:
                 return property.key.name;
             default:
-                throw new OpArgIllegalException(OpArgIllegalException.Cause.INVALID_TYPE, "invalid type");
+                throw new OpArgIllegalException(
+                        OpArgIllegalException.Cause.INVALID_TYPE, "invalid type");
         }
     }
 
@@ -119,8 +120,8 @@ public class ArgUtils {
                 return tag.name;
             case Id:
             default:
-                throw new OpArgIllegalException(OpArgIllegalException.Cause.INVALID_TYPE, "invalid type");
+                throw new OpArgIllegalException(
+                        OpArgIllegalException.Cause.INVALID_TYPE, "invalid type");
         }
     }
 }
-

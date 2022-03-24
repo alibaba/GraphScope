@@ -16,11 +16,12 @@
 
 package com.alibaba.graphscope.common.intermediate.operator;
 
-import com.alibaba.graphscope.common.utils.FileUtils;
 import com.alibaba.graphscope.common.IrPlan;
 import com.alibaba.graphscope.common.intermediate.ArgAggFn;
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.jna.type.*;
+import com.alibaba.graphscope.common.utils.FileUtils;
+
 import org.javatuples.Pair;
 import org.junit.After;
 import org.junit.Assert;
@@ -52,14 +53,15 @@ public class GroupOpTest {
         op.setGroupByValues(new OpArg(Collections.singletonList(aggFn), Function.identity()));
 
         irPlan.appendInterOp(-1, op);
-        Assert.assertEquals(FileUtils.readJsonFromResource("count_as.json"), irPlan.getPlanAsJson());
+        Assert.assertEquals(
+                FileUtils.readJsonFromResource("count_as.json"), irPlan.getPlanAsJson());
     }
 
     @Test
     public void groupTest() throws IOException {
         GroupOp op = new GroupOp();
-        Pair<FfiVariable.ByValue, FfiAlias.ByValue> groupKey = Pair.with(ArgUtils.asFfiNoneVar(),
-                ArgUtils.asFfiAlias("keys", false));
+        Pair<FfiVariable.ByValue, FfiAlias.ByValue> groupKey =
+                Pair.with(ArgUtils.asFfiNoneVar(), ArgUtils.asFfiAlias("keys", false));
         op.setGroupByKeys(new OpArg(Collections.singletonList(groupKey), Function.identity()));
 
         ArgAggFn aggFn = new ArgAggFn(FfiAggOpt.ToList, ArgUtils.asFfiAlias("values", false));
@@ -72,31 +74,32 @@ public class GroupOpTest {
     @Test
     public void groupByKeyTest() throws IOException {
         GroupOp op = new GroupOp();
-        Pair<FfiVariable.ByValue, FfiAlias.ByValue> groupKey = Pair.with(ArgUtils.asFfiVar("", "name"),
-                ArgUtils.asFfiAlias("keys_name", false));
+        Pair<FfiVariable.ByValue, FfiAlias.ByValue> groupKey =
+                Pair.with(ArgUtils.asFfiVar("", "name"), ArgUtils.asFfiAlias("keys_name", false));
         op.setGroupByKeys(new OpArg(Collections.singletonList(groupKey), Function.identity()));
 
         ArgAggFn aggFn = new ArgAggFn(FfiAggOpt.ToList, ArgUtils.asFfiAlias("values", false));
         op.setGroupByValues(new OpArg(Collections.singletonList(aggFn), Function.identity()));
 
         irPlan.appendInterOp(-1, op);
-        Assert.assertEquals(FileUtils.readJsonFromResource("group_key.json"), irPlan.getPlanAsJson());
+        Assert.assertEquals(
+                FileUtils.readJsonFromResource("group_key.json"), irPlan.getPlanAsJson());
     }
 
     @Test
     public void groupByKeyByCountTest() throws IOException {
         GroupOp op = new GroupOp();
-        Pair<FfiVariable.ByValue, FfiAlias.ByValue> groupKey = Pair.with(ArgUtils.asFfiVar("", "name"),
-                ArgUtils.asFfiAlias("keys_name", false));
+        Pair<FfiVariable.ByValue, FfiAlias.ByValue> groupKey =
+                Pair.with(ArgUtils.asFfiVar("", "name"), ArgUtils.asFfiAlias("keys_name", false));
         op.setGroupByKeys(new OpArg(Collections.singletonList(groupKey), Function.identity()));
 
         ArgAggFn aggFn = new ArgAggFn(FfiAggOpt.Count, ArgUtils.asFfiAlias("values", false));
         op.setGroupByValues(new OpArg(Collections.singletonList(aggFn), Function.identity()));
 
         irPlan.appendInterOp(-1, op);
-        Assert.assertEquals(FileUtils.readJsonFromResource("group_key_count.json"), irPlan.getPlanAsJson());
+        Assert.assertEquals(
+                FileUtils.readJsonFromResource("group_key_count.json"), irPlan.getPlanAsJson());
     }
-
 
     @After
     public void after() {

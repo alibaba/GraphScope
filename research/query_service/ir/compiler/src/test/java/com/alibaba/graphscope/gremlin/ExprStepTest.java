@@ -5,6 +5,7 @@ import com.alibaba.graphscope.common.intermediate.operator.ProjectOp;
 import com.alibaba.graphscope.common.intermediate.operator.SelectOp;
 import com.alibaba.graphscope.gremlin.plugin.step.ExprStep;
 import com.alibaba.graphscope.gremlin.transform.StepTransformFactory;
+
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
@@ -24,7 +25,9 @@ public class ExprStepTest {
     public void g_V_where_expr_test() {
         // g.V().where(expr("@.age"))
         Traversal traversal = g.V();
-        traversal.asAdmin().addStep(new ExprStep(traversal.asAdmin(), "@.age", ExprStep.Type.FILTER));
+        traversal
+                .asAdmin()
+                .addStep(new ExprStep(traversal.asAdmin(), "@.age", ExprStep.Type.FILTER));
         Step whereExpr = traversal.asAdmin().getEndStep();
 
         SelectOp selectOp = (SelectOp) StepTransformFactory.EXPR_STEP.apply(whereExpr);
@@ -36,7 +39,9 @@ public class ExprStepTest {
     public void g_V_select_expr_test() {
         // g.V().select(expr("@.name"))
         Traversal traversal = g.V();
-        traversal.asAdmin().addStep(new ExprStep(traversal.asAdmin(), "@.name", ExprStep.Type.PROJECTION));
+        traversal
+                .asAdmin()
+                .addStep(new ExprStep(traversal.asAdmin(), "@.name", ExprStep.Type.PROJECTION));
         Step whereExpr = traversal.asAdmin().getEndStep();
 
         ProjectOp projectOp = (ProjectOp) StepTransformFactory.EXPR_STEP.apply(whereExpr);

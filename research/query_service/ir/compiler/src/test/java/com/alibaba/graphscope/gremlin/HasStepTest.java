@@ -18,6 +18,7 @@ package com.alibaba.graphscope.gremlin;
 
 import com.alibaba.graphscope.common.intermediate.operator.SelectOp;
 import com.alibaba.graphscope.gremlin.transform.StepTransformFactory;
+
 import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
@@ -124,7 +125,9 @@ public class HasStepTest {
         Traversal traversal = g.V().has("name", P.within("marko", "josh"));
         Step hasStep = traversal.asAdmin().getEndStep();
         SelectOp op = (SelectOp) StepTransformFactory.HAS_STEP.apply(hasStep);
-        Assert.assertEquals("@.name && @.name within [\"marko\", \"josh\"]", op.getPredicate().get().applyArg());
+        Assert.assertEquals(
+                "@.name && @.name within [\"marko\", \"josh\"]",
+                op.getPredicate().get().applyArg());
     }
 
     @Test
@@ -132,7 +135,9 @@ public class HasStepTest {
         Traversal traversal = g.V().has("name", P.without("marko", "josh"));
         Step hasStep = traversal.asAdmin().getEndStep();
         SelectOp op = (SelectOp) StepTransformFactory.HAS_STEP.apply(hasStep);
-        Assert.assertEquals("@.name && @.name without [\"marko\", \"josh\"]", op.getPredicate().get().applyArg());
+        Assert.assertEquals(
+                "@.name && @.name without [\"marko\", \"josh\"]",
+                op.getPredicate().get().applyArg());
     }
 
     @Test
@@ -140,7 +145,8 @@ public class HasStepTest {
         Traversal traversal = g.V().has("age", P.gt(27).and(P.lt(32)));
         Step hasStep = traversal.asAdmin().getEndStep();
         SelectOp op = (SelectOp) StepTransformFactory.HAS_STEP.apply(hasStep);
-        Assert.assertEquals("@.age && @.age > 27 && (@.age && @.age < 32)", op.getPredicate().get().applyArg());
+        Assert.assertEquals(
+                "@.age && @.age > 27 && (@.age && @.age < 32)", op.getPredicate().get().applyArg());
     }
 
     @Test
@@ -148,7 +154,8 @@ public class HasStepTest {
         Traversal traversal = g.V().has("age", P.lt(27).or(P.gt(32)));
         Step hasStep = traversal.asAdmin().getEndStep();
         SelectOp op = (SelectOp) StepTransformFactory.HAS_STEP.apply(hasStep);
-        Assert.assertEquals("@.age && @.age < 27 || (@.age && @.age > 32)", op.getPredicate().get().applyArg());
+        Assert.assertEquals(
+                "@.age && @.age < 27 || (@.age && @.age > 32)", op.getPredicate().get().applyArg());
     }
 
     @Test
@@ -172,6 +179,8 @@ public class HasStepTest {
         Traversal traversal = g.V().has("name", "marko").has("id", 1);
         Step hasStep = traversal.asAdmin().getEndStep();
         SelectOp op = (SelectOp) StepTransformFactory.HAS_STEP.apply(hasStep);
-        Assert.assertEquals("@.name && @.name == \"marko\" && (@.id && @.id == 1)", op.getPredicate().get().applyArg());
+        Assert.assertEquals(
+                "@.name && @.name == \"marko\" && (@.id && @.id == 1)",
+                op.getPredicate().get().applyArg());
     }
 }

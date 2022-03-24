@@ -20,6 +20,7 @@ import com.alibaba.graphscope.common.store.IrMetaFetcher;
 import com.alibaba.graphscope.common.utils.JsonUtils;
 import com.alibaba.maxgraph.compiler.api.schema.*;
 import com.google.common.collect.ImmutableMap;
+
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.*;
@@ -48,17 +49,24 @@ public class GrootMetaFetcher extends IrMetaFetcher {
         List<GraphEdge> edges = graphSchema.getEdgeList();
         List entities = new ArrayList();
         List relations = new ArrayList();
-        vertices.forEach(v -> {
-            entities.add(getVertex(graphSchema, v));
-        });
-        edges.forEach(e -> {
-            relations.add(getEdge(graphSchema, e));
-        });
-        Map<String, Object> schemaMap = ImmutableMap.of(
-                "entities", entities,
-                "relations", relations,
-                "is_table_id", true,
-                "is_column_id", true);
+        vertices.forEach(
+                v -> {
+                    entities.add(getVertex(graphSchema, v));
+                });
+        edges.forEach(
+                e -> {
+                    relations.add(getEdge(graphSchema, e));
+                });
+        Map<String, Object> schemaMap =
+                ImmutableMap.of(
+                        "entities",
+                        entities,
+                        "relations",
+                        relations,
+                        "is_table_id",
+                        true,
+                        "is_column_id",
+                        true);
         return JsonUtils.toJson(schemaMap);
     }
 
@@ -69,13 +77,27 @@ public class GrootMetaFetcher extends IrMetaFetcher {
     private Map<String, Object> getEdge(GraphSchema graphSchema, GraphEdge edge) {
         Map<String, Object> entity = new LinkedHashMap(getElement(graphSchema, edge));
         List<EdgeRelation> relations = edge.getRelationList();
-        List entityPairs = relations.stream().map(k -> {
-            GraphVertex src = k.getSource();
-            GraphVertex dst = k.getTarget();
-            return ImmutableMap.of(
-                    "src", ImmutableMap.of("id", src.getLabelId(), "name", src.getLabel()),
-                    "dst", ImmutableMap.of("id", dst.getLabelId(), "name", dst.getLabel()));
-        }).collect(Collectors.toList());
+        List entityPairs =
+                relations.stream()
+                        .map(
+                                k -> {
+                                    GraphVertex src = k.getSource();
+                                    GraphVertex dst = k.getTarget();
+                                    return ImmutableMap.of(
+                                            "src",
+                                                    ImmutableMap.of(
+                                                            "id",
+                                                            src.getLabelId(),
+                                                            "name",
+                                                            src.getLabel()),
+                                            "dst",
+                                                    ImmutableMap.of(
+                                                            "id",
+                                                            dst.getLabelId(),
+                                                            "name",
+                                                            dst.getLabel()));
+                                })
+                        .collect(Collectors.toList());
         entity.put("entity_pairs", entityPairs);
         return entity;
     }
@@ -84,17 +106,22 @@ public class GrootMetaFetcher extends IrMetaFetcher {
         String label = entity.getLabel();
         int labelId = entity.getLabelId();
         List<GraphProperty> properties = entity.getPropertyList();
-        List columns = properties.stream().map(k -> {
-            int typeId = getDataTypeId(k.getDataType());
-            String name = k.getName();
-            int nameId = graphSchema.getPropertyId(name);
-            return ImmutableMap.of(
-                    "key", ImmutableMap.of("id", nameId, "name", name),
-                    "data_type", typeId);
-        }).collect(Collectors.toList());
+        List columns =
+                properties.stream()
+                        .map(
+                                k -> {
+                                    int typeId = getDataTypeId(k.getDataType());
+                                    String name = k.getName();
+                                    int nameId = graphSchema.getPropertyId(name);
+                                    return ImmutableMap.of(
+                                            "key",
+                                            ImmutableMap.of("id", nameId, "name", name),
+                                            "data_type",
+                                            typeId);
+                                })
+                        .collect(Collectors.toList());
         return ImmutableMap.of(
-                "label", ImmutableMap.of("id", labelId, "name", label),
-                "columns", columns);
+                "label", ImmutableMap.of("id", labelId, "name", label), "columns", columns);
     }
 
     private int getDataTypeId(DataType dataType) {

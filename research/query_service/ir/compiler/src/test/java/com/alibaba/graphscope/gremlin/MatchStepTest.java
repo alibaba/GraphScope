@@ -21,6 +21,7 @@ import com.alibaba.graphscope.common.intermediate.MatchSentence;
 import com.alibaba.graphscope.common.intermediate.operator.MatchOp;
 import com.alibaba.graphscope.common.jna.type.FfiJoinKind;
 import com.alibaba.graphscope.gremlin.transform.StepTransformFactory;
+
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
@@ -42,8 +43,12 @@ public class MatchStepTest {
         return (List<MatchSentence>) matchOp.getSentences().get().applyArg();
     }
 
-    private boolean isEqualWith(MatchSentence sentence, String expectedStart, String expectedEnd,
-                                FfiJoinKind expectedJoin, int expectedBinderSize) {
+    private boolean isEqualWith(
+            MatchSentence sentence,
+            String expectedStart,
+            String expectedEnd,
+            FfiJoinKind expectedJoin,
+            int expectedBinderSize) {
         return sentence.getStartTag().equals(ArgUtils.asFfiAlias(expectedStart, true))
                 && sentence.getEndTag().equals(ArgUtils.asFfiAlias(expectedEnd, true))
                 && sentence.getJoinKind() == expectedJoin
@@ -54,8 +59,7 @@ public class MatchStepTest {
     public void g_V_match_as_a_out_as_b_test() {
         Traversal traversal = g.V().match(__.as("a").out().as("b"));
         MatchSentence sentence = getSentences(traversal).get(0);
-        Assert.assertTrue(isEqualWith(sentence,
-                "a", "b", FfiJoinKind.Inner, 1));
+        Assert.assertTrue(isEqualWith(sentence, "a", "b", FfiJoinKind.Inner, 1));
     }
 
     @Test
@@ -63,33 +67,27 @@ public class MatchStepTest {
         Traversal traversal = g.V().match(__.as("a").out().as("b"), __.as("b").out().as("c"));
         MatchSentence sentence1 = getSentences(traversal).get(0);
         MatchSentence sentence2 = getSentences(traversal).get(1);
-        Assert.assertTrue(isEqualWith(sentence1,
-                "a", "b", FfiJoinKind.Inner, 1));
-        Assert.assertTrue(isEqualWith(sentence2,
-                "b", "c", FfiJoinKind.Inner, 1));
+        Assert.assertTrue(isEqualWith(sentence1, "a", "b", FfiJoinKind.Inner, 1));
+        Assert.assertTrue(isEqualWith(sentence2, "b", "c", FfiJoinKind.Inner, 1));
     }
 
     @Test
     public void g_V_match_as_a_out_as_b_where_test() {
-        Traversal traversal = g.V().match(__.as("a").out().as("b"),
-                __.where(__.as("a").out().as("c")));
+        Traversal traversal =
+                g.V().match(__.as("a").out().as("b"), __.where(__.as("a").out().as("c")));
         MatchSentence sentence1 = getSentences(traversal).get(0);
         MatchSentence sentence2 = getSentences(traversal).get(1);
-        Assert.assertTrue(isEqualWith(sentence1,
-                "a", "b", FfiJoinKind.Inner, 1));
-        Assert.assertTrue(isEqualWith(sentence2,
-                "a", "c", FfiJoinKind.Semi, 1));
+        Assert.assertTrue(isEqualWith(sentence1, "a", "b", FfiJoinKind.Inner, 1));
+        Assert.assertTrue(isEqualWith(sentence2, "a", "c", FfiJoinKind.Semi, 1));
     }
 
     @Test
     public void g_V_match_as_a_out_as_b_not_test() {
-        Traversal traversal = g.V().match(__.as("a").out().as("b"),
-                __.not(__.as("a").out().as("c")));
+        Traversal traversal =
+                g.V().match(__.as("a").out().as("b"), __.not(__.as("a").out().as("c")));
         MatchSentence sentence1 = getSentences(traversal).get(0);
         MatchSentence sentence2 = getSentences(traversal).get(1);
-        Assert.assertTrue(isEqualWith(sentence1,
-                "a", "b", FfiJoinKind.Inner, 1));
-        Assert.assertTrue(isEqualWith(sentence2,
-                "a", "c", FfiJoinKind.Anti, 1));
+        Assert.assertTrue(isEqualWith(sentence1, "a", "b", FfiJoinKind.Inner, 1));
+        Assert.assertTrue(isEqualWith(sentence2, "a", "c", FfiJoinKind.Anti, 1));
     }
 }

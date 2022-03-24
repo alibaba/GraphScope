@@ -26,8 +26,7 @@ public class FfiProperty extends Structure {
         super(IrTypeMapper.INSTANCE);
     }
 
-    public static class ByValue extends FfiProperty implements Structure.ByValue {
-    }
+    public static class ByValue extends FfiProperty implements Structure.ByValue {}
 
     public FfiPropertyOpt opt;
     public FfiNameOrId.ByValue key;
@@ -37,8 +36,7 @@ public class FfiProperty extends Structure {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         FfiProperty that = (FfiProperty) o;
-        return opt == that.opt &&
-                Objects.equal(key, that.key);
+        return opt == that.opt && Objects.equal(key, that.key);
     }
 
     @Override
@@ -46,4 +44,3 @@ public class FfiProperty extends Structure {
         return Objects.hashCode(opt, key);
     }
 }
-

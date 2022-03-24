@@ -20,6 +20,7 @@ import com.alibaba.graphscope.common.intermediate.operator.ExpandOp;
 import com.alibaba.graphscope.common.jna.type.FfiDirection;
 import com.alibaba.graphscope.common.jna.type.FfiNameOrId;
 import com.alibaba.graphscope.gremlin.transform.StepTransformFactory;
+
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
@@ -57,7 +58,8 @@ public class VertexStepTest {
         Traversal traversal = g.V().out("knows");
         Step vertexStep = traversal.asAdmin().getEndStep();
         ExpandOp op = (ExpandOp) StepTransformFactory.VERTEX_STEP.apply(vertexStep);
-        FfiNameOrId.ByValue label = ((List<FfiNameOrId.ByValue>) op.getLabels().get().applyArg()).get(0);
+        FfiNameOrId.ByValue label =
+                ((List<FfiNameOrId.ByValue>) op.getLabels().get().applyArg()).get(0);
         Assert.assertEquals("knows", label.name);
     }
 }

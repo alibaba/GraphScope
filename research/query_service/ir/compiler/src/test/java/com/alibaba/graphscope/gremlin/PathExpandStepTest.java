@@ -21,6 +21,7 @@ import com.alibaba.graphscope.common.jna.type.FfiDirection;
 import com.alibaba.graphscope.common.jna.type.FfiNameOrId;
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversalSource;
 import com.alibaba.graphscope.gremlin.transform.StepTransformFactory;
+
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
@@ -57,7 +58,8 @@ public class PathExpandStepTest {
         Assert.assertEquals(false, op.getIsEdge().get().applyArg());
         Assert.assertEquals(1, op.getLower().get().applyArg());
         Assert.assertEquals(2, op.getUpper().get().applyArg());
-        FfiNameOrId.ByValue label = ((List<FfiNameOrId.ByValue>) op.getLabels().get().applyArg()).get(0);
+        FfiNameOrId.ByValue label =
+                ((List<FfiNameOrId.ByValue>) op.getLabels().get().applyArg()).get(0);
         Assert.assertEquals("knows", label.name);
     }
 }

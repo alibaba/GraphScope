@@ -26,6 +26,7 @@
 package com.alibaba.graphscope.gremlin.antlr4;
 
 import com.alibaba.graphscope.gremlin.exception.UnsupportedEvalException;
+
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSBaseVisitor;
 import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSParser;
@@ -43,8 +44,7 @@ public class TraversalPredicateVisitor extends GremlinGSBaseVisitor<P> {
         return instance;
     }
 
-    private TraversalPredicateVisitor() {
-    }
+    private TraversalPredicateVisitor() {}
 
     /**
      * {@inheritDoc}
@@ -62,14 +62,18 @@ public class TraversalPredicateVisitor extends GremlinGSBaseVisitor<P> {
 
                 if (ctx.getChild(childIndexOfParameterOperator).getText().equals("or")) {
                     // handle or
-                    return visit(ctx.getChild(childIndexOfCaller)).or(visit(ctx.getChild(childIndexOfArgument)));
+                    return visit(ctx.getChild(childIndexOfCaller))
+                            .or(visit(ctx.getChild(childIndexOfArgument)));
                 } else {
                     // handle and
-                    return visit(ctx.getChild(childIndexOfCaller)).and(visit(ctx.getChild(childIndexOfArgument)));
+                    return visit(ctx.getChild(childIndexOfCaller))
+                            .and(visit(ctx.getChild(childIndexOfArgument)));
                 }
             default:
-                throw new UnsupportedEvalException(ctx.getClass(),
-                        "unexpected number of children in TraversalPredicateContext " + ctx.getChildCount());
+                throw new UnsupportedEvalException(
+                        ctx.getClass(),
+                        "unexpected number of children in TraversalPredicateContext "
+                                + ctx.getChildCount());
         }
     }
 
@@ -79,8 +83,10 @@ public class TraversalPredicateVisitor extends GremlinGSBaseVisitor<P> {
      */
     private Object getSingleGenericLiteralArgument(final ParseTree ctx) {
         final int childIndexOfParameterValue = 2;
-        return GenericLiteralVisitor.getInstance().visitGenericLiteral(
-                (GremlinGSParser.GenericLiteralContext) ctx.getChild(childIndexOfParameterValue));
+        return GenericLiteralVisitor.getInstance()
+                .visitGenericLiteral(
+                        (GremlinGSParser.GenericLiteralContext)
+                                ctx.getChild(childIndexOfParameterValue));
     }
 
     /**
@@ -148,7 +154,8 @@ public class TraversalPredicateVisitor extends GremlinGSBaseVisitor<P> {
             }
             return within;
         } else {
-            throw new UnsupportedEvalException(ctx.getClass(), "supported pattern is [within('a')] or [within('a', 'b')]");
+            throw new UnsupportedEvalException(
+                    ctx.getClass(), "supported pattern is [within('a')] or [within('a', 'b')]");
         }
     }
 
@@ -156,7 +163,8 @@ public class TraversalPredicateVisitor extends GremlinGSBaseVisitor<P> {
      * {@inheritDoc}
      */
     @Override
-    public P visitTraversalPredicate_without(GremlinGSParser.TraversalPredicate_withoutContext ctx) {
+    public P visitTraversalPredicate_without(
+            GremlinGSParser.TraversalPredicate_withoutContext ctx) {
         if (ctx.genericLiteralList() != null) {
             Object args = GenericLiteralVisitor.getGenericLiteralList(ctx.genericLiteralList());
             P without;
@@ -169,7 +177,8 @@ public class TraversalPredicateVisitor extends GremlinGSBaseVisitor<P> {
             }
             return without;
         } else {
-            throw new UnsupportedEvalException(ctx.getClass(), "supported pattern is [without('a')] or [without('a', 'b')]");
+            throw new UnsupportedEvalException(
+                    ctx.getClass(), "supported pattern is [without('a')] or [without('a', 'b')]");
         }
     }
 }
