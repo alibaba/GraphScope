@@ -38,11 +38,7 @@ public interface IrCoreLibrary extends Library {
 
     Pointer initScanOperator(FfiScanOpt opt);
 
-    FfiError.ByValue setScanPredicate(Pointer scan, String predicate);
-
-    FfiError.ByValue addScanTableName(Pointer scan, FfiNameOrId.ByValue tableName);
-
-    FfiError.ByValue setScanAlias(Pointer scan, FfiAlias.ByValue alias);
+    FfiError.ByValue appendScanOperator(Pointer plan, Pointer scan, int parent, IntByReference oprIdx);
 
     // set primary index
     Pointer initIndexPredicate();
@@ -53,13 +49,15 @@ public interface IrCoreLibrary extends Library {
 
     FfiError.ByValue addScanIndexPredicate(Pointer scan, Pointer predicate);
 
-    FfiError.ByValue appendScanOperator(Pointer plan, Pointer scan, int parent, IntByReference oprIdx);
+    FfiError.ByValue setScanParams(Pointer scan, Pointer params);
+
+    FfiError.ByValue setScanAlias(Pointer scan, FfiAlias.ByValue alias);
 
     Pointer initEdgexpdOperator(boolean isEdge, FfiDirection direction);
 
     FfiError.ByValue appendEdgexpdOperator(Pointer plan, Pointer edgeXpd, int parent, IntByReference oprIdx);
 
-    FfiError.ByValue addEdgexpdLabel(Pointer edgeXpd, FfiNameOrId.ByValue label);
+    FfiError.ByValue setEdgexpdParams(Pointer edgeXpd, Pointer params);
 
     FfiError.ByValue setEdgexpdAlias(Pointer edgeXpd, FfiAlias.ByValue alias);
 
@@ -123,6 +121,8 @@ public interface IrCoreLibrary extends Library {
     FfiError.ByValue setGetvAlias(Pointer getV, FfiAlias.ByValue alias);
 
     FfiError.ByValue appendGetvOperator(Pointer plan, Pointer getV, int parent, IntByReference oprIdx);
+
+    FfiError.ByValue setGetvParams(Pointer getV, Pointer params);
 
     Pointer initApplyOperator(int subtaskRoot, FfiJoinKind joinKind);
 
@@ -191,4 +191,16 @@ public interface IrCoreLibrary extends Library {
     void destroyFfiData(FfiData.ByValue value);
 
     FfiError.ByValue setSchema(String schemaJson);
+
+    Pointer initQueryParams();
+
+    FfiError.ByValue addParamsTable(Pointer params, FfiNameOrId.ByValue table);
+
+    FfiError.ByValue addParamsColumn(Pointer params, FfiNameOrId.ByValue column);
+
+    FfiError.ByValue setParamsRange(Pointer params, int lower, int upper);
+
+    FfiError.ByValue setParamsPredicate(Pointer params, String predicate);
+
+    FfiError.ByValue setParamsIsAllColumns(Pointer params);
 }
