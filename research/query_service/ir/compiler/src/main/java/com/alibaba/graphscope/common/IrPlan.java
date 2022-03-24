@@ -59,36 +59,22 @@ public class IrPlan implements Closeable {
                 }
                 FfiScanOpt ffiScanOpt = (FfiScanOpt) scanOpt.get().applyArg();
                 Pointer scan = irCoreLib.initScanOperator(ffiScanOpt);
-                Optional<OpArg> labels = op.getLabels();
-                if (labels.isPresent()) {
-                    List<FfiNameOrId.ByValue> ffiLabels = (List<FfiNameOrId.ByValue>) labels.get().applyArg();
-                    for (FfiNameOrId.ByValue label : ffiLabels) {
-                        FfiError error = irCoreLib.addScanTableName(scan, label);
-                        if (error.code != ResultCode.Success) {
-                            throw new InterOpIllegalArgException(baseOp.getClass(),
-                                    "labels", "addScanTableName returns " + error.msg);
-                        }
-                    }
+
+                // set params
+                FfiError e1 = irCoreLib.setScanParams(scan, getQueryParams(op));
+                if (e1.code != ResultCode.Success) {
+                    throw new InterOpIllegalArgException(baseOp.getClass(), "params", "setScanParams returns " + e1.msg);
                 }
-                Optional<OpArg> predicate = op.getPredicate();
-                if (predicate.isPresent()) {
-                    String expr = (String) predicate.get().applyArg();
-                    FfiError error = irCoreLib.setScanPredicate(scan, expr);
-                    if (error.code != ResultCode.Success) {
-                        throw new InterOpIllegalArgException(baseOp.getClass(),
-                                "predicate", "setScanPredicate returns " + error.msg);
-                    }
-                }
+
                 // set index predicate
                 Optional<OpArg> ids = op.getIds();
                 if (ids.isPresent()) {
                     Pointer idsPredicate = irCoreLib.initIndexPredicate();
                     List<FfiConst.ByValue> ffiIds = (List<FfiConst.ByValue>) ids.get().applyArg();
                     for (int i = 0; i < ffiIds.size(); ++i) {
-                        FfiError error = irCoreLib.orEquivPredicate(idsPredicate, irCoreLib.asIdKey(), ffiIds.get(i));
-                        if (error.code != ResultCode.Success) {
-                            throw new InterOpIllegalArgException(baseOp.getClass(),
-                                    "ids", "orEquivPredicate returns " + error.msg);
+                        FfiError e2 = irCoreLib.orEquivPredicate(idsPredicate, irCoreLib.asIdKey(), ffiIds.get(i));
+                        if (e2.code != ResultCode.Success) {
+                            throw new InterOpIllegalArgException(baseOp.getClass(), "ids", "orEquivPredicate returns " + e2.msg);
                         }
                     }
                     if (!ffiIds.isEmpty()) {
@@ -104,6 +90,29 @@ public class IrPlan implements Closeable {
                     irCoreLib.setScanAlias(scan, alias);
                 }
                 return scan;
+            }
+
+            private Pointer getQueryParams(ScanFusionOp op) {
+                Optional<OpArg> labels = op.getLabels();
+                Pointer ptrParams = irCoreLib.initQueryParams();
+                if (labels.isPresent()) {
+                    List<FfiNameOrId.ByValue> ffiLabels = (List<FfiNameOrId.ByValue>) labels.get().applyArg();
+                    for (FfiNameOrId.ByValue label : ffiLabels) {
+                        FfiError error = irCoreLib.addParamsTable(ptrParams, label);
+                        if (error.code != ResultCode.Success) {
+                            throw new InterOpIllegalArgException(op.getClass(), "tables", "addParamsTable returns " + error.msg);
+                        }
+                    }
+                }
+                Optional<OpArg> predicate = op.getPredicate();
+                if (predicate.isPresent()) {
+                    String expr = (String) predicate.get().applyArg();
+                    FfiError error = irCoreLib.setParamsPredicate(ptrParams, expr);
+                    if (error.code != ResultCode.Success) {
+                        throw new InterOpIllegalArgException(op.getClass(), "predicate", "setParamsPredicate returns " + error.msg);
+                    }
+                }
+                return ptrParams;
             }
         },
         SELECT_OP {
@@ -139,16 +148,10 @@ public class IrPlan implements Closeable {
                 }
                 Boolean isEdge = (Boolean) edgeOpt.get().applyArg();
                 Pointer expand = irCoreLib.initEdgexpdOperator(isEdge, ffiDirection);
-                Optional<OpArg> labels = op.getLabels();
-                if (labels.isPresent()) {
-                    List<FfiNameOrId.ByValue> ffiLabels = (List<FfiNameOrId.ByValue>) labels.get().applyArg();
-                    for (FfiNameOrId.ByValue label : ffiLabels) {
-                        FfiError error = irCoreLib.addEdgexpdLabel(expand, label);
-                        if (error.code != ResultCode.Success) {
-                            throw new InterOpIllegalArgException(baseOp.getClass(),
-                                    "labels", "addEdgexpdLabel returns " + error.msg);
-                        }
-                    }
+
+                FfiError e1 = irCoreLib.setEdgexpdParams(expand, getQueryParams(op));
+                if (e1.code != ResultCode.Success) {
+                    throw new InterOpIllegalArgException(op.getClass(), "params", "setEdgexpdParams returns " + e1.msg);
                 }
                 // todo: add properties
                 // todo: add predicates
@@ -159,6 +162,21 @@ public class IrPlan implements Closeable {
                     irCoreLib.setEdgexpdAlias(expand, alias);
                 }
                 return expand;
+            }
+
+            private Pointer getQueryParams(ExpandOp op) {
+                Pointer ptrParams = irCoreLib.initQueryParams();
+                Optional<OpArg> labels = op.getLabels();
+                if (labels.isPresent()) {
+                    List<FfiNameOrId.ByValue> ffiLabels = (List<FfiNameOrId.ByValue>) labels.get().applyArg();
+                    for (FfiNameOrId.ByValue label : ffiLabels) {
+                        FfiError error = irCoreLib.addParamsTable(ptrParams, label);
+                        if (error.code != ResultCode.Success) {
+                            throw new InterOpIllegalArgException(op.getClass(), "tables", "addParamsTable returns " + error.msg);
+                        }
+                    }
+                }
+                return ptrParams;
             }
         },
         LIMIT_OP {
