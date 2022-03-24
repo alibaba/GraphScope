@@ -810,58 +810,24 @@ fn set_predicate(ptr: *const c_void, cstr_predicate: *const c_char, target: Targ
     }
 }
 
-#[derive(PartialEq)]
-enum ParamsKey {
-    Tag,
-    Table,
-    Column,
-}
-
-/// A unified processing of parameters with type `NameOrId`
-fn process_params(ptr: *const c_void, key: ParamsKey, val: FfiNameOrId, target: Target) -> FfiError {
-    let pb = val.try_into();
+fn set_tag(ptr: *const c_void, tag: FfiNameOrId, target: Target) -> FfiError {
+    let pb = tag.try_into();
     if pb.is_ok() {
         match target {
             Target::EdgeExpand => {
                 let mut expand = unsafe { Box::from_raw(ptr as *mut pb::EdgeExpand) };
-                match key {
-                    ParamsKey::Tag => expand.v_tag = pb.unwrap(),
-                    _ => unreachable!(),
-                }
+                expand.v_tag = pb.unwrap();
                 std::mem::forget(expand);
             }
             Target::GetV => {
                 let mut getv = unsafe { Box::from_raw(ptr as *mut pb::GetV) };
-                match key {
-                    ParamsKey::Tag => getv.tag = pb.unwrap(),
-                    _ => unreachable!(),
-                }
+                getv.tag = pb.unwrap();
                 std::mem::forget(getv);
             }
             Target::PathExpand => {
                 let mut pathxpd = unsafe { Box::from_raw(ptr as *mut pb::PathExpand) };
-                match key {
-                    ParamsKey::Tag => pathxpd.start_tag = pb.unwrap(),
-                    _ => unreachable!(),
-                }
+                pathxpd.start_tag = pb.unwrap();
                 std::mem::forget(pathxpd);
-            }
-            Target::Params => {
-                let mut params = unsafe { Box::from_raw(ptr as *mut pb::QueryParams) };
-                match key {
-                    ParamsKey::Table => {
-                        if let Some(table) = pb.unwrap() {
-                            params.tables.push(table)
-                        }
-                    }
-                    ParamsKey::Column => {
-                        if let Some(col) = pb.unwrap() {
-                            params.columns.push(col)
-                        }
-                    }
-                    _ => unreachable!(),
-                }
-                std::mem::forget(params);
             }
             _ => unreachable!(),
         }
@@ -893,12 +859,34 @@ mod params {
 
     #[no_mangle]
     pub extern "C" fn add_params_table(ptr_params: *const c_void, table: FfiNameOrId) -> FfiError {
-        process_params(ptr_params, ParamsKey::Table, table, Target::Params)
+        let mut params = unsafe { Box::from_raw(ptr_params as *mut pb::QueryParams) };
+        let pb = table.try_into();
+        if pb.is_ok() {
+            if let Some(table) = pb.unwrap() {
+                params.tables.push(table)
+            }
+            std::mem::forget(params);
+
+            FfiError::success()
+        } else {
+            pb.err().unwrap()
+        }
     }
 
     #[no_mangle]
     pub extern "C" fn add_params_column(ptr_params: *const c_void, col: FfiNameOrId) -> FfiError {
-        process_params(ptr_params, ParamsKey::Column, col, Target::Params)
+        let mut params = unsafe { Box::from_raw(ptr_params as *mut pb::QueryParams) };
+        let pb = col.try_into();
+        if pb.is_ok() {
+            if let Some(col) = pb.unwrap() {
+                params.columns.push(col)
+            }
+            std::mem::forget(params);
+
+            FfiError::success()
+        } else {
+            pb.err().unwrap()
+        }
     }
 
     #[no_mangle]
@@ -1686,7 +1674,7 @@ mod graph {
     /// Set the start-vertex's tag to conduct this expansion
     #[no_mangle]
     pub extern "C" fn set_edgexpd_vtag(ptr_edgexpd: *const c_void, v_tag: FfiNameOrId) -> FfiError {
-        process_params(ptr_edgexpd, ParamsKey::Tag, v_tag, Target::EdgeExpand)
+        set_tag(ptr_edgexpd, v_tag, Target::EdgeExpand)
     }
 
     #[no_mangle]
@@ -1751,7 +1739,7 @@ mod graph {
     /// Set the tag of edge/path to get the vertex
     #[no_mangle]
     pub extern "C" fn set_getv_tag(ptr_getv: *const c_void, tag: FfiNameOrId) -> FfiError {
-        process_params(ptr_getv, ParamsKey::Tag, tag, Target::GetV)
+        set_tag(ptr_getv, tag, Target::GetV)
     }
 
     #[no_mangle]
@@ -1804,7 +1792,7 @@ mod graph {
     /// Set path alias of this path expansion
     #[no_mangle]
     pub extern "C" fn set_pathxpd_tag(ptr_pathxpd: *const c_void, tag: FfiNameOrId) -> FfiError {
-        process_params(ptr_pathxpd, ParamsKey::Tag, tag, Target::PathExpand)
+        set_tag(ptr_pathxpd, tag, Target::PathExpand)
     }
 
     /// Set path alias of this path expansion
