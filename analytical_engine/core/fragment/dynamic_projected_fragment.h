@@ -365,6 +365,7 @@ class DynamicProjectedFragment {
   using vertex_t = typename fragment_t::vertex_t;
   using vdata_t = VDATA_T;
   using edata_t = EDATA_T;
+  using vertex_map_t = fragment_t::vertex_map_t;
   using adj_list_t = dynamic_projected_fragment_impl::AdjList<vid_t, edata_t>;
   using const_adj_list_t =
       dynamic_projected_fragment_impl::ConstAdjList<vid_t, edata_t>;
@@ -412,6 +413,10 @@ class DynamicProjectedFragment {
   inline fid_t fnum() const { return fragment_->fnum(); }
 
   inline bool directed() const { return fragment_->directed(); }
+
+  std::shared_ptr<vertex_map_t> GetVertexMap() const {
+    return fragment_->GetVertexMap();
+  }
 
   inline const vertices_t& Vertices() const { return fragment_->Vertices(); }
 
@@ -614,6 +619,7 @@ class DynamicProjectedFragment<grape::EmptyType, grape::EmptyType> {
   using vertex_t = typename fragment_t::vertex_t;
   using vdata_t = grape::EmptyType;
   using edata_t = grape::EmptyType;
+  using vertex_map_t = fragment_t::vertex_map_t;
   using adj_list_t = typename fragment_t::adj_list_t;
   using const_adj_list_t = typename fragment_t::const_adj_list_t;
   using inner_vertices_t = typename fragment_t::inner_vertices_t;
@@ -660,6 +666,10 @@ class DynamicProjectedFragment<grape::EmptyType, grape::EmptyType> {
   inline fid_t fnum() const { return fragment_->fnum(); }
 
   inline bool directed() const { return fragment_->directed(); }
+
+  std::shared_ptr<vertex_map_t> GetVertexMap() const {
+    return fragment_->GetVertexMap();
+  }
 
   inline const vertices_t& Vertices() const { return fragment_->Vertices(); }
 
