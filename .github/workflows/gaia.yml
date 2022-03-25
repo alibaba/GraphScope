@@ -19,8 +19,10 @@ on:
 
 jobs:
   gaia-test:
-    runs-on: ubuntu-20.04
-    if: true
+    runs-on: self-hosted
+    if: ${{ github.repository == 'alibaba/GraphScope' }}
+    container:
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.3.21
     defaults:
       run:
         shell: bash --noprofile --norc -eo pipefail {0}
@@ -31,19 +33,25 @@ jobs:
 
     - name: Install Dependencies
       run: |
-        # Due to an observation of changing hostname in github runners,
-        # append 127.0.0.1 to etc/hosts to avoid DNS lookup.
-        r=`cat /etc/hosts | grep $(hostname) || true`
-        if [ -z "${r}" ];then export hn=$(hostname); sudo -E bash -c 'echo "127.0.0.1 ${hn}" >> /etc/hosts'; fi
-        cat /etc/hosts
-
-        # install dependencies
-        ${GITHUB_WORKSPACE}/scripts/install_deps.sh --dev --verbose
-
-    - name: Build GraphScope
-      run: |
-        source ${HOME}/.graphscope_env
-        make BUILD_TYPE=debug
+        # install cargo cause github change $HOME to /github/home, so we can't use
+        # `source ~/.bashrc` or `source ${HOME}/.bashrc` to find cargo command.
+        sudo chown -R $(id -u):$(id -g) ${HOME}
+        sudo chmod -R a+wrx ${HOME} ${GITHUB_WORKSPACE}
+        wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz
+        sudo tar -C /usr/local -xzf go1.15.5.linux-amd64.tar.gz
+        curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.54.0
+        echo "source ~/.cargo/env" >> ~/.bashrc
+        source ${HOME}/.bashrc
+        rustup component add rustfmt
+        # install rdkafka
+        sudo yum install -y librdkafka-devel
+        # install cppkafka
+        git clone -b 0.4.0 --single-branch --depth=1 \
+            https://github.com/mfontanini/cppkafka.git /tmp/cppkafka && \
+          cd /tmp/cppkafka && git submodule update --init && \
+          mkdir -p build && cd build && \
+          cmake .. && make -j && sudo make install && \
+          rm -fr /tmp/cppkafka
 
     - name: Build Ir on Experimental Store
       run: |
