@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.integration.graph;
+package com.alibaba.graphscope.gremlin.integration.graph;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.tinkerpop.gremlin.AbstractGraphProvider;
@@ -26,7 +26,14 @@ import java.util.Map;
 import java.util.Set;
 
 public class RemoteTestGraphProvider extends AbstractGraphProvider {
-    public static String MODERN_GRAPH_ENDPOINT = "localhost:8182";
+    private static String GREMLIN_ENDPOINT = "gremlin.endpoint";
+    private static String DEFAULT_VALUE = "localhost:8182";
+    private String gremlinEndpoint;
+
+    public RemoteTestGraphProvider() {
+        String property = System.getProperty(GREMLIN_ENDPOINT);
+        gremlinEndpoint = (property != null) ? property : DEFAULT_VALUE;
+    }
 
     @Override
     public Map<String, Object> getBaseConfiguration(
@@ -36,7 +43,7 @@ public class RemoteTestGraphProvider extends AbstractGraphProvider {
             LoadGraphWith.GraphData loadGraphWith) {
         Map config = new HashMap();
         config.put(Graph.GRAPH, RemoteTestGraph.class.getName());
-        config.put(RemoteTestGraph.GRAPH_NAME, MODERN_GRAPH_ENDPOINT);
+        config.put(RemoteTestGraph.GRAPH_NAME, gremlinEndpoint);
         return config;
     }
 

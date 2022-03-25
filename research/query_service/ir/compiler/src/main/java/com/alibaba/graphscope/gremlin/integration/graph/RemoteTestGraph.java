@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.integration.graph;
+package com.alibaba.graphscope.gremlin.integration.graph;
 
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversalSource;
 

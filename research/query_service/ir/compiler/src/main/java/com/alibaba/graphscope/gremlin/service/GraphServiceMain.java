@@ -22,14 +22,15 @@ import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FileLoadType;
 import com.alibaba.graphscope.common.store.ExperimentalMetaFetcher;
 import com.alibaba.graphscope.common.store.IrMetaFetcher;
+import com.alibaba.graphscope.gremlin.integration.result.TestGraphFactory;
 
 public class GraphServiceMain {
     public static void main(String[] args) throws Exception {
         Configs configs = new Configs("conf/ir.compiler.properties", FileLoadType.RELATIVE_PATH);
-        IrMetaFetcher storeConfigs = new ExperimentalMetaFetcher(configs);
+        IrMetaFetcher irMetaFetcher = new ExperimentalMetaFetcher(configs);
         RpcChannelFetcher fetcher = new HostsChannelFetcher(configs);
 
         IrGremlinServer server = new IrGremlinServer();
-        server.start(configs, storeConfigs, fetcher);
+        server.start(configs, irMetaFetcher, fetcher, TestGraphFactory.EXPERIMENTAL);
     }
 }

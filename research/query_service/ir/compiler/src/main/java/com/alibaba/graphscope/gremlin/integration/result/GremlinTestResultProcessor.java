@@ -17,10 +17,7 @@
 package com.alibaba.graphscope.gremlin.integration.result;
 
 import com.alibaba.graphscope.common.client.ResultParser;
-import com.alibaba.graphscope.common.utils.FileUtils;
-import com.alibaba.graphscope.common.utils.JsonUtils;
 import com.alibaba.graphscope.gremlin.result.GremlinResultProcessor;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.ImmutableMap;
 
 import org.apache.tinkerpop.gremlin.driver.message.ResponseStatusCode;
@@ -45,12 +42,10 @@ public class GremlinTestResultProcessor extends GremlinResultProcessor {
     private static String VERTEX_PROPERTIES = "vertex_properties";
     private static String EDGE_PROPERTIES = "edge_properties";
 
-    public GremlinTestResultProcessor(Context writeResult, ResultParser resultParser) {
+    public GremlinTestResultProcessor(
+            Context writeResult, ResultParser resultParser, GraphProperties testGraph) {
         super(writeResult, resultParser);
-        String propertiesJson =
-                FileUtils.readJsonFromResource("integration/ir.modern.properties.json");
-        cachedProperties =
-                JsonUtils.fromJson(propertiesJson, new TypeReference<Map<String, Object>>() {});
+        this.cachedProperties = testGraph.getProperties();
     }
 
     @Override

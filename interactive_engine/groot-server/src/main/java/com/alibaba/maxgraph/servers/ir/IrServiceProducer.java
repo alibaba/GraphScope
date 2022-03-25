@@ -19,6 +19,7 @@ package com.alibaba.maxgraph.servers.ir;
 import com.alibaba.graphscope.common.client.RpcChannelFetcher;
 import com.alibaba.graphscope.common.config.PegasusConfig;
 import com.alibaba.graphscope.common.store.IrMetaFetcher;
+import com.alibaba.graphscope.gremlin.integration.result.TestGraphFactory;
 import com.alibaba.graphscope.gremlin.service.IrGremlinServer;
 import com.alibaba.graphscope.groot.discovery.DiscoveryFactory;
 import com.alibaba.graphscope.groot.discovery.NodeDiscovery;
@@ -72,7 +73,8 @@ public class IrServiceProducer implements ComputeServiceProducer {
             @Override
             public void start() {
                 try {
-                    irGremlinServer.start(irConfigs, irMetaFetcher, channelFetcher);
+                    irGremlinServer.start(
+                            irConfigs, irMetaFetcher, channelFetcher, TestGraphFactory.GROOT);
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }

@@ -24,6 +24,7 @@ import com.alibaba.graphscope.common.config.PegasusConfig;
 import com.alibaba.graphscope.common.intermediate.InterOpCollection;
 import com.alibaba.graphscope.common.store.IrMetaFetcher;
 import com.alibaba.graphscope.gremlin.InterOpCollectionBuilder;
+import com.alibaba.graphscope.gremlin.integration.result.GraphProperties;
 import com.alibaba.graphscope.gremlin.integration.result.GremlinTestResultProcessor;
 import com.alibaba.graphscope.gremlin.plugin.processor.IrStandardOpProcessor;
 import com.alibaba.graphscope.gremlin.plugin.script.AntlrToJavaScriptEngine;
@@ -56,15 +57,20 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
     private static final Logger logger = LoggerFactory.getLogger(TraversalOpProcessor.class);
     private AntlrToJavaScriptEngine scriptEngine;
     private ScriptContext context;
+    private GraphProperties testGraph;
 
     public IrTestOpProcessor(
-            Configs configs, IrMetaFetcher irMetaFetcher, RpcChannelFetcher fetcher) {
+            Configs configs,
+            IrMetaFetcher irMetaFetcher,
+            RpcChannelFetcher fetcher,
+            GraphProperties testGraph) {
         super(configs, irMetaFetcher, fetcher);
-        context = new SimpleScriptContext();
+        this.context = new SimpleScriptContext();
         Bindings globalBindings = new SimpleBindings();
         globalBindings.put("g", g);
-        context.setBindings(globalBindings, ScriptContext.ENGINE_SCOPE);
-        scriptEngine = new AntlrToJavaScriptEngine();
+        this.context.setBindings(globalBindings, ScriptContext.ENGINE_SCOPE);
+        this.scriptEngine = new AntlrToJavaScriptEngine();
+        this.testGraph = testGraph;
     }
 
     @Override
@@ -132,7 +138,8 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
 
                             ResultParser resultParser = GremlinResultAnalyzer.analyze(traversal);
                             broadcastProcessor.broadcast(
-                                    request, new GremlinTestResultProcessor(ctx, resultParser));
+                                    request,
+                                    new GremlinTestResultProcessor(ctx, resultParser, testGraph));
                         });
                 return op;
             default:

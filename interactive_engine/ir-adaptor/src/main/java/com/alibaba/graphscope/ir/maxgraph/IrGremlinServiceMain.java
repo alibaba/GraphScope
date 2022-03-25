@@ -20,6 +20,7 @@ import com.alibaba.graphscope.common.client.RpcChannelFetcher;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.PegasusConfig;
 import com.alibaba.graphscope.common.store.IrMetaFetcher;
+import com.alibaba.graphscope.gremlin.integration.result.TestGraphFactory;
 import com.alibaba.graphscope.gremlin.service.IrGremlinServer;
 import com.alibaba.maxgraph.common.cluster.InstanceConfig;
 import com.alibaba.maxgraph.common.rpc.RpcAddressFetcher;
@@ -41,7 +42,7 @@ public class IrGremlinServiceMain {
         RpcChannelFetcher channelFetcher = new RpcAddressChannelFetcher(addressFetcher);
 
         IrGremlinServer gremlinServer = new IrGremlinServer(instanceConfig.getGremlinServerPort());
-        gremlinServer.start(configs, irMetaFetcher, channelFetcher);
+        gremlinServer.start(configs, irMetaFetcher, channelFetcher, TestGraphFactory.UNKNOWN);
     }
 
     private Configs getConfigs(InstanceConfig instanceConfig) {
