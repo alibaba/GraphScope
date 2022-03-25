@@ -20,7 +20,6 @@ on:
 jobs:
   gaia-test:
     runs-on: self-hosted
-    if: ${{ github.repository == 'alibaba/GraphScope' }}
     container:
       image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.3.21
     defaults:
