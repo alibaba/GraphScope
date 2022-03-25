@@ -16,6 +16,8 @@
 #ifndef ANALYTICAL_ENGINE_CORE_FRAGMENT_DYNAMIC_FRAGMENT_H_
 #define ANALYTICAL_ENGINE_CORE_FRAGMENT_DYNAMIC_FRAGMENT_H_
 
+#ifdef NETWORKX
+
 #include <limits>
 #include <map>
 #include <memory>
@@ -1502,4 +1504,5 @@ class DynamicFragmentMutator {
 
 }  // namespace gs
 
-#endif  // ANALYTICAL_ENGINE_CORE_FRAGMENT_DYNAMIC_FRAGMENT_H_
+#endif // NETWORKX
+#endif // ANALYTICAL_ENGINE_CORE_FRAGMENT_DYNAMIC_FRAGMENT_H_
