@@ -65,7 +65,7 @@ jobs:
     - name: Ir Integration Test on Experimental Store
       run: |
         source ${HOME}/.graphscope_env
-        cd ${GITHUB_WORKSPACE}/research/query_service/ir/compiler && ./ir_exprimental_ci.sh 
+        cd ${GITHUB_WORKSPACE}/research/query_service/ir/compiler && ./ir_exprimental_ci.sh
 
     - name: Ir Integration Test on Groot Store
       run: |
