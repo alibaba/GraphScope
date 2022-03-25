@@ -54,28 +54,28 @@ jobs:
 
     - name: Build Ir on Experimental Store
       run: |
-        source ${HOME}/.graphscope_env
+        source ${HOME}/.bashrc
         cd ${GITHUB_WORKSPACE}/research/query_service/ir/compiler
         make build
 
     - name: Build Ir on Groot Store
       run: |
-        source ${HOME}/.graphscope_env
+        source ${HOME}/.bashrc
         cd ${GITHUB_WORKSPACE}/interactive_engine
         mvn clean install -DskipTests -Pv2
 
     - name: Ir Unit Test
       run: |
-        source ${HOME}/.graphscope_env
+        source ${HOME}/.bashrc
         cd ${GITHUB_WORKSPACE}/research/query_service/ir/compiler && make test
 
     - name: Ir Integration Test on Experimental Store
       run: |
-        source ${HOME}/.graphscope_env
+        source ${HOME}/.bashrc
         cd ${GITHUB_WORKSPACE}/research/query_service/ir/compiler && ./ir_exprimental_ci.sh
 
     - name: Ir Integration Test on Groot Store
       run: |
-        source ${HOME}/.graphscope_env
+        source ${HOME}/.bashrc
         cd ${GITHUB_WORKSPACE}/interactive_engine/ir-adaptor && ./ir_groot_ci.sh
 

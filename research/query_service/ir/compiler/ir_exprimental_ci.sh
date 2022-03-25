@@ -10,7 +10,7 @@ sleep 5s
 cd ${base_dir} && make gremlin_test
 exit_code=$?
 # clean service
-ps -ef | grep "com.alibaba.graphscope.gremlin.service.GraphServiceMain" | grep -v grep | awk '{print $2}' | xargs kill -9
+ps -ef | grep "com.alibaba.graphscope.gremlin.service.GraphServiceMain" | grep -v grep | awk '{print $2}' | xargs kill -9 || true
 ps -ef | grep "start_rpc_server" | grep -v grep | awk '{print $2}' | xargs kill -9
 # report test result
 if [ $exit_code -ne 0 ]; then
