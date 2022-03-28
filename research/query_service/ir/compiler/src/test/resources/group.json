@@ -1,0 +1,37 @@
+{
+  "nodes": [
+    {
+      "opr": {
+        "opr": {
+          "GroupBy": {
+            "mappings": [
+              {
+                "key": {
+                  "tag": null,
+                  "property": null
+                },
+                "alias": {
+                  "item": {
+                    "Name": "keys"
+                  }
+                }
+              }
+            ],
+            "functions": [
+              {
+                "vars": [],
+                "aggregate": 5,
+                "alias": {
+                  "item": {
+                    "Name": "values"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "children": []
+    }
+  ]
+}

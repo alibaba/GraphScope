@@ -39,6 +39,9 @@ impl fmt::Display for CastError {
             RawType::Float => write!(f, "can't cast f64 into {}", self.target),
             RawType::Blob(len) => write!(f, "can't cast Blob({}) into {}", len, self.target),
             RawType::String => write!(f, "can't cast String into {}", self.target),
+            RawType::Vector => write!(f, "can't cast Vector into {}", self.target),
+            RawType::KV => write!(f, "can't cast KV into {}", self.target),
+            RawType::None => write!(f, "can't cast None into {}", self.target),
             RawType::Unknown => write!(f, "can't cast unknown dyn type into {}", self.target),
         }
     }

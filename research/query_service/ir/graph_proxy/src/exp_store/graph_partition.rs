@@ -1,0 +1,48 @@
+//
+//! Copyright 2021 Alibaba Group Holding Limited.
+//!
+//! Licensed under the Apache License, Version 2.0 (the "License");
+//! you may not use this file except in compliance with the License.
+//! You may obtain a copy of the License at
+//!
+//! http://www.apache.org/licenses/LICENSE-2.0
+//!
+//! Unless required by applicable law or agreed to in writing, software
+//! distributed under the License is distributed on an "AS IS" BASIS,
+//! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//! See the License for the specific language governing permissions and
+//! limitations under the License.
+
+use pegasus::api::function::FnResult;
+use runtime::graph::partitioner::Partitioner;
+use runtime::graph::ID;
+
+/// A simple partition utility that one server contains a single graph partition
+pub struct SimplePartition {
+    pub num_servers: usize,
+}
+
+impl Partitioner for SimplePartition {
+    fn get_partition(&self, id: &ID, workers: usize) -> FnResult<u64> {
+        let id_usize = *id as usize;
+        let magic_num = id_usize / self.num_servers;
+        // The partitioning logics is as follows:
+        // 1. `R = id - magic_num * num_servers = id % num_servers` routes a given id
+        // to the machine R that holds its data.
+        // 2. `R * workers` shifts the worker's id in the machine R.
+        // 3. `magic_num % workers` then picks up one of the workers in the machine R
+        // to do the computation.
+        Ok(((id_usize - magic_num * self.num_servers) * workers + magic_num % workers) as u64)
+    }
+
+    fn get_worker_partitions(&self, job_workers: usize, worker_id: u32) -> FnResult<Option<Vec<u64>>> {
+        // In graph that one server contains a single graph partition,
+        // we assign the first worker on current server to process (scan) the partition,
+        // and we assume the partition id is identity to the server id
+        if worker_id as usize % job_workers == 0 {
+            Ok(Some(vec![worker_id as u64 / job_workers as u64]))
+        } else {
+            Ok(None)
+        }
+    }
+}

@@ -1,0 +1,57 @@
+{
+  "nodes": [
+    {
+      "opr": {
+        "opr": {
+          "Scan": {
+            "scan_opt": 0,
+            "alias": null,
+            "params": {
+              "tables": [],
+              "columns": [],
+              "is_all_columns": false,
+              "limit": null,
+              "predicate": {
+                "operators": [
+                  {
+                    "item": {
+                      "Var": {
+                        "tag": null,
+                        "property": {
+                          "item": {
+                            "Key": {
+                              "item": {
+                                "Name": "id"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "item": {
+                      "Logical": 0
+                    }
+                  },
+                  {
+                    "item": {
+                      "Const": {
+                        "item": {
+                          "I64": 1
+                        }
+                      }
+                    }
+                  }
+                ]
+              },
+              "extra": {}
+            },
+            "idx_predicate": null
+          }
+        }
+      },
+      "children": []
+    }
+  ]
+}

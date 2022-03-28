@@ -26,6 +26,9 @@
     <module>tests</module>
     <module>benchmark</module>
     <module>distribution</module>
+    <module>../research/engine/pegasus/clients/java/client</module>
+    <module>../research/query_service/ir/compiler</module>
+    <module>ir-adaptor</module>
   </modules>
 
   <properties>

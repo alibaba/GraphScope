@@ -39,6 +39,7 @@ public class DataLoadingTest {
     @Test
     public void testZddData() throws Exception {
         Thread.sleep(5000);
+        client.initWriteSession();
 
         Map<String, String> v1 = new HashMap<>();
         v1.put("id", "1");
