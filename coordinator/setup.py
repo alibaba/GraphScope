@@ -61,11 +61,11 @@ version = get_version(os.path.join(repo_root, "..", "VERSION"))
 
 
 GRAPHSCOPE_REQUIRED_PACKAGES = [
-    f"gs-coordinator >= {version}",
-    f"gs-jython >= {version}",
-    f"gs-lib >= {version}",
-    f"gs-engine >= {version}",
-    f"gs-include >= {version}",
+    f"gs-coordinator == {version}",
+    f"gs-jython == {version}",
+    f"gs-lib == {version}",
+    f"gs-engine == {version}",
+    f"gs-include == {version}",
 ]
 
 
