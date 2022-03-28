@@ -155,6 +155,7 @@ def _get_extra_data():
         data = {
             "/opt/graphscope/include/": os.path.join(RUNTIME_ROOT, "include"),
             "/usr/local/include/grape": os.path.join(RUNTIME_ROOT, "include"),
+            "/usr/local/include/string_view": os.path.join(RUNTIME_ROOT, "include"),
             "/opt/vineyard/include/": os.path.join(RUNTIME_ROOT, "include"),
             "/usr/local/include/arrow": os.path.join(RUNTIME_ROOT, "include"),
             "/usr/local/include/boost": os.path.join(RUNTIME_ROOT, "include"),
