@@ -61,7 +61,7 @@ class TestGraph:
         data = [
             True,
             False,
-            10 ** 10,  # 10 ** 20 overflow on folly::dynamic
+            10**10,  # 10 ** 20 overflow on folly::dynamic
             -2e33,
             "'",
             '"&&amp;&&#34;"',
