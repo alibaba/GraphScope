@@ -168,7 +168,7 @@ def handle_grpc_error(fn):
                         "rpc %s failed: status %s" % (str(fn.__name__), exc)
                     )
 
-                backoff = min(0.0625 * 2 ** retries, 1.0)
+                backoff = min(0.0625 * 2**retries, 1.0)
                 logger.debug(
                     "Sleeping for %r before retrying failed request ...", backoff
                 )
