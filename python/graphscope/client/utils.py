@@ -40,8 +40,6 @@ GS_GRPC_MAX_MESSAGE_LENGTH = 2 * 1024 * 1024 * 1024 - 1
 
 # GRPC max retries by code
 GRPC_MAX_RETRIES_BY_CODE = {
-    grpc.StatusCode.INTERNAL: 1,
-    grpc.StatusCode.ABORTED: 5,
     grpc.StatusCode.UNAVAILABLE: 5,
     grpc.StatusCode.DEADLINE_EXCEEDED: 5,
 }
