@@ -54,6 +54,17 @@ inline InArchive& operator<<(InArchive& in_archive,
   return in_archive;
 }
 
+inline InArchive& operator<<(InArchive& in_archive,
+                             const gs::trivial_tensor_t<std::string>& tensor) {
+  size_t size = tensor.size();
+  if (size > 0) {
+    for (auto& s : tensor.data()) {
+      in_archive << s;
+    }
+  }
+  return in_archive;
+}
+
 #ifdef NETWORKX
 inline InArchive& operator<<(
     InArchive& in_archive,
@@ -62,15 +73,10 @@ inline InArchive& operator<<(
   if (size > 0) {
     auto type = gs::dynamic::GetType(tensor.data()[0]);
     CHECK(type == gs::dynamic::Type::kInt64Type ||
-          type == gs::dynamic::Type::kDoubleType);
-    if (type == gs::dynamic::Type::kInt64Type) {
-      for (size_t i = 0; i < tensor.size(); i++) {
-        in_archive << tensor.data()[i].GetInt64();
-      }
-    } else {
-      for (size_t i = 0; i < tensor.size(); i++) {
-        in_archive << tensor.data()[i].GetDouble();
-      }
+          type == gs::dynamic::Type::kDoubleType ||
+          type == gs::dynamic::Type::kStringType);
+    for (size_t i = 0; i < tensor.size(); i++) {
+      in_archive << tensor.data()[i];
     }
   }
   return in_archive;
@@ -217,6 +223,49 @@ class TensorContext : public grape::ContextBase {
 
     set_shape(shape);
     memcpy(tensor_.data(), data.data(), sizeof(data_t) * data.size());
+  }
+
+  void assign(const data_t& data) { tensor_.fill(data); }
+
+  void set_shape(std::vector<std::size_t> shape) {
+    CHECK(!shape.empty());
+    tensor_.resize(shape);
+  }
+
+  std::vector<size_t> shape() const { return tensor_.shape(); }
+
+  inline tensor_t& tensor() { return tensor_; }
+
+ private:
+  const fragment_t& fragment_;
+  tensor_t tensor_;
+};
+
+template <typename FRAG_T>
+class TensorContext<FRAG_T, std::string> : public grape::ContextBase {
+  using fragment_t = FRAG_T;
+  using vertex_t = typename fragment_t::vertex_t;
+  using tensor_t = trivial_tensor_t<std::string>;
+
+ public:
+  using data_t = std::string;
+
+  explicit TensorContext(const fragment_t& fragment) : fragment_(fragment) {}
+
+  const fragment_t& fragment() { return fragment_; }
+
+  void assign(const std::vector<data_t>& data,
+              const std::vector<size_t>& shape) {
+    size_t size = 1;
+    for (size_t dim_size : shape) {
+      size *= dim_size;
+    }
+    CHECK_EQ(data.size(), size);
+
+    set_shape(shape);
+    for (size_t i = 0; i < size; ++i) {
+      tensor_.data()[i] = data[i];
+    }
   }
 
   void assign(const data_t& data) { tensor_.fill(data); }
@@ -538,6 +587,8 @@ class TensorContextWrapper<
         *arc << static_cast<int>(vineyard::TypeToInt<double>::value);
       } else if (data_type == dynamic::Type::kNullType) {
         *arc << static_cast<int>(vineyard::TypeToInt<void>::value);
+      } else if (data_type == dynamic::Type::kStringType) {
+        *arc << static_cast<int>(vineyard::TypeToInt<std::string>::value);
       } else {
         RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
                         "Only support int64, double");
