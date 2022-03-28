@@ -16,14 +16,20 @@
 # limitations under the License.
 #
 
+import functools
 import inspect
 import logging
 import os
 import signal
 import sys
+import time
 from functools import wraps
 
+import grpc
+
 from graphscope.config import GSConfig as gs_config
+from graphscope.framework.errors import GRPCError
+from graphscope.framework.errors import RetriesExceededError
 from graphscope.proto import attr_value_pb2
 from graphscope.proto import message_pb2
 
@@ -31,6 +37,14 @@ logger = logging.getLogger("graphscope")
 
 # 2GB
 GS_GRPC_MAX_MESSAGE_LENGTH = 2 * 1024 * 1024 * 1024 - 1
+
+# GRPC max retries by code
+GRPC_MAX_RETRIES_BY_CODE = {
+    grpc.StatusCode.INTERNAL: 1,
+    grpc.StatusCode.ABORTED: 5,
+    grpc.StatusCode.UNAVAILABLE: 5,
+    grpc.StatusCode.DEADLINE_EXCEEDED: 5,
+}
 
 
 class GRPCUtils(object):
@@ -122,6 +136,68 @@ class GRPCUtils(object):
                 op_result.result = chunks[cursor]
                 cursor += 1
         return response_head.head
+
+
+def handle_grpc_error(fn):
+    """Decorator to handle grpc error.
+
+    This function will retry max times with specific GRPC status.
+    See detail in `GRPC_MAX_RETRIES_BY_CODE`.
+
+    Refer and specical thanks to:
+
+        https://github.com/googleapis/google-cloud-python/issues/2583
+    """
+
+    @functools.wraps(fn)
+    def with_grpc_catch(*args, **kwargs):
+        retries = 0
+        while True:
+            try:
+                return fn(*args, **kwargs)
+            except grpc.RpcError as exc:
+                code = exc.code()
+                max_retries = GRPC_MAX_RETRIES_BY_CODE.get(code)
+                if max_retries is None:
+                    raise GRPCError(
+                        "rpc %s failed: status %s" % (str(fn.__name__), exc)
+                    )
+
+                if retries > max_retries:
+                    raise RetriesExceededError(
+                        "rpc %s failed: status %s" % (str(fn.__name__), exc)
+                    )
+
+                backoff = min(0.0625 * 2 ** retries, 1.0)
+                logger.debug(
+                    "Sleeping for %r before retrying failed request ...", backoff
+                )
+
+                retries += 1
+                time.sleep(backoff)
+
+    return with_grpc_catch
+
+
+def suppress_grpc_error(fn):
+    """Decorator to suppress any grpc error."""
+
+    @functools.wraps(fn)
+    def with_grpc_catch(*args, **kwargs):
+        try:
+            return fn(*args, **kwargs)
+        except grpc.RpcError as exc:
+            if isinstance(exc, grpc.Call):
+                logger.warning(
+                    "Grpc call '%s' failed: %s: %s",
+                    fn.__name__,
+                    exc.code(),
+                    exc.details(),
+                )
+        except Exception as exc:  # noqa: F841
+            logger.warning("RPC call failed: %s", exc)
+
+    return with_grpc_catch
 
 
 class ConditionalFormatter(logging.Formatter):

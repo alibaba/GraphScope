@@ -41,6 +41,7 @@ __all__ = [
     "UnknownError",
     "FatalError",
     "GRPCError",
+    "RetriesExceededError",
     "check_argument",
 ]
 
@@ -144,6 +145,10 @@ class GRPCError(GSError):
         super().__init__(message)
 
 
+class RetriesExceededError(GSError):
+    pass
+
+
 _gs_error_types = {
     error_codes_pb2.TIMEOUT_ERROR: TimeoutError,
     error_codes_pb2.NOT_FOUND_ERROR: NotFoundError,
@@ -164,6 +169,7 @@ _gs_error_types = {
     error_codes_pb2.COORDINATOR_INTERNAL_ERROR: CoordinatorInternalError,
     error_codes_pb2.UNKNOWN_ERROR: UnknownError,
     error_codes_pb2.FATAL_ERROR: FatalError,
+    error_codes_pb2.RETRIES_EXCEEDED_ERROR: RetriesExceededError,
 }
 
 
