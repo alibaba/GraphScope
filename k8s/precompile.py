@@ -177,21 +177,96 @@ def compile_graph():
 
 
 def compile_cpp_pie_app():
+    targets = []
+    # 1. arrow fragment
     property_template = "vineyard::ArrowFragment<{},{}>"
-    project_template = "gs::ArrowProjectedFragment<{},{},{},{}>"
-    flatten_template = "gs::ArrowFlattenedFragment<{},{},{},{}>"
-    dynamic_template = "gs::DynamicProjectedFragment<{},{}>"
-
     lu = property_template.format("int64_t", "uint64_t")
+    su = property_template.format("std::string", "uint64_t")
+    # no builtin app can run on the arrow property graph
+
+    # 2. projected arrow fragment
+    project_template = "gs::ArrowProjectedFragment<{},{},{},{}>"
+    psuee = project_template.format(
+        "std::string", "uint64_t", "grape::EmptyType", "grape::EmptyType"
+    )
+    psuel = project_template.format(
+        "std::string", "uint64_t", "grape::EmptyType", "int64_t"
+    )
+    psued = project_template.format(
+        "std::string", "uint64_t", "grape::EmptyType", "double"
+    )
     psull = project_template.format("std::string", "uint64_t", "int64_t", "int64_t")
-    pllul = project_template.format("int64_t", "uint64_t", "int64_t", "int64_t")
+
+    plull = project_template.format("int64_t", "uint64_t", "int64_t", "int64_t")
     pluee = project_template.format(
         "int64_t", "uint64_t", "grape::EmptyType", "grape::EmptyType"
     )
     pluel = project_template.format(
         "int64_t", "uint64_t", "grape::EmptyType", "int64_t"
     )
-    lued = project_template.format("int64_t", "uint64_t", "grape::EmptyType", "double")
+    plued = project_template.format("int64_t", "uint64_t", "grape::EmptyType", "double")
+    targets.extend(
+        [
+            ("pagerank", psuee),
+            ("pagerank", pluee),
+            ("pagerank", plull),
+            ("wcc", psuee),
+            ("wcc", pluee),
+            ("wcc", plull),
+            ("sssp", psuel),
+            ("sssp", psued),
+            ("sssp", pluel),
+            ("sssp", plued),
+            ("sssp", plull),
+            ("sssp", psull),
+            ("cdlp", psuee),
+            ("cdlp", pluee),
+            ("cdlp", plull),
+            ("bfs", psuee),
+            ("bfs", pluee),
+            ("bfs", plull),
+            ("kcore", psuee),
+            ("kcore", pluee),
+            ("kshell", plull),
+            ("kshell", pluee),
+            ("kshell", psuee),
+            ("hits", psuee),
+            ("hits", pluee),
+            ("hits", plull),
+            ("triangles", psuee),
+            ("triangles", pluee),
+            ("triangles", plull),
+            ("clustering", psuee),
+            ("clustering", pluee),
+            ("clustering", plull),
+            ("degree_centrality", psuee),
+            ("degree_centrality", pluee),
+            ("degree_centrality", plull),
+            ("eigenvector_centrality", plull),
+            ("eigenvector_centrality", psued),
+            ("eigenvector_centrality", psuel),
+            ("eigenvector_centrality", plued),
+            ("eigenvector_centrality", pluel),
+            ("katz_centrality", psuee),
+            ("katz_centrality", pluee),
+            ("katz_centrality", plull),
+            ("is_simple_path", plull),
+            ("louvain", plull),
+            ("sssp_has_path", plull),
+        ]
+    )
+
+    # 3. flatten fragment
+    flatten_template = "gs::ArrowFlattenedFragment<{},{},{},{}>"
+    fsuee = flatten_template.format(
+        "std::string", "uint64_t", "grape::EmptyType", "grape::EmptyType"
+    )
+    fsuel = flatten_template.format(
+        "std::string", "uint64_t", "grape::EmptyType", "int64_t"
+    )
+    fsued = flatten_template.format(
+        "std::string", "uint64_t", "grape::EmptyType", "double"
+    )
     fluee = flatten_template.format(
         "int64_t", "uint64_t", "grape::EmptyType", "grape::EmptyType"
     )
@@ -199,95 +274,62 @@ def compile_cpp_pie_app():
         "int64_t", "uint64_t", "grape::EmptyType", "int64_t"
     )
     flued = flatten_template.format("int64_t", "uint64_t", "grape::EmptyType", "double")
-    dtee = dynamic_template.format("grape::EmptyType", "grape::EmptyType")
-    dtel = dynamic_template.format("grape::EmptyType", "int64_t")
-    dted = dynamic_template.format("grape::EmptyType", "double")
+    targets.extend(
+        [
+            ("pagerank", fsuee),
+            ("pagerank", fluee),
+            ("sssp", fsuel),
+            ("sssp", fsued),
+            ("sssp", fluel),
+            ("sssp", flued),
+            # ("cdlp", fsuee),
+            # ("cdlp", fluee),
+            ("kcore", fsuee),
+            ("kcore", fluee),
+            ("triangles", fsuee),
+            ("triangles", fluee),
+        ]
+    )
 
-    targets = [
-        ("pagerank", pluee),
-        ("pagerank", pluel),
-        ("pagerank", pllul),
-        ("hits", pluee),
-        ("hits", fluee),
-        ("hits", pllul),
-        ("wcc", pluee),
-        ("wcc", pluel),
-        ("wcc", pllul),
-        ("cdlp", pluee),
-        ("cdlp", pluel),
-        ("bfs", pluee),
-        ("bfs", pluel),
-        ("bfs", pllul),
-        ("sssp", pluel),
-        ("sssp", lued),
-        ("sssp", pllul),
-        ("sssp", psull),
-        ("kcore", pluee),
-        ("kcore", dtee),
-        ("kshell", pluee),
-        ("kshell", pllul),
-        ("triangles", pluee),
-        ("triangles", dtee),
-        ("triangles", pllul),
-        ("clustering", pluee),
-        ("clustering", fluee),
-        ("clustering", dtee),
-        ("clustering", pllul),
-        ("degree_centrality", pluee),
-        ("degree_centrality", pllul),
-        ("degree_centrality", fluee),
-        ("degree_centrality", dtee),
-        ("eigenvector_centrality", pluel),
-        ("eigenvector_centrality", pllul),
-        ("katz_centrality", pluel),
-        ("katz_centrality", pllul),
-        ("is_simple_path", pllul),
-        ("louvain", pllul),
-        ("sssp_has_path", pllul),
-    ]
-
-    if "NIGHTLY" in os.environ:
-        targets.extend(
-            [
-                ("sssp_average_length", pluee),
-                ("sssp_average_length", pluel),
-                ("sssp_average_length", lued),
-                ("sssp_average_length", dtee),
-                ("sssp_average_length", dtel),
-                ("sssp_average_length", dted),
-                ("pagerank_nx", fluee),
-                ("pagerank_nx", dtee),
-                ("hits", dtee),
-                ("eigenvector_centrality", pluee),
-                ("eigenvector_centrality", lued),
-                ("eigenvector_centrality", fluee),
-                ("eigenvector_centrality", fluel),
-                ("eigenvector_centrality", flued),
-                ("eigenvector_centrality", dtee),
-                ("eigenvector_centrality", dtel),
-                ("eigenvector_centrality", dted),
-                ("katz_centrality", pluee),
-                ("katz_centrality", lued),
-                ("katz_centrality", fluee),
-                ("katz_centrality", fluel),
-                ("katz_centrality", flued),
-                ("katz_centrality", dtee),
-                ("katz_centrality", dtel),
-                ("katz_centrality", dted),
-                ("transitivity", pluee),
-                ("transitivity", fluee),
-                ("transitivity", dtee),
-                ("avg_clustering", pluee),
-                ("avg_clustering", fluee),
-                ("avg_clustering", dtee),
-                ("sssp_projected", dtee),
-                ("sssp_projected", dtel),
-                ("sssp_projected", dted),
-                ("sssp_projected", fluee),
-                ("sssp_projected", fluel),
-                ("sssp_projected", flued),
-            ]
-        )
+    # 4. dynamic fragment
+    dynamic_template = "gs::DynamicProjectedFragment<{},{}>"
+    dee = dynamic_template.format("grape::EmptyType", "grape::EmptyType")
+    ded = dynamic_template.format("grape::EmptyType", "double")
+    dle = dynamic_template.format("int64_t", "grape::EmptyType")
+    dde = dynamic_template.format("double", "grape::EmptyType")
+    targets.extend(
+        [
+            ("wcc_projected", dee),
+            ("sssp_projected", dee),
+            ("sssp_projected", ded),
+            ("sssp_path", dee),
+            ("sssp_has_path", dee),
+            ("sssp_average_length", dee),
+            ("sssp_average_length", ded),
+            ("hits", dee),
+            ("degree_centrality", dee),
+            ("eigenvector_centrality", dee),
+            ("eigenvector_centrality", ded),
+            ("katz_centrality", dee),
+            ("katz_centrality", ded),
+            ("bfs_generic", dee),
+            ("kcore", dee),
+            ("lcc", dee),
+            ("clustering", dee),
+            ("triangles", dee),
+            ("transitivity", dee),
+            ("avg_clustering", dee),
+            ("pagerank_nx", dee),
+            ("pagerank_nx", ded),
+            ("degree_assortativity_coefficient", dee),
+            ("node_boundary", dee),
+            ("edge_boundary", dee),
+            ("average_degree_connectivity", dee),
+            ("average_degree_connectivity", ded),
+            ("attribute_assortativity_coefficient", dle),
+            ("attribute_assortativity_coefficient", dde),
+        ]
+    )
 
     with multiprocessing.Pool() as pool:
         pool.map(cmake_app, targets)
