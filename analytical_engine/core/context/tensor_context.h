@@ -22,7 +22,7 @@
 #include <utility>
 #include <vector>
 
-#include <arrow/array/builder_binary.h>
+#include "arrow/array/builder_binary.h"
 #include "grape/app/context_base.h"
 #include "vineyard/basic/ds/tensor.h"
 
