@@ -18,6 +18,8 @@
 #include <string>
 #include <vector>
 
+#include <arrow/array/array_binary.h>
+
 namespace gs {
 /**
  * @brief trivial_tensor_t is a naive implementation of tensor data structure.
@@ -74,36 +76,36 @@ struct trivial_tensor_t {
 template <>
 struct trivial_tensor_t<std::string> {
  public:
-  trivial_tensor_t() : size_(0) {}
+  trivial_tensor_t() : size_(0), data_(nullptr) {}
 
   ~trivial_tensor_t() = default;
 
-  std::vector<std::string>& data() { return data_; }
+  std::shared_ptr<arrow::StringArray>& data() { return data_; }
 
-  const std::vector<std::string>& data() const { return data_; }
+  const std::shared_ptr<arrow::StringArray>& data() const { return data_; }
 
-  void fill(const std::string& value) { data_.push_back(value); }
+  void fill(const std::string& value) { return; }
 
   std::vector<size_t> shape() const { return shape_; }
 
   size_t size() const { return size_; }
 
   void resize(std::vector<size_t> const& shape) {
-    size_t flat_size = shape.empty() ? 0 : 1;
-    for (auto dim_size : shape) {
-      flat_size *= dim_size;
-    }
+    // size_t flat_size = shape.empty() ? 0 : 1;
+    // for (auto dim_size : shape) {
+    //   flat_size *= dim_size;
+    // }
     this->shape_ = shape;
-    if (flat_size != size_) {
-      data_.resize(flat_size);
-      size_ = flat_size;
-    }
+    // if (flat_size != size_) {
+    //  data_.resize(flat_size);
+    //  size_ = flat_size;
+    //}
   }
 
  private:
   size_t size_;
   std::vector<size_t> shape_;
-  std::vector<std::string> data_;
+  std::shared_ptr<arrow::StringArray> data_;
 };
 }  // namespace gs
 #endif  // ANALYTICAL_ENGINE_CORE_UTILS_TRIVIAL_TENSOR_H_
