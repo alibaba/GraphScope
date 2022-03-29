@@ -45,6 +45,7 @@
     <curator.new.version>5.1.0</curator.new.version>
     <curator.version>2.12.0</curator.version>
     <jackson.version>2.13.2</jackson.version>
+    <jackson.databind.version>2.13.2.1</jackson.databind.version>
     <maven.surefire.version>2.22.2</maven.surefire.version>
     <os.maven.plugin.version>1.6.2</os.maven.plugin.version>
     <protoc.version>3.18.0</protoc.version>
@@ -235,7 +236,7 @@
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-databind</artifactId>
-        <version>${jackson.version}</version>
+        <version>${jackson.databind.version}</version>
       </dependency>
 
       <dependency>
