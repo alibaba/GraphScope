@@ -640,8 +640,8 @@ class TensorContextWrapper<FRAG_T, std::string> : public ITensorContextWrapper {
   bl::result<vineyard::ObjectID> ToVineyardTensor(
       const grape::CommSpec& comm_spec, vineyard::Client& client,
       uint32_t axis) override {
-      RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
-                      "Not implemented ToVineyardTensor for string type");
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "Not implemented ToVineyardTensor for string type");
   }
 
   bl::result<vineyard::ObjectID> ToVineyardDataframe(
