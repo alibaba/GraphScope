@@ -144,7 +144,7 @@ jobs:
     - name: Python Format and Lint Check
       run: |
         echo "Checking formatting for $GITHUB_REPOSITORY"
-        pip3 install black==22.1.0 flake8==4.0.1 isort==5.10.1
+        pip3 install coordinator/requirements-dev.txt
         export LC_ALL=en_US.utf8
         export LANG=en_US.utf8
         pushd python
