@@ -526,7 +526,7 @@ class TensorContextWrapper : public ITensorContextWrapper {
 };
 
 template <typename FRAG_T>
-class TensorContextWrapper<FRAG_T, std::string, void> : public ITensorContextWrapper {
+class TensorContextWrapper<FRAG_T, std::string> : public ITensorContextWrapper {
   using fragment_t = FRAG_T;
   using oid_t = typename fragment_t::oid_t;
   using vertex_t = typename fragment_t::vertex_t;
