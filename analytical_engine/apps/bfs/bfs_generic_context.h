@@ -43,7 +43,11 @@ class BFSGenericContext : public TensorContext<FRAG_T, typename FRAG_T::oid_t> {
     auto vertices = frag.Vertices();
 
     source_id = src_id;
-    depth_limit = limit;
+    if (limit == -1) {
+      depth_limit = frag.GetTotalVerticesNum();
+    } else {
+      depth_limit = limit;
+    }
     output_format = format;
     if (output_format != "edges" && output_format != "predecessors" &&
         output_format != "successors") {

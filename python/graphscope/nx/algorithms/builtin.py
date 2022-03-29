@@ -388,6 +388,7 @@ def bfs_edges(G, source, depth_limit=None):
 
     """
     # FIXME: reverse not support.
+    depth_limit = -1 if depth_limit is None else depth_limit
     ctx = AppAssets(algo="bfs_generic", context="tensor")(
         G, source, depth_limit, format="edges"
     )
