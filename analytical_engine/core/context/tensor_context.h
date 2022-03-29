@@ -60,7 +60,7 @@ inline InArchive& operator<<(InArchive& in_archive,
   size_t size = tensor.size();
   if (size > 0) {
     for (size_t i = 0; i < tensor.size(); ++i) {
-      in_archive << tensor.data()->Value(i);
+      in_archive << tensor.data()->GetView(i);
     }
   }
   return in_archive;
@@ -630,7 +630,7 @@ class TensorContextWrapper<FRAG_T, std::string> : public ITensorContextWrapper {
 
       for (auto row_idx = 0; row_idx < n_row; row_idx++) {
         auto idx = row_idx * n_col + col_idx;
-        *arc << tensor.data()->Value(idx);
+        *arc << tensor.data()->GetView(idx);
       }
       gather_archives(*arc, comm_spec, old_size);
     }
