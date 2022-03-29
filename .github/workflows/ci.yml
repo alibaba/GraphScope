@@ -144,7 +144,7 @@ jobs:
     - name: Python Format and Lint Check
       run: |
         echo "Checking formatting for $GITHUB_REPOSITORY"
-        pip3 install coordinator/requirements-dev.txt
+        pip3 install -r coordinator/requirements-dev.txt
         export LC_ALL=en_US.utf8
         export LANG=en_US.utf8
         pushd python

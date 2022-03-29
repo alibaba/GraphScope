@@ -89,7 +89,7 @@ jobs:
     - name: Python Format and Lint Check
       run: |
         echo "Checking formatting for $GITHUB_REPOSITORY"
-        pip3 install -i coordinator/requirements-dev.txt
+        pip3 install -r coordinator/requirements-dev.txt
         pushd python
         python3 -m isort --check --diff .
         python3 -m black --check --diff .
