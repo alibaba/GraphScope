@@ -60,9 +60,7 @@ inline InArchive& operator<<(InArchive& in_archive,
   size_t size = tensor.size();
   if (size > 0) {
     for (size_t i = 0; i < tensor.size(); ++i) {
-      LOG(INFO) << "size=" << tensor.data()->value_length(i) << " " << tensor.data()->GetString(i);
       in_archive << tensor.data()->Value(i);
-      // in_archive.AddBytes(string_view.data(), string_view.size());
     }
   }
   return in_archive;
@@ -642,120 +640,14 @@ class TensorContextWrapper<FRAG_T, std::string> : public ITensorContextWrapper {
   bl::result<vineyard::ObjectID> ToVineyardTensor(
       const grape::CommSpec& comm_spec, vineyard::Client& client,
       uint32_t axis) override {
-    return 0;
-    /*
-    auto& frag = ctx_->fragment();
-    auto& tensor = ctx_->tensor();
-    auto local_shape = ctx_->shape();
-
-    BOOST_LEAF_AUTO(n_dim, get_n_dim<data_t>(comm_spec, tensor));
-
-    if (axis >= n_dim) {
-      RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
-                      "Invalid axis " + std::to_string(axis) +
-                          ", n-dim: " + std::to_string(n_dim));
-    }
-
-    size_t local_num = local_shape.empty() ? 0 : local_shape[axis], total_num;
-
-    MPI_Allreduce(&local_num, &total_num, 1, MPI_SIZE_T, MPI_SUM,
-                  comm_spec.comm());
-
-    BOOST_LEAF_AUTO(first_shape, get_non_empty_shape(comm_spec, tensor, axis));
-
-    first_shape[axis] = total_num;  // the shape after combined
-
-    if (local_shape.empty()) {
-      local_shape.resize(n_dim, 0);
-    }
-
-    std::vector<int64_t> partition_index;
-
-    for (size_t i = 0; i < n_dim; i++) {
-      partition_index.push_back(frag.fid());
-    }
-
-    std::vector<int64_t> vy_tensor_shape;
-    for (auto e : local_shape) {
-      vy_tensor_shape.push_back(static_cast<int64_t>(e));
-    }
-    vineyard::TensorBuilder<data_t> tensor_builder(client, vy_tensor_shape,
-                                                   partition_index);
-
-    for (size_t offset = 0; offset < tensor.size(); offset++) {
-      tensor_builder.data()[offset] = tensor.data()->Value(offset);
-    }
-
-    auto vy_tensor = std::dynamic_pointer_cast<vineyard::Tensor<data_t>>(
-        tensor_builder.Seal(client));
-    VY_OK_OR_RAISE(vy_tensor->Persist(client));
-
-    std::vector<int64_t> global_shape;
-    std::vector<int64_t> global_partition_shape;
-
-    for (auto e : first_shape) {
-      global_shape.push_back(static_cast<int64_t>(e));
-      global_partition_shape.push_back(frag.fnum());
-    }
-
-    MPIGlobalTensorBuilder builder(client, comm_spec);
-    builder.set_shape(global_shape);
-    builder.set_partition_shape(global_partition_shape);
-    builder.AddChunk(vy_tensor->id());
-
-    return builder.Seal(client)->id();
-    */
+      RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                      "Not implemented ToVineyardTensor for string type");
   }
 
   bl::result<vineyard::ObjectID> ToVineyardDataframe(
       const grape::CommSpec& comm_spec, vineyard::Client& client) override {
-    return 0;
-    /*
-    auto shape = ctx_->shape();
-    auto& tensor = ctx_->tensor();
-    auto& frag = ctx_->fragment();
-
-    BOOST_LEAF_AUTO(n_dim, get_n_dim<data_t>(comm_spec, tensor));
-
-    if (n_dim != 2) {
-      RETURN_GS_ERROR(
-          vineyard::ErrorCode::kInvalidValueError,
-          "This is not a 2-dims tensor, n-dim: " + std::to_string(n_dim));
-    }
-
-    BOOST_LEAF_AUTO(n_col, get_n_column<data_t>(comm_spec, tensor));
-
-    size_t n_row = shape.empty() ? 0 : shape[0];
-
-    vineyard::DataFrameBuilder df_builder(client);
-
-    df_builder.set_partition_index(frag.fid(), 0);
-    df_builder.set_row_batch_index(frag.fid());
-
-    for (size_t col_idx = 0; col_idx < n_col; col_idx++) {
-      std::vector<int64_t> shape{static_cast<int64_t>(n_row)};
-      auto tensor_builder =
-          std::make_shared<vineyard::TensorBuilder<data_t>>(client, shape);
-
-      for (size_t row_idx = 0; row_idx < n_row; row_idx++) {
-        auto idx = row_idx * n_col + col_idx;
-        tensor_builder->data()[row_idx] = tensor.data()->Value(idx);
-      }
-      df_builder.AddColumn("Col " + std::to_string(col_idx), tensor_builder);
-    }
-
-    auto df = df_builder.Seal(client);
-    VY_OK_OR_RAISE(df->Persist(client));
-    auto df_chunk_id = df->id();
-
-    MPIGlobalDataFrameBuilder builder(client, comm_spec);
-    builder.set_partition_shape(frag.fnum(), n_col);
-    builder.AddChunk(df_chunk_id);
-
-    auto vy_obj = builder.Seal(client);
-
-    return vy_obj->id();
-    */
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "Not implemented ToVineyardDataframe for string type");
   }
 
  private:
