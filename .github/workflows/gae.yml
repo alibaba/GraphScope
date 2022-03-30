@@ -48,7 +48,6 @@ jobs:
         # also make coordinator and client for python test
         make coordinator && make client
 
-
     - name: Run Cpp Test
       env:
         GRAPHSCOPE_HOME: /opt/graphscope

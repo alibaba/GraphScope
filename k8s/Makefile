@@ -22,21 +22,11 @@ endif
 TARGET_SERVER_PACKAGE      :=
 TARGET_CLIENT_PACKAGE      :=
 ifeq ($(UNAME_S), Linux)
-    TARGET_CLIENT_PACKAGE := graphscope-client-manylinux2014-py3
 	TARGET_SERVER_PACKAGE := graphscope-manylinux2014-py3
+    TARGET_CLIENT_PACKAGE := graphscope-client-manylinux2014-py3
 else
-	TARGET_CLIENT_PACKAGE := graphscope-client-darwin-py3
 	TARGET_SERVER_PACKAGE := graphscope-darwin-py3
-endif
-
-USE_CACHE := false
-ifeq ($(USE_CACHE), false)
-    CACHE_MOUNT_OPTS =
-else
-    CACHE_MOUNT_OPTS = -v ${HOME}/.m2:/home/graphscope/.m2 \
-					   -v ${HOME}/.cache/sccache:/home/graphscope/.cache/sccache \
-					   -v ${HOME}/.cargo/git:/home/graphscope/.cargo/git \
-					   -v ${HOME}/.cargo/registry:/home/graphscope/.cargo/registry
+	TARGET_CLIENT_PACKAGE := graphscope-client-darwin-py3
 endif
 
 VERSION ?= latest
@@ -141,47 +131,61 @@ graphscope-darwin-py3:
 			delocate-wheel -w dist/wheelhouse -v $$wheel && rm $$wheel; \
 		done
 
+graphscope-manylinux2014-py3-nodocker:
+	cd $(WORKING_DIR)/../ && \
+	make install && \
+	python3 $(WORKING_DIR)/precompile.py && \
+	export WITH_EXTRA_DATA=ON && \
+	cd $(WORKING_DIR)/../coordinator && \
+	rm -fr build dist/*.whl && \
+	sudo strip /opt/graphscope/bin/grape_engine && \
+	sudo strip /opt/graphscope/bin/executor && \
+	sudo strip /opt/graphscope/bin/gaia_executor && \
+	sudo strip /opt/graphscope/lib/*.so && \
+	strip /tmp/gs/builtin/*/*.so && \
+	package_name=gs-lib python3 setup.py bdist_wheel && \
+	rm -fr build && \
+	package_name=gs-include python3 setup.py bdist_wheel && \
+	rm -fr build && \
+	package_name=gs-engine python3 setup.py bdist_wheel && \
+	rm -fr build && \
+	package_name=gs-jython python3 setup.py bdist_wheel && \
+	rm -fr build && \
+	package_name=gs-coordinator python3 setup.py bdist_wheel && \
+	rm -fr build && \
+	package_name=graphscope python3 setup.py bdist_wheel && \
+	cd dist && \
+	for wheel in `ls ./*.whl`; do \
+		auditwheel repair $$wheel --plat=manylinux2014_x86_64 && rm $$wheel; \
+	done
+
 graphscope-manylinux2014-py3:
 	docker pull ${REGISTRY}/$(DOCKER_ORG)/graphscope-vineyard:${VINEYARD_VERSION}
 	docker run --rm -v $(WORKING_DIR)/..:/work \
-		$(CACHE_MOUNT_OPTS) \
 		${REGISTRY}/$(DOCKER_ORG)/graphscope-vineyard:${VINEYARD_VERSION} \
 		bash -c 'source ~/.bashrc && \
-			curl -L https://github.com/mozilla/sccache/releases/download/v0.2.15/sccache-v0.2.15-x86_64-unknown-linux-musl.tar.gz | tar xz && \
-			sudo mv sccache-v0.2.15-x86_64-unknown-linux-musl/sccache /usr/local/bin/ && \
-			sudo chmod +x /usr/local/bin/sccache && \
-			export SCCACHE_DIR=/home/graphscope/.cache/sccache && \
-			export RUSTC_WRAPPER=/usr/local/bin/sccache && \
-			sccache --start-server && \
-			cd /work && \
-			make install && \
-			python3 /work/k8s/precompile.py && \
-			sccache --show-stats && \
-			export WITH_EXTRA_DATA=ON && \
-			cd /work/coordinator && \
-			rm -fr build dist/*.whl && \
-			sudo strip /opt/graphscope/bin/grape_engine && \
-			sudo strip /opt/graphscope/bin/executor && \
-			sudo strip /opt/graphscope/bin/gaia_executor && \
-			sudo strip /opt/graphscope/lib/*.so && \
-			strip /tmp/gs/builtin/*/*.so && \
-			package_name=gs-lib python3 setup.py bdist_wheel && \
-			rm -fr build && \
-			package_name=gs-include python3 setup.py bdist_wheel && \
-			rm -fr build && \
-			package_name=gs-apps python3 setup.py bdist_wheel && \
-			rm -fr build && \
-			package_name=gs-engine python3 setup.py bdist_wheel && \
-			rm -fr build && \
-			package_name=gs-jython python3 setup.py bdist_wheel && \
-			rm -fr build && \
-			package_name=gs-coordinator python3 setup.py bdist_wheel && \
-			rm -fr build && \
-			package_name=graphscope python3 setup.py bdist_wheel && \
-			cd dist && \
-			for wheel in `ls ./*.whl`; do \
-				auditwheel repair $$wheel --plat=manylinux2014_x86_64 && rm $$wheel; \
-			done'
+			cd /work/k8s && \
+			make graphscope-manylinux2014-py3-nodocker'
+
+graphscope-client-manylinux2014-py3-nodocker:
+	cd $(WORKING_DIR)/../learning_engine/graph-learn && \
+	git submodule update --init third_party/pybind11 && \
+	rm -rf cmake-build && \
+	mkdir -p cmake-build && \
+	cd cmake-build && \
+	cmake -DWITH_VINEYARD=ON .. && \
+	make graphlearn_shared -j`nproc` && \
+	export LD_LIBRARY_PATH=$(WORKING_DIR)/../learning_engine/graph-learn/built/lib:$$LD_LIBRARY_PATH && \
+	for py in cp37-cp37m cp38-cp38 cp39-cp39 ; do \
+		cd $(WORKING_DIR)/../python; \
+		export PATH=/opt/python/$$py/bin:$$PATH; \
+		pip3 install -U pip numpy==1.18.5 auditwheel==5.0.0 grpcio grpcio_tools wheel ; \
+		rm -rf build; \
+		rm -rf dist/*.whl; \
+		python3 setup.py bdist_wheel; \
+		cd dist; \
+		auditwheel repair ./*.whl; \
+	done	
 
 graphscope-client-darwin-py3:
 	cd $(WORKING_DIR)/../learning_engine/graph-learn && \
@@ -204,24 +208,7 @@ graphscope-client-manylinux2014-py3:
 	docker pull ${REGISTRY}/$(DOCKER_ORG)/graphscope-vineyard:${VINEYARD_VERSION}
 	docker run --rm -v $(WORKING_DIR)/..:/work \
 		${REGISTRY}/$(DOCKER_ORG)/graphscope-vineyard:${VINEYARD_VERSION} \
-		bash -c 'cd /work/learning_engine/graph-learn && \
-			git submodule update --init third_party/pybind11 && \
-			rm -rf cmake-build && \
-			mkdir -p cmake-build && \
-			cd cmake-build && \
-			cmake -DWITH_VINEYARD=ON .. && \
-			make graphlearn_shared -j`nproc` && \
-			export LD_LIBRARY_PATH=/work/learning_engine/graph-learn/built/lib:$$LD_LIBRARY_PATH && \
-			for py in cp37-cp37m cp38-cp38 cp39-cp39 ; do \
-				cd /work/python; \
-				export PATH=/opt/python/$$py/bin:$$PATH; \
-				pip3 install -U pip numpy==1.18.5 auditwheel==5.0.0 grpcio grpcio_tools wheel ; \
-				rm -rf build; \
-				rm -rf dist/*.whl; \
-				python3 setup.py bdist_wheel; \
-				cd dist; \
-				auditwheel repair ./*.whl; \
-			done'
+		bash -c 'cd /work/k8s && make graphscope-client-manylinux2014-py3-nodocker'
 
 push:
 	docker push ${REGISTRY}/$(DOCKER_ORG)/graphscope-runtime:${VERSION}

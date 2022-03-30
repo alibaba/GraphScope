@@ -53,6 +53,94 @@ jobs:
     steps:
     # For push it's necessary to checkout the code
     - uses: actions/checkout@v2
+    - name: Setup Java11
+      uses: actions/setup-java@v2
+      with:
+         distribution: 'zulu'
+         java-version: '11'
+
+    - name: Cpp Format and Lint Check
+      run: |
+        # install clang-format
+        sudo curl -L https://github.com/muttleyxd/clang-tools-static-binaries/releases/download/master-22538c65/clang-format-8_linux-amd64 --output /usr/bin/clang-format
+        sudo chmod +x /usr/bin/clang-format
+
+        # run format
+        cd analytical_engine/
+        find ./apps ./benchmarks ./core ./frame ./misc ./test  -name "*.h" | xargs clang-format -i --style=file
+        find ./apps ./benchmarks ./core ./frame ./misc ./test  -name "*.cc" | xargs clang-format -i --style=file
+
+        # validate format
+        function prepend() { while read line; do echo "${1}${line}"; done; }
+
+        GIT_DIFF=$(git diff --ignore-submodules)
+        if [[ -n $GIT_DIFF ]]; then
+            echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+            echo "| clang-format failures found!"
+            echo "|"
+            echo "$GIT_DIFF" | prepend "| "
+            echo "|"
+            echo "| Run: "
+            echo "|"
+            echo "|    make gsa_clformat"
+            echo "|"
+            echo "| to fix this error."
+            echo "|"
+            echo "| Ensure you are working with clang-format-8, which can be obtained from"
+            echo "|"
+            echo "|    https://github.com/muttleyxd/clang-tools-static-binaries/releases"
+            echo "|"
+            echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+            exit -1
+        fi
+
+    - name: Java Format and Lint Check
+      run: |
+        wget https://github.com/google/google-java-format/releases/download/v1.13.0/google-java-format-1.13.0-all-deps.jar
+
+        files_to_format=$(git ls-files *.java)
+
+        # run formatter in-place
+        java -jar ${GITHUB_WORKSPACE}/google-java-format-1.13.0-all-deps.jar --aosp --skip-javadoc-formatting -i $files_to_format
+
+        # validate format
+        function prepend() { while read line; do echo "${1}${line}"; done; }
+
+        GIT_DIFF=$(git diff --ignore-submodules)
+        if [[ -n $GIT_DIFF ]]; then
+            echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+            echo "| google-java-format failures found!"
+            echo "|"
+            echo "$GIT_DIFF" | prepend "| "
+            echo "|"
+            echo "| Run: "
+            echo "|"
+            echo '|    java -jar google-java-format-1.13.0-all-deps.jar --aosp --skip-javadoc-formatting -i $(git ls-files *.java)'
+            echo "|"
+            echo "| to fix this error."
+            echo "|"
+            echo "| Ensure you are working with google-java-format-1.13.0, which can be obtained from"
+            echo "|"
+            echo "|    https://github.com/google/google-java-format/releases/download/v1.13.0/google-java-format-1.13.0-all-deps.jar"
+            echo "|"
+            echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+            exit -1
+        fi
+
+    - name: Python Format and Lint Check
+      run: |
+        echo "Checking formatting for $GITHUB_REPOSITORY"
+        pip3 install -r coordinator/requirements-dev.txt
+        pushd python
+        python3 -m isort --check --diff .
+        python3 -m black --check --diff .
+        python3 -m flake8 .
+        popd
+        pushd coordinator
+        python3 -m isort --check --diff .
+        python3 -m black --check --diff .
+        python3 -m flake8 .
+
     # For pull requests it's not necessary to checkout the code
     - uses: dorny/paths-filter@v2
       id: filter
@@ -83,89 +171,53 @@ jobs:
   build-wheels:
     # Require the user id of the self-hosted is 1001, which may need to be
     # configured manually when a new self-hosted runner is added.
-    runs-on: self-hosted
-    if: ${{ github.repository == 'alibaba/GraphScope' }}
+    runs-on: [self-hosted, manylinux2014]
+    needs: [changes]
+    if: ${{ github.repository == 'siyuan0322/GraphScope' }}
     steps:
-    - name: Clean Up
-      run: |
-        echo "CI is running on host $(curl -s 'https://api.ipify.org')"
-
-        sudo chmod -R a+wrx ${GITHUB_WORKSPACE}
-        sudo rm -rf ./* || true
-        find ./ -name "*.egg-info" | xargs sudo rm -rf || true
-        find ./ -name "*.whl" | xargs sudo rm -rf || true
-        find ./ -name "*_pb2.py" | xargs sudo rm -rf || true
-        find ./ -name "*_pb2_grpc.py" | xargs sudo rm -rf || true
-
     - uses: actions/checkout@v2
       with:
         submodules: true
 
-    - name: Cpp Format And Lint Check
-      run: |
-        if ! command -v clang-format &> /dev/null; then
-            sudo curl -L https://github.com/muttleyxd/clang-tools-static-binaries/releases/download/master-22538c65/clang-format-8_linux-amd64 --output /usr/bin/clang-format
-            sudo chmod +x /usr/bin/clang-format
-        fi
+    - uses: actions/cache@v3
+      with:
+        path: ~/.m2/repository
+        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+        restore-keys: |
+          ${{ runner.os }}-maven-
 
-        # run clang-format
-        cd analytical_engine/
-        find ./apps ./benchmarks ./core ./frame ./misc ./test  -name "*.h" | xargs clang-format -i --style=file
-        find ./apps ./benchmarks ./core ./frame ./misc ./test  -name "*.cc" | xargs clang-format -i --style=file
-        # validate format
-        function prepend() { while read line; do echo "${1}${line}"; done; }
-        GIT_DIFF=$(git diff --ignore-submodules)
-        if [[ -n $GIT_DIFF ]]; then
-            echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-            echo "| clang-format failures found!"
-            echo "|"
-            echo "$GIT_DIFF" | prepend "| "
-            echo "|"
-            echo "| Run: "
-            echo "|"
-            echo "|    make gsa_clformat"
-            echo "|"
-            echo "| to fix this error."
-            echo "|"
-            echo "| Ensure you are working with clang-format-8, which can be obtained from"
-            echo "|"
-            echo "|    https://github.com/muttleyxd/clang-tools-static-binaries/releases"
-            echo "|"
-            echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-            exit -1
-        fi
-        python3 ./misc/cpplint.py --recursive ./apps ./benchmarks ./core ./frame ./test
+    - uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          ~/.cache/sccache
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-    - name: Java Format and Lint Check
-      run: |
-        wget https://github.com/google/google-java-format/releases/download/v1.13.0/google-java-format-1.13.0-all-deps.jar
-        java -jar ${GITHUB_WORKSPACE}/google-java-format-1.13.0-all-deps.jar --aosp --skip-javadoc-formatting --set-exit-if-changed --dry-run $(git ls-files *.java)
-
-    - name: Python Format and Lint Check
-      run: |
-        echo "Checking formatting for $GITHUB_REPOSITORY"
-        pip3 install -r coordinator/requirements-dev.txt
-        export LC_ALL=en_US.utf8
-        export LANG=en_US.utf8
-        pushd python
-        python3 -m isort --check --diff .
-        python3 -m black --check --diff .
-        python3 -m flake8 .
-        popd
-        pushd coordinator
-        python3 -m isort --check --diff .
-        python3 -m black --check --diff .
-        python3 -m flake8 .
+    - uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
 
     - name: Build Wheels
       run: |
-        mkdir -p ${HOME}/.m2 ${HOME}/.cache/sccache ${HOME}/.cargo/git ${HOME}/.cargo/registry
+        source ~/.bashrc
+
+        export SCCACHE_DIR=~/.cache/sccache
+        export RUSTC_WRAPPER=/usr/local/bin/sccache
+        sccache --start-server
 
         cd ${GITHUB_WORKSPACE}/k8s
         # build graphscope wheels
-        make graphscope-py3-package USE_CACHE=true
+        make graphscope-manylinux2014-py3-nodocker
         # build client wheels
-        make graphscope-client-py3-package
+        make graphscope-client-manylinux2014-py3-nodocker
+
+        sccache --show-stats
 
         # package
         cd ${GITHUB_WORKSPACE}
@@ -468,23 +520,25 @@ jobs:
             $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/nx/readwrite/tests
 
   gie-test:
-    runs-on: self-hosted
+    runs-on: [self-hosted, ubuntu2004]
     needs: [build-wheels, changes]
-    if: ${{ (needs.changes.outputs.gie-function-test == 'true' || github.ref == 'refs/heads/main') && github.repository == 'alibaba/GraphScope' }}
+    if: ${{ (needs.changes.outputs.gie-function-test == 'true' || github.ref == 'refs/heads/main') && github.repository == 'siyuan0322/GraphScope' }}
     steps:
-      - name: Clean up
-        run: |
-          echo "CI is running on host $(curl -s 'https://api.ipify.org')"
-          sudo docker ps --no-trunc -aqf "status=exited" | xargs sudo docker rm || true
-          sudo docker images --no-trunc -aqf "dangling=true" | xargs sudo docker rmi -f || true
-          sudo chmod -R a+wrx ${GITHUB_WORKSPACE}
-          sudo rm -rf ./* || true
-          find ./ -name "*.egg-info" | xargs sudo rm -rf || true
-          find ./ -name "*.whl" | xargs sudo rm -rf || true
-          find ./ -name "*_pb2.py" | xargs sudo rm -rf || true
-          find ./ -name "*_pb2_grpc.py" | xargs sudo rm -rf || true
-
       - uses: actions/checkout@v2.3.2
+
+      - uses: actions/cache@v3
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
 
       - uses: actions/download-artifact@v2
         with:
@@ -505,46 +559,41 @@ jobs:
           cd ${GITHUB_WORKSPACE}
           make graphscope-image
 
-          # build python client proto
           cd ${GITHUB_WORKSPACE}/python
+          pip3 install -r requirements.txt
+          pip3 install -r requirements-dev.txt
+
+          # build python client proto
           python3 setup.py build_proto
 
 
       - name: Run Function Test
-        env:
-          GS_TEST_DIR: ${{ github.workspace }}/gstest
         run: |
-          # download dataset
-          git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
+          export GS_TEST_DIR=${GITHUB_WORKSPACE}/interactive_engine/tests/src/main/resources
+          minikube start --base-image='registry-vpc.cn-hongkong.aliyuncs.com/graphscope/kicbase:v0.0.30' \
+                         --cpus='12' --memory='32000mb' --disk-size='40000mb' \
+                         --mount=true --mount-string="${GS_TEST_DIR}:${GS_TEST_DIR}"
+          minikube image load graphscope/graphscope:${SHORT_SHA}
 
-          cd ${GITHUB_WORKSPACE}/interactive_engine && mvn clean install -DskipTests -Pjava-release
+          export PYTHONPATH=${GITHUB_WORKSPACE}/python:${PYTHONPATH}
+          cd ${GITHUB_WORKSPACE}/interactive_engine && mvn clean install --quiet -DskipTests -Pjava-release
           cd ${GITHUB_WORKSPACE}/interactive_engine/tests
           ./function_test.sh 8111 1 graphscope/graphscope:${SHORT_SHA}
           ./function_test.sh 8112 2 graphscope/graphscope:${SHORT_SHA}
 
-      - name: Clean
-        if: always()
-        run: |
-          sudo docker rmi -f graphscope/graphscope:${SHORT_SHA} || true
-
   k8s-test:
-    runs-on: self-hosted
-    if: ${{ github.repository == 'alibaba/GraphScope' }}
+    runs-on: [self-hosted, ubuntu2004]
+    if: ${{ github.repository == 'siyuan0322/GraphScope' }}
     needs: [build-wheels]
     steps:
-      - name: Clean up
-        run: |
-          echo "CI is running on host $(curl -s 'https://api.ipify.org')"
-          sudo docker ps --no-trunc -aqf "status=exited" | xargs sudo docker rm || true
-          sudo docker images --no-trunc -aqf "dangling=true" | xargs sudo docker rmi -f || true
-          sudo chmod -R a+wrx ${GITHUB_WORKSPACE}
-          sudo rm -rf ./* || true
-          find ./ -name "*.egg-info" | xargs sudo rm -rf || true
-          find ./ -name "*.whl" | xargs sudo rm -rf || true
-          find ./ -name "*_pb2.py" | xargs sudo rm -rf || true
-          find ./ -name "*_pb2_grpc.py" | xargs sudo rm -rf || true
-
       - uses: actions/checkout@v2.3.2
+
+      - uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
 
       - uses: actions/download-artifact@v2
         with:
@@ -564,7 +613,7 @@ jobs:
           # build graphscope image
           cd ${GITHUB_WORKSPACE}
           make graphscope-image
-          sudo docker tag graphscope/graphscope:${SHORT_SHA} ${{ env.GS_IMAGE }}:${SHORT_SHA}
+          docker tag graphscope/graphscope:${SHORT_SHA} ${{ env.GS_IMAGE }}:${SHORT_SHA}
 
           cd ${GITHUB_WORKSPACE}/python
           pip3 install -r requirements.txt
@@ -580,9 +629,16 @@ jobs:
           # install pytest
           python3 -m pip install pytest pytest-cov
 
+      - name: Setup SSH
+        run: |
+          ssh-keygen -t rsa -f ~/.ssh/id_rsa -N ''
+          cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+          chmod og-wx ~/.ssh/authorized_keys
+          echo "StrictHostKeyChecking no" >> ~/.ssh/config
+          sudo /etc/init.d/ssh start
+
       - name: Kubernetes Test
         env:
-          CHANGE_MINIKUBE_NONE_USER: true
           GS_TEST_DIR: ${{ github.workspace }}/gstest
         run: |
           # download dataset
@@ -591,6 +647,11 @@ jobs:
           # set GS_IMAGE
           export GS_IMAGE=${{ env.GS_IMAGE }}:${SHORT_SHA}
 
+          minikube start --base-image='registry-vpc.cn-hongkong.aliyuncs.com/graphscope/kicbase:v0.0.30' \
+                         --cpus='12' --memory='32000mb' --disk-size='40000mb' \
+                         --mount=true --mount-string="${GS_TEST_DIR}:${GS_TEST_DIR}"
+
+          minikube image load ${{ env.GS_IMAGE }}:${SHORT_SHA}
           cd ${GITHUB_WORKSPACE}/python
           python3 -m pytest --ignore=./graphscope/tests/kubernetes/test_store_service.py \
                           --cov=graphscope --cov-config=.coveragerc --cov-report=xml \
@@ -605,9 +666,6 @@ jobs:
 
       - name: Helm Test
         run: |
-          if ! command -v helm &> /dev/null; then
-            curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
-          fi
           cd charts
           helm install graphscope --set coordinator.image.tag=${SHORT_SHA} \
                                   --set engines.image.tag=${SHORT_SHA} \
@@ -618,16 +676,13 @@ jobs:
 
       - name: HDFS test
         env:
-          CHANGE_MINIKUBE_NONE_USER: true
           JAVA_HOME: /usr/lib/jvm/default-java
           GS_TEST_DIR: ${{ github.workspace }}/gstest
         run: |
           export GS_IMAGE=${{ env.GS_IMAGE }}:${SHORT_SHA}
 
           # install hadoop HDFS
-          cd /tmp
-          wget -q https://mirror.cogentco.com/pub/apache/hadoop/common/hadoop-2.10.1/hadoop-2.10.1.tar.gz
-          tar -zxf hadoop-2.10.1.tar.gz
+          tar -zxf /home/runner/hadoop-2.10.1.tar.gz -C /tmp/
           cd ${GITHUB_WORKSPACE}/.github/workflows/hadoop_scripts
           ./prepare_hadoop.sh /tmp/hadoop-2.10.1
           export PATH=${PATH}:/tmp/hadoop-2.10.1/bin
@@ -645,15 +700,3 @@ jobs:
           python3 -m pytest -s ./graphscope/tests/kubernetes/test_demo_script.py -k test_demo_on_hdfs
           # Check the result file have successfully written to the given location
           # hdfs dfs -test -e /ldbc_sample/res.csv_0 && hdfs dfs -test -e /ldbc_sample/res.csv_1
-
-      - name: Clean
-        if: always()
-        env:
-          JAVA_HOME: /usr/lib/jvm/default-java
-        run: |
-          HADOOP_SSH_OPTS="-o StrictHostKeyChecking=no" /tmp/hadoop-2.10.1/sbin/stop-dfs.sh || true
-          rm -rf /tmp/hadoop* || true
-          sudo docker rmi -f graphscope/graphscope:${SHORT_SHA} || true
-          sudo docker rmi -f ${{ env.GS_IMAGE }}:${SHORT_SHA} || true
-          helm uninstall graphscope || true
-          kubectl delete pod graphscope-test-rpc-service --wait=false || true
