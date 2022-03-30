@@ -23,7 +23,8 @@ log4rs = "0.8.0"
 grpcio = "=0.4.1"
 grpcio-sys = { version = "0.4.7", features = ["openssl-vendored"] }
 rand = "0.8.4"
-rocksdb = "0.18.0"
+# deactivation of bzip2 due to https://github.com/rust-rocksdb/rust-rocksdb/issues/609
+rocksdb = { version = "0.18.0", features = ["snappy", "lz4", "zstd", "zlib"], default-features = false }
 
 maxgraph-common = { path = "../../rust-common" }
 
