@@ -54,7 +54,7 @@ from graphscope.deploy.kubernetes.resource_builder import resolve_volume_builder
 from graphscope.deploy.kubernetes.utils import delete_kubernetes_object
 from graphscope.deploy.kubernetes.utils import get_kubernetes_object_info
 from graphscope.deploy.kubernetes.utils import get_service_endpoints
-from graphscope.deploy.kubernetes.utils import try_to_resolve_api_client
+from graphscope.deploy.kubernetes.utils import resolve_api_client
 from graphscope.framework.utils import PipeWatcher
 from graphscope.framework.utils import get_tempdir
 from graphscope.framework.utils import is_free_port
@@ -201,7 +201,7 @@ class KubernetesClusterLauncher(Launcher):
     ):
 
         super().__init__()
-        self._api_client = try_to_resolve_api_client()
+        self._api_client = resolve_api_client()
         self._core_api = kube_client.CoreV1Api(self._api_client)
         self._app_api = kube_client.AppsV1Api(self._api_client)
 

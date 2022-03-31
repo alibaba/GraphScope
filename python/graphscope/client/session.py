@@ -49,7 +49,7 @@ from graphscope.client.utils import set_defaults
 from graphscope.config import GSConfig as gs_config
 from graphscope.deploy.hosts.cluster import HostsClusterLauncher
 from graphscope.deploy.kubernetes.cluster import KubernetesClusterLauncher
-from graphscope.deploy.kubernetes.utils import try_to_resolve_api_client
+from graphscope.deploy.kubernetes.utils import resolve_api_client
 from graphscope.framework.dag import Dag
 from graphscope.framework.errors import FatalError
 from graphscope.framework.errors import InteractiveEngineInternalError
@@ -992,7 +992,7 @@ class Session(object):
                 api_client = self._config_params["k8s_client_config"]
             else:
                 try:
-                    api_client = try_to_resolve_api_client(
+                    api_client = resolve_api_client(
                         self._config_params["k8s_client_config"]
                     )
                 except kube_config.ConfigException as e:
