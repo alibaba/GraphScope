@@ -1,0 +1,19 @@
+[package]
+name = "runtime"
+version = "0.1.0"
+edition = "2018"
+
+[dependencies]
+dyn_type = {path = "../../../dyn_type"}
+indexmap = "1.7.0"
+ir_common = {path = "../common"}
+lazy_static = "1.3.0"
+log = "0.4"
+pegasus_common = { path = "../../../engine/pegasus/common" }
+pegasus = { path = "../../../engine/pegasus/pegasus" }
+pegasus_server = { path = "../../../engine/pegasus/server-v0" }
+prost = "0.9"
+
+[features]
+default = []
+proto_inplace = ["ir_common/proto_inplace", "pegasus_server/gcip"]

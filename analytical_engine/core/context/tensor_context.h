@@ -22,6 +22,7 @@
 #include <utility>
 #include <vector>
 
+#include "arrow/array/builder_binary.h"
 #include "grape/app/context_base.h"
 #include "vineyard/basic/ds/tensor.h"
 
@@ -54,6 +55,17 @@ inline InArchive& operator<<(InArchive& in_archive,
   return in_archive;
 }
 
+inline InArchive& operator<<(InArchive& in_archive,
+                             const gs::trivial_tensor_t<std::string>& tensor) {
+  size_t size = tensor.size();
+  if (size > 0) {
+    for (size_t i = 0; i < tensor.size(); ++i) {
+      in_archive << tensor.data()->GetView(i);
+    }
+  }
+  return in_archive;
+}
+
 #ifdef NETWORKX
 inline InArchive& operator<<(
     InArchive& in_archive,
@@ -62,15 +74,10 @@ inline InArchive& operator<<(
   if (size > 0) {
     auto type = gs::dynamic::GetType(tensor.data()[0]);
     CHECK(type == gs::dynamic::Type::kInt64Type ||
-          type == gs::dynamic::Type::kDoubleType);
-    if (type == gs::dynamic::Type::kInt64Type) {
-      for (size_t i = 0; i < tensor.size(); i++) {
-        in_archive << tensor.data()[i].GetInt64();
-      }
-    } else {
-      for (size_t i = 0; i < tensor.size(); i++) {
-        in_archive << tensor.data()[i].GetDouble();
-      }
+          type == gs::dynamic::Type::kDoubleType ||
+          type == gs::dynamic::Type::kStringType);
+    for (size_t i = 0; i < tensor.size(); i++) {
+      in_archive << tensor.data()[i];
     }
   }
   return in_archive;
@@ -217,6 +224,49 @@ class TensorContext : public grape::ContextBase {
 
     set_shape(shape);
     memcpy(tensor_.data(), data.data(), sizeof(data_t) * data.size());
+  }
+
+  void assign(const data_t& data) { tensor_.fill(data); }
+
+  void set_shape(std::vector<std::size_t> shape) {
+    CHECK(!shape.empty());
+    tensor_.resize(shape);
+  }
+
+  std::vector<size_t> shape() const { return tensor_.shape(); }
+
+  inline tensor_t& tensor() { return tensor_; }
+
+ private:
+  const fragment_t& fragment_;
+  tensor_t tensor_;
+};
+
+template <typename FRAG_T>
+class TensorContext<FRAG_T, std::string> : public grape::ContextBase {
+  using fragment_t = FRAG_T;
+  using vertex_t = typename fragment_t::vertex_t;
+  using tensor_t = trivial_tensor_t<std::string>;
+
+ public:
+  using data_t = std::string;
+
+  explicit TensorContext(const fragment_t& fragment) : fragment_(fragment) {}
+
+  const fragment_t& fragment() { return fragment_; }
+
+  void assign(const std::vector<data_t>& data,
+              const std::vector<size_t>& shape) {
+    size_t size = 1;
+    for (size_t dim_size : shape) {
+      size *= dim_size;
+    }
+    CHECK_EQ(data.size(), size);
+
+    set_shape(shape);
+    arrow::StringBuilder builder;
+    builder.AppendValues(data);
+    builder.Finish(&(tensor_.data()));
   }
 
   void assign(const data_t& data) { tensor_.fill(data); }
@@ -473,6 +523,138 @@ class TensorContextWrapper : public ITensorContextWrapper {
   std::shared_ptr<context_t> ctx_;
 };
 
+template <typename FRAG_T>
+class TensorContextWrapper<FRAG_T, std::string> : public ITensorContextWrapper {
+  using fragment_t = FRAG_T;
+  using oid_t = typename fragment_t::oid_t;
+  using vertex_t = typename fragment_t::vertex_t;
+  using context_t = TensorContext<FRAG_T, std::string>;
+  using data_t = std::string;
+
+ public:
+  explicit TensorContextWrapper(const std::string& id,
+                                std::shared_ptr<IFragmentWrapper> frag_wrapper,
+                                std::shared_ptr<context_t> ctx)
+      : ITensorContextWrapper(id),
+        frag_wrapper_(std::move(frag_wrapper)),
+        ctx_(std::move(ctx)) {}
+
+  std::string context_type() override { return CONTEXT_TYPE_TENSOR; }
+
+  std::shared_ptr<IFragmentWrapper> fragment_wrapper() override {
+    return frag_wrapper_;
+  }
+
+  bl::result<std::unique_ptr<grape::InArchive>> ToNdArray(
+      const grape::CommSpec& comm_spec, uint32_t axis) override {
+    auto shape = ctx_->shape();
+    auto& tensor = ctx_->tensor();
+    auto arc = std::make_unique<grape::InArchive>();
+
+    BOOST_LEAF_AUTO(n_dim, get_n_dim<data_t>(comm_spec, tensor));
+
+    if (axis >= n_dim) {
+      RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
+                      "Invalid axis " + std::to_string(axis) +
+                          ", n-dim: " + std::to_string(n_dim));
+    }
+
+    BOOST_LEAF_AUTO(first_shape, get_non_empty_shape(comm_spec, tensor, axis));
+
+    int64_t local_num = shape.empty() ? 0 : shape[axis], total_num;
+
+    if (comm_spec.fid() == 0) {
+      MPI_Reduce(&local_num, &total_num, 1, MPI_INT64_T, MPI_SUM,
+                 comm_spec.worker_id(), comm_spec.comm());
+      *arc << static_cast<int64_t>(n_dim);  // shape size
+      first_shape[axis] = total_num;        // the shape after combined
+      for (auto dim_size : first_shape) {
+        *arc << static_cast<int64_t>(dim_size);
+      }
+      *arc << static_cast<int>(vineyard::TypeToInt<data_t>::value);
+
+      size_t total_size = first_shape.empty() ? 0 : 1;
+      for (auto e : first_shape) {
+        total_size *= e;
+      }
+      *arc << static_cast<int64_t>(total_size);
+    } else {
+      MPI_Reduce(&local_num, NULL, 1, MPI_INT64_T, MPI_SUM,
+                 comm_spec.FragToWorker(0), comm_spec.comm());
+    }
+
+    auto old_size = arc->GetSize();
+
+    *arc << tensor;
+    gather_archives(*arc, comm_spec, old_size);
+    return arc;
+  }
+
+  bl::result<std::unique_ptr<grape::InArchive>> ToDataframe(
+      const grape::CommSpec& comm_spec) override {
+    auto shape = ctx_->shape();
+    auto& tensor = ctx_->tensor();
+    auto arc = std::make_unique<grape::InArchive>();
+
+    BOOST_LEAF_AUTO(n_dim, get_n_dim<data_t>(comm_spec, tensor));
+
+    if (n_dim != 2) {
+      RETURN_GS_ERROR(
+          vineyard::ErrorCode::kInvalidValueError,
+          "This is not a 2-dims tensor, n-dim: " + std::to_string(n_dim));
+    }
+
+    BOOST_LEAF_AUTO(n_col, get_n_column<data_t>(comm_spec, tensor));
+
+    int64_t n_row = shape.empty() ? 0 : shape[0];
+    int64_t total_n_row;
+
+    if (comm_spec.worker_id() == grape::kCoordinatorRank) {
+      MPI_Reduce(&n_row, &total_n_row, 1, MPI_INT64_T, MPI_SUM,
+                 comm_spec.worker_id(), comm_spec.comm());
+      *arc << static_cast<int64_t>(n_col);
+      *arc << static_cast<int64_t>(total_n_row);
+    } else {
+      MPI_Reduce(&n_row, NULL, 1, MPI_INT64_T, MPI_SUM,
+                 comm_spec.FragToWorker(0), comm_spec.comm());
+    }
+
+    for (size_t col_idx = 0; col_idx < n_col; col_idx++) {
+      if (comm_spec.worker_id() == grape::kCoordinatorRank) {
+        *arc << "Col " + std::to_string(col_idx);  // Column name
+        *arc << static_cast<int>(vineyard::TypeToInt<data_t>::value);
+      }
+
+      // Python side requires columnar data structure
+      auto old_size = arc->GetSize();
+
+      for (auto row_idx = 0; row_idx < n_row; row_idx++) {
+        auto idx = row_idx * n_col + col_idx;
+        *arc << tensor.data()->GetView(idx);
+      }
+      gather_archives(*arc, comm_spec, old_size);
+    }
+    return arc;
+  }
+
+  bl::result<vineyard::ObjectID> ToVineyardTensor(
+      const grape::CommSpec& comm_spec, vineyard::Client& client,
+      uint32_t axis) override {
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "Not implemented ToVineyardTensor for string type");
+  }
+
+  bl::result<vineyard::ObjectID> ToVineyardDataframe(
+      const grape::CommSpec& comm_spec, vineyard::Client& client) override {
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "Not implemented ToVineyardDataframe for string type");
+  }
+
+ private:
+  std::shared_ptr<IFragmentWrapper> frag_wrapper_;
+  std::shared_ptr<context_t> ctx_;
+};
+
 #ifdef NETWORKX
 /**
  * @brief This is the specialized TensorContextWrapper for dynamic::Value type
@@ -538,6 +720,8 @@ class TensorContextWrapper<
         *arc << static_cast<int>(vineyard::TypeToInt<double>::value);
       } else if (data_type == dynamic::Type::kNullType) {
         *arc << static_cast<int>(vineyard::TypeToInt<void>::value);
+      } else if (data_type == dynamic::Type::kStringType) {
+        *arc << static_cast<int>(vineyard::TypeToInt<std::string>::value);
       } else {
         RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
                         "Only support int64, double");

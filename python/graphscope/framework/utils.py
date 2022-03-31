@@ -415,7 +415,10 @@ def decode_numpy(value):
         data_copy = []
         for _ in range(array_size):
             data_copy.append(archive.get_string())
-        array = np.array(data_copy, dtype=dtype)
+        if shape and shape[0] > 1:
+            array = np.reshape(data_copy, shape)
+        else:
+            array = np.array(data_copy, dtype=dtype)
     else:
         array = np.ndarray(
             shape=shape,

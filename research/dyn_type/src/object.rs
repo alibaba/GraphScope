@@ -15,9 +15,11 @@
 
 use crate::{try_downcast, try_downcast_ref, CastError, DynType};
 use core::any::TypeId;
+use itertools::Itertools;
 use std::any::Any;
 use std::borrow::Cow;
 use std::cmp::Ordering;
+use std::collections::BTreeMap;
 use std::convert::TryFrom;
 use std::fmt::Debug;
 use std::hash::{Hash, Hasher};
@@ -32,6 +34,9 @@ pub enum RawType {
     Float,
     String,
     Blob(usize),
+    Vector,
+    KV,
+    None,
     Unknown,
 }
 
@@ -104,15 +109,9 @@ impl Primitives {
     pub fn as_i8(&self) -> Result<i8, CastError> {
         match self {
             Primitives::Byte(v) => Ok(*v),
-            Primitives::Integer(v) => {
-                i8::try_from(*v).map_err(|_| CastError::new::<i8>(RawType::Integer))
-            }
-            Primitives::Long(v) => {
-                i8::try_from(*v).map_err(|_| CastError::new::<i8>(RawType::Long))
-            }
-            Primitives::ULLong(v) => {
-                i8::try_from(*v).map_err(|_| CastError::new::<i8>(RawType::ULLong))
-            }
+            Primitives::Integer(v) => i8::try_from(*v).map_err(|_| CastError::new::<i8>(RawType::Integer)),
+            Primitives::Long(v) => i8::try_from(*v).map_err(|_| CastError::new::<i8>(RawType::Long)),
+            Primitives::ULLong(v) => i8::try_from(*v).map_err(|_| CastError::new::<i8>(RawType::ULLong)),
             Primitives::Float(_) => Err(CastError::new::<i8>(RawType::Float)),
         }
     }
@@ -124,12 +123,8 @@ impl Primitives {
             Primitives::Integer(v) => {
                 i16::try_from(*v).map_err(|_| CastError::new::<i16>(RawType::Integer))
             }
-            Primitives::Long(v) => {
-                i16::try_from(*v).map_err(|_| CastError::new::<i16>(RawType::Long))
-            }
-            Primitives::ULLong(v) => {
-                i16::try_from(*v).map_err(|_| CastError::new::<i16>(RawType::ULLong))
-            }
+            Primitives::Long(v) => i16::try_from(*v).map_err(|_| CastError::new::<i16>(RawType::Long)),
+            Primitives::ULLong(v) => i16::try_from(*v).map_err(|_| CastError::new::<i16>(RawType::ULLong)),
             Primitives::Float(_) => Err(CastError::new::<i16>(RawType::Float)),
         }
     }
@@ -139,12 +134,8 @@ impl Primitives {
         match self {
             Primitives::Byte(v) => Ok(*v as i32),
             Primitives::Integer(v) => Ok(*v),
-            Primitives::Long(v) => {
-                i32::try_from(*v).map_err(|_| CastError::new::<i32>(RawType::Long))
-            }
-            Primitives::ULLong(v) => {
-                i32::try_from(*v).map_err(|_| CastError::new::<i32>(RawType::ULLong))
-            }
+            Primitives::Long(v) => i32::try_from(*v).map_err(|_| CastError::new::<i32>(RawType::Long)),
+            Primitives::ULLong(v) => i32::try_from(*v).map_err(|_| CastError::new::<i32>(RawType::ULLong)),
             Primitives::Float(_) => Err(CastError::new::<i32>(RawType::Float)),
         }
     }
@@ -155,9 +146,7 @@ impl Primitives {
             Primitives::Byte(v) => Ok(*v as i64),
             Primitives::Integer(v) => Ok(*v as i64),
             Primitives::Long(v) => Ok(*v),
-            Primitives::ULLong(v) => {
-                i64::try_from(*v).map_err(|_| CastError::new::<i64>(RawType::ULLong))
-            }
+            Primitives::ULLong(v) => i64::try_from(*v).map_err(|_| CastError::new::<i64>(RawType::ULLong)),
             Primitives::Float(_) => Err(CastError::new::<i64>(RawType::Float)),
         }
     }
@@ -178,18 +167,10 @@ impl Primitives {
     #[inline]
     pub fn as_u8(&self) -> Result<u8, CastError> {
         match self {
-            Primitives::Byte(v) => {
-                u8::try_from(*v).map_err(|_| CastError::new::<u8>(RawType::Byte))
-            }
-            Primitives::Integer(v) => {
-                u8::try_from(*v).map_err(|_| CastError::new::<u8>(RawType::Integer))
-            }
-            Primitives::Long(v) => {
-                u8::try_from(*v).map_err(|_| CastError::new::<u8>(RawType::Long))
-            }
-            Primitives::ULLong(v) => {
-                u8::try_from(*v).map_err(|_| CastError::new::<u8>(RawType::ULLong))
-            }
+            Primitives::Byte(v) => u8::try_from(*v).map_err(|_| CastError::new::<u8>(RawType::Byte)),
+            Primitives::Integer(v) => u8::try_from(*v).map_err(|_| CastError::new::<u8>(RawType::Integer)),
+            Primitives::Long(v) => u8::try_from(*v).map_err(|_| CastError::new::<u8>(RawType::Long)),
+            Primitives::ULLong(v) => u8::try_from(*v).map_err(|_| CastError::new::<u8>(RawType::ULLong)),
             Primitives::Float(_) => Err(CastError::new::<u8>(RawType::Float)),
         }
     }
@@ -197,18 +178,12 @@ impl Primitives {
     #[inline]
     pub fn as_u16(&self) -> Result<u16, CastError> {
         match self {
-            Primitives::Byte(v) => {
-                u16::try_from(*v).map_err(|_| CastError::new::<u16>(RawType::Byte))
-            }
+            Primitives::Byte(v) => u16::try_from(*v).map_err(|_| CastError::new::<u16>(RawType::Byte)),
             Primitives::Integer(v) => {
                 u16::try_from(*v).map_err(|_| CastError::new::<u16>(RawType::Integer))
             }
-            Primitives::Long(v) => {
-                u16::try_from(*v).map_err(|_| CastError::new::<u16>(RawType::Long))
-            }
-            Primitives::ULLong(v) => {
-                u16::try_from(*v).map_err(|_| CastError::new::<u16>(RawType::ULLong))
-            }
+            Primitives::Long(v) => u16::try_from(*v).map_err(|_| CastError::new::<u16>(RawType::Long)),
+            Primitives::ULLong(v) => u16::try_from(*v).map_err(|_| CastError::new::<u16>(RawType::ULLong)),
             Primitives::Float(_) => Err(CastError::new::<u16>(RawType::Float)),
         }
     }
@@ -216,18 +191,12 @@ impl Primitives {
     #[inline]
     pub fn as_u32(&self) -> Result<u32, CastError> {
         match self {
-            Primitives::Byte(v) => {
-                u32::try_from(*v).map_err(|_| CastError::new::<u32>(RawType::Byte))
-            }
+            Primitives::Byte(v) => u32::try_from(*v).map_err(|_| CastError::new::<u32>(RawType::Byte)),
             Primitives::Integer(v) => {
                 u32::try_from(*v).map_err(|_| CastError::new::<u32>(RawType::Integer))
             }
-            Primitives::Long(v) => {
-                u32::try_from(*v).map_err(|_| CastError::new::<u32>(RawType::Long))
-            }
-            Primitives::ULLong(v) => {
-                u32::try_from(*v).map_err(|_| CastError::new::<u32>(RawType::ULLong))
-            }
+            Primitives::Long(v) => u32::try_from(*v).map_err(|_| CastError::new::<u32>(RawType::Long)),
+            Primitives::ULLong(v) => u32::try_from(*v).map_err(|_| CastError::new::<u32>(RawType::ULLong)),
             Primitives::Float(_) => Err(CastError::new::<u32>(RawType::Float)),
         }
     }
@@ -235,18 +204,12 @@ impl Primitives {
     #[inline]
     pub fn as_u64(&self) -> Result<u64, CastError> {
         match self {
-            Primitives::Byte(v) => {
-                u64::try_from(*v).map_err(|_| CastError::new::<u64>(RawType::Byte))
-            }
+            Primitives::Byte(v) => u64::try_from(*v).map_err(|_| CastError::new::<u64>(RawType::Byte)),
             Primitives::Integer(v) => {
                 u64::try_from(*v).map_err(|_| CastError::new::<u64>(RawType::Integer))
             }
-            Primitives::Long(v) => {
-                u64::try_from(*v).map_err(|_| CastError::new::<u64>(RawType::Long))
-            }
-            Primitives::ULLong(v) => {
-                u64::try_from(*v).map_err(|_| CastError::new::<u64>(RawType::ULLong))
-            }
+            Primitives::Long(v) => u64::try_from(*v).map_err(|_| CastError::new::<u64>(RawType::Long)),
+            Primitives::ULLong(v) => u64::try_from(*v).map_err(|_| CastError::new::<u64>(RawType::ULLong)),
             Primitives::Float(_) => Err(CastError::new::<u64>(RawType::Float)),
         }
     }
@@ -259,15 +222,11 @@ impl Primitives {
     #[inline]
     pub fn as_u128(&self) -> Result<u128, CastError> {
         match self {
-            Primitives::Byte(v) => {
-                u128::try_from(*v).map_err(|_| CastError::new::<u128>(RawType::Byte))
-            }
+            Primitives::Byte(v) => u128::try_from(*v).map_err(|_| CastError::new::<u128>(RawType::Byte)),
             Primitives::Integer(v) => {
                 u128::try_from(*v).map_err(|_| CastError::new::<u128>(RawType::Integer))
             }
-            Primitives::Long(v) => {
-                u128::try_from(*v).map_err(|_| CastError::new::<u128>(RawType::Long))
-            }
+            Primitives::Long(v) => u128::try_from(*v).map_err(|_| CastError::new::<u128>(RawType::Long)),
             Primitives::ULLong(v) => Ok(*v),
             Primitives::Float(_) => Err(CastError::new::<u128>(RawType::Float)),
         }
@@ -276,9 +235,7 @@ impl Primitives {
     #[inline]
     pub fn as_f64(&self) -> Result<f64, CastError> {
         match self {
-            Primitives::Byte(v) => {
-                f64::try_from(*v).map_err(|_| CastError::new::<f64>(RawType::Byte))
-            }
+            Primitives::Byte(v) => f64::try_from(*v).map_err(|_| CastError::new::<f64>(RawType::Byte)),
             Primitives::Integer(v) => {
                 f64::try_from(*v).map_err(|_| CastError::new::<f64>(RawType::Integer))
             }
@@ -409,7 +366,10 @@ impl PartialEq for Primitives {
             },
             Primitives::ULLong(v) => match other {
                 Primitives::Float(o) => (*v as f64).eq(o),
-                _ => other.as_u128().map(|o| o == *v).unwrap_or(false),
+                _ => other
+                    .as_u128()
+                    .map(|o| o == *v)
+                    .unwrap_or(false),
             },
             Primitives::Float(v) => other.as_f64().map(|o| o == *v).unwrap_or(false),
         }
@@ -437,64 +397,35 @@ impl PartialOrd for Primitives {
                 Primitives::Float(o) => (*v as f64).partial_cmp(o),
                 _ => other.as_u128().map(|o| v.cmp(&o)).ok(),
             },
-            Primitives::Float(v) => other.as_f64().map(|o| v.partial_cmp(&o)).unwrap_or(None),
+            Primitives::Float(v) => other
+                .as_f64()
+                .map(|o| v.partial_cmp(&o))
+                .unwrap_or(None),
         }
     }
 }
 
-/// copy from std::any::Any;
-impl dyn DynType {
-    pub fn is<T: DynType>(&self) -> bool {
-        // Get `TypeId` of the type this function is instantiated with.
-        let t = TypeId::of::<T>();
-
-        // Get `TypeId` of the type in the trait dyn_type (`self`).
-        let concrete = self.type_id();
-
-        // Compare both `TypeId`s on equality.
-        t == concrete
-    }
-
-    pub fn try_downcast_ref<T: DynType>(&self) -> Option<&T> {
-        if self.is::<T>() {
-            // SAFETY: just checked whether we are pointing to the correct type, and we can rely on
-            // that check for memory safety because we have implemented Any for all types; no other
-            // impls can exist as they would conflict with our impl.
-            unsafe { Some(&*(self as *const dyn DynType as *const T)) }
-        } else {
-            None
-        }
-    }
-
-    pub fn try_downcast_mut<T: DynType>(&mut self) -> Option<&mut T> {
-        if self.is::<T>() {
-            // SAFETY: just checked whether we are pointing to the correct type, and we can rely on
-            // that check for memory safety because we have implemented Any for all types; no other
-            // impls can exist as they would conflict with our impl.
-            unsafe { Some(&mut *(self as *mut dyn DynType as *mut T)) }
-        } else {
-            None
-        }
-    }
-}
-
-// Is dyn type needed in dyn_type;
 #[derive(Clone, Debug)]
 pub enum Object {
     Primitive(Primitives),
     String(String),
+    Vector(Vec<Object>),
+    KV(BTreeMap<Object, Object>),
     Blob(Box<[u8]>),
     DynOwned(Box<dyn DynType>),
+    None,
 }
 
 impl ToString for Object {
     fn to_string(&self) -> String {
-        use Object::*;
         match self {
-            Primitive(p) => p.to_string(),
-            String(s) => s.to_string(),
-            Blob(_) => unimplemented!(),
-            DynOwned(_) => unimplemented!(),
+            Object::Primitive(p) => p.to_string(),
+            Object::String(s) => s.to_string(),
+            Object::Vector(v) => format!("{:?}", v),
+            Object::KV(kv) => format!("{:?}", kv),
+            Object::Blob(b) => format!("{:?}", b),
+            Object::DynOwned(_) => "unknown dynamic type".to_string(),
+            Object::None => "".to_string(),
         }
     }
 }
@@ -504,9 +435,12 @@ impl ToString for Object {
 pub enum BorrowObject<'a> {
     Primitive(Primitives),
     String(&'a str),
+    Vector(&'a [Object]),
+    KV(&'a BTreeMap<Object, Object>),
     Blob(&'a [u8]),
     /// To borrow from `Object::DynOwned`, and it can be cloned back to `Object::DynOwned`
     DynRef(&'a Box<dyn DynType>),
+    None,
 }
 
 impl<'a> ToString for BorrowObject<'a> {
@@ -515,10 +449,36 @@ impl<'a> ToString for BorrowObject<'a> {
         match self {
             Primitive(p) => p.to_string(),
             String(s) => s.to_string(),
-            Blob(_) => unimplemented!(),
-            DynRef(_) => unimplemented!(),
+            Vector(v) => format!("{:?}", v),
+            KV(kv) => format!("{:?}", kv),
+            Blob(b) => format!("{:?}", b),
+            DynRef(_) => "unknown dynamic type".to_string(),
+            None => "None".to_string(),
         }
     }
+}
+
+macro_rules! contains_single {
+    ($self: expr, $single: expr, $ty: ident) => {
+        match $self {
+            $crate::$ty::Vector(vec) => match $single {
+                $crate::$ty::Primitive(_) | $crate::$ty::String(_) => {
+                    for val in vec.iter() {
+                        if $single == val {
+                            return true;
+                        }
+                    }
+                    false
+                }
+                _ => false,
+            },
+            $crate::$ty::String(str1) => match $single {
+                $crate::$ty::String(str2) => str1.contains(str2),
+                _ => false,
+            },
+            _ => false,
+        }
+    };
 }
 
 impl Object {
@@ -526,8 +486,11 @@ impl Object {
         match self {
             Object::Primitive(p) => p.raw_type(),
             Object::String(_) => RawType::String,
+            Object::Vector(_) => RawType::Vector,
+            Object::KV(_) => RawType::KV,
             Object::Blob(b) => RawType::Blob(b.len()),
             Object::DynOwned(_) => RawType::Unknown,
+            Object::None => RawType::None,
         }
     }
 
@@ -535,8 +498,11 @@ impl Object {
         match self {
             Object::Primitive(p) => BorrowObject::Primitive(*p),
             Object::String(v) => BorrowObject::String(v.as_str()),
+            Object::Vector(v) => BorrowObject::Vector(v.as_slice()),
+            Object::KV(kv) => BorrowObject::KV(kv),
             Object::Blob(v) => BorrowObject::Blob(v.as_ref()),
             Object::DynOwned(v) => BorrowObject::DynRef(v),
+            Object::None => BorrowObject::None,
         }
     }
 
@@ -556,10 +522,10 @@ impl Object {
 
     #[inline]
     pub fn as_i8(&self) -> Result<i8, CastError> {
-        if let Object::Primitive(p) = self {
-            p.as_i8()
-        } else {
-            Err(CastError::new::<i8>(self.raw_type()))
+        match self {
+            Object::Primitive(p) => p.as_i8(),
+            Object::DynOwned(x) => try_downcast!(x, i8),
+            _ => Err(CastError::new::<i8>(self.raw_type())),
         }
     }
 
@@ -601,10 +567,10 @@ impl Object {
 
     #[inline]
     pub fn as_u8(&self) -> Result<u8, CastError> {
-        if let Object::Primitive(p) = self {
-            p.as_u8()
-        } else {
-            Err(CastError::new::<u8>(self.raw_type()))
+        match self {
+            Object::Primitive(p) => p.as_u8(),
+            Object::DynOwned(x) => try_downcast!(x, u8),
+            _ => Err(CastError::new::<u8>(self.raw_type())),
         }
     }
 
@@ -659,7 +625,8 @@ impl Object {
             Object::String(str) => Ok(Cow::Borrowed(str.as_str())),
             Object::Blob(b) => Ok(String::from_utf8_lossy(b)),
             Object::DynOwned(x) => try_downcast!(x, String, as_str).map(|r| Cow::Borrowed(r)),
-            Object::Primitive(p) => Err(CastError::new::<String>(p.raw_type())),
+            Object::None => Ok(Cow::Borrowed("")),
+            _ => Err(CastError::new::<String>(self.raw_type())),
         }
     }
 
@@ -670,6 +637,8 @@ impl Object {
             Object::String(str) => Ok(str.as_bytes()),
             Object::Blob(v) => Ok(v.as_ref()),
             Object::DynOwned(x) => try_downcast!(x, Vec<u8>, as_slice),
+            Object::None => Ok(&[]),
+            _ => Err(CastError::new::<&[u8]>(self.raw_type())),
         }
     }
 
@@ -680,10 +649,9 @@ impl Object {
                 Ok(OwnedOrRef::Owned(v))
             }
             Object::String(x) => try_transmute!(x, T, RawType::String).map(|v| OwnedOrRef::Ref(v)),
-            Object::Blob(x) => {
-                try_transmute!(x, T, RawType::Blob(x.len())).map(|v| OwnedOrRef::Ref(v))
-            }
+            Object::Blob(x) => try_transmute!(x, T, RawType::Blob(x.len())).map(|v| OwnedOrRef::Ref(v)),
             Object::DynOwned(x) => try_downcast_ref!(x, T).map(|v| OwnedOrRef::Ref(v)),
+            _ => Err(CastError::new::<OwnedOrRef<T>>(self.raw_type())),
         }
     }
 
@@ -697,8 +665,26 @@ impl Object {
                     Err(CastError::new::<i32>(RawType::Unknown))
                 }
             }
-            Object::Primitive(p) => Err(CastError::new::<String>(p.raw_type())),
-            Object::Blob(_) => unimplemented!(),
+            _ => Err(CastError::new::<String>(self.raw_type())),
+        }
+    }
+
+    fn contains_single(&self, single: &Object) -> bool {
+        contains_single!(self, single, Object)
+    }
+
+    pub fn contains(&self, obj: &Object) -> bool {
+        match obj {
+            Object::Vector(vec) => {
+                for val in vec.iter() {
+                    if !self.contains_single(val) {
+                        return false;
+                    }
+                }
+                true
+            }
+            Object::Primitive(_) | Object::String(_) => self.contains_single(obj),
+            _ => false,
         }
     }
 }
@@ -708,8 +694,11 @@ impl<'a> BorrowObject<'a> {
         match self {
             BorrowObject::Primitive(p) => p.raw_type(),
             BorrowObject::String(_) => RawType::String,
+            BorrowObject::Vector(_) => RawType::Vector,
+            BorrowObject::KV(_) => RawType::KV,
             BorrowObject::Blob(b) => RawType::Blob(b.len()),
             BorrowObject::DynRef(_) => RawType::Unknown,
+            BorrowObject::None => RawType::None,
         }
     }
 
@@ -832,7 +821,8 @@ impl<'a> BorrowObject<'a> {
             BorrowObject::String(str) => Ok(Cow::Borrowed(*str)),
             BorrowObject::Blob(b) => Ok(String::from_utf8_lossy(b)),
             BorrowObject::DynRef(x) => try_downcast!(x, String, as_str).map(|r| Cow::Borrowed(r)),
-            BorrowObject::Primitive(p) => Err(CastError::new::<String>(p.raw_type())),
+            BorrowObject::None => Ok(Cow::Borrowed("")),
+            _ => Err(CastError::new::<String>(self.raw_type())),
         }
     }
 
@@ -843,84 +833,194 @@ impl<'a> BorrowObject<'a> {
             BorrowObject::String(v) => Ok(v.as_bytes()),
             BorrowObject::Blob(v) => Ok(*v),
             BorrowObject::DynRef(v) => try_downcast!(v, Vec<u8>, as_slice),
+            BorrowObject::None => Ok(&[]),
+            _ => Err(CastError::new::<&[u8]>(self.raw_type())),
         }
     }
 
     pub fn try_to_owned(&self) -> Option<Object> {
-        match self {
-            BorrowObject::Primitive(p) => Some(Object::Primitive(*p)),
-            BorrowObject::String(s) => Some(Object::String((*s).to_owned())),
+        match *self {
+            BorrowObject::Primitive(p) => Some(Object::Primitive(p)),
+            BorrowObject::String(s) => Some(Object::String(s.to_owned())),
+            BorrowObject::Vector(v) => Some(Object::Vector(v.to_vec())),
+            BorrowObject::KV(kv) => Some(Object::KV(kv.clone())),
             BorrowObject::Blob(b) => Some(Object::Blob(b.to_vec().into_boxed_slice())),
             BorrowObject::DynRef(d) => Some(Object::DynOwned((*d).clone())),
+            BorrowObject::None => Some(Object::None),
+        }
+    }
+
+    fn contains_single(&self, single: &BorrowObject) -> bool {
+        contains_single!(self, single, BorrowObject)
+    }
+
+    pub fn contains(&self, obj: &BorrowObject) -> bool {
+        match obj {
+            BorrowObject::Vector(vec) => {
+                for val in vec.iter() {
+                    if !self.contains_single(&val.as_borrow()) {
+                        return false;
+                    }
+                }
+                true
+            }
+            BorrowObject::Primitive(_) | BorrowObject::String(_) => self.contains_single(obj),
+            _ => false,
         }
     }
 }
 
+impl<'a> PartialEq<Object> for BorrowObject<'a> {
+    fn eq(&self, other: &Object) -> bool {
+        self.eq(&other.as_borrow())
+    }
+}
+
+impl<'a> PartialEq<BorrowObject<'a>> for Object {
+    fn eq(&self, other: &BorrowObject<'a>) -> bool {
+        self.as_borrow().eq(other)
+    }
+}
+
+macro_rules! eq {
+    ($self:expr, $other:expr, $ty:ident) => {
+        match $self {
+            $crate::$ty::Primitive(p) => $other
+                .as_primitive()
+                .map(|o| p == &o)
+                .unwrap_or(false),
+            $crate::$ty::Blob(v) => $other
+                .as_bytes()
+                .map(|o| o.eq(v.as_ref()))
+                .unwrap_or(false),
+            $crate::$ty::String(v) => $other
+                .as_str()
+                .map(|o| o.eq(&(*v)))
+                .unwrap_or(false),
+            $crate::$ty::Vector(v1) => {
+                if let $crate::$ty::Vector(v2) = $other {
+                    v1 == v2
+                } else {
+                    false
+                }
+            }
+            $crate::$ty::KV(kv1) => {
+                if let $crate::$ty::KV(kv2) = $other {
+                    kv1 == kv2
+                } else {
+                    false
+                }
+            }
+            $crate::$ty::None => {
+                if let $crate::$ty::None = $other {
+                    true
+                } else {
+                    false
+                }
+            }
+            _ => false,
+        }
+    };
+}
+
 impl PartialEq for Object {
     fn eq(&self, other: &Self) -> bool {
-        match self {
-            Object::Primitive(p) => other.as_primitive().map(|o| p == &o).unwrap_or(false),
-            Object::Blob(v) => other.as_bytes().map(|o| o.eq(v.as_ref())).unwrap_or(false),
-            Object::String(v) => other.as_str().map(|o| o.eq(v.as_str())).unwrap_or(false),
-            // TODO(longbin) Should be able to compare a DynType
-            Object::DynOwned(_) => false,
-        }
+        eq!(self, other, Object)
     }
 }
 
 impl Eq for Object {}
 
-impl PartialOrd for Object {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        match self {
-            Object::Primitive(p) => other
-                .as_primitive()
-                .map(|o| p.partial_cmp(&o))
-                .unwrap_or(None),
-            Object::Blob(v) => other
+macro_rules! partial_cmp {
+    ($self:expr, $other:expr, $ty:ident) => {
+        match $self {
+            $crate::$ty::Primitive(p) => {
+                if let $crate::$ty::None = $other {
+                    Some(Ordering::Greater)
+                } else {
+                    $other
+                    .as_primitive()
+                    .map(|o| p.partial_cmp(&o))
+                    .unwrap_or(None)
+                }
+            }
+            $crate::$ty::Blob(v) => $other
                 .as_bytes()
                 .map(|o| v.as_ref().partial_cmp(o))
                 .unwrap_or(None),
-            Object::String(v) => other
+            $crate::$ty::String(v) => $other
                 .as_str()
-                .map(|o| v.as_str().partial_cmp(o.as_ref()))
+                .map(|o| (&(**v)).partial_cmp(&(*o)))
                 .unwrap_or(None),
-            // TODO(longbin) Should be able to compare a DynType
-            Object::DynOwned(_) => None,
+            $crate::$ty::Vector(v1) => {
+                if let $crate::$ty::Vector(v2) = $other {
+                    v1.partial_cmp(v2)
+                } else if let $crate::$ty::None = $other {
+                    Some(Ordering::Greater)
+                } else {
+                    None
+                }
+            }
+            $crate::$ty::KV(kv1) => {
+                if let $crate::$ty::KV(kv2) = $other {
+                    kv1.partial_cmp(kv2)
+                } else if let $crate::$ty::None = $other {
+                    Some(Ordering::Greater)
+                } else {
+                    None
+                }
+            }
+            $crate::$ty::None => {
+                if let $crate::$ty::None = $other {
+                    Some(Ordering::Equal)
+                } else {
+                    Some(Ordering::Less)
+                }
+            }
+            _ => None,
         }
+    };
+}
+
+macro_rules! cmp {
+    ($self:expr, $other:expr) => {
+        if let Some(ord) = $self.partial_cmp($other) {
+            ord
+        } else {
+            Ordering::Less
+        }
+    };
+}
+
+impl PartialOrd for Object {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        partial_cmp!(self, other, Object)
+    }
+}
+
+impl Ord for Object {
+    fn cmp(&self, other: &Self) -> Ordering {
+        cmp!(self, other)
     }
 }
 
 impl<'a> PartialEq for BorrowObject<'a> {
     fn eq(&self, other: &Self) -> bool {
-        match self {
-            BorrowObject::Primitive(p) => other.as_primitive().map(|o| p == &o).unwrap_or(false),
-            BorrowObject::String(v) => other.as_str().map(|o| o.eq(*v)).unwrap_or(false),
-            BorrowObject::Blob(v) => other.as_bytes().map(|o| *v == o).unwrap_or(false),
-            // TODO(longbin) Should be able to compare a DynType
-            BorrowObject::DynRef(_) => false,
-        }
+        eq!(self, other, BorrowObject)
     }
 }
 
+impl<'a> Eq for BorrowObject<'a> {}
+
 impl<'a> PartialOrd for BorrowObject<'a> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        match self {
-            BorrowObject::Primitive(p) => other
-                .as_primitive()
-                .map(|o| p.partial_cmp(&o))
-                .unwrap_or(None),
-            BorrowObject::String(v) => other
-                .as_str()
-                .map(|o| (*v).partial_cmp(o.as_ref()))
-                .unwrap_or(None),
-            BorrowObject::Blob(v) => other
-                .as_bytes()
-                .map(|o| (*v).partial_cmp(o))
-                .unwrap_or(None),
-            // TODO(longbin) Should be able to compare a DynType
-            BorrowObject::DynRef(_) => None,
-        }
+        partial_cmp!(self, other, BorrowObject)
+    }
+}
+
+impl<'a> Ord for BorrowObject<'a> {
+    fn cmp(&self, other: &Self) -> Ordering {
+        cmp!(self, other)
     }
 }
 
@@ -942,36 +1042,74 @@ fn integer_decode(val: f64) -> (u64, i16, i8) {
     (mantissa, exponent, sign)
 }
 
-impl Hash for Object {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        match self {
-            Object::Primitive(p) => match p {
-                Primitives::Byte(v) => {
-                    v.hash(state);
+macro_rules! hash {
+    ($self:expr, $state:expr, $ty:ident) => {
+        match $self {
+            $crate::$ty::Primitive(p) => match p {
+                $crate::Primitives::Byte(v) => {
+                    v.hash($state);
                 }
-                Primitives::Integer(v) => {
-                    v.hash(state);
+                $crate::Primitives::Integer(v) => {
+                    v.hash($state);
                 }
-                Primitives::Long(v) => {
-                    v.hash(state);
+                $crate::Primitives::Long(v) => {
+                    v.hash($state);
                 }
-                Primitives::Float(v) => {
-                    integer_decode(*v).hash(state);
+                $crate::Primitives::Float(v) => {
+                    integer_decode(*v).hash($state);
                 }
-                Primitives::ULLong(v) => {
-                    v.hash(state);
+                $crate::Primitives::ULLong(v) => {
+                    v.hash($state);
                 }
             },
-            Object::String(s) => {
-                s.hash(state);
+            $crate::$ty::String(s) => {
+                s.hash($state);
             }
-            Object::Blob(b) => {
-                b.hash(state);
+            $crate::$ty::Blob(b) => {
+                b.hash($state);
             }
-            // TODO(longbin) Should be able to hash a DynType
-            Object::DynOwned(_) => {
-                unimplemented!()
+            $crate::$ty::Vector(v) => {
+                v.hash($state);
             }
+            $crate::$ty::KV(kv) => {
+                for pair in kv.iter() {
+                    pair.hash($state);
+                }
+            }
+            $crate::$ty::None => {
+                "".hash($state);
+            }
+            _ => unimplemented!(),
+        }
+    };
+}
+
+impl Hash for Object {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        hash!(self, state, Object)
+    }
+}
+
+impl<'a> Hash for BorrowObject<'a> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        hash!(self, state, BorrowObject)
+    }
+}
+
+impl From<Option<Object>> for Object {
+    fn from(obj_opt: Option<Object>) -> Self {
+        match obj_opt {
+            Some(obj) => obj,
+            None => Object::None,
+        }
+    }
+}
+
+impl<'a> From<Option<BorrowObject<'a>>> for BorrowObject<'a> {
+    fn from(obj_opt: Option<BorrowObject<'a>>) -> Self {
+        match obj_opt {
+            Some(obj) => obj,
+            None => BorrowObject::None,
         }
     }
 }
@@ -1128,14 +1266,24 @@ impl From<String> for Object {
     }
 }
 
-impl<'a> From<BorrowObject<'a>> for Object {
-    fn from(s: BorrowObject<'a>) -> Self {
-        match s {
-            BorrowObject::Primitive(p) => Object::Primitive(p),
-            BorrowObject::Blob(blob) => Object::Blob(blob.to_vec().into_boxed_slice()),
-            BorrowObject::String(s) => Object::String(s.to_string()),
-            _ => unimplemented!(),
-        }
+impl<T: Into<Object>> From<Vec<T>> for Object {
+    fn from(vec: Vec<T>) -> Self {
+        Object::Vector(
+            vec.into_iter()
+                .map(|val| val.into())
+                .collect_vec(),
+        )
+    }
+}
+
+impl<K: Into<Object>, V: Into<Object>> From<Vec<(K, V)>> for Object {
+    fn from(tuples: Vec<(K, V)>) -> Self {
+        Object::KV(
+            tuples
+                .into_iter()
+                .map(|(k, v)| (k.into(), v.into()))
+                .collect::<BTreeMap<_, _>>(),
+        )
     }
 }
 

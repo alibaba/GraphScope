@@ -19,25 +19,20 @@ on:
   pull_request:
     branches:
       - main
-    paths-ignore:
-      - 'CONTRIBUTORS'
-      - 'LICENSE'
-      - 'NOTICE.txt'
-      - '**.md'
-      - '**.rst'
-      - 'docs/**'
-      - 'demo/**'
-      - 'scripts/**'
-      - 'tutorials/**'
-      - '.github/workflows/docs.yml'
-      - '.github/workflows/gss.yml'
-      - '.github/workflows/gaia.yml'
-      - '.github/workflows/gae.yml'
-      - '.github/workflows/nightly.yml'
-      - '.github/workflows/release.yml'
-      - '.github/workflows/networkx-forward-algo-nightly.yml'
-      - '.github/workflows/build-graphscope-wheels-linux.yml'
-      - '.github/workflows/build-graphscope-wheels-maos.yml'
+    paths:
+      - '.github/workflows/ci.yml'
+      - 'Makefile'
+      - 'analytical_engine/**'
+      - 'charts/**'
+      - 'coordinator/**'
+      - 'interactive_engine/**'
+      - 'k8s/**'
+      - 'learning_engine/**'
+      - 'proto/**'
+      - 'python/**'
+      - 'research/**'
+      - '!**.md'
+      - '!**.rst'
 
 concurrency:
   group: ${{ github.repository }}-${{ github.head_ref || github.sha }}-${{ github.workflow }}
@@ -149,7 +144,7 @@ jobs:
     - name: Python Format and Lint Check
       run: |
         echo "Checking formatting for $GITHUB_REPOSITORY"
-        pip3 install black==22.1.0 flake8==4.0.1 isort==5.10.1
+        pip3 install -r coordinator/requirements-dev.txt
         export LC_ALL=en_US.utf8
         export LANG=en_US.utf8
         pushd python
@@ -238,7 +233,7 @@ jobs:
   python-unittest:
     runs-on: ubuntu-20.04
     needs: [build-wheels, changes]
-    if: ${{ (needs.changes.outputs.gae-python == 'true' || github.ref == 'refs/heads/main') && github.repository == 'alibaba/GraphScope' }}
+    if: ${{ github.repository == 'alibaba/GraphScope' }}
     defaults:
       run:
         shell: bash --noprofile --norc -eo pipefail {0}
@@ -248,12 +243,15 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2.3.2
+      if: ${{ needs.changes.outputs.gae-python == 'true' || github.ref == 'refs/heads/main' }}
 
     - uses: actions/download-artifact@v2
+      if: ${{ needs.changes.outputs.gae-python == 'true' || github.ref == 'refs/heads/main' }}
       with:
         path: artifacts
 
     - name: Prepare Environment
+      if: ${{ needs.changes.outputs.gae-python == 'true' || github.ref == 'refs/heads/main' }}
       run: |
         # install graphscope-client
         cd artifacts
@@ -275,6 +273,7 @@ jobs:
         python3 -m pip install pytest pytest-cov
 
     - name: Run Python Test
+      if: ${{ needs.changes.outputs.gae-python == 'true' || github.ref == 'refs/heads/main' }}
       env:
         GS_TEST_DIR: ${{ github.workspace }}/gstest
         DEPLOYMENT: ${{ matrix.deployment }}
@@ -287,6 +286,7 @@ jobs:
                                 $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/tests/unittest
 
     - name: Upload Coverage
+      if: ${{ needs.changes.outputs.gae-python == 'true' || github.ref == 'refs/heads/main' }}
       uses: codecov/codecov-action@v2
       with:
         file: ./coverage.xml
@@ -295,18 +295,19 @@ jobs:
   networkx-basic-test:
     runs-on: ubuntu-20.04
     needs: [build-wheels, changes]
-    if: ${{ (needs.changes.outputs.networkx == 'true' || github.ref == 'refs/heads/main') && github.repository == 'alibaba/GraphScope' }}
+    if: ${{ github.repository == 'alibaba/GraphScope' }}
     defaults:
       run:
         shell: bash
     strategy:
       matrix:
-        # the networkx implementation under distributed setting is broken
-        # deployment: ["standalone", "distributed"]
-        deployment: ["standalone"]
+        deployment: ["standalone", "distributed"]
     steps:
     - uses: actions/checkout@v2.3.2
+      if: ${{ needs.changes.outputs.networkx == 'true' || github.ref == 'refs/heads/main' }}
+
     - uses: dorny/paths-filter@v2
+      if: ${{ needs.changes.outputs.networkx == 'true' || github.ref == 'refs/heads/main' }}
       id: nx-filter
       with:
         filters: |
@@ -323,10 +324,12 @@ jobs:
             - 'python/graphscope/nx/tests/convert/**'
 
     - uses: actions/download-artifact@v2
+      if: ${{ needs.changes.outputs.networkx == 'true' || github.ref == 'refs/heads/main' }}
       with:
         path: artifacts
 
     - name: Prepare Environment
+      if: ${{ needs.changes.outputs.networkx == 'true' || github.ref == 'refs/heads/main' }}
       env:
         GS_TEST_DIR: ${{ github.workspace }}/gstest
       run: |
@@ -357,7 +360,7 @@ jobs:
       if: false
 
     - name: Basic Test
-      if: steps.nx-filter.outputs.basic == 'true' || (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope')
+      if: ${{ (needs.changes.outputs.networkx == 'true' || github.ref == 'refs/heads/main') && (steps.nx-filter.outputs.basic == 'true' || (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope')) }}
       env:
         DEPLOYMENT: ${{ matrix.deployment }}
         GS_TEST_DIR: ${{ github.workspace }}/gstest
@@ -369,7 +372,7 @@ jobs:
             --ignore=$(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/nx/tests/convert
 
     - name: Convert Test
-      if: steps.nx-filter.outputs.convert == 'true'
+      if: ${{ (needs.changes.outputs.networkx == 'true' || github.ref == 'refs/heads/main') && steps.nx-filter.outputs.convert == 'true' }}
       env:
         DEPLOYMENT: ${{ matrix.deployment }}
         GS_TEST_DIR: ${{ github.workspace }}/gstest
@@ -381,13 +384,16 @@ jobs:
   networkx-algo-and-generator-test:
     runs-on: ubuntu-20.04
     needs: [build-wheels, changes]
-    if: ${{ needs.changes.outputs.networkx == 'true' && github.repository == 'alibaba/GraphScope' }}
+    if: ${{ github.repository == 'alibaba/GraphScope' }}
     strategy:
       matrix:
         deployment: ["standalone", "distributed"]
     steps:
     - uses: actions/checkout@v2.3.2
+      if: ${{ needs.changes.outputs.networkx == 'true' }}
+
     - uses: dorny/paths-filter@v2
+      if: ${{ needs.changes.outputs.networkx == 'true' }}
       id: nx-filter
       with:
         filters: |
@@ -403,10 +409,12 @@ jobs:
             - 'python/graphscope/nx/readwrite/**'
 
     - uses: actions/download-artifact@v2
+      if: ${{ needs.changes.outputs.networkx == 'true' }}
       with:
         path: artifacts
 
     - name: Prepare Environment
+      if: ${{ needs.changes.outputs.networkx == 'true' }}
       env:
         GS_TEST_DIR: ${{ github.workspace }}/gstest
       run: |
@@ -433,7 +441,7 @@ jobs:
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
 
     - name: Algorithm test
-      if: steps.nx-filter.outputs.algorithm == 'true'
+      if: ${{ needs.changes.outputs.networkx == 'true' && steps.nx-filter.outputs.algorithm == 'true' }}
       env:
         DEPLOYMENT: ${{ matrix.deployment }}
         GS_TEST_DIR: ${{ github.workspace }}/gstest
@@ -443,7 +451,7 @@ jobs:
             $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/nx/algorithms/tests/builtin
 
     - name: Generator test
-      if: steps.nx-filter.outputs.generator == 'true'
+      if: ${{ needs.changes.outputs.networkx == 'true' && steps.nx-filter.outputs.generator == 'true' }}
       env:
         DEPLOYMENT: ${{ matrix.deployment }}
         GS_TEST_DIR: ${{ github.workspace }}/gstest
@@ -453,7 +461,7 @@ jobs:
             $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/nx/generators/tests
 
     - name: Readwrite test
-      if: steps.nx-filter.outputs.io == 'true'
+      if: ${{ needs.changes.outputs.networkx == 'true' && steps.nx-filter.outputs.io == 'true' }}
       env:
         DEPLOYMENT: ${{ matrix.deployment }}
       run: |

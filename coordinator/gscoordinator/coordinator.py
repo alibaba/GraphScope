@@ -33,6 +33,7 @@ import signal
 import string
 import sys
 import threading
+import time
 import traceback
 import urllib.parse
 import urllib.request
@@ -349,27 +350,7 @@ class CoordinatorServiceServicer(
 
         # analytical engine
         request = message_pb2.HeartBeatRequest()
-
-        try:
-            self._analytical_engine_stub.HeartBeat(request)
-        except grpc.RpcError as e:
-            err_msg = f"code: {e.code().name}, details: {e.details()}"
-            if e.code() == grpc.StatusCode.UNAVAILABLE:
-                err_msg = f"Connect to analytical engine failed, engine may not started or closed. {err_msg}"
-                logger.warning(err_msg)
-                context.set_code(grpc.StatusCode.DEADLINE_EXCEEDED)
-                context.set_details(err_msg)
-            else:
-                err_msg = f"Connect to analytical engine failed with unknown exception. {err_msg}"
-                context.set_code(grpc.StatusCode.UNKNOWN)
-                context.set_details(err_msg)
-        except Exception:
-            context.set_code(grpc.StatusCode.UNKNOWN)
-            context.set_details(
-                f"Connect analytical engine failed with unknown exception, {traceback.format_exc()}"
-            )
-
-        return message_pb2.HeartBeatResponse()
+        return self._analytical_engine_stub.HeartBeat(request)
 
     HeartBeatWrapped = catch_unknown_errors(message_pb2.HeartBeatResponse())(_HeartBeat)
 

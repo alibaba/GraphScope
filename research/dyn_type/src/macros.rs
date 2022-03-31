@@ -13,8 +13,6 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-// TODO(longbin) We've only implement where $obj is a type that is supported by `$crate::Object::from` function.
-
 #[macro_export]
 macro_rules! object {
     ($obj:expr) => {

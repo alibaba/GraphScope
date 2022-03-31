@@ -15,14 +15,8 @@
 
 #[cfg(test)]
 mod tests {
-    extern crate itertools;
-
-    use self::itertools::Itertools;
-    use dyn_type::{object, Object, Primitives};
+    use dyn_type::{object, BorrowObject, Object, Primitives};
     use std::cmp::Ordering;
-    use std::collections::HashMap;
-    use std::fmt::Debug;
-    use std::hash::Hash;
 
     #[test]
     fn test_as_primitive() {
@@ -56,10 +50,76 @@ mod tests {
         assert!(!obj.as_bool().unwrap());
     }
 
-    fn is_map_eq<K: PartialEq + Ord + Debug + Hash, V: PartialEq + Ord + Debug>(
-        map1: &HashMap<K, V>, map2: &HashMap<K, V>,
-    ) -> bool {
-        map1.iter().sorted().eq(map2.iter().sorted())
+    #[test]
+    fn test_object_contains() {
+        // vector of numbers
+        let object_vec: Object = vec![1, 2, 3].into();
+        assert!(object_vec.contains(&1.into()));
+        assert!(!object_vec.contains(&4.into()));
+        assert!(object_vec.contains(&vec![1, 3].into()));
+        assert!(!object_vec.contains(&vec![1, 5].into()));
+        assert!(!object_vec.contains(&vec![1, 2, 3, 4].into()));
+        // An i32 array can contain a `u64` value
+        assert!(object_vec.contains(&1_u64.into()));
+
+        // vector of floats
+        let object_vec: Object = vec![1.0, 2.0, 3.0].into();
+        assert!(object_vec.contains(&1.0.into()));
+        assert!(!object_vec.contains(&4.0.into()));
+        assert!(object_vec.contains(&vec![1.0, 3.0].into()));
+        assert!(!object_vec.contains(&vec![1.0, 5.0].into()));
+        assert!(!object_vec.contains(&vec![1.0, 2.0, 3.0, 4.0].into()));
+        // An float-number array can contain a `u64` value
+        assert!(object_vec.contains(&1_u64.into()));
+        let object_vec: Object = vec![1.1, 2.0, 3.0].into();
+        // An float-number array can contain a `u64` value only their values are equal
+        assert!(!object_vec.contains(&1_u64.into()));
+
+        // vector of strings
+        let object_vec: Object = vec!["a".to_string(), "b".to_string(), "c".to_string()].into();
+        assert!(object_vec.contains(&"a".into()));
+        assert!(!object_vec.contains(&"d".into()));
+        assert!(object_vec.contains(&vec!["a".to_string()].into()));
+        assert!(!object_vec.contains(&vec!["a".to_string(), "d".to_string()].into()));
+
+        // string object
+        let object_str: Object = "abcde".to_string().into();
+        assert!(object_str.contains(&"a".to_string().into()));
+        assert!(object_str.contains(&"abc".to_string().into()));
+        assert!(!object_str.contains(&"ac".to_string().into()));
+
+        // borrow object
+        let object_vec_b: BorrowObject = object_vec.as_borrow();
+        assert!(object_vec_b.contains(&object!("a".to_string()).as_borrow()));
+        assert!(!object_vec_b.contains(&object!("d".to_string()).as_borrow()));
+        assert!(object_vec_b.contains(&object!(vec!["a".to_string()]).as_borrow()));
+        assert!(!object_vec_b.contains(&object!(vec!["a".to_string(), "d".to_string()]).as_borrow()));
+    }
+
+    #[test]
+    fn test_object_compare() {
+        // vector
+        let object_vec1 = object!(vec![1, 2, 3]);
+        let object_vec2 = object!(vec![1, 2, 3]);
+        let object_vec3 = object!(vec![3, 2]);
+
+        assert_eq!(object_vec1, object_vec2);
+        assert_ne!(object_vec1, object_vec3);
+        assert!(object_vec1 < object_vec3);
+        assert!(object_vec3 > object_vec2);
+
+        // kv
+        let object_kv1 = object!(vec![("a".to_string(), 1_u64), ("b".to_string(), 2_u64)]);
+        let object_kv2 = object!(vec![("a".to_string(), 1_u64), ("b".to_string(), 2_u64)]);
+        let object_kv3 = object!(vec![("a".to_string(), 2_u64), ("b".to_string(), 3_u64)]);
+        let object_kv4 = object!(vec![("c".to_string(), 1_u64), ("d".to_string(), 2_u64)]);
+
+        assert_eq!(object_kv1, object_kv2);
+        assert_ne!(object_kv1, object_kv3);
+        assert!(object_kv1 < object_kv3);
+        assert!(object_kv3 > object_kv2);
+        assert!(object_kv1 < object_kv4);
+        assert!(object_kv4 > object_kv2);
     }
 
     #[test]
@@ -72,26 +132,6 @@ mod tests {
         let vec_borrow = vec_obj.as_borrow();
         let vec_borrow_to_owned = vec_borrow.try_to_owned().unwrap();
         assert_eq!(vec_borrow_to_owned.get::<Vec<u32>>().unwrap(), vec);
-
-        /*
-        let mut map = HashMap::new();
-        // Review some books.
-        map.insert("Adventures of Huckleberry Finn".to_string(), "My favorite book.".to_string());
-        map.insert("Grimms' Fairy Tales".to_string(), "Masterpiece.".to_string());
-        map.insert("Pride and Prejudice".to_string(), "Very enjoyable.".to_string());
-        map.insert(
-            "The Adventures of Sherlock Holmes".to_string(),
-            "Eye lyked it alot.".to_string(),
-        );
-
-        let map_obj = Object::DynOwned(Box::new(map.clone()));
-        let map_recovered = map_obj.get::<HashMap<String, String>>().unwrap();
-        assert!(is_map_eq(&map, &(*map_recovered)));
-
-        let map_borrow = map_obj.as_borrow();
-        let map_borrow_to_owned = map_borrow.try_to_owned().unwrap();
-        assert!(is_map_eq(&map, &(*map_borrow_to_owned.get::<HashMap<String, String>>().unwrap())));
-         */
     }
 
     #[test]

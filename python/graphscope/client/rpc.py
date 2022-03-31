@@ -28,62 +28,14 @@ import grpc
 
 from graphscope.client.utils import GS_GRPC_MAX_MESSAGE_LENGTH
 from graphscope.client.utils import GRPCUtils
-from graphscope.framework.errors import FatalError
-from graphscope.framework.errors import GRPCError
+from graphscope.client.utils import handle_grpc_error
+from graphscope.client.utils import suppress_grpc_error
 from graphscope.proto import coordinator_service_pb2_grpc
 from graphscope.proto import error_codes_pb2
 from graphscope.proto import message_pb2
 from graphscope.version import __version__
 
 logger = logging.getLogger("graphscope")
-
-
-def catch_grpc_error(fn):
-    """Print error info from a :class:`grpc.RpcError`."""
-
-    @functools.wraps(fn)
-    def with_grpc_catch(*args, **kwargs):
-        try:
-            return fn(*args, **kwargs)
-        except grpc.RpcError as exc:
-            if grpc.StatusCode.INTERNAL == exc.code():
-                raise GRPCError("Internal Error: " + exc.details()) from None
-            elif (
-                grpc.StatusCode.UNKNOWN == exc.code()
-                or grpc.StatusCode.UNAVAILABLE == exc.code()
-            ):
-                logger.error(
-                    "rpc %s: failed with error code %s, details: %s"
-                    % (fn.__name__, exc.code(), exc.details())
-                )
-                raise FatalError("The analytical engine server may down.") from None
-            else:
-                raise GRPCError(
-                    "rpc %s failed: status %s" % (str(fn.__name__), exc)
-                ) from None
-
-    return with_grpc_catch
-
-
-def suppress_grpc_error(fn):
-    """Suppress the GRPC error."""
-
-    @functools.wraps(fn)
-    def with_grpc_catch(*args, **kwargs):
-        try:
-            return fn(*args, **kwargs)
-        except grpc.RpcError as exc:
-            if isinstance(exc, grpc.Call):
-                logger.warning(
-                    "Grpc call '%s' failed: %s: %s",
-                    fn.__name__,
-                    exc.code(),
-                    exc.details(),
-                )
-        except Exception as exc:  # noqa: F841
-            logger.warning("RPC call failed: %s", exc)
-
-    return with_grpc_catch
 
 
 class GRPCClient(object):
@@ -169,17 +121,17 @@ class GRPCClient(object):
         if self._logs_fetching_thread:
             self._logs_fetching_thread.join(timeout=5)
 
-    @catch_grpc_error
+    @handle_grpc_error
     def send_heartbeat(self):
         request = message_pb2.HeartBeatRequest()
         return self._stub.HeartBeat(request)
 
-    @catch_grpc_error
+    @handle_grpc_error
     def _add_lib_impl(self, gar):
         request = message_pb2.AddLibRequest(session_id=self._session_id, gar=gar)
         return self._stub.AddLib(request)
 
-    @catch_grpc_error
+    @handle_grpc_error
     def _connect_session_impl(self, cleanup_instance=True, dangling_timeout_seconds=60):
         """
         Args:
@@ -221,13 +173,13 @@ class GRPCClient(object):
             if error:
                 logger.error(error, extra={"simple": True})
 
-    @catch_grpc_error
+    @handle_grpc_error
     def _close_session_impl(self):
         request = message_pb2.CloseSessionRequest(session_id=self._session_id)
         response = self._stub.CloseSession(request)
         return response
 
-    @catch_grpc_error
+    @handle_grpc_error
     def _run_step_impl(self, runstep_requests):
         response = self._grpc_utils.parse_runstep_responses(
             self._stub.RunStep(runstep_requests)

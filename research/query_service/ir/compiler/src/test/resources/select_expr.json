@@ -1,0 +1,82 @@
+{
+  "nodes": [
+    {
+      "opr": {
+        "opr": {
+          "Select": {
+            "predicate": {
+              "operators": [
+                {
+                  "item": {
+                    "Var": {
+                      "tag": null,
+                      "property": {
+                        "item": {
+                          "Key": {
+                            "item": {
+                              "Name": "id"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "item": {
+                    "Logical": 0
+                  }
+                },
+                {
+                  "item": {
+                    "Const": {
+                      "item": {
+                        "I64": 1
+                      }
+                    }
+                  }
+                },
+                {
+                  "item": {
+                    "Logical": 8
+                  }
+                },
+                {
+                  "item": {
+                    "Var": {
+                      "tag": null,
+                      "property": {
+                        "item": {
+                          "Key": {
+                            "item": {
+                              "Name": "name"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "item": {
+                    "Logical": 0
+                  }
+                },
+                {
+                  "item": {
+                    "Const": {
+                      "item": {
+                        "Str": "marko"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "children": []
+    }
+  ]
+}

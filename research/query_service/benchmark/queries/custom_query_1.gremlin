@@ -1,0 +1,1 @@
+g.V($vertexId).both().limit(1)

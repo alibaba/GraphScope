@@ -1,0 +1,25 @@
+{
+  "nodes": [
+    {
+      "opr": {
+        "opr": {
+          "Auxilia": {
+            "params": {
+              "table_names": [],
+              "columns": [],
+              "limit": null,
+              "predicate": null,
+              "requirements": []
+            },
+            "alias": {
+              "item": {
+                "Name": "a"
+              }
+            }
+          }
+        }
+      },
+      "children": []
+    }
+  ]
+}

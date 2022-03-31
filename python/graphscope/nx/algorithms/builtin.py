@@ -388,6 +388,7 @@ def bfs_edges(G, source, depth_limit=None):
 
     """
     # FIXME: reverse not support.
+    depth_limit = -1 if depth_limit is None else depth_limit
     ctx = AppAssets(algo="bfs_generic", context="tensor")(
         G, source, depth_limit, format="edges"
     )
@@ -541,7 +542,7 @@ def clustering(G, nodes=None, weight=None):
     def _clustering(G):
         return graphscope.clustering(G)
 
-    if weight:
+    if weight or not isinstance(G, (nx.Graph, nx.DiGraph, graphscope.Graph)):
         # forward networkx.clustering
         return nxa.clustering(G, nodes, weight)
     clusterc = _clustering(G)
@@ -560,6 +561,10 @@ def triangles(G, nodes=None):
     @project_to_simple
     def _triangles(G):
         return graphscope.triangles(G)
+
+    if not isinstance(G, (nx.Graph, nx.DiGraph, graphscope.Graph)):
+        # forward networkx.triangles
+        return nxa.triangles(G, nodes)
 
     tricnt = _triangles(G)
     if nodes is not None:

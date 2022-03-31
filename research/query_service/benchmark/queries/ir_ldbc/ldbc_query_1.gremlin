@@ -1,0 +1,1 @@
+g.V().hasLabel('PERSON').has('id',$personId).both('1..4', 'KNOWS').as('p').inV().has('id', neq($personId)).has('firstName',eq('$firstName')).as('a').dedup().limit(20).order().by(select('p').by('~len'), asc).by(select('a').by('id')).by(select('a').by('lastName')).select('a', 'p').by(valueMap('id', 'firstName', 'lastName')).by('~len')

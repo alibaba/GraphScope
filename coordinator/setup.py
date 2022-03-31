@@ -61,11 +61,12 @@ version = get_version(os.path.join(repo_root, "..", "VERSION"))
 
 
 GRAPHSCOPE_REQUIRED_PACKAGES = [
-    f"gs-coordinator >= {version}",
-    f"gs-jython >= {version}",
-    f"gs-lib >= {version}",
-    f"gs-engine >= {version}",
-    f"gs-include >= {version}",
+    f"gs-coordinator == {version}",
+    f"gs-jython == {version}",
+    f"gs-lib == {version}",
+    f"gs-engine == {version}",
+    f"gs-include == {version}",
+    f"gs-apps == {version}",
 ]
 
 
@@ -83,8 +84,9 @@ def _get_extra_data():
     #   1) gs-coordinator: include python releated code of gscoordinator
     #   2) gs-lib: libs exclude jython-standalone/groovy/grpc/curator/hadoop/gremlin/conscrypt**.jar
     #   3) gs-jython: other libs not included in gs-lib
-    #   5) gs-include: header files and full-openmpi
-    #   4) gs-engine: other runtime info such as 'bin', 'conf'
+    #   4) gs-include: header files and full-openmpi
+    #   5) gs-engine: other runtime info such as 'bin', 'conf'
+    #   6) gs-apps: precompiled builtin applications
 
     def __get_openmpi_prefix():
         openmpi_prefix = ""
@@ -155,6 +157,7 @@ def _get_extra_data():
         data = {
             "/opt/graphscope/include/": os.path.join(RUNTIME_ROOT, "include"),
             "/usr/local/include/grape": os.path.join(RUNTIME_ROOT, "include"),
+            "/usr/local/include/string_view": os.path.join(RUNTIME_ROOT, "include"),
             "/opt/vineyard/include/": os.path.join(RUNTIME_ROOT, "include"),
             "/usr/local/include/arrow": os.path.join(RUNTIME_ROOT, "include"),
             "/usr/local/include/boost": os.path.join(RUNTIME_ROOT, "include"),
@@ -166,20 +169,19 @@ def _get_extra_data():
             data["/usr/include/rapidjson"] = os.path.join(RUNTIME_ROOT, "include")
         elif platform.system() == "Darwin":
             data["/usr/local/include/rapidjson"] = os.path.join(RUNTIME_ROOT, "include")
-        # precompiled
-        data.update(
-            {
-                os.path.join(
-                    "/", tempfile.gettempprefix(), "gs", "builtin"
-                ): os.path.join(RUNTIME_ROOT, "precompiled"),
-            }
-        )
         # openmpi
         data.update(
             {
                 __get_openmpi_prefix(): os.path.join(RUNTIME_ROOT),
             }
         )
+    elif name == "gs-apps":
+        # precompiled applications
+        data = {
+            os.path.join("/", tempfile.gettempprefix(), "gs", "builtin"): os.path.join(
+                RUNTIME_ROOT, "precompiled"
+            ),
+        }
     return data
 
 

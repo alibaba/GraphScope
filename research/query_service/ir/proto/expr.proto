@@ -1,0 +1,133 @@
+/**
+ * Copyright 2020 Alibaba Group Holding Limited.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+syntax = "proto3";
+package common;
+option java_package = "com.alibaba.graphscope.gaia.proto";
+option java_outer_classname = "OuterExpression";
+
+import "common.proto";
+
+message IdKey {}
+
+message LabelKey {}
+
+message LengthKey {}
+
+message AllKey {}
+
+// A indicator of an attribute or further its properties, which may present as a string-type name
+// or be encoded as a name identifier
+message NameOrId {
+  oneof item {
+    string name = 1;
+    int32 id = 2;
+  }
+}
+
+// Use `NameOrId` as key item, which is the same as `Option<NameOrId>`
+message NameOrIdKey {
+  NameOrId key = 1;
+}
+
+message Property {
+  oneof item {
+    // Get id from the entity
+    IdKey id = 2;
+    // Get label from the entity
+    LabelKey label = 3;
+    // Get length from the entity
+    LengthKey len = 4;
+    // Get all properties
+    AllKey all = 5;
+    // Get property of key from the entity
+    NameOrId key = 6;
+  }
+}
+
+enum Logical {
+  // A binary equality operator
+  EQ  = 0;
+  // A binary inequality operator
+  NE  = 1;
+  // A binary less-than operator
+  LT  = 2;
+  // A binary less-than-equal operator
+  LE  = 3;
+  // A binary greater-than operator
+  GT  = 4;
+  // A binary greater-than-equal operator
+  GE  = 5;
+  // A binary containment check operator, e.g 1 WITHIN [1, 2, 3, 4]
+  WITHIN = 6;
+  // A binary not-containment check operator, e.g 5 WITHOUT [1, 2, 3, 4]
+  WITHOUT = 7;
+  // A binary logical and operator.
+  AND = 8;
+  // A binary logical or operator.
+  OR = 9;
+  // A unary logical not operator.
+  NOT = 10;
+}
+
+enum Arithmetic {
+  // A binary addition operator
+  ADD = 0;
+  // A binary subtraction operator
+  SUB = 1;
+  // A binary multiplication operator
+  MUL = 2;
+  // A binary division operator
+  DIV = 3;
+  // A binary modulo operator
+  MOD = 4;
+  // A binary exponentiation operator
+  EXP = 5;
+}
+
+message Variable {
+  // The alias of a graph relation, which is required for a variable
+  NameOrId tag = 1;
+  // The property of a nested attribute (vertex/edge) of a graph relation, r.a.key, optional
+  Property property = 2;
+}
+
+message VariableKeys {
+  repeated Variable keys = 1;
+}
+
+// An operator of expression is one of Logical, Arithmetic, Const and Variable.
+message ExprOpr {
+  enum Brace {
+    LEFT_BRACE = 0;  // (
+    RIGHT_BRACE = 1;  // )
+  }
+  oneof item {
+    Logical logical = 2;
+    Arithmetic arith = 3;
+    common.Value const = 4;
+    Variable var = 5;
+    Brace brace = 6;
+    VariableKeys vars = 7;
+    VariableKeys var_map = 8;
+  }
+}
+
+// An inner representation of an expression
+message Expression {
+  repeated ExprOpr operators = 1;
+}
+

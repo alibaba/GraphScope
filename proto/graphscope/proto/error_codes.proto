@@ -57,6 +57,8 @@ enum Code {
 
   GREMLIN_QUERY_ERROR = 14;
 
+  RETRIES_EXCEEDED_ERROR = 15;
+
   // Errors raised by analytical engine
   ANALYTICAL_ENGINE_INTERNAL_ERROR = 30;
 

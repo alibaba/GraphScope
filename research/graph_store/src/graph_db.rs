@@ -196,6 +196,10 @@ impl<'a, G: IndexType, I: IndexType> LocalEdge<'a, G, I> {
         }
     }
 
+    pub fn is_from_start(&self) -> bool {
+        self.from_start
+    }
+
     pub fn get_label(&self) -> LabelId {
         self.label
     }
