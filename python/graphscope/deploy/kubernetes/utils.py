@@ -33,21 +33,39 @@ from graphscope.framework.errors import K8sError
 logger = logging.getLogger("graphscope")
 
 
-def try_to_resolve_api_client():
+def resolve_api_client(k8s_client_config={}):
     """The order of resolves are as following.
 
-    1. load from incluster configuration or,
-    2. load from kubernetes config file or,
-    3. set api address from env if `KUBE_API_ADDRESS` exist.
-    4. RuntimeError will be raised if resolve failed.
+    Args:
+        k8s_client_config (dict):
+            Provide configurable parameters for connecting to remote K8s cluster.
+            {
+                "config_file": "~/.kube/config",
+                "context": None,
+                "client_configuration": None,
+                "persist_config": True
+            }
+            Defaults to empty dict.
+
+    Raises:
+        RuntimeError: K8s api client resolve failed.
+
+    Returns:
+        An kubernetes ApiClient object, initialized with the client args.
+
+    The order of resolution as follows:
+        1. load from kubernetes config file or,
+        2. load from incluster configuration or,
+        3. set api address from env if `KUBE_API_ADDRESS` exist.
+        4. RuntimeError will be raised if resolve failed.
     """
     try:
-        # load from incluster configuration
-        kube_config.load_incluster_config()
+        # load from kubernetes config file
+        kube_config.load_kube_config(**k8s_client_config)
     except:  # noqa: E722
         try:
-            # load from kubernetes config file
-            kube_config.load_kube_config()
+            # load from incluster configuration
+            kube_config.load_incluster_config()
         except:  # noqa: E722
             if "KUBE_API_ADDRESS" in os.environ:
                 # try to load from env `KUBE_API_ADDRESS`
