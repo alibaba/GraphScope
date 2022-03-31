@@ -173,6 +173,21 @@ etcd:
 $ helm install -f values.yaml graphscope/graphscope --generate-name
 ```
 
+## Offline Deployment
+With offline environment, you can download the charts file first:
+
+```shell
+# version 0.11.0
+$ wget https://graphscope.oss-cn-beijing.aliyuncs.com/charts/graphscope-0.11.0.tgz
+```
+
+Then, transfer the package to the server, unzip, and install graphscope charts.
+
+```shell
+$ tar zxvf graphscope-0.11.0.tgz
+$ helm install graphscope ./graphscope --namespace=default
+```
+
 ## Useful links
 
 - https://graphscope.io/
