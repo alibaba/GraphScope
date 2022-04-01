@@ -242,7 +242,8 @@
                 <span class="n">node_view_label</span><span class="p">,</span> <span class="n">node_label</span><span class="p">,</span> <span class="n">nsplit</span><span class="o">=</span><span class="n">nsplit</span><span class="p">,</span> <span class="n">split_range</span><span class="o">=</span><span class="n">split_range</span>
             <span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">init_vineyard</span><span class="p">(</span><span class="n">worker_index</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">worker_count</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span></div>
+        <span class="c1"># server_own=False: make sure the glog inside graph-learn get initialized</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">init_vineyard</span><span class="p">(</span><span class="n">worker_index</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">worker_count</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">server_own</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">decode_arg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arg</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">arg</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
@@ -506,6 +507,16 @@
             
               
                 <dd><a href="../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.12.0/index.html">v0.12.0</a></dd>
               
             
 

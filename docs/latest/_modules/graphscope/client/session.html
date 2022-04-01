@@ -163,6 +163,7 @@
     <span class="n">kube_config</span> <span class="o">=</span> <span class="kc">None</span>
 
 <span class="kn">import</span> <span class="nn">graphscope</span>
+<span class="kn">from</span> <span class="nn">graphscope.analytical.udf.utils</span> <span class="kn">import</span> <span class="n">InMemoryZip</span>
 <span class="kn">from</span> <span class="nn">graphscope.client.rpc</span> <span class="kn">import</span> <span class="n">GRPCClient</span>
 <span class="kn">from</span> <span class="nn">graphscope.client.utils</span> <span class="kn">import</span> <span class="n">CaptureKeyboardInterrupt</span>
 <span class="kn">from</span> <span class="nn">graphscope.client.utils</span> <span class="kn">import</span> <span class="n">GSLogger</span>
@@ -171,6 +172,7 @@
 <span class="kn">from</span> <span class="nn">graphscope.config</span> <span class="kn">import</span> <span class="n">GSConfig</span> <span class="k">as</span> <span class="n">gs_config</span>
 <span class="kn">from</span> <span class="nn">graphscope.deploy.hosts.cluster</span> <span class="kn">import</span> <span class="n">HostsClusterLauncher</span>
 <span class="kn">from</span> <span class="nn">graphscope.deploy.kubernetes.cluster</span> <span class="kn">import</span> <span class="n">KubernetesClusterLauncher</span>
+<span class="kn">from</span> <span class="nn">graphscope.deploy.kubernetes.utils</span> <span class="kn">import</span> <span class="n">resolve_api_client</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.dag</span> <span class="kn">import</span> <span class="n">Dag</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.errors</span> <span class="kn">import</span> <span class="n">FatalError</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.errors</span> <span class="kn">import</span> <span class="n">InteractiveEngineInternalError</span>
@@ -233,6 +235,8 @@
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fetches</span><span class="p">[</span><span class="n">seq</span><span class="p">],</span> <span class="n">Operation</span><span class="p">):</span>
             <span class="c1"># for nx Graph</span>
             <span class="k">return</span> <span class="n">op_result</span><span class="o">.</span><span class="n">graph_def</span>
+        <span class="c1"># run_app op also can return graph result, so judge here</span>
+
         <span class="c1"># get graph dag node as base</span>
         <span class="n">graph_dag_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fetches</span><span class="p">[</span><span class="n">seq</span><span class="p">]</span>
         <span class="c1"># construct graph</span>
@@ -451,6 +455,7 @@
         <span class="n">k8s_image_pull_secrets</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_image_pull_secrets</span><span class="p">,</span>
         <span class="n">k8s_coordinator_cpu</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_coordinator_cpu</span><span class="p">,</span>
         <span class="n">k8s_coordinator_mem</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_coordinator_mem</span><span class="p">,</span>
+        <span class="n">etcd_addrs</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">etcd_addrs</span><span class="p">,</span>
         <span class="n">k8s_etcd_num_pods</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_etcd_num_pods</span><span class="p">,</span>
         <span class="n">k8s_etcd_cpu</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_etcd_cpu</span><span class="p">,</span>
         <span class="n">k8s_etcd_mem</span><span class="o">=</span><span class="n">gs_config</span><span class="o">.</span><span class="n">k8s_etcd_mem</span><span class="p">,</span>
@@ -628,10 +633,16 @@
 
 <span class="sd">                - k8s_client_config (dict, optional):</span>
 <span class="sd">                    Provide configurable parameters for connecting to remote k8s,</span>
-<span class="sd">                    which strongly relies on the `kube_config.new_client_from_config` function.</span>
-<span class="sd">                    eg: {&quot;config_file&quot;: &quot;~/.kube/config&quot;, &quot;context&quot;: None, &quot;persist_config&quot;: True}</span>
+<span class="sd">                    which strongly relies on the `kube_config.load_kube_config` function.</span>
+<span class="sd">                    eg: {</span>
+<span class="sd">                        &quot;config_file&quot;: &quot;~/.kube/config&quot;,</span>
+<span class="sd">                        &quot;context&quot;: None,</span>
+<span class="sd">                        &quot;client_configuration&quot;: None,</span>
+<span class="sd">                        &quot;persist_config&quot;: True</span>
+<span class="sd">                    }</span>
 <span class="sd">                    config_file: Name of the kube-config file.</span>
 <span class="sd">                    context: set the active context. If is set to None, current_context from config file will be used.</span>
+<span class="sd">                    client_configuration: The kubernetes.client.Configuration to set configs to.</span>
 <span class="sd">                    persist_config: If True, config file will be updated when changed(e.g GCP token refresh).</span>
 
 <span class="sd">                - log_level: Deprecated.</span>
@@ -680,6 +691,7 @@
             <span class="s2">&quot;k8s_image_pull_secrets&quot;</span><span class="p">,</span>
             <span class="s2">&quot;k8s_coordinator_cpu&quot;</span><span class="p">,</span>
             <span class="s2">&quot;k8s_coordinator_mem&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;etcd_addrs&quot;</span><span class="p">,</span>
             <span class="s2">&quot;k8s_etcd_num_pods&quot;</span><span class="p">,</span>
             <span class="s2">&quot;k8s_etcd_cpu&quot;</span><span class="p">,</span>
             <span class="s2">&quot;k8s_etcd_mem&quot;</span><span class="p">,</span>
@@ -1103,8 +1115,8 @@
                 <span class="n">api_client</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_client_config&quot;</span><span class="p">]</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">try</span><span class="p">:</span>
-                    <span class="n">api_client</span> <span class="o">=</span> <span class="n">kube_config</span><span class="o">.</span><span class="n">new_client_from_config</span><span class="p">(</span>
-                        <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_client_config&quot;</span><span class="p">]</span>
+                    <span class="n">api_client</span> <span class="o">=</span> <span class="n">resolve_api_client</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span><span class="p">[</span><span class="s2">&quot;k8s_client_config&quot;</span><span class="p">]</span>
                     <span class="p">)</span>
                 <span class="k">except</span> <span class="n">kube_config</span><span class="o">.</span><span class="n">ConfigException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
@@ -1385,7 +1397,30 @@
         <span class="nb">setattr</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span> <span class="s2">&quot;Graph&quot;</span><span class="p">,</span> <span class="n">graph</span><span class="p">)</span>
         <span class="nb">setattr</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span> <span class="s2">&quot;DiGraph&quot;</span><span class="p">,</span> <span class="n">digraph</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_nx</span> <span class="o">=</span> <span class="n">mod</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nx</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nx</span>
+
+<div class="viewcode-block" id="Session.add_lib"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.add_lib">[docs]</a>    <span class="k">def</span> <span class="nf">add_lib</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">resource_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        add the specified resource to the k8s cluster from client machine.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;client: adding lib </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">resource_name</span><span class="p">))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">resource_name</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span>
+                <span class="s2">&quot;resource file not found in </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">resource_name</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">resource_name</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;Provided resource </span><span class="si">{}</span><span class="s2"> can not be found&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">resource_name</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="c1"># pack into a gar file</span>
+        <span class="n">garfile</span> <span class="o">=</span> <span class="n">InMemoryZip</span><span class="p">()</span>
+        <span class="n">resource_reader</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">resource_name</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span>
+        <span class="n">bytes_</span> <span class="o">=</span> <span class="n">resource_reader</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">bytes_</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Expect a non-empty file.&quot;</span><span class="p">)</span>
+        <span class="c1"># the uploaded file may be placed in the same directory</span>
+        <span class="n">garfile</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">resource_name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span> <span class="n">bytes_</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span><span class="o">.</span><span class="n">add_lib</span><span class="p">(</span><span class="n">garfile</span><span class="o">.</span><span class="n">read_bytes</span><span class="p">()</span><span class="o">.</span><span class="n">getvalue</span><span class="p">())</span></div></div>
 
 
 <span class="n">session</span> <span class="o">=</span> <span class="n">Session</span>
@@ -1512,14 +1547,19 @@
     <span class="k">return</span> <span class="n">_default_session_stack</span><span class="o">.</span><span class="n">get_controller</span><span class="p">(</span><span class="n">session</span><span class="p">)</span>
 
 
+<div class="viewcode-block" id="has_default_session"><a class="viewcode-back" href="../../../reference/generated/graphscope.has_default_session.html#graphscope.has_default_session">[docs]</a><span class="k">def</span> <span class="nf">has_default_session</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;True if default session exists in current context.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="ow">not</span> <span class="n">_default_session_stack</span><span class="o">.</span><span class="n">empty</span><span class="p">()</span></div>
+
+
 <div class="viewcode-block" id="get_default_session"><a class="viewcode-back" href="../../../reference/generated/graphscope.get_default_session.html#graphscope.get_default_session">[docs]</a><span class="k">def</span> <span class="nf">get_default_session</span><span class="p">():</span>
     <span class="sd">&quot;&quot;&quot;Returns the default session for the current context.</span>
 
-<span class="sd">    Raises:</span>
-<span class="sd">        RuntimeError: Default session is not exist.</span>
+<span class="sd">    Note that a new session will be created if there is no</span>
+<span class="sd">    default session in current context.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        The default :class:`Session`.</span>
+<span class="sd">        The default :class:`graphscope.Session`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">_default_session_stack</span><span class="o">.</span><span class="n">get_default</span><span class="p">()</span></div>
 
@@ -1544,6 +1584,9 @@
             <span class="n">sess</span> <span class="o">=</span> <span class="n">session</span><span class="p">(</span><span class="n">cluster_type</span><span class="o">=</span><span class="s2">&quot;hosts&quot;</span><span class="p">,</span> <span class="n">num_workers</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
             <span class="n">sess</span><span class="o">.</span><span class="n">as_default</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">empty</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stack</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
 
     <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">stack</span> <span class="o">=</span> <span class="p">[]</span>
@@ -1687,6 +1730,16 @@
             
               
                 <dd><a href="../../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.12.0/index.html">v0.12.0</a></dd>
               
             
 

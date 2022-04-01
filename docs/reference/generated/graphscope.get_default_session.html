@@ -18,7 +18,7 @@
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="graphscope.set_option" href="graphscope.set_option.html" />
+    <link rel="next" title="graphscope.has_default_session" href="graphscope.has_default_session.html" />
     <link rel="prev" title="graphscope.session" href="graphscope.session.html" />
 
  
@@ -96,6 +96,7 @@
 <li class="toctree-l3 current"><a class="reference internal" href="../session.html#session-functions">Session Functions</a><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="graphscope.session.html">graphscope.session</a></li>
 <li class="toctree-l4 current"><a class="current reference internal" href="#">graphscope.get_default_session</a></li>
+<li class="toctree-l4"><a class="reference internal" href="graphscope.has_default_session.html">graphscope.has_default_session</a></li>
 <li class="toctree-l4"><a class="reference internal" href="graphscope.set_option.html">graphscope.set_option</a></li>
 <li class="toctree-l4"><a class="reference internal" href="graphscope.get_option.html">graphscope.get_option</a></li>
 <li class="toctree-l4"><a class="reference internal" href="graphscope.g.html">graphscope.g</a></li>
@@ -155,12 +156,11 @@
 <dt class="sig sig-object py" id="graphscope.get_default_session">
 <span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">get_default_session</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/client/session.html#get_default_session"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.get_default_session" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the default session for the current context.</p>
+<p>Note that a new session will be created if there is no
+default session in current context.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Raises</dt>
-<dd class="field-odd"><p><strong>RuntimeError</strong> – Default session is not exist.</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The default <a class="reference internal" href="../session.html#graphscope.Session" title="graphscope.Session"><code class="xref py py-class docutils literal notranslate"><span class="pre">Session</span></code></a>.</p>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The default <a class="reference internal" href="../session.html#graphscope.Session" title="graphscope.Session"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.Session</span></code></a>.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -172,7 +172,7 @@
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="graphscope.session.html" class="btn btn-neutral float-left" title="graphscope.session" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="graphscope.set_option.html" class="btn btn-neutral float-right" title="graphscope.set_option" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="graphscope.has_default_session.html" class="btn btn-neutral float-right" title="graphscope.has_default_session" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
@@ -223,6 +223,16 @@
             
               
                 <dd><a href="../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.12.0/index.html">v0.12.0</a></dd>
               
             
 
