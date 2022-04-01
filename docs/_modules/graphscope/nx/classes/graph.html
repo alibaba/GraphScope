@@ -148,7 +148,6 @@
 <span class="kn">from</span> <span class="nn">networkx</span> <span class="kn">import</span> <span class="n">freeze</span>
 <span class="kn">from</span> <span class="nn">networkx.classes.coreviews</span> <span class="kn">import</span> <span class="n">AdjacencyView</span>
 <span class="kn">from</span> <span class="nn">networkx.classes.graph</span> <span class="kn">import</span> <span class="n">Graph</span> <span class="k">as</span> <span class="n">RefGraph</span>
-<span class="kn">from</span> <span class="nn">networkx.classes.graphviews</span> <span class="kn">import</span> <span class="n">generic_graph_view</span>
 <span class="kn">from</span> <span class="nn">networkx.classes.reportviews</span> <span class="kn">import</span> <span class="n">DegreeView</span>
 
 <span class="kn">from</span> <span class="nn">graphscope</span> <span class="kn">import</span> <span class="n">nx</span>
@@ -162,6 +161,7 @@
 <span class="kn">from</span> <span class="nn">graphscope.nx</span> <span class="kn">import</span> <span class="n">NetworkXError</span>
 <span class="kn">from</span> <span class="nn">graphscope.nx.classes.dicts</span> <span class="kn">import</span> <span class="n">AdjDict</span>
 <span class="kn">from</span> <span class="nn">graphscope.nx.classes.dicts</span> <span class="kn">import</span> <span class="n">NodeDict</span>
+<span class="kn">from</span> <span class="nn">graphscope.nx.classes.graphviews</span> <span class="kn">import</span> <span class="n">generic_graph_view</span>
 <span class="kn">from</span> <span class="nn">graphscope.nx.classes.reportviews</span> <span class="kn">import</span> <span class="n">EdgeView</span>
 <span class="kn">from</span> <span class="nn">graphscope.nx.classes.reportviews</span> <span class="kn">import</span> <span class="n">NodeView</span>
 <span class="kn">from</span> <span class="nn">graphscope.nx.convert</span> <span class="kn">import</span> <span class="n">to_networkx_graph</span>
@@ -1207,7 +1207,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_convert_arrow_to_dynamic</span><span class="p">()</span>
 
-        <span class="n">edge</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(((</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">data</span><span class="p">),))</span>
+        <span class="n">edge</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(((</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">data</span><span class="p">),),</span> <span class="n">option</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">OPT_SERIALIZE_NUMPY</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="o">.</span><span class="n">add_nx_edge_properties</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">modify_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">NX_UPDATE_EDGES</span><span class="p">,</span> <span class="n">edge</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span></div>
@@ -1243,7 +1243,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_convert_arrow_to_dynamic</span><span class="p">()</span>
 
-        <span class="n">node</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(((</span><span class="n">n</span><span class="p">,</span> <span class="n">data</span><span class="p">),))</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(((</span><span class="n">n</span><span class="p">,</span> <span class="n">data</span><span class="p">),),</span> <span class="n">option</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">OPT_SERIALIZE_NUMPY</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">modify_vertices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">NX_UPDATE_NODES</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span></div>
 
@@ -1904,17 +1904,12 @@
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">as_view</span><span class="o">=</span><span class="n">as_view</span><span class="p">)</span>
         <span class="n">graph_class</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_directed_class</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">as_view</span><span class="p">:</span>
-            <span class="n">g</span> <span class="o">=</span> <span class="n">graph_class</span><span class="p">(</span><span class="n">create_empty_in_engine</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-            <span class="n">g</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
-            <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">create_graph_view</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;directed&quot;</span><span class="p">)</span>
-            <span class="n">graph_def</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
-            <span class="n">g</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="n">op</span>
-            <span class="n">g</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">graph_def</span><span class="o">.</span><span class="n">key</span>
+            <span class="n">g</span> <span class="o">=</span> <span class="n">generic_graph_view</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph_class</span><span class="p">)</span>
+            <span class="n">g</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_op</span>
+            <span class="n">g</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_key</span>
             <span class="n">g</span><span class="o">.</span><span class="n">_schema</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="p">)</span>
-            <span class="n">g</span><span class="o">.</span><span class="n">_graph</span> <span class="o">=</span> <span class="bp">self</span>
             <span class="n">g</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span>
-            <span class="n">g</span><span class="o">.</span><span class="n">_is_client_view</span> <span class="o">=</span> <span class="kc">False</span>
-            <span class="n">g</span> <span class="o">=</span> <span class="n">freeze</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+            <span class="n">g</span><span class="o">.</span><span class="n">_is_client_view</span> <span class="o">=</span> <span class="kc">True</span>
             <span class="k">return</span> <span class="n">g</span>
         <span class="n">g</span> <span class="o">=</span> <span class="n">graph_class</span><span class="p">(</span><span class="n">create_empty_in_engine</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="n">g</span><span class="o">.</span><span class="n">graph</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
@@ -2052,7 +2047,8 @@
                 <span class="n">lid</span><span class="o">=</span><span class="n">location</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
                 <span class="n">label_id</span><span class="o">=</span><span class="n">location</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
             <span class="p">)</span>
-        <span class="k">return</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">ret</span>
 
     <span class="nd">@parse_ret_as_dict</span>
     <span class="k">def</span> <span class="nf">_get_nbrs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">report_type</span><span class="o">=</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">SUCCS_BY_NODE</span><span class="p">):</span>
@@ -2450,6 +2446,16 @@
             
               
                 <dd><a href="../../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.12.0/index.html">v0.12.0</a></dd>
               
             
 

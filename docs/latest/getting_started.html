@@ -322,7 +322,8 @@ features following the last step.</p>
 </pre></div>
 </div>
 <p>Then we define the training and testing process, and run it.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">graphscope.learning.examples</span> <span class="kn">import</span> <span class="n">GCN</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope.learning</span>
+<span class="kn">from</span> <span class="nn">graphscope.learning.examples</span> <span class="kn">import</span> <span class="n">GCN</span>
 <span class="kn">from</span> <span class="nn">graphscope.learning.graphlearn.python.model.tf.trainer</span> <span class="kn">import</span> <span class="n">LocalTFTrainer</span>
 <span class="kn">from</span> <span class="nn">graphscope.learning.graphlearn.python.model.tf.optimizer</span> <span class="kn">import</span> <span class="n">get_tf_optimizer</span>
 
@@ -345,6 +346,7 @@ features following the last step.</p>
                    <span class="n">edge_type</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;edge_type&quot;</span><span class="p">],</span>
                    <span class="n">full_graph_mode</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;full_graph_mode&quot;</span><span class="p">])</span>
 
+    <span class="n">graphscope</span><span class="o">.</span><span class="n">learning</span><span class="o">.</span><span class="n">reset_default_tf_graph</span><span class="p">()</span>
     <span class="n">trainer</span> <span class="o">=</span> <span class="n">LocalTFTrainer</span><span class="p">(</span><span class="n">model_fn</span><span class="p">,</span>
                              <span class="n">epoch</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;epoch&quot;</span><span class="p">],</span>
                              <span class="n">optimizer</span><span class="o">=</span><span class="n">gl</span><span class="o">.</span><span class="n">get_tf_optimizer</span><span class="p">(</span>
@@ -443,6 +445,16 @@ Then, the coordinator will dealloc all the applied resources in the k8s cluster.
             
               
                 <dd><a href="../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.12.0/index.html">v0.12.0</a></dd>
               
             
 

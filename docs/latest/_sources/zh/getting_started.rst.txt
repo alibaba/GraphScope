@@ -215,6 +215,7 @@ GraphScope 内建了一组预置常用算法，方便用户可以轻松分析图
 
 .. code:: python
 
+    import graphscope.learning
     from graphscope.learning.examples import GCN
     from graphscope.learning.graphlearn.python.model.tf.trainer import LocalTFTrainer
     from graphscope.learning.graphlearn.python.model.tf.optimizer import get_tf_optimizer
@@ -238,6 +239,7 @@ GraphScope 内建了一组预置常用算法，方便用户可以轻松分析图
                        edge_type=config["edge_type"],
                        full_graph_mode=config["full_graph_mode"])
 
+        graphscope.learning.reset_default_tf_graph()
         trainer = LocalTFTrainer(model_fn,
                                  epoch=config["epoch"],
                                  optimizer=gl.get_tf_optimizer(
