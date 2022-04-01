@@ -127,6 +127,7 @@ def _get_extra_data():
                     "hadoop",
                     "gremlin",
                     "conscrypt",
+                    "bcprov",
                 ],
             ),
             "/usr/local/lib/libvineyard_internal_registry.{0}".format(
@@ -144,6 +145,7 @@ def _get_extra_data():
             "/opt/graphscope/lib/*hadoop*.jar": os.path.join(RUNTIME_ROOT, "lib"),
             "/opt/graphscope/lib/*gremlin*.jar": os.path.join(RUNTIME_ROOT, "lib"),
             "/opt/graphscope/lib/*conscrypt*.jar": os.path.join(RUNTIME_ROOT, "lib"),
+            "/opt/graphscope/lib/*bcprov*.jar": os.path.join(RUNTIME_ROOT, "lib"),
         }
     elif name == "gs-engine":
         data = {
