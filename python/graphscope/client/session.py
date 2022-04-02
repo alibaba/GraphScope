@@ -421,7 +421,8 @@ class Session(object):
 
             k8s_coordinator_mem (str, optional): Minimum number of memory request for coordinator pod. Defaults to '4Gi'.
 
-            etcd_addrs (str, optional): The addr of external etcd cluster, with formats like 'etcd01:port,etcd02:port,etcd03:port'
+            etcd_addrs (str, optional): The addr of external etcd cluster,
+                with formats like 'etcd01:port,etcd02:port,etcd03:port'
 
             k8s_etcd_num_pods (int, optional): The number of etcd pods. Defaults to 3.
 
