@@ -1315,7 +1315,9 @@ class Session(object):
 
     def check_version_compatible(self):
         if self._config_params["k8s_gs_image"] != gs_config.k8s_gs_image:
-            raise RuntimeError("Version between k8s_gs_image and client is inconsistent")
+            raise RuntimeError(
+                "Version between k8s_gs_image and client is inconsistent"
+            )
 
 
 session = Session
