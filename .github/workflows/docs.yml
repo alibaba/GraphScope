@@ -127,6 +127,13 @@ jobs:
           make graphscope-docs
         fi
 
+    - name: Stop the Actions
+      if: ${{ failure() }}
+      uses: styfle/cancel-workflow-action@0.9.1
+      with:
+        workflow_id: ci.yml,gae.yml,gaia.yml,gss.yml
+        access_token: ${{ github.token }}
+
     - name: Upload Docs
       if: ${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') }}
       shell: bash
