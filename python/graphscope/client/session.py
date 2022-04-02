@@ -67,6 +67,7 @@ from graphscope.proto import graph_def_pb2
 from graphscope.proto import message_pb2
 from graphscope.proto import op_def_pb2
 from graphscope.proto import types_pb2
+from graphscope.version import __version__
 
 DEFAULT_CONFIG_FILE = os.environ.get(
     "GS_CONFIG_PATH", os.path.expanduser("~/.graphscope/session.json")
@@ -659,6 +660,10 @@ class Session(object):
         # There should be no more custom keyword arguments.
         if kw:
             raise ValueError("Value not recognized: ", list(kw.keys()))
+
+        # The version of client and coordinator must be same
+        if self._config_params["k8s_gs_image"] != gs_config.k8s_gs_image:
+            raise RuntimeError("Version between k8s_gs_image and client is inconsistent")
 
         if self._config_params["addr"]:
             logger.info(
