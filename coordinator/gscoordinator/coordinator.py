@@ -610,6 +610,9 @@ class CoordinatorServiceServicer(
 
         while not dag_manager.empty():
             run_dag_on, dag, dag_bodies = dag_manager.next_dag()
+            error_code = None
+            head = None
+            bodies = None
             try:
                 # run on analytical engine
                 if run_dag_on == GSEngine.analytical_engine:
