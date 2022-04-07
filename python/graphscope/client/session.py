@@ -49,6 +49,7 @@ from graphscope.client.utils import set_defaults
 from graphscope.config import GSConfig as gs_config
 from graphscope.deploy.hosts.cluster import HostsClusterLauncher
 from graphscope.deploy.kubernetes.cluster import KubernetesClusterLauncher
+from graphscope.deploy.kubernetes.utils import resolve_api_client
 from graphscope.framework.dag import Dag
 from graphscope.framework.errors import FatalError
 from graphscope.framework.errors import InteractiveEngineInternalError
@@ -509,10 +510,16 @@ class Session(object):
 
                 - k8s_client_config (dict, optional):
                     Provide configurable parameters for connecting to remote k8s,
-                    which strongly relies on the `kube_config.new_client_from_config` function.
-                    eg: {"config_file": "~/.kube/config", "context": None, "persist_config": True}
+                    which strongly relies on the `kube_config.load_kube_config` function.
+                    eg: {
+                        "config_file": "~/.kube/config",
+                        "context": None,
+                        "client_configuration": None,
+                        "persist_config": True
+                    }
                     config_file: Name of the kube-config file.
                     context: set the active context. If is set to None, current_context from config file will be used.
+                    client_configuration: The kubernetes.client.Configuration to set configs to.
                     persist_config: If True, config file will be updated when changed(e.g GCP token refresh).
 
                 - log_level: Deprecated.
@@ -985,8 +992,8 @@ class Session(object):
                 api_client = self._config_params["k8s_client_config"]
             else:
                 try:
-                    api_client = kube_config.new_client_from_config(
-                        **self._config_params["k8s_client_config"]
+                    api_client = resolve_api_client(
+                        self._config_params["k8s_client_config"]
                     )
                 except kube_config.ConfigException as e:
                     raise RuntimeError(
