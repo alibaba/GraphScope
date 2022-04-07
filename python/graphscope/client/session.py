@@ -715,6 +715,9 @@ class Session(object):
         # networkx module
         self._nx = None
 
+        # a lock that protects the coordinator
+        self._lock = threading.Lock()
+
     def __repr__(self):
         return str(self.info)
 
@@ -937,6 +940,10 @@ class Session(object):
         return dag_node
 
     def run(self, fetches, debug=False):
+        with self._lock:
+            return self.run_fetches(fetches, debug)
+
+    def run_fetches(self, fetches, debug=False):
         """Run operations of `fetch`.
         Args:
             fetch: :class:`Operation`
