@@ -308,6 +308,59 @@ class UnionAdjList {
     size_t curr_list_index_;
   };
 
+  class const_iterator {
+    using pointer_type = const nbr_t*;
+    using reference_type = const nbr_t&;
+
+   public:
+    const_iterator() = default;
+    explicit const_iterator(const std::vector<adj_list_t>& adj_lists,
+                            const nbr_unit_t& nbr,
+                            const prop_id_t& default_prop_id, size_t index,
+                            const UnionIdParser<VID_T>& union_id_parser)
+        : adj_lists_(adj_lists),
+          curr_nbr_(default_prop_id, union_id_parser),
+          curr_list_index_(index) {
+      curr_nbr_ = nbr;
+    }
+    explicit const_iterator(const std::vector<adj_list_t>& adj_lists,
+                            const nbr_t& nbr, size_t list_index)
+        : adj_lists_(adj_lists), curr_nbr_(nbr), curr_list_index_(list_index) {}
+
+    reference_type operator*() noexcept { return curr_nbr_; }
+
+    pointer_type operator->() noexcept { return curr_nbr_; }
+
+    const_iterator& operator++() {
+      if (++curr_nbr_ == adj_lists_.get()[curr_list_index_].end()) {
+        ++curr_list_index_;
+        if (curr_list_index_ < adj_lists_.get().size()) {
+          curr_nbr_ = adj_lists_.get()[curr_list_index_].begin();
+        }
+      }
+      return *this;
+    }
+
+    const_iterator operator++(int) {
+      const_iterator ret(adj_lists_, curr_nbr_, curr_list_index_);
+      ++(*this);
+      return ret;
+    }
+
+    bool operator==(const const_iterator& rhs) noexcept {
+      return curr_nbr_ == rhs.curr_nbr_;
+    }
+
+    bool operator!=(const const_iterator& rhs) noexcept {
+      return curr_nbr_ != rhs.curr_nbr_;
+    }
+
+   private:
+    std::reference_wrapper<const std::vector<adj_list_t>> adj_lists_;
+    nbr_t curr_nbr_;
+    size_t curr_list_index_;
+  };
+
   iterator begin() {
     if (size_ == 0) {
       nbr_unit_t nbr;
@@ -325,6 +378,29 @@ class UnionAdjList {
     } else {
       return iterator(adj_lists_, adj_lists_.back().end(), default_prop_id_,
                       adj_lists_.size(), union_id_parser_);
+    }
+  }
+
+  const_iterator begin() const {
+    if (size_ == 0) {
+      nbr_unit_t nbr;
+      return const_iterator(adj_lists_, nbr, default_prop_id_, 0,
+                            union_id_parser_);
+    } else {
+      return const_iterator(adj_lists_, adj_lists_.front().begin(),
+                            default_prop_id_, 0, union_id_parser_);
+    }
+  }
+
+  const_iterator end() const {
+    if (size_ == 0) {
+      nbr_unit_t nbr;
+      return const_iterator(adj_lists_, nbr, default_prop_id_, 0,
+                            union_id_parser_);
+    } else {
+      return const_iterator(adj_lists_, adj_lists_.back().end(),
+                            default_prop_id_, adj_lists_.size(),
+                            union_id_parser_);
     }
   }
 
