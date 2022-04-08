@@ -962,8 +962,7 @@ class Session(object):
             return self.run_fetches(fetches, debug)
 
     def run_fetches(self, fetches, debug=False):
-        """Run operations of `fetches` without the session lock.
-        """
+        """Run operations of `fetches` without the session lock."""
         if self._closed:
             raise RuntimeError("Attempted to use a closed Session.")
         if not self._grpc_client:
