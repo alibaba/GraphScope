@@ -41,8 +41,8 @@ from graphscope.framework.graph_schema import GraphSchema
 from graphscope.nx import NetworkXError
 from graphscope.nx.classes.cache import Cache
 from graphscope.nx.classes.coreviews import AdjacencyView
-from graphscope.nx.classes.dict_factory import AdjListDictPoc
-from graphscope.nx.classes.dict_factory import NodeDictPoc
+from graphscope.nx.classes.dict_factory import AdjListDict
+from graphscope.nx.classes.dict_factory import NodeDict
 from graphscope.nx.classes.graphviews import generic_graph_view
 from graphscope.nx.classes.reportviews import EdgeView
 from graphscope.nx.classes.reportviews import NodeView
@@ -263,8 +263,8 @@ class Graph(_GraphBase):
     """
 
     graph_cache_factory = Cache
-    node_dict_factory = NodeDictPoc
-    adjlist_dict_factory = AdjListDictPoc
+    node_dict_factory = NodeDict
+    adjlist_dict_factory = AdjListDict
     graph_attr_dict_factory = dict
     _graph_type = graph_def_pb2.DYNAMIC_PROPERTY
 

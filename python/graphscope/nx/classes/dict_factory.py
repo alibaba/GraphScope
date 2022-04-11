@@ -20,10 +20,10 @@
 from collections import UserDict
 from collections.abc import Mapping
 
-__all__ = ["NodeDictPoc", "AdjListDictPoc"]
+__all__ = ["NodeDict", "AdjListDict"]
 
 
-class NodeDictPoc(Mapping):
+class NodeDict(Mapping):
     """A adhoc read-only view for nodes on graphscope.nx Graph."""
 
     __slots__ = (
@@ -44,10 +44,10 @@ class NodeDictPoc(Mapping):
     def __getitem__(self, key):
         if key in self._cache and self._cache.align_node_attr_cache():
             index = self._cache.id2i[key]
-            return NodeAttrDictPoc(self._graph, key, self._cache.node_attr_cache[index])
+            return NodeAttrDict(self._graph, key, self._cache.node_attr_cache[index])
         if key in self._graph:
             attr = self._cache.get_node_attr(key)
-            return NodeAttrDictPoc(self._graph, key, attr)
+            return NodeAttrDict(self._graph, key, attr)
         raise KeyError(key)
 
     def __iter__(self):
@@ -72,7 +72,7 @@ class NodeDictPoc(Mapping):
         return self.__repr__()
 
 
-class NodeAttrDictPoc(UserDict):
+class NodeAttrDict(UserDict):
     """Wrapper for attributes of node."""
 
     __slots__ = (
@@ -113,7 +113,7 @@ class NodeAttrDictPoc(UserDict):
         return item
 
 
-class AdjListDictPoc(Mapping):
+class AdjListDict(Mapping):
     """A adhoc read-only view for adjlist of nodes on graphscope.nx Graph."""
 
     __slots__ = ("_graph", "_cache", "_pred")
