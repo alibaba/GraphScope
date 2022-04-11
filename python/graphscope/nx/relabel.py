@@ -44,8 +44,7 @@ def relabel_nodes(G, mapping, copy=True):
         m = mapping
     if copy:
         return _relabel_copy(G, m)
-    else:
-        return _relabel_inplace(G, m)
+    return _relabel_inplace(G, m)
 
 
 def _relabel_inplace(G, mapping):

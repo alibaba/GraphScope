@@ -58,7 +58,7 @@ class Cache:
         self.pred_attr_align = False
 
         # thread pool and promises for iteration batch cache fetch
-        self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=4)
+        self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
         self.futures = {
             "node_id": None,
             "node_attr": None,
@@ -279,7 +279,7 @@ class Cache:
         if self.futures["node_attr"] is not None:
             try:
                 self.futures["node_attr"].result()
-            except Exception:
+            except concurrent.futures.CancelledError:
                 pass
         self.futures["node_attr"] = None
         self.node_attr_cache = ()
@@ -295,12 +295,12 @@ class Cache:
         if self.futures["succ_attr"] is not None:
             try:
                 self.futures["succ_attr"].result()
-            except Exception:
+            except concurrent.futures.CancelledError:
                 pass
         if self.futures["pred_attr"] is not None:
             try:
                 self.futures["pred_attr"].result()
-            except Exception:
+            except concurrent.futures.CancelledError:
                 pass
         self.futures["succ_attr"] = None
         self.futures["pred_attr"] = None
