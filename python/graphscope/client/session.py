@@ -664,9 +664,6 @@ class Session(object):
         if kw:
             raise ValueError("Value not recognized: ", list(kw.keys()))
 
-        # The version of client and coordinator must be same
-        self.check_version_compatible()
-
         if self._config_params["addr"]:
             logger.info(
                 "Connecting graphscope session with address: %s",
@@ -1313,13 +1310,6 @@ class Session(object):
         # the uploaded file may be placed in the same directory
         garfile.append("{}".format(resource_name.split("/")[-1]), bytes_)
         self._grpc_client.add_lib(garfile.read_bytes().getvalue())
-
-    def check_version_compatible(self):
-        if self._config_params["k8s_gs_image"] != gs_config.k8s_gs_image:
-            raise RuntimeError(
-                "Version between k8s_gs_image and client is inconsistent"
-            )
-
 
 session = Session
 
