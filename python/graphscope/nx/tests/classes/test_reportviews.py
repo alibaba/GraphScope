@@ -71,10 +71,10 @@ class TestNodeView(_TestNodeView):
         nv = self.nv
         nlist = list(self.G)
         # the order of iteration is not the same every time
-        sorted(nlist) == sorted(nv)
+        assert sorted(nlist) == sorted(nv)
         # odd case where NodeView calls NodeDataView with data=False
         nnv = nv(data=False)
-        sorted(nlist) == sorted(nnv)
+        assert sorted(nlist) == sorted(nnv)
 
     def test_pickle(self):
         pass
