@@ -38,7 +38,7 @@ from graphscope.nx.classes.reportviews import InEdgeView
 from graphscope.nx.classes.reportviews import OutEdgeView
 from graphscope.nx.convert import to_networkx_graph
 from graphscope.nx.utils.compat import patch_docstring
-from graphscope.nx.utils.misc import clear_cache
+from graphscope.nx.utils.misc import clear_mutation_cache
 from graphscope.nx.utils.misc import empty_graph_in_engine
 
 
@@ -300,7 +300,7 @@ class DiGraph(Graph):
         self._saved_signature = self.signature
 
     @property
-    @clear_cache
+    @clear_mutation_cache
     @patch_docstring(RefDiGraph.adj)
     def adj(self):
         return AdjacencyView(self._succ)
@@ -308,22 +308,22 @@ class DiGraph(Graph):
     succ = adj
 
     @property
-    @clear_cache
+    @clear_mutation_cache
     @patch_docstring(RefDiGraph.pred)
     def pred(self):
         return AdjacencyView(self._pred)
 
-    @clear_cache
+    @clear_mutation_cache
     @patch_docstring(RefDiGraph.has_predecessor)
     def has_successor(self, u, v):
         return self.has_edge(u, v)
 
-    @clear_cache
+    @clear_mutation_cache
     @patch_docstring(RefDiGraph.has_predecessor)
     def has_predecessor(self, u, v):
         return self.has_edge(v, u)
 
-    @clear_cache
+    @clear_mutation_cache
     @patch_docstring(RefDiGraph.successors)
     def successors(self, n):
         try:
@@ -334,7 +334,7 @@ class DiGraph(Graph):
     # digraph definitions
     neighbors = successors
 
-    @clear_cache
+    @clear_mutation_cache
     @patch_docstring(RefDiGraph.predecessors)
     def predecessors(self, n):
         try:
@@ -343,7 +343,7 @@ class DiGraph(Graph):
             raise NetworkXError("The node %s is not in the digraph." % (n,))
 
     @property
-    @clear_cache
+    @clear_mutation_cache
     def edges(self):
         """An OutEdgeView of the DiGraph as G.edges or G.edges().
 
@@ -410,13 +410,13 @@ class DiGraph(Graph):
     out_edges = edges
 
     @property
-    @clear_cache
+    @clear_mutation_cache
     @patch_docstring(RefDiGraph.in_edges)
     def in_edges(self):
         return InEdgeView(self)
 
     @property
-    @clear_cache
+    @clear_mutation_cache
     def degree(self):
         """A DegreeView for the Graph as G.degree or G.degree().
 
@@ -464,13 +464,13 @@ class DiGraph(Graph):
         return DiDegreeView(self)
 
     @property
-    @clear_cache
+    @clear_mutation_cache
     @patch_docstring(RefDiGraph.in_degree)
     def in_degree(self):
         return InDegreeView(self)
 
     @property
-    @clear_cache
+    @clear_mutation_cache
     @patch_docstring(RefDiGraph.out_degree)
     def out_degree(self):
         return OutDegreeView(self)
@@ -483,7 +483,7 @@ class DiGraph(Graph):
     def is_multigraph(self):
         return False
 
-    @clear_cache
+    @clear_mutation_cache
     @patch_docstring(RefDiGraph.reverse)
     def reverse(self, copy=True):
         self._convert_arrow_to_dynamic()

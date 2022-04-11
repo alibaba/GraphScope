@@ -20,6 +20,8 @@ import concurrent.futures
 import io
 from functools import lru_cache
 
+from graphscope.nx.utils.misc import clear_mutation_cache
+
 try:
     import msgpack
 except ImportError:
@@ -185,6 +187,7 @@ class Cache:
     def align_neighbor_attr_cache(self, pred=True):
         return self.align_pred_attr_cache() if pred else self.align_succ_attr_cache()
 
+    @clear_mutation_cache
     def __contains__(self, key):
         if self.enable_iter_cache:
             if len(self.node_id_cache) == 0 and self.futures["node_id"] is not None:
@@ -204,6 +207,7 @@ class Cache:
     def __len__(self):
         return self._len
 
+    @clear_mutation_cache
     def __iter__(self):
         iter_n = 0
         while True:

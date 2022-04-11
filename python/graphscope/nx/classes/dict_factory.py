@@ -165,10 +165,10 @@ class AdjListDict(Mapping):
         return len(self) == len(other) and item_equal(self, other)
 
     def __repr__(self):
-        return f"{self.__class__.__name__}({self._pred})"
+        return f"{self.__class__.__name__}"
 
     def __str__(self):
-        return f"{self.__class__.__name__}({self._pred})"
+        return f"{self.__class__.__name__}"
 
 
 class NeighborDict(Mapping):

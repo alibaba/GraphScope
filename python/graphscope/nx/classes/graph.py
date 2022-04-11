@@ -48,7 +48,7 @@ from graphscope.nx.classes.reportviews import EdgeView
 from graphscope.nx.classes.reportviews import NodeView
 from graphscope.nx.convert import to_networkx_graph
 from graphscope.nx.utils.compat import patch_docstring
-from graphscope.nx.utils.misc import clear_cache
+from graphscope.nx.utils.misc import clear_mutation_cache
 from graphscope.nx.utils.misc import empty_graph_in_engine
 from graphscope.proto import graph_def_pb2
 from graphscope.proto import types_pb2
@@ -498,7 +498,7 @@ class Graph(_GraphBase):
     def loaded(self):
         return self.key is not None
 
-    @clear_cache
+    @clear_mutation_cache
     @patch_docstring(RefGraph.__str__)
     def __str__(self):
         if self.graph_type in (
@@ -522,7 +522,7 @@ class Graph(_GraphBase):
         """override default __deepcopy__"""
         return self.copy()
 
-    @clear_cache
+    @clear_mutation_cache
     def __iter__(self):
         """Iterate over the nodes. Use: 'for n in G'.
 
@@ -541,7 +541,7 @@ class Graph(_GraphBase):
         """
         return iter(self._node)
 
-    @clear_cache
+    @clear_mutation_cache
     def __contains__(self, n):
         """Returns True if n is a node, False otherwise. Use: 'n in G'.
 
@@ -607,7 +607,7 @@ class Graph(_GraphBase):
         """
         return self.adj[n]
 
-    @clear_cache
+    @clear_mutation_cache
     def add_node(self, node_for_adding, **attr):
         """Add a single node `node_for_adding` and update node attributes.
 
@@ -646,7 +646,7 @@ class Graph(_GraphBase):
             (node_for_adding, attr) if attr else node_for_adding
         )
 
-    @clear_cache
+    @clear_mutation_cache
     def add_nodes_from(self, nodes_for_adding, **attr):
         """Add multiple nodes.
 
@@ -700,7 +700,7 @@ class Graph(_GraphBase):
             except (TypeError, ValueError):
                 self.add_node(n, **data)
 
-    @clear_cache
+    @clear_mutation_cache
     def remove_node(self, n):
         """Remove node n.
 
@@ -734,7 +734,7 @@ class Graph(_GraphBase):
         self._convert_arrow_to_dynamic()
         self._remove_node_cache.append(n)
 
-    @clear_cache
+    @clear_mutation_cache
     def remove_nodes_from(self, nodes_for_removing):
         """Remove multiple nodes.
 
@@ -764,14 +764,14 @@ class Graph(_GraphBase):
             self.remove_node(n)
 
     @property
-    @clear_cache
+    @clear_mutation_cache
     @patch_docstring(RefGraph.nodes)
     def nodes(self):
         nodes = NodeView(self)
         self.__dict__["nodes"] = nodes
         return nodes
 
-    @clear_cache
+    @clear_mutation_cache
     def get_node_data(self, n):
         """Returns the attribute dictionary of node n.
 
@@ -810,7 +810,7 @@ class Graph(_GraphBase):
         archive = op.eval()
         return json.loads(archive.get_bytes())
 
-    @clear_cache
+    @clear_mutation_cache
     def number_of_nodes(self):
         """Returns the number of nodes in the graph.
 
@@ -876,7 +876,7 @@ class Graph(_GraphBase):
         """
         return n in self
 
-    @clear_cache
+    @clear_mutation_cache
     def add_edge(self, u_of_edge, v_of_edge, **attr):
         """Add an edge between u and v.
 
@@ -933,7 +933,7 @@ class Graph(_GraphBase):
             (u_of_edge, v_of_edge, attr) if attr else (u_of_edge, v_of_edge)
         )
 
-    @clear_cache
+    @clear_mutation_cache
     def add_edges_from(self, ebunch_to_add, **attr):
         """Add all the edges in ebunch_to_add.
 
@@ -987,7 +987,7 @@ class Graph(_GraphBase):
                 )
             self.add_edge(u, v, **data)
 
-    @clear_cache
+    @clear_mutation_cache
     def add_weighted_edges_from(self, ebunch_to_add, weight="weight", **attr):
         """Add weighted edges in `ebunch_to_add` with specified weight attr
 
@@ -1022,13 +1022,13 @@ class Graph(_GraphBase):
             attr[weight] = d
             self.add_edge(u, v, **attr)
 
-    @clear_cache
+    @clear_mutation_cache
     @patch_docstring(RefGraph.remove_edge)
     def remove_edge(self, u, v):
         self._convert_arrow_to_dynamic()
         self._remove_edge_cache.append((u, v))
 
-    @clear_cache
+    @clear_mutation_cache
     def remove_edges_from(self, ebunch):
         """Remove all edges specified in ebunch.
 
@@ -1061,7 +1061,7 @@ class Graph(_GraphBase):
                 raise ValueError("Edge tuple %s must be a 2-tuple or 3-tuple." % (e,))
             self.remove_edge(e[0], e[1])
 
-    @clear_cache
+    @clear_mutation_cache
     def set_edge_data(self, u, v, data):
         """Set edge data of edge (u, v).
 
@@ -1098,7 +1098,7 @@ class Graph(_GraphBase):
         self._op.eval()
         self.cache.clear_neighbor_attr_cache()
 
-    @clear_cache
+    @clear_mutation_cache
     def set_node_data(self, n, data):
         """Set data of node.
 
@@ -1134,7 +1134,7 @@ class Graph(_GraphBase):
         self._op.eval()
         self.cache.clear_node_attr_cache()
 
-    @clear_cache
+    @clear_mutation_cache
     def update(self, edges=None, nodes=None):
         """Update the graph using nodes/edges/graphs as input.
 
@@ -1200,7 +1200,7 @@ class Graph(_GraphBase):
         else:
             raise NetworkXError("update needs nodes or edges input")
 
-    @clear_cache
+    @clear_mutation_cache
     def size(self, weight=None):
         """Returns the number of edges or total of all edge weights.
 
@@ -1243,7 +1243,7 @@ class Graph(_GraphBase):
         archive = op.eval()
         return archive.get_size() // 2
 
-    @clear_cache
+    @clear_mutation_cache
     @patch_docstring(RefGraph.number_of_edges)
     def number_of_edges(self, u=None, v=None):
         edges_num = 0
@@ -1253,13 +1253,13 @@ class Graph(_GraphBase):
             edges_num = 1
         return edges_num
 
-    @clear_cache
+    @clear_mutation_cache
     def number_of_selfloops(self):
         op = dag_utils.report_graph(self, types_pb2.SELFLOOPS_NUM)
         archive = op.eval()
         return archive.get_size()
 
-    @clear_cache
+    @clear_mutation_cache
     def has_edge(self, u, v):
         """Returns True if the edge (u, v) is in the graph.
 
@@ -1301,7 +1301,7 @@ class Graph(_GraphBase):
         except KeyError:
             return False
 
-    @clear_cache
+    @clear_mutation_cache
     def neighbors(self, n):
         """Returns an iterator over all neighbors of node n.
 
@@ -1346,7 +1346,7 @@ class Graph(_GraphBase):
             raise NetworkXError("The node %s is not in the graph." % (n,))
 
     @property
-    @clear_cache
+    @clear_mutation_cache
     def edges(self):
         """An EdgeView of the Graph as G.edges or G.edges().
 
@@ -1403,7 +1403,7 @@ class Graph(_GraphBase):
         """
         return EdgeView(self)
 
-    @clear_cache
+    @clear_mutation_cache
     def get_edge_data(self, u, v, default=None):
         """Returns the attribute dictionary associated with edge (u, v).
 
@@ -1461,12 +1461,12 @@ class Graph(_GraphBase):
             return default
 
     @property
-    @clear_cache
+    @clear_mutation_cache
     @patch_docstring(RefGraph.adj)
     def adj(self):
         return AdjacencyView(self._adj)
 
-    @clear_cache
+    @clear_mutation_cache
     def adjacency(self):
         """Returns an iterator over (node, adjacency dict) tuples for all nodes.
 
@@ -1488,7 +1488,7 @@ class Graph(_GraphBase):
         return iter(self._adj.items())
 
     @property
-    @clear_cache
+    @clear_mutation_cache
     def degree(self):
         """A DegreeView for the Graph as G.degree or G.degree().
 
@@ -1563,7 +1563,7 @@ class Graph(_GraphBase):
         self._remove_edge_cache.clear()
         self.schema.init_nx_schema()
 
-    @clear_cache
+    @clear_mutation_cache
     def clear_edges(self):
         """Remove all edges from the graph without altering nodes.
 
@@ -1589,7 +1589,7 @@ class Graph(_GraphBase):
     def is_multigraph(self):
         return False
 
-    @clear_cache
+    @clear_mutation_cache
     @patch_docstring(RefGraph.nbunch_iter)
     def nbunch_iter(self, nbunch=None):
         if nbunch is None:  # include all nodes via iterator
@@ -1619,7 +1619,7 @@ class Graph(_GraphBase):
             bunch = bunch_iter(nbunch, self._adj)
         return bunch
 
-    @clear_cache
+    @clear_mutation_cache
     def copy(self, as_view=False):
         """Returns a copy of the graph.
 
@@ -1691,7 +1691,7 @@ class Graph(_GraphBase):
         g._session = self._session
         return g
 
-    @clear_cache
+    @clear_mutation_cache
     def to_undirected(self, as_view=False):
         """Returns an undirected copy of the graph.
 
@@ -1755,7 +1755,7 @@ class Graph(_GraphBase):
             return g
         return self.copy(as_view=as_view)
 
-    @clear_cache
+    @clear_mutation_cache
     def to_directed(self, as_view=False):
         """Returns a directed representation of the graph.
 
@@ -1817,7 +1817,7 @@ class Graph(_GraphBase):
         g.cache.warmup()
         return g
 
-    @clear_cache
+    @clear_mutation_cache
     def subgraph(self, nodes):
         """Returns a independent deep copy subgraph induced on `nodes`.
 
@@ -1859,7 +1859,7 @@ class Graph(_GraphBase):
         g.cache.warmup()
         return g
 
-    @clear_cache
+    @clear_mutation_cache
     def edge_subgraph(self, edges):
         """Returns a independent deep copy subgraph induced by the specified edges.
 
@@ -1980,7 +1980,7 @@ class Graph(_GraphBase):
         archive = op.eval()
         return json.loads(archive.get_bytes())
 
-    @clear_cache
+    @clear_mutation_cache
     def _project_to_simple(self, v_prop=None, e_prop=None):
         """Project nx graph to a simple graph to run builtin algorithms.
 

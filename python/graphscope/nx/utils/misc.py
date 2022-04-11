@@ -18,10 +18,8 @@
 
 
 import functools
-import json
 
 import networkx.utils.misc
-import numpy as np
 
 from graphscope.client.session import get_session_by_id
 from graphscope.framework import dag_utils
@@ -54,7 +52,7 @@ def empty_graph_in_engine(graph, directed, distributed):
     return graph_def
 
 
-def clear_cache(func):
+def clear_mutation_cache(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         g = args[0]
