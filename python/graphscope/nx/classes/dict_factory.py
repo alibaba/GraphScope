@@ -86,6 +86,9 @@ class NodeAttrDict(UserDict):
         self._node = node
         self.data = data
 
+    def copy(self):
+        return self.data.copy()
+
     def __setitem__(self, key, item):
         super().__setitem__(key, item)
         self._graph.set_node_data(self._node, self.data)
@@ -262,6 +265,9 @@ class NeighborAttrDict(UserDict):
         self._u = u
         self._v = v
         self.data = data
+
+    def copy(self):
+        return self.data.copy()
 
     def __setitem__(self, key, item):
         super().__setitem__(key, item)
