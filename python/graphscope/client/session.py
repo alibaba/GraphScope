@@ -67,6 +67,7 @@ from graphscope.proto import graph_def_pb2
 from graphscope.proto import message_pb2
 from graphscope.proto import op_def_pb2
 from graphscope.proto import types_pb2
+from graphscope.version import __version__
 
 DEFAULT_CONFIG_FILE = os.environ.get(
     "GS_CONFIG_PATH", os.path.expanduser("~/.graphscope/session.json")
@@ -419,6 +420,9 @@ class Session(object):
             k8s_coordinator_cpu (float, optional): Minimum number of CPU cores request for coordinator pod. Defaults to 1.0.
 
             k8s_coordinator_mem (str, optional): Minimum number of memory request for coordinator pod. Defaults to '4Gi'.
+
+            etcd_addrs (str, optional): The addr of external etcd cluster,
+                with formats like 'etcd01:port,etcd02:port,etcd03:port'
 
             k8s_etcd_num_pods (int, optional): The number of etcd pods. Defaults to 3.
 

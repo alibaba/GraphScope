@@ -309,11 +309,11 @@ class CoordinatorServiceServicer(
         sv = version.parse(__version__)
         cv = version.parse(self._request.version)
         if sv.major != cv.major or sv.minor != cv.minor:
-            logger.warning(
-                "Version between client and server is inconsistent: %s vs %s",
-                self._request.version,
-                __version__,
-            )
+            error_msg = f"Version between client and server is inconsistent: {self._request.version} vs {__version__}"
+            logger.warning(error_msg)
+            context.set_code(error_codes_pb2.CONNECTION_ERROR)
+            context.set_details(error_msg)
+            return message_pb2.ConnectSessionResponse()
 
         return message_pb2.ConnectSessionResponse(
             session_id=self._session_id,
@@ -610,6 +610,9 @@ class CoordinatorServiceServicer(
 
         while not dag_manager.empty():
             run_dag_on, dag, dag_bodies = dag_manager.next_dag()
+            error_code = error_codes_pb2.COORDINATOR_INTERNAL_ERROR
+            head = None
+            bodies = None
             try:
                 # run on analytical engine
                 if run_dag_on == GSEngine.analytical_engine:
