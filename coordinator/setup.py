@@ -169,8 +169,12 @@ def _get_extra_data():
         }
         if platform.system() == "Linux":
             data["/usr/include/rapidjson"] = os.path.join(RUNTIME_ROOT, "include")
+            data["/usr/include/msgpack"] = os.path.join(RUNTIME_ROOT, "include")
+            data["/usr/include/msgpack.hpp"] = os.path.join(RUNTIME_ROOT, "include")
         elif platform.system() == "Darwin":
             data["/usr/local/include/rapidjson"] = os.path.join(RUNTIME_ROOT, "include")
+            data["/usr/local/include/msgpack"] = os.path.join(RUNTIME_ROOT, "include")
+            data["/usr/local/include/msgpack.hpp"] = os.path.join(RUNTIME_ROOT, "include")
         # openmpi
         data.update(
             {

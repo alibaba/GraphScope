@@ -20,15 +20,11 @@ import concurrent.futures
 import io
 from functools import lru_cache
 
-from graphscope.nx.utils.misc import clear_mutation_cache
-
-try:
-    import msgpack
-except ImportError:
-    msgpack = None
+import msgpack
 import simdjson
 
 from graphscope.framework import dag_utils
+from graphscope.nx.utils.misc import clear_mutation_cache
 from graphscope.proto import types_pb2
 
 
@@ -204,6 +200,7 @@ class Cache:
                 self.id2i = {k: v for v, k in enumerate(self.node_id_cache)}
         return key in self.id2i
 
+    @clear_mutation_cache
     def __len__(self):
         return self._len
 

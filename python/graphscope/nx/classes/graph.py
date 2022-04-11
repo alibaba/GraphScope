@@ -21,10 +21,7 @@
 
 import copy
 
-try:
-    import msgpack
-except ImportError:
-    msgpack = None
+import msgpack
 import orjson as json
 from networkx import freeze
 from networkx.classes.graph import Graph as RefGraph
@@ -1739,8 +1736,8 @@ class Graph(_GraphBase):
                 g._schema = copy.deepcopy(self._schema)
                 g._graph = self
                 g._session = self._session
-                g.cache = self.cache
                 g._is_client_view = False
+                g.cache.warmup()
                 g = freeze(g)
                 return g
             g = graph_class(create_empty_in_engine=False)
