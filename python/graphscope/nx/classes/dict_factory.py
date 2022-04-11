@@ -275,8 +275,8 @@ class NeighborAttrDict(UserDict):
         super().clear()
         self._graph.set_edge_data(self._u, self._v, self.data)
 
-    def update(self, dict=None, **kwargs):
-        super().update(dict, **kwargs)
+    def update(self, data=None, **kwargs):
+        super().update(data, **kwargs)
         self._graph.set_edge_data(self._u, self._v, self.data)
 
     def pop(self, key, *args):

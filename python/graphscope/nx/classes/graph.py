@@ -2103,10 +2103,7 @@ class Graph(_GraphBase):
         self._graph_type = graph_def_pb2.ARROW_PROPERTY
 
     def _clear_adding_cache(self):
-        if len(self._add_node_cache) > 0 or len(self._add_edge_cache) > 0:
-            init_cache = True
-        else:
-            init_cache = False
+        reset_cache = bool(len(self._add_node_cache) > 0 or len(self._add_edge_cache) > 0)
         if self._add_node_cache:
             nodes_to_modify = json.dumps(
                 self._add_node_cache, option=json.OPT_SERIALIZE_NUMPY
@@ -2127,14 +2124,11 @@ class Graph(_GraphBase):
             self._op.eval()
             self._add_edge_cache.clear()
 
-        if init_cache:
+        if reset_cache:
             self.cache.clear()
 
     def _clear_removing_cache(self):
-        if len(self._remove_node_cache) > 0 or len(self._remove_edge_cache) > 0:
-            init_cache = True
-        else:
-            init_cache = False
+        reset_cache = bool(len(self._remove_node_cache) > 0 or len(self._remove_edge_cache) > 0)
         if self._remove_node_cache:
             nodes_to_modify = json.dumps(
                 self._remove_node_cache, option=json.OPT_SERIALIZE_NUMPY
@@ -2155,8 +2149,7 @@ class Graph(_GraphBase):
             self._op.eval()
             self._remove_edge_cache.clear()
 
-        if init_cache:
-            print("Clear cache")
+        if reset_cache:
             self.cache.clear()
 
     def _convert_arrow_to_dynamic(self):
