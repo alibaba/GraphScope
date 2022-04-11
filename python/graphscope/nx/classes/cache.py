@@ -244,7 +244,7 @@ class Cache:
             if future is not None:
                 try:
                     future.result()
-                except Exception:
+                except concurrent.futures.CancelledError:
                     pass
                 future = None
 
