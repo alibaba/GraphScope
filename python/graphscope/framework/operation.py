@@ -72,7 +72,7 @@ class Operation(object):
         """
         self._session_id = session_id
         self._op_def = op_def_pb2.OpDef(
-            op=op_type, key=uuid.uuid1().hex, output_type=output_types
+            op=op_type, key=uuid.uuid4().hex, output_type=output_types
         )
         self._parents = list()
         if large_attr:
