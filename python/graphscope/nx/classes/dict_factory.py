@@ -194,7 +194,7 @@ class NeighborDict(Mapping):
         self._nbr_attrs = None
 
     def __repr__(self):
-        return f"{self.__class__.__name__} node {self._node} nbr_list{self._nbr_list} nbr_attrs{self._nbr_attrs}"
+        return f"{self.__class__.__name__} node {self._node} nbr_list{self._nbr_list} nbr_attrs {self._nbr_attrs}"
 
     def __str__(self):
         return self.__repr__()

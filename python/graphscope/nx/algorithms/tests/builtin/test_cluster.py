@@ -175,6 +175,7 @@ class TestDirectedWeightedClustering:
         ]
         assert nx.builtin.average_clustering(G, weight="weight") == 1
         G.remove_edge(1, 2)
+        assert G.number_of_nodes() == 5
         assert list(
             dict(sorted(nx.builtin.clustering(G, weight="weight").items())).values()
         ) == [

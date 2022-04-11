@@ -1553,11 +1553,11 @@ class Graph(_GraphBase):
 
         self.graph.clear()
         self.schema.clear()
-        self.cache.clear()
         self._add_node_cache.clear()
         self._add_edge_cache.clear()
         self._remove_node_cache.clear()
         self._remove_edge_cache.clear()
+        self.cache.clear()
         self.schema.init_nx_schema()
 
     @clear_mutation_cache
