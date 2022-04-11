@@ -242,7 +242,10 @@ class Cache:
 
         for _, future in self.futures.items():
             if future is not None:
-                future.result()
+                try:
+                    future.result()
+                except Exception:
+                    pass
                 future = None
 
     def clear(self):
@@ -274,7 +277,10 @@ class Cache:
         if self.futures["node_attr"] is not None:
             self.futures["node_attr"].cancel()
         if self.futures["node_attr"] is not None:
-            self.futures["node_attr"].result()
+            try:
+                self.futures["node_attr"].result()
+            except Exception:
+                pass
         self.futures["node_attr"] = None
         self.node_attr_cache = ()
         self.get_node_attr.cache_clear()
@@ -287,9 +293,15 @@ class Cache:
         if self.futures["pred_attr"] is not None:
             self.futures["pred_attr"].cancel()
         if self.futures["succ_attr"] is not None:
-            self.futures["succ_attr"].result()
+            try:
+                self.futures["succ_attr"].result()
+            except Exception:
+                pass
         if self.futures["pred_attr"] is not None:
-            self.futures["pred_attr"].result()
+            try:
+                self.futures["pred_attr"].result()
+            except Exception:
+                pass
         self.futures["succ_attr"] = None
         self.futures["pred_attr"] = None
         self.succ_attr_cache = ()
