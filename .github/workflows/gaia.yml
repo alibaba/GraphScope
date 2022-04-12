@@ -21,8 +21,7 @@ jobs:
   gaia-test:
     runs-on: self-hosted
     container:
-      # image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.3.21
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:test_cache
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.3.21
     defaults:
       run:
         shell: bash --noprofile --norc -eo pipefail {0}
