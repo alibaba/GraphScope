@@ -151,7 +151,7 @@ class TestEigenvectorCentralityDirected(object):
         G = self.G
         p = nx.eigenvector_centrality_numpy(G, weight="weight")
         for (a, b) in zip(list(dict(sorted(p.items())).values()), self.G.evc):
-            assert almost_equal(a, b)
+            assert almost_equal(a, b, places=4)
 
     def test_eigenvector_centrality_unweighted(self):
         G = self.H
@@ -163,7 +163,7 @@ class TestEigenvectorCentralityDirected(object):
         G = self.H
         p = nx.eigenvector_centrality_numpy(G)
         for (a, b) in zip(list(dict(sorted(p.items())).values()), self.H.evc):
-            assert almost_equal(a, b)
+            assert almost_equal(a, b, places=4)
 
 
 class TestEigenvectorCentralityExceptions(object):

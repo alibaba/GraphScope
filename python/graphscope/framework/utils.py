@@ -266,6 +266,11 @@ def i_to_attr(i: int) -> attr_value_pb2.AttrValue:
     return attr_value_pb2.AttrValue(i=i)
 
 
+def u_to_attr(i: int) -> attr_value_pb2.AttrValue:
+    check_argument(isinstance(i, int) and i >= 0)
+    return attr_value_pb2.AttrValue(u=i)
+
+
 def b_to_attr(b: bool) -> attr_value_pb2.AttrValue:
     check_argument(isinstance(b, bool))
     return attr_value_pb2.AttrValue(b=b)

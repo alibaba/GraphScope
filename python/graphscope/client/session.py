@@ -21,6 +21,7 @@
 
 import atexit
 import base64
+import concurrent.futures
 import contextlib
 import json
 import logging
@@ -41,6 +42,7 @@ except ImportError:
 
 import graphscope
 from graphscope.analytical.udf.utils import InMemoryZip
+from graphscope.client.archive import OutArchive
 from graphscope.client.rpc import GRPCClient
 from graphscope.client.utils import CaptureKeyboardInterrupt
 from graphscope.client.utils import GSLogger
@@ -186,7 +188,7 @@ class _FetchHandler(object):
         result_set_dag_node = self._fetches[seq]
         return ResultSet(result_set_dag_node)
 
-    def wrap_results(self, response: message_pb2.RunStepResponse):
+    def wrap_results(self, response: message_pb2.RunStepResponse):  # noqa: C901
         rets = list()
         for seq, op in enumerate(self._ops):
             for op_result in response.results:
@@ -196,6 +198,8 @@ class _FetchHandler(object):
                             rets.append(self._rebuild_context(seq, op, op_result))
                         elif op.type == types_pb2.FETCH_GREMLIN_RESULT:
                             rets.append(pickle.loads(op_result.result))
+                        elif op.type == types_pb2.REPORT_GRAPH:
+                            rets.append(OutArchive(op_result.result))
                         else:
                             # for nx Graph
                             rets.append(op_result.result.decode("utf-8"))

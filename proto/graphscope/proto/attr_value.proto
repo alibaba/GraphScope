@@ -49,15 +49,16 @@ message AttrValue {
     NullValue null = 1;    // "null"
     bytes s = 2;           // "string"
     int64 i = 3;           // "int"
-    float f = 4;           // "float"
-    bool b = 5;            // "bool"
-    DataType type = 6;     // "type"
-    gs.rpc.graph.GraphTypePb graph_type = 7;  // "graph type"
-    ModifyType modify_type = 8;    // "modify type"
-    ReportType report_type = 9;   // "nx report type"
-    ListValue list = 10;    // any "list(...)"
+    uint64 u = 4;          // "uint64"
+    float f = 5;           // "float"
+    bool b = 6;            // "bool"
+    DataType type = 7;     // "type"
+    gs.rpc.graph.GraphTypePb graph_type = 8;  // "graph type"
+    ModifyType modify_type = 9;    // "modify type"
+    ReportType report_type = 10;   // "nx report type"
+    ListValue list = 11;    // any "list(...)"
 
-    NameAttrList func = 11;
+    NameAttrList func = 12;
 
     // for lazy mode, inferred from the context of dag
     PlaceHolder place_holder = 21;

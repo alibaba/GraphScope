@@ -55,6 +55,12 @@ inline int64_t get_param_impl<int64_t>(
 }
 
 template <>
+inline uint64_t get_param_impl<uint64_t>(
+    const std::map<int, rpc::AttrValue>& params, rpc::ParamKey key) {
+  return params.at(key).u();
+}
+
+template <>
 inline bool get_param_impl<bool>(const std::map<int, rpc::AttrValue>& params,
                                  rpc::ParamKey key) {
   return params.at(key).b();

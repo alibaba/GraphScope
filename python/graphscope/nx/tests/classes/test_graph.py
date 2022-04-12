@@ -40,7 +40,6 @@ class TestGraph(_TestGraph):
         assert G.nodes == H.nodes
         assert G.graph == H.graph
         assert G.name == H.name
-        assert G.adj == H.adj
         if G.is_directed() and H.is_directed():
             assert G.pred == H.pred
             assert G.succ == H.succ
@@ -217,13 +216,13 @@ class TestGraph(_TestGraph):
                     (4, 5, {}),
                     (6, 7, {"weight": 2}),
                 ]
-            else:  # num_workers=2
+            else:  # num_workers = 2
                 elist = [
-                    (0, 1, {}),
                     (0, 2, {}),
-                    (2, 1, {}),
-                    (4, 5, {}),
-                    (6, 7, {"weight": 2}),
+                    (1, 0, {}),
+                    (1, 2, {}),
+                    (5, 4, {}),
+                    (7, 6, {"weight": 2}),
                 ]
         assert sorted(G.edges.data()) == elist
         assert G.graph == {}

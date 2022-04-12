@@ -271,7 +271,7 @@ bl::result<void> GrapeInstance::unloadContext(const rpc::GSParams& params) {
   return object_manager_.RemoveObject(context_key);
 }
 
-bl::result<std::string> GrapeInstance::reportGraph(
+bl::result<std::shared_ptr<grape::InArchive>> GrapeInstance::reportGraph(
     const rpc::GSParams& params) {
   BOOST_LEAF_AUTO(graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
   BOOST_LEAF_AUTO(wrapper,
@@ -1125,9 +1125,9 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
     break;
   }
   case rpc::REPORT_GRAPH: {
-    BOOST_LEAF_AUTO(report_in_json, reportGraph(params));
-    r->set_data(report_in_json,
-                DispatchResult::AggregatePolicy::kPickFirstNonEmpty, true);
+    BOOST_LEAF_AUTO(arc, reportGraph(params));
+    r->set_data(*arc, DispatchResult::AggregatePolicy::kPickFirstNonEmpty,
+                true);
     break;
   }
   case rpc::PROJECT_GRAPH: {

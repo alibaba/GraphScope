@@ -79,6 +79,12 @@ class TestToDirected(test_gvs.TestToDirected):
         dd = nx.to_directed(self.dv)
         assert_edges_equal(dd.edges, self.dv.edges)
 
+    def test_iter(self):
+        edges = list(self.G.edges)
+        revd = [tuple(reversed(e)) for e in edges]
+        expected = sorted(edges + revd)
+        assert sorted(self.dv.edges) == expected
+
 
 @pytest.mark.usefixtures("graphscope_session")
 class TestToUndirected(test_gvs.TestToUndirected):
@@ -144,11 +150,10 @@ class TestChainsOfViews(test_gvs.TestChainsOfViews):
         SG = self.G.subgraph([4, 5, 6])
         SSG = SG.to_undirected()
         assert sorted(list(SSG)) == [4, 5, 6]
-        assert sorted(SSG.edges) in (
-            [(5, 4), (6, 5)],
-            [(4, 5), (5, 6)],
-            [(4, 5), (6, 5)],
-        )
+        edges = sorted(SSG.edges)
+        assert len(edges) == 2
+        assert edges[0] in ((4, 5), (5, 4))
+        assert edges[1] in ((5, 6), (6, 5))
 
     def test_reverse_subgraph_toundirected(self):
         # a view can not project subgraph in graphscope.nx
@@ -156,7 +161,10 @@ class TestChainsOfViews(test_gvs.TestChainsOfViews):
         SG = G.subgraph([4, 5, 6])
         SSG = SG.to_undirected()
         assert sorted(list(SSG)) == [4, 5, 6]
-        assert sorted(SSG.edges) in ([(4, 5), (5, 6)], [(4, 5), (6, 5)])
+        edges = sorted(SSG.edges)
+        assert len(edges) == 2
+        assert edges[0] in ((4, 5), (5, 4))
+        assert edges[1] in ((5, 6), (6, 5))
 
     def test_reverse_reverse_copy(self):
         G = self.DG.reverse(copy=False)

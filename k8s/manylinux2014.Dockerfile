@@ -7,7 +7,8 @@ FROM registry.cn-hongkong.aliyuncs.com/graphscope/manylinux2014:2021-10-14-14ac0
 RUN yum install -y autoconf m4 git krb5-devel perl-IPC-Cmd rapidjson-devel \
         libcurl-devel libevent-devel libgsasl-devel libunwind-devel.x86_64 \
         libuuid-devel libxml2-devel libzip libzip-devel minizip minizip-devel \
-        make net-tools rsync telnet unzip vim wget which zip bind-utils sudo && \
+        make net-tools rsync telnet unzip vim wget which zip bind-utils sudo \
+        msgpack-devel && \
     yum clean all && \
     rm -fr /var/cache/yum && \
     cd /tmp && \
