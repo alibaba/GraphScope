@@ -32,6 +32,9 @@ inline InArchive& operator<<(InArchive& in_archive,
 }  // namespace grape
 
 // clang-format off
+
+// The implementation references code from xpol/xchange:
+// https://github.com/xpol/xchange/blob/master/src/msgpack/type/rapidjson.hpp
 namespace msgpack {
 
 MSGPACK_API_VERSION_NAMESPACE(v1) {
@@ -65,11 +68,8 @@ struct pack<rapidjson::GenericValue<Encoding, Allocator>> {
     }
     case rapidjson::kArrayType: {
       o.pack_array(v.Size());
-      typename rapidjson::GenericValue<
-          Encoding, Allocator>::ConstValueIterator i = v.Begin(),
-                                                   END = v.End();
-      for (; i < END; ++i) {
-        o.pack(*i);
+      for (const auto& val : v.GetArray()) {
+        o.pack(val);
       }
       return o;
     }
