@@ -147,6 +147,8 @@ graphscope-manylinux2014-py3-nodocker:
 	rm -fr build && \
 	package_name=gs-include python3 setup.py bdist_wheel && \
 	rm -fr build && \
+	package_name=gs-apps python3 setup.py bdist_wheel && \
+	rm -fr build && \
 	package_name=gs-engine python3 setup.py bdist_wheel && \
 	rm -fr build && \
 	package_name=gs-jython python3 setup.py bdist_wheel && \
