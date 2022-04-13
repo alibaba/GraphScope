@@ -241,6 +241,7 @@ init_basic_packages() {
       wget
       libomp
       rapidjson
+      msgpack-cxx
     )
   fi
   readonly BASIC_PACKGES_TO_INSTALL
