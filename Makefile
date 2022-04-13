@@ -34,6 +34,10 @@ gsvineyard-image:
 graphscope-image:
 	$(MAKE) -C $(WORKING_DIR)/k8s/ graphscope-image VERSION=$(VERSION)
 
+.PHONY: jupyter-image
+jupyter-image:
+	$(MAKE) -C $(WORKING_DIR)/k8s/ jupyter-image VERSION=$(VERSION)
+
 # bulld graphscope image from source code without wheel package
 .PHONY: graphscope-dev-image
 graphscope-dev-image:
