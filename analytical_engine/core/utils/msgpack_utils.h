@@ -16,6 +16,8 @@
 #ifndef ANALYTICAL_ENGINE_CORE_UTILS_MSGPACK_UTILS_H_
 #define ANALYTICAL_ENGINE_CORE_UTILS_MSGPACK_UTILS_H_
 
+#ifdef NETWORKX
+
 #include "msgpack.hpp"
 
 #include "grape/serialization/in_archive.h"
@@ -154,4 +156,5 @@ struct pack<gs::dynamic::Value> {
 }  // namespace msgpack
 // clang-format on
 
+#endif  // NETWORKX
 #endif  // ANALYTICAL_ENGINE_CORE_UTILS_MSGPACK_UTILS_H_
