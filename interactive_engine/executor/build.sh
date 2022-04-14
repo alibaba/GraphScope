@@ -23,4 +23,6 @@ else
     SUFFIX="so"
 fi
 
+rm -rf $(pwd)/target/${MODE}/build
+rm -rf $(pwd)/target/${MODE}/deps
 ln -sf $(pwd)/target/${MODE}/libmaxgraph_ffi.${SUFFIX} ./target/libmaxgraph_ffi.${SUFFIX}
