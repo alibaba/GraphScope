@@ -18,7 +18,6 @@
 
 import functools
 import hashlib
-import inspect
 import json
 import logging
 import os
@@ -64,14 +63,15 @@ def project_to_simple(func):
             if "weight" in kwargs:
                 # func has 'weight' argument
                 weight = kwargs.get("weight", None)
-                graph = graph._project_to_simple(e_prop=weight)
+                projected = graph._project_to_simple(e_prop=weight)
             elif "attribute" in kwargs:
                 # func has 'attribute' argument
                 attribute = kwargs.get("attribute", None)
-                graph = graph._project_to_simple(v_prop=attribute)
+                projected = graph._project_to_simple(v_prop=attribute)
             else:
-                graph = graph._project_to_simple()
-        return func(graph, *args[1:], **kwargs)
+                projected = graph._project_to_simple()
+            projected._base_graph = graph
+        return func(projected, *args[1:], **kwargs)
 
     return wrapper
 
@@ -386,7 +386,7 @@ class AppDAGNode(DAGNode):
 
         return create_context_node(context_type, self, self._graph, *args, **kwargs)
 
-    def unload(self):
+    def _unload(self):
         """Unload this app from graphscope engine.
 
         Returns:
@@ -433,9 +433,9 @@ class App(object):
             )
         ).hexdigest()
 
-    def unload(self):
+    def __del__(self):
         """Unload app. Both on engine side and python side. Set the key to None."""
-        rlt = self._session._wrapper(self._app_node.unload())
+        rlt = self._session._wrapper(self._app_node._unload())
         self._key = None
         self._session = None
         return rlt

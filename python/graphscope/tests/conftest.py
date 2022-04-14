@@ -54,7 +54,7 @@ def arrow_modern_graph(graphscope_session):
         graphscope_session, prefix="{}/modern_graph".format(test_repo_dir)
     )
     yield graph
-    graph.unload()
+    del graph
 
 
 @pytest.fixture(scope="module")
@@ -233,7 +233,7 @@ def arrow_property_graph(graphscope_session):
         generate_eid=False,
     )
     yield g
-    g.unload()
+    del g
 
 
 @pytest.fixture(scope="module")
@@ -328,7 +328,7 @@ def arrow_property_graph_only_from_efile(graphscope_session):
         generate_eid=False,
     )
     yield g
-    g.unload()
+    del g
 
 
 # @pytest.fixture(scope="module")
@@ -346,7 +346,7 @@ def arrow_property_graph_only_from_efile(graphscope_session):
 # g = g.add_edges(f"{new_property_dir}/twitter_e_1_1_1", "e1", ["weight"], "v1", "v1")
 
 # yield g
-# g.unload()
+# del g
 
 
 # @pytest.fixture(scope="module")
@@ -362,7 +362,7 @@ def arrow_property_graph_only_from_efile(graphscope_session):
 # g = g.add_edges(f"{new_property_dir}/twitter_e_1_1_1", "e1", ["weight"], "v1", "v1")
 
 # yield g
-# g.unload()
+# del g
 
 
 @pytest.fixture(scope="module")
@@ -380,7 +380,7 @@ def arrow_property_graph_undirected(graphscope_session):
     g = g.add_edges(f"{new_property_dir}/twitter_e_1_1_1", "e1", ["weight"], "v1", "v1")
 
     yield g
-    g.unload()
+    del g
 
 
 @pytest.fixture(scope="module")
@@ -392,7 +392,7 @@ def arrow_property_graph_lpa_u2i(graphscope_session):
         f"{property_dir}/lpa_dataset/lpa_3000_e_0", "e0", ["weight"], "v0", "v1"
     )
     yield g
-    g.unload()
+    del g
 
 
 @pytest.fixture(scope="module")
@@ -420,7 +420,7 @@ def p2p_property_graph(graphscope_session):
         dst_label="person",
     )
     yield g
-    g.unload()
+    del g
 
 
 @pytest.fixture(scope="module")
@@ -433,7 +433,7 @@ def p2p_graph_from_pandas(graphscope_session):
     g = g.add_vertices(df_v, "person")
     g = g.add_edges(df_e, label="knows", src_label="person", dst_label="person")
     yield g
-    g.unload()
+    del g
 
 
 @pytest.fixture(scope="module")
@@ -447,7 +447,7 @@ def p2p_property_graph_string(graphscope_session):
         dst_label="person",
     )
     yield g
-    g.unload()
+    del g
 
 
 @pytest.fixture(scope="module")
@@ -461,7 +461,7 @@ def p2p_property_graph_undirected(graphscope_session):
         dst_label="person",
     )
     yield g
-    g.unload()
+    del g
 
 
 @pytest.fixture(scope="module")
@@ -649,7 +649,7 @@ def simple_context(arrow_property_graph):
 def ldbc_graph(graphscope_session):
     graph = load_ldbc(graphscope_session, prefix="{}/ldbc_sample".format(test_repo_dir))
     yield graph
-    graph.unload()
+    del graph
 
 
 @pytest.fixture(scope="module")
@@ -660,7 +660,7 @@ def ldbc_graph_undirected(graphscope_session):
         directed=False,
     )
     yield graph
-    graph.unload()
+    del graph
 
 
 @pytest.fixture(scope="module")

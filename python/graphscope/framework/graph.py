@@ -77,10 +77,6 @@ class GraphInterface(metaclass=ABCMeta):
     ):
         raise NotImplementedError
 
-    @abstractmethod
-    def unload(self):
-        raise NotImplementedError
-
     def to_numpy(self, selector, vertex_range=None):
         raise NotImplementedError
 
@@ -209,7 +205,7 @@ class GraphDAGNode(DAGNode, GraphInterface):
         >>> g = sess.g()
         >>> g1 = g.add_vertices("person.csv","person")
         >>> print(g1) # <graphscope.framework.graph.Graph object>
-        >>> g1.unload()
+        >>> del g1
     """
 
     def __init__(
@@ -602,7 +598,7 @@ class GraphDAGNode(DAGNode, GraphInterface):
         graph_dag_node._base_graph = self
         return graph_dag_node
 
-    def unload(self):
+    def _unload(self):
         """Unload this graph from graphscope engine.
 
         Returns:
@@ -686,13 +682,6 @@ class Graph(GraphInterface):
         self._interactive_instance_launching_thread = None
         self._interactive_instance_list = []
         self._learning_instance_list = []
-
-    def __del__(self):
-        # cleanly ignore all exceptions, cause session may already closed / destroyed.
-        try:
-            self.unload()
-        except Exception:  # pylint: disable=broad-except
-            pass
 
     def _close_interactive_instances(self):
         # Close related interactive instances when graph unloaded.
@@ -849,7 +838,7 @@ class Graph(GraphInterface):
     def __repr__(self):
         return self.__str__()
 
-    def unload(self):
+    def __del__(self):
         """Unload this graph from graphscope engine."""
         if self._session.info["status"] != "active" or self._key is None:
             return
@@ -876,7 +865,7 @@ class Graph(GraphInterface):
             logger.error("Failed to close learning instances: %s" % e)
         rlt = None
         if not self._detached:
-            rlt = self._session._wrapper(self._graph_node.unload())
+            rlt = self._session._wrapper(self._graph_node._unload())
         self._key = None
         return rlt
 

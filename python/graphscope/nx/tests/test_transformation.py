@@ -161,9 +161,9 @@ class TestGraphTransformation(object):
 
     @classmethod
     def teardown_class(cls):
-        cls.single_label_g.unload()
-        cls.multi_label_g.unload()
-        cls.str_oid_g.unload()
+        del cls.single_label_g
+        del cls.multi_label_g
+        del cls.str_oid_g
 
     def assert_convert_success(self, gs_g, nx_g):
         assert gs_g.is_directed() == nx_g.is_directed()
@@ -642,9 +642,9 @@ class TestDigraphTransformation(TestGraphTransformation):
 
     @classmethod
     def teardown_class(cls):
-        cls.single_label_g.unload()
-        cls.multi_label_g.unload()
-        cls.str_oid_g.unload()
+        del cls.single_label_g
+        del cls.multi_label_g
+        del cls.str_oid_g
 
     def test_error_on_wrong_nx_type(self):
         g = self.single_label_g
