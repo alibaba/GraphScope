@@ -19,9 +19,8 @@ import com.alibaba.maxgraph.compiler.api.schema.GraphVertex;
 import com.alibaba.maxgraph.compiler.api.schema.PrimaryKeyConstraint;
 import com.google.common.base.MoreObjects;
 
-import org.apache.commons.lang.StringUtils;
-
 import java.util.List;
+import org.apache.commons.lang3.StringUtils;
 
 /** Default graph vertex in memory for testing */
 public class DefaultGraphVertex implements GraphVertex {
