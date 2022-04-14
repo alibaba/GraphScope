@@ -73,6 +73,13 @@ graphscope-dev-image: submodule
 				 --network=host \
 				 -f $(WORKING_DIR)/graphscope-dev.Dockerfile ..
 
+jupyter-image:
+	docker build --progress=$(BUILD_PROGRESS) \
+				 --build-arg CI=${CI} \
+				 -t graphscope/jupyter:${SHORT_SHA} \
+				 --network=host \
+				 -f $(WORKING_DIR)/jupyter.Dockerfile ..
+
 graphscope-store-image:
 	docker pull ${REGISTRY}/$(DOCKER_ORG)/graphscope-vineyard:${VINEYARD_VERSION}
 	docker build --progress=$(BUILD_PROGRESS) \
@@ -215,12 +222,6 @@ graphscope-client-manylinux2014-py3:
 				cd dist; \
 				auditwheel repair ./*.whl; \
 			done'
-
-jupyter:
-	docker build --progress=$(BUILD_PROGRESS) \
-				 -t ${REGISTRY}/$(DOCKER_ORG)/jupyter:${VERSION} \
-				 --network=host \
-				 -f $(WORKING_DIR)/jupyter.Dockerfile .
 
 push:
 	docker push ${REGISTRY}/$(DOCKER_ORG)/graphscope-runtime:${VERSION}
