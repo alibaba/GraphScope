@@ -24,7 +24,7 @@ import com.alibaba.maxgraph.proto.RoleType;
 import com.alibaba.maxgraph.sdkcommon.client.Endpoint;
 import com.google.common.collect.Maps;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
