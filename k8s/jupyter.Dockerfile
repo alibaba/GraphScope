@@ -1,23 +1,46 @@
-FROM centos:7
+FROM ubuntu:20.04
 
-RUN yum -y update && \
-    yum -y install epel-release && \
-    yum -y install gcc openssl-devel bzip2-devel libffi-devel && \
-    yum -y install yum-utils && yum -y groupinstall development && \
-    yum install -y python36 python3-libs python3-devel python3-setuptools python3-pip && \
-    yum clean all && \
-    rm -fr /var/cache/yum
+# Install wheel package from current directory if pass "CI=true" as build options.
+# Otherwise, exec `pip install graphscope` from Pypi.
+# Example:
+#     sudo docker build --build-arg CI=${CI} .
+ARG CI=false
 
+# change bash as default
+SHELL ["/bin/bash", "-c"]
 
+# shanghai zoneinfo
+ENV TZ=Asia/Shanghai
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+RUN sed -i 's/archive.ubuntu.com/mirrors.ustc.edu.cn/g' /etc/apt/sources.list && \
+    sed -i 's/security.ubuntu.com/mirrors.ustc.edu.cn/g' /etc/apt/sources.list && \
+    cat /etc/apt/sources.list && \
+    apt update -y && apt install -y \
+      gcc python3-pip openssh-server sudo wget telnet git vim zip wget && \
+    apt clean && rm -fr /var/lib/apt/lists/*
+
+# Add graphscope user with user id 1001
 RUN useradd -m graphscope -u 1001 && \
-    echo 'graphscope ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+  echo 'graphscope ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
+# Change to graphscope user
 USER graphscope
 WORKDIR /home/graphscope
-
 ENV PATH=${PATH}:/home/graphscope/.local/bin
 
-RUN python3 -m pip install --upgrade pip --user
-RUN python3 -m pip install jupyterlab graphscope-client -U --user
+COPY . /home/graphscope/gs
+
+# Install graphscope client
+RUN cd /home/graphscope/gs && \
+    if [ "${CI}" == "true" ]; then \
+        pushd artifacts/python/dist/wheelhouse; \
+        for f in * ; do python3 -m pip install --no-cache-dir $f; done || true; \
+        popd; \
+    else \
+        python3 -m pip install --no-cache-dir graphscope_client -U; \
+    fi && \
+    python3 -m pip install --no-cache-dir jupyterlab && \
+    sudo rm -fr /home/graphscope/gs
 
 CMD ["jupyter", "lab", "--port=8888", "--no-browser", "--ip=0.0.0.0"]
