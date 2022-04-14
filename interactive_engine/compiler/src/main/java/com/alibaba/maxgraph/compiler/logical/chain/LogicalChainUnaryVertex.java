@@ -19,8 +19,9 @@ import com.alibaba.maxgraph.compiler.logical.LogicalVertex;
 import com.alibaba.maxgraph.compiler.logical.function.ProcessorFunction;
 import com.google.common.collect.Lists;
 
-import java.util.List;
 import org.apache.commons.lang3.StringUtils;
+
+import java.util.List;
 
 public class LogicalChainUnaryVertex extends LogicalUnaryVertex {
     private List<LogicalVertex> unaryVertexList = Lists.newArrayList();

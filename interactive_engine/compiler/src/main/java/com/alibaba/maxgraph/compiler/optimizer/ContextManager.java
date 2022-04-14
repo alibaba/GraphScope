@@ -19,8 +19,9 @@ import com.alibaba.maxgraph.compiler.logical.VertexIdManager;
 import com.alibaba.maxgraph.compiler.tree.TreeNodeLabelManager;
 import com.google.common.collect.Maps;
 
-import java.util.Map;
 import org.apache.commons.configuration2.Configuration;
+
+import java.util.Map;
 
 public class ContextManager {
     private Map<String, LogicalVertex> storeVertexList = Maps.newHashMap();
