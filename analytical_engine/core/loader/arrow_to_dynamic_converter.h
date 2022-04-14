@@ -75,6 +75,41 @@ struct DynamicWrapper<std::string> {
   }
 };
 
+template <typename ITER_T, typename FUNC_T>
+void parallel_for(const ITER_T& begin, const ITER_T& end, const FUNC_T& func,
+                  int thread_num, size_t chunk = 1024) {
+  std::vector<std::thread> threads(thread_num);
+  // size_t num = end - begin;
+  // if (chunk == 0) {
+  //  chunk = (num + thread_num - 1) / thread_num;
+  // }
+  std::atomic<size_t> cur(0);
+  for (int i = 0; i < thread_num; ++i) {
+    threads[i] = std::thread([&]() {
+      while (true) {
+        //  size_t x = cur.fetch_add(chunk);
+        // if (x >= num) {
+        //  break;
+        // }
+        const ITER_T cur_beg = std::min(begin + cur.fetch_add(chunk), end);
+        const ITER_T cur_end = std::min(cur_beg + chunk, end);
+        // size_t y = std::min(x + chunk, end);
+        // ITER_T a = begin + x;
+        // ITER_T b = begin + y;
+        if (cur_beg == cur_end) {
+          break;
+        }
+        for (auto iter = cur_beg; iter != cur_end; ++iter) {
+          func(i, *iter);
+        }
+      }
+    });
+  }
+  for (auto& thrd : threads) {
+    thrd.join();
+  }
+}
+
 /**
  * @brief A ArrowFragment to DynamicFragment converter. The conversion is
  * proceeded by traversing the source graph.
@@ -88,6 +123,9 @@ class ArrowToDynamicConverter {
   using dst_fragment_t = DynamicFragment;
   using vertex_map_t = typename dst_fragment_t::vertex_map_t;
   using vid_t = typename dst_fragment_t::vid_t;
+  using internal_vertex_t = typename dst_fragment_t::internal_vertex_t;
+  using vertex_t = typename src_fragment_t::vertex_t;
+  using edge_t = typename dst_fragment_t::edge_t;
   using vdata_t = typename dst_fragment_t::vdata_t;
   using edata_t = typename dst_fragment_t::edata_t;
 
@@ -148,88 +186,90 @@ class ArrowToDynamicConverter {
       const std::shared_ptr<vertex_map_t>& dst_vm) {
     auto fid = src_frag->fid();
     const auto& schema = src_frag->schema();
-    dst_fragment_t::mutation_t mutation;
+    // dst_fragment_t::mutation_t mutation;
 
+    double start = grape::GetCurrentTime();
     for (label_id_t v_label = 0; v_label < src_frag->vertex_label_num();
          v_label++) {
-      auto label_name = schema.GetVertexLabelName(v_label);
-      auto v_data = src_frag->vertex_data_table(v_label);
-      dynamic::Value u_oid, v_oid, data;
-      vid_t u_gid, v_gid;
+      // auto label_name = schema.GetVertexLabelName(v_label);
+      // auto v_data = src_frag->vertex_data_table(v_label);
+      // dynamic::Value u_oid, v_oid, data;
+      // vid_t u_gid, v_gid;
+      int thrd_num = 4;
+      std::vector<std::vector<internal_vertex_t>> vertices(thrd_num);
+      std::vector<std::vector<edge_t>> edges(thrd_num);
+      auto inner_vertices = src_frag->InnerVertices(v_label);
 
-      // traverse vertices and extract data from ArrowFragment
-      for (const auto& u : src_frag->InnerVertices(v_label)) {
-        if (v_label == default_label_id_) {
-          u_oid = dynamic::Value(src_frag->GetId(u));
-        } else {
-          u_oid = dynamic::Value(rapidjson::kArrayType);
-          u_oid.PushBack(label_name).PushBack(src_frag->GetId(u));
-        }
-
-        CHECK(dst_vm->GetGid(fid, u_oid, u_gid));
-        data = dynamic::Value(rapidjson::kObjectType);
-        // N.B: th last column is id, we ignore it.
-        for (auto col_id = 0; col_id < v_data->num_columns() - 1; col_id++) {
-          auto column = v_data->column(col_id);
-          auto prop_key = v_data->field(col_id)->name();
-          auto type = column->type();
-          PropertyConverter<src_fragment_t>::NodeValue(src_frag, u, type,
-                                                       prop_key, col_id, data);
-        }
-        mutation.vertices_to_add.emplace_back(u_gid, data);
-
-        // traverse edges and extract data
-        for (label_id_t e_label = 0; e_label < src_frag->edge_label_num();
-             e_label++) {
-          auto oe = src_frag->GetOutgoingAdjList(u, e_label);
-          auto e_data = src_frag->edge_data_table(e_label);
-          for (auto& e : oe) {
-            auto v = e.get_neighbor();
-            auto e_id = e.edge_id();
-            auto v_label_id = src_frag->vertex_label(v);
-            if (v_label_id == default_label_id_) {
-              v_oid = dynamic::Value(src_frag->GetId(v));
-            } else {
-              v_oid = dynamic::Value(rapidjson::kArrayType);
-              v_oid.PushBack(schema.GetVertexLabelName(v_label_id))
-                  .PushBack(src_frag->GetId(v));
-            }
-            CHECK(dst_vm->GetGid(v_oid, v_gid));
-            data = dynamic::Value(rapidjson::kObjectType);
-            PropertyConverter<src_fragment_t>::EdgeValue(e_data, e_id, data);
-            mutation.edges_to_add.emplace_back(u_gid, v_gid, data);
-          }
-
-          if (src_frag->directed()) {
-            auto ie = src_frag->GetIncomingAdjList(u, e_label);
-            for (auto& e : ie) {
-              auto v = e.get_neighbor();
-              if (src_frag->IsOuterVertex(v)) {
-                auto e_id = e.edge_id();
-                auto v_label_id = src_frag->vertex_label(v);
-                if (v_label_id == default_label_id_) {
-                  v_oid = dynamic::Value(src_frag->GetId(v));
-                } else {
-                  v_oid = dynamic::Value(rapidjson::kArrayType);
-                  v_oid.PushBack(schema.GetVertexLabelName(v_label_id))
-                      .PushBack(src_frag->GetId(v));
-                }
-                CHECK(dst_vm->GetGid(v_oid, v_gid));
-                data = dynamic::Value(rapidjson::kObjectType);
-                PropertyConverter<src_fragment_t>::EdgeValue(e_data, e_id,
-                                                             data);
-                mutation.edges_to_add.emplace_back(v_gid, u_gid, data);
-              }
-            }
-          }
-        }
-      }
+      parallel_for(inner_vertices.begin(), inner_vertices.end(),
+                   [&src_frag, &dst_vm, &v_label, &vertices, &edges, this](int tid, vertex_t v) {
+             this->extract_data(src_frag, dst_vm, v_label, v, tid, vertices, edges);
+          }, thrd_num);
     }
+    LOG(INFO) << "Process vertices and Edges: " << grape::GetCurrentTime() - start;
 
     auto dynamic_frag = std::make_shared<dst_fragment_t>(dst_vm);
     dynamic_frag->Init(src_frag->fid(), src_frag->directed());
-    dynamic_frag->Mutate(mutation);
+    // dynamic_frag->Mutate(mutation);
     return dynamic_frag;
+  }
+
+  void extract_data(const std::shared_ptr<src_fragment_t>& src_frag,
+      const std::shared_ptr<vertex_map_t>& dst_vm, label_id_t label, const vertex_t& u, int tid,
+      std::vector<std::vector<internal_vertex_t>>& vertices,
+      std::vector<std::vector<edge_t>>& edges) {
+    auto fid = src_frag->fid();
+    auto v_data = src_frag->vertex_data_table(label);
+    dynamic::Value u_oid(src_frag->GetId(u));
+    // dynamic::Value u_oid;
+    vid_t u_gid, v_gid;
+
+    CHECK(dst_vm->GetGid(fid, u_oid, u_gid));
+    dynamic::Value data(rapidjson::kObjectType);
+    // N.B: th last column is id, we ignore it.
+    for (auto col_id = 0; col_id < v_data->num_columns() - 1; col_id++) {
+      auto column = v_data->column(col_id);
+      auto prop_key = v_data->field(col_id)->name();
+      auto type = column->type();
+      PropertyConverter<src_fragment_t>::NodeValue(src_frag, u, type,
+                                                   prop_key, col_id, data);
+      vertices[tid].emplace_back(u_gid, std::move(data));
+
+      // traverse edges and extract data
+      for (label_id_t e_label = 0; e_label < src_frag->edge_label_num();
+           e_label++) {
+        auto oe = src_frag->GetOutgoingAdjList(u, e_label);
+        auto e_data = src_frag->edge_data_table(e_label);
+        for (auto& e : oe) {
+          auto v = e.get_neighbor();
+          auto e_id = e.edge_id();
+          auto v_label_id = src_frag->vertex_label(v);
+          dynamic::Value v_oid(src_frag->GetId(v));
+          CHECK(dst_vm->GetGid(v_oid, v_gid));
+          data = dynamic::Value(rapidjson::kObjectType);
+          PropertyConverter<src_fragment_t>::EdgeValue(e_data, e_id, data);
+          edges[tid].emplace_back(u_gid, v_gid, std::move(data));
+        }
+
+        /*
+        if (src_frag->directed()) {
+          auto ie = src_frag->GetIncomingAdjList(u, e_label);
+          for (auto& e : ie) {
+            auto v = e.get_neighbor();
+            if (src_frag->IsOuterVertex(v)) {
+              auto e_id = e.edge_id();
+              auto v_label_id = src_frag->vertex_label(v);
+              dynamic::Value v_oid(src_frag->GetId(v));
+              CHECK(dst_vm->GetGid(v_oid, v_gid));
+              data = dynamic::Value(rapidjson::kObjectType);
+              PropertyConverter<src_fragment_t>::EdgeValue(e_data, e_id,
+                                                           data);
+              mutation.edges_to_add.emplace_back(v_gid, u_gid, data);
+            }
+          }
+        }
+        */
+      }
+    }
   }
 
   grape::CommSpec comm_spec_;
