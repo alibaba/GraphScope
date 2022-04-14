@@ -236,7 +236,7 @@ class _FetchHandler(object):
                     if op.output_types == types_pb2.NULL_OUTPUT:
                         rets.append(None)
                     break
-        return rets[0] if self._unpack else rets
+        return rets[0] if rets and self._unpack else rets
 
     def get_dag_for_unload(self):
         """Unload operations (graph, app, context) in dag which are not
