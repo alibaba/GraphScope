@@ -388,6 +388,12 @@ class AppDAGNode(DAGNode):
 
         return create_context_node(context_type, self, self._graph, *args, **kwargs)
 
+    def __del__(self):
+        try:
+            self.session.run(self._unload())
+        except Exception:  # pylint: disable=broad-except
+            pass
+
     def _unload(self):
         """Unload this app from graphscope engine.
 
@@ -435,12 +441,15 @@ class App(object):
             )
         ).hexdigest()
 
+    def _unload(self):
+        return self._session._wrapper(self._app_node._unload())
+
     def __del__(self):
         """Unload app. Both on engine side and python side. Set the key to None."""
-        rlt = self._session._wrapper(self._app_node._unload())
-        self._key = None
-        self._session = None
-        return rlt
+        try:
+            self.session.run(self._unload())
+        except Exception:  # pylint: disable=broad-except
+            pass
 
     def __call__(self, *args, **kwargs):
         return self._session._wrapper(self._app_node(*args, **kwargs))

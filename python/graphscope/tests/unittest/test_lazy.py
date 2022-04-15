@@ -98,10 +98,7 @@ def test_construct_graph_step_by_step(sess):
     g1 = sess.run(_g1)
     _g2 = g1.add_vertices(f"{new_property_dir}/twitter_v_1", "v1")
     g2 = sess.run(_g2)
-    ug = g._unload()
-    ug1 = g1._unload()
-    ug2 = g2._unload()
-    sess.run([ug, ug1, ug2])
+    del g, g1, g2
 
 
 def test_unload_graph(sess, student_v, teacher_v, student_group_e):
@@ -109,17 +106,14 @@ def test_unload_graph(sess, student_v, teacher_v, student_group_e):
     # 1. load empty g
     # 2. unload g
     g = sess.g()
-    ug = g._unload()
-    assert sess.run(ug) is None
+    g = sess.run(g)
+    del g
 
     # case 2
     g = sess.g()
     g1 = g.add_vertices(student_v, "student")
     g2 = g.add_vertices(teacher_v, "teacher")
-    ug1 = g1._unload()
-    ug2 = g2._unload()
-    assert sess.run(ug1) is None
-    assert sess.run(ug2) is None
+    del g1, g2
 
     # case 3
     g = sess.g()
@@ -128,26 +122,13 @@ def test_unload_graph(sess, student_v, teacher_v, student_group_e):
     g3 = g2.add_edges(
         student_group_e, "group", src_label="student", dst_label="student"
     )
-    ug = g._unload()
-    ug1 = g1._unload()
-    ug2 = g2._unload()
-    ug3 = g3._unload()
-    sess.run([ug, ug1, ug2, ug3])
+
+    del g, g1, g2, g3
 
     # case 4
     # test unload twice
     g = sess.g()
-    ug = g._unload()
-    assert sess.run(ug) is None
-    assert sess.run(ug) is None
-
-
-def test_error_using_unload_graph(sess, student_v):
-    with pytest.raises(AnalyticalEngineInternalError):
-        g = sess.g()
-        ug = g._unload()
-        g1 = g.add_vertices(student_v, "student")
-        sess.run([ug, g1])
+    del g
 
 
 def test_unload_app(sess, arrow_property_graph_lpa_u2i):
@@ -156,30 +137,8 @@ def test_unload_app(sess, arrow_property_graph_lpa_u2i):
         arrow_property_graph_lpa_u2i,
         AppAssets(algo="lpau2i", context="labeled_vertex_property"),
     )
-    ua1 = a1._unload()
-    assert sess.run(ua1) is None
-
-    # case 2
-    # unload app twice
-    a1 = AppDAGNode(
-        arrow_property_graph_lpa_u2i,
-        AppAssets(algo="lpau2i", context="labeled_vertex_property"),
-    )
-    ua1 = a1._unload()
-    assert sess.run(ua1) is None
-    assert sess.run(ua1) is None
-
-    # case 3
-    # load app after unload
-    a1 = AppDAGNode(
-        arrow_property_graph_lpa_u2i,
-        AppAssets(algo="lpau2i", context="labeled_vertex_property"),
-    )
-    ua1 = a1._unload()
-    assert sess.run(ua1) is None
-    c1 = a1(max_round=10)
-    r1 = c1.to_numpy("r:v0.label_0")
-    r = sess.run(r1)
+    a1 = sess.run(a1)
+    del a1
 
 
 def test_graph_to_numpy(sess):

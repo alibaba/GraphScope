@@ -20,6 +20,7 @@ import hashlib
 import json
 import logging
 import threading
+import warnings
 from abc import ABCMeta
 from abc import abstractmethod
 from copy import deepcopy
@@ -92,6 +93,12 @@ class GraphInterface(metaclass=ABCMeta):
     @abstractmethod
     def project(self, vertices, edges):
         raise NotImplementedError
+
+    def unload(self):
+        warnings.warn(
+            "The Graph.unload() method has been deprecated, please using the `del` operator instead, e.g., `del graph`",
+            DeprecationWarning,
+        )
 
     def _from_nx_graph(self, g):
         """Create a gs graph from a nx graph.
@@ -598,6 +605,12 @@ class GraphDAGNode(DAGNode, GraphInterface):
         graph_dag_node._base_graph = self
         return graph_dag_node
 
+    def __del__(self):
+        try:
+            self.session.run(self._unload())
+        except Exception:  # pylint: disable=broad-except
+            pass
+
     def _unload(self):
         """Unload this graph from graphscope engine.
 
@@ -682,13 +695,6 @@ class Graph(GraphInterface):
         self._interactive_instance_launching_thread = None
         self._interactive_instance_list = []
         self._learning_instance_list = []
-
-    def __del__(self):
-        # cleanly ignore all exceptions, cause session may already closed / destroyed.
-        try:
-            self._unload()
-        except Exception:  # pylint: disable=broad-except
-            pass
 
     def _close_interactive_instances(self):
         # Close related interactive instances when graph unloaded.
@@ -875,6 +881,13 @@ class Graph(GraphInterface):
             rlt = self._session._wrapper(self._graph_node._unload())
         self._key = None
         return rlt
+
+    def __del__(self):
+        # cleanly ignore all exceptions, cause session may already closed / destroyed.
+        try:
+            self._session.run(self._unload())
+        except Exception:  # pylint: disable=broad-except
+            pass
 
     def _project_to_simple(self, v_prop=None, e_prop=None):
         return self._session._wrapper(

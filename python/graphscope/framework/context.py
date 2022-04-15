@@ -258,6 +258,12 @@ class BaseContextDAGNode(DAGNode):
         op = dag_utils.output(df, fd, **kwargs)
         return ResultDAGNode(self, op)
 
+    def __del__(self):
+        try:
+            self.session.run(self._unload())
+        except Exception:  # pylint: disable=broad-except
+            pass
+
     def _unload(self):
         op = dag_utils.unload_context(self)
         return UnloadedContext(self._session, op)
@@ -590,13 +596,6 @@ class Context(object):
         self._context_node.evaluated = True
         self._saved_signature = self.signature
 
-    def __del__(self):
-        # cleanly ignore all exceptions, cause session may already closed / destroyed.
-        try:
-            self._unload()
-        except Exception:  # pylint: disable=broad-except
-            pass
-
     @property
     def op(self):
         return self._context_node.op
@@ -679,6 +678,13 @@ class Context(object):
         """Fetch result to client side"""
         df = self.to_dataframe(selector, vertex_range)
         df.to_csv(fd, header=True, index=False)
+
+    def __del__(self):
+        # cleanly ignore all exceptions, cause session may already closed / destroyed.
+        try:
+            self._session.run(self._unload())
+        except Exception:  # pylint: disable=broad-except
+            pass
 
     def _unload(self):
         return self._session._wrapper(self._context_node._unload())
