@@ -154,20 +154,20 @@ class ArrowToDynamicConverter {
     // dst_fragment_t::mutation_t mutation;
 
     double start = grape::GetCurrentTime();
+    int thrd_num = std::thread::hardware_concurrency();
+    std::vector<std::vector<internal_vertex_t>> vertices(thrd_num);
+    std::vector<std::vector<edge_t>> edges(thrd_num);
     for (label_id_t v_label = 0; v_label < src_frag->vertex_label_num();
          v_label++) {
       // auto label_name = schema.GetVertexLabelName(v_label);
       // auto v_data = src_frag->vertex_data_table(v_label);
       // dynamic::Value u_oid, v_oid, data;
       // vid_t u_gid, v_gid;
-      int thrd_num = 4;
-      std::vector<std::vector<internal_vertex_t>> vertices(thrd_num);
-      std::vector<std::vector<edge_t>> edges(thrd_num);
       auto inner_vertices = src_frag->InnerVertices(v_label);
 
       parallel_for(inner_vertices.begin(), inner_vertices.end(),
                    [&src_frag, &dst_vm, &v_label, &vertices, &edges, this](int tid, vertex_t v) {
-             this->extract_data(src_frag, dst_vm, v_label, v, tid, vertices, edges);
+            this->extract_data(src_frag, dst_vm, v_label, v, tid, vertices, edges);
           }, thrd_num);
     }
     LOG(INFO) << "Process vertices and Edges: " << grape::GetCurrentTime() - start;
@@ -187,8 +187,6 @@ class ArrowToDynamicConverter {
     dynamic::Value u_oid(src_frag->GetId(u));
     // dynamic::Value u_oid;
     vid_t u_gid, v_gid;
-    std::vector<internal_vertex_t> vertices2;
-    std::vector<edge_t> edges2;
 
     CHECK(dst_vm->GetGid(fid, u_oid, u_gid));
     dynamic::Value data(rapidjson::kObjectType);
@@ -199,7 +197,7 @@ class ArrowToDynamicConverter {
       auto type = column->type();
       PropertyConverter<src_fragment_t>::NodeValue(src_frag, u, type,
                                                    prop_key, col_id, data);
-      vertices2.emplace_back(u_gid, std::move(data));
+      vertices[tid].emplace_back(u_gid, std::move(data));
 
       // traverse edges and extract data
       for (label_id_t e_label = 0; e_label < src_frag->edge_label_num();
@@ -214,7 +212,7 @@ class ArrowToDynamicConverter {
           CHECK(dst_vm->GetGid(v_oid, v_gid));
           data = dynamic::Value(rapidjson::kObjectType);
           PropertyConverter<src_fragment_t>::EdgeValue(e_data, e_id, data);
-          edges2.emplace_back(u_gid, v_gid, std::move(data));
+          edges[tid].emplace_back(u_gid, v_gid, std::move(data));
         }
 
         /*
@@ -237,9 +235,6 @@ class ArrowToDynamicConverter {
         */
       }
     }
-    LOG(INFO) << "Tid=" << tid;
-    vertices[tid] = vertices2;
-    edges[tid] = edges2;
   }
 
   grape::CommSpec comm_spec_;
