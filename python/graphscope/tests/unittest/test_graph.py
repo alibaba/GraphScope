@@ -55,7 +55,6 @@ def test_load_graph_copy(graphscope_session, arrow_property_graph):
     assert str(g.schema) == str(g2.schema)
     assert np.all(g.to_numpy("v:v0.id") == g2.to_numpy("v:v0.id"))
     del g2
-    assert not g2.loaded()
     # test load from vineyard's graph
     g3 = graphscope_session.g(vineyard.ObjectID(g.vineyard_id))
     assert g3.loaded()

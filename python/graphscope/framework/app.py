@@ -71,6 +71,8 @@ def project_to_simple(func):
             else:
                 projected = graph._project_to_simple()
             projected._base_graph = graph
+        else:
+            projected = graph
         return func(projected, *args[1:], **kwargs)
 
     return wrapper

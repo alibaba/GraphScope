@@ -683,6 +683,13 @@ class Graph(GraphInterface):
         self._interactive_instance_list = []
         self._learning_instance_list = []
 
+    def __del__(self):
+        # cleanly ignore all exceptions, cause session may already closed / destroyed.
+        try:
+            self._unload()
+        except Exception:  # pylint: disable=broad-except
+            pass
+
     def _close_interactive_instances(self):
         # Close related interactive instances when graph unloaded.
         # Since the graph is gone, quering via interactive client is meaningless.
@@ -838,7 +845,7 @@ class Graph(GraphInterface):
     def __repr__(self):
         return self.__str__()
 
-    def __del__(self):
+    def _unload(self):
         """Unload this graph from graphscope engine."""
         if self._session.info["status"] != "active" or self._key is None:
             return
