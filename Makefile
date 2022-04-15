@@ -187,3 +187,5 @@ clean:
 	rm -fr $(WORKING_DIR)/learning_engine/graph-learn/proto/*.cc || true && \
 	rm -fr $(WORKING_DIR)/interactive_engine/executor/target || true && \
 	rm -fr $(WORKING_DIR)/interactive_engine/assembly/target || true
+	cd $(WORKING_DIR)/python && python3 setup.py clean --all && \
+	cd $(WORKING_DIR)/coordinator && python3 setup.py clean --all
