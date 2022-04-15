@@ -26,6 +26,8 @@
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
 
+#include "grape/serialization/in_archive.h"
+
 namespace gs {
 
 namespace dynamic {
@@ -267,6 +269,25 @@ struct hash<::gs::dynamic::Value> {
 };
 
 }  // namespace std
+
+namespace grape {
+inline grape::InArchive& operator<<(grape::InArchive& archive,
+                                    const gs::dynamic::Value& value) {
+  if (value.IsInt64()) {
+    archive << value.GetInt64();
+  } else if (value.IsDouble()) {
+    archive << value.GetDouble();
+  } else if (value.IsString()) {
+    size_t size = value.GetStringLength();
+    archive << size;
+    archive.AddBytes(value.GetString(), size);
+  } else {
+    std::string json = gs::dynamic::Stringify(value);
+    archive << json;
+  }
+  return archive;
+}
+}  // namespace grape
 
 #endif  // NETWORKX
 #endif  // ANALYTICAL_ENGINE_CORE_OBJECT_DYNAMIC_H_

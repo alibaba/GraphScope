@@ -75,41 +75,6 @@ struct DynamicWrapper<std::string> {
   }
 };
 
-template <typename ITER_T, typename FUNC_T>
-void parallel_for(const ITER_T& begin, const ITER_T& end, const FUNC_T& func,
-                  int thread_num, size_t chunk = 1024) {
-  std::vector<std::thread> threads(thread_num);
-  // size_t num = end - begin;
-  // if (chunk == 0) {
-  //  chunk = (num + thread_num - 1) / thread_num;
-  // }
-  std::atomic<size_t> cur(0);
-  for (int i = 0; i < thread_num; ++i) {
-    threads[i] = std::thread([&]() {
-      while (true) {
-        //  size_t x = cur.fetch_add(chunk);
-        // if (x >= num) {
-        //  break;
-        // }
-        const ITER_T cur_beg = std::min(begin + cur.fetch_add(chunk), end);
-        const ITER_T cur_end = std::min(cur_beg + chunk, end);
-        // size_t y = std::min(x + chunk, end);
-        // ITER_T a = begin + x;
-        // ITER_T b = begin + y;
-        if (cur_beg == cur_end) {
-          break;
-        }
-        for (auto iter = cur_beg; iter != cur_end; ++iter) {
-          func(i, *iter);
-        }
-      }
-    });
-  }
-  for (auto& thrd : threads) {
-    thrd.join();
-  }
-}
-
 /**
  * @brief A ArrowFragment to DynamicFragment converter. The conversion is
  * proceeded by traversing the source graph.
@@ -272,6 +237,7 @@ class ArrowToDynamicConverter {
         */
       }
     }
+    LOG(INFO) << "Tid=" << tid;
     vertices[tid] = vertices2;
     edges[tid] = edges2;
   }
