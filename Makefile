@@ -184,4 +184,6 @@ clean:
 	rm -fr $(WORKING_DIR)/analytical_engine/proto/ || true && \
 	rm -fr $(WORKING_DIR)/learning_engine/graph-learn/cmake-build/ || true && \
 	rm -fr $(WORKING_DIR)/learning_engine/graph-learn/proto/*.h || true && \
-	rm -fr $(WORKING_DIR)/learning_engine/graph-learn/proto/*.cc || true
+	rm -fr $(WORKING_DIR)/learning_engine/graph-learn/proto/*.cc || true && \
+	rm -fr $(WORKING_DIR)/interactive_engine/executor/target || true && \
+	rm -fr $(WORKING_DIR)/interactive_engine/assembly/target || true
