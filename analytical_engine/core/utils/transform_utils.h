@@ -26,6 +26,7 @@ limitations under the License.
 
 #include "vineyard/basic/ds/dataframe.h"
 #include "vineyard/basic/ds/tensor.h"
+#include "vineyard/graph/fragment/fragment_traits.h"
 
 #ifdef NETWORKX
 #include "core/object/dynamic.h"

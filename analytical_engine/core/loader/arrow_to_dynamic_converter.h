@@ -151,44 +151,45 @@ class ArrowToDynamicConverter {
       const std::shared_ptr<vertex_map_t>& dst_vm) {
     auto fid = src_frag->fid();
     const auto& schema = src_frag->schema();
-    // dst_fragment_t::mutation_t mutation;
 
     double start = grape::GetCurrentTime();
-    int thrd_num = std::thread::hardware_concurrency();
-    std::vector<std::vector<internal_vertex_t>> vertices(thrd_num);
-    std::vector<std::vector<edge_t>> edges(thrd_num);
+    uint32_t thread_num = std::thread::hardware_concurrency();
+    size_t ivnum = dst_vm->GetInnerVertexSize(fid);
+    std::vector<std::vector<internal_vertex_t>> vertices(thread_num);
+    std::vector<std::vector<edge_t>> edges(thread_num);
+    std::vector<int> oe_degree(ivnum, 0);
+    std::vector<int> ie_degree(ivnum, 0);
     for (label_id_t v_label = 0; v_label < src_frag->vertex_label_num();
          v_label++) {
-      // auto label_name = schema.GetVertexLabelName(v_label);
-      // auto v_data = src_frag->vertex_data_table(v_label);
-      // dynamic::Value u_oid, v_oid, data;
-      // vid_t u_gid, v_gid;
       auto inner_vertices = src_frag->InnerVertices(v_label);
 
       parallel_for(inner_vertices.begin(), inner_vertices.end(),
-                   [&src_frag, &dst_vm, &v_label, &vertices, &edges, this](int tid, vertex_t v) {
-            this->extract_data(src_frag, dst_vm, v_label, v, tid, vertices, edges);
-          }, thrd_num);
+                   [&src_frag, &dst_vm, &v_label, &vertices, &edges, &oe_degree, &ie_degree, this](uint32_t tid, vertex_t v) {
+            this->extract_data(src_frag, dst_vm, v_label, v, tid, vertices, edges, oe_degree, ie_degree);
+          }, thread_num);
     }
     LOG(INFO) << "Process vertices and Edges: " << grape::GetCurrentTime() - start;
 
     auto dynamic_frag = std::make_shared<dst_fragment_t>(dst_vm);
-    dynamic_frag->Init(src_frag->fid(), src_frag->directed());
-    // dynamic_frag->Mutate(mutation);
+    start = grape::GetCurrentTime();
+    dynamic_frag->Init(src_frag->fid(), src_frag->directed(), vertices, edges, oe_degree, ie_degree);
+    LOG(INFO) << "Convert fragment: " << grape::GetCurrentTime() - start;
     return dynamic_frag;
   }
 
   void extract_data(const std::shared_ptr<src_fragment_t>& src_frag,
-      const std::shared_ptr<vertex_map_t>& dst_vm, label_id_t label, const vertex_t& u, int tid,
+      const std::shared_ptr<vertex_map_t>& dst_vm, label_id_t label, const vertex_t& u, uint32_t tid,
       std::vector<std::vector<internal_vertex_t>>& vertices,
-      std::vector<std::vector<edge_t>>& edges) {
+      std::vector<std::vector<edge_t>>& edges,
+      std::vector<int>& oe_degree,
+      std::vector<int>& ie_degree) {
     auto fid = src_frag->fid();
     auto v_data = src_frag->vertex_data_table(label);
     dynamic::Value u_oid(src_frag->GetId(u));
-    // dynamic::Value u_oid;
     vid_t u_gid, v_gid;
 
     CHECK(dst_vm->GetGid(fid, u_oid, u_gid));
+    vid_t lid = dst_vm->GetLidFromGid(u_gid);
     dynamic::Value data(rapidjson::kObjectType);
     // N.B: th last column is id, we ignore it.
     for (auto col_id = 0; col_id < v_data->num_columns() - 1; col_id++) {
@@ -204,6 +205,7 @@ class ArrowToDynamicConverter {
            e_label++) {
         auto oe = src_frag->GetOutgoingAdjList(u, e_label);
         auto e_data = src_frag->edge_data_table(e_label);
+        oe_degree[lid] += oe.Size();
         for (auto& e : oe) {
           auto v = e.get_neighbor();
           auto e_id = e.edge_id();
@@ -215,9 +217,9 @@ class ArrowToDynamicConverter {
           edges[tid].emplace_back(u_gid, v_gid, std::move(data));
         }
 
-        /*
         if (src_frag->directed()) {
           auto ie = src_frag->GetIncomingAdjList(u, e_label);
+          ie_degree[lid] += ie.Size();
           for (auto& e : ie) {
             auto v = e.get_neighbor();
             if (src_frag->IsOuterVertex(v)) {
@@ -228,11 +230,10 @@ class ArrowToDynamicConverter {
               data = dynamic::Value(rapidjson::kObjectType);
               PropertyConverter<src_fragment_t>::EdgeValue(e_data, e_id,
                                                            data);
-              mutation.edges_to_add.emplace_back(v_gid, u_gid, data);
+              edges[tid].emplace_back(u_gid, v_gid, std::move(data));
             }
           }
         }
-        */
       }
     }
   }
