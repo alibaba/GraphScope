@@ -164,9 +164,12 @@ class ArrowToDynamicConverter {
       auto inner_vertices = src_frag->InnerVertices(v_label);
 
       parallel_for(inner_vertices.begin(), inner_vertices.end(),
-                   [&src_frag, &dst_vm, &v_label, &vertices, &edges, &oe_degree, &ie_degree, this](uint32_t tid, vertex_t v) {
-            this->extract_data(src_frag, dst_vm, v_label, v, tid, vertices, edges, oe_degree, ie_degree);
+                   [&](uint32_t tid, vertex_t v) {
+            extract_data(src_frag, dst_vm, v_label, v, tid, vertices, edges, oe_degree, ie_degree);
           }, thread_num);
+    }
+    for (int i = 0; i < edges.size();++i) {
+      LOG(INFO) << "i=" << i << " size=" << edges[i].size();
     }
     LOG(INFO) << "Process vertices and Edges: " << grape::GetCurrentTime() - start;
 
@@ -198,40 +201,39 @@ class ArrowToDynamicConverter {
       auto type = column->type();
       PropertyConverter<src_fragment_t>::NodeValue(src_frag, u, type,
                                                    prop_key, col_id, data);
-      vertices[tid].emplace_back(u_gid, std::move(data));
+    }
+    vertices[tid].emplace_back(u_gid, std::move(data));
 
-      // traverse edges and extract data
-      for (label_id_t e_label = 0; e_label < src_frag->edge_label_num();
-           e_label++) {
-        auto oe = src_frag->GetOutgoingAdjList(u, e_label);
-        auto e_data = src_frag->edge_data_table(e_label);
-        oe_degree[lid] += oe.Size();
-        for (auto& e : oe) {
+    // traverse edges and extract data
+    for (label_id_t e_label = 0; e_label < src_frag->edge_label_num();
+         e_label++) {
+      auto oe = src_frag->GetOutgoingAdjList(u, e_label);
+      auto e_data = src_frag->edge_data_table(e_label);
+      oe_degree[lid] += oe.Size();
+      for (auto& e : oe) {
+        auto v = e.get_neighbor();
+        auto e_id = e.edge_id();
+        auto v_label_id = src_frag->vertex_label(v);
+        dynamic::Value v_oid(src_frag->GetId(v));
+        CHECK(dst_vm->GetGid(v_oid, v_gid));
+        data = dynamic::Value(rapidjson::kObjectType);
+        PropertyConverter<src_fragment_t>::EdgeValue(e_data, e_id, data);
+        edges[tid].emplace_back(u_gid, v_gid, std::move(data));
+      }
+
+      if (src_frag->directed()) {
+        auto ie = src_frag->GetIncomingAdjList(u, e_label);
+        ie_degree[lid] += ie.Size();
+        for (auto& e : ie) {
           auto v = e.get_neighbor();
-          auto e_id = e.edge_id();
-          auto v_label_id = src_frag->vertex_label(v);
-          dynamic::Value v_oid(src_frag->GetId(v));
-          CHECK(dst_vm->GetGid(v_oid, v_gid));
-          data = dynamic::Value(rapidjson::kObjectType);
-          PropertyConverter<src_fragment_t>::EdgeValue(e_data, e_id, data);
-          edges[tid].emplace_back(u_gid, v_gid, std::move(data));
-        }
-
-        if (src_frag->directed()) {
-          auto ie = src_frag->GetIncomingAdjList(u, e_label);
-          ie_degree[lid] += ie.Size();
-          for (auto& e : ie) {
-            auto v = e.get_neighbor();
-            if (src_frag->IsOuterVertex(v)) {
-              auto e_id = e.edge_id();
-              auto v_label_id = src_frag->vertex_label(v);
-              dynamic::Value v_oid(src_frag->GetId(v));
-              CHECK(dst_vm->GetGid(v_oid, v_gid));
-              data = dynamic::Value(rapidjson::kObjectType);
-              PropertyConverter<src_fragment_t>::EdgeValue(e_data, e_id,
-                                                           data);
-              edges[tid].emplace_back(u_gid, v_gid, std::move(data));
-            }
+          if (src_frag->IsOuterVertex(v)) {
+            auto e_id = e.edge_id();
+            auto v_label_id = src_frag->vertex_label(v);
+            dynamic::Value v_oid(src_frag->GetId(v));
+            CHECK(dst_vm->GetGid(v_oid, v_gid));
+            data = dynamic::Value(rapidjson::kObjectType);
+            PropertyConverter<src_fragment_t>::EdgeValue(e_data, e_id, data);
+            edges[tid].emplace_back(u_gid, v_gid, std::move(data));
           }
         }
       }
