@@ -220,20 +220,20 @@ mod test {
     fn expand_outv_from_tag_as_tag_test() {
         let query_param = query_params(vec!["knows".into()], vec![], None);
         let expand_opr_pb = pb::EdgeExpand {
-            v_tag: Some("a".into()),
+            v_tag: Some(TAG_A.into()),
             direction: 0,
             params: Some(query_param),
             is_edge: false,
-            alias: Some("b".into()),
+            alias: Some(TAG_B.into()),
         };
-        let mut result = expand_test_with_source_tag("a".into(), expand_opr_pb);
+        let mut result = expand_test_with_source_tag(TAG_A.into(), expand_opr_pb);
         let mut result_ids = vec![];
         let v2: DefaultId = LDBCVertexParser::to_global_id(2, 0);
         let v4: DefaultId = LDBCVertexParser::to_global_id(4, 0);
         let mut expected_ids = vec![v2, v4];
         while let Some(Ok(record)) = result.next() {
             if let Some(element) = record
-                .get(Some(&"b".into()))
+                .get(Some(&TAG_B.into()))
                 .unwrap()
                 .as_graph_vertex()
             {
@@ -251,7 +251,7 @@ mod test {
         let query_param = query_params(vec!["knows".into()], vec![], None);
         let project = pb::Project {
             mappings: vec![pb::project::ExprAlias {
-                expr: str_to_expr_pb("@a".to_string()).ok(),
+                expr: Some(to_expr_var_pb(Some(TAG_A.into()), None)),
                 alias: None,
             }],
             is_append: false,
@@ -269,7 +269,7 @@ mod test {
             let project = project.clone();
             let expand = expand.clone();
             |input, output| {
-                let mut stream = input.input_from(source_gen(Some("a".into())))?;
+                let mut stream = input.input_from(source_gen(Some(TAG_A.into())))?;
                 let map_func = project.gen_map().unwrap();
                 stream = stream.map(move |input| map_func.exec(input))?;
                 let flatmap_func = expand.gen_flat_map().unwrap();
