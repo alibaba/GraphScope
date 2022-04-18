@@ -16,7 +16,7 @@
 use std::convert::TryInto;
 
 use ir_common::generated::algebra as algebra_pb;
-use ir_common::NameOrId;
+use ir_common::KeyId;
 use pegasus::api::function::{FnResult, MapFunction};
 use pegasus_server::pb as server_pb;
 
@@ -60,7 +60,7 @@ impl FoldGen<u64, Record> for algebra_pb::GroupBy {
 
 #[derive(Debug)]
 struct CountAlias {
-    alias: Option<NameOrId>,
+    alias: Option<KeyId>,
 }
 
 impl MapFunction<u64, Record> for CountAlias {
@@ -80,7 +80,7 @@ mod tests {
     use pegasus_server::pb as server_pb;
 
     use crate::process::functions::FoldGen;
-    use crate::process::operator::tests::init_source;
+    use crate::process::operator::tests::{init_source, TAG_A};
     use crate::process::record::{CommonObject, Entry, Record, RecordElement};
 
     fn count_test(source: Vec<Record>, fold_opr_pb: pb::GroupBy) -> ResultStream<Record> {
@@ -135,13 +135,13 @@ mod tests {
         let function = pb::group_by::AggFunc {
             vars: vec![common_pb::Variable::from("@".to_string())],
             aggregate: 3, // count
-            alias: Some("a".into()),
+            alias: Some(TAG_A.into()),
         };
         let fold_opr_pb = pb::GroupBy { mappings: vec![], functions: vec![function] };
         let mut result = count_test(init_source(), fold_opr_pb);
         let mut cnt = 0;
         if let Some(Ok(record)) = result.next() {
-            if let Some(entry) = record.get(Some(&"a".into())) {
+            if let Some(entry) = record.get(Some(&TAG_A.into())) {
                 cnt = match entry.as_ref() {
                     Entry::Element(RecordElement::OffGraph(CommonObject::Count(cnt))) => *cnt,
                     _ => {

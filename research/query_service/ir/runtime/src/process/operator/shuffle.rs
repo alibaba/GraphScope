@@ -18,7 +18,7 @@ use std::sync::Arc;
 
 use ir_common::error::ParsePbError;
 use ir_common::generated::common as common_pb;
-use ir_common::NameOrId;
+use ir_common::KeyId;
 use pegasus::api::function::{FnResult, RouteFunction};
 
 use crate::error::FnExecError;
@@ -29,7 +29,7 @@ use crate::process::record::Record;
 pub struct RecordRouter {
     p: Arc<dyn Partitioner>,
     num_workers: usize,
-    shuffle_key: Option<NameOrId>,
+    shuffle_key: Option<KeyId>,
 }
 
 impl RecordRouter {

@@ -17,7 +17,7 @@ use std::convert::TryInto;
 
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
-use ir_common::NameOrId;
+use ir_common::KeyId;
 use pegasus::api::function::{FnResult, MapFunction};
 
 use crate::error::{FnExecError, FnGenResult};
@@ -38,7 +38,7 @@ impl GroupGen<Record, RecordKey, Record> for algebra_pb::GroupBy {
     fn gen_group_map(&self) -> FnGenResult<Box<dyn MapFunction<(RecordKey, Record), Record>>> {
         let mut key_aliases = Vec::with_capacity(self.mappings.len());
         for key_alias in self.mappings.iter() {
-            let alias: Option<NameOrId> = Some(
+            let alias: Option<KeyId> = Some(
                 key_alias
                     .alias
                     .clone()
@@ -57,7 +57,7 @@ impl GroupGen<Record, RecordKey, Record> for algebra_pb::GroupBy {
 #[derive(Debug)]
 struct GroupMap {
     /// aliases for group keys, if some key is not not required to be preserved, give None alias
-    key_aliases: Vec<NameOrId>,
+    key_aliases: Vec<KeyId>,
 }
 
 impl MapFunction<(RecordKey, Record), Record> for GroupMap {
@@ -94,7 +94,7 @@ mod tests {
     use crate::graph::property::{DefaultDetails, DynDetails};
     use crate::process::functions::GroupGen;
     use crate::process::operator::accum::accumulator::Accumulator;
-    use crate::process::operator::tests::{init_source, init_vertex1, init_vertex2};
+    use crate::process::operator::tests::{init_source, init_vertex1, init_vertex2, TAG_A, TAG_B, TAG_C};
     use crate::process::record::{CommonObject, Entry, Record, RecordElement};
 
     // v1: marko, 29;
@@ -151,11 +151,11 @@ mod tests {
         let function = pb::group_by::AggFunc {
             vars: vec![common_pb::Variable::from("@".to_string())],
             aggregate: 5, // ToList
-            alias: Some(NameOrId::Str("b".to_string()).into()),
+            alias: Some(TAG_B.into()),
         };
         let key_alias = pb::group_by::KeyAlias {
             key: Some(common_pb::Variable::from("@".to_string())),
-            alias: Some(NameOrId::Str("a".to_string()).into()),
+            alias: Some(TAG_A.into()),
         };
         let group_opr_pb = pb::GroupBy { mappings: vec![key_alias], functions: vec![function] };
         let mut result = group_test(group_opr_pb);
@@ -170,8 +170,14 @@ mod tests {
         .collect();
 
         while let Some(Ok(result)) = result.next() {
-            let key = result.get(Some(&"a".into())).unwrap().as_ref();
-            let val = result.get(Some(&"b".into())).unwrap().as_ref();
+            let key = result
+                .get(Some(&TAG_A.into()))
+                .unwrap()
+                .as_ref();
+            let val = result
+                .get(Some(&TAG_B.into()))
+                .unwrap()
+                .as_ref();
             group_result.insert((key.clone(), val.clone()));
         }
         assert_eq!(group_result, expected_result);
@@ -183,11 +189,11 @@ mod tests {
         let function = pb::group_by::AggFunc {
             vars: vec![common_pb::Variable::from("@".to_string())],
             aggregate: 5, // ToList
-            alias: Some(NameOrId::Str("b".to_string()).into()),
+            alias: Some(TAG_B.into()),
         };
         let key_alias = pb::group_by::KeyAlias {
             key: Some(common_pb::Variable::from("@.name".to_string())),
-            alias: Some(NameOrId::Str("a".to_string()).into()),
+            alias: Some(TAG_A.into()),
         };
         let group_opr_pb = pb::GroupBy { mappings: vec![key_alias], functions: vec![function] };
         let mut result = group_test(group_opr_pb);
@@ -210,8 +216,14 @@ mod tests {
         .collect();
 
         while let Some(Ok(result)) = result.next() {
-            let key = result.get(Some(&"a".into())).unwrap().as_ref();
-            let val = result.get(Some(&"b".into())).unwrap().as_ref();
+            let key = result
+                .get(Some(&TAG_A.into()))
+                .unwrap()
+                .as_ref();
+            let val = result
+                .get(Some(&TAG_B.into()))
+                .unwrap()
+                .as_ref();
             group_result.insert((key.clone(), val.clone()));
         }
         assert_eq!(group_result, expected_result);
@@ -223,15 +235,15 @@ mod tests {
         let function = pb::group_by::AggFunc {
             vars: vec![common_pb::Variable::from("@".to_string())],
             aggregate: 5, // ToList
-            alias: Some("c".into()),
+            alias: Some(TAG_C.into()),
         };
         let key_alias_1 = pb::group_by::KeyAlias {
             key: Some(common_pb::Variable::from("@.id".to_string())),
-            alias: Some(NameOrId::Str("a".to_string()).into()),
+            alias: Some(TAG_A.into()),
         };
         let key_alias_2 = pb::group_by::KeyAlias {
             key: Some(common_pb::Variable::from("@.name".to_string())),
-            alias: Some(NameOrId::Str("b".to_string()).into()),
+            alias: Some(TAG_B.into()),
         };
         let group_opr_pb =
             pb::GroupBy { mappings: vec![key_alias_1, key_alias_2], functions: vec![function] };
@@ -256,9 +268,18 @@ mod tests {
         .collect();
 
         while let Some(Ok(result)) = result.next() {
-            let key_1 = result.get(Some(&"a".into())).unwrap().as_ref();
-            let key_2 = result.get(Some(&"b".into())).unwrap().as_ref();
-            let val = result.get(Some(&"c".into())).unwrap().as_ref();
+            let key_1 = result
+                .get(Some(&TAG_A.into()))
+                .unwrap()
+                .as_ref();
+            let key_2 = result
+                .get(Some(&TAG_B.into()))
+                .unwrap()
+                .as_ref();
+            let val = result
+                .get(Some(&TAG_C.into()))
+                .unwrap()
+                .as_ref();
             group_result.insert(((key_1.clone(), key_2.clone()), val.clone()));
         }
         assert_eq!(group_result, expected_result);
@@ -270,16 +291,16 @@ mod tests {
         let function_1 = pb::group_by::AggFunc {
             vars: vec![common_pb::Variable::from("@".to_string())],
             aggregate: 5, // ToList
-            alias: Some(NameOrId::Str("a".to_string()).into()),
+            alias: Some(TAG_A.into()),
         };
         let function_2 = pb::group_by::AggFunc {
             vars: vec![common_pb::Variable::from("@".to_string())],
             aggregate: 3, // Count
-            alias: Some(NameOrId::Str("b".to_string()).into()),
+            alias: Some(TAG_B.into()),
         };
         let key_alias = pb::group_by::KeyAlias {
             key: Some(common_pb::Variable::from("@".to_string())),
-            alias: Some(NameOrId::Str("c".to_string()).into()),
+            alias: Some(TAG_C.into()),
         };
         let group_opr_pb =
             pb::GroupBy { mappings: vec![key_alias], functions: vec![function_1, function_2] };
@@ -313,9 +334,18 @@ mod tests {
         .collect();
 
         while let Some(Ok(result)) = result.next() {
-            let key = result.get(Some(&"c".into())).unwrap().as_ref();
-            let val_1 = result.get(Some(&"a".into())).unwrap().as_ref();
-            let val_2 = result.get(Some(&"b".into())).unwrap().as_ref();
+            let key = result
+                .get(Some(&TAG_C.into()))
+                .unwrap()
+                .as_ref();
+            let val_1 = result
+                .get(Some(&TAG_A.into()))
+                .unwrap()
+                .as_ref();
+            let val_2 = result
+                .get(Some(&TAG_B.into()))
+                .unwrap()
+                .as_ref();
             group_result.insert((key.clone(), (val_1.clone(), val_2.clone())));
         }
         assert_eq!(group_result, expected_result);
@@ -327,11 +357,11 @@ mod tests {
         let function = pb::group_by::AggFunc {
             vars: vec![common_pb::Variable::from("@".to_string())],
             aggregate: 3, // Count
-            alias: Some(NameOrId::Str("b".to_string()).into()),
+            alias: Some(TAG_B.into()),
         };
         let key_alias = pb::group_by::KeyAlias {
             key: Some(common_pb::Variable::from("@".to_string())),
-            alias: Some(NameOrId::Str("a".to_string()).into()),
+            alias: Some(TAG_A.into()),
         };
         let group_opr_pb = pb::GroupBy { mappings: vec![key_alias], functions: vec![function] };
         let mut result = group_test(group_opr_pb);
@@ -345,8 +375,14 @@ mod tests {
         .cloned()
         .collect();
         while let Some(Ok(result)) = result.next() {
-            let key = result.get(Some(&"a".into())).unwrap().as_ref();
-            let val = result.get(Some(&"b".into())).unwrap().as_ref();
+            let key = result
+                .get(Some(&TAG_A.into()))
+                .unwrap()
+                .as_ref();
+            let val = result
+                .get(Some(&TAG_B.into()))
+                .unwrap()
+                .as_ref();
             group_result.insert((key.clone(), val.clone()));
         }
         assert_eq!(group_result, expected_result);
@@ -358,11 +394,11 @@ mod tests {
         let function = pb::group_by::AggFunc {
             vars: vec![common_pb::Variable::from("@".to_string())],
             aggregate: 3, // Count
-            alias: Some("b".into()),
+            alias: Some(TAG_B.into()),
         };
         let key_alias = pb::group_by::KeyAlias {
             key: Some(common_pb::Variable::from("@.name".to_string())),
-            alias: Some("a".into()),
+            alias: Some(TAG_A.into()),
         };
         let group_opr_pb = pb::GroupBy { mappings: vec![key_alias], functions: vec![function] };
         let mut result = group_test(group_opr_pb);
@@ -375,8 +411,14 @@ mod tests {
         .cloned()
         .collect();
         while let Some(Ok(result)) = result.next() {
-            let key = result.get(Some(&"a".into())).unwrap().as_ref();
-            let val = result.get(Some(&"b".into())).unwrap().as_ref();
+            let key = result
+                .get(Some(&TAG_A.into()))
+                .unwrap()
+                .as_ref();
+            let val = result
+                .get(Some(&TAG_B.into()))
+                .unwrap()
+                .as_ref();
             group_result.insert((key.clone(), val.clone()));
         }
         assert_eq!(group_result, expected_result);
@@ -388,11 +430,11 @@ mod tests {
         let function = pb::group_by::AggFunc {
             vars: vec![common_pb::Variable::from("@.age".to_string())],
             aggregate: 1, // min
-            alias: Some(NameOrId::Str("b".to_string()).into()),
+            alias: Some(TAG_B.into()),
         };
         let key_alias = pb::group_by::KeyAlias {
             key: Some(common_pb::Variable::from("@.name".to_string())),
-            alias: Some(NameOrId::Str("a".to_string()).into()),
+            alias: Some(TAG_A.into()),
         };
         let group_opr_pb = pb::GroupBy { mappings: vec![key_alias], functions: vec![function] };
         let mut result = group_test(group_opr_pb);
@@ -406,8 +448,14 @@ mod tests {
         .collect();
 
         while let Some(Ok(result)) = result.next() {
-            let key = result.get(Some(&"a".into())).unwrap().as_ref();
-            let val = result.get(Some(&"b".into())).unwrap().as_ref();
+            let key = result
+                .get(Some(&TAG_A.into()))
+                .unwrap()
+                .as_ref();
+            let val = result
+                .get(Some(&TAG_B.into()))
+                .unwrap()
+                .as_ref();
             group_result.insert((key.clone(), val.clone()));
         }
         assert_eq!(group_result, expected_result);
@@ -419,11 +467,11 @@ mod tests {
         let function = pb::group_by::AggFunc {
             vars: vec![common_pb::Variable::from("@.age".to_string())],
             aggregate: 2, // max
-            alias: Some(NameOrId::Str("b".to_string()).into()),
+            alias: Some(TAG_B.into()),
         };
         let key_alias = pb::group_by::KeyAlias {
             key: Some(common_pb::Variable::from("@.name".to_string())),
-            alias: Some(NameOrId::Str("a".to_string()).into()),
+            alias: Some(TAG_A.into()),
         };
         let group_opr_pb = pb::GroupBy { mappings: vec![key_alias], functions: vec![function] };
         let mut result = group_test(group_opr_pb);
@@ -437,8 +485,14 @@ mod tests {
         .collect();
 
         while let Some(Ok(result)) = result.next() {
-            let key = result.get(Some(&"a".into())).unwrap().as_ref();
-            let val = result.get(Some(&"b".into())).unwrap().as_ref();
+            let key = result
+                .get(Some(&TAG_A.into()))
+                .unwrap()
+                .as_ref();
+            let val = result
+                .get(Some(&TAG_B.into()))
+                .unwrap()
+                .as_ref();
             group_result.insert((key.clone(), val.clone()));
         }
         assert_eq!(group_result, expected_result);
