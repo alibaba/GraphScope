@@ -131,16 +131,6 @@ def test_unload_graph(sess, student_v, teacher_v, student_group_e):
     del g
 
 
-def test_unload_app(sess, arrow_property_graph_lpa_u2i):
-    # case 1
-    a1 = AppDAGNode(
-        arrow_property_graph_lpa_u2i,
-        AppAssets(algo="lpau2i", context="labeled_vertex_property"),
-    )
-    a1 = sess.run(a1)
-    del a1
-
-
 def test_graph_to_numpy(sess):
     g = load_p2p_network(sess)
     pg = g.project(vertices={"host": ["id"]}, edges={"connect": ["dist"]})
