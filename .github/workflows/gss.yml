@@ -114,7 +114,7 @@ jobs:
         retention-days: 5
 
   helm-test:
-    runs-on: [self-hosted, "1234"]
+    runs-on: [self-hosted, "47.242.9.60"]
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     needs: [gremlin-test]
     strategy:
