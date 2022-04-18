@@ -1352,6 +1352,7 @@ def set_option(**kwargs):
         - engine_params
         - initializing_interactive_engine
         - timeout_seconds
+        - dataset_download_retries
 
     Args:
         kwargs: dict
@@ -1406,6 +1407,7 @@ def get_option(key):
         - engine_params
         - initializing_interactive_engine
         - timeout_seconds
+        - dataset_download_retries
 
     Args:
         key: str
