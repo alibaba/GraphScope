@@ -222,7 +222,8 @@ class Value : public rapidjson::Value {
   friend std::ostream& operator<<(std::ostream&, Value const&);
 
  public:
-  static AllocatorT allocator_;
+  // static AllocatorT allocator_;
+  AllocatorT allocator_;
 };
 
 // Stringify Value to json.
@@ -237,7 +238,8 @@ static inline const char* Stringify(const Value& value) {
 // Parse json to Value.
 static inline void Parse(const std::string& str, Value& val) {
   // the document d must use the same allocator with other values
-  rapidjson::Document d(&Value::allocator_);
+  // rapidjson::Document d(&Value::allocator_);
+  rapidjson::Document d;
   d.Parse(str.c_str());
   val.Swap(d);  // constant time
 }

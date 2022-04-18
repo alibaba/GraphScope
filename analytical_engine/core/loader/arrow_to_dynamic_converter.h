@@ -230,12 +230,12 @@ class ArrowToDynamicConverter {
     LOG(INFO) << "Convert fragment: " << grape::GetCurrentTime() - start;
 
     // check the graph is consistent
-    std::ofstream f("/Users/weibin/Dev/gstest/twitter_dy.e");
+    std::ofstream f("/Users/weibin/Dev/test/p2p_dy.e");
     auto inner_vertices = dynamic_frag->InnerVertices();
     for (auto v : inner_vertices) {
       auto oe = dynamic_frag->GetOutgoingAdjList(v);
       for (auto& e : oe) {
-        f << dynamic_frag->GetId(v) << "\t" << dynamic_frag->GetId(e.get_neighbor()) << "\t" << e.get_data()["f2"].GetInt()  << "\n";
+        f << dynamic_frag->GetId(v) << " " << dynamic_frag->GetId(e.get_neighbor()) << " " << e.get_data()  << "\n";
       }
     }
     f.close();

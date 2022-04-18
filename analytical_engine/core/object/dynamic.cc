@@ -21,7 +21,7 @@
 #include "core/object/dynamic.h"
 
 /* static definition */
-gs::dynamic::AllocatorT gs::dynamic::Value::allocator_{};
+// gs::dynamic::AllocatorT gs::dynamic::Value::allocator_{};
 
 std::size_t gs::dynamic::Value::hash() const {
   switch (GetType()) {
