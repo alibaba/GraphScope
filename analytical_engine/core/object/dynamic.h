@@ -59,9 +59,12 @@ class Value : public rapidjson::Value {
   }
   // Constructor with move semantics.
   Value(Value& rhs) { Base::CopyFrom(rhs, allocator_); }
-  explicit Value(rapidjson::Value& rhs) { Base::CopyFrom(rhs, allocator_); }
+  // Value(Value& rhs) : Base(std::move(rhs)) {}
+  // explicit Value(rapidjson::Value& rhs) { Base::CopyFrom(rhs, allocator_); }
+  explicit Value(rapidjson::Value& rhs) : Base(std::move(rhs)) {}
   // Move constructor
   Value(Value&& rhs) : Base(std::move(rhs)) {}
+  explicit Value(rapidjson::Value&& rhs) : Base(std::move(rhs)) {}
   // Constructor with value type
   explicit Value(rapidjson::Type type) noexcept : Base(type) {}
   // Constructor for common type

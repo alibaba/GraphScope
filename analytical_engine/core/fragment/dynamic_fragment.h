@@ -204,26 +204,29 @@ class DynamicFragment
     }
   }
 
-  void Init(fid_t fid, bool directed, std::vector<std::vector<internal_vertex_t>>& vertices,
+  // Init an empty fragment.
+  void Init(fid_t fid, bool directed) {
+    std::vector<internal_vertex_t> empty_vertices;
+    std::vector<edge_t> empty_edges;
+    Init(fid, directed, empty_vertices, empty_edges);
+  }
+
+  // Init fragment from arrow property fragment.
+  void Init(fid_t fid, bool directed,
+            std::vector<std::vector<internal_vertex_t>>& vertices,
             std::vector<std::vector<edge_t>>& edges,
             std::vector<int>& oe_degree_to_add,
             std::vector<int>& ie_degree_to_add) {
     init(fid, directed);
-
     load_strategy_ = directed ? grape::LoadStrategy::kBothOutIn
                               : grape::LoadStrategy::kOnlyIn;
 
     ovnum_ = 0;
-    static constexpr vid_t invalid_vid = std::numeric_limits<vid_t>::max();
     if (load_strategy_ == grape::LoadStrategy::kOnlyOut) {
       for (auto& vec : edges) {
         for (auto& e : vec) {
-          if (IsInnerVertexGid(e.src)) {
-            if (!IsInnerVertexGid(e.dst)) {
-              parseOrAddOuterVertexGid(e.dst);
-            }
-          } else {
-            e.src = invalid_vid;
+          if (!IsInnerVertexGid(e.dst)) {
+            parseOrAddOuterVertexGid(e.dst);
           }
         }
       }
@@ -235,11 +238,7 @@ class DynamicFragment
               parseOrAddOuterVertexGid(e.dst);
             }
           } else {
-            if (IsInnerVertexGid(e.dst)) {
-              parseOrAddOuterVertexGid(e.src);
-            } else {
-              e.src = invalid_vid;
-            }
+            parseOrAddOuterVertexGid(e.src);
           }
         }
       }
@@ -264,8 +263,7 @@ class DynamicFragment
                              id_parser_.max_local_id());
     initOuterVerticesOfFragment();
 
-    // buildCSR(this->InnerVertices(), edges, load_strategy_);
-    buildCSRParallel(edges, oe_degree_to_add, ie_degree_to_add, load_strategy_);
+    buildCSRParallel(edges, oe_degree_to_add, ie_degree_to_add);
 
     ivdata_.clear();
     ivdata_.resize(ivnum_, dynamic::Value(rapidjson::kObjectType));
@@ -289,27 +287,27 @@ class DynamicFragment
     }
   }
 
-  void Init(fid_t fid, bool directed) {
-    std::vector<internal_vertex_t> empty_vertices;
-    std::vector<edge_t> empty_edges;
-    Init(fid, directed, empty_vertices, empty_edges);
-  }
-
-  void buildCSRParallel(std::vector<std::vector<edge_t>>& edges,
+  inline void buildCSRParallel(std::vector<std::vector<edge_t>>& edges,
                         const std::vector<int>& oe_degree_to_add,
-                        const std::vector<int>& ie_degree_to_add,
-                        grape::LoadStrategy load_strategy) {
+                        const std::vector<int>& ie_degree_to_add) {
     ie_.reserve_vertices(ivnum_);
     oe_.reserve_vertices(ivnum_);
 
     uint32_t thread_num = std::thread::hardware_concurrency();
 
-      // parse edges
+    // parse edges
     parallel_for(edges.begin(), edges.end(),
-                   [&](uint32_t tid, std::vector<edge_t>& es) {
-            for (auto& e: es) {
-              CHECK(Gid2Lid(e.src, e.src));
-              CHECK(Gid2Lid(e.dst, e.dst));
+                 [&](uint32_t tid, std::vector<edge_t>& es) {
+            if (load_strategy_ == grape::LoadStrategy::kOnlyOut) {
+              for (auto& e: es) {
+                CHECK(InnerVertexGid2Lid(e.src, e.src));
+                CHECK(Gid2Lid(e.dst, e.dst));
+              }
+            } else {
+              for (auto& e: es) {
+                CHECK(Gid2Lid(e.src, e.src));
+                CHECK(Gid2Lid(e.dst, e.dst));
+              }
             }
         }, thread_num, 1);
 
@@ -323,10 +321,15 @@ class DynamicFragment
                    [&](uint32_t tid, std::vector<edge_t>& es) {
             for (auto& e : es) {
               if (e.src < ivnum_) {
-                oe_.put_edge(e.src, nbr_t(e.dst, e.edata));
+                if (e.dst < ivnum_) {
+                  oe_.put_edge(e.src, nbr_t(e.dst, e.edata));
+                } else {
+                  // avoid copy.
+                  oe_.put_edge(e.src, nbr_t(e.dst, std::move(e.edata)));
+                }
               }
               if (e.dst < ivnum_) {
-                ie_.put_edge(e.dst, nbr_t(e.src, e.edata));
+                ie_.put_edge(e.dst, nbr_t(e.src, std::move(e.edata)));
               }
             }
           }, thread_num, 1);
@@ -337,7 +340,7 @@ class DynamicFragment
       parallel_for(edges.begin(), edges.end(),
                    [&](uint32_t tid, std::vector<edge_t>& es) {
             for (auto& e : es) {
-              oe_.put_edge(e.src, nbr_t(e.dst, e.edata));
+              oe_.put_edge(e.src, nbr_t(e.dst, std::move(e.edata)));
             }
           }, thread_num, 1);
       oe_.sort_neighbors_dense(oe_degree_to_add);

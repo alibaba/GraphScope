@@ -1068,10 +1068,10 @@ class TransformUtils<
 
 template <typename ITER_T, typename FUNC_T>
 void parallel_for(const ITER_T& begin, const ITER_T& end, const FUNC_T& func,
-                  int thread_num, size_t chunk = 1024) {
+                  uint32_t thread_num, size_t chunk = 1024) {
   std::vector<std::thread> threads(thread_num);
   std::atomic<size_t> cur(0);
-  for (int i = 0; i < thread_num; ++i) {
+  for (uint32_t i = 0; i < thread_num; ++i) {
     threads[i] = std::thread([&cur, chunk, &func, begin, end, i]() {
       while (true) {
         const ITER_T cur_beg = std::min(begin + cur.fetch_add(chunk), end);

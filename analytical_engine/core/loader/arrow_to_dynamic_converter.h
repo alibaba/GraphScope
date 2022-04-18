@@ -162,10 +162,61 @@ class ArrowToDynamicConverter {
     for (label_id_t v_label = 0; v_label < src_frag->vertex_label_num();
          v_label++) {
       auto inner_vertices = src_frag->InnerVertices(v_label);
+      auto v_data = src_frag->vertex_data_table(v_label);
+      std::string label_name = schema.GetVertexLabelName(v_label);
 
       parallel_for(inner_vertices.begin(), inner_vertices.end(),
-                   [&](uint32_t tid, vertex_t v) {
-            extract_data(src_frag, dst_vm, v_label, v, tid, vertices, edges, oe_degree, ie_degree);
+                   [&](uint32_t tid, vertex_t u) {
+        dynamic::Value u_oid(src_frag->GetId(u));
+        vid_t u_gid, v_gid;
+
+        CHECK(dst_vm->GetGid(fid, u_oid, u_gid));
+        vid_t lid = dst_vm->GetLidFromGid(u_gid);
+        dynamic::Value data(rapidjson::kObjectType);
+        // N.B: th last column is id, we ignore it.
+        for (auto col_id = 0; col_id < v_data->num_columns() - 1; col_id++) {
+          auto column = v_data->column(col_id);
+          auto& prop_key = v_data->field(col_id)->name();
+          auto type = column->type();
+          PropertyConverter<src_fragment_t>::NodeValue(src_frag, u, type,
+                                                       prop_key, col_id, data);
+        }
+        vertices[tid].emplace_back(u_gid, std::move(data));
+
+        // traverse edges and extract data
+        for (label_id_t e_label = 0; e_label < src_frag->edge_label_num();
+             e_label++) {
+          auto e_data = src_frag->edge_data_table(e_label);
+          auto oe = src_frag->GetOutgoingAdjList(u, e_label);
+          oe_degree[lid] += oe.Size();
+          for (auto& e : oe) {
+            auto v = e.get_neighbor();
+            auto e_id = e.edge_id();
+            auto v_label_id = src_frag->vertex_label(v);
+            dynamic::Value v_oid(src_frag->GetId(v));
+            CHECK(dst_vm->GetGid(v_oid, v_gid));
+            data = dynamic::Value(rapidjson::kObjectType);
+            PropertyConverter<src_fragment_t>::EdgeValue(e_data, e_id, data);
+            edges[tid].emplace_back(u_gid, v_gid, std::move(data));
+          }
+
+          if (src_frag->directed()) {
+            auto ie = src_frag->GetIncomingAdjList(u, e_label);
+            ie_degree[lid] += ie.Size();
+            for (auto& e : ie) {
+              auto v = e.get_neighbor();
+              if (src_frag->IsOuterVertex(v)) {
+                auto e_id = e.edge_id();
+                auto v_label_id = src_frag->vertex_label(v);
+                dynamic::Value v_oid(src_frag->GetId(v));
+                CHECK(dst_vm->GetGid(v_oid, v_gid));
+                data = dynamic::Value(rapidjson::kObjectType);
+                PropertyConverter<src_fragment_t>::EdgeValue(e_data, e_id, data);
+                edges[tid].emplace_back(v_gid, u_gid, std::move(data));
+              }
+            }
+          }
+        }
           }, thread_num);
     }
     for (int i = 0; i < edges.size();++i) {
@@ -178,66 +229,6 @@ class ArrowToDynamicConverter {
     dynamic_frag->Init(src_frag->fid(), src_frag->directed(), vertices, edges, oe_degree, ie_degree);
     LOG(INFO) << "Convert fragment: " << grape::GetCurrentTime() - start;
     return dynamic_frag;
-  }
-
-  void extract_data(const std::shared_ptr<src_fragment_t>& src_frag,
-      const std::shared_ptr<vertex_map_t>& dst_vm, label_id_t label, const vertex_t& u, uint32_t tid,
-      std::vector<std::vector<internal_vertex_t>>& vertices,
-      std::vector<std::vector<edge_t>>& edges,
-      std::vector<int>& oe_degree,
-      std::vector<int>& ie_degree) {
-    auto fid = src_frag->fid();
-    auto v_data = src_frag->vertex_data_table(label);
-    dynamic::Value u_oid(src_frag->GetId(u));
-    vid_t u_gid, v_gid;
-
-    CHECK(dst_vm->GetGid(fid, u_oid, u_gid));
-    vid_t lid = dst_vm->GetLidFromGid(u_gid);
-    dynamic::Value data(rapidjson::kObjectType);
-    // N.B: th last column is id, we ignore it.
-    for (auto col_id = 0; col_id < v_data->num_columns() - 1; col_id++) {
-      auto column = v_data->column(col_id);
-      auto prop_key = v_data->field(col_id)->name();
-      auto type = column->type();
-      PropertyConverter<src_fragment_t>::NodeValue(src_frag, u, type,
-                                                   prop_key, col_id, data);
-    }
-    vertices[tid].emplace_back(u_gid, std::move(data));
-
-    // traverse edges and extract data
-    for (label_id_t e_label = 0; e_label < src_frag->edge_label_num();
-         e_label++) {
-      auto oe = src_frag->GetOutgoingAdjList(u, e_label);
-      auto e_data = src_frag->edge_data_table(e_label);
-      oe_degree[lid] += oe.Size();
-      for (auto& e : oe) {
-        auto v = e.get_neighbor();
-        auto e_id = e.edge_id();
-        auto v_label_id = src_frag->vertex_label(v);
-        dynamic::Value v_oid(src_frag->GetId(v));
-        CHECK(dst_vm->GetGid(v_oid, v_gid));
-        data = dynamic::Value(rapidjson::kObjectType);
-        PropertyConverter<src_fragment_t>::EdgeValue(e_data, e_id, data);
-        edges[tid].emplace_back(u_gid, v_gid, std::move(data));
-      }
-
-      if (src_frag->directed()) {
-        auto ie = src_frag->GetIncomingAdjList(u, e_label);
-        ie_degree[lid] += ie.Size();
-        for (auto& e : ie) {
-          auto v = e.get_neighbor();
-          if (src_frag->IsOuterVertex(v)) {
-            auto e_id = e.edge_id();
-            auto v_label_id = src_frag->vertex_label(v);
-            dynamic::Value v_oid(src_frag->GetId(v));
-            CHECK(dst_vm->GetGid(v_oid, v_gid));
-            data = dynamic::Value(rapidjson::kObjectType);
-            PropertyConverter<src_fragment_t>::EdgeValue(e_data, e_id, data);
-            edges[tid].emplace_back(u_gid, v_gid, std::move(data));
-          }
-        }
-      }
-    }
   }
 
   grape::CommSpec comm_spec_;
