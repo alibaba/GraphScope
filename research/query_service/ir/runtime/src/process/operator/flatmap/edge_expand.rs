@@ -16,7 +16,7 @@
 use std::convert::TryInto;
 
 use ir_common::generated::algebra as algebra_pb;
-use ir_common::NameOrId;
+use ir_common::KeyId;
 use pegasus::api::function::{DynIter, FlatMapFunction, FnResult};
 
 use crate::error::{FnExecError, FnGenError, FnGenResult};
@@ -26,8 +26,8 @@ use crate::process::operator::flatmap::FlatMapFuncGen;
 use crate::process::record::{Record, RecordExpandIter, RecordPathExpandIter};
 
 pub struct EdgeExpandOperator<E: Into<GraphObject>> {
-    start_v_tag: Option<NameOrId>,
-    edge_or_end_v_tag: Option<NameOrId>,
+    start_v_tag: Option<KeyId>,
+    edge_or_end_v_tag: Option<KeyId>,
     stmt: Box<dyn Statement<ID, E>>,
 }
 

@@ -19,7 +19,7 @@ use std::sync::Arc;
 
 use ir_common::error::{ParsePbError, ParsePbResult};
 use ir_common::generated::algebra as algebra_pb;
-use ir_common::NameOrId;
+use ir_common::KeyId;
 
 use crate::error::{FnGenError, FnGenResult};
 use crate::graph::element::{Edge, Vertex};
@@ -40,7 +40,7 @@ pub enum SourceType {
 pub struct SourceOperator {
     query_params: QueryParams,
     src: Option<HashMap<u64, Vec<ID>>>,
-    alias: Option<NameOrId>,
+    alias: Option<KeyId>,
     source_type: SourceType,
 }
 
@@ -155,7 +155,7 @@ impl TryFrom<algebra_pb::Scan> for SourceOperator {
         };
         let alias = scan_pb
             .alias
-            .map(|alias| NameOrId::try_from(alias))
+            .map(|alias| KeyId::try_from(alias))
             .transpose()?;
 
         let query_params = QueryParams::try_from(scan_pb.params)?;

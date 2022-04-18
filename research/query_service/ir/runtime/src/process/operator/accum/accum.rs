@@ -19,7 +19,7 @@ use std::convert::{TryFrom, TryInto};
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::algebra::group_by::agg_func::Aggregate;
-use ir_common::NameOrId;
+use ir_common::KeyId;
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 
 use crate::error::{FnExecError, FnExecResult, FnGenError, FnGenResult};
@@ -43,7 +43,7 @@ pub enum EntryAccumulator {
 
 #[derive(Debug, Clone)]
 pub struct RecordAccumulator {
-    accum_ops: Vec<(EntryAccumulator, TagKey, NameOrId)>,
+    accum_ops: Vec<(EntryAccumulator, TagKey, KeyId)>,
 }
 
 impl Accumulator<Record, Record> for RecordAccumulator {
@@ -253,7 +253,7 @@ impl Decode for RecordAccumulator {
         for _ in 0..len {
             let accumulator = <EntryAccumulator>::read_from(reader)?;
             let tag_key = <TagKey>::read_from(reader)?;
-            let alias = <NameOrId>::read_from(reader)?;
+            let alias = <KeyId>::read_from(reader)?;
             accum_ops.push((accumulator, tag_key, alias));
         }
         Ok(RecordAccumulator { accum_ops })
@@ -274,7 +274,7 @@ mod tests {
 
     use crate::process::operator::accum::accumulator::Accumulator;
     use crate::process::operator::accum::AccumFactoryGen;
-    use crate::process::operator::tests::{init_source, init_vertex1, init_vertex2};
+    use crate::process::operator::tests::{init_source, init_vertex1, init_vertex2, TAG_A, TAG_B};
     use crate::process::record::{CommonObject, Entry, Record, RecordElement};
 
     fn fold_test(source: Vec<Record>, fold_opr_pb: pb::GroupBy) -> ResultStream<Record> {
@@ -308,7 +308,7 @@ mod tests {
         let function = pb::group_by::AggFunc {
             vars: vec![common_pb::Variable::from("@".to_string())],
             aggregate: 5, // to_list
-            alias: Some("a".into()),
+            alias: Some(TAG_A.into()),
         };
         let fold_opr_pb = pb::GroupBy { mappings: vec![], functions: vec![function] };
         let mut result = fold_test(init_source(), fold_opr_pb);
@@ -318,7 +318,7 @@ mod tests {
             RecordElement::OnGraph(init_vertex2().into()),
         ]);
         if let Some(Ok(record)) = result.next() {
-            if let Some(entry) = record.get(Some(&"a".into())) {
+            if let Some(entry) = record.get(Some(&TAG_A.into())) {
                 fold_result = entry.as_ref().clone();
             }
         }
@@ -331,13 +331,13 @@ mod tests {
         let function = pb::group_by::AggFunc {
             vars: vec![common_pb::Variable::from("@".to_string())],
             aggregate: 3, // count
-            alias: Some("a".into()),
+            alias: Some(TAG_A.into()),
         };
         let fold_opr_pb = pb::GroupBy { mappings: vec![], functions: vec![function] };
         let mut result = fold_test(init_source(), fold_opr_pb);
         let mut cnt = 0;
         if let Some(Ok(record)) = result.next() {
-            if let Some(entry) = record.get(Some(&"a".into())) {
+            if let Some(entry) = record.get(Some(&TAG_A.into())) {
                 cnt = match entry.as_ref() {
                     Entry::Element(RecordElement::OffGraph(CommonObject::Count(cnt))) => *cnt,
                     _ => {
@@ -355,12 +355,12 @@ mod tests {
         let function_1 = pb::group_by::AggFunc {
             vars: vec![common_pb::Variable::from("@".to_string())],
             aggregate: 5, // to_list
-            alias: Some("a".into()),
+            alias: Some(TAG_A.into()),
         };
         let function_2 = pb::group_by::AggFunc {
             vars: vec![common_pb::Variable::from("@".to_string())],
             aggregate: 3, // Count
-            alias: Some("b".into()),
+            alias: Some(TAG_B.into()),
         };
         let fold_opr_pb = pb::GroupBy { mappings: vec![], functions: vec![function_1, function_2] };
         let mut result = fold_test(init_source(), fold_opr_pb);
@@ -374,12 +374,12 @@ mod tests {
         );
         if let Some(Ok(record)) = result.next() {
             let collection_entry = record
-                .get(Some(&"a".into()))
+                .get(Some(&TAG_A.into()))
                 .unwrap()
                 .as_ref()
                 .clone();
             let count_entry = record
-                .get(Some(&"b".into()))
+                .get(Some(&TAG_B.into()))
                 .unwrap()
                 .as_ref()
                 .clone();
@@ -396,13 +396,13 @@ mod tests {
         let function = pb::group_by::AggFunc {
             vars: vec![common_pb::Variable::from("@".to_string())],
             aggregate: 1, // min
-            alias: Some("a".into()),
+            alias: Some(TAG_A.into()),
         };
         let fold_opr_pb = pb::GroupBy { mappings: vec![], functions: vec![function] };
         let mut result = fold_test(vec![r1, r2], fold_opr_pb);
         let mut res = 0.into();
         if let Some(Ok(record)) = result.next() {
-            if let Some(entry) = record.get(Some(&"a".into())) {
+            if let Some(entry) = record.get(Some(&TAG_A.into())) {
                 res = match entry.as_ref() {
                     // this is Prop, since get_entry returns entry type of prop
                     Entry::Element(RecordElement::OffGraph(CommonObject::Prop(obj))) => obj.clone(),
@@ -423,13 +423,13 @@ mod tests {
         let function = pb::group_by::AggFunc {
             vars: vec![common_pb::Variable::from("@".to_string())],
             aggregate: 2, // max
-            alias: Some("a".into()),
+            alias: Some(TAG_A.into()),
         };
         let fold_opr_pb = pb::GroupBy { mappings: vec![], functions: vec![function] };
         let mut result = fold_test(vec![r1, r2], fold_opr_pb);
         let mut res = "".into();
         if let Some(Ok(record)) = result.next() {
-            if let Some(entry) = record.get(Some(&"a".into())) {
+            if let Some(entry) = record.get(Some(&TAG_A.into())) {
                 res = match entry.as_ref() {
                     // this is Prop, since get_entry returns entry type of prop
                     Entry::Element(RecordElement::OffGraph(CommonObject::Prop(obj))) => obj.clone(),
@@ -455,13 +455,13 @@ mod tests {
         let function = pb::group_by::AggFunc {
             vars: vec![common_pb::Variable::from("@".to_string())],
             aggregate: 4, // distinct_count
-            alias: Some("a".into()),
+            alias: Some(TAG_A.into()),
         };
         let fold_opr_pb = pb::GroupBy { mappings: vec![], functions: vec![function] };
         let mut result = fold_test(vec![r1, r2, r3, r4], fold_opr_pb);
         let mut cnt = 0;
         if let Some(Ok(record)) = result.next() {
-            if let Some(entry) = record.get(Some(&"a".into())) {
+            if let Some(entry) = record.get(Some(&TAG_A.into())) {
                 cnt = match entry.as_ref() {
                     Entry::Element(RecordElement::OffGraph(CommonObject::Count(cnt))) => *cnt,
                     _ => {
@@ -483,7 +483,7 @@ mod tests {
         let function = pb::group_by::AggFunc {
             vars: vec![common_pb::Variable::from("@".to_string())],
             aggregate: 6, // to_set
-            alias: Some("a".into()),
+            alias: Some(TAG_A.into()),
         };
         let fold_opr_pb = pb::GroupBy { mappings: vec![], functions: vec![function] };
         let mut result = fold_test(source, fold_opr_pb);
@@ -493,7 +493,7 @@ mod tests {
             RecordElement::OnGraph(init_vertex2().into()),
         ]);
         if let Some(Ok(record)) = result.next() {
-            if let Some(entry) = record.get(Some(&"a".into())) {
+            if let Some(entry) = record.get(Some(&TAG_A.into())) {
                 fold_result = entry.as_ref().clone();
             }
         }
