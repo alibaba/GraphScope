@@ -173,7 +173,7 @@ jobs:
     # configured manually when a new self-hosted runner is added.
     runs-on: [self-hosted, manylinux2014]
     needs: [changes]
-    if: ${{ github.repository == 'siyuan0322/GraphScope' }}
+    if: ${{ github.repository == 'alibaba/GraphScope' }}
     steps:
     - uses: actions/checkout@v2
       with:
@@ -522,7 +522,7 @@ jobs:
   gie-test:
     runs-on: [self-hosted, ubuntu2004]
     needs: [build-wheels, changes]
-    if: ${{ (needs.changes.outputs.gie-function-test == 'true' || github.ref == 'refs/heads/main') && github.repository == 'siyuan0322/GraphScope' }}
+    if: ${{ (needs.changes.outputs.gie-function-test == 'true' || github.ref == 'refs/heads/main') && github.repository == 'alibaba/GraphScope' }}
     steps:
       - uses: actions/checkout@v2.3.2
 
@@ -583,7 +583,7 @@ jobs:
 
   k8s-test:
     runs-on: [self-hosted, ubuntu2004]
-    if: ${{ github.repository == 'siyuan0322/GraphScope' }}
+    if: ${{ github.repository == 'alibaba/GraphScope' }}
     needs: [build-wheels]
     steps:
       - uses: actions/checkout@v2.3.2
