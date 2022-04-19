@@ -801,6 +801,8 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::copyGraph(
   BOOST_LEAF_AUTO(src_wrapper,
                   object_manager_.GetObject<IFragmentWrapper>(src_graph_name));
   std::string dst_graph_name = "graph_" + generateId();
+  VLOG(1) << "Copy graph from " << src_graph_name
+          << ", graph name: " << dst_graph_name;
 
   BOOST_LEAF_AUTO(dst_wrapper, src_wrapper->CopyGraph(
                                    comm_spec_, dst_graph_name, copy_type));
@@ -816,6 +818,8 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::toDirected(
                   object_manager_.GetObject<IFragmentWrapper>(src_graph_name));
   std::string dst_graph_name = "graph_" + generateId();
 
+  VLOG(1) << "Convert to undirected graph from " << src_graph_name
+          << ", graph name: " << dst_graph_name;
   BOOST_LEAF_AUTO(dst_wrapper,
                   src_wrapper->ToDirected(comm_spec_, dst_graph_name));
   BOOST_LEAF_CHECK(object_manager_.PutObject(dst_wrapper));
@@ -829,6 +833,8 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::toUnDirected(
   BOOST_LEAF_AUTO(src_wrapper,
                   object_manager_.GetObject<IFragmentWrapper>(src_graph_name));
   std::string dst_graph_name = "graph_" + generateId();
+  VLOG(1) << "Convert to undirected graph from " << src_graph_name
+          << ", graph name: " << dst_graph_name;
 
   BOOST_LEAF_AUTO(dst_wrapper,
                   src_wrapper->ToUndirected(comm_spec_, dst_graph_name));
