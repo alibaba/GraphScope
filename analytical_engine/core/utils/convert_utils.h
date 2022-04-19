@@ -81,43 +81,50 @@ struct PropertyConverter {
       case arrow::Type::type::INT32: {
         auto array =
             std::dynamic_pointer_cast<arrow::Int32Array>(column->chunk(0));
-        ret.Insert(property_name, array->Value(row_id), allocator);
+        rapidjson::Value v(array->Value(row_id));
+        ret.Insert(property_name, v, allocator);
         break;
       }
       case arrow::Type::type::INT64: {
         auto array =
             std::dynamic_pointer_cast<arrow::Int64Array>(column->chunk(0));
-        ret.Insert(property_name, array->Value(row_id), allocator);
+        rapidjson::Value v(array->Value(row_id));
+        ret.Insert(property_name, v, allocator);
         break;
       }
       case arrow::Type::type::UINT32: {
         auto array =
             std::dynamic_pointer_cast<arrow::UInt32Array>(column->chunk(0));
-        ret.Insert(property_name, array->Value(row_id), allocator);
+        rapidjson::Value v(array->Value(row_id));
+        ret.Insert(property_name, v, allocator);
         break;
       }
       case arrow::Type::type::FLOAT: {
         auto array =
             std::dynamic_pointer_cast<arrow::FloatArray>(column->chunk(0));
-        ret.Insert(property_name, array->Value(row_id), allocator);
+        rapidjson::Value v(array->Value(row_id));
+        ret.Insert(property_name, v, allocator);
         break;
       }
       case arrow::Type::type::DOUBLE: {
         auto array =
             std::dynamic_pointer_cast<arrow::DoubleArray>(column->chunk(0));
-        ret.Insert(property_name, array->Value(row_id), allocator);
+        rapidjson::Value v(array->Value(row_id));
+        ret.Insert(property_name, v, allocator);
         break;
       }
       case arrow::Type::type::STRING: {
         auto array =
             std::dynamic_pointer_cast<arrow::StringArray>(column->chunk(0));
-        ret.Insert(property_name, array->GetString(row_id), allocator);
+        rapidjson::Value v(array->GetString(row_id), allocator);
+        ret.Insert(property_name, v, allocator);
         break;
       }
       case arrow::Type::type::LARGE_STRING: {
         auto array = std::dynamic_pointer_cast<arrow::LargeStringArray>(
             column->chunk(0));
-        ret.Insert(property_name, array->GetString(row_id), allocator);
+        rapidjson::Value v(array->GetString(row_id), allocator);
+        ret.Insert(property_name, v, allocator);
         break;
       }
       default:
