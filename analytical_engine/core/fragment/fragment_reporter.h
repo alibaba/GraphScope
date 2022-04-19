@@ -563,7 +563,7 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
         auto prop_name = vertex_data->field(col_id)->name();
         auto type = vertex_data->column(col_id)->type();
         PropertyConverter<fragment_t>::NodeValue(fragment, v, type, prop_name,
-                                                 col_id, ref_data);
+                                                 col_id, ref_data, dynamic::Value::allocator_);
       }
       arc << ref_data;
     }
@@ -588,7 +588,7 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
             ref_data = dynamic::Value(rapidjson::kObjectType);
             auto edge_data = fragment->edge_data_table(e_label);
             PropertyConverter<fragment_t>::EdgeValue(edge_data, e.edge_id(),
-                                                     ref_data);
+                                                     ref_data, dynamic::Value::allocator_);
             arc << ref_data;
           }
         }
@@ -650,7 +650,7 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
         for (auto& e : edges) {
           dynamic::Value data(rapidjson::kObjectType);
           PropertyConverter<fragment_t>::EdgeValue(edge_data, e.edge_id(),
-                                                   data);
+                                                   data, dynamic::Value::allocator_);
           data_array.PushBack(data);
         }
       }
@@ -732,7 +732,7 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
             auto prop_name = vertex_data->field(col_id)->name();
             auto type = vertex_data->column(col_id)->type();
             PropertyConverter<fragment_t>::NodeValue(
-                fragment, v, type, prop_name, col_id, ref_data);
+                fragment, v, type, prop_name, col_id, ref_data, dynamic::Value::allocator_);
           }
           nodes_attr.PushBack(ref_data);
           v++;
@@ -832,7 +832,7 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
             for (auto& e : edges) {
               dynamic::Value data(rapidjson::kObjectType);
               PropertyConverter<fragment_t>::EdgeValue(edge_data, e.edge_id(),
-                                                       data);
+                                                       data, dynamic::Value::allocator_);
               neighbor_attrs.PushBack(data);
             }
           }

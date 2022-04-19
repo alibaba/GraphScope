@@ -322,28 +322,30 @@ class DynamicFragment
             for (auto& e : es) {
               if (e.src < ivnum_) {
                 if (e.dst < ivnum_) {
-                  oe_.put_edge(e.src, nbr_t(e.dst, e.edata));
+                  oe_.put_edge(e.src, std::move(nbr_t(e.dst, e.edata)));
                 } else {
                   // avoid copy.
-                  oe_.put_edge(e.src, nbr_t(e.dst, std::move(e.edata)));
+                  oe_.put_edge(e.src, std::move(nbr_t(e.dst, std::move(e.edata))));
                 }
               }
               if (e.dst < ivnum_) {
-                ie_.put_edge(e.dst, nbr_t(e.src, std::move(e.edata)));
+                ie_.put_edge(e.dst, std::move(nbr_t(e.src, std::move(e.edata))));
               }
             }
           }, thread_num, 1);
-      oe_.sort_neighbors_dense(oe_degree_to_add);
-      ie_.sort_neighbors_dense(ie_degree_to_add);
+      // oe_.sort_neighbors_dense(oe_degree_to_add);
+      // ie_.sort_neighbors_dense(ie_degree_to_add);
     } else {
       oe_.reserve_edges_dense(oe_degree_to_add);
       parallel_for(edges.begin(), edges.end(),
                    [&](uint32_t tid, std::vector<edge_t>& es) {
+            LOG(INFO) << "All move";
             for (auto& e : es) {
-              oe_.put_edge(e.src, nbr_t(e.dst, std::move(e.edata)));
+              nbr_t nbr(e.dst, std::move(e.edata));
+              oe_.put_edge(e.src, std::move(nbr));
             }
           }, thread_num, 1);
-      oe_.sort_neighbors_dense(oe_degree_to_add);
+      // oe_.sort_neighbors_dense(oe_degree_to_add);
     }
   }
 
@@ -1592,7 +1594,7 @@ class DynamicFragmentMutator {
         if (weight.empty()) {
           e_data.Update(edata_t(e[2]));
         } else {
-          e_data.Insert(weight, edata_t(e[2]));
+          e_data.Insert(weight, edata_t(e[2]), dynamic::Value::allocator_);
         }
       }
       src = std::move(e[0]);

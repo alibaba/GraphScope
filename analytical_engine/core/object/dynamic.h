@@ -143,17 +143,17 @@ class Value : public rapidjson::Value {
 
   // Insert for object
   template <typename T>
-  void Insert(const std::string& key, T&& value) {
+  void Insert(const std::string& key, T&& value, AllocatorT& allocator) {
     Value v_(value);
-    Base::AddMember(Value(key).Move(), v_, allocator_);
+    Base::AddMember(Value(key).Move(), v_, allocator);
   }
 
-  void Insert(const std::string& key, Value& value) {
-    Base::AddMember(Value(key).Move(), value, allocator_);
+  void Insert(const std::string& key, Value& value, AllocatorT& allocator) {
+    Base::AddMember(Value(key).Move(), value, allocator);
   }
 
-  void Insert(const std::string& key, rapidjson::Value& value) {
-    Base::AddMember(Value(key).Move(), value, allocator_);
+  void Insert(const std::string& key, rapidjson::Value& value, AllocatorT& allocator) {
+    Base::AddMember(Value(key).Move(), value, allocator);
   }
 
   // Update for object
@@ -222,8 +222,7 @@ class Value : public rapidjson::Value {
   friend std::ostream& operator<<(std::ostream&, Value const&);
 
  public:
-  // static AllocatorT allocator_;
-  AllocatorT allocator_;
+  static AllocatorT allocator_;
 };
 
 // Stringify Value to json.
@@ -238,8 +237,7 @@ static inline const char* Stringify(const Value& value) {
 // Parse json to Value.
 static inline void Parse(const std::string& str, Value& val) {
   // the document d must use the same allocator with other values
-  // rapidjson::Document d(&Value::allocator_);
-  rapidjson::Document d;
+  rapidjson::Document d(&Value::allocator_);
   d.Parse(str.c_str());
   val.Swap(d);  // constant time
 }
