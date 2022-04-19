@@ -391,6 +391,16 @@ class Graph(_GraphBase):
             )
         self._session = session
 
+    def __del__(self):
+        if self._session.info["status"] != "active" or self._key is None:
+            return
+        # cancel cache fetch future
+        if self.cache.enable_iter_cache:
+            self.cache.shutdown()
+        op = dag_utils.unload_nx_graph(self)
+        op.eval()
+        self._key = None
+
     @property
     def op(self):
         """The DAG op of this graph."""

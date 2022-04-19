@@ -762,6 +762,27 @@ def unload_graph(graph):
     return create_unload_op(graph.session_id, types_pb2.UNLOAD_GRAPH, [graph.op])
 
 
+def unload_nx_graph(graph):
+    """Unload a networkx graph.
+
+    Args:
+        The graph to unload.
+
+    Returns:
+        An op to unload the networkx `graph`.
+    """
+    config = {
+        types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
+    }
+    op = Operation(
+        graph.session_id,
+        types_pb2.UNLOAD_GRAPH,
+        config=config,
+        output_types=types_pb2.NULL_OUTPUT,
+    )
+    return op
+
+
 def unload_context(context):
     return create_unload_op(context.session_id, types_pb2.UNLOAD_CONTEXT, [context.op])
 
