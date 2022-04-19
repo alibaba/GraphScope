@@ -54,13 +54,16 @@ class Value : public rapidjson::Value {
   Value() noexcept : Base() {}
   // Copy constructor
   Value(const Value& rhs, AllocatorT& allocator = allocator_) {
-    Base::CopyFrom(rhs, allocator); }
-  explicit Value(const rapidjson::Value& rhs, AllocatorT& allocator = allocator_) {
+    Base::CopyFrom(rhs, allocator);
+  }
+  explicit Value(const rapidjson::Value& rhs,
+                 AllocatorT& allocator = allocator_) {
     Base::CopyFrom(rhs, allocator);
   }
   // Constructor with move semantics.
   Value(Value& rhs, AllocatorT& allocator = allocator_) {
-    Base::CopyFrom(rhs, allocator); }
+    Base::CopyFrom(rhs, allocator);
+  }
   // Value(Value& rhs) : Base(std::move(rhs)) {}
   // explicit Value(rapidjson::Value& rhs) { Base::CopyFrom(rhs, allocator_); }
   explicit Value(rapidjson::Value& rhs) : Base(std::move(rhs)) {}
@@ -145,8 +148,10 @@ class Value : public rapidjson::Value {
 
   // Constructor for copy-string from a string object (i.e. do make a copy of
   // string)
-  explicit Value(const std::string& s, AllocatorT& allocator = allocator_) : Base(s.c_str(), allocator) {}
-  explicit Value(const char* s, AllocatorT& allocator = allocator_) : Base(s, allocator) {}
+  explicit Value(const std::string& s, AllocatorT& allocator = allocator_)
+      : Base(s.c_str(), allocator) {}
+  explicit Value(const char* s, AllocatorT& allocator = allocator_)
+      : Base(s, allocator) {}
 
   void CopyFrom(const Value& rhs) {
     if (this != &rhs) {
@@ -165,7 +170,8 @@ class Value : public rapidjson::Value {
     Base::AddMember(rapidjson::Value(key, allocator).Move(), value, allocator);
   }
 
-  void Insert(const std::string& key, rapidjson::Value& value, AllocatorT& allocator) {
+  void Insert(const std::string& key, rapidjson::Value& value,
+              AllocatorT& allocator) {
     Base::AddMember(rapidjson::Value(key, allocator).Move(), value, allocator);
   }
 

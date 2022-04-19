@@ -288,28 +288,30 @@ class DynamicFragment
   }
 
   inline void buildCSRParallel(std::vector<std::vector<edge_t>>& edges,
-                        const std::vector<int>& oe_degree_to_add,
-                        const std::vector<int>& ie_degree_to_add) {
+                               const std::vector<int>& oe_degree_to_add,
+                               const std::vector<int>& ie_degree_to_add) {
     ie_.reserve_vertices(ivnum_);
     oe_.reserve_vertices(ivnum_);
 
     uint32_t thread_num = std::thread::hardware_concurrency();
 
     // parse edges
-    parallel_for(edges.begin(), edges.end(),
-                 [&](uint32_t tid, std::vector<edge_t>& es) {
-            if (load_strategy_ == grape::LoadStrategy::kOnlyOut) {
-              for (auto& e: es) {
-                CHECK(InnerVertexGid2Lid(e.src, e.src));
-                CHECK(Gid2Lid(e.dst, e.dst));
-              }
-            } else {
-              for (auto& e: es) {
-                CHECK(Gid2Lid(e.src, e.src));
-                CHECK(Gid2Lid(e.dst, e.dst));
-              }
+    parallel_for(
+        edges.begin(), edges.end(),
+        [&](uint32_t tid, std::vector<edge_t>& es) {
+          if (load_strategy_ == grape::LoadStrategy::kOnlyOut) {
+            for (auto& e : es) {
+              CHECK(InnerVertexGid2Lid(e.src, e.src));
+              CHECK(Gid2Lid(e.dst, e.dst));
             }
-        }, thread_num, 1);
+          } else {
+            for (auto& e : es) {
+              CHECK(Gid2Lid(e.src, e.src));
+              CHECK(Gid2Lid(e.dst, e.dst));
+            }
+          }
+        },
+        thread_num, 1);
 
     if (load_strategy_ == grape::LoadStrategy::kBothOutIn) {
       // reserve edges
@@ -317,8 +319,9 @@ class DynamicFragment
       oe_.reserve_edges_dense(oe_degree_to_add);
 
       // insert edges
-      parallel_for(edges.begin(), edges.end(),
-                   [&](uint32_t tid, std::vector<edge_t>& es) {
+      parallel_for(
+          edges.begin(), edges.end(),
+          [&](uint32_t tid, std::vector<edge_t>& es) {
             for (auto& e : es) {
               if (e.src < ivnum_) {
                 if (e.dst < ivnum_) {
@@ -335,18 +338,21 @@ class DynamicFragment
                 ie_.put_edge(e.dst, std::move(nbr));
               }
             }
-          }, thread_num, 1);
+          },
+          thread_num, 1);
       // oe_.sort_neighbors_dense(oe_degree_to_add);
       // ie_.sort_neighbors_dense(ie_degree_to_add);
     } else {
       oe_.reserve_edges_dense(oe_degree_to_add);
-      parallel_for(edges.begin(), edges.end(),
-                   [&](uint32_t tid, std::vector<edge_t>& es) {
+      parallel_for(
+          edges.begin(), edges.end(),
+          [&](uint32_t tid, std::vector<edge_t>& es) {
             for (auto& e : es) {
               nbr_t nbr(e.dst, std::move(e.edata));
               oe_.put_edge(e.src, std::move(nbr));
             }
-          }, thread_num, 1);
+          },
+          thread_num, 1);
       // oe_.sort_neighbors_dense(oe_degree_to_add);
     }
   }
