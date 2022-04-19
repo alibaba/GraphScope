@@ -342,7 +342,6 @@ class DynamicFragment
       oe_.reserve_edges_dense(oe_degree_to_add);
       parallel_for(edges.begin(), edges.end(),
                    [&](uint32_t tid, std::vector<edge_t>& es) {
-            LOG(INFO) << "All move";
             for (auto& e : es) {
               nbr_t nbr(e.dst, std::move(e.edata));
               oe_.put_edge(e.src, std::move(nbr));
@@ -1021,6 +1020,14 @@ class DynamicFragment
     return const_adj_list_t(oespliter_[v], get_oe_end(v));
   }
 
+  inline void InitAllocators(uint32_t num) {
+    allocators_ = std::make_shared<std::vector<dynamic::AllocatorT>>(num);
+  }
+
+  inline std::shared_ptr<std::vector<dynamic::AllocatorT>> GetAllocators() {
+    return allocators_;
+  }
+
  private:
   inline vid_t outerVertexLidToIndex(vid_t lid) const {
     return id_parser_.max_local_id() - lid - 1;
@@ -1510,6 +1517,9 @@ class DynamicFragment
   grape::VertexArray<inner_vertices_t, nbr_t*> iespliter_, oespliter_;
 
   using base_t::outer_vertices_of_frag_;
+
+  // allocators for convert
+  std::shared_ptr<std::vector<dynamic::AllocatorT>> allocators_;
 
   template <typename _vdata_t, typename _edata_t>
   friend class DynamicProjectedFragment;

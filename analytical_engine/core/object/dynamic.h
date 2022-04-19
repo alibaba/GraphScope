@@ -53,12 +53,14 @@ class Value : public rapidjson::Value {
   // Default constructor to create a null value.
   Value() noexcept : Base() {}
   // Copy constructor
-  Value(const Value& rhs) { Base::CopyFrom(rhs, allocator_); }
-  explicit Value(const rapidjson::Value& rhs) {
-    Base::CopyFrom(rhs, allocator_);
+  Value(const Value& rhs, AllocatorT& allocator = allocator_) {
+    Base::CopyFrom(rhs, allocator); }
+  explicit Value(const rapidjson::Value& rhs, AllocatorT& allocator = allocator_) {
+    Base::CopyFrom(rhs, allocator);
   }
   // Constructor with move semantics.
-  Value(Value& rhs) { Base::CopyFrom(rhs, allocator_); }
+  Value(Value& rhs, AllocatorT& allocator = allocator_) {
+    Base::CopyFrom(rhs, allocator); }
   // Value(Value& rhs) : Base(std::move(rhs)) {}
   // explicit Value(rapidjson::Value& rhs) { Base::CopyFrom(rhs, allocator_); }
   explicit Value(rapidjson::Value& rhs) : Base(std::move(rhs)) {}
@@ -91,6 +93,13 @@ class Value : public rapidjson::Value {
     return *this;
   }
 
+  Value& operator=(Value& rhs) noexcept {
+    if (this != &rhs) {
+      Base::operator=(rhs.Move());
+    }
+    return *this;
+  }
+
   // Move assignment.
   Value& operator=(Value&& rhs) noexcept {
     if (this != &rhs) {
@@ -99,7 +108,11 @@ class Value : public rapidjson::Value {
     return *this;
   }
   Value& operator=(rapidjson::Value&& rhs) noexcept {
-    Base::operator=(rhs.Move());
+    Base::operator=(rhs);
+    return *this;
+  }
+  Value& operator=(rapidjson::Value& rhs) noexcept {
+    Base::operator=(rhs);
     return *this;
   }
 
@@ -132,8 +145,8 @@ class Value : public rapidjson::Value {
 
   // Constructor for copy-string from a string object (i.e. do make a copy of
   // string)
-  explicit Value(const std::string& s) : Base(s.c_str(), allocator_) {}
-  explicit Value(const char* s) : Base(s, allocator_) {}
+  explicit Value(const std::string& s, AllocatorT& allocator = allocator_) : Base(s.c_str(), allocator) {}
+  explicit Value(const char* s, AllocatorT& allocator = allocator_) : Base(s, allocator) {}
 
   void CopyFrom(const Value& rhs) {
     if (this != &rhs) {
@@ -198,18 +211,18 @@ class Value : public rapidjson::Value {
 
   // PushBack for array
   template <typename T>
-  Value& PushBack(T value) {
-    Base::PushBack(value, allocator_);
+  Value& PushBack(T value, AllocatorT& allocator = allocator_) {
+    Base::PushBack(value, allocator);
     return *this;
   }
 
-  Value& PushBack(const std::string& str) {
-    Base::PushBack(Value(str).Move(), allocator_);
+  Value& PushBack(const std::string& str, AllocatorT& allocator = allocator_) {
+    Base::PushBack(Value(str).Move(), allocator);
     return *this;
   }
 
-  Value& SetString(const std::string& str) {
-    Base::SetString(str, allocator_);
+  Value& SetString(const std::string& str, AllocatorT& allocator = allocator_) {
+    Base::SetString(str, allocator);
     return *this;
   }
 
@@ -226,7 +239,7 @@ class Value : public rapidjson::Value {
 };
 
 // Stringify Value to json.
-static inline const char* Stringify(const Value& value) {
+static inline const char* Stringify(const rapidjson::Value& value) {
   static rapidjson::StringBuffer buffer;
   rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
   buffer.Clear();
@@ -235,7 +248,7 @@ static inline const char* Stringify(const Value& value) {
 }
 
 // Parse json to Value.
-static inline void Parse(const std::string& str, Value& val) {
+static inline void Parse(const std::string& str, rapidjson::Value& val) {
   // the document d must use the same allocator with other values
   rapidjson::Document d(&Value::allocator_);
   d.Parse(str.c_str());
@@ -274,6 +287,23 @@ struct hash<::gs::dynamic::Value> {
 }  // namespace std
 
 namespace grape {
+inline grape::InArchive& operator<<(grape::InArchive& archive,
+                                    const rapidjson::Value& value) {
+  if (value.IsInt64()) {
+    archive << value.GetInt64();
+  } else if (value.IsDouble()) {
+    archive << value.GetDouble();
+  } else if (value.IsString()) {
+    size_t size = value.GetStringLength();
+    archive << size;
+    archive.AddBytes(value.GetString(), size);
+  } else {
+    std::string json = gs::dynamic::Stringify(value);
+    archive << json;
+  }
+  return archive;
+}
+
 inline grape::InArchive& operator<<(grape::InArchive& archive,
                                     const gs::dynamic::Value& value) {
   if (value.IsInt64()) {

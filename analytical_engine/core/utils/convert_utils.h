@@ -31,37 +31,43 @@ struct PropertyConverter {
                                const typename FRAGMENT_T::vertex_t& v,
                                const std::shared_ptr<arrow::DataType> data_type,
                                const std::string& prop_name, int prop_id,
-                               dynamic::Value& ret,
-                               dynamic::AllocatorT& allocator) {
+                               rapidjson::Value& ret,
+                               dynamic::AllocatorT& allocator = dynamic::Value::allocator_) {
     switch (data_type->id()) {
     case arrow::Type::type::INT32: {
-      ret.Insert(prop_name, fragment->template GetData<int32_t>(v, prop_id), allocator);
+      rapidjson::Value v_(fragment->template GetData<int32_t>(v, prop_id));
+      ret.AddMember(rapidjson::Value(prop_name, allocator).Move(), v_, allocator);
       break;
     }
     case arrow::Type::type::INT64: {
-      ret.Insert(prop_name, fragment->template GetData<int64_t>(v, prop_id), allocator);
+      rapidjson::Value v_(fragment->template GetData<int64_t>(v, prop_id));
+      ret.AddMember(rapidjson::Value(prop_name, allocator).Move(), v_, allocator);
       break;
     }
     case arrow::Type::type::UINT32: {
-      ret.Insert(prop_name, fragment->template GetData<uint32_t>(v, prop_id), allocator);
+      rapidjson::Value v_(fragment->template GetData<uint32_t>(v, prop_id));
+      ret.AddMember(rapidjson::Value(prop_name, allocator).Move(), v_, allocator);
       break;
     }
     case arrow::Type::type::UINT64: {
-      ret.Insert(prop_name, fragment->template GetData<uint64_t>(v, prop_id), allocator);
+      rapidjson::Value v_(fragment->template GetData<uint64_t>(v, prop_id));
+      ret.AddMember(rapidjson::Value(prop_name, allocator).Move(), v_, allocator);
       break;
     }
     case arrow::Type::type::FLOAT: {
-      ret.Insert(prop_name, fragment->template GetData<float>(v, prop_id), allocator);
+      rapidjson::Value v_(fragment->template GetData<float>(v, prop_id));
+      ret.AddMember(rapidjson::Value(prop_name, allocator).Move(), v_, allocator);
       break;
     }
     case arrow::Type::type::DOUBLE: {
-      ret.Insert(prop_name, fragment->template GetData<double>(v, prop_id), allocator);
+      rapidjson::Value v_(fragment->template GetData<double>(v, prop_id));
+      ret.AddMember(rapidjson::Value(prop_name, allocator).Move(), v_, allocator);
       break;
     }
     case arrow::Type::type::STRING:
     case arrow::Type::type::LARGE_STRING: {
-      ret.Insert(prop_name,
-                 fragment->template GetData<std::string>(v, prop_id), allocator);
+      rapidjson::Value v_(fragment->template GetData<std::string>(v, prop_id).c_str(), allocator);
+      ret.AddMember(rapidjson::Value(prop_name, allocator).Move(), v_, allocator);
       break;
     }
     default:
@@ -71,8 +77,9 @@ struct PropertyConverter {
   }
 
   inline static void EdgeValue(const std::shared_ptr<arrow::Table>& data_table,
-                               int64_t row_id, dynamic::Value& ret,
-                               dynamic::AllocatorT& allocator) {
+                               int64_t row_id,
+                               rapidjson::Value& ret,
+                               dynamic::AllocatorT& allocator = dynamic::Value::allocator_) {
     for (auto col_id = 0; col_id < data_table->num_columns(); col_id++) {
       auto column = data_table->column(col_id);
       auto type = data_table->column(col_id)->type();
@@ -82,49 +89,49 @@ struct PropertyConverter {
         auto array =
             std::dynamic_pointer_cast<arrow::Int32Array>(column->chunk(0));
         rapidjson::Value v(array->Value(row_id));
-        ret.Insert(property_name, v, allocator);
+        ret.AddMember(rapidjson::Value(property_name, allocator).Move(), v, allocator);
         break;
       }
       case arrow::Type::type::INT64: {
         auto array =
             std::dynamic_pointer_cast<arrow::Int64Array>(column->chunk(0));
         rapidjson::Value v(array->Value(row_id));
-        ret.Insert(property_name, v, allocator);
+        ret.AddMember(rapidjson::Value(property_name, allocator).Move(), v, allocator);
         break;
       }
       case arrow::Type::type::UINT32: {
         auto array =
             std::dynamic_pointer_cast<arrow::UInt32Array>(column->chunk(0));
         rapidjson::Value v(array->Value(row_id));
-        ret.Insert(property_name, v, allocator);
+        ret.AddMember(rapidjson::Value(property_name, allocator).Move(), v, allocator);
         break;
       }
       case arrow::Type::type::FLOAT: {
         auto array =
             std::dynamic_pointer_cast<arrow::FloatArray>(column->chunk(0));
         rapidjson::Value v(array->Value(row_id));
-        ret.Insert(property_name, v, allocator);
+        ret.AddMember(rapidjson::Value(property_name, allocator).Move(), v, allocator);
         break;
       }
       case arrow::Type::type::DOUBLE: {
         auto array =
             std::dynamic_pointer_cast<arrow::DoubleArray>(column->chunk(0));
         rapidjson::Value v(array->Value(row_id));
-        ret.Insert(property_name, v, allocator);
+        ret.AddMember(rapidjson::Value(property_name, allocator).Move(), v, allocator);
         break;
       }
       case arrow::Type::type::STRING: {
         auto array =
             std::dynamic_pointer_cast<arrow::StringArray>(column->chunk(0));
-        rapidjson::Value v(array->GetString(row_id), allocator);
-        ret.Insert(property_name, v, allocator);
+        rapidjson::Value v(array->GetString(row_id).c_str(), allocator);
+        ret.AddMember(rapidjson::Value(property_name, allocator).Move(), v, allocator);
         break;
       }
       case arrow::Type::type::LARGE_STRING: {
         auto array = std::dynamic_pointer_cast<arrow::LargeStringArray>(
             column->chunk(0));
-        rapidjson::Value v(array->GetString(row_id), allocator);
-        ret.Insert(property_name, v, allocator);
+        rapidjson::Value v(array->GetString(row_id).c_str(), allocator);
+        ret.AddMember(rapidjson::Value(property_name, allocator).Move(), v, allocator);
         break;
       }
       default:

@@ -563,7 +563,7 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
         auto prop_name = vertex_data->field(col_id)->name();
         auto type = vertex_data->column(col_id)->type();
         PropertyConverter<fragment_t>::NodeValue(fragment, v, type, prop_name,
-                                                 col_id, ref_data, dynamic::Value::allocator_);
+                                                 col_id, ref_data);
       }
       arc << ref_data;
     }
@@ -572,7 +572,6 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
   void getEdgeData(std::shared_ptr<fragment_t>& fragment, label_id_t u_label_id,
                    const oid_t& u_oid, label_id_t v_label_id,
                    const oid_t& v_oid, grape::InArchive& arc) {
-    dynamic::Value ref_data;
     vid_t u_gid, v_gid;
     vertex_t u, v;
     auto vm_ptr = fragment->GetVertexMap();
@@ -585,10 +584,10 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
         auto oe = fragment->GetOutgoingAdjList(u, e_label);
         for (auto& e : oe) {
           if (v == e.neighbor()) {
-            ref_data = dynamic::Value(rapidjson::kObjectType);
+            dynamic::Value ref_data(rapidjson::kObjectType);
             auto edge_data = fragment->edge_data_table(e_label);
             PropertyConverter<fragment_t>::EdgeValue(edge_data, e.edge_id(),
-                                                     ref_data, dynamic::Value::allocator_);
+                                                     ref_data);
             arc << ref_data;
           }
         }
@@ -650,7 +649,7 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
         for (auto& e : edges) {
           dynamic::Value data(rapidjson::kObjectType);
           PropertyConverter<fragment_t>::EdgeValue(edge_data, e.edge_id(),
-                                                   data, dynamic::Value::allocator_);
+                                                   data);
           data_array.PushBack(data);
         }
       }
@@ -732,7 +731,7 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
             auto prop_name = vertex_data->field(col_id)->name();
             auto type = vertex_data->column(col_id)->type();
             PropertyConverter<fragment_t>::NodeValue(
-                fragment, v, type, prop_name, col_id, ref_data, dynamic::Value::allocator_);
+                fragment, v, type, prop_name, col_id, ref_data);
           }
           nodes_attr.PushBack(ref_data);
           v++;
@@ -832,7 +831,7 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
             for (auto& e : edges) {
               dynamic::Value data(rapidjson::kObjectType);
               PropertyConverter<fragment_t>::EdgeValue(edge_data, e.edge_id(),
-                                                       data, dynamic::Value::allocator_);
+                                                       data);
               neighbor_attrs.PushBack(data);
             }
           }
