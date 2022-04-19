@@ -153,8 +153,7 @@ class ArrowToDynamicConverter {
     const auto& schema = src_frag->schema();
 
     double start = grape::GetCurrentTime();
-    // uint32_t thread_num = std::thread::hardware_concurrency();
-    uint32_t thread_num = 2;
+    uint32_t thread_num = std::thread::hardware_concurrency();
     size_t ivnum = dst_vm->GetInnerVertexSize(fid);
     std::vector<std::vector<internal_vertex_t>> vertices(thread_num);
     std::vector<std::vector<edge_t>> edges(thread_num);
@@ -228,7 +227,7 @@ class ArrowToDynamicConverter {
           }, thread_num);
     }
     // check the graph is consistent
-    std::ofstream f("/Users/weibin/Dev/test/p2p_edges.e");
+    std::ofstream f("/root/p2p_edges.e");
     for (auto& vec : edges) {
       for (auto& e : vec) {
         f << e.src << " " << e.dst << " " << e.edata << "\n";
