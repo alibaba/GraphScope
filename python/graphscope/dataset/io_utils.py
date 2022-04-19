@@ -23,11 +23,14 @@ import shutil
 import sys
 import tarfile
 import tempfile
+import time
 import urllib
 import zipfile
 from urllib.request import urlretrieve
 
 from tqdm import tqdm
+
+from graphscope.config import GSConfig as gs_config
 
 logger = logging.getLogger("graphscope")
 
@@ -151,7 +154,7 @@ def validate_file(fpath, file_hash, algorithm="auto", chunk_size=65535):
     return False
 
 
-def download_file(
+def download_file(  # noqa: C901
     fname,
     origin,
     file_hash=None,
@@ -247,16 +250,29 @@ def download_file(
                 ProgressTracker.progbar = None
                 ProgressTracker.record_downloaded = None
 
-        error_msg = "URL fetch failure on {}:{} -- {}"
+        max_retries = gs_config.dataset_download_retries
+        error_msg_tpl = "URL fetch failure on {}:{} -- {}"
         try:
-            try:
-                urlretrieve(origin, fpath, show_progress)
-            except urllib.error.HTTPError as e:
-                raise Exception(error_msg.format(origin, e.code, e.msg))
-            except urllib.error.URLError as e:
-                # `URLError` has been made a subclass of OSError since version 3.3
-                # https://docs.python.org/3/library/urllib.error.html
-                raise Exception(error_msg.format(origin, e.errno, e.reason))
+            for retry in range(max_retries):
+                backoff = max(2**retry, 1.0)
+                try:
+                    urlretrieve(origin, fpath, show_progress)
+                except urllib.error.HTTPError as e:
+                    error_msg = error_msg_tpl.format(origin, e.code, e.msg)
+                    logger.warning("{0}, retry {1} times...".format(error_msg, retry))
+                    if retry >= max_retries - 1:
+                        raise Exception(error_msg)
+                    time.sleep(backoff)
+                except urllib.error.URLError as e:
+                    # `URLError` has been made a subclass of OSError since version 3.3
+                    # https://docs.python.org/3/library/urllib.error.html
+                    error_msg = error_msg.format(origin, e.errno, e.reason)
+                    logger.warning("{0}, retry {1} times...".format(error_msg, retry))
+                    if retry >= max_retries - 1:
+                        raise Exception(error_msg)
+                    time.sleep(backoff)
+                else:
+                    break
         except (Exception, KeyboardInterrupt):
             if os.path.exists(fpath):
                 os.remove(fpath)

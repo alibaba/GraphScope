@@ -165,4 +165,4 @@ def test_giraph_app(
 
     giraph_sssp = load_app(algo="giraph:com.alibaba.graphscope.example.giraph.SSSP")
     giraph_sssp(g, sourceId=6)
-    g.unload()
+    del g

@@ -104,3 +104,6 @@ class GSConfig(object):
     k8s_dataset_image = (
         f"registry.cn-hongkong.aliyuncs.com/graphscope/dataset:{__version__}"
     )
+
+    # download_retries
+    dataset_download_retries = 3
