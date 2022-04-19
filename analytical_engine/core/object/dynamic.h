@@ -144,16 +144,16 @@ class Value : public rapidjson::Value {
   // Insert for object
   template <typename T>
   void Insert(const std::string& key, T&& value, AllocatorT& allocator) {
-    Value v_(value);
-    Base::AddMember(Value(key).Move(), v_, allocator);
+    rapidjson::Value v_(value);
+    Base::AddMember(rapidjson::Value(key, allocator).Move(), v_, allocator);
   }
 
   void Insert(const std::string& key, Value& value, AllocatorT& allocator) {
-    Base::AddMember(Value(key).Move(), value, allocator);
+    Base::AddMember(rapidjson::Value(key, allocator).Move(), value, allocator);
   }
 
   void Insert(const std::string& key, rapidjson::Value& value, AllocatorT& allocator) {
-    Base::AddMember(Value(key).Move(), value, allocator);
+    Base::AddMember(rapidjson::Value(key, allocator).Move(), value, allocator);
   }
 
   // Update for object

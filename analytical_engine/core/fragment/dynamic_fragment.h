@@ -322,14 +322,17 @@ class DynamicFragment
             for (auto& e : es) {
               if (e.src < ivnum_) {
                 if (e.dst < ivnum_) {
-                  oe_.put_edge(e.src, std::move(nbr_t(e.dst, e.edata)));
+                  nbr_t nbr(e.dst, e.edata);
+                  oe_.put_edge(e.src, std::move(nbr));
                 } else {
                   // avoid copy.
-                  oe_.put_edge(e.src, std::move(nbr_t(e.dst, std::move(e.edata))));
+                  nbr_t nbr(e.dst, std::move(e.edata));
+                  oe_.put_edge(e.src, std::move(nbr));
                 }
               }
               if (e.dst < ivnum_) {
-                ie_.put_edge(e.dst, std::move(nbr_t(e.src, std::move(e.edata))));
+                nbr_t nbr(e.src, std::move(e.edata));
+                ie_.put_edge(e.dst, std::move(nbr));
               }
             }
           }, thread_num, 1);

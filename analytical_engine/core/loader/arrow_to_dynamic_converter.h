@@ -227,7 +227,7 @@ class ArrowToDynamicConverter {
           }, thread_num);
     }
     // check the graph is consistent
-    std::ofstream f("/root/p2p_edges.e");
+    std::ofstream f("/Users/weibin/Dev/test/p2p_edges.e");
     for (auto& vec : edges) {
       for (auto& e : vec) {
         f << e.src << " " << e.dst << " " << e.edata << "\n";
@@ -241,20 +241,20 @@ class ArrowToDynamicConverter {
 
     auto dynamic_frag = std::make_shared<dst_fragment_t>(dst_vm);
     start = grape::GetCurrentTime();
-    // dynamic_frag->Init(src_frag->fid(), src_frag->directed(), vertices, edges, oe_degree, ie_degree);
+    dynamic_frag->Init(src_frag->fid(), src_frag->directed(), vertices, edges, oe_degree, ie_degree);
     LOG(INFO) << "Convert fragment: " << grape::GetCurrentTime() - start;
 
     // check the graph is consistent
     /*
-    std::ofstream f("/Users/weibin/Dev/test/p2p_dy.e");
+    std::ofstream f2("/Users/weibin/Dev/test/p2p_dy.e");
     auto inner_vertices = dynamic_frag->InnerVertices();
     for (auto v : inner_vertices) {
       auto oe = dynamic_frag->GetOutgoingAdjList(v);
       for (auto& e : oe) {
-        f << dynamic_frag->GetId(v) << " " << dynamic_frag->GetId(e.get_neighbor()) << " " << e.get_data()  << "\n";
+        f2 << dynamic_frag->GetId(v) << " " << dynamic_frag->GetId(e.get_neighbor()) << " " << e.get_data()  << "\n";
       }
     }
-    f.close();
+    f2.close();
     */
     return dynamic_frag;
   }
