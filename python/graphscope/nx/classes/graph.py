@@ -392,6 +392,7 @@ class Graph(_GraphBase):
         self._session = session
 
     def __del__(self):
+        print("Delete graph", self._key)
         if self._session.info["status"] != "active" or self._key is None:
             return
         # cancel cache fetch future
@@ -399,6 +400,7 @@ class Graph(_GraphBase):
             self.cache.shutdown()
         op = dag_utils.unload_nx_graph(self)
         op.eval()
+        print("Delete graph done", self._key)
         self._key = None
 
     @property
