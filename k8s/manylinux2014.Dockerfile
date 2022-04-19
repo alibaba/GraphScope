@@ -12,7 +12,7 @@ RUN yum install -y autoconf m4 git krb5-devel perl-IPC-Cmd rapidjson-devel \
     yum clean all && \
     rm -fr /var/cache/yum && \
     cd /tmp && \
-    wget https://github.com/Kitware/CMake/releases/download/v3.19.1/cmake-3.19.1-Linux-x86_64.sh && \
+    wget -q https://github.com/Kitware/CMake/releases/download/v3.19.1/cmake-3.19.1-Linux-x86_64.sh && \
     bash cmake-3.19.1-Linux-x86_64.sh --prefix=/usr --skip-license && \
     cd /tmp && \
     rm -rf /tmp/cmake-3.19.1-Linux-x86_64.sh
@@ -55,9 +55,9 @@ RUN cd /tmp && \
 
 # apache arrow v1.0.1
 RUN cd /tmp && \
-    wget -q https://github.com/apache/arrow/archive/apache-arrow-1.0.1.tar.gz && \
-    tar zxvf apache-arrow-1.0.1.tar.gz && \
-    cd arrow-apache-arrow-1.0.1 && \
+    wget -q https://github.com/apache/arrow/archive/apache-arrow-7.0.0.tar.gz && \
+    tar zxvf apache-arrow-7.0.0.tar.gz && \
+    cd arrow-apache-arrow-7.0.0 && \
     mkdir build && \
     cd build && \
     cmake ../cpp \
@@ -246,7 +246,7 @@ RUN mkdir -p /tmp/maven /usr/share/maven/ref \
     && ln -s /usr/share/maven/bin/mvn /usr/bin/mvn \
     && export LD_LIBRARY_PATH=$(echo "$LD_LIBRARY_PATH" | sed "s/::/:/g")
 
-# rust
+# go, zetcd
 RUN cd /tmp && \
     wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz && \
     tar -C /usr/local -xzf go1.15.5.linux-amd64.tar.gz && \
@@ -299,6 +299,7 @@ ENV PATH=${PATH}:/home/graphscope/.local/bin
 ENV LIBCLANG_PATH=/opt/llvm11/lib
 ENV LLVM_CONFIG_PATH=/opt/llvm11/bin/llvm-config
 
+# Rust
 RUN curl -sf -L https://static.rust-lang.org/rustup.sh | \
         sh -s -- -y --profile minimal --default-toolchain stable && \
     echo "source ~/.cargo/env" >> ~/.bashrc && \
