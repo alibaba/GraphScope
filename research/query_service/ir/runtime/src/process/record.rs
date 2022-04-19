@@ -106,9 +106,9 @@ impl Entry {
         }
     }
 
-    pub fn as_mut_graph_path(&mut self) -> Option<&mut GraphPath> {
+    pub fn as_collection(&self) -> Option<&Vec<RecordElement>> {
         match self {
-            Entry::Element(record_element) => record_element.as_mut_graph_path(),
+            Entry::Collection(record_collection) => Some(record_collection),
             _ => None,
         }
     }
@@ -229,6 +229,12 @@ impl Into<Entry> for CommonObject {
 impl Into<Entry> for RecordElement {
     fn into(self) -> Entry {
         Entry::Element(self)
+    }
+}
+
+impl Into<Entry> for Vec<RecordElement> {
+    fn into(self) -> Entry {
+        Entry::Collection(self)
     }
 }
 

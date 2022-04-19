@@ -147,7 +147,7 @@ impl Element for GraphObject {
 }
 
 impl GraphElement for GraphObject {
-    fn id(&self) -> u64 {
+    fn id(&self) -> ID {
         match self {
             GraphObject::V(v) => v.id(),
             GraphObject::E(e) => e.id(),
