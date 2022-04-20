@@ -1,16 +1,14 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * <p>http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
+ * <p>Unless required by applicable law or agreed to in writing, software distributed under the
+ * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 package com.alibaba.maxgraph.common.util;
@@ -20,13 +18,11 @@ import java.util.List;
 
 /**
  * murmur hash 2.0.
- * <p>
- * The murmur hash is a relatively fast hash function from
- * http://murmurhash.googlepages.com/ for platforms with efficient
- * multiplication.
- * <p>
- * This is a re-implementation of the original C code plus some additional
- * features.
+ *
+ * <p>The murmur hash is a relatively fast hash function from http://murmurhash.googlepages.com/ for
+ * platforms with efficient multiplication.
+ *
+ * <p>This is a re-implementation of the original C code plus some additional features.
  */
 public final class PkHashUtils {
 
@@ -48,9 +44,9 @@ public final class PkHashUtils {
     /**
      * Generates 64 bit hash from byte array of the given length and seed.
      *
-     * @param data   byte array to hash
+     * @param data byte array to hash
      * @param length length of the array to hash
-     * @param seed   initial seed value
+     * @param seed initial seed value
      * @return 64 bit hash of the given array
      */
     private static long hash64(final byte[] data, int length, int seed) {
@@ -58,7 +54,6 @@ public final class PkHashUtils {
         final int r = 47;
 
         long h = (seed & 0xffffffffL) ^ (length * m);
-
         int length8 = length / 8;
 
         for (int i = 0; i < length8; i++) {
@@ -109,7 +104,7 @@ public final class PkHashUtils {
     /**
      * Generates 64 bit hash from byte array with default seed value.
      *
-     * @param data   byte array to hash
+     * @param data byte array to hash
      * @param length length of the array to hash
      * @return 64 bit hash of the given string
      */
