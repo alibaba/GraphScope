@@ -39,10 +39,9 @@ struct DynamicWrapper {
   static void to_dynamic(T s, dynamic::Value& t) { t = dynamic::Value(s); }
 
   static void to_dynamic_array(const std::string& label, T s,
-                               dynamic::Value& t,
-                               dynamic::AllocatorT& allocator = dynamic::Value::allocator_) {
+                               dynamic::Value& t) {
     t.SetArray();
-    t.PushBack(label, allocator).PushBack(s, allocator);
+    t.PushBack(label).PushBack(s);
   }
 };
 
@@ -51,15 +50,12 @@ struct DynamicWrapper {
  */
 template <>
 struct DynamicWrapper<int64_t> {
-  static void to_dynamic(int64_t s, dynamic::Value& t, dynamic::AllocatorT& allocator = dynamic::Value::allocator_) {
-    t.SetInt64(s);
-  }
+  static void to_dynamic(int64_t s, dynamic::Value& t) { t.SetInt64(s); }
 
   static void to_dynamic_array(const std::string& label, int64_t s,
-                               dynamic::Value& t,
-                               dynamic::AllocatorT& allocator = dynamic::Value::allocator_) {
+                               dynamic::Value& t) {
     t.SetArray();
-    t.PushBack(label, allocator).PushBack(s, allocator);
+    t.PushBack(label).PushBack(s);
   }
 };
 
@@ -68,16 +64,14 @@ struct DynamicWrapper<int64_t> {
  */
 template <>
 struct DynamicWrapper<std::string> {
-  static void to_dynamic(arrow::util::string_view s, dynamic::Value& t,
-                         dynamic::AllocatorT& allocator = dynamic::Value::allocator_) {
-    t.SetString(s.to_string(), allocator);
+  static void to_dynamic(arrow::util::string_view s, dynamic::Value& t) {
+    t.SetString(s.to_string());
   }
 
   static void to_dynamic_array(const std::string& label,
-                               arrow::util::string_view s, dynamic::Value& t,
-                               dynamic::AllocatorT& allocator = dynamic::Value::allocator_) {
+                               arrow::util::string_view s, dynamic::Value& t) {
     t.SetArray();
-    t.PushBack(label, allocator).PushBack(s.to_string(), allocator);
+    t.PushBack(label).PushBack(s.to_string());
   }
 };
 
@@ -107,7 +101,11 @@ class ArrowToDynamicConverter {
 
   bl::result<std::shared_ptr<dst_fragment_t>> Convert(
       const std::shared_ptr<src_fragment_t>& arrow_frag) {
-    auto arrow_vm = arrow_frag->GetVertexMap();
+    arrow_vm_ptr_ = arrow_frag->GetVertexMap();
+    CHECK(arrow_vm_ptr_->fnum() == comm_spec_.fnum());
+    arrow_id_parser_.Init(comm_spec_.fnum(), arrow_vm_ptr_->label_num());
+    dynamic_id_parser_.init(comm_spec_.fnum());
+
     BOOST_LEAF_AUTO(dynamic_vm, convertVertexMap(arrow_frag));
     BOOST_LEAF_AUTO(dynamic_frag, convertFragment(arrow_frag, dynamic_vm));
     return dynamic_frag;
@@ -116,32 +114,37 @@ class ArrowToDynamicConverter {
  private:
   bl::result<std::shared_ptr<vertex_map_t>> convertVertexMap(
       const std::shared_ptr<src_fragment_t>& arrow_frag) {
-    auto src_vm_ptr = arrow_frag->GetVertexMap();
     const auto& schema = arrow_frag->schema();
-    auto fnum = src_vm_ptr->fnum();
-    auto dst_vm_ptr = std::make_shared<vertex_map_t>(comm_spec_);
-    vineyard::IdParser<vid_t> id_parser;
 
-    CHECK(src_vm_ptr->fnum() == comm_spec_.fnum());
+    auto dst_vm_ptr = std::make_shared<vertex_map_t>(comm_spec_);
     dst_vm_ptr->Init();
     typename vertex_map_t::partitioner_t partitioner(comm_spec_.fnum());
     dst_vm_ptr->SetPartitioner(partitioner);
-    id_parser.Init(fnum, src_vm_ptr->label_num());
     dynamic::Value to_oid;
 
-    for (label_id_t v_label = 0; v_label < src_vm_ptr->label_num(); v_label++) {
-      std::string label_name = schema.GetVertexLabelName(v_label);
-      for (fid_t fid = 0; fid < fnum; fid++) {
-        for (vid_t offset = 0;
-             offset < src_vm_ptr->GetInnerVertexSize(fid, v_label); offset++) {
-          auto gid = id_parser.GenerateId(fid, v_label, offset);
-          typename vineyard::InternalType<oid_t>::type oid;
-
-          CHECK(src_vm_ptr->GetOid(gid, oid));
-          if (v_label == default_label_id_) {
+    for (label_id_t v_label = 0; v_label < arrow_vm_ptr_->label_num();
+         v_label++) {
+      if (v_label == default_label_id_) {
+        for (fid_t fid = 0; fid < comm_spec_.fnum(); fid++) {
+          for (vid_t offset = 0;
+               offset < arrow_vm_ptr_->GetInnerVertexSize(fid, v_label);
+               offset++) {
+            auto gid = arrow_id_parser_.GenerateId(fid, v_label, offset);
+            typename vineyard::InternalType<oid_t>::type oid;
+            CHECK(arrow_vm_ptr_->GetOid(gid, oid));
             DynamicWrapper<oid_t>::to_dynamic(oid, to_oid);
             dst_vm_ptr->AddVertex(std::move(to_oid), gid);
-          } else {
+          }
+        }
+      } else {
+        std::string label_name = schema.GetVertexLabelName(v_label);
+        for (fid_t fid = 0; fid < comm_spec_.fnum(); fid++) {
+          for (vid_t offset = 0;
+               offset < arrow_vm_ptr_->GetInnerVertexSize(fid, v_label);
+               offset++) {
+            auto gid = arrow_id_parser_.GenerateId(fid, v_label, offset);
+            typename vineyard::InternalType<oid_t>::type oid;
+            CHECK(arrow_vm_ptr_->GetOid(gid, oid));
             DynamicWrapper<oid_t>::to_dynamic_array(label_name, oid, to_oid);
             dst_vm_ptr->AddVertex(std::move(to_oid), gid);
           }
@@ -157,7 +160,6 @@ class ArrowToDynamicConverter {
       const std::shared_ptr<vertex_map_t>& dst_vm) {
     LOG(INFO) << "Start to convert fragment.";
     auto fid = src_frag->fid();
-    const auto& schema = src_frag->schema();
 
     double start = grape::GetCurrentTime();
     auto dynamic_frag = std::make_shared<dst_fragment_t>(dst_vm);
@@ -166,28 +168,24 @@ class ArrowToDynamicConverter {
         comm_spec_.local_num();
     // Init allocators for dynamic fragment
     dynamic_frag->allocators_ =
-      std::make_shared<std::vector<dynamic::AllocatorT>>(thread_num);
+        std::make_shared<std::vector<dynamic::AllocatorT>>(thread_num);
     auto& allocators = dynamic_frag->allocators_;
     std::vector<std::vector<internal_vertex_t>> vertices(thread_num);
     std::vector<std::vector<edge_t>> edges(thread_num);
 
-    size_t ivnum = dst_vm->GetInnerVertexSize(fid);
-    std::vector<int> oe_degree(ivnum, 0);
-    std::vector<int> ie_degree(ivnum, 0);
+    std::vector<int> oe_degree(dst_vm->GetInnerVertexSize(fid), 0);
+    std::vector<int> ie_degree(dst_vm->GetInnerVertexSize(fid), 0);
     LOG(INFO) << "Start process vertices and edges";
     for (label_id_t v_label = 0; v_label < src_frag->vertex_label_num();
          v_label++) {
       auto inner_vertices = src_frag->InnerVertices(v_label);
       auto v_data = src_frag->vertex_data_table(v_label);
-      std::string label_name = schema.GetVertexLabelName(v_label);
 
       parallel_for(
           inner_vertices.begin(), inner_vertices.end(),
           [&](uint32_t tid, vertex_t u) {
-            dynamic::Value u_oid(src_frag->GetId(u));
-            vid_t u_gid, v_gid;
-            CHECK(dst_vm->GetGid(fid, u_oid, u_gid));
-            vid_t lid = dst_vm->GetLidFromGid(u_gid);
+            vid_t u_gid = gid2Gid(src_frag->GetInnerVertexGid(u));
+            vid_t lid = dynamic_id_parser_.get_local_id(u_gid);
             // N.B: th last column is id, we ignore it.
             dynamic::Value vertex_data(rapidjson::kObjectType);
             for (auto col_id = 0; col_id < v_data->num_columns() - 1;
@@ -211,8 +209,7 @@ class ArrowToDynamicConverter {
                 auto v = e.get_neighbor();
                 auto e_id = e.edge_id();
                 auto v_label_id = src_frag->vertex_label(v);
-                dynamic::Value v_oid(src_frag->GetId(v));
-                CHECK(dst_vm->GetGid(v_oid, v_gid));
+                vid_t v_gid = gid2Gid(src_frag->Vertex2Gid(v));
                 dynamic::Value edge_data(rapidjson::kObjectType);
                 PropertyConverter<src_fragment_t>::EdgeValue(
                     e_data, e_id, edge_data, (*allocators)[tid]);
@@ -227,8 +224,7 @@ class ArrowToDynamicConverter {
                   if (src_frag->IsOuterVertex(v)) {
                     auto e_id = e.edge_id();
                     auto v_label_id = src_frag->vertex_label(v);
-                    dynamic::Value v_oid(src_frag->GetId(v));
-                    CHECK(dst_vm->GetGid(v_oid, v_gid));
+                    vid_t v_gid = gid2Gid(src_frag->GetOuterVertexGid(v));
                     dynamic::Value edge_data(rapidjson::kObjectType);
                     PropertyConverter<src_fragment_t>::EdgeValue(
                         e_data, e_id, edge_data, (*allocators)[tid]);
@@ -240,7 +236,6 @@ class ArrowToDynamicConverter {
           },
           thread_num);
     }
-
     LOG(INFO) << "Process vertices and Edges: "
               << grape::GetCurrentTime() - start;
 
@@ -252,8 +247,21 @@ class ArrowToDynamicConverter {
     return dynamic_frag;
   }
 
+  vid_t gid2Gid(const vid_t gid) const {
+    auto fid = arrow_id_parser_.GetFid(gid);
+    auto label_id = arrow_id_parser_.GetLabelId(gid);
+    auto offset = arrow_id_parser_.GetOffset(gid);
+    for (label_id_t i = 0; i < label_id; ++i) {
+      offset += arrow_vm_ptr_->GetInnerVertexSize(fid, i);
+    }
+    return dynamic_id_parser_.generate_global_id(fid, offset);
+  }
+
   grape::CommSpec comm_spec_;
   label_id_t default_label_id_;
+  std::shared_ptr<typename src_fragment_t::vertex_map_t> arrow_vm_ptr_;
+  vineyard::IdParser<vid_t> arrow_id_parser_;
+  grape::IdParser<vid_t> dynamic_id_parser_;
 };
 
 }  // namespace gs

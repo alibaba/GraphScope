@@ -123,7 +123,7 @@ class DynamicFragment
     init(fid, directed);
 
     load_strategy_ = directed ? grape::LoadStrategy::kBothOutIn
-                              : grape::LoadStrategy::kOnlyIn;
+                              : grape::LoadStrategy::kOnlyOut;
 
     ovnum_ = 0;
     static constexpr vid_t invalid_vid = std::numeric_limits<vid_t>::max();
@@ -211,7 +211,7 @@ class DynamicFragment
             std::vector<int>& ie_degree_to_add, uint32_t thread_num) {
     init(fid, directed);
     load_strategy_ = directed ? grape::LoadStrategy::kBothOutIn
-                              : grape::LoadStrategy::kOnlyIn;
+                              : grape::LoadStrategy::kOnlyOut;
 
     ovnum_ = 0;
     if (load_strategy_ == grape::LoadStrategy::kOnlyOut) {
@@ -262,13 +262,13 @@ class DynamicFragment
     // process vertices data parallel
     if (sizeof(internal_vertex_t) > sizeof(vid_t)) {
       parallel_for(
-        vertices.begin(), vertices.end(),
-        [&](uint32_t tid, std::vector<internal_vertex_t>& vs) {
-          for (auto& v : vs) {
-            ivdata_[v.vid] = std::move(v.vdata);
-          }
-        },
-        thread_num, 1);
+          vertices.begin(), vertices.end(),
+          [&](uint32_t tid, std::vector<internal_vertex_t>& vs) {
+            for (auto& v : vs) {
+              ivdata_[v.vid] = std::move(v.vdata);
+            }
+          },
+          thread_num, 1);
     }
   }
 

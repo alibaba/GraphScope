@@ -53,17 +53,12 @@ class Value : public rapidjson::Value {
   // Default constructor to create a null value.
   Value() noexcept : Base() {}
   // Copy constructor
-  Value(const Value& rhs, AllocatorT& allocator = allocator_) {
-    Base::CopyFrom(rhs, allocator);
-  }
-  explicit Value(const rapidjson::Value& rhs,
-                 AllocatorT& allocator = allocator_) {
-    Base::CopyFrom(rhs, allocator);
+  Value(const Value& rhs) { Base::CopyFrom(rhs, allocator_); }
+  explicit Value(const rapidjson::Value& rhs) {
+    Base::CopyFrom(rhs, allocator_);
   }
   // Constructor with move semantics.
-  Value(Value& rhs, AllocatorT& allocator = allocator_) {
-    Base::CopyFrom(rhs, allocator);
-  }
+  Value(Value& rhs) { Base::CopyFrom(rhs, allocator_); }
   // Value(Value& rhs) : Base(std::move(rhs)) {}
   // explicit Value(rapidjson::Value& rhs) { Base::CopyFrom(rhs, allocator_); }
   explicit Value(rapidjson::Value& rhs) : Base(std::move(rhs)) {}
@@ -71,8 +66,7 @@ class Value : public rapidjson::Value {
   Value(Value&& rhs) noexcept : Base(std::move(rhs)) {}
   explicit Value(rapidjson::Value&& rhs) : Base(std::move(rhs)) {}
   // Constructor with value type
-  explicit Value(rapidjson::Type type) noexcept : Base(type) {
-  }
+  explicit Value(rapidjson::Type type) noexcept : Base(type) {}
   // Constructor for common type
   explicit Value(bool b) noexcept : Base(b) {}
   explicit Value(int i) noexcept : Base(i) {}
@@ -142,12 +136,8 @@ class Value : public rapidjson::Value {
 
   // Constructor for copy-string from a string object (i.e. do make a copy of
   // string)
-  explicit Value(const std::string& s, AllocatorT& allocator = allocator_)
-      : Base(s.c_str(), allocator) {
-  }
-  explicit Value(const char* s, AllocatorT& allocator = allocator_)
-      : Base(s, allocator) {
-  }
+  explicit Value(const std::string& s) : Base(s.c_str(), allocator_) {}
+  explicit Value(const char* s) : Base(s, allocator_) {}
 
   void CopyFrom(const Value& rhs) {
     if (this != &rhs) {
@@ -157,18 +147,19 @@ class Value : public rapidjson::Value {
 
   // Insert for object
   template <typename T>
-  void Insert(const std::string& key, T&& value, AllocatorT& allocator) {
+  void Insert(const std::string& key, T&& value) {
     Value v_(value);
-    Base::AddMember(rapidjson::Value(key, allocator).Move(), v_, allocator);
+    Base::AddMember(rapidjson::Value(key, allocator_).Move(), v_, allocator_);
   }
 
-  void Insert(const std::string& key, Value& value, AllocatorT& allocator) {
-    Base::AddMember(rapidjson::Value(key, allocator).Move(), value, allocator);
+  void Insert(const std::string& key, Value& value) {
+    Base::AddMember(rapidjson::Value(key, allocator_).Move(), value,
+                    allocator_);
   }
 
-  void Insert(const std::string& key, rapidjson::Value& value,
-              AllocatorT& allocator) {
-    Base::AddMember(rapidjson::Value(key, allocator).Move(), value, allocator);
+  void Insert(const std::string& key, rapidjson::Value& value) {
+    Base::AddMember(rapidjson::Value(key, allocator_).Move(), value,
+                    allocator_);
   }
 
   // Update for object
@@ -213,18 +204,18 @@ class Value : public rapidjson::Value {
 
   // PushBack for array
   template <typename T>
-  Value& PushBack(T value, AllocatorT& allocator = allocator_) {
-    Base::PushBack(value, allocator);
+  Value& PushBack(T value) {
+    Base::PushBack(value, allocator_);
     return *this;
   }
 
-  Value& PushBack(const std::string& str, AllocatorT& allocator = allocator_) {
-    Base::PushBack(Value(str).Move(), allocator);
+  Value& PushBack(const std::string& str) {
+    Base::PushBack(Value(str).Move(), allocator_);
     return *this;
   }
 
-  Value& SetString(const std::string& str, AllocatorT& allocator = allocator_) {
-    Base::SetString(str, allocator);
+  Value& SetString(const std::string& str) {
+    Base::SetString(str, allocator_);
     return *this;
   }
 
