@@ -71,7 +71,7 @@ class Cache:
     def warmup(self):
         """Warm up the iteration cache."""
         self._len = self._graph.number_of_nodes()
-        if False:
+        if self._len > 1000:
             # avoid much small graphs to compete thread resource
             self.enable_iter_cache = True
             self._async_fetch_node_id_cache(0)
