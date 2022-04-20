@@ -46,7 +46,7 @@ impl<E: Into<GraphObject> + 'static> FilterMapFunction<Record, Record>
             let id = v.id();
             let iter = self.stmt.exec(id)?;
             let mut neighbors_collection = vec![];
-            if let Some(pre_entry) = input.get(self.edge_or_end_v_tag.as_ref()) {
+            if let Some(pre_entry) = input.take(self.edge_or_end_v_tag.as_ref()) {
                 // the case of expansion and intersection
                 let neighbors_id_set: HashSet<ID> = iter.map(|e| e.into().id()).collect();
                 let pre_collection =
@@ -76,7 +76,6 @@ impl<E: Into<GraphObject> + 'static> FilterMapFunction<Record, Record>
                 Ok(Some(input))
             }
         } else if let Some(_graph_path) = entry.as_graph_path() {
-            // TODO: deal with path entry?
             Err(FnExecError::unsupported_error(
                 "Have not support to expand and intersect neighbors on a path entry in EdgeExpandIntersectionOperator yet",
             ))?
