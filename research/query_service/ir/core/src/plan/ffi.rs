@@ -1095,7 +1095,7 @@ mod union {
     /// To initialize a union operator
     #[no_mangle]
     pub extern "C" fn init_union_operator() -> *const c_void {
-        let union = Box::new(pb::Union { parents: vec![] });
+        let union = Box::new(pb::Union { parents: vec![], is_intersection: false });
         Box::into_raw(union) as *const c_void
     }
 

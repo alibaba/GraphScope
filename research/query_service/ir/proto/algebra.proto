@@ -73,7 +73,8 @@ message Join {
 
 // Union two relations
 message Union {
-  repeated int32 parents = 3;
+  repeated int32 parents = 1;
+  bool is_intersection = 2;
 }
 
 message GroupBy {

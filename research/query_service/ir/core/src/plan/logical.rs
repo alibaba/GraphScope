@@ -2202,7 +2202,7 @@ mod test {
         let id2 = plan
             .append_operator_as_node(expand3.into(), vec![opr_id])
             .unwrap();
-        let union = pb::Union { parents: vec![id1 as i32, id2 as i32] };
+        let union = pb::Union { parents: vec![id1 as i32, id2 as i32], is_intersection: false };
         plan.append_operator_as_node(union.into(), vec![id1, id2])
             .unwrap();
         assert_eq!(plan.meta.get_curr_nodes(), vec![id1, id2]);
