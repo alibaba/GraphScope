@@ -2071,7 +2071,9 @@ class Graph(_GraphBase):
         """Init graph with arrow property graph"""
         # check session and direction compatible
         if arrow_property_graph.session_id != self.session_id:
-            raise NetworkXError("The source graph is not loaded in session {}." % self.session_id)
+            raise NetworkXError(
+                "The source graph is not loaded in session {}." % self.session_id
+            )
         if arrow_property_graph.is_directed() != self.is_directed():
             if arrow_property_graph.is_directed():
                 msg = "The source graph is a directed graph, can't be used to init nx.Graph. You may use nx.DiGraph"
