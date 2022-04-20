@@ -159,6 +159,14 @@ impl Record {
         }
     }
 
+    pub fn take(&mut self, tag: Option<&KeyId>) -> Option<Arc<Entry>> {
+        if let Some(tag) = tag {
+            self.columns.remove(*tag as usize)
+        } else {
+            self.curr.take()
+        }
+    }
+
     /// To join this record with `other` record. After the join, the columns
     /// from both sides will be merged (and deduplicated). The head of the joined
     /// record will be specified according to `HeadJoinOpt`.
@@ -327,14 +335,14 @@ impl<E> RecordExpandIter<E> {
     }
 }
 
-impl<E: Into<GraphObject>> Iterator for RecordExpandIter<E> {
+impl<E: Into<Entry>> Iterator for RecordExpandIter<E> {
     type Item = Record;
 
     fn next(&mut self) -> Option<Self::Item> {
         let mut record = self.origin.clone();
         match self.children.next() {
             Some(elem) => {
-                record.append(elem.into(), self.tag.clone());
+                record.append(elem, self.tag.clone());
                 Some(record)
             }
             None => None,
@@ -354,7 +362,7 @@ impl<E> RecordPathExpandIter<E> {
     }
 }
 
-impl<E: Into<GraphObject>> Iterator for RecordPathExpandIter<E> {
+impl<E: Into<Entry>> Iterator for RecordPathExpandIter<E> {
     type Item = Record;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -362,19 +370,19 @@ impl<E: Into<GraphObject>> Iterator for RecordPathExpandIter<E> {
         let mut curr_path = self.curr_path.clone();
         match self.children.next() {
             Some(elem) => {
-                let graph_obj = elem.into();
-                match graph_obj {
-                    GraphObject::V(v) => {
+                let entry = elem.into();
+                match entry {
+                    Entry::Element(RecordElement::OnGraph(GraphObject::V(v))) => {
                         curr_path.append(v);
                         record.append(curr_path, None);
                         Some(record)
                     }
-                    GraphObject::E(e) => {
+                    Entry::Element(RecordElement::OnGraph(GraphObject::E(e))) => {
                         curr_path.append(e);
                         record.append(curr_path, None);
                         Some(record)
                     }
-                    GraphObject::P(_) => None,
+                    _ => None,
                 }
             }
             None => None,

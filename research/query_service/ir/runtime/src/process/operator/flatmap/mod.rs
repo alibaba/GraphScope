@@ -13,12 +13,13 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 mod edge_expand;
+mod unfold;
 
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use pegasus::api::function::{DynIter, FlatMapFunction};
 
-use crate::error::{FnGenError, FnGenResult};
+use crate::error::FnGenResult;
 use crate::process::record::Record;
 
 pub trait FlatMapFuncGen {
@@ -33,9 +34,7 @@ impl FlatMapFuncGen for algebra_pb::logical_plan::Operator {
         if let Some(opr) = self.opr {
             match opr {
                 algebra_pb::logical_plan::operator::Opr::Edge(edge_expand) => edge_expand.gen_flat_map(),
-                algebra_pb::logical_plan::operator::Opr::Unfold(_unfold) => {
-                    Err(FnGenError::unsupported_error("unfold is not supported yet"))
-                }
+                algebra_pb::logical_plan::operator::Opr::Unfold(unfold) => unfold.gen_flat_map(),
                 _ => Err(ParsePbError::from("algebra_pb op is not a flatmap"))?,
             }
         } else {

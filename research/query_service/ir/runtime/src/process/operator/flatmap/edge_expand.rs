@@ -20,18 +20,18 @@ use ir_common::KeyId;
 use pegasus::api::function::{DynIter, FlatMapFunction, FnResult};
 
 use crate::error::{FnExecError, FnGenError, FnGenResult};
-use crate::graph::element::{GraphElement, GraphObject};
+use crate::graph::element::GraphElement;
 use crate::graph::{Direction, Statement, ID};
 use crate::process::operator::flatmap::FlatMapFuncGen;
-use crate::process::record::{Record, RecordExpandIter, RecordPathExpandIter};
+use crate::process::record::{Entry, Record, RecordExpandIter, RecordPathExpandIter};
 
-pub struct EdgeExpandOperator<E: Into<GraphObject>> {
+pub struct EdgeExpandOperator<E: Into<Entry>> {
     start_v_tag: Option<KeyId>,
     edge_or_end_v_tag: Option<KeyId>,
     stmt: Box<dyn Statement<ID, E>>,
 }
 
-impl<E: Into<GraphObject> + 'static> FlatMapFunction<Record, Record> for EdgeExpandOperator<E> {
+impl<E: Into<Entry> + 'static> FlatMapFunction<Record, Record> for EdgeExpandOperator<E> {
     type Target = DynIter<Record>;
 
     fn exec(&self, input: Record) -> FnResult<Self::Target> {
