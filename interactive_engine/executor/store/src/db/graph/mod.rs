@@ -89,8 +89,6 @@ mod test {
     use crate::db::graph::get_vertex_id_by_primary_keys;
 
     thread_local! {
-        static BUFFER: RefCell<Vec<u8>> = RefCell::new(Vec::with_capacity(64 << 10));
-        static CONCAT_BUF: RefCell<Vec<u8>> = RefCell::new(Vec::with_capacity(64 << 10));
         static FIELD_BUF: RefCell<Vec<u8>> = RefCell::new(Vec::with_capacity(64 << 10));
     }
 
