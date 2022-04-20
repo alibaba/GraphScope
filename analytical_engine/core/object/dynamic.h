@@ -68,10 +68,11 @@ class Value : public rapidjson::Value {
   // explicit Value(rapidjson::Value& rhs) { Base::CopyFrom(rhs, allocator_); }
   explicit Value(rapidjson::Value& rhs) : Base(std::move(rhs)) {}
   // Move constructor
-  Value(Value&& rhs) : Base(std::move(rhs)) {}
+  Value(Value&& rhs) noexcept : Base(std::move(rhs)) {}
   explicit Value(rapidjson::Value&& rhs) : Base(std::move(rhs)) {}
   // Constructor with value type
-  explicit Value(rapidjson::Type type) noexcept : Base(type) {}
+  explicit Value(rapidjson::Type type) noexcept : Base(type) {
+  }
   // Constructor for common type
   explicit Value(bool b) noexcept : Base(b) {}
   explicit Value(int i) noexcept : Base(i) {}
@@ -93,13 +94,6 @@ class Value : public rapidjson::Value {
   }
   Value& operator=(const rapidjson::Value& rhs) {
     Base::CopyFrom(rhs, allocator_);
-    return *this;
-  }
-
-  Value& operator=(Value& rhs) noexcept {
-    if (this != &rhs) {
-      Base::operator=(rhs.Move());
-    }
     return *this;
   }
 
@@ -149,9 +143,11 @@ class Value : public rapidjson::Value {
   // Constructor for copy-string from a string object (i.e. do make a copy of
   // string)
   explicit Value(const std::string& s, AllocatorT& allocator = allocator_)
-      : Base(s.c_str(), allocator) {}
+      : Base(s.c_str(), allocator) {
+  }
   explicit Value(const char* s, AllocatorT& allocator = allocator_)
-      : Base(s, allocator) {}
+      : Base(s, allocator) {
+  }
 
   void CopyFrom(const Value& rhs) {
     if (this != &rhs) {
