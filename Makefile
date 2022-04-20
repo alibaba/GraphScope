@@ -177,3 +177,15 @@ k8stest:
 	cd $(WORKING_DIR)/python && \
 	pip3 install tensorflow==2.5.2 && \
 	python3 -m pytest --cov=graphscope --cov-config=.coveragerc --cov-report=xml --cov-report=term -s -v ./graphscope/tests/kubernetes
+
+.PHONY: clean
+clean:
+	rm -fr $(WORKING_DIR)/analytical_engine/build/ || true && \
+	rm -fr $(WORKING_DIR)/analytical_engine/proto/ || true && \
+	rm -fr $(WORKING_DIR)/learning_engine/graph-learn/cmake-build/ || true && \
+	rm -fr $(WORKING_DIR)/learning_engine/graph-learn/proto/*.h || true && \
+	rm -fr $(WORKING_DIR)/learning_engine/graph-learn/proto/*.cc || true && \
+	rm -fr $(WORKING_DIR)/interactive_engine/executor/target || true && \
+	rm -fr $(WORKING_DIR)/interactive_engine/assembly/target || true
+	cd $(WORKING_DIR)/python && python3 setup.py clean --all && \
+	cd $(WORKING_DIR)/coordinator && python3 setup.py clean --all

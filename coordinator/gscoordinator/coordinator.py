@@ -215,6 +215,9 @@ class CoordinatorServiceServicer(
             )
             self._dangling_detecting_timer.start()
 
+        # a lock that protects the coordinator
+        self._lock = threading.Lock()
+
         atexit.register(self._cleanup)
 
     def __del__(self):
@@ -593,8 +596,9 @@ class CoordinatorServiceServicer(
         return response_head, response_bodies
 
     def RunStep(self, request_iterator, context):
-        for response in self.RunStepWrapped(request_iterator, context):
-            yield response
+        with self._lock:
+            for response in self.RunStepWrapped(request_iterator, context):
+                yield response
 
     def _RunStep(self, request_iterator, context):
         # split dag

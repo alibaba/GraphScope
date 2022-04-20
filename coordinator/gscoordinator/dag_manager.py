@@ -88,26 +88,27 @@ class DAGManager(object):
                 req_head = req
             else:
                 req_bodies.append(req)
-        # split dag
-        dag = op_def_pb2.DagDef()
-        dag_for = GSEngine.analytical_engine
-        dag_bodies = []
-        for op in req_head.head.dag_def.op:
-            if self.is_splited_op(op):
-                if dag.op:
-                    self._dag_queue.put((dag_for, dag, dag_bodies))
-                # init empty dag
-                dag = op_def_pb2.DagDef()
-                dag_for = self.get_op_exec_engine(op)
-                dag_bodies = []
-            # select op
-            dag.op.extend([copy.deepcopy(op)])
-            for req_body in req_bodies:
-                # select chunks belong to this op
-                if req_body.body.op_key == op.key:
-                    dag_bodies.append(req_body)
-        if dag.op:
-            self._dag_queue.put((dag_for, dag, dag_bodies))
+        if req_head is not None:
+            # split dag
+            dag = op_def_pb2.DagDef()
+            dag_for = GSEngine.analytical_engine
+            dag_bodies = []
+            for op in req_head.head.dag_def.op:
+                if self.is_splited_op(op):
+                    if dag.op:
+                        self._dag_queue.put((dag_for, dag, dag_bodies))
+                    # init empty dag
+                    dag = op_def_pb2.DagDef()
+                    dag_for = self.get_op_exec_engine(op)
+                    dag_bodies = []
+                # select op
+                dag.op.extend([copy.deepcopy(op)])
+                for req_body in req_bodies:
+                    # select chunks belong to this op
+                    if req_body.body.op_key == op.key:
+                        dag_bodies.append(req_body)
+            if dag.op:
+                self._dag_queue.put((dag_for, dag, dag_bodies))
 
     def is_splited_op(self, op):
         return op.op in (

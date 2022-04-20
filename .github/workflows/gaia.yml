@@ -19,31 +19,38 @@ on:
 
 jobs:
   gaia-test:
-    runs-on: self-hosted
-    container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.3.21
-    defaults:
-      run:
-        shell: bash --noprofile --norc -eo pipefail {0}
+    runs-on: [self-hosted, manylinux2014]
     steps:
     - uses: actions/checkout@v2
       with:
         submodules: true
 
+    - uses: actions/cache@v3
+      with:
+        path: ~/.m2/repository
+        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+        restore-keys: |
+          ${{ runner.os }}-maven-
+
+    - uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          ~/.cache/sccache
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
     - name: Install Dependencies
       run: |
-        # install cargo cause github change $HOME to /github/home, so we can't use
-        # `source ~/.bashrc` or `source ${HOME}/.bashrc` to find cargo command.
-        sudo chown -R $(id -u):$(id -g) ${HOME}
-        sudo chmod -R a+wrx ${HOME} ${GITHUB_WORKSPACE}
-        wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz
-        sudo tar -C /usr/local -xzf go1.15.5.linux-amd64.tar.gz
-        curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.54.0
-        echo "source ~/.cargo/env" >> ~/.bashrc
-        source ${HOME}/.bashrc
-        rustup component add rustfmt
         # install rdkafka
         sudo yum install -y librdkafka-devel
+
+        export SCCACHE_DIR=~/.cache/sccache
+        export RUSTC_WRAPPER=/usr/local/bin/sccache
+        sccache --start-server
+
         # install cppkafka
         git clone -b 0.4.0 --single-branch --depth=1 \
             https://github.com/mfontanini/cppkafka.git /tmp/cppkafka && \

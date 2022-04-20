@@ -27,13 +27,13 @@ jobs:
     # Require the host is able to run docker without sudo and
     # can `ssh localhost` without password, which may need to
     # be configured manually when a new self-hosted runner is added.
-    runs-on: self-hosted
+    runs-on: ubuntu-20.04
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     steps:
     - run: 'echo "No action required" '
 
   helm-test:
-    runs-on: self-hosted
+    runs-on: ubuntu-20.04
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     needs: [gremlin-test]
     strategy:
