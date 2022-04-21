@@ -818,7 +818,7 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::toDirected(
                   object_manager_.GetObject<IFragmentWrapper>(src_graph_name));
   std::string dst_graph_name = "graph_" + generateId();
 
-  VLOG(1) << "Convert to undirected graph from " << src_graph_name
+  VLOG(1) << "Convert to directed graph from " << src_graph_name
           << ", graph name: " << dst_graph_name;
   BOOST_LEAF_AUTO(dst_wrapper,
                   src_wrapper->ToDirected(comm_spec_, dst_graph_name));
