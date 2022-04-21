@@ -20,6 +20,7 @@
 #
 
 import copy
+import threading
 
 import msgpack
 import orjson as json
@@ -392,17 +393,19 @@ class Graph(_GraphBase):
         self._session = session
 
     def __del__(self):
-        print("Delete graph", self._key)
         if self._session.info["status"] != "active" or self._key is None:
             return
-        # cancel cache fetch future
-        if self.cache.enable_iter_cache:
-            self.cache.shutdown()
-        op = dag_utils.unload_nx_graph(self)
-        print("Eval delete op", op.key)
-        op.eval()
-        print("Delete graph done", self._key)
-        self._key = None
+
+        # use thread to avoid dead-lock
+        def _del(graph):
+            # cancel cache fetch future
+            if graph.cache.enable_iter_cache:
+                graph.cache.shutdown()
+            op = dag_utils.unload_nx_graph(graph)
+            op.eval()
+            graph._key = None
+
+        threading.Thread(target=_del, args=(self,)).start()
 
     @property
     def op(self):

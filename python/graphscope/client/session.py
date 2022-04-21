@@ -966,12 +966,7 @@ class Session(object):
         Returns:
             Different values for different output types of :class:`Operation`
         """
-        print("try to get the lock............ of ", fetches.to_json())
-        with self._lock:
-            print("Got the lock............ of ", fetches.to_json())
-            ret= self.run_fetches(fetches, debug)
-            print("release the lock............ of ", fetches.to_json())
-            return ret
+        return self.run_fetches(fetches, debug)
 
     def run_fetches(self, fetches, debug=False):
         """Run operations of `fetches` without the session lock."""
