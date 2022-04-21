@@ -83,13 +83,13 @@ struct DynamicWrapper<std::string> {
 template <typename FRAG_T>
 class ArrowToDynamicConverter {
   using src_fragment_t = FRAG_T;
+  using vertex_t = typename src_fragment_t::vertex_t;
   using oid_t = typename src_fragment_t::oid_t;
   using label_id_t = typename src_fragment_t::label_id_t;
   using dst_fragment_t = DynamicFragment;
   using vertex_map_t = typename dst_fragment_t::vertex_map_t;
   using vid_t = typename dst_fragment_t::vid_t;
   using internal_vertex_t = typename dst_fragment_t::internal_vertex_t;
-  using vertex_t = typename src_fragment_t::vertex_t;
   using edge_t = typename dst_fragment_t::edge_t;
   using vdata_t = typename dst_fragment_t::vdata_t;
   using edata_t = typename dst_fragment_t::edata_t;
@@ -158,10 +158,8 @@ class ArrowToDynamicConverter {
   bl::result<std::shared_ptr<dst_fragment_t>> convertFragment(
       const std::shared_ptr<src_fragment_t>& src_frag,
       const std::shared_ptr<vertex_map_t>& dst_vm) {
-    LOG(INFO) << "Start to convert fragment.";
     auto fid = src_frag->fid();
 
-    double start = grape::GetCurrentTime();
     auto dynamic_frag = std::make_shared<dst_fragment_t>(dst_vm);
     uint32_t thread_num =
         (std::thread::hardware_concurrency() + comm_spec_.local_num() - 1) /
@@ -176,7 +174,6 @@ class ArrowToDynamicConverter {
 
     std::vector<int> oe_degree(dst_vm->GetInnerVertexSize(fid), 0);
     std::vector<int> ie_degree(dst_vm->GetInnerVertexSize(fid), 0);
-    LOG(INFO) << "Start process vertices and edges";
     for (label_id_t v_label = 0; v_label < src_frag->vertex_label_num();
          v_label++) {
       auto inner_vertices = src_frag->InnerVertices(v_label);
@@ -237,13 +234,9 @@ class ArrowToDynamicConverter {
           },
           thread_num);
     }
-    LOG(INFO) << "Process vertices and Edges: "
-              << grape::GetCurrentTime() - start;
 
-    start = grape::GetCurrentTime();
     dynamic_frag->Init(src_frag->fid(), src_frag->directed(), vertices, edges,
                        oe_degree, ie_degree, thread_num);
-    LOG(INFO) << "Convert fragment: " << grape::GetCurrentTime() - start;
 
     return dynamic_frag;
   }
