@@ -456,50 +456,101 @@ impl AsPhysical for LogicalPlan {
                 curr_node_opt = self.get_node(next_node_id);
             } else if curr_node.borrow().children.len() >= 2 {
                 let (merge_node_opt, subplans) = self.get_branch_plans(curr_node.clone());
-                let mut plans: Vec<Plan> = vec![];
-                for subplan in subplans {
-                    let mut sub_bldr = JobBuilder::new(builder.conf.clone());
-                    subplan.add_job_builder(&mut sub_bldr, plan_meta)?;
-                    plans.push(sub_bldr.take_plan());
+
+                let mut intersect_flag = false;
+                if let Some(merge_node) = merge_node_opt.clone() {
+                    if let Some(Union(union)) = &merge_node.borrow().opr.opr {
+                        // the case of intersection
+                        if union.is_intersection {
+                            intersect_flag = true;
+                            let mut intersect_tag = None;
+                            for subplan in subplans.iter() {
+                                if let Some(sub_root) = subplan.root() {
+                                    if let Some(Edge(edgexpd)) = sub_root.borrow().opr.opr.as_ref() {
+                                        //  TODO: post_process for edgexpd op with the filters etc.
+                                        if edgexpd.alias.is_some() {
+                                            if intersect_tag.is_some() {
+                                                if !intersect_tag.eq(&edgexpd.alias) {
+                                                    Err(IrError::InvalidPattern(
+                                                        "Cannot intersect on different tags".to_string(),
+                                                    ))?
+                                                }
+                                            } else {
+                                                intersect_tag = edgexpd.alias.clone();
+                                            }
+                                        }
+                                        simple_add_job_builder(
+                                            builder,
+                                            &pb::logical_plan::Operator::from(edgexpd.clone()),
+                                            SimpleOpr::FilterMap,
+                                        )?;
+                                    }
+                                }
+                            }
+                            // we assume that the field after unfold has the same alias
+                            let unfold_opr =
+                                pb::Unfold { tag: intersect_tag.clone(), alias: intersect_tag };
+                            simple_add_job_builder(
+                                builder,
+                                &pb::logical_plan::Operator::from(unfold_opr.clone()),
+                                SimpleOpr::Flatmap,
+                            )?;
+                            // TODO: further process filters etc.
+                        }
+                    }
                 }
 
-                if let Some(merge_node) = merge_node_opt.clone() {
-                    match &merge_node.borrow().opr.opr {
-                        Some(Union(_)) => {
-                            builder.merge(plans);
-                        }
-                        Some(Join(join_opr)) => {
-                            if curr_node.borrow().children.len() > 2 {
-                                // For now we only support joining two branches
-                                return Err(IrError::Unsupported(
-                                    "joining more than two branches".to_string(),
-                                ));
+                // the cases of union and join
+                if !intersect_flag {
+                    let mut plans: Vec<Plan> = vec![];
+                    for subplan in subplans.iter() {
+                        let mut sub_bldr = JobBuilder::new(builder.conf.clone());
+                        subplan.add_job_builder(&mut sub_bldr, plan_meta)?;
+                        plans.push(sub_bldr.take_plan());
+                    }
+
+                    if let Some(merge_node) = merge_node_opt.clone() {
+                        match &merge_node.borrow().opr.opr {
+                            // the case of union
+                            Some(Union(_union)) => {
+                                builder.merge(plans);
                             }
-                            assert_eq!(plans.len(), 2);
-                            let left_plan = plans.get(0).unwrap().clone();
-                            let right_plan = plans.get(1).unwrap().clone();
+                            // the case of join
+                            Some(Join(join_opr)) => {
+                                if curr_node.borrow().children.len() > 2 {
+                                    // For now we only support joining two branches
+                                    return Err(IrError::Unsupported(
+                                        "joining more than two branches".to_string(),
+                                    ));
+                                }
+                                assert_eq!(plans.len(), 2);
+                                let left_plan = plans.get(0).unwrap().clone();
+                                let right_plan = plans.get(1).unwrap().clone();
 
-                            let join_kind =
-                                unsafe { std::mem::transmute::<i32, pb::join::JoinKind>(join_opr.kind) };
-                            let pegasus_join_kind = match join_kind {
-                                JoinKind::Inner => server_pb::join::JoinKind::Inner,
-                                JoinKind::LeftOuter => server_pb::join::JoinKind::LeftOuter,
-                                JoinKind::RightOuter => server_pb::join::JoinKind::RightOuter,
-                                JoinKind::FullOuter => server_pb::join::JoinKind::FullOuter,
-                                JoinKind::Semi => server_pb::join::JoinKind::Semi,
-                                JoinKind::Anti => server_pb::join::JoinKind::Anti,
-                                JoinKind::Times => server_pb::join::JoinKind::Times,
-                            };
-                            let mut join_bytes = vec![];
-                            pb::logical_plan::Operator::from(join_opr.clone()).encode(&mut join_bytes)?;
+                                let join_kind = unsafe {
+                                    std::mem::transmute::<i32, pb::join::JoinKind>(join_opr.kind)
+                                };
+                                let pegasus_join_kind = match join_kind {
+                                    JoinKind::Inner => server_pb::join::JoinKind::Inner,
+                                    JoinKind::LeftOuter => server_pb::join::JoinKind::LeftOuter,
+                                    JoinKind::RightOuter => server_pb::join::JoinKind::RightOuter,
+                                    JoinKind::FullOuter => server_pb::join::JoinKind::FullOuter,
+                                    JoinKind::Semi => server_pb::join::JoinKind::Semi,
+                                    JoinKind::Anti => server_pb::join::JoinKind::Anti,
+                                    JoinKind::Times => server_pb::join::JoinKind::Times,
+                                };
+                                let mut join_bytes = vec![];
+                                pb::logical_plan::Operator::from(join_opr.clone())
+                                    .encode(&mut join_bytes)?;
 
-                            builder.join(pegasus_join_kind, left_plan, right_plan, join_bytes);
-                        }
-                        None => return Err(IrError::MissingData("Union/Join::merge_node".to_string())),
-                        _ => {
-                            return Err(IrError::Unsupported(
-                                "operators other than `Union` and `Join`".to_string(),
-                            ))
+                                builder.join(pegasus_join_kind, left_plan, right_plan, join_bytes);
+                            }
+                            None => return Err(IrError::MissingData("Union/Join::merge_node".to_string())),
+                            _ => {
+                                return Err(IrError::Unsupported(
+                                    "operators other than `Union` and `Join`".to_string(),
+                                ))
+                            }
                         }
                     }
                 }
@@ -1299,6 +1350,77 @@ mod test {
         expected_builder.join(server_pb::join::JoinKind::Inner, left_plan, right_plan, join_opr_bytes);
         expected_builder.limit(10);
 
+        assert_eq!(builder, expected_builder);
+    }
+
+    #[test]
+    fn intersection_as_physical() {
+        let source_opr = pb::logical_plan::Operator::from(pb::Scan {
+            scan_opt: 0,
+            alias: Some("A".into()),
+            params: Some(query_params(vec![], vec![])),
+            idx_predicate: None,
+        });
+
+        // extend A->B
+        let expand_ab_opr = pb::logical_plan::Operator::from(pb::EdgeExpand {
+            v_tag: Some("A".into()),
+            direction: 0,
+            params: Some(query_params(vec![], vec![])),
+            is_edge: false,
+            alias: Some("B".into()),
+        });
+
+        // extend A->C, B->C, and intersect on C
+        let expand_ac_opr = pb::logical_plan::Operator::from(pb::EdgeExpand {
+            v_tag: Some("A".into()),
+            direction: 0,
+            params: Some(query_params(vec![], vec![])),
+            is_edge: false,
+            alias: Some("C".into()),
+        });
+
+        let expand_bc_opr = pb::logical_plan::Operator::from(pb::EdgeExpand {
+            v_tag: Some("B".into()),
+            direction: 0,
+            params: Some(query_params(vec!["knows".into()], vec![])),
+            is_edge: false,
+            alias: Some("C".into()),
+        });
+
+        // parents are expand_ac_opr and expand_bc_opr
+        let intersect_opr =
+            pb::logical_plan::Operator::from(pb::Union { parents: vec![2, 3], is_intersection: true });
+
+        let mut logical_plan = LogicalPlan::with_root(Node::new(0, source_opr.clone()));
+        logical_plan
+            .append_operator_as_node(expand_ab_opr.clone(), vec![0])
+            .unwrap(); // node 1
+        logical_plan
+            .append_operator_as_node(expand_ac_opr.clone(), vec![1])
+            .unwrap(); // node 2
+        logical_plan
+            .append_operator_as_node(expand_bc_opr.clone(), vec![1])
+            .unwrap(); // node 3
+        logical_plan
+            .append_operator_as_node(intersect_opr.clone(), vec![2, 3])
+            .unwrap(); // node 4
+        let mut builder = JobBuilder::default();
+        let mut plan_meta = PlanMeta::default();
+        logical_plan
+            .add_job_builder(&mut builder, &mut plan_meta)
+            .unwrap();
+
+        let unfold_opr =
+        // TODO: we assume that alias is the same with tag in unfold for now.
+            pb::logical_plan::Operator::from(pb::Unfold { tag: Some("C".into()), alias: Some("C".into()) });
+
+        let mut expected_builder = JobBuilder::default();
+        expected_builder.add_source(source_opr.encode_to_vec());
+        expected_builder.flat_map(expand_ab_opr.encode_to_vec());
+        expected_builder.filter_map(expand_ac_opr.encode_to_vec());
+        expected_builder.filter_map(expand_bc_opr.encode_to_vec());
+        expected_builder.flat_map(unfold_opr.encode_to_vec());
         assert_eq!(builder, expected_builder);
     }
 }
