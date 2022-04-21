@@ -1583,7 +1583,7 @@ class DynamicFragmentMutator {
         if (weight.empty()) {
           e_data.Update(edata_t(e[2]));
         } else {
-          e_data.Insert(weight, edata_t(e[2]), dynamic::Value::allocator_);
+          e_data.Insert(weight, edata_t(e[2]));
         }
       }
       src = std::move(e[0]);
