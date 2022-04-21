@@ -399,6 +399,7 @@ class Graph(_GraphBase):
         if self.cache.enable_iter_cache:
             self.cache.shutdown()
         op = dag_utils.unload_nx_graph(self)
+        print("Eval delete op", op.key)
         op.eval()
         print("Delete graph done", self._key)
         self._key = None
