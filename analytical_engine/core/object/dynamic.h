@@ -139,9 +139,9 @@ class Value : public rapidjson::Value {
   explicit Value(const std::string& s) : Base(s.c_str(), allocator_) {}
   explicit Value(const char* s) : Base(s, allocator_) {}
 
-  void CopyFrom(const Value& rhs) {
+  void CopyFrom(const Value& rhs, AllocatorT& allocator = allocator_) {
     if (this != &rhs) {
-      Base::CopyFrom(rhs, allocator_);
+      Base::CopyFrom(rhs, allocator);
     }
   }
 

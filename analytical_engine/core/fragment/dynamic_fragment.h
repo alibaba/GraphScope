@@ -1435,20 +1435,21 @@ class DynamicFragment
       parallel_for(
           edges.begin(), edges.end(),
           [&](uint32_t tid, std::vector<edge_t>& es) {
+            dynamic::Value tmp_data;
             for (auto& e : es) {
               if (e.src < ivnum_) {
                 if (e.dst < ivnum_) {
-                  nbr_t nbr(e.dst, e.edata);
+                  tmp_data.CopyFrom(e.edata, (*allocators_)[tid]);
+                  nbr_t nbr(e.dst, std::move(tmp_data));
                   oe_.put_edge(e.src, std::move(nbr));
+
+                  nbr_t ie_nbr(e.src, std::move(e.edata));
+                  ie_.put_edge(e.dst, std::move(nbr));
                 } else {
-                  // avoid copy.
+                  // avoid copy
                   nbr_t nbr(e.dst, std::move(e.edata));
                   oe_.put_edge(e.src, std::move(nbr));
                 }
-              }
-              if (e.dst < ivnum_) {
-                nbr_t nbr(e.src, std::move(e.edata));
-                ie_.put_edge(e.dst, std::move(nbr));
               }
             }
           },
@@ -1489,7 +1490,7 @@ class DynamicFragment
 
   grape::VertexArray<inner_vertices_t, nbr_t*> iespliter_, oespliter_;
 
-  // allocators for convert
+  // allocators for parallel convert
   std::shared_ptr<std::vector<dynamic::AllocatorT>> allocators_;
 
   using base_t::outer_vertices_of_frag_;
@@ -1618,7 +1619,8 @@ class DynamicFragmentMutator {
         }
       } else if (modify_type == rpc::NX_UPDATE_EDGES) {
         if (src_fid == fid || dst_fid == fid) {
-          mutation.edges_to_update.emplace_back(src_gid, dst_gid, e_data);
+          mutation.edges_to_update.emplace_back(src_gid, dst_gid,
+                                                std::move(e_data));
         }
       }
     }

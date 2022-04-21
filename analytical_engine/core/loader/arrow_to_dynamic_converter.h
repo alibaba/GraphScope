@@ -166,6 +166,7 @@ class ArrowToDynamicConverter {
     uint32_t thread_num =
         (std::thread::hardware_concurrency() + comm_spec_.local_num() - 1) /
         comm_spec_.local_num();
+
     // Init allocators for dynamic fragment
     dynamic_frag->allocators_ =
         std::make_shared<std::vector<dynamic::AllocatorT>>(thread_num);
@@ -247,6 +248,17 @@ class ArrowToDynamicConverter {
     return dynamic_frag;
   }
 
+  /**
+   * Arrow fragment  gid of vertex to corresponding dynamic fragment gid.
+   * In the covertVertexMap process, the insert order of vertex in dynamic
+   * fragment vertex map is same as arrow fragment vertex map.
+   *
+   * Params:
+   *  - gid: the arrow fragment gid of vertex
+   *
+   * Returns:
+   *  The corresponding dynamic fragment gid of the vertex
+   */
   vid_t gid2Gid(const vid_t gid) const {
     auto fid = arrow_id_parser_.GetFid(gid);
     auto label_id = arrow_id_parser_.GetLabelId(gid);
