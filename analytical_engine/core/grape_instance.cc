@@ -1098,7 +1098,6 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
   auto r = std::make_shared<DispatchResult>(comm_spec_.worker_id());
   rpc::GSParams params(cmd->params, cmd->large_attr);
 
-  LOG(INFO) << "Server got command: " << cmd->type;
   switch (cmd->type) {
   case rpc::CREATE_GRAPH: {
     BOOST_LEAF_AUTO(graph_def, loadGraph(params));
@@ -1320,7 +1319,6 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
                     "Unsupported command type: " + std::to_string(cmd->type));
   }
-  LOG(INFO) << "Server run command: " << cmd->type;
   return r;
 }
 
