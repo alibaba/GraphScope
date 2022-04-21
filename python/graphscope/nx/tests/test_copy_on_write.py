@@ -298,7 +298,7 @@ class TestBuiltinCopyOnWrite:
         # )
 
     def test_with_multigraph(self):
-            nx.DiGraph(self.multi_simple)
+        nx.DiGraph(self.multi_simple)
 
     def test_single_source_dijkstra_path_length(self):
         ret = nx.builtin.single_source_dijkstra_path_length(
