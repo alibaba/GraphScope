@@ -53,7 +53,7 @@ RUN cd /tmp && \
     cd /tmp && \
     rm -rf /tmp/OpenSSL_1_1_1h.tar.gz /tmp/openssl-OpenSSL_1_1_1h
 
-# apache arrow v1.0.1
+# apache arrow v7.0.0
 RUN cd /tmp && \
     wget -q https://github.com/apache/arrow/archive/apache-arrow-7.0.0.tar.gz && \
     tar zxvf apache-arrow-7.0.0.tar.gz && \
@@ -102,7 +102,7 @@ RUN cd /tmp && \
     make -j`nproc` && \
     make install && \
     cd /tmp && \
-    rm -fr /tmp/arrow-apache-arrow-1.0.1 /tmp/apache-arrow-1.0.1.tar.gz
+    rm -fr /tmp/arrow-apache-arrow-7.0.0 /tmp/apache-arrow-7.0.0.tar.gz
 
 # boost v1.73.0
 RUN cd /tmp && \
