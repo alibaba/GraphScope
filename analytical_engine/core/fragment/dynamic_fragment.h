@@ -1442,18 +1442,28 @@ class DynamicFragment
                   tmp_data.CopyFrom(e.edata, (*allocators_)[tid]);
                   nbr_t nbr(e.dst, std::move(tmp_data));
                   oe_.put_edge(e.src, std::move(nbr));
-
-                  nbr_t ie_nbr(e.src, std::move(e.edata));
-                  ie_.put_edge(e.dst, std::move(nbr));
                 } else {
                   // avoid copy
                   nbr_t nbr(e.dst, std::move(e.edata));
                   oe_.put_edge(e.src, std::move(nbr));
                 }
+              } else {
+                nbr_t nbr(e.src, std::move(e.edata));
+                ie_.put_edge(e.dst, std::move(nbr));
               }
             }
           },
           thread_num, 1);
+      // The incoming edges maybe not in store in the same thread vector,
+      // can't be parallel process.
+      for (auto& vec : edges) {
+        for (auto& e : vec) {
+          if (e.src < ivnum_ && e.dst < ivnum_) {
+            nbr_t nbr(e.src, std::move(e.edata));
+            ie_.put_edge(e.dst, std::move(nbr));
+          }
+        }
+      }
       oe_.sort_neighbors_dense(oe_degree_to_add);
       ie_.sort_neighbors_dense(ie_degree_to_add);
     } else {
