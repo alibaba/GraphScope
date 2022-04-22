@@ -57,9 +57,9 @@ def clustering(graph):
 
 
 @project_to_simple
-@not_compatible_for("arrow_property", "dynamic_property")
+@not_compatible_for("arrow_property", "dynamic_property", "undirected")
 def avg_clustering(graph):
-    """Compute the average clustering coefficient for the graph.
+    """Compute the average clustering coefficient for the directed graph.
 
     Args:
         graph (:class:`graphscope.Graph`): A simple graph.
