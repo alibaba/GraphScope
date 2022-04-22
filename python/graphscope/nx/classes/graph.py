@@ -20,6 +20,7 @@
 #
 
 import copy
+import threading
 
 import msgpack
 import orjson as json
@@ -390,6 +391,23 @@ class Graph(_GraphBase):
                 "The default session is lazy mode."
             )
         self._session = session
+
+    def __del__(self):
+        if self._session.info["status"] != "active" or self._key is None:
+            return
+
+        # use thread to avoid dead-lock
+        def _del(graph):
+            # cancel cache fetch future
+            if graph.cache.enable_iter_cache:
+                graph.cache.shutdown()
+            op = dag_utils.unload_graph(graph)
+            op.eval()
+            graph._key = None
+
+        t = threading.Thread(target=_del, args=(self,))
+        t.daemon = True
+        t.start()
 
     @property
     def op(self):
