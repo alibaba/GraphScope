@@ -1414,6 +1414,14 @@ class DynamicFragment
         },
         thread_num, 1);
 
+    // insert the edges
+    insertEdgesParallel(edges, oe_degree, ie_degree, thread_num);
+  }
+
+  void insertEdgesParallel(std::vector<std::vector<edge_t>>& edges,
+                           const std::vector<int>& oe_degree,
+                           const std::vector<int>& ie_degree,
+                           uint32_t thread_num) {
     auto insert_edges_out_in = [&](uint32_t tid, std::vector<edge_t>& es) {
       dynamic::Value tmp_data;  // to void use default allocator on CopyFrom
       for (auto& e : es) {
@@ -1440,10 +1448,8 @@ class DynamicFragment
       }
     };
 
-    // insert edges
     oe_.reserve_edges_dense(oe_degree);
     if (load_strategy_ == grape::LoadStrategy::kBothOutIn) {
-      // reserve edges with given degree messages
       ie_.reserve_edges_dense(ie_degree);
       parallel_for(edges.begin(), edges.end(), insert_edges_out_in, thread_num,
                    1);
