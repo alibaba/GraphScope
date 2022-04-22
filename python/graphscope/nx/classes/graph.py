@@ -405,7 +405,9 @@ class Graph(_GraphBase):
             op.eval()
             graph._key = None
 
-        threading.Thread(target=_del, args=(self,)).start()
+        t = threading.Thread(target=_del, args=(self,))
+        t.daemon = True
+        t.start()
 
     @property
     def op(self):
