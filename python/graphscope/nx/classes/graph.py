@@ -401,7 +401,7 @@ class Graph(_GraphBase):
             # cancel cache fetch future
             if graph.cache.enable_iter_cache:
                 graph.cache.shutdown()
-            op = dag_utils.unload_nx_graph(graph)
+            op = dag_utils.unload_graph(graph)
             op.eval()
             graph._key = None
 
