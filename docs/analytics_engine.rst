@@ -50,6 +50,7 @@ property graph or not is described in its docstring.
 - :func:`average_shortest_path_length`
 - :func:`attribute_assortativity_coefficient`
 - :func:`bfs`
+- :func:`avg_clustering`
 - :func:`clustering`
 - :func:`degree_centrality`
 - :func:`degree_assortativity_coefficient`
