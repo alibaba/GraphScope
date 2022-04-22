@@ -1433,7 +1433,6 @@ class DynamicFragment
         }
       }
     };
-
     auto insert_edges_out = [&](uint32_t tid, std::vector<edge_t>& es) {
       for (auto& e : es) {
         nbr_t nbr(e.dst, std::move(e.edata));
@@ -1442,14 +1441,12 @@ class DynamicFragment
     };
 
     // insert edges
+    oe_.reserve_edges_dense(oe_degree);
     if (load_strategy_ == grape::LoadStrategy::kBothOutIn) {
       // reserve edges with given degree messages
       ie_.reserve_edges_dense(ie_degree);
-      oe_.reserve_edges_dense(oe_degree);
-
       parallel_for(edges.begin(), edges.end(), insert_edges_out_in, thread_num,
                    1);
-
       // The incoming edges may not store in the same thread vector,
       // can't be parallel process.
       for (auto& vec : edges) {
@@ -1460,13 +1457,11 @@ class DynamicFragment
           }
         }
       }
-      oe_.sort_neighbors_dense(oe_degree);
       ie_.sort_neighbors_dense(ie_degree);
     } else {
-      oe_.reserve_edges_dense(oe_degree);
       parallel_for(edges.begin(), edges.end(), insert_edges_out, thread_num, 1);
-      oe_.sort_neighbors_dense(oe_degree);
     }
+    oe_.sort_neighbors_dense(oe_degree);
   }
 
  private:
