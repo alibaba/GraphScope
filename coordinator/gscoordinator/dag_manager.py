@@ -53,6 +53,7 @@ class DAGManager(object):
         types_pb2.GRAPH_TO_DATAFRAME,  # need loaded graph to transform selector
         types_pb2.TO_VINEYARD_TENSOR,  # need loaded graph to transform selector
         types_pb2.TO_VINEYARD_DATAFRAME,  # need loaded graph to transform selector
+        types_pb2.OUTPUT,  # need loaded graph to transform selector
         types_pb2.PROJECT_GRAPH,  # need loaded graph to transform selector
         types_pb2.PROJECT_TO_SIMPLE,  # need loaded graph schema information
         types_pb2.ADD_COLUMN,  # need ctx result
@@ -75,7 +76,7 @@ class DAGManager(object):
 
     _coordinator_split_op = [
         types_pb2.DATA_SOURCE,  # spawn an io stream to read/write data from/to vineyard
-        types_pb2.OUTPUT,  # spawn an io stream to read/write data from/to vineyard
+        types_pb2.DATA_SINK,  # spawn an io stream to read/write data from/to vineyard
     ]
 
     def __init__(self, request_iterator: Sequence[message_pb2.RunStepRequest]):

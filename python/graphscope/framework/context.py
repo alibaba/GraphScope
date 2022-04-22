@@ -254,8 +254,20 @@ class BaseContextDAGNode(DAGNode):
         Returns:
             :class:`graphscope.framework.context.ResultDAGNode`, evaluated in eager mode.
         """
-        df = self.to_vineyard_dataframe(selector, vertex_range)
-        op = dag_utils.output(df, fd, **kwargs)
+        protocol = fd.split("://")[0]
+        if protocol in ("hdfs", "hive", "oss", "s3"):
+            df = self.to_vineyard_dataframe(selector, vertex_range)
+            op = dag_utils.to_data_sink(df, fd, **kwargs)
+        else:
+            check_argument(
+                isinstance(selector, Mapping), "selector of to_dataframe must be a dict"
+            )
+            for _, value in selector.items():
+                self._check_selector(value)
+            _ensure_consistent_label(self.context_type, selector)
+            selector = json.dumps(selector)
+            vertex_range = utils.transform_vertex_range(vertex_range)
+            op = dag_utils.output(self, fd, selector, vertex_range, **kwargs)
         return ResultDAGNode(self, op)
 
     def __del__(self):
