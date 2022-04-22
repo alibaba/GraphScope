@@ -172,6 +172,8 @@ class ArrowToDynamicConverter {
     std::vector<std::vector<internal_vertex_t>> vertices(thread_num);
     std::vector<std::vector<edge_t>> edges(thread_num);
 
+    // we record the degree messages here to avoid fetch these messages in
+    // dynamic_frag.Init again.
     std::vector<int> oe_degree(dst_vm->GetInnerVertexSize(fid), 0);
     std::vector<int> ie_degree(dst_vm->GetInnerVertexSize(fid), 0);
     for (label_id_t v_label = 0; v_label < src_frag->vertex_label_num();
@@ -184,6 +186,7 @@ class ArrowToDynamicConverter {
           [&](uint32_t tid, vertex_t u) {
             vid_t u_gid = gid2Gid(src_frag->GetInnerVertexGid(u));
             vid_t lid = dynamic_id_parser_.get_local_id(u_gid);
+            // extract vertex properties
             // N.B: th last column is id, we ignore it.
             dynamic::Value vertex_data(rapidjson::kObjectType);
             for (auto col_id = 0; col_id < v_data->num_columns() - 1;
@@ -197,7 +200,7 @@ class ArrowToDynamicConverter {
             }
             vertices[tid].emplace_back(lid, std::move(vertex_data));
 
-            // traverse edges and extract data
+            // traverse edges and extract edge properties
             for (label_id_t e_label = 0; e_label < src_frag->edge_label_num();
                  e_label++) {
               auto e_data = src_frag->edge_data_table(e_label);
