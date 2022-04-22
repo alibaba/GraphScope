@@ -747,7 +747,13 @@ def unload_app(app):
     Returns:
         An op to unload the `app`.
     """
-    return create_unload_op(app.session_id, types_pb2.UNLOAD_APP, [app.op])
+    op = Operation(
+        app.session_id,
+        types_pb2.UNLOAD_APP,
+        inputs=[app.op],
+        output_types=types_pb2.NULL_OUTPUT,
+    )
+    return op
 
 
 def unload_graph(graph):
@@ -759,7 +765,20 @@ def unload_graph(graph):
     Returns:
         An op to unload the `graph`.
     """
-    return create_unload_op(graph.session_id, types_pb2.UNLOAD_GRAPH, [graph.op])
+    config = {}
+    inputs = []
+    if graph.graph_type == graph_def_pb2.ARROW_PROPERTY:
+        inputs.append(graph.op)
+    else:
+        config[types_pb2.GRAPH_NAME] = (utils.s_to_attr(graph.key),)
+    op = Operation(
+        graph.session_id,
+        types_pb2.UNLOAD_GRAPH,
+        config=config,
+        inputs=inputs,
+        output_types=types_pb2.NULL_OUTPUT,
+    )
+    return op
 
 
 def unload_context(context):

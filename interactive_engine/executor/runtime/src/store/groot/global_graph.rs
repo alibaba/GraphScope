@@ -1,12 +1,12 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //!     http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,8 +30,15 @@ use maxgraph_store::db::graph::store::GraphStore;
 use store::groot::global_graph_schema::GlobalGraphSchema;
 use maxgraph_store::db::graph::entity::{RocksVertexImpl, RocksEdgeImpl};
 use maxgraph_store::db::api::multi_version_graph::MultiVersionGraph;
-use maxgraph_store::db::api::types::RocksEdge;
+use maxgraph_store::db::api::types::{RocksEdge, PropertyValue};
 use maxgraph_store::db::storage::RawBytes;
+use byteorder::{WriteBytesExt, BigEndian};
+use std::io::Write;
+use utils::hash;
+use maxgraph_store::db::graph::{hash64, get_vertex_id_by_primary_keys};
+use std::cell::{RefCell, RefMut};
+use std::borrow::BorrowMut;
+use std::ops::Deref;
 
 pub struct GlobalGraph {
     graph_partitions: Arc<HashMap<PartitionId, Arc<GraphStore>>>,
@@ -40,6 +47,7 @@ pub struct GlobalGraph {
 }
 
 unsafe impl Send for GlobalGraph {}
+
 unsafe impl Sync for GlobalGraph {}
 
 impl GlobalGraph {
@@ -97,7 +105,7 @@ impl GlobalGraphQuery for GlobalGraph {
 
     fn get_out_edges(&self, si: SnapshotId, src_ids: Vec<PartitionVertexIds>, edge_labels: &Vec<LabelId>, condition: Option<&Condition>,
                      dedup_prop_ids: Option<&Vec<PropId>>, output_prop_ids: Option<&Vec<PropId>>, limit: usize) -> Box<dyn Iterator<Item=(VertexId, Self::EI)>> {
-        let mut res: Vec<(VertexId, Self::EI)>  = Vec::new();
+        let mut res: Vec<(VertexId, Self::EI)> = Vec::new();
         for (partition_id, vertex_ids) in src_ids {
             if let Some(store) = self.graph_partitions.get(&partition_id) {
                 for vertex_id in vertex_ids {
@@ -178,8 +186,8 @@ impl GlobalGraphQuery for GlobalGraph {
         }))
     }
 
-    fn get_edge_properties(&self, si: SnapshotId, ids: Vec<PartitionLabeledVertexIds>,  output_prop_ids: Option<&Vec<PropId>>)
-        -> Self::EI {
+    fn get_edge_properties(&self, si: SnapshotId, ids: Vec<PartitionLabeledVertexIds>, output_prop_ids: Option<&Vec<PropId>>)
+                           -> Self::EI {
         unimplemented!()
     }
 
@@ -197,9 +205,9 @@ impl GlobalGraphQuery for GlobalGraph {
             if let Some(partition) = self.graph_partitions.get(&pid) {
                 if labels.is_empty() {
                     res = Box::new(res.chain(partition.scan_vertex(si,
-                                          None,
-                                          condition,
-                                          output_property_ids).unwrap()
+                                                                   None,
+                                                                   condition,
+                                                                   output_property_ids).unwrap()
                         .take(Self::get_limit(limit))
                         .map(|v| v.unwrap())))
                 } else {
@@ -272,6 +280,10 @@ impl GlobalGraphQuery for GlobalGraph {
     }
 }
 
+thread_local! {
+    static FIELD_BUF: RefCell<Vec<u8>> = RefCell::new(Vec::with_capacity(64 << 10));
+}
+
 impl GraphPartitionManager for GlobalGraph {
     fn get_partition_id(&self, vid: i64) -> i32 {
         let partition_count = self.total_partition;
@@ -283,12 +295,110 @@ impl GraphPartitionManager for GlobalGraph {
     }
 
     fn get_process_partition_list(&self) -> Vec<u32> {
-        self.graph_partitions.keys().into_iter().map(|x|*x).collect::<Vec<u32>>()
+        self.graph_partitions.keys().into_iter().map(|x| *x).collect::<Vec<u32>>()
     }
 
     fn get_vertex_id_by_primary_key(&self, label_id: u32, key: &String) -> Option<(u32, i64)> {
         // TODO check
         None
+    }
+
+    fn get_vertex_id_by_primary_keys(&self, label_id: LabelId, pks: &[Property]) -> Option<VertexId> {
+        Some(FIELD_BUF.with(|data| {
+            let pks_bytes = pks.iter().map(|pk| {
+                let mut data = data.borrow_mut();
+                data.clear();
+                match pk {
+                    Property::Bool(v) => {
+                        data.write_u8(*v as u8).unwrap();
+                    }
+                    Property::Char(v) => {
+                        data.write_u8(*v as u8).unwrap();
+                    }
+                    Property::Short(v) => {
+                        data.write_i16::<BigEndian>(*v).unwrap();
+                    }
+                    Property::Int(v) => {
+                        data.write_i32::<BigEndian>(*v).unwrap();
+                    }
+                    Property::Long(v) => {
+                        data.write_i64::<BigEndian>(*v).unwrap();
+                    }
+                    Property::Float(v) => {
+                        data.write_f32::<BigEndian>(*v).unwrap();
+                    }
+                    Property::Double(v) => {
+                        data.write_f64::<BigEndian>(*v).unwrap();
+                    }
+                    Property::Bytes(v) => {
+                        data.extend_from_slice(v);
+                    }
+                    Property::String(v) => {
+                        data.extend(v.as_bytes());
+                    }
+                    Property::Date(v) => {
+                        data.extend(v.as_bytes());
+                    }
+                    Property::ListInt(v) => {
+                        data.write_i32::<BigEndian>(v.len() as i32).unwrap();
+                        for i in v {
+                            data.write_i32::<BigEndian>(*i).unwrap();
+                        }
+                    }
+                    Property::ListLong(v) => {
+                        data.write_i32::<BigEndian>(v.len() as i32).unwrap();
+                        for i in v {
+                            data.write_i64::<BigEndian>(*i).unwrap();
+                        }
+                    }
+                    Property::ListFloat(v) => {
+                        data.write_i32::<BigEndian>(v.len() as i32).unwrap();
+                        for i in v {
+                            data.write_f32::<BigEndian>(*i).unwrap();
+                        }
+                    }
+                    Property::ListDouble(v) => {
+                        data.write_i32::<BigEndian>(v.len() as i32).unwrap();
+                        for i in v {
+                            data.write_f64::<BigEndian>(*i).unwrap();
+                        }
+                    }
+                    Property::ListString(v) => {
+                        data.write_i32::<BigEndian>(v.len() as i32).unwrap();
+                        let mut offset = 0;
+                        let mut bytes_vec = Vec::with_capacity(v.len());
+                        for i in v {
+                            let b = i.as_bytes();
+                            bytes_vec.push(b);
+                            offset += b.len();
+                            data.write_i32::<BigEndian>(offset as i32).unwrap();
+                        }
+                        for b in bytes_vec {
+                            data.write(b).unwrap();
+                        }
+                    }
+                    Property::ListBytes(v) => {
+                        data.write_i32::<BigEndian>(v.len() as i32).unwrap();
+                        let mut offset = 0;
+                        for i in v {
+                            offset += i.len();
+                            data.write_i32::<BigEndian>(offset as i32).unwrap();
+                        }
+                        for i in v {
+                            data.write(i.as_slice()).unwrap();
+                        }
+                    }
+                    Property::Null => {
+                        unimplemented!()
+                    }
+                    Property::Unknown => {
+                        unimplemented!()
+                    }
+                }
+                data
+            });
+            get_vertex_id_by_primary_keys(label_id as i32, pks_bytes) as VertexId
+        }))
     }
 }
 

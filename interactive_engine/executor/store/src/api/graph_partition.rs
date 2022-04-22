@@ -15,6 +15,7 @@
 
 use crate::api::{VertexId, PartitionId, Vertex, Edge, MVGraph, LabelId};
 use std::sync::Arc;
+use crate::api::property::Property;
 
 // Partition manager for graph query
 pub trait GraphPartitionManager: Send + Sync {
@@ -22,6 +23,7 @@ pub trait GraphPartitionManager: Send + Sync {
     fn get_server_id(&self, pid: PartitionId) -> Option<u32>;
     fn get_process_partition_list(&self) -> Vec<PartitionId>;
     fn get_vertex_id_by_primary_key(&self, label_id: LabelId, key: &String) -> Option<(PartitionId, VertexId)>;
+    fn get_vertex_id_by_primary_keys(&self, label_id: LabelId, pks: &[Property]) -> Option<VertexId>;
 }
 
 pub struct ConstantPartitionManager {
@@ -62,6 +64,10 @@ impl GraphPartitionManager for ConstantPartitionManager {
 
     fn get_vertex_id_by_primary_key(&self, _label_id: u32, _key: &String) -> Option<(u32, i64)> {
         None
+    }
+
+    fn get_vertex_id_by_primary_keys(&self, _label_id: LabelId, _pks: &[Property]) -> Option<VertexId> {
+        unimplemented!()
     }
 }
 
@@ -109,5 +115,9 @@ impl<V, VI, E, EI> GraphPartitionManager for FixedStorePartitionManager<V, VI, E
 
     fn get_vertex_id_by_primary_key(&self, _label_id: u32, _key: &String) -> Option<(u32, i64)> {
         None
+    }
+
+    fn get_vertex_id_by_primary_keys(&self, _label_id: LabelId, _pks: &[Property]) -> Option<VertexId> {
+        unimplemented!()
     }
 }
