@@ -83,7 +83,8 @@ def not_compatible_for(*graph_types):
 
     Args:
         graph_types: list of string
-            Entries must be one of 'arrow_property', 'dynamic_property', 'arrow_projected', 'dynamic_projected'
+            Entries must be one of 'arrow_property', 'dynamic_property',
+                'arrow_projected', 'dynamic_projected', 'directed', 'undirected'
 
     Returns:
         The decorated function.
@@ -118,6 +119,8 @@ def not_compatible_for(*graph_types):
                 "dynamic_projected": graph.graph_type
                 == graph_def_pb2.DYNAMIC_PROJECTED,
                 "arrow_flattened": graph.graph_type == graph_def_pb2.ARROW_FLATTENED,
+                "directed": graph.is_directed(),
+                "undirected": graph.is_directed() is False,
             }
             match = False
             try:
@@ -125,7 +128,8 @@ def not_compatible_for(*graph_types):
                     match = match or terms[t]
             except KeyError:
                 raise InvalidArgumentError(
-                    "Use one or more of arrow_property,dynamic_property,arrow_projected,dynamic_projected,arrow_flattened",
+                    "Use one or more of arrow_property,dynamic_property,"
+                    "arrow_projected,dynamic_projected,arrow_flattened,directed,undirected",
                 )
             if match:
                 raise InvalidArgumentError(

@@ -23,6 +23,7 @@ import numpy as np
 import pytest
 
 import graphscope
+from graphscope import avg_clustering
 from graphscope import bfs
 from graphscope import clustering
 from graphscope import degree_centrality
@@ -191,6 +192,11 @@ def test_run_app_on_directed_graph(
         .to_numpy(dtype=float)
     )
     assert np.allclose(ret_clustering, clustering_result["directed"])
+
+    # avg_clustering
+    ctx_avg_clustering = avg_clustering(p2p_project_directed_graph)
+    ret_avg_clustering = ctx_avg_clustering.to_numpy("r", axis=0)[0]
+    assert ret_avg_clustering is not None
 
     # degree_centrality
     ctx_dc = degree_centrality(p2p_project_directed_graph)
