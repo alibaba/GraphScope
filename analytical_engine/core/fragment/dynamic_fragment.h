@@ -1423,7 +1423,7 @@ class DynamicFragment
                            const std::vector<int>& ie_degree,
                            uint32_t thread_num) {
     auto insert_edges_out_in = [&](uint32_t tid, std::vector<edge_t>& es) {
-      dynamic::Value tmp_data;  // to void use default allocator on CopyFrom
+      dynamic::Value tmp_data;  // avoid to use default allocator on parallel
       for (auto& e : es) {
         if (e.src < ivnum_) {
           if (e.dst < ivnum_) {

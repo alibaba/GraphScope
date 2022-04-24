@@ -245,9 +245,9 @@ class ArrowToDynamicConverter {
   }
 
   /**
-   * Arrow fragment  gid of vertex to corresponding dynamic fragment gid.
+   * Convert arrow fragment gid of vertex to corresponding dynamic fragment gid.
    * In the covertVertexMap process, the insert order of vertex in dynamic
-   * fragment vertex map is same as arrow fragment vertex map.
+   * fragment vertex map is the same as arrow fragment vertex map.
    *
    * Params:
    *  - gid: the arrow fragment gid of vertex
