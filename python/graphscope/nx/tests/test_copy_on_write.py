@@ -297,12 +297,8 @@ class TestBuiltinCopyOnWrite:
         #     ).values
         # )
 
-    def test_error_with_multigraph(self):
-        with pytest.raises(
-            NetworkXError,
-            match="Graph is multigraph, cannot be converted to networkx graph",
-        ):
-            MSG = nx.DiGraph(self.multi_simple)
+    def test_with_multigraph(self):
+        nx.DiGraph(self.multi_simple)
 
     def test_single_source_dijkstra_path_length(self):
         ret = nx.builtin.single_source_dijkstra_path_length(

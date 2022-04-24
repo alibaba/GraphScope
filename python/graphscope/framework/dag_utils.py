@@ -770,7 +770,7 @@ def unload_graph(graph):
     if graph.graph_type == graph_def_pb2.ARROW_PROPERTY:
         inputs.append(graph.op)
     else:
-        config[types_pb2.GRAPH_NAME] = (utils.s_to_attr(graph.key),)
+        config[types_pb2.GRAPH_NAME] = utils.s_to_attr(graph.key)
     op = Operation(
         graph.session_id,
         types_pb2.UNLOAD_GRAPH,

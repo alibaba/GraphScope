@@ -26,6 +26,8 @@
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
 
+#include "grape/serialization/in_archive.h"
+
 namespace gs {
 
 namespace dynamic {
@@ -57,9 +59,10 @@ class Value : public rapidjson::Value {
   }
   // Constructor with move semantics.
   Value(Value& rhs) { Base::CopyFrom(rhs, allocator_); }
-  explicit Value(rapidjson::Value& rhs) { Base::CopyFrom(rhs, allocator_); }
+  explicit Value(rapidjson::Value& rhs) : Base(std::move(rhs)) {}
   // Move constructor
-  Value(Value&& rhs) : Base(std::move(rhs)) {}
+  Value(Value&& rhs) noexcept : Base(std::move(rhs)) {}
+  explicit Value(rapidjson::Value&& rhs) : Base(std::move(rhs)) {}
   // Constructor with value type
   explicit Value(rapidjson::Type type) noexcept : Base(type) {}
   // Constructor for common type
@@ -94,7 +97,11 @@ class Value : public rapidjson::Value {
     return *this;
   }
   Value& operator=(rapidjson::Value&& rhs) noexcept {
-    Base::operator=(rhs.Move());
+    Base::operator=(rhs);
+    return *this;
+  }
+  Value& operator=(rapidjson::Value& rhs) noexcept {
+    Base::operator=(rhs);
     return *this;
   }
 
@@ -130,9 +137,9 @@ class Value : public rapidjson::Value {
   explicit Value(const std::string& s) : Base(s.c_str(), allocator_) {}
   explicit Value(const char* s) : Base(s, allocator_) {}
 
-  void CopyFrom(const Value& rhs) {
+  void CopyFrom(const Value& rhs, AllocatorT& allocator = allocator_) {
     if (this != &rhs) {
-      Base::CopyFrom(rhs, allocator_);
+      Base::CopyFrom(rhs, allocator);
     }
   }
 
@@ -140,15 +147,17 @@ class Value : public rapidjson::Value {
   template <typename T>
   void Insert(const std::string& key, T&& value) {
     Value v_(value);
-    Base::AddMember(Value(key).Move(), v_, allocator_);
+    Base::AddMember(rapidjson::Value(key, allocator_).Move(), v_, allocator_);
   }
 
   void Insert(const std::string& key, Value& value) {
-    Base::AddMember(Value(key).Move(), value, allocator_);
+    Base::AddMember(rapidjson::Value(key, allocator_).Move(), value,
+                    allocator_);
   }
 
   void Insert(const std::string& key, rapidjson::Value& value) {
-    Base::AddMember(Value(key).Move(), value, allocator_);
+    Base::AddMember(rapidjson::Value(key, allocator_).Move(), value,
+                    allocator_);
   }
 
   // Update for object
@@ -221,7 +230,7 @@ class Value : public rapidjson::Value {
 };
 
 // Stringify Value to json.
-static inline const char* Stringify(const Value& value) {
+static inline const char* Stringify(const rapidjson::Value& value) {
   static rapidjson::StringBuffer buffer;
   rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
   buffer.Clear();
@@ -230,7 +239,7 @@ static inline const char* Stringify(const Value& value) {
 }
 
 // Parse json to Value.
-static inline void Parse(const std::string& str, Value& val) {
+static inline void Parse(const std::string& str, rapidjson::Value& val) {
   // the document d must use the same allocator with other values
   rapidjson::Document d(&Value::allocator_);
   d.Parse(str.c_str());
@@ -267,6 +276,42 @@ struct hash<::gs::dynamic::Value> {
 };
 
 }  // namespace std
+
+namespace grape {
+inline grape::InArchive& operator<<(grape::InArchive& archive,
+                                    const rapidjson::Value& value) {
+  if (value.IsInt64()) {
+    archive << value.GetInt64();
+  } else if (value.IsDouble()) {
+    archive << value.GetDouble();
+  } else if (value.IsString()) {
+    size_t size = value.GetStringLength();
+    archive << size;
+    archive.AddBytes(value.GetString(), size);
+  } else {
+    std::string json = gs::dynamic::Stringify(value);
+    archive << json;
+  }
+  return archive;
+}
+
+inline grape::InArchive& operator<<(grape::InArchive& archive,
+                                    const gs::dynamic::Value& value) {
+  if (value.IsInt64()) {
+    archive << value.GetInt64();
+  } else if (value.IsDouble()) {
+    archive << value.GetDouble();
+  } else if (value.IsString()) {
+    size_t size = value.GetStringLength();
+    archive << size;
+    archive.AddBytes(value.GetString(), size);
+  } else {
+    std::string json = gs::dynamic::Stringify(value);
+    archive << json;
+  }
+  return archive;
+}
+}  // namespace grape
 
 #endif  // NETWORKX
 #endif  // ANALYTICAL_ENGINE_CORE_OBJECT_DYNAMIC_H_
