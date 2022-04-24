@@ -83,11 +83,14 @@ struct DynamicWrapper<std::string> {
 template <typename FRAG_T>
 class ArrowToDynamicConverter {
   using src_fragment_t = FRAG_T;
+  using vertex_t = typename src_fragment_t::vertex_t;
   using oid_t = typename src_fragment_t::oid_t;
   using label_id_t = typename src_fragment_t::label_id_t;
   using dst_fragment_t = DynamicFragment;
   using vertex_map_t = typename dst_fragment_t::vertex_map_t;
   using vid_t = typename dst_fragment_t::vid_t;
+  using internal_vertex_t = typename dst_fragment_t::internal_vertex_t;
+  using edge_t = typename dst_fragment_t::edge_t;
   using vdata_t = typename dst_fragment_t::vdata_t;
   using edata_t = typename dst_fragment_t::edata_t;
 
@@ -98,7 +101,11 @@ class ArrowToDynamicConverter {
 
   bl::result<std::shared_ptr<dst_fragment_t>> Convert(
       const std::shared_ptr<src_fragment_t>& arrow_frag) {
-    auto arrow_vm = arrow_frag->GetVertexMap();
+    arrow_vm_ptr_ = arrow_frag->GetVertexMap();
+    CHECK(arrow_vm_ptr_->fnum() == comm_spec_.fnum());
+    arrow_id_parser_.Init(comm_spec_.fnum(), arrow_vm_ptr_->label_num());
+    dynamic_id_parser_.init(comm_spec_.fnum());
+
     BOOST_LEAF_AUTO(dynamic_vm, convertVertexMap(arrow_frag));
     BOOST_LEAF_AUTO(dynamic_frag, convertFragment(arrow_frag, dynamic_vm));
     return dynamic_frag;
@@ -107,32 +114,37 @@ class ArrowToDynamicConverter {
  private:
   bl::result<std::shared_ptr<vertex_map_t>> convertVertexMap(
       const std::shared_ptr<src_fragment_t>& arrow_frag) {
-    auto src_vm_ptr = arrow_frag->GetVertexMap();
     const auto& schema = arrow_frag->schema();
-    auto fnum = src_vm_ptr->fnum();
-    auto dst_vm_ptr = std::make_shared<vertex_map_t>(comm_spec_);
-    vineyard::IdParser<vid_t> id_parser;
 
-    CHECK(src_vm_ptr->fnum() == comm_spec_.fnum());
+    auto dst_vm_ptr = std::make_shared<vertex_map_t>(comm_spec_);
     dst_vm_ptr->Init();
     typename vertex_map_t::partitioner_t partitioner(comm_spec_.fnum());
     dst_vm_ptr->SetPartitioner(partitioner);
-    id_parser.Init(fnum, src_vm_ptr->label_num());
     dynamic::Value to_oid;
 
-    for (label_id_t v_label = 0; v_label < src_vm_ptr->label_num(); v_label++) {
-      std::string label_name = schema.GetVertexLabelName(v_label);
-      for (fid_t fid = 0; fid < fnum; fid++) {
-        for (vid_t offset = 0;
-             offset < src_vm_ptr->GetInnerVertexSize(fid, v_label); offset++) {
-          auto gid = id_parser.GenerateId(fid, v_label, offset);
-          typename vineyard::InternalType<oid_t>::type oid;
-
-          CHECK(src_vm_ptr->GetOid(gid, oid));
-          if (v_label == default_label_id_) {
+    for (label_id_t v_label = 0; v_label < arrow_vm_ptr_->label_num();
+         v_label++) {
+      if (v_label == default_label_id_) {
+        for (fid_t fid = 0; fid < comm_spec_.fnum(); fid++) {
+          for (vid_t offset = 0;
+               offset < arrow_vm_ptr_->GetInnerVertexSize(fid, v_label);
+               offset++) {
+            auto gid = arrow_id_parser_.GenerateId(fid, v_label, offset);
+            typename vineyard::InternalType<oid_t>::type oid;
+            CHECK(arrow_vm_ptr_->GetOid(gid, oid));
             DynamicWrapper<oid_t>::to_dynamic(oid, to_oid);
             dst_vm_ptr->AddVertex(std::move(to_oid), gid);
-          } else {
+          }
+        }
+      } else {
+        std::string label_name = schema.GetVertexLabelName(v_label);
+        for (fid_t fid = 0; fid < comm_spec_.fnum(); fid++) {
+          for (vid_t offset = 0;
+               offset < arrow_vm_ptr_->GetInnerVertexSize(fid, v_label);
+               offset++) {
+            auto gid = arrow_id_parser_.GenerateId(fid, v_label, offset);
+            typename vineyard::InternalType<oid_t>::type oid;
+            CHECK(arrow_vm_ptr_->GetOid(gid, oid));
             DynamicWrapper<oid_t>::to_dynamic_array(label_name, oid, to_oid);
             dst_vm_ptr->AddVertex(std::move(to_oid), gid);
           }
@@ -147,93 +159,117 @@ class ArrowToDynamicConverter {
       const std::shared_ptr<src_fragment_t>& src_frag,
       const std::shared_ptr<vertex_map_t>& dst_vm) {
     auto fid = src_frag->fid();
-    const auto& schema = src_frag->schema();
-    dst_fragment_t::mutation_t mutation;
-
-    for (label_id_t v_label = 0; v_label < src_frag->vertex_label_num();
-         v_label++) {
-      auto label_name = schema.GetVertexLabelName(v_label);
-      auto v_data = src_frag->vertex_data_table(v_label);
-      dynamic::Value u_oid, v_oid, data;
-      vid_t u_gid, v_gid;
-
-      // traverse vertices and extract data from ArrowFragment
-      for (const auto& u : src_frag->InnerVertices(v_label)) {
-        if (v_label == default_label_id_) {
-          u_oid = dynamic::Value(src_frag->GetId(u));
-        } else {
-          u_oid = dynamic::Value(rapidjson::kArrayType);
-          u_oid.PushBack(label_name).PushBack(src_frag->GetId(u));
-        }
-
-        CHECK(dst_vm->GetGid(fid, u_oid, u_gid));
-        data = dynamic::Value(rapidjson::kObjectType);
-        // N.B: th last column is id, we ignore it.
-        for (auto col_id = 0; col_id < v_data->num_columns() - 1; col_id++) {
-          auto column = v_data->column(col_id);
-          auto prop_key = v_data->field(col_id)->name();
-          auto type = column->type();
-          PropertyConverter<src_fragment_t>::NodeValue(src_frag, u, type,
-                                                       prop_key, col_id, data);
-        }
-        mutation.vertices_to_add.emplace_back(u_gid, data);
-
-        // traverse edges and extract data
-        for (label_id_t e_label = 0; e_label < src_frag->edge_label_num();
-             e_label++) {
-          auto oe = src_frag->GetOutgoingAdjList(u, e_label);
-          auto e_data = src_frag->edge_data_table(e_label);
-          for (auto& e : oe) {
-            auto v = e.get_neighbor();
-            auto e_id = e.edge_id();
-            auto v_label_id = src_frag->vertex_label(v);
-            if (v_label_id == default_label_id_) {
-              v_oid = dynamic::Value(src_frag->GetId(v));
-            } else {
-              v_oid = dynamic::Value(rapidjson::kArrayType);
-              v_oid.PushBack(schema.GetVertexLabelName(v_label_id))
-                  .PushBack(src_frag->GetId(v));
-            }
-            CHECK(dst_vm->GetGid(v_oid, v_gid));
-            data = dynamic::Value(rapidjson::kObjectType);
-            PropertyConverter<src_fragment_t>::EdgeValue(e_data, e_id, data);
-            mutation.edges_to_add.emplace_back(u_gid, v_gid, data);
-          }
-
-          if (src_frag->directed()) {
-            auto ie = src_frag->GetIncomingAdjList(u, e_label);
-            for (auto& e : ie) {
-              auto v = e.get_neighbor();
-              if (src_frag->IsOuterVertex(v)) {
-                auto e_id = e.edge_id();
-                auto v_label_id = src_frag->vertex_label(v);
-                if (v_label_id == default_label_id_) {
-                  v_oid = dynamic::Value(src_frag->GetId(v));
-                } else {
-                  v_oid = dynamic::Value(rapidjson::kArrayType);
-                  v_oid.PushBack(schema.GetVertexLabelName(v_label_id))
-                      .PushBack(src_frag->GetId(v));
-                }
-                CHECK(dst_vm->GetGid(v_oid, v_gid));
-                data = dynamic::Value(rapidjson::kObjectType);
-                PropertyConverter<src_fragment_t>::EdgeValue(e_data, e_id,
-                                                             data);
-                mutation.edges_to_add.emplace_back(v_gid, u_gid, data);
-              }
-            }
-          }
-        }
-      }
-    }
 
     auto dynamic_frag = std::make_shared<dst_fragment_t>(dst_vm);
-    dynamic_frag->Init(src_frag->fid(), src_frag->directed());
-    dynamic_frag->Mutate(mutation);
+    uint32_t thread_num =
+        (std::thread::hardware_concurrency() + comm_spec_.local_num() - 1) /
+        comm_spec_.local_num();
+
+    // Init allocators for dynamic fragment
+    dynamic_frag->allocators_ =
+        std::make_shared<std::vector<dynamic::AllocatorT>>(thread_num);
+    auto& allocators = dynamic_frag->allocators_;
+    std::vector<std::vector<internal_vertex_t>> vertices(thread_num);
+    std::vector<std::vector<edge_t>> edges(thread_num);
+
+    // we record the degree messages here to avoid fetch these messages in
+    // dynamic_frag.Init again.
+    std::vector<int> oe_degree(dst_vm->GetInnerVertexSize(fid), 0);
+    std::vector<int> ie_degree(dst_vm->GetInnerVertexSize(fid), 0);
+    for (label_id_t v_label = 0; v_label < src_frag->vertex_label_num();
+         v_label++) {
+      auto inner_vertices = src_frag->InnerVertices(v_label);
+      auto v_data = src_frag->vertex_data_table(v_label);
+
+      parallel_for(
+          inner_vertices.begin(), inner_vertices.end(),
+          [&](uint32_t tid, vertex_t u) {
+            vid_t u_gid = gid2Gid(src_frag->GetInnerVertexGid(u));
+            vid_t lid = dynamic_id_parser_.get_local_id(u_gid);
+            // extract vertex properties
+            // N.B: th last column is id, we ignore it.
+            dynamic::Value vertex_data(rapidjson::kObjectType);
+            for (auto col_id = 0; col_id < v_data->num_columns() - 1;
+                 col_id++) {
+              auto column = v_data->column(col_id);
+              auto& prop_key = v_data->field(col_id)->name();
+              auto type = column->type();
+              PropertyConverter<src_fragment_t>::NodeValue(
+                  src_frag, u, type, prop_key, col_id, vertex_data,
+                  (*allocators)[tid]);
+            }
+            vertices[tid].emplace_back(lid, std::move(vertex_data));
+
+            // traverse edges and extract edge properties
+            for (label_id_t e_label = 0; e_label < src_frag->edge_label_num();
+                 e_label++) {
+              auto e_data = src_frag->edge_data_table(e_label);
+              auto oe = src_frag->GetOutgoingAdjList(u, e_label);
+              oe_degree[lid] += oe.Size();
+              for (auto& e : oe) {
+                auto v = e.get_neighbor();
+                auto e_id = e.edge_id();
+                auto v_label_id = src_frag->vertex_label(v);
+                vid_t v_gid = gid2Gid(src_frag->Vertex2Gid(v));
+                dynamic::Value edge_data(rapidjson::kObjectType);
+                PropertyConverter<src_fragment_t>::EdgeValue(
+                    e_data, e_id, edge_data, (*allocators)[tid]);
+                edges[tid].emplace_back(u_gid, v_gid, std::move(edge_data));
+              }
+
+              if (src_frag->directed()) {
+                auto ie = src_frag->GetIncomingAdjList(u, e_label);
+                ie_degree[lid] += ie.Size();
+                for (auto& e : ie) {
+                  auto v = e.get_neighbor();
+                  if (src_frag->IsOuterVertex(v)) {
+                    auto e_id = e.edge_id();
+                    auto v_label_id = src_frag->vertex_label(v);
+                    vid_t v_gid = gid2Gid(src_frag->GetOuterVertexGid(v));
+                    dynamic::Value edge_data(rapidjson::kObjectType);
+                    PropertyConverter<src_fragment_t>::EdgeValue(
+                        e_data, e_id, edge_data, (*allocators)[tid]);
+                    edges[tid].emplace_back(v_gid, u_gid, std::move(edge_data));
+                  }
+                }
+              }
+            }
+          },
+          thread_num);
+    }
+
+    dynamic_frag->Init(src_frag->fid(), src_frag->directed(), vertices, edges,
+                       oe_degree, ie_degree, thread_num);
+
     return dynamic_frag;
+  }
+
+  /**
+   * Convert arrow fragment gid of vertex to corresponding dynamic fragment gid.
+   * In the covertVertexMap process, the insert order of vertex in dynamic
+   * fragment vertex map is the same as arrow fragment vertex map.
+   *
+   * Params:
+   *  - gid: the arrow fragment gid of vertex
+   *
+   * Returns:
+   *  The corresponding dynamic fragment gid of the vertex
+   */
+  vid_t gid2Gid(const vid_t gid) const {
+    auto fid = arrow_id_parser_.GetFid(gid);
+    auto label_id = arrow_id_parser_.GetLabelId(gid);
+    auto offset = arrow_id_parser_.GetOffset(gid);
+    for (label_id_t i = 0; i < label_id; ++i) {
+      offset += arrow_vm_ptr_->GetInnerVertexSize(fid, i);
+    }
+    return dynamic_id_parser_.generate_global_id(fid, offset);
   }
 
   grape::CommSpec comm_spec_;
   label_id_t default_label_id_;
+  std::shared_ptr<typename src_fragment_t::vertex_map_t> arrow_vm_ptr_;
+  vineyard::IdParser<vid_t> arrow_id_parser_;
+  grape::IdParser<vid_t> dynamic_id_parser_;
 };
 
 }  // namespace gs

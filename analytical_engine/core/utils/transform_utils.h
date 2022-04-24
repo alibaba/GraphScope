@@ -16,6 +16,7 @@ limitations under the License.
 #ifndef ANALYTICAL_ENGINE_CORE_UTILS_TRANSFORM_UTILS_H_
 #define ANALYTICAL_ENGINE_CORE_UTILS_TRANSFORM_UTILS_H_
 
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <utility>
@@ -26,33 +27,13 @@ limitations under the License.
 
 #include "vineyard/basic/ds/dataframe.h"
 #include "vineyard/basic/ds/tensor.h"
+#include "vineyard/graph/fragment/fragment_traits.h"
 
 #ifdef NETWORKX
 #include "core/object/dynamic.h"
 #endif
 #include "core/context/column.h"
 #include "core/utils/trait_utils.h"
-
-#ifdef NETWORKX
-namespace grape {
-inline grape::InArchive& operator<<(grape::InArchive& archive,
-                                    const gs::dynamic::Value& value) {
-  if (value.IsInt64()) {
-    archive << value.GetInt64();
-  } else if (value.IsDouble()) {
-    archive << value.GetDouble();
-  } else if (value.IsString()) {
-    size_t size = value.GetStringLength();
-    archive << size;
-    archive.AddBytes(value.GetString(), size);
-  } else {
-    std::string json = gs::dynamic::Stringify(value);
-    archive << json;
-  }
-  return archive;
-}
-}  // namespace grape
-#endif
 
 namespace gs {
 
@@ -1085,6 +1066,31 @@ class TransformUtils<
   const FRAG_T& frag_;
 };
 #endif
+
+template <typename ITER_T, typename FUNC_T>
+void parallel_for(const ITER_T& begin, const ITER_T& end, const FUNC_T& func,
+                  uint32_t thread_num, size_t chunk = 1024) {
+  std::vector<std::thread> threads(thread_num);
+  std::atomic<size_t> cur(0);
+  for (uint32_t i = 0; i < thread_num; ++i) {
+    threads[i] = std::thread([&cur, chunk, &func, begin, end, i]() {
+      while (true) {
+        const ITER_T cur_beg = std::min(begin + cur.fetch_add(chunk), end);
+        const ITER_T cur_end = std::min(cur_beg + chunk, end);
+        if (cur_beg == cur_end) {
+          break;
+        }
+        for (auto iter = cur_beg; iter != cur_end; ++iter) {
+          func(i, *iter);
+        }
+      }
+    });
+  }
+  for (auto& thrd : threads) {
+    thrd.join();
+  }
+}
+
 }  // namespace gs
 
 #endif  // ANALYTICAL_ENGINE_CORE_UTILS_TRANSFORM_UTILS_H_
