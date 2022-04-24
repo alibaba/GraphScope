@@ -936,9 +936,9 @@ def output(context, fd, selector, vertex_range, **kwargs):
         config[types_pb2.VERTEX_RANGE] = utils.s_to_attr(vertex_range)
 
     op = Operation(
-        context.sess_id,
+        context.session_id,
         types_pb2.OUTPUT,
-        config=None,
+        config=config,
         inputs=[context.op],
         output_types=types_pb2.NULL_OUTPUT,
     )

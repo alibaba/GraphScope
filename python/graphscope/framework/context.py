@@ -255,7 +255,9 @@ class BaseContextDAGNode(DAGNode):
             :class:`graphscope.framework.context.ResultDAGNode`, evaluated in eager mode.
         """
         protocol = fd.split("://")[0]
-        if protocol in ("hdfs", "hive", "oss", "s3"):
+        # Still use the stream to write to file,
+        # as the C++ adaptor in Vineyard requires arrow >= 4.0.0
+        if protocol in ("file", "hdfs", "hive", "oss", "s3"):
             df = self.to_vineyard_dataframe(selector, vertex_range)
             op = dag_utils.to_data_sink(df, fd, **kwargs)
         else:
