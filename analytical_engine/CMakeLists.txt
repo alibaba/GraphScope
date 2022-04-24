@@ -99,12 +99,6 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib:${CMAKE_INSTALL_PREFIX}/lib64")
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
-# Find dependencies
-include("cmake/FindRdkafka.cmake")
-if (RDKAFKA_FOUND)
-    include_directories(SYSTEM ${RDKAFKA_INCLUDE_DIRS})
-endif ()
-
 find_package(Threads REQUIRED)
 find_package(MPI REQUIRED)
 include_directories(SYSTEM ${MPI_CXX_INCLUDE_PATH})
@@ -307,12 +301,6 @@ if (BUILD_TESTS)
 
     add_vineyard_app(run_vy_ldbc SRCS test/run_vy_ldbc.cc)
     target_include_directories(run_vy_ldbc PRIVATE ${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps)
-
-    if (RDKAFKA_FOUND)
-        add_vineyard_app(run_append_frag SRCS test/run_append_frag.cc)
-        target_include_directories(run_append_frag PRIVATE ${LIBGRAPELITE_INCLUDE_DIRS}/grape/examples/gnn_sampler)
-        target_link_libraries(run_append_frag ${GFLAGS_LIBRARIES} ${RDKAFKA_LIBRARIES})
-    endif ()
 
     add_vineyard_app(run_ctx SRCS test/run_ctx.cc)
     target_include_directories(run_ctx PRIVATE ${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps)
