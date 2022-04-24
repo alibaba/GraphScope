@@ -245,22 +245,13 @@ void ToDynamicFragment(
         graph_def.set_key(dst_graph_name);
         graph_def.set_directed(dynamic_frag->directed());
         graph_def.set_graph_type(gs::rpc::graph::DYNAMIC_PROPERTY);
-        gs::rpc::graph::VineyardInfoPb vy_info;
+        gs::rpc::graph::MutableGraphInfoPb graph_info;
         if (graph_def.has_extension()) {
-          graph_def.extension().UnpackTo(&vy_info);
+          graph_def.extension().UnpackTo(&graph_info);
         }
-        vy_info.set_oid_type(gs::PropertyTypeToPb(vineyard::normalize_datatype(
-            vineyard::type_name<typename gs::DynamicFragment::oid_t>())));
-        vy_info.set_vid_type(gs::PropertyTypeToPb(vineyard::normalize_datatype(
-            vineyard::type_name<typename gs::DynamicFragment::vid_t>())));
-        vy_info.set_vdata_type(
-            gs::PropertyTypeToPb(vineyard::normalize_datatype(
-                vineyard::type_name<typename gs::DynamicFragment::vdata_t>())));
-        vy_info.set_edata_type(
-            gs::PropertyTypeToPb(vineyard::normalize_datatype(
-                vineyard::type_name<typename gs::DynamicFragment::edata_t>())));
-        vy_info.set_property_schema_json("{}");
-        graph_def.mutable_extension()->PackFrom(vy_info);
+        graph_info.set_property_schema_json(
+            gs::dynamic::Stringify(dynamic_frag->GetSchema()));
+        graph_def.mutable_extension()->PackFrom(graph_info);
 
         auto wrapper =
             std::make_shared<gs::FragmentWrapper<gs::DynamicFragment>>(

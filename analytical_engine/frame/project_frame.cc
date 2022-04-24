@@ -212,19 +212,15 @@ class ProjectSimpleFrame<gs::DynamicProjectedFragment<VDATA_T, EDATA_T>> {
 
     graph_def.set_key(projected_graph_name);
     graph_def.set_graph_type(rpc::graph::DYNAMIC_PROJECTED);
-    gs::rpc::graph::VineyardInfoPb vy_info;
+    gs::rpc::graph::MutableGraphInfoPb graph_info;
     if (graph_def.has_extension()) {
-      graph_def.extension().UnpackTo(&vy_info);
+      graph_def.extension().UnpackTo(&graph_info);
     }
-    vy_info.set_oid_type(PropertyTypeToPb(vineyard::normalize_datatype(
-        vineyard::type_name<typename projected_fragment_t::oid_t>())));
-    vy_info.set_vid_type(PropertyTypeToPb(vineyard::normalize_datatype(
-        vineyard::type_name<typename projected_fragment_t::vid_t>())));
-    vy_info.set_vdata_type(PropertyTypeToPb(vineyard::normalize_datatype(
+    graph_info.set_vdata_type(PropertyTypeToPb(vineyard::normalize_datatype(
         vineyard::type_name<typename projected_fragment_t::vdata_t>())));
-    vy_info.set_edata_type(PropertyTypeToPb(vineyard::normalize_datatype(
+    graph_info.set_edata_type(PropertyTypeToPb(vineyard::normalize_datatype(
         vineyard::type_name<typename projected_fragment_t::edata_t>())));
-    graph_def.mutable_extension()->PackFrom(vy_info);
+    graph_def.mutable_extension()->PackFrom(graph_info);
     auto wrapper = std::make_shared<FragmentWrapper<projected_fragment_t>>(
         projected_graph_name, graph_def, projected_frag);
     return std::dynamic_pointer_cast<IFragmentWrapper>(wrapper);

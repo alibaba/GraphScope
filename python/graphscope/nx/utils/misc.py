@@ -48,7 +48,7 @@ def empty_graph_in_engine(graph, directed, distributed):
         vfile="",
     )
     graph._op = op
-    graph_def = op.eval()
+    graph_def = op.eval(leaf=False)
     return graph_def
 
 

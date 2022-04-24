@@ -670,33 +670,49 @@ def _pre_process_for_bind_app_op(op, op_result_pool, key_to_op, **kwargs):
         else:
             # get graph runtime information from results
             result = op_result_pool[key_of_parent_op]
-            assert result.graph_def.extension.Is(
-                graph_def_pb2.VineyardInfoPb.DESCRIPTOR
-            )
-            vy_info = graph_def_pb2.VineyardInfoPb()
-            result.graph_def.extension.Unpack(vy_info)
             op.attr[types_pb2.GRAPH_NAME].CopyFrom(
                 attr_value_pb2.AttrValue(s=result.graph_def.key.encode("utf-8"))
             )
             op.attr[types_pb2.GRAPH_TYPE].CopyFrom(
                 attr_value_pb2.AttrValue(graph_type=result.graph_def.graph_type)
             )
-            op.attr[types_pb2.OID_TYPE].CopyFrom(
-                utils.s_to_attr(
-                    utils.normalize_data_type_str(
-                        utils.data_type_to_cpp(vy_info.oid_type)
+
+            assert result.graph_def.extension.Is(
+                graph_def_pb2.VineyardInfoPb.DESCRIPTOR
+            ) or result.graph_def.extension.Is(
+                graph_def_pb2.MutableGraphInfoPb.DESCRIPTOR
+            )
+            if result.graph_def.extension.Is(graph_def_pb2.VineyardInfoPb.DESCRIPTOR):
+                vy_info = graph_def_pb2.VineyardInfoPb()
+                result.graph_def.extension.Unpack(vy_info)
+
+                op.attr[types_pb2.OID_TYPE].CopyFrom(
+                    utils.s_to_attr(
+                        utils.normalize_data_type_str(
+                            utils.data_type_to_cpp(vy_info.oid_type)
+                        )
                     )
                 )
-            )
-            op.attr[types_pb2.VID_TYPE].CopyFrom(
-                utils.s_to_attr(utils.data_type_to_cpp(vy_info.vid_type))
-            )
-            op.attr[types_pb2.V_DATA_TYPE].CopyFrom(
-                utils.s_to_attr(utils.data_type_to_cpp(vy_info.vdata_type))
-            )
-            op.attr[types_pb2.E_DATA_TYPE].CopyFrom(
-                utils.s_to_attr(utils.data_type_to_cpp(vy_info.edata_type))
-            )
+                op.attr[types_pb2.VID_TYPE].CopyFrom(
+                    utils.s_to_attr(utils.data_type_to_cpp(vy_info.vid_type))
+                )
+                op.attr[types_pb2.V_DATA_TYPE].CopyFrom(
+                    utils.s_to_attr(utils.data_type_to_cpp(vy_info.vdata_type))
+                )
+                op.attr[types_pb2.E_DATA_TYPE].CopyFrom(
+                    utils.s_to_attr(utils.data_type_to_cpp(vy_info.edata_type))
+                )
+            elif result.graph_def.extension.Is(
+                graph_def_pb2.MutableGraphInfoPb.DESCRIPTOR
+            ):
+                graph_info = graph_def_pb2.MutableGraphInfoPb()
+                result.graph_def.extension.Unpack(graph_info)
+                op.attr[types_pb2.V_DATA_TYPE].CopyFrom(
+                    utils.s_to_attr(utils.data_type_to_cpp(graph_info.vdata_type))
+                )
+                op.attr[types_pb2.E_DATA_TYPE].CopyFrom(
+                    utils.s_to_attr(utils.data_type_to_cpp(graph_info.edata_type))
+                )
 
 
 # get `run_app` runtime informarion in lazy mode
@@ -768,14 +784,13 @@ def _pre_process_for_run_app_op(op, op_result_pool, key_to_op, **kwargs):
 
 
 def _pre_process_for_unload_graph_op(op, op_result_pool, key_to_op, **kwargs):
-    assert len(op.parents) <= 1
-    if len(op.parents) == 1:
-        key_of_parent_op = op.parents[0]
-        result = op_result_pool[key_of_parent_op]
-        assert result.graph_def.extension.Is(graph_def_pb2.VineyardInfoPb.DESCRIPTOR)
+    assert len(op.parents) == 1
+    key_of_parent_op = op.parents[0]
+    result = op_result_pool[key_of_parent_op]
+    op.attr[types_pb2.GRAPH_NAME].CopyFrom(utils.s_to_attr(result.graph_def.key))
+    if result.graph_def.extension.Is(graph_def_pb2.VineyardInfoPb.DESCRIPTOR):
         vy_info = graph_def_pb2.VineyardInfoPb()
         result.graph_def.extension.Unpack(vy_info)
-        op.attr[types_pb2.GRAPH_NAME].CopyFrom(utils.s_to_attr(result.graph_def.key))
         op.attr[types_pb2.VINEYARD_ID].CopyFrom(utils.i_to_attr(vy_info.vineyard_id))
 
 
@@ -918,13 +933,40 @@ def _pre_process_for_output_graph_op(op, op_result_pool, key_to_op, **kwargs):
 def _pre_process_for_project_to_simple_op(  # noqa: C901
     op, op_result_pool, key_to_op, **kwargs
 ):
+    assert len(op.parents) == 1
+    key_of_parent_op = op.parents[0]
+    r = op_result_pool[key_of_parent_op]
+
     # for nx graph
-    if op.attr[types_pb2.GRAPH_TYPE].graph_type in (
-        graph_def_pb2.DYNAMIC_PROJECTED,
-        graph_def_pb2.ARROW_FLATTENED,
-    ):
+    if r.graph_def.graph_type == graph_def_pb2.DYNAMIC_PROPERTY:
+        graph_info = graph_def_pb2.MutableGraphInfoPb()
+        r.graph_def.extension.Unpack(graph_info)
+        schema = json.loads(graph_info.property_schema_json)
+        graph_name = r.graph_def.key
+        v_prop = op.attr[types_pb2.V_PROP_KEY].s.decode("utf-8")
+        e_prop = op.attr[types_pb2.E_PROP_KEY].s.decode("utf-8")
+        v_prop_type = graph_def_pb2.NULLVALUE
+        e_prop_type = graph_def_pb2.NULLVALUE
+        if v_prop != "None" and v_prop in schema["vertex"]:
+            v_prop_type = schema["vertex"][v_prop]
+        if e_prop != "None" and e_prop in schema["edge"]:
+            e_prop_type = schema["edge"][e_prop]
+
+        op.attr[types_pb2.GRAPH_NAME].CopyFrom(
+            attr_value_pb2.AttrValue(s=graph_name.encode("utf-8"))
+        )
+        op.attr[types_pb2.GRAPH_TYPE].CopyFrom(
+            utils.graph_type_to_attr(graph_def_pb2.DYNAMIC_PROJECTED)
+        )
+        op.attr[types_pb2.V_DATA_TYPE].CopyFrom(
+            utils.s_to_attr(utils.data_type_to_cpp(v_prop_type))
+        )
+        op.attr[types_pb2.E_DATA_TYPE].CopyFrom(
+            utils.s_to_attr(utils.data_type_to_cpp(e_prop_type))
+        )
         return
 
+    # for arrow property graph
     def _check_v_prop_exists_in_all_v_labels(schema, prop):
         exists = True
         for v_label in schema.vertex_labels:
@@ -938,9 +980,6 @@ def _pre_process_for_project_to_simple_op(  # noqa: C901
         return exists
 
     # get parent graph schema
-    assert len(op.parents) == 1
-    key_of_parent_op = op.parents[0]
-    r = op_result_pool[key_of_parent_op]
     schema = GraphSchema()
     schema.from_graph_def(r.graph_def)
     graph_name = r.graph_def.key

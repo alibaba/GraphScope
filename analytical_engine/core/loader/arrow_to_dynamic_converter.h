@@ -239,6 +239,8 @@ class ArrowToDynamicConverter {
     dynamic_frag->Init(src_frag->fid(), src_frag->directed(), vertices, edges,
                        oe_degree, ie_degree, thread_num);
 
+    initFragmentSchema(dynamic_frag, src_frag->schema());
+
     return dynamic_frag;
   }
 
@@ -261,6 +263,27 @@ class ArrowToDynamicConverter {
       offset += arrow_vm_ptr_->GetInnerVertexSize(fid, i);
     }
     return dynamic_id_parser_.generate_global_id(fid, offset);
+  }
+
+  void initFragmentSchema(std::shared_ptr<dst_fragment_t> frag,
+                          const vineyard::PropertyGraphSchema& schema) {
+    // init vertex properties schema
+    for (label_id_t label_id = 0; label_id < schema.all_vertex_label_num();
+         ++label_id) {
+      for (auto& p : schema.GetVertexPropertyListByLabel(label_id)) {
+        dynamic::Value key(p.first);
+        frag->schema_["vertex"].AddMember(key, dynamic::Str2RpcType(p.second),
+                                          dynamic::Value::allocator_);
+      }
+    }
+    for (label_id_t label_id = 0; label_id < schema.all_edge_label_num();
+         ++label_id) {
+      for (auto& p : schema.GetEdgePropertyListByLabel(label_id)) {
+        dynamic::Value key(p.first);
+        frag->schema_["edge"].AddMember(key, dynamic::Str2RpcType(p.second),
+                                        dynamic::Value::allocator_);
+      }
+    }
   }
 
   grape::CommSpec comm_spec_;
