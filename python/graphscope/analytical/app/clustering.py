@@ -21,7 +21,7 @@ from graphscope.framework.app import AppAssets
 from graphscope.framework.app import not_compatible_for
 from graphscope.framework.app import project_to_simple
 
-__all__ = ["clustering"]
+__all__ = ["avg_clustering", "clustering"]
 
 
 @project_to_simple
@@ -54,3 +54,32 @@ def clustering(graph):
         return AppAssets(algo="clustering", context="vertex_data")(graph)
     else:
         return AppAssets(algo="lcc", context="vertex_data")(graph)
+
+
+@project_to_simple
+@not_compatible_for("arrow_property", "dynamic_property", "undirected")
+def avg_clustering(graph):
+    """Compute the average clustering coefficient for the directed graph.
+
+    Args:
+        graph (:class:`graphscope.Graph`): A simple graph.
+
+    Returns:
+        r: float
+            The average clustering coefficient.
+
+    Examples:
+
+    .. code:: python
+
+        >>> import graphscope
+        >>> from graphscope.dataset import load_p2p_network
+        >>> sess = graphscope.session(cluster_type="hosts", mode="eager")
+        >>> g = load_p2p_network(sess)
+        >>> # project to a simple graph
+        >>> pg = g.project(vertices={"host": ["id"]}, edges={"connect": ["dist"]})
+        >>> c = graphscope.avg_clustering(pg)
+        >>> print(c.to_numpy("r", axis=0)[0])
+        >>> sess.close()
+    """
+    return AppAssets(algo="avg_clustering", context="tensor")(graph)

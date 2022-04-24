@@ -29,6 +29,7 @@ from graphscope.analytical.app.average_shortest_path_length import \
 
 # fmt: on
 from graphscope.analytical.app.bfs import bfs
+from graphscope.analytical.app.clustering import avg_clustering
 from graphscope.analytical.app.clustering import clustering
 
 # fmt: off
