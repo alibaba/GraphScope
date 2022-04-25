@@ -17,9 +17,6 @@ import com.alibaba.graphscope.groot.operation.OperationBatch;
 import com.alibaba.graphscope.groot.store.external.ExternalStorage;
 import com.alibaba.maxgraph.proto.groot.GraphDefPb;
 
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-
 import java.io.Closeable;
 import java.io.IOException;
 

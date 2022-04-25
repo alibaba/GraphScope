@@ -22,7 +22,6 @@ import com.alibaba.maxgraph.common.config.StoreConfig;
 import com.alibaba.maxgraph.proto.groot.GraphDefPb;
 import com.sun.jna.Pointer;
 
-import org.apache.hadoop.fs.FileSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

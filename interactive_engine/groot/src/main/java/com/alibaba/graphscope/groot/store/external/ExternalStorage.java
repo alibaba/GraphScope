@@ -1,6 +1,7 @@
 package com.alibaba.graphscope.groot.store.external;
 
 import com.alibaba.maxgraph.common.config.Configs;
+
 import java.io.IOException;
 import java.net.URI;
 
