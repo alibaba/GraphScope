@@ -601,15 +601,6 @@ class DynamicProjectedFragment {
                 "unsupported type");
 };
 
-/**
- * @brief A wrapper class of DynamicFragment.
- * Inheritance does not work because of different return type of some methods.
- * We forward most of methods to DynamicFragment but enact
- * GetIncoming(Outgoing)AdjList, Get(Set)Data...
- *
- * @tparam VDATA_T The type of data attached with the vertex
- * @tparam EDATA_T The type of data attached with the edge
- */
 template <>
 class DynamicProjectedFragment<grape::EmptyType, grape::EmptyType> {
  public:
