@@ -111,6 +111,7 @@ enum OperationType {
   CLOSE_LEARNING_INSTANCE = 42;
 
   DATA_SOURCE = 46;  // loader
+  DATA_SINK = 47;
 
   // data
   CONTEXT_TO_NUMPY = 50;

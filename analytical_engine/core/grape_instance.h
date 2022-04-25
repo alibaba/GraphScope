@@ -122,6 +122,10 @@ class GrapeInstance : public Subscriber {
   bl::result<std::string> contextToVineyardDataFrame(
       const rpc::GSParams& params);
 
+  bl::result<void> outputContext(const rpc::GSParams& params);
+
+  bl::result<std::string> output(const rpc::GSParams& params);
+
   bl::result<rpc::graph::GraphDefPb> addColumn(const rpc::GSParams& params);
 
   bl::result<rpc::graph::GraphDefPb> convertGraph(const rpc::GSParams& params);
@@ -151,6 +155,24 @@ class GrapeInstance : public Subscriber {
       const rpc::GSParams& params);
 
   bl::result<void> registerGraphType(const rpc::GSParams& params);
+
+  bl::result<void> getContextDetails(
+      const rpc::GSParams& params, std::string* s_selector,
+      std::pair<std::string, std::string>* range,
+      std::shared_ptr<IContextWrapper>* wrapper) {
+    if (params.HasKey(rpc::SELECTOR)) {
+      BOOST_LEAF_ASSIGN(*s_selector, params.Get<std::string>(rpc::SELECTOR));
+    }
+    if (params.HasKey(rpc::VERTEX_RANGE)) {
+      BOOST_LEAF_AUTO(range_in_json,
+                      params.Get<std::string>(rpc::VERTEX_RANGE));
+      *range = parseRange(range_in_json);
+    }
+    BOOST_LEAF_AUTO(context_key, params.Get<std::string>(rpc::CONTEXT_KEY));
+    BOOST_LEAF_ASSIGN(*wrapper,
+                      object_manager_.GetObject<IContextWrapper>(context_key));
+    return {};
+  }
 
   static std::string toJson(const std::map<std::string, std::string>& map) {
     boost::property_tree::ptree pt;
