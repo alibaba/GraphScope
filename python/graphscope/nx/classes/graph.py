@@ -2101,6 +2101,7 @@ class Graph(_GraphBase):
 
         self._key = arrow_property_graph.key
         self._schema = arrow_property_graph.schema
+        self._op = arrow_property_graph.op
         if self._default_label is not None:
             try:
                 self._default_label_id = self._schema.get_vertex_label_id(

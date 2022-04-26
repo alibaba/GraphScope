@@ -53,6 +53,33 @@ jobs:
     steps:
     # For push it's necessary to checkout the code
     - uses: actions/checkout@v2
+    # For pull requests it's not necessary to checkout the code
+    - uses: dorny/paths-filter@v2
+      id: filter
+      with:
+        base: main  # Change detection against merge-base with main before push
+        filters: |
+          gae-python:
+            - 'proto/**'
+            - 'analytical_engine/**'
+            - 'python/graphscope/analytical/**'
+            - 'python/graphscope/client/**'
+            - 'python/graphscope/dataset/**'
+            - 'python/graphscope/deploy/**'
+            - 'python/graphscope/framework/**'
+            - 'python/graphscope/tests/unittest/**'
+            - 'coordinator/gscoordinator/**'
+            - '.github/workflows/ci.yml'
+          networkx:
+            - 'analytical_engine/apps/**'
+            - 'analytical_engine/frame/**'
+            - 'analytical_engine/core/**'
+            - 'python/graphscope/nx/**'
+          gie-function-test:
+            - 'interactive_engine/**'
+            - 'python/graphscope/interactive/**'
+            - '.github/workflows/ci.yml'
+
     - name: Setup Java11
       uses: actions/setup-java@v2
       with:
@@ -140,33 +167,6 @@ jobs:
         python3 -m isort --check --diff .
         python3 -m black --check --diff .
         python3 -m flake8 .
-
-    # For pull requests it's not necessary to checkout the code
-    - uses: dorny/paths-filter@v2
-      id: filter
-      with:
-        base: main  # Change detection against merge-base with main before push
-        filters: |
-          gae-python:
-            - 'proto/**'
-            - 'analytical_engine/**'
-            - 'python/graphscope/analytical/**'
-            - 'python/graphscope/client/**'
-            - 'python/graphscope/dataset/**'
-            - 'python/graphscope/deploy/**'
-            - 'python/graphscope/framework/**'
-            - 'python/graphscope/tests/unittest/**'
-            - 'coordinator/gscoordinator/**'
-            - '.github/workflows/ci.yml'
-          networkx:
-            - 'analytical_engine/apps/**'
-            - 'analytical_engine/frame/**'
-            - 'analytical_engine/core/**'
-            - 'python/graphscope/nx/**'
-          gie-function-test:
-            - 'interactive_engine/**'
-            - 'python/graphscope/interactive/**'
-            - '.github/workflows/ci.yml'
 
   build-wheels:
     # Require the user id of the self-hosted is 1001, which may need to be
@@ -368,6 +368,7 @@ jobs:
             - 'analytical_engine/frame/**'
             - 'analytical_engine/core/**'
             - 'python/graphscope/nx/__init__.py'
+            - 'python/graphscope/nx/classes/**'
             - 'python/graphscope/nx/!(tests)'
             - 'python/graphscope/nx/tests/!(convert)'
           convert:
