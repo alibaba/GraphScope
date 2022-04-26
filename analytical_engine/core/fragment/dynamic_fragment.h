@@ -319,10 +319,12 @@ class DynamicFragment
           if (IsInnerVertexGid(e.dst)) {
             e.dst = id_parser_.get_local_id(e.dst);
           } else {
+            mutation.vertices_to_add.emplace_back(e.dst);
             e.dst = parseOrAddOuterVertexGid(e.dst);
           }
         } else {
           if (IsInnerVertexGid(e.dst)) {
+            mutation.vertices_to_add.emplace_back(e.src);
             e.src = parseOrAddOuterVertexGid(e.src);
             e.dst = id_parser_.get_local_id(e.dst);
           } else {
