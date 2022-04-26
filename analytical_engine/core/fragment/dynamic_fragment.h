@@ -252,8 +252,8 @@ class DynamicFragment
             0.1) {
       std::set<vertex_t> sparse_set;
       for (auto gid : mutation.vertices_to_remove) {
-        if (Gid2Vertex(gid, v)) {
-          if (IsInnerVertex(v) && IsAliveInnerVertex(v)) {
+        if (Gid2Vertex(gid, v) && IsAliveVertex(v)) {
+          if (IsInnerVertex(v)) {
             if (load_strategy_ == grape::LoadStrategy::kBothOutIn) {
               ie_.remove_vertex(v.GetValue());
             }
@@ -279,8 +279,8 @@ class DynamicFragment
     } else if (!mutation.vertices_to_remove.empty()) {
       grape::DenseVertexSet<vertices_t> dense_bitset(Vertices());
       for (auto gid : mutation.vertices_to_remove) {
-        if (Gid2Vertex(gid, v)) {
-          if (IsInnerVertex(v) && IsAliveInnerVertex(v)) {
+        if (Gid2Vertex(gid, v) && IsAliveVertex(v)) {
+          if (IsInnerVertex(v)) {
             if (load_strategy_ == grape::LoadStrategy::kBothOutIn) {
               ie_.remove_vertex(v.GetValue());
             }
@@ -319,10 +319,12 @@ class DynamicFragment
           if (IsInnerVertexGid(e.dst)) {
             e.dst = id_parser_.get_local_id(e.dst);
           } else {
+            mutation.vertices_to_add.emplace_back(e.dst);
             e.dst = parseOrAddOuterVertexGid(e.dst);
           }
         } else {
           if (IsInnerVertexGid(e.dst)) {
+            mutation.vertices_to_add.emplace_back(e.src);
             e.src = parseOrAddOuterVertexGid(e.src);
             e.dst = id_parser_.get_local_id(e.dst);
           } else {
