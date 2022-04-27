@@ -100,13 +100,13 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::loadGraph(
     vy_info.set_vineyard_id(-1);
 
     vy_info.set_oid_type(PropertyTypeToPb(vineyard::normalize_datatype(
-        vineyard::TypeName<typename gs::DynamicFragment::oid_t>::Get())));
+        vineyard::type_name<typename gs::DynamicFragment::oid_t>())));
     vy_info.set_vid_type(PropertyTypeToPb(vineyard::normalize_datatype(
-        vineyard::TypeName<typename gs::DynamicFragment::vid_t>::Get())));
+        vineyard::type_name<typename gs::DynamicFragment::vid_t>())));
     vy_info.set_vdata_type(PropertyTypeToPb(vineyard::normalize_datatype(
-        vineyard::TypeName<typename gs::DynamicFragment::vdata_t>::Get())));
+        vineyard::type_name<typename gs::DynamicFragment::vdata_t>())));
     vy_info.set_edata_type(PropertyTypeToPb(vineyard::normalize_datatype(
-        vineyard::TypeName<typename gs::DynamicFragment::edata_t>::Get())));
+        vineyard::type_name<typename gs::DynamicFragment::edata_t>())));
     vy_info.set_property_schema_json("{}");
     graph_def.mutable_extension()->PackFrom(vy_info);
 

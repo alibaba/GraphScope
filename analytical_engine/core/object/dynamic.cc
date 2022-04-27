@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <rapidjson/rapidjson.h>
 #ifdef NETWORKX
 
 #include <numeric>
@@ -55,6 +56,7 @@ std::size_t gs::dynamic::Value::hash() const {
   case rapidjson::kObjectType:
     throw std::runtime_error("Object value can't not be hashed.");
   }
+  return rapidjson::kNullType;  // avoid -Wreturn-type warnings
 }
 
 #endif  // NETWORKX

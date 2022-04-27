@@ -401,13 +401,8 @@ class ArrowProjectedFragment
 
   static std::shared_ptr<ArrowProjectedFragment<oid_t, vid_t, vdata_t, edata_t>>
   Project(std::shared_ptr<vineyard::ArrowFragment<oid_t, vid_t>> fragment,
-          const std::string& v_label_str, const std::string& v_prop_str,
-          const std::string& e_label_str, const std::string& e_prop_str) {
-    label_id_t v_label = boost::lexical_cast<label_id_t>(v_label_str);
-    label_id_t e_label = boost::lexical_cast<label_id_t>(e_label_str);
-    prop_id_t v_prop = boost::lexical_cast<label_id_t>(v_prop_str);
-    prop_id_t e_prop = boost::lexical_cast<label_id_t>(e_prop_str);
-
+          const label_id_t& v_label, const prop_id_t& v_prop,
+          const label_id_t& e_label, const prop_id_t& e_prop) {
     vineyard::Client& client =
         *dynamic_cast<vineyard::Client*>(fragment->meta().GetClient());
     std::shared_ptr<vertex_map_t> vm =
@@ -470,10 +465,10 @@ class ArrowProjectedFragment
     if (fragment->directed()) {
       std::shared_ptr<arrow::Int64Array> ie_offsets_begin_arrow,
           ie_offsets_end_arrow;
-      selectEdgeByNeighborLabel(fragment, v_label,
-                                fragment->ie_lists_[v_label][e_label],
-                                fragment->ie_offsets_lists_[v_label][e_label],
-                                ie_offsets_begin_arrow, ie_offsets_end_arrow);
+      selectEdgeByNeighborLabel(
+          fragment, v_label, fragment->ie_lists_[v_label][e_label]->GetArray(),
+          fragment->ie_offsets_lists_[v_label][e_label]->GetArray(),
+          ie_offsets_begin_arrow, ie_offsets_end_arrow);
       vineyard::NumericArrayBuilder<int64_t> ie_offsets_begin_builder(
           client, ie_offsets_begin_arrow);
       ie_offsets_begin =
@@ -494,10 +489,10 @@ class ArrowProjectedFragment
     {
       std::shared_ptr<arrow::Int64Array> oe_offsets_begin_arrow,
           oe_offsets_end_arrow;
-      selectEdgeByNeighborLabel(fragment, v_label,
-                                fragment->oe_lists_[v_label][e_label],
-                                fragment->oe_offsets_lists_[v_label][e_label],
-                                oe_offsets_begin_arrow, oe_offsets_end_arrow);
+      selectEdgeByNeighborLabel(
+          fragment, v_label, fragment->oe_lists_[v_label][e_label]->GetArray(),
+          fragment->oe_offsets_lists_[v_label][e_label]->GetArray(),
+          oe_offsets_begin_arrow, oe_offsets_end_arrow);
       vineyard::NumericArrayBuilder<int64_t> oe_offsets_begin_builder(
           client, oe_offsets_begin_arrow);
       oe_offsets_begin =
@@ -602,7 +597,7 @@ class ArrowProjectedFragment
                                       ->column(vertex_prop_)
                                       ->chunk(0));
     }
-    ovgid_list_ = fragment_->ovgid_lists_[vertex_label_];
+    ovgid_list_ = fragment_->ovgid_lists_[vertex_label_]->GetArray();
     ovg2l_map_ = fragment_->ovg2l_maps_[vertex_label_];
 
     if (fragment_->edge_tables_[edge_label_]->num_rows() == 0) {
@@ -616,9 +611,9 @@ class ArrowProjectedFragment
     }
 
     if (directed_) {
-      ie_ = fragment_->ie_lists_[vertex_label_][edge_label_];
+      ie_ = fragment_->ie_lists_[vertex_label_][edge_label_]->GetArray();
     }
-    oe_ = fragment_->oe_lists_[vertex_label_][edge_label_];
+    oe_ = fragment_->oe_lists_[vertex_label_][edge_label_]->GetArray();
 
     vm_ptr_ = std::make_shared<vertex_map_t>();
     vm_ptr_->Construct(meta.GetMemberMeta("arrow_projected_vertex_map"));

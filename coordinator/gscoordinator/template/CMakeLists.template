@@ -165,17 +165,11 @@ if (libgrapelite_FOUND)
 endif()
 
 # find vineyard-----------------------------------------
-find_package(vineyard 0.3.21 QUIET)
+find_package(vineyard 0.4.0 QUIET)
 if (vineyard_FOUND)
   include_directories(AFTER SYSTEM ${VINEYARD_INCLUDE_DIRS})
 endif()
 add_compile_options(-DENABLE_SELECTOR)
-
-# find Glog---------------------------------------------------------------------
-include("${ANALYTICAL_ENGINE_HOME}/${CMAKE_INSTALL_LIBDIR}/cmake/graphscope-analytical/cmake/FindGlog.cmake")
-if (GLOG_FOUND)
-  include_directories(AFTER SYSTEM ${GLOG_INCLUDE_DIRS})
-endif()
 
 # include jni------------------------------------------------------------------
 if(ENABLE_JAVA_SDK)
@@ -238,11 +232,13 @@ endif()
 if(GRAPHSCOPE_ANALYTICAL_HOME)
     include_directories("${GRAPHSCOPE_ANALYTICAL_INCLUDE_DIRS}")
     include_directories("${GRAPHSCOPE_ANALYTICAL_HOME}/include/graphscope/apps")
+    include_directories("${GRAPHSCOPE_ANALYTICAL_HOME}/include/graphscope/proto")
     # include vineyard----------------------------------------------------------
     include_directories("${GRAPHSCOPE_ANALYTICAL_HOME}/include/vineyard")
 else()
     include_directories("${ANALYTICAL_ENGINE_HOME}")
     include_directories("${ANALYTICAL_ENGINE_HOME}/apps")
+    include_directories("${ANALYTICAL_ENGINE_HOME}/proto")
 endif()
 
 # include jni------------------------------------------------------------------

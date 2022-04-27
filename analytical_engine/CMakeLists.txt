@@ -57,6 +57,13 @@ else ()
     add_custom_target(ccache-stats COMMAND echo "ccache not found.")
 endif (ccache_EXECUTABLE)
 
+# enable colored diagnostics
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    add_compile_options(-fdiagnostics-color=always)
+elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
+    add_compile_options(-fcolor-diagnostics)
+endif()
+
 include(CheckCXXCompilerFlag)
 include(CheckLibraryExists)
 include(CheckCXXSourceRuns)
@@ -164,7 +171,7 @@ endif ()
 find_package(libgrapelite REQUIRED)
 include_directories(${LIBGRAPELITE_INCLUDE_DIRS})
 
-find_package(vineyard 0.3.21 REQUIRED)
+find_package(vineyard 0.4.0 REQUIRED)
 include_directories(${VINEYARD_INCLUDE_DIRS})
 add_compile_options(-DENABLE_SELECTOR)
 

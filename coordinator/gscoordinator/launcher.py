@@ -154,6 +154,7 @@ class LocalLauncher(Launcher):
         self._zookeeper_port = None
         self._zetcd_process = None
         # vineyardd
+        self._vineyard_rpc_port = None
         self._vineyardd_process = None
         # analytical engine
         self._analytical_engine_process = None
@@ -433,8 +434,11 @@ class LocalLauncher(Launcher):
         if not self._vineyard_socket:
             ts = get_timestamp()
             vineyard_socket = f"{self._vineyard_socket_prefix}{ts}"
+            self._vineyard_rpc_port = 9600 if is_free_port(9600) else get_free_port()
+
             cmd = self._find_vineyardd()
             cmd.extend(["--socket", vineyard_socket])
+            cmd.extend(["--rpc_socket_port", str(self._vineyard_rpc_port)])
             cmd.extend(["--size", self._shared_mem])
             cmd.extend(["-etcd_endpoint", self._etcd_endpoint])
             cmd.extend(["-etcd_prefix", f"vineyard.gsa.{ts}"])
