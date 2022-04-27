@@ -474,7 +474,7 @@ void Run(vineyard::Client& client, const grape::CommSpec& comm_spec,
       RunAutoSSSP(fragment, comm_spec, "./outputs_auto_sssp/");
     } else {
       std::shared_ptr<ProjectedFragmentType> projected_fragment =
-          ProjectedFragmentType::Project(fragment, "0", "0", "0", "0");
+          ProjectedFragmentType::Project(fragment, 0, 0, 0, 0);
 
       RunProjectedWCC(projected_fragment, comm_spec, "./output_projected_wcc/");
       RunProjectedSSSP(projected_fragment, comm_spec,

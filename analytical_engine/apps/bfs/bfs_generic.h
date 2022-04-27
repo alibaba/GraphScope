@@ -107,9 +107,9 @@ class BFSGeneric : public AppBase<FRAG_T, BFSGenericContext<FRAG_T>>,
     // Make sure IncEval continues when all activated neighbor is local.
     fid_t terminate_worker_num = 0;
     if (ctx.next_level_inner.empty() || ctx.depth == ctx.depth_limit) {
-      Sum(1, terminate_worker_num);
+      Sum(1u, terminate_worker_num);
     } else {
-      Sum(0, terminate_worker_num);
+      Sum(0u, terminate_worker_num);
       messages.ForceContinue();
     }
     if (terminate_worker_num == frag.fnum()) {

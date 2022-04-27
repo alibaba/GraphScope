@@ -133,9 +133,9 @@ int main(int argc, char** argv) {
       std::dynamic_pointer_cast<GraphType>(client.GetObject(fragment_id));
 
   vineyard::ObjectID empty_frag_id =
-      EmptyProjectedGraphType::Project(fragment, "0", "-1", "0", "-1")->id();
+      EmptyProjectedGraphType::Project(fragment, 0, -1, 0, -1)->id();
   vineyard::ObjectID ed_frag_id =
-      EDProjectedGraphType::Project(fragment, "0", "-1", "0", "0")->id();
+      EDProjectedGraphType::Project(fragment, 0, -1, 0, 0)->id();
 
   if (comm_spec.worker_id() == 0) {
     LOG(INFO) << "[empty graph ids]:";

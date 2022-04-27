@@ -224,7 +224,6 @@ class ArrowToDynamicConverter {
                   auto v = e.get_neighbor();
                   if (src_frag->IsOuterVertex(v)) {
                     auto e_id = e.edge_id();
-                    auto v_label_id = src_frag->vertex_label(v);
                     vid_t v_gid = gid2Gid(src_frag->GetOuterVertexGid(v));
                     dynamic::Value edge_data(rapidjson::kObjectType);
                     PropertyConverter<src_fragment_t>::EdgeValue(

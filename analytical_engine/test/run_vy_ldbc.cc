@@ -229,7 +229,7 @@ void Run(vineyard::Client& client, const grape::CommSpec& comm_spec,
   std::shared_ptr<GraphType> fragment =
       std::dynamic_pointer_cast<GraphType>(client.GetObject(id));
   std::shared_ptr<FragmentType> projected_fragment =
-      FragmentType::Project(fragment, "0", "0", "0", "0");
+      FragmentType::Project(fragment, 0, 0, 0, 0);
 
   RunProjectedWCC(projected_fragment, comm_spec, "/mnt2/output_projected_wcc/");
   RunProjectedLCC(projected_fragment, comm_spec, "/mnt2/output_projected_lcc/");
