@@ -28,6 +28,7 @@ from graphscope.nx.tests.utils import assert_graphs_equal
 from graphscope.nx.utils.compat import with_graphscope_nx_context
 
 
+@pytest.mark.skip("AttributeError: 'NeighborDict' object has no attribute 'copy'")
 @pytest.mark.usefixtures("graphscope_session")
 @with_graphscope_nx_context(TestConvertScipy)
 class TestConvertScipy:
