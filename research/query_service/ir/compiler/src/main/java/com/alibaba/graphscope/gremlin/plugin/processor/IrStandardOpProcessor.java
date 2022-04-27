@@ -36,7 +36,6 @@ import com.alibaba.graphscope.gremlin.Utils;
 import com.alibaba.graphscope.gremlin.plugin.script.AntlrToJavaScriptEngineFactory;
 import com.alibaba.graphscope.gremlin.plugin.strategy.RemoveUselessStepStrategy;
 import com.alibaba.graphscope.gremlin.plugin.strategy.ScanFusionStepStrategy;
-import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversalSource;
 import com.alibaba.graphscope.gremlin.result.GremlinResultAnalyzer;
 import com.alibaba.graphscope.gremlin.result.GremlinResultProcessor;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
@@ -58,7 +57,6 @@ import org.apache.tinkerpop.gremlin.server.op.AbstractEvalOpProcessor;
 import org.apache.tinkerpop.gremlin.server.op.OpProcessorException;
 import org.apache.tinkerpop.gremlin.server.op.standard.StandardOpProcessor;
 import org.apache.tinkerpop.gremlin.structure.Graph;
-import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
 import org.codehaus.groovy.control.MultipleCompilationErrorsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -84,9 +82,10 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
     protected IrMetaFetcher irMetaFetcher;
 
     public IrStandardOpProcessor(
-            Configs configs, IrMetaFetcher irMetaFetcher, RpcChannelFetcher fetcher) {
-        this.graph = TinkerFactory.createModern();
-        this.g = graph.traversal(IrCustomizedTraversalSource.class);
+            Configs configs, IrMetaFetcher irMetaFetcher, RpcChannelFetcher fetcher,
+            Graph graph, GraphTraversalSource g) {
+        this.graph = graph;
+        this.g = g;
         this.configs = configs;
         this.irMetaFetcher = irMetaFetcher;
         this.broadcastProcessor = new RpcBroadcastProcessor(fetcher);
@@ -128,8 +127,8 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                                                 .code(ResponseStatusCode.SERVER_ERROR_TEMPORARY)
                                                 .statusMessage(
                                                         ((Throwable)
-                                                                        possibleTemporaryException
-                                                                                .get())
+                                                                possibleTemporaryException
+                                                                        .get())
                                                                 .getMessage())
                                                 .statusAttributeException(
                                                         (Throwable)
@@ -153,8 +152,8 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                                                     .code(ResponseStatusCode.SERVER_ERROR_TIMEOUT)
                                                     .statusMessage(
                                                             "Timeout during script evaluation"
-                                                                + " triggered by"
-                                                                + " TimedInterruptCustomizerProvider")
+                                                                    + " triggered by"
+                                                                    + " TimedInterruptCustomizerProvider")
                                                     .statusAttributeException(t)
                                                     .create());
                                 } else if (t instanceof TimeoutException) {
@@ -173,15 +172,15 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                                 } else if (t instanceof MultipleCompilationErrorsException
                                         && t.getMessage().contains("Method too large")
                                         && ((MultipleCompilationErrorsException) t)
-                                                        .getErrorCollector()
-                                                        .getErrorCount()
-                                                == 1) {
+                                        .getErrorCollector()
+                                        .getErrorCount()
+                                        == 1) {
                                     errorMessage =
                                             String.format(
                                                     "The Gremlin statement that was submitted"
-                                                        + " exceeds the maximum compilation size"
-                                                        + " allowed by the JVM, please split it"
-                                                        + " into multiple smaller statements - %s",
+                                                            + " exceeds the maximum compilation size"
+                                                            + " allowed by the JVM, please split it"
+                                                            + " into multiple smaller statements - %s",
                                                     msg);
                                     logger.warn(errorMessage);
                                     ctx.writeAndFlush(
