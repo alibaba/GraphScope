@@ -516,7 +516,7 @@ void Run(vineyard::Client& client, const grape::CommSpec& comm_spec,
     VLOG(1) << "vertex properties num: " << fragment->vertex_property_num(0);
     VLOG(1) << "edge properties num: " << fragment->edge_property_num(0);
     std::shared_ptr<ProjectedFragmentType> projected_fragment =
-        ProjectedFragmentType::Project(fragment, "0", "0", "0", "0");
+        ProjectedFragmentType::Project(fragment, 0, 0, 0, 0);
     // test get data
     using vertex_t = ProjectedFragmentType::vertex_t;
     vertex_t vertex;

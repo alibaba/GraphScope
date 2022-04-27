@@ -27,8 +27,8 @@ if (ENABLE_JAVA_SDK)
         message(STATUS "Using Clang compiler: ${CMAKE_CXX_COMPILER}")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto -fforce-emit-vtables")
     else()
-        message(WARNING "Compiling with ENABLE_JAVA_SDK ON expects a minimum Clang-11 compiler,"
-                        "your compiler is ${CMAKE_CXX_COMPILER}. Continue building,"
+        message(WARNING "Compiling with ENABLE_JAVA_SDK ON expects a minimum Clang-11 compiler, "
+                        "current compiler is ${CMAKE_CXX_COMPILER}. The build process will continue, "
                         "BUT llvm4jni-based acceleration will be unavailable for generated libs.")
     endif()
 endif()

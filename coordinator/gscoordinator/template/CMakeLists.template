@@ -23,9 +23,9 @@ if (ENABLE_JAVA_SDK)
         message(STATUS "Obtain directory: ${COMPILER_DIR}")
         set(CMAKE_JNI_LINKER_FLAGS "-fuse-ld=${COMPILER_DIR}/ld.lld -Xlinker -mllvm=-lto-embed-bitcode")
     else()
-         message(WARNING "Compiling with ENABLE_JAVA_SDK ON expects a minimum Clang-11 compiler,"
-                        "your compiler is ${CMAKE_CXX_COMPILER}. Continue building,"
-                        "BUT llvm4jni-based accerleration will be unavailable for generated libs.")
+         message(WARNING "Compiling with ENABLE_JAVA_SDK ON expects a minimum Clang-11 compiler, "
+                         "current compiler is ${CMAKE_CXX_COMPILER}. The build process will continue, "
+                         "BUT llvm4jni-based accerleration will be unavailable for generated libs.")
     endif()
 endif()
 
