@@ -34,6 +34,8 @@ class ObjectManager {
   bl::result<void> PutObject(std::shared_ptr<GSObject> obj) {
     auto& id = obj->id();
 
+    DLOG(INFO) << "[object manager] putting " << id;
+
     if (objects.find(id) != objects.end()) {
       auto existed_obj_type = objects[id]->type();
       std::stringstream ss;
@@ -47,6 +49,7 @@ class ObjectManager {
   }
 
   bl::result<void> RemoveObject(const std::string& id) {
+    DLOG(INFO) << "[object manager] removing " << id;
     if (objects.find(id) != objects.end()) {
       objects.erase(id);
     }
@@ -54,6 +57,7 @@ class ObjectManager {
   }
 
   bl::result<std::shared_ptr<GSObject>> GetObject(const std::string& id) {
+    DLOG(INFO) << "[object manager] getting " << id;
     if (objects.find(id) == objects.end()) {
       RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
                       "Object " + id + " does not exist");
@@ -63,6 +67,7 @@ class ObjectManager {
 
   template <typename T>
   bl::result<std::shared_ptr<T>> GetObject(const std::string& id) {
+    DLOG(INFO) << "[object manager] getting typed " << id;
     if (objects.find(id) == objects.end()) {
       RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
                       "Object " + id + " does not exist");
@@ -77,6 +82,7 @@ class ObjectManager {
   }
 
   bool HasObject(const std::string& id) {
+    DLOG(INFO) << "[object manager] has " << id;
     return objects.find(id) != objects.end();
   }
 

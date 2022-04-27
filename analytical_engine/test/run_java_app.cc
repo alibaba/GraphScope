@@ -176,7 +176,7 @@ void output_vineyard_tensor(vineyard::Client& client,
   auto const& local_chunks = stored_tensor->LocalPartitions(client);
   CHECK_EQ(shape.size(), 1);
   CHECK_EQ(partition_shape.size(), 1);
-  CHECK_EQ(local_chunks.size(), 1);
+  CHECK_EQ(local_chunks.size(), static_cast<size_t>(comm_spec.local_num()));
   if (comm_spec.worker_id() == 0) {
     VLOG(1) << "tensor shape: " << shape[0] << ", " << partition_shape[0];
   }
