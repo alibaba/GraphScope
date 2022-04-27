@@ -222,6 +222,7 @@ jobs:
         git submodule update --init
         mkdir -p build && cd build
         cmake .. -DCMAKE_INSTALL_PREFIX=/opt/vineyard \
+                 -DUSE_EXTERNAL_ETCD_LIBS=OFF \
                  -DBUILD_SHARED_LIBS=ON \
                  -DBUILD_VINEYARD_TESTS=OFF
         make -j$(nproc)
