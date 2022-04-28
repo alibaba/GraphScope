@@ -13,9 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "property_graph_stream.h"
+
 #include "arrow/type.h"
 
-#include "property_graph_stream.h"
+#include "vineyard/basic/stream/recordbatch_stream.h"
 
 namespace vineyard {
 
@@ -154,7 +156,7 @@ void PropertyTableAppender::Apply(
 #endif
     funcs_[index](builder->GetField(index), properties + i);
   }
-  for (size_t i = 0; i < builder->num_fields(); ++i) {
+  for (int i = 0; i < builder->num_fields(); ++i) {
     // fill a null value for missing values to make sure columns
     // has the same length before being finalized.
     if (processed.find(i) == processed.end()) {
@@ -201,7 +203,7 @@ void PropertyTableAppender::Apply(
 #endif
     funcs_[index](builder->GetField(index), properties + i);
   }
-  for (size_t i = 0; i < builder->num_fields(); ++i) {
+  for (int i = 0; i < builder->num_fields(); ++i) {
     // fill a null value for missing values to make sure columns
     // has the same length before being finalized.
     if (processed.find(i) == processed.end()) {
@@ -248,7 +250,7 @@ void PropertyGraphOutStream::AddVertex(VertexId id, LabelId labelid,
       batch_chunk->RemoveColumn(vertex_primary_key_column_[labelid]));
 #endif
   }
-  this->buildTableChunk(batch_chunk, vertex_stream_, vertex_writer_, 1,
+  this->buildTableChunk(batch_chunk, vertex_stream_, 1,
                         vertex_property_id_mapping_[labelid]);
 }
 
@@ -288,7 +290,7 @@ void PropertyGraphOutStream::AddEdge(EdgeId edge_id, VertexId src_id,
   appender->Apply(builder, edge_id, src_id, dst_id, src_label, dst_label,
                   property_size, properties,
                   edge_property_id_mapping_[label], batch_chunk);
-  this->buildTableChunk(batch_chunk, edge_stream_, edge_writer_, 2,
+  this->buildTableChunk(batch_chunk, edge_stream_, 2,
                         edge_property_id_mapping_[label]);
 }
 
@@ -320,8 +322,8 @@ void PropertyGraphOutStream::AddEdges(size_t edge_size, EdgeId* edge_ids,
 }
 
 Status PropertyGraphOutStream::Abort() {
-  VINEYARD_CHECK_OK(vertex_writer_->Abort());
-  VINEYARD_CHECK_OK(edge_writer_->Abort());
+  VINEYARD_CHECK_OK(vertex_stream_->Abort());
+  VINEYARD_CHECK_OK(edge_stream_->Abort());
   return Status::OK();
 }
 
@@ -441,8 +443,7 @@ void PropertyGraphOutStream::initialTables() {
 
 void PropertyGraphOutStream::buildTableChunk(
     std::shared_ptr<arrow::RecordBatch> batch,
-    std::shared_ptr<vineyard::DataframeStream> &output_stream,
-    std::unique_ptr<vineyard::DataframeStreamWriter>& stream_writer,
+    std::shared_ptr<vineyard::RecordBatchStream> &output_stream,
     int const property_offset,
     std::map<int, int> const& property_id_mapping) {
 #ifndef NDEBUG
@@ -452,14 +453,14 @@ void PropertyGraphOutStream::buildTableChunk(
     return;
   }
 
-  if (stream_writer == nullptr) {
-    VINEYARD_CHECK_OK(this->Open(output_stream, stream_writer));
+  if (!output_stream->IsOpen()) {
+    VINEYARD_CHECK_OK(this->Open(output_stream));
   }
 
 #ifndef NDEBUG
   LOG(INFO) << "chunk schema: batch is " << batch->schema()->ToString();
 #endif
-  auto status = stream_writer->WriteBatch(batch);
+  auto status = output_stream->WriteBatch(batch);
   if (!status.ok()) {
     LOG(ERROR) << "Failed to write recordbatch to stream: " << status.ToString();
   }
@@ -487,13 +488,13 @@ void PropertyGraphOutStream::FinishAllVertices() {
         batch->RemoveColumn(vertex_primary_key_column_[vertices.first]));
 #endif
     }
-    buildTableChunk(batch, vertex_stream_, vertex_writer_, 1,
+    buildTableChunk(batch, vertex_stream_, 1,
                     vertex_property_id_mapping_[vertices.first]);
   }
-  if (!vertex_writer_) {
-    VINEYARD_CHECK_OK(Open(vertex_stream_, vertex_writer_));
+  if (!vertex_stream_->IsOpen()) {
+    VINEYARD_CHECK_OK(this->Open(vertex_stream_));
   }
-  VINEYARD_CHECK_OK(vertex_writer_->Finish());
+  VINEYARD_CHECK_OK(vertex_stream_->Finish());
   vertex_finished_ = true;
 }
 
@@ -511,14 +512,14 @@ void PropertyGraphOutStream::FinishAllEdges() {
 #ifndef NDEBUG
     LOG(INFO) << "finish edges: " << batch;
 #endif
-      buildTableChunk(batch, edge_stream_, edge_writer_, 2,
+      buildTableChunk(batch, edge_stream_, 2,
                       edge_property_id_mapping_[edges.first]);
     }
   }
-  if (!edge_writer_) {
-    VINEYARD_CHECK_OK(Open(edge_stream_, edge_writer_));
+  if (!edge_stream_->IsOpen()) {
+    VINEYARD_CHECK_OK(this->Open(edge_stream_));
   }
-  VINEYARD_CHECK_OK(edge_writer_->Finish());
+  VINEYARD_CHECK_OK(edge_stream_->Finish());
   edge_finished_ = true;
 }
 

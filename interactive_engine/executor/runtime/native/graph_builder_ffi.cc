@@ -127,20 +127,22 @@ ObjectId build_global_graph_stream(const char *graph_name, size_t size,
   {
     vineyard::ParallelStreamBuilder builder(client);
     for (auto const &id : vertex_streams) {
-      builder.AddStream(id);
+      builder.AddStream(client, id);
     }
     auto pstream = builder.Seal(client);
-    client.PutName(pstream->id(), std::string("__") + graph_name + "_vertex_stream");
+    VINEYARD_CHECK_OK(client.Persist(pstream->id()));
+    VINEYARD_CHECK_OK(client.PutName(pstream->id(), std::string("__") + graph_name + "_vertex_stream"));
     LOG(INFO) << "Generate parallel stream for vertex: " << graph_name << " -> "
               << vineyard::ObjectIDToString(pstream->id());
   }
   {
     vineyard::ParallelStreamBuilder builder(client);
     for (auto const &id : edge_streams) {
-      builder.AddStream(id);
+      builder.AddStream(client, id);
     }
     auto pstream = builder.Seal(client);
-    client.PutName(pstream->id(), std::string("__") + graph_name + "_edge_stream");
+    VINEYARD_CHECK_OK(client.Persist(pstream->id()));
+    VINEYARD_CHECK_OK(client.PutName(pstream->id(), std::string("__") + graph_name + "_edge_stream"));
     LOG(INFO) << "Generate parallel stream for edge: " << graph_name << " -> "
               << vineyard::ObjectIDToString(pstream->id());
   }

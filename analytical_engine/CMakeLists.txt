@@ -27,8 +27,8 @@ if (ENABLE_JAVA_SDK)
         message(STATUS "Using Clang compiler: ${CMAKE_CXX_COMPILER}")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto -fforce-emit-vtables")
     else()
-        message(WARNING "Compiling with ENABLE_JAVA_SDK ON expects a minimum Clang-11 compiler,"
-                        "your compiler is ${CMAKE_CXX_COMPILER}. Continue building,"
+        message(WARNING "Compiling with ENABLE_JAVA_SDK ON expects a minimum Clang-11 compiler, "
+                        "current compiler is ${CMAKE_CXX_COMPILER}. The build process will continue, "
                         "BUT llvm4jni-based acceleration will be unavailable for generated libs.")
     endif()
 endif()
@@ -56,6 +56,13 @@ if (ccache_EXECUTABLE)
 else ()
     add_custom_target(ccache-stats COMMAND echo "ccache not found.")
 endif (ccache_EXECUTABLE)
+
+# enable colored diagnostics
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    add_compile_options(-fdiagnostics-color=always)
+elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
+    add_compile_options(-fcolor-diagnostics)
+endif()
 
 include(CheckCXXCompilerFlag)
 include(CheckLibraryExists)
@@ -164,7 +171,7 @@ endif ()
 find_package(libgrapelite REQUIRED)
 include_directories(${LIBGRAPELITE_INCLUDE_DIRS})
 
-find_package(vineyard 0.3.21 REQUIRED)
+find_package(vineyard 0.4.1 REQUIRED)
 include_directories(${VINEYARD_INCLUDE_DIRS})
 add_compile_options(-DENABLE_SELECTOR)
 

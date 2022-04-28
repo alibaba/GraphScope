@@ -156,7 +156,7 @@ void Run(vineyard::Client& client, const grape::CommSpec& comm_spec,
   std::shared_ptr<FragmentType> fragment =
       std::dynamic_pointer_cast<FragmentType>(client.GetObject(id));
   std::shared_ptr<ProjectedFragmentType> projected_fragment =
-      ProjectedFragmentType::Project(fragment, "0", "-1", "0", "-1");
+      ProjectedFragmentType::Project(fragment, 0, -1, 0, -1);
 
   MPI_Barrier(comm_spec.comm());
   RunProjectedWCC(projected_fragment, comm_spec, "./output_projected_wcc/");

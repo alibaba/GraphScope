@@ -17,5 +17,5 @@ pysimdjson
 PyYAML
 scipy
 tqdm
-vineyard==0.3.21; sys_platform != "win32"
-vineyard-io==0.3.21; sys_platform != "win32"
+vineyard>=0.4.0; sys_platform != "win32"
+vineyard-io>=0.4.0; sys_platform != "win32"

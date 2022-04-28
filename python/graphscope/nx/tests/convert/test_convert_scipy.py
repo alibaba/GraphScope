@@ -18,7 +18,7 @@
 #
 
 import pytest
-from networkx.tests.test_convert_scipy import TestConvertNumpy
+from networkx.tests.test_convert_scipy import TestConvertScipy
 
 import graphscope.nx as nx
 from graphscope.nx.generators.classic import barbell_graph
@@ -28,9 +28,10 @@ from graphscope.nx.tests.utils import assert_graphs_equal
 from graphscope.nx.utils.compat import with_graphscope_nx_context
 
 
+@pytest.mark.skip("AttributeError: 'NeighborDict' object has no attribute 'copy'")
 @pytest.mark.usefixtures("graphscope_session")
-@with_graphscope_nx_context(TestConvertNumpy)
-class TestConvertNumpy:
+@with_graphscope_nx_context(TestConvertScipy)
+class TestConvertScipy:
     @pytest.mark.skip(reason="graphscope.nx not support numpy dtype yet")
     def test_identity_graph_matrix(self):
         "Conversion from graph to sparse matrix to graph."

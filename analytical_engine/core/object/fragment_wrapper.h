@@ -175,10 +175,10 @@ inline void set_graph_def(
     rpc::graph::GraphDefPb& graph_def) {
   auto& meta = fragment->meta();
   const auto& schema = fragment->schema();
+
   graph_def.set_graph_type(rpc::graph::ARROW_PROPERTY);
-  graph_def.set_directed(static_cast<bool>(meta.GetKeyValue<int>("directed")));
-  graph_def.set_is_multigraph(
-      static_cast<bool>(meta.GetKeyValue<int>("is_multigraph")));
+  graph_def.set_directed(fragment->directed());
+  graph_def.set_is_multigraph(fragment->is_multigraph());
 
   auto v_entries = schema.vertex_entries();
   auto e_entries = schema.edge_entries();
@@ -202,9 +202,12 @@ inline void set_graph_def(
   if (graph_def.has_extension()) {
     graph_def.extension().UnpackTo(&vy_info);
   }
-  vy_info.set_oid_type(PropertyTypeToPb(meta.GetKeyValue("oid_type")));
-  vy_info.set_vid_type(PropertyTypeToPb(meta.GetKeyValue("vid_type")));
-  vy_info.set_property_schema_json(meta.GetKeyValue("schema"));
+
+  vy_info.set_oid_type(PropertyTypeToPb(fragment->oid_typename()));
+  vy_info.set_vid_type(PropertyTypeToPb(fragment->vid_typename()));
+  vineyard::json schema_json;
+  meta.GetKeyValue("schema_json_", schema_json);
+  vy_info.set_property_schema_json(schema_json.dump());
   graph_def.mutable_extension()->PackFrom(vy_info);
 }
 

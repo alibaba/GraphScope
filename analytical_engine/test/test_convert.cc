@@ -99,7 +99,7 @@ int main(int argc, char** argv) {
           using ProjectedFragmentType =
               gs::ArrowProjectedFragment<OID_TYPE, VID_TYPE, int64_t, int64_t>;
           auto projected_frag =
-              ProjectedFragmentType::Project(arrow_frag1, "0", "0", "0", "0");
+              ProjectedFragmentType::Project(arrow_frag1, 0, 0, 0, 0);
           using AppType = grape::WCCAuto<ProjectedFragmentType>;
           auto app = std::make_shared<AppType>();
           auto worker = AppType::CreateWorker(app, projected_frag);

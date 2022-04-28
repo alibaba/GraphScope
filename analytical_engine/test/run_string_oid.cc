@@ -62,7 +62,7 @@ void Run(vineyard::Client& client, const grape::CommSpec& comm_spec,
   std::shared_ptr<FragmentType> fragment =
       std::dynamic_pointer_cast<FragmentType>(client.GetObject(id));
   std::shared_ptr<ProjectedFragmentType> projected_fragment =
-      ProjectedFragmentType::Project(fragment, "0", "0", "0", "0");
+      ProjectedFragmentType::Project(fragment, 0, 0, 0, 0);
 
   RunCTXSSSP(projected_fragment, comm_spec, "./output_string_oid_sssp/");
 }

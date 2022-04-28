@@ -104,15 +104,7 @@ class ArrowFragmentLoader {
         vfiles_(),
         graph_info_(graph_info),
         directed_(graph_info->directed),
-        generate_eid_(graph_info->generate_eid) {
-#ifdef ENABLE_JAVA_SDK
-    java_loader_invoker_.SetWorkerInfo(comm_spec_.worker_id(),
-                                       comm_spec_.worker_num());
-    VLOG(1) << "workerid: " << comm_spec_.worker_id()
-            << ", worker num: " << comm_spec_.worker_num();
-    java_loader_invoker_.InitJavaLoader();
-#endif
-  }
+        generate_eid_(graph_info->generate_eid) {}
 
   ~ArrowFragmentLoader() = default;
 
@@ -457,16 +449,27 @@ class ArrowFragmentLoader {
   boost::leaf::result<std::shared_ptr<arrow::Table>> readTableFromGiraph(
       bool load_vertex, const std::string& file_path, int index,
       int total_parts, const std::string formatter) {
+    if (java_loader_invoker_ == nullptr) {
+      VLOG(1) << "Java loader initializing: worker id: "
+              << comm_spec_.worker_id()
+              << ", worker num: " << comm_spec_.worker_num();
+
+      java_loader_invoker_ = std::make_shared<JavaLoaderInvoker>();
+      java_loader_invoker_->SetWorkerInfo(comm_spec_.worker_id(),
+                                          comm_spec_.worker_num());
+      java_loader_invoker_->InitJavaLoader();
+    }
+
     if (load_vertex) {
       // There are cases both vertex and edges are specified in vertex file.
       // In this case, we load the data in this function, and suppose call
       // add_edges will be called(empty location),
       // if location is empty, we just return the previous loaded data.
-      java_loader_invoker_.load_vertices_and_edges(file_path, formatter);
-      return java_loader_invoker_.get_vertex_table();
+      java_loader_invoker_->load_vertices_and_edges(file_path, formatter);
+      return java_loader_invoker_->get_vertex_table();
     } else {
-      java_loader_invoker_.load_edges(file_path, formatter);
-      return java_loader_invoker_.get_edge_table();
+      java_loader_invoker_->load_edges(file_path, formatter);
+      return java_loader_invoker_->get_edge_table();
     }
     // once set, we will read.
   }
@@ -978,7 +981,7 @@ class ArrowFragmentLoader {
   bool generate_eid_;
 
 #ifdef ENABLE_JAVA_SDK
-  JavaLoaderInvoker java_loader_invoker_;
+  std::shared_ptr<JavaLoaderInvoker> java_loader_invoker_;
 #endif
 
   std::function<void(vineyard::IIOAdaptor*)> io_deleter_ =

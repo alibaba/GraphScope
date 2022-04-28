@@ -140,6 +140,10 @@ if not os.path.isfile(INTERACTIVE_ENGINE_SCRIPT):
     INTERACTIVE_ENGINE_SCRIPT = os.path.join(
         GRAPHSCOPE_HOME, "interactive_engine", "bin", "giectl"
     )
+    if not os.path.isfile(INTERACTIVE_ENGINE_SCRIPT):
+        INTERACTIVE_ENGINE_SCRIPT = os.path.join(
+            GRAPHSCOPE_HOME, "interactive_engine", "assembly", "bin", "giectl"
+        )
 
 # JAVA SDK related CONSTANTS
 LLVM4JNI_HOME = os.environ.get("LLVM4JNI_HOME", None)

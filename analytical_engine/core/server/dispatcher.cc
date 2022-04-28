@@ -14,6 +14,7 @@
  */
 
 #include "core/server/dispatcher.h"
+#include "core/error.h"
 #include "core/io/property_parser.h"
 
 namespace gs {
