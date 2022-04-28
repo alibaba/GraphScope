@@ -1,4 +1,4 @@
-ARG BASE_VERSION=v0.4.0
+ARG BASE_VERSION=v0.4.1
 FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:$BASE_VERSION as builder
 
 ARG CI=true
