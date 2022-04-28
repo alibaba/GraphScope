@@ -40,7 +40,6 @@ from graphscope.nx.utils.compat import with_graphscope_nx_context
 # fmt: on
 
 
-# @pytest.mark.skip("AttributeError: 'NeighborDict' object has no attribute 'copy'")
 @pytest.mark.usefixtures("graphscope_session")
 @with_graphscope_nx_context(_TestConvertNumpyMatrix)
 class TestConvertNumpyMatrix:
@@ -55,7 +54,6 @@ class TestConvertNumpyMatrix:
         pass
 
 
-# @pytest.mark.skip("AttributeError: 'NeighborDict' object has no attribute 'copy'")
 @pytest.mark.usefixtures("graphscope_session")
 @with_graphscope_nx_context(_TestConvertNumpyArray)
 class TestConvertNumpyArray:
