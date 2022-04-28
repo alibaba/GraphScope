@@ -33,7 +33,6 @@ np = pytest.importorskip("numpy")
 pd = pytest.importorskip("pandas")
 
 
-# @pytest.mark.skip("AttributeError: 'NeighborDict' object has no attribute 'copy'")
 @pytest.mark.usefixtures("graphscope_session")
 @with_graphscope_nx_context(_TestConvertPandas)
 class TestConvertPandas:
