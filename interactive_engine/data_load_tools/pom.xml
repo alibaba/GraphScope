@@ -12,7 +12,41 @@
 
   <artifactId>data_load_tools</artifactId>
 
+  <properties>
+      <odps.sdk.version>0.36.4</odps.sdk.version>
+  </properties>
+
   <dependencies>
+    <dependency>
+        <groupId>com.aliyun.oss</groupId>
+        <artifactId>aliyun-sdk-oss</artifactId>
+        <version>3.14.0</version>
+    </dependency>
+
+    <dependency>
+        <groupId>com.aliyun.odps</groupId>
+        <artifactId>odps-sdk-commons</artifactId>
+        <version>${odps.sdk.version}</version>
+    </dependency>
+
+    <dependency>
+        <groupId>com.aliyun.odps</groupId>
+        <artifactId>odps-sdk-graph</artifactId>
+        <version>${odps.sdk.version}</version>
+    </dependency>
+
+    <dependency>
+        <groupId>com.aliyun.odps</groupId>
+        <artifactId>odps-sdk-mapred</artifactId>
+        <version>${odps.sdk.version}</version>
+    </dependency>
+
+    <dependency>
+        <groupId>com.aliyun.odps</groupId>
+        <artifactId>odps-sdk-core</artifactId>
+        <version>${odps.sdk.version}</version>
+    </dependency>
+
     <dependency>
       <groupId>com.alibaba.maxgraph</groupId>
       <artifactId>sdk</artifactId>
