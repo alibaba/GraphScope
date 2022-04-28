@@ -367,7 +367,6 @@ class TestGraphTransformation(object):
         assert ("post", 618475290624) in G
 
     @pytest.mark.skipif(
-        os.environ.get("DEPLOYMENT", None) == "standalone",
         reason="FIXME(weibin): ci runner failed",
     )
     def test_report_methods_on_copy_on_write_strategy(self):
