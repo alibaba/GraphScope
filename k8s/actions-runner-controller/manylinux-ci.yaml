@@ -1,14 +1,14 @@
 apiVersion: actions.summerwind.dev/v1alpha1
 kind: RunnerDeployment
 metadata:
-   name: graphscope-runners-manylinux2014
+   name: graphscope-runners-manylinux2014-ci-test
 spec:
   template:
     spec:
       repository: alibaba/GraphScope
-      image: registry-vpc.cn-hongkong.aliyuncs.com/graphscope/runner:manylinux2014
+      image: registry-vpc.cn-hongkong.aliyuncs.com/graphscope/runner:manylinux2014-ci-test
       labels:
-        - manylinux2014
+        - manylinux2014-ci-test
       containers:
       - name: runner
         env: []
@@ -34,11 +34,11 @@ spec:
 apiVersion: actions.summerwind.dev/v1alpha1
 kind: HorizontalRunnerAutoscaler
 metadata:
-    name: graphscope-runner-manylinux2014-deployment-autoscaler
+    name: graphscope-runner-manylinux2014-deployment-autoscaler-ci-test
 spec:
   scaleDownDelaySecondsAfterScaleOut: 900
   scaleTargetRef:
-    name: graphscope-runners-manylinux2014
+    name: graphscope-runners-manylinux2014-ci-test
     # Uncomment the below in case the target is not RunnerDeployment but RunnerSet
     #kind: RunnerSet
   minReplicas: 0
