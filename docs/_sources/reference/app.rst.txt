@@ -49,6 +49,7 @@ BuiltIn apps
 .. autofunction:: graphscope.pagerank
 .. autofunction:: graphscope.sssp
 .. autofunction:: graphscope.wcc
+.. autofunction:: graphscope.avg_clustering
 .. autofunction:: graphscope.clustering
 .. autofunction:: graphscope.degree_centrality
 .. autofunction:: graphscope.eigenvector_centrality

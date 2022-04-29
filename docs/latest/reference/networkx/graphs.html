@@ -727,6 +727,12 @@ the graph.</p>
 </div>
 </dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="graphscope.nx.Graph.adjlist_dict_factory">
+<span class="sig-name descname"><span class="pre">adjlist_dict_factory</span></span><a class="headerlink" href="#graphscope.nx.Graph.adjlist_dict_factory" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.nx.classes.dict_factory.AdjListDict</span></code></p>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="graphscope.nx.Graph.clear">
 <span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.clear"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.clear" title="Permalink to this definition"></a></dt>
@@ -868,7 +874,7 @@ attributes.</p>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
-<p>Unlike NetowrkX return a view, here return a independent deep copy subgraph.</p>
+<p>Unlike NetworkX return a view, here return a independent deep copy subgraph.</p>
 <p class="rubric">Examples</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">path_graph</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span> <span class="c1"># or DiGraph</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">H</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">edge_subgraph</span><span class="p">([(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">)])</span>
@@ -982,10 +988,52 @@ But it is safe to assign attributes <cite>G[u][v][‘foo’]</cite></p>
 </div>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="graphscope.nx.Graph.get_node_data">
+<span class="sig-name descname"><span class="pre">get_node_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph.get_node_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph.get_node_data" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the attribute dictionary of node n.</p>
+<p>This is identical to <cite>G[n]</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>n</strong> (<em>nodes</em>) – </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>node_dict</strong> – The node attribute dictionary.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dictionary</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">path_graph</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>  <span class="c1"># or DiGraph etc</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">G</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">{}</span>
+</pre></div>
+</div>
+<p>Warning: Assigning to <cite>G[n]</cite> is not permitted.
+But it is safe to assign attributes <cite>G[n][‘foo’]</cite></p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;weight&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">7</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">G</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;weight&#39;</span><span class="p">]</span>
+<span class="go">7</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">path_graph</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>  <span class="c1"># or DiGraph etc</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">G</span><span class="o">.</span><span class="n">get_node_data</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">{}</span>
+</pre></div>
+</div>
+</dd></dl>
+
 <dl class="py attribute">
 <dt class="sig sig-object py" id="graphscope.nx.Graph.graph_attr_dict_factory">
 <span class="sig-name descname"><span class="pre">graph_attr_dict_factory</span></span><a class="headerlink" href="#graphscope.nx.Graph.graph_attr_dict_factory" title="Permalink to this definition"></a></dt>
 <dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="graphscope.nx.Graph.graph_cache_factory">
+<span class="sig-name descname"><span class="pre">graph_cache_factory</span></span><a class="headerlink" href="#graphscope.nx.Graph.graph_cache_factory" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.nx.classes.cache.Cache</span></code></p>
 </dd></dl>
 
 <dl class="py property">
@@ -1167,6 +1215,12 @@ nbunch is not hashable, a <code class="xref py py-exc docutils literal notransla
 <span class="go">[1]</span>
 </pre></div>
 </div>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="graphscope.nx.Graph.node_dict_factory">
+<span class="sig-name descname"><span class="pre">node_dict_factory</span></span><a class="headerlink" href="#graphscope.nx.Graph.node_dict_factory" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.nx.classes.dict_factory.NodeDict</span></code></p>
 </dd></dl>
 
 <dl class="py property">
@@ -2360,6 +2414,12 @@ the graph.</p>
 </div>
 </dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.adjlist_dict_factory">
+<span class="sig-name descname"><span class="pre">adjlist_dict_factory</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.adjlist_dict_factory" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.nx.classes.dict_factory.AdjListDict</span></code></p>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="graphscope.nx.DiGraph.clear">
 <span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.clear" title="Permalink to this definition"></a></dt>
@@ -2506,7 +2566,7 @@ attributes.</p>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
-<p>Unlike NetowrkX return a view, here return a independent deep copy subgraph.</p>
+<p>Unlike NetworkX return a view, here return a independent deep copy subgraph.</p>
 <p class="rubric">Examples</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">path_graph</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span> <span class="c1"># or DiGraph</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">H</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">edge_subgraph</span><span class="p">([(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">)])</span>
@@ -2625,10 +2685,52 @@ But it is safe to assign attributes <cite>G[u][v][‘foo’]</cite></p>
 </div>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.get_node_data">
+<span class="sig-name descname"><span class="pre">get_node_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.DiGraph.get_node_data" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the attribute dictionary of node n.</p>
+<p>This is identical to <cite>G[n]</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>n</strong> (<em>nodes</em>) – </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>node_dict</strong> – The node attribute dictionary.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dictionary</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">path_graph</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>  <span class="c1"># or DiGraph etc</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">G</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">{}</span>
+</pre></div>
+</div>
+<p>Warning: Assigning to <cite>G[n]</cite> is not permitted.
+But it is safe to assign attributes <cite>G[n][‘foo’]</cite></p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;weight&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">7</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">G</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;weight&#39;</span><span class="p">]</span>
+<span class="go">7</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">path_graph</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>  <span class="c1"># or DiGraph etc</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">G</span><span class="o">.</span><span class="n">get_node_data</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">{}</span>
+</pre></div>
+</div>
+</dd></dl>
+
 <dl class="py attribute">
 <dt class="sig sig-object py" id="graphscope.nx.DiGraph.graph_attr_dict_factory">
 <span class="sig-name descname"><span class="pre">graph_attr_dict_factory</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.graph_attr_dict_factory" title="Permalink to this definition"></a></dt>
 <dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.graph_cache_factory">
+<span class="sig-name descname"><span class="pre">graph_cache_factory</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.graph_cache_factory" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.nx.classes.cache.Cache</span></code></p>
 </dd></dl>
 
 <dl class="py property">
@@ -2882,6 +2984,12 @@ edge from n to m.</p>
 </div>
 <p class="rubric">Notes</p>
 <p>neighbors() and successors() are the same.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="graphscope.nx.DiGraph.node_dict_factory">
+<span class="sig-name descname"><span class="pre">node_dict_factory</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.node_dict_factory" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.nx.classes.dict_factory.NodeDict</span></code></p>
 </dd></dl>
 
 <dl class="py property">

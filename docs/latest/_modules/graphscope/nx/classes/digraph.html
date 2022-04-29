@@ -144,7 +144,6 @@
 
 <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
 
-<span class="kn">from</span> <span class="nn">networkx</span> <span class="kn">import</span> <span class="n">freeze</span>
 <span class="kn">from</span> <span class="nn">networkx.classes.coreviews</span> <span class="kn">import</span> <span class="n">AdjacencyView</span>
 <span class="kn">from</span> <span class="nn">networkx.classes.digraph</span> <span class="kn">import</span> <span class="n">DiGraph</span> <span class="k">as</span> <span class="n">RefDiGraph</span>
 <span class="kn">from</span> <span class="nn">networkx.classes.reportviews</span> <span class="kn">import</span> <span class="n">DiDegreeView</span>
@@ -152,7 +151,6 @@
 <span class="kn">from</span> <span class="nn">networkx.classes.reportviews</span> <span class="kn">import</span> <span class="n">OutDegreeView</span>
 
 <span class="kn">from</span> <span class="nn">graphscope.client.session</span> <span class="kn">import</span> <span class="n">get_session_by_id</span>
-<span class="kn">from</span> <span class="nn">graphscope.framework</span> <span class="kn">import</span> <span class="n">dag_utils</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.dag_utils</span> <span class="kn">import</span> <span class="n">copy_graph</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.errors</span> <span class="kn">import</span> <span class="n">check_argument</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.graph_schema</span> <span class="kn">import</span> <span class="n">GraphSchema</span>
@@ -163,10 +161,8 @@
 <span class="kn">from</span> <span class="nn">graphscope.nx.classes.reportviews</span> <span class="kn">import</span> <span class="n">OutEdgeView</span>
 <span class="kn">from</span> <span class="nn">graphscope.nx.convert</span> <span class="kn">import</span> <span class="n">to_networkx_graph</span>
 <span class="kn">from</span> <span class="nn">graphscope.nx.utils.compat</span> <span class="kn">import</span> <span class="n">patch_docstring</span>
-<span class="kn">from</span> <span class="nn">graphscope.nx.utils.misc</span> <span class="kn">import</span> <span class="n">clear_cache</span>
+<span class="kn">from</span> <span class="nn">graphscope.nx.utils.misc</span> <span class="kn">import</span> <span class="n">clear_mutation_cache</span>
 <span class="kn">from</span> <span class="nn">graphscope.nx.utils.misc</span> <span class="kn">import</span> <span class="n">empty_graph_in_engine</span>
-<span class="kn">from</span> <span class="nn">graphscope.proto</span> <span class="kn">import</span> <span class="n">graph_def_pb2</span>
-<span class="kn">from</span> <span class="nn">graphscope.proto</span> <span class="kn">import</span> <span class="n">types_pb2</span>
 
 
 <div class="viewcode-block" id="DiGraph"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.DiGraph">[docs]</a><span class="k">class</span> <span class="nc">DiGraph</span><span class="p">(</span><span class="n">Graph</span><span class="p">):</span>
@@ -371,11 +367,13 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">graph_attr_dict_factory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_attr_dict_factory</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">node_dict_factory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_dict_factory</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">adjlist_dict_factory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">adjlist_dict_factory</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_attr_dict_factory</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cache</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_cache_factory</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="c1"># init node and adj (must be after cache)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_dict_factory</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_adj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">adjlist_dict_factory</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">adjlist_dict_factory</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">PREDS_BY_NODE</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">adjlist_dict_factory</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pred</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_succ</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_adj</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="kc">None</span>
@@ -415,6 +413,7 @@
         <span class="k">if</span> <span class="n">incoming_graph_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_gs_graph</span><span class="p">(</span><span class="n">incoming_graph_data</span><span class="p">):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_init_with_arrow_property_graph</span><span class="p">(</span><span class="n">incoming_graph_data</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">warmup</span><span class="p">()</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">g</span> <span class="o">=</span> <span class="n">to_networkx_graph</span><span class="p">(</span><span class="n">incoming_graph_data</span><span class="p">,</span> <span class="n">create_using</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
                 <span class="n">check_argument</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">Graph</span><span class="p">))</span>
@@ -424,7 +423,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_saved_signature</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">signature</span></div>
 
     <span class="nd">@property</span>
-    <span class="nd">@clear_cache</span>
+    <span class="nd">@clear_mutation_cache</span>
     <span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">RefDiGraph</span><span class="o">.</span><span class="n">adj</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">adj</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">AdjacencyView</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_succ</span><span class="p">)</span>
@@ -432,22 +431,22 @@
     <span class="n">succ</span> <span class="o">=</span> <span class="n">adj</span>
 
     <span class="nd">@property</span>
-    <span class="nd">@clear_cache</span>
+    <span class="nd">@clear_mutation_cache</span>
     <span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">RefDiGraph</span><span class="o">.</span><span class="n">pred</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">pred</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">AdjacencyView</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pred</span><span class="p">)</span>
 
-<div class="viewcode-block" id="DiGraph.has_successor"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.DiGraph.has_successor">[docs]</a>    <span class="nd">@clear_cache</span>
+<div class="viewcode-block" id="DiGraph.has_successor"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.DiGraph.has_successor">[docs]</a>    <span class="nd">@clear_mutation_cache</span>
     <span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">RefDiGraph</span><span class="o">.</span><span class="n">has_predecessor</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">has_successor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DiGraph.has_predecessor"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.DiGraph.has_predecessor">[docs]</a>    <span class="nd">@clear_cache</span>
+<div class="viewcode-block" id="DiGraph.has_predecessor"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.DiGraph.has_predecessor">[docs]</a>    <span class="nd">@clear_mutation_cache</span>
     <span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">RefDiGraph</span><span class="o">.</span><span class="n">has_predecessor</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">has_predecessor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_edge</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DiGraph.successors"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.DiGraph.successors">[docs]</a>    <span class="nd">@clear_cache</span>
+<div class="viewcode-block" id="DiGraph.successors"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.DiGraph.successors">[docs]</a>    <span class="nd">@clear_mutation_cache</span>
     <span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">RefDiGraph</span><span class="o">.</span><span class="n">successors</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">successors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>
@@ -458,7 +457,7 @@
     <span class="c1"># digraph definitions</span>
     <span class="n">neighbors</span> <span class="o">=</span> <span class="n">successors</span>
 
-<div class="viewcode-block" id="DiGraph.predecessors"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.DiGraph.predecessors">[docs]</a>    <span class="nd">@clear_cache</span>
+<div class="viewcode-block" id="DiGraph.predecessors"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.DiGraph.predecessors">[docs]</a>    <span class="nd">@clear_mutation_cache</span>
     <span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">RefDiGraph</span><span class="o">.</span><span class="n">predecessors</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">predecessors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>
@@ -467,7 +466,7 @@
             <span class="k">raise</span> <span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;The node </span><span class="si">%s</span><span class="s2"> is not in the digraph.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">n</span><span class="p">,))</span></div>
 
     <span class="nd">@property</span>
-    <span class="nd">@clear_cache</span>
+    <span class="nd">@clear_mutation_cache</span>
     <span class="k">def</span> <span class="nf">edges</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;An OutEdgeView of the DiGraph as G.edges or G.edges().</span>
 
@@ -534,13 +533,13 @@
     <span class="n">out_edges</span> <span class="o">=</span> <span class="n">edges</span>
 
     <span class="nd">@property</span>
-    <span class="nd">@clear_cache</span>
+    <span class="nd">@clear_mutation_cache</span>
     <span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">RefDiGraph</span><span class="o">.</span><span class="n">in_edges</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">in_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">InEdgeView</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="nd">@clear_cache</span>
+    <span class="nd">@clear_mutation_cache</span>
     <span class="k">def</span> <span class="nf">degree</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;A DegreeView for the Graph as G.degree or G.degree().</span>
 
@@ -588,13 +587,13 @@
         <span class="k">return</span> <span class="n">DiDegreeView</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="nd">@clear_cache</span>
+    <span class="nd">@clear_mutation_cache</span>
     <span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">RefDiGraph</span><span class="o">.</span><span class="n">in_degree</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">in_degree</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">InDegreeView</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="nd">@clear_cache</span>
+    <span class="nd">@clear_mutation_cache</span>
     <span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">RefDiGraph</span><span class="o">.</span><span class="n">out_degree</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">out_degree</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">OutDegreeView</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
@@ -607,7 +606,7 @@
     <span class="k">def</span> <span class="nf">is_multigraph</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="kc">False</span></div>
 
-<div class="viewcode-block" id="DiGraph.reverse"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.DiGraph.reverse">[docs]</a>    <span class="nd">@clear_cache</span>
+<div class="viewcode-block" id="DiGraph.reverse"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.DiGraph.reverse">[docs]</a>    <span class="nd">@clear_mutation_cache</span>
     <span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">RefDiGraph</span><span class="o">.</span><span class="n">reverse</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">reverse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_convert_arrow_to_dynamic</span><span class="p">()</span>
@@ -627,6 +626,7 @@
             <span class="n">graph_def</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
             <span class="n">g</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">graph_def</span><span class="o">.</span><span class="n">key</span>
             <span class="n">g</span><span class="o">.</span><span class="n">_schema</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="p">)</span>
+            <span class="n">g</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">warmup</span><span class="p">()</span>
         <span class="n">g</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span>
         <span class="k">return</span> <span class="n">g</span></div></div>
 </pre></div>

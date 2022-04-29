@@ -472,6 +472,7 @@
     <span class="n">lid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">label_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">gid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 <span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Create report operation for nx graph.</span>
 
@@ -526,6 +527,8 @@
         <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">LID</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">i_to_attr</span><span class="p">(</span><span class="n">lid</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">label_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">V_LABEL_ID</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">i_to_attr</span><span class="p">(</span><span class="n">label_id</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">gid</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">GID</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">u_to_attr</span><span class="p">(</span><span class="n">gid</span><span class="p">)</span>
 
     <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">EDGE_KEY</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="k">if</span> <span class="n">key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
     <span class="n">op</span> <span class="o">=</span> <span class="n">Operation</span><span class="p">(</span>
@@ -867,7 +870,13 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        An op to unload the `app`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">create_unload_op</span><span class="p">(</span><span class="n">app</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">UNLOAD_APP</span><span class="p">,</span> <span class="p">[</span><span class="n">app</span><span class="o">.</span><span class="n">op</span><span class="p">])</span></div>
+    <span class="n">op</span> <span class="o">=</span> <span class="n">Operation</span><span class="p">(</span>
+        <span class="n">app</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
+        <span class="n">types_pb2</span><span class="o">.</span><span class="n">UNLOAD_APP</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">app</span><span class="o">.</span><span class="n">op</span><span class="p">],</span>
+        <span class="n">output_types</span><span class="o">=</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">NULL_OUTPUT</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">op</span></div>
 
 
 <div class="viewcode-block" id="unload_graph"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.unload_graph.html#graphscope.framework.dag_utils.unload_graph">[docs]</a><span class="k">def</span> <span class="nf">unload_graph</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
@@ -879,7 +888,20 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        An op to unload the `graph`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">create_unload_op</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">UNLOAD_GRAPH</span><span class="p">,</span> <span class="p">[</span><span class="n">graph</span><span class="o">.</span><span class="n">op</span><span class="p">])</span></div>
+    <span class="n">config</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">inputs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">graph</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">==</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">ARROW_PROPERTY</span><span class="p">:</span>
+        <span class="n">inputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">op</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH_NAME</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">key</span><span class="p">)</span>
+    <span class="n">op</span> <span class="o">=</span> <span class="n">Operation</span><span class="p">(</span>
+        <span class="n">graph</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
+        <span class="n">types_pb2</span><span class="o">.</span><span class="n">UNLOAD_GRAPH</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">,</span>
+        <span class="n">output_types</span><span class="o">=</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">NULL_OUTPUT</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">op</span></div>
 
 
 <span class="k">def</span> <span class="nf">unload_context</span><span class="p">(</span><span class="n">context</span><span class="p">):</span>
@@ -992,13 +1014,13 @@
     <span class="k">return</span> <span class="n">op</span>
 
 
-<span class="k">def</span> <span class="nf">output</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">fd</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Dump result to `fd`</span>
+<span class="k">def</span> <span class="nf">to_data_sink</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">fd</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Dump result to `fd` by drivers in vineyard.</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        result (:class:`graphscope.framework.context.ResultDAGNode`):</span>
 <span class="sd">            Dataframe or numpy or result hold the object id of vineyard dataframe.</span>
-<span class="sd">        fd (str): Such as `file:///tmp/result_path`</span>
+<span class="sd">        fd (str): Such as `hdfs:///tmp/result_path`</span>
 <span class="sd">        kwargs (dict, optional): Storage options with respect to output storage type</span>
 
 <span class="sd">    Returns:</span>
@@ -1010,9 +1032,37 @@
     <span class="p">}</span>
     <span class="n">op</span> <span class="o">=</span> <span class="n">Operation</span><span class="p">(</span>
         <span class="n">result</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
-        <span class="n">types_pb2</span><span class="o">.</span><span class="n">OUTPUT</span><span class="p">,</span>
+        <span class="n">types_pb2</span><span class="o">.</span><span class="n">DATA_SINK</span><span class="p">,</span>
         <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
         <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">result</span><span class="o">.</span><span class="n">op</span><span class="p">],</span>
+        <span class="n">output_types</span><span class="o">=</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">NULL_OUTPUT</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">op</span>
+
+
+<span class="k">def</span> <span class="nf">output</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">fd</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Output result to `fd`, this will be handled by registered vineyard C++ adaptor.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        results (:class:`Context`): Results return by `run_app` operation, store the query results.</span>
+<span class="sd">        fd (str): Such as `file:///tmp/result_path`</span>
+<span class="sd">        selector (str): Select the type of data to retrieve.</span>
+<span class="sd">        vertex_range (str): Specify a range to retrieve.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        An op to output results to `fd`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">FD</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span>
+    <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">SELECTOR</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">selector</span><span class="p">)</span>
+    <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">STORAGE_OPTIONS</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">kwargs</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">vertex_range</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">VERTEX_RANGE</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">vertex_range</span><span class="p">)</span>
+
+    <span class="n">op</span> <span class="o">=</span> <span class="n">Operation</span><span class="p">(</span>
+        <span class="n">context</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
+        <span class="n">types_pb2</span><span class="o">.</span><span class="n">OUTPUT</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">context</span><span class="o">.</span><span class="n">op</span><span class="p">],</span>
         <span class="n">output_types</span><span class="o">=</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">NULL_OUTPUT</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="k">return</span> <span class="n">op</span>

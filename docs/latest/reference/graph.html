@@ -167,7 +167,7 @@ executed by <a href="#id2"><span class="problematic" id="id3">:method:`sess.run`
 <span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">g1</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">add_vertices</span><span class="p">(</span><span class="s2">&quot;person.csv&quot;</span><span class="p">,</span><span class="s2">&quot;person&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">g1</span><span class="p">)</span> <span class="c1"># &lt;graphscope.framework.graph.Graph object&gt;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">g1</span><span class="o">.</span><span class="n">unload</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">del</span> <span class="n">g1</span>
 </pre></div>
 </div>
 <dl class="py method">
@@ -306,20 +306,6 @@ name of properties. Specifically, it will select all properties if value is None
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><a class="reference internal" href="#graphscope.framework.graph.GraphDAGNode" title="graphscope.framework.graph.GraphDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.graph.GraphDAGNode</span></code></a></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="graphscope.framework.graph.GraphDAGNode.unload">
-<span class="sig-name descname"><span class="pre">unload</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#GraphDAGNode.unload"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph.GraphDAGNode.unload" title="Permalink to this definition"></a></dt>
-<dd><p>Unload this graph from graphscope engine.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Evaluated in eager mode.</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.graph.UnloadedGraph</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -523,12 +509,6 @@ You must check and correct for this manually if desired.</p>
 <dd class="field-even"><p><a class="reference internal" href="#graphscope.framework.graph.Graph" title="graphscope.framework.graph.Graph"><code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code></a></p>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="graphscope.framework.graph.Graph.unload">
-<span class="sig-name descname"><span class="pre">unload</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#Graph.unload"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph.Graph.unload" title="Permalink to this definition"></a></dt>
-<dd><p>Unload this graph from graphscope engine.</p>
 </dd></dl>
 
 <dl class="py property">
