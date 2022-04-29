@@ -354,20 +354,6 @@ app class.</p>
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">graphscope.framework.app.</span></span><span class="sig-name descname"><span class="pre">AppDAGNode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_assets</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#graphscope.framework.app.AppAssets" title="graphscope.framework.app.AppAssets"><span class="pre">graphscope.framework.app.AppAssets</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/app.html#AppDAGNode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.app.AppDAGNode" title="Permalink to this definition"></a></dt>
 <dd><p>A class represents a app node in a DAG.</p>
 <p>In GraphScope, an app node binding a concrete graph node that query executed on.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="graphscope.framework.app.AppDAGNode.unload">
-<span class="sig-name descname"><span class="pre">unload</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/app.html#AppDAGNode.unload"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.app.AppDAGNode.unload" title="Permalink to this definition"></a></dt>
-<dd><p>Unload this app from graphscope engine.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Evaluated in eager mode.</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.app.UnloadedApp</span></code></p>
-</dd>
-</dl>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
@@ -377,6 +363,12 @@ app class.</p>
 <p>Analytical engine will build the app dynamic library when instantiate a app instance.
 And the dynamic library will be reused if subsequent app’s signature matches one of
 previous ones.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="graphscope.framework.app.App.__del__">
+<span class="sig-name descname"><span class="pre">__del__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/app.html#App.__del__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.app.App.__del__" title="Permalink to this definition"></a></dt>
+<dd><p>Unload app. Both on engine side and python side. Set the key to None.</p>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="graphscope.framework.app.App.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">app_node</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/app.html#App.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.app.App.__init__" title="Permalink to this definition"></a></dt>
@@ -393,12 +385,6 @@ previous ones.</p>
 <dt class="sig sig-object py" id="graphscope.framework.app.App.signature">
 <em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">signature</span></span><a class="headerlink" href="#graphscope.framework.app.App.signature" title="Permalink to this definition"></a></dt>
 <dd><p>Signature is computed by all critical components of the App.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="graphscope.framework.app.App.unload">
-<span class="sig-name descname"><span class="pre">unload</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/app.html#App.unload"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.app.App.unload" title="Permalink to this definition"></a></dt>
-<dd><p>Unload app. Both on engine side and python side. Set the key to None.</p>
 </dd></dl>
 
 </dd></dl>
@@ -546,6 +532,39 @@ evaluated in eager mode.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># project to a simple graph (if needed)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pg</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;host&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]},</span> <span class="n">edges</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;connect&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;dist&quot;</span><span class="p">]})</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">wcc</span><span class="p">(</span><span class="n">pg</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sess</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="graphscope.avg_clustering">
+<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">avg_clustering</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/clustering.html#avg_clustering"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.avg_clustering" title="Permalink to this definition"></a></dt>
+<dd><p>Compute the average clustering coefficient for the directed graph.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.Graph</span></code>) – A simple graph.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>float</dt><dd><p>The average clustering coefficient.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>r</p>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">graphscope</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">graphscope.dataset</span> <span class="kn">import</span> <span class="n">load_p2p_network</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">cluster_type</span><span class="o">=</span><span class="s2">&quot;hosts&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;eager&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">load_p2p_network</span><span class="p">(</span><span class="n">sess</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># project to a simple graph</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pg</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;host&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]},</span> <span class="n">edges</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;connect&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;dist&quot;</span><span class="p">]})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">avg_clustering</span><span class="p">(</span><span class="n">pg</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sess</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 </pre></div>
 </div>

@@ -26,6 +26,7 @@
       ~session.load_from
       ~session.nx
       ~session.run
+      ~session.run_fetches
    
    
 

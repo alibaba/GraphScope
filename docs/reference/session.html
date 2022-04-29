@@ -280,6 +280,8 @@ a bundled vineyard container otherwise.</p></li>
 <li><p><strong>k8s_engine_mem</strong> (<em>str</em><em>, </em><em>optional</em>) – Minimum number of memory request for engine container. Defaults to ‘4Gi’.</p></li>
 <li><p><strong>k8s_coordinator_cpu</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum number of CPU cores request for coordinator pod. Defaults to 1.0.</p></li>
 <li><p><strong>k8s_coordinator_mem</strong> (<em>str</em><em>, </em><em>optional</em>) – Minimum number of memory request for coordinator pod. Defaults to ‘4Gi’.</p></li>
+<li><p><strong>etcd_addrs</strong> (<em>str</em><em>, </em><em>optional</em>) – The addr of external etcd cluster,
+with formats like ‘etcd01:port,etcd02:port,etcd03:port’</p></li>
 <li><p><strong>k8s_etcd_num_pods</strong> (<em>int</em><em>, </em><em>optional</em>) – The number of etcd pods. Defaults to 3.</p></li>
 <li><p><strong>k8s_etcd_cpu</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum number of CPU cores request for etcd pod. Defaults to 0.5.</p></li>
 <li><p><strong>k8s_etcd_mem</strong> (<em>str</em><em>, </em><em>optional</em>) – Minimum number of memory request for etcd pod. Defaults to ‘128Mi’.</p></li>
@@ -589,6 +591,12 @@ See a list of configurable keys in
 <span class="sig-name descname"><span class="pre">load_from</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/client/session.html#Session.load_from"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.Session.load_from" title="Permalink to this definition"></a></dt>
 <dd><p>Load a graph within the session.
 See more information in <code class="xref py py-meth docutils literal notranslate"><span class="pre">graphscope.load_from()</span></code>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="graphscope.Session.run_fetches">
+<span class="sig-name descname"><span class="pre">run_fetches</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fetches</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/client/session.html#Session.run_fetches"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.Session.run_fetches" title="Permalink to this definition"></a></dt>
+<dd><p>Run operations of <cite>fetches</cite> without the session lock.</p>
 </dd></dl>
 
 </dd></dl>

@@ -143,6 +143,7 @@
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">threading</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABCMeta</span>
 <span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">abstractmethod</span>
 <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
@@ -178,6 +179,7 @@
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_directed</span> <span class="o">=</span> <span class="kc">False</span>
 
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">add_column</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">selector</span><span class="p">):</span>
@@ -200,9 +202,8 @@
     <span class="p">):</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 
-    <span class="nd">@abstractmethod</span>
-    <span class="k">def</span> <span class="nf">unload</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+    <span class="k">def</span> <span class="nf">is_directed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_directed</span>
 
     <span class="k">def</span> <span class="nf">to_numpy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span>
@@ -219,6 +220,12 @@
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vertices</span><span class="p">,</span> <span class="n">edges</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="k">def</span> <span class="nf">unload</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">&quot;The Graph.unload() method has been deprecated, please using the `del` operator instead, e.g., `del graph`&quot;</span><span class="p">,</span>
+            <span class="ne">DeprecationWarning</span><span class="p">,</span>
+        <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_from_nx_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">g</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Create a gs graph from a nx graph.</span>
@@ -332,7 +339,7 @@
 <span class="sd">        &gt;&gt;&gt; g = sess.g()</span>
 <span class="sd">        &gt;&gt;&gt; g1 = g.add_vertices(&quot;person.csv&quot;,&quot;person&quot;)</span>
 <span class="sd">        &gt;&gt;&gt; print(g1) # &lt;graphscope.framework.graph.Graph object&gt;</span>
-<span class="sd">        &gt;&gt;&gt; g1.unload()</span>
+<span class="sd">        &gt;&gt;&gt; del g1</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="GraphDAGNode.__init__"><a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.GraphDAGNode.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
@@ -417,7 +424,9 @@
             <span class="bp">self</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">v_prop</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">e_prop</span><span class="p">)</span>
         <span class="p">)</span>
         <span class="c1"># construct dag node</span>
-        <span class="n">graph_dag_node</span> <span class="o">=</span> <span class="n">GraphDAGNode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">,</span> <span class="n">op</span><span class="p">)</span>
+        <span class="n">graph_dag_node</span> <span class="o">=</span> <span class="n">GraphDAGNode</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">,</span> <span class="n">op</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_oid_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_directed</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_eid</span>
+        <span class="p">)</span>
         <span class="n">graph_dag_node</span><span class="o">.</span><span class="n">_base_graph</span> <span class="o">=</span> <span class="bp">self</span>
         <span class="k">return</span> <span class="n">graph_dag_node</span>
 
@@ -725,14 +734,20 @@
         <span class="n">graph_dag_node</span><span class="o">.</span><span class="n">_base_graph</span> <span class="o">=</span> <span class="bp">self</span>
         <span class="k">return</span> <span class="n">graph_dag_node</span></div>
 
-<div class="viewcode-block" id="GraphDAGNode.unload"><a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.GraphDAGNode.unload">[docs]</a>    <span class="k">def</span> <span class="nf">unload</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_unload</span><span class="p">())</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># pylint: disable=broad-except</span>
+            <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">_unload</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Unload this graph from graphscope engine.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            :class:`graphscope.framework.graph.UnloadedGraph`: Evaluated in eager mode.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">unload_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">UnloadedGraph</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">,</span> <span class="n">op</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">UnloadedGraph</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">,</span> <span class="n">op</span><span class="p">)</span>
 
 <div class="viewcode-block" id="GraphDAGNode.project"><a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.GraphDAGNode.project">[docs]</a>    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -760,7 +775,9 @@
             <span class="bp">self</span><span class="p">,</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">vertices</span><span class="p">),</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span>
         <span class="p">)</span>
         <span class="c1"># construct dag node</span>
-        <span class="n">graph_dag_node</span> <span class="o">=</span> <span class="n">GraphDAGNode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">,</span> <span class="n">op</span><span class="p">)</span>
+        <span class="n">graph_dag_node</span> <span class="o">=</span> <span class="n">GraphDAGNode</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">,</span> <span class="n">op</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_oid_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_directed</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_eid</span>
+        <span class="p">)</span>
         <span class="n">graph_dag_node</span><span class="o">.</span><span class="n">_base_graph</span> <span class="o">=</span> <span class="bp">self</span>
         <span class="k">return</span> <span class="n">graph_dag_node</span></div></div>
 
@@ -809,13 +826,6 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_interactive_instance_launching_thread</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_interactive_instance_list</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_learning_instance_list</span> <span class="o">=</span> <span class="p">[]</span></div>
-
-    <span class="k">def</span> <span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="c1"># cleanly ignore all exceptions, cause session may already closed / destroyed.</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">unload</span><span class="p">()</span>
-        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># pylint: disable=broad-except</span>
-            <span class="k">pass</span>
 
     <span class="k">def</span> <span class="nf">_close_interactive_instances</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># Close related interactive instances when graph unloaded.</span>
@@ -954,9 +964,7 @@
 
 <div class="viewcode-block" id="Graph.loaded"><a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.Graph.loaded">[docs]</a>    <span class="k">def</span> <span class="nf">loaded</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;True if current graph has been loaded in the session.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;active&quot;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">True</span>
-        <span class="k">return</span> <span class="kc">False</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;active&quot;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span></div>
 
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">v_str</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s2">&quot;VERTEX: </span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_v_labels</span><span class="p">])</span>
@@ -974,7 +982,7 @@
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()</span>
 
-<div class="viewcode-block" id="Graph.unload"><a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.Graph.unload">[docs]</a>    <span class="k">def</span> <span class="nf">unload</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_unload</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Unload this graph from graphscope engine.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;active&quot;</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span>
@@ -1001,9 +1009,16 @@
             <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Failed to close learning instances: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">e</span><span class="p">)</span>
         <span class="n">rlt</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_detached</span><span class="p">:</span>
-            <span class="n">rlt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph_node</span><span class="o">.</span><span class="n">unload</span><span class="p">())</span>
+            <span class="n">rlt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph_node</span><span class="o">.</span><span class="n">_unload</span><span class="p">())</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="k">return</span> <span class="n">rlt</span></div>
+        <span class="k">return</span> <span class="n">rlt</span>
+
+    <span class="k">def</span> <span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># cleanly ignore all exceptions, cause session may already closed / destroyed.</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_unload</span><span class="p">())</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># pylint: disable=broad-except</span>
+            <span class="k">pass</span>
 
     <span class="k">def</span> <span class="nf">_project_to_simple</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v_prop</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">e_prop</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span>

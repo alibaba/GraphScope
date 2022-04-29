@@ -273,100 +273,100 @@
 <ul class="simple">
 <li><p>Source（输入图），如：</p></li>
 </ul>
-<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="c1">//V</span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">()</span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">(</span><span class="n">id1</span><span class="p">,</span> <span class="n">id2</span><span class="p">)</span>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="c1">//V</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">()</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">(</span><span class="n">id1</span><span class="p">,</span><span class="w"> </span><span class="n">id2</span><span class="p">)</span><span class="w"></span>
 
-<span class="c1">//E</span>
-<span class="n">g</span><span class="p">.</span><span class="na">E</span><span class="p">()</span>
+<span class="c1">//E</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">E</span><span class="p">()</span><span class="w"></span>
 </pre></div>
 </div>
 <ul class="simple">
 <li><p>Filter（过滤），如：</p></li>
 </ul>
-<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="c1">//has</span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">has</span><span class="p">(</span><span class="s">&quot;attrName&quot;</span><span class="p">)</span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">has</span><span class="p">(</span><span class="s">&quot;attrName&quot;</span><span class="p">,</span> <span class="n">attrValue</span><span class="p">)</span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">has</span><span class="p">(</span><span class="s">&quot;attrName&quot;</span><span class="p">,</span> <span class="n">gt</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="c1">//has</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">has</span><span class="p">(</span><span class="s">&quot;attrName&quot;</span><span class="p">)</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">has</span><span class="p">(</span><span class="s">&quot;attrName&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">attrValue</span><span class="p">)</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">has</span><span class="p">(</span><span class="s">&quot;attrName&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">gt</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span><span class="w"></span>
 
-<span class="c1">//is</span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">values</span><span class="p">(</span><span class="s">&quot;age&quot;</span><span class="p">).</span><span class="na">is</span><span class="p">(</span><span class="n">gt</span><span class="p">(</span><span class="mi">70</span><span class="p">))</span>
+<span class="c1">//is</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">values</span><span class="p">(</span><span class="s">&quot;age&quot;</span><span class="p">).</span><span class="na">is</span><span class="p">(</span><span class="n">gt</span><span class="p">(</span><span class="mi">70</span><span class="p">))</span><span class="w"></span>
 
-<span class="c1">//filter</span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">filter</span><span class="p">(</span><span class="n">values</span><span class="p">(</span><span class="s">&quot;age&quot;</span><span class="p">).</span><span class="na">is</span><span class="p">(</span><span class="n">gt</span><span class="p">(</span><span class="mi">20</span><span class="p">)))</span>
+<span class="c1">//filter</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">filter</span><span class="p">(</span><span class="n">values</span><span class="p">(</span><span class="s">&quot;age&quot;</span><span class="p">).</span><span class="na">is</span><span class="p">(</span><span class="n">gt</span><span class="p">(</span><span class="mi">20</span><span class="p">)))</span><span class="w"></span>
 
-<span class="c1">//where</span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">where</span><span class="p">(</span><span class="n">out</span><span class="p">().</span><span class="na">count</span><span class="p">().</span><span class="na">is</span><span class="p">(</span><span class="n">gt</span><span class="p">(</span><span class="mi">4</span><span class="p">)))</span>
+<span class="c1">//where</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">where</span><span class="p">(</span><span class="n">out</span><span class="p">().</span><span class="na">count</span><span class="p">().</span><span class="na">is</span><span class="p">(</span><span class="n">gt</span><span class="p">(</span><span class="mi">4</span><span class="p">)))</span><span class="w"></span>
 
-<span class="c1">//dedup</span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">dedup</span><span class="p">()</span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">dedup</span><span class="p">().</span><span class="na">by</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">)</span>
+<span class="c1">//dedup</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">dedup</span><span class="p">()</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">dedup</span><span class="p">().</span><span class="na">by</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">)</span><span class="w"></span>
 
-<span class="c1">//range</span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">limit</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">range</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span>
+<span class="c1">//range</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">limit</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">range</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">20</span><span class="p">)</span><span class="w"></span>
 
-<span class="c1">//simplePath</span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">repeat</span><span class="p">(</span><span class="n">out</span><span class="p">().</span><span class="na">simplePath</span><span class="p">()).</span><span class="na">times</span><span class="p">(</span><span class="mi">3</span><span class="p">).</span><span class="na">valeus</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">)</span>
+<span class="c1">//simplePath</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">repeat</span><span class="p">(</span><span class="n">out</span><span class="p">().</span><span class="na">simplePath</span><span class="p">()).</span><span class="na">times</span><span class="p">(</span><span class="mi">3</span><span class="p">).</span><span class="na">valeus</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">)</span><span class="w"></span>
 
-<span class="c1">//and/or</span>
+<span class="c1">//and/or</span><span class="w"></span>
 
-<span class="c1">//Text.*</span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">has</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">,</span> <span class="n">Text</span><span class="p">.</span><span class="na">match</span><span class="p">(</span><span class="s">&quot;.*j.*&quot;</span><span class="p">))</span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">values</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">).</span><span class="na">filter</span><span class="p">(</span><span class="n">Text</span><span class="p">.</span><span class="na">match</span><span class="p">(</span><span class="s">&quot;.*j.*&quot;</span><span class="p">))</span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">has</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">,</span> <span class="n">Text</span><span class="p">.</span><span class="na">startsWith</span><span class="p">(</span><span class="s">&quot;To&quot;</span><span class="p">))</span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">values</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">).</span><span class="na">filter</span><span class="p">(</span><span class="n">Text</span><span class="p">.</span><span class="na">startsWith</span><span class="p">(</span><span class="s">&quot;To&quot;</span><span class="p">))</span>
+<span class="c1">//Text.*</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">has</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Text</span><span class="p">.</span><span class="na">match</span><span class="p">(</span><span class="s">&quot;.*j.*&quot;</span><span class="p">))</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">values</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">).</span><span class="na">filter</span><span class="p">(</span><span class="n">Text</span><span class="p">.</span><span class="na">match</span><span class="p">(</span><span class="s">&quot;.*j.*&quot;</span><span class="p">))</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">has</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Text</span><span class="p">.</span><span class="na">startsWith</span><span class="p">(</span><span class="s">&quot;To&quot;</span><span class="p">))</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">values</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">).</span><span class="na">filter</span><span class="p">(</span><span class="n">Text</span><span class="p">.</span><span class="na">startsWith</span><span class="p">(</span><span class="s">&quot;To&quot;</span><span class="p">))</span><span class="w"></span>
 
-<span class="c1">//P.not</span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">has</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">,</span> <span class="n">P</span><span class="p">.</span><span class="na">not</span><span class="p">(</span><span class="n">Text</span><span class="p">.</span><span class="na">startsWith</span><span class="p">(</span><span class="s">&quot;To&quot;</span><span class="p">)))</span>
+<span class="c1">//P.not</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">has</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">P</span><span class="p">.</span><span class="na">not</span><span class="p">(</span><span class="n">Text</span><span class="p">.</span><span class="na">startsWith</span><span class="p">(</span><span class="s">&quot;To&quot;</span><span class="p">)))</span><span class="w"></span>
 
-<span class="c1">//Lists.contains*</span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">has</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">,</span> <span class="n">Lists</span><span class="p">.</span><span class="na">contains</span><span class="p">(</span><span class="mi">30</span><span class="p">))</span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">values</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">).</span><span class="na">filter</span><span class="p">(</span><span class="n">Lists</span><span class="p">.</span><span class="na">containsAny</span><span class="p">(</span><span class="n">Lists</span><span class="p">.</span><span class="na">of</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">30</span><span class="p">))</span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">has</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">,</span> <span class="n">P</span><span class="p">.</span><span class="na">not</span><span class="p">(</span><span class="n">Lists</span><span class="p">.</span><span class="na">contains</span><span class="p">(</span><span class="mi">30</span><span class="p">)))</span>
+<span class="c1">//Lists.contains*</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">has</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Lists</span><span class="p">.</span><span class="na">contains</span><span class="p">(</span><span class="mi">30</span><span class="p">))</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">values</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">).</span><span class="na">filter</span><span class="p">(</span><span class="n">Lists</span><span class="p">.</span><span class="na">containsAny</span><span class="p">(</span><span class="n">Lists</span><span class="p">.</span><span class="na">of</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="mi">30</span><span class="p">))</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">has</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">P</span><span class="p">.</span><span class="na">not</span><span class="p">(</span><span class="n">Lists</span><span class="p">.</span><span class="na">contains</span><span class="p">(</span><span class="mi">30</span><span class="p">)))</span><span class="w"></span>
 </pre></div>
 </div>
 <ul class="simple">
 <li><p>Map（映射），如：</p></li>
 </ul>
-<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="c1">//constant</span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">contant</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">constant</span><span class="p">(</span><span class="s">&quot;aaa&quot;</span><span class="p">)</span>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="c1">//constant</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">contant</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">constant</span><span class="p">(</span><span class="s">&quot;aaa&quot;</span><span class="p">)</span><span class="w"></span>
 
-<span class="c1">//local count</span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">values</span><span class="p">(</span><span class="s">&quot;age&quot;</span><span class="p">).</span><span class="na">fold</span><span class="p">().</span><span class="na">count</span><span class="p">(</span><span class="n">local</span><span class="p">)</span>
+<span class="c1">//local count</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">values</span><span class="p">(</span><span class="s">&quot;age&quot;</span><span class="p">).</span><span class="na">fold</span><span class="p">().</span><span class="na">count</span><span class="p">(</span><span class="n">local</span><span class="p">)</span><span class="w"></span>
 
-<span class="c1">//local dedup</span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">fold</span><span class="p">().</span><span class="na">dedup</span><span class="p">(</span><span class="n">local</span><span class="p">).</span><span class="na">by</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">)</span>
+<span class="c1">//local dedup</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">fold</span><span class="p">().</span><span class="na">dedup</span><span class="p">(</span><span class="n">local</span><span class="p">).</span><span class="na">by</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">)</span><span class="w"></span>
 
-<span class="c1">//otherV</span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">bothE</span><span class="p">().</span><span class="na">otherV</span><span class="p">()</span>
+<span class="c1">//otherV</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">bothE</span><span class="p">().</span><span class="na">otherV</span><span class="p">()</span><span class="w"></span>
 
-<span class="c1">//id</span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">id</span><span class="p">()</span>
+<span class="c1">//id</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">id</span><span class="p">()</span><span class="w"></span>
 
-<span class="c1">//label</span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">label</span><span class="p">()</span>
+<span class="c1">//label</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">label</span><span class="p">()</span><span class="w"></span>
 
-<span class="c1">//local order</span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">fold</span><span class="p">().</span><span class="na">order</span><span class="p">().</span><span class="na">by</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">)</span>
+<span class="c1">//local order</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">fold</span><span class="p">().</span><span class="na">order</span><span class="p">().</span><span class="na">by</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">)</span><span class="w"></span>
 
-<span class="c1">//property key</span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">properties</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">).</span><span class="na">key</span><span class="p">()</span>
+<span class="c1">//property key</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">properties</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">).</span><span class="na">key</span><span class="p">()</span><span class="w"></span>
 
-<span class="c1">//property value</span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">properties</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">).</span><span class="na">value</span><span class="p">()</span>
+<span class="c1">//property value</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">properties</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">).</span><span class="na">value</span><span class="p">()</span><span class="w"></span>
 
-<span class="c1">//local range</span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">fold</span><span class="p">().</span><span class="na">order</span><span class="p">(</span><span class="n">local</span><span class="p">).</span><span class="na">by</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">).</span><span class="na">range</span><span class="p">(</span><span class="n">local</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="c1">//local range</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">fold</span><span class="p">().</span><span class="na">order</span><span class="p">(</span><span class="n">local</span><span class="p">).</span><span class="na">by</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">).</span><span class="na">range</span><span class="p">(</span><span class="n">local</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">)</span><span class="w"></span>
 
-<span class="c1">//as...select</span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">as</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">).</span><span class="na">out</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">select</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">)</span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">as</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">).</span><span class="na">as</span><span class="p">(</span><span class="s">&quot;b&quot;</span><span class="p">).</span><span class="na">out</span><span class="p">(</span><span class="s">&quot;c&quot;</span><span class="p">).</span><span class="na">out</span><span class="p">().</span><span class="na">select</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">,</span> <span class="s">&quot;b&quot;</span><span class="p">,</span> <span class="s">&quot;c&quot;</span><span class="p">)</span>
+<span class="c1">//as...select</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">as</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">).</span><span class="na">out</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">select</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">)</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">as</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">).</span><span class="na">as</span><span class="p">(</span><span class="s">&quot;b&quot;</span><span class="p">).</span><span class="na">out</span><span class="p">(</span><span class="s">&quot;c&quot;</span><span class="p">).</span><span class="na">out</span><span class="p">().</span><span class="na">select</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c&quot;</span><span class="p">)</span><span class="w"></span>
 
-<span class="c1">//path</span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">in</span><span class="p">().</span><span class="na">path</span><span class="p">()</span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">outE</span><span class="p">().</span><span class="na">inV</span><span class="p">().</span><span class="na">path</span><span class="p">().</span><span class="na">bay</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">).</span><span class="na">by</span><span class="p">(</span><span class="s">&quot;weight&quot;</span><span class="p">).</span><span class="na">by</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">)</span>
+<span class="c1">//path</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">in</span><span class="p">().</span><span class="na">path</span><span class="p">()</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">outE</span><span class="p">().</span><span class="na">inV</span><span class="p">().</span><span class="na">path</span><span class="p">().</span><span class="na">bay</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">).</span><span class="na">by</span><span class="p">(</span><span class="s">&quot;weight&quot;</span><span class="p">).</span><span class="na">by</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">)</span><span class="w"></span>
 </pre></div>
 </div>
 <ul class="simple">
@@ -396,43 +396,43 @@ g.V().group().by().by(values(&quot;name&quot;)).select(values).unfold()
 <ul class="simple">
 <li><p>Aggregate（聚合），如：</p></li>
 </ul>
-<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="c1">//global count</span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">count</span><span class="p">()</span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">where</span><span class="p">(</span><span class="n">out</span><span class="p">().</span><span class="na">in</span><span class="p">().</span><span class="na">count</span><span class="p">().</span><span class="na">is</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="c1">//global count</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">count</span><span class="p">()</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">where</span><span class="p">(</span><span class="n">out</span><span class="p">().</span><span class="na">in</span><span class="p">().</span><span class="na">count</span><span class="p">().</span><span class="na">is</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span><span class="w"></span>
 
-<span class="c1">//fold</span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">fold</span><span class="p">()</span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">values</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">).</span><span class="na">fold</span><span class="p">()</span>
+<span class="c1">//fold</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">fold</span><span class="p">()</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">values</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">).</span><span class="na">fold</span><span class="p">()</span><span class="w"></span>
 
-<span class="c1">//groupCount</span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">groupCount</span><span class="p">()</span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">values</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">).</span><span class="na">groupCount</span><span class="p">()</span>
+<span class="c1">//groupCount</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">groupCount</span><span class="p">()</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">values</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">).</span><span class="na">groupCount</span><span class="p">()</span><span class="w"></span>
 
-<span class="c1">//groupBy</span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">group</span><span class="p">()</span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">group</span><span class="p">().</span><span class="na">by</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">)</span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">group</span><span class="p">().</span><span class="na">by</span><span class="p">().</span><span class="na">by</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">)</span>
+<span class="c1">//groupBy</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">group</span><span class="p">()</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">group</span><span class="p">().</span><span class="na">by</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">)</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">group</span><span class="p">().</span><span class="na">by</span><span class="p">().</span><span class="na">by</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">)</span><span class="w"></span>
 
-<span class="c1">//global max/min</span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">values</span><span class="p">(</span><span class="s">&quot;age&quot;</span><span class="p">).</span><span class="na">max</span><span class="p">()</span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">values</span><span class="p">(</span><span class="s">&quot;age&quot;</span><span class="p">).</span><span class="na">min</span><span class="p">()</span>
+<span class="c1">//global max/min</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">values</span><span class="p">(</span><span class="s">&quot;age&quot;</span><span class="p">).</span><span class="na">max</span><span class="p">()</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">values</span><span class="p">(</span><span class="s">&quot;age&quot;</span><span class="p">).</span><span class="na">min</span><span class="p">()</span><span class="w"></span>
 
-<span class="c1">//global sum</span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">values</span><span class="p">(</span><span class="s">&quot;age&quot;</span><span class="p">).</span><span class="na">sum</span><span class="p">()</span>
+<span class="c1">//global sum</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">values</span><span class="p">(</span><span class="s">&quot;age&quot;</span><span class="p">).</span><span class="na">sum</span><span class="p">()</span><span class="w"></span>
 </pre></div>
 </div>
 <ul class="simple">
 <li><p>Loop（循环），如：</p></li>
 </ul>
-<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="c1">//repeat...times</span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">repeat</span><span class="p">(</span><span class="n">out</span><span class="p">()).</span><span class="na">times</span><span class="p">(</span><span class="mi">4</span><span class="p">).</span><span class="na">valueMap</span><span class="p">()</span>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="c1">//repeat...times</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">repeat</span><span class="p">(</span><span class="n">out</span><span class="p">()).</span><span class="na">times</span><span class="p">(</span><span class="mi">4</span><span class="p">).</span><span class="na">valueMap</span><span class="p">()</span><span class="w"></span>
 
-<span class="c1">//repeat...until</span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">repeat</span><span class="p">(</span><span class="n">out</span><span class="p">()).</span><span class="na">until</span><span class="p">(</span><span class="n">out</span><span class="p">().</span><span class="na">count</span><span class="p">().</span><span class="na">is</span><span class="p">(</span><span class="n">eq</span><span class="p">(</span><span class="mi">0</span><span class="p">))).</span><span class="na">valueMap</span><span class="p">()</span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">repeat</span><span class="p">(</span><span class="n">out</span><span class="p">()).</span><span class="na">until</span><span class="p">(</span><span class="n">out</span><span class="p">().</span><span class="na">count</span><span class="p">().</span><span class="na">is</span><span class="p">(</span><span class="n">eq</span><span class="p">(</span><span class="mi">0</span><span class="p">)).</span><span class="na">or</span><span class="p">().</span><span class="na">loops</span><span class="p">().</span><span class="na">is</span><span class="p">(</span><span class="n">gt</span><span class="p">(</span><span class="mi">3</span><span class="p">))).</span><span class="na">where</span><span class="p">(</span><span class="n">out</span><span class="p">().</span><span class="na">count</span><span class="p">().</span><span class="na">is</span><span class="p">(</span><span class="n">eq</span><span class="p">(</span><span class="mi">0</span><span class="p">)))</span>
+<span class="c1">//repeat...until</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">repeat</span><span class="p">(</span><span class="n">out</span><span class="p">()).</span><span class="na">until</span><span class="p">(</span><span class="n">out</span><span class="p">().</span><span class="na">count</span><span class="p">().</span><span class="na">is</span><span class="p">(</span><span class="n">eq</span><span class="p">(</span><span class="mi">0</span><span class="p">))).</span><span class="na">valueMap</span><span class="p">()</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">repeat</span><span class="p">(</span><span class="n">out</span><span class="p">()).</span><span class="na">until</span><span class="p">(</span><span class="n">out</span><span class="p">().</span><span class="na">count</span><span class="p">().</span><span class="na">is</span><span class="p">(</span><span class="n">eq</span><span class="p">(</span><span class="mi">0</span><span class="p">)).</span><span class="na">or</span><span class="p">().</span><span class="na">loops</span><span class="p">().</span><span class="na">is</span><span class="p">(</span><span class="n">gt</span><span class="p">(</span><span class="mi">3</span><span class="p">))).</span><span class="na">where</span><span class="p">(</span><span class="n">out</span><span class="p">().</span><span class="na">count</span><span class="p">().</span><span class="na">is</span><span class="p">(</span><span class="n">eq</span><span class="p">(</span><span class="mi">0</span><span class="p">)))</span><span class="w"></span>
 
-<span class="c1">//emit</span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">emit</span><span class="p">().</span><span class="na">repeat</span><span class="p">(</span><span class="n">out</span><span class="p">()).</span><span class="na">times</span><span class="p">(</span><span class="mi">4</span><span class="p">).</span><span class="na">valueMap</span><span class="p">()</span>
+<span class="c1">//emit</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">emit</span><span class="p">().</span><span class="na">repeat</span><span class="p">(</span><span class="n">out</span><span class="p">()).</span><span class="na">times</span><span class="p">(</span><span class="mi">4</span><span class="p">).</span><span class="na">valueMap</span><span class="p">()</span><span class="w"></span>
 </pre></div>
 </div>
 <ul class="simple">
