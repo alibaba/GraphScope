@@ -727,9 +727,6 @@ class Session(object):
         # networkx module
         self._nx = None
 
-        # a lock that protects the coordinator
-        self._lock = threading.Lock()
-
     def __repr__(self):
         return str(self.info)
 
@@ -970,8 +967,7 @@ class Session(object):
         Returns:
             Different values for different output types of :class:`Operation`
         """
-        with self._lock:
-            return self.run_fetches(fetches, debug)
+        return self.run_fetches(fetches, debug)
 
     def run_fetches(self, fetches, debug=False):
         """Run operations of `fetches` without the session lock."""
