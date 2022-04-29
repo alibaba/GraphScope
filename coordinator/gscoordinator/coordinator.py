@@ -33,7 +33,6 @@ import signal
 import string
 import sys
 import threading
-import time
 import traceback
 import urllib.parse
 import urllib.request
