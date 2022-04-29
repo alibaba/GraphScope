@@ -406,9 +406,10 @@ class Graph(_GraphBase):
             op.eval()
             graph._key = None
 
-        t = threading.Thread(target=_del, args=(self,))
-        t.daemon = True
-        t.start()
+        if not self._is_client_view:
+            t = threading.Thread(target=_del, args=(self,))
+            t.daemon = True
+            t.start()
 
     @property
     def op(self):
