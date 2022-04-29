@@ -20,6 +20,7 @@
 #
 
 import copy
+import threading
 
 import msgpack
 import orjson as json
@@ -390,6 +391,23 @@ class Graph(_GraphBase):
                 "The default session is lazy mode."
             )
         self._session = session
+
+    def __del__(self):
+        if self._session.info["status"] != "active" or self._key is None:
+            return
+
+        # use thread to avoid dead-lock
+        def _del(graph):
+            # cancel cache fetch future
+            if graph.cache.enable_iter_cache:
+                graph.cache.shutdown()
+            op = dag_utils.unload_graph(graph)
+            op.eval()
+            graph._key = None
+
+        t = threading.Thread(target=_del, args=(self,))
+        t.daemon = True
+        t.start()
 
     @property
     def op(self):
@@ -2072,20 +2090,18 @@ class Graph(_GraphBase):
         # check session and direction compatible
         if arrow_property_graph.session_id != self.session_id:
             raise NetworkXError(
-                "Try to init with another session's arrow_property graph."
-                + "Graphs must be the same session."
+                "The source graph is not loaded in session {}." % self.session_id
             )
         if arrow_property_graph.is_directed() != self.is_directed():
-            raise NetworkXError(
-                "Try to init with another direction type's arrow_property graph."
-                + "Graphs must have the same direction type."
-            )
-        if arrow_property_graph._is_multigraph:
-            raise NetworkXError(
-                "Graph is multigraph, cannot be converted to networkx graph."
-            )
+            if arrow_property_graph.is_directed():
+                msg = "The source graph is a directed graph, can't be used to init nx.Graph. You may use nx.DiGraph"
+            else:
+                msg = "The source graph is a undirected graph, can't be used to init nx.DiGraph. You may use nx.Graph"
+            raise NetworkXError(msg)
+
         self._key = arrow_property_graph.key
         self._schema = arrow_property_graph.schema
+        self._op = arrow_property_graph.op
         if self._default_label is not None:
             try:
                 self._default_label_id = self._schema.get_vertex_label_id(

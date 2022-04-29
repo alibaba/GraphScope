@@ -15,6 +15,7 @@
 
 #include <cstdio>
 #include <fstream>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -48,7 +49,8 @@ static std::shared_ptr<gs::detail::Graph> make_graph_info(
           vineyard::ObjectIDFromString(e));
       VINEYARD_ASSERT(pstream != nullptr,
                       "The pstream " + e + " doesn't exist");
-      auto stream = pstream->GetStream<vineyard::DataframeStream>(0);
+      auto stream =
+          std::dynamic_pointer_cast<vineyard::DataframeStream>(pstream->Get(0));
       auto params = stream->GetParams();
       sublabel.src_label = params.at("src_label");
       sublabel.dst_label = params.at("dst_label");
@@ -66,7 +68,8 @@ static std::shared_ptr<gs::detail::Graph> make_graph_info(
     auto pstream = client.GetObject<vineyard::ParallelStream>(
         vineyard::ObjectIDFromString(v));
     VINEYARD_ASSERT(pstream != nullptr, "The stream " + v + " doesn't exist");
-    auto stream = pstream->GetStream<vineyard::DataframeStream>(0);
+    auto stream =
+        std::dynamic_pointer_cast<vineyard::DataframeStream>(pstream->Get(0));
     auto params = stream->GetParams();
     vertex->protocol = "vineyard";
     vertex->values = v;

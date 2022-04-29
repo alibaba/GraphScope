@@ -52,7 +52,6 @@ class DFS : public AppBase<FRAG_T, DFSContext<FRAG_T>>,
 
   void IncEval(const fragment_t& frag, context_t& ctx,
                message_manager_t& messages) {
-    auto vertices = frag.Vertices();
     auto inner_vertices = frag.InnerVertices();
     auto& is_in_frag = ctx.is_in_frag;
     if (ctx.output_stage == false) {

@@ -572,7 +572,6 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
   void getEdgeData(std::shared_ptr<fragment_t>& fragment, label_id_t u_label_id,
                    const oid_t& u_oid, label_id_t v_label_id,
                    const oid_t& v_oid, grape::InArchive& arc) {
-    dynamic::Value ref_data;
     vid_t u_gid, v_gid;
     vertex_t u, v;
     auto vm_ptr = fragment->GetVertexMap();
@@ -585,7 +584,7 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
         auto oe = fragment->GetOutgoingAdjList(u, e_label);
         for (auto& e : oe) {
           if (v == e.neighbor()) {
-            ref_data = dynamic::Value(rapidjson::kObjectType);
+            dynamic::Value ref_data(rapidjson::kObjectType);
             auto edge_data = fragment->edge_data_table(e_label);
             PropertyConverter<fragment_t>::EdgeValue(edge_data, e.edge_id(),
                                                      ref_data);
@@ -673,7 +672,7 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
       auto label_name = fragment->schema().GetVertexLabelName(label_id);
       for (int cnt = 0; cnt < batch_num_;) {
         if (id_parser.GetOffset(v.GetValue()) <
-            fragment->GetInnerVerticesNum(label_id)) {
+            static_cast<int64_t>(fragment->GetInnerVerticesNum(label_id))) {
           if (label_id == default_label_id_) {
             nodes_id.PushBack(fragment->GetId(v));
           } else {
@@ -694,7 +693,7 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
       }
       // archive the gid for next batch fetch, batch size and nodes id array.
       if (id_parser.GetOffset(v.GetValue()) <
-          fragment->GetInnerVerticesNum(label_id)) {
+          static_cast<int64_t>(fragment->GetInnerVerticesNum(label_id))) {
         arc << fragment->GetInnerVertexGid(v) << nodes_id.Size();
       } else if (label_id == label_num - 1) {
         if (fid == fnum - 1) {
@@ -723,7 +722,7 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
       auto label_id = id_parser.GetLabelId(v.GetValue());
       for (int cnt = 0; cnt < batch_num_;) {
         if (id_parser.GetOffset(v.GetValue()) <
-            fragment->GetInnerVerticesNum(label_id)) {
+            static_cast<int64_t>(fragment->GetInnerVerticesNum(label_id))) {
           dynamic::Value ref_data(rapidjson::kObjectType);
           auto vertex_data = fragment->vertex_data_table(label_id);
           // N.B: th last column is id, we ignore it.
@@ -766,7 +765,7 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
       adj_list_t edges;
       for (int cnt = 0; cnt < batch_num_;) {
         if (id_parser.GetOffset(v.GetValue()) <
-            fragment->GetInnerVerticesNum(label_id)) {
+            static_cast<int64_t>(fragment->GetInnerVerticesNum(label_id))) {
           dynamic::Value neighbor_ids(rapidjson::kArrayType);
           for (label_id_t e_label = 0; e_label < fragment->edge_label_num();
                e_label++) {
@@ -821,7 +820,7 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
       adj_list_t edges;
       for (int cnt = 0; cnt < batch_num_;) {
         if (id_parser.GetOffset(v.GetValue()) <
-            fragment->GetInnerVerticesNum(label_id)) {
+            static_cast<int64_t>(fragment->GetInnerVerticesNum(label_id))) {
           dynamic::Value neighbor_attrs(rapidjson::kArrayType);
           for (label_id_t e_label = 0; e_label < fragment->edge_label_num();
                e_label++) {

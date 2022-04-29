@@ -561,6 +561,10 @@ class Session(object):
             TypeError: If the given argument combination is invalid and cannot be used to create
                 a GraphScope session.
         """
+
+        # supress the grpc warnings, see also grpc/grpc#29103
+        os.environ["GRPC_ENABLE_FORK_SUPPORT"] = "false"
+
         self._config_params = {}
         self._accessable_params = (
             "addr",
@@ -966,8 +970,7 @@ class Session(object):
         Returns:
             Different values for different output types of :class:`Operation`
         """
-        with self._lock:
-            return self.run_fetches(fetches, debug)
+        return self.run_fetches(fetches, debug)
 
     def run_fetches(self, fetches, debug=False):
         """Run operations of `fetches` without the session lock."""

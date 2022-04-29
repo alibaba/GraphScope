@@ -42,7 +42,7 @@ typedef void QueryT(void* worker_handler, const rpc::QueryArgs& query_args,
                     const std::string& context_key,
                     std::shared_ptr<IFragmentWrapper> frag_wrapper,
                     std::shared_ptr<IContextWrapper>& ctx_wrapper,
-                    bl::result<nullptr_t>& wrapper_error);
+                    bl::result<std::nullptr_t>& wrapper_error);
 
 /**
  * @brief AppEntry is a class manages an application.
@@ -92,7 +92,7 @@ class AppEntry : public GSObject {
       const std::string& context_key,
       std::shared_ptr<IFragmentWrapper>& frag_wrapper) {
     std::shared_ptr<IContextWrapper> ctx_wrapper;
-    bl::result<nullptr_t> wrapper_error;
+    bl::result<std::nullptr_t> wrapper_error;
     query_(worker_handler, query_args, context_key, frag_wrapper, ctx_wrapper,
            wrapper_error);
     if (!wrapper_error) {

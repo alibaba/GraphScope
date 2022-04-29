@@ -136,7 +136,7 @@ int main(int argc, char** argv) {
             std::dynamic_pointer_cast<FragmentType>(client.GetObject(obj_id));
         LOG(INFO) << "got property fragment-" << fragment->fid();
         std::shared_ptr<ProjectedFragmentType> projected_fragment =
-            ProjectedFragmentType::Project(fragment, "2", "0", "0", "2");
+            ProjectedFragmentType::Project(fragment, 2, 0, 0, 2);
 
         LOG(INFO) << "got fragment-" << projected_fragment->fid();
 

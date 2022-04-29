@@ -140,6 +140,10 @@ if not os.path.isfile(INTERACTIVE_ENGINE_SCRIPT):
     INTERACTIVE_ENGINE_SCRIPT = os.path.join(
         GRAPHSCOPE_HOME, "interactive_engine", "bin", "giectl"
     )
+    if not os.path.isfile(INTERACTIVE_ENGINE_SCRIPT):
+        INTERACTIVE_ENGINE_SCRIPT = os.path.join(
+            GRAPHSCOPE_HOME, "interactive_engine", "assembly", "bin", "giectl"
+        )
 
 # JAVA SDK related CONSTANTS
 LLVM4JNI_HOME = os.environ.get("LLVM4JNI_HOME", None)
@@ -508,6 +512,7 @@ def op_pre_process(op, op_result_pool, key_to_op, **kwargs):  # noqa: C901
         types_pb2.CONTEXT_TO_DATAFRAME,
         types_pb2.TO_VINEYARD_TENSOR,
         types_pb2.TO_VINEYARD_DATAFRAME,
+        types_pb2.OUTPUT,
     ):
         _pre_process_for_context_op(op, op_result_pool, key_to_op, **kwargs)
     if op.op in (types_pb2.GRAPH_TO_NUMPY, types_pb2.GRAPH_TO_DATAFRAME):
@@ -538,8 +543,8 @@ def op_pre_process(op, op_result_pool, key_to_op, **kwargs):  # noqa: C901
         _pre_process_for_close_learning_instance_op(
             op, op_result_pool, key_to_op, **kwargs
         )
-    if op.op == types_pb2.OUTPUT:
-        _pre_process_for_output_op(op, op_result_pool, key_to_op, **kwargs)
+    if op.op == types_pb2.DATA_SINK:
+        _pre_process_for_data_sink_op(op, op_result_pool, key_to_op, **kwargs)
     if op.op in (types_pb2.TO_DIRECTED, types_pb2.TO_UNDIRECTED):
         _pre_process_for_transform_op(op, op_result_pool, key_to_op, **kwargs)
 
@@ -763,14 +768,15 @@ def _pre_process_for_run_app_op(op, op_result_pool, key_to_op, **kwargs):
 
 
 def _pre_process_for_unload_graph_op(op, op_result_pool, key_to_op, **kwargs):
-    assert len(op.parents) == 1
-    key_of_parent_op = op.parents[0]
-    result = op_result_pool[key_of_parent_op]
-    assert result.graph_def.extension.Is(graph_def_pb2.VineyardInfoPb.DESCRIPTOR)
-    vy_info = graph_def_pb2.VineyardInfoPb()
-    result.graph_def.extension.Unpack(vy_info)
-    op.attr[types_pb2.GRAPH_NAME].CopyFrom(utils.s_to_attr(result.graph_def.key))
-    op.attr[types_pb2.VINEYARD_ID].CopyFrom(utils.i_to_attr(vy_info.vineyard_id))
+    assert len(op.parents) <= 1
+    if len(op.parents) == 1:
+        key_of_parent_op = op.parents[0]
+        result = op_result_pool[key_of_parent_op]
+        assert result.graph_def.extension.Is(graph_def_pb2.VineyardInfoPb.DESCRIPTOR)
+        vy_info = graph_def_pb2.VineyardInfoPb()
+        result.graph_def.extension.Unpack(vy_info)
+        op.attr[types_pb2.GRAPH_NAME].CopyFrom(utils.s_to_attr(result.graph_def.key))
+        op.attr[types_pb2.VINEYARD_ID].CopyFrom(utils.i_to_attr(vy_info.vineyard_id))
 
 
 def _pre_process_for_unload_app_op(op, op_result_pool, key_to_op, **kwargs):
@@ -856,7 +862,11 @@ def _pre_process_for_context_op(op, op_result_pool, key_to_op, **kwargs):
     schema = GraphSchema()
     schema.from_graph_def(r.graph_def)
     selector = op.attr[types_pb2.SELECTOR].s.decode("utf-8")
-    if op.op in (types_pb2.CONTEXT_TO_DATAFRAME, types_pb2.TO_VINEYARD_DATAFRAME):
+    if op.op in (
+        types_pb2.CONTEXT_TO_DATAFRAME,
+        types_pb2.TO_VINEYARD_DATAFRAME,
+        types_pb2.OUTPUT,
+    ):
         selector = _tranform_dataframe_selector(context_type, schema, selector)
     else:
         # to numpy
@@ -867,7 +877,7 @@ def _pre_process_for_context_op(op, op_result_pool, key_to_op, **kwargs):
         )
 
 
-def _pre_process_for_output_op(op, op_result_pool, key_to_op, **kwargs):
+def _pre_process_for_data_sink_op(op, op_result_pool, key_to_op, **kwargs):
     assert len(op.parents) == 1
     key_of_parent_op = op.parents[0]
     parent_op = key_to_op[key_of_parent_op]

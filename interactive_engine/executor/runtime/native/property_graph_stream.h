@@ -35,11 +35,14 @@
 #include "grape/worker/comm_spec.h"
 
 #include "vineyard/basic/ds/arrow.h"
+#include "vineyard/basic/stream/byte_stream.h"
 #include "vineyard/basic/stream/dataframe_stream.h"
 #include "vineyard/basic/stream/parallel_stream.h"
+#include "vineyard/basic/stream/recordbatch_stream.h"
 #include "vineyard/client/client.h"
 #include "vineyard/client/ds/blob.h"
 #include "vineyard/common/util/json.h"
+#include "vineyard/common/util/status.h"
 
 #include "graph_schema.h"
 #include "htap_types.h"
@@ -200,21 +203,23 @@ class PropertyGraphOutStream : public Registered<PropertyGraphOutStream> {
 
     // create two streams for vertices and edges
     {
-      vineyard::DataframeStreamBuilder builder(client);
-      builder.SetParam("kind", "vertex");
-      builder.SetParam("graph_name", graph_name);
-      s->vertex_stream_ =
-        std::dynamic_pointer_cast<vineyard::DataframeStream>(builder.Seal(client));
+      std::unordered_map<std::string, std::string> params{
+          {"kind", "vertex"}, {"graph_name", graph_name}
+      };
+      auto stream_id = RecordBatchStream::Make<RecordBatchStream>(client, params);
+      s->vertex_stream_ = client.GetObject<RecordBatchStream>(stream_id);
+
       client.Persist(s->vertex_stream_->id());
       // Don't "OpenWriter" when creating, it will be "Get and Construct" again
       // VINEYARD_CHECK_OK(s->vertex_stream_->OpenWriter(client, s->vertex_writer_));
     }
     {
-      vineyard::DataframeStreamBuilder builder(client);
-      builder.SetParam("kind", "edge");
-      builder.SetParam("graph_name", graph_name);
-      s->edge_stream_ =
-        std::dynamic_pointer_cast<vineyard::DataframeStream>(builder.Seal(client));
+      std::unordered_map<std::string, std::string> params{
+          {"kind", "edge"}, {"graph_name", graph_name}
+      };
+      auto stream_id = RecordBatchStream::Make<RecordBatchStream>(client, params);
+      s->edge_stream_ = client.GetObject<RecordBatchStream>(stream_id);
+
       client.Persist(s->edge_stream_->id());
       // Don't "OpenWriter" when creating, it will be "Get and Construct" again
       // VINEYARD_CHECK_OK(s->edge_stream_->OpenWriter(client, s->edge_writer_));
@@ -244,29 +249,22 @@ class PropertyGraphOutStream : public Registered<PropertyGraphOutStream> {
     this->id_ = ObjectIDFromString(meta.GetKeyValue("id"));
     this->stream_index_ = meta.GetKeyValue<int>("stream_index");
     this->vertex_stream_ =
-      std::dynamic_pointer_cast<vineyard::DataframeStream>(meta.GetMember("vertex_stream"));
+      std::dynamic_pointer_cast<vineyard::RecordBatchStream>(meta.GetMember("vertex_stream"));
     this->edge_stream_ =
-      std::dynamic_pointer_cast<vineyard::DataframeStream>(meta.GetMember("edge_stream"));
+      std::dynamic_pointer_cast<vineyard::RecordBatchStream>(meta.GetMember("edge_stream"));
 
     this->graph_schema_ = std::make_shared<MGPropertyGraphSchema>();
     graph_schema_->FromJSONString(meta.GetKeyValue("graph_schema"));
     this->initialTables();
   }
 
-  Status Open(std::shared_ptr<vineyard::DataframeStream> &output_stream,
-              std::unique_ptr<vineyard::DataframeStreamWriter> &writer) {
+  Status Open(std::shared_ptr<vineyard::RecordBatchStream> &output_stream) {
     auto client = dynamic_cast<vineyard::Client *>(meta_.GetClient());
-    auto status = output_stream->OpenWriter(*client, writer);
+    auto status = output_stream->OpenWriter(client);
     if (!status.ok()) {
       LOG(INFO) << "Failed to open writer for stream: " << status.ToString();
     }
     return status;
-  }
-
-  Status GetNext(size_t const size,
-                 std::unique_ptr<arrow::MutableBuffer>& buffer,
-                 std::shared_ptr<vineyard::DataframeStreamWriter>& stream_writer) {
-    return stream_writer->GetNext(size, buffer);
   }
 
   void AddVertex(VertexId id, LabelId labelid, size_t property_size,
@@ -295,8 +293,7 @@ class PropertyGraphOutStream : public Registered<PropertyGraphOutStream> {
  private:
   void initialTables();
   void buildTableChunk(std::shared_ptr<arrow::RecordBatch> batch,
-                       std::shared_ptr<vineyard::DataframeStream> &output_stream,
-                       std::unique_ptr<vineyard::DataframeStreamWriter>& stream_writer,
+                       std::shared_ptr<vineyard::RecordBatchStream> &output_stream,
                        int const property_offset,
                        std::map<int, int> const& property_id_mapping);
 
@@ -326,32 +323,33 @@ class PropertyGraphOutStream : public Registered<PropertyGraphOutStream> {
   bool vertex_finished_ = false;
   bool edge_finished_ = false;
   int stream_index_;
-  std::shared_ptr<vineyard::DataframeStream> vertex_stream_;
-  std::shared_ptr<vineyard::DataframeStream> edge_stream_;
-  std::unique_ptr<vineyard::DataframeStreamWriter> vertex_writer_;
-  std::unique_ptr<vineyard::DataframeStreamWriter> edge_writer_;
+  std::shared_ptr<vineyard::RecordBatchStream> vertex_stream_;
+  std::shared_ptr<vineyard::RecordBatchStream> edge_stream_;
 
   friend class PropertyGraphInStream;
 };
 
 class PropertyGraphInStream {
  public:
-  explicit PropertyGraphInStream(vineyard::Client &client, PropertyGraphOutStream& stream)
+  explicit PropertyGraphInStream(vineyard::Client &client, PropertyGraphOutStream& stream, bool vertex)
       : vertex_stream_(stream.vertex_stream_),
         edge_stream_(stream.edge_stream_),
         graph_schema_(stream.graph_schema_) {
-    VINEYARD_CHECK_OK(vertex_stream_->OpenReader(client, vertex_reader_));
-    VINEYARD_CHECK_OK(edge_stream_->OpenReader(client, edge_reader_));
+    if (vertex) {
+      VINEYARD_CHECK_OK(vertex_stream_->OpenReader(&client));
+    } else {
+      VINEYARD_CHECK_OK(edge_stream_->OpenReader(&client));
+    }
   }
 
   Status GetNextVertices(Client& client,
                          std::shared_ptr<arrow::RecordBatch>& vertices) {
-    return vertex_reader_->ReadBatch(vertices);
+    return vertex_stream_->ReadBatch(vertices, true);
   }
 
   Status GetNextEdges(Client& client,
                       std::shared_ptr<arrow::RecordBatch>& edges) {
-    return edge_reader_->ReadBatch(edges);
+    return edge_stream_->ReadBatch(edges, true);
   }
 
   std::shared_ptr<MGPropertyGraphSchema> graph_schema() const {
@@ -359,10 +357,8 @@ class PropertyGraphInStream {
   }
 
  private:
-  std::shared_ptr<vineyard::DataframeStream> vertex_stream_;
-  std::shared_ptr<vineyard::DataframeStream> edge_stream_;
-  std::unique_ptr<vineyard::DataframeStreamReader> vertex_reader_;
-  std::unique_ptr<vineyard::DataframeStreamReader> edge_reader_;
+  std::shared_ptr<vineyard::RecordBatchStream> vertex_stream_;
+  std::shared_ptr<vineyard::RecordBatchStream> edge_stream_;
   std::shared_ptr<MGPropertyGraphSchema> graph_schema_;
 };
 

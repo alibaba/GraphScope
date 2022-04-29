@@ -747,7 +747,13 @@ def unload_app(app):
     Returns:
         An op to unload the `app`.
     """
-    return create_unload_op(app.session_id, types_pb2.UNLOAD_APP, [app.op])
+    op = Operation(
+        app.session_id,
+        types_pb2.UNLOAD_APP,
+        inputs=[app.op],
+        output_types=types_pb2.NULL_OUTPUT,
+    )
+    return op
 
 
 def unload_graph(graph):
@@ -759,7 +765,20 @@ def unload_graph(graph):
     Returns:
         An op to unload the `graph`.
     """
-    return create_unload_op(graph.session_id, types_pb2.UNLOAD_GRAPH, [graph.op])
+    config = {}
+    inputs = []
+    if graph.graph_type == graph_def_pb2.ARROW_PROPERTY:
+        inputs.append(graph.op)
+    else:
+        config[types_pb2.GRAPH_NAME] = utils.s_to_attr(graph.key)
+    op = Operation(
+        graph.session_id,
+        types_pb2.UNLOAD_GRAPH,
+        config=config,
+        inputs=inputs,
+        output_types=types_pb2.NULL_OUTPUT,
+    )
+    return op
 
 
 def unload_context(context):
@@ -872,13 +891,13 @@ def to_vineyard_dataframe(context, selector=None, vertex_range=None):
     return op
 
 
-def output(result, fd, **kwargs):
-    """Dump result to `fd`
+def to_data_sink(result, fd, **kwargs):
+    """Dump result to `fd` by drivers in vineyard.
 
     Parameters:
         result (:class:`graphscope.framework.context.ResultDAGNode`):
             Dataframe or numpy or result hold the object id of vineyard dataframe.
-        fd (str): Such as `file:///tmp/result_path`
+        fd (str): Such as `hdfs:///tmp/result_path`
         kwargs (dict, optional): Storage options with respect to output storage type
 
     Returns:
@@ -890,9 +909,37 @@ def output(result, fd, **kwargs):
     }
     op = Operation(
         result.session_id,
-        types_pb2.OUTPUT,
+        types_pb2.DATA_SINK,
         config=config,
         inputs=[result.op],
+        output_types=types_pb2.NULL_OUTPUT,
+    )
+    return op
+
+
+def output(context, fd, selector, vertex_range, **kwargs):
+    """Output result to `fd`, this will be handled by registered vineyard C++ adaptor.
+
+    Args:
+        results (:class:`Context`): Results return by `run_app` operation, store the query results.
+        fd (str): Such as `file:///tmp/result_path`
+        selector (str): Select the type of data to retrieve.
+        vertex_range (str): Specify a range to retrieve.
+    Returns:
+        An op to output results to `fd`.
+    """
+    config = {}
+    config[types_pb2.FD] = utils.s_to_attr(fd)
+    config[types_pb2.SELECTOR] = utils.s_to_attr(selector)
+    config[types_pb2.STORAGE_OPTIONS] = utils.s_to_attr(json.dumps(kwargs))
+    if vertex_range is not None:
+        config[types_pb2.VERTEX_RANGE] = utils.s_to_attr(vertex_range)
+
+    op = Operation(
+        context.session_id,
+        types_pb2.OUTPUT,
+        config=config,
+        inputs=[context.op],
         output_types=types_pb2.NULL_OUTPUT,
     )
     return op

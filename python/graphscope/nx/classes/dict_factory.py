@@ -254,6 +254,9 @@ class NeighborDict(Mapping):
 
         return len(self) == len(other) and item_equal(self, other)
 
+    def copy(self):
+        return self
+
 
 class NeighborAttrDict(UserDict):
     """Wrapper for attributes of edge."""

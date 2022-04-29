@@ -245,7 +245,7 @@ void CreateAndQuery(std::string params) {
 
   // Project
   std::shared_ptr<ProjectedFragmentType> projected_fragment =
-      ProjectedFragmentType::Project(fragment, "0", "0", "0", "0");
+      ProjectedFragmentType::Project(fragment, 0, 0, 0, 0);
 
   Query<ProjectedFragmentType>(comm_spec, projected_fragment, new_params,
                                user_lib_path, query_times);

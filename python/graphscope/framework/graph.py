@@ -56,6 +56,7 @@ class GraphInterface(metaclass=ABCMeta):
 
     def __init__(self):
         self._session = None
+        self._directed = False
 
     @abstractmethod
     def add_column(self, results, selector):
@@ -77,6 +78,9 @@ class GraphInterface(metaclass=ABCMeta):
         dst_field=1,
     ):
         raise NotImplementedError
+
+    def is_directed(self):
+        return self._directed
 
     def to_numpy(self, selector, vertex_range=None):
         raise NotImplementedError
@@ -297,7 +301,9 @@ class GraphDAGNode(DAGNode, GraphInterface):
             self, str(v_prop), str(e_prop)
         )
         # construct dag node
-        graph_dag_node = GraphDAGNode(self._session, op)
+        graph_dag_node = GraphDAGNode(
+            self._session, op, self._oid_type, self._directed, self._generate_eid
+        )
         graph_dag_node._base_graph = self
         return graph_dag_node
 
@@ -646,7 +652,9 @@ class GraphDAGNode(DAGNode, GraphInterface):
             self, json.dumps(vertices), json.dumps(edges)
         )
         # construct dag node
-        graph_dag_node = GraphDAGNode(self._session, op)
+        graph_dag_node = GraphDAGNode(
+            self._session, op, self._oid_type, self._directed, self._generate_eid
+        )
         graph_dag_node._base_graph = self
         return graph_dag_node
 

@@ -175,10 +175,10 @@ inline void set_graph_def(
     rpc::graph::GraphDefPb& graph_def) {
   auto& meta = fragment->meta();
   const auto& schema = fragment->schema();
+
   graph_def.set_graph_type(rpc::graph::ARROW_PROPERTY);
-  graph_def.set_directed(static_cast<bool>(meta.GetKeyValue<int>("directed")));
-  graph_def.set_is_multigraph(
-      static_cast<bool>(meta.GetKeyValue<int>("is_multigraph")));
+  graph_def.set_directed(fragment->directed());
+  graph_def.set_is_multigraph(fragment->is_multigraph());
 
   auto v_entries = schema.vertex_entries();
   auto e_entries = schema.edge_entries();
@@ -202,9 +202,12 @@ inline void set_graph_def(
   if (graph_def.has_extension()) {
     graph_def.extension().UnpackTo(&vy_info);
   }
-  vy_info.set_oid_type(PropertyTypeToPb(meta.GetKeyValue("oid_type")));
-  vy_info.set_vid_type(PropertyTypeToPb(meta.GetKeyValue("vid_type")));
-  vy_info.set_property_schema_json(meta.GetKeyValue("schema"));
+
+  vy_info.set_oid_type(PropertyTypeToPb(fragment->oid_typename()));
+  vy_info.set_vid_type(PropertyTypeToPb(fragment->vid_typename()));
+  vineyard::json schema_json;
+  meta.GetKeyValue("schema_json_", schema_json);
+  vy_info.set_property_schema_json(schema_json.dump());
   graph_def.mutable_extension()->PackFrom(vy_info);
 }
 
@@ -750,6 +753,71 @@ class FragmentWrapper<ArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T>>
   std::shared_ptr<fragment_t> fragment_;
 };
 
+/**
+ * @brief A specialized FragmentWrapper for ArrowFlattenedFragment.
+ */
+template <typename OID_T, typename VID_T, typename VDATA_T, typename EDATA_T>
+class FragmentWrapper<ArrowFlattenedFragment<OID_T, VID_T, VDATA_T, EDATA_T>>
+    : public IFragmentWrapper {
+  using fragment_t = ArrowFlattenedFragment<OID_T, VID_T, VDATA_T, EDATA_T>;
+
+ public:
+  FragmentWrapper(const std::string& id, rpc::graph::GraphDefPb graph_def,
+                  std::shared_ptr<fragment_t> fragment)
+      : IFragmentWrapper(id),
+        graph_def_(std::move(graph_def)),
+        fragment_(std::move(fragment)) {
+    CHECK_EQ(graph_def_.graph_type(), rpc::graph::ARROW_FLATTENED);
+  }
+
+  std::shared_ptr<void> fragment() const override {
+    return std::static_pointer_cast<void>(fragment_);
+  }
+
+  const rpc::graph::GraphDefPb& graph_def() const override {
+    return graph_def_;
+  }
+
+  bl::result<std::unique_ptr<grape::InArchive>> ReportGraph(
+      const grape::CommSpec& comm_spec, const rpc::GSParams& params) override {
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "Not implemented.");
+  }
+
+  bl::result<std::shared_ptr<IFragmentWrapper>> CopyGraph(
+      const grape::CommSpec& comm_spec, const std::string& dst_graph_name,
+      const std::string& copy_type) override {
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "Cannot copy the ArrowFlattenedFragment");
+  }
+
+  bl::result<std::shared_ptr<IFragmentWrapper>> ToDirected(
+      const grape::CommSpec& comm_spec,
+      const std::string& dst_graph_name) override {
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "Cannot convert to the directed ArrowFlattenedFragment");
+  }
+
+  bl::result<std::shared_ptr<IFragmentWrapper>> ToUndirected(
+      const grape::CommSpec& comm_spec,
+      const std::string& dst_graph_name) override {
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "Cannot convert to the undirected ArrowFlattenedFragment");
+  }
+
+  bl::result<std::shared_ptr<IFragmentWrapper>> CreateGraphView(
+      const grape::CommSpec& comm_spec, const std::string& dst_graph_name,
+      const std::string& copy_type) override {
+    RETURN_GS_ERROR(
+        vineyard::ErrorCode::kInvalidOperationError,
+        "Cannot generate a graph view over the ArrowFlattenedFragment.");
+  }
+
+ private:
+  rpc::graph::GraphDefPb graph_def_;
+  std::shared_ptr<fragment_t> fragment_;
+};
+
 #ifdef NETWORKX
 /**
  * @brief A specialized FragmentWrapper for DynamicFragment.
@@ -979,71 +1047,6 @@ class FragmentWrapper<DynamicProjectedFragment<VDATA_T, EDATA_T>>
   std::shared_ptr<fragment_t> fragment_;
 };
 
-/**
- * @brief A specialized FragmentWrapper for ArrowFlattenedFragment.
- */
-template <typename OID_T, typename VID_T, typename VDATA_T, typename EDATA_T>
-class FragmentWrapper<ArrowFlattenedFragment<OID_T, VID_T, VDATA_T, EDATA_T>>
-    : public IFragmentWrapper {
-  using fragment_t = ArrowFlattenedFragment<OID_T, VID_T, VDATA_T, EDATA_T>;
-
- public:
-  FragmentWrapper(const std::string& id, rpc::graph::GraphDefPb graph_def,
-                  std::shared_ptr<fragment_t> fragment)
-      : IFragmentWrapper(id),
-        graph_def_(std::move(graph_def)),
-        fragment_(std::move(fragment)) {
-    CHECK_EQ(graph_def_.graph_type(), rpc::graph::ARROW_FLATTENED);
-  }
-
-  std::shared_ptr<void> fragment() const override {
-    return std::static_pointer_cast<void>(fragment_);
-  }
-
-  const rpc::graph::GraphDefPb& graph_def() const override {
-    return graph_def_;
-  }
-
-  bl::result<std::unique_ptr<grape::InArchive>> ReportGraph(
-      const grape::CommSpec& comm_spec, const rpc::GSParams& params) override {
-    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
-                    "Not implemented.");
-  }
-
-  bl::result<std::shared_ptr<IFragmentWrapper>> CopyGraph(
-      const grape::CommSpec& comm_spec, const std::string& dst_graph_name,
-      const std::string& copy_type) override {
-    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
-                    "Cannot copy the ArrowFlattenedFragment");
-  }
-
-  bl::result<std::shared_ptr<IFragmentWrapper>> ToDirected(
-      const grape::CommSpec& comm_spec,
-      const std::string& dst_graph_name) override {
-    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
-                    "Cannot convert to the directed ArrowFlattenedFragment");
-  }
-
-  bl::result<std::shared_ptr<IFragmentWrapper>> ToUndirected(
-      const grape::CommSpec& comm_spec,
-      const std::string& dst_graph_name) override {
-    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
-                    "Cannot convert to the undirected ArrowFlattenedFragment");
-  }
-
-  bl::result<std::shared_ptr<IFragmentWrapper>> CreateGraphView(
-      const grape::CommSpec& comm_spec, const std::string& dst_graph_name,
-      const std::string& copy_type) override {
-    RETURN_GS_ERROR(
-        vineyard::ErrorCode::kInvalidOperationError,
-        "Cannot generate a graph view over the ArrowFlattenedFragment.");
-  }
-
- private:
-  rpc::graph::GraphDefPb graph_def_;
-  std::shared_ptr<fragment_t> fragment_;
-};
 #endif
-
 }  // namespace gs
 #endif  // ANALYTICAL_ENGINE_CORE_OBJECT_FRAGMENT_WRAPPER_H_

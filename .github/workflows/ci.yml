@@ -53,6 +53,33 @@ jobs:
     steps:
     # For push it's necessary to checkout the code
     - uses: actions/checkout@v2
+    # For pull requests it's not necessary to checkout the code
+    - uses: dorny/paths-filter@v2
+      id: filter
+      with:
+        base: main  # Change detection against merge-base with main before push
+        filters: |
+          gae-python:
+            - 'proto/**'
+            - 'analytical_engine/**'
+            - 'python/graphscope/analytical/**'
+            - 'python/graphscope/client/**'
+            - 'python/graphscope/dataset/**'
+            - 'python/graphscope/deploy/**'
+            - 'python/graphscope/framework/**'
+            - 'python/graphscope/tests/unittest/**'
+            - 'coordinator/gscoordinator/**'
+            - '.github/workflows/ci.yml'
+          networkx:
+            - 'analytical_engine/apps/**'
+            - 'analytical_engine/frame/**'
+            - 'analytical_engine/core/**'
+            - 'python/graphscope/nx/**'
+          gie-function-test:
+            - 'interactive_engine/**'
+            - 'python/graphscope/interactive/**'
+            - '.github/workflows/ci.yml'
+
     - name: Setup Java11
       uses: actions/setup-java@v2
       with:
@@ -141,33 +168,6 @@ jobs:
         python3 -m black --check --diff .
         python3 -m flake8 .
 
-    # For pull requests it's not necessary to checkout the code
-    - uses: dorny/paths-filter@v2
-      id: filter
-      with:
-        base: main  # Change detection against merge-base with main before push
-        filters: |
-          gae-python:
-            - 'proto/**'
-            - 'analytical_engine/**'
-            - 'python/graphscope/analytical/**'
-            - 'python/graphscope/client/**'
-            - 'python/graphscope/dataset/**'
-            - 'python/graphscope/deploy/**'
-            - 'python/graphscope/framework/**'
-            - 'python/graphscope/tests/unittest/**'
-            - 'coordinator/gscoordinator/**'
-            - '.github/workflows/ci.yml'
-          networkx:
-            - 'analytical_engine/apps/**'
-            - 'analytical_engine/frame/**'
-            - 'analytical_engine/core/**'
-            - 'python/graphscope/nx/**'
-          gie-function-test:
-            - 'interactive_engine/**'
-            - 'python/graphscope/interactive/**'
-            - '.github/workflows/ci.yml'
-
   build-wheels:
     # Require the user id of the self-hosted is 1001, which may need to be
     # configured manually when a new self-hosted runner is added.
@@ -202,6 +202,37 @@ jobs:
         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
         restore-keys: |
           ${{ runner.os }}-pip-
+
+    - name: Install latest libgrape-lite and vineyard
+      if: false
+      run: |
+        source ~/.bashrc
+
+        git clone --single-branch --depth=1 https://github.com/alibaba/libgrape-lite.git /tmp/libgrape-lite
+        pushd /tmp/libgrape-lite
+        mkdir -p build && cd build
+        cmake .. -DCMAKE_INSTALL_PREFIX=/opt/vineyard
+        make -j$(nproc)
+        sudo make install
+        popd
+        rm -fr /tmp/libgrape-lite
+
+        git clone --single-branch --depth=1 https://github.com/v6d-io/v6d.git /tmp/v6d
+        pushd /tmp/v6d
+        git submodule update --init
+        mkdir -p build && cd build
+        cmake .. -DCMAKE_INSTALL_PREFIX=/opt/vineyard \
+                 -DUSE_EXTERNAL_ETCD_LIBS=OFF \
+                 -DBUILD_SHARED_LIBS=ON \
+                 -DBUILD_VINEYARD_TESTS=OFF
+        make -j$(nproc)
+        sudo make install
+        popd
+
+        rm -fr /tmp/v6d
+
+        # copy to /usr/local, keep the same logic as gsvineyard.Dockerfile
+        sudo cp -r /opt/vineyard/* /usr/local/
 
     - name: Build Wheels
       run: |
@@ -368,6 +399,7 @@ jobs:
             - 'analytical_engine/frame/**'
             - 'analytical_engine/core/**'
             - 'python/graphscope/nx/__init__.py'
+            - 'python/graphscope/nx/classes/**'
             - 'python/graphscope/nx/!(tests)'
             - 'python/graphscope/nx/tests/!(convert)'
           convert:
@@ -675,6 +707,7 @@ jobs:
           helm test graphscope --timeout 5m0s
 
       - name: HDFS test
+        if: false  # temporary disable the hdfs tests
         env:
           JAVA_HOME: /usr/lib/jvm/default-java
           GS_TEST_DIR: ${{ github.workspace }}/gstest

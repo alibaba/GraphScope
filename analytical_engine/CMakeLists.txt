@@ -27,8 +27,8 @@ if (ENABLE_JAVA_SDK)
         message(STATUS "Using Clang compiler: ${CMAKE_CXX_COMPILER}")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto -fforce-emit-vtables")
     else()
-        message(WARNING "Compiling with ENABLE_JAVA_SDK ON expects a minimum Clang-11 compiler,"
-                        "your compiler is ${CMAKE_CXX_COMPILER}. Continue building,"
+        message(WARNING "Compiling with ENABLE_JAVA_SDK ON expects a minimum Clang-11 compiler, "
+                        "current compiler is ${CMAKE_CXX_COMPILER}. The build process will continue, "
                         "BUT llvm4jni-based acceleration will be unavailable for generated libs.")
     endif()
 endif()
@@ -56,6 +56,13 @@ if (ccache_EXECUTABLE)
 else ()
     add_custom_target(ccache-stats COMMAND echo "ccache not found.")
 endif (ccache_EXECUTABLE)
+
+# enable colored diagnostics
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    add_compile_options(-fdiagnostics-color=always)
+elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
+    add_compile_options(-fcolor-diagnostics)
+endif()
 
 include(CheckCXXCompilerFlag)
 include(CheckLibraryExists)
@@ -98,12 +105,6 @@ include(GNUInstallDirs)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib:${CMAKE_INSTALL_PREFIX}/lib64")
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-
-# Find dependencies
-include("cmake/FindRdkafka.cmake")
-if (RDKAFKA_FOUND)
-    include_directories(SYSTEM ${RDKAFKA_INCLUDE_DIRS})
-endif ()
 
 find_package(Threads REQUIRED)
 find_package(MPI REQUIRED)
@@ -170,7 +171,7 @@ endif ()
 find_package(libgrapelite REQUIRED)
 include_directories(${LIBGRAPELITE_INCLUDE_DIRS})
 
-find_package(vineyard 0.3.21 REQUIRED)
+find_package(vineyard 0.4.1 REQUIRED)
 include_directories(${VINEYARD_INCLUDE_DIRS})
 add_compile_options(-DENABLE_SELECTOR)
 
@@ -307,12 +308,6 @@ if (BUILD_TESTS)
 
     add_vineyard_app(run_vy_ldbc SRCS test/run_vy_ldbc.cc)
     target_include_directories(run_vy_ldbc PRIVATE ${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps)
-
-    if (RDKAFKA_FOUND)
-        add_vineyard_app(run_append_frag SRCS test/run_append_frag.cc)
-        target_include_directories(run_append_frag PRIVATE ${LIBGRAPELITE_INCLUDE_DIRS}/grape/examples/gnn_sampler)
-        target_link_libraries(run_append_frag ${GFLAGS_LIBRARIES} ${RDKAFKA_LIBRARIES})
-    endif ()
 
     add_vineyard_app(run_ctx SRCS test/run_ctx.cc)
     target_include_directories(run_ctx PRIVATE ${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps)

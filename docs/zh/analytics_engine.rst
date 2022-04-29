@@ -40,6 +40,7 @@ GraphScope 图分析引擎内置了许多常用的图分析算法，包括连通
 - :func:`average_shortest_path_length`
 - :func:`attribute_assortativity_coefficient`
 - :func:`bfs`
+- :func:`avg_clustering`
 - :func:`clustering`
 - :func:`degree_centrality`
 - :func:`degree_assortativity_coefficient`

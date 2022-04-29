@@ -285,7 +285,7 @@ void Run(vineyard::Client& client, const grape::CommSpec& comm_spec,
       std::dynamic_pointer_cast<GraphType>(client.GetObject(id));
 
   std::shared_ptr<FragmentType> projected_fragment =
-      FragmentType::Project(fragment, "0", "0", "0", "0");
+      FragmentType::Project(fragment, 0, 0, 0, 0);
 
   vineyard::ObjectID tensor_object, dataframe_object;
 

@@ -33,7 +33,6 @@ import signal
 import string
 import sys
 import threading
-import time
 import traceback
 import urllib.parse
 import urllib.request
@@ -587,8 +586,8 @@ class CoordinatorServiceServicer(
             )
             if op.op == types_pb2.DATA_SOURCE:
                 op_result = self._process_data_source(op, dag_bodies, loader_op_bodies)
-            elif op.op == types_pb2.OUTPUT:
-                op_result = self._output(op)
+            elif op.op == types_pb2.DATA_SINK:
+                op_result = self._process_data_sink(op)
             else:
                 raise RuntimeError("Unsupport op type: " + str(op.op))
             response_head.head.results.append(op_result)
@@ -926,7 +925,7 @@ class CoordinatorServiceServicer(
             result=pickle.dumps(rlt),
         )
 
-    def _output(self, op: op_def_pb2.OpDef):
+    def _process_data_sink(self, op: op_def_pb2.OpDef):
         import vineyard
         import vineyard.io
 

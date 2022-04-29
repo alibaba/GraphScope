@@ -20,12 +20,13 @@
 import os
 
 import pytest
-from networkx.tests.test_convert_pandas import TestConvertPandas
+from networkx.tests.test_convert_pandas import TestConvertPandas as _TestConvertPandas
+from networkx.utils import edges_equal
+from networkx.utils import graphs_equal
+from networkx.utils import nodes_equal
 
 import graphscope.nx as nx
-from graphscope.nx.tests.utils import assert_edges_equal
 from graphscope.nx.tests.utils import assert_graphs_equal
-from graphscope.nx.tests.utils import assert_nodes_equal
 from graphscope.nx.utils.compat import with_graphscope_nx_context
 
 np = pytest.importorskip("numpy")
@@ -33,7 +34,7 @@ pd = pytest.importorskip("pandas")
 
 
 @pytest.mark.usefixtures("graphscope_session")
-@with_graphscope_nx_context(TestConvertPandas)
+@with_graphscope_nx_context(_TestConvertPandas)
 class TestConvertPandas:
     def test_edgekey_with_multigraph(self):
         pass
@@ -42,6 +43,9 @@ class TestConvertPandas:
         pass
 
     def test_nonexisting_edgekey_raises(self):
+        pass
+
+    def test_from_edgelist_int_attr_name(self):
         pass
 
     @pytest.mark.skipif(
@@ -65,6 +69,21 @@ class TestConvertPandas:
         os.environ.get("DEPLOYMENT", None) != "standalone",
         reason="num_worker=2: DataFrame.index values are different",
     )
+    def test_from_edgelist_multi_attr_incl_target(self):
+        Gtrue = nx.Graph(
+            [
+                ("E", "C", {"b": "E", "weight": 10}),
+                ("B", "A", {"b": "A", "weight": 7}),
+                ("A", "D", {"b": "D", "weight": 4}),
+            ]
+        )
+        G = nx.from_pandas_edgelist(self.df, 0, "b", ["b", "weight"])
+        assert graphs_equal(G, Gtrue)
+
+    @pytest.mark.skipif(
+        os.environ.get("DEPLOYMENT", None) != "standalone",
+        reason="num_worker=2: DataFrame.index values are different",
+    )
     def test_from_adjacency(self):
         nodelist = [1, 2]
         dftrue = pd.DataFrame(
@@ -73,3 +92,26 @@ class TestConvertPandas:
         G = nx.Graph([(1, 1), (1, 2)])
         df = nx.to_pandas_adjacency(G, dtype=int)
         pd.testing.assert_frame_equal(df, dftrue)
+
+    def test_from_edgelist(self):
+        # Pandas DataFrame
+        G = nx.cycle_graph(10)
+        G.add_weighted_edges_from((u, v, u) for u, v in list(G.edges))
+
+        edgelist = nx.to_edgelist(G)
+        source = []
+        target = []
+        weight = []
+        # N.B the iterate order of edgelist may not all the same
+        for s, t, d in edgelist:
+            source.append(s)
+            target.append(t)
+            weight.append(d["weight"])
+        edges = pd.DataFrame({"source": source, "target": target, "weight": weight})
+
+        GG = nx.from_pandas_edgelist(edges, edge_attr="weight")
+        assert nodes_equal(G.nodes(), GG.nodes())
+        assert edges_equal(G.edges(), GG.edges())
+        GW = nx.to_networkx_graph(edges, create_using=nx.Graph)
+        assert nodes_equal(G.nodes(), GW.nodes())
+        assert edges_equal(G.edges(), GW.edges())
