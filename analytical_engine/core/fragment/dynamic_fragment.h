@@ -687,16 +687,6 @@ class DynamicFragment
 
   const dynamic::Value& GetSchema() { return schema_; }
 
-  /*
-  const ska::flat_hash_map<std::string, dynamic::Type>& GetVertexSchema() {
-    return vprop2type_;
-  }
-
-  const ska::flat_hash_map<std::string, dynamic::Type>& GetEdgeSchema() {
-    return eprop2type_;
-  }
-  */
-
   auto CollectPropertyKeysOnVertices()
       -> bl::result<std::map<std::string, dynamic::Type>> {
     std::map<std::string, dynamic::Type> prop_keys;
@@ -1521,8 +1511,6 @@ class DynamicFragment
   // allocators for parallel convert
   std::shared_ptr<std::vector<dynamic::AllocatorT>> allocators_;
 
-  // ska::flat_hash_map<std::string, dynamic::Type> vprop2type_;
-  // ska::flat_hash_map<std::string, dynamic::Type> eprop2type_;
   dynamic::Value schema_;
 
   using base_t::outer_vertices_of_frag_;

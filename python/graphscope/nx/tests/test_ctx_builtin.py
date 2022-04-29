@@ -94,15 +94,15 @@ class TestBuiltInApp:
         }
 
         data_dir = os.path.expandvars("${GS_TEST_DIR}")
-        p2p_file = os.path.expandvars("${GS_TEST_DIR}/dynamic/p2p-31_dynamic.edgelist")
+        p2p_file = os.path.expandvars("${GS_TEST_DIR}/p2p-31.e")
         p2p_sub_file = os.path.expandvars(
             "${GS_TEST_DIR}/dynamic/p2p-31_dynamic_subgraph.edgelist"
         )
         cls.p2p = nx.read_edgelist(
-            p2p_file, nodetype=int, data=True, create_using=nx.DiGraph
+            p2p_file, nodetype=int, data=(("weight", int),), create_using=nx.DiGraph
         )
         cls.p2p_undirected = nx.read_edgelist(
-            p2p_file, nodetype=int, data=True, create_using=nx.Graph
+            p2p_file, nodetype=int, data=(("weight", int),), create_using=nx.Graph
         )
         cls.p2p_subgraph = nx.read_edgelist(
             p2p_sub_file, nodetype=int, data=True, create_using=nx.DiGraph
