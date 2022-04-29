@@ -441,7 +441,7 @@ jobs:
 
     - name: Setup tmate session
       uses: mxschmitt/action-tmate@v3
-      if: true
+      if: false
 
     - name: Basic Test
       if: ${{ (needs.changes.outputs.networkx == 'true' || github.ref == 'refs/heads/main') && (steps.nx-filter.outputs.basic == 'true' || (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope')) }}
