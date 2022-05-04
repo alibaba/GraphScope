@@ -403,6 +403,7 @@ class Graph(_GraphBase):
             if graph.cache.enable_iter_cache:
                 graph.cache.shutdown()
             op = dag_utils.unload_graph(graph)
+            print("Unloading graph", graph._key)
             op.eval()
             graph._key = None
 
