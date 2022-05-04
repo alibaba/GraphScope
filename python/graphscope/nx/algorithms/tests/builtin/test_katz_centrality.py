@@ -330,7 +330,6 @@ class TestKatzCentralityDirected(object):
 
     def test_katz_centrality_unweighted(self):
         H = self.H
-        print(self.H.key, H.key)
         alpha = self.H.alpha
         p = nx.builtin.katz_centrality(H, alpha, weight="weight")
         for (a, b) in zip(list(dict(sorted(p.items())).values()), self.H.evc):

@@ -166,7 +166,7 @@ bl::result<void> GrapeInstance::unloadGraph(const rpc::GSParams& params) {
       }
     }
   }
-  LOG(INFO) << "Unloading Graph " << graph_name;
+  VLOG(2) << "Unloading Graph " << graph_name;
   return object_manager_.RemoveObject(graph_name);
 }
 
