@@ -171,7 +171,10 @@ class KatzCentrality
   }
 
   bool filterByDegree(const fragment_t& frag, context_t& ctx, vertex_t v) {
-    int degree = frag.GetLocalInDegree(v) + frag.GetLocalOutDegree(v);
+    int degree = frag.GetLocalOutDegree(v);
+    if (frag.directed()) {
+      degree += frag.GetLocalInDegree(v);
+    }
     if (degree > ctx.degree_threshold) {
       return true;
     }
