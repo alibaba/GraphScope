@@ -641,7 +641,7 @@ class DynamicToArrowConverter {
       LOG(INFO) << key << " got type " << p.value.GetInt() << " " << type;
 
       switch (type) {
-      case vineyard::TypeToInt<int64_t>::value: {
+      case rpc::graph::DataTypePb::LONG: {
         auto r = VertexArrayBuilder<arrow::Int64Builder>::build(src_frag, key);
 
         BOOST_LEAF_AUTO(array, r);
@@ -649,7 +649,7 @@ class DynamicToArrowConverter {
         arrays.push_back(array);
         break;
       }
-      case vineyard::TypeToInt<double>::value: {
+      case rpc::graph::DataTypePb::DOUBLE: {
         auto r = VertexArrayBuilder<arrow::DoubleBuilder>::build(src_frag, key);
 
         BOOST_LEAF_AUTO(array, r);
@@ -657,7 +657,7 @@ class DynamicToArrowConverter {
         arrays.push_back(array);
         break;
       }
-      case vineyard::TypeToInt<std::string>::value: {
+      case rpc::graph::DataTypePb::STRING: {
         auto r =
             VertexArrayBuilder<arrow::LargeStringBuilder>::build(src_frag, key);
 
@@ -702,7 +702,7 @@ class DynamicToArrowConverter {
       std::string key = p.name.GetString();
       int type = p.value.GetInt();
       switch (type) {
-      case vineyard::TypeToInt<int64_t>::value: {
+      case rpc::graph::DataTypePb::LONG: {
         auto r = EdgeArrayBuilder<arrow::Int64Builder>::build(src_frag, key);
 
         BOOST_LEAF_AUTO(array, r);
@@ -711,7 +711,7 @@ class DynamicToArrowConverter {
         arrays.push_back(array);
         break;
       }
-      case vineyard::TypeToInt<double>::value: {
+      case rpc::graph::DataTypePb::DOUBLE: {
         auto r = EdgeArrayBuilder<arrow::DoubleBuilder>::build(src_frag, key);
 
         BOOST_LEAF_AUTO(array, r);
@@ -719,7 +719,7 @@ class DynamicToArrowConverter {
         arrays.push_back(array);
         break;
       }
-      case vineyard::TypeToInt<std::string>::value: {
+      case rpc::graph::DataTypePb::STRING: {
         auto r =
             EdgeArrayBuilder<arrow::LargeStringBuilder>::build(src_frag, key);
 
