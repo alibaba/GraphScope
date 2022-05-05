@@ -16,6 +16,7 @@
 use std::collections::HashSet;
 use std::convert::TryInto;
 
+use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::KeyId;
 use pegasus::api::function::{FilterMapFunction, FnResult};
@@ -29,7 +30,7 @@ use crate::process::record::{Record, RecordElement};
 /// An EdgeExpandIntersection operator to expand neighbors
 /// and intersect with the ones of the same tag found previously (if exists).
 struct EdgeExpandIntersectionOperator<E: Into<GraphObject>> {
-    start_v_tag: Option<KeyId>,
+    start_v_tag: KeyId,
     //TODO: is this tag must be set??
     edge_or_end_v_tag: Option<KeyId>,
     stmt: Box<dyn Statement<ID, E>>,
@@ -40,7 +41,7 @@ impl<E: Into<GraphObject> + 'static> FilterMapFunction<Record, Record>
 {
     fn exec(&self, mut input: Record) -> FnResult<Option<Record>> {
         let entry = input
-            .get(self.start_v_tag.as_ref())
+            .get(Some(&self.start_v_tag))
             .ok_or(FnExecError::get_tag_error("get start_v failed"))?;
         if let Some(v) = entry.as_graph_vertex() {
             let id = v.id();
@@ -93,8 +94,8 @@ impl FilterMapFuncGen for algebra_pb::EdgeExpand {
         let graph = crate::get_graph().ok_or(FnGenError::NullGraphError)?;
         let start_v_tag = self
             .v_tag
-            .map(|v_tag| v_tag.try_into())
-            .transpose()?;
+            .ok_or(ParsePbError::from("v_tag cannot be empty in edge_expand for intersection"))?
+            .try_into()?;
         let edge_or_end_v_tag = self
             .alias
             .map(|alias| alias.try_into())
