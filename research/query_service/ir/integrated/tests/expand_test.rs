@@ -512,9 +512,10 @@ mod test {
             }
         })
         .expect("build job failure");
-
+        let v2: DefaultId = LDBCVertexParser::to_global_id(2, 0);
         let v3: DefaultId = LDBCVertexParser::to_global_id(3, 1);
-        let mut expected_collection = vec![2, v3, 4];
+        let v4: DefaultId = LDBCVertexParser::to_global_id(4, 0);
+        let mut expected_collection = vec![v2, v3, v4];
         expected_collection.sort();
         let expected_collections =
             vec![expected_collection.clone(), expected_collection.clone(), expected_collection];
@@ -589,14 +590,15 @@ mod test {
         })
         .expect("build job failure");
 
-        let expected_collections = vec![vec![4]];
+        let v4: DefaultId = LDBCVertexParser::to_global_id(4, 0);
+        let expected_collections = vec![vec![v4]];
         let mut result_collections = vec![];
         while let Some(Ok(record)) = result.next() {
             if let Some(collection) = record.get(None).unwrap().as_collection() {
-                let mut result_collection: Vec<ID> = collection
+                let mut result_collection: Vec<DefaultId> = collection
                     .clone()
                     .into_iter()
-                    .map(|r| r.as_graph_element().unwrap().id())
+                    .map(|r| r.as_graph_element().unwrap().id() as DefaultId)
                     .collect();
                 result_collection.sort();
                 result_collections.push(result_collection);
@@ -666,10 +668,10 @@ mod test {
         })
         .expect("build job failure");
 
-        let expected_ids = vec![4];
+        let v4: DefaultId = LDBCVertexParser::to_global_id(4, 0);
+        let expected_ids = vec![v4];
         let mut result_ids = vec![];
         while let Some(Ok(record)) = result.next() {
-            println!("record: {:?}", record);
             if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
                 result_ids.push(element.id() as usize);
             }
