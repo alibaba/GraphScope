@@ -438,22 +438,25 @@ def project_arrow_property_graph(graph, vertex_collections, edge_collections):
     return op
 
 
-def project_arrow_property_graph_to_simple(
+def project_to_simple(
     graph,
     v_prop,
     e_prop,
 ):
-    """Project arrow property graph to a simple graph.
+    """Project property graph to a simple graph.
 
     Args:
-        graph (:class:`graphscope.Graph`): Source graph, which type should be ARROW_PROPERTY
+        graph: Source graph, which type should be a property graph
         v_prop (str): The node attribute key to project.
         e_prop (str): The edge attribute key to project.
 
     Returns:
-        Operation to project a property graph, results in a simple ARROW_PROJECTED graph.
+        Operation to project a property graph, results in a simple graph.
     """
-    check_argument(graph.graph_type == graph_def_pb2.ARROW_PROPERTY)
+    check_argument(
+        graph.graph_type
+        in (graph_def_pb2.ARROW_PROPERTY, graph_def_pb2.DYNAMIC_PROPERTY)
+    )
     config = {
         types_pb2.V_PROP_KEY: utils.s_to_attr(v_prop),
         types_pb2.E_PROP_KEY: utils.s_to_attr(e_prop),
@@ -463,80 +466,6 @@ def project_arrow_property_graph_to_simple(
         types_pb2.PROJECT_TO_SIMPLE,
         config=config,
         inputs=[graph.op],
-        output_types=types_pb2.GRAPH,
-    )
-    return op
-
-
-def project_dynamic_property_graph(graph, v_prop, e_prop, v_prop_type, e_prop_type):
-    """Create project graph operation for nx graph.
-
-    Args:
-        graph (:class:`nx.Graph`): A nx graph.
-        v_prop (str): The node attribute key to project.
-        e_prop (str): The edge attribute key to project.
-        v_prop_type (str): Type of the node attribute.
-        e_prop_type (str): Type of the edge attribute.
-
-    Returns:
-        Operation to project a dynamic property graph. Results in a simple graph.
-    """
-    check_argument(graph.graph_type == graph_def_pb2.DYNAMIC_PROPERTY)
-    config = {
-        types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
-        types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(graph_def_pb2.DYNAMIC_PROJECTED),
-        types_pb2.V_PROP_KEY: utils.s_to_attr(v_prop),
-        types_pb2.E_PROP_KEY: utils.s_to_attr(e_prop),
-        types_pb2.V_DATA_TYPE: utils.s_to_attr(utils.data_type_to_cpp(v_prop_type)),
-        types_pb2.E_DATA_TYPE: utils.s_to_attr(utils.data_type_to_cpp(e_prop_type)),
-    }
-
-    op = Operation(
-        graph.session_id,
-        types_pb2.PROJECT_TO_SIMPLE,
-        config=config,
-        output_types=types_pb2.GRAPH,
-    )
-    return op
-
-
-def flatten_arrow_property_graph(
-    graph, v_prop, e_prop, v_prop_type, e_prop_type, oid_type=None, vid_type=None
-):
-    """Flatten arrow property graph.
-
-    Args:
-        graph (:class:`nx.Graph`): A nx graph hosts an arrow property graph.
-        v_prop (str): The vertex property id.
-        e_prop (str): The edge property id.
-        v_prop_type (str): Type of the node attribute.
-        e_prop_type (str): Type of the edge attribute.
-        oid_type (str): Type of oid.
-        vid_type (str): Type of vid.
-
-    Returns:
-        Operation to flatten an arrow property graph. Results in a arrow flattened graph.
-    """
-    config = {
-        types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
-        types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(graph_def_pb2.ARROW_FLATTENED),
-        types_pb2.DST_GRAPH_TYPE: utils.graph_type_to_attr(graph.graph_type),
-        types_pb2.V_DATA_TYPE: utils.s_to_attr(utils.data_type_to_cpp(v_prop_type)),
-        types_pb2.E_DATA_TYPE: utils.s_to_attr(utils.data_type_to_cpp(e_prop_type)),
-    }
-    if graph.graph_type == graph_def_pb2.ARROW_PROPERTY:
-        config[types_pb2.V_PROP_KEY] = utils.s_to_attr(str(v_prop))
-        config[types_pb2.E_PROP_KEY] = utils.s_to_attr(str(e_prop))
-        config[types_pb2.OID_TYPE] = utils.s_to_attr(utils.data_type_to_cpp(oid_type))
-        config[types_pb2.VID_TYPE] = utils.s_to_attr(utils.data_type_to_cpp(vid_type))
-    else:
-        config[types_pb2.V_PROP_KEY] = utils.s_to_attr(v_prop)
-        config[types_pb2.E_PROP_KEY] = utils.s_to_attr(e_prop)
-
-    op = Operation(
-        graph.session_id,
-        types_pb2.PROJECT_TO_SIMPLE,
-        config=config,
         output_types=types_pb2.GRAPH,
     )
     return op
@@ -747,13 +676,7 @@ def unload_app(app):
     Returns:
         An op to unload the `app`.
     """
-    op = Operation(
-        app.session_id,
-        types_pb2.UNLOAD_APP,
-        inputs=[app.op],
-        output_types=types_pb2.NULL_OUTPUT,
-    )
-    return op
+    return create_unload_op(app.session_id, types_pb2.UNLOAD_APP, [app.op])
 
 
 def unload_graph(graph):
@@ -765,20 +688,7 @@ def unload_graph(graph):
     Returns:
         An op to unload the `graph`.
     """
-    config = {}
-    inputs = []
-    if graph.graph_type == graph_def_pb2.ARROW_PROPERTY:
-        inputs.append(graph.op)
-    else:
-        config[types_pb2.GRAPH_NAME] = utils.s_to_attr(graph.key)
-    op = Operation(
-        graph.session_id,
-        types_pb2.UNLOAD_GRAPH,
-        config=config,
-        inputs=inputs,
-        output_types=types_pb2.NULL_OUTPUT,
-    )
-    return op
+    return create_unload_op(graph.session_id, types_pb2.UNLOAD_GRAPH, [graph.op])
 
 
 def unload_context(context):

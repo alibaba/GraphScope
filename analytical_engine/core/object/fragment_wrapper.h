@@ -249,6 +249,8 @@ class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T>>
     return graph_def_;
   }
 
+  rpc::graph::GraphDefPb& mutable_graph_def() override { return graph_def_; }
+
   bl::result<std::shared_ptr<IFragmentWrapper>> CopyGraph(
       const grape::CommSpec& comm_spec, const std::string& dst_graph_name,
       const std::string& copy_type) override {
@@ -713,6 +715,8 @@ class FragmentWrapper<ArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T>>
     return graph_def_;
   }
 
+  rpc::graph::GraphDefPb& mutable_graph_def() override { return graph_def_; }
+
   bl::result<std::shared_ptr<IFragmentWrapper>> CopyGraph(
       const grape::CommSpec& comm_spec, const std::string& dst_graph_name,
       const std::string& copy_type) override {
@@ -777,6 +781,8 @@ class FragmentWrapper<ArrowFlattenedFragment<OID_T, VID_T, VDATA_T, EDATA_T>>
   const rpc::graph::GraphDefPb& graph_def() const override {
     return graph_def_;
   }
+
+  rpc::graph::GraphDefPb& mutable_graph_def() override { return graph_def_; }
 
   bl::result<std::unique_ptr<grape::InArchive>> ReportGraph(
       const grape::CommSpec& comm_spec, const rpc::GSParams& params) override {
@@ -844,6 +850,8 @@ class FragmentWrapper<DynamicFragment> : public IFragmentWrapper {
   const rpc::graph::GraphDefPb& graph_def() const override {
     return graph_def_;
   }
+
+  rpc::graph::GraphDefPb& mutable_graph_def() override { return graph_def_; }
 
   bl::result<std::unique_ptr<grape::InArchive>> ReportGraph(
       const grape::CommSpec& comm_spec, const rpc::GSParams& params) override {
@@ -1006,6 +1014,8 @@ class FragmentWrapper<DynamicProjectedFragment<VDATA_T, EDATA_T>>
   const rpc::graph::GraphDefPb& graph_def() const override {
     return graph_def_;
   }
+
+  rpc::graph::GraphDefPb& mutable_graph_def() override { return graph_def_; }
 
   bl::result<std::unique_ptr<grape::InArchive>> ReportGraph(
       const grape::CommSpec& comm_spec, const rpc::GSParams& params) override {

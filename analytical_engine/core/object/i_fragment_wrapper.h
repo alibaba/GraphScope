@@ -43,6 +43,8 @@ class IFragmentWrapper : public GSObject {
 
   virtual const rpc::graph::GraphDefPb& graph_def() const = 0;
 
+  virtual rpc::graph::GraphDefPb& mutable_graph_def() = 0;
+
   virtual std::shared_ptr<void> fragment() const = 0;
 
   virtual bl::result<std::shared_ptr<IFragmentWrapper>> CopyGraph(

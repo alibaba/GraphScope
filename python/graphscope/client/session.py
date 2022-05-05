@@ -727,9 +727,6 @@ class Session(object):
         # networkx module
         self._nx = None
 
-        # a lock that protects the coordinator
-        self._lock = threading.Lock()
-
     def __repr__(self):
         return str(self.info)
 
