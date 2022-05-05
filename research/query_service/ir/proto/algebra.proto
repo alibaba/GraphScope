@@ -73,8 +73,14 @@ message Join {
 
 // Union two relations
 message Union {
+  enum UnionOpt {
+    // general union of two relations
+    Union = 0;
+    // intersection of two relations
+    Intersection = 1;
+  }
   repeated int32 parents = 1;
-  bool is_intersection = 2;
+  UnionOpt union_opt = 2;
 }
 
 message GroupBy {
