@@ -330,7 +330,6 @@ class Graph(_GraphBase):
         self._key = None
         self._op = None
         self._schema = GraphSchema()
-        self._schema.init_nx_schema()
 
         # caches for add_node and add_edge
         self._add_node_cache = []
@@ -348,6 +347,7 @@ class Graph(_GraphBase):
             if self._session is None:
                 self._session = get_session_by_id(incoming_graph_data.session_id)
         self._default_label = default_label
+        self._default_label_id = -1
 
         if self._session is None:
             self._try_to_get_default_session()
@@ -370,6 +370,7 @@ class Graph(_GraphBase):
         # load graph attributes (must be after to_networkx_graph)
         self.graph.update(attr)
         self._saved_signature = self.signature
+        self._is_client_view = False
 
     def _is_gs_graph(self, incoming_graph_data):
         return (
@@ -405,9 +406,10 @@ class Graph(_GraphBase):
             op.eval()
             graph._key = None
 
-        t = threading.Thread(target=_del, args=(self,))
-        t.daemon = True
-        t.start()
+        if not self._is_client_view:
+            t = threading.Thread(target=_del, args=(self,))
+            t.daemon = True
+            t.start()
 
     @property
     def op(self):
@@ -656,7 +658,6 @@ class Graph(_GraphBase):
         nx.Graph support int, float, str, tuple or bool object of nodes.
         """
         self._convert_arrow_to_dynamic()
-        self._schema.add_nx_vertex_properties(attr)
         self._add_node_cache.append(
             (node_for_adding, attr) if attr else node_for_adding
         )
@@ -943,7 +944,6 @@ class Graph(_GraphBase):
         >>> G.edges[1, 2].update({0: 5})
         """
         self._convert_arrow_to_dynamic()
-        self._schema.add_nx_edge_properties(attr)
         self._add_edge_cache.append(
             (u_of_edge, v_of_edge, attr) if attr else (u_of_edge, v_of_edge)
         )
@@ -1108,9 +1108,8 @@ class Graph(_GraphBase):
         self._convert_arrow_to_dynamic()
 
         edge = json.dumps(((u, v, data),), option=json.OPT_SERIALIZE_NUMPY)
-        self._schema.add_nx_edge_properties(data)
         self._op = dag_utils.modify_edges(self, types_pb2.NX_UPDATE_EDGES, edge)
-        self._op.eval()
+        self._op.eval(leaf=False)
         self.cache.clear_neighbor_attr_cache()
 
     @clear_mutation_cache
@@ -1146,7 +1145,7 @@ class Graph(_GraphBase):
 
         node = json.dumps(((n, data),), option=json.OPT_SERIALIZE_NUMPY)
         self._op = dag_utils.modify_vertices(self, types_pb2.NX_UPDATE_NODES, node)
-        self._op.eval()
+        self._op.eval(leaf=False)
         self.cache.clear_node_attr_cache()
 
     @clear_mutation_cache
@@ -1576,7 +1575,6 @@ class Graph(_GraphBase):
         self._remove_node_cache.clear()
         self._remove_edge_cache.clear()
         self.cache.clear()
-        self.schema.init_nx_schema()
 
     @clear_mutation_cache
     def clear_edges(self):
@@ -1593,7 +1591,7 @@ class Graph(_GraphBase):
         """
         self._convert_arrow_to_dynamic()
         self._op = dag_utils.clear_edges(self)
-        self._op.eval()
+        self._op.eval(leaf=False)
         self.cache.clear()
 
     @patch_docstring(RefGraph.is_directed)
@@ -1698,10 +1696,9 @@ class Graph(_GraphBase):
             g = self.__class__(create_empty_in_engine=False)
             g.graph = copy.deepcopy(self.graph)
             op = dag_utils.copy_graph(self, "identical")
-            graph_def = op.eval()
+            graph_def = op.eval(leaf=False)
             g._op = op
             g._key = graph_def.key
-            g._schema = copy.deepcopy(self._schema)
             g.cache.warmup()
         g._session = self._session
         return g
@@ -1744,28 +1741,19 @@ class Graph(_GraphBase):
 
         if self.is_directed():
             graph_class = self.to_undirected_class()
-            if as_view:
-                g = graph_class(create_empty_in_engine=False)
-                g.graph.update(self.graph)
-                op = dag_utils.to_undirected(self)
-                graph_def = op.eval()
-                g._op = op
-                g._key = graph_def.key
-                g._schema = copy.deepcopy(self._schema)
-                g._graph = self
-                g._session = self._session
-                g._is_client_view = False
-                g.cache.warmup()
-                g = freeze(g)
-                return g
             g = graph_class(create_empty_in_engine=False)
-            g.graph = copy.deepcopy(self.graph)
+            if as_view:
+                g.graph.update(self.graph)
+                g._graph = self
+                g._is_client_view = False
+                g = freeze(g)
+            else:
+                g.graph = copy.deepcopy(self.graph)
             op = dag_utils.to_undirected(self)
-            graph_def = op.eval()
+            graph_def = op.eval(leaf=False)
             g._op = op
             g._key = graph_def.key
             g._session = self._session
-            g._schema = copy.deepcopy(self._schema)
             g.cache.warmup()
             return g
         return self.copy(as_view=as_view)
@@ -1817,17 +1805,15 @@ class Graph(_GraphBase):
             g = generic_graph_view(self, graph_class)
             g._op = self._op
             g._key = self._key
-            g._schema = copy.deepcopy(self._schema)
             g._session = self._session
             g._is_client_view = True
             return g
         g = graph_class(create_empty_in_engine=False)
         g.graph = copy.deepcopy(self.graph)
         op = dag_utils.to_directed(self)
-        graph_def = op.eval()
+        graph_def = op.eval(leaf=False)
         g._key = graph_def.key
         g._session = self._session
-        g._schema = copy.deepcopy(self._schema)
         g._op = op
         g.cache.warmup()
         return g
@@ -1866,10 +1852,9 @@ class Graph(_GraphBase):
         g = self.__class__(create_empty_in_engine=False)
         g.graph.update(self.graph)
         op = dag_utils.create_subgraph(self, nodes=induced_nodes)
-        graph_def = op.eval()
+        graph_def = op.eval(leaf=False)
         g._key = graph_def.key
         g._session = self._session
-        g._schema = copy.deepcopy(self._schema)
         g._op = op
         g.cache.warmup()
         return g
@@ -1912,10 +1897,9 @@ class Graph(_GraphBase):
         g = self.__class__(create_empty_in_engine=False)
         g.graph.update(self.graph)
         op = dag_utils.create_subgraph(self, edges=induced_edges)
-        graph_def = op.eval()
+        graph_def = op.eval(leaf=False)
         g._key = graph_def.key
         g._session = self._session
-        g._schema = copy.deepcopy(self._schema)
         g._op = op
         g.cache.warmup()
         return g
@@ -2023,65 +2007,19 @@ class Graph(_GraphBase):
                 graph = graph._graph
             return graph._project_to_simple(v_prop=v_prop, e_prop=e_prop)
 
-        if v_prop is None:
-            v_prop = str(v_prop)
-            v_prop_id = -1
-            v_prop_type = graph_def_pb2.NULLVALUE
-        else:
-            check_argument(isinstance(v_prop, str))
-            v_label = self._schema.vertex_labels[0]
-            try:
-                v_prop_id = self._schema.get_vertex_property_id(v_label, v_prop)
-                v_prop_type = self._schema.get_vertex_properties(v_label)[
-                    v_prop_id
-                ].type
-            except KeyError:
-                raise InvalidArgumentError(
-                    "graph not contains the vertex property {}".format(v_prop)
-                )
-
-        if e_prop is None:
-            e_prop = str(e_prop)
-            e_prop_id = -1
-            e_prop_type = graph_def_pb2.NULLVALUE
-        else:
-            check_argument(isinstance(e_prop, str))
-            e_label = self._schema.edge_labels[0]
-            try:
-                e_prop_id = self._schema.get_edge_property_id(e_label, e_prop)
-                e_prop_type = self._schema.get_edge_properties(e_label)[e_prop_id].type
-            except KeyError:
-                raise InvalidArgumentError(
-                    "graph not contains the edge property {}".format(e_prop)
-                )
         graph = self.__class__(create_empty_in_engine=False)
         graph = nx.freeze(graph)
-        if self.graph_type == graph_def_pb2.DYNAMIC_PROPERTY:
-            op = dag_utils.project_dynamic_property_graph(
-                self, v_prop, e_prop, v_prop_type, e_prop_type
-            )
-            graph._graph_type = graph_def_pb2.DYNAMIC_PROJECTED
-            graph_def = op.eval(leaf=False)
-            graph.schema.from_graph_def(graph_def)
-        else:
-            op = dag_utils.flatten_arrow_property_graph(
-                self,
-                v_prop_id,
-                e_prop_id,
-                v_prop_type,
-                e_prop_type,
-                self.schema.oid_type,
-                self.schema.vid_type,
-            )
-            graph._graph_type = graph_def_pb2.ARROW_FLATTENED
-            graph._default_label_id = self._default_label_id
-            graph_def = op.eval(leaf=False)
-            graph._schema = self.schema  # inherit the schema
+
+        op = dag_utils.project_to_simple(self, str(v_prop), str(e_prop))
+        graph_def = op.eval(leaf=False)
+        graph._graph_type = graph_def.graph_type
         graph._key = graph_def.key
-        graph._session = self._session
-        graph._saved_signature = self._saved_signature
-        graph._graph = self  # projected graph also can report nodes.
+        graph._schema.from_graph_def(graph_def)
+        graph._default_label_id = self._default_label_id
+        graph._saved_signature = graph._key
         graph._op = op
+        graph._session = self._session
+        graph._graph = self  # projected graph also can report nodes.
         graph._is_client_view = False
         return graph
 
@@ -2111,8 +2049,6 @@ class Graph(_GraphBase):
                 raise NetworkXError(
                     "default label {} not existed in graph." % self._default_label
                 )
-        else:
-            self._default_label_id = -1
         self._graph_type = graph_def_pb2.ARROW_PROPERTY
 
     def _clear_adding_cache(self):
@@ -2126,7 +2062,7 @@ class Graph(_GraphBase):
             self._op = dag_utils.modify_vertices(
                 self, types_pb2.NX_ADD_NODES, nodes_to_modify
             )
-            self._op.eval()
+            self._op.eval(leaf=False)
             self._add_node_cache.clear()
 
         if self._add_edge_cache:
@@ -2136,7 +2072,7 @@ class Graph(_GraphBase):
             self._op = dag_utils.modify_edges(
                 self, types_pb2.NX_ADD_EDGES, edges_to_modify
             )
-            self._op.eval()
+            self._op.eval(leaf=False)
             self._add_edge_cache.clear()
 
         if reset_cache:
@@ -2153,7 +2089,7 @@ class Graph(_GraphBase):
             self._op = dag_utils.modify_vertices(
                 self, types_pb2.NX_DEL_NODES, nodes_to_modify
             )
-            self._op.eval()
+            self._op.eval(leaf=False)
             self._remove_node_cache.clear()
 
         if self._remove_edge_cache:
@@ -2163,7 +2099,7 @@ class Graph(_GraphBase):
             self._op = dag_utils.modify_edges(
                 self, types_pb2.NX_DEL_EDGES, edges_to_modify
             )
-            self._op.eval()
+            self._op.eval(leaf=False)
             self._remove_edge_cache.clear()
 
         if reset_cache:
@@ -2178,12 +2114,9 @@ class Graph(_GraphBase):
         """
         if self.graph_type == graph_def_pb2.ARROW_PROPERTY:
             self._op = dag_utils.arrow_to_dynamic(self)
-            graph_def = self._op.eval()
+            graph_def = self._op.eval(leaf=False)
             self._key = graph_def.key
-            schema = GraphSchema()
-            schema.init_nx_schema(self._schema)
-            self._schema = schema
-            self._graph_type = graph_def_pb2.DYNAMIC_PROPERTY
+            self._graph_type = graph_def.graph_type
 
     def _convert_to_label_id_tuple(self, n):
         """Convert the node to (label_id, id) format.

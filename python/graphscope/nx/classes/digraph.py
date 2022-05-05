@@ -258,7 +258,6 @@ class DiGraph(Graph):
         self._session_id = None
         self._graph_type = self._graph_type
         self._schema = GraphSchema()
-        self._schema.init_nx_schema()
 
         # cache for add_node and add_edge
         self._add_node_cache = []
@@ -276,6 +275,7 @@ class DiGraph(Graph):
             if self._session is None:
                 self._session = get_session_by_id(incoming_graph_data.session_id)
         self._default_label = default_label
+        self._default_label_id = -1
 
         if self._session is None:
             self._try_to_get_default_session()
@@ -298,6 +298,7 @@ class DiGraph(Graph):
         # load graph attributes (must be after to_networkx_graph)
         self.graph.update(attr)
         self._saved_signature = self.signature
+        self._is_client_view = False
 
     @property
     @clear_mutation_cache
@@ -500,9 +501,8 @@ class DiGraph(Graph):
             g.name = self.name
             op = copy_graph(self, "reverse")
             g._op = op
-            graph_def = op.eval()
+            graph_def = op.eval(leaf=False)
             g._key = graph_def.key
-            g._schema = deepcopy(self._schema)
             g.cache.warmup()
         g._session = self._session
         return g

@@ -73,11 +73,9 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::loadGraph(
     using fragment_t = DynamicFragment;
     using vertex_map_t = typename fragment_t::vertex_map_t;
     BOOST_LEAF_AUTO(directed, params.Get<bool>(rpc::DIRECTED));
-    BOOST_LEAF_AUTO(distributed, params.Get<bool>(rpc::DISTRIBUTED));
 
     VLOG(1) << "Loading graph, graph name: " << graph_name
-            << ", graph type: DynamicFragment, directed: " << directed
-            << ", distributed: " << distributed;
+            << ", graph type: DynamicFragment, directed: " << directed;
 
     auto vm_ptr = std::shared_ptr<vertex_map_t>(new vertex_map_t(comm_spec_));
     vm_ptr->Init();
@@ -93,22 +91,13 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::loadGraph(
     graph_def.set_directed(directed);
     graph_def.set_graph_type(rpc::graph::DYNAMIC_PROPERTY);
     // dynamic graph doesn't have a vineyard id
-    gs::rpc::graph::VineyardInfoPb vy_info;
+    gs::rpc::graph::MutableGraphInfoPb graph_info;
     if (graph_def.has_extension()) {
-      graph_def.extension().UnpackTo(&vy_info);
+      graph_def.extension().UnpackTo(&graph_info);
     }
-    vy_info.set_vineyard_id(-1);
-
-    vy_info.set_oid_type(PropertyTypeToPb(vineyard::normalize_datatype(
-        vineyard::type_name<typename gs::DynamicFragment::oid_t>())));
-    vy_info.set_vid_type(PropertyTypeToPb(vineyard::normalize_datatype(
-        vineyard::type_name<typename gs::DynamicFragment::vid_t>())));
-    vy_info.set_vdata_type(PropertyTypeToPb(vineyard::normalize_datatype(
-        vineyard::type_name<typename gs::DynamicFragment::vdata_t>())));
-    vy_info.set_edata_type(PropertyTypeToPb(vineyard::normalize_datatype(
-        vineyard::type_name<typename gs::DynamicFragment::edata_t>())));
-    vy_info.set_property_schema_json("{}");
-    graph_def.mutable_extension()->PackFrom(vy_info);
+    graph_info.set_property_schema_json(
+        dynamic::Stringify(fragment->GetSchema()));
+    graph_def.mutable_extension()->PackFrom(graph_info);
 
     auto wrapper = std::make_shared<FragmentWrapper<fragment_t>>(
         graph_name, graph_def, fragment);
@@ -177,6 +166,7 @@ bl::result<void> GrapeInstance::unloadGraph(const rpc::GSParams& params) {
       }
     }
   }
+  VLOG(1) << "Unloading Graph " << graph_name;
   return object_manager_.RemoveObject(graph_name);
 }
 
@@ -222,18 +212,19 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::projectGraph(
 
 bl::result<rpc::graph::GraphDefPb> GrapeInstance::projectToSimple(
     const rpc::GSParams& params) {
-  std::string projected_id = "graph_projected_" + generateId();
+  std::string projected_graph_name = "graph_projected_" + generateId();
   BOOST_LEAF_AUTO(graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
   BOOST_LEAF_AUTO(type_sig, params.Get<std::string>(rpc::TYPE_SIGNATURE));
 
-  VLOG(1) << "Projecting graph, dst graph name: " << graph_name
+  VLOG(1) << "Projecting graph " << graph_name
+          << " to simple graph: " << projected_graph_name
           << ", type sig: " << type_sig;
 
   BOOST_LEAF_AUTO(wrapper,
                   object_manager_.GetObject<IFragmentWrapper>(graph_name));
   BOOST_LEAF_AUTO(projector, object_manager_.GetObject<Projector>(type_sig));
   BOOST_LEAF_AUTO(projected_wrapper,
-                  projector->Project(wrapper, projected_id, params));
+                  projector->Project(wrapper, projected_graph_name, params));
   BOOST_LEAF_CHECK(object_manager_.PutObject(projected_wrapper));
 
   return projected_wrapper->graph_def();
@@ -279,13 +270,15 @@ bl::result<std::shared_ptr<grape::InArchive>> GrapeInstance::reportGraph(
   return wrapper->ReportGraph(comm_spec_, params);
 }
 
-bl::result<void> GrapeInstance::modifyVertices(const rpc::GSParams& params) {
+bl::result<rpc::graph::GraphDefPb> GrapeInstance::modifyVertices(
+    const rpc::GSParams& params) {
 #ifdef NETWORKX
   BOOST_LEAF_AUTO(modify_type, params.Get<rpc::ModifyType>(rpc::MODIFY_TYPE));
   BOOST_LEAF_AUTO(graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
   BOOST_LEAF_AUTO(wrapper,
                   object_manager_.GetObject<IFragmentWrapper>(graph_name));
-  auto graph_type = wrapper->graph_def().graph_type();
+  auto& graph_def = wrapper->mutable_graph_def();
+  auto graph_type = graph_def.graph_type();
 
   if (graph_type != rpc::graph::DYNAMIC_PROPERTY) {
     RETURN_GS_ERROR(
@@ -306,7 +299,15 @@ bl::result<void> GrapeInstance::modifyVertices(const rpc::GSParams& params) {
       std::static_pointer_cast<DynamicFragment>(wrapper->fragment());
   DynamicFragmentMutator mutator(comm_spec_, fragment);
   mutator.ModifyVertices(nodes, common_attr, modify_type);
-  return {};
+  // update schema in graph_def
+  gs::rpc::graph::MutableGraphInfoPb graph_info;
+  if (graph_def.has_extension()) {
+    graph_def.extension().UnpackTo(&graph_info);
+  }
+  graph_info.set_property_schema_json(
+      dynamic::Stringify(fragment->GetSchema()));
+  graph_def.mutable_extension()->PackFrom(graph_info);
+  return graph_def;
 #else
   RETURN_GS_ERROR(vineyard::ErrorCode::kUnimplementedMethod,
                   "GraphScope is built with NETWORKX=OFF, please recompile it "
@@ -314,13 +315,15 @@ bl::result<void> GrapeInstance::modifyVertices(const rpc::GSParams& params) {
 #endif
 }
 
-bl::result<void> GrapeInstance::modifyEdges(const rpc::GSParams& params) {
+bl::result<rpc::graph::GraphDefPb> GrapeInstance::modifyEdges(
+    const rpc::GSParams& params) {
 #ifdef NETWORKX
   BOOST_LEAF_AUTO(modify_type, params.Get<rpc::ModifyType>(rpc::MODIFY_TYPE));
   BOOST_LEAF_AUTO(graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
   BOOST_LEAF_AUTO(wrapper,
                   object_manager_.GetObject<IFragmentWrapper>(graph_name));
-  auto graph_type = wrapper->graph_def().graph_type();
+  auto& graph_def = wrapper->mutable_graph_def();
+  auto graph_type = graph_def.graph_type();
 
   if (graph_type != rpc::graph::DYNAMIC_PROPERTY) {
     RETURN_GS_ERROR(
@@ -343,12 +346,20 @@ bl::result<void> GrapeInstance::modifyEdges(const rpc::GSParams& params) {
       std::static_pointer_cast<DynamicFragment>(wrapper->fragment());
   DynamicFragmentMutator mutator(comm_spec_, fragment);
   mutator.ModifyEdges(edges, common_attr, modify_type, weight);
+  // update schema in graph_def
+  gs::rpc::graph::MutableGraphInfoPb graph_info;
+  if (graph_def.has_extension()) {
+    graph_def.extension().UnpackTo(&graph_info);
+  }
+  graph_info.set_property_schema_json(
+      dynamic::Stringify(fragment->GetSchema()));
+  graph_def.mutable_extension()->PackFrom(graph_info);
 #else
   RETURN_GS_ERROR(vineyard::ErrorCode::kUnimplementedMethod,
                   "GraphScope is built with NETWORKX=OFF, please recompile it "
                   "with NETWORKX=ON");
 #endif  // NETWORKX
-  return {};
+  return graph_def;
 }
 
 bl::result<std::shared_ptr<grape::InArchive>> GrapeInstance::contextToNumpy(
@@ -968,6 +979,13 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::induceSubGraph(
   sub_graph_def.set_key(sub_graph_name);
   auto sub_frag = std::make_shared<DynamicFragment>(sub_vm_ptr);
   sub_frag->InduceSubgraph(fragment, induced_vertices, induced_edges);
+  gs::rpc::graph::MutableGraphInfoPb graph_info;
+  if (sub_graph_def.has_extension()) {
+    sub_graph_def.extension().UnpackTo(&graph_info);
+  }
+  graph_info.set_property_schema_json(
+      dynamic::Stringify(sub_frag->GetSchema()));
+  sub_graph_def.mutable_extension()->PackFrom(graph_info);
 
   auto wrapper = std::make_shared<FragmentWrapper<DynamicFragment>>(
       sub_graph_name, sub_graph_def, sub_frag);
@@ -1211,7 +1229,8 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
   }
   case rpc::MODIFY_VERTICES: {
 #ifdef NETWORKX
-    BOOST_LEAF_CHECK(modifyVertices(params));
+    BOOST_LEAF_AUTO(graph_def, modifyVertices(params));
+    r->set_graph_def(graph_def);
 #else
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
                     "GraphScope is built with NETWORKX=OFF, please recompile "
@@ -1221,7 +1240,8 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
   }
   case rpc::MODIFY_EDGES: {
 #ifdef NETWORKX
-    BOOST_LEAF_CHECK(modifyEdges(params));
+    BOOST_LEAF_AUTO(graph_def, modifyEdges(params));
+    r->set_graph_def(graph_def);
 #else
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
                     "GraphScope is built with NETWORKX=OFF, please recompile "

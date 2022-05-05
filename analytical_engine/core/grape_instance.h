@@ -103,9 +103,10 @@ class GrapeInstance : public Subscriber {
   bl::result<rpc::graph::GraphDefPb> projectToSimple(
       const rpc::GSParams& params);
 
-  bl::result<void> modifyVertices(const rpc::GSParams& params);
+  bl::result<rpc::graph::GraphDefPb> modifyVertices(
+      const rpc::GSParams& params);
 
-  bl::result<void> modifyEdges(const rpc::GSParams& params);
+  bl::result<rpc::graph::GraphDefPb> modifyEdges(const rpc::GSParams& params);
 
   bl::result<void> clearEdges(const rpc::GSParams& params);
 

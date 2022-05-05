@@ -35,8 +35,8 @@
 #include "grape/utils/vertex_set.h"
 
 #include "core/object/dynamic.h"
+#include "core/utils/convert_utils.h"
 #include "core/utils/partitioner.h"
-#include "core/utils/transform_utils.h"
 #include "proto/graphscope/proto/types.pb.h"
 
 namespace gs {
@@ -178,6 +178,8 @@ class DynamicFragment
         }
       }
     }
+
+    initSchema();
   }
 
   // Init an empty fragment.
@@ -238,6 +240,8 @@ class DynamicFragment
           },
           thread_num, 1);
     }
+
+    initSchema();
   }
 
   using base_t::Gid2Lid;
@@ -535,6 +539,8 @@ class DynamicFragment
     } else {
       LOG(ERROR) << "Unsupported copy type: " << copy_type;
     }
+
+    this->schema_.CopyFrom(source->schema_);
   }
 
   // generate directed graph from original undirected graph.
@@ -560,6 +566,8 @@ class DynamicFragment
         oe_.put_edge(i, *iter);
       }
     }
+
+    this->schema_.CopyFrom(source->schema_);
   }
 
   // generate undirected graph from original directed graph.
@@ -585,6 +593,7 @@ class DynamicFragment
     }
 
     Mutate(mutation);
+    this->schema_.CopyFrom(source->schema_);
   }
 
   // induce a subgraph that contains the induced_vertices and the edges between
@@ -675,6 +684,8 @@ class DynamicFragment
                ? iv_alive_.get_bit(v.GetValue())
                : ov_alive_.get_bit(outerVertexLidToIndex(v.GetValue()));
   }
+
+  const dynamic::Value& GetSchema() { return schema_; }
 
   auto CollectPropertyKeysOnVertices()
       -> bl::result<std::map<std::string, dynamic::Type>> {
@@ -1472,6 +1483,12 @@ class DynamicFragment
     oe_.sort_neighbors_dense(oe_degree);
   }
 
+  void initSchema() {
+    schema_.SetObject();
+    schema_.Insert("vertex", dynamic::Value(rapidjson::kObjectType));
+    schema_.Insert("edge", dynamic::Value(rapidjson::kObjectType));
+  }
+
  private:
   using base_t::ivnum_;
   vid_t ovnum_;
@@ -1494,6 +1511,8 @@ class DynamicFragment
   // allocators for parallel convert
   std::shared_ptr<std::vector<dynamic::AllocatorT>> allocators_;
 
+  dynamic::Value schema_;
+
   using base_t::outer_vertices_of_frag_;
 
   template <typename _vdata_t, typename _edata_t>
@@ -1501,6 +1520,8 @@ class DynamicFragment
 
   template <typename FRAG_T>
   friend class ArrowToDynamicConverter;
+
+  friend class DynamicFragmentMutator;
 };
 
 class DynamicFragmentMutator {
@@ -1545,6 +1566,17 @@ class DynamicFragmentMutator {
       v_fid = partitioner.GetPartitionId(oid);
       if (modify_type == rpc::NX_ADD_NODES) {
         vm_ptr_->AddVertex(std::move(oid), gid);
+        if (!v_data.Empty()) {
+          for (const auto& prop : v_data.GetObject()) {
+            if (!fragment_->schema_["vertex"].HasMember(prop.name)) {
+              dynamic::Value key(prop.name);
+              fragment_->schema_["vertex"].AddMember(
+                  key,
+                  dynamic::DynamicType2RpcType(dynamic::GetType(prop.value)),
+                  dynamic::Value::allocator_);
+            }
+          }
+        }
         if (v_fid == fid) {
           mutation.vertices_to_add.emplace_back(gid, std::move(v_data));
         }
@@ -1602,6 +1634,17 @@ class DynamicFragmentMutator {
         if (dst_fid == fid && dst_added) {
           vdata_t empty_data(rapidjson::kObjectType);
           mutation.vertices_to_add.emplace_back(dst_gid, std::move(empty_data));
+        }
+        if (!e_data.Empty()) {
+          for (const auto& prop : e_data.GetObject()) {
+            if (!fragment_->schema_["edge"].HasMember(prop.name)) {
+              dynamic::Value key(prop.name);
+              fragment_->schema_["edge"].AddMember(
+                  key,
+                  dynamic::DynamicType2RpcType(dynamic::GetType(prop.value)),
+                  dynamic::Value::allocator_);
+            }
+          }
         }
       } else {
         if (!vm_ptr_->_GetGid(src_fid, src, src_gid) ||

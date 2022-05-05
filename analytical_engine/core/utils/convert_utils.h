@@ -157,5 +157,29 @@ struct PropertyConverter {
     }
   }
 };
+
+template <typename ITER_T, typename FUNC_T>
+void parallel_for(const ITER_T& begin, const ITER_T& end, const FUNC_T& func,
+                  uint32_t thread_num, size_t chunk = 1024) {
+  std::vector<std::thread> threads(thread_num);
+  std::atomic<size_t> cur(0);
+  for (uint32_t i = 0; i < thread_num; ++i) {
+    threads[i] = std::thread([&cur, chunk, &func, begin, end, i]() {
+      while (true) {
+        const ITER_T cur_beg = std::min(begin + cur.fetch_add(chunk), end);
+        const ITER_T cur_end = std::min(cur_beg + chunk, end);
+        if (cur_beg == cur_end) {
+          break;
+        }
+        for (auto iter = cur_beg; iter != cur_end; ++iter) {
+          func(i, *iter);
+        }
+      }
+    });
+  }
+  for (auto& thrd : threads) {
+    thrd.join();
+  }
+}
 }  // namespace gs
 #endif  // ANALYTICAL_ENGINE_CORE_UTILS_CONVERT_UTILS_H_

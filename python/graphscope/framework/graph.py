@@ -297,9 +297,7 @@ class GraphDAGNode(DAGNode, GraphInterface):
 
     def _project_to_simple(self, v_prop=None, e_prop=None):
         check_argument(self.graph_type == graph_def_pb2.ARROW_PROPERTY)
-        op = dag_utils.project_arrow_property_graph_to_simple(
-            self, str(v_prop), str(e_prop)
-        )
+        op = dag_utils.project_to_simple(self, str(v_prop), str(e_prop))
         # construct dag node
         graph_dag_node = GraphDAGNode(
             self._session, op, self._oid_type, self._directed, self._generate_eid
