@@ -27,18 +27,15 @@ use crate::graph::{Direction, Statement, ID};
 use crate::process::operator::map::FilterMapFuncGen;
 use crate::process::record::{Record, RecordElement};
 
-/// An EdgeExpandIntersection operator to expand neighbors
+/// An ExpandOrIntersect operator to expand neighbors
 /// and intersect with the ones of the same tag found previously (if exists).
-struct EdgeExpandIntersectionOperator<E: Into<GraphObject>> {
+struct ExpandOrIntersect<E: Into<GraphObject>> {
     start_v_tag: KeyId,
-    //TODO: is this tag must be set??
     edge_or_end_v_tag: Option<KeyId>,
     stmt: Box<dyn Statement<ID, E>>,
 }
 
-impl<E: Into<GraphObject> + 'static> FilterMapFunction<Record, Record>
-    for EdgeExpandIntersectionOperator<E>
-{
+impl<E: Into<GraphObject> + 'static> FilterMapFunction<Record, Record> for ExpandOrIntersect<E> {
     fn exec(&self, mut input: Record) -> FnResult<Option<Record>> {
         let entry = input
             .get(Some(&self.start_v_tag))
@@ -110,13 +107,11 @@ impl FilterMapFuncGen for algebra_pb::EdgeExpand {
         );
         if self.is_edge {
             let stmt = graph.prepare_explore_edge(direction, &query_params)?;
-            let edge_expand_operator =
-                EdgeExpandIntersectionOperator { start_v_tag, edge_or_end_v_tag, stmt };
+            let edge_expand_operator = ExpandOrIntersect { start_v_tag, edge_or_end_v_tag, stmt };
             Ok(Box::new(edge_expand_operator))
         } else {
             let stmt = graph.prepare_explore_vertex(direction, &query_params)?;
-            let edge_expand_operator =
-                EdgeExpandIntersectionOperator { start_v_tag, edge_or_end_v_tag, stmt };
+            let edge_expand_operator = ExpandOrIntersect { start_v_tag, edge_or_end_v_tag, stmt };
             Ok(Box::new(edge_expand_operator))
         }
     }

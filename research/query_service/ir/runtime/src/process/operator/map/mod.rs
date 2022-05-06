@@ -13,7 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 mod auxilia;
-mod edge_expand_intersection;
+mod expand_intersect;
 mod get_v;
 mod path_end;
 mod path_start;
