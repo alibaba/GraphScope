@@ -65,6 +65,11 @@ jobs:
         cd ${GITHUB_WORKSPACE}/research/query_service/ir/compiler
         make build
 
+    - name: Build Ir on Vineyard Store
+      run: |
+        source ${HOME}/.bashrc
+        cd ${GITHUB_WORKSPACE} && make install
+
     - name: Build Ir on Groot Store
       run: |
         source ${HOME}/.bashrc
@@ -85,4 +90,12 @@ jobs:
       run: |
         source ${HOME}/.bashrc
         cd ${GITHUB_WORKSPACE}/interactive_engine/ir-adaptor && ./ir_groot_ci.sh
+
+    - name: Ir Integration Test on Vineyard Store
+      run: |
+        source ${HOME}/.bashrc
+        export USE_GAIA_ENGINE=true
+        cd ${GITHUB_WORKSPACE}/interactive_engine/ir-adaptor
+        ./kill_vineyard.sh
+        ./ir_vineyard_ci.sh
 
