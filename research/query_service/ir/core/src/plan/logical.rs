@@ -368,7 +368,7 @@ impl LogicalPlan {
                         }
                     }
                 }
-                Opr::Union(_) => {
+                Opr::Union(_) | Opr::Intersect(_) => {
                     self.meta
                         .set_union_curr_nodes(parent_ids.clone());
                 }
@@ -2202,7 +2202,7 @@ mod test {
         let id2 = plan
             .append_operator_as_node(expand3.into(), vec![opr_id])
             .unwrap();
-        let union = pb::Union { parents: vec![id1 as i32, id2 as i32], union_opt: 0 };
+        let union = pb::Union { parents: vec![id1 as i32, id2 as i32] };
         plan.append_operator_as_node(union.into(), vec![id1, id2])
             .unwrap();
         assert_eq!(plan.meta.get_curr_nodes(), vec![id1, id2]);

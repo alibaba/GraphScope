@@ -419,6 +419,7 @@ impl AsPhysical for pb::logical_plan::Operator {
                 GroupBy(groupby) => groupby.add_job_builder(builder, plan_meta),
                 Sink(sink) => sink.add_job_builder(builder, plan_meta),
                 Union(_) => Ok(()),
+                Intersect(_) => Ok(()),
                 Unfold(unfold) => unfold.add_job_builder(builder, plan_meta),
                 _ => Err(IrError::Unsupported(format!("the operator {:?}", self))),
             }
@@ -487,17 +488,11 @@ impl AsPhysical for LogicalPlan {
 
                 if let Some(merge_node) = merge_node_opt.clone() {
                     match &merge_node.borrow().opr.opr {
-                        Some(Union(union)) => {
-                            let union_opt =
-                                unsafe { std::mem::transmute::<i32, pb::union::UnionOpt>(union.union_opt) };
-                            match union_opt {
-                                pb::union::UnionOpt::Union => {
-                                    builder.merge(plans);
-                                }
-                                pb::union::UnionOpt::Intersection => {
-                                    add_intersect_job_builder(builder, plan_meta, &subplans)?;
-                                }
-                            }
+                        Some(Union(_union)) => {
+                            builder.merge(plans);
+                        }
+                        Some(Intersect(intersect)) => {
+                            add_intersect_job_builder(builder, plan_meta, intersect, &subplans)?;
                         }
                         Some(Join(join_opr)) => {
                             if curr_node.borrow().children.len() > 2 {
@@ -552,12 +547,21 @@ impl AsPhysical for LogicalPlan {
     }
 }
 
+// Given a->b, now we only support intersecting neighbors (one-hop each with no filters) that "TRULY" need to,
+// e.g., Intersect{{a->c, b->c}, key=c}
+// TODO: consider more cases:
+// 1. Intersect{{a->d->c, b->c}, key=c}
+// if so, translate into two operators, i.e., EdgeExpand{a->d} and Intersect{{d->c, b->c}, key=c}
+// 2. Intersect{{a->c->d, b->c}, key=c}
+// if so, translate into two operators, i.e., Intersect{{a->c, b->c}, key=c} and Expand{c->d}
+// 3. extend with filters
 fn add_intersect_job_builder(
-    builder: &mut JobBuilder, plan_meta: &mut PlanMeta, subplans: &Vec<LogicalPlan>,
+    builder: &mut JobBuilder, plan_meta: &mut PlanMeta, intersect_opr: &pb::Intersect,
+    subplans: &Vec<LogicalPlan>,
 ) -> IrResult<()> {
     use pb::logical_plan::operator::Opr::*;
 
-    let mut intersect_tag = None;
+    let intersect_tag = intersect_opr.key.as_ref();
     let mut is_adding_auxilia = false;
     let mut auxilia_param = pb::QueryParams::default();
     for subplan in subplans {
@@ -577,18 +581,8 @@ fn add_intersect_job_builder(
                     let key_pb = common_pb::NameOrIdKey { key: edgexpd.v_tag.clone() };
                     builder.repartition(key_pb.encode_to_vec());
                 }
-                if edgexpd.alias.is_some() {
-                    if intersect_tag.is_some() {
-                        if !intersect_tag.eq(&edgexpd.alias) {
-                            Err(IrError::InvalidPattern("Cannot intersect on different tags".to_string()))?
-                        }
-                    } else {
-                        intersect_tag = edgexpd.alias.clone();
-                    }
-                } else {
-                    if intersect_tag.is_some() {
-                        Err(IrError::InvalidPattern("Cannot intersect on different tags".to_string()))?
-                    }
+                if !edgexpd.alias.eq(&intersect_tag.cloned()) {
+                    Err(IrError::InvalidPattern("Cannot intersect on different tags".to_string()))?
                 }
                 if let Some(params) = edgexpd.params.as_mut() {
                     // TODO: be very carefully that this only works when it is not followed by any filters
@@ -608,8 +602,8 @@ fn add_intersect_job_builder(
     }
     // We assume that the field after unfold has the same alias with intersect_tag.
     // Furthermore, if unfold is followed by auxilia, move the alias into the auxilia op.
-    let unfold_alias = if is_adding_auxilia { None } else { intersect_tag.clone() };
-    let unfold = pb::Unfold { tag: intersect_tag.clone(), alias: unfold_alias };
+    let unfold_alias = if is_adding_auxilia { None } else { intersect_tag.cloned() };
+    let unfold = pb::Unfold { tag: intersect_tag.cloned(), alias: unfold_alias };
     unfold.add_job_builder(builder, plan_meta)?;
     if is_adding_auxilia {
         if plan_meta.is_partition() {
@@ -618,7 +612,7 @@ fn add_intersect_job_builder(
         }
         let auxilia = pb::logical_plan::Operator::from(pb::Auxilia {
             params: Some(auxilia_param),
-            alias: intersect_tag.clone(),
+            alias: intersect_tag.cloned(),
         });
         auxilia.add_job_builder(builder, plan_meta)?;
     }
@@ -1444,7 +1438,7 @@ mod test {
         };
 
         // parents are expand_ac_opr and expand_bc_opr
-        let intersect_opr = pb::Union { parents: vec![2, 3], union_opt: 1 };
+        let intersect_opr = pb::Intersect { parents: vec![2, 3], key: Some("C".into()) };
 
         let mut logical_plan = LogicalPlan::with_root(Node::new(0, source_opr.clone().into()));
         logical_plan
@@ -1465,9 +1459,7 @@ mod test {
             .add_job_builder(&mut builder, &mut plan_meta)
             .unwrap();
 
-        let unfold_opr =
-        // TODO: we assume that alias is the same with tag in unfold for now.
-          pb::Unfold { tag: Some("C".into()), alias: Some("C".into()) };
+        let unfold_opr = pb::Unfold { tag: Some("C".into()), alias: Some("C".into()) };
 
         let mut expected_builder = JobBuilder::default();
         expected_builder.add_source(pb::logical_plan::Operator::from(source_opr).encode_to_vec());
@@ -1514,7 +1506,7 @@ mod test {
         };
 
         // parents are expand_ac_opr and expand_bc_opr
-        let intersect_opr = pb::Union { parents: vec![2, 3], union_opt: 1 };
+        let intersect_opr = pb::Intersect { parents: vec![2, 3], key: Some("C".into()) };
 
         let mut logical_plan = LogicalPlan::with_root(Node::new(0, source_opr.clone().into()));
         logical_plan

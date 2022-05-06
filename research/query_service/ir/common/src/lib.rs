@@ -523,6 +523,12 @@ impl From<pb::Union> for pb::logical_plan::Operator {
     }
 }
 
+impl From<pb::Intersect> for pb::logical_plan::Operator {
+    fn from(opr: pb::Intersect) -> Self {
+        pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::Intersect(opr)) }
+    }
+}
+
 impl From<pb::GroupBy> for pb::logical_plan::Operator {
     fn from(opr: pb::GroupBy) -> Self {
         pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::GroupBy(opr)) }

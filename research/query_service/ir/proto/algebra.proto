@@ -73,14 +73,13 @@ message Join {
 
 // Union two relations
 message Union {
-  enum UnionOpt {
-    // general union of two relations
-    Union = 0;
-    // intersection of two relations
-    Intersection = 1;
-  }
   repeated int32 parents = 1;
-  UnionOpt union_opt = 2;
+}
+
+// Intersect two relations on the given key;
+message Intersect {
+  repeated int32 parents = 1;
+  common.NameOrId key = 2;
 }
 
 message GroupBy {
@@ -411,6 +410,7 @@ message LogicalPlan {
       Auxilia auxilia = 13;
       As as = 14;
       Sink sink = 15;
+      Intersect intersect = 16;
       // Saving the room for relational operators
       GetV vertex = 30;
       EdgeExpand edge = 31;
