@@ -82,8 +82,11 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
     protected IrMetaFetcher irMetaFetcher;
 
     public IrStandardOpProcessor(
-            Configs configs, IrMetaFetcher irMetaFetcher, RpcChannelFetcher fetcher,
-            Graph graph, GraphTraversalSource g) {
+            Configs configs,
+            IrMetaFetcher irMetaFetcher,
+            RpcChannelFetcher fetcher,
+            Graph graph,
+            GraphTraversalSource g) {
         this.graph = graph;
         this.g = g;
         this.configs = configs;
@@ -127,8 +130,8 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                                                 .code(ResponseStatusCode.SERVER_ERROR_TEMPORARY)
                                                 .statusMessage(
                                                         ((Throwable)
-                                                                possibleTemporaryException
-                                                                        .get())
+                                                                        possibleTemporaryException
+                                                                                .get())
                                                                 .getMessage())
                                                 .statusAttributeException(
                                                         (Throwable)
@@ -152,8 +155,8 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                                                     .code(ResponseStatusCode.SERVER_ERROR_TIMEOUT)
                                                     .statusMessage(
                                                             "Timeout during script evaluation"
-                                                                    + " triggered by"
-                                                                    + " TimedInterruptCustomizerProvider")
+                                                                + " triggered by"
+                                                                + " TimedInterruptCustomizerProvider")
                                                     .statusAttributeException(t)
                                                     .create());
                                 } else if (t instanceof TimeoutException) {
@@ -172,15 +175,15 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                                 } else if (t instanceof MultipleCompilationErrorsException
                                         && t.getMessage().contains("Method too large")
                                         && ((MultipleCompilationErrorsException) t)
-                                        .getErrorCollector()
-                                        .getErrorCount()
-                                        == 1) {
+                                                        .getErrorCollector()
+                                                        .getErrorCount()
+                                                == 1) {
                                     errorMessage =
                                             String.format(
                                                     "The Gremlin statement that was submitted"
-                                                            + " exceeds the maximum compilation size"
-                                                            + " allowed by the JVM, please split it"
-                                                            + " into multiple smaller statements - %s",
+                                                        + " exceeds the maximum compilation size"
+                                                        + " allowed by the JVM, please split it"
+                                                        + " into multiple smaller statements - %s",
                                                     msg);
                                     logger.warn(errorMessage);
                                     ctx.writeAndFlush(

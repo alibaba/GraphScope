@@ -65,7 +65,9 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
             Configs configs,
             IrMetaFetcher irMetaFetcher,
             RpcChannelFetcher fetcher,
-            Graph graph, GraphTraversalSource g, GraphProperties testGraph) {
+            Graph graph,
+            GraphTraversalSource g,
+            GraphProperties testGraph) {
         super(configs, irMetaFetcher, fetcher, graph, g);
         this.context = new SimpleScriptContext();
         Bindings globalBindings = new SimpleBindings();

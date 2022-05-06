@@ -8,8 +8,8 @@ import com.alibaba.graphscope.gremlin.integration.processor.IrTestOpProcessor;
 import com.alibaba.graphscope.gremlin.integration.result.GraphProperties;
 import com.alibaba.graphscope.gremlin.plugin.processor.IrOpLoader;
 import com.alibaba.graphscope.gremlin.plugin.processor.IrStandardOpProcessor;
-
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversalSource;
+
 import io.netty.channel.Channel;
 
 import org.apache.tinkerpop.gremlin.groovy.engine.GremlinExecutor;
@@ -61,7 +61,8 @@ public class IrGremlinServer implements AutoCloseable {
         this.gremlinServer = new GremlinServer(settings);
 
         ServerGremlinExecutor serverGremlinExecutor =
-                Utils.getFieldValue(GremlinServer.class, this.gremlinServer, "serverGremlinExecutor");
+                Utils.getFieldValue(
+                        GremlinServer.class, this.gremlinServer, "serverGremlinExecutor");
         serverGremlinExecutor.getGraphManager().putGraph("graph", graph);
         serverGremlinExecutor.getGraphManager().putTraversalSource("g", graph.traversal());
 
