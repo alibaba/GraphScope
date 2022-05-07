@@ -420,9 +420,7 @@
 
     <span class="k">def</span> <span class="nf">_project_to_simple</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v_prop</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">e_prop</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="n">check_argument</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">==</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">ARROW_PROPERTY</span><span class="p">)</span>
-        <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">project_arrow_property_graph_to_simple</span><span class="p">(</span>
-            <span class="bp">self</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">v_prop</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">e_prop</span><span class="p">)</span>
-        <span class="p">)</span>
+        <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">project_to_simple</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">v_prop</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">e_prop</span><span class="p">))</span>
         <span class="c1"># construct dag node</span>
         <span class="n">graph_dag_node</span> <span class="o">=</span> <span class="n">GraphDAGNode</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">,</span> <span class="n">op</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_oid_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_directed</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_eid</span>
@@ -1304,6 +1302,16 @@
             
               
                 <dd><a href="../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.13.0/index.html">v0.13.0</a></dd>
               
             
 

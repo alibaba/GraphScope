@@ -453,7 +453,6 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_schema</span> <span class="o">=</span> <span class="n">GraphSchema</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="o">.</span><span class="n">init_nx_schema</span><span class="p">()</span>
 
         <span class="c1"># caches for add_node and add_edge</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_add_node_cache</span> <span class="o">=</span> <span class="p">[]</span>
@@ -471,6 +470,7 @@
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="n">get_session_by_id</span><span class="p">(</span><span class="n">incoming_graph_data</span><span class="o">.</span><span class="n">session_id</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_default_label</span> <span class="o">=</span> <span class="n">default_label</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_default_label_id</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_try_to_get_default_session</span><span class="p">()</span>
@@ -492,7 +492,8 @@
 
         <span class="c1"># load graph attributes (must be after to_networkx_graph)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">attr</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_saved_signature</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">signature</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_saved_signature</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">signature</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_is_client_view</span> <span class="o">=</span> <span class="kc">False</span></div>
 
     <span class="k">def</span> <span class="nf">_is_gs_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">incoming_graph_data</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span>
@@ -528,9 +529,10 @@
             <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
             <span class="n">graph</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="kc">None</span>
 
-        <span class="n">t</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">_del</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="p">,))</span>
-        <span class="n">t</span><span class="o">.</span><span class="n">daemon</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="n">t</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_client_view</span><span class="p">:</span>
+            <span class="n">t</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">_del</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="p">,))</span>
+            <span class="n">t</span><span class="o">.</span><span class="n">daemon</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">t</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">op</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -779,7 +781,6 @@
 <span class="sd">        nx.Graph support int, float, str, tuple or bool object of nodes.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_convert_arrow_to_dynamic</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="o">.</span><span class="n">add_nx_vertex_properties</span><span class="p">(</span><span class="n">attr</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_add_node_cache</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
             <span class="p">(</span><span class="n">node_for_adding</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span> <span class="k">if</span> <span class="n">attr</span> <span class="k">else</span> <span class="n">node_for_adding</span>
         <span class="p">)</span></div>
@@ -1066,7 +1067,6 @@
 <span class="sd">        &gt;&gt;&gt; G.edges[1, 2].update({0: 5})</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_convert_arrow_to_dynamic</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="o">.</span><span class="n">add_nx_edge_properties</span><span class="p">(</span><span class="n">attr</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_add_edge_cache</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
             <span class="p">(</span><span class="n">u_of_edge</span><span class="p">,</span> <span class="n">v_of_edge</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span> <span class="k">if</span> <span class="n">attr</span> <span class="k">else</span> <span class="p">(</span><span class="n">u_of_edge</span><span class="p">,</span> <span class="n">v_of_edge</span><span class="p">)</span>
         <span class="p">)</span></div>
@@ -1231,9 +1231,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_convert_arrow_to_dynamic</span><span class="p">()</span>
 
         <span class="n">edge</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(((</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">data</span><span class="p">),),</span> <span class="n">option</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">OPT_SERIALIZE_NUMPY</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="o">.</span><span class="n">add_nx_edge_properties</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">modify_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">NX_UPDATE_EDGES</span><span class="p">,</span> <span class="n">edge</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_op</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">leaf</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">clear_neighbor_attr_cache</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="Graph.set_node_data"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.set_node_data">[docs]</a>    <span class="nd">@clear_mutation_cache</span>
@@ -1269,7 +1268,7 @@
 
         <span class="n">node</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(((</span><span class="n">n</span><span class="p">,</span> <span class="n">data</span><span class="p">),),</span> <span class="n">option</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">OPT_SERIALIZE_NUMPY</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">modify_vertices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">NX_UPDATE_NODES</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_op</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">leaf</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">clear_node_attr_cache</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="Graph.update"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.update">[docs]</a>    <span class="nd">@clear_mutation_cache</span>
@@ -1698,8 +1697,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_add_edge_cache</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_remove_node_cache</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_remove_edge_cache</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">init_nx_schema</span><span class="p">()</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="Graph.clear_edges"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.clear_edges">[docs]</a>    <span class="nd">@clear_mutation_cache</span>
     <span class="k">def</span> <span class="nf">clear_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -1716,7 +1714,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_convert_arrow_to_dynamic</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">clear_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_op</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">leaf</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="Graph.is_directed"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.is_directed">[docs]</a>    <span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">RefGraph</span><span class="o">.</span><span class="n">is_directed</span><span class="p">)</span>
@@ -1821,10 +1819,9 @@
             <span class="n">g</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="n">create_empty_in_engine</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
             <span class="n">g</span><span class="o">.</span><span class="n">graph</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
             <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">copy_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;identical&quot;</span><span class="p">)</span>
-            <span class="n">graph_def</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+            <span class="n">graph_def</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">leaf</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
             <span class="n">g</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="n">op</span>
             <span class="n">g</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">graph_def</span><span class="o">.</span><span class="n">key</span>
-            <span class="n">g</span><span class="o">.</span><span class="n">_schema</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="p">)</span>
             <span class="n">g</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">warmup</span><span class="p">()</span>
         <span class="n">g</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span>
         <span class="k">return</span> <span class="n">g</span></div>
@@ -1867,28 +1864,19 @@
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
             <span class="n">graph_class</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_undirected_class</span><span class="p">()</span>
-            <span class="k">if</span> <span class="n">as_view</span><span class="p">:</span>
-                <span class="n">g</span> <span class="o">=</span> <span class="n">graph_class</span><span class="p">(</span><span class="n">create_empty_in_engine</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-                <span class="n">g</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
-                <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">to_undirected</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-                <span class="n">graph_def</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
-                <span class="n">g</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="n">op</span>
-                <span class="n">g</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">graph_def</span><span class="o">.</span><span class="n">key</span>
-                <span class="n">g</span><span class="o">.</span><span class="n">_schema</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="p">)</span>
-                <span class="n">g</span><span class="o">.</span><span class="n">_graph</span> <span class="o">=</span> <span class="bp">self</span>
-                <span class="n">g</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span>
-                <span class="n">g</span><span class="o">.</span><span class="n">_is_client_view</span> <span class="o">=</span> <span class="kc">False</span>
-                <span class="n">g</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">warmup</span><span class="p">()</span>
-                <span class="n">g</span> <span class="o">=</span> <span class="n">freeze</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
-                <span class="k">return</span> <span class="n">g</span>
             <span class="n">g</span> <span class="o">=</span> <span class="n">graph_class</span><span class="p">(</span><span class="n">create_empty_in_engine</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-            <span class="n">g</span><span class="o">.</span><span class="n">graph</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">as_view</span><span class="p">:</span>
+                <span class="n">g</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
+                <span class="n">g</span><span class="o">.</span><span class="n">_graph</span> <span class="o">=</span> <span class="bp">self</span>
+                <span class="n">g</span><span class="o">.</span><span class="n">_is_client_view</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="n">g</span> <span class="o">=</span> <span class="n">freeze</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">g</span><span class="o">.</span><span class="n">graph</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
             <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">to_undirected</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-            <span class="n">graph_def</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+            <span class="n">graph_def</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">leaf</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
             <span class="n">g</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="n">op</span>
             <span class="n">g</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">graph_def</span><span class="o">.</span><span class="n">key</span>
             <span class="n">g</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span>
-            <span class="n">g</span><span class="o">.</span><span class="n">_schema</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="p">)</span>
             <span class="n">g</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">warmup</span><span class="p">()</span>
             <span class="k">return</span> <span class="n">g</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">as_view</span><span class="o">=</span><span class="n">as_view</span><span class="p">)</span></div>
@@ -1940,17 +1928,15 @@
             <span class="n">g</span> <span class="o">=</span> <span class="n">generic_graph_view</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph_class</span><span class="p">)</span>
             <span class="n">g</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_op</span>
             <span class="n">g</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_key</span>
-            <span class="n">g</span><span class="o">.</span><span class="n">_schema</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="p">)</span>
             <span class="n">g</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span>
             <span class="n">g</span><span class="o">.</span><span class="n">_is_client_view</span> <span class="o">=</span> <span class="kc">True</span>
             <span class="k">return</span> <span class="n">g</span>
         <span class="n">g</span> <span class="o">=</span> <span class="n">graph_class</span><span class="p">(</span><span class="n">create_empty_in_engine</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="n">g</span><span class="o">.</span><span class="n">graph</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
         <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">to_directed</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-        <span class="n">graph_def</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+        <span class="n">graph_def</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">leaf</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="n">g</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">graph_def</span><span class="o">.</span><span class="n">key</span>
         <span class="n">g</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span>
-        <span class="n">g</span><span class="o">.</span><span class="n">_schema</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="p">)</span>
         <span class="n">g</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="n">op</span>
         <span class="n">g</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">warmup</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">g</span></div>
@@ -1989,10 +1975,9 @@
         <span class="n">g</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="n">create_empty_in_engine</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="n">g</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
         <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">create_subgraph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="n">induced_nodes</span><span class="p">)</span>
-        <span class="n">graph_def</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+        <span class="n">graph_def</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">leaf</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="n">g</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">graph_def</span><span class="o">.</span><span class="n">key</span>
         <span class="n">g</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span>
-        <span class="n">g</span><span class="o">.</span><span class="n">_schema</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="p">)</span>
         <span class="n">g</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="n">op</span>
         <span class="n">g</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">warmup</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">g</span></div>
@@ -2035,10 +2020,9 @@
         <span class="n">g</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="n">create_empty_in_engine</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="n">g</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
         <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">create_subgraph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edges</span><span class="o">=</span><span class="n">induced_edges</span><span class="p">)</span>
-        <span class="n">graph_def</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+        <span class="n">graph_def</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">leaf</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="n">g</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">graph_def</span><span class="o">.</span><span class="n">key</span>
         <span class="n">g</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span>
-        <span class="n">g</span><span class="o">.</span><span class="n">_schema</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="p">)</span>
         <span class="n">g</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="n">op</span>
         <span class="n">g</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">warmup</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">g</span></div>
@@ -2146,65 +2130,19 @@
                 <span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">_graph</span>
             <span class="k">return</span> <span class="n">graph</span><span class="o">.</span><span class="n">_project_to_simple</span><span class="p">(</span><span class="n">v_prop</span><span class="o">=</span><span class="n">v_prop</span><span class="p">,</span> <span class="n">e_prop</span><span class="o">=</span><span class="n">e_prop</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">v_prop</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">v_prop</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">v_prop</span><span class="p">)</span>
-            <span class="n">v_prop_id</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
-            <span class="n">v_prop_type</span> <span class="o">=</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">NULLVALUE</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">check_argument</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">v_prop</span><span class="p">,</span> <span class="nb">str</span><span class="p">))</span>
-            <span class="n">v_label</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="o">.</span><span class="n">vertex_labels</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">v_prop_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="o">.</span><span class="n">get_vertex_property_id</span><span class="p">(</span><span class="n">v_label</span><span class="p">,</span> <span class="n">v_prop</span><span class="p">)</span>
-                <span class="n">v_prop_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="o">.</span><span class="n">get_vertex_properties</span><span class="p">(</span><span class="n">v_label</span><span class="p">)[</span>
-                    <span class="n">v_prop_id</span>
-                <span class="p">]</span><span class="o">.</span><span class="n">type</span>
-            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span>
-                    <span class="s2">&quot;graph not contains the vertex property </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">v_prop</span><span class="p">)</span>
-                <span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">e_prop</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">e_prop</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">e_prop</span><span class="p">)</span>
-            <span class="n">e_prop_id</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
-            <span class="n">e_prop_type</span> <span class="o">=</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">NULLVALUE</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">check_argument</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">e_prop</span><span class="p">,</span> <span class="nb">str</span><span class="p">))</span>
-            <span class="n">e_label</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="o">.</span><span class="n">edge_labels</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">e_prop_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="o">.</span><span class="n">get_edge_property_id</span><span class="p">(</span><span class="n">e_label</span><span class="p">,</span> <span class="n">e_prop</span><span class="p">)</span>
-                <span class="n">e_prop_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="o">.</span><span class="n">get_edge_properties</span><span class="p">(</span><span class="n">e_label</span><span class="p">)[</span><span class="n">e_prop_id</span><span class="p">]</span><span class="o">.</span><span class="n">type</span>
-            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span>
-                    <span class="s2">&quot;graph not contains the edge property </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">e_prop</span><span class="p">)</span>
-                <span class="p">)</span>
         <span class="n">graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="n">create_empty_in_engine</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="n">graph</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">freeze</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">==</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">DYNAMIC_PROPERTY</span><span class="p">:</span>
-            <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">project_dynamic_property_graph</span><span class="p">(</span>
-                <span class="bp">self</span><span class="p">,</span> <span class="n">v_prop</span><span class="p">,</span> <span class="n">e_prop</span><span class="p">,</span> <span class="n">v_prop_type</span><span class="p">,</span> <span class="n">e_prop_type</span>
-            <span class="p">)</span>
-            <span class="n">graph</span><span class="o">.</span><span class="n">_graph_type</span> <span class="o">=</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">DYNAMIC_PROJECTED</span>
-            <span class="n">graph_def</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">leaf</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-            <span class="n">graph</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">from_graph_def</span><span class="p">(</span><span class="n">graph_def</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">flatten_arrow_property_graph</span><span class="p">(</span>
-                <span class="bp">self</span><span class="p">,</span>
-                <span class="n">v_prop_id</span><span class="p">,</span>
-                <span class="n">e_prop_id</span><span class="p">,</span>
-                <span class="n">v_prop_type</span><span class="p">,</span>
-                <span class="n">e_prop_type</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">oid_type</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">vid_type</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="n">graph</span><span class="o">.</span><span class="n">_graph_type</span> <span class="o">=</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">ARROW_FLATTENED</span>
-            <span class="n">graph</span><span class="o">.</span><span class="n">_default_label_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_label_id</span>
-            <span class="n">graph_def</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">leaf</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-            <span class="n">graph</span><span class="o">.</span><span class="n">_schema</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema</span>  <span class="c1"># inherit the schema</span>
+
+        <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">project_to_simple</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">v_prop</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">e_prop</span><span class="p">))</span>
+        <span class="n">graph_def</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">leaf</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">graph</span><span class="o">.</span><span class="n">_graph_type</span> <span class="o">=</span> <span class="n">graph_def</span><span class="o">.</span><span class="n">graph_type</span>
         <span class="n">graph</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">graph_def</span><span class="o">.</span><span class="n">key</span>
-        <span class="n">graph</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span>
-        <span class="n">graph</span><span class="o">.</span><span class="n">_saved_signature</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_saved_signature</span>
-        <span class="n">graph</span><span class="o">.</span><span class="n">_graph</span> <span class="o">=</span> <span class="bp">self</span>  <span class="c1"># projected graph also can report nodes.</span>
+        <span class="n">graph</span><span class="o">.</span><span class="n">_schema</span><span class="o">.</span><span class="n">from_graph_def</span><span class="p">(</span><span class="n">graph_def</span><span class="p">)</span>
+        <span class="n">graph</span><span class="o">.</span><span class="n">_default_label_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_label_id</span>
+        <span class="n">graph</span><span class="o">.</span><span class="n">_saved_signature</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">_key</span>
         <span class="n">graph</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="n">op</span>
+        <span class="n">graph</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span>
+        <span class="n">graph</span><span class="o">.</span><span class="n">_graph</span> <span class="o">=</span> <span class="bp">self</span>  <span class="c1"># projected graph also can report nodes.</span>
         <span class="n">graph</span><span class="o">.</span><span class="n">_is_client_view</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">return</span> <span class="n">graph</span>
 
@@ -2234,8 +2172,6 @@
                 <span class="k">raise</span> <span class="n">NetworkXError</span><span class="p">(</span>
                     <span class="s2">&quot;default label </span><span class="si">{}</span><span class="s2"> not existed in graph.&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_label</span>
                 <span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_default_label_id</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_graph_type</span> <span class="o">=</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">ARROW_PROPERTY</span>
 
     <span class="k">def</span> <span class="nf">_clear_adding_cache</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -2249,7 +2185,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">modify_vertices</span><span class="p">(</span>
                 <span class="bp">self</span><span class="p">,</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">NX_ADD_NODES</span><span class="p">,</span> <span class="n">nodes_to_modify</span>
             <span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_op</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">leaf</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_add_node_cache</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_add_edge_cache</span><span class="p">:</span>
@@ -2259,7 +2195,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">modify_edges</span><span class="p">(</span>
                 <span class="bp">self</span><span class="p">,</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">NX_ADD_EDGES</span><span class="p">,</span> <span class="n">edges_to_modify</span>
             <span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_op</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">leaf</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_add_edge_cache</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="n">reset_cache</span><span class="p">:</span>
@@ -2276,7 +2212,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">modify_vertices</span><span class="p">(</span>
                 <span class="bp">self</span><span class="p">,</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">NX_DEL_NODES</span><span class="p">,</span> <span class="n">nodes_to_modify</span>
             <span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_op</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">leaf</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_remove_node_cache</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_remove_edge_cache</span><span class="p">:</span>
@@ -2286,7 +2222,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">modify_edges</span><span class="p">(</span>
                 <span class="bp">self</span><span class="p">,</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">NX_DEL_EDGES</span><span class="p">,</span> <span class="n">edges_to_modify</span>
             <span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_op</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">leaf</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_remove_edge_cache</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="n">reset_cache</span><span class="p">:</span>
@@ -2301,12 +2237,9 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">==</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">ARROW_PROPERTY</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">arrow_to_dynamic</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-            <span class="n">graph_def</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+            <span class="n">graph_def</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_op</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">leaf</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">graph_def</span><span class="o">.</span><span class="n">key</span>
-            <span class="n">schema</span> <span class="o">=</span> <span class="n">GraphSchema</span><span class="p">()</span>
-            <span class="n">schema</span><span class="o">.</span><span class="n">init_nx_schema</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_schema</span> <span class="o">=</span> <span class="n">schema</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_graph_type</span> <span class="o">=</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">DYNAMIC_PROPERTY</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_graph_type</span> <span class="o">=</span> <span class="n">graph_def</span><span class="o">.</span><span class="n">graph_type</span>
 
     <span class="k">def</span> <span class="nf">_convert_to_label_id_tuple</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Convert the node to (label_id, id) format.</span>
@@ -2387,6 +2320,16 @@
             
               
                 <dd><a href="../../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.13.0/index.html">v0.13.0</a></dd>
               
             
 

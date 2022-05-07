@@ -273,6 +273,7 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_leaf</span><span class="p">:</span>
             <span class="n">sess</span><span class="o">.</span><span class="n">dag</span><span class="o">.</span><span class="n">add_op</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="n">res</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_evaluated</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">return</span> <span class="n">res</span></div>
 
     <span class="k">def</span> <span class="nf">add_parent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">):</span>
@@ -348,6 +349,16 @@
             
               
                 <dd><a href="../../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.13.0/index.html">v0.13.0</a></dd>
               
             
 
