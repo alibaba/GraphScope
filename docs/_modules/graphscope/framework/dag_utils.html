@@ -561,22 +561,25 @@
     <span class="k">return</span> <span class="n">op</span></div>
 
 
-<div class="viewcode-block" id="project_arrow_property_graph_to_simple"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.project_arrow_property_graph_to_simple.html#graphscope.framework.dag_utils.project_arrow_property_graph_to_simple">[docs]</a><span class="k">def</span> <span class="nf">project_arrow_property_graph_to_simple</span><span class="p">(</span>
+<span class="k">def</span> <span class="nf">project_to_simple</span><span class="p">(</span>
     <span class="n">graph</span><span class="p">,</span>
     <span class="n">v_prop</span><span class="p">,</span>
     <span class="n">e_prop</span><span class="p">,</span>
 <span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Project arrow property graph to a simple graph.</span>
+    <span class="sd">&quot;&quot;&quot;Project property graph to a simple graph.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        graph (:class:`graphscope.Graph`): Source graph, which type should be ARROW_PROPERTY</span>
+<span class="sd">        graph: Source graph, which type should be a property graph</span>
 <span class="sd">        v_prop (str): The node attribute key to project.</span>
 <span class="sd">        e_prop (str): The edge attribute key to project.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        Operation to project a property graph, results in a simple ARROW_PROJECTED graph.</span>
+<span class="sd">        Operation to project a property graph, results in a simple graph.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">check_argument</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">==</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">ARROW_PROPERTY</span><span class="p">)</span>
+    <span class="n">check_argument</span><span class="p">(</span>
+        <span class="n">graph</span><span class="o">.</span><span class="n">graph_type</span>
+        <span class="ow">in</span> <span class="p">(</span><span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">ARROW_PROPERTY</span><span class="p">,</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">DYNAMIC_PROPERTY</span><span class="p">)</span>
+    <span class="p">)</span>
     <span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
         <span class="n">types_pb2</span><span class="o">.</span><span class="n">V_PROP_KEY</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">v_prop</span><span class="p">),</span>
         <span class="n">types_pb2</span><span class="o">.</span><span class="n">E_PROP_KEY</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">e_prop</span><span class="p">),</span>
@@ -586,80 +589,6 @@
         <span class="n">types_pb2</span><span class="o">.</span><span class="n">PROJECT_TO_SIMPLE</span><span class="p">,</span>
         <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
         <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">graph</span><span class="o">.</span><span class="n">op</span><span class="p">],</span>
-        <span class="n">output_types</span><span class="o">=</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="k">return</span> <span class="n">op</span></div>
-
-
-<div class="viewcode-block" id="project_dynamic_property_graph"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.project_dynamic_property_graph.html#graphscope.framework.dag_utils.project_dynamic_property_graph">[docs]</a><span class="k">def</span> <span class="nf">project_dynamic_property_graph</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">v_prop</span><span class="p">,</span> <span class="n">e_prop</span><span class="p">,</span> <span class="n">v_prop_type</span><span class="p">,</span> <span class="n">e_prop_type</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Create project graph operation for nx graph.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        graph (:class:`nx.Graph`): A nx graph.</span>
-<span class="sd">        v_prop (str): The node attribute key to project.</span>
-<span class="sd">        e_prop (str): The edge attribute key to project.</span>
-<span class="sd">        v_prop_type (str): Type of the node attribute.</span>
-<span class="sd">        e_prop_type (str): Type of the edge attribute.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        Operation to project a dynamic property graph. Results in a simple graph.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">check_argument</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">==</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">DYNAMIC_PROPERTY</span><span class="p">)</span>
-    <span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH_NAME</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">key</span><span class="p">),</span>
-        <span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH_TYPE</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">graph_type_to_attr</span><span class="p">(</span><span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">DYNAMIC_PROJECTED</span><span class="p">),</span>
-        <span class="n">types_pb2</span><span class="o">.</span><span class="n">V_PROP_KEY</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">v_prop</span><span class="p">),</span>
-        <span class="n">types_pb2</span><span class="o">.</span><span class="n">E_PROP_KEY</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">e_prop</span><span class="p">),</span>
-        <span class="n">types_pb2</span><span class="o">.</span><span class="n">V_DATA_TYPE</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">utils</span><span class="o">.</span><span class="n">data_type_to_cpp</span><span class="p">(</span><span class="n">v_prop_type</span><span class="p">)),</span>
-        <span class="n">types_pb2</span><span class="o">.</span><span class="n">E_DATA_TYPE</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">utils</span><span class="o">.</span><span class="n">data_type_to_cpp</span><span class="p">(</span><span class="n">e_prop_type</span><span class="p">)),</span>
-    <span class="p">}</span>
-
-    <span class="n">op</span> <span class="o">=</span> <span class="n">Operation</span><span class="p">(</span>
-        <span class="n">graph</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
-        <span class="n">types_pb2</span><span class="o">.</span><span class="n">PROJECT_TO_SIMPLE</span><span class="p">,</span>
-        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
-        <span class="n">output_types</span><span class="o">=</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="k">return</span> <span class="n">op</span></div>
-
-
-<span class="k">def</span> <span class="nf">flatten_arrow_property_graph</span><span class="p">(</span>
-    <span class="n">graph</span><span class="p">,</span> <span class="n">v_prop</span><span class="p">,</span> <span class="n">e_prop</span><span class="p">,</span> <span class="n">v_prop_type</span><span class="p">,</span> <span class="n">e_prop_type</span><span class="p">,</span> <span class="n">oid_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vid_type</span><span class="o">=</span><span class="kc">None</span>
-<span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Flatten arrow property graph.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        graph (:class:`nx.Graph`): A nx graph hosts an arrow property graph.</span>
-<span class="sd">        v_prop (str): The vertex property id.</span>
-<span class="sd">        e_prop (str): The edge property id.</span>
-<span class="sd">        v_prop_type (str): Type of the node attribute.</span>
-<span class="sd">        e_prop_type (str): Type of the edge attribute.</span>
-<span class="sd">        oid_type (str): Type of oid.</span>
-<span class="sd">        vid_type (str): Type of vid.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        Operation to flatten an arrow property graph. Results in a arrow flattened graph.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH_NAME</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">key</span><span class="p">),</span>
-        <span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH_TYPE</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">graph_type_to_attr</span><span class="p">(</span><span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">ARROW_FLATTENED</span><span class="p">),</span>
-        <span class="n">types_pb2</span><span class="o">.</span><span class="n">DST_GRAPH_TYPE</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">graph_type_to_attr</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">graph_type</span><span class="p">),</span>
-        <span class="n">types_pb2</span><span class="o">.</span><span class="n">V_DATA_TYPE</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">utils</span><span class="o">.</span><span class="n">data_type_to_cpp</span><span class="p">(</span><span class="n">v_prop_type</span><span class="p">)),</span>
-        <span class="n">types_pb2</span><span class="o">.</span><span class="n">E_DATA_TYPE</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">utils</span><span class="o">.</span><span class="n">data_type_to_cpp</span><span class="p">(</span><span class="n">e_prop_type</span><span class="p">)),</span>
-    <span class="p">}</span>
-    <span class="k">if</span> <span class="n">graph</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">==</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">ARROW_PROPERTY</span><span class="p">:</span>
-        <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">V_PROP_KEY</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">v_prop</span><span class="p">))</span>
-        <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">E_PROP_KEY</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e_prop</span><span class="p">))</span>
-        <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">OID_TYPE</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">utils</span><span class="o">.</span><span class="n">data_type_to_cpp</span><span class="p">(</span><span class="n">oid_type</span><span class="p">))</span>
-        <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">VID_TYPE</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">utils</span><span class="o">.</span><span class="n">data_type_to_cpp</span><span class="p">(</span><span class="n">vid_type</span><span class="p">))</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">V_PROP_KEY</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">v_prop</span><span class="p">)</span>
-        <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">E_PROP_KEY</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">e_prop</span><span class="p">)</span>
-
-    <span class="n">op</span> <span class="o">=</span> <span class="n">Operation</span><span class="p">(</span>
-        <span class="n">graph</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
-        <span class="n">types_pb2</span><span class="o">.</span><span class="n">PROJECT_TO_SIMPLE</span><span class="p">,</span>
-        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
         <span class="n">output_types</span><span class="o">=</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="k">return</span> <span class="n">op</span>
@@ -870,13 +799,7 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        An op to unload the `app`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">op</span> <span class="o">=</span> <span class="n">Operation</span><span class="p">(</span>
-        <span class="n">app</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
-        <span class="n">types_pb2</span><span class="o">.</span><span class="n">UNLOAD_APP</span><span class="p">,</span>
-        <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">app</span><span class="o">.</span><span class="n">op</span><span class="p">],</span>
-        <span class="n">output_types</span><span class="o">=</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">NULL_OUTPUT</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="k">return</span> <span class="n">op</span></div>
+    <span class="k">return</span> <span class="n">create_unload_op</span><span class="p">(</span><span class="n">app</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">UNLOAD_APP</span><span class="p">,</span> <span class="p">[</span><span class="n">app</span><span class="o">.</span><span class="n">op</span><span class="p">])</span></div>
 
 
 <div class="viewcode-block" id="unload_graph"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.unload_graph.html#graphscope.framework.dag_utils.unload_graph">[docs]</a><span class="k">def</span> <span class="nf">unload_graph</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
@@ -888,20 +811,7 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        An op to unload the `graph`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">config</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="n">inputs</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">if</span> <span class="n">graph</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">==</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">ARROW_PROPERTY</span><span class="p">:</span>
-        <span class="n">inputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">op</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH_NAME</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">key</span><span class="p">)</span>
-    <span class="n">op</span> <span class="o">=</span> <span class="n">Operation</span><span class="p">(</span>
-        <span class="n">graph</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
-        <span class="n">types_pb2</span><span class="o">.</span><span class="n">UNLOAD_GRAPH</span><span class="p">,</span>
-        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
-        <span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">,</span>
-        <span class="n">output_types</span><span class="o">=</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">NULL_OUTPUT</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="k">return</span> <span class="n">op</span></div>
+    <span class="k">return</span> <span class="n">create_unload_op</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">UNLOAD_GRAPH</span><span class="p">,</span> <span class="p">[</span><span class="n">graph</span><span class="o">.</span><span class="n">op</span><span class="p">])</span></div>
 
 
 <span class="k">def</span> <span class="nf">unload_context</span><span class="p">(</span><span class="n">context</span><span class="p">):</span>
@@ -1397,6 +1307,16 @@
             
               
                 <dd><a href="../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.13.0/index.html">v0.13.0</a></dd>
               
             
 
