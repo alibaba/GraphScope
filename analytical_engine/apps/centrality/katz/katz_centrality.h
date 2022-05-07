@@ -87,7 +87,7 @@ class KatzCentrality
     auto inner_vertices = frag.InnerVertices();
     if (frag.directed()) {
       ForEach(inner_vertices.begin(), inner_vertices.end(),
-              [&ctx, &frag, &messages](int tid, vertex_t v) {
+              [this, &ctx, &frag, &messages](int tid, vertex_t v) {
                 if (!filterByDegree(frag, ctx, v)) {
                   auto es = frag.GetIncomingAdjList(v);
                   ctx.x[v] = 0;
@@ -107,7 +107,7 @@ class KatzCentrality
               });
     } else {
       ForEach(inner_vertices.begin(), inner_vertices.end(),
-              [&ctx, &frag, &messages](int tid, vertex_t v) {
+              [this, &ctx, &frag, &messages](int tid, vertex_t v) {
                 if (!filterByDegree(frag, ctx, v)) {
                   auto es = frag.GetOutgoingAdjList(v);
                   ctx.x[v] = 0;

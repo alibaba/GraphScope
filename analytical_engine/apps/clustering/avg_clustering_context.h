@@ -41,7 +41,8 @@ class AvgClusteringContext : public TensorContext<FRAG_T, float> {
   explicit AvgClusteringContext(const FRAG_T& fragment)
       : TensorContext<FRAG_T, float>(fragment) {}
 
-  void Init(grape::ParallelMessageManager& messages) {
+  void Init(grape::ParallelMessageManager& messages,
+            int degree_threshold = std::numeric_limits<int>::max()) {
     auto& frag = this->fragment();
     auto vertices = frag.Vertices();
     auto inner_vertices = frag.InnerVertices();
@@ -50,6 +51,7 @@ class AvgClusteringContext : public TensorContext<FRAG_T, float> {
     rec_degree.Init(inner_vertices, 0);
     complete_neighbor.Init(vertices);
     tricnt.Init(vertices, 0);
+    this->degree_threshold = degree_threshold;
   }
 
   void Output(std::ostream& os) override {
@@ -67,6 +69,7 @@ class AvgClusteringContext : public TensorContext<FRAG_T, float> {
       std::vector<std::pair<vertex_t, uint32_t>>>
       complete_neighbor;
   typename FRAG_T::template vertex_array_t<int> tricnt;
+  int degree_threshold = 0;
   float total_clustering = 0.0;
   int stage = 0;
 };
