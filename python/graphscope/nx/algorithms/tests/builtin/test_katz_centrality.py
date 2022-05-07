@@ -269,7 +269,6 @@ class TestKatzCentralityNumpy(object):
             assert almost_equal(b[n], b_answer[n], places=4)
 
 
-@pytest.mark.skip(reason="GetObject -> Object does not exist")
 @pytest.mark.usefixtures("graphscope_session")
 class TestKatzCentralityDirected(object):
     @classmethod

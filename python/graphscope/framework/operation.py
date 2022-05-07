@@ -150,6 +150,7 @@ class Operation(object):
         if not self._leaf:
             sess.dag.add_op(self)
         res = sess.run(self)
+        self._evaluated = True
         return res
 
     def add_parent(self, op):
