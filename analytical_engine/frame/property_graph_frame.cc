@@ -172,9 +172,11 @@ void ToArrowFragment(
         auto dynamic_frag = std::static_pointer_cast<gs::DynamicFragment>(
             wrapper_in->fragment());
 
-        BOOST_LEAF_AUTO(oid_type, dynamic_frag->GetOidType(comm_spec));
+        gs::TransformUtils<gs::DynamicFragment> trans_utils(comm_spec,
+                                                            *dynamic_frag);
+        BOOST_LEAF_AUTO(oid_type, trans_utils.GetOidTypeId());
 
-        if (oid_type == gs::dynamic::Type::kInt64Type &&
+        if (oid_type == vineyard::TypeToInt<int64_t>::value &&
             !std::is_same<oid_t, int32_t>::value &&
             !std::is_same<oid_t, int64_t>::value) {
           RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
@@ -183,7 +185,7 @@ void ToArrowFragment(
                               std::string(vineyard::type_name<oid_t>()));
         }
 
-        if (oid_type == gs::dynamic::Type::kStringType &&
+        if (oid_type == vineyard::TypeToInt<std::string>::value &&
             !std::is_same<oid_t, std::string>::value) {
           RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
                           "The oid type of DynamicFragment is string, but the "

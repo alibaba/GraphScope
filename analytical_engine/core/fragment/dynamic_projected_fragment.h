@@ -577,10 +577,6 @@ class DynamicProjectedFragment {
     return fragment_->HasNode(node);
   }
 
-  bl::result<dynamic::Type> GetOidType(const grape::CommSpec& comm_spec) const {
-    return fragment_->GetOidType(comm_spec);
-  }
-
  private:
   fragment_t* fragment_;
   std::string v_prop_key_;
@@ -814,10 +810,6 @@ class DynamicProjectedFragment<grape::EmptyType, grape::EmptyType> {
 
   inline bool HasNode(const oid_t& node) const {
     return fragment_->HasNode(node);
-  }
-
-  bl::result<dynamic::Type> GetOidType(const grape::CommSpec& comm_spec) const {
-    return fragment_->GetOidType(comm_spec);
   }
 
  private:

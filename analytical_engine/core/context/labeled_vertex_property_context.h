@@ -224,7 +224,7 @@ class LabeledVertexPropertyContextWrapper
 
     switch (selector.type()) {
     case SelectorType::kVertexId: {
-      auto type_id = trans_utils.GetOidTypeId();
+      BOOST_LEAF_AUTO(type_id, trans_utils.GetOidTypeId());
       if (comm_spec.fid() == 0) {
         *arc << static_cast<int>(type_id);
         *arc << total_num;
@@ -316,7 +316,7 @@ class LabeledVertexPropertyContextWrapper
 
       switch (selector.type()) {
       case SelectorType::kVertexId: {
-        auto type_id = trans_utils.GetOidTypeId();
+        BOOST_LEAF_AUTO(type_id, trans_utils.GetOidTypeId());
 
         if (comm_spec.fid() == 0) {
           *arc << static_cast<int>(type_id);

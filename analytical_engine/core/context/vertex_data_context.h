@@ -222,7 +222,7 @@ class VertexDataContextWrapper : public IVertexDataContextWrapper {
     switch (selector.type()) {
     case SelectorType::kVertexId: {
       // N.B. This method must be invoked on every worker!
-      auto type_id = trans_utils.GetOidTypeId();
+      BOOST_LEAF_AUTO(type_id, trans_utils.GetOidTypeId());
       if (comm_spec.fid() == 0) {
         *arc << static_cast<int>(type_id);
         *arc << total_num;
@@ -304,7 +304,7 @@ class VertexDataContextWrapper : public IVertexDataContextWrapper {
       size_t old_size;
       switch (selector.type()) {
       case SelectorType::kVertexId: {
-        auto type_id = trans_utils.GetOidTypeId();
+        BOOST_LEAF_AUTO(type_id, trans_utils.GetOidTypeId());
         if (comm_spec.fid() == 0) {
           *arc << static_cast<int>(type_id);
         }
