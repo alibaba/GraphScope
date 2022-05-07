@@ -67,7 +67,6 @@ class TestEigenvectorCentrality(object):
             b = nx.builtin.eigenvector_centrality(G, max_iter=0)
 
 
-@pytest.mark.skip(reason="GetObject -> Object does not exist")
 @pytest.mark.usefixtures("graphscope_session")
 class TestEigenvectorCentralityDirected(object):
     @classmethod
