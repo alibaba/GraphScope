@@ -13,9 +13,10 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use std::collections::HashSet;
 use std::convert::TryInto;
+use std::sync::Arc;
 
+use bit_set::BitSet;
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::KeyId;
@@ -25,7 +26,7 @@ use crate::error::{FnExecError, FnGenError, FnGenResult};
 use crate::graph::element::{Element, GraphElement, GraphObject};
 use crate::graph::{Direction, Statement, ID};
 use crate::process::operator::map::FilterMapFuncGen;
-use crate::process::record::{Record, RecordElement};
+use crate::process::record::{Entry, Record, RecordElement};
 
 /// An ExpandOrIntersect operator to expand neighbors
 /// and intersect with the ones of the same tag found previously (if exists).
@@ -46,19 +47,34 @@ impl<E: Into<GraphObject> + 'static> FilterMapFunction<Record, Record> for Expan
             let mut neighbors_collection = vec![];
             if let Some(pre_entry) = input.take(self.edge_or_end_v_tag.as_ref()) {
                 // the case of expansion and intersection
-                let neighbors_id_set: HashSet<ID> = iter.map(|e| e.into().id()).collect();
-                let pre_collection =
-                    pre_entry.as_collection().ok_or(FnExecError::unexpected_data_error(
-                        "Alias to intersect does not refer to a collection entry in EdgeExpandIntersectionOperator",
-                    ))?;
-                // TODO: optimize intersection
-                for record_element in pre_collection {
-                    let graph_element =
-                        record_element.as_graph_element().ok_or(FnExecError::unexpected_data_error(
-                            "Should intersect with a collection of graph_element entry in EdgeExpandIntersectionOperator",
-                        ))?;
-                    if neighbors_id_set.contains(&graph_element.id()) {
-                        neighbors_collection.push(record_element.clone());
+                unsafe {
+                    let pre_entry_ptr = Arc::into_raw(pre_entry) as *mut Entry;
+                    match &mut *pre_entry_ptr {
+                        Entry::Element(_) => Err(FnExecError::unexpected_data_error(
+                            "Alias to intersect does not refer to a collection entry in EdgeExpandIntersectionOperator",
+                        ))?,
+                        Entry::Collection(pre_collection) => {
+                            let mut s = BitSet::with_capacity(pre_collection.len());
+                            for item in iter {
+                                let graph_obj = item.into();
+                                if let Ok(idx) = pre_collection
+                                    // Notice that if multiple matches exist, binary_search will return any one.
+                                    .binary_search_by(|e| e.as_graph_element().unwrap().id().cmp(&graph_obj.id()))
+                                {
+                                    s.insert(idx);
+                                }
+                            }
+                            if !s.is_empty() {
+                                let mut idx = pre_collection.len();
+                                while idx > 0 {
+                                    idx = idx - 1;
+                                    if s.contains(idx) {
+                                        let r = pre_collection.swap_remove(idx);
+                                        neighbors_collection.push(r);
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             } else {
@@ -66,6 +82,12 @@ impl<E: Into<GraphObject> + 'static> FilterMapFunction<Record, Record> for Expan
                 neighbors_collection = iter
                     .map(|e| RecordElement::OnGraph(e.into()))
                     .collect();
+                neighbors_collection.sort_by(|r1, r2| {
+                    r1.as_graph_element()
+                        .unwrap()
+                        .id()
+                        .cmp(&r2.as_graph_element().unwrap().id())
+                });
             }
             if neighbors_collection.is_empty() {
                 Ok(None)

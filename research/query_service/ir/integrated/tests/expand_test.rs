@@ -32,7 +32,6 @@ mod test {
     use pegasus::JobConf;
     use runtime::graph::element::{Element, GraphElement};
     use runtime::graph::property::Details;
-    use runtime::graph::ID;
     use runtime::process::operator::flatmap::FlatMapFuncGen;
     use runtime::process::operator::map::{FilterMapFuncGen, MapFuncGen};
     use runtime::process::operator::source::SourceOperator;

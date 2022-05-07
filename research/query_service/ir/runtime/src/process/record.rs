@@ -69,13 +69,6 @@ impl RecordElement {
             _ => None,
         }
     }
-
-    pub fn as_mut_graph_path(&mut self) -> Option<&mut GraphPath> {
-        match self {
-            RecordElement::OnGraph(GraphObject::P(graph_path)) => Some(graph_path),
-            _ => None,
-        }
-    }
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, PartialOrd)]

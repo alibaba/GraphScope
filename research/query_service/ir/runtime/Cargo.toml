@@ -14,6 +14,7 @@ pegasus = { path = "../../../engine/pegasus/pegasus" }
 pegasus_server = { path = "../../../engine/pegasus/server-v0" }
 prost = "0.9"
 vec_map = "0.8.2"
+bit-set = "0.5.0"
 
 [features]
 default = []
