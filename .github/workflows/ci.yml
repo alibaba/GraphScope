@@ -484,6 +484,7 @@ jobs:
             - 'analytical_engine/apps/**'
             - 'analytical_engine/frame/**'
             - 'python/graphscope/nx/algorithms/builtin.py'
+            - 'python/graphscope/nx/algorithms/tests/builtin/**'
           generator:
             - 'python/graphscope/nx/classes/**'
             - 'python/graphscope/nx/utils/**'
