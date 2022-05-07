@@ -12,7 +12,7 @@ packaging
 pandas
 protobuf>=3.15.0,<3.19.0
 psutil
-pyarrow
+pyarrow<=6.0.0
 pysimdjson
 PyYAML
 scipy

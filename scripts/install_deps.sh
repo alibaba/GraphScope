@@ -715,6 +715,8 @@ install_dependencies() {
       export HOMEBREW_BOTTLE_DOMAIN="https://mirrors.tuna.tsinghua.edu.cn/homebrew-bottles"
     fi
     log "Installing packages ${BASIC_PACKGES_TO_INSTALL[*]}"
+    export HOMEBREW_NO_INSTALL_CLEANUP=1
+    export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1
     brew install ${BASIC_PACKGES_TO_INSTALL[*]}
 
     if [[ ${CN_MIRROR} == true && "${packages_to_install[*]}" =~ "openjdk@11" ]]; then
