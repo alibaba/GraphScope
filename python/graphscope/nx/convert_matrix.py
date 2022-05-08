@@ -23,6 +23,7 @@ import networkx.convert_matrix
 from networkx.convert_matrix import from_pandas_edgelist as _from_pandas_edgelist
 from networkx.convert_matrix import to_numpy_array as _to_numpy_array
 from networkx.convert_matrix import to_numpy_matrix as _to_numpy_matrix
+from networkx.convert_matrix import to_scipy_sparse_array as _to_scipy_sparse_array
 from networkx.convert_matrix import to_scipy_sparse_matrix as _to_scipy_sparse_matrix
 
 from graphscope import nx
@@ -239,3 +240,59 @@ def to_scipy_sparse_matrix(G, nodelist=None, dtype=None, weight="weight", format
     # AttributeError if the format if not recognized.
     except (AttributeError, ValueError) as e:
         raise nx.NetworkXError(f"Unknown sparse matrix format: {format}") from e
+
+
+@patch_docstring(_to_scipy_sparse_array)
+def to_scipy_sparse_array(G, nodelist=None, dtype=None, weight="weight", format="csr"):
+    import scipy as sp
+    import scipy.sparse  # call as sp.sparse
+
+    if len(G) == 0:
+        raise nx.NetworkXError("Graph has no nodes or edges")
+
+    if nodelist is None:
+        nodelist = sorted(G)
+        nlen = len(G)
+    else:
+        nlen = len(nodelist)
+        if nlen == 0:
+            raise nx.NetworkXError("nodelist has no nodes")
+        nodeset = set(G.nbunch_iter(nodelist))
+        if nlen != len(nodeset):
+            for n in nodelist:
+                if n not in G:
+                    raise nx.NetworkXError(f"Node {n} in nodelist is not in G")
+            raise nx.NetworkXError("nodelist contains duplicates.")
+        if nlen < len(G):
+            G = G.subgraph(nodelist)
+
+    index = dict(zip(nodelist, range(nlen)))
+    coefficients = zip(
+        *((index[u], index[v], wt) for u, v, wt in G.edges(data=weight, default=1))
+    )
+    try:
+        row, col, data = coefficients
+    except ValueError:
+        # there is no edge in the subgraph
+        row, col, data = [], [], []
+
+    if G.is_directed():
+        A = sp.sparse.coo_array((data, (row, col)), shape=(nlen, nlen), dtype=dtype)
+    else:
+        # symmetrize matrix
+        d = data + data
+        r = row + col
+        c = col + row
+        # selfloop entries get double counted when symmetrizing
+        # so we subtract the data on the diagonal
+        selfloops = list(nx.selfloop_edges(G, data=weight, default=1))
+        if selfloops:
+            diag_index, diag_data = zip(*((index[u], -wt) for u, v, wt in selfloops))
+            d += diag_data
+            r += diag_index
+            c += diag_index
+        A = sp.sparse.coo_array((d, (r, c)), shape=(nlen, nlen), dtype=dtype)
+    try:
+        return A.asformat(format)
+    except ValueError as err:
+        raise nx.NetworkXError(f"Unknown sparse matrix format: {format}") from err
