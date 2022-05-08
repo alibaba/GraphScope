@@ -243,14 +243,14 @@ class DiGraph(Graph):
 
         self.graph_attr_dict_factory = self.graph_attr_dict_factory
         self.node_dict_factory = self.node_dict_factory
-        self.adjlist_dict_factory = self.adjlist_dict_factory
+        self.adjlist_outer_dict_factory = self.adjlist_outer_dict_factory
         self.graph = self.graph_attr_dict_factory()
         self.cache = self.graph_cache_factory(self)
 
         # init node and adj (must be after cache)
         self._node = self.node_dict_factory(self)
-        self._adj = self.adjlist_dict_factory(self)
-        self._pred = self.adjlist_dict_factory(self, pred=True)
+        self._adj = self.adjlist_outer_dict_factory(self)
+        self._pred = self.adjlist_outer_dict_factory(self, pred=True)
         self._succ = self._adj
 
         self._key = None
