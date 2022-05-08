@@ -444,7 +444,7 @@ jobs:
       if: false
 
     - name: Basic Test
-      if: ${{ (needs.changes.outputs.networkx == 'true' || github.ref == 'refs/heads/main') && (steps.nx-filter.outputs.basic == 'true' || (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope')) }}
+      # if: ${{ (needs.changes.outputs.networkx == 'true' || github.ref == 'refs/heads/main') && (steps.nx-filter.outputs.basic == 'true' || (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope')) }}
       env:
         DEPLOYMENT: ${{ matrix.deployment }}
         GS_TEST_DIR: ${{ github.workspace }}/gstest
@@ -455,7 +455,7 @@ jobs:
             --ignore=$(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/nx/tests/convert
 
     - name: Convert Test
-      if: ${{ (needs.changes.outputs.networkx == 'true' || github.ref == 'refs/heads/main') && steps.nx-filter.outputs.convert == 'true' }}
+      # if: ${{ (needs.changes.outputs.networkx == 'true' || github.ref == 'refs/heads/main') && steps.nx-filter.outputs.convert == 'true' }}
       env:
         DEPLOYMENT: ${{ matrix.deployment }}
         GS_TEST_DIR: ${{ github.workspace }}/gstest
@@ -525,7 +525,7 @@ jobs:
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
 
     - name: Algorithm test
-      if: ${{ needs.changes.outputs.networkx == 'true' && steps.nx-filter.outputs.algorithm == 'true' }}
+      # if: ${{ needs.changes.outputs.networkx == 'true' && steps.nx-filter.outputs.algorithm == 'true' }}
       env:
         DEPLOYMENT: ${{ matrix.deployment }}
         GS_TEST_DIR: ${{ github.workspace }}/gstest
@@ -535,7 +535,7 @@ jobs:
             $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/nx/algorithms/tests/builtin
 
     - name: Generator test
-      if: ${{ needs.changes.outputs.networkx == 'true' && steps.nx-filter.outputs.generator == 'true' }}
+      # if: ${{ needs.changes.outputs.networkx == 'true' && steps.nx-filter.outputs.generator == 'true' }}
       env:
         DEPLOYMENT: ${{ matrix.deployment }}
         GS_TEST_DIR: ${{ github.workspace }}/gstest
@@ -545,7 +545,7 @@ jobs:
             $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/nx/generators/tests
 
     - name: Readwrite test
-      if: ${{ needs.changes.outputs.networkx == 'true' && steps.nx-filter.outputs.io == 'true' }}
+      # if: ${{ needs.changes.outputs.networkx == 'true' && steps.nx-filter.outputs.io == 'true' }}
       env:
         DEPLOYMENT: ${{ matrix.deployment }}
       run: |
