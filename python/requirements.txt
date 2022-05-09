@@ -5,7 +5,7 @@ grpcio-tools
 kubernetes
 msgpack
 nest_asyncio
-networkx>=2.6
+networkx==2.8.0
 numpy
 orjson
 packaging
