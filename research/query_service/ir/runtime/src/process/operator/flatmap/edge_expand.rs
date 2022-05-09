@@ -37,7 +37,10 @@ impl<E: Into<Entry> + 'static> FlatMapFunction<Record, Record> for EdgeExpandOpe
     fn exec(&self, input: Record) -> FnResult<Self::Target> {
         let entry = input
             .get(self.start_v_tag.as_ref())
-            .ok_or(FnExecError::get_tag_error("get start_v failed"))?;
+            .ok_or(FnExecError::get_tag_error(&format!(
+                "start_v_tag {:?} in EdgeExpandOperator",
+                self.start_v_tag
+            )))?;
         if let Some(v) = entry.as_graph_vertex() {
             let id = v.id();
             let iter = self.stmt.exec(id)?;
@@ -45,14 +48,14 @@ impl<E: Into<Entry> + 'static> FlatMapFunction<Record, Record> for EdgeExpandOpe
         } else if let Some(graph_path) = entry.as_graph_path() {
             let path_end = graph_path
                 .get_path_end()
-                .ok_or(FnExecError::unexpected_data_error("Get path_end failed in path expand"))?;
+                .ok_or(FnExecError::unexpected_data_error("get path_end failed in EdgeExpandOperator"))?;
             let id = path_end.id();
             let iter = self.stmt.exec(id)?;
             let curr_path = graph_path.clone();
             Ok(Box::new(RecordPathExpandIter::new(input, curr_path, iter)))
         } else {
             Err(FnExecError::unexpected_data_error(&format!(
-                "Cannot Expand from current entry {:?}",
+                "expand from entry {:?} in EdgeExpandOperator",
                 entry
             )))?
         }

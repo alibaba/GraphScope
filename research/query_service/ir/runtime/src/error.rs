@@ -146,12 +146,12 @@ impl std::fmt::Display for FnExecError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             FnExecError::NullGraphError => write!(f, "Null graph store error in fn exec",),
-            FnExecError::QueryStoreError(e) => write!(f, "Query store error in exec {}", e),
-            FnExecError::GetTagError(e) => write!(f, "Get tag error in exec {}", e),
-            FnExecError::ExprEvalError(e) => write!(f, "Eval expression error in exec {}", e),
-            FnExecError::UnExpectedData(e) => write!(f, "Unexpected data type in exec {}", e),
-            FnExecError::AccumError(e) => write!(f, "Accum error in exec {}", e),
-            FnExecError::UnSupported(e) => write!(f, "Op not supported error in exec {}", e),
+            FnExecError::QueryStoreError(e) => write!(f, "Query store error in exec: {}", e),
+            FnExecError::GetTagError(e) => write!(f, "Get tag error in exec: {}", e),
+            FnExecError::ExprEvalError(e) => write!(f, "Eval expression error in exec: {}", e),
+            FnExecError::UnExpectedData(e) => write!(f, "Unexpected data type in exec: {}", e),
+            FnExecError::AccumError(e) => write!(f, "Accum error in exec: {}", e),
+            FnExecError::UnSupported(e) => write!(f, "Op not supported error in exec: {}", e),
         }
     }
 }

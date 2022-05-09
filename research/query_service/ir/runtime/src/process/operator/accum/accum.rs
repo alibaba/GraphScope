@@ -90,7 +90,7 @@ impl Accumulator<Entry, Entry> for EntryAccumulator {
                     .map(|entry| match entry {
                         Entry::Element(e) => Ok(e.clone()),
                         Entry::Collection(_) => {
-                            Err(FnExecError::unsupported_error("fold collections is not supported yet"))
+                            Err(FnExecError::unsupported_error("fold collections in EntryAccumulator"))
                         }
                     })
                     .collect::<Result<Vec<_>, _>>()?;
@@ -108,9 +108,9 @@ impl Accumulator<Entry, Entry> for EntryAccumulator {
                     .into_iter()
                     .map(|entry| match entry {
                         Entry::Element(e) => Ok(e.clone()),
-                        Entry::Collection(_) => {
-                            Err(FnExecError::unsupported_error("set of collections is not supported yet"))
-                        }
+                        Entry::Collection(_) => Err(FnExecError::unsupported_error(
+                            "fold collections as set in EntryAccumulator",
+                        )),
                     })
                     .collect::<Result<Vec<_>, _>>()?;
                 Ok(Entry::Collection(set_entry))

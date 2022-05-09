@@ -39,7 +39,7 @@ impl FlatMapFunction<Record, Record> for UnfoldOperator {
         // A hint of "erasing the tag" maybe a better way (rather than assuming tag is not needed here).
         let entry = input
             .take(self.tag.as_ref())
-            .ok_or(FnExecError::get_tag_error("get start_v failed"))?;
+            .ok_or(FnExecError::get_tag_error(&format!("tag {:?} in UnfoldOperator", self.tag)))?;
         if let Some(collection) = entry.as_collection() {
             Ok(Box::new(RecordExpandIter::new(
                 input,
@@ -50,10 +50,10 @@ impl FlatMapFunction<Record, Record> for UnfoldOperator {
             let path_end = graph_path
                 .clone()
                 .take_path()
-                .ok_or(FnExecError::unexpected_data_error("Get path failed in UnfoldOperator"))?;
+                .ok_or(FnExecError::unexpected_data_error("get path failed in UnfoldOperator"))?;
             Ok(Box::new(RecordExpandIter::new(input, self.alias.as_ref(), Box::new(path_end.into_iter()))))
         } else {
-            Err(FnExecError::unexpected_data_error(&format!("Cannot Unfold the entry {:?}", entry)))?
+            Err(FnExecError::unexpected_data_error(&format!("unfold entry {:?} in UnfoldOperator", entry)))?
         }
     }
 }

@@ -51,10 +51,7 @@ impl TagKey {
     pub fn get_arc_entry(&self, input: &Record) -> Result<Arc<Entry>, FnExecError> {
         let entry = input
             .get(self.tag.as_ref())
-            .ok_or(FnExecError::get_tag_error(&format!(
-                "Get tag {:?} failed since it refers to an empty entry",
-                self.tag
-            )))?
+            .ok_or(FnExecError::get_tag_error(&format!("tag {:?} in get_arc_entry()", self.tag)))?
             .clone();
         if let Some(prop_key) = self.key.as_ref() {
             let prop = self.get_key(entry, prop_key)?;
@@ -68,10 +65,7 @@ impl TagKey {
     pub fn get_entry(&self, input: &Record) -> Result<Entry, FnExecError> {
         let entry = input
             .get(self.tag.as_ref())
-            .ok_or(FnExecError::get_tag_error(&format!(
-                "Get tag {:?} failed since it refers to an empty entry",
-                self.tag
-            )))?
+            .ok_or(FnExecError::get_tag_error(&format!("tag {:?} in get_entry()", self.tag)))?
             .clone();
         if let Some(prop_key) = self.key.as_ref() {
             Ok(self.get_key(entry, prop_key)?)
@@ -125,9 +119,7 @@ impl TagKey {
                     if let Some(properties) = details.get_property(key) {
                         properties
                             .try_to_owned()
-                            .ok_or(FnExecError::UnExpectedData(
-                                "unable to own the `BorrowObject`".to_string(),
-                            ))?
+                            .ok_or(FnExecError::unexpected_data_error("unable to own the `BorrowObject`"))?
                     } else {
                         Object::None
                     }

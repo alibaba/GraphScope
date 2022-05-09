@@ -65,7 +65,7 @@ impl MapFunction<(RecordKey, Record), Record> for GroupMap {
         let group_key_entries = group_key.take();
         if group_key_entries.len() != self.key_aliases.len() {
             Err(FnExecError::unexpected_data_error(
-                "the number of group_keys and group_key_aliases should be equal",
+                "the number of group_keys and group_key_aliases is not equal",
             ))?
         }
         for (entry, alias) in group_key_entries

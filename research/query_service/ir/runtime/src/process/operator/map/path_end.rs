@@ -32,7 +32,7 @@ impl MapFunction<Record, Record> for PathEndOperator {
     fn exec(&self, mut input: Record) -> FnResult<Record> {
         let entry = input
             .get(None)
-            .ok_or(FnExecError::get_tag_error("get tag failed in GetVertexOperator"))?
+            .ok_or(FnExecError::get_tag_error("current in PathEndOperator"))?
             .clone();
         if self.alias.is_some() {
             input.append_arc_entry(entry.clone(), self.alias.clone());

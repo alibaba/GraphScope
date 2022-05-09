@@ -40,7 +40,10 @@ impl<E: Into<GraphObject> + 'static> FilterMapFunction<Record, Record> for Expan
     fn exec(&self, mut input: Record) -> FnResult<Option<Record>> {
         let entry = input
             .get(Some(&self.start_v_tag))
-            .ok_or(FnExecError::get_tag_error("get start_v failed"))?;
+            .ok_or(FnExecError::get_tag_error(&format!(
+                "start_v_tag {:?} in ExpandOrIntersect",
+                self.start_v_tag
+            )))?;
         if let Some(v) = entry.as_graph_vertex() {
             let id = v.id();
             let iter = self.stmt.exec(id)?;
@@ -49,35 +52,41 @@ impl<E: Into<GraphObject> + 'static> FilterMapFunction<Record, Record> for Expan
                 unsafe {
                     let pre_entry_ptr = Arc::into_raw(pre_entry) as *mut Entry;
                     match &mut *pre_entry_ptr {
-                            Entry::Element(_) => Err(FnExecError::unexpected_data_error(
-                                "Alias to intersect does not refer to a collection entry in EdgeExpandIntersectionOperator",
-                            ))?,
-                            Entry::Collection(pre_collection) => {
-                                let mut s = BitSet::with_capacity(pre_collection.len());
-                                for item in iter {
-                                    let graph_obj = item.into();
-                                    if let Ok(idx) = pre_collection
-                                        // Notice that if multiple matches exist, binary_search will return any one.
-                                        .binary_search_by(|e| e.as_graph_element().unwrap().id().cmp(&graph_obj.id()))
-                                    {
-                                        s.insert(idx);
-                                    }
-                                }
-                                let mut idx = 0;
-                                for i in s.iter() {
-                                    pre_collection.swap(idx, i);
-                                    idx += 1;
-                                }
-                                pre_collection.drain(idx..pre_collection.len());
-                                if pre_collection.is_empty() {
-                                    Ok(None)
-                                } else {
-                                    let entry = Arc::from_raw(pre_entry_ptr);
-                                    input.append_arc_entry(entry, self.edge_or_end_v_tag.clone());
-                                    Ok(Some(input))
+                        Entry::Element(e) => Err(FnExecError::unexpected_data_error(&format!(
+                            "entry {:?} is not a collection in ExpandOrIntersect",
+                            e
+                        )))?,
+                        Entry::Collection(pre_collection) => {
+                            let mut s = BitSet::with_capacity(pre_collection.len());
+                            for item in iter {
+                                let graph_obj = item.into();
+                                if let Ok(idx) = pre_collection
+                                    // Notice that if multiple matches exist, binary_search will return any one.
+                                    .binary_search_by(|e| {
+                                        e.as_graph_element()
+                                            .unwrap()
+                                            .id()
+                                            .cmp(&graph_obj.id())
+                                    })
+                                {
+                                    s.insert(idx);
                                 }
                             }
+                            let mut idx = 0;
+                            for i in s.iter() {
+                                pre_collection.swap(idx, i);
+                                idx += 1;
+                            }
+                            pre_collection.drain(idx..pre_collection.len());
+                            if pre_collection.is_empty() {
+                                Ok(None)
+                            } else {
+                                let entry = Arc::from_raw(pre_entry_ptr);
+                                input.append_arc_entry(entry, self.edge_or_end_v_tag.clone());
+                                Ok(Some(input))
+                            }
                         }
+                    }
                 }
             } else {
                 // the case of expansion only
@@ -97,13 +106,9 @@ impl<E: Into<GraphObject> + 'static> FilterMapFunction<Record, Record> for Expan
                     Ok(Some(input))
                 }
             }
-        } else if let Some(_graph_path) = entry.as_graph_path() {
-            Err(FnExecError::unsupported_error(
-                "Have not support to expand and intersect neighbors on a path entry in EdgeExpandIntersectionOperator yet",
-            ))?
         } else {
-            Err(FnExecError::unexpected_data_error(&format!(
-                "Cannot Expand from current entry {:?}",
+            Err(FnExecError::unsupported_error(&format!(
+                "expand or intersect entry {:?} in ExpandOrIntersect",
                 entry
             )))?
         }
