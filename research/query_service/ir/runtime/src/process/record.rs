@@ -130,10 +130,11 @@ impl Record {
     }
 
     pub fn append_arc_entry(&mut self, entry: Arc<Entry>, alias: Option<KeyId>) {
-        self.curr = Some(entry.clone());
         if let Some(alias) = alias {
-            self.columns.insert(alias as usize, entry);
+            self.columns
+                .insert(alias as usize, entry.clone());
         }
+        self.curr = Some(entry);
     }
 
     pub fn get_curr_mut(&mut self) -> &mut Option<Arc<Entry>> {

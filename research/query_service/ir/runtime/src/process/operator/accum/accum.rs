@@ -15,6 +15,7 @@
 
 use std::collections::HashSet;
 use std::convert::{TryFrom, TryInto};
+use std::sync::Arc;
 
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
@@ -59,7 +60,8 @@ impl Accumulator<Record, Record> for RecordAccumulator {
         let mut record = Record::default();
         for (accumulator, _, alias) in self.accum_ops.iter_mut() {
             let entry = accumulator.finalize()?;
-            record.append(entry, Some(alias.clone()));
+            let columns = record.get_columns_mut();
+            columns.insert(*alias as usize, Arc::new(entry));
         }
         Ok(record)
     }
