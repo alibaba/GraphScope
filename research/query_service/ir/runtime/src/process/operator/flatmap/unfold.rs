@@ -14,14 +14,16 @@
 //! limitations under the License.
 
 use std::convert::TryInto;
+use std::sync::Arc;
 
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::KeyId;
 use pegasus::api::function::{DynIter, FlatMapFunction, FnResult};
 
 use crate::error::{FnExecError, FnGenResult};
+use crate::graph::element::GraphObject;
 use crate::process::operator::flatmap::FlatMapFuncGen;
-use crate::process::record::{Record, RecordExpandIter};
+use crate::process::record::{Entry, Record, RecordElement, RecordExpandIter};
 
 #[derive(Debug)]
 pub struct UnfoldOperator {
@@ -40,20 +42,33 @@ impl FlatMapFunction<Record, Record> for UnfoldOperator {
         let entry = input
             .take(self.tag.as_ref())
             .ok_or(FnExecError::get_tag_error(&format!("tag {:?} in UnfoldOperator", self.tag)))?;
-        if let Some(collection) = entry.as_collection() {
-            Ok(Box::new(RecordExpandIter::new(
-                input,
-                self.alias.as_ref(),
-                Box::new(collection.clone().into_iter()),
-            )))
-        } else if let Some(graph_path) = entry.as_graph_path() {
-            let path_end = graph_path
-                .clone()
-                .take_path()
-                .ok_or(FnExecError::unexpected_data_error("get path failed in UnfoldOperator"))?;
-            Ok(Box::new(RecordExpandIter::new(input, self.alias.as_ref(), Box::new(path_end.into_iter()))))
-        } else {
-            Err(FnExecError::unexpected_data_error(&format!("unfold entry {:?} in UnfoldOperator", entry)))?
+        unsafe {
+            let entry_ptr = Arc::into_raw(entry) as *mut Entry;
+            match &mut *entry_ptr {
+                Entry::Element(e) => match e {
+                    RecordElement::OnGraph(GraphObject::P(p)) => {
+                        let path = p
+                            .get_path_mut()
+                            .ok_or(FnExecError::unexpected_data_error(
+                                "get path failed in UnfoldOperator",
+                            ))?;
+                        Ok(Box::new(RecordExpandIter::new(
+                            input,
+                            self.alias.as_ref(),
+                            Box::new(path.drain(..)),
+                        )))
+                    }
+                    _ => Err(FnExecError::unexpected_data_error(&format!(
+                        "unfold entry {:?} in UnfoldOperator",
+                        e
+                    )))?,
+                },
+                Entry::Collection(collection) => Ok(Box::new(RecordExpandIter::new(
+                    input,
+                    self.alias.as_ref(),
+                    Box::new(collection.drain(..)),
+                ))),
+            }
         }
     }
 }

@@ -151,7 +151,7 @@ impl std::fmt::Display for FnExecError {
             FnExecError::ExprEvalError(e) => write!(f, "Eval expression error in exec: {}", e),
             FnExecError::UnExpectedData(e) => write!(f, "Unexpected data type in exec: {}", e),
             FnExecError::AccumError(e) => write!(f, "Accum error in exec: {}", e),
-            FnExecError::UnSupported(e) => write!(f, "Op not supported error in exec: {}", e),
+            FnExecError::UnSupported(e) => write!(f, "Do not support in exec: {}", e),
         }
     }
 }
