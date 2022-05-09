@@ -565,13 +565,12 @@ fn add_intersect_job_builder(
     let mut is_adding_auxilia = false;
     let mut auxilia_param = pb::QueryParams::default();
     for subplan in subplans {
+        if subplan.len() > 1 {
+            Err(IrError::Unsupported(
+                "multiple EdgeExpand ops in each branch for intersection".to_string(),
+            ))?
+        }
         if let Some(sub_root) = subplan.root() {
-            if sub_root.borrow().children.len() > 0 {
-                Err(IrError::Unsupported(
-                    "Only support a single EdgeExpand op in each branch for Intersection for now"
-                        .to_string(),
-                ))?
-            }
             if let Some(Edge(edgexpd)) = sub_root.borrow().opr.opr.as_ref() {
                 let mut edgexpd = edgexpd.clone();
                 if edgexpd.v_tag.is_none() {
