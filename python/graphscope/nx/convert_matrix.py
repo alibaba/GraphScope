@@ -32,7 +32,7 @@ from graphscope.nx.utils.compat import patch_docstring
 
 import_as_graphscope_nx(networkx.convert_matrix)
 
-__all__ = [
+__all__ = [  # noqa: F822
     "from_numpy_matrix",
     "to_numpy_matrix",
     "from_pandas_adjacency",

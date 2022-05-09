@@ -20,6 +20,9 @@
 #
 
 import warnings
+from collections.abc import Collection
+from collections.abc import Generator
+from collections.abc import Iterator
 
 import networkx.convert
 
@@ -27,7 +30,7 @@ from graphscope import nx
 from graphscope.nx.utils.compat import import_as_graphscope_nx
 from graphscope.nx.utils.compat import patch_docstring
 
-__all__ = [
+__all__ = [  # noqa: F822
     "to_networkx_graph",
     "from_dict_of_dicts",
     "to_dict_of_dicts",
@@ -45,7 +48,7 @@ def to_networkx_graph(data, create_using=None, multigraph_input=False):  # noqa:
     # networkx graph or graphscope.nx graph
     if hasattr(data, "adj"):
         try:
-            result = from_dict_of_dicts(
+            result = nx.from_dict_of_dicts(
                 data.adj,
                 create_using=create_using,
                 multigraph_input=data.is_multigraph(),
@@ -63,7 +66,7 @@ def to_networkx_graph(data, create_using=None, multigraph_input=False):  # noqa:
     # dict of dicts/lists
     if isinstance(data, dict):
         try:
-            return from_dict_of_dicts(
+            return nx.from_dict_of_dicts(
                 data, create_using=create_using, multigraph_input=multigraph_input
             )
         except Exception as err:
@@ -72,7 +75,7 @@ def to_networkx_graph(data, create_using=None, multigraph_input=False):  # noqa:
                     f"converting multigraph_input raised:\n{type(err)}: {err}"
                 )
             try:
-                return from_dict_of_lists(data, create_using=create_using)
+                return nx.from_dict_of_lists(data, create_using=create_using)
             except Exception as err:
                 raise TypeError("Input is not known type.") from err
 
@@ -132,7 +135,7 @@ def to_networkx_graph(data, create_using=None, multigraph_input=False):  # noqa:
     # iterators (e.g. itertools.chain) of edges
     if isinstance(data, (Collection, Generator, Iterator)):
         try:
-            return from_edgelist(data, create_using=create_using)
+            return nx.from_edgelist(data, create_using=create_using)
         except Exception as err:
             raise nx.NetworkXError("Input is not a valid edge list") from err
 
