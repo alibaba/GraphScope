@@ -32,6 +32,22 @@ from graphscope.nx.utils.compat import patch_docstring
 
 import_as_graphscope_nx(networkx.convert_matrix)
 
+__all__ = [
+    "from_numpy_matrix",
+    "to_numpy_matrix",
+    "from_pandas_adjacency",
+    "to_pandas_adjacency",
+    "from_pandas_edgelist",
+    "to_pandas_edgelist",
+    "to_numpy_recarray",
+    "from_scipy_sparse_array",
+    "from_scipy_sparse_matrix",
+    "to_scipy_sparse_array",
+    "to_scipy_sparse_matrix",
+    "from_numpy_array",
+    "to_numpy_array",
+]
+
 
 @patch_docstring(_from_pandas_edgelist)
 def from_pandas_edgelist(
