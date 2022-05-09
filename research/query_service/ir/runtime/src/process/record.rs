@@ -152,6 +152,14 @@ impl Record {
         }
     }
 
+    pub fn get_mut(&mut self, tag: Option<&KeyId>) -> Option<&mut Arc<Entry>> {
+        if let Some(tag) = tag {
+            self.columns.get_mut(*tag as usize)
+        } else {
+            self.curr.as_mut()
+        }
+    }
+
     pub fn take(&mut self, tag: Option<&KeyId>) -> Option<Arc<Entry>> {
         if let Some(tag) = tag {
             self.columns.remove(*tag as usize)

@@ -490,7 +490,7 @@ mod test {
             alias: Some(TAG_C.into()),
         };
 
-        let conf = JobConf::new("expand_bothe_otherv_test");
+        let conf = JobConf::new("expand_and_intersection_expand_test");
         let mut result = pegasus::run(conf, || {
             let expand1 = expand_opr1.clone();
             let expand2 = expand_opr2.clone();
@@ -520,7 +520,11 @@ mod test {
             vec![expected_collection.clone(), expected_collection.clone(), expected_collection];
         let mut result_collections: Vec<Vec<usize>> = vec![];
         while let Some(Ok(record)) = result.next() {
-            if let Some(collection) = record.get(None).unwrap().as_collection() {
+            if let Some(collection) = record
+                .get(Some(&TAG_C))
+                .unwrap()
+                .as_collection()
+            {
                 let mut result_collection: Vec<usize> = collection
                     .clone()
                     .into_iter()
@@ -564,7 +568,7 @@ mod test {
             alias: Some(TAG_C.into()),
         };
 
-        let conf = JobConf::new("expand_bothe_otherv_test");
+        let conf = JobConf::new("expand_and_intersection_intersect_test");
         let mut result = pegasus::run(conf, || {
             let expand1 = expand_opr1.clone();
             let expand2 = expand_opr2.clone();
@@ -593,7 +597,11 @@ mod test {
         let expected_collections = vec![vec![v4]];
         let mut result_collections = vec![];
         while let Some(Ok(record)) = result.next() {
-            if let Some(collection) = record.get(None).unwrap().as_collection() {
+            if let Some(collection) = record
+                .get(Some(&TAG_C))
+                .unwrap()
+                .as_collection()
+            {
                 let mut result_collection: Vec<DefaultId> = collection
                     .clone()
                     .into_iter()
@@ -637,9 +645,9 @@ mod test {
         };
 
         // unfold tag C
-        let unfold_opr = pb::Unfold { tag: Some(TAG_C.into()), alias: None };
+        let unfold_opr = pb::Unfold { tag: Some(TAG_C.into()), alias: Some(TAG_C.into()) };
 
-        let conf = JobConf::new("expand_bothe_otherv_test");
+        let conf = JobConf::new("expand_and_intersection_unfold_test");
         let mut result = pegasus::run(conf, || {
             let expand1 = expand_opr1.clone();
             let expand2 = expand_opr2.clone();
@@ -675,6 +683,76 @@ mod test {
                 result_ids.push(element.id() as usize);
             }
         }
+        assert_eq!(result_ids, expected_ids)
+    }
+
+    // A <-> B; A <-> C; B <-> C
+    #[test]
+    fn expand_and_intersection_unfold_test_02() {
+        // A <-> B;
+        let expand_opr1 = pb::EdgeExpand {
+            v_tag: Some(TAG_A.into()),
+            direction: 2, // both
+            params: Some(query_params(vec!["knows".into(), "created".into()], vec![], None)),
+            is_edge: false,
+            alias: Some(TAG_B.into()),
+        };
+
+        // A <-> C: expand C;
+        let expand_opr2 = pb::EdgeExpand {
+            v_tag: Some(TAG_A.into()),
+            direction: 2, // both
+            params: Some(query_params(vec!["knows".into(), "created".into()], vec![], None)),
+            is_edge: false,
+            alias: Some(TAG_C.into()),
+        };
+
+        // B <-> C: expand C and intersect on C;
+        let expand_opr3 = pb::EdgeExpand {
+            v_tag: Some(TAG_B.into()),
+            direction: 2, // both
+            params: Some(query_params(vec!["knows".into(), "created".into()], vec![], None)),
+            is_edge: false,
+            alias: Some(TAG_C.into()),
+        };
+
+        // unfold tag C
+        let unfold_opr = pb::Unfold { tag: Some(TAG_C.into()), alias: Some(TAG_C.into()) };
+
+        let conf = JobConf::new("expand_and_intersection_unfold_multiv_test");
+        let mut result = pegasus::run(conf, || {
+            let expand1 = expand_opr1.clone();
+            let expand2 = expand_opr2.clone();
+            let expand3 = expand_opr3.clone();
+            let unfold = unfold_opr.clone();
+            |input, output| {
+                let source_iter = source_gen(Some(TAG_A.into()));
+                let mut stream = input.input_from(source_iter)?;
+                let flatmap_func1 = expand1.gen_flat_map().unwrap();
+                stream = stream.flat_map(move |input| flatmap_func1.exec(input))?;
+                let map_func2 = expand2.gen_filter_map().unwrap();
+                stream = stream.filter_map(move |input| map_func2.exec(input))?;
+                let map_func3 = expand3.gen_filter_map().unwrap();
+                stream = stream.filter_map(move |input| map_func3.exec(input))?;
+                let unfold_func = unfold.gen_flat_map().unwrap();
+                stream = stream.flat_map(move |input| unfold_func.exec(input))?;
+                stream.sink_into(output)
+            }
+        })
+        .expect("build job failure");
+
+        let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
+        let v3: DefaultId = LDBCVertexParser::to_global_id(3, 1);
+        let v4: DefaultId = LDBCVertexParser::to_global_id(4, 0);
+        let mut expected_ids = vec![v1, v1, v3, v3, v4, v4];
+        let mut result_ids = vec![];
+        while let Some(Ok(record)) = result.next() {
+            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
+                result_ids.push(element.id() as usize);
+            }
+        }
+        result_ids.sort();
+        expected_ids.sort();
         assert_eq!(result_ids, expected_ids)
     }
 }

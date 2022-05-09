@@ -28,11 +28,13 @@ use crate::graph::{Direction, Statement, ID};
 use crate::process::operator::map::FilterMapFuncGen;
 use crate::process::record::{Entry, Record, RecordElement};
 
-/// An ExpandOrIntersect operator to expand neighbors (saved on HEAD)
+/// An ExpandOrIntersect operator to expand neighbors
 /// and intersect with the ones of the same tag found previously (if exists).
+/// Notice that start_v_tag (from which tag to expand from)
+/// and edge_or_end_v_tag (the alias of expanded neighbors) must be specified.
 struct ExpandOrIntersect<E: Into<GraphObject>> {
     start_v_tag: KeyId,
-    edge_or_end_v_tag: Option<KeyId>,
+    edge_or_end_v_tag: KeyId,
     stmt: Box<dyn Statement<ID, E>>,
 }
 
@@ -47,11 +49,10 @@ impl<E: Into<GraphObject> + 'static> FilterMapFunction<Record, Record> for Expan
         if let Some(v) = entry.as_graph_vertex() {
             let id = v.id();
             let iter = self.stmt.exec(id)?;
-            if let Some(pre_entry) = input.take(self.edge_or_end_v_tag.as_ref()) {
+            if let Some(pre_entry) = input.get_mut(Some(&self.edge_or_end_v_tag)) {
                 // the case of expansion and intersection
-                unsafe {
-                    let pre_entry_ptr = Arc::into_raw(pre_entry) as *mut Entry;
-                    match &mut *pre_entry_ptr {
+                if let Some(pre_entry) = Arc::get_mut(pre_entry) {
+                    match pre_entry {
                         Entry::Element(e) => Err(FnExecError::unexpected_data_error(&format!(
                             "entry {:?} is not a collection in ExpandOrIntersect",
                             e
@@ -81,12 +82,15 @@ impl<E: Into<GraphObject> + 'static> FilterMapFunction<Record, Record> for Expan
                             if pre_collection.is_empty() {
                                 Ok(None)
                             } else {
-                                let entry = Arc::from_raw(pre_entry_ptr);
-                                input.append_arc_entry(entry, self.edge_or_end_v_tag.clone());
                                 Ok(Some(input))
                             }
                         }
                     }
+                } else {
+                    Err(FnExecError::unexpected_data_error(&format!(
+                        "get mutable entry {:?} of tag {:?} failed in ExpandOrIntersect",
+                        pre_entry, self.edge_or_end_v_tag
+                    )))?
                 }
             } else {
                 // the case of expansion only
@@ -102,7 +106,9 @@ impl<E: Into<GraphObject> + 'static> FilterMapFunction<Record, Record> for Expan
                 if neighbors_collection.is_empty() {
                     Ok(None)
                 } else {
-                    input.append(neighbors_collection, self.edge_or_end_v_tag.clone());
+                    // append columns without changing head
+                    let columns = input.get_columns_mut();
+                    columns.insert(self.edge_or_end_v_tag as usize, Arc::new(neighbors_collection.into()));
                     Ok(Some(input))
                 }
             }
@@ -124,8 +130,8 @@ impl FilterMapFuncGen for algebra_pb::EdgeExpand {
             .try_into()?;
         let edge_or_end_v_tag = self
             .alias
-            .map(|alias| alias.try_into())
-            .transpose()?;
+            .ok_or(ParsePbError::from("edge_or_end_v_tag cannot be empty in edge_expand for intersection"))?
+            .try_into()?;
         let direction_pb: algebra_pb::edge_expand::Direction =
             unsafe { ::std::mem::transmute(self.direction) };
         let direction = Direction::from(direction_pb);
@@ -143,5 +149,118 @@ impl FilterMapFuncGen for algebra_pb::EdgeExpand {
             let edge_expand_operator = ExpandOrIntersect { start_v_tag, edge_or_end_v_tag, stmt };
             Ok(Box::new(edge_expand_operator))
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use bit_set::BitSet;
+
+    fn intersection(mut pre_collection: Vec<i32>, curr_collection: Vec<i32>) -> Vec<i32> {
+        let mut s = BitSet::with_capacity(pre_collection.len());
+        for item in curr_collection {
+            if let Ok(idx) = pre_collection.binary_search_by(|e| e.cmp(&item)) {
+                s.insert(idx);
+            }
+        }
+        let mut idx = 0;
+        for i in s.iter() {
+            pre_collection.swap(idx, i);
+            idx += 1;
+        }
+        pre_collection.drain(idx..pre_collection.len());
+        pre_collection
+    }
+
+    #[test]
+    fn intersect_test_01() {
+        let pre_collection = vec![1, 2, 3];
+        let curr_collection = vec![5, 4, 3, 2, 1];
+        let res = intersection(pre_collection, curr_collection);
+        assert_eq!(res, vec![1, 2, 3])
+    }
+
+    #[test]
+    fn intersect_test_02() {
+        let pre_collection = vec![1, 2, 3, 4, 5];
+        let curr_collection = vec![3, 2, 1];
+        let res = intersection(pre_collection, curr_collection);
+        assert_eq!(res, vec![1, 2, 3])
+    }
+
+    #[test]
+    fn intersect_test_03() {
+        let pre_collection = vec![1, 2, 3, 4, 5];
+        let curr_collection = vec![9, 7, 5, 3, 1];
+        let res = intersection(pre_collection, curr_collection);
+        assert_eq!(res, vec![1, 3, 5])
+    }
+
+    #[test]
+    fn intersect_test_04() {
+        let pre_collection = vec![1, 2, 3, 4, 5];
+        let curr_collection = vec![9, 8, 7, 6];
+        let res = intersection(pre_collection, curr_collection);
+        assert_eq!(res, vec![])
+    }
+
+    #[test]
+    fn intersect_test_05() {
+        let collection_1 = vec![1, 2, 3, 4, 5];
+        let collection_2 = vec![1, 3, 5, 7, 9];
+        let collection_3 = vec![1, 2, 4, 8];
+        let collection = intersection(collection_1, collection_2);
+        let res = intersection(collection, collection_3);
+        assert_eq!(res, vec![1])
+    }
+
+    #[test]
+    fn intersect_test_06() {
+        let collection_1 = vec![1, 2, 3, 4, 5];
+        let collection_2 = vec![1, 3, 5, 7, 9];
+        let collection_3 = vec![2, 4, 6, 8];
+        let collection = intersection(collection_1, collection_2);
+        let res = intersection(collection, collection_3);
+        assert_eq!(res, vec![])
+    }
+
+    #[test]
+    fn intersect_test_07() {
+        let pre_collection = vec![1, 1, 2, 3, 4, 5];
+        let curr_collection = vec![1, 2, 3];
+        let res = intersection(pre_collection, curr_collection);
+        assert_eq!(res, vec![1, 2, 3])
+    }
+
+    #[test]
+    fn intersect_test_08() {
+        let pre_collection = vec![1, 2, 3];
+        let curr_collection = vec![1, 1, 2, 3, 4, 5];
+        let res = intersection(pre_collection, curr_collection);
+        assert_eq!(res, vec![1, 2, 3])
+    }
+
+    #[test]
+    fn intersect_test_09() {
+        let pre_collection = vec![1, 1, 2, 2, 3, 3];
+        let curr_collection = vec![1, 2, 3];
+        let res = intersection(pre_collection, curr_collection);
+        assert_eq!(res, vec![1, 2, 3])
+    }
+
+    #[test]
+    fn intersect_test_10() {
+        let pre_collection = vec![1, 2, 3];
+        let curr_collection = vec![1, 1, 2, 2, 3, 3];
+        let res = intersection(pre_collection, curr_collection);
+        assert_eq!(res, vec![1, 2, 3])
+    }
+
+    #[test]
+    fn intersect_test_11() {
+        let pre_collection = vec![1, 1, 2, 2, 3, 3];
+        let curr_collection = vec![1, 1, 2, 2, 3, 3];
+        let res = intersection(pre_collection, curr_collection);
+        assert_eq!(res, vec![1, 2, 3])
     }
 }
