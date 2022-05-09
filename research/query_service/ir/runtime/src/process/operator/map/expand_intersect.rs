@@ -28,7 +28,7 @@ use crate::graph::{Direction, Statement, ID};
 use crate::process::operator::map::FilterMapFuncGen;
 use crate::process::record::{Entry, Record, RecordElement};
 
-/// An ExpandOrIntersect operator to expand neighbors
+/// An ExpandOrIntersect operator to expand neighbors (saved on HEAD)
 /// and intersect with the ones of the same tag found previously (if exists).
 struct ExpandOrIntersect<E: Into<GraphObject>> {
     start_v_tag: KeyId,
@@ -44,42 +44,44 @@ impl<E: Into<GraphObject> + 'static> FilterMapFunction<Record, Record> for Expan
         if let Some(v) = entry.as_graph_vertex() {
             let id = v.id();
             let iter = self.stmt.exec(id)?;
-            let mut neighbors_collection = vec![];
             if let Some(pre_entry) = input.take(self.edge_or_end_v_tag.as_ref()) {
                 // the case of expansion and intersection
                 unsafe {
                     let pre_entry_ptr = Arc::into_raw(pre_entry) as *mut Entry;
                     match &mut *pre_entry_ptr {
-                        Entry::Element(_) => Err(FnExecError::unexpected_data_error(
-                            "Alias to intersect does not refer to a collection entry in EdgeExpandIntersectionOperator",
-                        ))?,
-                        Entry::Collection(pre_collection) => {
-                            let mut s = BitSet::with_capacity(pre_collection.len());
-                            for item in iter {
-                                let graph_obj = item.into();
-                                if let Ok(idx) = pre_collection
-                                    // Notice that if multiple matches exist, binary_search will return any one.
-                                    .binary_search_by(|e| e.as_graph_element().unwrap().id().cmp(&graph_obj.id()))
-                                {
-                                    s.insert(idx);
-                                }
-                            }
-                            if !s.is_empty() {
-                                let mut idx = pre_collection.len();
-                                while idx > 0 {
-                                    idx = idx - 1;
-                                    if s.contains(idx) {
-                                        let r = pre_collection.swap_remove(idx);
-                                        neighbors_collection.push(r);
+                            Entry::Element(_) => Err(FnExecError::unexpected_data_error(
+                                "Alias to intersect does not refer to a collection entry in EdgeExpandIntersectionOperator",
+                            ))?,
+                            Entry::Collection(pre_collection) => {
+                                let mut s = BitSet::with_capacity(pre_collection.len());
+                                for item in iter {
+                                    let graph_obj = item.into();
+                                    if let Ok(idx) = pre_collection
+                                        // Notice that if multiple matches exist, binary_search will return any one.
+                                        .binary_search_by(|e| e.as_graph_element().unwrap().id().cmp(&graph_obj.id()))
+                                    {
+                                        s.insert(idx);
                                     }
+                                }
+                                let mut idx = 0;
+                                for i in s.iter() {
+                                    pre_collection.swap(idx, i);
+                                    idx += 1;
+                                }
+                                pre_collection.drain(idx..pre_collection.len());
+                                if pre_collection.is_empty() {
+                                    Ok(None)
+                                } else {
+                                    let entry = Arc::from_raw(pre_entry_ptr);
+                                    input.append_arc_entry(entry, self.edge_or_end_v_tag.clone());
+                                    Ok(Some(input))
                                 }
                             }
                         }
-                    }
                 }
             } else {
                 // the case of expansion only
-                neighbors_collection = iter
+                let mut neighbors_collection: Vec<RecordElement> = iter
                     .map(|e| RecordElement::OnGraph(e.into()))
                     .collect();
                 neighbors_collection.sort_by(|r1, r2| {
@@ -88,12 +90,12 @@ impl<E: Into<GraphObject> + 'static> FilterMapFunction<Record, Record> for Expan
                         .id()
                         .cmp(&r2.as_graph_element().unwrap().id())
                 });
-            }
-            if neighbors_collection.is_empty() {
-                Ok(None)
-            } else {
-                input.append(neighbors_collection, self.edge_or_end_v_tag.clone());
-                Ok(Some(input))
+                if neighbors_collection.is_empty() {
+                    Ok(None)
+                } else {
+                    input.append(neighbors_collection, self.edge_or_end_v_tag.clone());
+                    Ok(Some(input))
+                }
             }
         } else if let Some(_graph_path) = entry.as_graph_path() {
             Err(FnExecError::unsupported_error(
