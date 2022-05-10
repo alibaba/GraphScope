@@ -49,48 +49,41 @@ impl<E: Into<GraphObject> + 'static> FilterMapFunction<Record, Record> for Expan
         if let Some(v) = entry.as_graph_vertex() {
             let id = v.id();
             let iter = self.stmt.exec(id)?;
-            if let Some(pre_entry) = input.get_mut(Some(&self.edge_or_end_v_tag)) {
+            if let Some(pre_entry) = input.get_column_mut(&self.edge_or_end_v_tag) {
                 // the case of expansion and intersection
-                if let Some(pre_entry) = Arc::get_mut(pre_entry) {
-                    match pre_entry {
-                        Entry::Element(e) => Err(FnExecError::unexpected_data_error(&format!(
-                            "entry {:?} is not a collection in ExpandOrIntersect",
-                            e
-                        )))?,
-                        Entry::Collection(pre_collection) => {
-                            let mut s = BitSet::with_capacity(pre_collection.len());
-                            for item in iter {
-                                let graph_obj = item.into();
-                                if let Ok(idx) = pre_collection
-                                    // Notice that if multiple matches exist, binary_search will return any one.
-                                    .binary_search_by(|e| {
-                                        e.as_graph_element()
-                                            .unwrap()
-                                            .id()
-                                            .cmp(&graph_obj.id())
-                                    })
-                                {
-                                    s.insert(idx);
-                                }
-                            }
-                            let mut idx = 0;
-                            for i in s.iter() {
-                                pre_collection.swap(idx, i);
-                                idx += 1;
-                            }
-                            pre_collection.drain(idx..pre_collection.len());
-                            if pre_collection.is_empty() {
-                                Ok(None)
-                            } else {
-                                Ok(Some(input))
+                match pre_entry {
+                    Entry::Element(e) => Err(FnExecError::unexpected_data_error(&format!(
+                        "entry {:?} is not a collection in ExpandOrIntersect",
+                        e
+                    )))?,
+                    Entry::Collection(pre_collection) => {
+                        let mut s = BitSet::with_capacity(pre_collection.len());
+                        for item in iter {
+                            let graph_obj = item.into();
+                            if let Ok(idx) = pre_collection
+                                // Notice that if multiple matches exist, binary_search will return any one.
+                                .binary_search_by(|e| {
+                                    e.as_graph_element()
+                                        .unwrap()
+                                        .id()
+                                        .cmp(&graph_obj.id())
+                                })
+                            {
+                                s.insert(idx);
                             }
                         }
+                        let mut idx = 0;
+                        for i in s.iter() {
+                            pre_collection.swap(idx, i);
+                            idx += 1;
+                        }
+                        pre_collection.drain(idx..pre_collection.len());
+                        if pre_collection.is_empty() {
+                            Ok(None)
+                        } else {
+                            Ok(Some(input))
+                        }
                     }
-                } else {
-                    Err(FnExecError::unexpected_data_error(&format!(
-                        "get mutable entry {:?} of tag {:?} failed in ExpandOrIntersect",
-                        pre_entry, self.edge_or_end_v_tag
-                    )))?
                 }
             } else {
                 // the case of expansion only
@@ -114,8 +107,8 @@ impl<E: Into<GraphObject> + 'static> FilterMapFunction<Record, Record> for Expan
             }
         } else {
             Err(FnExecError::unsupported_error(&format!(
-                "expand or intersect entry {:?} in ExpandOrIntersect",
-                entry
+                "expand or intersect entry {:?} of tag {:?} failed in ExpandOrIntersect",
+                entry, self.edge_or_end_v_tag
             )))?
         }
     }

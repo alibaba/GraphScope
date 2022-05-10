@@ -141,6 +141,13 @@ impl Record {
         self.curr.borrow_mut()
     }
 
+    pub fn get_column_mut(&mut self, tag: &KeyId) -> Option<&mut Entry> {
+        self.columns
+            .get_mut(*tag as usize)
+            .map(|e| Arc::get_mut(e))
+            .unwrap_or(None)
+    }
+
     pub fn get_columns_mut(&mut self) -> &mut VecMap<Arc<Entry>> {
         self.columns.borrow_mut()
     }
@@ -150,14 +157,6 @@ impl Record {
             self.columns.get(*tag as usize)
         } else {
             self.curr.as_ref()
-        }
-    }
-
-    pub fn get_mut(&mut self, tag: Option<&KeyId>) -> Option<&mut Arc<Entry>> {
-        if let Some(tag) = tag {
-            self.columns.get_mut(*tag as usize)
-        } else {
-            self.curr.as_mut()
         }
     }
 
