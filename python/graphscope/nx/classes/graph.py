@@ -33,13 +33,15 @@ from graphscope.client.session import get_default_session
 from graphscope.client.session import get_session_by_id
 from graphscope.framework import dag_utils
 from graphscope.framework import utils
-from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.errors import check_argument
 from graphscope.framework.graph_schema import GraphSchema
 from graphscope.nx import NetworkXError
 from graphscope.nx.classes.cache import Cache
 from graphscope.nx.classes.coreviews import AdjacencyView
 from graphscope.nx.classes.dict_factory import AdjListDict
+from graphscope.nx.classes.dict_factory import NeighborAttrDict
+from graphscope.nx.classes.dict_factory import NeighborDict
+from graphscope.nx.classes.dict_factory import NodeAttrDict
 from graphscope.nx.classes.dict_factory import NodeDict
 from graphscope.nx.classes.graphviews import generic_graph_view
 from graphscope.nx.classes.reportviews import EdgeView
@@ -260,10 +262,13 @@ class Graph(_GraphBase):
     For details on these and other miscellaneous methods, see below.
     """
 
-    graph_cache_factory = Cache
     node_dict_factory = NodeDict
-    adjlist_dict_factory = AdjListDict
+    node_attr_dict_factory = NodeAttrDict
+    adjlist_outer_dict_factory = AdjListDict
+    adjlist_inner_dict_factory = NeighborDict
+    edge_attr_dict_factory = NeighborAttrDict
     graph_attr_dict_factory = dict
+    graph_cache_factory = Cache
     _graph_type = graph_def_pb2.DYNAMIC_PROPERTY
 
     @patch_docstring(RefGraph.to_directed_class)
@@ -319,13 +324,13 @@ class Graph(_GraphBase):
 
         self.graph_attr_dict_factory = self.graph_attr_dict_factory
         self.node_dict_factory = self.node_dict_factory
-        self.adjlist_dict_factory = self.adjlist_dict_factory
+        self.adjlist_outer_dict_factory = self.adjlist_outer_dict_factory
         self.graph = self.graph_attr_dict_factory()
         self.cache = self.graph_cache_factory(self)
 
         # init node and adj (must be after cache)
         self._node = self.node_dict_factory(self)
-        self._adj = self.adjlist_dict_factory(self)
+        self._adj = self.adjlist_outer_dict_factory(self)
 
         self._key = None
         self._op = None
