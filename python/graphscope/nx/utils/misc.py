@@ -28,19 +28,17 @@ from graphscope.nx.utils.compat import import_as_graphscope_nx
 import_as_graphscope_nx(networkx.utils.misc)
 
 
-def empty_graph_in_engine(graph, directed, distributed):
-    """create empty graph in grape_engine with the graph metadata.
+def init_empty_graph_in_engine(graph, directed, distributed=True):
+    """initialize an empty graph in grape_engine with the graph metadata.
 
     Parameters:
     -----------
     graph: the graph instance in python.
     graph_type: the graph type of graph (IMMUTABLE, ARROW, DYNAMIC).
-    nx_graph_type: the networkx graph type of graph (Graph, DiGraph, MultiGraph, MultiDiGraph).
 
     """
-    sess = get_session_by_id(graph.session_id)
     op = dag_utils.create_graph(
-        sess.session_id,
+        graph.session.session_id,
         graph_type=graph._graph_type,
         directed=directed,
         distributed=distributed,
