@@ -50,7 +50,7 @@ class BuildProto(Command):
                 os.path.join(
                     repo_root,
                     "..",
-                    "proto",
+                    "python",
                     "graphscope",
                     "proto",
                     "proto_generator.py",

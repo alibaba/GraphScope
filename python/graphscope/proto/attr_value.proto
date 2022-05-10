@@ -59,9 +59,6 @@ message AttrValue {
     ListValue list = 11;    // any "list(...)"
 
     NameAttrList func = 12;
-
-    // for lazy mode, inferred from the context of dag
-    PlaceHolder place_holder = 21;
   }
 }
 

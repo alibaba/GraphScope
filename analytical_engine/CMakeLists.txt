@@ -189,9 +189,7 @@ include("cmake/FindGRPC.cmake")
 include_directories(${GRPC_INCLUDE_DIR})
 
 # Generate proto
-execute_process(COMMAND python3 proto/graphscope/proto/proto_generator.py "${PROJECT_SOURCE_DIR}/proto" --cpp
-        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/..)
-execute_process(COMMAND python3 proto/graphscope/proto/proto_generator.py "${PROJECT_SOURCE_DIR}/../python" --python
+execute_process(COMMAND python3 python/graphscope/proto/proto_generator.py "${PROJECT_SOURCE_DIR}/proto" --cpp
         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/..)
 
 file(GLOB PROTO_CPP_FILES "proto/graphscope/proto/*.cc")

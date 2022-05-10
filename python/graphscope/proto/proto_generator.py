@@ -109,12 +109,10 @@ if __name__ == "__main__":
 
     # path to 'GraphScope/proto/python/proto'
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    print(current_dir)
 
-    # path to 'GraphScope/proto'
+    # path to 'python/graphscope/proto'
     base_dir = os.path.join(current_dir, "../", "../")
     os.chdir(base_dir)
-    print(base_dir)
     # must use relative path
     relative_dir = os.path.join(".", "graphscope", "proto")
 
