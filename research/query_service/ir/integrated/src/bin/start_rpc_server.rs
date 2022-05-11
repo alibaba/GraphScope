@@ -18,10 +18,14 @@ extern crate clap;
 use graph_proxy::{InitializeJobCompiler, QueryExpGraph};
 use log::info;
 use pegasus::Configuration;
-use pegasus_server::config::combine_config;
-use pegasus_server::rpc::{start_rpc_server, RpcService};
-use pegasus_server::service::Service;
-use pegasus_server::{CommonConfig, HostsConfig};
+// use pegasus_server::config::combine_config;
+// use pegasus_server::rpc::{start_rpc_server, RpcService};
+// use pegasus_server::service::Service;
+// use pegasus_server::{CommonConfig, HostsConfig};
+use runtime_server::config::combine_config;
+use runtime_server::rpc::{start_rpc_server, RpcService};
+use runtime_server::service::Service;
+use runtime_server::{CommonConfig, HostsConfig};
 use structopt::StructOpt;
 
 #[derive(Debug, Clone, StructOpt)]

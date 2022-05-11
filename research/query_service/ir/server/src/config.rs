@@ -71,7 +71,8 @@ pub fn combine_config(
         let port = local_host.get_port();
         let config = if let Some(common_config) = common_config {
             let mut network_config = NetworkConfig::with(server_id, host_config.peers);
-            network_config.nonblocking(common_config.nonblocking)
+            network_config
+                .nonblocking(common_config.nonblocking)
                 .read_timeout_ms(common_config.read_timeout_ms)
                 .write_timeout_ms(common_config.write_timeout_ms)
                 .read_slab_size(common_config.read_slab_size)

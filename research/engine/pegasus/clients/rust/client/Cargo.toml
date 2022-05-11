@@ -6,7 +6,7 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-pegasus_server = { path = "../../../server-v0" }
+runtime_server = { path = "../../../../../query_service/ir/server" }
 pegasus = { path = "../../../pegasus" }
 tonic = "0.6"
 prost = "0.9"

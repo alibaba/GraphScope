@@ -15,7 +15,8 @@ tokio = { version = "1.0", features = ["macros", "sync"] }
 clap = "2.32.0"
 pegasus = { path = "../../../engine/pegasus/pegasus" }
 pegasus_client = {path = "../../../engine/pegasus/clients/rust/client"}
-pegasus_server = { path = "../../../engine/pegasus/server-v0" }
+pegasus_server = { path = "../../../engine/pegasus/server" }
+runtime_server = {path = "../server"}
 pegasus_common = { path = "../../../engine/pegasus/common" }
 ir_common = {path = "../common"}
 ir_core = {path = "../core"}

@@ -24,6 +24,7 @@ use pegasus::api::FromStream;
 use pegasus::result::{FromStreamExt, ResultSink};
 use pegasus::{Data, JobConf, ServerConf};
 use prost::Message;
+use tokio::net::TcpListener;
 use tokio::sync::mpsc::UnboundedSender;
 use tokio_stream::wrappers::UnboundedReceiverStream;
 use tonic::transport::Server;
@@ -31,7 +32,6 @@ use tonic::{Code, Request, Response, Status};
 
 use crate::generated::protocol as pb;
 use crate::service::{JobParser, Service};
-use tokio::net::TcpListener;
 
 pub struct RpcSink {
     pub job_id: u64,

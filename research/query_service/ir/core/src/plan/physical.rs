@@ -23,8 +23,8 @@ use ir_common::generated::algebra as pb;
 use ir_common::generated::common as common_pb;
 use ir_common::NameOrId;
 use pegasus_client::builder::*;
-use pegasus_server::pb as server_pb;
 use prost::Message;
+use runtime_server::pb as server_pb;
 
 use crate::error::{IrError, IrResult};
 use crate::plan::logical::{LogicalPlan, NodeType};
@@ -67,8 +67,8 @@ fn simple_add_job_builder<M: Message>(
         SimpleOpr::Filter => builder.filter(bytes),
         SimpleOpr::SortBy => builder.sort_by(bytes),
         SimpleOpr::Dedup => builder.dedup(bytes),
-        SimpleOpr::GroupBy => builder.group_by(pegasus_server::pb::AccumKind::Custom, bytes),
-        SimpleOpr::Fold => builder.fold_custom(pegasus_server::pb::AccumKind::Custom, bytes),
+        SimpleOpr::GroupBy => builder.group_by(server_pb::AccumKind::Custom, bytes),
+        SimpleOpr::Fold => builder.fold_custom(server_pb::AccumKind::Custom, bytes),
         SimpleOpr::Sink => {
             builder.sink(bytes);
             builder

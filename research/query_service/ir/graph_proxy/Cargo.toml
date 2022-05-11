@@ -15,7 +15,7 @@ ir_common = {path = "../common"}
 pegasus = { path = "../../../engine/pegasus/pegasus" }
 pegasus_common = { path = "../../../engine/pegasus/common" }
 pegasus_network = { path = "../../../engine/pegasus/network" }
-pegasus_server = { path = "../../../engine/pegasus/server-v0" }
+pegasus_server = { path = "../../../engine/pegasus/server" }
 runtime = { path="../runtime" }
 
 [features]

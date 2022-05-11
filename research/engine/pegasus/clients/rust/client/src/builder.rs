@@ -14,7 +14,7 @@
 //! limitations under the License.
 
 use pegasus::{BuildJobError, JobConf};
-use pegasus_server::pb;
+use runtime_server::pb;
 use std::fmt;
 use std::ops::{Deref, DerefMut};
 
@@ -466,16 +466,14 @@ impl JobBuilder {
         FL: FnMut(&mut Plan),
         FR: FnMut(&mut Plan),
     {
-        self.plan
-            .join_func(join_kind, left_task, right_task, res);
+        self.plan.join_func(join_kind, left_task, right_task, res);
         self
     }
 
     pub fn join(
         &mut self, join_kind: pb::join::JoinKind, left_plan: Plan, right_plan: Plan, res: BinaryResource,
     ) -> &mut Self {
-        self.plan
-            .join(join_kind, left_plan, right_plan, res);
+        self.plan.join(join_kind, left_plan, right_plan, res);
         self
     }
 
@@ -570,9 +568,7 @@ mod test {
             .map(vec![3u8; 32])
             .limit(1)
             .iterate(3, |start| {
-                start
-                    .repartition(vec![4u8; 32])
-                    .map(vec![5u8; 32]);
+                start.repartition(vec![4u8; 32]).map(vec![5u8; 32]);
             })
             .sink(vec![6u8; 32]);
         let job_req = builder.build().unwrap();

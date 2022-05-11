@@ -13,7 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use pegasus_server::pb;
+use runtime_server::pb;
 use std::error::Error;
 use tonic::transport::Channel;
 use tonic::{Request, Streaming};
@@ -38,11 +38,7 @@ impl JobRpcClient {
     pub async fn submit(
         &mut self, job_req: pb::JobRequest,
     ) -> Result<Streaming<pb::JobResponse>, Box<dyn Error>> {
-        Ok(self
-            .stub
-            .submit(Request::new(job_req))
-            .await?
-            .into_inner())
+        Ok(self.stub.submit(Request::new(job_req)).await?.into_inner())
     }
 }
 

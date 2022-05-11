@@ -27,10 +27,10 @@ use pegasus::api::{
 use pegasus::result::ResultSink;
 use pegasus::stream::Stream;
 use pegasus::BuildJobError;
-use pegasus_server::pb as server_pb;
-use pegasus_server::service::JobParser;
-use pegasus_server::JobRequest;
 use prost::Message;
+use runtime_server::pb as server_pb;
+use runtime_server::service::JobParser;
+use runtime_server::JobRequest;
 
 use crate::error::{FnExecError, FnGenResult};
 use crate::graph::partitioner::Partitioner;
