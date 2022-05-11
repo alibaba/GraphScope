@@ -40,6 +40,7 @@ set(PROTO_FILES
   ${GRPC_FILES}
   ${PROTO_FILE_DIR}/sdk/model.proto
   ${PROTO_FILE_DIR}/sdk/common.proto)
+set(PROTOBUF_IMPORT_DIRS ${PROTO_FILE_DIR})
 set(PROTO_BUILD_DIR ${Lgraph_BINARY_DIR}/generated)
 set(PROTO_SRCS_DEST_DIR ${Lgraph_SOURCE_DIR}/src/proto)
 set(PROTO_HDRS_DEST_DIR ${Lgraph_SOURCE_DIR}/include/lgraph/proto)
