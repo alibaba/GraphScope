@@ -53,6 +53,10 @@ class TestFunction:
         H = nx.induced_subgraph(self.G.subgraph([0, 1, 2, 4]), [0, 1, 4])
         assert H.adj == self.G.subgraph([0, 1, 4]).adj
 
+    @pytest.mark.skip(reason="info api would be deprecated in networkx 3.0")
+    def test_info(self):
+        pass
+
 
 @pytest.mark.parametrize(
     "graph_type", (nx.Graph, nx.DiGraph, nx.MultiGraph, nx.MultiDiGraph)
@@ -175,9 +179,4 @@ def test_ispath(G):
 
 @pytest.mark.skip(reason="graphscope not support pathweight")
 def test_pathweight(G):
-    pass
-
-
-@pytest.mark.skip(reason="info api would be deprecated in networkx 3.0")
-def test_info(G):
     pass
