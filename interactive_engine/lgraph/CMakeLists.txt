@@ -41,12 +41,12 @@ set(PROTO_FILES
   ${PROTO_FILE_DIR}/sdk/model.proto
   ${PROTO_FILE_DIR}/sdk/common.proto)
 set(PROTOBUF_IMPORT_DIRS ${PROTO_FILE_DIR})
-set(PROTO_BUILD_DIR ${Lgraph_BINARY_DIR}/generated/sdk)
+set(PROTO_BUILD_DIR ${Lgraph_BINARY_DIR}/generated)
 set(PROTO_SRCS_DEST_DIR ${Lgraph_SOURCE_DIR}/src/proto)
 set(PROTO_HDRS_DEST_DIR ${Lgraph_SOURCE_DIR}/include/lgraph/proto)
 file(MAKE_DIRECTORY ${PROTO_BUILD_DIR})
-file(MAKE_DIRECTORY ${PROTO_SRCS_DEST_DIR}/sdk)
-file(MAKE_DIRECTORY ${PROTO_HDRS_DEST_DIR}/sdk)
+file(MAKE_DIRECTORY ${PROTO_SRCS_DEST_DIR})
+file(MAKE_DIRECTORY ${PROTO_HDRS_DEST_DIR})
 protobuf_generate_cpp(
   PROTO_SRCS
   PROTO_HDRS
