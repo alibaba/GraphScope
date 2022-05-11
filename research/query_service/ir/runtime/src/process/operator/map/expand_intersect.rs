@@ -37,22 +37,58 @@ struct ExpandOrIntersect<E: Into<GraphObject>> {
     stmt: Box<dyn Statement<ID, E>>,
 }
 
+fn binary_search(prober: &Vec<RecordElement>, len: usize, key: ID) -> FnResult<Option<usize>> {
+    let mut low = 0;
+    let mut high = len - 1;
+    while low != high {
+        let mid = (low + high) >> 1;
+        let ele = prober[mid]
+            .as_graph_element()
+            .ok_or(FnExecError::UnExpectedData(
+                "the element to process in `ExpandOrIntersect` is not `GraphElement`".to_string(),
+            ))?
+            .id();
+        if ele < key {
+            low = mid + 1;
+        } else {
+            high = mid;
+        }
+    }
+    let ele = prober[low]
+        .as_graph_element()
+        .ok_or(FnExecError::UnExpectedData(
+            "the element to process in `ExpandOrIntersect` is not `GraphElement`".to_string(),
+        ))?
+        .id();
+    if ele == key {
+        Ok(Some(low))
+    } else {
+        Ok(None)
+    }
+}
+
 fn do_intersection<E: Into<GraphObject> + 'static, Iter: Iterator<Item = E>>(
     prober: &mut Vec<RecordElement>, seeker: Iter,
-) {
-    let mut s = bit_set::BitSet::with_capacity(prober.len());
+) -> FnResult<()> {
+    let len = prober.len();
+    let mut s = bit_set::BitSet::with_capacity(len);
     for item in seeker {
-        let graph_obj = item.into();
-        if let Ok(idx) = prober
-            // Notice that binary_search will return any one when multiple records exist
-            .binary_search_by(|e| {
-                e.as_graph_element()
-                    .unwrap() // TODO(unwrap safe?)
-                    .id()
-                    .cmp(&graph_obj.id())
-            })
-        {
+        let graph_obj_id = item.into().id();
+        if let Ok(Some(idx)) = binary_search(prober, len, graph_obj_id) {
             s.insert(idx);
+            for i in idx + 1..len {
+                let ele = prober[i]
+                    .as_graph_element()
+                    .ok_or(FnExecError::UnExpectedData(
+                        "the element to process in `ExpandOrIntersect` is not `GraphElement`".to_string(),
+                    ))?
+                    .id();
+                if ele != graph_obj_id {
+                    break;
+                } else {
+                    s.insert(i);
+                }
+            }
         }
     }
     let mut idx = 0;
@@ -61,6 +97,8 @@ fn do_intersection<E: Into<GraphObject> + 'static, Iter: Iterator<Item = E>>(
         idx += 1;
     }
     prober.drain(idx..);
+
+    Ok(())
 }
 
 impl<E: Into<GraphObject> + 'static> FilterMapFunction<Record, Record> for ExpandOrIntersect<E> {
@@ -82,7 +120,7 @@ impl<E: Into<GraphObject> + 'static> FilterMapFunction<Record, Record> for Expan
                         e
                     )))?,
                     Entry::Collection(pre_collection) => {
-                        do_intersection(pre_collection, iter);
+                        do_intersection(pre_collection, iter)?;
                         if pre_collection.is_empty() {
                             Ok(None)
                         } else {
@@ -163,7 +201,7 @@ mod tests {
             .map(|id| RecordElement::OnGraph(id.into()))
             .collect();
         let curr_collection = vec![5, 4, 3, 2, 1];
-        do_intersection(&mut pre_collection, curr_collection.into_iter());
+        do_intersection(&mut pre_collection, curr_collection.into_iter()).unwrap();
         assert_eq!(
             pre_collection
                 .into_iter()
@@ -180,7 +218,7 @@ mod tests {
             .map(|id| RecordElement::OnGraph(id.into()))
             .collect();
         let curr_collection = vec![3, 2, 1];
-        do_intersection(&mut pre_collection, curr_collection.into_iter());
+        do_intersection(&mut pre_collection, curr_collection.into_iter()).unwrap();
         assert_eq!(
             pre_collection
                 .into_iter()
@@ -197,7 +235,7 @@ mod tests {
             .map(|id| RecordElement::OnGraph(id.into()))
             .collect();
         let curr_collection = vec![9, 7, 5, 3, 1];
-        do_intersection(&mut pre_collection, curr_collection.into_iter());
+        do_intersection(&mut pre_collection, curr_collection.into_iter()).unwrap();
         assert_eq!(
             pre_collection
                 .into_iter()
@@ -214,7 +252,7 @@ mod tests {
             .map(|id| RecordElement::OnGraph(id.into()))
             .collect();
         let curr_collection = vec![9, 8, 7, 6];
-        do_intersection(&mut pre_collection, curr_collection.into_iter());
+        do_intersection(&mut pre_collection, curr_collection.into_iter()).unwrap();
         assert_eq!(
             pre_collection
                 .into_iter()
@@ -231,13 +269,13 @@ mod tests {
             .map(|id| RecordElement::OnGraph(id.into()))
             .collect();
         let curr_collection = vec![1, 2, 3];
-        do_intersection(&mut pre_collection, curr_collection.into_iter());
+        do_intersection(&mut pre_collection, curr_collection.into_iter()).unwrap();
         assert_eq!(
             pre_collection
                 .into_iter()
                 .map(|r| r.as_graph_element().unwrap().id())
                 .collect::<Vec<ID>>(),
-            vec![1, 2, 3]
+            vec![1, 1, 2, 3]
         );
     }
 
@@ -248,7 +286,7 @@ mod tests {
             .map(|id| RecordElement::OnGraph(id.into()))
             .collect();
         let curr_collection = vec![1, 1, 2, 3, 4, 5];
-        do_intersection(&mut pre_collection, curr_collection.into_iter());
+        do_intersection(&mut pre_collection, curr_collection.into_iter()).unwrap();
         assert_eq!(
             pre_collection
                 .into_iter()
@@ -266,13 +304,13 @@ mod tests {
             .map(|id| RecordElement::OnGraph(id.into()))
             .collect();
         let curr_collection = vec![1, 2, 3];
-        do_intersection(&mut pre_collection, curr_collection.into_iter());
+        do_intersection(&mut pre_collection, curr_collection.into_iter()).unwrap();
         assert_eq!(
             pre_collection
                 .into_iter()
                 .map(|r| r.as_graph_element().unwrap().id())
                 .collect::<Vec<ID>>(),
-            vec![1, 2, 3]
+            vec![1, 1, 2, 2, 3, 3]
         );
     }
 
@@ -283,7 +321,7 @@ mod tests {
             .map(|id| RecordElement::OnGraph(id.into()))
             .collect();
         let curr_collection = vec![1, 1, 2, 2, 3, 3];
-        do_intersection(&mut pre_collection, curr_collection.into_iter());
+        do_intersection(&mut pre_collection, curr_collection.into_iter()).unwrap();
         assert_eq!(
             pre_collection
                 .into_iter()
@@ -300,13 +338,13 @@ mod tests {
             .map(|id| RecordElement::OnGraph(id.into()))
             .collect();
         let curr_collection = vec![1, 1, 2, 2, 3, 3];
-        do_intersection(&mut pre_collection, curr_collection.into_iter());
+        do_intersection(&mut pre_collection, curr_collection.into_iter()).unwrap();
         assert_eq!(
             pre_collection
                 .into_iter()
                 .map(|r| r.as_graph_element().unwrap().id())
                 .collect::<Vec<ID>>(),
-            vec![1, 2, 3]
+            vec![1, 1, 2, 2, 3, 3]
         );
     }
 }
