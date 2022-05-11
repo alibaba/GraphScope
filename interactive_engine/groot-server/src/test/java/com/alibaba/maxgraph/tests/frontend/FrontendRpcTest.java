@@ -19,13 +19,13 @@ import static org.mockito.Mockito.*;
 
 import com.alibaba.graphscope.groot.SnapshotCache;
 import com.alibaba.graphscope.groot.SnapshotWithSchema;
-import com.alibaba.graphscope.groot.coordinator.BackupInfo;
+import com.alibaba.maxgraph.sdkcommon.common.BackupInfo;
 import com.alibaba.graphscope.groot.frontend.*;
 import com.alibaba.graphscope.groot.frontend.FrontendSnapshotService;
 import com.alibaba.graphscope.groot.operation.BatchId;
 import com.alibaba.graphscope.groot.operation.OperationBatch;
 import com.alibaba.graphscope.groot.rpc.RoleClients;
-import com.alibaba.graphscope.groot.schema.GraphDef;
+import com.alibaba.maxgraph.sdkcommon.schema.GraphDef;
 import com.alibaba.graphscope.groot.schema.request.DdlRequestBatch;
 import com.alibaba.maxgraph.proto.groot.*;
 

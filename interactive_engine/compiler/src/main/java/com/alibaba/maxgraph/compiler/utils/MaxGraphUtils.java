@@ -1,16 +1,14 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * <p>http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
+ * <p>Unless required by applicable law or agreed to in writing, software distributed under the
+ * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 package com.alibaba.maxgraph.compiler.utils;
@@ -19,7 +17,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import com.alibaba.maxgraph.Message;
 import com.alibaba.maxgraph.Message.LogicalCompare;
-import com.alibaba.maxgraph.common.util.SchemaUtils;
+import com.alibaba.maxgraph.sdkcommon.util.SchemaUtils;
 import com.alibaba.maxgraph.compiler.api.schema.DataType;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.compiler.optimizer.CompilerConfig;
@@ -71,9 +69,7 @@ import java.util.Set;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 
-/**
- * Expression/Function related util
- */
+/** Expression/Function related util */
 public class MaxGraphUtils {
     private static final Logger LOG = LoggerFactory.getLogger(MaxGraphUtils.class);
 
@@ -107,9 +103,9 @@ public class MaxGraphUtils {
     /**
      * Parse HasContainer to LogicalCompare
      *
-     * @param key       The compare key
+     * @param key The compare key
      * @param predicate The predicate
-     * @param schema    The graph schema
+     * @param schema The graph schema
      */
     private static void parseLogicalCompare(
             String key,
@@ -377,7 +373,7 @@ public class MaxGraphUtils {
     /**
      * Serialize the given value to byte[]
      *
-     * @param value       The given value
+     * @param value The given value
      * @param variantType The value type
      * @return The byte[] result
      */
@@ -420,7 +416,7 @@ public class MaxGraphUtils {
     /**
      * Create operator type from function type and function requirement list
      *
-     * @param functionType            The given function type
+     * @param functionType The given function type
      * @param functionRequirementList The given function requirements
      * @return The operator type
      */
@@ -451,7 +447,7 @@ public class MaxGraphUtils {
      * Convert label and comparator to OrderComparator
      *
      * @param labelIndex The given label index
-     * @param order      The given Comparator
+     * @param order The given Comparator
      * @return The result OrderComparator
      */
     public static Message.OrderComparator.Builder parseOrderComparator(
@@ -467,7 +463,7 @@ public class MaxGraphUtils {
     /**
      * Union left and right value type to output value type
      *
-     * @param leftType  The given left value type
+     * @param leftType The given left value type
      * @param rightType The given right value type
      * @return The result value type
      */
@@ -517,7 +513,7 @@ public class MaxGraphUtils {
      * Parse property value proto to property value result
      *
      * @param variantType The value type
-     * @param byteString  The value payload
+     * @param byteString The value payload
      * @return The property value result
      */
     public static Object parsePropertyValueResult(

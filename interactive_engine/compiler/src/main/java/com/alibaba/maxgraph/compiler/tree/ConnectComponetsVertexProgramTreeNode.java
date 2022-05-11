@@ -17,7 +17,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import com.alibaba.maxgraph.Message;
 import com.alibaba.maxgraph.QueryFlowOuterClass.OperatorType;
-import com.alibaba.maxgraph.common.util.SchemaUtils;
+import com.alibaba.maxgraph.sdkcommon.util.SchemaUtils;
 import com.alibaba.maxgraph.compiler.api.schema.GraphEdge;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.compiler.logical.LogicalSubQueryPlan;

@@ -22,7 +22,7 @@ import com.alibaba.graphscope.groot.ingestor.BatchSender;
 import com.alibaba.graphscope.groot.ingestor.StoreWriter;
 import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.metrics.MetricsCollector;
-import com.alibaba.graphscope.groot.operation.LabelId;
+import com.alibaba.maxgraph.sdkcommon.schema.LabelId;
 import com.alibaba.graphscope.groot.operation.OperationBatch;
 import com.alibaba.graphscope.groot.operation.OperationBlob;
 import com.alibaba.graphscope.groot.operation.StoreDataBatch;

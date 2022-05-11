@@ -14,7 +14,7 @@
 package com.alibaba.graphscope.groot.coordinator;
 
 import com.alibaba.graphscope.groot.rpc.RpcClient;
-import com.alibaba.graphscope.groot.schema.GraphDef;
+import com.alibaba.maxgraph.sdkcommon.schema.GraphDef;
 import com.alibaba.maxgraph.proto.groot.FetchSchemaRequest;
 import com.alibaba.maxgraph.proto.groot.FetchSchemaResponse;
 import com.alibaba.maxgraph.proto.groot.StoreSchemaGrpc;

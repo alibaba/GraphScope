@@ -1,23 +1,21 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * <p>http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
+ * <p>Unless required by applicable law or agreed to in writing, software distributed under the
+ * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 package com.alibaba.maxgraph.compiler.utils;
 
 import com.alibaba.maxgraph.Message;
 import com.alibaba.maxgraph.QueryFlowOuterClass;
-import com.alibaba.maxgraph.common.util.SchemaUtils;
+import com.alibaba.maxgraph.sdkcommon.util.SchemaUtils;
 import com.alibaba.maxgraph.compiler.api.schema.DataType;
 import com.alibaba.maxgraph.compiler.api.schema.GraphEdge;
 import com.alibaba.maxgraph.compiler.api.schema.GraphElement;
@@ -300,7 +298,7 @@ public class CompilerUtils {
     /**
      * Serialize the given value to byte[]
      *
-     * @param value       The given value
+     * @param value The given value
      * @param variantType The value type
      * @return The byte[] result
      */
@@ -453,8 +451,8 @@ public class CompilerUtils {
     }
 
     /**
-     * Travel the given tree node from end to start, and there's flat map node and no aggregate after it,
-     * it means there would be multiple result for one input value
+     * Travel the given tree node from end to start, and there's flat map node and no aggregate
+     * after it, it means there would be multiple result for one input value
      *
      * @param treeNode The given tree node
      * @return The check results
@@ -515,9 +513,7 @@ public class CompilerUtils {
         return false;
     }
 
-    /**
-     * There're all map/filter in tree node
-     */
+    /** There're all map/filter in tree node */
     public static boolean checkAllMapFilterNode(TreeNode treeNode) {
         TreeNode currentNode = treeNode;
         while (currentNode instanceof UnaryTreeNode) {
@@ -541,7 +537,7 @@ public class CompilerUtils {
      * Get the output value type with tree node list and pop
      *
      * @param treeNodeList The given tree node list
-     * @param pop          The given pop
+     * @param pop The given pop
      * @return The output value type
      */
     public static ValueType parseValueTypeWithPop(List<TreeNode> treeNodeList, Pop pop) {

@@ -1,6 +1,6 @@
 package com.alibaba.maxgraph.dataload;
 
-import com.alibaba.graphscope.groot.schema.GraphSchemaMapper;
+import com.alibaba.maxgraph.sdkcommon.schema.GraphSchemaMapper;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.dataload.databuild.ColumnMappingInfo;
 import com.fasterxml.jackson.core.type.TypeReference;

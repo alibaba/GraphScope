@@ -1,6 +1,6 @@
 package com.alibaba.maxgraph.dataload;
 
-import com.alibaba.graphscope.groot.sdk.Client;
+import com.alibaba.graphscope.groot.sdk.MaxGraphClient;
 import com.alibaba.maxgraph.compiler.api.schema.GraphEdge;
 import com.alibaba.maxgraph.compiler.api.schema.GraphElement;
 import com.alibaba.maxgraph.dataload.databuild.ColumnMappingInfo;
@@ -17,7 +17,7 @@ public class CommitDataCommand extends DataCommand {
     }
 
     public void run() {
-        Client client = new Client(graphEndpoint);
+        MaxGraphClient client = new MaxGraphClient(graphEndpoint);
         Map<Long, DataLoadTarget> tableToTarget = new HashMap<>();
         for (ColumnMappingInfo columnMappingInfo : columnMappingInfos.values()) {
             long tableId = columnMappingInfo.getTableId();

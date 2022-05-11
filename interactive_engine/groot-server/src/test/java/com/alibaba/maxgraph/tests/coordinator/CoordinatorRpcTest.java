@@ -23,11 +23,12 @@ import com.alibaba.graphscope.groot.coordinator.SchemaService;
 import com.alibaba.graphscope.groot.coordinator.SnapshotCommitService;
 import com.alibaba.graphscope.groot.frontend.IngestorWriteClient;
 import com.alibaba.graphscope.groot.rpc.RoleClients;
-import com.alibaba.graphscope.groot.schema.GraphDef;
+import com.alibaba.maxgraph.sdkcommon.schema.GraphDef;
 import com.alibaba.graphscope.groot.schema.request.DdlException;
 import com.alibaba.graphscope.groot.store.StoreBackupId;
 import com.alibaba.maxgraph.proto.groot.*;
 
+import com.alibaba.maxgraph.sdkcommon.common.BackupInfo;
 import io.grpc.stub.StreamObserver;
 
 import org.junit.jupiter.api.Test;

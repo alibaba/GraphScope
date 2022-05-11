@@ -1,16 +1,14 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * <p>http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
+ * <p>Unless required by applicable law or agreed to in writing, software distributed under the
+ * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 package com.alibaba.maxgraph.compiler.utils;
@@ -19,7 +17,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.alibaba.maxgraph.Message;
 import com.alibaba.maxgraph.QueryFlowOuterClass;
-import com.alibaba.maxgraph.common.util.SchemaUtils;
+import com.alibaba.maxgraph.sdkcommon.util.SchemaUtils;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.compiler.logical.LogicalBinaryVertex;
 import com.alibaba.maxgraph.compiler.logical.LogicalEdge;
@@ -70,8 +68,8 @@ public class TreeNodeUtils {
     /**
      * Parse and get property/label id from tree node
      *
-     * @param treeNode     The given tree node
-     * @param schema       The given schema
+     * @param treeNode The given tree node
+     * @param schema The given schema
      * @param labelManager The given label manager
      * @return The optional property/label id
      */
@@ -134,7 +132,7 @@ public class TreeNodeUtils {
      * Add limit(1) to multiple output tree node
      *
      * @param treeNode The given tree node
-     * @param schema   The schema
+     * @param schema The schema
      * @return The result tree node
      */
     public static TreeNode buildSingleOutputNode(TreeNode treeNode, GraphSchema schema) {
@@ -153,8 +151,8 @@ public class TreeNodeUtils {
     /**
      * Parse enter key argument from given tree node
      *
-     * @param treeNode             The given tree node
-     * @param schema               The given schema
+     * @param treeNode The given tree node
+     * @param schema The given schema
      * @param treeNodeLabelManager The tree node label manager
      * @return The enter key argument
      */
@@ -210,10 +208,10 @@ public class TreeNodeUtils {
     /**
      * Build query plan from given leaf tree node
      *
-     * @param treeNode             The given leaf tree node
+     * @param treeNode The given leaf tree node
      * @param treeNodeLabelManager The tree node label manager
-     * @param contextManager       The context manager
-     * @param vertexIdManager      The vertex id manager
+     * @param contextManager The context manager
+     * @param vertexIdManager The vertex id manager
      * @return The query plan of sub query
      */
     public static LogicalSubQueryPlan buildQueryPlanWithSource(
@@ -237,10 +235,10 @@ public class TreeNodeUtils {
     /**
      * Build query plan from given leaf tree node
      *
-     * @param treeNode             The given leaf tree node
+     * @param treeNode The given leaf tree node
      * @param treeNodeLabelManager The tree node label manager
-     * @param contextManager       The context manager
-     * @param vertexIdManager      The vertex id manager
+     * @param contextManager The context manager
+     * @param vertexIdManager The vertex id manager
      * @return The query plan of sub query
      */
     public static LogicalSubQueryPlan buildQueryPlan(
@@ -276,8 +274,8 @@ public class TreeNodeUtils {
     /**
      * Build sub query plan from given leaf tree node
      *
-     * @param treeNode       The given leaf tree node
-     * @param sourceVertex   The source vertex
+     * @param treeNode The given leaf tree node
+     * @param sourceVertex The source vertex
      * @param contextManager The context manager
      * @return The query plan of sub query
      */
@@ -289,10 +287,11 @@ public class TreeNodeUtils {
     /**
      * Build sub query plan from given leaf tree node
      *
-     * @param treeNode       The given leaf tree node
-     * @param sourceVertex   The source vertex
+     * @param treeNode The given leaf tree node
+     * @param sourceVertex The source vertex
      * @param contextManager The context manager
-     * @param generateUseKey The flag of generated use key, it may be generated outside such as group
+     * @param generateUseKey The flag of generated use key, it may be generated outside such as
+     *     group
      * @return The query plan of sub query
      */
     public static LogicalSubQueryPlan buildSubQueryPlan(
@@ -353,8 +352,8 @@ public class TreeNodeUtils {
     /**
      * Build sub query plan, and save the result of sub plan to given label id
      *
-     * @param treeNode       The given tree node
-     * @param sourceVertex   The given source vertex
+     * @param treeNode The given tree node
+     * @param sourceVertex The given source vertex
      * @param contextManager The given context manager
      * @return The result query plan and label id
      */
@@ -466,11 +465,11 @@ public class TreeNodeUtils {
     }
 
     /**
-     * @param treeNode             The given tree node
-     * @param sourceVertex         The source vertex
+     * @param treeNode The given tree node
+     * @param sourceVertex The source vertex
      * @param treeNodeLabelManager The given label manager
-     * @param contextManager       The context manager
-     * @param vertexIdManager      The vertex id manager
+     * @param contextManager The context manager
+     * @param vertexIdManager The vertex id manager
      * @return The sub query with enter key vertex
      */
     public static LogicalSubQueryPlan buildSubQueryPlanWithKey(
@@ -585,9 +584,7 @@ public class TreeNodeUtils {
                 || checkNodeListUseKey(buildTreeNodeListFromLeaf(treeNode));
     }
 
-    /**
-     * If the result should select input value
-     */
+    /** If the result should select input value */
     public static boolean checkSelectFlag(TreeNode treeNode) {
         List<TreeNode> treeNodeList = buildTreeNodeListFromLeaf(treeNode);
         for (TreeNode currNode : treeNodeList) {
@@ -657,9 +654,7 @@ public class TreeNodeUtils {
         return currentFilterNode;
     }
 
-    /**
-     * Build logical plan with filter tree node and output the input value
-     */
+    /** Build logical plan with filter tree node and output the input value */
     public static LogicalVertex buildFilterTreeNode(
             TreeNode treeNode,
             ContextManager contextManager,
@@ -753,8 +748,8 @@ public class TreeNodeUtils {
     /**
      * Build select function
      *
-     * @param selectLabel    The given label
-     * @param pop            The given pop
+     * @param selectLabel The given label
+     * @param pop The given pop
      * @param labelIndexList The given label index list
      * @return The select function
      */

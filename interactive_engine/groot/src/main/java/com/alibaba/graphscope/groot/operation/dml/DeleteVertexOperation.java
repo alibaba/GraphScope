@@ -13,7 +13,7 @@
  */
 package com.alibaba.graphscope.groot.operation.dml;
 
-import com.alibaba.graphscope.groot.operation.LabelId;
+import com.alibaba.maxgraph.sdkcommon.schema.LabelId;
 import com.alibaba.graphscope.groot.operation.Operation;
 import com.alibaba.graphscope.groot.operation.OperationType;
 import com.alibaba.graphscope.groot.operation.VertexId;

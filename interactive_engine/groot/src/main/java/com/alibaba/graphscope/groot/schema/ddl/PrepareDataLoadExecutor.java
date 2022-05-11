@@ -13,13 +13,13 @@
  */
 package com.alibaba.graphscope.groot.schema.ddl;
 
-import com.alibaba.graphscope.groot.operation.LabelId;
+import com.alibaba.maxgraph.sdkcommon.schema.LabelId;
 import com.alibaba.graphscope.groot.operation.Operation;
 import com.alibaba.graphscope.groot.operation.ddl.PrepareDataLoadOperation;
-import com.alibaba.graphscope.groot.schema.EdgeKind;
-import com.alibaba.graphscope.groot.schema.GraphDef;
-import com.alibaba.graphscope.groot.schema.TypeDef;
-import com.alibaba.graphscope.groot.schema.TypeEnum;
+import com.alibaba.maxgraph.sdkcommon.schema.EdgeKind;
+import com.alibaba.maxgraph.sdkcommon.schema.GraphDef;
+import com.alibaba.maxgraph.sdkcommon.schema.TypeDef;
+import com.alibaba.maxgraph.sdkcommon.schema.TypeEnum;
 import com.alibaba.graphscope.groot.schema.request.DdlException;
 import com.alibaba.maxgraph.proto.DataLoadTargetPb;
 import com.alibaba.maxgraph.sdkcommon.common.DataLoadTarget;

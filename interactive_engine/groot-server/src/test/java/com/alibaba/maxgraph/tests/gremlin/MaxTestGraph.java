@@ -14,7 +14,7 @@
 package com.alibaba.maxgraph.tests.gremlin;
 
 import com.alibaba.graphscope.groot.frontend.ClientService;
-import com.alibaba.graphscope.groot.schema.GraphDef;
+import com.alibaba.maxgraph.sdkcommon.schema.GraphDef;
 import com.alibaba.maxgraph.common.config.CommonConfig;
 import com.alibaba.maxgraph.common.config.Configs;
 import com.alibaba.maxgraph.common.config.GremlinConfig;
