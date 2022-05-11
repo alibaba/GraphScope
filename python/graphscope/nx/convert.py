@@ -26,8 +26,8 @@ from collections.abc import Iterator
 
 import networkx.convert
 
+import graphscope
 from graphscope import nx
-from graphscope.framework.graph import Graph as gs_g
 from graphscope.nx.utils.compat import import_as_graphscope_nx
 from graphscope.nx.utils.compat import patch_docstring
 
@@ -37,7 +37,7 @@ import_as_graphscope_nx(networkx.convert)
 @patch_docstring(networkx.convert.to_networkx_graph)
 def to_networkx_graph(data, create_using=None, multigraph_input=False):  # noqa: C901
     # graphscope graph
-    if isinstance(data, gs_g):
+    if isinstance(data, graphscope.Graph):
         if create_using is None:
             raise nx.NetworkXError(
                 "Use None to convert graphscope graph to networkx graph."

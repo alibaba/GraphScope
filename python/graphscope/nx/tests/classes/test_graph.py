@@ -21,7 +21,7 @@ import pytest
 from networkx.classes.tests.test_graph import TestEdgeSubgraph as _TestEdgeSubgraph
 from networkx.classes.tests.test_graph import TestGraph as _TestGraph
 from networkx.testing.utils import almost_equal
-from networkx.testing.utils import assert_graphs_equal
+from networkx.utils import graphs_equal
 
 from graphscope import nx
 
@@ -217,9 +217,9 @@ class TestGraph(_TestGraph):
         GG = G.copy()
         H = self.Graph()
         GG.update(H)
-        assert_graphs_equal(G, GG)
+        assert graphs_equal(G, GG)
         H.update(G)
-        assert_graphs_equal(H, G)
+        assert graphs_equal(H, G)
 
         # update nodes only
         H = self.Graph()
