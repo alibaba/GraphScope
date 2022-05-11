@@ -15,7 +15,6 @@ package com.alibaba.maxgraph.compiler.tree;
 
 import com.alibaba.maxgraph.Message;
 import com.alibaba.maxgraph.QueryFlowOuterClass;
-import com.alibaba.maxgraph.sdkcommon.util.SchemaUtils;
 import com.alibaba.maxgraph.compiler.api.schema.DataType;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.compiler.logical.LogicalSubQueryPlan;
@@ -29,6 +28,7 @@ import com.alibaba.maxgraph.compiler.tree.value.ValueValueType;
 import com.alibaba.maxgraph.compiler.tree.value.VarietyValueType;
 import com.alibaba.maxgraph.compiler.utils.CompilerUtils;
 import com.alibaba.maxgraph.compiler.utils.TreeNodeUtils;
+import com.alibaba.maxgraph.sdkcommon.util.SchemaUtils;
 import com.google.common.collect.Sets;
 
 import java.util.Set;

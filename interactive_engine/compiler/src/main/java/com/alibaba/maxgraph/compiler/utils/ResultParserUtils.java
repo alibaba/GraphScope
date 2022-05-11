@@ -15,7 +15,6 @@ package com.alibaba.maxgraph.compiler.utils;
 
 import com.alibaba.maxgraph.Message;
 import com.alibaba.maxgraph.Message.PropertyEntityProto;
-import com.alibaba.maxgraph.sdkcommon.util.SchemaUtils;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.result.BulkResult;
 import com.alibaba.maxgraph.result.EdgeResult;
@@ -28,6 +27,7 @@ import com.alibaba.maxgraph.result.VertexPropertyResult;
 import com.alibaba.maxgraph.result.VertexResult;
 import com.alibaba.maxgraph.sdkcommon.graph.EntryValueResult;
 import com.alibaba.maxgraph.sdkcommon.graph.QueryResult;
+import com.alibaba.maxgraph.sdkcommon.util.SchemaUtils;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.protobuf.BoolValue;

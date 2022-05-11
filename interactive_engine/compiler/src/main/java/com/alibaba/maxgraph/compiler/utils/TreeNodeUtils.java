@@ -17,7 +17,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.alibaba.maxgraph.Message;
 import com.alibaba.maxgraph.QueryFlowOuterClass;
-import com.alibaba.maxgraph.sdkcommon.util.SchemaUtils;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.compiler.logical.LogicalBinaryVertex;
 import com.alibaba.maxgraph.compiler.logical.LogicalEdge;
@@ -49,6 +48,7 @@ import com.alibaba.maxgraph.compiler.tree.addition.AbstractUseKeyNode;
 import com.alibaba.maxgraph.compiler.tree.addition.PropertyNode;
 import com.alibaba.maxgraph.compiler.tree.source.SourceDelegateNode;
 import com.alibaba.maxgraph.compiler.tree.source.SourceTreeNode;
+import com.alibaba.maxgraph.sdkcommon.util.SchemaUtils;
 import com.google.common.collect.Lists;
 
 import org.apache.commons.lang3.StringUtils;

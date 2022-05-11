@@ -17,7 +17,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import com.alibaba.maxgraph.Message;
 import com.alibaba.maxgraph.Message.LogicalCompare;
-import com.alibaba.maxgraph.sdkcommon.util.SchemaUtils;
 import com.alibaba.maxgraph.compiler.api.schema.DataType;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.compiler.optimizer.CompilerConfig;
@@ -43,6 +42,7 @@ import com.alibaba.maxgraph.sdkcommon.compiler.custom.StringPredicate;
 import com.alibaba.maxgraph.sdkcommon.compiler.custom.dim.DimMatchType;
 import com.alibaba.maxgraph.sdkcommon.compiler.custom.dim.DimPredicate;
 import com.alibaba.maxgraph.sdkcommon.compiler.custom.dim.DimTable;
+import com.alibaba.maxgraph.sdkcommon.util.SchemaUtils;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.protobuf.ByteString;

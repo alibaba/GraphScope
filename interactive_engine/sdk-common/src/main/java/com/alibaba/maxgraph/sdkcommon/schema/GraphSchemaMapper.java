@@ -15,13 +15,13 @@ package com.alibaba.maxgraph.sdkcommon.schema;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.alibaba.maxgraph.compiler.api.schema.GraphEdge;
+import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
+import com.alibaba.maxgraph.compiler.api.schema.GraphVertex;
 import com.alibaba.maxgraph.sdkcommon.schema.mapper.DefaultGraphSchema;
 import com.alibaba.maxgraph.sdkcommon.schema.mapper.EdgeTypeMapper;
 import com.alibaba.maxgraph.sdkcommon.schema.mapper.SchemaElementMapper;
 import com.alibaba.maxgraph.sdkcommon.schema.mapper.VertexTypeMapper;
-import com.alibaba.maxgraph.compiler.api.schema.GraphEdge;
-import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
-import com.alibaba.maxgraph.compiler.api.schema.GraphVertex;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;

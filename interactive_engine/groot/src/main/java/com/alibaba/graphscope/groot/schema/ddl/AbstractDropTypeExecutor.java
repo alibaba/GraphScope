@@ -13,14 +13,14 @@
  */
 package com.alibaba.graphscope.groot.schema.ddl;
 
-import com.alibaba.maxgraph.sdkcommon.schema.LabelId;
 import com.alibaba.graphscope.groot.operation.Operation;
-import com.alibaba.maxgraph.sdkcommon.schema.EdgeKind;
-import com.alibaba.maxgraph.sdkcommon.schema.GraphDef;
-import com.alibaba.maxgraph.sdkcommon.schema.PropertyDef;
-import com.alibaba.maxgraph.sdkcommon.schema.TypeDef;
 import com.alibaba.graphscope.groot.schema.request.DdlException;
 import com.alibaba.maxgraph.proto.groot.TypeDefPb;
+import com.alibaba.maxgraph.sdkcommon.schema.EdgeKind;
+import com.alibaba.maxgraph.sdkcommon.schema.GraphDef;
+import com.alibaba.maxgraph.sdkcommon.schema.LabelId;
+import com.alibaba.maxgraph.sdkcommon.schema.PropertyDef;
+import com.alibaba.maxgraph.sdkcommon.schema.TypeDef;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 

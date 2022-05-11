@@ -15,7 +15,6 @@ package com.alibaba.maxgraph.tests.common.schema.ddl;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import com.alibaba.maxgraph.sdkcommon.schema.LabelId;
 import com.alibaba.graphscope.groot.operation.Operation;
 import com.alibaba.graphscope.groot.operation.ddl.AddEdgeKindOperation;
 import com.alibaba.graphscope.groot.operation.ddl.CreateEdgeTypeOperation;
@@ -23,12 +22,6 @@ import com.alibaba.graphscope.groot.operation.ddl.CreateVertexTypeOperation;
 import com.alibaba.graphscope.groot.operation.ddl.DropEdgeTypeOperation;
 import com.alibaba.graphscope.groot.operation.ddl.DropVertexTypeOperation;
 import com.alibaba.graphscope.groot.operation.ddl.RemoveEdgeKindOperation;
-import com.alibaba.maxgraph.sdkcommon.schema.EdgeKind;
-import com.alibaba.maxgraph.sdkcommon.schema.GraphDef;
-import com.alibaba.maxgraph.sdkcommon.schema.PropertyDef;
-import com.alibaba.maxgraph.sdkcommon.schema.PropertyValue;
-import com.alibaba.maxgraph.sdkcommon.schema.TypeDef;
-import com.alibaba.maxgraph.sdkcommon.schema.TypeEnum;
 import com.alibaba.graphscope.groot.schema.ddl.DdlExecutors;
 import com.alibaba.graphscope.groot.schema.ddl.DdlResult;
 import com.alibaba.graphscope.groot.schema.request.AddEdgeKindRequest;
@@ -41,6 +34,13 @@ import com.alibaba.graphscope.groot.schema.request.RemoveEdgeKindRequest;
 import com.alibaba.maxgraph.compiler.api.schema.DataType;
 import com.alibaba.maxgraph.proto.groot.DdlRequestBatchPb;
 import com.alibaba.maxgraph.proto.groot.GraphDefPb;
+import com.alibaba.maxgraph.sdkcommon.schema.EdgeKind;
+import com.alibaba.maxgraph.sdkcommon.schema.GraphDef;
+import com.alibaba.maxgraph.sdkcommon.schema.LabelId;
+import com.alibaba.maxgraph.sdkcommon.schema.PropertyDef;
+import com.alibaba.maxgraph.sdkcommon.schema.PropertyValue;
+import com.alibaba.maxgraph.sdkcommon.schema.TypeDef;
+import com.alibaba.maxgraph.sdkcommon.schema.TypeEnum;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 

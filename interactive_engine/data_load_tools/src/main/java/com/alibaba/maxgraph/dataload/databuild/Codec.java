@@ -13,10 +13,10 @@
  */
 package com.alibaba.maxgraph.dataload.databuild;
 
-import com.alibaba.maxgraph.sdkcommon.schema.PropertyValue;
 import com.alibaba.maxgraph.compiler.api.schema.DataType;
 import com.alibaba.maxgraph.compiler.api.schema.GraphElement;
 import com.alibaba.maxgraph.compiler.api.schema.GraphProperty;
+import com.alibaba.maxgraph.sdkcommon.schema.PropertyValue;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

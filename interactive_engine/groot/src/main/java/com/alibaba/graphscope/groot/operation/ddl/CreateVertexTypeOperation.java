@@ -15,9 +15,9 @@ package com.alibaba.graphscope.groot.operation.ddl;
 
 import com.alibaba.graphscope.groot.operation.Operation;
 import com.alibaba.graphscope.groot.operation.OperationType;
-import com.alibaba.maxgraph.sdkcommon.schema.TypeDef;
 import com.alibaba.maxgraph.proto.groot.CreateVertexTypePb;
 import com.alibaba.maxgraph.proto.groot.DdlOperationPb;
+import com.alibaba.maxgraph.sdkcommon.schema.TypeDef;
 import com.google.protobuf.ByteString;
 
 public class CreateVertexTypeOperation extends Operation {

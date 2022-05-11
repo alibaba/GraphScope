@@ -16,7 +16,6 @@ package com.alibaba.maxgraph.compiler.tree;
 import com.alibaba.maxgraph.Message;
 import com.alibaba.maxgraph.QueryFlowOuterClass;
 import com.alibaba.maxgraph.QueryFlowOuterClass.OdpsOutputConfig.Builder;
-import com.alibaba.maxgraph.sdkcommon.util.SchemaUtils;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.compiler.logical.LogicalEdge;
 import com.alibaba.maxgraph.compiler.logical.LogicalSubQueryPlan;
@@ -28,6 +27,7 @@ import com.alibaba.maxgraph.compiler.logical.function.ProcessorFunction;
 import com.alibaba.maxgraph.compiler.optimizer.ContextManager;
 import com.alibaba.maxgraph.compiler.tree.value.ValueType;
 import com.alibaba.maxgraph.compiler.tree.value.VertexValueType;
+import com.alibaba.maxgraph.sdkcommon.util.SchemaUtils;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -36,7 +36,7 @@ public class OutputTreeNode extends UnaryTreeNode {
     private static final IllegalArgumentException ILLEGAL_TUNNEL_EXCEPTION =
             new IllegalArgumentException(
                     "output URL format:"
-                            + " tunnel://accsessID:accessKey@endpoint#project=maxgraph&table=table&ds=20190101");
+                        + " tunnel://accsessID:accessKey@endpoint#project=maxgraph&table=table&ds=20190101");
     private final String path;
     private final String[] properties;
 

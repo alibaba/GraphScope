@@ -2,6 +2,7 @@ package com.alibaba.graphscope.groot.frontend.write;
 
 import com.alibaba.maxgraph.sdkcommon.common.EdgeRecordKey;
 import com.alibaba.maxgraph.sdkcommon.common.VertexRecordKey;
+
 import java.util.Map;
 
 public class DataRecord {

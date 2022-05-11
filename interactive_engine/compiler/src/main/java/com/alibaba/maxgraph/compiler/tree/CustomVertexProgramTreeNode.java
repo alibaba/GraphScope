@@ -17,7 +17,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import com.alibaba.maxgraph.Message;
 import com.alibaba.maxgraph.QueryFlowOuterClass;
-import com.alibaba.maxgraph.sdkcommon.util.SchemaUtils;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.compiler.logical.LogicalSubQueryPlan;
 import com.alibaba.maxgraph.compiler.logical.function.ProcessorFunction;
@@ -27,6 +26,7 @@ import com.alibaba.maxgraph.compiler.tree.value.ValueType;
 import com.alibaba.maxgraph.compiler.tree.value.ValueValueType;
 import com.alibaba.maxgraph.compiler.tree.value.VertexValueType;
 import com.alibaba.maxgraph.sdkcommon.compiler.custom.program.*;
+import com.alibaba.maxgraph.sdkcommon.util.SchemaUtils;
 
 import org.apache.tinkerpop.gremlin.process.computer.VertexProgram;
 

@@ -17,7 +17,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import com.alibaba.maxgraph.Message;
 import com.alibaba.maxgraph.QueryFlowOuterClass;
-import com.alibaba.maxgraph.sdkcommon.util.SchemaUtils;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.compiler.logical.LogicalEdge;
 import com.alibaba.maxgraph.compiler.logical.LogicalQueryPlan;
@@ -30,6 +29,7 @@ import com.alibaba.maxgraph.compiler.tree.addition.AbstractUseKeyNode;
 import com.alibaba.maxgraph.compiler.tree.source.SourceDelegateNode;
 import com.alibaba.maxgraph.compiler.tree.value.ValueType;
 import com.alibaba.maxgraph.compiler.utils.TreeNodeUtils;
+import com.alibaba.maxgraph.sdkcommon.util.SchemaUtils;
 import com.google.common.collect.Sets;
 
 import org.apache.commons.lang3.tuple.Pair;

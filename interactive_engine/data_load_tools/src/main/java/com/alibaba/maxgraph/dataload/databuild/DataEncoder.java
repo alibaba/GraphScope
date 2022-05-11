@@ -13,14 +13,14 @@
  */
 package com.alibaba.maxgraph.dataload.databuild;
 
-import com.alibaba.maxgraph.sdkcommon.schema.PropertyValue;
-import com.alibaba.maxgraph.sdkcommon.util.PkHashUtils;
-import com.alibaba.maxgraph.sdkcommon.util.SchemaUtils;
 import com.alibaba.maxgraph.compiler.api.exception.InvalidDataException;
 import com.alibaba.maxgraph.compiler.api.schema.GraphEdge;
 import com.alibaba.maxgraph.compiler.api.schema.GraphElement;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.compiler.api.schema.GraphVertex;
+import com.alibaba.maxgraph.sdkcommon.schema.PropertyValue;
+import com.alibaba.maxgraph.sdkcommon.util.PkHashUtils;
+import com.alibaba.maxgraph.sdkcommon.util.SchemaUtils;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;

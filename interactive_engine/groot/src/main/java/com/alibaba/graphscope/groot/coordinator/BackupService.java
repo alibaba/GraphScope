@@ -14,8 +14,8 @@
 package com.alibaba.graphscope.groot.coordinator;
 
 import com.alibaba.maxgraph.proto.groot.*;
-
 import com.alibaba.maxgraph.sdkcommon.common.BackupInfo;
+
 import io.grpc.stub.StreamObserver;
 
 import java.io.IOException;

@@ -22,7 +22,6 @@ import com.alibaba.graphscope.groot.ingestor.BatchSender;
 import com.alibaba.graphscope.groot.ingestor.StoreWriter;
 import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.metrics.MetricsCollector;
-import com.alibaba.maxgraph.sdkcommon.schema.LabelId;
 import com.alibaba.graphscope.groot.operation.OperationBatch;
 import com.alibaba.graphscope.groot.operation.OperationBlob;
 import com.alibaba.graphscope.groot.operation.StoreDataBatch;
@@ -30,6 +29,7 @@ import com.alibaba.graphscope.groot.operation.VertexId;
 import com.alibaba.graphscope.groot.operation.dml.OverwriteVertexOperation;
 import com.alibaba.maxgraph.common.config.CommonConfig;
 import com.alibaba.maxgraph.common.config.Configs;
+import com.alibaba.maxgraph.sdkcommon.schema.LabelId;
 
 import org.junit.jupiter.api.Test;
 

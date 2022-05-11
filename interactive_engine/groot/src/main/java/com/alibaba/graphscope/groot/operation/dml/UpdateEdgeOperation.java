@@ -16,10 +16,10 @@ package com.alibaba.graphscope.groot.operation.dml;
 import com.alibaba.graphscope.groot.operation.EdgeId;
 import com.alibaba.graphscope.groot.operation.Operation;
 import com.alibaba.graphscope.groot.operation.OperationType;
-import com.alibaba.maxgraph.sdkcommon.schema.EdgeKind;
-import com.alibaba.maxgraph.sdkcommon.schema.PropertyValue;
 import com.alibaba.maxgraph.proto.groot.DataOperationPb;
 import com.alibaba.maxgraph.proto.groot.EdgeLocationPb;
+import com.alibaba.maxgraph.sdkcommon.schema.EdgeKind;
+import com.alibaba.maxgraph.sdkcommon.schema.PropertyValue;
 import com.google.protobuf.ByteString;
 
 import java.util.Map;

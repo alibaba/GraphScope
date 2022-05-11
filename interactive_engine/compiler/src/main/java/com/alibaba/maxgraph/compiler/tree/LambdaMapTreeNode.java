@@ -18,7 +18,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.alibaba.maxgraph.Message;
 import com.alibaba.maxgraph.QueryFlowOuterClass;
-import com.alibaba.maxgraph.sdkcommon.util.SchemaUtils;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.compiler.logical.LogicalSourceDelegateVertex;
 import com.alibaba.maxgraph.compiler.logical.LogicalSubQueryPlan;
@@ -31,6 +30,7 @@ import com.alibaba.maxgraph.compiler.tree.value.ValueValueType;
 import com.alibaba.maxgraph.compiler.utils.CompilerUtils;
 import com.alibaba.maxgraph.sdkcommon.compiler.custom.map.MapPropFillFunction;
 import com.alibaba.maxgraph.sdkcommon.compiler.custom.map.RangeSumFunction;
+import com.alibaba.maxgraph.sdkcommon.util.SchemaUtils;
 
 import java.util.List;
 import java.util.function.Function;
