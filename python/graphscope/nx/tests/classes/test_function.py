@@ -177,6 +177,7 @@ def test_ispath(G):
 def test_pathweight(G):
     pass
 
+
 @pytest.mark.skip(reason="info api would be deprecated in networkx 3.0")
 def test_info(G):
     pass
