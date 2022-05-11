@@ -56,6 +56,7 @@ def to_networkx_graph(data, create_using=None, multigraph_input=False):  # noqa:
             raise nx.NetworkXError(msg)
         create_using._key = data.key
         create_using._schema = data.schema
+        create_using._op = data.op
         if create_using._default_label is not None:
             try:
                 create_using._default_label_id = (
