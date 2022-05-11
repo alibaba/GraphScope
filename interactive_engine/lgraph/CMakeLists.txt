@@ -34,11 +34,11 @@ find_package(CppKafka 0.3.1 REQUIRED)
 # Proto file generating
 set(PROTO_FILE_DIR ${Lgraph_SOURCE_DIR}/../proto)
 set(GRPC_FILES
-  ${PROTO_FILE_DIR}/client.proto
-  ${PROTO_FILE_DIR}/client_backup_service.proto)
+  ${PROTO_FILE_DIR}/sdk/client.proto
+  ${PROTO_FILE_DIR}/sdk/client_backup_service.proto)
 set(PROTO_FILES
   ${GRPC_FILES}
-  ${PROTO_FILE_DIR}/model.proto
+  ${PROTO_FILE_DIR}/sdk/model.proto
   ${PROTO_FILE_DIR}/sdk/common.proto)
 set(PROTO_BUILD_DIR ${Lgraph_BINARY_DIR}/generated)
 set(PROTO_SRCS_DEST_DIR ${Lgraph_SOURCE_DIR}/src/proto)
