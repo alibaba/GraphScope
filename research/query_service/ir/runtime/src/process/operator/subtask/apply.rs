@@ -42,7 +42,7 @@ impl BinaryFunction<Record, Vec<Record>, Option<Record>> for ApplyOperator {
                     // We assume the result of sub_entry is always saved on head of Record for now.
                     let sub_entry = sub_result
                         .get(None)
-                        .ok_or(FnExecError::get_tag_error("get entry of subtask result failed"))?;
+                        .ok_or(FnExecError::get_tag_error("current in InnerJoin"))?;
                     if let Some(alias) = self.alias.as_ref() {
                         // append sub_entry without moving head
                         let columns = parent.get_columns_mut();
@@ -68,7 +68,7 @@ impl BinaryFunction<Record, Vec<Record>, Option<Record>> for ApplyOperator {
                     // We assume the result of sub_entry is always saved on head of Record for now.
                     let sub_entry = sub_result
                         .get(None)
-                        .ok_or(FnExecError::get_tag_error("get entry of subtask result failed"))?;
+                        .ok_or(FnExecError::get_tag_error("current in LeftOuterJoin"))?;
                     if let Some(alias) = self.alias.as_ref() {
                         let columns = parent.get_columns_mut();
                         columns.insert(*alias as usize, sub_entry.clone());
@@ -78,10 +78,7 @@ impl BinaryFunction<Record, Vec<Record>, Option<Record>> for ApplyOperator {
                     Ok(Some(parent))
                 }
             }
-            _ => Err(FnExecError::UnSupported(format!(
-                "Do not support the join type {:?} in Apply",
-                self.join_kind
-            )))?,
+            _ => Err(FnExecError::unsupported_error(&format!("join type {:?} in Apply", self.join_kind)))?,
         }
     }
 }

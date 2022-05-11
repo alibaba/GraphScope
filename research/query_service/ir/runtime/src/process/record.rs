@@ -69,13 +69,6 @@ impl RecordElement {
             _ => None,
         }
     }
-
-    pub fn as_mut_graph_path(&mut self) -> Option<&mut GraphPath> {
-        match self {
-            RecordElement::OnGraph(GraphObject::P(graph_path)) => Some(graph_path),
-            _ => None,
-        }
-    }
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, PartialOrd)]
@@ -106,9 +99,9 @@ impl Entry {
         }
     }
 
-    pub fn as_mut_graph_path(&mut self) -> Option<&mut GraphPath> {
+    pub fn as_collection(&self) -> Option<&Vec<RecordElement>> {
         match self {
-            Entry::Element(record_element) => record_element.as_mut_graph_path(),
+            Entry::Collection(record_collection) => Some(record_collection),
             _ => None,
         }
     }
@@ -137,14 +130,22 @@ impl Record {
     }
 
     pub fn append_arc_entry(&mut self, entry: Arc<Entry>, alias: Option<KeyId>) {
-        self.curr = Some(entry.clone());
         if let Some(alias) = alias {
-            self.columns.insert(alias as usize, entry);
+            self.columns
+                .insert(alias as usize, entry.clone());
         }
+        self.curr = Some(entry);
     }
 
     pub fn get_curr_mut(&mut self) -> &mut Option<Arc<Entry>> {
         self.curr.borrow_mut()
+    }
+
+    pub fn get_column_mut(&mut self, tag: &KeyId) -> Option<&mut Entry> {
+        self.columns
+            .get_mut(*tag as usize)
+            .map(|e| Arc::get_mut(e))
+            .unwrap_or(None)
     }
 
     pub fn get_columns_mut(&mut self) -> &mut VecMap<Arc<Entry>> {
@@ -156,6 +157,14 @@ impl Record {
             self.columns.get(*tag as usize)
         } else {
             self.curr.as_ref()
+        }
+    }
+
+    pub fn take(&mut self, tag: Option<&KeyId>) -> Option<Arc<Entry>> {
+        if let Some(tag) = tag {
+            self.columns.remove(*tag as usize)
+        } else {
+            self.curr.take()
         }
     }
 
@@ -229,6 +238,12 @@ impl Into<Entry> for CommonObject {
 impl Into<Entry> for RecordElement {
     fn into(self) -> Entry {
         Entry::Element(self)
+    }
+}
+
+impl Into<Entry> for Vec<RecordElement> {
+    fn into(self) -> Entry {
+        Entry::Collection(self)
     }
 }
 
@@ -321,14 +336,14 @@ impl<E> RecordExpandIter<E> {
     }
 }
 
-impl<E: Into<GraphObject>> Iterator for RecordExpandIter<E> {
+impl<E: Into<Entry>> Iterator for RecordExpandIter<E> {
     type Item = Record;
 
     fn next(&mut self) -> Option<Self::Item> {
         let mut record = self.origin.clone();
         match self.children.next() {
             Some(elem) => {
-                record.append(elem.into(), self.tag.clone());
+                record.append(elem, self.tag.clone());
                 Some(record)
             }
             None => None,
@@ -348,7 +363,7 @@ impl<E> RecordPathExpandIter<E> {
     }
 }
 
-impl<E: Into<GraphObject>> Iterator for RecordPathExpandIter<E> {
+impl<E: Into<Entry>> Iterator for RecordPathExpandIter<E> {
     type Item = Record;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -356,19 +371,19 @@ impl<E: Into<GraphObject>> Iterator for RecordPathExpandIter<E> {
         let mut curr_path = self.curr_path.clone();
         match self.children.next() {
             Some(elem) => {
-                let graph_obj = elem.into();
-                match graph_obj {
-                    GraphObject::V(v) => {
+                let entry = elem.into();
+                match entry {
+                    Entry::Element(RecordElement::OnGraph(GraphObject::V(v))) => {
                         curr_path.append(v);
                         record.append(curr_path, None);
                         Some(record)
                     }
-                    GraphObject::E(e) => {
+                    Entry::Element(RecordElement::OnGraph(GraphObject::E(e))) => {
                         curr_path.append(e);
                         record.append(curr_path, None);
                         Some(record)
                     }
-                    GraphObject::P(_) => None,
+                    _ => None,
                 }
             }
             None => None,

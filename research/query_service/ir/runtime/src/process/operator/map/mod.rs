@@ -13,6 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 mod auxilia;
+mod expand_intersect;
 mod get_v;
 mod path_end;
 mod path_start;
@@ -54,6 +55,7 @@ impl FilterMapFuncGen for algebra_pb::logical_plan::Operator {
         if let Some(opr) = self.opr {
             match opr {
                 algebra_pb::logical_plan::operator::Opr::Auxilia(auxilia) => auxilia.gen_filter_map(),
+                algebra_pb::logical_plan::operator::Opr::Edge(edge_expand) => edge_expand.gen_filter_map(),
                 _ => Err(ParsePbError::from("algebra_pb op is not a map"))?,
             }
         } else {

@@ -37,7 +37,10 @@ impl MapFunction<Record, Record> for GetVertexOperator {
     fn exec(&self, mut input: Record) -> FnResult<Record> {
         let entry = input
             .get(self.start_tag.as_ref())
-            .ok_or(FnExecError::get_tag_error("get tag failed in GetVertexOperator"))?;
+            .ok_or(FnExecError::get_tag_error(&format!(
+                "start_tag {:?} in GetVertexOperator",
+                self.start_tag
+            )))?;
         if let Some(e) = entry.as_graph_edge() {
             let (id, label) = match self.opt {
                 VOpt::Start => (e.src_id, e.get_src_label()),
@@ -57,7 +60,10 @@ impl MapFunction<Record, Record> for GetVertexOperator {
                 input.append(path_end, self.alias.clone());
                 Ok(input)
             } else {
-                Err(FnExecError::unsupported_error("Only support `GetV` with VOpt::End on a path entry"))?
+                Err(FnExecError::unsupported_error(&format!(
+                    "VOpt type {:?} of path entry in GetVertexOperator",
+                    self.opt
+                )))?
             }
         } else {
             Err(FnExecError::unexpected_data_error(

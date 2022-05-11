@@ -409,7 +409,7 @@ impl IRJobCompiler {
                                         .left_outer_join(right_stream)?
                                         .map(|(left, right)| {
                                             let left = left.ok_or(FnExecError::unexpected_data_error(
-                                                "left cannot be None in left outer join",
+                                                "left is None in left outer join",
                                             ))?;
                                             if let Some(right) = right {
                                                 // TODO(bingqing): Specify HeadJoinOpt if necessary
@@ -423,7 +423,7 @@ impl IRJobCompiler {
                                     .right_outer_join(right_stream)?
                                     .map(|(left, right)| {
                                         let right = right.ok_or(FnExecError::unexpected_data_error(
-                                            "right cannot be None in right outer join",
+                                            "right is None in right outer join",
                                         ))?;
                                         if let Some(left) = left {
                                             Ok(left.value.join(right.value, None))

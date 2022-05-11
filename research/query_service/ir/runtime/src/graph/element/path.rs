@@ -84,6 +84,13 @@ impl GraphPath {
         }
     }
 
+    pub fn get_path_mut(&mut self) -> Option<&mut Vec<VertexOrEdge>> {
+        match self {
+            GraphPath::WHOLE((w, _)) => Some(w),
+            GraphPath::END((_, _)) => None,
+        }
+    }
+
     pub fn take_path(self) -> Option<Vec<VertexOrEdge>> {
         match self {
             GraphPath::WHOLE((w, _)) => Some(w),
