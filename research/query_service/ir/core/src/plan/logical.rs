@@ -368,7 +368,7 @@ impl LogicalPlan {
                         }
                     }
                 }
-                Opr::Union(_) => {
+                Opr::Union(_) | Opr::Intersect(_) => {
                     self.meta
                         .set_union_curr_nodes(parent_ids.clone());
                 }

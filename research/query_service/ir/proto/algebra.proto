@@ -71,9 +71,21 @@ message Join {
   JoinKind kind = 3;
 }
 
-// Union two relations
+// Union multiple relations
 message Union {
-  repeated int32 parents = 3;
+  repeated int32 parents = 1;
+}
+
+// Intersect multiple relations regarding a given key. In order to do so, the relations must satisfy:
+// * They have exactly the same schema,
+// * The data of every two relations is the same tuple-wise except for the data field referred by the given key,
+// * The key must refer to an array of objects.
+// The results of the intersection,
+// taking intersecting two relations R1[a, b, c, ..., array] and R2[a, b, c, ..., array] as an example,
+// is R[a, b, c, ..., array], where for each tuple r of R,  r.array = r1.array <intersect> r2.array
+message Intersect {
+  repeated int32 parents = 1;
+  common.NameOrId key = 2;
 }
 
 message GroupBy {
@@ -403,7 +415,8 @@ message LogicalPlan {
       Limit limit = 12;
       Auxilia auxilia = 13;
       As as = 14;
-      Sink sink = 15;
+      Intersect intersect = 15;
+      Sink sink = 16;
       // Saving the room for relational operators
       GetV vertex = 30;
       EdgeExpand edge = 31;
