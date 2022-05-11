@@ -21,7 +21,6 @@ import functools
 
 import networkx.utils.misc
 
-from graphscope.client.session import get_session_by_id
 from graphscope.framework import dag_utils
 from graphscope.nx.utils.compat import import_as_graphscope_nx
 
@@ -79,3 +78,10 @@ def clear_mutation_cache(func):
         return func(*args, **kwargs)
 
     return wrapper
+
+
+def replace_with_inf(data):
+    for k, v in data.items():
+        if v == 1.7976931348623157e308:
+            data[k] = float("inf")
+    return data

@@ -17,15 +17,13 @@
 #
 
 import os
-from posixpath import expanduser
 
-import numpy as np
 import pandas as pd
 import pytest
 
 from graphscope import nx
 from graphscope.nx.tests.utils import almost_equal
-from graphscope.nx.tests.utils import replace_with_inf
+from graphscope.nx.utils.misc import replace_with_inf
 
 
 @pytest.mark.usefixtures("graphscope_session")
