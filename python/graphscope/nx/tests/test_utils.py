@@ -17,11 +17,8 @@
 # information.
 #
 
-import os
-
 import pytest
 
-import graphscope
 from graphscope import nx
 from graphscope.nx.tests.utils import assert_edges_equal
 from graphscope.nx.tests.utils import assert_graphs_equal

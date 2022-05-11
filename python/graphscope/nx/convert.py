@@ -69,6 +69,7 @@ def to_networkx_graph(data, create_using=None, multigraph_input=False):  # noqa:
                     % create_using._default_label
                 )
         create_using._graph_type = data.graph_type
+        return
 
     # networkx graph or graphscope.nx graph
     if hasattr(data, "adj"):
