@@ -193,7 +193,7 @@ def add_labels_to_graph(graph, loader_op):
         types_pb2.IS_FROM_VINEYARD_ID: utils.b_to_attr(False),
     }
     # inferred from the context of the dag.
-    config.update({types_pb2.GRAPH_NAME: utils.place_holder_to_attr()})
+    config.update({types_pb2.GRAPH_NAME: utils.s_to_attr("")})
     if graph._graph_type != graph_def_pb2.ARROW_PROPERTY:
         raise NotImplementedError(
             f"Add vertices or edges is not supported yet on graph type {graph._graph_type}"

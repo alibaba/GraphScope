@@ -57,8 +57,6 @@ message OpResult {
   // if success, store the metrics. (e.g. how many seconds used, memory bytes...)
   string metrics = 3;
 
-  string error_msg = 4;
-
   // result represents raw bytes if:
   //  1) NDArray or DataFrame
   //  2) Gremlin result
@@ -66,18 +64,9 @@ message OpResult {
   bool has_large_result = 5;
 
   // result represents app_name or context_key or raw bytes If the op returns a NDArray or DataFrame
+  // For CREATE_INTERACTIVE_QUERY {'object_id': object_id}
+  // For CREATE_LEARNING_INSTANCE {'object_id': id, 'handle': '', config: ''}
   bytes result = 6;
-
-  // learning graph handle
-  bytes handle = 7;
-
-  // learning graph config
-  bytes config = 8;
-
-  // extra info for specific op
-  //  1) CREATE_INTERACTIVE_QUERY: object id
-  //  2) CREATE_LEARNING_INSTANCE: object_id
-  bytes extra_info = 9;
 
   // if the op create a graph or modify a graph, return the meta data of the graph.
   gs.rpc.graph.GraphDefPb graph_def = 31;

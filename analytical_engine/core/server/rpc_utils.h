@@ -75,13 +75,13 @@ inline float get_param_impl<float>(const std::map<int, rpc::AttrValue>& params,
 template <>
 inline rpc::graph::GraphTypePb get_param_impl<rpc::graph::GraphTypePb>(
     const std::map<int, rpc::AttrValue>& params, rpc::ParamKey key) {
-  return params.at(key).graph_type();
+  return static_cast<rpc::graph::GraphTypePb>(params.at(key).i());
 }
 
 template <>
 inline rpc::ModifyType get_param_impl<rpc::ModifyType>(
     const std::map<int, rpc::AttrValue>& params, rpc::ParamKey key) {
-  return params.at(key).modify_type();
+  return static_cast<rpc::ModifyType>(params.at(key).i());
 }
 
 template <>
@@ -93,7 +93,7 @@ inline rpc::AttrValue_ListValue get_param_impl<rpc::AttrValue_ListValue>(
 template <>
 inline rpc::ReportType get_param_impl<rpc::ReportType>(
     const std::map<int, rpc::AttrValue>& params, rpc::ParamKey key) {
-  return params.at(key).report_type();
+  return static_cast<rpc::ReportType>(params.at(key).i());
 }
 
 /**

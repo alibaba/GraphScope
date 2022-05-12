@@ -119,12 +119,13 @@ if __name__ == "__main__":
     output_dir = sys.argv[1]
     output_dir = os.path.realpath(os.path.realpath(output_dir))
     create_path(output_dir)
-    print("Generating cpp proto to:" + output_dir)
 
     if len(sys.argv) <= 2 or len(sys.argv) > 2 and sys.argv[2] == "--cpp":
+        print("Generating cpp proto to:" + output_dir)
         cpp_out(relative_dir, output_dir)
         cpp_service_out(relative_dir, output_dir)
 
     if len(sys.argv) <= 2 or len(sys.argv) > 2 and sys.argv[2] == "--python":
+        print("Generating python proto to:" + output_dir)
         python_out(relative_dir, output_dir)
         python_service_out(relative_dir, output_dir)
