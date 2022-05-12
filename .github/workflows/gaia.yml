@@ -103,5 +103,5 @@ jobs:
       if: always()
       uses: actions/upload-artifact@v2
       with:
-      name: gie-log
-      path: ~/.local/log/graphscope
+        name: gie-log
+        path: ~/.local/log/graphscope
