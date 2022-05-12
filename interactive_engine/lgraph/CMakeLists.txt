@@ -32,16 +32,16 @@ find_package(gRPC 1.26.0 REQUIRED)
 find_package(CppKafka 0.3.1 REQUIRED)
 
 # Proto file generating
-set(PROTO_FILE_DIR ${Lgraph_SOURCE_DIR}/../proto)
+set(PROTO_FILE_DIR ${Lgraph_SOURCE_DIR}/../proto/sdk)
 set(GRPC_FILES
-  ${PROTO_FILE_DIR}/sdk/client.proto
-  ${PROTO_FILE_DIR}/sdk/client_backup_service.proto)
+  ${PROTO_FILE_DIR}/client.proto
+  ${PROTO_FILE_DIR}/client_backup_service.proto)
 set(PROTO_FILES
   ${GRPC_FILES}
-  ${PROTO_FILE_DIR}/sdk/model.proto
-  ${PROTO_FILE_DIR}/sdk/common.proto)
+  ${PROTO_FILE_DIR}/model.proto
+  ${PROTO_FILE_DIR}/common.proto)
 set(PROTOBUF_IMPORT_DIRS ${Lgraph_SOURCE_DIR}/../proto)
-set(PROTO_BUILD_DIR ${Lgraph_BINARY_DIR}/generated/sdk)
+set(PROTO_BUILD_DIR ${Lgraph_BINARY_DIR}/generated)
 set(PROTO_SRCS_DEST_DIR ${Lgraph_SOURCE_DIR}/src/proto/sdk)
 set(PROTO_HDRS_DEST_DIR ${Lgraph_SOURCE_DIR}/include/lgraph/proto/sdk)
 file(MAKE_DIRECTORY ${PROTO_BUILD_DIR})
@@ -64,6 +64,7 @@ grpc_generate_cpp(
   ${PROTO_HDRS_DEST_DIR}
   ${GRPC_FILES})
 include_directories(${Lgraph_SOURCE_DIR}/include/lgraph/proto)
+include_directories(${PROTO_HDRS_DEST_DIR})
 
 # Maxgraph Ffi Dependency
 if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
