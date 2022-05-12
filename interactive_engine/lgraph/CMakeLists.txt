@@ -41,9 +41,9 @@ set(PROTO_FILES
   ${PROTO_FILE_DIR}/model.proto
   ${PROTO_FILE_DIR}/common.proto)
 set(PROTOBUF_IMPORT_DIRS ${Lgraph_SOURCE_DIR}/../proto)
-set(PROTO_BUILD_DIR ${Lgraph_BINARY_DIR}/generated/sdk)
-set(PROTO_SRCS_DEST_DIR ${Lgraph_SOURCE_DIR}/src/proto/sdk)
-set(PROTO_HDRS_DEST_DIR ${Lgraph_SOURCE_DIR}/include/lgraph/proto/sdk)
+set(PROTO_BUILD_DIR ${Lgraph_BINARY_DIR}/generated)
+set(PROTO_SRCS_DEST_DIR ${Lgraph_SOURCE_DIR}/src/proto)
+set(PROTO_HDRS_DEST_DIR ${Lgraph_SOURCE_DIR}/include/lgraph/proto)
 file(MAKE_DIRECTORY ${PROTO_BUILD_DIR})
 file(MAKE_DIRECTORY ${PROTO_SRCS_DEST_DIR})
 file(MAKE_DIRECTORY ${PROTO_HDRS_DEST_DIR})
@@ -63,7 +63,7 @@ grpc_generate_cpp(
   ${PROTO_SRCS_DEST_DIR}
   ${PROTO_HDRS_DEST_DIR}
   ${GRPC_FILES})
-include_directories(${Lgraph_SOURCE_DIR}/include/lgraph/proto)
+include_directories(${PROTO_HDRS_DEST_DIR})
 
 # Maxgraph Ffi Dependency
 if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
