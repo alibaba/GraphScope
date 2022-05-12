@@ -28,10 +28,10 @@
 #include "core/config.h"
 #include "core/error.h"
 #include "core/server/command_detail.h"
-#include "proto/graphscope/proto/attr_value.pb.h"
-#include "proto/graphscope/proto/message.pb.h"
-#include "proto/graphscope/proto/op_def.pb.h"
-#include "proto/graphscope/proto/types.pb.h"
+#include "graphscope/proto/attr_value.pb.h"
+#include "graphscope/proto/message.pb.h"
+#include "graphscope/proto/op_def.pb.h"
+#include "graphscope/proto/types.pb.h"
 
 namespace gs {
 namespace rpc {

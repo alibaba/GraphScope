@@ -27,8 +27,8 @@
 #include "core/context/i_context.h"
 #include "core/object/gs_object.h"
 #include "core/server/rpc_utils.h"
-#include "proto/graphscope/proto/attr_value.pb.h"
-#include "proto/graphscope/proto/graph_def.pb.h"
+#include "graphscope/proto/attr_value.pb.h"
+#include "graphscope/proto/graph_def.pb.h"
 
 namespace gs {
 class IContextWrapper;

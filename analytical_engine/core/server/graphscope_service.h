@@ -23,11 +23,11 @@
 #include <vector>
 
 #include "core/server/dispatcher.h"
-#include "proto/graphscope/proto/attr_value.pb.h"
-#include "proto/graphscope/proto/engine_service.grpc.pb.h"
-#include "proto/graphscope/proto/graph_def.pb.h"
-#include "proto/graphscope/proto/message.pb.h"
-#include "proto/graphscope/proto/op_def.pb.h"
+#include "graphscope/proto/attr_value.pb.h"
+#include "graphscope/proto/engine_service.grpc.pb.h"
+#include "graphscope/proto/graph_def.pb.h"
+#include "graphscope/proto/message.pb.h"
+#include "graphscope/proto/op_def.pb.h"
 
 #include "boost/lexical_cast.hpp"
 

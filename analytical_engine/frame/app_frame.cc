@@ -21,7 +21,7 @@
 #include "core/app/app_invoker.h"
 #include "core/error.h"
 #include "frame/ctx_wrapper_builder.h"
-#include "proto/graphscope/proto/query_args.pb.h"
+#include "graphscope/proto/query_args.pb.h"
 
 #define DO_QUOTE(X) #X
 #define QUOTE(X) DO_QUOTE(X)

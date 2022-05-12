@@ -44,7 +44,7 @@
 #include "core/object/projector.h"
 #include "core/server/rpc_utils.h"
 #include "core/utils/fragment_traits.h"
-#include "proto/graphscope/proto/types.pb.h"
+#include "graphscope/proto/types.pb.h"
 
 namespace gs {
 

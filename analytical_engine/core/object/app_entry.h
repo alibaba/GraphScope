@@ -28,7 +28,7 @@
 #include "core/error.h"
 #include "core/object/gs_object.h"
 #include "core/utils/lib_utils.h"
-#include "proto/graphscope/proto/query_args.pb.h"
+#include "graphscope/proto/query_args.pb.h"
 
 namespace gs {
 

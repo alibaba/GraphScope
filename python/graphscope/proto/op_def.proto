@@ -49,27 +49,37 @@ message OpDef {
 
 // Result of Op
 message OpResult {
-  Code code = 1;
+  message Meta {
+    Code code = 1;
+    // if success, store the metrics. (e.g. how many seconds used, memory bytes...)
+    string metrics = 2;
+  
+    // result represents raw bytes if:
+    //  1) NDArray or DataFrame
+    //  2) Gremlin result
+    //  3) Graph report information of Networkx
+    bool has_large_result = 3;
+    
+    // CREATE_INTERACTIVE_QUERY
+    // CREATE_LEARNING_INSTANCE
+    bytes object_id = 4;
+
+      // learning graph handle
+    bytes handle = 7;
+
+    // learning graph config
+    bytes config = 8;
+
+    // if the op create a graph or modify a graph, return the meta data of the graph.
+    gs.rpc.graph.GraphDefPb graph_def = 31;
+  };
 
   // unique key for every op
-  string key = 2;
+  string key = 1;
 
-  // if success, store the metrics. (e.g. how many seconds used, memory bytes...)
-  string metrics = 3;
-
-  // result represents raw bytes if:
-  //  1) NDArray or DataFrame
-  //  2) Gremlin result
-  //  3) Graph report information of Networkx
-  bool has_large_result = 5;
-
+  Meta meta = 2;
   // result represents app_name or context_key or raw bytes If the op returns a NDArray or DataFrame
-  // For CREATE_INTERACTIVE_QUERY {'object_id': object_id}
-  // For CREATE_LEARNING_INSTANCE {'object_id': id, 'handle': '', config: ''}
-  bytes result = 6;
-
-  // if the op create a graph or modify a graph, return the meta data of the graph.
-  gs.rpc.graph.GraphDefPb graph_def = 31;
+  bytes result = 3;
 };
 
 // Consist by list of ops.

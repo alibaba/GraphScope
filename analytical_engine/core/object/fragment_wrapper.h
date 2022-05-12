@@ -45,8 +45,8 @@
 #include "core/object/gs_object.h"
 #include "core/object/i_fragment_wrapper.h"
 #include "core/utils/transform_utils.h"
-#include "proto/graphscope/proto/attr_value.pb.h"
-#include "proto/graphscope/proto/graph_def.pb.h"
+#include "graphscope/proto/attr_value.pb.h"
+#include "graphscope/proto/graph_def.pb.h"
 
 namespace gs {
 

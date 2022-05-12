@@ -28,7 +28,7 @@
 #include "core/object/fragment_wrapper.h"
 #include "core/server/rpc_utils.h"
 #include "core/utils/fragment_traits.h"
-#include "proto/graphscope/proto/attr_value.pb.h"
+#include "graphscope/proto/attr_value.pb.h"
 
 #if !defined(_PROJECTED_GRAPH_TYPE)
 #error "_PROJECTED_GRAPH_TYPE is undefined"

@@ -108,25 +108,27 @@ if __name__ == "__main__":
         print("Usage: python proto_generator.py <OUTPUT_PATH> [--cpp] [--python]")
         sys.exit(1)
 
-    # path to 'GraphScope/proto/python/proto'
+    # path to 'GraphScope/python/graphscope/proto'
     current_dir = os.path.dirname(os.path.abspath(__file__))
 
-    # path to 'python/graphscope/proto'
+    # path to 'GraphScope/python'
     base_dir = os.path.join(current_dir, "../", "../")
     os.chdir(base_dir)
     # must use relative path
     relative_dir = os.path.join(".", "graphscope", "proto")
 
     output_dir = sys.argv[1]
+    print(output_dir)
     output_dir = os.path.realpath(os.path.realpath(output_dir))
+    print(output_dir)
     create_path(output_dir)
 
     if len(sys.argv) <= 2 or len(sys.argv) > 2 and sys.argv[2] == "--cpp":
-        print("Generating cpp proto to:" + output_dir)
+        print("Generating cpp proto to: " + output_dir)
         cpp_out(relative_dir, output_dir)
         cpp_service_out(relative_dir, output_dir)
 
     if len(sys.argv) <= 2 or len(sys.argv) > 2 and sys.argv[2] == "--python":
-        print("Generating python proto to:" + output_dir)
+        print("Generating python proto to: " + output_dir)
         python_out(relative_dir, output_dir)
         python_service_out(relative_dir, output_dir)
