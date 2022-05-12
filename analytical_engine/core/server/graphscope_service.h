@@ -71,8 +71,8 @@ class GraphScopeService final : public GAEService::Service {
     const std::string& data = result.data();
 
     // has_large_result
-    op_result->set_has_large_result(result.has_large_data());
-    if (op_result->has_large_result()) {
+    op_result->mutable_meta()->set_has_large_result(result.has_large_data());
+    if (op_result->meta().has_large_result()) {
       // split
       for (size_t i = 0; i < data.size(); i += chunk_size_) {
         RunStepResponse response_body;

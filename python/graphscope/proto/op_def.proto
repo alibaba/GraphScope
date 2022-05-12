@@ -49,27 +49,27 @@ message OpDef {
 
 // Result of Op
 message OpResult {
-  // message Meta {
+  message Meta {
+    // if success, store the metrics. (e.g. how many seconds used, memory bytes...)
+    string metrics = 1;
+    
+    // result represents raw bytes if:
+    //  1) NDArray or DataFrame
+    //  2) Gremlin result
+    //  3) Graph report information of Networkx
+    bool has_large_result = 2;
+    
+    // if the op create a graph or modify a graph, return the meta data of the graph.
+    gs.rpc.graph.GraphDefPb graph_def = 3;
+  };
+  // Status code
   Code code = 1;
-  
-  // };
-  
   // unique key for every op
-  string key =2;
-  
+  string key = 2;
+  Meta meta = 3;
   // result represents app_name or context_key or raw bytes If the op returns a NDArray or DataFrame
-  bytes result = 3;
-  // if success, store the metrics. (e.g. how many seconds used, memory bytes...)
-  string metrics = 4;
-  // Meta meta = 2;
-  
-  // result represents raw bytes if:
-  //  1) NDArray or DataFrame
-  //  2) Gremlin result
-  //  3) Graph report information of Networkx
-  bool has_large_result = 5;
-  // if the op create a graph or modify a graph, return the meta data of the graph.
-  gs.rpc.graph.GraphDefPb graph_def = 6;
+  bytes result = 4;
+  string error_msg = 5; 
 };
 
 // Consist by list of ops.

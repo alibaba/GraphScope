@@ -118,9 +118,7 @@ if __name__ == "__main__":
     relative_dir = os.path.join(".", "graphscope", "proto")
 
     output_dir = sys.argv[1]
-    print(output_dir)
     output_dir = os.path.realpath(os.path.realpath(output_dir))
-    print(output_dir)
     create_path(output_dir)
 
     if len(sys.argv) <= 2 or len(sys.argv) > 2 and sys.argv[2] == "--cpp":

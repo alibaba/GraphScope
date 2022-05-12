@@ -145,7 +145,7 @@ def split_op_result(op_result: op_def_pb2.OpResult):
 
     Note that this function may modify `result` attribute of op_result.
     """
-    if op_result.has_large_result:
+    if op_result.meta.has_large_result:
         result = op_result.result
         splited_result = [
             result[i : i + CHUNK_SIZE] for i in range(0, len(result), CHUNK_SIZE)

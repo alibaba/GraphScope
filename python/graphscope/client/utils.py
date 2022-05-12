@@ -130,7 +130,7 @@ class GRPCUtils(object):
                 has_next = response.body.has_next
         cursor = 0
         for op_result in response_head.head.results:
-            if op_result.has_large_result:
+            if op_result.meta.has_large_result:
                 op_result.result = chunks[cursor]
                 cursor += 1
         return response_head.head

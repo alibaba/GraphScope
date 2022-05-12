@@ -916,11 +916,11 @@ class CoordinatorServiceServicer(
                 rlt = result_set.all().result()
         except Exception as e:
             raise RuntimeError("Fetch gremlin result failed") from e
-
+        meta = op_def_pb2.OpResult.Meta(has_large_result=True)
         return op_def_pb2.OpResult(
             code=error_codes_pb2.OK,
             key=op.key,
-            has_large_result=True,
+            has_large_result=meta,
             result=pickle.dumps(rlt),
         )
 
