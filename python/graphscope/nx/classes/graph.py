@@ -33,7 +33,6 @@ from graphscope.client.session import get_default_session
 from graphscope.client.session import get_session_by_id
 from graphscope.framework import dag_utils
 from graphscope.framework import utils
-from graphscope.framework.errors import check_argument
 from graphscope.framework.graph_schema import GraphSchema
 from graphscope.nx import NetworkXError
 from graphscope.nx.classes.cache import Cache
@@ -49,7 +48,7 @@ from graphscope.nx.classes.reportviews import NodeView
 from graphscope.nx.convert import to_networkx_graph
 from graphscope.nx.utils.compat import patch_docstring
 from graphscope.nx.utils.misc import clear_mutation_cache
-from graphscope.nx.utils.misc import empty_graph_in_engine
+from graphscope.nx.utils.misc import init_empty_graph_in_engine
 from graphscope.proto import graph_def_pb2
 from graphscope.proto import types_pb2
 
@@ -94,9 +93,8 @@ class Graph(_GraphBase):
         Data to initialize graph. If None (default) an empty
         graph is created.  The data can be any format that is supported
         by the to_networkx_graph() function, currently including edge list,
-        dict of dicts, dict of lists, NetworkX graph, NumPy matrix
-        or 2d ndarray, Pandas DataFrame, SciPy sparse matrix, or a GraphScope
-        graph object.
+        dict of dicts, dict of lists, NetworkX graph, 2D NumPy array, SciPy
+        sparse matrix or a GraphScope graph object.
 
     default_label : default node label (optional, default: None)
         if incoming_graph_data is a GraphScope graph object, default label means
@@ -286,11 +284,10 @@ class Graph(_GraphBase):
         ----------
         incoming_graph_data : input graph (optional, default: None)
             Data to initialize graph. If None (default) an empty
-            graph is created.  The data can be any format that is supported
-            by the to_networkx_graph() function, currently including edge list,
-            dict of dicts, dict of lists, NetworkX graph, NumPy matrix
-            or 2d ndarray, Pandas DataFrame, SciPy sparse matrix, or a GraphScope
-            graph object.
+            graph is created. The data can be an edge list, any
+            NetworkX graph object or any GraphScope graph object.
+            If the corresponding optional Python packages are installed
+            the data can also be a 2D NumPy array, a SciPy sparse matrix
 
         default_label : default node label (optional, default: "_")
             if incoming_graph_data is a GraphScope graph object, default label means
@@ -300,6 +297,9 @@ class Graph(_GraphBase):
         attr : keyword arguments, optional (default= no attributes)
             Attributes to add to graph as key=value pairs.
 
+        See Also
+        --------
+        convert
 
         Examples
         --------
@@ -321,14 +321,13 @@ class Graph(_GraphBase):
         >>> G = nx.Graph(g, default_label="person") # or DiGraph
 
         """
-
         self.graph_attr_dict_factory = self.graph_attr_dict_factory
         self.node_dict_factory = self.node_dict_factory
         self.adjlist_outer_dict_factory = self.adjlist_outer_dict_factory
-        self.graph = self.graph_attr_dict_factory()
         self.cache = self.graph_cache_factory(self)
 
         # init node and adj (must be after cache)
+        self.graph = self.graph_attr_dict_factory()
         self._node = self.node_dict_factory(self)
         self._adj = self.adjlist_outer_dict_factory(self)
 
@@ -336,7 +335,7 @@ class Graph(_GraphBase):
         self._op = None
         self._schema = GraphSchema()
 
-        # caches for add_node and add_edge
+        # buffer caches for add_node and add_edge
         self._add_node_cache = []
         self._add_edge_cache = []
         self._remove_node_cache = []
@@ -348,29 +347,24 @@ class Graph(_GraphBase):
         self._distributed = attr.pop("dist", False)
         if incoming_graph_data is not None and self._is_gs_graph(incoming_graph_data):
             # convert from gs graph always use distributed mode
-            self._distributed = True
             if self._session is None:
                 self._session = get_session_by_id(incoming_graph_data.session_id)
         self._default_label = default_label
         self._default_label_id = -1
 
         if self._session is None:
-            self._try_to_get_default_session()
+            self._session = get_default_session()
 
         if not self._is_gs_graph(incoming_graph_data) and create_empty_in_engine:
-            graph_def = empty_graph_in_engine(
+            graph_def = init_empty_graph_in_engine(
                 self, self.is_directed(), self._distributed
             )
             self._key = graph_def.key
 
         # attempt to load graph with data
         if incoming_graph_data is not None:
-            if self._is_gs_graph(incoming_graph_data):
-                self._init_with_arrow_property_graph(incoming_graph_data)
-                self.cache.warmup()
-            else:
-                g = to_networkx_graph(incoming_graph_data, create_using=self)
-                check_argument(isinstance(g, Graph))
+            to_networkx_graph(incoming_graph_data, create_using=self)
+            self.cache.warmup()
 
         # load graph attributes (must be after to_networkx_graph)
         self.graph.update(attr)
@@ -382,21 +376,6 @@ class Graph(_GraphBase):
             hasattr(incoming_graph_data, "graph_type")
             and incoming_graph_data.graph_type == graph_def_pb2.ARROW_PROPERTY
         )
-
-    def _try_to_get_default_session(self):
-        try:
-            session = get_default_session()
-        except RuntimeError:
-            raise RuntimeError(
-                "The nx binding session is None, that maybe no default session found. "
-                "Please register a session as default session."
-            )
-        if not session.eager():
-            raise RuntimeError(
-                "NetworkX module need session to be eager mode. "
-                "The default session is lazy mode."
-            )
-        self._session = session
 
     def __del__(self):
         if self._session.info["status"] != "active" or self._key is None:
@@ -1565,7 +1544,7 @@ class Graph(_GraphBase):
         if self._graph_type == graph_def_pb2.ARROW_PROPERTY:
             # create an empty graph, no need to convert arrow to dynamic
             self._graph_type = graph_def_pb2.DYNAMIC_PROPERTY
-            graph_def = empty_graph_in_engine(
+            graph_def = init_empty_graph_in_engine(
                 self, self.is_directed(), self._distributed
             )
             self._key = graph_def.key
@@ -1909,81 +1888,6 @@ class Graph(_GraphBase):
         g.cache.warmup()
         return g
 
-    def _is_view(self):
-        return hasattr(self, "_graph")
-
-    def _get_neighbors(self, n, pred=False):
-        """Get the neighbors of node.
-
-        Parameters
-        ----------
-        n: node
-            the node to get neighbors.
-        report_type:
-            the report type of report graph operation,
-                types_pb2.SUCCS_BY_NODE: get the successors of node,
-                types_pb2.PREDS_BY_NODE: get the predecessors of node,
-
-        Returns
-        -------
-        neighbors: tuple
-
-        Raises
-        ------
-        Raise NetworkxError if node not in graph.
-
-        Examples
-        --------
-        >>> g = nx.Graph()
-        >>> g.add_edges_from([(0, 1), (0, 2)])
-        >>> g._get_neighbors(0)
-        (0, 1)
-        """
-        if n not in self:
-            raise NetworkXError("The node %s is not in the graph." % (n,))
-        if self.graph_type == graph_def_pb2.ARROW_PROPERTY:
-            n = self._convert_to_label_id_tuple(n)
-        report_t = types_pb2.PREDS_BY_NODE if pred else types_pb2.SUCCS_BY_NODE
-        op = dag_utils.report_graph(self, report_t, node=json.dumps(n))
-        archive = op.eval()
-        return msgpack.unpackb(archive.get_bytes(), use_list=False)
-
-    def _get_neighbors_attr(self, n, pred=False):
-        """Get the neighbors attr of node.
-
-        Parameters
-        ----------
-        n: node
-            the node to get neighbors.
-        report_type:
-            the report type of report graph operation,
-                types_pb2.SUCC_ATTR_BY_NODE: get the successors attr of node,
-                types_pb2.PRED_ATTR_BY_NODE: get the predecessors attr of node,
-
-        Returns
-        -------
-        attr: list
-
-        Raises
-        ------
-        Raise NetworkxError if node not in graph.
-
-        Examples
-        --------
-        >>> g = nx.Graph()
-        >>> g.add_edges_from([(0, 1), (0, 2)])
-        >>> g._get_nbrs(0)
-        [{}, {}]
-        """
-        if n not in self:
-            raise NetworkXError("The node %s is not in the graph." % (n,))
-        if self.graph_type == graph_def_pb2.ARROW_PROPERTY:
-            n = self._convert_to_label_id_tuple(n)
-        report_t = types_pb2.PRED_ATTR_BY_NODE if pred else types_pb2.SUCC_ATTR_BY_NODE
-        op = dag_utils.report_graph(self, report_t, node=json.dumps(n))
-        archive = op.eval()
-        return json.loads(archive.get_bytes())
-
     @clear_mutation_cache
     def _project_to_simple(self, v_prop=None, e_prop=None):
         """Project nx graph to a simple graph to run builtin algorithms.
@@ -2027,34 +1931,6 @@ class Graph(_GraphBase):
         graph._graph = self  # projected graph also can report nodes.
         graph._is_client_view = False
         return graph
-
-    def _init_with_arrow_property_graph(self, arrow_property_graph):
-        """Init graph with arrow property graph"""
-        # check session and direction compatible
-        if arrow_property_graph.session_id != self.session_id:
-            raise NetworkXError(
-                "The source graph is not loaded in session {}." % self.session_id
-            )
-        if arrow_property_graph.is_directed() != self.is_directed():
-            if arrow_property_graph.is_directed():
-                msg = "The source graph is a directed graph, can't be used to init nx.Graph. You may use nx.DiGraph"
-            else:
-                msg = "The source graph is a undirected graph, can't be used to init nx.DiGraph. You may use nx.Graph"
-            raise NetworkXError(msg)
-
-        self._key = arrow_property_graph.key
-        self._schema = arrow_property_graph.schema
-        self._op = arrow_property_graph.op
-        if self._default_label is not None:
-            try:
-                self._default_label_id = self._schema.get_vertex_label_id(
-                    self._default_label
-                )
-            except KeyError:
-                raise NetworkXError(
-                    "default label {} not existed in graph." % self._default_label
-                )
-        self._graph_type = graph_def_pb2.ARROW_PROPERTY
 
     def _clear_adding_cache(self):
         reset_cache = bool(

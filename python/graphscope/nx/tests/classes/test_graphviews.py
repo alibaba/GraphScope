@@ -22,8 +22,7 @@ import pytest
 from networkx.classes.tests import test_graphviews as test_gvs
 
 from graphscope import nx
-from graphscope.nx.tests.utils import assert_edges_equal
-from graphscope.nx.tests.utils import assert_nodes_equal
+from graphscope.nx.utils.misc import edges_equal
 
 # Note: SubGraph views are not tested here. They have their own testing file
 
@@ -77,7 +76,7 @@ class TestToDirected(test_gvs.TestToDirected):
 
     def test_already_directed(self):
         dd = nx.to_directed(self.dv)
-        assert_edges_equal(dd.edges, self.dv.edges)
+        assert edges_equal(dd.edges, self.dv.edges)
 
     def test_iter(self):
         edges = list(self.G.edges)
@@ -98,10 +97,10 @@ class TestToUndirected(test_gvs.TestToUndirected):
 
     def test_already_directed(self):
         uu = nx.to_undirected(self.uv)
-        assert_edges_equal(uu.edges, self.uv.edges)
+        assert edges_equal(uu.edges, self.uv.edges)
 
     def test_iter(self):
-        assert_edges_equal(self.uv.edges, self.DG.edges)
+        assert edges_equal(self.uv.edges, self.DG.edges)
 
 
 @pytest.mark.usefixtures("graphscope_session")

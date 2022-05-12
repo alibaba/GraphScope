@@ -26,6 +26,7 @@ from collections.abc import Iterator
 
 import networkx.convert
 
+import graphscope
 from graphscope import nx
 from graphscope.nx.utils.compat import import_as_graphscope_nx
 from graphscope.nx.utils.compat import patch_docstring
@@ -35,6 +36,42 @@ import_as_graphscope_nx(networkx.convert)
 
 @patch_docstring(networkx.convert.to_networkx_graph)
 def to_networkx_graph(data, create_using=None, multigraph_input=False):  # noqa: C901
+    # graphscope graph
+    if isinstance(data, graphscope.Graph):
+        if create_using is None:
+            raise nx.NetworkXError(
+                "Use None to convert graphscope graph to networkx graph."
+            )
+        # check session and direction compatible
+        if data.session_id != create_using.session_id:
+            raise nx.NetworkXError(
+                "The source graph is not loaded in session {}."
+                % create_using.session_id
+            )
+        if data.is_directed() != create_using.is_directed():
+            if data.is_directed():
+                msg = "The source graph is a directed graph, can't be used to init nx.Graph. You may use nx.DiGraph"
+            else:
+                msg = "The source graph is a undirected graph, can't be used to init nx.DiGraph. You may use nx.Graph"
+            raise nx.NetworkXError(msg)
+        create_using._key = data.key
+        create_using._schema = data.schema
+        create_using._op = data.op
+        if create_using._default_label is not None:
+            try:
+                create_using._default_label_id = (
+                    create_using._schema.get_vertex_label_id(
+                        create_using._default_label
+                    )
+                )
+            except KeyError:
+                raise nx.NetworkXError(
+                    "default label {} not existed in graph."
+                    % create_using._default_label
+                )
+        create_using._graph_type = data.graph_type
+        return
+
     # networkx graph or graphscope.nx graph
     if hasattr(data, "adj"):
         try:

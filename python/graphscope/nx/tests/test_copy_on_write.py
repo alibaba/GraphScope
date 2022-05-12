@@ -18,17 +18,15 @@
 
 import os
 
-import pandas as pd
 import pytest
-from networkx.testing.utils import assert_graphs_equal
 
 import graphscope
 import graphscope.nx as nx
 from graphscope.framework.loader import Loader
-from graphscope.nx import NetworkXError
 from graphscope.nx.tests.classes.test_digraph import TestDiGraph as _TestDiGraph
 from graphscope.nx.tests.classes.test_graph import TestGraph as _TestGraph
 from graphscope.nx.tests.utils import almost_equal
+from graphscope.nx.utils.misc import graphs_equal
 
 
 def k3_graph(prefix, directed):
@@ -195,9 +193,9 @@ class TestGraphCopyOnWrite(_TestGraph):
         GG = G.copy()
         H = self.Graph()
         GG.update(H)
-        assert_graphs_equal(G, GG)
+        assert graphs_equal(G, GG)
         H.update(G)
-        assert_graphs_equal(H, G)
+        assert graphs_equal(H, G)
 
         # update nodes only
         H = self.Graph()
