@@ -22,6 +22,7 @@ import shutil
 import subprocess
 import sys
 
+
 def gather_all_proto(proto_dir, suffix="*.proto"):
     directory = os.path.join(proto_dir, suffix)
     files = glob.glob(directory)
@@ -76,7 +77,7 @@ def cpp_service_out(relative_dir, output_dir):
             [
                 shutil.which("protoc"),
                 "-I%s" % ".",
-                "--grpc_out=%s" %  output_dir,
+                "--grpc_out=%s" % output_dir,
                 "--plugin=protoc-gen-grpc=%s" % plugin_path,
                 proto_file,
             ],
@@ -93,7 +94,7 @@ def python_service_out(relative_dir, output_dir):
                 sys.executable,
                 "-m",
                 "grpc_tools.protoc",
-                "-I%s" % '.',
+                "-I%s" % ".",
                 "--python_out=%s" % output_dir,
                 "--grpc_python_out=%s" % output_dir,
                 proto_file,
