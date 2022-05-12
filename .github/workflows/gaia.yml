@@ -95,5 +95,7 @@ jobs:
       run: |
         source ${HOME}/.bashrc
         export USE_GAIA_ENGINE=true
-        cd ${GITHUB_WORKSPACE}/interactive_engine/ir-adaptor && ./ir_vineyard_ci.sh
+        cd ${GITHUB_WORKSPACE}/interactive_engine/ir-adaptor
+        ./kill.sh
+        ./ir_vineyard_ci.sh
 
