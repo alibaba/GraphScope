@@ -41,8 +41,6 @@ pub mod config;
 pub mod rpc;
 pub mod service;
 
-pub use generated::protocol::{JobRequest, JobResponse};
-
 #[allow(dead_code)]
 pub fn report_memory(job_id: u64) -> Option<std::thread::JoinHandle<()>> {
     let g = std::thread::Builder::new()

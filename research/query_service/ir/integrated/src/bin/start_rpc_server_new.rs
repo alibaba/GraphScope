@@ -15,9 +15,8 @@
 
 use std::path::PathBuf;
 
-use graph_proxy::{create_demo_graph, SimplePartition};
+use graph_proxy::{InitializeJobCompiler, QueryExpGraph};
 use log::info;
-use runtime::assembly::IRJobAssembly;
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
@@ -34,9 +33,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let (server_config, rpc_config) = pegasus_server::config::load_configs(config.config_dir).unwrap();
 
     let num_servers = server_config.servers_size();
-    create_demo_graph();
-    let partitioner = SimplePartition { num_servers };
-    let factory = IRJobAssembly::new(partitioner);
+    let query_exp_graph = QueryExpGraph::new(num_servers);
+    let factory = query_exp_graph.initialize_job_compiler();
     info!("try to start rpc server;");
 
     pegasus_server::cluster::standalone::start(rpc_config, server_config, factory).await?;

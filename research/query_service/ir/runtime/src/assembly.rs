@@ -483,14 +483,11 @@ impl JobAssembly for IRJobAssembly {
             let task = decode::<server_pb::TaskPlan>(&plan.plan)?;
             let stream = self.install(source, &task.plan)?;
             // TODO: may return Vec<u8> in encoder.exec();
-            let ec = self.udf_gen.gen_sink(&plan.resource)?;
+            let sink = decode::<server_pb::Sink>(&plan.resource)?;
+            let ec = self.udf_gen.gen_sink(&sink.resource)?;
             stream
                 .map(move |record| ec.exec(record))?
-                .map(|res| {
-                    let mut buf: Vec<u8> = vec![];
-                    res.encode(&mut buf).unwrap();
-                    Ok(buf)
-                })?
+                .map(|res| Ok(res.encode_to_vec()))?
                 .sink_into(output)
         })
     }

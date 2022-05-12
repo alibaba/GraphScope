@@ -13,32 +13,37 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use runtime_server::pb;
 use std::error::Error;
+
+use pegasus_server::pb as pegasus_pb;
 use tonic::transport::Channel;
 use tonic::{Request, Streaming};
 
 pub mod builder;
 
 pub struct JobRpcClient {
-    stub: pb::job_service_client::JobServiceClient<Channel>,
+    stub: pegasus_pb::job_service_client::JobServiceClient<Channel>,
 }
 
 impl JobRpcClient {
     pub async fn from_str(addr: &'static str) -> Result<Self, Box<dyn Error>> {
-        let stub = pb::job_service_client::JobServiceClient::connect(addr).await?;
+        let stub = pegasus_pb::job_service_client::JobServiceClient::connect(addr).await?;
         Ok(JobRpcClient { stub })
     }
 
     pub fn new(ch: Channel) -> Self {
-        let stub = pb::job_service_client::JobServiceClient::new(ch);
+        let stub = pegasus_pb::job_service_client::JobServiceClient::new(ch);
         JobRpcClient { stub }
     }
 
     pub async fn submit(
-        &mut self, job_req: pb::JobRequest,
-    ) -> Result<Streaming<pb::JobResponse>, Box<dyn Error>> {
-        Ok(self.stub.submit(Request::new(job_req)).await?.into_inner())
+        &mut self, job_req: pegasus_pb::JobRequest,
+    ) -> Result<Streaming<pegasus_pb::JobResponse>, Box<dyn Error>> {
+        Ok(self
+            .stub
+            .submit(Request::new(job_req))
+            .await?
+            .into_inner())
     }
 }
 

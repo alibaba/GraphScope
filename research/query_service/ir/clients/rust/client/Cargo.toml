@@ -6,8 +6,9 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-runtime_server = { path = "../../../../../query_service/ir/server" }
-pegasus = { path = "../../../pegasus" }
+runtime_server = { path = "../../../server" }
+pegasus_server = { path = "../../../../../engine/pegasus/server" }
+pegasus = { path = "../../../../../engine/pegasus/pegasus" }
 tonic = "0.6"
 prost = "0.9"
 tokio = { version = "1.0", features = ["macros", "sync", "rt-multi-thread"] }
