@@ -60,7 +60,6 @@ message OpResult {
     bool has_large_result = 2;
     
     // if the op create a graph or modify a graph, return the meta data of the graph.
-    gs.rpc.graph.GraphDefPb graph_def = 3;
   };
   // Status code
   Code code = 1;
@@ -70,6 +69,7 @@ message OpResult {
   // result represents app_name or context_key or raw bytes If the op returns a NDArray or DataFrame
   bytes result = 4;
   string error_msg = 5; 
+  gs.rpc.graph.GraphDefPb graph_def = 7;
 };
 
 // Consist by list of ops.
