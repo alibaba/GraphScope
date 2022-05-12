@@ -21,6 +21,7 @@ import "google/protobuf/any.proto";
 option java_package = "com.alibaba.graphscope.proto.ddl";
 option java_multiple_files = true;
 
+// Various graph type
 enum GraphTypePb {
     UNKNOWN_TYPE = 0;
     IMMUTABLE_EDGECUT = 1;
@@ -32,30 +33,38 @@ enum GraphTypePb {
     ARROW_FLATTENED = 7;
 }
 
+// Attributes that only meaningful to and will be set by maxgraph storage
 message MaxGraphInfoPb {
     int32 last_label_id = 1;
     int32 last_property_id = 2;
     int64 last_table_id = 3;
 }
 
+// Attributes that only meaningful to and will be set by vineyard storage
 message VineyardInfoPb {
     DataTypePb oid_type = 1;
     DataTypePb vid_type = 2;
     DataTypePb vdata_type = 3;
     DataTypePb edata_type = 4;
 
+    // This is for sharing graph between vineyard storage and maxgraph storage
     string schema_path = 5;
+    // Whether to automatically generate unique edge id for all edges.
     bool generate_eid = 6;
+    // object id of the graph in vineyard
     int64 vineyard_id = 7;
+    // For client to reconstrut graph schema
     string property_schema_json = 8;
 }
 
+// Attributes that only meaningful to and will be set by dynamic storage
 message MutableGraphInfoPb {
    DataTypePb vdata_type = 1;
    DataTypePb edata_type = 2;
    string property_schema_json = 3;
 }
 
+// Stores all meta of a graph
 message GraphDefPb {
     int64 version = 1;
     string key = 2;

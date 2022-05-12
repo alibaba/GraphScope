@@ -32,6 +32,7 @@ package gs.rpc;
 message AttrValue {
   enum NullValue { NULL_VALUE = 0; }
 
+  // Allows recursive nesting
   message ListValue {
     repeated bytes s = 2;                         // "list(string)"
     repeated int64 i = 3 [ packed = true ];       // "list(int)"
@@ -59,6 +60,8 @@ message NameAttrList {
   map<int32, AttrValue> attr = 2;
 }
 
+// Chunk, ChunkMeta and LargeAttrValue is used for storing chunks of
+// huge bytes, which is larger than the GRPC message limits(2 GB) 
 message Chunk {
   bytes buffer = 1;
   map<int32, AttrValue> attr = 2;

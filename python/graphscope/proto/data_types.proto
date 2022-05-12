@@ -16,6 +16,9 @@
 syntax = "proto3";
 package gs.rpc;
 
+// These are used for unpacking parameters based on the type in the compile time.
+// Used in  AppFrame
+
 // Wrapper message for `double`.
 //
 // The JSON representation for `DoubleValue` is JSON number.
