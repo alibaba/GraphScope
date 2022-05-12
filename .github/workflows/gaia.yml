@@ -99,3 +99,9 @@ jobs:
         ./kill.sh
         ./ir_vineyard_ci.sh
 
+    - name: Upload GIE log
+      if: always()
+      uses: actions/upload-artifact@v2
+      with:
+      name: gie-log
+      path: ~/.local/log/graphscope
