@@ -58,15 +58,15 @@ install: gle client gae gie coordinator
 client: gle
 	cd $(WORKING_DIR)/python && \
 	pip3 install -r requirements.txt -r requirements-dev.txt --user && \
-	python3 setup.py build_ext --inplace --user && \
-	pip3 install -e .
+	python3 setup.py build_ext --inplace --user
+	pip3 install --user --editable .
 
 .PHONY: coordinator
 coordinator:
 	cd $(WORKING_DIR)/coordinator && \
 	pip3 install -r requirements.txt -r requirements-dev.txt --user && \
-	python3 setup.py build_builtin && \
-	pip3 install -e .
+	python3 setup.py build_builtin
+	pip3 install --user --editable .
 	if [ ! -d "/var/log/graphscope" ]; then \
 		sudo mkdir /var/log/graphscope; \
 	fi
