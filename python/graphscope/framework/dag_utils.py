@@ -24,7 +24,6 @@ from graphscope.framework.errors import check_argument
 from graphscope.framework.operation import Operation
 from graphscope.proto import attr_value_pb2
 from graphscope.proto import graph_def_pb2
-from graphscope.proto import query_args_pb2
 from graphscope.proto import types_pb2
 
 
@@ -83,7 +82,7 @@ def run_app(app, *args, **kwargs):
     config[types_pb2.OUTPUT_PREFIX] = utils.s_to_attr(output_prefix)
     # optional query arguments.
     params = utils.pack_query_params(*args, **kwargs)
-    query_args = query_args_pb2.QueryArgs()
+    query_args = types_pb2.QueryArgs()
     query_args.args.extend(params)
     op = Operation(
         app.session_id,

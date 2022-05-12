@@ -39,7 +39,6 @@
 #include "core/server/dispatcher.h"
 #include "core/server/graphscope_service.h"
 #include "core/server/rpc_utils.h"
-#include "graphscope/proto/query_args.pb.h"
 #include "graphscope/proto/types.pb.h"
 
 namespace gs {
