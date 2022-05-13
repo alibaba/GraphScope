@@ -16,10 +16,10 @@
 use std::fmt;
 use std::ops::{Deref, DerefMut};
 
+use ir_common::generated::job_service as pb;
 use pegasus::{BuildJobError, JobConf, ServerConf};
 use pegasus_server::pb as pegasus_pb;
 use prost::Message;
-use runtime_server::pb;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Plan {

@@ -16,8 +16,8 @@
 use std::cmp::Ordering;
 
 use ir_common::generated::algebra::join::JoinKind;
+use ir_common::generated::job_service::AccumKind;
 use pegasus::api::function::{BinaryFunction, FnResult, MapFunction};
-use runtime_server::pb::AccumKind;
 
 use crate::error::FnGenResult;
 use crate::process::operator::accum::RecordAccumulator;

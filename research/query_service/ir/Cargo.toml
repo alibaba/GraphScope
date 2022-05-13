@@ -5,7 +5,6 @@ members = [
     "graph_proxy",
     "integrated",
     "runtime",
-    "server"
 ]
 
 [profile.dev]

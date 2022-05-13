@@ -16,9 +16,9 @@
 use std::convert::TryInto;
 
 use ir_common::generated::algebra as algebra_pb;
+use ir_common::generated::job_service as server_pb;
 use ir_common::KeyId;
 use pegasus::api::function::{FnResult, MapFunction};
-use runtime_server::pb as server_pb;
 
 use crate::error::{FnGenError, FnGenResult};
 use crate::process::functions::FoldGen;

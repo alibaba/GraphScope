@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 syntax = "proto3";
-package protocol;
-option java_package = "com.alibaba.pegasus.service.protocol";
-option java_outer_classname = "PegasusClient";
+package job_service;
+//option java_package = "com.alibaba.pegasus.service.protocol";
+//option java_outer_classname = "PegasusClient";
+option java_package = "com.alibaba.ir.service.protocol";
+option java_outer_classname = "IrClient";
 
 message Repartition {
   bytes resource  = 1;

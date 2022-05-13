@@ -37,6 +37,8 @@ pub mod generated {
     pub mod algebra;
     #[path = "common.rs"]
     pub mod common;
+    #[path = "job_service.rs"]
+    pub mod job_service;
     #[path = "results.rs"]
     pub mod results;
     #[path = "schema.rs"]
@@ -56,6 +58,9 @@ pub mod generated {
     }
     pub mod schema {
         tonic::include_proto!("schema");
+    }
+    pub mod job_service {
+        tonic::include_proto!("job_service");
     }
 }
 
