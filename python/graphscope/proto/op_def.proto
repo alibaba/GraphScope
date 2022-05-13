@@ -65,6 +65,7 @@ message OpResult {
   Code code = 1;
   // unique key for every op
   string key = 2;
+  // Meta
   Meta meta = 3;
   // result represents app_name or context_key or raw bytes If the op returns a NDArray or DataFrame
   bytes result = 4;

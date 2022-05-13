@@ -114,13 +114,13 @@ if __name__ == "__main__":
     # path to 'GraphScope/python'
     base_dir = os.path.join(current_dir, "../", "../")
     os.chdir(base_dir)
-    # must use relative path
-    relative_dir = os.path.join(".", "graphscope", "proto")
 
     output_dir = sys.argv[1]
     output_dir = os.path.realpath(os.path.realpath(output_dir))
     create_path(output_dir)
 
+    # must use relative path
+    relative_dir = os.path.join(".", "graphscope", "proto")
     if len(sys.argv) <= 2 or len(sys.argv) > 2 and sys.argv[2] == "--cpp":
         print("Generating cpp proto to: " + output_dir)
         cpp_out(relative_dir, output_dir)
