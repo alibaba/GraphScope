@@ -22,7 +22,7 @@ limitations under the License.
 
 namespace grape {
 /**
- * @brief Context for the auto-parallel version of VoteRank.
+ * @brief Context for of VoteRank.
  *
  * @tparam FRAG_T
  */
