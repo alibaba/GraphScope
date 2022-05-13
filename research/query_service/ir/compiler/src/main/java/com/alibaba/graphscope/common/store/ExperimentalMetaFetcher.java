@@ -20,27 +20,29 @@ import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.GraphConfig;
 import com.alibaba.graphscope.gremlin.Utils;
 
+import com.google.common.collect.ImmutableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.Optional;
 
-public class ExperimentalMetaFetcher extends IrMetaFetcher {
+public class ExperimentalMetaFetcher implements IrMetaFetcher {
     private static final Logger logger = LoggerFactory.getLogger(ExperimentalMetaFetcher.class);
     private Configs configs;
+    private Map<String, Object> meta;
 
     public ExperimentalMetaFetcher(Configs configs) {
         this.configs = configs;
-        super.fetch();
+        init();
     }
 
-    @Override
-    protected Optional<String> getIrMeta() {
+    private void init() {
         String schemaFilePath = GraphConfig.GRAPH_SCHEMA.get(configs);
         try {
             String schema = Utils.readStringFromFile(schemaFilePath);
-            return Optional.of(schema);
+            this.meta = ImmutableMap.of(IrMetaFetcher.GRAPH_SCHEMA, schema);
         } catch (IOException e) {
             logger.info("open schema file {} fail", schemaFilePath);
             throw new RuntimeException(e);
@@ -48,7 +50,7 @@ public class ExperimentalMetaFetcher extends IrMetaFetcher {
     }
 
     @Override
-    public void fetch() {
-        // the meta from the static file is created in the constructor, here just do nothing
+    public Optional<Map<String, Object>> fetch() {
+        return Optional.ofNullable(this.meta);
     }
 }
