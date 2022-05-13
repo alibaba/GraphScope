@@ -19,10 +19,13 @@
 # information.
 #
 
+from collections import defaultdict
+
 import networkx.convert_matrix
 from networkx.convert_matrix import from_pandas_edgelist as _from_pandas_edgelist
 from networkx.convert_matrix import to_numpy_array as _to_numpy_array
 from networkx.convert_matrix import to_numpy_matrix as _to_numpy_matrix
+from networkx.convert_matrix import to_scipy_sparse_array as _to_scipy_sparse_array
 from networkx.convert_matrix import to_scipy_sparse_matrix as _to_scipy_sparse_matrix
 
 from graphscope import nx
@@ -121,40 +124,68 @@ def to_numpy_array(
                     raise nx.NetworkXError(f"Node {n} in nodelist is not in G")
             raise nx.NetworkXError("nodelist contains duplicates.")
 
-    undirected = not G.is_directed()
-    index = dict(zip(sorted(nodelist), range(nlen)))
+    A = np.full((nlen, nlen), fill_value=nonedge, dtype=dtype, order=order)
 
+    # Corner cases: empty nodelist or graph without any edges
+    if nlen == 0 or G.number_of_edges() == 0:
+        return A
+
+    # If dtype is structured and weight is None, use dtype field names as
+    # edge attributes
+    edge_attrs = None  # Only single edge attribute by default
+    if A.dtype.names:
+        if weight is None:
+            edge_attrs = dtype.names
+        else:
+            raise ValueError(
+                "Specifying `weight` not supported for structured dtypes\n."
+                "To create adjacency matrices from structured dtypes, use `weight=None`."
+            )
+
+    idx = dict(zip(sorted(nodelist), range(nlen)))
+    if len(nodelist) < len(G):
+        G = G.subgraph(nodelist)  # A real subgraph, not view
+
+    # Collect all edge weights and reduce with `multigraph_weights`
     if G.is_multigraph():
-        # Handle MultiGraphs and MultiDiGraphs
-        A = np.full((nlen, nlen), np.nan, order=order)
-        # use numpy nan-aware operations
-        operator = {sum: np.nansum, min: np.nanmin, max: np.nanmax}
-        try:
-            op = operator[multigraph_weight]
-        except Exception as e:
-            raise ValueError("multigraph_weight must be sum, min, or max") from e
-
-        for u, v, attrs in G.edges(data=True):
-            if (u in nodeset) and (v in nodeset):
-                i, j = index[u], index[v]
-                e_weight = attrs.get(weight, 1)
-                A[i, j] = op([e_weight, A[i, j]])
-                if undirected:
-                    A[j, i] = A[i, j]
+        if edge_attrs:
+            raise nx.NetworkXError(
+                "Structured arrays are not supported for MultiGraphs"
+            )
+        d = defaultdict(list)
+        for u, v, wt in G.edges(data=weight, default=1.0):
+            d[(idx[u], idx[v])].append(wt)
+        i, j = np.array(list(d.keys())).T  # indices
+        wts = [multigraph_weight(ws) for ws in d.values()]  # reduced weights
     else:
-        # Graph or DiGraph, this is much faster than above
-        A = np.full((nlen, nlen), np.nan, order=order)
-        for u, nbrdict in G.adjacency():
-            for v, d in nbrdict.items():
-                try:
-                    A[index[u], index[v]] = d.get(weight, 1)
-                except KeyError:
-                    # This occurs when there are fewer desired nodes than
-                    # there are nodes in the graph: len(nodelist) < len(G)
-                    pass
+        i, j, wts = [], [], []
 
-    A[np.isnan(A)] = nonedge
-    A = np.asarray(A, dtype=dtype)
+        # Special branch: multi-attr adjacency from structured dtypes
+        if edge_attrs:
+            # Extract edges with all data
+            for u, v, data in G.edges(data=True):
+                i.append(idx[u])
+                j.append(idx[v])
+                wts.append(data)
+            # Map each attribute to the appropriate named field in the
+            # structured dtype
+            for attr in edge_attrs:
+                attr_data = [wt.get(attr, 1.0) for wt in wts]
+                A[attr][i, j] = attr_data
+                if not G.is_directed():
+                    A[attr][j, i] = attr_data
+            return A
+
+        for u, v, wt in G.edges(data=weight, default=1.0):
+            i.append(idx[u])
+            j.append(idx[v])
+            wts.append(wt)
+
+    # Set array values with advanced indexing
+    A[i, j] = wts
+    if not G.is_directed():
+        A[j, i] = wts
+
     return A
 
 
@@ -185,6 +216,17 @@ def to_numpy_matrix(
 
 @patch_docstring(_to_scipy_sparse_matrix)
 def to_scipy_sparse_matrix(G, nodelist=None, dtype=None, weight="weight", format="csr"):
+    import scipy as sp
+    import scipy.sparse
+
+    A = to_scipy_sparse_array(
+        G, nodelist=nodelist, dtype=dtype, weight=weight, format=format
+    )
+    return sp.sparse.csr_matrix(A).asformat(format)
+
+
+@patch_docstring(_to_scipy_sparse_array)
+def to_scipy_sparse_array(G, nodelist=None, dtype=None, weight="weight", format="csr"):
     import scipy as sp
     import scipy.sparse  # call as sp.sparse
 
@@ -218,7 +260,7 @@ def to_scipy_sparse_matrix(G, nodelist=None, dtype=None, weight="weight", format
         row, col, data = [], [], []
 
     if G.is_directed():
-        M = sp.sparse.coo_matrix((data, (row, col)), shape=(nlen, nlen), dtype=dtype)
+        A = sp.sparse.coo_array((data, (row, col)), shape=(nlen, nlen), dtype=dtype)
     else:
         # symmetrize matrix
         d = data + data
@@ -232,10 +274,8 @@ def to_scipy_sparse_matrix(G, nodelist=None, dtype=None, weight="weight", format
             d += diag_data
             r += diag_index
             c += diag_index
-        M = sp.sparse.coo_matrix((d, (r, c)), shape=(nlen, nlen), dtype=dtype)
+        A = sp.sparse.coo_array((d, (r, c)), shape=(nlen, nlen), dtype=dtype)
     try:
-        return M.asformat(format)
-    # From Scipy 1.1.0, asformat will throw a ValueError instead of an
-    # AttributeError if the format if not recognized.
-    except (AttributeError, ValueError) as e:
-        raise nx.NetworkXError(f"Unknown sparse matrix format: {format}") from e
+        return A.asformat(format)
+    except ValueError as err:
+        raise nx.NetworkXError(f"Unknown sparse matrix format: {format}") from err

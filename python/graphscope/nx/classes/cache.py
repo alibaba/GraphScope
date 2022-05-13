@@ -25,7 +25,10 @@ import simdjson
 
 from graphscope.framework import dag_utils
 from graphscope.nx.utils.misc import clear_mutation_cache
+from graphscope.proto import graph_def_pb2
 from graphscope.proto import types_pb2
+
+__all__ = ["Cache"]
 
 
 class Cache:
@@ -86,19 +89,19 @@ class Cache:
 
     @lru_cache(1000000)
     def get_successors(self, n):
-        return self._graph._get_neighbors(n)
+        return get_neighbors(self._graph, n)
 
     @lru_cache(1000000)
     def get_succ_attr(self, n):
-        return self._graph._get_neighbors_attr(n)
+        return get_neighbors_attr(self._graph, n)
 
     @lru_cache(1000000)
     def get_predecessors(self, n):
-        return self._graph._get_neighbors(n, pred=True)
+        return get_neighbors(self._graph, n, pred=True)
 
     @lru_cache(1000000)
     def get_pred_attr(self, n):
-        return self._graph._get_neighbors_attr(n, pred=True)
+        return get_neighbors_attr(self._graph, n, pred=True)
 
     def align_node_attr_cache(self):
         """Check and align the node attr cache with node id cache"""
@@ -382,3 +385,51 @@ class Cache:
         fp = io.BytesIO(archive.get_bytes())
         pred_attr_cache = simdjson.load(fp)
         return gid, pred_attr_cache
+
+
+def get_neighbors(graph, n, pred=False):
+    """Get the neighbors of node in graph.
+
+    Parameters
+    ----------
+    graph:
+        the graph to query.
+    n: node
+        the node to get neighbors.
+    report_type:
+        the report type of report graph operation,
+            types_pb2.SUCCS_BY_NODE: get the successors of node,
+            types_pb2.PREDS_BY_NODE: get the predecessors of node,
+    """
+    if graph.graph_type == graph_def_pb2.ARROW_PROPERTY:
+        n = graph._convert_to_label_id_tuple(n)
+    report_t = types_pb2.PREDS_BY_NODE if pred else types_pb2.SUCCS_BY_NODE
+    op = dag_utils.report_graph(graph, report_t, node=simdjson.dumps(n).encode("utf-8"))
+    archive = op.eval()
+    return msgpack.unpackb(archive.get_bytes(), use_list=False)
+
+
+def get_neighbors_attr(graph, n, pred=False):
+    """Get the neighbors attr of node in graph.
+
+    Parameters
+    ----------
+    graph:
+        the graph to query.
+    n: node
+        the node to get neighbors.
+    report_type:
+        the report type of report graph operation,
+            types_pb2.SUCC_ATTR_BY_NODE: get the successors attr of node,
+            types_pb2.PRED_ATTR_BY_NODE: get the predecessors attr of node,
+
+    Returns
+    -------
+    attr: tuple
+    """
+    if graph.graph_type == graph_def_pb2.ARROW_PROPERTY:
+        n = graph._convert_to_label_id_tuple(n)
+    report_t = types_pb2.PRED_ATTR_BY_NODE if pred else types_pb2.SUCC_ATTR_BY_NODE
+    op = dag_utils.report_graph(graph, report_t, node=simdjson.dumps(n).encode("utf-8"))
+    archive = op.eval()
+    return simdjson.loads(archive.get_bytes())

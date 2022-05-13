@@ -119,7 +119,7 @@ def induced_subgraph(G, nbunch):
     [(0, 1), (1, 2)]
     """
     induced_nodes = G.nbunch_iter(nbunch)
-    return G.subgraph(G, induced_nodes)
+    return G.subgraph(induced_nodes)
 
 
 def edge_subgraph(G, edges):
@@ -161,6 +161,11 @@ def number_of_selfloops(G):
 
 @patch_docstring(func.set_node_attributes)
 def set_node_attributes(G, values, name=None):
+    if G.is_multigraph():
+        # multigraph forward NetworkX
+        func.set_node_attributes(G, values, name)
+        return
+
     # Set node attributes based on type of `values`
     if name is not None:  # `values` must not be a dict of dict
         try:  # `values` is a dict
@@ -184,41 +189,27 @@ def set_node_attributes(G, values, name=None):
 
 @patch_docstring(func.set_edge_attributes)
 def set_edge_attributes(G, values, name=None):  # noqa: C901
+    if G.is_multigraph():
+        # multigraph forward NetworkX
+        func.set_edge_attributes(G, values, name)
+        return
+
     if name is not None:
         # `values` does not contain attribute names
         try:
             # if `values` is a dict using `.items()` => {edge: value}
-            if G.is_multigraph():
-                for (u, v, key), value in values.items():
-                    try:
-                        G[u][v][key][name] = value
-                    except KeyError:
-                        pass
-            else:
-                for (u, v), value in values.items():
-                    try:
-                        dd = G.get_edge_data(u, v)
-                        dd[name] = value
-                        G.set_edge_data(u, v, dd)
-                    except KeyError:
-                        pass
+            for (u, v), value in values.items():
+                dd = G.get_edge_data(u, v)
+                if dd is not None:
+                    dd[name] = value
+                    G.set_edge_data(u, v, dd)
         except AttributeError:
             # treat `values` as a constant
             for u, v, data in G.edges(data=True):
                 data[name] = values
     else:
-        # `values` consists of doct-of-dict {edge: {attr: value}} shape
-        if G.is_multigraph():
-            for (u, v, key), d in values.items():
-                try:
-                    G[u][v][key].update(d)
-                except KeyError:
-                    pass
-        else:
-            for (u, v), d in values.items():
-                try:
-                    dd = G.get_edge_data(u, v)
-                    dd.update(d)
-                    G.set_edge_data(u, v, dd)
-                except KeyError:
-                    pass
+        for (u, v), d in values.items():
+            dd = G.get_edge_data(u, v)
+            if dd is not None:
+                dd.update(d)
+                G.set_edge_data(u, v, dd)

@@ -59,6 +59,7 @@ client: gle
 	cd $(WORKING_DIR)/python && \
 	pip3 install -r requirements.txt -r requirements-dev.txt --user && \
 	python3 setup.py build_ext --inplace --user
+	pip3 install --user --editable $(WORKING_DIR)/python
 
 .PHONY: coordinator
 coordinator:

@@ -27,6 +27,7 @@ from networkx.classes.reportviews import DiDegreeView
 from networkx.classes.reportviews import InDegreeView
 from networkx.classes.reportviews import OutDegreeView
 
+from graphscope.client.session import get_default_session
 from graphscope.client.session import get_session_by_id
 from graphscope.framework.dag_utils import copy_graph
 from graphscope.framework.errors import check_argument
@@ -39,7 +40,7 @@ from graphscope.nx.classes.reportviews import OutEdgeView
 from graphscope.nx.convert import to_networkx_graph
 from graphscope.nx.utils.compat import patch_docstring
 from graphscope.nx.utils.misc import clear_mutation_cache
-from graphscope.nx.utils.misc import empty_graph_in_engine
+from graphscope.nx.utils.misc import init_empty_graph_in_engine
 
 
 class DiGraph(Graph):
@@ -243,19 +244,18 @@ class DiGraph(Graph):
 
         self.graph_attr_dict_factory = self.graph_attr_dict_factory
         self.node_dict_factory = self.node_dict_factory
-        self.adjlist_dict_factory = self.adjlist_dict_factory
-        self.graph = self.graph_attr_dict_factory()
+        self.adjlist_outer_dict_factory = self.adjlist_outer_dict_factory
         self.cache = self.graph_cache_factory(self)
 
         # init node and adj (must be after cache)
+        self.graph = self.graph_attr_dict_factory()
         self._node = self.node_dict_factory(self)
-        self._adj = self.adjlist_dict_factory(self)
-        self._pred = self.adjlist_dict_factory(self, pred=True)
+        self._adj = self.adjlist_outer_dict_factory(self)
         self._succ = self._adj
+        self._pred = self.adjlist_outer_dict_factory(self, pred=True)
 
         self._key = None
         self._op = None
-        self._session_id = None
         self._graph_type = self._graph_type
         self._schema = GraphSchema()
 
@@ -278,22 +278,18 @@ class DiGraph(Graph):
         self._default_label_id = -1
 
         if self._session is None:
-            self._try_to_get_default_session()
+            self._session = get_default_session()
 
         if not self._is_gs_graph(incoming_graph_data) and create_empty_in_engine:
-            graph_def = empty_graph_in_engine(
+            graph_def = init_empty_graph_in_engine(
                 self, self.is_directed(), self._distributed
             )
             self._key = graph_def.key
 
         # attempt to load graph with data
         if incoming_graph_data is not None:
-            if self._is_gs_graph(incoming_graph_data):
-                self._init_with_arrow_property_graph(incoming_graph_data)
-                self.cache.warmup()
-            else:
-                g = to_networkx_graph(incoming_graph_data, create_using=self)
-                check_argument(isinstance(g, Graph))
+            to_networkx_graph(incoming_graph_data, create_using=self)
+            self.cache.warmup()
 
         # load graph attributes (must be after to_networkx_graph)
         self.graph.update(attr)
