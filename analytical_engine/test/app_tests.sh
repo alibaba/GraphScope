@@ -1,4 +1,6 @@
- script to perform tests for analytical engine.
+#!/bin/bash
+#
+# A script to perform tests for analytical engine.
 
 set -eo pipefail
 
