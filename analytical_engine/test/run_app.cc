@@ -79,6 +79,8 @@ DEFINE_int32(app_concurrency, -1, "concurrency of application");
 DEFINE_int64(dfs_source, 0, "source vertex of dfs.");
 DEFINE_string(dfs_format, "edges", "output format of dfs.");
 
+DEFINE_int32(vr_num_nodes, 10, "nodes number of voterank.");
+
 int main(int argc, char* argv[]) {
   FLAGS_stderrthreshold = 0;
 
