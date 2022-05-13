@@ -23,7 +23,7 @@ limitations under the License.
 namespace grape {
 
 /**
- * @brief An implementation of PageRank, the version in LDBC, which can work
+ * @brief An implementation of VoteRank, the version in LDBC, which can work
  * on both directed and undirected graphs.
  *
  * This version of PageRank inherits ParallelAppBase. Messages can be sent in
@@ -62,8 +62,8 @@ class VoteRank
 #endif
 
     ctx.step = 0;
-    // assign initial ranks
-    
+
+    // assign initial ranks and weights
     std::vector<long unsigned int> edge_nums(thread_num(), 0);
     ForEach(inner_vertices, [&ctx, &edge_nums,&frag, &messages](int tid, vertex_t u) {
       int EdgeNum = frag.GetOutgoingAdjList(u).Size();
@@ -107,7 +107,7 @@ class VoteRank
     ctx.exec_time -= GetCurrentTime();
 #endif
 
-    // pull ranks from neighbors
+    // pull weights from inner neighbors
     vertex_t v;
     
     ForEach(inner_vertices, [&ctx, &frag](int tid, vertex_t u) {
@@ -126,7 +126,7 @@ class VoteRank
     ctx.preprocess_time -= GetCurrentTime();
 #endif
 
-    // process received ranks sent by other workers
+    // process received weights sent by other workers
     {
       messages.ParallelProcess<fragment_t, double>(
           thread_num(), frag, [&ctx](int tid, vertex_t u, const double& msg) {
@@ -139,7 +139,6 @@ class VoteRank
     ctx.exec_time -= GetCurrentTime();
 #endif
 
-    // compute new ranks and send messages
     
     auto compare = [](std::pair<double,oid_t>& lhs, 
                  const std::pair<double,oid_t>& rhs) { 
@@ -152,7 +151,7 @@ class VoteRank
                   lhs = rhs;
               }
           };
-    
+    // compute new scores
     std::vector<std::pair<double,oid_t>> max_scores(thread_num(),{0,{}});
     ForEach(inner_vertices, [&ctx,compare, &max_scores,&frag](int tid, vertex_t u) {
         if (ctx.rank[u] == 0) {
@@ -174,13 +173,15 @@ class VoteRank
        compare(ctx.max_score,a);
     }
     auto max_score = ctx.max_score;
+    // select top node
     AllReduce(max_score,ctx.max_score,
                     compare);
     const double EPS = 1e-8;
     if(ctx.max_score.first < EPS){
       return;
     }
-    //vertex_t v;
+
+    //weaken the selected node and its out-neighbors
     std::vector<vertex_t> update_vertices;
     if(frag.GetVertex(ctx.max_score.second,v)){
          if(frag.IsInnerVertex(v)){
@@ -199,6 +200,8 @@ class VoteRank
           
          } 
       }
+
+    //send message
     if (ctx.step != ctx.max_round) {
         ForEach(update_vertices,
               [&ctx, &frag, &messages](int tid, vertex_t u) {
