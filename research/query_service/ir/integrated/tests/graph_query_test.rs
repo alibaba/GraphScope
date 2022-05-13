@@ -24,9 +24,9 @@ mod test {
     use ir_common::expr_parse::str_to_expr_pb;
     use ir_common::generated::algebra as pb;
     use ir_common::generated::common as common_pb;
-    use pegasus_client::builder::*;
     use pegasus_server::JobRequest;
     use prost::Message;
+    use runtime::builder::*;
     use runtime::graph::element::GraphElement;
     use runtime::process::record::{CommonObject, Entry, RecordElement};
 

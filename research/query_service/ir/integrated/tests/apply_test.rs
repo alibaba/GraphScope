@@ -23,10 +23,10 @@ mod test {
     use graph_store::ldbc::LDBCVertexParser;
     use ir_common::generated::algebra as pb;
     use ir_common::generated::common as common_pb;
-    use pegasus_client::builder::JobBuilder;
     use pegasus_server::pb as server_pb;
     use pegasus_server::JobRequest;
     use prost::Message;
+    use runtime::builder::JobBuilder;
     use runtime::graph::element::GraphElement;
     use runtime::process::record::{CommonObject, Entry, RecordElement};
 

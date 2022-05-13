@@ -60,8 +60,8 @@ use ir_common::expr_parse::str_to_expr_pb;
 use ir_common::generated::algebra as pb;
 use ir_common::generated::common as common_pb;
 use pegasus::BuildJobError;
-use pegasus_client::builder::JobBuilder;
 use prost::Message;
+use runtime::builder::JobBuilder;
 
 use crate::error::IrError;
 use crate::plan::logical::LogicalPlan;
