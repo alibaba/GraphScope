@@ -1,44 +1,42 @@
-#!/ bin / bash
-#
-#A script to perform tests for analytical engine.
+ script to perform tests for analytical engine.
 
-set - eo pipefail
+set -eo pipefail
 
-#parse the args and set the variables.
-          function
-          usage(){
-            cat << EOF Usage : $./ app_test.sh[--test_dir] optional
-                                   arguments : -h,
-            --help show this help message and exit - t,
-            --test_dir DIRECTORY the existing test data dir.EOF
-          }
+# parse the args and set the variables.
+function usage() {
+  cat <<EOF
+   Usage: $./app_test.sh [--test_dir]
+   optional arguments:
+     -h, --help                 show this help message and exit
+     -t, --test_dir DIRECTORY   the existing test data dir.
+EOF
+}
 
-    test_dir = "" engine_dir = ""
+test_dir=""
+engine_dir=""
 
-    while [[$ # - gt 0]];
-do
+while [[ $# -gt 0 ]]; do
   key="$1"
 
   case $key in
   -h | --help)
     usage
     exit
-    ;
-;
+    ;;
   -t | --test_dir)
     test_dir="$2"
     shift # past argument
     shift
-    ;
-  ;
+    ;;
   *) # unknown option
     usage
     exit 1
-    ;
-  ;
+    ;;
   esac
 done
-#colored error and info functions to wrap messages.
+
+
+# colored error and info functions to wrap messages.
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 NC='\033[0m' # No Color
@@ -50,15 +48,15 @@ info() {
   echo -e "${GREEN}[$(date +'%Y-%m-%d %H:%M:%S')] -INFO- $* ${NC}"
 }
 
-#analytical_engine HOME, find the HOME using relative path.
+# analytical_engine HOME, find the HOME using relative path.
 ENGINE_HOME="$(
   cd "$(dirname "$0")/.." >/dev/null 2>&1
   pwd -P
 )"
 
-#find vineyard.
+# find vineyard.
 export VINEYARD_HOME=/usr/local/bin
-#for open - mpi
+# for open-mpi
 export OMPI_MCA_btl_vader_single_copy_mechanism=none
 export OMPI_MCA_orte_allowed_exit_without_sync=1
 
@@ -66,50 +64,57 @@ np=4
 socket_file=/tmp/vineyard.sock
 
 ########################################################
-#Clone or update the latest test datasets from github.
-#Arguments:
-#None
+# Clone or update the latest test datasets from github.
+# Arguments:
+#   None
 ########################################################
 function get_test_data() {
-    if
-      [[-z ${test_dir}]];
-    then test_dir = "/tmp/gstest" fi echo $ { test_dir }
-    if
-      [[-d ${test_dir}]];
-    then cd ${test_dir} git pull cd - else git clone - b master-- single -
-        branch-- depth = 1 https :  // github.com/7br/gstest.git ${test_dir}
-                                    fi
-  }
+  if [[ -z ${test_dir} ]]; then
+    test_dir="/tmp/gstest"
+  fi
+  echo ${test_dir}
+  if [[ -d ${test_dir} ]]; then
+    cd ${test_dir}
+    git pull
+    cd -
+  else
+    git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${test_dir}
+  fi
+}
 
-  ########################################################
-#Start vineyard server
-#Arguments:
-#None
-#!!!WARNING !!!:
-#Kill all started vineyardd and etcd
-      ########################################################function
-      start_vineyard() {
-    pushd "${ENGINE_HOME}/build" pkill vineyardd || true pkill etcd ||
-        true echo
-        "[INFO] vineyardd will using the socket_file on ${socket_file}"
+########################################################
+# Start vineyard server
+# Arguments:
+#   None
+# !!!WARNING!!!:
+#   Kill all started vineyardd and etcd
+########################################################
+function start_vineyard() {
+  pushd "${ENGINE_HOME}/build"
+  pkill vineyardd || true
+  pkill etcd || true
+  echo "[INFO] vineyardd will using the socket_file on ${socket_file}"
 
-        timestamp =
-        $(date + % Y - % m - % d_ % H - % M - % S) vineyardd-- socket $ {
-      socket_file
-    }
-    --size 2000000000 --etcd_prefix "${timestamp}" --etcd_endpoint = http
-        :  // 127.0.0.1:3457 &
-           set +
-           m sleep 5 info "vineyardd started." popd
-  }
+  timestamp=$(date +%Y-%m-%d_%H-%M-%S)
+  vineyardd \
+    --socket ${socket_file} \
+    --size 2000000000 \
+    --etcd_prefix "${timestamp}" \
+    --etcd_endpoint=http://127.0.0.1:3457 &
+  set +m
+  sleep 5
+  info "vineyardd started."
+  popd
+}
 
-  ########################################################
-#Verify the results with an exactly match.
-#Arguments:
-#- correct result file
-      ########################################################function
-      exact_verify() {
-    cat./ test_output/* | sort -k1n >./test_output_tmp.res
+
+########################################################
+# Verify the results with an exactly match.
+# Arguments:
+#   - correct result file
+########################################################
+function exact_verify() {
+  cat ./test_output/* | sort -k1n >./test_output_tmp.res
   if ! cmp ./test_output_tmp.res "$1" >/dev/null 2>&1; then
     err "Failed to pass the exactly match for the results of $1"
     exit 1
@@ -174,13 +179,13 @@ function run_vy() {
     do
       for ((dst=0;dst<v_label_num;++dst))
       do
-	if [ "$first" = true ]
+    if [ "$first" = true ]
         then
           first=false
           cmd="${cmd}${e_prefix}_${src}_${dst}_${e}#src_label=v${src}&dst_label=v${dst}&label=e${e}"
         else
           cmd="${cmd};${e_prefix}_${src}_${dst}_${e}#src_label=v${src}&dst_label=v${dst}&label=e${e}"
-	fi
+    fi
       done
     done
     cmd="${cmd}'"
