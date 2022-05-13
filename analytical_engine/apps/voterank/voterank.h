@@ -26,7 +26,7 @@ namespace grape {
  * @brief An implementation of VoteRank, the version in LDBC, which can work
  * on both directed and undirected graphs.
  *
- * This version of PageRank inherits ParallelAppBase. Messages can be sent in
+ * This version of VoteRank inherits ParallelAppBase. Messages can be sent in
  * parallel with the evaluation process. This strategy improves performance by
  * overlapping the communication time and the evaluation time.
  *
