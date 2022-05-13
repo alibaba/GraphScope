@@ -10,7 +10,7 @@ numpy
 orjson
 packaging
 pandas
-protobuf
+protobuf>=3.15.0,<3.19.0
 psutil
 pyarrow<=6.0.0
 pysimdjson
