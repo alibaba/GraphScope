@@ -74,10 +74,10 @@ impl MapFunction<u64, Record> for CountAlias {
 mod tests {
     use ir_common::generated::algebra as pb;
     use ir_common::generated::common as common_pb;
+    use ir_common::generated::job_service as server_pb;
     use pegasus::api::{Count, Sink};
     use pegasus::result::ResultStream;
     use pegasus::JobConf;
-    use pegasus_server::pb as server_pb;
 
     use crate::process::functions::FoldGen;
     use crate::process::operator::tests::{init_source, TAG_A};

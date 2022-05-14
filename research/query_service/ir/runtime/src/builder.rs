@@ -592,10 +592,13 @@ mod test {
                     .map(vec![5u8; 32]);
             })
             .sink(vec![6u8; 32]);
+        let plan_len = builder.plan.len();
         let job_req = builder.build().unwrap();
-        assert_eq!(&job_req.source.unwrap().resource, &vec![0u8; 32]);
-        assert_eq!(&job_req.sink.unwrap().resource, &vec![6u8; 32]);
-        assert_eq!(&job_req.plan.unwrap().plan.len(), &5);
+        let source = pb::Source { resource: vec![0u8; 32] };
+        let sink = pb::Sink { resource: vec![6u8; 32] };
+        assert_eq!(&job_req.source, &source.encode_to_vec());
+        assert_eq!(&job_req.resource, &sink.encode_to_vec());
+        assert_eq!(&plan_len, &5);
     }
 
     #[test]
@@ -632,9 +635,12 @@ mod test {
                 vec![],
             )
             .sink(vec![6u8; 32]);
+        let plan_len = builder.plan.len();
         let job_req = builder.build().unwrap();
-        assert_eq!(&job_req.source.unwrap().resource, &vec![0u8; 32]);
-        assert_eq!(&job_req.sink.unwrap().resource, &vec![6u8; 32]);
-        assert_eq!(&job_req.plan.unwrap().plan.len(), &1);
+        let source = pb::Source { resource: vec![0u8; 32] };
+        let sink = pb::Sink { resource: vec![6u8; 32] };
+        assert_eq!(&job_req.source, &source.encode_to_vec());
+        assert_eq!(&job_req.resource, &sink.encode_to_vec());
+        assert_eq!(&plan_len, &1);
     }
 }

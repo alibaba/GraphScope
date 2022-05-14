@@ -23,7 +23,7 @@ mod test {
     use graph_store::ldbc::LDBCVertexParser;
     use ir_common::generated::algebra as pb;
     use ir_common::generated::common as common_pb;
-    use pegasus_server::pb as server_pb;
+    use ir_common::generated::job_service as server_pb;
     use pegasus_server::JobRequest;
     use prost::Message;
     use runtime::builder::JobBuilder;
