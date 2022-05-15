@@ -13,14 +13,27 @@
  * limitations under the License.
  */
 
+#include "core/grape_instance.h"
+
+#include <cstdint>
 #include <memory>
-#include <unordered_set>
+#include <ostream>
 #include <utility>
 #include <vector>
 
-#include "boost/algorithm/string.hpp"
-#include "boost/algorithm/string/split.hpp"
-
+#include "arrow/array/array_base.h"
+#include "arrow/table.h"
+#include "arrow/type.h"
+#include "grape/communication/communicator.h"
+#include "grape/parallel/parallel_engine_spec.h"
+#include "grape/serialization/in_archive.h"
+#include "grape/worker/comm_spec.h"
+#include "vineyard/client/client.h"
+#include "vineyard/client/ds/i_object.h"
+#include "vineyard/common/util/status.h"
+#include "vineyard/common/util/uuid.h"
+#include "vineyard/graph/fragment/arrow_fragment_group.h"
+#include "vineyard/graph/utils/error.h"
 #include "vineyard/io/io/io_factory.h"
 
 #ifdef ENABLE_JAVA_SDK
@@ -31,22 +44,31 @@
 #ifdef NETWORKX
 #include "core/object/dynamic.h"
 #endif
+
+#include "core/context/i_context.h"
+#include "core/context/labeled_vertex_property_context.h"
+#include "core/context/selector.h"
 #include "core/context/tensor_context.h"
 #include "core/context/vertex_data_context.h"
 #include "core/context/vertex_property_context.h"
 #include "core/fragment/dynamic_fragment.h"
-#include "core/grape_instance.h"
 #include "core/io/property_parser.h"
 #include "core/launcher.h"
 #include "core/object/app_entry.h"
+#include "core/object/fragment_wrapper.h"
 #include "core/object/graph_utils.h"
 #include "core/object/i_fragment_wrapper.h"
 #include "core/object/projector.h"
+#include "core/server/command_detail.h"
 #include "core/server/rpc_utils.h"
-#include "core/utils/fragment_traits.h"
+#include "graphscope/proto/attr_value.pb.h"
+#include "graphscope/proto/graph_def.pb.h"
 #include "graphscope/proto/types.pb.h"
 
 namespace gs {
+namespace rpc {
+class QueryArgs;
+}  // namespace rpc
 
 GrapeInstance::GrapeInstance(const grape::CommSpec& comm_spec)
     : comm_spec_(comm_spec) {}

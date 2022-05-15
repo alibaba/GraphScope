@@ -16,11 +16,11 @@
 #ifndef ANALYTICAL_ENGINE_CORE_CONFIG_H_
 #define ANALYTICAL_ENGINE_CORE_CONFIG_H_
 
-#include <cstdint>
+#include <cstdint>  // IWYU pragma: export
 
-#include "boost/leaf.hpp"
+#include "boost/leaf.hpp"  // IWYU pragma: export
 
-#include "grape/config.h"
+#include "grape/config.h"  // IWYU pragma: export
 
 namespace gs {
 using fid_t = grape::fid_t;

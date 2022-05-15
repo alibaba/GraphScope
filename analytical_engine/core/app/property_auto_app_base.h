@@ -19,7 +19,7 @@
 
 #include "grape/types.h"
 
-#include "core/worker/property_auto_worker.h"
+#include "core/worker/property_auto_worker.h"  // IWYU pragma: export
 
 namespace gs {
 

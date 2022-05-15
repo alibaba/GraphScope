@@ -16,17 +16,16 @@
 #ifndef ANALYTICAL_ENGINE_CORE_LAUNCHER_H_
 #define ANALYTICAL_ENGINE_CORE_LAUNCHER_H_
 
+#include <iosfwd>
 #include <memory>
-#include <string>
 
-#include "boost/filesystem.hpp"
-#include "boost/process.hpp"
-
-#include "grape/util.h"
-#include "grape/worker/comm_spec.h"
-#include "vineyard/client/client.h"
-
+#include "boost/process/detail/child_decl.hpp"
 #include "core/flags.h"
+#include "grape/worker/comm_spec.h"
+
+namespace vineyard {
+class Client;
+}  // namespace vineyard
 
 namespace gs {
 

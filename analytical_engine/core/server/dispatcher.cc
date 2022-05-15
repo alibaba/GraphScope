@@ -14,8 +14,30 @@
  */
 
 #include "core/server/dispatcher.h"
+
+#include <glog/logging.h>
+#include <mpi.h>
+
+#include <exception>
+#include <ostream>
+#include <thread>
+#include <utility>
+
+#include "boost/leaf/capture.hpp"
+#include "boost/leaf/handle_errors.hpp"
+#include "grape/communication/sync_comm.h"
+#include "grape/serialization/out_archive.h"
+#include "grape/worker/comm_spec.h"
+
+#include "vineyard/common/util/blocking_queue.h"
+#include "vineyard/graph/utils/error.h"
+#include "vineyard/graph/utils/mpi_utils.h"
+
 #include "core/error.h"
 #include "core/io/property_parser.h"
+#include "core/server/command_detail.h"
+#include "proto/graphscope/proto/attr_value.pb.h"
+#include "proto/graphscope/proto/graph_def.pb.h"
 
 namespace gs {
 

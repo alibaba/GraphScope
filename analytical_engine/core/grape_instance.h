@@ -16,32 +16,50 @@
 #ifndef ANALYTICAL_ENGINE_CORE_GRAPE_INSTANCE_H_
 #define ANALYTICAL_ENGINE_CORE_GRAPE_INSTANCE_H_
 
-#include <sys/stat.h>
+#include <glog/logging.h>
+#include <mpi.h>
 
+#include <iosfwd>
 #include <map>
 #include <memory>
 #include <string>
-#include <unordered_set>
 #include <utility>
-#include <vector>
 
-#include "boost/optional.hpp"
+#include "boost/foreach.hpp"
+#include "boost/iterator/iterator_facade.hpp"
+#include "boost/leaf/error.hpp"
+#include "boost/leaf/result.hpp"
+#include "boost/operators.hpp"
 #include "boost/property_tree/json_parser.hpp"
 #include "boost/property_tree/ptree.hpp"
-
-#include "grape/app/vertex_data_context.h"
 #include "grape/communication/sync_comm.h"
+#include "grape/config.h"
 #include "grape/worker/comm_spec.h"
+#include "vineyard/graph/utils/grape_utils.h"
 
-#include "core/context/i_context.h"
-#include "core/fragment/dynamic_fragment.h"
+#include "core/config.h"
 #include "core/object/object_manager.h"
 #include "core/server/dispatcher.h"
-#include "core/server/graphscope_service.h"
 #include "core/server/rpc_utils.h"
 #include "graphscope/proto/types.pb.h"
 
+namespace grape {
+class InArchive;
+}  // namespace grape
+namespace vineyard {
+class Client;
+}  // namespace vineyard
+
 namespace gs {
+class IContextWrapper;
+namespace rpc {
+class QueryArgs;
+namespace graph {
+class GraphDefPb;
+}  // namespace graph
+}  // namespace rpc
+struct CommandDetail;
+
 /**
  * @brief EngineConfig contains configurations about the analytical engine, such
  * as networkx features in enabled or not, vineyard socket, and vineyard rpc

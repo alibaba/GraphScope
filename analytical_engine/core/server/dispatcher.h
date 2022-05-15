@@ -15,26 +15,28 @@
 #ifndef ANALYTICAL_ENGINE_CORE_SERVER_DISPATCHER_H_
 #define ANALYTICAL_ENGINE_CORE_SERVER_DISPATCHER_H_
 
-#include <limits>
+#include <iosfwd>
 #include <memory>
 #include <string>
-#include <thread>
-#include <utility>
 #include <vector>
 
-#include "boost/leaf/handle_errors.hpp"
-
-#include "grape/util.h"
+#include "boost/leaf/result.hpp"
+#include "grape/config.h"
+#include "grape/serialization/in_archive.h"
 #include "grape/worker/comm_spec.h"
 #include "vineyard/common/util/blocking_queue.h"
 
 #include "core/config.h"
-#include "core/error.h"
-#include "core/server/command_detail.h"
-#include "core/utils/mpi_utils.h"
+#include "graphscope/proto/error_codes.pb.h"
 #include "graphscope/proto/graph_def.pb.h"
+#include "graphscope/proto/types.pb.h"
+
+namespace grape {
+class OutArchive;
+}  // namespace grape
 
 namespace gs {
+struct CommandDetail;
 
 /**
  * @brief DispatchResult wraps computation result, metadata and error message

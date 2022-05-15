@@ -21,6 +21,8 @@
 #include <string>
 #include <utility>
 
+#include "boost/leaf/result.hpp"
+
 #include "core/error.h"
 #include "core/object/gs_object.h"
 
