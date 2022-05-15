@@ -1224,7 +1224,7 @@ class CoordinatorServiceServicer(
         channel = grpc.insecure_channel(
             self._launcher.analytical_engine_endpoint, options=options
         )
-        return engine_service_pb2_grpc.GAEServiceStub(channel)
+        return engine_service_pb2_grpc.EngineServiceStub(channel)
 
     def _get_engine_config(self):
         dag_def = create_single_op_dag(types_pb2.GET_ENGINE_CONFIG)
