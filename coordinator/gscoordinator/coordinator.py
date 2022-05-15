@@ -917,7 +917,7 @@ class CoordinatorServiceServicer(
         return op_def_pb2.OpResult(
             code=error_codes_pb2.OK,
             key=op.key,
-            has_large_result=meta,
+            meta=meta,
             result=pickle.dumps(rlt),
         )
 
