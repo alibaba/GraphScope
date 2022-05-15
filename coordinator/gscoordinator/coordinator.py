@@ -409,7 +409,7 @@ class CoordinatorServiceServicer(
             if (
                 (
                     op.op == types_pb2.CREATE_GRAPH
-                    and op.attr[types_pb2.GRAPH_TYPE].graph_type
+                    and op.attr[types_pb2.GRAPH_TYPE].i
                     == graph_def_pb2.ARROW_PROPERTY
                 )
                 or op.op == types_pb2.TRANSFORM_GRAPH
@@ -722,7 +722,7 @@ class CoordinatorServiceServicer(
             )
             op_def.attr[types_pb2.GRAPH_TYPE].CopyFrom(
                 attr_value_pb2.AttrValue(
-                    graph_type=op.attr[types_pb2.GRAPH_TYPE].graph_type
+                    graph_type=op.attr[types_pb2.GRAPH_TYPE].i
                 )
             )
             dag_def = op_def_pb2.DagDef()

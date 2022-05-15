@@ -43,7 +43,7 @@ using grpc::StatusCode;
  * @brief GraphScopeService's responsibility is to listen to the request from
  * the client(coordinator) to perform operations.
  */
-class GraphScopeService final : public GAEService::Service {
+class GraphScopeService final : public EngineService::Service {
  public:
   explicit GraphScopeService(std::shared_ptr<Dispatcher> dispatcher)
       : dispatcher_(std::move(dispatcher)) {

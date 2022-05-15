@@ -416,7 +416,7 @@ def compile_graph_frame(
 
     os.chdir(library_dir)
 
-    graph_type = attr[types_pb2.GRAPH_TYPE].graph_type
+    graph_type = attr[types_pb2.GRAPH_TYPE].i
 
     # set OPAL_PREFIX in CMAKE_PREFIX_PATH
     OPAL_PREFIX = os.environ.get("OPAL_PREFIX", "")
@@ -1508,7 +1508,7 @@ GRAPH_HEADER_MAP = {
 
 
 def _codegen_graph_info(attr):
-    graph_type = attr[types_pb2.GRAPH_TYPE].graph_type
+    graph_type = attr[types_pb2.GRAPH_TYPE].i
     graph_class, graph_header = GRAPH_HEADER_MAP[graph_type]
     # graph_type is a literal of graph template in c++ side
     if graph_class == "vineyard::ArrowFragment":
