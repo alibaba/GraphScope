@@ -674,7 +674,7 @@ def _pre_process_for_bind_app_op(op, op_result_pool, key_to_op, **kwargs):
                 attr_value_pb2.AttrValue(s=result.graph_def.key.encode("utf-8"))
             )
             op.attr[types_pb2.GRAPH_TYPE].CopyFrom(
-                attr_value_pb2.AttrValue(graph_type=result.graph_def.graph_type)
+                attr_value_pb2.AttrValue(i=result.graph_def.graph_type)
             )
 
             assert result.graph_def.extension.Is(

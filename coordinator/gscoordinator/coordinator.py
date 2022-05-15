@@ -720,7 +720,7 @@ class CoordinatorServiceServicer(
                 attr_value_pb2.AttrValue(s=graph_sig.encode("utf-8"))
             )
             op_def.attr[types_pb2.GRAPH_TYPE].CopyFrom(
-                attr_value_pb2.AttrValue(graph_type=op.attr[types_pb2.GRAPH_TYPE].i)
+                attr_value_pb2.AttrValue(i=op.attr[types_pb2.GRAPH_TYPE].i)
             )
             dag_def = op_def_pb2.DagDef()
             dag_def.op.extend([op_def])
