@@ -35,6 +35,8 @@
 
 #define CONTEXT_TYPE_VERTEX_PROPERTY "vertex_property"
 
+namespace bl = boost::leaf;
+
 namespace gs {
 /**
  * @brief VertexPropertyContext can hold any number of columns. The context is

@@ -33,6 +33,8 @@
 #include "core/config.h"
 #include "core/error.h"
 
+namespace bl = boost::leaf;
+
 namespace gs {
 
 inline std::string generate_selectors(

@@ -30,6 +30,8 @@
 #include "core/utils/lib_utils.h"
 #include "graphscope/proto/attr_value.pb.h"
 
+namespace bl = boost::leaf;
+
 namespace gs {
 
 typedef void LoadGraphT(

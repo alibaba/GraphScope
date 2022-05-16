@@ -48,6 +48,8 @@
 #include "graphscope/proto/attr_value.pb.h"
 #include "graphscope/proto/graph_def.pb.h"
 
+namespace bl = boost::leaf;
+
 namespace gs {
 
 gs::rpc::graph::DataTypePb PropertyTypeToPb(vineyard::PropertyType type) {

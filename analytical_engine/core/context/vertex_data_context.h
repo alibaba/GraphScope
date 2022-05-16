@@ -47,6 +47,8 @@
 #define CONTEXT_TYPE_LABELED_VERTEX_DATA "labeled_vertex_data"
 #define CONTEXT_TTPE_DYNAMIC_VERTEX_DATA "dynamic_vertex_data"
 
+namespace bl = boost::leaf;
+
 #ifdef NETWORKX
 namespace grape {
 template <typename FRAG_T>

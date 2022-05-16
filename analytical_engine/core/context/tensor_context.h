@@ -43,6 +43,8 @@
 
 #define CONTEXT_TYPE_TENSOR "tensor"
 
+namespace bl = boost::leaf;
+
 namespace grape {
 
 template <typename T>

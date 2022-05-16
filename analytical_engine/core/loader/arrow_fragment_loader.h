@@ -49,6 +49,8 @@
 
 #define HASH_PARTITION
 
+namespace bl = boost::leaf;
+
 namespace gs {
 /**
  * @brief This loader can load a ArrowFragment from the data source including
@@ -108,7 +110,7 @@ class ArrowFragmentLoader {
 
   ~ArrowFragmentLoader() = default;
 
-  boost::leaf::result<std::pair<table_vec_t, std::vector<table_vec_t>>>
+  bl::result<std::pair<table_vec_t, std::vector<table_vec_t>>>
   LoadVertexEdgeTables() {
     if (graph_info_) {
       std::stringstream labels;
@@ -145,7 +147,7 @@ class ArrowFragmentLoader {
     return std::make_pair(v_tables, e_tables);
   }
 
-  boost::leaf::result<table_vec_t> LoadVertexTables() {
+  bl::result<table_vec_t> LoadVertexTables() {
     LOG_IF(INFO, comm_spec_.worker_id() == 0)
         << "PROGRESS--GRAPH-LOADING-READ-VERTEX-0";
     table_vec_t v_tables;
@@ -174,7 +176,7 @@ class ArrowFragmentLoader {
     return v_tables;
   }
 
-  boost::leaf::result<std::vector<table_vec_t>> LoadEdgeTables() {
+  bl::result<std::vector<table_vec_t>> LoadEdgeTables() {
     LOG_IF(INFO, comm_spec_.worker_id() == 0)
         << "PROGRESS--GRAPH-LOADING-READ-EDGE-0";
     std::vector<table_vec_t> e_tables;
@@ -205,8 +207,7 @@ class ArrowFragmentLoader {
     return e_tables;
   }
 
-  boost::leaf::result<vineyard::ObjectID> AddLabelsToGraph(
-      vineyard::ObjectID frag_id) {
+  bl::result<vineyard::ObjectID> AddLabelsToGraph(vineyard::ObjectID frag_id) {
     if (!graph_info_->vertices.empty() && !graph_info_->edges.empty()) {
       return addVerticesAndEdges(frag_id);
     } else if (!graph_info_->vertices.empty()) {
@@ -217,7 +218,7 @@ class ArrowFragmentLoader {
     return vineyard::InvalidObjectID();
   }
 
-  boost::leaf::result<vineyard::ObjectID> addVerticesAndEdges(
+  bl::result<vineyard::ObjectID> addVerticesAndEdges(
       vineyard::ObjectID frag_id) {
     BOOST_LEAF_AUTO(partitioner, initPartitioner());
     BOOST_LEAF_AUTO(raw_v_e_tables, LoadVertexEdgeTables());
@@ -289,8 +290,7 @@ class ArrowFragmentLoader {
     return basic_fragment_loader->AddVerticesAndEdgesToFragment(frag);
   }
 
-  boost::leaf::result<vineyard::ObjectID> addVertices(
-      vineyard::ObjectID frag_id) {
+  bl::result<vineyard::ObjectID> addVertices(vineyard::ObjectID frag_id) {
     BOOST_LEAF_AUTO(partitioner, initPartitioner());
     BOOST_LEAF_AUTO(raw_v_e_tables, LoadVertexEdgeTables());
     auto& partial_v_tables = raw_v_e_tables.first;
@@ -336,11 +336,11 @@ class ArrowFragmentLoader {
     return basic_fragment_loader->AddVerticesToFragment(frag);
   }
 
-  boost::leaf::result<vineyard::ObjectID> addEdges(vineyard::ObjectID frag_id) {
+  bl::result<vineyard::ObjectID> addEdges(vineyard::ObjectID frag_id) {
     return addVerticesAndEdges(frag_id);
   }
 
-  boost::leaf::result<vineyard::ObjectID> LoadFragment() {
+  bl::result<vineyard::ObjectID> LoadFragment() {
     BOOST_LEAF_AUTO(partitioner, initPartitioner());
     BOOST_LEAF_AUTO(raw_v_e_tables, LoadVertexEdgeTables());
     auto& partial_v_tables = raw_v_e_tables.first;
@@ -389,20 +389,20 @@ class ArrowFragmentLoader {
     return basic_fragment_loader->ConstructFragment();
   }
 
-  boost::leaf::result<vineyard::ObjectID> AddLabelsToGraphAsFragmentGroup(
+  bl::result<vineyard::ObjectID> AddLabelsToGraphAsFragmentGroup(
       vineyard::ObjectID frag_id) {
     BOOST_LEAF_AUTO(new_frag_id, AddLabelsToGraph(frag_id));
     VY_OK_OR_RAISE(client_.Persist(new_frag_id));
     return vineyard::ConstructFragmentGroup(client_, new_frag_id, comm_spec_);
   }
 
-  boost::leaf::result<vineyard::ObjectID> LoadFragmentAsFragmentGroup() {
+  bl::result<vineyard::ObjectID> LoadFragmentAsFragmentGroup() {
     BOOST_LEAF_AUTO(frag_id, LoadFragment());
     VY_OK_OR_RAISE(client_.Persist(frag_id));
     return vineyard::ConstructFragmentGroup(client_, frag_id, comm_spec_);
   }
 
-  boost::leaf::result<partitioner_t> initPartitioner() {
+  bl::result<partitioner_t> initPartitioner() {
     partitioner_t partitioner;
 #ifdef HASH_PARTITION
     partitioner.Init(comm_spec_.fnum());
@@ -446,7 +446,7 @@ class ArrowFragmentLoader {
  private:
 #ifdef ENABLE_JAVA_SDK
   // Location like giraph://filename#input_format_class=className
-  boost::leaf::result<std::shared_ptr<arrow::Table>> readTableFromGiraph(
+  bl::result<std::shared_ptr<arrow::Table>> readTableFromGiraph(
       bool load_vertex, const std::string& file_path, int index,
       int total_parts, const std::string formatter) {
     if (java_loader_invoker_ == nullptr) {
@@ -475,7 +475,7 @@ class ArrowFragmentLoader {
   }
 #endif
 
-  boost::leaf::result<std::shared_ptr<arrow::Table>> readTableFromPandas(
+  bl::result<std::shared_ptr<arrow::Table>> readTableFromPandas(
       const std::string& data) {
     std::shared_ptr<arrow::Table> table;
     if (!data.empty()) {
@@ -487,7 +487,7 @@ class ArrowFragmentLoader {
     return table;
   }
 
-  boost::leaf::result<std::shared_ptr<arrow::Table>> readTableFromLocation(
+  bl::result<std::shared_ptr<arrow::Table>> readTableFromLocation(
       const std::string& location, int index, int total_parts) {
     std::shared_ptr<arrow::Table> table;
     std::string expanded = vineyard::ExpandEnvironmentVariables(location);
@@ -503,7 +503,7 @@ class ArrowFragmentLoader {
     return table;
   }
 
-  boost::leaf::result<table_vec_t> loadVertexTables(
+  bl::result<table_vec_t> loadVertexTables(
       const std::vector<std::string>& files, int index, int total_parts) {
     auto label_num = static_cast<label_id_t>(files.size());
     table_vec_t tables(label_num);
@@ -515,8 +515,7 @@ class ArrowFragmentLoader {
                                                           "#header_row=true")
                          .release(),
                      io_deleter_);
-      auto read_procedure =
-          [&]() -> boost::leaf::result<std::shared_ptr<arrow::Table>> {
+      auto read_procedure = [&]() -> bl::result<std::shared_ptr<arrow::Table>> {
         VY_OK_OR_RAISE(io_adaptor->SetPartialRead(index, total_parts));
         VY_OK_OR_RAISE(io_adaptor->Open());
         std::shared_ptr<arrow::Table> table;
@@ -528,7 +527,7 @@ class ArrowFragmentLoader {
                       vineyard::sync_gs_error(comm_spec_, read_procedure));
 
       auto sync_schema_procedure =
-          [&]() -> boost::leaf::result<std::shared_ptr<arrow::Table>> {
+          [&]() -> bl::result<std::shared_ptr<arrow::Table>> {
         return vineyard::SyncSchema(table, comm_spec_);
       };
 
@@ -557,14 +556,14 @@ class ArrowFragmentLoader {
     return tables;
   }
 
-  boost::leaf::result<table_vec_t> loadVertexTables(
+  bl::result<table_vec_t> loadVertexTables(
       const std::vector<std::shared_ptr<detail::Vertex>>& vertices, int index,
       int total_parts) {
     // a special code path when multiple labeled vertex batches are mixed.
     if (vertices.size() == 1 && vertices[0]->protocol == "vineyard") {
       VLOG(2) << "read vertex table from vineyard: " << vertices[0]->values;
       BOOST_LEAF_AUTO(sourceId, resolveVYObject(vertices[0]->values));
-      auto read_procedure = [&]() -> boost::leaf::result<table_vec_t> {
+      auto read_procedure = [&]() -> bl::result<table_vec_t> {
         BOOST_LEAF_AUTO(tables, vineyard::GatherVTables(
                                     client_, {sourceId}, comm_spec_.local_id(),
                                     comm_spec_.local_num()));
@@ -600,8 +599,7 @@ class ArrowFragmentLoader {
     size_t label_num = vertices.size();
     table_vec_t tables(label_num);
     for (size_t i = 0; i < label_num; ++i) {
-      auto read_procedure =
-          [&]() -> boost::leaf::result<std::shared_ptr<arrow::Table>> {
+      auto read_procedure = [&]() -> bl::result<std::shared_ptr<arrow::Table>> {
         std::shared_ptr<arrow::Table> table;
         if (vertices[i]->protocol == "numpy" ||
             vertices[i]->protocol == "pandas") {
@@ -654,7 +652,7 @@ class ArrowFragmentLoader {
     return tables;
   }
 
-  boost::leaf::result<std::vector<table_vec_t>> loadEdgeTables(
+  bl::result<std::vector<table_vec_t>> loadEdgeTables(
       const std::vector<std::string>& files, int index, int total_parts) {
     auto label_num = static_cast<label_id_t>(files.size());
     std::vector<table_vec_t> tables(label_num);
@@ -672,7 +670,7 @@ class ArrowFragmentLoader {
                              .release(),
                          io_deleter_);
           auto read_procedure =
-              [&]() -> boost::leaf::result<std::shared_ptr<arrow::Table>> {
+              [&]() -> bl::result<std::shared_ptr<arrow::Table>> {
             VY_OK_OR_RAISE(io_adaptor->SetPartialRead(index, total_parts));
             VY_OK_OR_RAISE(io_adaptor->Open());
             std::shared_ptr<arrow::Table> table;
@@ -683,7 +681,7 @@ class ArrowFragmentLoader {
                           vineyard::sync_gs_error(comm_spec_, read_procedure));
 
           auto sync_schema_procedure =
-              [&]() -> boost::leaf::result<std::shared_ptr<arrow::Table>> {
+              [&]() -> bl::result<std::shared_ptr<arrow::Table>> {
             return vineyard::SyncSchema(table, comm_spec_);
           };
           BOOST_LEAF_AUTO(
@@ -738,7 +736,7 @@ class ArrowFragmentLoader {
     return tables;
   }
 
-  boost::leaf::result<std::vector<table_vec_t>> loadEdgeTables(
+  bl::result<std::vector<table_vec_t>> loadEdgeTables(
       const std::vector<std::shared_ptr<detail::Edge>>& edges, int index,
       int total_parts) {
     // a special code path when multiple labeled edge batches are mixed.
@@ -748,8 +746,7 @@ class ArrowFragmentLoader {
                 << edges[0]->sub_labels[0].values;
       BOOST_LEAF_AUTO(sourceId,
                       resolveVYObject(edges[0]->sub_labels[0].values));
-      auto read_procedure =
-          [&]() -> boost::leaf::result<std::vector<table_vec_t>> {
+      auto read_procedure = [&]() -> bl::result<std::vector<table_vec_t>> {
         BOOST_LEAF_AUTO(tables,
                         vineyard::GatherETables(client_, {{sourceId}},
                                                 comm_spec_.local_id(),
@@ -804,7 +801,7 @@ class ArrowFragmentLoader {
         meta->Append(LABEL_TAG, edges[i]->label);
 
         auto load_procedure =
-            [&]() -> boost::leaf::result<std::shared_ptr<arrow::Table>> {
+            [&]() -> bl::result<std::shared_ptr<arrow::Table>> {
           std::shared_ptr<arrow::Table> table;
           if (sub_labels[j].protocol == "pandas") {
             BOOST_LEAF_ASSIGN(table, readTableFromPandas(sub_labels[j].values));
@@ -856,7 +853,7 @@ class ArrowFragmentLoader {
     return tables;
   }
 
-  boost::leaf::result<std::pair<vertex_table_info_t, edge_table_info_t>>
+  bl::result<std::pair<vertex_table_info_t, edge_table_info_t>>
   preprocessInputs(partitioner_t partitioner, const table_vec_t& v_tables,
                    const std::vector<table_vec_t>& e_tables,
                    const std::set<std::string>& previous_vertex_labels =
@@ -927,8 +924,7 @@ class ArrowFragmentLoader {
     return std::make_pair(vertex_tables_with_label, edge_tables_with_label);
   }
 
-  boost::leaf::result<vineyard::ObjectID> resolveVYObject(
-      std::string const& source) {
+  bl::result<vineyard::ObjectID> resolveVYObject(std::string const& source) {
     vineyard::ObjectID sourceId = vineyard::InvalidObjectID();
     // encoding: 'o' prefix for object id, and 's' prefix for object name.
     CHECK_OR_RAISE(!source.empty() && (source[0] == 'o' || source[0] == 's'));
@@ -942,7 +938,7 @@ class ArrowFragmentLoader {
   }
 
   /// Do some necessary sanity checks.
-  boost::leaf::result<void> sanityChecks(std::shared_ptr<arrow::Table> table) {
+  bl::result<void> sanityChecks(std::shared_ptr<arrow::Table> table) {
     // We require that there are no identical column names
     auto names = table->ColumnNames();
     std::sort(names.begin(), names.end());

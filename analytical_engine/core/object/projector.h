@@ -27,6 +27,8 @@
 #include "core/server/rpc_utils.h"
 #include "core/utils/lib_utils.h"
 
+namespace bl = boost::leaf;
+
 namespace gs {
 
 typedef void ProjectT(

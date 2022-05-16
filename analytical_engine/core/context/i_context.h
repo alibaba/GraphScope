@@ -36,6 +36,8 @@
 #include "core/object/i_fragment_wrapper.h"
 #include "core/server/rpc_utils.h"
 
+namespace bl = boost::leaf;
+
 namespace gs {
 class IFragmentWrapper;
 

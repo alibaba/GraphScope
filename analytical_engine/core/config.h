@@ -18,14 +18,10 @@
 
 #include <cstdint>  // IWYU pragma: export
 
-#include "boost/leaf.hpp"  // IWYU pragma: export
-
 #include "grape/config.h"  // IWYU pragma: export
 
 namespace gs {
 using fid_t = grape::fid_t;
-
-namespace bl = boost::leaf;
 }  // namespace gs
 
 #endif  // ANALYTICAL_ENGINE_CORE_CONFIG_H_

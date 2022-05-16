@@ -30,6 +30,8 @@
 #include "core/utils/lib_utils.h"
 #include "graphscope/proto/types.pb.h"
 
+namespace bl = boost::leaf;
+
 namespace gs {
 
 typedef void* CreateWorkerT(const std::shared_ptr<void>& fragment,

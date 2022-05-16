@@ -22,6 +22,8 @@
 
 #include "core/error.h"
 
+namespace bl = boost::leaf;
+
 namespace gs {
 inline bl::result<void*> open_lib(const char* path) {
   void* handle = dlopen(path, RTLD_LAZY);

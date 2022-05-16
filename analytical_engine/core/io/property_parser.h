@@ -37,6 +37,8 @@
 #include "graphscope/proto/op_def.pb.h"
 #include "graphscope/proto/types.pb.h"
 
+namespace bl = boost::leaf;
+
 template <typename Key, typename Value>
 using ProtobufMap = ::google::protobuf::Map<Key, Value>;
 

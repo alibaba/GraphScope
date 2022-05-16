@@ -26,6 +26,8 @@
 #include "core/error.h"
 #include "core/object/gs_object.h"
 
+namespace bl = boost::leaf;
+
 namespace gs {
 /**
  * @brief ObjectManager manages GSObject like fragment wrapper, loaded app and

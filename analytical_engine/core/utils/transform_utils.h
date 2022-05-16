@@ -36,6 +36,8 @@ limitations under the License.
 #include "core/context/column.h"
 #include "core/utils/trait_utils.h"
 
+namespace bl = boost::leaf;
+
 namespace gs {
 
 #ifdef NETWORKX

@@ -43,6 +43,8 @@
 
 #define CONTEXT_TYPE_JAVA_PIE_PROPERTY "java_pie_property"
 
+namespace bl = boost::leaf;
+
 namespace gs {
 
 static constexpr const char* _java_property_message_manager_name =

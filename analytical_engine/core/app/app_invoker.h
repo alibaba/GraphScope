@@ -31,6 +31,8 @@
 #include "graphscope/proto/data_types.pb.h"
 #include "graphscope/proto/types.pb.h"
 
+namespace bl = boost::leaf;
+
 namespace gs {
 
 /**

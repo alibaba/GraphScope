@@ -29,6 +29,8 @@
 #include "core/loader/arrow_fragment_loader.h"
 #include "vineyard/graph/fragment/arrow_fragment.h"
 
+namespace bl = boost::leaf;
+
 using FragmentType = vineyard::ArrowFragment<std::string, uint64_t>;
 using ProjectedFragmentType =
     gs::ArrowProjectedFragment<std::string, uint64_t, double, int64_t>;
@@ -110,16 +112,16 @@ int main(int argc, char** argv) {
           gs::ArrowFragmentLoader<vineyard::property_graph_types::OID_TYPE,
                                   vineyard::property_graph_types::VID_TYPE>>(
           client, comm_spec, efiles, vfiles, directed != 0);
-      fragment_id = boost::leaf::try_handle_all(
-          [&loader]() { return loader->LoadFragment(); },
-          [](const vineyard::GSError& e) {
-            LOG(FATAL) << e.error_msg;
-            return 0;
-          },
-          [](const boost::leaf::error_info& unmatched) {
-            LOG(FATAL) << "Unmatched error " << unmatched;
-            return 0;
-          });
+      fragment_id =
+          bl::try_handle_all([&loader]() { return loader->LoadFragment(); },
+                             [](const vineyard::GSError& e) {
+                               LOG(FATAL) << e.error_msg;
+                               return 0;
+                             },
+                             [](const bl::error_info& unmatched) {
+                               LOG(FATAL) << "Unmatched error " << unmatched;
+                               return 0;
+                             });
     }
 
     LOG(INFO) << "[worker-" << comm_spec.worker_id()

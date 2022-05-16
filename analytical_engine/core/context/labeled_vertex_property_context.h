@@ -31,6 +31,8 @@
 #include "core/utils/transform_utils.h"
 #define CONTEXT_TYPE_LABELED_VERTEX_PROPERTY "labeled_vertex_property"
 
+namespace bl = boost::leaf;
+
 namespace gs {
 
 /**

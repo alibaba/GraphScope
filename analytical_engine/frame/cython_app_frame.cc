@@ -33,6 +33,7 @@
 #include "graphscope/proto/data_types.pb.h"
 #include "graphscope/proto/types.pb.h"
 
+namespace bl = boost::leaf;
 using string = std::string;
 
 #define DO_QUOTE(X) #X
@@ -165,7 +166,7 @@ void Query(void* worker_handler, const gs::rpc::QueryArgs& query_args,
            const std::string& context_key,
            std::shared_ptr<gs::IFragmentWrapper> frag_wrapper,
            std::shared_ptr<gs::IContextWrapper>& ctx_wrapper,
-           gs::bl::result<nullptr_t>& wrapper_error) {
+           bl::result<nullptr_t>& wrapper_error) {
   auto worker = static_cast<worker_handler_t*>(worker_handler)->worker;
   auto result = gs::AppInvoker<_APP_TYPE>::Query(worker, query_args);
   if (!result) {

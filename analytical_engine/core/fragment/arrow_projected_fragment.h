@@ -36,6 +36,8 @@
 #include "core/fragment/arrow_projected_fragment_base.h"
 #include "core/vertex_map/arrow_projected_vertex_map.h"
 
+namespace bl = boost::leaf;
+
 namespace gs {
 
 namespace arrow_projected_fragment_impl {

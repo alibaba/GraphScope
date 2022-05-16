@@ -43,6 +43,8 @@
 #include "core/server/rpc_utils.h"
 #include "graphscope/proto/types.pb.h"
 
+namespace bl = boost::leaf;
+
 namespace grape {
 class InArchive;
 }  // namespace grape

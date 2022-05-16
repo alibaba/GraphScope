@@ -39,6 +39,8 @@
 #include "proto/graphscope/proto/attr_value.pb.h"
 #include "proto/graphscope/proto/graph_def.pb.h"
 
+namespace bl = boost::leaf;
+
 namespace gs {
 
 Dispatcher::Dispatcher(const grape::CommSpec& comm_spec)

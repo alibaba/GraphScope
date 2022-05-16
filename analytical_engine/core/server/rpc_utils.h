@@ -33,6 +33,8 @@
 #include "graphscope/proto/op_def.pb.h"
 #include "graphscope/proto/types.pb.h"
 
+namespace bl = boost::leaf;
+
 namespace gs {
 namespace rpc {
 

@@ -43,6 +43,8 @@
 
 #define CONTEXT_TYPE_JAVA_PIE_PROJECTED "java_pie_projected"
 
+namespace bl = boost::leaf;
+
 namespace gs {
 
 static constexpr const char* _java_projected_message_manager_name =

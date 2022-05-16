@@ -34,6 +34,8 @@
 #include "core/utils/msgpack_utils.h"
 #include "graphscope/proto/types.pb.h"
 
+namespace bl = boost::leaf;
+
 namespace gs {
 /**
  * @brief DynamicFragmentReporter is used to query the vertex and edge
