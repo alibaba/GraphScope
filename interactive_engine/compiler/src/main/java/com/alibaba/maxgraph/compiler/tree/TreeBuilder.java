@@ -17,7 +17,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.alibaba.maxgraph.Message;
-import com.alibaba.maxgraph.common.util.SchemaUtils;
 import com.alibaba.maxgraph.compiler.api.schema.DataType;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.compiler.optimizer.OptimizeConfig;
@@ -54,6 +53,7 @@ import com.alibaba.maxgraph.sdkcommon.compiler.custom.branch.CustomWhenThenFunct
 import com.alibaba.maxgraph.sdkcommon.compiler.custom.map.MapPropFillFunction;
 import com.alibaba.maxgraph.sdkcommon.compiler.custom.map.RangeSumFunction;
 import com.alibaba.maxgraph.sdkcommon.compiler.custom.program.VertexRatioProgram;
+import com.alibaba.maxgraph.sdkcommon.util.SchemaUtils;
 import com.alibaba.maxgraph.tinkerpop.steps.AllPathStep;
 import com.alibaba.maxgraph.tinkerpop.steps.ConnectedComponentsStep;
 import com.alibaba.maxgraph.tinkerpop.steps.CreateGraphStep;

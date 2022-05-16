@@ -2,9 +2,9 @@ package com.alibaba.maxgraph.tests.frontend;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import com.alibaba.graphscope.groot.schema.PropertyValue;
-import com.alibaba.maxgraph.common.util.PkHashUtils;
 import com.alibaba.maxgraph.compiler.api.schema.DataType;
+import com.alibaba.maxgraph.sdkcommon.schema.PropertyValue;
+import com.alibaba.maxgraph.sdkcommon.util.PkHashUtils;
 
 import org.junit.Test;
 

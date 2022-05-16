@@ -13,9 +13,9 @@
  */
 package com.alibaba.graphscope.groot.sdk;
 
-import com.alibaba.graphscope.groot.schema.GraphDef;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.sdkcommon.common.DataLoadTarget;
+import com.alibaba.maxgraph.sdkcommon.schema.GraphDef;
 
 import org.junit.jupiter.api.Test;
 
@@ -31,7 +31,7 @@ public class ClientTest {
 
     String host = "localhost";
     int port = 55556;
-    Client client = new Client(host, port);
+    MaxGraphClient client = new MaxGraphClient(host, port);
 
     @Test
     void testIngestData() {

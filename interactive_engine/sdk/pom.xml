@@ -15,25 +15,9 @@
   <dependencies>
     <dependency>
       <groupId>com.alibaba.maxgraph</groupId>
-      <artifactId>groot</artifactId>
+      <artifactId>maxgraph-sdk-common</artifactId>
       <version>${project.parent.version}</version>
       <exclusions>
-        <exclusion>
-          <groupId>org.apache.curator</groupId>
-          <artifactId>curator-framework</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.apache.curator</groupId>
-          <artifactId>curator-client</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.apache.curator</groupId>
-          <artifactId>curator-recipes</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.apache.curator</groupId>
-          <artifactId>curator-test</artifactId>
-        </exclusion>
         <exclusion>
           <groupId>org.apache.logging.log4j</groupId>
           <artifactId>log4j-slf4j-impl</artifactId>

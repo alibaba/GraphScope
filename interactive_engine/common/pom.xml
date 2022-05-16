@@ -156,21 +156,6 @@
               <goal>compile-custom</goal>
             </goals>
           </execution>
-          <execution>
-            <id>graphscope</id>
-            <configuration>
-              <protoSourceRoot>../../python</protoSourceRoot>
-              <includes>
-                <include>graphscope/proto/graph_def.proto</include>
-                <include>graphscope/proto/ddl_service.proto</include>
-                <include>graphscope/proto/write_service.proto</include>
-              </includes>
-            </configuration>
-            <goals>
-              <goal>compile</goal>
-              <goal>compile-custom</goal>
-            </goals>
-          </execution>
         </executions>
       </plugin>
       <plugin>
