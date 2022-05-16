@@ -79,6 +79,12 @@ class VoteRank
       sumEdgeNum += i;
     }
     Sum(sumEdgeNum,sumEdgeNum);
+    std::cout << sumEdgeNum << " " << "total edge numbers\n";
+    
+    size_t edgeNumWithGetEdgeNum = frag.GetEdgeNum();
+    Sum(edgeNumWithGetEdgeNum,edgeNumWithGetEdgeNum);
+
+    std::cout << edgeNumWithGetEdgeNum << " " << "total edge numbers with GetEdgeNum\n";
     ctx.avg_degree = static_cast<double>(sumEdgeNum) /
                  static_cast<double>(graph_vnum);
 #ifdef PROFILING
