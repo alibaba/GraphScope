@@ -455,7 +455,7 @@ void Run() {
         grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T,
                                         grape::LoadStrategy::kBothOutIn,
                                         VertexMapType>;
-    using AppType = grape::VoteRank<GraphType>;
+    using AppType = VoteRank<GraphType>;
     CreateAndQuery<GraphType,AppType>(comm_spec, efile, vfile, out_prefix, 
                                       FLAGS_datasource, fnum, spec,
                                       FLAGS_vr_num_nodes);

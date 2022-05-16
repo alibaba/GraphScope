@@ -20,7 +20,7 @@ limitations under the License.
 
 #include "voterank/voterank_context.h"
 
-namespace grape {
+namespace gs {
 
 /**
  * @brief An implementation of VoteRank, the version in LDBC, which can work
@@ -35,16 +35,16 @@ namespace grape {
 
 template <typename FRAG_T>
 class VoteRank
-    : public ParallelAppBase<FRAG_T, VoteRankContext<FRAG_T>>,
-      public Communicator,
-      public ParallelEngine {
+    : public grape::ParallelAppBase<FRAG_T, VoteRankContext<FRAG_T>>,
+      public grape::Communicator,
+      public grape::ParallelEngine {
  public:
   using vertex_t = typename FRAG_T::vertex_t;
   using oid_t = typename FRAG_T::oid_t;
-  static constexpr MessageStrategy message_strategy =
-      MessageStrategy::kAlongIncomingEdgeToOuterVertex;
+  static constexpr grape::MessageStrategy message_strategy =
+      grape::MessageStrategy::kAlongIncomingEdgeToOuterVertex;
   static constexpr bool need_split_edges = true;
-  static constexpr LoadStrategy load_strategy = LoadStrategy::kBothOutIn;
+  static constexpr grape::LoadStrategy load_strategy = grape::LoadStrategy::kBothOutIn;
 
   INSTALL_PARALLEL_WORKER(VoteRank<FRAG_T>,
                           VoteRankContext<FRAG_T>, FRAG_T)
@@ -64,24 +64,23 @@ class VoteRank
     ctx.step = 0;
 
     // assign initial ranks and weights
-    std::vector<long unsigned int> edge_nums(thread_num(), 0);
-    ForEach(inner_vertices, [&ctx, &edge_nums,&frag, &messages](int tid, vertex_t u) {
-      int EdgeNum = frag.GetOutgoingAdjList(u).Size();
-      edge_nums[tid] += EdgeNum;
+    std::vector<size_t> edgeNums(thread_num(),0);
+    ForEach(inner_vertices, [&ctx, &edgeNums, &frag, &messages](int tid, vertex_t u) {
+      edgeNums[tid] += frag.GetOutgoingAdjList(u).Size();
       ctx.rank[u] = 0;
       ctx.weight[u] = 1.0;
       ctx.scores[u] = 0.0;
       messages.SendMsgThroughIEdges<fragment_t, double>(frag, u,
                                                           ctx.weight[u], tid); 
     });
-    long unsigned int sumEdgeNum = 0;
-    for(auto i : edge_nums){
+    
+    size_t sumEdgeNum = 0;
+    for(auto i : edgeNums){
       sumEdgeNum += i;
     }
     Sum(sumEdgeNum,sumEdgeNum);
     ctx.avg_degree = static_cast<double>(sumEdgeNum) /
                  static_cast<double>(graph_vnum);
-    
 #ifdef PROFILING
     ctx.exec_time += GetCurrentTime();
     ctx.postprocess_time -= GetCurrentTime();

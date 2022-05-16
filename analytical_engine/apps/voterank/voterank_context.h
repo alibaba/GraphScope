@@ -20,23 +20,23 @@ limitations under the License.
 
 #include <iomanip>
 
-namespace grape {
+namespace gs {
 /**
  * @brief Context for of VoteRank.
  *
  * @tparam FRAG_T
  */
 template <typename FRAG_T>
-class VoteRankContext : public VertexDataContext<FRAG_T, int> {
+class VoteRankContext : public grape::VertexDataContext<FRAG_T, int> {
   using oid_t = typename FRAG_T::oid_t;
   using vid_t = typename FRAG_T::vid_t;
 
  public:
   explicit VoteRankContext(const FRAG_T& fragment)
-      : VertexDataContext<FRAG_T, int32_t>(fragment, true),
+      : grape::VertexDataContext<FRAG_T, int32_t>(fragment, true),
         rank(this->data()) {}
 
-  void Init(ParallelMessageManager& messages, int max_round) {
+  void Init(grape::ParallelMessageManager& messages, int max_round) {
     auto& frag = this->fragment();
     auto vertices = frag.Vertices();
     this->max_round = max_round;
