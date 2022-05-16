@@ -26,7 +26,6 @@ from networkx.utils import graphs_equal
 from networkx.utils import nodes_equal
 
 import graphscope.nx as nx
-from graphscope.nx.tests.utils import assert_graphs_equal
 from graphscope.nx.utils.compat import with_graphscope_nx_context
 
 np = pytest.importorskip("numpy")

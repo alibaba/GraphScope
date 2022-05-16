@@ -116,10 +116,59 @@ public enum TestGraphFactory implements GraphProperties {
             return JsonUtils.fromJson(json, new TypeReference<Map<String, Object>>() {});
         }
     },
-    UNKNOWN {
+    VINEYARD {
         @Override
         public Map<String, Object> getProperties() {
-            throw new UnsupportedOperationException();
+            String json =
+                    "{\n"
+                            + "  \"vertex_properties\": {\n"
+                            + "    \"-9223372036854775808\": {\n"
+                            + "      \"name\": \"marko\",\n"
+                            + "      \"age\": 29\n"
+                            + "    },\n"
+                            + "    \"1\": {\n"
+                            + "      \"name\": \"vadas\",\n"
+                            + "      \"age\": 27\n"
+                            + "    },\n"
+                            + "    \"-9151314442816847872\": {\n"
+                            + "      \"name\": \"lop\",\n"
+                            + "      \"lang\": \"java\"\n"
+                            + "    },\n"
+                            + "    \"0\": {\n"
+                            + "      \"name\": \"josh\",\n"
+                            + "      \"age\": 32\n"
+                            + "    },\n"
+                            + "    \"-9151314442816847871\": {\n"
+                            + "      \"name\": \"ripple\",\n"
+                            + "      \"lang\": \"java\"\n"
+                            + "    },\n"
+                            + "    \"2\": {\n"
+                            + "      \"name\": \"peter\",\n"
+                            + "      \"age\": 35\n"
+                            + "    }\n"
+                            + "  },\n"
+                            + "  \"edge_properties\": {\n"
+                            + "    \"0\": {\n"
+                            + "      \"weight\": 0.5\n"
+                            + "    },\n"
+                            + "    \"72057594037927936\": {\n"
+                            + "      \"weight\": 0.4\n"
+                            + "    },\n"
+                            + "    \"1\": {\n"
+                            + "      \"weight\": 1.0\n"
+                            + "    },\n"
+                            + "    \"72057594037927938\": {\n"
+                            + "      \"weight\": 0.4\n"
+                            + "    },\n"
+                            + "    \"72057594037927937\": {\n"
+                            + "      \"weight\": 1.0\n"
+                            + "    },\n"
+                            + "    \"-9151314442816847872\": {\n"
+                            + "      \"weight\": 0.2\n"
+                            + "    }\n"
+                            + "  }\n"
+                            + "}";
+            return JsonUtils.fromJson(json, new TypeReference<Map<String, Object>>() {});
         }
     }
 }

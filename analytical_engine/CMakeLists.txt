@@ -189,12 +189,10 @@ include("cmake/FindGRPC.cmake")
 include_directories(${GRPC_INCLUDE_DIR})
 
 # Generate proto
-execute_process(COMMAND python3 proto/graphscope/proto/proto_generator.py "${PROJECT_SOURCE_DIR}/proto" --cpp
-        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/..)
-execute_process(COMMAND python3 proto/graphscope/proto/proto_generator.py "${PROJECT_SOURCE_DIR}/../python" --python
+execute_process(COMMAND python3 python/graphscope/proto/proto_generator.py "${PROJECT_SOURCE_DIR}" --cpp
         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/..)
 
-file(GLOB PROTO_CPP_FILES "proto/graphscope/proto/*.cc")
+file(GLOB PROTO_CPP_FILES "graphscope/proto/*.cc")
 file(GLOB CORE_RPC_SRC_FILES "core/server/*.cc")
 
 # Add targets
@@ -407,7 +405,7 @@ install_gsa_binary(gs_util)
 install_gsa_headers("${PROJECT_SOURCE_DIR}/apps")
 install_gsa_headers("${PROJECT_SOURCE_DIR}/benchmarks")
 install_gsa_headers("${PROJECT_SOURCE_DIR}/core")
-install_gsa_headers("${PROJECT_SOURCE_DIR}/proto")
+install_gsa_headers("${PROJECT_SOURCE_DIR}/graphscope")
 install_gsa_app_frames("${PROJECT_SOURCE_DIR}/frame")
 
 install_gsa_dependency_modules("${PROJECT_SOURCE_DIR}/cmake")

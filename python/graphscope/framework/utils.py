@@ -300,23 +300,19 @@ def f_to_attr(f: float) -> attr_value_pb2.AttrValue:
 
 
 def type_to_attr(t):
-    return attr_value_pb2.AttrValue(type=t)
+    return attr_value_pb2.AttrValue(i=t)
 
 
 def graph_type_to_attr(t):
-    return attr_value_pb2.AttrValue(graph_type=t)
+    return attr_value_pb2.AttrValue(i=t)
 
 
 def modify_type_to_attr(t):
-    return attr_value_pb2.AttrValue(modify_type=t)
+    return attr_value_pb2.AttrValue(i=t)
 
 
 def report_type_to_attr(t):
-    return attr_value_pb2.AttrValue(report_type=t)
-
-
-def place_holder_to_attr():
-    return attr_value_pb2.AttrValue(place_holder=types_pb2.PlaceHolder())
+    return attr_value_pb2.AttrValue(i=t)
 
 
 def list_str_to_attr(list_of_str):

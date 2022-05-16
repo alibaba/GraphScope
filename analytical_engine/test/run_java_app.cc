@@ -49,9 +49,9 @@
 #include "core/loader/arrow_fragment_loader.h"
 #include "core/object/fragment_wrapper.h"
 #include "core/utils/transform_utils.h"
+#include "graphscope/proto/graph_def.pb.h"
 #include "java_pie/java_pie_projected_parallel_app.h"
 #include "java_pie/java_pie_property_parallel_app.h"
-#include "proto/graphscope/proto/graph_def.pb.h"
 
 using FragmentType =
     vineyard::ArrowFragment<vineyard::property_graph_types::OID_TYPE,

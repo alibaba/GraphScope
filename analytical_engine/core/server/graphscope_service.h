@@ -23,11 +23,11 @@
 #include <vector>
 
 #include "core/server/dispatcher.h"
-#include "proto/graphscope/proto/attr_value.pb.h"
-#include "proto/graphscope/proto/engine_service.grpc.pb.h"
-#include "proto/graphscope/proto/graph_def.pb.h"
-#include "proto/graphscope/proto/message.pb.h"
-#include "proto/graphscope/proto/op_def.pb.h"
+#include "graphscope/proto/attr_value.pb.h"
+#include "graphscope/proto/engine_service.grpc.pb.h"
+#include "graphscope/proto/graph_def.pb.h"
+#include "graphscope/proto/message.pb.h"
+#include "graphscope/proto/op_def.pb.h"
 
 #include "boost/lexical_cast.hpp"
 
@@ -71,8 +71,8 @@ class GraphScopeService final : public EngineService::Service {
     const std::string& data = result.data();
 
     // has_large_result
-    op_result->set_has_large_result(result.has_large_data());
-    if (op_result->has_large_result()) {
+    op_result->mutable_meta()->set_has_large_result(result.has_large_data());
+    if (op_result->meta().has_large_result()) {
       // split
       for (size_t i = 0; i < data.size(); i += chunk_size_) {
         RunStepResponse response_body;

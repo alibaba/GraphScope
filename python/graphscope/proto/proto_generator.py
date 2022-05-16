@@ -22,6 +22,7 @@ import shutil
 import subprocess
 import sys
 
+
 def gather_all_proto(proto_dir, suffix="*.proto"):
     directory = os.path.join(proto_dir, suffix)
     files = glob.glob(directory)
@@ -76,7 +77,7 @@ def cpp_service_out(relative_dir, output_dir):
             [
                 shutil.which("protoc"),
                 "-I%s" % ".",
-                "--grpc_out=%s" %  output_dir,
+                "--grpc_out=%s" % output_dir,
                 "--plugin=protoc-gen-grpc=%s" % plugin_path,
                 proto_file,
             ],
@@ -93,7 +94,7 @@ def python_service_out(relative_dir, output_dir):
                 sys.executable,
                 "-m",
                 "grpc_tools.protoc",
-                "-I%s" % '.',
+                "-I%s" % ".",
                 "--python_out=%s" % output_dir,
                 "--grpc_python_out=%s" % output_dir,
                 proto_file,
@@ -107,26 +108,25 @@ if __name__ == "__main__":
         print("Usage: python proto_generator.py <OUTPUT_PATH> [--cpp] [--python]")
         sys.exit(1)
 
-    # path to 'GraphScope/proto/python/proto'
+    # path to 'GraphScope/python/graphscope/proto'
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    print(current_dir)
 
-    # path to 'GraphScope/proto'
+    # path to 'GraphScope/python'
     base_dir = os.path.join(current_dir, "../", "../")
     os.chdir(base_dir)
-    print(base_dir)
-    # must use relative path
-    relative_dir = os.path.join(".", "graphscope", "proto")
 
     output_dir = sys.argv[1]
     output_dir = os.path.realpath(os.path.realpath(output_dir))
     create_path(output_dir)
-    print("Generating cpp proto to:" + output_dir)
 
+    # must use relative path
+    relative_dir = os.path.join(".", "graphscope", "proto")
     if len(sys.argv) <= 2 or len(sys.argv) > 2 and sys.argv[2] == "--cpp":
+        print("Generating cpp proto to: " + output_dir)
         cpp_out(relative_dir, output_dir)
         cpp_service_out(relative_dir, output_dir)
 
     if len(sys.argv) <= 2 or len(sys.argv) > 2 and sys.argv[2] == "--python":
+        print("Generating python proto to: " + output_dir)
         python_out(relative_dir, output_dir)
         python_service_out(relative_dir, output_dir)

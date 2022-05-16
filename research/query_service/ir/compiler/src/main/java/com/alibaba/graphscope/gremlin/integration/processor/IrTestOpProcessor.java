@@ -37,9 +37,11 @@ import org.apache.tinkerpop.gremlin.driver.message.ResponseMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseStatusCode;
 import org.apache.tinkerpop.gremlin.process.traversal.Bytecode;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
+import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.process.traversal.translator.GroovyTranslator;
 import org.apache.tinkerpop.gremlin.server.Context;
 import org.apache.tinkerpop.gremlin.server.op.traversal.TraversalOpProcessor;
+import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.util.function.ThrowingConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,8 +65,10 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
             Configs configs,
             IrMetaFetcher irMetaFetcher,
             RpcChannelFetcher fetcher,
+            Graph graph,
+            GraphTraversalSource g,
             GraphProperties testGraph) {
-        super(configs, irMetaFetcher, fetcher);
+        super(configs, irMetaFetcher, fetcher, graph, g);
         this.context = new SimpleScriptContext();
         Bindings globalBindings = new SimpleBindings();
         globalBindings.put("g", g);

@@ -168,7 +168,8 @@ start_frontend() {
             -Dsun.jnu.encoding=UTF-8
             -Dlogfilename=${log_dir}/maxgraph-frontend.log
             -Dlogbasedir=${log_dir}/frontend
-            -Dlog4j.configurationFile=file:${GRAPHSCOPE_HOME}/conf/log4j2.xml"
+            -Dlog4j.configurationFile=file:${GRAPHSCOPE_HOME}/conf/log4j2.xml
+            -Djna.library.path=${GRAPHSCOPE_HOME}/lib"
 
   declare frontend_port="0"  # 0 means random
   # set frontend config file
@@ -184,8 +185,8 @@ start_frontend() {
     declare gaia_frontend_jar=""
     declare gaia_frontend_mainclass="com.alibaba.maxgraph.frontendservice.FrontendServiceMain"
   else
-    declare gaia_frontend_jar="${GRAPHSCOPE_HOME}/gaia-adaptor-0.0.1-SNAPSHOT.jar"
-    declare gaia_frontend_mainclass="com.alibaba.graphscope.gaia.vineyard.store.FrontendServiceMain"
+    declare gaia_frontend_jar="${GRAPHSCOPE_HOME}/ir-adaptor-0.0.1-SNAPSHOT.jar"
+    declare gaia_frontend_mainclass="com.alibaba.graphscope.ir.maxgraph.Frontend"
   fi
 
   # maxgraph frontend service hold a handle client of coordinator

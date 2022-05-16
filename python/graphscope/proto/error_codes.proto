@@ -38,25 +38,34 @@ enum Code {
   // Compile graph frame or app frame failed.
   COMPILATION_ERROR = 5;
 
+  // File or resources already existed.
   ALREADY_EXISTS_ERROR = 6;
 
+  // Error raised when running UDF application
   UDF_INTERNAL_ERROR = 7;
 
+  // Resources temporary unavaiable.
   UNAVAILABLE_ERROR = 8;
 
   // Arguments of operations is invalid / in a wrong format.
   INVALID_ARGUMENT_ERROR = 9;
 
+  // Client doesn't have the permission.
   PERMISSION_DENIED_ERROR = 10;
 
+  // Network is unreachable
   NETWORK_ERROR = 11;
 
+  // Error reported  by the k8s cluster
   K8S_ERROR = 12;
 
+  // Functionality not implemented yet
   UNIMPLEMENTED_ERROR = 13;
 
+  // Error raised when executing gremlin query
   GREMLIN_QUERY_ERROR = 14;
 
+  // Retry time exceed the defined maximum threshold
   RETRIES_EXCEEDED_ERROR = 15;
 
   // Errors raised by analytical engine

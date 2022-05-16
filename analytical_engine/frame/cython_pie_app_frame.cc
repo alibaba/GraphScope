@@ -28,8 +28,8 @@
 #include "core/app/app_invoker.h"
 #include "core/error.h"
 #include "frame/ctx_wrapper_builder.h"
-#include "proto/graphscope/proto/data_types.pb.h"
-#include "proto/graphscope/proto/query_args.pb.h"
+#include "graphscope/proto/data_types.pb.h"
+#include "graphscope/proto/types.pb.h"
 
 using string = std::string;
 

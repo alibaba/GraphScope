@@ -28,7 +28,7 @@
 #include "core/object/i_fragment_wrapper.h"
 #include "core/server/rpc_utils.h"
 #include "core/utils/lib_utils.h"
-#include "proto/graphscope/proto/attr_value.pb.h"
+#include "graphscope/proto/attr_value.pb.h"
 
 namespace gs {
 

@@ -17,129 +17,166 @@
 # information.
 #
 
-# fmt: off
+import networkx.classes.tests.test_function as func_tests
 import pytest
-from networkx.classes.tests.test_function import \
-    TestCommonNeighbors as _TestCommonNeighbors
-from networkx.classes.tests.test_function import TestFunction as _TestFunction
-from networkx.testing import assert_edges_equal
-from networkx.testing import assert_nodes_equal
+from networkx.utils import edges_equal
+from networkx.utils import nodes_equal
 
 from graphscope import nx
+from graphscope.nx.utils.compat import import_as_graphscope_nx
+from graphscope.nx.utils.compat import with_graphscope_nx_context
 
-# fmt: on
+import_as_graphscope_nx(
+    func_tests, decorators=pytest.mark.usefixtures("graphscope_session")
+)
 
 
 @pytest.mark.usefixtures("graphscope_session")
-class TestFunction(_TestFunction):
-    def setup_method(self):
-        self.G = nx.Graph({0: [1, 2, 3], 1: [1, 2, 0], 4: []}, name="Test")
-        self.Gdegree = {0: 3, 1: 2, 2: 2, 3: 1, 4: 0}
-        self.Gnodes = list(range(5))
-        self.Gedges = [(0, 1), (0, 2), (0, 3), (1, 0), (1, 1), (1, 2)]
-        self.DG = nx.DiGraph({0: [1, 2, 3], 1: [1, 2, 0], 4: []})
-        self.DGin_degree = {0: 1, 1: 2, 2: 2, 3: 1, 4: 0}
-        self.DGout_degree = {0: 3, 1: 3, 2: 0, 3: 0, 4: 0}
-        self.DGnodes = list(range(5))
-        self.DGedges = [(0, 1), (0, 2), (0, 3), (1, 0), (1, 1), (1, 2)]
-
-
-class TestCommonNeighbors(_TestCommonNeighbors):
-    @classmethod
-    def setup_class(cls):
-        cls.func = staticmethod(nx.common_neighbors)
-
-        def test_func(G, u, v, expected):
-            result = sorted(cls.func(G, u, v))
-            assert result == expected
-
-        cls.test = staticmethod(test_func)
-
-    def test_K5(self):
-        G = nx.complete_graph(5)
-        self.test(G, 0, 1, [2, 3, 4])
-
-    def test_P3(self):
-        G = nx.path_graph(3)
-        self.test(G, 0, 2, [1])
-
-    def test_S4(self):
-        G = nx.star_graph(4)
-        self.test(G, 1, 2, [0])
-
-    def test_digraph(self):
-        with pytest.raises(nx.NetworkXNotImplemented):
-            G = nx.DiGraph()
-            G.add_edges_from([(0, 1), (1, 2)])
-            self.func(G, 0, 2)
-
-    def test_nonexistent_nodes(self):
-        G = nx.complete_graph(5)
-        pytest.raises(nx.NetworkXError, nx.common_neighbors, G, 5, 4)
-        pytest.raises(nx.NetworkXError, nx.common_neighbors, G, 4, 5)
-        pytest.raises(nx.NetworkXError, nx.common_neighbors, G, 5, 6)
-
-    def test_custom1(self):
-        """Case of no common neighbors."""
-        G = nx.Graph()
-        G.add_nodes_from([0, 1])
-        self.test(G, 0, 1, [])
-
-    def test_custom2(self):
-        """Case of equal nodes."""
-        G = nx.complete_graph(4)
-        self.test(G, 0, 0, [1, 2, 3])
-
-
-def test_is_empty():
-    graphs = [nx.Graph(), nx.DiGraph()]
-    for G in graphs:
-        assert nx.is_empty(G)
-        G.add_nodes_from(range(5))
-        assert nx.is_empty(G)
-        G.add_edges_from([(1, 2), (3, 4)])
-        assert not nx.is_empty(G)
-
-
-def test_selfloops():
-    graphs = [nx.Graph(), nx.DiGraph()]
-    for graph in graphs:
-        G = nx.complete_graph(3, create_using=graph)
-        G.add_edge(0, 0)
-        assert_nodes_equal(nx.nodes_with_selfloops(G), [0])
-        assert_edges_equal(nx.selfloop_edges(G), [(0, 0)])
-        assert_edges_equal(nx.selfloop_edges(G, data=True), [(0, 0, {})])
-        assert nx.number_of_selfloops(G) == 1
-        # test selfloop attr
-        G.add_edge(1, 1, weight=2)
-        assert_edges_equal(
-            nx.selfloop_edges(G, data=True), [(0, 0, {}), (1, 1, {"weight": 2})]
+@with_graphscope_nx_context(func_tests.TestFunction)
+class TestFunction:
+    # subgraph in graphscope.nx is deep copy
+    def test_subgraph(self):
+        assert (
+            self.G.subgraph([0, 1, 2, 4]).adj == nx.subgraph(self.G, [0, 1, 2, 4]).adj
         )
-        assert_edges_equal(
-            nx.selfloop_edges(G, data="weight"), [(0, 0, None), (1, 1, 2)]
+        assert (
+            self.DG.subgraph([0, 1, 2, 4]).adj == nx.subgraph(self.DG, [0, 1, 2, 4]).adj
         )
-        # test removing selfloops behavior vis-a-vis altering a dict while iterating
-        G.add_edge(0, 0)
-        G.remove_edges_from(nx.selfloop_edges(G))
-        if G.is_multigraph():
-            G.add_edge(0, 0)
-            pytest.raises(
-                RuntimeError, G.remove_edges_from, nx.selfloop_edges(G, keys=True)
-            )
-            G.add_edge(0, 0)
-            pytest.raises(
-                TypeError, G.remove_edges_from, nx.selfloop_edges(G, data=True)
-            )
-            G.add_edge(0, 0)
-            pytest.raises(
-                RuntimeError,
-                G.remove_edges_from,
-                nx.selfloop_edges(G, data=True, keys=True),
-            )
-        else:
-            G.add_edge(0, 0)
-            G.remove_edges_from(nx.selfloop_edges(G, keys=True))
-            G.add_edge(0, 0)
-            G.remove_edges_from(nx.selfloop_edges(G, data=True))
-            G.add_edge(0, 0)
-            G.remove_edges_from(nx.selfloop_edges(G, keys=True, data=True))
+        assert (
+            self.G.subgraph([0, 1, 2, 4]).adj
+            == nx.induced_subgraph(self.G, [0, 1, 2, 4]).adj
+        )
+        assert (
+            self.DG.subgraph([0, 1, 2, 4]).adj
+            == nx.induced_subgraph(self.DG, [0, 1, 2, 4]).adj
+        )
+        H = nx.induced_subgraph(self.G.subgraph([0, 1, 2, 4]), [0, 1, 4])
+        assert H.adj == self.G.subgraph([0, 1, 4]).adj
+
+    @pytest.mark.skip(reason="info api would be deprecated in networkx 3.0")
+    def test_info(self):
+        pass
+
+
+@pytest.mark.parametrize(
+    "graph_type", (nx.Graph, nx.DiGraph, nx.MultiGraph, nx.MultiDiGraph)
+)
+@pytest.mark.usefixtures("graphscope_session")
+def test_set_node_attributes(graph_type):
+    # Test single value
+    G = nx.path_graph(3, create_using=graph_type)
+    vals = 100
+    attr = "hello"
+    nx.set_node_attributes(G, vals, attr)
+    assert G.nodes[0][attr] == vals
+    assert G.nodes[1][attr] == vals
+    assert G.nodes[2][attr] == vals
+
+    # Test dictionary
+    G = nx.path_graph(3, create_using=graph_type)
+    vals = dict(zip(sorted(G.nodes()), range(len(G))))
+    attr = "hi"
+    nx.set_node_attributes(G, vals, attr)
+    assert G.nodes[0][attr] == 0
+    assert G.nodes[1][attr] == 1
+    assert G.nodes[2][attr] == 2
+
+    # Test dictionary of dictionaries
+    G = nx.path_graph(3, create_using=graph_type)
+    d = {"hi": 0, "hello": 200}
+    vals = dict.fromkeys(G.nodes(), d)
+    vals.pop(0)
+    nx.set_node_attributes(G, vals)
+    assert G.nodes[0] == {}
+    assert G.nodes[1]["hi"] == 0
+    assert G.nodes[2]["hello"] == 200
+
+
+@pytest.mark.parametrize("graph_type", (nx.Graph, nx.DiGraph))
+@pytest.mark.usefixtures("graphscope_session")
+def test_set_edge_attributes(graph_type):
+    # Test single value
+    G = nx.path_graph(3, create_using=graph_type)
+    attr = "hello"
+    vals = 3
+    nx.set_edge_attributes(G, vals, attr)
+    assert G[0][1][attr] == vals
+    assert G[1][2][attr] == vals
+
+    # Test multiple values
+    G = nx.path_graph(3, create_using=graph_type)
+    attr = "hi"
+    edges = [(0, 1), (1, 2)]
+    vals = dict(zip(edges, range(len(edges))))
+    nx.set_edge_attributes(G, vals, attr)
+    assert G[0][1][attr] == 0
+    assert G[1][2][attr] == 1
+
+    # Test dictionary of dictionaries
+    G = nx.path_graph(3, create_using=graph_type)
+    d = {"hi": 0, "hello": 200}
+    edges = [(0, 1)]
+    vals = dict.fromkeys(edges, d)
+    nx.set_edge_attributes(G, vals)
+    assert G[0][1]["hi"] == 0
+    assert G[0][1]["hello"] == 200
+    assert G[1][2] == {}
+
+
+@pytest.mark.parametrize(
+    "graph_type", [nx.Graph, nx.DiGraph, nx.MultiGraph, nx.MultiDiGraph]
+)
+@pytest.mark.usefixtures("graphscope_session")
+def test_selfloops(graph_type):
+    G = nx.complete_graph(3, create_using=graph_type)
+    G.add_edge(0, 0)
+    assert nodes_equal(nx.nodes_with_selfloops(G), [0])
+    assert edges_equal(nx.selfloop_edges(G), [(0, 0)])
+    assert edges_equal(nx.selfloop_edges(G, data=True), [(0, 0, {})])
+    assert nx.number_of_selfloops(G) == 1
+
+
+@pytest.mark.parametrize(
+    "graph_type", [nx.Graph, nx.DiGraph, nx.MultiGraph, nx.MultiDiGraph]
+)
+@pytest.mark.usefixtures("graphscope_session")
+def test_selfloop_edges_attr(graph_type):
+    G = nx.complete_graph(3, create_using=graph_type)
+    G.add_edge(0, 0)
+    G.add_edge(1, 1, weight=2)
+    assert edges_equal(
+        nx.selfloop_edges(G, data=True), [(0, 0, {}), (1, 1, {"weight": 2})]
+    )
+    assert edges_equal(nx.selfloop_edges(G, data="weight"), [(0, 0, None), (1, 1, 2)])
+
+
+@pytest.mark.parametrize("graph_type", [nx.Graph, nx.DiGraph])
+@pytest.mark.usefixtures("graphscope_session")
+def test_selfloops_removal(graph_type):
+    G = nx.complete_graph(3, create_using=graph_type)
+    G.add_edge(0, 0)
+    G.remove_edges_from(nx.selfloop_edges(G, keys=True))
+    G.add_edge(0, 0)
+    G.remove_edges_from(nx.selfloop_edges(G, data=True))
+    G.add_edge(0, 0)
+    G.remove_edges_from(nx.selfloop_edges(G, keys=True, data=True))
+
+
+@pytest.mark.skip(reason="graphscope not support restricted view")
+def test_restricted_view(G):
+    pass
+
+
+@pytest.mark.skip(reason="graphscope not support restricted view")
+def test_restricted_view_multi(G):
+    pass
+
+
+@pytest.mark.skip(reason="graphscope not support ispath")
+def test_ispath(G):
+    pass
+
+
+@pytest.mark.skip(reason="graphscope not support pathweight")
+def test_pathweight(G):
+    pass
