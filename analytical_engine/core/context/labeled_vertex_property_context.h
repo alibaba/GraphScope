@@ -31,6 +31,7 @@
 #include "core/context/i_context.h"
 #include "core/context/selector.h"
 #include "core/context/tensor_dataframe_builder.h"
+#include "core/utils/mpi_utils.h"
 #include "core/utils/transform_utils.h"
 
 #define CONTEXT_TYPE_LABELED_VERTEX_PROPERTY "labeled_vertex_property"
