@@ -27,7 +27,7 @@
 #include "rapidjson/writer.h"
 
 #include "grape/serialization/in_archive.h"
-#include "proto/graphscope/proto/graph_def.pb.h"
+#include "graphscope/proto/graph_def.pb.h"
 
 namespace gs {
 

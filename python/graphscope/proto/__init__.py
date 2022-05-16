@@ -15,21 +15,3 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-import os
-import sys
-
-from . import attr_value_pb2
-from . import coordinator_service_pb2
-from . import coordinator_service_pb2_grpc
-from . import data_types_pb2
-from . import ddl_service_pb2
-from . import ddl_service_pb2_grpc
-from . import engine_service_pb2
-from . import engine_service_pb2_grpc
-from . import error_codes_pb2
-from . import graph_def_pb2
-from . import message_pb2
-from . import op_def_pb2
-from . import query_args_pb2
-from . import types_pb2

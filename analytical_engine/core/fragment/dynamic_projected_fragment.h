@@ -26,7 +26,7 @@
 
 #include "core/config.h"
 #include "core/fragment/dynamic_fragment.h"
-#include "proto/graphscope/proto/types.pb.h"
+#include "graphscope/proto/types.pb.h"
 
 namespace gs {
 namespace dynamic_projected_fragment_impl {

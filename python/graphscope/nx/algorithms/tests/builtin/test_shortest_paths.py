@@ -2,7 +2,7 @@ import pytest
 from networkx.testing import almost_equal
 
 from graphscope import nx
-from graphscope.nx.tests.utils import replace_with_inf
+from graphscope.nx.utils.misc import replace_with_inf
 
 
 @pytest.mark.usefixtures("graphscope_session")

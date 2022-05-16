@@ -1,3 +1,6 @@
+[build-system]
+requires = ["setuptools_scm", "grpcio", "grpcio-tools", "numpy", "wheel"]
+
 [tool.black]
 line-length = 88
 exclude = '.*\/(forward|node_modules|\.eggs|build)\/.*'

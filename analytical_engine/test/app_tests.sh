@@ -181,13 +181,13 @@ function run_vy() {
     do
       for ((dst=0;dst<v_label_num;++dst))
       do
-	if [ "$first" = true ]
+    if [ "$first" = true ]
         then
           first=false
           cmd="${cmd}${e_prefix}_${src}_${dst}_${e}#src_label=v${src}&dst_label=v${dst}&label=e${e}"
         else
           cmd="${cmd};${e_prefix}_${src}_${dst}_${e}#src_label=v${src}&dst_label=v${dst}&label=e${e}"
-	fi
+    fi
       done
     done
     cmd="${cmd}'"

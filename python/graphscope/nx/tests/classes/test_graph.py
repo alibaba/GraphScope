@@ -21,7 +21,7 @@ import pytest
 from networkx.classes.tests.test_graph import TestEdgeSubgraph as _TestEdgeSubgraph
 from networkx.classes.tests.test_graph import TestGraph as _TestGraph
 from networkx.testing.utils import almost_equal
-from networkx.testing.utils import assert_graphs_equal
+from networkx.utils import graphs_equal
 
 from graphscope import nx
 
@@ -33,21 +33,16 @@ class TestGraph(_TestGraph):
         self.k3nodes = [0, 1, 2]
         self.k3edges = [(0, 1), (0, 2), (1, 2)]
         self.K3 = self.Graph()
-        self.K3.update(self.k3edges, self.k3nodes)
+        self.K3.add_edges_from(self.k3edges)
 
     def graphs_equal(self, H, G):
-        assert G.adj == H.adj
-        assert G.nodes == H.nodes
+        assert G._adj == H._adj
+        assert G._node == H._node
         assert G.graph == H.graph
         assert G.name == H.name
         if G.is_directed() and H.is_directed():
-            assert G.pred == H.pred
-            assert G.succ == H.succ
-
-    def shallow_copy_graph_attr(self, H, G):
-        assert G.graph["foo"] == H.graph["foo"]
-        G.graph["foo"] = "new_foo"
-        assert G.graph["foo"] == H.graph["foo"]
+            assert G._pred == H._pred
+            assert G._succ == H._succ
 
     def shallow_copy_node_attr(self, H, G):
         assert G.nodes[0]["foo"] == H.nodes[0]["foo"]
@@ -80,7 +75,11 @@ class TestGraph(_TestGraph):
 
     def test_none_node(self):
         # graphscope.nx support None as node
-        pass
+        G = self.Graph()
+        G.add_node(None)
+        G.add_nodes_from([None])
+        G.add_edge(0, None)
+        G.add_edges_from([(0, None)])
 
     def test_remove_node(self):
         G = self.K3.copy()
@@ -157,32 +156,8 @@ class TestGraph(_TestGraph):
         assert G["n"][3.14]["weight"] == 3.14
         assert G[True][False]["weight"] == True
 
-    def test_selfloops(self):
-        G = self.Graph()
-        G.add_edge(0, 0)
-        assert G.number_of_edges() == 1
-        G.add_edge(0, 1)
-        assert G.number_of_selfloops() == 1
-        G.add_edge(2, 2)
-        assert G.number_of_edges() == 3
-        assert G.number_of_selfloops() == 2
-        SG = G.subgraph([0, 1])
-        assert SG.number_of_edges() == 2
-        assert SG.number_of_selfloops() == 1
-        ESG = G.edge_subgraph([(0, 0), (2, 2)])
-        assert ESG.number_of_edges() == 2
-        assert ESG.number_of_selfloops() == 2
-        H = G.copy()
-        assert H.number_of_selfloops() == 2
-        Gv = G.copy(as_view=True)
-        assert Gv.number_of_selfloops() == 2
-        G.remove_node(0)
-        assert G.number_of_selfloops() == 1
-        G.remove_edge(2, 2)
-        assert G.number_of_selfloops() == 0
-
     def test_update(self):
-        # specify both edgees and nodes
+        # specify both edges and nodes
         G = self.K3.copy()
         G.update(nodes=[3, (4, {"size": 2})], edges=[(4, 5), (6, 7, {"weight": 2})])
         nlist = [
@@ -242,9 +217,9 @@ class TestGraph(_TestGraph):
         GG = G.copy()
         H = self.Graph()
         GG.update(H)
-        assert_graphs_equal(G, GG)
+        assert graphs_equal(G, GG)
         H.update(G)
-        assert_graphs_equal(H, G)
+        assert graphs_equal(H, G)
 
         # update nodes only
         H = self.Graph()

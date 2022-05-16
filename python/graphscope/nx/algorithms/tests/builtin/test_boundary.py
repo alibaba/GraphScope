@@ -21,9 +21,9 @@
 import os
 
 import pytest
-from networkx.testing import assert_edges_equal
 
 from graphscope import nx
+from graphscope.nx.utils.misc import edges_equal
 
 
 @pytest.mark.usefixtures("graphscope_session")
@@ -84,11 +84,11 @@ class TestEdgeBoundary:
         assert ilen(nx.builtin.edge_boundary(K10, [3, 4, 5, 6])) == 24
         assert ilen(nx.builtin.edge_boundary(K10, [2, 3, 4, 5, 6])) == 25
         assert ilen(nx.builtin.edge_boundary(K10, [7, 8, 9])) == 21
-        assert_edges_equal(
+        assert edges_equal(
             nx.builtin.edge_boundary(K10, [3, 4, 5], [8, 9]),
             [(3, 8), (3, 9), (4, 8), (4, 9), (5, 8), (5, 9)],
         )
-        assert_edges_equal(
+        assert edges_equal(
             nx.builtin.edge_boundary(K10, [0, 1, 2], [2, 3, 4]),
             [(0, 2), (0, 3), (0, 4), (1, 2), (1, 3), (1, 4), (2, 3), (2, 4)],
         )

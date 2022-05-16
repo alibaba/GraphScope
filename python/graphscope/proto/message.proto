@@ -72,8 +72,9 @@ message HeartBeatResponse {
 //
 // RunStep method request/response protos.
 //
-// The caller should provide the feeds needed by the graph and specify
-// what nodes should be fetched.
+// In most case only the Head is used.
+// When the content is very large, exceeding the hard message limit of GRPC,
+// It will be split into chunks and be streamed by a Head followed by 1~n Bodies.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -155,7 +156,7 @@ message CloseSessionResponse {
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-// Upload libs/jars
+// Upload libs/jars from client to pods
 //
 ////////////////////////////////////////////////////////////////////////////////
 

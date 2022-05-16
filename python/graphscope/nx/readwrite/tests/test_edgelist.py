@@ -18,15 +18,11 @@
 #
 
 import io
-import os
 
 import pytest
 from networkx.readwrite.tests.test_edgelist import TestEdgelist
 
 import graphscope.nx as nx
-from graphscope.nx.tests.utils import assert_edges_equal
-from graphscope.nx.tests.utils import assert_graphs_equal
-from graphscope.nx.tests.utils import assert_nodes_equal
 from graphscope.nx.utils.compat import with_graphscope_nx_context
 
 

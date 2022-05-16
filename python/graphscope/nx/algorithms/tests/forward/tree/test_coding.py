@@ -34,5 +34,5 @@ class TestNestedTuple():
         balanced = (((), ()), ((), ()))
         T = nx.from_nested_tuple(balanced, sensible_relabeling=True)
         edges = [(0, 1), (0, 2), (1, 3), (1, 4), (2, 5), (2, 6)]
-        assert_nodes_equal(list(T), list(range(2 ** 3 - 1)))
-        assert_edges_equal(list(T.edges()), edges)
+        assert nodes_equal(list(T), list(range(2 ** 3 - 1)))
+        assert edges_equal(list(T.edges()), edges)

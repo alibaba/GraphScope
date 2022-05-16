@@ -130,17 +130,16 @@ class _FetchHandler(object):
     ):
         from graphscope.learning.graph import Graph as LearningGraph
 
-        handle = op_result.handle
+        result = op_result.result.decode("utf-8")
+        result = json.loads(result)
+        handle = result["handle"]
         handle = json.loads(base64.b64decode(handle).decode("utf-8"))
-        config = op_result.config.decode("utf-8")
-        handle["server"] = op_result.result.decode("utf-8")
+        handle["server"] = ",".join(result["endpoints"])
         handle["client_count"] = 1
 
         graph_dag_node = self._fetches[seq]
         # construct learning graph
-        g = LearningGraph(
-            graph_dag_node, handle, config, op_result.extra_info.decode("utf-8")
-        )
+        g = LearningGraph(graph_dag_node, handle, result["config"], result["object_id"])
         return g
 
     def _rebuild_interactive_query(
@@ -149,10 +148,12 @@ class _FetchHandler(object):
         # get interactive query dag node as base
         interactive_query_node = self._fetches[seq]
         # construct interactive query
+        result = op_result.result.decode("utf-8")
+        result = json.loads(result)
         interactive_query = InteractiveQuery(
             interactive_query_node,
-            op_result.result.decode("utf-8"),
-            op_result.extra_info.decode("utf-8"),
+            result["endpoint"],
+            result["object_id"],
         )
         interactive_query.status = InteractiveQueryStatus.Running
         return interactive_query

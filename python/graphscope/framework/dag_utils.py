@@ -24,7 +24,6 @@ from graphscope.framework.errors import check_argument
 from graphscope.framework.operation import Operation
 from graphscope.proto import attr_value_pb2
 from graphscope.proto import graph_def_pb2
-from graphscope.proto import query_args_pb2
 from graphscope.proto import types_pb2
 
 
@@ -83,7 +82,7 @@ def run_app(app, *args, **kwargs):
     config[types_pb2.OUTPUT_PREFIX] = utils.s_to_attr(output_prefix)
     # optional query arguments.
     params = utils.pack_query_params(*args, **kwargs)
-    query_args = query_args_pb2.QueryArgs()
+    query_args = types_pb2.QueryArgs()
     query_args.args.extend(params)
     op = Operation(
         app.session_id,
@@ -193,7 +192,7 @@ def add_labels_to_graph(graph, loader_op):
         types_pb2.IS_FROM_VINEYARD_ID: utils.b_to_attr(False),
     }
     # inferred from the context of the dag.
-    config.update({types_pb2.GRAPH_NAME: utils.place_holder_to_attr()})
+    config.update({types_pb2.GRAPH_NAME: utils.s_to_attr("")})
     if graph._graph_type != graph_def_pb2.ARROW_PROPERTY:
         raise NotImplementedError(
             f"Add vertices or edges is not supported yet on graph type {graph._graph_type}"

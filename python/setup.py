@@ -50,7 +50,7 @@ class BuildProto(Command):
                 os.path.join(
                     repo_root,
                     "..",
-                    "proto",
+                    "python",
                     "graphscope",
                     "proto",
                     "proto_generator.py",
@@ -282,7 +282,7 @@ setup(
         "root": repo_root,
         "parse": parse_version,
     },
-    setup_requires=["setuptools_scm>=5.0.0", "grpcio", "grpcio-tools"],
+    setup_requires=["setuptools_scm>=5.0.0", "grpcio", "grpcio-tools", "numpy"],
     package_dir=resolve_graphscope_package_dir(),
     packages=find_graphscope_packages(),
     package_data=parsed_packge_data(),
