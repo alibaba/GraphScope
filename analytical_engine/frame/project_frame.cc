@@ -21,6 +21,7 @@
 #include "vineyard/graph/fragment/arrow_fragment.h"
 #include "vineyard/graph/fragment/graph_schema.h"
 #include "vineyard/graph/fragment/property_graph_types.h"
+#include "vineyard/graph/utils/grape_utils.h"
 
 #include "core/fragment/arrow_projected_fragment.h"
 #include "core/fragment/dynamic_fragment.h"

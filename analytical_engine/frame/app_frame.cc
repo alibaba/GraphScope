@@ -13,28 +13,9 @@
  * limitations under the License.
  */
 
-#include <memory>
-#include <utility>
-
-#include "grape/app/context_base.h"
-
-#include "core/app/app_invoker.h"
-#include "core/error.h"
-#include "frame/ctx_wrapper_builder.h"
-
-namespace bl = boost::leaf;
-
+// The _GRAPH_HEADER and _APP_HEADER should include at begin
 #define DO_QUOTE(X) #X
 #define QUOTE(X) DO_QUOTE(X)
-
-/**
- * app_frame.cc is designed to serve for building apps as a library. The library
- * provides CreateWorker, Query, and DeleteWorker functions to be invoked by the
- * grape instance. The library will be loaded when a CREATE_APP request arrived
- * on the analytical engine. Then multiple query requests can be emitted based
- * on worker instance. Finally, a UNLOAD_APP request should be submitted to
- * release the resources.
- */
 #if defined(_GRAPH_TYPE) && defined(_GRAPH_HEADER)
 #include QUOTE(_GRAPH_HEADER)
 #else
@@ -47,6 +28,25 @@ namespace bl = boost::leaf;
 #error "Missing macro _APP_TYPE or _APP_HEADER"
 #endif
 
+#include <memory>
+#include <utility>
+
+#include "grape/app/context_base.h"
+
+#include "core/app/app_invoker.h"
+#include "core/error.h"
+#include "frame/ctx_wrapper_builder.h"
+
+namespace bl = boost::leaf;
+
+/**
+ * app_frame.cc is designed to serve for building apps as a library. The library
+ * provides CreateWorker, Query, and DeleteWorker functions to be invoked by the
+ * grape instance. The library will be loaded when a CREATE_APP request arrived
+ * on the analytical engine. Then multiple query requests can be emitted based
+ * on worker instance. Finally, a UNLOAD_APP request should be submitted to
+ * release the resources.
+ */
 typedef struct worker_handler {
   std::shared_ptr<typename _APP_TYPE::worker_t> worker;
 } worker_handler_t;
