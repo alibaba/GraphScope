@@ -123,6 +123,8 @@ spec:
           ports:
             - name: port
               containerPort: 55555
+            - name: service-port
+              containerPort: 55556
             - name: gremlin
               containerPort: 12312
             - name: gaia-rpc
