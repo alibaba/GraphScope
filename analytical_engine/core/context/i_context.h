@@ -30,6 +30,11 @@
 #include "core/error.h"
 #include "core/object/gs_object.h"
 
+#ifdef ENABLE_JAVA_SDK
+#define CONTEXT_TYPE_JAVA_PIE_PROPERTY "java_pie_property"
+#define CONTEXT_TYPE_JAVA_PIE_PROJECTED "java_pie_projected"
+#endif
+
 namespace bl = boost::leaf;
 
 namespace arrow {
@@ -233,6 +238,7 @@ class ILabeledVertexPropertyContextWrapper : public IContextWrapper {
 };
 
 #ifdef ENABLE_JAVA_SDK
+
 /**
  * @brief A base class for JavaPropertyDefaultContext. It holds an inner
  * ctxWrapper, and redirect function calls to the inner ctxWrapper.

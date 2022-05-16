@@ -41,8 +41,6 @@
 #include "core/parallel/parallel_property_message_manager.h"
 #include "core/parallel/property_message_manager.h"
 
-#define CONTEXT_TYPE_JAVA_PIE_PROPERTY "java_pie_property"
-
 namespace bl = boost::leaf;
 
 namespace gs {
