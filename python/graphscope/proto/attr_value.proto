@@ -27,20 +27,17 @@ syntax = "proto3";
 
 package gs.rpc;
 
-import "graphscope/proto/graph_def.proto";
-import "graphscope/proto/types.proto";
-
 // Comment indicates the corresponding attr type. Only the field matching the
 // attr type may be filled.
 message AttrValue {
   enum NullValue { NULL_VALUE = 0; }
 
+  // Allows recursive nesting
   message ListValue {
     repeated bytes s = 2;                         // "list(string)"
     repeated int64 i = 3 [ packed = true ];       // "list(int)"
     repeated float f = 4 [ packed = true ];       // "list(float)"
     repeated bool b = 5 [ packed = true ];        // "list(bool)"
-    repeated DataType type = 6 [ packed = true ]; // "list(type)"
     repeated NameAttrList func = 9;               // "list(attr)"
     repeated ListValue list = 10;                 // "list(list)
   }
@@ -52,16 +49,8 @@ message AttrValue {
     uint64 u = 4;          // "uint64"
     float f = 5;           // "float"
     bool b = 6;            // "bool"
-    DataType type = 7;     // "type"
-    gs.rpc.graph.GraphTypePb graph_type = 8;  // "graph type"
-    ModifyType modify_type = 9;    // "modify type"
-    ReportType report_type = 10;   // "nx report type"
     ListValue list = 11;    // any "list(...)"
-
     NameAttrList func = 12;
-
-    // for lazy mode, inferred from the context of dag
-    PlaceHolder place_holder = 21;
   }
 }
 
@@ -71,6 +60,8 @@ message NameAttrList {
   map<int32, AttrValue> attr = 2;
 }
 
+// Chunk, ChunkMeta and LargeAttrValue is used for storing chunks of
+// huge bytes, which is larger than the GRPC message limits(2 GB) 
 message Chunk {
   bytes buffer = 1;
   map<int32, AttrValue> attr = 2;

@@ -32,7 +32,7 @@
 #include "core/error.h"
 #include "core/server/command_detail.h"
 #include "core/utils/mpi_utils.h"
-#include "proto/graphscope/proto/graph_def.pb.h"
+#include "graphscope/proto/graph_def.pb.h"
 
 namespace gs {
 

@@ -14,10 +14,15 @@
 //
 
 syntax = "proto3";
+
 package gs.rpc;
 
-import "google/protobuf/any.proto";
+import "graphscope/proto/message.proto";
 
-message QueryArgs {
-  repeated google.protobuf.Any args = 1;
+service EngineService {
+  // Drives the graph computation.
+  rpc RunStep(stream RunStepRequest) returns (stream RunStepResponse);
+
+  // Heart beat between coordinator and analytical engine
+  rpc HeartBeat(HeartBeatRequest) returns (HeartBeatResponse);
 }

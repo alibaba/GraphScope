@@ -17,6 +17,8 @@ syntax = "proto3";
 
 package gs.rpc;
 
+import "google/protobuf/any.proto";
+
 enum ClusterType {
   HOSTS = 0;
   K8S  = 1;
@@ -58,7 +60,7 @@ enum Direction {
   OUT = 2;
 };
 
-// defined by GRAPE
+// The output types of evaluating an Operation
 enum OutputType {
   GRAPH = 0;
   APP = 1;
@@ -74,6 +76,7 @@ enum OutputType {
   NULL_OUTPUT = 101;
 };
 
+// All possible operation types
 enum OperationType {
   // command
   CREATE_GRAPH = 0;  // return output_type = graph
@@ -135,6 +138,7 @@ enum OperationType {
   GET_ENGINE_CONFIG = 90;
 };
 
+// All possible key of the map in AttrValue in attr_value.proto
 enum ParamKey {
   GRAPH_NAME = 0;
   DST_GRAPH_NAME = 1;
@@ -250,6 +254,7 @@ enum ParamKey {
   JVM_OPTS = 503; // opts str to start a jvm
 }
 
+// For simulating networkx modifing functionalities
 enum ModifyType {
   NX_ADD_NODES = 0;
   NX_ADD_EDGES = 1;
@@ -259,6 +264,7 @@ enum ModifyType {
   NX_UPDATE_EDGES = 5;
 }
 
+// For simulating networkx reporting functionalities
 enum ReportType {
   NODE_NUM = 0;
   EDGE_NUM = 1;
@@ -279,4 +285,8 @@ enum ReportType {
   PRED_ATTR_BY_NODE = 16;
 }
 
-message PlaceHolder {}
+// 
+message QueryArgs {
+  // pack messages from data_types.proto
+  repeated google.protobuf.Any args = 1;
+}

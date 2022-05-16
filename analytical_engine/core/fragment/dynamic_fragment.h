@@ -37,7 +37,7 @@
 #include "core/object/dynamic.h"
 #include "core/utils/convert_utils.h"
 #include "core/utils/partitioner.h"
-#include "proto/graphscope/proto/types.pb.h"
+#include "graphscope/proto/types.pb.h"
 
 namespace gs {
 
