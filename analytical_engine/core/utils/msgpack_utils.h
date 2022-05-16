@@ -18,7 +18,7 @@
 
 #ifdef NETWORKX
 
-#include "msgpack.hpp"
+#include "msgpack.hpp"  // IWYU pragma: export
 
 #include "grape/serialization/in_archive.h"
 

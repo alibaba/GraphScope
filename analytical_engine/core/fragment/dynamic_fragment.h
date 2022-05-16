@@ -18,22 +18,27 @@
 
 #ifdef NETWORKX
 
+#include <glog/logging.h>
+
+#include <algorithm>
+#include <cassert>
 #include <limits>
 #include <map>
 #include <memory>
+#include <ostream>
 #include <set>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include "grape/communication/communicator.h"
 #include "grape/fragment/basic_fragment_mutator.h"
 #include "grape/fragment/csr_edgecut_fragment_base.h"
 #include "grape/graph/mutable_csr.h"
-#include "grape/util.h"
 #include "grape/utils/bitset.h"
 #include "grape/utils/vertex_set.h"
+#include "vineyard/graph/fragment/property_graph_types.h"
 
+#include "core/config.h"
 #include "core/object/dynamic.h"
 #include "core/utils/convert_utils.h"
 #include "core/utils/partitioner.h"

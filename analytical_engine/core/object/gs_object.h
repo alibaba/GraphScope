@@ -18,6 +18,7 @@
 
 #include <glog/logging.h>
 
+#include <ostream>
 #include <string>
 #include <utility>
 

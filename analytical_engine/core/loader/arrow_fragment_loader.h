@@ -20,7 +20,6 @@
 #include <jni.h>
 #endif
 
-#include <algorithm>
 #include <map>
 #include <memory>
 #include <set>
@@ -30,11 +29,10 @@
 #include <utility>
 #include <vector>
 
+#include "boost/leaf/error.hpp"
+#include "boost/leaf/result.hpp"
 #include "grape/worker/comm_spec.h"
 #include "vineyard/basic/ds/arrow_utils.h"
-#include "vineyard/basic/stream/byte_stream.h"
-#include "vineyard/basic/stream/dataframe_stream.h"
-#include "vineyard/basic/stream/parallel_stream.h"
 #include "vineyard/client/client.h"
 #include "vineyard/common/util/functions.h"
 #include "vineyard/graph/loader/arrow_fragment_loader.h"

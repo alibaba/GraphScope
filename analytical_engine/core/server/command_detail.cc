@@ -21,8 +21,8 @@
 #include "grape/serialization/in_archive.h"
 #include "grape/serialization/out_archive.h"
 
-#include "proto/graphscope/proto/attr_value.pb.h"
-#include "proto/graphscope/proto/query_args.pb.h"
+#include "graphscope/proto/attr_value.pb.h"
+#include "graphscope/proto/types.pb.h"
 
 namespace gs {
 

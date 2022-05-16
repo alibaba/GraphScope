@@ -16,6 +16,8 @@
 #ifndef ANALYTICAL_ENGINE_CORE_FRAGMENT_ARROW_PROJECTED_FRAGMENT_H_
 #define ANALYTICAL_ENGINE_CORE_FRAGMENT_ARROW_PROJECTED_FRAGMENT_H_
 
+#include <cassert>
+#include <cstddef>
 #include <limits>
 #include <memory>
 #include <set>
@@ -23,20 +25,26 @@
 #include <utility>
 #include <vector>
 
-#include "arrow/array.h"
-#include "boost/lexical_cast.hpp"
-
+#include "arrow/array/array_binary.h"
+#include "arrow/array/array_primitive.h"
+#include "arrow/array/builder_primitive.h"
 #include "grape/fragment/fragment_base.h"
+#include "grape/graph/adj_list.h"
+#include "grape/types.h"
+#include "grape/utils/vertex_array.h"
 #include "vineyard/basic/ds/arrow_utils.h"
-#include "vineyard/common/util/version.h"
 #include "vineyard/graph/fragment/arrow_fragment.h"
-#include "vineyard/graph/vertex_map/arrow_vertex_map.h"
 
-#include "core/context/context_protocols.h"
-#include "core/fragment/arrow_projected_fragment_base.h"
+#include "core/config.h"
+#include "core/fragment/arrow_projected_fragment_base.h"  // IWYU pragma: export
 #include "core/vertex_map/arrow_projected_vertex_map.h"
+#include "graphscope/proto/types.pb.h"
 
 namespace bl = boost::leaf;
+
+namespace arrow {
+class Array;
+}
 
 namespace gs {
 

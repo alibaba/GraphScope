@@ -18,7 +18,11 @@
 
 #include <dlfcn.h>
 
+#include <ostream>
 #include <string>
+#include <utility>
+
+#include "boost/leaf/result.hpp"
 
 #include "core/error.h"
 

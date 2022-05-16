@@ -17,7 +17,6 @@
 
 #include <iosfwd>
 #include <memory>
-#include <string>
 #include <vector>
 
 #include "boost/leaf/result.hpp"
@@ -26,7 +25,6 @@
 #include "grape/worker/comm_spec.h"
 #include "vineyard/common/util/blocking_queue.h"
 
-#include "core/config.h"
 #include "graphscope/proto/error_codes.pb.h"
 #include "graphscope/proto/graph_def.pb.h"
 #include "graphscope/proto/types.pb.h"

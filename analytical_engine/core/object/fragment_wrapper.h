@@ -15,9 +15,15 @@
 
 #ifndef ANALYTICAL_ENGINE_CORE_OBJECT_FRAGMENT_WRAPPER_H_
 #define ANALYTICAL_ENGINE_CORE_OBJECT_FRAGMENT_WRAPPER_H_
+
+#include <mpi.h>
+
+#include <algorithm>
+#include <iterator>
 #include <map>
 #include <memory>
 #include <string>
+#include <thread>
 #include <utility>
 #include <vector>
 
@@ -26,29 +32,42 @@
 #include "boost/algorithm/string/split.hpp"
 #endif
 
-#include "grape/util.h"
+#include "boost/leaf/error.hpp"
+#include "boost/leaf/result.hpp"
+#include "grape/serialization/in_archive.h"
+#include "grape/worker/comm_spec.h"
 #include "vineyard/client/client.h"
+#include "vineyard/client/ds/object_meta.h"
+#include "vineyard/common/util/json.h"
+#include "vineyard/common/util/status.h"
+#include "vineyard/common/util/uuid.h"
+#include "vineyard/graph/fragment/arrow_fragment.h"
+#include "vineyard/graph/fragment/arrow_fragment_group.h"
 #include "vineyard/graph/fragment/graph_schema.h"
-#include "vineyard/graph/utils/grape_utils.h"
+#include "vineyard/graph/utils/context_protocols.h"
 
-#include "core/context/java_pie_projected_context.h"
-#include "core/context/java_pie_property_context.h"
+#include "core/context/i_context.h"
 #include "core/context/labeled_vertex_property_context.h"
+#include "core/context/selector.h"
 #include "core/context/vertex_data_context.h"
 #include "core/context/vertex_property_context.h"
 #include "core/error.h"
 #include "core/fragment/arrow_flattened_fragment.h"
+#include "core/fragment/arrow_projected_fragment.h"
 #include "core/fragment/dynamic_fragment.h"
 #include "core/fragment/dynamic_projected_fragment.h"
 #include "core/fragment/fragment_reporter.h"
-#include "core/loader/arrow_fragment_loader.h"
-#include "core/object/gs_object.h"
 #include "core/object/i_fragment_wrapper.h"
+#include "core/server/rpc_utils.h"
 #include "core/utils/transform_utils.h"
-#include "graphscope/proto/attr_value.pb.h"
 #include "graphscope/proto/graph_def.pb.h"
+#include "graphscope/proto/types.pb.h"
 
 namespace bl = boost::leaf;
+
+namespace arrow {
+class Array;
+}
 
 namespace gs {
 

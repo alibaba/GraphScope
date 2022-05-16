@@ -16,23 +16,30 @@
 #ifndef ANALYTICAL_ENGINE_CORE_OBJECT_GRAPH_UTILS_H_
 #define ANALYTICAL_ENGINE_CORE_OBJECT_GRAPH_UTILS_H_
 
-#include <map>
+#include <iosfwd>
 #include <memory>
-#include <string>
 #include <utility>
 
-#include "grape/worker/comm_spec.h"
-#include "vineyard/client/client.h"
+#include "boost/leaf/error.hpp"
+#include "boost/leaf/result.hpp"
+#include "vineyard/common/util/uuid.h"
 
 #include "core/object/gs_object.h"
-#include "core/object/i_fragment_wrapper.h"
 #include "core/server/rpc_utils.h"
 #include "core/utils/lib_utils.h"
-#include "graphscope/proto/attr_value.pb.h"
 
 namespace bl = boost::leaf;
 
+namespace grape {
+class CommSpec;
+}
+
+namespace vineyard {
+class Client;
+}
+
 namespace gs {
+class IFragmentWrapper;
 
 typedef void LoadGraphT(
     const grape::CommSpec& comm_spec, vineyard::Client& client,

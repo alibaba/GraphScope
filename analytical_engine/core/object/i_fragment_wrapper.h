@@ -16,24 +16,30 @@
 #ifndef ANALYTICAL_ENGINE_CORE_OBJECT_I_FRAGMENT_WRAPPER_H_
 #define ANALYTICAL_ENGINE_CORE_OBJECT_I_FRAGMENT_WRAPPER_H_
 
+#include <iosfwd>
 #include <map>
 #include <memory>
-#include <string>
 #include <utility>
 #include <vector>
 
-#include "vineyard/graph/utils/grape_utils.h"
+#include "boost/leaf/result.hpp"
 
-#include "core/context/i_context.h"
 #include "core/object/gs_object.h"
-#include "core/server/rpc_utils.h"
-#include "graphscope/proto/attr_value.pb.h"
-#include "graphscope/proto/graph_def.pb.h"
 
 namespace bl = boost::leaf;
 
+namespace grape {
+class CommSpec;
+class InArchive;
+}  // namespace grape
+
 namespace gs {
 class IContextWrapper;
+class LabeledSelector;
+namespace rpc {
+class GSParams;
+class GraphDefPb;
+}  // namespace rpc
 
 /**
  * @brief This is the base class of non-labeled fragment wrapper

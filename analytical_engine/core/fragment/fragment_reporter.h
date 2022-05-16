@@ -18,17 +18,24 @@
 
 #ifdef NETWORKX
 
-#include <map>
+#include <glog/logging.h>
+
+#include <cstddef>
+#include <cstdint>
 #include <memory>
-#include <string>
+#include <ostream>
 #include <utility>
 
-#include "boost/lexical_cast.hpp"
-
+#include "boost/leaf/error.hpp"
+#include "boost/leaf/result.hpp"
 #include "grape/communication/communicator.h"
+#include "grape/serialization/in_archive.h"
 #include "grape/worker/comm_spec.h"
+#include "vineyard/graph/fragment/arrow_fragment.h"
+#include "vineyard/graph/fragment/property_graph_utils.h"
 
 #include "core/fragment/dynamic_fragment.h"
+#include "core/object/dynamic.h"
 #include "core/server/rpc_utils.h"
 #include "core/utils/convert_utils.h"
 #include "core/utils/msgpack_utils.h"

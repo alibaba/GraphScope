@@ -16,10 +16,10 @@
 #ifndef ANALYTICAL_ENGINE_CORE_CONTEXT_CONTEXT_PROTOCOLS_H_
 #define ANALYTICAL_ENGINE_CORE_CONTEXT_CONTEXT_PROTOCOLS_H_
 
-#include <memory>
-#include <string>
+#include <cstdint>
+#include <iosfwd>
 
-#include "vineyard/graph/utils/context_protocols.h"
+#include "vineyard/graph/utils/context_protocols.h"  // IWYU pragma: export
 
 namespace gs {
 

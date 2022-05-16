@@ -22,18 +22,23 @@
 #include <utility>
 #include <vector>
 
+#include "boost/leaf/error.hpp"
+#include "boost/leaf/result.hpp"
 #include "grape/app/context_base.h"
 #include "vineyard/graph/fragment/fragment_traits.h"
 
 #include "core/context/column.h"
 #include "core/context/i_context.h"
+#include "core/context/selector.h"
 #include "core/context/tensor_dataframe_builder.h"
 #include "core/utils/transform_utils.h"
+
 #define CONTEXT_TYPE_LABELED_VERTEX_PROPERTY "labeled_vertex_property"
 
 namespace bl = boost::leaf;
 
 namespace gs {
+class IFragmentWrapper;
 
 /**
  * @brief LabeledVertexPropertyContext can hold any number of columns. The

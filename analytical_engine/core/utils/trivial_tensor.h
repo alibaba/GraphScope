@@ -14,12 +14,17 @@
  */
 #ifndef ANALYTICAL_ENGINE_CORE_UTILS_TRIVIAL_TENSOR_H_
 #define ANALYTICAL_ENGINE_CORE_UTILS_TRIVIAL_TENSOR_H_
-#include <algorithm>
+
+#include <cstddef>
+#include <iosfwd>
 #include <memory>
-#include <string>
 #include <vector>
 
-#include "arrow/array/array_binary.h"
+#include "arrow/array/builder_binary.h"
+
+namespace arrow {
+class StringArray;
+}
 
 namespace gs {
 /**

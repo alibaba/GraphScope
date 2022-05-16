@@ -16,17 +16,14 @@ limitations under the License.
 #ifndef ANALYTICAL_ENGINE_CORE_UTILS_TRANSFORM_UTILS_H_
 #define ANALYTICAL_ENGINE_CORE_UTILS_TRANSFORM_UTILS_H_
 
-#include <algorithm>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include "boost/foreach.hpp"
 #include "boost/lexical_cast.hpp"
 
 #include "grape/communication/communicator.h"
-#include "vineyard/basic/ds/dataframe.h"
 #include "vineyard/basic/ds/tensor.h"
 #include "vineyard/graph/fragment/fragment_traits.h"
 

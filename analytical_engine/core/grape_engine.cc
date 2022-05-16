@@ -34,15 +34,17 @@
 #include "grape/communication/sync_comm.h"
 #include "grape/config.h"
 #include "grape/worker/comm_spec.h"
+#include "grpcpp/server.h"
 
 #include "core/context/i_context.h"
+#include "core/error.h"
 #include "core/flags.h"
 #include "core/grape_instance.h"
 #include "core/launcher.h"
+#include "core/object/i_fragment_wrapper.h"
 #include "core/server/analytical_server.h"
 #include "core/server/dispatcher.h"
 #include "core/server/rpc_utils.h"
-#include "grpcpp/server.h"
 
 namespace bl = boost::leaf;
 

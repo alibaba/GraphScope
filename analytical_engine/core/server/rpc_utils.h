@@ -15,21 +15,21 @@
 #ifndef ANALYTICAL_ENGINE_CORE_SERVER_RPC_UTILS_H_
 #define ANALYTICAL_ENGINE_CORE_SERVER_RPC_UTILS_H_
 
-#include <exception>
 #include <fstream>
+#include <iterator>
 #include <map>
 #include <memory>
-#include <sstream>
 #include <string>
 #include <utility>
 
+#include "boost/leaf/result.hpp"
 #include "google/protobuf/util/json_util.h"
+#include "vineyard/graph/utils/error.h"
 
 #include "core/config.h"
-#include "core/error.h"
 #include "core/server/command_detail.h"
 #include "graphscope/proto/attr_value.pb.h"
-#include "graphscope/proto/message.pb.h"
+#include "graphscope/proto/graph_def.pb.h"
 #include "graphscope/proto/op_def.pb.h"
 #include "graphscope/proto/types.pb.h"
 
