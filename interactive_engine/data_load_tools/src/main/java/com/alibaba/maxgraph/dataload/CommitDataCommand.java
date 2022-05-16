@@ -17,7 +17,7 @@ public class CommitDataCommand extends DataCommand {
     }
 
     public void run() {
-        MaxGraphClient client = new MaxGraphClient(graphEndpoint);
+        MaxGraphClient client = MaxGraphClient.newBuilder().setHosts(graphEndpoint).build();
         Map<Long, DataLoadTarget> tableToTarget = new HashMap<>();
         for (ColumnMappingInfo columnMappingInfo : columnMappingInfos.values()) {
             long tableId = columnMappingInfo.getTableId();

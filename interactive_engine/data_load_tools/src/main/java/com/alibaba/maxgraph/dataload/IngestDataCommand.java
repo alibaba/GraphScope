@@ -11,7 +11,7 @@ public class IngestDataCommand extends DataCommand {
     }
 
     public void run() {
-        MaxGraphClient client = new MaxGraphClient(graphEndpoint);
+        MaxGraphClient client = MaxGraphClient.newBuilder().setHosts(graphEndpoint).build();
         client.ingestData(dataPath);
     }
 }

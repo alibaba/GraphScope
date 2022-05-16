@@ -30,7 +30,7 @@ public class ClientBackupTest {
 
     String host = "localhost";
     int port = 55556;
-    MaxGraphClient client = new MaxGraphClient(host, port);
+    MaxGraphClient client = MaxGraphClient.newBuilder().addHost(host, port).build();
 
     @Test
     public void testBackup() throws InterruptedException, IOException, URISyntaxException {
