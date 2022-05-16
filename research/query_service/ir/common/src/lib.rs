@@ -499,6 +499,29 @@ impl TryFrom<pb::IndexPredicate> for Vec<i64> {
     }
 }
 
+impl TryFrom<pb::IndexPredicate> for Object {
+    type Error = ParsePbError;
+
+    fn try_from(value: pb::IndexPredicate) -> Result<Self, Self::Error> {
+        let mut indexed_values = vec![];
+        // for pk values, which should be a set of and_conditions.
+        let and_predicates = value
+            .or_predicates
+            .get(0)
+            .ok_or(ParsePbError::EmptyFieldError("`OrCondition` is emtpy".to_string()))?;
+        for predicate in &and_predicates.predicates {
+            // TODO: Groot only requires prop_vals to be given in ascending order of corresponding prop_ids
+            let value = predicate
+                .value
+                .clone()
+                .ok_or("value is empty in kv_pair in indexed_scan")?;
+            let obj_val = Object::try_from(value)?;
+            indexed_values.push(obj_val);
+        }
+        Ok(Object::Vector(indexed_values))
+    }
+}
+
 impl From<pb::Project> for pb::logical_plan::Operator {
     fn from(opr: pb::Project) -> Self {
         pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::Project(opr)) }

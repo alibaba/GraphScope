@@ -77,10 +77,7 @@ where
             let store = self.store.clone();
             let si = params
                 .get_extra_param(SNAPSHOT_ID)
-                .map(|s| {
-                    s.parse::<SnapshotId>()
-                        .unwrap_or(DEFAULT_SNAPSHOT_ID)
-                })
+                .map(|s| s.as_i64().unwrap_or(DEFAULT_SNAPSHOT_ID))
                 .unwrap_or(DEFAULT_SNAPSHOT_ID);
             let label_ids = encode_storage_label(params.labels.as_ref())?;
             let prop_ids = encode_storage_prop_keys(params.columns.as_ref())?;
@@ -89,23 +86,32 @@ where
                 .iter()
                 .map(|pid| *pid as PartitionId)
                 .collect();
-            let result = store
-                .get_all_vertices(
-                    si,
-                    label_ids.as_ref(),
-                    // None means no filter condition pushed down to storage as not supported yet. Same as follows.
-                    None,
-                    // None means no need to dedup by properties. Same as follows.
-                    None,
-                    prop_ids.as_ref(),
-                    // Zero limit means no limit. Same as follows.
-                    params.limit.unwrap_or(0),
-                    // Each worker will scan the partitions pre-allocated in source operator. Same as follows.
-                    partitions.as_ref(),
-                )
-                .map(move |v| to_runtime_vertex(&v));
+            if let Some(indexed_values) = params.get_extra_param("PK") {
+                match indexed_values {
+                    Object::Vector(_prop_vals) => {
+                        todo!()
+                    }
+                    _ => Err(FnExecError::query_store_error("PK values should be a vector"))?,
+                }
+            } else {
+                let result = store
+                    .get_all_vertices(
+                        si,
+                        label_ids.as_ref(),
+                        // None means no filter condition pushed down to storage as not supported yet. Same as follows.
+                        None,
+                        // None means no need to dedup by properties. Same as follows.
+                        None,
+                        prop_ids.as_ref(),
+                        // Zero limit means no limit. Same as follows.
+                        params.limit.unwrap_or(0),
+                        // Each worker will scan the partitions pre-allocated in source operator. Same as follows.
+                        partitions.as_ref(),
+                    )
+                    .map(move |v| to_runtime_vertex(&v));
 
-            Ok(filter_limit!(result, filter, None))
+                Ok(filter_limit!(result, filter, None))
+            }
         } else {
             Ok(Box::new(std::iter::empty()))
         }
@@ -116,10 +122,7 @@ where
             let store = self.store.clone();
             let si = params
                 .get_extra_param(SNAPSHOT_ID)
-                .map(|s| {
-                    s.parse::<SnapshotId>()
-                        .unwrap_or(DEFAULT_SNAPSHOT_ID)
-                })
+                .map(|s| s.as_i64().unwrap_or(DEFAULT_SNAPSHOT_ID))
                 .unwrap_or(DEFAULT_SNAPSHOT_ID);
             let label_ids = encode_storage_label(params.labels.as_ref())?;
             let prop_ids = encode_storage_prop_keys(params.columns.as_ref())?;
@@ -152,10 +155,7 @@ where
         let store = self.store.clone();
         let si = params
             .get_extra_param(SNAPSHOT_ID)
-            .map(|s| {
-                s.parse::<SnapshotId>()
-                    .unwrap_or(DEFAULT_SNAPSHOT_ID)
-            })
+            .map(|s| s.as_i64().unwrap_or(DEFAULT_SNAPSHOT_ID))
             .unwrap_or(DEFAULT_SNAPSHOT_ID);
         let prop_ids = encode_storage_prop_keys(params.columns.as_ref())?;
         let filter = params.filter.clone();
@@ -184,10 +184,7 @@ where
         let partition_manager = self.partition_manager.clone();
         let si = params
             .get_extra_param(SNAPSHOT_ID)
-            .map(|s| {
-                s.parse::<SnapshotId>()
-                    .unwrap_or(DEFAULT_SNAPSHOT_ID)
-            })
+            .map(|s| s.as_i64().unwrap_or(DEFAULT_SNAPSHOT_ID))
             .unwrap_or(DEFAULT_SNAPSHOT_ID);
         let edge_label_ids = encode_storage_label(params.labels.as_ref())?;
 
@@ -246,10 +243,7 @@ where
         let store = self.store.clone();
         let si = params
             .get_extra_param(SNAPSHOT_ID)
-            .map(|s| {
-                s.parse::<SnapshotId>()
-                    .unwrap_or(DEFAULT_SNAPSHOT_ID)
-            })
+            .map(|s| s.as_i64().unwrap_or(DEFAULT_SNAPSHOT_ID))
             .unwrap_or(DEFAULT_SNAPSHOT_ID);
         let partition_manager = self.partition_manager.clone();
         let filter = params.filter.clone();

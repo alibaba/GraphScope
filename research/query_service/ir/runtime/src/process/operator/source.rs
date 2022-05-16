@@ -17,6 +17,7 @@ use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::sync::Arc;
 
+use dyn_type::Object;
 use ir_common::error::{ParsePbError, ParsePbResult};
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::KeyId;
@@ -54,13 +55,25 @@ impl SourceOperator {
                 algebra_pb::logical_plan::operator::Opr::Scan(scan) => {
                     if let Some(index_predicate) = &scan.idx_predicate {
                         let ip = index_predicate.clone();
+                        let ip2 = index_predicate.clone();
                         let mut source_op = SourceOperator::try_from(scan)?;
                         let global_ids: Vec<ID> = <Vec<i64>>::try_from(ip)?
                             .into_iter()
                             .map(|i| i as ID)
                             .collect();
                         if !global_ids.is_empty() {
+                            // query by global_ids
                             source_op.set_src(global_ids, job_workers, partitioner);
+                            debug!("Runtime source op of indexed scan of global ids {:?}", source_op);
+                        } else {
+                            // query by indexed_scan
+                            source_op.set_partitions(job_workers, worker_index, partitioner);
+                            let indexed_values = Object::try_from(ip2)?;
+                            let extra_params = source_op
+                                .query_params
+                                .extra_params
+                                .get_or_insert(HashMap::new());
+                            extra_params.insert("PK".to_string(), indexed_values);
                             debug!("Runtime source op of indexed scan {:?}", source_op);
                         }
                         Ok(source_op)
