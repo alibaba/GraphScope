@@ -17,9 +17,10 @@
 #define ANALYTICAL_ENGINE_CORE_FRAGMENT_ARROW_FLATTENED_FRAGMENT_H_
 
 #include <cstddef>
-#include <iosfwd>
 #include <memory>
 #include <set>
+#include <string>
+#include <utility>
 #include <vector>
 
 #include "boost/lexical_cast.hpp"

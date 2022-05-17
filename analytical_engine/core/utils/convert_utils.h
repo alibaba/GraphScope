@@ -20,8 +20,8 @@
 #include <atomic>
 #include <cstddef>
 #include <cstdint>
-#include <iosfwd>
 #include <memory>
+#include <string>
 #include <thread>
 #include <vector>
 

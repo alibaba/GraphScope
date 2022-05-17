@@ -16,9 +16,9 @@
 #ifndef ANALYTICAL_ENGINE_CORE_OBJECT_I_FRAGMENT_WRAPPER_H_
 #define ANALYTICAL_ENGINE_CORE_OBJECT_I_FRAGMENT_WRAPPER_H_
 
-#include <iosfwd>
 #include <map>
 #include <memory>
+#include <string>
 #include <utility>
 #include <vector>
 

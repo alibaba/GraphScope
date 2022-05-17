@@ -20,6 +20,7 @@
 #include <jni.h>
 #endif
 
+#include <algorithm>
 #include <map>
 #include <memory>
 #include <set>

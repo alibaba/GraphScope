@@ -18,8 +18,8 @@
 #define ANALYTICAL_ENGINE_CORE_CONTEXT_COLUMN_H_
 
 #include <cstdint>
-#include <iosfwd>
 #include <memory>
+#include <string>
 #include <type_traits>
 
 #include "vineyard/basic/ds/arrow_utils.h"

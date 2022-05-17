@@ -16,8 +16,8 @@
 #ifndef ANALYTICAL_ENGINE_CORE_LAUNCHER_H_
 #define ANALYTICAL_ENGINE_CORE_LAUNCHER_H_
 
-#include <iosfwd>
 #include <memory>
+#include <string>
 
 #include "boost/process/detail/child_decl.hpp"
 #include "core/flags.h"

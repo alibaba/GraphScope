@@ -17,8 +17,8 @@
 #define ANALYTICAL_ENGINE_CORE_SERVER_GRAPHSCOPE_SERVICE_H_
 
 #include <cstdlib>
-#include <iosfwd>
 #include <memory>
+#include <string>
 #include <utility>
 #include <vector>
 

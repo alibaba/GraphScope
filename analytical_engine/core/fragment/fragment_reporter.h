@@ -24,6 +24,7 @@
 #include <cstdint>
 #include <memory>
 #include <ostream>
+#include <string>
 #include <utility>
 
 #include "boost/leaf/error.hpp"

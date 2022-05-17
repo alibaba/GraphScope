@@ -17,7 +17,7 @@
 #define ANALYTICAL_ENGINE_CORE_CONTEXT_CONTEXT_PROTOCOLS_H_
 
 #include <cstdint>
-#include <iosfwd>
+#include <string>
 
 #include "vineyard/graph/utils/context_protocols.h"  // IWYU pragma: export
 

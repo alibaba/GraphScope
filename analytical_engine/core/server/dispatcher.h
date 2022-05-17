@@ -15,8 +15,8 @@
 #ifndef ANALYTICAL_ENGINE_CORE_SERVER_DISPATCHER_H_
 #define ANALYTICAL_ENGINE_CORE_SERVER_DISPATCHER_H_
 
-#include <iosfwd>
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "boost/leaf/result.hpp"

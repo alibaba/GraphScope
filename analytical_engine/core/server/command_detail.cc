@@ -16,7 +16,7 @@
 #include "core/server/command_detail.h"
 
 #include <cstddef>
-#include <iosfwd>
+#include <string>
 
 #include "grape/serialization/in_archive.h"
 #include "grape/serialization/out_archive.h"

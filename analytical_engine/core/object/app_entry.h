@@ -17,8 +17,8 @@
 #define ANALYTICAL_ENGINE_CORE_OBJECT_APP_ENTRY_H_
 
 #include <cstddef>
-#include <iosfwd>
 #include <memory>
+#include <string>
 #include <utility>
 
 #include "boost/leaf/error.hpp"
