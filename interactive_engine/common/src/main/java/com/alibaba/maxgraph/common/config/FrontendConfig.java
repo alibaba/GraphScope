@@ -20,4 +20,9 @@ public class FrontendConfig {
 
     public static final Config<Integer> FRONTEND_SERVICE_PORT =
             Config.intConfig("frontend.service.port", 0);
+
+    public static final Config<Integer> FRONTEND_SERVICE_THREAD_COUNT =
+            Config.intConfig(
+                    "frontend.service.thread.count",
+                    Math.max(Math.min(Runtime.getRuntime().availableProcessors() / 2, 64), 4));
 }

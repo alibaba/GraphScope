@@ -41,6 +41,7 @@ import com.alibaba.graphscope.groot.metrics.MetricsAggregator;
 import com.alibaba.graphscope.groot.metrics.MetricsCollectClient;
 import com.alibaba.graphscope.groot.metrics.MetricsCollectService;
 import com.alibaba.graphscope.groot.metrics.MetricsCollector;
+import com.alibaba.graphscope.groot.rpc.AuthorizationServerInterceptor;
 import com.alibaba.graphscope.groot.rpc.ChannelManager;
 import com.alibaba.graphscope.groot.rpc.MaxGraphNameResolverFactory;
 import com.alibaba.graphscope.groot.rpc.RoleClients;
@@ -49,12 +50,17 @@ import com.alibaba.graphscope.groot.schema.ddl.DdlExecutors;
 import com.alibaba.maxgraph.common.RoleType;
 import com.alibaba.maxgraph.common.config.CommonConfig;
 import com.alibaba.maxgraph.common.config.Configs;
+import com.alibaba.maxgraph.common.config.FrontendConfig;
 import com.alibaba.maxgraph.common.util.CuratorUtils;
+import com.alibaba.maxgraph.common.util.RpcUtils;
 import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
 import com.google.common.annotations.VisibleForTesting;
 
+import io.grpc.BindableService;
 import io.grpc.NameResolver;
 
+import io.grpc.netty.NettyServerBuilder;
+import java.util.Collections;
 import org.apache.curator.framework.CuratorFramework;
 
 import java.io.IOException;
@@ -66,6 +72,7 @@ public class Frontend extends NodeBase {
     private ChannelManager channelManager;
     private MetaService metaService;
     private RpcServer rpcServer;
+    private RpcServer serviceServer;
     private ClientService clientService;
     private AbstractService graphService;
 
@@ -136,11 +143,12 @@ public class Frontend extends NodeBase {
         ClientBackupService clientBackupService = new ClientBackupService(backupClients);
         this.rpcServer =
                 new RpcServer(
+                        configs, localNodeProvider, frontendSnapshotService, metricsCollectService);
+
+        this.serviceServer =
+                buildServiceServer(
                         configs,
-                        localNodeProvider,
-                        frontendSnapshotService,
                         clientService,
-                        metricsCollectService,
                         clientDdlService,
                         clientWriteService,
                         clientBackupService);
@@ -158,6 +166,25 @@ public class Frontend extends NodeBase {
                         metaService);
     }
 
+    private RpcServer buildServiceServer(Configs configs, BindableService... services) {
+        int port = FrontendConfig.FRONTEND_SERVICE_PORT.get(configs);
+        int threadCount = FrontendConfig.FRONTEND_SERVICE_THREAD_COUNT.get(configs);
+        int maxBytes = CommonConfig.RPC_MAX_BYTES_MB.get(configs) * 1024 * 1024;
+        NettyServerBuilder builder = NettyServerBuilder.forPort(port);
+        builder.executor(RpcUtils.createGrpcExecutor(threadCount)).maxInboundMessageSize(maxBytes);
+
+        String username = FrontendConfig.AUTH_USERNAME.get(configs);
+        String password = FrontendConfig.AUTH_PASSWORD.get(configs);
+        if (!username.isEmpty()) {
+            AuthorizationServerInterceptor interceptor =
+                    new AuthorizationServerInterceptor(
+                            Collections.singletonMap(username, password));
+            builder.intercept(interceptor);
+        }
+        LocalNodeProvider lnp = new LocalNodeProvider(RoleType.FRONTEND_SERVICE, configs);
+        return new RpcServer(builder, lnp, services);
+    }
+
     @Override
     public void start() {
         if (this.curator != null) {
@@ -172,10 +199,16 @@ public class Frontend extends NodeBase {
         this.discovery.start();
         this.channelManager.start();
         this.graphService.start();
+        try {
+            this.serviceServer.start();
+        } catch (IOException e) {
+            throw new MaxGraphException(e);
+        }
     }
 
     @Override
     public void close() throws IOException {
+        this.serviceServer.stop();
         this.rpcServer.stop();
         this.metaService.stop();
         this.channelManager.stop();
