@@ -252,6 +252,12 @@
       </dependency>
 
       <dependency>
+        <groupId>com.fasterxml.jackson.module</groupId>
+        <artifactId>jackson-module-scala_2.11</artifactId>
+        <version>${jackson.version}</version>
+      </dependency>
+
+      <dependency>
         <groupId>jline</groupId>
         <artifactId>jline</artifactId>
         <version>2.14.2</version>
@@ -345,6 +351,10 @@
           <exclusion>
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-yarn-client</artifactId>
           </exclusion>
           <exclusion>
             <groupId>org.slf4j</groupId>
