@@ -43,9 +43,10 @@ class VoteRankContext : public grape::VertexDataContext<FRAG_T, int> {
     weight.SetValue(0);
     weight.Init(vertices);
     scores.Init(vertices);
+    update.Init(vertices);
     step = 0;
     avg_degree = 0;
-    
+
 #ifdef PROFILING
     preprocess_time = 0;
     exec_time = 0;
@@ -57,8 +58,8 @@ class VoteRankContext : public grape::VertexDataContext<FRAG_T, int> {
     auto& frag = this->fragment();
     auto inner_vertices = frag.InnerVertices();
     for (auto v : inner_vertices) {
-      if(rank[v])
-         os << frag.GetId(v) << " "  << rank[v] << std::endl;
+      if (rank[v])
+        os << frag.GetId(v) << " " << rank[v] << std::endl;
     }
 #ifdef PROFILING
     VLOG(2) << "preprocess_time: " << preprocess_time << "s.";
@@ -70,16 +71,17 @@ class VoteRankContext : public grape::VertexDataContext<FRAG_T, int> {
   typename FRAG_T::template vertex_array_t<double> weight;
   typename FRAG_T::template vertex_array_t<double> scores;
   typename FRAG_T::template vertex_array_t<int>& rank;
+  typename FRAG_T::template vertex_array_t<bool> update;
 #ifdef PROFILING
   double preprocess_time = 0;
   double exec_time = 0;
   double postprocess_time = 0;
 #endif
-  std::pair<double,oid_t> max_score;
+  std::pair<double, oid_t> max_score;
   int step = 0;
   int max_round = 0;
   double avg_degree = 0;
 };
-}  // namespace grape
+}  // namespace gs
 
 #endif  // EXAMPLES_ANALYTICAL_APPS_VOTERANK_VOTERANK_CONTEXT_H_

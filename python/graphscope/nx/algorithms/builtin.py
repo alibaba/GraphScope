@@ -1086,3 +1086,61 @@ def betweenness_centrality(
     return _betweenness_centrality(
         G, k=k, normalized=normalized, weight=weight, endpoints=endpoints, seed=seed
     )
+
+
+@context_to_dict
+@project_to_simple
+@not_implemented_for("multigraph")
+def voterank(G,num_of_nodes=10):
+    """Returns the PageRank of the nodes in the graph.
+
+    PageRank computes a ranking of the nodes in the graph G based on
+    the structure of the incoming links. It was originally designed as
+    an algorithm to rank web pages.
+
+    Parameters
+    ----------
+    G : graph
+      A networkx directed graph.
+
+    alpha : float, optional
+      Damping parameter for PageRank, default=0.85.
+
+    max_iter : integer, optional
+      Maximum number of iterations in power method eigenvalue solver.
+
+    tol : float, optional
+      Error tolerance used to check convergence in power method solver.
+
+    Returns
+    -------
+    pagerank : dataframe
+       Dataframe of nodes with PageRank as the value.
+
+    Examples
+    --------
+    >>> G = nx.DiGraph(nx.path_graph(4))
+    >>> pr = nx.pagerank(G, alpha=0.9)
+
+    Notes
+    -----
+    The eigenvector calculation is done by the power iteration method
+    and has no guarantee of convergence.  The iteration will stop after
+    an error tolerance of ``len(G) * tol`` has been reached. If the
+    number of iterations exceed `max_iter`, computation just complete and
+    return the current result.
+
+    The PageRank algorithm was designed for directed graphs but this
+    algorithm does not check if the input graph is directed.
+
+    References
+    ----------
+    .. [1] A. Langville and C. Meyer,
+       "A survey of eigenvector methods of web information retrieval."
+       http://citeseer.ist.psu.edu/713792.html
+    .. [2] Page, Lawrence; Brin, Sergey; Motwani, Rajeev and Winograd, Terry,
+       The PageRank citation ranking: Bringing order to the Web. 1999
+       http://dbpubs.stanford.edu:8090/pub/showDoc.Fulltext?lang=en&doc=1999-66&format=pdf
+
+    """
+    return graphscope.voterank(G, num_of_nodes)

@@ -46,9 +46,9 @@ limitations under the License.
 #include "pagerank/pagerank_auto.h"
 #include "sssp/sssp.h"
 #include "sssp/sssp_auto.h"
+#include "voterank/voterank.h"
 #include "wcc/wcc.h"
 #include "wcc/wcc_auto.h"
-#include "voterank/voterank.h"
 
 #include "apps/bfs/bfs_generic.h"
 #include "apps/centrality/degree/degree_centrality.h"
@@ -450,15 +450,15 @@ void Run() {
     CreateAndQuery<GraphType, AppType>(comm_spec, efile, vfile, out_prefix,
                                        FLAGS_datasource, fnum, spec,
                                        FLAGS_bfs_source);
-  } else if(name == "voterank") {
+  } else if (name == "voterank") {
     using GraphType =
         grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T,
                                         grape::LoadStrategy::kBothOutIn,
                                         VertexMapType>;
     using AppType = VoteRank<GraphType>;
-    CreateAndQuery<GraphType,AppType>(comm_spec, efile, vfile, out_prefix, 
-                                      FLAGS_datasource, fnum, spec,
-                                      FLAGS_vr_num_nodes);
+    CreateAndQuery<GraphType, AppType>(comm_spec, efile, vfile, out_prefix,
+                                       FLAGS_datasource, fnum, spec,
+                                       FLAGS_vr_num_nodes);
   } else {
     LOG(FATAL) << "No available application named [" << name << "].";
   }
