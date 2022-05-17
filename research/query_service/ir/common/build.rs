@@ -29,7 +29,6 @@ fn codegen_inplace() -> Result<(), Box<dyn std::error::Error>> {
     println!("cargo:rerun-if-changed=../proto/algebra.proto");
     println!("cargo:rerun-if-changed=../proto/schema.proto");
     println!("cargo:rerun-if-changed=../proto/results.proto");
-    println!("cargo:rerun-if-changed=../proto/job_service.proto");
     let out_dir = PathBuf::from(GEN_DIR);
     if out_dir.exists() {
         let _ = std::fs::remove_dir_all(GEN_DIR);
@@ -45,7 +44,6 @@ fn codegen_inplace() -> Result<(), Box<dyn std::error::Error>> {
                 "../proto/algebra.proto",
                 "../proto/schema.proto",
                 "../proto/results.proto",
-                "../proto/job_service.proto",
             ],
             &["../proto"],
         )?;
@@ -64,7 +62,6 @@ fn codegen_inplace() -> Result<(), Box<dyn std::error::Error>> {
                 "../proto/algebra.proto",
                 "../proto/schema.proto",
                 "../proto/results.proto",
-                "../proto/job_service.proto",
             ],
             &["../proto"],
         )?;

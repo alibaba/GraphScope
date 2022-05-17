@@ -24,8 +24,8 @@ mod test {
     use ir_common::generated::common as common_pb;
     use ir_core::plan::logical::LogicalPlan;
     use ir_core::plan::physical::AsPhysical;
+    use pegasus_client::builder::JobBuilder;
     use pegasus_server::JobRequest;
-    use runtime::builder::JobBuilder;
     use runtime::graph::element::GraphElement;
 
     use crate::common::test::{initialize, parse_result, query_params, submit_query, TAG_A, TAG_B, TAG_C};

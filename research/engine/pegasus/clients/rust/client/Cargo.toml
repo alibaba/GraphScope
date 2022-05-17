@@ -1,0 +1,14 @@
+[package]
+name = "pegasus_client"
+version = "0.1.0"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+pegasus_server = { path = "../../../server" }
+pegasus = { path = "../../../pegasus" }
+tonic = "0.6"
+prost = "0.9"
+tokio = { version = "1.0", features = ["macros", "sync", "rt-multi-thread"] }
+tokio-stream = { version = "0.1.3", features = ["net"] }

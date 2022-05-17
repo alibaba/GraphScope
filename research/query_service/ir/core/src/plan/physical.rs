@@ -21,10 +21,10 @@
 
 use ir_common::generated::algebra as pb;
 use ir_common::generated::common as common_pb;
-use ir_common::generated::job_service as server_pb;
 use ir_common::NameOrId;
+use pegasus_client::builder::{JobBuilder, Plan};
+use pegasus_server::job_pb as server_pb;
 use prost::Message;
-use runtime::builder::*;
 
 use crate::error::{IrError, IrResult};
 use crate::plan::logical::{LogicalPlan, NodeType};

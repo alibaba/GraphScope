@@ -18,7 +18,6 @@ use std::sync::Arc;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::algebra::join::JoinKind;
 use ir_common::generated::common as common_pb;
-use ir_common::generated::job_service as server_pb;
 use ir_common::generated::results as result_pb;
 use pegasus::api::function::*;
 use pegasus::api::{
@@ -29,6 +28,7 @@ use pegasus::codec::{Decode, Encode};
 use pegasus::stream::Stream;
 use pegasus::{BuildJobError, Worker};
 use pegasus_server::job::{JobAssembly, JobDesc};
+use pegasus_server::job_pb as server_pb;
 use prost::Message;
 
 use crate::error::{FnExecError, FnGenResult};

@@ -16,8 +16,8 @@
 use std::fmt;
 use std::ops::{Deref, DerefMut};
 
-use ir_common::generated::job_service as pb;
 use pegasus::{BuildJobError, JobConf, ServerConf};
+use pegasus_server::job_pb as pb;
 use pegasus_server::pb as pegasus_pb;
 use prost::Message;
 
@@ -469,16 +469,14 @@ impl JobBuilder {
         FL: FnMut(&mut Plan),
         FR: FnMut(&mut Plan),
     {
-        self.plan
-            .join_func(join_kind, left_task, right_task, res);
+        self.plan.join_func(join_kind, left_task, right_task, res);
         self
     }
 
     pub fn join(
         &mut self, join_kind: pb::join::JoinKind, left_plan: Plan, right_plan: Plan, res: BinaryResource,
     ) -> &mut Self {
-        self.plan
-            .join(join_kind, left_plan, right_plan, res);
+        self.plan.join(join_kind, left_plan, right_plan, res);
         self
     }
 
@@ -587,9 +585,7 @@ mod test {
             .map(vec![3u8; 32])
             .limit(1)
             .iterate(3, |start| {
-                start
-                    .repartition(vec![4u8; 32])
-                    .map(vec![5u8; 32]);
+                start.repartition(vec![4u8; 32]).map(vec![5u8; 32]);
             })
             .sink(vec![6u8; 32]);
         let plan_len = builder.plan.len();
