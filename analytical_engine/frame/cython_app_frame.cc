@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-// The _GRAPH_HEADER and _APP_HEADER should include at begin
+// The _GRAPH_HEADER at begin
 #define DO_QUOTE(X) #X
 #define QUOTE(X) DO_QUOTE(X)
 #if defined(_GRAPH_TYPE) && defined(_GRAPH_HEADER)
@@ -21,7 +21,6 @@
 #else
 #error "Missing macro _GRAPH_TYPE or _GRAPH_HEADER"
 #endif
-#include QUOTE(_APP_HEADER)
 
 #include <iostream>
 #include <memory>
@@ -42,6 +41,8 @@
 #include "frame/ctx_wrapper_builder.h"
 #include "graphscope/proto/data_types.pb.h"
 #include "graphscope/proto/types.pb.h"
+
+#include QUOTE(_APP_HEADER)
 
 namespace bl = boost::leaf;
 using string = std::string;

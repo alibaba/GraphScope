@@ -16,6 +16,7 @@ limitations under the License.
 #ifndef ANALYTICAL_ENGINE_CORE_UTILS_TRANSFORM_UTILS_H_
 #define ANALYTICAL_ENGINE_CORE_UTILS_TRANSFORM_UTILS_H_
 
+#include <fstream>
 #include <memory>
 #include <string>
 #include <utility>

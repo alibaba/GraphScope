@@ -13,19 +13,13 @@
  * limitations under the License.
  */
 
-// The _GRAPH_HEADER and _APP_HEADER should include at begin
+// Include _GRAPH_HEADER at begin
 #define DO_QUOTE(X) #X
 #define QUOTE(X) DO_QUOTE(X)
 #if defined(_GRAPH_TYPE) && defined(_GRAPH_HEADER)
 #include QUOTE(_GRAPH_HEADER)
 #else
 #error "Missing macro _GRAPH_TYPE or _GRAPH_HEADER"
-#endif
-
-#if defined(_APP_TYPE) && defined(_APP_HEADER)
-#include QUOTE(_APP_HEADER)
-#else
-#error "Missing macro _APP_TYPE or _APP_HEADER"
 #endif
 
 #include <memory>
@@ -36,6 +30,12 @@
 #include "core/app/app_invoker.h"
 #include "core/error.h"
 #include "frame/ctx_wrapper_builder.h"
+
+#if defined(_APP_TYPE) && defined(_APP_HEADER)
+#include QUOTE(_APP_HEADER)
+#else
+#error "Missing macro _APP_TYPE or _APP_HEADER"
+#endif
 
 namespace bl = boost::leaf;
 
