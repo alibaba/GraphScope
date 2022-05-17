@@ -16,18 +16,21 @@
 #ifndef ANALYTICAL_ENGINE_CORE_OBJECT_PROJECTOR_H_
 #define ANALYTICAL_ENGINE_CORE_OBJECT_PROJECTOR_H_
 
-#include <map>
+#include <iosfwd>
 #include <memory>
-#include <string>
 #include <utility>
 
-#include "core/error.h"
-#include "core/object/fragment_wrapper.h"
+#include "boost/leaf/error.hpp"
+#include "boost/leaf/result.hpp"
+
 #include "core/object/gs_object.h"
 #include "core/server/rpc_utils.h"
 #include "core/utils/lib_utils.h"
 
+namespace bl = boost::leaf;
+
 namespace gs {
+class IFragmentWrapper;
 
 typedef void ProjectT(
     std::shared_ptr<IFragmentWrapper>& wrapper_in,

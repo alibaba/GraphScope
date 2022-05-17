@@ -16,8 +16,14 @@
 #ifndef ANALYTICAL_ENGINE_CORE_UTILS_CONVERT_UTILS_H_
 #define ANALYTICAL_ENGINE_CORE_UTILS_CONVERT_UTILS_H_
 
+#include <algorithm>
+#include <atomic>
+#include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <string>
+#include <thread>
+#include <vector>
 
 #include "vineyard/graph/fragment/arrow_fragment.h"
 

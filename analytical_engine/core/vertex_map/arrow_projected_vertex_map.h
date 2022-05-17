@@ -19,11 +19,27 @@
 #include <memory>
 #include <vector>
 
-#include "vineyard/common/util/version.h"
+#include "arrow/array/array_binary.h"
+#include "flat_hash_map/flat_hash_map.hpp"
+#include "string_view/string_view.hpp"
+#include "vineyard/basic/ds/arrow_utils.h"
+#include "vineyard/basic/ds/hashmap.h"
+#include "vineyard/client/client.h"
+#include "vineyard/client/ds/i_object.h"
+#include "vineyard/client/ds/object_meta.h"
+#include "vineyard/common/util/config.h"
+#include "vineyard/common/util/status.h"
+#include "vineyard/common/util/typename.h"
+#include "vineyard/common/util/uuid.h"
 #include "vineyard/graph/fragment/property_graph_types.h"
-#include "vineyard/graph/vertex_map/arrow_vertex_map.h"
+#include "vineyard/graph/fragment/property_graph_utils.h"
 
 #include "core/config.h"
+
+namespace vineyard {
+template <typename OID_T, typename VID_T>
+class ArrowVertexMap;
+}
 
 namespace gs {
 /**

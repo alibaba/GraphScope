@@ -20,7 +20,7 @@
 
 #include "grape/types.h"
 
-#include "core/worker/parallel_property_worker.h"
+#include "core/worker/parallel_property_worker.h"  // IWYU pragma: export
 
 namespace gs {
 

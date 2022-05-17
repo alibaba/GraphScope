@@ -21,6 +21,7 @@
 #include "vineyard/graph/fragment/arrow_fragment.h"
 #include "vineyard/graph/fragment/graph_schema.h"
 #include "vineyard/graph/fragment/property_graph_types.h"
+#include "vineyard/graph/utils/grape_utils.h"
 
 #include "core/fragment/arrow_projected_fragment.h"
 #include "core/fragment/dynamic_fragment.h"
@@ -33,6 +34,8 @@
 #if !defined(_PROJECTED_GRAPH_TYPE)
 #error "_PROJECTED_GRAPH_TYPE is undefined"
 #endif
+
+namespace bl = boost::leaf;
 
 /**
  * project_frame.cc serves as a frame to be compiled with
@@ -230,10 +233,10 @@ class ProjectSimpleFrame<gs::DynamicProjectedFragment<VDATA_T, EDATA_T>> {
 }  // namespace gs
 
 extern "C" {
-void Project(
-    std::shared_ptr<gs::IFragmentWrapper>& wrapper_in,
-    const std::string& projected_graph_name, const gs::rpc::GSParams& params,
-    gs::bl::result<std::shared_ptr<gs::IFragmentWrapper>>& wrapper_out) {
+void Project(std::shared_ptr<gs::IFragmentWrapper>& wrapper_in,
+             const std::string& projected_graph_name,
+             const gs::rpc::GSParams& params,
+             bl::result<std::shared_ptr<gs::IFragmentWrapper>>& wrapper_out) {
   wrapper_out = gs::ProjectSimpleFrame<_PROJECTED_GRAPH_TYPE>::Project(
       wrapper_in, projected_graph_name, params);
 }

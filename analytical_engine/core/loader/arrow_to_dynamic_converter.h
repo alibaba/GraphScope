@@ -29,6 +29,8 @@
 #include "core/fragment/dynamic_fragment.h"
 #include "core/utils/convert_utils.h"
 
+namespace bl = boost::leaf;
+
 namespace gs {
 /**
  * @brief A utility class to pack basic C++ data type to dynamic::Value

@@ -16,22 +16,27 @@
 #ifndef ANALYTICAL_ENGINE_CORE_CONTEXT_SELECTOR_H_
 #define ANALYTICAL_ENGINE_CORE_CONTEXT_SELECTOR_H_
 
+#include <glog/logging.h>
+
 #include <regex>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include "boost/algorithm/string.hpp"
+#include "boost/algorithm/string/case_conv.hpp"
 #include "boost/foreach.hpp"
-#include "boost/leaf.hpp"
+#include "boost/leaf/error.hpp"
+#include "boost/leaf/result.hpp"
 #include "boost/lexical_cast.hpp"
+#include "boost/property_tree/exceptions.hpp"
 #include "boost/property_tree/json_parser.hpp"
 #include "boost/property_tree/ptree.hpp"
 
 #include "vineyard/graph/fragment/property_graph_types.h"
 
-#include "core/config.h"
 #include "core/error.h"
+
+namespace bl = boost::leaf;
 
 namespace gs {
 

@@ -15,11 +15,15 @@
 #ifndef ANALYTICAL_ENGINE_CORE_CONTEXT_MPI_OBJECT_SYNC_H_
 #define ANALYTICAL_ENGINE_CORE_CONTEXT_MPI_OBJECT_SYNC_H_
 
-#include <utility>
 #include <vector>
 
+#include "grape/communication/sync_comm.h"
 #include "grape/worker/comm_spec.h"
-#include "vineyard/client/client.h"
+#include "vineyard/common/util/uuid.h"
+
+namespace vineyard {
+class Client;
+}
 
 namespace gs {
 

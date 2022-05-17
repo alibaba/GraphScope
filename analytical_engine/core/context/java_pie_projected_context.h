@@ -41,7 +41,7 @@
 #include "core/java/javasdk.h"
 #include "core/object/i_fragment_wrapper.h"
 
-#define CONTEXT_TYPE_JAVA_PIE_PROJECTED "java_pie_projected"
+namespace bl = boost::leaf;
 
 namespace gs {
 
