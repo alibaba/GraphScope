@@ -27,16 +27,16 @@ import io.grpc.ManagedChannel;
 import io.grpc.netty.NettyChannelBuilder;
 import io.grpc.stub.StreamObserver;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Iterator;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinWorkerThread;
-import java.util.concurrent.atomic.AtomicInteger;
-import org.slf4j.Logger;
-
-import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author lvshuang.xjs@alibaba-inc.com
@@ -184,5 +184,5 @@ public class RpcUtils {
                 },
                 (t, e) -> logger.error("Uncaught exception in thread {}", t.getName(), e),
                 true);
-        }
+    }
 }

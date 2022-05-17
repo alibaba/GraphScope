@@ -58,12 +58,12 @@ import com.google.common.annotations.VisibleForTesting;
 
 import io.grpc.BindableService;
 import io.grpc.NameResolver;
-
 import io.grpc.netty.NettyServerBuilder;
-import java.util.Collections;
+
 import org.apache.curator.framework.CuratorFramework;
 
 import java.io.IOException;
+import java.util.Collections;
 
 public class Frontend extends NodeBase {
 
