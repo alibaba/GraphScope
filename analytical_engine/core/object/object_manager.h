@@ -16,13 +16,20 @@
 #ifndef ANALYTICAL_ENGINE_CORE_OBJECT_OBJECT_MANAGER_H_
 #define ANALYTICAL_ENGINE_CORE_OBJECT_OBJECT_MANAGER_H_
 
+#include <glog/logging.h>
+
 #include <map>
 #include <memory>
+#include <ostream>
 #include <string>
 #include <utility>
 
+#include "boost/leaf/result.hpp"
+
 #include "core/error.h"
 #include "core/object/gs_object.h"
+
+namespace bl = boost::leaf;
 
 namespace gs {
 /**

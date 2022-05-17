@@ -53,6 +53,8 @@
 #include "java_pie/java_pie_projected_parallel_app.h"
 #include "java_pie/java_pie_property_parallel_app.h"
 
+namespace bl = boost::leaf;
+
 using FragmentType =
     vineyard::ArrowFragment<vineyard::property_graph_types::OID_TYPE,
                             vineyard::property_graph_types::VID_TYPE>;
@@ -605,16 +607,16 @@ int main(int argc, char** argv) {
           gs::ArrowFragmentLoader<vineyard::property_graph_types::OID_TYPE,
                                   vineyard::property_graph_types::VID_TYPE>>(
           client, comm_spec, efiles, vfiles, directed != 0);
-      fragment_id = boost::leaf::try_handle_all(
-          [&loader]() { return loader->LoadFragment(); },
-          [](const vineyard::GSError& e) {
-            LOG(ERROR) << e.error_msg;
-            return 0;
-          },
-          [](const boost::leaf::error_info& unmatched) {
-            LOG(ERROR) << "Unmatched error " << unmatched;
-            return 0;
-          });
+      fragment_id =
+          bl::try_handle_all([&loader]() { return loader->LoadFragment(); },
+                             [](const vineyard::GSError& e) {
+                               LOG(ERROR) << e.error_msg;
+                               return 0;
+                             },
+                             [](const bl::error_info& unmatched) {
+                               LOG(ERROR) << "Unmatched error " << unmatched;
+                               return 0;
+                             });
     }
 
     VLOG(1) << "[worker-" << comm_spec.worker_id()

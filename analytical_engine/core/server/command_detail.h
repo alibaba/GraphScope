@@ -17,14 +17,15 @@
 #define ANALYTICAL_ENGINE_CORE_SERVER_COMMAND_DETAIL_H_
 
 #include <map>
-#include <string>
 #include <utility>
-
-#include "grape/serialization/in_archive.h"
-#include "grape/serialization/out_archive.h"
 
 #include "graphscope/proto/attr_value.pb.h"
 #include "graphscope/proto/types.pb.h"
+
+namespace grape {
+class InArchive;
+class OutArchive;
+}  // namespace grape
 
 namespace gs {
 

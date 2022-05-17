@@ -16,8 +16,10 @@
 #ifndef ANALYTICAL_ENGINE_CORE_UTILS_FRAGMENT_TRAITS_H_
 #define ANALYTICAL_ENGINE_CORE_UTILS_FRAGMENT_TRAITS_H_
 
+#include <string>
+
 #include "vineyard/common/util/typename.h"
-#include "vineyard/graph/fragment/fragment_traits.h"
+#include "vineyard/graph/fragment/fragment_traits.h"  // IWYU pragma: export
 
 #include "core/object/dynamic.h"
 

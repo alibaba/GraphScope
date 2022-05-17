@@ -16,20 +16,26 @@
 #ifndef ANALYTICAL_ENGINE_CORE_SERVER_GRAPHSCOPE_SERVICE_H_
 #define ANALYTICAL_ENGINE_CORE_SERVER_GRAPHSCOPE_SERVICE_H_
 
-#include <map>
+#include <cstdlib>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include "boost/lexical_cast.hpp"
+#include "grpcpp/support/status.h"
+#include "grpcpp/support/status_code_enum.h"
+
 #include "core/server/dispatcher.h"
-#include "graphscope/proto/attr_value.pb.h"
 #include "graphscope/proto/engine_service.grpc.pb.h"
-#include "graphscope/proto/graph_def.pb.h"
 #include "graphscope/proto/message.pb.h"
 #include "graphscope/proto/op_def.pb.h"
 
-#include "boost/lexical_cast.hpp"
+namespace grpc {
+class ServerContext;
+template <class W, class R>
+class ServerReaderWriter;
+}  // namespace grpc
 
 namespace gs {
 namespace rpc {

@@ -16,10 +16,11 @@
 #ifndef ANALYTICAL_ENGINE_CORE_OBJECT_GS_OBJECT_H_
 #define ANALYTICAL_ENGINE_CORE_OBJECT_GS_OBJECT_H_
 
+#include <glog/logging.h>
+
+#include <ostream>
 #include <string>
 #include <utility>
-
-#include "glog/logging.h"
 
 namespace gs {
 enum class ObjectType {

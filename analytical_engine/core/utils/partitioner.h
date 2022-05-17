@@ -16,13 +16,20 @@
 #ifndef ANALYTICAL_ENGINE_CORE_UTILS_PARTITIONER_H_
 #define ANALYTICAL_ENGINE_CORE_UTILS_PARTITIONER_H_
 
+#include <glog/logging.h>
+
+#include <cstddef>
+#include <functional>
 #include <memory>
 #include <string>
 
+#include "core/config.h"
 #include "core/object/dynamic.h"
-#include "grape/fragment/partitioner.h"
 
 namespace grape {
+
+template <typename OID_T>
+class HashPartitioner;
 
 #if defined(NETWORKX)
 template <>
