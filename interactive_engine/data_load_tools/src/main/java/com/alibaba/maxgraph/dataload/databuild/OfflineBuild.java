@@ -14,7 +14,6 @@
 package com.alibaba.maxgraph.dataload.databuild;
 
 import com.alibaba.graphscope.groot.sdk.MaxGraphClient;
-import com.alibaba.graphscope.groot.sdk.MaxGraphClient.MaxGraphClientBuilder;
 import com.alibaba.maxgraph.compiler.api.schema.GraphEdge;
 import com.alibaba.maxgraph.compiler.api.schema.GraphElement;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
@@ -23,7 +22,6 @@ import com.alibaba.maxgraph.sdkcommon.schema.GraphSchemaMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.net.InetSocketAddress;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
