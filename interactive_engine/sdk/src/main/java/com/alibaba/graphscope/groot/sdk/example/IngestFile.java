@@ -36,7 +36,7 @@ public class IngestFile {
         int port = Integer.valueOf(args[2]);
         int batchSize = Integer.valueOf(args[3]);
 
-        MaxGraphClient client = new MaxGraphClient(host, port);
+        MaxGraphClient client = MaxGraphClient.newBuilder().addHost(host, port).build();
         File file = new File(inputFile);
         String fileName = file.getName();
         String label = fileName.split("_")[0];

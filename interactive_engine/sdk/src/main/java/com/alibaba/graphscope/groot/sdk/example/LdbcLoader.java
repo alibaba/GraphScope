@@ -75,7 +75,7 @@ public class LdbcLoader {
                         + batchSize
                         + "]");
 
-        MaxGraphClient client = new MaxGraphClient(host, port);
+        MaxGraphClient client = MaxGraphClient.newBuilder().addHost(host, port).build();
         int processed = 0;
         int ignored = 0;
         for (Path path : Files.list(Paths.get(dataDir)).collect(Collectors.toList())) {

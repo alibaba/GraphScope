@@ -29,6 +29,9 @@ data:
     engine.type={{ .Values.engineType }}
     discovery.mode={{ .Values.discoveryMode }}
 
+    ## Frontend Config
+    frontend.service.port=55556
+
     ## Ingestor Config
     ingestor.queue.buffer.size={{ .Values.ingestorQueueBufferSize }}
     ingestor.sender.buffer.size={{ .Values.ingestorSenderBufferSize }}

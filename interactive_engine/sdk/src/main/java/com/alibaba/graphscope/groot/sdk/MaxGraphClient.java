@@ -16,13 +16,16 @@ package com.alibaba.graphscope.groot.sdk;
 import com.alibaba.graphscope.proto.write.BatchWriteRequest;
 import com.alibaba.graphscope.proto.write.BatchWriteResponse;
 import com.alibaba.graphscope.proto.write.ClientWriteGrpc;
+import com.alibaba.graphscope.proto.write.ClientWriteGrpc.ClientWriteBlockingStub;
 import com.alibaba.graphscope.proto.write.DataRecordPb;
 import com.alibaba.graphscope.proto.write.GetClientIdRequest;
 import com.alibaba.graphscope.proto.write.WriteRequestPb;
 import com.alibaba.graphscope.proto.write.WriteTypePb;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.proto.groot.ClientBackupGrpc;
+import com.alibaba.maxgraph.proto.groot.ClientBackupGrpc.ClientBackupBlockingStub;
 import com.alibaba.maxgraph.proto.groot.ClientGrpc;
+import com.alibaba.maxgraph.proto.groot.ClientGrpc.ClientBlockingStub;
 import com.alibaba.maxgraph.proto.groot.CommitDataLoadRequest;
 import com.alibaba.maxgraph.proto.groot.CommitDataLoadResponse;
 import com.alibaba.maxgraph.proto.groot.CreateNewGraphBackupRequest;
@@ -48,6 +51,7 @@ import com.alibaba.maxgraph.proto.groot.RemoteFlushRequest;
 import com.alibaba.maxgraph.proto.groot.RestoreFromGraphBackupRequest;
 import com.alibaba.maxgraph.proto.groot.VerifyGraphBackupRequest;
 import com.alibaba.maxgraph.proto.groot.VerifyGraphBackupResponse;
+import com.alibaba.maxgraph.sdkcommon.BasicAuth;
 import com.alibaba.maxgraph.sdkcommon.common.BackupInfo;
 import com.alibaba.maxgraph.sdkcommon.common.DataLoadTarget;
 import com.alibaba.maxgraph.sdkcommon.common.EdgeRecordKey;
@@ -84,35 +88,13 @@ public class MaxGraphClient implements Closeable {
 
     private BatchWriteRequest.Builder batchWriteBuilder;
 
-    public MaxGraphClient(String hosts) {
-        List<SocketAddress> addrList = new ArrayList<>();
-        for (String host : hosts.split(",")) {
-            String[] items = host.split(":");
-            addrList.add(new InetSocketAddress(items[0], Integer.valueOf(items[1])));
-        }
-        MultiAddrResovlerFactory resovlerFactory = new MultiAddrResovlerFactory(addrList);
-        ManagedChannel channel =
-                ManagedChannelBuilder.forTarget("hosts")
-                        .nameResolverFactory(resovlerFactory)
-                        .defaultLoadBalancingPolicy("round_robin")
-                        .usePlaintext()
-                        .build();
-        this.channel = channel;
-        this.stub = ClientGrpc.newBlockingStub(this.channel);
-        this.writeStub = ClientWriteGrpc.newBlockingStub(this.channel);
-        this.backupStub = ClientBackupGrpc.newBlockingStub(this.channel);
-        this.reset();
-    }
-
-    public MaxGraphClient(String host, int port) {
-        this(ManagedChannelBuilder.forAddress(host, port).usePlaintext().build());
-    }
-
-    public MaxGraphClient(ManagedChannel channel) {
-        this.channel = channel;
-        this.stub = ClientGrpc.newBlockingStub(this.channel);
-        this.writeStub = ClientWriteGrpc.newBlockingStub(this.channel);
-        this.backupStub = ClientBackupGrpc.newBlockingStub(this.channel);
+    private MaxGraphClient(
+            ClientBlockingStub clientBlockingStub,
+            ClientWriteBlockingStub clientWriteBlockingStub,
+            ClientBackupBlockingStub clientBackupBlockingStub) {
+        this.stub = clientBlockingStub;
+        this.writeStub = clientWriteBlockingStub;
+        this.backupStub = clientBackupBlockingStub;
         this.reset();
     }
 
@@ -290,6 +272,73 @@ public class MaxGraphClient implements Closeable {
             this.channel.awaitTermination(3000, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
             // Ignore
+        }
+    }
+
+    public static MaxGraphClientBuilder newBuilder() {
+        return new MaxGraphClientBuilder();
+    }
+
+    public static class MaxGraphClientBuilder {
+        private List<SocketAddress> addrs;
+        private String username;
+        private String password;
+
+        private MaxGraphClientBuilder() {
+            this.addrs = new ArrayList<>();
+        }
+
+        public MaxGraphClientBuilder addAddress(SocketAddress address) {
+            this.addrs.add(address);
+            return this;
+        }
+
+        public MaxGraphClientBuilder addHost(String host, int port) {
+            return this.addAddress(new InetSocketAddress(host, port));
+        }
+
+        public MaxGraphClientBuilder setHosts(String hosts) {
+            List<SocketAddress> addresses = new ArrayList<>();
+            for (String host : hosts.split(",")) {
+                String[] items = host.split(":");
+                addresses.add(new InetSocketAddress(items[0], Integer.valueOf(items[1])));
+            }
+            this.addrs = addresses;
+            return this;
+        }
+
+        public MaxGraphClientBuilder setUsername(String username) {
+            this.username = username;
+            return this;
+        }
+
+        public MaxGraphClientBuilder setPassword(String password) {
+            this.password = password;
+            return this;
+        }
+
+        public MaxGraphClient build() {
+            MultiAddrResovlerFactory multiAddrResovlerFactory =
+                    new MultiAddrResovlerFactory(this.addrs);
+            ManagedChannel channel =
+                    ManagedChannelBuilder.forTarget("hosts")
+                            .nameResolverFactory(multiAddrResovlerFactory)
+                            .defaultLoadBalancingPolicy("round_robin")
+                            .usePlaintext()
+                            .build();
+            ClientBlockingStub clientBlockingStub = ClientGrpc.newBlockingStub(channel);
+            ClientWriteBlockingStub clientWriteBlockingStub =
+                    ClientWriteGrpc.newBlockingStub(channel);
+            ClientBackupBlockingStub clientBackupBlockingStub =
+                    ClientBackupGrpc.newBlockingStub(channel);
+            if (username != null && password != null) {
+                BasicAuth basicAuth = new BasicAuth(username, password);
+                clientBlockingStub = clientBlockingStub.withCallCredentials(basicAuth);
+                clientWriteBlockingStub = clientWriteBlockingStub.withCallCredentials(basicAuth);
+                clientBackupBlockingStub = clientBackupBlockingStub.withCallCredentials(basicAuth);
+            }
+            return new MaxGraphClient(
+                    clientBlockingStub, clientWriteBlockingStub, clientBackupBlockingStub);
         }
     }
 }

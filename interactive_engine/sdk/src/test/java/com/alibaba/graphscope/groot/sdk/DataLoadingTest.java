@@ -16,7 +16,7 @@ import java.util.Map;
 public class DataLoadingTest {
     String host = "localhost";
     int port = 55556;
-    MaxGraphClient client = new MaxGraphClient(host, port);
+    MaxGraphClient client = MaxGraphClient.newBuilder().addHost(host, port).build();
 
     @Test
     public void testLoadSchema() throws URISyntaxException, IOException {

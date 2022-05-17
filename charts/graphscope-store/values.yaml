@@ -354,10 +354,15 @@ frontend:
     type: NodePort
     ## Service port
     ##
-    port: 55555
+    servicePort: 55556
+
     ## Gremlin console port
     ##
     gremlinPort: 12312
+
+    ## Internal port for communication between components.
+    ##
+    port: 55555
 
     ## Gaia rpc port
     ##
@@ -370,7 +375,7 @@ frontend:
     ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport
     ##
     nodePorts:
-      grpc: ""
+      service: ""
       gremlin: ""
     ## Service clusterIP
     ##

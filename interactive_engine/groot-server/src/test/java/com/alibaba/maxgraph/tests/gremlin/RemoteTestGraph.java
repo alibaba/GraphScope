@@ -448,7 +448,7 @@ public class RemoteTestGraph implements Graph {
     public RemoteTestGraph(String host, int port) {
         this.cluster = createCluster(host, port);
         this.remoteConnection = DriverRemoteConnection.using(cluster);
-        this.sdkClient = new MaxGraphClient(host, 55555);
+        this.sdkClient = MaxGraphClient.newBuilder().addHost(host, 55555).build();
         this.started = true;
     }
 
