@@ -334,6 +334,56 @@ class TestBuiltInApp:
         ans = nx.builtin.average_degree_connectivity(self.p2p_undirected)
         assert gt == ans
 
+    def test_voterank(self):
+        gt = [
+            9788,
+            17325,
+            585,
+            50445,
+            28802,
+            2550,
+            61511,
+            5928,
+            29965,
+            38767,
+            57802,
+            52032,
+            44619,
+            13596,
+            59426,
+            454,
+            58170,
+            3544,
+            364,
+            5530
+        ]
+        ans = nx.builtin.voterank(self.p2p_undirected, 20)
+        assert gt == ans
+        gt = [
+            9788,
+            17325,
+            50445,
+            28802,
+            61511,
+            57802,
+            52032,
+            29965,
+            38767,
+            44619,
+            44323,
+            57146,
+            41257,
+            59426,
+            19365,
+            58170,
+            4746,
+            2550,
+            15313,
+            39802
+        ]
+        ans = nx.builtin.voterank(self.p2p_directed, 20)
+        assert gt == ans
+
     @pytest.mark.skip(reason="TODO: the app not compatible with DynamicFragment")
     def test_all_simple_paths(self):
         ans = nx.builtin.all_simple_paths(self.p2p, 1, 4, cutoff=10)

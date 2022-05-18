@@ -28,7 +28,6 @@ namespace gs {
  */
 template <typename FRAG_T>
 class VoteRankContext : public grape::VertexDataContext<FRAG_T, int> {
-  using oid_t = typename FRAG_T::oid_t;
   using vid_t = typename FRAG_T::vid_t;
 
  public:
@@ -36,11 +35,13 @@ class VoteRankContext : public grape::VertexDataContext<FRAG_T, int> {
       : grape::VertexDataContext<FRAG_T, int32_t>(fragment, true),
         rank(this->data()) {}
 
-  void Init(grape::ParallelMessageManager& messages, int max_round) {
+  void Init(grape::ParallelMessageManager& messages, int num_of_nodes) {
     auto& frag = this->fragment();
     auto vertices = frag.Vertices();
-    this->max_round = max_round;
-    weight.SetValue(0);
+    this->num_of_nodes = num_of_nodes;
+    if(num_of_nodes == 0){
+      this->num_of_nodes = frag.GetTotalVerticesNum();
+    }
     weight.Init(vertices);
     scores.Init(vertices);
     update.Init(vertices);
@@ -77,9 +78,9 @@ class VoteRankContext : public grape::VertexDataContext<FRAG_T, int> {
   double exec_time = 0;
   double postprocess_time = 0;
 #endif
-  std::pair<double, oid_t> max_score;
+  std::pair<double, vid_t> max_score;
   int step = 0;
-  int max_round = 0;
+  int num_of_nodes = 0;
   double avg_degree = 0;
 };
 }  // namespace gs

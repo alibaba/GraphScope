@@ -39,7 +39,7 @@ class VoteRank : public grape::ParallelAppBase<FRAG_T, VoteRankContext<FRAG_T>>,
                  public grape::ParallelEngine {
  public:
   using vertex_t = typename FRAG_T::vertex_t;
-  using oid_t = typename FRAG_T::oid_t;
+  using vid_t = typename FRAG_T::vid_t;
   static constexpr grape::MessageStrategy message_strategy =
       grape::MessageStrategy::kAlongIncomingEdgeToOuterVertex;
   static constexpr bool need_split_edges = true;
@@ -105,7 +105,7 @@ class VoteRank : public grape::ParallelAppBase<FRAG_T, VoteRankContext<FRAG_T>>,
                message_manager_t& messages) {
     auto inner_vertices = frag.InnerVertices();
     ++ctx.step;
-    if (ctx.step > ctx.max_round) {
+    if (ctx.step > ctx.num_of_nodes) {
       return;
     }
 
@@ -153,8 +153,8 @@ class VoteRank : public grape::ParallelAppBase<FRAG_T, VoteRankContext<FRAG_T>>,
     ctx.exec_time -= GetCurrentTime();
 #endif
 
-    auto compare = [](std::pair<double, oid_t>& lhs,
-                      const std::pair<double, oid_t>& rhs) {
+    auto compare = [](std::pair<double, vid_t>& lhs,
+                      const std::pair<double, vid_t>& rhs) {
       const double EPS = 1e-8;
       if (fabs(lhs.first - rhs.first) < EPS) {
         if (rhs.second < lhs.second) {
@@ -164,9 +164,9 @@ class VoteRank : public grape::ParallelAppBase<FRAG_T, VoteRankContext<FRAG_T>>,
         lhs = rhs;
       }
     };
-    // compute new scores
 
-    std::vector<std::pair<double, oid_t>> max_scores(thread_num(), {0, {}});
+    // compute new scores
+    std::vector<std::pair<double, vid_t>> max_scores(thread_num(), {0, {}});
     ForEach(inner_vertices,
             [&ctx, compare, &max_scores, &frag](int tid, vertex_t u) {
               if (ctx.update[u] && ctx.rank[u] == 0) {
@@ -178,7 +178,7 @@ class VoteRank : public grape::ParallelAppBase<FRAG_T, VoteRankContext<FRAG_T>>,
                 ctx.scores[u] = cur;
                 ctx.update[u] = false;
               }
-              compare(max_scores[tid], {ctx.scores[u], frag.GetId(u)});
+              compare(max_scores[tid], {ctx.scores[u], frag.Vertex2Gid(u)});
             });
 
 #ifdef PROFILING
@@ -198,7 +198,7 @@ class VoteRank : public grape::ParallelAppBase<FRAG_T, VoteRankContext<FRAG_T>>,
 
     // weaken the selected node and its out-neighbors
     std::vector<vertex_t> update_vertices;
-    if (frag.GetVertex(ctx.max_score.second, v)) {
+    if (frag.Gid2Vertex(ctx.max_score.second, v)) {
       if (frag.IsInnerVertex(v)) {
         ctx.rank[v] = ctx.step;
         ctx.weight[v] = 0.0;
@@ -217,7 +217,7 @@ class VoteRank : public grape::ParallelAppBase<FRAG_T, VoteRankContext<FRAG_T>>,
     }
 
     // send message
-    if (ctx.step != ctx.max_round) {
+    if (ctx.step != ctx.num_of_nodes) {
       ForEach(update_vertices, [&ctx, &frag, &messages](int tid, vertex_t u) {
         messages.SendMsgThroughIEdges<fragment_t, double>(frag, u,
                                                           ctx.weight[u], tid);

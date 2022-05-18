@@ -117,7 +117,7 @@ DECLARE_int32(app_concurrency);
 DECLARE_int64(dfs_source);
 DECLARE_string(dfs_format);
 
-DECLARE_int32(vr_num_nodes);
+DECLARE_int32(vr_num_of_nodes);
 
 namespace gs {
 
@@ -458,7 +458,7 @@ void Run() {
     using AppType = VoteRank<GraphType>;
     CreateAndQuery<GraphType, AppType>(comm_spec, efile, vfile, out_prefix,
                                        FLAGS_datasource, fnum, spec,
-                                       FLAGS_vr_num_nodes);
+                                       FLAGS_vr_num_of_nodes);
   } else {
     LOG(FATAL) << "No available application named [" << name << "].";
   }

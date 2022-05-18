@@ -1088,59 +1088,44 @@ def betweenness_centrality(
     )
 
 
-@context_to_dict
 @project_to_simple
 @not_implemented_for("multigraph")
-def voterank(G,num_of_nodes=10):
-    """Returns the PageRank of the nodes in the graph.
+def voterank(G,num_of_nodes=0):
+    """Select a list of influential nodes in a graph using VoteRank algorithm
 
-    PageRank computes a ranking of the nodes in the graph G based on
-    the structure of the incoming links. It was originally designed as
-    an algorithm to rank web pages.
+    VoteRank [1]_ computes a ranking of the nodes in a graph G based on a
+    voting scheme. With VoteRank, all nodes vote for each of its in-neighbours
+    and the node with the highest votes is elected iteratively. The voting
+    ability of out-neighbors of elected nodes is decreased in subsequent turns.
+
+    Note: We treat each edge independently in case of multigraphs.
 
     Parameters
     ----------
     G : graph
       A networkx directed graph.
 
-    alpha : float, optional
-      Damping parameter for PageRank, default=0.85.
-
-    max_iter : integer, optional
-      Maximum number of iterations in power method eigenvalue solver.
-
-    tol : float, optional
-      Error tolerance used to check convergence in power method solver.
+    number_of_nodes : integer, optional
+        Number of ranked nodes to extract (default all nodes).
 
     Returns
     -------
-    pagerank : dataframe
-       Dataframe of nodes with PageRank as the value.
+    voterank : list
+       Ordered list of computed seeds.
+       Only nodes with positive number of votes are returned.
 
     Examples
     --------
     >>> G = nx.DiGraph(nx.path_graph(4))
-    >>> pr = nx.pagerank(G, alpha=0.9)
-
-    Notes
-    -----
-    The eigenvector calculation is done by the power iteration method
-    and has no guarantee of convergence.  The iteration will stop after
-    an error tolerance of ``len(G) * tol`` has been reached. If the
-    number of iterations exceed `max_iter`, computation just complete and
-    return the current result.
-
-    The PageRank algorithm was designed for directed graphs but this
-    algorithm does not check if the input graph is directed.
+    >>> pr = nx.voterank(G, num_of_nodes=2)
 
     References
     ----------
-    .. [1] A. Langville and C. Meyer,
-       "A survey of eigenvector methods of web information retrieval."
-       http://citeseer.ist.psu.edu/713792.html
-    .. [2] Page, Lawrence; Brin, Sergey; Motwani, Rajeev and Winograd, Terry,
-       The PageRank citation ranking: Bringing order to the Web. 1999
-       http://dbpubs.stanford.edu:8090/pub/showDoc.Fulltext?lang=en&doc=1999-66&format=pdf
+    .. [1] Zhang, J.-X. et al. (2016).
+        Identifying a set of influential spreaders in complex networks.
+        Sci. Rep. 6, 27823; doi: 10.1038/srep27823.
 
     """
+
     return graphscope.voterank(G, num_of_nodes)
+    

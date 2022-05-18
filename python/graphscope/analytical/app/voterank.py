@@ -26,17 +26,17 @@ __all__ = ["voterank"]
 
 @project_to_simple
 @not_compatible_for("arrow_property", "dynamic_property")
-def voterank(graph, num_of_nodes=10):
+def voterank(graph, num_of_nodes=0):
     """Evalute VoteRank on a graph.
 
     Args:
         graph (:class:`graphscope.Graph`): A simple graph.
-        delta (float, optional): Dumping factor. Defaults to 0.85.
-        max_round (int, optional): Maximum number of rounds. Defaults to 10.
+        num_of_nodes (unsigned long int, optional): Number of ranked nodes to extract. Default all nodes.
 
     Returns:
-        :class:`graphscope.framework.context.VertexDataContextDAGNode`:
-            A context with each vertex assigned with the pagerank value, evaluated in eager mode.
+        :voterank : list
+         Ordered list of computed seeds. Only nodes with positive number of votes are returned.
+
 
     Examples:
 
@@ -48,8 +48,12 @@ def voterank(graph, num_of_nodes=10):
         >>> g = load_p2p_network(sess)
         >>> # project to a simple graph (if needed)
         >>> pg = g.project(vertices={"host": ["id"]}, edges={"connect": ["dist"]})
-        >>> c = graphscope.pagerank(pg, delta=0.85, max_round=10)
+        >>> c = graphscope.voterank(pg, num_of_nodes=10)
         >>> sess.close()
     """
     num_of_nodes = int(num_of_nodes)
-    return AppAssets(algo="voterank", context="vertex_data")(graph, num_of_nodes)
+    c = AppAssets(algo="voterank", context="vertex_data")(graph, num_of_nodes)
+    r = c.to_dataframe({"id": "v.id", "result": "r"})
+    r = r[r['result'] != 0].sort_values(by=['result'])
+    return r['id'].tolist()
+    
