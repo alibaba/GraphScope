@@ -1,0 +1,120 @@
+/*
+ * Copyright 2020 Alibaba Group Holding Limited.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.alibaba.maxgraph.servers.ir;
+
+import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
+import com.alibaba.graphscope.common.store.IrMeta;
+import com.alibaba.graphscope.common.store.IrMetaFetcher;
+import com.alibaba.graphscope.groot.rpc.ChannelManager;
+import com.alibaba.maxgraph.common.util.CommonUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.*;
+
+public class SnapshotManager extends IrMetaQueryCallback {
+    private final static Logger logger = LoggerFactory.getLogger(SnapshotManager.class);
+    private final static int QUEUE_SIZE = 1024 * 1024;
+
+    // manage queries <snapshotId, is_done>
+    private BlockingQueue<QueryStatus> queryQueue;
+    private ChannelManager channelManager;
+    private ScheduledExecutorService updateExecutor;
+    private long oldSnapshotId = Long.MIN_VALUE;
+
+    public SnapshotManager(IrMetaFetcher fetcher, ChannelManager channelManager) {
+        super(fetcher);
+        queryQueue = new ArrayBlockingQueue<>(QUEUE_SIZE);
+        this.channelManager = channelManager;
+    }
+
+    public void start() {
+        updateExecutor = Executors.newSingleThreadScheduledExecutor(
+                CommonUtil.createFactoryWithDefaultExceptionHandler("groot-snapshot-manager", logger));
+        updateExecutor.scheduleWithFixedDelay(new UpdateSnapshot(), 5000, 2000, TimeUnit.MILLISECONDS);
+    }
+
+    public void stop() {
+        if (updateExecutor != null) {
+            updateExecutor.shutdownNow();
+            try {
+                if (!updateExecutor.awaitTermination(1000, TimeUnit.MILLISECONDS)) {
+                    logger.error("updateExecutor await timeout before shutdown");
+                }
+            } catch (InterruptedException e) {
+                logger.error("updateExecutor awaitTermination exception ", e);
+            }
+        }
+    }
+
+    @Override
+    public synchronized IrMeta beforeExec() {
+        try {
+            IrMeta irMeta = super.beforeExec();
+            QueryStatus status = new QueryStatus(irMeta.getSnapshotId());
+            queryQueue.put(status);
+            return irMeta;
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    // set the QueryStatus as done after the execution of the query
+    @Override
+    public synchronized void afterExec(IrMeta irMeta) {
+        long snapshotId = irMeta.getSnapshotId();
+        queryQueue.forEach(k -> {
+            if (k.snapshotId == snapshotId) {
+                k.isDone = true;
+            }
+        });
+    }
+
+    private class UpdateSnapshot implements Runnable {
+        @Override
+        public void run() {
+            long minSnapshotId = 0L;
+            try {
+                while (!queryQueue.isEmpty() && queryQueue.peek().isDone) {
+                    queryQueue.remove();
+                }
+                if (queryQueue.isEmpty()) {
+                    minSnapshotId = fetcher.fetch().get().getSnapshotId();
+                } else {
+                    minSnapshotId = queryQueue.peek().snapshotId;
+                }
+                if (minSnapshotId > oldSnapshotId) {
+                    // todo: rpc with coordinator to report min snapshotId
+                    logger.info("update minSnapshotId {} success", minSnapshotId);
+                    oldSnapshotId = minSnapshotId;
+                }
+            } catch (Exception e) {
+                logger.error("update minSnapshotId {} fail", minSnapshotId, e);
+            }
+        }
+    }
+
+    private class QueryStatus {
+        public long snapshotId;
+        public boolean isDone;
+
+        public QueryStatus(long snapshotId) {
+            this.snapshotId = snapshotId;
+            this.isDone = false;
+        }
+    }
+}

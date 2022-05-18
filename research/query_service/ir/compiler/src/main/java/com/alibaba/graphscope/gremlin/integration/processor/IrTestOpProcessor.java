@@ -18,6 +18,7 @@ package com.alibaba.graphscope.gremlin.integration.processor;
 
 import com.alibaba.graphscope.common.client.RpcChannelFetcher;
 import com.alibaba.graphscope.common.config.Configs;
+import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
 import com.alibaba.graphscope.common.store.IrMetaFetcher;
 import com.alibaba.graphscope.gremlin.integration.result.GraphProperties;
 import com.alibaba.graphscope.gremlin.integration.result.GremlinTestResultProcessor;
@@ -56,8 +57,9 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
             Configs configs,
             IrMetaFetcher irMetaFetcher,
             RpcChannelFetcher fetcher,
+            IrMetaQueryCallback metaQueryCallback,
             GraphProperties testGraph) {
-        super(configs, irMetaFetcher, fetcher);
+        super(configs, irMetaFetcher, fetcher, metaQueryCallback);
         this.context = new SimpleScriptContext();
         Bindings globalBindings = new SimpleBindings();
         globalBindings.put("g", g);

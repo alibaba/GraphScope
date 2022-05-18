@@ -27,7 +27,7 @@ import com.alibaba.graphscope.common.intermediate.operator.*;
 import com.alibaba.graphscope.common.intermediate.process.SinkArg;
 import com.alibaba.graphscope.common.jna.IrCoreLibrary;
 import com.alibaba.graphscope.common.jna.type.*;
-import com.alibaba.graphscope.common.store.IrMetaFetcher;
+import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.common.utils.ClassUtils;
 import com.alibaba.graphscope.gremlin.Utils;
 import com.sun.jna.Pointer;
@@ -48,7 +48,7 @@ public class IrPlan implements Closeable {
     private static IrCoreLibrary irCoreLib = IrCoreLibrary.INSTANCE;
     private static String PLAN_JSON_FILE = "plan.json";
     private Pointer ptrPlan;
-    private Map<String, Object> meta;
+    private IrMeta meta;
 
     // call libc to transform from InterOpBase to c structure
     private enum TransformFactory implements Function<InterOpBase, Pointer> {
@@ -529,17 +529,10 @@ public class IrPlan implements Closeable {
         }
     }
 
-    public IrPlan(Map<String, Object> meta) {
+    public IrPlan(IrMeta meta, InterOpCollection opCollection) {
         this.meta = meta;
+        irCoreLib.setSchema(meta.getSchema());
         this.ptrPlan = irCoreLib.initLogicalPlan();
-        irCoreLib.setSchema((String) meta.get(IrMetaFetcher.GRAPH_SCHEMA));
-    }
-
-    public void appendToPlan(InterOpCollection opCollection) {
-        // fuse order with limit to topK
-        InterOpCollection.applyStrategies(opCollection);
-        // add sink operator
-        InterOpCollection.process(opCollection);
         appendInterOpCollection(-1, opCollection);
     }
 

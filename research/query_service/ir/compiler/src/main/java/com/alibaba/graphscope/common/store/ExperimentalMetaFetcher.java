@@ -20,37 +20,24 @@ import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.GraphConfig;
 import com.alibaba.graphscope.gremlin.Utils;
 
-import com.google.common.collect.ImmutableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.Map;
 import java.util.Optional;
 
 public class ExperimentalMetaFetcher implements IrMetaFetcher {
     private static final Logger logger = LoggerFactory.getLogger(ExperimentalMetaFetcher.class);
-    private Configs configs;
-    private Map<String, Object> meta;
+    private IrMeta meta;
 
-    public ExperimentalMetaFetcher(Configs configs) {
-        this.configs = configs;
-        init();
-    }
-
-    private void init() {
+    public ExperimentalMetaFetcher(Configs configs) throws IOException {
         String schemaFilePath = GraphConfig.GRAPH_SCHEMA.get(configs);
-        try {
-            String schema = Utils.readStringFromFile(schemaFilePath);
-            this.meta = ImmutableMap.of(IrMetaFetcher.GRAPH_SCHEMA, schema);
-        } catch (IOException e) {
-            logger.info("open schema file {} fail", schemaFilePath);
-            throw new RuntimeException(e);
-        }
+        String schema = Utils.readStringFromFile(schemaFilePath);
+        this.meta = (new IrMeta(schema));
     }
 
     @Override
-    public Optional<Map<String, Object>> fetch() {
-        return Optional.ofNullable(this.meta);
+    public Optional<IrMeta> fetch() {
+        return Optional.of(this.meta);
     }
 }

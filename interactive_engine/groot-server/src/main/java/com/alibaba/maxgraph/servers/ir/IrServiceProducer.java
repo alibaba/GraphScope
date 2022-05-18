@@ -74,7 +74,8 @@ public class IrServiceProducer implements ComputeServiceProducer {
             public void start() {
                 try {
                     irGremlinServer.start(
-                            irConfigs, irMetaFetcher, channelFetcher, TestGraphFactory.GROOT);
+                            irConfigs, irMetaFetcher, channelFetcher,
+                            new SnapshotManager(irMetaFetcher, channelManager), TestGraphFactory.GROOT);
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }

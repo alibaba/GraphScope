@@ -20,6 +20,7 @@ import com.alibaba.graphscope.common.client.HostsChannelFetcher;
 import com.alibaba.graphscope.common.client.RpcChannelFetcher;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FileLoadType;
+import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
 import com.alibaba.graphscope.common.store.ExperimentalMetaFetcher;
 import com.alibaba.graphscope.common.store.IrMetaFetcher;
 import com.alibaba.graphscope.gremlin.integration.result.TestGraphFactory;
@@ -31,6 +32,6 @@ public class GraphServiceMain {
         RpcChannelFetcher fetcher = new HostsChannelFetcher(configs);
 
         IrGremlinServer server = new IrGremlinServer();
-        server.start(configs, irMetaFetcher, fetcher, TestGraphFactory.EXPERIMENTAL);
+        server.start(configs, irMetaFetcher, fetcher, new IrMetaQueryCallback(irMetaFetcher), TestGraphFactory.EXPERIMENTAL);
     }
 }

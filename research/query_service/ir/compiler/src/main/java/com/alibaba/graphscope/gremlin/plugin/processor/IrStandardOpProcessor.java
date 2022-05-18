@@ -29,6 +29,9 @@ import com.alibaba.graphscope.common.IrPlan;
 import com.alibaba.graphscope.common.client.*;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.PegasusConfig;
+import com.alibaba.graphscope.common.intermediate.InterOpCollection;
+import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
+import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.common.store.IrMetaFetcher;
 import com.alibaba.graphscope.gremlin.InterOpCollectionBuilder;
 import com.alibaba.graphscope.gremlin.Utils;
@@ -82,14 +85,16 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
     protected Configs configs;
     protected RpcBroadcastProcessor broadcastProcessor;
     protected IrMetaFetcher irMetaFetcher;
+    protected IrMetaQueryCallback metaQueryCallback;
 
     public IrStandardOpProcessor(
-            Configs configs, IrMetaFetcher irMetaFetcher, RpcChannelFetcher fetcher) {
+            Configs configs, IrMetaFetcher irMetaFetcher, RpcChannelFetcher fetcher, IrMetaQueryCallback metaQueryCallback) {
         this.graph = TinkerFactory.createModern();
         this.g = graph.traversal(IrCustomizedTraversalSource.class);
         this.configs = configs;
         this.irMetaFetcher = irMetaFetcher;
         this.broadcastProcessor = new RpcBroadcastProcessor(fetcher);
+        this.metaQueryCallback = metaQueryCallback;
     }
 
     @Override
@@ -273,15 +278,15 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
 
     protected void processTraversal(Traversal traversal, ResultProcessor resultProcessor)
             throws InvalidProtocolBufferException, IOException, RuntimeException {
-        // update schema before the query is submitted
-        Optional<Map<String, Object>> metaOpt = irMetaFetcher.fetch();
-        if (!metaOpt.isPresent()) {
-            throw new RuntimeException("ir meta is not ready");
-        }
-        Map<String, Object> meta = metaOpt.get();
+        IrMeta irMeta = metaQueryCallback.beforeExec();
 
-        IrPlan irPlan = new IrPlan(meta);
-        irPlan.appendToPlan((new InterOpCollectionBuilder(traversal)).build());
+        InterOpCollection opCollection = (new InterOpCollectionBuilder(traversal)).build();
+        // fuse order with limit to topK
+        InterOpCollection.applyStrategies(opCollection);
+        // add sink operator
+        InterOpCollection.process(opCollection);
+
+        IrPlan irPlan = new IrPlan(irMeta, opCollection);
         logger.info("{}", irPlan.getPlanAsJson());
 
         byte[] physicalPlanBytes = irPlan.toPhysicalBytes(configs);
@@ -322,6 +327,8 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
 
         request = request.toBuilder().setConf(jobConfig).build();
         broadcastProcessor.broadcast(request, resultProcessor);
+
+        metaQueryCallback.afterExec(irMeta);
     }
 
     public static void applyStrategies(Traversal traversal) {

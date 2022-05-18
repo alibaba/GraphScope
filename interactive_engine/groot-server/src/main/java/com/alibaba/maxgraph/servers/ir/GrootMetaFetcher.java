@@ -16,32 +16,21 @@
 
 package com.alibaba.maxgraph.servers.ir;
 
+import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.common.store.IrMetaFetcher;
 import com.alibaba.graphscope.common.utils.JsonUtils;
 import com.alibaba.maxgraph.compiler.api.schema.*;
 import com.google.common.collect.ImmutableMap;
-
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class GrootMetaFetcher extends IrMetaFetcher {
+public class GrootMetaFetcher implements IrMetaFetcher {
     private SchemaFetcher schemaFetcher;
 
     public GrootMetaFetcher(SchemaFetcher schemaFetcher) {
         this.schemaFetcher = schemaFetcher;
-    }
-
-    @Override
-    protected Optional<String> getIrMeta() {
-        Pair<GraphSchema, Long> pair = this.schemaFetcher.getSchemaSnapshotPair();
-        GraphSchema schema;
-        if (pair != null && (schema = pair.getLeft()) != null) {
-            return Optional.of(parseSchema(schema));
-        } else {
-            return Optional.empty();
-        }
     }
 
     private String parseSchema(GraphSchema graphSchema) {
@@ -85,17 +74,17 @@ public class GrootMetaFetcher extends IrMetaFetcher {
                                     GraphVertex dst = k.getTarget();
                                     return ImmutableMap.of(
                                             "src",
-                                                    ImmutableMap.of(
-                                                            "id",
-                                                            src.getLabelId(),
-                                                            "name",
-                                                            src.getLabel()),
+                                            ImmutableMap.of(
+                                                    "id",
+                                                    src.getLabelId(),
+                                                    "name",
+                                                    src.getLabel()),
                                             "dst",
-                                                    ImmutableMap.of(
-                                                            "id",
-                                                            dst.getLabelId(),
-                                                            "name",
-                                                            dst.getLabel()));
+                                            ImmutableMap.of(
+                                                    "id",
+                                                    dst.getLabelId(),
+                                                    "name",
+                                                    dst.getLabel()));
                                 })
                         .collect(Collectors.toList());
         entity.put("entity_pairs", entityPairs);
@@ -149,6 +138,18 @@ public class GrootMetaFetcher extends IrMetaFetcher {
             case UNKNOWN:
             default:
                 return 11;
+        }
+    }
+
+    @Override
+    public Optional<IrMeta> fetch() {
+        Pair<GraphSchema, Long> pair = this.schemaFetcher.getSchemaSnapshotPair();
+        GraphSchema schema;
+        Long snapshotId;
+        if (pair != null && (schema = pair.getLeft()) != null && (snapshotId = pair.getRight()) != null) {
+            return Optional.of(new IrMeta(parseSchema(schema), snapshotId));
+        } else {
+            return Optional.empty();
         }
     }
 }
