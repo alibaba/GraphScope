@@ -147,7 +147,7 @@ def replace_module_context(  # noqa: C901
 
         from network import relabel
 
-        reuse_with_grape_context(relabel)
+        import_as_graphscope_nx(relabel)
 
     such statements will import **ALL** variables in module :code:`relabel`, both public
     ones (exposed in :code:`__all__`) and private ones, to current module (i.e.,
@@ -155,7 +155,7 @@ def replace_module_context(  # noqa: C901
 
     This patch method can also been used on per method, for fine-grained control,
 
-        with_grape_context(relabel.relabel_nodes)
+        with_graphscope_nx_context(relabel.relabel_nodes)
 
     such statements will import method :code:`relabel_nodes` to current module (i.e.,
     :code:`grape.nx.modx`). Note that patching a standalone function doesn't affect the
