@@ -367,21 +367,9 @@ class TestBuiltInApp:
             61511,
             57802,
             52032,
-            29965,
-            38767,
-            44619,
-            44323,
-            57146,
-            41257,
-            59426,
-            19365,
-            58170,
-            4746,
-            2550,
-            15313,
-            39802,
+            29965
         ]
-        ans = nx.builtin.voterank(self.p2p, 20)
+        ans = nx.builtin.voterank(self.p2p, 8)
         assert gt == ans
 
     @pytest.mark.skip(reason="TODO: the app not compatible with DynamicFragment")
