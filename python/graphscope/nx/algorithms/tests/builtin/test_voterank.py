@@ -1,6 +1,7 @@
 import pytest
 
 from graphscope import nx
+
 """
     Unit tests for voterank.
 """
