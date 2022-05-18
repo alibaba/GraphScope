@@ -39,7 +39,7 @@ class VoteRankContext : public grape::VertexDataContext<FRAG_T, int> {
     auto& frag = this->fragment();
     auto vertices = frag.Vertices();
     this->num_of_nodes = num_of_nodes;
-    if(num_of_nodes == 0){
+    if (num_of_nodes == 0) {
       this->num_of_nodes = frag.GetTotalVerticesNum();
     }
     weight.Init(vertices);
