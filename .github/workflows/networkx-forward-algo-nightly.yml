@@ -40,7 +40,7 @@ jobs:
       run: |
         cd ${GITHUB_WORKSPACE}/python
         python3 -m pytest --cov=graphscope --cov-config=.coveragerc --cov-report=xml \
-          --cov-report=term -s -v -m "not slow" graphscope/nx/algorithms/tests/forward
+          --cov-report=term -s -v -m "not slow" graphscope/nx/algorithms/tests/forward/*.py
 
     - name: Upload Coverage
       uses: codecov/codecov-action@v2
