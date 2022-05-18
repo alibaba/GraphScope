@@ -355,7 +355,7 @@ class TestBuiltInApp:
             58170,
             3544,
             364,
-            5530
+            5530,
         ]
         ans = nx.builtin.voterank(self.p2p_undirected, 20)
         assert gt == ans
@@ -379,7 +379,7 @@ class TestBuiltInApp:
             4746,
             2550,
             15313,
-            39802
+            39802,
         ]
         ans = nx.builtin.voterank(self.p2p_directed, 20)
         assert gt == ans

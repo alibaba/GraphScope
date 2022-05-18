@@ -54,6 +54,5 @@ def voterank(graph, num_of_nodes=0):
     num_of_nodes = int(num_of_nodes)
     c = AppAssets(algo="voterank", context="vertex_data")(graph, num_of_nodes)
     r = c.to_dataframe({"id": "v.id", "result": "r"})
-    r = r[r['result'] != 0].sort_values(by=['result'])
-    return r['id'].tolist()
-    
+    r = r[r["result"] != 0].sort_values(by=["result"])
+    return r["id"].tolist()

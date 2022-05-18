@@ -1090,7 +1090,7 @@ def betweenness_centrality(
 
 @project_to_simple
 @not_implemented_for("multigraph")
-def voterank(G,num_of_nodes=0):
+def voterank(G, num_of_nodes=0):
     """Select a list of influential nodes in a graph using VoteRank algorithm
 
     VoteRank [1]_ computes a ranking of the nodes in a graph G based on a
@@ -1128,4 +1128,3 @@ def voterank(G,num_of_nodes=0):
     """
 
     return graphscope.voterank(G, num_of_nodes)
-    
