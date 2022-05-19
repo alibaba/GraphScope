@@ -16,14 +16,31 @@
 # limitations under the License.
 #
 
+# from timeit import default_timer as timer
+
+# begin = timer()
 import networkx.classes.coreviews
 import networkx.classes.graphviews
 import networkx.classes.reportviews
 
+# begin = timer()
 # graphscope.nx not implement MultiGraph and MultiDiGraph, forward NetworkX to pass tests
 from networkx.classes import MultiDiGraph
 from networkx.classes import MultiGraph
 
+# print("class import 5", timer() - begin)
+# begin = timer()
 from graphscope.nx.classes.digraph import DiGraph
+
+# print("class import 3", timer() - begin)
+# begin = timer()
 from graphscope.nx.classes.function import *
+
+# begin = timer()
 from graphscope.nx.classes.graph import Graph
+
+# print("class import 1", timer() - begin)
+
+# print("class import 2", timer() - begin)
+
+# print("class import 4", timer() - begin)

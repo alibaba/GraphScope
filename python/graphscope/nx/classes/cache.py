@@ -85,7 +85,7 @@ class Cache:
     # LRU Caches
     @lru_cache(1000000)
     def get_node_attr(self, n):
-        return self._graph.get_node_data(n)
+        return get_node_data(self._graph, n)
 
     @lru_cache(1000000)
     def get_successors(self, n):
@@ -351,7 +351,7 @@ class Cache:
         archive = op.eval()
         gid = archive.get_uint64()
         fp = io.BytesIO(archive.get_bytes())
-        node_attr_cache = simdjson.load(fp)
+        node_attr_cache = msgpack.load(fp, use_list=False)
         return gid, node_attr_cache
 
     def _get_succ_cache(self, gid):
@@ -375,7 +375,7 @@ class Cache:
         archive = op.eval()
         gid = archive.get_uint64()
         fp = io.BytesIO(archive.get_bytes())
-        succ_attr_cache = simdjson.load(fp)
+        succ_attr_cache = msgpack.load(fp, use_list=False)
         return gid, succ_attr_cache
 
     def _get_pred_attr_cache(self, gid):
@@ -383,7 +383,7 @@ class Cache:
         archive = op.eval()
         gid = archive.get_uint64()
         fp = io.BytesIO(archive.get_bytes())
-        pred_attr_cache = simdjson.load(fp)
+        pred_attr_cache = msgpack.load(fp, use_list=False)
         return gid, pred_attr_cache
 
 
@@ -433,3 +433,42 @@ def get_neighbors_attr(graph, n, pred=False):
     op = dag_utils.report_graph(graph, report_t, node=simdjson.dumps(n).encode("utf-8"))
     archive = op.eval()
     return simdjson.loads(archive.get_bytes())
+
+
+def get_node_data(graph, n):
+    """Returns the attribute dictionary of node n.
+
+    This is identical to `G[n]`.
+
+    Parameters
+    ----------
+    n : nodes
+
+    Returns
+    -------
+    node_dict : dictionary
+        The node attribute dictionary.
+
+    Examples
+    --------
+    >>> G = nx.path_graph(4)  # or DiGraph etc
+    >>> G[0]
+    {}
+
+    Warning: Assigning to `G[n]` is not permitted.
+    But it is safe to assign attributes `G[n]['foo']`
+
+    >>> G[0]['weight'] = 7
+    >>> G[0]['weight']
+    7
+
+    >>> G = nx.path_graph(4)  # or DiGraph etc
+    >>> G.get_node_data(0, 1)
+    {}
+
+    """
+    if graph.graph_type == graph_def_pb2.ARROW_PROPERTY:
+        n = graph._convert_to_label_id_tuple(n)
+    op = dag_utils.report_graph(graph, types_pb2.NODE_DATA, node=simdjson.dumps(n).encode("utf-8"))
+    archive = op.eval()
+    return msgpack.loads(archive.get_bytes(), use_list=False)

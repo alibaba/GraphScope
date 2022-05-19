@@ -22,9 +22,9 @@
 import copy
 import threading
 
-import msgpack
 import orjson as json
 from networkx import freeze
+
 from networkx.classes.graph import Graph as RefGraph
 from networkx.classes.reportviews import DegreeView
 
@@ -46,6 +46,7 @@ from graphscope.nx.classes.graphviews import generic_graph_view
 from graphscope.nx.classes.reportviews import EdgeView
 from graphscope.nx.classes.reportviews import NodeView
 from graphscope.nx.convert import to_networkx_graph
+
 from graphscope.nx.utils.compat import patch_docstring
 from graphscope.nx.utils.misc import clear_mutation_cache
 from graphscope.nx.utils.misc import init_empty_graph_in_engine
@@ -269,7 +270,6 @@ class Graph(_GraphBase):
     graph_cache_factory = Cache
     _graph_type = graph_def_pb2.DYNAMIC_PROPERTY
 
-    @patch_docstring(RefGraph.to_directed_class)
     def to_directed_class(self):
         return nx.DiGraph
 
@@ -770,45 +770,6 @@ class Graph(_GraphBase):
         nodes = NodeView(self)
         self.__dict__["nodes"] = nodes
         return nodes
-
-    @clear_mutation_cache
-    def get_node_data(self, n):
-        """Returns the attribute dictionary of node n.
-
-        This is identical to `G[n]`.
-
-        Parameters
-        ----------
-        n : nodes
-
-        Returns
-        -------
-        node_dict : dictionary
-            The node attribute dictionary.
-
-        Examples
-        --------
-        >>> G = nx.path_graph(4)  # or DiGraph etc
-        >>> G[0]
-        {}
-
-        Warning: Assigning to `G[n]` is not permitted.
-        But it is safe to assign attributes `G[n]['foo']`
-
-        >>> G[0]['weight'] = 7
-        >>> G[0]['weight']
-        7
-
-        >>> G = nx.path_graph(4)  # or DiGraph etc
-        >>> G.get_node_data(0, 1)
-        {}
-
-        """
-        if self.graph_type == graph_def_pb2.ARROW_PROPERTY:
-            n = self._convert_to_label_id_tuple(n)
-        op = dag_utils.report_graph(self, types_pb2.NODE_DATA, node=json.dumps(n))
-        archive = op.eval()
-        return json.loads(archive.get_bytes())
 
     @clear_mutation_cache
     def number_of_nodes(self):
