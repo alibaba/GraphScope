@@ -1,8 +1,8 @@
-import pytest
 import networkx.algorithms.tree.tests.test_branchings
 import networkx.algorithms.tree.tests.test_coding
 import networkx.algorithms.tree.tests.test_mst
 import networkx.algorithms.tree.tests.test_operations
+import pytest
 
 import graphscope.nx as nx
 from graphscope.nx.utils.compat import import_as_graphscope_nx

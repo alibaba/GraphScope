@@ -1,6 +1,6 @@
-import pytest
 import networkx.algorithms.link_analysis.tests.test_hits
 import networkx.algorithms.link_analysis.tests.test_pagerank
+import pytest
 
 from graphscope.nx.utils.compat import import_as_graphscope_nx
 

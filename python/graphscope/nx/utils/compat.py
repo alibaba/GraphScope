@@ -118,19 +118,16 @@ def replace_context(global_ctx, source_module, target_module):
     return global_ctx
 
 
-def load_the_module(module_or_name, reload=True):
-    if not reload:
-        return module_or_name
+def load_the_module(module_or_name):
     if isinstance(module_or_name, ModuleType):
         module_or_name = module_or_name.__name__
     names = module_or_name.split(".")
     module_path = imp.find_module(names[0])
-    for name in names[1:]:
-        try:
+    try:
+        for name in names[1:]:
             module_path = imp.find_module(name, [module_path[1]])
-        except ImportError:
-            print(name, module_path)
-            raise ImportError
+    except ImportError:
+        return module_or_name
     return imp.load_module(module_or_name, *module_path)
 
 
@@ -140,7 +137,6 @@ def replace_module_context(  # noqa: C901
     target_module,
     expand=True,
     decorators=None,
-    reload=False,
 ):
     """
     Patching all calls of `nx.xxx` inside the given method with graphscope.nx.xxx, and register
@@ -183,7 +179,7 @@ def replace_module_context(  # noqa: C901
 
     if isinstance(module_or_value, ModuleType):
         # reload a copy of the module, to rewrite
-        module = load_the_module(module_or_value, reload)
+        module = load_the_module(module_or_value)
 
         members_skip_patch = set(
             {

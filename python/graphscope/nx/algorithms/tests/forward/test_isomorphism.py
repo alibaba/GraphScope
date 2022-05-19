@@ -1,10 +1,10 @@
-import pytest
 import networkx.algorithms.isomorphism.tests.test_ismags
 import networkx.algorithms.isomorphism.tests.test_isomorphism
 import networkx.algorithms.isomorphism.tests.test_isomorphvf2
-import networkx.algorithms.isomorphism.tests.test_temporalisomorphvf2
 import networkx.algorithms.isomorphism.tests.test_match_helpers
+import networkx.algorithms.isomorphism.tests.test_temporalisomorphvf2
 import networkx.algorithms.isomorphism.tests.test_vf2userfunc
+import pytest
 
 from graphscope.nx.utils.compat import import_as_graphscope_nx
 

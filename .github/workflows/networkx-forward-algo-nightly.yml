@@ -7,13 +7,10 @@ on:
     # last modified the cron syntax in the workflow file.
     # Trigger the workflow at 03:00(CST) every day.
     - cron:  '00 19 * * *'
-  pull_request:
-    branches:
-      - main
 
 jobs:
   forward-algo-test:
-    # if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
+    if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
     runs-on: ubuntu-20.04
     defaults:
       run:
@@ -40,7 +37,7 @@ jobs:
       run: |
         cd ${GITHUB_WORKSPACE}/python
         python3 -m pytest --cov=graphscope --cov-config=.coveragerc --cov-report=xml \
-          --cov-report=term -s -v -m "not slow" graphscope/nx/algorithms/tests/forward/*.py
+          --cov-report=term -s -v -m "not slow" graphscope/nx/algorithms/tests/forward
 
     - name: Upload Coverage
       uses: codecov/codecov-action@v2

@@ -4,11 +4,10 @@ import networkx.algorithms.shortest_paths.tests.test_generic
 import networkx.algorithms.shortest_paths.tests.test_unweighted
 import networkx.algorithms.shortest_paths.tests.test_weighted
 import pytest
+from networkx.algorithms.shortest_paths.tests.test_astar import TestAStar as _TestAStar
 
 from graphscope.nx.utils.compat import import_as_graphscope_nx
 from graphscope.nx.utils.compat import with_graphscope_nx_context
-
-from networkx.algorithms.shortest_paths.tests.test_astar import TestAStar as _TestAStar
 
 
 @pytest.mark.usefixtures("graphscope_session")

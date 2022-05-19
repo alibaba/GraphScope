@@ -1,8 +1,8 @@
-import pytest
 import networkx.algorithms.flow.tests.test_gomory_hu
 import networkx.algorithms.flow.tests.test_maxflow
 import networkx.algorithms.flow.tests.test_maxflow_large_graph
 import networkx.algorithms.flow.tests.test_mincost
+import pytest
 
 from graphscope.nx.utils.compat import import_as_graphscope_nx
 from graphscope.nx.utils.compat import with_graphscope_nx_context

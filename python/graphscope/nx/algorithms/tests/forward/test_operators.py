@@ -1,8 +1,8 @@
-import pytest
 import networkx.algorithms.operators.tests.test_all
 import networkx.algorithms.operators.tests.test_binary
 import networkx.algorithms.operators.tests.test_product
 import networkx.algorithms.operators.tests.test_unary
+import pytest
 
 from graphscope.nx.utils.compat import import_as_graphscope_nx
 

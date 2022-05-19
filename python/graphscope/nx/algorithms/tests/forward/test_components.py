@@ -21,8 +21,8 @@ import networkx.algorithms.components.tests.test_connected
 import networkx.algorithms.components.tests.test_semiconnected
 import networkx.algorithms.components.tests.test_strongly_connected
 import networkx.algorithms.components.tests.test_weakly_connected
-from networkx.generators.lattice import grid_2d_graph
 import pytest
+from networkx.generators.lattice import grid_2d_graph
 
 from graphscope.nx.utils.compat import import_as_graphscope_nx
 from graphscope.nx.utils.compat import with_graphscope_nx_context
