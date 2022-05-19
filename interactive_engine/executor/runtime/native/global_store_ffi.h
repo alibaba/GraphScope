@@ -18,6 +18,9 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <string>
+
+#include "vineyard/graph/fragment/arrow_fragment.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -45,7 +48,7 @@ struct Edge {
 };
 typedef int64_t ObjectId;
 
-typedef int64_t OuterId;
+typedef arrow::util::string_view OuterId;
 
 enum PropertyType {
   INVALID = 0,

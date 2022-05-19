@@ -19,6 +19,7 @@
 #include <memory>
 #include <string>
 
+#include "global_store_ffi.h"
 #include "vineyard/client/client.h"
 #include "vineyard/graph/fragment/arrow_fragment.h"
 #include "vineyard/graph/fragment/arrow_fragment_group.h"

@@ -27,3 +27,4 @@ from graphscope.dataset.ogbn_proteins import load_ogbn_proteins
 from graphscope.dataset.p2p_network import load_p2p_network
 from graphscope.dataset.ppi import load_ppi
 from graphscope.dataset.u2i import load_u2i
+from graphscope.dataset.china_vis import load_chinavis_dataset

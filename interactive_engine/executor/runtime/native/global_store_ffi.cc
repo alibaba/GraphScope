@@ -630,7 +630,6 @@ int get_vertex_id_from_primary_key(GraphHandle graph, LabelId label_id,
      return -1;
   }
   auto handle = ((htap_impl::GraphHandleImpl*)graph);
-
   bool get_gid_ret;
   htap_impl::VID_TYPE gid;
 
