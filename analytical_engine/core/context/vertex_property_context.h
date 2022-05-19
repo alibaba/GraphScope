@@ -16,26 +16,47 @@
 #ifndef ANALYTICAL_ENGINE_CORE_CONTEXT_VERTEX_PROPERTY_CONTEXT_H_
 #define ANALYTICAL_ENGINE_CORE_CONTEXT_VERTEX_PROPERTY_CONTEXT_H_
 
+#include <mpi.h>
+
+#include <cstddef>
+#include <cstdint>
 #include <map>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include "boost/algorithm/string.hpp"
-#include "boost/lexical_cast.hpp"
+#include "boost/leaf/error.hpp"
+#include "boost/leaf/result.hpp"
+#include "grape/app/context_base.h"
+#include "grape/serialization/in_archive.h"
+#include "grape/worker/comm_spec.h"
+#include "vineyard/basic/ds/dataframe.h"
+#include "vineyard/client/client.h"
+#include "vineyard/common/util/uuid.h"
+#include "vineyard/graph/fragment/property_graph_types.h"
+#include "vineyard/graph/utils/context_protocols.h"
 
-#include "vineyard/graph/fragment/fragment_traits.h"
-
+#include "core/context/column.h"
 #include "core/context/context_protocols.h"
 #include "core/context/i_context.h"
+#include "core/context/selector.h"
 #include "core/context/tensor_dataframe_builder.h"
 #include "core/error.h"
+#include "core/utils/mpi_utils.h"
 #include "core/utils/transform_utils.h"
 
 #define CONTEXT_TYPE_VERTEX_PROPERTY "vertex_property"
 
+namespace bl = boost::leaf;
+
+namespace arrow {
+class Array;
+}
+
 namespace gs {
+class IFragmentWrapper;
+
 /**
  * @brief VertexPropertyContext can hold any number of columns. The context is
  * designed for labeled fragment - ArrowFragment. Compared with
@@ -183,7 +204,7 @@ class VertexPropertyContextWrapper : public IVertexPropertyContextWrapper {
 
     switch (selector.type()) {
     case SelectorType::kVertexId: {
-      auto type_id = trans_utils.GetOidTypeId();
+      BOOST_LEAF_AUTO(type_id, trans_utils.GetOidTypeId());
       if (comm_spec.fid() == 0) {
         *arc << static_cast<int>(type_id);
         *arc << total_num;
@@ -263,7 +284,7 @@ class VertexPropertyContextWrapper : public IVertexPropertyContextWrapper {
 
       switch (selector.type()) {
       case SelectorType::kVertexId: {
-        auto type_id = trans_utils.GetOidTypeId();
+        BOOST_LEAF_AUTO(type_id, trans_utils.GetOidTypeId());
         if (comm_spec.fid() == 0) {
           *arc << static_cast<int>(type_id);
         }

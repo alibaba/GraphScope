@@ -18,17 +18,15 @@
 
 import os
 
-import pandas as pd
 import pytest
-from networkx.testing.utils import assert_graphs_equal
 
 import graphscope
 import graphscope.nx as nx
 from graphscope.framework.loader import Loader
-from graphscope.nx import NetworkXError
 from graphscope.nx.tests.classes.test_digraph import TestDiGraph as _TestDiGraph
 from graphscope.nx.tests.classes.test_graph import TestGraph as _TestGraph
 from graphscope.nx.tests.utils import almost_equal
+from graphscope.nx.utils.misc import graphs_equal
 
 
 def k3_graph(prefix, directed):
@@ -169,13 +167,13 @@ class TestGraphCopyOnWrite(_TestGraph):
                     (4, 5, {}),
                     (6, 7, {"weight": 2}),
                 ]
-            else:  # num_workers=2
+            else:  # num_workers=2, N.B: diff with _TestGraph, update the order of id
                 elist = [
-                    (0, 1, {}),
-                    (2, 0, {}),  # N.B: diff with _TestGraph, update the order of id
-                    (2, 1, {}),
-                    (4, 5, {}),
-                    (6, 7, {"weight": 2}),
+                    (1, 0, {}),
+                    (1, 2, {}),
+                    (2, 0, {}),
+                    (5, 4, {}),
+                    (7, 6, {"weight": 2}),
                 ]
         assert sorted(G.edges.data()) == elist
         assert G.graph == {}
@@ -195,9 +193,9 @@ class TestGraphCopyOnWrite(_TestGraph):
         GG = G.copy()
         H = self.Graph()
         GG.update(H)
-        assert_graphs_equal(G, GG)
+        assert graphs_equal(G, GG)
         H.update(G)
-        assert_graphs_equal(H, G)
+        assert graphs_equal(H, G)
 
         # update nodes only
         H = self.Graph()
@@ -297,12 +295,8 @@ class TestBuiltinCopyOnWrite:
         #     ).values
         # )
 
-    def test_error_with_multigraph(self):
-        with pytest.raises(
-            NetworkXError,
-            match="Graph is multigraph, cannot be converted to networkx graph",
-        ):
-            MSG = nx.DiGraph(self.multi_simple)
+    def test_with_multigraph(self):
+        nx.DiGraph(self.multi_simple)
 
     def test_single_source_dijkstra_path_length(self):
         ret = nx.builtin.single_source_dijkstra_path_length(

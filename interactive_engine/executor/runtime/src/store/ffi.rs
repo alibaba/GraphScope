@@ -1454,6 +1454,10 @@ impl GraphPartitionManager for VineyardPartitionManager {
         }
         return Some((partition_id as u32, vertex_id));
     }
+
+    fn get_vertex_id_by_primary_keys(&self, _label_id: LabelId, _pks: &[Property]) -> Option<VertexId> {
+        unimplemented!()
+    }
 }
 
 unsafe impl Send for VineyardPartitionManager {}

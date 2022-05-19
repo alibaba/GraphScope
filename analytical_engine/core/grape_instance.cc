@@ -13,14 +13,29 @@
  * limitations under the License.
  */
 
+#include "core/grape_instance.h"
+
+#include <cstdint>
 #include <memory>
-#include <unordered_set>
+#include <ostream>
 #include <utility>
 #include <vector>
 
-#include "boost/algorithm/string.hpp"
-#include "boost/algorithm/string/split.hpp"
-
+#include "arrow/array/array_base.h"
+#include "arrow/table.h"
+#include "arrow/type.h"
+#include "boost/leaf/error.hpp"
+#include "boost/leaf/result.hpp"
+#include "grape/communication/communicator.h"
+#include "grape/parallel/parallel_engine_spec.h"
+#include "grape/serialization/in_archive.h"
+#include "grape/worker/comm_spec.h"
+#include "vineyard/client/client.h"
+#include "vineyard/client/ds/i_object.h"
+#include "vineyard/common/util/status.h"
+#include "vineyard/common/util/uuid.h"
+#include "vineyard/graph/fragment/arrow_fragment_group.h"
+#include "vineyard/graph/utils/error.h"
 #include "vineyard/io/io/io_factory.h"
 
 #ifdef ENABLE_JAVA_SDK
@@ -31,22 +46,34 @@
 #ifdef NETWORKX
 #include "core/object/dynamic.h"
 #endif
+
+#include "core/context/i_context.h"
+#include "core/context/labeled_vertex_property_context.h"
+#include "core/context/selector.h"
 #include "core/context/tensor_context.h"
 #include "core/context/vertex_data_context.h"
 #include "core/context/vertex_property_context.h"
 #include "core/fragment/dynamic_fragment.h"
-#include "core/grape_instance.h"
 #include "core/io/property_parser.h"
 #include "core/launcher.h"
 #include "core/object/app_entry.h"
+#include "core/object/fragment_wrapper.h"
 #include "core/object/graph_utils.h"
 #include "core/object/i_fragment_wrapper.h"
 #include "core/object/projector.h"
+#include "core/server/command_detail.h"
 #include "core/server/rpc_utils.h"
-#include "core/utils/fragment_traits.h"
-#include "proto/graphscope/proto/types.pb.h"
+#include "core/utils/mpi_utils.h"
+#include "graphscope/proto/attr_value.pb.h"
+#include "graphscope/proto/graph_def.pb.h"
+#include "graphscope/proto/types.pb.h"
+
+namespace bl = boost::leaf;
 
 namespace gs {
+namespace rpc {
+class QueryArgs;
+}  // namespace rpc
 
 GrapeInstance::GrapeInstance(const grape::CommSpec& comm_spec)
     : comm_spec_(comm_spec) {}
@@ -73,11 +100,9 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::loadGraph(
     using fragment_t = DynamicFragment;
     using vertex_map_t = typename fragment_t::vertex_map_t;
     BOOST_LEAF_AUTO(directed, params.Get<bool>(rpc::DIRECTED));
-    BOOST_LEAF_AUTO(distributed, params.Get<bool>(rpc::DISTRIBUTED));
 
     VLOG(1) << "Loading graph, graph name: " << graph_name
-            << ", graph type: DynamicFragment, directed: " << directed
-            << ", distributed: " << distributed;
+            << ", graph type: DynamicFragment, directed: " << directed;
 
     auto vm_ptr = std::shared_ptr<vertex_map_t>(new vertex_map_t(comm_spec_));
     vm_ptr->Init();
@@ -93,22 +118,13 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::loadGraph(
     graph_def.set_directed(directed);
     graph_def.set_graph_type(rpc::graph::DYNAMIC_PROPERTY);
     // dynamic graph doesn't have a vineyard id
-    gs::rpc::graph::VineyardInfoPb vy_info;
+    gs::rpc::graph::MutableGraphInfoPb graph_info;
     if (graph_def.has_extension()) {
-      graph_def.extension().UnpackTo(&vy_info);
+      graph_def.extension().UnpackTo(&graph_info);
     }
-    vy_info.set_vineyard_id(-1);
-
-    vy_info.set_oid_type(PropertyTypeToPb(vineyard::normalize_datatype(
-        vineyard::TypeName<typename gs::DynamicFragment::oid_t>::Get())));
-    vy_info.set_vid_type(PropertyTypeToPb(vineyard::normalize_datatype(
-        vineyard::TypeName<typename gs::DynamicFragment::vid_t>::Get())));
-    vy_info.set_vdata_type(PropertyTypeToPb(vineyard::normalize_datatype(
-        vineyard::TypeName<typename gs::DynamicFragment::vdata_t>::Get())));
-    vy_info.set_edata_type(PropertyTypeToPb(vineyard::normalize_datatype(
-        vineyard::TypeName<typename gs::DynamicFragment::edata_t>::Get())));
-    vy_info.set_property_schema_json("{}");
-    graph_def.mutable_extension()->PackFrom(vy_info);
+    graph_info.set_property_schema_json(
+        dynamic::Stringify(fragment->GetSchema()));
+    graph_def.mutable_extension()->PackFrom(graph_info);
 
     auto wrapper = std::make_shared<FragmentWrapper<fragment_t>>(
         graph_name, graph_def, fragment);
@@ -177,6 +193,7 @@ bl::result<void> GrapeInstance::unloadGraph(const rpc::GSParams& params) {
       }
     }
   }
+  VLOG(1) << "Unloading Graph " << graph_name;
   return object_manager_.RemoveObject(graph_name);
 }
 
@@ -222,18 +239,19 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::projectGraph(
 
 bl::result<rpc::graph::GraphDefPb> GrapeInstance::projectToSimple(
     const rpc::GSParams& params) {
-  std::string projected_id = "graph_projected_" + generateId();
+  std::string projected_graph_name = "graph_projected_" + generateId();
   BOOST_LEAF_AUTO(graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
   BOOST_LEAF_AUTO(type_sig, params.Get<std::string>(rpc::TYPE_SIGNATURE));
 
-  VLOG(1) << "Projecting graph, dst graph name: " << graph_name
+  VLOG(1) << "Projecting graph " << graph_name
+          << " to simple graph: " << projected_graph_name
           << ", type sig: " << type_sig;
 
   BOOST_LEAF_AUTO(wrapper,
                   object_manager_.GetObject<IFragmentWrapper>(graph_name));
   BOOST_LEAF_AUTO(projector, object_manager_.GetObject<Projector>(type_sig));
   BOOST_LEAF_AUTO(projected_wrapper,
-                  projector->Project(wrapper, projected_id, params));
+                  projector->Project(wrapper, projected_graph_name, params));
   BOOST_LEAF_CHECK(object_manager_.PutObject(projected_wrapper));
 
   return projected_wrapper->graph_def();
@@ -271,7 +289,7 @@ bl::result<void> GrapeInstance::unloadContext(const rpc::GSParams& params) {
   return object_manager_.RemoveObject(context_key);
 }
 
-bl::result<std::string> GrapeInstance::reportGraph(
+bl::result<std::shared_ptr<grape::InArchive>> GrapeInstance::reportGraph(
     const rpc::GSParams& params) {
   BOOST_LEAF_AUTO(graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
   BOOST_LEAF_AUTO(wrapper,
@@ -279,13 +297,15 @@ bl::result<std::string> GrapeInstance::reportGraph(
   return wrapper->ReportGraph(comm_spec_, params);
 }
 
-bl::result<void> GrapeInstance::modifyVertices(const rpc::GSParams& params) {
+bl::result<rpc::graph::GraphDefPb> GrapeInstance::modifyVertices(
+    const rpc::GSParams& params) {
 #ifdef NETWORKX
   BOOST_LEAF_AUTO(modify_type, params.Get<rpc::ModifyType>(rpc::MODIFY_TYPE));
   BOOST_LEAF_AUTO(graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
   BOOST_LEAF_AUTO(wrapper,
                   object_manager_.GetObject<IFragmentWrapper>(graph_name));
-  auto graph_type = wrapper->graph_def().graph_type();
+  auto& graph_def = wrapper->mutable_graph_def();
+  auto graph_type = graph_def.graph_type();
 
   if (graph_type != rpc::graph::DYNAMIC_PROPERTY) {
     RETURN_GS_ERROR(
@@ -306,7 +326,15 @@ bl::result<void> GrapeInstance::modifyVertices(const rpc::GSParams& params) {
       std::static_pointer_cast<DynamicFragment>(wrapper->fragment());
   DynamicFragmentMutator mutator(comm_spec_, fragment);
   mutator.ModifyVertices(nodes, common_attr, modify_type);
-  return {};
+  // update schema in graph_def
+  gs::rpc::graph::MutableGraphInfoPb graph_info;
+  if (graph_def.has_extension()) {
+    graph_def.extension().UnpackTo(&graph_info);
+  }
+  graph_info.set_property_schema_json(
+      dynamic::Stringify(fragment->GetSchema()));
+  graph_def.mutable_extension()->PackFrom(graph_info);
+  return graph_def;
 #else
   RETURN_GS_ERROR(vineyard::ErrorCode::kUnimplementedMethod,
                   "GraphScope is built with NETWORKX=OFF, please recompile it "
@@ -314,13 +342,15 @@ bl::result<void> GrapeInstance::modifyVertices(const rpc::GSParams& params) {
 #endif
 }
 
-bl::result<void> GrapeInstance::modifyEdges(const rpc::GSParams& params) {
+bl::result<rpc::graph::GraphDefPb> GrapeInstance::modifyEdges(
+    const rpc::GSParams& params) {
 #ifdef NETWORKX
   BOOST_LEAF_AUTO(modify_type, params.Get<rpc::ModifyType>(rpc::MODIFY_TYPE));
   BOOST_LEAF_AUTO(graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
   BOOST_LEAF_AUTO(wrapper,
                   object_manager_.GetObject<IFragmentWrapper>(graph_name));
-  auto graph_type = wrapper->graph_def().graph_type();
+  auto& graph_def = wrapper->mutable_graph_def();
+  auto graph_type = graph_def.graph_type();
 
   if (graph_type != rpc::graph::DYNAMIC_PROPERTY) {
     RETURN_GS_ERROR(
@@ -343,31 +373,29 @@ bl::result<void> GrapeInstance::modifyEdges(const rpc::GSParams& params) {
       std::static_pointer_cast<DynamicFragment>(wrapper->fragment());
   DynamicFragmentMutator mutator(comm_spec_, fragment);
   mutator.ModifyEdges(edges, common_attr, modify_type, weight);
+  // update schema in graph_def
+  gs::rpc::graph::MutableGraphInfoPb graph_info;
+  if (graph_def.has_extension()) {
+    graph_def.extension().UnpackTo(&graph_info);
+  }
+  graph_info.set_property_schema_json(
+      dynamic::Stringify(fragment->GetSchema()));
+  graph_def.mutable_extension()->PackFrom(graph_info);
 #else
   RETURN_GS_ERROR(vineyard::ErrorCode::kUnimplementedMethod,
                   "GraphScope is built with NETWORKX=OFF, please recompile it "
                   "with NETWORKX=ON");
 #endif  // NETWORKX
-  return {};
+  return graph_def;
 }
 
 bl::result<std::shared_ptr<grape::InArchive>> GrapeInstance::contextToNumpy(
     const rpc::GSParams& params) {
-  std::pair<std::string, std::string> range;
   std::string s_selector;
-
-  if (params.HasKey(rpc::VERTEX_RANGE)) {
-    BOOST_LEAF_AUTO(range_in_json, params.Get<std::string>(rpc::VERTEX_RANGE));
-    range = parseRange(range_in_json);
-  }
-
-  if (params.HasKey(rpc::SELECTOR)) {
-    BOOST_LEAF_ASSIGN(s_selector, params.Get<std::string>(rpc::SELECTOR));
-  }
-
-  BOOST_LEAF_AUTO(context_key, params.Get<std::string>(rpc::CONTEXT_KEY));
-  BOOST_LEAF_AUTO(base_ctx_wrapper,
-                  object_manager_.GetObject<IContextWrapper>(context_key));
+  std::pair<std::string, std::string> range;
+  std::shared_ptr<IContextWrapper> base_ctx_wrapper;
+  BOOST_LEAF_CHECK(
+      getContextDetails(params, &s_selector, &range, &base_ctx_wrapper));
 
   auto ctx_type = base_ctx_wrapper->context_type();
 
@@ -448,21 +476,11 @@ bl::result<std::string> GrapeInstance::getContextData(
 
 bl::result<std::shared_ptr<grape::InArchive>> GrapeInstance::contextToDataframe(
     const rpc::GSParams& params) {
+  std::string s_selector;
   std::pair<std::string, std::string> range;
-  std::string s_selectors;
-
-  if (params.HasKey(rpc::VERTEX_RANGE)) {
-    BOOST_LEAF_AUTO(range_in_json, params.Get<std::string>(rpc::VERTEX_RANGE));
-    range = parseRange(range_in_json);
-  }
-
-  if (params.HasKey(rpc::SELECTOR)) {
-    BOOST_LEAF_ASSIGN(s_selectors, params.Get<std::string>(rpc::SELECTOR));
-  }
-
-  BOOST_LEAF_AUTO(context_key, params.Get<std::string>(rpc::CONTEXT_KEY));
-  BOOST_LEAF_AUTO(base_ctx_wrapper,
-                  object_manager_.GetObject<IContextWrapper>(context_key));
+  std::shared_ptr<IContextWrapper> base_ctx_wrapper;
+  BOOST_LEAF_CHECK(
+      getContextDetails(params, &s_selector, &range, &base_ctx_wrapper));
 
   auto ctx_type = base_ctx_wrapper->context_type();
 
@@ -475,26 +493,26 @@ bl::result<std::shared_ptr<grape::InArchive>> GrapeInstance::contextToDataframe(
     auto wrapper =
         std::dynamic_pointer_cast<IVertexDataContextWrapper>(base_ctx_wrapper);
 
-    BOOST_LEAF_AUTO(selectors, Selector::ParseSelectors(s_selectors));
+    BOOST_LEAF_AUTO(selectors, Selector::ParseSelectors(s_selector));
     return wrapper->ToDataframe(comm_spec_, selectors, range);
   } else if (ctx_type == CONTEXT_TYPE_LABELED_VERTEX_DATA) {
     auto wrapper = std::dynamic_pointer_cast<ILabeledVertexDataContextWrapper>(
         base_ctx_wrapper);
 
-    BOOST_LEAF_AUTO(selectors, LabeledSelector::ParseSelectors(s_selectors));
+    BOOST_LEAF_AUTO(selectors, LabeledSelector::ParseSelectors(s_selector));
     return wrapper->ToDataframe(comm_spec_, selectors, range);
   } else if (ctx_type == CONTEXT_TYPE_VERTEX_PROPERTY) {
     auto wrapper = std::dynamic_pointer_cast<IVertexPropertyContextWrapper>(
         base_ctx_wrapper);
 
-    BOOST_LEAF_AUTO(selectors, Selector::ParseSelectors(s_selectors));
+    BOOST_LEAF_AUTO(selectors, Selector::ParseSelectors(s_selector));
     return wrapper->ToDataframe(comm_spec_, selectors, range);
   } else if (ctx_type == CONTEXT_TYPE_LABELED_VERTEX_PROPERTY) {
     auto wrapper =
         std::dynamic_pointer_cast<ILabeledVertexPropertyContextWrapper>(
             base_ctx_wrapper);
 
-    BOOST_LEAF_AUTO(selectors, LabeledSelector::ParseSelectors(s_selectors));
+    BOOST_LEAF_AUTO(selectors, LabeledSelector::ParseSelectors(s_selector));
     return wrapper->ToDataframe(comm_spec_, selectors, range);
 #ifdef ENABLE_JAVA_SDK
   } else if (ctx_type.find(CONTEXT_TYPE_JAVA_PIE_PROPERTY) !=
@@ -508,7 +526,7 @@ bl::result<std::shared_ptr<grape::InArchive>> GrapeInstance::contextToDataframe(
     }
     auto wrapper = std::dynamic_pointer_cast<IJavaPIEPropertyContextWrapper>(
         base_ctx_wrapper);
-    BOOST_LEAF_AUTO(selectors, LabeledSelector::ParseSelectors(s_selectors));
+    BOOST_LEAF_AUTO(selectors, LabeledSelector::ParseSelectors(s_selector));
     return wrapper->ToDataframe(comm_spec_, selectors, range);
   } else if (ctx_type.find(CONTEXT_TYPE_JAVA_PIE_PROJECTED) !=
              std::string::npos) {
@@ -521,7 +539,7 @@ bl::result<std::shared_ptr<grape::InArchive>> GrapeInstance::contextToDataframe(
     }
     auto wrapper = std::dynamic_pointer_cast<IJavaPIEProjectedContextWrapper>(
         base_ctx_wrapper);
-    BOOST_LEAF_AUTO(selectors, Selector::ParseSelectors(s_selectors));
+    BOOST_LEAF_AUTO(selectors, Selector::ParseSelectors(s_selector));
     return wrapper->ToDataframe(comm_spec_, selectors, range);
 #endif
   }
@@ -531,17 +549,13 @@ bl::result<std::shared_ptr<grape::InArchive>> GrapeInstance::contextToDataframe(
 
 bl::result<std::string> GrapeInstance::contextToVineyardTensor(
     const rpc::GSParams& params) {
-  BOOST_LEAF_AUTO(context_key, params.Get<std::string>(rpc::CONTEXT_KEY));
-  BOOST_LEAF_AUTO(base_ctx_wrapper,
-                  object_manager_.GetObject<IContextWrapper>(context_key));
-  auto ctx_type = base_ctx_wrapper->context_type();
+  std::string s_selector;
   std::pair<std::string, std::string> range;
+  std::shared_ptr<IContextWrapper> base_ctx_wrapper;
+  BOOST_LEAF_CHECK(
+      getContextDetails(params, &s_selector, &range, &base_ctx_wrapper));
 
-  if (params.HasKey(rpc::VERTEX_RANGE)) {
-    BOOST_LEAF_AUTO(range_in_json, params.Get<std::string>(rpc::VERTEX_RANGE));
-    range = parseRange(range_in_json);
-  }
-
+  auto ctx_type = base_ctx_wrapper->context_type();
   vineyard::ObjectID id;
 
   if (ctx_type == CONTEXT_TYPE_TENSOR) {
@@ -554,7 +568,6 @@ bl::result<std::string> GrapeInstance::contextToVineyardTensor(
     auto wrapper =
         std::dynamic_pointer_cast<IVertexDataContextWrapper>(base_ctx_wrapper);
 
-    BOOST_LEAF_AUTO(s_selector, params.Get<std::string>(rpc::SELECTOR));
     BOOST_LEAF_AUTO(selector, Selector::parse(s_selector));
     BOOST_LEAF_ASSIGN(
         id, wrapper->ToVineyardTensor(comm_spec_, *client_, selector, range));
@@ -562,7 +575,6 @@ bl::result<std::string> GrapeInstance::contextToVineyardTensor(
     auto wrapper = std::dynamic_pointer_cast<ILabeledVertexDataContextWrapper>(
         base_ctx_wrapper);
 
-    BOOST_LEAF_AUTO(s_selector, params.Get<std::string>(rpc::SELECTOR));
     BOOST_LEAF_AUTO(selector, LabeledSelector::parse(s_selector));
     BOOST_LEAF_ASSIGN(
         id, wrapper->ToVineyardTensor(comm_spec_, *client_, selector, range));
@@ -570,7 +582,6 @@ bl::result<std::string> GrapeInstance::contextToVineyardTensor(
     auto wrapper = std::dynamic_pointer_cast<IVertexPropertyContextWrapper>(
         base_ctx_wrapper);
 
-    BOOST_LEAF_AUTO(s_selector, params.Get<std::string>(rpc::SELECTOR));
     BOOST_LEAF_AUTO(selector, Selector::parse(s_selector));
     BOOST_LEAF_ASSIGN(
         id, wrapper->ToVineyardTensor(comm_spec_, *client_, selector, range));
@@ -579,7 +590,6 @@ bl::result<std::string> GrapeInstance::contextToVineyardTensor(
         std::dynamic_pointer_cast<ILabeledVertexPropertyContextWrapper>(
             base_ctx_wrapper);
 
-    BOOST_LEAF_AUTO(s_selector, params.Get<std::string>(rpc::SELECTOR));
     BOOST_LEAF_AUTO(selector, LabeledSelector::parse(s_selector));
     BOOST_LEAF_ASSIGN(
         id, wrapper->ToVineyardTensor(comm_spec_, *client_, selector, range));
@@ -595,7 +605,6 @@ bl::result<std::string> GrapeInstance::contextToVineyardTensor(
     }
     auto wrapper = std::dynamic_pointer_cast<IJavaPIEPropertyContextWrapper>(
         base_ctx_wrapper);
-    BOOST_LEAF_AUTO(s_selector, params.Get<std::string>(rpc::SELECTOR));
     BOOST_LEAF_AUTO(selector, LabeledSelector::parse(s_selector));
     BOOST_LEAF_ASSIGN(
         id, wrapper->ToVineyardTensor(comm_spec_, *client_, selector, range));
@@ -610,7 +619,6 @@ bl::result<std::string> GrapeInstance::contextToVineyardTensor(
     }
     auto wrapper = std::dynamic_pointer_cast<IJavaPIEProjectedContextWrapper>(
         base_ctx_wrapper);
-    BOOST_LEAF_AUTO(s_selector, params.Get<std::string>(rpc::SELECTOR));
     BOOST_LEAF_AUTO(selector, Selector::parse(s_selector));
     BOOST_LEAF_ASSIGN(
         id, wrapper->ToVineyardTensor(comm_spec_, *client_, selector, range));
@@ -629,15 +637,11 @@ bl::result<std::string> GrapeInstance::contextToVineyardTensor(
 
 bl::result<std::string> GrapeInstance::contextToVineyardDataFrame(
     const rpc::GSParams& params) {
+  std::string s_selector;
   std::pair<std::string, std::string> range;
-
-  BOOST_LEAF_AUTO(context_key, params.Get<std::string>(rpc::CONTEXT_KEY));
-  BOOST_LEAF_AUTO(base_ctx_wrapper,
-                  object_manager_.GetObject<IContextWrapper>(context_key));
-  if (params.HasKey(rpc::VERTEX_RANGE)) {
-    BOOST_LEAF_AUTO(range_in_json, params.Get<std::string>(rpc::VERTEX_RANGE));
-    range = parseRange(range_in_json);
-  }
+  std::shared_ptr<IContextWrapper> base_ctx_wrapper;
+  BOOST_LEAF_CHECK(
+      getContextDetails(params, &s_selector, &range, &base_ctx_wrapper));
 
   vineyard::ObjectID id;
   auto ctx_type = base_ctx_wrapper->context_type();
@@ -651,8 +655,7 @@ bl::result<std::string> GrapeInstance::contextToVineyardDataFrame(
     auto vd_ctx_wrapper =
         std::dynamic_pointer_cast<IVertexDataContextWrapper>(base_ctx_wrapper);
 
-    BOOST_LEAF_AUTO(s_selectors, params.Get<std::string>(rpc::SELECTOR));
-    BOOST_LEAF_AUTO(selectors, Selector::ParseSelectors(s_selectors));
+    BOOST_LEAF_AUTO(selectors, Selector::ParseSelectors(s_selector));
     BOOST_LEAF_ASSIGN(id, vd_ctx_wrapper->ToVineyardDataframe(
                               comm_spec_, *client_, selectors, range));
   } else if (ctx_type == CONTEXT_TYPE_LABELED_VERTEX_DATA) {
@@ -660,8 +663,7 @@ bl::result<std::string> GrapeInstance::contextToVineyardDataFrame(
         std::dynamic_pointer_cast<ILabeledVertexDataContextWrapper>(
             base_ctx_wrapper);
 
-    BOOST_LEAF_AUTO(s_selectors, params.Get<std::string>(rpc::SELECTOR));
-    BOOST_LEAF_AUTO(selectors, LabeledSelector::ParseSelectors(s_selectors));
+    BOOST_LEAF_AUTO(selectors, LabeledSelector::ParseSelectors(s_selector));
     BOOST_LEAF_ASSIGN(id, vd_ctx_wrapper->ToVineyardDataframe(
                               comm_spec_, *client_, selectors, range));
   } else if (ctx_type == CONTEXT_TYPE_VERTEX_PROPERTY) {
@@ -669,8 +671,7 @@ bl::result<std::string> GrapeInstance::contextToVineyardDataFrame(
         std::dynamic_pointer_cast<IVertexPropertyContextWrapper>(
             base_ctx_wrapper);
 
-    BOOST_LEAF_AUTO(s_selectors, params.Get<std::string>(rpc::SELECTOR));
-    BOOST_LEAF_AUTO(selectors, Selector::ParseSelectors(s_selectors));
+    BOOST_LEAF_AUTO(selectors, Selector::ParseSelectors(s_selector));
     BOOST_LEAF_ASSIGN(id, vd_ctx_wrapper->ToVineyardDataframe(
                               comm_spec_, *client_, selectors, range));
   } else if (ctx_type == CONTEXT_TYPE_LABELED_VERTEX_PROPERTY) {
@@ -678,8 +679,7 @@ bl::result<std::string> GrapeInstance::contextToVineyardDataFrame(
         std::dynamic_pointer_cast<ILabeledVertexPropertyContextWrapper>(
             base_ctx_wrapper);
 
-    BOOST_LEAF_AUTO(s_selectors, params.Get<std::string>(rpc::SELECTOR));
-    BOOST_LEAF_AUTO(selectors, LabeledSelector::ParseSelectors(s_selectors));
+    BOOST_LEAF_AUTO(selectors, LabeledSelector::ParseSelectors(s_selector));
     BOOST_LEAF_ASSIGN(id, vd_ctx_wrapper->ToVineyardDataframe(
                               comm_spec_, *client_, selectors, range));
 #ifdef ENABLE_JAVA_SDK
@@ -695,8 +695,7 @@ bl::result<std::string> GrapeInstance::contextToVineyardDataFrame(
     auto vd_ctx_wrapper =
         std::dynamic_pointer_cast<IJavaPIEPropertyContextWrapper>(
             base_ctx_wrapper);
-    BOOST_LEAF_AUTO(s_selectors, params.Get<std::string>(rpc::SELECTOR));
-    BOOST_LEAF_AUTO(selectors, LabeledSelector::ParseSelectors(s_selectors));
+    BOOST_LEAF_AUTO(selectors, LabeledSelector::ParseSelectors(s_selector));
     BOOST_LEAF_ASSIGN(id, vd_ctx_wrapper->ToVineyardDataframe(
                               comm_spec_, *client_, selectors, range));
   } else if (ctx_type.find(CONTEXT_TYPE_JAVA_PIE_PROJECTED) !=
@@ -711,8 +710,7 @@ bl::result<std::string> GrapeInstance::contextToVineyardDataFrame(
     auto vd_ctx_wrapper =
         std::dynamic_pointer_cast<IJavaPIEProjectedContextWrapper>(
             base_ctx_wrapper);
-    BOOST_LEAF_AUTO(s_selectors, params.Get<std::string>(rpc::SELECTOR));
-    BOOST_LEAF_AUTO(selectors, Selector::ParseSelectors(s_selectors));
+    BOOST_LEAF_AUTO(selectors, Selector::ParseSelectors(s_selector));
     BOOST_LEAF_ASSIGN(id, vd_ctx_wrapper->ToVineyardDataframe(
                               comm_spec_, *client_, selectors, range));
 #endif
@@ -728,11 +726,114 @@ bl::result<std::string> GrapeInstance::contextToVineyardDataFrame(
   return toJson({{"object_id", s_id}});
 }
 
+bl::result<void> GrapeInstance::outputContext(const rpc::GSParams& params) {
+  std::string s_selector;
+  std::pair<std::string, std::string> range;
+  std::shared_ptr<IContextWrapper> base_ctx_wrapper;
+  BOOST_LEAF_CHECK(
+      getContextDetails(params, &s_selector, &range, &base_ctx_wrapper));
+
+  if (!range.first.empty() && !range.second.empty()) {
+    LOG(WARNING)
+        << "Specifing vertex range for output is not supported and ignored";
+  }
+
+  BOOST_LEAF_AUTO(location, params.Get<std::string>(rpc::FD));
+
+  auto ctx_type = base_ctx_wrapper->context_type();
+  std::vector<std::pair<std::string, std::shared_ptr<arrow::Array>>> arrays;
+  if (ctx_type == CONTEXT_TYPE_VERTEX_DATA) {
+    auto wrapper =
+        std::dynamic_pointer_cast<IVertexDataContextWrapper>(base_ctx_wrapper);
+
+    BOOST_LEAF_AUTO(selectors, Selector::ParseSelectors(s_selector));
+    BOOST_LEAF_ASSIGN(arrays, wrapper->ToArrowArrays(comm_spec_, selectors));
+  } else if (ctx_type == CONTEXT_TYPE_LABELED_VERTEX_DATA) {
+    auto wrapper = std::dynamic_pointer_cast<ILabeledVertexDataContextWrapper>(
+        base_ctx_wrapper);
+
+    BOOST_LEAF_AUTO(selectors, LabeledSelector::ParseSelectors(s_selector));
+    BOOST_LEAF_AUTO(arrays_map, wrapper->ToArrowArrays(comm_spec_, selectors));
+    for (auto& pair : arrays_map) {
+      arrays.insert(arrays.end(), pair.second.begin(), pair.second.end());
+    }
+  } else if (ctx_type == CONTEXT_TYPE_VERTEX_PROPERTY) {
+    auto wrapper = std::dynamic_pointer_cast<IVertexPropertyContextWrapper>(
+        base_ctx_wrapper);
+
+    BOOST_LEAF_AUTO(selectors, Selector::ParseSelectors(s_selector));
+    BOOST_LEAF_ASSIGN(arrays, wrapper->ToArrowArrays(comm_spec_, selectors));
+  } else if (ctx_type == CONTEXT_TYPE_LABELED_VERTEX_PROPERTY) {
+    auto wrapper =
+        std::dynamic_pointer_cast<ILabeledVertexPropertyContextWrapper>(
+            base_ctx_wrapper);
+    BOOST_LEAF_AUTO(selectors, LabeledSelector::ParseSelectors(s_selector));
+    BOOST_LEAF_AUTO(arrays_map, wrapper->ToArrowArrays(comm_spec_, selectors));
+    for (auto& pair : arrays_map) {
+      arrays.insert(arrays.end(), pair.second.begin(), pair.second.end());
+    }
+#ifdef ENABLE_JAVA_SDK
+  } else if (ctx_type.find(CONTEXT_TYPE_JAVA_PIE_PROPERTY) !=
+             std::string::npos) {
+    std::vector<std::string> outer_and_inner;
+    boost::split(outer_and_inner, ctx_type, boost::is_any_of(":"));
+    if (outer_and_inner.size() != 2) {
+      RETURN_GS_ERROR(
+          vineyard::ErrorCode::kIllegalStateError,
+          "Unsupported java property context type: " + std::string(ctx_type));
+    }
+    auto wrapper = std::dynamic_pointer_cast<IJavaPIEPropertyContextWrapper>(
+        base_ctx_wrapper);
+    BOOST_LEAF_AUTO(selectors, LabeledSelector::ParseSelectors(s_selector));
+    BOOST_LEAF_AUTO(arrays_map, wrapper->ToArrowArrays(comm_spec_, selectors));
+    for (auto& pair : arrays_map) {
+      arrays.insert(arrays.end(), pair.second.begin(), pair.second.end());
+    }
+  } else if (ctx_type.find(CONTEXT_TYPE_JAVA_PIE_PROJECTED) !=
+             std::string::npos) {
+    std::vector<std::string> outer_and_inner;
+    boost::split(outer_and_inner, ctx_type, boost::is_any_of(":"));
+    if (outer_and_inner.size() != 2) {
+      RETURN_GS_ERROR(
+          vineyard::ErrorCode::kInvalidValueError,
+          "Unsupported java projected context type: " + std::string(ctx_type));
+    }
+    auto wrapper = std::dynamic_pointer_cast<IJavaPIEProjectedContextWrapper>(
+        base_ctx_wrapper);
+    BOOST_LEAF_AUTO(selectors, Selector::ParseSelectors(s_selector));
+    BOOST_LEAF_ASSIGN(arrays, wrapper->ToArrowArrays(comm_spec_, selectors));
+#endif
+  } else {
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
+                    "Unsupported context type: " + std::string(ctx_type));
+  }
+  std::vector<std::shared_ptr<arrow::Array>> arrays_vec;
+  std::vector<std::shared_ptr<arrow::Field>> fields_vec;
+  for (auto& pair : arrays) {
+    arrays_vec.push_back(pair.second);
+    auto field =
+        std::make_shared<arrow::Field>(pair.first, pair.second->type());
+    fields_vec.push_back(field);
+  }
+  auto schema = std::make_shared<arrow::Schema>(fields_vec);
+  auto table = arrow::Table::Make(schema, arrays_vec);
+  VLOG(2) << "Output table schema: " << table->schema()->ToString();
+  auto io_adaptor = vineyard::IOFactory::CreateIOAdaptor(location);
+  if (io_adaptor == nullptr) {
+    RETURN_GS_ERROR(vineyard::ErrorCode::kIOError,
+                    "Cannot find a supported adaptor for " + location);
+  }
+  ARROW_OK_OR_RAISE(io_adaptor->Open("w"));
+  ARROW_OK_OR_RAISE(io_adaptor->WriteTable(table));
+  ARROW_OK_OR_RAISE(io_adaptor->Close());
+  return {};
+}
+
 bl::result<rpc::graph::GraphDefPb> GrapeInstance::addColumn(
     const rpc::GSParams& params) {
   BOOST_LEAF_AUTO(graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
   BOOST_LEAF_AUTO(context_key, params.Get<std::string>(rpc::CONTEXT_KEY));
-  BOOST_LEAF_AUTO(s_selectors, params.Get<std::string>(rpc::SELECTOR));
+  BOOST_LEAF_AUTO(s_selector, params.Get<std::string>(rpc::SELECTOR));
   BOOST_LEAF_AUTO(
       frag_wrapper,
       object_manager_.GetObject<ILabeledFragmentWrapper>(graph_name));
@@ -747,7 +848,7 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::addColumn(
 
   BOOST_LEAF_AUTO(new_frag_wrapper,
                   frag_wrapper->AddColumn(comm_spec_, dst_graph_name,
-                                          ctx_wrapper, s_selectors));
+                                          ctx_wrapper, s_selector));
   BOOST_LEAF_CHECK(object_manager_.PutObject(new_frag_wrapper));
   return new_frag_wrapper->graph_def();
 }
@@ -801,6 +902,8 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::copyGraph(
   BOOST_LEAF_AUTO(src_wrapper,
                   object_manager_.GetObject<IFragmentWrapper>(src_graph_name));
   std::string dst_graph_name = "graph_" + generateId();
+  VLOG(1) << "Copy graph from " << src_graph_name
+          << ", graph name: " << dst_graph_name;
 
   BOOST_LEAF_AUTO(dst_wrapper, src_wrapper->CopyGraph(
                                    comm_spec_, dst_graph_name, copy_type));
@@ -816,6 +919,8 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::toDirected(
                   object_manager_.GetObject<IFragmentWrapper>(src_graph_name));
   std::string dst_graph_name = "graph_" + generateId();
 
+  VLOG(1) << "Convert to directed graph from " << src_graph_name
+          << ", graph name: " << dst_graph_name;
   BOOST_LEAF_AUTO(dst_wrapper,
                   src_wrapper->ToDirected(comm_spec_, dst_graph_name));
   BOOST_LEAF_CHECK(object_manager_.PutObject(dst_wrapper));
@@ -829,6 +934,8 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::toUnDirected(
   BOOST_LEAF_AUTO(src_wrapper,
                   object_manager_.GetObject<IFragmentWrapper>(src_graph_name));
   std::string dst_graph_name = "graph_" + generateId();
+  VLOG(1) << "Convert to undirected graph from " << src_graph_name
+          << ", graph name: " << dst_graph_name;
 
   BOOST_LEAF_AUTO(dst_wrapper,
                   src_wrapper->ToUndirected(comm_spec_, dst_graph_name));
@@ -899,6 +1006,13 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::induceSubGraph(
   sub_graph_def.set_key(sub_graph_name);
   auto sub_frag = std::make_shared<DynamicFragment>(sub_vm_ptr);
   sub_frag->InduceSubgraph(fragment, induced_vertices, induced_edges);
+  gs::rpc::graph::MutableGraphInfoPb graph_info;
+  if (sub_graph_def.has_extension()) {
+    sub_graph_def.extension().UnpackTo(&graph_info);
+  }
+  graph_info.set_property_schema_json(
+      dynamic::Stringify(sub_frag->GetSchema()));
+  sub_graph_def.mutable_extension()->PackFrom(graph_info);
 
   auto wrapper = std::make_shared<FragmentWrapper<DynamicFragment>>(
       sub_graph_name, sub_graph_def, sub_frag);
@@ -1049,8 +1163,8 @@ bl::result<std::shared_ptr<grape::InArchive>> GrapeInstance::graphToDataframe(
     range = parseRange(range_in_json);
   }
 
-  BOOST_LEAF_AUTO(s_selectors, params.Get<std::string>(rpc::SELECTOR));
-  BOOST_LEAF_AUTO(selectors, LabeledSelector::ParseSelectors(s_selectors));
+  BOOST_LEAF_AUTO(s_selector, params.Get<std::string>(rpc::SELECTOR));
+  BOOST_LEAF_AUTO(selectors, LabeledSelector::ParseSelectors(s_selector));
 
   return wrapper->ToDataframe(comm_spec_, selectors, range);
 }
@@ -1125,9 +1239,9 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
     break;
   }
   case rpc::REPORT_GRAPH: {
-    BOOST_LEAF_AUTO(report_in_json, reportGraph(params));
-    r->set_data(report_in_json,
-                DispatchResult::AggregatePolicy::kPickFirstNonEmpty, true);
+    BOOST_LEAF_AUTO(arc, reportGraph(params));
+    r->set_data(*arc, DispatchResult::AggregatePolicy::kPickFirstNonEmpty,
+                true);
     break;
   }
   case rpc::PROJECT_GRAPH: {
@@ -1142,7 +1256,8 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
   }
   case rpc::MODIFY_VERTICES: {
 #ifdef NETWORKX
-    BOOST_LEAF_CHECK(modifyVertices(params));
+    BOOST_LEAF_AUTO(graph_def, modifyVertices(params));
+    r->set_graph_def(graph_def);
 #else
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
                     "GraphScope is built with NETWORKX=OFF, please recompile "
@@ -1152,7 +1267,8 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
   }
   case rpc::MODIFY_EDGES: {
 #ifdef NETWORKX
-    BOOST_LEAF_CHECK(modifyEdges(params));
+    BOOST_LEAF_AUTO(graph_def, modifyEdges(params));
+    r->set_graph_def(graph_def);
 #else
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
                     "GraphScope is built with NETWORKX=OFF, please recompile "
@@ -1263,6 +1379,10 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
   case rpc::TO_VINEYARD_DATAFRAME: {
     BOOST_LEAF_AUTO(vy_obj_id_in_json, contextToVineyardDataFrame(params));
     r->set_data(vy_obj_id_in_json);
+    break;
+  }
+  case rpc::OUTPUT: {
+    BOOST_LEAF_CHECK(outputContext(params));
     break;
   }
   case rpc::GET_CONTEXT_DATA: {

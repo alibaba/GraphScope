@@ -15,6 +15,7 @@
 
 #include <cstdio>
 #include <fstream>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -25,6 +26,8 @@
 
 #include "core/io/property_parser.h"
 #include "core/loader/arrow_fragment_loader.h"
+
+namespace bl = boost::leaf;
 
 using GraphType =
     vineyard::ArrowFragment<vineyard::property_graph_types::OID_TYPE,
@@ -48,7 +51,8 @@ static std::shared_ptr<gs::detail::Graph> make_graph_info(
           vineyard::ObjectIDFromString(e));
       VINEYARD_ASSERT(pstream != nullptr,
                       "The pstream " + e + " doesn't exist");
-      auto stream = pstream->GetStream<vineyard::DataframeStream>(0);
+      auto stream =
+          std::dynamic_pointer_cast<vineyard::DataframeStream>(pstream->Get(0));
       auto params = stream->GetParams();
       sublabel.src_label = params.at("src_label");
       sublabel.dst_label = params.at("dst_label");
@@ -66,7 +70,8 @@ static std::shared_ptr<gs::detail::Graph> make_graph_info(
     auto pstream = client.GetObject<vineyard::ParallelStream>(
         vineyard::ObjectIDFromString(v));
     VINEYARD_ASSERT(pstream != nullptr, "The stream " + v + " doesn't exist");
-    auto stream = pstream->GetStream<vineyard::DataframeStream>(0);
+    auto stream =
+        std::dynamic_pointer_cast<vineyard::DataframeStream>(pstream->Get(0));
     auto params = stream->GetParams();
     vertex->protocol = "vineyard";
     vertex->values = v;
@@ -122,16 +127,16 @@ int main(int argc, char** argv) {
   {
     auto loader =
         std::make_unique<GraphLoaderType>(client, comm_spec, graphinfo);
-    fragment_id = boost::leaf::try_handle_all(
-        [&loader]() { return loader->LoadFragment(); },
-        [](const vineyard::GSError& e) {
-          LOG(FATAL) << e.error_msg;
-          return 0;
-        },
-        [](const boost::leaf::error_info& unmatched) {
-          LOG(FATAL) << "Unmatched error " << unmatched;
-          return 0;
-        });
+    fragment_id =
+        bl::try_handle_all([&loader]() { return loader->LoadFragment(); },
+                           [](const vineyard::GSError& e) {
+                             LOG(FATAL) << e.error_msg;
+                             return 0;
+                           },
+                           [](const bl::error_info& unmatched) {
+                             LOG(FATAL) << "Unmatched error " << unmatched;
+                             return 0;
+                           });
   }
 
   LOG(INFO) << "[worker-" << comm_spec.worker_id()

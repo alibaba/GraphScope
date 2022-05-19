@@ -13,6 +13,8 @@
  */
 package com.alibaba.graphscope.groot.rpc;
 
+import static com.alibaba.maxgraph.common.util.RpcUtils.createGrpcExecutor;
+
 import com.alibaba.graphscope.groot.discovery.LocalNodeProvider;
 import com.alibaba.graphscope.groot.discovery.MaxGraphNode;
 import com.alibaba.maxgraph.common.config.CommonConfig;
@@ -27,11 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class RpcServer {
     public static final Logger logger = LoggerFactory.getLogger(RpcServer.class);
@@ -93,25 +91,5 @@ public class RpcServer {
 
     public int getPort() {
         return this.server.getPort();
-    }
-
-    private static Executor createGrpcExecutor(int threadCount) {
-        logger.info("create grpc executor, thread count [" + threadCount + "]");
-        return new ForkJoinPool(
-                threadCount,
-                new ForkJoinPool.ForkJoinWorkerThreadFactory() {
-                    final AtomicInteger num = new AtomicInteger();
-
-                    @Override
-                    public ForkJoinWorkerThread newThread(ForkJoinPool pool) {
-                        ForkJoinWorkerThread thread =
-                                ForkJoinPool.defaultForkJoinWorkerThreadFactory.newThread(pool);
-                        thread.setDaemon(true);
-                        thread.setName("grpc-worker-" + "-" + num.getAndIncrement());
-                        return thread;
-                    }
-                },
-                (t, e) -> logger.error("Uncaught exception in thread {}", t.getName(), e),
-                true);
     }
 }

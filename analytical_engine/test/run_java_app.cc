@@ -49,9 +49,11 @@
 #include "core/loader/arrow_fragment_loader.h"
 #include "core/object/fragment_wrapper.h"
 #include "core/utils/transform_utils.h"
+#include "graphscope/proto/graph_def.pb.h"
 #include "java_pie/java_pie_projected_parallel_app.h"
 #include "java_pie/java_pie_property_parallel_app.h"
-#include "proto/graphscope/proto/graph_def.pb.h"
+
+namespace bl = boost::leaf;
 
 using FragmentType =
     vineyard::ArrowFragment<vineyard::property_graph_types::OID_TYPE,
@@ -176,7 +178,7 @@ void output_vineyard_tensor(vineyard::Client& client,
   auto const& local_chunks = stored_tensor->LocalPartitions(client);
   CHECK_EQ(shape.size(), 1);
   CHECK_EQ(partition_shape.size(), 1);
-  CHECK_EQ(local_chunks.size(), 1);
+  CHECK_EQ(local_chunks.size(), static_cast<size_t>(comm_spec.local_num()));
   if (comm_spec.worker_id() == 0) {
     VLOG(1) << "tensor shape: " << shape[0] << ", " << partition_shape[0];
   }
@@ -516,7 +518,7 @@ void Run(vineyard::Client& client, const grape::CommSpec& comm_spec,
     VLOG(1) << "vertex properties num: " << fragment->vertex_property_num(0);
     VLOG(1) << "edge properties num: " << fragment->edge_property_num(0);
     std::shared_ptr<ProjectedFragmentType> projected_fragment =
-        ProjectedFragmentType::Project(fragment, "0", "0", "0", "0");
+        ProjectedFragmentType::Project(fragment, 0, 0, 0, 0);
     // test get data
     using vertex_t = ProjectedFragmentType::vertex_t;
     vertex_t vertex;
@@ -605,16 +607,16 @@ int main(int argc, char** argv) {
           gs::ArrowFragmentLoader<vineyard::property_graph_types::OID_TYPE,
                                   vineyard::property_graph_types::VID_TYPE>>(
           client, comm_spec, efiles, vfiles, directed != 0);
-      fragment_id = boost::leaf::try_handle_all(
-          [&loader]() { return loader->LoadFragment(); },
-          [](const vineyard::GSError& e) {
-            LOG(ERROR) << e.error_msg;
-            return 0;
-          },
-          [](const boost::leaf::error_info& unmatched) {
-            LOG(ERROR) << "Unmatched error " << unmatched;
-            return 0;
-          });
+      fragment_id =
+          bl::try_handle_all([&loader]() { return loader->LoadFragment(); },
+                             [](const vineyard::GSError& e) {
+                               LOG(ERROR) << e.error_msg;
+                               return 0;
+                             },
+                             [](const bl::error_info& unmatched) {
+                               LOG(ERROR) << "Unmatched error " << unmatched;
+                               return 0;
+                             });
     }
 
     VLOG(1) << "[worker-" << comm_spec.worker_id()

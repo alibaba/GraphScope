@@ -26,25 +26,25 @@ from graphscope.dataset import *
 @pytest.mark.skipif("FULL_TEST_SUITE" not in os.environ, reason="Run in nightly CI")
 def test_download_dataset(graphscope_session):
     g1 = load_modern_graph(graphscope_session)
-    g1.unload()
+    del g1
     g2 = load_ldbc(graphscope_session)
-    g2.unload()
+    del g2
     g3 = load_ogbn_mag(graphscope_session)
-    g3.unload()
+    del g3
     g4 = load_ogbn_arxiv(graphscope_session)
-    g4.unload()
+    del g4
     # Unable to fit in the memory of the CI environment
     # g5 = load_ogbn_proteins(graphscope_session)
-    # g5.unload()
+    # del g5
     g6 = load_ogbl_collab(graphscope_session)
-    g6.unload()
+    del g6
     g7 = load_ogbl_ddi(graphscope_session)
-    g7.unload()
+    del g7
     g8 = load_p2p_network(graphscope_session)
-    g8.unload()
+    del g8
     g9 = load_cora(graphscope_session)
-    g9.unload()
+    del g9
     g10 = load_ppi(graphscope_session)
-    g10.unload()
+    del g10
     g11 = load_u2i(graphscope_session)
-    g11.unload()
+    del g11

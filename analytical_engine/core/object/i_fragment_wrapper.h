@@ -22,16 +22,24 @@
 #include <utility>
 #include <vector>
 
-#include "vineyard/graph/utils/grape_utils.h"
+#include "boost/leaf/result.hpp"
 
-#include "core/context/i_context.h"
 #include "core/object/gs_object.h"
-#include "core/server/rpc_utils.h"
-#include "proto/graphscope/proto/attr_value.pb.h"
-#include "proto/graphscope/proto/graph_def.pb.h"
+
+namespace bl = boost::leaf;
+
+namespace grape {
+class CommSpec;
+class InArchive;
+}  // namespace grape
 
 namespace gs {
 class IContextWrapper;
+class LabeledSelector;
+namespace rpc {
+class GSParams;
+class GraphDefPb;
+}  // namespace rpc
 
 /**
  * @brief This is the base class of non-labeled fragment wrapper
@@ -43,14 +51,16 @@ class IFragmentWrapper : public GSObject {
 
   virtual const rpc::graph::GraphDefPb& graph_def() const = 0;
 
+  virtual rpc::graph::GraphDefPb& mutable_graph_def() = 0;
+
   virtual std::shared_ptr<void> fragment() const = 0;
 
   virtual bl::result<std::shared_ptr<IFragmentWrapper>> CopyGraph(
       const grape::CommSpec& comm_spec, const std::string& dst_graph_name,
       const std::string& copy_type) = 0;
 
-  virtual bl::result<std::string> ReportGraph(const grape::CommSpec& comm_spec,
-                                              const rpc::GSParams& params) = 0;
+  virtual bl::result<std::unique_ptr<grape::InArchive>> ReportGraph(
+      const grape::CommSpec& comm_spec, const rpc::GSParams& params) = 0;
 
   virtual bl::result<std::shared_ptr<IFragmentWrapper>> ToDirected(
       const grape::CommSpec& comm_spec, const std::string& dst_graph_name) = 0;

@@ -21,6 +21,7 @@
 
 import atexit
 import base64
+import concurrent.futures
 import contextlib
 import json
 import logging
@@ -41,6 +42,7 @@ except ImportError:
 
 import graphscope
 from graphscope.analytical.udf.utils import InMemoryZip
+from graphscope.client.archive import OutArchive
 from graphscope.client.rpc import GRPCClient
 from graphscope.client.utils import CaptureKeyboardInterrupt
 from graphscope.client.utils import GSLogger
@@ -67,6 +69,7 @@ from graphscope.proto import graph_def_pb2
 from graphscope.proto import message_pb2
 from graphscope.proto import op_def_pb2
 from graphscope.proto import types_pb2
+from graphscope.version import __version__
 
 DEFAULT_CONFIG_FILE = os.environ.get(
     "GS_CONFIG_PATH", os.path.expanduser("~/.graphscope/session.json")
@@ -127,17 +130,16 @@ class _FetchHandler(object):
     ):
         from graphscope.learning.graph import Graph as LearningGraph
 
-        handle = op_result.handle
+        result = op_result.result.decode("utf-8")
+        result = json.loads(result)
+        handle = result["handle"]
         handle = json.loads(base64.b64decode(handle).decode("utf-8"))
-        config = op_result.config.decode("utf-8")
-        handle["server"] = op_result.result.decode("utf-8")
+        handle["server"] = ",".join(result["endpoints"])
         handle["client_count"] = 1
 
         graph_dag_node = self._fetches[seq]
         # construct learning graph
-        g = LearningGraph(
-            graph_dag_node, handle, config, op_result.extra_info.decode("utf-8")
-        )
+        g = LearningGraph(graph_dag_node, handle, result["config"], result["object_id"])
         return g
 
     def _rebuild_interactive_query(
@@ -146,10 +148,12 @@ class _FetchHandler(object):
         # get interactive query dag node as base
         interactive_query_node = self._fetches[seq]
         # construct interactive query
+        result = op_result.result.decode("utf-8")
+        result = json.loads(result)
         interactive_query = InteractiveQuery(
             interactive_query_node,
-            op_result.result.decode("utf-8"),
-            op_result.extra_info.decode("utf-8"),
+            result["endpoint"],
+            result["object_id"],
         )
         interactive_query.status = InteractiveQueryStatus.Running
         return interactive_query
@@ -185,7 +189,7 @@ class _FetchHandler(object):
         result_set_dag_node = self._fetches[seq]
         return ResultSet(result_set_dag_node)
 
-    def wrap_results(self, response: message_pb2.RunStepResponse):
+    def wrap_results(self, response: message_pb2.RunStepResponse):  # noqa: C901
         rets = list()
         for seq, op in enumerate(self._ops):
             for op_result in response.results:
@@ -195,6 +199,8 @@ class _FetchHandler(object):
                             rets.append(self._rebuild_context(seq, op, op_result))
                         elif op.type == types_pb2.FETCH_GREMLIN_RESULT:
                             rets.append(pickle.loads(op_result.result))
+                        elif op.type == types_pb2.REPORT_GRAPH:
+                            rets.append(OutArchive(op_result.result))
                         else:
                             # for nx Graph
                             rets.append(op_result.result.decode("utf-8"))
@@ -231,7 +237,7 @@ class _FetchHandler(object):
                     if op.output_types == types_pb2.NULL_OUTPUT:
                         rets.append(None)
                     break
-        return rets[0] if self._unpack else rets
+        return rets[0] if rets and self._unpack else rets
 
     def get_dag_for_unload(self):
         """Unload operations (graph, app, context) in dag which are not
@@ -420,6 +426,9 @@ class Session(object):
 
             k8s_coordinator_mem (str, optional): Minimum number of memory request for coordinator pod. Defaults to '4Gi'.
 
+            etcd_addrs (str, optional): The addr of external etcd cluster,
+                with formats like 'etcd01:port,etcd02:port,etcd03:port'
+
             k8s_etcd_num_pods (int, optional): The number of etcd pods. Defaults to 3.
 
             k8s_etcd_cpu (float, optional): Minimum number of CPU cores request for etcd pod. Defaults to 0.5.
@@ -553,6 +562,10 @@ class Session(object):
             TypeError: If the given argument combination is invalid and cannot be used to create
                 a GraphScope session.
         """
+
+        # supress the grpc warnings, see also grpc/grpc#29103
+        os.environ["GRPC_ENABLE_FORK_SUPPORT"] = "false"
+
         self._config_params = {}
         self._accessable_params = (
             "addr",
@@ -937,7 +950,7 @@ class Session(object):
         return dag_node
 
     def run(self, fetches, debug=False):
-        """Run operations of `fetch`.
+        """Run operations of `fetches`.
         Args:
             fetch: :class:`Operation`
 
@@ -955,6 +968,10 @@ class Session(object):
         Returns:
             Different values for different output types of :class:`Operation`
         """
+        return self.run_fetches(fetches, debug)
+
+    def run_fetches(self, fetches, debug=False):
+        """Run operations of `fetches` without the session lock."""
         if self._closed:
             raise RuntimeError("Attempted to use a closed Session.")
         if not self._grpc_client:
@@ -1336,6 +1353,7 @@ def set_option(**kwargs):
         - engine_params
         - initializing_interactive_engine
         - timeout_seconds
+        - dataset_download_retries
 
     Args:
         kwargs: dict
@@ -1390,6 +1408,7 @@ def get_option(key):
         - engine_params
         - initializing_interactive_engine
         - timeout_seconds
+        - dataset_download_retries
 
     Args:
         key: str

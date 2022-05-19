@@ -34,6 +34,10 @@ gsvineyard-image:
 graphscope-image:
 	$(MAKE) -C $(WORKING_DIR)/k8s/ graphscope-image VERSION=$(VERSION)
 
+.PHONY: jupyter-image
+jupyter-image:
+	$(MAKE) -C $(WORKING_DIR)/k8s/ jupyter-image VERSION=$(VERSION)
+
 # bulld graphscope image from source code without wheel package
 .PHONY: graphscope-dev-image
 graphscope-dev-image:
@@ -55,6 +59,7 @@ client: gle
 	cd $(WORKING_DIR)/python && \
 	pip3 install -r requirements.txt -r requirements-dev.txt --user && \
 	python3 setup.py build_ext --inplace --user
+	pip3 install --user --editable $(WORKING_DIR)/python
 
 .PHONY: coordinator
 coordinator:
@@ -100,6 +105,8 @@ endif
 
 .PHONY: gie
 gie:
+	# ir_core
+	cd $(WORKING_DIR)/research/query_service/ir/core && cargo build --release
 	# coordinator/frontend/graphmanager
 	cd $(WORKING_DIR)/interactive_engine && \
 	mvn clean package -DskipTests -Pjava-release --quiet
@@ -173,3 +180,15 @@ k8stest:
 	cd $(WORKING_DIR)/python && \
 	pip3 install tensorflow==2.5.2 && \
 	python3 -m pytest --cov=graphscope --cov-config=.coveragerc --cov-report=xml --cov-report=term -s -v ./graphscope/tests/kubernetes
+
+.PHONY: clean
+clean:
+	rm -fr $(WORKING_DIR)/analytical_engine/build/ || true && \
+	rm -fr $(WORKING_DIR)/analytical_engine/proto/ || true && \
+	rm -fr $(WORKING_DIR)/learning_engine/graph-learn/cmake-build/ || true && \
+	rm -fr $(WORKING_DIR)/learning_engine/graph-learn/proto/*.h || true && \
+	rm -fr $(WORKING_DIR)/learning_engine/graph-learn/proto/*.cc || true && \
+	rm -fr $(WORKING_DIR)/interactive_engine/executor/target || true && \
+	rm -fr $(WORKING_DIR)/interactive_engine/assembly/target || true && \
+	cd $(WORKING_DIR)/python && python3 setup.py clean --all && \
+	cd $(WORKING_DIR)/coordinator && python3 setup.py clean --all

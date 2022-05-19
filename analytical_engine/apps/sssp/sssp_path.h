@@ -48,6 +48,7 @@ class SSSPPath : public AppBase<FRAG_T, SSSPPathContext<FRAG_T>>,
   static constexpr grape::LoadStrategy load_strategy =
       grape::LoadStrategy::kBothOutIn;
   using vertex_t = typename fragment_t::vertex_t;
+  using oid_t = typename fragment_t::oid_t;
   using vid_t = typename fragment_t::vid_t;
   using edata_t = typename fragment_t::edata_t;
   using pair_msg_t = typename std::pair<vid_t, double>;
@@ -122,20 +123,16 @@ class SSSPPath : public AppBase<FRAG_T, SSSPPathContext<FRAG_T>>,
           row_num++;
         }
       }
+      std::vector<oid_t> data;
       std::vector<size_t> shape{row_num, 2};
-
-      ctx.set_shape(shape);
-      size_t idx = 0;
-
-      auto* data = ctx.tensor().data();
-
       for (auto v : inner_vertices) {
         if (!(native_source && v == source) &&
             ctx.path_distance[v] != std::numeric_limits<double>::max()) {
-          data[idx++] = frag.GetId(ctx.predecessor[v]);
-          data[idx++] = frag.GetId(v);
+          data.push_back(frag.GetId(ctx.predecessor[v]));
+          data.push_back(frag.GetId(v));
         }
       }
+      ctx.assign(data, shape);
     }
 #ifdef PROFILING
     t2 = GetCurrentTime();

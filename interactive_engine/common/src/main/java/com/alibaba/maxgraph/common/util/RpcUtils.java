@@ -28,9 +28,14 @@ import io.grpc.netty.NettyChannelBuilder;
 import io.grpc.stub.StreamObserver;
 
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Iterator;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
 /**
@@ -38,6 +43,7 @@ import java.util.function.Function;
  * @create 2018-06-06 上午10:03
  **/
 public class RpcUtils {
+    public static final Logger logger = LoggerFactory.getLogger(RpcUtils.class);
 
     /**
      * EXECUTE provided execution function which return some information to client side. and return the
@@ -158,5 +164,25 @@ public class RpcUtils {
             builder.idleTimeout(idleSec, TimeUnit.SECONDS);
         }
         return builder.build();
+    }
+
+    public static Executor createGrpcExecutor(int threadCount) {
+        logger.info("create grpc executor, thread count [" + threadCount + "]");
+        return new ForkJoinPool(
+                threadCount,
+                new ForkJoinPool.ForkJoinWorkerThreadFactory() {
+                    final AtomicInteger num = new AtomicInteger();
+
+                    @Override
+                    public ForkJoinWorkerThread newThread(ForkJoinPool pool) {
+                        ForkJoinWorkerThread thread =
+                                ForkJoinPool.defaultForkJoinWorkerThreadFactory.newThread(pool);
+                        thread.setDaemon(true);
+                        thread.setName("grpc-worker-" + "-" + num.getAndIncrement());
+                        return thread;
+                    }
+                },
+                (t, e) -> logger.error("Uncaught exception in thread {}", t.getName(), e),
+                true);
     }
 }

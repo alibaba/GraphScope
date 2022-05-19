@@ -14,11 +14,12 @@
  */
 
 #ifdef NETWORKX
-
-#include <numeric>
-#include <string>
-
 #include "core/object/dynamic.h"
+
+#include <cstddef>
+#include <functional>
+#include <stdexcept>
+#include <string>
 
 /* static definition */
 gs::dynamic::AllocatorT gs::dynamic::Value::allocator_{};
@@ -55,6 +56,7 @@ std::size_t gs::dynamic::Value::hash() const {
   case rapidjson::kObjectType:
     throw std::runtime_error("Object value can't not be hashed.");
   }
+  return rapidjson::kNullType;  // avoid -Wreturn-type warnings
 }
 
 #endif  // NETWORKX

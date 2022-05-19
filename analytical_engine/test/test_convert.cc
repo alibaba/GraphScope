@@ -33,6 +33,8 @@
 #define OID_TYPE int64_t
 #define VID_TYPE uint64_t
 
+namespace bl = boost::leaf;
+
 template class vineyard::BasicArrowVertexMapBuilder<OID_TYPE, VID_TYPE>;
 template class vineyard::ArrowVertexMap<OID_TYPE, VID_TYPE>;
 template class vineyard::ArrowVertexMapBuilder<OID_TYPE, VID_TYPE>;
@@ -84,8 +86,8 @@ int main(int argc, char** argv) {
     gs::ArrowFragmentLoader<oid_t, vid_t> loader(client, comm_spec, efiles,
                                                  vfiles, directed != 0);
 
-    exit_code = boost::leaf::try_handle_all(
-        [&]() -> boost::leaf::result<int> {
+    exit_code = bl::try_handle_all(
+        [&]() -> bl::result<int> {
           BOOST_LEAF_AUTO(obj_id, loader.LoadFragment());
           auto arrow_frag =
               std::dynamic_pointer_cast<FragmentType>(client.GetObject(obj_id));
@@ -99,7 +101,7 @@ int main(int argc, char** argv) {
           using ProjectedFragmentType =
               gs::ArrowProjectedFragment<OID_TYPE, VID_TYPE, int64_t, int64_t>;
           auto projected_frag =
-              ProjectedFragmentType::Project(arrow_frag1, "0", "0", "0", "0");
+              ProjectedFragmentType::Project(arrow_frag1, 0, 0, 0, 0);
           using AppType = grape::WCCAuto<ProjectedFragmentType>;
           auto app = std::make_shared<AppType>();
           auto worker = AppType::CreateWorker(app, projected_frag);
@@ -114,7 +116,7 @@ int main(int argc, char** argv) {
           LOG(ERROR) << e.error_msg;
           return 1;
         },
-        [](const boost::leaf::error_info& unmatched) {
+        [](const bl::error_info& unmatched) {
           LOG(ERROR) << "Unmatched error " << unmatched;
           return 1;
         });

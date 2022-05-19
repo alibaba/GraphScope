@@ -198,7 +198,7 @@ int main(int argc, char** argv) {
       }
     } else {
       std::shared_ptr<ProjectedFragmentType> projected_fragment =
-          ProjectedFragmentType::Project(fragment, "0", "0", "0", "2");
+          ProjectedFragmentType::Project(fragment, 0, 0, 0, 2);
       pt.put("frag_name",
              "gs::ArrowProjectedFragment<int64_t,uint64_t,double,int64_t>");
       boost::property_tree::json_parser::write_json(ss, pt);

@@ -18,15 +18,25 @@
 
 #ifdef NETWORKX
 
-#include <map>
+#include <cassert>
+#include <cstddef>
 #include <memory>
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
+#include "grape/fragment/fragment_base.h"
+#include "grape/graph/adj_list.h"
+#include "grape/types.h"
+
 #include "core/config.h"
 #include "core/fragment/dynamic_fragment.h"
-#include "proto/graphscope/proto/types.pb.h"
+#include "core/object/dynamic.h"
+
+namespace grape {
+class CommSpec;
+}
 
 namespace gs {
 namespace dynamic_projected_fragment_impl {
@@ -577,10 +587,6 @@ class DynamicProjectedFragment {
     return fragment_->HasNode(node);
   }
 
-  bl::result<dynamic::Type> GetOidType(const grape::CommSpec& comm_spec) const {
-    return fragment_->GetOidType(comm_spec);
-  }
-
  private:
   fragment_t* fragment_;
   std::string v_prop_key_;
@@ -601,15 +607,6 @@ class DynamicProjectedFragment {
                 "unsupported type");
 };
 
-/**
- * @brief A wrapper class of DynamicFragment.
- * Inheritance does not work because of different return type of some methods.
- * We forward most of methods to DynamicFragment but enact
- * GetIncoming(Outgoing)AdjList, Get(Set)Data...
- *
- * @tparam VDATA_T The type of data attached with the vertex
- * @tparam EDATA_T The type of data attached with the edge
- */
 template <>
 class DynamicProjectedFragment<grape::EmptyType, grape::EmptyType> {
  public:
@@ -823,10 +820,6 @@ class DynamicProjectedFragment<grape::EmptyType, grape::EmptyType> {
 
   inline bool HasNode(const oid_t& node) const {
     return fragment_->HasNode(node);
-  }
-
-  bl::result<dynamic::Type> GetOidType(const grape::CommSpec& comm_spec) const {
-    return fragment_->GetOidType(comm_spec);
   }
 
  private:

@@ -40,6 +40,8 @@ limitations under the License.
 #include "core/java/utils.h"
 #include "core/loader/arrow_fragment_loader.h"
 
+namespace bl = boost::leaf;
+
 namespace gs {
 using FragmentType =
     vineyard::ArrowFragment<int64_t, vineyard::property_graph_types::VID_TYPE>;
@@ -97,16 +99,16 @@ vineyard::ObjectID LoadGiraphFragment(
   {
     auto loader =
         std::make_unique<FragmentLoaderType>(client, comm_spec, graph);
-    fragment_id = boost::leaf::try_handle_all(
-        [&loader]() { return loader->LoadFragment(); },
-        [](const vineyard::GSError& e) {
-          LOG(ERROR) << e.error_msg;
-          return 0;
-        },
-        [](const boost::leaf::error_info& unmatched) {
-          LOG(ERROR) << "Unmatched error " << unmatched;
-          return 0;
-        });
+    fragment_id =
+        bl::try_handle_all([&loader]() { return loader->LoadFragment(); },
+                           [](const vineyard::GSError& e) {
+                             LOG(ERROR) << e.error_msg;
+                             return 0;
+                           },
+                           [](const bl::error_info& unmatched) {
+                             LOG(ERROR) << "Unmatched error " << unmatched;
+                             return 0;
+                           });
   }
 
   VLOG(1) << "[worker-" << comm_spec.worker_id()
@@ -245,7 +247,7 @@ void CreateAndQuery(std::string params) {
 
   // Project
   std::shared_ptr<ProjectedFragmentType> projected_fragment =
-      ProjectedFragmentType::Project(fragment, "0", "0", "0", "0");
+      ProjectedFragmentType::Project(fragment, 0, 0, 0, 0);
 
   Query<ProjectedFragmentType>(comm_spec, projected_fragment, new_params,
                                user_lib_path, query_times);

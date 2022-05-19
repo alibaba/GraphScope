@@ -15,7 +15,14 @@
 
 #include "core/server/command_detail.h"
 
+#include <cstddef>
 #include <string>
+
+#include "grape/serialization/in_archive.h"
+#include "grape/serialization/out_archive.h"
+
+#include "graphscope/proto/attr_value.pb.h"
+#include "graphscope/proto/types.pb.h"
 
 namespace gs {
 

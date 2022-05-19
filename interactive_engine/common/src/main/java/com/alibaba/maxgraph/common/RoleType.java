@@ -19,6 +19,7 @@ import java.util.Map;
 public enum RoleType {
     UNKNOWN("unknown"),
     FRONTEND("frontend"),
+    FRONTEND_SERVICE("frontend_service"),
     INGESTOR("ingestor"),
     STORE("store"),
     COORDINATOR("coordinator"),

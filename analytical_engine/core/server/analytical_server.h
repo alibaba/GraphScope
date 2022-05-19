@@ -16,17 +16,17 @@
 #ifndef ANALYTICAL_ENGINE_CORE_SERVER_ANALYTICAL_SERVER_H_
 #define ANALYTICAL_ENGINE_CORE_SERVER_ANALYTICAL_SERVER_H_
 
-#include <map>
 #include <memory>
 #include <string>
 #include <utility>
 
-#include "grpcpp/server.h"
-#include "grpcpp/server_builder.h"
-
-#include "core/server/dispatcher.h"
+namespace grpc {
+class Server;
+}  // namespace grpc
 
 namespace gs {
+class Dispatcher;
+
 namespace rpc {
 
 /**

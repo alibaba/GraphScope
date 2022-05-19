@@ -19,7 +19,7 @@ import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.coordinator.FrontendSnapshotClient;
 import com.alibaba.graphscope.groot.coordinator.NotifyFrontendListener;
 import com.alibaba.graphscope.groot.coordinator.SchemaManager;
-import com.alibaba.graphscope.groot.schema.GraphDef;
+import com.alibaba.maxgraph.sdkcommon.schema.GraphDef;
 
 import org.junit.jupiter.api.Test;
 

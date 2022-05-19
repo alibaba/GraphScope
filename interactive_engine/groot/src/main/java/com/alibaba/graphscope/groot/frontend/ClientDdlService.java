@@ -14,15 +14,15 @@
 package com.alibaba.graphscope.groot.frontend;
 
 import com.alibaba.graphscope.groot.SnapshotCache;
-import com.alibaba.graphscope.groot.schema.EdgeKind;
-import com.alibaba.graphscope.groot.schema.GraphDef;
-import com.alibaba.graphscope.groot.schema.PropertyDef;
-import com.alibaba.graphscope.groot.schema.PropertyValue;
-import com.alibaba.graphscope.groot.schema.TypeDef;
-import com.alibaba.graphscope.groot.schema.TypeEnum;
 import com.alibaba.graphscope.groot.schema.request.DdlRequestBatch;
 import com.alibaba.graphscope.proto.ddl.*;
 import com.alibaba.maxgraph.compiler.api.schema.DataType;
+import com.alibaba.maxgraph.sdkcommon.schema.EdgeKind;
+import com.alibaba.maxgraph.sdkcommon.schema.GraphDef;
+import com.alibaba.maxgraph.sdkcommon.schema.PropertyDef;
+import com.alibaba.maxgraph.sdkcommon.schema.PropertyValue;
+import com.alibaba.maxgraph.sdkcommon.schema.TypeDef;
+import com.alibaba.maxgraph.sdkcommon.schema.TypeEnum;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 

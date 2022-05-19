@@ -29,7 +29,7 @@ public class CommonConfig {
     public static final Config<Integer> RPC_THREAD_COUNT =
             Config.intConfig(
                     "rpc.thread.count",
-                    Math.max(Math.min(Runtime.getRuntime().availableProcessors(), 64), 4));
+                    Math.max(Math.min(Runtime.getRuntime().availableProcessors() / 2, 64), 4));
 
     public static final Config<Integer> NETTY_THREAD_COUNT =
             Config.intConfig(

@@ -17,6 +17,9 @@ spec:
   clusterIP: None
   publishNotReadyAddresses: true
   ports:
+    - name: service-port
+      port: {{ .Values.frontend.service.servicePort }}
+      targetPort: service-port
     - name: port
       port: {{ .Values.frontend.service.port }}
       targetPort: port

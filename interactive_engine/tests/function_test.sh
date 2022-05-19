@@ -23,8 +23,9 @@ function _start {
     if [ -z "$gs_image" ]; then
         gs_image="registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${version}"
     fi
-
-    export GS_TEST_DIR=$curdir/src/main/resources
+    if [ -z "$GS_TEST_DIR" ]; then
+        export GS_TEST_DIR=$curdir/src/main/resources
+    fi
     cd $curdir/../deploy/testing && python3 maxgraph_test_server.py ${_port} &
     sleep 5s
     curl -XPOST http://localhost:${_port} -d 'import graphscope'

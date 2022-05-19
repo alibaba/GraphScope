@@ -21,10 +21,6 @@ env:
 jobs:
   peagsus-build:
     runs-on: ubuntu-20.04
-    defaults:
-      run:
-        shell: bash --noprofile --norc -eo pipefail {0}
-
     steps:
     - uses: actions/checkout@v2
 
@@ -52,18 +48,16 @@ jobs:
         target/release/examples/logistic_regression --data pegasus/examples/data/binary.csv
 
   k8s-test:
-    runs-on: self-hosted
-    defaults:
-      run:
-        shell: bash --noprofile --norc -eo pipefail {0}
-
+    runs-on: [self-hosted, ubuntu2004]
     steps:
     - uses: actions/checkout@v2
 
     - name : Prepare Image
       run: |
-        sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/pegasus-base:latest
-        sudo docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/pegasus:${{ github.sha }} \
+        docker pull registry-vpc.cn-hongkong.aliyuncs.com/graphscope/pegasus-base:latest
+        docker tag registry-vpc.cn-hongkong.aliyuncs.com/graphscope/pegasus-base:latest \
+                   registry.cn-hongkong.aliyuncs.com/graphscope/pegasus-base:latest
+        docker build -t registry.cn-hongkong.aliyuncs.com/graphscope/pegasus:${{ github.sha }} \
                           --network=host \
                           -f research/engine/pegasus/test/k8s/pegasus.Dockerfile .
         echo "        - name: CONFIG_MAP_NAME" >> research/engine/pegasus/test/k8s/pegasus-set.yaml
@@ -72,13 +66,11 @@ jobs:
 
     - name: Start k8s cluster
       run: |
+        minikube start --base-image='registry-vpc.cn-hongkong.aliyuncs.com/graphscope/kicbase:v0.0.30' \
+                  --cpus='12' --memory='32000mb' --disk-size='40000mb'
+        minikube image load registry.cn-hongkong.aliyuncs.com/graphscope/pegasus:${{ github.sha }}
+
         kubectl get ns pegasus-ci || kubectl create ns pegasus-ci
         kubectl --namespace pegasus-ci create -f research/engine/pegasus/test/k8s/role_binding.yaml
         kubectl --namespace pegasus-ci create -f research/engine/pegasus/test/k8s/pegasus-set.yaml
         bash research/engine/pegasus/test/k8s/read_result.sh ${{ github.sha }}
-
-    - name: Clean
-      if: always()
-      run: |
-        kubectl delete ns pegasus-ci || true
-        docker rmi -f registry.cn-hongkong.aliyuncs.com/graphscope/pegasus:${{ github.sha }} --wait=false || true

@@ -24,7 +24,6 @@ from graphscope.framework.errors import check_argument
 from graphscope.framework.operation import Operation
 from graphscope.proto import attr_value_pb2
 from graphscope.proto import graph_def_pb2
-from graphscope.proto import query_args_pb2
 from graphscope.proto import types_pb2
 
 
@@ -83,7 +82,7 @@ def run_app(app, *args, **kwargs):
     config[types_pb2.OUTPUT_PREFIX] = utils.s_to_attr(output_prefix)
     # optional query arguments.
     params = utils.pack_query_params(*args, **kwargs)
-    query_args = query_args_pb2.QueryArgs()
+    query_args = types_pb2.QueryArgs()
     query_args.args.extend(params)
     op = Operation(
         app.session_id,
@@ -193,7 +192,7 @@ def add_labels_to_graph(graph, loader_op):
         types_pb2.IS_FROM_VINEYARD_ID: utils.b_to_attr(False),
     }
     # inferred from the context of the dag.
-    config.update({types_pb2.GRAPH_NAME: utils.place_holder_to_attr()})
+    config.update({types_pb2.GRAPH_NAME: utils.s_to_attr("")})
     if graph._graph_type != graph_def_pb2.ARROW_PROPERTY:
         raise NotImplementedError(
             f"Add vertices or edges is not supported yet on graph type {graph._graph_type}"
@@ -349,6 +348,7 @@ def report_graph(
     lid=None,
     key=None,
     label_id=None,
+    gid=None,
 ):
     """Create report operation for nx graph.
 
@@ -403,6 +403,8 @@ def report_graph(
         config[types_pb2.LID] = utils.i_to_attr(lid)
     if label_id is not None:
         config[types_pb2.V_LABEL_ID] = utils.i_to_attr(label_id)
+    if gid is not None:
+        config[types_pb2.GID] = utils.u_to_attr(gid)
 
     config[types_pb2.EDGE_KEY] = utils.s_to_attr(str(key) if key is not None else "")
     op = Operation(
@@ -435,22 +437,25 @@ def project_arrow_property_graph(graph, vertex_collections, edge_collections):
     return op
 
 
-def project_arrow_property_graph_to_simple(
+def project_to_simple(
     graph,
     v_prop,
     e_prop,
 ):
-    """Project arrow property graph to a simple graph.
+    """Project property graph to a simple graph.
 
     Args:
-        graph (:class:`graphscope.Graph`): Source graph, which type should be ARROW_PROPERTY
+        graph: Source graph, which type should be a property graph
         v_prop (str): The node attribute key to project.
         e_prop (str): The edge attribute key to project.
 
     Returns:
-        Operation to project a property graph, results in a simple ARROW_PROJECTED graph.
+        Operation to project a property graph, results in a simple graph.
     """
-    check_argument(graph.graph_type == graph_def_pb2.ARROW_PROPERTY)
+    check_argument(
+        graph.graph_type
+        in (graph_def_pb2.ARROW_PROPERTY, graph_def_pb2.DYNAMIC_PROPERTY)
+    )
     config = {
         types_pb2.V_PROP_KEY: utils.s_to_attr(v_prop),
         types_pb2.E_PROP_KEY: utils.s_to_attr(e_prop),
@@ -460,80 +465,6 @@ def project_arrow_property_graph_to_simple(
         types_pb2.PROJECT_TO_SIMPLE,
         config=config,
         inputs=[graph.op],
-        output_types=types_pb2.GRAPH,
-    )
-    return op
-
-
-def project_dynamic_property_graph(graph, v_prop, e_prop, v_prop_type, e_prop_type):
-    """Create project graph operation for nx graph.
-
-    Args:
-        graph (:class:`nx.Graph`): A nx graph.
-        v_prop (str): The node attribute key to project.
-        e_prop (str): The edge attribute key to project.
-        v_prop_type (str): Type of the node attribute.
-        e_prop_type (str): Type of the edge attribute.
-
-    Returns:
-        Operation to project a dynamic property graph. Results in a simple graph.
-    """
-    check_argument(graph.graph_type == graph_def_pb2.DYNAMIC_PROPERTY)
-    config = {
-        types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
-        types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(graph_def_pb2.DYNAMIC_PROJECTED),
-        types_pb2.V_PROP_KEY: utils.s_to_attr(v_prop),
-        types_pb2.E_PROP_KEY: utils.s_to_attr(e_prop),
-        types_pb2.V_DATA_TYPE: utils.s_to_attr(utils.data_type_to_cpp(v_prop_type)),
-        types_pb2.E_DATA_TYPE: utils.s_to_attr(utils.data_type_to_cpp(e_prop_type)),
-    }
-
-    op = Operation(
-        graph.session_id,
-        types_pb2.PROJECT_TO_SIMPLE,
-        config=config,
-        output_types=types_pb2.GRAPH,
-    )
-    return op
-
-
-def flatten_arrow_property_graph(
-    graph, v_prop, e_prop, v_prop_type, e_prop_type, oid_type=None, vid_type=None
-):
-    """Flatten arrow property graph.
-
-    Args:
-        graph (:class:`nx.Graph`): A nx graph hosts an arrow property graph.
-        v_prop (str): The vertex property id.
-        e_prop (str): The edge property id.
-        v_prop_type (str): Type of the node attribute.
-        e_prop_type (str): Type of the edge attribute.
-        oid_type (str): Type of oid.
-        vid_type (str): Type of vid.
-
-    Returns:
-        Operation to flatten an arrow property graph. Results in a arrow flattened graph.
-    """
-    config = {
-        types_pb2.GRAPH_NAME: utils.s_to_attr(graph.key),
-        types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(graph_def_pb2.ARROW_FLATTENED),
-        types_pb2.DST_GRAPH_TYPE: utils.graph_type_to_attr(graph.graph_type),
-        types_pb2.V_DATA_TYPE: utils.s_to_attr(utils.data_type_to_cpp(v_prop_type)),
-        types_pb2.E_DATA_TYPE: utils.s_to_attr(utils.data_type_to_cpp(e_prop_type)),
-    }
-    if graph.graph_type == graph_def_pb2.ARROW_PROPERTY:
-        config[types_pb2.V_PROP_KEY] = utils.s_to_attr(str(v_prop))
-        config[types_pb2.E_PROP_KEY] = utils.s_to_attr(str(e_prop))
-        config[types_pb2.OID_TYPE] = utils.s_to_attr(utils.data_type_to_cpp(oid_type))
-        config[types_pb2.VID_TYPE] = utils.s_to_attr(utils.data_type_to_cpp(vid_type))
-    else:
-        config[types_pb2.V_PROP_KEY] = utils.s_to_attr(v_prop)
-        config[types_pb2.E_PROP_KEY] = utils.s_to_attr(e_prop)
-
-    op = Operation(
-        graph.session_id,
-        types_pb2.PROJECT_TO_SIMPLE,
-        config=config,
         output_types=types_pb2.GRAPH,
     )
     return op
@@ -869,13 +800,13 @@ def to_vineyard_dataframe(context, selector=None, vertex_range=None):
     return op
 
 
-def output(result, fd, **kwargs):
-    """Dump result to `fd`
+def to_data_sink(result, fd, **kwargs):
+    """Dump result to `fd` by drivers in vineyard.
 
     Parameters:
         result (:class:`graphscope.framework.context.ResultDAGNode`):
             Dataframe or numpy or result hold the object id of vineyard dataframe.
-        fd (str): Such as `file:///tmp/result_path`
+        fd (str): Such as `hdfs:///tmp/result_path`
         kwargs (dict, optional): Storage options with respect to output storage type
 
     Returns:
@@ -887,9 +818,37 @@ def output(result, fd, **kwargs):
     }
     op = Operation(
         result.session_id,
-        types_pb2.OUTPUT,
+        types_pb2.DATA_SINK,
         config=config,
         inputs=[result.op],
+        output_types=types_pb2.NULL_OUTPUT,
+    )
+    return op
+
+
+def output(context, fd, selector, vertex_range, **kwargs):
+    """Output result to `fd`, this will be handled by registered vineyard C++ adaptor.
+
+    Args:
+        results (:class:`Context`): Results return by `run_app` operation, store the query results.
+        fd (str): Such as `file:///tmp/result_path`
+        selector (str): Select the type of data to retrieve.
+        vertex_range (str): Specify a range to retrieve.
+    Returns:
+        An op to output results to `fd`.
+    """
+    config = {}
+    config[types_pb2.FD] = utils.s_to_attr(fd)
+    config[types_pb2.SELECTOR] = utils.s_to_attr(selector)
+    config[types_pb2.STORAGE_OPTIONS] = utils.s_to_attr(json.dumps(kwargs))
+    if vertex_range is not None:
+        config[types_pb2.VERTEX_RANGE] = utils.s_to_attr(vertex_range)
+
+    op = Operation(
+        context.session_id,
+        types_pb2.OUTPUT,
+        config=config,
+        inputs=[context.op],
         output_types=types_pb2.NULL_OUTPUT,
     )
     return op

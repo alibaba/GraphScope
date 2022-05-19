@@ -15,16 +15,24 @@
 
 #ifndef ANALYTICAL_ENGINE_CORE_OBJECT_DYNAMIC_H_
 #define ANALYTICAL_ENGINE_CORE_OBJECT_DYNAMIC_H_
-
 #ifdef NETWORKX
 
+#include <cstddef>
+#include <cstdint>
 #include <iostream>
+#include <map>
 #include <string>
 #include <utility>
 
+// IWYU pragma: begin_exports
 #include "rapidjson/document.h"
+#include "rapidjson/rapidjson.h"
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
+// IWYU pragma: end_exports
+
+#include "grape/serialization/in_archive.h"
+#include "graphscope/proto/graph_def.pb.h"
 
 namespace gs {
 
@@ -57,9 +65,10 @@ class Value : public rapidjson::Value {
   }
   // Constructor with move semantics.
   Value(Value& rhs) { Base::CopyFrom(rhs, allocator_); }
-  explicit Value(rapidjson::Value& rhs) { Base::CopyFrom(rhs, allocator_); }
+  explicit Value(rapidjson::Value& rhs) : Base(std::move(rhs)) {}
   // Move constructor
-  Value(Value&& rhs) : Base(std::move(rhs)) {}
+  Value(Value&& rhs) noexcept : Base(std::move(rhs)) {}
+  explicit Value(rapidjson::Value&& rhs) : Base(std::move(rhs)) {}
   // Constructor with value type
   explicit Value(rapidjson::Type type) noexcept : Base(type) {}
   // Constructor for common type
@@ -94,7 +103,11 @@ class Value : public rapidjson::Value {
     return *this;
   }
   Value& operator=(rapidjson::Value&& rhs) noexcept {
-    Base::operator=(rhs.Move());
+    Base::operator=(rhs);
+    return *this;
+  }
+  Value& operator=(rapidjson::Value& rhs) noexcept {
+    Base::operator=(rhs);
     return *this;
   }
 
@@ -130,9 +143,9 @@ class Value : public rapidjson::Value {
   explicit Value(const std::string& s) : Base(s.c_str(), allocator_) {}
   explicit Value(const char* s) : Base(s, allocator_) {}
 
-  void CopyFrom(const Value& rhs) {
+  void CopyFrom(const Value& rhs, AllocatorT& allocator = allocator_) {
     if (this != &rhs) {
-      Base::CopyFrom(rhs, allocator_);
+      Base::CopyFrom(rhs, allocator);
     }
   }
 
@@ -140,15 +153,17 @@ class Value : public rapidjson::Value {
   template <typename T>
   void Insert(const std::string& key, T&& value) {
     Value v_(value);
-    Base::AddMember(Value(key).Move(), v_, allocator_);
+    Base::AddMember(rapidjson::Value(key, allocator_).Move(), v_, allocator_);
   }
 
   void Insert(const std::string& key, Value& value) {
-    Base::AddMember(Value(key).Move(), value, allocator_);
+    Base::AddMember(rapidjson::Value(key, allocator_).Move(), value,
+                    allocator_);
   }
 
   void Insert(const std::string& key, rapidjson::Value& value) {
-    Base::AddMember(Value(key).Move(), value, allocator_);
+    Base::AddMember(rapidjson::Value(key, allocator_).Move(), value,
+                    allocator_);
   }
 
   // Update for object
@@ -221,7 +236,7 @@ class Value : public rapidjson::Value {
 };
 
 // Stringify Value to json.
-static inline const char* Stringify(const Value& value) {
+static inline const char* Stringify(const rapidjson::Value& value) {
   static rapidjson::StringBuffer buffer;
   rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
   buffer.Clear();
@@ -230,7 +245,7 @@ static inline const char* Stringify(const Value& value) {
 }
 
 // Parse json to Value.
-static inline void Parse(const std::string& str, Value& val) {
+static inline void Parse(const std::string& str, rapidjson::Value& val) {
   // the document d must use the same allocator with other values
   rapidjson::Document d(&Value::allocator_);
   d.Parse(str.c_str());
@@ -251,6 +266,32 @@ static inline Type GetType(const rapidjson::Value& val) {
   }
 }
 
+// Type string to Type
+static inline rpc::graph::DataTypePb Str2RpcType(const std::string& s) {
+  const static std::map<std::string, rpc::graph::DataTypePb> str2type = {
+      {"NULL", rpc::graph::DataTypePb::NULLVALUE},
+      {"BOOL", rpc::graph::DataTypePb::BOOL},
+      {"INT", rpc::graph::DataTypePb::INT},
+      {"LONG", rpc::graph::DataTypePb::LONG},
+      {"FLOAT", rpc::graph::DataTypePb::DOUBLE},
+      {"DOUBLE", rpc::graph::DataTypePb::DOUBLE},
+      {"STRING", rpc::graph::DataTypePb::STRING},
+  };
+  return str2type.at(s);
+}
+
+static inline rpc::graph::DataTypePb DynamicType2RpcType(const Type& t) {
+  const static std::map<Type, rpc::graph::DataTypePb> type2type = {
+      {Type::kNullType, rpc::graph::DataTypePb::NULLVALUE},
+      {Type::kBoolType, rpc::graph::DataTypePb::BOOL},
+      {Type::kInt64Type, rpc::graph::DataTypePb::LONG},
+      {Type::kDoubleType, rpc::graph::DataTypePb::DOUBLE},
+      {Type::kStringType, rpc::graph::DataTypePb::STRING},
+      {Type::kArrayType, rpc::graph::DataTypePb::INT_LIST},
+      {Type::kObjectType, rpc::graph::DataTypePb::DYNAMIC}};
+  return type2type.at(t);
+}
+
 inline std::ostream& operator<<(std::ostream& out, Value const& val) {
   out << Stringify(val);
   return out;
@@ -263,10 +304,48 @@ namespace std {
 
 template <>
 struct hash<::gs::dynamic::Value> {
-  size_t operator()(::gs::dynamic::Value const& d) const { return d.hash(); }
+  std::size_t operator()(::gs::dynamic::Value const& d) const {
+    return d.hash();
+  }
 };
 
 }  // namespace std
+
+namespace grape {
+inline grape::InArchive& operator<<(grape::InArchive& archive,
+                                    const rapidjson::Value& value) {
+  if (value.IsInt64()) {
+    archive << value.GetInt64();
+  } else if (value.IsDouble()) {
+    archive << value.GetDouble();
+  } else if (value.IsString()) {
+    std::size_t size = value.GetStringLength();
+    archive << size;
+    archive.AddBytes(value.GetString(), size);
+  } else {
+    std::string json = gs::dynamic::Stringify(value);
+    archive << json;
+  }
+  return archive;
+}
+
+inline grape::InArchive& operator<<(grape::InArchive& archive,
+                                    const gs::dynamic::Value& value) {
+  if (value.IsInt64()) {
+    archive << value.GetInt64();
+  } else if (value.IsDouble()) {
+    archive << value.GetDouble();
+  } else if (value.IsString()) {
+    std::size_t size = value.GetStringLength();
+    archive << size;
+    archive.AddBytes(value.GetString(), size);
+  } else {
+    std::string json = gs::dynamic::Stringify(value);
+    archive << json;
+  }
+  return archive;
+}
+}  // namespace grape
 
 #endif  // NETWORKX
 #endif  // ANALYTICAL_ENGINE_CORE_OBJECT_DYNAMIC_H_

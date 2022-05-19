@@ -14,8 +14,8 @@ readonly GREEN="\033[0;32m"
 readonly NC="\033[0m" # No Color
 
 readonly GRAPE_BRANCH="master" # libgrape-lite branch
-readonly V6D_VERSION="0.3.21"  # vineyard version
-readonly V6D_BRANCH="v0.3.21" # vineyard branch
+readonly V6D_VERSION="0.4.1"  # vineyard version
+readonly V6D_BRANCH="v0.4.1" # vineyard branch
 
 readonly OUTPUT_ENV_FILE="${HOME}/.graphscope_env"
 IS_IN_WSL=false && [[ ! -z "${IS_WSL}" || ! -z "${WSL_DISTRO_NAME}" ]] && IS_IN_WSL=true
@@ -184,6 +184,7 @@ init_basic_packages() {
       python3-pip
       git
       rapidjson-dev
+      libmsgpack-dev
     )
   elif [[ "${PLATFORM}" == *"CentOS"* ]]; then
     BASIC_PACKGES_TO_INSTALL=(
@@ -221,6 +222,7 @@ init_basic_packages() {
       wget
       curl
       rapidjson-devel
+      msgpack-devel
     )
   else
     BASIC_PACKGES_TO_INSTALL=(
@@ -239,6 +241,7 @@ init_basic_packages() {
       wget
       libomp
       rapidjson
+      msgpack-cxx
     )
   fi
   readonly BASIC_PACKGES_TO_INSTALL
@@ -712,6 +715,8 @@ install_dependencies() {
       export HOMEBREW_BOTTLE_DOMAIN="https://mirrors.tuna.tsinghua.edu.cn/homebrew-bottles"
     fi
     log "Installing packages ${BASIC_PACKGES_TO_INSTALL[*]}"
+    export HOMEBREW_NO_INSTALL_CLEANUP=1
+    export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1
     brew install ${BASIC_PACKGES_TO_INSTALL[*]}
 
     if [[ ${CN_MIRROR} == true && "${packages_to_install[*]}" =~ "openjdk@11" ]]; then

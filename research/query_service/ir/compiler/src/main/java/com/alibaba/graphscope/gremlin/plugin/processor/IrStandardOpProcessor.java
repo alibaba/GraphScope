@@ -36,7 +36,6 @@ import com.alibaba.graphscope.gremlin.Utils;
 import com.alibaba.graphscope.gremlin.plugin.script.AntlrToJavaScriptEngineFactory;
 import com.alibaba.graphscope.gremlin.plugin.strategy.RemoveUselessStepStrategy;
 import com.alibaba.graphscope.gremlin.plugin.strategy.ScanFusionStepStrategy;
-import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversalSource;
 import com.alibaba.graphscope.gremlin.result.GremlinResultAnalyzer;
 import com.alibaba.graphscope.gremlin.result.GremlinResultProcessor;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
@@ -58,7 +57,6 @@ import org.apache.tinkerpop.gremlin.server.op.AbstractEvalOpProcessor;
 import org.apache.tinkerpop.gremlin.server.op.OpProcessorException;
 import org.apache.tinkerpop.gremlin.server.op.standard.StandardOpProcessor;
 import org.apache.tinkerpop.gremlin.structure.Graph;
-import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
 import org.codehaus.groovy.control.MultipleCompilationErrorsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -84,9 +82,13 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
     protected IrMetaFetcher irMetaFetcher;
 
     public IrStandardOpProcessor(
-            Configs configs, IrMetaFetcher irMetaFetcher, RpcChannelFetcher fetcher) {
-        this.graph = TinkerFactory.createModern();
-        this.g = graph.traversal(IrCustomizedTraversalSource.class);
+            Configs configs,
+            IrMetaFetcher irMetaFetcher,
+            RpcChannelFetcher fetcher,
+            Graph graph,
+            GraphTraversalSource g) {
+        this.graph = graph;
+        this.g = g;
         this.configs = configs;
         this.irMetaFetcher = irMetaFetcher;
         this.broadcastProcessor = new RpcBroadcastProcessor(fetcher);

@@ -16,20 +16,22 @@
 #ifndef ANALYTICAL_ENGINE_CORE_APP_APP_INVOKER_H_
 #define ANALYTICAL_ENGINE_CORE_APP_APP_INVOKER_H_
 
+#include <glog/logging.h>
+
 #include <cstdint>
 #include <memory>
 #include <string>
 #include <type_traits>
-
-#include "glog/logging.h"
 
 #ifdef NETWORKX
 #include "core/object/dynamic.h"
 #endif
 #include "core/config.h"
 #include "core/error.h"
-#include "proto/graphscope/proto/data_types.pb.h"
-#include "proto/graphscope/proto/query_args.pb.h"
+#include "graphscope/proto/data_types.pb.h"
+#include "graphscope/proto/types.pb.h"
+
+namespace bl = boost::leaf;
 
 namespace gs {
 

@@ -58,6 +58,7 @@ from graphscope.nx.algorithms.builtin import clustering
 from graphscope.nx.algorithms.builtin import degree_centrality
 from graphscope.nx.algorithms.builtin import edge_boundary
 from graphscope.nx.algorithms.builtin import eigenvector_centrality
+from graphscope.nx.algorithms.builtin import eigenvector_centrality_numpy
 from graphscope.nx.algorithms.builtin import has_path
 from graphscope.nx.algorithms.builtin import hits
 from graphscope.nx.algorithms.builtin import hits_scipy

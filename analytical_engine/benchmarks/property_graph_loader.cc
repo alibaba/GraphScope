@@ -29,6 +29,8 @@
 #include "core/loader/arrow_fragment_loader.h"
 #include "core/utils/transform_utils.h"
 
+namespace bl = boost::leaf;
+
 using GraphType =
     vineyard::ArrowFragment<vineyard::property_graph_types::OID_TYPE,
                             vineyard::property_graph_types::VID_TYPE>;
@@ -109,16 +111,16 @@ int main(int argc, char** argv) {
         gs::ArrowFragmentLoader<vineyard::property_graph_types::OID_TYPE,
                                 vineyard::property_graph_types::VID_TYPE>>(
         client, comm_spec, efiles, vfiles, directed != 0);
-    fragment_id = boost::leaf::try_handle_all(
-        [&loader]() { return loader->LoadFragment(); },
-        [](const vineyard::GSError& e) {
-          LOG(FATAL) << e.error_msg;
-          return 0;
-        },
-        [](const boost::leaf::error_info& unmatched) {
-          LOG(FATAL) << "Unmatched error " << unmatched;
-          return 0;
-        });
+    fragment_id =
+        bl::try_handle_all([&loader]() { return loader->LoadFragment(); },
+                           [](const vineyard::GSError& e) {
+                             LOG(FATAL) << e.error_msg;
+                             return 0;
+                           },
+                           [](const bl::error_info& unmatched) {
+                             LOG(FATAL) << "Unmatched error " << unmatched;
+                             return 0;
+                           });
   }
 
   if (comm_spec.worker_id() == 0) {
@@ -133,9 +135,9 @@ int main(int argc, char** argv) {
       std::dynamic_pointer_cast<GraphType>(client.GetObject(fragment_id));
 
   vineyard::ObjectID empty_frag_id =
-      EmptyProjectedGraphType::Project(fragment, "0", "-1", "0", "-1")->id();
+      EmptyProjectedGraphType::Project(fragment, 0, -1, 0, -1)->id();
   vineyard::ObjectID ed_frag_id =
-      EDProjectedGraphType::Project(fragment, "0", "-1", "0", "0")->id();
+      EDProjectedGraphType::Project(fragment, 0, -1, 0, 0)->id();
 
   if (comm_spec.worker_id() == 0) {
     LOG(INFO) << "[empty graph ids]:";

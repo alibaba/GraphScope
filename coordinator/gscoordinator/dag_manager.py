@@ -53,6 +53,7 @@ class DAGManager(object):
         types_pb2.GRAPH_TO_DATAFRAME,  # need loaded graph to transform selector
         types_pb2.TO_VINEYARD_TENSOR,  # need loaded graph to transform selector
         types_pb2.TO_VINEYARD_DATAFRAME,  # need loaded graph to transform selector
+        types_pb2.OUTPUT,  # need loaded graph to transform selector
         types_pb2.PROJECT_GRAPH,  # need loaded graph to transform selector
         types_pb2.PROJECT_TO_SIMPLE,  # need loaded graph schema information
         types_pb2.ADD_COLUMN,  # need ctx result
@@ -75,7 +76,7 @@ class DAGManager(object):
 
     _coordinator_split_op = [
         types_pb2.DATA_SOURCE,  # spawn an io stream to read/write data from/to vineyard
-        types_pb2.OUTPUT,  # spawn an io stream to read/write data from/to vineyard
+        types_pb2.DATA_SINK,  # spawn an io stream to read/write data from/to vineyard
     ]
 
     def __init__(self, request_iterator: Sequence[message_pb2.RunStepRequest]):
@@ -88,26 +89,27 @@ class DAGManager(object):
                 req_head = req
             else:
                 req_bodies.append(req)
-        # split dag
-        dag = op_def_pb2.DagDef()
-        dag_for = GSEngine.analytical_engine
-        dag_bodies = []
-        for op in req_head.head.dag_def.op:
-            if self.is_splited_op(op):
-                if dag.op:
-                    self._dag_queue.put((dag_for, dag, dag_bodies))
-                # init empty dag
-                dag = op_def_pb2.DagDef()
-                dag_for = self.get_op_exec_engine(op)
-                dag_bodies = []
-            # select op
-            dag.op.extend([copy.deepcopy(op)])
-            for req_body in req_bodies:
-                # select chunks belong to this op
-                if req_body.body.op_key == op.key:
-                    dag_bodies.append(req_body)
-        if dag.op:
-            self._dag_queue.put((dag_for, dag, dag_bodies))
+        if req_head is not None:
+            # split dag
+            dag = op_def_pb2.DagDef()
+            dag_for = GSEngine.analytical_engine
+            dag_bodies = []
+            for op in req_head.head.dag_def.op:
+                if self.is_splited_op(op):
+                    if dag.op:
+                        self._dag_queue.put((dag_for, dag, dag_bodies))
+                    # init empty dag
+                    dag = op_def_pb2.DagDef()
+                    dag_for = self.get_op_exec_engine(op)
+                    dag_bodies = []
+                # select op
+                dag.op.extend([copy.deepcopy(op)])
+                for req_body in req_bodies:
+                    # select chunks belong to this op
+                    if req_body.body.op_key == op.key:
+                        dag_bodies.append(req_body)
+            if dag.op:
+                self._dag_queue.put((dag_for, dag, dag_bodies))
 
     def is_splited_op(self, op):
         return op.op in (
@@ -143,7 +145,7 @@ def split_op_result(op_result: op_def_pb2.OpResult):
 
     Note that this function may modify `result` attribute of op_result.
     """
-    if op_result.has_large_result:
+    if op_result.meta.has_large_result:
         result = op_result.result
         splited_result = [
             result[i : i + CHUNK_SIZE] for i in range(0, len(result), CHUNK_SIZE)

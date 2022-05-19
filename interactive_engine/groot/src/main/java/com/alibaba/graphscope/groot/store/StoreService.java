@@ -20,6 +20,7 @@ import com.alibaba.graphscope.groot.metrics.MetricsAgent;
 import com.alibaba.graphscope.groot.metrics.MetricsCollector;
 import com.alibaba.graphscope.groot.operation.OperationBatch;
 import com.alibaba.graphscope.groot.operation.StoreDataBatch;
+import com.alibaba.graphscope.groot.store.external.ExternalStorage;
 import com.alibaba.graphscope.groot.store.jna.JnaGraphStore;
 import com.alibaba.maxgraph.common.config.CommonConfig;
 import com.alibaba.maxgraph.common.config.Configs;
@@ -28,9 +29,6 @@ import com.alibaba.maxgraph.common.util.ThreadFactoryUtils;
 import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
 import com.alibaba.maxgraph.proto.groot.GraphDefPb;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -285,15 +283,13 @@ public class StoreService implements MetricsAgent {
     }
 
     private void ingestDataInternal(String path) throws IOException {
-        Path dataDir = new Path(path);
-        Configuration conf = new Configuration();
-        FileSystem fs = dataDir.getFileSystem(conf);
+        ExternalStorage externalStorage = ExternalStorage.getStorage(configs, path);
         for (Map.Entry<Integer, GraphPartition> entry : this.idToPartition.entrySet()) {
             int pid = entry.getKey();
             GraphPartition partition = entry.getValue();
             String fileName = "part-r-" + String.format("%05d", pid) + ".sst";
-            Path realPath = new Path(dataDir, fileName);
-            partition.ingestHdfsFile(fs, realPath);
+            String fullPath = path + "/" + fileName;
+            partition.ingestExternalFile(externalStorage, fullPath);
         }
     }
 

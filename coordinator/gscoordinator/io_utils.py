@@ -19,6 +19,7 @@
 from queue import Queue
 
 from tqdm import tqdm
+from tqdm.utils import ObjectWrapper
 
 
 class LoadingProgressTracker:
@@ -40,13 +41,11 @@ class LoadingProgressTracker:
     ]
 
 
-class StdStreamWrapper(object):
+class StdStreamWrapper(ObjectWrapper):
     def __init__(self, std_stream, queue=None, drop=True):
+        super().__init__(std_stream)
         self._stream_backup = std_stream
-        if queue is None:
-            self._lines = Queue()
-        else:
-            self._lines = queue
+        self._lines = queue if queue is not None else Queue()
         self._drop = drop
 
     @property
@@ -64,9 +63,9 @@ class StdStreamWrapper(object):
         line = self._filter_progress(line)
         if line is None:
             return
-        line = line.encode("ascii", "ignore").decode("ascii")
         self._stream_backup.write(line)
         self._stream_backup.flush()
+        line = line.encode("utf-8", "ignore").decode("utf-8")
         if not self._drop:
             self._lines.put(line)
 
@@ -82,9 +81,7 @@ class StdStreamWrapper(object):
             if LoadingProgressTracker.progbar is not None:
                 LoadingProgressTracker.progbar.close()
             desc = line.split("-")[-1].strip()
-            LoadingProgressTracker.progbar = tqdm(
-                desc=desc, total=total, file=self._stream_backup
-            )
+            LoadingProgressTracker.progbar = tqdm(desc=desc, total=total, file=self)
         elif LoadingProgressTracker.progbar is not None:
             LoadingProgressTracker.progbar.update(1)
             LoadingProgressTracker.cur_stub += 1
