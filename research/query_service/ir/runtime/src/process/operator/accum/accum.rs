@@ -15,7 +15,6 @@
 
 use std::collections::HashSet;
 use std::convert::{TryFrom, TryInto};
-use std::sync::Arc;
 
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
@@ -60,8 +59,7 @@ impl Accumulator<Record, Record> for RecordAccumulator {
         let mut record = Record::default();
         for (accumulator, _, alias) in self.accum_ops.iter_mut() {
             let entry = accumulator.finalize()?;
-            let columns = record.get_columns_mut();
-            columns.insert(*alias as usize, Arc::new(entry));
+            record.append(entry, Some(alias.clone()));
         }
         Ok(record)
     }
@@ -92,7 +90,7 @@ impl Accumulator<Entry, Entry> for EntryAccumulator {
                     .map(|entry| match entry {
                         Entry::Element(e) => Ok(e.clone()),
                         Entry::Collection(_) => {
-                            Err(FnExecError::unsupported_error("fold collections in EntryAccumulator"))
+                            Err(FnExecError::unsupported_error("fold collections is not supported yet"))
                         }
                     })
                     .collect::<Result<Vec<_>, _>>()?;
@@ -110,9 +108,9 @@ impl Accumulator<Entry, Entry> for EntryAccumulator {
                     .into_iter()
                     .map(|entry| match entry {
                         Entry::Element(e) => Ok(e.clone()),
-                        Entry::Collection(_) => Err(FnExecError::unsupported_error(
-                            "fold collections as set in EntryAccumulator",
-                        )),
+                        Entry::Collection(_) => {
+                            Err(FnExecError::unsupported_error("set of collections is not supported yet"))
+                        }
                     })
                     .collect::<Result<Vec<_>, _>>()?;
                 Ok(Entry::Collection(set_entry))
