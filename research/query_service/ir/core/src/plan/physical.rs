@@ -92,20 +92,6 @@ fn update_query_params(
     new_params
 }
 
-fn merge_query_params(merged_params: &mut pb::QueryParams, other_params: &mut pb::QueryParams) {
-    if merged_params.is_all_columns || other_params.is_all_columns {
-        merged_params.is_all_columns = true;
-    } else {
-        for column in &other_params.columns {
-            if !merged_params.columns.contains(column) {
-                merged_params.columns.push(column.clone());
-            }
-        }
-    }
-    other_params.columns.clear();
-    other_params.is_all_columns = false;
-}
-
 impl AsPhysical for pb::Project {
     fn add_job_builder(&self, builder: &mut JobBuilder, _plan_meta: &mut PlanMeta) -> IrResult<()> {
         simple_add_job_builder(builder, &pb::logical_plan::Operator::from(self.clone()), SimpleOpr::Map)
@@ -373,13 +359,6 @@ impl AsPhysical for pb::GroupBy {
     }
 }
 
-impl AsPhysical for pb::Unfold {
-    fn add_job_builder(&self, builder: &mut JobBuilder, _plan_meta: &mut PlanMeta) -> IrResult<()> {
-        let opr = pb::logical_plan::Operator::from(self.clone());
-        simple_add_job_builder(builder, &opr, SimpleOpr::Flatmap)
-    }
-}
-
 impl AsPhysical for pb::Sink {
     fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         let mut sink_opr = self.clone();
@@ -419,8 +398,6 @@ impl AsPhysical for pb::logical_plan::Operator {
                 GroupBy(groupby) => groupby.add_job_builder(builder, plan_meta),
                 Sink(sink) => sink.add_job_builder(builder, plan_meta),
                 Union(_) => Ok(()),
-                Intersect(_) => Ok(()),
-                Unfold(unfold) => unfold.add_job_builder(builder, plan_meta),
                 _ => Err(IrError::Unsupported(format!("the operator {:?}", self))),
             }
         } else {
@@ -480,7 +457,7 @@ impl AsPhysical for LogicalPlan {
             } else if curr_node.borrow().children.len() >= 2 {
                 let (merge_node_opt, subplans) = self.get_branch_plans(curr_node.clone());
                 let mut plans: Vec<Plan> = vec![];
-                for subplan in &subplans {
+                for subplan in subplans {
                     let mut sub_bldr = JobBuilder::new(builder.conf.clone());
                     subplan.add_job_builder(&mut sub_bldr, plan_meta)?;
                     plans.push(sub_bldr.take_plan());
@@ -488,11 +465,8 @@ impl AsPhysical for LogicalPlan {
 
                 if let Some(merge_node) = merge_node_opt.clone() {
                     match &merge_node.borrow().opr.opr {
-                        Some(Union(_union)) => {
+                        Some(Union(_)) => {
                             builder.merge(plans);
-                        }
-                        Some(Intersect(intersect)) => {
-                            add_intersect_job_builder(builder, plan_meta, intersect, &subplans)?;
                         }
                         Some(Join(join_opr)) => {
                             if curr_node.borrow().children.len() > 2 {
@@ -529,7 +503,6 @@ impl AsPhysical for LogicalPlan {
                         }
                     }
                 }
-
                 curr_node_opt = merge_node_opt;
 
                 if let Some(curr_node_clone) = curr_node_opt.clone() {
@@ -545,78 +518,6 @@ impl AsPhysical for LogicalPlan {
 
         Ok(())
     }
-}
-
-// Given a->b, now we only support intersecting neighbors (one-hop each with no filters) that "TRULY" need to,
-// e.g., Intersect{{a->c, b->c}, key=c}
-// TODO: consider more cases:
-// 1. Intersect{{a->d->c, b->c}, key=c}
-// if so, translate into two operators, i.e., EdgeExpand{a->d} and Intersect{{d->c, b->c}, key=c}
-// 2. Intersect{{a->c->d, b->c}, key=c}
-// if so, translate into two operators, i.e., Intersect{{a->c, b->c}, key=c} and Expand{c->d}
-// 3. extend with filters
-fn add_intersect_job_builder(
-    builder: &mut JobBuilder, plan_meta: &mut PlanMeta, intersect_opr: &pb::Intersect,
-    subplans: &Vec<LogicalPlan>,
-) -> IrResult<()> {
-    use pb::logical_plan::operator::Opr::*;
-
-    let intersect_tag = intersect_opr.key.as_ref();
-    let mut is_adding_auxilia = false;
-    let mut auxilia_param = pb::QueryParams::default();
-    for subplan in subplans {
-        if subplan.len() > 1 {
-            Err(IrError::Unsupported(
-                "multiple EdgeExpand ops in each branch for intersection".to_string(),
-            ))?
-        }
-        if let Some(sub_root) = subplan.root() {
-            if let Some(Edge(edgexpd)) = sub_root.borrow().opr.opr.as_ref() {
-                let mut edgexpd = edgexpd.clone();
-                if edgexpd.v_tag.is_none() {
-                    Err(IrError::MissingData("EdgeExpand::v_tag".to_string()))?
-                }
-                if plan_meta.is_partition() {
-                    let key_pb = common_pb::NameOrIdKey { key: edgexpd.v_tag.clone() };
-                    builder.repartition(key_pb.encode_to_vec());
-                }
-                if !edgexpd.alias.eq(&intersect_tag.cloned()) {
-                    Err(IrError::InvalidPattern("Cannot intersect on different tags".to_string()))?
-                }
-                if let Some(params) = edgexpd.params.as_mut() {
-                    // TODO: be very carefully that this only works when it is not followed by any filters
-                    // move columns fetch into auxilia
-                    if params.is_all_columns || !params.columns.is_empty() {
-                        is_adding_auxilia = true;
-                        merge_query_params(&mut auxilia_param, params);
-                    }
-                }
-                simple_add_job_builder(
-                    builder,
-                    &pb::logical_plan::Operator::from(edgexpd.clone()),
-                    SimpleOpr::FilterMap,
-                )?;
-            }
-        }
-    }
-    // We assume that the field after unfold has the same alias with intersect_tag.
-    // Furthermore, if unfold is followed by auxilia, move the alias into the auxilia op.
-    let unfold_alias = if is_adding_auxilia { None } else { intersect_tag.cloned() };
-    let unfold = pb::Unfold { tag: intersect_tag.cloned(), alias: unfold_alias };
-    unfold.add_job_builder(builder, plan_meta)?;
-    if is_adding_auxilia {
-        if plan_meta.is_partition() {
-            let key_pb = common_pb::NameOrIdKey { key: None };
-            builder.repartition(key_pb.encode_to_vec());
-        }
-        let auxilia = pb::logical_plan::Operator::from(pb::Auxilia {
-            params: Some(auxilia_param),
-            alias: intersect_tag.cloned(),
-        });
-        auxilia.add_job_builder(builder, plan_meta)?;
-    }
-    //  TODO: process edgexpd follwed by filter ops
-    Ok(())
 }
 
 #[cfg(test)]
@@ -1398,150 +1299,6 @@ mod test {
         expected_builder.join(server_pb::join::JoinKind::Inner, left_plan, right_plan, join_opr_bytes);
         expected_builder.limit(10);
 
-        assert_eq!(builder, expected_builder);
-    }
-
-    #[test]
-    fn intersection_as_physical() {
-        let source_opr = pb::Scan {
-            scan_opt: 0,
-            alias: Some("A".into()),
-            params: Some(query_params(vec![], vec![])),
-            idx_predicate: None,
-        };
-
-        // extend A->B
-        let expand_ab_opr = pb::EdgeExpand {
-            v_tag: Some("A".into()),
-            direction: 0,
-            params: Some(query_params(vec![], vec![])),
-            is_edge: false,
-            alias: Some("B".into()),
-        };
-
-        // extend A->C, B->C, and intersect on C
-        let expand_ac_opr = pb::EdgeExpand {
-            v_tag: Some("A".into()),
-            direction: 0,
-            params: Some(query_params(vec![], vec![])),
-            is_edge: false,
-            alias: Some("C".into()),
-        };
-
-        let expand_bc_opr = pb::EdgeExpand {
-            v_tag: Some("B".into()),
-            direction: 0,
-            params: Some(query_params(vec!["knows".into()], vec![])),
-            is_edge: false,
-            alias: Some("C".into()),
-        };
-
-        // parents are expand_ac_opr and expand_bc_opr
-        let intersect_opr = pb::Intersect { parents: vec![2, 3], key: Some("C".into()) };
-
-        let mut logical_plan = LogicalPlan::with_root(Node::new(0, source_opr.clone().into()));
-        logical_plan
-            .append_operator_as_node(expand_ab_opr.clone().into(), vec![0])
-            .unwrap(); // node 1
-        logical_plan
-            .append_operator_as_node(expand_ac_opr.clone().into(), vec![1])
-            .unwrap(); // node 2
-        logical_plan
-            .append_operator_as_node(expand_bc_opr.clone().into(), vec![1])
-            .unwrap(); // node 3
-        logical_plan
-            .append_operator_as_node(intersect_opr.clone().into(), vec![2, 3])
-            .unwrap(); // node 4
-        let mut builder = JobBuilder::default();
-        let mut plan_meta = PlanMeta::default();
-        logical_plan
-            .add_job_builder(&mut builder, &mut plan_meta)
-            .unwrap();
-
-        let unfold_opr = pb::Unfold { tag: Some("C".into()), alias: Some("C".into()) };
-
-        let mut expected_builder = JobBuilder::default();
-        expected_builder.add_source(pb::logical_plan::Operator::from(source_opr).encode_to_vec());
-        expected_builder.flat_map(pb::logical_plan::Operator::from(expand_ab_opr).encode_to_vec());
-        expected_builder.filter_map(pb::logical_plan::Operator::from(expand_ac_opr).encode_to_vec());
-        expected_builder.filter_map(pb::logical_plan::Operator::from(expand_bc_opr).encode_to_vec());
-        expected_builder.flat_map(pb::logical_plan::Operator::from(unfold_opr).encode_to_vec());
-        assert_eq!(builder, expected_builder);
-    }
-
-    #[test]
-    fn intersection_with_auxilia_as_physical() {
-        let source_opr = pb::Scan {
-            scan_opt: 0,
-            alias: Some("A".into()),
-            params: Some(query_params(vec![], vec![])),
-            idx_predicate: None,
-        };
-
-        // extend A->B
-        let expand_ab_opr = pb::EdgeExpand {
-            v_tag: Some("A".into()),
-            direction: 0,
-            params: Some(query_params(vec![], vec![])),
-            is_edge: false,
-            alias: Some("B".into()),
-        };
-
-        // extend A->C, B->C, and intersect on C (where C has required columns)
-        let mut expand_ac_opr = pb::EdgeExpand {
-            v_tag: Some("A".into()),
-            direction: 0,
-            params: Some(query_params(vec![], vec!["id".into()])),
-            is_edge: false,
-            alias: Some("C".into()),
-        };
-
-        let mut expand_bc_opr = pb::EdgeExpand {
-            v_tag: Some("B".into()),
-            direction: 0,
-            params: Some(query_params(vec!["knows".into()], vec!["name".into()])),
-            is_edge: false,
-            alias: Some("C".into()),
-        };
-
-        // parents are expand_ac_opr and expand_bc_opr
-        let intersect_opr = pb::Intersect { parents: vec![2, 3], key: Some("C".into()) };
-
-        let mut logical_plan = LogicalPlan::with_root(Node::new(0, source_opr.clone().into()));
-        logical_plan
-            .append_operator_as_node(expand_ab_opr.clone().into(), vec![0])
-            .unwrap(); // node 1
-        logical_plan
-            .append_operator_as_node(expand_ac_opr.clone().into(), vec![1])
-            .unwrap(); // node 2
-        logical_plan
-            .append_operator_as_node(expand_bc_opr.clone().into(), vec![1])
-            .unwrap(); // node 3
-        logical_plan
-            .append_operator_as_node(intersect_opr.clone().into(), vec![2, 3])
-            .unwrap(); // node 4
-        let mut builder = JobBuilder::default();
-        let mut plan_meta = PlanMeta::default();
-        logical_plan
-            .add_job_builder(&mut builder, &mut plan_meta)
-            .unwrap();
-
-        let unfold_opr = pb::Unfold { tag: Some("C".into()), alias: None };
-        let mut auxilia_param = pb::QueryParams::default();
-        merge_query_params(&mut auxilia_param, expand_ac_opr.params.as_mut().unwrap());
-        merge_query_params(&mut auxilia_param, expand_bc_opr.params.as_mut().unwrap());
-        let auxilia_opr = pb::logical_plan::Operator::from(pb::Auxilia {
-            params: Some(auxilia_param),
-            alias: Some("C".into()),
-        });
-
-        let mut expected_builder = JobBuilder::default();
-        expected_builder.add_source(pb::logical_plan::Operator::from(source_opr).encode_to_vec());
-        expected_builder.flat_map(pb::logical_plan::Operator::from(expand_ab_opr).encode_to_vec());
-        expected_builder.filter_map(pb::logical_plan::Operator::from(expand_ac_opr).encode_to_vec());
-        expected_builder.filter_map(pb::logical_plan::Operator::from(expand_bc_opr).encode_to_vec());
-        expected_builder.flat_map(pb::logical_plan::Operator::from(unfold_opr).encode_to_vec());
-        expected_builder.filter_map(pb::logical_plan::Operator::from(auxilia_opr).encode_to_vec());
         assert_eq!(builder, expected_builder);
     }
 }
