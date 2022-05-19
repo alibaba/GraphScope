@@ -1,5 +1,3 @@
-import pytest
-import numpy as np
 import networkx.algorithms.centrality.tests.test_betweenness_centrality
 import networkx.algorithms.centrality.tests.test_betweenness_centrality_subset
 import networkx.algorithms.centrality.tests.test_closeness_centrality
@@ -16,6 +14,8 @@ import networkx.algorithms.centrality.tests.test_percolation_centrality
 import networkx.algorithms.centrality.tests.test_reaching
 import networkx.algorithms.centrality.tests.test_second_order_centrality
 import networkx.algorithms.centrality.tests.test_subgraph
+import numpy as np
+import pytest
 
 import graphscope.nx as nx
 from graphscope.nx.utils.compat import import_as_graphscope_nx
