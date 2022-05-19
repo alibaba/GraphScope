@@ -35,8 +35,7 @@ use crate::process::record::{CommonObject, Entry, Record, RecordElement};
 pub struct RecordSinkEncoder {
     /// the given column tags to sink;
     sink_keys: Vec<Option<KeyId>>,
-    /// A map from id to name; including type of Entity (Vertex in Graph Database),
-    /// Relation (Edge in Graph Database), Column (Property in Graph Database), and Tag (Alias).
+    /// A map from id to name; Now we only support to map Tag (Alias) in Runtime.
     schema_map: Option<HashMap<(MetaType, i32), String>>,
 }
 
@@ -102,13 +101,10 @@ impl RecordSinkEncoder {
                 // a special case to parse key in KV, where the key is vec![tag, prop_name]
                 if let Object::Vector(ref mut v) = key {
                     if v.len() == 2 {
+                        // map tag_id to tag_name
                         if let Ok(tag_id) = v.get(0).unwrap().as_i32() {
                             let mapped_tag = Object::from(self.get_meta_name(tag_id, MetaType::Tag));
                             *(v[0].borrow_mut()) = mapped_tag;
-                        }
-                        if let Ok(prop_id) = v.get(1).unwrap().as_i32() {
-                            let mapped_prop = Object::from(self.get_meta_name(prop_id, MetaType::Column));
-                            *(v[1].borrow_mut()) = mapped_prop;
                         }
                     }
                 }
@@ -144,9 +140,7 @@ impl RecordSinkEncoder {
     fn vertex_to_pb(&self, v: &Vertex) -> result_pb::Vertex {
         result_pb::Vertex {
             id: v.id() as i64,
-            label: v
-                .label()
-                .map(|label| self.meta_to_pb(label.clone(), MetaType::Entity)),
+            label: v.label().map(|label| label.clone().into()),
             // TODO: return detached vertex without property for now
             properties: vec![],
         }
@@ -155,17 +149,15 @@ impl RecordSinkEncoder {
     fn edge_to_pb(&self, e: &Edge) -> result_pb::Edge {
         result_pb::Edge {
             id: e.id() as i64,
-            label: e
-                .label()
-                .map(|label| self.meta_to_pb(label.clone(), MetaType::Relation)),
+            label: e.label().map(|label| label.clone().into()),
             src_id: e.src_id as i64,
             src_label: e
                 .get_src_label()
-                .map(|label| self.meta_to_pb(label.clone(), MetaType::Entity)),
+                .map(|label| label.clone().into()),
             dst_id: e.dst_id as i64,
             dst_label: e
                 .get_dst_label()
-                .map(|label| self.meta_to_pb(label.clone(), MetaType::Entity)),
+                .map(|label| label.clone().into()),
             // TODO: return detached edge without property for now
             properties: vec![],
         }
