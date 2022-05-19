@@ -18,8 +18,8 @@ limitations under the License.
 
 #include <grape/grape.h>
 
+#include "core/object/dynamic.h"
 #include "voterank/voterank_context.h"
-
 namespace gs {
 
 /**
@@ -40,6 +40,7 @@ class VoteRank : public grape::ParallelAppBase<FRAG_T, VoteRankContext<FRAG_T>>,
  public:
   using vertex_t = typename FRAG_T::vertex_t;
   using vid_t = typename FRAG_T::vid_t;
+  using oid_t = typename FRAG_T::oid_t;
   static constexpr grape::MessageStrategy message_strategy =
       grape::MessageStrategy::kAlongIncomingEdgeToOuterVertex;
   static constexpr bool need_split_edges = true;
@@ -80,14 +81,14 @@ class VoteRank : public grape::ParallelAppBase<FRAG_T, VoteRankContext<FRAG_T>>,
       sumEdgeNum += i;
     }
     Sum(sumEdgeNum, sumEdgeNum);
-    std::cout << sumEdgeNum << " "
-              << "total edge numbers\n";
+    /*std::cout << sumEdgeNum << " "
+              << "total edge numbers\n";*/
 
     size_t edgeNumWithGetEdgeNum = frag.GetEdgeNum();
     Sum(edgeNumWithGetEdgeNum, edgeNumWithGetEdgeNum);
 
-    std::cout << edgeNumWithGetEdgeNum << " "
-              << "total edge numbers with GetEdgeNum\n";
+    /* std::cout << edgeNumWithGetEdgeNum << " "
+               << "total edge numbers with GetEdgeNum\n";*/
     ctx.avg_degree =
         static_cast<double>(sumEdgeNum) / static_cast<double>(graph_vnum);
 #ifdef PROFILING
@@ -153,20 +154,22 @@ class VoteRank : public grape::ParallelAppBase<FRAG_T, VoteRankContext<FRAG_T>>,
     ctx.exec_time -= GetCurrentTime();
 #endif
 
-    auto compare = [](std::pair<double, vid_t>& lhs,
-                      const std::pair<double, vid_t>& rhs) {
+    auto compare = [](std::tuple<double, size_t, vid_t>& lhs,
+                      const std::tuple<double, size_t, vid_t>& rhs) {
       const double EPS = 1e-8;
-      if (fabs(lhs.first - rhs.first) < EPS) {
-        if (rhs.second < lhs.second) {
+
+      if (fabs(std::get<0>(lhs) - std::get<0>(rhs)) < EPS) {
+        if (std::get<1>(rhs) < std::get<1>(lhs)) {
           lhs = rhs;
         }
-      } else if (lhs.first < rhs.first) {
+      } else if (std::get<0>(lhs) < std::get<0>(rhs)) {
         lhs = rhs;
       }
     };
 
     // compute new scores
-    std::vector<std::pair<double, vid_t>> max_scores(thread_num(), {0, {}});
+    std::vector<std::tuple<double, size_t, vid_t>> max_scores(thread_num(),
+                                                              {0, 0, {}});
     ForEach(inner_vertices,
             [&ctx, compare, &max_scores, &frag](int tid, vertex_t u) {
               if (ctx.update[u] && ctx.rank[u] == 0) {
@@ -178,7 +181,9 @@ class VoteRank : public grape::ParallelAppBase<FRAG_T, VoteRankContext<FRAG_T>>,
                 ctx.scores[u] = cur;
                 ctx.update[u] = false;
               }
-              compare(max_scores[tid], {ctx.scores[u], frag.Vertex2Gid(u)});
+              compare(max_scores[tid],
+                      {ctx.scores[u], std::hash<oid_t>()(frag.GetId(u)),
+                       frag.Vertex2Gid(u)});
             });
 
 #ifdef PROFILING
@@ -192,13 +197,13 @@ class VoteRank : public grape::ParallelAppBase<FRAG_T, VoteRankContext<FRAG_T>>,
     // select top node
     AllReduce(max_score, ctx.max_score, compare);
     const double EPS = 1e-8;
-    if (ctx.max_score.first < EPS) {
+    if (std::get<0>(ctx.max_score) < EPS) {
       return;
     }
 
     // weaken the selected node and its out-neighbors
     std::vector<vertex_t> update_vertices;
-    if (frag.Gid2Vertex(ctx.max_score.second, v)) {
+    if (frag.Gid2Vertex(std::get<2>(ctx.max_score), v)) {
       if (frag.IsInnerVertex(v)) {
         ctx.rank[v] = ctx.step;
         ctx.weight[v] = 0.0;
@@ -231,7 +236,7 @@ class VoteRank : public grape::ParallelAppBase<FRAG_T, VoteRankContext<FRAG_T>>,
       });
     }
 
-    ctx.max_score = {0.0, {}};
+    ctx.max_score = {0.0, 0, {}};
 
 #ifdef PROFILING
     ctx.postprocess_time += GetCurrentTime();

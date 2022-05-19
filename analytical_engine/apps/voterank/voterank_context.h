@@ -78,7 +78,7 @@ class VoteRankContext : public grape::VertexDataContext<FRAG_T, int> {
   double exec_time = 0;
   double postprocess_time = 0;
 #endif
-  std::pair<double, vid_t> max_score;
+  std::tuple<double, size_t, vid_t> max_score;
   int step = 0;
   int num_of_nodes = 0;
   double avg_degree = 0;
