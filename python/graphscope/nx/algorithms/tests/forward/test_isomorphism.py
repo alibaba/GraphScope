@@ -118,4 +118,3 @@ def test_simple():
                     g2._pred[0][0] = data2
 
             assert not nx.is_isomorphic(g1, g2, edge_match=em)
-

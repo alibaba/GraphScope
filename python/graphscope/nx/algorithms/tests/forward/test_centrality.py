@@ -1,3 +1,5 @@
+import pytest
+import numpy as np
 import networkx.algorithms.centrality.tests.test_betweenness_centrality
 import networkx.algorithms.centrality.tests.test_betweenness_centrality_subset
 import networkx.algorithms.centrality.tests.test_closeness_centrality
@@ -14,7 +16,6 @@ import networkx.algorithms.centrality.tests.test_percolation_centrality
 import networkx.algorithms.centrality.tests.test_reaching
 import networkx.algorithms.centrality.tests.test_second_order_centrality
 import networkx.algorithms.centrality.tests.test_subgraph
-import pytest
 
 import graphscope.nx as nx
 from graphscope.nx.utils.compat import import_as_graphscope_nx
@@ -76,16 +77,6 @@ import_as_graphscope_nx(
 import_as_graphscope_nx(networkx.algorithms.centrality.tests.test_subgraph,
                         decorators=pytest.mark.usefixtures("graphscope_session"))
 
-"""
-from networkx.algorithms.centrality.tests.test_betweenness_centrality import \
-    TestBetweennessCentrality as _TestBetweennessCentrality
-from networkx.algorithms.centrality.tests.test_current_flow_betweenness_centrality import \
-    TestApproximateFlowBetweennessCentrality as _TestApproximateFlowBetweennessCentrality
-from networkx.algorithms.centrality.tests.test_katz_centrality import \
-    TestKatzCentralityDirectedNumpy
-from networkx.algorithms.centrality.tests.test_katz_centrality import \
-    TestKatzEigenvectorVKatz
-"""
 
 @pytest.mark.usefixtures("graphscope_session")
 @with_graphscope_nx_context(TestBetweennessCentrality)
@@ -104,12 +95,14 @@ class TestBetweennessCentrality:
         for n in sorted(G):
             assert b[n] in (b_approx1[n], b_approx2[n])
 
+
 @pytest.mark.usefixtures("graphscope_session")
 @with_graphscope_nx_context(TestApproximateFlowBetweennessCentrality)
 class TestApproximateFlowBetweennessCentrality:
     # NB: graphscope.nx does not support grid_graph, pass the test
     def test_grid(self):
         pass
+
 
 @pytest.mark.usefixtures("graphscope_session")
 @with_graphscope_nx_context(TestKatzCentralityDirectedNumpy)
