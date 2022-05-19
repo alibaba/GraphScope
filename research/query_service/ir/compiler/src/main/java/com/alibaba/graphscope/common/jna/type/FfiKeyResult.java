@@ -9,8 +9,7 @@ public class FfiKeyResult extends Structure {
         super(IrTypeMapper.INSTANCE);
     }
 
-    public static class ByValue extends FfiKeyResult implements Structure.ByValue {
-    }
+    public static class ByValue extends FfiKeyResult implements Structure.ByValue {}
 
     public String keyName;
     public FfiError.ByValue error;

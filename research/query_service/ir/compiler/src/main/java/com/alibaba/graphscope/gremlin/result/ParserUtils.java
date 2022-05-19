@@ -114,9 +114,7 @@ public class ParserUtils {
     private static Vertex parseVertex(IrResult.Vertex vertex) {
         Map<String, Object> properties = parseProperties(vertex.getPropertiesList());
         return new DetachedVertex(
-                vertex.getId(),
-                getKeyName(vertex.getLabel(), FfiKeyType.Entity),
-                properties);
+                vertex.getId(), getKeyName(vertex.getLabel(), FfiKeyType.Entity), properties);
     }
 
     private static Edge parseEdge(IrResult.Edge edge) {
@@ -139,16 +137,21 @@ public class ParserUtils {
         switch (key.getItemCase()) {
             case NAME:
                 return key.getName();
-            case ID: {
-                FfiKeyResult result = irCoreLib.getKeyName(key.getId(), type);
-                if (result.error == null || result.error.code != ResultCode.Success) {
-                    String errorMsg = (result.error == null) ? "error code is null" : result.error.msg;
-                    throw new GremlinResultParserException("getKeyName fail " + errorMsg);
+            case ID:
+                {
+                    FfiKeyResult result = irCoreLib.getKeyName(key.getId(), type);
+                    if (result.error == null || result.error.code != ResultCode.Success) {
+                        String errorMsg =
+                                (result.error == null) ? "error code is null" : result.error.msg;
+                        throw new GremlinResultParserException("getKeyName fail " + errorMsg);
+                    }
+                    return result.keyName;
                 }
-                return result.keyName;
-            }
             default:
-                throw new GremlinResultParserException("key type " + key.getItemCase().name() + " is invalid");
+                // throw new GremlinResultParserException("key type " + key.getItemCase().name() + "
+                // is invalid");
+                logger.error("{}", "key type is not set");
+                return "";
         }
     }
 }
