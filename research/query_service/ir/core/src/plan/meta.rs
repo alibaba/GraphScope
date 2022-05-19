@@ -21,6 +21,7 @@ use std::rc::Rc;
 use std::sync::RwLock;
 
 use ir_common::generated::common as common_pb;
+use ir_common::generated::common::name_or_id::Item;
 use ir_common::generated::schema as schema_pb;
 use ir_common::NameOrId;
 
@@ -107,12 +108,14 @@ impl Default for KeyType {
 
 #[derive(Clone, Debug, Default)]
 pub struct Schema {
-    /// A map from table name to its internally encoded id
+    /// A map from table (Entity or Relation) name to its internally encoded id
     /// In the concept of graph database, this is also known as label
-    table_map: BTreeMap<String, i32>,
-    /// A map from column name to its internally encoded id
+    table_map: BTreeMap<String, (KeyType, i32)>,
+    /// A map from column name to its store-encoded id
     /// In the concept of graph database, this is also known as property
     column_map: BTreeMap<String, i32>,
+    /// Record the primary keys of each table
+    primary_keys: BTreeMap<String, BTreeSet<String>>,
     /// A reversed map of `id` to `name` mapping
     id_name_rev: BTreeMap<(KeyType, i32), String>,
     /// The source and destination labels of a given relation label's id
@@ -129,7 +132,7 @@ pub struct Schema {
 
 impl Schema {
     pub fn get_table_id(&self, name: &str) -> Option<i32> {
-        self.table_map.get(name).cloned()
+        self.table_map.get(name).map(|(_, id)| *id)
     }
 
     pub fn get_table_id_from_pb(&self, name: &common_pb::NameOrId) -> Option<i32> {
@@ -150,15 +153,23 @@ impl Schema {
         })
     }
 
-    pub fn get_name(&self, id: i32, ty: KeyType) -> Option<&String> {
-        self.id_name_rev.get(&(ty, id))
+    pub fn get_entity_name(&self, id: i32) -> Option<&String> {
+        self.id_name_rev.get(&(KeyType::Entity, id))
+    }
+
+    pub fn get_relation_name(&self, id: i32) -> Option<&String> {
+        self.id_name_rev.get(&(KeyType::Relation, id))
+    }
+
+    pub fn get_column_name(&self, id: i32) -> Option<&String> {
+        self.id_name_rev.get(&(KeyType::Column, id))
     }
 
     pub fn get_relation_labels(&self, relation: &NameOrId) -> Option<&Vec<(LabelMeta, LabelMeta)>> {
         match relation {
             NameOrId::Str(name) => self.relation_labels.get(name),
             NameOrId::Id(id) => self
-                .get_name(*id, KeyType::Relation)
+                .get_relation_name(*id)
                 .and_then(|name| self.relation_labels.get(name)),
         }
     }
@@ -169,6 +180,47 @@ impl Schema {
 
     pub fn is_table_id(&self) -> bool {
         self.is_table_id
+    }
+
+    /// Check whether a given table contains a given column as a primary key.
+    /// Also return the number of primary keys of the given table.
+    pub fn check_primary_key(&self, table: &str, col: &str) -> (bool, usize) {
+        if let Some(pks) = self.primary_keys.get(table) {
+            (pks.contains(col), pks.len())
+        } else {
+            (false, self.primary_keys.len())
+        }
+    }
+
+    pub fn check_primary_key_from_pb(
+        &self, table: &common_pb::NameOrId, is_entity: bool, col: &common_pb::NameOrId,
+    ) -> (bool, usize) {
+        let mut table_name = "";
+        let mut col_name = "";
+        if let Some(item) = table.item.as_ref() {
+            match item {
+                Item::Name(name) => table_name = name.as_str(),
+                Item::Id(id) => {
+                    if let Some(name) =
+                        if is_entity { self.get_entity_name(*id) } else { self.get_relation_name(*id) }
+                    {
+                        table_name = name.as_str();
+                    }
+                }
+            }
+        }
+        if let Some(item) = col.item.as_ref() {
+            match item {
+                Item::Name(name) => col_name = name.as_str(),
+                Item::Id(id) => {
+                    if let Some(name) = self.get_column_name(*id) {
+                        col_name = name.as_str();
+                    }
+                }
+            }
+        }
+
+        self.check_primary_key(table_name, col_name)
     }
 }
 
@@ -181,13 +233,17 @@ impl From<(Vec<(String, i32)>, Vec<(String, i32)>, Vec<(String, i32)>)> for Sche
 
         if schema.is_table_id {
             for (name, id) in entities.into_iter() {
-                schema.table_map.insert(name.clone(), id);
+                schema
+                    .table_map
+                    .insert(name.clone(), (KeyType::Entity, id));
                 schema
                     .id_name_rev
                     .insert((KeyType::Entity, id), name);
             }
             for (name, id) in relations.into_iter() {
-                schema.table_map.insert(name.clone(), id);
+                schema
+                    .table_map
+                    .insert(name.clone(), (KeyType::Relation, id));
                 schema
                     .id_name_rev
                     .insert((KeyType::Relation, id), name);
@@ -257,6 +313,7 @@ impl JsonIO for Schema {
             is_column_id: self.is_column_id,
         };
         serde_json::to_writer_pretty(writer, &schema_pb)?;
+
         Ok(())
     }
 
@@ -276,16 +333,17 @@ impl JsonIO for Schema {
                     if !schema.table_map.contains_key(&label.name) {
                         schema
                             .table_map
-                            .insert(label.name.clone(), label.id);
+                            .insert(label.name.clone(), (KeyType::Entity, label.id));
                         schema
                             .id_name_rev
                             .insert((KeyType::Entity, label.id), label.name.clone());
                     }
                 }
             }
-            if schema_pb.is_column_id {
-                for column in entity.columns {
-                    if let Some(key) = &column.key {
+
+            for column in entity.columns {
+                if let Some(key) = &column.key {
+                    if schema_pb.is_column_id {
                         if !schema.column_map.contains_key(&key.name) {
                             schema
                                 .column_map
@@ -293,6 +351,15 @@ impl JsonIO for Schema {
                             schema
                                 .id_name_rev
                                 .insert((KeyType::Column, key.id), key.name.clone());
+                        }
+                    }
+                    if column.is_primary_key {
+                        if let Some(label) = &entity.label {
+                            schema
+                                .primary_keys
+                                .entry(label.name.clone())
+                                .or_insert_with(BTreeSet::new)
+                                .insert(key.name.clone());
                         }
                     }
                 }
@@ -305,16 +372,17 @@ impl JsonIO for Schema {
                     if !schema.table_map.contains_key(&label.name) {
                         schema
                             .table_map
-                            .insert(label.name.clone(), label.id);
+                            .insert(label.name.clone(), (KeyType::Relation, label.id));
                         schema
                             .id_name_rev
                             .insert((KeyType::Relation, label.id), label.name.clone());
                     }
                 }
             }
-            if schema_pb.is_column_id {
-                for column in rel.columns {
-                    if let Some(key) = &column.key {
+
+            for column in rel.columns {
+                if let Some(key) = &column.key {
+                    if schema_pb.is_column_id {
                         if !schema.column_map.contains_key(&key.name) {
                             schema
                                 .column_map
@@ -322,6 +390,15 @@ impl JsonIO for Schema {
                             schema
                                 .id_name_rev
                                 .insert((KeyType::Column, key.id), key.name.clone());
+                        }
+                    }
+                    if column.is_primary_key {
+                        if let Some(label) = &rel.label {
+                            schema
+                                .primary_keys
+                                .entry(label.name.clone())
+                                .or_insert_with(BTreeSet::new)
+                                .insert(key.name.clone());
                         }
                     }
                 }
