@@ -16,8 +16,11 @@
 
 package com.alibaba.graphscope.gremlin.result;
 
+import com.alibaba.graphscope.common.jna.IrCoreLibrary;
+import com.alibaba.graphscope.common.jna.type.*;
 import com.alibaba.graphscope.gaia.proto.Common;
 import com.alibaba.graphscope.gaia.proto.IrResult;
+import com.alibaba.graphscope.gaia.proto.OuterExpression;
 import com.alibaba.graphscope.gremlin.exception.GremlinResultParserException;
 
 import org.apache.tinkerpop.gremlin.structure.Edge;
@@ -34,6 +37,7 @@ import java.util.stream.Collectors;
 
 public class ParserUtils {
     private static final Logger logger = LoggerFactory.getLogger(ParserUtils.class);
+    private static final IrCoreLibrary irCoreLib = IrCoreLibrary.INSTANCE;
 
     public static Object parseElement(IrResult.Element element) {
         switch (element.getInnerCase()) {
@@ -109,22 +113,42 @@ public class ParserUtils {
 
     private static Vertex parseVertex(IrResult.Vertex vertex) {
         Map<String, Object> properties = parseProperties(vertex.getPropertiesList());
-        return new DetachedVertex(vertex.getId(), vertex.getLabel().getName(), properties);
+        return new DetachedVertex(
+                vertex.getId(),
+                getKeyName(vertex.getLabel(), FfiKeyType.Entity),
+                properties);
     }
 
     private static Edge parseEdge(IrResult.Edge edge) {
         Map<String, Object> edgeProperties = parseProperties(edge.getPropertiesList());
         return new DetachedEdge(
                 edge.getId(),
-                edge.getLabel().getName(),
+                getKeyName(edge.getLabel(), FfiKeyType.Relation),
                 edgeProperties,
                 edge.getSrcId(),
-                edge.getSrcLabel().getName(),
+                getKeyName(edge.getSrcLabel(), FfiKeyType.Entity),
                 edge.getDstId(),
-                edge.getDstLabel().getName());
+                getKeyName(edge.getDstLabel(), FfiKeyType.Entity));
     }
 
     private static Map<String, Object> parseProperties(List<IrResult.Property> properties) {
         return new HashMap<>();
+    }
+
+    public static String getKeyName(OuterExpression.NameOrId key, FfiKeyType type) {
+        switch (key.getItemCase()) {
+            case NAME:
+                return key.getName();
+            case ID: {
+                FfiKeyResult result = irCoreLib.getKeyName(key.getId(), type);
+                if (result.error == null || result.error.code != ResultCode.Success) {
+                    String errorMsg = (result.error == null) ? "error code is null" : result.error.msg;
+                    throw new GremlinResultParserException("getKeyName fail " + errorMsg);
+                }
+                return result.keyName;
+            }
+            default:
+                throw new GremlinResultParserException("key type " + key.getItemCase().name() + " is invalid");
+        }
     }
 }
