@@ -236,7 +236,7 @@ class TestDiGraphCopyOnWrite(_TestDiGraph):
 
 @pytest.mark.usefixtures("graphscope_session")
 class TestBuiltinCopyOnWrite:
-    def setup_(cls):
+    def setup_class(cls):
         data_dir = os.path.expandvars("${GS_TEST_DIR}/networkx")
         p2p_dir = os.path.expandvars("${GS_TEST_DIR}")
 
