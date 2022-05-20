@@ -14,10 +14,7 @@
 package com.alibaba.maxgraph.servers;
 
 import com.alibaba.maxgraph.common.RoleType;
-import com.alibaba.maxgraph.common.config.CommonConfig;
-import com.alibaba.maxgraph.common.config.Configs;
-import com.alibaba.maxgraph.common.config.KafkaConfig;
-import com.alibaba.maxgraph.common.config.ZkConfig;
+import com.alibaba.maxgraph.common.config.*;
 import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
 import com.google.common.annotations.VisibleForTesting;
 import com.salesforce.kafka.test.KafkaTestCluster;
@@ -109,7 +106,8 @@ public class MaxNode extends NodeBase {
                     Configs.newBuilder(baseConfigs)
                             .put(CommonConfig.ROLE_NAME.getKey(), RoleType.FRONTEND.getName())
                             .put(CommonConfig.NODE_IDX.getKey(), String.valueOf(i))
-                            .put(CommonConfig.RPC_PORT.getKey(), "55556")
+                            .put(CommonConfig.RPC_PORT.getKey(), "55555")
+                            .put(FrontendConfig.FRONTEND_SERVICE_PORT.getKey(), "55556")
                             .build();
             this.frontends.add(new Frontend(frontendConfigs));
         }
