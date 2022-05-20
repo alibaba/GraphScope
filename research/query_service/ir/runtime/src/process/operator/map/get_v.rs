@@ -17,7 +17,7 @@ use std::convert::TryInto;
 
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::algebra::get_v::VOpt;
-use ir_common::NameOrId;
+use ir_common::KeyId;
 use pegasus::api::function::{FnResult, MapFunction};
 
 use crate::error::{FnExecError, FnGenResult};
@@ -28,9 +28,9 @@ use crate::process::record::Record;
 
 #[derive(Debug)]
 struct GetVertexOperator {
-    start_tag: Option<NameOrId>,
+    start_tag: Option<KeyId>,
     opt: VOpt,
-    alias: Option<NameOrId>,
+    alias: Option<KeyId>,
 }
 
 impl MapFunction<Record, Record> for GetVertexOperator {

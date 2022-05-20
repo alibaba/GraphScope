@@ -16,7 +16,7 @@
 use std::convert::TryInto;
 
 use ir_common::generated::algebra as algebra_pb;
-use ir_common::NameOrId;
+use ir_common::KeyId;
 use pegasus::api::function::{FilterMapFunction, FnResult};
 
 use crate::error::{FnExecError, FnGenResult};
@@ -31,7 +31,7 @@ use crate::process::record::{Entry, Record};
 #[derive(Debug)]
 struct AuxiliaOperator {
     query_params: QueryParams,
-    alias: Option<NameOrId>,
+    alias: Option<KeyId>,
 }
 
 impl FilterMapFunction<Record, Record> for AuxiliaOperator {

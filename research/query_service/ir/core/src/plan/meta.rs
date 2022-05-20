@@ -624,6 +624,14 @@ impl PlanMeta {
         }
     }
 
+    pub fn get_tag_ids(&self) -> Vec<(NameOrId, u32)> {
+        self.tag_ids
+            .clone()
+            .into_iter()
+            .map(|x| x)
+            .collect()
+    }
+
     pub fn set_curr_node(&mut self, curr_node: u32) {
         self.curr_node = CurrNodeOpt::Single(curr_node);
     }

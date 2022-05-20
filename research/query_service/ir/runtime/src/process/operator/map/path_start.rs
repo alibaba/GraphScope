@@ -16,7 +16,7 @@
 use std::convert::TryInto;
 
 use ir_common::generated::algebra as algebra_pb;
-use ir_common::NameOrId;
+use ir_common::KeyId;
 use pegasus::api::function::{FnResult, MapFunction};
 
 use crate::error::{FnExecError, FnGenResult};
@@ -26,7 +26,7 @@ use crate::process::record::Record;
 
 #[derive(Debug)]
 struct PathStartOperator {
-    start_tag: Option<NameOrId>,
+    start_tag: Option<KeyId>,
     is_whole_path: bool,
 }
 
