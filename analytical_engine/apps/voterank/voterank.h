@@ -71,7 +71,7 @@ class VoteRank : public grape::ParallelAppBase<FRAG_T, VoteRankContext<FRAG_T>>,
               ctx.rank[u] = 0;
               ctx.weight[u] = 1.0;
               ctx.scores[u] = 0.0;
-              ctx.update[u] = true;
+              ctx.update.Insert(u);
               messages.SendMsgThroughIEdges<fragment_t, double>(
                   frag, u, ctx.weight[u], tid);
             });
@@ -143,7 +143,7 @@ class VoteRank : public grape::ParallelAppBase<FRAG_T, VoteRankContext<FRAG_T>>,
             for (auto& e : es) {
               auto v = e.get_neighbor();
               if (frag.IsInnerVertex(v)) {
-                ctx.update[v] = true;
+                ctx.update.Insert(v);
               }
             }
           });
@@ -172,19 +172,20 @@ class VoteRank : public grape::ParallelAppBase<FRAG_T, VoteRankContext<FRAG_T>>,
                                                               {0, 0, {}});
     ForEach(inner_vertices,
             [&ctx, compare, &max_scores, &frag](int tid, vertex_t u) {
-              if (ctx.update[u] && ctx.rank[u] == 0) {
+              if (ctx.update.Exist(u) && ctx.rank[u] == 0) {
                 double cur = 0;
                 auto es = frag.GetOutgoingAdjList(u);
                 for (auto& e : es) {
                   cur += ctx.weight[e.get_neighbor()];
                 }
                 ctx.scores[u] = cur;
-                ctx.update[u] = false;
               }
               compare(max_scores[tid],
                       {ctx.scores[u], std::hash<oid_t>()(frag.GetId(u)),
                        frag.Vertex2Gid(u)});
             });
+
+    ctx.update.Clear();
 
 #ifdef PROFILING
     ctx.exec_time += GetCurrentTime();
@@ -230,7 +231,7 @@ class VoteRank : public grape::ParallelAppBase<FRAG_T, VoteRankContext<FRAG_T>>,
         for (auto& e : es) {
           auto v = e.get_neighbor();
           if (frag.IsInnerVertex(v)) {
-            ctx.update[v] = true;
+            ctx.update.Insert(v);
           }
         }
       });

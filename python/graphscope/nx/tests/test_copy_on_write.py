@@ -18,6 +18,7 @@
 
 import os
 
+import pandas as pd
 import pytest
 
 import graphscope
@@ -27,6 +28,7 @@ from graphscope.nx.tests.classes.test_digraph import TestDiGraph as _TestDiGraph
 from graphscope.nx.tests.classes.test_graph import TestGraph as _TestGraph
 from graphscope.nx.tests.utils import almost_equal
 from graphscope.nx.utils.misc import graphs_equal
+from graphscope.nx.utils.misc import replace_with_inf
 
 
 def k3_graph(prefix, directed):
@@ -283,17 +285,16 @@ class TestBuiltinCopyOnWrite:
             6: 0.4255225997990211,
         }
 
-        # FIXME(acezen): p2p_31_graph loading fail in ci, open when fixed the problem. (fixme)
-        # self.p2p_31 = p2p_31_graph(p2p_dir, False)
-        # self.P2P = nx.Graph(self.p2p_31, default_label="vertex")
-        # self.P2P.sssp = dict(
-        #     pd.read_csv(
-        #         "{}/p2p-31-sssp".format(os.path.expandvars("${GS_TEST_DIR}")),
-        #         sep=" ",
-        #         header=None,
-        #         prefix="",
-        #     ).values
-        # )
+        self.p2p_31 = p2p_31_graph(p2p_dir, False)
+        self.P2P = nx.Graph(self.p2p_31, default_label="vertex")
+        self.P2P.sssp = dict(
+            pd.read_csv(
+                "{}/p2p-31-sssp".format(os.path.expandvars("${GS_TEST_DIR}")),
+                sep=" ",
+                header=None,
+                prefix="",
+            ).values
+        )
 
     def test_with_multigraph(self):
         nx.DiGraph(self.multi_simple)
@@ -303,10 +304,10 @@ class TestBuiltinCopyOnWrite:
             self.SG, source=1, weight="weight"
         )
         assert ret == {1: 0.0, 2: 1.0, 3: 1.0, 4: 3.0, 5: 2.0, 6: 3.0}
-        # p2p_ans = nx.builtin.single_source_dijkstra_path_length(
-        #     self.P2P, source=6, weight="f2"
-        # )
-        # assert replace_with_inf(p2p_ans) == self.P2P.sssp
+        p2p_ans = nx.builtin.single_source_dijkstra_path_length(
+            self.P2P, source=6, weight="f2"
+        )
+        assert replace_with_inf(p2p_ans) == self.P2P.sssp
 
     def test_wcc(self):
         ret = nx.builtin.weakly_connected_components(self.SG)
@@ -393,3 +394,29 @@ class TestBuiltinCopyOnWrite:
     def test_numeric_assortativity_coefficient(self):
         ret = nx.builtin.numeric_assortativity_coefficient(self.SG, attribute="attr")
         assert almost_equal(ret, 0.5383819020581653, places=12)
+
+    def test_voterank(self):
+        gt = [
+            9788,
+            17325,
+            585,
+            50445,
+            28802,
+            2550,
+            61511,
+            5928,
+            29965,
+            38767,
+            57802,
+            52032,
+            44619,
+            13596,
+            59426,
+            454,
+            58170,
+            3544,
+            364,
+            5530,
+        ]
+        ans = nx.builtin.voterank(self.P2P, 20)
+        assert gt == ans

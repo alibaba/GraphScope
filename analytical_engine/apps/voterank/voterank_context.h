@@ -32,11 +32,12 @@ class VoteRankContext : public grape::VertexDataContext<FRAG_T, int> {
 
  public:
   explicit VoteRankContext(const FRAG_T& fragment)
-      : grape::VertexDataContext<FRAG_T, int32_t>(fragment, true),
+      : grape::VertexDataContext<FRAG_T, int32_t>(fragment),
         rank(this->data()) {}
 
   void Init(grape::ParallelMessageManager& messages, int num_of_nodes) {
     auto& frag = this->fragment();
+    auto inner_vertices = frag.InnerVertices();
     auto vertices = frag.Vertices();
     this->num_of_nodes = num_of_nodes;
     if (num_of_nodes == 0) {
@@ -44,7 +45,7 @@ class VoteRankContext : public grape::VertexDataContext<FRAG_T, int> {
     }
     weight.Init(vertices);
     scores.Init(vertices);
-    update.Init(vertices);
+    update.Init(inner_vertices);
     step = 0;
     avg_degree = 0;
 
@@ -72,7 +73,8 @@ class VoteRankContext : public grape::VertexDataContext<FRAG_T, int> {
   typename FRAG_T::template vertex_array_t<double> weight;
   typename FRAG_T::template vertex_array_t<double> scores;
   typename FRAG_T::template vertex_array_t<int>& rank;
-  typename FRAG_T::template vertex_array_t<bool> update;
+  grape::DenseVertexSet<typename FRAG_T::inner_vertices_t> update;
+
 #ifdef PROFILING
   double preprocess_time = 0;
   double exec_time = 0;

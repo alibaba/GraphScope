@@ -528,6 +528,7 @@ class DynamicProjectedFragment {
   }
 
   inline adj_list_t GetIncomingAdjList(const vertex_t& v) {
+    assert(IsInnerVertex(v));
     if (!fragment_->directed()) {
       return adj_list_t(fragment_->get_oe_begin(v), fragment_->get_oe_end(v),
                         e_prop_key_);
@@ -537,6 +538,7 @@ class DynamicProjectedFragment {
   }
 
   inline const_adj_list_t GetIncomingAdjList(const vertex_t& v) const {
+    assert(IsInnerVertex(v));
     if (!fragment_->directed()) {
       return const_adj_list_t(fragment_->get_oe_begin(v),
                               fragment_->get_oe_end(v), e_prop_key_);
@@ -546,11 +548,13 @@ class DynamicProjectedFragment {
   }
 
   inline adj_list_t GetOutgoingAdjList(const vertex_t& v) {
+    assert(IsInnerVertex(v));
     return adj_list_t(fragment_->get_oe_begin(v), fragment_->get_oe_end(v),
                       e_prop_key_);
   }
 
   inline const_adj_list_t GetOutgoingAdjList(const vertex_t& v) const {
+    assert(IsInnerVertex(v));
     return const_adj_list_t(fragment_->get_oe_begin(v),
                             fragment_->get_oe_end(v), e_prop_key_);
   }

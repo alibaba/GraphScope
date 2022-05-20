@@ -334,6 +334,10 @@ class TestBuiltInApp:
         ans = nx.builtin.average_degree_connectivity(self.p2p_undirected)
         assert gt == ans
 
+    @pytest.mark.skipif(
+        os.environ.get("DEPLOYMENT", None) != "standalone",
+        reason="FIXME(acezen): DynamicFragment not store edges of outer vertex.",
+    )
     def test_voterank(self):
         gt = [
             9788,
