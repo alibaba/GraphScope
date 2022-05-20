@@ -9,7 +9,7 @@ from graphscope import nx
 
 @pytest.mark.usefixtures("graphscope_session")
 class TestVoteRank(object):
-    def test_direct_graph(self):
+    def test_directed_graph(self):
         G = nx.DiGraph()
         edges = [(1, 3), (1, 4), (2, 4), (2, 5), (3, 5), (1, 2)]
         G.add_edges_from(edges)
@@ -30,12 +30,12 @@ class TestVoteRank(object):
         assert p == [1]
 
         G = nx.DiGraph()
-        edges = [(21, 1), (89, 1), (91, 1), (92, 1), (20, 1)]
+        edges = [(21, 91), (89, 20), (12, 21), (92, 12), (20, 21), (89, 91)]
         G.add_edges_from(edges)
         p = nx.builtin.voterank(G, 1)
-        assert p == [21]
+        assert p == [89]
 
-    def test_undirect_graph(self):
+    def test_undirected_graph(self):
         G = nx.Graph()
         edges = [(1, 2), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7)]
         G.add_edges_from(edges)
