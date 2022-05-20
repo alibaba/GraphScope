@@ -236,15 +236,15 @@ class TestDiGraphCopyOnWrite(_TestDiGraph):
 
 @pytest.mark.usefixtures("graphscope_session")
 class TestBuiltinCopyOnWrite:
-    def setup_method(self):
+    def setup_(cls):
         data_dir = os.path.expandvars("${GS_TEST_DIR}/networkx")
         p2p_dir = os.path.expandvars("${GS_TEST_DIR}")
 
-        self.simple = simple_label_graph(data_dir, True)
-        self.multi_simple = simple_label_multigraph(data_dir, True)
-        self.K3 = k3_graph(data_dir, False)
-        self.SG = nx.DiGraph(self.simple, default_label="v-0")
-        self.SG.pagerank = {
+        cls.simple = simple_label_graph(data_dir, True)
+        cls.multi_simple = simple_label_multigraph(data_dir, True)
+        cls.K3 = k3_graph(data_dir, False)
+        cls.SG = nx.DiGraph(cls.simple, default_label="v-0")
+        cls.SG.pagerank = {
             1: 0.03721197,
             2: 0.05395735,
             3: 0.04150565,
@@ -252,7 +252,7 @@ class TestBuiltinCopyOnWrite:
             5: 0.20599833,
             6: 0.28624589,
         }
-        self.SG.auth = {
+        cls.SG.auth = {
             1: 0.165000,
             2: 0.243018,
             3: 0.078017,
@@ -260,7 +260,7 @@ class TestBuiltinCopyOnWrite:
             5: 0.270943,
             6: 0.165000,
         }
-        self.SG.hub = {
+        cls.SG.hub = {
             1: 0.182720,
             2: 0.0,
             3: 0.386437,
@@ -268,7 +268,7 @@ class TestBuiltinCopyOnWrite:
             5: 0.138316,
             6: 0.044404,
         }
-        self.SG.eigen = {
+        cls.SG.eigen = {
             1: 3.201908045277076e-06,
             2: 6.4038160905537886e-06,
             3: 3.201908045277076e-06,
@@ -276,7 +276,7 @@ class TestBuiltinCopyOnWrite:
             4: 0.6479356498234745,
             6: 0.6479356498234745,
         }
-        self.SG.katz = {
+        cls.SG.katz = {
             1: 0.37871516522035104,
             2: 0.4165866814015425,
             3: 0.37871516522035104,
@@ -285,9 +285,9 @@ class TestBuiltinCopyOnWrite:
             6: 0.4255225997990211,
         }
 
-        self.p2p_31 = p2p_31_graph(p2p_dir, False)
-        self.P2P = nx.Graph(self.p2p_31, default_label="vertex")
-        self.P2P.sssp = dict(
+        cls.p2p_31 = p2p_31_graph(p2p_dir, False)
+        cls.P2P = nx.Graph(cls.p2p_31, default_label="vertex")
+        cls.P2P.sssp = dict(
             pd.read_csv(
                 "{}/p2p-31-sssp".format(os.path.expandvars("${GS_TEST_DIR}")),
                 sep=" ",
