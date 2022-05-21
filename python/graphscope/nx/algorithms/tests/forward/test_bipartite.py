@@ -12,6 +12,7 @@ import networkx.algorithms.bipartite.tests.test_spectral_bipartivity
 import pytest
 
 from graphscope.nx.utils.compat import import_as_graphscope_nx
+from graphscope.nx.utils.compat import with_graphscope_nx_context
 
 import_as_graphscope_nx(networkx.algorithms.bipartite.tests.test_basic,
                         decorators=pytest.mark.usefixtures("graphscope_session"))
@@ -45,3 +46,11 @@ import_as_graphscope_nx(networkx.algorithms.bipartite.tests.test_redundancy,
 
 import_as_graphscope_nx(networkx.algorithms.bipartite.tests.test_spectral_bipartivity,
                         decorators=pytest.mark.usefixtures("graphscope_session"))
+
+
+@pytest.mark.usefixtures("graphscope_session")
+@with_graphscope_nx_context(TestMatching)
+class TestMatching():
+    @pytest.mark.skip(reason="graphscope.nx not support object as node")
+    def test_unorderable_nodes(self):
+        pass

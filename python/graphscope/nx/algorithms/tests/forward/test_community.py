@@ -41,3 +41,53 @@ import_as_graphscope_nx(networkx.algorithms.community.tests.test_quality,
 
 import_as_graphscope_nx(networkx.algorithms.community.tests.test_utils,
                         decorators=pytest.mark.usefixtures("graphscope_session"))
+
+
+@pytest.mark.skip(reason="graphscope.nx not support LFR_benchmark_graph generator")
+def test_modularity_increase():
+    pass
+
+
+@pytest.mark.skip(reason="graphscope.nx not support LFR_benchmark_graph generator")
+def test_valid_partition():
+    pass
+
+
+@pytest.mark.skip(reason="graphscope.nx not support LFR_benchmark_graph generator")
+def test_quality():
+    pass
+
+
+@pytest.mark.skip(reason="graphscope.nx not support LFR_benchmark_graph generator")
+def test_resolution():
+    pass
+
+
+@pytest.mark.skip(reason="graphscope.nx not support LFR_benchmark_graph generator")
+def test_threshold():
+    pass
+
+
+@pytest.mark.skip(reason="graphscope.nx not support set as data")
+def test_partition():
+    pass
+
+
+@pytest.mark.skip(reason="graphscope.nx not support set as data")
+def test_none_weight_param():
+    pass
+
+
+@pytest.mark.skip(reason="graphscope.nx not support set as data")
+def test_multigraph():
+    pass
+
+
+@pytest.mark.skip(reason="graphscope.nx not support luke_partition")
+def test_paper_1_case():
+    pass
+
+
+@pytest.mark.skip(reason="graphscope.nx not support luke_partition")
+def test_paper_2_case():
+    pass

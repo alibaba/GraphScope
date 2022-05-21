@@ -21,8 +21,8 @@
 
 import networkx.classes.function as func
 
-from graphscope.nx.utils.compat import patch_docstring
 from graphscope.nx.classes.cache import get_node_data
+from graphscope.nx.utils.compat import patch_docstring
 
 __all__ = [
     "nodes",

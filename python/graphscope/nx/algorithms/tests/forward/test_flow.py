@@ -28,48 +28,23 @@ class TestGomoryHuTree:
 
 
 @pytest.mark.usefixtures("graphscope_session")
+@pytest.mark.slow
+@with_graphscope_nx_context(TestCutoff)
+class TestCutoff:
+    pass
+
+
+@pytest.mark.usefixtures("graphscope_session")
 @with_graphscope_nx_context(TestMaxflowLargeGraph)
-class TestMaxflowLargeGraph():
-    @pytest.mark.skip(reason="not support tuple as node")
+class TestMaxflowLargeGraph:
+    @pytest.mark.slow
     def test_pyramid(self):
-        pass
-
-    @pytest.mark.skip(reason="not support read_gpickle")
-    def test_gl1(self):
-        pass
-
-    @pytest.mark.skip(reason="not support read_gpickle")
-    def test_gw1(self):
-        pass
-
-    @pytest.mark.skip(reason="not support read_gpickle")
-    def test_wlm3(self):
-        pass
-
-    @pytest.mark.skip(reason="not support read_gpickle")
-    def test_preflow_push_global_relabel(self):
         pass
 
 
 @pytest.mark.usefixtures("graphscope_session")
 @with_graphscope_nx_context(TestMinCostFlow)
 class TestMinCostFlow():
-    def test_negative_selfloops(self):
-        """Negative selfloops should cause an exception if uncapacitated and
-        always be saturated otherwise.
-        """
-        G = nx.DiGraph()
-        G.add_edge(1, 1, weight=-1)
-        pytest.raises(nx.NetworkXUnbounded, nx.network_simplex, G)
-        pytest.raises(nx.NetworkXUnbounded, nx.capacity_scaling, G)
-        G[1][1]['capacity'] = 2
-        flowCost, H = nx.network_simplex(G)
-        assert flowCost == -2
-        assert H == {1: {1: 2}}
-        flowCost, H = nx.capacity_scaling(G)
-        assert flowCost == -2
-        assert H == {1: {1: 2}}
-
     @pytest.mark.skip(reason="not support value nan")
     def test_exceptions(self):
         G = nx.Graph()
@@ -106,3 +81,8 @@ class TestMinCostFlow():
     @pytest.mark.skip(reason="not support int as key")
     def test_digraph3(self):
         pass
+
+
+@pytest.mark.skip(reason="not support int as key")
+def test_shortest_augmenting_path_two_phase():
+    pass

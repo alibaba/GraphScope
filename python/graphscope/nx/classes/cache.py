@@ -469,6 +469,8 @@ def get_node_data(graph, n):
     """
     if graph.graph_type == graph_def_pb2.ARROW_PROPERTY:
         n = graph._convert_to_label_id_tuple(n)
-    op = dag_utils.report_graph(graph, types_pb2.NODE_DATA, node=simdjson.dumps(n).encode("utf-8"))
+    op = dag_utils.report_graph(
+        graph, types_pb2.NODE_DATA, node=simdjson.dumps(n).encode("utf-8")
+    )
     archive = op.eval()
     return msgpack.loads(archive.get_bytes(), use_list=False)

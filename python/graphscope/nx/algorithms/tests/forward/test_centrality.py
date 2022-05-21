@@ -1,4 +1,3 @@
-import numpy as np
 import networkx.algorithms.centrality.tests.test_betweenness_centrality
 import networkx.algorithms.centrality.tests.test_betweenness_centrality_subset
 import networkx.algorithms.centrality.tests.test_closeness_centrality
@@ -15,6 +14,7 @@ import networkx.algorithms.centrality.tests.test_percolation_centrality
 import networkx.algorithms.centrality.tests.test_reaching
 import networkx.algorithms.centrality.tests.test_second_order_centrality
 import networkx.algorithms.centrality.tests.test_subgraph
+import numpy as np
 import pytest
 
 import graphscope.nx as nx
@@ -79,29 +79,19 @@ import_as_graphscope_nx(networkx.algorithms.centrality.tests.test_subgraph,
 
 
 @pytest.mark.usefixtures("graphscope_session")
-@with_graphscope_nx_context(TestBetweennessCentrality)
-class TestBetweennessCentrality:
-    @pytest.mark.skip(reason="not support sampling")
-    def test_sample_from_P3(self):
-        G = nx.path_graph(3)
-        b_answer = {0: 0.0, 1: 1.0, 2: 0.0}
-        b = nx.betweenness_centrality(G, k=3, weight=None, normalized=False, seed=1)
-        for n in sorted(G):
-            assert b[n] == pytest.approx(b_answer[n], abs=1e-7)
-        b = nx.betweenness_centrality(G, k=2, weight=None, normalized=False, seed=1)
-        # python versions give different results with same seed
-        b_approx1 = {0: 0.0, 1: 1.5, 2: 0.0}
-        b_approx2 = {0: 0.0, 1: 0.75, 2: 0.0}
-        for n in sorted(G):
-            assert b[n] in (b_approx1[n], b_approx2[n])
+@with_graphscope_nx_context(TestEigenvectorCentralityDirected)
+class TestEigenvectorCentralityDirected:
+    def test_eigenvector_centrality_weighted_numpy(self):
+        G = self.G
+        p = nx.eigenvector_centrality_numpy(G)
+        for (a, b) in zip(list(p.values()), self.G.evc):
+            assert a == pytest.approx(b, abs=1e-4)
 
-
-@pytest.mark.usefixtures("graphscope_session")
-@with_graphscope_nx_context(TestApproximateFlowBetweennessCentrality)
-class TestApproximateFlowBetweennessCentrality:
-    # NB: graphscope.nx does not support grid_graph, pass the test
-    def test_grid(self):
-        pass
+    def test_eigenvector_centrality_unweighted_numpy(self):
+        G = self.H
+        p = nx.eigenvector_centrality_numpy(G)
+        for (a, b) in zip(list(p.values()), self.G.evc):
+            assert a == pytest.approx(b, abs=1e-4)
 
 
 @pytest.mark.usefixtures("graphscope_session")
@@ -147,28 +137,10 @@ class TestKatzCentralityDirectedNumpy():
 @pytest.mark.usefixtures("graphscope_session")
 @with_graphscope_nx_context(TestKatzEigenvectorVKatz)
 class TestKatzEigenvectorVKatz():
-    @pytest.mark.skip(reason="not support adjacency_matrix now")
     def test_eigenvector_v_katz_random(self):
         G = nx.gnp_random_graph(10, 0.5, seed=1234)
-        l = float(max(eigvals(nx.adjacency_matrix(G).todense())))
+        l = float(max(np.linalg.eigvals(nx.to_scipy_sparse_array(G).todense())))
         e = nx.eigenvector_centrality_numpy(G)
         k = nx.katz_centrality_numpy(G, 1.0 / l)
         for n in G:
-            assert almost_equal(e[n], k[n])
-
-
-@pytest.mark.usefixtures("graphscope_session")
-class TestVoteRankCentrality:
-    @pytest.mark.skip(reason="not support list as attribute")
-    def test_voterank_centrality_1(self):
-        G = nx.Graph()
-        G.add_edges_from([(7, 8), (7, 5), (7, 9), (5, 0), (0, 1), (0, 2), (0, 3),
-                          (0, 4), (1, 6), (2, 6), (3, 6), (4, 6)])
-        assert [0, 7, 6] == nx.voterank(G)
-
-    @pytest.mark.skip(reason="not support list as attribute")
-    def test_voterank_centrality_2(self):
-        G = nx.florentine_families_graph()
-        d = nx.voterank(G, 4)
-        exact = ['Medici', 'Strozzi', 'Guadagni', 'Castellani']
-        assert exact == d
+            assert e[n] == pytest.approx(k[n], abs=1e-5)

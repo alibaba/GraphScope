@@ -24,7 +24,6 @@ import threading
 
 import orjson as json
 from networkx import freeze
-
 from networkx.classes.graph import Graph as RefGraph
 from networkx.classes.reportviews import DegreeView
 
@@ -46,7 +45,6 @@ from graphscope.nx.classes.graphviews import generic_graph_view
 from graphscope.nx.classes.reportviews import EdgeView
 from graphscope.nx.classes.reportviews import NodeView
 from graphscope.nx.convert import to_networkx_graph
-
 from graphscope.nx.utils.compat import patch_docstring
 from graphscope.nx.utils.misc import clear_mutation_cache
 from graphscope.nx.utils.misc import init_empty_graph_in_engine

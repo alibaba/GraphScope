@@ -9,31 +9,19 @@ from graphscope.nx.utils.compat import with_graphscope_nx_context
 import_as_graphscope_nx(networkx.algorithms.tests.test_threshold,
                         decorators=pytest.mark.usefixtures("graphscope_session"))
 
-from networkx.algorithms.tests.test_threshold import \
-    TestGeneratorThreshold as _TestGeneratorThreshold
-
-
 @pytest.mark.usefixtures("graphscope_session")
-@with_graphscope_nx_context(_TestGeneratorThreshold)
+@with_graphscope_nx_context(TestGeneratorThreshold)
 class TestGeneratorThreshold:
     def test_eigenvectors(self):
-        np = pytest.importorskip('numpy')
+        # N.B: graphscope.nx has no attribute 'laplacian_matrix'
+        np = pytest.importorskip("numpy")
         eigenval = np.linalg.eigvals
-        scipy = pytest.importorskip('scipy')
+        pytest.importorskip("scipy")
 
-        cs = 'ddiiddid'
+        cs = "ddiiddid"
         G = nxt.threshold_graph(cs)
         (tgeval, tgevec) = nxt.eigenvectors(cs)
-        dot = np.dot
-        assert [abs(dot(lv, lv) - 1.0) < 1e-9 for lv in tgevec] == [True] * 8
-
-    def test_create_using(self):
-        cs = 'ddiiddid'
-        G = nxt.threshold_graph(cs)
-        assert pytest.raises(nx.exception.NetworkXError,
-                             nxt.threshold_graph,
-                             cs,
-                             create_using=nx.DiGraph())
+        np.testing.assert_allclose([np.dot(lv, lv) for lv in tgevec], 1.0, rtol=1e-9)
 
     @pytest.mark.skipif("CI" in os.environ, reason="This case would failed in ci.")
     def test_finding_routines(self):

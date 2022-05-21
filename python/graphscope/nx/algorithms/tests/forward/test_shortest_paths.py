@@ -36,3 +36,11 @@ import_as_graphscope_nx(
 import_as_graphscope_nx(
     networkx.algorithms.shortest_paths.tests.test_weighted,
     decorators=pytest.mark.usefixtures("graphscope_session"))
+
+
+@pytest.mark.usefixtures("graphscope_session")
+@with_graphscope_nx_context(TestAverageShortestPathLength)
+class TestAverageShortestPathLength():
+    @pytest.mark.skip(reason="builtin app would not raise Error during compute")
+    def test_disconnected():
+        pass
