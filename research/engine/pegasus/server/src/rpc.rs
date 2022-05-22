@@ -40,7 +40,7 @@ use tonic::{Code, Request, Response, Status};
 
 use crate::generated::protocol as pb;
 use crate::generated::protocol::job_config::Servers;
-use crate::job::{JobDesc, JobAssembly};
+use crate::job::{JobAssembly, JobDesc};
 use crate::pb::{BinaryResource, Empty, Name};
 
 pub struct RpcSink {
@@ -135,7 +135,7 @@ where
             Ok(lib) => {
                 info!("add library with name {}", name);
                 if let Some((name, _)) = pegasus::resource::add_global_resource(name, lib) {
-                    return Err(Status::aborted(format!("resource {} already exists;", name)))
+                    return Err(Status::aborted(format!("resource {} already exists;", name)));
                 }
                 Ok(Response::new(Empty {}))
             }
@@ -199,6 +199,22 @@ pub struct RPCServerConfig {
 }
 
 impl RPCServerConfig {
+    pub fn new(rpc_host: Option<String>, rpc_port: Option<u16>) -> Self {
+        RPCServerConfig {
+            rpc_host,
+            rpc_port,
+            rpc_concurrency_limit_per_connection: None,
+            rpc_timeout_ms: None,
+            rpc_initial_stream_window_size: None,
+            rpc_initial_connection_window_size: None,
+            rpc_max_concurrent_streams: None,
+            rpc_keep_alive_interval_ms: None,
+            rpc_keep_alive_timeout_ms: None,
+            tcp_keep_alive_ms: None,
+            tcp_nodelay: None,
+        }
+    }
+
     pub fn parse(content: &str) -> Result<Self, toml::de::Error> {
         toml::from_str(&content)
     }
@@ -207,42 +223,49 @@ impl RPCServerConfig {
 pub struct RPCJobServer<S: pb::job_service_server::JobService> {
     service: S,
     rpc_config: RPCServerConfig,
-    server_config: pegasus::Configuration,
 }
 
-pub async fn start_rpc_server<P, D, E>(
-    rpc_config: RPCServerConfig, server_config: Configuration, assemble: P,
-    server_detector: D, listener: E,
+/// start both rpc server and pegasus server
+pub async fn start_all<P, D, E>(
+    rpc_config: RPCServerConfig, server_config: Configuration, assemble: P, server_detector: D, mut listener: E,
 ) -> Result<(), Box<dyn std::error::Error>>
 where
     P: JobAssembly,
     D: ServerDetect + 'static,
     E: ServiceStartListener,
 {
+    let server_id = server_config.server_id();
+    if let Some(server_addr) = pegasus::startup_with(server_config, server_detector)? {
+        listener.on_server_start(server_id, server_addr)?;
+    }
+    start_rpc_server(server_id, rpc_config, assemble, listener).await?;
+    Ok(())
+}
+
+/// startup rpc server
+pub async fn start_rpc_server<P, E>(
+    server_id: u64, rpc_config: RPCServerConfig, assemble: P, listener: E,
+) -> Result<(), Box<dyn std::error::Error>>
+where
+    P: JobAssembly,
+    E: ServiceStartListener,
+{
     let service = JobServiceImpl { inner: Arc::new(assemble), report: true };
-    let server = RPCJobServer::new(rpc_config, server_config, service);
-    server.run(server_detector, listener).await?;
+    let server = RPCJobServer::new(rpc_config, service);
+    server.run(server_id, listener).await?;
     Ok(())
 }
 
 impl<S: pb::job_service_server::JobService> RPCJobServer<S> {
-    pub fn new(rpc_config: RPCServerConfig, server_config: Configuration, service: S) -> Self {
-        RPCJobServer { service, rpc_config, server_config }
+    pub fn new(rpc_config: RPCServerConfig, service: S) -> Self {
+        RPCJobServer { service, rpc_config }
     }
 
-    pub async fn run<D, E>(
-        self, server_detector: D, mut listener: E,
-    ) -> Result<(), Box<dyn std::error::Error>>
+    pub async fn run<E>(self, server_id: u64, mut listener: E) -> Result<(), Box<dyn std::error::Error>>
     where
-        D: ServerDetect + 'static,
         E: ServiceStartListener,
     {
-        let RPCJobServer { service, mut rpc_config, server_config } = self;
-        let server_id = server_config.server_id();
-        if let Some(server_addr) = pegasus::startup_with(server_config, server_detector)? {
-            listener.on_server_start(server_id, server_addr)?;
-        }
-
+        let RPCJobServer { service, mut rpc_config } = self;
         let mut builder = Server::builder();
         if let Some(limit) = rpc_config.rpc_concurrency_limit_per_connection {
             builder = builder.concurrency_limit_per_connection(limit);
