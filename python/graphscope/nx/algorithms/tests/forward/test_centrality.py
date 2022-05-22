@@ -97,7 +97,6 @@ class TestEigenvectorCentralityDirected:
 @pytest.mark.usefixtures("graphscope_session")
 @with_graphscope_nx_context(TestKatzCentralityDirectedNumpy)
 class TestKatzCentralityDirectedNumpy():
-    @classmethod
     def setup_class(cls):
         global np
         np = pytest.importorskip('numpy')

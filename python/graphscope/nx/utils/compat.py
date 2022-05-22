@@ -119,7 +119,6 @@ def replace_context(global_ctx, source_module, target_module):
 
 
 def load_the_module(module_or_name):
-    return module_or_name
     if isinstance(module_or_name, ModuleType):
         module_or_name = module_or_name.__name__
     names = module_or_name.split(".")

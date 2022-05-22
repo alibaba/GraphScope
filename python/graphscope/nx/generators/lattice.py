@@ -144,7 +144,6 @@ def grid_graph(dim, periodic=False):
         Gnew = next(func)(current_dim)
         G = _cartesian_product(Gnew, G)
     # graph G is done but has labels of the form (1, (2, (3, 1))) so relabel
-    print(G.nodes)
     H = relabel_nodes(G, flatten)
     return H
 
