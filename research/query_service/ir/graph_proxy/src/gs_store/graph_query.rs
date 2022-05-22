@@ -88,8 +88,31 @@ where
                 .collect();
             if let Some(indexed_values) = params.get_extra_param("PK") {
                 match indexed_values {
-                    Object::Vector(_prop_vals) => {
-                        todo!()
+                    Object::Vector(prop_vals) => {
+                        let mut properties = Vec::with_capacity(prop_vals.len());
+                        for prop_val in prop_vals {
+                            let property = encode_store_prop_val(prop_val.clone());
+                            properties.push(property);
+                        }
+                        if label_ids.len() != 1 {
+                            Err(FnExecError::query_store_error("PK only supports a single label"))?
+                        }
+                        if let Some(vid) = self
+                            .partition_manager
+                            // TODO: vineyard should also implement this function
+                            .get_vertex_id_by_primary_keys(*label_ids.get(0).unwrap(), properties.as_ref())
+                        {
+                            Ok(Box::new(
+                                vec![Vertex::new(
+                                    vid as ID,
+                                    params.labels.get(0).cloned(),
+                                    DynDetails::new(DefaultDetails::new(HashMap::new())),
+                                )]
+                                .into_iter(),
+                            ))
+                        } else {
+                            Ok(Box::new(std::iter::empty()))
+                        }
                     }
                     _ => Err(FnExecError::query_store_error("PK values should be a vector"))?,
                 }
@@ -411,6 +434,69 @@ fn encode_runtime_prop_val(prop_val: Property) -> Object {
         Property::Bytes(v) => Object::Blob(v.into_boxed_slice()),
         Property::String(s) => Object::String(s),
         _ => unimplemented!(),
+    }
+}
+
+#[inline]
+fn encode_store_prop_val(prop_val: Object) -> Property {
+    match prop_val {
+        Object::Primitive(p) => match p {
+            Primitives::Byte(b) => Property::Char(b as u8),
+            Primitives::Integer(i) => Property::Int(i),
+            Primitives::Long(i) => Property::Long(i),
+            // TODO: overflow check
+            Primitives::ULLong(i) => Property::Long(i as i64),
+            Primitives::Float(f) => Property::Double(f),
+        },
+        Object::String(s) => Property::String(s),
+        Object::Vector(vec) => {
+            if let Some(probe) = vec.get(0) {
+                match probe {
+                    Object::Primitive(p) => match p {
+                        Primitives::Byte(_) | Primitives::Integer(_) => Property::ListInt(
+                            vec.into_iter()
+                                .map(|i| i.as_i32().unwrap())
+                                .collect(),
+                        ),
+                        Primitives::Long(_) => Property::ListLong(
+                            vec.into_iter()
+                                .map(|i| i.as_i64().unwrap())
+                                .collect(),
+                        ),
+                        Primitives::ULLong(_) => {
+                            // TODO:  overflow check
+                            Property::ListLong(
+                                vec.into_iter()
+                                    .map(|i| i.as_u128().unwrap() as i64)
+                                    .collect(),
+                            )
+                        }
+                        Primitives::Float(_) => Property::ListDouble(
+                            vec.into_iter()
+                                .map(|i| i.as_f64().unwrap())
+                                .collect(),
+                        ),
+                    },
+                    Object::String(_) => Property::ListString(
+                        vec.into_iter()
+                            .map(|i| i.as_str().unwrap().into_owned())
+                            .collect(),
+                    ),
+                    Object::Blob(_) => Property::ListBytes(
+                        vec.into_iter()
+                            .map(|i| i.as_bytes().unwrap().to_vec())
+                            .collect(),
+                    ),
+                    Object::None => Property::Null,
+                    _ => Property::Unknown,
+                }
+            } else {
+                Property::Null
+            }
+        }
+        Object::Blob(b) => Property::Bytes(b.to_vec()),
+        Object::None => Property::Null,
+        _ => Property::Unknown,
     }
 }
 
