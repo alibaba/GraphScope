@@ -49,3 +49,21 @@ import_as_graphscope_nx(networkx.algorithms.approximation.tests.test_traveling_s
 
 import_as_graphscope_nx(networkx.algorithms.approximation.tests.test_treewidth,
                         decorators=pytest.mark.usefixtures("graphscope_session"))
+
+
+pytest.mark.usefixtures("graphscope_session")
+pytest.mark.skip(reason="Too slow")
+def test_example_1():
+    pass
+
+
+pytest.mark.usefixtures("graphscope_session")
+pytest.mark.skip(reason="Too slow")
+def test_example_1_detail_3_and_4():
+    pass
+
+
+pytest.mark.usefixtures("graphscope_session")
+pytest.mark.skip(reason="Too slow")
+def test_torrents_and_ferraro_graph():
+    pass

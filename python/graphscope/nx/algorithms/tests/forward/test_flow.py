@@ -28,10 +28,11 @@ class TestGomoryHuTree:
 
 
 @pytest.mark.usefixtures("graphscope_session")
-@pytest.mark.slow
 @with_graphscope_nx_context(TestCutoff)
 class TestCutoff:
-    pass
+    @pytest.mark.skip(reason="out of memory")
+    def test_cutoff(self)
+        pass
 
 
 @pytest.mark.usefixtures("graphscope_session")

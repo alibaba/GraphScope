@@ -122,3 +122,8 @@ def test_arborescence_iterator_max():
 @pytest.mark.usefixtures("graphscope_session")
 def test_arborescence_iterator_initial_partition():
     pass
+
+@pytest.mark.skip(reason="No need to check multigraph of graphscope.nx")
+@pytest.mark.usefixtures("graphscope_session")
+class TestPrim(MultigraphMSTTestBase):
+    pass
