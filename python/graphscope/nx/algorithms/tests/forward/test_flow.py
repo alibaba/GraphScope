@@ -21,7 +21,7 @@ import_as_graphscope_nx(networkx.algorithms.flow.tests.test_mincost,
 
 
 @pytest.mark.usefixtures("graphscope_session")
-@pytest.mark.slow
+@pytest.mark.skip(reason="Too slow")
 @with_graphscope_nx_context(TestGomoryHuTree)
 class TestGomoryHuTree:
     pass
@@ -38,7 +38,7 @@ class TestCutoff:
 @pytest.mark.usefixtures("graphscope_session")
 @with_graphscope_nx_context(TestMaxflowLargeGraph)
 class TestMaxflowLargeGraph:
-    @pytest.mark.slow
+    @pytest.mark.skip(reason="Too slow")
     def test_pyramid(self):
         pass
 
