@@ -31,7 +31,7 @@ class TestGomoryHuTree:
 @with_graphscope_nx_context(TestCutoff)
 class TestCutoff:
     @pytest.mark.skip(reason="out of memory")
-    def test_cutoff(self)
+    def test_cutoff(self):
         pass
 
 
