@@ -52,5 +52,19 @@
         <include>maxgraph*.jar</include>
       </includes>
     </fileSet>
+    <fileSet>
+      <directory>${project.basedir}/../ir-adaptor/target</directory>
+      <outputDirectory>/</outputDirectory>
+      <includes>
+        <include>ir*.jar</include>
+      </includes>
+    </fileSet>
+    <fileSet>
+      <directory>${project.basedir}/../../research/query_service/ir/target/release</directory>
+      <outputDirectory>lib</outputDirectory>
+      <includes>
+        <include>libir_core*</include>
+      </includes>
+    </fileSet>
   </fileSets>
 </assembly>

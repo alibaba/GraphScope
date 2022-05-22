@@ -54,10 +54,6 @@ Fragments in GraphScope
     :members:
     :undoc-members:
 
-.. doxygenclass:: gs::AppendOnlyArrowFragment
-    :members:
-    :undoc-members:
-
 .. doxygenclass:: gs::ArrowProjectedVertexMap
     :members:
     :undoc-members:
@@ -67,14 +63,6 @@ Fragments in GraphScope
     :undoc-members:
 
 .. doxygenclass:: gs::ArrowFragmentAppender
-    :members:
-    :undoc-members:
-
-.. doxygenclass:: gs::AppendOnlyArrowFragmentBuilder
-    :members:
-    :undoc-members:
-
-.. doxygenclass:: gs::AppendOnlyArrowFragmentLoader
     :members:
     :undoc-members:
 

@@ -16,33 +16,48 @@
 #ifndef ANALYTICAL_ENGINE_CORE_GRAPE_INSTANCE_H_
 #define ANALYTICAL_ENGINE_CORE_GRAPE_INSTANCE_H_
 
-#include <sys/stat.h>
+#include <glog/logging.h>
+#include <mpi.h>
 
+#include <iosfwd>
 #include <map>
 #include <memory>
 #include <string>
-#include <unordered_set>
 #include <utility>
-#include <vector>
 
-#include "boost/optional.hpp"
+#include "boost/foreach.hpp"
+#include "boost/leaf/error.hpp"
+#include "boost/leaf/result.hpp"
 #include "boost/property_tree/json_parser.hpp"
 #include "boost/property_tree/ptree.hpp"
-
-#include "grape/app/vertex_data_context.h"
 #include "grape/communication/sync_comm.h"
+#include "grape/config.h"
 #include "grape/worker/comm_spec.h"
+#include "vineyard/graph/utils/grape_utils.h"
 
-#include "core/context/i_context.h"
-#include "core/fragment/dynamic_fragment.h"
 #include "core/object/object_manager.h"
 #include "core/server/dispatcher.h"
-#include "core/server/graphscope_service.h"
 #include "core/server/rpc_utils.h"
-#include "proto/graphscope/proto/query_args.pb.h"
-#include "proto/graphscope/proto/types.pb.h"
+#include "graphscope/proto/types.pb.h"
+
+namespace bl = boost::leaf;
+
+namespace grape {
+class InArchive;
+}  // namespace grape
+namespace vineyard {
+class Client;
+}  // namespace vineyard
 
 namespace gs {
+class IContextWrapper;
+namespace rpc {
+namespace graph {
+class GraphDefPb;
+}  // namespace graph
+}  // namespace rpc
+struct CommandDetail;
+
 /**
  * @brief EngineConfig contains configurations about the analytical engine, such
  * as networkx features in enabled or not, vineyard socket, and vineyard rpc
@@ -95,16 +110,18 @@ class GrapeInstance : public Subscriber {
 
   bl::result<void> unloadContext(const rpc::GSParams& params);
 
-  bl::result<std::string> reportGraph(const rpc::GSParams& params);
+  bl::result<std::shared_ptr<grape::InArchive>> reportGraph(
+      const rpc::GSParams& params);
 
   bl::result<rpc::graph::GraphDefPb> projectGraph(const rpc::GSParams& params);
 
   bl::result<rpc::graph::GraphDefPb> projectToSimple(
       const rpc::GSParams& params);
 
-  bl::result<void> modifyVertices(const rpc::GSParams& params);
+  bl::result<rpc::graph::GraphDefPb> modifyVertices(
+      const rpc::GSParams& params);
 
-  bl::result<void> modifyEdges(const rpc::GSParams& params);
+  bl::result<rpc::graph::GraphDefPb> modifyEdges(const rpc::GSParams& params);
 
   bl::result<void> clearEdges(const rpc::GSParams& params);
 
@@ -120,6 +137,10 @@ class GrapeInstance : public Subscriber {
 
   bl::result<std::string> contextToVineyardDataFrame(
       const rpc::GSParams& params);
+
+  bl::result<void> outputContext(const rpc::GSParams& params);
+
+  bl::result<std::string> output(const rpc::GSParams& params);
 
   bl::result<rpc::graph::GraphDefPb> addColumn(const rpc::GSParams& params);
 
@@ -150,6 +171,24 @@ class GrapeInstance : public Subscriber {
       const rpc::GSParams& params);
 
   bl::result<void> registerGraphType(const rpc::GSParams& params);
+
+  bl::result<void> getContextDetails(
+      const rpc::GSParams& params, std::string* s_selector,
+      std::pair<std::string, std::string>* range,
+      std::shared_ptr<IContextWrapper>* wrapper) {
+    if (params.HasKey(rpc::SELECTOR)) {
+      BOOST_LEAF_ASSIGN(*s_selector, params.Get<std::string>(rpc::SELECTOR));
+    }
+    if (params.HasKey(rpc::VERTEX_RANGE)) {
+      BOOST_LEAF_AUTO(range_in_json,
+                      params.Get<std::string>(rpc::VERTEX_RANGE));
+      *range = parseRange(range_in_json);
+    }
+    BOOST_LEAF_AUTO(context_key, params.Get<std::string>(rpc::CONTEXT_KEY));
+    BOOST_LEAF_ASSIGN(*wrapper,
+                      object_manager_.GetObject<IContextWrapper>(context_key));
+    return {};
+  }
 
   static std::string toJson(const std::map<std::string, std::string>& map) {
     boost::property_tree::ptree pt;

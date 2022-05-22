@@ -37,7 +37,7 @@
     <rust.compile.skip.clean>true</rust.compile.skip.clean>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <log4j2.version>[2.17.1,)</log4j2.version>
-    <hadoop.version>2.10.1</hadoop.version>
+    <hadoop.version>3.2.3</hadoop.version>
     <grpc.version>1.42.1</grpc.version>
     <tinkerpop.version>3.5.1</tinkerpop.version>
     <slf4j.version>1.7.21</slf4j.version>
@@ -62,6 +62,7 @@
     <protobuf.maven.plugin.version>0.6.1</protobuf.maven.plugin.version>
     <commons.codec.version>1.11</commons.codec.version>
     <metrics.core.version>3.2.5</metrics.core.version>
+    <aliyun.oss.version>3.14.1</aliyun.oss.version>
     <skip.tests>true</skip.tests>
   </properties>
 
@@ -586,6 +587,11 @@
         <groupId>io.dropwizard.metrics</groupId>
         <artifactId>metrics-core</artifactId>
         <version>${metrics.core.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.aliyun.oss</groupId>
+        <artifactId>aliyun-sdk-oss</artifactId>
+        <version>${aliyun.oss.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

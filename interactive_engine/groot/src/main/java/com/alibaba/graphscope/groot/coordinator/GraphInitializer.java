@@ -19,6 +19,7 @@ import com.alibaba.maxgraph.common.config.CommonConfig;
 import com.alibaba.maxgraph.common.config.Configs;
 import com.alibaba.maxgraph.common.config.ZkConfig;
 import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
+import com.alibaba.maxgraph.sdkcommon.common.BackupInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.apache.curator.framework.CuratorFramework;

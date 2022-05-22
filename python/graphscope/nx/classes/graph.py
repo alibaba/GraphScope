@@ -20,10 +20,11 @@
 #
 
 import copy
+import threading
 
+import msgpack
 import orjson as json
 from networkx import freeze
-from networkx.classes.coreviews import AdjacencyView
 from networkx.classes.graph import Graph as RefGraph
 from networkx.classes.reportviews import DegreeView
 
@@ -32,20 +33,22 @@ from graphscope.client.session import get_default_session
 from graphscope.client.session import get_session_by_id
 from graphscope.framework import dag_utils
 from graphscope.framework import utils
-from graphscope.framework.errors import InvalidArgumentError
-from graphscope.framework.errors import check_argument
 from graphscope.framework.graph_schema import GraphSchema
 from graphscope.nx import NetworkXError
-from graphscope.nx.classes.dicts import AdjDict
-from graphscope.nx.classes.dicts import NodeDict
+from graphscope.nx.classes.cache import Cache
+from graphscope.nx.classes.coreviews import AdjacencyView
+from graphscope.nx.classes.dict_factory import AdjListDict
+from graphscope.nx.classes.dict_factory import NeighborAttrDict
+from graphscope.nx.classes.dict_factory import NeighborDict
+from graphscope.nx.classes.dict_factory import NodeAttrDict
+from graphscope.nx.classes.dict_factory import NodeDict
 from graphscope.nx.classes.graphviews import generic_graph_view
 from graphscope.nx.classes.reportviews import EdgeView
 from graphscope.nx.classes.reportviews import NodeView
 from graphscope.nx.convert import to_networkx_graph
 from graphscope.nx.utils.compat import patch_docstring
-from graphscope.nx.utils.misc import clear_cache
-from graphscope.nx.utils.misc import empty_graph_in_engine
-from graphscope.nx.utils.misc import parse_ret_as_dict
+from graphscope.nx.utils.misc import clear_mutation_cache
+from graphscope.nx.utils.misc import init_empty_graph_in_engine
 from graphscope.proto import graph_def_pb2
 from graphscope.proto import types_pb2
 
@@ -90,9 +93,8 @@ class Graph(_GraphBase):
         Data to initialize graph. If None (default) an empty
         graph is created.  The data can be any format that is supported
         by the to_networkx_graph() function, currently including edge list,
-        dict of dicts, dict of lists, NetworkX graph, NumPy matrix
-        or 2d ndarray, Pandas DataFrame, SciPy sparse matrix, or a GraphScope
-        graph object.
+        dict of dicts, dict of lists, NetworkX graph, 2D NumPy array, SciPy
+        sparse matrix or a GraphScope graph object.
 
     default_label : default node label (optional, default: None)
         if incoming_graph_data is a GraphScope graph object, default label means
@@ -259,8 +261,12 @@ class Graph(_GraphBase):
     """
 
     node_dict_factory = NodeDict
-    adjlist_dict_factory = AdjDict
+    node_attr_dict_factory = NodeAttrDict
+    adjlist_outer_dict_factory = AdjListDict
+    adjlist_inner_dict_factory = NeighborDict
+    edge_attr_dict_factory = NeighborAttrDict
     graph_attr_dict_factory = dict
+    graph_cache_factory = Cache
     _graph_type = graph_def_pb2.DYNAMIC_PROPERTY
 
     @patch_docstring(RefGraph.to_directed_class)
@@ -278,11 +284,10 @@ class Graph(_GraphBase):
         ----------
         incoming_graph_data : input graph (optional, default: None)
             Data to initialize graph. If None (default) an empty
-            graph is created.  The data can be any format that is supported
-            by the to_networkx_graph() function, currently including edge list,
-            dict of dicts, dict of lists, NetworkX graph, NumPy matrix
-            or 2d ndarray, Pandas DataFrame, SciPy sparse matrix, or a GraphScope
-            graph object.
+            graph is created. The data can be an edge list, any
+            NetworkX graph object or any GraphScope graph object.
+            If the corresponding optional Python packages are installed
+            the data can also be a 2D NumPy array, a SciPy sparse matrix
 
         default_label : default node label (optional, default: "_")
             if incoming_graph_data is a GraphScope graph object, default label means
@@ -292,6 +297,9 @@ class Graph(_GraphBase):
         attr : keyword arguments, optional (default= no attributes)
             Attributes to add to graph as key=value pairs.
 
+        See Also
+        --------
+        convert
 
         Examples
         --------
@@ -313,20 +321,21 @@ class Graph(_GraphBase):
         >>> G = nx.Graph(g, default_label="person") # or DiGraph
 
         """
-
         self.graph_attr_dict_factory = self.graph_attr_dict_factory
         self.node_dict_factory = self.node_dict_factory
-        self.adjlist_dict_factory = self.adjlist_dict_factory
+        self.adjlist_outer_dict_factory = self.adjlist_outer_dict_factory
+        self.cache = self.graph_cache_factory(self)
+
+        # init node and adj (must be after cache)
         self.graph = self.graph_attr_dict_factory()
         self._node = self.node_dict_factory(self)
-        self._adj = self.adjlist_dict_factory(self)
+        self._adj = self.adjlist_outer_dict_factory(self)
 
         self._key = None
         self._op = None
         self._schema = GraphSchema()
-        self._schema.init_nx_schema()
 
-        # caches for add_node and add_edge
+        # buffer caches for add_node and add_edge
         self._add_node_cache = []
         self._add_edge_cache = []
         self._remove_node_cache = []
@@ -338,31 +347,29 @@ class Graph(_GraphBase):
         self._distributed = attr.pop("dist", False)
         if incoming_graph_data is not None and self._is_gs_graph(incoming_graph_data):
             # convert from gs graph always use distributed mode
-            self._distributed = True
             if self._session is None:
                 self._session = get_session_by_id(incoming_graph_data.session_id)
         self._default_label = default_label
+        self._default_label_id = -1
 
         if self._session is None:
-            self._try_to_get_default_session()
+            self._session = get_default_session()
 
         if not self._is_gs_graph(incoming_graph_data) and create_empty_in_engine:
-            graph_def = empty_graph_in_engine(
+            graph_def = init_empty_graph_in_engine(
                 self, self.is_directed(), self._distributed
             )
             self._key = graph_def.key
 
         # attempt to load graph with data
         if incoming_graph_data is not None:
-            if self._is_gs_graph(incoming_graph_data):
-                self._init_with_arrow_property_graph(incoming_graph_data)
-            else:
-                g = to_networkx_graph(incoming_graph_data, create_using=self)
-                check_argument(isinstance(g, Graph))
+            to_networkx_graph(incoming_graph_data, create_using=self)
+            self.cache.warmup()
 
         # load graph attributes (must be after to_networkx_graph)
         self.graph.update(attr)
         self._saved_signature = self.signature
+        self._is_client_view = False
 
     def _is_gs_graph(self, incoming_graph_data):
         return (
@@ -370,20 +377,23 @@ class Graph(_GraphBase):
             and incoming_graph_data.graph_type == graph_def_pb2.ARROW_PROPERTY
         )
 
-    def _try_to_get_default_session(self):
-        try:
-            session = get_default_session()
-        except RuntimeError:
-            raise RuntimeError(
-                "The nx binding session is None, that maybe no default session found. "
-                "Please register a session as default session."
-            )
-        if not session.eager():
-            raise RuntimeError(
-                "NetworkX module need session to be eager mode. "
-                "The default session is lazy mode."
-            )
-        self._session = session
+    def __del__(self):
+        if self._session.info["status"] != "active" or self._key is None:
+            return
+
+        # use thread to avoid dead-lock
+        def _del(graph):
+            # cancel cache fetch future
+            if graph.cache.enable_iter_cache:
+                graph.cache.shutdown()
+            op = dag_utils.unload_graph(graph)
+            op.eval()
+            graph._key = None
+
+        if not self._is_client_view:
+            t = threading.Thread(target=_del, args=(self,))
+            t.daemon = True
+            t.start()
 
     @property
     def op(self):
@@ -489,7 +499,7 @@ class Graph(_GraphBase):
     def loaded(self):
         return self.key is not None
 
-    @clear_cache
+    @clear_mutation_cache
     @patch_docstring(RefGraph.__str__)
     def __str__(self):
         if self.graph_type in (
@@ -513,7 +523,7 @@ class Graph(_GraphBase):
         """override default __deepcopy__"""
         return self.copy()
 
-    @clear_cache
+    @clear_mutation_cache
     def __iter__(self):
         """Iterate over the nodes. Use: 'for n in G'.
 
@@ -532,7 +542,7 @@ class Graph(_GraphBase):
         """
         return iter(self._node)
 
-    @clear_cache
+    @clear_mutation_cache
     def __contains__(self, n):
         """Returns True if n is a node, False otherwise. Use: 'n in G'.
 
@@ -542,7 +552,14 @@ class Graph(_GraphBase):
         >>> 1 in G
         True
         """
-        return self.has_node(n)
+        try:
+            if self.graph_type == graph_def_pb2.ARROW_PROPERTY:
+                n = self._convert_to_label_id_tuple(n)
+            op = dag_utils.report_graph(self, types_pb2.HAS_NODE, node=json.dumps(n))
+            archive = op.eval()
+            return archive.get_bool()
+        except (TypeError, NetworkXError, KeyError):
+            return False
 
     def __len__(self):
         """Returns the number of nodes in the graph. Use: 'len(G)'.
@@ -591,7 +608,7 @@ class Graph(_GraphBase):
         """
         return self.adj[n]
 
-    @clear_cache
+    @clear_mutation_cache
     def add_node(self, node_for_adding, **attr):
         """Add a single node `node_for_adding` and update node attributes.
 
@@ -625,12 +642,11 @@ class Graph(_GraphBase):
         nx.Graph support int, float, str, tuple or bool object of nodes.
         """
         self._convert_arrow_to_dynamic()
-        self._schema.add_nx_vertex_properties(attr)
         self._add_node_cache.append(
             (node_for_adding, attr) if attr else node_for_adding
         )
 
-    @clear_cache
+    @clear_mutation_cache
     def add_nodes_from(self, nodes_for_adding, **attr):
         """Add multiple nodes.
 
@@ -684,7 +700,7 @@ class Graph(_GraphBase):
             except (TypeError, ValueError):
                 self.add_node(n, **data)
 
-    @clear_cache
+    @clear_mutation_cache
     def remove_node(self, n):
         """Remove node n.
 
@@ -718,7 +734,7 @@ class Graph(_GraphBase):
         self._convert_arrow_to_dynamic()
         self._remove_node_cache.append(n)
 
-    @clear_cache
+    @clear_mutation_cache
     def remove_nodes_from(self, nodes_for_removing):
         """Remove multiple nodes.
 
@@ -748,15 +764,14 @@ class Graph(_GraphBase):
             self.remove_node(n)
 
     @property
-    @clear_cache
+    @clear_mutation_cache
     @patch_docstring(RefGraph.nodes)
     def nodes(self):
         nodes = NodeView(self)
         self.__dict__["nodes"] = nodes
         return nodes
 
-    @parse_ret_as_dict
-    @clear_cache
+    @clear_mutation_cache
     def get_node_data(self, n):
         """Returns the attribute dictionary of node n.
 
@@ -792,9 +807,10 @@ class Graph(_GraphBase):
         if self.graph_type == graph_def_pb2.ARROW_PROPERTY:
             n = self._convert_to_label_id_tuple(n)
         op = dag_utils.report_graph(self, types_pb2.NODE_DATA, node=json.dumps(n))
-        return op.eval()
+        archive = op.eval()
+        return json.loads(archive.get_bytes())
 
-    @clear_cache
+    @clear_mutation_cache
     def number_of_nodes(self):
         """Returns the number of nodes in the graph.
 
@@ -814,7 +830,8 @@ class Graph(_GraphBase):
         3
         """
         op = dag_utils.report_graph(self, types_pb2.NODE_NUM)
-        return int(op.eval())
+        archive = op.eval()
+        return archive.get_size()
 
     def order(self):
         """Returns the number of nodes in the graph.
@@ -836,7 +853,6 @@ class Graph(_GraphBase):
         """
         return self.number_of_nodes()
 
-    @clear_cache
     def has_node(self, n):
         """Returns True if the graph contains the node n.
 
@@ -858,17 +874,9 @@ class Graph(_GraphBase):
         True
 
         """
-        if isinstance(n, dict):
-            return False
-        try:
-            if self.graph_type == graph_def_pb2.ARROW_PROPERTY:
-                n = self._convert_to_label_id_tuple(n)
-            op = dag_utils.report_graph(self, types_pb2.HAS_NODE, node=json.dumps(n))
-            return bool(int(op.eval()))
-        except (TypeError, NetworkXError, KeyError):
-            return False
+        return n in self
 
-    @clear_cache
+    @clear_mutation_cache
     def add_edge(self, u_of_edge, v_of_edge, **attr):
         """Add an edge between u and v.
 
@@ -920,12 +928,11 @@ class Graph(_GraphBase):
         >>> G.edges[1, 2].update({0: 5})
         """
         self._convert_arrow_to_dynamic()
-        self._schema.add_nx_edge_properties(attr)
         self._add_edge_cache.append(
             (u_of_edge, v_of_edge, attr) if attr else (u_of_edge, v_of_edge)
         )
 
-    @clear_cache
+    @clear_mutation_cache
     def add_edges_from(self, ebunch_to_add, **attr):
         """Add all the edges in ebunch_to_add.
 
@@ -979,7 +986,7 @@ class Graph(_GraphBase):
                 )
             self.add_edge(u, v, **data)
 
-    @clear_cache
+    @clear_mutation_cache
     def add_weighted_edges_from(self, ebunch_to_add, weight="weight", **attr):
         """Add weighted edges in `ebunch_to_add` with specified weight attr
 
@@ -1014,13 +1021,13 @@ class Graph(_GraphBase):
             attr[weight] = d
             self.add_edge(u, v, **attr)
 
-    @clear_cache
+    @clear_mutation_cache
     @patch_docstring(RefGraph.remove_edge)
     def remove_edge(self, u, v):
         self._convert_arrow_to_dynamic()
         self._remove_edge_cache.append((u, v))
 
-    @clear_cache
+    @clear_mutation_cache
     def remove_edges_from(self, ebunch):
         """Remove all edges specified in ebunch.
 
@@ -1053,7 +1060,7 @@ class Graph(_GraphBase):
                 raise ValueError("Edge tuple %s must be a 2-tuple or 3-tuple." % (e,))
             self.remove_edge(e[0], e[1])
 
-    @clear_cache
+    @clear_mutation_cache
     def set_edge_data(self, u, v, data):
         """Set edge data of edge (u, v).
 
@@ -1085,11 +1092,11 @@ class Graph(_GraphBase):
         self._convert_arrow_to_dynamic()
 
         edge = json.dumps(((u, v, data),), option=json.OPT_SERIALIZE_NUMPY)
-        self._schema.add_nx_edge_properties(data)
         self._op = dag_utils.modify_edges(self, types_pb2.NX_UPDATE_EDGES, edge)
-        self._op.eval()
+        self._op.eval(leaf=False)
+        self.cache.clear_neighbor_attr_cache()
 
-    @clear_cache
+    @clear_mutation_cache
     def set_node_data(self, n, data):
         """Set data of node.
 
@@ -1122,9 +1129,10 @@ class Graph(_GraphBase):
 
         node = json.dumps(((n, data),), option=json.OPT_SERIALIZE_NUMPY)
         self._op = dag_utils.modify_vertices(self, types_pb2.NX_UPDATE_NODES, node)
-        self._op.eval()
+        self._op.eval(leaf=False)
+        self.cache.clear_node_attr_cache()
 
-    @clear_cache
+    @clear_mutation_cache
     def update(self, edges=None, nodes=None):
         """Update the graph using nodes/edges/graphs as input.
 
@@ -1190,7 +1198,7 @@ class Graph(_GraphBase):
         else:
             raise NetworkXError("update needs nodes or edges input")
 
-    @clear_cache
+    @clear_mutation_cache
     def size(self, weight=None):
         """Returns the number of edges or total of all edge weights.
 
@@ -1230,9 +1238,10 @@ class Graph(_GraphBase):
         if weight:
             return sum(d for v, d in self.degree(weight=weight)) / 2
         op = dag_utils.report_graph(self, types_pb2.EDGE_NUM)
-        return int(op.eval()) // 2
+        archive = op.eval()
+        return archive.get_size() // 2
 
-    @clear_cache
+    @clear_mutation_cache
     @patch_docstring(RefGraph.number_of_edges)
     def number_of_edges(self, u=None, v=None):
         edges_num = 0
@@ -1242,12 +1251,13 @@ class Graph(_GraphBase):
             edges_num = 1
         return edges_num
 
-    @clear_cache
+    @clear_mutation_cache
     def number_of_selfloops(self):
         op = dag_utils.report_graph(self, types_pb2.SELFLOOPS_NUM)
-        return int(op.eval())
+        archive = op.eval()
+        return archive.get_size()
 
-    @clear_cache
+    @clear_mutation_cache
     def has_edge(self, u, v):
         """Returns True if the edge (u, v) is in the graph.
 
@@ -1289,7 +1299,7 @@ class Graph(_GraphBase):
         except KeyError:
             return False
 
-    @clear_cache
+    @clear_mutation_cache
     def neighbors(self, n):
         """Returns an iterator over all neighbors of node n.
 
@@ -1334,7 +1344,7 @@ class Graph(_GraphBase):
             raise NetworkXError("The node %s is not in the graph." % (n,))
 
     @property
-    @clear_cache
+    @clear_mutation_cache
     def edges(self):
         """An EdgeView of the Graph as G.edges or G.edges().
 
@@ -1391,7 +1401,7 @@ class Graph(_GraphBase):
         """
         return EdgeView(self)
 
-    @clear_cache
+    @clear_mutation_cache
     def get_edge_data(self, u, v, default=None):
         """Returns the attribute dictionary associated with edge (u, v).
 
@@ -1443,18 +1453,18 @@ class Graph(_GraphBase):
                 edge=json.dumps((u, v)),
                 key="",
             )
-            ret = op.eval()
-            return json.loads(ret)
+            archive = op.eval()
+            return json.loads(archive.get_bytes())
         else:
             return default
 
     @property
-    @clear_cache
+    @clear_mutation_cache
     @patch_docstring(RefGraph.adj)
     def adj(self):
         return AdjacencyView(self._adj)
 
-    @clear_cache
+    @clear_mutation_cache
     def adjacency(self):
         """Returns an iterator over (node, adjacency dict) tuples for all nodes.
 
@@ -1476,7 +1486,7 @@ class Graph(_GraphBase):
         return iter(self._adj.items())
 
     @property
-    @clear_cache
+    @clear_mutation_cache
     def degree(self):
         """A DegreeView for the Graph as G.degree or G.degree().
 
@@ -1534,7 +1544,7 @@ class Graph(_GraphBase):
         if self._graph_type == graph_def_pb2.ARROW_PROPERTY:
             # create an empty graph, no need to convert arrow to dynamic
             self._graph_type = graph_def_pb2.DYNAMIC_PROPERTY
-            graph_def = empty_graph_in_engine(
+            graph_def = init_empty_graph_in_engine(
                 self, self.is_directed(), self._distributed
             )
             self._key = graph_def.key
@@ -1548,9 +1558,9 @@ class Graph(_GraphBase):
         self._add_edge_cache.clear()
         self._remove_node_cache.clear()
         self._remove_edge_cache.clear()
-        self.schema.init_nx_schema()
+        self.cache.clear()
 
-    @clear_cache
+    @clear_mutation_cache
     def clear_edges(self):
         """Remove all edges from the graph without altering nodes.
 
@@ -1565,7 +1575,8 @@ class Graph(_GraphBase):
         """
         self._convert_arrow_to_dynamic()
         self._op = dag_utils.clear_edges(self)
-        self._op.eval()
+        self._op.eval(leaf=False)
+        self.cache.clear()
 
     @patch_docstring(RefGraph.is_directed)
     def is_directed(self):
@@ -1575,7 +1586,7 @@ class Graph(_GraphBase):
     def is_multigraph(self):
         return False
 
-    @clear_cache
+    @clear_mutation_cache
     @patch_docstring(RefGraph.nbunch_iter)
     def nbunch_iter(self, nbunch=None):
         if nbunch is None:  # include all nodes via iterator
@@ -1605,7 +1616,7 @@ class Graph(_GraphBase):
             bunch = bunch_iter(nbunch, self._adj)
         return bunch
 
-    @clear_cache
+    @clear_mutation_cache
     def copy(self, as_view=False):
         """Returns a copy of the graph.
 
@@ -1663,19 +1674,20 @@ class Graph(_GraphBase):
             g = generic_graph_view(self)
             g._is_client_view = True
             g._op = self._op
+            g.cache = self.cache
         else:
             self._convert_arrow_to_dynamic()
             g = self.__class__(create_empty_in_engine=False)
             g.graph = copy.deepcopy(self.graph)
             op = dag_utils.copy_graph(self, "identical")
-            graph_def = op.eval()
+            graph_def = op.eval(leaf=False)
             g._op = op
             g._key = graph_def.key
-            g._schema = copy.deepcopy(self._schema)
+            g.cache.warmup()
         g._session = self._session
         return g
 
-    @clear_cache
+    @clear_mutation_cache
     def to_undirected(self, as_view=False):
         """Returns an undirected copy of the graph.
 
@@ -1713,31 +1725,24 @@ class Graph(_GraphBase):
 
         if self.is_directed():
             graph_class = self.to_undirected_class()
+            g = graph_class(create_empty_in_engine=False)
             if as_view:
-                g = graph_class(create_empty_in_engine=False)
                 g.graph.update(self.graph)
-                op = dag_utils.to_undirected(self)
-                graph_def = op.eval()
-                g._op = op
-                g._key = graph_def.key
-                g._schema = copy.deepcopy(self._schema)
                 g._graph = self
-                g._session = self._session
                 g._is_client_view = False
                 g = freeze(g)
-                return g
-            g = graph_class(create_empty_in_engine=False)
-            g.graph = copy.deepcopy(self.graph)
+            else:
+                g.graph = copy.deepcopy(self.graph)
             op = dag_utils.to_undirected(self)
-            graph_def = op.eval()
+            graph_def = op.eval(leaf=False)
             g._op = op
             g._key = graph_def.key
             g._session = self._session
-            g._schema = copy.deepcopy(self._schema)
+            g.cache.warmup()
             return g
         return self.copy(as_view=as_view)
 
-    @clear_cache
+    @clear_mutation_cache
     def to_directed(self, as_view=False):
         """Returns a directed representation of the graph.
 
@@ -1784,21 +1789,20 @@ class Graph(_GraphBase):
             g = generic_graph_view(self, graph_class)
             g._op = self._op
             g._key = self._key
-            g._schema = copy.deepcopy(self._schema)
             g._session = self._session
             g._is_client_view = True
             return g
         g = graph_class(create_empty_in_engine=False)
         g.graph = copy.deepcopy(self.graph)
         op = dag_utils.to_directed(self)
-        graph_def = op.eval()
+        graph_def = op.eval(leaf=False)
         g._key = graph_def.key
         g._session = self._session
-        g._schema = copy.deepcopy(self._schema)
         g._op = op
+        g.cache.warmup()
         return g
 
-    @clear_cache
+    @clear_mutation_cache
     def subgraph(self, nodes):
         """Returns a independent deep copy subgraph induced on `nodes`.
 
@@ -1832,14 +1836,14 @@ class Graph(_GraphBase):
         g = self.__class__(create_empty_in_engine=False)
         g.graph.update(self.graph)
         op = dag_utils.create_subgraph(self, nodes=induced_nodes)
-        graph_def = op.eval()
+        graph_def = op.eval(leaf=False)
         g._key = graph_def.key
         g._session = self._session
-        g._schema = copy.deepcopy(self._schema)
         g._op = op
+        g.cache.warmup()
         return g
 
-    @clear_cache
+    @clear_mutation_cache
     def edge_subgraph(self, edges):
         """Returns a independent deep copy subgraph induced by the specified edges.
 
@@ -1859,7 +1863,7 @@ class Graph(_GraphBase):
 
         Notes
         -----
-        Unlike NetowrkX return a view, here return a independent deep copy subgraph.
+        Unlike NetworkX return a view, here return a independent deep copy subgraph.
 
         Examples
         --------
@@ -1877,194 +1881,14 @@ class Graph(_GraphBase):
         g = self.__class__(create_empty_in_engine=False)
         g.graph.update(self.graph)
         op = dag_utils.create_subgraph(self, edges=induced_edges)
-        graph_def = op.eval()
+        graph_def = op.eval(leaf=False)
         g._key = graph_def.key
         g._session = self._session
-        g._schema = copy.deepcopy(self._schema)
         g._op = op
+        g.cache.warmup()
         return g
 
-    def _is_view(self):
-        return hasattr(self, "_graph")
-
-    @parse_ret_as_dict
-    def _batch_get_node(self, location):
-        """Get node by location in batch.
-
-        In grape engine, it will start fetch from location, and return a batch of nodes.
-
-        Parameters
-        ----------
-        location: tuple
-            location of start node, a tuple with fragment id and local id.
-
-        Returns
-        -------
-        nodes_dict_with_status: dict
-            the return contain three parts:
-                ret['status']: bool, success or failed.
-                ret['next']: tuple, next location.
-                ret['batch']: list, the batch nodes id list.
-
-        Example:
-        >>> g = nx.Graph()
-        >>> g.add_nodes_from([1, 2, 3])
-        >>> g._batch_get_node((0, 0))  # start from frag-0, lid-0, mpirun np=1
-        {'status': True, 'next': [1, 0], 'batch': [1, 2, 3]}
-        """
-        if len(location) == 2:
-            op = dag_utils.report_graph(
-                self, types_pb2.NODES_BY_LOC, fid=location[0], lid=location[1]
-            )
-        else:
-            op = dag_utils.report_graph(
-                self,
-                types_pb2.NODES_BY_LOC,
-                fid=location[0],
-                lid=location[1],
-                label_id=location[2],
-            )
-        ret = op.eval()
-        return ret
-
-    @parse_ret_as_dict
-    def _get_nbrs(self, n, report_type=types_pb2.SUCCS_BY_NODE):
-        """Get the neighbors of node.
-
-        Parameters
-        ----------
-        n: node
-            the node to get neighbors.
-        report_type:
-            the report type of report graph operation,
-                types_pb2.SUCCS_BY_NODE: get the successors of node,
-                types_pb2.PREDS_BY_NODE: get the predecessors of node,
-                types_pb2.NEIGHBORS_BY_NODE: get all neighbors of node,
-
-        Returns
-        -------
-        neighbors: dict
-
-        Raises
-        ------
-        Raise NetworkxError if node not in graph.
-
-        Examples
-        --------
-        >>> g = nx.Graph()
-        >>> g.add_edges_from([(0, 1), (0, 2)])
-        >>> g._get_nbrs(0)
-        {0: {}, 2: {}}
-        """
-        if n not in self:
-            raise NetworkXError("The node %s is not in the graph." % (n,))
-        if self.graph_type == graph_def_pb2.ARROW_PROPERTY:
-            n = self._convert_to_label_id_tuple(n)
-        op = dag_utils.report_graph(self, report_type, node=json.dumps(n))
-        return op.eval()
-
-    def _batch_get_nbrs(self, location, report_type=types_pb2.SUCCS_BY_LOC):
-        """Get neighbors of nodes by location in batch.
-
-        In grape engine, it will start fetch from location, and return a batch of nodes' neighbors.
-
-        Parameters
-        ----------
-        location: tuple
-            location of start node, a tuple with fragment id and local id.
-        report_type:
-            the report type of report graph operation,
-                types_pb2.SUCCS_BY_LOC: get the successors,
-                types_pb2.PREDS_BY_LOC: get the predecessors,
-                types_pb2.NEIGHBORS_BY_LOC: get all neighbors,
-
-        Returns
-        -------
-        dict_with_status: dict
-            the return contain three parts:
-                ret['status']: bool, success or failed.
-                ret['next']: tuple, next location.
-                ret['batch']: list, the batch list.
-
-        Examples:
-        >>> # mpirun np=1
-        >>> g = nx.Graph()
-        >>> g.add_edges_from([(0, 1), (0, 2)])
-        >>> g._batch_get_nbrs((0, 0))  # start from frag-0, lid-0
-        {'status': True, 'next': [1, 0],
-        'batch': [{'node': 0, 'nbrs': {'1': {}, '2': {}}}], [{'node': 1 .....}]}
-        """
-        op = dag_utils.report_graph(self, report_type, fid=location[0], lid=location[1])
-        return op.eval()
-
-    def _get_degree(self, n, weight=None, report_type=types_pb2.OUT_DEG_BY_NODE):
-        """Get degree of node.
-
-        Parameters
-        ----------
-        n: node
-        weight: the edge attribute to get degree. if is None, default 1
-        report_type:
-            the report type of report graph operation,
-            types_pb2.OUT_DEG_BY_NODE: get the out degree of node,
-            types_pb2.IN_DEG_BY_NODE: get the in degree of node,
-            types_pb2.DEG_BY_NODE: get the degree of node,
-
-        Returns
-        -------
-            degree: float or int
-
-        Raises
-        -----
-        Raise NetworkxError if node not in graph.
-        """
-        op = dag_utils.report_graph(self, report_type, node=json.dumps(n), key=weight)
-        degree = float(op.eval())
-        return degree if weight is not None else int(degree)
-
-    def _batch_get_degree(
-        self, location, weight=None, report_type=types_pb2.OUT_DEG_BY_LOC
-    ):
-        """Get degree of nodes by location in batch.
-
-        In grape engine, it will start fetch from location, and return a batch of nodes' degree.
-
-        Parameters
-        ----------
-        location: tuple
-            location of start node, a tuple with fragment id and local id.
-        report_type:
-            the report type of report graph operation,
-                types_pb2.OUT_DEG_BY_LOC: get the out degree,
-                types_pb2.IN_DEG_BY_LOC: get the in degree,
-                types_pb2.DEG_BY_LOC: get degree,
-
-        Returns
-        -------
-        dict_with_status: dict
-            the return contain three parts:
-                ret['status']: bool, success or failed.
-                ret['next']: tuple, next location.
-                ret['batch']: list, the degree list.
-
-        Examples
-        >>> # mpirun np=1
-        >>> g = nx.Graph()
-        >>> g.add_edges_from([(0, 1), (0, 2)])
-        >>> g._batch_get_degree((0, 0))  # start from frag-0, lid-0
-        {'status': True, 'next': [1, 0],
-        'batch': [
-            {'node': 0, 'degree': 2},
-            {'node':1, 'degree': 1},
-            {'node':2, 'degree': 1},
-        ]}
-        """
-        op = dag_utils.report_graph(
-            self, report_type, fid=location[0], lid=location[1], key=weight
-        )
-        return op.eval()
-
-    @clear_cache
+    @clear_mutation_cache
     def _project_to_simple(self, v_prop=None, e_prop=None):
         """Project nx graph to a simple graph to run builtin algorithms.
 
@@ -2092,101 +1916,26 @@ class Graph(_GraphBase):
                 graph = graph._graph
             return graph._project_to_simple(v_prop=v_prop, e_prop=e_prop)
 
-        if v_prop is None:
-            v_prop = str(v_prop)
-            v_prop_id = -1
-            v_prop_type = graph_def_pb2.NULLVALUE
-        else:
-            check_argument(isinstance(v_prop, str))
-            v_label = self._schema.vertex_labels[0]
-            try:
-                v_prop_id = self._schema.get_vertex_property_id(v_label, v_prop)
-                v_prop_type = self._schema.get_vertex_properties(v_label)[
-                    v_prop_id
-                ].type
-            except KeyError:
-                raise InvalidArgumentError(
-                    "graph not contains the vertex property {}".format(v_prop)
-                )
-
-        if e_prop is None:
-            e_prop = str(e_prop)
-            e_prop_id = -1
-            e_prop_type = graph_def_pb2.NULLVALUE
-        else:
-            check_argument(isinstance(e_prop, str))
-            e_label = self._schema.edge_labels[0]
-            try:
-                e_prop_id = self._schema.get_edge_property_id(e_label, e_prop)
-                e_prop_type = self._schema.get_edge_properties(e_label)[e_prop_id].type
-            except KeyError:
-                raise InvalidArgumentError(
-                    "graph not contains the edge property {}".format(e_prop)
-                )
         graph = self.__class__(create_empty_in_engine=False)
         graph = nx.freeze(graph)
-        if self.graph_type == graph_def_pb2.DYNAMIC_PROPERTY:
-            op = dag_utils.project_dynamic_property_graph(
-                self, v_prop, e_prop, v_prop_type, e_prop_type
-            )
-            graph._graph_type = graph_def_pb2.DYNAMIC_PROJECTED
-            graph_def = op.eval(leaf=False)
-            graph.schema.from_graph_def(graph_def)
-        else:
-            op = dag_utils.flatten_arrow_property_graph(
-                self,
-                v_prop_id,
-                e_prop_id,
-                v_prop_type,
-                e_prop_type,
-                self.schema.oid_type,
-                self.schema.vid_type,
-            )
-            graph._graph_type = graph_def_pb2.ARROW_FLATTENED
-            graph._default_label_id = self._default_label_id
-            graph_def = op.eval(leaf=False)
-            graph._schema = self.schema  # inherit the schema
+
+        op = dag_utils.project_to_simple(self, str(v_prop), str(e_prop))
+        graph_def = op.eval(leaf=False)
+        graph._graph_type = graph_def.graph_type
         graph._key = graph_def.key
-        graph._session = self._session
-        graph._saved_signature = self._saved_signature
-        graph._graph = self  # projected graph also can report nodes.
+        graph._schema.from_graph_def(graph_def)
+        graph._default_label_id = self._default_label_id
+        graph._saved_signature = graph._key
         graph._op = op
+        graph._session = self._session
+        graph._graph = self  # projected graph also can report nodes.
         graph._is_client_view = False
         return graph
 
-    def _init_with_arrow_property_graph(self, arrow_property_graph):
-        """Init graph with arrow property graph"""
-        # check session and direction compatible
-        if arrow_property_graph.session_id != self.session_id:
-            raise NetworkXError(
-                "Try to init with another session's arrow_property graph."
-                + "Graphs must be the same session."
-            )
-        if arrow_property_graph.is_directed() != self.is_directed():
-            raise NetworkXError(
-                "Try to init with another direction type's arrow_property graph."
-                + "Graphs must have the same direction type."
-            )
-        if arrow_property_graph._is_multigraph:
-            raise NetworkXError(
-                "Graph is multigraph, cannot be converted to networkx graph."
-            )
-        self._key = arrow_property_graph.key
-        self._schema = arrow_property_graph.schema
-        if self._default_label is not None:
-            try:
-                self._default_label_id = self._schema.get_vertex_label_id(
-                    self._default_label
-                )
-            except KeyError:
-                raise NetworkXError(
-                    "default label {} not existed in graph." % self._default_label
-                )
-        else:
-            self._default_label_id = -1
-        self._graph_type = graph_def_pb2.ARROW_PROPERTY
-
     def _clear_adding_cache(self):
+        reset_cache = bool(
+            len(self._add_node_cache) > 0 or len(self._add_edge_cache) > 0
+        )
         if self._add_node_cache:
             nodes_to_modify = json.dumps(
                 self._add_node_cache, option=json.OPT_SERIALIZE_NUMPY
@@ -2194,7 +1943,7 @@ class Graph(_GraphBase):
             self._op = dag_utils.modify_vertices(
                 self, types_pb2.NX_ADD_NODES, nodes_to_modify
             )
-            self._op.eval()
+            self._op.eval(leaf=False)
             self._add_node_cache.clear()
 
         if self._add_edge_cache:
@@ -2204,10 +1953,16 @@ class Graph(_GraphBase):
             self._op = dag_utils.modify_edges(
                 self, types_pb2.NX_ADD_EDGES, edges_to_modify
             )
-            self._op.eval()
+            self._op.eval(leaf=False)
             self._add_edge_cache.clear()
 
+        if reset_cache:
+            self.cache.clear()
+
     def _clear_removing_cache(self):
+        reset_cache = bool(
+            len(self._remove_node_cache) > 0 or len(self._remove_edge_cache) > 0
+        )
         if self._remove_node_cache:
             nodes_to_modify = json.dumps(
                 self._remove_node_cache, option=json.OPT_SERIALIZE_NUMPY
@@ -2215,7 +1970,7 @@ class Graph(_GraphBase):
             self._op = dag_utils.modify_vertices(
                 self, types_pb2.NX_DEL_NODES, nodes_to_modify
             )
-            self._op.eval()
+            self._op.eval(leaf=False)
             self._remove_node_cache.clear()
 
         if self._remove_edge_cache:
@@ -2225,8 +1980,11 @@ class Graph(_GraphBase):
             self._op = dag_utils.modify_edges(
                 self, types_pb2.NX_DEL_EDGES, edges_to_modify
             )
-            self._op.eval()
+            self._op.eval(leaf=False)
             self._remove_edge_cache.clear()
+
+        if reset_cache:
+            self.cache.clear()
 
     def _convert_arrow_to_dynamic(self):
         """Try to convert the hosted graph from arrow_property to dynamic_property.
@@ -2237,12 +1995,9 @@ class Graph(_GraphBase):
         """
         if self.graph_type == graph_def_pb2.ARROW_PROPERTY:
             self._op = dag_utils.arrow_to_dynamic(self)
-            graph_def = self._op.eval()
+            graph_def = self._op.eval(leaf=False)
             self._key = graph_def.key
-            schema = GraphSchema()
-            schema.init_nx_schema(self._schema)
-            self._schema = schema
-            self._graph_type = graph_def_pb2.DYNAMIC_PROPERTY
+            self._graph_type = graph_def.graph_type
 
     def _convert_to_label_id_tuple(self, n):
         """Convert the node to (label_id, id) format.

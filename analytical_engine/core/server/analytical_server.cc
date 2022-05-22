@@ -15,6 +15,13 @@
 #include "core/server/analytical_server.h"
 
 #include <limits>
+#include <ostream>
+#include <string>
+
+#include "glog/logging.h"
+#include "grpcpp/security/server_credentials.h"
+#include "grpcpp/server.h"
+#include "grpcpp/server_builder.h"
 
 #include "core/server/graphscope_service.h"
 

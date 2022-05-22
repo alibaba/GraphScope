@@ -21,15 +21,14 @@
 
 from copy import deepcopy
 
-from networkx import freeze
 from networkx.classes.coreviews import AdjacencyView
 from networkx.classes.digraph import DiGraph as RefDiGraph
 from networkx.classes.reportviews import DiDegreeView
 from networkx.classes.reportviews import InDegreeView
 from networkx.classes.reportviews import OutDegreeView
 
+from graphscope.client.session import get_default_session
 from graphscope.client.session import get_session_by_id
-from graphscope.framework import dag_utils
 from graphscope.framework.dag_utils import copy_graph
 from graphscope.framework.errors import check_argument
 from graphscope.framework.graph_schema import GraphSchema
@@ -40,10 +39,8 @@ from graphscope.nx.classes.reportviews import InEdgeView
 from graphscope.nx.classes.reportviews import OutEdgeView
 from graphscope.nx.convert import to_networkx_graph
 from graphscope.nx.utils.compat import patch_docstring
-from graphscope.nx.utils.misc import clear_cache
-from graphscope.nx.utils.misc import empty_graph_in_engine
-from graphscope.proto import graph_def_pb2
-from graphscope.proto import types_pb2
+from graphscope.nx.utils.misc import clear_mutation_cache
+from graphscope.nx.utils.misc import init_empty_graph_in_engine
 
 
 class DiGraph(Graph):
@@ -247,20 +244,20 @@ class DiGraph(Graph):
 
         self.graph_attr_dict_factory = self.graph_attr_dict_factory
         self.node_dict_factory = self.node_dict_factory
-        self.adjlist_dict_factory = self.adjlist_dict_factory
+        self.adjlist_outer_dict_factory = self.adjlist_outer_dict_factory
+        self.cache = self.graph_cache_factory(self)
 
+        # init node and adj (must be after cache)
         self.graph = self.graph_attr_dict_factory()
         self._node = self.node_dict_factory(self)
-        self._adj = self.adjlist_dict_factory(self)
-        self._pred = self.adjlist_dict_factory(self, types_pb2.PREDS_BY_NODE)
+        self._adj = self.adjlist_outer_dict_factory(self)
         self._succ = self._adj
+        self._pred = self.adjlist_outer_dict_factory(self, pred=True)
 
         self._key = None
         self._op = None
-        self._session_id = None
         self._graph_type = self._graph_type
         self._schema = GraphSchema()
-        self._schema.init_nx_schema()
 
         # cache for add_node and add_edge
         self._add_node_cache = []
@@ -278,30 +275,29 @@ class DiGraph(Graph):
             if self._session is None:
                 self._session = get_session_by_id(incoming_graph_data.session_id)
         self._default_label = default_label
+        self._default_label_id = -1
 
         if self._session is None:
-            self._try_to_get_default_session()
+            self._session = get_default_session()
 
         if not self._is_gs_graph(incoming_graph_data) and create_empty_in_engine:
-            graph_def = empty_graph_in_engine(
+            graph_def = init_empty_graph_in_engine(
                 self, self.is_directed(), self._distributed
             )
             self._key = graph_def.key
 
         # attempt to load graph with data
         if incoming_graph_data is not None:
-            if self._is_gs_graph(incoming_graph_data):
-                self._init_with_arrow_property_graph(incoming_graph_data)
-            else:
-                g = to_networkx_graph(incoming_graph_data, create_using=self)
-                check_argument(isinstance(g, Graph))
+            to_networkx_graph(incoming_graph_data, create_using=self)
+            self.cache.warmup()
 
         # load graph attributes (must be after to_networkx_graph)
         self.graph.update(attr)
         self._saved_signature = self.signature
+        self._is_client_view = False
 
     @property
-    @clear_cache
+    @clear_mutation_cache
     @patch_docstring(RefDiGraph.adj)
     def adj(self):
         return AdjacencyView(self._succ)
@@ -309,22 +305,22 @@ class DiGraph(Graph):
     succ = adj
 
     @property
-    @clear_cache
+    @clear_mutation_cache
     @patch_docstring(RefDiGraph.pred)
     def pred(self):
         return AdjacencyView(self._pred)
 
-    @clear_cache
+    @clear_mutation_cache
     @patch_docstring(RefDiGraph.has_predecessor)
     def has_successor(self, u, v):
         return self.has_edge(u, v)
 
-    @clear_cache
+    @clear_mutation_cache
     @patch_docstring(RefDiGraph.has_predecessor)
     def has_predecessor(self, u, v):
         return self.has_edge(v, u)
 
-    @clear_cache
+    @clear_mutation_cache
     @patch_docstring(RefDiGraph.successors)
     def successors(self, n):
         try:
@@ -335,7 +331,7 @@ class DiGraph(Graph):
     # digraph definitions
     neighbors = successors
 
-    @clear_cache
+    @clear_mutation_cache
     @patch_docstring(RefDiGraph.predecessors)
     def predecessors(self, n):
         try:
@@ -344,7 +340,7 @@ class DiGraph(Graph):
             raise NetworkXError("The node %s is not in the digraph." % (n,))
 
     @property
-    @clear_cache
+    @clear_mutation_cache
     def edges(self):
         """An OutEdgeView of the DiGraph as G.edges or G.edges().
 
@@ -411,13 +407,13 @@ class DiGraph(Graph):
     out_edges = edges
 
     @property
-    @clear_cache
+    @clear_mutation_cache
     @patch_docstring(RefDiGraph.in_edges)
     def in_edges(self):
         return InEdgeView(self)
 
     @property
-    @clear_cache
+    @clear_mutation_cache
     def degree(self):
         """A DegreeView for the Graph as G.degree or G.degree().
 
@@ -465,13 +461,13 @@ class DiGraph(Graph):
         return DiDegreeView(self)
 
     @property
-    @clear_cache
+    @clear_mutation_cache
     @patch_docstring(RefDiGraph.in_degree)
     def in_degree(self):
         return InDegreeView(self)
 
     @property
-    @clear_cache
+    @clear_mutation_cache
     @patch_docstring(RefDiGraph.out_degree)
     def out_degree(self):
         return OutDegreeView(self)
@@ -484,7 +480,7 @@ class DiGraph(Graph):
     def is_multigraph(self):
         return False
 
-    @clear_cache
+    @clear_mutation_cache
     @patch_docstring(RefDiGraph.reverse)
     def reverse(self, copy=True):
         self._convert_arrow_to_dynamic()
@@ -501,8 +497,8 @@ class DiGraph(Graph):
             g.name = self.name
             op = copy_graph(self, "reverse")
             g._op = op
-            graph_def = op.eval()
+            graph_def = op.eval(leaf=False)
             g._key = graph_def.key
-            g._schema = deepcopy(self._schema)
+            g.cache.warmup()
         g._session = self._session
         return g

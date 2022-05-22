@@ -18,9 +18,15 @@
 
 #include <dlfcn.h>
 
+#include <ostream>
 #include <string>
+#include <utility>
+
+#include "boost/leaf/result.hpp"
 
 #include "core/error.h"
+
+namespace bl = boost::leaf;
 
 namespace gs {
 inline bl::result<void*> open_lib(const char* path) {

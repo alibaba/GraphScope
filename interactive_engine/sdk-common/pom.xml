@@ -140,18 +140,36 @@
           <pluginId>proto</pluginId>
           <pluginArtifact>io.grpc:protoc-gen-grpc-java:1.0.0:exe:${os.detected.classifier}
           </pluginArtifact>
-          <protoSourceRoot>../proto</protoSourceRoot>
           <outputDirectory>src/main/generated</outputDirectory>
-          <includes>
-            <include>sdk/*</include>
-          </includes>
           <clearOutputDirectory>false</clearOutputDirectory>
         </configuration>
         <executions>
           <execution>
+            <id>sdk</id>
+            <configuration>
+              <protoSourceRoot>../proto</protoSourceRoot>
+              <includes>
+                <include>sdk/*</include>
+              </includes>
+            </configuration>
             <goals>
               <goal>compile-custom</goal>
               <goal>compile</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>graphscope</id>
+            <configuration>
+              <protoSourceRoot>../../python</protoSourceRoot>
+              <includes>
+                <include>graphscope/proto/graph_def.proto</include>
+                <include>graphscope/proto/ddl_service.proto</include>
+                <include>graphscope/proto/write_service.proto</include>
+              </includes>
+            </configuration>
+            <goals>
+              <goal>compile</goal>
+              <goal>compile-custom</goal>
             </goals>
           </execution>
         </executions>

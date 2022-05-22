@@ -1,0 +1,147 @@
+// Copyright 2020 Alibaba Group Holding Limited. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
+syntax = "proto3";
+package gs.rpc.graph;
+
+import "google/protobuf/any.proto";
+
+option java_package = "com.alibaba.graphscope.proto.ddl";
+option java_multiple_files = true;
+
+// Various graph type
+enum GraphTypePb {
+    UNKNOWN_TYPE = 0;
+    IMMUTABLE_EDGECUT = 1;
+    DYNAMIC_PROPERTY = 2;
+    DYNAMIC_PROJECTED = 3;
+    ARROW_PROPERTY = 4;
+    ARROW_PROJECTED = 5;
+    PERSISTENT_STORE = 6;
+    ARROW_FLATTENED = 7;
+}
+
+// Attributes that only meaningful to and will be set by maxgraph storage
+message MaxGraphInfoPb {
+    int32 last_label_id = 1;
+    int32 last_property_id = 2;
+    int64 last_table_id = 3;
+}
+
+// Attributes that only meaningful to and will be set by vineyard storage
+message VineyardInfoPb {
+    DataTypePb oid_type = 1;
+    DataTypePb vid_type = 2;
+    DataTypePb vdata_type = 3;
+    DataTypePb edata_type = 4;
+
+    // This is for sharing graph between vineyard storage and maxgraph storage
+    string schema_path = 5;
+    // Whether to automatically generate unique edge id for all edges.
+    bool generate_eid = 6;
+    // object id of the graph in vineyard
+    int64 vineyard_id = 7;
+    // For client to reconstrut graph schema
+    string property_schema_json = 8;
+}
+
+// Attributes that only meaningful to and will be set by dynamic storage
+message MutableGraphInfoPb {
+   DataTypePb vdata_type = 1;
+   DataTypePb edata_type = 2;
+   string property_schema_json = 3;
+}
+
+// Stores all meta of a graph
+message GraphDefPb {
+    int64 version = 1;
+    string key = 2;
+    GraphTypePb graph_type = 3;
+    bool directed = 4;
+    repeated TypeDefPb type_defs = 5;
+    repeated EdgeKindPb edge_kinds = 6;
+    map<string, int32> property_name_to_id = 7;
+    // current extension supported:
+    //   - MaxGraphInfoPb
+    //   - VineyardInfoPb
+    //   - MutableGraphInfoPb
+    google.protobuf.Any extension = 8;
+    bool is_multigraph = 9;
+}
+
+message TypeDefPb {
+    int32 version_id = 1;
+    string label = 2;
+    LabelIdPb label_id = 3;
+    TypeEnumPb type_enum = 4;
+    repeated PropertyDefPb props = 5;
+}
+
+message LabelIdPb {
+    int32 id = 1;
+}
+
+enum TypeEnumPb {
+    UNSPECIFIED = 0;
+    VERTEX = 1;
+    EDGE = 2;
+}
+
+message PropertyDefPb {
+    int32 id = 1;
+    int32 inner_id = 2;
+    string name = 3;
+    DataTypePb data_type = 4;
+    PropertyValuePb default_value = 5;
+    bool pk = 6;
+    string comment = 7;
+}
+
+enum DataTypePb {
+    UNKNOWN = 0;
+    BOOL = 1;
+    CHAR = 2;
+    SHORT = 3;
+    INT = 4;
+    LONG = 5;
+    FLOAT = 6;
+    DOUBLE = 7;
+    STRING = 8;
+    BYTES = 9;
+    INT_LIST = 10;
+    LONG_LIST = 11;
+    FLOAT_LIST = 12;
+    DOUBLE_LIST = 13;
+    STRING_LIST = 14;
+    NULLVALUE = 15;
+    UINT = 16;
+    ULONG = 17;
+    DYNAMIC = 18;
+}
+
+message PropertyValuePb {
+    DataTypePb data_type = 1;
+    bytes val = 2;
+}
+
+message EdgeKindPb {
+    string edge_label = 1;
+    LabelIdPb edge_label_id = 2;
+    string src_vertex_label = 3;
+    LabelIdPb src_vertex_label_id = 4;
+    string dst_vertex_label = 5;
+    LabelIdPb dst_vertex_label_id = 6;
+}
+

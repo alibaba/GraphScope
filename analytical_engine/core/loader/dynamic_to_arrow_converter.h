@@ -30,6 +30,8 @@
 #include "core/fragment/dynamic_fragment.h"
 #include "core/loader/arrow_fragment_loader.h"
 
+namespace bl = boost::leaf;
+
 namespace gs {
 
 /**
@@ -632,16 +634,16 @@ class DynamicToArrowConverter {
       const std::shared_ptr<src_fragment_t>& src_frag) {
     std::vector<std::shared_ptr<arrow::Field>> schema_vector;
     std::vector<std::shared_ptr<arrow::Array>> arrays;
-    // TODO(weibin): Replace with schema of DynamicFragment.
-    BOOST_LEAF_AUTO(prop_keys, src_frag->CollectPropertyKeysOnVertices());
+    const auto& vertex_schema = src_frag->GetSchema()["vertex"];
 
     // build schema and array
-    for (const auto& p : prop_keys) {
-      auto key = p.first;
-      auto type = p.second;
+    for (const auto& p : vertex_schema.GetObject()) {
+      std::string key = p.name.GetString();
+      int type = p.value.GetInt();
+      LOG(INFO) << key << " got type " << p.value.GetInt() << " " << type;
 
       switch (type) {
-      case dynamic::Type::kInt64Type: {
+      case rpc::graph::DataTypePb::LONG: {
         auto r = VertexArrayBuilder<arrow::Int64Builder>::build(src_frag, key);
 
         BOOST_LEAF_AUTO(array, r);
@@ -649,7 +651,7 @@ class DynamicToArrowConverter {
         arrays.push_back(array);
         break;
       }
-      case dynamic::Type::kDoubleType: {
+      case rpc::graph::DataTypePb::DOUBLE: {
         auto r = VertexArrayBuilder<arrow::DoubleBuilder>::build(src_frag, key);
 
         BOOST_LEAF_AUTO(array, r);
@@ -657,7 +659,7 @@ class DynamicToArrowConverter {
         arrays.push_back(array);
         break;
       }
-      case dynamic::Type::kStringType: {
+      case rpc::graph::DataTypePb::STRING: {
         auto r =
             VertexArrayBuilder<arrow::LargeStringBuilder>::build(src_frag, key);
 
@@ -668,7 +670,7 @@ class DynamicToArrowConverter {
       }
       default:
         RETURN_GS_ERROR(vineyard::ErrorCode::kDataTypeError,
-                        "Unsupported dynamic type: " + std::to_string(type));
+                        "Unsupported type: " + std::to_string(type));
       }
     }
 
@@ -696,14 +698,13 @@ class DynamicToArrowConverter {
     CHECK_EQ(src_array->length(), dst_array->length());
     std::vector<std::shared_ptr<arrow::Array>> arrays{src_array, dst_array};
 
-    BOOST_LEAF_AUTO(prop_keys, src_frag->CollectPropertyKeysOnEdges());
     // build schema and array
-    for (const auto& e : prop_keys) {
-      auto key = e.first;
-      auto type = e.second;
-
+    const auto& edge_schema = src_frag->GetSchema()["edge"];
+    for (const auto& p : edge_schema.GetObject()) {
+      std::string key = p.name.GetString();
+      int type = p.value.GetInt();
       switch (type) {
-      case dynamic::Type::kInt64Type: {
+      case rpc::graph::DataTypePb::LONG: {
         auto r = EdgeArrayBuilder<arrow::Int64Builder>::build(src_frag, key);
 
         BOOST_LEAF_AUTO(array, r);
@@ -712,7 +713,7 @@ class DynamicToArrowConverter {
         arrays.push_back(array);
         break;
       }
-      case dynamic::Type::kDoubleType: {
+      case rpc::graph::DataTypePb::DOUBLE: {
         auto r = EdgeArrayBuilder<arrow::DoubleBuilder>::build(src_frag, key);
 
         BOOST_LEAF_AUTO(array, r);
@@ -720,7 +721,7 @@ class DynamicToArrowConverter {
         arrays.push_back(array);
         break;
       }
-      case dynamic::Type::kStringType: {
+      case rpc::graph::DataTypePb::STRING: {
         auto r =
             EdgeArrayBuilder<arrow::LargeStringBuilder>::build(src_frag, key);
 
@@ -731,7 +732,7 @@ class DynamicToArrowConverter {
       }
       default:
         RETURN_GS_ERROR(vineyard::ErrorCode::kDataTypeError,
-                        "Unsupported dynamic type: " + std::to_string(type));
+                        "Unsupported type: " + std::to_string(type));
       }
     }
 

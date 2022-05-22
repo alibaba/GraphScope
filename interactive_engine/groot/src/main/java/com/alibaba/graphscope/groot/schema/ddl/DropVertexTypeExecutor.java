@@ -13,9 +13,9 @@
  */
 package com.alibaba.graphscope.groot.schema.ddl;
 
-import com.alibaba.graphscope.groot.operation.LabelId;
 import com.alibaba.graphscope.groot.operation.Operation;
 import com.alibaba.graphscope.groot.operation.ddl.DropVertexTypeOperation;
+import com.alibaba.maxgraph.sdkcommon.schema.LabelId;
 
 public class DropVertexTypeExecutor extends AbstractDropTypeExecutor {
 

@@ -20,60 +20,62 @@
 #
 
 import warnings
+from collections.abc import Collection
+from collections.abc import Generator
+from collections.abc import Iterator
 
 import networkx.convert
-from networkx.convert import from_dict_of_dicts
-from networkx.convert import from_dict_of_lists
-from networkx.convert import from_edgelist
-from networkx.convert import to_dict_of_dicts
-from networkx.convert import to_dict_of_lists
 
+import graphscope
 from graphscope import nx
 from graphscope.nx.utils.compat import import_as_graphscope_nx
+from graphscope.nx.utils.compat import patch_docstring
 
 import_as_graphscope_nx(networkx.convert)
 
 
+@patch_docstring(networkx.convert.to_networkx_graph)
 def to_networkx_graph(data, create_using=None, multigraph_input=False):  # noqa: C901
-    """Make a graph from a known data structure.
+    # graphscope graph
+    if isinstance(data, graphscope.Graph):
+        if create_using is None:
+            raise nx.NetworkXError(
+                "Use None to convert graphscope graph to networkx graph."
+            )
+        # check session and direction compatible
+        if data.session_id != create_using.session_id:
+            raise nx.NetworkXError(
+                "The source graph is not loaded in session {}."
+                % create_using.session_id
+            )
+        if data.is_directed() != create_using.is_directed():
+            if data.is_directed():
+                msg = "The source graph is a directed graph, can't be used to init nx.Graph. You may use nx.DiGraph"
+            else:
+                msg = "The source graph is a undirected graph, can't be used to init nx.DiGraph. You may use nx.Graph"
+            raise nx.NetworkXError(msg)
+        create_using._key = data.key
+        create_using._schema = data.schema
+        create_using._op = data.op
+        if create_using._default_label is not None:
+            try:
+                create_using._default_label_id = (
+                    create_using._schema.get_vertex_label_id(
+                        create_using._default_label
+                    )
+                )
+            except KeyError:
+                raise nx.NetworkXError(
+                    "default label {} not existed in graph."
+                    % create_using._default_label
+                )
+        create_using._graph_type = data.graph_type
+        return
 
-    The preferred way to call this is automatically
-    from the class constructor
-
-    >>> d = {0: {1: {'weight':1}}} # dict-of-dicts single edge (0,1)
-    >>> G = nx.Graph(d)
-
-    instead of the equivalent
-
-    >>> G = nx.from_dict_of_dicts(d)
-
-    Parameters
-    ----------
-    data : object to be converted
-
-        Current known types are:
-         any NetworkX graph
-         dict-of-dicts
-         dict-of-lists
-         container (ie set, list, tuple, iterator) of edges
-         Pandas DataFrame (row per edge)
-         numpy matrix
-         numpy ndarray
-         scipy sparse matrix
-
-    create_using : nx graph constructor, optional (default=nx.Graph)
-        Graph type to create. If graph instance, then cleared before populated.
-
-    multigraph_input : bool (default False)
-        If True and  data is a dict_of_dicts,
-        try to create a multigraph assuming dict_of_dict_of_lists.
-        If data and create_using are both multigraphs then create
-        a multigraph from a multigraph.
-    """
     # networkx graph or graphscope.nx graph
     if hasattr(data, "adj"):
         try:
-            result = from_dict_of_dicts(
+            result = nx.from_dict_of_dicts(
                 data.adj,
                 create_using=create_using,
                 multigraph_input=data.is_multigraph(),
@@ -83,29 +85,26 @@ def to_networkx_graph(data, create_using=None, multigraph_input=False):  # noqa:
             if hasattr(data, "nodes"):  # data.nodes should be dict-like
                 result.add_nodes_from(data.nodes.items())
             return result
-        except Exception as e:
-            raise nx.NetworkXError("Input is not a correct NetworkX-like graph.") from e
+        except Exception as err:
+            raise nx.NetworkXError(
+                "Input is not a correct NetworkX-like graph."
+            ) from err
 
     # dict of dicts/lists
     if isinstance(data, dict):
         try:
-            return from_dict_of_dicts(
+            return nx.from_dict_of_dicts(
                 data, create_using=create_using, multigraph_input=multigraph_input
             )
-        except Exception:
+        except Exception as err:
+            if multigraph_input is True:
+                raise nx.NetworkXError(
+                    f"converting multigraph_input raised:\n{type(err)}: {err}"
+                )
             try:
-                return from_dict_of_lists(data, create_using=create_using)
-            except Exception as e:
-                raise TypeError("Input is not known type.") from e
-
-    # list or generator of edges
-    if isinstance(data, (list, tuple)) or any(
-        hasattr(data, attr) for attr in ["_adjdict", "next", "__next__"]
-    ):
-        try:
-            return from_edgelist(data, create_using=create_using)
-        except Exception as e:
-            raise nx.NetworkXError("Input is not a valid edge list") from e
+                return nx.from_dict_of_lists(data, create_using=create_using)
+            except Exception as err:
+                raise TypeError("Input is not known type.") from err
 
     # Pandas DataFrame
     try:
@@ -115,17 +114,17 @@ def to_networkx_graph(data, create_using=None, multigraph_input=False):  # noqa:
             if data.shape[0] == data.shape[1]:
                 try:
                     return nx.from_pandas_adjacency(data, create_using=create_using)
-                except Exception as e:
+                except Exception as err:
                     msg = "Input is not a correct Pandas DataFrame adjacency matrix."
-                    raise nx.NetworkXError(msg) from e
+                    raise nx.NetworkXError(msg) from err
             else:
                 try:
                     return nx.from_pandas_edgelist(
                         data, edge_attr=True, create_using=create_using
                     )
-                except Exception as e:
+                except Exception as err:
                     msg = "Input is not a correct Pandas DataFrame edge-list."
-                    raise nx.NetworkXError(msg) from e
+                    raise nx.NetworkXError(msg) from err
     except ImportError:
         msg = "pandas not found, skipping conversion test."
         warnings.warn(msg, ImportWarning)
@@ -137,10 +136,10 @@ def to_networkx_graph(data, create_using=None, multigraph_input=False):  # noqa:
         if isinstance(data, (numpy.matrix, numpy.ndarray)):
             try:
                 return nx.from_numpy_matrix(data, create_using=create_using)
-            except Exception as e:
+            except Exception as err:
                 raise nx.NetworkXError(
                     "Input is not a correct numpy matrix or array."
-                ) from e
+                ) from err
     except ImportError:
         warnings.warn("numpy not found, skipping conversion test.", ImportWarning)
 
@@ -151,12 +150,21 @@ def to_networkx_graph(data, create_using=None, multigraph_input=False):  # noqa:
         if hasattr(data, "format"):
             try:
                 return nx.from_scipy_sparse_matrix(data, create_using=create_using)
-            except Exception as e:
+            except Exception as err:
                 raise nx.NetworkXError(
                     "Input is not a correct scipy sparse matrix type."
-                ) from e
+                ) from err
     except ImportError:
         warnings.warn("scipy not found, skipping conversion test.", ImportWarning)
+
+    # Note: most general check - should remain last in order of execution
+    # Includes containers (e.g. list, set, dict, etc.), generators, and
+    # iterators (e.g. itertools.chain) of edges
+    if isinstance(data, (Collection, Generator, Iterator)):
+        try:
+            return nx.from_edgelist(data, create_using=create_using)
+        except Exception as err:
+            raise nx.NetworkXError("Input is not a valid edge list") from err
 
     raise nx.NetworkXError("Input is not a known data type for conversion.")
 

@@ -16,15 +16,26 @@
 #ifndef ANALYTICAL_ENGINE_CORE_CONTEXT_TENSOR_CONTEXT_H_
 #define ANALYTICAL_ENGINE_CORE_CONTEXT_TENSOR_CONTEXT_H_
 
-#include <algorithm>
+#include <glog/logging.h>
+#include <mpi.h>
+
 #include <memory>
+#include <ostream>
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
 #include "arrow/array/builder_binary.h"
+#include "boost/leaf/error.hpp"
+#include "boost/leaf/result.hpp"
 #include "grape/app/context_base.h"
+#include "grape/serialization/in_archive.h"
+#include "grape/worker/comm_spec.h"
+#include "vineyard/basic/ds/dataframe.h"
 #include "vineyard/basic/ds/tensor.h"
+#include "vineyard/client/client.h"
+#include "vineyard/common/util/uuid.h"
 
 #ifdef NETWORKX
 #include "core/object/dynamic.h"
@@ -34,14 +45,13 @@
 #include "core/context/i_context.h"
 #include "core/context/tensor_dataframe_builder.h"
 #include "core/error.h"
-#include "core/fragment/arrow_flattened_fragment.h"
-#include "core/fragment/arrow_projected_fragment.h"
-#include "core/fragment/dynamic_projected_fragment.h"
-#include "core/object/i_fragment_wrapper.h"
+#include "core/utils/mpi_utils.h"
 #include "core/utils/transform_utils.h"
 #include "core/utils/trivial_tensor.h"
 
 #define CONTEXT_TYPE_TENSOR "tensor"
+
+namespace bl = boost::leaf;
 
 namespace grape {
 
@@ -86,6 +96,8 @@ inline InArchive& operator<<(
 }  // namespace grape
 
 namespace gs {
+class IFragmentWrapper;
+
 template <typename T>
 static bl::result<size_t> get_n_dim(const grape::CommSpec& comm_spec,
                                     const trivial_tensor_t<T>& tensor) {

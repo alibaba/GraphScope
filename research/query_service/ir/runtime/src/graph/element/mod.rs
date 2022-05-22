@@ -29,7 +29,7 @@ use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
 pub use vertex::Vertex;
 
 use crate::graph::property::DynDetails;
-use crate::graph::{DefaultDetails, ID};
+use crate::graph::ID;
 
 /// An `Element` is an abstraction of the data filed in an IR `Record`.
 pub trait Element {
@@ -120,12 +120,6 @@ impl From<GraphPath> for GraphObject {
     }
 }
 
-impl From<ID> for GraphObject {
-    fn from(id: ID) -> Self {
-        GraphObject::V(Vertex::new(id, None, DynDetails::new(DefaultDetails::default())))
-    }
-}
-
 impl Element for GraphObject {
     fn details(&self) -> Option<&DynDetails> {
         match self {
@@ -153,7 +147,7 @@ impl Element for GraphObject {
 }
 
 impl GraphElement for GraphObject {
-    fn id(&self) -> ID {
+    fn id(&self) -> u64 {
         match self {
             GraphObject::V(v) => v.id(),
             GraphObject::E(e) => e.id(),

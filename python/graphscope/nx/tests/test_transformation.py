@@ -161,32 +161,12 @@ class TestGraphTransformation(object):
 
     @classmethod
     def teardown_class(cls):
-        cls.single_label_g.unload()
-        cls.multi_label_g.unload()
-        cls.str_oid_g.unload()
+        del cls.single_label_g
+        del cls.multi_label_g
+        del cls.str_oid_g
 
     def assert_convert_success(self, gs_g, nx_g):
         assert gs_g.is_directed() == nx_g.is_directed()
-        assert self._schema_equal(gs_g.schema, nx_g.schema)
-
-    def _schema_equal(self, gs_schema, nx_schema):
-        v_props = {}
-        for entry in gs_schema._valid_vertex_labels():
-            for prop in entry.properties:
-                v_props[prop.name] = prop.type
-        e_props = {}
-        for entry in gs_schema._valid_edge_labels():
-            for prop in entry.properties:
-                e_props[prop.name] = prop.type
-        gs_v_props = {
-            prop.name: prop.type
-            for prop in list(nx_schema._valid_vertex_labels())[0].properties
-        }
-        gs_e_props = {
-            prop.name: prop.type
-            for prop in list(nx_schema._valid_edge_labels())[0].properties
-        }
-        return v_props == gs_v_props and e_props == gs_e_props
 
     # nx to gs
     def test_empty_nx_to_gs(self):
@@ -367,7 +347,6 @@ class TestGraphTransformation(object):
         assert ("post", 618475290624) in G
 
     @pytest.mark.skipif(
-        os.environ.get("DEPLOYMENT", None) == "standalone",
         reason="FIXME(weibin): ci runner failed",
     )
     def test_report_methods_on_copy_on_write_strategy(self):
@@ -520,110 +499,6 @@ class TestGraphTransformation(object):
 
 
 @pytest.mark.usefixtures("graphscope_session")
-class TestGraphProjectTest(object):
-    @classmethod
-    def setup_class(cls):
-        cls.NXGraph = nx.Graph
-        edgelist = os.path.expandvars("${GS_TEST_DIR}/dynamic/p2p-31_dynamic.edgelist")
-        cls.g = nx.read_edgelist(edgelist, nodetype=int, data=True)
-        cls.g.add_node(1, vdata_str="kdjfao")
-        cls.g.add_node(1, vdata_int=123)
-
-    def test_project_to_simple(self):
-        # default, e_prop='', v_prop=''
-        sg1 = self.g._project_to_simple()
-        assert (
-            sg1.schema.vdata_type == graph_def_pb2.NULLVALUE
-            and sg1.schema.edata_type == graph_def_pb2.NULLVALUE
-        )
-
-        # to_simple with e_prop
-        sg2 = self.g._project_to_simple(e_prop="edata_float")
-        assert (
-            sg2.schema.vdata_type == graph_def_pb2.NULLVALUE
-            and sg2.schema.edata_type == graph_def_pb2.DOUBLE
-        )
-
-        # to_simple with v_prop
-        sg3 = self.g._project_to_simple(v_prop="vdata_str")
-        assert (
-            sg3.schema.vdata_type == graph_def_pb2.STRING
-            and sg3.schema.edata_type == graph_def_pb2.NULLVALUE
-        )
-
-        # to_simple with e_prop and v_prop
-        sg4 = self.g._project_to_simple(v_prop="vdata_int", e_prop="edata_str")
-        assert (
-            sg4.schema.vdata_type == graph_def_pb2.LONG
-            and sg4.schema.edata_type == graph_def_pb2.STRING
-        )
-
-        # empty graph to simple
-        empty_g = self.NXGraph()
-        sg5 = empty_g._project_to_simple()
-        assert (
-            sg5.schema.vdata_type == graph_def_pb2.NULLVALUE
-            and sg5.schema.edata_type == graph_def_pb2.NULLVALUE
-        )
-        with pytest.raises(
-            InvalidArgumentError, match="graph not contains the vertex property foo"
-        ):
-            sg6 = empty_g._project_to_simple(v_prop="foo")
-
-    @pytest.mark.skip(reason="It use much memory, exceeds the limit of Github runner")
-    def test_implicit_project_to_simple(self):
-        g = self.g
-        nx.builtin.degree_centrality(g)
-        nx.builtin.single_source_dijkstra_path_length(g, source=6, weight="weight")
-
-    def test_error_on_not_exist_vertex_property(self):
-        g = self.NXGraph()
-        g.add_node(0, foo="node")
-        with pytest.raises(
-            InvalidArgumentError, match="graph not contains the vertex property weight"
-        ):
-            sg = g._project_to_simple(v_prop="weight")
-
-    def test_error_on_not_exist_edge_property(self):
-        g = self.NXGraph()
-        g.add_edge(0, 1, weight=3)
-        with pytest.raises(
-            InvalidArgumentError, match="graph not contains the edge property type"
-        ):
-            sg = g._project_to_simple(e_prop="type")
-
-    @pytest.mark.skip(reason="FIXME: engine can not catch the app throw error now")
-    def test_error_on_some_edges_not_contain_property(self):
-        g = self.g
-        # some edges not contain the property
-        with pytest.raises(RuntimeError):
-            nx.builtin.single_source_dijkstra_path_length(
-                g, source=6, weight="edata_random_int_0"
-            )
-
-    @pytest.mark.skip(reason="FIXME: engine can not catch the app throw error now")
-    def test_error_on_some_edges_has_wrong_type(self):
-        g = self.g.copy()
-        # set edge a wrong type
-        g[6][42]["weight"] = "a str"
-        with pytest.raises(RuntimeError):
-            nx.builtin.single_source_dijkstra_path_length(g, source=6, weight="weight")
-
-    @pytest.mark.skip(reason="find a algorithm that use vertex data")
-    def test_error_on_some_nodes_not_contain_property(self):
-        g = self.g
-        with pytest.raises(RuntimeError):
-            nx.builtin.sssp(weight="vdata_random_int_0")
-
-    @pytest.mark.skip(reason="find a algorithm that use vertex data")
-    def test_error_on_some_nodes_has_wrong_type(self):
-        g = self.g.copy()
-        g[0]["weight"] = "a str"
-        with pytest.raises(RuntimeError):
-            nx.builtin.sssp(weight="weight")
-
-
-@pytest.mark.usefixtures("graphscope_session")
 class TestDigraphTransformation(TestGraphTransformation):
     @classmethod
     def setup_class(cls):
@@ -642,27 +517,14 @@ class TestDigraphTransformation(TestGraphTransformation):
 
     @classmethod
     def teardown_class(cls):
-        cls.single_label_g.unload()
-        cls.multi_label_g.unload()
-        cls.str_oid_g.unload()
+        del cls.single_label_g
+        del cls.multi_label_g
+        del cls.str_oid_g
 
     def test_error_on_wrong_nx_type(self):
         g = self.single_label_g
         with pytest.raises(NetworkXError):
             nx_g = nx.Graph(g)
-
-
-@pytest.mark.usefixtures("graphscope_session")
-class TestDiGraphProjectTest(TestGraphProjectTest):
-    @classmethod
-    def setup_class(cls):
-        cls.NXGraph = nx.DiGraph
-        edgelist = os.path.expandvars("${GS_TEST_DIR}/dynamic/p2p-31_dynamic.edgelist")
-        cls.g = nx.read_edgelist(
-            edgelist, nodetype=int, data=True, create_using=cls.NXGraph
-        )
-        cls.g.add_node(0, vdata_str="kdjfao")
-        cls.g.add_node(1, vdata_int=123)
 
 
 @pytest.mark.usefixtures("graphscope_session")

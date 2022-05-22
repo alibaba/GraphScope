@@ -34,15 +34,10 @@ impl MapFunction<Record, Record> for PathStartOperator {
     fn exec(&self, mut input: Record) -> FnResult<Record> {
         let entry = input
             .get(self.start_tag.as_ref())
-            .ok_or(FnExecError::get_tag_error(&format!(
-                "start_tag {:?} in PathStartOperator",
-                self.start_tag
-            )))?;
+            .ok_or(FnExecError::get_tag_error("get tag failed in PathStartOperator"))?;
         let v = entry
             .as_graph_vertex()
-            .ok_or(FnExecError::unexpected_data_error(
-                "tag does not refer to a graph vertex element in PathStartOperator",
-            ))?;
+            .ok_or(FnExecError::unexpected_data_error("tag does not refer to a graph vertex element"))?;
         let graph_path = GraphPath::new(v.clone(), self.is_whole_path);
         input.append(graph_path, None);
         Ok(input)

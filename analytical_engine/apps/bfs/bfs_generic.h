@@ -22,6 +22,7 @@ limitations under the License.
 #include "bfs/bfs_generic_context.h"
 
 #include "core/app/app_base.h"
+#include "core/config.h"
 #include "core/worker/default_worker.h"
 
 namespace gs {
@@ -74,7 +75,6 @@ class BFSGeneric : public AppBase<FRAG_T, BFSGenericContext<FRAG_T>>,
 
   void IncEval(const fragment_t& frag, context_t& ctx,
                message_manager_t& messages) {
-    auto inner_vertices = frag.InnerVertices();
 #ifdef PROFILING
     ctx.pre_time -= GetCurrentTime();
 #endif
@@ -105,11 +105,11 @@ class BFSGeneric : public AppBase<FRAG_T, BFSGenericContext<FRAG_T>>,
     }
 
     // Make sure IncEval continues when all activated neighbor is local.
-    int terminate_worker_num = 0;
+    fid_t terminate_worker_num = 0;
     if (ctx.next_level_inner.empty() || ctx.depth == ctx.depth_limit) {
-      Sum(1, terminate_worker_num);
+      Sum(1u, terminate_worker_num);
     } else {
-      Sum(0, terminate_worker_num);
+      Sum(0u, terminate_worker_num);
       messages.ForceContinue();
     }
     if (terminate_worker_num == frag.fnum()) {

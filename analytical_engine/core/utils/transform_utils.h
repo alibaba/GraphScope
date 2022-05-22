@@ -16,16 +16,17 @@ limitations under the License.
 #ifndef ANALYTICAL_ENGINE_CORE_UTILS_TRANSFORM_UTILS_H_
 #define ANALYTICAL_ENGINE_CORE_UTILS_TRANSFORM_UTILS_H_
 
+#include <fstream>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include "boost/foreach.hpp"
 #include "boost/lexical_cast.hpp"
 
-#include "vineyard/basic/ds/dataframe.h"
+#include "grape/communication/communicator.h"
 #include "vineyard/basic/ds/tensor.h"
+#include "vineyard/graph/fragment/fragment_traits.h"
 
 #ifdef NETWORKX
 #include "core/object/dynamic.h"
@@ -33,26 +34,7 @@ limitations under the License.
 #include "core/context/column.h"
 #include "core/utils/trait_utils.h"
 
-#ifdef NETWORKX
-namespace grape {
-inline grape::InArchive& operator<<(grape::InArchive& archive,
-                                    const gs::dynamic::Value& value) {
-  if (value.IsInt64()) {
-    archive << value.GetInt64();
-  } else if (value.IsDouble()) {
-    archive << value.GetDouble();
-  } else if (value.IsString()) {
-    size_t size = value.GetStringLength();
-    archive << size;
-    archive.AddBytes(value.GetString(), size);
-  } else {
-    std::string json = gs::dynamic::Stringify(value);
-    archive << json;
-  }
-  return archive;
-}
-}  // namespace grape
-#endif
+namespace bl = boost::leaf;
 
 namespace gs {
 
@@ -579,7 +561,7 @@ class TransformUtils<FRAG_T,
   explicit TransformUtils(const grape::CommSpec& comm_spec, const FRAG_T& frag)
       : comm_spec_(comm_spec), frag_(frag) {}
 
-  int GetOidTypeId() { return vineyard::TypeToInt<oid_t>::value; }
+  bl::result<int> GetOidTypeId() { return vineyard::TypeToInt<oid_t>::value; }
 
   std::vector<vertex_t> SelectVertices(
       label_id_t label_id, const std::pair<std::string, std::string>& range) {
@@ -805,7 +787,7 @@ class TransformUtils<
   explicit TransformUtils(const grape::CommSpec& comm_spec, const FRAG_T& frag)
       : comm_spec_(comm_spec), frag_(frag) {}
 
-  int GetOidTypeId() { return vineyard::TypeToInt<oid_t>::value; }
+  bl::result<int> GetOidTypeId() { return vineyard::TypeToInt<oid_t>::value; }
 
   std::vector<vertex_t> SelectVertices(
       const std::pair<std::string, std::string>& range) {
@@ -928,19 +910,38 @@ class TransformUtils<
    * @param comm_spec
    * @return
    */
-  int GetOidTypeId() {
-    auto r = frag_.GetOidType(comm_spec_);
-    if (!r) {
-      return -1;
+  bl::result<int> GetOidTypeId() {
+    dynamic::Type oid_type = dynamic::Type::kNullType;
+    auto vm_ptr = frag_.GetVertexMap();
+    if (frag_.GetInnerVerticesNum() > 0) {
+      for (auto& v : frag_.InnerVertices()) {
+        if (frag_.IsAliveInnerVertex(v)) {
+          dynamic::Value oid;
+          vm_ptr->GetOid(frag_.fid(), v.GetValue(), oid);
+          oid_type = dynamic::GetType(oid);
+          break;
+        }
+      }
     }
-    auto dynamic_type = r.value();
-    if (dynamic_type == dynamic::Type::kInt64Type) {
+
+    grape::Communicator comm;
+    comm.InitCommunicator(comm_spec_.comm());
+    std::vector<dynamic::Type> gather_type;
+    comm.AllGather(oid_type, gather_type);
+    for (auto& t : gather_type) {
+      if (oid_type != t) {
+        std::stringstream ss;
+        ss << "Exist different oid type between fragments";
+        RETURN_GS_ERROR(vineyard::ErrorCode::kDataTypeError, ss.str());
+      }
+    }
+
+    if (oid_type == dynamic::Type::kInt64Type) {
       return vineyard::TypeToInt<int64_t>::value;
-    } else if (dynamic_type == dynamic::Type::kStringType) {
+    } else if (oid_type == dynamic::Type::kStringType) {
       return vineyard::TypeToInt<std::string>::value;
-    } else {
-      // if is null, return 0, means np.dtype(void) in numpy
-      return 0;
+    } else if (oid_type == dynamic::Type::kNullType) {
+      return vineyard::TypeToInt<void>::value;
     }
     return -1;
   }
@@ -971,9 +972,9 @@ class TransformUtils<
   bl::result<std::shared_ptr<arrow::Array>> VertexIdToArrowArray() {
     auto inner_vertices = frag_.InnerVertices();
 
-    BOOST_LEAF_AUTO(oid_type, frag_.GetOidType(comm_spec_));
+    BOOST_LEAF_AUTO(oid_type, GetOidTypeId());
 
-    if (oid_type == dynamic::Type::kInt64Type) {
+    if (oid_type == vineyard::TypeToInt<int64_t>::value) {
       typename vineyard::ConvertToArrowType<int64_t>::BuilderType builder;
       for (auto& v : inner_vertices) {
         ARROW_OK_OR_RAISE(builder.Append(frag_.GetId(v).GetInt64()));
@@ -982,7 +983,7 @@ class TransformUtils<
           ret;
       ARROW_OK_OR_RAISE(builder.Finish(&ret));
       return std::dynamic_pointer_cast<arrow::Array>(ret);
-    } else if (oid_type == dynamic::Type::kStringType) {
+    } else if (oid_type == vineyard::TypeToInt<std::string>::value) {
       typename vineyard::ConvertToArrowType<std::string>::BuilderType builder;
       for (auto v : inner_vertices) {
         ARROW_OK_OR_RAISE(builder.Append(frag_.GetId(v).GetString()));
@@ -1003,9 +1004,9 @@ class TransformUtils<
     std::vector<int64_t> shape{static_cast<int64_t>(vertices.size())};
     std::vector<int64_t> part_idx{comm_spec_.fid()};
 
-    BOOST_LEAF_AUTO(oid_type, frag_.GetOidType(comm_spec_));
+    BOOST_LEAF_AUTO(oid_type, GetOidTypeId());
 
-    if (oid_type == dynamic::Type::kInt64Type) {
+    if (oid_type == vineyard::TypeToInt<int64_t>::value) {
       auto tensor_builder = std::make_shared<vineyard::TensorBuilder<int64_t>>(
           client, shape, part_idx);
       for (size_t i = 0; i < vertices.size(); i++) {
@@ -1013,7 +1014,7 @@ class TransformUtils<
       }
       return std::dynamic_pointer_cast<vineyard::ITensorBuilder>(
           tensor_builder);
-    } else if (oid_type == dynamic::Type::kStringType) {
+    } else if (oid_type == vineyard::TypeToInt<std::string>::value) {
       auto tensor_builder =
           std::make_shared<vineyard::TensorBuilder<std::string>>(client, shape,
                                                                  part_idx);
@@ -1031,16 +1032,16 @@ class TransformUtils<
   bl::result<vineyard::ObjectID> VertexIdToVYTensor(
       vineyard::Client& client, const std::vector<vertex_t>& vertices) {
     BOOST_LEAF_AUTO(base_builder, VertexIdToVYTensorBuilder(client, vertices));
-    BOOST_LEAF_AUTO(oid_type, frag_.GetOidType(comm_spec_));
+    BOOST_LEAF_AUTO(oid_type, GetOidTypeId());
 
-    if (oid_type == dynamic::Type::kInt64Type) {
+    if (oid_type == vineyard::TypeToInt<int64_t>::value) {
       auto builder =
           std::dynamic_pointer_cast<vineyard::TensorBuilder<int64_t>>(
               base_builder);
       auto tensor = builder->Seal(client);
       VY_OK_OR_RAISE(tensor->Persist(client));
       return tensor->id();
-    } else if (oid_type == dynamic::Type::kStringType) {
+    } else if (oid_type == vineyard::TypeToInt<std::string>::value) {
       auto builder =
           std::dynamic_pointer_cast<vineyard::TensorBuilder<std::string>>(
               base_builder);

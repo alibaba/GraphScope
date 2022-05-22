@@ -19,7 +19,7 @@
 
 import pytest
 from networkx.classes.tests.test_digraph import BaseAttrDiGraphTester
-from networkx.testing import assert_nodes_equal
+from networkx.utils import nodes_equal
 
 from graphscope import nx
 from graphscope.nx.tests.classes.test_graph import TestEdgeSubgraph as _TestEdgeSubgraph
@@ -43,6 +43,7 @@ class TestDiGraph(BaseAttrDiGraphTester, _TestGraph):
         self.P3.update(self.P3edges, self.P3nodes)
 
     def test_to_undirected_reciprocal(self):
+        # not support reciprocal in graphscope.nx
         pass
 
     def test_data_input(self):
@@ -140,15 +141,13 @@ class TestDiGraph(BaseAttrDiGraphTester, _TestGraph):
         y = False
         G = nx.DiGraph()
         G.add_edge(x, y)
-        assert_nodes_equal(G.nodes(), G.reverse().nodes())
+        assert nodes_equal(G.nodes(), G.reverse().nodes())
         assert [(y, x)] == list(G.reverse().edges())
 
 
 @pytest.mark.usefixtures("graphscope_session")
 class TestEdgeSubgraph(_TestEdgeSubgraph):
     def setup_method(self):
-        # Create a doubly-linked path graph on five nodes.
-        # G = nx.DiGraph(nx.path_graph(5))
         G = nx.path_graph(5, nx.DiGraph)
         # Add some node, edge, and graph attributes.
         for i in range(5):
@@ -165,11 +164,6 @@ class TestEdgeSubgraph(_TestEdgeSubgraph):
         assert [(0, 1, "edge01"), (3, 4, "edge34")] == sorted(self.H.edges(data="name"))
 
     def test_pred_succ(self):
-        """Test that nodes are added to predecessors and successors.
-
-        For more information, see GitHub issue #2370.
-
-        """
         G = nx.DiGraph()
         G.add_edge(0, 1)
         H = G.edge_subgraph([(0, 1)])

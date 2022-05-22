@@ -18,31 +18,26 @@
 
 
 import functools
-import json
 
 import networkx.utils.misc
-import numpy as np
 
-from graphscope.client.session import get_session_by_id
 from graphscope.framework import dag_utils
 from graphscope.nx.utils.compat import import_as_graphscope_nx
 
 import_as_graphscope_nx(networkx.utils.misc)
 
 
-def empty_graph_in_engine(graph, directed, distributed):
-    """create empty graph in grape_engine with the graph metadata.
+def init_empty_graph_in_engine(graph, directed, distributed=True):
+    """initialize an empty graph in grape_engine with the graph metadata.
 
     Parameters:
     -----------
     graph: the graph instance in python.
     graph_type: the graph type of graph (IMMUTABLE, ARROW, DYNAMIC).
-    nx_graph_type: the networkx graph type of graph (Graph, DiGraph, MultiGraph, MultiDiGraph).
 
     """
-    sess = get_session_by_id(graph.session_id)
     op = dag_utils.create_graph(
-        sess.session_id,
+        graph.session.session_id,
         graph_type=graph._graph_type,
         directed=directed,
         distributed=distributed,
@@ -50,25 +45,11 @@ def empty_graph_in_engine(graph, directed, distributed):
         vfile="",
     )
     graph._op = op
-    graph_def = op.eval()
+    graph_def = op.eval(leaf=False)
     return graph_def
 
 
-def parse_ret_as_dict(func):
-    def wrapper(*args, **kwargs):
-        r = json.loads(func(*args, **kwargs))
-        if not isinstance(r, list):
-            return r
-        ret = dict()
-        for i in range(len(r[0])):
-            key = tuple(r[0][i]) if isinstance(r[0][i], list) else r[0][i]
-            ret[key] = r[1][i]
-        return ret
-
-    return wrapper
-
-
-def clear_cache(func):
+def clear_mutation_cache(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         g = args[0]
@@ -88,8 +69,19 @@ def clear_cache(func):
         ):
             g._clear_adding_cache()
         else:
-            g._clear_removing_cache()
-            g._clear_adding_cache()
+            if hasattr(g, "_graph"):
+                g._graph._clear_removing_cache()
+                g._graph._clear_adding_cache()
+            else:
+                g._clear_removing_cache()
+                g._clear_adding_cache()
         return func(*args, **kwargs)
 
     return wrapper
+
+
+def replace_with_inf(data):
+    for k, v in data.items():
+        if v == 1.7976931348623157e308:
+            data[k] = float("inf")
+    return data

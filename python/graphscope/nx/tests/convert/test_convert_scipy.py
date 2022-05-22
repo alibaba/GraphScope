@@ -18,19 +18,19 @@
 #
 
 import pytest
-from networkx.tests.test_convert_scipy import TestConvertNumpy
+from networkx.tests.test_convert_scipy import TestConvertScipy as _TestConvertScipy
 
 import graphscope.nx as nx
 from graphscope.nx.generators.classic import barbell_graph
 from graphscope.nx.generators.classic import cycle_graph
 from graphscope.nx.generators.classic import path_graph
-from graphscope.nx.tests.utils import assert_graphs_equal
 from graphscope.nx.utils.compat import with_graphscope_nx_context
+from graphscope.nx.utils.misc import graphs_equal
 
 
 @pytest.mark.usefixtures("graphscope_session")
-@with_graphscope_nx_context(TestConvertNumpy)
-class TestConvertNumpy:
+@with_graphscope_nx_context(_TestConvertScipy)
+class TestConvertScipy:
     @pytest.mark.skip(reason="graphscope.nx not support numpy dtype yet")
     def test_identity_graph_matrix(self):
         "Conversion from graph to sparse matrix to graph."
@@ -86,11 +86,11 @@ class TestConvertNumpy:
         actual = nx.from_scipy_sparse_matrix(
             A, parallel_edges=True, create_using=nx.DiGraph
         )
-        assert_graphs_equal(actual, expected)
+        assert graphs_equal(actual, expected)
         actual = nx.from_scipy_sparse_matrix(
             A, parallel_edges=False, create_using=nx.DiGraph
         )
-        assert_graphs_equal(actual, expected)
+        assert graphs_equal(actual, expected)
         # Now each integer entry in the adjacency matrix is interpreted as the
         # number of parallel edges in the graph if the appropriate keyword
         # argument is specified.
@@ -100,7 +100,7 @@ class TestConvertNumpy:
         actual = nx.from_scipy_sparse_matrix(
             A, parallel_edges=True, create_using=nx.MultiDiGraph
         )
-        assert_graphs_equal(actual, expected)
+        assert graphs_equal(actual, expected)
         expected = nx.MultiDiGraph()
         expected.add_edges_from(set(edges), weight=1)
         # The sole self-loop (edge 0) on vertex 1 should have weight 2.
@@ -108,4 +108,4 @@ class TestConvertNumpy:
         actual = nx.from_scipy_sparse_matrix(
             A, parallel_edges=False, create_using=nx.MultiDiGraph
         )
-        assert_graphs_equal(actual, expected)
+        assert graphs_equal(actual, expected)

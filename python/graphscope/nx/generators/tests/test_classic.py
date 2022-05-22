@@ -22,8 +22,8 @@ from networkx.generators.tests.test_classic import TestGeneratorClassic
 
 import graphscope.nx as nx
 from graphscope.nx import is_isomorphic
-from graphscope.nx.tests.utils import assert_edges_equal
 from graphscope.nx.utils.compat import with_graphscope_nx_context
+from graphscope.nx.utils.misc import edges_equal
 
 
 @pytest.mark.usefixtures("graphscope_session")
@@ -44,4 +44,4 @@ class TestGeneratorClassic:
 
         g = nx.ladder_graph(2)
         mg = nx.ladder_graph(2, create_using=nx.MultiGraph)
-        assert_edges_equal(mg.edges(), g.edges())
+        assert edges_equal(mg.edges(), g.edges())

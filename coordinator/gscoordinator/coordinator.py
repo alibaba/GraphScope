@@ -33,7 +33,6 @@ import signal
 import string
 import sys
 import threading
-import time
 import traceback
 import urllib.parse
 import urllib.request
@@ -215,6 +214,9 @@ class CoordinatorServiceServicer(
             )
             self._dangling_detecting_timer.start()
 
+        # a lock that protects the coordinator
+        self._lock = threading.Lock()
+
         atexit.register(self._cleanup)
 
     def __del__(self):
@@ -309,11 +311,11 @@ class CoordinatorServiceServicer(
         sv = version.parse(__version__)
         cv = version.parse(self._request.version)
         if sv.major != cv.major or sv.minor != cv.minor:
-            logger.warning(
-                "Version between client and server is inconsistent: %s vs %s",
-                self._request.version,
-                __version__,
-            )
+            error_msg = f"Version between client and server is inconsistent: {self._request.version} vs {__version__}"
+            logger.warning(error_msg)
+            context.set_code(error_codes_pb2.CONNECTION_ERROR)
+            context.set_details(error_msg)
+            return message_pb2.ConnectSessionResponse()
 
         return message_pb2.ConnectSessionResponse(
             session_id=self._session_id,
@@ -407,8 +409,7 @@ class CoordinatorServiceServicer(
             if (
                 (
                     op.op == types_pb2.CREATE_GRAPH
-                    and op.attr[types_pb2.GRAPH_TYPE].graph_type
-                    == graph_def_pb2.ARROW_PROPERTY
+                    and op.attr[types_pb2.GRAPH_TYPE].i == graph_def_pb2.ARROW_PROPERTY
                 )
                 or op.op == types_pb2.TRANSFORM_GRAPH
                 or op.op == types_pb2.PROJECT_TO_SIMPLE
@@ -584,8 +585,8 @@ class CoordinatorServiceServicer(
             )
             if op.op == types_pb2.DATA_SOURCE:
                 op_result = self._process_data_source(op, dag_bodies, loader_op_bodies)
-            elif op.op == types_pb2.OUTPUT:
-                op_result = self._output(op)
+            elif op.op == types_pb2.DATA_SINK:
+                op_result = self._process_data_sink(op)
             else:
                 raise RuntimeError("Unsupport op type: " + str(op.op))
             response_head.head.results.append(op_result)
@@ -593,8 +594,9 @@ class CoordinatorServiceServicer(
         return response_head, response_bodies
 
     def RunStep(self, request_iterator, context):
-        for response in self.RunStepWrapped(request_iterator, context):
-            yield response
+        with self._lock:
+            for response in self.RunStepWrapped(request_iterator, context):
+                yield response
 
     def _RunStep(self, request_iterator, context):
         # split dag
@@ -610,6 +612,9 @@ class CoordinatorServiceServicer(
 
         while not dag_manager.empty():
             run_dag_on, dag, dag_bodies = dag_manager.next_dag()
+            error_code = error_codes_pb2.COORDINATOR_INTERNAL_ERROR
+            head = None
+            bodies = None
             try:
                 # run on analytical engine
                 if run_dag_on == GSEngine.analytical_engine:
@@ -715,9 +720,7 @@ class CoordinatorServiceServicer(
                 attr_value_pb2.AttrValue(s=graph_sig.encode("utf-8"))
             )
             op_def.attr[types_pb2.GRAPH_TYPE].CopyFrom(
-                attr_value_pb2.AttrValue(
-                    graph_type=op.attr[types_pb2.GRAPH_TYPE].graph_type
-                )
+                attr_value_pb2.AttrValue(i=op.attr[types_pb2.GRAPH_TYPE].i)
             )
             dag_def = op_def_pb2.DagDef()
             dag_def.op.extend([op_def])
@@ -848,7 +851,7 @@ class CoordinatorServiceServicer(
         try:
             # 60 seconds is enough, see also GH#1024; try 120
             # already add errs to outs
-            outs, errs = proc.communicate(timeout=120)
+            outs, _ = proc.communicate(timeout=120)
             return_code = proc.poll()
             if return_code == 0:
                 # match maxgraph endpoint and check for ready
@@ -869,13 +872,12 @@ class CoordinatorServiceServicer(
                     op.key,
                     InteractiveQueryManager(op.key, maxgraph_endpoint, object_id),
                 )
+                endpoint = maxgraph_external_endpoint or maxgraph_endpoint
+                result = {"endpoint": endpoint, "object_id": object_id}
                 return op_def_pb2.OpResult(
                     code=error_codes_pb2.OK,
                     key=op.key,
-                    result=maxgraph_external_endpoint.encode("utf-8")
-                    if maxgraph_external_endpoint
-                    else maxgraph_endpoint.encode("utf-8"),
-                    extra_info=str(object_id).encode("utf-8"),
+                    result=json.dumps(result).encode("utf-8"),
                 )
             raise RuntimeError("Error code: {0}, message {1}".format(return_code, outs))
         except Exception as e:
@@ -911,15 +913,15 @@ class CoordinatorServiceServicer(
                 rlt = result_set.all().result()
         except Exception as e:
             raise RuntimeError("Fetch gremlin result failed") from e
-
+        meta = op_def_pb2.OpResult.Meta(has_large_result=True)
         return op_def_pb2.OpResult(
             code=error_codes_pb2.OK,
             key=op.key,
-            has_large_result=True,
+            meta=meta,
             result=pickle.dumps(rlt),
         )
 
-    def _output(self, op: op_def_pb2.OpDef):
+    def _process_data_sink(self, op: op_def_pb2.OpDef):
         import vineyard
         import vineyard.io
 
@@ -1107,19 +1109,20 @@ class CoordinatorServiceServicer(
             "Coordinator create learning instance with object id %ld",
             object_id,
         )
-        handle = op.attr[types_pb2.GLE_HANDLE].s
-        config = op.attr[types_pb2.GLE_CONFIG].s
-        endpoints = self._launcher.create_learning_instance(
-            object_id, handle.decode("utf-8"), config.decode("utf-8")
-        )
+        handle = op.attr[types_pb2.GLE_HANDLE].s.decode("utf-8")
+        config = op.attr[types_pb2.GLE_CONFIG].s.decode("utf-8")
+        endpoints = self._launcher.create_learning_instance(object_id, handle, config)
         self._object_manager.put(op.key, LearningInstanceManager(op.key, object_id))
+        result = {
+            "handle": handle,
+            "config": config,
+            "endpoints": endpoints,
+            "object_id": object_id,
+        }
         return op_def_pb2.OpResult(
             code=error_codes_pb2.OK,
             key=op.key,
-            handle=handle,
-            config=config,
-            result=",".join(endpoints).encode("utf-8"),
-            extra_info=str(object_id).encode("utf-8"),
+            result=json.dumps(result).encode("utf-8"),
         )
 
     def _close_learning_instance(self, op: op_def_pb2.OpDef):

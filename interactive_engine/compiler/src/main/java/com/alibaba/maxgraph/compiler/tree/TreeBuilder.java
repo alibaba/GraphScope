@@ -1,16 +1,14 @@
 /**
  * Copyright 2020 Alibaba Group Holding Limited.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * <p>http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
+ * <p>Unless required by applicable law or agreed to in writing, software distributed under the
+ * License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 package com.alibaba.maxgraph.compiler.tree;
@@ -19,7 +17,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.alibaba.maxgraph.Message;
-import com.alibaba.maxgraph.common.util.SchemaUtils;
 import com.alibaba.maxgraph.compiler.api.schema.DataType;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.compiler.optimizer.OptimizeConfig;
@@ -56,6 +53,7 @@ import com.alibaba.maxgraph.sdkcommon.compiler.custom.branch.CustomWhenThenFunct
 import com.alibaba.maxgraph.sdkcommon.compiler.custom.map.MapPropFillFunction;
 import com.alibaba.maxgraph.sdkcommon.compiler.custom.map.RangeSumFunction;
 import com.alibaba.maxgraph.sdkcommon.compiler.custom.program.VertexRatioProgram;
+import com.alibaba.maxgraph.sdkcommon.util.SchemaUtils;
 import com.alibaba.maxgraph.tinkerpop.steps.AllPathStep;
 import com.alibaba.maxgraph.tinkerpop.steps.ConnectedComponentsStep;
 import com.alibaba.maxgraph.tinkerpop.steps.CreateGraphStep;
@@ -78,7 +76,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
-import org.apache.commons.configuration.MapConfiguration;
+import org.apache.commons.configuration2.MapConfiguration;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -148,9 +146,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-/**
- * Syntax tree builder
- */
+/** Syntax tree builder */
 public class TreeBuilder {
     private static final Logger logger = LoggerFactory.getLogger(TreeBuilder.class);
 

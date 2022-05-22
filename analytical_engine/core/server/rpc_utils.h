@@ -15,23 +15,25 @@
 #ifndef ANALYTICAL_ENGINE_CORE_SERVER_RPC_UTILS_H_
 #define ANALYTICAL_ENGINE_CORE_SERVER_RPC_UTILS_H_
 
-#include <exception>
 #include <fstream>
+#include <iterator>
 #include <map>
 #include <memory>
-#include <sstream>
 #include <string>
 #include <utility>
 
+#include "boost/leaf/result.hpp"
 #include "google/protobuf/util/json_util.h"
+#include "vineyard/graph/utils/error.h"
 
 #include "core/config.h"
-#include "core/error.h"
 #include "core/server/command_detail.h"
-#include "proto/graphscope/proto/attr_value.pb.h"
-#include "proto/graphscope/proto/message.pb.h"
-#include "proto/graphscope/proto/op_def.pb.h"
-#include "proto/graphscope/proto/types.pb.h"
+#include "graphscope/proto/attr_value.pb.h"
+#include "graphscope/proto/graph_def.pb.h"
+#include "graphscope/proto/op_def.pb.h"
+#include "graphscope/proto/types.pb.h"
+
+namespace bl = boost::leaf;
 
 namespace gs {
 namespace rpc {
@@ -55,6 +57,12 @@ inline int64_t get_param_impl<int64_t>(
 }
 
 template <>
+inline uint64_t get_param_impl<uint64_t>(
+    const std::map<int, rpc::AttrValue>& params, rpc::ParamKey key) {
+  return params.at(key).u();
+}
+
+template <>
 inline bool get_param_impl<bool>(const std::map<int, rpc::AttrValue>& params,
                                  rpc::ParamKey key) {
   return params.at(key).b();
@@ -69,13 +77,13 @@ inline float get_param_impl<float>(const std::map<int, rpc::AttrValue>& params,
 template <>
 inline rpc::graph::GraphTypePb get_param_impl<rpc::graph::GraphTypePb>(
     const std::map<int, rpc::AttrValue>& params, rpc::ParamKey key) {
-  return params.at(key).graph_type();
+  return static_cast<rpc::graph::GraphTypePb>(params.at(key).i());
 }
 
 template <>
 inline rpc::ModifyType get_param_impl<rpc::ModifyType>(
     const std::map<int, rpc::AttrValue>& params, rpc::ParamKey key) {
-  return params.at(key).modify_type();
+  return static_cast<rpc::ModifyType>(params.at(key).i());
 }
 
 template <>
@@ -87,7 +95,7 @@ inline rpc::AttrValue_ListValue get_param_impl<rpc::AttrValue_ListValue>(
 template <>
 inline rpc::ReportType get_param_impl<rpc::ReportType>(
     const std::map<int, rpc::AttrValue>& params, rpc::ParamKey key) {
-  return params.at(key).report_type();
+  return static_cast<rpc::ReportType>(params.at(key).i());
 }
 
 /**

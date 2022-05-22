@@ -90,9 +90,6 @@ class Dag(object):
         op_keys_to_keep = sorted(op_keys_to_keep, key=lambda n: self._ops_seq_by_key[n])
         for key in op_keys_to_keep:
             op_def = self._ops_by_key[key].as_op_def()
-            # mark op fetch or not
-            if key in op_keys:
-                op_def.fetch = True
             out.op.extend([op_def])
         return out
 

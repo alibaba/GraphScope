@@ -1,29 +1,49 @@
 The GraphScope has been deployed.
 
+1. Get service address by:
+--------------------------
 {{- if contains "NodePort" .Values.coordinator.service.type }}
-Get service address by:
+
   export NODE_IP=$(kubectl --namespace {{ .Release.Namespace }}  get pod -l {{ template "graphscope.coordinator.labelSelector" . }} --no-headers=true | awk '/ /{print $1}' | xargs kubectl --namespace {{ .Release.Namespace }} get pod -o jsonpath="{.status.hostIP}")
   export NODE_PORT=$(kubectl --namespace {{ .Release.Namespace }} get services -o jsonpath="{.spec.ports[0].nodePort}" {{ template "graphscope.fullname" . }}-coordinator-service)
   echo "GraphScope service listen on ${NODE_IP}:${NODE_PORT}"
 
+{{- else if contains "LoadBalancer" .Values.coordinator.service.type }}
+
+  It may take a few minutes for the LoadBalancer IP to be available.
+  You can watch the status by executing 'kubectl --namespace {{ .Release.Namespace }} get services -o wide -w {{ template "graphscope.fullname" . }}-coordinator-service'
+
+{{- end }}
+
+
+2. Get jupyterlab url by:
+-------------------------
+
 {{- if .Values.jupyter }}
 
-A jupyter-lab container is shipped with GraphScope, you can get the jupyter URL by executing 
-  'kubectl --namespace {{ .Release.Namespace }} logs --tail=10 -lgraphscope.components=coordinator -c jupyter'
+  A jupyter-lab container is shipped with GraphScope, you can get the jupyter URL by executing:
 
-Then replace the '127.0.0.1:8888' to '${NODE_IP}:{{ .Values.jupyter.port }}'.
+      'kubectl --namespace {{ .Release.Namespace }} logs --tail=10 -lgraphscope.components=coordinator -c jupyter'
+
+  Then replace the '127.0.0.1:8888' to '${NODE_IP}:{{ .Values.jupyter.port }}'.
 
 {{- end }}
 
-{{- else if contains "LoadBalancer" .Values.coordinator.service.type }}
-It may take a few minutes for the LoadBalancer IP to be available.
-You can watch the status by executing 'kubectl --namespace {{ .Release.Namespace }} get services -o wide -w {{ template "graphscope.fullname" . }}-coordinator-service'
-{{- end }}
 
-An example to connect service in python.
+3. An example to connect service in python:
+-------------------------------------------
 
 ```python
-import graphscope
-graphscope.set_option(show_log=True)
-sess = graphscope.session(addr='<ip>:<port>')
+>>> import graphscope
+>>> graphscope.set_option(show_log=True)
+>>> sess = graphscope.session(addr='<ip>:<port>')
+```
+
+Or connect service from our jupyterlab container:
+-------------------------------------------------
+
+```python
+>>> import graphscope
+>>> graphscope.set_option(show_log=True)
+>>> sess = graphscope.session(addr='localhost:59001')
 ```

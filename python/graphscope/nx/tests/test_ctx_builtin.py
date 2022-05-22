@@ -17,15 +17,13 @@
 #
 
 import os
-from posixpath import expanduser
 
-import numpy as np
 import pandas as pd
 import pytest
 
 from graphscope import nx
 from graphscope.nx.tests.utils import almost_equal
-from graphscope.nx.tests.utils import replace_with_inf
+from graphscope.nx.utils.misc import replace_with_inf
 
 
 @pytest.mark.usefixtures("graphscope_session")
@@ -94,15 +92,15 @@ class TestBuiltInApp:
         }
 
         data_dir = os.path.expandvars("${GS_TEST_DIR}")
-        p2p_file = os.path.expandvars("${GS_TEST_DIR}/dynamic/p2p-31_dynamic.edgelist")
+        p2p_file = os.path.expandvars("${GS_TEST_DIR}/p2p-31.e")
         p2p_sub_file = os.path.expandvars(
             "${GS_TEST_DIR}/dynamic/p2p-31_dynamic_subgraph.edgelist"
         )
         cls.p2p = nx.read_edgelist(
-            p2p_file, nodetype=int, data=True, create_using=nx.DiGraph
+            p2p_file, nodetype=int, data=(("weight", int),), create_using=nx.DiGraph
         )
         cls.p2p_undirected = nx.read_edgelist(
-            p2p_file, nodetype=int, data=True, create_using=nx.Graph
+            p2p_file, nodetype=int, data=(("weight", int),), create_using=nx.Graph
         )
         cls.p2p_subgraph = nx.read_edgelist(
             p2p_sub_file, nodetype=int, data=True, create_using=nx.DiGraph

@@ -1,0 +1,49 @@
+apiVersion: actions.summerwind.dev/v1alpha1
+kind: RunnerDeployment
+metadata:
+   name: graphscope-runners-manylinux2014
+spec:
+  template:
+    spec:
+      repository: alibaba/GraphScope
+      image: registry-vpc.cn-hongkong.aliyuncs.com/graphscope/runner:manylinux2014
+      labels:
+        - manylinux2014
+      containers:
+      - name: runner
+        env: []
+        resources:
+          limits:
+            cpu: "28.0"
+            memory: "100Gi"
+            ephemeral-storage: 100Gi
+          requests:
+            cpu: "24.0"
+            memory: "60Gi"
+            ephemeral-storage: 100Gi
+      - name: docker
+        resources:
+          limits:
+            cpu: "2.0"
+            memory: "8Gi"
+          requests:
+            cpu: "2.0"
+            memory: "8Gi"
+            ephemeral-storage: 1Gi
+---
+apiVersion: actions.summerwind.dev/v1alpha1
+kind: HorizontalRunnerAutoscaler
+metadata:
+    name: graphscope-runner-manylinux2014-deployment-autoscaler
+spec:
+  scaleDownDelaySecondsAfterScaleOut: 900
+  scaleTargetRef:
+    name: graphscope-runners-manylinux2014
+    # Uncomment the below in case the target is not RunnerDeployment but RunnerSet
+    #kind: RunnerSet
+  minReplicas: 0
+  maxReplicas: 20
+  scaleUpTriggers:
+  - githubEvent:
+      workflowJob: {}
+    duration: "30m"

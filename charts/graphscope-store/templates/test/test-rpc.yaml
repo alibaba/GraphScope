@@ -14,7 +14,7 @@ spec:
       command:
         - /bin/sh
         - -c
-        - while sleep 3 && ! python3 -c 'import socket; import os; socket.create_connection((os.getenv("frontend"), 55555))';
+        - while sleep 3 && ! python3 -c 'import socket; import os; socket.create_connection((os.getenv("frontend"), 55556))';
             do echo -n .;
           done
 

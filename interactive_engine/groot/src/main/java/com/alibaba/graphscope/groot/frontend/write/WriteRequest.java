@@ -4,6 +4,8 @@ import com.alibaba.graphscope.groot.operation.OperationType;
 import com.alibaba.graphscope.proto.write.DataRecordPb;
 import com.alibaba.graphscope.proto.write.WriteRequestPb;
 import com.alibaba.graphscope.proto.write.WriteTypePb;
+import com.alibaba.maxgraph.sdkcommon.common.EdgeRecordKey;
+import com.alibaba.maxgraph.sdkcommon.common.VertexRecordKey;
 
 import java.util.Collections;
 import java.util.Map;

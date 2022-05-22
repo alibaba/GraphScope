@@ -16,12 +16,12 @@ package com.alibaba.graphscope.groot.store.jna;
 import com.alibaba.graphscope.groot.operation.OperationBatch;
 import com.alibaba.graphscope.groot.store.GraphPartition;
 import com.alibaba.graphscope.groot.store.GraphPartitionBackup;
+import com.alibaba.graphscope.groot.store.external.ExternalStorage;
 import com.alibaba.maxgraph.common.config.Configs;
 import com.alibaba.maxgraph.common.config.StoreConfig;
 import com.alibaba.maxgraph.proto.groot.GraphDefPb;
 import com.sun.jna.Pointer;
 
-import org.apache.hadoop.fs.FileSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -102,13 +102,11 @@ public class JnaGraphStore implements GraphPartition {
     }
 
     @Override
-    public void ingestHdfsFile(FileSystem fs, org.apache.hadoop.fs.Path filePath)
-            throws IOException {
-        org.apache.hadoop.fs.Path targetPath =
-                new org.apache.hadoop.fs.Path(downloadPath.toString(), filePath.getName());
-        fs.copyToLocalFile(filePath, targetPath);
-        try (JnaResponse response =
-                GraphLibrary.INSTANCE.ingestData(this.pointer, targetPath.toString())) {
+    public void ingestExternalFile(ExternalStorage storage, String fullPath) throws IOException {
+        String fileName = fullPath.substring(fullPath.lastIndexOf('/') + 1);
+        String dstPath = downloadPath.toString() + "/" + fileName;
+        storage.downloadData(fullPath, dstPath);
+        try (JnaResponse response = GraphLibrary.INSTANCE.ingestData(this.pointer, dstPath)) {
             if (!response.success()) {
                 throw new IOException(response.getErrMsg());
             }

@@ -17,7 +17,7 @@
 
 #include <string>
 
-#include "grape/communication/shuffle.h"
+#include "grape/communication/shuffle.h"  // IWYU pragma: export
 #include "vineyard/graph/utils/string_collection.h"
 
 namespace grape {

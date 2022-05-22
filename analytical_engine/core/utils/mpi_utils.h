@@ -16,10 +16,12 @@
 #ifndef ANALYTICAL_ENGINE_CORE_UTILS_MPI_UTILS_H_
 #define ANALYTICAL_ENGINE_CORE_UTILS_MPI_UTILS_H_
 
+#include <mpi.h>
+
 #include <climits>
 #include <cstdint>
 
-#include "vineyard/graph/utils/mpi_utils.h"
+#include "vineyard/graph/utils/mpi_utils.h"  // IWYU pragma: export
 
 namespace gs {
 

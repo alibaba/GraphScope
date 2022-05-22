@@ -125,10 +125,20 @@ class HostsClusterLauncher(Launcher):
             env["PYTHONPATH"] = (
                 os.path.join(os.path.dirname(graphscope.__file__), "..")
                 + os.pathsep
+                + os.path.join(
+                    os.path.dirname(graphscope.__file__), "..", "..", "coordinator"
+                )
+                + os.pathsep
                 + env["PYTHONPATH"]
             )
         else:
-            env["PYTHONPATH"] = os.path.join(os.path.dirname(graphscope.__file__), "..")
+            env["PYTHONPATH"] = (
+                os.path.join(os.path.dirname(graphscope.__file__), "..")
+                + os.pathsep
+                + os.path.join(
+                    os.path.dirname(graphscope.__file__), "..", "..", "coordinator"
+                )
+            )
 
         # Param `start_new_session=True` is for putting child process to a new process group
         # so it won't get the signals from parent.
@@ -136,7 +146,7 @@ class HostsClusterLauncher(Launcher):
         process = subprocess.Popen(
             cmd,
             start_new_session=False if in_notebook() else True,
-            cwd=COORDINATOR_HOME,
+            cwd=os.getcwd(),
             env=env,
             encoding="utf-8",
             errors="replace",

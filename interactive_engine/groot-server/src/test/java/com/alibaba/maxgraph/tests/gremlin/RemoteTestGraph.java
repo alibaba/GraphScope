@@ -13,10 +13,10 @@
  */
 package com.alibaba.maxgraph.tests.gremlin;
 
-import com.alibaba.graphscope.groot.schema.GraphDef;
-import com.alibaba.graphscope.groot.sdk.Client;
+import com.alibaba.graphscope.groot.sdk.MaxGraphClient;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.sdkcommon.io.MaxGraphIORegistry;
+import com.alibaba.maxgraph.sdkcommon.schema.GraphDef;
 import com.alibaba.maxgraph.tinkerpop.traversal.MaxGraphTraversalSource;
 
 import org.apache.commons.configuration2.Configuration;
@@ -443,12 +443,12 @@ public class RemoteTestGraph implements Graph {
     private RemoteConnection remoteConnection;
     private Cluster cluster;
     private boolean started = false;
-    private Client sdkClient;
+    private MaxGraphClient sdkClient;
 
     public RemoteTestGraph(String host, int port) {
         this.cluster = createCluster(host, port);
         this.remoteConnection = DriverRemoteConnection.using(cluster);
-        this.sdkClient = new Client(host, 55555);
+        this.sdkClient = MaxGraphClient.newBuilder().addHost(host, 55555).build();
         this.started = true;
     }
 

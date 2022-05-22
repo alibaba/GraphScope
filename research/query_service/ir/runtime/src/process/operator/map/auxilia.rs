@@ -38,7 +38,7 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
     fn exec(&self, mut input: Record) -> FnResult<Option<Record>> {
         let entry = input
             .get(None)
-            .ok_or(FnExecError::get_tag_error("current in AuxiliaOperator"))?
+            .ok_or(FnExecError::get_tag_error("get current entry failed in AuxiliaOperator"))?
             .clone();
         // Make sure there is anything to query with
         // Note that we need to guarantee the requested column if it has any alias,
@@ -56,7 +56,7 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
                 let mut result_iter = graph.get_edge(&[e.id()], &self.query_params)?;
                 result_iter.next().map(|edge| edge.into())
             } else {
-                Err(FnExecError::unexpected_data_error(&format!("entry {:?} in AuxiliaOperator", entry)))?
+                Err(FnExecError::unexpected_data_error("should be vertex or edge in AuxiliaOperator"))?
             };
             if new_entry.is_some() {
                 input.append(new_entry.unwrap(), self.alias.clone());

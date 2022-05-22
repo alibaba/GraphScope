@@ -16,26 +16,34 @@
 #ifndef ANALYTICAL_ENGINE_CORE_IO_PROPERTY_PARSER_H_
 #define ANALYTICAL_ENGINE_CORE_IO_PROPERTY_PARSER_H_
 
-#include <atomic>
+#include <glog/logging.h>
+
+#include <cstddef>
 #include <iostream>
 #include <map>
 #include <memory>
-#include <sstream>
 #include <string>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 
-#include "arrow/api.h"
-#include "arrow/io/api.h"
-#include "boost/algorithm/string.hpp"
-#include "google/protobuf/util/json_util.h"
+#include "arrow/buffer.h"
+#include "arrow/table.h"
+#include "boost/leaf/error.hpp"
+#include "boost/leaf/result.hpp"
 #include "vineyard/basic/ds/arrow_utils.h"
+#include "vineyard/common/util/status.h"
 
 #include "core/server/rpc_utils.h"
-#include "proto/graphscope/proto/attr_value.pb.h"
-#include "proto/graphscope/proto/op_def.pb.h"
-#include "proto/graphscope/proto/types.pb.h"
+#include "graphscope/proto/attr_value.pb.h"
+#include "graphscope/proto/types.pb.h"
+
+namespace bl = boost::leaf;
+
+namespace gs {
+namespace rpc {
+class OpDef;
+}
+}  // namespace gs
 
 template <typename Key, typename Value>
 using ProtobufMap = ::google::protobuf::Map<Key, Value>;

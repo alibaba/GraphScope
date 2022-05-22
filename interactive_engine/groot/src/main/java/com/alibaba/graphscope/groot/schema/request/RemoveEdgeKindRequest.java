@@ -14,7 +14,7 @@
 package com.alibaba.graphscope.groot.schema.request;
 
 import com.alibaba.graphscope.groot.operation.OperationType;
-import com.alibaba.graphscope.groot.schema.EdgeKind;
+import com.alibaba.maxgraph.sdkcommon.schema.EdgeKind;
 import com.google.protobuf.ByteString;
 
 public class RemoveEdgeKindRequest extends AbstractDdlRequest {

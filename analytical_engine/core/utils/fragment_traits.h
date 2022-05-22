@@ -16,7 +16,10 @@
 #ifndef ANALYTICAL_ENGINE_CORE_UTILS_FRAGMENT_TRAITS_H_
 #define ANALYTICAL_ENGINE_CORE_UTILS_FRAGMENT_TRAITS_H_
 
-#include "vineyard/graph/fragment/fragment_traits.h"
+#include <string>
+
+#include "vineyard/common/util/typename.h"
+#include "vineyard/graph/fragment/fragment_traits.h"  // IWYU pragma: export
 
 #include "core/object/dynamic.h"
 
@@ -24,8 +27,8 @@ namespace vineyard {
 
 #if defined(NETWORKX)
 template <>
-struct TypeName<gs::dynamic::Value> {
-  static const char* Get() { return "dynamic::Value"; }
+struct typename_t<gs::dynamic::Value> {
+  inline static const std::string name() { return "dynamic::Value"; }
 };
 #endif
 
