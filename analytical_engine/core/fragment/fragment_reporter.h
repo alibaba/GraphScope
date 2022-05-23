@@ -126,7 +126,9 @@ class DynamicFragmentReporter : public grape::Communicator {
       dynamic::Parse(node_in_json, node_id);
       if (fragment->GetInnerVertex(node_id, v) &&
           fragment->IsAliveInnerVertex(v)) {
-        *in_archive << fragment->GetData(v);
+        msgpack::sbuffer sbuf;
+        msgpack::pack(&sbuf, fragment->GetData(v));
+        *in_archive << sbuf;
       }
       break;
     }
@@ -279,7 +281,9 @@ class DynamicFragmentReporter : public grape::Communicator {
       }
     }
     // archive the start gid and nodes attribute array.
-    arc << gid << nodes_attr;
+    msgpack::sbuffer sbuf;
+    msgpack::pack(&sbuf, nodes_attr);
+    arc << gid << sbuf;
   }
 
   void getNeighborCacheByGid(std::shared_ptr<fragment_t>& fragment, vid_t gid,
@@ -341,7 +345,9 @@ class DynamicFragmentReporter : public grape::Communicator {
     }
 
     // archive the start gid and edges attribute array.
-    arc << gid << adj_list;
+    msgpack::sbuffer sbuf;
+    msgpack::pack(&sbuf, adj_list);
+    arc << gid << sbuf;
   }
 
   grape::CommSpec comm_spec_;
@@ -575,7 +581,9 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
         PropertyConverter<fragment_t>::NodeValue(fragment, v, type, prop_name,
                                                  col_id, ref_data);
       }
-      arc << ref_data;
+      msgpack::sbuffer sbuf;
+      msgpack::pack(&sbuf, ref_data);
+      arc << sbuf;
     }
   }
 
