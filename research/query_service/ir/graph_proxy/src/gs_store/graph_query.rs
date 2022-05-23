@@ -89,30 +89,25 @@ where
             if let Some(indexed_values) = params.get_extra_param("PK") {
                 match indexed_values {
                     Object::Vector(prop_vals) => {
+                        let mut results = Vec::with_capacity(prop_vals.len());
                         let mut properties = Vec::with_capacity(prop_vals.len());
                         for prop_val in prop_vals {
                             let property = encode_store_prop_val(prop_val.clone());
                             properties.push(property);
                         }
-                        if label_ids.len() != 1 {
-                            Err(FnExecError::query_store_error("PK only supports a single label"))?
-                        }
-                        if let Some(vid) = self
-                            .partition_manager
-                            // TODO: vineyard should also implement this function
-                            .get_vertex_id_by_primary_keys(*label_ids.get(0).unwrap(), properties.as_ref())
-                        {
-                            Ok(Box::new(
-                                vec![Vertex::new(
+                        for (idx, label) in label_ids.iter().enumerate() {
+                            if let Some(vid) = self
+                                .partition_manager
+                                .get_vertex_id_by_primary_keys(*label, properties.as_ref())
+                            {
+                                results.push(Vertex::new(
                                     vid as ID,
-                                    params.labels.get(0).cloned(),
+                                    params.labels.get(idx).cloned(),
                                     DynDetails::new(DefaultDetails::new(HashMap::new())),
-                                )]
-                                .into_iter(),
-                            ))
-                        } else {
-                            Ok(Box::new(std::iter::empty()))
+                                ));
+                            }
                         }
+                        Ok(Box::new(results.into_iter()))
                     }
                     _ => Err(FnExecError::query_store_error("PK values should be a vector"))?,
                 }
