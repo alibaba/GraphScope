@@ -46,6 +46,7 @@ limitations under the License.
 #include "pagerank/pagerank_auto.h"
 #include "sssp/sssp.h"
 #include "sssp/sssp_auto.h"
+#include "voterank/voterank.h"
 #include "wcc/wcc.h"
 #include "wcc/wcc_auto.h"
 
@@ -115,6 +116,8 @@ DECLARE_int32(app_concurrency);
 
 DECLARE_int64(dfs_source);
 DECLARE_string(dfs_format);
+
+DECLARE_int32(vr_num_of_nodes);
 
 namespace gs {
 
@@ -447,6 +450,15 @@ void Run() {
     CreateAndQuery<GraphType, AppType>(comm_spec, efile, vfile, out_prefix,
                                        FLAGS_datasource, fnum, spec,
                                        FLAGS_bfs_source);
+  } else if (name == "voterank") {
+    using GraphType =
+        grape::ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T,
+                                        grape::LoadStrategy::kBothOutIn,
+                                        VertexMapType>;
+    using AppType = VoteRank<GraphType>;
+    CreateAndQuery<GraphType, AppType>(comm_spec, efile, vfile, out_prefix,
+                                       FLAGS_datasource, fnum, spec,
+                                       FLAGS_vr_num_of_nodes);
   } else {
     LOG(FATAL) << "No available application named [" << name << "].";
   }

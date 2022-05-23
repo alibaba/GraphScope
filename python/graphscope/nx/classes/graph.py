@@ -472,6 +472,14 @@ class Graph(_GraphBase):
             vdata_type = utils.data_type_to_cpp(self._schema.vdata_type)
             edata_type = utils.data_type_to_cpp(self._schema.edata_type)
             s = f"gs::ArrowFlattenedFragment<{oid_type},{vid_type},{vdata_type},{edata_type}>"
+        elif self._graph_type == graph_def_pb2.ARROW_PROJECTED:
+            oid_type = utils.normalize_data_type_str(
+                utils.data_type_to_cpp(self._schema.oid_type)
+            )
+            vid_type = self._schema.vid_type
+            vdata_type = utils.data_type_to_cpp(self._schema.vdata_type)
+            edata_type = utils.data_type_to_cpp(self._schema.edata_type)
+            s = f"gs::ArrowProjectedFragment<{oid_type},{vid_type},{vdata_type},{edata_type}>"
         else:
             raise ValueError(f"Unsupported graph type: {self._graph_type}")
         return s
