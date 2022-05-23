@@ -13,6 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::borrow::BorrowMut;
 use std::collections::HashMap;
 use std::convert::TryInto;
 use std::ops::Deref;
@@ -22,7 +23,7 @@ use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::algebra::sink::MetaType;
 use ir_common::generated::common as common_pb;
 use ir_common::generated::results as result_pb;
-use ir_common::NameOrId;
+use ir_common::{KeyId, NameOrId};
 use pegasus::api::function::{FnResult, MapFunction};
 
 use crate::error::FnGenResult;
@@ -33,9 +34,9 @@ use crate::process::record::{CommonObject, Entry, Record, RecordElement};
 #[derive(Debug)]
 pub struct RecordSinkEncoder {
     /// the given column tags to sink;
-    sink_keys: Vec<Option<NameOrId>>,
+    sink_keys: Vec<Option<KeyId>>,
     /// A map from id to name; including type of Entity (Vertex in Graph Database),
-    /// Relation (Edge in Graph Database) and Column (Property in Graph Database)
+    /// Relation (Edge in Graph Database), Column (Property in Graph Database), and Tag (Alias).
     schema_map: Option<HashMap<(MetaType, i32), String>>,
 }
 
@@ -77,7 +78,8 @@ impl RecordSinkEncoder {
             RecordElement::OffGraph(o) => match o {
                 CommonObject::None => Some(result_pb::element::Inner::Object(Object::None.into())),
                 CommonObject::Prop(obj) | CommonObject::Agg(obj) => {
-                    Some(result_pb::element::Inner::Object(obj.clone().into()))
+                    let obj_pb = self.object_to_pb(obj.clone());
+                    Some(result_pb::element::Inner::Object(obj_pb))
                 }
                 CommonObject::Count(cnt) => {
                     let item = if *cnt <= (i64::MAX as u64) {
@@ -93,19 +95,50 @@ impl RecordSinkEncoder {
         result_pb::Element { inner }
     }
 
-    fn label_to_pb(&self, label: NameOrId, t: MetaType) -> common_pb::NameOrId {
-        let mapped_label = if let Some(schema_map) = self.schema_map.as_ref() {
-            match label {
-                NameOrId::Str(_) => label,
-                NameOrId::Id(id) => {
-                    let str_label = schema_map.get(&(t, id)).unwrap();
-                    NameOrId::Str(str_label.clone())
+    fn object_to_pb(&self, value: Object) -> common_pb::Value {
+        if let Object::KV(kv) = value {
+            let mut pairs: Vec<common_pb::Pair> = Vec::with_capacity(kv.len());
+            for (mut key, val) in kv {
+                // a special case to parse key in KV, where the key is vec![tag, prop_name]
+                if let Object::Vector(ref mut v) = key {
+                    if v.len() == 2 {
+                        if let Ok(tag_id) = v.get(0).unwrap().as_i32() {
+                            let mapped_tag = Object::from(self.get_meta_name(tag_id, MetaType::Tag));
+                            *(v[0].borrow_mut()) = mapped_tag;
+                        }
+                        if let Ok(prop_id) = v.get(1).unwrap().as_i32() {
+                            let mapped_prop = Object::from(self.get_meta_name(prop_id, MetaType::Column));
+                            *(v[1].borrow_mut()) = mapped_prop;
+                        }
+                    }
                 }
+                let key_pb: common_pb::Value = key.into();
+                let val_pb: common_pb::Value = val.into();
+                pairs.push(common_pb::Pair { key: Some(key_pb), val: Some(val_pb) })
             }
+            let item = common_pb::value::Item::PairArray(common_pb::PairArray { item: pairs });
+            common_pb::Value { item: Some(item) }
         } else {
-            label
+            common_pb::Value::from(value)
+        }
+    }
+
+    fn meta_to_pb(&self, meta: NameOrId, t: MetaType) -> common_pb::NameOrId {
+        let mapped_meta = match meta {
+            NameOrId::Str(_) => meta,
+            NameOrId::Id(id) => self.get_meta_name(id, t),
         };
-        mapped_label.into()
+        mapped_meta.into()
+    }
+
+    fn get_meta_name(&self, meta_id: KeyId, t: MetaType) -> NameOrId {
+        if let Some(schema_map) = self.schema_map.as_ref() {
+            if let Some(meta_name) = schema_map.get(&(t, meta_id)) {
+                return NameOrId::Str(meta_name.clone());
+            }
+        }
+        // if we can not find mapped meta_name, we return meta_id.to_string() instead.
+        NameOrId::Str(meta_id.to_string())
     }
 
     fn vertex_to_pb(&self, v: &Vertex) -> result_pb::Vertex {
@@ -113,7 +146,7 @@ impl RecordSinkEncoder {
             id: v.id() as i64,
             label: v
                 .label()
-                .map(|label| self.label_to_pb(label.clone(), MetaType::Entity)),
+                .map(|label| self.meta_to_pb(label.clone(), MetaType::Entity)),
             // TODO: return detached vertex without property for now
             properties: vec![],
         }
@@ -124,15 +157,15 @@ impl RecordSinkEncoder {
             id: e.id() as i64,
             label: e
                 .label()
-                .map(|label| self.label_to_pb(label.clone(), MetaType::Relation)),
+                .map(|label| self.meta_to_pb(label.clone(), MetaType::Relation)),
             src_id: e.src_id as i64,
             src_label: e
                 .get_src_label()
-                .map(|label| self.label_to_pb(label.clone(), MetaType::Entity)),
+                .map(|label| self.meta_to_pb(label.clone(), MetaType::Entity)),
             dst_id: e.dst_id as i64,
             dst_label: e
                 .get_dst_label()
-                .map(|label| self.label_to_pb(label.clone(), MetaType::Entity)),
+                .map(|label| self.meta_to_pb(label.clone(), MetaType::Entity)),
             // TODO: return detached edge without property for now
             properties: vec![],
         }
@@ -182,7 +215,7 @@ impl MapFunction<Record, result_pb::Results> for RecordSinkEncoder {
                 let column_pb = result_pb::Column {
                     name_or_id: sink_key
                         .clone()
-                        .map(|sink_key| common_pb::NameOrId::from(sink_key.clone())),
+                        .map(|sink_key| self.meta_to_pb(NameOrId::Id(sink_key), MetaType::Tag)),
                     entry: Some(entry_pb),
                 };
                 sink_columns.push(column_pb);

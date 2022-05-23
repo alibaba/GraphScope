@@ -28,7 +28,7 @@ mod test {
     use pegasus_server::JobRequest;
     use runtime::graph::element::GraphElement;
 
-    use crate::common::test::{initialize, parse_result, query_params, submit_query};
+    use crate::common::test::{initialize, parse_result, query_params, submit_query, TAG_A, TAG_B, TAG_C};
 
     // g.V().hasLabel("person").match(
     //    __.as('a').has(age, gt(25)).out("created").as('b'),
@@ -65,27 +65,27 @@ mod test {
         let pattern = pb::Pattern {
             sentences: vec![
                 pb::pattern::Sentence {
-                    start: Some("a".into()),
+                    start: Some(TAG_A.into()),
                     binders: vec![pb::pattern::Binder {
                         item: Some(pb::pattern::binder::Item::Edge(out_knows)),
                     }],
-                    end: Some("b".into()),
+                    end: Some(TAG_B.into()),
                     join_kind: 0,
                 },
                 pb::pattern::Sentence {
-                    start: Some("a".into()),
+                    start: Some(TAG_A.into()),
                     binders: vec![pb::pattern::Binder {
                         item: Some(pb::pattern::binder::Item::Edge(out_created.clone())),
                     }],
-                    end: Some("c".into()),
+                    end: Some(TAG_C.into()),
                     join_kind: 0,
                 },
                 pb::pattern::Sentence {
-                    start: Some("b".into()),
+                    start: Some(TAG_B.into()),
                     binders: vec![pb::pattern::Binder {
                         item: Some(pb::pattern::binder::Item::Edge(out_created.clone())),
                     }],
-                    end: Some("c".into()),
+                    end: Some(TAG_C.into()),
                     join_kind: 0,
                 },
             ],
@@ -93,9 +93,9 @@ mod test {
 
         let sink = pb::Sink {
             tags: vec![
-                common_pb::NameOrIdKey { key: Some("a".into()) },
-                common_pb::NameOrIdKey { key: Some("b".into()) },
-                common_pb::NameOrIdKey { key: Some("c".into()) },
+                common_pb::NameOrIdKey { key: Some(TAG_A.into()) },
+                common_pb::NameOrIdKey { key: Some(TAG_B.into()) },
+                common_pb::NameOrIdKey { key: Some(TAG_C.into()) },
             ],
             id_name_mappings: vec![],
         };
@@ -130,15 +130,15 @@ mod test {
                 Ok(res) => {
                     let entry = parse_result(res).unwrap();
                     let a = entry
-                        .get(Some(&"a".into()))
+                        .get(Some(&TAG_A.into()))
                         .unwrap()
                         .as_graph_vertex();
                     let b = entry
-                        .get(Some(&"b".into()))
+                        .get(Some(&TAG_B.into()))
                         .unwrap()
                         .as_graph_vertex();
                     let c = entry
-                        .get(Some(&"c".into()))
+                        .get(Some(&TAG_C.into()))
                         .unwrap()
                         .as_graph_vertex();
                     result_collection.push((a.unwrap().id(), b.unwrap().id(), c.unwrap().id()));

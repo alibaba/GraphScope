@@ -1081,7 +1081,7 @@ def betweenness_centrality(
             G, normalized=normalized, endpoints=endpoints
         )
 
-    if not isinstance(G, nx.Graph):
+    if not isinstance(G, nx.Graph) or seed is not None:
         return nxa.betweenness_centrality(G, k, normalized, weight, endpoints, seed)
     return _betweenness_centrality(
         G, k=k, normalized=normalized, weight=weight, endpoints=endpoints, seed=seed

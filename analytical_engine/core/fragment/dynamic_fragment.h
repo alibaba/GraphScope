@@ -1497,7 +1497,7 @@ class DynamicFragmentMutator {
                    const std::string weight) {
     edata_t e_data;
     oid_t src, dst;
-    vid_t src_gid, dst_gid;
+    vid_t src_gid, dst_gid, lid;
     fid_t src_fid, dst_fid, fid = fragment_->fid();
     auto& partitioner = vm_ptr_->GetPartitioner();
     mutation_t mutation;
@@ -1519,15 +1519,23 @@ class DynamicFragmentMutator {
       src_fid = partitioner.GetPartitionId(src);
       dst_fid = partitioner.GetPartitionId(dst);
       if (modify_type == rpc::NX_ADD_EDGES) {
-        bool src_added = vm_ptr_->AddVertex(std::move(src), src_gid);
-        bool dst_added = vm_ptr_->AddVertex(std::move(dst), dst_gid);
-        if (src_fid == fid && src_added) {
-          vdata_t empty_data(rapidjson::kObjectType);
-          mutation.vertices_to_add.emplace_back(src_gid, std::move(empty_data));
+        bool src_new_add = vm_ptr_->AddVertex(std::move(src), src_gid);
+        bool dst_new_add = vm_ptr_->AddVertex(std::move(dst), dst_gid);
+        if (src_fid == fid) {
+          if (src_new_add || (fragment_->InnerVertexGid2Lid(src_gid, lid) &&
+                              !fragment_->iv_alive_.get_bit(lid))) {
+            vdata_t empty_data(rapidjson::kObjectType);
+            mutation.vertices_to_add.emplace_back(src_gid,
+                                                  std::move(empty_data));
+          }
         }
-        if (dst_fid == fid && dst_added) {
-          vdata_t empty_data(rapidjson::kObjectType);
-          mutation.vertices_to_add.emplace_back(dst_gid, std::move(empty_data));
+        if (dst_fid == fid) {
+          if (dst_new_add || (fragment_->InnerVertexGid2Lid(src_gid, lid) &&
+                              !fragment_->iv_alive_.get_bit(lid))) {
+            vdata_t empty_data(rapidjson::kObjectType);
+            mutation.vertices_to_add.emplace_back(dst_gid,
+                                                  std::move(empty_data));
+          }
         }
         if (!e_data.Empty()) {
           for (const auto& prop : e_data.GetObject()) {

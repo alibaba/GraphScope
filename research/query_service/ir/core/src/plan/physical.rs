@@ -21,6 +21,7 @@
 
 use ir_common::generated::algebra as pb;
 use ir_common::generated::common as common_pb;
+use ir_common::NameOrId;
 use pegasus_client::builder::*;
 use pegasus_server::pb as server_pb;
 use prost::Message;
@@ -359,8 +360,22 @@ impl AsPhysical for pb::GroupBy {
 }
 
 impl AsPhysical for pb::Sink {
-    fn add_job_builder(&self, builder: &mut JobBuilder, _plan_meta: &mut PlanMeta) -> IrResult<()> {
-        simple_add_job_builder(builder, &pb::logical_plan::Operator::from(self.clone()), SimpleOpr::Sink)
+    fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
+        let mut sink_opr = self.clone();
+        let tag_id_mapping = plan_meta
+            .get_tag_ids()
+            .into_iter()
+            .map(|(tag, id)| pb::sink::IdNameMapping {
+                id: id as i32,
+                name: match tag {
+                    NameOrId::Str(name) => name,
+                    NameOrId::Id(id) => id.to_string(),
+                },
+                meta_type: 3,
+            })
+            .collect();
+        sink_opr.id_name_mappings = tag_id_mapping;
+        simple_add_job_builder(builder, &pb::logical_plan::Operator::from(sink_opr), SimpleOpr::Sink)
     }
 }
 

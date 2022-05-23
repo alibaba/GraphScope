@@ -19,12 +19,12 @@ use std::hash::Hash;
 use std::sync::Arc;
 
 use dyn_type::{BorrowObject, Object};
-use indexmap::map::IndexMap;
 use ir_common::error::ParsePbError;
 use ir_common::generated::results as result_pb;
-use ir_common::NameOrId;
+use ir_common::{KeyId, NameOrId};
 use pegasus::api::function::DynIter;
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
+use vec_map::VecMap;
 
 use crate::expr::eval::Context;
 use crate::graph::element::{Edge, Element, GraphElement, GraphObject, GraphPath, Vertex, VertexOrEdge};
@@ -117,30 +117,29 @@ impl Entry {
 #[derive(Debug, Clone, Default)]
 pub struct Record {
     curr: Option<Arc<Entry>>,
-    // TODO: optimized as VecMap<Entry>
-    columns: IndexMap<NameOrId, Arc<Entry>>,
+    columns: VecMap<Arc<Entry>>,
 }
 
 impl Record {
-    pub fn new<E: Into<Entry>>(entry: E, tag: Option<NameOrId>) -> Self {
+    pub fn new<E: Into<Entry>>(entry: E, tag: Option<KeyId>) -> Self {
         let entry = Arc::new(entry.into());
-        let mut columns = IndexMap::new();
+        let mut columns = VecMap::new();
         if let Some(tag) = tag {
-            columns.insert(tag.clone(), entry.clone());
+            columns.insert(tag as usize, entry.clone());
         }
         Record { curr: Some(entry), columns }
     }
 
     // TODO: consider to maintain the record without any alias, which also needed to be stored;
     // We may: 1. define a None type in NameOrId; or 2. define different Record types, for the gremlin path requirement
-    pub fn append<E: Into<Entry>>(&mut self, entry: E, alias: Option<NameOrId>) {
+    pub fn append<E: Into<Entry>>(&mut self, entry: E, alias: Option<KeyId>) {
         self.append_arc_entry(Arc::new(entry.into()), alias)
     }
 
-    pub fn append_arc_entry(&mut self, entry: Arc<Entry>, alias: Option<NameOrId>) {
+    pub fn append_arc_entry(&mut self, entry: Arc<Entry>, alias: Option<KeyId>) {
         self.curr = Some(entry.clone());
         if let Some(alias) = alias {
-            self.columns.insert(alias.clone(), entry);
+            self.columns.insert(alias as usize, entry);
         }
     }
 
@@ -148,13 +147,13 @@ impl Record {
         self.curr.borrow_mut()
     }
 
-    pub fn get_columns_mut(&mut self) -> &mut IndexMap<NameOrId, Arc<Entry>> {
+    pub fn get_columns_mut(&mut self) -> &mut VecMap<Arc<Entry>> {
         self.columns.borrow_mut()
     }
 
-    pub fn get(&self, tag: Option<&NameOrId>) -> Option<&Arc<Entry>> {
+    pub fn get(&self, tag: Option<&KeyId>) -> Option<&Arc<Entry>> {
         if let Some(tag) = tag {
-            self.columns.get(tag)
+            self.columns.get(*tag as usize)
         } else {
             self.curr.as_ref()
         }
@@ -164,8 +163,8 @@ impl Record {
     /// from both sides will be merged (and deduplicated). The head of the joined
     /// record will be specified according to `HeadJoinOpt`.
     pub fn join(mut self, mut other: Record, opt: Option<HeadJoinOpt>) -> Record {
-        for column in other.columns.drain(..) {
-            if !self.columns.contains_key(&column.0) {
+        for column in other.columns.drain() {
+            if !self.columns.contains_key(column.0) {
                 self.columns.insert(column.0, column.1);
             }
         }
@@ -235,6 +234,15 @@ impl Into<Entry> for RecordElement {
 
 impl Context<RecordElement> for Record {
     fn get(&self, tag: Option<&NameOrId>) -> Option<&RecordElement> {
+        let tag = if let Some(tag) = tag {
+            match tag {
+                // TODO: may better throw an unsupported error if tag is a string_tag
+                NameOrId::Str(_) => None,
+                NameOrId::Id(id) => Some(id),
+            }
+        } else {
+            None
+        };
         self.get(tag)
             .map(|entry| match entry.as_ref() {
                 Entry::Element(element) => Some(element),
@@ -302,13 +310,13 @@ impl Eq for RecordKey {}
 impl Eq for Entry {}
 
 pub struct RecordExpandIter<E> {
-    tag: Option<NameOrId>,
+    tag: Option<KeyId>,
     origin: Record,
     children: DynIter<E>,
 }
 
 impl<E> RecordExpandIter<E> {
-    pub fn new(origin: Record, tag: Option<&NameOrId>, children: DynIter<E>) -> Self {
+    pub fn new(origin: Record, tag: Option<&KeyId>, children: DynIter<E>) -> Self {
         RecordExpandIter { tag: tag.map(|e| e.clone()), origin, children }
     }
 }
@@ -492,7 +500,7 @@ impl Encode for Record {
         }
         writer.write_u64(self.columns.len() as u64)?;
         for (k, v) in self.columns.iter() {
-            k.write_to(writer)?;
+            (k as KeyId).write_to(writer)?;
             v.write_to(writer)?;
         }
         Ok(())
@@ -504,9 +512,9 @@ impl Decode for Record {
         let opt = reader.read_u8()?;
         let curr = if opt == 0 { None } else { Some(Arc::new(<Entry>::read_from(reader)?)) };
         let size = <u64>::read_from(reader)? as usize;
-        let mut columns = IndexMap::with_capacity(size);
+        let mut columns = VecMap::with_capacity(size);
         for _i in 0..size {
-            let k = <NameOrId>::read_from(reader)?;
+            let k = <KeyId>::read_from(reader)? as usize;
             let v = <Entry>::read_from(reader)?;
             columns.insert(k, Arc::new(v));
         }
