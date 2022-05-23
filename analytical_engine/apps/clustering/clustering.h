@@ -58,8 +58,10 @@ class Clustering
             [&messages, &frag, &ctx](int tid, vertex_t v) {
               ctx.global_degree[v] =
                   frag.GetLocalOutDegree(v) + frag.GetLocalInDegree(v);
-              messages.SendMsgThroughEdges<fragment_t, int>(
-                  frag, v, ctx.global_degree[v], tid);
+              if (ctx.global_degree[v] > 1) {
+                messages.SendMsgThroughEdges<fragment_t, int>(
+                    frag, v, ctx.global_degree[v], tid);
+              }
             });
     messages.ForceContinue();
   }
@@ -79,46 +81,34 @@ class Clustering
 
       ForEach(inner_vertices.begin(), inner_vertices.end(),
               [&frag, &ctx, &messages, &vertices](int tid, vertex_t v) {
-                vid_t u_gid, v_gid;
-                auto& nbr_vec = ctx.complete_neighbor[v];
                 int degree = ctx.global_degree[v];
-                nbr_vec.reserve(degree);
-                std::vector<std::pair<vid_t, uint32_t>> msg_vec;
-                msg_vec.reserve(degree);
+                if (degree > 1) {
+                  vid_t u_gid, v_gid;
+                  auto& nbr_vec = ctx.complete_neighbor[v];
+                  nbr_vec.reserve(degree);
+                  std::vector<std::pair<vid_t, uint32_t>> msg_vec;
+                  msg_vec.reserve(degree);
 
-                typename FRAG_T::template vertex_array_t<uint32_t> is_rec;
-                is_rec.Init(vertices, 0);
-                auto es = frag.GetOutgoingAdjList(v);
-                for (auto& e : es) {
-                  auto u = e.get_neighbor();
-                  is_rec[u]++;
-                }
-                es = frag.GetIncomingAdjList(v);
-                for (auto& e : es) {
-                  auto u = e.get_neighbor();
-                  is_rec[u]++;
-                  if (is_rec[u] == 2) {
-                    ctx.rec_degree[v]++;
+                  typename FRAG_T::template vertex_array_t<uint32_t> is_rec;
+                  is_rec.Init(vertices, 0);
+                  auto es = frag.GetOutgoingAdjList(v);
+                  for (auto& e : es) {
+                    auto u = e.get_neighbor();
+                    is_rec[u]++;
                   }
-                }
-
-                es = frag.GetOutgoingAdjList(v);
-                for (auto& e : es) {
-                  auto u = e.get_neighbor();
-                  if (ctx.global_degree[u] < ctx.global_degree[v]) {
-                    std::pair<vid_t, uint32_t> msg;
-                    msg.first = frag.Vertex2Gid(u);
+                  es = frag.GetIncomingAdjList(v);
+                  for (auto& e : es) {
+                    auto u = e.get_neighbor();
+                    is_rec[u]++;
                     if (is_rec[u] == 2) {
-                      msg.second = 2;
-                    } else {
-                      msg.second = 1;
+                      ctx.rec_degree[v]++;
                     }
-                    msg_vec.push_back(msg);
-                    nbr_vec.push_back(std::make_pair(u, msg.second));
-                  } else if (ctx.global_degree[u] == ctx.global_degree[v]) {
-                    u_gid = frag.Vertex2Gid(u);
-                    v_gid = frag.GetInnerVertexGid(v);
-                    if (v_gid > u_gid) {
+                  }
+
+                  es = frag.GetOutgoingAdjList(v);
+                  for (auto& e : es) {
+                    auto u = e.get_neighbor();
+                    if (ctx.global_degree[u] < ctx.global_degree[v]) {
                       std::pair<vid_t, uint32_t> msg;
                       msg.first = frag.Vertex2Gid(u);
                       if (is_rec[u] == 2) {
@@ -126,27 +116,29 @@ class Clustering
                       } else {
                         msg.second = 1;
                       }
-                      nbr_vec.push_back(std::make_pair(u, msg.second));
                       msg_vec.push_back(msg);
+                      nbr_vec.push_back(std::make_pair(u, msg.second));
+                    } else if (ctx.global_degree[u] == ctx.global_degree[v]) {
+                      u_gid = frag.Vertex2Gid(u);
+                      v_gid = frag.GetInnerVertexGid(v);
+                      if (v_gid > u_gid) {
+                        std::pair<vid_t, uint32_t> msg;
+                        msg.first = frag.Vertex2Gid(u);
+                        if (is_rec[u] == 2) {
+                          msg.second = 2;
+                        } else {
+                          msg.second = 1;
+                        }
+                        nbr_vec.push_back(std::make_pair(u, msg.second));
+                        msg_vec.push_back(msg);
+                      }
                     }
                   }
-                }
 
-                es = frag.GetIncomingAdjList(v);
-                for (auto& e : es) {
-                  auto u = e.get_neighbor();
-                  if (ctx.global_degree[u] < ctx.global_degree[v]) {
-                    std::pair<vid_t, uint32_t> msg;
-                    msg.first = frag.Vertex2Gid(u);
-                    if (is_rec[u] == 1) {
-                      msg.second = 1;
-                      msg_vec.push_back(msg);
-                      nbr_vec.push_back(std::make_pair(u, 1));
-                    }
-                  } else if (ctx.global_degree[u] == ctx.global_degree[v]) {
-                    u_gid = frag.Vertex2Gid(u);
-                    v_gid = frag.GetInnerVertexGid(v);
-                    if (v_gid > u_gid) {
+                  es = frag.GetIncomingAdjList(v);
+                  for (auto& e : es) {
+                    auto u = e.get_neighbor();
+                    if (ctx.global_degree[u] < ctx.global_degree[v]) {
                       std::pair<vid_t, uint32_t> msg;
                       msg.first = frag.Vertex2Gid(u);
                       if (is_rec[u] == 1) {
@@ -154,13 +146,25 @@ class Clustering
                         msg_vec.push_back(msg);
                         nbr_vec.push_back(std::make_pair(u, 1));
                       }
+                    } else if (ctx.global_degree[u] == ctx.global_degree[v]) {
+                      u_gid = frag.Vertex2Gid(u);
+                      v_gid = frag.GetInnerVertexGid(v);
+                      if (v_gid > u_gid) {
+                        std::pair<vid_t, uint32_t> msg;
+                        msg.first = frag.Vertex2Gid(u);
+                        if (is_rec[u] == 1) {
+                          msg.second = 1;
+                          msg_vec.push_back(msg);
+                          nbr_vec.push_back(std::make_pair(u, 1));
+                        }
+                      }
                     }
                   }
-                }
 
-                messages.SendMsgThroughEdges<
-                    fragment_t, std::vector<std::pair<vid_t, uint32_t>>>(
-                    frag, v, msg_vec, tid);
+                  messages.SendMsgThroughEdges<
+                      fragment_t, std::vector<std::pair<vid_t, uint32_t>>>(
+                      frag, v, msg_vec, tid);
+                }
               });
       messages.ForceContinue();
     } else if (ctx.stage == 1) {
@@ -184,22 +188,26 @@ class Clustering
       typename FRAG_T::template vertex_array_t<uint32_t> v0_nbr_set(vertices,
                                                                     0);
       for (auto v : inner_vertices) {
-        auto& v0_nbr_vec = ctx.complete_neighbor[v];
-        for (auto u : v0_nbr_vec) {
-          v0_nbr_set[u.first] = u.second;
-        }
-        for (auto u : v0_nbr_vec) {
-          auto& v1_nbr_vec = ctx.complete_neighbor[u.first];
-          for (auto w : v1_nbr_vec) {
-            if (v0_nbr_set[w.first] != 0) {
-              ctx.tricnt[u.first] += v0_nbr_set[w.first] * u.second * w.second;
-              ctx.tricnt[v] += v0_nbr_set[w.first] * u.second * w.second;
-              ctx.tricnt[w.first] += v0_nbr_set[w.first] * u.second * w.second;
+        if (ctx.global_degree[v] > 1) {
+          auto& v0_nbr_vec = ctx.complete_neighbor[v];
+          for (auto u : v0_nbr_vec) {
+            v0_nbr_set[u.first] = u.second;
+          }
+          for (auto u : v0_nbr_vec) {
+            auto& v1_nbr_vec = ctx.complete_neighbor[u.first];
+            for (auto w : v1_nbr_vec) {
+              if (v0_nbr_set[w.first] != 0) {
+                ctx.tricnt[u.first] +=
+                    v0_nbr_set[w.first] * u.second * w.second;
+                ctx.tricnt[v] += v0_nbr_set[w.first] * u.second * w.second;
+                ctx.tricnt[w.first] +=
+                    v0_nbr_set[w.first] * u.second * w.second;
+              }
             }
           }
-        }
-        for (auto u : v0_nbr_vec) {
-          v0_nbr_set[u.first] = 0;
+          for (auto u : v0_nbr_vec) {
+            v0_nbr_set[u.first] = 0;
+          }
         }
       }
 
@@ -224,9 +232,13 @@ class Clustering
       auto& tricnt = ctx.tricnt;
       auto& ctx_data = ctx.data();
       for (auto v : inner_vertices) {
-        int degree =
-            global_degree[v] * (global_degree[v] - 1) - 2 * rec_degree[v];
-        ctx_data[v] = degree == 0 ? 0.0 : 1.0 * tricnt[v] / degree;
+        if (global_degree[v] == 0 || global_degree[v] == 1) {
+          ctx_data[v] = 0;
+        } else {
+          int degree =
+              global_degree[v] * (global_degree[v] - 1) - 2 * rec_degree[v];
+          ctx_data[v] = degree == 0 ? 0.0 : 1.0 * tricnt[v] / degree;
+        }
       }
     }
   }
