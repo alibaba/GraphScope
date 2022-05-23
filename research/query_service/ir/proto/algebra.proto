@@ -371,6 +371,7 @@ message Sink {
       ENTITY = 0;
       RELATION = 1;
       COLUMN = 2;
+      TAG = 3;
   }
   message IdNameMapping {
     int32 id = 1;

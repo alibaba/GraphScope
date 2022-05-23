@@ -20,7 +20,7 @@
 
 #include "grape/types.h"
 
-#include "core/worker/default_worker.h"
+#include "core/worker/default_worker.h"  // IWYU pragma: export
 
 namespace gs {
 

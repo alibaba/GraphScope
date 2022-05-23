@@ -32,7 +32,7 @@ use std::sync::Arc;
 use dyn_type::Object;
 use ir_common::error::ParsePbError;
 use ir_common::generated::common as common_pb;
-use ir_common::NameOrId;
+use ir_common::{KeyId, NameOrId};
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 
 use crate::error::FnExecError;
@@ -42,7 +42,7 @@ use crate::process::record::{CommonObject, Entry, Record, RecordElement};
 
 #[derive(Clone, Debug, Default)]
 pub struct TagKey {
-    tag: Option<NameOrId>,
+    tag: Option<KeyId>,
     key: Option<PropKey>,
 }
 
@@ -150,7 +150,7 @@ impl TryFrom<common_pb::Variable> for TagKey {
     type Error = ParsePbError;
 
     fn try_from(v: common_pb::Variable) -> Result<Self, Self::Error> {
-        let tag = if let Some(tag) = v.tag { Some(NameOrId::try_from(tag)?) } else { None };
+        let tag = if let Some(tag) = v.tag { Some(KeyId::try_from(tag)?) } else { None };
         let prop = if let Some(prop) = v.property { Some(PropKey::try_from(prop)?) } else { None };
         Ok(TagKey { tag, key: prop })
     }
@@ -185,12 +185,12 @@ impl Decode for TagKey {
         let opt = reader.read_u8()?;
         match opt {
             0 => {
-                let tag = <NameOrId>::read_from(reader)?;
+                let tag = <KeyId>::read_from(reader)?;
                 let key = <PropKey>::read_from(reader)?;
                 Ok(TagKey { tag: Some(tag), key: Some(key) })
             }
             1 => {
-                let tag = <NameOrId>::read_from(reader)?;
+                let tag = <KeyId>::read_from(reader)?;
                 Ok(TagKey { tag: Some(tag), key: None })
             }
             2 => {
@@ -214,6 +214,12 @@ pub(crate) mod tests {
     use crate::graph::element::{GraphElement, Vertex};
     use crate::graph::property::{DefaultDetails, DynDetails};
     use crate::process::record::RecordElement;
+
+    pub const TAG_A: KeyId = 0;
+    pub const TAG_B: KeyId = 1;
+    pub const TAG_C: KeyId = 2;
+    pub const TAG_D: KeyId = 3;
+    pub const TAG_E: KeyId = 4;
 
     pub fn init_vertex1() -> Vertex {
         let map1: HashMap<NameOrId, Object> = vec![
@@ -257,17 +263,51 @@ pub(crate) mod tests {
     pub fn init_source_with_tag() -> Vec<Record> {
         let v1 = init_vertex1();
         let v2 = init_vertex2();
-        let r1 = Record::new(v1, Some("a".into()));
-        let r2 = Record::new(v2, Some("a".into()));
+        let r1 = Record::new(v1, Some(TAG_A.into()));
+        let r2 = Record::new(v2, Some(TAG_A.into()));
         vec![r1, r2]
     }
 
     pub fn init_source_with_multi_tags() -> Vec<Record> {
         let v1 = init_vertex1();
         let v2 = init_vertex2();
-        let mut r1 = Record::new(v1, Some("a".into()));
-        r1.append(v2, Some("b".into()));
+        let mut r1 = Record::new(v1, Some(TAG_A.into()));
+        r1.append(v2, Some(TAG_B.into()));
         vec![r1]
+    }
+
+    pub fn to_var_pb(tag: Option<NameOrId>, key: Option<NameOrId>) -> common_pb::Variable {
+        common_pb::Variable {
+            tag: tag.map(|t| t.into()),
+            property: key
+                .map(|k| common_pb::Property { item: Some(common_pb::property::Item::Key(k.into())) }),
+        }
+    }
+
+    pub fn to_expr_var_pb(tag: Option<NameOrId>, key: Option<NameOrId>) -> common_pb::Expression {
+        common_pb::Expression {
+            operators: vec![common_pb::ExprOpr {
+                item: Some(common_pb::expr_opr::Item::Var(to_var_pb(tag, key))),
+            }],
+        }
+    }
+
+    pub fn to_expr_vars_pb(
+        tag_keys: Vec<(Option<NameOrId>, Option<NameOrId>)>, is_map: bool,
+    ) -> common_pb::Expression {
+        let vars = tag_keys
+            .into_iter()
+            .map(|(tag, key)| to_var_pb(tag, key))
+            .collect();
+        common_pb::Expression {
+            operators: vec![common_pb::ExprOpr {
+                item: if is_map {
+                    Some(common_pb::expr_opr::Item::VarMap(common_pb::VariableKeys { keys: vars }))
+                } else {
+                    Some(common_pb::expr_opr::Item::Vars(common_pb::VariableKeys { keys: vars }))
+                },
+            }],
+        }
     }
 
     #[test]

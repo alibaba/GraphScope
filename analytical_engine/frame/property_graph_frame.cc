@@ -30,12 +30,14 @@
 #include "core/server/rpc_utils.h"
 #include "core/utils/fragment_traits.h"
 #include "core/vertex_map/arrow_projected_vertex_map.h"
-#include "proto/graphscope/proto/attr_value.pb.h"
-#include "proto/graphscope/proto/graph_def.pb.h"
+#include "graphscope/proto/attr_value.pb.h"
+#include "graphscope/proto/graph_def.pb.h"
 
 #if !defined(_GRAPH_TYPE)
 #error Missing _GRAPH_TYPE
 #endif
+
+namespace bl = boost::leaf;
 
 /**
  * property_graph_frame.cc serves as a frame to be compiled with ArrowFragment.
@@ -49,12 +51,12 @@ extern "C" {
 void LoadGraph(
     const grape::CommSpec& comm_spec, vineyard::Client& client,
     const std::string& graph_name, const gs::rpc::GSParams& params,
-    gs::bl::result<std::shared_ptr<gs::IFragmentWrapper>>& fragment_wrapper) {
+    bl::result<std::shared_ptr<gs::IFragmentWrapper>>& fragment_wrapper) {
   using oid_t = typename _GRAPH_TYPE::oid_t;
   using vid_t = typename _GRAPH_TYPE::vid_t;
 
-  fragment_wrapper = gs::bl::try_handle_some(
-      [&]() -> gs::bl::result<std::shared_ptr<gs::IFragmentWrapper>> {
+  fragment_wrapper = bl::try_handle_some(
+      [&]() -> bl::result<std::shared_ptr<gs::IFragmentWrapper>> {
         BOOST_LEAF_AUTO(from_vineyard_id,
                         params.Get<bool>(gs::rpc::IS_FROM_VINEYARD_ID));
 
@@ -152,7 +154,7 @@ void ToArrowFragment(
     vineyard::Client& client, const grape::CommSpec& comm_spec,
     std::shared_ptr<gs::IFragmentWrapper>& wrapper_in,
     const std::string& dst_graph_name,
-    gs::bl::result<std::shared_ptr<gs::IFragmentWrapper>>& wrapper_out) {
+    bl::result<std::shared_ptr<gs::IFragmentWrapper>>& wrapper_out) {
 #ifdef NETWORKX
   using oid_t = typename _GRAPH_TYPE::oid_t;
   using vid_t = typename _GRAPH_TYPE::vid_t;
@@ -161,8 +163,8 @@ void ToArrowFragment(
                 "DynamicFragment::vid_t");
 #endif
 
-  wrapper_out = gs::bl::try_handle_some(
-      [&]() -> gs::bl::result<std::shared_ptr<gs::IFragmentWrapper>> {
+  wrapper_out = bl::try_handle_some(
+      [&]() -> bl::result<std::shared_ptr<gs::IFragmentWrapper>> {
 #ifdef NETWORKX
         if (wrapper_in->graph_def().graph_type() !=
             gs::rpc::graph::DYNAMIC_PROPERTY) {
@@ -226,9 +228,9 @@ void ToDynamicFragment(
     const grape::CommSpec& comm_spec,
     std::shared_ptr<gs::IFragmentWrapper>& wrapper_in,
     const std::string& dst_graph_name, int default_label_id,
-    gs::bl::result<std::shared_ptr<gs::IFragmentWrapper>>& wrapper_out) {
-  wrapper_out = gs::bl::try_handle_some(
-      [&]() -> gs::bl::result<std::shared_ptr<gs::IFragmentWrapper>> {
+    bl::result<std::shared_ptr<gs::IFragmentWrapper>>& wrapper_out) {
+  wrapper_out = bl::try_handle_some(
+      [&]() -> bl::result<std::shared_ptr<gs::IFragmentWrapper>> {
 #ifdef NETWORKX
         if (wrapper_in->graph_def().graph_type() !=
             gs::rpc::graph::ARROW_PROPERTY) {
@@ -272,12 +274,12 @@ void AddLabelsToGraph(
     vineyard::ObjectID frag_id, const grape::CommSpec& comm_spec,
     vineyard::Client& client, const std::string& graph_name,
     const gs::rpc::GSParams& params,
-    gs::bl::result<std::shared_ptr<gs::IFragmentWrapper>>& fragment_wrapper) {
+    bl::result<std::shared_ptr<gs::IFragmentWrapper>>& fragment_wrapper) {
   using oid_t = typename _GRAPH_TYPE::oid_t;
   using vid_t = typename _GRAPH_TYPE::vid_t;
 
-  fragment_wrapper = gs::bl::try_handle_some(
-      [&]() -> gs::bl::result<std::shared_ptr<gs::IFragmentWrapper>> {
+  fragment_wrapper = bl::try_handle_some(
+      [&]() -> bl::result<std::shared_ptr<gs::IFragmentWrapper>> {
         BOOST_LEAF_AUTO(graph_info, gs::ParseCreatePropertyGraph(params));
         gs::ArrowFragmentLoader<oid_t, vid_t> loader(client, comm_spec,
                                                      graph_info);

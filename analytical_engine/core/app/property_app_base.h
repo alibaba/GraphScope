@@ -21,7 +21,7 @@
 #include "grape/types.h"
 
 #include "core/parallel/property_message_manager.h"
-#include "core/worker/default_property_worker.h"
+#include "core/worker/default_property_worker.h"  // IWYU pragma: export
 
 namespace gs {
 

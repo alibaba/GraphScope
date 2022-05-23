@@ -13,6 +13,15 @@
  * limitations under the License.
  */
 
+// The _GRAPH_HEADER at begin
+#define DO_QUOTE(X) #X
+#define QUOTE(X) DO_QUOTE(X)
+#if defined(_GRAPH_TYPE) && defined(_GRAPH_HEADER)
+#include QUOTE(_GRAPH_HEADER)
+#else
+#error "Missing macro _GRAPH_TYPE or _GRAPH_HEADER"
+#endif
+
 #include <iostream>
 #include <memory>
 #include <string>
@@ -28,18 +37,17 @@
 #include "core/app/app_invoker.h"
 #include "core/error.h"
 #include "frame/ctx_wrapper_builder.h"
-#include "proto/graphscope/proto/data_types.pb.h"
-#include "proto/graphscope/proto/query_args.pb.h"
+#include "graphscope/proto/data_types.pb.h"
+#include "graphscope/proto/types.pb.h"
 
-using string = std::string;
-
-#define DO_QUOTE(X) #X
-#define QUOTE(X) DO_QUOTE(X)
-
-#if defined(_GRAPH_TYPE) && defined(_GRAPH_HEADER)
+#ifdef _APP_HEADER
+#include QUOTE(_APP_HEADER)
 #else
-#error "Missing macro _GRAPH_TYPE or _GRAPH_HEADER"
+#error "Missing macro _APP_HEADER"
 #endif
+
+namespace bl = boost::leaf;
+using string = std::string;
 
 #if !defined(_OID_TYPE)
 #define _OID_TYPE vineyard::property_graph_types::OID_TYPE
@@ -62,14 +70,7 @@ using string = std::string;
   gs::PythonPIEApp<_GRAPH_TYPE, gs::CythonPIEProgram<_VD_TYPE, _MD_TYPE>>
 // #endif
 
-#ifndef _APP_HEADER
-#error "Missing macro _APP_HEADER"
-#endif
-
 #define _DATA_TYPE typename _APP_TYPE::context_t::data_t
-
-#include QUOTE(_GRAPH_HEADER)
-#include QUOTE(_APP_HEADER)
 
 /**
  * cython_pie_app_frame.cc is designed to serve for building apps as a library.
@@ -153,7 +154,7 @@ void Query(void* worker_handler, const gs::rpc::QueryArgs& query_args,
            const std::string& context_key,
            std::shared_ptr<gs::IFragmentWrapper> frag_wrapper,
            std::shared_ptr<gs::IContextWrapper>& ctx_wrapper,
-           gs::bl::result<nullptr_t>& wrapper_error) {
+           bl::result<nullptr_t>& wrapper_error) {
   auto worker = static_cast<worker_handler_t*>(worker_handler)->worker;
   auto result = gs::AppInvoker<_APP_TYPE>::Query(worker, query_args);
   if (!result) {

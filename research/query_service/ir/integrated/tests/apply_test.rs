@@ -217,7 +217,7 @@ mod test {
     fn apply_inner_join(worker_num: u32) {
         initialize();
         // join_kind: InnerJoin
-        let request = init_apply_count_request(0, "a".into());
+        let request = init_apply_count_request(0, TAG_A.into());
         let mut results = submit_query(request, worker_num);
         let mut result_collection = vec![];
         let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
@@ -238,7 +238,7 @@ mod test {
                         // This should be CommonObject::Count(cnt).
                         // We assume it as CommonObject::Prop(cnt) here since we parse it as CommonObject::Prop in parse_result()
                         if let Entry::Element(RecordElement::OffGraph(CommonObject::Prop(cnt))) = record
-                            .get(Some(&"a".to_string().into()))
+                            .get(Some(&TAG_A.into()))
                             .unwrap()
                             .as_ref()
                         {
@@ -272,7 +272,7 @@ mod test {
     fn apply_left_out_join(worker_num: u32) {
         initialize();
         // join_kind: LeftOuterJoin
-        let request = init_apply_count_request(1, "a".into());
+        let request = init_apply_count_request(1, TAG_A.into());
         let mut results = submit_query(request, worker_num);
         let mut result_collection = vec![];
         let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
@@ -288,14 +288,14 @@ mod test {
                         record.get(None).unwrap().as_ref()
                     {
                         if let Entry::Element(RecordElement::OffGraph(CommonObject::Prop(cnt))) = record
-                            .get(Some(&"a".to_string().into()))
+                            .get(Some(&TAG_A.into()))
                             .unwrap()
                             .as_ref()
                         {
                             result_collection
                                 .push((vertex.id() as DefaultId, Some(cnt.clone().as_u64().unwrap())));
                         } else if let Entry::Element(RecordElement::OffGraph(CommonObject::None)) = record
-                            .get(Some(&"a".to_string().into()))
+                            .get(Some(&TAG_A.into()))
                             .unwrap()
                             .as_ref()
                         {

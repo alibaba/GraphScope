@@ -56,13 +56,13 @@ class TestGraph(_TestGraph):
 
     def deepcopy_node_attr(self, H, G):
         assert G.nodes[0]["foo"] == H.nodes[0]["foo"]
-        attr = G.nodes[0]["foo"]
+        attr = list(G.nodes[0]["foo"])
         G.nodes[0]["foo"] = attr.append(1)
         assert G.nodes[0]["foo"] != H.nodes[0]["foo"]
 
     def deepcopy_edge_attr(self, H, G):
         assert G[1][2]["foo"] == H[1][2]["foo"]
-        attr = G[1][2]["foo"]
+        attr = list(G[1][2]["foo"])
         attr.append(1)
         G[1][2]["foo"] = attr
         assert G[1][2]["foo"] != H[1][2]["foo"]

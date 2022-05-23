@@ -18,7 +18,7 @@
 
 #ifdef NETWORKX
 
-#include "msgpack.hpp"
+#include "msgpack.hpp"  // IWYU pragma: export
 
 #include "grape/serialization/in_archive.h"
 
@@ -119,6 +119,7 @@ struct pack<gs::dynamic::Value> {
             .pack_str_body(i->name.GetString(), i->name.GetStringLength());
         o.pack(i->value);
       }
+      return o;
     }
     case rapidjson::kArrayType: {
       o.pack_array(v.Size());

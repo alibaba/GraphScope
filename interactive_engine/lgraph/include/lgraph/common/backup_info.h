@@ -17,7 +17,7 @@
 #pragma once
 
 #include "lgraph/common/schema.h"
-#include "lgraph/proto/model.pb.h"
+#include "lgraph/proto/sdk/model.pb.h"
 
 namespace LGRAPH_NAMESPACE {
 

@@ -61,7 +61,6 @@ import org.apache.tinkerpop.gremlin.server.op.AbstractEvalOpProcessor;
 import org.apache.tinkerpop.gremlin.server.op.OpProcessorException;
 import org.apache.tinkerpop.gremlin.server.op.standard.StandardOpProcessor;
 import org.apache.tinkerpop.gremlin.structure.Graph;
-import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
 import org.codehaus.groovy.control.MultipleCompilationErrorsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -88,9 +87,14 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
     protected IrMetaQueryCallback metaQueryCallback;
 
     public IrStandardOpProcessor(
-            Configs configs, IrMetaFetcher irMetaFetcher, RpcChannelFetcher fetcher, IrMetaQueryCallback metaQueryCallback) {
-        this.graph = TinkerFactory.createModern();
-        this.g = graph.traversal(IrCustomizedTraversalSource.class);
+            Configs configs,
+            IrMetaFetcher irMetaFetcher,
+            RpcChannelFetcher fetcher,
+            IrMetaQueryCallback metaQueryCallback,
+            Graph graph,
+            GraphTraversalSource g) {
+        this.graph = graph;
+        this.g = g;
         this.configs = configs;
         this.irMetaFetcher = irMetaFetcher;
         this.broadcastProcessor = new RpcBroadcastProcessor(fetcher);

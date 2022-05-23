@@ -409,8 +409,7 @@ class CoordinatorServiceServicer(
             if (
                 (
                     op.op == types_pb2.CREATE_GRAPH
-                    and op.attr[types_pb2.GRAPH_TYPE].graph_type
-                    == graph_def_pb2.ARROW_PROPERTY
+                    and op.attr[types_pb2.GRAPH_TYPE].i == graph_def_pb2.ARROW_PROPERTY
                 )
                 or op.op == types_pb2.TRANSFORM_GRAPH
                 or op.op == types_pb2.PROJECT_TO_SIMPLE
@@ -721,9 +720,7 @@ class CoordinatorServiceServicer(
                 attr_value_pb2.AttrValue(s=graph_sig.encode("utf-8"))
             )
             op_def.attr[types_pb2.GRAPH_TYPE].CopyFrom(
-                attr_value_pb2.AttrValue(
-                    graph_type=op.attr[types_pb2.GRAPH_TYPE].graph_type
-                )
+                attr_value_pb2.AttrValue(i=op.attr[types_pb2.GRAPH_TYPE].i)
             )
             dag_def = op_def_pb2.DagDef()
             dag_def.op.extend([op_def])
@@ -854,7 +851,7 @@ class CoordinatorServiceServicer(
         try:
             # 60 seconds is enough, see also GH#1024; try 120
             # already add errs to outs
-            outs, errs = proc.communicate(timeout=120)
+            outs, _ = proc.communicate(timeout=120)
             return_code = proc.poll()
             if return_code == 0:
                 # match maxgraph endpoint and check for ready
@@ -875,13 +872,12 @@ class CoordinatorServiceServicer(
                     op.key,
                     InteractiveQueryManager(op.key, maxgraph_endpoint, object_id),
                 )
+                endpoint = maxgraph_external_endpoint or maxgraph_endpoint
+                result = {"endpoint": endpoint, "object_id": object_id}
                 return op_def_pb2.OpResult(
                     code=error_codes_pb2.OK,
                     key=op.key,
-                    result=maxgraph_external_endpoint.encode("utf-8")
-                    if maxgraph_external_endpoint
-                    else maxgraph_endpoint.encode("utf-8"),
-                    extra_info=str(object_id).encode("utf-8"),
+                    result=json.dumps(result).encode("utf-8"),
                 )
             raise RuntimeError("Error code: {0}, message {1}".format(return_code, outs))
         except Exception as e:
@@ -917,11 +913,11 @@ class CoordinatorServiceServicer(
                 rlt = result_set.all().result()
         except Exception as e:
             raise RuntimeError("Fetch gremlin result failed") from e
-
+        meta = op_def_pb2.OpResult.Meta(has_large_result=True)
         return op_def_pb2.OpResult(
             code=error_codes_pb2.OK,
             key=op.key,
-            has_large_result=True,
+            meta=meta,
             result=pickle.dumps(rlt),
         )
 
@@ -1113,19 +1109,20 @@ class CoordinatorServiceServicer(
             "Coordinator create learning instance with object id %ld",
             object_id,
         )
-        handle = op.attr[types_pb2.GLE_HANDLE].s
-        config = op.attr[types_pb2.GLE_CONFIG].s
-        endpoints = self._launcher.create_learning_instance(
-            object_id, handle.decode("utf-8"), config.decode("utf-8")
-        )
+        handle = op.attr[types_pb2.GLE_HANDLE].s.decode("utf-8")
+        config = op.attr[types_pb2.GLE_CONFIG].s.decode("utf-8")
+        endpoints = self._launcher.create_learning_instance(object_id, handle, config)
         self._object_manager.put(op.key, LearningInstanceManager(op.key, object_id))
+        result = {
+            "handle": handle,
+            "config": config,
+            "endpoints": endpoints,
+            "object_id": object_id,
+        }
         return op_def_pb2.OpResult(
             code=error_codes_pb2.OK,
             key=op.key,
-            handle=handle,
-            config=config,
-            result=",".join(endpoints).encode("utf-8"),
-            extra_info=str(object_id).encode("utf-8"),
+            result=json.dumps(result).encode("utf-8"),
         )
 
     def _close_learning_instance(self, op: op_def_pb2.OpDef):

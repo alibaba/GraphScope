@@ -18,15 +18,25 @@
 
 #ifdef NETWORKX
 
-#include <map>
+#include <cassert>
+#include <cstddef>
 #include <memory>
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
+#include "grape/fragment/fragment_base.h"
+#include "grape/graph/adj_list.h"
+#include "grape/types.h"
+
 #include "core/config.h"
 #include "core/fragment/dynamic_fragment.h"
-#include "proto/graphscope/proto/types.pb.h"
+#include "core/object/dynamic.h"
+
+namespace grape {
+class CommSpec;
+}
 
 namespace gs {
 namespace dynamic_projected_fragment_impl {

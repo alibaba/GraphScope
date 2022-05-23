@@ -30,6 +30,8 @@
 #include "core/fragment/dynamic_fragment.h"
 #include "core/loader/arrow_fragment_loader.h"
 
+namespace bl = boost::leaf;
+
 namespace gs {
 
 /**

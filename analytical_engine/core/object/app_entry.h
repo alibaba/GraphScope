@@ -16,21 +16,30 @@
 #ifndef ANALYTICAL_ENGINE_CORE_OBJECT_APP_ENTRY_H_
 #define ANALYTICAL_ENGINE_CORE_OBJECT_APP_ENTRY_H_
 
+#include <cstddef>
 #include <memory>
 #include <string>
 #include <utility>
 
-#include "grape/app/context_base.h"
-#include "grape/parallel/parallel_engine.h"
-#include "grape/worker/comm_spec.h"
+#include "boost/leaf/error.hpp"
+#include "boost/leaf/result.hpp"
 
-#include "core/context/i_context.h"
-#include "core/error.h"
 #include "core/object/gs_object.h"
 #include "core/utils/lib_utils.h"
-#include "proto/graphscope/proto/query_args.pb.h"
+
+namespace bl = boost::leaf;
+
+namespace grape {
+class CommSpec;
+struct ParallelEngineSpec;
+}  // namespace grape
 
 namespace gs {
+class IContextWrapper;
+class IFragmentWrapper;
+namespace rpc {
+class QueryArgs;
+}
 
 typedef void* CreateWorkerT(const std::shared_ptr<void>& fragment,
                             const grape::CommSpec& comm_spec,

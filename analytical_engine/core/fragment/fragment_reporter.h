@@ -18,21 +18,31 @@
 
 #ifdef NETWORKX
 
-#include <map>
+#include <glog/logging.h>
+
+#include <cstddef>
+#include <cstdint>
 #include <memory>
+#include <ostream>
 #include <string>
 #include <utility>
 
-#include "boost/lexical_cast.hpp"
-
+#include "boost/leaf/error.hpp"
+#include "boost/leaf/result.hpp"
 #include "grape/communication/communicator.h"
+#include "grape/serialization/in_archive.h"
 #include "grape/worker/comm_spec.h"
+#include "vineyard/graph/fragment/arrow_fragment.h"
+#include "vineyard/graph/fragment/property_graph_utils.h"
 
 #include "core/fragment/dynamic_fragment.h"
+#include "core/object/dynamic.h"
 #include "core/server/rpc_utils.h"
 #include "core/utils/convert_utils.h"
 #include "core/utils/msgpack_utils.h"
-#include "proto/graphscope/proto/types.pb.h"
+#include "graphscope/proto/types.pb.h"
+
+namespace bl = boost::leaf;
 
 namespace gs {
 /**
@@ -116,7 +126,9 @@ class DynamicFragmentReporter : public grape::Communicator {
       dynamic::Parse(node_in_json, node_id);
       if (fragment->GetInnerVertex(node_id, v) &&
           fragment->IsAliveInnerVertex(v)) {
-        *in_archive << fragment->GetData(v);
+        msgpack::sbuffer sbuf;
+        msgpack::pack(&sbuf, fragment->GetData(v));
+        *in_archive << sbuf;
       }
       break;
     }
@@ -269,7 +281,9 @@ class DynamicFragmentReporter : public grape::Communicator {
       }
     }
     // archive the start gid and nodes attribute array.
-    arc << gid << nodes_attr;
+    msgpack::sbuffer sbuf;
+    msgpack::pack(&sbuf, nodes_attr);
+    arc << gid << sbuf;
   }
 
   void getNeighborCacheByGid(std::shared_ptr<fragment_t>& fragment, vid_t gid,
@@ -331,7 +345,9 @@ class DynamicFragmentReporter : public grape::Communicator {
     }
 
     // archive the start gid and edges attribute array.
-    arc << gid << adj_list;
+    msgpack::sbuffer sbuf;
+    msgpack::pack(&sbuf, adj_list);
+    arc << gid << sbuf;
   }
 
   grape::CommSpec comm_spec_;
@@ -565,7 +581,9 @@ class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
         PropertyConverter<fragment_t>::NodeValue(fragment, v, type, prop_name,
                                                  col_id, ref_data);
       }
-      arc << ref_data;
+      msgpack::sbuffer sbuf;
+      msgpack::pack(&sbuf, ref_data);
+      arc << sbuf;
     }
   }
 

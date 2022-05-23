@@ -28,7 +28,7 @@ pub mod test {
     use ir_common::generated::algebra as pb;
     use ir_common::generated::common as common_pb;
     use ir_common::generated::results as result_pb;
-    use ir_common::NameOrId;
+    use ir_common::{KeyId, NameOrId};
     use lazy_static::lazy_static;
     use pegasus::result::{ResultSink, ResultStream};
     use pegasus::{run_opt, Configuration, JobConf, StartupError};
@@ -39,6 +39,10 @@ pub mod test {
     use runtime::graph::ID;
     use runtime::process::record::{Entry, Record, RecordElement};
     use runtime::IRJobCompiler;
+
+    pub const TAG_A: KeyId = 0;
+    pub const TAG_B: KeyId = 1;
+    pub const TAG_C: KeyId = 2;
 
     static INIT: Once = Once::new();
 
@@ -88,13 +92,22 @@ pub mod test {
         if let Some(result_pb::results::Inner::Record(record_pb)) = result.inner {
             let mut record = Record::default();
             for column in record_pb.columns {
-                let tag: Option<NameOrId> =
-                    if let Some(tag) = column.name_or_id { Some(tag.try_into().unwrap()) } else { None };
+                let tag: Option<KeyId> = if let Some(tag) = column.name_or_id {
+                    match tag.item.unwrap() {
+                        common_pb::name_or_id::Item::Name(name) => Some(
+                            name.parse::<KeyId>()
+                                .unwrap_or(KeyId::max_value()),
+                        ),
+                        common_pb::name_or_id::Item::Id(id) => Some(id),
+                    }
+                } else {
+                    None
+                };
                 let entry = column.entry.unwrap();
                 // append entry without moving head
                 if let Some(tag) = tag {
                     let columns = record.get_columns_mut();
-                    columns.insert(tag.clone(), Arc::new(Entry::try_from(entry).unwrap()));
+                    columns.insert(tag as usize, Arc::new(Entry::try_from(entry).unwrap()));
                 } else {
                     record.append(Entry::try_from(entry).unwrap(), None);
                 }
@@ -130,6 +143,53 @@ pub mod test {
             limit: None,
             predicate,
             extra: HashMap::new(),
+        }
+    }
+
+    pub fn to_var_pb(tag: Option<NameOrId>, key: Option<NameOrId>) -> common_pb::Variable {
+        common_pb::Variable {
+            tag: tag.map(|t| t.into()),
+            property: key
+                .map(|k| common_pb::Property { item: Some(common_pb::property::Item::Key(k.into())) }),
+        }
+    }
+
+    pub fn to_expr_var_pb(tag: Option<NameOrId>, key: Option<NameOrId>) -> common_pb::Expression {
+        common_pb::Expression {
+            operators: vec![common_pb::ExprOpr {
+                item: Some(common_pb::expr_opr::Item::Var(to_var_pb(tag, key))),
+            }],
+        }
+    }
+
+    pub fn to_expr_var_all_prop_pb(tag: Option<NameOrId>) -> common_pb::Expression {
+        common_pb::Expression {
+            operators: vec![common_pb::ExprOpr {
+                item: Some(common_pb::expr_opr::Item::Var(common_pb::Variable {
+                    tag: tag.map(|t| t.into()),
+                    property: Some(common_pb::Property {
+                        item: Some(common_pb::property::Item::All(common_pb::AllKey {})),
+                    }),
+                })),
+            }],
+        }
+    }
+
+    pub fn to_expr_vars_pb(
+        tag_keys: Vec<(Option<NameOrId>, Option<NameOrId>)>, is_map: bool,
+    ) -> common_pb::Expression {
+        let vars = tag_keys
+            .into_iter()
+            .map(|(tag, key)| to_var_pb(tag, key))
+            .collect();
+        common_pb::Expression {
+            operators: vec![common_pb::ExprOpr {
+                item: if is_map {
+                    Some(common_pb::expr_opr::Item::VarMap(common_pb::VariableKeys { keys: vars }))
+                } else {
+                    Some(common_pb::expr_opr::Item::Vars(common_pb::VariableKeys { keys: vars }))
+                },
+            }],
         }
     }
 }

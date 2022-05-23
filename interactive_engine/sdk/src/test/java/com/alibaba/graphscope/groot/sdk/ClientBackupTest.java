@@ -13,7 +13,7 @@
  */
 package com.alibaba.graphscope.groot.sdk;
 
-import com.alibaba.graphscope.groot.coordinator.BackupInfo;
+import com.alibaba.maxgraph.sdkcommon.common.BackupInfo;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -30,7 +30,7 @@ public class ClientBackupTest {
 
     String host = "localhost";
     int port = 55556;
-    Client client = new Client(host, port);
+    MaxGraphClient client = MaxGraphClient.newBuilder().addHost(host, port).build();
 
     @Test
     public void testBackup() throws InterruptedException, IOException, URISyntaxException {

@@ -13,7 +13,7 @@ import com.alibaba.maxgraph.common.config.CommonConfig;
 import com.alibaba.maxgraph.common.config.Configs;
 import com.alibaba.maxgraph.common.config.IngestorConfig;
 import com.alibaba.maxgraph.common.config.StoreConfig;
-import com.alibaba.maxgraph.common.util.PartitionUtils;
+import com.alibaba.maxgraph.sdkcommon.util.PartitionUtils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

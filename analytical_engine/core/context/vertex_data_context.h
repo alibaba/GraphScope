@@ -16,10 +16,13 @@
 #ifndef ANALYTICAL_ENGINE_CORE_CONTEXT_VERTEX_DATA_CONTEXT_H_
 #define ANALYTICAL_ENGINE_CORE_CONTEXT_VERTEX_DATA_CONTEXT_H_
 
-#include <algorithm>
+#include <mpi.h>
+
+#include <cstddef>
 #include <map>
 #include <memory>
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -27,25 +30,37 @@
 #include "core/object/dynamic.h"
 #endif
 
+#include "grape/app/context_base.h"
 #include "grape/app/vertex_data_context.h"
+#include "grape/serialization/in_archive.h"
 #include "grape/utils/vertex_array.h"
+#include "grape/worker/comm_spec.h"
 #include "vineyard/basic/ds/arrow_utils.h"
 #include "vineyard/basic/ds/dataframe.h"
 #include "vineyard/client/client.h"
+#include "vineyard/client/ds/i_object.h"
+#include "vineyard/common/util/uuid.h"
 
 #include "core/config.h"
 #include "core/context/context_protocols.h"
 #include "core/context/i_context.h"
+#include "core/context/selector.h"
 #include "core/context/tensor_dataframe_builder.h"
 #include "core/error.h"
-#include "core/fragment/arrow_flattened_fragment.h"
-#include "core/fragment/arrow_projected_fragment.h"
-#include "core/fragment/dynamic_projected_fragment.h"
+#include "core/server/rpc_utils.h"
+#include "core/utils/mpi_utils.h"
 #include "core/utils/transform_utils.h"
+#include "graphscope/proto/types.pb.h"
 
 #define CONTEXT_TYPE_VERTEX_DATA "vertex_data"
 #define CONTEXT_TYPE_LABELED_VERTEX_DATA "labeled_vertex_data"
 #define CONTEXT_TTPE_DYNAMIC_VERTEX_DATA "dynamic_vertex_data"
+
+namespace bl = boost::leaf;
+
+namespace arrow {
+class Array;
+}
 
 #ifdef NETWORKX
 namespace grape {
@@ -86,6 +101,7 @@ class VertexDataContext<FRAG_T, gs::dynamic::Value> : public ContextBase {
 #endif  // NETWORKX
 
 namespace gs {
+class IFragmentWrapper;
 
 template <typename FRAG_T, typename DATA_T>
 typename std::enable_if<!is_dynamic<DATA_T>::value,

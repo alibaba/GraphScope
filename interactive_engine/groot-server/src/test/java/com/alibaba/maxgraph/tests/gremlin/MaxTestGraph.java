@@ -14,7 +14,6 @@
 package com.alibaba.maxgraph.tests.gremlin;
 
 import com.alibaba.graphscope.groot.frontend.ClientService;
-import com.alibaba.graphscope.groot.schema.GraphDef;
 import com.alibaba.maxgraph.common.config.CommonConfig;
 import com.alibaba.maxgraph.common.config.Configs;
 import com.alibaba.maxgraph.common.config.GremlinConfig;
@@ -25,6 +24,7 @@ import com.alibaba.maxgraph.proto.groot.DropSchemaResponse;
 import com.alibaba.maxgraph.proto.groot.LoadJsonSchemaRequest;
 import com.alibaba.maxgraph.proto.groot.LoadJsonSchemaResponse;
 import com.alibaba.maxgraph.sdkcommon.io.MaxGraphIORegistry;
+import com.alibaba.maxgraph.sdkcommon.schema.GraphDef;
 import com.alibaba.maxgraph.servers.Frontend;
 import com.alibaba.maxgraph.servers.MaxNode;
 import com.alibaba.maxgraph.servers.NodeBase;

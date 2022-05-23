@@ -16,13 +16,25 @@
 #ifndef ANALYTICAL_ENGINE_CORE_FRAGMENT_ARROW_FLATTENED_FRAGMENT_H_
 #define ANALYTICAL_ENGINE_CORE_FRAGMENT_ARROW_FLATTENED_FRAGMENT_H_
 
+#include <cstddef>
 #include <memory>
 #include <set>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include "boost/lexical_cast.hpp"
+#include "grape/fragment/fragment_base.h"
+#include "grape/graph/adj_list.h"
+#include "grape/types.h"
+#include "grape/utils/vertex_array.h"
 #include "vineyard/graph/fragment/arrow_fragment.h"
+
+#include "core/config.h"
+
+namespace grape {
+class CommSpec;
+}
 
 namespace gs {
 

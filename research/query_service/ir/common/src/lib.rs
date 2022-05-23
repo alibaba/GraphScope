@@ -169,6 +169,32 @@ impl TryFrom<common_pb::NameOrId> for NameOrId {
     }
 }
 
+impl TryFrom<common_pb::NameOrId> for KeyId {
+    type Error = ParsePbError;
+
+    fn try_from(t: common_pb::NameOrId) -> ParsePbResult<Self>
+    where
+        Self: Sized,
+    {
+        use common_pb::name_or_id::Item;
+
+        if let Some(item) = t.item {
+            match item {
+                Item::Name(_) => Err(ParsePbError::from("key must be a number")),
+                Item::Id(id) => {
+                    if id < 0 {
+                        Err(ParsePbError::from("key id must be positive number"))
+                    } else {
+                        Ok(id as KeyId)
+                    }
+                }
+            }
+        } else {
+            Err(ParsePbError::from("empty content provided"))
+        }
+    }
+}
+
 impl From<NameOrId> for common_pb::NameOrId {
     fn from(tag: NameOrId) -> Self {
         let name_or_id = match tag {
@@ -176,6 +202,15 @@ impl From<NameOrId> for common_pb::NameOrId {
             NameOrId::Id(id) => common_pb::name_or_id::Item::Id(id),
         };
         common_pb::NameOrId { item: Some(name_or_id) }
+    }
+}
+
+impl From<NameOrId> for Object {
+    fn from(tag: NameOrId) -> Self {
+        match tag {
+            NameOrId::Str(name) => Object::from(name),
+            NameOrId::Id(id) => Object::from(id),
+        }
     }
 }
 

@@ -364,7 +364,7 @@ class TestGraphTransformation(object):
         assert G.has_edge(("comment", 618475290625), ("post", 618475290624))
         assert not G.has_edge(933, ("post", 618475290624))
         # test GET_NODE_DATA and GET_EDGE_DATA
-        assert G.get_node_data(933) == {
+        assert G.nodes[933] == {
             "browserUsed": "Firefox",
             "locationIP": "119.235.7.103",
             "creationDate": "2010-02-14T15:32:10.447+0000",
@@ -402,7 +402,7 @@ class TestGraphTransformation(object):
         assert G.has_edge(("comment", 618475290625), ("post", 618475290624))
         assert not G.has_edge(618475290625, ("post", 618475290624))
         # test GET_NODE_DATA and GET_EDGE_DATA
-        assert G.get_node_data(933) == {
+        assert G.nodes[933] == {
             "browserUsed": "Firefox",
             "locationIP": "119.235.7.103",
             "creationDate": "2010-02-14T15:32:10.447+0000",

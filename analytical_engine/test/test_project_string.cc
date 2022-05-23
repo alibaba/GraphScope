@@ -30,6 +30,8 @@
 #define OID_TYPE int64_t
 #define VID_TYPE uint64_t
 
+namespace bl = boost::leaf;
+
 template class vineyard::BasicArrowVertexMapBuilder<OID_TYPE, VID_TYPE>;
 template class vineyard::ArrowVertexMap<OID_TYPE, VID_TYPE>;
 template class vineyard::ArrowVertexMapBuilder<OID_TYPE, VID_TYPE>;
@@ -123,8 +125,8 @@ int main(int argc, char** argv) {
   auto loader = std::make_unique<vineyard::ArrowFragmentLoader<oid_t, vid_t>>(
       client, comm_spec, efiles, vfiles, directed != 0);
 
-  int exit_code = boost::leaf::try_handle_all(
-      [&]() -> boost::leaf::result<int> {
+  int exit_code = bl::try_handle_all(
+      [&]() -> bl::result<int> {
         BOOST_LEAF_AUTO(obj_id, loader->LoadFragment());
         LOG(INFO) << "got fragment: " << obj_id;
 
@@ -150,7 +152,7 @@ int main(int argc, char** argv) {
         std::cerr << error.error_msg;
         return 1;
       },
-      [](const boost::leaf::error_info& e) { return 1; });
+      [](const bl::error_info& e) { return 1; });
 
   return exit_code;
 }

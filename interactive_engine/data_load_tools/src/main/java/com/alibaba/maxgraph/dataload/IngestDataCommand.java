@@ -1,6 +1,6 @@
 package com.alibaba.maxgraph.dataload;
 
-import com.alibaba.graphscope.groot.sdk.Client;
+import com.alibaba.graphscope.groot.sdk.MaxGraphClient;
 
 import java.io.IOException;
 
@@ -11,7 +11,7 @@ public class IngestDataCommand extends DataCommand {
     }
 
     public void run() {
-        Client client = new Client(graphEndpoint);
+        MaxGraphClient client = MaxGraphClient.newBuilder().setHosts(graphEndpoint).build();
         client.ingestData(dataPath);
     }
 }

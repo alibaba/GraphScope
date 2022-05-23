@@ -16,12 +16,12 @@
 #ifndef ANALYTICAL_ENGINE_CORE_UTILS_TRAIT_UTILS_H_
 #define ANALYTICAL_ENGINE_CORE_UTILS_TRAIT_UTILS_H_
 
-#include <dlfcn.h>
-
-#include <string>
 #include <type_traits>
 
 namespace gs {
+template <typename OID_T, typename VID_T, typename VDATA_T, typename EDATA_T>
+class ArrowFlattenedFragment;
+
 template <typename T, typename F>
 auto static_if(std::true_type, T t, F f) {
   return t;

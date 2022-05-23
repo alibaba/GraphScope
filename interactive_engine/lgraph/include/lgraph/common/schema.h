@@ -19,7 +19,7 @@
 #include <fstream>
 #include "lgraph/common/check.h"
 #include "lgraph/common/types.h"
-#include "lgraph/proto/model.pb.h"
+#include "lgraph/proto/sdk/model.pb.h"
 
 namespace LGRAPH_NAMESPACE {
 

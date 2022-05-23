@@ -15,19 +15,24 @@
 
 #ifndef ANALYTICAL_ENGINE_CORE_OBJECT_DYNAMIC_H_
 #define ANALYTICAL_ENGINE_CORE_OBJECT_DYNAMIC_H_
-
 #ifdef NETWORKX
 
+#include <cstddef>
+#include <cstdint>
 #include <iostream>
+#include <map>
 #include <string>
 #include <utility>
 
+// IWYU pragma: begin_exports
 #include "rapidjson/document.h"
+#include "rapidjson/rapidjson.h"
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
+// IWYU pragma: end_exports
 
 #include "grape/serialization/in_archive.h"
-#include "proto/graphscope/proto/graph_def.pb.h"
+#include "graphscope/proto/graph_def.pb.h"
 
 namespace gs {
 
@@ -299,7 +304,9 @@ namespace std {
 
 template <>
 struct hash<::gs::dynamic::Value> {
-  size_t operator()(::gs::dynamic::Value const& d) const { return d.hash(); }
+  std::size_t operator()(::gs::dynamic::Value const& d) const {
+    return d.hash();
+  }
 };
 
 }  // namespace std
@@ -312,7 +319,7 @@ inline grape::InArchive& operator<<(grape::InArchive& archive,
   } else if (value.IsDouble()) {
     archive << value.GetDouble();
   } else if (value.IsString()) {
-    size_t size = value.GetStringLength();
+    std::size_t size = value.GetStringLength();
     archive << size;
     archive.AddBytes(value.GetString(), size);
   } else {
@@ -329,7 +336,7 @@ inline grape::InArchive& operator<<(grape::InArchive& archive,
   } else if (value.IsDouble()) {
     archive << value.GetDouble();
   } else if (value.IsString()) {
-    size_t size = value.GetStringLength();
+    std::size_t size = value.GetStringLength();
     archive << size;
     archive.AddBytes(value.GetString(), size);
   } else {

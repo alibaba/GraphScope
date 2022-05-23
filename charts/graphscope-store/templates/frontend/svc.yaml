@@ -26,11 +26,11 @@ spec:
   {{- end }}
   ports:
     - name: grpc
-      port: {{ .Values.frontend.service.port }}
+      port: {{ .Values.frontend.service.servicePort }}
       protocol: TCP
-      targetPort: port
-      {{- if and (or (eq .Values.frontend.service.type "NodePort") (eq .Values.frontend.service.type "LoadBalancer")) (not (empty .Values.frontend.service.nodePorts.grpc)) }}
-      nodePort: {{ .Values.frontend.service.nodePorts.grpc }}
+      targetPort: service-port
+      {{- if and (or (eq .Values.frontend.service.type "NodePort") (eq .Values.frontend.service.type "LoadBalancer")) (not (empty .Values.frontend.service.nodePorts.service)) }}
+      nodePort: {{ .Values.frontend.service.nodePorts.service }}
       {{- else if eq .Values.frontend.service.type "ClusterIP" }}
       nodePort: null
       {{- end }}

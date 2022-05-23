@@ -13,6 +13,15 @@
  * limitations under the License.
  */
 
+// The _GRAPH_HEADER at begin
+#define DO_QUOTE(X) #X
+#define QUOTE(X) DO_QUOTE(X)
+#if defined(_GRAPH_TYPE) && defined(_GRAPH_HEADER)
+#include QUOTE(_GRAPH_HEADER)
+#else
+#error "Missing macro _GRAPH_TYPE or _GRAPH_HEADER"
+#endif
+
 #include <iostream>
 #include <memory>
 #include <string>
@@ -30,19 +39,13 @@
 #include "core/app/pregel/pregel_property_app_base.h"
 #include "core/error.h"
 #include "frame/ctx_wrapper_builder.h"
-#include "proto/graphscope/proto/data_types.pb.h"
-#include "proto/graphscope/proto/query_args.pb.h"
+#include "graphscope/proto/data_types.pb.h"
+#include "graphscope/proto/types.pb.h"
 
+#include QUOTE(_APP_HEADER)
+
+namespace bl = boost::leaf;
 using string = std::string;
-
-#define DO_QUOTE(X) #X
-#define QUOTE(X) DO_QUOTE(X)
-
-#if defined(_GRAPH_TYPE) && defined(_GRAPH_HEADER)
-#include QUOTE(_GRAPH_HEADER)
-#else
-#error "Missing macro _GRAPH_TYPE or _GRAPH_HEADER"
-#endif
 
 #if !defined(_OID_TYPE)
 #define _OID_TYPE vineyard::property_graph_types::OID_TYPE
@@ -71,8 +74,6 @@ using string = std::string;
 #endif
 
 #define _DATA_TYPE typename _APP_TYPE::context_t::data_t
-
-#include QUOTE(_APP_HEADER)
 
 /**
  * cython_app_frame.cc is designed to serve for building apps as a library. The
@@ -165,7 +166,7 @@ void Query(void* worker_handler, const gs::rpc::QueryArgs& query_args,
            const std::string& context_key,
            std::shared_ptr<gs::IFragmentWrapper> frag_wrapper,
            std::shared_ptr<gs::IContextWrapper>& ctx_wrapper,
-           gs::bl::result<nullptr_t>& wrapper_error) {
+           bl::result<nullptr_t>& wrapper_error) {
   auto worker = static_cast<worker_handler_t*>(worker_handler)->worker;
   auto result = gs::AppInvoker<_APP_TYPE>::Query(worker, query_args);
   if (!result) {

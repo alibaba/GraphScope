@@ -34,12 +34,13 @@ find_package(CppKafka 0.3.1 REQUIRED)
 # Proto file generating
 set(PROTO_FILE_DIR ${Lgraph_SOURCE_DIR}/../proto)
 set(GRPC_FILES
-  ${PROTO_FILE_DIR}/client.proto
-  ${PROTO_FILE_DIR}/client_backup_service.proto)
+  ${PROTO_FILE_DIR}/sdk/client.proto
+  ${PROTO_FILE_DIR}/sdk/client_backup_service.proto)
 set(PROTO_FILES
   ${GRPC_FILES}
-  ${PROTO_FILE_DIR}/model.proto
+  ${PROTO_FILE_DIR}/sdk/model.proto
   ${PROTO_FILE_DIR}/sdk/common.proto)
+set(PROTOBUF_IMPORT_DIRS ${Lgraph_SOURCE_DIR}/../proto)
 set(PROTO_BUILD_DIR ${Lgraph_BINARY_DIR}/generated)
 set(PROTO_SRCS_DEST_DIR ${Lgraph_SOURCE_DIR}/src/proto)
 set(PROTO_HDRS_DEST_DIR ${Lgraph_SOURCE_DIR}/include/lgraph/proto)
@@ -51,7 +52,6 @@ protobuf_generate_cpp(
   PROTO_HDRS
   ${PROTO_FILE_DIR}
   ${PROTO_BUILD_DIR}
-  ${PROTO_GEN_DIR}
   ${PROTO_SRCS_DEST_DIR}
   ${PROTO_HDRS_DEST_DIR}
   ${PROTO_FILES})
@@ -60,10 +60,10 @@ grpc_generate_cpp(
   GRPC_HDRS
   ${PROTO_FILE_DIR}
   ${PROTO_BUILD_DIR}
-  ${PROTO_GEN_DIR}
   ${PROTO_SRCS_DEST_DIR}
   ${PROTO_HDRS_DEST_DIR}
   ${GRPC_FILES})
+include_directories(${PROTO_HDRS_DEST_DIR}/sdk)
 include_directories(${PROTO_HDRS_DEST_DIR})
 
 # Maxgraph Ffi Dependency

@@ -1,7 +1,7 @@
 package com.alibaba.graphscope.groot.frontend.write;
 
 import com.alibaba.graphscope.groot.operation.EdgeId;
-import com.alibaba.graphscope.groot.schema.EdgeKind;
+import com.alibaba.maxgraph.sdkcommon.schema.EdgeKind;
 
 public class EdgeTarget {
     private EdgeKind edgeKind;

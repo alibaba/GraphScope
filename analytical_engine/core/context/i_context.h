@@ -16,6 +16,7 @@
 #ifndef ANALYTICAL_ENGINE_CORE_CONTEXT_I_CONTEXT_H_
 #define ANALYTICAL_ENGINE_CORE_CONTEXT_I_CONTEXT_H_
 
+#include <cstdint>
 #include <iostream>
 #include <map>
 #include <memory>
@@ -23,21 +24,38 @@
 #include <utility>
 #include <vector>
 
-#include "grape/app/context_base.h"
-#include "grape/serialization/in_archive.h"
-#include "grape/worker/comm_spec.h"
-#include "vineyard/client/client.h"
+#include "boost/leaf/result.hpp"
+#include "vineyard/common/util/uuid.h"
 #include "vineyard/graph/fragment/property_graph_types.h"
 
-#include "core/context/context_protocols.h"
-#include "core/context/selector.h"
 #include "core/error.h"
 #include "core/object/gs_object.h"
-#include "core/object/i_fragment_wrapper.h"
-#include "core/server/rpc_utils.h"
+
+#ifdef ENABLE_JAVA_SDK
+#define CONTEXT_TYPE_JAVA_PIE_PROPERTY "java_pie_property"
+#define CONTEXT_TYPE_JAVA_PIE_PROJECTED "java_pie_projected"
+#endif
+
+namespace bl = boost::leaf;
+
+namespace arrow {
+class Array;
+}
+namespace grape {
+class CommSpec;
+class InArchive;
+}  // namespace grape
+namespace vineyard {
+class Client;
+}
 
 namespace gs {
 class IFragmentWrapper;
+class LabeledSelector;
+class Selector;
+namespace rpc {
+class GSParams;
+}
 
 /**
  * @brief IContextWrapper is the base class for any kind of ContextWrapper.
@@ -221,6 +239,7 @@ class ILabeledVertexPropertyContextWrapper : public IContextWrapper {
 };
 
 #ifdef ENABLE_JAVA_SDK
+
 /**
  * @brief A base class for JavaPropertyDefaultContext. It holds an inner
  * ctxWrapper, and redirect function calls to the inner ctxWrapper.

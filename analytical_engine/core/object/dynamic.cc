@@ -13,13 +13,13 @@
  * limitations under the License.
  */
 
-#include <rapidjson/rapidjson.h>
 #ifdef NETWORKX
-
-#include <numeric>
-#include <string>
-
 #include "core/object/dynamic.h"
+
+#include <cstddef>
+#include <functional>
+#include <stdexcept>
+#include <string>
 
 /* static definition */
 gs::dynamic::AllocatorT gs::dynamic::Value::allocator_{};

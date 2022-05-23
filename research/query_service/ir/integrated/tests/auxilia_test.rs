@@ -60,10 +60,8 @@ mod test {
             alias: None,
         };
 
-        let auxilia_opr = pb::Auxilia {
-            params: Some(query_params(vec![], vec![], None)),
-            alias: Some("a".to_string().into()),
-        };
+        let auxilia_opr =
+            pb::Auxilia { params: Some(query_params(vec![], vec![], None)), alias: Some(TAG_A.into()) };
 
         let conf = JobConf::new("auxilia_simple_alias_test");
         let mut result = pegasus::run(conf, || {
@@ -84,7 +82,7 @@ mod test {
         let mut result_ids = vec![];
         while let Some(Ok(record)) = result.next() {
             if let Some(element) = record
-                .get(Some(&"a".to_string().into()))
+                .get(Some(&TAG_A.into()))
                 .unwrap()
                 .as_graph_vertex()
             {
@@ -157,7 +155,7 @@ mod test {
 
         let auxilia_opr = pb::Auxilia {
             params: Some(query_params(vec![], vec!["name".into()], None)),
-            alias: Some("a".to_string().into()),
+            alias: Some(TAG_A.into()),
         };
 
         let conf = JobConf::new("auxilia_get_property_with_none_tag_input_test");
@@ -179,7 +177,7 @@ mod test {
         let mut result_ids_with_prop = vec![];
         while let Some(Ok(record)) = result.next() {
             if let Some(element) = record
-                .get(Some(&NameOrId::Str("a".to_string())))
+                .get(Some(&TAG_A.into()))
                 .unwrap()
                 .as_graph_vertex()
             {
@@ -271,7 +269,7 @@ mod test {
                 vec!["name".into()],
                 str_to_expr_pb("@.name==\"vadas\"".to_string()).ok(),
             )),
-            alias: Some("a".to_string().into()),
+            alias: Some(TAG_A.into()),
         };
 
         let conf = JobConf::new("auxilia_alias_test");
@@ -293,7 +291,7 @@ mod test {
         let mut result_ids = vec![];
         while let Some(Ok(record)) = result.next() {
             if let Some(element) = record
-                .get(Some(&NameOrId::Str("a".to_string())))
+                .get(Some(&TAG_A.into()))
                 .unwrap()
                 .as_graph_vertex()
             {

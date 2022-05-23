@@ -16,16 +16,25 @@
 #ifndef ANALYTICAL_ENGINE_CORE_CONTEXT_TENSOR_DATAFRAME_BUILDER_H_
 #define ANALYTICAL_ENGINE_CORE_CONTEXT_TENSOR_DATAFRAME_BUILDER_H_
 
+#include <mpi.h>
+
 #include <memory>
-#include <utility>
 #include <vector>
 
-#include "grape/communication/sync_comm.h"
+#include "common/util/uuid.h"
 #include "grape/worker/comm_spec.h"
 #include "vineyard/basic/ds/dataframe.h"
 #include "vineyard/basic/ds/tensor.h"
+#include "vineyard/client/client.h"
+#include "vineyard/client/ds/object_meta.h"
+#include "vineyard/common/util/status.h"
 
 #include "core/context/mpi_object_sync.h"
+
+namespace vineyard {
+class Object;
+}
+
 namespace gs {
 
 /**

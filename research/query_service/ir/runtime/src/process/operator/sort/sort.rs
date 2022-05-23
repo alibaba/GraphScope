@@ -94,7 +94,7 @@ mod tests {
     use crate::graph::element::{Element, GraphElement, Vertex};
     use crate::graph::property::{DefaultDetails, Details, DynDetails};
     use crate::process::operator::sort::CompareFunctionGen;
-    use crate::process::operator::tests::{init_source, init_source_with_tag};
+    use crate::process::operator::tests::{init_source, init_source_with_tag, to_var_pb, TAG_A};
     use crate::process::record::Record;
 
     fn sort_test(source: Vec<Record>, sort_opr: pb::OrderBy) -> ResultStream<Record> {
@@ -240,7 +240,7 @@ mod tests {
     fn sort_by_tag_test() {
         let sort_opr = pb::OrderBy {
             pairs: vec![pb::order_by::OrderingPair {
-                key: Some(common_pb::Variable::from("@a".to_string())),
+                key: Some(to_var_pb(Some(TAG_A.into()), None)),
                 order: 2, // descending
             }],
             limit: None,
@@ -249,7 +249,7 @@ mod tests {
         let mut result_ids = vec![];
         while let Some(Ok(record)) = result.next() {
             if let Some(element) = record
-                .get(Some(&"a".into()))
+                .get(Some(&TAG_A.into()))
                 .unwrap()
                 .as_graph_vertex()
             {
@@ -265,7 +265,7 @@ mod tests {
     fn sort_by_tag_property_test() {
         let sort_opr = pb::OrderBy {
             pairs: vec![pb::order_by::OrderingPair {
-                key: Some(common_pb::Variable::from("@a.age".to_string())),
+                key: Some(to_var_pb(Some(TAG_A.into()), Some("age".into()))),
                 order: 2, // descending
             }],
             limit: None,
@@ -274,7 +274,7 @@ mod tests {
         let mut result_ids = vec![];
         while let Some(Ok(record)) = result.next() {
             if let Some(element) = record
-                .get(Some(&"a".into()))
+                .get(Some(&TAG_A.into()))
                 .unwrap()
                 .as_graph_vertex()
             {

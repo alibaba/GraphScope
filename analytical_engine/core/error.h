@@ -16,18 +16,9 @@
 #ifndef ANALYTICAL_ENGINE_CORE_ERROR_H_
 #define ANALYTICAL_ENGINE_CORE_ERROR_H_
 
-#include <numeric>
-#include <string>
-#include <typeinfo>
-#include <utility>
-#include <vector>
+#include "vineyard/graph/utils/error.h"  // IWYU pragma: export
 
-#include "boost/leaf.hpp"
-
-#include "vineyard/graph/utils/error.h"
-
-#include "proto/graphscope/proto/error_codes.pb.h"
-#include "utils/mpi_utils.h"
+#include "graphscope/proto/error_codes.pb.h"  // IWYU pragma: export
 
 namespace gs {
 
