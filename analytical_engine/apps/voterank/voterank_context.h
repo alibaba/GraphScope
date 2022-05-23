@@ -13,8 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#ifndef EXAMPLES_ANALYTICAL_APPS_VOTERANK_VOTERANK_CONTEXT_H_
-#define EXAMPLES_ANALYTICAL_APPS_VOTERANK_VOTERANK_CONTEXT_H_
+#ifndef ANALYTICAL_ENGINE_APPS_VOTERANK_VOTERANK_CONTEXT_H_
+#define ANALYTICAL_ENGINE_APPS_VOTERANK_VOTERANK_CONTEXT_H_
 
 #include <grape/grape.h>
 
@@ -69,10 +69,9 @@ class VoteRankContext : public grape::VertexDataContext<FRAG_T, int> {
     VLOG(2) << "postprocess_time: " << postprocess_time << "s.";
 #endif
   }
-
+  typename FRAG_T::template vertex_array_t<int>& rank;
   typename FRAG_T::template vertex_array_t<double> weight;
   typename FRAG_T::template vertex_array_t<double> scores;
-  typename FRAG_T::template vertex_array_t<int>& rank;
   grape::DenseVertexSet<typename FRAG_T::inner_vertices_t> update;
 
 #ifdef PROFILING
@@ -87,4 +86,4 @@ class VoteRankContext : public grape::VertexDataContext<FRAG_T, int> {
 };
 }  // namespace gs
 
-#endif  // EXAMPLES_ANALYTICAL_APPS_VOTERANK_VOTERANK_CONTEXT_H_
+#endif  // ANALYTICAL_ENGINE_APPS_VOTERANK_VOTERANK_CONTEXT_H_

@@ -13,12 +13,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#ifndef EXAMPLES_ANALYTICAL_APPS_VOTERANK_VOTERANK_H_
-#define EXAMPLES_ANALYTICAL_APPS_VOTERANK_VOTERANK_H_
+#ifndef ANALYTICAL_ENGINE_APPS_VOTERANK_VOTERANK_H_
+#define ANALYTICAL_ENGINE_APPS_VOTERANK_VOTERANK_H_
 
 #include <grape/grape.h>
 
-#include "core/object/dynamic.h"
 #include "voterank/voterank_context.h"
 namespace gs {
 
@@ -76,25 +75,19 @@ class VoteRank : public grape::ParallelAppBase<FRAG_T, VoteRankContext<FRAG_T>>,
                   frag, u, ctx.weight[u], tid);
             });
 
+#ifdef PROFILING
+    ctx.exec_time += GetCurrentTime();
+    ctx.postprocess_time -= GetCurrentTime();
+#endif
+
     size_t sumEdgeNum = 0;
     for (auto i : edgeNums) {
       sumEdgeNum += i;
     }
     Sum(sumEdgeNum, sumEdgeNum);
-    /*std::cout << sumEdgeNum << " "
-              << "total edge numbers\n";*/
 
-    size_t edgeNumWithGetEdgeNum = frag.GetEdgeNum();
-    Sum(edgeNumWithGetEdgeNum, edgeNumWithGetEdgeNum);
-
-    /* std::cout << edgeNumWithGetEdgeNum << " "
-               << "total edge numbers with GetEdgeNum\n";*/
     ctx.avg_degree =
         static_cast<double>(sumEdgeNum) / static_cast<double>(graph_vnum);
-#ifdef PROFILING
-    ctx.exec_time += GetCurrentTime();
-    ctx.postprocess_time -= GetCurrentTime();
-#endif
 
 #ifdef PROFILING
     ctx.postprocess_time += GetCurrentTime();
@@ -112,25 +105,6 @@ class VoteRank : public grape::ParallelAppBase<FRAG_T, VoteRankContext<FRAG_T>>,
 
 #ifdef PROFILING
     ctx.exec_time -= GetCurrentTime();
-#endif
-
-    // pull weights from inner neighbors
-    vertex_t v;
-    /*
-    ForEach(inner_vertices, [&ctx, &frag](int tid, vertex_t u) {
-      if (ctx.rank[u] == 0) {
-        double cur = 0;
-        auto es = frag.GetOutgoingInnerVertexAdjList(u);
-        for (auto& e : es) {
-          cur += ctx.weight[e.get_neighbor()];
-        }
-        ctx.scores[u] = cur;
-      }
-    });*/
-
-#ifdef PROFILING
-    ctx.exec_time += GetCurrentTime();
-    ctx.preprocess_time -= GetCurrentTime();
 #endif
 
     // process received weights sent by other workers
@@ -157,7 +131,6 @@ class VoteRank : public grape::ParallelAppBase<FRAG_T, VoteRankContext<FRAG_T>>,
     auto compare = [](std::tuple<double, size_t, vid_t>& lhs,
                       const std::tuple<double, size_t, vid_t>& rhs) {
       const double EPS = 1e-8;
-
       if (fabs(std::get<0>(lhs) - std::get<0>(rhs)) < EPS) {
         if (std::get<1>(rhs) < std::get<1>(lhs)) {
           lhs = rhs;
@@ -167,7 +140,7 @@ class VoteRank : public grape::ParallelAppBase<FRAG_T, VoteRankContext<FRAG_T>>,
       }
     };
 
-    // compute new scores
+    //  pull weights from neighbors and compute new scores
     std::vector<std::tuple<double, size_t, vid_t>> max_scores(thread_num(),
                                                               {0, 0, {}});
     ForEach(inner_vertices,
@@ -203,6 +176,8 @@ class VoteRank : public grape::ParallelAppBase<FRAG_T, VoteRankContext<FRAG_T>>,
     }
 
     // weaken the selected node and its out-neighbors
+    vertex_t v;
+
     std::vector<vertex_t> update_vertices;
     if (frag.Gid2Vertex(std::get<2>(ctx.max_score), v)) {
       if (frag.IsInnerVertex(v)) {
@@ -247,4 +222,4 @@ class VoteRank : public grape::ParallelAppBase<FRAG_T, VoteRankContext<FRAG_T>>,
 };
 
 }  // namespace gs
-#endif  // EXAMPLES_ANALYTICAL_APPS_VOTERANK_VOTERANK_H_
+#endif  // ANALYTICAL_ENGINE_APPS_VOTERANK_VOTERANK_H_
