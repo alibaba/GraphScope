@@ -185,31 +185,42 @@ class Clustering
                 }
               });
 
-      typename FRAG_T::template vertex_array_t<uint32_t> v0_nbr_set(vertices,
-                                                                    0);
-      for (auto v : inner_vertices) {
-        if (ctx.global_degree[v] > 1) {
-          auto& v0_nbr_vec = ctx.complete_neighbor[v];
-          for (auto u : v0_nbr_vec) {
-            v0_nbr_set[u.first] = u.second;
-          }
-          for (auto u : v0_nbr_vec) {
-            auto& v1_nbr_vec = ctx.complete_neighbor[u.first];
-            for (auto w : v1_nbr_vec) {
-              if (v0_nbr_set[w.first] != 0) {
-                ctx.tricnt[u.first] +=
-                    v0_nbr_set[w.first] * u.second * w.second;
-                ctx.tricnt[v] += v0_nbr_set[w.first] * u.second * w.second;
-                ctx.tricnt[w.first] +=
-                    v0_nbr_set[w.first] * u.second * w.second;
+      std::vector<typename FRAG_T::template vertex_array_t<uint32_t>>
+          vertexsets(thread_num());
+      ForEach(
+          inner_vertices,
+          [&vertexsets, &frag](int tid) {
+            auto& ns = vertexsets[tid];
+            ns.Init(frag.Vertices(), 0);
+          },
+          [&vertexsets, &ctx](int tid, vertex_t v) {
+            if (ctx.global_degree[v] > 1) {
+              auto& v0_nbr_set = vertexsets[tid];
+              auto& v0_nbr_vec = ctx.complete_neighbor[v];
+              for (auto u : v0_nbr_vec) {
+                v0_nbr_set[u.first] = u.second;
+              }
+              for (auto u : v0_nbr_vec) {
+                auto& v1_nbr_vec = ctx.complete_neighbor[u.first];
+                for (auto w : v1_nbr_vec) {
+                  if (v0_nbr_set[w.first] != 0) {
+                    grape::atomic_add(
+                        ctx.tricnt[u.first],
+                        v0_nbr_set[w.first] * u.second * w.second);
+                    grape::atomic_add(ctx.tricnt[v], v0_nbr_set[w.first] *
+                                                         u.second * w.second);
+                    grape::atomic_add(
+                        ctx.tricnt[w.first],
+                        v0_nbr_set[w.first] * u.second * w.second);
+                  }
+                }
+              }
+              for (auto u : v0_nbr_vec) {
+                v0_nbr_set[u.first] = 0;
               }
             }
-          }
-          for (auto u : v0_nbr_vec) {
-            v0_nbr_set[u.first] = 0;
-          }
-        }
-      }
+          },
+          [](int tid) {});
 
       ForEach(outer_vertices.begin(), outer_vertices.end(),
               [&messages, &frag, &ctx](int tid, vertex_t v) {
@@ -223,7 +234,7 @@ class Clustering
       ctx.stage = 3;
       messages.ParallelProcess<fragment_t, int>(
           thread_num(), frag, [&ctx](int tid, vertex_t u, int deg) {
-            grape::atomic_add(ctx.tricnt[u], deg);
+            grape::atomic_add(ctx.tricnt[u], static_cast<uint32_t>(deg));
           });
 
       // output result to context data

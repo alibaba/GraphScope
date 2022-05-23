@@ -72,7 +72,7 @@ class ClusteringContext : public grape::VertexDataContext<FRAG_T, double> {
   typename FRAG_T::template vertex_array_t<
       std::vector<std::pair<vertex_t, uint32_t>>>
       complete_neighbor;
-  typename FRAG_T::template vertex_array_t<int> tricnt;
+  typename FRAG_T::template vertex_array_t<uint32_t> tricnt;
 
   int stage = 0;
 };
