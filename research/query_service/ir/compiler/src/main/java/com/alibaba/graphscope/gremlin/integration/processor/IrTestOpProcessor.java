@@ -94,8 +94,12 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
 
                             applyStrategies(traversal);
 
-                            processTraversal(traversal,
-                                    new GremlinTestResultProcessor(ctx, GremlinResultAnalyzer.analyze(traversal), testGraph));
+                            processTraversal(
+                                    traversal,
+                                    new GremlinTestResultProcessor(
+                                            ctx,
+                                            GremlinResultAnalyzer.analyze(traversal),
+                                            testGraph));
                         });
                 return op;
             default:

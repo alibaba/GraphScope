@@ -70,10 +70,12 @@ public class IrGremlinServer implements AutoCloseable {
             GraphProperties testGraph)
             throws Exception {
         AbstractOpProcessor standardProcessor =
-                new IrStandardOpProcessor(configs, irMetaFetcher, fetcher, metaQueryCallback, graph, g);
+                new IrStandardOpProcessor(
+                        configs, irMetaFetcher, fetcher, metaQueryCallback, graph, g);
         IrOpLoader.addProcessor(standardProcessor.getName(), standardProcessor);
         AbstractOpProcessor testProcessor =
-                new IrTestOpProcessor(configs, irMetaFetcher, fetcher, metaQueryCallback, graph, g, testGraph);
+                new IrTestOpProcessor(
+                        configs, irMetaFetcher, fetcher, metaQueryCallback, graph, g, testGraph);
         IrOpLoader.addProcessor(testProcessor.getName(), testProcessor);
 
         this.gremlinServer = new GremlinServer(settings);

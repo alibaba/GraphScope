@@ -38,7 +38,6 @@ import com.alibaba.graphscope.gremlin.Utils;
 import com.alibaba.graphscope.gremlin.plugin.script.AntlrToJavaScriptEngineFactory;
 import com.alibaba.graphscope.gremlin.plugin.strategy.RemoveUselessStepStrategy;
 import com.alibaba.graphscope.gremlin.plugin.strategy.ScanFusionStepStrategy;
-import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversalSource;
 import com.alibaba.graphscope.gremlin.result.GremlinResultAnalyzer;
 import com.alibaba.graphscope.gremlin.result.GremlinResultProcessor;
 import com.alibaba.pegasus.intf.ResultProcessor;
@@ -137,8 +136,8 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                                                 .code(ResponseStatusCode.SERVER_ERROR_TEMPORARY)
                                                 .statusMessage(
                                                         ((Throwable)
-                                                                possibleTemporaryException
-                                                                        .get())
+                                                                        possibleTemporaryException
+                                                                                .get())
                                                                 .getMessage())
                                                 .statusAttributeException(
                                                         (Throwable)
@@ -162,8 +161,8 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                                                     .code(ResponseStatusCode.SERVER_ERROR_TIMEOUT)
                                                     .statusMessage(
                                                             "Timeout during script evaluation"
-                                                                    + " triggered by"
-                                                                    + " TimedInterruptCustomizerProvider")
+                                                                + " triggered by"
+                                                                + " TimedInterruptCustomizerProvider")
                                                     .statusAttributeException(t)
                                                     .create());
                                 } else if (t instanceof TimeoutException) {
@@ -182,15 +181,15 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                                 } else if (t instanceof MultipleCompilationErrorsException
                                         && t.getMessage().contains("Method too large")
                                         && ((MultipleCompilationErrorsException) t)
-                                        .getErrorCollector()
-                                        .getErrorCount()
-                                        == 1) {
+                                                        .getErrorCollector()
+                                                        .getErrorCount()
+                                                == 1) {
                                     errorMessage =
                                             String.format(
                                                     "The Gremlin statement that was submitted"
-                                                            + " exceeds the maximum compilation size"
-                                                            + " allowed by the JVM, please split it"
-                                                            + " into multiple smaller statements - %s",
+                                                        + " exceeds the maximum compilation size"
+                                                        + " allowed by the JVM, please split it"
+                                                        + " into multiple smaller statements - %s",
                                                     msg);
                                     logger.warn(errorMessage);
                                     ctx.writeAndFlush(
@@ -268,8 +267,10 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                             try {
                                 if (o != null && o instanceof Traversal) {
                                     Traversal traversal = (Traversal) o;
-                                    processTraversal(traversal,
-                                            new GremlinResultProcessor(ctx, GremlinResultAnalyzer.analyze(traversal)));
+                                    processTraversal(
+                                            traversal,
+                                            new GremlinResultProcessor(
+                                                    ctx, GremlinResultAnalyzer.analyze(traversal)));
                                 }
                             } catch (InvalidProtocolBufferException e) {
                                 throw new RuntimeException(e);
@@ -305,27 +306,16 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         long jobId = JOB_ID_COUNTER.incrementAndGet();
         String jobName = "ir_plan_" + jobId;
 
-        PegasusClient.JobRequest request =
-                PegasusClient.JobRequest.parseFrom(physicalPlanBytes);
+        PegasusClient.JobRequest request = PegasusClient.JobRequest.parseFrom(physicalPlanBytes);
         PegasusClient.JobConfig jobConfig =
                 PegasusClient.JobConfig.newBuilder()
                         .setJobId(jobId)
                         .setJobName(jobName)
-                        .setWorkers(
-                                PegasusConfig.PEGASUS_WORKER_NUM.get(
-                                        configs))
-                        .setBatchSize(
-                                PegasusConfig.PEGASUS_BATCH_SIZE.get(
-                                        configs))
-                        .setMemoryLimit(
-                                PegasusConfig.PEGASUS_MEMORY_LIMIT.get(
-                                        configs))
-                        .setOutputCapacity(
-                                PegasusConfig.PEGASUS_OUTPUT_CAPACITY
-                                        .get(configs))
-                        .setTimeLimit(
-                                PegasusConfig.PEGASUS_TIMEOUT.get(
-                                        configs))
+                        .setWorkers(PegasusConfig.PEGASUS_WORKER_NUM.get(configs))
+                        .setBatchSize(PegasusConfig.PEGASUS_BATCH_SIZE.get(configs))
+                        .setMemoryLimit(PegasusConfig.PEGASUS_MEMORY_LIMIT.get(configs))
+                        .setOutputCapacity(PegasusConfig.PEGASUS_OUTPUT_CAPACITY.get(configs))
+                        .setTimeLimit(PegasusConfig.PEGASUS_TIMEOUT.get(configs))
                         .addAllServers(servers)
                         .build();
 

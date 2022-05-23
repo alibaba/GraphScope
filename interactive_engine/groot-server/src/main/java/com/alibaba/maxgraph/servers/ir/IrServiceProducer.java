@@ -35,6 +35,7 @@ import com.alibaba.maxgraph.common.config.GremlinConfig;
 import com.alibaba.maxgraph.compiler.api.schema.SchemaFetcher;
 import com.alibaba.maxgraph.servers.AbstractService;
 import com.alibaba.maxgraph.servers.ComputeServiceProducer;
+import com.alibaba.maxgraph.servers.ir.client.SnapshotUpdateCommitter;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -66,6 +67,9 @@ public class IrServiceProducer implements ComputeServiceProducer {
         com.alibaba.graphscope.common.config.Configs irConfigs = getConfigs();
         IrMetaFetcher irMetaFetcher = new GrootMetaFetcher(schemaFetcher);
 
+        SnapshotUpdateCommitter updateCommitter = new SnapshotUpdateCommitter(channelManager);
+        int frontendId = CommonConfig.NODE_IDX.get(configs);
+
         return new AbstractService() {
             private IrGremlinServer irGremlinServer =
                     new IrGremlinServer(GremlinConfig.GREMLIN_PORT.get(configs));
@@ -74,8 +78,11 @@ public class IrServiceProducer implements ComputeServiceProducer {
             public void start() {
                 try {
                     irGremlinServer.start(
-                            irConfigs, irMetaFetcher, channelFetcher,
-                            new SnapshotManager(irMetaFetcher, channelManager), TestGraphFactory.GROOT);
+                            irConfigs,
+                            irMetaFetcher,
+                            channelFetcher,
+                            new SnapshotManager(irMetaFetcher, frontendId, updateCommitter),
+                            TestGraphFactory.GROOT);
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }

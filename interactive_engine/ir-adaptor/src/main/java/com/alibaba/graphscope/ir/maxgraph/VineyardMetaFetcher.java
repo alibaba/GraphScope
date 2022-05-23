@@ -83,17 +83,17 @@ public class VineyardMetaFetcher implements IrMetaFetcher {
                                     GraphVertex dst = k.getTarget();
                                     return ImmutableMap.of(
                                             "src",
-                                            ImmutableMap.of(
-                                                    "id",
-                                                    src.getLabelId(),
-                                                    "name",
-                                                    src.getLabel()),
+                                                    ImmutableMap.of(
+                                                            "id",
+                                                            src.getLabelId(),
+                                                            "name",
+                                                            src.getLabel()),
                                             "dst",
-                                            ImmutableMap.of(
-                                                    "id",
-                                                    dst.getLabelId(),
-                                                    "name",
-                                                    dst.getLabel()));
+                                                    ImmutableMap.of(
+                                                            "id",
+                                                            dst.getLabelId(),
+                                                            "name",
+                                                            dst.getLabel()));
                                 })
                         .collect(Collectors.toList());
         entity.put("entity_pairs", entityPairs);

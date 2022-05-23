@@ -38,6 +38,5 @@ public class IrMetaQueryCallback {
     }
 
     // do sth after the query is done
-    public void afterExec(IrMeta meta) {
-    }
+    public void afterExec(IrMeta meta) {}
 }

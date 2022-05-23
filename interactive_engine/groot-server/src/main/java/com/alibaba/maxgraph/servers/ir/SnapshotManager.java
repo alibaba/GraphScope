@@ -19,33 +19,40 @@ package com.alibaba.maxgraph.servers.ir;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
 import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.common.store.IrMetaFetcher;
-import com.alibaba.graphscope.groot.rpc.ChannelManager;
 import com.alibaba.maxgraph.common.util.CommonUtil;
+import com.alibaba.maxgraph.servers.ir.client.SnapshotUpdateCommitter;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.*;
 
 public class SnapshotManager extends IrMetaQueryCallback {
-    private final static Logger logger = LoggerFactory.getLogger(SnapshotManager.class);
-    private final static int QUEUE_SIZE = 1024 * 1024;
+    private static final Logger logger = LoggerFactory.getLogger(SnapshotManager.class);
+    private static final int QUEUE_SIZE = 1024 * 1024;
 
     // manage queries <snapshotId, is_done>
     private BlockingQueue<QueryStatus> queryQueue;
-    private ChannelManager channelManager;
+    private SnapshotUpdateCommitter committer;
     private ScheduledExecutorService updateExecutor;
     private long oldSnapshotId = Long.MIN_VALUE;
+    private int frontendId;
 
-    public SnapshotManager(IrMetaFetcher fetcher, ChannelManager channelManager) {
+    public SnapshotManager(
+            IrMetaFetcher fetcher, int frontendId, SnapshotUpdateCommitter committer) {
         super(fetcher);
-        queryQueue = new ArrayBlockingQueue<>(QUEUE_SIZE);
-        this.channelManager = channelManager;
+        this.queryQueue = new ArrayBlockingQueue<>(QUEUE_SIZE);
+        this.committer = committer;
+        this.frontendId = frontendId;
     }
 
     public void start() {
-        updateExecutor = Executors.newSingleThreadScheduledExecutor(
-                CommonUtil.createFactoryWithDefaultExceptionHandler("groot-snapshot-manager", logger));
-        updateExecutor.scheduleWithFixedDelay(new UpdateSnapshot(), 5000, 2000, TimeUnit.MILLISECONDS);
+        updateExecutor =
+                Executors.newSingleThreadScheduledExecutor(
+                        CommonUtil.createFactoryWithDefaultExceptionHandler(
+                                "groot-snapshot-manager", logger));
+        updateExecutor.scheduleWithFixedDelay(
+                new UpdateSnapshot(), 5000, 2000, TimeUnit.MILLISECONDS);
     }
 
     public void stop() {
@@ -77,11 +84,12 @@ public class SnapshotManager extends IrMetaQueryCallback {
     @Override
     public synchronized void afterExec(IrMeta irMeta) {
         long snapshotId = irMeta.getSnapshotId();
-        queryQueue.forEach(k -> {
-            if (k.snapshotId == snapshotId) {
-                k.isDone = true;
-            }
-        });
+        queryQueue.forEach(
+                k -> {
+                    if (k.snapshotId == snapshotId) {
+                        k.isDone = true;
+                    }
+                });
     }
 
     private class UpdateSnapshot implements Runnable {
@@ -98,7 +106,7 @@ public class SnapshotManager extends IrMetaQueryCallback {
                     minSnapshotId = queryQueue.peek().snapshotId;
                 }
                 if (minSnapshotId > oldSnapshotId) {
-                    // todo: rpc with coordinator to report min snapshotId
+                    committer.updateSnapshot(frontendId, minSnapshotId);
                     logger.info("update minSnapshotId {} success", minSnapshotId);
                     oldSnapshotId = minSnapshotId;
                 }

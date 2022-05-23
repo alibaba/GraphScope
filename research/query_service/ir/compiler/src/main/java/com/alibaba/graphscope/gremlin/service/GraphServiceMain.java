@@ -32,6 +32,11 @@ public class GraphServiceMain {
         RpcChannelFetcher fetcher = new HostsChannelFetcher(configs);
 
         IrGremlinServer server = new IrGremlinServer();
-        server.start(configs, irMetaFetcher, fetcher, new IrMetaQueryCallback(irMetaFetcher), TestGraphFactory.EXPERIMENTAL);
+        server.start(
+                configs,
+                irMetaFetcher,
+                fetcher,
+                new IrMetaQueryCallback(irMetaFetcher),
+                TestGraphFactory.EXPERIMENTAL);
     }
 }

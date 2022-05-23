@@ -496,32 +496,35 @@ public class IrPlan implements Closeable {
             for (FfiNameOrId.ByValue table : params.getTables()) {
                 FfiError error = irCoreLib.addParamsTable(ptrParams, table);
                 if (error.code != ResultCode.Success) {
-                    throw new InterOpIllegalArgException(InterOpBase.class,
-                            "table", "addParamsTable returns " + error.msg);
+                    throw new InterOpIllegalArgException(
+                            InterOpBase.class, "table", "addParamsTable returns " + error.msg);
                 }
             }
             for (FfiNameOrId.ByValue column : params.getColumns()) {
                 FfiError error = irCoreLib.addParamsColumn(ptrParams, column);
                 if (error.code != ResultCode.Success) {
-                    throw new InterOpIllegalArgException(InterOpBase.class,
-                            "column", "addParamsColumn returns " + error.msg);
+                    throw new InterOpIllegalArgException(
+                            InterOpBase.class, "column", "addParamsColumn returns " + error.msg);
                 }
             }
             Optional<String> predicateOpt = params.getPredicate();
             if (predicateOpt.isPresent()) {
                 FfiError error = irCoreLib.setParamsPredicate(ptrParams, predicateOpt.get());
                 if (error.code != ResultCode.Success) {
-                    throw new InterOpIllegalArgException(InterOpBase.class,
-                            "predicate", "setParamsPredicate returns " + error.msg);
+                    throw new InterOpIllegalArgException(
+                            InterOpBase.class,
+                            "predicate",
+                            "setParamsPredicate returns " + error.msg);
                 }
             }
             Optional<Pair<Integer, Integer>> rangeOpt = params.getRange();
             if (rangeOpt.isPresent()) {
                 Pair<Integer, Integer> range = rangeOpt.get();
-                FfiError error = irCoreLib.setParamsRange(ptrParams, range.getValue0(), range.getValue1());
+                FfiError error =
+                        irCoreLib.setParamsRange(ptrParams, range.getValue0(), range.getValue1());
                 if (error.code != ResultCode.Success) {
-                    throw new InterOpIllegalArgException(InterOpBase.class,
-                            "range", "setParamsRange returns " + error.msg);
+                    throw new InterOpIllegalArgException(
+                            InterOpBase.class, "range", "setParamsRange returns " + error.msg);
                 }
             }
             // todo: set snapshot from meta
@@ -578,7 +581,8 @@ public class IrPlan implements Closeable {
     }
 
     // return id of the first operator, id of the last operator
-    private Pair<Integer, Integer> appendInterOpCollection(int parentId, InterOpCollection opCollection) {
+    private Pair<Integer, Integer> appendInterOpCollection(
+            int parentId, InterOpCollection opCollection) {
         int subTaskRootId = 0;
         int unionParentId = 0;
         IntByReference oprId = new IntByReference(parentId);

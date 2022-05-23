@@ -53,8 +53,12 @@ public class Frontend extends com.alibaba.maxgraph.frontendservice.Frontend {
         RpcChannelFetcher channelFetcher = new RpcAddressChannelFetcher(addressFetcher);
 
         this.gremlinServer = new IrGremlinServer(this.instanceConfig.getGremlinServerPort());
-        this.gremlinServer.start(configs, irMetaFetcher, channelFetcher,
-                new IrMetaQueryCallback(irMetaFetcher), TestGraphFactory.VINEYARD);
+        this.gremlinServer.start(
+                configs,
+                irMetaFetcher,
+                channelFetcher,
+                new IrMetaQueryCallback(irMetaFetcher),
+                TestGraphFactory.VINEYARD);
 
         this.gremlinServerPort = gremlinServer.getGremlinServerPort();
     }
