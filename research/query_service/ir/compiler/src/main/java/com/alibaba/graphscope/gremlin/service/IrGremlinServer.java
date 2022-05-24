@@ -42,6 +42,7 @@ public class IrGremlinServer implements AutoCloseable {
 
     public IrGremlinServer(int gremlinPort) {
         this();
+        settings.host = "0.0.0.0";
         settings.port = (gremlinPort >= 0) ? gremlinPort : settings.port;
     }
 
