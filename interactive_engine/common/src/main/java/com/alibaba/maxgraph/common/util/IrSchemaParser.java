@@ -134,7 +134,7 @@ public class IrSchemaParser {
                 }
             }
         }
-        logger.info("label {}, property {}, primary key is {}", label, propertyName, isPrimaryKey);
+        logger.debug("label {}, property {}, primary key is {}", label, propertyName, isPrimaryKey);
         return isPrimaryKey;
     }
 
