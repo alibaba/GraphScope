@@ -19,6 +19,7 @@ package com.alibaba.maxgraph.servers.ir;
 import com.alibaba.graphscope.common.store.IrMetaFetcher;
 import com.alibaba.maxgraph.common.util.IrSchemaParser;
 import com.alibaba.maxgraph.compiler.api.schema.*;
+
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.*;
@@ -42,5 +43,4 @@ public class GrootMetaFetcher extends IrMetaFetcher {
             return Optional.empty();
         }
     }
-
 }

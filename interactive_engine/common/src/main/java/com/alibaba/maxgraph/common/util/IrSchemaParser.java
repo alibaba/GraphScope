@@ -19,6 +19,7 @@ package com.alibaba.maxgraph.common.util;
 import com.alibaba.maxgraph.compiler.api.schema.*;
 import com.alibaba.maxgraph.sdkcommon.util.JSON;
 import com.google.common.collect.ImmutableMap;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,8 +40,7 @@ public class IrSchemaParser {
         return instance;
     }
 
-    private IrSchemaParser() {
-    }
+    private IrSchemaParser() {}
 
     public String parse(GraphSchema graphSchema) {
         List<GraphVertex> vertices = graphSchema.getVertexList();
@@ -84,10 +84,7 @@ public class IrSchemaParser {
                                     return ImmutableMap.of(
                                             "src",
                                             ImmutableMap.of(
-                                                    "id",
-                                                    src.getLabelId(),
-                                                    "name",
-                                                    src.getLabel()),
+                                                    "id", src.getLabelId(), "name", src.getLabel()),
                                             "dst",
                                             ImmutableMap.of(
                                                     "id",
@@ -117,14 +114,16 @@ public class IrSchemaParser {
                                             ImmutableMap.of("id", nameId, "name", name),
                                             "data_type",
                                             typeId,
-                                            "is_primary_key", isPrimaryKey(label, name, primaryKeys));
+                                            "is_primary_key",
+                                            isPrimaryKey(label, name, primaryKeys));
                                 })
                         .collect(Collectors.toList());
         return ImmutableMap.of(
                 "label", ImmutableMap.of("id", labelId, "name", label), "columns", columns);
     }
 
-    private boolean isPrimaryKey(String label, String propertyName, List<GraphProperty> primaryKeys) {
+    private boolean isPrimaryKey(
+            String label, String propertyName, List<GraphProperty> primaryKeys) {
         boolean isPrimaryKey = false;
         if (primaryKeys != null && !primaryKeys.isEmpty()) {
             for (GraphProperty key : primaryKeys) {
