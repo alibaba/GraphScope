@@ -1461,7 +1461,7 @@ impl GraphPartitionManager for VineyardPartitionManager {
         } else {
             let pk = pks.get(0).unwrap();
             let key = match pk {
-                // TODO: Vineyard only supports `id` as pk.
+                // Vineyard only supports `id` as pk.
                 Property::Char(i) => {
                     Some(i.to_string())
                 }

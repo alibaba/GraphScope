@@ -439,7 +439,6 @@ fn encode_store_prop_val(prop_val: Object) -> Property {
             Primitives::Byte(b) => Property::Char(b as u8),
             Primitives::Integer(i) => Property::Int(i),
             Primitives::Long(i) => Property::Long(i),
-            // TODO: overflow check
             Primitives::ULLong(i) => Property::Long(i as i64),
             Primitives::Float(f) => Property::Double(f),
         },
@@ -458,14 +457,11 @@ fn encode_store_prop_val(prop_val: Object) -> Property {
                                 .map(|i| i.as_i64().unwrap())
                                 .collect(),
                         ),
-                        Primitives::ULLong(_) => {
-                            // TODO:  overflow check
-                            Property::ListLong(
-                                vec.into_iter()
-                                    .map(|i| i.as_u128().unwrap() as i64)
-                                    .collect(),
-                            )
-                        }
+                        Primitives::ULLong(_) => Property::ListLong(
+                            vec.into_iter()
+                                .map(|i| i.as_u128().unwrap() as i64)
+                                .collect(),
+                        ),
                         Primitives::Float(_) => Property::ListDouble(
                             vec.into_iter()
                                 .map(|i| i.as_f64().unwrap())

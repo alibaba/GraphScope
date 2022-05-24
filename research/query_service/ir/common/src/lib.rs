@@ -508,7 +508,6 @@ impl TryFrom<pb::IndexPredicate> for Object {
             .get(0)
             .ok_or(ParsePbError::EmptyFieldError("`OrCondition` is emtpy".to_string()))?;
         for predicate in &and_predicates.predicates {
-            // TODO: Groot only requires prop_vals to be given in ascending order of corresponding prop_ids
             let value = predicate
                 .value
                 .clone()
