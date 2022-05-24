@@ -64,7 +64,7 @@ fn join_test_key_by() {
                 .sink_into(output)
         }
     })
-    .expect("run job failure;");
+        .expect("run job failure;");
 
     let mut result = result.next().unwrap().unwrap();
     result.sort_by_key(|x| x.0 .0);
@@ -90,7 +90,7 @@ fn join_test_keyed() {
                 .sink_into(output)
         }
     })
-    .expect("run job failure;");
+        .expect("run job failure;");
 
     let mut result = result.next().unwrap().unwrap();
     result.sort_by_key(|x| x.0.item);
@@ -105,6 +105,27 @@ fn join_test_keyed() {
     );
 }
 
+#[test]
+fn join_test_with_same_key() {
+    let mut conf = JobConf::new("inner_join");
+    conf.set_workers(1);
+    let mut result = pegasus::run(conf, || {
+        let id = pegasus::get_current_worker().index;
+        move |input, output| {
+            let (src1, src2) = input.input_from(0..1000 as i32)?.copied()?;
+            src1.key_by(|x| Ok((1 as i32, x)))?
+                .partition_by_key()
+                .inner_join(src2.key_by(|x| Ok((1 as i32, x)))?.partition_by_key())?
+                .map(|(d1, d2)| Ok(((d1.key, d1.value), (d2.key, d2.value))))?
+                .collect::<Vec<((i32, i32), (i32, i32))>>()?
+                .sink_into(output)
+        }
+    })
+        .expect("run job failure;");
+
+    let mut result = result.next().unwrap().unwrap();
+    assert_eq!(result.len(), 1000*1000);
+}
 /*
 #[test]
 fn join_test_key_by_with_keyed() {
@@ -158,7 +179,7 @@ fn join_test_empty_stream() {
                 .sink_into(output)
         }
     })
-    .expect("run job failure;");
+        .expect("run job failure;");
 
     let mut result = result.next().unwrap().unwrap();
     result.sort_by_key(|x| x.0 .0);
@@ -181,7 +202,7 @@ fn join_test_outer() {
                 .sink_into(output)
         }
     })
-    .expect("run job failure;");
+        .expect("run job failure;");
 
     let mut result = result.next().unwrap().unwrap();
     result.sort();
@@ -216,7 +237,7 @@ fn join_test_semi() {
                 .sink_into(output)
         }
     })
-    .expect("run job failure;");
+        .expect("run job failure;");
 
     let mut result = result.next().unwrap().unwrap();
     result.sort();
@@ -239,7 +260,7 @@ fn join_test_anti() {
                 .sink_into(output)
         }
     })
-    .expect("run job failure;");
+        .expect("run job failure;");
 
     let mut result = result.next().unwrap().unwrap();
     result.sort();
@@ -261,11 +282,11 @@ fn join_test_different_tag_outer() {
                 let src2 = src2.key_by(|x| Ok((x, x)))?.partition_by_key();
                 src1.full_outer_join(src2)?.count()
             })?
-            .collect::<Vec<(u64, u64)>>()?
-            .sink_into(output)
+                .collect::<Vec<(u64, u64)>>()?
+                .sink_into(output)
         }
     })
-    .expect("run job failure;");
+        .expect("run job failure;");
 
     // println!("{:?}", result.next().unwrap());
     let mut result = result.next().unwrap().unwrap();
@@ -288,11 +309,11 @@ fn join_test_different_tag_semi() {
                 let src2 = src2.key_by(|x| Ok((x, x)))?.partition_by_key();
                 src1.semi_join(src2)?.count()
             })?
-            .collect::<Vec<(u64, u64)>>()?
-            .sink_into(output)
+                .collect::<Vec<(u64, u64)>>()?
+                .sink_into(output)
         }
     })
-    .expect("run job failure;");
+        .expect("run job failure;");
 
     // println!("{:?}", result.next().unwrap());
     let mut result = result.next().unwrap().unwrap();
