@@ -20,6 +20,8 @@ import com.alibaba.maxgraph.compiler.api.schema.*;
 import com.alibaba.maxgraph.sdkcommon.util.JSON;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -29,6 +31,8 @@ import java.util.stream.Collectors;
 
 // singleton to parse ir schema in json format from GraphSchema
 public class IrSchemaParser {
+    private static final Logger logger = LoggerFactory.getLogger(IrSchemaParser.class);
+
     private static IrSchemaParser instance = new IrSchemaParser();
 
     public static IrSchemaParser getInstance() {
@@ -113,20 +117,25 @@ public class IrSchemaParser {
                                             ImmutableMap.of("id", nameId, "name", name),
                                             "data_type",
                                             typeId,
-                                            "is_primary_key", isPrimaryKey(name, primaryKeys));
+                                            "is_primary_key", isPrimaryKey(label, name, primaryKeys));
                                 })
                         .collect(Collectors.toList());
         return ImmutableMap.of(
                 "label", ImmutableMap.of("id", labelId, "name", label), "columns", columns);
     }
 
-    private boolean isPrimaryKey(String propertyName, List<GraphProperty> primaryKeys) {
-        for (GraphProperty property : primaryKeys) {
-            if (StringUtils.equals(propertyName, property.getName())) {
-                return true;
+    private boolean isPrimaryKey(String label, String propertyName, List<GraphProperty> primaryKeys) {
+        boolean isPrimaryKey = false;
+        if (primaryKeys != null && !primaryKeys.isEmpty()) {
+            for (GraphProperty key : primaryKeys) {
+                if (StringUtils.equals(propertyName, key.getName())) {
+                    isPrimaryKey = true;
+                    break;
+                }
             }
         }
-        return false;
+        logger.info("label {}, property {}, primary key is {}", label, propertyName, isPrimaryKey);
+        return isPrimaryKey;
     }
 
     private int getDataTypeId(DataType dataType) {
