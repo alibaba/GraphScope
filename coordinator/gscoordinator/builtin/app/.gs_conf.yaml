@@ -248,3 +248,11 @@ app:
     src: apps/centrality/betweenness/betweenness_centrality_generic.h
     compatible_graph:
       - gs::DynamicProjectedFragment
+  - algo: voterank
+    type: cpp_pie
+    class_name: gs::VoteRank
+    src: apps/voterank/voterank.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+      - gs::DynamicProjectedFragment

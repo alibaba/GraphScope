@@ -20,3 +20,4 @@ from networkx.utils.contextmanagers import *
 
 from graphscope.nx.utils.decorators import *
 from graphscope.nx.utils.misc import *
+from graphscope.nx.utils.random_sequence import *

@@ -21,6 +21,7 @@
 
 import networkx.classes.function as func
 
+from graphscope.nx.classes.cache import get_node_data
 from graphscope.nx.utils.compat import patch_docstring
 
 __all__ = [
@@ -171,18 +172,18 @@ def set_node_attributes(G, values, name=None):
         try:  # `values` is a dict
             for n, v in values.items():
                 if n in G:
-                    dd = G.get_node_data(n)
+                    dd = get_node_data(G, n)
                     dd[name] = values[n]
                     G.set_node_data(n, dd)
         except AttributeError:  # `values` is a constant
             for n in G:
-                dd = G.get_node_data(n)
+                dd = get_node_data(G, n)
                 dd[name] = values
                 G.set_node_data(n, dd)
     else:  # `values` must be dict of dict
         for n, d in values.items():
             if n in G:
-                dd = G.get_node_data(n)
+                dd = get_node_data(G, n)
                 dd.update(d)
                 G.set_node_data(n, dd)
 
