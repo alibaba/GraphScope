@@ -105,8 +105,6 @@ endif
 
 .PHONY: gie
 gie:
-	# ir_core
-	cd $(WORKING_DIR)/research/query_service/ir/core && cargo build --release
 	# coordinator/frontend/graphmanager
 	cd $(WORKING_DIR)/interactive_engine && \
 	mvn clean package -DskipTests -Pjava-release --quiet
