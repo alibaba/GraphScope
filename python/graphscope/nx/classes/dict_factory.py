@@ -38,6 +38,11 @@ class NodeDict(Mapping):
     def __contains__(self, key):
         return key in self._cache or key in self._graph
 
+    def update(self, nodes_to_update):
+        # N.B: for forward use networkx.relabel_nodes
+        self._graph.add_nodes_from(nodes_to_update)
+        self._cache.clear_node_attr_cache()
+
     def __len__(self):
         return len(self._cache)
 
