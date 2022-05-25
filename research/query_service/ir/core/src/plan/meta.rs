@@ -188,7 +188,7 @@ impl Schema {
         if let Some(pks) = self.primary_keys.get(table) {
             (pks.contains(col), pks.len())
         } else {
-            (false, self.primary_keys.len())
+            (false, 0)
         }
     }
 

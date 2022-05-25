@@ -41,6 +41,7 @@ pub enum SourceType {
 pub struct SourceOperator {
     query_params: QueryParams,
     src: Option<HashMap<u64, Vec<ID>>>,
+    indexed_values: Option<Vec<Object>>,
     alias: Option<KeyId>,
     source_type: SourceType,
 }
@@ -67,13 +68,8 @@ impl SourceOperator {
                             debug!("Runtime source op of indexed scan of global ids {:?}", source_op);
                         } else {
                             // query by indexed_scan
-                            source_op.set_partitions(job_workers, worker_index, partitioner);
-                            let indexed_values = Object::try_from(ip2)?;
-                            let extra_params = source_op
-                                .query_params
-                                .extra_params
-                                .get_or_insert(HashMap::new());
-                            extra_params.insert("PK".to_string(), indexed_values);
+                            let indexed_values = <Vec<Object>>::try_from(ip2)?;
+                            source_op.indexed_values = Some(indexed_values);
                             debug!("Runtime source op of indexed scan {:?}", source_op);
                         }
                         Ok(source_op)
@@ -131,6 +127,9 @@ impl SourceOperator {
                             v_source = graph.get_vertex(src, &self.query_params)?;
                         }
                     }
+                } else if let Some(ref indexed_values) = self.indexed_values {
+                    // parallel indexed scan
+                    v_source = graph.index_scan_vertex(indexed_values, &self.query_params)?;
                 } else {
                     // parallel scan, and each worker should scan the partitions assigned to it in self.v_params.partitions
                     v_source = graph.scan_vertex(&self.query_params)?;
@@ -173,6 +172,6 @@ impl TryFrom<algebra_pb::Scan> for SourceOperator {
 
         let query_params = QueryParams::try_from(scan_pb.params)?;
 
-        Ok(SourceOperator { query_params, src: None, alias, source_type })
+        Ok(SourceOperator { query_params, src: None, indexed_values: None, alias, source_type })
     }
 }

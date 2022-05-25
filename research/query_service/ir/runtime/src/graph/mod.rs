@@ -198,6 +198,11 @@ pub trait GraphProxy: Send + Sync {
     /// Scan all vertices with query parameters, and return an iterator over them.
     fn scan_vertex(&self, params: &QueryParams) -> FnResult<Box<dyn Iterator<Item = Vertex> + Send>>;
 
+    /// Scan all vertices with index and query parameters, and return an iterator over them.
+    fn index_scan_vertex(
+        &self, index_values: &Vec<Object>, params: &QueryParams,
+    ) -> FnResult<Box<dyn Iterator<Item = Vertex> + Send>>;
+
     /// Scan all edges with query parameters, and return an iterator over them.
     fn scan_edge(&self, params: &QueryParams) -> FnResult<Box<dyn Iterator<Item = Edge> + Send>>;
 

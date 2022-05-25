@@ -497,7 +497,7 @@ impl TryFrom<pb::IndexPredicate> for Vec<i64> {
     }
 }
 
-impl TryFrom<pb::IndexPredicate> for Object {
+impl TryFrom<pb::IndexPredicate> for Vec<Object> {
     type Error = ParsePbError;
 
     fn try_from(value: pb::IndexPredicate) -> Result<Self, Self::Error> {
@@ -515,7 +515,7 @@ impl TryFrom<pb::IndexPredicate> for Object {
             let obj_val = Object::try_from(value)?;
             indexed_values.push(obj_val);
         }
-        Ok(Object::Vector(indexed_values))
+        Ok(indexed_values)
     }
 }
 

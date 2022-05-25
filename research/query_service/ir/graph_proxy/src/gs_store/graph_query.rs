@@ -86,53 +86,51 @@ where
                 .iter()
                 .map(|pid| *pid as PartitionId)
                 .collect();
-            if let Some(indexed_values) = params.get_extra_param("PK") {
-                match indexed_values {
-                    Object::Vector(prop_vals) => {
-                        let mut results = Vec::with_capacity(prop_vals.len());
-                        let mut properties = Vec::with_capacity(prop_vals.len());
-                        for prop_val in prop_vals {
-                            let property = encode_store_prop_val(prop_val.clone());
-                            properties.push(property);
-                        }
-                        for (idx, label) in label_ids.iter().enumerate() {
-                            if let Some(vid) = self
-                                .partition_manager
-                                .get_vertex_id_by_primary_keys(*label, properties.as_ref())
-                            {
-                                results.push(Vertex::new(
-                                    vid as ID,
-                                    params.labels.get(idx).cloned(),
-                                    DynDetails::new(DefaultDetails::new(HashMap::new())),
-                                ));
-                            }
-                        }
-                        Ok(Box::new(results.into_iter()))
-                    }
-                    _ => Err(FnExecError::query_store_error("PK values should be a vector"))?,
-                }
-            } else {
-                let result = store
-                    .get_all_vertices(
-                        si,
-                        label_ids.as_ref(),
-                        // None means no filter condition pushed down to storage as not supported yet. Same as follows.
-                        None,
-                        // None means no need to dedup by properties. Same as follows.
-                        None,
-                        prop_ids.as_ref(),
-                        // Zero limit means no limit. Same as follows.
-                        params.limit.unwrap_or(0),
-                        // Each worker will scan the partitions pre-allocated in source operator. Same as follows.
-                        partitions.as_ref(),
-                    )
-                    .map(move |v| to_runtime_vertex(&v));
 
-                Ok(filter_limit!(result, filter, None))
-            }
+            let result = store
+                .get_all_vertices(
+                    si,
+                    label_ids.as_ref(),
+                    // None means no filter condition pushed down to storage as not supported yet. Same as follows.
+                    None,
+                    // None means no need to dedup by properties. Same as follows.
+                    None,
+                    prop_ids.as_ref(),
+                    // Zero limit means no limit. Same as follows.
+                    params.limit.unwrap_or(0),
+                    // Each worker will scan the partitions pre-allocated in source operator. Same as follows.
+                    partitions.as_ref(),
+                )
+                .map(move |v| to_runtime_vertex(&v));
+            Ok(filter_limit!(result, filter, None))
         } else {
             Ok(Box::new(std::iter::empty()))
         }
+    }
+
+    fn index_scan_vertex(
+        &self, indexed_values: &Vec<Object>, params: &QueryParams,
+    ) -> FnResult<Box<dyn Iterator<Item = Vertex> + Send>> {
+        let label_ids = encode_storage_label(params.labels.as_ref())?;
+        let mut results = Vec::with_capacity(indexed_values.len());
+        let mut store_indexed_values = Vec::with_capacity(indexed_values.len());
+        for value in indexed_values {
+            let prop_val = encode_store_prop_val(value.clone());
+            store_indexed_values.push(prop_val);
+        }
+        for (idx, label) in label_ids.iter().enumerate() {
+            if let Some(vid) = self
+                .partition_manager
+                .get_vertex_id_by_primary_keys(*label, store_indexed_values.as_ref())
+            {
+                results.push(Vertex::new(
+                    vid as ID,
+                    params.labels.get(idx).cloned(),
+                    DynDetails::new(DefaultDetails::new(HashMap::new())),
+                ));
+            }
+        }
+        Ok(Box::new(results.into_iter()))
     }
 
     fn scan_edge(&self, params: &QueryParams) -> FnResult<Box<dyn Iterator<Item = Edge> + Send>> {
