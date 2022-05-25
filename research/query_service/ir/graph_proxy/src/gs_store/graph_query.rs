@@ -77,7 +77,10 @@ where
             let store = self.store.clone();
             let si = params
                 .get_extra_param(SNAPSHOT_ID)
-                .map(|s| s.as_i64().unwrap_or(DEFAULT_SNAPSHOT_ID))
+                .map(|s| {
+                    s.parse::<SnapshotId>()
+                        .unwrap_or(DEFAULT_SNAPSHOT_ID)
+                })
                 .unwrap_or(DEFAULT_SNAPSHOT_ID);
             let label_ids = encode_storage_label(params.labels.as_ref())?;
             let prop_ids = encode_storage_prop_keys(params.columns.as_ref())?;
@@ -138,7 +141,10 @@ where
             let store = self.store.clone();
             let si = params
                 .get_extra_param(SNAPSHOT_ID)
-                .map(|s| s.as_i64().unwrap_or(DEFAULT_SNAPSHOT_ID))
+                .map(|s| {
+                    s.parse::<SnapshotId>()
+                        .unwrap_or(DEFAULT_SNAPSHOT_ID)
+                })
                 .unwrap_or(DEFAULT_SNAPSHOT_ID);
             let label_ids = encode_storage_label(params.labels.as_ref())?;
             let prop_ids = encode_storage_prop_keys(params.columns.as_ref())?;
@@ -171,7 +177,10 @@ where
         let store = self.store.clone();
         let si = params
             .get_extra_param(SNAPSHOT_ID)
-            .map(|s| s.as_i64().unwrap_or(DEFAULT_SNAPSHOT_ID))
+            .map(|s| {
+                s.parse::<SnapshotId>()
+                    .unwrap_or(DEFAULT_SNAPSHOT_ID)
+            })
             .unwrap_or(DEFAULT_SNAPSHOT_ID);
         let prop_ids = encode_storage_prop_keys(params.columns.as_ref())?;
         let filter = params.filter.clone();
@@ -200,7 +209,10 @@ where
         let partition_manager = self.partition_manager.clone();
         let si = params
             .get_extra_param(SNAPSHOT_ID)
-            .map(|s| s.as_i64().unwrap_or(DEFAULT_SNAPSHOT_ID))
+            .map(|s| {
+                s.parse::<SnapshotId>()
+                    .unwrap_or(DEFAULT_SNAPSHOT_ID)
+            })
             .unwrap_or(DEFAULT_SNAPSHOT_ID);
         let edge_label_ids = encode_storage_label(params.labels.as_ref())?;
 
@@ -259,7 +271,10 @@ where
         let store = self.store.clone();
         let si = params
             .get_extra_param(SNAPSHOT_ID)
-            .map(|s| s.as_i64().unwrap_or(DEFAULT_SNAPSHOT_ID))
+            .map(|s| {
+                s.parse::<SnapshotId>()
+                    .unwrap_or(DEFAULT_SNAPSHOT_ID)
+            })
             .unwrap_or(DEFAULT_SNAPSHOT_ID);
         let partition_manager = self.partition_manager.clone();
         let filter = params.filter.clone();

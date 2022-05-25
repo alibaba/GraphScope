@@ -188,7 +188,7 @@ message QueryParams {
   // The optional predicate for the data tuple, which may be pushed down to the storage service
   common.Expression predicate = 5;
   // Extra parameters for general-purpose usage
-  map<string, common.Value> extra = 6;
+  map<string, string> extra = 6;
 }
 
 // Scan is an operator that transforms the source data format (defined by the database)
