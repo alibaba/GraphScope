@@ -242,8 +242,8 @@ impl GraphProxy for DemoGraph {
     }
 
     fn index_scan_vertex(
-        &self, _index_values: &Vec<Object>, _params: &QueryParams,
-    ) -> FnResult<Box<dyn Iterator<Item = Vertex> + Send>> {
+        &self, _label: &NameOrId, _primary_key_values: &Vec<(NameOrId, Object)>, _params: &QueryParams,
+    ) -> FnResult<Option<Vertex>> {
         Err(FnExecError::query_store_error(
             "Experiment storage does not support index_scan_vertex for now",
         ))?

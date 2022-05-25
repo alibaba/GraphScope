@@ -20,7 +20,7 @@ use std::sync::Arc;
 use dyn_type::Object;
 use ir_common::error::{ParsePbError, ParsePbResult};
 use ir_common::generated::algebra as algebra_pb;
-use ir_common::KeyId;
+use ir_common::{KeyId, NameOrId};
 
 use crate::error::{FnGenError, FnGenResult};
 use crate::graph::element::{Edge, Vertex};
@@ -41,7 +41,7 @@ pub enum SourceType {
 pub struct SourceOperator {
     query_params: QueryParams,
     src: Option<HashMap<u64, Vec<ID>>>,
-    indexed_values: Option<Vec<Object>>,
+    primary_key_values: Option<Vec<(NameOrId, Object)>>,
     alias: Option<KeyId>,
     source_type: SourceType,
 }
@@ -68,8 +68,8 @@ impl SourceOperator {
                             debug!("Runtime source op of indexed scan of global ids {:?}", source_op);
                         } else {
                             // query by indexed_scan
-                            let indexed_values = <Vec<Object>>::try_from(ip2)?;
-                            source_op.indexed_values = Some(indexed_values);
+                            let primary_key_values = <Vec<(NameOrId, Object)>>::try_from(ip2)?;
+                            source_op.primary_key_values = Some(primary_key_values);
                             debug!("Runtime source op of indexed scan {:?}", source_op);
                         }
                         Ok(source_op)
@@ -127,9 +127,18 @@ impl SourceOperator {
                             v_source = graph.get_vertex(src, &self.query_params)?;
                         }
                     }
-                } else if let Some(ref indexed_values) = self.indexed_values {
+                } else if let Some(ref indexed_values) = self.primary_key_values {
                     // parallel indexed scan
-                    v_source = graph.index_scan_vertex(indexed_values, &self.query_params)?;
+                    if self.query_params.labels.len() != 1 {
+                        Err(FnGenError::unsupported_error("indexed_scan with empty/multiple labels"))?
+                    }
+                    if let Some(v) = graph.index_scan_vertex(
+                        &self.query_params.labels[0],
+                        indexed_values,
+                        &self.query_params,
+                    )? {
+                        v_source = Box::new(vec![v].into_iter())
+                    }
                 } else {
                     // parallel scan, and each worker should scan the partitions assigned to it in self.v_params.partitions
                     v_source = graph.scan_vertex(&self.query_params)?;
@@ -172,6 +181,6 @@ impl TryFrom<algebra_pb::Scan> for SourceOperator {
 
         let query_params = QueryParams::try_from(scan_pb.params)?;
 
-        Ok(SourceOperator { query_params, src: None, indexed_values: None, alias, source_type })
+        Ok(SourceOperator { query_params, src: None, primary_key_values: None, alias, source_type })
     }
 }

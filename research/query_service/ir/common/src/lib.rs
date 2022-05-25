@@ -13,7 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use std::convert::TryFrom;
+use std::convert::{TryFrom, TryInto};
 use std::io;
 
 use dyn_type::{BorrowObject, Object, Primitives};
@@ -497,25 +497,35 @@ impl TryFrom<pb::IndexPredicate> for Vec<i64> {
     }
 }
 
-impl TryFrom<pb::IndexPredicate> for Vec<Object> {
+impl TryFrom<pb::IndexPredicate> for Vec<(NameOrId, Object)> {
     type Error = ParsePbError;
 
     fn try_from(value: pb::IndexPredicate) -> Result<Self, Self::Error> {
-        let mut indexed_values = vec![];
+        let mut primary_key_values = vec![];
         // for pk values, which should be a set of and_conditions.
         let and_predicates = value
             .or_predicates
             .get(0)
             .ok_or(ParsePbError::EmptyFieldError("`OrCondition` is emtpy".to_string()))?;
         for predicate in &and_predicates.predicates {
+            let key_pb = predicate
+                .key
+                .clone()
+                .ok_or("key is empty in kv_pair in indexed_scan")?;
             let value = predicate
                 .value
                 .clone()
                 .ok_or("value is empty in kv_pair in indexed_scan")?;
+            let key = match key_pb.item {
+                Some(common_pb::property::Item::Key(prop_key)) => prop_key.try_into()?,
+                _ => Err(ParsePbError::Unsupported(
+                    "Other keys rather than property key in kv_pair in indexed_scan".to_string(),
+                ))?,
+            };
             let obj_val = Object::try_from(value)?;
-            indexed_values.push(obj_val);
+            primary_key_values.push((key, obj_val));
         }
-        Ok(indexed_values)
+        Ok(primary_key_values)
     }
 }
 

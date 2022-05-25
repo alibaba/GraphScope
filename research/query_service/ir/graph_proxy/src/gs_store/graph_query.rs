@@ -82,7 +82,7 @@ where
                         .unwrap_or(DEFAULT_SNAPSHOT_ID)
                 })
                 .unwrap_or(DEFAULT_SNAPSHOT_ID);
-            let label_ids = encode_storage_label(params.labels.as_ref())?;
+            let label_ids = encode_storage_labels(params.labels.as_ref())?;
             let prop_ids = encode_storage_prop_keys(params.columns.as_ref())?;
             let filter = params.filter.clone();
             let partitions: Vec<PartitionId> = partitions
@@ -112,28 +112,25 @@ where
     }
 
     fn index_scan_vertex(
-        &self, indexed_values: &Vec<Object>, params: &QueryParams,
-    ) -> FnResult<Box<dyn Iterator<Item = Vertex> + Send>> {
-        let label_ids = encode_storage_label(params.labels.as_ref())?;
-        let mut results = Vec::with_capacity(indexed_values.len());
-        let mut store_indexed_values = Vec::with_capacity(indexed_values.len());
-        for value in indexed_values {
-            let prop_val = encode_store_prop_val(value.clone());
-            store_indexed_values.push(prop_val);
+        &self, label_id: &NameOrId, primary_key_values: &Vec<(NameOrId, Object)>, _params: &QueryParams,
+    ) -> FnResult<Option<Vertex>> {
+        let store_label_id = encode_storage_label(label_id)?;
+        let store_indexed_values: Vec<Property> = primary_key_values
+            .iter()
+            .map(|(_pk, value)| encode_store_prop_val(value.clone()))
+            .collect();
+        if let Some(vid) = self
+            .partition_manager
+            .get_vertex_id_by_primary_keys(store_label_id, store_indexed_values.as_ref())
+        {
+            Ok(Some(Vertex::new(
+                vid as ID,
+                Some(label_id.clone()),
+                DynDetails::new(DefaultDetails::new(HashMap::new())),
+            )))
+        } else {
+            Ok(None)
         }
-        for (idx, label) in label_ids.iter().enumerate() {
-            if let Some(vid) = self
-                .partition_manager
-                .get_vertex_id_by_primary_keys(*label, store_indexed_values.as_ref())
-            {
-                results.push(Vertex::new(
-                    vid as ID,
-                    params.labels.get(idx).cloned(),
-                    DynDetails::new(DefaultDetails::new(HashMap::new())),
-                ));
-            }
-        }
-        Ok(Box::new(results.into_iter()))
     }
 
     fn scan_edge(&self, params: &QueryParams) -> FnResult<Box<dyn Iterator<Item = Edge> + Send>> {
@@ -146,7 +143,7 @@ where
                         .unwrap_or(DEFAULT_SNAPSHOT_ID)
                 })
                 .unwrap_or(DEFAULT_SNAPSHOT_ID);
-            let label_ids = encode_storage_label(params.labels.as_ref())?;
+            let label_ids = encode_storage_labels(params.labels.as_ref())?;
             let prop_ids = encode_storage_prop_keys(params.columns.as_ref())?;
             let filter = params.filter.clone();
             let partitions: Vec<PartitionId> = partitions
@@ -214,7 +211,7 @@ where
                     .unwrap_or(DEFAULT_SNAPSHOT_ID)
             })
             .unwrap_or(DEFAULT_SNAPSHOT_ID);
-        let edge_label_ids = encode_storage_label(params.labels.as_ref())?;
+        let edge_label_ids = encode_storage_labels(params.labels.as_ref())?;
 
         let stmt = from_fn(move |v: ID| {
             let src_id = get_partition_vertex_ids(v, partition_manager.clone());
@@ -279,7 +276,7 @@ where
         let partition_manager = self.partition_manager.clone();
         let filter = params.filter.clone();
         let limit = params.limit.clone();
-        let edge_label_ids = encode_storage_label(params.labels.as_ref())?;
+        let edge_label_ids = encode_storage_labels(params.labels.as_ref())?;
         let prop_ids = encode_storage_prop_keys(params.columns.as_ref())?;
 
         let stmt = from_fn(move |v: ID| {
@@ -394,16 +391,21 @@ fn encode_storage_prop_keys(prop_names: Option<&Vec<NameOrId>>) -> FnExecResult<
 }
 
 #[inline]
-fn encode_storage_label(labels: &Vec<Label>) -> FnExecResult<Vec<LabelId>> {
+fn encode_storage_labels(labels: &Vec<Label>) -> FnExecResult<Vec<LabelId>> {
     labels
         .iter()
-        .map(|label| match label {
-            Label::Str(_) => {
-                Err(FnExecError::query_store_error("encode storage label error, should provide label_id"))
-            }
-            Label::Id(id) => Ok(*id as LabelId),
-        })
+        .map(|label| encode_storage_label(label))
         .collect::<Result<Vec<LabelId>, _>>()
+}
+
+#[inline]
+fn encode_storage_label(label: &NameOrId) -> FnExecResult<LabelId> {
+    match label {
+        Label::Str(_) => {
+            Err(FnExecError::query_store_error("encode storage label error, should provide label_id"))
+        }
+        Label::Id(id) => Ok(*id as LabelId),
+    }
 }
 
 #[inline]
