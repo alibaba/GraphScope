@@ -998,43 +998,44 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
         reason = "unsupported")
 
 // todo: return label is integer
-@Graph.OptOut(
-        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest",
-        method = "g_VX1X_outE",
-        reason = "returned label is id")
-@Graph.OptOut(
-        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest",
-        method = "g_VX4X_bothEXcreatedX",
-        reason = "returned label is id")
-@Graph.OptOut(
-        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest",
-        method = "g_VX4X_bothE",
-        reason = "returned label is id")
-@Graph.OptOut(
-        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
-        method = "g_E_hasXlabelXknowsX",
-        reason = "returned label is id")
-@Graph.OptOut(
-        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest",
-        method = "g_VX2X_inE",
-        reason = "returned label is id")
-@Graph.OptOut(
-        method =
-                "g_VX1X_outEXknowsX_asXhereX_hasXweight_1X_asXfakeX_inV_hasXname_joshX_selectXhereX",
-        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
-        reason = "returned label is id")
-@Graph.OptOut(
-        method = "g_VX1X_outEXknowsX_asXhereX_hasXweight_1X_inV_hasXname_joshX_selectXhereX",
-        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
-        reason = "returned label is id")
-@Graph.OptOut(
-        method = "g_VX1X_outEXknowsX_hasXweight_1X_asXhereX_inV_hasXname_joshX_selectXhereX",
-        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
-        reason = "returned label is id")
-@Graph.OptOut(
-        method = "g_VX1X_outE_asXhereX_inV_hasXname_vadasX_selectXhereX",
-        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
-        reason = "returned label is id")
+// @Graph.OptOut(
+//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest",
+//        method = "g_VX1X_outE",
+//        reason = "returned label is id")
+// @Graph.OptOut(
+//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest",
+//        method = "g_VX4X_bothEXcreatedX",
+//        reason = "returned label is id")
+// @Graph.OptOut(
+//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest",
+//        method = "g_VX4X_bothE",
+//        reason = "returned label is id")
+// @Graph.OptOut(
+//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
+//        method = "g_E_hasXlabelXknowsX",
+//        reason = "returned label is id")
+// @Graph.OptOut(
+//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest",
+//        method = "g_VX2X_inE",
+//        reason = "returned label is id")
+// @Graph.OptOut(
+//        method =
+//
+// "g_VX1X_outEXknowsX_asXhereX_hasXweight_1X_asXfakeX_inV_hasXname_joshX_selectXhereX",
+//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
+//        reason = "returned label is id")
+// @Graph.OptOut(
+//        method = "g_VX1X_outEXknowsX_asXhereX_hasXweight_1X_inV_hasXname_joshX_selectXhereX",
+//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
+//        reason = "returned label is id")
+// @Graph.OptOut(
+//        method = "g_VX1X_outEXknowsX_hasXweight_1X_asXhereX_inV_hasXname_joshX_selectXhereX",
+//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
+//        reason = "returned label is id")
+// @Graph.OptOut(
+//        method = "g_VX1X_outE_asXhereX_inV_hasXname_vadasX_selectXhereX",
+//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
+//        reason = "returned label is id")
 
 // add more ignored tests which are out of ir range
 @Graph.OptOut(
