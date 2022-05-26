@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.alibaba.maxgraph.servers.ir.client;
+package com.alibaba.graphscope.groot.frontend;
 
 import com.alibaba.graphscope.groot.rpc.ChannelManager;
 import com.alibaba.graphscope.groot.rpc.RoleClients;

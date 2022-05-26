@@ -20,15 +20,15 @@ import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
 import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.common.store.IrMetaFetcher;
 import com.alibaba.maxgraph.common.util.CommonUtil;
-import com.alibaba.maxgraph.servers.ir.client.SnapshotUpdateCommitter;
+import com.alibaba.graphscope.groot.frontend.SnapshotUpdateCommitter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.*;
 
-public class SnapshotManager extends IrMetaQueryCallback {
-    private static final Logger logger = LoggerFactory.getLogger(SnapshotManager.class);
+public class FrontendQueryManager extends IrMetaQueryCallback {
+    private static final Logger logger = LoggerFactory.getLogger(FrontendQueryManager.class);
     private static final int QUEUE_SIZE = 1024 * 1024;
 
     // manage queries <snapshotId, is_done>
@@ -38,7 +38,7 @@ public class SnapshotManager extends IrMetaQueryCallback {
     private long oldSnapshotId = Long.MIN_VALUE;
     private int frontendId;
 
-    public SnapshotManager(
+    public FrontendQueryManager(
             IrMetaFetcher fetcher, int frontendId, SnapshotUpdateCommitter committer) {
         super(fetcher);
         this.queryQueue = new ArrayBlockingQueue<>(QUEUE_SIZE);
