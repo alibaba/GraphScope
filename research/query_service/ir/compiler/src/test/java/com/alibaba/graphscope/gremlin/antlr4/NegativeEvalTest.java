@@ -180,17 +180,6 @@ public class NegativeEvalTest {
     }
 
     @Test
-    public void g_V_valueMap_none_test() {
-        try {
-            scriptEngine.eval("g.V().valueMap()", context);
-        } catch (InvalidGremlinScriptException e) {
-            // expected error
-            return;
-        }
-        Assert.fail();
-    }
-
-    @Test
     public void g_V_as_invalid_test() {
         try {
             scriptEngine.eval("g.V().as('a', 'b')", context);
