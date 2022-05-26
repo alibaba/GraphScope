@@ -127,6 +127,12 @@ pub extern fn writeBatch(ptr: GraphHandle, snapshot_id: i64, data: *const u8, le
     }
 }
 
+#[no_mangle]
+pub extern fn deleteSnapshot(ptr: GraphHandle,  snapshot_id: i64) -> Box<JnaResponse>  {
+    info!("Delete snapshot in rust {}", snapshot_id);
+    JnaResponse::new_success()
+}
+
 fn do_write_batch<G: MultiVersionGraph>(graph: &G, snapshot_id: SnapshotId, buf: &[u8]) -> GraphResult<bool> {
     let proto = parse_pb::<OperationBatchPb>(buf)?;
     let mut has_ddl = false;

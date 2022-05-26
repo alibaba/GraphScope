@@ -122,4 +122,14 @@ public class JnaGraphStore implements GraphPartition {
     public int getId() {
         return this.partitionId;
     }
+
+    @Override
+    public void garbageCollect(long snapshotId) throws IOException {
+        try (JnaResponse response =
+                GraphLibrary.INSTANCE.deleteSnapshot(this.pointer, snapshotId); ) {
+            if (!response.success()) {
+                throw new IOException(response.getErrMsg());
+            }
+        }
+    }
 }
