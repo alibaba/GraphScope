@@ -23,6 +23,7 @@ import com.alibaba.graphscope.gremlin.integration.result.TestGraphFactory;
 import com.alibaba.graphscope.gremlin.service.IrGremlinServer;
 import com.alibaba.graphscope.groot.discovery.DiscoveryFactory;
 import com.alibaba.graphscope.groot.discovery.NodeDiscovery;
+import com.alibaba.graphscope.groot.frontend.SnapshotUpdateCommitter;
 import com.alibaba.graphscope.groot.frontend.WriteSessionGenerator;
 import com.alibaba.graphscope.groot.frontend.write.GraphWriter;
 import com.alibaba.graphscope.groot.meta.MetaService;
@@ -35,7 +36,6 @@ import com.alibaba.maxgraph.common.config.GremlinConfig;
 import com.alibaba.maxgraph.compiler.api.schema.SchemaFetcher;
 import com.alibaba.maxgraph.servers.AbstractService;
 import com.alibaba.maxgraph.servers.ComputeServiceProducer;
-import com.alibaba.graphscope.groot.frontend.SnapshotUpdateCommitter;
 
 import java.util.HashMap;
 import java.util.Map;
