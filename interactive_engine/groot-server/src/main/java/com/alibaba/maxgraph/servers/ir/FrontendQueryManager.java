@@ -19,8 +19,8 @@ package com.alibaba.maxgraph.servers.ir;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
 import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.common.store.IrMetaFetcher;
-import com.alibaba.maxgraph.common.util.CommonUtil;
 import com.alibaba.graphscope.groot.frontend.SnapshotUpdateCommitter;
+import com.alibaba.maxgraph.common.util.CommonUtil;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
