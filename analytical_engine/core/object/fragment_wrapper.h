@@ -488,23 +488,26 @@ class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T>>
       for (fid_t i = 0; i < cur_fnum; ++i) {
         auto name =
             "o2g_" + std::to_string(i) + "_" + std::to_string(pair.first);
+        if (ctx_meta.Haskey(name) && cur_meta.Haskey(name)) {
+          auto id_in_ctx = ctx_meta.GetMemberMeta(name).GetId();
+          auto id_in_cur = cur_meta.GetMemberMeta(name).GetId();
+          if (id_in_ctx != id_in_cur) {
+            RETURN_GS_ERROR(vineyard::ErrorCode::kIllegalStateError,
+                            "OID to GID mapping '" + name +
+                                "' in context differ from vertex map of the "
+                                "destination fragment");
+          }
+        }
+
+        name = "oid_arrays_" + std::to_string(i) + "_" +
+               std::to_string(pair.first);
         auto id_in_ctx = ctx_meta.GetMemberMeta(name).GetId();
         auto id_in_cur = cur_meta.GetMemberMeta(name).GetId();
         if (id_in_ctx != id_in_cur) {
           RETURN_GS_ERROR(vineyard::ErrorCode::kIllegalStateError,
-                          "Vertex datastructure " + name +
-                              "in context differ from vertex map of the "
+                          "OID array '" + name +
+                              "' in context differs from vertex map of the "
                               "destination fragment");
-        }
-        name = "oid_arrays_" + std::to_string(i) + "_" +
-               std::to_string(pair.first);
-        id_in_ctx = ctx_meta.GetMemberMeta(name).GetId();
-        id_in_cur = cur_meta.GetMemberMeta(name).GetId();
-        if (id_in_ctx != id_in_cur) {
-          RETURN_GS_ERROR(vineyard::ErrorCode::kIllegalStateError,
-                          "Vertex datastructure " + name +
-                              "in context differ from vertex map of the "
-                              "destionation fragment");
         }
       }
     }
