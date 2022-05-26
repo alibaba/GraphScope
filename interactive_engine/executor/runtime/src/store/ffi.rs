@@ -1457,6 +1457,7 @@ impl GraphPartitionManager for VineyardPartitionManager {
 
     fn get_vertex_id_by_primary_keys(&self, label_id: LabelId, pks: &[Property]) -> Option<VertexId> {
         if pks.len() != 1 {
+            error!("multiple pks are not supported in Vineyard {:?}", pks);
             return None;
         } else {
             let pk = pks.get(0).unwrap();
