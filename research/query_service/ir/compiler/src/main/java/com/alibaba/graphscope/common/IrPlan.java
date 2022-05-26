@@ -540,7 +540,7 @@ public class IrPlan implements Closeable {
             if (file.exists()) {
                 file.delete();
             }
-            irCoreLib.write_plan_to_json(ptrPlan, PLAN_JSON_FILE);
+            irCoreLib.writePlanToJson(ptrPlan, PLAN_JSON_FILE);
             json = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
             if (file.exists()) {
                 file.delete();

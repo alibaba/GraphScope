@@ -34,7 +34,7 @@ public interface IrCoreLibrary extends Library {
 
     Pointer initLogicalPlan();
 
-    void write_plan_to_json(Pointer plan, String jsonFile);
+    void writePlanToJson(Pointer plan, String jsonFile);
 
     void destroyLogicalPlan(Pointer plan);
 
@@ -224,4 +224,6 @@ public interface IrCoreLibrary extends Library {
     FfiError.ByValue setParamsPredicate(Pointer params, String predicate);
 
     FfiError.ByValue setParamsIsAllColumns(Pointer params);
+
+    FfiKeyResult.ByValue getKeyName(int keyId, FfiKeyType keyType);
 }
