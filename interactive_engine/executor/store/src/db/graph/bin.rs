@@ -32,7 +32,7 @@ pub fn parse_vertex_key(key: &[u8]) -> GraphResult<(VertexId, SnapshotId)> {
 /// If an edge table's id is X, we use 2 * X to identify the forward edges and 2 * X + 1 to identify
 /// the backward edges. And to avoid duplication of vertex tables' prefixes and edge tables', we using
 /// 2 * X to identify vertex table. As any type has an unique table id, all prefixes will be different.
-fn vertex_table_prefix(id: TableId) -> i64 {
+pub fn vertex_table_prefix(id: TableId) -> i64 {
     id << 1
 }
 

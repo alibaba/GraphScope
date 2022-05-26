@@ -36,7 +36,7 @@ impl VertexTypeInfo {
     }
 
     #[allow(dead_code)]
-    pub fn gc(&self, si: SnapshotId) {
+    pub fn gc(&self, si: SnapshotId) -> GraphResult<Vec<TableId>> {
         self.info.gc(si)
     }
 
@@ -220,17 +220,17 @@ impl VertexTypeManager {
         Ok(())
     }
 
-    pub fn gc(&self, si: SnapshotId) {
+    pub fn gc(&self, si: SnapshotId) -> GraphResult<Vec<TableId>> {
         unsafe {
             let guard = epoch::pin();
             let map = self.get_shared_map(&guard);
             let map_ref: &VertexMap = map.deref();
             let mut b = Vec::new();
+            let mut table_ids = Vec::new();
             for (label, info) in map_ref {
+                table_ids.append(&mut info.gc(si)?);
                 if !info.is_alive_at(si) {
                     b.push(*label);
-                } else {
-                    info.gc(si);
                 }
             }
             if !b.is_empty() {
@@ -241,6 +241,7 @@ impl VertexTypeManager {
                 self.map.store(Owned::new(map_clone), Ordering::Relaxed);
                 guard.defer_destroy(map);
             }
+            Ok(table_ids)
         }
     }
 

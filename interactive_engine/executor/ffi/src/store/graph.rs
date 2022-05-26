@@ -339,3 +339,23 @@ fn delete_edge<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &Operation
     let edge_kind = EdgeKind::from_proto(edge_kind_pb);
     graph.delete_edge(snapshot_id, edge_id, &edge_kind, edge_location_pb.get_forward())
 }
+
+#[no_mangle]
+pub extern fn gc(ptr: GraphHandle, snapshot_id: i64) -> Box<JnaResponse> {
+    unsafe {
+        let graph_store_ptr = &*(ptr as *const GraphStore);
+        match graph_store_ptr.gc(snapshot_id) {
+            Ok(_) => {
+                JnaResponse::new_success()
+            }
+            Err(e) => {
+                let msg = format!("{:?}", e);
+                JnaResponse::new_error(&msg)
+            }
+        }
+    }
+}
+
+fn do_gc<G: MultiVersionGraph>(graph: &G, snapshot_id: i64) -> GraphResult<()> {
+    graph.gc(snapshot_id)
+}

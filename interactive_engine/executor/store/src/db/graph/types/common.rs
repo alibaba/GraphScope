@@ -48,8 +48,8 @@ impl TypeCommon {
         self.codec_manager.add_codec(si, codec)
     }
 
-    pub fn gc(&self, _si: SnapshotId) {
-        unimplemented!()
+    pub fn gc(&self, si: SnapshotId) -> GraphResult<Vec<TableId>> {
+        self.table_manager.gc(si)
     }
 }
 

@@ -13,6 +13,7 @@ use crate::db::common::unsafe_util;
 use super::super::table_manager::Table;
 use super::super::codec::*;
 use super::common::*;
+use crate::db::graph::table_manager::TableId;
 
 pub struct EdgeKindInfo {
     edge_kind: EdgeKind,
@@ -33,7 +34,7 @@ impl EdgeKindInfo {
         res_unwrap!(self.info.online_table(table), online_table)
     }
 
-    pub fn gc(&self, si: SnapshotId) {
+    pub fn gc(&self, si: SnapshotId) -> GraphResult<Vec<TableId>> {
         self.info.gc(si)
     }
 
@@ -284,9 +285,9 @@ impl EdgeTypeManager {
         })
     }
 
-    pub fn gc(&self, si: SnapshotId) {
+    pub fn gc(&self, si: SnapshotId) -> GraphResult<Vec<TableId>> {
         self.modify(|inner| {
-            inner.gc(si);
+            inner.gc(si)
         })
     }
 
@@ -485,21 +486,22 @@ impl EdgeManagerInner {
 
     /// if gc nothing return false
     #[allow(dead_code)]
-    fn gc(&mut self, si: SnapshotId) {
+    fn gc(&mut self, si: SnapshotId) -> GraphResult<Vec<TableId>> {
         let mut dropped_labels = Vec::new();
         let mut dropped_types = Vec::new();
+        let mut table_ids = Vec::new();
         for (label, info) in &self.info_map {
             if !info.lifetime.is_alive_at(si) {
                 dropped_labels.push(*label);
                 for t in &info.kinds {
+                    table_ids.append(&mut t.gc(si)?);
                     dropped_types.push(t.edge_kind.clone());
                 }
             } else {
                 for t in &info.kinds {
+                    table_ids.append(&mut t.gc(si)?);
                     if !t.lifetime.is_alive_at(si) {
                         dropped_types.push(t.edge_kind.clone());
-                    } else {
-                        t.gc(si);
                     }
                 }
             }
@@ -510,5 +512,6 @@ impl EdgeManagerInner {
         for t in dropped_types {
             self.type_map.remove(&t);
         }
+        Ok(table_ids)
     }
 }
