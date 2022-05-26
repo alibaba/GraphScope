@@ -192,7 +192,7 @@ pub trait GraphProxy: Send + Sync {
     /// Scan all vertices with query parameters, and return an iterator over them.
     fn scan_vertex(&self, params: &QueryParams) -> FnResult<Box<dyn Iterator<Item = Vertex> + Send>>;
 
-    /// Scan all vertices with a specified label and its primary key values, and additional query parameters,
+    /// Scan a vertex with a specified label and its primary key values, and additional query parameters,
     /// and return the vertex if exists.
     fn index_scan_vertex(
         &self, label: &NameOrId, primary_key_values: &Vec<(NameOrId, Object)>, params: &QueryParams,
