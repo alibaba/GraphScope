@@ -463,10 +463,10 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
         method =
                 "g_V_outXcreatedX_unionXasXprojectX_inXcreatedX_hasXname_markoX_selectXprojectX__asXprojectX_inXcreatedX_inXknowsX_hasXname_markoX_selectXprojectXX_groupCount_byXnameX",
         reason = "unsupported")
-//@Graph.OptOut(
-//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
-//        method = "g_V_valueMap_selectXlast_a_bX",
-//        reason = "unsupported")
+@Graph.OptOut(
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
+        method = "g_V_valueMap_selectXlast_a_bX",
+        reason = "unsupported")
 @Graph.OptOut(
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
         method = "g_V_hasLabelXpersonX_asXpX_mapXbothE_label_groupCountX_asXrX_selectXp_rX",
@@ -492,10 +492,10 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
         method = "g_V_outE_weight_groupCount_unfold_selectXkeysX_unfold",
         reason = "unsupported")
-//@Graph.OptOut(
-//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
-//        method = "g_V_valueMap_selectXlast_aX",
-//        reason = "unsupported")
+@Graph.OptOut(
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
+        method = "g_V_valueMap_selectXlast_aX",
+        reason = "unsupported")
 @Graph.OptOut(
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
         method = "g_V_selectXall_aX",
@@ -563,10 +563,10 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
         method = "g_V_valueMap_selectXall_a_bX",
         reason = "unsupported")
-//@Graph.OptOut(
-//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
-//        method = "g_V_valueMap_selectXa_bX",
-//        reason = "unsupported")
+@Graph.OptOut(
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
+        method = "g_V_valueMap_selectXa_bX",
+        reason = "unsupported")
 @Graph.OptOut(
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
         method =
@@ -592,10 +592,10 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
         method = "g_V_outE_weight_groupCount_selectXvaluesX_unfold",
         reason = "unsupported")
-//@Graph.OptOut(
-//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
-//        method = "g_V_valueMap_selectXaX",
-//        reason = "unsupported")
+@Graph.OptOut(
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
+        method = "g_V_valueMap_selectXaX",
+        reason = "unsupported")
 @Graph.OptOut(
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest",
         method = "g_VX4X_bothE_hasXweight_lt_1X_otherV",
@@ -1293,14 +1293,14 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
 // @Graph.OptOut(method="g_V_valueMapXname_ageX" ,
 // test="org.apache.tinkerpop.gremlin.process.traversal.step.map.ValueMapTest", reason = "will be
 // supported")
-//@Graph.OptOut(
-//        method = "g_VX1X_outXcreatedX_valueMap",
-//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.ValueMapTest",
-//        reason = "will be supported")
-//@Graph.OptOut(
-//        method = "g_V_valueMap",
-//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.ValueMapTest",
-//        reason = "will be supported")
+@Graph.OptOut(
+        method = "g_VX1X_outXcreatedX_valueMap",
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.ValueMapTest",
+        reason = "will be supported")
+@Graph.OptOut(
+        method = "g_V_valueMap",
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.ValueMapTest",
+        reason = "will be supported")
 @Graph.OptOut(
         method = "g_V_group_byXlabelX_byXlabel_countX",
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.GroupTest",

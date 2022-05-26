@@ -76,11 +76,19 @@ public enum GremlinResultParserFactory implements GremlinResultParser {
                                             (k, v) -> {
                                                 if (!(v instanceof EmptyValue)) {
                                                     String nameOrId = null;
-                                                    if(k instanceof List) { // valueMap("name") -> Map<["", "name"], value>
-                                                        nameOrId = (String) ((List)k).get(1);
-                                                    } else if (k instanceof String) { // valueMap() -> Map<"name", value>
+                                                    if (k
+                                                            instanceof
+                                                            List) { // valueMap("name") -> Map<["",
+                                                        // "name"], value>
+                                                        nameOrId = (String) ((List) k).get(1);
+                                                    } else if (k
+                                                            instanceof
+                                                            String) { // valueMap() -> Map<"name",
+                                                        // value>
                                                         nameOrId = (String) k;
-                                                    } else if(k instanceof Number) { // valueMap() -> Map<1, value>
+                                                    } else if (k
+                                                            instanceof
+                                                            Number) { // valueMap() -> Map<1, value>
                                                         nameOrId = String.valueOf(k);
                                                     }
                                                     if (nameOrId == null || nameOrId.isEmpty()) {
