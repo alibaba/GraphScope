@@ -223,9 +223,35 @@ pub trait GraphProxy: Send + Sync {
     ) -> FnResult<Box<dyn Statement<ID, Edge>>>;
 }
 
+#[derive(Clone)]
+pub struct GraphSchema {
+    // TODO: define GraphSchema to initiate write graph
+}
+
+/// The interface of graph written in runtime
+pub trait WriteGraphProxy: Send + Sync {
+    /// Add a vertex
+    fn add_vertex(&mut self, vertex: Vertex) -> FnResult<()>;
+
+    /// Add a batch of vertices
+    // fn add_vertices<Iter: Iterator<Item = Vertex>>(&mut self, vertices_iter: Iter) -> FnResult<()>;
+    fn add_vertices(&mut self, vertices: Vec<Vertex>) -> FnResult<()>;
+
+    /// Add an edge
+    fn add_edge(&mut self, edge: Edge) -> FnResult<()>;
+
+    /// Add a batch of edges
+    // fn add_edges<Iter: Iterator<Item = Edge>>(&mut self, edges_iter: Iter) -> FnResult<()>;
+    fn add_edges(&mut self, edges: Vec<Edge>) -> FnResult<()>;
+
+    /// A hint of all vertices/edges are added.
+    fn finish(&mut self) -> FnResult<()>;
+}
+
 lazy_static! {
     /// GRAPH_PROXY is a raw pointer which can be safely shared between threads.
     pub static ref GRAPH_PROXY: AtomicPtr<Arc<dyn GraphProxy>> = AtomicPtr::default();
+    pub static ref GRAPH_WRITER_PROXY: AtomicPtr<Arc<dyn WriteGraphProxy>> = AtomicPtr::default();
 }
 
 pub fn register_graph(graph: Arc<dyn GraphProxy>) {
@@ -240,4 +266,12 @@ pub fn get_graph() -> Option<Arc<dyn GraphProxy>> {
     } else {
         Some(unsafe { (*ptr).clone() })
     }
+}
+
+pub fn register_graph_writer(_graph_id: i64, _graph_schema: GraphSchema) {
+    unimplemented!()
+}
+
+pub fn get_graph_writer() -> Option<Arc<dyn WriteGraphProxy>> {
+    unimplemented!()
 }
