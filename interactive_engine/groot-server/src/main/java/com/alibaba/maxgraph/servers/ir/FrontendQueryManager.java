@@ -107,7 +107,7 @@ public class FrontendQueryManager extends IrMetaQueryCallback {
                 }
                 if (minSnapshotId > oldSnapshotId) {
                     committer.updateSnapshot(frontendId, minSnapshotId);
-                    logger.info("update minSnapshotId {} success", minSnapshotId);
+                    logger.debug("update minSnapshotId {} success", minSnapshotId);
                     oldSnapshotId = minSnapshotId;
                 }
             } catch (Exception e) {
