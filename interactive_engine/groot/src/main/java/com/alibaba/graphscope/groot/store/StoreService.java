@@ -305,7 +305,6 @@ public class StoreService implements MetricsAgent {
     }
 
     public void garbageCollect(long snapshotId, CompletionCallback<Void> callback) {
-        logger.info("garbageCollect snapshotId [" + snapshotId + "]");
         this.garbageCollectExecutor.execute(
                 () -> {
                     try {

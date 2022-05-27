@@ -50,11 +50,6 @@ public class SnapshotUpdateClient extends RpcClient {
                         .setSnapshotId(snapshotId)
                         .build();
         UpdateMinQuerySnapshotIdResponse res = stub.updateMinQuerySnapshotId(req);
-        logger.info(
-                "updateSnapshot: frontendId={}, snapshotId={}, res={}",
-                frontendId,
-                snapshotId,
-                res);
         if (!res.getSuccess()) {
             throw new RuntimeException("update snapshot fail {} " + res.getErrMsg());
         }

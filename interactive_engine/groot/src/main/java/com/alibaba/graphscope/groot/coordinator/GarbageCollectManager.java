@@ -45,7 +45,7 @@ public class GarbageCollectManager {
                                 CoordinatorSnapshotClient client = clients.getClient(i);
                                 client.synchronizeSnapshot(offlineVersion);
                                 logger.info(
-                                        "querySnapshotId of store ["
+                                        "Offline version of store ["
                                                 + i
                                                 + "] updated to ["
                                                 + offlineVersion
