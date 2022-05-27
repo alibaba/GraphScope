@@ -44,7 +44,7 @@ public class GarbageCollectManager {
                             for (int i = 0; i < CommonConfig.STORE_NODE_COUNT.get(configs); i++) {
                                 CoordinatorSnapshotClient client = clients.getClient(i);
                                 client.synchronizeSnapshot(offlineVersion);
-                                logger.debug(
+                                logger.info(
                                         "querySnapshotId of store ["
                                                 + i
                                                 + "] updated to ["

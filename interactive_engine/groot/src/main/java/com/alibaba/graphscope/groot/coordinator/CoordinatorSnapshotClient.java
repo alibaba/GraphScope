@@ -4,9 +4,12 @@ import com.alibaba.graphscope.groot.rpc.RpcClient;
 import com.alibaba.maxgraph.proto.groot.*;
 
 import io.grpc.ManagedChannel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 // send rpc to CoordinatorSnapshotService in Store,  to report minimum snapshot current used
 public class CoordinatorSnapshotClient extends RpcClient {
+    private static final Logger logger = LoggerFactory.getLogger(CoordinatorSnapshotClient.class);
     private CoordinatorSnapshotServiceGrpc.CoordinatorSnapshotServiceBlockingStub stub;
 
     public CoordinatorSnapshotClient(ManagedChannel channel) {
@@ -24,6 +27,7 @@ public class CoordinatorSnapshotClient extends RpcClient {
         SynchronizeMinQuerySnapshotIdRequest req =
                 SynchronizeMinQuerySnapshotIdRequest.newBuilder().setSnapshotId(snapshotId).build();
         SynchronizeMinQuerySnapshotIdResponse res = stub.synchronizeMinQuerySnapshotId(req);
+        logger.info("synchronizeSnapshot of snapshot [" + snapshotId + "]");
         if (!res.getSuccess()) {
             throw new RuntimeException("Update store snapshot fail {} " + res.getErrMsg());
         }

@@ -22,9 +22,13 @@ import com.alibaba.maxgraph.proto.groot.UpdateMinQuerySnapshotIdRequest;
 import com.alibaba.maxgraph.proto.groot.UpdateMinQuerySnapshotIdResponse;
 
 import io.grpc.ManagedChannel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 // send rpc to Coordinator Service,  to report minimum snapshot current used
 public class SnapshotUpdateClient extends RpcClient {
+    private static final Logger logger = LoggerFactory.getLogger(SnapshotUpdateClient.class);
+
     private CoordinatorSnapshotServiceGrpc.CoordinatorSnapshotServiceBlockingStub stub;
 
     public SnapshotUpdateClient(ManagedChannel channel) {
@@ -45,6 +49,7 @@ public class SnapshotUpdateClient extends RpcClient {
                         .setSnapshotId(snapshotId)
                         .build();
         UpdateMinQuerySnapshotIdResponse res = stub.updateMinQuerySnapshotId(req);
+        logger.info("updateSnapshot: frontendId={}, snapshotId={}, res={}", frontendId, snapshotId, res);
         if (!res.getSuccess()) {
             throw new RuntimeException("update snapshot fail {} " + res.getErrMsg());
         }

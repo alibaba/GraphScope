@@ -25,6 +25,7 @@ public class StoreSnapshotService
             SynchronizeMinQuerySnapshotIdRequest request,
             StreamObserver<SynchronizeMinQuerySnapshotIdResponse> responseObserver) {
         long snapshotId = request.getSnapshotId();
+        logger.info("synchronizeMinQuerySnapshotId of snapshot [" + snapshotId + "]");
         this.storeService.garbageCollect(
                 snapshotId,
                 new CompletionCallback<Void>() {
