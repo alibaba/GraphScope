@@ -39,7 +39,6 @@ public class GarbageCollectManager {
         this.updateStoreMinSnapshotScheduler.scheduleWithFixedDelay(
                 () -> {
                     try {
-                        logger.info("start to update store min snapshot in coordinator");
                         if (!hashMap.isEmpty()) {
                             long offlineVersion = Collections.min(hashMap.values()) - 1;
                             for (int i = 0; i < CommonConfig.STORE_NODE_COUNT.get(configs); i++) {

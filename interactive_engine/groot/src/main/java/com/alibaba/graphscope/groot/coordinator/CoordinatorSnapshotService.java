@@ -25,7 +25,12 @@ public class CoordinatorSnapshotService
         int frontendId = request.getFrontendId();
         long snapshotId = request.getSnapshotId();
         garbageCollectManager.put(frontendId, snapshotId);
-        logger.info("updateMinQuerySnapshotId of frontend [" + frontendId + "] updated to [" + snapshotId + "]");
+        logger.info(
+                "updateMinQuerySnapshotId of frontend ["
+                        + frontendId
+                        + "] updated to ["
+                        + snapshotId
+                        + "]");
         UpdateMinQuerySnapshotIdResponse response =
                 UpdateMinQuerySnapshotIdResponse.newBuilder().setSuccess(true).build();
         responseObserver.onNext(response);

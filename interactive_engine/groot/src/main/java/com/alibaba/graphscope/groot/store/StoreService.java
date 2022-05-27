@@ -309,7 +309,6 @@ public class StoreService implements MetricsAgent {
         this.garbageCollectExecutor.execute(
                 () -> {
                     try {
-                        logger.info("garbage collect snapshot [" + snapshotId + "]");
                         garbageCollectInternal(snapshotId);
                         callback.onCompleted(null);
                     } catch (Exception e) {
@@ -321,7 +320,6 @@ public class StoreService implements MetricsAgent {
 
     private void garbageCollectInternal(long snapshotId) throws IOException {
         for (Map.Entry<Integer, GraphPartition> entry : this.idToPartition.entrySet()) {
-            logger.info("garbage collect partition [" + entry.getKey() + "]");
             GraphPartition partition = entry.getValue();
             partition.garbageCollect(snapshotId);
         }

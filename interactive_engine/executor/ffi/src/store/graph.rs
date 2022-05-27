@@ -128,7 +128,7 @@ pub extern fn writeBatch(ptr: GraphHandle, snapshot_id: i64, data: *const u8, le
 }
 
 #[no_mangle]
-pub extern fn deleteSnapshot(ptr: GraphHandle,  snapshot_id: i64) -> Box<JnaResponse>  {
+pub extern fn garbageCollectSnapshot(ptr: GraphHandle,  snapshot_id: i64) -> Box<JnaResponse>  {
     info!("Delete snapshot in rust {}", snapshot_id);
     JnaResponse::new_success()
 }

@@ -125,9 +125,8 @@ public class JnaGraphStore implements GraphPartition {
 
     @Override
     public void garbageCollect(long snapshotId) throws IOException {
-        logger.info("garbageCollect partition [" + this.partitionId + "]");
         try (JnaResponse response =
-                GraphLibrary.INSTANCE.deleteSnapshot(this.pointer, snapshotId)) {
+                GraphLibrary.INSTANCE.garbageCollectSnapshot(this.pointer, snapshotId)) {
             if (!response.success()) {
                 throw new IOException(response.getErrMsg());
             }

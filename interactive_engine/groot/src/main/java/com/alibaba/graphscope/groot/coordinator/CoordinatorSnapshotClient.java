@@ -4,6 +4,7 @@ import com.alibaba.graphscope.groot.rpc.RpcClient;
 import com.alibaba.maxgraph.proto.groot.*;
 
 import io.grpc.ManagedChannel;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,9 +28,9 @@ public class CoordinatorSnapshotClient extends RpcClient {
         SynchronizeMinQuerySnapshotIdRequest req =
                 SynchronizeMinQuerySnapshotIdRequest.newBuilder().setSnapshotId(snapshotId).build();
         SynchronizeMinQuerySnapshotIdResponse res = stub.synchronizeMinQuerySnapshotId(req);
-        logger.info("synchronizeSnapshot of snapshot [" + snapshotId + "]");
         if (!res.getSuccess()) {
-            throw new RuntimeException("Update store snapshot fail {} " + res.getErrMsg());
+            throw new RuntimeException(
+                    "Synchronize snapshot to store failed: {} " + res.getErrMsg());
         }
     }
 }

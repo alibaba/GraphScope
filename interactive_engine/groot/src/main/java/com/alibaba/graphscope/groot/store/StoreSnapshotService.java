@@ -25,14 +25,15 @@ public class StoreSnapshotService
             SynchronizeMinQuerySnapshotIdRequest request,
             StreamObserver<SynchronizeMinQuerySnapshotIdResponse> responseObserver) {
         long snapshotId = request.getSnapshotId();
-        logger.info("synchronizeMinQuerySnapshotId of snapshot [" + snapshotId + "]");
         this.storeService.garbageCollect(
                 snapshotId,
                 new CompletionCallback<Void>() {
                     @Override
                     public void onCompleted(Void res) {
                         responseObserver.onNext(
-                                SynchronizeMinQuerySnapshotIdResponse.newBuilder().setSuccess(true).build());
+                                SynchronizeMinQuerySnapshotIdResponse.newBuilder()
+                                        .setSuccess(true)
+                                        .build());
                         responseObserver.onCompleted();
                     }
 
