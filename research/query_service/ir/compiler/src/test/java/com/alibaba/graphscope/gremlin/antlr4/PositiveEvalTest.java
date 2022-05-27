@@ -258,6 +258,11 @@ public class PositiveEvalTest {
     }
 
     @Test
+    public void g_V_valueMap() {
+        Assert.assertEquals(g.V().valueMap(), eval("g.V().valueMap()"));
+    }
+
+    @Test
     public void g_V_valueMap_str_test() {
         Assert.assertEquals(g.V().valueMap("name"), eval("g.V().valueMap('name')"));
     }

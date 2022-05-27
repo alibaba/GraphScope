@@ -71,13 +71,27 @@ public enum GremlinResultParserFactory implements GremlinResultParser {
                                 Object parseElement =
                                         ParserUtils.parseElement(column.getEntry().getElement());
                                 if (parseElement instanceof Map) {
-                                    Map<List, Object> projectTags =
-                                            (Map<List, Object>) parseElement;
+                                    Map projectTags = (Map) parseElement;
                                     projectTags.forEach(
                                             (k, v) -> {
                                                 if (!(v instanceof EmptyValue)) {
-                                                    String nameOrId = (String) k.get(1);
-                                                    if (nameOrId.isEmpty()) {
+                                                    String nameOrId = null;
+                                                    if (k
+                                                            instanceof
+                                                            List) { // valueMap("name") -> Map<["",
+                                                        // "name"], value>
+                                                        nameOrId = (String) ((List) k).get(1);
+                                                    } else if (k
+                                                            instanceof
+                                                            String) { // valueMap() -> Map<"name",
+                                                        // value>
+                                                        nameOrId = (String) k;
+                                                    } else if (k
+                                                            instanceof
+                                                            Number) { // valueMap() -> Map<1, value>
+                                                        nameOrId = String.valueOf(k);
+                                                    }
+                                                    if (nameOrId == null || nameOrId.isEmpty()) {
                                                         throw new GremlinResultParserException(
                                                                 "map value should have property"
                                                                         + " key");

@@ -259,7 +259,7 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
     public Traversal visitTraversalMethod_valueMap(
             GremlinGSParser.TraversalMethod_valueMapContext ctx) {
         return graphTraversal.valueMap(
-                GenericLiteralVisitor.getStringLiteralExpr(ctx.stringLiteralExpr()));
+                GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList()));
     }
 
     @Override
