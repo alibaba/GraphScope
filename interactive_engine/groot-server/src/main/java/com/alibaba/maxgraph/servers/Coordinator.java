@@ -165,6 +165,7 @@ public class Coordinator extends NodeBase {
         this.schemaManager.start();
         this.logRecycler.start();
         this.backupManager.start();
+        this.garbageCollectManager.start();
     }
 
     @Override
