@@ -70,7 +70,8 @@ public class IrServiceProducer implements ComputeServiceProducer {
         SnapshotUpdateCommitter updateCommitter = new SnapshotUpdateCommitter(channelManager);
 
         int frontendId = CommonConfig.NODE_IDX.get(configs);
-        FrontendQueryManager queryManager = new FrontendQueryManager(irMetaFetcher, frontendId, updateCommitter);
+        FrontendQueryManager queryManager =
+                new FrontendQueryManager(irMetaFetcher, frontendId, updateCommitter);
 
         return new AbstractService() {
             private IrGremlinServer irGremlinServer =
@@ -96,7 +97,7 @@ public class IrServiceProducer implements ComputeServiceProducer {
             public void stop() {
                 try {
                     irGremlinServer.close();
-                    
+
                     queryManager.stop();
                 } catch (Exception e) {
                     throw new RuntimeException(e);
