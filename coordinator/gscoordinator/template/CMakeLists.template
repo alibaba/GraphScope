@@ -12,6 +12,7 @@ option(PROJECT_FRAME "Whether to build project frame" False)
 option(ENABLE_PREGEL_COMBINE "Whether enable combinator in pregel app." False)
 option(NETWORKX "networkx on?" ON)
 option(ENABLE_JAVA_SDK "Build with support for java sdk" OFF)
+option(GID_AS_LABEL "Use gid as label for lpa algorithm" True)
 
 if (ENABLE_JAVA_SDK)
     #check whether we are using clang.
@@ -46,6 +47,10 @@ endif ()
 
 if (ENABLE_PREGEL_COMBINE)
     add_definitions(-D_ENABLE_COMBINE)
+endif ()
+
+if (GID_AS_LABEL)
+  add_definitions(-DGID_AS_LABEL)
 endif ()
 
 include(CheckCXXCompilerFlag)
