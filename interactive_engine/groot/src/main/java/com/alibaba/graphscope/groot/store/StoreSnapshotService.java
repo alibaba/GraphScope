@@ -32,7 +32,7 @@ public class StoreSnapshotService
                     @Override
                     public void onCompleted(Void res) {
                         responseObserver.onNext(
-                                SynchronizeMinQuerySnapshotIdResponse.newBuilder().build());
+                                SynchronizeMinQuerySnapshotIdResponse.newBuilder().setSuccess(true).build());
                         responseObserver.onCompleted();
                     }
 
