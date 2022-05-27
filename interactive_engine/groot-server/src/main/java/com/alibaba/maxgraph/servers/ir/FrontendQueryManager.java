@@ -96,6 +96,7 @@ public class FrontendQueryManager extends IrMetaQueryCallback {
         @Override
         public void run() {
             long minSnapshotId = 0L;
+            logger.info("updateSnapshot start");
             try {
                 while (!queryQueue.isEmpty() && queryQueue.peek().isDone) {
                     queryQueue.remove();
@@ -109,6 +110,8 @@ public class FrontendQueryManager extends IrMetaQueryCallback {
                     committer.updateSnapshot(frontendId, minSnapshotId);
                     logger.info("update minSnapshotId {} success", minSnapshotId);
                     oldSnapshotId = minSnapshotId;
+                } else {
+                    logger.info("no new snapshot to update");
                 }
             } catch (Exception e) {
                 logger.error("update minSnapshotId {} fail", minSnapshotId, e);
