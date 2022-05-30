@@ -48,7 +48,7 @@ struct Edge {
 };
 typedef int64_t ObjectId;
 
-typedef arrow::util::string_view OuterId;
+typedef int64_t OuterId;
 
 enum PropertyType {
   INVALID = 0,
