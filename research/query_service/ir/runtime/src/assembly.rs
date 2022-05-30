@@ -18,7 +18,6 @@ use std::sync::Arc;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::algebra::join::JoinKind;
 use ir_common::generated::common as common_pb;
-use ir_common::generated::results as result_pb;
 use pegasus::api::function::*;
 use pegasus::api::{
     Collect, CorrelatedSubTask, Count, Dedup, EmitKind, Filter, Fold, FoldByKey, HasAny, IterCondition,
@@ -53,7 +52,7 @@ type RecordFilterMap = Box<dyn FilterMapFunction<Record, Record>>;
 type RecordFlatMap = Box<dyn FlatMapFunction<Record, Record, Target = DynIter<Record>>>;
 type RecordFilter = Box<dyn FilterFunction<Record>>;
 type RecordLeftJoin = Box<dyn ApplyGen<Record, Vec<Record>, Option<Record>>>;
-type RecordEncode = Box<dyn MapFunction<Record, result_pb::Results>>;
+type RecordEncode = Box<dyn MapFunction<Record, Vec<u8>>>;
 type RecordShuffle = Box<dyn RouteFunction<Record>>;
 type RecordCompare = Box<dyn CompareFunction<Record>>;
 type RecordJoin = Box<dyn JoinKeyGen<Record, RecordKey, Record>>;
@@ -470,24 +469,23 @@ impl JobAssembly for IRJobAssembly {
             // TODO: may return Vec<u8> in gen_source;
             let source_iter = self
                 .udf_gen
-                .gen_source(source_op.resource.as_ref())?
-                .map(|r| {
+                .gen_source(source_op.resource.as_ref())?;
+            let source = input
+                .input_from(source_iter.map(|record| {
                     let mut buf: Vec<u8> = vec![];
-                    r.write_to(&mut buf).unwrap();
+                    record.write_to(&mut buf).unwrap();
                     buf
-                });
-            let source = input.input_from(source_iter)?.map(|buf| {
-                let record = Record::read_from(&mut buf.as_slice()).unwrap();
-                Ok(record)
-            })?;
+                }))?
+                .map(|buf| {
+                    let record = Record::read_from(&mut buf.as_slice()).unwrap();
+                    Ok(record)
+                })?;
             let task = decode::<server_pb::TaskPlan>(&plan.plan)?;
             let stream = self.install(source, &task.plan)?;
-            // TODO: may return Vec<u8> in encoder.exec();
             let sink = decode::<server_pb::Sink>(&plan.resource)?;
             let ec = self.udf_gen.gen_sink(&sink.resource)?;
             stream
                 .map(move |record| ec.exec(record))?
-                .map(|res| Ok(res.encode_to_vec()))?
                 .sink_into(output)
         })
     }

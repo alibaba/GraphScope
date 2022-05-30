@@ -25,6 +25,7 @@ use ir_common::generated::common as common_pb;
 use ir_common::generated::results as result_pb;
 use ir_common::{KeyId, NameOrId};
 use pegasus::api::function::{FnResult, MapFunction};
+use prost::Message;
 
 use crate::error::FnGenResult;
 use crate::graph::element::{Edge, GraphElement, GraphObject, GraphPath, Vertex, VertexOrEdge};
@@ -198,8 +199,8 @@ impl RecordSinkEncoder {
     }
 }
 
-impl MapFunction<Record, result_pb::Results> for RecordSinkEncoder {
-    fn exec(&self, input: Record) -> FnResult<result_pb::Results> {
+impl MapFunction<Record, Vec<u8>> for RecordSinkEncoder {
+    fn exec(&self, input: Record) -> FnResult<Vec<u8>> {
         let mut sink_columns = Vec::with_capacity(self.sink_keys.len());
         for sink_key in self.sink_keys.iter() {
             if let Some(entry) = input.get(sink_key.as_ref()) {
@@ -216,12 +217,12 @@ impl MapFunction<Record, result_pb::Results> for RecordSinkEncoder {
 
         let record_pb = result_pb::Record { columns: sink_columns };
         let results = result_pb::Results { inner: Some(result_pb::results::Inner::Record(record_pb)) };
-        Ok(results)
+        Ok(results.encode_to_vec())
     }
 }
 
 impl SinkFunctionGen for algebra_pb::Sink {
-    fn gen_sink(self) -> FnGenResult<Box<dyn MapFunction<Record, result_pb::Results>>> {
+    fn gen_sink(self) -> FnGenResult<Box<dyn MapFunction<Record, Vec<u8>>>> {
         let mut sink_keys = Vec::with_capacity(self.tags.len());
         for sink_key_pb in self.tags.into_iter() {
             let sink_key = sink_key_pb
@@ -244,4 +245,3 @@ impl SinkFunctionGen for algebra_pb::Sink {
         Ok(Box::new(record_sinker))
     }
 }
-
