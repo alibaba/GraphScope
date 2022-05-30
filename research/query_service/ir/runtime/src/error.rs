@@ -108,6 +108,8 @@ pub enum FnExecError {
     NullGraphError,
     /// Query storage error
     QueryStoreError(String),
+    /// Write storage error
+    WriteStoreError(String),
     /// Keyed error
     GetTagError(String),
     /// Evaluating expressions error
@@ -123,6 +125,10 @@ pub enum FnExecError {
 impl FnExecError {
     pub fn query_store_error(e: &str) -> Self {
         FnExecError::QueryStoreError(e.to_string())
+    }
+
+    pub fn write_store_error(e: &str) -> Self {
+        FnExecError::WriteStoreError(e.to_string())
     }
 
     pub fn get_tag_error(e: &str) -> Self {
@@ -147,6 +153,7 @@ impl std::fmt::Display for FnExecError {
         match self {
             FnExecError::NullGraphError => write!(f, "Null graph store error in fn exec",),
             FnExecError::QueryStoreError(e) => write!(f, "Query store error in exec {}", e),
+            FnExecError::WriteStoreError(e) => write!(f, "Write store error in exec {}", e),
             FnExecError::GetTagError(e) => write!(f, "Get tag error in exec {}", e),
             FnExecError::ExprEvalError(e) => write!(f, "Eval expression error in exec {}", e),
             FnExecError::UnExpectedData(e) => write!(f, "Unexpected data type in exec {}", e),
@@ -172,6 +179,10 @@ impl From<FnExecError> for DynError {
                 err
             }
             FnExecError::QueryStoreError(e) => {
+                let err: Box<dyn std::error::Error + Send + Sync> = e.into();
+                err
+            }
+            FnExecError::WriteStoreError(e) => {
                 let err: Box<dyn std::error::Error + Send + Sync> = e.into();
                 err
             }
