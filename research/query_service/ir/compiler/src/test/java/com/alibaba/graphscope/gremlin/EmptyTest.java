@@ -49,8 +49,8 @@ public class EmptyTest {
         IrStandardOpProcessor.applyStrategies(traversal);
         Step step = traversal.asAdmin().getStartStep();
         ScanFusionOp op = (ScanFusionOp) StepTransformFactory.SCAN_FUSION_STEP.apply(step);
-        Assert.assertEquals(false, op.getPredicate().isPresent());
-        Assert.assertEquals(false, op.getLabels().isPresent());
+        Assert.assertEquals(false, op.getParams().get().getPredicate().isPresent());
+        Assert.assertEquals(true, op.getParams().get().getTables().isEmpty());
     }
 
     @Test
@@ -59,8 +59,8 @@ public class EmptyTest {
         IrStandardOpProcessor.applyStrategies(traversal);
         Step step = traversal.asAdmin().getStartStep();
         ScanFusionOp op = (ScanFusionOp) StepTransformFactory.SCAN_FUSION_STEP.apply(step);
-        Assert.assertEquals(false, op.getPredicate().isPresent());
-        Assert.assertEquals(true, op.getLabels().isPresent());
+        Assert.assertEquals(false, op.getParams().get().getPredicate().isPresent());
+        Assert.assertEquals(false, op.getParams().get().getTables().isEmpty());
     }
 
     @Test
@@ -69,8 +69,8 @@ public class EmptyTest {
         IrStandardOpProcessor.applyStrategies(traversal);
         Step step = traversal.asAdmin().getStartStep();
         ScanFusionOp op = (ScanFusionOp) StepTransformFactory.SCAN_FUSION_STEP.apply(step);
-        Assert.assertEquals(true, op.getPredicate().isPresent());
-        Assert.assertEquals(false, op.getLabels().isPresent());
+        Assert.assertEquals(true, op.getParams().get().getPredicate().isPresent());
+        Assert.assertEquals(true, op.getParams().get().getTables().isEmpty());
     }
 
     @Test
@@ -79,6 +79,6 @@ public class EmptyTest {
         IrStandardOpProcessor.applyStrategies(traversal);
         Step step = traversal.asAdmin().getEndStep();
         ExpandOp op = (ExpandOp) StepTransformFactory.VERTEX_STEP.apply(step);
-        Assert.assertEquals(false, op.getLabels().isPresent());
+        Assert.assertEquals(true, op.getParams().get().getTables().isEmpty());
     }
 }

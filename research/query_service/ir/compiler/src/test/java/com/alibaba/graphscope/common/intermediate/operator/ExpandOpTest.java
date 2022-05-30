@@ -20,7 +20,6 @@ import com.alibaba.graphscope.common.IrPlan;
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.jna.IrCoreLibrary;
 import com.alibaba.graphscope.common.jna.type.FfiDirection;
-import com.alibaba.graphscope.common.jna.type.FfiNameOrId;
 import com.alibaba.graphscope.common.utils.FileUtils;
 
 import org.junit.After;
@@ -28,20 +27,18 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
 import java.util.function.Function;
 
 public class ExpandOpTest {
     private static IrCoreLibrary irCoreLib = IrCoreLibrary.INSTANCE;
-    private IrPlan irPlan = new IrPlan();
+    private IrPlan irPlan;
 
     @Test
     public void edgeOptTest() throws IOException {
         ExpandOp op = new ExpandOp();
         op.setEdgeOpt(new OpArg<>(Boolean.valueOf(true), Function.identity()));
         op.setDirection(new OpArg<>(FfiDirection.Out, Function.identity()));
-        irPlan.appendInterOp(-1, op);
+        irPlan = DedupOpTest.getTestIrPlan(op);
         String actual = irPlan.getPlanAsJson();
         Assert.assertEquals(FileUtils.readJsonFromResource("expand_edge_opt.json"), actual);
     }
@@ -51,9 +48,12 @@ public class ExpandOpTest {
         ExpandOp op = new ExpandOp();
         op.setEdgeOpt(new OpArg<>(Boolean.valueOf(true), Function.identity()));
         op.setDirection(new OpArg<>(FfiDirection.Out, Function.identity()));
-        List<FfiNameOrId.ByValue> values = Arrays.asList(irCoreLib.cstrAsNameOrId("knows"));
-        op.setLabels(new OpArg<List, List>(values, Function.identity()));
-        irPlan.appendInterOp(-1, op);
+
+        QueryParams params = new QueryParams();
+        params.addTable(irCoreLib.cstrAsNameOrId("knows"));
+        op.setParams(params);
+
+        irPlan = DedupOpTest.getTestIrPlan(op);
         String actual = irPlan.getPlanAsJson();
         Assert.assertEquals(FileUtils.readJsonFromResource("expand_labels.json"), actual);
     }
@@ -64,7 +64,7 @@ public class ExpandOpTest {
         op.setEdgeOpt(new OpArg<>(Boolean.valueOf(true), Function.identity()));
         op.setDirection(new OpArg<>(FfiDirection.Out, Function.identity()));
         op.setAlias(new OpArg(ArgUtils.asFfiAlias("a", true), Function.identity()));
-        irPlan.appendInterOp(-1, op);
+        irPlan = DedupOpTest.getTestIrPlan(op);
         String actual = irPlan.getPlanAsJson();
         Assert.assertEquals(FileUtils.readJsonFromResource("expand_alias.json"), actual);
     }

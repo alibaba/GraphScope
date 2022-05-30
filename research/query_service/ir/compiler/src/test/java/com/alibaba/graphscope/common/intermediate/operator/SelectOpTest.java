@@ -27,13 +27,13 @@ import java.io.IOException;
 import java.util.function.Function;
 
 public class SelectOpTest {
-    private IrPlan irPlan = new IrPlan();
+    private IrPlan irPlan;
 
     @Test
     public void selectOpTest() throws IOException {
         SelectOp op = new SelectOp();
         op.setPredicate(new OpArg("@.id == 1 && @.name == \"marko\"", Function.identity()));
-        irPlan.appendInterOp(-1, op);
+        irPlan = DedupOpTest.getTestIrPlan(op);
         String actual = irPlan.getPlanAsJson();
         Assert.assertEquals(FileUtils.readJsonFromResource("select_expr.json"), actual);
     }

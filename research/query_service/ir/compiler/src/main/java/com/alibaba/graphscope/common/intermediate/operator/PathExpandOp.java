@@ -40,17 +40,8 @@ public class PathExpandOp extends ExpandOp {
         if (other.getDirection().isPresent()) {
             setDirection(other.getDirection().get());
         }
-        if (other.getLabels().isPresent()) {
-            setLabels(other.getLabels().get());
-        }
-        if (other.getPredicate().isPresent()) {
-            setPredicate(other.getPredicate().get());
-        }
-        if (other.getProperties().isPresent()) {
-            setProperties(other.getProperties().get());
-        }
-        if (other.getLimit().isPresent()) {
-            setLimit(other.getLimit().get());
+        if (other.getParams().isPresent()) {
+            setParams(other.getParams().get());
         }
     }
 

@@ -3,6 +3,7 @@ package com.alibaba.graphscope.ir.maxgraph;
 import com.alibaba.graphscope.common.client.RpcChannelFetcher;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.PegasusConfig;
+import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
 import com.alibaba.graphscope.common.store.IrMetaFetcher;
 import com.alibaba.graphscope.gremlin.integration.result.TestGraphFactory;
 import com.alibaba.graphscope.gremlin.service.IrGremlinServer;
@@ -52,7 +53,12 @@ public class Frontend extends com.alibaba.maxgraph.frontendservice.Frontend {
         RpcChannelFetcher channelFetcher = new RpcAddressChannelFetcher(addressFetcher);
 
         this.gremlinServer = new IrGremlinServer(this.instanceConfig.getGremlinServerPort());
-        this.gremlinServer.start(configs, irMetaFetcher, channelFetcher, TestGraphFactory.VINEYARD);
+        this.gremlinServer.start(
+                configs,
+                irMetaFetcher,
+                channelFetcher,
+                new IrMetaQueryCallback(irMetaFetcher),
+                TestGraphFactory.VINEYARD);
 
         this.gremlinServerPort = gremlinServer.getGremlinServerPort();
     }

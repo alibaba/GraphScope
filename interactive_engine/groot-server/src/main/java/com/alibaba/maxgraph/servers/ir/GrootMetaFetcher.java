@@ -16,6 +16,7 @@
 
 package com.alibaba.maxgraph.servers.ir;
 
+import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.common.store.IrMetaFetcher;
 import com.alibaba.maxgraph.common.util.IrSchemaParser;
 import com.alibaba.maxgraph.compiler.api.schema.*;
@@ -24,7 +25,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.*;
 
-public class GrootMetaFetcher extends IrMetaFetcher {
+public class GrootMetaFetcher implements IrMetaFetcher {
     private IrSchemaParser parser;
     private SchemaFetcher schemaFetcher;
 
@@ -34,11 +35,14 @@ public class GrootMetaFetcher extends IrMetaFetcher {
     }
 
     @Override
-    protected Optional<String> getIrMeta() {
+    public Optional<IrMeta> fetch() {
         Pair<GraphSchema, Long> pair = this.schemaFetcher.getSchemaSnapshotPair();
         GraphSchema schema;
-        if (pair != null && (schema = pair.getLeft()) != null) {
-            return Optional.of(parser.parse(schema));
+        Long snapshotId;
+        if (pair != null
+                && (schema = pair.getLeft()) != null
+                && (snapshotId = pair.getRight()) != null) {
+            return Optional.of(new IrMeta(parser.parse(schema), snapshotId));
         } else {
             return Optional.empty();
         }

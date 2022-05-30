@@ -20,7 +20,6 @@ import com.alibaba.graphscope.common.IrPlan;
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.jna.IrCoreLibrary;
 import com.alibaba.graphscope.common.jna.type.FfiConst;
-import com.alibaba.graphscope.common.jna.type.FfiNameOrId;
 import com.alibaba.graphscope.common.jna.type.FfiScanOpt;
 import com.alibaba.graphscope.common.utils.FileUtils;
 
@@ -35,13 +34,13 @@ import java.util.function.Function;
 
 public class ScanFusionOpTest {
     private IrCoreLibrary irCoreLib = IrCoreLibrary.INSTANCE;
-    private IrPlan irPlan = new IrPlan();
+    private IrPlan irPlan;
 
     @Test
     public void scanOptTest() throws IOException {
         ScanFusionOp op = new ScanFusionOp();
         op.setScanOpt(new OpArg<>(FfiScanOpt.Entity, Function.identity()));
-        irPlan.appendInterOp(-1, op);
+        irPlan = DedupOpTest.getTestIrPlan(op);
         String actual = irPlan.getPlanAsJson();
         Assert.assertEquals(FileUtils.readJsonFromResource("scan_opt.json"), actual);
     }
@@ -50,8 +49,12 @@ public class ScanFusionOpTest {
     public void predicateTest() throws IOException {
         ScanFusionOp op = new ScanFusionOp();
         op.setScanOpt(new OpArg<>(FfiScanOpt.Entity, Function.identity()));
-        op.setPredicate(new OpArg("@.id == 1", Function.identity()));
-        irPlan.appendInterOp(-1, op);
+
+        QueryParams params = new QueryParams();
+        params.setPredicate("@.id == 1");
+        op.setParams(params);
+
+        irPlan = DedupOpTest.getTestIrPlan(op);
         String actual = irPlan.getPlanAsJson();
         Assert.assertEquals(FileUtils.readJsonFromResource("scan_expr.json"), actual);
     }
@@ -60,9 +63,12 @@ public class ScanFusionOpTest {
     public void labelsTest() throws IOException {
         ScanFusionOp op = new ScanFusionOp();
         op.setScanOpt(new OpArg<>(FfiScanOpt.Entity, Function.identity()));
-        List<FfiNameOrId.ByValue> values = Arrays.asList(irCoreLib.cstrAsNameOrId("person"));
-        op.setLabels(new OpArg<List, List>(values, Function.identity()));
-        irPlan.appendInterOp(-1, op);
+
+        QueryParams params = new QueryParams();
+        params.addTable(irCoreLib.cstrAsNameOrId("person"));
+        op.setParams(params);
+
+        irPlan = DedupOpTest.getTestIrPlan(op);
         String actual = irPlan.getPlanAsJson();
         Assert.assertEquals(FileUtils.readJsonFromResource("scan_labels.json"), actual);
     }
@@ -74,7 +80,7 @@ public class ScanFusionOpTest {
         List<FfiConst.ByValue> values =
                 Arrays.asList(irCoreLib.int64AsConst(1L), irCoreLib.int64AsConst(2L));
         op.setIds(new OpArg<List, List>(values, Function.identity()));
-        irPlan.appendInterOp(-1, op);
+        irPlan = DedupOpTest.getTestIrPlan(op);
         String actual = irPlan.getPlanAsJson();
         Assert.assertEquals(FileUtils.readJsonFromResource("scan_ids.json"), actual);
     }
@@ -84,7 +90,7 @@ public class ScanFusionOpTest {
         ScanFusionOp op = new ScanFusionOp();
         op.setScanOpt(new OpArg<>(FfiScanOpt.Entity, Function.identity()));
         op.setAlias(new OpArg(ArgUtils.asFfiAlias("a", true), Function.identity()));
-        irPlan.appendInterOp(-1, op);
+        irPlan = DedupOpTest.getTestIrPlan(op);
         String actual = irPlan.getPlanAsJson();
         Assert.assertEquals(FileUtils.readJsonFromResource("scan_alias.json"), actual);
     }

@@ -90,13 +90,13 @@ import java.util.concurrent.locks.ReentrantLock;
  * querySnapshotId - consumed snapshotId of each GraphNode // not necessary? - consumed offset of
  * each queue on each GraphNode
  *
- * <p>When and in what frequency should we persist these information: - "last generated
+ * <p>When and in what frequency should we persist this information: - "last generated
  * writeSnapshotId" and "last available querySnapshotId" are the same. They must be persisted before
  * they are broadcast to the Frontend nodes. Otherwise, the system might step backward after process
  * recovery, which is not acceptable.
  *
  * <p>- "consumed snapshotId of each GraphNode" and "consumed offset of each queue on each
- * GraphNode" can be persisted asynchronously. We can endure lost the latest value of these
+ * GraphNode" can be persisted asynchronously. We can endure lost the latest value of this
  * information. The only drawback is that the data replay might process some duplicate data, which
  * is acceptable.
  *
