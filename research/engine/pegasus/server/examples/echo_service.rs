@@ -1,11 +1,12 @@
-use log::info;
-use pegasus::api::Sink;
-use pegasus::{BuildJobError, JobConf, ServerConf, Worker};
-use pegasus_server::job::{JobAssembly, JobDesc};
 use std::io::Write;
 use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::time::Instant;
+
+use log::info;
+use pegasus::api::Sink;
+use pegasus::{BuildJobError, JobConf, ServerConf, Worker};
+use pegasus_server::job::{JobAssembly, JobDesc};
 use structopt::StructOpt;
 use tokio_stream::StreamExt;
 

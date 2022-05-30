@@ -227,7 +227,8 @@ pub struct RPCJobServer<S: pb::job_service_server::JobService> {
 
 /// start both rpc server and pegasus server
 pub async fn start_all<P, D, E>(
-    rpc_config: RPCServerConfig, server_config: Configuration, assemble: P, server_detector: D, mut listener: E,
+    rpc_config: RPCServerConfig, server_config: Configuration, assemble: P, server_detector: D,
+    mut listener: E,
 ) -> Result<(), Box<dyn std::error::Error>>
 where
     P: JobAssembly,

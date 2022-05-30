@@ -1,6 +1,7 @@
+use std::net::SocketAddr;
+
 use crate::job::JobAssembly;
 use crate::rpc::{RPCServerConfig, ServiceStartListener};
-use std::net::SocketAddr;
 
 struct StandaloneServiceListener;
 
