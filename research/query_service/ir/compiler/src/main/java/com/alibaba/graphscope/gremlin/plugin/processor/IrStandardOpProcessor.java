@@ -300,27 +300,16 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         long jobId = JOB_ID_COUNTER.incrementAndGet();
         String jobName = "ir_plan_" + jobId;
 
-        PegasusClient.JobRequest request =
-                PegasusClient.JobRequest.parseFrom(physicalPlanBytes);
+        PegasusClient.JobRequest request = PegasusClient.JobRequest.parseFrom(physicalPlanBytes);
         PegasusClient.JobConfig jobConfig =
                 PegasusClient.JobConfig.newBuilder()
                         .setJobId(jobId)
                         .setJobName(jobName)
-                        .setWorkers(
-                                PegasusConfig.PEGASUS_WORKER_NUM.get(
-                                        configs))
-                        .setBatchSize(
-                                PegasusConfig.PEGASUS_BATCH_SIZE.get(
-                                        configs))
-                        .setMemoryLimit(
-                                PegasusConfig.PEGASUS_MEMORY_LIMIT.get(
-                                        configs))
-                        .setBatchCapacity(
-                                PegasusConfig.PEGASUS_OUTPUT_CAPACITY
-                                        .get(configs))
-                        .setTimeLimit(
-                                PegasusConfig.PEGASUS_TIMEOUT.get(
-                                        configs))
+                        .setWorkers(PegasusConfig.PEGASUS_WORKER_NUM.get(configs))
+                        .setBatchSize(PegasusConfig.PEGASUS_BATCH_SIZE.get(configs))
+                        .setMemoryLimit(PegasusConfig.PEGASUS_MEMORY_LIMIT.get(configs))
+                        .setBatchCapacity(PegasusConfig.PEGASUS_OUTPUT_CAPACITY.get(configs))
+                        .setTimeLimit(PegasusConfig.PEGASUS_TIMEOUT.get(configs))
                         .setAll(PegasusClient.Empty.newBuilder().build())
                         .build();
         request = request.toBuilder().setConf(jobConfig).build();

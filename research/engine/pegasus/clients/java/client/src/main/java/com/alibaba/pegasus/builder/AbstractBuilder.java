@@ -15,10 +15,10 @@
  */
 package com.alibaba.pegasus.builder;
 
-import com.alibaba.pegasus.service.protocol.PegasusClient.JobConfig;
-import com.alibaba.pegasus.service.protocol.PegasusClient.JobRequest;
 import com.alibaba.pegasus.service.job.protocol.JobClient.Sink;
 import com.alibaba.pegasus.service.job.protocol.JobClient.TaskPlan;
+import com.alibaba.pegasus.service.protocol.PegasusClient.JobConfig;
+import com.alibaba.pegasus.service.protocol.PegasusClient.JobRequest;
 import com.google.protobuf.ByteString;
 
 public abstract class AbstractBuilder {
@@ -85,7 +85,11 @@ public abstract class AbstractBuilder {
         return JobRequest.newBuilder()
                 .setConf(this.conf)
                 .setSource(this.source)
-                .setPlan(TaskPlan.newBuilder().addAllPlan(this.plan.getPlan()).build().toByteString())
+                .setPlan(
+                        TaskPlan.newBuilder()
+                                .addAllPlan(this.plan.getPlan())
+                                .build()
+                                .toByteString())
                 .setResource(sink.toByteString())
                 .build();
     }
