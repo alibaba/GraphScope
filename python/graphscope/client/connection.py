@@ -20,6 +20,7 @@
 """
 
 import grpc
+import base64
 from gremlin_python.driver.driver_remote_connection import DriverRemoteConnection
 from gremlin_python.process.anonymous_traversal import traversal
 
@@ -88,14 +89,28 @@ class Graph:
         return self._conn.batch_write(request)
 
 
+class BasicAuthPlugin(grpc.AuthMetadataPlugin):
+    def __init__(self, username, password):
+        self.secret = username + ':' + password
+        self.secret = base64.b64encode(self.secret.encode('utf-8')).decode('utf-8')
+
+    def __call__(self, context, callback):
+        metadata = [('Authorization', 'Basic ' + self.secret)]
+        callback(metadata, None)
+
 class Connection:
-    def __init__(self, addr, gremlin_endpoint=None) -> None:
+    def __init__(self, addr, gremlin_endpoint=None, username=None, password=None) -> None:
         self._addr = addr
         self._gremlin_endpoint = gremlin_endpoint
         self._conn = None
+        if username is not None and password is not None:
+            auth = BasicAuthPlugin(username, password)
+            crendential = grpc.metadata_call_credentials(auth)
+        else:
+            crendential = None
         channel = grpc.insecure_channel(addr)
-        self._ddl_service_stub = ddl_service_pb2_grpc.ClientDdlStub(channel)
-        self._write_service_stub = write_service_pb2_grpc.ClientWriteStub(channel)
+        self._ddl_service_stub = ddl_service_pb2_grpc.ClientDdlStub(channel, credentials=crendential)
+        self._write_service_stub = write_service_pb2_grpc.ClientWriteStub(channel, credentials=crendential)
         self._client_id = None
 
     def close(self):
