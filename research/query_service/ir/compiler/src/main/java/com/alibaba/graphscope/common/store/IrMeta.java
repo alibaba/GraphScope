@@ -16,8 +16,24 @@
 
 package com.alibaba.graphscope.common.store;
 
-import java.util.Optional;
+public class IrMeta {
+    private long snapshotId;
+    private String schema;
 
-public interface IrMetaFetcher {
-    Optional<IrMeta> fetch();
+    public IrMeta(String schema) {
+        this.schema = schema;
+    }
+
+    public IrMeta(String schema, long snapshotId) {
+        this.schema = schema;
+        this.snapshotId = snapshotId;
+    }
+
+    public long getSnapshotId() {
+        return snapshotId;
+    }
+
+    public String getSchema() {
+        return schema;
+    }
 }

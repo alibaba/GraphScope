@@ -16,6 +16,7 @@
 
 package com.alibaba.graphscope.ir.maxgraph;
 
+import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.common.store.IrMetaFetcher;
 import com.alibaba.graphscope.common.utils.JsonUtils;
 import com.alibaba.maxgraph.common.cluster.InstanceConfig;
@@ -26,25 +27,19 @@ import com.google.common.collect.ImmutableMap;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class VineyardMetaFetcher extends IrMetaFetcher {
-    private InstanceConfig instanceConfig;
+public class VineyardMetaFetcher implements IrMetaFetcher {
+    private IrMeta irMeta;
 
     public VineyardMetaFetcher(InstanceConfig instanceConfig) {
-        this.instanceConfig = instanceConfig;
-        super.fetch();
-    }
-
-    @Override
-    protected Optional<String> getIrMeta() {
         String schemaPath = instanceConfig.getVineyardSchemaPath();
         JsonFileSchemaFetcher fetcher = new JsonFileSchemaFetcher(schemaPath);
         GraphSchema graphSchema = fetcher.getSchemaSnapshotPair().getLeft();
-        return Optional.of(parseSchema(graphSchema));
+        this.irMeta = new IrMeta(parseSchema(graphSchema));
     }
 
     @Override
-    public void fetch() {
-        // do nothing
+    public Optional<IrMeta> fetch() {
+        return Optional.of(irMeta);
     }
 
     private String parseSchema(GraphSchema graphSchema) {

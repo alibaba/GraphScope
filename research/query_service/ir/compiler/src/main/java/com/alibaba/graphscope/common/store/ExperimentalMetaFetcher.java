@@ -26,29 +26,18 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.Optional;
 
-public class ExperimentalMetaFetcher extends IrMetaFetcher {
+public class ExperimentalMetaFetcher implements IrMetaFetcher {
     private static final Logger logger = LoggerFactory.getLogger(ExperimentalMetaFetcher.class);
-    private Configs configs;
+    private IrMeta meta;
 
-    public ExperimentalMetaFetcher(Configs configs) {
-        this.configs = configs;
-        super.fetch();
-    }
-
-    @Override
-    protected Optional<String> getIrMeta() {
+    public ExperimentalMetaFetcher(Configs configs) throws IOException {
         String schemaFilePath = GraphConfig.GRAPH_SCHEMA.get(configs);
-        try {
-            String schema = Utils.readStringFromFile(schemaFilePath);
-            return Optional.of(schema);
-        } catch (IOException e) {
-            logger.info("open schema file {} fail", schemaFilePath);
-            throw new RuntimeException(e);
-        }
+        String schema = Utils.readStringFromFile(schemaFilePath);
+        this.meta = (new IrMeta(schema));
     }
 
     @Override
-    public void fetch() {
-        // the meta from the static file is created in the constructor, here just do nothing
+    public Optional<IrMeta> fetch() {
+        return Optional.of(this.meta);
     }
 }

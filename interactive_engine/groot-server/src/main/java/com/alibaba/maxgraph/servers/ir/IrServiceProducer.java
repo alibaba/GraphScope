@@ -23,6 +23,7 @@ import com.alibaba.graphscope.gremlin.integration.result.TestGraphFactory;
 import com.alibaba.graphscope.gremlin.service.IrGremlinServer;
 import com.alibaba.graphscope.groot.discovery.DiscoveryFactory;
 import com.alibaba.graphscope.groot.discovery.NodeDiscovery;
+import com.alibaba.graphscope.groot.frontend.SnapshotUpdateCommitter;
 import com.alibaba.graphscope.groot.frontend.WriteSessionGenerator;
 import com.alibaba.graphscope.groot.frontend.write.GraphWriter;
 import com.alibaba.graphscope.groot.meta.MetaService;
@@ -66,6 +67,12 @@ public class IrServiceProducer implements ComputeServiceProducer {
         com.alibaba.graphscope.common.config.Configs irConfigs = getConfigs();
         IrMetaFetcher irMetaFetcher = new GrootMetaFetcher(schemaFetcher);
 
+        SnapshotUpdateCommitter updateCommitter = new SnapshotUpdateCommitter(channelManager);
+
+        int frontendId = CommonConfig.NODE_IDX.get(configs);
+        FrontendQueryManager queryManager =
+                new FrontendQueryManager(irMetaFetcher, frontendId, updateCommitter);
+
         return new AbstractService() {
             private IrGremlinServer irGremlinServer =
                     new IrGremlinServer(GremlinConfig.GREMLIN_PORT.get(configs));
@@ -74,7 +81,13 @@ public class IrServiceProducer implements ComputeServiceProducer {
             public void start() {
                 try {
                     irGremlinServer.start(
-                            irConfigs, irMetaFetcher, channelFetcher, TestGraphFactory.GROOT);
+                            irConfigs,
+                            irMetaFetcher,
+                            channelFetcher,
+                            queryManager,
+                            TestGraphFactory.GROOT);
+
+                    queryManager.start();
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
@@ -84,6 +97,8 @@ public class IrServiceProducer implements ComputeServiceProducer {
             public void stop() {
                 try {
                     irGremlinServer.close();
+
+                    queryManager.stop();
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }

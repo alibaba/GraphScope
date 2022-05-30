@@ -24,14 +24,25 @@ public class GetVOp extends InterOpBase {
 
     public GetVOp() {
         super();
-        getVOpt = Optional.empty();
+        this.getVOpt = Optional.empty();
+        this.params = Optional.empty();
     }
 
     public Optional<OpArg> getGetVOpt() {
         return getVOpt;
     }
 
+    private Optional<QueryParams> params;
+
+    public Optional<QueryParams> getParams() {
+        return this.params;
+    }
+
     public void setGetVOpt(OpArg getVOpt) {
         this.getVOpt = Optional.of(getVOpt);
+    }
+
+    public void setParams(QueryParams params) {
+        this.params = Optional.of(params);
     }
 }

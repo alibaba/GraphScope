@@ -39,4 +39,6 @@ public interface GraphPartition extends Closeable {
     GraphPartitionBackup openBackupEngine();
 
     int getId();
+
+    void garbageCollect(long snapshotId) throws IOException;
 }

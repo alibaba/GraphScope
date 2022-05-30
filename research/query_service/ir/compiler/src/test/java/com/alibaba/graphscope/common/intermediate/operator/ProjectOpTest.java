@@ -34,7 +34,7 @@ import java.util.List;
 import java.util.function.Function;
 
 public class ProjectOpTest {
-    private IrPlan irPlan = new IrPlan();
+    private IrPlan irPlan;
 
     @Test
     public void projectKeyTest() throws IOException {
@@ -45,7 +45,7 @@ public class ProjectOpTest {
         List<Pair> exprWithAlias = Arrays.asList(Pair.with(projectExpr, alias));
 
         op.setExprWithAlias(new OpArg(exprWithAlias, Function.identity()));
-        irPlan.appendInterOp(-1, op);
+        irPlan = DedupOpTest.getTestIrPlan(op);
         Assert.assertEquals(
                 FileUtils.readJsonFromResource("project_key.json"), irPlan.getPlanAsJson());
     }
@@ -55,16 +55,14 @@ public class ProjectOpTest {
         ScanFusionOp scanOp = new ScanFusionOp();
         scanOp.setScanOpt(new OpArg<>(FfiScanOpt.Entity, Function.identity()));
         scanOp.setAlias(new OpArg(ArgUtils.asFfiAlias("a", true), Function.identity()));
-        irPlan.appendInterOp(-1, scanOp);
 
-        ProjectOp op = new ProjectOp();
-
+        ProjectOp projectOp = new ProjectOp();
         String projectExpr = "@a.name";
         FfiAlias.ByValue alias = ArgUtils.asFfiAlias("a_name", false);
         List<Pair> exprWithAlias = Collections.singletonList(Pair.with(projectExpr, alias));
+        projectOp.setExprWithAlias(new OpArg(exprWithAlias, Function.identity()));
 
-        op.setExprWithAlias(new OpArg(exprWithAlias, Function.identity()));
-        irPlan.appendInterOp(0, op);
+        irPlan = DedupOpTest.getTestIrPlan(scanOp, projectOp);
         Assert.assertEquals(
                 FileUtils.readJsonFromResource("project_tag_key.json"), irPlan.getPlanAsJson());
     }
@@ -74,16 +72,14 @@ public class ProjectOpTest {
         ScanFusionOp scanOp = new ScanFusionOp();
         scanOp.setScanOpt(new OpArg<>(FfiScanOpt.Entity, Function.identity()));
         scanOp.setAlias(new OpArg(ArgUtils.asFfiAlias("a", true), Function.identity()));
-        irPlan.appendInterOp(-1, scanOp);
 
         ProjectOp op = new ProjectOp();
-
         String projectExpr = "{@a.name, @a.id}";
         FfiAlias.ByValue alias = ArgUtils.asFfiAlias("a_{name, id}", false);
         List<Pair> exprWithAlias = Collections.singletonList(Pair.with(projectExpr, alias));
-
         op.setExprWithAlias(new OpArg(exprWithAlias, Function.identity()));
-        irPlan.appendInterOp(0, op);
+
+        irPlan = DedupOpTest.getTestIrPlan(scanOp, op);
         Assert.assertEquals(
                 FileUtils.readJsonFromResource("project_tag_keys.json"), irPlan.getPlanAsJson());
     }

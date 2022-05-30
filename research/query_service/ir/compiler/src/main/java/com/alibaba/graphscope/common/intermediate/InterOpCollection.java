@@ -16,7 +16,6 @@
 
 package com.alibaba.graphscope.common.intermediate;
 
-import com.alibaba.graphscope.common.IrPlan;
 import com.alibaba.graphscope.common.exception.InterOpIllegalArgException;
 import com.alibaba.graphscope.common.intermediate.operator.ApplyOp;
 import com.alibaba.graphscope.common.intermediate.operator.InterOpBase;
@@ -43,14 +42,6 @@ public class InterOpCollection {
         opCollection = new ArrayList<>();
     }
 
-    public IrPlan buildIrPlan() {
-        applyStrategies(this);
-        process(this);
-        IrPlan irPlan = new IrPlan();
-        irPlan.appendInterOpCollection(-1, this);
-        return irPlan;
-    }
-
     public List<InterOpBase> unmodifiableCollection() {
         return UnmodifiableList.decorate(this.opCollection);
     }
@@ -63,7 +54,7 @@ public class InterOpCollection {
         opCollection.remove(i);
     }
 
-    private void applyStrategies(InterOpCollection opCollection) {
+    public static void applyStrategies(InterOpCollection opCollection) {
         opCollection
                 .unmodifiableCollection()
                 .forEach(
@@ -85,7 +76,7 @@ public class InterOpCollection {
         strategies.forEach(k -> k.apply(opCollection));
     }
 
-    private void process(InterOpCollection opCollection) {
+    public static void process(InterOpCollection opCollection) {
         // only traverse root opCollection for SinkOutputProcessor
         processors.forEach(k -> k.process(opCollection));
     }

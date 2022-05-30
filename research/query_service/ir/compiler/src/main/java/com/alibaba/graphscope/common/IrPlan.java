@@ -27,6 +27,7 @@ import com.alibaba.graphscope.common.intermediate.operator.*;
 import com.alibaba.graphscope.common.intermediate.process.SinkArg;
 import com.alibaba.graphscope.common.jna.IrCoreLibrary;
 import com.alibaba.graphscope.common.jna.type.*;
+import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.common.utils.ClassUtils;
 import com.alibaba.graphscope.gremlin.Utils;
 import com.sun.jna.Pointer;
@@ -47,6 +48,7 @@ public class IrPlan implements Closeable {
     private static IrCoreLibrary irCoreLib = IrCoreLibrary.INSTANCE;
     private static String PLAN_JSON_FILE = "plan.json";
     private Pointer ptrPlan;
+    private IrMeta meta;
 
     // call libc to transform from InterOpBase to c structure
     private enum TransformFactory implements Function<InterOpBase, Pointer> {
@@ -63,10 +65,13 @@ public class IrPlan implements Closeable {
                 Pointer scan = irCoreLib.initScanOperator(ffiScanOpt);
 
                 // set params
-                FfiError e1 = irCoreLib.setScanParams(scan, getQueryParams(op));
-                if (e1.code != ResultCode.Success) {
-                    throw new InterOpIllegalArgException(
-                            baseOp.getClass(), "params", "setScanParams returns " + e1.msg);
+                Optional<QueryParams> paramsOpt = op.getParams();
+                if (paramsOpt.isPresent()) {
+                    FfiError e1 = irCoreLib.setScanParams(scan, createParams(paramsOpt.get()));
+                    if (e1.code != ResultCode.Success) {
+                        throw new InterOpIllegalArgException(
+                                baseOp.getClass(), "params", "setScanParams returns " + e1.msg);
+                    }
                 }
 
                 // set index predicate
@@ -87,8 +92,6 @@ public class IrPlan implements Closeable {
                         irCoreLib.addScanIndexPredicate(scan, idsPredicate);
                     }
                 }
-                // todo: add other predicates
-                // todo: add limit
 
                 Optional<OpArg> aliasOpt = baseOp.getAlias();
                 if (aliasOpt.isPresent()) {
@@ -96,34 +99,6 @@ public class IrPlan implements Closeable {
                     irCoreLib.setScanAlias(scan, alias);
                 }
                 return scan;
-            }
-
-            private Pointer getQueryParams(ScanFusionOp op) {
-                Optional<OpArg> labels = op.getLabels();
-                Pointer ptrParams = irCoreLib.initQueryParams();
-                if (labels.isPresent()) {
-                    List<FfiNameOrId.ByValue> ffiLabels =
-                            (List<FfiNameOrId.ByValue>) labels.get().applyArg();
-                    for (FfiNameOrId.ByValue label : ffiLabels) {
-                        FfiError error = irCoreLib.addParamsTable(ptrParams, label);
-                        if (error.code != ResultCode.Success) {
-                            throw new InterOpIllegalArgException(
-                                    op.getClass(), "tables", "addParamsTable returns " + error.msg);
-                        }
-                    }
-                }
-                Optional<OpArg> predicate = op.getPredicate();
-                if (predicate.isPresent()) {
-                    String expr = (String) predicate.get().applyArg();
-                    FfiError error = irCoreLib.setParamsPredicate(ptrParams, expr);
-                    if (error.code != ResultCode.Success) {
-                        throw new InterOpIllegalArgException(
-                                op.getClass(),
-                                "predicate",
-                                "setParamsPredicate returns " + error.msg);
-                    }
-                }
-                return ptrParams;
             }
         },
         SELECT_OP {
@@ -165,37 +140,22 @@ public class IrPlan implements Closeable {
                 Boolean isEdge = (Boolean) edgeOpt.get().applyArg();
                 Pointer expand = irCoreLib.initEdgexpdOperator(isEdge, ffiDirection);
 
-                FfiError e1 = irCoreLib.setEdgexpdParams(expand, getQueryParams(op));
-                if (e1.code != ResultCode.Success) {
-                    throw new InterOpIllegalArgException(
-                            op.getClass(), "params", "setEdgexpdParams returns " + e1.msg);
+                // set params
+                Optional<QueryParams> paramsOpt = op.getParams();
+                if (paramsOpt.isPresent()) {
+                    FfiError e1 = irCoreLib.setEdgexpdParams(expand, createParams(paramsOpt.get()));
+                    if (e1.code != ResultCode.Success) {
+                        throw new InterOpIllegalArgException(
+                                baseOp.getClass(), "params", "setEdgexpdParams returns " + e1.msg);
+                    }
                 }
-                // todo: add properties
-                // todo: add predicates
-                // todo: add limit
+
                 Optional<OpArg> aliasOpt = baseOp.getAlias();
                 if (aliasOpt.isPresent() && ClassUtils.equalClass(baseOp, ExpandOp.class)) {
                     FfiAlias.ByValue alias = (FfiAlias.ByValue) aliasOpt.get().applyArg();
                     irCoreLib.setEdgexpdAlias(expand, alias);
                 }
                 return expand;
-            }
-
-            private Pointer getQueryParams(ExpandOp op) {
-                Pointer ptrParams = irCoreLib.initQueryParams();
-                Optional<OpArg> labels = op.getLabels();
-                if (labels.isPresent()) {
-                    List<FfiNameOrId.ByValue> ffiLabels =
-                            (List<FfiNameOrId.ByValue>) labels.get().applyArg();
-                    for (FfiNameOrId.ByValue label : ffiLabels) {
-                        FfiError error = irCoreLib.addParamsTable(ptrParams, label);
-                        if (error.code != ResultCode.Success) {
-                            throw new InterOpIllegalArgException(
-                                    op.getClass(), "tables", "addParamsTable returns " + error.msg);
-                        }
-                    }
-                }
-                return ptrParams;
             }
         },
         LIMIT_OP {
@@ -411,6 +371,16 @@ public class IrPlan implements Closeable {
                 FfiVOpt ffiVOpt = (FfiVOpt) vOpt.get().applyArg();
                 Pointer ptrGetV = irCoreLib.initGetvOperator(ffiVOpt);
 
+                // set params
+                Optional<QueryParams> paramsOpt = getVOp.getParams();
+                if (paramsOpt.isPresent()) {
+                    FfiError e1 = irCoreLib.setGetvParams(ptrGetV, createParams(paramsOpt.get()));
+                    if (e1.code != ResultCode.Success) {
+                        throw new InterOpIllegalArgException(
+                                baseOp.getClass(), "params", "setGetvParams returns " + e1.msg);
+                    }
+                }
+
                 // set alias
                 Optional<OpArg> aliasOpt = baseOp.getAlias();
                 if (aliasOpt.isPresent()) {
@@ -519,18 +489,72 @@ public class IrPlan implements Closeable {
                 }
                 return ptrMatch;
             }
+        };
+
+        public Pointer createParams(QueryParams params) {
+            Pointer ptrParams = irCoreLib.initQueryParams();
+            for (FfiNameOrId.ByValue table : params.getTables()) {
+                FfiError error = irCoreLib.addParamsTable(ptrParams, table);
+                if (error.code != ResultCode.Success) {
+                    throw new InterOpIllegalArgException(
+                            InterOpBase.class, "table", "addParamsTable returns " + error.msg);
+                }
+            }
+            for (FfiNameOrId.ByValue column : params.getColumns()) {
+                FfiError error = irCoreLib.addParamsColumn(ptrParams, column);
+                if (error.code != ResultCode.Success) {
+                    throw new InterOpIllegalArgException(
+                            InterOpBase.class, "column", "addParamsColumn returns " + error.msg);
+                }
+            }
+            Optional<String> predicateOpt = params.getPredicate();
+            if (predicateOpt.isPresent()) {
+                FfiError error = irCoreLib.setParamsPredicate(ptrParams, predicateOpt.get());
+                if (error.code != ResultCode.Success) {
+                    throw new InterOpIllegalArgException(
+                            InterOpBase.class,
+                            "predicate",
+                            "setParamsPredicate returns " + error.msg);
+                }
+            }
+            Optional<Pair<Integer, Integer>> rangeOpt = params.getRange();
+            if (rangeOpt.isPresent()) {
+                Pair<Integer, Integer> range = rangeOpt.get();
+                FfiError error =
+                        irCoreLib.setParamsRange(ptrParams, range.getValue0(), range.getValue1());
+                if (error.code != ResultCode.Success) {
+                    throw new InterOpIllegalArgException(
+                            InterOpBase.class, "range", "setParamsRange returns " + error.msg);
+                }
+            }
+            // todo: set snapshot from meta
+            return ptrParams;
         }
     }
 
-    public IrPlan() {
+    public IrPlan(IrMeta meta, InterOpCollection opCollection) {
+        this.meta = meta;
+        irCoreLib.setSchema(meta.getSchema());
         this.ptrPlan = irCoreLib.initLogicalPlan();
+        appendInterOpCollection(-1, opCollection);
     }
 
-    @Override
-    public void close() {
-        if (ptrPlan != null) {
-            irCoreLib.destroyLogicalPlan(ptrPlan);
+    public byte[] toPhysicalBytes(Configs configs) throws BuildPhysicalException {
+        if (ptrPlan == null) {
+            throw new BuildPhysicalException("ptrPlan is NullPointer");
         }
+        // hack way to notify shuffle
+        int servers = PegasusConfig.PEGASUS_HOSTS.get(configs).split(",").length;
+        int workers = PegasusConfig.PEGASUS_WORKER_NUM.get(configs);
+        FfiData.ByValue buffer = irCoreLib.buildPhysicalPlan(ptrPlan, workers, servers);
+        FfiError error = buffer.error;
+        if (error.code != ResultCode.Success) {
+            throw new BuildPhysicalException(
+                    "call libc returns " + error.code.name() + ", msg is " + error.msg);
+        }
+        byte[] bytes = buffer.getBytes();
+        buffer.close();
+        return bytes;
     }
 
     public String getPlanAsJson() throws IOException {
@@ -549,8 +573,15 @@ public class IrPlan implements Closeable {
         return json;
     }
 
+    @Override
+    public void close() {
+        if (ptrPlan != null) {
+            irCoreLib.destroyLogicalPlan(ptrPlan);
+        }
+    }
+
     // return id of the first operator, id of the last operator
-    public Pair<Integer, Integer> appendInterOpCollection(
+    private Pair<Integer, Integer> appendInterOpCollection(
             int parentId, InterOpCollection opCollection) {
         int subTaskRootId = 0;
         int unionParentId = 0;
@@ -568,7 +599,7 @@ public class IrPlan implements Closeable {
     }
 
     // return id of the current operator
-    public IntByReference appendInterOp(int parentId, InterOpBase base)
+    private IntByReference appendInterOp(int parentId, InterOpBase base)
             throws InterOpIllegalArgException, InterOpUnsupportedException, AppendInterOpException {
         FfiError error;
         IntByReference oprId = new IntByReference(parentId);
@@ -677,23 +708,5 @@ public class IrPlan implements Closeable {
                 || base instanceof OrderOp
                 || base instanceof DedupOp
                 || base instanceof UnionOp;
-    }
-
-    public byte[] toPhysicalBytes(Configs configs) throws BuildPhysicalException {
-        if (ptrPlan == null) {
-            throw new BuildPhysicalException("ptrPlan is NullPointer");
-        }
-        // hack way to notify shuffle
-        int servers = PegasusConfig.PEGASUS_HOSTS.get(configs).split(",").length;
-        int workers = PegasusConfig.PEGASUS_WORKER_NUM.get(configs);
-        FfiData.ByValue buffer = irCoreLib.buildPhysicalPlan(ptrPlan, workers, servers);
-        FfiError error = buffer.error;
-        if (error.code != ResultCode.Success) {
-            throw new BuildPhysicalException(
-                    "call libc returns " + error.code.name() + ", msg is " + error.msg);
-        }
-        byte[] bytes = buffer.getBytes();
-        buffer.close();
-        return bytes;
     }
 }

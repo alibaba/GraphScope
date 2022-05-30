@@ -31,3 +31,27 @@ message CommitSnapshotIdRequest {
 
 message CommitSnapshotIdResponse {
 }
+
+service CoordinatorSnapshotService {
+  rpc updateMinQuerySnapshotId(UpdateMinQuerySnapshotIdRequest) returns (UpdateMinQuerySnapshotIdResponse);
+  rpc synchronizeMinQuerySnapshotId(SynchronizeMinQuerySnapshotIdRequest) returns (SynchronizeMinQuerySnapshotIdResponse);
+}
+
+message UpdateMinQuerySnapshotIdRequest {
+  int32 frontendId = 1;
+  int64 snapshotId = 2;
+}
+
+message UpdateMinQuerySnapshotIdResponse {
+  bool success = 1;
+  string errMsg = 2;
+}
+
+message SynchronizeMinQuerySnapshotIdRequest {
+  int64 snapshotId = 1;
+};
+
+message SynchronizeMinQuerySnapshotIdResponse {
+  bool success = 1;
+  string errMsg = 2;
+};

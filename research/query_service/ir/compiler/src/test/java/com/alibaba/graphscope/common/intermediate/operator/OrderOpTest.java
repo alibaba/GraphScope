@@ -32,7 +32,7 @@ import java.util.Arrays;
 import java.util.function.Function;
 
 public class OrderOpTest {
-    private IrPlan irPlan = new IrPlan();
+    private IrPlan irPlan;
 
     @Test
     public void orderTest() throws IOException {
@@ -41,7 +41,7 @@ public class OrderOpTest {
                 new OpArg(
                         Arrays.asList(Pair.with(ArgUtils.asFfiNoneVar(), FfiOrderOpt.Asc)),
                         Function.identity()));
-        irPlan.appendInterOp(-1, op);
+        irPlan = DedupOpTest.getTestIrPlan(op);
         Assert.assertEquals(
                 FileUtils.readJsonFromResource("order_asc.json"), irPlan.getPlanAsJson());
     }
@@ -52,7 +52,7 @@ public class OrderOpTest {
         FfiVariable.ByValue var = ArgUtils.asFfiVar("", "name");
         op.setOrderVarWithOrder(
                 new OpArg(Arrays.asList(Pair.with(var, FfiOrderOpt.Asc)), Function.identity()));
-        irPlan.appendInterOp(-1, op);
+        irPlan = DedupOpTest.getTestIrPlan(op);
         Assert.assertEquals(
                 FileUtils.readJsonFromResource("order_key.json"), irPlan.getPlanAsJson());
     }
@@ -67,7 +67,7 @@ public class OrderOpTest {
                         Arrays.asList(
                                 Pair.with(v1, FfiOrderOpt.Asc), Pair.with(v2, FfiOrderOpt.Desc)),
                         Function.identity()));
-        irPlan.appendInterOp(-1, op);
+        irPlan = DedupOpTest.getTestIrPlan(op);
         Assert.assertEquals(
                 FileUtils.readJsonFromResource("order_keys.json"), irPlan.getPlanAsJson());
     }
@@ -78,7 +78,7 @@ public class OrderOpTest {
         FfiVariable.ByValue var = ArgUtils.asFfiVar("", "~label");
         op.setOrderVarWithOrder(
                 new OpArg(Arrays.asList(Pair.with(var, FfiOrderOpt.Asc)), Function.identity()));
-        irPlan.appendInterOp(-1, op);
+        irPlan = DedupOpTest.getTestIrPlan(op);
         Assert.assertEquals(
                 FileUtils.readJsonFromResource("order_label.json"), irPlan.getPlanAsJson());
     }
@@ -91,7 +91,7 @@ public class OrderOpTest {
                 new OpArg(Arrays.asList(Pair.with(var, FfiOrderOpt.Asc)), Function.identity()));
         op.setLower(new OpArg(Integer.valueOf(1), Function.identity()));
         op.setUpper(new OpArg(Integer.valueOf(2), Function.identity()));
-        irPlan.appendInterOp(-1, op);
+        irPlan = DedupOpTest.getTestIrPlan(op);
         Assert.assertEquals(
                 FileUtils.readJsonFromResource("order_limit.json"), irPlan.getPlanAsJson());
     }
