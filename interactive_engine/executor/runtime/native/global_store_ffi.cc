@@ -43,9 +43,15 @@ GetVertexIterator get_vertices(GraphHandle graph, PartitionId partition_id,
   htap_impl::GraphHandleImpl* casted_graph =
       static_cast<htap_impl::GraphHandleImpl*>(graph);
 
-  htap_impl::get_vertices(
+  if (casted_graph->use_int64_oid) {
+    htap_impl::get_vertices(
       &(casted_graph->fragments[partition_id / casted_graph->channel_num]),
       labels, ids, count, (htap_impl::GetVertexIteratorImpl*)ret);
+  } else {
+    htap_impl::get_vertices(
+      &(casted_graph->string_fragments[partition_id / casted_graph->channel_num]),
+      labels, ids, count, (htap_impl::GetVertexIteratorImpl*)ret);
+  }
   return ret;
 }
 
@@ -77,10 +83,17 @@ GetAllVerticesIterator get_all_vertices(GraphHandle graph,
 
   PartitionId fid = partition_id / casted_graph->channel_num;
 
-  htap_impl::get_all_vertices(
+  if (casted_graph->use_int64_oid) {
+    htap_impl::get_all_vertices(
       &(casted_graph->fragments[fid]), partition_id % casted_graph->channel_num,
       casted_graph->vertex_chunk_sizes[fid], labels, labels_count, limit,
       (htap_impl::GetAllVerticesIteratorImpl*)ret);
+  } else {
+    htap_impl::get_all_vertices(
+      &(casted_graph->string_fragments[fid]), partition_id % casted_graph->channel_num,
+      casted_graph->vertex_chunk_sizes[fid], labels, labels_count, limit,
+      (htap_impl::GetAllVerticesIteratorImpl*)ret);
+  }
   return ret;
 }
 
@@ -99,9 +112,11 @@ VertexId get_vertex_id(GraphHandle graph, Vertex v) { return (VertexId)v; }
 
 OuterId get_outer_id(GraphHandle graph, Vertex v) {
   OuterId ret;
-  if (((htap_impl::GraphHandleImpl*)graph)
-          ->vertex_map->GetOid((htap_impl::VID_TYPE)v, ret)) {
-    return ret;
+  auto casted_graph = static_cast<htap_impl::GraphHandleImpl*>(graph);
+  if (casted_graph->use_int64_oid) {
+    ret = casted_graph->vertex_map->GetOid((htap_impl::VID_TYPE)v, ret);
+  } else {
+    LOG(FATAL) << "get_outer_id is not supported on string fragment";
   }
   return OuterId();
 }
@@ -112,10 +127,14 @@ int get_vertex_by_outer_id(GraphHandle graph, LabelId label_id,
     return -1;
   }
   auto casted_graph = static_cast<htap_impl::GraphHandleImpl*>(graph);
-  htap_impl::VID_TYPE gid;
-  if (casted_graph->vertex_map->GetGid(label_id, outer_id, gid)) {
-    *v = gid;
-    return 0;
+  if (casted_graph->use_int64_oid) {
+    htap_impl::VID_TYPE gid;
+    if (casted_graph->vertex_map->GetGid(label_id, outer_id, gid)) {
+      *v = gid;
+      return 0;
+    }
+  } else {
+    LOG(FATAL) << "get_vertex_by_outer_id is not supported on string fragment";
   }
   return -1;
 }
@@ -139,10 +158,19 @@ int get_vertex_property(GraphHandle graph, Vertex v, PropertyId id,
   if (transformed_id == -1) {
     return -1;
   }
-  int r = htap_impl::get_vertex_property(
+  int r = -1;
+  if (handle->use_int64_oid) {
+    r = htap_impl::get_vertex_property(
       &(static_cast<htap_impl::GraphHandleImpl*>(graph)
             ->fragments[partition_id]),
       v, transformed_id, p_out);
+  } else {
+    r = htap_impl::get_vertex_property(
+      &(static_cast<htap_impl::GraphHandleImpl*>(graph)
+            ->string_fragments[partition_id]),
+      v, transformed_id, p_out);
+  }
+
   if (r == 0) {
     p_out->id = id;
   }
@@ -155,8 +183,13 @@ PropertiesIterator get_vertex_properties(GraphHandle graph, Vertex v) {
       static_cast<htap_impl::GraphHandleImpl*>(graph);
   ((htap_impl::PropertiesIteratorImpl*)ret)->handle = handle;
   int partition_id = handle->vid_parser.GetFid((htap_impl::VID_TYPE)v);
-  htap_impl::get_vertex_properties(&(handle->fragments[partition_id]), v,
+  if (handle->use_int64_oid) {
+    htap_impl::get_vertex_properties(&(handle->fragments[partition_id]), v,
                                    (htap_impl::PropertiesIteratorImpl*)ret);
+  } else {
+    htap_impl::get_vertex_properties(&(handle->string_fragments[partition_id]), v,
+                                   (htap_impl::PropertiesIteratorImpl*)ret);
+  }
   return ret;
 }
 
@@ -178,10 +211,17 @@ OutEdgeIterator get_out_edges(GraphHandle graph, PartitionId partition_id,
   for (int i = 0; i < labels_count; ++i) {
     transformed_labels[i] = labels[i] - casted_graph->vertex_label_num;
   }
-  htap_impl::get_out_edges(
+  if (casted_graph->use_int64_oid) {
+    htap_impl::get_out_edges(
       &(casted_graph->fragments[partition_id / casted_graph->channel_num]),
       &(casted_graph->eid_parser), src_id, transformed_labels.data(),
       labels_count, limit, (htap_impl::EdgeIteratorImpl*)ret);
+  } else {
+    htap_impl::get_out_edges(
+      &(casted_graph->string_fragments[partition_id / casted_graph->channel_num]),
+      &(casted_graph->eid_parser), src_id, transformed_labels.data(),
+      labels_count, limit, (htap_impl::EdgeIteratorImpl*)ret);
+  }
 #ifndef NDEBUG
   LOG(INFO) << "finish " << __FUNCTION__;
 #endif
@@ -223,10 +263,17 @@ InEdgeIterator get_in_edges(GraphHandle graph, PartitionId partition_id,
     for (int i = 0; i < labels_count; ++i) {
       transformed_labels[i] = labels[i] - casted_graph->vertex_label_num;
     }
-    htap_impl::get_in_edges(
+    if (casted_graph->use_int64_oid) {
+      htap_impl::get_in_edges(
         &(casted_graph->fragments[partition_id / casted_graph->channel_num]),
         &(casted_graph->eid_parser), dst_id, transformed_labels.data(),
         labels_count, limit, (htap_impl::EdgeIteratorImpl*)ret);
+    } else {
+      htap_impl::get_in_edges(
+        &(casted_graph->string_fragments[partition_id / casted_graph->channel_num]),
+        &(casted_graph->eid_parser), dst_id, transformed_labels.data(),
+        labels_count, limit, (htap_impl::EdgeIteratorImpl*)ret);
+    }
   }
 #ifndef NDEBUG
   LOG(INFO) << "finish " << __FUNCTION__;
@@ -266,11 +313,19 @@ GetAllEdgesIterator get_all_edges(GraphHandle graph, PartitionId partition_id,
     transformed_labels[i] = labels[i] - casted_graph->vertex_label_num;
   }
   PartitionId fid = partition_id / casted_graph->channel_num;
-  htap_impl::get_all_edges(
+  if (casted_graph->use_int64_oid) {
+    htap_impl::get_all_edges(
       &(casted_graph->fragments[fid]), partition_id % casted_graph->channel_num,
       casted_graph->vertex_chunk_sizes[fid], &(casted_graph->eid_parser),
       transformed_labels.data(), labels_count, limit,
       (htap_impl::GetAllEdgesIteratorImpl*)ret);
+  } else {
+    htap_impl::get_all_edges(
+      &(casted_graph->string_fragments[fid]), partition_id % casted_graph->channel_num,
+      casted_graph->vertex_chunk_sizes[fid], &(casted_graph->eid_parser),
+      transformed_labels.data(), labels_count, limit,
+      (htap_impl::GetAllEdgesIteratorImpl*)ret);
+  }
 #ifndef NDEBUG
   LOG(INFO) << "finish get all edges";
 #endif
@@ -329,10 +384,16 @@ EdgeId get_edge_id(GraphHandle graph, struct Edge* e) {
 #ifndef NDEBUG
   LOG(INFO) << "finish " << __FUNCTION__;
 #endif
-  return htap_impl::get_edge_id(
-      &(static_cast<htap_impl::GraphHandleImpl*>(graph)
-            ->fragments[partition_id]),
+  auto handle = static_cast<htap_impl::GraphHandleImpl*>(graph);
+  if (handle->use_int64_oid) {
+    return htap_impl::get_edge_id(
+      &(handle->fragments[partition_id]),
       label, offset);
+  } else {
+    return htap_impl::get_edge_id(
+      &(handle->string_fragments[partition_id]),
+      label, offset);
+  }
 }
 
 LabelId get_edge_src_label(GraphHandle graph, struct Edge* e) {
@@ -378,8 +439,14 @@ int get_edge_property(GraphHandle graph, struct Edge* e, PropertyId id,
 #ifndef NDEBUG
   LOG(INFO) << "finish " << __FUNCTION__;
 #endif
-  int r = htap_impl::get_edge_property(&(handle->fragments[partition_id]),
+  int r = -1;
+  if (handle->use_int64_oid) {
+    r = htap_impl::get_edge_property(&(handle->fragments[partition_id]),
                                        label, offset, transformed_id, p_out);
+  } else {
+    r = htap_impl::get_edge_property(&(handle->string_fragments[partition_id]),
+                                       label, offset, transformed_id, p_out);
+  }
   if (r == 0) {
     p_out->id = id;
   }
@@ -399,9 +466,15 @@ PropertiesIterator get_edge_properties(GraphHandle graph, struct Edge* e) {
   htap_impl::GraphHandleImpl* handle =
       static_cast<htap_impl::GraphHandleImpl*>(graph);
   ((htap_impl::PropertiesIteratorImpl*)ret)->handle = handle;
-  htap_impl::get_edge_properties(&(handle->fragments[partition_id]), label,
+  if (handle->use_int64_oid) {
+    htap_impl::get_edge_properties(&(handle->fragments[partition_id]), label,
                                  offset,
                                  (htap_impl::PropertiesIteratorImpl*)ret);
+  } else {
+    htap_impl::get_edge_properties(&(handle->string_fragments[partition_id]), label,
+                                 offset,
+                                 (htap_impl::PropertiesIteratorImpl*)ret);
+  }
 #ifndef NDEBUG
   LOG(INFO) << "finish " << __FUNCTION__;
 #endif
@@ -522,9 +595,16 @@ PartitionId get_partition_id(GraphHandle graph, VertexId v) {
     return -1;
   }
 
-  if (offset >= casted_graph->vertex_map->GetInnerVertexSize(fid, label_id) ||
-      offset < 0) {
-    return -1;
+  if (casted_graph->use_int64_oid) {
+    if (offset >= casted_graph->vertex_map->GetInnerVertexSize(fid, label_id) ||
+        offset < 0) {
+      return -1;
+    }
+  } else {
+    if (offset >= casted_graph->string_vertex_map->GetInnerVertexSize(fid, label_id) ||
+        offset < 0) {
+      return -1;
+    }
   }
 
   int channel_id = offset / casted_graph->vertex_chunk_sizes[fid][label_id];
@@ -550,9 +630,18 @@ int get_vertex_id_from_primary_key(GraphHandle graph, LabelId label_id,
      return -1;
   }
   auto handle = ((htap_impl::GraphHandleImpl*)graph);
-  htap_impl::OID_TYPE oid = std::stoll(key);
+
+  bool get_gid_ret;
   htap_impl::VID_TYPE gid;
-  if (handle->vertex_map->GetGid(label_id, oid, gid)) {
+
+  if (handle->use_int64_oid) {
+    htap_impl::OID_TYPE oid = std::stoll(key);
+    get_gid_ret = handle->vertex_map->GetGid(label_id, oid, gid);
+  } else {
+    htap_impl::STRING_OID_TYPE oid = key;
+    get_gid_ret = handle->string_vertex_map->GetGid(label_id, oid, gid);
+  }
+  if (get_gid_ret) {
     *internal_id = gid;
     *partition_id = get_partition_id(graph, gid);
 #ifndef NDEBUG
