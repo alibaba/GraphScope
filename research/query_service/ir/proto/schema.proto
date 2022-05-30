@@ -30,6 +30,8 @@ message LabelMeta {
 message ColumnMeta {
   LabelMeta key = 1;
   common.DataType data_type = 2;
+  // Whether this column is a part of a primary key
+  bool is_primary_key = 3;
 }
 
 message EntityMeta {

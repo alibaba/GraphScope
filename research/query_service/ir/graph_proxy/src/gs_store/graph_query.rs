@@ -82,13 +82,14 @@ where
                         .unwrap_or(DEFAULT_SNAPSHOT_ID)
                 })
                 .unwrap_or(DEFAULT_SNAPSHOT_ID);
-            let label_ids = encode_storage_label(params.labels.as_ref())?;
+            let label_ids = encode_storage_labels(params.labels.as_ref())?;
             let prop_ids = encode_storage_prop_keys(params.columns.as_ref())?;
             let filter = params.filter.clone();
             let partitions: Vec<PartitionId> = partitions
                 .iter()
                 .map(|pid| *pid as PartitionId)
                 .collect();
+
             let result = store
                 .get_all_vertices(
                     si,
@@ -104,10 +105,31 @@ where
                     partitions.as_ref(),
                 )
                 .map(move |v| to_runtime_vertex(&v));
-
             Ok(filter_limit!(result, filter, None))
         } else {
             Ok(Box::new(std::iter::empty()))
+        }
+    }
+
+    fn index_scan_vertex(
+        &self, label_id: &NameOrId, primary_key_values: &Vec<(NameOrId, Object)>, _params: &QueryParams,
+    ) -> FnResult<Option<Vertex>> {
+        let store_label_id = encode_storage_label(label_id)?;
+        let store_indexed_values: Vec<Property> = primary_key_values
+            .iter()
+            .map(|(_pk, value)| encode_store_prop_val(value.clone()))
+            .collect();
+        if let Some(vid) = self
+            .partition_manager
+            .get_vertex_id_by_primary_keys(store_label_id, store_indexed_values.as_ref())
+        {
+            Ok(Some(Vertex::new(
+                vid as ID,
+                Some(label_id.clone()),
+                DynDetails::new(DefaultDetails::new(HashMap::new())),
+            )))
+        } else {
+            Ok(None)
         }
     }
 
@@ -121,7 +143,7 @@ where
                         .unwrap_or(DEFAULT_SNAPSHOT_ID)
                 })
                 .unwrap_or(DEFAULT_SNAPSHOT_ID);
-            let label_ids = encode_storage_label(params.labels.as_ref())?;
+            let label_ids = encode_storage_labels(params.labels.as_ref())?;
             let prop_ids = encode_storage_prop_keys(params.columns.as_ref())?;
             let filter = params.filter.clone();
             let partitions: Vec<PartitionId> = partitions
@@ -189,7 +211,7 @@ where
                     .unwrap_or(DEFAULT_SNAPSHOT_ID)
             })
             .unwrap_or(DEFAULT_SNAPSHOT_ID);
-        let edge_label_ids = encode_storage_label(params.labels.as_ref())?;
+        let edge_label_ids = encode_storage_labels(params.labels.as_ref())?;
 
         let stmt = from_fn(move |v: ID| {
             let src_id = get_partition_vertex_ids(v, partition_manager.clone());
@@ -254,7 +276,7 @@ where
         let partition_manager = self.partition_manager.clone();
         let filter = params.filter.clone();
         let limit = params.limit.clone();
-        let edge_label_ids = encode_storage_label(params.labels.as_ref())?;
+        let edge_label_ids = encode_storage_labels(params.labels.as_ref())?;
         let prop_ids = encode_storage_prop_keys(params.columns.as_ref())?;
 
         let stmt = from_fn(move |v: ID| {
@@ -369,16 +391,21 @@ fn encode_storage_prop_keys(prop_names: Option<&Vec<NameOrId>>) -> FnExecResult<
 }
 
 #[inline]
-fn encode_storage_label(labels: &Vec<Label>) -> FnExecResult<Vec<LabelId>> {
+fn encode_storage_labels(labels: &Vec<Label>) -> FnExecResult<Vec<LabelId>> {
     labels
         .iter()
-        .map(|label| match label {
-            Label::Str(_) => {
-                Err(FnExecError::query_store_error("encode storage label error, should provide label_id"))
-            }
-            Label::Id(id) => Ok(*id as LabelId),
-        })
+        .map(|label| encode_storage_label(label))
         .collect::<Result<Vec<LabelId>, _>>()
+}
+
+#[inline]
+fn encode_storage_label(label: &NameOrId) -> FnExecResult<LabelId> {
+    match label {
+        Label::Str(_) => {
+            Err(FnExecError::query_store_error("encode storage label error, should provide label_id"))
+        }
+        Label::Id(id) => Ok(*id as LabelId),
+    }
 }
 
 #[inline]
@@ -417,6 +444,65 @@ fn encode_runtime_prop_val(prop_val: Property) -> Object {
         Property::Bytes(v) => Object::Blob(v.into_boxed_slice()),
         Property::String(s) => Object::String(s),
         _ => unimplemented!(),
+    }
+}
+
+#[inline]
+fn encode_store_prop_val(prop_val: Object) -> Property {
+    match prop_val {
+        Object::Primitive(p) => match p {
+            Primitives::Byte(b) => Property::Char(b as u8),
+            Primitives::Integer(i) => Property::Int(i),
+            Primitives::Long(i) => Property::Long(i),
+            Primitives::ULLong(i) => Property::Long(i as i64),
+            Primitives::Float(f) => Property::Double(f),
+        },
+        Object::String(s) => Property::String(s),
+        Object::Vector(vec) => {
+            if let Some(probe) = vec.get(0) {
+                match probe {
+                    Object::Primitive(p) => match p {
+                        Primitives::Byte(_) | Primitives::Integer(_) => Property::ListInt(
+                            vec.into_iter()
+                                .map(|i| i.as_i32().unwrap())
+                                .collect(),
+                        ),
+                        Primitives::Long(_) => Property::ListLong(
+                            vec.into_iter()
+                                .map(|i| i.as_i64().unwrap())
+                                .collect(),
+                        ),
+                        Primitives::ULLong(_) => Property::ListLong(
+                            vec.into_iter()
+                                .map(|i| i.as_u128().unwrap() as i64)
+                                .collect(),
+                        ),
+                        Primitives::Float(_) => Property::ListDouble(
+                            vec.into_iter()
+                                .map(|i| i.as_f64().unwrap())
+                                .collect(),
+                        ),
+                    },
+                    Object::String(_) => Property::ListString(
+                        vec.into_iter()
+                            .map(|i| i.as_str().unwrap().into_owned())
+                            .collect(),
+                    ),
+                    Object::Blob(_) => Property::ListBytes(
+                        vec.into_iter()
+                            .map(|i| i.as_bytes().unwrap().to_vec())
+                            .collect(),
+                    ),
+                    Object::None => Property::Null,
+                    _ => Property::Unknown,
+                }
+            } else {
+                Property::Null
+            }
+        }
+        Object::Blob(b) => Property::Bytes(b.to_vec()),
+        Object::None => Property::Null,
+        _ => Property::Unknown,
     }
 }
 

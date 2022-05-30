@@ -631,24 +631,35 @@ pub extern "C" fn get_key_name(key_id: i32, key_type: FfiKeyType) -> FfiKeyResul
     use super::meta::STORE_META;
     if let Ok(meta) = STORE_META.read() {
         if let Some(schema) = &meta.schema {
-            if let Some(key_name) = schema.get_name(key_id, key_type.into()) {
-                FfiKeyResult {
-                    key_name: string_to_cstr(key_name.to_string()).unwrap(),
-                    error: FfiError::success(),
-                }
-            } else {
-                match key_type {
-                    FfiKeyType::Entity | FfiKeyType::Relation => FfiError::new(
+            let key_name = match key_type {
+                FfiKeyType::Entity => schema.get_entity_name(key_id).ok_or(
+                    FfiError::new(
                         ResultCode::TableNotExistError,
-                        format!("label_id {:?} is not found", key_id),
+                        format!("entity label_id {:?} is not found", key_id),
                     )
                     .into(),
-                    FfiKeyType::Column => FfiError::new(
+                ),
+                FfiKeyType::Relation => schema.get_relation_name(key_id).ok_or(
+                    FfiError::new(
+                        ResultCode::TableNotExistError,
+                        format!("relation label_id {:?} is not found", key_id),
+                    )
+                    .into(),
+                ),
+                FfiKeyType::Column => schema.get_column_name(key_id).ok_or(
+                    FfiError::new(
                         ResultCode::ColumnNotExistError,
                         format!("prop_id {:?} is not found", key_id),
                     )
                     .into(),
-                }
+                ),
+            };
+            match key_name {
+                Ok(key_name) => FfiKeyResult {
+                    key_name: string_to_cstr(key_name.to_string()).unwrap(),
+                    error: FfiError::success(),
+                },
+                Err(e) => e,
             }
         } else {
             FfiError::new(ResultCode::Others, "error getting schema from store meta".to_string()).into()
