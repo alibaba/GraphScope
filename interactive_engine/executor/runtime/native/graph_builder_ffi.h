@@ -87,6 +87,13 @@ ObjectId build_global_graph_stream(const char* graph_name, size_t size,
 GraphBuilder get_graph_builder(const char* graph_name, const int index);
 
 /**
+ * Initialize the builder using schema.
+ *
+ * See also `finish_build_schema`
+ */
+void initialize_graph_builder(GraphBuilder builder, Schema schema);
+
+/**
  * 多个property用array的方式给出，property_size指定property array的size。
  */
 void add_vertex(GraphBuilder builder, VertexId id, LabelId labelid,

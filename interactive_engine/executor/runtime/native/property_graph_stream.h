@@ -254,8 +254,11 @@ class PropertyGraphOutStream : public Registered<PropertyGraphOutStream> {
       std::dynamic_pointer_cast<vineyard::RecordBatchStream>(meta.GetMember("edge_stream"));
 
     this->graph_schema_ = std::make_shared<MGPropertyGraphSchema>();
-    graph_schema_->FromJSONString(meta.GetKeyValue("graph_schema"));
-    this->initialTables();
+    auto graph_schema_json = vineyard::json::parse(meta.GetKeyValue("graph_schema"));
+    if (graph_schema_json.contains("types")) {
+      graph_schema_->FromJSON(graph_schema_json);
+      this->initialTables();
+    }
   }
 
   Status Open(std::shared_ptr<vineyard::RecordBatchStream> &output_stream) {
@@ -266,6 +269,8 @@ class PropertyGraphOutStream : public Registered<PropertyGraphOutStream> {
     }
     return status;
   }
+
+  void Initialize(Schema schema);
 
   void AddVertex(VertexId id, LabelId labelid, size_t property_size,
                  Property* properties);

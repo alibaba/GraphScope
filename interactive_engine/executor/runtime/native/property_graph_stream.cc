@@ -227,6 +227,14 @@ void PropertyTableAppender::Flush(
 
 }  // namespace detail
 
+void PropertyGraphOutStream::Initialize(Schema schema) {
+  auto schema_ptr = static_cast<vineyard::MGPropertyGraphSchema *>(schema);
+  *graph_schema_ = *schema_ptr;
+
+  LOG(INFO) << "Initialize the graph builder using schema ...";
+  this->initialTables();
+}
+
 void PropertyGraphOutStream::AddVertex(VertexId id, LabelId labelid,
                                        size_t property_size,
                                        Property* properties) {
