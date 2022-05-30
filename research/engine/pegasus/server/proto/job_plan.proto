@@ -15,8 +15,6 @@
  */
 syntax = "proto3";
 package job_proto;
-//option java_package = "com.alibaba.pegasus.service.protocol";
-//option java_outer_classname = "PegasusClient";
 option java_package = "com.alibaba.pegasus.service.job.protocol";
 option java_outer_classname = "JobClient";
 

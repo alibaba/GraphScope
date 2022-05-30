@@ -48,8 +48,7 @@ use maxgraph_server::StoreContext;
 use maxgraph_store::api::graph_partition::GraphPartitionManager;
 use maxgraph_store::api::prelude::*;
 use maxgraph_store::config::{StoreConfig, VINEYARD_GRAPH};
-use pegasus_server::rpc::{start_rpc_server, RpcService};
-use pegasus_server::service::Service;
+use pegasus_server::rpc::{RPCServerConfig, ServiceStartListener, start_rpc_server};
 use protobuf::Message;
 use std::collections::HashMap;
 use std::env;
@@ -59,6 +58,7 @@ use std::sync::{Arc, Mutex, RwLock};
 use std::thread;
 use std::time::Duration;
 use tokio::runtime::Runtime;
+use std::net::SocketAddr;
 
 fn main() {
     if let Some(_) = env::args().find(|arg| arg == "--show-build-info") {
@@ -129,7 +129,7 @@ fn run_main<V, VI, E, EI>(
         store_config.clone(),
         Box::new(recover_prepare),
     )
-    .unwrap();
+        .unwrap();
 
     let gaia_service = GaiaService::new(
         store_config.clone(),
@@ -138,7 +138,7 @@ fn run_main<V, VI, E, EI>(
         partition_worker_mapping,
         worker_partition_list_mapping,
     );
-    let (_, gaia_rpc_service_port) = gaia_service.start_rpc_service();
+    let gaia_rpc_service_port = gaia_service.start_rpc_service();
     let store_context = StoreContext::new(graph, partition_manager);
     start_hb_rpc_service(
         runtime_info_clone,
@@ -234,11 +234,11 @@ fn get_init_info(config: &StoreConfig) -> (u64, Vec<PartitionId>) {
 }
 
 pub struct GaiaService<V, VI, E, EI>
-where
-    V: Vertex + 'static,
-    VI: Iterator<Item = V> + Send + 'static,
-    E: Edge + 'static,
-    EI: Iterator<Item = E> + Send + 'static,
+    where
+        V: Vertex + 'static,
+        VI: Iterator<Item = V> + Send + 'static,
+        E: Edge + 'static,
+        EI: Iterator<Item = E> + Send + 'static,
 {
     store_config: Arc<StoreConfig>,
     graph: Arc<dyn GlobalGraphQuery<V = V, E = E, VI = VI, EI = EI>>,
@@ -251,11 +251,11 @@ where
 }
 
 impl<V, VI, E, EI> GaiaService<V, VI, E, EI>
-where
-    V: Vertex + 'static,
-    VI: Iterator<Item = V> + Send + 'static,
-    E: Edge + 'static,
-    EI: Iterator<Item = E> + Send + 'static,
+    where
+        V: Vertex + 'static,
+        VI: Iterator<Item = V> + Send + 'static,
+        E: Edge + 'static,
+        EI: Iterator<Item = E> + Send + 'static,
 {
     pub fn new(
         store_config: Arc<StoreConfig>,
@@ -274,7 +274,7 @@ where
         }
     }
 
-    pub fn start_rpc_service(&self) -> (String, u16) {
+    pub fn start_rpc_service(&self) -> u16 {
         let rpc_port = self.rpc_runtime.block_on(async {
             let query_vineyard = QueryVineyard::new(
                 self.graph.clone(),
@@ -283,16 +283,65 @@ where
                 self.worker_partition_list_mapping.clone(),
                 self.store_config.worker_num as usize,
             );
-            let job_compiler = query_vineyard.initialize_job_compiler();
-            let service = Service::new(job_compiler);
-            let addr = format!("{}:{}", "0.0.0.0", self.store_config.rpc_port);
-            // TODO: add report in store_config
-            let rpc_service = RpcService::new(service, true);
-            let local_addr =  start_rpc_server(addr.parse().unwrap(), rpc_service, false).await.unwrap();
-            local_addr.port()
+            let job_assembly = query_vineyard.initialize_job_compiler();
+            let rpc_config = RPCServerConfig::new(Some("0.0.0.0".to_string()), Some(self.store_config.rpc_port as u16));
+            let service_listener = GaiaRpcServiceListener::default();
+            let service_listener_clone = service_listener.clone();
+            self.rpc_runtime.spawn(async move {
+                // pass a fake server_id, which is required by the API, but won't be used later.
+                start_rpc_server(0, rpc_config, job_assembly, service_listener_clone).await.unwrap();
+            });
+            loop {
+                if service_listener.get_rpc_port().is_some() {
+                    break;
+                } else {
+                    thread::sleep(Duration::from_millis(10));
+                }
+            }
+            service_listener.get_rpc_port().unwrap()
         });
         let ip = get_local_ip();
         info!("start rpc server on {} {}", ip, rpc_port);
-        (ip, rpc_port)
+        rpc_port
+    }
+}
+
+#[derive(Default)]
+struct GaiaRpcServiceListener {
+    rpc_addr: Arc<Mutex<Option<SocketAddr>>>,
+}
+
+impl Clone for GaiaRpcServiceListener {
+    fn clone(&self) -> Self {
+        GaiaRpcServiceListener {
+            rpc_addr: self.rpc_addr.clone(),
+        }
+    }
+}
+
+impl GaiaRpcServiceListener {
+    fn new() -> Self {
+        GaiaRpcServiceListener {
+            rpc_addr: Arc::new(Mutex::new(None)),
+        }
+    }
+    fn get_rpc_port(&self) -> Option<u16> {
+        self.rpc_addr.lock().unwrap().map(|addr| addr.port())
+    }
+}
+
+impl ServiceStartListener for GaiaRpcServiceListener {
+    fn on_rpc_start(&mut self, server_id: u64, addr: SocketAddr) -> std::io::Result<()> {
+        info!("RPC server of server[{}] start on {}", server_id, addr);
+        let mut rpc_addr = self
+            .rpc_addr
+            .lock()
+            .map_err(|e|std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?;
+        *rpc_addr = Some(addr);
+        Ok(())
+    }
+
+    fn on_server_start(&mut self, _: u64, _: SocketAddr) -> std::io::Result<()> {
+        Ok(())
     }
 }
