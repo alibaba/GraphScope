@@ -62,7 +62,7 @@ pub use pegasus_memory::alloc::check_current_task_memory;
 pub use pegasus_network::ServerDetect;
 pub use tag::Tag;
 pub use worker::Worker;
-pub use worker_id::{get_current_worker, WorkerId, set_current_worker};
+pub use worker_id::{get_current_worker, set_current_worker, WorkerId};
 
 use crate::api::Source;
 pub use crate::errors::{BuildJobError, JobSubmitError, SpawnJobError, StartupError};
@@ -191,6 +191,13 @@ pub fn startup_with<D: ServerDetect + 'static>(
         let conn_conf = net_conf.get_connection_param();
         let addr = pegasus_network::start_up(server_id, conn_conf, addr, detect)?;
         info!("server {} start on {:?}", server_id, addr);
+
+        let mut lock = SERVERS
+            .write()
+            .expect("fetch servers lock failure;");
+        for i in 0..net_conf.servers_size {
+            lock.push(i as u64);
+        }
         Some(addr)
     } else {
         None
