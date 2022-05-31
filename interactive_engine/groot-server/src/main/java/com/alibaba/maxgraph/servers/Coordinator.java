@@ -54,6 +54,8 @@ public class Coordinator extends NodeBase {
     private IdAllocator idAllocator;
     private BackupManager backupManager;
 
+    private GarbageCollectManager garbageCollectManager;
+
     public Coordinator(Configs configs) {
         super(configs);
         configs = reConfig(configs);
@@ -123,6 +125,12 @@ public class Coordinator extends NodeBase {
                         localSnapshotCache,
                         storeBackupTaskSender);
         BackupService backupService = new BackupService(this.backupManager);
+        RoleClients<CoordinatorSnapshotClient> coordinatorSnapshotClients =
+                new RoleClients<>(
+                        this.channelManager, RoleType.STORE, CoordinatorSnapshotClient::new);
+        this.garbageCollectManager = new GarbageCollectManager(configs, coordinatorSnapshotClients);
+        CoordinatorSnapshotService coordinatorSnapshotService =
+                new CoordinatorSnapshotService(garbageCollectManager);
         this.rpcServer =
                 new RpcServer(
                         configs,
@@ -131,7 +139,8 @@ public class Coordinator extends NodeBase {
                         snapshotCommitService,
                         schemaService,
                         idAllocateService,
-                        backupService);
+                        backupService,
+                        coordinatorSnapshotService);
         this.logRecycler = new LogRecycler(configs, logService, this.snapshotManager);
         this.graphInitializer = new GraphInitializer(configs, this.curator, metaStore, logService);
     }
@@ -156,6 +165,7 @@ public class Coordinator extends NodeBase {
         this.schemaManager.start();
         this.logRecycler.start();
         this.backupManager.start();
+        this.garbageCollectManager.start();
     }
 
     @Override

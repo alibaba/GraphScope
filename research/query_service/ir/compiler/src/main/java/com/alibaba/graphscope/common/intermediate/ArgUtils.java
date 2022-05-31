@@ -25,6 +25,7 @@ public class ArgUtils {
     private static String LABEL = "~label";
     private static String ID = "~id";
     private static String LEN = "~len";
+    public static String PROPERTY_ALL = "~all";
 
     public static FfiConst.ByValue asFfiConst(int id) {
         return irCoreLib.int32AsConst(id);

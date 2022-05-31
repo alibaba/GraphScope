@@ -170,6 +170,12 @@ GraphBuilder get_graph_builder(const char *graph_name, const int index) {
   return new std::shared_ptr<vineyard::PropertyGraphOutStream>(builder);
 }
 
+void initialize_graph_builder(GraphBuilder builder, Schema schema) {
+  auto stream =
+      static_cast<std::shared_ptr<vineyard::PropertyGraphOutStream> *>(builder);
+  return (*stream)->Initialize(schema);
+}
+
 void add_vertex(GraphBuilder builder, VertexId id, LabelId labelid,
                 size_t property_size, Property *properties) {
   auto stream =

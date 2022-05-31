@@ -11,14 +11,16 @@
             "id": 0,
             "name": "name"
           },
-          "data_type": 4
+          "data_type": 4,
+          "is_primary_key": true
         },
         {
           "key": {
             "id": 2,
             "name": "lang"
           },
-          "data_type": 4
+          "data_type": 4,
+          "is_primary_key": false
         }
       ]
     },
@@ -33,14 +35,16 @@
             "id": 0,
             "name": "name"
           },
-          "data_type": 4
+          "data_type": 4,
+          "is_primary_key": true
         },
         {
           "key": {
             "id": 1,
             "name": "age"
           },
-          "data_type": 1
+          "data_type": 1,
+          "is_primary_key": false
         }
       ]
     }
@@ -69,7 +73,8 @@
             "id": 3,
             "name": "weight"
           },
-          "data_type": 3
+          "data_type": 3,
+          "is_primary_key": false
         }
       ]
     },
@@ -96,7 +101,8 @@
             "id": 3,
             "name": "weight"
           },
-          "data_type": 3
+          "data_type": 3,
+          "is_primary_key": false
         }
       ]
     }

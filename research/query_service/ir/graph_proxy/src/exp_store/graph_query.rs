@@ -32,6 +32,7 @@ use pegasus::api::function::FnResult;
 use pegasus::configure_with_default;
 use pegasus_common::downcast::*;
 use pegasus_common::impl_as_any;
+use runtime::error::FnExecError;
 use runtime::graph::element::{Edge, Vertex};
 use runtime::graph::property::{DefaultDetails, Details, DynDetails};
 use runtime::graph::{register_graph, Direction, GraphProxy, QueryParams, Statement, ID};
@@ -238,6 +239,14 @@ impl GraphProxy for DemoGraph {
         } else {
             Ok(Box::new(std::iter::empty()))
         }
+    }
+
+    fn index_scan_vertex(
+        &self, _label: &NameOrId, _primary_key_values: &Vec<(NameOrId, Object)>, _params: &QueryParams,
+    ) -> FnResult<Option<Vertex>> {
+        Err(FnExecError::query_store_error(
+            "Experiment storage does not support index_scan_vertex for now",
+        ))?
     }
 
     fn scan_edge(&self, params: &QueryParams) -> FnResult<Box<dyn Iterator<Item = Edge> + Send>> {

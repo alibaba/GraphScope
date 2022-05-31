@@ -16,20 +16,15 @@
 
 package com.alibaba.graphscope.gremlin.integration.processor;
 
-import com.alibaba.graphscope.common.IrPlan;
-import com.alibaba.graphscope.common.client.ResultParser;
 import com.alibaba.graphscope.common.client.RpcChannelFetcher;
 import com.alibaba.graphscope.common.config.Configs;
-import com.alibaba.graphscope.common.config.PegasusConfig;
-import com.alibaba.graphscope.common.intermediate.InterOpCollection;
+import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
 import com.alibaba.graphscope.common.store.IrMetaFetcher;
-import com.alibaba.graphscope.gremlin.InterOpCollectionBuilder;
 import com.alibaba.graphscope.gremlin.integration.result.GraphProperties;
 import com.alibaba.graphscope.gremlin.integration.result.GremlinTestResultProcessor;
 import com.alibaba.graphscope.gremlin.plugin.processor.IrStandardOpProcessor;
 import com.alibaba.graphscope.gremlin.plugin.script.AntlrToJavaScriptEngine;
 import com.alibaba.graphscope.gremlin.result.GremlinResultAnalyzer;
-import com.alibaba.pegasus.service.protocol.PegasusClient;
 
 import org.apache.tinkerpop.gremlin.driver.Tokens;
 import org.apache.tinkerpop.gremlin.driver.message.RequestMessage;
@@ -46,7 +41,6 @@ import org.apache.tinkerpop.gremlin.util.function.ThrowingConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -65,10 +59,11 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
             Configs configs,
             IrMetaFetcher irMetaFetcher,
             RpcChannelFetcher fetcher,
+            IrMetaQueryCallback metaQueryCallback,
             Graph graph,
             GraphTraversalSource g,
             GraphProperties testGraph) {
-        super(configs, irMetaFetcher, fetcher, graph, g);
+        super(configs, irMetaFetcher, fetcher, metaQueryCallback, graph, g);
         this.context = new SimpleScriptContext();
         Bindings globalBindings = new SimpleBindings();
         globalBindings.put("g", g);
@@ -99,51 +94,12 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
 
                             applyStrategies(traversal);
 
-                            // update the schema before the query is submitted
-                            irMetaFetcher.fetch();
-
-                            InterOpCollection opCollection =
-                                    (new InterOpCollectionBuilder(traversal)).build();
-                            IrPlan irPlan = opCollection.buildIrPlan();
-
-                            byte[] physicalPlanBytes = irPlan.toPhysicalBytes(configs);
-                            irPlan.close();
-
-                            int serverNum =
-                                    PegasusConfig.PEGASUS_HOSTS.get(configs).split(",").length;
-                            List<Long> servers = new ArrayList<>();
-                            for (long i = 0; i < serverNum; ++i) {
-                                servers.add(i);
-                            }
-
-                            long jobId = JOB_ID_COUNTER.incrementAndGet();
-                            String jobName = "ir_plan_" + jobId;
-
-                            PegasusClient.JobRequest request =
-                                    PegasusClient.JobRequest.parseFrom(physicalPlanBytes);
-                            PegasusClient.JobConfig jobConfig =
-                                    PegasusClient.JobConfig.newBuilder()
-                                            .setJobId(jobId)
-                                            .setJobName(jobName)
-                                            .setWorkers(
-                                                    PegasusConfig.PEGASUS_WORKER_NUM.get(configs))
-                                            .setBatchSize(
-                                                    PegasusConfig.PEGASUS_BATCH_SIZE.get(configs))
-                                            .setMemoryLimit(
-                                                    PegasusConfig.PEGASUS_MEMORY_LIMIT.get(configs))
-                                            .setOutputCapacity(
-                                                    PegasusConfig.PEGASUS_OUTPUT_CAPACITY.get(
-                                                            configs))
-                                            .setTimeLimit(
-                                                    PegasusConfig.PEGASUS_TIMEOUT.get(configs))
-                                            .addAllServers(servers)
-                                            .build();
-                            request = request.toBuilder().setConf(jobConfig).build();
-
-                            ResultParser resultParser = GremlinResultAnalyzer.analyze(traversal);
-                            broadcastProcessor.broadcast(
-                                    request,
-                                    new GremlinTestResultProcessor(ctx, resultParser, testGraph));
+                            processTraversal(
+                                    traversal,
+                                    new GremlinTestResultProcessor(
+                                            ctx,
+                                            GremlinResultAnalyzer.analyze(traversal),
+                                            testGraph));
                         });
                 return op;
             default:

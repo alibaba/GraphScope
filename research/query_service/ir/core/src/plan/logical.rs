@@ -788,6 +788,83 @@ fn preprocess_expression(
     Ok(())
 }
 
+/// To optimize a triplet predicate of <pk, cmp, val> into an `IndexPredicate`.
+fn triplet_to_index_predicate(
+    operators: &[common_pb::ExprOpr], table: &common_pb::NameOrId, is_vertex: bool, meta: &StoreMeta,
+) -> IrResult<Option<pb::IndexPredicate>> {
+    if operators.len() != 3 {
+        return Ok(None);
+    }
+    if meta.schema.is_none() {
+        return Ok(None);
+    }
+    let schema = meta.schema.as_ref().unwrap();
+    let mut key = None;
+    let mut is_eq = false;
+    let mut value = None;
+    if let Some(item) = &operators.get(0).unwrap().item {
+        match item {
+            common_pb::expr_opr::Item::Var(var) => {
+                if let Some(property) = &var.property {
+                    if let Some(item) = &property.item {
+                        match item {
+                            common_pb::property::Item::Key(col) => {
+                                let (is_pk, num_pks) =
+                                    schema.check_primary_key_from_pb(table, is_vertex, col);
+                                if is_pk && num_pks == 1 {
+                                    key = Some(property.clone());
+                                }
+                            }
+                            _ => { /*do nothing*/ }
+                        }
+                    }
+                }
+            }
+            _ => { /*do nothing*/ }
+        }
+    };
+
+    if key.is_none() {
+        return Ok(None);
+    }
+
+    if let Some(item) = &operators.get(1).unwrap().item {
+        match item {
+            common_pb::expr_opr::Item::Logical(l) => {
+                if *l == 0 {
+                    // Eq
+                    is_eq = true;
+                }
+            }
+            _ => { /*do nothing*/ }
+        }
+    };
+
+    if !is_eq {
+        return Ok(None);
+    }
+
+    if let Some(item) = &operators.get(2).unwrap().item {
+        match item {
+            common_pb::expr_opr::Item::Const(c) => {
+                value = Some(c.clone());
+            }
+            _ => { /*do nothing*/ }
+        }
+    };
+    if value.is_none() {
+        return Ok(None);
+    }
+
+    let idx_pred = pb::IndexPredicate {
+        or_predicates: vec![pb::index_predicate::AndPredicate {
+            predicates: vec![pb::index_predicate::Triplet { key, value, cmp: None }],
+        }],
+    };
+
+    Ok(Some(idx_pred))
+}
+
 fn preprocess_params(
     params: &mut pb::QueryParams, meta: &StoreMeta, plan_meta: &mut PlanMeta,
 ) -> IrResult<()> {
@@ -893,10 +970,28 @@ impl AsLogical for pb::Scan {
             plan_meta.insert_tag_nodes(alias.clone().try_into()?, plan_meta.get_curr_nodes());
         }
         if let Some(params) = self.params.as_mut() {
+            if self.idx_predicate.is_none() {
+                if let Some(table) = params.tables.get(0) {
+                    let mut idx_pred = None;
+                    if let Some(expr) = &params.predicate {
+                        idx_pred = triplet_to_index_predicate(
+                            expr.operators.as_slice(),
+                            table,
+                            self.scan_opt != 1,
+                            meta,
+                        )?;
+                    }
+
+                    if idx_pred.is_some() {
+                        params.predicate = None;
+                        self.idx_predicate = idx_pred;
+                    }
+                }
+            }
             preprocess_params(params, meta, plan_meta)?;
         }
-        if let Some(index_pred) = self.idx_predicate.as_mut() {
-            index_pred.preprocess(meta, plan_meta)?;
+        if let Some(idx_pred) = self.idx_predicate.as_mut() {
+            idx_pred.preprocess(meta, plan_meta)?;
         }
         Ok(())
     }
@@ -1182,7 +1277,7 @@ mod test {
     use ir_common::NameOrId;
 
     use super::*;
-    use crate::plan::meta::set_schema_simple;
+    use crate::plan::meta::Schema;
 
     #[allow(dead_code)]
     fn query_params(
@@ -1427,14 +1522,16 @@ mod test {
             .unwrap()
             .set_is_add_column(true);
 
-        set_schema_simple(
-            vec![("person".to_string(), 0), ("software".to_string(), 1)],
-            vec![("knows".to_string(), 0), ("creates".to_string(), 1)],
-            vec![("id".to_string(), 0), ("name".to_string(), 1), ("age".to_string(), 2)],
-        );
+        let meta = StoreMeta {
+            schema: Some(Schema::from((
+                vec![("person".to_string(), 0), ("software".to_string(), 1)],
+                vec![("knows".to_string(), 0), ("creates".to_string(), 1)],
+                vec![("id".to_string(), 0), ("name".to_string(), 1), ("age".to_string(), 2)],
+            ))),
+        };
 
         let mut expression = str_to_expr_pb("@.~label == \"person\"".to_string()).unwrap();
-        preprocess_expression(&mut expression, &STORE_META.read().unwrap(), &mut plan_meta).unwrap();
+        preprocess_expression(&mut expression, &meta, &mut plan_meta).unwrap();
         let opr = expression.operators.get(2).unwrap().clone();
         match opr.item.unwrap() {
             common_pb::expr_opr::Item::Const(val) => match val.item.unwrap() {
@@ -1446,7 +1543,7 @@ mod test {
 
         let mut expression =
             str_to_expr_pb("@.~label within [\"person\", \"software\"]".to_string()).unwrap();
-        preprocess_expression(&mut expression, &STORE_META.read().unwrap(), &mut plan_meta).unwrap();
+        preprocess_expression(&mut expression, &meta, &mut plan_meta).unwrap();
         let opr = expression.operators.get(2).unwrap().clone();
         match opr.item.unwrap() {
             common_pb::expr_opr::Item::Const(val) => match val.item.unwrap() {
@@ -1460,7 +1557,7 @@ mod test {
 
         let mut expression =
             str_to_expr_pb("(@.name == \"person\") && @a.~label == \"knows\"".to_string()).unwrap();
-        preprocess_expression(&mut expression, &STORE_META.read().unwrap(), &mut plan_meta).unwrap();
+        preprocess_expression(&mut expression, &meta, &mut plan_meta).unwrap();
 
         // person should not be mapped, as name is not a label key
         let opr = expression.operators.get(3).unwrap().clone();
@@ -1496,7 +1593,7 @@ mod test {
 
         // name maps to 1
         let mut expression = str_to_expr_pb("@a.name == \"John\"".to_string()).unwrap();
-        preprocess_expression(&mut expression, &STORE_META.read().unwrap(), &mut plan_meta).unwrap();
+        preprocess_expression(&mut expression, &meta, &mut plan_meta).unwrap();
         let opr = expression.operators.get(0).unwrap().clone();
         match opr.item.unwrap() {
             common_pb::expr_opr::Item::Var(var) => {
@@ -1523,7 +1620,7 @@ mod test {
         );
 
         let mut expression = str_to_expr_pb("{@a.name, @b.id}".to_string()).unwrap();
-        preprocess_expression(&mut expression, &STORE_META.read().unwrap(), &mut plan_meta).unwrap();
+        preprocess_expression(&mut expression, &meta, &mut plan_meta).unwrap();
         let opr = expression.operators.get(0).unwrap().clone();
         match opr.item.unwrap() {
             common_pb::expr_opr::Item::VarMap(vars) => {
@@ -1580,11 +1677,15 @@ mod test {
             .tag_node_metas_mut(Some(&"a".into()))
             .unwrap()
             .set_is_add_column(true);
-        set_schema_simple(
-            vec![("person".to_string(), 0), ("software".to_string(), 1)],
-            vec![("knows".to_string(), 0), ("creates".to_string(), 1)],
-            vec![("id".to_string(), 0), ("name".to_string(), 1), ("age".to_string(), 2)],
-        );
+
+        let meta = StoreMeta {
+            schema: Some(Schema::from((
+                vec![("person".to_string(), 0), ("software".to_string(), 1)],
+                vec![("knows".to_string(), 0), ("creates".to_string(), 1)],
+                vec![("id".to_string(), 0), ("name".to_string(), 1), ("age".to_string(), 2)],
+            ))),
+        };
+
         let mut scan = pb::Scan {
             scan_opt: 0,
             alias: None,
@@ -1600,8 +1701,7 @@ mod test {
             }),
             idx_predicate: Some(vec!["software".to_string()].into()),
         };
-        scan.preprocess(&STORE_META.read().unwrap(), &mut plan_meta)
-            .unwrap();
+        scan.preprocess(&meta, &mut plan_meta).unwrap();
         assert_eq!(scan.clone().params.unwrap().tables[0], 0.into());
         assert_eq!(
             scan.idx_predicate.unwrap().or_predicates[0].predicates[0]
@@ -1657,6 +1757,46 @@ mod test {
             &vec![2.into()]
                 .into_iter()
                 .collect::<BTreeSet<_>>()
+        );
+    }
+
+    #[test]
+    fn scan_pred_to_idx_pred() {
+        let mut plan_meta = PlanMeta::default().with_store_conf(false, false);
+        let meta = StoreMeta {
+            schema: Some(
+                Schema::from_json(std::fs::File::open("resource/modern_schema.json").unwrap()).unwrap(),
+            ),
+        };
+        let mut scan = pb::Scan {
+            scan_opt: 0,
+            alias: None,
+            params: Some(pb::QueryParams {
+                tables: vec!["person".into()],
+                columns: vec![],
+                is_all_columns: false,
+                limit: None,
+                predicate: Some(str_to_expr_pb("@.name == \"John\"".to_string()).unwrap()),
+                extra: HashMap::new(),
+            }),
+            idx_predicate: None,
+        };
+
+        scan.preprocess(&meta, &mut plan_meta).unwrap();
+        assert!(scan.params.unwrap().predicate.is_none());
+        assert_eq!(
+            scan.idx_predicate.unwrap(),
+            pb::IndexPredicate {
+                or_predicates: vec![pb::index_predicate::AndPredicate {
+                    predicates: vec![pb::index_predicate::Triplet {
+                        key: Some(common_pb::Property {
+                            item: Some(common_pb::property::Item::Key("name".into())),
+                        }),
+                        value: Some("John".to_string().into()),
+                        cmp: None,
+                    }]
+                }]
+            }
         );
     }
 

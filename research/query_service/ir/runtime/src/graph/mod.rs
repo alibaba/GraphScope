@@ -23,6 +23,7 @@ use std::io;
 use std::sync::atomic::{AtomicPtr, Ordering};
 use std::sync::Arc;
 
+use dyn_type::Object;
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::common as common_pb;
@@ -150,8 +151,8 @@ impl QueryParams {
     }
 
     // Extra query params for different storages
-    fn with_extra_params(mut self, extra_params: HashMap<String, String>) -> Result<Self, ParsePbError> {
-        self.extra_params = Some(extra_params);
+    fn with_extra_params(mut self, extra_params_pb: HashMap<String, String>) -> Result<Self, ParsePbError> {
+        self.extra_params = Some(extra_params_pb);
         Ok(self)
     }
 
@@ -190,6 +191,12 @@ where
 pub trait GraphProxy: Send + Sync {
     /// Scan all vertices with query parameters, and return an iterator over them.
     fn scan_vertex(&self, params: &QueryParams) -> FnResult<Box<dyn Iterator<Item = Vertex> + Send>>;
+
+    /// Scan a vertex with a specified label and its primary key values, and additional query parameters,
+    /// and return the vertex if exists.
+    fn index_scan_vertex(
+        &self, label: &NameOrId, primary_key_values: &Vec<(NameOrId, Object)>, params: &QueryParams,
+    ) -> FnResult<Option<Vertex>>;
 
     /// Scan all edges with query parameters, and return an iterator over them.
     fn scan_edge(&self, params: &QueryParams) -> FnResult<Box<dyn Iterator<Item = Edge> + Send>>;

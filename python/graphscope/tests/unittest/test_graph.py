@@ -521,6 +521,22 @@ def test_add_column(ldbc_graph, arrow_modern_graph):
         print(g4.schema)
 
 
+def test_add_column_string_oid(
+    p2p_property_graph_string, p2p_project_directed_graph_string
+):
+    g1 = p2p_property_graph_string
+    g2 = p2p_project_directed_graph_string
+
+    property_names = [p.name for p in g1.schema.get_vertex_properties("person")]
+    assert "pagerank" not in property_names
+
+    ctx = graphscope.pagerank(g2)
+    g3 = g1.add_column(ctx, selector={"pagerank": "r"})
+
+    property_names = [p.name for p in g3.schema.get_vertex_properties("person")]
+    assert "pagerank" in property_names
+
+
 def test_graph_lifecycle(graphscope_session):
     graph = load_modern_graph(graphscope_session)
     c = graphscope.wcc(graph)

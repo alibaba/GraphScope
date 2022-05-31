@@ -11,56 +11,64 @@
             "id": 0,
             "name": "id"
           },
-          "data_type": 2
+          "data_type": 2,
+          "is_primary_key": true
         },
         {
           "key": {
             "id": 1,
             "name": "imageFile"
           },
-          "data_type": 4
+          "data_type": 4,
+          "is_primary_key": false
         },
         {
           "key": {
             "id": 2,
             "name": "creationDate"
           },
-          "data_type": 2
+          "data_type": 2,
+          "is_primary_key": false
         },
         {
           "key": {
             "id": 3,
             "name": "locationIP"
           },
-          "data_type": 4
+          "data_type": 4,
+          "is_primary_key": false
         },
         {
           "key": {
             "id": 4,
             "name": "browserUsed"
           },
-          "data_type": 4
+          "data_type": 4,
+          "is_primary_key": false
         },
         {
           "key": {
             "id": 5,
             "name": "language"
           },
-          "data_type": 4
+          "data_type": 4,
+          "is_primary_key": false
         },
         {
           "key": {
             "id": 6,
             "name": "content"
           },
-          "data_type": 4
+          "data_type": 4,
+          "is_primary_key": false
         },
         {
           "key": {
             "id": 7,
             "name": "length"
           },
-          "data_type": 1
+          "data_type": 1,
+          "is_primary_key": false
         }
       ]
     },
@@ -75,21 +83,24 @@
             "id": 0,
             "name": "id"
           },
-          "data_type": 2
+          "data_type": 2,
+          "is_primary_key": true
         },
         {
           "key": {
             "id": 8,
             "name": "name"
           },
-          "data_type": 4
+          "data_type": 4,
+          "is_primary_key": false
         },
         {
           "key": {
             "id": 9,
             "name": "url"
           },
-          "data_type": 4
+          "data_type": 4,
+          "is_primary_key": false
         }
       ]
     },
@@ -104,28 +115,32 @@
             "id": 4,
             "name": "browserUsed"
           },
-          "data_type": 4
+          "data_type": 4,
+          "is_primary_key": false
         },
         {
           "key": {
             "id": 6,
             "name": "content"
           },
-          "data_type": 4
+          "data_type": 4,
+          "is_primary_key": false
         },
         {
           "key": {
             "id": 3,
             "name": "locationIP"
           },
-          "data_type": 4
+          "data_type": 4,
+          "is_primary_key": false
         },
         {
           "key": {
             "id": 7,
             "name": "length"
           },
-          "data_type": 1
+          "data_type": 1,
+          "is_primary_key": false
         }
       ]
     },
@@ -140,21 +155,24 @@
             "id": 0,
             "name": "id"
           },
-          "data_type": 2
+          "data_type": 2,
+          "is_primary_key": true
         },
         {
           "key": {
             "id": 8,
             "name": "name"
           },
-          "data_type": 4
+          "data_type": 4,
+          "is_primary_key": false
         },
         {
           "key": {
             "id": 9,
             "name": "url"
           },
-          "data_type": 4
+          "data_type": 4,
+          "is_primary_key": false
         }
       ]
     },
@@ -169,21 +187,24 @@
             "id": 0,
             "name": "id"
           },
-          "data_type": 2
+          "data_type": 2,
+          "is_primary_key": true
         },
         {
           "key": {
             "id": 8,
             "name": "name"
           },
-          "data_type": 4
+          "data_type": 4,
+          "is_primary_key": false
         },
         {
           "key": {
             "id": 9,
             "name": "url"
           },
-          "data_type": 4
+          "data_type": 4,
+          "is_primary_key": false
         }
       ]
     },
@@ -198,21 +219,24 @@
             "id": 0,
             "name": "id"
           },
-          "data_type": 2
+          "data_type": 2,
+          "is_primary_key": true
         },
         {
           "key": {
             "id": 8,
             "name": "name"
           },
-          "data_type": 4
+          "data_type": 4,
+          "is_primary_key": false
         },
         {
           "key": {
             "id": 9,
             "name": "url"
           },
-          "data_type": 4
+          "data_type": 4,
+          "is_primary_key": false
         }
       ]
     },
@@ -227,21 +251,24 @@
             "id": 0,
             "name": "id"
           },
-          "data_type": 2
+          "data_type": 2,
+          "is_primary_key": true
         },
         {
           "key": {
             "id": 10,
             "name": "title"
           },
-          "data_type": 4
+          "data_type": 4,
+          "is_primary_key": false
         },
         {
           "key": {
             "id": 2,
             "name": "creationDate"
           },
-          "data_type": 2
+          "data_type": 2,
+          "is_primary_key": false
         }
       ]
     },
@@ -256,21 +283,24 @@
             "id": 0,
             "name": "id"
           },
-          "data_type": 2
+          "data_type": 2,
+          "is_primary_key": true
         },
         {
           "key": {
             "id": 8,
             "name": "name"
           },
-          "data_type": 4
+          "data_type": 4,
+          "is_primary_key": false
         },
         {
           "key": {
             "id": 9,
             "name": "url"
           },
-          "data_type": 4
+          "data_type": 4,
+          "is_primary_key": false
         }
       ]
     },
@@ -285,56 +315,64 @@
             "id": 0,
             "name": "id"
           },
-          "data_type": 2
+          "data_type": 2,
+          "is_primary_key": true
         },
         {
           "key": {
             "id": 11,
             "name": "firstName"
           },
-          "data_type": 4
+          "data_type": 4,
+          "is_primary_key": false
         },
         {
           "key": {
             "id": 12,
             "name": "lastName"
           },
-          "data_type": 4
+          "data_type": 4,
+          "is_primary_key": false
         },
         {
           "key": {
             "id": 13,
             "name": "gender"
           },
-          "data_type": 4
+          "data_type": 4,
+          "is_primary_key": false
         },
         {
           "key": {
             "id": 14,
             "name": "birthday"
           },
-          "data_type": 2
+          "data_type": 2,
+          "is_primary_key": false
         },
         {
           "key": {
             "id": 2,
             "name": "creationDate"
           },
-          "data_type": 2
+          "data_type": 2,
+          "is_primary_key": false
         },
         {
           "key": {
             "id": 3,
             "name": "locationIP"
           },
-          "data_type": 4
+          "data_type": 4,
+          "is_primary_key": false
         },
         {
           "key": {
             "id": 4,
             "name": "browserUsed"
           },
-          "data_type": 4
+          "data_type": 4,
+          "is_primary_key": false
         }
       ]
     },
@@ -349,21 +387,24 @@
             "id": 0,
             "name": "id"
           },
-          "data_type": 2
+          "data_type": 2,
+          "is_primary_key": true
         },
         {
           "key": {
             "id": 8,
             "name": "name"
           },
-          "data_type": 4
+          "data_type": 4,
+          "is_primary_key": false
         },
         {
           "key": {
             "id": 9,
             "name": "url"
           },
-          "data_type": 4
+          "data_type": 4,
+          "is_primary_key": false
         }
       ]
     },
@@ -378,21 +419,24 @@
             "id": 0,
             "name": "id"
           },
-          "data_type": 2
+          "data_type": 2,
+          "is_primary_key": true
         },
         {
           "key": {
             "id": 8,
             "name": "name"
           },
-          "data_type": 4
+          "data_type": 4,
+          "is_primary_key": false
         },
         {
           "key": {
             "id": 9,
             "name": "url"
           },
-          "data_type": 4
+          "data_type": 4,
+          "is_primary_key": false
         }
       ]
     },
@@ -407,21 +451,24 @@
             "id": 0,
             "name": "id"
           },
-          "data_type": 2
+          "data_type": 2,
+          "is_primary_key": true
         },
         {
           "key": {
             "id": 8,
             "name": "name"
           },
-          "data_type": 4
+          "data_type": 4,
+          "is_primary_key": false
         },
         {
           "key": {
             "id": 9,
             "name": "url"
           },
-          "data_type": 4
+          "data_type": 4,
+          "is_primary_key": false
         }
       ]
     },
@@ -436,21 +483,24 @@
             "id": 0,
             "name": "id"
           },
-          "data_type": 2
+          "data_type": 2,
+          "is_primary_key": false
         },
         {
           "key": {
             "id": 8,
             "name": "name"
           },
-          "data_type": 4
+          "data_type": 4,
+          "is_primary_key": false
         },
         {
           "key": {
             "id": 9,
             "name": "url"
           },
-          "data_type": 4
+          "data_type": 4,
+          "is_primary_key": false
         }
       ]
     }
@@ -479,7 +529,8 @@
             "id": 15,
             "name": "classYear"
           },
-          "data_type": 1
+          "data_type": 1,
+          "is_primary_key": false
         }
       ]
     },
@@ -506,7 +557,8 @@
             "id": 16,
             "name": "workFrom"
           },
-          "data_type": 1
+          "data_type": 1,
+          "is_primary_key": false
         }
       ]
     },
@@ -581,7 +633,8 @@
             "id": 17,
             "name": "joinDate"
           },
-          "data_type": 2
+          "data_type": 2,
+          "is_primary_key": false
         }
       ]
     },
@@ -647,7 +700,8 @@
             "id": 2,
             "name": "creationDate"
           },
-          "data_type": 2
+          "data_type": 2,
+          "is_primary_key": false
         }
       ]
     },
@@ -712,7 +766,8 @@
             "id": 2,
             "name": "creationDate"
           },
-          "data_type": 2
+          "data_type": 2,
+          "is_primary_key": false
         }
       ]
     },

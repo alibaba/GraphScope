@@ -36,6 +36,17 @@ public class ValueMapTest {
     private GraphTraversalSource g = graph.traversal();
 
     @Test
+    public void g_V_valueMap_test() {
+        Traversal traversal = g.V().valueMap();
+        Step valueMapStep = traversal.asAdmin().getEndStep();
+        ProjectOp op = (ProjectOp) StepTransformFactory.VALUE_MAP_STEP.apply(valueMapStep);
+
+        List<Pair> exprWithAlias = (List<Pair>) op.getExprWithAlias().get().applyArg();
+        Assert.assertEquals("@.~all", exprWithAlias.get(0).getValue0());
+        Assert.assertEquals(ArgUtils.asFfiNoneAlias(), exprWithAlias.get(0).getValue1());
+    }
+
+    @Test
     public void g_V_valueMap_strs_test() {
         Traversal traversal = g.V().valueMap("name", "id");
         Step valueMapStep = traversal.asAdmin().getEndStep();

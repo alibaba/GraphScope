@@ -67,6 +67,7 @@ public class Store extends NodeBase {
         StoreBackupService storeBackupService = new StoreBackupService(this.backupAgent);
         StoreSchemaService storeSchemaService = new StoreSchemaService(this.storeService);
         StoreIngestService storeIngestService = new StoreIngestService(this.storeService);
+        StoreSnapshotService storeSnapshotService = new StoreSnapshotService(this.storeService);
         this.rpcServer =
                 new RpcServer(
                         configs,
@@ -75,6 +76,7 @@ public class Store extends NodeBase {
                         storeBackupService,
                         storeSchemaService,
                         storeIngestService,
+                        storeSnapshotService,
                         metricsCollectService);
         ComputeServiceProducer serviceProducer = ServiceProducerFactory.getProducer(configs);
         this.executorService =

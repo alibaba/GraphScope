@@ -62,8 +62,7 @@ public class GraphStepTest {
         IrStandardOpProcessor.applyStrategies(traversal);
         Step graphStep = traversal.asAdmin().getStartStep();
         ScanFusionOp op = (ScanFusionOp) StepTransformFactory.SCAN_FUSION_STEP.apply(graphStep);
-        FfiNameOrId.ByValue ffiLabel =
-                ((List<FfiNameOrId.ByValue>) op.getLabels().get().applyArg()).get(0);
+        FfiNameOrId.ByValue ffiLabel = op.getParams().get().getTables().get(0);
         Assert.assertEquals("person", ffiLabel.name);
     }
 
@@ -82,7 +81,7 @@ public class GraphStepTest {
         IrStandardOpProcessor.applyStrategies(traversal);
         Step graphStep = traversal.asAdmin().getStartStep();
         ScanFusionOp op = (ScanFusionOp) StepTransformFactory.SCAN_FUSION_STEP.apply(graphStep);
-        String expr = (String) op.getPredicate().get().applyArg();
+        String expr = op.getParams().get().getPredicate().get();
         Assert.assertEquals("@.name && @.name == \"marko\"", expr);
     }
 

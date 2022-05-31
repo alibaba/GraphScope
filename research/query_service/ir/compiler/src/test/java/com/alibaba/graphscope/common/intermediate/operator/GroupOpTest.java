@@ -32,7 +32,7 @@ import java.util.Collections;
 import java.util.function.Function;
 
 public class GroupOpTest {
-    private IrPlan irPlan = new IrPlan();
+    private IrPlan irPlan;
 
     @Test
     public void countTest() throws IOException {
@@ -41,7 +41,7 @@ public class GroupOpTest {
         ArgAggFn aggFn = new ArgAggFn(FfiAggOpt.Count, ArgUtils.asFfiAlias("values", false));
         op.setGroupByValues(new OpArg(Collections.singletonList(aggFn), Function.identity()));
 
-        irPlan.appendInterOp(-1, op);
+        irPlan = DedupOpTest.getTestIrPlan(op);
         Assert.assertEquals(FileUtils.readJsonFromResource("count.json"), irPlan.getPlanAsJson());
     }
 
@@ -52,7 +52,7 @@ public class GroupOpTest {
         ArgAggFn aggFn = new ArgAggFn(FfiAggOpt.Count, ArgUtils.asFfiAlias("a", true));
         op.setGroupByValues(new OpArg(Collections.singletonList(aggFn), Function.identity()));
 
-        irPlan.appendInterOp(-1, op);
+        irPlan = DedupOpTest.getTestIrPlan(op);
         Assert.assertEquals(
                 FileUtils.readJsonFromResource("count_as.json"), irPlan.getPlanAsJson());
     }
@@ -67,7 +67,7 @@ public class GroupOpTest {
         ArgAggFn aggFn = new ArgAggFn(FfiAggOpt.ToList, ArgUtils.asFfiAlias("values", false));
         op.setGroupByValues(new OpArg(Collections.singletonList(aggFn), Function.identity()));
 
-        irPlan.appendInterOp(-1, op);
+        irPlan = DedupOpTest.getTestIrPlan(op);
         Assert.assertEquals(FileUtils.readJsonFromResource("group.json"), irPlan.getPlanAsJson());
     }
 
@@ -81,7 +81,7 @@ public class GroupOpTest {
         ArgAggFn aggFn = new ArgAggFn(FfiAggOpt.ToList, ArgUtils.asFfiAlias("values", false));
         op.setGroupByValues(new OpArg(Collections.singletonList(aggFn), Function.identity()));
 
-        irPlan.appendInterOp(-1, op);
+        irPlan = DedupOpTest.getTestIrPlan(op);
         Assert.assertEquals(
                 FileUtils.readJsonFromResource("group_key.json"), irPlan.getPlanAsJson());
     }
@@ -96,7 +96,7 @@ public class GroupOpTest {
         ArgAggFn aggFn = new ArgAggFn(FfiAggOpt.Count, ArgUtils.asFfiAlias("values", false));
         op.setGroupByValues(new OpArg(Collections.singletonList(aggFn), Function.identity()));
 
-        irPlan.appendInterOp(-1, op);
+        irPlan = DedupOpTest.getTestIrPlan(op);
         Assert.assertEquals(
                 FileUtils.readJsonFromResource("group_key_count.json"), irPlan.getPlanAsJson());
     }

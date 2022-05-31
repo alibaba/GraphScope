@@ -26,31 +26,43 @@
 
 namespace htap_impl {
 
-using FRAGMENT_TYPE = ::vineyard::ArrowFragment<int64_t, uint64_t>;
-using VERTEX_MAP_TYPE = ::vineyard::ArrowVertexMap<int64_t, uint64_t>;
+using VID_TYPE = uint64_t;
+using OID_TYPE = int64_t;
+using STRING_OID_TYPE = std::string;
 
-using OID_TYPE = typename FRAGMENT_TYPE::oid_t;
-using VID_TYPE = typename FRAGMENT_TYPE::vid_t;
+using FRAGMENT_TYPE = ::vineyard::ArrowFragment<OID_TYPE, VID_TYPE>;
+using STRING_FRAGMENT_TYPE = ::vineyard::ArrowFragment<STRING_OID_TYPE, VID_TYPE>;
+
+using VERTEX_MAP_TYPE = ::vineyard::ArrowVertexMap<FRAGMENT_TYPE::internal_oid_t, VID_TYPE>;
+using STRING_VERTEX_MAP_TYPE = ::vineyard::ArrowVertexMap<STRING_FRAGMENT_TYPE::internal_oid_t, VID_TYPE>;
+
 using FRAG_ID_TYPE = ::vineyard::fid_t;
 using EID_TYPE = typename FRAGMENT_TYPE::eid_t;
 using VERTEX_RANGE_TYPE = std::pair<VID_TYPE, VID_TYPE>;
 using VERTEX_TYPE = typename FRAGMENT_TYPE::vertex_t;
 
 struct GraphHandleImpl {
-  vineyard::Client* client;
-  FRAGMENT_TYPE* fragments;
-  VERTEX_MAP_TYPE* vertex_map;
+  vineyard::Client* client = nullptr;
+
+  bool use_int64_oid = true;
+  bool use_string_oid = false;
+
+  FRAGMENT_TYPE* fragments = nullptr;
+  STRING_FRAGMENT_TYPE* string_fragments = nullptr;
+  VERTEX_MAP_TYPE* vertex_map = nullptr;
+  STRING_VERTEX_MAP_TYPE* string_vertex_map = nullptr;
+
   FRAG_ID_TYPE fnum;
   vineyard::IdParser<VID_TYPE> vid_parser;
   vineyard::IdParser<EID_TYPE> eid_parser;
-  vineyard::MGPropertyGraphSchema* schema;
+  vineyard::MGPropertyGraphSchema* schema = nullptr;
   FRAG_ID_TYPE local_fnum;
-  FRAG_ID_TYPE* local_fragments;
+  FRAG_ID_TYPE* local_fragments = nullptr;
   int vertex_label_num;
   int edge_label_num;
 
   PartitionId channel_num;
-  VID_TYPE** vertex_chunk_sizes;
+  VID_TYPE** vertex_chunk_sizes = nullptr;
 };
 
 inline int get_edge_partition_id(EID_TYPE id, GraphHandleImpl* handle) {
@@ -68,6 +80,7 @@ struct GetVertexIteratorImpl {
   int index;
 };
 
+template <typename FRAGMENT_TYPE>
 void get_vertices(FRAGMENT_TYPE* frag, LabelId* label, VertexId* ids, int count,
                   GetVertexIteratorImpl* out);
 
@@ -83,6 +96,7 @@ struct GetAllVerticesIteratorImpl {
   VID_TYPE cur_vertex_id;
 };
 
+template <typename FRAGMENT_TYPE>
 void get_all_vertices(FRAGMENT_TYPE* frag, PartitionId channel_id,
                       const VID_TYPE* chunk_sizes, LabelId* labels,
                       int labels_count, int64_t limit,
@@ -102,11 +116,14 @@ struct PropertiesIteratorImpl {
   PropertyId col_id;
 };
 
-OuterId get_outer_id(FRAGMENT_TYPE* frag, Vertex v);
+template <typename FRAGMENT_TYPE>
+typename FRAGMENT_TYPE::oid_t get_outer_id(FRAGMENT_TYPE* frag, Vertex v);
 
+template <typename FRAGMENT_TYPE>
 int get_vertex_property(FRAGMENT_TYPE* frag, Vertex v, PropertyId id,
                         Property* p_out);
 
+template <typename FRAGMENT_TYPE>
 void get_vertex_properties(FRAGMENT_TYPE* frag, Vertex v,
                            PropertiesIteratorImpl* iter);
 
@@ -120,7 +137,8 @@ struct AdjListUnit {
 
 struct EdgeIteratorImpl {
   // FRAG_ID_TYPE fid;
-  FRAGMENT_TYPE* fragment;
+  FRAGMENT_TYPE* fragment = nullptr;
+  STRING_FRAGMENT_TYPE* string_fragment = nullptr;
   vineyard::IdParser<EID_TYPE>* eid_parser;
 
   int64_t src;
@@ -133,6 +151,7 @@ struct EdgeIteratorImpl {
 
 void empty_edge_iterator(EdgeIteratorImpl* iter);
 
+template <typename FRAGMENT_TYPE>
 void get_out_edges(FRAGMENT_TYPE* frag,
                    vineyard::IdParser<EID_TYPE>* eid_parser, VertexId src_id,
                    LabelId* labels, int labels_count, int64_t limit,
@@ -140,6 +159,7 @@ void get_out_edges(FRAGMENT_TYPE* frag,
 
 int out_edge_next(EdgeIteratorImpl* iter, Edge* e_out);
 
+template <typename FRAGMENT_TYPE>
 void get_in_edges(FRAGMENT_TYPE* frag, vineyard::IdParser<EID_TYPE>* eid_parser,
                   VertexId dst_id, LabelId* labels, int labels_count,
                   int64_t limit, EdgeIteratorImpl* iter);
@@ -147,7 +167,8 @@ void get_in_edges(FRAGMENT_TYPE* frag, vineyard::IdParser<EID_TYPE>* eid_parser,
 int in_edge_next(EdgeIteratorImpl* iter, Edge* e_out);
 
 struct GetAllEdgesIteratorImpl {
-  FRAGMENT_TYPE* fragment;
+  FRAGMENT_TYPE* fragment = nullptr;
+  STRING_FRAGMENT_TYPE* string_fragment = nullptr;
   LabelId* e_labels;
   vineyard::IdParser<EID_TYPE>* eid_parser;
   int e_labels_count;
@@ -164,6 +185,7 @@ struct GetAllEdgesIteratorImpl {
   int64_t limit;
 };
 
+template <typename FRAGMENT_TYPE>
 void get_all_edges(FRAGMENT_TYPE* frag, PartitionId channel_id,
                    const VID_TYPE* chunk_sizes,
                    vineyard::IdParser<EID_TYPE>* eid_parser, LabelId* labels,
@@ -176,11 +198,14 @@ void free_edge_iterator(EdgeIteratorImpl* iter);
 
 void free_get_all_edges_iterator(GetAllEdgesIteratorImpl* iter);
 
+template <typename FRAGMENT_TYPE>
 EdgeId get_edge_id(FRAGMENT_TYPE* frag, LabelId label, int64_t offset);
 
+template <typename FRAGMENT_TYPE>
 int get_edge_property(FRAGMENT_TYPE* frag, LabelId label, int64_t offset,
                       PropertyId id, Property* p_out);
 
+template <typename FRAGMENT_TYPE>
 void get_edge_properties(FRAGMENT_TYPE* frag, LabelId label, int64_t offset,
                          PropertiesIteratorImpl* iter);
 

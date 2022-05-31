@@ -41,6 +41,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.step.branch.UnionStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.*;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.*;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.EmptyStep;
+import org.apache.tinkerpop.gremlin.process.traversal.step.util.HasContainer;
 import org.apache.tinkerpop.gremlin.process.traversal.util.TraversalHelper;
 import org.apache.tinkerpop.gremlin.structure.Column;
 import org.apache.tinkerpop.gremlin.structure.Direction;
@@ -76,15 +77,20 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
             if (scanFusionStep.getIds() != null && scanFusionStep.getIds().length > 0) {
                 op.setIds(new OpArg(scanFusionStep, CONST_IDS_FROM_STEP));
             }
+
+            QueryParams params = new QueryParams();
             // set labels
-            if (!scanFusionStep.getGraphLabels().isEmpty()) {
-                List<String> labels = scanFusionStep.getGraphLabels();
-                op.setLabels(new OpArg(scanFusionStep, LABELS_FROM_STEP));
+            List<String> labels = scanFusionStep.getGraphLabels();
+            for (String label : labels) {
+                params.addTable(ArgUtils.asFfiTag(label));
             }
-            // set other containers as predicates
-            if (!scanFusionStep.getHasContainers().isEmpty()) {
-                op.setPredicate(new OpArg(step, PredicateExprTransformFactory.HAS_STEP));
+            List<HasContainer> containers = scanFusionStep.getHasContainers();
+            if (!containers.isEmpty()) {
+                String predicate = PredicateExprTransformFactory.HAS_STEP.apply(scanFusionStep);
+                params.setPredicate(predicate);
             }
+            op.setParams(params);
+
             return op;
         }
     },
@@ -140,16 +146,15 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
                                     return Boolean.valueOf(false);
                                 }
                             }));
-            // add corner judgement
-            if (((VertexStep) step).getEdgeLabels().length > 0) {
-                op.setLabels(
-                        new OpArg<>(
-                                (VertexStep) step,
-                                (VertexStep s1) ->
-                                        Arrays.stream(s1.getEdgeLabels())
-                                                .map(k -> ArgUtils.asFfiTag(k))
-                                                .collect(Collectors.toList())));
+
+            QueryParams params = new QueryParams();
+            String[] labels = ((VertexStep) step).getEdgeLabels();
+            if (labels.length > 0) {
+                for (String label : labels) {
+                    params.addTable(ArgUtils.asFfiTag(label));
+                }
             }
+            op.setParams(params);
             return op;
         }
     },
@@ -305,6 +310,7 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
                                                 direction + " cannot be converted to FfiVOpt");
                                 }
                             }));
+            op.setParams(new QueryParams());
             return op;
         }
     },
