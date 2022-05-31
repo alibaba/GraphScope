@@ -127,12 +127,6 @@ pub extern fn writeBatch(ptr: GraphHandle, snapshot_id: i64, data: *const u8, le
     }
 }
 
-#[no_mangle]
-pub extern fn garbageCollectSnapshot(ptr: GraphHandle,  snapshot_id: i64) -> Box<JnaResponse>  {
-    info!("Delete snapshot in rust {}", snapshot_id);
-    JnaResponse::new_success()
-}
-
 fn do_write_batch<G: MultiVersionGraph>(graph: &G, snapshot_id: SnapshotId, buf: &[u8]) -> GraphResult<bool> {
     let proto = parse_pb::<OperationBatchPb>(buf)?;
     let mut has_ddl = false;
@@ -347,7 +341,7 @@ fn delete_edge<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &Operation
 }
 
 #[no_mangle]
-pub extern fn gc(ptr: GraphHandle, snapshot_id: i64) -> Box<JnaResponse> {
+pub extern fn garbageCollectSnapshot(ptr: GraphHandle, snapshot_id: i64) -> Box<JnaResponse> {
     unsafe {
         let graph_store_ptr = &*(ptr as *const GraphStore);
         match graph_store_ptr.gc(snapshot_id) {
@@ -363,5 +357,5 @@ pub extern fn gc(ptr: GraphHandle, snapshot_id: i64) -> Box<JnaResponse> {
 }
 
 fn do_gc<G: MultiVersionGraph>(graph: &G, snapshot_id: i64) -> GraphResult<()> {
-    graph.gc(snapshot_id)
+    graph.garbageCollectSnapshot(snapshot_id)
 }
