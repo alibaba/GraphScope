@@ -361,11 +361,13 @@ impl MultiVersionGraph for GraphStore {
     fn gc(&self, si: i64) -> GraphResult<()> {
         let vertex_tables = self.vertex_manager.gc(si)?;
         for vt in vertex_tables {
+            info!("gc vertex table {}", vt);
             let table_prefix = vertex_table_prefix(vt);
             self.delete_table_by_prefix(table_prefix)?;
         }
         let edge_tables = self.edge_manager.gc(si)?;
         for et in edge_tables {
+            info!("gc edge table {}", et);
             let table_prefix = edge_table_prefix(et, EdgeDirection::Out);
             self.delete_table_by_prefix(table_prefix)?;
         }
