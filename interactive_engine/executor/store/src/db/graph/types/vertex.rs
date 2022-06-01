@@ -236,6 +236,7 @@ impl VertexTypeManager {
             if !b.is_empty() {
                 let mut map_clone = map_ref.clone();
                 for label in b {
+                    info!("label {} removed", label);
                     map_clone.remove(&label);
                 }
                 self.map.store(Owned::new(map_clone), Ordering::Relaxed);
