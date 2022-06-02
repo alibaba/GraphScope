@@ -548,12 +548,14 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
                                 });
                         InterOpCollection ops =
                                 (new InterOpCollectionBuilder(binderTraversal)).build();
+                        // apply fusion strategy
                         ElementFusionStrategy.INSTANCE.apply(ops);
+                        // all of the SelectOps should have been fused with Expand/GetV, otherwise invalid
                         for (InterOpBase opBase : ops.unmodifiableCollection()) {
                             if (opBase instanceof SelectOp) {
                                 throw new OpArgIllegalException(
                                         OpArgIllegalException.Cause.INVALID_TYPE,
-                                        "the filter should be fused with GetV or Expand");
+                                        "the filter should have been fused with GetV or Expand");
                             }
                         }
                         sentences.add(
@@ -567,7 +569,7 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
                     || step instanceof PathExpandStep // out/in/both('1..5', 'knows')
                     || step instanceof EdgeOtherVertexStep // otherV()
                     || step instanceof EdgeVertexStep // inV()/outV()/endV()(todo)
-                    || step instanceof HasStep;
+                    || step instanceof HasStep; // permit has() nested in match step
         }
     },
 
