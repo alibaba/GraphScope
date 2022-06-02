@@ -73,7 +73,7 @@ impl LifeTime {
     }
 
     pub fn is_obsolete_at(&self, si: SnapshotId) -> bool {
-        self.end_si.get() < si
+        self.end_si.get() <= si
     }
 
     pub fn get_start(&self) -> SnapshotId {

@@ -233,7 +233,7 @@ impl VertexTypeManager {
             let mut table_ids = Vec::new();
             for (label, info) in map_ref {
                 table_ids.append(&mut info.gc(si)?);
-                if !info.is_obsolete_at(si) {
+                if info.is_obsolete_at(si) {
                     b.push(*label);
                 }
             }

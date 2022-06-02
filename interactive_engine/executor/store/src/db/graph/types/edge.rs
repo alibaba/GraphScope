@@ -491,7 +491,7 @@ impl EdgeManagerInner {
         let mut dropped_types = Vec::new();
         let mut table_ids = Vec::new();
         for (label, info) in &self.info_map {
-            if !info.lifetime.is_obsolete_at(si) {
+            if info.lifetime.is_obsolete_at(si) {
                 dropped_labels.push(*label);
                 for t in &info.kinds {
                     table_ids.append(&mut t.gc(si)?);
@@ -500,7 +500,7 @@ impl EdgeManagerInner {
             } else {
                 for t in &info.kinds {
                     table_ids.append(&mut t.gc(si)?);
-                    if !t.lifetime.is_obsolete_at(si) {
+                    if t.lifetime.is_obsolete_at(si) {
                         dropped_types.push(t.edge_kind.clone());
                     }
                 }
