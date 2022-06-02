@@ -12,7 +12,7 @@ use super::meta::*;
 use super::bin::*;
 use protobuf::Message;
 use crate::db::api::GraphErrorCode::{InvalidData, TypeNotFound};
-use crate::db::graph::table_manager::{Table, TableId};
+use crate::db::graph::table_manager::Table;
 use crate::db::graph::entity::{RocksVertexImpl, RocksEdgeImpl};
 use crate::db::graph::iter::{EdgeTypeScan, VertexTypeScan};
 use crate::db::api::multi_version_graph::{MultiVersionGraph, GraphBackup};

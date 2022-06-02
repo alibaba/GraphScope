@@ -356,7 +356,3 @@ pub extern fn garbageCollectSnapshot(ptr: GraphHandle, snapshot_id: i64) -> Box<
         }
     }
 }
-
-fn do_gc<G: MultiVersionGraph>(graph: &G, snapshot_id: i64) -> GraphResult<()> {
-    graph.gc(snapshot_id)
-}
