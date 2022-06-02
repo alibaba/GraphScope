@@ -550,7 +550,8 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
                                 (new InterOpCollectionBuilder(binderTraversal)).build();
                         // apply fusion strategy
                         ElementFusionStrategy.INSTANCE.apply(ops);
-                        // all of the SelectOps should have been fused with Expand/GetV, otherwise invalid
+                        // all of the SelectOps should have been fused with Expand/GetV, otherwise
+                        // invalid
                         for (InterOpBase opBase : ops.unmodifiableCollection()) {
                             if (opBase instanceof SelectOp) {
                                 throw new OpArgIllegalException(
