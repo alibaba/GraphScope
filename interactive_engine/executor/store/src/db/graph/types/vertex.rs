@@ -49,7 +49,7 @@ impl VertexTypeInfo {
     }
 
     fn is_alive_at(&self, si: SnapshotId) -> bool {
-        self.lifetime.is_alive_at(si);
+        self.lifetime.is_alive_at(si)
     }
 
     fn is_obsolete_at(&self, si: SnapshotId) -> bool {
