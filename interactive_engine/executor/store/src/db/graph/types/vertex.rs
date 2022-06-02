@@ -49,11 +49,11 @@ impl VertexTypeInfo {
     }
 
     fn is_alive_at(&self, si: SnapshotId) -> bool {
-        let res = self.lifetime.is_alive_at(si);
-        if !res {
-            info!("start {}, end {}", self.lifetime.get_start(), self.lifetime.get_end());
-        }
-        res
+        self.lifetime.is_alive_at(si);
+    }
+
+    fn is_obsolete_at(&self, si: SnapshotId) -> bool {
+        self.lifetime.is_obsolete_at(si)
     }
 
     fn new(si: SnapshotId, label: LabelId) -> Self {
@@ -233,7 +233,7 @@ impl VertexTypeManager {
             let mut table_ids = Vec::new();
             for (label, info) in map_ref {
                 table_ids.append(&mut info.gc(si)?);
-                if !info.is_alive_at(si) {
+                if !info.is_obsolete_at(si) {
                     b.push(*label);
                 }
             }
