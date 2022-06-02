@@ -137,9 +137,10 @@ impl Partitioner for VineyardMultiPartition {
                     if let Some(worker_id) = partition_worker_mapping.get(&partition_id) {
                         Ok(*worker_id as u64)
                     } else {
-                        Err(FnExecError::query_store_error(
-                            "get worker id failed in VineyardMultiPartition",
-                        ))?
+			Err(FnExecError::query_store_error(&format!(
+                            "get worker id failed in VineyardMultiPartition with partition id  {:?} {:?}",
+                            id, partition_id
+                        )))?
                     }
                 } else {
                     Err(FnExecError::query_store_error(

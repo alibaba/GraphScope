@@ -60,7 +60,9 @@ impl SourceOperator {
                         let mut source_op = SourceOperator::try_from(scan)?;
                         let global_ids: Vec<ID> = <Vec<i64>>::try_from(ip)?
                             .into_iter()
-                            .map(|i| i as ID)
+                            .map(|i|{ 
+                                info!("Source vertex id in runtime {:?}", i);
+                                i as ID})
                             .collect();
                         if !global_ids.is_empty() {
                             // query by global_ids

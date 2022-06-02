@@ -36,7 +36,8 @@ public enum GremlinResultParserFactory implements GremlinResultParser {
     GRAPH_ELEMENT {
         @Override
         public Object parseFrom(IrResult.Results results) {
-            IrResult.Element element = ParserUtils.getHeadEntry(results).getElement();
+          logger.info("Output element result in compiler {}", results);  
+          IrResult.Element element = ParserUtils.getHeadEntry(results).getElement();
             Object graphElement = ParserUtils.parseElement(element);
             if (!(graphElement instanceof Element || graphElement instanceof List)) {
                 throw new GremlinResultParserException(
@@ -48,6 +49,7 @@ public enum GremlinResultParserFactory implements GremlinResultParser {
     SINGLE_VALUE {
         @Override
         public Object parseFrom(IrResult.Results results) {
+          logger.info("Output single value result in compiler {}", results);
             IrResult.Element element = ParserUtils.getHeadEntry(results).getElement();
             return ParserUtils.parseElement(element);
         }
@@ -62,6 +64,7 @@ public enum GremlinResultParserFactory implements GremlinResultParser {
         @Override
         public Object parseFrom(IrResult.Results results) {
             IrResult.Record record = results.getRecord();
+            logger.info("Output project result in compiler {}", record);
             logger.debug("{}", record);
             Map<String, Object> projectResult = new HashMap<>();
             record.getColumnsList()
@@ -156,6 +159,7 @@ public enum GremlinResultParserFactory implements GremlinResultParser {
         @Override
         public Map parseFrom(IrResult.Results results) {
             IrResult.Record record = results.getRecord();
+            logger.info("Output group result in compiler {}", record);
             Object key = null;
             Object value = null;
             for (IrResult.Column column : record.getColumnsList()) {

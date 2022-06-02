@@ -335,6 +335,7 @@ where
 
 #[inline]
 fn to_runtime_vertex<V: StoreVertex>(v: &V) -> Vertex {
+  //  info!("Store Vertex: id {:?} label {:?}", v.get_id(), v.get_label_id());
     let id = v.get_id() as ID;
     let label = encode_runtime_v_label(v);
     let properties = v
@@ -346,6 +347,7 @@ fn to_runtime_vertex<V: StoreVertex>(v: &V) -> Vertex {
 
 #[inline]
 fn to_runtime_edge<E: StoreEdge>(e: &E) -> Edge {
+    info!("Store Edge: e_id {:?} src_id {:?} dst_id {:?}", e.get_edge_id(), e.get_src_id(), e.get_dst_id());
     let id = e.get_edge_id() as ID;
     let label = encode_runtime_e_label(e);
     let properties = e
@@ -522,6 +524,8 @@ fn get_partition_label_vertex_ids(
             .or_insert(vec![])
             .push(*vid as VertexId);
     }
+
+    info!("Source partition_label_vid_map in query {:?}", partition_label_vid_map);
 
     partition_label_vid_map
         .into_iter()
