@@ -36,7 +36,8 @@ import java.util.Optional;
 // collection of intermediate operators
 public class InterOpCollection {
     private List<InterOpBase> opCollection;
-    private static List<InterOpStrategy> strategies = Arrays.asList(TopKStrategy.INSTANCE, ElementFusionStrategy.INSTANCE);
+    private static List<InterOpStrategy> strategies =
+            Arrays.asList(TopKStrategy.INSTANCE, ElementFusionStrategy.INSTANCE);
     private static List<InterOpProcessor> processors = Arrays.asList(SinkOutputProcessor.INSTANCE);
 
     public InterOpCollection() {
