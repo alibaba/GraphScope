@@ -49,7 +49,11 @@ impl VertexTypeInfo {
     }
 
     fn is_alive_at(&self, si: SnapshotId) -> bool {
-        self.lifetime.is_alive_at(si)
+        let res = self.lifetime.is_alive_at(si);
+        if !res {
+            info!("start {}, end {}", self.lifetime.get_start(), self.lifetime.get_end());
+        }
+        res
     }
 
     fn new(si: SnapshotId, label: LabelId) -> Self {
