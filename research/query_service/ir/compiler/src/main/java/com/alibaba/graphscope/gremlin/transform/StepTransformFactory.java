@@ -22,6 +22,7 @@ import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.intermediate.InterOpCollection;
 import com.alibaba.graphscope.common.intermediate.MatchSentence;
 import com.alibaba.graphscope.common.intermediate.operator.*;
+import com.alibaba.graphscope.common.intermediate.strategy.ElementFusionStrategy;
 import com.alibaba.graphscope.common.jna.type.*;
 import com.alibaba.graphscope.gremlin.InterOpCollectionBuilder;
 import com.alibaba.graphscope.gremlin.antlr4.GremlinAntlrToJava;
@@ -321,6 +322,7 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
             GetVOp op = new GetVOp();
             op.setGetVOpt(
                     new OpArg<>(otherStep, (EdgeOtherVertexStep otherStep1) -> FfiVOpt.Other));
+            op.setParams(new QueryParams());
             return op;
         }
     },
@@ -496,11 +498,11 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
                                             Set<String> scopeKeys;
                                             if (!startTag.isPresent()
                                                     && !(scopeKeys =
-                                                                    ((WhereTraversalStep
-                                                                                            .WhereStartStep)
-                                                                                    s1)
-                                                                            .getScopeKeys())
-                                                            .isEmpty()) {
+                                                    ((WhereTraversalStep
+                                                            .WhereStartStep)
+                                                            s1)
+                                                            .getScopeKeys())
+                                                    .isEmpty()) {
                                                 startTag = Optional.of(scopeKeys.iterator().next());
                                             }
                                         } else if (s1
@@ -510,11 +512,11 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
                                             Set<String> scopeKeys;
                                             if (!endTag.isPresent()
                                                     && !(scopeKeys =
-                                                                    ((WhereTraversalStep
-                                                                                            .WhereEndStep)
-                                                                                    s1)
-                                                                            .getScopeKeys())
-                                                            .isEmpty()) {
+                                                    ((WhereTraversalStep
+                                                            .WhereEndStep)
+                                                            s1)
+                                                            .getScopeKeys())
+                                                    .isEmpty()) {
                                                 endTag = Optional.of(scopeKeys.iterator().next());
                                             }
                                         } else if (isValidBinderStep(s1)) {
@@ -546,6 +548,13 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
                                 });
                         InterOpCollection ops =
                                 (new InterOpCollectionBuilder(binderTraversal)).build();
+                        ElementFusionStrategy.INSTANCE.apply(ops);
+                        for (InterOpBase opBase : ops.unmodifiableCollection()) {
+                            if (opBase instanceof SelectOp) {
+                                throw new OpArgIllegalException(
+                                        OpArgIllegalException.Cause.INVALID_TYPE, "the filter should be fused with GetV or Expand");
+                            }
+                        }
                         sentences.add(
                                 new MatchSentence(startTag.get(), endTag.get(), ops, joinKind));
                     });
@@ -556,7 +565,8 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
             return step instanceof VertexStep // in()/out()/both()/inE()/outE()/bothE()
                     || step instanceof PathExpandStep // out/in/both('1..5', 'knows')
                     || step instanceof EdgeOtherVertexStep // otherV()
-                    || step instanceof EdgeVertexStep; // inV()/outV()/endV()(todo)
+                    || step instanceof EdgeVertexStep // inV()/outV()/endV()(todo)
+                    || step instanceof HasStep;
         }
     },
 
