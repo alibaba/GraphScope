@@ -36,6 +36,7 @@ extern {
 
     fn build_global_graph_stream(graph_name: *const ::libc::c_char, size: usize, object_ids: *const GraphId, instance_ids: *const InstanceId) -> GraphId;
     fn get_graph_builder(graph_name: *const ::libc::c_char, index: i32) -> GraphBuilder;
+    fn initialize_graph_builder(builder: GraphBuilder, schema: SchemaHandle);
 
     fn add_vertex(graph_builder: GraphBuilder, id: VertexId, labelId: LabelId,
                   property_size: usize, properties: *const WriteNativeProperty);

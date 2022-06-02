@@ -17,6 +17,7 @@ package com.alibaba.pegasus;
 
 import com.alibaba.pegasus.builder.JobBuilder;
 import com.alibaba.pegasus.intf.CloseableIterator;
+import com.alibaba.pegasus.service.protocol.PegasusClient;
 import com.alibaba.pegasus.service.protocol.PegasusClient.JobConfig;
 import com.alibaba.pegasus.service.protocol.PegasusClient.JobRequest;
 import com.alibaba.pegasus.service.protocol.PegasusClient.JobResponse;
@@ -36,7 +37,7 @@ public class ClientExample {
     private static final Logger logger = LoggerFactory.getLogger(ClientExample.class);
 
     private static void process(JobResponse response) {
-        ByteString data = response.getData();
+        ByteString data = response.getResp();
         ArrayList<Long> res = toLongArray(data.toByteArray(), data.size());
         logger.info(
                 "got one response: job id {}, array size {}, job data {}",
@@ -119,8 +120,7 @@ public class ClientExample {
                         .setJobId(2)
                         .setJobName("ping_pong_example")
                         .setWorkers(2)
-                        .addServers(0)
-                        .addServers(1)
+                        .setAll(PegasusClient.Empty.newBuilder().build())
                         .build();
         // for job build
         JobBuilder jobBuilder = new JobBuilder(confPb);

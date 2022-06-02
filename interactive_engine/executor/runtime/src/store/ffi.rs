@@ -1455,8 +1455,47 @@ impl GraphPartitionManager for VineyardPartitionManager {
         return Some((partition_id as u32, vertex_id));
     }
 
-    fn get_vertex_id_by_primary_keys(&self, _label_id: LabelId, _pks: &[Property]) -> Option<VertexId> {
-        unimplemented!()
+    fn get_vertex_id_by_primary_keys(&self, label_id: LabelId, pks: &[Property]) -> Option<VertexId> {
+        if pks.len() != 1 {
+            warn!("multiple pks are not supported in Vineyard {:?}", pks);
+            return None;
+        } else {
+            let pk = pks.get(0).unwrap();
+            let key = match pk {
+                // Vineyard only supports `id` as pk.
+                Property::Char(i) => {
+                    Some(i.to_string())
+                }
+                Property::Short(i) => {
+                    Some(i.to_string())
+                }
+                Property::Int(i) => {
+                    Some(i.to_string())
+                }
+                Property::Long(i) => {
+                    Some(i.to_string())
+                }
+                Property::String(s) => {
+                    Some(s.clone())
+                }
+                _ => None,
+            };
+            if let Some(key) = key {
+                let mut partition_id = 0;
+                let mut vertex_id = 0;
+                let c_key = CString::new(key.as_str()).unwrap();
+                unsafe {
+                    let ret = get_vertex_id_from_primary_key(self.graph, label_id, c_key.as_ptr(), &mut vertex_id, &mut partition_id);
+                    if 0 != ret {
+                        error!("get vertex id from primary key {:?} with label id {:?} failed", key, label_id);
+                        return None;
+                    }
+                }
+                Some(vertex_id)
+            }  else {
+                None
+            }
+        }
     }
 }
 

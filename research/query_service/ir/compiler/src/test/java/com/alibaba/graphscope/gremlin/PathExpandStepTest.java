@@ -30,8 +30,6 @@ import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.List;
-
 public class PathExpandStepTest {
     private Graph graph = TinkerFactory.createModern();
     private IrCustomizedTraversalSource g = graph.traversal(IrCustomizedTraversalSource.class);
@@ -58,8 +56,7 @@ public class PathExpandStepTest {
         Assert.assertEquals(false, op.getIsEdge().get().applyArg());
         Assert.assertEquals(1, op.getLower().get().applyArg());
         Assert.assertEquals(2, op.getUpper().get().applyArg());
-        FfiNameOrId.ByValue label =
-                ((List<FfiNameOrId.ByValue>) op.getLabels().get().applyArg()).get(0);
+        FfiNameOrId.ByValue label = op.getParams().get().getTables().get(0);
         Assert.assertEquals("knows", label.name);
     }
 }

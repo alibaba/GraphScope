@@ -59,7 +59,9 @@ public class StoreService implements MetricsAgent {
     private int writeThreadCount;
     private MetaService metaService;
     private Map<Integer, GraphPartition> idToPartition;
-    private ExecutorService writeExecutor, ingestExecutor;
+    private ExecutorService writeExecutor;
+    private ExecutorService ingestExecutor;
+    private ExecutorService garbageCollectExecutor;
     private volatile boolean shouldStop = true;
 
     private volatile long lastUpdateTime;
@@ -106,6 +108,15 @@ public class StoreService implements MetricsAgent {
                         new LinkedBlockingQueue<>(1),
                         ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
                                 "store-ingest", logger));
+        this.garbageCollectExecutor =
+                new ThreadPoolExecutor(
+                        1,
+                        1,
+                        0L,
+                        TimeUnit.MILLISECONDS,
+                        new LinkedBlockingQueue<>(),
+                        ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
+                                "store-garbage-collect", logger));
         logger.info("StoreService started. storeId [" + this.storeId + "]");
     }
 
@@ -290,6 +301,26 @@ public class StoreService implements MetricsAgent {
             String fileName = "part-r-" + String.format("%05d", pid) + ".sst";
             String fullPath = path + "/" + fileName;
             partition.ingestExternalFile(externalStorage, fullPath);
+        }
+    }
+
+    public void garbageCollect(long snapshotId, CompletionCallback<Void> callback) {
+        this.garbageCollectExecutor.execute(
+                () -> {
+                    try {
+                        garbageCollectInternal(snapshotId);
+                        callback.onCompleted(null);
+                    } catch (Exception e) {
+                        logger.error("garbage collect failed. snapshot [" + snapshotId + "]", e);
+                        callback.onError(e);
+                    }
+                });
+    }
+
+    private void garbageCollectInternal(long snapshotId) throws IOException {
+        for (Map.Entry<Integer, GraphPartition> entry : this.idToPartition.entrySet()) {
+            GraphPartition partition = entry.getValue();
+            partition.garbageCollect(snapshotId);
         }
     }
 

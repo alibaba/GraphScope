@@ -15,7 +15,7 @@ maxgraph-server = { path = "../server" }
 pegasus = { path = "../Pegasus", package = "pegasus" }
 gaia_pegasus = { path = "../../../research/engine/pegasus/pegasus", package = "pegasus" }
 pegasus_network = { path = "../../../research/engine/pegasus/network" }
-pegasus_server = { path = "../../../research/engine/pegasus/server-v0" }
+pegasus_server = { path = "../../../research/engine/pegasus/server" }
 graph_proxy =  { path = "../../../research/query_service/ir/graph_proxy" }
 itertools = "0.7.8"
 log = "0.3"

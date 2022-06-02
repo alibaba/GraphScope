@@ -22,10 +22,9 @@ endif
 
 build:
 	cd $(CUR_DIR)/../../../engine/pegasus/clients/java/client && \
-		mvn clean install -DskipTests $(OSFLAG) && \
-		cd $(CUR_DIR)/../core && cargo build --release && \
-		cd ../integrated && cargo build --release --bin start_rpc_server && \
-		cd $(CUR_DIR) && mvn clean package -DskipTests $(OSFLAG)
+		mvn clean install -DskipTests --quiet $(OSFLAG) && \
+		cd $(CUR_DIR)/../integrated && cargo build --release --bin start_rpc_server && \
+		cd $(CUR_DIR) && mvn clean package -DskipTests --quiet $(OSFLAG)
 
 clean:
 	cd $(CUR_DIR)/../../../engine/pegasus/clients/java/client && mvn clean && \

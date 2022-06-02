@@ -62,9 +62,8 @@ public interface TraversalParentTransform extends Function<TraversalParent, List
                         stringBuilder.append("}");
                         return (new ExprResult(true)).addTagExpr("", stringBuilder.toString());
                     } else {
-                        throw new OpArgIllegalException(
-                                OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
-                                "valueMap() is unsupported");
+                        // valueMap() -> @.~all
+                        return (new ExprResult(true)).addTagExpr("", "@." + ArgUtils.PROPERTY_ALL);
                     }
                 } else if (step instanceof PropertiesStep) { // values(..)
                     String[] mapKeys = ((PropertiesStep) step).getPropertyKeys();

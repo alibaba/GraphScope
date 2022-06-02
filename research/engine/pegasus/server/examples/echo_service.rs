@@ -2,10 +2,11 @@ use std::io::Write;
 use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::time::Instant;
+
 use log::info;
-use pegasus::api::{Sink};
+use pegasus::api::Sink;
 use pegasus::{BuildJobError, JobConf, ServerConf, Worker};
-use pegasus_server::job::{JobDesc, JobAssembly};
+use pegasus_server::job::{JobAssembly, JobDesc};
 use structopt::StructOpt;
 use tokio_stream::StreamExt;
 
@@ -29,7 +30,8 @@ struct EchoJobParser;
 impl JobAssembly for EchoJobParser {
     fn assemble(&self, job: &JobDesc, worker: &mut Worker<Vec<u8>, Vec<u8>>) -> Result<(), BuildJobError> {
         worker.dataflow(|input, output| {
-            input.input_from(Some(job.input.clone()))?
+            input
+                .input_from(Some(job.input.clone()))?
                 .sink_into(output)
         })
     }

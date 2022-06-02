@@ -16,6 +16,7 @@
 
 package com.alibaba.graphscope.gremlin.result;
 
+import com.alibaba.graphscope.common.jna.type.FfiKeyType;
 import com.alibaba.graphscope.gaia.proto.Common;
 import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.alibaba.graphscope.gaia.proto.OuterExpression;
@@ -61,7 +62,7 @@ public enum GremlinResultParserFactory implements GremlinResultParser {
         @Override
         public Object parseFrom(IrResult.Results results) {
             IrResult.Record record = results.getRecord();
-            logger.info("{}", record);
+            logger.debug("{}", record);
             Map<String, Object> projectResult = new HashMap<>();
             record.getColumnsList()
                     .forEach(
@@ -70,17 +71,32 @@ public enum GremlinResultParserFactory implements GremlinResultParser {
                                 Object parseElement =
                                         ParserUtils.parseElement(column.getEntry().getElement());
                                 if (parseElement instanceof Map) {
-                                    Map<List, Object> projectTags =
-                                            (Map<List, Object>) parseElement;
+                                    Map projectTags = (Map) parseElement;
                                     projectTags.forEach(
                                             (k, v) -> {
                                                 if (!(v instanceof EmptyValue)) {
-                                                    String property = (String) k.get(1);
-                                                    if (property.isEmpty()) {
+                                                    String nameOrId = null;
+                                                    if (k
+                                                            instanceof
+                                                            List) { // valueMap("name") -> Map<["",
+                                                        // "name"], value>
+                                                        nameOrId = (String) ((List) k).get(1);
+                                                    } else if (k
+                                                            instanceof
+                                                            String) { // valueMap() -> Map<"name",
+                                                        // value>
+                                                        nameOrId = (String) k;
+                                                    } else if (k
+                                                            instanceof
+                                                            Number) { // valueMap() -> Map<1, value>
+                                                        nameOrId = String.valueOf(k);
+                                                    }
+                                                    if (nameOrId == null || nameOrId.isEmpty()) {
                                                         throw new GremlinResultParserException(
                                                                 "map value should have property"
                                                                         + " key");
                                                     }
+                                                    String property = getPropertyName(nameOrId);
                                                     Map tagEntry =
                                                             (Map)
                                                                     projectResult.computeIfAbsent(
@@ -123,6 +139,17 @@ public enum GremlinResultParserFactory implements GremlinResultParser {
                 default:
                     throw new GremlinResultParserException(columnKey.getItemCase() + " is invalid");
             }
+        }
+
+        // propertyId is in String format, i.e. "1"
+        private String getPropertyName(String nameOrId) {
+            OuterExpression.NameOrId.Builder builder = OuterExpression.NameOrId.newBuilder();
+            if (nameOrId.matches("^[0-9]+$")) {
+                builder.setId(Integer.valueOf(nameOrId));
+            } else {
+                builder.setName(nameOrId);
+            }
+            return ParserUtils.getKeyName(builder.build(), FfiKeyType.Column);
         }
     },
     GROUP {

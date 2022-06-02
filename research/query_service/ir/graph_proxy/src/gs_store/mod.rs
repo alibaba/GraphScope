@@ -23,7 +23,7 @@ use graph_partition::{MaxGraphMultiPartition, VineyardMultiPartition};
 use graph_query::create_gs_store;
 use maxgraph_store::api::graph_partition::GraphPartitionManager;
 use maxgraph_store::api::{Edge, GlobalGraphQuery, Vertex};
-use runtime::IRJobCompiler;
+use runtime::IRJobAssembly;
 
 use crate::InitializeJobCompiler;
 
@@ -49,10 +49,10 @@ where
     E: Edge + 'static,
     EI: Iterator<Item = E> + Send + 'static,
 {
-    fn initialize_job_compiler(&self) -> IRJobCompiler {
+    fn initialize_job_compiler(&self) -> IRJobAssembly {
         create_gs_store(self.graph_query.clone(), self.graph_partitioner.clone());
         let partitioner = MaxGraphMultiPartition::new(self.graph_partitioner.clone());
-        IRJobCompiler::new(partitioner)
+        IRJobAssembly::new(partitioner)
     }
 }
 
@@ -90,7 +90,7 @@ where
     E: Edge + 'static,
     EI: Iterator<Item = E> + Send + 'static,
 {
-    fn initialize_job_compiler(&self) -> IRJobCompiler {
+    fn initialize_job_compiler(&self) -> IRJobAssembly {
         create_gs_store(self.graph_query.clone(), self.graph_partitioner.clone());
         let partitioner = VineyardMultiPartition::new(
             self.graph_partitioner.clone(),
@@ -98,6 +98,6 @@ where
             self.worker_partition_list_mapping.clone(),
             self.num_servers,
         );
-        IRJobCompiler::new(partitioner)
+        IRJobAssembly::new(partitioner)
     }
 }

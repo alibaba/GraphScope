@@ -29,8 +29,6 @@ import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.List;
-
 public class VertexStepTest {
     private Graph graph = TinkerFactory.createModern();
     private GraphTraversalSource g = graph.traversal();
@@ -58,8 +56,7 @@ public class VertexStepTest {
         Traversal traversal = g.V().out("knows");
         Step vertexStep = traversal.asAdmin().getEndStep();
         ExpandOp op = (ExpandOp) StepTransformFactory.VERTEX_STEP.apply(vertexStep);
-        FfiNameOrId.ByValue label =
-                ((List<FfiNameOrId.ByValue>) op.getLabels().get().applyArg()).get(0);
+        FfiNameOrId.ByValue label = op.getParams().get().getTables().get(0);
         Assert.assertEquals("knows", label.name);
     }
 }

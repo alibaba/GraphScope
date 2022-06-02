@@ -17,9 +17,10 @@ use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::sync::Arc;
 
+use dyn_type::Object;
 use ir_common::error::{ParsePbError, ParsePbResult};
 use ir_common::generated::algebra as algebra_pb;
-use ir_common::KeyId;
+use ir_common::{KeyId, NameOrId};
 
 use crate::error::{FnGenError, FnGenResult};
 use crate::graph::element::{Edge, Vertex};
@@ -40,6 +41,7 @@ pub enum SourceType {
 pub struct SourceOperator {
     query_params: QueryParams,
     src: Option<HashMap<u64, Vec<ID>>>,
+    primary_key_values: Option<Vec<(NameOrId, Object)>>,
     alias: Option<KeyId>,
     source_type: SourceType,
 }
@@ -54,13 +56,20 @@ impl SourceOperator {
                 algebra_pb::logical_plan::operator::Opr::Scan(scan) => {
                     if let Some(index_predicate) = &scan.idx_predicate {
                         let ip = index_predicate.clone();
+                        let ip2 = index_predicate.clone();
                         let mut source_op = SourceOperator::try_from(scan)?;
                         let global_ids: Vec<ID> = <Vec<i64>>::try_from(ip)?
                             .into_iter()
                             .map(|i| i as ID)
                             .collect();
                         if !global_ids.is_empty() {
+                            // query by global_ids
                             source_op.set_src(global_ids, job_workers, partitioner);
+                            debug!("Runtime source op of indexed scan of global ids {:?}", source_op);
+                        } else {
+                            // query by indexed_scan
+                            let primary_key_values = <Vec<(NameOrId, Object)>>::try_from(ip2)?;
+                            source_op.primary_key_values = Some(primary_key_values);
                             debug!("Runtime source op of indexed scan {:?}", source_op);
                         }
                         Ok(source_op)
@@ -118,6 +127,18 @@ impl SourceOperator {
                             v_source = graph.get_vertex(src, &self.query_params)?;
                         }
                     }
+                } else if let Some(ref indexed_values) = self.primary_key_values {
+                    // parallel indexed scan
+                    if self.query_params.labels.len() != 1 {
+                        Err(FnGenError::unsupported_error("indexed_scan with empty/multiple labels"))?
+                    }
+                    if let Some(v) = graph.index_scan_vertex(
+                        &self.query_params.labels[0],
+                        indexed_values,
+                        &self.query_params,
+                    )? {
+                        v_source = Box::new(vec![v].into_iter())
+                    }
                 } else {
                     // parallel scan, and each worker should scan the partitions assigned to it in self.v_params.partitions
                     v_source = graph.scan_vertex(&self.query_params)?;
@@ -160,6 +181,6 @@ impl TryFrom<algebra_pb::Scan> for SourceOperator {
 
         let query_params = QueryParams::try_from(scan_pb.params)?;
 
-        Ok(SourceOperator { query_params, src: None, alias, source_type })
+        Ok(SourceOperator { query_params, src: None, primary_key_values: None, alias, source_type })
     }
 }

@@ -29,7 +29,7 @@ public interface GremlinResultParser extends ResultParser {
     @Override
     default List<Object> parseFrom(PegasusClient.JobResponse response) {
         try {
-            IrResult.Results results = IrResult.Results.parseFrom(response.getData());
+            IrResult.Results results = IrResult.Results.parseFrom(response.getResp());
             Object parseResult = parseFrom(results);
             if (parseResult instanceof EmptyValue) {
                 return Collections.emptyList();

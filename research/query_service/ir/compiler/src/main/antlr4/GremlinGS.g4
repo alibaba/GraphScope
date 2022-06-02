@@ -173,10 +173,10 @@ traversalMethod_limit
 	: 'limit' LPAREN integerLiteral RPAREN
 	;
 
+// valueMap()
 // valueMap('s1', ...)
-// valueMap() is unsupported
 traversalMethod_valueMap
-    : 'valueMap' LPAREN stringLiteralExpr RPAREN
+    : 'valueMap' LPAREN stringLiteralList RPAREN
     ;
 
 // order()
@@ -191,7 +191,7 @@ traversalMethod_order
 // by(values(..), 'asc' | 'desc')
 // by(select("a"), 'asc' | 'desc')
 // by(select("a").by("name"), 'asc' | 'desc')
-// by(select("a").by(valueMap("name")), 'asc' | 'desc')
+// by(select("a").by(values("name")), 'asc' | 'desc')
 // by(out().count()), by(out().count(), desc)
 traversalMethod_orderby
     : 'by' LPAREN RPAREN

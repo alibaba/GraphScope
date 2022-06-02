@@ -65,7 +65,7 @@ use prost::Message;
 
 use crate::error::IrError;
 use crate::plan::logical::LogicalPlan;
-use crate::plan::meta::set_schema_from_json;
+use crate::plan::meta::{set_schema_from_json, KeyType};
 use crate::plan::physical::AsPhysical;
 use crate::JsonIO;
 
@@ -580,6 +580,92 @@ pub extern "C" fn set_schema(cstr_json: *const c_char) -> FfiError {
         FfiError::success()
     } else {
         result.err().unwrap()
+    }
+}
+
+#[repr(i32)]
+#[derive(Copy, Clone)]
+pub enum FfiKeyType {
+    Entity = 0,
+    Relation = 1,
+    Column = 2,
+}
+
+impl From<FfiKeyType> for KeyType {
+    fn from(t: FfiKeyType) -> Self {
+        match t {
+            FfiKeyType::Entity => KeyType::Entity,
+            FfiKeyType::Relation => KeyType::Relation,
+            FfiKeyType::Column => KeyType::Column,
+        }
+    }
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct FfiKeyResult {
+    key_name: *const c_char,
+    error: FfiError,
+}
+
+impl From<FfiError> for FfiKeyResult {
+    fn from(error: FfiError) -> Self {
+        FfiKeyResult { key_name: std::ptr::null::<c_char>(), error }
+    }
+}
+
+/// To release a FfiKeyResult
+#[no_mangle]
+pub extern "C" fn destroy_ffi_key_result(data: FfiKeyResult) {
+    if !data.key_name.is_null() {
+        let _ = unsafe { std::ffi::CString::from_raw(data.key_name as *mut c_char) };
+    }
+    if !data.error.msg.is_null() {
+        let _ = unsafe { std::ffi::CString::from_raw(data.error.msg as *mut c_char) };
+    }
+}
+
+/// Query prop_name by given prop_id
+#[no_mangle]
+pub extern "C" fn get_key_name(key_id: i32, key_type: FfiKeyType) -> FfiKeyResult {
+    use super::meta::STORE_META;
+    if let Ok(meta) = STORE_META.read() {
+        if let Some(schema) = &meta.schema {
+            let key_name = match key_type {
+                FfiKeyType::Entity => schema.get_entity_name(key_id).ok_or(
+                    FfiError::new(
+                        ResultCode::TableNotExistError,
+                        format!("entity label_id {:?} is not found", key_id),
+                    )
+                    .into(),
+                ),
+                FfiKeyType::Relation => schema.get_relation_name(key_id).ok_or(
+                    FfiError::new(
+                        ResultCode::TableNotExistError,
+                        format!("relation label_id {:?} is not found", key_id),
+                    )
+                    .into(),
+                ),
+                FfiKeyType::Column => schema.get_column_name(key_id).ok_or(
+                    FfiError::new(
+                        ResultCode::ColumnNotExistError,
+                        format!("prop_id {:?} is not found", key_id),
+                    )
+                    .into(),
+                ),
+            };
+            match key_name {
+                Ok(key_name) => FfiKeyResult {
+                    key_name: string_to_cstr(key_name.to_string()).unwrap(),
+                    error: FfiError::success(),
+                },
+                Err(e) => e,
+            }
+        } else {
+            FfiError::new(ResultCode::Others, "error getting schema from store meta".to_string()).into()
+        }
+    } else {
+        FfiError::new(ResultCode::Others, "error reading store meta".to_string()).into()
     }
 }
 

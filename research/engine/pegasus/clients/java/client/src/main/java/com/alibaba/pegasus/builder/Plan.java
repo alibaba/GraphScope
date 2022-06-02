@@ -16,28 +16,28 @@
 package com.alibaba.pegasus.builder;
 
 import com.alibaba.pegasus.intf.NestedFunc;
-import com.alibaba.pegasus.service.protocol.PegasusClient.AccumKind;
-import com.alibaba.pegasus.service.protocol.PegasusClient.Aggregate;
-import com.alibaba.pegasus.service.protocol.PegasusClient.Apply;
-import com.alibaba.pegasus.service.protocol.PegasusClient.Broadcast;
-import com.alibaba.pegasus.service.protocol.PegasusClient.Communicate;
-import com.alibaba.pegasus.service.protocol.PegasusClient.Dedup;
-import com.alibaba.pegasus.service.protocol.PegasusClient.Filter;
-import com.alibaba.pegasus.service.protocol.PegasusClient.FlatMap;
-import com.alibaba.pegasus.service.protocol.PegasusClient.Fold;
-import com.alibaba.pegasus.service.protocol.PegasusClient.GroupBy;
-import com.alibaba.pegasus.service.protocol.PegasusClient.Iteration;
-import com.alibaba.pegasus.service.protocol.PegasusClient.LeftJoin;
-import com.alibaba.pegasus.service.protocol.PegasusClient.Limit;
-import com.alibaba.pegasus.service.protocol.PegasusClient.Map;
-import com.alibaba.pegasus.service.protocol.PegasusClient.Merge;
-import com.alibaba.pegasus.service.protocol.PegasusClient.OperatorDef;
-import com.alibaba.pegasus.service.protocol.PegasusClient.OperatorDef.Builder;
-import com.alibaba.pegasus.service.protocol.PegasusClient.OperatorDef.OpKindCase;
-import com.alibaba.pegasus.service.protocol.PegasusClient.Repartition;
-import com.alibaba.pegasus.service.protocol.PegasusClient.Sink;
-import com.alibaba.pegasus.service.protocol.PegasusClient.SortBy;
-import com.alibaba.pegasus.service.protocol.PegasusClient.TaskPlan;
+import com.alibaba.pegasus.service.job.protocol.JobClient.AccumKind;
+import com.alibaba.pegasus.service.job.protocol.JobClient.Aggregate;
+import com.alibaba.pegasus.service.job.protocol.JobClient.Apply;
+import com.alibaba.pegasus.service.job.protocol.JobClient.Broadcast;
+import com.alibaba.pegasus.service.job.protocol.JobClient.Communicate;
+import com.alibaba.pegasus.service.job.protocol.JobClient.Dedup;
+import com.alibaba.pegasus.service.job.protocol.JobClient.Filter;
+import com.alibaba.pegasus.service.job.protocol.JobClient.FlatMap;
+import com.alibaba.pegasus.service.job.protocol.JobClient.Fold;
+import com.alibaba.pegasus.service.job.protocol.JobClient.GroupBy;
+import com.alibaba.pegasus.service.job.protocol.JobClient.Iteration;
+import com.alibaba.pegasus.service.job.protocol.JobClient.LeftJoin;
+import com.alibaba.pegasus.service.job.protocol.JobClient.Limit;
+import com.alibaba.pegasus.service.job.protocol.JobClient.Map;
+import com.alibaba.pegasus.service.job.protocol.JobClient.Merge;
+import com.alibaba.pegasus.service.job.protocol.JobClient.OperatorDef;
+import com.alibaba.pegasus.service.job.protocol.JobClient.OperatorDef.Builder;
+import com.alibaba.pegasus.service.job.protocol.JobClient.OperatorDef.OpKindCase;
+import com.alibaba.pegasus.service.job.protocol.JobClient.Repartition;
+import com.alibaba.pegasus.service.job.protocol.JobClient.Sink;
+import com.alibaba.pegasus.service.job.protocol.JobClient.SortBy;
+import com.alibaba.pegasus.service.job.protocol.JobClient.TaskPlan;
 import com.google.protobuf.ByteString;
 
 import org.slf4j.Logger;
@@ -281,14 +281,6 @@ public class Plan {
 
     public Sink genSink() {
         Sink.Builder sinkBuilder = Sink.newBuilder();
-        if (endReduce()) {
-            OperatorDef pre = plan.remove(plan.size() - 1);
-            if (pre.getOpKindCase() == OpKindCase.GROUP) {
-                sinkBuilder.setGroup(pre.getGroup());
-            } else if (pre.getOpKindCase() == OpKindCase.FOLD) {
-                sinkBuilder.setFold(pre.getFold());
-            }
-        }
         return sinkBuilder.build();
     }
 

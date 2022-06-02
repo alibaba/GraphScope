@@ -41,7 +41,7 @@ tokio = { version = "1.0", features = ["macros", "sync"] }
 futures = { version = "0.3.0", features = ["thread-pool"] }
 gaia_pegasus = { path = "../../../research/engine/pegasus/pegasus", package = "pegasus" }
 pegasus_network = { path = "../../../research/engine/pegasus/network" }
-pegasus_server = { path = "../../../research/engine/pegasus/server-v0" }
+pegasus_server = { path = "../../../research/engine/pegasus/server" }
 graph_proxy =  { path = "../../../research/query_service/ir/graph_proxy" }
 
 [dev-dependencies]

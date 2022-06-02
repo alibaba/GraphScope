@@ -18,7 +18,9 @@ package com.alibaba.graphscope.common.intermediate.operator;
 
 import com.alibaba.graphscope.common.IrPlan;
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
+import com.alibaba.graphscope.common.intermediate.InterOpCollection;
 import com.alibaba.graphscope.common.jna.type.FfiVariable;
+import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.common.utils.FileUtils;
 
 import org.junit.After;
@@ -30,7 +32,7 @@ import java.util.Collections;
 import java.util.function.Function;
 
 public class DedupOpTest {
-    private IrPlan irPlan = new IrPlan();
+    private IrPlan irPlan;
 
     @Test
     public void dedupTest() throws IOException {
@@ -38,7 +40,7 @@ public class DedupOpTest {
         FfiVariable.ByValue dedupKey = ArgUtils.asFfiNoneVar();
         op.setDedupKeys(new OpArg(Collections.singletonList(dedupKey), Function.identity()));
 
-        irPlan.appendInterOp(-1, op);
+        irPlan = getTestIrPlan(op);
         Assert.assertEquals(FileUtils.readJsonFromResource("dedup.json"), irPlan.getPlanAsJson());
     }
 
@@ -47,5 +49,16 @@ public class DedupOpTest {
         if (irPlan != null) {
             irPlan.close();
         }
+    }
+
+    public static IrPlan getTestIrPlan(InterOpBase op, InterOpBase... ops) {
+        InterOpCollection opCollection = new InterOpCollection();
+        opCollection.appendInterOp(op);
+        if (ops != null) {
+            for (InterOpBase op1 : ops) {
+                opCollection.appendInterOp(op1);
+            }
+        }
+        return new IrPlan(new IrMeta(""), opCollection);
     }
 }

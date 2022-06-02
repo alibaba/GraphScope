@@ -27,14 +27,14 @@ import java.io.IOException;
 import java.util.function.Function;
 
 public class LimitOpTest {
-    private IrPlan irPlan = new IrPlan();
+    private IrPlan irPlan;
 
     @Test
     public void limitOpTest() throws IOException {
         LimitOp op = new LimitOp();
         op.setLower(new OpArg<>(Integer.valueOf(1), Function.identity()));
         op.setUpper(new OpArg<>(Integer.valueOf(2), Function.identity()));
-        irPlan.appendInterOp(-1, op);
+        irPlan = DedupOpTest.getTestIrPlan(op);
         String actual = irPlan.getPlanAsJson();
         Assert.assertEquals(FileUtils.readJsonFromResource("limit_range.json"), actual);
     }
