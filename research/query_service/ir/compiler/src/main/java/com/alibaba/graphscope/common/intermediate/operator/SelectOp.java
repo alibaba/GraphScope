@@ -41,7 +41,6 @@ public class SelectOp extends InterOpBase {
         this.type = type;
     }
 
-
     public FilterType getType() {
         return type;
     }

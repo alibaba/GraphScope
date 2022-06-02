@@ -708,8 +708,6 @@ public abstract class LdbcQueryTest extends AbstractGremlinProcessTest {
                     .limit(20);
         }
 
-        
-
         @Override
         public Traversal<Vertex, Map<String, Object>> get_ldbc_6_test() {
             return g.V().hasId(72088380363511554L)

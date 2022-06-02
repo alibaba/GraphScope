@@ -25,8 +25,7 @@ import java.util.List;
 public class ElementFusionStrategy implements InterOpStrategy {
     public static ElementFusionStrategy INSTANCE = new ElementFusionStrategy();
 
-    private ElementFusionStrategy() {
-    }
+    private ElementFusionStrategy() {}
 
     @Override
     public void apply(InterOpCollection opCollection) {
