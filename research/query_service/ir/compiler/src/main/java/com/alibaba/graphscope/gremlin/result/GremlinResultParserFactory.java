@@ -72,6 +72,12 @@ public enum GremlinResultParserFactory implements GremlinResultParser {
                                         ParserUtils.parseElement(column.getEntry().getElement());
                                 if (parseElement instanceof Map) {
                                     Map projectTags = (Map) parseElement;
+                                    // return empty Map if none properties
+                                    Map tagEntry =
+                                            (Map)
+                                                    projectResult.computeIfAbsent(
+                                                            tag,
+                                                            k1 -> new HashMap<>());
                                     projectTags.forEach(
                                             (k, v) -> {
                                                 if (!(v instanceof EmptyValue)) {
@@ -97,11 +103,6 @@ public enum GremlinResultParserFactory implements GremlinResultParser {
                                                                         + " key");
                                                     }
                                                     String property = getPropertyName(nameOrId);
-                                                    Map tagEntry =
-                                                            (Map)
-                                                                    projectResult.computeIfAbsent(
-                                                                            tag,
-                                                                            k1 -> new HashMap<>());
                                                     tagEntry.put(
                                                             property, Collections.singletonList(v));
                                                 }
