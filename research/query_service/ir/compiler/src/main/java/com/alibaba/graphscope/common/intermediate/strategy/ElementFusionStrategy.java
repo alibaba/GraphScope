@@ -25,14 +25,17 @@ import java.util.List;
 public class ElementFusionStrategy implements InterOpStrategy {
     public static ElementFusionStrategy INSTANCE = new ElementFusionStrategy();
 
-    private ElementFusionStrategy() {}
+    private ElementFusionStrategy() {
+    }
 
     @Override
     public void apply(InterOpCollection opCollection) {
         List<InterOpBase> original = opCollection.unmodifiableCollection();
         for (int i = original.size() - 2; i >= 0; --i) {
             InterOpBase cur = original.get(i), next = original.get(i + 1);
-            if (next instanceof SelectOp && (cur instanceof ExpandOp || cur instanceof GetVOp)) {
+            if (next instanceof SelectOp
+                    && ((SelectOp) next).getType() == SelectOp.FilterType.HAS
+                    && (cur instanceof ExpandOp || cur instanceof GetVOp)) {
                 QueryParams params =
                         (cur instanceof ExpandOp)
                                 ? ((ExpandOp) cur).getParams().get()
@@ -40,6 +43,9 @@ public class ElementFusionStrategy implements InterOpStrategy {
                 String fuse = fusePredicates(params, (SelectOp) next);
                 if (fuse != null && !fuse.isEmpty()) {
                     params.setPredicate(fuse);
+                }
+                if (!cur.getAlias().isPresent() && next.getAlias().isPresent()) {
+                    cur.setAlias(next.getAlias().get());
                 }
                 opCollection.removeInterOp(i + 1);
             }

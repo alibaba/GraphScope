@@ -99,6 +99,7 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
         @Override
         public InterOpBase apply(Step step) {
             SelectOp op = new SelectOp();
+            op.setType(SelectOp.FilterType.HAS);
             List containers = ((HasStep) step).getHasContainers();
             // add corner judgement
             if (!containers.isEmpty()) {
@@ -498,11 +499,11 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
                                             Set<String> scopeKeys;
                                             if (!startTag.isPresent()
                                                     && !(scopeKeys =
-                                                                    ((WhereTraversalStep
-                                                                                            .WhereStartStep)
-                                                                                    s1)
-                                                                            .getScopeKeys())
-                                                            .isEmpty()) {
+                                                    ((WhereTraversalStep
+                                                            .WhereStartStep)
+                                                            s1)
+                                                            .getScopeKeys())
+                                                    .isEmpty()) {
                                                 startTag = Optional.of(scopeKeys.iterator().next());
                                             }
                                         } else if (s1
@@ -512,11 +513,11 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
                                             Set<String> scopeKeys;
                                             if (!endTag.isPresent()
                                                     && !(scopeKeys =
-                                                                    ((WhereTraversalStep
-                                                                                            .WhereEndStep)
-                                                                                    s1)
-                                                                            .getScopeKeys())
-                                                            .isEmpty()) {
+                                                    ((WhereTraversalStep
+                                                            .WhereEndStep)
+                                                            s1)
+                                                            .getScopeKeys())
+                                                    .isEmpty()) {
                                                 endTag = Optional.of(scopeKeys.iterator().next());
                                             }
                                         } else if (isValidBinderStep(s1)) {
