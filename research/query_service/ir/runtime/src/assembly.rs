@@ -1,5 +1,5 @@
 //
-//! Copyright 2021 Alibaba Group Holding Limited.
+//! Copyright 2022 Alibaba Group Holding Limited.
 //!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
@@ -18,18 +18,16 @@ use std::sync::Arc;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::algebra::join::JoinKind;
 use ir_common::generated::common as common_pb;
-use ir_common::generated::results as result_pb;
 use pegasus::api::function::*;
 use pegasus::api::{
     Collect, CorrelatedSubTask, Count, Dedup, EmitKind, Filter, Fold, FoldByKey, HasAny, IterCondition,
-    Iteration, Join, KeyBy, Limit, Map, Merge, PartitionByKey, Sink, SortBy, SortLimitBy, Source,
+    Iteration, Join, KeyBy, Limit, Map, Merge, PartitionByKey, Sink, SortBy, SortLimitBy,
 };
-use pegasus::result::ResultSink;
+use pegasus::codec::{Decode, Encode};
 use pegasus::stream::Stream;
-use pegasus::BuildJobError;
-use pegasus_server::pb as server_pb;
-use pegasus_server::service::JobParser;
-use pegasus_server::JobRequest;
+use pegasus::{BuildJobError, Worker};
+use pegasus_server::job::{JobAssembly, JobDesc};
+use pegasus_server::job_pb as server_pb;
 use prost::Message;
 
 use crate::error::{FnExecError, FnGenResult};
@@ -54,7 +52,7 @@ type RecordFilterMap = Box<dyn FilterMapFunction<Record, Record>>;
 type RecordFlatMap = Box<dyn FlatMapFunction<Record, Record, Target = DynIter<Record>>>;
 type RecordFilter = Box<dyn FilterFunction<Record>>;
 type RecordLeftJoin = Box<dyn ApplyGen<Record, Vec<Record>, Option<Record>>>;
-type RecordEncode = Box<dyn MapFunction<Record, result_pb::Results>>;
+type RecordEncode = Box<dyn MapFunction<Record, Vec<u8>>>;
 type RecordShuffle = Box<dyn RouteFunction<Record>>;
 type RecordCompare = Box<dyn CompareFunction<Record>>;
 type RecordJoin = Box<dyn JoinKeyGen<Record, RecordKey, Record>>;
@@ -63,7 +61,7 @@ type RecordGroup = Box<dyn GroupGen<Record, RecordKey, Record>>;
 type RecordFold = Box<dyn FoldGen<u64, Record>>;
 type BinaryResource = Vec<u8>;
 
-pub struct IRJobCompiler {
+pub struct IRJobAssembly {
     udf_gen: FnGenerator,
 }
 
@@ -152,9 +150,9 @@ impl FnGenerator {
     }
 }
 
-impl IRJobCompiler {
+impl IRJobAssembly {
     pub fn new<D: Partitioner>(partitioner: D) -> Self {
-        IRJobCompiler { udf_gen: FnGenerator::new(Arc::new(partitioner)) }
+        IRJobAssembly { udf_gen: FnGenerator::new(Arc::new(partitioner)) }
     }
 
     fn install(
@@ -409,7 +407,7 @@ impl IRJobCompiler {
                                         .left_outer_join(right_stream)?
                                         .map(|(left, right)| {
                                             let left = left.ok_or(FnExecError::unexpected_data_error(
-                                                "left cannot be None in left outer join",
+                                                "left is None in left outer join",
                                             ))?;
                                             if let Some(right) = right {
                                                 // TODO(bingqing): Specify HeadJoinOpt if necessary
@@ -423,7 +421,7 @@ impl IRJobCompiler {
                                     .right_outer_join(right_stream)?
                                     .map(|(left, right)| {
                                         let right = right.ok_or(FnExecError::unexpected_data_error(
-                                            "right cannot be None in right outer join",
+                                            "right is None in right outer join",
                                         ))?;
                                         if let Some(left) = left {
                                             Ok(left.value.join(right.value, None))
@@ -464,39 +462,32 @@ impl IRJobCompiler {
     }
 }
 
-impl JobParser<Record, result_pb::Results> for IRJobCompiler {
-    fn parse(
-        &self, plan: &JobRequest, input: &mut Source<Record>, output: ResultSink<result_pb::Results>,
-    ) -> Result<(), BuildJobError> {
-        if let Some(source) = plan.source.as_ref() {
-            let source = input.input_from(
-                self.udf_gen
-                    .gen_source(source.resource.as_ref())?,
-            )?;
-            let stream = if let Some(task) = plan.plan.as_ref() {
-                self.install(source, &task.plan)?
-            } else {
-                source
-            };
-            if let Some(sinker) = plan.sink.as_ref() {
-                let sink = sinker
-                    .sinker
-                    .as_ref()
-                    .ok_or("sinker in sink op is empty")?;
-                if let server_pb::sink::Sinker::Resource(sink_res) = sink {
-                    let ec = self.udf_gen.gen_sink(sink_res)?;
-                    stream
-                        .map(move |record| ec.exec(record))?
-                        .sink_into(output)
-                } else {
-                    Err("unreachable sink type")?
-                }
-            } else {
-                Err("sink of job not found")?
-            }
-        } else {
-            Err("source of job not found")?
-        }
+impl JobAssembly for IRJobAssembly {
+    fn assemble(&self, plan: &JobDesc, worker: &mut Worker<Vec<u8>, Vec<u8>>) -> Result<(), BuildJobError> {
+        worker.dataflow(move |input, output| {
+            let source_op = decode::<server_pb::Source>(&plan.input)?;
+            // TODO: may return Vec<u8> in gen_source;
+            let source_iter = self
+                .udf_gen
+                .gen_source(source_op.resource.as_ref())?;
+            let source = input
+                .input_from(source_iter.map(|record| {
+                    let mut buf: Vec<u8> = vec![];
+                    record.write_to(&mut buf).unwrap();
+                    buf
+                }))?
+                .map(|buf| {
+                    let record = Record::read_from(&mut buf.as_slice()).unwrap();
+                    Ok(record)
+                })?;
+            let task = decode::<server_pb::TaskPlan>(&plan.plan)?;
+            let stream = self.install(source, &task.plan)?;
+            let sink = decode::<server_pb::Sink>(&plan.resource)?;
+            let ec = self.udf_gen.gen_sink(&sink.resource)?;
+            stream
+                .map(move |record| ec.exec(record))?
+                .sink_into(output)
+        })
     }
 }
 

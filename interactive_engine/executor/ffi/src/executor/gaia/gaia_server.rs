@@ -14,20 +14,20 @@
 //! limitations under the License.
 //!
 
-use maxgraph_store::db::api::{GraphConfig, GraphResult, GraphError};
-use std::sync::Arc;
+use maxgraph_store::db::api::{GraphConfig, GraphResult};
+use std::sync::{Arc, Mutex};
 use maxgraph_store::db::graph::store::GraphStore;
 use std::net::SocketAddr;
 use maxgraph_runtime::store::groot::global_graph::GlobalGraph;
 use gaia_pegasus::Configuration as GaiaConfig;
-use maxgraph_store::db::api::GraphErrorCode::EngineError;
 use tokio::runtime::Runtime;
-use pegasus_server::service::Service;
-use pegasus_server::rpc::{start_rpc_server, RpcService};
+use pegasus_server::rpc::{RPCServerConfig, ServiceStartListener, start_all};
 use pegasus_network::SimpleServerDetector;
 use pegasus_network::config::{NetworkConfig, ServerAddr};
 use graph_proxy::{InitializeJobCompiler, QueryMaxGraph};
 use maxgraph_store::api::PartitionId;
+use std::thread;
+use std::time::Duration;
 
 pub struct GaiaServer {
     config: Arc<GraphConfig>,
@@ -56,34 +56,31 @@ impl GaiaServer {
         Arc::get_mut(&mut self.graph).unwrap().update_partition_routing(partition_id, worker_id);
     }
 
-    pub fn start(&self) -> GraphResult<(u16, u16)> {
-        let report = match self.config.get_storage_option("gaia.report") {
-            None => false,
-            Some(report_string) => report_string.parse()
-                .map_err(|e| GraphError::new(EngineError, format!("{:?}", e)))?,
-        };
-        let rpc_port = match self.config.get_storage_option("gaia.rpc.port") {
-            None => { 0 },
-            Some(server_port_string) => {
-                server_port_string.parse().map_err(|e| GraphError::new(EngineError, format!("{:?}", e)))?
-            },
-        };
-        let addr = format!("{}:{}", "0.0.0.0", rpc_port).parse()
-            .map_err(|e| GraphError::new(EngineError, format!("{:?}", e)))?;
+    pub fn start(&'static self) -> GraphResult<(u16, u16)> {
         let gaia_config = make_gaia_config(self.config.clone());
-        let socket_addr = gaia_pegasus::startup_with(gaia_config, self.detector.clone())
-            .map_err(|e| GraphError::new(EngineError, format!("{:?}", e)))?
-            .ok_or(GraphError::new(EngineError, "gaia engine return None addr".to_string()))?;
-
-        let rpc_port = self.rpc_runtime.block_on(async{
+        let gaia_rpc_config = make_gaia_rpc_config(self.config.clone());
+        let (server_port, rpc_port) = self.rpc_runtime.block_on(async {
             let query_maxgraph = QueryMaxGraph::new(self.graph.clone(), self.graph.clone());
             let job_compiler = query_maxgraph.initialize_job_compiler();
-            let service = Service::new(job_compiler);
-            let rpc_service = RpcService::new(service, report);
-            let local_addr = start_rpc_server(addr, rpc_service, false).await.unwrap();
-            local_addr.port()
+            let service_listener = GaiaServiceListener::default();
+            let service_listener_clone = service_listener.clone();
+            self.rpc_runtime.spawn(async move {start_all(
+                gaia_rpc_config,
+                gaia_config,
+                job_compiler,
+                self.detector.clone(),
+                service_listener_clone,
+            ).await.unwrap()});
+            loop {
+                if service_listener.get_server_port().is_some() && service_listener.get_rpc_port().is_some() {
+                    break;
+                } else {
+                    thread::sleep(Duration::from_millis(10));
+                }
+            }
+            (service_listener.get_server_port().unwrap(),service_listener.get_rpc_port().unwrap())
         });
-        Ok((socket_addr.port(), rpc_port))
+        Ok((server_port, rpc_port))
     }
 
     pub fn update_peer_view(&self, peer_view: Vec<(u64, SocketAddr)>) {
@@ -139,3 +136,62 @@ fn make_gaia_config(graph_config: Arc<GraphConfig>) -> GaiaConfig {
     }
 }
 
+fn make_gaia_rpc_config(graph_config: Arc<GraphConfig>) -> RPCServerConfig {
+    let rpc_port = match graph_config.get_storage_option("gaia.rpc.port") {
+        None => { 0 },
+        Some(server_port_string) => {
+            server_port_string.parse().expect("parse node.idx failed")
+        },
+    };
+    RPCServerConfig::new(Some("0.0.0.0".to_string()), Some(rpc_port))
+}
+
+
+#[derive(Default)]
+struct GaiaServiceListener {
+    rpc_addr: Arc<Mutex<Option<SocketAddr>>>,
+    server_addr: Arc<Mutex<Option<SocketAddr>>>,
+}
+
+impl Clone for GaiaServiceListener {
+    fn clone(&self) -> Self {
+        GaiaServiceListener {
+            rpc_addr: self.rpc_addr.clone(),
+            server_addr: self.server_addr.clone()
+        }
+    }
+}
+
+impl GaiaServiceListener {
+    fn new() -> Self {
+        GaiaServiceListener { rpc_addr: Arc::new(Mutex::new(None)), server_addr: Arc::new(Mutex::new(None)) }
+    }
+    fn get_rpc_port(&self) -> Option<u16> {
+        self.rpc_addr.lock().unwrap().map(|addr|addr.port())
+    }
+    fn get_server_port(&self) -> Option<u16> {
+        self.server_addr.lock().unwrap().map(|addr|addr.port())
+    }
+}
+
+impl ServiceStartListener for GaiaServiceListener {
+    fn on_rpc_start(&mut self, server_id: u64, addr: SocketAddr) -> std::io::Result<()> {
+        info!("RPC server of server[{}] start on {}", server_id, addr);
+        let mut rpc_addr = self
+            .rpc_addr
+            .lock()
+            .map_err(|e|std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?;
+        *rpc_addr = Some(addr);
+        Ok(())
+    }
+
+    fn on_server_start(&mut self, server_id: u64, addr: SocketAddr) -> std::io::Result<()> {
+        info!("compute server[{}] start on {}", server_id, addr);
+        let mut server_addr = self
+            .server_addr
+            .lock()
+            .map_err(|e|std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?;
+        *server_addr = Some(addr);
+        Ok(())
+    }
+}

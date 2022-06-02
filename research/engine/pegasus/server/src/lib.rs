@@ -23,6 +23,9 @@ mod generated {
     pub mod protocol {
         tonic::include_proto!("protocol");
     }
+    pub mod job_proto {
+        tonic::include_proto!("job_proto");
+    }
 }
 
 #[rustfmt::skip]
@@ -30,8 +33,11 @@ mod generated {
 mod generated {
     #[path = "protocol.rs"]
     pub mod protocol;
+    #[path = "job_proto.rs"]
+    pub mod job_proto;
 }
 
+pub use generated::job_proto as job_pb;
 pub use generated::protocol as pb;
 
 pub trait AnyData: Data + Eq {}

@@ -32,13 +32,15 @@ pub mod test {
     use lazy_static::lazy_static;
     use pegasus::result::{ResultSink, ResultStream};
     use pegasus::{run_opt, Configuration, JobConf, StartupError};
-    use pegasus_server::service::JobParser;
+    use pegasus_server::job::{JobAssembly, JobDesc};
+    use pegasus_server::rpc::RpcSink;
     use pegasus_server::JobRequest;
+    use prost::Message;
     use runtime::graph::element::{Edge, Vertex, VertexOrEdge};
     use runtime::graph::property::{DefaultDetails, DynDetails};
     use runtime::graph::ID;
     use runtime::process::record::{Entry, Record, RecordElement};
-    use runtime::IRJobCompiler;
+    use runtime::IRJobAssembly;
 
     pub const TAG_A: KeyId = 0;
     pub const TAG_B: KeyId = 1;
@@ -47,7 +49,7 @@ pub mod test {
     static INIT: Once = Once::new();
 
     lazy_static! {
-        static ref FACTORY: IRJobCompiler = initialize_job_compiler();
+        static ref FACTORY: IRJobAssembly = initialize_job_compiler();
     }
 
     pub fn initialize() {
@@ -68,27 +70,26 @@ pub mod test {
         }
     }
 
-    fn initialize_job_compiler() -> IRJobCompiler {
+    fn initialize_job_compiler() -> IRJobAssembly {
         let query_exp_graph = QueryExpGraph::new(1);
         query_exp_graph.initialize_job_compiler()
     }
 
-    pub fn submit_query(job_req: JobRequest, num_workers: u32) -> ResultStream<result_pb::Results> {
+    pub fn submit_query(job_req: JobRequest, num_workers: u32) -> ResultStream<Vec<u8>> {
         let mut conf = JobConf::default();
         conf.workers = num_workers;
         let (tx, rx) = crossbeam_channel::unbounded();
         let sink = ResultSink::new(tx);
         let cancel_hook = sink.get_cancel_hook().clone();
         let results = ResultStream::new(conf.job_id, cancel_hook, rx);
-        run_opt(conf, sink, |worker| {
-            worker.dataflow(|input, output| FACTORY.parse(&job_req, input, output))
-        })
-        .expect("submit job failure;");
-
+        let service = &FACTORY;
+        let job = JobDesc { input: job_req.source, plan: job_req.plan, resource: job_req.resource };
+        run_opt(conf, sink, move |worker| service.assemble(&job, worker)).expect("submit job failure;");
         results
     }
 
-    pub fn parse_result(result: result_pb::Results) -> Option<Record> {
+    pub fn parse_result(result: Vec<u8>) -> Option<Record> {
+        let result: result_pb::Results = result_pb::Results::decode(result.as_slice()).unwrap();
         if let Some(result_pb::results::Inner::Record(record_pb)) = result.inner {
             let mut record = Record::default();
             for column in record_pb.columns {

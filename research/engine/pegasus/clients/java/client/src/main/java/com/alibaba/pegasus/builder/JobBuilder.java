@@ -16,10 +16,11 @@
 package com.alibaba.pegasus.builder;
 
 import com.alibaba.pegasus.intf.NestedFunc;
-import com.alibaba.pegasus.service.protocol.PegasusClient.AccumKind;
+import com.alibaba.pegasus.service.job.protocol.JobClient;
+import com.alibaba.pegasus.service.job.protocol.JobClient.AccumKind;
+import com.alibaba.pegasus.service.job.protocol.JobClient.Sink;
 import com.alibaba.pegasus.service.protocol.PegasusClient.JobConfig;
 import com.alibaba.pegasus.service.protocol.PegasusClient.JobRequest;
-import com.alibaba.pegasus.service.protocol.PegasusClient.Sink;
 import com.google.protobuf.ByteString;
 
 import org.slf4j.Logger;
@@ -177,7 +178,7 @@ public class JobBuilder extends AbstractBuilder {
     }
 
     // reduce api
-    public ReduceBuilder groupBy(AccumKind accumKind, ByteString keySelector) {
+    public ReduceBuilder groupBy(JobClient.AccumKind accumKind, ByteString keySelector) {
         this.plan.groupBy(accumKind, keySelector);
         return new ReduceBuilder(this.conf, this.source, this.plan, this.sink);
     }

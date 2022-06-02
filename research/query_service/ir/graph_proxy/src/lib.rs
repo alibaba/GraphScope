@@ -21,13 +21,13 @@ pub use exp_store::{create_demo_graph, QueryExpGraph, SimplePartition};
 pub use gs_store::{QueryMaxGraph, QueryVineyard};
 use pegasus::api::function::{DynIter, FnResult};
 use runtime::graph::Statement;
-use runtime::IRJobCompiler;
+use runtime::IRJobAssembly;
 
 mod exp_store;
 mod gs_store;
 
 pub trait InitializeJobCompiler {
-    fn initialize_job_compiler(&self) -> IRJobCompiler;
+    fn initialize_job_compiler(&self) -> IRJobAssembly;
 }
 
 pub fn from_fn<I, O, F>(func: F) -> Box<dyn Statement<I, O>>
