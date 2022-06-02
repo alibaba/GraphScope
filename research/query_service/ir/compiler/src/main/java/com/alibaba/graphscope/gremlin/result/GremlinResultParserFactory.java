@@ -76,8 +76,7 @@ public enum GremlinResultParserFactory implements GremlinResultParser {
                                     Map tagEntry =
                                             (Map)
                                                     projectResult.computeIfAbsent(
-                                                            tag,
-                                                            k1 -> new HashMap<>());
+                                                            tag, k1 -> new HashMap<>());
                                     projectTags.forEach(
                                             (k, v) -> {
                                                 if (!(v instanceof EmptyValue)) {
