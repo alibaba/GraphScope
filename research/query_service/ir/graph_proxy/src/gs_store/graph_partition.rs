@@ -117,7 +117,8 @@ impl Partitioner for VineyardMultiPartition {
         // 2. get worker_id by the prebuild partition_worker_map, which specifies partition_id -> worker_id
 
         // Firstly, we check if the job parallelism is identical to the pre-allocated parallelism,
-        let parallelism = self
+        info!("worker_partition_list_mapping in vineyard {:?}", self.worker_partition_list_mapping);
+	let parallelism = self
             .worker_partition_list_mapping
             .read()
             .unwrap()
@@ -132,6 +133,7 @@ impl Partitioner for VineyardMultiPartition {
             let partition_id = self
                 .graph_partition_manager
                 .get_partition_id(vid) as PartitionId;
+	    info!("get_partition_id {:?}, {:?}", vid, partition_id);
             if let Ok(partition_worker_mapping) = self.partition_worker_mapping.read() {
                 if let Some(partition_worker_mapping) = partition_worker_mapping.as_ref() {
                     if let Some(worker_id) = partition_worker_mapping.get(&partition_id) {

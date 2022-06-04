@@ -171,7 +171,8 @@ where
     fn get_vertex(
         &self, ids: &[ID], params: &QueryParams,
     ) -> FnResult<Box<dyn Iterator<Item = Vertex> + Send>> {
-        let store = self.store.clone();
+	info!("get_vertex {:?}", ids);        
+	let store = self.store.clone();
         let si = params
             .get_extra_param(SNAPSHOT_ID)
             .map(|s| {
@@ -516,7 +517,8 @@ fn get_partition_label_vertex_ids(
     let mut partition_label_vid_map = HashMap::new();
     for vid in ids {
         let partition_id = graph_partition_manager.get_partition_id(*vid as VertexId) as PartitionId;
-        let label_vid_list = partition_label_vid_map
+        info!("get_partition_label_vertex_ids {:?} {:?}", (*vid as VertexId), partition_id);
+	let label_vid_list = partition_label_vid_map
             .entry(partition_id)
             .or_insert(HashMap::new());
         label_vid_list

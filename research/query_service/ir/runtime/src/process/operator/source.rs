@@ -67,7 +67,7 @@ impl SourceOperator {
                         if !global_ids.is_empty() {
                             // query by global_ids
                             source_op.set_src(global_ids, job_workers, partitioner);
-                            debug!("Runtime source op of indexed scan of global ids {:?}", source_op);
+                            info!("Runtime source op of indexed scan of global ids {:?}", source_op);
                         } else {
                             // query by indexed_scan
                             let primary_key_values = <Vec<(NameOrId, Object)>>::try_from(ip2)?;
@@ -93,14 +93,15 @@ impl SourceOperator {
     fn set_src(&mut self, ids: Vec<ID>, job_workers: usize, partitioner: Arc<dyn Partitioner>) {
         let mut partitions = HashMap::new();
         for id in ids {
-            if let Ok(wid) = partitioner.get_partition(&id, job_workers) {
+             let res = partitioner.get_partition(&id, job_workers);
+	    if let Ok(wid) = res {
                 partitions
                     .entry(wid)
                     .or_insert_with(Vec::new)
                     .push(id);
             } else {
-                debug!("get server id failed in graph_partition_manager in source op");
-            }
+                info!("get server id failed in graph_partition_manager in source op: {:?}", res.err());
+	    }
         }
 
         self.src = Some(partitions);
@@ -126,6 +127,7 @@ impl SourceOperator {
                 if let Some(ref seeds) = self.src {
                     if let Some(src) = seeds.get(&(worker_index as u64)) {
                         if !src.is_empty() {
+			    info!("get_vertex in source op {:?}...", src);
                             v_source = graph.get_vertex(src, &self.query_params)?;
                         }
                     }

@@ -2,7 +2,7 @@ import os
 
 from graphscope.framework.loader import Loader
 
-def load_chinavis_dataset(sess, prefix="/home/graphscope/alibaba/GI/dataset", directed=True):
+def load_chinavis_dataset(sess, prefix="/home/graphscope/.gshttpserver/dataset/vis", directed=True):
     prefix = os.path.expandvars(prefix)
 
     vertices = {
@@ -84,7 +84,7 @@ def load_chinavis_dataset(sess, prefix="/home/graphscope/alibaba/GI/dataset", di
         "r_whois_name": [
             (
                 Loader(
-                    os.path.join(prefix, "gen", "r_whois_name_Domain_Domain.csv"),
+                    os.path.join(prefix, "r_whois_name_Domain_Domain.csv"),
                     header_row=True,
                     delimiter=","
                 ),
@@ -94,7 +94,7 @@ def load_chinavis_dataset(sess, prefix="/home/graphscope/alibaba/GI/dataset", di
             ),
             (
                 Loader(
-                    os.path.join(prefix, "gen", "r_whois_name_Domain_Whois_Name.csv"),
+                    os.path.join(prefix, "r_whois_name_Domain_Whois_Name.csv"),
                     header_row=True,
                     delimiter=","
                 ),
@@ -104,7 +104,7 @@ def load_chinavis_dataset(sess, prefix="/home/graphscope/alibaba/GI/dataset", di
             ),
             (
                 Loader(
-                    os.path.join(prefix, "gen", "r_whois_name_Domain_Whois_Phone.csv"),
+                    os.path.join(prefix, "r_whois_name_Domain_Whois_Phone.csv"),
                     header_row=True,
                     delimiter=","
                 ),
@@ -114,7 +114,7 @@ def load_chinavis_dataset(sess, prefix="/home/graphscope/alibaba/GI/dataset", di
             ),
             (
                 Loader(
-                    os.path.join(prefix, "gen", "r_whois_name_Whois_Phone_Domain.csv"),
+                    os.path.join(prefix, "r_whois_name_Whois_Phone_Domain.csv"),
                     header_row=True,
                     delimiter=","
                 ),
@@ -126,7 +126,7 @@ def load_chinavis_dataset(sess, prefix="/home/graphscope/alibaba/GI/dataset", di
         "r_whois_phone": [
             (
                 Loader(
-                    os.path.join(prefix, "gen", "r_whois_phone_Whois_Name_Domain.csv"),
+                    os.path.join(prefix, "r_whois_phone_Whois_Name_Domain.csv"),
                     header_row=True,
                     delimiter=","
                 ),
@@ -136,7 +136,7 @@ def load_chinavis_dataset(sess, prefix="/home/graphscope/alibaba/GI/dataset", di
             ),
             (
                 Loader(
-                    os.path.join(prefix, "gen", "r_whois_phone_Domain_Whois_Phone.csv"),
+                    os.path.join(prefix, "r_whois_phone_Domain_Whois_Phone.csv"),
                     header_row=True,
                     delimiter=","
                 ),
@@ -148,7 +148,7 @@ def load_chinavis_dataset(sess, prefix="/home/graphscope/alibaba/GI/dataset", di
         "r_asn": [
             (
                 Loader(
-                    os.path.join(prefix, "gen", "r_asn_IP_ASN.csv"),
+                    os.path.join(prefix, "r_asn_IP_ASN.csv"),
                     header_row=True,
                     delimiter=","
                 ),
@@ -160,7 +160,7 @@ def load_chinavis_dataset(sess, prefix="/home/graphscope/alibaba/GI/dataset", di
         "r_cert": [
             (
                 Loader(
-                    os.path.join(prefix, "gen", "r_cert_Domain_Cert.csv"),
+                    os.path.join(prefix, "r_cert_Domain_Cert.csv"),
                     header_row=True,
                     delimiter=","
                 ),
@@ -172,7 +172,7 @@ def load_chinavis_dataset(sess, prefix="/home/graphscope/alibaba/GI/dataset", di
         "r_cert_chain": [
             (
                 Loader(
-                    os.path.join(prefix, "gen", "r_cert_chain_Cert_Cert.csv"),
+                    os.path.join(prefix, "r_cert_chain_Cert_Cert.csv"),
                     header_row=True,
                     delimiter=","
                 ),
@@ -184,7 +184,7 @@ def load_chinavis_dataset(sess, prefix="/home/graphscope/alibaba/GI/dataset", di
         "r_cidr": [
             (
                 Loader(
-                    os.path.join(prefix, "gen", "r_cidr_IP_IP_CIDR.csv"),
+                    os.path.join(prefix, "r_cidr_IP_IP_CIDR.csv"),
                     header_row=True,
                     delimiter=","
                 ),
@@ -196,7 +196,7 @@ def load_chinavis_dataset(sess, prefix="/home/graphscope/alibaba/GI/dataset", di
         "r_cname": [
             (
                 Loader(
-                    os.path.join(prefix, "gen", "r_cname_Domain_Domain.csv"),
+                    os.path.join(prefix, "r_cname_Domain_Domain.csv"),
                     header_row=True,
                     delimiter=","
                 ),
@@ -208,7 +208,7 @@ def load_chinavis_dataset(sess, prefix="/home/graphscope/alibaba/GI/dataset", di
         "r_dns_a": [
             (
                 Loader(
-                    os.path.join(prefix, "gen", "r_dns_a_Domain_IP.csv"),
+                    os.path.join(prefix, "r_dns_a_Domain_IP.csv"),
                     header_row=True,
                     delimiter=","
                 ),
@@ -220,7 +220,7 @@ def load_chinavis_dataset(sess, prefix="/home/graphscope/alibaba/GI/dataset", di
         "r_request_jump": [
             (
                 Loader(
-                    os.path.join(prefix, "gen", "r_request_jump_Domain_Domain.csv"),
+                    os.path.join(prefix, "r_request_jump_Domain_Domain.csv"),
                     header_row=True,
                     delimiter=","
                 ),
@@ -232,7 +232,7 @@ def load_chinavis_dataset(sess, prefix="/home/graphscope/alibaba/GI/dataset", di
         "r_subdomain": [
             (
                 Loader(
-                    os.path.join(prefix, "gen", "r_subdomain_Domain_Domain.csv"),
+                    os.path.join(prefix, "r_subdomain_Domain_Domain.csv"),
                     header_row=True,
                     delimiter=","
                 ),
@@ -244,7 +244,7 @@ def load_chinavis_dataset(sess, prefix="/home/graphscope/alibaba/GI/dataset", di
         "r_whois_email": [
             (
                 Loader(
-                    os.path.join(prefix, "gen", "r_whois_email_Domain_Whois_Email.csv"),
+                    os.path.join(prefix, "r_whois_email_Domain_Whois_Email.csv"),
                     header_row=True,
                     delimiter=","
                 ),
