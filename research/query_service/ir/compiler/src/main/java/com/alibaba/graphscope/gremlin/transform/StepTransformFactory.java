@@ -321,6 +321,7 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
             GetVOp op = new GetVOp();
             op.setGetVOpt(
                     new OpArg<>(otherStep, (EdgeOtherVertexStep otherStep1) -> FfiVOpt.Other));
+            op.setParams(new QueryParams());
             return op;
         }
     },
