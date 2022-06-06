@@ -37,4 +37,10 @@ public class BytesRef {
     public int getLength() {
         return length;
     }
+
+    public byte[] getBytes() {
+        byte[] bytes = new byte[length];
+        System.arraycopy(array, offset, bytes, 0, length);
+        return bytes;
+    }
 }
