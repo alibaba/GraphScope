@@ -46,6 +46,20 @@ public class ScanFusionOpTest {
     }
 
     @Test
+    public void addSnapshotTest() throws IOException {
+        ScanFusionOp op = new ScanFusionOp();
+        op.setScanOpt(new OpArg<>(FfiScanOpt.Entity, Function.identity()));
+
+        QueryParams params = new QueryParams();
+        params.addExtraParams("SID", "1");
+        op.setParams(params);
+
+        irPlan = DedupOpTest.getTestIrPlan(op);
+        String actual = irPlan.getPlanAsJson();
+        Assert.assertEquals(FileUtils.readJsonFromResource("scan_opt.json"), actual);
+    }
+
+    @Test
     public void predicateTest() throws IOException {
         ScanFusionOp op = new ScanFusionOp();
         op.setScanOpt(new OpArg<>(FfiScanOpt.Entity, Function.identity()));
