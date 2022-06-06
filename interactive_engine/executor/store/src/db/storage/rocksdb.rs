@@ -6,7 +6,7 @@ use std::sync::Arc;
 use crate::db::api::*;
 use super::{StorageIter, StorageRes, ExternalStorage, ExternalStorageBackup};
 use crate::db::storage::{KvPair, RawBytes};
-use rocksdb::{DBCompressionType, DBCompactionStyle};
+use rocksdb::{DBCompressionType, DBCompactionStyle, WriteBatch};
 
 pub struct RocksDB {
     db: Arc<DB>,
@@ -86,8 +86,9 @@ impl ExternalStorage for RocksDB {
     }
 
     fn delete_range(&self, start: &[u8], end: &[u8]) -> GraphResult<()> {
-        let handle = self.db.cf_handle("default").unwrap();
-        self.db.delete_range_cf(handle, start, end).map_err(|e| {
+        let mut batch = WriteBatch::default();
+        batch.delete_range(start, end);
+        self.db.write(batch).map_err(|e| {
             let msg = format!("rocksdb.delete_range failed because {}", e.into_string());
             gen_graph_err!(GraphErrorCode::ExternalStorageError, msg)
         })
