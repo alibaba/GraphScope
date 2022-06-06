@@ -71,7 +71,8 @@ public class MatchStepTest {
         MatchSentence sentence = getSentences(traversal).get(0);
         Assert.assertTrue(isEqualWith(sentence, "a", "b", FfiJoinKind.Inner, 1));
         ExpandOp op = (ExpandOp) sentence.getBinders().unmodifiableCollection().get(0);
-        Assert.assertEquals("@.name && @.name == \"marko\"", op.getParams().get().getPredicate().get());
+        Assert.assertEquals(
+                "@.name && @.name == \"marko\"", op.getParams().get().getPredicate().get());
         Assert.assertEquals(false, op.getIsEdge().get().applyArg());
     }
 
@@ -82,7 +83,8 @@ public class MatchStepTest {
         MatchSentence sentence = getSentences(traversal).get(0);
         Assert.assertTrue(isEqualWith(sentence, "a", "b", FfiJoinKind.Inner, 1));
         ExpandOp op = (ExpandOp) sentence.getBinders().unmodifiableCollection().get(0);
-        Assert.assertEquals("@.name && @.name == \"marko\"", op.getParams().get().getPredicate().get());
+        Assert.assertEquals(
+                "@.name && @.name == \"marko\"", op.getParams().get().getPredicate().get());
         Assert.assertEquals(true, op.getIsEdge().get().applyArg());
     }
 
@@ -93,7 +95,8 @@ public class MatchStepTest {
         MatchSentence sentence = getSentences(traversal).get(0);
         Assert.assertTrue(isEqualWith(sentence, "a", "b", FfiJoinKind.Inner, 2));
         GetVOp op = (GetVOp) sentence.getBinders().unmodifiableCollection().get(1);
-        Assert.assertEquals("@.name && @.name == \"marko\"", op.getParams().get().getPredicate().get());
+        Assert.assertEquals(
+                "@.name && @.name == \"marko\"", op.getParams().get().getPredicate().get());
     }
 
     @Test
