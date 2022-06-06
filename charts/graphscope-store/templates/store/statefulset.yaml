@@ -52,6 +52,9 @@ spec:
       {{- if .Values.store.affinity }}
       affinity: {{- include "graphscope-store.tplvalues.render" (dict "value" .Values.store.affinity "context" $) | nindent 8 }}
       {{- end }}
+      {{- if .Values.tolerations }}
+      tolerations: {{- include "graphscope-store.tplvalues.render" (dict "value" .Values.tolerations "context" $) | nindent 8 }}
+      {{- end }}
       initContainers:
         {{- if .Values.store.initContainers }}
         {{- include "graphscope-store.tplvalues.render" (dict "value" .Values.store.initContainers "context" $) | nindent 8 }}

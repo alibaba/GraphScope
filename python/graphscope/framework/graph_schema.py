@@ -266,8 +266,7 @@ class GraphSchema:
         Raises:
             ValueError: If the schema is not valid.
         """
-        self._vertex_labels.clear()
-        self._edge_labels.clear()
+        self.clear()
         id_to_label = {}
         for type_def_pb in graph_def.type_defs:
             id_to_label[type_def_pb.label_id.id] = type_def_pb.label
@@ -284,17 +283,21 @@ class GraphSchema:
             )
         for type_def_pb in graph_def.type_defs:
             if type_def_pb.type_enum == graph_def_pb2.VERTEX:
+                self._v_label_index[type_def_pb.label] = len(self._vertex_labels)
                 self._vertex_labels.append(VertexLabel.from_type_def(type_def_pb))
                 self._valid_vertices.append(1)
             else:
                 label = EdgeLabel.from_type_def(type_def_pb)
-                for src, dst in edge_kinds[label.label]:
-                    label.source(src).destination(dst)
+                if label.label in edge_kinds:
+                    for src, dst in edge_kinds[label.label]:
+                        label.source(src).destination(dst)
+                self._e_label_index[type_def_pb.label] = len(self._edge_labels)
                 self._edge_labels.append(label)
                 self._valid_edges.append(1)
         return self
 
     def _from_vineyard(self, graph_def):
+        self.clear()
         vy_info = graph_def_pb2.VineyardInfoPb()
         graph_def.extension.Unpack(vy_info)
         self._oid_type = vy_info.oid_type

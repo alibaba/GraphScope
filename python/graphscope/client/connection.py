@@ -19,6 +19,7 @@
 """ Manage connections of the GraphScope store service.
 """
 
+import base64
 import grpc
 from gremlin_python.driver.driver_remote_connection import DriverRemoteConnection
 from gremlin_python.process.anonymous_traversal import traversal
@@ -89,28 +90,31 @@ class Graph:
 
 
 class Connection:
-    def __init__(self, addr, gremlin_endpoint=None) -> None:
+    def __init__(self, addr, gremlin_endpoint, username="", password="") -> None:
         self._addr = addr
         self._gremlin_endpoint = gremlin_endpoint
-        self._conn = None
         channel = grpc.insecure_channel(addr)
         self._ddl_service_stub = ddl_service_pb2_grpc.ClientDdlStub(channel)
         self._write_service_stub = write_service_pb2_grpc.ClientWriteStub(channel)
         self._client_id = None
+        self._metadata = self._encode_metadata(username, password)
+        graph_url = "ws://%s/gremlin" % self._gremlin_endpoint
+        self._conn = DriverRemoteConnection(graph_url, "g", username=username, password=password)
+
+    def __del__(self):
+        self.close()
 
     def close(self):
-        if self._conn is not None:
-            try:
-                self._conn.close()
-            except Exception:
-                pass  # be silent when closing
-            self._conn = None
+        try:
+            self._conn.close()
+        except Exception:
+            pass  # be silent when closing
 
     def submit(self, requests):
-        return self._ddl_service_stub.batchSubmit(requests)
+        return self._ddl_service_stub.batchSubmit(requests, metadata=self._metadata)
 
     def get_graph_def(self, requests):
-        return self._ddl_service_stub.getGraphDef(requests)
+        return self._ddl_service_stub.getGraphDef(requests, metadata=self._metadata)
 
     def g(self):
         request = ddl_service_pb2.GetGraphDefRequest()
@@ -119,9 +123,6 @@ class Connection:
         return graph
 
     def gremlin(self):
-        graph_url = "ws://%s/gremlin" % self._gremlin_endpoint
-        if self._conn is None:
-            self._conn = DriverRemoteConnection(graph_url, "g")
         return traversal().withRemote(self._conn)
 
     def _get_client_id(self):
@@ -143,6 +144,13 @@ class Connection:
         response = self._write_service_stub.remoteFlush(request)
         return response.success
 
+    def _encode_metadata(self, username, password):
+        if not (username and password):
+            return None
+        secret = username + ":" + password
+        secret = base64.b64encode(secret.encode("utf-8")).decode("utf-8")
+        metadata = [("authorization", "Basic " + secret)]
+        return metadata
 
-def conn(addr, gremlin_endpoint=None):
-    return Connection(addr, gremlin_endpoint)
+def conn(addr, gremlin_endpoint, username="", password=""):
+    return Connection(addr, gremlin_endpoint, username, password)

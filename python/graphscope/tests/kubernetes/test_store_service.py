@@ -20,7 +20,6 @@ import logging
 import os
 import subprocess
 
-import numpy as np
 import pytest
 
 import graphscope

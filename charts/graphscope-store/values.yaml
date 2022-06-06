@@ -101,6 +101,10 @@ serviceAccount:
   # If not set and create is true, a name is generated using the fullname template
   name: ""
 
+## Tolerations for GraphScope store pods assignment
+## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+##
+tolerations: [{operator: Exists}]
 ## Name of existing ConfigMap with GraphScope configuration.
 ## NOTE: When it's set the 'configuration' parameter is ignored
 ##
@@ -143,11 +147,6 @@ store:
   ## ref: https://kubernetes.io/docs/user-guide/node-selection/
   ##
   nodeSelector: {}
-
-  ## Tolerations for GraphScope store pods assignment
-  ## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
-  ##
-  tolerations: []
 
   ## GraphScope store Pod security context
   ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod
@@ -306,11 +305,6 @@ frontend:
   ##
   nodeSelector: {}
 
-  ## Tolerations for GraphScope store pods assignment
-  ## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
-  ##
-  tolerations: []
-
   ## GraphScope store container's resource requests and limits
   ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
   ##
@@ -455,11 +449,6 @@ ingestor:
   ##
   nodeSelector: {}
 
-  ## Tolerations for GraphScope store pods assignment
-  ## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
-  ##
-  tolerations: []
-
   ## GraphScope store container's resource requests and limits
   ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
   ##
@@ -566,11 +555,6 @@ coordinator:
   ## ref: https://kubernetes.io/docs/user-guide/node-selection/
   ##
   nodeSelector: {}
-
-  ## Tolerations for GraphScope store pods assignment
-  ## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
-  ##
-  tolerations: []
 
   ## GraphScope store container's resource requests and limits
   ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
