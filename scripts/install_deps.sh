@@ -676,7 +676,7 @@ install_dependencies() {
     log "Installing packages ${BASIC_PACKGES_TO_INSTALL[*]}"
     export HOMEBREW_NO_INSTALL_CLEANUP=1
     export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1
-    brew bundle ${BASIC_PACKGES_TO_INSTALL[*]}
+    brew install ${BASIC_PACKGES_TO_INSTALL[*]} || true
 
     if [[ ${CN_MIRROR} == true && "${packages_to_install[*]}" =~ "openjdk@11" ]]; then
       # packages_to_install contains jdk
@@ -705,7 +705,7 @@ install_dependencies() {
 
     if [[ ! -z "${packages_to_install}" ]]; then
       log "Installing packages ${packages_to_install[*]}"
-      brew bundle ${packages_to_install[*]}
+      brew bundle ${packages_to_install[*]} || true
     fi
 
     if [[ "$(uname -m)" == "x86_64" ]]; then
