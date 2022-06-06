@@ -72,3 +72,6 @@ java/**/dependency-reduced-pom.xml
 
 # GraphLearn
 coordinator/graphlearn*
+
+# Lock files
+Chart.lock
