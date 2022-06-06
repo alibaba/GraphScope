@@ -527,13 +527,17 @@ public class IrPlan implements Closeable {
                             InterOpBase.class, "range", "setParamsRange returns " + error.msg);
                 }
             }
-            params.getExtraParams().forEach((k, v) -> {
-                FfiError error = irCoreLib.addParamsExtra(ptrParams, k, v);
-                if (error.code != ResultCode.Success) {
-                    throw new InterOpIllegalArgException(
-                            InterOpBase.class, "extraParams", "addParamsExtra returns " + error.msg);
-                }
-            });
+            params.getExtraParams()
+                    .forEach(
+                            (k, v) -> {
+                                FfiError error = irCoreLib.addParamsExtra(ptrParams, k, v);
+                                if (error.code != ResultCode.Success) {
+                                    throw new InterOpIllegalArgException(
+                                            InterOpBase.class,
+                                            "extraParams",
+                                            "addParamsExtra returns " + error.msg);
+                                }
+                            });
             return ptrParams;
         }
     }
@@ -553,7 +557,8 @@ public class IrPlan implements Closeable {
                 params = ((GetVOp) op).getParams().get();
             }
             if (params != null && meta.isAcquireSnapshot()) {
-                params.addExtraParams(QueryParams.SNAPSHOT_CONFIG_NAME, String.valueOf(meta.getSnapshotId()));
+                params.addExtraParams(
+                        QueryParams.SNAPSHOT_CONFIG_NAME, String.valueOf(meta.getSnapshotId()));
             }
         }
         appendInterOpCollection(-1, opCollection);
