@@ -708,6 +708,7 @@ jobs:
           helm test graphscope --timeout 5m0s
 
       - name: HDFS test
+        if: false  # temporary disable the hdfs tests
         env:
           JAVA_HOME: /usr/lib/jvm/default-java
           GS_TEST_DIR: ${{ github.workspace }}/gstest
