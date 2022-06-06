@@ -120,15 +120,13 @@ def replace_context(global_ctx, source_module, target_module):
 
 def load_the_module(module_or_name):
     if isinstance(module_or_name, ModuleType):
-        module_or_name = module_or_name.__name__
-    names = module_or_name.split(".")
-    module_path = imp.find_module(names[0])
-    try:
+        return module_or_name
+    else:
+        names = module_or_name.split(".")
+        module_path = imp.find_module(names[0])
         for name in names[1:]:
             module_path = imp.find_module(name, [module_path[1]])
-    except Exception:
-        return module_or_name
-    return imp.load_module(module_or_name, *module_path)
+        return imp.load_module(module_or_name, *module_path)
 
 
 def replace_module_context(  # noqa: C901
