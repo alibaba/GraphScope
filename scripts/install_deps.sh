@@ -705,7 +705,7 @@ install_dependencies() {
 
     if [[ ! -z "${packages_to_install}" ]]; then
       log "Installing packages ${packages_to_install[*]}"
-      brew bundle ${packages_to_install[*]} || true
+      brew install ${packages_to_install[*]} || true
     fi
 
     if [[ "$(uname -m)" == "x86_64" ]]; then
