@@ -353,12 +353,6 @@ check_dependencies() {
     fi
   fi
 
-  # check zetcd
-  if ! command -v zetcd &> /dev/null && ! command -v ${HOME}/go/bin/zetcd &> /dev/null && \
-     ! command -v /usr/local/go/bin/zetcd &> /dev/null; then
-    packages_to_install+=(zetcd)
-  fi
-
   # check c++ compiler
   if [[ "${PLATFORM}" == *"Darwin"* ]]; then
     if [[ ! -z "$(brew info llvm 2>&1 | grep 'Not installed')" ]];then
@@ -727,13 +721,9 @@ install_dependencies() {
     export CPPFLAGS=-I${homebrew_prefix}/opt/llvm/include
   fi
 
-  if [[ "${packages_to_install[*]}" =~ "zetcd" ]]; then
-    log "Installing zetcd."
-    GO111MODULE="auto" go get github.com/etcd-io/zetcd/cmd/zetcd
-    sudo cp ${HOME}/go/bin/zetcd /usr/local/bin/zetcd
-    # remove zetcd from packages_to_install
-    packages_to_install=("${packages_to_install[@]/zetcd}")
-  fi
+  log "Installing zetcd."
+  GO111MODULE="auto" go get github.com/etcd-io/zetcd/cmd/zetcd
+  sudo cp ${HOME}/go/bin/zetcd /usr/local/bin/zetcd
 
   log "Installing python packages for vineyard codegen."
   pip3 install -U pip --user
