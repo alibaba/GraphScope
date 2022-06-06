@@ -118,15 +118,33 @@ def replace_context(global_ctx, source_module, target_module):
     return global_ctx
 
 
+
 def load_the_module(module_or_name):
     if isinstance(module_or_name, ModuleType):
-        return module_or_name
-    else:
-        names = module_or_name.split(".")
-        module_path = imp.find_module(names[0])
+        module_or_name = module_or_name.__name__
+    names = module_or_name.split(".")
+    module_path = imp.find_module(names[0])
+    try:
         for name in names[1:]:
             module_path = imp.find_module(name, [module_path[1]])
-        return imp.load_module(module_or_name, *module_path)
+    except ImportError:
+        return module_or_name
+    return imp.load_module(module_or_name, *module_path)
+    module = imp.load_module(module_or_name, *module_path)
+    return apply_networkx_patches(module)
+
+
+def apply_networkx_patches(module):
+    # there'a some name conflicts in networkx and we need to be careful
+    # e.g.,
+    #
+    #     networkx.algorithms.approximation.connectivity
+    # vs. networkx.algorithms.connectivity
+    #
+    if module.__name__ == "networkx.algorithms":
+        mod_connectivity = load_the_module("networkx.algorithms.connectivity")
+        setattr(module, "connectivity", mod_connectivity)
+    return module
 
 
 def replace_module_context(  # noqa: C901
