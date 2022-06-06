@@ -89,28 +89,24 @@ class Graph:
         return self._conn.batch_write(request)
 
 
-class BasicAuthPlugin(grpc.AuthMetadataPlugin):
-    def __init__(self, username, password):
-        self.secret = username + ':' + password
-        self.secret = base64.b64encode(self.secret.encode('utf-8')).decode('utf-8')
+def _encode_metadata_for_authorization(username, password):
+    if username is None or password is None:
+        return None
+    secret = username + ":" + password
+    secret = base64.b64encode(secret.encode("utf-8")).decode("utf-8")
+    metadata = [("authorization", "Basic " + secret)]
+    return metadata
 
-    def __call__(self, context, callback):
-        metadata = [('Authorization', 'Basic ' + self.secret)]
-        callback(metadata, None)
 
 class Connection:
-    def __init__(self, addr, gremlin_endpoint=None, username=None, password=None) -> None:
+    def __init__(self, addr, gremlin_endpoint=None, username=None, password=None):
         self._addr = addr
         self._gremlin_endpoint = gremlin_endpoint
         self._conn = None
-        if username is not None and password is not None:
-            auth = BasicAuthPlugin(username, password)
-            crendential = grpc.metadata_call_credentials(auth)
-        else:
-            crendential = None
+        self._metadata = _encode_metadata_for_authorization(username, password)
         channel = grpc.insecure_channel(addr)
-        self._ddl_service_stub = ddl_service_pb2_grpc.ClientDdlStub(channel, credentials=crendential)
-        self._write_service_stub = write_service_pb2_grpc.ClientWriteStub(channel, credentials=crendential)
+        self._ddl_service_stub = ddl_service_pb2_grpc.ClientDdlStub(channel)
+        self._write_service_stub = write_service_pb2_grpc.ClientWriteStub(channel)
         self._client_id = None
 
     def close(self):
@@ -122,10 +118,10 @@ class Connection:
             self._conn = None
 
     def submit(self, requests):
-        return self._ddl_service_stub.batchSubmit(requests)
+        return self._ddl_service_stub.batchSubmit(requests, metadata=self._metadata)
 
     def get_graph_def(self, requests):
-        return self._ddl_service_stub.getGraphDef(requests)
+        return self._ddl_service_stub.getGraphDef(requests, metadata=self._metadata)
 
     def g(self):
         request = ddl_service_pb2.GetGraphDefRequest()
