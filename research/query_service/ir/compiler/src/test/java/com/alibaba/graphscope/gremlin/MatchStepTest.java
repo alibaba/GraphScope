@@ -18,6 +18,8 @@ package com.alibaba.graphscope.gremlin;
 
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.intermediate.MatchSentence;
+import com.alibaba.graphscope.common.intermediate.operator.ExpandOp;
+import com.alibaba.graphscope.common.intermediate.operator.GetVOp;
 import com.alibaba.graphscope.common.intermediate.operator.MatchOp;
 import com.alibaba.graphscope.common.jna.type.FfiJoinKind;
 import com.alibaba.graphscope.gremlin.transform.StepTransformFactory;
@@ -60,6 +62,38 @@ public class MatchStepTest {
         Traversal traversal = g.V().match(__.as("a").out().as("b"));
         MatchSentence sentence = getSentences(traversal).get(0);
         Assert.assertTrue(isEqualWith(sentence, "a", "b", FfiJoinKind.Inner, 1));
+    }
+
+    // fuse out + has
+    @Test
+    public void g_V_match_as_a_out_has_as_b_test() {
+        Traversal traversal = g.V().match(__.as("a").out().has("name", "marko").as("b"));
+        MatchSentence sentence = getSentences(traversal).get(0);
+        Assert.assertTrue(isEqualWith(sentence, "a", "b", FfiJoinKind.Inner, 1));
+        ExpandOp op = (ExpandOp) sentence.getBinders().unmodifiableCollection().get(0);
+        Assert.assertEquals("@.name && @.name == \"marko\"", op.getParams().get().getPredicate().get());
+        Assert.assertEquals(false, op.getIsEdge().get().applyArg());
+    }
+
+    // fuse outE + has
+    @Test
+    public void g_V_match_as_a_outE_has_as_b_test() {
+        Traversal traversal = g.V().match(__.as("a").outE().has("name", "marko").as("b"));
+        MatchSentence sentence = getSentences(traversal).get(0);
+        Assert.assertTrue(isEqualWith(sentence, "a", "b", FfiJoinKind.Inner, 1));
+        ExpandOp op = (ExpandOp) sentence.getBinders().unmodifiableCollection().get(0);
+        Assert.assertEquals("@.name && @.name == \"marko\"", op.getParams().get().getPredicate().get());
+        Assert.assertEquals(true, op.getIsEdge().get().applyArg());
+    }
+
+    // fuse outV + has
+    @Test
+    public void g_V_match_as_a_outE_outV_has_as_b_test() {
+        Traversal traversal = g.V().match(__.as("a").outE().outV().has("name", "marko").as("b"));
+        MatchSentence sentence = getSentences(traversal).get(0);
+        Assert.assertTrue(isEqualWith(sentence, "a", "b", FfiJoinKind.Inner, 2));
+        GetVOp op = (GetVOp) sentence.getBinders().unmodifiableCollection().get(1);
+        Assert.assertEquals("@.name && @.name == \"marko\"", op.getParams().get().getPredicate().get());
     }
 
     @Test
