@@ -10,7 +10,7 @@ pegasus_memory = { path = "../memory" }
 pegasus_network = { path = "../network" }
 pegasus_executor = { path = "../executor" }
 pegasus_graph = { path = "../graph" }
-crossbeam-channel = "0.3.6"
+crossbeam-channel = "0.5.2"
 crossbeam-queue = "0.1"
 crossbeam-utils = "0.6"
 log = "0.4"
