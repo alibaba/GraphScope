@@ -111,7 +111,7 @@ public class MatchStepTest {
         ExpandOp op = (ExpandOp) sentence.getBinders().unmodifiableCollection().get(0);
         Assert.assertEquals(
                 "@.weight && @.weight == 1.0", op.getParams().get().getPredicate().get());
-        Assert.assertEquals(false, op.getIsEdge().get().applyArg());
+        Assert.assertEquals(true, op.getIsEdge().get().applyArg());
     }
 
     // fuse outV + hasLabel("person")
