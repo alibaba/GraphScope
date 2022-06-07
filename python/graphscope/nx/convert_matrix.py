@@ -22,11 +22,6 @@
 from collections import defaultdict
 
 import networkx.convert_matrix
-from networkx.convert_matrix import from_pandas_edgelist as _from_pandas_edgelist
-from networkx.convert_matrix import to_numpy_array as _to_numpy_array
-from networkx.convert_matrix import to_numpy_matrix as _to_numpy_matrix
-from networkx.convert_matrix import to_scipy_sparse_array as _to_scipy_sparse_array
-from networkx.convert_matrix import to_scipy_sparse_matrix as _to_scipy_sparse_matrix
 
 from graphscope import nx
 from graphscope.nx.utils.compat import import_as_graphscope_nx
@@ -35,7 +30,6 @@ from graphscope.nx.utils.compat import patch_docstring
 import_as_graphscope_nx(networkx.convert_matrix)
 
 
-@patch_docstring(_from_pandas_edgelist)
 def from_pandas_edgelist(
     df,
     source="source",
@@ -99,7 +93,6 @@ def from_pandas_edgelist(
     return g
 
 
-@patch_docstring(_to_numpy_array)
 def to_numpy_array(
     G,
     nodelist=None,
@@ -189,7 +182,6 @@ def to_numpy_array(
     return A
 
 
-@patch_docstring(_to_numpy_matrix)
 def to_numpy_matrix(
     G,
     nodelist=None,
@@ -214,7 +206,6 @@ def to_numpy_matrix(
     return M
 
 
-@patch_docstring(_to_scipy_sparse_matrix)
 def to_scipy_sparse_matrix(G, nodelist=None, dtype=None, weight="weight", format="csr"):
     import scipy as sp
     import scipy.sparse
@@ -225,7 +216,6 @@ def to_scipy_sparse_matrix(G, nodelist=None, dtype=None, weight="weight", format
     return sp.sparse.csr_matrix(A).asformat(format)
 
 
-@patch_docstring(_to_scipy_sparse_array)
 def to_scipy_sparse_array(G, nodelist=None, dtype=None, weight="weight", format="csr"):
     import scipy as sp
     import scipy.sparse  # call as sp.sparse

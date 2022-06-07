@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# Copyright 2020 Alibaba Group Holding Limited. All Rights Reserved.
+# Copyright 2020-2022 Alibaba Group Holding Limited. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,11 +16,8 @@
 # limitations under the License.
 #
 
-from graphscope.nx.utils.contextmanagers import *
-from graphscope.nx.utils.decorators import *
-from graphscope.nx.utils.heaps import *
-from graphscope.nx.utils.mapped_queue import *
-from graphscope.nx.utils.misc import *
-from graphscope.nx.utils.random_sequence import *
-from graphscope.nx.utils.rcm import *
-from graphscope.nx.utils.union_find import *
+import networkx.utils.heaps
+
+from graphscope.nx.utils.compat import import_as_graphscope_nx
+
+import_as_graphscope_nx(networkx.utils.heaps)
