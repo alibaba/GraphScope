@@ -16,11 +16,8 @@
 # limitations under the License.
 #
 
-from graphscope.nx.utils.contextmanagers import *
-from graphscope.nx.utils.decorators import *
-from graphscope.nx.utils.heaps import *
-from graphscope.nx.utils.mapped_queue import *
-from graphscope.nx.utils.misc import *
-from graphscope.nx.utils.random_sequence import *
-from graphscope.nx.utils.rcm import *
-from graphscope.nx.utils.union_find import *
+import networkx.utils.mapped_queue
+
+from graphscope.nx.utils.compat import import_as_graphscope_nx
+
+import_as_graphscope_nx(networkx.utils.mapped_queue)
