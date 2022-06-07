@@ -326,15 +326,15 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2.3.2
-      if: ${{ needs.changes.outputs.gae-python == 'true' || github.ref == 'refs/heads/main' }}
+      if: ${{ needs.changes.outputs.gae-python == 'true' }}
 
     - uses: actions/download-artifact@v2
-      if: ${{ needs.changes.outputs.gae-python == 'true' || github.ref == 'refs/heads/main' }}
+      if: ${{ needs.changes.outputs.gae-python == 'true' }}
       with:
         path: artifacts
 
     - name: Prepare Environment
-      if: ${{ needs.changes.outputs.gae-python == 'true' || github.ref == 'refs/heads/main' }}
+      if: ${{ needs.changes.outputs.gae-python == 'true' }}
       run: |
         # install graphscope-client
         cd artifacts
@@ -356,7 +356,7 @@ jobs:
         python3 -m pip install pytest pytest-cov
 
     - name: Run Python Test
-      if: ${{ needs.changes.outputs.gae-python == 'true' || github.ref == 'refs/heads/main' }}
+      if: ${{ needs.changes.outputs.gae-python == 'true' }}
       env:
         GS_TEST_DIR: ${{ github.workspace }}/gstest
         DEPLOYMENT: ${{ matrix.deployment }}
@@ -369,7 +369,7 @@ jobs:
                                 $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/tests/unittest
 
     - name: Upload Coverage
-      if: ${{ needs.changes.outputs.gae-python == 'true' || github.ref == 'refs/heads/main' }}
+      if: ${{ needs.changes.outputs.gae-python == 'true' }}
       uses: codecov/codecov-action@v2
       with:
         file: ./coverage.xml
@@ -387,10 +387,10 @@ jobs:
         deployment: ["standalone", "distributed"]
     steps:
     - uses: actions/checkout@v2.3.2
-      if: ${{ needs.changes.outputs.networkx == 'true' || github.ref == 'refs/heads/main' }}
+      if: ${{ needs.changes.outputs.networkx == 'true' }}
 
     - uses: dorny/paths-filter@v2
-      if: ${{ needs.changes.outputs.networkx == 'true' || github.ref == 'refs/heads/main' }}
+      if: ${{ needs.changes.outputs.networkx == 'true' }}
       id: nx-filter
       with:
         filters: |
@@ -408,12 +408,12 @@ jobs:
             - 'python/graphscope/nx/tests/convert/**'
 
     - uses: actions/download-artifact@v2
-      if: ${{ needs.changes.outputs.networkx == 'true' || github.ref == 'refs/heads/main' }}
+      if: ${{ needs.changes.outputs.networkx == 'true' }}
       with:
         path: artifacts
 
     - name: Prepare Environment
-      if: ${{ needs.changes.outputs.networkx == 'true' || github.ref == 'refs/heads/main' }}
+      if: ${{ needs.changes.outputs.networkx == 'true' }}
       env:
         GS_TEST_DIR: ${{ github.workspace }}/gstest
       run: |
@@ -444,7 +444,7 @@ jobs:
       if: false
 
     - name: Basic Test
-      if: ${{ (needs.changes.outputs.networkx == 'true' || github.ref == 'refs/heads/main') && (steps.nx-filter.outputs.basic == 'true' || (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope')) }}
+      if: ${{ needs.changes.outputs.networkx == 'true' && steps.nx-filter.outputs.basic == 'true' }}
       env:
         DEPLOYMENT: ${{ matrix.deployment }}
         GS_TEST_DIR: ${{ github.workspace }}/gstest
@@ -455,7 +455,7 @@ jobs:
             --ignore=$(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/nx/tests/convert
 
     - name: Convert Test
-      if: ${{ (needs.changes.outputs.networkx == 'true' || github.ref == 'refs/heads/main') && steps.nx-filter.outputs.convert == 'true' }}
+      if: ${{ needs.changes.outputs.networkx == 'true' && steps.nx-filter.outputs.convert == 'true' }}
       env:
         DEPLOYMENT: ${{ matrix.deployment }}
         GS_TEST_DIR: ${{ github.workspace }}/gstest
@@ -555,7 +555,7 @@ jobs:
   gie-test:
     runs-on: [self-hosted, ubuntu2004]
     needs: [build-wheels, changes]
-    if: ${{ (needs.changes.outputs.gie-function-test == 'true' || github.ref == 'refs/heads/main') && github.repository == 'alibaba/GraphScope' }}
+    if: ${{ needs.changes.outputs.gie-function-test == 'true' && github.repository == 'alibaba/GraphScope' }}
     steps:
       - uses: actions/checkout@v2.3.2
 
