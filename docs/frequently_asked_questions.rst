@@ -98,7 +98,7 @@ If you don't find an answer to your question here, feel free to file a `Issues`_
 12. why ``Timeout Exception`` raised during launching GraphScope instance on kubernetes cluster?
 
     It will take a few minutes for pulling image during the first time for launching GraphScope instance. Thus, the ``Timeout Exception`` may caused by a poor network connection.
-    You can increase the ``timeeout_seconds`` parameter as your expect by ``graphscope.set_option(timeout_seconds=600))``.
+    You can increase the value of ``timeeout_seconds`` parameter as your expectation by ``graphscope.set_option(timeout_seconds=600))``.
 
 
 **I do have many other questions...**
