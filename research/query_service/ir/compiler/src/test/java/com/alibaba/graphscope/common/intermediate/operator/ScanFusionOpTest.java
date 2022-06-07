@@ -56,7 +56,7 @@ public class ScanFusionOpTest {
 
         irPlan = DedupOpTest.getTestIrPlan(op);
         String actual = irPlan.getPlanAsJson();
-        Assert.assertEquals(FileUtils.readJsonFromResource("scan_opt.json"), actual);
+        Assert.assertEquals(FileUtils.readJsonFromResource("scan_snapshot.json"), actual);
     }
 
     @Test
