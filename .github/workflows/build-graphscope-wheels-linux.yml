@@ -166,10 +166,10 @@ jobs:
 
         # install graphscope
         tar -zxf ./wheel-${{ github.sha }}/graphscope.tar.gz
-        pushd coordinator/dist/wheelhouse
+        pushd coordinator/dist
         python3 -m pip install ./*.whl --user
         popd
-        pushd coordinator/dist
+        pushd coordinator/dist/wheelhouse
         python3 -m pip install ./*.whl --user
         popd
 
@@ -222,10 +222,10 @@ jobs:
 
         # install graphscope
         tar -zxf ./wheel-${{ github.sha }}/graphscope.tar.gz
-        pushd coordinator/dist/wheelhouse
+        pushd coordinator/dist
         python3 -m pip install ./*.whl --user
         popd
-        pushd coordinator/dist
+        pushd coordinator/dist/wheelhouse
         python3 -m pip install ./*.whl --user || true
         popd
 
