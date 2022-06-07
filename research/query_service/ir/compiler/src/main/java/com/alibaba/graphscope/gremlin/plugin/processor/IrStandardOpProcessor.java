@@ -53,6 +53,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalStrategies;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
+import org.apache.tinkerpop.gremlin.process.traversal.strategy.optimization.InlineFilterStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.util.DefaultTraversalStrategies;
 import org.apache.tinkerpop.gremlin.server.Context;
 import org.apache.tinkerpop.gremlin.server.Settings;
@@ -328,6 +329,8 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         strategies.clear();
         strategies.add(ScanFusionStepStrategy.instance());
         strategies.add(RemoveUselessStepStrategy.instance());
+        // fuse outE() + hasLabel(..)
+        strategies.add(InlineFilterStrategy.instance());
         traversal.asAdmin().applyStrategies();
     }
 }
