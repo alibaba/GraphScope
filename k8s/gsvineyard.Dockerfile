@@ -27,7 +27,7 @@ RUN sudo mkdir -p /opt/vineyard && \
     make -j`nproc` && \
     make install && \
     cd /tmp && \
-    git clone -b v0.4.1 https://github.com/v6d-io/v6d.git --depth=1 && \
+    git clone -b v0.5.0 https://github.com/v6d-io/v6d.git --depth=1 && \
     cd v6d && \
     git submodule update --init && \
     mkdir -p /tmp/v6d/build && \
@@ -38,15 +38,15 @@ RUN sudo mkdir -p /opt/vineyard && \
     make install vineyard_client_python -j && \
     cd /tmp/v6d && \
     python3 setup.py bdist_wheel && \
-    cd dist && \
+    pushd dist && \
     auditwheel repair --plat=manylinux2014_x86_64 ./*.whl && \
     mkdir -p /opt/vineyard/dist && \
     cp -f wheelhouse/* /opt/vineyard/dist && \
     pip3 install wheelhouse/*.whl && \
-    cd /tmp/v6d/modules/io && \
-    python3 setup.py bdist_wheel && \
-    cp -f dist/* /opt/vineyard/dist && \
-    pip3 install dist/* && \
+    popd && \
+    python3 setup_io.py bdist_wheel && \
+    cp -f dist/vineyard_io*.whl /opt/vineyard/dist && \
+    pip3 install dist/vineyard_io* && \
     sudo cp -r /opt/vineyard/* /usr/local/ && \
     cd /tmp && \
     rm -fr /tmp/v6d /tmp/libgrape-lite
