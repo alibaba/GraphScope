@@ -343,7 +343,6 @@ fn delete_edge<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &Operation
 #[no_mangle]
 pub extern fn garbageCollectSnapshot(ptr: GraphHandle, snapshot_id: i64) -> Box<JnaResponse> {
     unsafe {
-        info!("gc snapshot {}", snapshot_id);
         let graph_store_ptr = &*(ptr as *const GraphStore);
         match graph_store_ptr.gc(snapshot_id) {
             Ok(_) => {
