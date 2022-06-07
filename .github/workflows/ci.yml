@@ -369,7 +369,7 @@ jobs:
                                 $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/tests/unittest
 
     - name: Upload Coverage
-      if: ${{ needs.changes.outputs.gae-python == 'true' }}
+      if: ${{ needs.changes.outputs.gae-python == 'true' || github.ref == 'refs/heads/main' }}
       uses: codecov/codecov-action@v2
       with:
         file: ./coverage.xml
