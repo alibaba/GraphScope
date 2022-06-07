@@ -105,6 +105,9 @@ endif
 
 .PHONY: gie
 gie:
+	# coordinator/frontend/graphmanager
+	cd $(WORKING_DIR)/interactive_engine && \
+	mvn clean package -DskipTests -Pjava-release --quiet
 	# executor
 	cd $(WORKING_DIR)/interactive_engine/executor && \
 	rustup component add rustfmt && \
@@ -113,9 +116,6 @@ gie:
 	else \
 		cargo build --all; \
 	fi
-	# coordinator/frontend/graphmanager
-	cd $(WORKING_DIR)/interactive_engine && \
-	mvn clean package -DskipTests -Pjava-release --quiet
 	# install
 	mkdir -p $(WORKING_DIR)/.install_prefix && \
 	tar -xf $(WORKING_DIR)/interactive_engine/assembly/target/maxgraph-assembly-0.0.1-SNAPSHOT.tar.gz --strip-components 1 -C $(WORKING_DIR)/.install_prefix && \

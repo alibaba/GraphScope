@@ -10,13 +10,10 @@ on:
   push:
     tags:
       - "v*"
-  pull_request:
-    branches:
-      - main
 
 jobs:
   build-wheels:
-    # if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope')
+    if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope')
     runs-on: macos-10.15
     steps:
     - uses: actions/checkout@v2
@@ -57,7 +54,7 @@ jobs:
         retention-days: 5
 
   build-client-wheels:
-    # if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope')
+    if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope')
     runs-on: macos-10.15
     strategy:
       matrix:
@@ -148,7 +145,7 @@ jobs:
         packages_dir: upload_pypi/
 
   python-test:
-    # if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
+    if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
     runs-on: macos-10.15
     needs: [build-wheels, build-client-wheels]
     strategy:
