@@ -18,7 +18,7 @@ use std::convert::TryInto;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::KeyId;
 use pegasus::api::function::{FnResult, MapFunction};
-use pegasus_server::pb as server_pb;
+use pegasus_server::job_pb as server_pb;
 
 use crate::error::{FnGenError, FnGenResult};
 use crate::process::functions::FoldGen;
@@ -77,7 +77,7 @@ mod tests {
     use pegasus::api::{Count, Sink};
     use pegasus::result::ResultStream;
     use pegasus::JobConf;
-    use pegasus_server::pb as server_pb;
+    use pegasus_server::job_pb as server_pb;
 
     use crate::process::functions::FoldGen;
     use crate::process::operator::tests::{init_source, TAG_A};

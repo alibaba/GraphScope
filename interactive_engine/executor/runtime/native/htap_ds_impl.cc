@@ -664,7 +664,9 @@ void get_out_edges(FRAGMENT_TYPE_T* frag,
   iter->eid_parser = eid_parser;
   if (frag->oid_typename() == vineyard::type_name<OID_TYPE>()) {
     iter->fragment = reinterpret_cast<FRAGMENT_TYPE *>(frag);
+    iter->string_fragment = nullptr;
   } else {
+    iter->fragment = nullptr;
     iter->string_fragment = reinterpret_cast<STRING_FRAGMENT_TYPE *>(frag);
   }
   VERTEX_TYPE vert;
@@ -799,7 +801,9 @@ void get_in_edges(FRAGMENT_TYPE_T* frag, vineyard::IdParser<EID_TYPE>* eid_parse
   iter->eid_parser = eid_parser;
   if (frag->oid_typename() == vineyard::type_name<OID_TYPE>()) {
     iter->fragment = reinterpret_cast<FRAGMENT_TYPE *>(frag);
+    iter->string_fragment = nullptr;
   } else {
+    iter->fragment = nullptr;
     iter->string_fragment = reinterpret_cast<STRING_FRAGMENT_TYPE *>(frag);
   }
   VERTEX_TYPE vert;
@@ -891,7 +895,7 @@ void get_in_edges(STRING_FRAGMENT_TYPE* frag, vineyard::IdParser<EID_TYPE>* eid_
 
 int in_edge_next(EdgeIteratorImpl* iter, Edge* e_out) {
 #ifndef NDEBUG
-  LOG(INFO) << "exit " << __FUNCTION__;
+  LOG(INFO) << "enter " << __FUNCTION__;
 #endif
   while (iter->list_id != iter->list_num &&
          iter->cur_edge == iter->lists[iter->list_id].end) {
@@ -936,7 +940,9 @@ void get_all_edges(FRAGMENT_TYPE_T* frag, PartitionId channel_id,
 
   if (frag->oid_typename() == vineyard::type_name<OID_TYPE>()) {
     out->fragment = reinterpret_cast<FRAGMENT_TYPE *>(frag);
+    out->string_fragment = nullptr;
   } else {
+    out->fragment = nullptr;
     out->string_fragment = reinterpret_cast<STRING_FRAGMENT_TYPE *>(frag);
   }
   out->e_labels = static_cast<LabelId*>(malloc(sizeof(LabelId) * labels_count));

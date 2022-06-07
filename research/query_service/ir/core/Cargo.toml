@@ -13,7 +13,7 @@ ir_common = {path = "../common"}
 lazy_static = "1.3.0"
 log = "0.4"
 pegasus_client = {path = "../../../engine/pegasus/clients/rust/client"}
-pegasus_server = {path = "../../../engine/pegasus/server-v0"}
+pegasus_server = {path = "../../../engine/pegasus/server"}
 pegasus = {path = "../../../engine/pegasus/pegasus"}
 prost = "0.9"
 serde = "1.0"

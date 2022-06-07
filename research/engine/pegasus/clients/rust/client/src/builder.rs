@@ -13,10 +13,13 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use pegasus::{BuildJobError, JobConf};
-use pegasus_server::pb;
 use std::fmt;
 use std::ops::{Deref, DerefMut};
+
+use pegasus::{BuildJobError, JobConf, ServerConf};
+use pegasus_server::job_pb as pb;
+use pegasus_server::pb as pegasus_pb;
+use prost::Message;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Plan {
@@ -466,16 +469,14 @@ impl JobBuilder {
         FL: FnMut(&mut Plan),
         FR: FnMut(&mut Plan),
     {
-        self.plan
-            .join_func(join_kind, left_task, right_task, res);
+        self.plan.join_func(join_kind, left_task, right_task, res);
         self
     }
 
     pub fn join(
         &mut self, join_kind: pb::join::JoinKind, left_plan: Plan, right_plan: Plan, res: BinaryResource,
     ) -> &mut Self {
-        self.plan
-            .join(join_kind, left_plan, right_plan, res);
+        self.plan.join(join_kind, left_plan, right_plan, res);
         self
     }
 
@@ -522,23 +523,37 @@ impl JobBuilder {
         self.plan
     }
 
-    pub fn build(self) -> Result<pb::JobRequest, BuildJobError> {
-        let conf = pb::JobConfig {
+    pub fn build(self) -> Result<pegasus_pb::JobRequest, BuildJobError> {
+        let conf = pegasus_pb::JobConfig {
             job_id: self.conf.job_id,
             job_name: self.conf.job_name.clone(),
             workers: self.conf.workers,
             time_limit: self.conf.time_limit,
             batch_size: self.conf.batch_size,
-            output_capacity: self.conf.batch_capacity,
+            batch_capacity: self.conf.batch_capacity,
             memory_limit: self.conf.memory_limit,
-            plan_print: self.conf.plan_print,
-            servers: self.conf.servers().get_servers(),
+            trace_enable: self.conf.trace_enable,
+            servers: match self.conf.servers() {
+                ServerConf::Local => Some(pegasus_pb::job_config::Servers::Local(pegasus_pb::Empty {})),
+                ServerConf::Partial(servers) => {
+                    Some(pegasus_pb::job_config::Servers::Part(pegasus_pb::ServerList {
+                        servers: servers.clone(),
+                    }))
+                }
+                ServerConf::All => Some(pegasus_pb::job_config::Servers::All(pegasus_pb::Empty {})),
+            },
         };
+
         let source = pb::Source { resource: self.source };
         let plan = pb::TaskPlan { plan: self.plan.take() };
-        let sink = pb::Sink { sinker: Some(pb::sink::Sinker::Resource(self.sink)) };
+        let sink = pb::Sink { resource: self.sink };
 
-        Ok(pb::JobRequest { conf: Some(conf), source: Some(source), plan: Some(plan), sink: Some(sink) })
+        Ok(pegasus_pb::JobRequest {
+            conf: Some(conf),
+            source: source.encode_to_vec(),
+            plan: plan.encode_to_vec(),
+            resource: sink.encode_to_vec(),
+        })
     }
 }
 
@@ -570,15 +585,16 @@ mod test {
             .map(vec![3u8; 32])
             .limit(1)
             .iterate(3, |start| {
-                start
-                    .repartition(vec![4u8; 32])
-                    .map(vec![5u8; 32]);
+                start.repartition(vec![4u8; 32]).map(vec![5u8; 32]);
             })
             .sink(vec![6u8; 32]);
+        let plan_len = builder.plan.len();
         let job_req = builder.build().unwrap();
-        assert_eq!(&job_req.source.unwrap().resource, &vec![0u8; 32]);
-        assert_eq!(&job_req.sink.unwrap().resource, &vec![6u8; 32]);
-        assert_eq!(&job_req.plan.unwrap().plan.len(), &5);
+        let source = pb::Source { resource: vec![0u8; 32] };
+        let sink = pb::Sink { resource: vec![6u8; 32] };
+        assert_eq!(&job_req.source, &source.encode_to_vec());
+        assert_eq!(&job_req.resource, &sink.encode_to_vec());
+        assert_eq!(&plan_len, &5);
     }
 
     #[test]
@@ -615,9 +631,12 @@ mod test {
                 vec![],
             )
             .sink(vec![6u8; 32]);
+        let plan_len = builder.plan.len();
         let job_req = builder.build().unwrap();
-        assert_eq!(&job_req.source.unwrap().resource, &vec![0u8; 32]);
-        assert_eq!(&job_req.sink.unwrap().resource, &vec![6u8; 32]);
-        assert_eq!(&job_req.plan.unwrap().plan.len(), &1);
+        let source = pb::Source { resource: vec![0u8; 32] };
+        let sink = pb::Sink { resource: vec![6u8; 32] };
+        assert_eq!(&job_req.source, &source.encode_to_vec());
+        assert_eq!(&job_req.resource, &sink.encode_to_vec());
+        assert_eq!(&plan_len, &1);
     }
 }
