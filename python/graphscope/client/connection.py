@@ -157,4 +157,4 @@ class Connection:
 
 
 def conn(addr, gremlin_endpoint=None):
-    return Connection(addr, gremlin_endpoint)
+    return Connection(addr, gremlin_endpoint, username=None, password=None)
