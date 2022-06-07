@@ -128,7 +128,6 @@ def load_the_module(module_or_name):
             module_path = imp.find_module(name, [module_path[1]])
     except ImportError:
         return module_or_name
-    return imp.load_module(module_or_name, *module_path)
     module = imp.load_module(module_or_name, *module_path)
     return apply_networkx_patches(module)
 
