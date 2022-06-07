@@ -1015,6 +1015,7 @@ mod params {
         params
             .extra
             .insert(key.unwrap(), val.unwrap());
+        std::mem::forget(params);
 
         FfiError::success()
     }
