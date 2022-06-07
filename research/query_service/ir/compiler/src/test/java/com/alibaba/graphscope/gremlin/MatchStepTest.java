@@ -139,7 +139,8 @@ public class MatchStepTest {
     // fuse outE + hasLabel("knows") and fuse inV() + has("name", "marko")
     @Test
     public void g_V_match_as_a_outE_hasLabel_inV_hasProp_as_b_test() {
-        Traversal traversal = g.V().match(__.as("a").outE().hasLabel("knows").inV().has("name", "marko").as("b"));
+        Traversal traversal =
+                g.V().match(__.as("a").outE().hasLabel("knows").inV().has("name", "marko").as("b"));
         IrStandardOpProcessor.applyStrategies(traversal);
 
         MatchSentence sentence = getSentences(traversal).get(0);
@@ -156,13 +157,21 @@ public class MatchStepTest {
     // fuse outE + has("weight", 1.0) and fuse inV() + has("name", "marko")
     @Test
     public void g_V_match_as_a_outE_hasProp_inV_hasProp_as_b_test() {
-        Traversal traversal = g.V().match(__.as("a").outE().has("weight", 1.0).inV().has("name", "marko").as("b"));
+        Traversal traversal =
+                g.V().match(
+                                __.as("a")
+                                        .outE()
+                                        .has("weight", 1.0)
+                                        .inV()
+                                        .has("name", "marko")
+                                        .as("b"));
 
         MatchSentence sentence = getSentences(traversal).get(0);
         Assert.assertTrue(isEqualWith(sentence, "a", "b", FfiJoinKind.Inner, 2));
 
         ExpandOp expandOp = (ExpandOp) sentence.getBinders().unmodifiableCollection().get(0);
-        Assert.assertEquals("@.weight && @.weight == 1.0", expandOp.getParams().get().getPredicate().get());
+        Assert.assertEquals(
+                "@.weight && @.weight == 1.0", expandOp.getParams().get().getPredicate().get());
 
         GetVOp op = (GetVOp) sentence.getBinders().unmodifiableCollection().get(1);
         Assert.assertEquals(
