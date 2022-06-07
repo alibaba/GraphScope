@@ -87,11 +87,17 @@ impl ExternalStorage for RocksDB {
 
     fn delete_range(&self, start: &[u8], end: &[u8]) -> GraphResult<()> {
         let mut batch = WriteBatch::default();
+        self.db.delete_file_in_range(start, end).map_err(|e| {
+            let msg = format!("rocksdb.delete_files_in_range failed because {}", e.into_string());
+            gen_graph_err!(GraphErrorCode::ExternalStorageError, msg)
+        })?;
         batch.delete_range(start, end);
         self.db.write(batch).map_err(|e| {
             let msg = format!("rocksdb.delete_range failed because {}", e.into_string());
             gen_graph_err!(GraphErrorCode::ExternalStorageError, msg)
-        })
+        })?;
+        self.db.compact_range(Option::Some(start), Option::Some(end));
+        Ok(())
     }
 
     fn load(&self, files: &[&str]) -> GraphResult<()> {

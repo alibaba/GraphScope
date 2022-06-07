@@ -363,13 +363,13 @@ impl MultiVersionGraph for GraphStore {
         for vt in vertex_tables {
             info!("gc vertex table {}", vt);
             let table_prefix = vertex_table_prefix(vt);
-            self.delete_table_by_prefix(table_prefix)?;
+            self.delete_table_by_prefix(table_prefix, true)?;
         }
         let edge_tables = self.edge_manager.gc(si)?;
         for et in edge_tables {
             info!("gc edge table {}", et);
-            let table_prefix = edge_table_prefix(et, EdgeDirection::Out);
-            self.delete_table_by_prefix(table_prefix)?;
+            let out_table_prefix = edge_table_prefix(et, EdgeDirection::Out);
+            self.delete_table_by_prefix(out_table_prefix, false)?;
         }
         Ok(())
     }
@@ -620,8 +620,12 @@ impl GraphStore {
         }
     }
 
-    fn delete_table_by_prefix(&self, table_prefix: i64) -> GraphResult<()> {
-        let end = table_prefix + 1;
+    pub fn delete_table_by_prefix(&self, table_prefix: i64, vertex_table: bool) -> GraphResult<()> {
+        let end = if vertex_table {
+            table_prefix + 1
+        } else {
+            table_prefix + 2
+        };
         let end_key = transform::i64_to_arr(end.to_be());
         let start_key = transform::i64_to_arr(table_prefix.to_be());
         self.storage.delete_range(&start_key, &end_key)
