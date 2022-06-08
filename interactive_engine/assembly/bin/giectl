@@ -115,7 +115,7 @@ start_coordinator() {
       ${GRAPHSCOPE_HOME}/conf/coordinator.application.properties > ${config_dir}/coordinator.application.properties
 
   java ${java_opt} \
-    -cp ${GRAPHSCOPE_HOME}/maxgraph-coordinator-0.0.1-SNAPSHOT.jar:${GRAPHSCOPE_HOME}/lib/*: \
+    -cp "${GRAPHSCOPE_HOME}/maxgraph-coordinator-0.0.1-SNAPSHOT.jar:${GRAPHSCOPE_HOME}/lib/*:" \
     com.alibaba.maxgraph.coordinator.CoordinatorMain \
     ${config_dir}/coordinator.application.properties \
     ${object_id} 1>${log_dir}/maxgraph-coordinator.out 2>${log_dir}/maxgraph-coordinator.err&
@@ -191,7 +191,7 @@ start_frontend() {
 
   # maxgraph frontend service hold a handle client of coordinator
   java ${java_opt} \
-    -cp $gaia_frontend_jar:${GRAPHSCOPE_HOME}/maxgraph-frontendservice-0.0.1-SNAPSHOT.jar:${GRAPHSCOPE_HOME}/maxgraph-coordinator-0.0.1-SNAPSHOT.jar:${GRAPHSCOPE_HOME}/lib/*: \
+    -cp "$gaia_frontend_jar:${GRAPHSCOPE_HOME}/maxgraph-frontendservice-0.0.1-SNAPSHOT.jar:${GRAPHSCOPE_HOME}/maxgraph-coordinator-0.0.1-SNAPSHOT.jar:${GRAPHSCOPE_HOME}/lib/*:" \
     $gaia_frontend_mainclass \
     ${config_dir}/frontend.vineyard.properties \
     ${object_id} 1>${log_dir}/maxgraph-frontend.out 2>${log_dir}/maxgraph-frontend.err&
