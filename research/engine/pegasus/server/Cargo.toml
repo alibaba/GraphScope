@@ -10,7 +10,7 @@ pegasus_network = { path = "../network"}
 pegasus_memory = { path = "../memory"}
 pegasus = { path = "../pegasus" }
 log = "0.4"
-crossbeam-utils = "0.6"
+crossbeam-utils = "0.8.7"
 #crossbeam-channel = "0.3.6"
 tonic = "0.6"
 prost = "0.9"
