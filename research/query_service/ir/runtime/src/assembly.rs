@@ -41,7 +41,7 @@ use crate::process::operator::join::JoinFunctionGen;
 use crate::process::operator::keyed::KeyFunctionGen;
 use crate::process::operator::map::{FilterMapFuncGen, MapFuncGen};
 use crate::process::operator::shuffle::RecordRouter;
-use crate::process::operator::sink::SinkFunctionGen;
+use crate::process::operator::sink::{SinkGen, Sinker};
 use crate::process::operator::sort::CompareFunctionGen;
 use crate::process::operator::source::SourceOperator;
 use crate::process::operator::subtask::RecordLeftJoinGen;
@@ -52,7 +52,6 @@ type RecordFilterMap = Box<dyn FilterMapFunction<Record, Record>>;
 type RecordFlatMap = Box<dyn FlatMapFunction<Record, Record, Target = DynIter<Record>>>;
 type RecordFilter = Box<dyn FilterFunction<Record>>;
 type RecordLeftJoin = Box<dyn ApplyGen<Record, Vec<Record>, Option<Record>>>;
-type RecordEncode = Box<dyn MapFunction<Record, Vec<u8>>>;
 type RecordShuffle = Box<dyn RouteFunction<Record>>;
 type RecordCompare = Box<dyn CompareFunction<Record>>;
 type RecordJoin = Box<dyn JoinKeyGen<Record, RecordKey, Record>>;
@@ -144,7 +143,7 @@ impl FnGenerator {
         Ok(step.gen_key()?)
     }
 
-    fn gen_sink(&self, res: &BinaryResource) -> FnGenResult<RecordEncode> {
+    fn gen_sink(&self, res: &BinaryResource) -> FnGenResult<Sinker> {
         let step = decode::<algebra_pb::logical_plan::Operator>(res)?;
         Ok(step.gen_sink()?)
     }
@@ -466,7 +465,6 @@ impl JobAssembly for IRJobAssembly {
     fn assemble(&self, plan: &JobDesc, worker: &mut Worker<Vec<u8>, Vec<u8>>) -> Result<(), BuildJobError> {
         worker.dataflow(move |input, output| {
             let source_op = decode::<server_pb::Source>(&plan.input)?;
-            // TODO: may return Vec<u8> in gen_source;
             let source_iter = self
                 .udf_gen
                 .gen_source(source_op.resource.as_ref())?;
@@ -484,9 +482,23 @@ impl JobAssembly for IRJobAssembly {
             let stream = self.install(source, &task.plan)?;
             let sink = decode::<server_pb::Sink>(&plan.resource)?;
             let ec = self.udf_gen.gen_sink(&sink.resource)?;
-            stream
-                .map(move |record| ec.exec(record))?
-                .sink_into(output)
+            match ec {
+                Sinker::DefaultSinker(default_sinker) => stream
+                    .map(move |record| default_sinker.exec(record))?
+                    .sink_into(output),
+                Sinker::GraphSinker(graph_sinker) => stream
+                    .fold_partition(graph_sinker, || {
+                        |mut accumulator, next| {
+                            accumulator.accum(next)?;
+                            Ok(accumulator)
+                        }
+                    })?
+                    .map(|mut accumulator| Ok(accumulator.finalize()?))?
+                    .into_stream()?
+                    // TODO: confirm with compiler
+                    .map(|_r| Ok(vec![]))?
+                    .sink_into(output),
+            }
         })
     }
 }

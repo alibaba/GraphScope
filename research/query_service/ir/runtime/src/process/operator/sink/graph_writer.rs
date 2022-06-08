@@ -27,7 +27,7 @@ use crate::error::{FnExecError, FnExecResult, FnGenResult};
 use crate::graph::element::{Edge, Vertex};
 use crate::graph::WriteGraphProxy;
 use crate::process::operator::accum::accumulator::Accumulator;
-use crate::process::operator::sink::GraphSinkGen;
+use crate::process::operator::sink::{SinkGen, Sinker};
 use crate::process::record::Record;
 
 #[derive(Clone, Debug)]
@@ -71,8 +71,8 @@ pub struct SinkVineyardOp {
     pub graph_schema: Option<schema_pb::Schema>,
 }
 
-impl GraphSinkGen for SinkVineyardOp {
-    fn gen_graph_writer(self) -> FnGenResult<GraphWriter> {
+impl SinkGen for SinkVineyardOp {
+    fn gen_sink(self) -> FnGenResult<Sinker> {
         let mut sink_keys = Vec::with_capacity(self.tags.len());
         for sink_key_pb in self.tags.into_iter() {
             let sink_key = sink_key_pb
@@ -86,7 +86,7 @@ impl GraphSinkGen for SinkVineyardOp {
             // TODO: replace by VineyardGraph
             let graph_writer = GraphWriter { graph_writer: TestGraph::default(), sink_keys };
             debug!("Runtime sink graph operator: {:?}", graph_writer);
-            Ok(graph_writer)
+            Ok(Sinker::GraphSinker(graph_writer))
         } else {
             Err(ParsePbError::EmptyFieldError("graph_schema in SinkVineyardOp".to_string()))?
         }
@@ -213,7 +213,7 @@ mod tests {
             |input, output| {
                 let mut stream = input.input_from(source)?;
                 stream = stream
-                    .fold(test_graph_writer, || {
+                    .fold_partition(test_graph_writer, || {
                         |mut accumulator, next| {
                             accumulator.accum(next)?;
                             Ok(accumulator)

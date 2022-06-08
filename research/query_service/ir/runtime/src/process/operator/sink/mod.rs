@@ -18,70 +18,50 @@ mod sink;
 pub use graph_writer::GraphWriter;
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
-use pegasus::api::function::MapFunction;
 
 use crate::error::FnGenResult;
 use crate::process::operator::sink::graph_writer::SinkVineyardOp;
-use crate::process::operator::sink::sink::DefaultSinkOp;
-use crate::process::record::Record;
+use crate::process::operator::sink::sink::{DefaultSinkOp, RecordSinkEncoder};
 
-pub trait SinkFunctionGen {
-    fn gen_sink(self) -> FnGenResult<Box<dyn MapFunction<Record, Vec<u8>>>>;
+pub enum Sinker {
+    DefaultSinker(RecordSinkEncoder),
+    GraphSinker(GraphWriter),
 }
 
-pub trait GraphSinkGen {
-    fn gen_graph_writer(self) -> FnGenResult<GraphWriter>;
+pub trait SinkGen {
+    fn gen_sink(self) -> FnGenResult<Sinker>;
 }
 
-impl SinkFunctionGen for algebra_pb::logical_plan::Operator {
-    fn gen_sink(self) -> FnGenResult<Box<dyn MapFunction<Record, Vec<u8>>>> {
+impl SinkGen for algebra_pb::logical_plan::Operator {
+    fn gen_sink(self) -> FnGenResult<Sinker> {
         if let Some(opr) = self.opr {
             match opr {
                 algebra_pb::logical_plan::operator::Opr::Sink(sink) => {
                     if let Some(sink_target) = sink.sink_target {
-                        if let Some(algebra_pb::sink::sink_target::Inner::SinkDefault(default)) =
-                            sink_target.inner
-                        {
-                            let default_sink_op = DefaultSinkOp {
-                                tags: sink.tags,
-                                id_name_mappings: default.id_name_mappings,
-                            };
-                            default_sink_op.gen_sink()
-                        } else {
-                            Err(ParsePbError::from("sink target is not sink_default"))?
+                        let inner = sink_target
+                            .inner
+                            .ok_or(ParsePbError::EmptyFieldError(
+                                "sink_target inner is missing".to_string(),
+                            ))?;
+                        match inner {
+                            algebra_pb::sink::sink_target::Inner::SinkDefault(sink_default) => {
+                                let default_sink_op = DefaultSinkOp {
+                                    tags: sink.tags,
+                                    id_name_mappings: sink_default.id_name_mappings,
+                                };
+                                default_sink_op.gen_sink()
+                            }
+                            algebra_pb::sink::sink_target::Inner::SinkVineyard(sink_vineyard) => {
+                                let sink_vineyard_op = SinkVineyardOp {
+                                    tags: sink.tags,
+                                    graph_name: sink_vineyard.graph_name,
+                                    graph_schema: sink_vineyard.graph_schema,
+                                };
+                                sink_vineyard_op.gen_sink()
+                            }
                         }
                     } else {
                         Err(ParsePbError::EmptyFieldError("sink_target is missing".to_string()))?
-                    }
-                }
-                _ => Err(ParsePbError::from("algebra_pb op is not a sink op"))?,
-            }
-        } else {
-            Err(ParsePbError::EmptyFieldError("algebra op is empty".to_string()))?
-        }
-    }
-}
-
-impl GraphSinkGen for algebra_pb::logical_plan::Operator {
-    fn gen_graph_writer(self) -> FnGenResult<GraphWriter> {
-        if let Some(opr) = self.opr {
-            match opr {
-                algebra_pb::logical_plan::operator::Opr::Sink(sink) => {
-                    if let Some(sink_target) = sink.sink_target {
-                        if let Some(algebra_pb::sink::sink_target::Inner::SinkVineyard(sink_vineyard)) =
-                            sink_target.inner
-                        {
-                            let sink_vineyard_op = SinkVineyardOp {
-                                tags: sink.tags,
-                                graph_name: sink_vineyard.graph_name,
-                                graph_schema: sink_vineyard.graph_schema,
-                            };
-                            sink_vineyard_op.gen_graph_writer()
-                        } else {
-                            Err(ParsePbError::from("sink target is not sink_vineyard"))?
-                        }
-                    } else {
-                        Err(ParsePbError::EmptyFieldError("SinkTarget in sink op".to_string()))?
                     }
                 }
                 _ => Err(ParsePbError::from("algebra_pb op is not a sink op"))?,

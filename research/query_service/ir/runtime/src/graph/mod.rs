@@ -244,7 +244,6 @@ pub trait WriteGraphProxy: Send + Sync {
 lazy_static! {
     /// GRAPH_PROXY is a raw pointer which can be safely shared between threads.
     pub static ref GRAPH_PROXY: AtomicPtr<Arc<dyn GraphProxy>> = AtomicPtr::default();
-    pub static ref GRAPH_WRITER_PROXY: AtomicPtr<Arc<dyn WriteGraphProxy>> = AtomicPtr::default();
 }
 
 pub fn register_graph(graph: Arc<dyn GraphProxy>) {

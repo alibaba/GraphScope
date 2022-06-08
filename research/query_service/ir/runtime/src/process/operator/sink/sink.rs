@@ -29,7 +29,7 @@ use prost::Message;
 
 use crate::error::FnGenResult;
 use crate::graph::element::{Edge, GraphElement, GraphObject, GraphPath, Vertex, VertexOrEdge};
-use crate::process::operator::sink::SinkFunctionGen;
+use crate::process::operator::sink::{SinkGen, Sinker};
 use crate::process::record::{CommonObject, Entry, Record, RecordElement};
 
 #[derive(Debug)]
@@ -226,8 +226,8 @@ pub struct DefaultSinkOp {
     pub id_name_mappings: Vec<algebra_pb::sink_default::IdNameMapping>,
 }
 
-impl SinkFunctionGen for DefaultSinkOp {
-    fn gen_sink(self) -> FnGenResult<Box<dyn MapFunction<Record, Vec<u8>>>> {
+impl SinkGen for DefaultSinkOp {
+    fn gen_sink(self) -> FnGenResult<Sinker> {
         let mut sink_keys = Vec::with_capacity(self.tags.len());
         for sink_key_pb in self.tags.into_iter() {
             let sink_key = sink_key_pb
@@ -247,6 +247,6 @@ impl SinkFunctionGen for DefaultSinkOp {
             schema_map: if schema_map.is_empty() { None } else { Some(schema_map) },
         };
         debug!("Runtime sink operator: {:?}", record_sinker);
-        Ok(Box::new(record_sinker))
+        Ok(Sinker::DefaultSinker(record_sinker))
     }
 }
