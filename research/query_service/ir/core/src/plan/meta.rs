@@ -20,8 +20,6 @@ use std::io;
 use std::rc::Rc;
 use std::sync::RwLock;
 
-use ir_common::generated::common as common_pb;
-use ir_common::generated::common::name_or_id::Item;
 use ir_common::generated::schema as schema_pb;
 use ir_common::NameOrId;
 
@@ -135,22 +133,8 @@ impl Schema {
         self.table_map.get(name).map(|(_, id)| *id)
     }
 
-    pub fn get_table_id_from_pb(&self, name: &common_pb::NameOrId) -> Option<i32> {
-        name.item.as_ref().and_then(|item| match item {
-            common_pb::name_or_id::Item::Name(name) => self.get_table_id(name),
-            common_pb::name_or_id::Item::Id(id) => Some(*id),
-        })
-    }
-
     pub fn get_column_id(&self, name: &str) -> Option<i32> {
         self.column_map.get(name).cloned()
-    }
-
-    pub fn get_column_id_from_pb(&self, name: &common_pb::NameOrId) -> Option<i32> {
-        name.item.as_ref().and_then(|item| match item {
-            common_pb::name_or_id::Item::Name(name) => self.get_column_id(name),
-            common_pb::name_or_id::Item::Id(id) => Some(*id),
-        })
     }
 
     pub fn get_entity_name(&self, id: i32) -> Option<&String> {
@@ -190,37 +174,6 @@ impl Schema {
         } else {
             (false, 0)
         }
-    }
-
-    pub fn check_primary_key_from_pb(
-        &self, table: &common_pb::NameOrId, is_entity: bool, col: &common_pb::NameOrId,
-    ) -> (bool, usize) {
-        let mut table_name = "";
-        let mut col_name = "";
-        if let Some(item) = table.item.as_ref() {
-            match item {
-                Item::Name(name) => table_name = name.as_str(),
-                Item::Id(id) => {
-                    if let Some(name) =
-                        if is_entity { self.get_entity_name(*id) } else { self.get_relation_name(*id) }
-                    {
-                        table_name = name.as_str();
-                    }
-                }
-            }
-        }
-        if let Some(item) = col.item.as_ref() {
-            match item {
-                Item::Name(name) => col_name = name.as_str(),
-                Item::Id(id) => {
-                    if let Some(name) = self.get_column_name(*id) {
-                        col_name = name.as_str();
-                    }
-                }
-            }
-        }
-
-        self.check_primary_key(table_name, col_name)
     }
 }
 
@@ -432,7 +385,7 @@ pub struct NodeMeta {
     columns: BTreeSet<NameOrId>,
     /// A flag to indicate that all columns are required
     is_all_columns: bool,
-    /// Whether the current node accept columns
+    /// Whether the current node require fetching columns
     is_add_column: bool,
 }
 
@@ -458,13 +411,22 @@ impl NodeMeta {
 
 #[derive(Clone, Debug)]
 pub enum SingleOrNodes {
-    Single(u32),
+    Single([u32; 1]),
     Union(Vec<u32>),
 }
 
 impl Default for SingleOrNodes {
     fn default() -> Self {
-        SingleOrNodes::Single(0)
+        SingleOrNodes::Single([0])
+    }
+}
+
+impl SingleOrNodes {
+    pub fn get(&self) -> &[u32] {
+        match self {
+            SingleOrNodes::Single(node) => &node[..],
+            SingleOrNodes::Union(nodes) => nodes.as_slice(),
+        }
     }
 }
 
@@ -524,11 +486,11 @@ impl NodeMetaOpt {
 
     pub fn get_columns(&self) -> BTreeSet<NameOrId> {
         match self {
-            NodeMetaOpt::Single(meta) => meta.borrow().get_columns().clone(),
+            NodeMetaOpt::Single(meta) => meta.borrow().columns.clone(),
             NodeMetaOpt::Union(metas) => {
                 let mut union_cols = BTreeSet::new();
                 for meta in metas {
-                    union_cols.append(&mut meta.borrow_mut().columns);
+                    union_cols.extend(meta.borrow().columns.iter().cloned());
                 }
                 union_cols
             }
@@ -555,10 +517,10 @@ pub struct PlanMeta {
     /// For example, if the plan looks like, `Scan.Filter(xx)`, `Scan` is a node that
     /// accesses storage, while `Filter` is not. Here, we refer the node id of
     /// `Filter` to the node id of `Scan`.
-    node_to_referred_nodes: BTreeMap<u32, SingleOrNodes>,
+    referred_nodes: BTreeMap<u32, SingleOrNodes>,
     /// The tag must refer to some valid nodes in the plan.
     tag_nodes: BTreeMap<NameOrId, Vec<u32>>,
-    /// To ease the processing, tag may be transformed to an internal id.
+    /// To ease the processing, tag may be mapped to an internal id.
     /// This maintains the mappings
     tag_ids: BTreeMap<NameOrId, u32>,
     /// To record the current nodes' id in the logical plan. Note that nodes that have operators that
@@ -580,7 +542,7 @@ pub struct PlanMeta {
 impl PlanMeta {
     pub fn new(node_id: u32) -> Self {
         let mut plan_meta = PlanMeta::default();
-        plan_meta.curr_node = SingleOrNodes::Single(node_id);
+        plan_meta.curr_node = SingleOrNodes::Single([node_id]);
         plan_meta.node_metas.entry(node_id).or_default();
         plan_meta
     }
@@ -603,11 +565,11 @@ impl PlanMeta {
 }
 
 impl PlanMeta {
-    pub fn curr_node_metas_mut(&mut self) -> NodeMetaOpt {
+    pub fn curr_node_meta_mut(&mut self) -> NodeMetaOpt {
         match &self.curr_node {
             SingleOrNodes::Single(node) => NodeMetaOpt::Single(
                 self.node_metas
-                    .entry(*node)
+                    .entry(node[0])
                     .or_default()
                     .clone(),
             ),
@@ -626,7 +588,7 @@ impl PlanMeta {
         }
     }
 
-    pub fn tag_node_metas_mut(&mut self, tag_opt: Option<&NameOrId>) -> IrResult<NodeMetaOpt> {
+    pub fn tag_node_meta_mut(&mut self, tag_opt: Option<&NameOrId>) -> IrResult<NodeMetaOpt> {
         if let Some(tag) = tag_opt {
             if let Some(nodes) = self.tag_nodes.get(tag) {
                 if nodes.len() == 1 {
@@ -652,7 +614,7 @@ impl PlanMeta {
                 Err(IrError::TagNotExist(tag.clone()))
             }
         } else {
-            Ok(self.curr_node_metas_mut())
+            Ok(self.curr_node_meta_mut())
         }
     }
 
@@ -660,11 +622,11 @@ impl PlanMeta {
         self.node_metas.get(&id).cloned()
     }
 
-    pub fn curr_node_metas(&self) -> Option<NodeMetaOpt> {
+    pub fn curr_node_meta(&self) -> Option<NodeMetaOpt> {
         match &self.curr_node {
             SingleOrNodes::Single(node) => self
                 .node_metas
-                .get(node)
+                .get(&node[0])
                 .map(|meta| NodeMetaOpt::Single(meta.clone())),
             SingleOrNodes::Union(nodes) => {
                 let mut node_metas = vec![];
@@ -706,52 +668,42 @@ impl PlanMeta {
         }
     }
 
-    pub fn get_tag_ids(&self) -> Vec<(NameOrId, u32)> {
-        self.tag_ids
-            .clone()
-            .into_iter()
-            .map(|x| x)
-            .collect()
+    pub fn get_tag_ids(&self) -> &BTreeMap<NameOrId, u32> {
+        &self.tag_ids
     }
 
     pub fn set_curr_node(&mut self, curr_node: u32) {
-        self.curr_node = SingleOrNodes::Single(curr_node);
+        self.curr_node = SingleOrNodes::Single([curr_node]);
     }
 
     pub fn set_union_curr_nodes(&mut self, nodes: Vec<u32>) {
         if nodes.len() == 1 {
-            self.curr_node = SingleOrNodes::Single(nodes[0]);
+            self.curr_node = SingleOrNodes::Single([nodes[0]]);
         } else {
             self.curr_node = SingleOrNodes::Union(nodes);
         }
     }
 
-    pub fn get_curr_nodes(&self) -> Vec<u32> {
-        match &self.curr_node {
-            SingleOrNodes::Single(node) => vec![*node],
-            SingleOrNodes::Union(nodes) => nodes.clone(),
-        }
+    pub fn get_curr_nodes(&self) -> &[u32] {
+        self.curr_node.get()
     }
 
     pub fn refer_to_nodes(&mut self, node: u32, referred_nodes: Vec<u32>) {
-        self.node_to_referred_nodes.insert(
+        self.referred_nodes.insert(
             node,
             if referred_nodes.len() == 1 {
-                SingleOrNodes::Single(referred_nodes[0])
+                SingleOrNodes::Single([referred_nodes[0]])
             } else {
                 SingleOrNodes::Union(referred_nodes)
             },
         );
     }
 
-    pub fn get_referred_nodes(&self, node: u32) -> Vec<u32> {
-        if let Some(referred_nodes) = self.node_to_referred_nodes.get(&node) {
-            match referred_nodes {
-                SingleOrNodes::Single(n) => vec![*n],
-                SingleOrNodes::Union(ns) => ns.clone(),
-            }
+    pub fn get_referred_nodes(&self, node: u32) -> &[u32] {
+        if let Some(referred_nodes) = self.referred_nodes.get(&node) {
+            referred_nodes.get()
         } else {
-            vec![node]
+            &[]
         }
     }
 

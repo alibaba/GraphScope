@@ -113,7 +113,7 @@ impl AsPhysical for pb::Scan {
 
     fn post_process(&mut self, _builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         if let Some(params) = &mut self.params {
-            if let Some(node_metas) = plan_meta.curr_node_metas() {
+            if let Some(node_metas) = plan_meta.curr_node_meta() {
                 let columns = node_metas.get_columns();
                 let is_all_columns = node_metas.is_all_columns();
                 if !columns.is_empty() || is_all_columns {
@@ -142,7 +142,7 @@ impl AsPhysical for pb::EdgeExpand {
         let mut is_adding_auxilia = false;
         let mut auxilia = pb::Auxilia { params: None, alias: None };
         if let Some(params) = self.params.as_mut() {
-            if let Some(node_metas) = plan_meta.curr_node_metas() {
+            if let Some(node_metas) = plan_meta.curr_node_meta() {
                 let columns = node_metas.get_columns();
                 let is_all_columns = node_metas.is_all_columns();
                 if !columns.is_empty() || is_all_columns {
@@ -258,7 +258,7 @@ impl AsPhysical for pb::GetV {
         let mut is_adding_auxilia = false;
         let mut auxilia = pb::Auxilia { params: None, alias: None };
         if let Some(params) = self.params.as_mut() {
-            if let Some(node_metas) = plan_meta.curr_node_metas() {
+            if let Some(node_metas) = plan_meta.curr_node_meta() {
                 let columns = node_metas.get_columns();
                 let is_all_columns = node_metas.is_all_columns();
                 if !columns.is_empty() || is_all_columns {
@@ -364,11 +364,11 @@ impl AsPhysical for pb::Sink {
         let mut sink_opr = self.clone();
         let tag_id_mapping = plan_meta
             .get_tag_ids()
-            .into_iter()
+            .iter()
             .map(|(tag, id)| pb::sink::IdNameMapping {
-                id: id as i32,
+                id: *id as i32,
                 name: match tag {
-                    NameOrId::Str(name) => name,
+                    NameOrId::Str(name) => name.clone(),
                     NameOrId::Id(id) => id.to_string(),
                 },
                 meta_type: 3,

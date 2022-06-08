@@ -14,7 +14,7 @@
 //! limitations under the License.
 
 use std::cell::RefCell;
-use std::collections::{BTreeSet, HashMap, HashSet};
+use std::collections::{BTreeSet, HashMap};
 use std::convert::{TryFrom, TryInto};
 use std::fmt;
 use std::io;
@@ -27,7 +27,7 @@ use ir_common::NameOrId;
 use vec_map::VecMap;
 
 use crate::error::{IrError, IrResult};
-use crate::plan::meta::{PlanMeta, StoreMeta, INVALID_META_ID, STORE_META};
+use crate::plan::meta::{PlanMeta, Schema, StoreMeta, INVALID_META_ID, STORE_META};
 use crate::plan::patmat::{MatchingStrategy, NaiveStrategy};
 use crate::JsonIO;
 
@@ -659,27 +659,147 @@ pub trait AsLogical {
     fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()>;
 }
 
+
+fn check_primary_key_from_pb(
+    schema: &Schema, table: &common_pb::NameOrId, col: &common_pb::NameOrId, is_entity: bool,
+) -> (bool, usize) {
+    use ir_common::generated::common::name_or_id::Item;
+
+    let mut table_name = "";
+    let mut col_name = "";
+    if let Some(item) = table.item.as_ref() {
+        match item {
+            Item::Name(name) => table_name = name.as_str(),
+            Item::Id(id) => {
+                if let Some(name) =
+                if is_entity { schema.get_entity_name(*id) } else { schema.get_relation_name(*id) }
+                {
+                    table_name = name.as_str();
+                }
+            }
+        }
+    }
+    if let Some(item) = col.item.as_ref() {
+        match item {
+            Item::Name(name) => col_name = name.as_str(),
+            Item::Id(id) => {
+                if let Some(name) = schema.get_column_name(*id) {
+                    col_name = name.as_str();
+                }
+            }
+        }
+    }
+
+    schema.check_primary_key(table_name, col_name)
+}
+
+/// To optimize a triplet predicate of <pk, cmp, val> into an `IndexPredicate`.
+fn triplet_to_index_predicate(
+    operators: &[common_pb::ExprOpr], table: &common_pb::NameOrId, is_vertex: bool, meta: &StoreMeta,
+) -> IrResult<Option<pb::IndexPredicate>> {
+    if operators.len() != 3 {
+        return Ok(None);
+    }
+    if meta.schema.is_none() {
+        return Ok(None);
+    }
+    let schema = meta.schema.as_ref().unwrap();
+    let mut key = None;
+    let mut is_eq = false;
+    let mut value = None;
+    if let Some(item) = &operators.get(0).unwrap().item {
+        match item {
+            common_pb::expr_opr::Item::Var(var) => {
+                if let Some(property) = &var.property {
+                    if let Some(item) = &property.item {
+                        match item {
+                            common_pb::property::Item::Key(col) => {
+                                let (is_pk, num_pks) =
+                                    check_primary_key_from_pb(schema, table, col, is_vertex);
+                                if is_pk && num_pks == 1 {
+                                    key = Some(property.clone());
+                                }
+                            }
+                            _ => { /*do nothing*/ }
+                        }
+                    }
+                }
+            }
+            _ => { /*do nothing*/ }
+        }
+    };
+
+    if key.is_none() {
+        return Ok(None);
+    }
+
+    if let Some(item) = &operators.get(1).unwrap().item {
+        match item {
+            common_pb::expr_opr::Item::Logical(l) => {
+                if *l == 0 {
+                    // Eq
+                    is_eq = true;
+                }
+            }
+            _ => { /*do nothing*/ }
+        }
+    };
+
+    if !is_eq {
+        return Ok(None);
+    }
+
+    if let Some(item) = &operators.get(2).unwrap().item {
+        match item {
+            common_pb::expr_opr::Item::Const(c) => {
+                value = Some(c.clone());
+            }
+            _ => { /*do nothing*/ }
+        }
+    };
+    if value.is_none() {
+        return Ok(None);
+    }
+
+    let idx_pred = pb::IndexPredicate {
+        or_predicates: vec![pb::index_predicate::AndPredicate {
+            predicates: vec![pb::index_predicate::Triplet { key, value, cmp: None }],
+        }],
+    };
+
+    Ok(Some(idx_pred))
+}
+
+fn get_table_id_from_pb(schema: &Schema, name: &common_pb::NameOrId) -> Option<i32> {
+    name.item.as_ref().and_then(|item| match item {
+        common_pb::name_or_id::Item::Name(name) => schema.get_table_id(name),
+        common_pb::name_or_id::Item::Id(id) => Some(*id),
+    })
+}
+
+pub fn get_column_id_from_pb(schema: &Schema, name: &common_pb::NameOrId) -> Option<i32> {
+    name.item.as_ref().and_then(|item| match item {
+        common_pb::name_or_id::Item::Name(name) => schema.get_column_id(name),
+        common_pb::name_or_id::Item::Id(id) => Some(*id),
+    })
+}
+
 fn preprocess_var(
     var: &mut common_pb::Variable, meta: &StoreMeta, plan_meta: &mut PlanMeta,
 ) -> IrResult<()> {
-    var.tag
-        .as_mut()
-        .map(|tag| get_or_set_tag_id(tag, true, plan_meta))
-        .transpose()?;
     let tag = var
         .tag
         .clone()
         .map(|tag| tag.try_into())
         .transpose()?;
-    let mut node_meta = plan_meta.tag_node_metas_mut(tag.as_ref())?;
+    let mut node_meta = plan_meta.tag_node_meta_mut(tag.as_ref())?;
     if let Some(property) = var.property.as_mut() {
         if let Some(key) = property.item.as_mut() {
             match key {
                 common_pb::property::Item::Key(key) => {
                     if let Some(schema) = &meta.schema {
                         if plan_meta.is_column_id() && schema.is_column_id() {
-                            let new_key = schema
-                                .get_column_id_from_pb(key)
+                            let new_key = get_column_id_from_pb(schema,key)
                                 .unwrap_or(INVALID_META_ID)
                                 .into();
                             debug!("column: {:?} -> {:?}", key, new_key);
@@ -788,83 +908,6 @@ fn preprocess_expression(
     Ok(())
 }
 
-/// To optimize a triplet predicate of <pk, cmp, val> into an `IndexPredicate`.
-fn triplet_to_index_predicate(
-    operators: &[common_pb::ExprOpr], table: &common_pb::NameOrId, is_vertex: bool, meta: &StoreMeta,
-) -> IrResult<Option<pb::IndexPredicate>> {
-    if operators.len() != 3 {
-        return Ok(None);
-    }
-    if meta.schema.is_none() {
-        return Ok(None);
-    }
-    let schema = meta.schema.as_ref().unwrap();
-    let mut key = None;
-    let mut is_eq = false;
-    let mut value = None;
-    if let Some(item) = &operators.get(0).unwrap().item {
-        match item {
-            common_pb::expr_opr::Item::Var(var) => {
-                if let Some(property) = &var.property {
-                    if let Some(item) = &property.item {
-                        match item {
-                            common_pb::property::Item::Key(col) => {
-                                let (is_pk, num_pks) =
-                                    schema.check_primary_key_from_pb(table, is_vertex, col);
-                                if is_pk && num_pks == 1 {
-                                    key = Some(property.clone());
-                                }
-                            }
-                            _ => { /*do nothing*/ }
-                        }
-                    }
-                }
-            }
-            _ => { /*do nothing*/ }
-        }
-    };
-
-    if key.is_none() {
-        return Ok(None);
-    }
-
-    if let Some(item) = &operators.get(1).unwrap().item {
-        match item {
-            common_pb::expr_opr::Item::Logical(l) => {
-                if *l == 0 {
-                    // Eq
-                    is_eq = true;
-                }
-            }
-            _ => { /*do nothing*/ }
-        }
-    };
-
-    if !is_eq {
-        return Ok(None);
-    }
-
-    if let Some(item) = &operators.get(2).unwrap().item {
-        match item {
-            common_pb::expr_opr::Item::Const(c) => {
-                value = Some(c.clone());
-            }
-            _ => { /*do nothing*/ }
-        }
-    };
-    if value.is_none() {
-        return Ok(None);
-    }
-
-    let idx_pred = pb::IndexPredicate {
-        or_predicates: vec![pb::index_predicate::AndPredicate {
-            predicates: vec![pb::index_predicate::Triplet { key, value, cmp: None }],
-        }],
-    };
-
-    Ok(Some(idx_pred))
-}
-
 fn preprocess_params(
     params: &mut pb::QueryParams, meta: &StoreMeta, plan_meta: &mut PlanMeta,
 ) -> IrResult<()> {
@@ -874,8 +917,7 @@ fn preprocess_params(
     if let Some(schema) = &meta.schema {
         if plan_meta.is_table_id() && schema.is_table_id() {
             for table in params.tables.iter_mut() {
-                let new_table = schema
-                    .get_table_id_from_pb(table)
+                let new_table = get_table_id_from_pb(schema,table)
                     .ok_or(IrError::TableNotExist(table.clone().try_into()?))?
                     .into();
                 debug!("table: {:?} -> {:?}", table, new_table);
@@ -886,8 +928,7 @@ fn preprocess_params(
     for column in params.columns.iter_mut() {
         if let Some(schema) = &meta.schema {
             if plan_meta.is_column_id() && schema.is_column_id() {
-                let new_column = schema
-                    .get_column_id_from_pb(column)
+                let new_column = get_column_id_from_pb(schema,column)
                     .unwrap_or(INVALID_META_ID)
                     .into();
                 debug!("column: {:?} -> {:?}", column, new_column);
@@ -896,7 +937,7 @@ fn preprocess_params(
         }
         debug!("add column ({:?}) to HEAD", column);
         plan_meta
-            .curr_node_metas_mut()
+            .curr_node_meta_mut()
             .insert_column(column.clone().try_into()?);
     }
     Ok(())
@@ -963,7 +1004,7 @@ impl AsLogical for pb::Select {
 impl AsLogical for pb::Scan {
     fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
         plan_meta
-            .curr_node_metas_mut()
+            .curr_node_meta_mut()
             .set_is_add_column(true);
         if let Some(alias) = self.alias.as_mut() {
             get_or_set_tag_id(alias, false, plan_meta)?;
@@ -1002,11 +1043,11 @@ impl AsLogical for pb::EdgeExpand {
         if self.is_edge {
             // as edge is always local, do not need to add column for remote fetching
             plan_meta
-                .curr_node_metas_mut()
+                .curr_node_meta_mut()
                 .set_is_add_column(false);
         } else {
             plan_meta
-                .curr_node_metas_mut()
+                .curr_node_meta_mut()
                 .set_is_add_column(true);
         }
         if let Some(params) = self.params.as_mut() {
@@ -1017,7 +1058,7 @@ impl AsLogical for pb::EdgeExpand {
             plan_meta.insert_tag_nodes(alias.clone().try_into()?, plan_meta.get_curr_nodes());
         }
         plan_meta
-            .curr_node_metas_mut()
+            .curr_node_meta_mut()
             .set_is_add_column(true);
 
         Ok(())
@@ -1035,7 +1076,7 @@ impl AsLogical for pb::PathExpand {
         }
         // PathExpand would never require adding columns
         plan_meta
-            .curr_node_metas_mut()
+            .curr_node_meta_mut()
             .set_is_add_column(false);
 
         Ok(())
@@ -1045,7 +1086,7 @@ impl AsLogical for pb::PathExpand {
 impl AsLogical for pb::GetV {
     fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
         plan_meta
-            .curr_node_metas_mut()
+            .curr_node_meta_mut()
             .set_is_add_column(true);
         if let Some(params) = self.params.as_mut() {
             preprocess_params(params, meta, plan_meta)?;
@@ -1114,8 +1155,7 @@ impl AsLogical for pb::IndexPredicate {
                             common_pb::property::Item::Key(key) => {
                                 if let Some(schema) = &meta.schema {
                                     if plan_meta.is_column_id() && schema.is_column_id() {
-                                        let new_key = schema
-                                            .get_column_id_from_pb(key)
+                                        let new_key = get_column_id_from_pb(schema, key)
                                             .unwrap_or(INVALID_META_ID)
                                             .into();
                                         debug!("column: {:?} -> {:?}", key, new_key);
@@ -1124,7 +1164,7 @@ impl AsLogical for pb::IndexPredicate {
                                 }
                                 debug!("add column ({:?}) to HEAD", key);
                                 plan_meta
-                                    .curr_node_metas_mut()
+                                    .curr_node_meta_mut()
                                     .insert_column(key.clone().try_into()?);
                             }
                             common_pb::property::Item::Label(_) => {
@@ -1204,37 +1244,31 @@ impl AsLogical for pb::Apply {
     }
 }
 
-fn check_refer_existing_tag(
-    mut tag_pb: common_pb::NameOrId, plan_meta: &mut PlanMeta, pattern_tags: &mut HashSet<NameOrId>,
-) -> IrResult<()> {
-    let mut is_existing_tag = get_or_set_tag_id(&mut tag_pb, false, plan_meta)?;
-    let tag: NameOrId = tag_pb.try_into()?;
-
-    if is_existing_tag {
-        is_existing_tag = !pattern_tags.contains(&tag);
-    }
-    if is_existing_tag {
-        Err(IrError::InvalidPattern(format!("`pb::Pattern` cannot reference existing tag: {:?}", tag)))
-    } else {
-        pattern_tags.insert(tag);
-
-        Ok(())
-    }
-}
-
 impl AsLogical for pb::Pattern {
     fn preprocess(&mut self, _meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
-        let mut pattern_tags = HashSet::new();
-        for sentence in &self.sentences {
-            if let Some(alias) = &sentence.start {
-                check_refer_existing_tag(alias.clone(), plan_meta, &mut pattern_tags)?;
+        let existing_tags = plan_meta.get_tag_ids().clone();
+        for sentence in self.sentences.iter_mut() {
+            if let Some(alias) = sentence.start.as_mut() {
+                get_or_set_tag_id(alias, false, plan_meta)?;
+                if existing_tags.contains_key(&(alias.clone().try_into()?)) {
+                    return Err(IrError::InvalidPattern(format!(
+                        "`pb::Pattern` cannot reference existing tag: {:?}",
+                        alias
+                    )));
+                }
             } else {
                 return Err(IrError::InvalidPattern(
                     "the start tag in `pb::Pattern` does not exist".to_string(),
                 ));
             }
-            if let Some(alias) = &sentence.end {
-                check_refer_existing_tag(alias.clone(), plan_meta, &mut pattern_tags)?;
+            if let Some(alias) = sentence.end.as_mut() {
+                get_or_set_tag_id(alias, false, plan_meta)?;
+                if existing_tags.contains_key(&(alias.clone().try_into()?)) {
+                    return Err(IrError::InvalidPattern(format!(
+                        "`pb::Pattern` cannot reference existing tag: {:?}",
+                        alias
+                    )));
+                }
             }
         }
 
@@ -1511,14 +1545,14 @@ mod test {
         plan_meta.get_or_set_tag_id(&"a".into());
         plan_meta.get_or_set_tag_id(&"b".into());
         plan_meta
-            .curr_node_metas_mut()
+            .curr_node_meta_mut()
             .set_is_add_column(true);
         plan_meta
-            .tag_node_metas_mut(Some(&"a".into()))
+            .tag_node_meta_mut(Some(&"a".into()))
             .unwrap()
             .set_is_add_column(true);
         plan_meta
-            .tag_node_metas_mut(Some(&"b".into()))
+            .tag_node_meta_mut(Some(&"b".into()))
             .unwrap()
             .set_is_add_column(true);
 
@@ -1671,10 +1705,10 @@ mod test {
         plan_meta.insert_tag_nodes("a".into(), vec![1]);
         plan_meta.get_or_set_tag_id(&"a".into());
         plan_meta
-            .curr_node_metas_mut()
+            .curr_node_meta_mut()
             .set_is_add_column(true);
         plan_meta
-            .tag_node_metas_mut(Some(&"a".into()))
+            .tag_node_meta_mut(Some(&"a".into()))
             .unwrap()
             .set_is_add_column(true);
 
@@ -2009,7 +2043,7 @@ mod test {
         assert_eq!(plan.meta.get_curr_nodes(), &[1]);
         assert_eq!(
             plan.meta
-                .curr_node_metas()
+                .curr_node_meta()
                 .unwrap()
                 .get_columns()
                 .clone(),

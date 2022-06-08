@@ -77,8 +77,7 @@ impl MapFunction<Record, Record> for ProjectOperator {
                     }
                 }
                 // set head as None when the last column is appended
-                let curr = input.get_curr_mut();
-                *curr = None;
+                input.set_curr_entry(None);
             }
 
             Ok(input)

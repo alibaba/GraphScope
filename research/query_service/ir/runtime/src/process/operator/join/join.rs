@@ -53,7 +53,7 @@ mod tests {
     use crate::graph::property::{DefaultDetails, DynDetails};
     use crate::graph::ID;
     use crate::process::functions::JoinKeyGen;
-    use crate::process::record::{HeadJoinOpt, Record};
+    use crate::process::record::Record;
 
     fn source_s1_gen() -> Box<dyn Iterator<Item = Record> + Send> {
         let v1 = Vertex::new(1, Some("person".into()), DynDetails::new(DefaultDetails::default()));
@@ -97,20 +97,14 @@ mod tests {
                 let stream = match join_kind {
                     JoinKind::Inner => left_stream
                         .inner_join(right_stream)?
-                        .map(|(left, right)| {
-                            Ok(left
-                                .value
-                                .join(right.value, Some(HeadJoinOpt::Left)))
-                        })?,
+                        .map(|(left, right)| Ok(left.value.join(right.value, Some(true))))?,
                     JoinKind::LeftOuter => {
                         left_stream
                             .left_outer_join(right_stream)?
                             .map(|(left, right)| {
                                 let left = left.unwrap();
                                 if let Some(right) = right {
-                                    Ok(left
-                                        .value
-                                        .join(right.value, Some(HeadJoinOpt::Left)))
+                                    Ok(left.value.join(right.value, Some(true)))
                                 } else {
                                     Ok(left.value)
                                 }
@@ -121,9 +115,7 @@ mod tests {
                         .map(|(left, right)| {
                             let right = right.unwrap();
                             if let Some(left) = left {
-                                Ok(left
-                                    .value
-                                    .join(right.value, Some(HeadJoinOpt::Left)))
+                                Ok(left.value.join(right.value, Some(true)))
                             } else {
                                 Ok(right.value)
                             }
@@ -132,9 +124,7 @@ mod tests {
                         left_stream
                             .full_outer_join(right_stream)?
                             .map(|(left, right)| match (left, right) {
-                                (Some(left), Some(right)) => Ok(left
-                                    .value
-                                    .join(right.value, Some(HeadJoinOpt::Left))),
+                                (Some(left), Some(right)) => Ok(left.value.join(right.value, Some(true))),
                                 (Some(left), None) => Ok(left.value),
                                 (None, Some(right)) => Ok(right.value),
                                 (None, None) => {

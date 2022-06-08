@@ -65,7 +65,7 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
             }
         } else {
             if self.alias.is_some() {
-                input.append_arc_entry(entry.clone(), self.alias.clone());
+                input.append_arc_entry(entry, self.alias.clone());
             }
         }
 
@@ -81,7 +81,7 @@ impl FilterMapFuncGen for algebra_pb::Auxilia {
             .map(|alias| alias.try_into())
             .transpose()?;
         let auxilia_operator = AuxiliaOperator { query_params, alias };
-        debug!("Runtime auxilia operator: {:?}", auxilia_operator);
+        debug!("Runtime AuxiliaOperator: {:?}", auxilia_operator);
         Ok(Box::new(auxilia_operator))
     }
 }
