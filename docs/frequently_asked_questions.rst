@@ -95,6 +95,12 @@ If you don't find an answer to your question here, feel free to file a `Issues`_
 
         The elegant one is creating ``graphscope`` user and user group first, and then grant the access permission on ``graphscope`` to the related NFS directories.
 
+12. why ``Timeout Exception`` raised during launching GraphScope instance on kubernetes cluster?
+
+    It will take a few minutes for pulling image during the first time for launching GraphScope instance. Thus, the ``Timeout Exception`` may caused by a poor network connection.
+    You can increase the value of ``timeout_seconds`` parameter as your expectation by ``graphscope.set_option(timeout_seconds=600))``.
+
+
 **I do have many other questions...**
 
     Please feel free to contact us. You may reach us by `Issues`_, ask questions in `Discussions`_, or drop a message in `Slack`_ or `DingTalk`_. We are happy to answer your questions responsively.
