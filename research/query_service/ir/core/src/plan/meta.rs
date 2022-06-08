@@ -513,18 +513,16 @@ pub struct PlanMeta {
     /// with the storage to access the required column. Thus, such information can help
     /// the computation route and fetch columns.
     node_metas: BTreeMap<u32, Rc<RefCell<NodeMeta>>>,
-    /// Refer a node to the most-recent nodes that interact with the storage.
-    /// For example, if the plan looks like, `Scan.Filter(xx)`, `Scan` is a node that
-    /// accesses storage, while `Filter` is not. Here, we refer the node id of
-    /// `Filter` to the node id of `Scan`.
+    /// Refer a node to the node that points to the head of the plan.
+    /// A head of the plan is often determined by an operator that changes the head of the
+    /// `Record`. Such operators include Scan, EdgeExpand, PathExpand, GetV, Project, etc.
     referred_nodes: BTreeMap<u32, SingleOrNodes>,
     /// The tag must refer to some valid nodes in the plan.
     tag_nodes: BTreeMap<NameOrId, Vec<u32>>,
     /// To ease the processing, tag may be mapped to an internal id.
     /// This maintains the mappings
     tag_ids: BTreeMap<NameOrId, u32>,
-    /// To record the current nodes' id in the logical plan. Note that nodes that have operators that
-    /// of `As` or `Selection` does not alter curr_node.
+    /// Record the current node that has been processed by the plan
     curr_node: SingleOrNodes,
     /// The maximal tag id that has been assigned, for mapping tag ids.
     max_tag_id: u32,
@@ -649,8 +647,8 @@ impl PlanMeta {
             .extend(nodes.into_iter());
     }
 
-    pub fn get_tag_nodes(&self, tag: &NameOrId) -> Option<Vec<u32>> {
-        self.tag_nodes.get(tag).cloned()
+    pub fn get_tag_nodes(&self, tag: &NameOrId) -> Option<&Vec<u32>> {
+        self.tag_nodes.get(tag)
     }
 
     /// Get the id (with a `true` indicator) of the given tag if it already presents,
