@@ -126,7 +126,7 @@ def load_the_module(module_or_name):
     try:
         for name in names[1:]:
             module_path = imp.find_module(name, [module_path[1]])
-    except ImportError:
+    except Exception:
         return module_or_name
     module = imp.load_module(module_or_name, *module_path)
     return apply_networkx_patches(module)
