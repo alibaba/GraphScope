@@ -1689,9 +1689,10 @@ mod sink {
     pub extern "C" fn init_sink_operator() -> *const c_void {
         let sink_opr = Box::new(pb::Sink {
             tags: vec![],
-            id_name_mappings: vec![],
             sink_target: Some(pb::sink::SinkTarget {
-                inner: Some(pb::sink::sink_target::Inner::SinkDefault(pb::SinkDefault {})),
+                inner: Some(pb::sink::sink_target::Inner::SinkDefault(pb::SinkDefault {
+                    id_name_mappings: vec![],
+                })),
             }),
         });
         Box::into_raw(sink_opr) as *const c_void

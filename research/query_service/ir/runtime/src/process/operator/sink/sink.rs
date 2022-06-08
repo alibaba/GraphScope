@@ -20,7 +20,7 @@ use std::ops::Deref;
 
 use dyn_type::Object;
 use ir_common::generated::algebra as algebra_pb;
-use ir_common::generated::algebra::sink::MetaType;
+use ir_common::generated::algebra::sink_default::MetaType;
 use ir_common::generated::common as common_pb;
 use ir_common::generated::results as result_pb;
 use ir_common::{KeyId, NameOrId};
@@ -221,7 +221,12 @@ impl MapFunction<Record, Vec<u8>> for RecordSinkEncoder {
     }
 }
 
-impl SinkFunctionGen for algebra_pb::Sink {
+pub struct DefaultSinkOp {
+    pub tags: Vec<common_pb::NameOrIdKey>,
+    pub id_name_mappings: Vec<algebra_pb::sink_default::IdNameMapping>,
+}
+
+impl SinkFunctionGen for DefaultSinkOp {
     fn gen_sink(self) -> FnGenResult<Box<dyn MapFunction<Record, Vec<u8>>>> {
         let mut sink_keys = Vec::with_capacity(self.tags.len());
         for sink_key_pb in self.tags.into_iter() {

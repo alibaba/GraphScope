@@ -53,7 +53,11 @@ mod test {
         let path_end_opr = pb::logical_plan::Operator::from(pb::PathEnd { alias: None });
         let sink_opr_bytes = pb::logical_plan::Operator::from(pb::Sink {
             tags: vec![common_pb::NameOrIdKey { key: None }],
-            id_name_mappings: vec![],
+            sink_target: Some(pb::sink::SinkTarget {
+                inner: Some(pb::sink::sink_target::Inner::SinkDefault(pb::SinkDefault {
+                    id_name_mappings: vec![],
+                })),
+            }),
         })
         .encode_to_vec();
 
@@ -94,7 +98,11 @@ mod test {
         let path_end_opr = pb::logical_plan::Operator::from(pb::PathEnd { alias: None });
         let sink_opr_bytes = pb::logical_plan::Operator::from(pb::Sink {
             tags: vec![common_pb::NameOrIdKey { key: None }],
-            id_name_mappings: vec![],
+            sink_target: Some(pb::sink::SinkTarget {
+                inner: Some(pb::sink::sink_target::Inner::SinkDefault(pb::SinkDefault {
+                    id_name_mappings: vec![],
+                })),
+            }),
         })
         .encode_to_vec();
 

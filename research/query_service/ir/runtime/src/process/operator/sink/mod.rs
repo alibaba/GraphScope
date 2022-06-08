@@ -21,6 +21,7 @@ use ir_common::generated::algebra as algebra_pb;
 use pegasus::api::function::MapFunction;
 
 use crate::error::FnGenResult;
+use crate::process::operator::sink::sink::DefaultSinkOp;
 use crate::process::record::Record;
 
 pub trait SinkFunctionGen {
@@ -35,7 +36,23 @@ impl SinkFunctionGen for algebra_pb::logical_plan::Operator {
     fn gen_sink(self) -> FnGenResult<Box<dyn MapFunction<Record, Vec<u8>>>> {
         if let Some(opr) = self.opr {
             match opr {
-                algebra_pb::logical_plan::operator::Opr::Sink(sink) => sink.gen_sink(),
+                algebra_pb::logical_plan::operator::Opr::Sink(sink) => {
+                    if let Some(sink_target) = sink.sink_target {
+                        if let Some(algebra_pb::sink::sink_target::Inner::SinkDefault(default)) =
+                            sink_target.inner
+                        {
+                            let default_sink_op = DefaultSinkOp {
+                                tags: sink.tags,
+                                id_name_mappings: default.id_name_mappings,
+                            };
+                            default_sink_op.gen_sink()
+                        } else {
+                            Err(ParsePbError::from("sink target is not sink_default"))?
+                        }
+                    } else {
+                        Err(ParsePbError::EmptyFieldError("sink_target is missing".to_string()))?
+                    }
+                }
                 _ => Err(ParsePbError::from("algebra_pb op is not a sink op"))?,
             }
         } else {
@@ -55,10 +72,7 @@ impl GraphSinkGen for algebra_pb::logical_plan::Operator {
                         {
                             sink_vineyard.gen_graph_writer()
                         } else {
-                            Err(ParsePbError::Unsupported(format!(
-                                "SinkTarget {:?} in sink op is not a reduce operator",
-                                sink_target
-                            )))?
+                            Err(ParsePbError::from("sink target is not sink_vineyard"))?
                         }
                     } else {
                         Err(ParsePbError::EmptyFieldError("SinkTarget in sink op".to_string()))?

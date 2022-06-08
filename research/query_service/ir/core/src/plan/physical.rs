@@ -365,7 +365,7 @@ impl AsPhysical for pb::Sink {
         let tag_id_mapping = plan_meta
             .get_tag_ids()
             .into_iter()
-            .map(|(tag, id)| pb::sink::IdNameMapping {
+            .map(|(tag, id)| pb::sink_default::IdNameMapping {
                 id: id as i32,
                 name: match tag {
                     NameOrId::Str(name) => name,
@@ -374,7 +374,12 @@ impl AsPhysical for pb::Sink {
                 meta_type: 3,
             })
             .collect();
-        sink_opr.id_name_mappings = tag_id_mapping;
+        let sink_target = pb::sink::SinkTarget {
+            inner: Some(pb::sink::sink_target::Inner::SinkDefault(pb::SinkDefault {
+                id_name_mappings: tag_id_mapping,
+            })),
+        };
+        sink_opr.sink_target = Some(sink_target);
         simple_add_job_builder(builder, &pb::logical_plan::Operator::from(sink_opr), SimpleOpr::Sink)
     }
 }

@@ -97,7 +97,11 @@ mod test {
                 common_pb::NameOrIdKey { key: Some(TAG_B.into()) },
                 common_pb::NameOrIdKey { key: Some(TAG_C.into()) },
             ],
-            id_name_mappings: vec![],
+            sink_target: Some(pb::sink::SinkTarget {
+                inner: Some(pb::sink::sink_target::Inner::SinkDefault(pb::SinkDefault {
+                    id_name_mappings: vec![],
+                })),
+            }),
         };
 
         let mut plan = LogicalPlan::default();

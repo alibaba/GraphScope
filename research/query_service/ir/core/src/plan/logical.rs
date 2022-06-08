@@ -2622,7 +2622,11 @@ mod test {
 
         let sink = pb::Sink {
             tags: vec![common_pb::NameOrIdKey { key: Some("name".into()) }],
-            id_name_mappings: vec![],
+            sink_target: Some(pb::sink::SinkTarget {
+                inner: Some(pb::sink::sink_target::Inner::SinkDefault(pb::SinkDefault {
+                    id_name_mappings: vec![],
+                })),
+            }),
         };
         plan.append_operator_as_node(sink.into(), vec![3])
             .unwrap();
