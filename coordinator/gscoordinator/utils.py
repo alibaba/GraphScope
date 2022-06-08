@@ -138,12 +138,16 @@ INTERAVTIVE_INSTANCE_TIMEOUT_SECONDS = 600  # 10 mins
 INTERACTIVE_ENGINE_SCRIPT = os.path.join(GRAPHSCOPE_HOME, "bin", "giectl")
 if not os.path.isfile(INTERACTIVE_ENGINE_SCRIPT):
     INTERACTIVE_ENGINE_SCRIPT = os.path.join(
+        GRAPHSCOPE_HOME, ".install_prefix", "bin", "giectl"
+    )
+if not os.path.isfile(INTERACTIVE_ENGINE_SCRIPT):
+    INTERACTIVE_ENGINE_SCRIPT = os.path.join(
         GRAPHSCOPE_HOME, "interactive_engine", "bin", "giectl"
     )
-    if not os.path.isfile(INTERACTIVE_ENGINE_SCRIPT):
-        INTERACTIVE_ENGINE_SCRIPT = os.path.join(
-            GRAPHSCOPE_HOME, "interactive_engine", "assembly", "bin", "giectl"
-        )
+if not os.path.isfile(INTERACTIVE_ENGINE_SCRIPT):
+    INTERACTIVE_ENGINE_SCRIPT = os.path.join(
+        GRAPHSCOPE_HOME, "interactive_engine", "assembly", "bin", "giectl"
+    )
 
 # JAVA SDK related CONSTANTS
 LLVM4JNI_HOME = os.environ.get("LLVM4JNI_HOME", None)
