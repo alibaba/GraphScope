@@ -21,6 +21,7 @@ use ir_common::generated::algebra as algebra_pb;
 use pegasus::api::function::MapFunction;
 
 use crate::error::FnGenResult;
+use crate::process::operator::sink::graph_writer::SinkVineyardOp;
 use crate::process::operator::sink::sink::DefaultSinkOp;
 use crate::process::record::Record;
 
@@ -70,7 +71,12 @@ impl GraphSinkGen for algebra_pb::logical_plan::Operator {
                         if let Some(algebra_pb::sink::sink_target::Inner::SinkVineyard(sink_vineyard)) =
                             sink_target.inner
                         {
-                            sink_vineyard.gen_graph_writer()
+                            let sink_vineyard_op = SinkVineyardOp {
+                                tags: sink.tags,
+                                graph_name: sink_vineyard.graph_name,
+                                graph_schema: sink_vineyard.graph_schema,
+                            };
+                            sink_vineyard_op.gen_graph_writer()
                         } else {
                             Err(ParsePbError::from("sink target is not sink_vineyard"))?
                         }

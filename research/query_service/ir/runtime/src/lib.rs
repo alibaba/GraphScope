@@ -15,7 +15,7 @@
 
 pub use assembly::IRJobAssembly;
 
-pub use crate::graph::{get_graph, get_graph_writer, register_graph};
+pub use crate::graph::{get_graph, register_graph};
 pub mod assembly;
 pub mod error;
 pub mod expr;
