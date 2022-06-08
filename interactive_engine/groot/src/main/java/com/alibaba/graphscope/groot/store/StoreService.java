@@ -62,6 +62,7 @@ public class StoreService implements MetricsAgent {
     private ExecutorService writeExecutor;
     private ExecutorService ingestExecutor;
     private ExecutorService garbageCollectExecutor;
+    private boolean enableGc;
     private volatile boolean shouldStop = true;
 
     private volatile long lastUpdateTime;
@@ -71,6 +72,7 @@ public class StoreService implements MetricsAgent {
             Configs configs, MetaService metaService, MetricsCollector metricsCollector) {
         this.configs = configs;
         this.storeId = CommonConfig.NODE_IDX.get(configs);
+        this.enableGc = StoreConfig.STORE_GC_ENABLE.get(configs);
         this.writeThreadCount = StoreConfig.STORE_WRITE_THREAD_COUNT.get(configs);
         this.metaService = metaService;
         metricsCollector.register(this, () -> updateMetrics());
@@ -305,6 +307,10 @@ public class StoreService implements MetricsAgent {
     }
 
     public void garbageCollect(long snapshotId, CompletionCallback<Void> callback) {
+        if (!enableGc) {
+            callback.onError(new MaxGraphException("store gc not enabled"));
+            return;
+        }
         this.garbageCollectExecutor.execute(
                 () -> {
                     try {

@@ -17,6 +17,7 @@ use crate::db::graph::entity::{RocksVertexImpl, RocksEdgeImpl};
 use crate::db::graph::iter::{EdgeTypeScan, VertexTypeScan};
 use crate::db::api::multi_version_graph::{MultiVersionGraph, GraphBackup};
 use crate::db::api::condition::Condition;
+use crate::db::common::bytes::transform;
 
 pub struct GraphStore {
     config: GraphConfig,
@@ -357,8 +358,20 @@ impl MultiVersionGraph for GraphStore {
         Ok(())
     }
 
-    fn gc(&self, _si: i64) {
-        unimplemented!()
+    fn gc(&self, si: i64) -> GraphResult<()> {
+        let vertex_tables = self.vertex_manager.gc(si)?;
+        for vt in vertex_tables {
+            info!("gc vertex table {}", vt);
+            let table_prefix = vertex_table_prefix(vt);
+            self.delete_table_by_prefix(table_prefix, true)?;
+        }
+        let edge_tables = self.edge_manager.gc(si)?;
+        for et in edge_tables {
+            info!("gc edge table {}", et);
+            let out_table_prefix = edge_table_prefix(et, EdgeDirection::Out);
+            self.delete_table_by_prefix(out_table_prefix, false)?;
+        }
+        Ok(())
     }
 
     fn get_graph_def_blob(&self) -> GraphResult<Vec<u8>> {
@@ -605,6 +618,17 @@ impl GraphStore {
             }
             Ok(res)
         }
+    }
+
+    pub fn delete_table_by_prefix(&self, table_prefix: i64, vertex_table: bool) -> GraphResult<()> {
+        let end = if vertex_table {
+            table_prefix + 1
+        } else {
+            table_prefix + 2
+        };
+        let end_key = transform::i64_to_arr(end.to_be());
+        let start_key = transform::i64_to_arr(table_prefix.to_be());
+        self.storage.delete_range(&start_key, &end_key)
     }
 }
 
