@@ -18,6 +18,7 @@ use std::sync::Arc;
 
 use dyn_type::object::RawType;
 use dyn_type::Object;
+use dyn_type::object::Primitives;
 
 // TODO: a preclude type define in ir-runtime
 type KeyId = i32;
@@ -226,131 +227,86 @@ impl NativeProperty {
     }
 
     pub fn to_object(&self) -> Option<Object> {
-        todo!()
+        let property = self.as_ptr();
+        match self.r#type {
+            PropertyType::Bool => {
+                let mut v = false;
+                let res = unsafe { get_property_as_bool(property, &mut v as *mut bool) };
+                if res == STATE_SUCCESS {
+                    if v {
+                        return Some(Object::Primitive(Primitives::Byte(1)));
+                    } else {
+                        return Some(Object::Primitive(Primitives::Byte(0)));
+                    }
+                }
+            }
+            PropertyType::Char => {
+                let mut v: u8 = 0;
+                let res = unsafe { get_property_as_char(property, &mut v as *mut u8) };
+                if res == STATE_SUCCESS {
+                    return Some(Object::Primitive(Primitives::Byte(v as i8)));
+                }
+            }
+            PropertyType::Short => {
+                let mut v: i16 = 0;
+                let res = unsafe { get_property_as_short(property, &mut v as *mut i16) };
+                if res == STATE_SUCCESS {
+                    return Some(Object::Primitive(Primitives::Integer(v as i32)));
+                }
+            }
+            PropertyType::Int => {
+                let mut v = 0;
+                let res = unsafe { get_property_as_int(property, &mut v as *mut i32) };
+                if res == STATE_SUCCESS {
+                    return Some(Object::Primitive(Primitives::Integer(v)));
+                }
+            }
+            PropertyType::Long => {
+                let mut v = 0;
+                let res = unsafe { get_property_as_long(property, &mut v as *mut i64) };
+                if res == STATE_SUCCESS {
+                    return Some(Object::Primitive(Primitives::Long(v)));
+                }
+            }
+            PropertyType::Float => {
+                let mut v: f32 = 0.0;
+                let res = unsafe { get_property_as_float(property, &mut v as *mut f32) };
+                if res == STATE_SUCCESS {
+                    return Some(Object::Primitive(Primitives::Float(v as f64)));
+                }
+            }
+            PropertyType::Double => {
+                let mut v: f64 = 0.0;
+                let res = unsafe { get_property_as_double(property, &mut v as *mut f64) };
+                if res == STATE_SUCCESS {
+                    return Some(Object::Primitive(Primitives::Float(v)));
+                }
+            }
+            PropertyType::String => {
+                let mut v: *const u8 = std::ptr::null();
+                let mut len = 0;
+                let res = unsafe { get_property_as_string(property, &mut v, &mut len) };
+                if res == STATE_SUCCESS {
+                    let s = unsafe {
+                        let buf = std::slice::from_raw_parts(v, len as usize);
+                        std::str::from_utf8(buf).ok().map(|s| s.to_owned())
+                    };
+                    return s.map(|s| Object::String(s));
+                }
+            }
+            PropertyType::Bytes => {
+                let mut v: *const u8 = std::ptr::null();
+                let mut len = 0;
+                let res = unsafe { get_property_as_bytes(property, &mut v, &mut len) };
+                if res == STATE_SUCCESS {
+                    let ret = unsafe { std::slice::from_raw_parts(v, len as usize) }.to_vec();
+                    return Some(Object::Blob(ret.into_boxed_slice()));
+                }
+            }
+            _ => (),
+        }
+        None
     }
-
-    // pub fn to_property(&self) -> Option<Property> {
-    //     let property = self.as_ptr();
-    //     match self.r#type {
-    //         PropertyType::Bool => {
-    //             let mut v = false;
-    //             let res = unsafe { get_property_as_bool(property, &mut v as *mut bool) };
-    //             if res == STATE_SUCCESS {
-    //                 return Some(Property::Bool(v));
-    //             }
-    //         }
-    //         PropertyType::Char => {
-    //             let mut v = 0;
-    //             let res = unsafe { get_property_as_char(property, &mut v as *mut u8) };
-    //             if res == STATE_SUCCESS {
-    //                 return Some(Property::Char(v));
-    //             }
-    //         }
-    //         PropertyType::Short => {
-    //             let mut v = 0;
-    //             let res = unsafe { get_property_as_short(property, &mut v as *mut i16) };
-    //             if res == STATE_SUCCESS {
-    //                 return Some(Property::Short(v));
-    //             }
-    //         }
-    //         PropertyType::Int => {
-    //             let mut v = 0;
-    //             let res = unsafe { get_property_as_int(property, &mut v as *mut i32) };
-    //             if res == STATE_SUCCESS {
-    //                 return Some(Property::Int(v));
-    //             }
-    //         }
-    //         PropertyType::Long => {
-    //             let mut v = 0;
-    //             let res = unsafe { get_property_as_long(property, &mut v as *mut i64) };
-    //             if res == STATE_SUCCESS {
-    //                 return Some(Property::Long(v));
-    //             }
-    //         }
-    //         PropertyType::Float => {
-    //             let mut v = 0.0;
-    //             let res = unsafe { get_property_as_float(property, &mut v as *mut f32) };
-    //             if res == STATE_SUCCESS {
-    //                 return Some(Property::Float(v));
-    //             }
-    //         }
-    //         PropertyType::Double => {
-    //             let mut v = 0.0;
-    //             let res = unsafe { get_property_as_double(property, &mut v as *mut f64) };
-    //             if res == STATE_SUCCESS {
-    //                 return Some(Property::Double(v));
-    //             }
-    //         }
-    //         PropertyType::String => {
-    //             let mut v: *const u8 = std::ptr::null();
-    //             let mut len = 0;
-    //             let res = unsafe { get_property_as_string(property, &mut v, &mut len) };
-    //             if res == STATE_SUCCESS {
-    //                 let s = unsafe {
-    //                     let buf = std::slice::from_raw_parts(v, len as usize);
-    //                     std::str::from_utf8(buf).ok().map(|s| s.to_owned())
-    //                 };
-    //                 return s.map(|s| Property::String(s));
-    //             }
-    //         }
-    //         PropertyType::Bytes => {
-    //             let mut v: *const u8 = std::ptr::null();
-    //             let mut len = 0;
-    //             let res = unsafe { get_property_as_bytes(property, &mut v, &mut len) };
-    //             if res == STATE_SUCCESS {
-    //                 let ret = unsafe { std::slice::from_raw_parts(v, len as usize) }.to_vec();
-    //                 return Some(Property::Bytes(ret));
-    //             }
-    //         }
-    //         PropertyType::IntList => {
-    //             let mut v: *const i32 = std::ptr::null();
-    //             let mut len = 0;
-    //             let res = unsafe { get_property_as_int_list(property, &mut v, &mut len) };
-    //             if res == STATE_SUCCESS {
-    //                 let ret = unsafe { get_list_from_c_ptr(v, len) };
-    //                 return Some(Property::ListInt(ret));
-    //             }
-    //         }
-    //         PropertyType::LongList => {
-    //             let mut v: *const i64 = std::ptr::null();
-    //             let mut len = 0;
-    //             let res = unsafe { get_property_as_long_list(property, &mut v, &mut len) };
-    //             if res == STATE_SUCCESS {
-    //                 let ret = unsafe { get_list_from_c_ptr(v, len) };
-    //                 return Some(Property::ListLong(ret));
-    //             }
-    //         }
-    //         PropertyType::FloatList => {
-    //             let mut v: *const f32 = std::ptr::null();
-    //             let mut len = 0;
-    //             let res = unsafe { get_property_as_float_list(property, &mut v, &mut len) };
-    //             if res == STATE_SUCCESS {
-    //                 let ret = unsafe { get_list_from_c_ptr(v, len) };
-    //                 return Some(Property::ListFloat(ret));
-    //             }
-    //         }
-    //         PropertyType::DoubleList => {
-    //             let mut v: *const f64 = std::ptr::null();
-    //             let mut len = 0;
-    //             let res = unsafe { get_property_as_double_list(property, &mut v, &mut len) };
-    //             if res == STATE_SUCCESS {
-    //                 let ret = unsafe { get_list_from_c_ptr(v, len) };
-    //                 return Some(Property::ListDouble(ret));
-    //             }
-    //         }
-    //         PropertyType::StringList => {
-    //             let mut v: *const *const u8 = std::ptr::null();
-    //             let mut len: *const i32 = std::ptr::null();
-    //             let mut count = 0;
-    //             let res = unsafe { get_property_as_string_list(property, &mut v, &mut len, &mut count) };
-    //             if res == STATE_SUCCESS {
-    //                 let ret = unsafe { get_string_list_from_c_ptr(v, len, count) };
-    //                 return ret.map(|x| Property::ListString(x));
-    //             }
-    //         }
-    //     }
-    //     None
-    // }
 
     fn as_ptr(&self) -> *const Self {
         self as *const Self
@@ -405,168 +361,49 @@ impl WriteNativeProperty {
         WriteNativeProperty { id: 0, r#type: PropertyType::Int, data: std::ptr::null(), len: 0 }
     }
 
-    pub fn from_object(_prop_id: KeyId, _property: Object) -> Self {
-        todo!()
+    pub fn from_object(prop_id: KeyId, property: Object) -> Self {
+        let (prop_type, mut data, data_len) = {
+            match property {
+                Object::Primitive(Primitives::Byte(v)) => {
+                    let u = PropertyUnion { c: v as u8 };
+                    (PropertyType::Char, vec![], unsafe { u.l })
+                }
+                Object::Primitive(Primitives::Integer(v)) => {
+                    let u = PropertyUnion { i: v };
+                    (PropertyType::Int, vec![], unsafe { u.l })
+                }
+                Object::Primitive(Primitives::Long(v)) => {
+                    let u = PropertyUnion { l: v };
+                    (PropertyType::Long, vec![], unsafe { u.l })
+                }
+                Object::Primitive(Primitives::ULLong(v)) => {
+                    let u = PropertyUnion { l: v as i64 };
+                    (PropertyType::Long, vec![], unsafe { u.l })
+                }
+                Object::Primitive(Primitives::Float(v)) => {
+                    let u = PropertyUnion { d: v };
+                    (PropertyType::Double, vec![], unsafe { u.l })
+                }
+                Object::String(ref v) => {
+                    let vecdata = v.to_owned().into_bytes();
+                    let len = vecdata.len() as i64;
+                    (PropertyType::String, vecdata, len)
+                }
+                Object::Blob(ref v) => {
+                    let vecdata = v.to_vec();
+                    let len = vecdata.len() as i64;
+                    (PropertyType::Bytes, vecdata, len)
+                }
+                _ => {
+                    panic!("Unsupported object type: {:?}", property)
+                }
+            }
+        };
+        data.shrink_to_fit();
+        let data_ptr = data.as_ptr();
+        ::std::mem::forget(data);
+        WriteNativeProperty { id: prop_id as i32, r#type: prop_type, data: data_ptr, len: data_len as i64 }
     }
-
-    // pub fn from_property(propid: PropId, property: Property) -> Self {
-    //     let (prop_type, mut data, data_len) = {
-    //         match property {
-    //             Property::Bool(v) => {
-    //                 let u = PropertyUnion { b: v };
-    //                 (PropertyType::Bool, vec![], unsafe { u.l })
-    //             }
-    //             Property::Char(v) => {
-    //                 let u = PropertyUnion { c: v };
-    //                 (PropertyType::Char, vec![], unsafe { u.l })
-    //             }
-    //             Property::Short(v) => {
-    //                 let u = PropertyUnion { s: v };
-    //                 (PropertyType::Short, vec![], unsafe { u.l })
-    //             }
-    //             Property::Int(v) => {
-    //                 let u = PropertyUnion { i: v };
-    //                 (PropertyType::Int, vec![], unsafe { u.l })
-    //             }
-    //             Property::Long(v) => {
-    //                 let u = PropertyUnion { l: v };
-    //                 (PropertyType::Long, vec![], unsafe { u.l })
-    //             }
-    //             Property::Float(v) => {
-    //                 let u = PropertyUnion { f: v };
-    //                 (PropertyType::Float, vec![], unsafe { u.l })
-    //             }
-    //             Property::Double(v) => {
-    //                 let u = PropertyUnion { d: v };
-    //                 (PropertyType::Double, vec![], unsafe { u.l })
-    //             }
-    //             Property::Bytes(ref v) => {
-    //                 let vecdata = property.to_vec();
-    //                 let len = vecdata.len() as i64;
-    //                 (PropertyType::Bytes, vecdata, len)
-    //             }
-    //             Property::String(ref v) => {
-    //                 let vecdata = property.to_vec();
-    //                 let len = vecdata.len() as i64;
-    //                 (PropertyType::String, vecdata, len)
-    //             }
-    //             Property::Date(v) => {
-    //                 panic!("property is Date");
-    //             }
-    //             Property::ListInt(ref v) => {
-    //                 let vecdata = property.to_vec();
-    //                 let len = vecdata.len() as i64;
-    //                 (PropertyType::IntList, vecdata, len)
-    //             }
-    //             Property::ListLong(ref v) => {
-    //                 let vecdata = property.to_vec();
-    //                 let len = vecdata.len() as i64;
-    //                 (PropertyType::LongList, vecdata, len)
-    //             }
-    //             Property::ListFloat(ref v) => {
-    //                 let vecdata = property.to_vec();
-    //                 let len = vecdata.len() as i64;
-    //                 (PropertyType::FloatList, vecdata, len)
-    //             }
-    //             Property::ListDouble(ref v) => {
-    //                 let vecdata = property.to_vec();
-    //                 let len = vecdata.len() as i64;
-    //                 (PropertyType::DoubleList, vecdata, len)
-    //             }
-    //             Property::ListString(ref v) => {
-    //                 let vecdata = property.to_vec();
-    //                 let len = vecdata.len() as i64;
-    //                 (PropertyType::StringList, vecdata, len)
-    //             }
-    //             Property::ListBytes(v) => {
-    //                 panic!("property is ListBytes");
-    //             }
-    //
-    //             Property::Null => {
-    //                 panic!("property is null");
-    //             }
-    //             _ => unimplemented!(),
-    //         }
-    //     };
-    //     data.shrink_to_fit();
-    //     let data_ptr = data.as_ptr();
-    //     _info!(
-    //         "build native property id {:?} type {:?} data {:?} len {:?}",
-    //         propid,
-    //         &prop_type,
-    //         &data,
-    //         data_len
-    //     );
-    //
-    //     ::std::mem::forget(data);
-    //     WriteNativeProperty { id: propid as i32, r#type: prop_type, data: data_ptr, len: data_len as i64 }
-    // }
-    //
-    // pub fn from_prop_entity(prop: &PropertyEntity) -> Self {
-    //     let value = prop.get_value();
-    //     let (prop_type, mut data, data_len) = {
-    //         match value {
-    //             ValuePayload::Bool(v) => {
-    //                 let u = PropertyUnion { b: *v };
-    //                 (PropertyType::Bool, vec![], unsafe { u.l })
-    //             }
-    //             ValuePayload::Char(v) => {
-    //                 let u = PropertyUnion { c: *v };
-    //                 (PropertyType::Char, vec![], unsafe { u.l })
-    //             }
-    //             ValuePayload::Short(v) => {
-    //                 let u = PropertyUnion { s: *v };
-    //                 (PropertyType::Short, vec![], unsafe { u.l })
-    //             }
-    //             ValuePayload::Int(v) => {
-    //                 let u = PropertyUnion { i: *v };
-    //                 (PropertyType::Int, vec![], unsafe { u.l })
-    //             }
-    //             ValuePayload::Long(v) => {
-    //                 let u = PropertyUnion { l: *v };
-    //                 (PropertyType::Long, vec![], unsafe { u.l })
-    //             }
-    //             ValuePayload::Float(v) => {
-    //                 let u = PropertyUnion { f: f32::parse_bytes(v) };
-    //                 (PropertyType::Float, vec![], unsafe { u.l })
-    //             }
-    //             ValuePayload::Double(v) => {
-    //                 let u = PropertyUnion { d: f64::parse_bytes(v) };
-    //                 (PropertyType::Double, vec![], unsafe { u.l })
-    //             }
-    //             ValuePayload::Bytes(v) => {
-    //                 let data = vec![0; v.len()];
-    //                 let len = data.len() as i64;
-    //                 (PropertyType::Bytes, data, len)
-    //             }
-    //             ValuePayload::String(v) => {
-    //                 let bytes = v.as_bytes();
-    //                 let len = bytes.len() as i64;
-    //                 (PropertyType::String, bytes.to_vec(), len)
-    //             }
-    //             _ => {
-    //                 unimplemented!("not support property value {:?}", prop)
-    //             }
-    //         }
-    //     };
-    //     data.shrink_to_fit();
-    //     let data_ptr = data.as_ptr();
-    //     _info!(
-    //         "build native property id {:?} type {:?} data {:?} len {:?} from property entity",
-    //         prop.get_propid(),
-    //         &prop_type,
-    //         &data,
-    //         data_len
-    //     );
-    //
-    //     ::std::mem::forget(data);
-    //     WriteNativeProperty {
-    //         id: prop.get_propid(),
-    //         r#type: prop_type,
-    //         data: data_ptr,
-    //         len: data_len as i64,
-    //     }
-    // }
 
     fn as_ptr(&self) -> *const Self {
         self as *const Self
@@ -596,53 +433,35 @@ impl Drop for WriteNativeProperty {
 }
 
 impl PropertyType {
-    pub fn from_raw_type(_raw_type: RawType) -> Self {
-        todo!()
+    pub fn from_raw_type(raw_type: RawType) -> Self {
+        match raw_type {
+            RawType::Byte => PropertyType::Char,
+            RawType::Integer => PropertyType::Int,
+            RawType::Long => PropertyType::Long,
+            RawType::ULLong => PropertyType::Long,
+            RawType::Float => PropertyType::Double,
+            RawType::String => PropertyType::String,
+            RawType::Blob(_) => PropertyType::Bytes,
+            _ => {
+                unimplemented!("Unsupported data type {:?}", raw_type)
+            }
+        }
     }
     pub fn to_raw_type(&self) -> RawType {
-        todo!()
+        match *self {
+            PropertyType::Bool => RawType::Byte,
+            PropertyType::Char => RawType::Byte,
+            PropertyType::Short => RawType::Integer,
+            PropertyType::Int => RawType::Integer,
+            PropertyType::Long => RawType::Long,
+            PropertyType::Float => RawType::Float,
+            PropertyType::Double => RawType::Float,
+            PropertyType::String => RawType::String,
+            _ => {
+                unimplemented!("Unsupported data type {:?}", *self)
+            }
+        }
     }
-
-    // pub fn from_data_type(data_type: &DataType) -> Self {
-    //     match data_type {
-    //         DataType::Bool => PropertyType::Bool,
-    //         DataType::Char => PropertyType::Char,
-    //         DataType::Short => PropertyType::Short,
-    //         DataType::Int => PropertyType::Int,
-    //         DataType::Long => PropertyType::Long,
-    //         DataType::Float => PropertyType::Float,
-    //         DataType::Double => PropertyType::Double,
-    //         DataType::String => PropertyType::String,
-    //         DataType::Bytes => PropertyType::Bytes,
-    //         DataType::ListInt => PropertyType::IntList,
-    //         DataType::ListLong => PropertyType::LongList,
-    //         DataType::ListFloat => PropertyType::FloatList,
-    //         DataType::ListDouble => PropertyType::DoubleList,
-    //         DataType::ListString => PropertyType::StringList,
-    //         _ => {
-    //             unimplemented!("Unsupported data type {:?}", data_type)
-    //         }
-    //     }
-    // }
-    //
-    // pub fn to_data_type(&self) -> DataType {
-    //     match *self {
-    //         PropertyType::Bool => DataType::Bool,
-    //         PropertyType::Char => DataType::Char,
-    //         PropertyType::Short => DataType::Short,
-    //         PropertyType::Int => DataType::Int,
-    //         PropertyType::Long => DataType::Long,
-    //         PropertyType::Float => DataType::Float,
-    //         PropertyType::Double => DataType::Double,
-    //         PropertyType::String => DataType::String,
-    //         PropertyType::Bytes => DataType::Bytes,
-    //         PropertyType::IntList => DataType::ListInt,
-    //         PropertyType::LongList => DataType::ListLong,
-    //         PropertyType::FloatList => DataType::ListFloat,
-    //         PropertyType::DoubleList => DataType::ListDouble,
-    //         PropertyType::StringList => DataType::ListString,
-    //     }
-    // }
 }
 
 // TODO: should preserve the schema apis
