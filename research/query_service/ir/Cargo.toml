@@ -5,6 +5,7 @@ members = [
     "graph_proxy",
     "integrated",
     "runtime",
+    "ffi",
 ]
 
 [profile.dev]

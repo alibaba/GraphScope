@@ -16,6 +16,7 @@
 pub mod element;
 pub mod partitioner;
 pub mod property;
+pub mod vineyard_writer;
 
 use std::collections::HashMap;
 use std::convert::{TryFrom, TryInto};

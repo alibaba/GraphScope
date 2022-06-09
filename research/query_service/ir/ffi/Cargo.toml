@@ -1,0 +1,12 @@
+[package]
+name = "ffi"
+version = "0.1.0"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+log = "0.4"
+ir_common = {path = "../common"}
+dyn_type = { path = "../../../dyn_type" }
+libc = "0.2"
