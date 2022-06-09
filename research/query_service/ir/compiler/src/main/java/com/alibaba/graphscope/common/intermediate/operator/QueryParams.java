@@ -20,13 +20,12 @@ import com.alibaba.graphscope.common.jna.type.FfiNameOrId;
 
 import org.javatuples.Pair;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 // Source/Expand/GetV need params to query from store, compatible with graph interface
 public class QueryParams {
+    public static String SNAPSHOT_CONFIG_NAME = "SID";
+
     private List<FfiNameOrId.ByValue> tables;
 
     private List<FfiNameOrId.ByValue> columns;
@@ -36,11 +35,14 @@ public class QueryParams {
 
     private Optional<String> predicate;
 
+    private Map<String, String> extraParams;
+
     public QueryParams() {
         this.predicate = Optional.empty();
         this.range = Optional.empty();
         this.tables = new ArrayList<>();
         this.columns = new ArrayList<>();
+        this.extraParams = new HashMap<>();
     }
 
     public void addTable(FfiNameOrId.ByValue name) {
@@ -77,5 +79,13 @@ public class QueryParams {
 
     public Optional<String> getPredicate() {
         return predicate;
+    }
+
+    public void addExtraParams(String key, String value) {
+        this.extraParams.put(key, value);
+    }
+
+    public Map<String, String> getExtraParams() {
+        return Collections.unmodifiableMap(extraParams);
     }
 }

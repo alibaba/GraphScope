@@ -38,4 +38,4 @@ spec:
   scaleUpTriggers:
   - githubEvent:
       workflowJob: {}
-    duration: "30m"
+    duration: "120m"

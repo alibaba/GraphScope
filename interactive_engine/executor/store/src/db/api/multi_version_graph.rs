@@ -195,7 +195,7 @@ pub trait MultiVersionGraph {
     fn delete_edge(&self, si: SnapshotId, id: EdgeId, edge_kind: &EdgeKind, forward: bool) -> GraphResult<()>;
 
     /// garbage collection at `si`
-    fn gc(&self, si: SnapshotId);
+    fn gc(&self, si: SnapshotId) -> GraphResult<()>;
 
     /// Returns current GraphDefPb bytes
     fn get_graph_def_blob(&self) -> GraphResult<Vec<u8>>;

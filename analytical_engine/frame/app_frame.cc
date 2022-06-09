@@ -25,6 +25,8 @@
 #include <memory>
 #include <utility>
 
+#include <arrow/api.h>
+
 #include "grape/app/context_base.h"
 
 #include "core/app/app_invoker.h"

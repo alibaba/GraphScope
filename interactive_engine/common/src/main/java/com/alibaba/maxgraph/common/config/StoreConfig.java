@@ -29,6 +29,9 @@ public class StoreConfig {
     public static final Config<Long> STORE_COMMIT_INTERVAL_MS =
             Config.longConfig("store.commit.interval.ms", 1000L);
 
+    public static final Config<Boolean> STORE_GC_ENABLE =
+            Config.boolConfig("store.gc.enable", true);
+
     public static final Config<Integer> EXECUTOR_GRAPH_PORT =
             Config.intConfig("executor.graph.port", 0);
 

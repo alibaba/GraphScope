@@ -252,7 +252,16 @@ class LocalLauncher(Launcher):
             "{}:{}".format(key, value) for key, value in engine_params.items()
         ]
         env = os.environ.copy()
-        env.update({"GRAPHSCOPE_HOME": GRAPHSCOPE_HOME})
+        if ".install_prefix" in INTERACTIVE_ENGINE_SCRIPT:
+            env.update(
+                {
+                    "GRAPHSCOPE_HOME": os.path.dirname(
+                        os.path.dirname(INTERACTIVE_ENGINE_SCRIPT)
+                    )
+                }
+            )
+        else:
+            env.update({"GRAPHSCOPE_HOME": GRAPHSCOPE_HOME})
         cmd = [
             INTERACTIVE_ENGINE_SCRIPT,
             "create_gremlin_instance_on_local",
@@ -282,7 +291,16 @@ class LocalLauncher(Launcher):
 
     def close_interactive_instance(self, object_id):
         env = os.environ.copy()
-        env.update({"GRAPHSCOPE_HOME": GRAPHSCOPE_HOME})
+        if ".install_prefix" in INTERACTIVE_ENGINE_SCRIPT:
+            env.update(
+                {
+                    "GRAPHSCOPE_HOME": os.path.dirname(
+                        os.path.dirname(INTERACTIVE_ENGINE_SCRIPT)
+                    )
+                }
+            )
+        else:
+            env.update({"GRAPHSCOPE_HOME": GRAPHSCOPE_HOME})
         cmd = [
             INTERACTIVE_ENGINE_SCRIPT,
             "close_gremlin_instance_on_local",
