@@ -298,8 +298,8 @@
 <span class="sd">    &gt;&gt;&gt; G = nx.freeze(G)</span>
 <span class="sd">    &gt;&gt;&gt; try:</span>
 <span class="sd">    ...     G.add_edge(4, 5)</span>
-<span class="sd">    ... except nx.NetworkXError as e:</span>
-<span class="sd">    ...     print(str(e))</span>
+<span class="sd">    ... except nx.NetworkXError as err:</span>
+<span class="sd">    ...     print(str(err))</span>
 <span class="sd">    Frozen graph can&#39;t be modified</span>
 
 <span class="sd">    Notes</span>
@@ -697,7 +697,16 @@
 <span class="sd">    NetworkXError</span>
 <span class="sd">        If n is not in the graph G</span>
 
+<span class="sd">    .. deprecated:: 2.7</span>
+<span class="sd">       ``info`` is deprecated and will be removed in NetworkX 3.0.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">warnings</span>
+
+    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+        <span class="p">(</span><span class="s2">&quot;info is deprecated and will be removed in version 3.0.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">),</span>
+        <span class="ne">DeprecationWarning</span><span class="p">,</span>
+        <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="p">)</span>
     <span class="k">if</span> <span class="n">n</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">n</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
@@ -1402,8 +1411,8 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    cost: int</span>
-<span class="sd">        A integer representing the total cost with respect to the</span>
+<span class="sd">    cost: int or float</span>
+<span class="sd">        An integer or a float representing the total cost with respect to the</span>
 <span class="sd">        specified weight of the specified path</span>
 
 <span class="sd">    Raises</span>
@@ -1418,7 +1427,7 @@
         <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXNoPath</span><span class="p">(</span><span class="s2">&quot;path does not exist&quot;</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">node</span><span class="p">,</span> <span class="n">nbr</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">pairwise</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">multigraph</span><span class="p">:</span>
-            <span class="n">cost</span> <span class="o">+=</span> <span class="nb">min</span><span class="p">([</span><span class="n">v</span><span class="p">[</span><span class="n">weight</span><span class="p">]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">G</span><span class="p">[</span><span class="n">node</span><span class="p">][</span><span class="n">nbr</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">()])</span>
+            <span class="n">cost</span> <span class="o">+=</span> <span class="nb">min</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="n">weight</span><span class="p">]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">G</span><span class="p">[</span><span class="n">node</span><span class="p">][</span><span class="n">nbr</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">cost</span> <span class="o">+=</span> <span class="n">G</span><span class="p">[</span><span class="n">node</span><span class="p">][</span><span class="n">nbr</span><span class="p">][</span><span class="n">weight</span><span class="p">]</span>
     <span class="k">return</span> <span class="n">cost</span>
@@ -1476,6 +1485,16 @@
             
               
                 <dd><a href="../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.14.0/index.html">v0.14.0</a></dd>
               
             
 

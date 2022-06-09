@@ -253,17 +253,16 @@
     <span class="p">):</span>
         <span class="kn">from</span> <span class="nn">graphscope.learning.graph</span> <span class="kn">import</span> <span class="n">Graph</span> <span class="k">as</span> <span class="n">LearningGraph</span>
 
-        <span class="n">handle</span> <span class="o">=</span> <span class="n">op_result</span><span class="o">.</span><span class="n">handle</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">op_result</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+        <span class="n">handle</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;handle&quot;</span><span class="p">]</span>
         <span class="n">handle</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">base64</span><span class="o">.</span><span class="n">b64decode</span><span class="p">(</span><span class="n">handle</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>
-        <span class="n">config</span> <span class="o">=</span> <span class="n">op_result</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
-        <span class="n">handle</span><span class="p">[</span><span class="s2">&quot;server&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">op_result</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+        <span class="n">handle</span><span class="p">[</span><span class="s2">&quot;server&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;endpoints&quot;</span><span class="p">])</span>
         <span class="n">handle</span><span class="p">[</span><span class="s2">&quot;client_count&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
 
         <span class="n">graph_dag_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fetches</span><span class="p">[</span><span class="n">seq</span><span class="p">]</span>
         <span class="c1"># construct learning graph</span>
-        <span class="n">g</span> <span class="o">=</span> <span class="n">LearningGraph</span><span class="p">(</span>
-            <span class="n">graph_dag_node</span><span class="p">,</span> <span class="n">handle</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">op_result</span><span class="o">.</span><span class="n">extra_info</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
-        <span class="p">)</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="n">LearningGraph</span><span class="p">(</span><span class="n">graph_dag_node</span><span class="p">,</span> <span class="n">handle</span><span class="p">,</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;config&quot;</span><span class="p">],</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;object_id&quot;</span><span class="p">])</span>
         <span class="k">return</span> <span class="n">g</span>
 
     <span class="k">def</span> <span class="nf">_rebuild_interactive_query</span><span class="p">(</span>
@@ -272,10 +271,12 @@
         <span class="c1"># get interactive query dag node as base</span>
         <span class="n">interactive_query_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fetches</span><span class="p">[</span><span class="n">seq</span><span class="p">]</span>
         <span class="c1"># construct interactive query</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">op_result</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
         <span class="n">interactive_query</span> <span class="o">=</span> <span class="n">InteractiveQuery</span><span class="p">(</span>
             <span class="n">interactive_query_node</span><span class="p">,</span>
-            <span class="n">op_result</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">),</span>
-            <span class="n">op_result</span><span class="o">.</span><span class="n">extra_info</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">),</span>
+            <span class="n">result</span><span class="p">[</span><span class="s2">&quot;endpoint&quot;</span><span class="p">],</span>
+            <span class="n">result</span><span class="p">[</span><span class="s2">&quot;object_id&quot;</span><span class="p">],</span>
         <span class="p">)</span>
         <span class="n">interactive_query</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">InteractiveQueryStatus</span><span class="o">.</span><span class="n">Running</span>
         <span class="k">return</span> <span class="n">interactive_query</span>
@@ -1748,6 +1749,16 @@
             
               
                 <dd><a href="../../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.14.0/index.html">v0.14.0</a></dd>
               
             
 

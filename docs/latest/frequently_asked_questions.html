@@ -216,6 +216,10 @@ This case is observed when using GraphScope with helm. If users did not correctl
 </li>
 </ul>
 </li>
+<li><p>why <code class="docutils literal notranslate"><span class="pre">Timeout</span> <span class="pre">Exception</span></code> raised during launching GraphScope instance on kubernetes cluster?</p>
+<p>It will take a few minutes for pulling image during the first time for launching GraphScope instance. Thus, the <code class="docutils literal notranslate"><span class="pre">Timeout</span> <span class="pre">Exception</span></code> may caused by a poor network connection.
+You can increase the value of <code class="docutils literal notranslate"><span class="pre">timeout_seconds</span></code> parameter as your expectation by <code class="docutils literal notranslate"><span class="pre">graphscope.set_option(timeout_seconds=600))</span></code>.</p>
+</li>
 </ol>
 <p><strong>I do have many other questions…</strong></p>
 <blockquote>
@@ -279,6 +283,16 @@ This case is observed when using GraphScope with helm. If users did not correctl
             
               
                 <dd><a href="../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.14.0/index.html">v0.14.0</a></dd>
               
             
 

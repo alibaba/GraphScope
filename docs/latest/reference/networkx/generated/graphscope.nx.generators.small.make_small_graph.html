@@ -175,6 +175,12 @@
 <dt class="sig sig-object py" id="graphscope.nx.generators.small.make_small_graph">
 <span class="sig-prename descclassname"><span class="pre">graphscope.nx.generators.small.</span></span><span class="sig-name descname"><span class="pre">make_small_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph_description</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">create_using</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/graphscope/nx/generators/small.html#make_small_graph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.generators.small.make_small_graph" title="Permalink to this definition"></a></dt>
 <dd><p>Return the small graph described by graph_description.</p>
+<div class="deprecated">
+<p><span class="versionmodified deprecated">Deprecated since version 2.7: </span>make_small_graph is deprecated and will be removed in
+version 3.0. If “ltype” == “adjacencylist”, convert the list to a dict
+and use <cite>from_dict_of_lists</cite>. If “ltype” == “edgelist”, use
+<cite>from_edgelist</cite>.</p>
+</div>
 <p>graph_description is a list of the form [ltype,name,n,xlist]</p>
 <p>Here ltype is one of “adjacencylist” or “edgelist”,
 name is the name of the graph and n the number of nodes.
@@ -262,6 +268,16 @@ e.g. the “square” graph C_4 can be obtained by</p>
             
               
                 <dd><a href="../../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.14.0/index.html">v0.14.0</a></dd>
               
             
 

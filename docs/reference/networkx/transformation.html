@@ -186,11 +186,10 @@ Here is an example to show the <cite>copy-on-write</cite> transformation.</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>incoming_graph_data</strong> (<em>input graph</em><em> (</em><em>optional</em><em>, </em><em>default: None</em><em>)</em>) – Data to initialize graph. If None (default) an empty
-graph is created.  The data can be any format that is supported
-by the to_networkx_graph() function, currently including edge list,
-dict of dicts, dict of lists, NetworkX graph, NumPy matrix
-or 2d ndarray, Pandas DataFrame, SciPy sparse matrix, or a GraphScope
-graph object.</p></li>
+graph is created. The data can be an edge list, any
+NetworkX graph object or any GraphScope graph object.
+If the corresponding optional Python packages are installed
+the data can also be a 2D NumPy array, a SciPy sparse matrix</p></li>
 <li><p><strong>default_label</strong> (<em>default node label</em><em> (</em><em>optional</em><em>, </em><em>default: &quot;_&quot;</em><em>)</em>) – if incoming_graph_data is a GraphScope graph object, default label means
 the nodes of the label can be accessed by id directly, other label nodes
 need to use <cite>(label, id)</cite> to access.</p></li>
@@ -198,6 +197,10 @@ need to use <cite>(label, id)</cite> to access.</p></li>
 </ul>
 </dd>
 </dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">convert</span></code></p>
+</div>
 <p class="rubric">Examples</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>  <span class="c1"># or DiGraph</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;my graph&#39;</span><span class="p">)</span>
@@ -217,12 +220,6 @@ need to use <cite>(label, id)</cite> to access.</p></li>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">default_label</span><span class="o">=</span><span class="s2">&quot;person&quot;</span><span class="p">)</span> <span class="c1"># or DiGraph</span>
 </pre></div>
 </div>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="graphscope.nx.Graph._init_with_arrow_property_graph">
-<span class="sig-prename descclassname"><span class="pre">graphscope.nx.Graph.</span></span><span class="sig-name descname"><span class="pre">_init_with_arrow_property_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arrow_property_graph</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.Graph._init_with_arrow_property_graph" title="Permalink to this definition"></a></dt>
-<dd><p>Init graph with arrow property graph</p>
 </dd></dl>
 
 <dl class="py function">
@@ -291,6 +288,16 @@ need to use <cite>(label, id)</cite> to access.</p></li>
             
               
                 <dd><a href="../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.14.0/index.html">v0.14.0</a></dd>
               
             
 
