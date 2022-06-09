@@ -21,7 +21,6 @@
 
 use ir_common::generated::algebra as pb;
 use ir_common::generated::common as common_pb;
-use ir_common::NameOrId;
 use pegasus_client::builder::{JobBuilder, Plan};
 use pegasus_server::job_pb as server_pb;
 use prost::Message;
@@ -113,7 +112,7 @@ impl AsPhysical for pb::Scan {
 
     fn post_process(&mut self, _builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         if let Some(params) = &mut self.params {
-            if let Some(node_metas) = plan_meta.curr_node_meta() {
+            if let Some(node_metas) = plan_meta.get_curr_nodes_meta() {
                 let columns = node_metas.get_columns();
                 let is_all_columns = node_metas.is_all_columns();
                 if !columns.is_empty() || is_all_columns {
@@ -142,7 +141,7 @@ impl AsPhysical for pb::EdgeExpand {
         let mut is_adding_auxilia = false;
         let mut auxilia = pb::Auxilia { params: None, alias: None };
         if let Some(params) = self.params.as_mut() {
-            if let Some(node_metas) = plan_meta.curr_node_meta() {
+            if let Some(node_metas) = plan_meta.get_curr_nodes_meta() {
                 let columns = node_metas.get_columns();
                 let is_all_columns = node_metas.is_all_columns();
                 if !columns.is_empty() || is_all_columns {
@@ -258,7 +257,7 @@ impl AsPhysical for pb::GetV {
         let mut is_adding_auxilia = false;
         let mut auxilia = pb::Auxilia { params: None, alias: None };
         if let Some(params) = self.params.as_mut() {
-            if let Some(node_metas) = plan_meta.curr_node_meta() {
+            if let Some(node_metas) = plan_meta.get_curr_nodes_meta() {
                 let columns = node_metas.get_columns();
                 let is_all_columns = node_metas.is_all_columns();
                 if !columns.is_empty() || is_all_columns {
@@ -365,11 +364,7 @@ impl AsPhysical for pb::Sink {
         let tag_id_mapping = plan_meta
             .get_tag_ids()
             .iter()
-            .map(|(tag, id)| pb::sink::IdNameMapping {
-                id: *id as i32,
-                name: tag.clone(),
-                meta_type: 3,
-            })
+            .map(|(tag, id)| pb::sink::IdNameMapping { id: *id as i32, name: tag.clone(), meta_type: 3 })
             .collect();
         sink_opr.id_name_mappings = tag_id_mapping;
         simple_add_job_builder(builder, &pb::logical_plan::Operator::from(sink_opr), SimpleOpr::Sink)
@@ -405,7 +400,7 @@ impl AsPhysical for pb::logical_plan::Operator {
 
 impl AsPhysical for NodeType {
     fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
-        plan_meta.set_curr_node(self.borrow().id);
+        plan_meta.set_curr_nodes(vec![self.borrow().id]);
         self.borrow()
             .opr
             .add_job_builder(builder, plan_meta)

@@ -681,8 +681,7 @@ pub extern "C" fn init_logical_plan() -> *const c_void {
         if let Some(schema) = &meta.schema {
             plan.meta = plan
                 .meta
-                .with_store_conf(schema.is_table_id(), schema.is_column_id())
-                .with_tag_id();
+                .with_store_conf(schema.is_table_id(), schema.is_column_id());
         }
     }
     Box::into_raw(plan) as *const c_void
