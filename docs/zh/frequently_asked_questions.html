@@ -196,6 +196,21 @@ GraphScope 在支持以下环境中运行</p>
 <li><p>编译 <code class="docutils literal notranslate"><span class="pre">scipy</span></code> 失败: 你可以根据 <a class="reference external" href="https://stackoverflow.com/questions/65745683/how-to-install-scipy-on-apple-silicon-arm-m1">此教程</a> 来源码编译，或尝试通过 <code class="docutils literal notranslate"><span class="pre">pip3</span> <span class="pre">install</span> <span class="pre">--pre</span> <span class="pre">-i</span> <span class="pre">https://pypi.anaconda.org/scipy-wheels-nightly/simple</span> <span class="pre">scipy</span></code> 来解决这个问题。</p></li>
 </ul>
 </li>
+<li><p>在 NFS 上分配 PV 时遇到了 <code class="docutils literal notranslate"><span class="pre">Permission</span> <span class="pre">denied</span></code> 问题，如何解决？</p>
+<ul class="simple">
+<li><p>Appearance: 通常当使用 helm 的方式安装 graphscope-store 时，Pod <code class="docutils literal notranslate"><span class="pre">graphscope-store-kafka-0</span></code> , <code class="docutils literal notranslate"><span class="pre">graphscope-store-zookeeper-0</span></code> 会报 <code class="docutils literal notranslate"><span class="pre">CrashLoopBackOff</span></code> 错误</p></li>
+<li><p>Check: 我们通过 <code class="docutils literal notranslate"><span class="pre">kubectl</span> <span class="pre">logs</span> <span class="pre">graphscope-store-zookeeper-0</span></code> 来查看日志，此时日志显示 <code class="docutils literal notranslate"><span class="pre">mkdir:</span> <span class="pre">cannot</span> <span class="pre">create</span> <span class="pre">directory</span> <span class="pre">'/bitnami/zookeeper/data':</span> <span class="pre">Permission</span> <span class="pre">denied</span></code></p></li>
+<li><p>Solution: 通常有两种解决方式:</p>
+<ol class="arabic simple">
+<li><p>快速的方式是在所有相关的 PV 目录上使用 <code class="docutils literal notranslate"><span class="pre">chmod</span> <span class="pre">777</span></code> ，但不建议在生产环境中使用。</p></li>
+<li><p>优雅的方法是首先创建 <code class="docutils literal notranslate"><span class="pre">graphscope</span></code> 用户和用户组，然后将 <code class="docutils literal notranslate"><span class="pre">graphscope</span></code> 上的访问权限授予相关NFS目录。</p></li>
+</ol>
+</li>
+</ul>
+</li>
+<li><p>为什么在 Kubernetes 集群上拉起 GraphScope 实例时，产生超时异常？</p>
+<p>大多数情况下，超时的原因是因为在 Kubernetes 集群拉起 GraphScope 实例时需要下载对应镜像，这一步通常需要几分钟的时间，你可以通过 <code class="docutils literal notranslate"><span class="pre">graphscope.set_option(timeout_seconds=600)</span></code> 适当的增加超时等待时间来解决该问题。</p>
+</li>
 </ol>
 <p><strong>其他问题</strong></p>
 <blockquote>
@@ -259,6 +274,16 @@ GraphScope 在支持以下环境中运行</p>
             
               
                 <dd><a href="index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.14.0/zh/index.html">v0.14.0</a></dd>
               
             
 

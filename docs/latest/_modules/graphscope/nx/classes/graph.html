@@ -145,7 +145,6 @@
 <span class="kn">import</span> <span class="nn">copy</span>
 <span class="kn">import</span> <span class="nn">threading</span>
 
-<span class="kn">import</span> <span class="nn">msgpack</span>
 <span class="kn">import</span> <span class="nn">orjson</span> <span class="k">as</span> <span class="nn">json</span>
 <span class="kn">from</span> <span class="nn">networkx</span> <span class="kn">import</span> <span class="n">freeze</span>
 <span class="kn">from</span> <span class="nn">networkx.classes.graph</span> <span class="kn">import</span> <span class="n">Graph</span> <span class="k">as</span> <span class="n">RefGraph</span>
@@ -156,13 +155,14 @@
 <span class="kn">from</span> <span class="nn">graphscope.client.session</span> <span class="kn">import</span> <span class="n">get_session_by_id</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework</span> <span class="kn">import</span> <span class="n">dag_utils</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework</span> <span class="kn">import</span> <span class="n">utils</span>
-<span class="kn">from</span> <span class="nn">graphscope.framework.errors</span> <span class="kn">import</span> <span class="n">InvalidArgumentError</span>
-<span class="kn">from</span> <span class="nn">graphscope.framework.errors</span> <span class="kn">import</span> <span class="n">check_argument</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.graph_schema</span> <span class="kn">import</span> <span class="n">GraphSchema</span>
 <span class="kn">from</span> <span class="nn">graphscope.nx</span> <span class="kn">import</span> <span class="n">NetworkXError</span>
 <span class="kn">from</span> <span class="nn">graphscope.nx.classes.cache</span> <span class="kn">import</span> <span class="n">Cache</span>
 <span class="kn">from</span> <span class="nn">graphscope.nx.classes.coreviews</span> <span class="kn">import</span> <span class="n">AdjacencyView</span>
 <span class="kn">from</span> <span class="nn">graphscope.nx.classes.dict_factory</span> <span class="kn">import</span> <span class="n">AdjListDict</span>
+<span class="kn">from</span> <span class="nn">graphscope.nx.classes.dict_factory</span> <span class="kn">import</span> <span class="n">NeighborAttrDict</span>
+<span class="kn">from</span> <span class="nn">graphscope.nx.classes.dict_factory</span> <span class="kn">import</span> <span class="n">NeighborDict</span>
+<span class="kn">from</span> <span class="nn">graphscope.nx.classes.dict_factory</span> <span class="kn">import</span> <span class="n">NodeAttrDict</span>
 <span class="kn">from</span> <span class="nn">graphscope.nx.classes.dict_factory</span> <span class="kn">import</span> <span class="n">NodeDict</span>
 <span class="kn">from</span> <span class="nn">graphscope.nx.classes.graphviews</span> <span class="kn">import</span> <span class="n">generic_graph_view</span>
 <span class="kn">from</span> <span class="nn">graphscope.nx.classes.reportviews</span> <span class="kn">import</span> <span class="n">EdgeView</span>
@@ -170,7 +170,7 @@
 <span class="kn">from</span> <span class="nn">graphscope.nx.convert</span> <span class="kn">import</span> <span class="n">to_networkx_graph</span>
 <span class="kn">from</span> <span class="nn">graphscope.nx.utils.compat</span> <span class="kn">import</span> <span class="n">patch_docstring</span>
 <span class="kn">from</span> <span class="nn">graphscope.nx.utils.misc</span> <span class="kn">import</span> <span class="n">clear_mutation_cache</span>
-<span class="kn">from</span> <span class="nn">graphscope.nx.utils.misc</span> <span class="kn">import</span> <span class="n">empty_graph_in_engine</span>
+<span class="kn">from</span> <span class="nn">graphscope.nx.utils.misc</span> <span class="kn">import</span> <span class="n">init_empty_graph_in_engine</span>
 <span class="kn">from</span> <span class="nn">graphscope.proto</span> <span class="kn">import</span> <span class="n">graph_def_pb2</span>
 <span class="kn">from</span> <span class="nn">graphscope.proto</span> <span class="kn">import</span> <span class="n">types_pb2</span>
 
@@ -215,9 +215,8 @@
 <span class="sd">        Data to initialize graph. If None (default) an empty</span>
 <span class="sd">        graph is created.  The data can be any format that is supported</span>
 <span class="sd">        by the to_networkx_graph() function, currently including edge list,</span>
-<span class="sd">        dict of dicts, dict of lists, NetworkX graph, NumPy matrix</span>
-<span class="sd">        or 2d ndarray, Pandas DataFrame, SciPy sparse matrix, or a GraphScope</span>
-<span class="sd">        graph object.</span>
+<span class="sd">        dict of dicts, dict of lists, NetworkX graph, 2D NumPy array, SciPy</span>
+<span class="sd">        sparse matrix or a GraphScope graph object.</span>
 
 <span class="sd">    default_label : default node label (optional, default: None)</span>
 <span class="sd">        if incoming_graph_data is a GraphScope graph object, default label means</span>
@@ -383,15 +382,17 @@
 <span class="sd">    For details on these and other miscellaneous methods, see below.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">graph_cache_factory</span> <span class="o">=</span> <span class="n">Cache</span>
     <span class="n">node_dict_factory</span> <span class="o">=</span> <span class="n">NodeDict</span>
-    <span class="n">adjlist_dict_factory</span> <span class="o">=</span> <span class="n">AdjListDict</span>
+    <span class="n">node_attr_dict_factory</span> <span class="o">=</span> <span class="n">NodeAttrDict</span>
+    <span class="n">adjlist_outer_dict_factory</span> <span class="o">=</span> <span class="n">AdjListDict</span>
+    <span class="n">adjlist_inner_dict_factory</span> <span class="o">=</span> <span class="n">NeighborDict</span>
+    <span class="n">edge_attr_dict_factory</span> <span class="o">=</span> <span class="n">NeighborAttrDict</span>
     <span class="n">graph_attr_dict_factory</span> <span class="o">=</span> <span class="nb">dict</span>
+    <span class="n">graph_cache_factory</span> <span class="o">=</span> <span class="n">Cache</span>
     <span class="n">_graph_type</span> <span class="o">=</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">DYNAMIC_PROPERTY</span>
 
-<div class="viewcode-block" id="Graph.to_directed_class"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.to_directed_class">[docs]</a>    <span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">RefGraph</span><span class="o">.</span><span class="n">to_directed_class</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">to_directed_class</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span></div>
+        <span class="k">return</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span>
 
 <div class="viewcode-block" id="Graph.to_undirected_class"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.to_undirected_class">[docs]</a>    <span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">RefGraph</span><span class="o">.</span><span class="n">to_undirected_class</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">to_undirected_class</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -404,11 +405,10 @@
 <span class="sd">        ----------</span>
 <span class="sd">        incoming_graph_data : input graph (optional, default: None)</span>
 <span class="sd">            Data to initialize graph. If None (default) an empty</span>
-<span class="sd">            graph is created.  The data can be any format that is supported</span>
-<span class="sd">            by the to_networkx_graph() function, currently including edge list,</span>
-<span class="sd">            dict of dicts, dict of lists, NetworkX graph, NumPy matrix</span>
-<span class="sd">            or 2d ndarray, Pandas DataFrame, SciPy sparse matrix, or a GraphScope</span>
-<span class="sd">            graph object.</span>
+<span class="sd">            graph is created. The data can be an edge list, any</span>
+<span class="sd">            NetworkX graph object or any GraphScope graph object.</span>
+<span class="sd">            If the corresponding optional Python packages are installed</span>
+<span class="sd">            the data can also be a 2D NumPy array, a SciPy sparse matrix</span>
 
 <span class="sd">        default_label : default node label (optional, default: &quot;_&quot;)</span>
 <span class="sd">            if incoming_graph_data is a GraphScope graph object, default label means</span>
@@ -418,6 +418,9 @@
 <span class="sd">        attr : keyword arguments, optional (default= no attributes)</span>
 <span class="sd">            Attributes to add to graph as key=value pairs.</span>
 
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        convert</span>
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
@@ -439,22 +442,21 @@
 <span class="sd">        &gt;&gt;&gt; G = nx.Graph(g, default_label=&quot;person&quot;) # or DiGraph</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">graph_attr_dict_factory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_attr_dict_factory</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">node_dict_factory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_dict_factory</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">adjlist_dict_factory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">adjlist_dict_factory</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_attr_dict_factory</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">adjlist_outer_dict_factory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">adjlist_outer_dict_factory</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cache</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_cache_factory</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
         <span class="c1"># init node and adj (must be after cache)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_attr_dict_factory</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_dict_factory</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_adj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">adjlist_dict_factory</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_adj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">adjlist_outer_dict_factory</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_schema</span> <span class="o">=</span> <span class="n">GraphSchema</span><span class="p">()</span>
 
-        <span class="c1"># caches for add_node and add_edge</span>
+        <span class="c1"># buffer caches for add_node and add_edge</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_add_node_cache</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_add_edge_cache</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_remove_node_cache</span> <span class="o">=</span> <span class="p">[]</span>
@@ -466,29 +468,24 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_distributed</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;dist&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">incoming_graph_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_gs_graph</span><span class="p">(</span><span class="n">incoming_graph_data</span><span class="p">):</span>
             <span class="c1"># convert from gs graph always use distributed mode</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_distributed</span> <span class="o">=</span> <span class="kc">True</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="n">get_session_by_id</span><span class="p">(</span><span class="n">incoming_graph_data</span><span class="o">.</span><span class="n">session_id</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_default_label</span> <span class="o">=</span> <span class="n">default_label</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_default_label_id</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_try_to_get_default_session</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="n">get_default_session</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_gs_graph</span><span class="p">(</span><span class="n">incoming_graph_data</span><span class="p">)</span> <span class="ow">and</span> <span class="n">create_empty_in_engine</span><span class="p">:</span>
-            <span class="n">graph_def</span> <span class="o">=</span> <span class="n">empty_graph_in_engine</span><span class="p">(</span>
+            <span class="n">graph_def</span> <span class="o">=</span> <span class="n">init_empty_graph_in_engine</span><span class="p">(</span>
                 <span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_directed</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_distributed</span>
             <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">graph_def</span><span class="o">.</span><span class="n">key</span>
 
         <span class="c1"># attempt to load graph with data</span>
         <span class="k">if</span> <span class="n">incoming_graph_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_gs_graph</span><span class="p">(</span><span class="n">incoming_graph_data</span><span class="p">):</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_init_with_arrow_property_graph</span><span class="p">(</span><span class="n">incoming_graph_data</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">warmup</span><span class="p">()</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">g</span> <span class="o">=</span> <span class="n">to_networkx_graph</span><span class="p">(</span><span class="n">incoming_graph_data</span><span class="p">,</span> <span class="n">create_using</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
-                <span class="n">check_argument</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">Graph</span><span class="p">))</span>
+            <span class="n">to_networkx_graph</span><span class="p">(</span><span class="n">incoming_graph_data</span><span class="p">,</span> <span class="n">create_using</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">warmup</span><span class="p">()</span>
 
         <span class="c1"># load graph attributes (must be after to_networkx_graph)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">attr</span><span class="p">)</span>
@@ -500,21 +497,6 @@
             <span class="nb">hasattr</span><span class="p">(</span><span class="n">incoming_graph_data</span><span class="p">,</span> <span class="s2">&quot;graph_type&quot;</span><span class="p">)</span>
             <span class="ow">and</span> <span class="n">incoming_graph_data</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">==</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">ARROW_PROPERTY</span>
         <span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">_try_to_get_default_session</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">session</span> <span class="o">=</span> <span class="n">get_default_session</span><span class="p">()</span>
-        <span class="k">except</span> <span class="ne">RuntimeError</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                <span class="s2">&quot;The nx binding session is None, that maybe no default session found. &quot;</span>
-                <span class="s2">&quot;Please register a session as default session.&quot;</span>
-            <span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">session</span><span class="o">.</span><span class="n">eager</span><span class="p">():</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                <span class="s2">&quot;NetworkX module need session to be eager mode. &quot;</span>
-                <span class="s2">&quot;The default session is lazy mode.&quot;</span>
-            <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="n">session</span>
 
     <span class="k">def</span> <span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;active&quot;</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -613,6 +595,14 @@
             <span class="n">vdata_type</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">data_type_to_cpp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="o">.</span><span class="n">vdata_type</span><span class="p">)</span>
             <span class="n">edata_type</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">data_type_to_cpp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="o">.</span><span class="n">edata_type</span><span class="p">)</span>
             <span class="n">s</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;gs::ArrowFlattenedFragment&lt;</span><span class="si">{</span><span class="n">oid_type</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="n">vid_type</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="n">vdata_type</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="n">edata_type</span><span class="si">}</span><span class="s2">&gt;&quot;</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph_type</span> <span class="o">==</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">ARROW_PROJECTED</span><span class="p">:</span>
+            <span class="n">oid_type</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">normalize_data_type_str</span><span class="p">(</span>
+                <span class="n">utils</span><span class="o">.</span><span class="n">data_type_to_cpp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="o">.</span><span class="n">oid_type</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">vid_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="o">.</span><span class="n">vid_type</span>
+            <span class="n">vdata_type</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">data_type_to_cpp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="o">.</span><span class="n">vdata_type</span><span class="p">)</span>
+            <span class="n">edata_type</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">data_type_to_cpp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="o">.</span><span class="n">edata_type</span><span class="p">)</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;gs::ArrowProjectedFragment&lt;</span><span class="si">{</span><span class="n">oid_type</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="n">vid_type</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="n">vdata_type</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="n">edata_type</span><span class="si">}</span><span class="s2">&gt;&quot;</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported graph type: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">s</span>
@@ -909,45 +899,6 @@
         <span class="n">nodes</span> <span class="o">=</span> <span class="n">NodeView</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">&quot;nodes&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">nodes</span>
         <span class="k">return</span> <span class="n">nodes</span>
-
-<div class="viewcode-block" id="Graph.get_node_data"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.get_node_data">[docs]</a>    <span class="nd">@clear_mutation_cache</span>
-    <span class="k">def</span> <span class="nf">get_node_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns the attribute dictionary of node n.</span>
-
-<span class="sd">        This is identical to `G[n]`.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        n : nodes</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        node_dict : dictionary</span>
-<span class="sd">            The node attribute dictionary.</span>
-
-<span class="sd">        Examples</span>
-<span class="sd">        --------</span>
-<span class="sd">        &gt;&gt;&gt; G = nx.path_graph(4)  # or DiGraph etc</span>
-<span class="sd">        &gt;&gt;&gt; G[0]</span>
-<span class="sd">        {}</span>
-
-<span class="sd">        Warning: Assigning to `G[n]` is not permitted.</span>
-<span class="sd">        But it is safe to assign attributes `G[n][&#39;foo&#39;]`</span>
-
-<span class="sd">        &gt;&gt;&gt; G[0][&#39;weight&#39;] = 7</span>
-<span class="sd">        &gt;&gt;&gt; G[0][&#39;weight&#39;]</span>
-<span class="sd">        7</span>
-
-<span class="sd">        &gt;&gt;&gt; G = nx.path_graph(4)  # or DiGraph etc</span>
-<span class="sd">        &gt;&gt;&gt; G.get_node_data(0, 1)</span>
-<span class="sd">        {}</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">==</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">ARROW_PROPERTY</span><span class="p">:</span>
-            <span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_to_label_id_tuple</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
-        <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">report_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">NODE_DATA</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
-        <span class="n">archive</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
-        <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">archive</span><span class="o">.</span><span class="n">get_bytes</span><span class="p">())</span></div>
 
 <div class="viewcode-block" id="Graph.number_of_nodes"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.number_of_nodes">[docs]</a>    <span class="nd">@clear_mutation_cache</span>
     <span class="k">def</span> <span class="nf">number_of_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -1683,7 +1634,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph_type</span> <span class="o">==</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">ARROW_PROPERTY</span><span class="p">:</span>
             <span class="c1"># create an empty graph, no need to convert arrow to dynamic</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_graph_type</span> <span class="o">=</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">DYNAMIC_PROPERTY</span>
-            <span class="n">graph_def</span> <span class="o">=</span> <span class="n">empty_graph_in_engine</span><span class="p">(</span>
+            <span class="n">graph_def</span> <span class="o">=</span> <span class="n">init_empty_graph_in_engine</span><span class="p">(</span>
                 <span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_directed</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_distributed</span>
             <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">graph_def</span><span class="o">.</span><span class="n">key</span>
@@ -2027,81 +1978,6 @@
         <span class="n">g</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">warmup</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">g</span></div>
 
-    <span class="k">def</span> <span class="nf">_is_view</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_graph&quot;</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">_get_neighbors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">pred</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Get the neighbors of node.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        n: node</span>
-<span class="sd">            the node to get neighbors.</span>
-<span class="sd">        report_type:</span>
-<span class="sd">            the report type of report graph operation,</span>
-<span class="sd">                types_pb2.SUCCS_BY_NODE: get the successors of node,</span>
-<span class="sd">                types_pb2.PREDS_BY_NODE: get the predecessors of node,</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        neighbors: tuple</span>
-
-<span class="sd">        Raises</span>
-<span class="sd">        ------</span>
-<span class="sd">        Raise NetworkxError if node not in graph.</span>
-
-<span class="sd">        Examples</span>
-<span class="sd">        --------</span>
-<span class="sd">        &gt;&gt;&gt; g = nx.Graph()</span>
-<span class="sd">        &gt;&gt;&gt; g.add_edges_from([(0, 1), (0, 2)])</span>
-<span class="sd">        &gt;&gt;&gt; g._get_neighbors(0)</span>
-<span class="sd">        (0, 1)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">n</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;The node </span><span class="si">%s</span><span class="s2"> is not in the graph.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">n</span><span class="p">,))</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">==</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">ARROW_PROPERTY</span><span class="p">:</span>
-            <span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_to_label_id_tuple</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
-        <span class="n">report_t</span> <span class="o">=</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">PREDS_BY_NODE</span> <span class="k">if</span> <span class="n">pred</span> <span class="k">else</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">SUCCS_BY_NODE</span>
-        <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">report_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">report_t</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
-        <span class="n">archive</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
-        <span class="k">return</span> <span class="n">msgpack</span><span class="o">.</span><span class="n">unpackb</span><span class="p">(</span><span class="n">archive</span><span class="o">.</span><span class="n">get_bytes</span><span class="p">(),</span> <span class="n">use_list</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">_get_neighbors_attr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">pred</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Get the neighbors attr of node.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        n: node</span>
-<span class="sd">            the node to get neighbors.</span>
-<span class="sd">        report_type:</span>
-<span class="sd">            the report type of report graph operation,</span>
-<span class="sd">                types_pb2.SUCC_ATTR_BY_NODE: get the successors attr of node,</span>
-<span class="sd">                types_pb2.PRED_ATTR_BY_NODE: get the predecessors attr of node,</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        attr: list</span>
-
-<span class="sd">        Raises</span>
-<span class="sd">        ------</span>
-<span class="sd">        Raise NetworkxError if node not in graph.</span>
-
-<span class="sd">        Examples</span>
-<span class="sd">        --------</span>
-<span class="sd">        &gt;&gt;&gt; g = nx.Graph()</span>
-<span class="sd">        &gt;&gt;&gt; g.add_edges_from([(0, 1), (0, 2)])</span>
-<span class="sd">        &gt;&gt;&gt; g._get_nbrs(0)</span>
-<span class="sd">        [{}, {}]</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">n</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;The node </span><span class="si">%s</span><span class="s2"> is not in the graph.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">n</span><span class="p">,))</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">==</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">ARROW_PROPERTY</span><span class="p">:</span>
-            <span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_to_label_id_tuple</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
-        <span class="n">report_t</span> <span class="o">=</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">PRED_ATTR_BY_NODE</span> <span class="k">if</span> <span class="n">pred</span> <span class="k">else</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">SUCC_ATTR_BY_NODE</span>
-        <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">report_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">report_t</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
-        <span class="n">archive</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
-        <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">archive</span><span class="o">.</span><span class="n">get_bytes</span><span class="p">())</span>
-
     <span class="nd">@clear_mutation_cache</span>
     <span class="k">def</span> <span class="nf">_project_to_simple</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v_prop</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">e_prop</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Project nx graph to a simple graph to run builtin algorithms.</span>
@@ -2145,34 +2021,6 @@
         <span class="n">graph</span><span class="o">.</span><span class="n">_graph</span> <span class="o">=</span> <span class="bp">self</span>  <span class="c1"># projected graph also can report nodes.</span>
         <span class="n">graph</span><span class="o">.</span><span class="n">_is_client_view</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">return</span> <span class="n">graph</span>
-
-    <span class="k">def</span> <span class="nf">_init_with_arrow_property_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arrow_property_graph</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Init graph with arrow property graph&quot;&quot;&quot;</span>
-        <span class="c1"># check session and direction compatible</span>
-        <span class="k">if</span> <span class="n">arrow_property_graph</span><span class="o">.</span><span class="n">session_id</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_id</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">NetworkXError</span><span class="p">(</span>
-                <span class="s2">&quot;The source graph is not loaded in session </span><span class="si">{}</span><span class="s2">.&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_id</span>
-            <span class="p">)</span>
-        <span class="k">if</span> <span class="n">arrow_property_graph</span><span class="o">.</span><span class="n">is_directed</span><span class="p">()</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
-            <span class="k">if</span> <span class="n">arrow_property_graph</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
-                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;The source graph is a directed graph, can&#39;t be used to init nx.Graph. You may use nx.DiGraph&quot;</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;The source graph is a undirected graph, can&#39;t be used to init nx.DiGraph. You may use nx.Graph&quot;</span>
-            <span class="k">raise</span> <span class="n">NetworkXError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">arrow_property_graph</span><span class="o">.</span><span class="n">key</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_schema</span> <span class="o">=</span> <span class="n">arrow_property_graph</span><span class="o">.</span><span class="n">schema</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="n">arrow_property_graph</span><span class="o">.</span><span class="n">op</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_default_label_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="o">.</span><span class="n">get_vertex_label_id</span><span class="p">(</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_default_label</span>
-                <span class="p">)</span>
-            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="n">NetworkXError</span><span class="p">(</span>
-                    <span class="s2">&quot;default label </span><span class="si">{}</span><span class="s2"> not existed in graph.&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_label</span>
-                <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_graph_type</span> <span class="o">=</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">ARROW_PROPERTY</span>
 
     <span class="k">def</span> <span class="nf">_clear_adding_cache</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">reset_cache</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span>
@@ -2320,6 +2168,16 @@
             
               
                 <dd><a href="../../../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../../v0.14.0/index.html">v0.14.0</a></dd>
               
             
 

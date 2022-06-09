@@ -76,6 +76,21 @@
     - 编译 ``grpcio`` 失败: 你可以通过 ``export GRPC_PYTHON_BUILD_SYSTEM_OPENSSL=True`` 来尝试使用系统安装的 ``openssl`` 编译 grpcio。详情可参考 `grpc issue <https://github.com/grpc/grpc/issues/25082>`_
 
     - 编译 ``scipy`` 失败: 你可以根据 `此教程 <https://stackoverflow.com/questions/65745683/how-to-install-scipy-on-apple-silicon-arm-m1>`_ 来源码编译，或尝试通过 ``pip3 install --pre -i https://pypi.anaconda.org/scipy-wheels-nightly/simple scipy`` 来解决这个问题。
+
+11. 在 NFS 上分配 PV 时遇到了 ``Permission denied`` 问题，如何解决？
+
+    - Appearance: 通常当使用 helm 的方式安装 graphscope-store 时，Pod ``graphscope-store-kafka-0`` , ``graphscope-store-zookeeper-0`` 会报 ``CrashLoopBackOff`` 错误
+
+    - Check: 我们通过 ``kubectl logs graphscope-store-zookeeper-0`` 来查看日志，此时日志显示 ``mkdir: cannot create directory '/bitnami/zookeeper/data': Permission denied``
+
+    - Solution: 通常有两种解决方式:
+
+      1. 快速的方式是在所有相关的 PV 目录上使用 ``chmod 777`` ，但不建议在生产环境中使用。
+      2. 优雅的方法是首先创建 ``graphscope`` 用户和用户组，然后将 ``graphscope`` 上的访问权限授予相关NFS目录。
+
+12. 为什么在 Kubernetes 集群上拉起 GraphScope 实例时，产生超时异常？
+
+    大多数情况下，超时的原因是因为在 Kubernetes 集群拉起 GraphScope 实例时需要下载对应镜像，这一步通常需要几分钟的时间，你可以通过 ``graphscope.set_option(timeout_seconds=600)`` 适当的增加超时等待时间来解决该问题。
     
 
 **其他问题**
