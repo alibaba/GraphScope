@@ -518,10 +518,10 @@ pub struct PlanMeta {
     /// `Record`. Such operators include Scan, EdgeExpand, PathExpand, GetV, Project, etc.
     referred_nodes: BTreeMap<u32, SingleOrNodes>,
     /// The tag must refer to some valid nodes in the plan.
-    tag_nodes: BTreeMap<NameOrId, Vec<u32>>,
+    tag_nodes: BTreeMap<u32, Vec<u32>>,
     /// To ease the processing, tag may be mapped to an internal id.
     /// This maintains the mappings
-    tag_ids: BTreeMap<NameOrId, u32>,
+    tag_ids: BTreeMap<String, u32>,
     /// Record the current node that has been processed by the plan
     curr_node: SingleOrNodes,
     /// The maximal tag id that has been assigned, for mapping tag ids.
@@ -530,8 +530,6 @@ pub struct PlanMeta {
     is_table_id: bool,
     /// Whether to preprocess the column name into id.
     is_column_id: bool,
-    /// Whether to preprocess the tag name into id.
-    is_tag_id: bool,
     /// Whether to partition the task
     is_partition: bool,
 }
@@ -551,11 +549,6 @@ impl PlanMeta {
         self
     }
 
-    pub fn with_tag_id(mut self) -> Self {
-        self.is_tag_id = true;
-        self
-    }
-
     pub fn with_partition(mut self) -> Self {
         self.is_partition = true;
         self
@@ -563,98 +556,25 @@ impl PlanMeta {
 }
 
 impl PlanMeta {
-    pub fn curr_node_meta_mut(&mut self) -> NodeMetaOpt {
-        match &self.curr_node {
-            SingleOrNodes::Single(node) => NodeMetaOpt::Single(
-                self.node_metas
-                    .entry(node[0])
-                    .or_default()
-                    .clone(),
-            ),
-            SingleOrNodes::Union(nodes) => {
-                let mut node_metas = vec![];
-                for node in nodes {
-                    node_metas.push(
-                        self.node_metas
-                            .entry(*node)
-                            .or_default()
-                            .clone(),
-                    );
-                }
-                NodeMetaOpt::Union(node_metas)
-            }
-        }
-    }
-
-    pub fn tag_node_meta_mut(&mut self, tag_opt: Option<&NameOrId>) -> IrResult<NodeMetaOpt> {
-        if let Some(tag) = tag_opt {
-            if let Some(nodes) = self.tag_nodes.get(tag) {
-                if nodes.len() == 1 {
-                    Ok(NodeMetaOpt::Single(
-                        self.node_metas
-                            .entry(nodes[0])
-                            .or_default()
-                            .clone(),
-                    ))
-                } else {
-                    let mut node_metas = vec![];
-                    for node in nodes {
-                        node_metas.push(
-                            self.node_metas
-                                .entry(*node)
-                                .or_default()
-                                .clone(),
-                        )
-                    }
-                    Ok(NodeMetaOpt::Union(node_metas))
-                }
-            } else {
-                Err(IrError::TagNotExist(tag.clone()))
-            }
-        } else {
-            Ok(self.curr_node_meta_mut())
-        }
-    }
-
-    pub fn get_node_meta(&self, id: u32) -> Option<Rc<RefCell<NodeMeta>>> {
-        self.node_metas.get(&id).cloned()
-    }
-
-    pub fn curr_node_meta(&self) -> Option<NodeMetaOpt> {
-        match &self.curr_node {
-            SingleOrNodes::Single(node) => self
-                .node_metas
-                .get(&node[0])
-                .map(|meta| NodeMetaOpt::Single(meta.clone())),
-            SingleOrNodes::Union(nodes) => {
-                let mut node_metas = vec![];
-                for node in nodes {
-                    if let Some(node_meta) = self.node_metas.get(node) {
-                        node_metas.push(node_meta.clone());
-                    } else {
-                        return None;
-                    }
-                }
-                Some(NodeMetaOpt::Union(node_metas))
-            }
-        }
-    }
-
-    pub fn insert_tag_nodes(&mut self, tag: NameOrId, nodes: Vec<u32>) {
+    pub fn insert_tag_nodes(&mut self, tag: u32, nodes: Vec<u32>) {
         self.tag_nodes
             .entry(tag)
             .or_default()
             .extend(nodes.into_iter());
     }
 
-    pub fn get_tag_nodes(&self, tag: &NameOrId) -> Option<&Vec<u32>> {
-        self.tag_nodes.get(tag)
+    pub fn get_tag_nodes(&self, tag: u32) -> Option<&Vec<u32>> {
+        self.tag_nodes.get(&tag)
+    }
+
+    pub fn has_tag(&self, tag: u32) -> bool {
+        self.tag_nodes.contains_key(&tag)
     }
 
     /// Get the id (with a `true` indicator) of the given tag if it already presents,
     /// otherwise, set and return the id as `self.max_tag_id` (with a `false` indicator).
-    pub fn get_or_set_tag_id(&mut self, tag: &NameOrId) -> (bool, u32) {
-        let entry = self.tag_ids.entry(tag.clone());
+    pub fn get_or_set_tag_id(&mut self, tag: String) -> (bool, u32) {
+        let entry = self.tag_ids.entry(tag);
         match entry {
             Entry::Occupied(o) => (true, *o.get()),
             Entry::Vacant(v) => {
@@ -666,15 +586,11 @@ impl PlanMeta {
         }
     }
 
-    pub fn get_tag_ids(&self) -> &BTreeMap<NameOrId, u32> {
+    pub fn get_tag_ids(&self) -> &BTreeMap<String, u32> {
         &self.tag_ids
     }
 
-    pub fn set_curr_node(&mut self, curr_node: u32) {
-        self.curr_node = SingleOrNodes::Single([curr_node]);
-    }
-
-    pub fn set_union_curr_nodes(&mut self, nodes: Vec<u32>) {
+    pub fn set_curr_nodes(&mut self, nodes: Vec<u32>) {
         if nodes.len() == 1 {
             self.curr_node = SingleOrNodes::Single([nodes[0]]);
         } else {
@@ -687,27 +603,104 @@ impl PlanMeta {
     }
 
     pub fn refer_to_nodes(&mut self, node: u32, referred_nodes: Vec<u32>) {
-        self.referred_nodes.insert(
-            node,
-            if referred_nodes.len() == 1 {
-                SingleOrNodes::Single([referred_nodes[0]])
-            } else {
-                SingleOrNodes::Union(referred_nodes)
-            },
-        );
-    }
-
-    pub fn get_referred_nodes(&self, node: u32) -> &[u32] {
-        if let Some(referred_nodes) = self.referred_nodes.get(&node) {
-            referred_nodes.get()
+        if referred_nodes.len() == 1 && node == referred_nodes[0] {
+            self.referred_nodes.insert(node, SingleOrNodes::Single([node]));
         } else {
-            &[]
+            let nodes = self.get_referred_nodes(&referred_nodes);
+            self.referred_nodes.insert(
+                node,
+                if nodes.len() == 1 {
+                    SingleOrNodes::Single([nodes[0]])
+                } else {
+                    SingleOrNodes::Union(nodes)
+                },
+            );
         }
     }
 
-    /// Return a dummy node for maintaining tag that refers to neither vertex nor edge
-    pub fn get_dummy_nodes(&self) -> Vec<u32> {
-        vec![0xffffffff]
+    pub fn get_referred_nodes(&self, nodes: &[u32]) -> Vec<u32> {
+        if nodes.len() == 1 {
+            if let Some(referred) = self.referred_nodes.get(&nodes[0]) {
+                referred.get().to_vec()
+            } else {
+                vec![]
+            }
+        } else {
+            let mut results = BTreeSet::new();
+            for node in nodes {
+                if let Some(referred) = self.referred_nodes.get(node) {
+                    results.extend(referred.get().iter().cloned())
+                }
+            }
+            results
+                .into_iter()
+                .collect()
+        }
+    }
+
+    /// Get the metadata of given nodes. If the metadata does not exist, return `None`.
+    pub fn get_nodes_meta(&self, nodes: Vec<u32>) -> Option<NodeMetaOpt> {
+        if nodes.len() == 1 {
+            self.node_metas.get(&nodes[0])
+                .map(|meta| NodeMetaOpt::Single(meta.clone()))
+        } else if nodes.len() > 1 {
+            let mut node_metas = vec![];
+            for node in nodes {
+                if let Some(meta) = self.node_metas.get(&node) {
+                    node_metas.push(meta.clone());
+                } else {
+                    return None;
+                }
+            }
+            Some(NodeMetaOpt::Union(node_metas))
+        } else {  // empty cases
+            None
+        }
+    }
+
+    /// Get or insert the metadata of given nodes.
+    pub fn get_or_insert_nodes_meta(&mut self, nodes: Vec<u32>) -> NodeMetaOpt {
+        if nodes.len() == 1 {
+            NodeMetaOpt::Single(
+                self.node_metas
+                    .entry(nodes[0])
+                    .or_default()
+                    .clone(),
+            )
+        } else {
+            let mut node_metas = vec![];
+            for node in nodes {
+                node_metas.push(
+                    self.node_metas
+                        .entry(*node)
+                        .or_default()
+                        .clone(),
+                )
+            }
+            Ok(NodeMetaOpt::Union(node_metas))
+        }
+    }
+
+    /// Get the tag-associated nodes' metadata.
+    /// If the tag is `None`, the associated nodes are the referred nodes of current nodes.
+    /// If the metadata does not exist, create one and return the newly created.
+    /// If there is no node associated with the tag, return `TagNotExist` error.
+    pub fn tag_nodes_meta_mut(&mut self, tag_opt: Option<u32>) -> IrResult<NodeMetaOpt> {
+        if let Some(tag) = tag_opt {
+            if let Some(nodes) = self.tag_nodes.get(&tag) {
+                Ok(self.get_or_insert_nodes_meta(nodes.clone()))
+            } else {
+                Err(IrError::TagNotExist(tag.into()))
+            }
+        } else {
+            let ref_curr_nodes = self.get_referred_nodes(self.get_curr_nodes());
+            Ok(self.get_or_insert_nodes_meta(ref_curr_nodes))
+        }
+    }
+
+    /// Get current nodes' metadata. If the metadata does not exist, create one and return.
+    pub fn curr_nodes_meta_mut(&mut self) -> NodeMetaOpt {
+        self.get_or_insert_nodes_meta(self.get_curr_nodes().to_vec())
     }
 
     pub fn is_table_id(&self) -> bool {
@@ -716,10 +709,6 @@ impl PlanMeta {
 
     pub fn is_column_id(&self) -> bool {
         self.is_column_id
-    }
-
-    pub fn is_tag_id(&self) -> bool {
-        self.is_tag_id
     }
 
     pub fn is_partition(&self) -> bool {

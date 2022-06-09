@@ -367,10 +367,7 @@ impl AsPhysical for pb::Sink {
             .iter()
             .map(|(tag, id)| pb::sink::IdNameMapping {
                 id: *id as i32,
-                name: match tag {
-                    NameOrId::Str(name) => name.clone(),
-                    NameOrId::Id(id) => id.to_string(),
-                },
+                name: tag.clone(),
                 meta_type: 3,
             })
             .collect();
