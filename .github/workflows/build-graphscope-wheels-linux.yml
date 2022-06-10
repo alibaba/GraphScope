@@ -67,7 +67,8 @@ jobs:
 
     # We do this, since failures on test.pypi aren't that bad
     - name: Publish to Test PyPI
-      if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope' }}
+      # the limit of graphscope package in test.pypi is still 100MB, which is not enough.
+      if: false
       uses: pypa/gh-action-pypi-publish@v1.4.2
       with:
         user: __token__
