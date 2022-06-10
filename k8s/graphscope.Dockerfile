@@ -59,10 +59,10 @@ RUN cd /home/graphscope/gs && \
         pushd artifacts/python/dist/wheelhouse; \
         for f in * ; do python3 -m pip install --no-cache-dir $f; done || true; \
         popd; \
-        pushd artifacts/coordinator/dist/wheelhouse; \
+        pushd artifacts/coordinator/dist; \
         python3 -m pip install --no-cache-dir ./*.whl; \
         popd; \
-        pushd artifacts/coordinator/dist; \
+        pushd artifacts/coordinator/dist/wheelhouse; \
         python3 -m pip install --no-cache-dir ./*.whl; \
         popd; \
     else \

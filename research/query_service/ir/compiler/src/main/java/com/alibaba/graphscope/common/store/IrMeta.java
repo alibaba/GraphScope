@@ -19,14 +19,17 @@ package com.alibaba.graphscope.common.store;
 public class IrMeta {
     private long snapshotId;
     private String schema;
+    private boolean acquireSnapshot;
 
     public IrMeta(String schema) {
         this.schema = schema;
+        this.acquireSnapshot = false;
     }
 
     public IrMeta(String schema, long snapshotId) {
         this.schema = schema;
         this.snapshotId = snapshotId;
+        this.acquireSnapshot = true;
     }
 
     public long getSnapshotId() {
@@ -35,5 +38,9 @@ public class IrMeta {
 
     public String getSchema() {
         return schema;
+    }
+
+    public boolean isAcquireSnapshot() {
+        return acquireSnapshot;
     }
 }

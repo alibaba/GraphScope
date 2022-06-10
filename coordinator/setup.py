@@ -62,8 +62,6 @@ version = get_version(os.path.join(repo_root, "..", "VERSION"))
 
 GRAPHSCOPE_REQUIRED_PACKAGES = [
     f"gs-coordinator == {version}",
-    f"gs-jython == {version}",
-    f"gs-lib == {version}",
     f"gs-engine == {version}",
     f"gs-include == {version}",
     f"gs-apps == {version}",
@@ -81,12 +79,11 @@ def _get_extra_data():
     # into site-packages/graphscope.runtime
     #
     #  For shrink the package size less than "100M", we split graphscope into
-    #   1) gs-coordinator: include python releated code of gscoordinator
-    #   2) gs-lib: libs exclude jython-standalone/groovy/grpc/curator/hadoop/gremlin/conscrypt**.jar
-    #   3) gs-jython: other libs not included in gs-lib
-    #   4) gs-include: header files and full-openmpi
-    #   5) gs-engine: other runtime info such as 'bin', 'conf'
-    #   6) gs-apps: precompiled builtin applications
+    #   1) graphscope: libs include *.so and *.jar
+    #   2) gs-coordinator: include python releated code of gscoordinator
+    #   3) gs-include: header files and full-openmpi
+    #   4) gs-engine: other runtime info such as 'bin', 'conf'
+    #   5) gs-apps: precompiled builtin applications
 
     def __get_openmpi_prefix():
         openmpi_prefix = ""
@@ -113,42 +110,15 @@ def _get_extra_data():
     # data format:
     #   {"source_dir": "package_dir"} or
     #   {"source_dir": (package_dir, [exclude_list])}
-    if name == "gs-lib":
-        # exclude jython-standalone-**.jar
+    if name == "graphscope":
+        # lib
         data = {
-            "/opt/graphscope/lib/": (
-                os.path.join(RUNTIME_ROOT, "lib"),
-                # exclude lists
-                [
-                    "jython-standalone",
-                    "groovy",
-                    "grpc",
-                    "curator",
-                    "hadoop",
-                    "gremlin",
-                    "conscrypt",
-                    "bcprov",
-                    "maxgraph",
-                ],
-            ),
+            "/opt/graphscope/lib/": os.path.join(RUNTIME_ROOT, "lib"),
             "/usr/local/lib/libvineyard_internal_registry.{0}".format(
                 get_lib_suffix()
             ): os.path.join(RUNTIME_ROOT, "lib"),
         }
-    elif name == "gs-jython":
-        data = {
-            "/opt/graphscope/lib/jython-standalone*.jar": os.path.join(
-                RUNTIME_ROOT, "lib"
-            ),
-            "/opt/graphscope/lib/*groovy*.jar": os.path.join(RUNTIME_ROOT, "lib"),
-            "/opt/graphscope/lib/*grpc*.jar": os.path.join(RUNTIME_ROOT, "lib"),
-            "/opt/graphscope/lib/*curator*.jar": os.path.join(RUNTIME_ROOT, "lib"),
-            "/opt/graphscope/lib/*hadoop*.jar": os.path.join(RUNTIME_ROOT, "lib"),
-            "/opt/graphscope/lib/*gremlin*.jar": os.path.join(RUNTIME_ROOT, "lib"),
-            "/opt/graphscope/lib/*conscrypt*.jar": os.path.join(RUNTIME_ROOT, "lib"),
-            "/opt/graphscope/lib/*bcprov*.jar": os.path.join(RUNTIME_ROOT, "lib"),
-            "/opt/graphscope/lib/*maxgraph*.jar": os.path.join(RUNTIME_ROOT, "lib"),
-        }
+
     elif name == "gs-engine":
         data = {
             "/opt/graphscope/bin/": os.path.join(RUNTIME_ROOT, "bin"),

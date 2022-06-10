@@ -20,7 +20,7 @@ crc = "1.8.1"
 rust-ini = "0.13"
 libc = "0.2"
 log4rs = "0.8.0"
-grpcio = "=0.4.1"
+grpcio = "0.4.1"
 grpcio-sys = { version = "0.4.7", features = ["openssl-vendored"] }
 rand = "0.8.4"
 # deactivation of bzip2 due to https://github.com/rust-rocksdb/rust-rocksdb/issues/609

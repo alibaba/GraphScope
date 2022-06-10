@@ -30,7 +30,7 @@ else
 endif
 
 VERSION ?= latest
-VINEYARD_VERSION ?= v0.4.1
+VINEYARD_VERSION ?= v0.5.0
 PROFILE ?= release
 
 
@@ -112,15 +112,11 @@ graphscope-darwin-py3:
 		sudo strip /opt/graphscope/bin/executor && \
 		sudo strip /opt/graphscope/bin/gaia_executor && \
 		export DYLD_LIBRARY_PATH=/usr/local/lib:$$DYLD_LIBRARY_PATH && \
-		package_name=gs-lib python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
-		rm -fr build && \
 		package_name=gs-include python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
 		rm -fr build && \
 		package_name=gs-apps python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
 		rm -fr build && \
 		package_name=gs-engine python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
-		rm -fr build && \
-		package_name=gs-jython python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
 		rm -fr build && \
 		package_name=gs-coordinator python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
 		rm -fr build && \
@@ -143,15 +139,11 @@ graphscope-manylinux2014-py3-nodocker:
 	sudo strip /opt/graphscope/bin/gaia_executor && \
 	sudo strip /opt/graphscope/lib/*.so && \
 	strip /tmp/gs/builtin/*/*.so && \
-	package_name=gs-lib python3 setup.py bdist_wheel && \
-	rm -fr build && \
 	package_name=gs-include python3 setup.py bdist_wheel && \
 	rm -fr build && \
 	package_name=gs-apps python3 setup.py bdist_wheel && \
 	rm -fr build && \
 	package_name=gs-engine python3 setup.py bdist_wheel && \
-	rm -fr build && \
-	package_name=gs-jython python3 setup.py bdist_wheel && \
 	rm -fr build && \
 	package_name=gs-coordinator python3 setup.py bdist_wheel && \
 	rm -fr build && \
