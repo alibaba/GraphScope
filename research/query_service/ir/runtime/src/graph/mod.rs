@@ -32,6 +32,7 @@ use ir_common::NameOrId;
 use pegasus::api::function::{DynIter, FnResult};
 use pegasus::codec::{ReadExt, WriteExt};
 pub use property::DefaultDetails;
+pub use vineyard_writer::VineyardGraphWriter;
 
 use crate::expr::eval_pred::PEvaluator;
 use crate::graph::element::{Edge, Vertex};

@@ -1,24 +1,9 @@
-//
-//! Copyright 2020 Alibaba Group Holding Limited.
-//!
-//! Licensed under the Apache License, Version 2.0 (the "License");
-//! you may not use this file except in compliance with the License.
-//! You may obtain a copy of the License at
-//!
-//!     http://www.apache.org/licenses/LICENSE-2.0
-//!
-//! Unless required by applicable law or agreed to in writing, software
-//! distributed under the License is distributed on an "AS IS" BASIS,
-//! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//! See the License for the specific language governing permissions and
-//! limitations under the License.
-
 use std::ffi::{CStr, CString};
 use std::sync::Arc;
 
+use dyn_type::object::Primitives;
 use dyn_type::object::RawType;
 use dyn_type::Object;
-use dyn_type::object::Primitives;
 
 // TODO: a preclude type define in ir-runtime
 type KeyId = i32;
@@ -222,7 +207,7 @@ extern "C" {
 }
 
 impl NativeProperty {
-    fn default() -> Self {
+    pub fn default() -> Self {
         NativeProperty { id: 0, r#type: PropertyType::Int, data: std::ptr::null(), len: 0 }
     }
 
@@ -289,7 +274,9 @@ impl NativeProperty {
                 if res == STATE_SUCCESS {
                     let s = unsafe {
                         let buf = std::slice::from_raw_parts(v, len as usize);
-                        std::str::from_utf8(buf).ok().map(|s| s.to_owned())
+                        std::str::from_utf8(buf)
+                            .ok()
+                            .map(|s| s.to_owned())
                     };
                     return s.map(|s| Object::String(s));
                 }
@@ -357,7 +344,7 @@ union PropertyUnion {
 }
 
 impl WriteNativeProperty {
-    fn default() -> Self {
+    pub fn default() -> Self {
         WriteNativeProperty { id: 0, r#type: PropertyType::Int, data: std::ptr::null(), len: 0 }
     }
 

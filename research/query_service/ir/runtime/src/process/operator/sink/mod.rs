@@ -12,20 +12,19 @@
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
-mod graph_writer;
 mod sink;
+mod sink_vineyard;
 
-pub use graph_writer::GraphWriter;
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 
 use crate::error::FnGenResult;
-use crate::process::operator::sink::graph_writer::SinkVineyardOp;
 use crate::process::operator::sink::sink::{DefaultSinkOp, RecordSinkEncoder};
+use crate::process::operator::sink::sink_vineyard::{SinkVineyardOp, VineyardSinker};
 
 pub enum Sinker {
     DefaultSinker(RecordSinkEncoder),
-    GraphSinker(GraphWriter),
+    GraphSinker(VineyardSinker),
 }
 
 pub trait SinkGen {

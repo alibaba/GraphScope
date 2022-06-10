@@ -31,12 +31,12 @@ use crate::process::operator::sink::{SinkGen, Sinker};
 use crate::process::record::Record;
 
 #[derive(Clone, Debug)]
-pub struct GraphWriter {
+pub struct VineyardSinker {
     graph_writer: TestGraph,
     sink_keys: Vec<Option<KeyId>>,
 }
 
-impl Accumulator<Record, Record> for GraphWriter {
+impl Accumulator<Record, Record> for VineyardSinker {
     fn accum(&mut self, mut next: Record) -> FnExecResult<()> {
         for sink_key in &self.sink_keys {
             let entry = next
@@ -84,7 +84,7 @@ impl SinkGen for SinkVineyardOp {
 
         if let Some(_graph_schema) = self.graph_schema {
             // TODO: replace by VineyardGraph
-            let graph_writer = GraphWriter { graph_writer: TestGraph::default(), sink_keys };
+            let graph_writer = VineyardSinker { graph_writer: TestGraph::default(), sink_keys };
             debug!("Runtime sink graph operator: {:?}", graph_writer);
             Ok(Sinker::GraphSinker(graph_writer))
         } else {
@@ -184,8 +184,8 @@ mod tests {
     use crate::graph::property::DynDetails;
     use crate::graph::DefaultDetails;
     use crate::process::operator::accum::accumulator::Accumulator;
-    use crate::process::operator::sink::graph_writer::TestGraph;
-    use crate::process::operator::sink::GraphWriter;
+    use crate::process::operator::sink::sink_vineyard::TestGraph;
+    use crate::process::operator::sink::VineyardSinker;
     use crate::process::operator::tests::{init_source, init_vertex1, init_vertex2};
     use crate::process::record::Record;
 
@@ -205,7 +205,7 @@ mod tests {
         Edge::new(21, Some(1.into()), 2, 1, DynDetails::new(DefaultDetails::new(map2)))
     }
 
-    fn graph_writer_test(source: Vec<Record>, graph_writer: GraphWriter) -> ResultStream<Record> {
+    fn graph_writer_test(source: Vec<Record>, graph_writer: VineyardSinker) -> ResultStream<Record> {
         let conf = JobConf::new("subgraph_write_test");
         let result = pegasus::run(conf, || {
             let source = source.clone();
@@ -233,7 +233,7 @@ mod tests {
     fn write_vertex_test() {
         let source = init_source();
         let test_graph = TestGraph::default();
-        let test_graph_writer = GraphWriter { graph_writer: test_graph.clone(), sink_keys: vec![None] };
+        let test_graph_writer = VineyardSinker { graph_writer: test_graph.clone(), sink_keys: vec![None] };
         let mut result_stream = graph_writer_test(source, test_graph_writer);
 
         let mut expected_vertices = vec![init_vertex1(), init_vertex2()];
@@ -255,7 +255,7 @@ mod tests {
         let r2 = Record::new(init_edge2(), None);
         let source = vec![r1, r2];
         let test_graph = TestGraph::default();
-        let test_graph_writer = GraphWriter { graph_writer: test_graph.clone(), sink_keys: vec![None] };
+        let test_graph_writer = VineyardSinker { graph_writer: test_graph.clone(), sink_keys: vec![None] };
 
         let mut result_stream = graph_writer_test(source, test_graph_writer);
 
@@ -280,7 +280,7 @@ mod tests {
         let r4 = Record::new(init_edge2(), None);
         let source = vec![r1, r2, r3, r4];
         let test_graph = TestGraph::default();
-        let test_graph_writer = GraphWriter { graph_writer: test_graph.clone(), sink_keys: vec![None] };
+        let test_graph_writer = VineyardSinker { graph_writer: test_graph.clone(), sink_keys: vec![None] };
         let mut result_stream = graph_writer_test(source, test_graph_writer);
 
         let mut expected_vertices = vec![init_vertex1(), init_vertex2()];
