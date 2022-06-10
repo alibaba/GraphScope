@@ -188,7 +188,7 @@ impl TryFrom<pb::pattern::Sentence> for BaseSentence {
 
 impl MatchingStrategy for BaseSentence {
     fn build_logical_plan(&self) -> IrResult<pb::LogicalPlan> {
-        let mut plan = pb::LogicalPlan { nodes: vec![] };
+        let mut plan = pb::LogicalPlan { nodes: vec![], roots: vec![0] };
         let size = self.operators.len();
         if size == 0 {
             Err(IrError::InvalidPattern("empty sentence".to_string()))
@@ -591,18 +591,33 @@ pub struct CompoSentence {
     tags: BTreeSet<NameOrId>,
 }
 
-/// To obtain the nodes in `plan` that has no parent
-fn get_first_nodes(plan: &pb::LogicalPlan) -> IrResult<BTreeSet<u32>> {
-    let mut nodes: BTreeSet<u32> = (0..plan.nodes.len() as u32).collect();
-    for node in &plan.nodes {
-        for child in &node.children {
-            nodes.remove(&(*child as u32));
+/// Preprocess a plan such that it does not contain two root nodes. More speciically,
+/// we will add a common `As(None)` operator as the parent of the two original roots
+/// in the plan, which becomes the new and only root node of the plan
+fn preprocess_plan(plan: &mut pb::LogicalPlan) -> IrResult<()> {
+    if plan.roots.len() == 1 {
+        Ok(())
+    } else if plan.roots.len() == 2 {
+        let new_root = pb::logical_plan::Node {
+            opr: Some(pb::As { alias: None }.into()),
+            children: plan.roots.iter().map(|id| *id + 1).collect(),
+        };
+        let mut i = plan.nodes.len();
+        plan.nodes.push(plan.nodes[i - 1].clone());
+
+        while i > 0 {
+            for child in plan.nodes[i - 1].children.iter_mut() {
+                *child += 1;
+            }
+            plan.nodes.swap(i - 1, i);
+            i -= 1;
         }
-    }
-    if nodes.is_empty() {
-        Err(IrError::InvalidPattern(format!("fail to obtain first nodes from plan {:?}", plan)))
+        plan.nodes[0] = new_root;
+        plan.roots = vec![0];
+
+        Ok(())
     } else {
-        Ok(nodes)
+        Err(IrError::InvalidPattern(format!("a plan cannot contain more than two roots ")))
     }
 }
 
@@ -638,13 +653,13 @@ impl MatchingStrategy for CompoSentence {
                 plan.nodes.push(project_node);
             }
             let tail_plan = tail.build_logical_plan()?;
-            let tail_first_nodes: BTreeSet<u32> = get_first_nodes(&tail_plan)?;
             // set the first nodes in tail plan as the children of last node of head plan.
             if let Some(n) = plan.nodes.get_mut(last_node as usize) {
                 n.children.extend(
-                    tail_first_nodes
-                        .into_iter()
-                        .map(|id| (id + last_node + 1) as i32),
+                    tail_plan
+                        .roots
+                        .iter()
+                        .map(|id| (*id + last_node as i32 + 1)),
                 );
             }
             // push the nodes in tail_plan into the resulted plan
@@ -800,6 +815,10 @@ impl MatchingStrategy for JoinSentence {
             right_plan_opt = Some(right.build_logical_plan()?);
         }
         if let Some(mut right_plan) = right_plan_opt {
+            // must be preprocessed to only one single root
+            preprocess_plan(&mut plan)?;
+            // must be preprocessed to only one single root
+            preprocess_plan(&mut right_plan)?;
             let left_size = plan.nodes.len();
             let right_size = right_plan.nodes.len();
             let join_node_idx = (left_size + right_size) as i32;
@@ -815,6 +834,9 @@ impl MatchingStrategy for JoinSentence {
             if let Some(node) = plan.nodes.last_mut() {
                 node.children.push(join_node_idx);
             }
+
+            plan.roots
+                .push(left_size as i32 + right_plan.roots[0]);
             plan.nodes.extend(right_plan.nodes.into_iter());
             let keys = self
                 .common_tags
@@ -945,8 +967,8 @@ impl From<Vec<BaseSentence>> for NaiveStrategy {
     }
 }
 
-// TODO(longbin) For now, the either the `start` tag or `end` tag of each sentence in
-// TODO(longbin) `pb::Pattern` does not exist outside of the match operator.
+// TODO(longbin) For now, neither the `start` tag nor `end` tag of each sentence in
+// TODO(longbin) `pb::Pattern` can exist outside of the match operator.
 impl TryFrom<pb::Pattern> for NaiveStrategy {
     type Error = ParsePbError;
 
@@ -1467,8 +1489,9 @@ mod test {
         let plan = strategy.build_logical_plan().unwrap();
         println!("{:#?}", plan.nodes);
 
+        assert_eq!(plan.nodes.first().unwrap().opr.clone().unwrap(), pb::As { alias: None }.into());
         assert_eq!(
-            plan.nodes.get(5).unwrap().opr.clone().unwrap(),
+            plan.nodes.get(6).unwrap().opr.clone().unwrap(),
             pb::EdgeExpand {
                 v_tag: None,
                 direction: 1, // check this has been reversed from 0 to 1
@@ -1478,10 +1501,10 @@ mod test {
             }
             .into()
         );
-        assert_eq!(plan.nodes.get(6).unwrap().children, vec![10]);
-        assert_eq!(plan.nodes.get(9).unwrap().children, vec![10]);
+        assert_eq!(plan.nodes.get(7).unwrap().children, vec![11]);
+        assert_eq!(plan.nodes.get(10).unwrap().children, vec![11]);
         assert_eq!(
-            plan.nodes.get(10).unwrap().opr.clone().unwrap(),
+            plan.nodes.get(11).unwrap().opr.clone().unwrap(),
             pb::Join {
                 left_keys: vec![
                     common_pb::Variable { tag: Some("a".into()), property: None },
@@ -1495,8 +1518,8 @@ mod test {
             }
             .into()
         );
-        assert_eq!(plan.nodes.get(10).unwrap().children, vec![14]);
-        assert_eq!(plan.nodes.get(13).unwrap().children, vec![14]);
+        assert_eq!(plan.nodes.get(11).unwrap().children, vec![15]);
+        assert_eq!(plan.nodes.get(14).unwrap().children, vec![15]);
         assert_eq!(
             plan.nodes.last().unwrap().opr.clone().unwrap(),
             pb::Join {
@@ -1533,10 +1556,10 @@ mod test {
         let plan = strategy.build_logical_plan().unwrap();
         println!("{:#?}", plan.nodes);
 
-        assert_eq!(plan.nodes.get(4).unwrap().children, vec![10]);
-        assert_eq!(plan.nodes.get(9).unwrap().children, vec![10]);
+        assert_eq!(plan.nodes.get(5).unwrap().children, vec![11]);
+        assert_eq!(plan.nodes.get(10).unwrap().children, vec![11]);
         assert_eq!(
-            plan.nodes.get(10).unwrap().opr.clone().unwrap(),
+            plan.nodes.get(11).unwrap().opr.clone().unwrap(),
             pb::Join {
                 left_keys: vec![
                     common_pb::Variable { tag: Some("a".into()), property: None },
@@ -1550,8 +1573,8 @@ mod test {
             }
             .into()
         );
-        assert_eq!(plan.nodes.get(10).unwrap().children, vec![14]);
-        assert_eq!(plan.nodes.get(13).unwrap().children, vec![14]);
+        assert_eq!(plan.nodes.get(11).unwrap().children, vec![15]);
+        assert_eq!(plan.nodes.get(14).unwrap().children, vec![15]);
         assert_eq!(
             plan.nodes.last().unwrap().opr.clone().unwrap(),
             pb::Join {
@@ -1611,6 +1634,8 @@ mod test {
         //    As(a), Out(), As(b) (id = 5),
         // )
         let plan = strategy.build_logical_plan().unwrap();
+        println!("{:#?}", plan.nodes);
+
         assert_eq!(plan.nodes.len(), 7);
         assert_eq!(plan.nodes.get(2).unwrap().children, vec![6]);
         assert_eq!(plan.nodes.get(5).unwrap().children, vec![6]);
@@ -1657,6 +1682,49 @@ mod test {
                     common_pb::Variable { tag: Some("a".into()), property: None },
                     common_pb::Variable { tag: Some("c".into()), property: None },
                 ],
+                kind: 0 // inner join
+            }
+            .into()
+        );
+    }
+
+    #[test]
+    fn pattern_case7_into_logical_plan() {
+        let strategy = NaiveStrategy::from(vec![
+            gen_sentence_x_out_y("a", Some("b"), false, false),
+            gen_sentence_x_out_y("a", Some("c"), false, false),
+            gen_sentence_x_out_y("a", Some("d"), false, false),
+        ]);
+        // Join (id = 11) (
+        //      Join (id = 7) (
+        //          As(), As(a), Out(), As(b) (id = 3),
+        //                As(a), Out(), As(c) (id = 6),
+        //      ),
+        //      As(a), Out(), As(d) (id = 10)
+        //)
+        let plan = strategy.build_logical_plan().unwrap();
+        assert_eq!(plan.nodes.len(), 12);
+        assert_eq!(plan.nodes.first().unwrap().opr.clone().unwrap(), pb::As { alias: None }.into());
+
+        assert_eq!(plan.nodes.get(3).unwrap().children, vec![7]);
+        assert_eq!(plan.nodes.get(6).unwrap().children, vec![7]);
+        assert_eq!(
+            plan.nodes.get(7).unwrap().opr.clone().unwrap(),
+            pb::Join {
+                left_keys: vec![common_pb::Variable { tag: Some("a".into()), property: None },],
+                right_keys: vec![common_pb::Variable { tag: Some("a".into()), property: None },],
+                kind: 0 // inner join
+            }
+            .into()
+        );
+
+        assert_eq!(plan.nodes.get(7).unwrap().children, vec![11]);
+        assert_eq!(plan.nodes.get(10).unwrap().children, vec![11]);
+        assert_eq!(
+            plan.nodes.get(11).unwrap().opr.clone().unwrap(),
+            pb::Join {
+                left_keys: vec![common_pb::Variable { tag: Some("a".into()), property: None },],
+                right_keys: vec![common_pb::Variable { tag: Some("a".into()), property: None },],
                 kind: 0 // inner join
             }
             .into()

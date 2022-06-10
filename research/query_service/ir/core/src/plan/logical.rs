@@ -158,11 +158,15 @@ impl TryFrom<pb::LogicalPlan> for LogicalPlan {
 impl From<LogicalPlan> for pb::LogicalPlan {
     fn from(plan: LogicalPlan) -> Self {
         let mut id_map: HashMap<u32, i32> = HashMap::with_capacity(plan.len());
+        let mut roots = vec![];
         // As there might be some nodes being removed, we gonna remap the nodes' ids
-        for (id, node) in plan.nodes.iter().enumerate() {
-            id_map.insert(node.0 as u32, id as i32);
+        for (new_id, (old_id, node)) in plan.nodes.iter().enumerate() {
+            id_map.insert(old_id as u32, new_id as i32);
+            if node.borrow().parents.is_empty() {
+                roots.push(new_id as i32);
+            }
         }
-        let mut plan_pb = pb::LogicalPlan { nodes: vec![] };
+        let mut plan_pb = pb::LogicalPlan { nodes: vec![], roots };
         for (_, node) in &plan.nodes {
             let mut node_pb = pb::logical_plan::Node { opr: None, children: vec![] };
             let mut operator = node.borrow().opr.clone();
@@ -1432,7 +1436,7 @@ mod test {
         let root_pb = pb::logical_plan::Node { opr: Some(opr.clone()), children: vec![1, 2] };
         let node1_pb = pb::logical_plan::Node { opr: Some(opr.clone()), children: vec![2] };
         let node2_pb = pb::logical_plan::Node { opr: Some(opr.clone()), children: vec![] };
-        let plan_pb = pb::LogicalPlan { nodes: vec![root_pb, node1_pb, node2_pb] };
+        let plan_pb = pb::LogicalPlan { nodes: vec![root_pb, node1_pb, node2_pb], roots: vec![0] };
 
         let plan = LogicalPlan::try_from(plan_pb).unwrap();
         assert_eq!(plan.len(), 3);

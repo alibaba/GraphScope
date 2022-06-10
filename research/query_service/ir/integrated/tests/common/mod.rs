@@ -45,6 +45,7 @@ pub mod test {
     pub const TAG_A: KeyId = 0;
     pub const TAG_B: KeyId = 1;
     pub const TAG_C: KeyId = 2;
+    pub const TAG_D: KeyId = 3;
 
     static INIT: Once = Once::new();
 

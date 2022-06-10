@@ -53,6 +53,11 @@ fn codegen_inplace() -> Result<(), Box<dyn std::error::Error>> {
 
 #[cfg(not(feature = "proto_inplace"))]
 fn codegen_inplace() -> Result<(), Box<dyn std::error::Error>> {
+    println!("cargo:rerun-if-changed=../proto/common.proto");
+    println!("cargo:rerun-if-changed=../proto/expr.proto");
+    println!("cargo:rerun-if-changed=../proto/algebra.proto");
+    println!("cargo:rerun-if-changed=../proto/schema.proto");
+    println!("cargo:rerun-if-changed=../proto/results.proto");
     prost_build::Config::new()
         .type_attribute(".", "#[derive(Serialize,Deserialize)]")
         .compile_protos(

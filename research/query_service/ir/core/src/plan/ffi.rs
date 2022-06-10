@@ -1012,9 +1012,7 @@ mod params {
         if val.is_err() {
             return val.err().unwrap();
         }
-        params
-            .extra
-            .insert(key.unwrap(), val.unwrap());
+        params.extra.insert(key.unwrap(), val.unwrap());
         std::mem::forget(params);
 
         FfiError::success()
