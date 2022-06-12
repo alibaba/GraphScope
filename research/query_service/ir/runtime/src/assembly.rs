@@ -15,6 +15,7 @@
 
 use std::sync::Arc;
 
+use graph_proxy::api::partitioner::Partitioner;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::algebra::join::JoinKind;
 use ir_common::generated::common as common_pb;
@@ -31,7 +32,6 @@ use pegasus_server::job_pb as server_pb;
 use prost::Message;
 
 use crate::error::{FnExecError, FnGenResult};
-use crate::graph::partitioner::Partitioner;
 use crate::process::functions::{ApplyGen, CompareFunction, FoldGen, GroupGen, JoinKeyGen, KeyFunction};
 use crate::process::operator::accum::accumulator::Accumulator;
 use crate::process::operator::filter::FilterFuncGen;

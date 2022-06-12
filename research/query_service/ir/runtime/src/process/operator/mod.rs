@@ -30,14 +30,13 @@ use std::convert::TryFrom;
 use std::sync::Arc;
 
 use dyn_type::Object;
+use graph_proxy::api::graph::element::{Details, Element, GraphElement, PropKey};
 use ir_common::error::ParsePbError;
 use ir_common::generated::common as common_pb;
 use ir_common::{KeyId, NameOrId};
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 
 use crate::error::FnExecError;
-use crate::graph::element::{Element, GraphElement};
-use crate::graph::property::{Details, PropKey};
 use crate::process::record::{CommonObject, Entry, Record, RecordElement};
 
 #[derive(Clone, Debug, Default)]

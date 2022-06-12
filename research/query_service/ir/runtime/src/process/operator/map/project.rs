@@ -17,6 +17,7 @@ use std::convert::{TryFrom, TryInto};
 use std::sync::Arc;
 
 use dyn_type::Object;
+use graph_proxy::utils::expr::eval::{Evaluate, Evaluator};
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::common as common_pb;
@@ -24,7 +25,6 @@ use ir_common::KeyId;
 use pegasus::api::function::{FnResult, MapFunction};
 
 use crate::error::{FnExecError, FnGenResult};
-use crate::expr::eval::{Evaluate, Evaluator};
 use crate::process::operator::map::MapFuncGen;
 use crate::process::operator::TagKey;
 use crate::process::record::{CommonObject, Entry, Record, RecordElement};

@@ -15,14 +15,13 @@
 
 use std::convert::TryInto;
 
+use graph_proxy::api::graph::element::{DefaultDetails, DynDetails, Vertex};
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::algebra::get_v::VOpt;
 use ir_common::KeyId;
 use pegasus::api::function::{FnResult, MapFunction};
 
 use crate::error::{FnExecError, FnGenResult};
-use crate::graph::element::Vertex;
-use crate::graph::property::{DefaultDetails, DynDetails};
 use crate::process::operator::map::MapFuncGen;
 use crate::process::record::Record;
 

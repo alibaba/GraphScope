@@ -15,12 +15,12 @@
 
 use std::convert::TryInto;
 
+use graph_proxy::utils::expr::eval_pred::{EvalPred, PEvaluator};
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use pegasus::api::function::{FilterFunction, FnResult};
 
 use crate::error::{FnExecError, FnGenResult};
-use crate::expr::eval_pred::{EvalPred, PEvaluator};
 use crate::process::operator::filter::FilterFuncGen;
 use crate::process::record::Record;
 

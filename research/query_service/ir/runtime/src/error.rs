@@ -13,12 +13,12 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use graph_proxy::utils::expr::ExprEvalError;
+use graph_proxy::GraphProxyError;
 use ir_common::error::ParsePbError;
 use pegasus::api::function::DynError;
 use pegasus::BuildJobError;
 use prost::DecodeError;
-
-use crate::expr::ExprEvalError;
 
 pub type FnGenResult<T> = Result<T, FnGenError>;
 
@@ -32,7 +32,7 @@ pub enum FnGenError {
     /// Null storage error
     NullGraphError,
     /// Query storage error
-    QueryStoreError(DynError),
+    StoreError(GraphProxyError),
     /// Not supported error
     UnSupported(String),
 }
@@ -49,7 +49,7 @@ impl std::fmt::Display for FnGenError {
             FnGenError::DecodeOpError(e) => write!(f, "Decode pb error in fn gen {}", e),
             FnGenError::ParseError(e) => write!(f, "Parse pb error in fn gen {}", e),
             FnGenError::NullGraphError => write!(f, "Null graph store error in fn gen",),
-            FnGenError::QueryStoreError(e) => write!(f, "Query store error in fn gen {}", e),
+            FnGenError::StoreError(e) => write!(f, "Query store error in fn gen {}", e),
             FnGenError::UnSupported(e) => write!(f, "Op not supported error in fn gen  {}", e),
         }
     }
@@ -69,9 +69,9 @@ impl From<DecodeError> for FnGenError {
     }
 }
 
-impl From<DynError> for FnGenError {
-    fn from(e: DynError) -> Self {
-        FnGenError::QueryStoreError(e)
+impl From<GraphProxyError> for FnGenError {
+    fn from(e: GraphProxyError) -> Self {
+        FnGenError::StoreError(e)
     }
 }
 
@@ -90,7 +90,10 @@ impl From<FnGenError> for BuildJobError {
                 let err: Box<dyn std::error::Error + Send + Sync> = "Null graph error".into();
                 BuildJobError::UserError(err)
             }
-            FnGenError::QueryStoreError(e) => BuildJobError::UserError(e),
+            FnGenError::StoreError(e) => {
+                let err: Box<dyn std::error::Error + Send + Sync> = e.into();
+                BuildJobError::UserError(err)
+            }
             FnGenError::UnSupported(e) => {
                 let err: Box<dyn std::error::Error + Send + Sync> = e.into();
                 BuildJobError::UserError(err)
@@ -107,7 +110,7 @@ pub enum FnExecError {
     /// Null storage error
     NullGraphError,
     /// Query storage error
-    QueryStoreError(String),
+    StoreError(GraphProxyError),
     /// Keyed error
     GetTagError(String),
     /// Evaluating expressions error
@@ -121,10 +124,6 @@ pub enum FnExecError {
 }
 
 impl FnExecError {
-    pub fn query_store_error(e: &str) -> Self {
-        FnExecError::QueryStoreError(e.to_string())
-    }
-
     pub fn get_tag_error(e: &str) -> Self {
         FnExecError::GetTagError(e.to_string())
     }
@@ -146,7 +145,7 @@ impl std::fmt::Display for FnExecError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             FnExecError::NullGraphError => write!(f, "Null graph store error in fn exec",),
-            FnExecError::QueryStoreError(e) => write!(f, "Query store error in exec {}", e),
+            FnExecError::StoreError(e) => write!(f, "Query store error in exec {}", e),
             FnExecError::GetTagError(e) => write!(f, "Get tag error in exec {}", e),
             FnExecError::ExprEvalError(e) => write!(f, "Eval expression error in exec {}", e),
             FnExecError::UnExpectedData(e) => write!(f, "Unexpected data type in exec {}", e),
@@ -164,6 +163,12 @@ impl From<ExprEvalError> for FnExecError {
     }
 }
 
+impl From<GraphProxyError> for FnExecError {
+    fn from(e: GraphProxyError) -> Self {
+        FnExecError::StoreError(e)
+    }
+}
+
 impl From<FnExecError> for DynError {
     fn from(e: FnExecError) -> Self {
         match e {
@@ -171,10 +176,7 @@ impl From<FnExecError> for DynError {
                 let err: Box<dyn std::error::Error + Send + Sync> = "Null graph error".into();
                 err
             }
-            FnExecError::QueryStoreError(e) => {
-                let err: Box<dyn std::error::Error + Send + Sync> = e.into();
-                err
-            }
+            FnExecError::StoreError(e) => e.into(),
             FnExecError::GetTagError(e) => {
                 let err: Box<dyn std::error::Error + Send + Sync> = e.into();
                 err
