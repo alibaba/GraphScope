@@ -21,6 +21,7 @@ mod common;
 mod test {
     use std::sync::Arc;
 
+    use graph_proxy::api::graph::element::{Details, Element, GraphElement};
     use graph_proxy::{create_demo_graph, SimplePartition};
     use ir_common::expr_parse::str_to_expr_pb;
     use ir_common::generated::algebra as pb;
@@ -28,8 +29,6 @@ mod test {
     use ir_common::NameOrId;
     use pegasus::api::{Map, Sink};
     use pegasus::JobConf;
-    use runtime::graph::element::{Element, GraphElement};
-    use runtime::graph::property::Details;
     use runtime::process::operator::flatmap::FlatMapFuncGen;
     use runtime::process::operator::map::FilterMapFuncGen;
     use runtime::process::operator::source::SourceOperator;

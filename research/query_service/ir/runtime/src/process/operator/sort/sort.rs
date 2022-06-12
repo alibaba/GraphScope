@@ -84,6 +84,9 @@ mod tests {
     use std::collections::HashMap;
 
     use dyn_type::Object;
+    use graph_proxy::api::graph::element::{
+        DefaultDetails, Details, DynDetails, Element, GraphElement, Vertex,
+    };
     use ir_common::generated::algebra as pb;
     use ir_common::generated::common as common_pb;
     use ir_common::NameOrId;
@@ -91,8 +94,6 @@ mod tests {
     use pegasus::result::ResultStream;
     use pegasus::JobConf;
 
-    use crate::graph::element::{Element, GraphElement, Vertex};
-    use crate::graph::property::{DefaultDetails, Details, DynDetails};
     use crate::process::operator::sort::CompareFunctionGen;
     use crate::process::operator::tests::{init_source, init_source_with_tag, to_var_pb, TAG_A};
     use crate::process::record::Record;

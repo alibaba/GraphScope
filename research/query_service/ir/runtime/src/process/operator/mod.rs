@@ -207,11 +207,10 @@ pub(crate) mod tests {
     use std::collections::HashMap;
 
     use dyn_type::Object;
+    use graph_proxy::api::graph::element::{DefaultDetails, DynDetails, GraphElement, Vertex};
     use ir_common::KeyId;
 
     use super::*;
-    use crate::graph::element::{GraphElement, Vertex};
-    use crate::graph::property::{DefaultDetails, DynDetails};
     use crate::process::record::RecordElement;
 
     pub const TAG_A: KeyId = 0;

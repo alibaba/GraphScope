@@ -19,6 +19,7 @@ mod common;
 
 #[cfg(test)]
 mod test {
+    use graph_proxy::api::graph::element::GraphElement;
     use ir_common::expr_parse::str_to_expr_pb;
     use ir_common::generated::algebra as pb;
     use ir_common::generated::common as common_pb;
@@ -26,7 +27,6 @@ mod test {
     use ir_core::plan::physical::AsPhysical;
     use pegasus_client::builder::JobBuilder;
     use pegasus_server::JobRequest;
-    use runtime::graph::element::GraphElement;
 
     use crate::common::test::{
         initialize, parse_result, query_params, submit_query, TAG_A, TAG_B, TAG_C, TAG_D,

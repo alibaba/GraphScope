@@ -21,6 +21,7 @@ mod common;
 mod test {
     use std::sync::Arc;
 
+    use graph_proxy::api::graph::element::{Details, Element, GraphElement};
     use graph_proxy::{create_demo_graph, SimplePartition};
     use graph_store::ldbc::LDBCVertexParser;
     use graph_store::prelude::DefaultId;
@@ -30,8 +31,6 @@ mod test {
     use pegasus::api::{Map, Sink};
     use pegasus::result::ResultStream;
     use pegasus::JobConf;
-    use runtime::graph::element::{Element, GraphElement};
-    use runtime::graph::property::Details;
     use runtime::process::operator::flatmap::FlatMapFuncGen;
     use runtime::process::operator::map::MapFuncGen;
     use runtime::process::operator::source::SourceOperator;

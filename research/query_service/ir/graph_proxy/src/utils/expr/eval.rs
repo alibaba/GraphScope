@@ -544,8 +544,7 @@ mod tests {
     use ir_common::expr_parse::str_to_expr_pb;
 
     use super::*;
-    use crate::graph::element::Vertex;
-    use crate::graph::property::{DefaultDetails, DynDetails};
+    use crate::api::graph::element::{DefaultDetails, DynDetails, Vertex};
 
     struct Vertices {
         vec: Vec<Vertex>,

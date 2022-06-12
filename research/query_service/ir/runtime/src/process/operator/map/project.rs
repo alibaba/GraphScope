@@ -142,6 +142,7 @@ mod tests {
     use std::collections::HashMap;
 
     use dyn_type::Object;
+    use graph_proxy::api::graph::element::{DefaultDetails, DynDetails, GraphElement, Vertex};
     use ir_common::expr_parse::str_to_expr_pb;
     use ir_common::generated::algebra as pb;
     use ir_common::NameOrId;
@@ -149,8 +150,6 @@ mod tests {
     use pegasus::result::ResultStream;
     use pegasus::JobConf;
 
-    use crate::graph::element::{GraphElement, Vertex};
-    use crate::graph::property::{DefaultDetails, DynDetails};
     use crate::process::operator::map::MapFuncGen;
     use crate::process::operator::tests::{
         init_source, init_source_with_multi_tags, init_source_with_tag, init_vertex1, init_vertex2,

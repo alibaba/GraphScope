@@ -525,14 +525,14 @@ impl TryFrom<pb::IndexPredicate> for PEvaluator {
 mod tests {
     use std::collections::HashMap;
 
+    use dyn_type::object;
     use dyn_type::Object;
     use ir_common::expr_parse::str_to_expr_pb;
     use ir_common::NameOrId;
 
     use super::*;
-    use crate::expr::eval::NoneContext;
-    use crate::graph::element::Vertex;
-    use crate::graph::property::{DefaultDetails, DynDetails};
+    use crate::api::graph::element::{DefaultDetails, DynDetails, Vertex};
+    use crate::utils::expr::eval::NoneContext;
 
     struct Vertices {
         vec: Vec<Vertex>,
