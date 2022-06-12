@@ -19,16 +19,16 @@ use std::collections::BTreeMap;
 use std::convert::{TryFrom, TryInto};
 
 use dyn_type::arith::Exp;
+use dyn_type::object;
 use dyn_type::{BorrowObject, Object};
 use ir_common::error::{ParsePbError, ParsePbResult};
 use ir_common::expr_parse::to_suffix_expr;
 use ir_common::generated::common as common_pb;
 use ir_common::{NameOrId, ALL_KEY, ID_KEY, LABEL_KEY, LENGTH_KEY};
 
-use crate::expr::eval_pred::EvalPred;
-use crate::expr::{ExprEvalError, ExprEvalResult};
-use crate::graph::element::Element;
-use crate::graph::property::{Details, PropKey};
+use crate::api::graph::element::{Details, Element, PropKey};
+use crate::utils::expr::eval_pred::EvalPred;
+use crate::utils::expr::{ExprEvalError, ExprEvalResult};
 
 /// The trait to define evaluating an expression
 pub trait Evaluate {
@@ -219,13 +219,13 @@ impl Evaluate for Evaluator {
     /// ```
     /// # use dyn_type::Object;
     /// # use ir_common::NameOrId;
-    /// # use runtime::expr::eval::{Context, Evaluator, Evaluate};
-    /// # use runtime::graph::element::Vertex;
-    /// # use runtime::graph::property::{DefaultDetails, DynDetails};
+    /// # use graph_proxy::utils::expr::eval::{Context, Evaluator, Evaluate};
+    /// # use graph_proxy::api::graph::element::Vertex;
+    /// # use graph_proxy::api::graph::element::property::{DefaultDetails, DynDetails};
     /// # use std::collections::HashMap;
     /// # use std::convert::TryFrom;
     /// # use ir_common::expr_parse::str_to_expr_pb;
-    /// # use runtime::expr::eval_pred::EvalPred;
+    /// # use graph_proxy::utils::expr::eval_pred::EvalPred;
     ///
     /// struct Vertices {
     ///     vec: Vec<Vertex>,

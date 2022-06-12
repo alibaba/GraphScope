@@ -13,28 +13,20 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-pub mod element;
-pub mod partitioner;
-pub mod property;
-
 use std::collections::HashMap;
 use std::convert::{TryFrom, TryInto};
 use std::io;
-use std::sync::atomic::{AtomicPtr, Ordering};
 use std::sync::Arc;
 
-use dyn_type::Object;
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::common as common_pb;
 use ir_common::NameOrId;
-use pegasus::api::function::{DynIter, FnResult};
 use pegasus::codec::{ReadExt, WriteExt};
-pub use property::DefaultDetails;
 
-use crate::expr::eval_pred::PEvaluator;
-use crate::graph::element::{Edge, Vertex};
+use crate::utils::expr::eval_pred::PEvaluator;
 
+pub mod element;
 pub type ID = u64;
 
 pub fn read_id<R: ReadExt>(reader: &mut R) -> io::Result<ID> {
@@ -170,74 +162,5 @@ impl QueryParams {
         } else {
             None
         }
-    }
-}
-
-/// The function for graph query
-pub trait Statement<I, O>: Send + 'static {
-    fn exec(&self, next: I) -> FnResult<DynIter<O>>;
-}
-
-impl<I, O, F: 'static> Statement<I, O> for F
-where
-    F: Fn(I) -> FnResult<DynIter<O>> + Send + Sync,
-{
-    fn exec(&self, param: I) -> FnResult<DynIter<O>> {
-        (self)(param)
-    }
-}
-
-/// The interface of graph query in runtime
-pub trait GraphProxy: Send + Sync {
-    /// Scan all vertices with query parameters, and return an iterator over them.
-    fn scan_vertex(&self, params: &QueryParams) -> FnResult<Box<dyn Iterator<Item = Vertex> + Send>>;
-
-    /// Scan a vertex with a specified label and its primary key values, and additional query parameters,
-    /// and return the vertex if exists.
-    fn index_scan_vertex(
-        &self, label: &NameOrId, primary_key_values: &Vec<(NameOrId, Object)>, params: &QueryParams,
-    ) -> FnResult<Option<Vertex>>;
-
-    /// Scan all edges with query parameters, and return an iterator over them.
-    fn scan_edge(&self, params: &QueryParams) -> FnResult<Box<dyn Iterator<Item = Edge> + Send>>;
-
-    /// Get vertices with the given global_ids (defined in runtime) and parameters, and return an iterator over them.
-    fn get_vertex(
-        &self, ids: &[ID], params: &QueryParams,
-    ) -> FnResult<Box<dyn Iterator<Item = Vertex> + Send>>;
-
-    /// Get edges with the given global_ids (defined in runtime) and parameters, and return an iterator over them.
-    fn get_edge(&self, ids: &[ID], params: &QueryParams)
-        -> FnResult<Box<dyn Iterator<Item = Edge> + Send>>;
-
-    /// Get adjacent vertices of the given direction with parameters, and return the closure of Statement.
-    /// We could further call the returned closure with input vertex and get its adjacent vertices.
-    fn prepare_explore_vertex(
-        &self, direction: Direction, params: &QueryParams,
-    ) -> FnResult<Box<dyn Statement<ID, Vertex>>>;
-
-    /// Get adjacent edges of the given direction with parameters, and return the closure of Statement.
-    /// We could further call the returned closure with input vertex and get its adjacent edges.
-    fn prepare_explore_edge(
-        &self, direction: Direction, params: &QueryParams,
-    ) -> FnResult<Box<dyn Statement<ID, Edge>>>;
-}
-
-lazy_static! {
-    /// GRAPH_PROXY is a raw pointer which can be safely shared between threads.
-    pub static ref GRAPH_PROXY: AtomicPtr<Arc<dyn GraphProxy>> = AtomicPtr::default();
-}
-
-pub fn register_graph(graph: Arc<dyn GraphProxy>) {
-    let ptr = Box::into_raw(Box::new(graph));
-    GRAPH_PROXY.store(ptr, Ordering::SeqCst);
-}
-
-pub fn get_graph() -> Option<Arc<dyn GraphProxy>> {
-    let ptr = GRAPH_PROXY.load(Ordering::SeqCst);
-    if ptr.is_null() {
-        None
-    } else {
-        Some(unsafe { (*ptr).clone() })
     }
 }

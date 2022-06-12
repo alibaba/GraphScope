@@ -18,10 +18,10 @@ use std::sync::{Arc, RwLock};
 
 use maxgraph_store::api::graph_partition::GraphPartitionManager;
 use maxgraph_store::api::{PartitionId, VertexId};
-use pegasus::api::function::FnResult;
-use runtime::error::FnExecError;
-use runtime::graph::partitioner::Partitioner;
-use runtime::graph::ID;
+
+use crate::api::graph::ID;
+use crate::api::partitioner::Partitioner;
+use crate::errors::{GraphProxyError, GraphProxyResult};
 
 /// A partition utility that one server contains multiple graph partitions for MaxGraph (V2) Store
 pub struct MaxGraphMultiPartition {
@@ -36,7 +36,7 @@ impl MaxGraphMultiPartition {
 }
 
 impl Partitioner for MaxGraphMultiPartition {
-    fn get_partition(&self, id: &ID, worker_num_per_server: usize) -> FnResult<u64> {
+    fn get_partition(&self, id: &ID, worker_num_per_server: usize) -> GraphProxyResult<u64> {
         // The partitioning logics is as follows:
         // 1. `partition_id = self.graph_partition_manager.get_partition_id(*id as VertexId)` routes a given id
         // to the partition that holds its data.
@@ -53,13 +53,15 @@ impl Partitioner for MaxGraphMultiPartition {
         let server_index = self
             .graph_partition_manager
             .get_server_id(partition_id as PartitionId)
-            .ok_or(FnExecError::query_store_error("get server id failed in graph_partition_manager"))?
+            .ok_or(GraphProxyError::query_store_error("get server id failed in graph_partition_manager"))?
             as u64;
         let worker_index = partition_id % worker_num_per_server;
         Ok(server_index * worker_num_per_server + worker_index as u64)
     }
 
-    fn get_worker_partitions(&self, job_workers: usize, worker_id: u32) -> FnResult<Option<Vec<u64>>> {
+    fn get_worker_partitions(
+        &self, job_workers: usize, worker_id: u32,
+    ) -> GraphProxyResult<Option<Vec<u64>>> {
         // Get worker partition list logic is as follows:
         // 1. `process_partition_list = self.graph_partition_manager.get_process_partition_list()`
         // get all partitions on current server
@@ -110,7 +112,7 @@ impl VineyardMultiPartition {
 }
 
 impl Partitioner for VineyardMultiPartition {
-    fn get_partition(&self, id: &ID, worker_num_per_server: usize) -> FnResult<u64> {
+    fn get_partition(&self, id: &ID, worker_num_per_server: usize) -> GraphProxyResult<u64> {
         // The partitioning logics is as follows:
         // 1. `partition_id = self.graph_partition_manager.get_partition_id(*id as VertexId)` routes a given id
         // to the partition that holds its data.
@@ -124,7 +126,7 @@ impl Partitioner for VineyardMultiPartition {
             .as_ref()
             .map_or(0, |map| map.len());
         if self.num_servers * worker_num_per_server != parallelism {
-            Err(FnExecError::query_store_error(
+            Err(GraphProxyError::query_store_error(
                 "Job parallelism is not identical to the pre-allocated parallelism",
             ))?
         } else {
@@ -137,24 +139,26 @@ impl Partitioner for VineyardMultiPartition {
                     if let Some(worker_id) = partition_worker_mapping.get(&partition_id) {
                         Ok(*worker_id as u64)
                     } else {
-                        Err(FnExecError::query_store_error(
+                        Err(GraphProxyError::query_store_error(
                             "get worker id failed in VineyardMultiPartition",
                         ))?
                     }
                 } else {
-                    Err(FnExecError::query_store_error(
+                    Err(GraphProxyError::query_store_error(
                         "partition_worker_mapping is not initialized in VineyardMultiPartition",
                     ))?
                 }
             } else {
-                Err(FnExecError::query_store_error(
+                Err(GraphProxyError::query_store_error(
                     "read partition_worker_mapping in VineyardMultiPartition failed",
                 ))?
             }
         }
     }
 
-    fn get_worker_partitions(&self, job_workers: usize, worker_id: u32) -> FnResult<Option<Vec<u64>>> {
+    fn get_worker_partitions(
+        &self, job_workers: usize, worker_id: u32,
+    ) -> GraphProxyResult<Option<Vec<u64>>> {
         // If only one worker each server, it will process all partitions
         if job_workers == 1 {
             Ok(Some(
@@ -176,17 +180,17 @@ impl Partitioner for VineyardMultiPartition {
                             .collect(),
                     ))
                 } else {
-                    Err(FnExecError::query_store_error(
+                    Err(GraphProxyError::query_store_error(
                         "get worker partitions failed in VineyardMultiPartition",
                     ))?
                 }
             } else {
-                Err(FnExecError::query_store_error(
+                Err(GraphProxyError::query_store_error(
                     "worker_partition_list is not initialized in VineyardMultiPartition",
                 ))?
             }
         } else {
-            Err(FnExecError::query_store_error(
+            Err(GraphProxyError::query_store_error(
                 "read worker_partition_list failed in VineyardMultiPartition",
             ))?
         }

@@ -24,10 +24,10 @@ use ir_common::generated::results as result_pb;
 use ir_common::NameOrId;
 use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
 
-use crate::expr::eval::Context;
-use crate::graph::element::{Element, GraphElement};
-use crate::graph::property::{DefaultDetails, DynDetails};
-use crate::graph::{read_id, write_id, ID};
+use crate::api::graph::element::property::DynDetails;
+use crate::api::graph::element::{DefaultDetails, Element, GraphElement};
+use crate::api::graph::{read_id, write_id, ID};
+use crate::utils::expr::eval::Context;
 
 #[derive(Clone, Debug)]
 pub struct Vertex {

@@ -14,7 +14,6 @@ dyn_type = { path = "../../../dyn_type" }
 ir_common = {path = "../common"}
 pegasus = { path = "../../../engine/pegasus/pegasus" }
 pegasus_common = { path = "../../../engine/pegasus/common" }
-runtime = { path="../runtime" }
 
 [features]
 default = []

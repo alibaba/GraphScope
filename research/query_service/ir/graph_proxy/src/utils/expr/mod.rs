@@ -17,7 +17,7 @@ use std::fmt::Display;
 
 use dyn_type::CastError;
 
-use crate::expr::eval::OperatorDesc;
+use crate::utils::expr::eval::OperatorDesc;
 
 pub mod eval;
 pub mod eval_pred;

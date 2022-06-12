@@ -17,25 +17,20 @@
 extern crate log;
 #[macro_use]
 extern crate lazy_static;
+pub use errors::GraphProxyError;
 pub use exp_store::{create_demo_graph, QueryExpGraph, SimplePartition};
 pub use gs_store::{QueryMaxGraph, QueryVineyard};
-use pegasus::api::function::{DynIter, FnResult};
-use runtime::graph::Statement;
-use runtime::IRJobAssembly;
+// use runtime::IRJobAssembly;
 
+pub mod api;
+mod errors;
 mod exp_store;
 mod gs_store;
+pub mod utils;
 
-pub trait InitializeJobCompiler {
-    fn initialize_job_compiler(&self) -> IRJobAssembly;
-}
-
-pub fn from_fn<I, O, F>(func: F) -> Box<dyn Statement<I, O>>
-where
-    F: Fn(I) -> FnResult<DynIter<O>> + Send + Sync + 'static,
-{
-    Box::new(func) as Box<dyn Statement<I, O>>
-}
+// pub trait InitializeJobCompiler {
+//     fn initialize_job_compiler(&self) -> IRJobAssembly;
+// }
 
 #[macro_export]
 macro_rules! limit_n {
@@ -53,7 +48,7 @@ macro_rules! limit_n {
 macro_rules! filter_limit {
     ($iter: expr, $f: expr, $n: expr) => {
         if let Some(ref f) = $f {
-            use runtime::expr::eval_pred::EvalPred;
+            use crate::utils::expr::eval_pred::EvalPred;
             let f = f.clone();
             let r = $iter.filter(move |v| f.eval_bool(Some(v)).unwrap_or(false));
             limit_n!(r, $n)

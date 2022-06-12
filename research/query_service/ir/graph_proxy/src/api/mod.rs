@@ -13,15 +13,6 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use pegasus::api::function::FnResult;
-
-use crate::graph::ID;
-
-pub trait Partitioner: Send + Sync + 'static {
-    /// Given the element id and job_workers (number of worker per server),
-    /// return the id of worker that is going to process
-    fn get_partition(&self, id: &ID, job_workers: usize) -> FnResult<u64>;
-    /// Given job_workers (number of worker per server) and worker_id (worker index),
-    /// return the partition list that the worker is going to process
-    fn get_worker_partitions(&self, job_workers: usize, worker_id: u32) -> FnResult<Option<Vec<u64>>>;
-}
+pub mod graph;
+pub mod graph_proxy;
+pub mod partitioner;
