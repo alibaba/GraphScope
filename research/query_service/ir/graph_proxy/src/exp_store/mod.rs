@@ -18,24 +18,3 @@ mod graph_query;
 
 pub use graph_partition::SimplePartition;
 pub use graph_query::create_demo_graph;
-// use runtime::IRJobAssembly;
-
-// use crate::InitializeJobCompiler;
-
-pub struct QueryExpGraph {
-    num_servers: usize,
-}
-
-impl QueryExpGraph {
-    pub fn new(num_servers: usize) -> Self {
-        QueryExpGraph { num_servers }
-    }
-}
-
-// impl InitializeJobCompiler for QueryExpGraph {
-//     fn initialize_job_compiler(&self) -> IRJobAssembly {
-//         create_demo_graph();
-//         let partitioner = SimplePartition { num_servers: self.num_servers.clone() };
-//         IRJobAssembly::new(partitioner)
-//     }
-// }

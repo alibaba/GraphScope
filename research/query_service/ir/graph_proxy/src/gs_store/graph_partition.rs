@@ -23,19 +23,19 @@ use crate::api::graph::ID;
 use crate::api::partitioner::Partitioner;
 use crate::errors::{GraphProxyError, GraphProxyResult};
 
-/// A partition utility that one server contains multiple graph partitions for MaxGraph (V2) Store
-pub struct MaxGraphMultiPartition {
+/// A partition utility that one server contains multiple graph partitions for Groot Store
+pub struct GrootMultiPartition {
     graph_partition_manager: Arc<dyn GraphPartitionManager>,
 }
 
 #[allow(dead_code)]
-impl MaxGraphMultiPartition {
+impl GrootMultiPartition {
     pub fn new(graph_partition_manager: Arc<dyn GraphPartitionManager>) -> Self {
-        MaxGraphMultiPartition { graph_partition_manager }
+        GrootMultiPartition { graph_partition_manager }
     }
 }
 
-impl Partitioner for MaxGraphMultiPartition {
+impl Partitioner for GrootMultiPartition {
     fn get_partition(&self, id: &ID, worker_num_per_server: usize) -> GraphProxyResult<u64> {
         // The partitioning logics is as follows:
         // 1. `partition_id = self.graph_partition_manager.get_partition_id(*id as VertexId)` routes a given id

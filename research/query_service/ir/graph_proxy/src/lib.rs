@@ -18,19 +18,14 @@ extern crate log;
 #[macro_use]
 extern crate lazy_static;
 pub use errors::GraphProxyError;
-pub use exp_store::{create_demo_graph, QueryExpGraph, SimplePartition};
-pub use gs_store::{QueryMaxGraph, QueryVineyard};
-// use runtime::IRJobAssembly;
+pub use exp_store::{create_demo_graph, SimplePartition};
+pub use gs_store::{create_gs_store, GrootMultiPartition, VineyardMultiPartition};
 
 pub mod api;
 mod errors;
 mod exp_store;
 mod gs_store;
 pub mod utils;
-
-// pub trait InitializeJobCompiler {
-//     fn initialize_job_compiler(&self) -> IRJobAssembly;
-// }
 
 #[macro_export]
 macro_rules! limit_n {
