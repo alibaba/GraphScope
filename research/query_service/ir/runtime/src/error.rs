@@ -171,32 +171,7 @@ impl From<GraphProxyError> for FnExecError {
 
 impl From<FnExecError> for DynError {
     fn from(e: FnExecError) -> Self {
-        match e {
-            FnExecError::NullGraphError => {
-                let err: Box<dyn std::error::Error + Send + Sync> = "Null graph error".into();
-                err
-            }
-            FnExecError::StoreError(e) => e.into(),
-            FnExecError::GetTagError(e) => {
-                let err: Box<dyn std::error::Error + Send + Sync> = e.into();
-                err
-            }
-            FnExecError::ExprEvalError(e) => {
-                let err: Box<dyn std::error::Error + Send + Sync> = e.into();
-                err
-            }
-            FnExecError::UnExpectedData(_) => {
-                let err: Box<dyn std::error::Error + Send + Sync> = e.into();
-                err
-            }
-            FnExecError::AccumError(e) => {
-                let err: Box<dyn std::error::Error + Send + Sync> = e.into();
-                err
-            }
-            FnExecError::UnSupported(e) => {
-                let err: Box<dyn std::error::Error + Send + Sync> = e.into();
-                err
-            }
-        }
+        let err: Box<dyn std::error::Error + Send + Sync> = e.into();
+        err
     }
 }

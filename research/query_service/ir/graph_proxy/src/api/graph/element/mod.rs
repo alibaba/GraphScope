@@ -29,7 +29,7 @@ use crate::api::graph::ID;
 
 mod edge;
 mod path;
-pub mod property;
+mod property;
 mod vertex;
 
 /// An `Element` is an abstraction of the data filed in an IR `Record`.

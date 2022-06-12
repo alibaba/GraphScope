@@ -220,8 +220,7 @@ impl Evaluate for Evaluator {
     /// # use dyn_type::Object;
     /// # use ir_common::NameOrId;
     /// # use graph_proxy::utils::expr::eval::{Context, Evaluator, Evaluate};
-    /// # use graph_proxy::api::graph::element::Vertex;
-    /// # use graph_proxy::api::graph::element::property::{DefaultDetails, DynDetails};
+    /// # use graph_proxy::api::graph::element::{Vertex,DefaultDetails, DynDetails};
     /// # use std::collections::HashMap;
     /// # use std::convert::TryFrom;
     /// # use ir_common::expr_parse::str_to_expr_pb;

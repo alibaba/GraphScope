@@ -24,8 +24,7 @@ use ir_common::generated::results as result_pb;
 use ir_common::NameOrId;
 use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
 
-use crate::api::graph::element::property::{DefaultDetails, DynDetails};
-use crate::api::graph::element::{Element, GraphElement};
+use crate::api::graph::element::{DefaultDetails, DynDetails, Element, GraphElement};
 use crate::api::graph::{read_id, write_id, ID};
 use crate::utils::expr::eval::Context;
 

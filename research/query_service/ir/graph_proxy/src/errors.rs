@@ -45,9 +45,9 @@ impl GraphProxyError {
 impl std::fmt::Display for GraphProxyError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            GraphProxyError::QueryStoreError(e) => write!(f, "Query store error in exec {}", e),
-            GraphProxyError::WriteGraphError(e) => write!(f, "Write graph error in exec {}", e),
-            GraphProxyError::UnSupported(e) => write!(f, "Op not supported error in exec {}", e),
+            GraphProxyError::QueryStoreError(e) => write!(f, "Query store error in graph_proxy {}", e),
+            GraphProxyError::WriteGraphError(e) => write!(f, "Write graph error in graph_proxy {}", e),
+            GraphProxyError::UnSupported(e) => write!(f, "Op not supported error in graph_proxy {}", e),
         }
     }
 }
@@ -56,19 +56,7 @@ impl std::error::Error for GraphProxyError {}
 
 impl From<GraphProxyError> for DynError {
     fn from(e: GraphProxyError) -> Self {
-        match e {
-            GraphProxyError::QueryStoreError(e) => {
-                let err: Box<dyn std::error::Error + Send + Sync> = e.into();
-                err
-            }
-            GraphProxyError::WriteGraphError(e) => {
-                let err: Box<dyn std::error::Error + Send + Sync> = e.into();
-                err
-            }
-            GraphProxyError::UnSupported(e) => {
-                let err: Box<dyn std::error::Error + Send + Sync> = e.into();
-                err
-            }
-        }
+        let err: Box<dyn std::error::Error + Send + Sync> = e.into();
+        err
     }
 }

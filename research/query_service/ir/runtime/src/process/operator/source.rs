@@ -19,8 +19,7 @@ use std::sync::Arc;
 
 use dyn_type::Object;
 use graph_proxy::api::graph::element::{Edge, Vertex};
-use graph_proxy::api::graph::QueryParams;
-use graph_proxy::api::graph::ID;
+use graph_proxy::api::graph::{QueryParams, ID};
 use graph_proxy::api::graph_proxy::get_graph;
 use graph_proxy::api::partitioner::Partitioner;
 use ir_common::error::{ParsePbError, ParsePbResult};
