@@ -61,6 +61,9 @@ import com.alibaba.maxgraph.sdkcommon.schema.GraphDef;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 
+import org.apache.tinkerpop.gremlin.driver.Client;
+import org.apache.tinkerpop.gremlin.driver.CloseableGremlinClient;
+import org.apache.tinkerpop.gremlin.driver.ResultSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -83,6 +86,7 @@ public class MaxGraphClient implements Closeable {
     private ClientGrpc.ClientBlockingStub stub;
     private ClientWriteGrpc.ClientWriteBlockingStub writeStub;
     private ClientBackupGrpc.ClientBackupBlockingStub backupStub;
+    private CloseableGremlinClient gremlinClient;
     private ManagedChannel channel;
     private String clientId = "DEFAULT";
 
@@ -91,10 +95,12 @@ public class MaxGraphClient implements Closeable {
     private MaxGraphClient(
             ClientBlockingStub clientBlockingStub,
             ClientWriteBlockingStub clientWriteBlockingStub,
-            ClientBackupBlockingStub clientBackupBlockingStub) {
+            ClientBackupBlockingStub clientBackupBlockingStub,
+            CloseableGremlinClient gremlinClient) {
         this.stub = clientBlockingStub;
         this.writeStub = clientWriteBlockingStub;
         this.backupStub = clientBackupBlockingStub;
+        this.gremlinClient = gremlinClient;
         this.reset();
     }
 
@@ -265,11 +271,17 @@ public class MaxGraphClient implements Closeable {
                 .collect(Collectors.toList());
     }
 
+    public ResultSet submitQuery(String query) {
+        Client gremlinClient = this.gremlinClient.gremlinClient();
+        return gremlinClient.submit(query);
+    }
+
     @Override
     public void close() {
         this.channel.shutdown();
         try {
             this.channel.awaitTermination(3000, TimeUnit.MILLISECONDS);
+            this.gremlinClient.close();
         } catch (InterruptedException e) {
             // Ignore
         }
@@ -283,9 +295,12 @@ public class MaxGraphClient implements Closeable {
         private List<SocketAddress> addrs;
         private String username;
         private String password;
+        private List<String> gremlinHosts;
+        private int gremlinPort;
 
         private MaxGraphClientBuilder() {
             this.addrs = new ArrayList<>();
+            this.gremlinHosts = new ArrayList<>();
         }
 
         public MaxGraphClientBuilder addAddress(SocketAddress address) {
@@ -317,6 +332,16 @@ public class MaxGraphClient implements Closeable {
             return this;
         }
 
+        public MaxGraphClientBuilder setGremlinPort(int gremlinPort) {
+            this.gremlinPort = gremlinPort;
+            return this;
+        }
+
+        public MaxGraphClientBuilder addGremlinHost(String host) {
+            this.gremlinHosts.add(host);
+            return this;
+        }
+
         public MaxGraphClient build() {
             MultiAddrResovlerFactory multiAddrResovlerFactory =
                     new MultiAddrResovlerFactory(this.addrs);
@@ -337,8 +362,10 @@ public class MaxGraphClient implements Closeable {
                 clientWriteBlockingStub = clientWriteBlockingStub.withCallCredentials(basicAuth);
                 clientBackupBlockingStub = clientBackupBlockingStub.withCallCredentials(basicAuth);
             }
+            CloseableGremlinClient gremlinClient = new CloseableGremlinClient(
+                    this.gremlinHosts, this.gremlinPort, this.username, this.password);
             return new MaxGraphClient(
-                    clientBlockingStub, clientWriteBlockingStub, clientBackupBlockingStub);
+                    clientBlockingStub, clientWriteBlockingStub, clientBackupBlockingStub, gremlinClient);
         }
     }
 }
