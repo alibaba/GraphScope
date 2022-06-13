@@ -33,8 +33,8 @@ use pegasus_common::downcast::*;
 use pegasus_common::impl_as_any;
 
 use crate::apis::{
-    from_fn, register_graph, DefaultDetails, Details, Direction, DynDetails, Edge, QueryParams,
-    ReadGraphProxy, Statement, Vertex, ID,
+    from_fn, register_graph, DefaultDetails, Details, Direction, DynDetails, Edge, QueryParams, ReadGraph,
+    Statement, Vertex, ID,
 };
 use crate::errors::{GraphProxyError, GraphProxyResult};
 use crate::{filter_limit, limit_n};
@@ -43,16 +43,16 @@ lazy_static! {
     pub static ref DATA_PATH: String = configure_with_default!(String, "DATA_PATH", "".to_string());
     pub static ref PARTITION_ID: usize = configure_with_default!(usize, "PARTITION_ID", 0);
     pub static ref GRAPH: LargeGraphDB<DefaultId, InternalId> = _init_graph();
-    static ref GRAPH_PROXY: Arc<DemoGraph> = initialize();
+    static ref GRAPH_PROXY: Arc<ExpStore> = initialize();
 }
 
-pub struct DemoGraph {
+pub struct ExpStore {
     store: &'static LargeGraphDB<DefaultId, InternalId>,
 }
 
-fn initialize() -> Arc<DemoGraph> {
+fn initialize() -> Arc<ExpStore> {
     lazy_static::initialize(&GRAPH);
-    Arc::new(DemoGraph { store: &GRAPH })
+    Arc::new(ExpStore { store: &GRAPH })
 }
 
 fn _init_graph() -> LargeGraphDB<DefaultId, InternalId> {
@@ -220,7 +220,7 @@ fn _init_modern_graph() -> LargeGraphDB<DefaultId, InternalId> {
     mut_graph.into_graph(schema)
 }
 
-impl ReadGraphProxy for DemoGraph {
+impl ReadGraph for ExpStore {
     fn scan_vertex(
         &self, params: &QueryParams,
     ) -> GraphProxyResult<Box<dyn Iterator<Item = Vertex> + Send>> {
@@ -333,7 +333,7 @@ impl ReadGraphProxy for DemoGraph {
 }
 
 #[allow(dead_code)]
-pub fn create_demo_graph() {
+pub fn create_exp_store() {
     lazy_static::initialize(&GRAPH_PROXY);
     register_graph(GRAPH_PROXY.clone());
 }

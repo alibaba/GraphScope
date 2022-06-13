@@ -13,7 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use graph_proxy::{create_demo_graph, SimplePartition};
+use graph_proxy::{create_exp_store, SimplePartition};
 use runtime::IRJobAssembly;
 
 use crate::InitializeJobAssembly;
@@ -30,7 +30,7 @@ impl QueryExpGraph {
 
 impl InitializeJobAssembly for QueryExpGraph {
     fn initialize_job_assembly(&self) -> IRJobAssembly {
-        create_demo_graph();
+        create_exp_store();
         let partitioner = SimplePartition { num_servers: self.num_servers };
         IRJobAssembly::new(partitioner)
     }

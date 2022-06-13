@@ -22,7 +22,7 @@ mod test {
     use std::sync::Arc;
 
     use graph_proxy::apis::GraphElement;
-    use graph_proxy::{create_demo_graph, SimplePartition};
+    use graph_proxy::{create_exp_store, SimplePartition};
     use graph_store::common::DefaultId;
     use graph_store::ldbc::LDBCVertexParser;
     use ir_common::generated::algebra as pb;
@@ -33,7 +33,7 @@ mod test {
 
     // g.V()
     fn scan_gen(scan_opr_pb: pb::Scan) -> Box<dyn Iterator<Item = Record> + Send> {
-        create_demo_graph();
+        create_exp_store();
         let mut source_opr_pb =
             pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::Scan(scan_opr_pb)) };
         let source =

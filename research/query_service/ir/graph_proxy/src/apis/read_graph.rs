@@ -43,8 +43,8 @@ where
     Box::new(func) as Box<dyn Statement<I, O>>
 }
 
-/// The interface of graph query in runtime
-pub trait ReadGraphProxy: Send + Sync {
+/// The interfaces of reading data (vertices, edges and their properties) from a graph.
+pub trait ReadGraph: Send + Sync {
     /// Scan all vertices with query parameters, and return an iterator over them.
     fn scan_vertex(
         &self, params: &QueryParams,
@@ -84,15 +84,15 @@ pub trait ReadGraphProxy: Send + Sync {
 
 lazy_static! {
     /// GRAPH_PROXY is a raw pointer which can be safely shared between threads.
-    pub static ref GRAPH_PROXY: AtomicPtr<Arc<dyn ReadGraphProxy >> = AtomicPtr::default();
+    pub static ref GRAPH_PROXY: AtomicPtr<Arc<dyn ReadGraph >> = AtomicPtr::default();
 }
 
-pub fn register_graph(graph: Arc<dyn ReadGraphProxy>) {
+pub fn register_graph(graph: Arc<dyn ReadGraph>) {
     let ptr = Box::into_raw(Box::new(graph));
     GRAPH_PROXY.store(ptr, Ordering::SeqCst);
 }
 
-pub fn get_graph() -> Option<Arc<dyn ReadGraphProxy>> {
+pub fn get_graph() -> Option<Arc<dyn ReadGraph>> {
     let ptr = GRAPH_PROXY.load(Ordering::SeqCst);
     if ptr.is_null() {
         None

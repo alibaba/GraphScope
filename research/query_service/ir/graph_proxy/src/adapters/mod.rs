@@ -16,5 +16,5 @@
 mod exp_store;
 mod gs_store;
 
-pub use exp_store::{create_demo_graph, SimplePartition};
+pub use exp_store::{create_exp_store, SimplePartition};
 pub use gs_store::{create_gs_store, GrootMultiPartition, VineyardMultiPartition};

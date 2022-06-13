@@ -15,7 +15,7 @@
 
 pub mod graph;
 pub mod partitioner;
-pub mod read_proxy;
+pub mod read_graph;
 
 pub use graph::element::{
     DefaultDetails, Details, DynDetails, Edge, Element, GraphElement, GraphObject, GraphPath, PropKey,
@@ -23,4 +23,4 @@ pub use graph::element::{
 };
 pub use graph::{read_id, write_id, Direction, QueryParams, ID};
 pub use partitioner::Partitioner;
-pub use read_proxy::{from_fn, get_graph, register_graph, ReadGraphProxy, Statement};
+pub use read_graph::{from_fn, get_graph, register_graph, ReadGraph, Statement};
