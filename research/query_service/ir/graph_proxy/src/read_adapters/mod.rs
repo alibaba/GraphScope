@@ -13,16 +13,8 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::api::graph::ID;
-use crate::errors::GraphProxyResult;
+mod exp_store;
+mod gs_store;
 
-pub trait Partitioner: Send + Sync + 'static {
-    /// Given the element id and job_workers (number of worker per server),
-    /// return the id of worker that is going to process
-    fn get_partition(&self, id: &ID, job_workers: usize) -> GraphProxyResult<u64>;
-    /// Given job_workers (number of worker per server) and worker_id (worker index),
-    /// return the partition list that the worker is going to process
-    fn get_worker_partitions(
-        &self, job_workers: usize, worker_id: u32,
-    ) -> GraphProxyResult<Option<Vec<u64>>>;
-}
+pub use exp_store::{create_demo_graph, SimplePartition};
+pub use gs_store::{create_gs_store, GrootMultiPartition, VineyardMultiPartition};

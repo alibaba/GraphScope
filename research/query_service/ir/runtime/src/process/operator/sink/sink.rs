@@ -19,7 +19,7 @@ use std::convert::TryInto;
 use std::ops::Deref;
 
 use dyn_type::Object;
-use graph_proxy::api::graph::element::{Edge, GraphElement, GraphObject, GraphPath, Vertex, VertexOrEdge};
+use graph_proxy::apis::{Edge, GraphElement, GraphObject, GraphPath, Vertex, VertexOrEdge};
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::algebra::sink::MetaType;
 use ir_common::generated::common as common_pb;

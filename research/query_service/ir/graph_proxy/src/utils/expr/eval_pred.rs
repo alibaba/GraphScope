@@ -22,7 +22,7 @@ use ir_common::expr_parse::error::{ExprError, ExprResult};
 use ir_common::generated::algebra as pb;
 use ir_common::generated::common as common_pb;
 
-use crate::api::graph::element::{Details, Element, PropKey};
+use crate::apis::{Details, Element, PropKey};
 use crate::utils::expr::eval::{apply_logical, Context, Evaluate, Evaluator, Operand};
 use crate::utils::expr::{ExprEvalError, ExprEvalResult};
 
@@ -530,7 +530,7 @@ mod tests {
     use ir_common::NameOrId;
 
     use super::*;
-    use crate::api::graph::element::{DefaultDetails, DynDetails, Vertex};
+    use crate::apis::{DefaultDetails, DynDetails, Vertex};
     use crate::utils::expr::eval::NoneContext;
 
     struct Vertices {

@@ -78,8 +78,7 @@ mod tests {
     use std::collections::HashMap;
 
     use dyn_type::Object;
-    use graph_proxy::api::graph::element::{DefaultDetails, DynDetails, GraphElement, Vertex};
-    use graph_proxy::api::graph::ID;
+    use graph_proxy::apis::{DefaultDetails, DynDetails, GraphElement, Vertex, ID};
     use ir_common::generated::algebra as pb;
     use ir_common::generated::common as common_pb;
     use ir_common::NameOrId;

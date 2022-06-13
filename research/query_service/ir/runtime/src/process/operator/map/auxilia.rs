@@ -15,9 +15,7 @@
 
 use std::convert::TryInto;
 
-use graph_proxy::api::graph::element::GraphElement;
-use graph_proxy::api::graph::QueryParams;
-use graph_proxy::api::graph_proxy::get_graph;
+use graph_proxy::apis::{get_graph, GraphElement, QueryParams};
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::KeyId;
 use pegasus::api::function::{FilterMapFunction, FnResult};

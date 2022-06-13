@@ -26,7 +26,7 @@ use ir_common::expr_parse::to_suffix_expr;
 use ir_common::generated::common as common_pb;
 use ir_common::{NameOrId, ALL_KEY, ID_KEY, LABEL_KEY, LENGTH_KEY};
 
-use crate::api::graph::element::{Details, Element, PropKey};
+use crate::apis::{Details, Element, PropKey};
 use crate::utils::expr::eval_pred::EvalPred;
 use crate::utils::expr::{ExprEvalError, ExprEvalResult};
 
@@ -220,7 +220,7 @@ impl Evaluate for Evaluator {
     /// # use dyn_type::Object;
     /// # use ir_common::NameOrId;
     /// # use graph_proxy::utils::expr::eval::{Context, Evaluator, Evaluate};
-    /// # use graph_proxy::api::graph::element::{Vertex,DefaultDetails, DynDetails};
+    /// # use graph_proxy::apis::{Vertex,DefaultDetails, DynDetails};
     /// # use std::collections::HashMap;
     /// # use std::convert::TryFrom;
     /// # use ir_common::expr_parse::str_to_expr_pb;
@@ -543,7 +543,7 @@ mod tests {
     use ir_common::expr_parse::str_to_expr_pb;
 
     use super::*;
-    use crate::api::graph::element::{DefaultDetails, DynDetails, Vertex};
+    use crate::apis::{DefaultDetails, DynDetails, Vertex};
 
     struct Vertices {
         vec: Vec<Vertex>,

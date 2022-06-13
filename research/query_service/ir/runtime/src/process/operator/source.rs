@@ -18,10 +18,7 @@ use std::convert::TryFrom;
 use std::sync::Arc;
 
 use dyn_type::Object;
-use graph_proxy::api::graph::element::{Edge, Vertex};
-use graph_proxy::api::graph::{QueryParams, ID};
-use graph_proxy::api::graph_proxy::get_graph;
-use graph_proxy::api::partitioner::Partitioner;
+use graph_proxy::apis::{get_graph, Edge, Partitioner, QueryParams, Vertex, ID};
 use ir_common::error::{ParsePbError, ParsePbResult};
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::{KeyId, NameOrId};

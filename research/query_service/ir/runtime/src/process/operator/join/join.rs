@@ -43,8 +43,7 @@ impl JoinKeyGen<Record, RecordKey, Record> for algebra_pb::Join {
 
 #[cfg(test)]
 mod tests {
-    use graph_proxy::api::graph::element::{DefaultDetails, DynDetails, GraphElement, Vertex};
-    use graph_proxy::api::graph::ID;
+    use graph_proxy::apis::{DefaultDetails, DynDetails, GraphElement, Vertex, ID};
     use ir_common::generated::algebra as pb;
     use ir_common::generated::algebra::join::JoinKind;
     use ir_common::generated::common as common_pb;

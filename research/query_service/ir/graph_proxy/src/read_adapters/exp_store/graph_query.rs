@@ -32,9 +32,10 @@ use pegasus::configure_with_default;
 use pegasus_common::downcast::*;
 use pegasus_common::impl_as_any;
 
-use crate::api::graph::element::{DefaultDetails, Details, DynDetails, Edge, Vertex};
-use crate::api::graph::{Direction, QueryParams, ID};
-use crate::api::graph_proxy::{from_fn, register_graph, GraphProxy, Statement};
+use crate::apis::{
+    from_fn, register_graph, DefaultDetails, Details, Direction, DynDetails, Edge, QueryParams,
+    ReadGraphProxy, Statement, Vertex, ID,
+};
 use crate::errors::{GraphProxyError, GraphProxyResult};
 use crate::{filter_limit, limit_n};
 
@@ -219,7 +220,7 @@ fn _init_modern_graph() -> LargeGraphDB<DefaultId, InternalId> {
     mut_graph.into_graph(schema)
 }
 
-impl GraphProxy for DemoGraph {
+impl ReadGraphProxy for DemoGraph {
     fn scan_vertex(
         &self, params: &QueryParams,
     ) -> GraphProxyResult<Box<dyn Iterator<Item = Vertex> + Send>> {

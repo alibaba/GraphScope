@@ -15,7 +15,7 @@
 
 use std::convert::TryInto;
 
-use graph_proxy::api::graph::element::GraphPath;
+use graph_proxy::apis::GraphPath;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::KeyId;
 use pegasus::api::function::{FnResult, MapFunction};

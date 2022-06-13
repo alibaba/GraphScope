@@ -24,8 +24,7 @@ use ir_common::generated::results as result_pb;
 use ir_common::NameOrId;
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 
-use crate::api::graph::element::{DynDetails, Edge, Element, GraphElement, Vertex};
-use crate::api::graph::ID;
+use crate::apis::{DynDetails, Edge, Element, GraphElement, Vertex, ID};
 
 #[derive(Clone, Debug, Hash, PartialEq, PartialOrd)]
 pub enum VertexOrEdge {

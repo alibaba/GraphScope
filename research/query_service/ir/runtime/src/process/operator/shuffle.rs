@@ -16,8 +16,7 @@
 use std::convert::TryInto;
 use std::sync::Arc;
 
-use graph_proxy::api::graph::element::{GraphElement, VertexOrEdge};
-use graph_proxy::api::partitioner::Partitioner;
+use graph_proxy::apis::{GraphElement, Partitioner, VertexOrEdge};
 use ir_common::error::ParsePbError;
 use ir_common::generated::common as common_pb;
 use ir_common::KeyId;

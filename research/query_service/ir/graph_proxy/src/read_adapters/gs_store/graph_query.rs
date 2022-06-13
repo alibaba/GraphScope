@@ -26,9 +26,10 @@ use maxgraph_store::api::*;
 use maxgraph_store::api::{Edge as StoreEdge, Vertex as StoreVertex};
 use maxgraph_store::api::{PropId, SnapshotId};
 
-use crate::api::graph::element::{DefaultDetails, DynDetails, Edge, Vertex};
-use crate::api::graph::{Direction, QueryParams, ID};
-use crate::api::graph_proxy::{from_fn, register_graph, GraphProxy, Statement};
+use crate::apis::{
+    from_fn, register_graph, DefaultDetails, Direction, DynDetails, Edge, QueryParams, ReadGraphProxy,
+    Statement, Vertex, ID,
+};
 use crate::errors::{GraphProxyError, GraphProxyResult};
 use crate::{filter_limit, limit_n};
 
@@ -62,7 +63,7 @@ pub fn create_gs_store<V, VI, E, EI>(
     register_graph(Arc::new(graph));
 }
 
-impl<V, VI, E, EI> GraphProxy for GraphScopeStore<V, VI, E, EI>
+impl<V, VI, E, EI> ReadGraphProxy for GraphScopeStore<V, VI, E, EI>
 where
     V: StoreVertex + 'static,
     VI: Iterator<Item = V> + Send + 'static,

@@ -19,8 +19,7 @@ use std::sync::Arc;
 use dyn_type::Object;
 use ir_common::NameOrId;
 
-use crate::api::graph::element::{Edge, Vertex};
-use crate::api::graph::{Direction, QueryParams, ID};
+use crate::apis::{Direction, Edge, QueryParams, Vertex, ID};
 use crate::errors::GraphProxyResult;
 
 /// The function for graph query
@@ -45,7 +44,7 @@ where
 }
 
 /// The interface of graph query in runtime
-pub trait GraphProxy: Send + Sync {
+pub trait ReadGraphProxy: Send + Sync {
     /// Scan all vertices with query parameters, and return an iterator over them.
     fn scan_vertex(
         &self, params: &QueryParams,
@@ -85,15 +84,15 @@ pub trait GraphProxy: Send + Sync {
 
 lazy_static! {
     /// GRAPH_PROXY is a raw pointer which can be safely shared between threads.
-    pub static ref GRAPH_PROXY: AtomicPtr<Arc<dyn GraphProxy>> = AtomicPtr::default();
+    pub static ref GRAPH_PROXY: AtomicPtr<Arc<dyn ReadGraphProxy >> = AtomicPtr::default();
 }
 
-pub fn register_graph(graph: Arc<dyn GraphProxy>) {
+pub fn register_graph(graph: Arc<dyn ReadGraphProxy>) {
     let ptr = Box::into_raw(Box::new(graph));
     GRAPH_PROXY.store(ptr, Ordering::SeqCst);
 }
 
-pub fn get_graph() -> Option<Arc<dyn GraphProxy>> {
+pub fn get_graph() -> Option<Arc<dyn ReadGraphProxy>> {
     let ptr = GRAPH_PROXY.load(Ordering::SeqCst);
     if ptr.is_null() {
         None

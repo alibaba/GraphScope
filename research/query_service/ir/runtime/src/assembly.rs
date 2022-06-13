@@ -15,7 +15,7 @@
 
 use std::sync::Arc;
 
-use graph_proxy::api::partitioner::Partitioner;
+use graph_proxy::apis::Partitioner;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::algebra::join::JoinKind;
 use ir_common::generated::common as common_pb;

@@ -25,7 +25,7 @@ use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
 pub use property::{DefaultDetails, Details, DynDetails, PropKey};
 pub use vertex::Vertex;
 
-use crate::api::graph::ID;
+use crate::apis::ID;
 
 mod edge;
 mod path;

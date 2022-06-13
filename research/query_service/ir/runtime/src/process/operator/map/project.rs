@@ -142,7 +142,7 @@ mod tests {
     use std::collections::HashMap;
 
     use dyn_type::Object;
-    use graph_proxy::api::graph::element::{DefaultDetails, DynDetails, GraphElement, Vertex};
+    use graph_proxy::apis::{DefaultDetails, DynDetails, GraphElement, Vertex};
     use ir_common::expr_parse::str_to_expr_pb;
     use ir_common::generated::algebra as pb;
     use ir_common::NameOrId;

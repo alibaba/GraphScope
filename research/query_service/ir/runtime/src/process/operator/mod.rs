@@ -30,7 +30,7 @@ use std::convert::TryFrom;
 use std::sync::Arc;
 
 use dyn_type::Object;
-use graph_proxy::api::graph::element::{Details, Element, GraphElement, PropKey};
+use graph_proxy::apis::{Details, Element, GraphElement, PropKey};
 use ir_common::error::ParsePbError;
 use ir_common::generated::common as common_pb;
 use ir_common::{KeyId, NameOrId};
@@ -207,7 +207,7 @@ pub(crate) mod tests {
     use std::collections::HashMap;
 
     use dyn_type::Object;
-    use graph_proxy::api::graph::element::{DefaultDetails, DynDetails, GraphElement, Vertex};
+    use graph_proxy::apis::{DefaultDetails, DynDetails, GraphElement, Vertex};
     use ir_common::KeyId;
 
     use super::*;

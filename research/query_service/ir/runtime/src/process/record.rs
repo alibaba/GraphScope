@@ -19,7 +19,7 @@ use std::hash::Hash;
 use std::sync::Arc;
 
 use dyn_type::{BorrowObject, Object};
-use graph_proxy::api::graph::element::{
+use graph_proxy::apis::{
     DynDetails, Edge, Element, GraphElement, GraphObject, GraphPath, Vertex, VertexOrEdge,
 };
 use graph_proxy::utils::expr::eval::Context;

@@ -23,8 +23,7 @@ pub mod test {
     use std::convert::{TryFrom, TryInto};
     use std::sync::{Arc, Once};
 
-    use graph_proxy::api::graph::element::{DefaultDetails, DynDetails, Edge, Vertex, VertexOrEdge};
-    use graph_proxy::api::graph::ID;
+    use graph_proxy::apis::{DefaultDetails, DynDetails, Edge, Vertex, VertexOrEdge, ID};
     use ir_common::expr_parse::str_to_expr_pb;
     use ir_common::generated::algebra as pb;
     use ir_common::generated::common as common_pb;

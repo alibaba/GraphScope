@@ -19,7 +19,7 @@ mod common;
 
 #[cfg(test)]
 mod test {
-    use graph_proxy::api::graph::element::GraphElement;
+    use graph_proxy::apis::GraphElement;
     use ir_common::expr_parse::str_to_expr_pb;
     use ir_common::generated::algebra as pb;
     use ir_common::generated::common as common_pb;

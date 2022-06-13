@@ -21,7 +21,7 @@ mod common;
 mod test {
     use std::sync::Arc;
 
-    use graph_proxy::api::graph::element::{Details, Element, GraphElement};
+    use graph_proxy::apis::{Details, Element, GraphElement};
     use graph_proxy::{create_demo_graph, SimplePartition};
     use graph_store::ldbc::LDBCVertexParser;
     use graph_store::prelude::DefaultId;

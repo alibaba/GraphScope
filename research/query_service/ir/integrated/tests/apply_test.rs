@@ -19,7 +19,7 @@ mod common;
 
 #[cfg(test)]
 mod test {
-    use graph_proxy::api::graph::element::GraphElement;
+    use graph_proxy::apis::GraphElement;
     use graph_store::common::DefaultId;
     use graph_store::ldbc::LDBCVertexParser;
     use ir_common::generated::algebra as pb;

@@ -13,8 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::api::graph::ID;
-use crate::api::partitioner::Partitioner;
+use crate::apis::{Partitioner, ID};
 use crate::errors::GraphProxyResult;
 
 /// A simple partition utility that one server contains a single graph partition

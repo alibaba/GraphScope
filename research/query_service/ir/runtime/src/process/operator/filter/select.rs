@@ -53,7 +53,7 @@ impl FilterFuncGen for algebra_pb::Select {
 
 #[cfg(test)]
 mod tests {
-    use graph_proxy::api::graph::element::{Details, Element, GraphElement};
+    use graph_proxy::apis::{Details, Element, GraphElement};
     use ir_common::expr_parse::str_to_expr_pb;
     use ir_common::generated::algebra as pb;
     use pegasus::api::{Filter, Sink};

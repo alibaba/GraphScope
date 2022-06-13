@@ -13,6 +13,16 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-pub mod graph;
-pub mod graph_proxy;
-pub mod partitioner;
+use crate::apis::ID;
+use crate::errors::GraphProxyResult;
+
+pub trait Partitioner: Send + Sync + 'static {
+    /// Given the element id and job_workers (number of worker per server),
+    /// return the id of worker that is going to process
+    fn get_partition(&self, id: &ID, job_workers: usize) -> GraphProxyResult<u64>;
+    /// Given job_workers (number of worker per server) and worker_id (worker index),
+    /// return the partition list that the worker is going to process
+    fn get_worker_partitions(
+        &self, job_workers: usize, worker_id: u32,
+    ) -> GraphProxyResult<Option<Vec<u64>>>;
+}

@@ -15,7 +15,7 @@
 
 use std::convert::TryInto;
 
-use graph_proxy::api::graph::element::{DefaultDetails, DynDetails, Vertex};
+use graph_proxy::apis::{DefaultDetails, DynDetails, Vertex};
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::algebra::get_v::VOpt;
 use ir_common::KeyId;
