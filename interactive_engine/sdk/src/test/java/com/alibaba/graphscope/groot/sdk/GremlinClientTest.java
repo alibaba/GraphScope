@@ -27,10 +27,8 @@ import java.util.*;
 public class GremlinClientTest {
     String host = "localhost";
     int gremlinPort = 8182;
-    MaxGraphClient client = MaxGraphClient.newBuilder()
-            .addGremlinHost(host)
-            .setGremlinPort(gremlinPort)
-            .build();
+    MaxGraphClient client =
+            MaxGraphClient.newBuilder().addGremlinHost(host).setGremlinPort(gremlinPort).build();
 
     @Test
     void submitQuery() {

@@ -16,6 +16,12 @@
 
 package com.alibaba.graphscope.gremlin.auth;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
+import static org.apache.commons.lang3.CharUtils.NUL;
+import static org.apache.tinkerpop.gremlin.groovy.jsr223.dsl.credential.CredentialGraphTokens.PROPERTY_PASSWORD;
+import static org.apache.tinkerpop.gremlin.groovy.jsr223.dsl.credential.CredentialGraphTokens.PROPERTY_USERNAME;
+
 import org.apache.tinkerpop.gremlin.server.auth.AuthenticatedUser;
 import org.apache.tinkerpop.gremlin.server.auth.AuthenticationException;
 import org.apache.tinkerpop.gremlin.server.auth.Authenticator;
@@ -27,11 +33,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-
-import static com.google.common.base.Preconditions.checkNotNull;
-import static org.apache.commons.lang3.CharUtils.NUL;
-import static org.apache.tinkerpop.gremlin.groovy.jsr223.dsl.credential.CredentialGraphTokens.PROPERTY_PASSWORD;
-import static org.apache.tinkerpop.gremlin.groovy.jsr223.dsl.credential.CredentialGraphTokens.PROPERTY_USERNAME;
 
 public class DefaultAuthenticator implements Authenticator {
     private static final Logger logger = LoggerFactory.getLogger(DefaultAuthenticator.class);
@@ -55,7 +56,8 @@ public class DefaultAuthenticator implements Authenticator {
 
     // authenticate the username and the password in credentials
     @Override
-    public AuthenticatedUser authenticate(Map<String, String> credentials) throws AuthenticationException {
+    public AuthenticatedUser authenticate(Map<String, String> credentials)
+            throws AuthenticationException {
         String username = credentials.get(PROPERTY_USERNAME);
         String password = credentials.get(PROPERTY_PASSWORD);
 
@@ -101,15 +103,14 @@ public class DefaultAuthenticator implements Authenticator {
             int end = bytes.length;
             for (int i = bytes.length - 1; i >= 0; i--) {
                 if (bytes[i] == NUL) {
-                    if (pass == null)
-                        pass = Arrays.copyOfRange(bytes, i + 1, end);
-                    else if (user == null)
-                        user = Arrays.copyOfRange(bytes, i + 1, end);
+                    if (pass == null) pass = Arrays.copyOfRange(bytes, i + 1, end);
+                    else if (user == null) user = Arrays.copyOfRange(bytes, i + 1, end);
                     end = i;
                 }
             }
 
-            if (null == user) throw new AuthenticationException("Authentication ID must not be null");
+            if (null == user)
+                throw new AuthenticationException("Authentication ID must not be null");
             if (null == pass) throw new AuthenticationException("Password must not be null");
 
             username = new String(user, StandardCharsets.UTF_8);

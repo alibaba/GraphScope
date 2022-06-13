@@ -279,7 +279,7 @@ public class MaxGraphClient implements Closeable {
     @Override
     public void close() {
         try {
-            if(this.channel != null) {
+            if (this.channel != null) {
                 this.channel.shutdown();
                 this.channel.awaitTermination(3000, TimeUnit.MILLISECONDS);
             }
@@ -364,10 +364,14 @@ public class MaxGraphClient implements Closeable {
                 clientWriteBlockingStub = clientWriteBlockingStub.withCallCredentials(basicAuth);
                 clientBackupBlockingStub = clientBackupBlockingStub.withCallCredentials(basicAuth);
             }
-            CloseableGremlinClient gremlinClient = new CloseableGremlinClient(
-                    this.gremlinHosts, this.gremlinPort, this.username, this.password);
+            CloseableGremlinClient gremlinClient =
+                    new CloseableGremlinClient(
+                            this.gremlinHosts, this.gremlinPort, this.username, this.password);
             return new MaxGraphClient(
-                    clientBlockingStub, clientWriteBlockingStub, clientBackupBlockingStub, gremlinClient);
+                    clientBlockingStub,
+                    clientWriteBlockingStub,
+                    clientBackupBlockingStub,
+                    gremlinClient);
         }
     }
 }

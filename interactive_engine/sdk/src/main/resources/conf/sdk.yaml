@@ -1,6 +1,7 @@
-serializer: { className: org.apache.tinkerpop.gremlin.driver.ser.GraphBinaryMessageSerializerV1, config: { serializeResultToString: true }}
+serializer: { className: org.apache.tinkerpop.gremlin.driver.ser.GraphBinaryMessageSerializerV1 }
 username: default
 password: default
 connectionPool: {
   maxContentLength: 65536
 }
+

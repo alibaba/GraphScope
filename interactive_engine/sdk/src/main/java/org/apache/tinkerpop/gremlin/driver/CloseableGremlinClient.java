@@ -16,6 +16,8 @@
 
 package org.apache.tinkerpop.gremlin.driver;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -26,14 +28,16 @@ public class CloseableGremlinClient implements AutoCloseable {
     private Client client;
     private Cluster cluster;
 
-    public CloseableGremlinClient(List<String> hosts, int port,
-                                  String userName, String password) {
-        this.cluster = createCluster(hosts, port, userName, password);
-        this.client = this.cluster.connect();
+    public CloseableGremlinClient(List<String> hosts, int port, String userName, String password) {
+        if (!hosts.isEmpty()) {
+            this.cluster = createCluster(hosts, port, userName, password);
+            this.client = this.cluster.connect();
+        }
     }
 
     // return a standard gremlin client to submit query
     public Client gremlinClient() {
+        checkNotNull(this.client, "should initiate the client with a non-empty host list");
         return this.client;
     }
 
@@ -47,15 +51,14 @@ public class CloseableGremlinClient implements AutoCloseable {
         }
     }
 
-    private Cluster createCluster(List<String> hosts, int port,
-                                  String userName, String password) {
+    private Cluster createCluster(List<String> hosts, int port, String userName, String password) {
         Settings settings = loadSettings("conf/sdk.yaml");
         settings.hosts = hosts;
         settings.port = port;
-        if(userName != null) {
+        if (userName != null) {
             settings.username = userName;
         }
-        if(password != null) {
+        if (password != null) {
             settings.password = password;
         }
         return getBuilderFromSettings(settings).create();
@@ -64,48 +67,53 @@ public class CloseableGremlinClient implements AutoCloseable {
     private Cluster.Builder getBuilderFromSettings(Settings settings) {
         List<String> hosts = settings.hosts;
         if (hosts == null || hosts.isEmpty())
-            throw new IllegalStateException("At least one value must be specified to the hosts setting");
+            throw new IllegalStateException(
+                    "At least one value must be specified to the hosts setting");
         String[] points = hosts.toArray(new String[0]);
-        Cluster.Builder builder = Cluster.build()
-                .addContactPoints(points)
-                .port(settings.port)
-                .path(settings.path)
-                .enableSsl(settings.connectionPool.enableSsl)
-                .keepAliveInterval(settings.connectionPool.keepAliveInterval)
-                .keyStore(settings.connectionPool.keyStore)
-                .keyStorePassword(settings.connectionPool.keyStorePassword)
-                .keyStoreType(settings.connectionPool.keyStoreType)
-                .trustStore(settings.connectionPool.trustStore)
-                .trustStorePassword(settings.connectionPool.trustStorePassword)
-                .trustStoreType(settings.connectionPool.trustStoreType)
-                .sslCipherSuites(settings.connectionPool.sslCipherSuites)
-                .sslEnabledProtocols(settings.connectionPool.sslEnabledProtocols)
-                .sslSkipCertValidation(settings.connectionPool.sslSkipCertValidation)
-                .nioPoolSize(settings.nioPoolSize)
-                .workerPoolSize(settings.workerPoolSize)
-                .reconnectInterval(settings.connectionPool.reconnectInterval)
-                .resultIterationBatchSize(settings.connectionPool.resultIterationBatchSize)
-                .channelizer(settings.connectionPool.channelizer)
-                .maxContentLength(settings.connectionPool.maxContentLength)
-                .maxWaitForConnection(settings.connectionPool.maxWaitForConnection)
-                .maxInProcessPerConnection(settings.connectionPool.maxInProcessPerConnection)
-                .minInProcessPerConnection(settings.connectionPool.minInProcessPerConnection)
-                .maxSimultaneousUsagePerConnection(settings.connectionPool.maxSimultaneousUsagePerConnection)
-                .minSimultaneousUsagePerConnection(settings.connectionPool.minSimultaneousUsagePerConnection)
-                .maxConnectionPoolSize(settings.connectionPool.maxSize)
-                .minConnectionPoolSize(settings.connectionPool.minSize)
-                .connectionSetupTimeoutMillis(settings.connectionPool.connectionSetupTimeoutMillis)
-                .validationRequest(settings.connectionPool.validationRequest)
-                .loadBalancingStrategy(new LoadBalancingStrategy.RoundRobin());
+        Cluster.Builder builder =
+                Cluster.build()
+                        .addContactPoints(points)
+                        .port(settings.port)
+                        .path(settings.path)
+                        .enableSsl(settings.connectionPool.enableSsl)
+                        .keepAliveInterval(settings.connectionPool.keepAliveInterval)
+                        .keyStore(settings.connectionPool.keyStore)
+                        .keyStorePassword(settings.connectionPool.keyStorePassword)
+                        .keyStoreType(settings.connectionPool.keyStoreType)
+                        .trustStore(settings.connectionPool.trustStore)
+                        .trustStorePassword(settings.connectionPool.trustStorePassword)
+                        .trustStoreType(settings.connectionPool.trustStoreType)
+                        .sslCipherSuites(settings.connectionPool.sslCipherSuites)
+                        .sslEnabledProtocols(settings.connectionPool.sslEnabledProtocols)
+                        .sslSkipCertValidation(settings.connectionPool.sslSkipCertValidation)
+                        .nioPoolSize(settings.nioPoolSize)
+                        .workerPoolSize(settings.workerPoolSize)
+                        .reconnectInterval(settings.connectionPool.reconnectInterval)
+                        .resultIterationBatchSize(settings.connectionPool.resultIterationBatchSize)
+                        .channelizer(settings.connectionPool.channelizer)
+                        .maxContentLength(settings.connectionPool.maxContentLength)
+                        .maxWaitForConnection(settings.connectionPool.maxWaitForConnection)
+                        .maxInProcessPerConnection(
+                                settings.connectionPool.maxInProcessPerConnection)
+                        .minInProcessPerConnection(
+                                settings.connectionPool.minInProcessPerConnection)
+                        .maxSimultaneousUsagePerConnection(
+                                settings.connectionPool.maxSimultaneousUsagePerConnection)
+                        .minSimultaneousUsagePerConnection(
+                                settings.connectionPool.minSimultaneousUsagePerConnection)
+                        .maxConnectionPoolSize(settings.connectionPool.maxSize)
+                        .minConnectionPoolSize(settings.connectionPool.minSize)
+                        .connectionSetupTimeoutMillis(
+                                settings.connectionPool.connectionSetupTimeoutMillis)
+                        .validationRequest(settings.connectionPool.validationRequest)
+                        .loadBalancingStrategy(new LoadBalancingStrategy.RoundRobin());
 
         if (settings.username != null && settings.password != null)
             builder.credentials(settings.username, settings.password);
 
-        if (settings.jaasEntry != null)
-            builder.jaasEntry(settings.jaasEntry);
+        if (settings.jaasEntry != null) builder.jaasEntry(settings.jaasEntry);
 
-        if (settings.protocol != null)
-            builder.protocol(settings.protocol);
+        if (settings.protocol != null) builder.protocol(settings.protocol);
 
         try {
             builder.serializer(settings.serializer.create());
@@ -123,7 +131,8 @@ public class CloseableGremlinClient implements AutoCloseable {
         try {
             return Settings.read(new FileInputStream(resourceFile));
         } catch (FileNotFoundException e) {
-            throw new RuntimeException(String.format("Configuration file at %s does not exist", resourceConfig));
+            throw new RuntimeException(
+                    String.format("Configuration file at %s does not exist", resourceConfig));
         }
     }
 }
