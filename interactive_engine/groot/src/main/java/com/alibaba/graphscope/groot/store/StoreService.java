@@ -36,6 +36,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -57,11 +58,13 @@ public class StoreService implements MetricsAgent {
     private Configs configs;
     private int storeId;
     private int writeThreadCount;
+    private int downloadThreadCount;
     private MetaService metaService;
     private Map<Integer, GraphPartition> idToPartition;
     private ExecutorService writeExecutor;
     private ExecutorService ingestExecutor;
     private ExecutorService garbageCollectExecutor;
+    private ExecutorService downloadExecutor;
     private boolean enableGc;
     private volatile boolean shouldStop = true;
 
@@ -119,6 +122,17 @@ public class StoreService implements MetricsAgent {
                         new LinkedBlockingQueue<>(),
                         ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
                                 "store-garbage-collect", logger));
+        logger.info("StoreService started. storeId [" + this.storeId + "]");
+        this.downloadThreadCount = 8;
+        this.downloadExecutor =
+                new ThreadPoolExecutor(
+                        0,
+                        downloadThreadCount,
+                        0L,
+                        TimeUnit.MILLISECONDS,
+                        new LinkedBlockingQueue<>(),
+                        ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
+                                "store-download", logger));
         logger.info("StoreService started. storeId [" + this.storeId + "]");
     }
 
@@ -286,8 +300,7 @@ public class StoreService implements MetricsAgent {
                 () -> {
                     try {
                         logger.info("ingest data [" + path + "]");
-                        ingestDataInternal(path);
-                        callback.onCompleted(null);
+                        ingestDataInternal(path, callback);
                     } catch (Exception e) {
                         logger.error("ingest data failed. path [" + path + "]", e);
                         callback.onError(e);
@@ -295,14 +308,31 @@ public class StoreService implements MetricsAgent {
                 });
     }
 
-    private void ingestDataInternal(String path) throws IOException {
+    private void ingestDataInternal(String path, CompletionCallback<Void> callback)
+            throws IOException {
         ExternalStorage externalStorage = ExternalStorage.getStorage(configs, path);
-        for (Map.Entry<Integer, GraphPartition> entry : this.idToPartition.entrySet()) {
+        Set<Map.Entry<Integer, GraphPartition>> entries = this.idToPartition.entrySet();
+        AtomicInteger counter = new AtomicInteger(entries.size());
+        AtomicBoolean finished = new AtomicBoolean(false);
+        for (Map.Entry<Integer, GraphPartition> entry : entries) {
             int pid = entry.getKey();
             GraphPartition partition = entry.getValue();
             String fileName = "part-r-" + String.format("%05d", pid) + ".sst";
             String fullPath = path + "/" + fileName;
-            partition.ingestExternalFile(externalStorage, fullPath);
+            this.downloadExecutor.execute(
+                    () -> {
+                        try {
+                            partition.ingestExternalFile(externalStorage, fullPath);
+                        } catch (IOException e) {
+                            if (!finished.getAndSet(true)) {
+                                callback.onError(e);
+                            }
+                        }
+                        if (counter.decrementAndGet() == 0) {
+                            finished.set(true);
+                            callback.onCompleted(null);
+                        }
+                    });
         }
     }
 
