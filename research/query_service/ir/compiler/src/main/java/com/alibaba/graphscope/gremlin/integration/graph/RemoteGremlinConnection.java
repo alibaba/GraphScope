@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.alibaba.graphscope.gremlin.integration.graph;
 
 import org.apache.tinkerpop.gremlin.driver.Cluster;
@@ -42,7 +43,7 @@ public class RemoteGremlinConnection implements RemoteConnection {
                 Cluster.build()
                         .addContactPoint(split[0])
                         .port(Integer.valueOf(split[1]))
-                        .credentials("admin", "admin")
+                        .credentials("default", "default")
                         .serializer(serializer)
                         .create();
         return cluster;

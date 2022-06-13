@@ -278,9 +278,11 @@ public class MaxGraphClient implements Closeable {
 
     @Override
     public void close() {
-        this.channel.shutdown();
         try {
-            this.channel.awaitTermination(3000, TimeUnit.MILLISECONDS);
+            if(this.channel != null) {
+                this.channel.shutdown();
+                this.channel.awaitTermination(3000, TimeUnit.MILLISECONDS);
+            }
             this.gremlinClient.close();
         } catch (InterruptedException e) {
             // Ignore

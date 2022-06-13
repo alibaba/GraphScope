@@ -32,6 +32,7 @@ import com.alibaba.graphscope.groot.store.StoreService;
 import com.alibaba.maxgraph.common.RoleType;
 import com.alibaba.maxgraph.common.config.CommonConfig;
 import com.alibaba.maxgraph.common.config.Configs;
+import com.alibaba.maxgraph.common.config.FrontendConfig;
 import com.alibaba.maxgraph.common.config.GremlinConfig;
 import com.alibaba.maxgraph.compiler.api.schema.SchemaFetcher;
 import com.alibaba.maxgraph.servers.AbstractService;
@@ -124,6 +125,9 @@ public class IrServiceProducer implements ComputeServiceProducer {
         addToConfigMapIfExist(PegasusConfig.PEGASUS_BATCH_SIZE.getKey(), configMap);
         addToConfigMapIfExist(PegasusConfig.PEGASUS_OUTPUT_CAPACITY.getKey(), configMap);
         addToConfigMapIfExist(PegasusConfig.PEGASUS_MEMORY_LIMIT.getKey(), configMap);
+        // add authentication
+        addToConfigMapIfExist(FrontendConfig.AUTH_USERNAME.getKey(), configMap);
+        addToConfigMapIfExist(FrontendConfig.AUTH_PASSWORD.getKey(), configMap);
 
         return new com.alibaba.graphscope.common.config.Configs(configMap);
     }
