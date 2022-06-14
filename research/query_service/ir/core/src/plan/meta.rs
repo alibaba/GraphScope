@@ -28,6 +28,7 @@ use crate::error::{IrError, IrResult};
 use crate::JsonIO;
 
 pub static INVALID_META_ID: i32 = -1;
+pub type TagId = u32;
 
 lazy_static! {
     pub static ref STORE_META: RwLock<StoreMeta> = RwLock::new(StoreMeta::default());
@@ -578,14 +579,14 @@ pub struct PlanMeta {
     /// `Record`. Such operators include Scan, EdgeExpand, PathExpand, GetV, Project, etc.
     referred_nodes: BTreeMap<u32, OneOrMany<u32>>,
     /// The tag must refer to some valid nodes in the plan.
-    tag_nodes: BTreeMap<u32, Vec<u32>>,
+    tag_nodes: BTreeMap<TagId, Vec<u32>>,
     /// To ease the processing, tag may be mapped to an internal id.
     /// This maintains the mappings
-    tag_ids: BTreeMap<String, u32>,
+    tag_ids: BTreeMap<String, TagId>,
     /// Record the current node that has been processed by the plan
     curr_node: u32,
     /// The maximal tag id that has been assigned, for mapping tag ids.
-    max_tag_id: u32,
+    max_tag_id: TagId,
     /// Whether to preprocess the table name into id.
     is_table_id: bool,
     /// Whether to preprocess the column name into id.
@@ -616,24 +617,24 @@ impl PlanMeta {
 }
 
 impl PlanMeta {
-    pub fn insert_tag_nodes(&mut self, tag: u32, nodes: Vec<u32>) {
+    pub fn insert_tag_nodes(&mut self, tag: TagId, nodes: Vec<u32>) {
         self.tag_nodes
             .entry(tag)
             .or_default()
             .extend(nodes.into_iter());
     }
 
-    pub fn get_tag_nodes(&self, tag: u32) -> Option<&Vec<u32>> {
+    pub fn get_tag_nodes(&self, tag: TagId) -> Option<&Vec<u32>> {
         self.tag_nodes.get(&tag)
     }
 
-    pub fn has_tag(&self, tag: u32) -> bool {
+    pub fn has_tag(&self, tag: TagId) -> bool {
         self.tag_nodes.contains_key(&tag)
     }
 
     /// Get the id (with a `true` indicator) of the given tag if it already presents,
     /// otherwise, set and return the id as `self.max_tag_id` (with a `false` indicator).
-    pub fn get_or_set_tag_id(&mut self, tag: &str) -> (bool, u32) {
+    pub fn get_or_set_tag_id(&mut self, tag: &str) -> (bool, TagId) {
         let entry = self.tag_ids.entry(tag.to_string());
         match entry {
             Entry::Occupied(o) => (true, *o.get()),
@@ -646,11 +647,11 @@ impl PlanMeta {
         }
     }
 
-    pub fn get_tag_id_mappings(&self) -> &BTreeMap<String, u32> {
+    pub fn get_tag_id_mappings(&self) -> &BTreeMap<String, TagId> {
         &self.tag_ids
     }
 
-    pub fn get_tag_id(&self, tag: &str) -> Option<u32> {
+    pub fn get_tag_id(&self, tag: &str) -> Option<TagId> {
         self.tag_ids.get(tag).cloned()
     }
 
@@ -752,7 +753,7 @@ impl PlanMeta {
     /// If the tag is `None`, the associated nodes are the referred nodes of current nodes.
     /// If the metadata does not exist, create one and return the newly created.
     /// If there is no node associated with the tag, return `TagNotExist` error.
-    pub fn tag_nodes_meta_mut(&mut self, tag_opt: Option<u32>) -> IrResult<NodeMetaOpt> {
+    pub fn tag_nodes_meta_mut(&mut self, tag_opt: Option<TagId>) -> IrResult<NodeMetaOpt> {
         if let Some(tag) = tag_opt {
             if let Some(nodes) = self.tag_nodes.get(&tag).cloned() {
                 Ok(self.get_or_insert_nodes_meta(nodes))

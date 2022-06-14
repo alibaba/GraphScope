@@ -151,9 +151,9 @@ impl Record {
         self.columns.borrow_mut()
     }
 
-    pub fn get(&self, tag: Option<&KeyId>) -> Option<&Arc<Entry>> {
+    pub fn get(&self, tag: Option<KeyId>) -> Option<&Arc<Entry>> {
         if let Some(tag) = tag {
-            self.columns.get(*tag as usize)
+            self.columns.get(tag as usize)
         } else {
             self.curr.as_ref()
         }
@@ -235,7 +235,7 @@ impl Context<RecordElement> for Record {
             match tag {
                 // TODO: may better throw an unsupported error if tag is a string_tag
                 NameOrId::Str(_) => None,
-                NameOrId::Id(id) => Some(id),
+                NameOrId::Id(id) => Some(*id),
             }
         } else {
             None

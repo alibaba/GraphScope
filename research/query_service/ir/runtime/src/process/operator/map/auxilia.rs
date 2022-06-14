@@ -29,6 +29,7 @@ use crate::process::record::{Entry, Record};
 /// and rename the entity, if `alias` has been set.
 #[derive(Debug)]
 struct AuxiliaOperator {
+    tag: Option<KeyId>,
     query_params: QueryParams,
     alias: Option<KeyId>,
 }
@@ -36,7 +37,7 @@ struct AuxiliaOperator {
 impl FilterMapFunction<Record, Record> for AuxiliaOperator {
     fn exec(&self, mut input: Record) -> FnResult<Option<Record>> {
         let entry = input
-            .get(None)
+            .get(self.tag)
             .ok_or(FnExecError::get_tag_error("get current entry failed in AuxiliaOperator"))?
             .clone();
         // Make sure there is anything to query with
@@ -94,12 +95,16 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
 
 impl FilterMapFuncGen for algebra_pb::Auxilia {
     fn gen_filter_map(self) -> FnGenResult<Box<dyn FilterMapFunction<Record, Record>>> {
+        let tag = self
+            .tag
+            .map(|alias| alias.try_into())
+            .transpose()?;
         let query_params = self.params.try_into()?;
         let alias = self
             .alias
             .map(|alias| alias.try_into())
             .transpose()?;
-        let auxilia_operator = AuxiliaOperator { query_params, alias };
+        let auxilia_operator = AuxiliaOperator { tag, query_params, alias };
         debug!("Runtime AuxiliaOperator: {:?}", auxilia_operator);
         Ok(Box::new(auxilia_operator))
     }

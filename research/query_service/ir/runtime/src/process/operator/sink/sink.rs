@@ -203,7 +203,7 @@ impl MapFunction<Record, Vec<u8>> for RecordSinkEncoder {
     fn exec(&self, input: Record) -> FnResult<Vec<u8>> {
         let mut sink_columns = Vec::with_capacity(self.sink_keys.len());
         for sink_key in self.sink_keys.iter() {
-            if let Some(entry) = input.get(sink_key.as_ref()) {
+            if let Some(entry) = input.get(sink_key.clone()) {
                 let entry_pb = self.entry_to_pb(entry.deref());
                 let column_pb = result_pb::Column {
                     name_or_id: sink_key

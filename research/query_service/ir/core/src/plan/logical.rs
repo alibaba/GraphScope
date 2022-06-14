@@ -27,7 +27,7 @@ use ir_common::NameOrId;
 use vec_map::VecMap;
 
 use crate::error::{IrError, IrResult};
-use crate::plan::meta::{ColumnsOpt, PlanMeta, Schema, StoreMeta, INVALID_META_ID, STORE_META};
+use crate::plan::meta::{ColumnsOpt, PlanMeta, Schema, StoreMeta, TagId, INVALID_META_ID, STORE_META};
 use crate::plan::patmat::{MatchingStrategy, NaiveStrategy};
 use crate::JsonIO;
 
@@ -915,12 +915,12 @@ fn preprocess_params(
 
 fn get_or_set_tag_id(
     tag_pb: &mut common_pb::NameOrId, should_exist: bool, plan_meta: &mut PlanMeta,
-) -> IrResult<u32> {
+) -> IrResult<TagId> {
     use common_pb::name_or_id::Item;
     if let Some(tag_item) = tag_pb.item.as_mut() {
         let (is_exist, tag_id) = match tag_item {
             Item::Name(tag) => plan_meta.get_or_set_tag_id(tag),
-            Item::Id(id) => (true, *id as u32),
+            Item::Id(id) => (true, *id as TagId),
         };
         if should_exist && !is_exist {
             return Err(IrError::TagNotExist((tag_id as i32).into()));

@@ -35,7 +35,7 @@ impl<E: Into<GraphObject> + 'static> FlatMapFunction<Record, Record> for EdgeExp
 
     fn exec(&self, input: Record) -> FnResult<Self::Target> {
         let entry = input
-            .get(self.start_v_tag.as_ref())
+            .get(self.start_v_tag)
             .ok_or(FnExecError::get_tag_error("get start_v failed"))?;
         if let Some(v) = entry.as_graph_vertex() {
             let id = v.id();

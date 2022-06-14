@@ -35,7 +35,7 @@ struct GetVertexOperator {
 impl MapFunction<Record, Record> for GetVertexOperator {
     fn exec(&self, mut input: Record) -> FnResult<Record> {
         let entry = input
-            .get(self.start_tag.as_ref())
+            .get(self.start_tag)
             .ok_or(FnExecError::get_tag_error("get tag failed in GetVertexOperator"))?;
         if let Some(e) = entry.as_graph_edge() {
             let (id, label) = match self.opt {

@@ -232,7 +232,7 @@ mod test {
         let mut expected_ids = vec![v2, v4];
         while let Some(Ok(record)) = result.next() {
             if let Some(element) = record
-                .get(Some(&TAG_B.into()))
+                .get(Some(TAG_B))
                 .unwrap()
                 .as_graph_vertex()
             {

@@ -139,7 +139,7 @@ impl AsPhysical for pb::EdgeExpand {
 
     fn post_process(&mut self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         let mut is_adding_auxilia = false;
-        let mut auxilia = pb::Auxilia { params: None, alias: None };
+        let mut auxilia = pb::Auxilia { tag: None, params: None, alias: None };
         if let Some(params) = self.params.as_mut() {
             if let Some(node_meta) = plan_meta.get_curr_node_meta() {
                 let columns = node_meta.get_columns();
@@ -255,7 +255,7 @@ impl AsPhysical for pb::GetV {
 
     fn post_process(&mut self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         let mut is_adding_auxilia = false;
-        let mut auxilia = pb::Auxilia { params: None, alias: None };
+        let mut auxilia = pb::Auxilia { tag: None, params: None, alias: None };
         if let Some(params) = self.params.as_mut() {
             if let Some(node_meta) = plan_meta.get_curr_node_meta() {
                 let columns = node_meta.get_columns();
@@ -293,7 +293,7 @@ impl AsPhysical for pb::GetV {
 impl AsPhysical for pb::As {
     fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         // Transform to `Auxilia` internally.
-        let auxilia = pb::Auxilia { params: None, alias: self.alias.clone() };
+        let auxilia = pb::Auxilia { tag: None, params: None, alias: self.alias.clone() };
         auxilia.add_job_builder(builder, plan_meta)
     }
 }
@@ -671,6 +671,7 @@ mod test {
             .flat_map(pb::logical_plan::Operator::from(build_edgexpd(false, vec![], None)).encode_to_vec());
         expected_builder.filter_map(
             pb::logical_plan::Operator::from(pb::Auxilia {
+                tag: None,
                 params: Some(query_params(vec![], vec!["birthday".into()])),
                 alias: None,
             })
@@ -697,6 +698,7 @@ mod test {
         expected_builder.repartition(vec![]);
         expected_builder.filter_map(
             pb::logical_plan::Operator::from(pb::Auxilia {
+                tag: None,
                 params: Some(query_params(vec![], vec!["birthday".into()])),
                 alias: None,
             })
@@ -731,6 +733,7 @@ mod test {
             .flat_map(pb::logical_plan::Operator::from(build_edgexpd(false, vec![], None)).encode_to_vec());
         expected_builder.filter_map(
             pb::logical_plan::Operator::from(pb::Auxilia {
+                tag: None,
                 params: Some(query_params(vec![], vec!["age".into(), "id".into(), "name".into()])),
                 alias: Some(0.into()),
             })
@@ -757,6 +760,7 @@ mod test {
         expected_builder.repartition(vec![]);
         expected_builder.filter_map(
             pb::logical_plan::Operator::from(pb::Auxilia {
+                tag: None,
                 params: Some(query_params(vec![], vec!["age".into(), "id".into(), "name".into()])),
                 alias: Some(0.into()),
             })
@@ -862,6 +866,7 @@ mod test {
         expected_builder.map(pb::logical_plan::Operator::from(build_getv(None)).encode_to_vec());
         expected_builder.filter_map(
             pb::logical_plan::Operator::from(pb::Auxilia {
+                tag: None,
                 params: Some(query_params(vec![], vec!["age".into(), "id".into(), "name".into()])),
                 alias: Some(0.into()),
             })
@@ -889,6 +894,7 @@ mod test {
         expected_builder.repartition(vec![]);
         expected_builder.filter_map(
             pb::logical_plan::Operator::from(pb::Auxilia {
+                tag: None,
                 params: Some(query_params(vec![], vec!["age".into(), "id".into(), "name".into()])),
                 alias: Some(0.into()),
             })
@@ -1222,6 +1228,7 @@ mod test {
                     .repartition(vec![])
                     .filter_map(
                         pb::logical_plan::Operator::from(pb::Auxilia {
+                            tag: None,
                             params: Some(query_params(vec![], vec!["lang".into()])),
                             alias: Some(1.into()),
                         })

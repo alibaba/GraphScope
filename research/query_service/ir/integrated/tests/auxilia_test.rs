@@ -61,8 +61,11 @@ mod test {
             alias: None,
         };
 
-        let auxilia_opr =
-            pb::Auxilia { params: Some(query_params(vec![], vec![], None)), alias: Some(TAG_A.into()) };
+        let auxilia_opr = pb::Auxilia {
+            tag: None,
+            params: Some(query_params(vec![], vec![], None)),
+            alias: Some(TAG_A.into()),
+        };
 
         let conf = JobConf::new("auxilia_simple_alias_test");
         let mut result = pegasus::run(conf, || {
@@ -83,7 +86,7 @@ mod test {
         let mut result_ids = vec![];
         while let Some(Ok(record)) = result.next() {
             if let Some(element) = record
-                .get(Some(&TAG_A.into()))
+                .get(Some(TAG_A))
                 .unwrap()
                 .as_graph_vertex()
             {
@@ -105,8 +108,11 @@ mod test {
             alias: None,
         };
 
-        let auxilia_opr =
-            pb::Auxilia { params: Some(query_params(vec![], vec!["name".into()], None)), alias: None };
+        let auxilia_opr = pb::Auxilia {
+            tag: None,
+            params: Some(query_params(vec![], vec!["name".into()], None)),
+            alias: None,
+        };
 
         let conf = JobConf::new("auxilia_get_property_test");
         let mut result = pegasus::run(conf, || {
@@ -155,6 +161,7 @@ mod test {
         };
 
         let auxilia_opr = pb::Auxilia {
+            tag: None,
             params: Some(query_params(vec![], vec!["name".into()], None)),
             alias: Some(TAG_A.into()),
         };
@@ -178,7 +185,7 @@ mod test {
         let mut result_ids_with_prop = vec![];
         while let Some(Ok(record)) = result.next() {
             if let Some(element) = record
-                .get(Some(&TAG_A.into()))
+                .get(Some(TAG_A))
                 .unwrap()
                 .as_graph_vertex()
             {
@@ -210,6 +217,7 @@ mod test {
         };
 
         let auxilia_opr = pb::Auxilia {
+            tag: None,
             params: Some(query_params(
                 vec![],
                 vec![],
@@ -265,6 +273,7 @@ mod test {
         };
 
         let auxilia_opr = pb::Auxilia {
+            tag: None,
             params: Some(query_params(
                 vec![],
                 vec!["name".into()],
@@ -292,7 +301,7 @@ mod test {
         let mut result_ids = vec![];
         while let Some(Ok(record)) = result.next() {
             if let Some(element) = record
-                .get(Some(&TAG_A.into()))
+                .get(Some(TAG_A))
                 .unwrap()
                 .as_graph_vertex()
             {
@@ -306,10 +315,16 @@ mod test {
     // g.V() with two auxilia ops to test updating with new properties
     #[test]
     fn auxilia_update_test() {
-        let auxilia_opr_1 =
-            pb::Auxilia { params: Some(query_params(vec![], vec!["id".into()], None)), alias: None };
-        let auxilia_opr_2 =
-            pb::Auxilia { params: Some(query_params(vec![], vec!["name".into()], None)), alias: None };
+        let auxilia_opr_1 = pb::Auxilia {
+            tag: None,
+            params: Some(query_params(vec![], vec!["id".into()], None)),
+            alias: None,
+        };
+        let auxilia_opr_2 = pb::Auxilia {
+            tag: None,
+            params: Some(query_params(vec![], vec!["name".into()], None)),
+            alias: None,
+        };
 
         let conf = JobConf::new("auxilia_update_test");
         let mut result = pegasus::run(conf, || {

@@ -141,7 +141,7 @@ mod tests {
         let mut result = count_test(init_source(), fold_opr_pb);
         let mut cnt = 0;
         if let Some(Ok(record)) = result.next() {
-            if let Some(entry) = record.get(Some(&TAG_A.into())) {
+            if let Some(entry) = record.get(Some(TAG_A)) {
                 cnt = match entry.as_ref() {
                     Entry::Element(RecordElement::OffGraph(CommonObject::Count(cnt))) => *cnt,
                     _ => {
