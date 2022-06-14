@@ -19,13 +19,12 @@ mod common;
 
 #[cfg(test)]
 mod test {
+    use graph_proxy::apis::{GraphElement, ID};
     use ir_common::generated::algebra as pb;
     use ir_common::generated::common as common_pb;
     use pegasus_client::builder::*;
     use pegasus_server::JobRequest;
     use prost::Message;
-    use runtime::graph::element::GraphElement;
-    use runtime::graph::ID;
 
     use crate::common::test::*;
 

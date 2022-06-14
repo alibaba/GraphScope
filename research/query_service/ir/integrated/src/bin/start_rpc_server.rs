@@ -15,8 +15,8 @@
 
 use std::path::PathBuf;
 
-use graph_proxy::{InitializeJobCompiler, QueryExpGraph};
 use log::info;
+use runtime_integration::{InitializeJobAssembly, QueryExpGraph};
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
@@ -34,10 +34,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let num_servers = server_config.servers_size();
     let query_exp_graph = QueryExpGraph::new(num_servers);
-    let factory = query_exp_graph.initialize_job_compiler();
+    let job_assembly = query_exp_graph.initialize_job_assembly();
     info!("try to start rpc server;");
 
-    pegasus_server::cluster::standalone::start(rpc_config, server_config, factory).await?;
+    pegasus_server::cluster::standalone::start(rpc_config, server_config, job_assembly).await?;
 
     Ok(())
 }

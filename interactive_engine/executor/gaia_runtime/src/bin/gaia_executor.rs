@@ -20,7 +20,6 @@ extern crate grpcio;
 #[macro_use]
 extern crate log;
 extern crate gaia_pegasus;
-extern crate graph_proxy;
 extern crate log4rs;
 extern crate maxgraph_common;
 extern crate maxgraph_runtime;
@@ -33,7 +32,7 @@ extern crate structopt;
 
 use gaia_runtime::server::init_with_rpc_service;
 use gaia_runtime::server::manager::GaiaServerManager;
-use graph_proxy::{InitializeJobCompiler, QueryVineyard};
+use runtime_integration::{InitializeJobAssembly, QueryVineyard};
 use grpcio::ChannelBuilder;
 use grpcio::EnvBuilder;
 use maxgraph_common::proto::data::*;
@@ -283,7 +282,7 @@ impl<V, VI, E, EI> GaiaService<V, VI, E, EI>
                 self.worker_partition_list_mapping.clone(),
                 self.store_config.worker_num as usize,
             );
-            let job_assembly = query_vineyard.initialize_job_compiler();
+            let job_assembly = query_vineyard.initialize_job_assembly();
             let rpc_config = RPCServerConfig::new(Some("0.0.0.0".to_string()), Some(self.store_config.rpc_port as u16));
             let service_listener = GaiaRpcServiceListener::default();
             let service_listener_clone = service_listener.clone();
@@ -320,11 +319,6 @@ impl Clone for GaiaRpcServiceListener {
 }
 
 impl GaiaRpcServiceListener {
-    fn new() -> Self {
-        GaiaRpcServiceListener {
-            rpc_addr: Arc::new(Mutex::new(None)),
-        }
-    }
     fn get_rpc_port(&self) -> Option<u16> {
         self.rpc_addr.lock().unwrap().map(|addr| addr.port())
     }

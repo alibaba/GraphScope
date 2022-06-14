@@ -28,32 +28,31 @@ use graph_store::prelude::{
     LargeGraphDB, LocalEdge, LocalVertex, MutableGraphDB, Row, INVALID_LABEL_ID,
 };
 use ir_common::{KeyId, NameOrId};
-use pegasus::api::function::FnResult;
 use pegasus::configure_with_default;
 use pegasus_common::downcast::*;
 use pegasus_common::impl_as_any;
-use runtime::error::FnExecError;
-use runtime::graph::element::{Edge, Vertex};
-use runtime::graph::property::{DefaultDetails, Details, DynDetails};
-use runtime::graph::{register_graph, Direction, GraphProxy, QueryParams, Statement, ID};
 
-use crate::from_fn;
+use crate::apis::{
+    from_fn, register_graph, DefaultDetails, Details, Direction, DynDetails, Edge, QueryParams, ReadGraph,
+    Statement, Vertex, ID,
+};
+use crate::errors::{GraphProxyError, GraphProxyResult};
 use crate::{filter_limit, limit_n};
 
 lazy_static! {
     pub static ref DATA_PATH: String = configure_with_default!(String, "DATA_PATH", "".to_string());
     pub static ref PARTITION_ID: usize = configure_with_default!(usize, "PARTITION_ID", 0);
     pub static ref GRAPH: LargeGraphDB<DefaultId, InternalId> = _init_graph();
-    static ref GRAPH_PROXY: Arc<DemoGraph> = initialize();
+    static ref GRAPH_PROXY: Arc<ExpStore> = initialize();
 }
 
-pub struct DemoGraph {
+pub struct ExpStore {
     store: &'static LargeGraphDB<DefaultId, InternalId>,
 }
 
-fn initialize() -> Arc<DemoGraph> {
+fn initialize() -> Arc<ExpStore> {
     lazy_static::initialize(&GRAPH);
-    Arc::new(DemoGraph { store: &GRAPH })
+    Arc::new(ExpStore { store: &GRAPH })
 }
 
 fn _init_graph() -> LargeGraphDB<DefaultId, InternalId> {
@@ -221,8 +220,10 @@ fn _init_modern_graph() -> LargeGraphDB<DefaultId, InternalId> {
     mut_graph.into_graph(schema)
 }
 
-impl GraphProxy for DemoGraph {
-    fn scan_vertex(&self, params: &QueryParams) -> FnResult<Box<dyn Iterator<Item = Vertex> + Send>> {
+impl ReadGraph for ExpStore {
+    fn scan_vertex(
+        &self, params: &QueryParams,
+    ) -> GraphProxyResult<Box<dyn Iterator<Item = Vertex> + Send>> {
         // DemoGraph contains a single graph partition on each server,
         // therefore, there's no need to use the specific partition id for query.
         // Besides, we guarantee only one worker (on each server) is going to scan (with params.partitions.is_some())
@@ -243,13 +244,13 @@ impl GraphProxy for DemoGraph {
 
     fn index_scan_vertex(
         &self, _label: &NameOrId, _primary_key_values: &Vec<(NameOrId, Object)>, _params: &QueryParams,
-    ) -> FnResult<Option<Vertex>> {
-        Err(FnExecError::query_store_error(
+    ) -> GraphProxyResult<Option<Vertex>> {
+        Err(GraphProxyError::query_store_error(
             "Experiment storage does not support index_scan_vertex for now",
         ))?
     }
 
-    fn scan_edge(&self, params: &QueryParams) -> FnResult<Box<dyn Iterator<Item = Edge> + Send>> {
+    fn scan_edge(&self, params: &QueryParams) -> GraphProxyResult<Box<dyn Iterator<Item = Edge> + Send>> {
         if params.partitions.is_some() {
             let label_ids = encode_storage_edge_label(&params.labels);
             let store = self.store;
@@ -266,7 +267,7 @@ impl GraphProxy for DemoGraph {
 
     fn get_vertex(
         &self, ids: &[ID], params: &QueryParams,
-    ) -> FnResult<Box<dyn Iterator<Item = Vertex> + Send>> {
+    ) -> GraphProxyResult<Box<dyn Iterator<Item = Vertex> + Send>> {
         let mut result = Vec::with_capacity(ids.len());
         for id in ids {
             if let Some(local_vertex) = self.store.get_vertex(*id as DefaultId) {
@@ -279,7 +280,7 @@ impl GraphProxy for DemoGraph {
 
     fn get_edge(
         &self, ids: &[ID], params: &QueryParams,
-    ) -> FnResult<Box<dyn Iterator<Item = Edge> + Send>> {
+    ) -> GraphProxyResult<Box<dyn Iterator<Item = Edge> + Send>> {
         let mut result = Vec::with_capacity(ids.len());
         for id in ids {
             let eid = encode_store_e_id(id);
@@ -293,7 +294,7 @@ impl GraphProxy for DemoGraph {
 
     fn prepare_explore_vertex(
         &self, direction: Direction, params: &QueryParams,
-    ) -> FnResult<Box<dyn Statement<ID, Vertex>>> {
+    ) -> GraphProxyResult<Box<dyn Statement<ID, Vertex>>> {
         let edge_label_ids = encode_storage_edge_label(params.labels.as_ref());
         let filter = params.filter.clone();
         let limit = params.limit.clone();
@@ -313,7 +314,7 @@ impl GraphProxy for DemoGraph {
 
     fn prepare_explore_edge(
         &self, direction: Direction, params: &QueryParams,
-    ) -> FnResult<Box<dyn Statement<ID, Edge>>> {
+    ) -> GraphProxyResult<Box<dyn Statement<ID, Edge>>> {
         let edge_label_ids = encode_storage_edge_label(&params.labels);
         let filter = params.filter.clone();
         let limit = params.limit.clone();
@@ -332,7 +333,7 @@ impl GraphProxy for DemoGraph {
 }
 
 #[allow(dead_code)]
-pub fn create_demo_graph() {
+pub fn create_exp_store() {
     lazy_static::initialize(&GRAPH_PROXY);
     register_graph(GRAPH_PROXY.clone());
 }

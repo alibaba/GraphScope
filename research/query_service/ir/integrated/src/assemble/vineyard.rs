@@ -1,5 +1,5 @@
 //
-//! Copyright 2021 Alibaba Group Holding Limited.
+//! Copyright 2022 Alibaba Group Holding Limited.
 //!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
@@ -13,48 +13,15 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-mod graph_partition;
-mod graph_query;
-
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 
-use graph_partition::{MaxGraphMultiPartition, VineyardMultiPartition};
-use graph_query::create_gs_store;
+use graph_proxy::{create_gs_store, VineyardMultiPartition};
 use maxgraph_store::api::graph_partition::GraphPartitionManager;
 use maxgraph_store::api::{Edge, GlobalGraphQuery, Vertex};
 use runtime::IRJobAssembly;
 
-use crate::InitializeJobCompiler;
-
-pub struct QueryMaxGraph<V, VI, E, EI> {
-    graph_query: Arc<dyn GlobalGraphQuery<V = V, VI = VI, E = E, EI = EI>>,
-    graph_partitioner: Arc<dyn GraphPartitionManager>,
-}
-
-#[allow(dead_code)]
-impl<V, VI, E, EI> QueryMaxGraph<V, VI, E, EI> {
-    pub fn new(
-        graph_query: Arc<dyn GlobalGraphQuery<V = V, VI = VI, E = E, EI = EI>>,
-        graph_partitioner: Arc<dyn GraphPartitionManager>,
-    ) -> Self {
-        QueryMaxGraph { graph_query, graph_partitioner }
-    }
-}
-
-impl<V, VI, E, EI> InitializeJobCompiler for QueryMaxGraph<V, VI, E, EI>
-where
-    V: Vertex + 'static,
-    VI: Iterator<Item = V> + Send + 'static,
-    E: Edge + 'static,
-    EI: Iterator<Item = E> + Send + 'static,
-{
-    fn initialize_job_compiler(&self) -> IRJobAssembly {
-        create_gs_store(self.graph_query.clone(), self.graph_partitioner.clone());
-        let partitioner = MaxGraphMultiPartition::new(self.graph_partitioner.clone());
-        IRJobAssembly::new(partitioner)
-    }
-}
+use crate::InitializeJobAssembly;
 
 pub struct QueryVineyard<V, VI, E, EI> {
     graph_query: Arc<dyn GlobalGraphQuery<V = V, VI = VI, E = E, EI = EI>>,
@@ -83,14 +50,14 @@ impl<V, VI, E, EI> QueryVineyard<V, VI, E, EI> {
 }
 
 /// Initialize GremlinJobCompiler for vineyard
-impl<V, VI, E, EI> InitializeJobCompiler for QueryVineyard<V, VI, E, EI>
+impl<V, VI, E, EI> InitializeJobAssembly for QueryVineyard<V, VI, E, EI>
 where
     V: Vertex + 'static,
     VI: Iterator<Item = V> + Send + 'static,
     E: Edge + 'static,
     EI: Iterator<Item = E> + Send + 'static,
 {
-    fn initialize_job_compiler(&self) -> IRJobAssembly {
+    fn initialize_job_assembly(&self) -> IRJobAssembly {
         create_gs_store(self.graph_query.clone(), self.graph_partitioner.clone());
         let partitioner = VineyardMultiPartition::new(
             self.graph_partitioner.clone(),

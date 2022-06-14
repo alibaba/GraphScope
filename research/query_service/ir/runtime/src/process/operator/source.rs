@@ -18,15 +18,12 @@ use std::convert::TryFrom;
 use std::sync::Arc;
 
 use dyn_type::Object;
+use graph_proxy::apis::{get_graph, Edge, Partitioner, QueryParams, Vertex, ID};
 use ir_common::error::{ParsePbError, ParsePbResult};
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::{KeyId, NameOrId};
 
 use crate::error::{FnGenError, FnGenResult};
-use crate::graph::element::{Edge, Vertex};
-use crate::graph::partitioner::Partitioner;
-use crate::graph::QueryParams;
-use crate::graph::ID;
 use crate::process::record::Record;
 
 #[derive(Debug)]
@@ -117,7 +114,7 @@ impl SourceOperator {
 
 impl SourceOperator {
     pub fn gen_source(self, worker_index: usize) -> FnGenResult<Box<dyn Iterator<Item = Record> + Send>> {
-        let graph = crate::get_graph().ok_or(FnGenError::NullGraphError)?;
+        let graph = get_graph().ok_or(FnGenError::NullGraphError)?;
         match self.source_type {
             SourceType::Vertex => {
                 let mut v_source = Box::new(std::iter::empty()) as Box<dyn Iterator<Item = Vertex> + Send>;

@@ -19,16 +19,16 @@ use std::hash::Hash;
 use std::sync::Arc;
 
 use dyn_type::{BorrowObject, Object};
+use graph_proxy::apis::{
+    DynDetails, Edge, Element, GraphElement, GraphObject, GraphPath, Vertex, VertexOrEdge,
+};
+use graph_proxy::utils::expr::eval::Context;
 use ir_common::error::ParsePbError;
 use ir_common::generated::results as result_pb;
 use ir_common::{KeyId, NameOrId};
 use pegasus::api::function::DynIter;
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 use vec_map::VecMap;
-
-use crate::expr::eval::Context;
-use crate::graph::element::{Edge, Element, GraphElement, GraphObject, GraphPath, Vertex, VertexOrEdge};
-use crate::graph::property::DynDetails;
 
 #[derive(Debug, Clone, Hash, PartialEq, PartialOrd)]
 pub enum CommonObject {

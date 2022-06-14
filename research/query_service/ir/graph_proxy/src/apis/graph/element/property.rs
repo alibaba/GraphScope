@@ -26,6 +26,7 @@ use ir_common::generated::common as pb;
 use ir_common::NameOrId;
 use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
 use pegasus_common::downcast::*;
+use pegasus_common::impl_as_any;
 
 /// The three types of property to get
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]

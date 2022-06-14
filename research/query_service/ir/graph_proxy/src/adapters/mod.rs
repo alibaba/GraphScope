@@ -1,5 +1,5 @@
 //
-//! Copyright 2020 Alibaba Group Holding Limited.
+//! Copyright 2021 Alibaba Group Holding Limited.
 //!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
@@ -13,13 +13,8 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-pub use assembly::IRJobAssembly;
+mod exp_store;
+mod gs_store;
 
-pub mod assembly;
-pub mod error;
-pub mod process;
-
-#[macro_use]
-extern crate dyn_type;
-#[macro_use]
-extern crate log;
+pub use exp_store::{create_exp_store, SimplePartition};
+pub use gs_store::{create_gs_store, GrootMultiPartition, VineyardMultiPartition};
