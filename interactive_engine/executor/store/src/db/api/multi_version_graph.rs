@@ -203,7 +203,7 @@ pub trait MultiVersionGraph {
     /// prepare data load
     fn prepare_data_load(&self, si: SnapshotId, schema_version: i64, target: &DataLoadTarget, table_id: i64) -> GraphResult<bool>;
 
-    fn commit_data_load(&self, si: SnapshotId, schema_version: i64, target: &DataLoadTarget, table_id: i64) -> GraphResult<bool>;
+    fn commit_data_load(&self, si: SnapshotId, schema_version: i64, target: &DataLoadTarget, table_id: i64, partition_id: i32, unique_path: &str) -> GraphResult<bool>;
 
     /// Open a backup engine of graph storage that implements GraphBackup trait.
     fn open_backup_engine(&self, backup_path: &str) -> GraphResult<Box<dyn GraphBackup>>;

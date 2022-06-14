@@ -185,12 +185,13 @@ public class MaxGraphClient implements Closeable {
         return GraphDef.parseProto(response.getGraphDef());
     }
 
-    public void commitDataLoad(Map<Long, DataLoadTarget> tableToTarget) {
+    public void commitDataLoad(Map<Long, DataLoadTarget> tableToTarget, String path) {
         CommitDataLoadRequest.Builder builder = CommitDataLoadRequest.newBuilder();
         tableToTarget.forEach(
                 (tableId, target) -> {
                     builder.putTableToTarget(tableId, target.toProto());
                 });
+        builder.setPath(path);
         CommitDataLoadResponse response = this.stub.commitDataLoad(builder.build());
     }
 

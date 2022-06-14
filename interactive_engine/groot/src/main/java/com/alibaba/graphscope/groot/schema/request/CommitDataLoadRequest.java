@@ -14,6 +14,7 @@
 package com.alibaba.graphscope.groot.schema.request;
 
 import com.alibaba.graphscope.groot.operation.OperationType;
+import com.alibaba.maxgraph.proto.CommitDataLoadPb;
 import com.alibaba.maxgraph.proto.PrepareDataLoadPb;
 import com.alibaba.maxgraph.sdkcommon.common.DataLoadTarget;
 import com.google.protobuf.ByteString;
@@ -22,18 +23,21 @@ public class CommitDataLoadRequest extends AbstractDdlRequest {
 
     private DataLoadTarget dataLoadTarget;
     private long tableId;
+    private String path;
 
-    public CommitDataLoadRequest(DataLoadTarget dataLoadTarget, long tableId) {
+    public CommitDataLoadRequest(DataLoadTarget dataLoadTarget, long tableId, String path) {
         super(OperationType.COMMIT_DATA_LOAD);
         this.dataLoadTarget = dataLoadTarget;
         this.tableId = tableId;
+        this.path = path;
     }
 
     @Override
     protected ByteString getBytes() {
-        return PrepareDataLoadPb.newBuilder()
+        return CommitDataLoadPb.newBuilder()
                 .setTarget(dataLoadTarget.toProto())
                 .setTableIdx(this.tableId)
+                .setPath(this.path)
                 .build()
                 .toByteString();
     }

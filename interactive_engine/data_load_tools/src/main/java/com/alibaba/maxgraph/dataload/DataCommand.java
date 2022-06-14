@@ -90,6 +90,7 @@ public abstract class DataCommand {
                 objectMapper.readValue(
                         metaMap.get("mappings"),
                         new TypeReference<Map<String, ColumnMappingInfo>>() {});
+        this.uniquePath = metaMap.get("unique_path");
     }
 
     public abstract void run();

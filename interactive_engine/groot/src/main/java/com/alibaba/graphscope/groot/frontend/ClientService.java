@@ -114,12 +114,13 @@ public class ClientService extends ClientGrpc.ClientImplBase {
             StreamObserver<CommitDataLoadResponse> responseObserver) {
         DdlRequestBatch.Builder builder = DdlRequestBatch.newBuilder();
         Map<Long, DataLoadTargetPb> tableToTarget = request.getTableToTargetMap();
+        String path = request.getPath();
         tableToTarget.forEach(
                 (tableId, targetPb) -> {
                     DataLoadTarget dataLoadTarget = DataLoadTarget.parseProto(targetPb);
                     builder.addDdlRequest(
                             new com.alibaba.graphscope.groot.schema.request.CommitDataLoadRequest(
-                                    dataLoadTarget, tableId));
+                                    dataLoadTarget, tableId, path));
                 });
         DdlRequestBatch batch = builder.build();
         try {

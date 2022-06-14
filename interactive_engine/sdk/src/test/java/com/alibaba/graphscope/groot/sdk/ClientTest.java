@@ -43,7 +43,7 @@ public class ClientTest {
     void testCommitData() {
         long tableId = -4611686018427387871L;
         DataLoadTarget target = DataLoadTarget.newBuilder().setLabel("person").build();
-        client.commitDataLoad(Collections.singletonMap(tableId, target));
+        client.commitDataLoad(Collections.singletonMap(tableId, target), "");
     }
 
     @Test
