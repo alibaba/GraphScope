@@ -22,6 +22,7 @@ import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.intermediate.InterOpCollection;
 import com.alibaba.graphscope.common.intermediate.MatchSentence;
 import com.alibaba.graphscope.common.intermediate.operator.*;
+import com.alibaba.graphscope.common.intermediate.strategy.ElementFusionStrategy;
 import com.alibaba.graphscope.common.jna.type.*;
 import com.alibaba.graphscope.gremlin.InterOpCollectionBuilder;
 import com.alibaba.graphscope.gremlin.antlr4.GremlinAntlrToJava;
@@ -98,6 +99,7 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
         @Override
         public InterOpBase apply(Step step) {
             SelectOp op = new SelectOp();
+            op.setType(SelectOp.FilterType.HAS);
             List containers = ((HasStep) step).getHasContainers();
             // add corner judgement
             if (!containers.isEmpty()) {
@@ -321,6 +323,7 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
             GetVOp op = new GetVOp();
             op.setGetVOpt(
                     new OpArg<>(otherStep, (EdgeOtherVertexStep otherStep1) -> FfiVOpt.Other));
+            op.setParams(new QueryParams());
             return op;
         }
     },
@@ -546,6 +549,17 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
                                 });
                         InterOpCollection ops =
                                 (new InterOpCollectionBuilder(binderTraversal)).build();
+                        // apply fusion strategy
+                        ElementFusionStrategy.INSTANCE.apply(ops);
+                        // all of the SelectOps should have been fused with Expand/GetV, otherwise
+                        // invalid
+                        for (InterOpBase opBase : ops.unmodifiableCollection()) {
+                            if (opBase instanceof SelectOp) {
+                                throw new OpArgIllegalException(
+                                        OpArgIllegalException.Cause.INVALID_TYPE,
+                                        "the filter should have been fused with GetV or Expand");
+                            }
+                        }
                         sentences.add(
                                 new MatchSentence(startTag.get(), endTag.get(), ops, joinKind));
                     });
@@ -556,7 +570,8 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
             return step instanceof VertexStep // in()/out()/both()/inE()/outE()/bothE()
                     || step instanceof PathExpandStep // out/in/both('1..5', 'knows')
                     || step instanceof EdgeOtherVertexStep // otherV()
-                    || step instanceof EdgeVertexStep; // inV()/outV()/endV()(todo)
+                    || step instanceof EdgeVertexStep // inV()/outV()/endV()(todo)
+                    || step instanceof HasStep; // permit has() nested in match step
         }
     },
 

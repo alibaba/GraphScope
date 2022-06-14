@@ -67,7 +67,8 @@ jobs:
 
     # We do this, since failures on test.pypi aren't that bad
     - name: Publish to Test PyPI
-      if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope' }}
+      # the limit of graphscope package in test.pypi is still 100MB, which is not enough.
+      if: false
       uses: pypa/gh-action-pypi-publish@v1.4.2
       with:
         user: __token__
@@ -166,10 +167,10 @@ jobs:
 
         # install graphscope
         tar -zxf ./wheel-${{ github.sha }}/graphscope.tar.gz
-        pushd coordinator/dist/wheelhouse
+        pushd coordinator/dist
         python3 -m pip install ./*.whl --user
         popd
-        pushd coordinator/dist
+        pushd coordinator/dist/wheelhouse
         python3 -m pip install ./*.whl --user
         popd
 
@@ -222,10 +223,10 @@ jobs:
 
         # install graphscope
         tar -zxf ./wheel-${{ github.sha }}/graphscope.tar.gz
-        pushd coordinator/dist/wheelhouse
+        pushd coordinator/dist
         python3 -m pip install ./*.whl --user
         popd
-        pushd coordinator/dist
+        pushd coordinator/dist/wheelhouse
         python3 -m pip install ./*.whl --user || true
         popd
 

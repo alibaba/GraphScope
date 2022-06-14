@@ -15,13 +15,12 @@
 
 use std::convert::TryInto;
 
+use graph_proxy::apis::{get_graph, GraphElement, QueryParams};
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::KeyId;
 use pegasus::api::function::{FilterMapFunction, FnResult};
 
 use crate::error::{FnExecError, FnGenResult};
-use crate::graph::element::GraphElement;
-use crate::graph::QueryParams;
 use crate::process::operator::map::FilterMapFuncGen;
 use crate::process::record::{Entry, Record};
 
@@ -48,7 +47,7 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
         // TODO: it seems that we do not really care about getting head from curr or "a", we only need to save the updated entry with expected alias "a"
         if self.query_params.is_queryable() {
             // If queryable, then turn into graph element and do the query
-            let graph = crate::get_graph().ok_or(FnExecError::NullGraphError)?;
+            let graph = get_graph().ok_or(FnExecError::NullGraphError)?;
             let new_entry: Option<Entry> = if let Some(v) = entry.as_graph_vertex() {
                 let mut result_iter = graph.get_vertex(&[v.id()], &self.query_params)?;
                 result_iter.next().map(|vertex| vertex.into())

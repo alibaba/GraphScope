@@ -19,6 +19,7 @@ mod common;
 
 #[cfg(test)]
 mod test {
+    use graph_proxy::apis::GraphElement;
     use graph_store::common::DefaultId;
     use graph_store::ldbc::LDBCVertexParser;
     use ir_common::generated::algebra as pb;
@@ -27,7 +28,6 @@ mod test {
     use pegasus_server::job_pb as server_pb;
     use pegasus_server::JobRequest;
     use prost::Message;
-    use runtime::graph::element::GraphElement;
     use runtime::process::record::{CommonObject, Entry, RecordElement};
 
     use crate::common::test::*;

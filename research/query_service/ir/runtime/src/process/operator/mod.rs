@@ -30,14 +30,13 @@ use std::convert::TryFrom;
 use std::sync::Arc;
 
 use dyn_type::Object;
+use graph_proxy::apis::{Details, Element, GraphElement, PropKey};
 use ir_common::error::ParsePbError;
 use ir_common::generated::common as common_pb;
 use ir_common::{KeyId, NameOrId};
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 
 use crate::error::FnExecError;
-use crate::graph::element::{Element, GraphElement};
-use crate::graph::property::{Details, PropKey};
 use crate::process::record::{CommonObject, Entry, Record, RecordElement};
 
 #[derive(Clone, Debug, Default)]
@@ -208,11 +207,10 @@ pub(crate) mod tests {
     use std::collections::HashMap;
 
     use dyn_type::Object;
+    use graph_proxy::apis::{DefaultDetails, DynDetails, GraphElement, Vertex};
     use ir_common::KeyId;
 
     use super::*;
-    use crate::graph::element::{GraphElement, Vertex};
-    use crate::graph::property::{DefaultDetails, DynDetails};
     use crate::process::record::RecordElement;
 
     pub const TAG_A: KeyId = 0;

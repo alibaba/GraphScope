@@ -48,8 +48,8 @@ impl TypeCommon {
         self.codec_manager.add_codec(si, codec)
     }
 
-    pub fn gc(&self, _si: SnapshotId) {
-        unimplemented!()
+    pub fn gc(&self, si: SnapshotId) -> GraphResult<Vec<TableId>> {
+        self.table_manager.gc(si)
     }
 }
 
@@ -70,6 +70,10 @@ impl LifeTime {
 
     pub fn is_alive_at(&self, si: SnapshotId) -> bool {
         self.start_si.get() <= si && self.end_si.get() > si
+    }
+
+    pub fn is_obsolete_at(&self, si: SnapshotId) -> bool {
+        self.end_si.get() <= si
     }
 
     pub fn get_start(&self) -> SnapshotId {

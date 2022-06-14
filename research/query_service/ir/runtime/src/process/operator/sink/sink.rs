@@ -19,6 +19,7 @@ use std::convert::TryInto;
 use std::ops::Deref;
 
 use dyn_type::Object;
+use graph_proxy::apis::{Edge, GraphElement, GraphObject, GraphPath, Vertex, VertexOrEdge};
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::algebra::sink_default::MetaType;
 use ir_common::generated::common as common_pb;
@@ -28,7 +29,6 @@ use pegasus::api::function::{FnResult, MapFunction};
 use prost::Message;
 
 use crate::error::FnGenResult;
-use crate::graph::element::{Edge, GraphElement, GraphObject, GraphPath, Vertex, VertexOrEdge};
 use crate::process::operator::sink::{SinkGen, Sinker};
 use crate::process::record::{CommonObject, Entry, Record, RecordElement};
 

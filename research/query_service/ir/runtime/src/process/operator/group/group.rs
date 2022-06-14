@@ -83,6 +83,7 @@ mod tests {
     use std::collections::{HashMap, HashSet};
 
     use dyn_type::Object;
+    use graph_proxy::apis::{DefaultDetails, DynDetails, Vertex};
     use ir_common::generated::algebra as pb;
     use ir_common::generated::common as common_pb;
     use ir_common::NameOrId;
@@ -90,8 +91,6 @@ mod tests {
     use pegasus::result::ResultStream;
     use pegasus::JobConf;
 
-    use crate::graph::element::Vertex;
-    use crate::graph::property::{DefaultDetails, DynDetails};
     use crate::process::functions::GroupGen;
     use crate::process::operator::accum::accumulator::Accumulator;
     use crate::process::operator::tests::{init_source, init_vertex1, init_vertex2, TAG_A, TAG_B, TAG_C};

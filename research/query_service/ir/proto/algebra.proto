@@ -438,4 +438,6 @@ message LogicalPlan {
   }
   // A array of nodes
   repeated Node nodes = 1;
+  /// The root nodes' array indices
+  repeated int32 roots = 2;
 }

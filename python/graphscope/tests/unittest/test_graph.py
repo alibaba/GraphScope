@@ -47,6 +47,32 @@ def test_graph_schema(arrow_property_graph):
     assert schema.edge_labels == ["e0", "e1"]
 
 
+def test_graph_schema_todict(p2p_property_graph):
+    rlt = {
+        "vertices": [
+            {
+                "label": "person",
+                "properties": [
+                    {"name": "weight", "id": 0, "type": "LONG"},
+                    {"name": "id", "id": 1, "type": "LONG"},
+                ],
+            }
+        ],
+        "edges": [
+            {
+                "label": "knows",
+                "properties": [
+                    {"name": "src_label_id", "id": 0, "type": "LONG"},
+                    {"name": "dst_label_id", "id": 1, "type": "LONG"},
+                    {"name": "dist", "id": 2, "type": "LONG"},
+                ],
+                "relations": [{"src_label": "person", "dst_label": "person"}],
+            }
+        ],
+    }
+    assert p2p_property_graph.schema.to_dict() == rlt
+
+
 def test_load_graph_copy(graphscope_session, arrow_property_graph):
     g = arrow_property_graph
     g2 = graphscope_session.g(g)

@@ -998,6 +998,26 @@ mod params {
 
         FfiError::success()
     }
+
+    /// Add extra parameters
+    #[no_mangle]
+    pub extern "C" fn add_params_extra(
+        ptr_params: *const c_void, c_key: *const c_char, c_val: *const c_char,
+    ) -> FfiError {
+        let mut params = unsafe { Box::from_raw(ptr_params as *mut pb::QueryParams) };
+        let key = cstr_to_string(c_key);
+        if key.is_err() {
+            return key.err().unwrap();
+        }
+        let val = cstr_to_string(c_val);
+        if val.is_err() {
+            return val.err().unwrap();
+        }
+        params.extra.insert(key.unwrap(), val.unwrap());
+        std::mem::forget(params);
+
+        FfiError::success()
+    }
 }
 
 mod project {

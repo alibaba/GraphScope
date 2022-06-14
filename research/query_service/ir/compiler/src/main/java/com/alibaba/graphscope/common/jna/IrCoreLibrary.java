@@ -226,4 +226,6 @@ public interface IrCoreLibrary extends Library {
     FfiError.ByValue setParamsIsAllColumns(Pointer params);
 
     FfiKeyResult.ByValue getKeyName(int keyId, FfiKeyType keyType);
+
+    FfiError.ByValue addParamsExtra(Pointer params, String key, String value);
 }
