@@ -19,12 +19,12 @@ package com.alibaba.graphscope.gremlin.auth;
 public class AuthManagerReference {
     private static AuthManager authManager;
 
-    // get a global AuthManager instance from the static function
+    // static function, get a global and single instance of AuthManager
     public static AuthManager getAuthManager() {
         return authManager;
     }
 
-    // set a global AuthManager instance
+    // static function, set a global and single instance of AuthManager
     public static void setAuthManager(AuthManager authManager) {
         AuthManagerReference.authManager = authManager;
     }

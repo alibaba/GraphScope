@@ -20,5 +20,9 @@ import org.apache.tinkerpop.gremlin.server.auth.AuthenticatedUser;
 import org.apache.tinkerpop.gremlin.server.auth.AuthenticationException;
 
 public interface AuthManager<T extends AuthenticatedUser> {
+    // authenticate the userName and the password from the clients
     T authenticate(String userName, String password) throws AuthenticationException;
+
+    // judge whether the authentication of gremlin server is enabled
+    boolean requireAuthentication();
 }

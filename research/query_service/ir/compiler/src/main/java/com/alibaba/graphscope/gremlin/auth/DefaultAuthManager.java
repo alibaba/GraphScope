@@ -30,19 +30,27 @@ public class DefaultAuthManager implements AuthManager<AuthenticatedUser> {
         this.configs = configs;
     }
 
-    // authenticate the username and the password by comparing with the configs
+    // authenticate the username and the password by comparing with the expected from configs
     @Override
     public AuthenticatedUser authenticate(String userName, String password)
             throws AuthenticationException {
         String authUserName = AuthConfig.AUTH_USERNAME.get(configs);
         String authPassword = AuthConfig.AUTH_PASSWORD.get(configs);
         // no authentication
-        if (StringUtils.isEmpty(authUserName) || StringUtils.isEmpty(authPassword)) {
+        if (!requireAuthentication()) {
             return AuthenticatedUser.ANONYMOUS_USER;
         }
         if (!authUserName.equals(userName) || !authPassword.equals(password)) {
             throw new AuthenticationException("user " + userName + " is invalid");
         }
         return new AuthenticatedUser(userName);
+    }
+
+    // if either of auth.username or auth.password is not set, disable the authentication
+    @Override
+    public boolean requireAuthentication() {
+        String authUserName = AuthConfig.AUTH_USERNAME.get(configs);
+        String authPassword = AuthConfig.AUTH_PASSWORD.get(configs);
+        return !StringUtils.isEmpty(authUserName) && !StringUtils.isEmpty(authPassword);
     }
 }

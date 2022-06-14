@@ -53,5 +53,5 @@ writeBufferLowWaterMark: 32768
 writeBufferHighWaterMark: 65536
 authentication: {
   authenticator: com.alibaba.graphscope.gremlin.auth.DefaultAuthenticator,
-  authenticationHandler: org.apache.tinkerpop.gremlin.server.handler.SaslAuthenticationHandler,
+  authenticationHandler: com.alibaba.graphscope.gremlin.auth.IrAuthenticationHandler,
 }

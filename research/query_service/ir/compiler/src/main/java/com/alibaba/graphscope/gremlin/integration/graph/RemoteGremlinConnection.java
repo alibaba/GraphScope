@@ -39,11 +39,11 @@ public class RemoteGremlinConnection implements RemoteConnection {
     public static Cluster createCluster(String endpoint) throws Exception {
         String[] split = endpoint.split(":");
         MessageSerializer serializer = new GryoMessageSerializerV1d0();
+        // authentication is unnecessary in tests
         Cluster cluster =
                 Cluster.build()
                         .addContactPoint(split[0])
                         .port(Integer.valueOf(split[1]))
-                        .credentials("default", "default")
                         .serializer(serializer)
                         .create();
         return cluster;
