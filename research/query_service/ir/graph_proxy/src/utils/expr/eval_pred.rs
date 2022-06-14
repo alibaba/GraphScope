@@ -22,10 +22,9 @@ use ir_common::expr_parse::error::{ExprError, ExprResult};
 use ir_common::generated::algebra as pb;
 use ir_common::generated::common as common_pb;
 
-use crate::expr::eval::{apply_logical, Context, Evaluate, Evaluator, Operand};
-use crate::expr::{ExprEvalError, ExprEvalResult};
-use crate::graph::element::Element;
-use crate::graph::property::{Details, PropKey};
+use crate::apis::{Details, Element, PropKey};
+use crate::utils::expr::eval::{apply_logical, Context, Evaluate, Evaluator, Operand};
+use crate::utils::expr::{ExprEvalError, ExprEvalResult};
 
 /// The trait to define evaluating a predicate, which return `bool` value.
 pub trait EvalPred {
@@ -525,14 +524,14 @@ impl TryFrom<pb::IndexPredicate> for PEvaluator {
 mod tests {
     use std::collections::HashMap;
 
+    use dyn_type::object;
     use dyn_type::Object;
     use ir_common::expr_parse::str_to_expr_pb;
     use ir_common::NameOrId;
 
     use super::*;
-    use crate::expr::eval::NoneContext;
-    use crate::graph::element::Vertex;
-    use crate::graph::property::{DefaultDetails, DynDetails};
+    use crate::apis::{DefaultDetails, DynDetails, Vertex};
+    use crate::utils::expr::eval::NoneContext;
 
     struct Vertices {
         vec: Vec<Vertex>,

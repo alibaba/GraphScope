@@ -1,5 +1,5 @@
 [package]
-name = "runtime_test"
+name = "runtime_integration"
 version = "0.1.0"
 edition = "2018"
 
@@ -23,6 +23,7 @@ runtime = {path="../runtime"}
 graph_proxy = {path = "../graph_proxy"}
 graph_store = {path = "../../../graph_store"}
 dyn_type = {path = "../../../dyn_type"}
+maxgraph-store = {path = "../../../../interactive_engine/executor/store"}
 
 [features]
 default = []

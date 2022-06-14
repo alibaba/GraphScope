@@ -42,7 +42,7 @@ futures = { version = "0.3.0", features = ["thread-pool"] }
 gaia_pegasus = { path = "../../../research/engine/pegasus/pegasus", package = "pegasus" }
 pegasus_network = { path = "../../../research/engine/pegasus/network" }
 pegasus_server = { path = "../../../research/engine/pegasus/server" }
-graph_proxy =  { path = "../../../research/query_service/ir/graph_proxy" }
+runtime_integration =  { path = "../../../research/query_service/ir/integrated" }
 
 [dev-dependencies]
 env_logger = "0.6"

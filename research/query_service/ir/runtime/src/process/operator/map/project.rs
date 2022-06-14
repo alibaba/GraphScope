@@ -17,6 +17,7 @@ use std::convert::{TryFrom, TryInto};
 use std::sync::Arc;
 
 use dyn_type::Object;
+use graph_proxy::utils::expr::eval::{Evaluate, Evaluator};
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::common as common_pb;
@@ -24,7 +25,6 @@ use ir_common::KeyId;
 use pegasus::api::function::{FnResult, MapFunction};
 
 use crate::error::{FnExecError, FnGenResult};
-use crate::expr::eval::{Evaluate, Evaluator};
 use crate::process::operator::map::MapFuncGen;
 use crate::process::operator::TagKey;
 use crate::process::record::{CommonObject, Entry, Record, RecordElement};
@@ -141,6 +141,7 @@ mod tests {
     use std::collections::HashMap;
 
     use dyn_type::Object;
+    use graph_proxy::apis::{DefaultDetails, DynDetails, GraphElement, Vertex};
     use ir_common::expr_parse::str_to_expr_pb;
     use ir_common::generated::algebra as pb;
     use ir_common::NameOrId;
@@ -148,8 +149,6 @@ mod tests {
     use pegasus::result::ResultStream;
     use pegasus::JobConf;
 
-    use crate::graph::element::{GraphElement, Vertex};
-    use crate::graph::property::{DefaultDetails, DynDetails};
     use crate::process::operator::map::MapFuncGen;
     use crate::process::operator::tests::{
         init_source, init_source_with_multi_tags, init_source_with_tag, init_vertex1, init_vertex2,

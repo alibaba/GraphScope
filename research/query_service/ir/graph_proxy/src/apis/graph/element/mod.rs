@@ -13,10 +13,6 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-mod edge;
-mod path;
-mod vertex;
-
 use std::fmt::Debug;
 use std::hash::Hash;
 
@@ -26,10 +22,15 @@ use ir_common::NameOrId;
 pub use path::GraphPath;
 pub use path::VertexOrEdge;
 use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
+pub use property::{DefaultDetails, Details, DynDetails, PropKey};
 pub use vertex::Vertex;
 
-use crate::graph::property::DynDetails;
-use crate::graph::ID;
+use crate::apis::ID;
+
+mod edge;
+mod path;
+mod property;
+mod vertex;
 
 /// An `Element` is an abstraction of the data filed in an IR `Record`.
 pub trait Element {
