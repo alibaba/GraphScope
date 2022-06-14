@@ -21,6 +21,8 @@ mod common;
 mod test {
     use std::sync::Arc;
 
+    use dyn_type::object;
+    use dyn_type::Object;
     use graph_proxy::apis::{Details, Element, GraphElement};
     use graph_proxy::{create_exp_store, SimplePartition};
     use ir_common::expr_parse::str_to_expr_pb;
@@ -299,5 +301,60 @@ mod test {
         }
         result_ids.sort();
         assert_eq!(result_ids, expected_ids)
+    }
+
+    // g.V() with two auxilia ops to test updating with new properties
+    #[test]
+    fn auxilia_update_test() {
+        let auxilia_opr_1 =
+            pb::Auxilia { params: Some(query_params(vec![], vec!["id".into()], None)), alias: None };
+        let auxilia_opr_2 =
+            pb::Auxilia { params: Some(query_params(vec![], vec!["name".into()], None)), alias: None };
+
+        let conf = JobConf::new("auxilia_update_test");
+        let mut result = pegasus::run(conf, || {
+            let auxilia_1 = auxilia_opr_1.clone();
+            let auxilia_2 = auxilia_opr_2.clone();
+            |input, output| {
+                let mut stream = input.input_from(source_gen(None))?;
+                let filter_map_func_1 = auxilia_1.gen_filter_map().unwrap();
+                stream = stream.filter_map(move |input| filter_map_func_1.exec(input))?;
+                let filter_map_func_2 = auxilia_2.gen_filter_map().unwrap();
+                stream = stream.filter_map(move |input| filter_map_func_2.exec(input))?;
+                stream.sink_into(output)
+            }
+        })
+        .expect("build job failure");
+
+        let mut expected_id_names: Vec<(Object, Object)> = vec![
+            (object!(1), object!("marko")),
+            (object!(2), object!("vadas")),
+            (object!(3), object!("lop")),
+            (object!(4), object!("josh")),
+            (object!(5), object!("ripple")),
+            (object!(6), object!("peter")),
+        ];
+
+        let mut results: Vec<(Object, Object)> = vec![];
+        while let Some(Ok(record)) = result.next() {
+            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
+                let details = element.details().unwrap();
+                results.push((
+                    details
+                        .get_property(&"id".to_string().into())
+                        .unwrap()
+                        .try_to_owned()
+                        .unwrap(),
+                    details
+                        .get_property(&"name".to_string().into())
+                        .unwrap()
+                        .try_to_owned()
+                        .unwrap(),
+                ));
+            }
+        }
+        expected_id_names.sort_by(|e1, e2| e1.0.cmp(&e2.0));
+        results.sort_by(|e1, e2| e1.0.cmp(&e2.0));
+        assert_eq!(expected_id_names, results)
     }
 }

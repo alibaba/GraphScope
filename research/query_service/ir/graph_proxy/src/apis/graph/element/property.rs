@@ -113,6 +113,9 @@ pub trait Details: std::fmt::Debug + Send + Sync + AsAny {
     /// (2) if some prop_keys are provided when querying the vertex/edge which indicates that only these properties are necessary,
     /// then we can only get all pre-specified properties of the vertex/edge.
     fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>>;
+
+    /// Insert a property with given property key and value
+    fn insert_property(&mut self, key: NameOrId, value: Object) -> Option<Object>;
 }
 
 #[derive(Clone)]
@@ -135,6 +138,12 @@ impl Details for DynDetails {
 
     fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {
         self.inner.get_all_properties()
+    }
+
+    fn insert_property(&mut self, key: NameOrId, value: Object) -> Option<Object> {
+        Arc::get_mut(&mut self.inner)
+            .map(|e| e.insert_property(key, value))
+            .unwrap_or(None)
     }
 }
 
@@ -225,6 +234,10 @@ impl Details for DefaultDetails {
     fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {
         // it's actually unreachable!()
         Some(self.inner.clone())
+    }
+
+    fn insert_property(&mut self, key: NameOrId, value: Object) -> Option<Object> {
+        self.inner.insert(key, value)
     }
 }
 

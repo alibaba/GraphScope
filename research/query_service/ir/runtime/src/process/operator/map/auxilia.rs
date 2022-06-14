@@ -15,7 +15,7 @@
 
 use std::convert::TryInto;
 
-use graph_proxy::apis::{get_graph, GraphElement, QueryParams};
+use graph_proxy::apis::{get_graph, Details, Element, GraphElement, QueryParams};
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::KeyId;
 use pegasus::api::function::{FilterMapFunction, FnResult};
@@ -25,8 +25,8 @@ use crate::process::operator::map::FilterMapFuncGen;
 use crate::process::record::{Entry, Record};
 
 /// An Auxilia operator to get extra information for the current entity.
-/// Specifically, we will replace the old entity with the new one with details,
-/// and set rename the entity, if `alias` has been set.
+/// Specifically, we will update the old entity by appending the new extra information,
+/// and rename the entity, if `alias` has been set.
 #[derive(Debug)]
 struct AuxiliaOperator {
     query_params: QueryParams,
@@ -50,10 +50,30 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
             let graph = get_graph().ok_or(FnExecError::NullGraphError)?;
             let new_entry: Option<Entry> = if let Some(v) = entry.as_graph_vertex() {
                 let mut result_iter = graph.get_vertex(&[v.id()], &self.query_params)?;
-                result_iter.next().map(|vertex| vertex.into())
+                result_iter.next().map(|mut vertex| {
+                    if let Some(details) = v.details() {
+                        if let Some(properties) = details.get_all_properties() {
+                            for (key, val) in properties {
+                                vertex
+                                    .get_details_mut()
+                                    .insert_property(key, val);
+                            }
+                        }
+                    }
+                    vertex.into()
+                })
             } else if let Some(e) = entry.as_graph_edge() {
                 let mut result_iter = graph.get_edge(&[e.id()], &self.query_params)?;
-                result_iter.next().map(|edge| edge.into())
+                result_iter.next().map(|mut edge| {
+                    if let Some(details) = e.details() {
+                        if let Some(properties) = details.get_all_properties() {
+                            for (key, val) in properties {
+                                edge.get_details_mut().insert_property(key, val);
+                            }
+                        }
+                    }
+                    edge.into()
+                })
             } else {
                 Err(FnExecError::unexpected_data_error("should be vertex or edge in AuxiliaOperator"))?
             };

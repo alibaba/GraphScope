@@ -481,6 +481,15 @@ impl Details for LazyVertexDetails {
         }
         Some(all_props)
     }
+
+    fn insert_property(&mut self, key: NameOrId, _value: Object) -> Option<Object> {
+        if let Some(prop_keys) = self.prop_keys.as_mut() {
+            prop_keys.push(key);
+        } else {
+            self.prop_keys = Some(vec![key]);
+        }
+        None
+    }
 }
 
 impl Drop for LazyVertexDetails {
