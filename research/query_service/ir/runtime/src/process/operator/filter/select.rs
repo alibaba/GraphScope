@@ -15,12 +15,12 @@
 
 use std::convert::TryInto;
 
+use graph_proxy::utils::expr::eval_pred::{EvalPred, PEvaluator};
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use pegasus::api::function::{FilterFunction, FnResult};
 
 use crate::error::{FnExecError, FnGenResult};
-use crate::expr::eval_pred::{EvalPred, PEvaluator};
 use crate::process::operator::filter::FilterFuncGen;
 use crate::process::record::Record;
 
@@ -53,14 +53,13 @@ impl FilterFuncGen for algebra_pb::Select {
 
 #[cfg(test)]
 mod tests {
+    use graph_proxy::apis::{Details, Element, GraphElement};
     use ir_common::expr_parse::str_to_expr_pb;
     use ir_common::generated::algebra as pb;
     use pegasus::api::{Filter, Sink};
     use pegasus::result::ResultStream;
     use pegasus::JobConf;
 
-    use crate::graph::element::{Element, GraphElement};
-    use crate::graph::property::Details;
     use crate::process::operator::filter::FilterFuncGen;
     use crate::process::operator::tests::init_source;
     use crate::process::record::Record;

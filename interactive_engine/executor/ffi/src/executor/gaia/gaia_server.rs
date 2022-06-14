@@ -24,7 +24,7 @@ use tokio::runtime::Runtime;
 use pegasus_server::rpc::{RPCServerConfig, ServiceStartListener, start_all};
 use pegasus_network::SimpleServerDetector;
 use pegasus_network::config::{NetworkConfig, ServerAddr};
-use graph_proxy::{InitializeJobCompiler, QueryMaxGraph};
+use runtime_integration::{InitializeJobAssembly, QueryGrootGraph};
 use maxgraph_store::api::PartitionId;
 use std::thread;
 use std::time::Duration;
@@ -60,8 +60,8 @@ impl GaiaServer {
         let gaia_config = make_gaia_config(self.config.clone());
         let gaia_rpc_config = make_gaia_rpc_config(self.config.clone());
         let (server_port, rpc_port) = self.rpc_runtime.block_on(async {
-            let query_maxgraph = QueryMaxGraph::new(self.graph.clone(), self.graph.clone());
-            let job_compiler = query_maxgraph.initialize_job_compiler();
+            let query_maxgraph = QueryGrootGraph::new(self.graph.clone(), self.graph.clone());
+            let job_compiler = query_maxgraph.initialize_job_assembly();
             let service_listener = GaiaServiceListener::default();
             let service_listener_clone = service_listener.clone();
             self.rpc_runtime.spawn(async move {start_all(
@@ -163,9 +163,6 @@ impl Clone for GaiaServiceListener {
 }
 
 impl GaiaServiceListener {
-    fn new() -> Self {
-        GaiaServiceListener { rpc_addr: Arc::new(Mutex::new(None)), server_addr: Arc::new(Mutex::new(None)) }
-    }
     fn get_rpc_port(&self) -> Option<u16> {
         self.rpc_addr.lock().unwrap().map(|addr|addr.port())
     }

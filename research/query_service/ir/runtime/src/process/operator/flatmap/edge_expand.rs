@@ -15,13 +15,12 @@
 
 use std::convert::TryInto;
 
+use graph_proxy::apis::{get_graph, Direction, GraphElement, GraphObject, Statement, ID};
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::KeyId;
 use pegasus::api::function::{DynIter, FlatMapFunction, FnResult};
 
 use crate::error::{FnExecError, FnGenError, FnGenResult};
-use crate::graph::element::{GraphElement, GraphObject};
-use crate::graph::{Direction, Statement, ID};
 use crate::process::operator::flatmap::FlatMapFuncGen;
 use crate::process::record::{Record, RecordExpandIter, RecordPathExpandIter};
 
@@ -63,7 +62,7 @@ impl FlatMapFuncGen for algebra_pb::EdgeExpand {
     fn gen_flat_map(
         self,
     ) -> FnGenResult<Box<dyn FlatMapFunction<Record, Record, Target = DynIter<Record>>>> {
-        let graph = crate::get_graph().ok_or(FnGenError::NullGraphError)?;
+        let graph = get_graph().ok_or(FnGenError::NullGraphError)?;
         let start_v_tag = self
             .v_tag
             .map(|v_tag| v_tag.try_into())

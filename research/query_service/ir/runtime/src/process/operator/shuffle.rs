@@ -16,14 +16,13 @@
 use std::convert::TryInto;
 use std::sync::Arc;
 
+use graph_proxy::apis::{GraphElement, Partitioner, VertexOrEdge};
 use ir_common::error::ParsePbError;
 use ir_common::generated::common as common_pb;
 use ir_common::KeyId;
 use pegasus::api::function::{FnResult, RouteFunction};
 
 use crate::error::FnExecError;
-use crate::graph::element::{GraphElement, VertexOrEdge};
-use crate::graph::partitioner::Partitioner;
 use crate::process::record::Record;
 
 pub struct RecordRouter {
@@ -49,20 +48,25 @@ impl RouteFunction<Record> for RecordRouter {
     fn route(&self, t: &Record) -> FnResult<u64> {
         if let Some(entry) = t.get(self.shuffle_key.as_ref()) {
             if let Some(v) = entry.as_graph_vertex() {
-                self.p.get_partition(&v.id(), self.num_workers)
+                Ok(self
+                    .p
+                    .get_partition(&v.id(), self.num_workers)?)
             } else if let Some(e) = entry.as_graph_edge() {
                 // shuffle e to the partition that contains other_id
-                self.p
-                    .get_partition(&e.get_other_id(), self.num_workers)
+                Ok(self
+                    .p
+                    .get_partition(&e.get_other_id(), self.num_workers)?)
             } else if let Some(p) = entry.as_graph_path() {
                 let path_end = p
                     .get_path_end()
                     .ok_or(FnExecError::unexpected_data_error("get path_end failed in shuffle"))?;
                 match path_end {
-                    VertexOrEdge::V(v) => self.p.get_partition(&v.id(), self.num_workers),
-                    VertexOrEdge::E(e) => self
+                    VertexOrEdge::V(v) => Ok(self
                         .p
-                        .get_partition(&e.get_other_id(), self.num_workers),
+                        .get_partition(&v.id(), self.num_workers)?),
+                    VertexOrEdge::E(e) => Ok(self
+                        .p
+                        .get_partition(&e.get_other_id(), self.num_workers)?),
                 }
             } else {
                 //TODO(bingqing): deal with other element shuffle

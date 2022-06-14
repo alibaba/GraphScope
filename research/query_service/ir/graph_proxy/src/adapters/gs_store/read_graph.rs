@@ -25,14 +25,12 @@ use maxgraph_store::api::prelude::Property;
 use maxgraph_store::api::*;
 use maxgraph_store::api::{Edge as StoreEdge, Vertex as StoreVertex};
 use maxgraph_store::api::{PropId, SnapshotId};
-use pegasus::api::function::FnResult;
-use runtime::error::{FnExecError, FnExecResult};
-use runtime::graph::element::{Edge, Vertex};
-use runtime::graph::property::{DefaultDetails, DynDetails};
-use runtime::graph::{Direction, GraphProxy, QueryParams, Statement, ID};
-use runtime::register_graph;
 
-use crate::from_fn;
+use crate::apis::{
+    from_fn, register_graph, DefaultDetails, Direction, DynDetails, Edge, QueryParams, ReadGraph,
+    Statement, Vertex, ID,
+};
+use crate::errors::{GraphProxyError, GraphProxyResult};
 use crate::{filter_limit, limit_n};
 
 // Should be identical to the param_name given by compiler
@@ -65,14 +63,16 @@ pub fn create_gs_store<V, VI, E, EI>(
     register_graph(Arc::new(graph));
 }
 
-impl<V, VI, E, EI> GraphProxy for GraphScopeStore<V, VI, E, EI>
+impl<V, VI, E, EI> ReadGraph for GraphScopeStore<V, VI, E, EI>
 where
     V: StoreVertex + 'static,
     VI: Iterator<Item = V> + Send + 'static,
     E: StoreEdge + 'static,
     EI: Iterator<Item = E> + Send + 'static,
 {
-    fn scan_vertex(&self, params: &QueryParams) -> FnResult<Box<dyn Iterator<Item = Vertex> + Send>> {
+    fn scan_vertex(
+        &self, params: &QueryParams,
+    ) -> GraphProxyResult<Box<dyn Iterator<Item = Vertex> + Send>> {
         if let Some(partitions) = params.partitions.as_ref() {
             let store = self.store.clone();
             let si = params
@@ -113,7 +113,7 @@ where
 
     fn index_scan_vertex(
         &self, label_id: &NameOrId, primary_key_values: &Vec<(NameOrId, Object)>, _params: &QueryParams,
-    ) -> FnResult<Option<Vertex>> {
+    ) -> GraphProxyResult<Option<Vertex>> {
         let store_label_id = encode_storage_label(label_id)?;
         let store_indexed_values: Vec<Property> = primary_key_values
             .iter()
@@ -133,7 +133,7 @@ where
         }
     }
 
-    fn scan_edge(&self, params: &QueryParams) -> FnResult<Box<dyn Iterator<Item = Edge> + Send>> {
+    fn scan_edge(&self, params: &QueryParams) -> GraphProxyResult<Box<dyn Iterator<Item = Edge> + Send>> {
         if let Some(partitions) = params.partitions.as_ref() {
             let store = self.store.clone();
             let si = params
@@ -170,7 +170,7 @@ where
 
     fn get_vertex(
         &self, ids: &[ID], params: &QueryParams,
-    ) -> FnResult<Box<dyn Iterator<Item = Vertex> + Send>> {
+    ) -> GraphProxyResult<Box<dyn Iterator<Item = Vertex> + Send>> {
         let store = self.store.clone();
         let si = params
             .get_extra_param(SNAPSHOT_ID)
@@ -192,14 +192,14 @@ where
 
     fn get_edge(
         &self, _ids: &[ID], _params: &QueryParams,
-    ) -> FnResult<Box<dyn Iterator<Item = Edge> + Send>> {
+    ) -> GraphProxyResult<Box<dyn Iterator<Item = Edge> + Send>> {
         // TODO(bingqing): adapt get_edge when graphscope support this
-        Err(FnExecError::query_store_error("GraphScope storage does not support get_edge for now"))?
+        Err(GraphProxyError::query_store_error("GraphScope storage does not support get_edge for now"))?
     }
 
     fn prepare_explore_vertex(
         &self, direction: Direction, params: &QueryParams,
-    ) -> FnResult<Box<dyn Statement<ID, Vertex>>> {
+    ) -> GraphProxyResult<Box<dyn Statement<ID, Vertex>>> {
         let filter = params.filter.clone();
         let limit = params.limit.clone();
         let store = self.store.clone();
@@ -264,7 +264,7 @@ where
 
     fn prepare_explore_edge(
         &self, direction: Direction, params: &QueryParams,
-    ) -> FnResult<Box<dyn Statement<ID, Edge>>> {
+    ) -> GraphProxyResult<Box<dyn Statement<ID, Edge>>> {
         let store = self.store.clone();
         let si = params
             .get_extra_param(SNAPSHOT_ID)
@@ -369,7 +369,7 @@ fn to_runtime_edge<E: StoreEdge>(e: &E) -> Edge {
 /// while in ir, None means we do not need any properties,
 /// and Some means we need given properties (and Some(vec![]) means we need all properties)
 #[inline]
-fn encode_storage_prop_keys(prop_names: Option<&Vec<NameOrId>>) -> FnExecResult<Option<Vec<PropId>>> {
+fn encode_storage_prop_keys(prop_names: Option<&Vec<NameOrId>>) -> GraphProxyResult<Option<Vec<PropId>>> {
     if let Some(prop_names) = prop_names {
         if prop_names.is_empty() {
             Ok(None)
@@ -377,7 +377,7 @@ fn encode_storage_prop_keys(prop_names: Option<&Vec<NameOrId>>) -> FnExecResult<
             let encoded_prop_ids = prop_names
                 .iter()
                 .map(|prop_key| match prop_key {
-                    NameOrId::Str(_) => Err(FnExecError::query_store_error(
+                    NameOrId::Str(_) => Err(GraphProxyError::query_store_error(
                         "encode storage prop key error, should provide prop_id",
                     )),
                     NameOrId::Id(prop_id) => Ok(*prop_id as PropId),
@@ -391,7 +391,7 @@ fn encode_storage_prop_keys(prop_names: Option<&Vec<NameOrId>>) -> FnExecResult<
 }
 
 #[inline]
-fn encode_storage_labels(labels: &Vec<Label>) -> FnExecResult<Vec<LabelId>> {
+fn encode_storage_labels(labels: &Vec<Label>) -> GraphProxyResult<Vec<LabelId>> {
     labels
         .iter()
         .map(|label| encode_storage_label(label))
@@ -399,10 +399,10 @@ fn encode_storage_labels(labels: &Vec<Label>) -> FnExecResult<Vec<LabelId>> {
 }
 
 #[inline]
-fn encode_storage_label(label: &NameOrId) -> FnExecResult<LabelId> {
+fn encode_storage_label(label: &NameOrId) -> GraphProxyResult<LabelId> {
     match label {
         Label::Str(_) => {
-            Err(FnExecError::query_store_error("encode storage label error, should provide label_id"))
+            Err(GraphProxyError::query_store_error("encode storage label error, should provide label_id"))
         }
         Label::Id(id) => Ok(*id as LabelId),
     }
