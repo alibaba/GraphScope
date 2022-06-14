@@ -33,6 +33,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -296,6 +299,18 @@ public class StoreService implements MetricsAgent {
     }
 
     public void ingestData(String path, CompletionCallback<Void> callback) {
+        String dataRoot = StoreConfig.STORE_DATA_PATH.get(configs);
+        String downloadPath = Paths.get(dataRoot, "download").toString();
+        String[] items = path.split("\\/");
+        String unique_path = items[items.length - 2];
+        Path uniquePath = Paths.get(downloadPath, unique_path);
+        if (!Files.isDirectory(uniquePath)) {
+            try {
+                Files.createDirectories(uniquePath);
+            } catch (IOException e) {
+                logger.error("create uniquePath failed. uniquePath [" + uniquePath.toString() + "]", e);
+            }
+        }
         this.ingestExecutor.execute(
                 () -> {
                     try {

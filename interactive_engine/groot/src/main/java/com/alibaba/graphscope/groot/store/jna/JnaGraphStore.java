@@ -110,14 +110,16 @@ public class JnaGraphStore implements GraphPartition {
 
     @Override
     public void ingestExternalFile(ExternalStorage storage, String sstPath) throws IOException {
+        String[] items = sstPath.split("\\/");
+        String unique_path = items[items.length - 2];
         String sstName = sstPath.substring(sstPath.lastIndexOf('/') + 1);
-        String sstLocalPath = downloadPath.toString() + "/" + sstName;
+        String sstLocalPath = downloadPath.toString() + "/" + unique_path + "/" + sstName;
         URI uri = URI.create(sstPath);
         String scheme = uri.getScheme();
         if ("oss".equals(scheme)) {
             String chkPath = sstPath.substring(0, sstPath.length() - ".sst".length()) + ".chk";
             String chkName = sstName.substring(0, sstName.length() - ".sst".length()) + ".chk";
-            String chkLocalPath = downloadPath.toString() + "/" + chkName;
+            String chkLocalPath = downloadPath.toString() + "/" + unique_path + "/" + chkName;
 
             storage.downloadData(chkPath, chkLocalPath);
             File file = new File(chkLocalPath);

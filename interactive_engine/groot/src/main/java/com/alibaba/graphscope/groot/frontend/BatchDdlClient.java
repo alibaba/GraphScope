@@ -4,7 +4,7 @@ import com.alibaba.graphscope.groot.SnapshotCache;
 import com.alibaba.graphscope.groot.schema.ddl.DdlExecutors;
 import com.alibaba.graphscope.groot.schema.request.DdlException;
 import com.alibaba.graphscope.groot.schema.request.DdlRequestBatch;
-import com.alibaba.maxgraph.common.util.UuidUtils;
+import com.alibaba.maxgraph.sdkcommon.util.UuidUtils;
 import com.alibaba.maxgraph.sdkcommon.schema.GraphDef;
 import com.google.protobuf.InvalidProtocolBufferException;
 

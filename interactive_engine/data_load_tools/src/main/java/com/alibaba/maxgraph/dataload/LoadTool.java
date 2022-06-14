@@ -6,12 +6,12 @@ import java.io.IOException;
 
 public class LoadTool {
 
-    public static void ingest(String path, boolean isFromOSS) throws IOException {
-        new IngestDataCommand(path, isFromOSS).run();
+    public static void ingest(String path, boolean isFromOSS, String uniquePath) throws IOException {
+        new IngestDataCommand(path, isFromOSS, uniquePath).run();
     }
 
-    public static void commit(String path, boolean isFromOSS) throws IOException {
-        new CommitDataCommand(path, isFromOSS).run();
+    public static void commit(String path, boolean isFromOSS, String uniquePath) throws IOException {
+        new CommitDataCommand(path, isFromOSS, uniquePath).run();
     }
 
     public static void main(String[] args) throws ParseException, IOException {
@@ -37,15 +37,24 @@ public class LoadTool {
                         .argName("OSS_CONFIG_FILE")
                         .desc("OSS Config File. e.g., config.init")
                         .build());
+        options.addOption(
+                Option.builder("u")
+                        .longOpt("uniquepath")
+                        .hasArg()
+                        .argName("UNIQUE_PATH")
+                        .desc("unique path from uuid. e.g., unique_path")
+                        .build());
         options.addOption(Option.builder("h").longOpt("help").desc("print this message").build());
         CommandLineParser parser = new DefaultParser();
         CommandLine commandLine = parser.parse(options, args);
         String command = commandLine.getOptionValue("command");
         String path = null;
+        String uniquePath = null;
         boolean isFromOSS = false;
         if (commandLine.hasOption("oss")) {
             isFromOSS = true;
             path = commandLine.getOptionValue("oss");
+            uniquePath = commandLine.getOptionValue("u");
         } else {
             path = commandLine.getOptionValue("dir");
         }
@@ -53,9 +62,9 @@ public class LoadTool {
         if (commandLine.hasOption("help") || command == null) {
             printHelp(options);
         } else if (command.equalsIgnoreCase("ingest")) {
-            ingest(path, isFromOSS);
+            ingest(path, isFromOSS, uniquePath);
         } else if (command.equalsIgnoreCase("commit")) {
-            commit(path, isFromOSS);
+            commit(path, isFromOSS, uniquePath);
         } else {
             printHelp(options);
         }

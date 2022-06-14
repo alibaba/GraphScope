@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.maxgraph.common.util;
+package com.alibaba.maxgraph.sdkcommon.util;
 
 import java.security.SecureRandom;
 import java.util.Base64;

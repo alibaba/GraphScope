@@ -26,6 +26,7 @@ public abstract class DataCommand {
     protected String metaData;
     protected String username;
     protected String password;
+    protected String uniquePath;
 
     protected final String metaFileName = "META";
     protected final String OSS_ENDPOINT = "oss.endpoint";
@@ -36,8 +37,9 @@ public abstract class DataCommand {
     protected final String USER_NAME = "auth.username";
     protected final String PASS_WORD = "auth.password";
 
-    public DataCommand(String dataPath, boolean isFromOSS) throws IOException {
+    public DataCommand(String dataPath, boolean isFromOSS, String uniquePath) throws IOException {
         this.dataPath = dataPath;
+        this.uniquePath = uniquePath;
         initialize(isFromOSS);
     }
 
