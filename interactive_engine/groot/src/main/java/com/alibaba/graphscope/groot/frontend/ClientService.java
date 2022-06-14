@@ -367,4 +367,44 @@ public class ClientService extends ClientGrpc.ClientImplBase {
                     });
         }
     }
+
+    @Override
+    public void clearIngest(
+            ClearIngestRequest request, StreamObserver<ClearIngestResponse> responseObserver) {
+        logger.info("clear ingest data");
+        int storeCount = this.metaService.getStoreCount();
+        AtomicInteger counter = new AtomicInteger(storeCount);
+        AtomicBoolean finished = new AtomicBoolean(false);
+        for (int i = 0; i < storeCount; i++) {
+            this.storeIngestor.clearIngest(
+                    i,
+                    new CompletionCallback<Void>() {
+                        @Override
+                        public void onCompleted(Void res) {
+                            if (!finished.get() && counter.decrementAndGet() == 0) {
+                                finish(null);
+                            }
+                        }
+
+                        @Override
+                        public void onError(Throwable t) {
+                            logger.error("failed clear ingest", t);
+                            finish(t);
+                        }
+
+                        private void finish(Throwable t) {
+                            if (finished.getAndSet(true)) {
+                                return;
+                            }
+                            logger.info("ingest finished. Error [" + t + "]");
+                            if (t != null) {
+                                responseObserver.onError(t);
+                            } else {
+                                responseObserver.onNext(ClearIngestResponse.newBuilder().build());
+                                responseObserver.onCompleted();
+                            }
+                        }
+                    });
+        }
+    }
 }

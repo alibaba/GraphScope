@@ -18,7 +18,7 @@ use crate::db::graph::iter::{EdgeTypeScan, VertexTypeScan};
 use crate::db::api::multi_version_graph::{MultiVersionGraph, GraphBackup};
 use crate::db::api::condition::Condition;
 use crate::db::common::bytes::transform;
-use crate::db::util::fs;
+use std::path::Path;
 
 pub struct GraphStore {
     config: GraphConfig,
@@ -400,7 +400,7 @@ impl MultiVersionGraph for GraphStore {
         }
         self.meta.commit_data_load(si, schema_version, target, table_id)?;
         let data_file_path = format!("{}/../{}/{}/part-r-{:0>5}.sst", self.data_root, "download", unique_path, partition_id);
-        if fs::exists(data_file_path) {
+        if Path::new(data_file_path.as_str()).exists() {
             self.ingest(data_file_path.as_str())?
         }
         if target.src_label_id > 0 {

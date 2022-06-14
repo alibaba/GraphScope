@@ -34,6 +34,7 @@ service Client {
   rpc commitDataLoad(CommitDataLoadRequest) returns(CommitDataLoadResponse);
   rpc getPartitionNum(GetPartitionNumRequest) returns(GetPartitionNumResponse);
   rpc getLoggerInfo(GetLoggerInfoRequest) returns(GetLoggerInfoResponse);
+  rpc clearIngest(ClearIngestRequest) returns(ClearIngestResponse);
 }
 
 message VertexDataPb {
@@ -148,4 +149,10 @@ message GetLoggerInfoResponse {
   string loggerServers = 1;
   string loggerTopic = 2;
   int32 loggerQueueCount = 3;
+}
+
+message ClearIngestRequest {
+}
+
+message ClearIngestResponse {
 }

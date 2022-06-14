@@ -15,7 +15,6 @@ package com.alibaba.graphscope.groot.schema.request;
 
 import com.alibaba.graphscope.groot.operation.OperationType;
 import com.alibaba.maxgraph.proto.CommitDataLoadPb;
-import com.alibaba.maxgraph.proto.PrepareDataLoadPb;
 import com.alibaba.maxgraph.sdkcommon.common.DataLoadTarget;
 import com.google.protobuf.ByteString;
 
