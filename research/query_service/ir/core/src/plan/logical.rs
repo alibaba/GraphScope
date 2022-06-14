@@ -27,7 +27,7 @@ use ir_common::NameOrId;
 use vec_map::VecMap;
 
 use crate::error::{IrError, IrResult};
-use crate::plan::meta::{PlanMeta, Schema, StoreMeta, INVALID_META_ID, STORE_META};
+use crate::plan::meta::{ColumnsOpt, PlanMeta, Schema, StoreMeta, INVALID_META_ID, STORE_META};
 use crate::plan::patmat::{MatchingStrategy, NaiveStrategy};
 use crate::JsonIO;
 
@@ -350,24 +350,25 @@ impl LogicalPlan {
         if opr.opr.is_none() {
             return Err(IrError::MissingData("Operator::opr".to_string()));
         }
-        // Set current node as `self.max_node_id`
-        self.meta.set_curr_node(self.max_node_id);
+        // Set new current node as `self.max_node_id`
+        let new_curr_node = self.max_node_id;
+        self.meta.set_curr_node(new_curr_node);
 
         match opr.opr.as_ref().unwrap() {
             Opr::Scan(_) | Opr::Edge(_) | Opr::Vertex(_) | Opr::Path(_) => {
                 // Refer to current nodes
                 self.meta
-                    .refer_to_nodes(self.max_node_id, vec![self.max_node_id]);
+                    .refer_to_nodes(new_curr_node, vec![new_curr_node]);
             }
             Opr::Apply(apply) => {
                 if apply.join_kind == 4 || apply.join_kind == 5 {
                     // This mean this apply is a filter, must refer to what the parent nodes refer to
                     self.meta
-                        .refer_to_nodes(self.max_node_id, parent_ids.clone());
+                        .refer_to_nodes(new_curr_node, parent_ids.clone());
                 } else {
                     // Otherwise refer to current nodes
                     self.meta
-                        .refer_to_nodes(self.max_node_id, vec![self.max_node_id]);
+                        .refer_to_nodes(new_curr_node, vec![new_curr_node]);
                 }
             }
             Opr::Project(_)
@@ -402,7 +403,7 @@ impl LogicalPlan {
                     ))
                 }
             }
-            _ => self.append_node(Node::new(self.max_node_id, opr), parent_ids.clone()),
+            _ => self.append_node(Node::new(new_curr_node, opr), parent_ids.clone()),
         };
 
         // As in this case, the current id will not refer to any actual nodes, it is fine to
@@ -777,7 +778,7 @@ fn preprocess_var(
                     debug!("add column ({:?}) to {:?}", key, var.tag);
                     node_meta.insert_column(key.clone().try_into()?);
                 }
-                common_pb::property::Item::All(_) => node_meta.set_is_all_columns(true),
+                common_pb::property::Item::All(_) => node_meta.set_columns_opt(ColumnsOpt::All(256)),
                 _ => {}
             }
         }
@@ -983,9 +984,7 @@ impl AsLogical for pb::Select {
 
 impl AsLogical for pb::Scan {
     fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
-        plan_meta
-            .curr_node_meta_mut()
-            .set_is_add_column(true);
+        plan_meta.curr_node_meta_mut();
         if let Some(alias) = self.alias.as_mut() {
             let tag_id = get_or_set_tag_id(alias, false, plan_meta)?;
             plan_meta.insert_tag_nodes(tag_id, vec![plan_meta.get_curr_node()]);
@@ -1023,9 +1022,7 @@ impl AsLogical for pb::EdgeExpand {
         let mut node_meta = plan_meta.curr_node_meta_mut();
         if self.is_edge {
             // as edge is always local, do not need to add column for remote fetching
-            node_meta.set_is_add_column(false);
-        } else {
-            node_meta.set_is_add_column(true);
+            node_meta.set_columns_opt(ColumnsOpt::None);
         }
         if let Some(params) = self.params.as_mut() {
             preprocess_params(params, meta, plan_meta)?;
@@ -1034,7 +1031,7 @@ impl AsLogical for pb::EdgeExpand {
             let tag_id = get_or_set_tag_id(alias, false, plan_meta)?;
             plan_meta.insert_tag_nodes(tag_id, vec![plan_meta.get_curr_node()]);
         }
-        node_meta.set_is_add_column(true);
+        node_meta.set_columns_opt(ColumnsOpt::Init);
 
         Ok(())
     }
@@ -1052,7 +1049,7 @@ impl AsLogical for pb::PathExpand {
         // PathExpand would never require adding columns
         plan_meta
             .curr_node_meta_mut()
-            .set_is_add_column(false);
+            .set_columns_opt(ColumnsOpt::None);
 
         Ok(())
     }
@@ -1060,9 +1057,7 @@ impl AsLogical for pb::PathExpand {
 
 impl AsLogical for pb::GetV {
     fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
-        plan_meta
-            .curr_node_meta_mut()
-            .set_is_add_column(true);
+        plan_meta.curr_node_meta_mut();
         if let Some(params) = self.params.as_mut() {
             preprocess_params(params, meta, plan_meta)?;
         }
@@ -1522,17 +1517,13 @@ mod test {
         let b_id = plan_meta.get_or_set_tag_id("b").1;
         plan_meta.insert_tag_nodes(a_id, vec![1]);
         plan_meta.insert_tag_nodes(b_id, vec![2]);
-        plan_meta
-            .curr_node_meta_mut()
-            .set_is_add_column(true);
+        plan_meta.curr_node_meta_mut();
         plan_meta
             .tag_nodes_meta_mut(Some(a_id))
-            .unwrap()
-            .set_is_add_column(true);
+            .unwrap();
         plan_meta
             .tag_nodes_meta_mut(Some(b_id))
-            .unwrap()
-            .set_is_add_column(true);
+            .unwrap();
         plan_meta.refer_to_nodes(0, vec![0]);
 
         let meta = StoreMeta {
@@ -1680,13 +1671,10 @@ mod test {
         let a_id = plan_meta.get_or_set_tag_id("a").1;
         plan_meta.insert_tag_nodes(a_id, vec![1]);
 
-        plan_meta
-            .curr_node_meta_mut()
-            .set_is_add_column(true);
+        plan_meta.curr_node_meta_mut();
         plan_meta
             .tag_nodes_meta_mut(Some(a_id))
-            .unwrap()
-            .set_is_add_column(true);
+            .unwrap();
         plan_meta.refer_to_nodes(0, vec![0]);
 
         let meta = StoreMeta {

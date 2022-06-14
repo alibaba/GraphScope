@@ -790,8 +790,7 @@ mod test {
         expected_builder.add_source(pb::logical_plan::Operator::from(build_scan(vec![])).encode_to_vec());
         expected_builder.repartition(vec![]);
         expected_builder.flat_map(
-            pb::logical_plan::Operator::from(build_edgexpd(false, vec![], Some(0.into())))
-                .encode_to_vec(),
+            pb::logical_plan::Operator::from(build_edgexpd(false, vec![], Some(0.into()))).encode_to_vec(),
         );
         expected_builder.map(pb::logical_plan::Operator::from(build_project("@0")).encode_to_vec());
         expected_builder.sink(vec![]);

@@ -126,7 +126,7 @@ pub struct Schema {
     /// Entities
     entities: Vec<schema_pb::EntityMeta>,
     /// Relations
-    rels: Vec<schema_pb::RelationMeta>,
+    relations: Vec<schema_pb::RelationMeta>,
 }
 
 impl Schema {
@@ -233,8 +233,8 @@ impl JsonIO for Schema {
             entities
         };
 
-        let relations_pb: Vec<schema_pb::RelationMeta> = if !self.rels.is_empty() {
-            self.rels.clone()
+        let relations_pb: Vec<schema_pb::RelationMeta> = if !self.relations.is_empty() {
+            self.relations.clone()
         } else {
             let mut relations = Vec::new();
             for (&(ty, id), name) in &self.id_name_rev {
@@ -278,7 +278,7 @@ impl JsonIO for Schema {
         let schema_pb = serde_json::from_reader::<_, schema_pb::Schema>(reader)?;
         let mut schema = Schema::default();
         schema.entities = schema_pb.entities.clone();
-        schema.rels = schema_pb.relations.clone();
+        schema.relations = schema_pb.relations.clone();
         schema.is_table_id = schema_pb.is_table_id;
         schema.is_column_id = schema_pb.is_column_id;
         for entity in schema_pb.entities {
@@ -377,30 +377,98 @@ impl JsonIO for Schema {
     }
 }
 
+/// To define the options of required columns by the computing node of the query plan.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ColumnsOpt {
+    /// Initial state
+    Init,
+    /// None column is required
+    None,
+    /// Some columns are required
+    Partial(BTreeSet<NameOrId>),
+    /// All columns are required, with an integer to indicate the number of columns
+    All(usize),
+}
+
+impl Default for ColumnsOpt {
+    fn default() -> Self {
+        Self::Init
+    }
+}
+
+impl ColumnsOpt {
+    pub fn new(cols: BTreeSet<NameOrId>) -> Self {
+        Self::Partial(cols)
+    }
+
+    pub fn is_init(&self) -> bool {
+        match self {
+            ColumnsOpt::Init => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_all(&self) -> bool {
+        match self {
+            ColumnsOpt::All(_) => true,
+            _ => false,
+        }
+    }
+
+    pub fn len(&self) -> usize {
+        match self {
+            ColumnsOpt::Init => 0,
+            ColumnsOpt::None => 0,
+            ColumnsOpt::Partial(cols) => cols.len(),
+            ColumnsOpt::All(size) => *size,
+        }
+    }
+
+    pub fn insert(&mut self, col: NameOrId) -> bool {
+        if self.is_init() {
+            let cols = BTreeSet::new();
+            *self = Self::Partial(cols)
+        }
+        match self {
+            ColumnsOpt::Partial(cols) => cols.insert(col),
+            _ => false,
+        }
+    }
+
+    pub fn remove(&mut self, col: &NameOrId) -> bool {
+        match self {
+            ColumnsOpt::Partial(cols) => cols.remove(col),
+            _ => false,
+        }
+    }
+
+    pub fn contains(&self, col: &NameOrId) -> bool {
+        match self {
+            ColumnsOpt::Init => false,
+            ColumnsOpt::None => false,
+            ColumnsOpt::Partial(cols) => cols.contains(col),
+            ColumnsOpt::All(_) => true,
+        }
+    }
+
+    pub fn get(&self) -> BTreeSet<NameOrId> {
+        match self {
+            ColumnsOpt::Partial(cols) => cols.clone(),
+            _ => BTreeSet::new(),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 /// Record the runtime schema of the node in the logical plan, for it being the vertex/edge
 pub struct NodeMeta {
     /// The table names (labels)
     tables: BTreeSet<NameOrId>,
     /// The required columns (columns)
-    columns: BTreeSet<NameOrId>,
-    /// A flag to indicate that all columns are required
-    is_all_columns: bool,
-    /// Whether the current node require fetching columns
-    is_add_column: bool,
+    columns: ColumnsOpt,
 }
 
 impl NodeMeta {
-    pub fn insert_column(&mut self, col: NameOrId) {
-        if self.is_add_column {
-            self.columns.insert(col);
-        }
-    }
-
-    pub fn get_columns(&self) -> &BTreeSet<NameOrId> {
-        &self.columns
-    }
-
     pub fn insert_table(&mut self, table: NameOrId) {
         self.tables.insert(table);
     }
@@ -443,23 +511,29 @@ impl<T: Clone> AsRef<[T]> for OneOrMany<T> {
 pub type NodeMetaOpt = OneOrMany<Rc<RefCell<NodeMeta>>>;
 
 impl NodeMetaOpt {
-    pub fn insert_column(&mut self, col: NameOrId) {
+    pub fn set_columns_opt(&mut self, columns_opt: ColumnsOpt) {
         match self {
-            NodeMetaOpt::One(meta) => meta[0].borrow_mut().insert_column(col),
+            // The number 256 is given arbitrarily, which however should be determined by the number
+            // of actual columns for the given node.
+            NodeMetaOpt::One(meta) => {
+                meta[0].borrow_mut().columns = columns_opt;
+            }
             NodeMetaOpt::Many(metas) => {
                 for meta in metas {
-                    meta.borrow_mut().insert_column(col.clone());
+                    meta.borrow_mut().columns = columns_opt.clone();
                 }
             }
         }
     }
 
-    pub fn set_is_all_columns(&mut self, is_all_columns: bool) {
+    pub fn insert_column(&mut self, col: NameOrId) {
         match self {
-            NodeMetaOpt::One(meta) => meta[0].borrow_mut().is_all_columns = is_all_columns,
+            NodeMetaOpt::One(meta) => {
+                meta[0].borrow_mut().columns.insert(col);
+            }
             NodeMetaOpt::Many(metas) => {
                 for meta in metas {
-                    meta.borrow_mut().is_all_columns = is_all_columns;
+                    meta.borrow_mut().columns.insert(col.clone());
                 }
             }
         }
@@ -467,10 +541,10 @@ impl NodeMetaOpt {
 
     pub fn is_all_columns(&self) -> bool {
         match self {
-            NodeMetaOpt::One(meta) => meta[0].borrow().is_all_columns,
+            NodeMetaOpt::One(meta) => meta[0].borrow().columns.is_all(),
             NodeMetaOpt::Many(metas) => {
                 for meta in metas {
-                    if meta.borrow().is_all_columns {
+                    if meta.borrow().columns.is_all() {
                         return true;
                     }
                 }
@@ -479,19 +553,8 @@ impl NodeMetaOpt {
         }
     }
 
-    pub fn set_is_add_column(&mut self, is_add_column: bool) {
-        match self {
-            NodeMetaOpt::One(meta) => meta[0].borrow_mut().is_add_column = is_add_column,
-            NodeMetaOpt::Many(metas) => {
-                for meta in metas {
-                    meta.borrow_mut().is_add_column = is_add_column;
-                }
-            }
-        }
-    }
-
     pub fn get_columns(&self) -> BTreeSet<NameOrId> {
-        self.as_ref()[0].borrow().get_columns().clone()
+        self.as_ref()[0].borrow().columns.get()
     }
 }
 
