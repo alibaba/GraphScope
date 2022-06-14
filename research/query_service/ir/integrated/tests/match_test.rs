@@ -29,7 +29,8 @@ mod test {
     use pegasus_server::JobRequest;
 
     use crate::common::test::{
-        initialize, parse_result, query_params, submit_query, TAG_A, TAG_B, TAG_C, TAG_D,
+        default_sink_target, initialize, parse_result, query_params, submit_query, TAG_A, TAG_B, TAG_C,
+        TAG_D,
     };
 
     // g.V().hasLabel("person").match(
@@ -99,11 +100,7 @@ mod test {
                 common_pb::NameOrIdKey { key: Some(TAG_B.into()) },
                 common_pb::NameOrIdKey { key: Some(TAG_C.into()) },
             ],
-            sink_target: Some(pb::sink::SinkTarget {
-                inner: Some(pb::sink::sink_target::Inner::SinkDefault(pb::SinkDefault {
-                    id_name_mappings: vec![],
-                })),
-            }),
+            sink_target: default_sink_target(),
         };
 
         let mut plan = LogicalPlan::default();
@@ -188,7 +185,7 @@ mod test {
                 common_pb::NameOrIdKey { key: Some(TAG_C.into()) },
                 common_pb::NameOrIdKey { key: Some(TAG_D.into()) },
             ],
-            id_name_mappings: vec![],
+            sink_target: default_sink_target(),
         };
 
         let mut plan = LogicalPlan::default();

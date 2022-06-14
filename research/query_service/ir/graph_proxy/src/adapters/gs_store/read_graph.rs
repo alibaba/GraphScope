@@ -30,8 +30,8 @@ use crate::apis::{
     from_fn, register_graph, DefaultDetails, Direction, DynDetails, Edge, QueryParams, ReadGraph,
     Statement, Vertex, ID,
 };
-use crate::errors::{GraphProxyError, GraphProxyResult};
 use crate::{filter_limit, limit_n};
+use crate::{GraphProxyError, GraphProxyResult};
 
 // Should be identical to the param_name given by compiler
 const SNAPSHOT_ID: &str = "SID";

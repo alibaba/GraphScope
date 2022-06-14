@@ -50,15 +50,7 @@ mod test {
         let path_start_opr =
             pb::logical_plan::Operator::from(pb::PathStart { start_tag: None, is_whole_path });
         let path_end_opr = pb::logical_plan::Operator::from(pb::PathEnd { alias: None });
-        let sink_opr_bytes = pb::logical_plan::Operator::from(pb::Sink {
-            tags: vec![common_pb::NameOrIdKey { key: None }],
-            sink_target: Some(pb::sink::SinkTarget {
-                inner: Some(pb::sink::sink_target::Inner::SinkDefault(pb::SinkDefault {
-                    id_name_mappings: vec![],
-                })),
-            }),
-        })
-        .encode_to_vec();
+        let sink_opr_bytes = pb::logical_plan::Operator::from(default_sink_pb()).encode_to_vec();
 
         let mut job_builder = JobBuilder::default();
         job_builder.add_source(source_opr.encode_to_vec());
@@ -95,15 +87,7 @@ mod test {
         let path_start_opr =
             pb::logical_plan::Operator::from(pb::PathStart { start_tag: None, is_whole_path });
         let path_end_opr = pb::logical_plan::Operator::from(pb::PathEnd { alias: None });
-        let sink_opr_bytes = pb::logical_plan::Operator::from(pb::Sink {
-            tags: vec![common_pb::NameOrIdKey { key: None }],
-            sink_target: Some(pb::sink::SinkTarget {
-                inner: Some(pb::sink::sink_target::Inner::SinkDefault(pb::SinkDefault {
-                    id_name_mappings: vec![],
-                })),
-            }),
-        })
-        .encode_to_vec();
+        let sink_opr_bytes = pb::logical_plan::Operator::from(default_sink_pb()).encode_to_vec();
 
         let mut job_builder = JobBuilder::default();
         job_builder.add_source(source_opr.encode_to_vec());

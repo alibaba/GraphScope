@@ -14,7 +14,7 @@
 //! limitations under the License.
 
 use crate::apis::ID;
-use crate::errors::GraphProxyResult;
+use crate::GraphProxyResult;
 
 pub trait Partitioner: Send + Sync + 'static {
     /// Given the element id and job_workers (number of worker per server),

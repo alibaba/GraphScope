@@ -20,7 +20,7 @@ use dyn_type::Object;
 use ir_common::NameOrId;
 
 use crate::apis::{Direction, Edge, QueryParams, Vertex, ID};
-use crate::errors::GraphProxyResult;
+use crate::GraphProxyResult;
 
 /// The function for graph query
 pub trait Statement<I, O>: Send + 'static {

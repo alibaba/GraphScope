@@ -13,22 +13,23 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use crate::apis::{Edge, Vertex};
+use crate::GraphProxyResult;
+
 /// The interfaces of writing data (vertices, edges and their properties) into a graph.
 pub trait WriteGraphProxy: Send + Sync {
     /// Add a vertex
-    fn add_vertex(&mut self, vertex: Vertex) -> FnResult<()>;
+    fn add_vertex(&mut self, vertex: Vertex) -> GraphProxyResult<()>;
 
     /// Add a batch of vertices
-    // fn add_vertices<Iter: Iterator<Item = Vertex>>(&mut self, vertices_iter: Iter) -> FnResult<()>;
-    fn add_vertices(&mut self, vertices: Vec<Vertex>) -> FnResult<()>;
+    fn add_vertices(&mut self, vertices: Vec<Vertex>) -> GraphProxyResult<()>;
 
     /// Add an edge
-    fn add_edge(&mut self, edge: Edge) -> FnResult<()>;
+    fn add_edge(&mut self, edge: Edge) -> GraphProxyResult<()>;
 
     /// Add a batch of edges
-    // fn add_edges<Iter: Iterator<Item = Edge>>(&mut self, edges_iter: Iter) -> FnResult<()>;
-    fn add_edges(&mut self, edges: Vec<Edge>) -> FnResult<()>;
+    fn add_edges(&mut self, edges: Vec<Edge>) -> GraphProxyResult<()>;
 
     /// A hint of all vertices/edges are added.
-    fn finish(&mut self) -> FnResult<()>;
+    fn finish(&mut self) -> GraphProxyResult<()>;
 }

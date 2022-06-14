@@ -20,7 +20,7 @@ extern crate lazy_static;
 pub use adapters::{
     create_exp_store, create_gs_store, GrootMultiPartition, SimplePartition, VineyardMultiPartition,
 };
-pub use errors::GraphProxyError;
+pub use errors::{GraphProxyError, GraphProxyResult};
 
 mod adapters;
 pub mod apis;

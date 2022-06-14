@@ -17,15 +17,14 @@ use std::convert::TryInto;
 use std::fmt::Debug;
 use std::sync::{Arc, Mutex};
 
+use graph_proxy::apis::{Edge, Vertex, WriteGraphProxy};
+use graph_proxy::{GraphProxyError, GraphProxyResult};
 use ir_common::error::ParsePbError;
 use ir_common::generated::common as common_pb;
 use ir_common::generated::schema as schema_pb;
 use ir_common::KeyId;
-use pegasus::api::function::FnResult;
 
 use crate::error::{FnExecError, FnExecResult, FnGenResult};
-use crate::graph::element::{Edge, Vertex};
-use crate::graph::WriteGraphProxy;
 use crate::process::operator::accum::accumulator::Accumulator;
 use crate::process::operator::sink::{SinkGen, Sinker};
 use crate::process::record::Record;
@@ -43,13 +42,9 @@ impl Accumulator<Record, Record> for VineyardSinker {
                 .take(sink_key.as_ref())
                 .ok_or(FnExecError::get_tag_error(&format!("tag {:?} in GraphWriter", sink_key)))?;
             if let Some(v) = entry.as_graph_vertex() {
-                self.graph_writer
-                    .add_vertex(v.clone())
-                    .map_err(|e| FnExecError::write_store_error(&e.to_string()))?;
+                self.graph_writer.add_vertex(v.clone())?
             } else if let Some(e) = entry.as_graph_edge() {
-                self.graph_writer
-                    .add_edge(e.clone())
-                    .map_err(|e| FnExecError::write_store_error(&e.to_string()))?;
+                self.graph_writer.add_edge(e.clone())?
             } else {
                 Err(FnExecError::unexpected_data_error("neither vertex nor edge in GraphWriter"))?
             }
@@ -58,9 +53,7 @@ impl Accumulator<Record, Record> for VineyardSinker {
     }
 
     fn finalize(&mut self) -> FnExecResult<Record> {
-        self.graph_writer
-            .finish()
-            .map_err(|e| FnExecError::write_store_error(&e.to_string()))?;
+        self.graph_writer.finish()?;
         Ok(Record::default())
     }
 }
@@ -106,63 +99,63 @@ impl Clone for TestGraph {
 }
 
 impl WriteGraphProxy for TestGraph {
-    fn add_vertex(&mut self, vertex: Vertex) -> FnResult<()> {
+    fn add_vertex(&mut self, vertex: Vertex) -> GraphProxyResult<()> {
         self.vertices
             .lock()
-            .map_err(|_e| FnExecError::query_store_error("add_vertex failed"))?
+            .map_err(|_e| GraphProxyError::write_graph_error("add_vertex failed"))?
             .push(vertex);
         Ok(())
     }
 
-    fn add_vertices(&mut self, vertices: Vec<Vertex>) -> FnResult<()> {
+    fn add_vertices(&mut self, vertices: Vec<Vertex>) -> GraphProxyResult<()> {
         for vertex in vertices {
             self.vertices
                 .lock()
-                .map_err(|_e| FnExecError::query_store_error("add_vertices failed"))?
+                .map_err(|_e| GraphProxyError::write_graph_error("add_vertices failed"))?
                 .push(vertex);
         }
         Ok(())
     }
 
-    fn add_edge(&mut self, edge: Edge) -> FnResult<()> {
+    fn add_edge(&mut self, edge: Edge) -> GraphProxyResult<()> {
         self.edges
             .lock()
-            .map_err(|_e| FnExecError::query_store_error("add_edge failed"))?
+            .map_err(|_e| GraphProxyError::write_graph_error("add_edge failed"))?
             .push(edge);
         Ok(())
     }
 
-    fn add_edges(&mut self, edges: Vec<Edge>) -> FnResult<()> {
+    fn add_edges(&mut self, edges: Vec<Edge>) -> GraphProxyResult<()> {
         for edge in edges {
             self.edges
                 .lock()
-                .map_err(|_e| FnExecError::query_store_error("add_edges failed"))?
+                .map_err(|_e| GraphProxyError::write_graph_error("add_edges failed"))?
                 .push(edge);
         }
         Ok(())
     }
 
-    fn finish(&mut self) -> FnResult<()> {
+    fn finish(&mut self) -> GraphProxyResult<()> {
         Ok(())
     }
 }
 
 impl TestGraph {
-    fn scan_vertex(&self) -> FnResult<Box<dyn Iterator<Item = Vertex> + Send>> {
+    fn scan_vertex(&self) -> GraphProxyResult<Box<dyn Iterator<Item = Vertex> + Send>> {
         Ok(Box::new(
             self.vertices
                 .lock()
-                .map_err(|_e| FnExecError::query_store_error("scan_vertex failed"))?
+                .map_err(|_e| GraphProxyError::query_store_error("scan_vertex failed"))?
                 .clone()
                 .into_iter(),
         ))
     }
 
-    fn scan_edge(&self) -> FnResult<Box<dyn Iterator<Item = Edge> + Send>> {
+    fn scan_edge(&self) -> GraphProxyResult<Box<dyn Iterator<Item = Edge> + Send>> {
         Ok(Box::new(
             self.edges
                 .lock()
-                .map_err(|_e| FnExecError::query_store_error("scan_edge failed"))?
+                .map_err(|_e| GraphProxyError::query_store_error("scan_edge failed"))?
                 .clone()
                 .into_iter(),
         ))
@@ -175,14 +168,12 @@ mod tests {
     use std::collections::HashMap;
 
     use dyn_type::Object;
+    use graph_proxy::apis::{DefaultDetails, DynDetails, Edge, GraphElement};
     use ir_common::NameOrId;
     use pegasus::api::{Fold, Sink};
     use pegasus::result::ResultStream;
     use pegasus::JobConf;
 
-    use crate::graph::element::{Edge, GraphElement};
-    use crate::graph::property::DynDetails;
-    use crate::graph::DefaultDetails;
     use crate::process::operator::accum::accumulator::Accumulator;
     use crate::process::operator::sink::sink_vineyard::TestGraph;
     use crate::process::operator::sink::VineyardSinker;

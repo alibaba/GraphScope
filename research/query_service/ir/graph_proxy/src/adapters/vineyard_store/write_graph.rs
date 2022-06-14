@@ -24,12 +24,9 @@ use ffi::graph_builder_ffi::{
 };
 use ir_common::generated::schema as schema_pb;
 use ir_common::{KeyId, NameOrId};
-use pegasus::api::function::FnResult;
 
-use crate::error::FnExecError;
-use crate::graph::element::{Edge, Element, GraphElement, Vertex};
-use crate::graph::property::{Details, DynDetails};
-use crate::graph::WriteGraphProxy;
+use crate::apis::{Details, DynDetails, Edge, Element, GraphElement, Vertex, WriteGraphProxy};
+use crate::{GraphProxyError, GraphProxyResult};
 
 #[derive(Clone, Debug)]
 pub struct VineyardGraphWriter {
@@ -45,18 +42,20 @@ impl VineyardGraphWriter {
         VineyardGraphWriter { graph }
     }
 
-    fn encode_key(&self, key: Option<&NameOrId>) -> FnResult<KeyId> {
+    fn encode_key(&self, key: Option<&NameOrId>) -> GraphProxyResult<KeyId> {
         match key {
-            Some(NameOrId::Str(s)) => Err(FnExecError::write_store_error(&format!(
+            Some(NameOrId::Str(s)) => Err(GraphProxyError::write_graph_error(&format!(
                 "do not support string key when writing vineyard {:?}",
                 s
             )))?,
             Some(NameOrId::Id(id)) => Ok(*id),
-            None => Err(FnExecError::write_store_error("do not support empty key when writing vineyard"))?,
+            None => {
+                Err(GraphProxyError::write_graph_error("do not support empty key when writing vineyard"))?
+            }
         }
     }
 
-    fn encode_details(&self, details: Option<&DynDetails>) -> FnResult<Vec<WriteNativeProperty>> {
+    fn encode_details(&self, details: Option<&DynDetails>) -> GraphProxyResult<Vec<WriteNativeProperty>> {
         let properties = details
             .map(|details| details.get_all_properties())
             .unwrap_or(None);
@@ -65,7 +64,7 @@ impl VineyardGraphWriter {
 
     fn encode_properties(
         &self, properties: Option<HashMap<NameOrId, Object>>,
-    ) -> FnResult<Vec<WriteNativeProperty>> {
+    ) -> GraphProxyResult<Vec<WriteNativeProperty>> {
         let mut native_properties: Vec<WriteNativeProperty> = vec![];
         if let Some(mut properties) = properties {
             for (prop_key, prop_val) in properties.drain() {
@@ -79,7 +78,7 @@ impl VineyardGraphWriter {
 }
 
 impl WriteGraphProxy for VineyardGraphWriter {
-    fn add_vertex(&mut self, vertex: Vertex) -> FnResult<()> {
+    fn add_vertex(&mut self, vertex: Vertex) -> GraphProxyResult<()> {
         let vertex_id = vertex.id();
         let label_id = self.encode_key(vertex.label())?;
         let native_properties = self.encode_details(vertex.details())?;
@@ -95,7 +94,7 @@ impl WriteGraphProxy for VineyardGraphWriter {
         Ok(())
     }
 
-    fn add_vertices(&mut self, vertices: Vec<Vertex>) -> FnResult<()> {
+    fn add_vertices(&mut self, vertices: Vec<Vertex>) -> GraphProxyResult<()> {
         let vertex_size = vertices.len();
         let mut vertex_ids = Vec::with_capacity(vertex_size);
         let mut vertex_label_ids = Vec::with_capacity(vertex_size);
@@ -123,7 +122,7 @@ impl WriteGraphProxy for VineyardGraphWriter {
         Ok(())
     }
 
-    fn add_edge(&mut self, edge: Edge) -> FnResult<()> {
+    fn add_edge(&mut self, edge: Edge) -> GraphProxyResult<()> {
         let edge_label = self.encode_key(edge.label())?;
         let src_label = self.encode_key(edge.get_src_label())?;
         let dst_label = self.encode_key(edge.get_dst_label())?;
@@ -145,7 +144,7 @@ impl WriteGraphProxy for VineyardGraphWriter {
         Ok(())
     }
 
-    fn add_edges(&mut self, edges: Vec<Edge>) -> FnResult<()> {
+    fn add_edges(&mut self, edges: Vec<Edge>) -> GraphProxyResult<()> {
         let edge_size = edges.len();
         let mut edge_ids = Vec::with_capacity(edge_size);
         let mut src_ids = Vec::with_capacity(edge_size);
@@ -185,7 +184,7 @@ impl WriteGraphProxy for VineyardGraphWriter {
         Ok(())
     }
 
-    fn finish(&mut self) -> FnResult<()> {
+    fn finish(&mut self) -> GraphProxyResult<()> {
         unsafe {
             build_vertices(self.graph);
         }
