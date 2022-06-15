@@ -21,8 +21,8 @@ import com.alibaba.graphscope.common.intermediate.operator.*;
 
 import java.util.List;
 
-// the getEOp and getVOp need all properties to be stored in subgraph,
-// process all operations and set all columns in QueryParams
+// the getEOp and getVOp need all properties to be stored after subgraph,
+// set all columns as true in QueryParams of the operations
 public class SubGraphProjectProcessor implements InterOpProcessor {
     public static SubGraphProjectProcessor INSTANCE = new SubGraphProjectProcessor();
 

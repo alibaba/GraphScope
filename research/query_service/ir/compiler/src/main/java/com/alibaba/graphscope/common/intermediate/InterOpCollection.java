@@ -39,7 +39,7 @@ public class InterOpCollection {
     private List<InterOpBase> opCollection;
     private static List<InterOpStrategy> strategies =
             Arrays.asList(TopKStrategy.INSTANCE, ElementFusionStrategy.INSTANCE);
-    // order matters, process SubGraphProperties before the SinkOutput
+    // order matters, process SubGraphProject before the SinkOutput
     private static List<InterOpProcessor> processors =
             Arrays.asList(SubGraphProjectProcessor.INSTANCE, SinkOutputProcessor.INSTANCE);
 
