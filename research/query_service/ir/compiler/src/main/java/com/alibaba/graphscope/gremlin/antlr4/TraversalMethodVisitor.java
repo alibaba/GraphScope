@@ -630,6 +630,16 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
         }
     }
 
+    @Override
+    public GraphTraversal visitTraversalMethod_subgraph(final GremlinGSParser.TraversalMethod_subgraphContext ctx) {
+        return graphTraversal.subgraph(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()));
+    }
+
+    @Override
+    public GraphTraversal visitTraversalMethod_bothV(final GremlinGSParser.TraversalMethod_bothVContext ctx) {
+        return graphTraversal.bothV();
+    }
+
     public Traversal visitExpr(
             GremlinGSParser.TraversalMethod_exprContext ctx, ExprStep.Type type) {
         if (ctx.stringLiteral() != null) {

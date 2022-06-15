@@ -228,4 +228,6 @@ public interface IrCoreLibrary extends Library {
     FfiKeyResult.ByValue getKeyName(int keyId, FfiKeyType keyType);
 
     FfiError.ByValue addParamsExtra(Pointer params, String key, String value);
+
+    Pointer initSinkGraphOperator(String graphName);
 }

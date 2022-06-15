@@ -30,26 +30,30 @@ import org.javatuples.Pair;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Function;
 
 public class SinkOutputProcessor implements InterOpProcessor {
     public static SinkOutputProcessor INSTANCE = new SinkOutputProcessor();
 
-    private SinkOutputProcessor() {}
+    private SinkOutputProcessor() {
+    }
 
     @Override
     public void process(InterOpCollection opCollection) {
-        SinkArg sinkArg = getSinkColumns(opCollection);
-        if (sinkArg != null && !sinkArg.getColumnNames().isEmpty()) {
-            SinkOp sinkOp = new SinkOp();
-            sinkOp.setSinkArg(new OpArg(sinkArg, Function.identity()));
-            opCollection.appendInterOp(sinkOp);
-        }
+        SinkOp sinkOp = new SinkOp();
+        sinkOp.setSinkArg(new OpArg(getSinkArg(opCollection)));
+        opCollection.appendInterOp(sinkOp);
     }
 
-    private SinkArg getSinkColumns(InterOpCollection opCollection) {
+    private SinkArg getSinkArg(InterOpCollection opCollection) {
         List<InterOpBase> collections = opCollection.unmodifiableCollection();
-        SinkArg sinkArg = new SinkArg();
+        for (int i = collections.size() - 1; i >= 0; --i) {
+            InterOpBase cur = collections.get(i);
+            if (cur instanceof SubGraphAsUnionOp) {
+                SubGraphAsUnionOp op = (SubGraphAsUnionOp) cur;
+                return new SinkGraph(op.getGraphType(), op.getGraphConfigs());
+            }
+        }
+        SinkByColumns sinkArg = new SinkByColumns();
         for (int i = collections.size() - 1; i >= 0; --i) {
             InterOpBase cur = collections.get(i);
             if (cur instanceof DedupOp
@@ -107,7 +111,7 @@ public class SinkOutputProcessor implements InterOpProcessor {
                         (List<InterOpCollection>) subOpsListOpt.get().applyArg();
                 subOpsList.forEach(
                         op -> {
-                            SinkArg subSink = getSinkColumns(op);
+                            SinkByColumns subSink = (SinkByColumns) getSinkArg(op);
                             subSink.getColumnNames().forEach(c -> sinkArg.addColumnName(c));
                         });
                 sinkArg.dedup();

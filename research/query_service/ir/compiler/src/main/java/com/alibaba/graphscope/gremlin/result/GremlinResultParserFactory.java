@@ -211,7 +211,7 @@ public enum GremlinResultParserFactory implements GremlinResultParser {
                         if (element.getInnerCase() == IrResult.Element.InnerCase.VERTEX
                                 || element.getInnerCase() == IrResult.Element.InnerCase.EDGE
                                 || element.getInnerCase()
-                                        == IrResult.Element.InnerCase.GRAPH_PATH) {
+                                == IrResult.Element.InnerCase.GRAPH_PATH) {
                             return GRAPH_ELEMENT;
                         } else if (element.getInnerCase() == IrResult.Element.InnerCase.OBJECT) {
                             Common.Value value = element.getObject();
@@ -249,6 +249,12 @@ public enum GremlinResultParserFactory implements GremlinResultParser {
             } else {
                 throw new GremlinResultParserException("columns should not be empty");
             }
+        }
+    },
+    SUBGRAPH {
+        @Override
+        public Object parseFrom(IrResult.Results results) {
+            return EmptyValue.INSTANCE;
         }
     };
 

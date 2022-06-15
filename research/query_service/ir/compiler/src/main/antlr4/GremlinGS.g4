@@ -79,6 +79,8 @@ traversalMethod
     | traversalMethod_union // union()
     | traversalMethod_range // range()
     | traversalMethod_match // match()
+    | traversalMethod_subgraph // subgraph()
+    | traversalMethod_bothV // bothV()
     ;
 
 traversalSourceSpawnMethod_V
@@ -347,6 +349,16 @@ traversalMethod_match
 traversalMethod_expr
     : 'expr' LPAREN stringLiteral RPAREN
     ;
+
+// user-defined configs is represented as json string in subgraph
+// i.e. g.E().subgraph("{\"type\": \"VINEYARD\", \"configs\" : {\"name\" : \"XXX\"}}")
+traversalMethod_subgraph
+	: 'subgraph' LPAREN stringLiteral RPAREN
+	;
+
+traversalMethod_bothV
+	: 'bothV' LPAREN RPAREN
+	;
 
 // only permit non empty, \'\' or \"\" or \'null\' is meaningless as a parameter
 stringLiteral

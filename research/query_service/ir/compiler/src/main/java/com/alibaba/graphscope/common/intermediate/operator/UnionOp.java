@@ -20,10 +20,10 @@ import java.util.Optional;
 
 public class UnionOp extends InterOpBase {
     // List<InterOpCollection>
-    private Optional<OpArg> subOpCollectionList;
+    protected Optional<OpArg> subOpCollectionList;
 
     // List<Integer>
-    private Optional<OpArg> parentIdList;
+    protected Optional<OpArg> parentIdList;
 
     public UnionOp() {
         super();

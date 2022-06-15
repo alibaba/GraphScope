@@ -14,27 +14,26 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.common.jna.type;
 
-import com.alibaba.graphscope.common.jna.IntEnum;
+package com.alibaba.graphscope.common.intermediate.process;
 
-public enum FfiVOpt implements IntEnum<FfiVOpt> {
-    Start,
-    End,
-    Other,
-    BothV;
+import java.util.Map;
 
-    @Override
-    public int getInt() {
-        return this.ordinal();
+public class SinkGraph implements SinkArg {
+    public static final String GRAPH_NAME = "name";
+    private String graphType;
+    private Map<String, String> graphConfigs;
+
+    public SinkGraph(String graphType, Map<String, String> graphConfigs) {
+        this.graphType = graphType;
+        this.graphConfigs = graphConfigs;
     }
 
-    @Override
-    public FfiVOpt getEnum(int i) {
-        FfiVOpt opts[] = values();
-        if (i < opts.length && i >= 0) {
-            return opts[i];
-        }
-        return null;
+    public String getGraphType() {
+        return graphType;
+    }
+
+    public String getConfig(String key) {
+        return graphConfigs.get(key);
     }
 }
