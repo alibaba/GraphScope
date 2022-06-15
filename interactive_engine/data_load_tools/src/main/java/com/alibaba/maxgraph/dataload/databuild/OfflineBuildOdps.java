@@ -182,7 +182,6 @@ public class OfflineBuildOdps {
         }
 
         String Uuid = UuidUtils.getBase64UUIDString();
-        Uuid = "uniquepath";
         String dataPath = Paths.get(ossBucketName, ossObjectName).toString();
         Map<String, String> outputMeta = new HashMap<>();
         outputMeta.put("endpoint", graphEndpoint);
