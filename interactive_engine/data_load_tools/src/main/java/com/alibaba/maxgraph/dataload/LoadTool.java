@@ -6,11 +6,13 @@ import java.io.IOException;
 
 public class LoadTool {
 
-    public static void ingest(String path, boolean isFromOSS, String uniquePath) throws IOException {
+    public static void ingest(String path, boolean isFromOSS, String uniquePath)
+            throws IOException {
         new IngestDataCommand(path, isFromOSS, uniquePath).run();
     }
 
-    public static void commit(String path, boolean isFromOSS, String uniquePath) throws IOException {
+    public static void commit(String path, boolean isFromOSS, String uniquePath)
+            throws IOException {
         new CommitDataCommand(path, isFromOSS, uniquePath).run();
     }
 

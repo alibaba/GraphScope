@@ -310,7 +310,8 @@ public class StoreService implements MetricsAgent {
             try {
                 Files.createDirectories(uniquePath);
             } catch (IOException e) {
-                logger.error("create uniquePath failed. uniquePath [" + uniquePath.toString() + "]", e);
+                logger.error(
+                        "create uniquePath failed. uniquePath [" + uniquePath.toString() + "]", e);
             }
         }
         this.ingestExecutor.execute(

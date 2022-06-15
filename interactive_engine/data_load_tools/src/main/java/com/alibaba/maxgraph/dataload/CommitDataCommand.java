@@ -12,7 +12,8 @@ import java.util.Map;
 
 public class CommitDataCommand extends DataCommand {
 
-    public CommitDataCommand(String dataPath, boolean isFromOSS, String uniquePath) throws IOException {
+    public CommitDataCommand(String dataPath, boolean isFromOSS, String uniquePath)
+            throws IOException {
         super(dataPath, isFromOSS, uniquePath);
     }
 

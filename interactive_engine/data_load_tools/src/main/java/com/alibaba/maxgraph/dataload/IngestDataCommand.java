@@ -7,7 +7,8 @@ import java.nio.file.Paths;
 
 public class IngestDataCommand extends DataCommand {
 
-    public IngestDataCommand(String dataPath, boolean isFromOSS, String uniquePath) throws IOException {
+    public IngestDataCommand(String dataPath, boolean isFromOSS, String uniquePath)
+            throws IOException {
         super(dataPath, isFromOSS, uniquePath);
     }
 

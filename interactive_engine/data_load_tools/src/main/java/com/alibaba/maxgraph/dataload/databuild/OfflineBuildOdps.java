@@ -193,7 +193,7 @@ public class OfflineBuildOdps {
         job.set(META_INFO, objectMapper.writeValueAsString(outputMeta));
         job.set(UNIQUE_PATH, Uuid);
 
-        System.out.println("uniquePath: "+Uuid);
+        System.out.println("uniquePath: " + Uuid);
 
         try {
             JobClient.runJob(job);
