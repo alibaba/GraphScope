@@ -5,6 +5,8 @@ use dyn_type::object::Primitives;
 use dyn_type::object::RawType;
 use dyn_type::Object;
 
+use ir_common::generated::common as common_pb;
+
 // TODO: a preclude type define in ir-runtime
 type KeyId = i32;
 type VertexId = u64;
@@ -444,6 +446,41 @@ impl PropertyType {
             PropertyType::Float => RawType::Float,
             PropertyType::Double => RawType::Float,
             PropertyType::String => RawType::String,
+            _ => {
+                unimplemented!("Unsupported data type {:?}", *self)
+            }
+        }
+    }
+
+    pub fn from_data_type(raw_type: common_pb::DataType) -> Self {
+        match raw_type {
+            common_pb::DataType::Boolean => PropertyType::Bool,
+            common_pb::DataType::Int32 => PropertyType::Int,
+            common_pb::DataType::Int64 => PropertyType::Long,
+            common_pb::DataType::Double => PropertyType::Double,
+            common_pb::DataType::String => PropertyType::String,
+            common_pb::DataType::Bytes => PropertyType::Bytes,
+            common_pb::DataType::Int32Array => PropertyType::IntList,
+            common_pb::DataType::Int64Array => PropertyType::LongList,
+            common_pb::DataType::DoubleArray => PropertyType::DoubleList,
+            common_pb::DataType::StringArray => PropertyType::StringList,
+            _ => {
+                unimplemented!("Unsupported data type {:?}", raw_type)
+            }
+        }
+    }
+    pub fn to_data_type(&self) -> common_pb::DataType {
+        match *self {
+            PropertyType::Bool => common_pb::DataType::Boolean,
+            PropertyType::Int => common_pb::DataType::Int32,
+            PropertyType::Long => common_pb::DataType::Int64,
+            PropertyType::Double => common_pb::DataType::Double,
+            PropertyType::String => common_pb::DataType::String,
+            PropertyType::Bytes => common_pb::DataType::Bytes,
+            PropertyType::IntList => common_pb::DataType::Int32Array,
+            PropertyType::LongList => common_pb::DataType::Int64Array,
+            PropertyType::DoubleList => common_pb::DataType::DoubleArray,
+            PropertyType::StringList => common_pb::DataType::StringArray,
             _ => {
                 unimplemented!("Unsupported data type {:?}", *self)
             }
