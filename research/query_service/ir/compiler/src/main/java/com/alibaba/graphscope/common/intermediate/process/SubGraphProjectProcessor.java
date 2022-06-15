@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 package com.alibaba.graphscope.common.intermediate.process;
 
 import com.alibaba.graphscope.common.intermediate.InterOpCollection;
@@ -27,8 +26,7 @@ import java.util.List;
 public class SubGraphProjectProcessor implements InterOpProcessor {
     public static SubGraphProjectProcessor INSTANCE = new SubGraphProjectProcessor();
 
-    private SubGraphProjectProcessor() {
-    }
+    private SubGraphProjectProcessor() {}
 
     @Override
     public void process(InterOpCollection opCollection) {
@@ -41,15 +39,18 @@ public class SubGraphProjectProcessor implements InterOpProcessor {
                 for (int j = i - 1; j >= 0; --j) {
                     InterOpBase getEOp = ops.get(j);
                     if (getEOp instanceof ExpandOp || getEOp instanceof ScanFusionOp) {
-                        QueryParams params = (getEOp instanceof ExpandOp) ?
-                                ((ExpandOp) getEOp).getParams().get() : ((ScanFusionOp) getEOp).getParams().get();
+                        QueryParams params =
+                                (getEOp instanceof ExpandOp)
+                                        ? ((ExpandOp) getEOp).getParams().get()
+                                        : ((ScanFusionOp) getEOp).getParams().get();
                         params.setAllColumns(true);
                         break;
                     }
                 }
                 // need all properties of the bothV of the edges, set params as all
                 List<InterOpCollection> subGraphOps =
-                        (List<InterOpCollection>) ((SubGraphAsUnionOp) op).getSubOpCollectionList().get().applyArg();
+                        (List<InterOpCollection>)
+                                ((SubGraphAsUnionOp) op).getSubOpCollectionList().get().applyArg();
                 if (subGraphOps.size() > 1) {
                     InterOpCollection getVOps = subGraphOps.get(1);
                     for (InterOpBase opBase : getVOps.unmodifiableCollection()) {

@@ -34,8 +34,7 @@ import java.util.Optional;
 public class SinkOutputProcessor implements InterOpProcessor {
     public static SinkOutputProcessor INSTANCE = new SinkOutputProcessor();
 
-    private SinkOutputProcessor() {
-    }
+    private SinkOutputProcessor() {}
 
     @Override
     public void process(InterOpCollection opCollection) {

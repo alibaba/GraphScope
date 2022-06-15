@@ -346,7 +346,8 @@ public class IrPlan implements Closeable {
                     String graphName = ((SinkGraph) sinkArg).getConfig(SinkGraph.GRAPH_NAME);
                     ptrSink = irCoreLib.initSinkGraphOperator(graphName);
                 } else {
-                    throw new InterOpIllegalArgException(baseOp.getClass(), "sink", "target is invalid");
+                    throw new InterOpIllegalArgException(
+                            baseOp.getClass(), "sink", "target is invalid");
                 }
                 return ptrSink;
             }
@@ -630,7 +631,8 @@ public class IrPlan implements Closeable {
     private Pair<Integer, Integer> appendInterOpCollection(
             int parentId, InterOpCollection opCollection) {
         int subTaskRootId = 0;
-        // if opCollection is empty which means identity(), will return the id of the op before the union
+        // if opCollection is empty which means identity(), will return the id of the op before the
+        // union
         int unionParentId = parentId;
         IntByReference oprId = new IntByReference(parentId);
         List<InterOpBase> opList = opCollection.unmodifiableCollection();

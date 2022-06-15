@@ -33,8 +33,8 @@ import com.alibaba.graphscope.gremlin.plugin.step.ScanFusionStep;
 import com.alibaba.graphscope.gremlin.transform.alias.AliasArg;
 import com.alibaba.graphscope.gremlin.transform.alias.AliasManager;
 import com.alibaba.graphscope.gremlin.transform.alias.AliasPrefixType;
-
 import com.fasterxml.jackson.core.type.TypeReference;
+
 import org.apache.tinkerpop.gremlin.process.traversal.Pop;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
@@ -503,11 +503,11 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
                                             Set<String> scopeKeys;
                                             if (!startTag.isPresent()
                                                     && !(scopeKeys =
-                                                    ((WhereTraversalStep
-                                                            .WhereStartStep)
-                                                            s1)
-                                                            .getScopeKeys())
-                                                    .isEmpty()) {
+                                                                    ((WhereTraversalStep
+                                                                                            .WhereStartStep)
+                                                                                    s1)
+                                                                            .getScopeKeys())
+                                                            .isEmpty()) {
                                                 startTag = Optional.of(scopeKeys.iterator().next());
                                             }
                                         } else if (s1
@@ -517,11 +517,11 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
                                             Set<String> scopeKeys;
                                             if (!endTag.isPresent()
                                                     && !(scopeKeys =
-                                                    ((WhereTraversalStep
-                                                            .WhereEndStep)
-                                                            s1)
-                                                            .getScopeKeys())
-                                                    .isEmpty()) {
+                                                                    ((WhereTraversalStep
+                                                                                            .WhereEndStep)
+                                                                                    s1)
+                                                                            .getScopeKeys())
+                                                            .isEmpty()) {
                                                 endTag = Optional.of(scopeKeys.iterator().next());
                                             }
                                         } else if (isValidBinderStep(s1)) {
@@ -610,13 +610,14 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
             // contains user defined configs, i.e. type: VINEYARD, graph_name: XX
             // json format
             String meta = subgraphStep.getSideEffectKey();
-            SubGraphAsUnionOp op = JsonUtils.fromJson(meta, new TypeReference<SubGraphAsUnionOp>() {
-            });
+            SubGraphAsUnionOp op =
+                    JsonUtils.fromJson(meta, new TypeReference<SubGraphAsUnionOp>() {});
             // empty opCollection -> identity(), to get edges
             InterOpCollection getEOps = new InterOpCollection();
 
             // add bothV().dedup(), to get bothV of the edges
-            Traversal.Admin getVTraversal = (Traversal.Admin) GremlinAntlrToJava.getTraversalSupplier().get();
+            Traversal.Admin getVTraversal =
+                    (Traversal.Admin) GremlinAntlrToJava.getTraversalSupplier().get();
             getVTraversal.addStep(new EdgeVertexStep(getVTraversal, Direction.BOTH));
             getVTraversal.addStep(new DedupGlobalStep(getVTraversal));
             InterOpCollection getVOps = (new InterOpCollectionBuilder(getVTraversal)).build();

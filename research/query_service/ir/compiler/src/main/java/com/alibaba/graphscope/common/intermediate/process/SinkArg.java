@@ -17,5 +17,4 @@
 package com.alibaba.graphscope.common.intermediate.process;
 
 // parameter in SinkOp, indicating SinkGraph or SinkByColumns
-public interface SinkArg {
-}
+public interface SinkArg {}

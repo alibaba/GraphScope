@@ -35,7 +35,9 @@ public class SubGraphAsUnionOp extends UnionOp {
     }
 
     public Map<String, String> getGraphConfigs() {
-        return graphConfigs == null ? Collections.emptyMap() : Collections.unmodifiableMap(graphConfigs);
+        return graphConfigs == null
+                ? Collections.emptyMap()
+                : Collections.unmodifiableMap(graphConfigs);
     }
 
     public String getGraphType() {

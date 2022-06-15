@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 package com.alibaba.graphscope.common.intermediate.process;
 
 import java.util.Map;
