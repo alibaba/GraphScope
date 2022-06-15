@@ -1719,9 +1719,9 @@ mod sink {
         Box::into_raw(sink_opr) as *const c_void
     }
 
-    /// To initialize an Sink operator with target of SinkVineyard
+    /// To initialize an Sink operator with target of a Graph (now it is Vineyard as a default option)
     #[no_mangle]
-    pub extern "C" fn init_sink_vineyard_operator(graph_name: *const c_char) -> *const c_void {
+    pub extern "C" fn init_sink_graph_operator(graph_name: *const c_char) -> *const c_void {
         let graph_name = cstr_to_string(graph_name).expect("C String to Rust String error!");
         let sink_opr = Box::new(pb::Sink {
             tags: vec![],
