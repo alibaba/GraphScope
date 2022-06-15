@@ -149,11 +149,6 @@ public class JnaGraphStore implements GraphPartition {
             throw new IllegalArgumentException(
                     "external storage scheme [" + scheme + "] not supported");
         }
-        try (JnaResponse response = GraphLibrary.INSTANCE.ingestData(this.pointer, sstLocalPath)) {
-            if (!response.success()) {
-                throw new IOException(response.getErrMsg());
-            }
-        }
     }
 
     public String getFileMD5(String fileName) throws IOException {
