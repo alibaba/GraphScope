@@ -15,10 +15,9 @@
 
 use std::convert::TryInto;
 use std::fmt::Debug;
-use std::sync::{Arc, Mutex};
 
-use graph_proxy::apis::{Edge, Vertex, WriteGraphProxy};
-use graph_proxy::{GraphProxyError, GraphProxyResult};
+use graph_proxy::apis::WriteGraphProxy;
+use graph_proxy::VineyardGraphWriter;
 use ir_common::error::ParsePbError;
 use ir_common::generated::common as common_pb;
 use ir_common::generated::schema as schema_pb;
@@ -31,7 +30,7 @@ use crate::process::record::Record;
 
 #[derive(Clone, Debug)]
 pub struct VineyardSinker {
-    graph_writer: TestGraph,
+    graph_writer: VineyardGraphWriter,
     sink_keys: Vec<Option<KeyId>>,
 }
 
@@ -75,9 +74,11 @@ impl SinkGen for SinkVineyardOp {
             sink_keys.push(sink_key);
         }
 
-        if let Some(_graph_schema) = self.graph_schema {
-            // TODO: replace by VineyardGraph
-            let graph_writer = VineyardSinker { graph_writer: TestGraph::default(), sink_keys };
+        if let Some(graph_schema) = self.graph_schema {
+            let server_index = pegasus::get_current_worker().server_index;
+            let graph_writer =
+                VineyardGraphWriter::new(self.graph_name, &graph_schema, server_index as i32);
+            let graph_writer = VineyardSinker { graph_writer, sink_keys };
             debug!("Runtime sink graph operator: {:?}", graph_writer);
             Ok(Sinker::GraphSinker(graph_writer))
         } else {
@@ -86,99 +87,118 @@ impl SinkGen for SinkVineyardOp {
     }
 }
 
-#[derive(Default, Debug)]
-pub struct TestGraph {
-    vertices: Arc<Mutex<Vec<Vertex>>>,
-    edges: Arc<Mutex<Vec<Edge>>>,
-}
-
-impl Clone for TestGraph {
-    fn clone(&self) -> Self {
-        TestGraph { vertices: self.vertices.clone(), edges: self.edges.clone() }
-    }
-}
-
-impl WriteGraphProxy for TestGraph {
-    fn add_vertex(&mut self, vertex: Vertex) -> GraphProxyResult<()> {
-        self.vertices
-            .lock()
-            .map_err(|_e| GraphProxyError::write_graph_error("add_vertex failed"))?
-            .push(vertex);
-        Ok(())
-    }
-
-    fn add_vertices(&mut self, vertices: Vec<Vertex>) -> GraphProxyResult<()> {
-        for vertex in vertices {
-            self.vertices
-                .lock()
-                .map_err(|_e| GraphProxyError::write_graph_error("add_vertices failed"))?
-                .push(vertex);
-        }
-        Ok(())
-    }
-
-    fn add_edge(&mut self, edge: Edge) -> GraphProxyResult<()> {
-        self.edges
-            .lock()
-            .map_err(|_e| GraphProxyError::write_graph_error("add_edge failed"))?
-            .push(edge);
-        Ok(())
-    }
-
-    fn add_edges(&mut self, edges: Vec<Edge>) -> GraphProxyResult<()> {
-        for edge in edges {
-            self.edges
-                .lock()
-                .map_err(|_e| GraphProxyError::write_graph_error("add_edges failed"))?
-                .push(edge);
-        }
-        Ok(())
-    }
-
-    fn finish(&mut self) -> GraphProxyResult<()> {
-        Ok(())
-    }
-}
-
-impl TestGraph {
-    fn scan_vertex(&self) -> GraphProxyResult<Box<dyn Iterator<Item = Vertex> + Send>> {
-        Ok(Box::new(
-            self.vertices
-                .lock()
-                .map_err(|_e| GraphProxyError::query_store_error("scan_vertex failed"))?
-                .clone()
-                .into_iter(),
-        ))
-    }
-
-    fn scan_edge(&self) -> GraphProxyResult<Box<dyn Iterator<Item = Edge> + Send>> {
-        Ok(Box::new(
-            self.edges
-                .lock()
-                .map_err(|_e| GraphProxyError::query_store_error("scan_edge failed"))?
-                .clone()
-                .into_iter(),
-        ))
-    }
-}
-
 #[cfg(test)]
 mod tests {
 
     use std::collections::HashMap;
+    use std::sync::{Arc, Mutex};
 
     use dyn_type::Object;
-    use graph_proxy::apis::{DefaultDetails, DynDetails, Edge, GraphElement};
+    use graph_proxy::apis::{DefaultDetails, DynDetails, Edge, GraphElement, Vertex, WriteGraphProxy};
+    use graph_proxy::{GraphProxyError, GraphProxyResult};
     use ir_common::NameOrId;
     use pegasus::api::{Fold, Sink};
     use pegasus::result::ResultStream;
     use pegasus::JobConf;
 
+    use crate::error::FnExecResult;
     use crate::process::operator::accum::accumulator::Accumulator;
-    use crate::process::operator::sink::sink_vineyard::TestGraph;
-    use crate::process::operator::sink::VineyardSinker;
     use crate::process::operator::tests::{init_source, init_vertex1, init_vertex2};
     use crate::process::record::Record;
+
+    #[derive(Default, Debug)]
+    pub struct TestGraphWriter {
+        vertices: Arc<Mutex<Vec<Vertex>>>,
+        edges: Arc<Mutex<Vec<Edge>>>,
+    }
+
+    impl Clone for TestGraphWriter {
+        fn clone(&self) -> Self {
+            TestGraphWriter { vertices: self.vertices.clone(), edges: self.edges.clone() }
+        }
+    }
+
+    impl WriteGraphProxy for TestGraphWriter {
+        fn add_vertex(&mut self, vertex: Vertex) -> GraphProxyResult<()> {
+            self.vertices
+                .lock()
+                .map_err(|_e| GraphProxyError::write_graph_error("add_vertex failed"))?
+                .push(vertex);
+            Ok(())
+        }
+
+        fn add_vertices(&mut self, vertices: Vec<Vertex>) -> GraphProxyResult<()> {
+            for vertex in vertices {
+                self.vertices
+                    .lock()
+                    .map_err(|_e| GraphProxyError::write_graph_error("add_vertices failed"))?
+                    .push(vertex);
+            }
+            Ok(())
+        }
+
+        fn add_edge(&mut self, edge: Edge) -> GraphProxyResult<()> {
+            self.edges
+                .lock()
+                .map_err(|_e| GraphProxyError::write_graph_error("add_edge failed"))?
+                .push(edge);
+            Ok(())
+        }
+
+        fn add_edges(&mut self, edges: Vec<Edge>) -> GraphProxyResult<()> {
+            for edge in edges {
+                self.edges
+                    .lock()
+                    .map_err(|_e| GraphProxyError::write_graph_error("add_edges failed"))?
+                    .push(edge);
+            }
+            Ok(())
+        }
+
+        fn finish(&mut self) -> GraphProxyResult<()> {
+            Ok(())
+        }
+    }
+
+    impl TestGraphWriter {
+        fn scan_vertex(&self) -> GraphProxyResult<Box<dyn Iterator<Item = Vertex> + Send>> {
+            Ok(Box::new(
+                self.vertices
+                    .lock()
+                    .map_err(|_e| GraphProxyError::query_store_error("scan_vertex failed"))?
+                    .clone()
+                    .into_iter(),
+            ))
+        }
+
+        fn scan_edge(&self) -> GraphProxyResult<Box<dyn Iterator<Item = Edge> + Send>> {
+            Ok(Box::new(
+                self.edges
+                    .lock()
+                    .map_err(|_e| GraphProxyError::query_store_error("scan_edge failed"))?
+                    .clone()
+                    .into_iter(),
+            ))
+        }
+    }
+
+    impl Accumulator<Record, Record> for TestGraphWriter {
+        fn accum(&mut self, mut next: Record) -> FnExecResult<()> {
+            let entry = next.take(None).unwrap();
+            if let Some(v) = entry.as_graph_vertex() {
+                self.add_vertex(v.clone())?
+            } else if let Some(e) = entry.as_graph_edge() {
+                self.add_edge(e.clone())?
+            }
+
+            Ok(())
+        }
+
+        fn finalize(&mut self) -> FnExecResult<Record> {
+            self.finish()?;
+            Ok(Record::default())
+        }
+    }
 
     fn init_edge1() -> Edge {
         let map1: HashMap<NameOrId, Object> =
@@ -196,7 +216,7 @@ mod tests {
         Edge::new(21, Some(1.into()), 2, 1, DynDetails::new(DefaultDetails::new(map2)))
     }
 
-    fn graph_writer_test(source: Vec<Record>, graph_writer: VineyardSinker) -> ResultStream<Record> {
+    fn graph_writer_test(source: Vec<Record>, graph_writer: &TestGraphWriter) -> ResultStream<Record> {
         let conf = JobConf::new("subgraph_write_test");
         let result = pegasus::run(conf, || {
             let source = source.clone();
@@ -223,9 +243,8 @@ mod tests {
     #[test]
     fn write_vertex_test() {
         let source = init_source();
-        let test_graph = TestGraph::default();
-        let test_graph_writer = VineyardSinker { graph_writer: test_graph.clone(), sink_keys: vec![None] };
-        let mut result_stream = graph_writer_test(source, test_graph_writer);
+        let test_graph = TestGraphWriter::default();
+        let mut result_stream = graph_writer_test(source, &test_graph);
 
         let mut expected_vertices = vec![init_vertex1(), init_vertex2()];
         while let Some(Ok(_record)) = result_stream.next() {
@@ -245,10 +264,8 @@ mod tests {
         let r1 = Record::new(init_edge1(), None);
         let r2 = Record::new(init_edge2(), None);
         let source = vec![r1, r2];
-        let test_graph = TestGraph::default();
-        let test_graph_writer = VineyardSinker { graph_writer: test_graph.clone(), sink_keys: vec![None] };
-
-        let mut result_stream = graph_writer_test(source, test_graph_writer);
+        let test_graph = TestGraphWriter::default();
+        let mut result_stream = graph_writer_test(source, &test_graph);
 
         let mut expected_edges = vec![init_edge1(), init_edge2()];
         while let Some(Ok(_record)) = result_stream.next() {
@@ -270,9 +287,8 @@ mod tests {
         let r3 = Record::new(init_edge1(), None);
         let r4 = Record::new(init_edge2(), None);
         let source = vec![r1, r2, r3, r4];
-        let test_graph = TestGraph::default();
-        let test_graph_writer = VineyardSinker { graph_writer: test_graph.clone(), sink_keys: vec![None] };
-        let mut result_stream = graph_writer_test(source, test_graph_writer);
+        let test_graph = TestGraphWriter::default();
+        let mut result_stream = graph_writer_test(source, &test_graph);
 
         let mut expected_vertices = vec![init_vertex1(), init_vertex2()];
         let mut expected_edges = vec![init_edge1(), init_edge2()];
