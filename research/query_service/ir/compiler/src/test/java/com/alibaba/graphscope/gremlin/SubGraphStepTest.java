@@ -38,7 +38,7 @@ public class SubGraphStepTest {
 
         // bothV().dedup()
         GetVOp op1 = (GetVOp) actualOps.get(1).unmodifiableCollection().get(0);
-        Assert.assertEquals(FfiVOpt.BothV, op1.getGetVOpt().get().applyArg());
+        Assert.assertEquals(FfiVOpt.Both, op1.getGetVOpt().get().applyArg());
 
         DedupOp op2 = (DedupOp) actualOps.get(1).unmodifiableCollection().get(1);
         Assert.assertEquals(

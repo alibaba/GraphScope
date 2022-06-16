@@ -309,7 +309,7 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
                                     case IN:
                                         return FfiVOpt.End;
                                     case BOTH:
-                                        return FfiVOpt.BothV;
+                                        return FfiVOpt.Both;
                                     default:
                                         throw new OpArgIllegalException(
                                                 OpArgIllegalException.Cause.INVALID_TYPE,

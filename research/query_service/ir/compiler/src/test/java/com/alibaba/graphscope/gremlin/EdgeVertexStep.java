@@ -22,6 +22,6 @@ public class EdgeVertexStep {
                 (GetVOp)
                         StepTransformFactory.EDGE_VERTEX_STEP.apply(
                                 traversal.asAdmin().getEndStep());
-        Assert.assertEquals(FfiVOpt.BothV, getVOp.getGetVOpt().get().applyArg());
+        Assert.assertEquals(FfiVOpt.Both, getVOp.getGetVOpt().get().applyArg());
     }
 }

@@ -16,7 +16,7 @@ public class GetVOpTest {
     @Test
     public void getBothVTest() throws IOException {
         GetVOp getVOp = new GetVOp();
-        getVOp.setGetVOpt(new OpArg(FfiVOpt.BothV));
+        getVOp.setGetVOpt(new OpArg(FfiVOpt.Both));
         irPlan = DedupOpTest.getTestIrPlan(getVOp);
         String actual = irPlan.getPlanAsJson();
         Assert.assertEquals(FileUtils.readJsonFromResource("get_bothV.json"), actual);

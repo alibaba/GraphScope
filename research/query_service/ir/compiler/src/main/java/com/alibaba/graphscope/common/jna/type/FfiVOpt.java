@@ -22,7 +22,7 @@ public enum FfiVOpt implements IntEnum<FfiVOpt> {
     Start,
     End,
     Other,
-    BothV;
+    Both;
 
     @Override
     public int getInt() {
