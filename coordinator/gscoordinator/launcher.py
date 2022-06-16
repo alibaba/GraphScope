@@ -21,6 +21,7 @@ import json
 import logging
 import os
 import shutil
+import socket
 import subprocess
 import sys
 import time
@@ -342,7 +343,14 @@ class LocalLauncher(Launcher):
         etcd_exec = self._find_etcd()
         self._etcd_peer_port = 2380 if is_free_port(2380) else get_free_port()
         self._etcd_client_port = 2379 if is_free_port(2379) else get_free_port()
-        self._etcd_endpoint = "http://127.0.0.1:{0}".format(str(self._etcd_client_port))
+        if len(self._hosts) > 1:
+            self._etcd_endpoint = "http://{0}:{1}".format(
+                socket.gethostname(), str(self._etcd_client_port)
+            )
+        else:
+            self._etcd_endpoint = "http://127.0.0.1:{0}".format(
+                str(self._etcd_client_port)
+            )
 
         env = os.environ.copy()
         env.update({"ETCD_MAX_TXN_OPS": "102400"})
@@ -449,48 +457,67 @@ class LocalLauncher(Launcher):
         return vineyardd
 
     def _create_vineyard(self):
-        if not self._vineyard_socket:
-            ts = get_timestamp()
-            vineyard_socket = f"{self._vineyard_socket_prefix}{ts}"
-            self._vineyard_rpc_port = 9600 if is_free_port(9600) else get_free_port()
+        if self._vineyard_socket is not None:
+            return
 
-            cmd = self._find_vineyardd()
-            cmd.extend(["--socket", vineyard_socket])
-            cmd.extend(["--rpc_socket_port", str(self._vineyard_rpc_port)])
-            cmd.extend(["--size", self._shared_mem])
-            cmd.extend(["-etcd_endpoint", self._etcd_endpoint])
-            cmd.extend(["-etcd_prefix", f"vineyard.gsa.{ts}"])
-            env = os.environ.copy()
-            env["GLOG_v"] = str(self._glog_level)
+        multiple_hosts = []
+        for host in self._hosts.split(","):
+            if ":" in host:
+                multiple_hosts.append(host + ":1")
+            else:
+                multiple_hosts.append(host.split(":")[0] + ":1")
 
-            logger.info("Launch vineyardd with command: %s", " ".join(cmd))
+        if len(multiple_hosts) > 1:
+            rmcp = ResolveMPICmdPrefix()
+            cmd, mpi_env = rmcp.resolve(len(multiple_hosts), ",".join(multiple_hosts))
+        else:
+            cmd, mpi_env = [], {}
 
-            process = subprocess.Popen(
-                cmd,
-                start_new_session=True,
-                cwd=os.getcwd(),
-                env=env,
-                encoding="utf-8",
-                errors="replace",
-                stdin=subprocess.DEVNULL,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                universal_newlines=True,
-                bufsize=1,
-            )
+        ts = get_timestamp()
+        vineyard_socket = f"{self._vineyard_socket_prefix}{ts}"
+        self._vineyard_rpc_port = 9600 if is_free_port(9600) else get_free_port()
 
-            logger.info("Server is initializing vineyardd.")
-            stdout_watcher = PipeWatcher(
-                process.stdout,
-                sys.stdout,
-                suppressed=(not logger.isEnabledFor(logging.DEBUG)),
-            )
-            setattr(process, "stdout_watcher", stdout_watcher)
+        cmd.extend(self._find_vineyardd())
+        cmd.extend(["--socket", vineyard_socket])
+        cmd.extend(["--rpc_socket_port", str(self._vineyard_rpc_port)])
+        cmd.extend(["--size", self._shared_mem])
+        cmd.extend(["-etcd_endpoint", self._etcd_endpoint])
+        cmd.extend(["-etcd_prefix", f"vineyard.gsa.{ts}"])
+        env = os.environ.copy()
+        env["GLOG_v"] = str(self._glog_level)
+        env.update(mpi_env)
 
-            self._vineyard_socket = vineyard_socket
-            self._vineyardd_process = process
+        logger.info("Launch vineyardd with command: %s", " ".join(cmd))
 
-            start_time = time.time()
+        process = subprocess.Popen(
+            cmd,
+            start_new_session=True,
+            cwd=os.getcwd(),
+            env=env,
+            encoding="utf-8",
+            errors="replace",
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            universal_newlines=True,
+            bufsize=1,
+        )
+
+        logger.info("Server is initializing vineyardd.")
+        stdout_watcher = PipeWatcher(
+            process.stdout,
+            sys.stdout,
+            suppressed=(not logger.isEnabledFor(logging.DEBUG)),
+        )
+        setattr(process, "stdout_watcher", stdout_watcher)
+
+        self._vineyard_socket = vineyard_socket
+        self._vineyardd_process = process
+
+        start_time = time.time()
+        if len(multiple_hosts) > 1:
+            time.sleep(5)  # should be OK
+        else:
             while not os.path.exists(self._vineyard_socket):
                 time.sleep(1)
                 if (
@@ -498,21 +525,9 @@ class LocalLauncher(Launcher):
                     and self._timeout_seconds + start_time < time.time()
                 ):
                     raise RuntimeError("Launch vineyardd failed due to timeout.")
-            logger.info(
-                "Vineyardd is ready, ipc socket is {0}".format(self._vineyard_socket)
-            )
-
-    def _create_services(self):
-        # create etcd
-        self._config_etcd()
-        # create vineyard
-        self._create_vineyard()
-        # create GAE rpc service
-        self._start_analytical_engine()
-        # create zetcd
-        self._launch_zetcd()
-        if self.poll() is not None and self.poll() != 0:
-            raise RuntimeError("Initializing analytical engine failed.")
+        logger.info(
+            "Vineyardd is ready, ipc socket is {0}".format(self._vineyard_socket)
+        )
 
     def _start_analytical_engine(self):
         rmcp = ResolveMPICmdPrefix()
@@ -576,6 +591,18 @@ class LocalLauncher(Launcher):
                 self._analytical_engine_endpoint
             )
         )
+
+    def _create_services(self):
+        # create etcd
+        self._config_etcd()
+        # create vineyard
+        self._create_vineyard()
+        # create GAE rpc service
+        self._start_analytical_engine()
+        # create zetcd
+        self._launch_zetcd()
+        if self.poll() is not None and self.poll() != 0:
+            raise RuntimeError("Initializing analytical engine failed.")
 
     def create_learning_instance(self, object_id, handle, config):
         # prepare argument
