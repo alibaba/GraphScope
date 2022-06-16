@@ -460,11 +460,16 @@ class LocalLauncher(Launcher):
         if self._vineyard_socket is not None:
             return
 
-        multiple_hosts = len(self._hosts.split(",")) > 1
+        multiple_hosts = []
+        for host in self._hosts.split(","):
+            if ":" in host:
+                multiple_hosts.append(host + ":1")
+            else:
+                multiple_hosts.append(host.split(":")[0] + ":1")
 
-        if multiple_hosts:
+        if len(multiple_hosts) > 1:
             rmcp = ResolveMPICmdPrefix()
-            cmd, mpi_env = rmcp.resolve(self._num_workers, self._hosts)
+            cmd, mpi_env = rmcp.resolve(len(multiple_hosts), ",".join(multiple_hosts))
         else:
             cmd, mpi_env = [], {}
 
@@ -510,7 +515,7 @@ class LocalLauncher(Launcher):
         self._vineyardd_process = process
 
         start_time = time.time()
-        if multiple_hosts:
+        if len(multiple_hosts) > 1:
             time.sleep(5)  # should be OK
         else:
             while not os.path.exists(self._vineyard_socket):
