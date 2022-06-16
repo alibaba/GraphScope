@@ -17,6 +17,9 @@ import com.alibaba.graphscope.groot.meta.MetaStore;
 import com.alibaba.maxgraph.common.config.Configs;
 import com.alibaba.maxgraph.common.config.CoordinatorConfig;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
@@ -32,8 +35,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.zip.CRC32;
 import java.util.zip.Checksum;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class FileMetaStore implements MetaStore {
     private static final Logger logger = LoggerFactory.getLogger(FileMetaStore.class);
