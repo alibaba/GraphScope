@@ -53,7 +53,7 @@
       </includes>
     </fileSet>
     <fileSet>
-      <directory>${project.basedir}/../ir-adaptor/target</directory>
+      <directory>${project.basedir}/../frontend/target</directory>
       <outputDirectory>/</outputDirectory>
       <includes>
         <include>ir*.jar</include>

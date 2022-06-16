@@ -24,6 +24,7 @@ import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Objects;
 
 @JsonRootName("details")
 public class MaxGraphNode {
@@ -109,8 +110,8 @@ public class MaxGraphNode {
 
         if (idx != that.idx) return false;
         if (port != that.port) return false;
-        if (roleName != null ? !roleName.equals(that.roleName) : that.roleName != null)
+        if (!Objects.equals(roleName, that.roleName))
             return false;
-        return host != null ? host.equals(that.host) : that.host == null;
+        return Objects.equals(host, that.host);
     }
 }

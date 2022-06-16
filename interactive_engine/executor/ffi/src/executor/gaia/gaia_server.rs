@@ -18,7 +18,7 @@ use maxgraph_store::db::api::{GraphConfig, GraphResult};
 use std::sync::{Arc, Mutex};
 use maxgraph_store::db::graph::store::GraphStore;
 use std::net::SocketAddr;
-use maxgraph_runtime::store::groot::global_graph::GlobalGraph;
+use maxgraph_runtime::store::global_graph::GlobalGraph;
 use gaia_pegasus::Configuration as GaiaConfig;
 use tokio::runtime::Runtime;
 use pegasus_server::rpc::{RPCServerConfig, ServiceStartListener, start_all};

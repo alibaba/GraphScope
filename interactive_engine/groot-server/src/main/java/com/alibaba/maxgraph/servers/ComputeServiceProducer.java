@@ -10,16 +10,6 @@ import com.alibaba.graphscope.groot.store.StoreService;
 import com.alibaba.maxgraph.compiler.api.schema.SchemaFetcher;
 
 public interface ComputeServiceProducer {
-    // Used for compatibility of maxgraph engine
-    @Deprecated
-    AbstractService makeGraphService(
-            SchemaFetcher schemaFetcher,
-            ChannelManager channelManager,
-            NodeDiscovery discovery,
-            GraphWriter graphWriter,
-            WriteSessionGenerator writeSessionGenerator,
-            MetaService metaService);
-
     AbstractService makeGraphService(SchemaFetcher schemaFetcher, ChannelManager channelManager);
 
     AbstractService makeExecutorService(

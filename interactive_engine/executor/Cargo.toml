@@ -3,8 +3,6 @@
 members = [
     "runtime",
     "store",
-    "server",
-    "Pegasus",
     "ffi",
     "gaia_runtime"
 ]

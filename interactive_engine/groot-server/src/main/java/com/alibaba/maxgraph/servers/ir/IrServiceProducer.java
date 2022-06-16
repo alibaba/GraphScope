@@ -50,17 +50,6 @@ public class IrServiceProducer implements ComputeServiceProducer {
 
     @Override
     public AbstractService makeGraphService(
-            SchemaFetcher schemaFetcher,
-            ChannelManager channelManager,
-            NodeDiscovery discovery,
-            GraphWriter graphWriter,
-            WriteSessionGenerator writeSessionGenerator,
-            MetaService metaService) {
-        return makeGraphService(schemaFetcher, channelManager);
-    }
-
-    @Override
-    public AbstractService makeGraphService(
             SchemaFetcher schemaFetcher, ChannelManager channelManager) {
         int executorCount = CommonConfig.STORE_NODE_COUNT.get(configs);
         RpcChannelFetcher channelFetcher =

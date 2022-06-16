@@ -159,11 +159,7 @@ public class Frontend extends NodeBase {
         this.graphService =
                 serviceProducer.makeGraphService(
                         wrappedSchemaFetcher,
-                        channelManager,
-                        discovery,
-                        graphWriter,
-                        writeSessionGenerator,
-                        metaService);
+                        channelManager);
     }
 
     private RpcServer buildServiceServer(Configs configs, BindableService... services) {

@@ -31,7 +31,15 @@ use rand::{thread_rng, Rng};
 use maxgraph_store::api::graph_partition::GraphPartitionManager;
 use std::collections::HashMap;
 use std::sync::Arc;
-use execution::build_empty_router;
+use log::error;
+
+#[inline]
+pub fn build_empty_router() -> impl Fn(&i64) -> i32 + 'static {
+    move |_| {
+        // info!("generate store id with 0");
+        0
+    }
+}
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, Abomonation)]
 pub enum RawMessageType {

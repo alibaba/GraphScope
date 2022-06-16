@@ -20,11 +20,7 @@
 #![allow(dead_code)]
 extern crate bincode;
 extern crate byteorder;
-extern crate crossbeam_channel;
-extern crate getopts;
-extern crate grpcio;
 extern crate itertools;
-extern crate zookeeper;
 #[allow(unused_imports)]
 #[macro_use]
 extern crate lazy_static;
@@ -42,37 +38,15 @@ extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 extern crate rand;
-extern crate futures;
-extern crate futures_cpupool;
-extern crate tokio_sync;
-extern crate tokio_core;
-extern crate tokio;
 extern crate serde_json;
 extern crate core;
 extern crate abomonation_derive;
 extern crate abomonation;
 extern crate alloc;
-extern crate pegasus;
-extern crate crossbeam_queue;
 extern crate libc;
-extern crate maxgraph_server;
 
 use maxgraph_common::proto::query_flow::QueryInput;
-use server::Client;
-use server::AsyncClient;
 
-
-#[allow(bare_trait_objects)]
-pub mod execution;
-#[allow(bare_trait_objects)]
-pub mod utils;
-#[allow(bare_trait_objects)]
-pub mod operator;
-#[allow(bare_trait_objects)]
-pub mod server;
-#[allow(bare_trait_objects)]
-pub mod rpc;
 #[allow(bare_trait_objects)]
 pub mod dataflow;
-#[allow(bare_trait_objects)]
 pub mod store;

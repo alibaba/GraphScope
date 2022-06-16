@@ -67,16 +67,6 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>com.alibaba.maxgraph</groupId>
-      <artifactId>maxgraph-executor</artifactId>
-      <version>${project.parent.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.alibaba.maxgraph</groupId>
-      <artifactId>c-end-lgraph</artifactId>
-      <version>${project.parent.version}</version>
-    </dependency>
-    <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency>

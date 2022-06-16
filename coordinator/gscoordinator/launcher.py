@@ -152,9 +152,6 @@ class LocalLauncher(Launcher):
         self._etcd_peer_port = None
         self._etcd_client_port = None
         self._etcd_process = None
-        # zookeeper
-        self._zookeeper_port = None
-        self._zetcd_process = None
         # vineyardd
         self._vineyard_rpc_port = None
         self._vineyardd_process = None
@@ -218,10 +215,6 @@ class LocalLauncher(Launcher):
     def etcd_port(self):
         return self._etcd_client_port
 
-    @property
-    def zookeeper_port(self):
-        return self._zookeeper_port
-
     def get_engine_config(self):
         config = {
             "engine_hosts": self.hosts,
@@ -278,10 +271,11 @@ class LocalLauncher(Launcher):
             self._session_workspace,
             str(object_id),
             schema_path,
-            "1",  # server id
+            "0",  # server id
+            "1234",  # executor port
+            "12345",  # executor rpc port
+            "8182",  # frontend port
             self.vineyard_socket,
-            str(self.zookeeper_port),
-            "{}".format(";".join(engine_params)),
         ]
         logger.info("Create GIE instance with command: %s", " ".join(cmd))
         process = subprocess.Popen(
@@ -408,49 +402,6 @@ class LocalLauncher(Launcher):
                 raise RuntimeError("Launch etcd service failed due to timeout.")
         logger.info(
             "Etcd is ready, endpoint is localhost:{0}".format(self._etcd_client_port)
-        )
-
-    def _launch_zetcd(self):
-        self._zookeeper_port = 2181 if is_free_port(2181) else get_free_port()
-
-        zetcd_exec = shutil.which("zetcd")
-        if not zetcd_exec:
-            raise RuntimeError("zetcd command not found.")
-        cmd = [
-            zetcd_exec,
-            "--zkaddr",
-            "0.0.0.0:{}".format(self._zookeeper_port),
-            "--endpoints",
-            self._etcd_endpoint,
-        ]
-
-        process = subprocess.Popen(
-            cmd,
-            start_new_session=True,
-            cwd=os.getcwd(),
-            env=os.environ.copy(),
-            encoding="utf-8",
-            errors="replace",
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.STDOUT,
-            universal_newlines=True,
-            bufsize=1,
-        )
-
-        logger.info("Server is initializing zetcd.")
-        self._zetcd_process = process
-
-        start_time = time.time()
-        while is_free_port(self._zookeeper_port):
-            time.sleep(1)
-            if (
-                self._timeout_seconds
-                and self._timeout_seconds + start_time < time.time()
-            ):
-                raise RuntimeError("Launch zetcd proxy service failed due to timeout.")
-        logger.info(
-            "ZEtcd is ready, endpoint is localhost:{0}".format(self._zookeeper_port)
         )
 
     def _find_vineyardd(self):
@@ -608,8 +559,6 @@ class LocalLauncher(Launcher):
         self._create_vineyard()
         # create GAE rpc service
         self._start_analytical_engine()
-        # create zetcd
-        self._launch_zetcd()
         if self.poll() is not None and self.poll() != 0:
             raise RuntimeError("Initializing analytical engine failed.")
 
@@ -684,7 +633,7 @@ class LocalLauncher(Launcher):
         self._stop_subprocess(self._vineyardd_process, kill=True)
 
     def _stop_interactive_engine_service(self):
-        self._stop_subprocess(self._zetcd_process)
+        pass
 
     def _stop_analytical_engine(self):
         self._stop_subprocess(self._analytical_engine_process, kill=True)

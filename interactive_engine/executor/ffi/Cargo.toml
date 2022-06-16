@@ -1,7 +1,7 @@
 [package]
 name = "maxgraph-ffi"
 version = "0.1.0"
-authors = ["maxgraph@alibaba-inc.com"]
+authors = ["graphscope@alibaba-inc.com"]
 edition = "2018"
 
 [lib]
@@ -11,8 +11,6 @@ crate-type = ["rlib", "cdylib"]
 maxgraph-runtime = { path = "../runtime" }
 maxgraph-store = { path = "../store" }
 maxgraph-common = { path = "../../rust-common" }
-maxgraph-server = { path = "../server" }
-pegasus = { path = "../Pegasus", package = "pegasus" }
 gaia_pegasus = { path = "../../../research/engine/pegasus/pegasus", package = "pegasus" }
 pegasus_network = { path = "../../../research/engine/pegasus/network" }
 pegasus_server = { path = "../../../research/engine/pegasus/server" }

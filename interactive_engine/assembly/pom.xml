@@ -21,17 +21,7 @@
     </dependency>
     <dependency>
       <groupId>com.alibaba.maxgraph</groupId>
-      <artifactId>maxgraph-coordinator</artifactId>
-      <version>${project.parent.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.alibaba.maxgraph</groupId>
-      <artifactId>maxgraph-frontendservice</artifactId>
-      <version>${project.parent.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.alibaba.maxgraph</groupId>
-      <artifactId>ir-adaptor</artifactId>
+      <artifactId>frontend</artifactId>
       <version>0.0.1-SNAPSHOT</version>
     </dependency>
   </dependencies>

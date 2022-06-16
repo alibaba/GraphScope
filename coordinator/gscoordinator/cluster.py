@@ -152,7 +152,6 @@ class KubernetesClusterLauncher(Launcher):
     _mars_scheduler_name_prefix = "marsscheduler-"
     _mars_service_name_prefix = "mars-"
 
-    _zookeeper_port = 2181  # fixed
     _random_analytical_engine_rpc_port = random.randint(56001, 57000)
     _random_etcd_listen_peer_service_port = random.randint(57001, 58000)
     _random_etcd_listen_client_service_port = random.randint(58001, 59000)
@@ -250,7 +249,6 @@ class KubernetesClusterLauncher(Launcher):
         self._glog_level = parse_as_glog_level(log_level)
 
         self._analytical_engine_process = None
-        self._zetcd_process = None
 
         # 8000 ~ 9000 is exposed
         self._learning_engine_ports_usage = 8000
@@ -355,16 +353,6 @@ class KubernetesClusterLauncher(Launcher):
         """
         object_id = config[types_pb2.VINEYARD_ID].i
         schema_path = config[types_pb2.SCHEMA_PATH].s.decode()
-        # engine params format:
-        #   k1:v1;k2:v2;k3:v3
-        engine_params = {}
-        if types_pb2.GIE_GREMLIN_ENGINE_PARAMS in config:
-            engine_params = json.loads(
-                config[types_pb2.GIE_GREMLIN_ENGINE_PARAMS].s.decode()
-            )
-        engine_params = [
-            "{}:{}".format(key, value) for key, value in engine_params.items()
-        ]
         env = os.environ.copy()
         env.update({"GRAPHSCOPE_HOME": GRAPHSCOPE_HOME})
         cmd = [
@@ -375,8 +363,11 @@ class KubernetesClusterLauncher(Launcher):
             schema_path,
             self.hosts,
             self._engine_container_name,
-            "{}".format(";".join(engine_params)),
+            "1234",  # executor port
+            "12345",  # executor rpc port
+            "8182",  # frontend port
             self._coordinator_name,
+            self._engine_name,
         ]
         logger.info("Create GIE instance with command: {0}".format(" ".join(cmd)))
         process = subprocess.Popen(
@@ -851,53 +842,7 @@ class KubernetesClusterLauncher(Launcher):
         return config
 
     def _create_interactive_engine_service(self):
-        # launch zetcd proxy
-        logger.info("Launching zetcd proxy service ...")
-        zetcd_exec = shutil.which("zetcd")
-        if not zetcd_exec:
-            raise RuntimeError("zetcd command not found.")
-        etcd_endpoints = self._get_etcd_endpoints()
-        cmd = [
-            zetcd_exec,
-            "--zkaddr",
-            "0.0.0.0:{}".format(self._zookeeper_port),
-            "--endpoints",
-            "{}".format(",".join(etcd_endpoints)),
-        ]
-        logger.info("zetcd cmd {}".format(" ".join(cmd)))
-
-        self._zetcd_process = subprocess.Popen(
-            cmd,
-            start_new_session=True,
-            cwd=os.getcwd(),
-            env=os.environ.copy(),
-            encoding="utf-8",
-            errors="replace",
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            universal_newlines=True,
-            bufsize=1,
-        )
-        stdout_watcher = PipeWatcher(self._zetcd_process.stdout, sys.stdout, drop=True)
-        setattr(self._zetcd_process, "stdout_watcher", stdout_watcher)
-
-        start_time = time.time()
-        while is_free_port(
-            self._zookeeper_port,
-            socket.gethostbyname(socket.gethostname()),
-        ):
-            time.sleep(1)
-            if (
-                self._saved_locals["timeout_seconds"]
-                and self._saved_locals["timeout_seconds"] + start_time < time.time()
-            ):
-                raise RuntimeError("Launch zetcd service failed.")
-        logger.info(
-            "ZEtcd is ready, endpoint is {0}:{1}".format(
-                socket.gethostbyname(socket.gethostname()), self._zookeeper_port
-            )
-        )
+        pass
 
     def _config_etcd_endpoint(self):
         if self._etcd_addrs is None:

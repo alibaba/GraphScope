@@ -89,13 +89,13 @@ jobs:
     - name: Ir Integration Test on Groot Store
       run: |
         source ${HOME}/.bashrc
-        cd ${GITHUB_WORKSPACE}/interactive_engine/ir-adaptor && ./ir_groot_ci.sh
+        cd ${GITHUB_WORKSPACE}/interactive_engine/frontend && ./ir_groot_ci.sh
 
     - name: Ir Integration Test on Vineyard Store
       run: |
         source ${HOME}/.bashrc
         export USE_GAIA_ENGINE=true
-        cd ${GITHUB_WORKSPACE}/interactive_engine/ir-adaptor
+        cd ${GITHUB_WORKSPACE}/interactive_engine/frontend
         ./kill.sh || true
         ./ir_vineyard_ci.sh
 

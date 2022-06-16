@@ -842,9 +842,9 @@ class CoordinatorServiceServicer(
         # vineyard object id of graph
         object_id = op.attr[types_pb2.VINEYARD_ID].i
         # maxgraph endpoint pattern
-        MAXGRAPH_FRONTEND_PATTERN = re.compile("(?<=MAXGRAPH_FRONTEND_ENDPOINT:).*$")
-        MAXGRAPH_FRONTEND_EXTERNAL_PATTERN = re.compile(
-            "(?<=MAXGRAPH_FRONTEND_EXTERNAL_ENDPOINT:).*$"
+        FRONTEND_PATTERN = re.compile("(?<=FRONTEND_ENDPOINT:).*$")
+        FRONTEND_EXTERNAL_PATTERN = re.compile(
+            "(?<=FRONTEND_EXTERNAL_ENDPOINT:).*$"
         )
         # maxgraph endpoint
         maxgraph_endpoint = None
@@ -860,7 +860,7 @@ class CoordinatorServiceServicer(
             if return_code == 0:
                 # match maxgraph endpoint and check for ready
                 maxgraph_endpoint = _match_frontend_endpoint(
-                    MAXGRAPH_FRONTEND_PATTERN, outs
+                    FRONTEND_PATTERN, outs
                 )
                 if check_gremlin_server_ready(maxgraph_endpoint):
                     logger.info(
@@ -869,7 +869,7 @@ class CoordinatorServiceServicer(
                         object_id,
                     )
                 maxgraph_external_endpoint = _match_frontend_endpoint(
-                    MAXGRAPH_FRONTEND_EXTERNAL_PATTERN, outs
+                    FRONTEND_EXTERNAL_PATTERN, outs
                 )
 
                 self._object_manager.put(

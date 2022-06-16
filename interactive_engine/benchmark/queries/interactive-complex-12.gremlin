@@ -1,1 +1,0 @@
-g.timeout(600000).V().hasLabel('person').has('id',$personId).out('knows').as('friend').in('hasCreator').hasLabel('comment').as('comment').filter(out('replyOf').hasLabel('post').out('hasTag').as('tag').out('hasType').has('name',within('$tagClassName'))).as('comment').select('friend').groupCount().unfold().order().by(select(values), decr).by('id', incr).limit(20)

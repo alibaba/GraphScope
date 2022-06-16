@@ -29,7 +29,7 @@ succ() {
 }
 
 ##########################
-# Output useage information.
+# Output usage information.
 # Globals:
 #   None
 # Arguments:
@@ -51,97 +51,29 @@ cat <<END
     create_gremlin_instance_on_k8s      create gremlin instance on k8s
     close_gremlin_instance_on_local     close gremlin instance locally
     close_gremlin_instance_on_k8s       close instance on k8s
-    start_coordinator                   start coordinator of instance
     start_frontend                      start frontend of instance
     start_executor                      start executor of instance
 END
 }
 
 ##########################
-# Start the coordinator of maxgraph instance.
-# Globals:
-#   GRAPHSCOPE_HOME
-# Arguments:
-#   GRAPHSCOPE_RUNTIME: runtime workspace
-#   object_id: id of vineyard object
-#   zookeeper_ip: ip of zookeeper host
-#   zookeeper_port
-#   executor_count: number of executor, equal to engine count
-##########################
-start_coordinator() {
-  declare -r GRAPHSCOPE_RUNTIME=$1
-  declare -r cluster_type=$2
-  declare -r object_id=$3
-  declare -r zookeeper_ip=$4
-  declare -r zookeeper_port=$5
-  declare -r executor_count=$6
-
-  # create related directories
-  declare -r log_dir=${GS_LOG}/${object_id}
-  declare -r config_dir=${GRAPHSCOPE_RUNTIME}/config/${object_id}
-  declare -r pid_dir=${GRAPHSCOPE_RUNTIME}/pid/${object_id}
-  mkdir -p ${log_dir} ${config_dir} ${pid_dir}
-
-  declare java_opt="-server
-            -Xmx1024m
-            -Xms1024m
-            -XX:+HeapDumpOnOutOfMemoryError
-            -XX:HeapDumpPath=./java.hprof
-            -verbose:gc
-            -Xloggc:${log_dir}/maxgraph-coordinator.gc.log
-            -XX:+PrintGCDetails
-            -XX:+PrintGCDateStamps
-            -XX:+PrintHeapAtGC
-            -XX:+PrintTenuringDistribution
-            -Djava.awt.headless=true
-            -Dsun.net.client.defaultConnectTimeout=10000
-            -Dsun.net.client.defaultReadTimeout=30000
-            -XX:+DisableExplicitGC
-            -XX:-OmitStackTraceInFastThrow
-            -XX:+UseG1GC
-            -XX:InitiatingHeapOccupancyPercent=75
-            -XX:+IgnoreUnrecognizedVMOptions
-            -Dfile.encoding=UTF-8
-            -Dsun.jnu.encoding=UTF-8
-            -Dlogfilename=${log_dir}/maxgraph-coordinator.log
-            -Dlogbasedir=${log_dir}/coordinator
-            -Dlog4j.configurationFile=file:${GRAPHSCOPE_HOME}/conf/log4j2.xml"
-
-  # set coordinator config file
-  sed -e "s@GRAPH_NAME@${object_id}@g" \
-      -e "s@ZOOKEEPER_IP:ZOOKEEPER_PORT@${zookeeper_ip}:$zookeeper_port@g" \
-      -e "s@RESOURCE_EXECUTOR_COUNT@${executor_count}@g" \
-      -e "s@PARTITION_NUM@${executor_count}@g" \
-      ${GRAPHSCOPE_HOME}/conf/coordinator.application.properties > ${config_dir}/coordinator.application.properties
-
-  java ${java_opt} \
-    -cp "${GRAPHSCOPE_HOME}/maxgraph-coordinator-0.0.1-SNAPSHOT.jar:${GRAPHSCOPE_HOME}/lib/*:" \
-    com.alibaba.maxgraph.coordinator.CoordinatorMain \
-    ${config_dir}/coordinator.application.properties \
-    ${object_id} 1>${log_dir}/maxgraph-coordinator.out 2>${log_dir}/maxgraph-coordinator.err&
-  echo $! >> ${pid_dir}/coordinator.pid
-}
-
-##########################
-# Start the frontend of maxgraph instance.
+# Start the frontend of interactive engine instance.
 # Globals:
 #   GRAPHSCOPE_HOME
 # Arguments:
 #   GRAPHSCOPE_RUNTIME: runtime workspace
 #   object_id: id of vineyard object
 #   schema_path: path of graph schema file
-#   zookeeper_ip: ip of zookeeper host
-#   zookeeper_port
+#   pegasus_hosts: hosts and port of executor
 #   executor_count: number of executor, equal to engine count
+#   frontend_port: frontend port
 ##########################
 start_frontend() {
   declare -r GRAPHSCOPE_RUNTIME=$1
-  declare -r cluster_type=$2
-  declare -r object_id=$3
-  declare -r schema_path=$4
-  declare -r zookeeper_ip=$5
-  declare -r zookeeper_port=$6
-  declare -r executor_count=$7
+  declare -r object_id=$2
+  declare -r schema_path=$3
+  declare -r pegasus_hosts=$4
+  declare -r frontend_port=$5
   declare -r threads_per_worker=${THREADS_PER_WORKER:-2}
 
   # create related directories
@@ -152,7 +84,7 @@ start_frontend() {
 
   declare java_opt="-server
             -verbose:gc
-            -Xloggc:${log_dir}/maxgraph-frontend.gc.log
+            -Xloggc:${log_dir}/frontend.gc.log
             -XX:+PrintGCDetails
             -XX:+PrintGCDateStamps
             -XX:+PrintHeapAtGC
@@ -167,60 +99,47 @@ start_frontend() {
             -XX:+IgnoreUnrecognizedVMOptions
             -Dfile.encoding=UTF-8
             -Dsun.jnu.encoding=UTF-8
-            -Dlogfilename=${log_dir}/maxgraph-frontend.log
+            -Dlogfilename=${log_dir}/frontend.log
             -Dlogbasedir=${log_dir}/frontend
             -Dlog4j.configurationFile=file:${GRAPHSCOPE_HOME}/conf/log4j2.xml
             -Djna.library.path=${GRAPHSCOPE_HOME}/lib"
 
-  declare frontend_port="0"  # 0 means random
   # set frontend config file
   sed -e "s@GRAPH_NAME@${object_id}@g" \
-      -e "s@ZOOKEEPER_IP:ZOOKEEPER_PORT@${zookeeper_ip}:$zookeeper_port@g" \
-      -e "s@SCHEMA_PATH@${schema_path}@g" \
-      -e "s@RESOURCE_EXECUTOR_COUNT@${executor_count}@g" \
-      -e "s@PARTITION_NUM@${executor_count}@g" \
+      -e "s@GRAPH_SCHEMA@${schema_path}@g" \
+      -e "s@PEGASUS_HOSTS@${pegasus_hosts}@g" \
+      -e "s@FRONTEND_SERVICE_PORT@${frontend_port}@g" \
       -e "s@THREADS_PER_WORKER@${threads_per_worker}@g" \
-      -e "s@SERVER_PORT@${frontend_port}@g" \
       ${GRAPHSCOPE_HOME}/conf/frontend.vineyard.properties > ${config_dir}/frontend.vineyard.properties
 
-  if [[ -z "${USE_GAIA_ENGINE}" ]]; then
-    declare gaia_frontend_jar=""
-    declare gaia_frontend_mainclass="com.alibaba.maxgraph.frontendservice.FrontendServiceMain"
-  else
-    declare gaia_frontend_jar="${GRAPHSCOPE_HOME}/ir-adaptor-0.0.1-SNAPSHOT.jar"
-    declare gaia_frontend_mainclass="com.alibaba.graphscope.ir.maxgraph.Frontend"
-  fi
-
-  # maxgraph frontend service hold a handle client of coordinator
+  # frontend service hold a handle client of coordinator
   java ${java_opt} \
-    -cp "$gaia_frontend_jar:${GRAPHSCOPE_HOME}/maxgraph-frontendservice-0.0.1-SNAPSHOT.jar:${GRAPHSCOPE_HOME}/maxgraph-coordinator-0.0.1-SNAPSHOT.jar:${GRAPHSCOPE_HOME}/lib/*:" \
-    $gaia_frontend_mainclass \
+    -cp "${GRAPHSCOPE_HOME}/lib/*:" \
+    com.alibaba.graphscope.frontend.Frontend \
     ${config_dir}/frontend.vineyard.properties \
-    ${object_id} 1>${log_dir}/maxgraph-frontend.out 2>${log_dir}/maxgraph-frontend.err&
+    ${object_id} 1>${log_dir}/frontend.out 2>${log_dir}/frontend.err&
   echo $! >> ${pid_dir}/frontend.pid
 }
 
 ##########################
-# Start the executor of maxgraph instance.
+# Start the executor of interactive engine instance.
 # Globals:
 #   GRAPHSCOPE_HOME
 # Arguments:
 #   GRAPHSCOPE_RUNTIME: runtime workspace
 #   object_id: id of vineyard object
 #   server_id: global id of executor server
-#   zookeeper_ip: ip of zookeeper host
-#   zookeeper_port
-#   executor_count: number of executor, equal to engine count
-#   interactive_engine_params: parameters of interactive engine
+#   server_size
+#   rpc_port
+#   pegasus_hosts
 ##########################
 start_executor() {
   declare -r GRAPHSCOPE_RUNTIME=$1
   declare -r object_id=$2
   declare -r server_id=$3
-  declare -r zookeeper_ip=$4
-  declare -r zookeeper_port=$5
-  declare -r engine_count=$6
-  declare -r interactive_engine_params=$7
+  declare -r server_size=$4
+  declare -r rpc_port=$5
+  declare -r pegasus_hosts=$6
   declare -r threads_per_worker=${THREADS_PER_WORKER:-2}
 
   declare -r log_dir=${GS_LOG}/${object_id}
@@ -235,40 +154,26 @@ start_executor() {
   # set executor config file
   sed -e "s@GRAPH_NAME@${object_id}@g" \
       -e "s@VINEYARD_OBJECT_ID@${object_id}@g" \
-      -e "s@ZOOKEEPER_IP:ZOOKEEPER_PORT@${zookeeper_ip}:$zookeeper_port@g" \
-      -e "s@WORKER_NUM@${engine_count}@g" \
-      -e "s@PARTITION_NUM@${engine_count}@g" \
+      -e "s@RPC_PORT@${rpc_port}@g" \
+      -e "s@SERVER_ID@${server_id}@g" \
+      -e "s@SERVER_SIZE@${server_size}@g" \
+      -e "s@PEGASUS_HOSTS@${pegasus_hosts}@g" \
       -e "s@THREADS_PER_WORKER@${threads_per_worker}@g" \
       ${GRAPHSCOPE_HOME}/conf/executor.vineyard.properties > ${config_dir}/executor.vineyard.properties
 
-  # update parameters(key-value) in config file
-  if [ ! -z "${interactive_engine_params}" ]; then
-    params=$(echo ${interactive_engine_params} | awk -F";" '{for(i=1; i<=NF; ++i){print $i}}') # trans to key-value pairs
-    for param in $(echo ${params})
-    do
-      key=$(echo ${param} | awk -F":" '{print $1}')
-      value=$(echo ${param} | awk -F":" '{print $2}')
-      key=$(printf '%s\n' "${key}" | sed -e 's/[\/&]/\\&/g')
-      value=$(printf '%s\n' "${value}" | sed -e 's/[\/&]/\\&/g')
-      sed -i'.bak' "s/^\(${key}\s*=\s*\).*\$/\1${value}/" ${config_dir}/executor.vineyard.properties
-    done
-  fi
+  cp ${GRAPHSCOPE_HOME}/conf/log4rs.yml  ${config_dir}/log4rs.yml
 
-  if [[ -z "${USE_GAIA_ENGINE}" ]]; then
-    declare executor_binary="executor"
-  else
-    declare executor_binary="gaia_executor"
-  fi
+  declare executor_binary="gaia_executor"
 
   # launch executor
-  declare flag="maxgraph${object_id}executor"
-  RUST_BACKTRACE=full ${GRAPHSCOPE_HOME}/bin/${executor_binary} --config ${config_dir}/executor.vineyard.properties \
-    ${flag} ${server_id} 1>> ${log_dir}/maxgraph-executor.out 2>> ${log_dir}/maxgraph-executor.err &
+  declare flag="gaia_${object_id}executor"  # Flag is used to kill process
+  RUST_BACKTRACE=full ${GRAPHSCOPE_HOME}/bin/gaia_executor ${config_dir}/log4rs.yml ${config_dir}/executor.vineyard.properties ${flag} \
+    1>> ${log_dir}/executor.out 2>> ${log_dir}/executor.err &
   echo $! >> ${pid_dir}/executor.pid
 }
 
 ##########################
-# create maxgraph instance on local.
+# create interactive instance on local.
 # Globals:
 #   GRAPHSCOPE_HOME
 # Arguments:
@@ -276,20 +181,21 @@ start_executor() {
 #   object_id: id of vineyard object
 #   schema_path: path of graph schema file
 #   server_id: global server id of executor
+#   executor_port
+#   frontend_port
 #   vineyard_ipc_socket
-#   zookeeper_port
 ##########################
 create_gremlin_instance_on_local() {
   declare -r GRAPHSCOPE_RUNTIME=$1
   declare -r object_id=$2
   declare -r schema_path=$3
   declare -r server_id=$4
-  export VINEYARD_IPC_SOCKET=$5
-  declare -r zookeeper_port=$6
-  declare -r engine_params=$7
+  declare -r executor_port=$5
+  declare -r executor_rpc_port=$6
+  declare -r frontend_port=$7
+  export VINEYARD_IPC_SOCKET=$8
 
   declare -r cluster_type="local"
-  declare -r zookeeper_ip="localhost"
   declare -r executor_count="1"  # local mode only start one executor
 
   if [[ ! -d "${GS_LOG}" || ! -w "${GS_LOG}" ]]; then
@@ -305,59 +211,22 @@ create_gremlin_instance_on_local() {
   unlink ${GS_LOG}/current || true
   ln -s ${log_dir} ${GS_LOG}/current
 
-  start_coordinator ${GRAPHSCOPE_RUNTIME} ${cluster_type} ${object_id} ${zookeeper_ip} ${zookeeper_port} \
-                    ${executor_count}
-  sleep 1
+  server_size="1"
+  # Frontend use executor rpc port
+  pegasus_hosts="127.0.0.1:${executor_rpc_port}"
 
-  start_frontend ${GRAPHSCOPE_RUNTIME} ${cluster_type} ${object_id} ${schema_path} ${zookeeper_ip} \
-                 ${zookeeper_port} ${executor_count}
+  start_frontend ${GRAPHSCOPE_RUNTIME} ${object_id} ${schema_path} ${pegasus_hosts} \
+                 ${frontend_port}
 
-  sleep 4
-  # expose gremlin server (NB: must before start executor)
-  declare -r timeout_seconds=60
-  declare wait_period_seconds=0
-  declare gremlin_server_ready=False
-  declare gremlin_server_port_in_log gremlin_server_port_in_out gremlin_server_port_in_err
-  while true
-  do
-    # The frontend log may randomly output to log/out/err, this is an ad-hoc solution
-    # to find the gremlin server port, and the file may not exist, we add a || true to
-    # ignore the error.
-    # FIXME: the port should fetch from .log file, not .out or .err
-    #
-    # NB. match the last element, as the log format (format of date/time) may change
-    gremlin_server_port_in_log=$(awk '/frontend host/ { print }' ${log_dir}/maxgraph-frontend.log | awk -F: '{print $NF}') || true
-    gremlin_server_port_in_out=$(awk '/frontend host/ { print }' ${log_dir}/maxgraph-frontend.out | awk -F: '{print $NF}') || true
-    gremlin_server_port_in_err=$(awk '/frontend host/ { print }' ${log_dir}/maxgraph-frontend.err | awk -F: '{print $NF}') || true
-    if [ ! -z "${gremlin_server_port_in_log}" ]; then
-      log "MAXGRAPH_FRONTEND_ENDPOINT:127.0.0.1:${gremlin_server_port_in_log}"
-      gremlin_server_ready=True
-    elif [ ! -z "${gremlin_server_port_in_out}" ]; then
-      log "MAXGRAPH_FRONTEND_ENDPOINT:127.0.0.1:${gremlin_server_port_in_out}"
-      gremlin_server_ready=True
-    elif [ ! -z "${gremlin_server_port_in_err}" ]; then
-      log "MAXGRAPH_FRONTEND_ENDPOINT:127.0.0.1:${gremlin_server_port_in_err}"
-      gremlin_server_ready=True
-    fi
-
-    if [ "${gremlin_server_ready}" = True ]; then
-      break
-    fi
-
-    wait_period_seconds=$(($wait_period_seconds+5))
-    if [ ${wait_period_seconds} -gt ${timeout_seconds} ];then
-      echo "Get external ip of ${GREMLIN_EXPOSE} failed."
-      break
-    fi
-    sleep 5
-  done
-
-  start_executor ${GRAPHSCOPE_RUNTIME} ${object_id} ${server_id} ${zookeeper_ip} ${zookeeper_port} \
-                 ${executor_count} ${engine_params}
+  log "FRONTEND_ENDPOINT:127.0.0.1:${frontend_port}"
+  # executor use executor inner port
+  pegasus_hosts="127.0.0.1:${executor_port}"
+  start_executor ${GRAPHSCOPE_RUNTIME} ${object_id} ${server_id} ${server_size} ${executor_rpc_port} \
+                 ${pegasus_hosts}
 }
 
 ##########################
-# create maxgraph instance on k8s.
+# create interactive engine instance on k8s.
 # Globals:
 #   None
 # Arguments:
@@ -365,96 +234,65 @@ create_gremlin_instance_on_local() {
 #   object_id: id of vineyard object
 #   schema_path: path of graph schema file
 #   pod_name_list:
-#   engine_count: number of engine
 #   engine_container: container name of engine
-#   preemptive: resource preemption or resource guarantee
-#   gremlin_server_cpu: cpu resource of gremlin server
-#   gremlin_server_mem: memory resource of gremlin server
-#   engine_params: parameters of interactive engine
+#   executor_port
+#   frontend_port
 #   coordinator_name: name of coordinator deployment object in k8s
+#   engine_name: name of engine deployment object in k8s
 ##########################
 create_gremlin_instance_on_k8s() {
   declare -r GRAPHSCOPE_RUNTIME=$1
   declare -r object_id=$2
   declare -r schema_path=$3
+
   declare -r pod_hosts=$(echo $4 | awk -F"," '{for(i=1;i<=NF;++i) {print $i" "}}')
-  declare -r engine_count=$(echo $4 | awk -F"," '{print NF}')
+  declare -r server_size=$(echo $4 | awk -F"," '{print NF}')
+
   declare -r engine_container=$5
-  declare -r engine_params=$6
-  declare -r coordinator_name=$7 # deployment name of coordinator
+  declare -r executor_port=$6
+  declare -r executor_rpc_port=$7
+  declare -r frontend_port=$8
+  declare -r coordinator_name=$9 # deployment name of coordinator
+  declare -r engine_name=$10  # deployment name of engines
+
   declare -r host_ip=$(hostname -i)
-  declare -r zookeeper_port="2181"
 
-  declare -r cluster_type="k8s"
-  start_coordinator ${GRAPHSCOPE_RUNTIME} ${cluster_type} ${object_id} ${host_ip} \
-      ${zookeeper_port} ${engine_count}
-  sleep 1
-
-  start_frontend ${GRAPHSCOPE_RUNTIME} ${cluster_type} ${object_id} ${schema_path} \
-      ${host_ip} ${zookeeper_port} ${engine_count}
-  sleep 4
-
-  # expose gremlin server (NB: must before start executor)
-  declare -r log_dir=${GS_LOG}/${object_id}
-  declare -r timeout_seconds=60
-  declare wait_period_seconds=0
-  declare gremlin_server_ready=False
-  declare gremlin_server_port_in_log gremlin_server_port_in_out gremlin_server_port_in_err
-  while true
-  do
-    # The frontend log may randomly output to log/out/err, this is an ad-hoc solution
-    # to find the gremlin server port, and the file may not exist, we add a || true to
-    # ignore the error.
-    # FIXME: the port should fetch from .log file, not .out or .err
-    #
-    # NB. match the last element, as the log format (format of date/time) may change
-    gremlin_server_port_in_log=$(awk '/frontend host/ { print }' ${log_dir}/maxgraph-frontend.log | awk -F: '{print $NF}') || true
-    gremlin_server_port_in_out=$(awk '/frontend host/ { print }' ${log_dir}/maxgraph-frontend.out | awk -F: '{print $NF}') || true
-    gremlin_server_port_in_err=$(awk '/frontend host/ { print }' ${log_dir}/maxgraph-frontend.err | awk -F: '{print $NF}') || true
-    if [ ! -z "${gremlin_server_port_in_log}" ]; then
-      maxgraph_frontend_port=${gremlin_server_port_in_log}
-      gremlin_server_ready=True
-    elif [ ! -z "${gremlin_server_port_in_out}" ]; then
-      maxgraph_frontend_port=${gremlin_server_port_in_out}
-      gremlin_server_ready=True
-    elif [ ! -z "${gremlin_server_port_in_err}" ]; then
-      maxgraph_frontend_port=${gremlin_server_port_in_err}
-      gremlin_server_ready=True
-    fi
-
-    if [ "${gremlin_server_ready}" = True ]; then
-      break
-    fi
-
-    wait_period_seconds=$(($wait_period_seconds+5))
-    if [ ${wait_period_seconds} -gt ${timeout_seconds} ];then
-      echo "Get external ip of ${GREMLIN_EXPOSE} failed."
-      break
-    fi
-    sleep 5
+  pod_ips=$(kubectl get pod -lapp=${engine_name} -o jsonpath='{.items[*].status.podIP}')
+  pegasus_hosts=""
+  for pod in ${pod_ips}; do
+    pegasus_hosts="${pegasus_hosts},${pod}:${executor_rpc_port}"
   done
+  pegasus_hosts=${pegasus_hosts:1}
 
+  start_frontend ${GRAPHSCOPE_RUNTIME} ${object_id} ${schema_path} ${pegasus_hosts} \
+                 ${frontend_port}
+
+  pegasus_hosts=""
+  for pod in ${pod_ips}; do
+    pegasus_hosts="${pegasus_hosts},${pod}:${executor_port}"
+  done
+  pegasus_hosts=${pegasus_hosts:1}
   log "Launch interactive engine(executor) in per engine pod."
-  _server_id=1
+  _server_id=0
   for pod in $(echo ${pod_hosts})
   do
-    launch_executor_cmd="GRAPHSCOPE_HOME=${GRAPHSCOPE_HOME} ${GRAPHSCOPE_HOME}/bin/giectl start_executor ${GRAPHSCOPE_RUNTIME} ${object_id} ${_server_id} ${host_ip} ${zookeeper_port} ${engine_count} ${engine_params}"
+    launch_executor_cmd="GRAPHSCOPE_HOME=${GRAPHSCOPE_HOME} ${GRAPHSCOPE_HOME}/bin/giectl start_executor ${GRAPHSCOPE_RUNTIME} ${object_id} ${_server_id} ${server_size} ${executor_rpc_port} ${pegasus_hosts}"
     kubectl --namespace=${KUBE_NAMESPACE} exec ${pod} -c ${engine_container} -- /bin/bash -c "${launch_executor_cmd}"
     (( _server_id+=1 ))
   done
 
   log "Expose gremlin server."
   if [ "${GREMLIN_EXPOSE}" = "LoadBalancer" ]; then
-    # random from range [50001, 51000) for maxgraph
-    mg_external_port=$(( ((RANDOM<<15)|RANDOM) % 50001 + 51000 ))
-    kubectl expose deployment ${coordinator_name} --name=mg-gremlin-${object_id} --port=${mg_external_port} \
-      --target-port=${maxgraph_frontend_port} --type=LoadBalancer 1>/dev/null 2>&1
+    # random from range [50001, 51000) for interactive engine
+    frontend_external_port=$(( ((RANDOM<<15)|RANDOM) % 50001 + 51000 ))
+    kubectl expose deployment ${coordinator_name} --name=gremlin-${object_id} --port=${frontend_external_port} \
+      --target-port=${frontend_port} --type=LoadBalancer 1>/dev/null 2>&1
     [ $? -eq 0 ] || exit 1
     wait_period_seconds=0
     while true
     do
-      mg_external_ip=$(kubectl describe service mg-gremlin-${object_id} | grep "LoadBalancer Ingress" | awk -F'[ :]+' '{print $3}')
-      if [ -n "${mg_external_ip}" ]; then
+      external_ip=$(kubectl describe service gremlin-${object_id} | grep "LoadBalancer Ingress" | awk -F'[ :]+' '{print $3}')
+      if [ -n "${external_ip}" ]; then
         break
       fi
       wait_period_seconds=$(($wait_period_seconds+5))
@@ -466,20 +304,20 @@ create_gremlin_instance_on_k8s() {
     done
   else
     # NodePort service type
-    # expose maxgraph gremlin service
-    kubectl expose deployment ${coordinator_name} --name=mg-gremlin-${object_id} --port=${maxgraph_frontend_port} \
-      --target-port=${maxgraph_frontend_port} --type=NodePort 1>/dev/null 2>&1
+    # expose gremlin service
+    kubectl expose deployment ${coordinator_name} --name=gremlin-${object_id} --port=${frontend_external_port} \
+      --target-port=${frontend_port} --type=NodePort 1>/dev/null 2>&1
     [ $? -eq 0 ] || exit 1
     wait_period_seconds=0
     while true
     do
-      mg_external_port=$(kubectl describe services mg-gremlin-${object_id} | grep "NodePort" | grep "TCP" | tr -cd "0-9")
-      if [ -n "${mg_external_port}" ]; then
+      frontend_external_port=$(kubectl describe services gremlin-${object_id} | grep "NodePort" | grep "TCP" | tr -cd "0-9")
+      if [ -n "${frontend_external_port}" ]; then
         break
       fi
       wait_period_seconds=$(($wait_period_seconds+5))
       if [ ${wait_period_seconds} -gt ${timeout_seconds} ];then
-        log "Get maxgraph node port failed."
+        log "Get interactive engine frontend node port failed."
         break
       fi
       sleep 5
@@ -487,25 +325,25 @@ create_gremlin_instance_on_k8s() {
     wait_period_seconds=0
     while true
     do
-      mg_external_ip=$(kubectl describe pods ${coordinator_name} | grep "Node:" | head -1 | awk -F '[ /]+' '{print $3}')
-      if [ -n "${mg_external_ip}" ]; then
+      external_ip=$(kubectl describe pods ${coordinator_name} | grep "Node:" | head -1 | awk -F '[ /]+' '{print $3}')
+      if [ -n "${external_ip}" ]; then
         break
       fi
       wait_period_seconds=$(($wait_period_seconds+5))
       if [ ${wait_period_seconds} -gt ${timeout_seconds} ];then
-        log "Get maxgraph host ip of ${GREMLIN_EXPOSE} failed."
+        log "Get interactive engine frontend host ip of ${GREMLIN_EXPOSE} failed."
         break
       fi
       sleep 5
     done
   fi
 
-  log "MAXGRAPH_FRONTEND_ENDPOINT:${host_ip}:${maxgraph_frontend_port}"
-  log "MAXGRAPH_FRONTEND_EXTERNAL_ENDPOINT:${mg_external_ip}:${mg_external_port}"
+  log "FRONTEND_ENDPOINT:${host_ip}:${frontend_port}"
+  log "FRONTEND_EXTERNAL_ENDPOINT:${external_ip}:${frontend_external_port}"
 }
 
 ##########################
-# close maxgraph instance on local.
+# close interactive engine instance on local.
 # Globals:
 # Arguments:
 #   GRAPHSCOPE_RUNTIME: runtime workspace
@@ -516,11 +354,7 @@ close_gremlin_instance_on_local() {
   declare -r object_id=$2
   declare -r pid_dir=${GRAPHSCOPE_RUNTIME}/pid/${object_id}
 
-  declare -r coordinator_id=$(cat ${pid_dir}/coordinator.pid)
-  declare -r frontend_id=$(cat ${pid_dir}/frontend.pid)
-  declare -r executor_id=$(cat ${pid_dir}/executor.pid)
-
-  declare -a components=("coordinator" "frontend" "executor")
+  declare -a components=("frontend" "executor")
 
   for component in "${components[@]}"; do
     declare str=$(cat ${pid_dir}/${component}.pid)
@@ -536,7 +370,7 @@ close_gremlin_instance_on_local() {
 }
 
 ##########################
-# Close maxgraph instance on k8s.
+# Close interactive engine instance on k8s.
 # Globals:
 #   None
 # Arguments:
@@ -554,95 +388,30 @@ close_gremlin_instance_on_k8s() {
   declare -r pid_dir=${GRAPHSCOPE_RUNTIME}/pid/${object_id}
 
   # kill frontend and coordinator process
-  log "Close frontend and corrdinator process."
-  declare -a components=("coordinator" "frontend")
-  for component in "${components[@]}"; do
-    declare str=$(cat ${pid_dir}/${component}.pid)
+  log "Close frontend process."
 
-    # The file may have multiple pids, each in a single line
-    # This will read each line into an array
-    while read -r pid; do pids+=("$pid"); done <<<"${str}"
+  declare str=$(cat ${pid_dir}/frontend.pid)
 
-    for pid in "${pids[@]}"; do
-        kill ${pid} || true
-    done
+  # The file may have multiple pids, each in a single line
+  # This will read each line into an array
+  while read -r pid; do pids+=("$pid"); done <<<"${str}"
+
+  for pid in "${pids[@]}"; do
+      kill ${pid} || true
   done
 
   # delete service
   log "delete gremlin service"
-  kubectl delete service mg-gremlin-${object_id} || true
+  kubectl delete service gremlin-${object_id} || true
 
   # kill executor process on engine container.
   log "Close executor process on engine container."
   for pod in $(echo ${pod_hosts})
   do
-    kill_mg_executor_process_cmd="ps -ef | grep maxgraph${object_id}executor |
+    kill_executor_process_cmd="ps -ef | grep gaia_${object_id}executor |
         grep -v grep | awk '{print \$2}' | xargs kill -9"
-    kubectl --namespace=${KUBE_NAMESPACE} exec ${pod} -c ${engine_container} -- sh -c "${kill_mg_executor_process_cmd}"
+    kubectl --namespace=${KUBE_NAMESPACE} exec ${pod} -c ${engine_container} -- sh -c "${kill_executor_process_cmd}"
   done
-}
-
-##########################
-# Start graph manager service.
-# Globals:
-#   None
-# Arguments:
-#   cluster_type: local or k8s
-#   server_port
-#   service_id
-#   zookeeper_port
-##########################
-start_manager_service() {
-  declare -r cluster_type=$1
-  declare -r server_port=$2
-  declare -r service_id=$3
-  declare -r zookeeper_port=$4
-
-  if [ ! -n "${GRAPHSCOPE_RUNTIME}" ]; then
-    export GRAPHSCOPE_RUNTIME=/tmp/graphscope/runtime
-  fi
-
-  declare -r libpath="$(echo "${WORKSPACE}"/lib/*.jar | tr ' ' ':')"
-
-  declare -r service_dir=${GRAPHSCOPE_RUNTIME}/${service_id}
-  mkdir -p ${service_dir}
-  sed -e "s@SERVER_PORT@${server_port}@g" \
-      -e "s@CREATE_SCRIPT@${WORKSPACE}/bin/giectl@g" \
-      -e "s@CLOSE_SCRIPT@${WORKSPACE}/bin/giectl@g" \
-      ${WORKSPACE}/conf/application.properties > ${service_dir}/application.properties
-  if [[ "${cluster_type}" == "local" ]]; then
-    java -cp ${libpath} -Dspring.config.location=${service_dir}/application.properties \
-         com.alibaba.maxgraph.admin.InstanceManagerApplication &
-    echo $! > ${service_dir}/graphmanager.pid
-  else
-    java -cp ${libpath} -Dspring.config.location=${service_dir}/application.properties \
-         com.alibaba.maxgraph.admin.InstanceManagerApplication
-  fi
-}
-
-##########################
-# Stop graph manager service.
-# Globals:
-#   None
-# Arguments:
-#   cluster_type: local or k8s
-#   service_id
-##########################
-stop_manager_service() {
-  declare -r cluster_type=$1
-  declare -r service_id=$2
-
-  if [ ! -n "${GRAPHSCOPE_RUNTIME}" ]; then
-    export GRAPHSCOPE_RUNTIME=/tmp/graphscope/runtime
-  fi
-
-  if [[ "${cluster_type}" == "local" ]]; then
-    declare -r service_dir=${GRAPHSCOPE_RUNTIME}/$service_id
-    declare -r manager_pid=$(cat ${service_dir}/graphmanager.pid)
-    kill ${manager_pid} || true > /dev/null 2>&1
-  else
-    jps | grep InstanceManagerApplication | awk '{print $1}' | xargs kill -9
-  fi
 }
 
 # parse argv
@@ -654,7 +423,6 @@ while test $# -ne 0; do
     create_gremlin_instance_on_k8s) create_gremlin_instance_on_k8s "$@"; exit;;
     close_gremlin_instance_on_local) close_gremlin_instance_on_local "$@"; exit;;
     close_gremlin_instance_on_k8s) close_gremlin_instance_on_k8s "$@"; exit;;
-    start_coordinator) start_coordinator "$@"; exit;;
     start_frontend) start_frontend "$@"; exit;;
     start_executor) start_executor "$@"; exit;;
     *)
