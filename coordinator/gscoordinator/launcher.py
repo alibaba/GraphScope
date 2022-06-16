@@ -508,13 +508,16 @@ class LocalLauncher(Launcher):
         self._vineyardd_process = process
 
         start_time = time.time()
-        while not os.path.exists(self._vineyard_socket):
-            time.sleep(1)
-            if (
-                self._timeout_seconds
-                and self._timeout_seconds + start_time < time.time()
-            ):
-                raise RuntimeError("Launch vineyardd failed due to timeout.")
+        if len(self._hosts) > 1:
+            time.sleep(5)  # should be OK
+        else:
+            while not os.path.exists(self._vineyard_socket):
+                time.sleep(1)
+                if (
+                    self._timeout_seconds
+                    and self._timeout_seconds + start_time < time.time()
+                ):
+                    raise RuntimeError("Launch vineyardd failed due to timeout.")
         logger.info(
             "Vineyardd is ready, ipc socket is {0}".format(self._vineyard_socket)
         )
