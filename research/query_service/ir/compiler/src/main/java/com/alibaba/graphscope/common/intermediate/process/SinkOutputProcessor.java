@@ -49,7 +49,7 @@ public class SinkOutputProcessor implements InterOpProcessor {
             InterOpBase cur = collections.get(i);
             if (cur instanceof SubGraphAsUnionOp) {
                 SubGraphAsUnionOp op = (SubGraphAsUnionOp) cur;
-                return new SinkGraph(op.getGraphType(), op.getGraphConfigs());
+                return new SinkGraph(op.getGraphConfigs());
             }
         }
         SinkByColumns sinkArg = new SinkByColumns();

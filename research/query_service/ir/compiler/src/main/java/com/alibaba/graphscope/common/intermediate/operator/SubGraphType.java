@@ -16,22 +16,8 @@
 
 package com.alibaba.graphscope.common.intermediate.operator;
 
-import java.util.Collections;
-import java.util.Map;
-
-// contains info to represent subgraph in ir plan
-public class SubGraphAsUnionOp extends UnionOp {
-    // graph_name, i.e name: graph_XX
-    private Map<String, String> graphConfigs;
-
-    public SubGraphAsUnionOp(Map<String, String> graphConfigs) {
-        super();
-        this.graphConfigs = graphConfigs;
-    }
-
-    public Map<String, String> getGraphConfigs() {
-        return graphConfigs == null
-                ? Collections.emptyMap()
-                : Collections.unmodifiableMap(graphConfigs);
-    }
+// write subgraph to vineyard or groot
+public enum SubGraphType {
+    VINEYARD,
+    GROOT
 }

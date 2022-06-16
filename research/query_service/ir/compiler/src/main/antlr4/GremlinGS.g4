@@ -350,8 +350,7 @@ traversalMethod_expr
     : 'expr' LPAREN stringLiteral RPAREN
     ;
 
-// user-defined configs is represented as json string in subgraph
-// i.e. g.E().subgraph("{\"type\": \"VINEYARD\", \"configs\" : {\"name\" : \"XXX\"}}")
+// i.e. g.E().subgraph("graph_name")
 traversalMethod_subgraph
 	: 'subgraph' LPAREN stringLiteral RPAREN
 	;

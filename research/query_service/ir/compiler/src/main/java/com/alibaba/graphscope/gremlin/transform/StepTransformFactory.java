@@ -22,9 +22,9 @@ import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.intermediate.InterOpCollection;
 import com.alibaba.graphscope.common.intermediate.MatchSentence;
 import com.alibaba.graphscope.common.intermediate.operator.*;
+import com.alibaba.graphscope.common.intermediate.process.SinkGraph;
 import com.alibaba.graphscope.common.intermediate.strategy.ElementFusionStrategy;
 import com.alibaba.graphscope.common.jna.type.*;
-import com.alibaba.graphscope.common.utils.JsonUtils;
 import com.alibaba.graphscope.gremlin.InterOpCollectionBuilder;
 import com.alibaba.graphscope.gremlin.antlr4.GremlinAntlrToJava;
 import com.alibaba.graphscope.gremlin.plugin.step.ExprStep;
@@ -33,8 +33,8 @@ import com.alibaba.graphscope.gremlin.plugin.step.ScanFusionStep;
 import com.alibaba.graphscope.gremlin.transform.alias.AliasArg;
 import com.alibaba.graphscope.gremlin.transform.alias.AliasManager;
 import com.alibaba.graphscope.gremlin.transform.alias.AliasPrefixType;
-import com.fasterxml.jackson.core.type.TypeReference;
 
+import com.google.common.collect.ImmutableMap;
 import org.apache.tinkerpop.gremlin.process.traversal.Pop;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
@@ -503,11 +503,11 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
                                             Set<String> scopeKeys;
                                             if (!startTag.isPresent()
                                                     && !(scopeKeys =
-                                                                    ((WhereTraversalStep
-                                                                                            .WhereStartStep)
-                                                                                    s1)
-                                                                            .getScopeKeys())
-                                                            .isEmpty()) {
+                                                    ((WhereTraversalStep
+                                                            .WhereStartStep)
+                                                            s1)
+                                                            .getScopeKeys())
+                                                    .isEmpty()) {
                                                 startTag = Optional.of(scopeKeys.iterator().next());
                                             }
                                         } else if (s1
@@ -517,11 +517,11 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
                                             Set<String> scopeKeys;
                                             if (!endTag.isPresent()
                                                     && !(scopeKeys =
-                                                                    ((WhereTraversalStep
-                                                                                            .WhereEndStep)
-                                                                                    s1)
-                                                                            .getScopeKeys())
-                                                            .isEmpty()) {
+                                                    ((WhereTraversalStep
+                                                            .WhereEndStep)
+                                                            s1)
+                                                            .getScopeKeys())
+                                                    .isEmpty()) {
                                                 endTag = Optional.of(scopeKeys.iterator().next());
                                             }
                                         } else if (isValidBinderStep(s1)) {
@@ -607,11 +607,7 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
         @Override
         public InterOpBase apply(Step step) {
             SubgraphStep subgraphStep = (SubgraphStep) step;
-            // contains user defined configs, i.e. type: VINEYARD, graph_name: XX
-            // json format
-            String meta = subgraphStep.getSideEffectKey();
-            SubGraphAsUnionOp op =
-                    JsonUtils.fromJson(meta, new TypeReference<SubGraphAsUnionOp>() {});
+            SubGraphAsUnionOp op = new SubGraphAsUnionOp(getConfigs(subgraphStep));
             // empty opCollection -> identity(), to get edges
             InterOpCollection getEOps = new InterOpCollection();
 
@@ -625,6 +621,12 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
             List<InterOpCollection> subGraphOps = Arrays.asList(getEOps, getVOps);
             op.setSubOpCollectionList(new OpArg(subGraphOps));
             return op;
+        }
+
+        private Map<String, String> getConfigs(SubgraphStep step) {
+            // graph_name
+            String meta = step.getSideEffectKey();
+            return ImmutableMap.of(SinkGraph.GRAPH_NAME, meta);
         }
     };
 

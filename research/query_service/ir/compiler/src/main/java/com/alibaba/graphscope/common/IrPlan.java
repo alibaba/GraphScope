@@ -342,7 +342,6 @@ public class IrPlan implements Closeable {
                                 }
                             });
                 } else if (sinkArg instanceof SinkGraph) {
-                    // todo: make more settings configurable from the given query
                     String graphName = ((SinkGraph) sinkArg).getConfig(SinkGraph.GRAPH_NAME);
                     ptrSink = irCoreLib.initSinkGraphOperator(graphName);
                 } else {

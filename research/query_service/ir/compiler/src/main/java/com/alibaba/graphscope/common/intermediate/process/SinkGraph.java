@@ -16,23 +16,30 @@
 
 package com.alibaba.graphscope.common.intermediate.process;
 
+import com.alibaba.graphscope.common.intermediate.operator.SubGraphType;
+
 import java.util.Map;
 
 public class SinkGraph implements SinkArg {
     public static final String GRAPH_NAME = "name";
-    private String graphType;
+    private SubGraphType graphType;
     private Map<String, String> graphConfigs;
 
-    public SinkGraph(String graphType, Map<String, String> graphConfigs) {
-        this.graphType = graphType;
+    public SinkGraph(Map<String, String> graphConfigs) {
+        this.graphType = SubGraphType.VINEYARD;
         this.graphConfigs = graphConfigs;
     }
 
-    public String getGraphType() {
+    public SubGraphType getGraphType() {
         return graphType;
     }
 
     public String getConfig(String key) {
         return graphConfigs.get(key);
+    }
+
+    // todo: make graphType configurable from outer configs
+    public void setGraphType(SubGraphType graphType) {
+        this.graphType = graphType;
     }
 }
