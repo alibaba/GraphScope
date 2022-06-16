@@ -63,14 +63,14 @@ public abstract class DataCommand {
                     "oss://"
                             + Paths.get(
                                             Paths.get(ossEndPoint, ossBucketName).toString(),
-                                            ossObjectName)
-                                    .toString();
+                                            ossObjectName);
 
             Map<String, String> ossInfo = new HashMap<String, String>();
             ossInfo.put(OSS_ENDPOINT, ossEndPoint);
             ossInfo.put(OSS_ACCESS_ID, ossAccessId);
             ossInfo.put(OSS_ACCESS_KEY, ossAccessKey);
             OSSFileObj ossFileObj = new OSSFileObj(ossInfo);
+            ossObjectName = Paths.get(ossObjectName, uniquePath).toString();
 
             this.metaData = ossFileObj.readBuffer(ossBucketName, ossObjectName, metaFileName);
             ossFileObj.close();

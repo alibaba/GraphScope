@@ -77,6 +77,7 @@ public class DataBuildReducerOdps extends ReducerBase {
 
         this.ossFileObj = new OSSFileObj(ossInfo);
 
+        /*
         if ("00000".equals(taskId)) {
             try {
                 ossFileObj.createDirectory(ossBucketName, ossObjectName, uniquePath);
@@ -84,6 +85,7 @@ public class DataBuildReducerOdps extends ReducerBase {
                 throw e;
             }
         }
+        */
 
         ossObjectName = Paths.get(ossObjectName, uniquePath).toString();
 
@@ -128,6 +130,7 @@ public class DataBuildReducerOdps extends ReducerBase {
             ossFileObj.uploadFileWithCheckPoint(ossBucketName, ossObjectName, sstFileName);
         }
 
+        // Only the first task will write  the meta
         if ("00000".equals(taskId)) {
             try {
                 writeFile(metaFileName, metaData);

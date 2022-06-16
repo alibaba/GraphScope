@@ -304,14 +304,17 @@ public class StoreService implements MetricsAgent {
         String dataRoot = StoreConfig.STORE_DATA_PATH.get(configs);
         String downloadPath = Paths.get(dataRoot, "download").toString();
         String[] items = path.split("\\/");
-        String unique_path = items[items.length - 2];
+        // Get the  unique path  (uuid)
+        String unique_path = items[items.length - 1];
         Path uniquePath = Paths.get(downloadPath, unique_path);
         if (!Files.isDirectory(uniquePath)) {
             try {
                 Files.createDirectories(uniquePath);
             } catch (IOException e) {
                 logger.error(
-                        "create uniquePath failed. uniquePath [" + uniquePath.toString() + "]", e);
+                        "create uniquePath failed. uniquePath [" + uniquePath + "]", e);
+                callback.onError(e);
+                return;
             }
         }
         this.ingestExecutor.execute(
@@ -341,7 +344,7 @@ public class StoreService implements MetricsAgent {
                     () -> {
                         try {
                             partition.ingestExternalFile(externalStorage, fullPath);
-                        } catch (IOException e) {
+                        } catch (Exception e) {
                             if (!finished.getAndSet(true)) {
                                 callback.onError(e);
                             }
