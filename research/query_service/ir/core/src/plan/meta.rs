@@ -465,8 +465,11 @@ impl ColumnsOpt {
 pub struct NodeMeta {
     /// The table names (labels)
     tables: BTreeSet<NameOrId>,
-    /// The required columns (columns)
+    /// The required columns of current node
     columns: ColumnsOpt,
+    /// The required columns of the nodes with certain tags. `None` tag means the columns
+    /// for the head nodes that current node refers to.
+    tag_columns: BTreeMap<Option<TagId>, ColumnsOpt>,
 }
 
 impl NodeMeta {
@@ -540,6 +543,46 @@ impl NodeMetaOpt {
         }
     }
 
+    pub fn set_tag_columns_opt(&mut self, tag: Option<TagId>, columns_opt: ColumnsOpt) {
+        match self {
+            NodeMetaOpt::One(meta) => {
+                meta[0]
+                    .borrow_mut()
+                    .tag_columns
+                    .insert(tag, columns_opt);
+            }
+            NodeMetaOpt::Many(metas) => {
+                for meta in metas {
+                    meta.borrow_mut()
+                        .tag_columns
+                        .insert(tag, columns_opt.clone());
+                }
+            }
+        }
+    }
+
+    pub fn insert_tag_column(&mut self, tag: Option<TagId>, col: NameOrId) {
+        match self {
+            NodeMetaOpt::One(meta) => {
+                meta[0]
+                    .borrow_mut()
+                    .tag_columns
+                    .entry(tag)
+                    .or_default()
+                    .insert(col);
+            }
+            NodeMetaOpt::Many(metas) => {
+                for meta in metas {
+                    meta.borrow_mut()
+                        .tag_columns
+                        .entry(tag)
+                        .or_default()
+                        .insert(col.clone());
+                }
+            }
+        }
+    }
+
     pub fn is_all_columns(&self) -> bool {
         match self {
             NodeMetaOpt::One(meta) => meta[0].borrow().columns.is_all(),
@@ -556,6 +599,10 @@ impl NodeMetaOpt {
 
     pub fn get_columns(&self) -> BTreeSet<NameOrId> {
         self.as_ref()[0].borrow().columns.get()
+    }
+
+    pub fn get_tag_columns(&self) -> BTreeMap<Option<TagId>, ColumnsOpt> {
+        self.as_ref()[0].borrow().tag_columns.clone()
     }
 }
 
@@ -624,8 +671,12 @@ impl PlanMeta {
             .extend(nodes.into_iter());
     }
 
-    pub fn get_tag_nodes(&self, tag: TagId) -> Option<&Vec<u32>> {
-        self.tag_nodes.get(&tag)
+    pub fn get_tag_nodes(&self, tag: TagId) -> &[u32] {
+        if let Some(nodes) = self.tag_nodes.get(&tag) {
+            nodes.as_slice()
+        } else {
+            &[]
+        }
     }
 
     pub fn has_tag(&self, tag: TagId) -> bool {
@@ -663,17 +714,11 @@ impl PlanMeta {
         self.curr_node
     }
 
-    pub fn refer_to_nodes(&mut self, node: u32, referred_nodes: Vec<u32>) {
-        if referred_nodes.len() == 1 && node == referred_nodes[0] {
-            self.referred_nodes
-                .insert(node, OneOrMany::One([node]));
-        } else {
-            let nodes = self.get_referred_nodes(&referred_nodes);
-            self.referred_nodes.insert(
-                node,
-                if nodes.len() == 1 { OneOrMany::One([nodes[0]]) } else { OneOrMany::Many(nodes) },
-            );
-        }
+    pub fn refer_to_nodes(&mut self, node: u32, nodes: Vec<u32>) {
+        self.referred_nodes.insert(
+            node,
+            if nodes.len() == 1 { OneOrMany::One([nodes[0]]) } else { OneOrMany::Many(nodes) },
+        );
     }
 
     pub fn get_referred_nodes(&self, nodes: &[u32]) -> Vec<u32> {
@@ -695,8 +740,12 @@ impl PlanMeta {
     }
 
     /// Get the referred nodes of current node
-    pub fn get_curr_referred_nodes(&self) -> Vec<u32> {
-        self.get_referred_nodes(&[self.curr_node])
+    pub fn get_curr_referred_nodes(&self) -> &[u32] {
+        if let Some(nodes) = self.referred_nodes.get(&self.curr_node) {
+            nodes.as_ref()
+        } else {
+            &[]
+        }
     }
 
     /// Get the metadata of one given node. If the metadata does not exist, return `None`.
@@ -733,7 +782,7 @@ impl PlanMeta {
     }
 
     /// Get or insert the metadata of given nodes.
-    pub fn get_or_insert_nodes_meta(&mut self, nodes: Vec<u32>) -> NodeMetaOpt {
+    pub fn get_or_insert_nodes_meta(&mut self, nodes: &[u32]) -> NodeMetaOpt {
         if nodes.len() == 1 {
             NodeMetaOpt::One([self
                 .node_metas
@@ -742,7 +791,7 @@ impl PlanMeta {
                 .clone()])
         } else {
             let mut node_metas = vec![];
-            for node in nodes {
+            for &node in nodes {
                 node_metas.push(self.node_metas.entry(node).or_default().clone())
             }
             NodeMetaOpt::Many(node_metas)
@@ -756,14 +805,14 @@ impl PlanMeta {
     pub fn tag_nodes_meta_mut(&mut self, tag_opt: Option<TagId>) -> IrResult<NodeMetaOpt> {
         if let Some(tag) = tag_opt {
             if let Some(nodes) = self.tag_nodes.get(&tag).cloned() {
-                Ok(self.get_or_insert_nodes_meta(nodes))
+                Ok(self.get_or_insert_nodes_meta(&nodes))
             } else {
                 Err(IrError::TagNotExist((tag as i32).into()))
             }
         } else {
-            let ref_curr_nodes = self.get_curr_referred_nodes();
+            let ref_curr_nodes = self.get_curr_referred_nodes().to_vec();
             if !ref_curr_nodes.is_empty() {
-                Ok(self.get_or_insert_nodes_meta(ref_curr_nodes))
+                Ok(self.get_or_insert_nodes_meta(&ref_curr_nodes))
             } else {
                 Err(IrError::MissingData("the head of the plan refers to empty nodes".to_string()))
             }
@@ -772,7 +821,7 @@ impl PlanMeta {
 
     /// Get curr node's metadata. If the metadata does not exist, create one and return.
     pub fn curr_node_meta_mut(&mut self) -> NodeMetaOpt {
-        self.get_or_insert_nodes_meta(vec![self.curr_node])
+        self.get_or_insert_nodes_meta(&vec![self.curr_node])
     }
 
     pub fn is_table_id(&self) -> bool {

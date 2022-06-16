@@ -98,7 +98,30 @@ impl AsPhysical for pb::Project {
 }
 
 impl AsPhysical for pb::Select {
-    fn add_job_builder(&self, builder: &mut JobBuilder, _plan_meta: &mut PlanMeta) -> IrResult<()> {
+    fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
+        let node_meta = plan_meta.get_curr_node_meta().unwrap();
+        for (tag, columns_opt) in node_meta.get_tag_columns().into_iter() {
+            if columns_opt.len() > 0 {
+                let tag_pb = tag.map(|tag_id| (tag_id as i32).into());
+                if plan_meta.is_partition() {
+                    let key_pb = common_pb::NameOrIdKey { key: tag_pb.clone() };
+                    builder.repartition(key_pb.encode_to_vec());
+                }
+                let mut params = pb::QueryParams {
+                    tables: vec![],
+                    columns: vec![],
+                    is_all_columns: columns_opt.is_all(),
+                    limit: None,
+                    predicate: None,
+                    extra: Default::default()
+                };
+                if !columns_opt.is_all() {
+                    params.columns.extend(columns_opt.get().into_iter().map(|col| col.into()));
+                }
+                let auxilia = pb::Auxilia { tag: tag_pb.clone(), params: Some(params), alias: tag_pb };
+                pb::logical_plan::Operator::from(auxilia).add_job_builder(builder, plan_meta)?;
+            }
+        }
         simple_add_job_builder(builder, &pb::logical_plan::Operator::from(self.clone()), SimpleOpr::Filter)
     }
 }
@@ -133,10 +156,15 @@ impl AsPhysical for pb::Scan {
 impl AsPhysical for pb::EdgeExpand {
     fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         let mut xpd = self.clone();
-        xpd.post_process(builder, plan_meta)
-        // simple_add_job_builder(builder, &pb::logical_plan::Operator::from(self.clone()), SimpleOpr::Flatmap)
+        xpd.post_process(builder, plan_meta)?;
+        simple_add_job_builder(
+            builder,
+            &pb::logical_plan::Operator::from(self.clone()),
+            SimpleOpr::Flatmap,
+        )
     }
 
+    /*
     fn post_process(&mut self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         let mut is_adding_auxilia = false;
         let mut auxilia = pb::Auxilia { tag: None, params: None, alias: None };
@@ -171,11 +199,13 @@ impl AsPhysical for pb::EdgeExpand {
         } else {
             return Err(IrError::MissingData("EdgeExpand::params".to_string()));
         }
+
         simple_add_job_builder(
             builder,
             &pb::logical_plan::Operator::from(self.clone()),
             SimpleOpr::Flatmap,
-        )?;
+        )
+
         if is_adding_auxilia {
             if plan_meta.is_partition() {
                 let key_pb = common_pb::NameOrIdKey { key: None };
@@ -183,9 +213,8 @@ impl AsPhysical for pb::EdgeExpand {
             }
             pb::logical_plan::Operator::from(auxilia).add_job_builder(builder, plan_meta)?;
         }
-
-        Ok(())
     }
+     */
 }
 
 impl AsPhysical for pb::PathExpand {
@@ -933,8 +962,11 @@ mod test {
         let select_opr_bytes = select_opr.encode_to_vec();
         let expand_opr_bytes = expand_opr.encode_to_vec();
 
-        let mut logical_plan = LogicalPlan::with_root(Node::new(0, source_opr));
+        let mut logical_plan = LogicalPlan::default();
 
+        logical_plan
+            .append_operator_as_node(source_opr.clone(), vec![])
+            .unwrap(); // node 0
         logical_plan
             .append_operator_as_node(select_opr.clone(), vec![0])
             .unwrap(); // node 1
@@ -1178,7 +1210,7 @@ mod test {
             .unwrap();
 
         // .out().as("1")
-        let mut expand = pb::EdgeExpand {
+        let expand = pb::EdgeExpand {
             v_tag: None,
             direction: 0,
             params: Some(query_params(vec![], vec![])),
@@ -1220,20 +1252,25 @@ mod test {
 
         let mut expected_builder = JobBuilder::default();
         expected_builder.add_source(scan.encode_to_vec());
-        expand.alias = None;
+        let auxilia = pb::Auxilia {
+            tag: None,
+            params: Some(pb::QueryParams {
+                tables: vec![],
+                columns: vec!["lang".into()],
+                is_all_columns: false,
+                limit: None,
+                predicate: None,
+                extra: Default::default()
+            }),
+            alias: None
+        };
+
         expected_builder.apply_join(
             |plan| {
                 plan.repartition(vec![])
                     .flat_map(pb::logical_plan::Operator::from(expand.clone()).encode_to_vec())
                     .repartition(vec![])
-                    .filter_map(
-                        pb::logical_plan::Operator::from(pb::Auxilia {
-                            tag: None,
-                            params: Some(query_params(vec![], vec!["lang".into()])),
-                            alias: Some(1.into()),
-                        })
-                        .encode_to_vec(),
-                    )
+                    .filter_map(pb::logical_plan::Operator::from(auxilia.clone()).encode_to_vec())
                     .filter(select.encode_to_vec());
             },
             apply.encode_to_vec(),
