@@ -13,6 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 mod edge_expand;
+mod get_v;
 
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
@@ -33,6 +34,7 @@ impl FlatMapFuncGen for algebra_pb::logical_plan::Operator {
         if let Some(opr) = self.opr {
             match opr {
                 algebra_pb::logical_plan::operator::Opr::Edge(edge_expand) => edge_expand.gen_flat_map(),
+                algebra_pb::logical_plan::operator::Opr::Vertex(get_vertex) => get_vertex.gen_flat_map(),
                 algebra_pb::logical_plan::operator::Opr::Unfold(_unfold) => {
                     Err(FnGenError::unsupported_error("unfold is not supported yet"))
                 }
