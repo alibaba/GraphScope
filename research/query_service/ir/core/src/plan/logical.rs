@@ -919,7 +919,7 @@ fn get_or_set_tag_id(
 fn process_columns_meta(plan_meta: &mut PlanMeta, is_late_project: bool) -> IrResult<()> {
     let tag_columns = plan_meta.curr_node_meta_mut().get_tag_columns();
     // late project currently only handles the case of one single tag
-    if !is_late_project {
+    if !is_late_project || tag_columns.len() > 1 {
         for (tag, columns) in tag_columns.into_iter() {
             let nodes = if let Some(tag_id) = tag {
                 let nodes = plan_meta.get_tag_nodes(tag_id);
@@ -943,11 +943,11 @@ fn process_columns_meta(plan_meta: &mut PlanMeta, is_late_project: bool) -> IrRe
                     meta.insert_column(col);
                 }
             } else {
-                println!("{:?}", plan_meta);
-                println!("{:?}", nodes);
                 return Err(IrError::MissingData(format!("`NodeMeta` missing for the tag: {:?}", tag)));
             }
         }
+    } else {
+        // apply late project that does not record the columns in the corresponding nodes
     }
 
     Ok(())
@@ -1002,6 +1002,7 @@ impl AsLogical for pb::Select {
             // the columns will be added to the current node rather than tagged nodes
             // thus, can lazy fetched the columns upon filtering
             preprocess_expression(pred, meta, plan_meta, false)?;
+            process_columns_meta(plan_meta, true)?;
             Ok(())
         } else {
             Err(IrError::MissingData("`pb::Select::predicate`".to_string()))
@@ -1809,13 +1810,11 @@ mod test {
         );
 
         // The column "age" of a predicate "a.age == 10" should not be added
-        assert!(
-            plan_meta
-                .get_node_meta(1)
-                .unwrap()
-                .get_columns()
-                .is_empty()
-        );
+        assert!(plan_meta
+            .get_node_meta(1)
+            .unwrap()
+            .get_columns()
+            .is_empty());
     }
 
     #[test]
@@ -1887,13 +1886,12 @@ mod test {
             .unwrap();
         assert_eq!(plan.meta.get_curr_referred_nodes(), &vec![0]);
         // The column "age" in a predicate ".age == 27" should not be added
-        assert!(
-            plan.meta
-                .get_node_meta(0)
-                .unwrap()
-                .get_columns()
-                .is_empty()
-        );
+        assert!(plan
+            .meta
+            .get_node_meta(0)
+            .unwrap()
+            .get_columns()
+            .is_empty());
 
         // .valueMap("age", "name", "id")
         let project = pb::Project {
@@ -1949,13 +1947,12 @@ mod test {
             .unwrap();
         assert_eq!(plan.meta.get_curr_referred_nodes(), &vec![1]);
         // The column "lang" in a predicate should not be added
-        assert!(
-            plan.meta
-                .get_node_meta(1)
-                .unwrap()
-                .get_columns()
-                .is_empty()
-        );
+        assert!(plan
+            .meta
+            .get_node_meta(1)
+            .unwrap()
+            .get_columns()
+            .is_empty());
 
         // .select("here")
         let project = pb::Project {
@@ -2129,13 +2126,12 @@ mod test {
             .unwrap();
         assert_eq!(plan.meta.get_curr_referred_nodes(), &vec![0]);
         // The column "name" in a predicate should not be added
-        assert!(
-            plan.meta
-                .get_node_meta(0)
-                .unwrap()
-                .get_columns()
-                .is_empty()
-        );
+        assert!(plan
+            .meta
+            .get_node_meta(0)
+            .unwrap()
+            .get_columns()
+            .is_empty());
 
         // .as('a')
         let as_opr = pb::As { alias: Some("a".into()) };
@@ -2182,13 +2178,12 @@ mod test {
             .unwrap();
         assert_eq!(plan.meta.get_curr_referred_nodes(), &vec![opr_id as u32 - 1]);
         // The column "id" in a predicate should not be added
-        assert!(
-            plan.meta
-                .get_node_meta(opr_id as u32 - 1)
-                .unwrap()
-                .get_columns()
-                .is_empty()
-        );
+        assert!(plan
+            .meta
+            .get_node_meta(opr_id as u32 - 1)
+            .unwrap()
+            .get_columns()
+            .is_empty());
 
         // .select('a').by(valueMap('age', "name"))
         let project = pb::Project {
@@ -2599,14 +2594,12 @@ mod test {
                 }
                 let o_id = plan.meta.get_tag_id("o").unwrap();
                 assert_eq!(subplan.meta.get_tag_nodes(o_id), &vec![root_id]);
-                assert!(
-                    subplan
-                        .meta
-                        .get_node_meta(root_id)
-                        .unwrap()
-                        .get_columns()
-                        .is_empty()
-                )
+                assert!(subplan
+                    .meta
+                    .get_node_meta(root_id)
+                    .unwrap()
+                    .get_columns()
+                    .is_empty())
             } else {
                 match node_ref.opr.opr.as_ref().unwrap() {
                     Opr::Select(_) => {}
