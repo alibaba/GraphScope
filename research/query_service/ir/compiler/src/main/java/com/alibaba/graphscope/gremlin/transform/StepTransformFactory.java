@@ -33,8 +33,8 @@ import com.alibaba.graphscope.gremlin.plugin.step.ScanFusionStep;
 import com.alibaba.graphscope.gremlin.transform.alias.AliasArg;
 import com.alibaba.graphscope.gremlin.transform.alias.AliasManager;
 import com.alibaba.graphscope.gremlin.transform.alias.AliasPrefixType;
-
 import com.google.common.collect.ImmutableMap;
+
 import org.apache.tinkerpop.gremlin.process.traversal.Pop;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
@@ -503,11 +503,11 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
                                             Set<String> scopeKeys;
                                             if (!startTag.isPresent()
                                                     && !(scopeKeys =
-                                                    ((WhereTraversalStep
-                                                            .WhereStartStep)
-                                                            s1)
-                                                            .getScopeKeys())
-                                                    .isEmpty()) {
+                                                                    ((WhereTraversalStep
+                                                                                            .WhereStartStep)
+                                                                                    s1)
+                                                                            .getScopeKeys())
+                                                            .isEmpty()) {
                                                 startTag = Optional.of(scopeKeys.iterator().next());
                                             }
                                         } else if (s1
@@ -517,11 +517,11 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
                                             Set<String> scopeKeys;
                                             if (!endTag.isPresent()
                                                     && !(scopeKeys =
-                                                    ((WhereTraversalStep
-                                                            .WhereEndStep)
-                                                            s1)
-                                                            .getScopeKeys())
-                                                    .isEmpty()) {
+                                                                    ((WhereTraversalStep
+                                                                                            .WhereEndStep)
+                                                                                    s1)
+                                                                            .getScopeKeys())
+                                                            .isEmpty()) {
                                                 endTag = Optional.of(scopeKeys.iterator().next());
                                             }
                                         } else if (isValidBinderStep(s1)) {
