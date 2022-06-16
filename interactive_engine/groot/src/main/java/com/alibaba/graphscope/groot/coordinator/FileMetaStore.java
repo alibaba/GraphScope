@@ -139,6 +139,7 @@ public class FileMetaStore implements MetaStore {
             DataOutputStream dos = new DataOutputStream(os);
             dos.writeLong(getCRC32Checksum(content));
             dos.writeLong(System.currentTimeMillis());
+            dos.writeInt(content.length);
             os.write(content);
         }
     }
