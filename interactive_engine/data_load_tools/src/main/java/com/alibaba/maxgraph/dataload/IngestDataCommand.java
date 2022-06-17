@@ -3,7 +3,6 @@ package com.alibaba.maxgraph.dataload;
 import com.alibaba.graphscope.groot.sdk.MaxGraphClient;
 
 import java.io.IOException;
-import java.nio.file.Paths;
 
 public class IngestDataCommand extends DataCommand {
 

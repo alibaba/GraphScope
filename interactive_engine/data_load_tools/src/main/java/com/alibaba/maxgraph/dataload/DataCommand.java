@@ -62,8 +62,8 @@ public abstract class DataCommand {
             dataPath =
                     "oss://"
                             + Paths.get(
-                                            Paths.get(ossEndPoint, ossBucketName).toString(),
-                                            ossObjectName);
+                                    Paths.get(ossEndPoint, ossBucketName).toString(),
+                                    ossObjectName);
 
             Map<String, String> ossInfo = new HashMap<String, String>();
             ossInfo.put(OSS_ENDPOINT, ossEndPoint);

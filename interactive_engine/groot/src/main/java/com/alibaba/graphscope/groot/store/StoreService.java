@@ -311,8 +311,7 @@ public class StoreService implements MetricsAgent {
             try {
                 Files.createDirectories(uniquePath);
             } catch (IOException e) {
-                logger.error(
-                        "create uniquePath failed. uniquePath [" + uniquePath + "]", e);
+                logger.error("create uniquePath failed. uniquePath [" + uniquePath + "]", e);
                 callback.onError(e);
                 return;
             }
