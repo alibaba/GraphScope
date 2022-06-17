@@ -21,6 +21,7 @@
 
 use ir_common::generated::algebra as pb;
 use ir_common::generated::common as common_pb;
+use ir_common::KeyId;
 use pegasus_client::builder::{JobBuilder, Plan};
 use pegasus_server::job_pb as server_pb;
 use prost::Message;
@@ -398,7 +399,7 @@ impl AsPhysical for pb::Sink {
         let tag_id_mapping = plan_meta
             .get_tag_id_mappings()
             .iter()
-            .map(|(tag, id)| pb::sink::IdNameMapping { id: *id as i32, name: tag.clone(), meta_type: 3 })
+            .map(|(tag, id)| pb::sink::IdNameMapping { id: *id as KeyId, name: tag.clone(), meta_type: 3 })
             .collect();
         sink_opr.id_name_mappings = tag_id_mapping;
         simple_add_job_builder(builder, &pb::logical_plan::Operator::from(sink_opr), SimpleOpr::Sink)
