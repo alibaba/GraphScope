@@ -67,6 +67,12 @@ public class OfflineBuildOdps {
     public static void main(String[] args)
             throws IOException, ClassNotFoundException, InterruptedException {
         String propertiesFile = args[0];
+        String uniquePath = UuidUtils.getBase64UUIDString();
+        // User can assign a unique path manually.
+        if (args.length > 1) {
+            uniquePath = args[1];
+        }
+
         Properties properties = new Properties();
         try (InputStream is = new FileInputStream(propertiesFile)) {
             properties.load(is);
@@ -181,19 +187,18 @@ public class OfflineBuildOdps {
             OutputUtils.addTable(TableInfo.builder().tableName(outputTable).build(), job);
         }
 
-        String Uuid = UuidUtils.getBase64UUIDString();
         String dataPath = Paths.get(ossBucketName, ossObjectName).toString();
         Map<String, String> outputMeta = new HashMap<>();
         outputMeta.put("endpoint", graphEndpoint);
         outputMeta.put("schema", schemaJson);
         outputMeta.put("mappings", mappings);
         outputMeta.put("datapath", dataPath);
-        outputMeta.put("unique_path", Uuid);
+        outputMeta.put("unique_path", uniquePath);
 
         job.set(META_INFO, objectMapper.writeValueAsString(outputMeta));
-        job.set(UNIQUE_PATH, Uuid);
+        job.set(UNIQUE_PATH, uniquePath);
 
-        System.out.println("uniquePath: " + Uuid);
+        System.out.println("uniquePath is: " + uniquePath);
 
         try {
             JobClient.runJob(job);
