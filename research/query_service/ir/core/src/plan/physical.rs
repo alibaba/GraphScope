@@ -670,39 +670,7 @@ mod test {
     }
 
     #[test]
-    fn post_process_edgexpd_select_as_auxilia_case1() {
-        // g.V().outE().has("creationDate", 20220101)
-        // In this case, the Select will be translated into an Auxilia, to fetch and filter the
-        // results in one single `FilterMap` pegasus operator.
-        let mut plan = LogicalPlan::default();
-        plan.append_operator_as_node(build_scan(vec![]).into(), vec![])
-            .unwrap();
-        plan.append_operator_as_node(build_edgexpd(true, vec![], None).into(), vec![0])
-            .unwrap();
-        plan.append_operator_as_node(build_select("@.creationDate == 20220101").into(), vec![1])
-            .unwrap();
-        let mut job_builder = JobBuilder::default();
-        let mut plan_meta = plan.meta.clone();
-        plan_meta = plan_meta.with_partition();
-        plan.add_job_builder(&mut job_builder, &mut plan_meta)
-            .unwrap();
-
-        let mut expected_builder = JobBuilder::default();
-        expected_builder.add_source(pb::logical_plan::Operator::from(build_scan(vec![])).encode_to_vec());
-        expected_builder.repartition(vec![]);
-        expected_builder
-            .flat_map(pb::logical_plan::Operator::from(build_edgexpd(true, vec![], None)).encode_to_vec());
-        expected_builder.repartition(vec![]);
-        expected_builder.filter_map(
-            pb::logical_plan::Operator::from(build_auxilia("@.creationDate == 20220101")).encode_to_vec(),
-        );
-        expected_builder.sink(vec![]);
-
-        assert_eq!(job_builder, expected_builder);
-    }
-
-    #[test]
-    fn post_process_edgexpd_select_as_auxilia_case2() {
+    fn post_process_edgexpd_property_filter_as_auxilia() {
         // g.V().out().has("birthday", 20220101)
         // In this case, the Select will be translated into an Auxilia, to fetch and filter the
         // results in one single `FilterMap` pegasus operator.
@@ -750,7 +718,34 @@ mod test {
     }
 
     #[test]
-    fn post_process_edgexpd_select_as_select() {
+    fn post_process_edgexpd_label_filter() {
+        // g.V().out().filter(@.~label == "person")
+        let mut plan = LogicalPlan::default();
+        plan.append_operator_as_node(build_scan(vec![]).into(), vec![])
+            .unwrap();
+        plan.append_operator_as_node(build_edgexpd(false, vec![], None).into(), vec![0])
+            .unwrap();
+        plan.append_operator_as_node(build_select("@.~label == \"person\"").into(), vec![1])
+            .unwrap();
+        let mut job_builder = JobBuilder::default();
+        let mut plan_meta = plan.meta.clone();
+        plan.add_job_builder(&mut job_builder, &mut plan_meta)
+            .unwrap();
+
+        let mut expected_builder = JobBuilder::default();
+        expected_builder.add_source(pb::logical_plan::Operator::from(build_scan(vec![])).encode_to_vec());
+        expected_builder
+            .flat_map(pb::logical_plan::Operator::from(build_edgexpd(false, vec![], None)).encode_to_vec());
+        expected_builder.filter(
+            pb::logical_plan::Operator::from(build_select("@.~label == \"person\"")).encode_to_vec(),
+        );
+        expected_builder.sink(vec![]);
+
+        assert_eq!(job_builder, expected_builder);
+    }
+
+    #[test]
+    fn post_process_edgexpd_multi_tag_property_filter() {
         // g.V().out().as(0).out().as(1).filter(0.age > 1.age)
         // In this case, the Select cannot be translated into an Auxilia, as it contains
         // fetching the properties from two different nodes. In this case, we need to fetch
