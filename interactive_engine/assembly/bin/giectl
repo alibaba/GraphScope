@@ -149,6 +149,10 @@ start_frontend() {
   declare -r pid_dir=${GRAPHSCOPE_RUNTIME}/pid/${object_id}
   mkdir -p ${log_dir} ${config_dir} ${pid_dir}
 
+  # make a "current" link
+  unlink ${GS_LOG}/current || true
+  ln -s ${log_dir} ${GS_LOG}/current
+
   declare java_opt="-server
             -verbose:gc
             -Xloggc:${log_dir}/maxgraph-frontend.gc.log

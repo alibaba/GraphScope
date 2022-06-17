@@ -229,10 +229,38 @@ void PropertyTableAppender::Flush(
 
 void PropertyGraphOutStream::Initialize(Schema schema) {
   auto schema_ptr = static_cast<vineyard::MGPropertyGraphSchema *>(schema);
+  LOG(INFO) << "Initialize the graph builder using schema ...";
+
+  // set schema
   *graph_schema_ = *schema_ptr;
 
-  LOG(INFO) << "Initialize the graph builder using schema ...";
+  auto client = meta_.GetClient();
+  std::string graph_name = this->meta().GetKeyValue("graph_name");
+  int chunk_index = this->meta().GetKeyValue<int>("stream_index");
+
+  // create actual streams, as the coordinator only create placeholders
+  DLOG(INFO) << "this->edge_stream_->id() = " << ObjectIDToString(this->edge_stream_->id());
+  DLOG(INFO) << "this->vertex_stream_->id() = " << ObjectIDToString(this->vertex_stream_->id());
+
+  VINEYARD_CHECK_OK(client->CreateStream(this->edge_stream_->id()));
+  VINEYARD_CHECK_OK(client->CreateStream(this->vertex_stream_->id()));
+
+  // create a name
+  {
+    vineyard::ObjectID global_stream_id = vineyard::InvalidObjectID();
+    VINEYARD_CHECK_OK(client->GetName(graph_name, global_stream_id));
+    std::string flag = "__" + graph_name + "_" + std::to_string(chunk_index) + "_streamed";
+    VINEYARD_CHECK_OK(client->PutName(this->id_, flag));
+  }
+
+  // create tables
   this->initialTables();
+  vertex_finished_ = false;
+  edge_finished_ = false;
+  LOG(INFO) << "vertex_finished_ = " << vertex_finished_ << ", " << this;
+  LOG(INFO) << "edge_finished_ = " << edge_finished_ << ", " << this;
+
+  LOG(INFO) << "The graph builder is initialized using schema";
 }
 
 void PropertyGraphOutStream::AddVertex(VertexId id, LabelId labelid,
@@ -475,6 +503,7 @@ void PropertyGraphOutStream::buildTableChunk(
 }
 
 void PropertyGraphOutStream::FinishAllVertices() {
+  LOG(INFO) << "vertex_finished_ = " << vertex_finished_ << ", " << this;
   if (vertex_finished_) {
     return;
   }
@@ -502,11 +531,13 @@ void PropertyGraphOutStream::FinishAllVertices() {
   if (!vertex_stream_->IsOpen()) {
     VINEYARD_CHECK_OK(this->Open(vertex_stream_));
   }
+  LOG(INFO) << "finishing vertex stream: " << ObjectIDToString(vertex_stream_->id());
   VINEYARD_CHECK_OK(vertex_stream_->Finish());
   vertex_finished_ = true;
 }
 
 void PropertyGraphOutStream::FinishAllEdges() {
+  LOG(INFO) << "edge_finished_ = " << edge_finished_ << ", " << this;
   if (edge_finished_) {
     return;
   }
@@ -527,6 +558,7 @@ void PropertyGraphOutStream::FinishAllEdges() {
   if (!edge_stream_->IsOpen()) {
     VINEYARD_CHECK_OK(this->Open(edge_stream_));
   }
+  LOG(INFO) << "finishing vertex stream: " << ObjectIDToString(vertex_stream_->id());
   VINEYARD_CHECK_OK(edge_stream_->Finish());
   edge_finished_ = true;
 }
@@ -538,6 +570,7 @@ void GlobalPGStream::Construct(const ObjectMeta& meta) {
   this->id_ = meta.GetId();
 
   meta.GetKeyValue("total_stream_chunks", total_stream_chunks_);
+  LOG(INFO) << "total_stream_chunks_ = " << total_stream_chunks_;
   for (size_t idx = 0; idx < total_stream_chunks_; ++idx) {
     std::string member_key = "stream_chunk_" + std::to_string(idx);
     if (meta.GetMemberMeta(member_key).IsLocal()) {

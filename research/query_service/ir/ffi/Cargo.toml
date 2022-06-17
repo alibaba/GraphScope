@@ -10,3 +10,6 @@ log = "0.4"
 ir_common = {path = "../common"}
 dyn_type = { path = "../../../dyn_type" }
 libc = "0.2"
+
+[build-dependencies]
+cmake = "0.1"

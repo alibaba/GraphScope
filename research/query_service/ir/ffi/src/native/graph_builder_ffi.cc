@@ -156,8 +156,9 @@ GraphBuilder get_graph_builder(const char *graph_name, const int index) {
   vineyard::ObjectID id;
   VINEYARD_CHECK_OK(client.GetName(graph_name, id));
 #ifndef NDEBUG
-  LOG(INFO) << "get name " << graph_name << " yields ID "
-            << vineyard::ObjectIDToString(id);
+  LOG(INFO) << "get graph builder with name " << graph_name
+            << " yields ID " << vineyard::ObjectIDToString(id)
+            << ", using index: " << index;
 #endif
   vineyard::ObjectMeta meta;
   VINEYARD_CHECK_OK(client.GetMetaData(id, meta, true));
@@ -171,6 +172,7 @@ GraphBuilder get_graph_builder(const char *graph_name, const int index) {
 }
 
 void initialize_graph_builder(GraphBuilder builder, Schema schema) {
+  LOG(INFO) << "initialize graph: builder = " << builder;
   auto stream =
       static_cast<std::shared_ptr<vineyard::PropertyGraphOutStream> *>(builder);
   return (*stream)->Initialize(schema);
@@ -221,20 +223,21 @@ void build(GraphBuilder builder) {
 void build_vertice(GraphBuilder builder) { return build_vertices(builder); }
 
 void build_vertices(GraphBuilder builder) {
-  LOG(INFO) << "build vertices";
+  LOG(INFO) << "building vertices: builder = " << builder;
   auto stream =
       static_cast<std::shared_ptr<vineyard::PropertyGraphOutStream> *>(builder);
   (*stream)->FinishAllVertices();
 }
 
 void build_edges(GraphBuilder builder) {
-  LOG(INFO) << "build edges";
+  LOG(INFO) << "building edges: builder = " << builder;
   auto stream =
       static_cast<std::shared_ptr<vineyard::PropertyGraphOutStream> *>(builder);
   (*stream)->FinishAllEdges();
 }
 
 void destroy(GraphBuilder builder) {
+  LOG(INFO) << "destory: builder = " << builder;
   auto stream =
       static_cast<std::shared_ptr<vineyard::PropertyGraphOutStream> *>(builder);
   // delete the shared_ptr object on heap, it will then delete the holded
