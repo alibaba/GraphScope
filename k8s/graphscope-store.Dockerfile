@@ -17,7 +17,7 @@ RUN sudo chown -R $(id -u):$(id -g) /home/graphscope/gs /home/graphscope/.m2 && 
     wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz && \
     sudo tar -C /usr/local -xzf go1.15.5.linux-amd64.tar.gz && \
     curl -sf -L https://static.rust-lang.org/rustup.sh | \
-        sh -s -- -y --profile minimal --default-toolchain 1.54.0 && \
+        sh -s -- -y --profile minimal --default-toolchain 1.61.0 && \
     echo "source ~/.cargo/env" >> ~/.bashrc \
     && source ~/.bashrc \
     && rustup component add rustfmt \

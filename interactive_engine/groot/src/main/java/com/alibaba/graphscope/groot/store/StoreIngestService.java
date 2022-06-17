@@ -19,6 +19,8 @@ import com.alibaba.maxgraph.proto.groot.*;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 
+import java.io.IOException;
+
 public class StoreIngestService extends StoreIngestGrpc.StoreIngestImplBase {
 
     private StoreService storeService;
@@ -48,5 +50,19 @@ public class StoreIngestService extends StoreIngestGrpc.StoreIngestImplBase {
                                         .asRuntimeException());
                     }
                 });
+    }
+
+    @Override
+    public void storeClearIngest(
+            StoreClearIngestRequest request,
+            StreamObserver<StoreClearIngestResponse> responseObserver) {
+        try {
+            this.storeService.clearIngest();
+            responseObserver.onNext(StoreClearIngestResponse.newBuilder().build());
+            responseObserver.onCompleted();
+        } catch (IOException e) {
+            responseObserver.onError(
+                    Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
+        }
     }
 }
