@@ -768,13 +768,13 @@ fn preprocess_var(
     Ok(())
 }
 
-fn preprocess_const(
-    val: &mut common_pb::Value, meta: &StoreMeta, plan_meta: &mut PlanMeta,
+fn preprocess_label(
+    label: &mut common_pb::Value, meta: &StoreMeta, plan_meta: &mut PlanMeta,
 ) -> IrResult<()> {
     if let Some(schema) = &meta.schema {
         // A Const needs to be preprocessed only if it is while comparing a label (table)
         if plan_meta.is_table_id() && schema.is_table_id() {
-            if let Some(item) = val.item.as_mut() {
+            if let Some(item) = label.item.as_mut() {
                 match item {
                     common_pb::value::Item::Str(name) => {
                         let new_item = common_pb::value::Item::I32(
@@ -840,7 +840,7 @@ fn preprocess_expression(
                 common_pb::expr_opr::Item::Const(c) => {
                     if count == 2 {
                         // indicates LabelKey <cmp> labelValue
-                        preprocess_const(c, meta, plan_meta)?;
+                        preprocess_label(c, meta, plan_meta)?;
                     }
                     count = 0;
                 }
@@ -1181,7 +1181,7 @@ impl AsLogical for pb::IndexPredicate {
                             }
                             common_pb::property::Item::Label(_) => {
                                 if let Some(val) = pred.value.as_mut() {
-                                    preprocess_const(val, meta, plan_meta)?;
+                                    preprocess_label(val, meta, plan_meta)?;
                                 }
                             }
                             _ => {}
