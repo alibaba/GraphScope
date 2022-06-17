@@ -20,7 +20,7 @@ use cmake::Config;
 use std::env;
 
 fn main() {
-    let dst = Config::new("native")
+    let dst = Config::new("src/native")
         .build_target("native_store")
         .build();
 
