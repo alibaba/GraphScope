@@ -24,7 +24,7 @@ pub enum ResultSinkKind<T> {
     Customized(Box<dyn FromStreamExt<T>>),
 }
 
-impl<T> ResultSink<T> {
+impl<T: 'static> ResultSink<T> {
     pub fn new(tx: Sender<Result<T, Box<dyn Error + Send>>>) -> Self {
         ResultSink {
             cancel: Arc::new(AtomicBool::new(false)),
