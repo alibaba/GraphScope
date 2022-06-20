@@ -108,7 +108,7 @@ impl SinkGen for SinkVineyardOp {
             if worker.index % worker.local_peers == 0 {
                 // the first worker on current server are assigned to sink to vineyard
                 let graph_writer =
-                    VineyardGraphWriter::new(self.graph_name, &graph_schema, worker.server_index as i32);
+                    VineyardGraphWriter::new(self.graph_name, &graph_schema, worker.server_index as i32)?;
                 let graph_writer = VinyardWriter { graph_writer: Arc::new(graph_writer), sink_keys };
                 debug!("Runtime sink graph operator: {:?}", graph_writer);
                 Ok(Sinker::GraphSinker(VineyardSinker::Writer(graph_writer)))

@@ -13,15 +13,13 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use std::collections::HashMap;
 use std::ffi::CString;
 
-use dyn_type::Object;
-use ffi::ffi::{FFIState, GraphHandle, WriteNativeProperty, STATE_FAILED, STATE_SUCCESS};
-use ffi::graph_builder_ffi::{
-    add_edge, add_edges, add_vertex, add_vertices, build_edges, build_vertices, build_vineyard_schema,
-    destroy, get_graph_builder, initialize_graph_builder, LabelId as FfiLabelId, VertexId as FfiVertexId,
-};
+use dyn_type::{Object, Primitives};
+use ffi::ffi::*;
+use ffi::ffi::{LabelId as FfiLabelId, VertexId as FfiVertexId};
+use ffi::graph_builder_ffi::*;
+use ir_common::generated::common as common_pb;
 use ir_common::generated::schema as schema_pb;
 use ir_common::{KeyId, NameOrId};
 
@@ -34,12 +32,12 @@ pub struct VineyardGraphWriter {
 }
 
 impl VineyardGraphWriter {
-    pub fn new(graph_name: String, schema: &schema_pb::Schema, index: i32) -> Self {
+    pub fn new(graph_name: String, schema: &schema_pb::Schema, index: i32) -> GraphProxyResult<Self> {
         let name = CString::new(graph_name).unwrap();
         let graph = unsafe { get_graph_builder(name.as_ptr(), index) };
-        let schema_handle = build_vineyard_schema(schema);
+        let schema_handle = build_vineyard_schema(schema)?;
         unsafe { initialize_graph_builder(graph, schema_handle) };
-        VineyardGraphWriter { graph }
+        Ok(VineyardGraphWriter { graph })
     }
 
     fn encode_ffi_label(&self, key: Option<&NameOrId>) -> GraphProxyResult<FfiLabelId> {
@@ -64,31 +62,59 @@ impl VineyardGraphWriter {
         let properties = details
             .map(|details| details.get_all_properties())
             .unwrap_or(None);
-        self.encode_properties(properties)
-    }
-
-    fn encode_properties(
-        &self, properties: Option<HashMap<NameOrId, Object>>,
-    ) -> GraphProxyResult<Vec<WriteNativeProperty>> {
         let mut native_properties: Vec<WriteNativeProperty> = vec![];
         if let Some(mut properties) = properties {
             for (prop_key, prop_val) in properties.drain() {
                 let prop_id = self.encode_key(Some(&prop_key))?;
-                let native_property = WriteNativeProperty::from_object(prop_id, prop_val);
+                let native_property = self.to_ffi_native_property(prop_id, prop_val);
                 native_properties.push(native_property);
             }
         }
         Ok(native_properties)
     }
 
-    fn check_state(&self, state: FFIState, msg: &str) -> GraphProxyResult<()> {
-        if state.eq(&STATE_SUCCESS) {
-            Ok(())
-        } else if state.eq(&STATE_FAILED) {
-            Err(GraphProxyError::write_graph_error(&format!("state error on vineyard when {:?}", msg)))
-        } else {
-            Err(GraphProxyError::write_graph_error(&format!("state unknown on vineyard when {:?}", msg)))
-        }
+    fn to_ffi_native_property(&self, prop_id: KeyId, property: Object) -> WriteNativeProperty {
+        let (prop_type, mut data, data_len) = {
+            match property {
+                Object::Primitive(Primitives::Byte(v)) => {
+                    let u = PropertyUnion { c: v as u8 };
+                    (PropertyType::Char, vec![], unsafe { u.l })
+                }
+                Object::Primitive(Primitives::Integer(v)) => {
+                    let u = PropertyUnion { i: v };
+                    (PropertyType::Int, vec![], unsafe { u.l })
+                }
+                Object::Primitive(Primitives::Long(v)) => {
+                    let u = PropertyUnion { l: v };
+                    (PropertyType::Long, vec![], unsafe { u.l })
+                }
+                Object::Primitive(Primitives::ULLong(v)) => {
+                    let u = PropertyUnion { l: v as i64 };
+                    (PropertyType::Long, vec![], unsafe { u.l })
+                }
+                Object::Primitive(Primitives::Float(v)) => {
+                    let u = PropertyUnion { d: v };
+                    (PropertyType::Double, vec![], unsafe { u.l })
+                }
+                Object::String(ref v) => {
+                    let vecdata = v.to_owned().into_bytes();
+                    let len = vecdata.len() as i64;
+                    (PropertyType::String, vecdata, len)
+                }
+                Object::Blob(ref v) => {
+                    let vecdata = v.to_vec();
+                    let len = vecdata.len() as i64;
+                    (PropertyType::Bytes, vecdata, len)
+                }
+                _ => {
+                    panic!("Unsupported object type: {:?}", property)
+                }
+            }
+        };
+        data.shrink_to_fit();
+        let data_ptr = data.as_ptr();
+        ::std::mem::forget(data);
+        WriteNativeProperty::new(prop_id as i32, prop_type, data_ptr, data_len)
     }
 }
 
@@ -100,7 +126,7 @@ impl WriteGraphProxy for VineyardGraphWriter {
         let state = unsafe {
             add_vertex(self.graph, vertex_id, label_id, native_properties.len(), native_properties.as_ptr())
         };
-        self.check_state(state, "add_vertex")
+        check_ffi_state(state, "add_vertex")
     }
 
     fn add_vertices(&mut self, vertices: Vec<Vertex>) -> GraphProxyResult<()> {
@@ -127,7 +153,7 @@ impl WriteGraphProxy for VineyardGraphWriter {
                 merge_properties.as_ptr(),
             )
         };
-        self.check_state(state, "add_vertices")
+        check_ffi_state(state, "add_vertices")
     }
 
     fn add_edge(&mut self, edge: Edge) -> GraphProxyResult<()> {
@@ -149,7 +175,7 @@ impl WriteGraphProxy for VineyardGraphWriter {
             )
         };
 
-        self.check_state(state, "add_edge")
+        check_ffi_state(state, "add_edge")
     }
 
     fn add_edges(&mut self, edges: Vec<Edge>) -> GraphProxyResult<()> {
@@ -189,14 +215,14 @@ impl WriteGraphProxy for VineyardGraphWriter {
             )
         };
 
-        self.check_state(state, "add_edges")
+        check_ffi_state(state, "add_edges")
     }
 
     fn finish(&mut self) -> GraphProxyResult<()> {
         let build_vertex_state = unsafe { build_vertices(self.graph) };
         let build_edge_state = unsafe { build_edges(self.graph) };
-        self.check_state(build_vertex_state, "finish_vertex")?;
-        self.check_state(build_edge_state, "finish_edge")
+        check_ffi_state(build_vertex_state, "finish_vertex")?;
+        check_ffi_state(build_edge_state, "finish_edge")
     }
 }
 
@@ -211,3 +237,85 @@ impl Drop for VineyardGraphWriter {
 unsafe impl Send for VineyardGraphWriter {}
 
 unsafe impl Sync for VineyardGraphWriter {}
+
+fn check_ffi_state(state: FFIState, msg: &str) -> GraphProxyResult<()> {
+    if state.eq(&STATE_SUCCESS) {
+        Ok(())
+    } else if state.eq(&STATE_FAILED) {
+        Err(GraphProxyError::write_graph_error(&format!("state error on vineyard when {:?}", msg)))
+    } else {
+        Err(GraphProxyError::write_graph_error(&format!("state unknown on vineyard when {:?}", msg)))
+    }
+}
+
+fn build_vineyard_schema(schema: &schema_pb::Schema) -> GraphProxyResult<SchemaHandle> {
+    let builder = unsafe { create_schema_builder() };
+    for vertex in &schema.entities {
+        let label = &vertex.label.as_ref().unwrap();
+        let name = CString::new(label.name.to_owned()).unwrap();
+        let v_type_builder = unsafe { build_vertex_type(builder, label.id, name.as_ptr()) };
+
+        let mut primary_key_list = vec![];
+        let mut primary_key_ptr_list = vec![];
+
+        for column in &vertex.columns {
+            let key = &column.key.as_ref().unwrap();
+            let prop_id = key.id;
+            let prop_name = CString::new(key.name.to_owned()).unwrap();
+            let prop_type =
+                PropertyType::from_data_type(common_pb::DataType::from_i32(column.data_type).unwrap());
+            let state =
+                unsafe { build_vertex_property(v_type_builder, prop_id, prop_name.as_ptr(), prop_type) };
+            check_ffi_state(state, "build_vertex_property() for vineyard")?;
+
+            if column.is_primary_key {
+                primary_key_ptr_list.push(prop_name.as_ptr());
+                primary_key_list.push(prop_name);
+            }
+        }
+        unsafe {
+            let state = build_vertex_primary_keys(
+                v_type_builder,
+                primary_key_list.len(),
+                primary_key_ptr_list.as_ptr(),
+            );
+            check_ffi_state(state, "build_vertex_primary_keys() for vineyard")?;
+            let state = finish_build_vertex(v_type_builder);
+            check_ffi_state(state, "finish_build_vertex() for vineyard")?;
+        };
+    }
+
+    for edge in &schema.relations {
+        let label = &edge.label.as_ref().unwrap();
+        let name = CString::new(label.name.to_owned()).unwrap();
+        let e_type_builder = unsafe { build_edge_type(builder, label.id, name.as_ptr()) };
+
+        for column in &edge.columns {
+            let key = &column.key.as_ref().unwrap();
+            let prop_id = key.id;
+            let prop_name = CString::new(key.name.to_owned()).unwrap();
+            let prop_type =
+                PropertyType::from_data_type(common_pb::DataType::from_i32(column.data_type).unwrap());
+            let state =
+                unsafe { build_edge_property(e_type_builder, prop_id, prop_name.as_ptr(), prop_type) };
+            check_ffi_state(state, "build_edge_property() for vineyard")?;
+        }
+
+        for relation in &edge.entity_pairs {
+            let src = &relation.src.as_ref().unwrap();
+            let src_name = CString::new(src.name.to_owned()).unwrap();
+            let dst = &relation.dst.as_ref().unwrap();
+            let dst_name = CString::new(dst.name.to_owned()).unwrap();
+            let state =
+                unsafe { build_edge_relation(e_type_builder, src_name.as_ptr(), dst_name.as_ptr()) };
+            check_ffi_state(state, "build_edge_relation() for vineyard")?;
+        }
+
+        let state = unsafe { finish_build_edge(e_type_builder) };
+        check_ffi_state(state, "finish_build_edge() for vineyard")?;
+    }
+
+    unsafe { finish_build_schema(builder) };
+
+    return Ok(builder);
+}
