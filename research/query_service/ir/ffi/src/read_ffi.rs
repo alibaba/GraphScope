@@ -286,7 +286,7 @@ impl WriteNativeProperty {
         data.shrink_to_fit();
         let data_ptr = data.as_ptr();
         ::std::mem::forget(data);
-        WriteNativeProperty::new(prop_id as i32, prop_type, data_ptr, data_len)
+        WriteNativeProperty { id: prop_id as i32, r#type: prop_type, data: data_ptr, len: data_len as i64 }
     }
 
     fn as_ptr(&self) -> *const Self {

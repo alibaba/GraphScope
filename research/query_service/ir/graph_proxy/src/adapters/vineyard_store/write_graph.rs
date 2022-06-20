@@ -15,7 +15,6 @@
 
 use std::ffi::CString;
 
-use dyn_type::{Object, Primitives};
 use ffi::read_ffi::*;
 use ffi::read_ffi::{LabelId as FfiLabelId, VertexId as FfiVertexId};
 use ffi::write_ffi::*;
