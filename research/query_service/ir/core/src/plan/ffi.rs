@@ -1822,6 +1822,7 @@ mod graph {
         Start = 0,
         End = 1,
         Other = 2,
+        Both = 3,
     }
 
     /// To initialize an expansion base

@@ -278,7 +278,21 @@ impl AsPhysical for pb::GetV {
         } else {
             return Err(IrError::MissingData("GetV::params".to_string()));
         }
-        simple_add_job_builder(builder, &pb::logical_plan::Operator::from(self.clone()), SimpleOpr::Map)?;
+        let opt: pb::get_v::VOpt = unsafe { ::std::mem::transmute(self.opt) };
+        match opt {
+            pb::get_v::VOpt::Both => {
+                simple_add_job_builder(
+                    builder,
+                    &pb::logical_plan::Operator::from(self.clone()),
+                    SimpleOpr::Flatmap,
+                )?;
+            }
+            _ => simple_add_job_builder(
+                builder,
+                &pb::logical_plan::Operator::from(self.clone()),
+                SimpleOpr::Map,
+            )?,
+        }
         if is_adding_auxilia {
             if plan_meta.is_partition() {
                 let key_pb = common_pb::NameOrIdKey { key: None };

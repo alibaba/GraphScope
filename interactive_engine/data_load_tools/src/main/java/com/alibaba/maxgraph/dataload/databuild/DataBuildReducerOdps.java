@@ -27,6 +27,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
@@ -41,6 +42,7 @@ public class DataBuildReducerOdps extends ReducerBase {
     private String ossObjectName = null;
 
     private SstRecordWriter sstRecordWriter = null;
+    private String uniquePath = null;
     private String taskId = null;
     private String metaData = null;
     private OSSFileObj ossFileObj = null;
@@ -57,6 +59,7 @@ public class DataBuildReducerOdps extends ReducerBase {
         this.ossBucketName = context.getJobConf().get(OfflineBuildOdps.OSS_BUCKET_NAME);
         this.ossObjectName = context.getJobConf().get(OfflineBuildOdps.OSS_OBJECT_NAME);
         this.metaData = context.getJobConf().get(OfflineBuildOdps.META_INFO);
+        this.uniquePath = context.getJobConf().get(OfflineBuildOdps.UNIQUE_PATH);
 
         if (!ossEndPoint.startsWith("http")) {
             ossEndPoint = "https://" + ossEndPoint;
@@ -73,6 +76,18 @@ public class DataBuildReducerOdps extends ReducerBase {
         ossInfo.put(OfflineBuildOdps.OSS_ACCESS_KEY, ossAccessKey);
 
         this.ossFileObj = new OSSFileObj(ossInfo);
+
+        /*
+        if ("00000".equals(taskId)) {
+            try {
+                ossFileObj.createDirectory(ossBucketName, ossObjectName, uniquePath);
+            } catch (IOException e) {
+                throw e;
+            }
+        }
+        */
+
+        ossObjectName = Paths.get(ossObjectName, uniquePath).toString();
 
         try {
             this.sstRecordWriter = new SstRecordWriter(sstFileName, DataBuildMapperOdps.charSet);
@@ -115,6 +130,7 @@ public class DataBuildReducerOdps extends ReducerBase {
             ossFileObj.uploadFileWithCheckPoint(ossBucketName, ossObjectName, sstFileName);
         }
 
+        // Only the first task will write  the meta
         if ("00000".equals(taskId)) {
             try {
                 writeFile(metaFileName, metaData);
