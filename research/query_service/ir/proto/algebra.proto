@@ -356,6 +356,7 @@ message Pattern {
       EdgeExpand edge = 1;
       PathExpand path = 2;
       GetV vertex = 3;
+      Select select = 4;
     }
   }
   // A sentence defines a match

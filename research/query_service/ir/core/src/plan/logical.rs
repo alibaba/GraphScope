@@ -1300,6 +1300,7 @@ impl AsLogical for pb::Pattern {
                         Item::Edge(edge) => edge.preprocess(meta, plan_meta)?,
                         Item::Path(path) => path.preprocess(meta, plan_meta)?,
                         Item::Vertex(vertex) => vertex.preprocess(meta, plan_meta)?,
+                        Item::Select(pred) => pred.preprocess(meta, plan_meta)?,
                     }
                 }
             }

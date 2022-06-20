@@ -1987,6 +1987,7 @@ mod graph {
         Edge = 0,
         Path = 1,
         Vertex = 2,
+        Select = 3,
     }
 
     #[no_mangle]
@@ -2011,6 +2012,12 @@ mod graph {
                 let getv = unsafe { Box::from_raw(ptr as *mut pb::GetV) };
                 sentence.binders.push(pb::pattern::Binder {
                     item: Some(pb::pattern::binder::Item::Vertex(getv.as_ref().clone())),
+                });
+            }
+            FfiBinderOpt::Select => {
+                let select = unsafe { Box::from_raw(ptr as *mut pb::Select) };
+                sentence.binders.push(pb::pattern::Binder {
+                    item: Some(pb::pattern::binder::Item::Select(select.as_ref().clone())),
                 });
             }
         }
