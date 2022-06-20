@@ -168,8 +168,7 @@ if (GLOG_FOUND)
     }
     " GLOG_COMPILE_SUCCESS)
     if (GLOG_COMPILE_SUCCESS)
-        message(STATUS "glog 060")
-        add_definitions(-DGLOG_0_6_0_API)
+        add_definitions(-DGLOG_VERSION=6)
     endif ()
 endif ()
 

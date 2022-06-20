@@ -176,7 +176,7 @@ extern "C" void master_signal_handler(int sig, siginfo_t* info, void* context) {
 class RedirectLogSink : public google::LogSink {
   virtual void send(google::LogSeverity severity, const char* full_filename,
                     const char* base_filename, int line,
-#ifdef GLOG_0_6_0_API
+#if defined(GLOG_VERSION) && GLOG_VERSION >= 6
                     const google::LogMessageTime& tm_time,
 #else
                     const struct ::tm* tm_time,
