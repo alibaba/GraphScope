@@ -17,10 +17,10 @@ use std::collections::HashMap;
 use std::ffi::CString;
 
 use dyn_type::Object;
-use ffi::ffi::{GraphHandle, WriteNativeProperty};
+use ffi::ffi::{FFIState, GraphHandle, WriteNativeProperty, STATE_FAILED, STATE_SUCCESS};
 use ffi::graph_builder_ffi::{
     add_edge, add_edges, add_vertex, add_vertices, build_edges, build_vertices, build_vineyard_schema,
-    destroy, get_graph_builder, initialize_graph_builder,
+    destroy, get_graph_builder, initialize_graph_builder, LabelId as FfiLabelId, VertexId as FfiVertexId,
 };
 use ir_common::generated::schema as schema_pb;
 use ir_common::{KeyId, NameOrId};
@@ -40,6 +40,11 @@ impl VineyardGraphWriter {
         let schema_handle = build_vineyard_schema(schema);
         unsafe { initialize_graph_builder(graph, schema_handle) };
         VineyardGraphWriter { graph }
+    }
+
+    fn encode_ffi_label(&self, key: Option<&NameOrId>) -> GraphProxyResult<FfiLabelId> {
+        let key_id = self.encode_key(key)?;
+        Ok(key_id as FfiLabelId)
     }
 
     fn encode_key(&self, key: Option<&NameOrId>) -> GraphProxyResult<KeyId> {
@@ -75,23 +80,27 @@ impl VineyardGraphWriter {
         }
         Ok(native_properties)
     }
+
+    fn check_state(&self, state: FFIState, msg: &str) -> GraphProxyResult<()> {
+        if state.eq(&STATE_SUCCESS) {
+            Ok(())
+        } else if state.eq(&STATE_FAILED) {
+            Err(GraphProxyError::write_graph_error(&format!("state error on vineyard when {:?}", msg)))
+        } else {
+            Err(GraphProxyError::write_graph_error(&format!("state unknown on vineyard when {:?}", msg)))
+        }
+    }
 }
 
 impl WriteGraphProxy for VineyardGraphWriter {
     fn add_vertex(&mut self, vertex: Vertex) -> GraphProxyResult<()> {
-        let vertex_id = vertex.id();
-        let label_id = self.encode_key(vertex.label())?;
+        let vertex_id = vertex.id() as FfiVertexId;
+        let label_id = self.encode_ffi_label(vertex.label())?;
         let native_properties = self.encode_details(vertex.details())?;
-        unsafe {
-            add_vertex(
-                self.graph,
-                vertex_id,
-                label_id,
-                native_properties.len(),
-                native_properties.as_ptr(),
-            );
-        }
-        Ok(())
+        let state = unsafe {
+            add_vertex(self.graph, vertex_id, label_id, native_properties.len(), native_properties.as_ptr())
+        };
+        self.check_state(state, "add_vertex")
     }
 
     fn add_vertices(&mut self, vertices: Vec<Vertex>) -> GraphProxyResult<()> {
@@ -101,14 +110,14 @@ impl WriteGraphProxy for VineyardGraphWriter {
         let mut merge_properties: Vec<WriteNativeProperty> = Vec::with_capacity(vertex_size);
         let mut property_sizes = Vec::with_capacity(vertex_size);
         for vertex in vertices {
-            vertex_ids.push(vertex.id());
-            vertex_label_ids.push(self.encode_key(vertex.label())?);
+            vertex_ids.push(vertex.id() as FfiVertexId);
+            vertex_label_ids.push(self.encode_ffi_label(vertex.label())?);
             let mut properties = self.encode_details(vertex.details())?;
             property_sizes.push(properties.len());
             merge_properties.append(&mut properties);
         }
 
-        unsafe {
+        let state = unsafe {
             add_vertices(
                 self.graph,
                 vertex_size,
@@ -116,18 +125,17 @@ impl WriteGraphProxy for VineyardGraphWriter {
                 vertex_label_ids.as_ptr(),
                 property_sizes.as_ptr(),
                 merge_properties.as_ptr(),
-            );
-        }
-
-        Ok(())
+            )
+        };
+        self.check_state(state, "add_vertices")
     }
 
     fn add_edge(&mut self, edge: Edge) -> GraphProxyResult<()> {
-        let edge_label = self.encode_key(edge.label())?;
-        let src_label = self.encode_key(edge.get_src_label())?;
-        let dst_label = self.encode_key(edge.get_dst_label())?;
+        let edge_label = self.encode_ffi_label(edge.label())?;
+        let src_label = self.encode_ffi_label(edge.get_src_label())?;
+        let dst_label = self.encode_ffi_label(edge.get_dst_label())?;
         let native_properties = self.encode_details(edge.details())?;
-        unsafe {
+        let state = unsafe {
             add_edge(
                 self.graph,
                 edge.id(),
@@ -138,10 +146,10 @@ impl WriteGraphProxy for VineyardGraphWriter {
                 dst_label,
                 native_properties.len(),
                 native_properties.as_ptr(),
-            );
-        }
+            )
+        };
 
-        Ok(())
+        self.check_state(state, "add_edge")
     }
 
     fn add_edges(&mut self, edges: Vec<Edge>) -> GraphProxyResult<()> {
@@ -158,15 +166,15 @@ impl WriteGraphProxy for VineyardGraphWriter {
             edge_ids.push(edge.id());
             src_ids.push(edge.src_id);
             dst_ids.push(edge.dst_id);
-            edge_label_ids.push(self.encode_key(edge.label())?);
-            src_label_ids.push(self.encode_key(edge.get_src_label())?);
-            dst_label_ids.push(self.encode_key(edge.get_dst_label())?);
+            edge_label_ids.push(self.encode_ffi_label(edge.label())?);
+            src_label_ids.push(self.encode_ffi_label(edge.get_src_label())?);
+            dst_label_ids.push(self.encode_ffi_label(edge.get_dst_label())?);
             let mut properties = self.encode_details(edge.details())?;
             property_sizes.push(properties.len());
             merge_properties.append(&mut properties);
         }
 
-        unsafe {
+        let state = unsafe {
             add_edges(
                 self.graph,
                 edge_size,
@@ -178,20 +186,17 @@ impl WriteGraphProxy for VineyardGraphWriter {
                 dst_label_ids.as_ptr(),
                 property_sizes.as_ptr(),
                 merge_properties.as_ptr(),
-            );
-        }
+            )
+        };
 
-        Ok(())
+        self.check_state(state, "add_edges")
     }
 
     fn finish(&mut self) -> GraphProxyResult<()> {
-        unsafe {
-            build_vertices(self.graph);
-        }
-        unsafe {
-            build_edges(self.graph);
-        }
-        Ok(())
+        let build_vertex_state = unsafe { build_vertices(self.graph) };
+        let build_edge_state = unsafe { build_edges(self.graph) };
+        self.check_state(build_vertex_state, "finish_vertex")?;
+        self.check_state(build_edge_state, "finish_edge")
     }
 }
 

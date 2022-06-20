@@ -4,7 +4,6 @@ use std::sync::Arc;
 use dyn_type::object::Primitives;
 use dyn_type::object::RawType;
 use dyn_type::Object;
-
 use ir_common::generated::common as common_pb;
 
 // TODO: a preclude type define in ir-runtime
@@ -32,8 +31,8 @@ pub type SchemaHandle = *const ::libc::c_void;
 /// -1 means failed, 0 means success
 pub type FFIState = i32;
 
-const STATE_SUCCESS: i32 = 0;
-const STATE_FAILED: i32 = -1;
+pub const STATE_SUCCESS: i32 = 0;
+pub const STATE_FAILED: i32 = -1;
 
 #[repr(C)]
 #[derive(Debug)]

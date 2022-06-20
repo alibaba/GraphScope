@@ -6,14 +6,12 @@ use ir_common::generated::common as common_pb;
 use ir_common::generated::schema as schema_pb;
 
 use crate::ffi::{
-    get_schema, GraphHandle, GraphId, PropertyId, PropertyType, SchemaHandle, WriteNativeProperty,
-    FFIState,
+    get_schema, FFIState, GraphHandle, GraphId, PropertyId, PropertyType, SchemaHandle, WriteNativeProperty,
 };
 
-// TODO: `VertexId`/`EdgeId` should be identical to `ID`, and `LabelId` should be identical to `KeyId` in Runtime
-type VertexId = u64;
-type EdgeId = u64;
-type LabelId = i32;
+pub type VertexId = u64;
+pub type EdgeId = u64;
+pub type LabelId = i32;
 
 type GraphBuilder = *const ::libc::c_void;
 type VertexTypeBuilder = *const ::libc::c_void;
@@ -63,7 +61,9 @@ extern "C" {
     fn build_vertex_primary_keys(
         vertex: VertexTypeBuilder, key_count: usize, key_name_list: *const *const ::libc::c_char,
     ) -> FFIState;
-    fn build_edge_relation(edge: EdgeTypeBuilder, src: *const ::libc::c_char, dst: *const ::libc::c_char) -> FFIState;
+    fn build_edge_relation(
+        edge: EdgeTypeBuilder, src: *const ::libc::c_char, dst: *const ::libc::c_char,
+    ) -> FFIState;
     fn finish_build_vertex(vertex: VertexTypeBuilder) -> FFIState;
     fn finish_build_edge(edge: EdgeTypeBuilder) -> FFIState;
     fn finish_build_schema(schema: SchemaHandle);
@@ -83,7 +83,8 @@ pub fn build_vineyard_schema(schema: &schema_pb::Schema) -> SchemaHandle {
             let key = &column.key.as_ref().unwrap();
             let prop_id = key.id;
             let prop_name = CString::new(key.name.to_owned()).unwrap();
-            let prop_type = PropertyType::from_data_type(common_pb::DataType::from_i32(column.data_type).unwrap());
+            let prop_type =
+                PropertyType::from_data_type(common_pb::DataType::from_i32(column.data_type).unwrap());
             unsafe { build_vertex_property(vbuilder, prop_id, prop_name.as_ptr(), prop_type) };
 
             if column.is_primary_key {
@@ -106,7 +107,8 @@ pub fn build_vineyard_schema(schema: &schema_pb::Schema) -> SchemaHandle {
             let key = &column.key.as_ref().unwrap();
             let prop_id = key.id;
             let prop_name = CString::new(key.name.to_owned()).unwrap();
-            let prop_type = PropertyType::from_data_type(common_pb::DataType::from_i32(column.data_type).unwrap());
+            let prop_type =
+                PropertyType::from_data_type(common_pb::DataType::from_i32(column.data_type).unwrap());
             unsafe { build_edge_property(ebuilder, prop_id, prop_name.as_ptr(), prop_type) };
         }
 
