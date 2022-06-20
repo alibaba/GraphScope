@@ -91,12 +91,12 @@ GraphBuilder get_graph_builder(const char* graph_name, const int index);
  *
  * See also `finish_build_schema`
  */
-void initialize_graph_builder(GraphBuilder builder, Schema schema);
+int initialize_graph_builder(GraphBuilder builder, Schema schema);
 
 /**
  * 多个property用array的方式给出，property_size指定property array的size。
  */
-void add_vertex(GraphBuilder builder, VertexId id, LabelId labelid,
+int add_vertex(GraphBuilder builder, VertexId id, LabelId labelid,
                 size_t property_size, Property* properties);
 
 /**
@@ -104,21 +104,21 @@ void add_vertex(GraphBuilder builder, VertexId id, LabelId labelid,
  *
  * 多个property用array的方式给出，property_size指定property array的size。
  */
-void add_edge(GraphBuilder builder, EdgeId edgeid, VertexId src_id,
+int add_edge(GraphBuilder builder, EdgeId edgeid, VertexId src_id,
               VertexId dst_id, LabelId label, LabelId src_label,
               LabelId dst_label, size_t property_size, Property* properties);
 
 /**
  * 参数含义与add_vertex一致，都变为array形式，vertex_size给出当前batch的size。
  */
-void add_vertices(GraphBuilder builder, size_t vertex_size, VertexId* ids,
+int add_vertices(GraphBuilder builder, size_t vertex_size, VertexId* ids,
                   LabelId* labelids, size_t* property_sizes,
                   Property* properties);
 
 /**
  * 参数含义与add_edge一致，都变为array形式，edge_size给出当前batch的size。
  */
-void add_edges(GraphBuilder builder, size_t edge_size, EdgeId* edgeids,
+int add_edges(GraphBuilder builder, size_t edge_size, EdgeId* edgeids,
                VertexId* src_id, VertexId* dst_id, LabelId* labels,
                LabelId* src_labels, LabelId* dst_labels, size_t* property_sizes,
                Property* properties);
@@ -126,11 +126,11 @@ void add_edges(GraphBuilder builder, size_t edge_size, EdgeId* edgeids,
 /**
  * 结束local GraphBuilder的build，点、边写完之后分别调用
  */
-void build(GraphBuilder builder);
+int build(GraphBuilder builder);
 // as an alias due for backwardscompatibility
-void build_vertice(GraphBuilder builder);
-void build_vertices(GraphBuilder builder);
-void build_edges(GraphBuilder builder);
+int build_vertice(GraphBuilder builder);
+int build_vertices(GraphBuilder builder);
+int build_edges(GraphBuilder builder);
 
 /**
  * 析构handle
@@ -178,26 +178,26 @@ VertexTypeBuilder build_vertex_type(Schema schema, LabelId label,
 EdgeTypeBuilder build_edge_type(Schema schema, LabelId label, const char* name);
 
 // 根据属性id、name、属性type在点类型中增加属性
-void build_vertex_property(VertexTypeBuilder vertex, PropertyId id,
+int build_vertex_property(VertexTypeBuilder vertex, PropertyId id,
                            const char* name, PropertyType prop_type);
 
 // 根据属性id、name、属性type在边类型中增加属性
-void build_edge_property(EdgeTypeBuilder edge, PropertyId id, const char* name,
+int build_edge_property(EdgeTypeBuilder edge, PropertyId id, const char* name,
                          PropertyType prop_type);
 
 // 设置点类型的主键列表
-void build_vertex_primary_keys(VertexTypeBuilder vertex, size_t key_count,
+int build_vertex_primary_keys(VertexTypeBuilder vertex, size_t key_count,
                                const char** key_name_list);
 
 // 在边类型中增加一条 <起点类型-->终点类型> 的关系，一个边类型可以增加多条关系
-void build_edge_relation(EdgeTypeBuilder edge, const char* src,
+int build_edge_relation(EdgeTypeBuilder edge, const char* src,
                          const char* dst);
 
 // 完成创建指定的点类型并释放空间
-void finish_build_vertex(VertexTypeBuilder vertex);
+int finish_build_vertex(VertexTypeBuilder vertex);
 
 // 完成创建指定的边类型并释放空间
-void finish_build_edge(EdgeTypeBuilder edge);
+int finish_build_edge(EdgeTypeBuilder edge);
 
 // 完成创建指定的schema并释放空间
 Schema finish_build_schema(Schema schema);

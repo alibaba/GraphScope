@@ -227,7 +227,7 @@ void PropertyTableAppender::Flush(
 
 }  // namespace detail
 
-void PropertyGraphOutStream::Initialize(Schema schema) {
+int PropertyGraphOutStream::Initialize(Schema schema) {
   auto schema_ptr = static_cast<vineyard::MGPropertyGraphSchema *>(schema);
   LOG(INFO) << "Initialize the graph builder using schema ...";
 
@@ -261,9 +261,11 @@ void PropertyGraphOutStream::Initialize(Schema schema) {
   LOG(INFO) << "edge_finished_ = " << edge_finished_ << ", " << this;
 
   LOG(INFO) << "The graph builder is initialized using schema";
+
+  return 0;
 }
 
-void PropertyGraphOutStream::AddVertex(VertexId id, LabelId labelid,
+int PropertyGraphOutStream::AddVertex(VertexId id, LabelId labelid,
                                        size_t property_size,
                                        Property* properties) {
 #ifndef NDEBUG
@@ -288,9 +290,11 @@ void PropertyGraphOutStream::AddVertex(VertexId id, LabelId labelid,
   }
   this->buildTableChunk(batch_chunk, vertex_stream_, 1,
                         vertex_property_id_mapping_[labelid]);
+
+  return 0;
 }
 
-void PropertyGraphOutStream::AddEdge(EdgeId edge_id, VertexId src_id,
+int PropertyGraphOutStream::AddEdge(EdgeId edge_id, VertexId src_id,
                                      VertexId dst_id, LabelId label,
                                      LabelId src_label, LabelId dst_label,
                                      size_t property_size,
@@ -328,9 +332,11 @@ void PropertyGraphOutStream::AddEdge(EdgeId edge_id, VertexId src_id,
                   edge_property_id_mapping_[label], batch_chunk);
   this->buildTableChunk(batch_chunk, edge_stream_, 2,
                         edge_property_id_mapping_[label]);
+
+  return 0;
 }
 
-void PropertyGraphOutStream::AddVertices(size_t vertex_size, VertexId* ids,
+int PropertyGraphOutStream::AddVertices(size_t vertex_size, VertexId* ids,
                                          LabelId* labelids,
                                          size_t* property_sizes,
                                          Property* properties) {
@@ -340,9 +346,10 @@ void PropertyGraphOutStream::AddVertices(size_t vertex_size, VertexId* ids,
               properties + cumsum);
     cumsum += property_sizes[idx];
   }
+  return 0;
 }
 
-void PropertyGraphOutStream::AddEdges(size_t edge_size, EdgeId* edge_ids,
+int PropertyGraphOutStream::AddEdges(size_t edge_size, EdgeId* edge_ids,
                                       VertexId* src_ids, VertexId* dst_ids,
                                       LabelId* labels, LabelId* src_labels,
                                       LabelId* dst_labels,
@@ -355,6 +362,7 @@ void PropertyGraphOutStream::AddEdges(size_t edge_size, EdgeId* edge_ids,
             properties + cumsum);
     cumsum += property_sizes[idx];
   }
+  return 0;
 }
 
 Status PropertyGraphOutStream::Abort() {
@@ -502,10 +510,10 @@ void PropertyGraphOutStream::buildTableChunk(
   }
 }
 
-void PropertyGraphOutStream::FinishAllVertices() {
+int PropertyGraphOutStream::FinishAllVertices() {
   LOG(INFO) << "vertex_finished_ = " << vertex_finished_ << ", " << this;
   if (vertex_finished_) {
-    return;
+    return 0;
   }
   for (auto& vertices : vertex_builders_) {
     auto &builder = vertices.second;
@@ -534,12 +542,14 @@ void PropertyGraphOutStream::FinishAllVertices() {
   LOG(INFO) << "finishing vertex stream: " << ObjectIDToString(vertex_stream_->id());
   VINEYARD_CHECK_OK(vertex_stream_->Finish());
   vertex_finished_ = true;
+
+  return 0;
 }
 
-void PropertyGraphOutStream::FinishAllEdges() {
+int PropertyGraphOutStream::FinishAllEdges() {
   LOG(INFO) << "edge_finished_ = " << edge_finished_ << ", " << this;
   if (edge_finished_) {
-    return;
+    return 0;
   }
   for (auto& edges : edge_builders_) {
     for (auto &subedges: edges.second) {
@@ -561,6 +571,8 @@ void PropertyGraphOutStream::FinishAllEdges() {
   LOG(INFO) << "finishing vertex stream: " << ObjectIDToString(vertex_stream_->id());
   VINEYARD_CHECK_OK(edge_stream_->Finish());
   edge_finished_ = true;
+
+  return 0;
 }
 
 void GlobalPGStream::Construct(const ObjectMeta& meta) {

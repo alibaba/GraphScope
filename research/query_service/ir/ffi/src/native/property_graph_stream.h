@@ -270,19 +270,19 @@ class PropertyGraphOutStream : public Registered<PropertyGraphOutStream> {
     return status;
   }
 
-  void Initialize(Schema schema);
+  int Initialize(Schema schema);
 
-  void AddVertex(VertexId id, LabelId labelid, size_t property_size,
+  int AddVertex(VertexId id, LabelId labelid, size_t property_size,
                  Property* properties);
 
-  void AddEdge(EdgeId edge_id, VertexId src_id, VertexId dst_id, LabelId label,
+  int AddEdge(EdgeId edge_id, VertexId src_id, VertexId dst_id, LabelId label,
                LabelId src_label, LabelId dst_label, size_t property_size,
                Property* properties);
 
-  void AddVertices(size_t vertex_size, VertexId* ids, LabelId* labelids,
+  int AddVertices(size_t vertex_size, VertexId* ids, LabelId* labelids,
                    size_t* property_sizes, Property* properties);
 
-  void AddEdges(size_t edge_size, EdgeId* edge_ids, VertexId* src_ids,
+  int AddEdges(size_t edge_size, EdgeId* edge_ids, VertexId* src_ids,
                 VertexId* dst_ids, LabelId* labels, LabelId* src_labels,
                 LabelId* dst_labels, size_t* property_sizes,
                 Property* properties);
@@ -290,8 +290,8 @@ class PropertyGraphOutStream : public Registered<PropertyGraphOutStream> {
   Status Abort();
 
   Status Finish();
-  void FinishAllVertices();
-  void FinishAllEdges();
+  int FinishAllVertices();
+  int FinishAllEdges();
 
   int stream_index() const { return stream_index_; }
 

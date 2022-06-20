@@ -171,21 +171,21 @@ GraphBuilder get_graph_builder(const char *graph_name, const int index) {
   return new std::shared_ptr<vineyard::PropertyGraphOutStream>(builder);
 }
 
-void initialize_graph_builder(GraphBuilder builder, Schema schema) {
+int initialize_graph_builder(GraphBuilder builder, Schema schema) {
   LOG(INFO) << "initialize graph: builder = " << builder;
   auto stream =
       static_cast<std::shared_ptr<vineyard::PropertyGraphOutStream> *>(builder);
   return (*stream)->Initialize(schema);
 }
 
-void add_vertex(GraphBuilder builder, VertexId id, LabelId labelid,
+int add_vertex(GraphBuilder builder, VertexId id, LabelId labelid,
                 size_t property_size, Property *properties) {
   auto stream =
       static_cast<std::shared_ptr<vineyard::PropertyGraphOutStream> *>(builder);
   return (*stream)->AddVertex(id, labelid, property_size, properties);
 }
 
-void add_edge(GraphBuilder builder, EdgeId edgeid, VertexId src_id,
+int add_edge(GraphBuilder builder, EdgeId edgeid, VertexId src_id,
               VertexId dst_id, LabelId label, LabelId src_label,
               LabelId dst_label, size_t property_size, Property *properties) {
   auto stream =
@@ -194,7 +194,7 @@ void add_edge(GraphBuilder builder, EdgeId edgeid, VertexId src_id,
                             property_size, properties);
 }
 
-void add_vertices(GraphBuilder builder, size_t vertex_size, VertexId *ids,
+int add_vertices(GraphBuilder builder, size_t vertex_size, VertexId *ids,
                   LabelId *labelids, size_t *property_sizes,
                   Property *properties) {
   auto stream =
@@ -203,7 +203,7 @@ void add_vertices(GraphBuilder builder, size_t vertex_size, VertexId *ids,
                                 properties);
 }
 
-void add_edges(GraphBuilder builder, size_t edge_size, EdgeId *edgeids,
+int add_edges(GraphBuilder builder, size_t edge_size, EdgeId *edgeids,
                VertexId *src_ids, VertexId *dst_ids, LabelId *labels,
                LabelId *src_labels, LabelId *dst_labels, size_t *property_sizes,
                Property *properties) {
@@ -214,26 +214,27 @@ void add_edges(GraphBuilder builder, size_t edge_size, EdgeId *edgeids,
                              properties);
 }
 
-void build(GraphBuilder builder) {
+int build(GraphBuilder builder) {
   auto stream =
       static_cast<std::shared_ptr<vineyard::PropertyGraphOutStream> *>(builder);
   VINEYARD_CHECK_OK((*stream)->Finish());
+  return 0;
 }
 
-void build_vertice(GraphBuilder builder) { return build_vertices(builder); }
+int build_vertice(GraphBuilder builder) { return build_vertices(builder); }
 
-void build_vertices(GraphBuilder builder) {
+int build_vertices(GraphBuilder builder) {
   LOG(INFO) << "building vertices: builder = " << builder;
   auto stream =
       static_cast<std::shared_ptr<vineyard::PropertyGraphOutStream> *>(builder);
-  (*stream)->FinishAllVertices();
+  return (*stream)->FinishAllVertices();
 }
 
-void build_edges(GraphBuilder builder) {
+int build_edges(GraphBuilder builder) {
   LOG(INFO) << "building edges: builder = " << builder;
   auto stream =
       static_cast<std::shared_ptr<vineyard::PropertyGraphOutStream> *>(builder);
-  (*stream)->FinishAllEdges();
+  return (*stream)->FinishAllEdges();
 }
 
 void destroy(GraphBuilder builder) {
@@ -350,7 +351,7 @@ static bool entry_has_property(vineyard::Entry *entry, std::string const &name) 
   return false;
 }
 
-void build_vertex_property(VertexTypeBuilder vertex, PropertyId id,
+int build_vertex_property(VertexTypeBuilder vertex, PropertyId id,
                            const char *name, PropertyType prop_type) {
 #ifndef NDEBUG
   LOG(INFO) << "add vertex property: " << id << " -> " << name << ": "
@@ -361,14 +362,15 @@ void build_vertex_property(VertexTypeBuilder vertex, PropertyId id,
   if (entry_has_property(entry_ptr, name)) {
     LOG(WARNING) << "detect duplicate vertex property name, ignored: " << name
                  << ", id = " << id;
-    return;
+    return 0;
   }
   entry_ptr->AddProperty(/* id, */ name,
                          vineyard::detail::PropertyTypeToDataType(prop_type));
   entry_ptr->props_.rbegin()->id = id;
+  return 0;
 }
 
-void build_edge_property(EdgeTypeBuilder edge, PropertyId id, const char *name,
+int build_edge_property(EdgeTypeBuilder edge, PropertyId id, const char *name,
                          PropertyType prop_type) {
 #ifndef NDEBUG
   LOG(INFO) << "add edge property: " << id << " -> " << name << ": "
@@ -379,14 +381,15 @@ void build_edge_property(EdgeTypeBuilder edge, PropertyId id, const char *name,
   if (entry_has_property(entry_ptr, name)) {
     LOG(WARNING) << "detect duplicate edge property name, ignored: " << name
                  << ", id = " << id;
-    return;
+    return 0;
   }
   entry_ptr->AddProperty(/* id, */ name,
                          vineyard::detail::PropertyTypeToDataType(prop_type));
   entry_ptr->props_.rbegin()->id = id;
+  return 0;
 }
 
-void build_vertex_primary_keys(VertexTypeBuilder vertex, size_t key_count,
+int build_vertex_primary_keys(VertexTypeBuilder vertex, size_t key_count,
                                const char **key_name_list) {
 #ifndef NDEBUG
   LOG(INFO) << "add vertex pk: " << key_count;
@@ -398,9 +401,10 @@ void build_vertex_primary_keys(VertexTypeBuilder vertex, size_t key_count,
     names.emplace_back(key_name_list[i]);
   }
   entry_ptr->AddPrimaryKeys(key_count, names);
+  return 0;
 }
 
-void build_edge_relation(EdgeTypeBuilder edge, const char *src,
+int build_edge_relation(EdgeTypeBuilder edge, const char *src,
                          const char *dst) {
 #ifndef NDEBUG
   LOG(INFO) << "add edge relation: " << src << " -> " << dst;
@@ -408,14 +412,17 @@ void build_edge_relation(EdgeTypeBuilder edge, const char *src,
   using entry_t = vineyard::Entry;
   auto entry_ptr = static_cast<entry_t *>(edge);
   entry_ptr->AddRelation(src, dst);
+  return 0;
 }
 
-void finish_build_vertex(VertexTypeBuilder vertex) {
+int finish_build_vertex(VertexTypeBuilder vertex) {
   // do NOTHING since nothing needs to be freed.
+  return 0;
 }
 
-void finish_build_edge(EdgeTypeBuilder edge) {
+int finish_build_edge(EdgeTypeBuilder edge) {
   // do NOTHING since nothing needs to be freed.
+  return 0;
 }
 
 Schema finish_build_schema(Schema schema) {

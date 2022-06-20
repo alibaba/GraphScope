@@ -7,6 +7,7 @@ use ir_common::generated::schema as schema_pb;
 
 use crate::ffi::{
     get_schema, GraphHandle, GraphId, PropertyId, PropertyType, SchemaHandle, WriteNativeProperty,
+    FFIState,
 };
 
 // TODO: `VertexId`/`EdgeId` should be identical to `ID`, and `LabelId` should be identical to `KeyId` in Runtime
@@ -21,27 +22,27 @@ type EdgeTypeBuilder = *const ::libc::c_void;
 extern "C" {
     /// APIs for writing a vineyard graph
     pub fn get_graph_builder(graph_name: *const ::libc::c_char, index: i32) -> GraphBuilder;
-    pub fn initialize_graph_builder(builder: GraphBuilder, schema: SchemaHandle);
+    pub fn initialize_graph_builder(builder: GraphBuilder, schema: SchemaHandle) -> FFIState;
     pub fn add_vertex(
         graph_builder: GraphBuilder, id: VertexId, label_id: LabelId, property_size: usize,
         properties: *const WriteNativeProperty,
-    );
+    ) -> FFIState;
     pub fn add_edge(
         graph_builder: GraphBuilder, edge_id: EdgeId, src_id: VertexId, dst_id: VertexId, label: LabelId,
         src_label: LabelId, dst_label: LabelId, property_size: usize,
         properties: *const WriteNativeProperty,
-    );
+    ) -> FFIState;
     pub fn add_vertices(
         graph_builder: GraphBuilder, vertex_size: usize, ids: *const VertexId, label_ids: *const LabelId,
         property_sizes: *const usize, properties: *const WriteNativeProperty,
-    );
+    ) -> FFIState;
     pub fn add_edges(
         graph_builder: GraphBuilder, edge_size: usize, edge_ids: *const EdgeId, src_ids: *const VertexId,
         dst_ids: *const VertexId, labels: *const LabelId, src_labels: *const LabelId,
         dst_labels: *const LabelId, property_sizes: *const usize, properties: *const WriteNativeProperty,
-    );
-    pub fn build_vertices(builder: GraphBuilder);
-    pub fn build_edges(builder: GraphBuilder);
+    ) -> FFIState;
+    pub fn build_vertices(builder: GraphBuilder) -> FFIState;
+    pub fn build_edges(builder: GraphBuilder) -> FFIState;
     pub fn destroy(builder: GraphBuilder);
 
     /// APIs for building a vineyard graph schema
@@ -55,16 +56,16 @@ extern "C" {
 
     fn build_vertex_property(
         vertex: VertexTypeBuilder, id: PropertyId, name: *const ::libc::c_char, prop_type: PropertyType,
-    );
+    ) -> FFIState;
     fn build_edge_property(
         edge: EdgeTypeBuilder, id: PropertyId, name: *const ::libc::c_char, prop_type: PropertyType,
-    );
+    ) -> FFIState;
     fn build_vertex_primary_keys(
         vertex: VertexTypeBuilder, key_count: usize, key_name_list: *const *const ::libc::c_char,
-    );
-    fn build_edge_relation(edge: EdgeTypeBuilder, src: *const ::libc::c_char, dst: *const ::libc::c_char);
-    fn finish_build_vertex(vertex: VertexTypeBuilder);
-    fn finish_build_edge(edge: EdgeTypeBuilder);
+    ) -> FFIState;
+    fn build_edge_relation(edge: EdgeTypeBuilder, src: *const ::libc::c_char, dst: *const ::libc::c_char) -> FFIState;
+    fn finish_build_vertex(vertex: VertexTypeBuilder) -> FFIState;
+    fn finish_build_edge(edge: EdgeTypeBuilder) -> FFIState;
     fn finish_build_schema(schema: SchemaHandle);
 }
 
@@ -114,7 +115,7 @@ pub fn build_vineyard_schema(schema: &schema_pb::Schema) -> SchemaHandle {
             let src_name = CString::new(src.name.to_owned()).unwrap();
             let dst = &relation.dst.as_ref().unwrap();
             let dst_name = CString::new(dst.name.to_owned()).unwrap();
-            unsafe { build_edge_relation(ebuilder, src_name.as_ptr(), dst_name.as_ptr()) }
+            unsafe { build_edge_relation(ebuilder, src_name.as_ptr(), dst_name.as_ptr()) };
         }
 
         unsafe { finish_build_edge(ebuilder) };

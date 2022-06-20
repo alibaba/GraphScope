@@ -30,7 +30,7 @@ type GetAllEdgesIterator = *const ::libc::c_void;
 pub type SchemaHandle = *const ::libc::c_void;
 
 /// -1 means failed, 0 means success
-type FFIState = i32;
+pub type FFIState = i32;
 
 const STATE_SUCCESS: i32 = 0;
 const STATE_FAILED: i32 = -1;
