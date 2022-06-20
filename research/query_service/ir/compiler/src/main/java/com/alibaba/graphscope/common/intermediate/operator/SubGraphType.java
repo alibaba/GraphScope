@@ -16,8 +16,7 @@
 
 package com.alibaba.graphscope.common.intermediate.operator;
 
-// write subgraph to vineyard or groot
+// write subgraph to vineyard, other graph types are unsupported yet
 public enum SubGraphType {
     VINEYARD,
-    GROOT
 }

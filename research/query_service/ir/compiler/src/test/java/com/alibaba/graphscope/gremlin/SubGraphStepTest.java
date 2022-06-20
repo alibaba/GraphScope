@@ -61,4 +61,27 @@ public class SubGraphStepTest {
                 Collections.singletonList(ArgUtils.asFfiNoneVar()),
                 op2.getDedupKeys().get().applyArg());
     }
+
+    @Test
+    public void g_V_outE_subgraph() {
+        Traversal traversal = g.V().outE().subgraph("graph_1");
+        SubGraphAsUnionOp op =
+                (SubGraphAsUnionOp)
+                        StepTransformFactory.SUBGRAPH_STEP.apply(traversal.asAdmin().getEndStep());
+
+        Assert.assertEquals("graph_1", op.getGraphConfigs().get(SinkGraph.GRAPH_NAME));
+        List<InterOpCollection> actualOps = (List) op.getSubOpCollectionList().get().applyArg();
+
+        // empty opCollection means identity()
+        Assert.assertTrue(actualOps.get(0).unmodifiableCollection().isEmpty());
+
+        // bothV().dedup()
+        GetVOp op1 = (GetVOp) actualOps.get(1).unmodifiableCollection().get(0);
+        Assert.assertEquals(FfiVOpt.Both, op1.getGetVOpt().get().applyArg());
+
+        DedupOp op2 = (DedupOp) actualOps.get(1).unmodifiableCollection().get(1);
+        Assert.assertEquals(
+                Collections.singletonList(ArgUtils.asFfiNoneVar()),
+                op2.getDedupKeys().get().applyArg());
+    }
 }

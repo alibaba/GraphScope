@@ -879,6 +879,6 @@ public class PositiveEvalTest {
 
     @Test
     public void g_E_subgraph_test() {
-        Assert.assertEquals(g.V().subgraph("graph_X"), eval("g.V().subgraph(\"graph_X\")"));
+        Assert.assertEquals(g.E().subgraph("graph_X"), eval("g.E().subgraph(\"graph_X\")"));
     }
 }
