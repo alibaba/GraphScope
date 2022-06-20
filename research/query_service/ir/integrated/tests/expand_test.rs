@@ -32,7 +32,7 @@ mod test {
     use pegasus::result::ResultStream;
     use pegasus::JobConf;
     use runtime::process::operator::flatmap::FlatMapFuncGen;
-    use runtime::process::operator::map::MapFuncGen;
+    use runtime::process::operator::map::{FilterMapFuncGen, MapFuncGen};
     use runtime::process::operator::source::SourceOperator;
     use runtime::process::record::Record;
 
@@ -295,6 +295,46 @@ mod test {
     // g.V().out('knows').has('id',2)
     #[test]
     fn expand_outv_filter_test() {
+        let edge_query_param = query_params(vec!["knows".into()], vec![], None);
+        let expand_opr_pb = pb::EdgeExpand {
+            v_tag: None,
+            direction: 0,
+            params: Some(edge_query_param),
+            is_edge: false,
+            alias: None,
+        };
+        let vertex_query_param = query_params(vec![], vec![], str_to_expr_pb("@.id == 2".to_string()).ok());
+        let auxilia_opr_pb = pb::Auxilia { tag: None, params: Some(vertex_query_param), alias: None };
+
+        let conf = JobConf::new("expand_getv_test");
+        let mut result = pegasus::run(conf, || {
+            let expand = expand_opr_pb.clone();
+            let auxilia = auxilia_opr_pb.clone();
+            |input, output| {
+                let mut stream = input.input_from(source_gen(None))?;
+                let flatmap_func = expand.gen_flat_map().unwrap();
+                stream = stream.flat_map(move |input| flatmap_func.exec(input))?;
+                let filter_map_func = auxilia.gen_filter_map().unwrap();
+                stream = stream.filter_map(move |input| filter_map_func.exec(input))?;
+                stream.sink_into(output)
+            }
+        })
+        .expect("build job failure");
+
+        let mut result_ids = vec![];
+        let v2: DefaultId = LDBCVertexParser::to_global_id(2, 0);
+        let expected_ids = vec![v2];
+        while let Some(Ok(record)) = result.next() {
+            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
+                result_ids.push(element.id() as usize)
+            }
+        }
+        assert_eq!(result_ids, expected_ids)
+    }
+
+    // g.V().out('knows').has('id',2), this is an error case, since we cannot filter on vertices in an EdgeExpand opr.
+    #[test]
+    fn expand_outv_filter_error_test() {
         let query_param =
             query_params(vec!["knows".into()], vec![], str_to_expr_pb("@.id == 2".to_string()).ok());
         let expand_opr_pb = pb::EdgeExpand {
@@ -313,7 +353,7 @@ mod test {
                 result_ids.push(element.id() as usize)
             }
         }
-        assert_eq!(result_ids, expected_ids)
+        assert_ne!(result_ids, expected_ids)
     }
 
     // g.V().outE('knows').inV()
