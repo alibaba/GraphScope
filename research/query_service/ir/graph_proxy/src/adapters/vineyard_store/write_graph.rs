@@ -16,9 +16,9 @@
 use std::ffi::CString;
 
 use dyn_type::{Object, Primitives};
-use ffi::ffi::*;
-use ffi::ffi::{LabelId as FfiLabelId, VertexId as FfiVertexId};
-use ffi::graph_builder_ffi::*;
+use ffi::read_ffi::*;
+use ffi::read_ffi::{LabelId as FfiLabelId, VertexId as FfiVertexId};
+use ffi::write_ffi::*;
 use ir_common::generated::common as common_pb;
 use ir_common::generated::schema as schema_pb;
 use ir_common::{KeyId, NameOrId};
@@ -66,55 +66,11 @@ impl VineyardGraphWriter {
         if let Some(mut properties) = properties {
             for (prop_key, prop_val) in properties.drain() {
                 let prop_id = self.encode_key(Some(&prop_key))?;
-                let native_property = self.to_ffi_native_property(prop_id, prop_val);
+                let native_property = WriteNativeProperty::from_object(prop_id, prop_val);
                 native_properties.push(native_property);
             }
         }
         Ok(native_properties)
-    }
-
-    fn to_ffi_native_property(&self, prop_id: KeyId, property: Object) -> WriteNativeProperty {
-        let (prop_type, mut data, data_len) = {
-            match property {
-                Object::Primitive(Primitives::Byte(v)) => {
-                    let u = PropertyUnion { c: v as u8 };
-                    (PropertyType::Char, vec![], unsafe { u.l })
-                }
-                Object::Primitive(Primitives::Integer(v)) => {
-                    let u = PropertyUnion { i: v };
-                    (PropertyType::Int, vec![], unsafe { u.l })
-                }
-                Object::Primitive(Primitives::Long(v)) => {
-                    let u = PropertyUnion { l: v };
-                    (PropertyType::Long, vec![], unsafe { u.l })
-                }
-                Object::Primitive(Primitives::ULLong(v)) => {
-                    let u = PropertyUnion { l: v as i64 };
-                    (PropertyType::Long, vec![], unsafe { u.l })
-                }
-                Object::Primitive(Primitives::Float(v)) => {
-                    let u = PropertyUnion { d: v };
-                    (PropertyType::Double, vec![], unsafe { u.l })
-                }
-                Object::String(ref v) => {
-                    let vecdata = v.to_owned().into_bytes();
-                    let len = vecdata.len() as i64;
-                    (PropertyType::String, vecdata, len)
-                }
-                Object::Blob(ref v) => {
-                    let vecdata = v.to_vec();
-                    let len = vecdata.len() as i64;
-                    (PropertyType::Bytes, vecdata, len)
-                }
-                _ => {
-                    panic!("Unsupported object type: {:?}", property)
-                }
-            }
-        };
-        data.shrink_to_fit();
-        let data_ptr = data.as_ptr();
-        ::std::mem::forget(data);
-        WriteNativeProperty::new(prop_id as i32, prop_type, data_ptr, data_len)
     }
 }
 

@@ -2,6 +2,7 @@ use dyn_type::object::Primitives;
 use dyn_type::object::RawType;
 use dyn_type::Object;
 use ir_common::generated::common as common_pb;
+use ir_common::KeyId;
 
 pub type VertexId = u64;
 pub type LabelId = i32;
@@ -229,14 +230,14 @@ impl Drop for NativeProperty {
 }
 
 #[repr(C)]
-pub union PropertyUnion {
-    pub b: bool,
-    pub c: u8,
-    pub s: i16,
-    pub i: i32,
-    pub l: i64,
-    pub f: f32,
-    pub d: f64,
+union PropertyUnion {
+    b: bool,
+    c: u8,
+    s: i16,
+    i: i32,
+    l: i64,
+    f: f32,
+    d: f64,
 }
 
 impl WriteNativeProperty {
@@ -244,8 +245,48 @@ impl WriteNativeProperty {
         WriteNativeProperty { id: 0, r#type: PropertyType::Int, data: std::ptr::null(), len: 0 }
     }
 
-    pub fn new(id: i32, r#type: PropertyType, data: *const u8, len: i64) -> Self {
-        WriteNativeProperty { id, r#type, data, len }
+    pub fn from_object(prop_id: KeyId, property: Object) -> Self {
+        let (prop_type, mut data, data_len) = {
+            match property {
+                Object::Primitive(Primitives::Byte(v)) => {
+                    let u = PropertyUnion { c: v as u8 };
+                    (PropertyType::Char, vec![], unsafe { u.l })
+                }
+                Object::Primitive(Primitives::Integer(v)) => {
+                    let u = PropertyUnion { i: v };
+                    (PropertyType::Int, vec![], unsafe { u.l })
+                }
+                Object::Primitive(Primitives::Long(v)) => {
+                    let u = PropertyUnion { l: v };
+                    (PropertyType::Long, vec![], unsafe { u.l })
+                }
+                Object::Primitive(Primitives::ULLong(v)) => {
+                    let u = PropertyUnion { l: v as i64 };
+                    (PropertyType::Long, vec![], unsafe { u.l })
+                }
+                Object::Primitive(Primitives::Float(v)) => {
+                    let u = PropertyUnion { d: v };
+                    (PropertyType::Double, vec![], unsafe { u.l })
+                }
+                Object::String(ref v) => {
+                    let vecdata = v.to_owned().into_bytes();
+                    let len = vecdata.len() as i64;
+                    (PropertyType::String, vecdata, len)
+                }
+                Object::Blob(ref v) => {
+                    let vecdata = v.to_vec();
+                    let len = vecdata.len() as i64;
+                    (PropertyType::Bytes, vecdata, len)
+                }
+                _ => {
+                    panic!("Unsupported object type: {:?}", property)
+                }
+            }
+        };
+        data.shrink_to_fit();
+        let data_ptr = data.as_ptr();
+        ::std::mem::forget(data);
+        WriteNativeProperty::new(prop_id as i32, prop_type, data_ptr, data_len)
     }
 
     fn as_ptr(&self) -> *const Self {

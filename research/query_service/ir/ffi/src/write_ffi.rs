@@ -1,4 +1,4 @@
-use crate::ffi::{
+use crate::read_ffi::{
     EdgeId, FFIState, LabelId, PropertyId, PropertyType, SchemaHandle, VertexId, WriteNativeProperty,
 };
 

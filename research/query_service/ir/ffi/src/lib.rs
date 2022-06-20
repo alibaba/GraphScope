@@ -1,8 +1,8 @@
 #[macro_use]
 extern crate log;
 
-pub mod ffi;
-pub mod graph_builder_ffi;
+pub mod read_ffi;
+pub mod write_ffi;
 
 #[cfg(test)]
 mod tests {
