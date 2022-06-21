@@ -250,6 +250,12 @@ public enum GremlinResultParserFactory implements GremlinResultParser {
                 throw new GremlinResultParserException("columns should not be empty");
             }
         }
+    },
+    SUBGRAPH {
+        @Override
+        public Object parseFrom(IrResult.Results results) {
+            return EmptyValue.INSTANCE;
+        }
     };
 
     private static Logger logger = LoggerFactory.getLogger(GremlinResultParserFactory.class);

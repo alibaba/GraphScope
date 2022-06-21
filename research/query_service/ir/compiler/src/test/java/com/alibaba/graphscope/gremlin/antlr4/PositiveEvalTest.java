@@ -871,4 +871,14 @@ public class PositiveEvalTest {
         EdgeVertexStep endVStep = (EdgeVertexStep) traversal.asAdmin().getEndStep();
         Assert.assertEquals(Direction.IN, endVStep.getDirection());
     }
+
+    @Test
+    public void g_E_bothV_test() {
+        Assert.assertEquals(g.E().bothV(), eval("g.E().bothV()"));
+    }
+
+    @Test
+    public void g_E_subgraph_test() {
+        Assert.assertEquals(g.E().subgraph("graph_X"), eval("g.E().subgraph(\"graph_X\")"));
+    }
 }

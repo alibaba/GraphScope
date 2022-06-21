@@ -14,27 +14,9 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.common.jna.type;
+package com.alibaba.graphscope.common.intermediate.operator;
 
-import com.alibaba.graphscope.common.jna.IntEnum;
-
-public enum FfiVOpt implements IntEnum<FfiVOpt> {
-    Start,
-    End,
-    Other,
-    Both;
-
-    @Override
-    public int getInt() {
-        return this.ordinal();
-    }
-
-    @Override
-    public FfiVOpt getEnum(int i) {
-        FfiVOpt opts[] = values();
-        if (i < opts.length && i >= 0) {
-            return opts[i];
-        }
-        return null;
-    }
+// write subgraph to vineyard, other graph types are unsupported yet
+public enum SubGraphType {
+    VINEYARD,
 }

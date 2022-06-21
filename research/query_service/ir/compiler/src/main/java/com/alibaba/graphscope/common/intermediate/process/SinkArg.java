@@ -16,28 +16,5 @@
 
 package com.alibaba.graphscope.common.intermediate.process;
 
-import com.alibaba.graphscope.common.jna.type.FfiNameOrId;
-
-import java.util.*;
-
-public class SinkArg {
-    private List<FfiNameOrId.ByValue> columnNames;
-
-    public SinkArg() {
-        columnNames = new ArrayList<>();
-    }
-
-    public List<FfiNameOrId.ByValue> getColumnNames() {
-        return Collections.unmodifiableList(columnNames);
-    }
-
-    public void addColumnName(FfiNameOrId.ByValue columnName) {
-        this.columnNames.add(columnName);
-    }
-
-    public void dedup() {
-        Set<FfiNameOrId.ByValue> uniqueColumnNames = new HashSet<>(columnNames);
-        columnNames.clear();
-        columnNames.addAll(uniqueColumnNames);
-    }
-}
+// parameter in SinkOp, indicating SinkGraph or SinkByColumns
+public interface SinkArg {}
