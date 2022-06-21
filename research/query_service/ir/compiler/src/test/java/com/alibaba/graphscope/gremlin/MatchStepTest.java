@@ -137,7 +137,7 @@ public class MatchStepTest {
                 "@.~label && @.~label == \"person\"", selectOp.getPredicate().get().applyArg());
     }
 
-    // fuse outV + has("name", "marko")
+    // outV + has("name", "marko") -> getV + filter
     @Test
     public void g_V_match_as_a_outE_outV_hasProp_as_b_test() {
         Traversal traversal = g.V().match(__.as("a").outE().outV().has("name", "marko").as("b"));
