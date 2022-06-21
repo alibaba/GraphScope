@@ -19,6 +19,7 @@ use std::sync::Arc;
 
 use dyn_type::Object;
 use graph_proxy::apis::{get_graph, Edge, Partitioner, QueryParams, Vertex, ID};
+use graph_proxy::GraphProxyError;
 use ir_common::error::{ParsePbError, ParsePbResult};
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::{KeyId, NameOrId};
@@ -103,11 +104,15 @@ impl SourceOperator {
 
     /// Assign partition_list for each worker to call scan_vertex
     fn set_partitions(&mut self, job_workers: usize, worker_index: u32, partitioner: Arc<dyn Partitioner>) {
-        if let Ok(partition_list) = partitioner.get_worker_partitions(job_workers, worker_index) {
-            debug!("Assign worker {:?} to scan partition list: {:?}", worker_index, partition_list);
-            self.query_params.partitions = partition_list;
-        } else {
-            debug!("get partition list failed in graph_partition_manager in source op");
+        let res = partitioner.get_worker_partitions(job_workers, worker_index);
+        match res {
+            Ok(partition_list) => {
+                debug!("Assign worker {:?} to scan partition list: {:?}", worker_index, partition_list);
+                self.query_params.partitions = partition_list;
+            }
+            Err(err) => {
+                debug!("get partition list failed in graph_partition_manager in source op {:?}", err);
+            }
         }
     }
 }
