@@ -68,7 +68,8 @@ public class VertexStepTest {
         Assert.assertEquals(2, ops.size() - 1);
         ExpandOp expandOp = (ExpandOp) ops.get(1);
         Assert.assertEquals(true, expandOp.getIsEdge().get().applyArg());
-        Assert.assertEquals(Arrays.asList(ArgUtils.asFfiTag("knows")), expandOp.getParams().get().getTables());
+        Assert.assertEquals(
+                Arrays.asList(ArgUtils.asFfiTag("knows")), expandOp.getParams().get().getTables());
     }
 
     // fuse outE + has("name", ...)
@@ -79,7 +80,8 @@ public class VertexStepTest {
         Assert.assertEquals(2, ops.size() - 1);
         ExpandOp expandOp = (ExpandOp) ops.get(1);
         Assert.assertEquals(true, expandOp.getIsEdge().get().applyArg());
-        Assert.assertEquals("@.weight && @.weight == 1.0", expandOp.getParams().get().getPredicate().get());
+        Assert.assertEquals(
+                "@.weight && @.weight == 1.0", expandOp.getParams().get().getPredicate().get());
     }
 
     // fuse outE + has("name", ...) + inV
@@ -90,7 +92,8 @@ public class VertexStepTest {
         Assert.assertEquals(2, ops.size() - 1);
         ExpandOp expandOp = (ExpandOp) ops.get(1);
         Assert.assertEquals(false, expandOp.getIsEdge().get().applyArg());
-        Assert.assertEquals("@.weight && @.weight == 1.0", expandOp.getParams().get().getPredicate().get());
+        Assert.assertEquals(
+                "@.weight && @.weight == 1.0", expandOp.getParams().get().getPredicate().get());
     }
 
     // fuse outE + has("name", ...) + inV
@@ -102,10 +105,12 @@ public class VertexStepTest {
 
         ExpandOp expandOp = (ExpandOp) ops.get(1);
         Assert.assertEquals(false, expandOp.getIsEdge().get().applyArg());
-        Assert.assertEquals("@.weight && @.weight == 1.0", expandOp.getParams().get().getPredicate().get());
+        Assert.assertEquals(
+                "@.weight && @.weight == 1.0", expandOp.getParams().get().getPredicate().get());
 
         SelectOp selectOp = (SelectOp) ops.get(2);
-        Assert.assertEquals("@.name && @.name == \"marko\"", selectOp.getPredicate().get().applyArg());
+        Assert.assertEquals(
+                "@.name && @.name == \"marko\"", selectOp.getPredicate().get().applyArg());
     }
 
     // fuse outE + has("name", ...)
@@ -118,7 +123,8 @@ public class VertexStepTest {
 
         ExpandOp expandOp = (ExpandOp) ops.get(1);
         Assert.assertEquals(true, expandOp.getIsEdge().get().applyArg());
-        Assert.assertEquals("@.weight && @.weight == 1.0", expandOp.getParams().get().getPredicate().get());
+        Assert.assertEquals(
+                "@.weight && @.weight == 1.0", expandOp.getParams().get().getPredicate().get());
         Assert.assertEquals(ArgUtils.asFfiAlias("a", true), expandOp.getAlias().get().applyArg());
 
         GetVOp getVOp = (GetVOp) ops.get(2);
@@ -129,20 +135,23 @@ public class VertexStepTest {
     // inV().has(...) -> getV + filter
     @Test
     public void g_V_outE_hasProp_as_inV_hasProp() {
-        List<InterOpBase> ops = getOps(g.V().outE().has("weight", 1.0).as("a").inV().has("name", "marko"));
+        List<InterOpBase> ops =
+                getOps(g.V().outE().has("weight", 1.0).as("a").inV().has("name", "marko"));
         // source + expand + getV + filter + sink
         Assert.assertEquals(4, ops.size() - 1);
 
         ExpandOp expandOp = (ExpandOp) ops.get(1);
         Assert.assertEquals(true, expandOp.getIsEdge().get().applyArg());
-        Assert.assertEquals("@.weight && @.weight == 1.0", expandOp.getParams().get().getPredicate().get());
+        Assert.assertEquals(
+                "@.weight && @.weight == 1.0", expandOp.getParams().get().getPredicate().get());
         Assert.assertEquals(ArgUtils.asFfiAlias("a", true), expandOp.getAlias().get().applyArg());
 
         GetVOp op = (GetVOp) ops.get(2);
         Assert.assertEquals(FfiVOpt.End, op.getGetVOpt().get().applyArg());
 
         SelectOp selectOp = (SelectOp) ops.get(3);
-        Assert.assertEquals("@.name && @.name == \"marko\"", selectOp.getPredicate().get().applyArg());
+        Assert.assertEquals(
+                "@.name && @.name == \"marko\"", selectOp.getPredicate().get().applyArg());
     }
 
     // out + hasLabel -> expand + filter
@@ -156,7 +165,8 @@ public class VertexStepTest {
         Assert.assertEquals(false, expandOp.getIsEdge().get().applyArg());
 
         SelectOp selectOp = (SelectOp) ops.get(2);
-        Assert.assertEquals("@.~label && @.~label == \"person\"", selectOp.getPredicate().get().applyArg());
+        Assert.assertEquals(
+                "@.~label && @.~label == \"person\"", selectOp.getPredicate().get().applyArg());
     }
 
     // out + has("name", ...) -> expand + filter
@@ -170,7 +180,8 @@ public class VertexStepTest {
         Assert.assertEquals(false, expandOp.getIsEdge().get().applyArg());
 
         SelectOp selectOp = (SelectOp) ops.get(2);
-        Assert.assertEquals("@.name && @.name == \"marko\"", selectOp.getPredicate().get().applyArg());
+        Assert.assertEquals(
+                "@.name && @.name == \"marko\"", selectOp.getPredicate().get().applyArg());
     }
 
     public static List<InterOpBase> getOps(Traversal traversal) {

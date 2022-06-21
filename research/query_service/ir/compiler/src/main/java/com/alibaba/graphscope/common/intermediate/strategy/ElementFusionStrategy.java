@@ -27,8 +27,7 @@ import java.util.List;
 public class ElementFusionStrategy implements InterOpStrategy {
     public static ElementFusionStrategy INSTANCE = new ElementFusionStrategy();
 
-    private ElementFusionStrategy() {
-    }
+    private ElementFusionStrategy() {}
 
     @Override
     public void apply(InterOpCollection opCollection) {
@@ -50,7 +49,8 @@ public class ElementFusionStrategy implements InterOpStrategy {
                 opCollection.removeInterOp(i + 1);
             }
             // fuse outE + inV
-            if (isExpandEdge(cur) && i + 1 < original.size()
+            if (isExpandEdge(cur)
+                    && i + 1 < original.size()
                     && (next = original.get(i + 1)) instanceof GetVOp
                     && canFuseExpandWithGetV((ExpandOp) cur, (GetVOp) next)) {
                 ((ExpandOp) cur).setEdgeOpt(new OpArg(false));
@@ -78,23 +78,28 @@ public class ElementFusionStrategy implements InterOpStrategy {
     }
 
     private boolean isExpandEdge(InterOpBase op) {
-        return op instanceof ExpandOp && (Boolean) ((ExpandOp) op).getIsEdge().get().applyArg() == true;
+        return op instanceof ExpandOp
+                && (Boolean) ((ExpandOp) op).getIsEdge().get().applyArg() == true;
     }
 
     private boolean canFuseExpandWithGetV(ExpandOp expandOp, GetVOp getVOp) {
         FfiDirection direction = (FfiDirection) expandOp.getDirection().get().applyArg();
         FfiVOpt vOpt = (FfiVOpt) getVOp.getGetVOpt().get().applyArg();
         return (direction == FfiDirection.Out && vOpt == FfiVOpt.End // outE().inV()
-                || direction == FfiDirection.In && vOpt == FfiVOpt.Start // inE().outV()
-                || direction == FfiDirection.Both && vOpt == FfiVOpt.Both) // bothE().bothV()
+                        || direction == FfiDirection.In && vOpt == FfiVOpt.Start // inE().outV()
+                        || direction == FfiDirection.Both
+                                && vOpt == FfiVOpt.Both) // bothE().bothV()
                 && !isCurNeedAlias(expandOp, getVOp);
     }
 
     // outE().as("a").inV().as("b")
     // expand need a alias for latter attachment and cannot be fused with the next operator
     private boolean isCurNeedAlias(InterOpBase cur, InterOpBase next) {
-        return cur.getAlias().isPresent() &&
-                (!next.getAlias().isPresent()
-                        || !cur.getAlias().get().applyArg().equals(next.getAlias().get().applyArg()));
+        return cur.getAlias().isPresent()
+                && (!next.getAlias().isPresent()
+                        || !cur.getAlias()
+                                .get()
+                                .applyArg()
+                                .equals(next.getAlias().get().applyArg()));
     }
 }

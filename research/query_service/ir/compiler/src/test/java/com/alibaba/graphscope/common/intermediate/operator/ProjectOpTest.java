@@ -28,7 +28,6 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
@@ -36,19 +35,19 @@ import java.util.function.Function;
 public class ProjectOpTest {
     private IrPlan irPlan;
 
-//    @Test
-//    public void projectKeyTest() throws IOException {
-//        ProjectOp op = new ProjectOp();
-//
-//        String projectExpr = "@.name";
-//        FfiAlias.ByValue alias = ArgUtils.asFfiAlias("name", false);
-//        List<Pair> exprWithAlias = Arrays.asList(Pair.with(projectExpr, alias));
-//
-//        op.setExprWithAlias(new OpArg(exprWithAlias, Function.identity()));
-//        irPlan = DedupOpTest.getTestIrPlan(op);
-//        Assert.assertEquals(
-//                FileUtils.readJsonFromResource("project_key.json"), irPlan.getPlanAsJson());
-//    }
+    //    @Test
+    //    public void projectKeyTest() throws IOException {
+    //        ProjectOp op = new ProjectOp();
+    //
+    //        String projectExpr = "@.name";
+    //        FfiAlias.ByValue alias = ArgUtils.asFfiAlias("name", false);
+    //        List<Pair> exprWithAlias = Arrays.asList(Pair.with(projectExpr, alias));
+    //
+    //        op.setExprWithAlias(new OpArg(exprWithAlias, Function.identity()));
+    //        irPlan = DedupOpTest.getTestIrPlan(op);
+    //        Assert.assertEquals(
+    //                FileUtils.readJsonFromResource("project_key.json"), irPlan.getPlanAsJson());
+    //    }
 
     @Test
     public void projectTagKeyTest() throws IOException {
