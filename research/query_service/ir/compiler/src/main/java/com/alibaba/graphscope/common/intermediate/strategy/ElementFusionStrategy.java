@@ -60,23 +60,6 @@ public class ElementFusionStrategy implements InterOpStrategy {
                 opCollection.removeInterOp(i + 1);
             }
         }
-        for (int i = original.size() - 2; i >= 0; --i) {
-            InterOpBase cur = original.get(i), next = original.get(i + 1);
-            // inV + filter
-            if (cur instanceof GetVOp
-                    && next instanceof SelectOp
-                    && ((SelectOp) next).getType() == SelectOp.FilterType.HAS) {
-                QueryParams params = ((GetVOp) cur).getParams().get();
-                String fuse = fusePredicates(params, (SelectOp) next);
-                if (fuse != null && !fuse.isEmpty()) {
-                    params.setPredicate(fuse);
-                }
-                if (next.getAlias().isPresent()) {
-                    cur.setAlias(next.getAlias().get());
-                }
-                opCollection.removeInterOp(i + 1);
-            }
-        }
     }
 
     private String fusePredicates(QueryParams params, SelectOp selectOp) {

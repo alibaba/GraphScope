@@ -126,21 +126,23 @@ public class VertexStepTest {
     }
 
     // fuse outE + has("name", ...)
-    // inV represent as getV and fuse getV + filter
+    // inV().has(...) -> getV + filter
     @Test
     public void g_V_outE_hasProp_as_inV_hasProp() {
         List<InterOpBase> ops = getOps(g.V().outE().has("weight", 1.0).as("a").inV().has("name", "marko"));
-        // source + expand + getV + sink
-        Assert.assertEquals(3, ops.size() - 1);
+        // source + expand + getV + filter + sink
+        Assert.assertEquals(4, ops.size() - 1);
 
         ExpandOp expandOp = (ExpandOp) ops.get(1);
         Assert.assertEquals(true, expandOp.getIsEdge().get().applyArg());
         Assert.assertEquals("@.weight && @.weight == 1.0", expandOp.getParams().get().getPredicate().get());
         Assert.assertEquals(ArgUtils.asFfiAlias("a", true), expandOp.getAlias().get().applyArg());
 
-        GetVOp getVOp = (GetVOp) ops.get(2);
-        Assert.assertEquals(FfiVOpt.End, getVOp.getGetVOpt().get().applyArg());
-        Assert.assertEquals("@.name && @.name == \"marko\"", getVOp.getParams().get().getPredicate().get());
+        GetVOp op = (GetVOp) ops.get(2);
+        Assert.assertEquals(FfiVOpt.End, op.getGetVOpt().get().applyArg());
+
+        SelectOp selectOp = (SelectOp) ops.get(3);
+        Assert.assertEquals("@.name && @.name == \"marko\"", selectOp.getPredicate().get().applyArg());
     }
 
     // out + hasLabel -> expand + filter
