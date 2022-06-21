@@ -43,6 +43,7 @@ gaia_pegasus = { path = "../../../research/engine/pegasus/pegasus", package = "p
 pegasus_network = { path = "../../../research/engine/pegasus/network" }
 pegasus_server = { path = "../../../research/engine/pegasus/server" }
 runtime_integration =  { path = "../../../research/query_service/ir/integrated" }
+ffi = { path = "../../../research/query_service/ir/ffi" }
 
 [dev-dependencies]
 env_logger = "0.6"
