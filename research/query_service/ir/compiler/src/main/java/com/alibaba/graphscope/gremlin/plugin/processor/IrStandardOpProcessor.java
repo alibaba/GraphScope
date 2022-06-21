@@ -116,7 +116,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         Bindings bindings = new SimpleBindings();
 
         GremlinExecutor.LifeCycle lifeCycle =
-                createLifeCycle(ctx, gremlinExecutorSupplier, bindingsSupplier);
+                createLifeCycle(ctx, gremlinExecutorSupplier, bindingsSupplier, script);
 
         try {
             CompletableFuture<Object> evalFuture =
@@ -235,7 +235,8 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
     protected GremlinExecutor.LifeCycle createLifeCycle(
             Context ctx,
             Supplier<GremlinExecutor> gremlinExecutorSupplier,
-            BindingSupplier bindingsSupplier) {
+            BindingSupplier bindingsSupplier,
+            String script) {
         final RequestMessage msg = ctx.getRequestMessage();
         final Settings settings = ctx.getSettings();
         final Map<String, Object> args = msg.getArgs();
@@ -271,7 +272,8 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                                     processTraversal(
                                             traversal,
                                             new GremlinResultProcessor(
-                                                    ctx, GremlinResultAnalyzer.analyze(traversal)));
+                                                    ctx, GremlinResultAnalyzer.analyze(traversal)),
+                                            script);
                                 }
                             } catch (InvalidProtocolBufferException e) {
                                 throw new RuntimeException(e);
@@ -282,7 +284,9 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                 .create();
     }
 
-    protected void processTraversal(Traversal traversal, ResultProcessor resultProcessor)
+    // add script argument to print with ir plan
+    protected void processTraversal(
+            Traversal traversal, ResultProcessor resultProcessor, String script)
             throws InvalidProtocolBufferException, IOException, RuntimeException {
         IrMeta irMeta = metaQueryCallback.beforeExec();
 
@@ -292,14 +296,19 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         // add sink operator
         InterOpCollection.process(opCollection);
 
+        long jobId = JOB_ID_COUNTER.incrementAndGet();
+        String jobName = "ir_plan_" + jobId;
+
         IrPlan irPlan = new IrPlan(irMeta, opCollection);
-        logger.info("{}", irPlan.getPlanAsJson());
+        // print script and jobName with ir plan
+        logger.info(
+                "gremlin query \"{}\", job conf name \"{}\", ir plan {}",
+                script,
+                jobName,
+                irPlan.getPlanAsJson());
 
         byte[] physicalPlanBytes = irPlan.toPhysicalBytes(configs);
         irPlan.close();
-
-        long jobId = JOB_ID_COUNTER.incrementAndGet();
-        String jobName = "ir_plan_" + jobId;
 
         PegasusClient.JobRequest request = PegasusClient.JobRequest.parseFrom(physicalPlanBytes);
         PegasusClient.JobConfig jobConfig =
