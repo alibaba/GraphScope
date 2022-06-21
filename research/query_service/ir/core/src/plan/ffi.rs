@@ -1724,7 +1724,8 @@ mod sink {
     pub extern "C" fn init_sink_graph_operator(graph_name: *const c_char) -> *const c_void {
         let graph_name = cstr_to_string(graph_name).expect("C String to Rust String error!");
         let sink_opr = Box::new(pb::Sink {
-            tags: vec![],
+            // sink head by default
+            tags: vec![common_pb::NameOrIdKey { key: None }],
             sink_target: Some(pb::sink::SinkTarget {
                 inner: Some(pb::sink::sink_target::Inner::SinkVineyard(pb::SinkVineyard {
                     graph_name,
