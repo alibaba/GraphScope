@@ -26,6 +26,7 @@ public abstract class DataCommand {
     protected String metaData;
     protected String username;
     protected String password;
+    protected String uniquePath;
 
     protected final String metaFileName = "META";
     protected final String OSS_ENDPOINT = "oss.endpoint";
@@ -36,8 +37,9 @@ public abstract class DataCommand {
     protected final String USER_NAME = "auth.username";
     protected final String PASS_WORD = "auth.password";
 
-    public DataCommand(String dataPath, boolean isFromOSS) throws IOException {
+    public DataCommand(String dataPath, boolean isFromOSS, String uniquePath) throws IOException {
         this.dataPath = dataPath;
+        this.uniquePath = uniquePath;
         initialize(isFromOSS);
     }
 
@@ -60,15 +62,15 @@ public abstract class DataCommand {
             dataPath =
                     "oss://"
                             + Paths.get(
-                                            Paths.get(ossEndPoint, ossBucketName).toString(),
-                                            ossObjectName)
-                                    .toString();
+                                    Paths.get(ossEndPoint, ossBucketName).toString(),
+                                    ossObjectName);
 
             Map<String, String> ossInfo = new HashMap<String, String>();
             ossInfo.put(OSS_ENDPOINT, ossEndPoint);
             ossInfo.put(OSS_ACCESS_ID, ossAccessId);
             ossInfo.put(OSS_ACCESS_KEY, ossAccessKey);
             OSSFileObj ossFileObj = new OSSFileObj(ossInfo);
+            ossObjectName = Paths.get(ossObjectName, uniquePath).toString();
 
             this.metaData = ossFileObj.readBuffer(ossBucketName, ossObjectName, metaFileName);
             ossFileObj.close();
@@ -88,6 +90,7 @@ public abstract class DataCommand {
                 objectMapper.readValue(
                         metaMap.get("mappings"),
                         new TypeReference<Map<String, ColumnMappingInfo>>() {});
+        this.uniquePath = metaMap.get("unique_path");
     }
 
     public abstract void run();

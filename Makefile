@@ -38,6 +38,10 @@ graphscope-image:
 jupyter-image:
 	$(MAKE) -C $(WORKING_DIR)/k8s/ jupyter-image VERSION=$(VERSION)
 
+.PHONY: dataset-image
+dataset-image:
+	$(MAKE) -C $(WORKING_DIR)/k8s/ dataset-image VERSION=$(VERSION)
+
 # bulld graphscope image from source code without wheel package
 .PHONY: graphscope-dev-image
 graphscope-dev-image:

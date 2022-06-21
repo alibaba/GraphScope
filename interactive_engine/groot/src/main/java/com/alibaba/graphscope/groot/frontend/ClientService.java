@@ -114,12 +114,13 @@ public class ClientService extends ClientGrpc.ClientImplBase {
             StreamObserver<CommitDataLoadResponse> responseObserver) {
         DdlRequestBatch.Builder builder = DdlRequestBatch.newBuilder();
         Map<Long, DataLoadTargetPb> tableToTarget = request.getTableToTargetMap();
+        String path = request.getPath();
         tableToTarget.forEach(
                 (tableId, targetPb) -> {
                     DataLoadTarget dataLoadTarget = DataLoadTarget.parseProto(targetPb);
                     builder.addDdlRequest(
                             new com.alibaba.graphscope.groot.schema.request.CommitDataLoadRequest(
-                                    dataLoadTarget, tableId));
+                                    dataLoadTarget, tableId, path));
                 });
         DdlRequestBatch batch = builder.build();
         try {
@@ -360,6 +361,46 @@ public class ClientService extends ClientGrpc.ClientImplBase {
                                 responseObserver.onError(t);
                             } else {
                                 responseObserver.onNext(IngestDataResponse.newBuilder().build());
+                                responseObserver.onCompleted();
+                            }
+                        }
+                    });
+        }
+    }
+
+    @Override
+    public void clearIngest(
+            ClearIngestRequest request, StreamObserver<ClearIngestResponse> responseObserver) {
+        logger.info("clear ingest data");
+        int storeCount = this.metaService.getStoreCount();
+        AtomicInteger counter = new AtomicInteger(storeCount);
+        AtomicBoolean finished = new AtomicBoolean(false);
+        for (int i = 0; i < storeCount; i++) {
+            this.storeIngestor.clearIngest(
+                    i,
+                    new CompletionCallback<Void>() {
+                        @Override
+                        public void onCompleted(Void res) {
+                            if (!finished.get() && counter.decrementAndGet() == 0) {
+                                finish(null);
+                            }
+                        }
+
+                        @Override
+                        public void onError(Throwable t) {
+                            logger.error("failed clear ingest", t);
+                            finish(t);
+                        }
+
+                        private void finish(Throwable t) {
+                            if (finished.getAndSet(true)) {
+                                return;
+                            }
+                            logger.info("ingest finished. Error [" + t + "]");
+                            if (t != null) {
+                                responseObserver.onError(t);
+                            } else {
+                                responseObserver.onNext(ClearIngestResponse.newBuilder().build());
                                 responseObserver.onCompleted();
                             }
                         }
