@@ -101,9 +101,23 @@ impl Decode for PropKey {
     }
 }
 
+pub enum PropertyValue<'a> {
+    Borrowed(BorrowObject<'a>),
+    Owned(Object),
+}
+
+impl<'a> PropertyValue<'a> {
+    pub fn try_to_owned(&self) -> Option<Object> {
+        match self {
+            PropertyValue::Borrowed(borrowed_obj) => borrowed_obj.try_to_owned(),
+            PropertyValue::Owned(obj) => Some(obj.clone()),
+        }
+    }
+}
+
 pub trait Details: std::fmt::Debug + Send + Sync + AsAny {
     /// Get a property with given key
-    fn get_property(&self, key: &NameOrId) -> Option<BorrowObject>;
+    fn get_property(&self, key: &NameOrId) -> Option<PropertyValue>;
 
     /// get_all_properties returns all properties. None means that we failed in getting the properties.
     /// Specifically, it returns all properties of Vertex/Edge saved in RUNTIME rather than STORAGE.
@@ -132,7 +146,7 @@ impl DynDetails {
 impl_as_any!(DynDetails);
 
 impl Details for DynDetails {
-    fn get_property(&self, key: &NameOrId) -> Option<BorrowObject> {
+    fn get_property(&self, key: &NameOrId) -> Option<PropertyValue> {
         self.inner.get_property(key)
     }
 
@@ -227,8 +241,10 @@ impl DerefMut for DefaultDetails {
 }
 
 impl Details for DefaultDetails {
-    fn get_property(&self, key: &NameOrId) -> Option<BorrowObject> {
-        self.inner.get(key).map(|o| o.as_borrow())
+    fn get_property(&self, key: &NameOrId) -> Option<PropertyValue> {
+        self.inner
+            .get(key)
+            .map(|o| PropertyValue::Borrowed(o.as_borrow()))
     }
 
     fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {

@@ -19,7 +19,7 @@ use std::path::Path;
 use std::sync::atomic::{AtomicPtr, Ordering};
 use std::sync::Arc;
 
-use dyn_type::{object, BorrowObject, Object};
+use dyn_type::{object, Object};
 use graph_store::common::LabelId;
 use graph_store::config::{JsonConf, DIR_GRAPH_SCHEMA, FILE_SCHEMA};
 use graph_store::ldbc::{LDBCVertexParser, LABEL_SHIFT_BITS};
@@ -33,8 +33,8 @@ use pegasus_common::downcast::*;
 use pegasus_common::impl_as_any;
 
 use crate::apis::{
-    from_fn, register_graph, Details, Direction, DynDetails, Edge, QueryParams, ReadGraph, Statement,
-    Vertex, ID,
+    from_fn, register_graph, Details, Direction, DynDetails, Edge, PropertyValue, QueryParams, ReadGraph,
+    Statement, Vertex, ID,
 };
 use crate::errors::{GraphProxyError, GraphProxyResult};
 use crate::{filter_limit, limit_n};
@@ -405,42 +405,57 @@ impl LazyVertexDetails {
     ) -> Self {
         LazyVertexDetails { id, prop_keys, inner: AtomicPtr::default(), store }
     }
+
+    fn get_vertex_ptr(&self) -> Option<*mut LocalVertex<'static, DefaultId>> {
+        let mut ptr = self.inner.load(Ordering::SeqCst);
+        if ptr.is_null() {
+            if let Some(v) = self.store.get_vertex(self.id) {
+                let v = Box::new(v);
+                let new_ptr = Box::into_raw(v);
+                let swapped = self.inner.swap(new_ptr, Ordering::SeqCst);
+                if swapped.is_null() {
+                    ptr = new_ptr;
+                } else {
+                    unsafe {
+                        std::ptr::drop_in_place(new_ptr);
+                    }
+                    ptr = swapped
+                };
+                Some(ptr)
+            } else {
+                info!("Have not found vertex {:?} in exp_store", self.id);
+                None
+            }
+        } else {
+            Some(ptr)
+        }
+    }
 }
 
 impl fmt::Debug for LazyVertexDetails {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("LazyVertexDetails")
             .field("id", &self.id)
+            .field("properties", &self.prop_keys)
             .field("inner", &self.inner)
             .finish()
     }
 }
 
 impl Details for LazyVertexDetails {
-    fn get_property(&self, key: &NameOrId) -> Option<BorrowObject> {
+    fn get_property(&self, key: &NameOrId) -> Option<PropertyValue> {
         if let NameOrId::Str(key) = key {
-            let mut ptr = self.inner.load(Ordering::SeqCst);
-            if ptr.is_null() {
-                if let Some(v) = self.store.get_vertex(self.id) {
-                    let v = Box::new(v);
-                    let new_ptr = Box::into_raw(v);
-                    let swapped = self.inner.swap(new_ptr, Ordering::SeqCst);
-                    if swapped.is_null() {
-                        ptr = new_ptr;
-                    } else {
-                        unsafe {
-                            std::ptr::drop_in_place(new_ptr);
-                        }
-                        ptr = swapped
-                    };
-                } else {
-                    return None;
+            if let Some(ptr) = self.get_vertex_ptr() {
+                unsafe {
+                    (*ptr)
+                        .get_property(key)
+                        .map(|prop| PropertyValue::Borrowed(prop))
                 }
+            } else {
+                None
             }
-
-            unsafe { (*ptr).get_property(key) }
         } else {
-            info!("Have not support getting property by prop_id in experiments store yet");
+            info!("Have not support getting property by prop_id in exp_store yet");
             None
         }
     }
@@ -450,33 +465,19 @@ impl Details for LazyVertexDetails {
         if let Some(prop_keys) = self.prop_keys.as_ref() {
             // the case of get_all_properties from vertex;
             if prop_keys.is_empty() {
-                let mut ptr = self.inner.load(Ordering::SeqCst);
-                if ptr.is_null() {
-                    if let Some(v) = self.store.get_vertex(self.id) {
-                        let v = Box::new(v);
-                        let new_ptr = Box::into_raw(v);
-                        let swapped = self.inner.swap(new_ptr, Ordering::SeqCst);
-                        if swapped.is_null() {
-                            ptr = new_ptr;
+                if let Some(ptr) = self.get_vertex_ptr() {
+                    unsafe {
+                        if let Some(prop_key_vals) = (*ptr).clone_all_properties() {
+                            all_props = prop_key_vals
+                                .into_iter()
+                                .map(|(prop_key, prop_val)| (prop_key.into(), prop_val as Object))
+                                .collect();
                         } else {
-                            unsafe {
-                                std::ptr::drop_in_place(new_ptr);
-                            }
-                            ptr = swapped
-                        };
-                    } else {
-                        return None;
+                            return None;
+                        }
                     }
-                }
-                unsafe {
-                    if let Some(prop_key_vals) = (*ptr).clone_all_properties() {
-                        all_props = prop_key_vals
-                            .into_iter()
-                            .map(|(prop_key, prop_val)| (prop_key.into(), prop_val as Object))
-                            .collect();
-                    } else {
-                        return None;
-                    }
+                } else {
+                    return None;
                 }
             } else {
                 // the case of get_all_properties with prop_keys pre-specified
@@ -536,6 +537,31 @@ impl LazyEdgeDetails {
     ) -> Self {
         LazyEdgeDetails { eid, prop_keys, inner: AtomicPtr::default(), store }
     }
+
+    fn get_edge_ptr(&self) -> Option<*mut LocalEdge<'static, DefaultId, InternalId>> {
+        let mut ptr = self.inner.load(Ordering::SeqCst);
+        if ptr.is_null() {
+            if let Some(e) = self.store.get_edge(self.eid) {
+                let e = Box::new(e);
+                let new_ptr = Box::into_raw(e);
+                let swapped = self.inner.swap(new_ptr, Ordering::SeqCst);
+                if swapped.is_null() {
+                    ptr = new_ptr;
+                } else {
+                    unsafe {
+                        std::ptr::drop_in_place(new_ptr);
+                    }
+                    ptr = swapped
+                };
+                Some(ptr)
+            } else {
+                info!("Have not found edge {:?} in exp_store", self.eid);
+                None
+            }
+        } else {
+            Some(ptr)
+        }
+    }
 }
 
 impl fmt::Debug for LazyEdgeDetails {
@@ -548,28 +574,18 @@ impl fmt::Debug for LazyEdgeDetails {
 }
 
 impl Details for LazyEdgeDetails {
-    fn get_property(&self, key: &NameOrId) -> Option<BorrowObject> {
+    fn get_property(&self, key: &NameOrId) -> Option<PropertyValue> {
         if let NameOrId::Str(key) = key {
-            let mut ptr = self.inner.load(Ordering::SeqCst);
-            if ptr.is_null() {
-                if let Some(v) = self.store.get_edge(self.eid) {
-                    let v = Box::new(v);
-                    let new_ptr = Box::into_raw(v);
-                    let swapped = self.inner.swap(new_ptr, Ordering::SeqCst);
-                    if swapped.is_null() {
-                        ptr = new_ptr;
-                    } else {
-                        unsafe {
-                            std::ptr::drop_in_place(new_ptr);
-                        }
-                        ptr = swapped
-                    };
-                } else {
-                    return None;
+            let ptr = self.get_edge_ptr();
+            if let Some(ptr) = ptr {
+                unsafe {
+                    (*ptr)
+                        .get_property(key)
+                        .map(|prop| PropertyValue::Borrowed(prop))
                 }
+            } else {
+                None
             }
-
-            unsafe { (*ptr).get_property(key) }
         } else {
             info!("Have not support getting property by prop_id in experiments store yet");
             None
@@ -581,33 +597,20 @@ impl Details for LazyEdgeDetails {
         if let Some(prop_keys) = self.prop_keys.as_ref() {
             // the case of get_all_properties from vertex;
             if prop_keys.is_empty() {
-                let mut ptr = self.inner.load(Ordering::SeqCst);
-                if ptr.is_null() {
-                    if let Some(v) = self.store.get_edge(self.eid) {
-                        let v = Box::new(v);
-                        let new_ptr = Box::into_raw(v);
-                        let swapped = self.inner.swap(new_ptr, Ordering::SeqCst);
-                        if swapped.is_null() {
-                            ptr = new_ptr;
+                let ptr = self.get_edge_ptr();
+                if let Some(ptr) = ptr {
+                    unsafe {
+                        if let Some(prop_key_vals) = (*ptr).clone_all_properties() {
+                            all_props = prop_key_vals
+                                .into_iter()
+                                .map(|(prop_key, prop_val)| (prop_key.into(), prop_val as Object))
+                                .collect();
                         } else {
-                            unsafe {
-                                std::ptr::drop_in_place(new_ptr);
-                            }
-                            ptr = swapped
-                        };
-                    } else {
-                        return None;
+                            return None;
+                        }
                     }
-                }
-                unsafe {
-                    if let Some(prop_key_vals) = (*ptr).clone_all_properties() {
-                        all_props = prop_key_vals
-                            .into_iter()
-                            .map(|(prop_key, prop_val)| (prop_key.into(), prop_val as Object))
-                            .collect();
-                    } else {
-                        return None;
-                    }
+                } else {
+                    return None;
                 }
             } else {
                 // the case of get_all_properties with prop_keys pre-specified
