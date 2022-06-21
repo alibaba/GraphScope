@@ -16,7 +16,6 @@
 use std::ffi::CString;
 
 use ffi::read_ffi::*;
-use ffi::read_ffi::{LabelId as FfiLabelId, VertexId as FfiVertexId};
 use ffi::write_ffi::*;
 use ir_common::generated::common as common_pb;
 use ir_common::generated::schema as schema_pb;
@@ -217,8 +216,9 @@ fn build_vineyard_schema(schema: &schema_pb::Schema) -> GraphProxyResult<SchemaH
             let key = &column.key.as_ref().unwrap();
             let prop_id = key.id;
             let prop_name = CString::new(key.name.to_owned()).unwrap();
-            let prop_type =
-                PropertyType::from_data_type(common_pb::DataType::from_i32(column.data_type).unwrap());
+            let prop_type = PropertyType::from_common_data_type(
+                common_pb::DataType::from_i32(column.data_type).unwrap(),
+            );
             let state =
                 unsafe { build_vertex_property(v_type_builder, prop_id, prop_name.as_ptr(), prop_type) };
             check_ffi_state(state, "build_vertex_property() for vineyard")?;
@@ -249,8 +249,9 @@ fn build_vineyard_schema(schema: &schema_pb::Schema) -> GraphProxyResult<SchemaH
             let key = &column.key.as_ref().unwrap();
             let prop_id = key.id;
             let prop_name = CString::new(key.name.to_owned()).unwrap();
-            let prop_type =
-                PropertyType::from_data_type(common_pb::DataType::from_i32(column.data_type).unwrap());
+            let prop_type = PropertyType::from_common_data_type(
+                common_pb::DataType::from_i32(column.data_type).unwrap(),
+            );
             let state =
                 unsafe { build_edge_property(e_type_builder, prop_id, prop_name.as_ptr(), prop_type) };
             check_ffi_state(state, "build_edge_property() for vineyard")?;
