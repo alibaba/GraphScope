@@ -37,7 +37,7 @@ impl FlatMapFunction<Record, Record> for GetBothVOperator {
 
     fn exec(&self, input: Record) -> FnResult<Self::Target> {
         let entry = input
-            .get(self.start_tag.as_ref())
+            .get(self.start_tag)
             .ok_or(FnExecError::get_tag_error("get tag failed in GetVertexOperator"))?;
         if let Some(e) = entry.as_graph_edge() {
             let src_vertex = Vertex::new(
