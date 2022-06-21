@@ -59,6 +59,6 @@ public class DedupOpTest {
                 opCollection.appendInterOp(op1);
             }
         }
-        return new IrPlan(new IrMeta(""), opCollection);
+        return new IrPlan(new IrMeta(""), opCollection, "");
     }
 }
