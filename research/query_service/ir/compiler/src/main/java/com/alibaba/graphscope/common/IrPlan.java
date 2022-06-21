@@ -469,7 +469,7 @@ public class IrPlan implements Closeable {
                                                 } else if (Utils.equalClass(o, GetVOp.class)) {
                                                     binder = GETV_OP.apply(o);
                                                     opt = FfiBinderOpt.Vertex;
-                                                } else {
+                                                } else { // todo: filter
                                                     throw new InterOpIllegalArgException(
                                                             baseOp.getClass(),
                                                             "sentences",

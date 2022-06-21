@@ -551,15 +551,6 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
                                 (new InterOpCollectionBuilder(binderTraversal)).build();
                         // apply fusion strategy
                         ElementFusionStrategy.INSTANCE.apply(ops);
-                        // all of the SelectOps should have been fused with Expand/GetV, otherwise
-                        // invalid
-                        for (InterOpBase opBase : ops.unmodifiableCollection()) {
-                            if (opBase instanceof SelectOp) {
-                                throw new OpArgIllegalException(
-                                        OpArgIllegalException.Cause.INVALID_TYPE,
-                                        "the filter should have been fused with GetV or Expand");
-                            }
-                        }
                         sentences.add(
                                 new MatchSentence(startTag.get(), endTag.get(), ops, joinKind));
                     });

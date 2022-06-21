@@ -46,31 +46,31 @@ public class OrderOpTest {
                 FileUtils.readJsonFromResource("order_asc.json"), irPlan.getPlanAsJson());
     }
 
-    @Test
-    public void orderByKeyTest() throws IOException {
-        OrderOp op = new OrderOp();
-        FfiVariable.ByValue var = ArgUtils.asFfiVar("", "name");
-        op.setOrderVarWithOrder(
-                new OpArg(Arrays.asList(Pair.with(var, FfiOrderOpt.Asc)), Function.identity()));
-        irPlan = DedupOpTest.getTestIrPlan(op);
-        Assert.assertEquals(
-                FileUtils.readJsonFromResource("order_key.json"), irPlan.getPlanAsJson());
-    }
-
-    @Test
-    public void orderByKeysTest() throws IOException {
-        OrderOp op = new OrderOp();
-        FfiVariable.ByValue v1 = ArgUtils.asFfiVar("", "name");
-        FfiVariable.ByValue v2 = ArgUtils.asFfiVar("", "id");
-        op.setOrderVarWithOrder(
-                new OpArg(
-                        Arrays.asList(
-                                Pair.with(v1, FfiOrderOpt.Asc), Pair.with(v2, FfiOrderOpt.Desc)),
-                        Function.identity()));
-        irPlan = DedupOpTest.getTestIrPlan(op);
-        Assert.assertEquals(
-                FileUtils.readJsonFromResource("order_keys.json"), irPlan.getPlanAsJson());
-    }
+//    @Test
+//    public void orderByKeyTest() throws IOException {
+//        OrderOp op = new OrderOp();
+//        FfiVariable.ByValue var = ArgUtils.asFfiVar("", "name");
+//        op.setOrderVarWithOrder(
+//                new OpArg(Arrays.asList(Pair.with(var, FfiOrderOpt.Asc)), Function.identity()));
+//        irPlan = DedupOpTest.getTestIrPlan(op);
+//        Assert.assertEquals(
+//                FileUtils.readJsonFromResource("order_key.json"), irPlan.getPlanAsJson());
+//    }
+//
+//    @Test
+//    public void orderByKeysTest() throws IOException {
+//        OrderOp op = new OrderOp();
+//        FfiVariable.ByValue v1 = ArgUtils.asFfiVar("", "name");
+//        FfiVariable.ByValue v2 = ArgUtils.asFfiVar("", "id");
+//        op.setOrderVarWithOrder(
+//                new OpArg(
+//                        Arrays.asList(
+//                                Pair.with(v1, FfiOrderOpt.Asc), Pair.with(v2, FfiOrderOpt.Desc)),
+//                        Function.identity()));
+//        irPlan = DedupOpTest.getTestIrPlan(op);
+//        Assert.assertEquals(
+//                FileUtils.readJsonFromResource("order_keys.json"), irPlan.getPlanAsJson());
+//    }
 
     @Test
     public void orderByLabelTest() throws IOException {

@@ -12,7 +12,7 @@
                 },
                 "alias": {
                   "item": {
-                    "Name": "keys"
+                    "Id": 0
                   }
                 }
               }
@@ -23,7 +23,7 @@
                 "aggregate": 5,
                 "alias": {
                   "item": {
-                    "Name": "values"
+                    "Id": 1
                   }
                 }
               }

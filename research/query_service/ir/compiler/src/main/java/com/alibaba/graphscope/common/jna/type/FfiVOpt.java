@@ -21,7 +21,8 @@ import com.alibaba.graphscope.common.jna.IntEnum;
 public enum FfiVOpt implements IntEnum<FfiVOpt> {
     Start,
     End,
-    Other;
+    Other,
+    Both;
 
     @Override
     public int getInt() {
