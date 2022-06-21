@@ -77,21 +77,6 @@ fn simple_add_job_builder<M: Message>(
     Ok(())
 }
 
-fn update_query_params(
-    params: &mut pb::QueryParams, columns: Vec<common_pb::NameOrId>, is_all_columns: bool,
-) -> pb::QueryParams {
-    let mut new_params = params.clone();
-    params.columns.clear();
-    params.is_all_columns = false;
-    params.predicate = None;
-
-    new_params.tables.clear();
-    new_params.columns = columns;
-    new_params.is_all_columns = is_all_columns;
-
-    new_params
-}
-
 impl AsPhysical for pb::Project {
     fn add_job_builder(&self, builder: &mut JobBuilder, _plan_meta: &mut PlanMeta) -> IrResult<()> {
         simple_add_job_builder(builder, &pb::logical_plan::Operator::from(self.clone()), SimpleOpr::Map)
@@ -179,16 +164,19 @@ impl AsPhysical for pb::EdgeExpand {
                 let is_all_columns = node_meta.is_all_columns();
                 if !columns.is_empty() || is_all_columns {
                     if !self.is_edge {
-                        // Vertex expansion
-                        // Move everything to Auxilia
-                        auxilia.params = Some(update_query_params(
-                            params,
-                            columns
+                        // Expand to adjacent vertices
+                        let new_params = pb::QueryParams {
+                            tables: vec![],
+                            columns: columns
                                 .into_iter()
                                 .map(|tag| tag.into())
                                 .collect(),
                             is_all_columns,
-                        ));
+                            limit: None,
+                            predicate: None,
+                            extra: Default::default(),
+                        };
+                        auxilia.params = Some(new_params);
                         auxilia.alias = self.alias.clone();
                         self.alias = None;
                         is_adding_auxilia = true;
@@ -295,15 +283,24 @@ impl AsPhysical for pb::GetV {
             if let Some(node_meta) = plan_meta.get_curr_node_meta() {
                 let columns = node_meta.get_columns();
                 let is_all_columns = node_meta.is_all_columns();
-                if !columns.is_empty() || is_all_columns {
-                    auxilia.params = Some(update_query_params(
-                        params,
-                        columns
-                            .into_iter()
-                            .map(|tag| tag.into())
-                            .collect(),
-                        is_all_columns,
-                    ));
+                if !columns.is_empty() || is_all_columns || params.predicate.is_some() {
+                    let mut new_params = params.clone();
+                    new_params.columns = columns
+                        .into_iter()
+                        .map(|params| params.into())
+                        .collect();
+                    new_params.is_all_columns = is_all_columns;
+                    auxilia.params = Some(new_params);
+
+                    *params = pb::QueryParams {
+                        tables: params.tables.clone(),
+                        columns: vec![],
+                        is_all_columns: false,
+                        limit: None,
+                        predicate: None,
+                        extra: Default::default(),
+                    };
+
                     auxilia.alias = self.alias.clone();
                     self.alias = None;
                     is_adding_auxilia = true;
@@ -963,7 +960,7 @@ mod test {
     }
 
     #[test]
-    fn post_process_getv_tag_auxilia_shuffle() {
+    fn post_process_getv_auxilia_projection() {
         // g.V().outE().inV().as('a').select('a').by(valueMap("name", "id", "age")
         let mut plan = LogicalPlan::default();
         plan.append_operator_as_node(build_scan(vec![]).into(), vec![])
@@ -1025,6 +1022,62 @@ mod test {
         );
         expected_builder.sink(vec![]);
 
+        assert_eq!(job_builder, expected_builder);
+    }
+
+    #[test]
+    fn post_process_getv_auxilia_filter() {
+        // g.V().outE().inV().filter('age > 10')
+        let mut plan = LogicalPlan::default();
+        plan.append_operator_as_node(build_scan(vec![]).into(), vec![])
+            .unwrap();
+        plan.append_operator_as_node(build_edgexpd(true, vec![], None).into(), vec![0])
+            .unwrap();
+        plan.append_operator_as_node(
+            pb::GetV {
+                tag: None,
+                opt: 1,
+                params: Some(pb::QueryParams {
+                    tables: vec![],
+                    columns: vec![],
+                    is_all_columns: false,
+                    limit: None,
+                    predicate: str_to_expr_pb("@.age > 10".to_string()).ok(),
+                    extra: Default::default(),
+                }),
+                alias: None,
+            }
+            .into(),
+            vec![1],
+        )
+        .unwrap();
+
+        let mut job_builder = JobBuilder::default();
+        let mut plan_meta = plan.meta.clone();
+        plan.add_job_builder(&mut job_builder, &mut plan_meta)
+            .unwrap();
+
+        let mut expected_builder = JobBuilder::default();
+        expected_builder.add_source(pb::logical_plan::Operator::from(build_scan(vec![])).encode_to_vec());
+        expected_builder
+            .flat_map(pb::logical_plan::Operator::from(build_edgexpd(true, vec![], None)).encode_to_vec());
+        expected_builder.map(pb::logical_plan::Operator::from(build_getv(None)).encode_to_vec());
+        expected_builder.filter_map(
+            pb::logical_plan::Operator::from(pb::Auxilia {
+                tag: None,
+                params: Some(pb::QueryParams {
+                    tables: vec![],
+                    columns: vec![],
+                    is_all_columns: false,
+                    limit: None,
+                    predicate: str_to_expr_pb("@.age > 10".to_string()).ok(),
+                    extra: Default::default(),
+                }),
+                alias: None,
+            })
+            .encode_to_vec(),
+        );
+        expected_builder.sink(vec![]);
         assert_eq!(job_builder, expected_builder);
     }
 
