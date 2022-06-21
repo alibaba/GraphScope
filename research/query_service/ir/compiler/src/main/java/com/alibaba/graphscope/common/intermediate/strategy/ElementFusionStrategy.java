@@ -23,7 +23,7 @@ import com.alibaba.graphscope.common.jna.type.FfiVOpt;
 
 import java.util.List;
 
-// fuse outE + filter, outE + filter + has, inV + has
+// fuse outE + filter, outE + filter + has
 public class ElementFusionStrategy implements InterOpStrategy {
     public static ElementFusionStrategy INSTANCE = new ElementFusionStrategy();
 
@@ -44,7 +44,7 @@ public class ElementFusionStrategy implements InterOpStrategy {
                 if (fuse != null && !fuse.isEmpty()) {
                     params.setPredicate(fuse);
                 }
-                if (next.getAlias().isPresent()) {
+                if (!cur.getAlias().isPresent() && next.getAlias().isPresent()) {
                     cur.setAlias(next.getAlias().get());
                 }
                 opCollection.removeInterOp(i + 1);
