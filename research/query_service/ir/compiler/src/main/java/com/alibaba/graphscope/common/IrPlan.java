@@ -46,8 +46,8 @@ import java.util.function.Function;
 // represent ir plan as a chain of operators
 public class IrPlan implements Closeable {
     private static IrCoreLibrary irCoreLib = IrCoreLibrary.INSTANCE;
-    // write to '/tmp' which is accessible from common users
-    private static String JSON_PLAN_DIR = "/tmp";
+    // get tmp directory from system properties, which is accessible from common users
+    private static String JSON_PLAN_DIR = System.getProperty("java.io.tmpdir");
     private Pointer ptrPlan;
     private IrMeta meta;
     // to identify a unique json file which contains the logic plan from ir_core
