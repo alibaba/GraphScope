@@ -110,15 +110,7 @@ where
                     partitions.as_ref(),
                 )
                 .map(move |v| {
-                    let partition_label_vertex_ids =
-                        get_partition_label_vertex_ids(&vec![v.get_id() as ID], partitioner.clone());
-                    to_detailed_runtime_vertex(
-                        &v,
-                        store.clone(),
-                        si,
-                        partition_label_vertex_ids.clone(),
-                        prop_ids.clone(),
-                    )
+                    to_detailed_runtime_vertex(&v, store.clone(), partitioner.clone(), si, prop_ids.clone())
                 });
             Ok(filter_limit!(result, filter, None))
         } else {
@@ -199,6 +191,7 @@ where
         &self, ids: &[ID], params: &QueryParams,
     ) -> GraphProxyResult<Box<dyn Iterator<Item = Vertex> + Send>> {
         let store = self.store.clone();
+        let partitioner = self.partition_manager.clone();
         let si = params
             .get_extra_param(SNAPSHOT_ID)
             .map(|s| {
@@ -213,13 +206,7 @@ where
         let result = store
             .get_vertex_properties(si, partition_label_vertex_ids.clone(), prop_ids.as_ref())
             .map(move |v| {
-                to_detailed_runtime_vertex(
-                    &v,
-                    store.clone(),
-                    si,
-                    partition_label_vertex_ids.clone(),
-                    prop_ids.clone(),
-                )
+                to_detailed_runtime_vertex(&v, store.clone(), partitioner.clone(), si, prop_ids.clone())
             });
 
         Ok(filter_limit!(result, filter, None))
@@ -389,8 +376,9 @@ fn to_empty_runtime_vertex<V: StoreVertex>(v: &V) -> Vertex {
 
 #[inline]
 fn to_detailed_runtime_vertex<V, VI, E, EI>(
-    v: &V, store: Arc<dyn GlobalGraphQuery<V = V, VI = VI, E = E, EI = EI>>, si: SnapshotId,
-    partition_vid: Vec<PartitionLabeledVertexIds>, prop_keys: Option<Vec<PropId>>,
+    v: &V, store: Arc<dyn GlobalGraphQuery<V = V, VI = VI, E = E, EI = EI>>,
+    graph_partition_manager: Arc<dyn GraphPartitionManager>, si: SnapshotId,
+    prop_keys: Option<Vec<PropId>>,
 ) -> Vertex
 where
     V: 'static + StoreVertex,
@@ -400,6 +388,7 @@ where
 {
     let id = v.get_id() as ID;
     let label = encode_runtime_v_label(v);
+    let partition_vid = get_partition_label_vertex_ids(&vec![id], graph_partition_manager.clone());
     let details = LazyVertexDetails::new(partition_vid, si, prop_keys, store);
     Vertex::new(id, Some(label), DynDetails::new(details))
 }
