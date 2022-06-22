@@ -501,6 +501,17 @@ public class IrPlan implements Closeable {
                 }
                 return ptrMatch;
             }
+        },
+        // to represent identity in gremlin
+        AS_NONE_OP {
+            public Pointer apply(InterOpBase baseOp) {
+                Pointer asPtr = irCoreLib.initAsOperator();
+                FfiError error = irCoreLib.setAsAlias(asPtr, ArgUtils.asFfiNoneAlias());
+                if (error != null && error.code != ResultCode.Success) {
+                    throw new AppendInterOpException(baseOp.getClass(), error.msg);
+                }
+                return asPtr;
+            }
         };
 
         public Pointer createParams(QueryParams params) {
@@ -723,6 +734,9 @@ public class IrPlan implements Closeable {
         } else if (ClassUtils.equalClass(base, MatchOp.class)) {
             Pointer ptrMatch = TransformFactory.MATCH_OP.apply(base);
             error = irCoreLib.appendPatternOperator(ptrPlan, ptrMatch, oprId.getValue(), oprId);
+        } else if (ClassUtils.equalClass(base, AsNoneOp.class)) {
+            Pointer ptrAs = TransformFactory.AS_NONE_OP.apply(base);
+            error = irCoreLib.appendAsOperator(ptrPlan, ptrAs, oprId.getValue(), oprId);
         } else {
             throw new InterOpUnsupportedException(base.getClass(), "unimplemented yet");
         }

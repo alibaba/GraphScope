@@ -43,6 +43,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.step.TraversalParent;
 import org.apache.tinkerpop.gremlin.process.traversal.step.branch.UnionStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.*;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.*;
+import org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.IdentityStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.SubgraphStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.EmptyStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.HasContainer;
@@ -608,8 +609,11 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
         public InterOpBase apply(Step step) {
             SubgraphStep subgraphStep = (SubgraphStep) step;
             SubGraphAsUnionOp op = new SubGraphAsUnionOp(getConfigs(subgraphStep));
-            // empty opCollection -> identity(), to get edges
-            InterOpCollection getEOps = new InterOpCollection();
+            // identity() is represented as As(None), to get edges
+            Traversal.Admin getETraversal =
+                    (Traversal.Admin) GremlinAntlrToJava.getTraversalSupplier().get();
+            getETraversal.addStep(new IdentityStep(getETraversal));
+            InterOpCollection getEOps = (new InterOpCollectionBuilder(getETraversal)).build();
 
             // add bothV().dedup(), to get bothV of the edges
             Traversal.Admin getVTraversal =
@@ -627,6 +631,14 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
             // graph_name
             String meta = step.getSideEffectKey();
             return ImmutableMap.of(SinkGraph.GRAPH_NAME, meta);
+        }
+    },
+
+    // todo: support identity() in gremlin grammar
+    IDENTITY_STEP {
+        @Override
+        public InterOpBase apply(Step step) {
+            return new AsNoneOp();
         }
     };
 
