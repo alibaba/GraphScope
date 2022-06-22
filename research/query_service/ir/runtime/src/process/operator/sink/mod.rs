@@ -20,11 +20,11 @@ use ir_common::generated::algebra as algebra_pb;
 
 use crate::error::FnGenResult;
 use crate::process::operator::sink::sink::{DefaultSinkOp, RecordSinkEncoder};
-use crate::process::operator::sink::sink_vineyard::{SinkVineyardOp, VineyardSinker};
+use crate::process::operator::sink::sink_vineyard::{GraphSinkEncoder, SinkVineyardOp};
 
 pub enum Sinker {
     DefaultSinker(RecordSinkEncoder),
-    GraphSinker(VineyardSinker),
+    GraphSinker(GraphSinkEncoder),
 }
 
 pub trait SinkGen {

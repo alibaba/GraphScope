@@ -15,7 +15,7 @@
 
 use std::convert::TryInto;
 use std::fmt::Debug;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use graph_proxy::apis::WriteGraphProxy;
 use graph_proxy::VineyardGraphWriter;
@@ -30,47 +30,31 @@ use crate::process::operator::sink::{SinkGen, Sinker};
 use crate::process::record::Record;
 
 #[derive(Clone, Debug)]
-pub enum VineyardSinker {
-    Writer(VinyardWriter),
-    Dummy,
-}
-
-impl Accumulator<Record, Record> for VineyardSinker {
-    fn accum(&mut self, next: Record) -> FnExecResult<()> {
-        match self {
-            VineyardSinker::Writer(vineyard_writer) => vineyard_writer.accum(next),
-            VineyardSinker::Dummy => Ok(()),
-        }
-    }
-
-    fn finalize(&mut self) -> FnExecResult<Record> {
-        match self {
-            VineyardSinker::Writer(vineyard_writer) => vineyard_writer.finalize(),
-            VineyardSinker::Dummy => Ok(Record::default()),
-        }
-    }
-}
-
-#[derive(Clone, Debug)]
-pub struct VinyardWriter {
-    graph_writer: Arc<VineyardGraphWriter>,
+pub struct GraphSinkEncoder {
+    graph_writer: Arc<Mutex<VineyardGraphWriter>>,
     sink_keys: Vec<Option<KeyId>>,
 }
 
-impl Accumulator<Record, Record> for VinyardWriter {
+impl Accumulator<Record, Record> for GraphSinkEncoder {
     fn accum(&mut self, mut next: Record) -> FnExecResult<()> {
         for sink_key in &self.sink_keys {
             let entry = next
                 .take(sink_key.as_ref())
                 .ok_or(FnExecError::get_tag_error(&format!("tag {:?} in GraphWriter", sink_key)))?;
             if let Some(v) = entry.as_graph_vertex() {
-                Arc::get_mut(&mut self.graph_writer)
-                    .ok_or(FnExecError::accum_error("get mut graph writer failed"))?
-                    .add_vertex(v.clone())?
+                loop {
+                    if let Ok(mut graph_writer_guard) = self.graph_writer.try_lock() {
+                        graph_writer_guard.add_vertex(v.clone())?;
+                        break;
+                    }
+                }
             } else if let Some(e) = entry.as_graph_edge() {
-                Arc::get_mut(&mut self.graph_writer)
-                    .ok_or(FnExecError::accum_error("get mut graph writer failed"))?
-                    .add_edge(e.clone())?
+                loop {
+                    if let Ok(mut graph_writer_guard) = self.graph_writer.try_lock() {
+                        graph_writer_guard.add_edge(e.clone())?;
+                        break;
+                    }
+                }
             } else {
                 Err(FnExecError::unexpected_data_error("neither vertex nor edge in GraphWriter"))?
             }
@@ -79,9 +63,12 @@ impl Accumulator<Record, Record> for VinyardWriter {
     }
 
     fn finalize(&mut self) -> FnExecResult<Record> {
-        Arc::get_mut(&mut self.graph_writer)
-            .ok_or(FnExecError::accum_error("get mut graph writer failed"))?
-            .finish()?;
+        loop {
+            if let Ok(mut graph_writer_guard) = self.graph_writer.try_lock() {
+                graph_writer_guard.finish()?;
+                break;
+            }
+        }
         Ok(Record::default())
     }
 }
@@ -102,21 +89,16 @@ impl SinkGen for SinkVineyardOp {
                 .transpose()?;
             sink_keys.push(sink_key);
         }
-
         if let Some(graph_schema) = self.graph_schema {
-            let worker = pegasus::get_current_worker();
-            if worker.index % worker.local_peers == 0 {
-                // the first worker on current server are assigned to sink to vineyard
-                let graph_writer =
-                    VineyardGraphWriter::new(self.graph_name, &graph_schema, worker.server_index as i32)?;
-                let graph_writer = VinyardWriter { graph_writer: Arc::new(graph_writer), sink_keys };
-                debug!("Runtime sink graph operator: {:?}", graph_writer);
-                Ok(Sinker::GraphSinker(VineyardSinker::Writer(graph_writer)))
-            } else {
-                // other workers do nothing
-                debug!("Runtime dummy sink graph operator");
-                Ok(Sinker::GraphSinker(VineyardSinker::Dummy))
-            }
+            let graph_writer = VineyardGraphWriter::new(
+                self.graph_name,
+                &graph_schema,
+                pegasus::get_current_worker().index as i32,
+            )?;
+            let graph_sink_encoder =
+                GraphSinkEncoder { graph_writer: Arc::new(Mutex::new(graph_writer)), sink_keys };
+            debug!("Runtime sink graph operator: {:?}", graph_sink_encoder,);
+            Ok(Sinker::GraphSinker(graph_sink_encoder))
         } else {
             Err(ParsePbError::EmptyFieldError("graph_schema in SinkVineyardOp".to_string()))?
         }
