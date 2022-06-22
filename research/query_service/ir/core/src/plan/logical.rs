@@ -727,7 +727,7 @@ fn get_table_id_from_pb(schema: &Schema, name: &common_pb::NameOrId) -> Option<K
     })
 }
 
-pub fn get_column_id_from_pb(schema: &Schema, name: &common_pb::NameOrId) -> Option<KeyId> {
+fn get_column_id_from_pb(schema: &Schema, name: &common_pb::NameOrId) -> Option<KeyId> {
     name.item.as_ref().and_then(|item| match item {
         common_pb::name_or_id::Item::Name(name) => schema.get_column_id(name),
         common_pb::name_or_id::Item::Id(id) => Some(*id),
@@ -880,20 +880,23 @@ fn preprocess_params(
             }
         }
     }
-    for column in params.columns.iter_mut() {
-        if let Some(schema) = &meta.schema {
-            if schema.is_column_id() {
-                let column_id = get_column_id_from_pb(schema, column)
-                    .unwrap_or(INVALID_META_ID)
-                    .into();
-                debug!("column: {:?} -> {:?}", column, column_id);
-                *column = column_id;
+    let mut node_meta = plan_meta.curr_node_meta_mut();
+    if params.is_all_columns {
+        node_meta.set_columns_opt(ColumnsOpt::All(256));
+    } else {
+        for column in params.columns.iter_mut() {
+            if let Some(schema) = &meta.schema {
+                if schema.is_column_id() {
+                    let column_id = get_column_id_from_pb(schema, column)
+                        .unwrap_or(INVALID_META_ID)
+                        .into();
+                    debug!("column: {:?} -> {:?}", column, column_id);
+                    *column = column_id;
+                }
             }
+            debug!("add column ({:?}) to HEAD", column);
+            node_meta.insert_column(column.clone().try_into()?);
         }
-        debug!("add column ({:?}) to HEAD", column);
-        plan_meta
-            .curr_node_meta_mut()
-            .insert_column(column.clone().try_into()?);
     }
 
     Ok(())
@@ -930,8 +933,12 @@ fn process_columns_meta(plan_meta: &mut PlanMeta, is_late_project: bool) -> IrRe
     if !is_late_project || tag_columns.len() > 1 {
         for (tag, columns) in tag_columns.into_iter() {
             let mut meta = plan_meta.tag_nodes_meta_mut(tag)?;
-            for col in columns.get() {
-                meta.insert_column(col);
+            if columns.is_all() {
+                meta.set_columns_opt(ColumnsOpt::All(256));
+            } else if columns.len() > 0 {
+                for col in columns.get() {
+                    meta.insert_column(col);
+                }
             }
         }
     } else {
@@ -1838,7 +1845,7 @@ mod test {
     }
 
     #[test]
-    fn tag_maintain_case1() {
+    fn column_maintain_case1() {
         let mut plan = LogicalPlan::default();
         // g.V().hasLabel("person").has("age", 27).valueMap("age", "name", "id")
 
@@ -1893,7 +1900,7 @@ mod test {
     }
 
     #[test]
-    fn tag_maintain_case2() {
+    fn column_maintain_case2() {
         let mut plan = LogicalPlan::default();
         // g.V().out().as("here").has("lang", "java").select("here").values("name")
         let scan = pb::Scan {
@@ -1964,7 +1971,7 @@ mod test {
     }
 
     #[test]
-    fn tag_maintain_case3() {
+    fn column_maintain_case3() {
         let mut plan = LogicalPlan::default();
         // g.V().outE().as("e").inV().as("v").select("e").order().by("weight").select("v").values("name").dedup()
 
@@ -2075,7 +2082,7 @@ mod test {
     }
 
     #[test]
-    fn tag_maintain_case4() {
+    fn column_maintain_case4() {
         let mut plan = LogicalPlan::default();
         // g.V("person").has("name", "John").as('a').outE("knows").as('b')
         //  .has("date", 20200101).inV().as('c').has('id', 10)
@@ -2202,7 +2209,75 @@ mod test {
     }
 
     #[test]
-    fn tag_maintain_semi_apply() {
+    fn column_maintain_case5() {
+        // Test the maintenance of all columns
+        let mut plan = LogicalPlan::default();
+        // g.V("person").valueMap(ALL)
+
+        // g.V("person")
+        let scan = pb::Scan {
+            scan_opt: 0,
+            alias: None,
+            params: Some(pb::QueryParams {
+                tables: vec!["person".into()],
+                columns: vec!["a".into()],
+                is_all_columns: true,
+                limit: None,
+                predicate: None,
+                extra: Default::default(),
+            }),
+            idx_predicate: None,
+        };
+
+        plan.append_operator_as_node(scan.into(), vec![])
+            .unwrap();
+        assert!(plan
+            .meta
+            .get_curr_node_meta()
+            .unwrap()
+            .is_all_columns());
+
+        let mut plan = LogicalPlan::default();
+        // g.V("person").valueMap(ALL)
+
+        // g.V("person")
+        let scan = pb::Scan {
+            scan_opt: 0,
+            alias: None,
+            params: Some(pb::QueryParams {
+                tables: vec!["person".into()],
+                columns: vec!["a".into()],
+                is_all_columns: false,
+                limit: None,
+                predicate: None,
+                extra: Default::default(),
+            }),
+            idx_predicate: None,
+        };
+
+        let opr_id = plan
+            .append_operator_as_node(scan.into(), vec![])
+            .unwrap();
+
+        let project = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: str_to_expr_pb("@.~all".to_string()).ok(),
+                alias: None,
+            }],
+            is_append: true,
+        };
+
+        plan.append_operator_as_node(project.into(), vec![opr_id])
+            .unwrap();
+        assert!(plan
+            .meta
+            .get_node_meta(0)
+            .unwrap()
+            .is_all_columns());
+    }
+
+    #[test]
+    fn column_maintain_semi_apply() {
         let mut plan = LogicalPlan::default();
         // g.V().where(out()).valueMap("age")
 
@@ -2261,7 +2336,7 @@ mod test {
     }
 
     #[test]
-    fn tag_maintain_groupby_case1() {
+    fn column_maintain_groupby_case1() {
         // groupBy contains tagging a keys that is further a vertex
         let mut plan = LogicalPlan::default();
         // g.V().groupCount().order().by(select(keys).by('name'))
@@ -2316,7 +2391,7 @@ mod test {
     }
 
     #[test]
-    fn tag_maintain_groupby_case2() {
+    fn column_maintain_groupby_case2() {
         // groupBy contains tagging a keys that is further a vertex
         let mut plan = LogicalPlan::default();
         // g.V().groupCount().select(values)
@@ -2361,7 +2436,7 @@ mod test {
     }
 
     #[test]
-    fn tag_maintain_orderby() {
+    fn column_maintain_orderby() {
         let mut plan = LogicalPlan::default();
         // g.E(xx).values("workFrom").as("a").order().by(select("a"))
 
@@ -2405,7 +2480,7 @@ mod test {
     }
 
     #[test]
-    fn tag_maintain_union() {
+    fn column_maintain_union() {
         let mut plan = LogicalPlan::default();
         // g.V().union(out().has("age", Gt(10)), out().out()).as('a').select('a').by(valueMap('name', 'age'))
         // g.V()

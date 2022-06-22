@@ -134,12 +134,15 @@ impl AsPhysical for pb::Scan {
             if let Some(node_meta) = plan_meta.get_curr_node_meta() {
                 let columns = node_meta.get_columns();
                 let is_all_columns = node_meta.is_all_columns();
-                if !columns.is_empty() || is_all_columns {
+                if is_all_columns {
+                    // is_all_columns yield the settings of columns
+                    params.columns = vec![];
+                    params.is_all_columns = true;
+                } else if !columns.is_empty() {
                     params.columns = columns
                         .into_iter()
                         .map(|tag| tag.into())
                         .collect();
-                    params.is_all_columns = is_all_columns;
                 }
             }
             Ok(())
@@ -285,11 +288,17 @@ impl AsPhysical for pb::GetV {
                 let is_all_columns = node_meta.is_all_columns();
                 if !columns.is_empty() || is_all_columns || params.predicate.is_some() {
                     let mut new_params = params.clone();
-                    new_params.columns = columns
-                        .into_iter()
-                        .map(|params| params.into())
-                        .collect();
-                    new_params.is_all_columns = is_all_columns;
+                    if is_all_columns {
+                        new_params.columns = vec![];
+                        new_params.is_all_columns = is_all_columns;
+                    } else {
+                        new_params.columns = columns
+                            .into_iter()
+                            .map(|params| params.into())
+                            .collect();
+                        new_params.is_all_columns = is_all_columns;
+                    }
+
                     auxilia.params = Some(new_params);
 
                     *params = pb::QueryParams {
