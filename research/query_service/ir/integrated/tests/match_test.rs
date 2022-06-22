@@ -217,15 +217,15 @@ mod test {
                 Ok(res) => {
                     let entry = parse_result(res).unwrap();
                     let a = entry
-                        .get(Some(&TAG_A.into()))
+                        .get(Some(TAG_A))
                         .unwrap()
                         .as_graph_vertex();
                     let b = entry
-                        .get(Some(&TAG_B.into()))
+                        .get(Some(TAG_B))
                         .unwrap()
                         .as_graph_vertex();
                     let c = entry
-                        .get(Some(&TAG_C.into()))
+                        .get(Some(TAG_C))
                         .unwrap()
                         .as_graph_vertex();
                     result_collection.push((a.unwrap().id(), b.unwrap().id(), c.unwrap().id()));
@@ -257,19 +257,19 @@ mod test {
                 Ok(res) => {
                     let entry = parse_result(res).unwrap();
                     let a = entry
-                        .get(Some(&TAG_A.into()))
+                        .get(Some(TAG_A))
                         .unwrap()
                         .as_graph_vertex();
                     let b = entry
-                        .get(Some(&TAG_B.into()))
+                        .get(Some(TAG_B))
                         .unwrap()
                         .as_graph_vertex();
                     let c = entry
-                        .get(Some(&TAG_C.into()))
+                        .get(Some(TAG_C))
                         .unwrap()
                         .as_graph_vertex();
                     let d = entry
-                        .get(Some(&TAG_D.into()))
+                        .get(Some(TAG_D))
                         .unwrap()
                         .as_graph_vertex();
                     result_collection.push((

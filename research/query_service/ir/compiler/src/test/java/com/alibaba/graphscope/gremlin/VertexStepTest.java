@@ -16,9 +16,15 @@
 
 package com.alibaba.graphscope.gremlin;
 
+import com.alibaba.graphscope.common.intermediate.ArgUtils;
+import com.alibaba.graphscope.common.intermediate.InterOpCollection;
 import com.alibaba.graphscope.common.intermediate.operator.ExpandOp;
+import com.alibaba.graphscope.common.intermediate.operator.GetVOp;
+import com.alibaba.graphscope.common.intermediate.operator.InterOpBase;
+import com.alibaba.graphscope.common.intermediate.operator.SelectOp;
 import com.alibaba.graphscope.common.jna.type.FfiDirection;
-import com.alibaba.graphscope.common.jna.type.FfiNameOrId;
+import com.alibaba.graphscope.common.jna.type.FfiVOpt;
+import com.alibaba.graphscope.gremlin.plugin.processor.IrStandardOpProcessor;
 import com.alibaba.graphscope.gremlin.transform.StepTransformFactory;
 
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
@@ -28,6 +34,9 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
 import org.junit.Assert;
 import org.junit.Test;
+
+import java.util.Arrays;
+import java.util.List;
 
 public class VertexStepTest {
     private Graph graph = TinkerFactory.createModern();
@@ -51,12 +60,135 @@ public class VertexStepTest {
         Assert.assertEquals(true, op.getIsEdge().get().applyArg());
     }
 
+    // fuse outE + hasLabel
     @Test
-    public void g_V_out_label() {
-        Traversal traversal = g.V().out("knows");
-        Step vertexStep = traversal.asAdmin().getEndStep();
-        ExpandOp op = (ExpandOp) StepTransformFactory.VERTEX_STEP.apply(vertexStep);
-        FfiNameOrId.ByValue label = op.getParams().get().getTables().get(0);
-        Assert.assertEquals("knows", label.name);
+    public void g_V_outE_hasLabel() {
+        List<InterOpBase> ops = getOps(g.V().outE().hasLabel("knows"));
+        // source + expand + sink
+        Assert.assertEquals(2, ops.size() - 1);
+        ExpandOp expandOp = (ExpandOp) ops.get(1);
+        Assert.assertEquals(true, expandOp.getIsEdge().get().applyArg());
+        Assert.assertEquals(
+                Arrays.asList(ArgUtils.asFfiTag("knows")), expandOp.getParams().get().getTables());
+    }
+
+    // fuse outE + has("name", ...)
+    @Test
+    public void g_V_outE_hasProp() {
+        List<InterOpBase> ops = getOps(g.V().outE().has("weight", 1.0));
+        // source + expand + sink
+        Assert.assertEquals(2, ops.size() - 1);
+        ExpandOp expandOp = (ExpandOp) ops.get(1);
+        Assert.assertEquals(true, expandOp.getIsEdge().get().applyArg());
+        Assert.assertEquals(
+                "@.weight && @.weight == 1.0", expandOp.getParams().get().getPredicate().get());
+    }
+
+    // fuse outE + has("name", ...) + inV
+    @Test
+    public void g_V_outE_hasProp_inV() {
+        List<InterOpBase> ops = getOps(g.V().outE().has("weight", 1.0).inV());
+        // source + expand + sink
+        Assert.assertEquals(2, ops.size() - 1);
+        ExpandOp expandOp = (ExpandOp) ops.get(1);
+        Assert.assertEquals(false, expandOp.getIsEdge().get().applyArg());
+        Assert.assertEquals(
+                "@.weight && @.weight == 1.0", expandOp.getParams().get().getPredicate().get());
+    }
+
+    // fuse outE + has("name", ...) + inV
+    @Test
+    public void g_V_outE_hasProp_inV_hasProp() {
+        List<InterOpBase> ops = getOps(g.V().outE().has("weight", 1.0).inV().has("name", "marko"));
+        // source + expand + filter + sink
+        Assert.assertEquals(3, ops.size() - 1);
+
+        ExpandOp expandOp = (ExpandOp) ops.get(1);
+        Assert.assertEquals(false, expandOp.getIsEdge().get().applyArg());
+        Assert.assertEquals(
+                "@.weight && @.weight == 1.0", expandOp.getParams().get().getPredicate().get());
+
+        SelectOp selectOp = (SelectOp) ops.get(2);
+        Assert.assertEquals(
+                "@.name && @.name == \"marko\"", selectOp.getPredicate().get().applyArg());
+    }
+
+    // fuse outE + has("name", ...)
+    // inV represent as getV
+    @Test
+    public void g_V_outE_hasProp_as_inV() {
+        List<InterOpBase> ops = getOps(g.V().outE().has("weight", 1.0).as("a").inV());
+        // source + expand + getV + sink
+        Assert.assertEquals(3, ops.size() - 1);
+
+        ExpandOp expandOp = (ExpandOp) ops.get(1);
+        Assert.assertEquals(true, expandOp.getIsEdge().get().applyArg());
+        Assert.assertEquals(
+                "@.weight && @.weight == 1.0", expandOp.getParams().get().getPredicate().get());
+        Assert.assertEquals(ArgUtils.asFfiAlias("a", true), expandOp.getAlias().get().applyArg());
+
+        GetVOp getVOp = (GetVOp) ops.get(2);
+        Assert.assertEquals(FfiVOpt.End, getVOp.getGetVOpt().get().applyArg());
+    }
+
+    // fuse outE + has("name", ...)
+    // inV().has(...) -> getV + filter
+    @Test
+    public void g_V_outE_hasProp_as_inV_hasProp() {
+        List<InterOpBase> ops =
+                getOps(g.V().outE().has("weight", 1.0).as("a").inV().has("name", "marko"));
+        // source + expand + getV + filter + sink
+        Assert.assertEquals(4, ops.size() - 1);
+
+        ExpandOp expandOp = (ExpandOp) ops.get(1);
+        Assert.assertEquals(true, expandOp.getIsEdge().get().applyArg());
+        Assert.assertEquals(
+                "@.weight && @.weight == 1.0", expandOp.getParams().get().getPredicate().get());
+        Assert.assertEquals(ArgUtils.asFfiAlias("a", true), expandOp.getAlias().get().applyArg());
+
+        GetVOp op = (GetVOp) ops.get(2);
+        Assert.assertEquals(FfiVOpt.End, op.getGetVOpt().get().applyArg());
+
+        SelectOp selectOp = (SelectOp) ops.get(3);
+        Assert.assertEquals(
+                "@.name && @.name == \"marko\"", selectOp.getPredicate().get().applyArg());
+    }
+
+    // out + hasLabel -> expand + filter
+    @Test
+    public void g_V_out_hasLabel() {
+        List<InterOpBase> ops = getOps(g.V().out().hasLabel("person"));
+        // source + expand + filter + sink
+        Assert.assertEquals(3, ops.size() - 1);
+
+        ExpandOp expandOp = (ExpandOp) ops.get(1);
+        Assert.assertEquals(false, expandOp.getIsEdge().get().applyArg());
+
+        SelectOp selectOp = (SelectOp) ops.get(2);
+        Assert.assertEquals(
+                "@.~label && @.~label == \"person\"", selectOp.getPredicate().get().applyArg());
+    }
+
+    // out + has("name", ...) -> expand + filter
+    @Test
+    public void g_V_out_hasProp() {
+        List<InterOpBase> ops = getOps(g.V().out().has("name", "marko"));
+        // source + expand + filter + sink
+        Assert.assertEquals(3, ops.size() - 1);
+
+        ExpandOp expandOp = (ExpandOp) ops.get(1);
+        Assert.assertEquals(false, expandOp.getIsEdge().get().applyArg());
+
+        SelectOp selectOp = (SelectOp) ops.get(2);
+        Assert.assertEquals(
+                "@.name && @.name == \"marko\"", selectOp.getPredicate().get().applyArg());
+    }
+
+    public static List<InterOpBase> getOps(Traversal traversal) {
+        IrStandardOpProcessor.applyStrategies(traversal);
+        InterOpCollection opCollection = new InterOpCollectionBuilder(traversal).build();
+        InterOpCollection.applyStrategies(opCollection);
+        InterOpCollection.process(opCollection);
+        return opCollection.unmodifiableCollection();
     }
 }

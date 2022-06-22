@@ -14,6 +14,8 @@
 //! limitations under the License.
 
 use std::collections::HashMap;
+use std::fmt;
+use std::sync::atomic::{AtomicPtr, Ordering};
 use std::sync::Arc;
 
 use dyn_type::{Object, Primitives};
@@ -25,12 +27,14 @@ use maxgraph_store::api::prelude::Property;
 use maxgraph_store::api::*;
 use maxgraph_store::api::{Edge as StoreEdge, Vertex as StoreVertex};
 use maxgraph_store::api::{PropId, SnapshotId};
+use pegasus_common::downcast::*;
 
 use crate::apis::{
-    from_fn, register_graph, DefaultDetails, Direction, DynDetails, Edge, QueryParams, ReadGraph,
-    Statement, Vertex, ID,
+    from_fn, register_graph, DefaultDetails, Details, Direction, DynDetails, Edge, PropertyValue,
+    QueryParams, ReadGraph, Statement, Vertex, ID,
 };
 use crate::errors::{GraphProxyError, GraphProxyResult};
+use crate::utils::expr::eval_pred::EvalPred;
 use crate::{filter_limit, limit_n};
 
 // Should be identical to the param_name given by compiler
@@ -75,6 +79,7 @@ where
     ) -> GraphProxyResult<Box<dyn Iterator<Item = Vertex> + Send>> {
         if let Some(partitions) = params.partitions.as_ref() {
             let store = self.store.clone();
+            let partitioner = self.partition_manager.clone();
             let si = params
                 .get_extra_param(SNAPSHOT_ID)
                 .map(|s| {
@@ -104,7 +109,9 @@ where
                     // Each worker will scan the partitions pre-allocated in source operator. Same as follows.
                     partitions.as_ref(),
                 )
-                .map(move |v| to_runtime_vertex(&v));
+                .map(move |v| {
+                    to_detailed_runtime_vertex(&v, store.clone(), partitioner.clone(), si, prop_ids.clone())
+                });
             Ok(filter_limit!(result, filter, None))
         } else {
             Ok(Box::new(std::iter::empty()))
@@ -123,10 +130,11 @@ where
             .partition_manager
             .get_vertex_id_by_primary_keys(store_label_id, store_indexed_values.as_ref())
         {
+            // TODO: confirm if this should be lazy details?
             Ok(Some(Vertex::new(
                 vid as ID,
                 Some(label_id.clone()),
-                DynDetails::new(DefaultDetails::new(HashMap::new())),
+                DynDetails::new(DefaultDetails::default()),
             )))
         } else {
             Ok(None)
@@ -144,8 +152,11 @@ where
                 })
                 .unwrap_or(DEFAULT_SNAPSHOT_ID);
             let label_ids = encode_storage_labels(params.labels.as_ref())?;
-            let prop_ids = encode_storage_prop_keys(params.columns.as_ref())?;
             let filter = params.filter.clone();
+            // TODO: Currently, if filter exists, we scan edges with all props for filtering, and then trim the edges by only preserving necessary props;
+            // TODO: In the future, the filter will be pushed to the storage.
+            let prop_ids =
+                if filter.is_some() { None } else { encode_storage_prop_keys(params.columns.as_ref())? };
             let partitions: Vec<PartitionId> = partitions
                 .iter()
                 .map(|pid| *pid as PartitionId)
@@ -162,7 +173,15 @@ where
                 )
                 .map(move |e| to_runtime_edge(&e));
 
-            Ok(filter_limit!(result, filter, None))
+            if let Some(filter) = filter {
+                let columns = params.columns.clone();
+                let filter_result = result
+                    .filter(move |e| filter.eval_bool(Some(e)).unwrap_or(false))
+                    .map(move |e| edge_trim(e, columns.as_ref()));
+                Ok(Box::new(filter_result))
+            } else {
+                Ok(Box::new(result))
+            }
         } else {
             Ok(Box::new(std::iter::empty()))
         }
@@ -172,6 +191,7 @@ where
         &self, ids: &[ID], params: &QueryParams,
     ) -> GraphProxyResult<Box<dyn Iterator<Item = Vertex> + Send>> {
         let store = self.store.clone();
+        let partitioner = self.partition_manager.clone();
         let si = params
             .get_extra_param(SNAPSHOT_ID)
             .map(|s| {
@@ -184,8 +204,10 @@ where
         let partition_label_vertex_ids =
             get_partition_label_vertex_ids(ids, self.partition_manager.clone());
         let result = store
-            .get_vertex_properties(si, partition_label_vertex_ids, prop_ids.as_ref())
-            .map(move |v| to_runtime_vertex(&v));
+            .get_vertex_properties(si, partition_label_vertex_ids.clone(), prop_ids.as_ref())
+            .map(move |v| {
+                to_detailed_runtime_vertex(&v, store.clone(), partitioner.clone(), si, prop_ids.clone())
+            });
 
         Ok(filter_limit!(result, filter, None))
     }
@@ -214,11 +236,11 @@ where
         let edge_label_ids = encode_storage_labels(params.labels.as_ref())?;
 
         let stmt = from_fn(move |v: ID| {
-            let src_id = get_partition_vertex_ids(v, partition_manager.clone());
+            let src_id = get_partition_vertex_id(v, partition_manager.clone());
             let iter = match direction {
                 Direction::Out => store.get_out_vertex_ids(
                     si,
-                    src_id,
+                    vec![src_id],
                     edge_label_ids.as_ref(),
                     None,
                     None,
@@ -226,7 +248,7 @@ where
                 ),
                 Direction::In => store.get_in_vertex_ids(
                     si,
-                    src_id,
+                    vec![src_id],
                     edge_label_ids.as_ref(),
                     None,
                     None,
@@ -236,7 +258,7 @@ where
                     let mut iters = vec![];
                     let out_iter = store.get_out_vertex_ids(
                         si,
-                        src_id.clone(),
+                        vec![src_id.clone()],
                         edge_label_ids.as_ref(),
                         None,
                         None,
@@ -245,7 +267,7 @@ where
                     iters.push(out_iter);
                     let in_iter = store.get_in_vertex_ids(
                         si,
-                        src_id,
+                        vec![src_id],
                         edge_label_ids.as_ref(),
                         None,
                         None,
@@ -256,7 +278,7 @@ where
                 }
             };
             let iters = iter.map(|(_src, vi)| vi).collect();
-            let iter_list = IterList::new(iters).map(move |v| to_runtime_vertex(&v));
+            let iter_list = IterList::new(iters).map(move |v| to_empty_runtime_vertex(&v));
             Ok(filter_limit!(iter_list, filter, None))
         });
         Ok(stmt)
@@ -277,14 +299,18 @@ where
         let filter = params.filter.clone();
         let limit = params.limit.clone();
         let edge_label_ids = encode_storage_labels(params.labels.as_ref())?;
-        let prop_ids = encode_storage_prop_keys(params.columns.as_ref())?;
+        // TODO: Currently, if filter exists, we scan edges with all props for filtering, and then trim the edges by only preserving necessary props;
+        // TODO: In the future, the filter will be pushed to the storage.
+        let prop_ids =
+            if filter.is_some() { None } else { encode_storage_prop_keys(params.columns.as_ref())? };
+        let columns = params.columns.clone();
 
         let stmt = from_fn(move |v: ID| {
-            let src_id = get_partition_vertex_ids(v, partition_manager.clone());
+            let src_id = get_partition_vertex_id(v, partition_manager.clone());
             let iter = match direction {
                 Direction::Out => store.get_out_edges(
                     si,
-                    src_id,
+                    vec![src_id],
                     edge_label_ids.as_ref(),
                     None,
                     None,
@@ -293,7 +319,7 @@ where
                 ),
                 Direction::In => store.get_in_edges(
                     si,
-                    src_id,
+                    vec![src_id],
                     edge_label_ids.as_ref(),
                     None,
                     None,
@@ -304,7 +330,7 @@ where
                     let mut iter = vec![];
                     let out_iter = store.get_out_edges(
                         si,
-                        src_id.clone(),
+                        vec![src_id.clone()],
                         edge_label_ids.as_ref(),
                         None,
                         None,
@@ -314,7 +340,7 @@ where
                     iter.push(out_iter);
                     let in_iter = store.get_in_edges(
                         si,
-                        src_id,
+                        vec![src_id],
                         edge_label_ids.as_ref(),
                         None,
                         None,
@@ -327,21 +353,44 @@ where
             };
             let iters = iter.map(|(_src, ei)| ei).collect();
             let iter_list = IterList::new(iters).map(move |e| to_runtime_edge(&e));
-            Ok(filter_limit!(iter_list, filter, None))
+            if let Some(filter) = filter.clone() {
+                let columns = columns.clone();
+                let filter_result = iter_list
+                    .filter(move |e| filter.eval_bool(Some(e)).unwrap_or(false))
+                    .map(move |e| edge_trim(e, columns.as_ref()));
+                Ok(Box::new(filter_result))
+            } else {
+                Ok(Box::new(iter_list))
+            }
         });
         Ok(stmt)
     }
 }
 
 #[inline]
-fn to_runtime_vertex<V: StoreVertex>(v: &V) -> Vertex {
+fn to_empty_runtime_vertex<V: StoreVertex>(v: &V) -> Vertex {
     let id = v.get_id() as ID;
     let label = encode_runtime_v_label(v);
-    let properties = v
-        .get_properties()
-        .map(|(prop_id, prop_val)| encode_runtime_property(prop_id, prop_val))
-        .collect();
-    Vertex::new(id, Some(label), DynDetails::new(DefaultDetails::new(properties)))
+    Vertex::new(id, Some(label), DynDetails::new(DefaultDetails::default()))
+}
+
+#[inline]
+fn to_detailed_runtime_vertex<V, VI, E, EI>(
+    v: &V, store: Arc<dyn GlobalGraphQuery<V = V, VI = VI, E = E, EI = EI>>,
+    graph_partition_manager: Arc<dyn GraphPartitionManager>, si: SnapshotId,
+    prop_keys: Option<Vec<PropId>>,
+) -> Vertex
+where
+    V: 'static + StoreVertex,
+    VI: 'static + Iterator<Item = V> + Send,
+    E: 'static + StoreEdge,
+    EI: 'static + Iterator<Item = E> + Send,
+{
+    let id = v.get_id() as ID;
+    let label = encode_runtime_v_label(v);
+    let partition_vid = get_partition_label_vertex_ids(&vec![id], graph_partition_manager.clone());
+    let details = LazyVertexDetails::new(partition_vid, si, prop_keys, store);
+    Vertex::new(id, Some(label), DynDetails::new(details))
 }
 
 #[inline]
@@ -352,6 +401,7 @@ fn to_runtime_edge<E: StoreEdge>(e: &E) -> Edge {
         .get_properties()
         .map(|(prop_id, prop_val)| encode_runtime_property(prop_id, prop_val))
         .collect();
+    // TODO: new an edge with with_from_src()
     let mut edge = Edge::new(
         id,
         Some(label),
@@ -364,7 +414,217 @@ fn to_runtime_edge<E: StoreEdge>(e: &E) -> Edge {
     edge
 }
 
-/// in maxgraph store, Option<Vec<PropId>>: None means we need all properties,
+#[inline]
+fn edge_trim(mut edge: Edge, columns: Option<&Vec<NameOrId>>) -> Edge {
+    if let Some(columns) = columns {
+        if columns.is_empty() {
+            // vec![] means all properties are needed, and do nothing
+        } else {
+            let details = edge.get_details_mut();
+            let mut trimmed_details = HashMap::new();
+            for column in columns {
+                trimmed_details.insert(
+                    column.clone(),
+                    details
+                        .get_property(column)
+                        .map(|p| p.try_to_owned())
+                        .unwrap_or(None)
+                        .unwrap_or(Object::None),
+                );
+            }
+            *details = DynDetails::new(DefaultDetails::new(trimmed_details));
+        }
+    } else {
+        // None means no properties are needed
+        let details = edge.get_details_mut();
+        *details = DynDetails::new(DefaultDetails::default());
+    }
+    edge
+}
+
+/// LazyVertexDetails is used for local property fetching optimization.
+/// That is, the required properties will not be materialized until LazyVertexDetails need to be shuffled.
+#[allow(dead_code)]
+pub struct LazyVertexDetails<V, VI, E, EI>
+where
+    V: StoreVertex + 'static,
+    VI: Iterator<Item = V> + Send + 'static,
+    E: StoreEdge + 'static,
+    EI: Iterator<Item = E> + Send + 'static,
+{
+    pub id: Vec<PartitionLabeledVertexIds>,
+    snapshot_id: SnapshotId,
+    // prop_keys specify the properties we would save for later queries after shuffle,
+    // excluding the ones used only when local property fetching.
+    // Specifically, in graphscope store, None means we need all properties,
+    // and Some(vec![]) means we do not need any property
+    prop_keys: Option<Vec<PropId>>,
+    inner: AtomicPtr<V>,
+    store: Arc<dyn GlobalGraphQuery<V = V, VI = VI, E = E, EI = EI>>,
+}
+
+impl<V, VI, E, EI> LazyVertexDetails<V, VI, E, EI>
+where
+    V: StoreVertex + 'static,
+    VI: Iterator<Item = V> + Send + 'static,
+    E: StoreEdge + 'static,
+    EI: Iterator<Item = E> + Send + 'static,
+{
+    pub fn new(
+        id: Vec<PartitionLabeledVertexIds>, snapshot_id: SnapshotId, prop_keys: Option<Vec<PropId>>,
+        store: Arc<dyn GlobalGraphQuery<V = V, VI = VI, E = E, EI = EI>>,
+    ) -> Self {
+        LazyVertexDetails { id, snapshot_id, prop_keys, inner: AtomicPtr::default(), store }
+    }
+
+    fn get_vertex_ptr(&self) -> Option<*mut V> {
+        let mut ptr = self.inner.load(Ordering::SeqCst);
+        if ptr.is_null() {
+            if let Some(v) = self
+                .store
+                .get_vertex_properties(self.snapshot_id, self.id.clone(), self.prop_keys.as_ref())
+                .next()
+            {
+                let v = Box::new(v);
+                let new_ptr = Box::into_raw(v);
+                let swapped = self.inner.swap(new_ptr, Ordering::SeqCst);
+                if swapped.is_null() {
+                    ptr = new_ptr;
+                } else {
+                    unsafe {
+                        std::ptr::drop_in_place(new_ptr);
+                    }
+                    ptr = swapped
+                };
+                Some(ptr)
+            } else {
+                info!("Have not found vertex {:?} in gs_store", self.id);
+                None
+            }
+        } else {
+            Some(ptr)
+        }
+    }
+}
+
+impl<V, VI, E, EI> fmt::Debug for LazyVertexDetails<V, VI, E, EI>
+where
+    V: StoreVertex + 'static,
+    VI: Iterator<Item = V> + Send + 'static,
+    E: StoreEdge + 'static,
+    EI: Iterator<Item = E> + Send + 'static,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("gs_store LazyVertexDetails")
+            .field("id", &self.id)
+            .field("properties", &self.prop_keys)
+            .field("inner", &self.inner)
+            .finish()
+    }
+}
+
+impl<V, VI, E, EI> Details for LazyVertexDetails<V, VI, E, EI>
+where
+    V: StoreVertex + 'static,
+    VI: Iterator<Item = V> + Send + 'static,
+    E: StoreEdge + 'static,
+    EI: Iterator<Item = E> + Send + 'static,
+{
+    fn get_property(&self, key: &NameOrId) -> Option<PropertyValue> {
+        if let NameOrId::Id(key) = key {
+            if let Some(ptr) = self.get_vertex_ptr() {
+                unsafe {
+                    (*ptr)
+                        .get_property(*key as PropId)
+                        .map(|prop| PropertyValue::Owned(encode_runtime_prop_val(prop)))
+                }
+            } else {
+                None
+            }
+        } else {
+            info!("Have not support getting property by prop_name in gs_store yet");
+            None
+        }
+    }
+
+    fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {
+        let mut all_props = HashMap::new();
+        if self.prop_keys.is_none() {
+            // the case of get_all_properties from vertex;
+            if let Some(ptr) = self.get_vertex_ptr() {
+                unsafe {
+                    all_props = (*ptr)
+                        .get_properties()
+                        .map(|(prop_id, prop_val)| encode_runtime_property(prop_id, prop_val))
+                        .collect();
+                }
+            } else {
+                return None;
+            }
+        } else {
+            let prop_keys = self.prop_keys.as_ref().unwrap();
+            // the case of get_all_properties with prop_keys pre-specified
+            for key in prop_keys.iter() {
+                let key = NameOrId::Id(*key as KeyId);
+                if let Some(prop) = self.get_property(&key) {
+                    all_props.insert(key.clone(), prop.try_to_owned().unwrap());
+                } else {
+                    all_props.insert(key.clone(), Object::None);
+                }
+            }
+        }
+        Some(all_props)
+    }
+
+    fn insert_property(&mut self, key: NameOrId, _value: Object) -> Option<Object> {
+        if let NameOrId::Id(key) = key {
+            if let Some(prop_keys) = self.prop_keys.as_mut() {
+                prop_keys.push(key as PropId);
+            } else {
+                self.prop_keys = Some(vec![key as PropId]);
+            }
+            None
+        } else {
+            info!("Have not support insert property by prop_name in gs_store yet");
+            None
+        }
+    }
+}
+
+impl<V, VI, E, EI> AsAny for LazyVertexDetails<V, VI, E, EI>
+where
+    V: StoreVertex + 'static,
+    VI: Iterator<Item = V> + Send + 'static,
+    E: StoreEdge + 'static,
+    EI: Iterator<Item = E> + Send + 'static,
+{
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
+    }
+
+    fn as_any_ref(&self) -> &dyn Any {
+        self
+    }
+}
+
+impl<V, VI, E, EI> Drop for LazyVertexDetails<V, VI, E, EI>
+where
+    V: StoreVertex + 'static,
+    VI: Iterator<Item = V> + Send + 'static,
+    E: StoreEdge + 'static,
+    EI: Iterator<Item = E> + Send + 'static,
+{
+    fn drop(&mut self) {
+        let ptr = self.inner.load(Ordering::SeqCst);
+        if !ptr.is_null() {
+            unsafe {
+                std::ptr::drop_in_place(ptr);
+            }
+        }
+    }
+}
+
+/// in graphscope store, Option<Vec<PropId>>: None means we need all properties,
 /// and Some means we need given properties (and Some(vec![]) means we do not need any property)
 /// while in ir, None means we do not need any properties,
 /// and Some means we need given properties (and Some(vec![]) means we need all properties)
@@ -531,9 +791,9 @@ fn get_partition_label_vertex_ids(
 
 /// Transform type of ids to PartitionVertexIds as required by graphscope store,
 /// which consists of (PartitionId,Vec<VertexId>)
-fn get_partition_vertex_ids(
+fn get_partition_vertex_id(
     id: ID, graph_partition_manager: Arc<dyn GraphPartitionManager>,
-) -> Vec<PartitionVertexIds> {
+) -> PartitionVertexIds {
     let partition_id = graph_partition_manager.get_partition_id(id as VertexId) as PartitionId;
-    vec![(partition_id, vec![id as VertexId])]
+    (partition_id, vec![id as VertexId])
 }

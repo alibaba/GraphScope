@@ -481,6 +481,9 @@ public class IrPlan implements Closeable {
                                                 } else if (Utils.equalClass(o, GetVOp.class)) {
                                                     binder = GETV_OP.apply(o);
                                                     opt = FfiBinderOpt.Vertex;
+                                                } else if (Utils.equalClass(o, SelectOp.class)) {
+                                                    binder = SELECT_OP.apply(o);
+                                                    opt = FfiBinderOpt.Select;
                                                 } else {
                                                     throw new InterOpIllegalArgException(
                                                             baseOp.getClass(),

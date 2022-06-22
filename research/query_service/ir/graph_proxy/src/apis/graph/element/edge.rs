@@ -119,6 +119,10 @@ impl Edge {
             self.get_src_label()
         }
     }
+
+    pub fn get_details_mut(&mut self) -> &mut DynDetails {
+        &mut self.details
+    }
 }
 
 impl Encode for Edge {
