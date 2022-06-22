@@ -377,13 +377,7 @@ class GlobalPGStream : public Registered<GlobalPGStream>, GlobalObject {
   }
 
   std::shared_ptr<PropertyGraphOutStream> StreamAt(size_t const index) const {
-    for (auto const& ptr : local_streams_) {
-      if (static_cast<size_t>(ptr->stream_index()) == index) {
-        return ptr;
-      }
-    }
-    LOG(ERROR) << "No such stream: index = " << index;
-    return nullptr;
+    return local_streams_[index % local_stream_chunks_];
   }
 
   const std::vector<std::shared_ptr<PropertyGraphOutStream>>& AvailableStreams(
@@ -394,6 +388,7 @@ class GlobalPGStream : public Registered<GlobalPGStream>, GlobalObject {
   void Construct(const ObjectMeta& meta) override;
 
  private:
+  size_t local_stream_chunks_;
   size_t total_stream_chunks_;
   std::vector<std::shared_ptr<PropertyGraphOutStream>> local_streams_;
 

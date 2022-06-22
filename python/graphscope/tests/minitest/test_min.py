@@ -230,3 +230,28 @@ def test_demo_with_default_session(ogbn_small_script):
     }
 
     train(config, lg)
+
+
+def test_modern_graph():
+    import vineyard
+
+    with vineyard.envvars(
+        {
+            "USE_GAIA_ENGINE": "True",
+            "RUST_LOG": "debug",
+            "THREAD_PER_WORKER": "2",
+        }
+    ):
+        vquery = "g.V().valueMap()"
+        equery = "g.E().valueMap()"
+        session = graphscope.session(cluster_type="hosts", num_workers=1)
+
+        g0 = load_modern_graph(session)
+        interactive0 = session.gremlin(g0)
+        print("vertices = ", interactive0.execute(vquery).all())
+        print("edges = ", interactive0.execute(equery).all())
+
+        g1 = interactive0.subgraph("g.E()")
+        interactive1 = session.gremlin(g1)
+        print("vertices = ", interactive1.execute(vquery).all())
+        print("edges = ", interactive1.execute(equery).all())

@@ -1038,7 +1038,7 @@ class CoordinatorServiceServicer(
         key_of_parent_op = op.parents[0]
         gremlin_client = self._object_manager.get(key_of_parent_op)
 
-        def create_global_graph_builder(graph_name, num_workers):
+        def create_global_graph_builder(graph_name, num_workers, thread_per_worker):
             import vineyard
 
             vineyard_client = vineyard.connect(
@@ -1047,23 +1047,29 @@ class CoordinatorServiceServicer(
 
             instances = [key for key in vineyard_client.meta]
 
+            # duplicate each instances for each thread per worker.
+            chunk_instances = [
+                key for key in instances for _ in range(thread_per_worker)
+            ]
+
             # build the vineyard::GlobalPGStream
             metadata = vineyard.ObjectMeta()
             metadata.set_global(True)
             metadata["typename"] = "vineyard::GlobalPGStream"
-            metadata["total_stream_chunks"] = len(instances)
+            metadata["local_stream_chunks"] = thread_per_worker
+            metadata["total_stream_chunks"] = len(chunk_instances)
 
             # build the parallel stream for edge
             edge_metadata = vineyard.ObjectMeta()
             edge_metadata.set_global(True)
             edge_metadata["typename"] = "vineyard::ParallelStream"
-            edge_metadata["__streams_-size"] = len(instances)
+            edge_metadata["__streams_-size"] = len(chunk_instances)
 
             # build the parallel stream for vertex
             vertex_metadata = vineyard.ObjectMeta()
             vertex_metadata.set_global(True)
             vertex_metadata["typename"] = "vineyard::ParallelStream"
-            vertex_metadata["__streams_-size"] = len(instances)
+            vertex_metadata["__streams_-size"] = len(chunk_instances)
 
             # NB: we don't respect `num_workers`, instead, we create a substream
             # on each vineyard instance.
@@ -1073,7 +1079,7 @@ class CoordinatorServiceServicer(
             #
             # It should be ok, as each engine work will get its own local stream. But,
             # generally it should be equal to `num_workers`.
-            for worker, instance_id in enumerate(instances):
+            for worker, instance_id in enumerate(chunk_instances):
                 edge_stream = vineyard.ObjectMeta()
                 edge_stream["typename"] = "vineyard::RecordBatchStream"
                 edge_stream["nbytes"] = 0
@@ -1130,7 +1136,12 @@ class CoordinatorServiceServicer(
             return repr(graph.id), repr(edge.id), repr(vertex.id)
 
         def load_subgraph(
-            graph_name, num_workers, oid_type, edge_stream_id, vertex_stream_id
+            graph_name,
+            num_workers,
+            thread_per_worker,
+            oid_type,
+            edge_stream_id,
+            vertex_stream_id,
         ):
             import vineyard
 
@@ -1142,7 +1153,7 @@ class CoordinatorServiceServicer(
             )
 
             # wait for all stream been created by GAIA executor in FFI
-            for worker in range(num_workers):
+            for worker in range(num_workers * thread_per_worker):
                 name = "__%s_%d_streamed" % (graph_name, worker)
                 vineyard_client.get_name(name, wait=True)
 
@@ -1184,11 +1195,14 @@ class CoordinatorServiceServicer(
         random_num = random.randint(0, 10000000)
         graph_name = "subgraph-%s-%s" % (str(now_time), str(random_num))
 
+        thread_per_worker = int(os.environ.get("THREAD_PER_WORKER", 2))
         (
             _graph_builder_id,
             edge_stream_id,
             vertex_stream_id,
-        ) = create_global_graph_builder(graph_name, self._launcher.num_workers)
+        ) = create_global_graph_builder(
+            graph_name, self._launcher.num_workers, thread_per_worker
+        )
 
         # start a thread to launch the graph
         pool = futures.ThreadPoolExecutor()
@@ -1196,6 +1210,7 @@ class CoordinatorServiceServicer(
             load_subgraph,
             graph_name,
             self._launcher.num_workers,
+            thread_per_worker,
             oid_type,
             edge_stream_id,
             vertex_stream_id,

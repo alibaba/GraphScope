@@ -581,6 +581,7 @@ void GlobalPGStream::Construct(const ObjectMeta& meta) {
   this->meta_ = meta;
   this->id_ = meta.GetId();
 
+  meta.GetKeyValue("local_stream_chunks", local_stream_chunks_);
   meta.GetKeyValue("total_stream_chunks", total_stream_chunks_);
   LOG(INFO) << "total_stream_chunks_ = " << total_stream_chunks_;
   for (size_t idx = 0; idx < total_stream_chunks_; ++idx) {
@@ -590,6 +591,8 @@ void GlobalPGStream::Construct(const ObjectMeta& meta) {
         std::dynamic_pointer_cast<PropertyGraphOutStream>(meta.GetMember(member_key)));
     }
   }
+  VINEYARD_ASSERT(local_stream_chunks_ == local_streams_.size(),
+                  "Local streams don't match with the expected size");
   LOG(INFO) << "local stream chunk size: " << local_streams_.size();
 }
 
