@@ -4,7 +4,7 @@ import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.frontend.write.GraphWriter;
 import com.alibaba.graphscope.groot.frontend.write.WriteRequest;
 import com.alibaba.graphscope.proto.write.*;
-import com.alibaba.maxgraph.common.util.UuidUtils;
+import com.alibaba.maxgraph.sdkcommon.util.UuidUtils;
 
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;

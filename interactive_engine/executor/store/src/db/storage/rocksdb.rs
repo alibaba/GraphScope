@@ -104,7 +104,7 @@ impl ExternalStorage for RocksDB {
         let mut options = IngestExternalFileOptions::default();
         options.set_move_files(true);
         self.db.ingest_external_file_opts(&options, files.to_vec()).map_err(|e| {
-            let msg = format!("rocksdb.ingest_sst failed because {}", e.into_string());
+            let msg = format!("rocksdb.ingest_sst file {:?} failed because {}", files, e.into_string());
             gen_graph_err!(GraphErrorCode::ExternalStorageError, msg)
         })
     }
