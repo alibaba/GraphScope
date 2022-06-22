@@ -39,7 +39,7 @@
     <fastffi.annotation-processor.version>0.1</fastffi.annotation-processor.version>
     <fastffi.ffi.version>0.1</fastffi.ffi.version>
     <fastffi.llvm4jni-runtime.version>0.1</fastffi.llvm4jni-runtime.version>
-    <fastjson.version>1.2.76</fastjson.version>
+    <fastjson.version>1.2.83</fastjson.version>
     <google-java-format.version>1.7</google-java-format.version>
     <javapoet.version>1.13.0</javapoet.version>
     <junit.version>4.13.2</junit.version>
