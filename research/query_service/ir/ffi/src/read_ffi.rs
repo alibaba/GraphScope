@@ -226,7 +226,7 @@ extern "C" {
         partition_id: &mut PartitionId,
     ) -> FFIState;
 
-    fn get_outer_id(graph: GraphHandle, vid: VertexId) -> VertexId;
+    pub fn get_outer_id(graph: GraphHandle, vid: VertexId) -> VertexId;
 
     fn test1(test: NativeProperty);
 }

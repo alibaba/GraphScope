@@ -38,6 +38,10 @@ impl VineyardGraphWriter {
         Ok(VineyardGraphWriter { graph })
     }
 
+    fn encode_ffi_id(&self, vertex_id: FfiVertexId) -> FfiVertexId {
+        unsafe { get_outer_id(self.graph, vertex_id as i64) as FfiVertexId }
+    }
+
     fn encode_ffi_label(&self, key: Option<&NameOrId>) -> GraphProxyResult<FfiLabelId> {
         let key_id = self.encode_key(key)?;
         Ok(key_id as FfiLabelId)
@@ -57,9 +61,7 @@ impl VineyardGraphWriter {
     }
 
     fn encode_details(&self, details: Option<&DynDetails>) -> GraphProxyResult<Vec<WriteNativeProperty>> {
-        let properties = details
-            .map(|details| details.get_all_properties())
-            .unwrap_or(None);
+        let properties = details.map(|details| details.get_all_properties()).unwrap_or(None);
         let mut native_properties: Vec<WriteNativeProperty> = vec![];
         if let Some(mut properties) = properties {
             for (prop_key, prop_val) in properties.drain() {
@@ -74,7 +76,7 @@ impl VineyardGraphWriter {
 
 impl WriteGraphProxy for VineyardGraphWriter {
     fn add_vertex(&mut self, vertex: Vertex) -> GraphProxyResult<()> {
-        let vertex_id = vertex.id() as FfiVertexId;
+        let vertex_id = self.encode_ffi_id(vertex.id());
         let label_id = self.encode_ffi_label(vertex.label())?;
         let native_properties = self.encode_details(vertex.details())?;
         let state = unsafe {
@@ -90,7 +92,7 @@ impl WriteGraphProxy for VineyardGraphWriter {
         let mut merge_properties: Vec<WriteNativeProperty> = Vec::with_capacity(vertex_size);
         let mut property_sizes = Vec::with_capacity(vertex_size);
         for vertex in vertices {
-            vertex_ids.push(vertex.id() as FfiVertexId);
+            vertex_ids.push(self.encode_ffi_id(vertex.id()));
             vertex_label_ids.push(self.encode_ffi_label(vertex.label())?);
             let mut properties = self.encode_details(vertex.details())?;
             property_sizes.push(properties.len());
@@ -119,8 +121,8 @@ impl WriteGraphProxy for VineyardGraphWriter {
             add_edge(
                 self.graph,
                 edge.id(),
-                edge.src_id,
-                edge.dst_id,
+                self.encode_ffi_id(edge.src_id),
+                self.encode_ffi_id(edge.dst_id),
                 edge_label,
                 src_label,
                 dst_label,
@@ -144,8 +146,8 @@ impl WriteGraphProxy for VineyardGraphWriter {
         let mut property_sizes = Vec::with_capacity(edge_size);
         for edge in edges {
             edge_ids.push(edge.id());
-            src_ids.push(edge.src_id);
-            dst_ids.push(edge.dst_id);
+            src_ids.push(self.encode_ffi_id(edge.src_id));
+            dst_ids.push(self.encode_ffi_id(edge.dst_id));
             edge_label_ids.push(self.encode_ffi_label(edge.label())?);
             src_label_ids.push(self.encode_ffi_label(edge.get_src_label())?);
             dst_label_ids.push(self.encode_ffi_label(edge.get_dst_label())?);
