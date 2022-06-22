@@ -70,6 +70,13 @@ jupyter-image:
 				 --network=host \
 				 -f $(WORKING_DIR)/jupyter.Dockerfile ..
 
+dataset-image:
+	docker build --progress=$(BUILD_PROGRESS) \
+				 --build-arg CI=${CI} \
+				 -t graphscope/dataset:${SHORT_SHA} \
+				 --network=host \
+				 -f $(WORKING_DIR)/dataset.Dockerfile ..
+
 graphscope-store-image:
 	docker pull ${REGISTRY}/$(DOCKER_ORG)/graphscope-vineyard:${VINEYARD_VERSION}
 	docker build --progress=$(BUILD_PROGRESS) \

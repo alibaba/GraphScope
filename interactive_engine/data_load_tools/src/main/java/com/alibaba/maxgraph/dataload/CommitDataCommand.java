@@ -12,8 +12,9 @@ import java.util.Map;
 
 public class CommitDataCommand extends DataCommand {
 
-    public CommitDataCommand(String dataPath, boolean isFromOSS) throws IOException {
-        super(dataPath, isFromOSS);
+    public CommitDataCommand(String dataPath, boolean isFromOSS, String uniquePath)
+            throws IOException {
+        super(dataPath, isFromOSS, uniquePath);
     }
 
     public void run() {
@@ -39,6 +40,6 @@ public class CommitDataCommand extends DataCommand {
             }
             tableToTarget.put(tableId, builder.build());
         }
-        client.commitDataLoad(tableToTarget);
+        client.commitDataLoad(tableToTarget, this.uniquePath);
     }
 }

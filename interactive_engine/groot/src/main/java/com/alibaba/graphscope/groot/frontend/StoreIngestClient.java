@@ -15,6 +15,8 @@ package com.alibaba.graphscope.groot.frontend;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.rpc.RpcClient;
+import com.alibaba.maxgraph.proto.groot.StoreClearIngestRequest;
+import com.alibaba.maxgraph.proto.groot.StoreClearIngestResponse;
 import com.alibaba.maxgraph.proto.groot.StoreIngestGrpc;
 import com.alibaba.maxgraph.proto.groot.StoreIngestRequest;
 import com.alibaba.maxgraph.proto.groot.StoreIngestResponse;
@@ -44,6 +46,25 @@ public class StoreIngestClient extends RpcClient {
                     @Override
                     public void onError(Throwable t) {
                         callback.onError(t);
+                    }
+
+                    @Override
+                    public void onCompleted() {}
+                });
+    }
+
+    public void storeClearIngest(CompletionCallback<Void> callback) {
+        this.stub.storeClearIngest(
+                StoreClearIngestRequest.newBuilder().build(),
+                new StreamObserver<StoreClearIngestResponse>() {
+                    @Override
+                    public void onNext(StoreClearIngestResponse storeClearIngestResponse) {
+                        callback.onCompleted(null);
+                    }
+
+                    @Override
+                    public void onError(Throwable throwable) {
+                        callback.onError(throwable);
                     }
 
                     @Override

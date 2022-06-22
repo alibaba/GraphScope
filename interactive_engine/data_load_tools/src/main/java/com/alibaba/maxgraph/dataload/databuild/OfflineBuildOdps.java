@@ -20,6 +20,7 @@ import com.alibaba.maxgraph.compiler.api.schema.GraphElement;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.sdkcommon.common.DataLoadTarget;
 import com.alibaba.maxgraph.sdkcommon.schema.GraphSchemaMapper;
+import com.alibaba.maxgraph.sdkcommon.util.UuidUtils;
 import com.aliyun.odps.data.TableInfo;
 import com.aliyun.odps.mapred.JobClient;
 import com.aliyun.odps.mapred.conf.JobConf;
@@ -61,10 +62,17 @@ public class OfflineBuildOdps {
     public static final String META_INFO = "meta.info";
     public static final String USER_NAME = "auth.username";
     public static final String PASS_WORD = "auth.password";
+    public static final String UNIQUE_PATH = "unique.path";
 
     public static void main(String[] args)
             throws IOException, ClassNotFoundException, InterruptedException {
         String propertiesFile = args[0];
+        String uniquePath = UuidUtils.getBase64UUIDString();
+        // User can assign a unique path manually.
+        if (args.length > 1) {
+            uniquePath = args[1];
+        }
+
         Properties properties = new Properties();
         try (InputStream is = new FileInputStream(propertiesFile)) {
             properties.load(is);
@@ -185,8 +193,12 @@ public class OfflineBuildOdps {
         outputMeta.put("schema", schemaJson);
         outputMeta.put("mappings", mappings);
         outputMeta.put("datapath", dataPath);
+        outputMeta.put("unique_path", uniquePath);
 
         job.set(META_INFO, objectMapper.writeValueAsString(outputMeta));
+        job.set(UNIQUE_PATH, uniquePath);
+
+        System.out.println("uniquePath is: " + uniquePath);
 
         try {
             JobClient.runJob(job);

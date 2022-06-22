@@ -119,4 +119,6 @@ message PrepareDataLoadPb {
 message CommitDataLoadPb {
   DataLoadTargetPb target = 1;
   int64 tableIdx = 2;
+  string path = 3;
+  int32 partitionId = 4;
 }

@@ -29,10 +29,15 @@ import com.alibaba.maxgraph.common.util.ThreadFactoryUtils;
 import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
 import com.alibaba.maxgraph.proto.groot.GraphDefPb;
 
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -296,6 +301,21 @@ public class StoreService implements MetricsAgent {
     }
 
     public void ingestData(String path, CompletionCallback<Void> callback) {
+        String dataRoot = StoreConfig.STORE_DATA_PATH.get(configs);
+        String downloadPath = Paths.get(dataRoot, "download").toString();
+        String[] items = path.split("\\/");
+        // Get the  unique path  (uuid)
+        String unique_path = items[items.length - 1];
+        Path uniquePath = Paths.get(downloadPath, unique_path);
+        if (!Files.isDirectory(uniquePath)) {
+            try {
+                Files.createDirectories(uniquePath);
+            } catch (IOException e) {
+                logger.error("create uniquePath failed. uniquePath [" + uniquePath + "]", e);
+                callback.onError(e);
+                return;
+            }
+        }
         this.ingestExecutor.execute(
                 () -> {
                     try {
@@ -323,7 +343,7 @@ public class StoreService implements MetricsAgent {
                     () -> {
                         try {
                             partition.ingestExternalFile(externalStorage, fullPath);
-                        } catch (IOException e) {
+                        } catch (Exception e) {
                             if (!finished.getAndSet(true)) {
                                 callback.onError(e);
                             }
@@ -334,6 +354,17 @@ public class StoreService implements MetricsAgent {
                         }
                     });
         }
+    }
+
+    public void clearIngest() throws IOException {
+        String dataRoot = StoreConfig.STORE_DATA_PATH.get(configs);
+        Path downloadPath = Paths.get(dataRoot, "download");
+        try {
+            FileUtils.forceDelete(downloadPath.toFile());
+        } catch (FileNotFoundException fnfe) {
+            // Ignore
+        }
+        Files.createDirectories(downloadPath);
     }
 
     public void garbageCollect(long snapshotId, CompletionCallback<Void> callback) {

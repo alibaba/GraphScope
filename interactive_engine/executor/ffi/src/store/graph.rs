@@ -196,8 +196,10 @@ fn commit_data_load<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &Oper
     let commit_data_load_pb = parse_pb::<CommitDataLoadPb>(ddl_operation_pb.get_ddlBlob())?;
     let table_id = commit_data_load_pb.get_tableIdx();
     let target_pb = commit_data_load_pb.get_target();
+    let partition_id = commit_data_load_pb.get_partitionId();
+    let unique_path = commit_data_load_pb.get_path();
     let target = DataLoadTarget::from_proto(target_pb);
-    graph.commit_data_load(snapshot_id, schema_version, &target, table_id)
+    graph.commit_data_load(snapshot_id, schema_version, &target, table_id, partition_id, unique_path)
 }
 
 fn prepare_data_load<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &OperationPb) -> GraphResult<bool> {
