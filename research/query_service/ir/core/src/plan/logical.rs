@@ -922,33 +922,16 @@ fn get_or_set_tag_id(
 /// Process the columns' meta in `plan_meta` such that the columns can be added to
 /// corresponding nodes.
 fn process_columns_meta(plan_meta: &mut PlanMeta, is_late_project: bool) -> IrResult<()> {
-    let tag_columns = plan_meta.curr_node_meta_mut().get_tag_columns();
+    let tag_columns = plan_meta
+        .get_curr_node_meta()
+        .unwrap()
+        .get_tag_columns();
     // late project currently only handles the case of one single tag
     if !is_late_project || tag_columns.len() > 1 {
         for (tag, columns) in tag_columns.into_iter() {
-            let nodes = if let Some(tag_id) = tag {
-                let nodes = plan_meta.get_tag_nodes(tag_id);
-                if nodes.is_empty() {
-                    return Err(IrError::TagNotExist((tag_id as i32).into()));
-                }
-                nodes
-            } else {
-                let nodes = plan_meta.get_curr_referred_nodes();
-                if nodes.is_empty() {
-                    return Err(IrError::MissingData(format!(
-                        "Current node: {:?} does not refer to a node",
-                        plan_meta.get_curr_node()
-                    )));
-                }
-                nodes
-            };
-
-            if let Some(mut meta) = plan_meta.get_nodes_meta(nodes) {
-                for col in columns.get() {
-                    meta.insert_column(col);
-                }
-            } else {
-                return Err(IrError::MissingData(format!("`NodeMeta` missing for the tag: {:?}", tag)));
+            let mut meta = plan_meta.tag_nodes_meta_mut(tag)?;
+            for col in columns.get() {
+                meta.insert_column(col);
             }
         }
     } else {
@@ -1814,6 +1797,8 @@ mod test {
     #[test]
     fn scan_pred_to_idx_pred() {
         let mut plan_meta = PlanMeta::default();
+        plan_meta.set_curr_node(0);
+        plan_meta.curr_node_meta_mut();
         plan_meta.refer_to_nodes(0, vec![0]);
         let meta = StoreMeta {
             schema: Some(
