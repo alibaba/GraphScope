@@ -18,6 +18,7 @@ package com.alibaba.graphscope.gremlin;
 
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.intermediate.InterOpCollection;
+import com.alibaba.graphscope.common.intermediate.operator.AsNoneOp;
 import com.alibaba.graphscope.common.intermediate.operator.DedupOp;
 import com.alibaba.graphscope.common.intermediate.operator.GetVOp;
 import com.alibaba.graphscope.common.intermediate.operator.SubGraphAsUnionOp;
@@ -49,8 +50,9 @@ public class SubGraphStepTest {
         Assert.assertEquals("graph_1", op.getGraphConfigs().get(SinkGraph.GRAPH_NAME));
         List<InterOpCollection> actualOps = (List) op.getSubOpCollectionList().get().applyArg();
 
-        // empty opCollection means identity()
-        Assert.assertTrue(actualOps.get(0).unmodifiableCollection().isEmpty());
+        // AsNoneOp means identity()
+        Class<?> asNoneOp = actualOps.get(0).unmodifiableCollection().get(0).getClass();
+        Assert.assertEquals(AsNoneOp.class, asNoneOp);
 
         // bothV().dedup()
         GetVOp op1 = (GetVOp) actualOps.get(1).unmodifiableCollection().get(0);
@@ -72,8 +74,9 @@ public class SubGraphStepTest {
         Assert.assertEquals("graph_1", op.getGraphConfigs().get(SinkGraph.GRAPH_NAME));
         List<InterOpCollection> actualOps = (List) op.getSubOpCollectionList().get().applyArg();
 
-        // empty opCollection means identity()
-        Assert.assertTrue(actualOps.get(0).unmodifiableCollection().isEmpty());
+        // AsNoneOp means identity()
+        Class<?> asNoneOp = actualOps.get(0).unmodifiableCollection().get(0).getClass();
+        Assert.assertEquals(AsNoneOp.class, asNoneOp);
 
         // bothV().dedup()
         GetVOp op1 = (GetVOp) actualOps.get(1).unmodifiableCollection().get(0);
