@@ -3,7 +3,7 @@ use crate::read_ffi::{
     PropertyType, SchemaHandle, WriteNativeProperty,
 };
 
-type GraphBuilder = *const ::libc::c_void;
+pub type GraphBuilder = *const ::libc::c_void;
 type VertexTypeBuilder = *const ::libc::c_void;
 type EdgeTypeBuilder = *const ::libc::c_void;
 

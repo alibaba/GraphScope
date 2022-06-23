@@ -26,7 +26,7 @@ use crate::{GraphProxyError, GraphProxyResult};
 
 #[derive(Clone, Debug)]
 pub struct VineyardGraphWriter {
-    graph: GraphHandle,
+    graph: GraphBuilder,
 }
 
 impl VineyardGraphWriter {
