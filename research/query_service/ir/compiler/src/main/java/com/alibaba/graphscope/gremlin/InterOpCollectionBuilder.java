@@ -33,6 +33,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.step.TraversalParent;
 import org.apache.tinkerpop.gremlin.process.traversal.step.branch.UnionStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.*;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.*;
+import org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.IdentityStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.SubgraphStep;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -127,6 +128,8 @@ public class InterOpCollectionBuilder {
                 opList.add(StepTransformFactory.EXPR_STEP.apply(step));
             } else if (Utils.equalClass(step, SubgraphStep.class)) {
                 opList.add(StepTransformFactory.SUBGRAPH_STEP.apply(step));
+            } else if (Utils.equalClass(step, IdentityStep.class)) {
+                opList.add(StepTransformFactory.IDENTITY_STEP.apply(step));
             } else {
                 throw new UnsupportedStepException(step.getClass(), "unimplemented yet");
             }
