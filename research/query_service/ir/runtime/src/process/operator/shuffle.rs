@@ -46,7 +46,7 @@ impl RecordRouter {
 
 impl RouteFunction<Record> for RecordRouter {
     fn route(&self, t: &Record) -> FnResult<u64> {
-        if let Some(entry) = t.get(self.shuffle_key.as_ref()) {
+        if let Some(entry) = t.get(self.shuffle_key.clone()) {
             if let Some(v) = entry.as_graph_vertex() {
                 Ok(self
                     .p

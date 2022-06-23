@@ -21,7 +21,9 @@ import com.alibaba.graphscope.common.intermediate.MatchSentence;
 import com.alibaba.graphscope.common.intermediate.operator.ExpandOp;
 import com.alibaba.graphscope.common.intermediate.operator.GetVOp;
 import com.alibaba.graphscope.common.intermediate.operator.MatchOp;
+import com.alibaba.graphscope.common.intermediate.operator.SelectOp;
 import com.alibaba.graphscope.common.jna.type.FfiJoinKind;
+import com.alibaba.graphscope.common.jna.type.FfiVOpt;
 import com.alibaba.graphscope.gremlin.plugin.processor.IrStandardOpProcessor;
 import com.alibaba.graphscope.gremlin.transform.StepTransformFactory;
 
@@ -65,28 +67,34 @@ public class MatchStepTest {
         Assert.assertTrue(isEqualWith(sentence, "a", "b", FfiJoinKind.Inner, 1));
     }
 
-    // fuse out + hasLabel("person")
+    // out + hasLabel("person") -> expand + filter
     @Test
     public void g_V_match_as_a_out_hasLabel_as_b_test() {
         Traversal traversal = g.V().match(__.as("a").out().hasLabel("person").as("b"));
         MatchSentence sentence = getSentences(traversal).get(0);
-        Assert.assertTrue(isEqualWith(sentence, "a", "b", FfiJoinKind.Inner, 1));
+        Assert.assertTrue(isEqualWith(sentence, "a", "b", FfiJoinKind.Inner, 2));
+
         ExpandOp op = (ExpandOp) sentence.getBinders().unmodifiableCollection().get(0);
-        Assert.assertEquals(
-                "@.~label && @.~label == \"person\"", op.getParams().get().getPredicate().get());
         Assert.assertEquals(false, op.getIsEdge().get().applyArg());
+
+        SelectOp selectOp = (SelectOp) sentence.getBinders().unmodifiableCollection().get(1);
+        Assert.assertEquals(
+                "@.~label && @.~label == \"person\"", selectOp.getPredicate().get().applyArg());
     }
 
-    // fuse out + has("name", "marko")
+    // out + has("name", "marko") -> expand + filter
     @Test
     public void g_V_match_as_a_out_hasProp_as_b_test() {
         Traversal traversal = g.V().match(__.as("a").out().has("name", "marko").as("b"));
         MatchSentence sentence = getSentences(traversal).get(0);
-        Assert.assertTrue(isEqualWith(sentence, "a", "b", FfiJoinKind.Inner, 1));
+        Assert.assertTrue(isEqualWith(sentence, "a", "b", FfiJoinKind.Inner, 2));
+
         ExpandOp op = (ExpandOp) sentence.getBinders().unmodifiableCollection().get(0);
-        Assert.assertEquals(
-                "@.name && @.name == \"marko\"", op.getParams().get().getPredicate().get());
         Assert.assertEquals(false, op.getIsEdge().get().applyArg());
+
+        SelectOp selectOp = (SelectOp) sentence.getBinders().unmodifiableCollection().get(1);
+        Assert.assertEquals(
+                "@.name && @.name == \"marko\"", selectOp.getPredicate().get().applyArg());
     }
 
     // fuse outE + hasLabel("knows")
@@ -114,29 +122,38 @@ public class MatchStepTest {
         Assert.assertEquals(true, op.getIsEdge().get().applyArg());
     }
 
-    // fuse outV + hasLabel("person")
+    // outV + hasLabel("person") -> getV + filter
     @Test
     public void g_V_match_as_a_outE_outV_hasLabel_as_b_test() {
         Traversal traversal = g.V().match(__.as("a").outE().outV().hasLabel("person").as("b"));
         MatchSentence sentence = getSentences(traversal).get(0);
-        Assert.assertTrue(isEqualWith(sentence, "a", "b", FfiJoinKind.Inner, 2));
+        Assert.assertTrue(isEqualWith(sentence, "a", "b", FfiJoinKind.Inner, 3));
+
         GetVOp op = (GetVOp) sentence.getBinders().unmodifiableCollection().get(1);
+        Assert.assertEquals(FfiVOpt.Start, op.getGetVOpt().get().applyArg());
+
+        SelectOp selectOp = (SelectOp) sentence.getBinders().unmodifiableCollection().get(2);
         Assert.assertEquals(
-                "@.~label && @.~label == \"person\"", op.getParams().get().getPredicate().get());
+                "@.~label && @.~label == \"person\"", selectOp.getPredicate().get().applyArg());
     }
 
-    // fuse outV + has("name", "marko")
+    // outV + has("name", "marko") -> getV + filter
     @Test
     public void g_V_match_as_a_outE_outV_hasProp_as_b_test() {
         Traversal traversal = g.V().match(__.as("a").outE().outV().has("name", "marko").as("b"));
         MatchSentence sentence = getSentences(traversal).get(0);
-        Assert.assertTrue(isEqualWith(sentence, "a", "b", FfiJoinKind.Inner, 2));
+        Assert.assertTrue(isEqualWith(sentence, "a", "b", FfiJoinKind.Inner, 3));
+
         GetVOp op = (GetVOp) sentence.getBinders().unmodifiableCollection().get(1);
+        Assert.assertEquals(FfiVOpt.Start, op.getGetVOpt().get().applyArg());
+
+        SelectOp selectOp = (SelectOp) sentence.getBinders().unmodifiableCollection().get(2);
         Assert.assertEquals(
-                "@.name && @.name == \"marko\"", op.getParams().get().getPredicate().get());
+                "@.name && @.name == \"marko\"", selectOp.getPredicate().get().applyArg());
     }
 
-    // fuse outE + hasLabel("knows") and fuse inV() + has("name", "marko")
+    // fuse outE + hasLabel("knows") + inV()
+    // has("name", "marko") -> filter
     @Test
     public void g_V_match_as_a_outE_hasLabel_inV_hasProp_as_b_test() {
         Traversal traversal =
@@ -146,15 +163,17 @@ public class MatchStepTest {
         MatchSentence sentence = getSentences(traversal).get(0);
         Assert.assertTrue(isEqualWith(sentence, "a", "b", FfiJoinKind.Inner, 2));
 
-        ExpandOp expandOp = (ExpandOp) sentence.getBinders().unmodifiableCollection().get(0);
-        Assert.assertEquals("knows", expandOp.getParams().get().getTables().get(0).name);
+        ExpandOp op = (ExpandOp) sentence.getBinders().unmodifiableCollection().get(0);
+        Assert.assertEquals(false, op.getIsEdge().get().applyArg());
+        Assert.assertEquals("knows", op.getParams().get().getTables().get(0).name);
 
-        GetVOp op = (GetVOp) sentence.getBinders().unmodifiableCollection().get(1);
+        SelectOp selectOp = (SelectOp) sentence.getBinders().unmodifiableCollection().get(1);
         Assert.assertEquals(
-                "@.name && @.name == \"marko\"", op.getParams().get().getPredicate().get());
+                "@.name && @.name == \"marko\"", selectOp.getPredicate().get().applyArg());
     }
 
-    // fuse outE + has("weight", 1.0) and fuse inV() + has("name", "marko")
+    // fuse outE + has("weight", 1.0) + inV()
+    // has("name", "marko") -> filter
     @Test
     public void g_V_match_as_a_outE_hasProp_inV_hasProp_as_b_test() {
         Traversal traversal =
@@ -172,10 +191,11 @@ public class MatchStepTest {
         ExpandOp expandOp = (ExpandOp) sentence.getBinders().unmodifiableCollection().get(0);
         Assert.assertEquals(
                 "@.weight && @.weight == 1.0", expandOp.getParams().get().getPredicate().get());
+        Assert.assertEquals(false, expandOp.getIsEdge().get().applyArg());
 
-        GetVOp op = (GetVOp) sentence.getBinders().unmodifiableCollection().get(1);
+        SelectOp selectOp = (SelectOp) sentence.getBinders().unmodifiableCollection().get(1);
         Assert.assertEquals(
-                "@.name && @.name == \"marko\"", op.getParams().get().getPredicate().get());
+                "@.name && @.name == \"marko\"", selectOp.getPredicate().get().applyArg());
     }
 
     @Test

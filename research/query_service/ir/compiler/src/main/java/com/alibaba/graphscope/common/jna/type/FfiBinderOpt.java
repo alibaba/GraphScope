@@ -5,7 +5,8 @@ import com.alibaba.graphscope.common.jna.IntEnum;
 public enum FfiBinderOpt implements IntEnum<FfiBinderOpt> {
     Edge,
     Path,
-    Vertex;
+    Vertex,
+    Select;
 
     @Override
     public int getInt() {

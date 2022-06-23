@@ -114,17 +114,6 @@ public class NegativeEvalTest {
     }
 
     @Test
-    public void g_V_bothV_test() {
-        try {
-            scriptEngine.eval("g.V().bothV()", context);
-        } catch (InvalidGremlinScriptException e) {
-            // expected error
-            return;
-        }
-        Assert.fail();
-    }
-
-    @Test
     public void g_V_valueMap_int_test() {
         try {
             scriptEngine.eval("g.V().valueMap(1)", context);

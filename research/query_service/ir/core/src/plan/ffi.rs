@@ -64,7 +64,7 @@ use pegasus_client::builder::JobBuilder;
 use prost::Message;
 
 use crate::error::IrError;
-use crate::plan::logical::LogicalPlan;
+use crate::plan::logical::{LogicalPlan, NodeId};
 use crate::plan::meta::{set_schema_from_json, KeyType};
 use crate::plan::physical::AsPhysical;
 use crate::JsonIO;
@@ -675,16 +675,7 @@ pub extern "C" fn get_key_name(key_id: i32, key_type: FfiKeyType) -> FfiKeyResul
 /// We have provided  the [`destroy_logical_plan`] api for deallocating the pointer of the logical plan.
 #[no_mangle]
 pub extern "C" fn init_logical_plan() -> *const c_void {
-    use super::meta::STORE_META;
-    let mut plan = Box::new(LogicalPlan::default());
-    if let Ok(meta) = STORE_META.read() {
-        if let Some(schema) = &meta.schema {
-            plan.meta = plan
-                .meta
-                .with_store_conf(schema.is_table_id(), schema.is_column_id())
-                .with_tag_id();
-        }
-    }
+    let plan = Box::new(LogicalPlan::default());
     Box::into_raw(plan) as *const c_void
 }
 
@@ -754,7 +745,7 @@ fn append_operator(
         operator,
         parent_ids
             .into_iter()
-            .filter_map(|x| if x >= 0 { Some(x as u32) } else { None })
+            .filter_map(|x| if x >= 0 { Some(x as NodeId) } else { None })
             .collect(),
     );
     if result.is_err() {
@@ -1997,6 +1988,7 @@ mod graph {
         Edge = 0,
         Path = 1,
         Vertex = 2,
+        Select = 3,
     }
 
     #[no_mangle]
@@ -2021,6 +2013,12 @@ mod graph {
                 let getv = unsafe { Box::from_raw(ptr as *mut pb::GetV) };
                 sentence.binders.push(pb::pattern::Binder {
                     item: Some(pb::pattern::binder::Item::Vertex(getv.as_ref().clone())),
+                });
+            }
+            FfiBinderOpt::Select => {
+                let select = unsafe { Box::from_raw(ptr as *mut pb::Select) };
+                sentence.binders.push(pb::pattern::Binder {
+                    item: Some(pb::pattern::binder::Item::Select(select.as_ref().clone())),
                 });
             }
         }

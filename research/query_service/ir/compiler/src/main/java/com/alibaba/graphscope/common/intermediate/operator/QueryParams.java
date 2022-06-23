@@ -30,6 +30,8 @@ public class QueryParams {
 
     private List<FfiNameOrId.ByValue> columns;
 
+    private boolean isAllColumns;
+
     // lower and upper
     private Optional<Pair<Integer, Integer>> range;
 
@@ -43,6 +45,7 @@ public class QueryParams {
         this.tables = new ArrayList<>();
         this.columns = new ArrayList<>();
         this.extraParams = new HashMap<>();
+        this.isAllColumns = false;
     }
 
     public void addTable(FfiNameOrId.ByValue name) {
@@ -63,6 +66,10 @@ public class QueryParams {
         if (range != null) {
             this.range = Optional.of(range);
         }
+    }
+
+    public void setAllColumns(boolean allColumns) {
+        isAllColumns = allColumns;
     }
 
     public List<FfiNameOrId.ByValue> getTables() {
@@ -87,5 +94,9 @@ public class QueryParams {
 
     public Map<String, String> getExtraParams() {
         return Collections.unmodifiableMap(extraParams);
+    }
+
+    public boolean isAllColumns() {
+        return isAllColumns;
     }
 }

@@ -136,6 +136,7 @@ include_directories("${ANALYTICAL_ENGINE_HOME}/openmpi/include"
                     "${ANALYTICAL_ENGINE_HOME}/open-mpi/include"
                     "${ANALYTICAL_ENGINE_HOME}/include"
                     "${ANALYTICAL_ENGINE_HOME}/include/vineyard"
+                    "${ANALYTICAL_ENGINE_HOME}/include/vineyard/contrib"
                     "${ANALYTICAL_ENGINE_HOME}/include/graphscope"
                     "${ANALYTICAL_ENGINE_HOME}/include/graphscope/apps"
                     "${ANALYTICAL_ENGINE_HOME}/include/grape/analytical_apps")
@@ -164,7 +165,7 @@ if (libgrapelite_FOUND)
 endif()
 
 # find vineyard-----------------------------------------
-find_package(vineyard 0.5.0 QUIET)
+find_package(vineyard 0.5.3 QUIET)
 if (vineyard_FOUND)
   include_directories(AFTER SYSTEM ${VINEYARD_INCLUDE_DIRS})
 endif()

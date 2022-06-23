@@ -169,14 +169,8 @@ mod tests {
         .collect();
 
         while let Some(Ok(result)) = result.next() {
-            let key = result
-                .get(Some(&TAG_A.into()))
-                .unwrap()
-                .as_ref();
-            let val = result
-                .get(Some(&TAG_B.into()))
-                .unwrap()
-                .as_ref();
+            let key = result.get(Some(TAG_A)).unwrap().as_ref();
+            let val = result.get(Some(TAG_B)).unwrap().as_ref();
             group_result.insert((key.clone(), val.clone()));
         }
         assert_eq!(group_result, expected_result);
@@ -215,14 +209,8 @@ mod tests {
         .collect();
 
         while let Some(Ok(result)) = result.next() {
-            let key = result
-                .get(Some(&TAG_A.into()))
-                .unwrap()
-                .as_ref();
-            let val = result
-                .get(Some(&TAG_B.into()))
-                .unwrap()
-                .as_ref();
+            let key = result.get(Some(TAG_A)).unwrap().as_ref();
+            let val = result.get(Some(TAG_B)).unwrap().as_ref();
             group_result.insert((key.clone(), val.clone()));
         }
         assert_eq!(group_result, expected_result);
@@ -267,18 +255,9 @@ mod tests {
         .collect();
 
         while let Some(Ok(result)) = result.next() {
-            let key_1 = result
-                .get(Some(&TAG_A.into()))
-                .unwrap()
-                .as_ref();
-            let key_2 = result
-                .get(Some(&TAG_B.into()))
-                .unwrap()
-                .as_ref();
-            let val = result
-                .get(Some(&TAG_C.into()))
-                .unwrap()
-                .as_ref();
+            let key_1 = result.get(Some(TAG_A)).unwrap().as_ref();
+            let key_2 = result.get(Some(TAG_B)).unwrap().as_ref();
+            let val = result.get(Some(TAG_C)).unwrap().as_ref();
             group_result.insert(((key_1.clone(), key_2.clone()), val.clone()));
         }
         assert_eq!(group_result, expected_result);
@@ -333,18 +312,9 @@ mod tests {
         .collect();
 
         while let Some(Ok(result)) = result.next() {
-            let key = result
-                .get(Some(&TAG_C.into()))
-                .unwrap()
-                .as_ref();
-            let val_1 = result
-                .get(Some(&TAG_A.into()))
-                .unwrap()
-                .as_ref();
-            let val_2 = result
-                .get(Some(&TAG_B.into()))
-                .unwrap()
-                .as_ref();
+            let key = result.get(Some(TAG_C)).unwrap().as_ref();
+            let val_1 = result.get(Some(TAG_A)).unwrap().as_ref();
+            let val_2 = result.get(Some(TAG_B)).unwrap().as_ref();
             group_result.insert((key.clone(), (val_1.clone(), val_2.clone())));
         }
         assert_eq!(group_result, expected_result);
@@ -374,14 +344,8 @@ mod tests {
         .cloned()
         .collect();
         while let Some(Ok(result)) = result.next() {
-            let key = result
-                .get(Some(&TAG_A.into()))
-                .unwrap()
-                .as_ref();
-            let val = result
-                .get(Some(&TAG_B.into()))
-                .unwrap()
-                .as_ref();
+            let key = result.get(Some(TAG_A)).unwrap().as_ref();
+            let val = result.get(Some(TAG_B)).unwrap().as_ref();
             group_result.insert((key.clone(), val.clone()));
         }
         assert_eq!(group_result, expected_result);
@@ -410,14 +374,8 @@ mod tests {
         .cloned()
         .collect();
         while let Some(Ok(result)) = result.next() {
-            let key = result
-                .get(Some(&TAG_A.into()))
-                .unwrap()
-                .as_ref();
-            let val = result
-                .get(Some(&TAG_B.into()))
-                .unwrap()
-                .as_ref();
+            let key = result.get(Some(TAG_A)).unwrap().as_ref();
+            let val = result.get(Some(TAG_B)).unwrap().as_ref();
             group_result.insert((key.clone(), val.clone()));
         }
         assert_eq!(group_result, expected_result);
@@ -447,14 +405,8 @@ mod tests {
         .collect();
 
         while let Some(Ok(result)) = result.next() {
-            let key = result
-                .get(Some(&TAG_A.into()))
-                .unwrap()
-                .as_ref();
-            let val = result
-                .get(Some(&TAG_B.into()))
-                .unwrap()
-                .as_ref();
+            let key = result.get(Some(TAG_A)).unwrap().as_ref();
+            let val = result.get(Some(TAG_B)).unwrap().as_ref();
             group_result.insert((key.clone(), val.clone()));
         }
         assert_eq!(group_result, expected_result);
@@ -484,14 +436,8 @@ mod tests {
         .collect();
 
         while let Some(Ok(result)) = result.next() {
-            let key = result
-                .get(Some(&TAG_A.into()))
-                .unwrap()
-                .as_ref();
-            let val = result
-                .get(Some(&TAG_B.into()))
-                .unwrap()
-                .as_ref();
+            let key = result.get(Some(TAG_A)).unwrap().as_ref();
+            let val = result.get(Some(TAG_B)).unwrap().as_ref();
             group_result.insert((key.clone(), val.clone()));
         }
         assert_eq!(group_result, expected_result);

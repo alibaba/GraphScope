@@ -22,6 +22,7 @@ import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.intermediate.InterOpCollection;
 import com.alibaba.graphscope.common.intermediate.MatchSentence;
 import com.alibaba.graphscope.common.intermediate.operator.*;
+import com.alibaba.graphscope.common.intermediate.process.SinkGraph;
 import com.alibaba.graphscope.common.intermediate.strategy.ElementFusionStrategy;
 import com.alibaba.graphscope.common.jna.type.*;
 import com.alibaba.graphscope.gremlin.InterOpCollectionBuilder;
@@ -32,6 +33,7 @@ import com.alibaba.graphscope.gremlin.plugin.step.ScanFusionStep;
 import com.alibaba.graphscope.gremlin.transform.alias.AliasArg;
 import com.alibaba.graphscope.gremlin.transform.alias.AliasManager;
 import com.alibaba.graphscope.gremlin.transform.alias.AliasPrefixType;
+import com.google.common.collect.ImmutableMap;
 
 import org.apache.tinkerpop.gremlin.process.traversal.Pop;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
@@ -41,6 +43,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.step.TraversalParent;
 import org.apache.tinkerpop.gremlin.process.traversal.step.branch.UnionStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.*;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.*;
+import org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.SubgraphStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.EmptyStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.HasContainer;
 import org.apache.tinkerpop.gremlin.process.traversal.util.TraversalHelper;
@@ -306,6 +309,7 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
                                     case IN:
                                         return FfiVOpt.End;
                                     case BOTH:
+                                        return FfiVOpt.Both;
                                     default:
                                         throw new OpArgIllegalException(
                                                 OpArgIllegalException.Cause.INVALID_TYPE,
@@ -551,15 +555,6 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
                                 (new InterOpCollectionBuilder(binderTraversal)).build();
                         // apply fusion strategy
                         ElementFusionStrategy.INSTANCE.apply(ops);
-                        // all of the SelectOps should have been fused with Expand/GetV, otherwise
-                        // invalid
-                        for (InterOpBase opBase : ops.unmodifiableCollection()) {
-                            if (opBase instanceof SelectOp) {
-                                throw new OpArgIllegalException(
-                                        OpArgIllegalException.Cause.INVALID_TYPE,
-                                        "the filter should have been fused with GetV or Expand");
-                            }
-                        }
                         sentences.add(
                                 new MatchSentence(startTag.get(), endTag.get(), ops, joinKind));
                     });
@@ -595,6 +590,34 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
                     selectOp.setPredicate(new OpArg(exprStep.getExpr()));
                     return selectOp;
             }
+        }
+    },
+
+    // subgraph -> union(identity(), bothV().dedup())
+    SUBGRAPH_STEP {
+        @Override
+        public InterOpBase apply(Step step) {
+            SubgraphStep subgraphStep = (SubgraphStep) step;
+            SubGraphAsUnionOp op = new SubGraphAsUnionOp(getConfigs(subgraphStep));
+            // empty opCollection -> identity(), to get edges
+            InterOpCollection getEOps = new InterOpCollection();
+
+            // add bothV().dedup(), to get bothV of the edges
+            Traversal.Admin getVTraversal =
+                    (Traversal.Admin) GremlinAntlrToJava.getTraversalSupplier().get();
+            getVTraversal.addStep(new EdgeVertexStep(getVTraversal, Direction.BOTH));
+            getVTraversal.addStep(new DedupGlobalStep(getVTraversal));
+            InterOpCollection getVOps = (new InterOpCollectionBuilder(getVTraversal)).build();
+
+            List<InterOpCollection> subGraphOps = Arrays.asList(getEOps, getVOps);
+            op.setSubOpCollectionList(new OpArg(subGraphOps));
+            return op;
+        }
+
+        private Map<String, String> getConfigs(SubgraphStep step) {
+            // graph_name
+            String meta = step.getSideEffectKey();
+            return ImmutableMap.of(SinkGraph.GRAPH_NAME, meta);
         }
     };
 

@@ -3,9 +3,9 @@
     {
       "opr": {
         "opr": {
-          "Edge": {
-            "v_tag": null,
-            "direction": 0,
+          "Vertex": {
+            "tag": null,
+            "opt": 3,
             "params": {
               "tables": [],
               "columns": [],
@@ -14,12 +14,7 @@
               "predicate": null,
               "extra": {}
             },
-            "is_edge": true,
-            "alias": {
-              "item": {
-                "Id": 0
-              }
-            }
+            "alias": null
           }
         }
       },

@@ -14,27 +14,24 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.common.jna.type;
+package com.alibaba.graphscope.common.intermediate.operator;
 
-import com.alibaba.graphscope.common.jna.IntEnum;
+import java.util.Collections;
+import java.util.Map;
 
-public enum FfiVOpt implements IntEnum<FfiVOpt> {
-    Start,
-    End,
-    Other,
-    Both;
+// contains info to represent subgraph in ir plan
+public class SubGraphAsUnionOp extends UnionOp {
+    // graph_name, i.e name: graph_XX
+    private Map<String, String> graphConfigs;
 
-    @Override
-    public int getInt() {
-        return this.ordinal();
+    public SubGraphAsUnionOp(Map<String, String> graphConfigs) {
+        super();
+        this.graphConfigs = graphConfigs;
     }
 
-    @Override
-    public FfiVOpt getEnum(int i) {
-        FfiVOpt opts[] = values();
-        if (i < opts.length && i >= 0) {
-            return opts[i];
-        }
-        return null;
+    public Map<String, String> getGraphConfigs() {
+        return graphConfigs == null
+                ? Collections.emptyMap()
+                : Collections.unmodifiableMap(graphConfigs);
     }
 }

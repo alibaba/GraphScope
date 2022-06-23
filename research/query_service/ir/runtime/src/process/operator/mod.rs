@@ -49,7 +49,7 @@ impl TagKey {
     /// This is for key generation, which generate the key of the input Record according to the tag_key field
     pub fn get_arc_entry(&self, input: &Record) -> Result<Arc<Entry>, FnExecError> {
         let entry = input
-            .get(self.tag.as_ref())
+            .get(self.tag)
             .ok_or(FnExecError::get_tag_error(&format!(
                 "Get tag {:?} failed since it refers to an empty entry",
                 self.tag
@@ -66,7 +66,7 @@ impl TagKey {
     /// This is for accum, which get the entry of the input Record according to the tag_key field
     pub fn get_entry(&self, input: &Record) -> Result<Entry, FnExecError> {
         let entry = input
-            .get(self.tag.as_ref())
+            .get(self.tag)
             .ok_or(FnExecError::get_tag_error(&format!(
                 "Get tag {:?} failed since it refers to an empty entry",
                 self.tag
