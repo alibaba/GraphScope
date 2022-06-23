@@ -207,13 +207,13 @@ impl From<(Vec<(String, KeyId)>, Vec<(String, KeyId)>, Vec<(String, KeyId)>)> fo
     }
 }
 
-impl JsonIO for Schema {
-    fn into_json<W: io::Write>(self, writer: W) -> io::Result<()> {
-        let entities_pb: Vec<schema_pb::EntityMeta> = if !self.entities.is_empty() {
-            self.entities.clone()
+impl From<Schema> for schema_pb::Schema {
+    fn from(schema: Schema) -> Self {
+        let entities_pb: Vec<schema_pb::EntityMeta> = if !schema.entities.is_empty() {
+            schema.entities.clone()
         } else {
             let mut entities = Vec::new();
-            for (&(ty, id), name) in &self.id_name_rev {
+            for (&(ty, id), name) in &schema.id_name_rev {
                 if ty == KeyType::Entity {
                     entities.push(schema_pb::EntityMeta {
                         label: Some(schema_pb::LabelMeta { id, name: name.to_string() }),
@@ -224,18 +224,18 @@ impl JsonIO for Schema {
             entities
         };
 
-        let relations_pb: Vec<schema_pb::RelationMeta> = if !self.relations.is_empty() {
-            self.relations.clone()
+        let relations_pb: Vec<schema_pb::RelationMeta> = if !schema.relations.is_empty() {
+            schema.relations.clone()
         } else {
             let mut relations = Vec::new();
-            for (&(ty, id), name) in &self.id_name_rev {
+            for (&(ty, id), name) in &schema.id_name_rev {
                 if ty == KeyType::Relation {
                     let mut relation_meta = schema_pb::RelationMeta {
                         label: Some(schema_pb::LabelMeta { id, name: name.to_string() }),
                         entity_pairs: vec![],
                         columns: vec![],
                     };
-                    if let Some(labels) = self.get_relation_labels(&id.into()) {
+                    if let Some(labels) = schema.get_relation_labels(&id.into()) {
                         relation_meta.entity_pairs = labels
                             .iter()
                             .cloned()
@@ -251,22 +251,17 @@ impl JsonIO for Schema {
             relations
         };
 
-        let schema_pb = schema_pb::Schema {
+        schema_pb::Schema {
             entities: entities_pb,
             relations: relations_pb,
-            is_table_id: self.is_table_id,
-            is_column_id: self.is_column_id,
-        };
-        serde_json::to_writer_pretty(writer, &schema_pb)?;
-
-        Ok(())
+            is_table_id: schema.is_table_id,
+            is_column_id: schema.is_column_id,
+        }
     }
+}
 
-    fn from_json<R: io::Read>(reader: R) -> io::Result<Self>
-    where
-        Self: Sized,
-    {
-        let schema_pb = serde_json::from_reader::<_, schema_pb::Schema>(reader)?;
+impl From<schema_pb::Schema> for Schema {
+    fn from(schema_pb: schema_pb::Schema) -> Self {
         let mut schema = Schema::default();
         schema.entities = schema_pb.entities.clone();
         schema.relations = schema_pb.relations.clone();
@@ -345,6 +340,24 @@ impl JsonIO for Schema {
             }
         }
 
+        schema
+    }
+}
+
+impl JsonIO for Schema {
+    fn into_json<W: io::Write>(self, writer: W) -> io::Result<()> {
+        let schema_pb = schema_pb::Schema::from(self);
+        serde_json::to_writer_pretty(writer, &schema_pb)?;
+
+        Ok(())
+    }
+
+    fn from_json<R: io::Read>(reader: R) -> io::Result<Self>
+    where
+        Self: Sized,
+    {
+        let schema_pb = serde_json::from_reader::<_, schema_pb::Schema>(reader)?;
+        let schema = Schema::from(schema_pb);
         Ok(schema)
     }
 }

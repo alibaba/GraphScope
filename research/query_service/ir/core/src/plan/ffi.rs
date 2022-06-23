@@ -163,7 +163,6 @@ impl From<IrError> for FfiError {
                 format!("the range ({:?}, {:?}) is invalid", l, u),
             ),
             IrError::Unsupported(err) => FfiError::new(ResultCode::UnSupported, err.to_string()),
-            IrError::Others(err) => FfiError::new(ResultCode::Others, err.to_string()),
         }
     }
 }

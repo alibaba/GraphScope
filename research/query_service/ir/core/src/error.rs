@@ -40,7 +40,6 @@ pub enum IrError {
 
     // Common Errors
     Unsupported(String),
-    Others(String),
 }
 
 pub type IrResult<T> = Result<T, IrError>;
@@ -67,7 +66,6 @@ impl fmt::Display for IrError {
                 write!(f, "invalid range ({:?}, {:?})", lo, up)
             }
             IrError::Unsupported(s) => write!(f, "{:?}: is not supported", s),
-            IrError::Others(s) => write!(f, "user define error: {:?}", s),
         }
     }
 }
