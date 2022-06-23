@@ -83,12 +83,18 @@ where
             let partitioner = self.partition_manager.clone();
             let si = params
                 .get_extra_param(SNAPSHOT_ID)
-                .map(|s| s.parse::<SnapshotId>().unwrap_or(DEFAULT_SNAPSHOT_ID))
+                .map(|s| {
+                    s.parse::<SnapshotId>()
+                        .unwrap_or(DEFAULT_SNAPSHOT_ID)
+                })
                 .unwrap_or(DEFAULT_SNAPSHOT_ID);
             let label_ids = encode_storage_labels(params.labels.as_ref())?;
             let prop_ids = encode_storage_prop_keys(params.columns.as_ref())?;
             let filter = params.filter.clone();
-            let partitions: Vec<PartitionId> = partitions.iter().map(|pid| *pid as PartitionId).collect();
+            let partitions: Vec<PartitionId> = partitions
+                .iter()
+                .map(|pid| *pid as PartitionId)
+                .collect();
 
             let result = store
                 .get_all_vertices(
@@ -122,9 +128,10 @@ where
             PK::Single(value) => {
                 vec![encode_store_prop_val(value.clone())]
             }
-            PK::Multi(pk_pairs) => {
-                pk_pairs.iter().map(|(_pk, value)| encode_store_prop_val(value.clone())).collect()
-            }
+            PK::Multi(pk_pairs) => pk_pairs
+                .iter()
+                .map(|(_pk, value)| encode_store_prop_val(value.clone()))
+                .collect(),
         };
 
         if let Some(vid) = self
@@ -147,7 +154,10 @@ where
             let store = self.store.clone();
             let si = params
                 .get_extra_param(SNAPSHOT_ID)
-                .map(|s| s.parse::<SnapshotId>().unwrap_or(DEFAULT_SNAPSHOT_ID))
+                .map(|s| {
+                    s.parse::<SnapshotId>()
+                        .unwrap_or(DEFAULT_SNAPSHOT_ID)
+                })
                 .unwrap_or(DEFAULT_SNAPSHOT_ID);
             let label_ids = encode_storage_labels(params.labels.as_ref())?;
             let filter = params.filter.clone();
@@ -155,7 +165,10 @@ where
             // TODO: In the future, the filter will be pushed to the storage.
             let prop_ids =
                 if filter.is_some() { None } else { encode_storage_prop_keys(params.columns.as_ref())? };
-            let partitions: Vec<PartitionId> = partitions.iter().map(|pid| *pid as PartitionId).collect();
+            let partitions: Vec<PartitionId> = partitions
+                .iter()
+                .map(|pid| *pid as PartitionId)
+                .collect();
             let result = store
                 .get_all_edges(
                     si,
@@ -189,7 +202,10 @@ where
         let partitioner = self.partition_manager.clone();
         let si = params
             .get_extra_param(SNAPSHOT_ID)
-            .map(|s| s.parse::<SnapshotId>().unwrap_or(DEFAULT_SNAPSHOT_ID))
+            .map(|s| {
+                s.parse::<SnapshotId>()
+                    .unwrap_or(DEFAULT_SNAPSHOT_ID)
+            })
             .unwrap_or(DEFAULT_SNAPSHOT_ID);
         let prop_ids = encode_storage_prop_keys(params.columns.as_ref())?;
         let filter = params.filter.clone();
@@ -220,7 +236,10 @@ where
         let partition_manager = self.partition_manager.clone();
         let si = params
             .get_extra_param(SNAPSHOT_ID)
-            .map(|s| s.parse::<SnapshotId>().unwrap_or(DEFAULT_SNAPSHOT_ID))
+            .map(|s| {
+                s.parse::<SnapshotId>()
+                    .unwrap_or(DEFAULT_SNAPSHOT_ID)
+            })
             .unwrap_or(DEFAULT_SNAPSHOT_ID);
         let edge_label_ids = encode_storage_labels(params.labels.as_ref())?;
 
@@ -279,7 +298,10 @@ where
         let store = self.store.clone();
         let si = params
             .get_extra_param(SNAPSHOT_ID)
-            .map(|s| s.parse::<SnapshotId>().unwrap_or(DEFAULT_SNAPSHOT_ID))
+            .map(|s| {
+                s.parse::<SnapshotId>()
+                    .unwrap_or(DEFAULT_SNAPSHOT_ID)
+            })
             .unwrap_or(DEFAULT_SNAPSHOT_ID);
         let partition_manager = self.partition_manager.clone();
         let filter = params.filter.clone();
@@ -390,8 +412,10 @@ where
 fn to_runtime_edge<E: StoreEdge>(e: &E) -> Edge {
     let id = e.get_edge_id() as ID;
     let label = encode_runtime_e_label(e);
-    let properties =
-        e.get_properties().map(|(prop_id, prop_val)| encode_runtime_property(prop_id, prop_val)).collect();
+    let properties = e
+        .get_properties()
+        .map(|(prop_id, prop_val)| encode_runtime_property(prop_id, prop_val))
+        .collect();
     // TODO: new an edge with with_from_src()
     let mut edge = Edge::new(
         id,
@@ -643,7 +667,10 @@ fn encode_storage_prop_keys(prop_names: Option<&Vec<NameOrId>>) -> GraphProxyRes
 
 #[inline]
 fn encode_storage_labels(labels: &Vec<Label>) -> GraphProxyResult<Vec<LabelId>> {
-    labels.iter().map(|label| encode_storage_label(label)).collect::<Result<Vec<LabelId>, _>>()
+    labels
+        .iter()
+        .map(|label| encode_storage_label(label))
+        .collect::<Result<Vec<LabelId>, _>>()
 }
 
 #[inline]
@@ -710,24 +737,36 @@ fn encode_store_prop_val(prop_val: Object) -> Property {
             if let Some(probe) = vec.get(0) {
                 match probe {
                     Object::Primitive(p) => match p {
-                        Primitives::Byte(_) | Primitives::Integer(_) => {
-                            Property::ListInt(vec.into_iter().map(|i| i.as_i32().unwrap()).collect())
-                        }
-                        Primitives::Long(_) => {
-                            Property::ListLong(vec.into_iter().map(|i| i.as_i64().unwrap()).collect())
-                        }
-                        Primitives::ULLong(_) => Property::ListLong(
-                            vec.into_iter().map(|i| i.as_u128().unwrap() as i64).collect(),
+                        Primitives::Byte(_) | Primitives::Integer(_) => Property::ListInt(
+                            vec.into_iter()
+                                .map(|i| i.as_i32().unwrap())
+                                .collect(),
                         ),
-                        Primitives::Float(_) => {
-                            Property::ListDouble(vec.into_iter().map(|i| i.as_f64().unwrap()).collect())
-                        }
+                        Primitives::Long(_) => Property::ListLong(
+                            vec.into_iter()
+                                .map(|i| i.as_i64().unwrap())
+                                .collect(),
+                        ),
+                        Primitives::ULLong(_) => Property::ListLong(
+                            vec.into_iter()
+                                .map(|i| i.as_u128().unwrap() as i64)
+                                .collect(),
+                        ),
+                        Primitives::Float(_) => Property::ListDouble(
+                            vec.into_iter()
+                                .map(|i| i.as_f64().unwrap())
+                                .collect(),
+                        ),
                     },
                     Object::String(_) => Property::ListString(
-                        vec.into_iter().map(|i| i.as_str().unwrap().into_owned()).collect(),
+                        vec.into_iter()
+                            .map(|i| i.as_str().unwrap().into_owned())
+                            .collect(),
                     ),
                     Object::Blob(_) => Property::ListBytes(
-                        vec.into_iter().map(|i| i.as_bytes().unwrap().to_vec()).collect(),
+                        vec.into_iter()
+                            .map(|i| i.as_bytes().unwrap().to_vec())
+                            .collect(),
                     ),
                     Object::None => Property::Null,
                     _ => Property::Unknown,
@@ -750,8 +789,13 @@ fn get_partition_label_vertex_ids(
     let mut partition_label_vid_map = HashMap::new();
     for vid in ids {
         let partition_id = graph_partition_manager.get_partition_id(*vid as VertexId) as PartitionId;
-        let label_vid_list = partition_label_vid_map.entry(partition_id).or_insert(HashMap::new());
-        label_vid_list.entry(None).or_insert(vec![]).push(*vid as VertexId);
+        let label_vid_list = partition_label_vid_map
+            .entry(partition_id)
+            .or_insert(HashMap::new());
+        label_vid_list
+            .entry(None)
+            .or_insert(vec![])
+            .push(*vid as VertexId);
     }
 
     partition_label_vid_map

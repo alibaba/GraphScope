@@ -156,7 +156,9 @@ impl Schema {
     pub fn get_relation_labels(&self, relation: &NameOrId) -> Option<&Vec<(LabelMeta, LabelMeta)>> {
         match relation {
             NameOrId::Str(name) => self.relation_labels.get(name),
-            NameOrId::Id(id) => self.get_relation_name(*id).and_then(|name| self.relation_labels.get(name)),
+            NameOrId::Id(id) => self
+                .get_relation_name(*id)
+                .and_then(|name| self.relation_labels.get(name)),
         }
     }
 
@@ -188,18 +190,28 @@ impl From<(Vec<(String, KeyId)>, Vec<(String, KeyId)>, Vec<(String, KeyId)>)> fo
 
         if schema.is_table_id {
             for (name, id) in entities.into_iter() {
-                schema.table_map.insert(name.clone(), (KeyType::Entity, id));
-                schema.id_name_rev.insert((KeyType::Entity, id), name);
+                schema
+                    .table_map
+                    .insert(name.clone(), (KeyType::Entity, id));
+                schema
+                    .id_name_rev
+                    .insert((KeyType::Entity, id), name);
             }
             for (name, id) in relations.into_iter() {
-                schema.table_map.insert(name.clone(), (KeyType::Relation, id));
-                schema.id_name_rev.insert((KeyType::Relation, id), name);
+                schema
+                    .table_map
+                    .insert(name.clone(), (KeyType::Relation, id));
+                schema
+                    .id_name_rev
+                    .insert((KeyType::Relation, id), name);
             }
         }
         if schema.is_column_id {
             for (name, id) in columns.into_iter() {
                 schema.column_map.insert(name.clone(), id);
-                schema.id_name_rev.insert((KeyType::Column, id), name);
+                schema
+                    .id_name_rev
+                    .insert((KeyType::Column, id), name);
             }
         }
 
@@ -271,8 +283,12 @@ impl From<schema_pb::Schema> for Schema {
             if schema_pb.is_table_id {
                 if let Some(label) = &entity.label {
                     if !schema.table_map.contains_key(&label.name) {
-                        schema.table_map.insert(label.name.clone(), (KeyType::Entity, label.id));
-                        schema.id_name_rev.insert((KeyType::Entity, label.id), label.name.clone());
+                        schema
+                            .table_map
+                            .insert(label.name.clone(), (KeyType::Entity, label.id));
+                        schema
+                            .id_name_rev
+                            .insert((KeyType::Entity, label.id), label.name.clone());
                     }
                 }
             }
@@ -281,8 +297,12 @@ impl From<schema_pb::Schema> for Schema {
                 if let Some(key) = &column.key {
                     if schema_pb.is_column_id {
                         if !schema.column_map.contains_key(&key.name) {
-                            schema.column_map.insert(key.name.clone(), key.id);
-                            schema.id_name_rev.insert((KeyType::Column, key.id), key.name.clone());
+                            schema
+                                .column_map
+                                .insert(key.name.clone(), key.id);
+                            schema
+                                .id_name_rev
+                                .insert((KeyType::Column, key.id), key.name.clone());
                         }
                     }
                     if column.is_primary_key {
@@ -302,8 +322,12 @@ impl From<schema_pb::Schema> for Schema {
             if schema_pb.is_table_id {
                 if let Some(label) = &rel.label {
                     if !schema.table_map.contains_key(&label.name) {
-                        schema.table_map.insert(label.name.clone(), (KeyType::Relation, label.id));
-                        schema.id_name_rev.insert((KeyType::Relation, label.id), label.name.clone());
+                        schema
+                            .table_map
+                            .insert(label.name.clone(), (KeyType::Relation, label.id));
+                        schema
+                            .id_name_rev
+                            .insert((KeyType::Relation, label.id), label.name.clone());
                     }
                 }
             }
@@ -312,8 +336,12 @@ impl From<schema_pb::Schema> for Schema {
                 if let Some(key) = &column.key {
                     if schema_pb.is_column_id {
                         if !schema.column_map.contains_key(&key.name) {
-                            schema.column_map.insert(key.name.clone(), key.id);
-                            schema.id_name_rev.insert((KeyType::Column, key.id), key.name.clone());
+                            schema
+                                .column_map
+                                .insert(key.name.clone(), key.id);
+                            schema
+                                .id_name_rev
+                                .insert((KeyType::Column, key.id), key.name.clone());
                         }
                     }
                     if column.is_primary_key {
@@ -328,7 +356,10 @@ impl From<schema_pb::Schema> for Schema {
                 }
             }
             if let Some(label) = &rel.label {
-                let pairs = schema.relation_labels.entry(label.name.clone()).or_default();
+                let pairs = schema
+                    .relation_labels
+                    .entry(label.name.clone())
+                    .or_default();
                 for entity_pair in rel.entity_pairs {
                     if entity_pair.src.is_some() && entity_pair.dst.is_some() {
                         pairs.push((
@@ -530,11 +561,16 @@ impl NodeMetaOpt {
     pub fn set_tag_columns_opt(&mut self, tag: Option<TagId>, columns_opt: ColumnsOpt) {
         match self {
             NodeMetaOpt::One(meta) => {
-                meta[0].borrow_mut().tag_columns.insert(tag, columns_opt);
+                meta[0]
+                    .borrow_mut()
+                    .tag_columns
+                    .insert(tag, columns_opt);
             }
             NodeMetaOpt::Many(metas) => {
                 for meta in metas {
-                    meta.borrow_mut().tag_columns.insert(tag, columns_opt.clone());
+                    meta.borrow_mut()
+                        .tag_columns
+                        .insert(tag, columns_opt.clone());
                 }
             }
         }
@@ -543,11 +579,20 @@ impl NodeMetaOpt {
     pub fn insert_tag_column(&mut self, tag: Option<TagId>, col: NameOrId) {
         match self {
             NodeMetaOpt::One(meta) => {
-                meta[0].borrow_mut().tag_columns.entry(tag).or_default().insert(col);
+                meta[0]
+                    .borrow_mut()
+                    .tag_columns
+                    .entry(tag)
+                    .or_default()
+                    .insert(col);
             }
             NodeMetaOpt::Many(metas) => {
                 for meta in metas {
-                    meta.borrow_mut().tag_columns.entry(tag).or_default().insert(col.clone());
+                    meta.borrow_mut()
+                        .tag_columns
+                        .entry(tag)
+                        .or_default()
+                        .insert(col.clone());
                 }
             }
         }
@@ -625,7 +670,10 @@ impl PlanMeta {
 
 impl PlanMeta {
     pub fn insert_tag_nodes(&mut self, tag: TagId, nodes: Vec<NodeId>) {
-        self.tag_nodes.entry(tag).or_default().extend(nodes.into_iter());
+        self.tag_nodes
+            .entry(tag)
+            .or_default()
+            .extend(nodes.into_iter());
     }
 
     pub fn get_tag_nodes(&self, tag: TagId) -> &[NodeId] {
@@ -707,13 +755,17 @@ impl PlanMeta {
 
     /// Get the metadata of one given node. If the metadata does not exist, return `None`.
     pub fn get_node_meta(&self, node: NodeId) -> Option<NodeMetaOpt> {
-        self.node_metas.get(&node).map(|meta| NodeMetaOpt::One([meta.clone()]))
+        self.node_metas
+            .get(&node)
+            .map(|meta| NodeMetaOpt::One([meta.clone()]))
     }
 
     /// Get the metadata of given nodes. If the metadata does not exist, return `None`.
     pub fn get_nodes_meta(&self, nodes: &[NodeId]) -> Option<NodeMetaOpt> {
         if nodes.len() == 1 {
-            self.node_metas.get(&nodes[0]).map(|meta| NodeMetaOpt::One([meta.clone()]))
+            self.node_metas
+                .get(&nodes[0])
+                .map(|meta| NodeMetaOpt::One([meta.clone()]))
         } else if nodes.len() > 1 {
             let mut node_metas = vec![];
             for node in nodes {
@@ -737,7 +789,11 @@ impl PlanMeta {
     /// Get or insert the metadata of given nodes.
     pub fn get_or_insert_nodes_meta(&mut self, nodes: &[NodeId]) -> NodeMetaOpt {
         if nodes.len() == 1 {
-            NodeMetaOpt::One([self.node_metas.entry(nodes[0]).or_default().clone()])
+            NodeMetaOpt::One([self
+                .node_metas
+                .entry(nodes[0])
+                .or_default()
+                .clone()])
         } else {
             let mut node_metas = vec![];
             for &node in nodes {
