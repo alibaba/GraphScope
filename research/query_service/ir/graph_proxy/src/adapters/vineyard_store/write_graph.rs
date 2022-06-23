@@ -13,6 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::collections::HashMap;
 use std::ffi::CString;
 
 use ffi::read_ffi::*;
@@ -21,8 +22,14 @@ use ir_common::generated::common as common_pb;
 use ir_common::generated::schema as schema_pb;
 use ir_common::{KeyId, NameOrId};
 
-use crate::apis::{Details, DynDetails, Edge, Element, GraphElement, Vertex, WriteGraphProxy};
+use crate::apis::{
+    get_graph, Details, DynDetails, Edge, Element, GraphElement, QueryParams, Vertex, WriteGraphProxy, ID,
+};
 use crate::{GraphProxyError, GraphProxyResult};
+
+// TODO: use TRANSLATE_VERTEX_ID_FLAG in read_graph after separate groot/vineyard
+const TRANSLATE_VERTEX_ID_FLAG: &str = "TRANSLATE_VERTEX_ID_FLAG";
+const OUTER_ID_PROP_KEY: &str = "OUTER_ID_PROP_KEY";
 
 #[derive(Clone, Debug)]
 pub struct VineyardGraphWriter {
@@ -38,8 +45,33 @@ impl VineyardGraphWriter {
         Ok(VineyardGraphWriter { graph })
     }
 
-    fn encode_ffi_id(&self, vertex_id: FfiVertexId) -> FfiVertexId {
-        unsafe { get_outer_id(self.graph, vertex_id as i64) as FfiVertexId }
+    fn encode_ffi_id(&self, vertex_id: ID) -> GraphProxyResult<FfiVertexId> {
+        let read_graph = get_graph()
+            .ok_or(GraphProxyError::query_store_error("get graph failed when writing subgraph"))?;
+        let mut extra_param = HashMap::new();
+        extra_param.insert(TRANSLATE_VERTEX_ID_FLAG.to_string(), "".to_string());
+        let mut query_param = QueryParams::default();
+        query_param.extra_params = Some(extra_param);
+        if let Some(vertex_with_outer_id) = read_graph
+            .get_vertex(&vec![vertex_id], &query_param)?
+            .next()
+        {
+            let outer_id = vertex_with_outer_id
+                .details()
+                .map(|details| details.get_property(&NameOrId::from(OUTER_ID_PROP_KEY)))
+                .unwrap_or(None)
+                .ok_or(GraphProxyError::query_store_error(
+                    "get_property of outer_id failed when writing subgraph",
+                ))?;
+            outer_id.as_u64().map_err(|e| {
+                GraphProxyError::query_store_error(&format!(
+                    "cast outer_id as u64 failed {:?}",
+                    e.to_string()
+                ))
+            })
+        } else {
+            Err(GraphProxyError::query_store_error("get_vertex with TRANSLATE_VERTEX_ID_FLAG failed"))
+        }
     }
 
     fn encode_ffi_label(&self, key: Option<&NameOrId>) -> GraphProxyResult<FfiLabelId> {
@@ -78,7 +110,7 @@ impl VineyardGraphWriter {
 
 impl WriteGraphProxy for VineyardGraphWriter {
     fn add_vertex(&mut self, vertex: Vertex) -> GraphProxyResult<()> {
-        let vertex_id = self.encode_ffi_id(vertex.id());
+        let vertex_id = self.encode_ffi_id(vertex.id())?;
         let label_id = self.encode_ffi_label(vertex.label())?;
         let native_properties = self.encode_details(vertex.details())?;
         let state = unsafe {
@@ -94,7 +126,7 @@ impl WriteGraphProxy for VineyardGraphWriter {
         let mut merge_properties: Vec<WriteNativeProperty> = Vec::with_capacity(vertex_size);
         let mut property_sizes = Vec::with_capacity(vertex_size);
         for vertex in vertices {
-            vertex_ids.push(self.encode_ffi_id(vertex.id()));
+            vertex_ids.push(self.encode_ffi_id(vertex.id())?);
             vertex_label_ids.push(self.encode_ffi_label(vertex.label())?);
             let mut properties = self.encode_details(vertex.details())?;
             property_sizes.push(properties.len());
@@ -123,8 +155,8 @@ impl WriteGraphProxy for VineyardGraphWriter {
             add_edge(
                 self.graph,
                 edge.id(),
-                self.encode_ffi_id(edge.src_id),
-                self.encode_ffi_id(edge.dst_id),
+                self.encode_ffi_id(edge.src_id)?,
+                self.encode_ffi_id(edge.dst_id)?,
                 edge_label,
                 src_label,
                 dst_label,
@@ -148,8 +180,8 @@ impl WriteGraphProxy for VineyardGraphWriter {
         let mut property_sizes = Vec::with_capacity(edge_size);
         for edge in edges {
             edge_ids.push(edge.id());
-            src_ids.push(self.encode_ffi_id(edge.src_id));
-            dst_ids.push(self.encode_ffi_id(edge.dst_id));
+            src_ids.push(self.encode_ffi_id(edge.src_id)?);
+            dst_ids.push(self.encode_ffi_id(edge.dst_id)?);
             edge_label_ids.push(self.encode_ffi_label(edge.label())?);
             src_label_ids.push(self.encode_ffi_label(edge.get_src_label())?);
             dst_label_ids.push(self.encode_ffi_label(edge.get_dst_label())?);

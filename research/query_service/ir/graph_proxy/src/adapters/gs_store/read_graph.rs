@@ -37,6 +37,11 @@ use crate::{GraphProxyError, GraphProxyResult};
 const SNAPSHOT_ID: &str = "SID";
 // This will refer to the latest graph
 const DEFAULT_SNAPSHOT_ID: SnapshotId = SnapshotId::max_value() - 1;
+// This flag will be used in get_vertex,
+// indicating that we need to translate the vertex with global id into the one with outer id (i.e., the value of property 'id')
+// TODO: this will only be used in Vineyard. We will separate vineyard and groot soon.
+const TRANSLATE_VERTEX_ID_FLAG: &str = "TRANSLATE_VERTEX_ID_FLAG";
+const OUTER_ID_PROP_KEY: &str = "OUTER_ID_PROP_KEY";
 
 pub struct GraphScopeStore<V, VI, E, EI>
 where
@@ -172,6 +177,19 @@ where
         &self, ids: &[ID], params: &QueryParams,
     ) -> GraphProxyResult<Box<dyn Iterator<Item = Vertex> + Send>> {
         let store = self.store.clone();
+        if params
+            .get_extra_param(TRANSLATE_VERTEX_ID_FLAG)
+            .is_some()
+        {
+            let global_id = ids[0];
+            let outer_id = store.translate_vertex_id(global_id as VertexId);
+            let mut properties = HashMap::new();
+            properties.insert(NameOrId::from(OUTER_ID_PROP_KEY), Object::from(outer_id));
+            return Ok(Box::new(
+                vec![Vertex::new(global_id, None, DynDetails::new(DefaultDetails::new(properties)))]
+                    .into_iter(),
+            ));
+        }
         let si = params
             .get_extra_param(SNAPSHOT_ID)
             .map(|s| {
