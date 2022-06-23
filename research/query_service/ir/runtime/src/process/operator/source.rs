@@ -85,26 +85,32 @@ impl SourceOperator {
     }
 
     /// Assign source vertex ids for each worker to call get_vertex
-    fn set_src(&mut self, ids: Vec<ID>, job_workers: usize, partitioner: Arc<dyn Partitioner>) -> ParsePbResult<()> {
+    fn set_src(
+        &mut self, ids: Vec<ID>, job_workers: usize, partitioner: Arc<dyn Partitioner>,
+    ) -> ParsePbResult<()> {
         let mut partitions = HashMap::new();
         for id in ids {
-            if let Ok(wid) = partitioner.get_partition(&id, job_workers) {
-                partitions
-                    .entry(wid)
-                    .or_insert_with(Vec::new)
-                    .push(id);
-            } else {
-                debug!("get server id failed in graph_partition_manager in source op");
-                return Err(ParsePbError::Unsupported("get server id failed in graph_partition_manager in source op".to_string()));
+            match partitioner.get_partition(&id, job_workers) {
+                Ok(wid) => {
+                    partitions
+                        .entry(wid)
+                        .or_insert_with(Vec::new)
+                        .push(id);
+                }
+                Err(err) => Err(ParsePbError::Unsupported(format!(
+                    "get server id failed in graph_partition_manager in source op {:?}",
+                    err
+                )))?,
             }
         }
-
         self.src = Some(partitions);
-        return Ok(());
+        Ok(())
     }
 
     /// Assign partition_list for each worker to call scan_vertex
-    fn set_partitions(&mut self, job_workers: usize, worker_index: u32, partitioner: Arc<dyn Partitioner>) -> ParsePbResult<()> {
+    fn set_partitions(
+        &mut self, job_workers: usize, worker_index: u32, partitioner: Arc<dyn Partitioner>,
+    ) -> ParsePbResult<()> {
         let res = partitioner.get_worker_partitions(job_workers, worker_index);
         match res {
             Ok(partition_list) => {
@@ -113,10 +119,13 @@ impl SourceOperator {
             }
             Err(err) => {
                 debug!("get partition list failed in graph_partition_manager in source op {:?}", err);
-                return Err(ParsePbError::Unsupported(format!("get partition list failed in graph_partition_manager in source op {:?}", err).to_string()));
+                Err(ParsePbError::Unsupported(
+                    format!("get partition list failed in graph_partition_manager in source op {:?}", err)
+                        .to_string(),
+                ))?
             }
         }
-        return Ok(());
+        Ok(())
     }
 }
 
