@@ -38,6 +38,10 @@ impl Vertex {
     pub fn new(id: ID, label: Option<NameOrId>, details: DynDetails) -> Self {
         Vertex { id, label, details }
     }
+
+    pub fn get_details_mut(&mut self) -> &mut DynDetails {
+        &mut self.details
+    }
 }
 
 impl Element for Vertex {

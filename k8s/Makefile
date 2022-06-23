@@ -30,7 +30,7 @@ else
 endif
 
 VERSION ?= latest
-VINEYARD_VERSION ?= v0.5.0
+VINEYARD_VERSION ?= v0.5.3
 PROFILE ?= release
 
 
@@ -69,6 +69,13 @@ jupyter-image:
 				 -t graphscope/jupyter:${SHORT_SHA} \
 				 --network=host \
 				 -f $(WORKING_DIR)/jupyter.Dockerfile ..
+
+dataset-image:
+	docker build --progress=$(BUILD_PROGRESS) \
+				 --build-arg CI=${CI} \
+				 -t graphscope/dataset:${SHORT_SHA} \
+				 --network=host \
+				 -f $(WORKING_DIR)/dataset.Dockerfile ..
 
 graphscope-store-image:
 	docker pull ${REGISTRY}/$(DOCKER_ORG)/graphscope-vineyard:${VINEYARD_VERSION}

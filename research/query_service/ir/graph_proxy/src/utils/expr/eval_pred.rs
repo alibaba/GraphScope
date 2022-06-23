@@ -207,7 +207,7 @@ impl TryFrom<pb::IndexPredicate> for Predicates {
                 is_first = false;
             } else {
                 let new_pred = and_triplet.try_into()?;
-                predicates = predicates.map(|pred| pred.and(new_pred));
+                predicates = predicates.map(|pred| pred.or(new_pred));
             }
         }
 

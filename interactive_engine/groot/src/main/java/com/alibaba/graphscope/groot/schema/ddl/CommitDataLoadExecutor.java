@@ -36,6 +36,7 @@ public class CommitDataLoadExecutor extends AbstractDdlExecutor {
             throws InvalidProtocolBufferException {
         CommitDataLoadPb commitDataLoadPb = CommitDataLoadPb.parseFrom(ddlBlob);
         DataLoadTargetPb dataLoadTargetPb = commitDataLoadPb.getTarget();
+        String path = commitDataLoadPb.getPath();
         DataLoadTarget dataLoadTarget = DataLoadTarget.parseProto(dataLoadTargetPb);
         String label = dataLoadTarget.getLabel();
         String srcLabel = dataLoadTarget.getSrcLabel();
@@ -112,6 +113,8 @@ public class CommitDataLoadExecutor extends AbstractDdlExecutor {
                             CommitDataLoadPb.newBuilder()
                                     .setTableIdx(commitDataLoadPb.getTableIdx())
                                     .setTarget(targetBuilder.build().toProto())
+                                    .setPartitionId(i)
+                                    .setPath(path)
                                     .build()));
         }
         return new DdlResult(newGraphDef, operations);

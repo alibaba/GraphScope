@@ -233,10 +233,8 @@ mod test {
                     {
                         // This should be CommonObject::Count(cnt).
                         // We assume it as CommonObject::Prop(cnt) here since we parse it as CommonObject::Prop in parse_result()
-                        if let Entry::Element(RecordElement::OffGraph(CommonObject::Prop(cnt))) = record
-                            .get(Some(&TAG_A.into()))
-                            .unwrap()
-                            .as_ref()
+                        if let Entry::Element(RecordElement::OffGraph(CommonObject::Prop(cnt))) =
+                            record.get(Some(TAG_A)).unwrap().as_ref()
                         {
                             result_collection
                                 .push((vertex.id() as DefaultId, cnt.clone().as_u64().unwrap()));
@@ -283,17 +281,13 @@ mod test {
                     if let Entry::Element(RecordElement::OnGraph(vertex)) =
                         record.get(None).unwrap().as_ref()
                     {
-                        if let Entry::Element(RecordElement::OffGraph(CommonObject::Prop(cnt))) = record
-                            .get(Some(&TAG_A.into()))
-                            .unwrap()
-                            .as_ref()
+                        if let Entry::Element(RecordElement::OffGraph(CommonObject::Prop(cnt))) =
+                            record.get(Some(TAG_A)).unwrap().as_ref()
                         {
                             result_collection
                                 .push((vertex.id() as DefaultId, Some(cnt.clone().as_u64().unwrap())));
-                        } else if let Entry::Element(RecordElement::OffGraph(CommonObject::None)) = record
-                            .get(Some(&TAG_A.into()))
-                            .unwrap()
-                            .as_ref()
+                        } else if let Entry::Element(RecordElement::OffGraph(CommonObject::None)) =
+                            record.get(Some(TAG_A)).unwrap().as_ref()
                         {
                             result_collection.push((vertex.id() as DefaultId, None));
                         }

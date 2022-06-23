@@ -18,6 +18,7 @@ use crate::db::graph::iter::{EdgeTypeScan, VertexTypeScan};
 use crate::db::api::multi_version_graph::{MultiVersionGraph, GraphBackup};
 use crate::db::api::condition::Condition;
 use crate::db::common::bytes::transform;
+use std::path::Path;
 
 pub struct GraphStore {
     config: GraphConfig,
@@ -25,6 +26,7 @@ pub struct GraphStore {
     vertex_manager: VertexTypeManager,
     edge_manager: EdgeTypeManager,
     storage: Arc<dyn ExternalStorage>,
+    data_root: String,
     // ensure all modification to graph is in ascending order of snapshot_id
     si_guard: AtomicIsize,
     lock: GraphMutexLock<()>,
@@ -390,13 +392,17 @@ impl MultiVersionGraph for GraphStore {
         Ok(true)
     }
 
-    fn commit_data_load(&self, si: i64, schema_version: i64, target: &DataLoadTarget, table_id: i64) -> GraphResult<bool> {
+    fn commit_data_load(&self, si: i64, schema_version: i64, target: &DataLoadTarget, table_id: i64, partition_id: i32, unique_path: &str) -> GraphResult<bool> {
         let _guard = res_unwrap!(self.lock.lock(), prepare_data_load)?;
         self.check_si_guard(si)?;
         if let Err(_) = self.meta.check_version(schema_version) {
             return Ok(false);
         }
         self.meta.commit_data_load(si, schema_version, target, table_id)?;
+        let data_file_path = format!("{}/../{}/{}/part-r-{:0>5}.sst", self.data_root, "download", unique_path, partition_id);
+        if Path::new(data_file_path.as_str()).exists() {
+            self.ingest(data_file_path.as_str())?
+        }
         if target.src_label_id > 0 {
             let edge_kind = EdgeKind::new(target.label_id, target.src_label_id, target.dst_label_id);
             let info = self.edge_manager.get_edge_kind(si, &edge_kind)?;
@@ -425,7 +431,7 @@ impl GraphStore {
             "rocksdb" => {
                 let res = RocksDB::open(config.get_storage_options(), path).and_then(|db| {
                     let storage = Arc::new(db);
-                    Self::init(config, storage)
+                    Self::init(config, storage, path)
                 });
                 res_unwrap!(res, open, config, path)
             }
@@ -442,7 +448,7 @@ impl GraphStore {
         }
     }
 
-    fn init(config: &GraphConfig, storage: Arc<dyn ExternalStorage>) -> GraphResult<Self> {
+    fn init(config: &GraphConfig, storage: Arc<dyn ExternalStorage>, path: &str) -> GraphResult<Self> {
         let meta = Meta::new(storage.clone());
         let (vertex_manager, edge_manager) = res_unwrap!(meta.recover(), init)?;
         let ret = GraphStore {
@@ -451,6 +457,7 @@ impl GraphStore {
             vertex_manager,
             edge_manager,
             storage,
+            data_root: path.to_string(),
             si_guard: AtomicIsize::new(0),
             lock: GraphMutexLock::new(()),
         };

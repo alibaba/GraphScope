@@ -7,7 +7,7 @@
             "scan_opt": 0,
             "alias": {
               "item": {
-                "Name": "a"
+                "Id": 0
               }
             },
             "params": {
@@ -41,7 +41,7 @@
                             {
                               "tag": {
                                 "item": {
-                                  "Name": "a"
+                                  "Id": 0
                                 }
                               },
                               "property": {
@@ -57,7 +57,7 @@
                             {
                               "tag": {
                                 "item": {
-                                  "Name": "a"
+                                  "Id": 0
                                 }
                               },
                               "property": {
@@ -78,7 +78,7 @@
                 },
                 "alias": {
                   "item": {
-                    "Name": "a_{name, id}"
+                    "Id": 1
                   }
                 }
               }

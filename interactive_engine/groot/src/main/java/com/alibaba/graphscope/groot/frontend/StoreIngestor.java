@@ -17,4 +17,6 @@ import com.alibaba.graphscope.groot.CompletionCallback;
 
 public interface StoreIngestor {
     void ingest(int storeId, String path, CompletionCallback<Void> callback);
+
+    void clearIngest(int storeId, CompletionCallback<Void> callback);
 }

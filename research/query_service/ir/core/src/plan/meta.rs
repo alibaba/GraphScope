@@ -16,19 +16,21 @@
 use std::cell::RefCell;
 use std::collections::btree_map::Entry;
 use std::collections::{BTreeMap, BTreeSet};
+use std::fmt::{Debug, Formatter};
 use std::io;
 use std::rc::Rc;
 use std::sync::RwLock;
 
-use ir_common::generated::common as common_pb;
-use ir_common::generated::common::name_or_id::Item;
 use ir_common::generated::schema as schema_pb;
+use ir_common::KeyId;
 use ir_common::NameOrId;
 
 use crate::error::{IrError, IrResult};
+use crate::plan::logical::NodeId;
 use crate::JsonIO;
 
-pub static INVALID_META_ID: i32 = -1;
+pub static INVALID_META_ID: KeyId = -1;
+pub type TagId = u32;
 
 lazy_static! {
     pub static ref STORE_META: RwLock<StoreMeta> = RwLock::new(StoreMeta::default());
@@ -44,7 +46,7 @@ pub fn set_schema_from_json<R: io::Read>(read: R) {
 
 /// The simple schema, mapping either label or property name into id.
 pub fn set_schema_simple(
-    entities: Vec<(String, i32)>, relations: Vec<(String, i32)>, columns: Vec<(String, i32)>,
+    entities: Vec<(String, KeyId)>, relations: Vec<(String, KeyId)>, columns: Vec<(String, KeyId)>,
 ) {
     if let Ok(mut meta) = STORE_META.write() {
         let schema: Schema = (entities, relations, columns).into();
@@ -66,7 +68,7 @@ pub struct StoreMeta {
 #[derive(Clone, Debug)]
 pub struct LabelMeta {
     name: String,
-    id: i32,
+    id: KeyId,
 }
 
 impl Default for LabelMeta {
@@ -75,8 +77,8 @@ impl Default for LabelMeta {
     }
 }
 
-impl From<(String, i32)> for LabelMeta {
-    fn from(tuple: (String, i32)) -> Self {
+impl From<(String, KeyId)> for LabelMeta {
+    fn from(tuple: (String, KeyId)) -> Self {
         Self { name: tuple.0, id: tuple.1 }
     }
 }
@@ -110,14 +112,14 @@ impl Default for KeyType {
 pub struct Schema {
     /// A map from table (Entity or Relation) name to its internally encoded id
     /// In the concept of graph database, this is also known as label
-    table_map: BTreeMap<String, (KeyType, i32)>,
+    table_map: BTreeMap<String, (KeyType, KeyId)>,
     /// A map from column name to its store-encoded id
     /// In the concept of graph database, this is also known as property
-    column_map: BTreeMap<String, i32>,
+    column_map: BTreeMap<String, KeyId>,
     /// Record the primary keys of each table
     primary_keys: BTreeMap<String, BTreeSet<String>>,
     /// A reversed map of `id` to `name` mapping
-    id_name_rev: BTreeMap<(KeyType, i32), String>,
+    id_name_rev: BTreeMap<(KeyType, KeyId), String>,
     /// The source and destination labels of a given relation label's id
     relation_labels: BTreeMap<String, Vec<(LabelMeta, LabelMeta)>>,
     /// Is the table name mapped as id
@@ -127,50 +129,34 @@ pub struct Schema {
     /// Entities
     entities: Vec<schema_pb::EntityMeta>,
     /// Relations
-    rels: Vec<schema_pb::RelationMeta>,
+    relations: Vec<schema_pb::RelationMeta>,
 }
 
 impl Schema {
-    pub fn get_table_id(&self, name: &str) -> Option<i32> {
+    pub fn get_table_id(&self, name: &str) -> Option<KeyId> {
         self.table_map.get(name).map(|(_, id)| *id)
     }
 
-    pub fn get_table_id_from_pb(&self, name: &common_pb::NameOrId) -> Option<i32> {
-        name.item.as_ref().and_then(|item| match item {
-            common_pb::name_or_id::Item::Name(name) => self.get_table_id(name),
-            common_pb::name_or_id::Item::Id(id) => Some(*id),
-        })
-    }
-
-    pub fn get_column_id(&self, name: &str) -> Option<i32> {
+    pub fn get_column_id(&self, name: &str) -> Option<KeyId> {
         self.column_map.get(name).cloned()
     }
 
-    pub fn get_column_id_from_pb(&self, name: &common_pb::NameOrId) -> Option<i32> {
-        name.item.as_ref().and_then(|item| match item {
-            common_pb::name_or_id::Item::Name(name) => self.get_column_id(name),
-            common_pb::name_or_id::Item::Id(id) => Some(*id),
-        })
-    }
-
-    pub fn get_entity_name(&self, id: i32) -> Option<&String> {
+    pub fn get_entity_name(&self, id: KeyId) -> Option<&String> {
         self.id_name_rev.get(&(KeyType::Entity, id))
     }
 
-    pub fn get_relation_name(&self, id: i32) -> Option<&String> {
+    pub fn get_relation_name(&self, id: KeyId) -> Option<&String> {
         self.id_name_rev.get(&(KeyType::Relation, id))
     }
 
-    pub fn get_column_name(&self, id: i32) -> Option<&String> {
+    pub fn get_column_name(&self, id: KeyId) -> Option<&String> {
         self.id_name_rev.get(&(KeyType::Column, id))
     }
 
     pub fn get_relation_labels(&self, relation: &NameOrId) -> Option<&Vec<(LabelMeta, LabelMeta)>> {
         match relation {
             NameOrId::Str(name) => self.relation_labels.get(name),
-            NameOrId::Id(id) => self
-                .get_relation_name(*id)
-                .and_then(|name| self.relation_labels.get(name)),
+            NameOrId::Id(id) => self.get_relation_name(*id).and_then(|name| self.relation_labels.get(name)),
         }
     }
 
@@ -191,41 +177,10 @@ impl Schema {
             (false, 0)
         }
     }
-
-    pub fn check_primary_key_from_pb(
-        &self, table: &common_pb::NameOrId, is_entity: bool, col: &common_pb::NameOrId,
-    ) -> (bool, usize) {
-        let mut table_name = "";
-        let mut col_name = "";
-        if let Some(item) = table.item.as_ref() {
-            match item {
-                Item::Name(name) => table_name = name.as_str(),
-                Item::Id(id) => {
-                    if let Some(name) =
-                        if is_entity { self.get_entity_name(*id) } else { self.get_relation_name(*id) }
-                    {
-                        table_name = name.as_str();
-                    }
-                }
-            }
-        }
-        if let Some(item) = col.item.as_ref() {
-            match item {
-                Item::Name(name) => col_name = name.as_str(),
-                Item::Id(id) => {
-                    if let Some(name) = self.get_column_name(*id) {
-                        col_name = name.as_str();
-                    }
-                }
-            }
-        }
-
-        self.check_primary_key(table_name, col_name)
-    }
 }
 
-impl From<(Vec<(String, i32)>, Vec<(String, i32)>, Vec<(String, i32)>)> for Schema {
-    fn from(tuple: (Vec<(String, i32)>, Vec<(String, i32)>, Vec<(String, i32)>)) -> Self {
+impl From<(Vec<(String, KeyId)>, Vec<(String, KeyId)>, Vec<(String, KeyId)>)> for Schema {
+    fn from(tuple: (Vec<(String, KeyId)>, Vec<(String, KeyId)>, Vec<(String, KeyId)>)) -> Self {
         let (entities, relations, columns) = tuple;
         let mut schema = Schema::default();
         schema.is_table_id = !entities.is_empty() || !relations.is_empty();
@@ -233,28 +188,18 @@ impl From<(Vec<(String, i32)>, Vec<(String, i32)>, Vec<(String, i32)>)> for Sche
 
         if schema.is_table_id {
             for (name, id) in entities.into_iter() {
-                schema
-                    .table_map
-                    .insert(name.clone(), (KeyType::Entity, id));
-                schema
-                    .id_name_rev
-                    .insert((KeyType::Entity, id), name);
+                schema.table_map.insert(name.clone(), (KeyType::Entity, id));
+                schema.id_name_rev.insert((KeyType::Entity, id), name);
             }
             for (name, id) in relations.into_iter() {
-                schema
-                    .table_map
-                    .insert(name.clone(), (KeyType::Relation, id));
-                schema
-                    .id_name_rev
-                    .insert((KeyType::Relation, id), name);
+                schema.table_map.insert(name.clone(), (KeyType::Relation, id));
+                schema.id_name_rev.insert((KeyType::Relation, id), name);
             }
         }
         if schema.is_column_id {
             for (name, id) in columns.into_iter() {
                 schema.column_map.insert(name.clone(), id);
-                schema
-                    .id_name_rev
-                    .insert((KeyType::Column, id), name);
+                schema.id_name_rev.insert((KeyType::Column, id), name);
             }
         }
 
@@ -262,13 +207,13 @@ impl From<(Vec<(String, i32)>, Vec<(String, i32)>, Vec<(String, i32)>)> for Sche
     }
 }
 
-impl From<Schema> for schema_pb::Schema {
-    fn from(schema: Schema) -> Self {
-        let entities_pb: Vec<schema_pb::EntityMeta> = if !schema.entities.is_empty() {
-            schema.entities.clone()
+impl JsonIO for Schema {
+    fn into_json<W: io::Write>(self, writer: W) -> io::Result<()> {
+        let entities_pb: Vec<schema_pb::EntityMeta> = if !self.entities.is_empty() {
+            self.entities.clone()
         } else {
             let mut entities = Vec::new();
-            for (&(ty, id), name) in &schema.id_name_rev {
+            for (&(ty, id), name) in &self.id_name_rev {
                 if ty == KeyType::Entity {
                     entities.push(schema_pb::EntityMeta {
                         label: Some(schema_pb::LabelMeta { id, name: name.to_string() }),
@@ -279,18 +224,18 @@ impl From<Schema> for schema_pb::Schema {
             entities
         };
 
-        let relations_pb: Vec<schema_pb::RelationMeta> = if !schema.rels.is_empty() {
-            schema.rels.clone()
+        let relations_pb: Vec<schema_pb::RelationMeta> = if !self.relations.is_empty() {
+            self.relations.clone()
         } else {
             let mut relations = Vec::new();
-            for (&(ty, id), name) in &schema.id_name_rev {
+            for (&(ty, id), name) in &self.id_name_rev {
                 if ty == KeyType::Relation {
                     let mut relation_meta = schema_pb::RelationMeta {
                         label: Some(schema_pb::LabelMeta { id, name: name.to_string() }),
                         entity_pairs: vec![],
                         columns: vec![],
                     };
-                    if let Some(labels) = schema.get_relation_labels(&id.into()) {
+                    if let Some(labels) = self.get_relation_labels(&id.into()) {
                         relation_meta.entity_pairs = labels
                             .iter()
                             .cloned()
@@ -309,30 +254,30 @@ impl From<Schema> for schema_pb::Schema {
         let schema_pb = schema_pb::Schema {
             entities: entities_pb,
             relations: relations_pb,
-            is_table_id: schema.is_table_id,
-            is_column_id: schema.is_column_id,
+            is_table_id: self.is_table_id,
+            is_column_id: self.is_column_id,
         };
-        schema_pb
-    }
-}
+        serde_json::to_writer_pretty(writer, &schema_pb)?;
 
-impl From<schema_pb::Schema> for Schema {
-    fn from(schema_pb: schema_pb::Schema) -> Self {
+        Ok(())
+    }
+
+    fn from_json<R: io::Read>(reader: R) -> io::Result<Self>
+    where
+        Self: Sized,
+    {
+        let schema_pb = serde_json::from_reader::<_, schema_pb::Schema>(reader)?;
         let mut schema = Schema::default();
         schema.entities = schema_pb.entities.clone();
-        schema.rels = schema_pb.relations.clone();
+        schema.relations = schema_pb.relations.clone();
         schema.is_table_id = schema_pb.is_table_id;
         schema.is_column_id = schema_pb.is_column_id;
         for entity in schema_pb.entities {
             if schema_pb.is_table_id {
                 if let Some(label) = &entity.label {
                     if !schema.table_map.contains_key(&label.name) {
-                        schema
-                            .table_map
-                            .insert(label.name.clone(), (KeyType::Entity, label.id));
-                        schema
-                            .id_name_rev
-                            .insert((KeyType::Entity, label.id), label.name.clone());
+                        schema.table_map.insert(label.name.clone(), (KeyType::Entity, label.id));
+                        schema.id_name_rev.insert((KeyType::Entity, label.id), label.name.clone());
                     }
                 }
             }
@@ -341,12 +286,8 @@ impl From<schema_pb::Schema> for Schema {
                 if let Some(key) = &column.key {
                     if schema_pb.is_column_id {
                         if !schema.column_map.contains_key(&key.name) {
-                            schema
-                                .column_map
-                                .insert(key.name.clone(), key.id);
-                            schema
-                                .id_name_rev
-                                .insert((KeyType::Column, key.id), key.name.clone());
+                            schema.column_map.insert(key.name.clone(), key.id);
+                            schema.id_name_rev.insert((KeyType::Column, key.id), key.name.clone());
                         }
                     }
                     if column.is_primary_key {
@@ -366,12 +307,8 @@ impl From<schema_pb::Schema> for Schema {
             if schema_pb.is_table_id {
                 if let Some(label) = &rel.label {
                     if !schema.table_map.contains_key(&label.name) {
-                        schema
-                            .table_map
-                            .insert(label.name.clone(), (KeyType::Relation, label.id));
-                        schema
-                            .id_name_rev
-                            .insert((KeyType::Relation, label.id), label.name.clone());
+                        schema.table_map.insert(label.name.clone(), (KeyType::Relation, label.id));
+                        schema.id_name_rev.insert((KeyType::Relation, label.id), label.name.clone());
                     }
                 }
             }
@@ -380,12 +317,8 @@ impl From<schema_pb::Schema> for Schema {
                 if let Some(key) = &column.key {
                     if schema_pb.is_column_id {
                         if !schema.column_map.contains_key(&key.name) {
-                            schema
-                                .column_map
-                                .insert(key.name.clone(), key.id);
-                            schema
-                                .id_name_rev
-                                .insert((KeyType::Column, key.id), key.name.clone());
+                            schema.column_map.insert(key.name.clone(), key.id);
+                            schema.id_name_rev.insert((KeyType::Column, key.id), key.name.clone());
                         }
                     }
                     if column.is_primary_key {
@@ -400,10 +333,7 @@ impl From<schema_pb::Schema> for Schema {
                 }
             }
             if let Some(label) = &rel.label {
-                let pairs = schema
-                    .relation_labels
-                    .entry(label.name.clone())
-                    .or_default();
+                let pairs = schema.relation_labels.entry(label.name.clone()).or_default();
                 for entity_pair in rel.entity_pairs {
                     if entity_pair.src.is_some() && entity_pair.dst.is_some() {
                         pairs.push((
@@ -415,25 +345,89 @@ impl From<schema_pb::Schema> for Schema {
             }
         }
 
-        schema
+        Ok(schema)
     }
 }
 
-impl JsonIO for Schema {
-    fn into_json<W: io::Write>(self, writer: W) -> io::Result<()> {
-        let schema_pb: schema_pb::Schema = self.into();
-        serde_json::to_writer_pretty(writer, &schema_pb)?;
+/// To define the options of required columns by the computing node of the query plan.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ColumnsOpt {
+    /// Initial state
+    Init,
+    /// None column is required
+    None,
+    /// Some columns are required
+    Partial(BTreeSet<NameOrId>),
+    /// All columns are required, with an integer to indicate the number of columns
+    All(usize),
+}
 
-        Ok(())
+impl Default for ColumnsOpt {
+    fn default() -> Self {
+        Self::Init
+    }
+}
+
+impl ColumnsOpt {
+    pub fn new(cols: BTreeSet<NameOrId>) -> Self {
+        Self::Partial(cols)
     }
 
-    fn from_json<R: io::Read>(reader: R) -> io::Result<Self>
-    where
-        Self: Sized,
-    {
-        let schema_pb = serde_json::from_reader::<_, schema_pb::Schema>(reader)?;
-        let schema = schema_pb.into();
-        Ok(schema)
+    pub fn is_init(&self) -> bool {
+        match self {
+            ColumnsOpt::Init => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_all(&self) -> bool {
+        match self {
+            ColumnsOpt::All(_) => true,
+            _ => false,
+        }
+    }
+
+    pub fn len(&self) -> usize {
+        match self {
+            ColumnsOpt::Init => 0,
+            ColumnsOpt::None => 0,
+            ColumnsOpt::Partial(cols) => cols.len(),
+            ColumnsOpt::All(size) => *size,
+        }
+    }
+
+    pub fn insert(&mut self, col: NameOrId) -> bool {
+        if self.is_init() {
+            let cols = BTreeSet::new();
+            *self = Self::Partial(cols)
+        }
+        match self {
+            ColumnsOpt::Partial(cols) => cols.insert(col),
+            _ => false,
+        }
+    }
+
+    pub fn remove(&mut self, col: &NameOrId) -> bool {
+        match self {
+            ColumnsOpt::Partial(cols) => cols.remove(col),
+            _ => false,
+        }
+    }
+
+    pub fn contains(&self, col: &NameOrId) -> bool {
+        match self {
+            ColumnsOpt::Init => false,
+            ColumnsOpt::None => false,
+            ColumnsOpt::Partial(cols) => cols.contains(col),
+            ColumnsOpt::All(_) => true,
+        }
+    }
+
+    pub fn get(&self) -> Vec<NameOrId> {
+        match self {
+            ColumnsOpt::Partial(cols) => cols.iter().cloned().collect(),
+            _ => vec![],
+        }
     }
 }
 
@@ -442,25 +436,14 @@ impl JsonIO for Schema {
 pub struct NodeMeta {
     /// The table names (labels)
     tables: BTreeSet<NameOrId>,
-    /// The required columns (columns)
-    columns: BTreeSet<NameOrId>,
-    /// A flag to indicate that all columns are required
-    is_all_columns: bool,
-    /// Whether the current node accept columns
-    is_add_column: bool,
+    /// The required columns of current node
+    columns: ColumnsOpt,
+    /// The required columns of the nodes with certain tags. `None` tag means the columns
+    /// for the head nodes that current node refers to.
+    tag_columns: BTreeMap<Option<TagId>, ColumnsOpt>,
 }
 
 impl NodeMeta {
-    pub fn insert_column(&mut self, col: NameOrId) {
-        if self.is_add_column {
-            self.columns.insert(col);
-        }
-    }
-
-    pub fn get_columns(&self) -> &BTreeSet<NameOrId> {
-        &self.columns
-    }
-
     pub fn insert_table(&mut self, table: NameOrId) {
         self.tables.insert(table);
     }
@@ -470,42 +453,88 @@ impl NodeMeta {
     }
 }
 
-#[derive(Clone, Debug)]
-pub enum SingleOrNodes {
-    Single(u32),
-    Union(Vec<u32>),
+#[derive(Clone)]
+pub enum OneOrMany<T: Clone> {
+    One([T; 1]),
+    Many(Vec<T>),
 }
 
-impl Default for SingleOrNodes {
-    fn default() -> Self {
-        SingleOrNodes::Single(0)
+impl<T: Clone + Debug> Debug for OneOrMany<T> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            OneOrMany::One(one) => one.get(0).unwrap().fmt(f),
+            OneOrMany::Many(many) => many.fmt(f),
+        }
     }
 }
 
-#[derive(Clone, Debug)]
-pub enum NodeMetaOpt {
-    Single(Rc<RefCell<NodeMeta>>),
-    Union(Vec<Rc<RefCell<NodeMeta>>>),
+impl<T: Clone + Default> Default for OneOrMany<T> {
+    fn default() -> Self {
+        Self::One([T::default()])
+    }
 }
 
-impl NodeMetaOpt {
-    pub fn insert_column(&mut self, col: NameOrId) {
+impl<T: Clone> AsRef<[T]> for OneOrMany<T> {
+    fn as_ref(&self) -> &[T] {
         match self {
-            NodeMetaOpt::Single(meta) => meta.borrow_mut().insert_column(col),
-            NodeMetaOpt::Union(metas) => {
+            OneOrMany::One(one) => &one[..],
+            OneOrMany::Many(many) => many.as_slice(),
+        }
+    }
+}
+
+pub type NodeMetaOpt = OneOrMany<Rc<RefCell<NodeMeta>>>;
+
+impl NodeMetaOpt {
+    pub fn set_columns_opt(&mut self, columns_opt: ColumnsOpt) {
+        match self {
+            // The number 256 is given arbitrarily, which however should be determined by the number
+            // of actual columns for the given node.
+            NodeMetaOpt::One(meta) => {
+                meta[0].borrow_mut().columns = columns_opt;
+            }
+            NodeMetaOpt::Many(metas) => {
                 for meta in metas {
-                    meta.borrow_mut().insert_column(col.clone());
+                    meta.borrow_mut().columns = columns_opt.clone();
                 }
             }
         }
     }
 
-    pub fn set_is_all_columns(&mut self, is_all_columns: bool) {
+    pub fn insert_column(&mut self, col: NameOrId) {
         match self {
-            NodeMetaOpt::Single(meta) => meta.borrow_mut().is_all_columns = is_all_columns,
-            NodeMetaOpt::Union(metas) => {
+            NodeMetaOpt::One(meta) => {
+                meta[0].borrow_mut().columns.insert(col);
+            }
+            NodeMetaOpt::Many(metas) => {
                 for meta in metas {
-                    meta.borrow_mut().is_all_columns = is_all_columns;
+                    meta.borrow_mut().columns.insert(col.clone());
+                }
+            }
+        }
+    }
+
+    pub fn set_tag_columns_opt(&mut self, tag: Option<TagId>, columns_opt: ColumnsOpt) {
+        match self {
+            NodeMetaOpt::One(meta) => {
+                meta[0].borrow_mut().tag_columns.insert(tag, columns_opt);
+            }
+            NodeMetaOpt::Many(metas) => {
+                for meta in metas {
+                    meta.borrow_mut().tag_columns.insert(tag, columns_opt.clone());
+                }
+            }
+        }
+    }
+
+    pub fn insert_tag_column(&mut self, tag: Option<TagId>, col: NameOrId) {
+        match self {
+            NodeMetaOpt::One(meta) => {
+                meta[0].borrow_mut().tag_columns.entry(tag).or_default().insert(col);
+            }
+            NodeMetaOpt::Many(metas) => {
+                for meta in metas {
+                    meta.borrow_mut().tag_columns.entry(tag).or_default().insert(col.clone());
                 }
             }
         }
@@ -513,10 +542,10 @@ impl NodeMetaOpt {
 
     pub fn is_all_columns(&self) -> bool {
         match self {
-            NodeMetaOpt::Single(meta) => meta.borrow().is_all_columns,
-            NodeMetaOpt::Union(metas) => {
+            NodeMetaOpt::One(meta) => meta[0].borrow().columns.is_all(),
+            NodeMetaOpt::Many(metas) => {
                 for meta in metas {
-                    if meta.borrow().is_all_columns {
+                    if meta.borrow().columns.is_all() {
                         return true;
                     }
                 }
@@ -525,28 +554,12 @@ impl NodeMetaOpt {
         }
     }
 
-    pub fn set_is_add_column(&mut self, is_add_column: bool) {
-        match self {
-            NodeMetaOpt::Single(meta) => meta.borrow_mut().is_add_column = is_add_column,
-            NodeMetaOpt::Union(metas) => {
-                for meta in metas {
-                    meta.borrow_mut().is_add_column = is_add_column;
-                }
-            }
-        }
+    pub fn get_columns(&self) -> Vec<NameOrId> {
+        self.as_ref()[0].borrow().columns.get()
     }
 
-    pub fn get_columns(&self) -> BTreeSet<NameOrId> {
-        match self {
-            NodeMetaOpt::Single(meta) => meta.borrow().get_columns().clone(),
-            NodeMetaOpt::Union(metas) => {
-                let mut union_cols = BTreeSet::new();
-                for meta in metas {
-                    union_cols.append(&mut meta.borrow_mut().columns);
-                }
-                union_cols
-            }
-        }
+    pub fn get_tag_columns(&self) -> BTreeMap<Option<TagId>, ColumnsOpt> {
+        self.as_ref()[0].borrow().tag_columns.clone()
     }
 }
 
@@ -564,50 +577,31 @@ pub struct PlanMeta {
     /// information is critical in distributed processing, as the computation may not align
     /// with the storage to access the required column. Thus, such information can help
     /// the computation route and fetch columns.
-    node_metas: BTreeMap<u32, Rc<RefCell<NodeMeta>>>,
-    /// Refer a node to the most-recent nodes that interact with the storage.
-    /// For example, if the plan looks like, `Scan.Filter(xx)`, `Scan` is a node that
-    /// accesses storage, while `Filter` is not. Here, we refer the node id of
-    /// `Filter` to the node id of `Scan`.
-    node_to_referred_nodes: BTreeMap<u32, SingleOrNodes>,
+    node_metas: BTreeMap<NodeId, Rc<RefCell<NodeMeta>>>,
+    /// Refer a node to the node that points to the head of the plan.
+    /// A head of the plan is often determined by an operator that changes the head of the
+    /// `Record`. Such operators include Scan, EdgeExpand, PathExpand, GetV, Project, etc.
+    referred_nodes: BTreeMap<NodeId, OneOrMany<NodeId>>,
     /// The tag must refer to some valid nodes in the plan.
-    tag_nodes: BTreeMap<NameOrId, Vec<u32>>,
-    /// To ease the processing, tag may be transformed to an internal id.
+    tag_nodes: BTreeMap<TagId, Vec<NodeId>>,
+    /// To ease the processing, tag may be mapped to an internal id.
     /// This maintains the mappings
-    tag_ids: BTreeMap<NameOrId, u32>,
-    /// To record the current nodes' id in the logical plan. Note that nodes that have operators that
-    /// of `As` or `Selection` does not alter curr_node.
-    curr_node: SingleOrNodes,
+    tag_ids: BTreeMap<String, TagId>,
+    /// Record the current node that has been processed by the plan
+    curr_node: NodeId,
     /// The maximal tag id that has been assigned, for mapping tag ids.
-    max_tag_id: u32,
-    /// Whether to preprocess the table name into id.
-    is_table_id: bool,
-    /// Whether to preprocess the column name into id.
-    is_column_id: bool,
-    /// Whether to preprocess the tag name into id.
-    is_tag_id: bool,
+    max_tag_id: TagId,
     /// Whether to partition the task
     is_partition: bool,
 }
 
 // Some constructors
 impl PlanMeta {
-    pub fn new(node_id: u32) -> Self {
+    pub fn new(node_id: NodeId) -> Self {
         let mut plan_meta = PlanMeta::default();
-        plan_meta.curr_node = SingleOrNodes::Single(node_id);
+        plan_meta.curr_node = node_id;
         plan_meta.node_metas.entry(node_id).or_default();
         plan_meta
-    }
-
-    pub fn with_store_conf(mut self, is_table_id: bool, is_column_id: bool) -> Self {
-        self.is_table_id = is_table_id;
-        self.is_column_id = is_column_id;
-        self
-    }
-
-    pub fn with_tag_id(mut self) -> Self {
-        self.is_tag_id = true;
-        self
     }
 
     pub fn with_partition(mut self) -> Self {
@@ -617,98 +611,26 @@ impl PlanMeta {
 }
 
 impl PlanMeta {
-    pub fn curr_node_metas_mut(&mut self) -> NodeMetaOpt {
-        match &self.curr_node {
-            SingleOrNodes::Single(node) => NodeMetaOpt::Single(
-                self.node_metas
-                    .entry(*node)
-                    .or_default()
-                    .clone(),
-            ),
-            SingleOrNodes::Union(nodes) => {
-                let mut node_metas = vec![];
-                for node in nodes {
-                    node_metas.push(
-                        self.node_metas
-                            .entry(*node)
-                            .or_default()
-                            .clone(),
-                    );
-                }
-                NodeMetaOpt::Union(node_metas)
-            }
-        }
+    pub fn insert_tag_nodes(&mut self, tag: TagId, nodes: Vec<NodeId>) {
+        self.tag_nodes.entry(tag).or_default().extend(nodes.into_iter());
     }
 
-    pub fn tag_node_metas_mut(&mut self, tag_opt: Option<&NameOrId>) -> IrResult<NodeMetaOpt> {
-        if let Some(tag) = tag_opt {
-            if let Some(nodes) = self.tag_nodes.get(tag) {
-                if nodes.len() == 1 {
-                    Ok(NodeMetaOpt::Single(
-                        self.node_metas
-                            .entry(nodes[0])
-                            .or_default()
-                            .clone(),
-                    ))
-                } else {
-                    let mut node_metas = vec![];
-                    for node in nodes {
-                        node_metas.push(
-                            self.node_metas
-                                .entry(*node)
-                                .or_default()
-                                .clone(),
-                        )
-                    }
-                    Ok(NodeMetaOpt::Union(node_metas))
-                }
-            } else {
-                Err(IrError::TagNotExist(tag.clone()))
-            }
+    pub fn get_tag_nodes(&self, tag: TagId) -> &[NodeId] {
+        if let Some(nodes) = self.tag_nodes.get(&tag) {
+            nodes.as_slice()
         } else {
-            Ok(self.curr_node_metas_mut())
+            &[]
         }
     }
 
-    pub fn get_node_meta(&self, id: u32) -> Option<Rc<RefCell<NodeMeta>>> {
-        self.node_metas.get(&id).cloned()
-    }
-
-    pub fn curr_node_metas(&self) -> Option<NodeMetaOpt> {
-        match &self.curr_node {
-            SingleOrNodes::Single(node) => self
-                .node_metas
-                .get(node)
-                .map(|meta| NodeMetaOpt::Single(meta.clone())),
-            SingleOrNodes::Union(nodes) => {
-                let mut node_metas = vec![];
-                for node in nodes {
-                    if let Some(node_meta) = self.node_metas.get(node) {
-                        node_metas.push(node_meta.clone());
-                    } else {
-                        return None;
-                    }
-                }
-                Some(NodeMetaOpt::Union(node_metas))
-            }
-        }
-    }
-
-    pub fn insert_tag_nodes(&mut self, tag: NameOrId, nodes: Vec<u32>) {
-        self.tag_nodes
-            .entry(tag)
-            .or_default()
-            .extend(nodes.into_iter());
-    }
-
-    pub fn get_tag_nodes(&self, tag: &NameOrId) -> Option<Vec<u32>> {
-        self.tag_nodes.get(tag).cloned()
+    pub fn has_tag(&self, tag: TagId) -> bool {
+        self.tag_nodes.contains_key(&tag)
     }
 
     /// Get the id (with a `true` indicator) of the given tag if it already presents,
     /// otherwise, set and return the id as `self.max_tag_id` (with a `false` indicator).
-    pub fn get_or_set_tag_id(&mut self, tag: &NameOrId) -> (bool, u32) {
-        let entry = self.tag_ids.entry(tag.clone());
+    pub fn get_or_set_tag_id(&mut self, tag: &str) -> (bool, TagId) {
+        let entry = self.tag_ids.entry(tag.to_string());
         match entry {
             Entry::Occupied(o) => (true, *o.get()),
             Entry::Vacant(v) => {
@@ -720,70 +642,122 @@ impl PlanMeta {
         }
     }
 
-    pub fn get_tag_ids(&self) -> Vec<(NameOrId, u32)> {
-        self.tag_ids
-            .clone()
-            .into_iter()
-            .map(|x| x)
-            .collect()
+    pub fn get_tag_id_mappings(&self) -> &BTreeMap<String, TagId> {
+        &self.tag_ids
     }
 
-    pub fn set_curr_node(&mut self, curr_node: u32) {
-        self.curr_node = SingleOrNodes::Single(curr_node);
+    pub fn get_tag_id(&self, tag: &str) -> Option<TagId> {
+        self.tag_ids.get(tag).cloned()
     }
 
-    pub fn set_union_curr_nodes(&mut self, nodes: Vec<u32>) {
-        if nodes.len() == 1 {
-            self.curr_node = SingleOrNodes::Single(nodes[0]);
-        } else {
-            self.curr_node = SingleOrNodes::Union(nodes);
-        }
+    pub fn set_curr_node(&mut self, node: NodeId) {
+        self.curr_node = node;
     }
 
-    pub fn get_curr_nodes(&self) -> Vec<u32> {
-        match &self.curr_node {
-            SingleOrNodes::Single(node) => vec![*node],
-            SingleOrNodes::Union(nodes) => nodes.clone(),
-        }
+    pub fn get_curr_node(&self) -> NodeId {
+        self.curr_node
     }
 
-    pub fn refer_to_nodes(&mut self, node: u32, referred_nodes: Vec<u32>) {
-        self.node_to_referred_nodes.insert(
+    pub fn refer_to_nodes(&mut self, node: NodeId, nodes: Vec<NodeId>) {
+        self.referred_nodes.insert(
             node,
-            if referred_nodes.len() == 1 {
-                SingleOrNodes::Single(referred_nodes[0])
-            } else {
-                SingleOrNodes::Union(referred_nodes)
-            },
+            if nodes.len() == 1 { OneOrMany::One([nodes[0]]) } else { OneOrMany::Many(nodes) },
         );
     }
 
-    pub fn get_referred_nodes(&self, node: u32) -> Vec<u32> {
-        if let Some(referred_nodes) = self.node_to_referred_nodes.get(&node) {
-            match referred_nodes {
-                SingleOrNodes::Single(n) => vec![*n],
-                SingleOrNodes::Union(ns) => ns.clone(),
+    pub fn get_referred_nodes(&self, nodes: &[NodeId]) -> Vec<NodeId> {
+        if nodes.len() == 1 {
+            if let Some(referred) = self.referred_nodes.get(&nodes[0]) {
+                referred.as_ref().to_vec()
+            } else {
+                vec![]
             }
         } else {
-            vec![node]
+            let mut results = BTreeSet::new();
+            for node in nodes {
+                if let Some(referred) = self.referred_nodes.get(node) {
+                    results.extend(referred.as_ref().iter().cloned())
+                }
+            }
+            results.into_iter().collect()
         }
     }
 
-    /// Return a dummy node for maintaining tag that refers to neither vertex nor edge
-    pub fn get_dummy_nodes(&self) -> Vec<u32> {
-        vec![0xffffffff]
+    /// Get the referred nodes of current node
+    pub fn get_curr_referred_nodes(&self) -> &[NodeId] {
+        if let Some(nodes) = self.referred_nodes.get(&self.curr_node) {
+            nodes.as_ref()
+        } else {
+            &[]
+        }
     }
 
-    pub fn is_table_id(&self) -> bool {
-        self.is_table_id
+    /// Get the metadata of one given node. If the metadata does not exist, return `None`.
+    pub fn get_node_meta(&self, node: NodeId) -> Option<NodeMetaOpt> {
+        self.node_metas.get(&node).map(|meta| NodeMetaOpt::One([meta.clone()]))
     }
 
-    pub fn is_column_id(&self) -> bool {
-        self.is_column_id
+    /// Get the metadata of given nodes. If the metadata does not exist, return `None`.
+    pub fn get_nodes_meta(&self, nodes: &[NodeId]) -> Option<NodeMetaOpt> {
+        if nodes.len() == 1 {
+            self.node_metas.get(&nodes[0]).map(|meta| NodeMetaOpt::One([meta.clone()]))
+        } else if nodes.len() > 1 {
+            let mut node_metas = vec![];
+            for node in nodes {
+                if let Some(meta) = self.node_metas.get(node) {
+                    node_metas.push(meta.clone());
+                } else {
+                    return None;
+                }
+            }
+            Some(NodeMetaOpt::Many(node_metas))
+        } else {
+            // empty cases
+            None
+        }
     }
 
-    pub fn is_tag_id(&self) -> bool {
-        self.is_tag_id
+    pub fn get_curr_node_meta(&self) -> Option<NodeMetaOpt> {
+        self.get_node_meta(self.curr_node)
+    }
+
+    /// Get or insert the metadata of given nodes.
+    pub fn get_or_insert_nodes_meta(&mut self, nodes: &[NodeId]) -> NodeMetaOpt {
+        if nodes.len() == 1 {
+            NodeMetaOpt::One([self.node_metas.entry(nodes[0]).or_default().clone()])
+        } else {
+            let mut node_metas = vec![];
+            for &node in nodes {
+                node_metas.push(self.node_metas.entry(node).or_default().clone())
+            }
+            NodeMetaOpt::Many(node_metas)
+        }
+    }
+
+    /// Get the tag-associated nodes' metadata.
+    /// If the tag is `None`, the associated nodes are the referred nodes of current nodes.
+    /// If the metadata does not exist, create one and return the newly created.
+    /// If there is no node associated with the tag, return `TagNotExist` error.
+    pub fn tag_nodes_meta_mut(&mut self, tag_opt: Option<TagId>) -> IrResult<NodeMetaOpt> {
+        if let Some(tag) = tag_opt {
+            if let Some(nodes) = self.tag_nodes.get(&tag).cloned() {
+                Ok(self.get_or_insert_nodes_meta(&nodes))
+            } else {
+                Err(IrError::TagNotExist((tag as KeyId).into()))
+            }
+        } else {
+            let ref_curr_nodes = self.get_curr_referred_nodes().to_vec();
+            if !ref_curr_nodes.is_empty() {
+                Ok(self.get_or_insert_nodes_meta(&ref_curr_nodes))
+            } else {
+                Err(IrError::MissingData("the head of the plan refers to empty nodes".to_string()))
+            }
+        }
+    }
+
+    /// Get curr node's metadata. If the metadata does not exist, create one and return.
+    pub fn curr_node_meta_mut(&mut self) -> NodeMetaOpt {
+        self.get_or_insert_nodes_meta(&vec![self.curr_node])
     }
 
     pub fn is_partition(&self) -> bool {

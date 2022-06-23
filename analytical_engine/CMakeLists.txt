@@ -153,8 +153,25 @@ else ()
     message(FATAL_ERROR "gflags not found")
 endif ()
 
+# api changed in glog 0.6.0
 include("cmake/FindGlog.cmake")
 include_directories(SYSTEM ${GLOG_INCLUDE_DIRS})
+if (GLOG_FOUND)
+    set(CMAKE_REQUIRED_INCLUDES "${GLOG_INCLUDE_DIRS}")
+    set(CMAKE_REQUIRED_LIBRARIES "${CMAKE_REQUIRED_LIBRARIES} ${GLOG_LIBRARIES}")
+    check_cxx_source_runs("
+    #include <iostream>
+    #include <glog/logging.h>
+
+    int main() {
+        google::LogMessageTime time;
+    }
+    " GLOG_COMPILE_SUCCESS)
+    if (GLOG_COMPILE_SUCCESS)
+        add_definitions(-DGLOG_VERSION=6)
+    endif ()
+endif ()
+
 
 include("cmake/FindArrow.cmake")
 if (ARROW_FOUND)
@@ -171,7 +188,7 @@ endif ()
 find_package(libgrapelite REQUIRED)
 include_directories(${LIBGRAPELITE_INCLUDE_DIRS})
 
-find_package(vineyard 0.5.0 REQUIRED)
+find_package(vineyard 0.5.3 REQUIRED)
 include_directories(${VINEYARD_INCLUDE_DIRS})
 add_compile_options(-DENABLE_SELECTOR)
 

@@ -222,6 +222,8 @@ message GetV {
     End = 1;
     // Getting the other vertex of the edge. We are calibrating to Gremlin's bothE.otherV semantics
     Other = 2;
+    // Getting both vertices of the edge
+    Both = 3;
   }
   // The tag that refers to the edge/path where the end vertex will be retrieved
   common.NameOrId tag = 1;
@@ -239,17 +241,20 @@ message As {
   common.NameOrId alias = 1;
 }
 
-// An operator that provides auxiliary functionalities given the current entity.
-// Note this operator is not aware to the logical plan, and will be used while processing into logical plan.
-// The functionalities include:
+// An operator that provides **auxiliary** functionalities for certain entity (as tagged). Functionalities include:
 // * To get certain properties/columns from the entity
 // * To filter out the entity based on the data
 // * To re-name the entity with other alias
+//
+// Note this operator is invisible the logical plan, and will only be used by the translator/optimizer
+// when processing the logical plan into the physical plan.
 message Auxilia {
+  // The tag refers to the entity upon which this operator is applied
+  common.NameOrId tag = 1;
   // The details (columns/properties) to be retrieved
-  QueryParams params = 1;
+  QueryParams params = 2;
   // The alias to give if any, which is especially helpful when the entity now refers to the head of the record
-  common.NameOrId alias = 2;
+  common.NameOrId alias = 3;
 }
 
 message EdgeExpand {
@@ -354,6 +359,7 @@ message Pattern {
       EdgeExpand edge = 1;
       PathExpand path = 2;
       GetV vertex = 3;
+      Select select = 4;
     }
   }
   // A sentence defines a match

@@ -33,7 +33,7 @@ struct PathStartOperator {
 impl MapFunction<Record, Record> for PathStartOperator {
     fn exec(&self, mut input: Record) -> FnResult<Record> {
         let entry = input
-            .get(self.start_tag.as_ref())
+            .get(self.start_tag.clone())
             .ok_or(FnExecError::get_tag_error("get tag failed in PathStartOperator"))?;
         let v = entry
             .as_graph_vertex()

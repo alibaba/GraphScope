@@ -160,6 +160,7 @@ impl TryFrom<pb::pattern::Sentence> for BaseSentence {
                         }
                         Ok(p.into())
                     }
+                    Some(Item::Select(pred)) => Ok(pred.into()),
                     None => Err(ParsePbError::EmptyFieldError("Pattern::Binder::item".to_string())),
                 }?;
                 operators.push(opr);
