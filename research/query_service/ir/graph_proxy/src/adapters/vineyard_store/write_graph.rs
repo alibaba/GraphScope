@@ -13,7 +13,6 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use std::collections::HashMap;
 use std::ffi::CString;
 
 use ffi::read_ffi::*;
@@ -22,14 +21,9 @@ use ir_common::generated::common as common_pb;
 use ir_common::generated::schema as schema_pb;
 use ir_common::{KeyId, NameOrId};
 
-use crate::apis::{
-    get_graph, Details, DynDetails, Edge, Element, GraphElement, QueryParams, Vertex, WriteGraphProxy, ID,
-};
+use crate::apis::graph::PK;
+use crate::apis::{Details, DynDetails, WriteGraphProxy};
 use crate::{GraphProxyError, GraphProxyResult};
-
-// TODO: use TRANSLATE_VERTEX_ID_FLAG in read_graph after separate groot/vineyard
-const TRANSLATE_VERTEX_ID_FLAG: &str = "TRANSLATE_VERTEX_ID_FLAG";
-const OUTER_ID_PROP_KEY: &str = "OUTER_ID_PROP_KEY";
 
 #[derive(Clone, Debug)]
 pub struct VineyardGraphWriter {
@@ -45,50 +39,32 @@ impl VineyardGraphWriter {
         Ok(VineyardGraphWriter { graph })
     }
 
-    fn encode_ffi_id(&self, vertex_id: ID) -> GraphProxyResult<FfiVertexId> {
-        let read_graph = get_graph()
-            .ok_or(GraphProxyError::query_store_error("get graph failed when writing subgraph"))?;
-        let mut extra_param = HashMap::new();
-        extra_param.insert(TRANSLATE_VERTEX_ID_FLAG.to_string(), "".to_string());
-        let mut query_param = QueryParams::default();
-        query_param.extra_params = Some(extra_param);
-        if let Some(vertex_with_outer_id) = read_graph
-            .get_vertex(&vec![vertex_id], &query_param)?
-            .next()
-        {
-            let outer_id = vertex_with_outer_id
-                .details()
-                .map(|details| details.get_property(&NameOrId::from(OUTER_ID_PROP_KEY)))
-                .unwrap_or(None)
-                .ok_or(GraphProxyError::query_store_error(
-                    "get_property of outer_id failed when writing subgraph",
-                ))?;
-            outer_id.as_u64().map_err(|e| {
+    fn encode_ffi_id(&self, vertex_pk: PK) -> GraphProxyResult<FfiVertexId> {
+        match vertex_pk {
+            PK::Single(pk_value) => pk_value.as_u64().map_err(|e| {
                 GraphProxyError::query_store_error(&format!(
                     "cast outer_id as u64 failed {:?}",
                     e.to_string()
                 ))
-            })
-        } else {
-            Err(GraphProxyError::query_store_error("get_vertex with TRANSLATE_VERTEX_ID_FLAG failed"))
+            }),
+            PK::Multi(_) => Err(GraphProxyError::write_graph_error(
+                "encode_ffi_id failed as vineyard only support single-column pk",
+            )),
         }
     }
 
-    fn encode_ffi_label(&self, key: Option<&NameOrId>) -> GraphProxyResult<FfiLabelId> {
+    fn encode_ffi_label(&self, key: &NameOrId) -> GraphProxyResult<FfiLabelId> {
         let key_id = self.encode_key(key)?;
         Ok(key_id as FfiLabelId)
     }
 
-    fn encode_key(&self, key: Option<&NameOrId>) -> GraphProxyResult<KeyId> {
+    fn encode_key(&self, key: &NameOrId) -> GraphProxyResult<KeyId> {
         match key {
-            Some(NameOrId::Str(s)) => Err(GraphProxyError::write_graph_error(&format!(
+            NameOrId::Str(s) => Err(GraphProxyError::write_graph_error(&format!(
                 "do not support string key when writing vineyard {:?}",
                 s
             )))?,
-            Some(NameOrId::Id(id)) => Ok(*id),
-            None => {
-                Err(GraphProxyError::write_graph_error("do not support empty key when writing vineyard"))?
-            }
+            NameOrId::Id(id) => Ok(*id),
         }
     }
 
@@ -99,7 +75,7 @@ impl VineyardGraphWriter {
         let mut native_properties: Vec<WriteNativeProperty> = vec![];
         if let Some(mut properties) = properties {
             for (prop_key, prop_val) in properties.drain() {
-                let prop_id = self.encode_key(Some(&prop_key))?;
+                let prop_id = self.encode_key(&prop_key)?;
                 let native_property = WriteNativeProperty::from_object(prop_id, prop_val);
                 native_properties.push(native_property);
             }
@@ -109,54 +85,35 @@ impl VineyardGraphWriter {
 }
 
 impl WriteGraphProxy for VineyardGraphWriter {
-    fn add_vertex(&mut self, vertex: Vertex) -> GraphProxyResult<()> {
-        let vertex_id = self.encode_ffi_id(vertex.id())?;
-        let label_id = self.encode_ffi_label(vertex.label())?;
-        let native_properties = self.encode_details(vertex.details())?;
+    fn add_vertex(
+        &mut self, vertex_pk: PK, label: &NameOrId, properties: Option<&DynDetails>,
+    ) -> GraphProxyResult<()> {
+        let vertex_id = self.encode_ffi_id(vertex_pk)?;
+        let label_id = self.encode_ffi_label(label)?;
+        let native_properties = self.encode_details(properties)?;
         let state = unsafe {
             add_vertex(self.graph, vertex_id, label_id, native_properties.len(), native_properties.as_ptr())
         };
         check_ffi_state(state, "add_vertex")
     }
 
-    fn add_vertices(&mut self, vertices: Vec<Vertex>) -> GraphProxyResult<()> {
-        let vertex_size = vertices.len();
-        let mut vertex_ids = Vec::with_capacity(vertex_size);
-        let mut vertex_label_ids = Vec::with_capacity(vertex_size);
-        let mut merge_properties: Vec<WriteNativeProperty> = Vec::with_capacity(vertex_size);
-        let mut property_sizes = Vec::with_capacity(vertex_size);
-        for vertex in vertices {
-            vertex_ids.push(self.encode_ffi_id(vertex.id())?);
-            vertex_label_ids.push(self.encode_ffi_label(vertex.label())?);
-            let mut properties = self.encode_details(vertex.details())?;
-            property_sizes.push(properties.len());
-            merge_properties.append(&mut properties);
-        }
-
-        let state = unsafe {
-            add_vertices(
-                self.graph,
-                vertex_size,
-                vertex_ids.as_ptr(),
-                vertex_label_ids.as_ptr(),
-                property_sizes.as_ptr(),
-                merge_properties.as_ptr(),
-            )
-        };
-        check_ffi_state(state, "add_vertices")
-    }
-
-    fn add_edge(&mut self, edge: Edge) -> GraphProxyResult<()> {
-        let edge_label = self.encode_ffi_label(edge.label())?;
-        let src_label = self.encode_ffi_label(edge.get_src_label())?;
-        let dst_label = self.encode_ffi_label(edge.get_dst_label())?;
-        let native_properties = self.encode_details(edge.details())?;
+    fn add_edge(
+        &mut self, _edge_pk: Option<PK>, label: &NameOrId, src_vertex_pk: PK, src_vertex_label: &NameOrId,
+        dst_vertex_pk: PK, dst_vertex_label: &NameOrId, properties: Option<&DynDetails>,
+    ) -> GraphProxyResult<()> {
+        let edge_label = self.encode_ffi_label(label)?;
+        let src_id = self.encode_ffi_id(src_vertex_pk)?;
+        let dst_id = self.encode_ffi_id(dst_vertex_pk)?;
+        let src_label = self.encode_ffi_label(src_vertex_label)?;
+        let dst_label = self.encode_ffi_label(dst_vertex_label)?;
+        let native_properties = self.encode_details(properties)?;
         let state = unsafe {
             add_edge(
                 self.graph,
-                edge.id(),
-                self.encode_ffi_id(edge.src_id)?,
-                self.encode_ffi_id(edge.dst_id)?,
+                // TODO: if eid won't be used, remove from add_edge
+                0,
+                src_id,
+                dst_id,
                 edge_label,
                 src_label,
                 dst_label,
@@ -166,46 +123,6 @@ impl WriteGraphProxy for VineyardGraphWriter {
         };
 
         check_ffi_state(state, "add_edge")
-    }
-
-    fn add_edges(&mut self, edges: Vec<Edge>) -> GraphProxyResult<()> {
-        let edge_size = edges.len();
-        let mut edge_ids = Vec::with_capacity(edge_size);
-        let mut src_ids = Vec::with_capacity(edge_size);
-        let mut dst_ids = Vec::with_capacity(edge_size);
-        let mut edge_label_ids = Vec::with_capacity(edge_size);
-        let mut src_label_ids = Vec::with_capacity(edge_size);
-        let mut dst_label_ids = Vec::with_capacity(edge_size);
-        let mut merge_properties: Vec<WriteNativeProperty> = Vec::with_capacity(edge_size);
-        let mut property_sizes = Vec::with_capacity(edge_size);
-        for edge in edges {
-            edge_ids.push(edge.id());
-            src_ids.push(self.encode_ffi_id(edge.src_id)?);
-            dst_ids.push(self.encode_ffi_id(edge.dst_id)?);
-            edge_label_ids.push(self.encode_ffi_label(edge.label())?);
-            src_label_ids.push(self.encode_ffi_label(edge.get_src_label())?);
-            dst_label_ids.push(self.encode_ffi_label(edge.get_dst_label())?);
-            let mut properties = self.encode_details(edge.details())?;
-            property_sizes.push(properties.len());
-            merge_properties.append(&mut properties);
-        }
-
-        let state = unsafe {
-            add_edges(
-                self.graph,
-                edge_size,
-                edge_ids.as_ptr(),
-                src_ids.as_ptr(),
-                dst_ids.as_ptr(),
-                edge_label_ids.as_ptr(),
-                src_label_ids.as_ptr(),
-                dst_label_ids.as_ptr(),
-                property_sizes.as_ptr(),
-                merge_properties.as_ptr(),
-            )
-        };
-
-        check_ffi_state(state, "add_edges")
     }
 
     fn finish(&mut self) -> GraphProxyResult<()> {

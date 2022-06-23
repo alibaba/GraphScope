@@ -16,9 +16,9 @@
 use std::sync::atomic::{AtomicPtr, Ordering};
 use std::sync::Arc;
 
-use dyn_type::Object;
 use ir_common::NameOrId;
 
+use crate::apis::graph::PK;
 use crate::apis::{Direction, Edge, QueryParams, Vertex, ID};
 use crate::GraphProxyResult;
 
@@ -50,10 +50,10 @@ pub trait ReadGraph: Send + Sync {
         &self, params: &QueryParams,
     ) -> GraphProxyResult<Box<dyn Iterator<Item = Vertex> + Send>>;
 
-    /// Scan a vertex with a specified label and its primary key values, and additional query parameters,
+    /// Scan a vertex with a specified label and its primary key value(s), and additional query parameters,
     /// and return the vertex if exists.
     fn index_scan_vertex(
-        &self, label: &NameOrId, primary_key_values: &Vec<(NameOrId, Object)>, params: &QueryParams,
+        &self, label: &NameOrId, primary_key: &PK, params: &QueryParams,
     ) -> GraphProxyResult<Option<Vertex>>;
 
     /// Scan all edges with query parameters, and return an iterator over them.
@@ -80,6 +80,10 @@ pub trait ReadGraph: Send + Sync {
     fn prepare_explore_edge(
         &self, direction: Direction, params: &QueryParams,
     ) -> GraphProxyResult<Box<dyn Statement<ID, Edge>>>;
+
+    /// Get primary key value(s) with the given global_id,
+    /// and return the primary key value(s) if exists
+    fn get_primary_key(&self, id: &ID) -> GraphProxyResult<Option<PK>>;
 }
 
 lazy_static! {

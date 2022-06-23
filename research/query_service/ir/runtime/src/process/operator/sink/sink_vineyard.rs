@@ -17,8 +17,8 @@ use std::convert::TryInto;
 use std::fmt::Debug;
 use std::sync::{Arc, Mutex};
 
-use graph_proxy::apis::WriteGraphProxy;
-use graph_proxy::VineyardGraphWriter;
+use graph_proxy::apis::{get_graph, Element, GraphElement, WriteGraphProxy};
+use graph_proxy::{GraphProxyError, VineyardGraphWriter};
 use ir_common::error::ParsePbError;
 use ir_common::generated::common as common_pb;
 use ir_common::generated::schema as schema_pb;
@@ -37,21 +37,69 @@ pub struct GraphSinkEncoder {
 
 impl Accumulator<Record, Record> for GraphSinkEncoder {
     fn accum(&mut self, mut next: Record) -> FnExecResult<()> {
+        let graph = get_graph().ok_or(FnExecError::NullGraphError)?;
         for sink_key in &self.sink_keys {
             let entry = next
                 .take(sink_key.as_ref())
                 .ok_or(FnExecError::get_tag_error(&format!("tag {:?} in GraphWriter", sink_key)))?;
             if let Some(v) = entry.as_graph_vertex() {
+                let vertex_pk = graph
+                    .get_primary_key(&v.id())?
+                    .ok_or(GraphProxyError::query_store_error("get_primary_key() returns empty pk"))?;
+                let label = v
+                    .label()
+                    .ok_or(FnExecError::unexpected_data_error(&format!(
+                        "label of vertex {:?} is None in sink_vineyard",
+                        v.id()
+                    )))?;
                 loop {
                     if let Ok(mut graph_writer_guard) = self.graph_writer.try_lock() {
-                        graph_writer_guard.add_vertex(v.clone())?;
+                        graph_writer_guard.add_vertex(vertex_pk, label, v.details())?;
                         break;
                     }
                 }
             } else if let Some(e) = entry.as_graph_edge() {
+                let src_vertex_pk =
+                    graph
+                        .get_primary_key(&e.src_id)?
+                        .ok_or(GraphProxyError::query_store_error(
+                            "get_primary_key() of src_vertex returns empty pk",
+                        ))?;
+                let dst_vertex_pk =
+                    graph
+                        .get_primary_key(&e.dst_id)?
+                        .ok_or(GraphProxyError::query_store_error(
+                            "get_primary_key() of src_vertex returns empty pk",
+                        ))?;
+                let label = e
+                    .label()
+                    .ok_or(FnExecError::unexpected_data_error(&format!(
+                        "label of edge {:?} is None in sink_vineyard",
+                        e.id()
+                    )))?;
+                let src_label = e
+                    .get_src_label()
+                    .ok_or(FnExecError::unexpected_data_error(&format!(
+                        "src_label of edge {:?} is None in sink_vineyard",
+                        e.id()
+                    )))?;
+                let dst_label = e
+                    .get_dst_label()
+                    .ok_or(FnExecError::unexpected_data_error(&format!(
+                        "dst_label of edge {:?} is None in sink_vineyard",
+                        e.id()
+                    )))?;
                 loop {
                     if let Ok(mut graph_writer_guard) = self.graph_writer.try_lock() {
-                        graph_writer_guard.add_edge(e.clone())?;
+                        graph_writer_guard.add_edge(
+                            None,
+                            label,
+                            src_vertex_pk,
+                            src_label,
+                            dst_vertex_pk,
+                            dst_label,
+                            e.details(),
+                        )?;
                         break;
                     }
                 }
@@ -112,7 +160,10 @@ mod tests {
     use std::sync::{Arc, Mutex};
 
     use dyn_type::Object;
-    use graph_proxy::apis::{DefaultDetails, DynDetails, Edge, GraphElement, Vertex, WriteGraphProxy};
+    use graph_proxy::apis::graph::PK;
+    use graph_proxy::apis::{
+        DefaultDetails, DynDetails, Edge, Element, GraphElement, Vertex, WriteGraphProxy, ID,
+    };
     use graph_proxy::{GraphProxyError, GraphProxyResult};
     use ir_common::NameOrId;
     use pegasus::api::{Fold, Sink};
@@ -125,9 +176,20 @@ mod tests {
     use crate::process::record::Record;
 
     #[derive(Default, Debug)]
-    pub struct TestGraphWriter {
+    struct TestGraphWriter {
         vertices: Arc<Mutex<Vec<Vertex>>>,
         edges: Arc<Mutex<Vec<Edge>>>,
+    }
+
+    impl TestGraphWriter {
+        fn encode_id(&self, pk: PK) -> ID {
+            match pk {
+                PK::Single(obj) => obj.as_u64().unwrap(),
+                PK::Multi(_) => {
+                    unreachable!()
+                }
+            }
+        }
     }
 
     impl Clone for TestGraphWriter {
@@ -137,7 +199,11 @@ mod tests {
     }
 
     impl WriteGraphProxy for TestGraphWriter {
-        fn add_vertex(&mut self, vertex: Vertex) -> GraphProxyResult<()> {
+        fn add_vertex(
+            &mut self, vertex_pk: PK, label: &NameOrId, properties: Option<&DynDetails>,
+        ) -> GraphProxyResult<()> {
+            let vid = self.encode_id(vertex_pk);
+            let vertex = Vertex::new(vid, Some(label.clone()), properties.unwrap().clone());
             self.vertices
                 .lock()
                 .map_err(|_e| GraphProxyError::write_graph_error("add_vertex failed"))?
@@ -145,31 +211,21 @@ mod tests {
             Ok(())
         }
 
-        fn add_vertices(&mut self, vertices: Vec<Vertex>) -> GraphProxyResult<()> {
-            for vertex in vertices {
-                self.vertices
-                    .lock()
-                    .map_err(|_e| GraphProxyError::write_graph_error("add_vertices failed"))?
-                    .push(vertex);
-            }
-            Ok(())
-        }
-
-        fn add_edge(&mut self, edge: Edge) -> GraphProxyResult<()> {
+        fn add_edge(
+            &mut self, edge_pk: Option<PK>, label: &NameOrId, src_vertex_pk: PK,
+            src_vertex_label: &NameOrId, dst_vertex_pk: PK, dst_vertex_label: &NameOrId,
+            properties: Option<&DynDetails>,
+        ) -> GraphProxyResult<()> {
+            let eid = self.encode_id(edge_pk.unwrap());
+            let src_id = self.encode_id(src_vertex_pk);
+            let dst_id = self.encode_id(dst_vertex_pk);
+            let mut edge = Edge::new(eid, Some(label.clone()), src_id, dst_id, properties.unwrap().clone());
+            edge.set_src_label(Some(src_vertex_label.clone()));
+            edge.set_src_label(Some(dst_vertex_label.clone()));
             self.edges
                 .lock()
                 .map_err(|_e| GraphProxyError::write_graph_error("add_edge failed"))?
                 .push(edge);
-            Ok(())
-        }
-
-        fn add_edges(&mut self, edges: Vec<Edge>) -> GraphProxyResult<()> {
-            for edge in edges {
-                self.edges
-                    .lock()
-                    .map_err(|_e| GraphProxyError::write_graph_error("add_edges failed"))?
-                    .push(edge);
-            }
             Ok(())
         }
 
@@ -200,13 +256,29 @@ mod tests {
         }
     }
 
+    fn get_primary_key(id: &ID) -> PK {
+        (Object::from(*id)).into()
+    }
+
     impl Accumulator<Record, Record> for TestGraphWriter {
         fn accum(&mut self, mut next: Record) -> FnExecResult<()> {
             let entry = next.take(None).unwrap();
             if let Some(v) = entry.as_graph_vertex() {
-                self.add_vertex(v.clone())?
+                let pk = get_primary_key(&v.id());
+                self.add_vertex(pk, v.label().unwrap(), v.details())?;
             } else if let Some(e) = entry.as_graph_edge() {
-                self.add_edge(e.clone())?
+                let e_pk = get_primary_key(&e.id());
+                let src_pk = get_primary_key(&e.src_id);
+                let dst_pk = get_primary_key(&e.dst_id);
+                self.add_edge(
+                    Some(e_pk),
+                    e.label().unwrap(),
+                    src_pk,
+                    e.get_src_label().unwrap(),
+                    dst_pk,
+                    e.get_dst_label().unwrap(),
+                    e.details(),
+                )?;
             }
 
             Ok(())
@@ -223,7 +295,10 @@ mod tests {
             vec![("id".into(), object!(12)), ("score".into(), object!(11))]
                 .into_iter()
                 .collect();
-        Edge::new(12, Some(1.into()), 1, 2, DynDetails::new(DefaultDetails::new(map1)))
+        let mut e = Edge::new(12, Some(1.into()), 1, 2, DynDetails::new(DefaultDetails::new(map1)));
+        e.set_src_label(Some("person".into()));
+        e.set_dst_label(Some("person".into()));
+        e
     }
 
     fn init_edge2() -> Edge {
@@ -231,7 +306,10 @@ mod tests {
             vec![("id".into(), object!(21)), ("score".into(), object!(22))]
                 .into_iter()
                 .collect();
-        Edge::new(21, Some(1.into()), 2, 1, DynDetails::new(DefaultDetails::new(map2)))
+        let mut e = Edge::new(21, Some(1.into()), 2, 1, DynDetails::new(DefaultDetails::new(map2)));
+        e.set_src_label(Some("person".into()));
+        e.set_dst_label(Some("person".into()));
+        e
     }
 
     fn graph_writer_test(source: Vec<Record>, graph_writer: &TestGraphWriter) -> ResultStream<Record> {

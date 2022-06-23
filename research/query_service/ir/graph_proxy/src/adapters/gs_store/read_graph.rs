@@ -26,6 +26,7 @@ use maxgraph_store::api::*;
 use maxgraph_store::api::{Edge as StoreEdge, Vertex as StoreVertex};
 use maxgraph_store::api::{PropId, SnapshotId};
 
+use crate::apis::graph::PK;
 use crate::apis::{
     from_fn, register_graph, DefaultDetails, Direction, DynDetails, Edge, QueryParams, ReadGraph,
     Statement, Vertex, ID,
@@ -37,11 +38,6 @@ use crate::{GraphProxyError, GraphProxyResult};
 const SNAPSHOT_ID: &str = "SID";
 // This will refer to the latest graph
 const DEFAULT_SNAPSHOT_ID: SnapshotId = SnapshotId::max_value() - 1;
-// This flag will be used in get_vertex,
-// indicating that we need to translate the vertex with global id into the one with outer id (i.e., the value of property 'id')
-// TODO: this will only be used in Vineyard. We will separate vineyard and groot soon.
-const TRANSLATE_VERTEX_ID_FLAG: &str = "TRANSLATE_VERTEX_ID_FLAG";
-const OUTER_ID_PROP_KEY: &str = "OUTER_ID_PROP_KEY";
 
 pub struct GraphScopeStore<V, VI, E, EI>
 where
@@ -117,13 +113,20 @@ where
     }
 
     fn index_scan_vertex(
-        &self, label_id: &NameOrId, primary_key_values: &Vec<(NameOrId, Object)>, _params: &QueryParams,
+        &self, label_id: &NameOrId, primary_key: &PK, _params: &QueryParams,
     ) -> GraphProxyResult<Option<Vertex>> {
         let store_label_id = encode_storage_label(label_id)?;
-        let store_indexed_values: Vec<Property> = primary_key_values
-            .iter()
-            .map(|(_pk, value)| encode_store_prop_val(value.clone()))
-            .collect();
+        let store_indexed_values = match primary_key {
+            // TODO: refine after separate groot/vineyard
+            PK::Single(value) => {
+                vec![encode_store_prop_val(value.clone())]
+            }
+            PK::Multi(pk_pairs) => pk_pairs
+                .iter()
+                .map(|(_pk, value)| encode_store_prop_val(value.clone()))
+                .collect(),
+        };
+
         if let Some(vid) = self
             .partition_manager
             .get_vertex_id_by_primary_keys(store_label_id, store_indexed_values.as_ref())
@@ -177,19 +180,6 @@ where
         &self, ids: &[ID], params: &QueryParams,
     ) -> GraphProxyResult<Box<dyn Iterator<Item = Vertex> + Send>> {
         let store = self.store.clone();
-        if params
-            .get_extra_param(TRANSLATE_VERTEX_ID_FLAG)
-            .is_some()
-        {
-            let global_id = ids[0];
-            let outer_id = store.translate_vertex_id(global_id as VertexId);
-            let mut properties = HashMap::new();
-            properties.insert(NameOrId::from(OUTER_ID_PROP_KEY), Object::from(outer_id));
-            return Ok(Box::new(
-                vec![Vertex::new(global_id, None, DynDetails::new(DefaultDetails::new(properties)))]
-                    .into_iter(),
-            ));
-        }
         let si = params
             .get_extra_param(SNAPSHOT_ID)
             .map(|s| {
@@ -348,6 +338,13 @@ where
             Ok(filter_limit!(iter_list, filter, None))
         });
         Ok(stmt)
+    }
+
+    fn get_primary_key(&self, id: &ID) -> GraphProxyResult<Option<PK>> {
+        let store = self.store.clone();
+        let outer_id = store.translate_vertex_id(*id as VertexId);
+        let pk_val = Object::from(outer_id);
+        Ok(Some(pk_val.into()))
     }
 }
 

@@ -18,6 +18,7 @@ use std::convert::{TryFrom, TryInto};
 use std::io;
 use std::sync::Arc;
 
+use dyn_type::Object;
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::common as common_pb;
@@ -39,6 +40,27 @@ pub fn write_id<W: WriteExt>(writer: &mut W, id: ID) -> io::Result<()> {
 
 /// The number of bits in an `ID`
 pub const ID_BITS: usize = std::mem::size_of::<ID>() * 8;
+
+/// Primary key in storage, including single column pk and multi column pks.
+#[derive(Debug)]
+pub enum PK {
+    /// prop_value of single column primary key
+    Single(Object),
+    /// pairs of (prop_id, prop_value) of multiple column primary keys
+    Multi(Vec<(NameOrId, Object)>),
+}
+
+impl From<Object> for PK {
+    fn from(pk: Object) -> Self {
+        PK::Single(pk)
+    }
+}
+
+impl From<Vec<(NameOrId, Object)>> for PK {
+    fn from(pks: Vec<(NameOrId, Object)>) -> Self {
+        PK::Multi(pks)
+    }
+}
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub enum Direction {

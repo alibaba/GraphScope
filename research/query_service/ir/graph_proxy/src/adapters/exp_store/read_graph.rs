@@ -22,7 +22,7 @@ use std::sync::Arc;
 use dyn_type::{object, BorrowObject, Object};
 use graph_store::common::LabelId;
 use graph_store::config::{JsonConf, DIR_GRAPH_SCHEMA, FILE_SCHEMA};
-use graph_store::ldbc::LDBCVertexParser;
+use graph_store::ldbc::{LDBCVertexParser, LABEL_SHIFT_BITS};
 use graph_store::prelude::{
     DefaultId, EdgeId, GlobalStoreTrait, GlobalStoreUpdate, GraphDBConfig, InternalId, LDBCGraphSchema,
     LargeGraphDB, LocalEdge, LocalVertex, MutableGraphDB, Row, INVALID_LABEL_ID,
@@ -32,6 +32,7 @@ use pegasus::configure_with_default;
 use pegasus_common::downcast::*;
 use pegasus_common::impl_as_any;
 
+use crate::apis::graph::PK;
 use crate::apis::{
     from_fn, register_graph, DefaultDetails, Details, Direction, DynDetails, Edge, QueryParams, ReadGraph,
     Statement, Vertex, ID,
@@ -243,7 +244,7 @@ impl ReadGraph for ExpStore {
     }
 
     fn index_scan_vertex(
-        &self, _label: &NameOrId, _primary_key_values: &Vec<(NameOrId, Object)>, _params: &QueryParams,
+        &self, _label: &NameOrId, _primary_key: &PK, _params: &QueryParams,
     ) -> GraphProxyResult<Option<Vertex>> {
         Err(GraphProxyError::query_store_error(
             "Experiment storage does not support index_scan_vertex for now",
@@ -329,6 +330,12 @@ impl ReadGraph for ExpStore {
             Ok(filter_limit!(iter, filter, limit))
         });
         Ok(stmt)
+    }
+
+    fn get_primary_key(&self, id: &ID) -> GraphProxyResult<Option<PK>> {
+        let outer_id = (*id << LABEL_SHIFT_BITS) >> LABEL_SHIFT_BITS;
+        let pk_val = Object::from(outer_id);
+        Ok(Some(pk_val.into()))
     }
 }
 
