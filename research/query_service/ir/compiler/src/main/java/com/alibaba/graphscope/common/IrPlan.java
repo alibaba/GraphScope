@@ -48,9 +48,12 @@ import java.util.function.Function;
 // represent ir plan as a chain of operators
 public class IrPlan implements Closeable {
     private static IrCoreLibrary irCoreLib = IrCoreLibrary.INSTANCE;
-    private static String PLAN_JSON_FILE = "plan.json";
+    // get tmp directory from system properties, which is accessible from common users
+    private static String JSON_PLAN_DIR = System.getProperty("java.io.tmpdir");
     private Pointer ptrPlan;
     private IrMeta meta;
+    // to identify a unique json file which contains the logic plan from ir_core
+    private String planName;
 
     // call libc to transform from InterOpBase to c structure
     private enum TransformFactory implements Function<InterOpBase, Pointer> {
@@ -566,8 +569,9 @@ public class IrPlan implements Closeable {
         }
     }
 
-    public IrPlan(IrMeta meta, InterOpCollection opCollection) {
+    public IrPlan(IrMeta meta, InterOpCollection opCollection, String planName) {
         this.meta = meta;
+        this.planName = planName;
         irCoreLib.setSchema(meta.getSchema());
         this.ptrPlan = irCoreLib.initLogicalPlan();
         // add snapshot to QueryParams
@@ -609,11 +613,12 @@ public class IrPlan implements Closeable {
     public String getPlanAsJson() throws IOException {
         String json = "";
         if (ptrPlan != null) {
-            File file = new File(PLAN_JSON_FILE);
+            String fileName = JSON_PLAN_DIR + File.separator + planName + ".json";
+            File file = new File(fileName);
             if (file.exists()) {
                 file.delete();
             }
-            irCoreLib.writePlanToJson(ptrPlan, PLAN_JSON_FILE);
+            irCoreLib.writePlanToJson(ptrPlan, fileName);
             json = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
             if (file.exists()) {
                 file.delete();
