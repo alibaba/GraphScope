@@ -1,19 +1,3 @@
-//
-//! Copyright 2020 Alibaba Group Holding Limited.
-//!
-//! Licensed under the Apache License, Version 2.0 (the "License");
-//! you may not use this file except in compliance with the License.
-//! You may obtain a copy of the License at
-//!
-//!     http://www.apache.org/licenses/LICENSE-2.0
-//!
-//! Unless required by applicable law or agreed to in writing, software
-//! distributed under the License is distributed on an "AS IS" BASIS,
-//! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//! See the License for the specific language governing permissions and
-//! limitations under the License.
-
-// TODO: these are for read_path via GlobalGraphQuery
 use std::ffi::{CStr, CString};
 use std::sync::Arc;
 
@@ -1900,21 +1884,3 @@ impl GraphPartitionManager for VineyardPartitionManager {
 unsafe impl Send for VineyardPartitionManager {}
 
 unsafe impl Sync for VineyardPartitionManager {}
-
-#[test]
-fn zzzzzz() {
-    let pid_list = vec![1, 2, 3];
-    unsafe {
-        let graph_handle = get_graph_handle(1, 1);
-        let partition_manager = VineyardPartitionManager::new(graph_handle);
-        let partition_id_list = partition_manager.get_process_partition_list();
-        println!("partition id list {:?}", partition_id_list);
-
-        // get_graph_handle(1);
-        // free_graph_handle(std::ptr::null());
-
-        // let p = NativeProperty { data: std::ptr::null(), len: 10, r#type: PropertyType::Double};
-
-        // test1(p);
-    }
-}

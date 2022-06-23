@@ -61,7 +61,9 @@ impl VineyardGraphWriter {
     }
 
     fn encode_details(&self, details: Option<&DynDetails>) -> GraphProxyResult<Vec<WriteNativeProperty>> {
-        let properties = details.map(|details| details.get_all_properties()).unwrap_or(None);
+        let properties = details
+            .map(|details| details.get_all_properties())
+            .unwrap_or(None);
         let mut native_properties: Vec<WriteNativeProperty> = vec![];
         if let Some(mut properties) = properties {
             for (prop_key, prop_val) in properties.drain() {
