@@ -31,6 +31,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSBaseVisitor;
 import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSParser;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
+import org.apache.tinkerpop.gremlin.process.traversal.TextP;
 
 import java.util.Collection;
 
@@ -180,5 +181,17 @@ public class TraversalPredicateVisitor extends GremlinGSBaseVisitor<P> {
             throw new UnsupportedEvalException(
                     ctx.getClass(), "supported pattern is [without('a')] or [without('a', 'b')]");
         }
+    }
+
+    @Override
+    public P visitTraversalPredicate_containing(
+            final GremlinGSParser.TraversalPredicate_containingContext ctx) {
+        return TextP.containing(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()));
+    }
+
+    @Override
+    public P visitTraversalPredicate_notContaining(
+            final GremlinGSParser.TraversalPredicate_notContainingContext ctx) {
+        return TextP.notContaining(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()));
     }
 }
