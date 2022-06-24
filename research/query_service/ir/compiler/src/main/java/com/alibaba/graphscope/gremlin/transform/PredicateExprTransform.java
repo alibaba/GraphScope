@@ -91,7 +91,8 @@ public interface PredicateExprTransform extends Function<Step, String> {
                                     "within",
                                     predicateValue,
                                     // reverse subject and value to implement containing by within
-                                    // i.e. @a.name contains "name" as substring -> "name" within @a.name
+                                    // i.e. @a.name contains "name" as substring -> "name" within
+                                    // @a.name
                                     (Triple t) ->
                                             String.format(
                                                     "%s %s %s",
