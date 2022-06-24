@@ -32,7 +32,7 @@ use pegasus::configure_with_default;
 use pegasus_common::downcast::*;
 use pegasus_common::impl_as_any;
 
-use crate::apis::graph::PK;
+use crate::apis::graph::PKV;
 use crate::apis::{
     from_fn, register_graph, Details, Direction, DynDetails, Edge, PropertyValue, QueryParams, ReadGraph,
     Statement, Vertex, ID,
@@ -244,7 +244,7 @@ impl ReadGraph for ExpStore {
     }
 
     fn index_scan_vertex(
-        &self, _label: &NameOrId, _primary_key: &PK, _params: &QueryParams,
+        &self, _label: &NameOrId, _primary_key: &PKV, _params: &QueryParams,
     ) -> GraphProxyResult<Option<Vertex>> {
         Err(GraphProxyError::query_store_error(
             "Experiment storage does not support index_scan_vertex for now",
@@ -336,10 +336,10 @@ impl ReadGraph for ExpStore {
         Ok(stmt)
     }
 
-    fn get_primary_key(&self, id: &ID) -> GraphProxyResult<Option<PK>> {
+    fn get_primary_key(&self, id: &ID) -> GraphProxyResult<Option<PKV>> {
         let outer_id = (*id << LABEL_SHIFT_BITS) >> LABEL_SHIFT_BITS;
         let pk_val = Object::from(outer_id);
-        Ok(Some(pk_val.into()))
+        Ok(Some(("".into(), pk_val).into()))
     }
 }
 

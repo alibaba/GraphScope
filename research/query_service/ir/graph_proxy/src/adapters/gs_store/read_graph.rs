@@ -20,8 +20,8 @@ use std::sync::Arc;
 
 use dyn_type::{Object, Primitives};
 use graph_store::utils::IterList;
-use ir_common::NameOrId as Label;
 use ir_common::{KeyId, NameOrId};
+use ir_common::{NameOrId as Label, OneOrMany};
 use maxgraph_store::api::graph_partition::GraphPartitionManager;
 use maxgraph_store::api::prelude::Property;
 use maxgraph_store::api::*;
@@ -29,7 +29,7 @@ use maxgraph_store::api::{Edge as StoreEdge, Vertex as StoreVertex};
 use maxgraph_store::api::{PropId, SnapshotId};
 use pegasus_common::downcast::*;
 
-use crate::apis::graph::PK;
+use crate::apis::graph::PKV;
 use crate::apis::{
     from_fn, register_graph, DefaultDetails, Details, Direction, DynDetails, Edge, PropertyValue,
     QueryParams, ReadGraph, Statement, Vertex, ID,
@@ -120,15 +120,14 @@ where
     }
 
     fn index_scan_vertex(
-        &self, label_id: &NameOrId, primary_key: &PK, _params: &QueryParams,
+        &self, label_id: &NameOrId, primary_key: &PKV, _params: &QueryParams,
     ) -> GraphProxyResult<Option<Vertex>> {
         let store_label_id = encode_storage_label(label_id)?;
         let store_indexed_values = match primary_key {
-            // TODO: refine after separate groot/vineyard
-            PK::Single(value) => {
-                vec![encode_store_prop_val(value.clone())]
+            OneOrMany::One(pkv) => {
+                vec![encode_store_prop_val(pkv[0].1.clone())]
             }
-            PK::Multi(pk_pairs) => pk_pairs
+            OneOrMany::Many(pkvs) => pkvs
                 .iter()
                 .map(|(_pk, value)| encode_store_prop_val(value.clone()))
                 .collect(),
@@ -374,11 +373,11 @@ where
         Ok(stmt)
     }
 
-    fn get_primary_key(&self, id: &ID) -> GraphProxyResult<Option<PK>> {
+    fn get_primary_key(&self, id: &ID) -> GraphProxyResult<Option<PKV>> {
         let store = self.store.clone();
         let outer_id = store.translate_vertex_id(*id as VertexId);
         let pk_val = Object::from(outer_id);
-        Ok(Some(pk_val.into()))
+        Ok(Some(("".into(), pk_val).into()))
     }
 }
 

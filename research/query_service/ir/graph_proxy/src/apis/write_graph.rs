@@ -15,7 +15,7 @@
 
 use ir_common::NameOrId;
 
-use crate::apis::graph::PK;
+use crate::apis::graph::PKV;
 use crate::apis::DynDetails;
 use crate::GraphProxyResult;
 
@@ -23,13 +23,13 @@ use crate::GraphProxyResult;
 pub trait WriteGraphProxy: Send + Sync {
     /// Add a vertex
     fn add_vertex(
-        &mut self, vertex_pk: PK, label: &NameOrId, properties: Option<&DynDetails>,
+        &mut self, label: NameOrId, vertex_pk: PKV, properties: Option<DynDetails>,
     ) -> GraphProxyResult<()>;
 
     /// Add an edge
     fn add_edge(
-        &mut self, edge_pk: Option<PK>, label: &NameOrId, src_vertex_pk: PK, src_vertex_label: &NameOrId,
-        dst_vertex_pk: PK, dst_vertex_label: &NameOrId, properties: Option<&DynDetails>,
+        &mut self, label: NameOrId, src_vertex_label: NameOrId, src_vertex_pk: PKV,
+        dst_vertex_label: NameOrId, dst_vertex_pk: PKV, properties: Option<DynDetails>,
     ) -> GraphProxyResult<()>;
 
     /// A hint of all vertices/edges are added.

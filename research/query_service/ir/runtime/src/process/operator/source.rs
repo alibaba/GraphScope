@@ -18,7 +18,7 @@ use std::convert::TryFrom;
 use std::sync::Arc;
 
 use dyn_type::Object;
-use graph_proxy::apis::graph::PK;
+use graph_proxy::apis::graph::PKV;
 use graph_proxy::apis::{get_graph, Edge, Partitioner, QueryParams, Vertex, ID};
 use ir_common::error::{ParsePbError, ParsePbResult};
 use ir_common::generated::algebra as algebra_pb;
@@ -39,7 +39,7 @@ pub enum SourceType {
 pub struct SourceOperator {
     query_params: QueryParams,
     src: Option<HashMap<u64, Vec<ID>>>,
-    primary_key_values: Option<PK>,
+    primary_key_values: Option<PKV>,
     alias: Option<KeyId>,
     source_type: SourceType,
 }
@@ -67,7 +67,7 @@ impl SourceOperator {
                         } else {
                             // query by indexed_scan
                             let primary_key_values = <Vec<(NameOrId, Object)>>::try_from(ip2)?;
-                            source_op.primary_key_values = Some(PK::from(primary_key_values));
+                            source_op.primary_key_values = Some(PKV::from(primary_key_values));
                             debug!("Runtime source op of indexed scan {:?}", source_op);
                         }
                         Ok(source_op)

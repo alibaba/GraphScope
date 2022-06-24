@@ -54,7 +54,7 @@ impl Accumulator<Record, Record> for GraphSinkEncoder {
                     )))?;
                 loop {
                     if let Ok(mut graph_writer_guard) = self.graph_writer.try_lock() {
-                        graph_writer_guard.add_vertex(vertex_pk, label, v.details())?;
+                        graph_writer_guard.add_vertex(label.clone(), vertex_pk, v.details().cloned())?;
                         break;
                     }
                 }
@@ -92,13 +92,12 @@ impl Accumulator<Record, Record> for GraphSinkEncoder {
                 loop {
                     if let Ok(mut graph_writer_guard) = self.graph_writer.try_lock() {
                         graph_writer_guard.add_edge(
-                            None,
-                            label,
+                            label.clone(),
+                            src_label.clone(),
                             src_vertex_pk,
-                            src_label,
+                            dst_label.clone(),
                             dst_vertex_pk,
-                            dst_label,
-                            e.details(),
+                            e.details().cloned(),
                         )?;
                         break;
                     }
@@ -160,12 +159,12 @@ mod tests {
     use std::sync::{Arc, Mutex};
 
     use dyn_type::Object;
-    use graph_proxy::apis::graph::PK;
+    use graph_proxy::apis::graph::PKV;
     use graph_proxy::apis::{
         DefaultDetails, DynDetails, Edge, Element, GraphElement, Vertex, WriteGraphProxy, ID,
     };
     use graph_proxy::{GraphProxyError, GraphProxyResult};
-    use ir_common::NameOrId;
+    use ir_common::{NameOrId, OneOrMany};
     use pegasus::api::{Fold, Sink};
     use pegasus::result::ResultStream;
     use pegasus::JobConf;
@@ -182,12 +181,13 @@ mod tests {
     }
 
     impl TestGraphWriter {
-        fn encode_id(&self, pk: PK) -> ID {
-            match pk {
-                PK::Single(obj) => obj.as_u64().unwrap(),
-                PK::Multi(_) => {
-                    unreachable!()
+        fn encode_id(&self, pkv: PKV) -> ID {
+            match pkv {
+                OneOrMany::One(pkv) => {
+                    let pk_value = &pkv[0].1;
+                    pk_value.as_u64().unwrap()
                 }
+                OneOrMany::Many(_) => unreachable!(),
             }
         }
     }
@@ -200,7 +200,7 @@ mod tests {
 
     impl WriteGraphProxy for TestGraphWriter {
         fn add_vertex(
-            &mut self, vertex_pk: PK, label: &NameOrId, properties: Option<&DynDetails>,
+            &mut self, label: NameOrId, vertex_pk: PKV, properties: Option<DynDetails>,
         ) -> GraphProxyResult<()> {
             let vid = self.encode_id(vertex_pk);
             let vertex = Vertex::new(vid, Some(label.clone()), properties.unwrap().clone());
@@ -212,13 +212,12 @@ mod tests {
         }
 
         fn add_edge(
-            &mut self, edge_pk: Option<PK>, label: &NameOrId, src_vertex_pk: PK,
-            src_vertex_label: &NameOrId, dst_vertex_pk: PK, dst_vertex_label: &NameOrId,
-            properties: Option<&DynDetails>,
+            &mut self, label: NameOrId, src_vertex_label: NameOrId, src_vertex_pk: PKV,
+            dst_vertex_label: NameOrId, dst_vertex_pk: PKV, properties: Option<DynDetails>,
         ) -> GraphProxyResult<()> {
-            let eid = self.encode_id(edge_pk.unwrap());
             let src_id = self.encode_id(src_vertex_pk);
             let dst_id = self.encode_id(dst_vertex_pk);
+            let eid = encode_eid(src_id, dst_id);
             let mut edge = Edge::new(eid, Some(label.clone()), src_id, dst_id, properties.unwrap().clone());
             edge.set_src_label(Some(src_vertex_label.clone()));
             edge.set_src_label(Some(dst_vertex_label.clone()));
@@ -256,8 +255,8 @@ mod tests {
         }
     }
 
-    fn get_primary_key(id: &ID) -> PK {
-        (Object::from(*id)).into()
+    fn get_primary_key(id: &ID) -> PKV {
+        ("".into(), Object::from(*id)).into()
     }
 
     impl Accumulator<Record, Record> for TestGraphWriter {
@@ -265,19 +264,17 @@ mod tests {
             let entry = next.take(None).unwrap();
             if let Some(v) = entry.as_graph_vertex() {
                 let pk = get_primary_key(&v.id());
-                self.add_vertex(pk, v.label().unwrap(), v.details())?;
+                self.add_vertex(v.label().unwrap().clone(), pk, v.details().cloned())?;
             } else if let Some(e) = entry.as_graph_edge() {
-                let e_pk = get_primary_key(&e.id());
                 let src_pk = get_primary_key(&e.src_id);
                 let dst_pk = get_primary_key(&e.dst_id);
                 self.add_edge(
-                    Some(e_pk),
-                    e.label().unwrap(),
+                    e.label().unwrap().clone(),
+                    e.get_src_label().unwrap().clone(),
                     src_pk,
-                    e.get_src_label().unwrap(),
+                    e.get_dst_label().unwrap().clone(),
                     dst_pk,
-                    e.get_dst_label().unwrap(),
-                    e.details(),
+                    e.details().cloned(),
                 )?;
             }
 
@@ -290,12 +287,17 @@ mod tests {
         }
     }
 
+    fn encode_eid(src_id: ID, dst_id: ID) -> ID {
+        src_id << 8 | dst_id
+    }
+
     fn init_edge1() -> Edge {
         let map1: HashMap<NameOrId, Object> =
             vec![("id".into(), object!(12)), ("score".into(), object!(11))]
                 .into_iter()
                 .collect();
-        let mut e = Edge::new(12, Some(1.into()), 1, 2, DynDetails::new(DefaultDetails::new(map1)));
+        let mut e =
+            Edge::new(encode_eid(1, 2), Some(1.into()), 1, 2, DynDetails::new(DefaultDetails::new(map1)));
         e.set_src_label(Some("person".into()));
         e.set_dst_label(Some("person".into()));
         e
@@ -306,7 +308,8 @@ mod tests {
             vec![("id".into(), object!(21)), ("score".into(), object!(22))]
                 .into_iter()
                 .collect();
-        let mut e = Edge::new(21, Some(1.into()), 2, 1, DynDetails::new(DefaultDetails::new(map2)));
+        let mut e =
+            Edge::new(encode_eid(2, 1), Some(1.into()), 2, 1, DynDetails::new(DefaultDetails::new(map2)));
         e.set_src_label(Some("person".into()));
         e.set_dst_label(Some("person".into()));
         e

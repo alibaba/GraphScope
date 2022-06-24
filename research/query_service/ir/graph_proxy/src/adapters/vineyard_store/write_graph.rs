@@ -19,9 +19,9 @@ use ffi::read_ffi::*;
 use ffi::write_ffi::*;
 use ir_common::generated::common as common_pb;
 use ir_common::generated::schema as schema_pb;
-use ir_common::{KeyId, NameOrId};
+use ir_common::{KeyId, NameOrId, OneOrMany};
 
-use crate::apis::graph::PK;
+use crate::apis::graph::PKV;
 use crate::apis::{Details, DynDetails, WriteGraphProxy};
 use crate::{GraphProxyError, GraphProxyResult};
 
@@ -39,43 +39,46 @@ impl VineyardGraphWriter {
         Ok(VineyardGraphWriter { graph })
     }
 
-    fn encode_ffi_id(&self, vertex_pk: PK) -> GraphProxyResult<FfiVertexId> {
+    fn encode_ffi_id(&self, vertex_pk: PKV) -> GraphProxyResult<FfiVertexId> {
         match vertex_pk {
-            PK::Single(pk_value) => pk_value.as_u64().map_err(|e| {
-                GraphProxyError::query_store_error(&format!(
-                    "cast outer_id as u64 failed {:?}",
-                    e.to_string()
-                ))
-            }),
-            PK::Multi(_) => Err(GraphProxyError::write_graph_error(
+            OneOrMany::One(pkv) => {
+                let pk_value = &pkv[0].1;
+                pk_value.as_u64().map_err(|e| {
+                    GraphProxyError::query_store_error(&format!(
+                        "cast outer_id as u64 failed {:?}",
+                        e.to_string()
+                    ))
+                })
+            }
+            OneOrMany::Many(_) => Err(GraphProxyError::write_graph_error(
                 "encode_ffi_id failed as vineyard only support single-column pk",
             )),
         }
     }
 
-    fn encode_ffi_label(&self, key: &NameOrId) -> GraphProxyResult<FfiLabelId> {
+    fn encode_ffi_label(&self, key: NameOrId) -> GraphProxyResult<FfiLabelId> {
         let key_id = self.encode_key(key)?;
         Ok(key_id as FfiLabelId)
     }
 
-    fn encode_key(&self, key: &NameOrId) -> GraphProxyResult<KeyId> {
+    fn encode_key(&self, key: NameOrId) -> GraphProxyResult<KeyId> {
         match key {
             NameOrId::Str(s) => Err(GraphProxyError::write_graph_error(&format!(
                 "do not support string key when writing vineyard {:?}",
                 s
             )))?,
-            NameOrId::Id(id) => Ok(*id),
+            NameOrId::Id(id) => Ok(id),
         }
     }
 
-    fn encode_details(&self, details: Option<&DynDetails>) -> GraphProxyResult<Vec<WriteNativeProperty>> {
+    fn encode_details(&self, details: Option<DynDetails>) -> GraphProxyResult<Vec<WriteNativeProperty>> {
         let properties = details
             .map(|details| details.get_all_properties())
             .unwrap_or(None);
         let mut native_properties: Vec<WriteNativeProperty> = vec![];
         if let Some(mut properties) = properties {
             for (prop_key, prop_val) in properties.drain() {
-                let prop_id = self.encode_key(&prop_key)?;
+                let prop_id = self.encode_key(prop_key)?;
                 let native_property = WriteNativeProperty::from_object(prop_id, prop_val);
                 native_properties.push(native_property);
             }
@@ -86,7 +89,7 @@ impl VineyardGraphWriter {
 
 impl WriteGraphProxy for VineyardGraphWriter {
     fn add_vertex(
-        &mut self, vertex_pk: PK, label: &NameOrId, properties: Option<&DynDetails>,
+        &mut self, label: NameOrId, vertex_pk: PKV, properties: Option<DynDetails>,
     ) -> GraphProxyResult<()> {
         let vertex_id = self.encode_ffi_id(vertex_pk)?;
         let label_id = self.encode_ffi_label(label)?;
@@ -98,8 +101,8 @@ impl WriteGraphProxy for VineyardGraphWriter {
     }
 
     fn add_edge(
-        &mut self, _edge_pk: Option<PK>, label: &NameOrId, src_vertex_pk: PK, src_vertex_label: &NameOrId,
-        dst_vertex_pk: PK, dst_vertex_label: &NameOrId, properties: Option<&DynDetails>,
+        &mut self, label: NameOrId, src_vertex_label: NameOrId, src_vertex_pk: PKV,
+        dst_vertex_label: NameOrId, dst_vertex_pk: PKV, properties: Option<DynDetails>,
     ) -> GraphProxyResult<()> {
         let edge_label = self.encode_ffi_label(label)?;
         let src_id = self.encode_ffi_id(src_vertex_pk)?;

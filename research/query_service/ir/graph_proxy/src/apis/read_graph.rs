@@ -18,7 +18,7 @@ use std::sync::Arc;
 
 use ir_common::NameOrId;
 
-use crate::apis::graph::PK;
+use crate::apis::graph::PKV;
 use crate::apis::{Direction, Edge, QueryParams, Vertex, ID};
 use crate::GraphProxyResult;
 
@@ -53,7 +53,7 @@ pub trait ReadGraph: Send + Sync {
     /// Scan a vertex with a specified label and its primary key value(s), and additional query parameters,
     /// and return the vertex if exists.
     fn index_scan_vertex(
-        &self, label: &NameOrId, primary_key: &PK, params: &QueryParams,
+        &self, label: &NameOrId, primary_key: &PKV, params: &QueryParams,
     ) -> GraphProxyResult<Option<Vertex>>;
 
     /// Scan all edges with query parameters, and return an iterator over them.
@@ -83,7 +83,7 @@ pub trait ReadGraph: Send + Sync {
 
     /// Get primary key value(s) with the given global_id,
     /// and return the primary key value(s) if exists
-    fn get_primary_key(&self, id: &ID) -> GraphProxyResult<Option<PK>>;
+    fn get_primary_key(&self, id: &ID) -> GraphProxyResult<Option<PKV>>;
 }
 
 lazy_static! {
