@@ -192,4 +192,23 @@ pub mod test {
             }],
         }
     }
+
+    pub fn default_sink_pb() -> pb::Sink {
+        pb::Sink {
+            tags: vec![common_pb::NameOrIdKey { key: None }],
+            sink_target: Some(pb::sink::SinkTarget {
+                inner: Some(pb::sink::sink_target::Inner::SinkDefault(pb::SinkDefault {
+                    id_name_mappings: vec![],
+                })),
+            }),
+        }
+    }
+
+    pub fn default_sink_target() -> Option<pb::sink::SinkTarget> {
+        Some(pb::sink::SinkTarget {
+            inner: Some(pb::sink::sink_target::Inner::SinkDefault(pb::SinkDefault {
+                id_name_mappings: vec![],
+            })),
+        })
+    }
 }

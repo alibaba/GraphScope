@@ -21,6 +21,7 @@ option java_outer_classname = "GraphAlgebra";
 
 import "common.proto";
 import "expr.proto";
+import "schema.proto";
 
 // To project a relation on certain attributes or further their properties
 message Project {
@@ -373,21 +374,37 @@ message Pattern {
 }
 
 message Sink {
+  message SinkTarget {
+    oneof inner {
+      SinkDefault sink_default = 1;
+      SinkVineyard sink_vineyard = 2;
+    }
+  }
+  // Define the tags of columns to sink
+  repeated common.NameOrIdKey tags = 1;
+  // Define the target of sink, e.g., to Client as default, to Graph such as Vineyard etc.
+  SinkTarget sink_target = 2;
+}
+
+message SinkDefault {
   enum MetaType {
-      ENTITY = 0;
-      RELATION = 1;
-      COLUMN = 2;
-      TAG = 3;
+    ENTITY = 0;
+    RELATION = 1;
+    COLUMN = 2;
+    TAG = 3;
   }
   message IdNameMapping {
     int32 id = 1;
     string name = 2;
     MetaType meta_type = 3;
   }
-  // Define the tags of columns to sink
-  repeated common.NameOrIdKey tags = 1;
   // The mapping of id to name given certain `MetaType`
-  repeated IdNameMapping id_name_mappings = 2;
+  repeated IdNameMapping id_name_mappings = 1;
+}
+
+message SinkVineyard {
+  string graph_name = 1;
+  schema.Schema graph_schema = 2;
 }
 
 // A logical plan of graph relation algebra forms a DAG, where each node is an operator and the

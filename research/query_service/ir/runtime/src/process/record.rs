@@ -159,6 +159,14 @@ impl Record {
         }
     }
 
+    pub fn take(&mut self, tag: Option<&KeyId>) -> Option<Arc<Entry>> {
+        if let Some(tag) = tag {
+            self.columns.remove(*tag as usize)
+        } else {
+            self.curr.take()
+        }
+    }
+
     /// To join this record with `other` record. After the join, the columns
     /// from both sides will be merged (and deduplicated). The `curr` entry of the joined
     /// record will be specified according to `is_left_opt`, namely, if

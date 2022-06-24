@@ -20,10 +20,8 @@ import com.alibaba.graphscope.common.exception.OpArgIllegalException;
 import com.alibaba.graphscope.common.jna.type.FfiVariable;
 import com.alibaba.graphscope.gremlin.antlr4.AnyValue;
 
-import org.apache.tinkerpop.gremlin.process.traversal.Compare;
-import org.apache.tinkerpop.gremlin.process.traversal.Contains;
-import org.apache.tinkerpop.gremlin.process.traversal.P;
-import org.apache.tinkerpop.gremlin.process.traversal.Step;
+import org.apache.commons.lang3.tuple.Triple;
+import org.apache.tinkerpop.gremlin.process.traversal.*;
 import org.apache.tinkerpop.gremlin.process.traversal.util.AndP;
 import org.apache.tinkerpop.gremlin.process.traversal.util.ConnectiveP;
 
@@ -62,22 +60,57 @@ public interface PredicateExprTransform extends Function<Step, String> {
                 expr = getExprIfPropertyExist(subject);
             } else {
                 BiPredicate biPredicate = predicate.getBiPredicate();
+                // format as (subject predicate value), i.e "@a.name within [...]"
+                Function<Triple, String> defaultFormat =
+                        (Triple t) ->
+                                String.format(
+                                        "%s %s %s",
+                                        t.getLeft(),
+                                        t.getMiddle(),
+                                        getPredicateValue(t.getRight()));
                 if (biPredicate == Compare.eq) {
-                    expr += getPredicateExpr(subject, "==", predicateValue);
+                    expr += getPredicateExpr(subject, "==", predicateValue, defaultFormat);
                 } else if (biPredicate == Compare.neq) {
-                    expr += getPredicateExpr(subject, "!=", predicateValue);
+                    expr += getPredicateExpr(subject, "!=", predicateValue, defaultFormat);
                 } else if (biPredicate == Compare.lt) {
-                    expr += getPredicateExpr(subject, "<", predicateValue);
+                    expr += getPredicateExpr(subject, "<", predicateValue, defaultFormat);
                 } else if (biPredicate == Compare.lte) {
-                    expr += getPredicateExpr(subject, "<=", predicateValue);
+                    expr += getPredicateExpr(subject, "<=", predicateValue, defaultFormat);
                 } else if (biPredicate == Compare.gt) {
-                    expr += getPredicateExpr(subject, ">", predicateValue);
+                    expr += getPredicateExpr(subject, ">", predicateValue, defaultFormat);
                 } else if (biPredicate == Compare.gte) {
-                    expr += getPredicateExpr(subject, ">=", predicateValue);
+                    expr += getPredicateExpr(subject, ">=", predicateValue, defaultFormat);
                 } else if (biPredicate == Contains.within) {
-                    expr += getPredicateExpr(subject, "within", predicateValue);
+                    expr += getPredicateExpr(subject, "within", predicateValue, defaultFormat);
                 } else if (biPredicate == Contains.without) {
-                    expr += getPredicateExpr(subject, "without", predicateValue);
+                    expr += getPredicateExpr(subject, "without", predicateValue, defaultFormat);
+                } else if (biPredicate == Text.containing) {
+                    expr +=
+                            getPredicateExpr(
+                                    subject,
+                                    "within",
+                                    predicateValue,
+                                    // reverse subject and value to implement containing by within
+                                    // i.e. @a.name contains "name" as substring -> "name" within
+                                    // @a.name
+                                    (Triple t) ->
+                                            String.format(
+                                                    "%s %s %s",
+                                                    getPredicateValue(t.getRight()),
+                                                    t.getMiddle(),
+                                                    t.getLeft()));
+                } else if (biPredicate == Text.notContaining) {
+                    expr +=
+                            getPredicateExpr(
+                                    subject,
+                                    "without",
+                                    predicateValue,
+                                    (Triple t) ->
+                                            String.format(
+                                                    "%s %s %s",
+                                                    getPredicateValue(t.getRight()),
+                                                    t.getMiddle(),
+                                                    t.getLeft()));
                 } else {
                     throw new OpArgIllegalException(
                             OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
@@ -123,14 +156,14 @@ public interface PredicateExprTransform extends Function<Step, String> {
         return (splitExprs.length == 2) ? expr : "";
     }
 
-    default String getPredicateExpr(String subject, String predicate, Object value) {
+    default String getPredicateExpr(
+            String subject, String predicate, Object value, Function<Triple, String> format) {
         String subjectKeyExist = getExprIfPropertyExist(subject);
         String valueKeyExist = "";
         if (value instanceof FfiVariable.ByValue) {
             valueKeyExist = getExprIfPropertyExist(value.toString());
         }
-        String predicateExpr =
-                String.format("%s %s %s", subject, predicate, getPredicateValue(value));
+        String predicateExpr = format.apply(Triple.of(subject, predicate, value));
         StringBuilder builder = new StringBuilder(predicateExpr);
         if (!valueKeyExist.isEmpty()) {
             builder.insert(0, String.format("%s && ", valueKeyExist));

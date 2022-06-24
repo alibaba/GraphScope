@@ -426,6 +426,8 @@ traversalPredicate
     | traversalPredicate_without
     | traversalPredicate DOT 'and' LPAREN traversalPredicate RPAREN
     | traversalPredicate DOT 'or' LPAREN traversalPredicate RPAREN
+    | traversalPredicate_containing // TextP.containing
+    | traversalPredicate_notContaining //  TextP.notContaining
     ;
 
 nestedTraversal
@@ -463,6 +465,14 @@ traversalPredicate_within
 
 traversalPredicate_without
     : ('P.without' | 'without') LPAREN genericLiteralList RPAREN
+    ;
+
+traversalPredicate_containing
+    : ('TextP.containing' | 'containing') LPAREN stringLiteral RPAREN
+    ;
+
+traversalPredicate_notContaining
+    : ('TextP.notContaining' | 'notContaining') LPAREN stringLiteral RPAREN
     ;
 
 // incr and decr is unsupported in 3.5.1

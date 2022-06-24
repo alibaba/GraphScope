@@ -14,7 +14,7 @@
 //! limitations under the License.
 
 use crate::apis::{Partitioner, ID};
-use crate::errors::GraphProxyResult;
+use crate::GraphProxyResult;
 
 /// A simple partition utility that one server contains a single graph partition
 pub struct SimplePartition {
