@@ -1695,10 +1695,34 @@ mod as_opr {
 mod sink {
     use super::*;
 
-    /// To initialize an Sink operator
+    /// To initialize an Sink operator with target of SinkDefault (i.e., sink to client)
     #[no_mangle]
     pub extern "C" fn init_sink_operator() -> *const c_void {
-        let sink_opr = Box::new(pb::Sink { tags: vec![], id_name_mappings: vec![] });
+        let sink_opr = Box::new(pb::Sink {
+            tags: vec![],
+            sink_target: Some(pb::sink::SinkTarget {
+                inner: Some(pb::sink::sink_target::Inner::SinkDefault(pb::SinkDefault {
+                    id_name_mappings: vec![],
+                })),
+            }),
+        });
+        Box::into_raw(sink_opr) as *const c_void
+    }
+
+    /// To initialize an Sink operator with target of a Graph (now it is Vineyard as a default option)
+    #[no_mangle]
+    pub extern "C" fn init_sink_graph_operator(graph_name: *const c_char) -> *const c_void {
+        let graph_name = cstr_to_string(graph_name).expect("C String to Rust String error!");
+        let sink_opr = Box::new(pb::Sink {
+            // sink head by default
+            tags: vec![common_pb::NameOrIdKey { key: None }],
+            sink_target: Some(pb::sink::SinkTarget {
+                inner: Some(pb::sink::sink_target::Inner::SinkVineyard(pb::SinkVineyard {
+                    graph_name,
+                    graph_schema: None,
+                })),
+            }),
+        });
         Box::into_raw(sink_opr) as *const c_void
     }
 

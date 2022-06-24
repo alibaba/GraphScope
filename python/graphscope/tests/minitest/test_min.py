@@ -16,6 +16,7 @@
 # limitations under the License.
 #
 
+import logging
 import os
 import sys
 
@@ -33,11 +34,11 @@ import graphscope
 import graphscope.learning
 import graphscope.nx as nx
 from graphscope.analytical.udf.decorators import pregel
+from graphscope.dataset import load_modern_graph
 from graphscope.dataset import load_ogbn_mag
 from graphscope.framework.app import AppAssets
-from graphscope.learning.examples import GCN
-from graphscope.learning.graphlearn.python.model.tf import optimizer
-from graphscope.learning.graphlearn.python.model.tf.trainer import LocalTFTrainer
+
+logger = logging.getLogger("graphscope")
 
 graphscope.set_option(show_log=True)
 graphscope.set_option(initializing_interactive_engine=False)
@@ -50,6 +51,10 @@ def ogbn_small_script():
 
 
 def train(config, graph):
+    from graphscope.learning.examples import GCN
+    from graphscope.learning.graphlearn.python.model.tf import optimizer
+    from graphscope.learning.graphlearn.python.model.tf.trainer import LocalTFTrainer
+
     def model_fn():
         return GCN(
             graph,
@@ -230,3 +235,65 @@ def test_demo_with_default_session(ogbn_small_script):
     }
 
     train(config, lg)
+
+
+def test_modern_graph():
+    import vineyard
+
+    def make_nodes_set(nodes):
+        return {
+            item.get("id", [None])[0]: {k: v for k, v in item.items() if k}
+            for item in nodes
+        }
+
+    def make_edges_set(edges):
+        return {item.get("eid", [None])[0]: item for item in edges}
+
+    def subgraph_roundtrip(num_workers, threads_per_worker):
+        logger.info(
+            "testing subgraph with %d workers and %d threads per worker",
+            num_workers,
+            threads_per_worker,
+        )
+
+        vquery = "g.V().valueMap()"
+        equery = "g.E().valueMap()"
+        session = graphscope.session(cluster_type="hosts", num_workers=num_workers)
+
+        g0 = load_modern_graph(session)
+        interactive0 = session.gremlin(g0)
+        nodes = interactive0.execute(vquery).all()
+        edges = interactive0.execute(equery).all()
+
+        logger.info("nodes = %s", nodes)
+        logger.info("edges = %s", edges)
+
+        g1 = interactive0.subgraph("g.E()")
+        interactive1 = session.gremlin(g1)
+        subgraph_nodes = interactive1.execute(vquery).all()
+        subgraph_edges = interactive1.execute(equery).all()
+        logger.info("subgraph nodes = %s", subgraph_nodes)
+        logger.info("subgraph edges = %s", subgraph_edges)
+
+        assert make_nodes_set(nodes) == make_nodes_set(subgraph_nodes)
+        assert make_edges_set(edges) == make_edges_set(subgraph_edges)
+
+    num_workers_options = (
+        1,
+        2,
+    )
+    threads_per_worker_options = (
+        1,
+        2,
+    )
+
+    for num_workers in num_workers_options:
+        for threads_per_worker in threads_per_worker_options:
+            with vineyard.envvars(
+                {
+                    "USE_GAIA_ENGINE": "True",
+                    "RUST_LOG": "debug",
+                    "THREADS_PER_WORKER": "%d" % (threads_per_worker,),
+                }
+            ):
+                subgraph_roundtrip(num_workers, threads_per_worker)

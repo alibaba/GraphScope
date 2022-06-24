@@ -59,11 +59,7 @@ mod test {
         let shuffle_opr_bytes = common_pb::NameOrIdKey { key: None }.encode_to_vec();
         let apply_opr_bytes = pb::logical_plan::Operator::from(apply_opr).encode_to_vec();
         let expand_opr_bytes = pb::logical_plan::Operator::from(expand_opr).encode_to_vec();
-        let sink_opr_bytes = pb::logical_plan::Operator::from(pb::Sink {
-            tags: vec![common_pb::NameOrIdKey { key: None }],
-            id_name_mappings: vec![],
-        })
-        .encode_to_vec();
+        let sink_opr_bytes = pb::logical_plan::Operator::from(default_sink_pb()).encode_to_vec();
 
         let mut job_builder = JobBuilder::default();
         job_builder.add_source(source_opr_bytes);
@@ -195,7 +191,7 @@ mod test {
         let fold_opr_bytes = pb::logical_plan::Operator::from(fold_opr).encode_to_vec();
         let sink_opr_bytes = pb::logical_plan::Operator::from(pb::Sink {
             tags: vec![common_pb::NameOrIdKey { key: None }, common_pb::NameOrIdKey { key: Some(alias) }],
-            id_name_mappings: vec![],
+            sink_target: default_sink_target(),
         })
         .encode_to_vec();
 

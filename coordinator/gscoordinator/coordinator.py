@@ -83,6 +83,7 @@ from gscoordinator.object_manager import ObjectManager
 from gscoordinator.utils import ANALYTICAL_ENGINE_JAVA_INIT_CLASS_PATH
 from gscoordinator.utils import ANALYTICAL_ENGINE_JAVA_JVM_OPTS
 from gscoordinator.utils import GRAPHSCOPE_HOME
+from gscoordinator.utils import INTERACTIVE_ENGINE_THREADS_PER_WORKER
 from gscoordinator.utils import RESOURCE_DIR_NAME
 from gscoordinator.utils import WORKSPACE
 from gscoordinator.utils import check_gremlin_server_ready
@@ -520,7 +521,10 @@ class CoordinatorServiceServicer(
             elif op.op == types_pb2.CLOSE_INTERACTIVE_QUERY:
                 op_result = self._close_interactive_instance(op)
             elif op.op == types_pb2.SUBGRAPH:
-                op_result = self._gremlin_to_subgraph(op)
+                if os.environ.get("USE_GAIA_ENGINE", None) is not None:
+                    op_result = self._gremlin_to_subgraph_v2(op)
+                else:
+                    op_result = self._gremlin_to_subgraph(op)
             else:
                 raise RuntimeError("Unsupport op type: " + str(op.op))
             splited_result = split_op_result(op_result)
@@ -1038,67 +1042,83 @@ class CoordinatorServiceServicer(
         key_of_parent_op = op.parents[0]
         gremlin_client = self._object_manager.get(key_of_parent_op)
 
-        def create_global_graph_builder(graph_name, num_workers):
+        def create_global_graph_builder(graph_name, num_workers, threads_per_executor):
             import vineyard
 
             vineyard_client = vineyard.connect(
-                self._analytical_engine_config["vineyard_rpc_endpoint"]
+                *self._analytical_engine_config["vineyard_rpc_endpoint"].split(":")
             )
+
+            instances = [key for key in vineyard_client.meta]
+
+            # duplicate each instances for each thread per worker.
+            chunk_instances = [
+                key for key in instances for _ in range(threads_per_executor)
+            ]
 
             # build the vineyard::GlobalPGStream
             metadata = vineyard.ObjectMeta()
             metadata.set_global(True)
-            metadata["typename"] = "vineyard::GlobalPGStream"
-            metadata["total_stream_chunks"] = num_workers
+            metadata["typename"] = "vineyard::htap::GlobalPGStream"
+            metadata["local_stream_chunks"] = threads_per_executor
+            metadata["total_stream_chunks"] = len(chunk_instances)
 
             # build the parallel stream for edge
             edge_metadata = vineyard.ObjectMeta()
             edge_metadata.set_global(True)
             edge_metadata["typename"] = "vineyard::ParallelStream"
-            edge_metadata["__streams_-size"] = num_workers
+            edge_metadata["__streams_-size"] = len(chunk_instances)
 
             # build the parallel stream for vertex
             vertex_metadata = vineyard.ObjectMeta()
             vertex_metadata.set_global(True)
             vertex_metadata["typename"] = "vineyard::ParallelStream"
-            vertex_metadata["__streams_-size"] = num_workers
+            vertex_metadata["__streams_-size"] = len(chunk_instances)
 
-            for worker in range(num_workers):
-                edge_metadata = vineyard.ObjectMeta()
-                edge_metadata["typename"] = "vineyard::RecordBatchStream"
-                edge_metadata["nbytes"] = 0
-                edge_metadata["params_"] = json.dumps(
+            # NB: we don't respect `num_workers`, instead, we create a substream
+            # on each vineyard instance.
+            #
+            # Such a choice is to handle cases where thet etcd instance still contains
+            # information about dead instances.
+            #
+            # It should be ok, as each engine work will get its own local stream. But,
+            # generally it should be equal to `num_workers`.
+            for worker, instance_id in enumerate(chunk_instances):
+                edge_stream = vineyard.ObjectMeta()
+                edge_stream["typename"] = "vineyard::RecordBatchStream"
+                edge_stream["nbytes"] = 0
+                edge_stream["params_"] = json.dumps(
                     {
                         "graph_name": graph_name,
                         "kind": "edge",
                     }
                 )
-                edge = vineyard_client.create_metadata(edge_metadata)
+                edge = vineyard_client.create_metadata(edge_stream, instance_id)
                 vineyard_client.persist(edge.id)
                 edge_metadata.add_member("__streams_-%d" % worker, edge)
 
-                vertex_metadata = vineyard.ObjectMeta()
-                vertex_metadata["typename"] = "vineyard::RecordBatchStream"
-                vertex_metadata["nbytes"] = 0
-                vertex_metadata["params_"] = json.dumps(
+                vertex_stream = vineyard.ObjectMeta()
+                vertex_stream["typename"] = "vineyard::RecordBatchStream"
+                vertex_stream["nbytes"] = 0
+                vertex_stream["params_"] = json.dumps(
                     {
                         "graph_name": graph_name,
                         "kind": "vertex",
                     }
                 )
-                vertex = vineyard_client.create_metadata(vertex_metadata)
+                vertex = vineyard_client.create_metadata(vertex_stream, instance_id)
                 vineyard_client.persist(vertex.id)
-                edge_metadata.add_member("__streams_-%d" % worker, vertex)
+                vertex_metadata.add_member("__streams_-%d" % worker, vertex)
 
-                metadata = vineyard.ObjectMeta()
-                metadata["typename"] = "vineyard::PropertyGraphOutStream"
-                metadata["graph_name"] = graph_name
-                metadata["graph_schema"] = "{}"
-                metadata["nbytes"] = 0
-                metadata["stream_index"] = worker
-                metadata["edge_stream"] = edge
-                metadata["vertex_stream"] = vertex
-                chunk = vineyard_client.create_metadata(metadata)
+                chunk_stream = vineyard.ObjectMeta()
+                chunk_stream["typename"] = "vineyard::htap::PropertyGraphOutStream"
+                chunk_stream["graph_name"] = graph_name
+                chunk_stream["graph_schema"] = "{}"
+                chunk_stream["nbytes"] = 0
+                chunk_stream["stream_index"] = worker
+                chunk_stream.add_member("edge_stream", edge)
+                chunk_stream.add_member("vertex_stream", vertex)
+                chunk = vineyard_client.create_metadata(chunk_stream, instance_id)
                 vineyard_client.persist(chunk.id)
                 metadata.add_member("stream_chunk_%d" % worker, chunk)
 
@@ -1108,19 +1128,37 @@ class CoordinatorServiceServicer(
             vineyard_client.put_name(graph.id, graph_name)
 
             # build the parallel stream for edge
-            edge = vineyard_client.create_metadata(metadata)
+            edge = vineyard_client.create_metadata(edge_metadata)
             vineyard_client.persist(edge.id)
             vineyard_client.put_name(edge.id, "__%s_edge_stream" % graph_name)
 
             # build the parallel stream for vertex
-            vertex = vineyard_client.create_metadata(metadata)
+            vertex = vineyard_client.create_metadata(vertex_metadata)
             vineyard_client.persist(vertex.id)
             vineyard_client.put_name(vertex.id, "__%s_vertex_stream" % graph_name)
 
             return repr(graph.id), repr(edge.id), repr(vertex.id)
 
-        def load_subgraph(oid_type, edge_stream_id, vertex_stream_id):
+        def load_subgraph(
+            graph_name,
+            total_builder_chunks,
+            oid_type,
+            edge_stream_id,
+            vertex_stream_id,
+        ):
             import vineyard
+
+            # wait all flags been created, see also
+            #
+            # `PropertyGraphOutStream::Initialize(Schema schema)`
+            vineyard_client = vineyard.connect(
+                *self._analytical_engine_config["vineyard_rpc_endpoint"].split(":")
+            )
+
+            # wait for all stream been created by GAIA executor in FFI
+            for worker in range(total_builder_chunks):
+                name = "__%s_%d_streamed" % (graph_name, worker)
+                vineyard_client.get_name(name, wait=True)
 
             vertices = [Loader(vineyard.ObjectID(vertex_stream_id))]
             edges = [Loader(vineyard.ObjectID(edge_stream_id))]
@@ -1158,26 +1196,44 @@ class CoordinatorServiceServicer(
         # generate a random graph name
         now_time = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
         random_num = random.randint(0, 10000000)
-        graph_name = "%s_%s" % (str(now_time), str(random_num))
+        graph_name = "subgraph-%s-%s" % (str(now_time), str(random_num))
+
+        threads_per_worker = int(
+            os.environ.get("THREADS_PER_WORKER", INTERACTIVE_ENGINE_THREADS_PER_WORKER)
+        )
+
+        if self._launcher_type == types_pb2.HOSTS:
+            # only 1 GIE executor on local cluster
+            executor_workers_num = 1
+            threads_per_executor = self._launcher.num_workers * threads_per_worker
+        else:
+            executor_workers_num = self._launcher.num_workers
+            threads_per_executor = threads_per_worker
+        total_builder_chunks = executor_workers_num * threads_per_executor
 
         (
             _graph_builder_id,
             edge_stream_id,
             vertex_stream_id,
-        ) = create_global_graph_builder(graph_name, self._launcher.num_workers)
+        ) = create_global_graph_builder(
+            graph_name, executor_workers_num, threads_per_executor
+        )
 
         # start a thread to launch the graph
         pool = futures.ThreadPoolExecutor()
         subgraph_task = pool.submit(
             load_subgraph,
+            graph_name,
+            total_builder_chunks,
             oid_type,
             edge_stream_id,
             vertex_stream_id,
         )
 
         # add subgraph vertices and edges
-        subgraph_script = "{0}.subgraph('{1}').outputVineyard('{2}')".format(
-            gremlin_script, graph_name, graph_name
+        subgraph_script = "{0}.subgraph('{1}')".format(
+            gremlin_script,
+            graph_name,
         )
         gremlin_client.submit(
             subgraph_script, request_options=request_options

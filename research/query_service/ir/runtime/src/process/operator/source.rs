@@ -18,6 +18,7 @@ use std::convert::TryFrom;
 use std::sync::Arc;
 
 use dyn_type::Object;
+use graph_proxy::apis::graph::PKV;
 use graph_proxy::apis::{get_graph, Edge, Partitioner, QueryParams, Vertex, ID};
 use ir_common::error::{ParsePbError, ParsePbResult};
 use ir_common::generated::algebra as algebra_pb;
@@ -38,7 +39,7 @@ pub enum SourceType {
 pub struct SourceOperator {
     query_params: QueryParams,
     src: Option<HashMap<u64, Vec<ID>>>,
-    primary_key_values: Option<Vec<(NameOrId, Object)>>,
+    primary_key_values: Option<PKV>,
     alias: Option<KeyId>,
     source_type: SourceType,
 }
@@ -61,18 +62,18 @@ impl SourceOperator {
                             .collect();
                         if !global_ids.is_empty() {
                             // query by global_ids
-                            source_op.set_src(global_ids, job_workers, partitioner);
+                            source_op.set_src(global_ids, job_workers, partitioner)?;
                             debug!("Runtime source op of indexed scan of global ids {:?}", source_op);
                         } else {
                             // query by indexed_scan
                             let primary_key_values = <Vec<(NameOrId, Object)>>::try_from(ip2)?;
-                            source_op.primary_key_values = Some(primary_key_values);
+                            source_op.primary_key_values = Some(PKV::from(primary_key_values));
                             debug!("Runtime source op of indexed scan {:?}", source_op);
                         }
                         Ok(source_op)
                     } else {
                         let mut source_op = SourceOperator::try_from(scan)?;
-                        source_op.set_partitions(job_workers, worker_index, partitioner);
+                        source_op.set_partitions(job_workers, worker_index, partitioner)?;
                         debug!("Runtime source op of scan {:?}", source_op);
                         Ok(source_op)
                     }
@@ -85,30 +86,47 @@ impl SourceOperator {
     }
 
     /// Assign source vertex ids for each worker to call get_vertex
-    fn set_src(&mut self, ids: Vec<ID>, job_workers: usize, partitioner: Arc<dyn Partitioner>) {
+    fn set_src(
+        &mut self, ids: Vec<ID>, job_workers: usize, partitioner: Arc<dyn Partitioner>,
+    ) -> ParsePbResult<()> {
         let mut partitions = HashMap::new();
         for id in ids {
-            if let Ok(wid) = partitioner.get_partition(&id, job_workers) {
-                partitions
-                    .entry(wid)
-                    .or_insert_with(Vec::new)
-                    .push(id);
-            } else {
-                debug!("get server id failed in graph_partition_manager in source op");
+            match partitioner.get_partition(&id, job_workers) {
+                Ok(wid) => {
+                    partitions
+                        .entry(wid)
+                        .or_insert_with(Vec::new)
+                        .push(id);
+                }
+                Err(err) => Err(ParsePbError::Unsupported(format!(
+                    "get server id failed in graph_partition_manager in source op {:?}",
+                    err
+                )))?,
             }
         }
-
         self.src = Some(partitions);
+        Ok(())
     }
 
     /// Assign partition_list for each worker to call scan_vertex
-    fn set_partitions(&mut self, job_workers: usize, worker_index: u32, partitioner: Arc<dyn Partitioner>) {
-        if let Ok(partition_list) = partitioner.get_worker_partitions(job_workers, worker_index) {
-            debug!("Assign worker {:?} to scan partition list: {:?}", worker_index, partition_list);
-            self.query_params.partitions = partition_list;
-        } else {
-            debug!("get partition list failed in graph_partition_manager in source op");
+    fn set_partitions(
+        &mut self, job_workers: usize, worker_index: u32, partitioner: Arc<dyn Partitioner>,
+    ) -> ParsePbResult<()> {
+        let res = partitioner.get_worker_partitions(job_workers, worker_index);
+        match res {
+            Ok(partition_list) => {
+                debug!("Assign worker {:?} to scan partition list: {:?}", worker_index, partition_list);
+                self.query_params.partitions = partition_list;
+            }
+            Err(err) => {
+                debug!("get partition list failed in graph_partition_manager in source op {:?}", err);
+                Err(ParsePbError::Unsupported(
+                    format!("get partition list failed in graph_partition_manager in source op {:?}", err)
+                        .to_string(),
+                ))?
+            }
         }
+        Ok(())
     }
 }
 

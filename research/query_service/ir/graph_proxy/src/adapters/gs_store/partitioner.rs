@@ -20,7 +20,7 @@ use maxgraph_store::api::graph_partition::GraphPartitionManager;
 use maxgraph_store::api::{PartitionId, VertexId};
 
 use crate::apis::{Partitioner, ID};
-use crate::errors::{GraphProxyError, GraphProxyResult};
+use crate::{GraphProxyError, GraphProxyResult};
 
 /// A partition utility that one server contains multiple graph partitions for Groot Store
 pub struct GrootMultiPartition {

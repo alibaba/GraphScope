@@ -416,12 +416,50 @@ impl AsPhysical for pb::GroupBy {
 impl AsPhysical for pb::Sink {
     fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         let mut sink_opr = self.clone();
-        let tag_id_mapping = plan_meta
-            .get_tag_id_mappings()
-            .iter()
-            .map(|(tag, id)| pb::sink::IdNameMapping { id: *id as KeyId, name: tag.clone(), meta_type: 3 })
-            .collect();
-        sink_opr.id_name_mappings = tag_id_mapping;
+        let target = self
+            .sink_target
+            .as_ref()
+            .ok_or(IrError::MissingData("Sink::sink_target".to_string()))?;
+        match target
+            .inner
+            .as_ref()
+            .ok_or(IrError::MissingData("Sink::sink_target::Inner".to_string()))?
+        {
+            pb::sink::sink_target::Inner::SinkDefault(_) => {
+                let tag_id_mapping = plan_meta
+                    .get_tag_id_mappings()
+                    .iter()
+                    .map(|(tag, id)| pb::sink_default::IdNameMapping {
+                        id: *id as KeyId,
+                        name: tag.clone(),
+                        meta_type: 3,
+                    })
+                    .collect();
+                let sink_target = pb::sink::SinkTarget {
+                    inner: Some(pb::sink::sink_target::Inner::SinkDefault(pb::SinkDefault {
+                        id_name_mappings: tag_id_mapping,
+                    })),
+                };
+                sink_opr.sink_target = Some(sink_target);
+            }
+            pb::sink::sink_target::Inner::SinkVineyard(sink_vineyard) => {
+                use crate::plan::meta::STORE_META;
+                let graph_name = sink_vineyard.graph_name.clone();
+                loop {
+                    if let Ok(meta) = STORE_META.try_read() {
+                        let sink_target = pb::sink::SinkTarget {
+                            inner: Some(pb::sink::sink_target::Inner::SinkVineyard(pb::SinkVineyard {
+                                graph_name,
+                                graph_schema: meta.schema.clone().map(|schema| schema.into()),
+                            })),
+                        };
+                        sink_opr.sink_target = Some(sink_target);
+                        break;
+                    }
+                }
+            }
+        };
+
         simple_add_job_builder(builder, &pb::logical_plan::Operator::from(sink_opr), SimpleOpr::Sink)
     }
 }

@@ -13,23 +13,56 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 mod sink;
+mod sink_vineyard;
 
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
-use pegasus::api::function::MapFunction;
 
 use crate::error::FnGenResult;
-use crate::process::record::Record;
+use crate::process::operator::sink::sink::{DefaultSinkOp, RecordSinkEncoder};
+use crate::process::operator::sink::sink_vineyard::{GraphSinkEncoder, SinkVineyardOp};
 
-pub trait SinkFunctionGen {
-    fn gen_sink(self) -> FnGenResult<Box<dyn MapFunction<Record, Vec<u8>>>>;
+pub enum Sinker {
+    DefaultSinker(RecordSinkEncoder),
+    GraphSinker(GraphSinkEncoder),
 }
 
-impl SinkFunctionGen for algebra_pb::logical_plan::Operator {
-    fn gen_sink(self) -> FnGenResult<Box<dyn MapFunction<Record, Vec<u8>>>> {
+pub trait SinkGen {
+    fn gen_sink(self) -> FnGenResult<Sinker>;
+}
+
+impl SinkGen for algebra_pb::logical_plan::Operator {
+    fn gen_sink(self) -> FnGenResult<Sinker> {
         if let Some(opr) = self.opr {
             match opr {
-                algebra_pb::logical_plan::operator::Opr::Sink(sink) => sink.gen_sink(),
+                algebra_pb::logical_plan::operator::Opr::Sink(sink) => {
+                    if let Some(sink_target) = sink.sink_target {
+                        let inner = sink_target
+                            .inner
+                            .ok_or(ParsePbError::EmptyFieldError(
+                                "sink_target inner is missing".to_string(),
+                            ))?;
+                        match inner {
+                            algebra_pb::sink::sink_target::Inner::SinkDefault(sink_default) => {
+                                let default_sink_op = DefaultSinkOp {
+                                    tags: sink.tags,
+                                    id_name_mappings: sink_default.id_name_mappings,
+                                };
+                                default_sink_op.gen_sink()
+                            }
+                            algebra_pb::sink::sink_target::Inner::SinkVineyard(sink_vineyard) => {
+                                let sink_vineyard_op = SinkVineyardOp {
+                                    tags: sink.tags,
+                                    graph_name: sink_vineyard.graph_name,
+                                    graph_schema: sink_vineyard.graph_schema,
+                                };
+                                sink_vineyard_op.gen_sink()
+                            }
+                        }
+                    } else {
+                        Err(ParsePbError::EmptyFieldError("sink_target is missing".to_string()))?
+                    }
+                }
                 _ => Err(ParsePbError::from("algebra_pb op is not a sink op"))?,
             }
         } else {
