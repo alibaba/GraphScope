@@ -104,7 +104,7 @@ int add_vertex(GraphBuilder builder, VertexId id, LabelId labelid,
  *
  * 多个property用array的方式给出，property_size指定property array的size。
  */
-int add_edge(GraphBuilder builder, EdgeId edgeid, VertexId src_id,
+int add_edge(GraphBuilder builder, VertexId src_id,
               VertexId dst_id, LabelId label, LabelId src_label,
               LabelId dst_label, size_t property_size, Property* properties);
 
@@ -118,7 +118,7 @@ int add_vertices(GraphBuilder builder, size_t vertex_size, VertexId* ids,
 /**
  * 参数含义与add_edge一致，都变为array形式，edge_size给出当前batch的size。
  */
-int add_edges(GraphBuilder builder, size_t edge_size, EdgeId* edgeids,
+int add_edges(GraphBuilder builder, size_t edge_size,
                VertexId* src_id, VertexId* dst_id, LabelId* labels,
                LabelId* src_labels, LabelId* dst_labels, size_t* property_sizes,
                Property* properties);

@@ -168,7 +168,7 @@ class PropertyTableAppender {
 
   // apply for edge values and properties.
   void Apply(std::unique_ptr<arrow::RecordBatchBuilder>& builder,
-             EdgeId edge_id, VertexId src_id, VertexId dst_id,
+             VertexId src_id, VertexId dst_id,
              LabelId src_label, LabelId dst_label, size_t property_size,
              Property* properties,
              std::map<int, int> const& property_id_mapping,
@@ -275,14 +275,14 @@ class PropertyGraphOutStream : public Registered<PropertyGraphOutStream> {
   int AddVertex(VertexId id, LabelId labelid, size_t property_size,
                  Property* properties);
 
-  int AddEdge(EdgeId edge_id, VertexId src_id, VertexId dst_id, LabelId label,
+  int AddEdge(VertexId src_id, VertexId dst_id, LabelId label,
                LabelId src_label, LabelId dst_label, size_t property_size,
                Property* properties);
 
   int AddVertices(size_t vertex_size, VertexId* ids, LabelId* labelids,
                    size_t* property_sizes, Property* properties);
 
-  int AddEdges(size_t edge_size, EdgeId* edge_ids, VertexId* src_ids,
+  int AddEdges(size_t edge_size, VertexId* src_ids,
                 VertexId* dst_ids, LabelId* labels, LabelId* src_labels,
                 LabelId* dst_labels, size_t* property_sizes,
                 Property* properties);

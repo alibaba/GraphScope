@@ -113,8 +113,6 @@ impl WriteGraphProxy for VineyardGraphWriter {
         let state = unsafe {
             add_edge(
                 self.graph,
-                // TODO: if eid won't be used, remove from add_edge
-                0,
                 src_id,
                 dst_id,
                 edge_label,

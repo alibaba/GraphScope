@@ -185,12 +185,12 @@ int add_vertex(GraphBuilder builder, VertexId id, LabelId labelid,
   return (*stream)->AddVertex(id, labelid, property_size, properties);
 }
 
-int add_edge(GraphBuilder builder, EdgeId edgeid, VertexId src_id,
+int add_edge(GraphBuilder builder, VertexId src_id,
               VertexId dst_id, LabelId label, LabelId src_label,
               LabelId dst_label, size_t property_size, Property *properties) {
   auto stream =
       static_cast<std::shared_ptr<vineyard::PropertyGraphOutStream> *>(builder);
-  return (*stream)->AddEdge(edgeid, src_id, dst_id, label, src_label, dst_label,
+  return (*stream)->AddEdge(src_id, dst_id, label, src_label, dst_label,
                             property_size, properties);
 }
 
@@ -203,13 +203,13 @@ int add_vertices(GraphBuilder builder, size_t vertex_size, VertexId *ids,
                                 properties);
 }
 
-int add_edges(GraphBuilder builder, size_t edge_size, EdgeId *edgeids,
+int add_edges(GraphBuilder builder, size_t edge_size,
                VertexId *src_ids, VertexId *dst_ids, LabelId *labels,
                LabelId *src_labels, LabelId *dst_labels, size_t *property_sizes,
                Property *properties) {
   auto stream =
       static_cast<std::shared_ptr<vineyard::PropertyGraphOutStream> *>(builder);
-  return (*stream)->AddEdges(edge_size, edgeids, src_ids, dst_ids, labels,
+  return (*stream)->AddEdges(edge_size, src_ids, dst_ids, labels,
                              src_labels, dst_labels, property_sizes,
                              properties);
 }

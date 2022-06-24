@@ -169,7 +169,7 @@ void PropertyTableAppender::Apply(
 }
 
 void PropertyTableAppender::Apply(
-    std::unique_ptr<arrow::RecordBatchBuilder>& builder, EdgeId edge_id,
+    std::unique_ptr<arrow::RecordBatchBuilder>& builder,
     VertexId src_id, VertexId dst_id, LabelId src_label, LabelId dst_label,
     size_t property_size, Property* properties,
     std::map<int, int> const& property_id_mapping,
@@ -294,14 +294,13 @@ int PropertyGraphOutStream::AddVertex(VertexId id, LabelId labelid,
   return 0;
 }
 
-int PropertyGraphOutStream::AddEdge(EdgeId edge_id, VertexId src_id,
+int PropertyGraphOutStream::AddEdge(VertexId src_id,
                                      VertexId dst_id, LabelId label,
                                      LabelId src_label, LabelId dst_label,
                                      size_t property_size,
                                      Property* properties) {
 #ifndef NDEBUG
-  LOG(INFO) << "add edge: id = " << edge_id
-            << ", labelid = " << label
+  LOG(INFO) << "add edge: labelid = " << label
             << ", property_size = " << property_size;
 #endif
   auto src_dst_key = std::make_pair(src_label, dst_label);
@@ -327,7 +326,7 @@ int PropertyGraphOutStream::AddEdge(EdgeId edge_id, VertexId src_id,
   auto &appender = edge_appenders_[label];
   VINEYARD_ASSERT(appender != nullptr, "edge label = " + std::to_string(label));
   std::shared_ptr<arrow::RecordBatch> batch_chunk = nullptr;
-  appender->Apply(builder, edge_id, src_id, dst_id, src_label, dst_label,
+  appender->Apply(builder, src_id, dst_id, src_label, dst_label,
                   property_size, properties,
                   edge_property_id_mapping_[label], batch_chunk);
   this->buildTableChunk(batch_chunk, edge_stream_, 2,
@@ -349,7 +348,7 @@ int PropertyGraphOutStream::AddVertices(size_t vertex_size, VertexId* ids,
   return 0;
 }
 
-int PropertyGraphOutStream::AddEdges(size_t edge_size, EdgeId* edge_ids,
+int PropertyGraphOutStream::AddEdges(size_t edge_size,
                                       VertexId* src_ids, VertexId* dst_ids,
                                       LabelId* labels, LabelId* src_labels,
                                       LabelId* dst_labels,
@@ -357,7 +356,7 @@ int PropertyGraphOutStream::AddEdges(size_t edge_size, EdgeId* edge_ids,
                                       Property* properties) {
   size_t cumsum = 0;
   for (size_t idx = 0; idx < edge_size; ++idx) {
-    AddEdge(edge_ids[idx], src_ids[idx], dst_ids[idx], labels[idx],
+    AddEdge(src_ids[idx], dst_ids[idx], labels[idx],
             src_labels[idx], dst_labels[idx], property_sizes[idx],
             properties + cumsum);
     cumsum += property_sizes[idx];

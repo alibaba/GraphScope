@@ -791,7 +791,7 @@ TEST_P(OneEdgeOnePropertyTest, AddEdgeThenReadBack) {
   VineyardStoreTestGraphBuilder graph_builder{"test_graph", schema_raii.get()};
   auto builder_handle = graph_builder.GetGraphBuilder();
   add_vertex(builder_handle, 1001, 0, 0, nullptr);
-  add_edge(builder_handle, 2001, 1001, 1001, 1, 0, 0, 1, &prop);
+  add_edge(builder_handle, 1001, 1001, 1, 0, 0, 1, &prop);
   auto graph_raii = graph_builder.Build();
   auto graph = graph_raii.get();
   auto read_back_schema = get_schema(graph);
@@ -1099,7 +1099,7 @@ class ModernGraphTest : public ::testing::Test {
               vertex_labels_.data(),
               vertex_property_sizes_.data(), vertex_properties_.data());
         ::add_edges(builder.GetGraphBuilder(),
-              edge_ids_.size(), edge_ids_.data(),
+              edge_ids_.size(),
               src_ids_.data(), dest_ids_.data(),
               edge_labels_.data(), src_labels_.data(), dest_labels_.data(),
               edge_property_sizes_.data(), edge_properties_.data());
