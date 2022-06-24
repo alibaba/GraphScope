@@ -17,6 +17,7 @@ extern crate cmake;
 
 use std::env;
 use std::path::Path;
+
 use cmake::Config;
 
 fn main() {

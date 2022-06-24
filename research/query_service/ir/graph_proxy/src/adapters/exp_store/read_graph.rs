@@ -39,6 +39,7 @@ use crate::apis::{
 };
 use crate::errors::{GraphProxyError, GraphProxyResult};
 use crate::{filter_limit, limit_n};
+const EXP_STORE_PK: KeyId = 0;
 
 lazy_static! {
     pub static ref DATA_PATH: String = configure_with_default!(String, "DATA_PATH", "".to_string());
@@ -339,7 +340,7 @@ impl ReadGraph for ExpStore {
     fn get_primary_key(&self, id: &ID) -> GraphProxyResult<Option<PKV>> {
         let outer_id = (*id << LABEL_SHIFT_BITS) >> LABEL_SHIFT_BITS;
         let pk_val = Object::from(outer_id);
-        Ok(Some(("".into(), pk_val).into()))
+        Ok(Some((EXP_STORE_PK.into(), pk_val).into()))
     }
 }
 

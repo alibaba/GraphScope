@@ -89,7 +89,7 @@ fn main() {
             "Start executor with vineyard graph object id {:?}",
             store_config.vineyard_graph_id
         );
-        use ffi::read_ffi::FFIGraphStore;
+        use v6d_ffi::read_ffi::FFIGraphStore;
         let ffi_store = FFIGraphStore::new(store_config.vineyard_graph_id, worker_num as i32);
         let partition_manager = ffi_store.get_partition_manager();
         run_main(store_config, Arc::new(ffi_store), Arc::new(partition_manager));

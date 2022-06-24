@@ -15,11 +15,11 @@
 
 use std::ffi::CString;
 
-use ffi::read_ffi::*;
-use ffi::write_ffi::*;
 use ir_common::generated::common as common_pb;
 use ir_common::generated::schema as schema_pb;
 use ir_common::{KeyId, NameOrId, OneOrMany};
+use v6d_ffi::read_ffi::*;
+use v6d_ffi::write_ffi::*;
 
 use crate::apis::graph::PKV;
 use crate::apis::{Details, DynDetails, WriteGraphProxy};

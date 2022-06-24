@@ -26,9 +26,9 @@ extern "C" {
         property_sizes: *const usize, properties: *const WriteNativeProperty,
     ) -> FFIState;
     pub fn add_edges(
-        graph_builder: GraphBuilder, edge_size: usize, src_ids: *const VertexId,
-        dst_ids: *const VertexId, labels: *const LabelId, src_labels: *const LabelId,
-        dst_labels: *const LabelId, property_sizes: *const usize, properties: *const WriteNativeProperty,
+        graph_builder: GraphBuilder, edge_size: usize, src_ids: *const VertexId, dst_ids: *const VertexId,
+        labels: *const LabelId, src_labels: *const LabelId, dst_labels: *const LabelId,
+        property_sizes: *const usize, properties: *const WriteNativeProperty,
     ) -> FFIState;
     pub fn build_vertices(builder: GraphBuilder) -> FFIState;
     pub fn build_edges(builder: GraphBuilder) -> FFIState;

@@ -42,6 +42,8 @@ use crate::{GraphProxyError, GraphProxyResult};
 const SNAPSHOT_ID: &str = "SID";
 // This will refer to the latest graph
 const DEFAULT_SNAPSHOT_ID: SnapshotId = SnapshotId::max_value() - 1;
+// This represents the primary key of GraphScopeStore
+const GS_STORE_PK: KeyId = 0;
 
 pub struct GraphScopeStore<V, VI, E, EI>
 where
@@ -377,7 +379,7 @@ where
         let store = self.store.clone();
         let outer_id = store.translate_vertex_id(*id as VertexId);
         let pk_val = Object::from(outer_id);
-        Ok(Some(("".into(), pk_val).into()))
+        Ok(Some((GS_STORE_PK.into(), pk_val).into()))
     }
 }
 
