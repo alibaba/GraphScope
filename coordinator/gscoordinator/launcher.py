@@ -38,6 +38,7 @@ from graphscope.proto import types_pb2
 from gscoordinator.utils import ANALYTICAL_ENGINE_PATH
 from gscoordinator.utils import GRAPHSCOPE_HOME
 from gscoordinator.utils import INTERACTIVE_ENGINE_SCRIPT
+from gscoordinator.utils import INTERACTIVE_ENGINE_THREADS_PER_WORKER
 from gscoordinator.utils import WORKSPACE
 from gscoordinator.utils import ResolveMPICmdPrefix
 from gscoordinator.utils import get_timestamp
@@ -263,6 +264,14 @@ class LocalLauncher(Launcher):
             )
         else:
             env.update({"GRAPHSCOPE_HOME": GRAPHSCOPE_HOME})
+
+        # only one GIE/GAIA executor will be launched locally, even there are
+        # multiple GAE engines
+        threads_per_worker = int(
+            os.environ.get("THREADS_PER_WORKER", INTERACTIVE_ENGINE_THREADS_PER_WORKER)
+        )
+        env["THREADS_PER_WORKER"] = str(threads_per_worker * self._num_workers)
+
         cmd = [
             INTERACTIVE_ENGINE_SCRIPT,
             "create_gremlin_instance_on_local",

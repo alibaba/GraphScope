@@ -99,8 +99,7 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
                                     new GremlinTestResultProcessor(
                                             ctx,
                                             GremlinResultAnalyzer.analyze(traversal),
-                                            testGraph),
-                                    script);
+                                            testGraph));
                         });
                 return op;
             default:

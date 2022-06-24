@@ -149,6 +149,9 @@ if not os.path.isfile(INTERACTIVE_ENGINE_SCRIPT):
         GRAPHSCOPE_HOME, "interactive_engine", "assembly", "bin", "giectl"
     )
 
+# default threads per worker configuration for GIE/GAIA
+INTERACTIVE_ENGINE_THREADS_PER_WORKER = 2
+
 # JAVA SDK related CONSTANTS
 LLVM4JNI_HOME = os.environ.get("LLVM4JNI_HOME", None)
 LLVM4JNI_USER_OUT_DIR_BASE = "user-llvm4jni-output"

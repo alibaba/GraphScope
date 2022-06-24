@@ -142,7 +142,7 @@ start_frontend() {
   declare -r zookeeper_ip=$5
   declare -r zookeeper_port=$6
   declare -r executor_count=$7
-  declare -r thread_per_worker=${THREAD_PER_WORKER:-2}
+  declare -r threads_per_worker=${THREADS_PER_WORKER:-2}
 
   # create related directories
   declare -r log_dir=${GS_LOG}/${object_id}
@@ -179,7 +179,7 @@ start_frontend() {
       -e "s@SCHEMA_PATH@${schema_path}@g" \
       -e "s@RESOURCE_EXECUTOR_COUNT@${executor_count}@g" \
       -e "s@PARTITION_NUM@${executor_count}@g" \
-      -e "s@THREAD_PER_WORKER@${thread_per_worker}@g" \
+      -e "s@THREADS_PER_WORKER@${threads_per_worker}@g" \
       -e "s@SERVER_PORT@${frontend_port}@g" \
       ${GRAPHSCOPE_HOME}/conf/frontend.vineyard.properties > ${config_dir}/frontend.vineyard.properties
 
@@ -221,7 +221,7 @@ start_executor() {
   declare -r zookeeper_port=$5
   declare -r engine_count=$6
   declare -r interactive_engine_params=$7
-  declare -r thread_per_worker=${THREAD_PER_WORKER:-2}
+  declare -r threads_per_worker=${THREADS_PER_WORKER:-2}
 
   declare -r log_dir=${GS_LOG}/${object_id}
   declare -r config_dir=${GRAPHSCOPE_RUNTIME}/config/${object_id}
@@ -238,7 +238,7 @@ start_executor() {
       -e "s@ZOOKEEPER_IP:ZOOKEEPER_PORT@${zookeeper_ip}:$zookeeper_port@g" \
       -e "s@WORKER_NUM@${engine_count}@g" \
       -e "s@PARTITION_NUM@${engine_count}@g" \
-      -e "s@THREAD_PER_WORKER@${thread_per_worker}@g" \
+      -e "s@THREADS_PER_WORKER@${threads_per_worker}@g" \
       ${GRAPHSCOPE_HOME}/conf/executor.vineyard.properties > ${config_dir}/executor.vineyard.properties
 
   # update parameters(key-value) in config file

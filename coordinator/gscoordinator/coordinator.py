@@ -83,6 +83,7 @@ from gscoordinator.object_manager import ObjectManager
 from gscoordinator.utils import ANALYTICAL_ENGINE_JAVA_INIT_CLASS_PATH
 from gscoordinator.utils import ANALYTICAL_ENGINE_JAVA_JVM_OPTS
 from gscoordinator.utils import GRAPHSCOPE_HOME
+from gscoordinator.utils import INTERACTIVE_ENGINE_THREADS_PER_WORKER
 from gscoordinator.utils import RESOURCE_DIR_NAME
 from gscoordinator.utils import WORKSPACE
 from gscoordinator.utils import check_gremlin_server_ready
@@ -520,7 +521,10 @@ class CoordinatorServiceServicer(
             elif op.op == types_pb2.CLOSE_INTERACTIVE_QUERY:
                 op_result = self._close_interactive_instance(op)
             elif op.op == types_pb2.SUBGRAPH:
-                op_result = self._gremlin_to_subgraph(op)
+                if os.environ.get("USE_GAIA_ENGINE", None) is not None:
+                    op_result = self._gremlin_to_subgraph_v2(op)
+                else:
+                    op_result = self._gremlin_to_subgraph(op)
             else:
                 raise RuntimeError("Unsupport op type: " + str(op.op))
             splited_result = split_op_result(op_result)
@@ -1038,7 +1042,7 @@ class CoordinatorServiceServicer(
         key_of_parent_op = op.parents[0]
         gremlin_client = self._object_manager.get(key_of_parent_op)
 
-        def create_global_graph_builder(graph_name, num_workers, thread_per_worker):
+        def create_global_graph_builder(graph_name, num_workers, threads_per_executor):
             import vineyard
 
             vineyard_client = vineyard.connect(
@@ -1049,14 +1053,14 @@ class CoordinatorServiceServicer(
 
             # duplicate each instances for each thread per worker.
             chunk_instances = [
-                key for key in instances for _ in range(thread_per_worker)
+                key for key in instances for _ in range(threads_per_executor)
             ]
 
             # build the vineyard::GlobalPGStream
             metadata = vineyard.ObjectMeta()
             metadata.set_global(True)
             metadata["typename"] = "vineyard::GlobalPGStream"
-            metadata["local_stream_chunks"] = thread_per_worker
+            metadata["local_stream_chunks"] = threads_per_executor
             metadata["total_stream_chunks"] = len(chunk_instances)
 
             # build the parallel stream for edge
@@ -1137,8 +1141,7 @@ class CoordinatorServiceServicer(
 
         def load_subgraph(
             graph_name,
-            num_workers,
-            thread_per_worker,
+            total_builder_chunks,
             oid_type,
             edge_stream_id,
             vertex_stream_id,
@@ -1153,7 +1156,7 @@ class CoordinatorServiceServicer(
             )
 
             # wait for all stream been created by GAIA executor in FFI
-            for worker in range(num_workers * thread_per_worker):
+            for worker in range(total_builder_chunks):
                 name = "__%s_%d_streamed" % (graph_name, worker)
                 vineyard_client.get_name(name, wait=True)
 
@@ -1195,13 +1198,25 @@ class CoordinatorServiceServicer(
         random_num = random.randint(0, 10000000)
         graph_name = "subgraph-%s-%s" % (str(now_time), str(random_num))
 
-        thread_per_worker = int(os.environ.get("THREAD_PER_WORKER", 2))
+        threads_per_worker = int(
+            os.environ.get("THREADS_PER_WORKER", INTERACTIVE_ENGINE_THREADS_PER_WORKER)
+        )
+
+        if self._launcher_type == types_pb2.HOSTS:
+            # only 1 GIE executor on local cluster
+            executor_workers_num = 1
+            threads_per_executor = self._launcher.num_workers * threads_per_worker
+        else:
+            executor_workers_num = self._launcher.num_workers
+            threads_per_executor = threads_per_worker
+        total_builder_chunks = executor_workers_num * threads_per_executor
+
         (
             _graph_builder_id,
             edge_stream_id,
             vertex_stream_id,
         ) = create_global_graph_builder(
-            graph_name, self._launcher.num_workers, thread_per_worker
+            graph_name, executor_workers_num, threads_per_executor
         )
 
         # start a thread to launch the graph
@@ -1209,8 +1224,7 @@ class CoordinatorServiceServicer(
         subgraph_task = pool.submit(
             load_subgraph,
             graph_name,
-            self._launcher.num_workers,
-            thread_per_worker,
+            total_builder_chunks,
             oid_type,
             edge_stream_id,
             vertex_stream_id,
