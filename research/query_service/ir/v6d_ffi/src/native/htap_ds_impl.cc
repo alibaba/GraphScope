@@ -23,6 +23,7 @@
 #include "vineyard/graph/fragment/arrow_fragment.h"
 #include "vineyard/graph/fragment/arrow_fragment_group.h"
 
+namespace vineyard {
 namespace htap_impl {
 
 void get_graph_handle(ObjectId id, PartitionId channel_num,
@@ -144,10 +145,10 @@ void get_graph_handle(ObjectId id, PartitionId channel_num,
         } else {
           handle->string_fragments[fid].schema().ToJSON(schema_json);
         }
-        vineyard::MGPropertyGraphSchema mgschema;
+        vineyard::htap::MGPropertyGraphSchema mgschema;
         mgschema.FromJSON(schema_json);
         handle->schema =
-            new vineyard::MGPropertyGraphSchema(mgschema.TransformToMaxGraph());
+            new vineyard::htap::MGPropertyGraphSchema(mgschema.TransformToMaxGraph());
       }
     }
   }
@@ -1214,4 +1215,5 @@ int get_property_as_string_list(Property* property, const char*** out,
 void free_property(Property* property) {}
 
 }  // namespace htap_impl
+}  // namespace vineyard
 

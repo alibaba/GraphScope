@@ -24,6 +24,8 @@
 
 namespace vineyard {
 
+namespace htap {
+
 namespace htap_types {
 
 using OID_TYPE = int64_t;
@@ -64,6 +66,8 @@ union PodProperties {
 };
 
 }  // namespace htap_types
+
+}  // namespace htap
 
 }  // namespace vineyard
 

@@ -21,6 +21,8 @@
 
 namespace vineyard {
 
+namespace htap {
+
 namespace detail {
 
 std::shared_ptr<arrow::DataType> PropertyTypeToDataType(
@@ -228,7 +230,7 @@ void PropertyTableAppender::Flush(
 }  // namespace detail
 
 int PropertyGraphOutStream::Initialize(Schema schema) {
-  auto schema_ptr = static_cast<vineyard::MGPropertyGraphSchema *>(schema);
+  auto schema_ptr = static_cast<vineyard::htap::MGPropertyGraphSchema *>(schema);
   LOG(INFO) << "Initialize the graph builder using schema ...";
 
   // set schema
@@ -613,4 +615,5 @@ std::shared_ptr<Object> GlobalPGStreamBuilder::_Seal(Client& client) {
   return std::dynamic_pointer_cast<Object>(gstream);
 }
 
+}  // namespace htap
 }  // namespace vineyard

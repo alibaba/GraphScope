@@ -51,16 +51,16 @@ find_package(Threads REQUIRED)
 add_definitions(-DENDPOINT_LISTS)
 
 find_package(vineyard 0.4.1 REQUIRED)
-add_library(native_store global_store_ffi.cc
+add_library(v6d_native_store global_store_ffi.cc
                          htap_ds_impl.cc
                          graph_builder_ffi.cc
                          property_graph_stream.cc
                          graph_schema.cc
 )
-target_include_directories(native_store PRIVATE ${VINEYARD_INCLUDE_DIRS})
-target_link_libraries(native_store ${VINEYARD_LIBRARIES})
+target_include_directories(v6d_native_store PRIVATE ${VINEYARD_INCLUDE_DIRS})
+target_link_libraries(v6d_native_store ${VINEYARD_LIBRARIES})
 if(BUILD_SHARED_LIBS)
-    install_vineyard_target(native_store)
+    install_vineyard_target(v6d_native_store)
 endif()
 
 option(BUILD_NATIVE_STORE_TEST "Build native store unittest" OFF)
@@ -86,7 +86,7 @@ if (BUILD_NATIVE_STORE_TEST)
         target_include_directories(vineyard_store_test
                 PUBLIC ${Boost_INCLUDE_DIRS}
                 PRIVATE ${VINEYARD_INCLUDE_DIRS})
-        target_link_libraries(vineyard_store_test gtest gmock native_store Boost::system Boost::filesystem ${VINEYARD_LIBRARIES})
+        target_link_libraries(vineyard_store_test gtest gmock v6d_native_store Boost::system Boost::filesystem ${VINEYARD_LIBRARIES})
     endif()
 endif()
 

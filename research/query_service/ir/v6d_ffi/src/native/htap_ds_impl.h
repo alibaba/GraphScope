@@ -24,6 +24,8 @@
 #include "global_store_ffi.h"
 #include "graph_schema.h"
 
+namespace vineyard {
+
 namespace htap_impl {
 
 using VID_TYPE = uint64_t;
@@ -55,7 +57,7 @@ struct GraphHandleImpl {
   FRAG_ID_TYPE fnum;
   vineyard::IdParser<VID_TYPE> vid_parser;
   vineyard::IdParser<EID_TYPE> eid_parser;
-  vineyard::MGPropertyGraphSchema* schema = nullptr;
+  vineyard::htap::MGPropertyGraphSchema* schema = nullptr;
   FRAG_ID_TYPE local_fnum;
   FRAG_ID_TYPE* local_fragments = nullptr;
   int vertex_label_num;
@@ -245,5 +247,6 @@ int get_property_as_string_list(Property* property, const char*** out,
 void free_property(Property* property);
 
 }  // namespace htap_impl
+}  // namespace vineyard
 
 #endif  // ANALYTICAL_ENGINE_HTAP_HTAP_DS_IMPL_H_

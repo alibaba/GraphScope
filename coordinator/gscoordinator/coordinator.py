@@ -1059,7 +1059,7 @@ class CoordinatorServiceServicer(
             # build the vineyard::GlobalPGStream
             metadata = vineyard.ObjectMeta()
             metadata.set_global(True)
-            metadata["typename"] = "vineyard::GlobalPGStream"
+            metadata["typename"] = "vineyard::htap::GlobalPGStream"
             metadata["local_stream_chunks"] = threads_per_executor
             metadata["total_stream_chunks"] = len(chunk_instances)
 
@@ -1111,7 +1111,7 @@ class CoordinatorServiceServicer(
                 vertex_metadata.add_member("__streams_-%d" % worker, vertex)
 
                 chunk_stream = vineyard.ObjectMeta()
-                chunk_stream["typename"] = "vineyard::PropertyGraphOutStream"
+                chunk_stream["typename"] = "vineyard::htap::PropertyGraphOutStream"
                 chunk_stream["graph_name"] = graph_name
                 chunk_stream["graph_schema"] = "{}"
                 chunk_stream["nbytes"] = 0

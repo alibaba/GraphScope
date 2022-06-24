@@ -39,6 +39,7 @@ limitations under the License.
 #include "common/util/json.h"
 
 namespace vineyard {
+namespace htap {
 
 namespace detail {
 
@@ -303,4 +304,5 @@ MGPropertyGraphSchema MGPropertyGraphSchema::TransformToMaxGraph() {
   return new_schema;
 }
 
+}  // namespace htap
 }  // namespace vineyard

@@ -49,7 +49,7 @@ typedef void* EdgeTypeBuilder;
  *
  * 📌 vineyard client library会从环境变量中得到vineyard_ipc_socket。
  */
-GraphBuilder create_graph_builder(const char* graph_name, Schema schema,
+GraphBuilder v6d_create_graph_builder(const char* graph_name, Schema schema,
                                   const int index);
 
 /**
@@ -58,7 +58,7 @@ GraphBuilder create_graph_builder(const char* graph_name, Schema schema,
  * builder_id: 用于接收返回值
  * instance_id: 用于接收返回值
  */
-void get_builder_id(GraphBuilder builder, ObjectId* object_id,
+void v6d_get_builder_id(GraphBuilder builder, ObjectId* object_id,
                     InstanceId* instance_id);
 
 /**
@@ -72,7 +72,7 @@ void get_builder_id(GraphBuilder builder, ObjectId* object_id,
  *
  * 📌 vineyard client library会从环境变量中得到vineyard_ipc_socket
  */
-ObjectId build_global_graph_stream(const char* graph_name, size_t size,
+ObjectId v6d_build_global_graph_stream(const char* graph_name, size_t size,
                                    ObjectId* object_ids,
                                    InstanceId* instance_ids);
 
@@ -84,19 +84,19 @@ ObjectId build_global_graph_stream(const char* graph_name, size_t size,
  *
  * 对于invalid的输入，例如graph_name错误或者index错误，返回空指针。
  */
-GraphBuilder get_graph_builder(const char* graph_name, const int index);
+GraphBuilder v6d_get_graph_builder(const char* graph_name, const int index);
 
 /**
  * Initialize the builder using schema.
  *
  * See also `finish_build_schema`
  */
-int initialize_graph_builder(GraphBuilder builder, Schema schema);
+int v6d_initialize_graph_builder(GraphBuilder builder, Schema schema);
 
 /**
  * 多个property用array的方式给出，property_size指定property array的size。
  */
-int add_vertex(GraphBuilder builder, VertexId id, LabelId labelid,
+int v6d_add_vertex(GraphBuilder builder, VertexId id, LabelId labelid,
                 size_t property_size, Property* properties);
 
 /**
@@ -104,21 +104,21 @@ int add_vertex(GraphBuilder builder, VertexId id, LabelId labelid,
  *
  * 多个property用array的方式给出，property_size指定property array的size。
  */
-int add_edge(GraphBuilder builder, VertexId src_id,
+int v6d_add_edge(GraphBuilder builder, VertexId src_id,
               VertexId dst_id, LabelId label, LabelId src_label,
               LabelId dst_label, size_t property_size, Property* properties);
 
 /**
  * 参数含义与add_vertex一致，都变为array形式，vertex_size给出当前batch的size。
  */
-int add_vertices(GraphBuilder builder, size_t vertex_size, VertexId* ids,
+int v6d_add_vertices(GraphBuilder builder, size_t vertex_size, VertexId* ids,
                   LabelId* labelids, size_t* property_sizes,
                   Property* properties);
 
 /**
  * 参数含义与add_edge一致，都变为array形式，edge_size给出当前batch的size。
  */
-int add_edges(GraphBuilder builder, size_t edge_size,
+int v6d_add_edges(GraphBuilder builder, size_t edge_size,
                VertexId* src_id, VertexId* dst_id, LabelId* labels,
                LabelId* src_labels, LabelId* dst_labels, size_t* property_sizes,
                Property* properties);
@@ -126,81 +126,81 @@ int add_edges(GraphBuilder builder, size_t edge_size,
 /**
  * 结束local GraphBuilder的build，点、边写完之后分别调用
  */
-int build(GraphBuilder builder);
+int v6d_build(GraphBuilder builder);
 // as an alias due for backwardscompatibility
-int build_vertice(GraphBuilder builder);
-int build_vertices(GraphBuilder builder);
-int build_edges(GraphBuilder builder);
+int v6d_build_vertice(GraphBuilder builder);
+int v6d_build_vertices(GraphBuilder builder);
+int v6d_build_edges(GraphBuilder builder);
 
 /**
  * 析构handle
  */
-void destroy(GraphBuilder builder);
+void v6d_destroy(GraphBuilder builder);
 
 /////////// schema 接口 /////////////
 
 // 获取schema对象
-Schema get_schema(GraphHandle graph);
+Schema v6d_get_schema(GraphHandle graph);
 
 // 释放schema对象
 //TODO: rename to destroy_schema(Schema schema) to be  more consistent
-void free_schema(Schema schema);
+void v6d_free_schema(Schema schema);
 
 // 根据property name获取property
 // id，如果找到id，则赋值给out，并且返回0，否则返回-1
-int get_property_id(Schema schema, const char* name, PropertyId* out);
+int v6d_get_property_id(Schema schema, const char* name, PropertyId* out);
 
 // 获取属性的类型，如果属性存在，则赋值给out，并且返回0，否则返回-1
-int get_property_type(Schema schema, LabelId label, PropertyId id,
+int v6d_get_property_type(Schema schema, LabelId label, PropertyId id,
                       PropertyType* out);
 
 // 根据属性id获取属性名，如果属性存在，则赋值给out，并且返回0，否则返回-1
-int get_property_name(Schema schema, PropertyId id, const char** out);
+int v6d_get_property_name(Schema schema, PropertyId id, const char** out);
 
 // 根据label名称获取label id，如果label存在则赋值给out，并且返回0，否则返回-1
-int get_label_id(Schema schema, const char* name, LabelId* out);
+int v6d_get_label_id(Schema schema, const char* name, LabelId* out);
 
 // 根据label id获取label名称，如果label存在，则赋值给out，并且返回0，否则返回-1
-int get_label_name(Schema schema, LabelId label, const char** out);
+int v6d_get_label_name(Schema schema, LabelId label, const char** out);
 
 // 释放从上述接口中获取的字符串
-void free_string(char* s);
+void v6d_free_string(char* s);
 
 /********************** 创建Schema相关API **********************/
 // 创建Schema builder
-Schema create_schema_builder();
+Schema v6d_create_schema_builder();
 
 // 根据点类型的id、name创建vertex type builder
-VertexTypeBuilder build_vertex_type(Schema schema, LabelId label,
+VertexTypeBuilder v6d_build_vertex_type(Schema schema, LabelId label,
                                     const char* name);
 
 // 根据边类型的id、name创建edge type builder
-EdgeTypeBuilder build_edge_type(Schema schema, LabelId label, const char* name);
+EdgeTypeBuilder v6d_build_edge_type(Schema schema, LabelId label, const char* name);
 
 // 根据属性id、name、属性type在点类型中增加属性
-int build_vertex_property(VertexTypeBuilder vertex, PropertyId id,
+int v6d_build_vertex_property(VertexTypeBuilder vertex, PropertyId id,
                            const char* name, PropertyType prop_type);
 
 // 根据属性id、name、属性type在边类型中增加属性
-int build_edge_property(EdgeTypeBuilder edge, PropertyId id, const char* name,
+int v6d_build_edge_property(EdgeTypeBuilder edge, PropertyId id, const char* name,
                          PropertyType prop_type);
 
 // 设置点类型的主键列表
-int build_vertex_primary_keys(VertexTypeBuilder vertex, size_t key_count,
+int v6d_build_vertex_primary_keys(VertexTypeBuilder vertex, size_t key_count,
                                const char** key_name_list);
 
 // 在边类型中增加一条 <起点类型-->终点类型> 的关系，一个边类型可以增加多条关系
-int build_edge_relation(EdgeTypeBuilder edge, const char* src,
+int v6d_build_edge_relation(EdgeTypeBuilder edge, const char* src,
                          const char* dst);
 
 // 完成创建指定的点类型并释放空间
-int finish_build_vertex(VertexTypeBuilder vertex);
+int v6d_finish_build_vertex(VertexTypeBuilder vertex);
 
 // 完成创建指定的边类型并释放空间
-int finish_build_edge(EdgeTypeBuilder edge);
+int v6d_finish_build_edge(EdgeTypeBuilder edge);
 
 // 完成创建指定的schema并释放空间
-Schema finish_build_schema(Schema schema);
+Schema v6d_finish_build_schema(Schema schema);
 
 #ifdef __cplusplus
 }

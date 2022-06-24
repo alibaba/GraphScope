@@ -18,11 +18,13 @@
 
 #include <cstring>
 
+using namespace vineyard;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-GraphHandle get_graph_handle(ObjectId object_id, PartitionId channel_num) {
+GraphHandle v6d_get_graph_handle(ObjectId object_id, PartitionId channel_num) {
   // FIXME: handle exception here
   GraphHandle handle = malloc(sizeof(htap_impl::GraphHandleImpl));
   if (handle) {
@@ -32,12 +34,12 @@ GraphHandle get_graph_handle(ObjectId object_id, PartitionId channel_num) {
   return handle;
 }
 
-void free_graph_handle(GraphHandle handle) {
+void v6d_free_graph_handle(GraphHandle handle) {
   htap_impl::free_graph_handle((htap_impl::GraphHandleImpl*)handle);
   free(handle);
 }
 
-GetVertexIterator get_vertices(GraphHandle graph, PartitionId partition_id,
+GetVertexIterator v6d_get_vertices(GraphHandle graph, PartitionId partition_id,
                                LabelId* labels, VertexId* ids, int count) {
   GetVertexIterator ret = malloc(sizeof(htap_impl::GetVertexIteratorImpl));
   htap_impl::GraphHandleImpl* casted_graph =
@@ -55,17 +57,17 @@ GetVertexIterator get_vertices(GraphHandle graph, PartitionId partition_id,
   return ret;
 }
 
-void free_get_vertex_iterator(GetVertexIterator iter) {
+void v6d_free_get_vertex_iterator(GetVertexIterator iter) {
   htap_impl::free_get_vertex_iterator((htap_impl::GetVertexIteratorImpl*)iter);
   free(iter);
 }
 
-int get_vertices_next(GetVertexIterator iter, Vertex* v_out) {
+int v6d_get_vertices_next(GetVertexIterator iter, Vertex* v_out) {
   return htap_impl::get_vertices_next((htap_impl::GetVertexIteratorImpl*)iter,
                                       v_out);
 }
 
-GetAllVerticesIterator get_all_vertices(GraphHandle graph,
+GetAllVerticesIterator v6d_get_all_vertices(GraphHandle graph,
                                         PartitionId partition_id,
                                         LabelId* labels, int labels_count,
                                         int64_t limit) {
@@ -97,20 +99,20 @@ GetAllVerticesIterator get_all_vertices(GraphHandle graph,
   return ret;
 }
 
-void free_get_all_vertices_iterator(GetAllVerticesIterator iter) {
+void v6d_free_get_all_vertices_iterator(GetAllVerticesIterator iter) {
   htap_impl::free_get_all_vertices_iterator(
       (htap_impl::GetAllVerticesIteratorImpl*)iter);
   free(iter);
 }
 
-int get_all_vertices_next(GetAllVerticesIterator iter, Vertex* v_out) {
+int v6d_get_all_vertices_next(GetAllVerticesIterator iter, Vertex* v_out) {
   return htap_impl::get_all_vertices_next(
       (htap_impl::GetAllVerticesIteratorImpl*)iter, v_out);
 }
 
-VertexId get_vertex_id(GraphHandle graph, Vertex v) { return (VertexId)v; }
+VertexId v6d_get_vertex_id(GraphHandle graph, Vertex v) { return (VertexId)v; }
 
-OuterId get_outer_id(GraphHandle graph, Vertex v) {
+OuterId v6d_get_outer_id(GraphHandle graph, Vertex v) {
   OuterId ret;
   auto casted_graph = static_cast<htap_impl::GraphHandleImpl*>(graph);
   if (casted_graph->use_int64_oid) {
@@ -121,7 +123,7 @@ OuterId get_outer_id(GraphHandle graph, Vertex v) {
   return OuterId();
 }
 
-int get_vertex_by_outer_id(GraphHandle graph, LabelId label_id,
+int v6d_get_vertex_by_outer_id(GraphHandle graph, LabelId label_id,
                            OuterId outer_id, Vertex* v) {
   if (label_id < 0 || v == nullptr) {
     return -1;
@@ -139,15 +141,15 @@ int get_vertex_by_outer_id(GraphHandle graph, LabelId label_id,
   return -1;
 }
 
-OuterId get_outer_id_by_vertex_id(GraphHandle graph, VertexId v) {
-  return get_outer_id(graph, (Vertex)v);
+OuterId v6d_get_outer_id_by_vertex_id(GraphHandle graph, VertexId v) {
+  return v6d_get_outer_id(graph, (Vertex)v);
 }
 
-LabelId get_vertex_label(GraphHandle graph, Vertex v) {
+LabelId v6d_get_vertex_label(GraphHandle graph, Vertex v) {
   return ((htap_impl::GraphHandleImpl*)graph)->vid_parser.GetLabelId(v);
 }
 
-int get_vertex_property(GraphHandle graph, Vertex v, PropertyId id,
+int v6d_get_vertex_property(GraphHandle graph, Vertex v, PropertyId id,
                         Property* p_out) {
   htap_impl::GraphHandleImpl* handle =
       static_cast<htap_impl::GraphHandleImpl*>(graph);
@@ -177,7 +179,7 @@ int get_vertex_property(GraphHandle graph, Vertex v, PropertyId id,
   return r;
 }
 
-PropertiesIterator get_vertex_properties(GraphHandle graph, Vertex v) {
+PropertiesIterator v6d_get_vertex_properties(GraphHandle graph, Vertex v) {
   PropertiesIterator ret = malloc(sizeof(htap_impl::PropertiesIteratorImpl));
   htap_impl::GraphHandleImpl* handle =
       static_cast<htap_impl::GraphHandleImpl*>(graph);
@@ -193,7 +195,7 @@ PropertiesIterator get_vertex_properties(GraphHandle graph, Vertex v) {
   return ret;
 }
 
-OutEdgeIterator get_out_edges(GraphHandle graph, PartitionId partition_id,
+OutEdgeIterator v6d_get_out_edges(GraphHandle graph, PartitionId partition_id,
                               VertexId src_id, LabelId* labels,
                               int labels_count, int64_t limit) {
 #ifndef NDEBUG
@@ -228,7 +230,7 @@ OutEdgeIterator get_out_edges(GraphHandle graph, PartitionId partition_id,
   return ret;
 }
 
-void free_out_edge_iterator(OutEdgeIterator iter) {
+void v6d_free_out_edge_iterator(OutEdgeIterator iter) {
 #ifndef NDEBUG
   LOG(INFO) << "enter " << __FUNCTION__;
 #endif
@@ -239,14 +241,14 @@ void free_out_edge_iterator(OutEdgeIterator iter) {
 #endif
 }
 
-int out_edge_next(OutEdgeIterator iter, struct Edge* e_out) {
+int v6d_out_edge_next(OutEdgeIterator iter, struct Edge* e_out) {
 #ifndef NDEBUG
   LOG(INFO) << "enter " << __FUNCTION__;
 #endif
   return htap_impl::out_edge_next((htap_impl::EdgeIteratorImpl*)iter, e_out);
 }
 
-InEdgeIterator get_in_edges(GraphHandle graph, PartitionId partition_id,
+InEdgeIterator v6d_get_in_edges(GraphHandle graph, PartitionId partition_id,
                             VertexId dst_id, LabelId* labels, int labels_count,
                             int64_t limit) {
 #ifndef NDEBUG
@@ -255,7 +257,7 @@ InEdgeIterator get_in_edges(GraphHandle graph, PartitionId partition_id,
   htap_impl::GraphHandleImpl* casted_graph =
       static_cast<htap_impl::GraphHandleImpl*>(graph);
   InEdgeIterator ret = malloc(sizeof(htap_impl::EdgeIteratorImpl));
-  PartitionId dst_partition_id = get_partition_id(graph, dst_id);
+  PartitionId dst_partition_id = v6d_get_partition_id(graph, dst_id);
   if (dst_partition_id != partition_id) {
     htap_impl::empty_edge_iterator((htap_impl::EdgeIteratorImpl*)ret);
   } else {
@@ -281,7 +283,7 @@ InEdgeIterator get_in_edges(GraphHandle graph, PartitionId partition_id,
   return ret;
 }
 
-void free_in_edge_iterator(InEdgeIterator iter) {
+void v6d_free_in_edge_iterator(InEdgeIterator iter) {
 #ifndef NDEBUG
   LOG(INFO) << "enter " << __FUNCTION__;
 #endif
@@ -292,14 +294,14 @@ void free_in_edge_iterator(InEdgeIterator iter) {
 #endif
 }
 
-int in_edge_next(InEdgeIterator iter, struct Edge* e_out) {
+int v6d_in_edge_next(InEdgeIterator iter, struct Edge* e_out) {
 #ifndef NDEBUG
   LOG(INFO) << "enter " << __FUNCTION__;
 #endif
   return htap_impl::in_edge_next((htap_impl::EdgeIteratorImpl*)iter, e_out);
 }
 
-GetAllEdgesIterator get_all_edges(GraphHandle graph, PartitionId partition_id,
+GetAllEdgesIterator v6d_get_all_edges(GraphHandle graph, PartitionId partition_id,
                                   LabelId* labels, int labels_count,
                                   int64_t limit) {
 #ifndef NDEBUG
@@ -332,7 +334,7 @@ GetAllEdgesIterator get_all_edges(GraphHandle graph, PartitionId partition_id,
   return ret;
 }
 
-void free_get_all_edges_iterator(GetAllEdgesIterator iter) {
+void v6d_free_get_all_edges_iterator(GetAllEdgesIterator iter) {
 #ifndef NDEBUG
   LOG(INFO) << "enter " << __FUNCTION__;
 #endif
@@ -344,7 +346,7 @@ void free_get_all_edges_iterator(GetAllEdgesIterator iter) {
 #endif
 }
 
-int get_all_edges_next(GetAllEdgesIterator iter, struct Edge* e_out) {
+int v6d_get_all_edges_next(GetAllEdgesIterator iter, struct Edge* e_out) {
 #ifndef NDEBUG
   LOG(INFO) << "enter " << __FUNCTION__;
 #endif
@@ -352,11 +354,11 @@ int get_all_edges_next(GetAllEdgesIterator iter, struct Edge* e_out) {
       (htap_impl::GetAllEdgesIteratorImpl*)iter, e_out);
 }
 
-VertexId get_edge_src_id(GraphHandle graph, struct Edge* e) { return e->src; }
+VertexId v6d_get_edge_src_id(GraphHandle graph, struct Edge* e) { return e->src; }
 
-VertexId get_edge_dst_id(GraphHandle graph, struct Edge* e) { return e->dst; }
+VertexId v6d_get_edge_dst_id(GraphHandle graph, struct Edge* e) { return e->dst; }
 
-static void parse_edge_id(GraphHandle graph, htap_impl::EID_TYPE eid,
+static void v6d_parse_edge_id(GraphHandle graph, htap_impl::EID_TYPE eid,
                           htap_impl::FRAG_ID_TYPE* fid, LabelId* label,
                           int64_t* offset) {
 #ifndef NDEBUG
@@ -372,14 +374,14 @@ static void parse_edge_id(GraphHandle graph, htap_impl::EID_TYPE eid,
 #endif
 }
 
-EdgeId get_edge_id(GraphHandle graph, struct Edge* e) {
+EdgeId v6d_get_edge_id(GraphHandle graph, struct Edge* e) {
 #ifndef NDEBUG
   LOG(INFO) << "enter " << __FUNCTION__;
 #endif
   htap_impl::FRAG_ID_TYPE partition_id;
   LabelId label;
   int64_t offset;
-  parse_edge_id(graph, (htap_impl::EID_TYPE)e->offset, &partition_id, &label,
+  v6d_parse_edge_id(graph, (htap_impl::EID_TYPE)e->offset, &partition_id, &label,
                 &offset);
 #ifndef NDEBUG
   LOG(INFO) << "finish " << __FUNCTION__;
@@ -396,21 +398,21 @@ EdgeId get_edge_id(GraphHandle graph, struct Edge* e) {
   }
 }
 
-LabelId get_edge_src_label(GraphHandle graph, struct Edge* e) {
+LabelId v6d_get_edge_src_label(GraphHandle graph, struct Edge* e) {
 #ifndef NDEBUG
   LOG(INFO) << "enter " << __FUNCTION__;
 #endif
   return ((htap_impl::GraphHandleImpl*)graph)->vid_parser.GetLabelId(e->src);
 }
 
-LabelId get_edge_dst_label(GraphHandle graph, struct Edge* e) {
+LabelId v6d_get_edge_dst_label(GraphHandle graph, struct Edge* e) {
 #ifndef NDEBUG
   LOG(INFO) << "enter " << __FUNCTION__;
 #endif
   return ((htap_impl::GraphHandleImpl*)graph)->vid_parser.GetLabelId(e->dst);
 }
 
-LabelId get_edge_label(GraphHandle graph, struct Edge* e) {
+LabelId v6d_get_edge_label(GraphHandle graph, struct Edge* e) {
 #ifndef NDEBUG
   LOG(INFO) << "enter " << __FUNCTION__;
 #endif
@@ -419,7 +421,7 @@ LabelId get_edge_label(GraphHandle graph, struct Edge* e) {
   return handle->eid_parser.GetLabelId(e->offset) + handle->vertex_label_num;
 }
 
-int get_edge_property(GraphHandle graph, struct Edge* e, PropertyId id,
+int v6d_get_edge_property(GraphHandle graph, struct Edge* e, PropertyId id,
                       Property* p_out) {
 #ifndef NDEBUG
   LOG(INFO) << "enter " << __FUNCTION__;
@@ -427,7 +429,7 @@ int get_edge_property(GraphHandle graph, struct Edge* e, PropertyId id,
   htap_impl::FRAG_ID_TYPE partition_id;
   LabelId label;
   int64_t offset;
-  parse_edge_id(graph, (htap_impl::EID_TYPE)e->offset, &partition_id, &label,
+  v6d_parse_edge_id(graph, (htap_impl::EID_TYPE)e->offset, &partition_id, &label,
                 &offset);
   htap_impl::GraphHandleImpl* handle =
       static_cast<htap_impl::GraphHandleImpl*>(graph);
@@ -453,14 +455,14 @@ int get_edge_property(GraphHandle graph, struct Edge* e, PropertyId id,
   return r;
 }
 
-PropertiesIterator get_edge_properties(GraphHandle graph, struct Edge* e) {
+PropertiesIterator v6d_get_edge_properties(GraphHandle graph, struct Edge* e) {
 #ifndef NDEBUG
   LOG(INFO) << "enter " << __FUNCTION__;
 #endif
   htap_impl::FRAG_ID_TYPE partition_id;
   LabelId label;
   int64_t offset;
-  parse_edge_id(graph, (htap_impl::EID_TYPE)e->offset, &partition_id, &label,
+  v6d_parse_edge_id(graph, (htap_impl::EID_TYPE)e->offset, &partition_id, &label,
                 &offset);
   PropertiesIterator ret = malloc(sizeof(htap_impl::PropertiesIteratorImpl));
   htap_impl::GraphHandleImpl* handle =
@@ -481,7 +483,7 @@ PropertiesIterator get_edge_properties(GraphHandle graph, struct Edge* e) {
   return ret;
 }
 
-int properties_next(PropertiesIterator iter, Property* p_out) {
+int v6d_properties_next(PropertiesIterator iter, Property* p_out) {
 #ifndef NDEBUG
   LOG(INFO) << "enter " << __FUNCTION__;
 #endif
@@ -502,7 +504,7 @@ int properties_next(PropertiesIterator iter, Property* p_out) {
   return r;
 }
 
-void free_properties_iterator(PropertiesIterator iter) {
+void v6d_free_properties_iterator(PropertiesIterator iter) {
 #ifndef NDEBUG
   LOG(INFO) << "enter " << __FUNCTION__;
 #endif
@@ -513,60 +515,60 @@ void free_properties_iterator(PropertiesIterator iter) {
 #endif
 }
 
-int get_property_as_bool(Property* property, bool* out) {
+int v6d_get_property_as_bool(Property* property, bool* out) {
   return htap_impl::get_property_as_bool(property, out);
 }
-int get_property_as_char(Property* property, char* out) {
+int v6d_get_property_as_char(Property* property, char* out) {
   return htap_impl::get_property_as_char(property, out);
 }
-int get_property_as_short(Property* property, int16_t* out) {
+int v6d_get_property_as_short(Property* property, int16_t* out) {
   return htap_impl::get_property_as_short(property, out);
 }
-int get_property_as_int(Property* property, int* out) {
+int v6d_get_property_as_int(Property* property, int* out) {
   return htap_impl::get_property_as_int(property, out);
 }
-int get_property_as_long(Property* property, int64_t* out) {
+int v6d_get_property_as_long(Property* property, int64_t* out) {
   return htap_impl::get_property_as_long(property, out);
 }
-int get_property_as_float(Property* property, float* out) {
+int v6d_get_property_as_float(Property* property, float* out) {
   return htap_impl::get_property_as_float(property, out);
 }
-int get_property_as_double(Property* property, double* out) {
+int v6d_get_property_as_double(Property* property, double* out) {
   return htap_impl::get_property_as_double(property, out);
 }
 
-int get_property_as_string(Property* property, const char** out, int* out_len) {
+int v6d_get_property_as_string(Property* property, const char** out, int* out_len) {
   int r = htap_impl::get_property_as_string(property, out, out_len);
   return r;
 }
-int get_property_as_bytes(Property* property, const char** out, int* out_len) {
+int v6d_get_property_as_bytes(Property* property, const char** out, int* out_len) {
   return htap_impl::get_property_as_bytes(property, out, out_len);
 }
-int get_property_as_int_list(Property* property, const int** out,
+int v6d_get_property_as_int_list(Property* property, const int** out,
                              int* out_len) {
   return htap_impl::get_property_as_int_list(property, out, out_len);
 }
-int get_property_as_long_list(Property* property, const int64_t** out,
+int v6d_get_property_as_long_list(Property* property, const int64_t** out,
                               int* out_len) {
   return htap_impl::get_property_as_long_list(property, out, out_len);
 }
-int get_property_as_float_list(Property* property, const float** out,
+int v6d_get_property_as_float_list(Property* property, const float** out,
                                int* out_len) {
   return htap_impl::get_property_as_float_list(property, out, out_len);
 }
-int get_property_as_double_list(Property* property, const double** out,
+int v6d_get_property_as_double_list(Property* property, const double** out,
                                 int* out_len) {
   return htap_impl::get_property_as_double_list(property, out, out_len);
 }
-int get_property_as_string_list(Property* property, const char*** out,
+int v6d_get_property_as_string_list(Property* property, const char*** out,
                                 const int** out_len, int* out_num) {
   return htap_impl::get_property_as_string_list(property, out, out_len,
                                                 out_num);
 }
 
-void free_property(Property* property) {}
+void v6d_free_property(Property* property) {}
 
-Schema get_schema(GraphHandle graph) {
+Schema v6d_get_schema(GraphHandle graph) {
 #ifndef NDEBUG
   LOG(INFO) << "rust ffi call: " << __FUNCTION__;
 #endif
@@ -577,7 +579,7 @@ Schema get_schema(GraphHandle graph) {
 // (*out_len)[i]为第i个string的长度
 // (*out)[i]为第i个string的其实地址
 
-PartitionId get_partition_id(GraphHandle graph, VertexId v) {
+PartitionId v6d_get_partition_id(GraphHandle graph, VertexId v) {
 #ifndef NDEBUG
   LOG(INFO) << "enter get_partition_id " << v;
 #endif
@@ -619,7 +621,7 @@ PartitionId get_partition_id(GraphHandle graph, VertexId v) {
 
 // 如果 key 不存在，返回 -1
 // 否则返回0，结果存在 internal_id 和 partition_id 中
-int get_vertex_id_from_primary_key(GraphHandle graph, LabelId label_id,
+int v6d_get_vertex_id_from_primary_key(GraphHandle graph, LabelId label_id,
                                    const char* key, VertexId* internal_id,
                                    PartitionId* partition_id) {
 #ifndef NDEBUG
@@ -643,7 +645,7 @@ int get_vertex_id_from_primary_key(GraphHandle graph, LabelId label_id,
   }
   if (get_gid_ret) {
     *internal_id = gid;
-    *partition_id = get_partition_id(graph, gid);
+    *partition_id = v6d_get_partition_id(graph, gid);
 #ifndef NDEBUG
     LOG(INFO) << "vertex found: gid = " << gid
               << ", partition_id = " << (*partition_id);
@@ -657,7 +659,7 @@ int get_vertex_id_from_primary_key(GraphHandle graph, LabelId label_id,
   }
 }
 
-void get_process_partition_list(GraphHandle graph, PartitionId** partition_ids,
+void v6d_get_process_partition_list(GraphHandle graph, PartitionId** partition_ids,
                                 int* partition_id_size) {
 #ifndef NDEBUG
   LOG(INFO) << "enter get_process_partition_list";
@@ -685,7 +687,7 @@ void get_process_partition_list(GraphHandle graph, PartitionId** partition_ids,
   }
 }
 
-void free_partition_list(PartitionId* partition_ids) { free(partition_ids); }
+void v6d_free_partition_list(PartitionId* partition_ids) { free(partition_ids); }
 
 #ifdef __cplusplus
 }

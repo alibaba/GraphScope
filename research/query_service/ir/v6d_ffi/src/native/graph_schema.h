@@ -36,6 +36,8 @@
 
 namespace vineyard {
 
+namespace htap {
+
 using PropertyType = std::shared_ptr<arrow::DataType>;
 
 class MGPropertyGraphSchema {
@@ -107,6 +109,7 @@ class MGPropertyGraphSchema {
   std::vector<std::string> unique_property_names_;
 };
 
+}  // namespace htap
 }  // namespace vineyard
 
 #endif  // MODULES_GRAPH_FRAGMENT_HTAP_GRAPH_SCHEMA_H_

@@ -49,6 +49,7 @@
 #include "graph_builder_ffi.h"
 
 namespace vineyard {
+namespace htap {
 
 namespace detail {
 
@@ -65,7 +66,7 @@ struct AppendProperty {
 template <>
 struct AppendProperty<bool> {
   static void append(arrow::ArrayBuilder* builder, Property const* prop) {
-    vineyard::htap_types::PodProperties pp;
+    vineyard::htap::htap_types::PodProperties pp;
     pp.long_value = prop->len;
     CHECK_ARROW_ERROR(
         dynamic_cast<arrow::BooleanBuilder*>(builder)->Append(pp.bool_value));
@@ -75,7 +76,7 @@ struct AppendProperty<bool> {
 template <>
 struct AppendProperty<char> {
   static void append(arrow::ArrayBuilder* builder, Property const* prop) {
-    vineyard::htap_types::PodProperties pp;
+    vineyard::htap::htap_types::PodProperties pp;
     pp.long_value = prop->len;
     CHECK_ARROW_ERROR(
         dynamic_cast<arrow::Int8Builder*>(builder)->Append(pp.char_value));
@@ -85,7 +86,7 @@ struct AppendProperty<char> {
 template <>
 struct AppendProperty<int16_t> {
   static void append(arrow::ArrayBuilder* builder, Property const* prop) {
-    vineyard::htap_types::PodProperties pp;
+    vineyard::htap::htap_types::PodProperties pp;
     pp.long_value = prop->len;
     CHECK_ARROW_ERROR(
         dynamic_cast<arrow::Int16Builder*>(builder)->Append(pp.int16_value));
@@ -95,7 +96,7 @@ struct AppendProperty<int16_t> {
 template <>
 struct AppendProperty<int32_t> {
   static void append(arrow::ArrayBuilder* builder, Property const* prop) {
-    vineyard::htap_types::PodProperties pp;
+    vineyard::htap::htap_types::PodProperties pp;
     pp.long_value = prop->len;
     CHECK_ARROW_ERROR(
         dynamic_cast<arrow::Int32Builder*>(builder)->Append(pp.int_value));
@@ -113,7 +114,7 @@ struct AppendProperty<int64_t> {
 template <>
 struct AppendProperty<float> {
   static void append(arrow::ArrayBuilder* builder, Property const* prop) {
-    vineyard::htap_types::PodProperties pp;
+    vineyard::htap::htap_types::PodProperties pp;
     pp.long_value = prop->len;
     CHECK_ARROW_ERROR(
         dynamic_cast<arrow::FloatBuilder*>(builder)->Append(pp.float_value));
@@ -123,7 +124,7 @@ struct AppendProperty<float> {
 template <>
 struct AppendProperty<double> {
   static void append(arrow::ArrayBuilder* builder, Property const* prop) {
-    vineyard::htap_types::PodProperties pp;
+    vineyard::htap::htap_types::PodProperties pp;
     pp.long_value = prop->len;
     CHECK_ARROW_ERROR(
         dynamic_cast<arrow::DoubleBuilder*>(builder)->Append(pp.double_value));
@@ -253,7 +254,7 @@ class PropertyGraphOutStream : public Registered<PropertyGraphOutStream> {
     this->edge_stream_ =
       std::dynamic_pointer_cast<vineyard::RecordBatchStream>(meta.GetMember("edge_stream"));
 
-    this->graph_schema_ = std::make_shared<MGPropertyGraphSchema>();
+    this->graph_schema_ = std::make_shared<htap::MGPropertyGraphSchema>();
     auto graph_schema_json = vineyard::json::parse(meta.GetKeyValue("graph_schema"));
     if (graph_schema_json.contains("types")) {
       graph_schema_->FromJSON(graph_schema_json);
@@ -302,7 +303,7 @@ class PropertyGraphOutStream : public Registered<PropertyGraphOutStream> {
                        int const property_offset,
                        std::map<int, int> const& property_id_mapping);
 
-  std::shared_ptr<MGPropertyGraphSchema> graph_schema_;
+  std::shared_ptr<htap::MGPropertyGraphSchema> graph_schema_;
 
   // record the mapping between property_id and table column index
   std::map<LabelId, std::map<int, int>> vertex_property_id_mapping_;
@@ -419,6 +420,7 @@ class GlobalPGStreamBuilder : public ObjectBuilder {
   size_t total_stream_chunks_;
 };
 
+}  // namespace htap
 }  // namespace vineyard
 
 #endif  // SRC_CLIENT_DS_STREAM_PROPERTY_GRAPH_H_

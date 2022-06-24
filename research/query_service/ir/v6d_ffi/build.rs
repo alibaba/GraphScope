@@ -22,7 +22,7 @@ use cmake::Config;
 
 fn main() {
     let dst = Config::new("src/native")
-        .build_target("native_store")
+        .build_target("v6d_native_store")
         .build();
 
     println!("cargo:rustc-link-search=/usr/local/lib");
@@ -36,7 +36,7 @@ fn main() {
         Err(_) => (),
     }
     println!("cargo:rustc-link-search={}/build", dst.display());
-    println!("cargo:rustc-link-lib=native_store");
+    println!("cargo:rustc-link-lib=v6d_native_store");
     println!("cargo:rustc-link-lib=vineyard_graph");
     println!("cargo:rustc-link-lib=vineyard_io");
     println!("cargo:rustc-link-lib=vineyard_client");

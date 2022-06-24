@@ -28,33 +28,35 @@
 
 #include "property_graph_stream.h"
 
+using namespace vineyard;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-GraphBuilder create_graph_builder(const char *graph_name, Schema schema,
+GraphBuilder v6d_create_graph_builder(const char *graph_name, Schema schema,
                                   const int index) {
   auto &client = vineyard::Client::Default();
-  auto schema_ptr = static_cast<vineyard::MGPropertyGraphSchema *>(schema);
-  auto stream = vineyard::PropertyGraphOutStream::Create(client, graph_name,
+  auto schema_ptr = static_cast<vineyard::htap::MGPropertyGraphSchema *>(schema);
+  auto stream = vineyard::htap::PropertyGraphOutStream::Create(client, graph_name,
                                                          schema_ptr, index);
   VINEYARD_CHECK_OK(client.Persist(stream->id()));
   LOG(INFO) << "create graph builder: yields "
             << vineyard::ObjectIDToString(stream->id());
   // create a shared_ptr object on heap.
-  return new std::shared_ptr<vineyard::PropertyGraphOutStream>(stream.release());
+  return new std::shared_ptr<vineyard::htap::PropertyGraphOutStream>(stream.release());
 }
 
-void get_builder_id(GraphBuilder builder, ObjectId *object_id,
+void v6d_get_builder_id(GraphBuilder builder, ObjectId *object_id,
                     InstanceId *instance_id) {
   auto stream =
-      static_cast<std::shared_ptr<vineyard::PropertyGraphOutStream> *>(builder);
+      static_cast<std::shared_ptr<vineyard::htap::PropertyGraphOutStream> *>(builder);
   *object_id = static_cast<vineyard::ObjectID>((*stream)->id());
   *instance_id = (*stream)->instance_id();
 }
 
 // TRICK: launch the loader
-void launch_property_graph_loader(vineyard::Client &client,
+void v6d_launch_property_graph_loader(vineyard::Client &client,
                                   vineyard::ObjectID global_stream_id,
                                   size_t size, InstanceId *instance_ids) {
   std::map<vineyard::InstanceID, vineyard::json> cluster;
@@ -85,16 +87,16 @@ void launch_property_graph_loader(vineyard::Client &client,
   }
 }
 
-ObjectId build_global_graph_stream(const char *graph_name, size_t size,
+ObjectId v6d_build_global_graph_stream(const char *graph_name, size_t size,
                                    ObjectId *object_ids,
                                    InstanceId *instance_ids) {
   LOG(INFO) << "start build_global_graph_stream: size = " << size;
   auto &client = vineyard::Client::Default();
 
   // build two parallel stream (global dataframe stream) for loading graphs
-  std::vector<ObjectID> vertex_streams, edge_streams;
+  std::vector<vineyard::ObjectID> vertex_streams, edge_streams;
 
-  vineyard::GlobalPGStreamBuilder builder(client);
+  vineyard::htap::GlobalPGStreamBuilder builder(client);
   for (size_t idx = 0; idx < size; ++idx) {
 #ifndef NDEBUG
     LOG(INFO) << "add substream: "
@@ -151,7 +153,7 @@ ObjectId build_global_graph_stream(const char *graph_name, size_t size,
   return global_stream_id;
 }
 
-GraphBuilder get_graph_builder(const char *graph_name, const int index) {
+GraphBuilder v6d_get_graph_builder(const char *graph_name, const int index) {
   auto &client = vineyard::Client::Default();
   vineyard::ObjectID id;
   VINEYARD_CHECK_OK(client.GetName(graph_name, id));
@@ -166,92 +168,92 @@ GraphBuilder get_graph_builder(const char *graph_name, const int index) {
   meta.PrintMeta();
 #endif
   auto gstream =
-      std::dynamic_pointer_cast<vineyard::GlobalPGStream>(client.GetObject(id));
+      std::dynamic_pointer_cast<vineyard::htap::GlobalPGStream>(client.GetObject(id));
   auto builder = gstream->StreamAt(index);
-  return new std::shared_ptr<vineyard::PropertyGraphOutStream>(builder);
+  return new std::shared_ptr<vineyard::htap::PropertyGraphOutStream>(builder);
 }
 
-int initialize_graph_builder(GraphBuilder builder, Schema schema) {
+int v6d_initialize_graph_builder(GraphBuilder builder, Schema schema) {
   LOG(INFO) << "initialize graph: builder = " << builder;
   auto stream =
-      static_cast<std::shared_ptr<vineyard::PropertyGraphOutStream> *>(builder);
+      static_cast<std::shared_ptr<vineyard::htap::PropertyGraphOutStream> *>(builder);
   return (*stream)->Initialize(schema);
 }
 
-int add_vertex(GraphBuilder builder, VertexId id, LabelId labelid,
+int v6d_add_vertex(GraphBuilder builder, VertexId id, LabelId labelid,
                 size_t property_size, Property *properties) {
   auto stream =
-      static_cast<std::shared_ptr<vineyard::PropertyGraphOutStream> *>(builder);
+      static_cast<std::shared_ptr<vineyard::htap::PropertyGraphOutStream> *>(builder);
   return (*stream)->AddVertex(id, labelid, property_size, properties);
 }
 
-int add_edge(GraphBuilder builder, VertexId src_id,
+int v6d_add_edge(GraphBuilder builder, VertexId src_id,
               VertexId dst_id, LabelId label, LabelId src_label,
               LabelId dst_label, size_t property_size, Property *properties) {
   auto stream =
-      static_cast<std::shared_ptr<vineyard::PropertyGraphOutStream> *>(builder);
+      static_cast<std::shared_ptr<vineyard::htap::PropertyGraphOutStream> *>(builder);
   return (*stream)->AddEdge(src_id, dst_id, label, src_label, dst_label,
                             property_size, properties);
 }
 
-int add_vertices(GraphBuilder builder, size_t vertex_size, VertexId *ids,
+int v6d_add_vertices(GraphBuilder builder, size_t vertex_size, VertexId *ids,
                   LabelId *labelids, size_t *property_sizes,
                   Property *properties) {
   auto stream =
-      static_cast<std::shared_ptr<vineyard::PropertyGraphOutStream> *>(builder);
+      static_cast<std::shared_ptr<vineyard::htap::PropertyGraphOutStream> *>(builder);
   return (*stream)->AddVertices(vertex_size, ids, labelids, property_sizes,
                                 properties);
 }
 
-int add_edges(GraphBuilder builder, size_t edge_size,
+int v6d_add_edges(GraphBuilder builder, size_t edge_size,
                VertexId *src_ids, VertexId *dst_ids, LabelId *labels,
                LabelId *src_labels, LabelId *dst_labels, size_t *property_sizes,
                Property *properties) {
   auto stream =
-      static_cast<std::shared_ptr<vineyard::PropertyGraphOutStream> *>(builder);
+      static_cast<std::shared_ptr<vineyard::htap::PropertyGraphOutStream> *>(builder);
   return (*stream)->AddEdges(edge_size, src_ids, dst_ids, labels,
                              src_labels, dst_labels, property_sizes,
                              properties);
 }
 
-int build(GraphBuilder builder) {
+int v6d_build(GraphBuilder builder) {
   auto stream =
-      static_cast<std::shared_ptr<vineyard::PropertyGraphOutStream> *>(builder);
+      static_cast<std::shared_ptr<vineyard::htap::PropertyGraphOutStream> *>(builder);
   VINEYARD_CHECK_OK((*stream)->Finish());
   return 0;
 }
 
-int build_vertice(GraphBuilder builder) { return build_vertices(builder); }
+int v6d_build_vertice(GraphBuilder builder) { return v6d_build_vertices(builder); }
 
-int build_vertices(GraphBuilder builder) {
+int v6d_build_vertices(GraphBuilder builder) {
   LOG(INFO) << "building vertices: builder = " << builder;
   auto stream =
-      static_cast<std::shared_ptr<vineyard::PropertyGraphOutStream> *>(builder);
+      static_cast<std::shared_ptr<vineyard::htap::PropertyGraphOutStream> *>(builder);
   return (*stream)->FinishAllVertices();
 }
 
-int build_edges(GraphBuilder builder) {
+int v6d_build_edges(GraphBuilder builder) {
   LOG(INFO) << "building edges: builder = " << builder;
   auto stream =
-      static_cast<std::shared_ptr<vineyard::PropertyGraphOutStream> *>(builder);
+      static_cast<std::shared_ptr<vineyard::htap::PropertyGraphOutStream> *>(builder);
   return (*stream)->FinishAllEdges();
 }
 
-void destroy(GraphBuilder builder) {
+void v6d_destroy(GraphBuilder builder) {
   LOG(INFO) << "destory: builder = " << builder;
   auto stream =
-      static_cast<std::shared_ptr<vineyard::PropertyGraphOutStream> *>(builder);
+      static_cast<std::shared_ptr<vineyard::htap::PropertyGraphOutStream> *>(builder);
   // delete the shared_ptr object on heap, it will then delete the holded
   // object.
   delete stream;
 }
 
-void free_schema(Schema schema) {
+void v6d_free_schema(Schema schema) {
   // do NOTHING, since the schema is part of Fragment (GraphHandle).
 }
 
-int get_property_id(Schema schema, const char *name, PropertyId *out) {
-  auto ptr = static_cast<vineyard::MGPropertyGraphSchema *>(schema);
+int v6d_get_property_id(Schema schema, const char *name, PropertyId *out) {
+  auto ptr = static_cast<vineyard::htap::MGPropertyGraphSchema *>(schema);
   *out = ptr->GetPropertyId(name);
   if (*out == -1) {
     *out = ptr->GetPropertyId(name);
@@ -262,13 +264,13 @@ int get_property_id(Schema schema, const char *name, PropertyId *out) {
   return (*out == -1) ? -1 : 0;
 }
 
-int get_property_type(Schema schema, LabelId label, PropertyId id,
-                      PropertyType *out) {
-  auto ptr = static_cast<vineyard::MGPropertyGraphSchema *>(schema);
-  *out = vineyard::detail::PropertyTypeFromDataType(
+int v6d_get_property_type(Schema schema, LabelId label, PropertyId id,
+                      ::PropertyType *out) {
+  auto ptr = static_cast<vineyard::htap::MGPropertyGraphSchema *>(schema);
+  *out = vineyard::htap::detail::PropertyTypeFromDataType(
       ptr->GetPropertyType(label, id));
   if (*out == INVALID) {
-    *out = vineyard::detail::PropertyTypeFromDataType(
+    *out = vineyard::htap::detail::PropertyTypeFromDataType(
         ptr->GetPropertyType(label, id));
   }
 #ifndef NDEBUG
@@ -277,8 +279,8 @@ int get_property_type(Schema schema, LabelId label, PropertyId id,
   return (*out == INVALID) ? -1 : 0;
 }
 
-int get_property_name(Schema schema, PropertyId id, const char **out) {
-  auto ptr = static_cast<vineyard::MGPropertyGraphSchema *>(schema);
+int v6d_get_property_name(Schema schema, PropertyId id, const char **out) {
+  auto ptr = static_cast<vineyard::htap::MGPropertyGraphSchema *>(schema);
   std::string name = ptr->GetPropertyName(id);
 #ifndef NDEBUG
   LOG(INFO) << "get propery name: " << id << " -> " << name;
@@ -294,14 +296,14 @@ int get_property_name(Schema schema, PropertyId id, const char **out) {
   }
 }
 
-int get_label_id(Schema schema, const char *name, LabelId *out) {
-  auto ptr = static_cast<vineyard::MGPropertyGraphSchema *>(schema);
+int v6d_get_label_id(Schema schema, const char *name, LabelId *out) {
+  auto ptr = static_cast<vineyard::htap::MGPropertyGraphSchema *>(schema);
   *out = ptr->GetLabelId(name);
   return (*out == -1) ? -1 : 0;
 }
 
-int get_label_name(Schema schema, LabelId label, const char **out) {
-  auto ptr = static_cast<vineyard::MGPropertyGraphSchema *>(schema);
+int v6d_get_label_name(Schema schema, LabelId label, const char **out) {
+  auto ptr = static_cast<vineyard::htap::MGPropertyGraphSchema *>(schema);
   std::string name = ptr->GetLabelName(label);
   if (name.empty()) {
     *out = NULL;
@@ -314,7 +316,7 @@ int get_label_name(Schema schema, LabelId label, const char **out) {
   }
 }
 
-void free_string(char *s) {
+void v6d_free_string(char *s) {
 #ifndef NDEBUG
   LOG(INFO) << "free label/prop name: " << s;
 #endif
@@ -322,27 +324,27 @@ void free_string(char *s) {
   free(s);
 }
 
-Schema create_schema_builder() { return new vineyard::MGPropertyGraphSchema(); }
+Schema v6d_create_schema_builder() { return new vineyard::htap::MGPropertyGraphSchema(); }
 
-VertexTypeBuilder build_vertex_type(Schema schema, LabelId label,
+VertexTypeBuilder v6d_build_vertex_type(Schema schema, LabelId label,
                                     const char *name) {
 #ifndef NDEBUG
   LOG(INFO) << "add vertex type: " << label << " -> " << name;
 #endif
-  auto ptr = static_cast<vineyard::MGPropertyGraphSchema *>(schema);
+  auto ptr = static_cast<vineyard::htap::MGPropertyGraphSchema *>(schema);
   return ptr->CreateEntry("VERTEX", label, name);
 }
 
-EdgeTypeBuilder build_edge_type(Schema schema, LabelId label,
+EdgeTypeBuilder v6d_build_edge_type(Schema schema, LabelId label,
                                 const char *name) {
 #ifndef NDEBUG
   LOG(INFO) << "add edge type: " << label << " -> " << name;
 #endif
-  auto ptr = static_cast<vineyard::MGPropertyGraphSchema *>(schema);
+  auto ptr = static_cast<vineyard::htap::MGPropertyGraphSchema *>(schema);
   return ptr->CreateEntry("EDGE", label, name);
 }
 
-static bool entry_has_property(vineyard::Entry *entry, std::string const &name) {
+static bool v6d_entry_has_property(vineyard::Entry *entry, std::string const &name) {
   for (auto const &prop: entry->props_) {
     if (prop.name == name) {
       return true;
@@ -351,45 +353,45 @@ static bool entry_has_property(vineyard::Entry *entry, std::string const &name) 
   return false;
 }
 
-int build_vertex_property(VertexTypeBuilder vertex, PropertyId id,
-                           const char *name, PropertyType prop_type) {
+int v6d_build_vertex_property(VertexTypeBuilder vertex, PropertyId id,
+                           const char *name, ::PropertyType prop_type) {
 #ifndef NDEBUG
   LOG(INFO) << "add vertex property: " << id << " -> " << name << ": "
             << prop_type;
 #endif
   using entry_t = vineyard::Entry;
   auto entry_ptr = static_cast<entry_t *>(vertex);
-  if (entry_has_property(entry_ptr, name)) {
+  if (v6d_entry_has_property(entry_ptr, name)) {
     LOG(WARNING) << "detect duplicate vertex property name, ignored: " << name
                  << ", id = " << id;
     return 0;
   }
   entry_ptr->AddProperty(/* id, */ name,
-                         vineyard::detail::PropertyTypeToDataType(prop_type));
+                         vineyard::htap::detail::PropertyTypeToDataType(prop_type));
   entry_ptr->props_.rbegin()->id = id;
   return 0;
 }
 
-int build_edge_property(EdgeTypeBuilder edge, PropertyId id, const char *name,
-                         PropertyType prop_type) {
+int v6d_build_edge_property(EdgeTypeBuilder edge, PropertyId id, const char *name,
+                         ::PropertyType prop_type) {
 #ifndef NDEBUG
   LOG(INFO) << "add edge property: " << id << " -> " << name << ": "
             << prop_type;
 #endif
   using entry_t = vineyard::Entry;
   auto entry_ptr = static_cast<entry_t *>(edge);
-  if (entry_has_property(entry_ptr, name)) {
+  if (v6d_entry_has_property(entry_ptr, name)) {
     LOG(WARNING) << "detect duplicate edge property name, ignored: " << name
                  << ", id = " << id;
     return 0;
   }
   entry_ptr->AddProperty(/* id, */ name,
-                         vineyard::detail::PropertyTypeToDataType(prop_type));
+                         vineyard::htap::detail::PropertyTypeToDataType(prop_type));
   entry_ptr->props_.rbegin()->id = id;
   return 0;
 }
 
-int build_vertex_primary_keys(VertexTypeBuilder vertex, size_t key_count,
+int v6d_build_vertex_primary_keys(VertexTypeBuilder vertex, size_t key_count,
                                const char **key_name_list) {
 #ifndef NDEBUG
   LOG(INFO) << "add vertex pk: " << key_count;
@@ -404,7 +406,7 @@ int build_vertex_primary_keys(VertexTypeBuilder vertex, size_t key_count,
   return 0;
 }
 
-int build_edge_relation(EdgeTypeBuilder edge, const char *src,
+int v6d_build_edge_relation(EdgeTypeBuilder edge, const char *src,
                          const char *dst) {
 #ifndef NDEBUG
   LOG(INFO) << "add edge relation: " << src << " -> " << dst;
@@ -415,17 +417,17 @@ int build_edge_relation(EdgeTypeBuilder edge, const char *src,
   return 0;
 }
 
-int finish_build_vertex(VertexTypeBuilder vertex) {
+int v6d_finish_build_vertex(VertexTypeBuilder vertex) {
   // do NOTHING since nothing needs to be freed.
   return 0;
 }
 
-int finish_build_edge(EdgeTypeBuilder edge) {
+int v6d_finish_build_edge(EdgeTypeBuilder edge) {
   // do NOTHING since nothing needs to be freed.
   return 0;
 }
 
-Schema finish_build_schema(Schema schema) {
+Schema v6d_finish_build_schema(Schema schema) {
   // schema is just a metadata of Graph
   return schema;
 }

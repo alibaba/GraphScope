@@ -33,9 +33,9 @@ pub struct VineyardGraphWriter {
 impl VineyardGraphWriter {
     pub fn new(graph_name: String, schema: &schema_pb::Schema, index: i32) -> GraphProxyResult<Self> {
         let name = CString::new(graph_name).unwrap();
-        let graph = unsafe { get_graph_builder(name.as_ptr(), index) };
+        let graph = unsafe { v6d_get_graph_builder(name.as_ptr(), index) };
         let schema_handle = build_vineyard_schema(schema)?;
-        unsafe { initialize_graph_builder(graph, schema_handle) };
+        unsafe { v6d_initialize_graph_builder(graph, schema_handle) };
         Ok(VineyardGraphWriter { graph })
     }
 
@@ -95,7 +95,7 @@ impl WriteGraphProxy for VineyardGraphWriter {
         let label_id = self.encode_ffi_label(label)?;
         let native_properties = self.encode_details(properties)?;
         let state = unsafe {
-            add_vertex(self.graph, vertex_id, label_id, native_properties.len(), native_properties.as_ptr())
+            v6d_add_vertex(self.graph, vertex_id, label_id, native_properties.len(), native_properties.as_ptr())
         };
         check_ffi_state(state, "add_vertex")
     }
@@ -111,7 +111,7 @@ impl WriteGraphProxy for VineyardGraphWriter {
         let dst_label = self.encode_ffi_label(dst_vertex_label)?;
         let native_properties = self.encode_details(properties)?;
         let state = unsafe {
-            add_edge(
+            v6d_add_edge(
                 self.graph,
                 src_id,
                 dst_id,
@@ -127,8 +127,8 @@ impl WriteGraphProxy for VineyardGraphWriter {
     }
 
     fn finish(&mut self) -> GraphProxyResult<()> {
-        let build_vertex_state = unsafe { build_vertices(self.graph) };
-        let build_edge_state = unsafe { build_edges(self.graph) };
+        let build_vertex_state = unsafe { v6d_build_vertices(self.graph) };
+        let build_edge_state = unsafe { v6d_build_edges(self.graph) };
         check_ffi_state(build_vertex_state, "finish_vertex")?;
         check_ffi_state(build_edge_state, "finish_edge")
     }
@@ -137,7 +137,7 @@ impl WriteGraphProxy for VineyardGraphWriter {
 impl Drop for VineyardGraphWriter {
     fn drop(&mut self) {
         unsafe {
-            destroy(self.graph);
+            v6d_destroy(self.graph);
         }
     }
 }
@@ -157,11 +157,11 @@ fn check_ffi_state(state: FFIState, msg: &str) -> GraphProxyResult<()> {
 }
 
 fn build_vineyard_schema(schema: &schema_pb::Schema) -> GraphProxyResult<SchemaHandle> {
-    let builder = unsafe { create_schema_builder() };
+    let builder = unsafe { v6d_create_schema_builder() };
     for vertex in &schema.entities {
         let label = &vertex.label.as_ref().unwrap();
         let name = CString::new(label.name.to_owned()).unwrap();
-        let v_type_builder = unsafe { build_vertex_type(builder, label.id, name.as_ptr()) };
+        let v_type_builder = unsafe { v6d_build_vertex_type(builder, label.id, name.as_ptr()) };
 
         let mut primary_key_list = vec![];
         let mut primary_key_ptr_list = vec![];
@@ -174,7 +174,7 @@ fn build_vineyard_schema(schema: &schema_pb::Schema) -> GraphProxyResult<SchemaH
                 common_pb::DataType::from_i32(column.data_type).unwrap(),
             );
             let state =
-                unsafe { build_vertex_property(v_type_builder, prop_id, prop_name.as_ptr(), prop_type) };
+                unsafe { v6d_build_vertex_property(v_type_builder, prop_id, prop_name.as_ptr(), prop_type) };
             check_ffi_state(state, "build_vertex_property() for vineyard")?;
 
             if column.is_primary_key {
@@ -183,13 +183,13 @@ fn build_vineyard_schema(schema: &schema_pb::Schema) -> GraphProxyResult<SchemaH
             }
         }
         unsafe {
-            let state = build_vertex_primary_keys(
+            let state = v6d_build_vertex_primary_keys(
                 v_type_builder,
                 primary_key_list.len(),
                 primary_key_ptr_list.as_ptr(),
             );
             check_ffi_state(state, "build_vertex_primary_keys() for vineyard")?;
-            let state = finish_build_vertex(v_type_builder);
+            let state = v6d_finish_build_vertex(v_type_builder);
             check_ffi_state(state, "finish_build_vertex() for vineyard")?;
         };
     }
@@ -197,7 +197,7 @@ fn build_vineyard_schema(schema: &schema_pb::Schema) -> GraphProxyResult<SchemaH
     for edge in &schema.relations {
         let label = &edge.label.as_ref().unwrap();
         let name = CString::new(label.name.to_owned()).unwrap();
-        let e_type_builder = unsafe { build_edge_type(builder, label.id, name.as_ptr()) };
+        let e_type_builder = unsafe { v6d_build_edge_type(builder, label.id, name.as_ptr()) };
 
         for column in &edge.columns {
             let key = &column.key.as_ref().unwrap();
@@ -207,7 +207,7 @@ fn build_vineyard_schema(schema: &schema_pb::Schema) -> GraphProxyResult<SchemaH
                 common_pb::DataType::from_i32(column.data_type).unwrap(),
             );
             let state =
-                unsafe { build_edge_property(e_type_builder, prop_id, prop_name.as_ptr(), prop_type) };
+                unsafe { v6d_build_edge_property(e_type_builder, prop_id, prop_name.as_ptr(), prop_type) };
             check_ffi_state(state, "build_edge_property() for vineyard")?;
         }
 
@@ -217,15 +217,15 @@ fn build_vineyard_schema(schema: &schema_pb::Schema) -> GraphProxyResult<SchemaH
             let dst = &relation.dst.as_ref().unwrap();
             let dst_name = CString::new(dst.name.to_owned()).unwrap();
             let state =
-                unsafe { build_edge_relation(e_type_builder, src_name.as_ptr(), dst_name.as_ptr()) };
+                unsafe { v6d_build_edge_relation(e_type_builder, src_name.as_ptr(), dst_name.as_ptr()) };
             check_ffi_state(state, "build_edge_relation() for vineyard")?;
         }
 
-        let state = unsafe { finish_build_edge(e_type_builder) };
+        let state = unsafe { v6d_finish_build_edge(e_type_builder) };
         check_ffi_state(state, "finish_build_edge() for vineyard")?;
     }
 
-    unsafe { finish_build_schema(builder) };
+    unsafe { v6d_finish_build_schema(builder) };
 
     return Ok(builder);
 }
