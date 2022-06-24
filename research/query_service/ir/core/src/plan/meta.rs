@@ -16,14 +16,15 @@
 use std::cell::RefCell;
 use std::collections::btree_map::Entry;
 use std::collections::{BTreeMap, BTreeSet};
-use std::fmt::{Debug, Formatter};
+use std::fmt::Debug;
 use std::io;
+use std::ops::Deref;
 use std::rc::Rc;
 use std::sync::RwLock;
 
 use ir_common::generated::schema as schema_pb;
-use ir_common::KeyId;
 use ir_common::NameOrId;
+use ir_common::{KeyId, OneOrMany};
 
 use crate::error::{IrError, IrResult};
 use crate::plan::logical::NodeId;
@@ -497,47 +498,39 @@ impl NodeMeta {
     }
 }
 
-#[derive(Clone)]
-pub enum OneOrMany<T: Clone> {
-    One([T; 1]),
-    Many(Vec<T>),
+pub struct NodeMetaOpt {
+    inner: OneOrMany<Rc<RefCell<NodeMeta>>>,
 }
 
-impl<T: Clone + Debug> Debug for OneOrMany<T> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            OneOrMany::One(one) => one.get(0).unwrap().fmt(f),
-            OneOrMany::Many(many) => many.fmt(f),
-        }
+impl AsRef<OneOrMany<Rc<RefCell<NodeMeta>>>> for NodeMetaOpt {
+    fn as_ref(&self) -> &OneOrMany<Rc<RefCell<NodeMeta>>> {
+        &self.inner
     }
 }
 
-impl<T: Clone + Default> Default for OneOrMany<T> {
-    fn default() -> Self {
-        Self::One([T::default()])
+impl Deref for NodeMetaOpt {
+    type Target = OneOrMany<Rc<RefCell<NodeMeta>>>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.inner
     }
 }
 
-impl<T: Clone> AsRef<[T]> for OneOrMany<T> {
-    fn as_ref(&self) -> &[T] {
-        match self {
-            OneOrMany::One(one) => &one[..],
-            OneOrMany::Many(many) => many.as_slice(),
-        }
+impl From<OneOrMany<Rc<RefCell<NodeMeta>>>> for NodeMetaOpt {
+    fn from(inner: OneOrMany<Rc<RefCell<NodeMeta>>>) -> Self {
+        Self { inner }
     }
 }
-
-pub type NodeMetaOpt = OneOrMany<Rc<RefCell<NodeMeta>>>;
 
 impl NodeMetaOpt {
     pub fn set_columns_opt(&mut self, columns_opt: ColumnsOpt) {
-        match self {
+        match self.as_ref() {
             // The number 256 is given arbitrarily, which however should be determined by the number
             // of actual columns for the given node.
-            NodeMetaOpt::One(meta) => {
+            OneOrMany::One(meta) => {
                 meta[0].borrow_mut().columns = columns_opt;
             }
-            NodeMetaOpt::Many(metas) => {
+            OneOrMany::Many(metas) => {
                 for meta in metas {
                     meta.borrow_mut().columns = columns_opt.clone();
                 }
@@ -546,11 +539,11 @@ impl NodeMetaOpt {
     }
 
     pub fn insert_column(&mut self, col: NameOrId) {
-        match self {
-            NodeMetaOpt::One(meta) => {
+        match self.as_ref() {
+            OneOrMany::One(meta) => {
                 meta[0].borrow_mut().columns.insert(col);
             }
-            NodeMetaOpt::Many(metas) => {
+            OneOrMany::Many(metas) => {
                 for meta in metas {
                     meta.borrow_mut().columns.insert(col.clone());
                 }
@@ -559,14 +552,14 @@ impl NodeMetaOpt {
     }
 
     pub fn set_tag_columns_opt(&mut self, tag: Option<TagId>, columns_opt: ColumnsOpt) {
-        match self {
-            NodeMetaOpt::One(meta) => {
+        match self.as_ref() {
+            OneOrMany::One(meta) => {
                 meta[0]
                     .borrow_mut()
                     .tag_columns
                     .insert(tag, columns_opt);
             }
-            NodeMetaOpt::Many(metas) => {
+            OneOrMany::Many(metas) => {
                 for meta in metas {
                     meta.borrow_mut()
                         .tag_columns
@@ -577,8 +570,8 @@ impl NodeMetaOpt {
     }
 
     pub fn insert_tag_column(&mut self, tag: Option<TagId>, col: NameOrId) {
-        match self {
-            NodeMetaOpt::One(meta) => {
+        match self.as_ref() {
+            OneOrMany::One(meta) => {
                 meta[0]
                     .borrow_mut()
                     .tag_columns
@@ -586,7 +579,7 @@ impl NodeMetaOpt {
                     .or_default()
                     .insert(col);
             }
-            NodeMetaOpt::Many(metas) => {
+            OneOrMany::Many(metas) => {
                 for meta in metas {
                     meta.borrow_mut()
                         .tag_columns
@@ -599,9 +592,9 @@ impl NodeMetaOpt {
     }
 
     pub fn is_all_columns(&self) -> bool {
-        match self {
-            NodeMetaOpt::One(meta) => meta[0].borrow().columns.is_all(),
-            NodeMetaOpt::Many(metas) => {
+        match self.as_ref() {
+            OneOrMany::One(meta) => meta[0].borrow().columns.is_all(),
+            OneOrMany::Many(metas) => {
                 for meta in metas {
                     if meta.borrow().columns.is_all() {
                         return true;
@@ -613,11 +606,11 @@ impl NodeMetaOpt {
     }
 
     pub fn get_columns(&self) -> Vec<NameOrId> {
-        self.as_ref()[0].borrow().columns.get()
+        self[0].borrow().columns.get()
     }
 
     pub fn get_tag_columns(&self) -> BTreeMap<Option<TagId>, ColumnsOpt> {
-        self.as_ref()[0].borrow().tag_columns.clone()
+        self[0].borrow().tag_columns.clone()
     }
 }
 
@@ -757,7 +750,7 @@ impl PlanMeta {
     pub fn get_node_meta(&self, node: NodeId) -> Option<NodeMetaOpt> {
         self.node_metas
             .get(&node)
-            .map(|meta| NodeMetaOpt::One([meta.clone()]))
+            .map(|meta| OneOrMany::One([meta.clone()]).into())
     }
 
     /// Get the metadata of given nodes. If the metadata does not exist, return `None`.
@@ -765,7 +758,7 @@ impl PlanMeta {
         if nodes.len() == 1 {
             self.node_metas
                 .get(&nodes[0])
-                .map(|meta| NodeMetaOpt::One([meta.clone()]))
+                .map(|meta| OneOrMany::One([meta.clone()]).into())
         } else if nodes.len() > 1 {
             let mut node_metas = vec![];
             for node in nodes {
@@ -775,7 +768,7 @@ impl PlanMeta {
                     return None;
                 }
             }
-            Some(NodeMetaOpt::Many(node_metas))
+            Some(OneOrMany::Many(node_metas).into())
         } else {
             // empty cases
             None
@@ -789,17 +782,18 @@ impl PlanMeta {
     /// Get or insert the metadata of given nodes.
     pub fn get_or_insert_nodes_meta(&mut self, nodes: &[NodeId]) -> NodeMetaOpt {
         if nodes.len() == 1 {
-            NodeMetaOpt::One([self
+            OneOrMany::One([self
                 .node_metas
                 .entry(nodes[0])
                 .or_default()
                 .clone()])
+            .into()
         } else {
             let mut node_metas = vec![];
             for &node in nodes {
                 node_metas.push(self.node_metas.entry(node).or_default().clone())
             }
-            NodeMetaOpt::Many(node_metas)
+            OneOrMany::Many(node_metas).into()
         }
     }
 
