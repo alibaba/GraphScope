@@ -278,8 +278,14 @@ def test_modern_graph():
         assert make_nodes_set(nodes) == make_nodes_set(subgraph_nodes)
         assert make_edges_set(edges) == make_edges_set(subgraph_edges)
 
-    num_workers_options = (1, 2,)
-    threads_per_worker_options = (1, 2,)
+    num_workers_options = (
+        1,
+        2,
+    )
+    threads_per_worker_options = (
+        1,
+        2,
+    )
 
     for num_workers in num_workers_options:
         for threads_per_worker in threads_per_worker_options:
