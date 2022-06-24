@@ -21,6 +21,7 @@ import com.alibaba.graphscope.gremlin.transform.StepTransformFactory;
 
 import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
+import org.apache.tinkerpop.gremlin.process.traversal.TextP;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.structure.Graph;
@@ -182,5 +183,23 @@ public class HasStepTest {
         Assert.assertEquals(
                 "@.name && @.name == \"marko\" && (@.id && @.id == 1)",
                 op.getPredicate().get().applyArg());
+    }
+
+    @Test
+    public void g_V_has_containing_str_test() {
+        Traversal traversal = g.V().has("name", TextP.containing("marko"));
+        Step hasStep = traversal.asAdmin().getEndStep();
+        SelectOp op = (SelectOp) StepTransformFactory.HAS_STEP.apply(hasStep);
+        Assert.assertEquals(
+                "@.name && \"marko\" within @.name", op.getPredicate().get().applyArg());
+    }
+
+    @Test
+    public void g_V_has_notContaining_str_test() {
+        Traversal traversal = g.V().has("name", TextP.notContaining("marko"));
+        Step hasStep = traversal.asAdmin().getEndStep();
+        SelectOp op = (SelectOp) StepTransformFactory.HAS_STEP.apply(hasStep);
+        Assert.assertEquals(
+                "@.name && \"marko\" without @.name", op.getPredicate().get().applyArg());
     }
 }
