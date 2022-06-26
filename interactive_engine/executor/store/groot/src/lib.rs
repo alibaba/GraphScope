@@ -94,4 +94,10 @@ pub enum GraphErrorKind {
     Other,
 }
 
+impl From<String> for GraphError {
+    fn from(e: String) -> Self {
+        GraphError::not_supported(e)
+    }
+}
+
 pub type GraphResult<T> = Result<T, GraphError>;

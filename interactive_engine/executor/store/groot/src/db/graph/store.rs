@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 use std::collections::HashMap;
+use std::collections::HashSet;
 use std::path::Path;
 use std::sync::atomic::{AtomicIsize, Ordering};
 use std::sync::Arc;
@@ -10,7 +11,9 @@ use super::bin::*;
 use super::codec::*;
 use super::meta::*;
 use super::types::*;
-use crate::db::api::condition::Condition;
+use crate::api::Condition;
+use crate::api::ElemFilter;
+use crate::api::PropId;
 use crate::db::api::multi_version_graph::{GraphBackup, MultiVersionGraph};
 use crate::db::api::GraphErrorCode::{InvalidData, TypeNotFound};
 use crate::db::api::*;
@@ -115,35 +118,56 @@ impl MultiVersionGraph for GraphStore {
     }
 
     fn scan_vertex(
-        &self, snapshot_id: SnapshotId, label_id: Option<LabelId>, _condition: Option<&Condition>,
-        _property_ids: Option<&Vec<PropertyId>>,
+        &self, snapshot_id: SnapshotId, label_id: Option<LabelId>, condition: Option<&Condition>,
+        property_ids: Option<&Vec<PropertyId>>,
     ) -> GraphResult<Records<Self::V>> {
-        if let Some(label_id) = label_id {
-            match self
-                .vertex_manager
-                .get_type_info(snapshot_id as i64, label_id as i32)
-            {
-                Ok(vertex_type_info) => {
-                    let scan = VertexTypeScan::new(self.storage.clone(), snapshot_id, vertex_type_info);
-                    Ok(scan.into_iter())
-                }
-                Err(e) => {
-                    if let TypeNotFound = e.get_error_code() {
-                        Ok(Box::new(::std::iter::empty()))
-                    } else {
-                        Err(e)
+        let mut iter = match label_id {
+            Some(label_id) => {
+                match self
+                    .vertex_manager
+                    .get_type_info(snapshot_id as i64, label_id as i32)
+                {
+                    Ok(vertex_type_info) => {
+                        let scan = VertexTypeScan::new(self.storage.clone(), snapshot_id, vertex_type_info);
+                        scan.into_iter()
+                    }
+                    Err(e) => {
+                        if let TypeNotFound = e.get_error_code() {
+                            Box::new(::std::iter::empty())
+                        } else {
+                            return Err(e);
+                        }
                     }
                 }
             }
-        } else {
-            let mut vertex_type_info_iter = self.vertex_manager.get_all(snapshot_id as i64);
-            let mut res: Records<Self::V> = Box::new(::std::iter::empty());
-            while let Some(info) = vertex_type_info_iter.next_info() {
-                let label_iter = VertexTypeScan::new(self.storage.clone(), snapshot_id, info).into_iter();
-                res = Box::new(res.chain(label_iter));
+            None => {
+                let mut vertex_type_info_iter = self.vertex_manager.get_all(snapshot_id as i64);
+                let mut res: Records<Self::V> = Box::new(::std::iter::empty());
+                while let Some(info) = vertex_type_info_iter.next_info() {
+                    let label_iter =
+                        VertexTypeScan::new(self.storage.clone(), snapshot_id, info).into_iter();
+                    res = Box::new(res.chain(label_iter));
+                }
+                res
             }
-            Ok(res)
+        };
+
+        if let Some(condition) = condition.cloned() {
+            iter = Box::new(iter.filter(move |v| {
+                v.is_ok()
+                    && condition
+                        .filter_vertex(v.as_ref().unwrap())
+                        .unwrap_or(false)
+            }))
         }
+        let columns = Self::parse_columns(property_ids);
+        Ok(Box::new(iter.map(move |v| match v {
+            Ok(mut v) => {
+                v.set_columns(columns.clone());
+                Ok(v)
+            }
+            Err(e) => Err(e),
+        })))
     }
 
     fn scan_edge(
@@ -653,7 +677,7 @@ impl GraphStore {
 
     fn get_vertex_from_label(
         &self, snapshot_id: SnapshotId, vertex_id: VertexId, label_id: LabelId,
-        _property_ids: Option<&Vec<PropertyId>>,
+        property_ids: Option<&Vec<PropertyId>>,
     ) -> GraphResult<Option<RocksVertexImpl>> {
         let snapshot_id = snapshot_id as i64;
         let vertex_type_info = self
@@ -666,11 +690,13 @@ impl GraphStore {
                 if k[0..16] == key[0..16] && v.len() > 4 {
                     let codec_version = get_codec_version(v);
                     let decoder = vertex_type_info.get_decoder(snapshot_id, codec_version)?;
-                    let vertex = RocksVertexImpl::new(
+                    let columns = Self::parse_columns(property_ids);
+                    let vertex = RocksVertexImpl::with_columns(
                         vertex_id,
                         vertex_type_info.get_label() as LabelId,
                         Some(decoder),
                         RawBytes::new(v),
+                        columns,
                     );
                     return Ok(Some(vertex));
                 }
@@ -681,7 +707,7 @@ impl GraphStore {
 
     fn get_edge_from_relation(
         &self, snapshot_id: SnapshotId, edge_id: EdgeId, edge_relation: &EdgeKind,
-        _property_ids: Option<&Vec<PropertyId>>,
+        property_ids: Option<&Vec<PropertyId>>,
     ) -> GraphResult<Option<RocksEdgeImpl>> {
         let snapshot_id = snapshot_id as i64;
         let info = self
@@ -694,11 +720,13 @@ impl GraphStore {
                 if k[0..32] == key[0..32] && v.len() >= 4 {
                     let codec_version = get_codec_version(v);
                     let decoder = info.get_decoder(snapshot_id, codec_version)?;
-                    let edge = RocksEdgeImpl::new(
+                    let columns = Self::parse_columns(property_ids);
+                    let edge = RocksEdgeImpl::with_columns(
                         edge_id,
                         info.get_type().into(),
                         Some(decoder),
                         RawBytes::new(v),
+                        columns,
                     );
                     return Ok(Some(edge));
                 }
@@ -709,44 +737,63 @@ impl GraphStore {
 
     fn query_edges(
         &self, snapshot_id: SnapshotId, vertex_id: Option<VertexId>, direction: EdgeDirection,
-        label_id: Option<LabelId>, _condition: Option<&Condition>, _property_ids: Option<&Vec<PropertyId>>,
+        label_id: Option<LabelId>, condition: Option<&Condition>, property_ids: Option<&Vec<PropertyId>>,
     ) -> GraphResult<Records<RocksEdgeImpl>> {
-        if let Some(label_id) = label_id {
-            match self
-                .edge_manager
-                .get_edge_info(snapshot_id as i64, label_id as i32)
-            {
-                Ok(edge_info) => {
-                    let scan = EdgeTypeScan::new(
-                        self.storage.clone(),
-                        snapshot_id,
-                        edge_info,
-                        vertex_id,
-                        direction,
-                    );
-                    Ok(scan.into_iter())
-                }
-                Err(e) => {
-                    if let TypeNotFound = e.get_error_code() {
-                        Ok(Box::new(::std::iter::empty()))
-                    } else {
-                        Err(e)
+        let mut iter = match label_id {
+            Some(label_id) => {
+                match self
+                    .edge_manager
+                    .get_edge_info(snapshot_id as i64, label_id as i32)
+                {
+                    Ok(edge_info) => {
+                        let scan = EdgeTypeScan::new(
+                            self.storage.clone(),
+                            snapshot_id,
+                            edge_info,
+                            vertex_id,
+                            direction,
+                        );
+                        scan.into_iter()
+                    }
+                    Err(e) => {
+                        if let TypeNotFound = e.get_error_code() {
+                            Box::new(::std::iter::empty())
+                        } else {
+                            return Err(e);
+                        }
                     }
                 }
             }
-        } else {
-            let mut edge_info_iter = self
-                .edge_manager
-                .get_all_edges(snapshot_id as i64);
-            let mut res: Records<RocksEdgeImpl> = Box::new(::std::iter::empty());
-            while let Some(info) = edge_info_iter.next_info() {
-                let label_iter =
-                    EdgeTypeScan::new(self.storage.clone(), snapshot_id, info, vertex_id, direction)
-                        .into_iter();
-                res = Box::new(res.chain(label_iter));
+            None => {
+                let mut edge_info_iter = self
+                    .edge_manager
+                    .get_all_edges(snapshot_id as i64);
+                let mut res: Records<RocksEdgeImpl> = Box::new(::std::iter::empty());
+                while let Some(info) = edge_info_iter.next_info() {
+                    let label_iter =
+                        EdgeTypeScan::new(self.storage.clone(), snapshot_id, info, vertex_id, direction)
+                            .into_iter();
+                    res = Box::new(res.chain(label_iter));
+                }
+                res
             }
-            Ok(res)
+        };
+        if let Some(condition) = condition.cloned() {
+            iter = Box::new(iter.filter(move |e| {
+                e.is_ok()
+                    && condition
+                        .filter_edge(e.as_ref().unwrap())
+                        .unwrap_or(false)
+            }));
         }
+        let columns = Self::parse_columns(property_ids);
+        Ok(Box::new(iter.map(move |e| match e {
+            Ok(mut e) => {
+                e.set_columns(columns.clone());
+                Ok(e)
+            }
+            Err(e) => Err(e),
+        })))
     }
 
     pub fn delete_table_by_prefix(&self, table_prefix: i64, vertex_table: bool) -> GraphResult<()> {
@@ -754,6 +801,15 @@ impl GraphStore {
         let end_key = transform::i64_to_arr(end.to_be());
         let start_key = transform::i64_to_arr(table_prefix.to_be());
         self.storage.delete_range(&start_key, &end_key)
+    }
+
+    fn parse_columns(property_ids: Option<&Vec<PropertyId>>) -> Option<HashSet<PropId>> {
+        property_ids.map(|v| {
+            v.to_owned()
+                .into_iter()
+                .map(|i| i as PropId)
+                .collect()
+        })
     }
 }
 

@@ -13,8 +13,9 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-mod condition;
+pub mod condition;
 mod elem;
+mod filter;
 mod multi_version;
 pub mod prelude;
 mod property;
@@ -22,8 +23,10 @@ mod unwrap_or;
 
 use std::collections::HashMap;
 
-pub use self::condition::*;
+pub use condition::{Condition, ConditionBuilder};
+
 pub use self::elem::*;
+pub use self::filter::ElemFilter;
 pub use self::multi_version::*;
 pub use crate::schema::prelude::*;
 

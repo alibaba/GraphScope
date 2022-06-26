@@ -22,6 +22,7 @@ grpcio = "0.10"
 grpcio-sys = { version = "0.10", features = ["openssl-vendored"] }
 # deactivation of bzip2 due to https://github.com/rust-rocksdb/rust-rocksdb/issues/609
 rocksdb = { version = "0.18.0", features = ["snappy", "lz4", "zstd", "zlib"], default-features = false }
+dyn_type = { path = "../../common/dyn_type" }
 
 [build-dependencies]
 protoc-grpcio = "3.0"

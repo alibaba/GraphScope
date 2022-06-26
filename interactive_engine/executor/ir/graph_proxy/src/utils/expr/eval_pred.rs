@@ -17,6 +17,7 @@
 use std::convert::{TryFrom, TryInto};
 
 use dyn_type::{BorrowObject, Object};
+use global_query::store_api::PropId;
 use ir_common::error::ParsePbError;
 use ir_common::expr_parse::error::{ExprError, ExprResult};
 use ir_common::generated::algebra as pb;
@@ -33,9 +34,22 @@ pub trait EvalPred {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Predicate {
-    left: Operand,
-    cmp: common_pb::Logical,
-    right: Operand,
+    pub(crate) left: Operand,
+    pub(crate) cmp: common_pb::Logical,
+    pub(crate) right: Operand,
+}
+
+impl Predicate {
+    pub(crate) fn extract_prop_ids(&self) -> Option<Vec<PropId>> {
+        let left = self.left.get_var_prop_id();
+        let right = self.right.get_var_prop_id();
+        match (left, right) {
+            (Ok(left), Ok(right)) => Some(vec![left, right]),
+            (Ok(left), _) => Some(vec![left]),
+            (_, Ok(right)) => Some(vec![right]),
+            _ => None,
+        }
+    }
 }
 
 #[allow(dead_code)]
@@ -146,6 +160,42 @@ pub enum Predicates {
     Not(Box<Predicates>),
     And((Box<Predicates>, Box<Predicates>)),
     Or((Box<Predicates>, Box<Predicates>)),
+}
+
+pub(crate) fn zip_option_vecs<T>(left: Option<Vec<T>>, right: Option<Vec<T>>) -> Option<Vec<T>> {
+    match (left, right) {
+        (Some(mut left), Some(mut right)) => {
+            left.append(&mut right);
+            Some(left)
+        }
+        (None, Some(right)) => Some(right),
+        (Some(left), None) => Some(left),
+        (None, None) => None,
+    }
+}
+
+impl Predicates {
+    pub fn extract_prop_ids(&self) -> Option<Vec<PropId>> {
+        match self {
+            Predicates::Init => None,
+            Predicates::SingleItem(operand) => operand
+                .get_var_prop_id()
+                .map(|id| Some(vec![id]))
+                .unwrap_or(None),
+            Predicates::Predicate(pred) => pred.extract_prop_ids(),
+            Predicates::Not(pred) => pred.extract_prop_ids(),
+            Predicates::And((left, right)) => {
+                let left = left.extract_prop_ids();
+                let right = right.extract_prop_ids();
+                zip_option_vecs(left, right)
+            }
+            Predicates::Or((left, right)) => {
+                let left = left.extract_prop_ids();
+                let right = right.extract_prop_ids();
+                zip_option_vecs(left, right)
+            }
+        }
+    }
 }
 
 impl Default for Predicates {
@@ -477,6 +527,15 @@ pub enum PEvaluator {
     General(Evaluator),
 }
 
+impl PEvaluator {
+    pub fn extract_prop_ids(&self) -> Option<Vec<PropId>> {
+        match self {
+            PEvaluator::Predicates(preds) => preds.extract_prop_ids(),
+            _ => None,
+        }
+    }
+}
+
 impl EvalPred for PEvaluator {
     fn eval_bool<E: Element, C: Context<E>>(&self, context: Option<&C>) -> ExprEvalResult<bool> {
         let result = match self {
@@ -519,8 +578,8 @@ impl TryFrom<pb::IndexPredicate> for PEvaluator {
 #[cfg(test)]
 mod tests {
     use ahash::HashMap;
-    use dyn_type::object;
-    use dyn_type::Object;
+    use dyn_type::{object, Primitives};
+    use global_query::store_api::prelude::{Operand as StoreOperand, Property as StoreProperty};
     use ir_common::expr_parse::str_to_expr_pb;
     use ir_common::NameOrId;
 
