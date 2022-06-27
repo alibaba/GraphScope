@@ -456,6 +456,34 @@ void RunProjectedPR(std::shared_ptr<ProjectedFragmentType> fragment,
   worker->Finalize();
 }
 
+using LocalFragmentType =
+    vineyard::ArrowFragment<int64_t, uint64_t,
+                            vineyard::ArrowLocalVertexMap<int64_t, uint64_t>>;
+using LocalProjectedFragmentType = gs::ArrowProjectedFragment<
+    int64_t, uint64_t, int64_t, int64_t,
+    vineyard::ArrowLocalVertexMap<int64_t, uint64_t>>;
+void RunProjectedPRWithLocalVertexMap(
+    std::shared_ptr<LocalProjectedFragmentType> fragment,
+    const grape::CommSpec& comm_spec, const std::string& out_prefix) {
+  using AppType = grape::PageRank<LocalProjectedFragmentType>;
+  auto app = std::make_shared<AppType>();
+  auto worker = AppType::CreateWorker(app, fragment);
+  auto spec = grape::DefaultParallelEngineSpec();
+  worker->Init(comm_spec, spec);
+
+  worker->Query(0.85, 10);
+
+  std::ofstream ostream;
+  std::string output_path =
+      grape::GetResultFilename(out_prefix, fragment->fid());
+
+  ostream.open(output_path);
+  worker->Output(ostream);
+  ostream.close();
+
+  worker->Finalize();
+}
+
 void Run(vineyard::Client& client, const grape::CommSpec& comm_spec,
          vineyard::ObjectID id, bool run_projected, const std::string& app_name,
          const std::string& path_pattern) {
@@ -488,6 +516,17 @@ void Run(vineyard::Client& client, const grape::CommSpec& comm_spec,
       RunProjectedPR(projected_fragment, comm_spec, "./output_projected_pr/");
     }
   }
+}
+
+void RunLocal(vineyard::Client& client, const grape::CommSpec& comm_spec,
+              vineyard::ObjectID id, bool run_projected,
+              const std::string& app_name) {
+  std::shared_ptr<LocalFragmentType> fragment =
+      std::dynamic_pointer_cast<LocalFragmentType>(client.GetObject(id));
+  std::shared_ptr<LocalProjectedFragmentType> projected_fragment =
+      LocalProjectedFragmentType::Project(fragment, 0, 0, 0, 0);
+  RunProjectedPRWithLocalVertexMap(projected_fragment, comm_spec,
+                                   "./output_projected_pr/");
 }
 
 int main(int argc, char** argv) {
@@ -527,6 +566,10 @@ int main(int argc, char** argv) {
   if (argc > index) {
     path_pattern = argv[index++];
   }
+  int with_local_vertex_map = 0;
+  if (argc > index) {
+    with_local_vertex_map = atoi(argv[index++]);
+  }
 
   grape::InitMPIComm();
   {
@@ -540,28 +583,51 @@ int main(int argc, char** argv) {
 
     vineyard::ObjectID fragment_id;
     {
-      auto loader = std::make_unique<
-          gs::ArrowFragmentLoader<vineyard::property_graph_types::OID_TYPE,
-                                  vineyard::property_graph_types::VID_TYPE>>(
-          client, comm_spec, efiles, vfiles, directed != 0);
-      fragment_id =
-          bl::try_handle_all([&loader]() { return loader->LoadFragment(); },
-                             [](const vineyard::GSError& e) {
-                               LOG(FATAL) << e.error_msg;
-                               return 0;
-                             },
-                             [](const bl::error_info& unmatched) {
-                               LOG(FATAL) << "Unmatched error " << unmatched;
-                               return 0;
-                             });
+      using oid_t = vineyard::property_graph_types::OID_TYPE;
+      using vid_t = vineyard::property_graph_types::VID_TYPE;
+      if (with_local_vertex_map) {
+        using vertex_map_t = vineyard::ArrowLocalVertexMap<
+            typename vineyard::InternalType<oid_t>::type, vid_t>;
+        auto loader = std::make_unique<
+            gs::ArrowFragmentLoader<oid_t, vid_t, vertex_map_t>>(
+            client, comm_spec, efiles, vfiles, directed != 0);
+        fragment_id =
+            bl::try_handle_all([&loader]() { return loader->LoadFragment(); },
+                               [](const vineyard::GSError& e) {
+                                 LOG(FATAL) << e.error_msg;
+                                 return 0;
+                               },
+                               [](const bl::error_info& unmatched) {
+                                 LOG(FATAL) << "Unmatched error " << unmatched;
+                                 return 0;
+                               });
+      } else {
+        auto loader = std::make_unique<gs::ArrowFragmentLoader<oid_t, vid_t>>(
+            client, comm_spec, efiles, vfiles, directed != 0);
+        fragment_id =
+            bl::try_handle_all([&loader]() { return loader->LoadFragment(); },
+                               [](const vineyard::GSError& e) {
+                                 LOG(FATAL) << e.error_msg;
+                                 return 0;
+                               },
+                               [](const bl::error_info& unmatched) {
+                                 LOG(FATAL) << "Unmatched error " << unmatched;
+                                 return 0;
+                               });
+      }
     }
 
     LOG(INFO) << "[worker-" << comm_spec.worker_id()
-              << "] loaded graph to vineyard ...";
+              << "] loaded graph to vineyard ... ";
 
     MPI_Barrier(comm_spec.comm());
 
-    Run(client, comm_spec, fragment_id, run_projected, app_name, path_pattern);
+    if (with_local_vertex_map) {
+      RunLocal(client, comm_spec, fragment_id, run_projected, app_name);
+    } else {
+      Run(client, comm_spec, fragment_id, run_projected, app_name,
+          path_pattern);
+    }
 
     MPI_Barrier(comm_spec.comm());
   }
@@ -571,3 +637,6 @@ int main(int argc, char** argv) {
 }
 
 template class gs::ArrowProjectedFragment<int64_t, uint64_t, double, int64_t>;
+template class gs::ArrowProjectedFragment<
+    int64_t, uint64_t, int64_t, int64_t,
+    vineyard::ArrowLocalVertexMap<int64_t, uint64_t>>;

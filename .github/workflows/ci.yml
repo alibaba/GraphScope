@@ -173,7 +173,7 @@ jobs:
   build-wheels:
     # Require the user id of the self-hosted is 1001, which may need to be
     # configured manually when a new self-hosted runner is added.
-    runs-on: [self-hosted, manylinux2014]
+    runs-on: [self-hosted, manylinux2014-ci-test]
     needs: [changes]
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     steps:

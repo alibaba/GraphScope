@@ -150,7 +150,7 @@ class SSSPPath : public AppBase<FRAG_T, SSSPPathContext<FRAG_T>>,
       auto u = e.get_neighbor();
       double new_distu;
       double edata = 1.0;
-      static_if<!std::is_same<edata_t, grape::EmptyType>{}>(
+      vineyard::static_if<!std::is_same<edata_t, grape::EmptyType>{}>(
           [&](auto& e, auto& data) {
             data = static_cast<double>(e.get_data());
           })(e, edata);

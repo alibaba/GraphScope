@@ -47,7 +47,7 @@ jobs:
         popd
         rm -fr /tmp/libgrape-lite
 
-        git clone --single-branch --depth=1 https://github.com/v6d-io/v6d.git /tmp/v6d
+        git clone -b acezen/local_vertex_map --depth=1 https://github.com/acezen/v6d.git /tmp/v6d
         pushd /tmp/v6d
         git submodule update --init
         mkdir -p build && cd build

@@ -283,7 +283,7 @@ class AttributeAssortativity
           vdata_t vdata = pair1.first;
           double data = 1.0;
           // convert vdata_t to double in compile-time
-          static_if<Conversion<double, vdata_t>::exists>(
+          vineyard::static_if<Conversion<double, vdata_t>::exists>(
               [&](auto& data, auto& vdata) {
                 data = static_cast<double>(vdata);
               })(data, vdata);
@@ -295,7 +295,7 @@ class AttributeAssortativity
           vdata_t vdata = pair2.first;
           double data = 1.0;
           // convert vdata_t to double in compile-time
-          static_if<Conversion<double, vdata_t>::exists>(
+          vineyard::static_if<Conversion<double, vdata_t>::exists>(
               [&](auto& data, auto& vdata) {
                 data = static_cast<double>(vdata);
               })(data, vdata);
