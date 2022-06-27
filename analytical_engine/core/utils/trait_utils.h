@@ -19,7 +19,8 @@
 #include <type_traits>
 
 namespace gs {
-template <typename OID_T, typename VID_T, typename VDATA_T, typename EDATA_T>
+template <typename OID_T, typename VID_T, typename VDATA_T, typename EDATA_T,
+          typename VERTEX_MAP_T>
 class ArrowFlattenedFragment;
 
 template <typename T, typename F>
@@ -48,12 +49,10 @@ struct is_flattened_fragment {
   static constexpr bool value = false;
 };
 
-template <typename OID_T, typename VID_T, typename VDATA_T, typename EDATA_T>
-class ArrowFlattenedFragment;
-
-template <typename OID_T, typename VID_T, typename VDATA_T, typename EDATA_T>
+template <typename OID_T, typename VID_T, typename VDATA_T, typename EDATA_T,
+          typename VERTEX_MAP_T>
 struct is_flattened_fragment<
-    ArrowFlattenedFragment<OID_T, VID_T, VDATA_T, EDATA_T>> {
+    ArrowFlattenedFragment<OID_T, VID_T, VDATA_T, EDATA_T, VERTEX_MAP_T>> {
   using type = std::true_type;
   static constexpr bool value = true;
 };
