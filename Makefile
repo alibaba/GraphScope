@@ -14,7 +14,7 @@ NETWORKX                    ?= ON
 BUILD_TEST                  ?= OFF
 
 # build java sdk option
-ENABLE_JAVA_SDK             ?= OFF
+ENABLE_JAVA_SDK             ?= ON
 
 .PHONY: all
 all: graphscope

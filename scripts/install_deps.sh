@@ -407,6 +407,7 @@ write_envs_config() {
       fi
       echo "export PATH=\${JAVA_HOME}/bin:\$HOME/.cargo/bin:/usr/local/go/bin:\$PATH"
       echo "export PATH=\$(go env GOPATH)/bin:\$PATH"
+      echo "export LLVM11_HOME=${homebrew_prefix}/opt/llvm/"
     } >> ${OUTPUT_ENV_FILE}
   else
     {
@@ -416,6 +417,7 @@ write_envs_config() {
       fi
       echo "export PATH=\${JAVA_HOME}/bin:\$HOME/.cargo/bin:\$PATH:/usr/local/go/bin"
       echo "export PATH=\$(go env GOPATH)/bin:\$PATH"
+      echo "export LLVM11_HOME=${homebrew_prefix}/opt/llvm/"
     } >> ${OUTPUT_ENV_FILE}
   fi
 }
@@ -481,6 +483,40 @@ install_vineyard() {
   popd
 
   rm -fr /tmp/v6d
+}
+
+
+##########################
+# Install fastFFI.
+# Globals:
+#   PLATFORM
+# Arguments:
+#   None
+# Outputs:
+#   output log to stdout, output error to stderr.
+##########################
+install_fastFFI() {
+  log "Building and installing fastFFI."
+
+  pushd /opt/
+  if [[ -d /opt/fastFFI ]]; then
+    log "Found /opt/fastFFI exists, remove it."
+    sudo rm -fr /opt/fastFFI
+  fi
+  sudo git clone https://github.com/alibaba/fastFFI.git 
+  sudo chown -R $(id -u):$(id -g) /opt/fastFFI
+  pushd fastFFI
+  git checkout a166c6287f2efb938c27fb01b3d499932d484f9c
+
+  if [[ "${PLATFORM}" == *"Darwin"* ]]; then
+      # fastFFI not compatible on mac m1.
+      mvn clean install -DskipTests -pl :ffi,annotation-processor -am
+  else
+    export PATH=${PATH}:${LLVM11_HOME}/bin
+    mvn clean install -DskipTests
+  fi
+  popd
+  popd
 }
 
 ##########################
@@ -713,6 +749,7 @@ install_dependencies() {
     export CC=${homebrew_prefix}/opt/llvm/bin/clang
     export CXX=${homebrew_prefix}/opt/llvm/bin/clang++
     export CPPFLAGS=-I${homebrew_prefix}/opt/llvm/include
+    export LLVM11_HOME=${homebrew_prefix}/opt/llvm/
   fi
 
   log "Installing zetcd."
@@ -728,6 +765,8 @@ install_dependencies() {
   install_vineyard
 
   install_cppkafka
+
+  install_fastFFI
 
   log "Output environments config file ${OUTPUT_ENV_FILE}"
   write_envs_config

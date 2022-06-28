@@ -11,7 +11,7 @@ option(PROPERTY_GRAPH_FRAME "Whether to build property graph frame" False)
 option(PROJECT_FRAME "Whether to build project frame" False)
 option(ENABLE_PREGEL_COMBINE "Whether enable combinator in pregel app." False)
 option(NETWORKX "networkx on?" ON)
-option(ENABLE_JAVA_SDK "Build with support for java sdk" OFF)
+option(ENABLE_JAVA_SDK "Build with support for java sdk" ON)
 
 execute_process(COMMAND uname -m OUTPUT_VARIABLE SYSTEM_PROCESSOR)
 string(REGEX REPLACE "\n$" "" SYSTEM_PROCESSOR "${SYSTEM_PROCESSOR}")

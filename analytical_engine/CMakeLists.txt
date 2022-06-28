@@ -11,7 +11,7 @@ project(analytical_engine LANGUAGES C CXX VERSION ${GRAPHSCOPE_ANALYTICAL_VERSIO
 
 option(NETWORKX "networkx on?" ON)
 option(BUILD_TESTS "Build unit test" ON)
-option(ENABLE_JAVA_SDK "Build with support for java sdk" OFF)
+option(ENABLE_JAVA_SDK "Build with support for java sdk" ON)
 
 # Get system processor
 execute_process(COMMAND uname -m OUTPUT_VARIABLE SYSTEM_PROCESSOR)
