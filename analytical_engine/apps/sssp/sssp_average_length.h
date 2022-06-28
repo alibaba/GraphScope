@@ -126,7 +126,7 @@ class SSSPAverageLength
           updated_map[src_vid].Insert(v);
         }
       } else {  // sum msg
-        fid_t fid = (fid_t) (std::get<0>(msg.second));
+        fid_t fid = (fid_t)(std::get<0>(msg.second));
         ctx.all_sums[fid] = std::get<2>(msg.second);
       }
       msg_cnt++;
@@ -185,7 +185,7 @@ class SSSPAverageLength
     else
       messages.SendToFragment(
           0, pair_msg_t(false,
-                        tuple_t((vid_t) (fid), (vid_t) (fid), ctx.inner_sum)));
+                        tuple_t((vid_t) (fid), (vid_t)(fid), ctx.inner_sum)));
   }
 
   inline void syncUpdated(vid_t src_vid, const fragment_t& frag, context_t& ctx,
