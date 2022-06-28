@@ -29,9 +29,7 @@ const NATIVE_DIR: &'static str = "src/native";
 
 #[cfg(feature = "with_v6d")]
 fn codegen_inplace() -> Result<(), Box<dyn std::error::Error>> {
-    let dst = Config::new(NATIVE_DIR)
-        .build_target("v6d_native_store")
-        .build();
+    let dst = Config::new(NATIVE_DIR).build_target("native_store").build();
 
     println!("cargo:rustc-link-search=/usr/local/lib");
     println!("cargo:rustc-link-search=/usr/local/lib64");
@@ -44,7 +42,7 @@ fn codegen_inplace() -> Result<(), Box<dyn std::error::Error>> {
         Err(_) => (),
     }
     println!("cargo:rustc-link-search={}/build", dst.display());
-    println!("cargo:rustc-link-lib=v6d_native_store");
+    println!("cargo:rustc-link-lib=native_store");
     println!("cargo:rustc-link-lib=vineyard_graph");
     println!("cargo:rustc-link-lib=vineyard_io");
     println!("cargo:rustc-link-lib=vineyard_client");
