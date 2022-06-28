@@ -49,7 +49,7 @@ class SamplingPath
       auto level = pair.first;
       auto& path = pair.second;
 
-      if ((size_t)(level + 2) < ctx.path_pattern.size()) {
+      if ((size_t) (level + 2) < ctx.path_pattern.size()) {
         vertex_t u;
         auto curr_e_label = ctx.path_pattern[level + 1];
         auto curr_v_label = ctx.path_pattern[level + 2];
