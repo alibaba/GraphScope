@@ -20,10 +20,16 @@
     </condition>
 
     <condition property="platform" value="mac">
-      <os arch="x86_64" family="mac"/>
+      <!--Both m1 and x86 are ok, we will diff them in cmakelist-->
+      <os family="mac"/>
     </condition>
 
-    <fail message="Not a supported platform." unless="platform"/>
+    <exec executable="nproc" outputproperty="cores.count">
+      <arg value="--all"/>
+    </exec>
+
+    <fail unless="platform" message="Not a supported platform."/>
+
     <echo level="info" message="Make graphscope java sdk jni code"/>
 
     <echo level="info" message="Native Library Name: ${jni.library.name}"/>
@@ -40,7 +46,7 @@
     </exec>
 
     <exec dir="${project.build.directory}/native" executable="make" failonerror="true">
-      <arg line="VERBOSE=1 -j4"/>
+      <arg line="VERBOSE=1 -j${cores.count}"/>
     </exec>
   </target>
 </project>

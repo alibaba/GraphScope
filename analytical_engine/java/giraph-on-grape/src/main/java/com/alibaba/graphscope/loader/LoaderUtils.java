@@ -55,7 +55,7 @@ public class LoaderUtils {
             process = builder.start();
             try (BufferedReader reader =
                     new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                String res = reader.readLine().split("\\s+")[0];
+                String res = reader.readLine().trim().split("\\s+")[0];
                 return Long.parseLong(res);
             }
         } catch (IOException e) {

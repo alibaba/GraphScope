@@ -677,10 +677,8 @@ install_dependencies() {
     if [[ ${CN_MIRROR} == true && "${packages_to_install[*]}" =~ "openjdk@11" ]]; then
       # packages_to_install contains jdk
       log "Installing openjdk11."
-      wget -c https://graphscope.oss-cn-beijing.aliyuncs.com/dependencies/OpenJDK11U-jdk_x64_mac_hotspot_11.0.13_8.tar.gz \
-        -P /tmp
-      sudo tar xf /tmp/OpenJDK11U-jdk_x64_mac_hotspot_11.0.13_8.tar.gz -C /Library/Java/JavaVirtualMachines/
-      rm -fr /tmp/OpenJDK11U-jdk_x64_mac_hotspot_11.0.13_8.tar.gz
+      # we need arm64-base jvm, install from brew.
+      brew install --ignore-dependencies openjdk@11
       # remove jdk from packages_to_install
       packages_to_install=("${packages_to_install[@]/openjdk@11}")
     fi
