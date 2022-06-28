@@ -13,7 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-mod exp_store;
+pub mod exp_store;
 mod gs_store;
 
 pub use exp_store::{create_exp_store, SimplePartition};

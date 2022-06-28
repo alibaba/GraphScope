@@ -20,29 +20,23 @@ use std::path::PathBuf;
 use std::slice::SliceIndex;
 use std::sync::Arc;
 use std::time::Instant;
-use std::vec;
 
-use graph_store::config::GraphDBConfig;
-use graph_store::graph_db::Direction;
-use graph_store::graph_db::GlobalStoreTrait;
-use graph_store::graph_db_impl::LargeGraphDB;
+use graph_proxy::adapters::exp_store::read_graph::GRAPH;
 use graph_proxy::create_exp_store;
-use graph_proxy::a
+use graph_store::graph_db::GlobalStoreTrait;
+// These apis imported for your reference
 use pegasus::api::{Count, Dedup, Filter, Fold, Join, KeyBy, Map, PartitionByKey, Sink};
-use pegasus::errors::{BuildJobError, JobSubmitError, SpawnJobError, StartupError};
+use pegasus::errors::JobSubmitError;
 use pegasus::result::ResultStream;
-use pegasus::{flat_map, Configuration, JobConf, ServerConf};
+use pegasus::{Configuration, JobConf, ServerConf};
 use structopt::StructOpt;
-use strum_macros::ToString;
 
-#[derive(Debug, Clone, StructOpt, Default)]
+#[derive(StructOpt, Default)]
 pub struct Config {
     #[structopt(short = "s", long = "servers")]
     servers: Option<PathBuf>,
     #[structopt(short = "w", long = "workers", default_value = "1")]
     workers: u32,
-    #[structopt(short = "b", long = "benchmark", default_value = "t")]
-    benchmark_type: String,
 }
 
 fn main() {
