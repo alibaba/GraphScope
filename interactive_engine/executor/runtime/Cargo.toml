@@ -42,3 +42,7 @@ env_logger = "0.6"
 
 [build-dependencies]
 cmake = "0.1"
+
+[features]
+default = []
+with_v6d = []

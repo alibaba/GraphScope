@@ -20,8 +20,16 @@ use std::path::Path;
 
 use cmake::Config;
 
-fn main() {
-    let dst = Config::new("src/native")
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    codegen_inplace()
+}
+
+#[cfg(feature = "with_v6d")]
+const NATIVE_DIR: &'static str = "src/native";
+
+#[cfg(feature = "with_v6d")]
+fn codegen_inplace() -> Result<(), Box<dyn std::error::Error>> {
+    let dst = Config::new(NATIVE_DIR)
         .build_target("v6d_native_store")
         .build();
 
@@ -55,4 +63,11 @@ fn main() {
     } else {
         unimplemented!()
     }
+
+    Ok(())
+}
+
+#[cfg(not(feature = "with_v6d"))]
+fn codegen_inplace() -> Result<(), Box<dyn std::error::Error>> {
+    Ok(())
 }
