@@ -25,7 +25,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[cfg(feature = "with_native")]
-const NATIVE_DIR: &'static str = "src/native";
+const NATIVE_DIR: &'static str = "native";
 
 #[cfg(feature = "with_native")]
 fn codegen_inplace() -> Result<(), Box<dyn std::error::Error>> {

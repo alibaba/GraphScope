@@ -24,7 +24,7 @@ log4rs = "0.8.0"
 maxgraph-common = { path = "../../rust-common" }
 maxgraph-store = { path = "../store" }
 maxgraph-server = { path = "../server" }
-maxgraph-runtime = { path = "../runtime" }
+maxgraph-runtime = { path = "../runtime", features = ["with_native"] }
 protobuf = { version = "~2.0", features = ["with-bytes"] }
 rand = "0.7.3"
 regex = "1"
