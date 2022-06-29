@@ -111,7 +111,7 @@ endif
 gie:
 	# coordinator/frontend/graphmanager
 	cd $(WORKING_DIR)/interactive_engine && \
-	mvn clean package -DskipTests -Pjava-release --quiet
+	mvn clean package -DskipTests -Pjava-release
 	# executor
 	cd $(WORKING_DIR)/interactive_engine/executor && \
 	rustup component add rustfmt && \
