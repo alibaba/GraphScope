@@ -79,6 +79,8 @@ traversalMethod
     | traversalMethod_union // union()
     | traversalMethod_range // range()
     | traversalMethod_match // match()
+    | traversalMethod_subgraph // subgraph()
+    | traversalMethod_bothV // bothV()
     ;
 
 traversalSourceSpawnMethod_V
@@ -348,6 +350,15 @@ traversalMethod_expr
     : 'expr' LPAREN stringLiteral RPAREN
     ;
 
+// i.e. g.E().subgraph("graph_name")
+traversalMethod_subgraph
+	: 'subgraph' LPAREN stringLiteral RPAREN
+	;
+
+traversalMethod_bothV
+	: 'bothV' LPAREN RPAREN
+	;
+
 // only permit non empty, \'\' or \"\" or \'null\' is meaningless as a parameter
 stringLiteral
     : NonEmptyStringLiteral
@@ -415,6 +426,8 @@ traversalPredicate
     | traversalPredicate_without
     | traversalPredicate DOT 'and' LPAREN traversalPredicate RPAREN
     | traversalPredicate DOT 'or' LPAREN traversalPredicate RPAREN
+    | traversalPredicate_containing // TextP.containing
+    | traversalPredicate_notContaining //  TextP.notContaining
     ;
 
 nestedTraversal
@@ -452,6 +465,14 @@ traversalPredicate_within
 
 traversalPredicate_without
     : ('P.without' | 'without') LPAREN genericLiteralList RPAREN
+    ;
+
+traversalPredicate_containing
+    : ('TextP.containing' | 'containing') LPAREN stringLiteral RPAREN
+    ;
+
+traversalPredicate_notContaining
+    : ('TextP.notContaining' | 'notContaining') LPAREN stringLiteral RPAREN
     ;
 
 // incr and decr is unsupported in 3.5.1

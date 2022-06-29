@@ -29,7 +29,8 @@ mod test {
     use pegasus_server::JobRequest;
 
     use crate::common::test::{
-        initialize, parse_result, query_params, submit_query, TAG_A, TAG_B, TAG_C, TAG_D,
+        default_sink_target, initialize, parse_result, query_params, submit_query, TAG_A, TAG_B, TAG_C,
+        TAG_D,
     };
 
     // g.V().hasLabel("person").match(
@@ -99,7 +100,7 @@ mod test {
                 common_pb::NameOrIdKey { key: Some(TAG_B.into()) },
                 common_pb::NameOrIdKey { key: Some(TAG_C.into()) },
             ],
-            id_name_mappings: vec![],
+            sink_target: default_sink_target(),
         };
 
         let mut plan = LogicalPlan::default();
@@ -184,7 +185,7 @@ mod test {
                 common_pb::NameOrIdKey { key: Some(TAG_C.into()) },
                 common_pb::NameOrIdKey { key: Some(TAG_D.into()) },
             ],
-            id_name_mappings: vec![],
+            sink_target: default_sink_target(),
         };
 
         let mut plan = LogicalPlan::default();
@@ -217,15 +218,15 @@ mod test {
                 Ok(res) => {
                     let entry = parse_result(res).unwrap();
                     let a = entry
-                        .get(Some(&TAG_A.into()))
+                        .get(Some(TAG_A))
                         .unwrap()
                         .as_graph_vertex();
                     let b = entry
-                        .get(Some(&TAG_B.into()))
+                        .get(Some(TAG_B))
                         .unwrap()
                         .as_graph_vertex();
                     let c = entry
-                        .get(Some(&TAG_C.into()))
+                        .get(Some(TAG_C))
                         .unwrap()
                         .as_graph_vertex();
                     result_collection.push((a.unwrap().id(), b.unwrap().id(), c.unwrap().id()));
@@ -257,19 +258,19 @@ mod test {
                 Ok(res) => {
                     let entry = parse_result(res).unwrap();
                     let a = entry
-                        .get(Some(&TAG_A.into()))
+                        .get(Some(TAG_A))
                         .unwrap()
                         .as_graph_vertex();
                     let b = entry
-                        .get(Some(&TAG_B.into()))
+                        .get(Some(TAG_B))
                         .unwrap()
                         .as_graph_vertex();
                     let c = entry
-                        .get(Some(&TAG_C.into()))
+                        .get(Some(TAG_C))
                         .unwrap()
                         .as_graph_vertex();
                     let d = entry
-                        .get(Some(&TAG_D.into()))
+                        .get(Some(TAG_D))
                         .unwrap()
                         .as_graph_vertex();
                     result_collection.push((

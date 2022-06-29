@@ -22,6 +22,7 @@ option java_multiple_files = true;
 
 service StoreIngest {
   rpc storeIngest(StoreIngestRequest) returns(StoreIngestResponse);
+  rpc storeClearIngest(StoreClearIngestRequest) returns(StoreClearIngestResponse);
 }
 
 message StoreIngestRequest {
@@ -30,4 +31,12 @@ message StoreIngestRequest {
 
 message StoreIngestResponse {
 
+}
+
+message StoreClearIngestRequest {
+
+}
+
+message StoreClearIngestResponse {
+  
 }

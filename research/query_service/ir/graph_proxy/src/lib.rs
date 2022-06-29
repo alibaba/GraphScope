@@ -18,9 +18,10 @@ extern crate log;
 #[macro_use]
 extern crate lazy_static;
 pub use adapters::{
-    create_exp_store, create_gs_store, GrootMultiPartition, SimplePartition, VineyardMultiPartition,
+    create_exp_store, create_gs_store, GrootMultiPartition, SimplePartition, VineyardGraphWriter,
+    VineyardMultiPartition,
 };
-pub use errors::GraphProxyError;
+pub use errors::{GraphProxyError, GraphProxyResult};
 
 pub mod adapters;
 pub mod apis;

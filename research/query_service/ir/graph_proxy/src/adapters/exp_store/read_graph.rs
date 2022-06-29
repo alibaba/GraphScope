@@ -19,10 +19,10 @@ use std::path::Path;
 use std::sync::atomic::{AtomicPtr, Ordering};
 use std::sync::Arc;
 
-use dyn_type::{object, BorrowObject, Object};
+use dyn_type::{object, Object};
 use graph_store::common::LabelId;
 use graph_store::config::{JsonConf, DIR_GRAPH_SCHEMA, FILE_SCHEMA};
-use graph_store::ldbc::LDBCVertexParser;
+use graph_store::ldbc::{LDBCVertexParser, LABEL_SHIFT_BITS};
 use graph_store::prelude::{
     DefaultId, EdgeId, GlobalStoreTrait, GlobalStoreUpdate, GraphDBConfig, InternalId, LDBCGraphSchema,
     LargeGraphDB, LocalEdge, LocalVertex, MutableGraphDB, Row, INVALID_LABEL_ID,
@@ -32,12 +32,14 @@ use pegasus::configure_with_default;
 use pegasus_common::downcast::*;
 use pegasus_common::impl_as_any;
 
+use crate::apis::graph::PKV;
 use crate::apis::{
-    from_fn, register_graph, DefaultDetails, Details, Direction, DynDetails, Edge, QueryParams, ReadGraph,
+    from_fn, register_graph, Details, Direction, DynDetails, Edge, PropertyValue, QueryParams, ReadGraph,
     Statement, Vertex, ID,
 };
 use crate::errors::{GraphProxyError, GraphProxyResult};
 use crate::{filter_limit, limit_n};
+const EXP_STORE_PK: KeyId = 0;
 
 lazy_static! {
     pub static ref DATA_PATH: String = configure_with_default!(String, "DATA_PATH", "".to_string());
@@ -243,7 +245,7 @@ impl ReadGraph for ExpStore {
     }
 
     fn index_scan_vertex(
-        &self, _label: &NameOrId, _primary_key_values: &Vec<(NameOrId, Object)>, _params: &QueryParams,
+        &self, _label: &NameOrId, _primary_key: &PKV, _params: &QueryParams,
     ) -> GraphProxyResult<Option<Vertex>> {
         Err(GraphProxyError::query_store_error(
             "Experiment storage does not support index_scan_vertex for now",
@@ -254,10 +256,11 @@ impl ReadGraph for ExpStore {
         if params.partitions.is_some() {
             let label_ids = encode_storage_edge_label(&params.labels);
             let store = self.store;
+            let props = params.columns.clone();
             let result = self
                 .store
                 .get_all_edges(label_ids.as_ref())
-                .map(move |e| to_runtime_edge(e, store));
+                .map(move |e| to_runtime_edge(e, store, props.clone()));
 
             Ok(filter_limit!(result, params.filter, params.limit))
         } else {
@@ -285,7 +288,7 @@ impl ReadGraph for ExpStore {
         for id in ids {
             let eid = encode_store_e_id(id);
             if let Some(local_edge) = self.store.get_edge(eid) {
-                let e = to_runtime_edge(local_edge, self.store);
+                let e = to_runtime_edge(local_edge, self.store, params.columns.clone());
                 result.push(e);
             }
         }
@@ -319,16 +322,25 @@ impl ReadGraph for ExpStore {
         let filter = params.filter.clone();
         let limit = params.limit.clone();
         let graph = self.store;
+        let props = params.columns.clone();
+
         let stmt = from_fn(move |v: ID| {
+            let props = props.clone();
             let iter = match direction {
                 Direction::Out => graph.get_out_edges(v as DefaultId, edge_label_ids.as_ref()),
                 Direction::In => graph.get_in_edges(v as DefaultId, edge_label_ids.as_ref()),
                 Direction::Both => graph.get_both_edges(v as DefaultId, edge_label_ids.as_ref()),
             }
-            .map(move |e| to_runtime_edge(e, graph));
+            .map(move |e| to_runtime_edge(e, graph, props.clone()));
             Ok(filter_limit!(iter, filter, limit))
         });
         Ok(stmt)
+    }
+
+    fn get_primary_key(&self, id: &ID) -> GraphProxyResult<Option<PKV>> {
+        let outer_id = (*id << LABEL_SHIFT_BITS) >> LABEL_SHIFT_BITS;
+        let pk_val = Object::from(outer_id);
+        Ok(Some((EXP_STORE_PK.into(), pk_val).into()))
     }
 }
 
@@ -351,26 +363,31 @@ fn to_runtime_vertex(
 
 #[inline]
 fn to_runtime_edge(
-    e: LocalEdge<DefaultId, InternalId>, _store: &'static LargeGraphDB<DefaultId, InternalId>,
+    e: LocalEdge<DefaultId, InternalId>, store: &'static LargeGraphDB<DefaultId, InternalId>,
+    prop_keys: Option<Vec<NameOrId>>,
 ) -> Edge {
     let id = encode_runtime_e_id(&e);
     let label = encode_runtime_e_label(&e);
-    let mut properties = HashMap::new();
-    // TODO: For edges, we clone all properties by default for now. But we'd better get properties on demand
-    if let Some(mut prop_vals) = e.clone_all_properties() {
-        for (prop, obj) in prop_vals.drain() {
-            properties.insert(prop.into(), obj as Object);
-        }
-    }
+    let details = LazyEdgeDetails::new(e.get_edge_id(), prop_keys, store);
+    let src_id = e.get_src_id();
+    let dst_id = e.get_dst_id();
+    let store_src_label: LabelId = (src_id >> LABEL_SHIFT_BITS) as LabelId;
+    let store_dst_label: LabelId = (dst_id >> LABEL_SHIFT_BITS) as LabelId;
+    let src_label = encode_runtime_label(store_src_label);
+    let dst_label = encode_runtime_label(store_dst_label);
 
-    Edge::with_from_src(
+    let mut e = Edge::with_from_src(
         id,
         Some(label),
-        e.get_src_id() as ID,
-        e.get_dst_id() as ID,
+        src_id as ID,
+        dst_id as ID,
         e.is_from_start(),
-        DynDetails::new(DefaultDetails::new(properties)),
-    )
+        DynDetails::new(details),
+    );
+
+    e.set_src_label(Some(src_label));
+    e.set_dst_label(Some(dst_label));
+    e
 }
 
 /// LazyVertexDetails is used for local property fetching optimization.
@@ -378,7 +395,8 @@ fn to_runtime_edge(
 #[allow(dead_code)]
 struct LazyVertexDetails {
     pub id: DefaultId,
-    // prop_keys specify the properties we query for,
+    // prop_keys specify the properties we would save for later queries after shuffle,
+    // excluding the ones used only when local property fetching.
     // Specifically, Some(vec![]) indicates we need all properties
     // and None indicates we do not need any property,
     prop_keys: Option<Vec<NameOrId>>,
@@ -395,42 +413,57 @@ impl LazyVertexDetails {
     ) -> Self {
         LazyVertexDetails { id, prop_keys, inner: AtomicPtr::default(), store }
     }
+
+    fn get_vertex_ptr(&self) -> Option<*mut LocalVertex<'static, DefaultId>> {
+        let mut ptr = self.inner.load(Ordering::SeqCst);
+        if ptr.is_null() {
+            if let Some(v) = self.store.get_vertex(self.id) {
+                let v = Box::new(v);
+                let new_ptr = Box::into_raw(v);
+                let swapped = self.inner.swap(new_ptr, Ordering::SeqCst);
+                if swapped.is_null() {
+                    ptr = new_ptr;
+                } else {
+                    unsafe {
+                        std::ptr::drop_in_place(new_ptr);
+                    }
+                    ptr = swapped
+                };
+                Some(ptr)
+            } else {
+                info!("Have not found vertex {:?} in exp_store", self.id);
+                None
+            }
+        } else {
+            Some(ptr)
+        }
+    }
 }
 
 impl fmt::Debug for LazyVertexDetails {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("LazyVertexDetails")
             .field("id", &self.id)
+            .field("properties", &self.prop_keys)
             .field("inner", &self.inner)
             .finish()
     }
 }
 
 impl Details for LazyVertexDetails {
-    fn get_property(&self, key: &NameOrId) -> Option<BorrowObject> {
+    fn get_property(&self, key: &NameOrId) -> Option<PropertyValue> {
         if let NameOrId::Str(key) = key {
-            let mut ptr = self.inner.load(Ordering::SeqCst);
-            if ptr.is_null() {
-                if let Some(v) = self.store.get_vertex(self.id) {
-                    let v = Box::new(v);
-                    let new_ptr = Box::into_raw(v);
-                    let swapped = self.inner.swap(new_ptr, Ordering::SeqCst);
-                    if swapped.is_null() {
-                        ptr = new_ptr;
-                    } else {
-                        unsafe {
-                            std::ptr::drop_in_place(new_ptr);
-                        }
-                        ptr = swapped
-                    };
-                } else {
-                    return None;
+            if let Some(ptr) = self.get_vertex_ptr() {
+                unsafe {
+                    (*ptr)
+                        .get_property(key)
+                        .map(|prop| PropertyValue::Borrowed(prop))
                 }
+            } else {
+                None
             }
-
-            unsafe { (*ptr).get_property(key) }
         } else {
-            info!("Have not support getting property by prop_id in experiments store yet");
+            info!("Have not support getting property by prop_id in exp_store yet");
             None
         }
     }
@@ -440,33 +473,19 @@ impl Details for LazyVertexDetails {
         if let Some(prop_keys) = self.prop_keys.as_ref() {
             // the case of get_all_properties from vertex;
             if prop_keys.is_empty() {
-                let mut ptr = self.inner.load(Ordering::SeqCst);
-                if ptr.is_null() {
-                    if let Some(v) = self.store.get_vertex(self.id) {
-                        let v = Box::new(v);
-                        let new_ptr = Box::into_raw(v);
-                        let swapped = self.inner.swap(new_ptr, Ordering::SeqCst);
-                        if swapped.is_null() {
-                            ptr = new_ptr;
+                if let Some(ptr) = self.get_vertex_ptr() {
+                    unsafe {
+                        if let Some(prop_key_vals) = (*ptr).clone_all_properties() {
+                            all_props = prop_key_vals
+                                .into_iter()
+                                .map(|(prop_key, prop_val)| (prop_key.into(), prop_val as Object))
+                                .collect();
                         } else {
-                            unsafe {
-                                std::ptr::drop_in_place(new_ptr);
-                            }
-                            ptr = swapped
-                        };
-                    } else {
-                        return None;
+                            return None;
+                        }
                     }
-                }
-                unsafe {
-                    if let Some(prop_key_vals) = (*ptr).clone_all_properties() {
-                        all_props = prop_key_vals
-                            .into_iter()
-                            .map(|(prop_key, prop_val)| (prop_key.into(), prop_val as Object))
-                            .collect();
-                    } else {
-                        return None;
-                    }
+                } else {
+                    return None;
                 }
             } else {
                 // the case of get_all_properties with prop_keys pre-specified
@@ -481,9 +500,151 @@ impl Details for LazyVertexDetails {
         }
         Some(all_props)
     }
+
+    fn insert_property(&mut self, key: NameOrId, _value: Object) -> Option<Object> {
+        if let Some(prop_keys) = self.prop_keys.as_mut() {
+            prop_keys.push(key);
+        } else {
+            self.prop_keys = Some(vec![key]);
+        }
+        None
+    }
 }
 
 impl Drop for LazyVertexDetails {
+    fn drop(&mut self) {
+        let ptr = self.inner.load(Ordering::SeqCst);
+        if !ptr.is_null() {
+            unsafe {
+                std::ptr::drop_in_place(ptr);
+            }
+        }
+    }
+}
+
+/// LazyEdgeDetails is used for local property fetching optimization.
+/// That is, the required properties will not be materialized until LazyEdgeDetails need to be shuffled.
+#[allow(dead_code)]
+struct LazyEdgeDetails {
+    pub eid: EdgeId<DefaultId>,
+    // prop_keys specify the properties we would save for later queries after shuffle,
+    // excluding the ones used only when local property fetching.
+    // Specifically, Some(vec![]) indicates we need all properties
+    // and None indicates we do not need any property,
+    prop_keys: Option<Vec<NameOrId>>,
+    inner: AtomicPtr<LocalEdge<'static, DefaultId, InternalId>>,
+    store: &'static LargeGraphDB<DefaultId, InternalId>,
+}
+
+impl_as_any!(LazyEdgeDetails);
+
+impl LazyEdgeDetails {
+    pub fn new(
+        eid: EdgeId<DefaultId>, prop_keys: Option<Vec<NameOrId>>,
+        store: &'static LargeGraphDB<DefaultId, InternalId>,
+    ) -> Self {
+        LazyEdgeDetails { eid, prop_keys, inner: AtomicPtr::default(), store }
+    }
+
+    fn get_edge_ptr(&self) -> Option<*mut LocalEdge<'static, DefaultId, InternalId>> {
+        let mut ptr = self.inner.load(Ordering::SeqCst);
+        if ptr.is_null() {
+            if let Some(e) = self.store.get_edge(self.eid) {
+                let e = Box::new(e);
+                let new_ptr = Box::into_raw(e);
+                let swapped = self.inner.swap(new_ptr, Ordering::SeqCst);
+                if swapped.is_null() {
+                    ptr = new_ptr;
+                } else {
+                    unsafe {
+                        std::ptr::drop_in_place(new_ptr);
+                    }
+                    ptr = swapped
+                };
+                Some(ptr)
+            } else {
+                info!("Have not found edge {:?} in exp_store", self.eid);
+                None
+            }
+        } else {
+            Some(ptr)
+        }
+    }
+}
+
+impl fmt::Debug for LazyEdgeDetails {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("LazyEdgeDetails")
+            .field("eid", &self.eid)
+            .field("inner", &self.inner)
+            .finish()
+    }
+}
+
+impl Details for LazyEdgeDetails {
+    fn get_property(&self, key: &NameOrId) -> Option<PropertyValue> {
+        if let NameOrId::Str(key) = key {
+            let ptr = self.get_edge_ptr();
+            if let Some(ptr) = ptr {
+                unsafe {
+                    (*ptr)
+                        .get_property(key)
+                        .map(|prop| PropertyValue::Borrowed(prop))
+                }
+            } else {
+                None
+            }
+        } else {
+            info!("Have not support getting property by prop_id in experiments store yet");
+            None
+        }
+    }
+
+    fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {
+        let mut all_props = HashMap::new();
+        if let Some(prop_keys) = self.prop_keys.as_ref() {
+            // the case of get_all_properties from vertex;
+            if prop_keys.is_empty() {
+                let ptr = self.get_edge_ptr();
+                if let Some(ptr) = ptr {
+                    unsafe {
+                        if let Some(prop_key_vals) = (*ptr).clone_all_properties() {
+                            all_props = prop_key_vals
+                                .into_iter()
+                                .map(|(prop_key, prop_val)| (prop_key.into(), prop_val as Object))
+                                .collect();
+                        } else {
+                            return None;
+                        }
+                    }
+                } else {
+                    return None;
+                }
+            } else {
+                // the case of get_all_properties with prop_keys pre-specified
+                for key in prop_keys.iter() {
+                    if let Some(prop) = self.get_property(&key) {
+                        all_props.insert(key.clone(), prop.try_to_owned().unwrap());
+                    } else {
+                        all_props.insert(key.clone(), Object::None);
+                    }
+                }
+            }
+        }
+        Some(all_props)
+    }
+
+    fn insert_property(&mut self, key: NameOrId, _value: Object) -> Option<Object> {
+        if let Some(prop_keys) = self.prop_keys.as_mut() {
+            prop_keys.push(key);
+        } else {
+            self.prop_keys = Some(vec![key]);
+        }
+        None
+    }
+}
+
+impl Drop for LazyEdgeDetails {
     fn drop(&mut self) {
         let ptr = self.inner.load(Ordering::SeqCst);
         if !ptr.is_null() {
@@ -505,12 +666,16 @@ pub fn encode_store_e_id(e: &ID) -> EdgeId<DefaultId> {
     (0, *e as usize)
 }
 
+fn encode_runtime_label(l: LabelId) -> NameOrId {
+    NameOrId::Id(l as KeyId)
+}
+
 fn encode_runtime_v_label(v: &LocalVertex<DefaultId>) -> NameOrId {
-    NameOrId::Id(v.get_label()[0] as KeyId)
+    encode_runtime_label(v.get_label()[0])
 }
 
 fn encode_runtime_e_label(e: &LocalEdge<DefaultId, InternalId>) -> NameOrId {
-    NameOrId::Id(e.get_label() as KeyId)
+    encode_runtime_label(e.get_label())
 }
 
 /// Transform string-typed labels into a id-typed labels.
@@ -552,7 +717,8 @@ fn encode_storage_edge_label(labels: &Vec<NameOrId>) -> Option<Vec<LabelId>> {
 
 #[cfg(test)]
 mod tests {
-    use graph_store::ldbc::LDBCVertexParser;
+    use graph_store::common::LabelId;
+    use graph_store::ldbc::{LDBCVertexParser, LABEL_SHIFT_BITS};
     use graph_store::prelude::{DefaultId, GlobalStoreTrait};
 
     use super::GRAPH;
@@ -566,5 +732,17 @@ mod tests {
         let out_iter = GRAPH.get_out_vertices(v1, Some(&vec![0]));
         let out: Vec<DefaultId> = out_iter.map(|v| v.get_id()).collect();
         assert_eq!(out, vec![v4, v2]);
+    }
+
+    #[test]
+    fn label_test() {
+        let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
+        let v2: DefaultId = LDBCVertexParser::to_global_id(2, 1);
+
+        let v1_label: LabelId = (v1 >> LABEL_SHIFT_BITS) as LabelId;
+        let v2_label: LabelId = (v2 >> LABEL_SHIFT_BITS) as LabelId;
+
+        assert_eq!(v1_label, 0);
+        assert_eq!(v2_label, 1);
     }
 }

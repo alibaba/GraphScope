@@ -25,6 +25,8 @@ import com.alibaba.graphscope.common.intermediate.InterOpCollection;
 import com.alibaba.graphscope.common.intermediate.MatchSentence;
 import com.alibaba.graphscope.common.intermediate.operator.*;
 import com.alibaba.graphscope.common.intermediate.process.SinkArg;
+import com.alibaba.graphscope.common.intermediate.process.SinkByColumns;
+import com.alibaba.graphscope.common.intermediate.process.SinkGraph;
 import com.alibaba.graphscope.common.jna.IrCoreLibrary;
 import com.alibaba.graphscope.common.jna.type.*;
 import com.alibaba.graphscope.common.store.IrMeta;
@@ -46,9 +48,12 @@ import java.util.function.Function;
 // represent ir plan as a chain of operators
 public class IrPlan implements Closeable {
     private static IrCoreLibrary irCoreLib = IrCoreLibrary.INSTANCE;
-    private static String PLAN_JSON_FILE = "plan.json";
+    // get tmp directory from system properties, which is accessible from common users
+    private static String JSON_PLAN_DIR = System.getProperty("java.io.tmpdir");
     private Pointer ptrPlan;
     private IrMeta meta;
+    // to identify a unique json file which contains the logic plan from ir_core
+    private String planName;
 
     // call libc to transform from InterOpBase to c structure
     private enum TransformFactory implements Function<InterOpBase, Pointer> {
@@ -320,22 +325,32 @@ public class IrPlan implements Closeable {
                             baseOp.getClass(), "sinkArg", "not present");
                 }
                 SinkArg sinkArg = (SinkArg) argOpt.get().applyArg();
-                List<FfiNameOrId.ByValue> columns = sinkArg.getColumnNames();
-                if (columns.isEmpty()) {
+                Pointer ptrSink;
+                if (sinkArg instanceof SinkByColumns) {
+                    ptrSink = irCoreLib.initSinkOperator();
+                    List<FfiNameOrId.ByValue> columns = ((SinkByColumns) sinkArg).getColumnNames();
+                    if (columns.isEmpty()) {
+                        throw new InterOpIllegalArgException(
+                                baseOp.getClass(), "selected columns", "is empty");
+                    }
+
+                    columns.forEach(
+                            column -> {
+                                FfiError error = irCoreLib.addSinkColumn(ptrSink, column);
+                                if (error.code != ResultCode.Success) {
+                                    throw new InterOpIllegalArgException(
+                                            baseOp.getClass(),
+                                            "columns",
+                                            "addSinkColumn returns " + error.msg);
+                                }
+                            });
+                } else if (sinkArg instanceof SinkGraph) {
+                    String graphName = ((SinkGraph) sinkArg).getConfig(SinkGraph.GRAPH_NAME);
+                    ptrSink = irCoreLib.initSinkGraphOperator(graphName);
+                } else {
                     throw new InterOpIllegalArgException(
-                            baseOp.getClass(), "selected columns", "is empty");
+                            baseOp.getClass(), "sink", "target is invalid");
                 }
-                Pointer ptrSink = irCoreLib.initSinkOperator();
-                columns.forEach(
-                        column -> {
-                            FfiError error = irCoreLib.addSinkColumn(ptrSink, column);
-                            if (error.code != ResultCode.Success) {
-                                throw new InterOpIllegalArgException(
-                                        baseOp.getClass(),
-                                        "columns",
-                                        "addSinkColumn returns " + error.msg);
-                            }
-                        });
                 return ptrSink;
             }
         },
@@ -469,6 +484,9 @@ public class IrPlan implements Closeable {
                                                 } else if (Utils.equalClass(o, GetVOp.class)) {
                                                     binder = GETV_OP.apply(o);
                                                     opt = FfiBinderOpt.Vertex;
+                                                } else if (Utils.equalClass(o, SelectOp.class)) {
+                                                    binder = SELECT_OP.apply(o);
+                                                    opt = FfiBinderOpt.Select;
                                                 } else {
                                                     throw new InterOpIllegalArgException(
                                                             baseOp.getClass(),
@@ -488,6 +506,17 @@ public class IrPlan implements Closeable {
                             baseOp.getClass(), "match", "the query given alias is unsupported");
                 }
                 return ptrMatch;
+            }
+        },
+        // to represent identity in gremlin
+        AS_NONE_OP {
+            public Pointer apply(InterOpBase baseOp) {
+                Pointer asPtr = irCoreLib.initAsOperator();
+                FfiError error = irCoreLib.setAsAlias(asPtr, ArgUtils.asFfiNoneAlias());
+                if (error != null && error.code != ResultCode.Success) {
+                    throw new AppendInterOpException(baseOp.getClass(), error.msg);
+                }
+                return asPtr;
             }
         };
 
@@ -538,12 +567,22 @@ public class IrPlan implements Closeable {
                                             "addParamsExtra returns " + error.msg);
                                 }
                             });
+            if (params.isAllColumns()) {
+                FfiError error = irCoreLib.setParamsIsAllColumns(ptrParams);
+                if (error.code != ResultCode.Success) {
+                    throw new InterOpIllegalArgException(
+                            InterOpBase.class,
+                            "setIsAll",
+                            "setParamsIsAllColumns returns " + error.msg);
+                }
+            }
             return ptrParams;
         }
     }
 
-    public IrPlan(IrMeta meta, InterOpCollection opCollection) {
+    public IrPlan(IrMeta meta, InterOpCollection opCollection, String planName) {
         this.meta = meta;
+        this.planName = planName;
         irCoreLib.setSchema(meta.getSchema());
         this.ptrPlan = irCoreLib.initLogicalPlan();
         // add snapshot to QueryParams
@@ -585,11 +624,12 @@ public class IrPlan implements Closeable {
     public String getPlanAsJson() throws IOException {
         String json = "";
         if (ptrPlan != null) {
-            File file = new File(PLAN_JSON_FILE);
+            String fileName = JSON_PLAN_DIR + File.separator + planName + ".json";
+            File file = new File(fileName);
             if (file.exists()) {
                 file.delete();
             }
-            irCoreLib.writePlanToJson(ptrPlan, PLAN_JSON_FILE);
+            irCoreLib.writePlanToJson(ptrPlan, fileName);
             json = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
             if (file.exists()) {
                 file.delete();
@@ -609,7 +649,9 @@ public class IrPlan implements Closeable {
     private Pair<Integer, Integer> appendInterOpCollection(
             int parentId, InterOpCollection opCollection) {
         int subTaskRootId = 0;
-        int unionParentId = 0;
+        // if opCollection is empty which means identity(), will return the id of the op before the
+        // union
+        int unionParentId = parentId;
         IntByReference oprId = new IntByReference(parentId);
         List<InterOpBase> opList = opCollection.unmodifiableCollection();
         for (int i = 0; i < opList.size(); ++i) {
@@ -675,7 +717,8 @@ public class IrPlan implements Closeable {
 
             Pointer ptrApply = TransformFactory.APPLY_OP.apply(base);
             error = irCoreLib.appendApplyOperator(ptrPlan, ptrApply, oprId.getValue(), oprId);
-        } else if (ClassUtils.equalClass(base, UnionOp.class)) {
+        } else if (ClassUtils.equalClass(base, UnionOp.class)
+                || ClassUtils.equalClass(base, SubGraphAsUnionOp.class)) {
             UnionOp unionOp = (UnionOp) base;
             Optional<OpArg> subOpsListOpt = unionOp.getSubOpCollectionList();
             if (!subOpsListOpt.isPresent()) {
@@ -699,6 +742,9 @@ public class IrPlan implements Closeable {
         } else if (ClassUtils.equalClass(base, MatchOp.class)) {
             Pointer ptrMatch = TransformFactory.MATCH_OP.apply(base);
             error = irCoreLib.appendPatternOperator(ptrPlan, ptrMatch, oprId.getValue(), oprId);
+        } else if (ClassUtils.equalClass(base, AsNoneOp.class)) {
+            Pointer ptrAs = TransformFactory.AS_NONE_OP.apply(base);
+            error = irCoreLib.appendAsOperator(ptrPlan, ptrAs, oprId.getValue(), oprId);
         } else {
             throw new InterOpUnsupportedException(base.getClass(), "unimplemented yet");
         }

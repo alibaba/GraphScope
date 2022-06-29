@@ -21,6 +21,9 @@ import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
 import com.alibaba.graphscope.common.store.IrMetaFetcher;
 import com.alibaba.graphscope.gremlin.Utils;
+import com.alibaba.graphscope.gremlin.auth.AuthManager;
+import com.alibaba.graphscope.gremlin.auth.AuthManagerReference;
+import com.alibaba.graphscope.gremlin.auth.DefaultAuthManager;
 import com.alibaba.graphscope.gremlin.integration.processor.IrTestOpProcessor;
 import com.alibaba.graphscope.gremlin.integration.result.GraphProperties;
 import com.alibaba.graphscope.gremlin.plugin.processor.IrOpLoader;
@@ -78,6 +81,9 @@ public class IrGremlinServer implements AutoCloseable {
                 new IrTestOpProcessor(
                         configs, irMetaFetcher, fetcher, metaQueryCallback, graph, g, testGraph);
         IrOpLoader.addProcessor(testProcessor.getName(), testProcessor);
+
+        AuthManager authManager = new DefaultAuthManager(configs);
+        AuthManagerReference.setAuthManager(authManager);
 
         this.gremlinServer = new GremlinServer(settings);
 

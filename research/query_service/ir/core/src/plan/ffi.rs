@@ -64,7 +64,7 @@ use pegasus_client::builder::JobBuilder;
 use prost::Message;
 
 use crate::error::IrError;
-use crate::plan::logical::LogicalPlan;
+use crate::plan::logical::{LogicalPlan, NodeId};
 use crate::plan::meta::{set_schema_from_json, KeyType};
 use crate::plan::physical::AsPhysical;
 use crate::JsonIO;
@@ -675,16 +675,7 @@ pub extern "C" fn get_key_name(key_id: i32, key_type: FfiKeyType) -> FfiKeyResul
 /// We have provided  the [`destroy_logical_plan`] api for deallocating the pointer of the logical plan.
 #[no_mangle]
 pub extern "C" fn init_logical_plan() -> *const c_void {
-    use super::meta::STORE_META;
-    let mut plan = Box::new(LogicalPlan::default());
-    if let Ok(meta) = STORE_META.read() {
-        if let Some(schema) = &meta.schema {
-            plan.meta = plan
-                .meta
-                .with_store_conf(schema.is_table_id(), schema.is_column_id())
-                .with_tag_id();
-        }
-    }
+    let plan = Box::new(LogicalPlan::default());
     Box::into_raw(plan) as *const c_void
 }
 
@@ -754,7 +745,7 @@ fn append_operator(
         operator,
         parent_ids
             .into_iter()
-            .filter_map(|x| if x >= 0 { Some(x as u32) } else { None })
+            .filter_map(|x| if x >= 0 { Some(x as NodeId) } else { None })
             .collect(),
     );
     if result.is_err() {
@@ -1704,10 +1695,34 @@ mod as_opr {
 mod sink {
     use super::*;
 
-    /// To initialize an Sink operator
+    /// To initialize an Sink operator with target of SinkDefault (i.e., sink to client)
     #[no_mangle]
     pub extern "C" fn init_sink_operator() -> *const c_void {
-        let sink_opr = Box::new(pb::Sink { tags: vec![], id_name_mappings: vec![] });
+        let sink_opr = Box::new(pb::Sink {
+            tags: vec![],
+            sink_target: Some(pb::sink::SinkTarget {
+                inner: Some(pb::sink::sink_target::Inner::SinkDefault(pb::SinkDefault {
+                    id_name_mappings: vec![],
+                })),
+            }),
+        });
+        Box::into_raw(sink_opr) as *const c_void
+    }
+
+    /// To initialize an Sink operator with target of a Graph (now it is Vineyard as a default option)
+    #[no_mangle]
+    pub extern "C" fn init_sink_graph_operator(graph_name: *const c_char) -> *const c_void {
+        let graph_name = cstr_to_string(graph_name).expect("C String to Rust String error!");
+        let sink_opr = Box::new(pb::Sink {
+            // sink head by default
+            tags: vec![common_pb::NameOrIdKey { key: None }],
+            sink_target: Some(pb::sink::SinkTarget {
+                inner: Some(pb::sink::sink_target::Inner::SinkVineyard(pb::SinkVineyard {
+                    graph_name,
+                    graph_schema: None,
+                })),
+            }),
+        });
         Box::into_raw(sink_opr) as *const c_void
     }
 
@@ -1822,6 +1837,7 @@ mod graph {
         Start = 0,
         End = 1,
         Other = 2,
+        Both = 3,
     }
 
     /// To initialize an expansion base
@@ -1996,6 +2012,7 @@ mod graph {
         Edge = 0,
         Path = 1,
         Vertex = 2,
+        Select = 3,
     }
 
     #[no_mangle]
@@ -2020,6 +2037,12 @@ mod graph {
                 let getv = unsafe { Box::from_raw(ptr as *mut pb::GetV) };
                 sentence.binders.push(pb::pattern::Binder {
                     item: Some(pb::pattern::binder::Item::Vertex(getv.as_ref().clone())),
+                });
+            }
+            FfiBinderOpt::Select => {
+                let select = unsafe { Box::from_raw(ptr as *mut pb::Select) };
+                sentence.binders.push(pb::pattern::Binder {
+                    item: Some(pb::pattern::binder::Item::Select(select.as_ref().clone())),
                 });
             }
         }

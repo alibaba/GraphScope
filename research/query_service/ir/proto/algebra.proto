@@ -21,6 +21,7 @@ option java_outer_classname = "GraphAlgebra";
 
 import "common.proto";
 import "expr.proto";
+import "schema.proto";
 
 // To project a relation on certain attributes or further their properties
 message Project {
@@ -221,6 +222,8 @@ message GetV {
     End = 1;
     // Getting the other vertex of the edge. We are calibrating to Gremlin's bothE.otherV semantics
     Other = 2;
+    // Getting both vertices of the edge
+    Both = 3;
   }
   // The tag that refers to the edge/path where the end vertex will be retrieved
   common.NameOrId tag = 1;
@@ -238,17 +241,20 @@ message As {
   common.NameOrId alias = 1;
 }
 
-// An operator that provides auxiliary functionalities given the current entity.
-// Note this operator is not aware to the logical plan, and will be used while processing into logical plan.
-// The functionalities include:
+// An operator that provides **auxiliary** functionalities for certain entity (as tagged). Functionalities include:
 // * To get certain properties/columns from the entity
 // * To filter out the entity based on the data
 // * To re-name the entity with other alias
+//
+// Note this operator is invisible the logical plan, and will only be used by the translator/optimizer
+// when processing the logical plan into the physical plan.
 message Auxilia {
+  // The tag refers to the entity upon which this operator is applied
+  common.NameOrId tag = 1;
   // The details (columns/properties) to be retrieved
-  QueryParams params = 1;
+  QueryParams params = 2;
   // The alias to give if any, which is especially helpful when the entity now refers to the head of the record
-  common.NameOrId alias = 2;
+  common.NameOrId alias = 3;
 }
 
 message EdgeExpand {
@@ -353,6 +359,7 @@ message Pattern {
       EdgeExpand edge = 1;
       PathExpand path = 2;
       GetV vertex = 3;
+      Select select = 4;
     }
   }
   // A sentence defines a match
@@ -367,21 +374,37 @@ message Pattern {
 }
 
 message Sink {
+  message SinkTarget {
+    oneof inner {
+      SinkDefault sink_default = 1;
+      SinkVineyard sink_vineyard = 2;
+    }
+  }
+  // Define the tags of columns to sink
+  repeated common.NameOrIdKey tags = 1;
+  // Define the target of sink, e.g., to Client as default, to Graph such as Vineyard etc.
+  SinkTarget sink_target = 2;
+}
+
+message SinkDefault {
   enum MetaType {
-      ENTITY = 0;
-      RELATION = 1;
-      COLUMN = 2;
-      TAG = 3;
+    ENTITY = 0;
+    RELATION = 1;
+    COLUMN = 2;
+    TAG = 3;
   }
   message IdNameMapping {
     int32 id = 1;
     string name = 2;
     MetaType meta_type = 3;
   }
-  // Define the tags of columns to sink
-  repeated common.NameOrIdKey tags = 1;
   // The mapping of id to name given certain `MetaType`
-  repeated IdNameMapping id_name_mappings = 2;
+  repeated IdNameMapping id_name_mappings = 1;
+}
+
+message SinkVineyard {
+  string graph_name = 1;
+  schema.Schema graph_schema = 2;
 }
 
 // A logical plan of graph relation algebra forms a DAG, where each node is an operator and the

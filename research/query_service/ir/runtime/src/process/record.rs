@@ -130,8 +130,7 @@ impl Record {
         Record { curr: Some(entry), columns }
     }
 
-    // TODO: consider to maintain the record without any alias, which also needed to be stored;
-    // We may: 1. define a None type in NameOrId; or 2. define different Record types, for the gremlin path requirement
+    /// A handy api to append entry of different types that can be turned into `Entry`
     pub fn append<E: Into<Entry>>(&mut self, entry: E, alias: Option<KeyId>) {
         self.append_arc_entry(Arc::new(entry.into()), alias)
     }
@@ -143,48 +142,54 @@ impl Record {
         }
     }
 
-    pub fn get_curr_mut(&mut self) -> &mut Option<Arc<Entry>> {
-        self.curr.borrow_mut()
+    /// Set new current entry for the record
+    pub fn set_curr_entry(&mut self, entry: Option<Arc<Entry>>) {
+        self.curr = entry;
     }
 
     pub fn get_columns_mut(&mut self) -> &mut VecMap<Arc<Entry>> {
         self.columns.borrow_mut()
     }
 
-    pub fn get(&self, tag: Option<&KeyId>) -> Option<&Arc<Entry>> {
+    pub fn get(&self, tag: Option<KeyId>) -> Option<&Arc<Entry>> {
         if let Some(tag) = tag {
-            self.columns.get(*tag as usize)
+            self.columns.get(tag as usize)
         } else {
             self.curr.as_ref()
         }
     }
 
+    pub fn take(&mut self, tag: Option<&KeyId>) -> Option<Arc<Entry>> {
+        if let Some(tag) = tag {
+            self.columns.remove(*tag as usize)
+        } else {
+            self.curr.take()
+        }
+    }
+
     /// To join this record with `other` record. After the join, the columns
-    /// from both sides will be merged (and deduplicated). The head of the joined
-    /// record will be specified according to `HeadJoinOpt`.
-    pub fn join(mut self, mut other: Record, opt: Option<HeadJoinOpt>) -> Record {
+    /// from both sides will be merged (and deduplicated). The `curr` entry of the joined
+    /// record will be specified according to `is_left_opt`, namely, if
+    /// * `is_left_opt = None` -> set as `None`,
+    /// * `is_left_opt = Some(true)` -> set as left record,
+    /// * `is_left_opt = Some(false)` -> set as right record.
+    pub fn join(mut self, mut other: Record, is_left_opt: Option<bool>) -> Record {
         for column in other.columns.drain() {
             if !self.columns.contains_key(column.0) {
                 self.columns.insert(column.0, column.1);
             }
         }
 
-        self.curr = match opt {
-            None => None,
-            Some(HeadJoinOpt::Left) => self.curr,
-            Some(HeadJoinOpt::Right) => other.curr,
-        };
+        if let Some(is_left) = is_left_opt {
+            if !is_left {
+                self.curr = other.curr;
+            }
+        } else {
+            self.curr = None;
+        }
 
         self
     }
-}
-
-/// `HeadJoinOpt` specifies which head of the recores are to be applied for the joined record
-pub enum HeadJoinOpt {
-    /// Store the head as the head of the left record of the join
-    Left,
-    /// Store the head as the head of the right record of the join
-    Right,
 }
 
 impl Into<Entry> for Vertex {
@@ -238,7 +243,7 @@ impl Context<RecordElement> for Record {
             match tag {
                 // TODO: may better throw an unsupported error if tag is a string_tag
                 NameOrId::Str(_) => None,
-                NameOrId::Id(id) => Some(id),
+                NameOrId::Id(id) => Some(*id),
             }
         } else {
             None

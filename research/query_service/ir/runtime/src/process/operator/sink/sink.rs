@@ -21,7 +21,7 @@ use std::ops::Deref;
 use dyn_type::Object;
 use graph_proxy::apis::{Edge, GraphElement, GraphObject, GraphPath, Vertex, VertexOrEdge};
 use ir_common::generated::algebra as algebra_pb;
-use ir_common::generated::algebra::sink::MetaType;
+use ir_common::generated::algebra::sink_default::MetaType;
 use ir_common::generated::common as common_pb;
 use ir_common::generated::results as result_pb;
 use ir_common::{KeyId, NameOrId};
@@ -29,7 +29,7 @@ use pegasus::api::function::{FnResult, MapFunction};
 use prost::Message;
 
 use crate::error::FnGenResult;
-use crate::process::operator::sink::SinkFunctionGen;
+use crate::process::operator::sink::{SinkGen, Sinker};
 use crate::process::record::{CommonObject, Entry, Record, RecordElement};
 
 #[derive(Debug)]
@@ -203,7 +203,7 @@ impl MapFunction<Record, Vec<u8>> for RecordSinkEncoder {
     fn exec(&self, input: Record) -> FnResult<Vec<u8>> {
         let mut sink_columns = Vec::with_capacity(self.sink_keys.len());
         for sink_key in self.sink_keys.iter() {
-            if let Some(entry) = input.get(sink_key.as_ref()) {
+            if let Some(entry) = input.get(sink_key.clone()) {
                 let entry_pb = self.entry_to_pb(entry.deref());
                 let column_pb = result_pb::Column {
                     name_or_id: sink_key
@@ -221,8 +221,13 @@ impl MapFunction<Record, Vec<u8>> for RecordSinkEncoder {
     }
 }
 
-impl SinkFunctionGen for algebra_pb::Sink {
-    fn gen_sink(self) -> FnGenResult<Box<dyn MapFunction<Record, Vec<u8>>>> {
+pub struct DefaultSinkOp {
+    pub tags: Vec<common_pb::NameOrIdKey>,
+    pub id_name_mappings: Vec<algebra_pb::sink_default::IdNameMapping>,
+}
+
+impl SinkGen for DefaultSinkOp {
+    fn gen_sink(self) -> FnGenResult<Sinker> {
         let mut sink_keys = Vec::with_capacity(self.tags.len());
         for sink_key_pb in self.tags.into_iter() {
             let sink_key = sink_key_pb
@@ -242,6 +247,6 @@ impl SinkFunctionGen for algebra_pb::Sink {
             schema_map: if schema_map.is_empty() { None } else { Some(schema_map) },
         };
         debug!("Runtime sink operator: {:?}", record_sinker);
-        Ok(Box::new(record_sinker))
+        Ok(Sinker::DefaultSinker(record_sinker))
     }
 }

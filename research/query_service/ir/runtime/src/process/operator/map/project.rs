@@ -77,8 +77,7 @@ impl MapFunction<Record, Record> for ProjectOperator {
                     }
                 }
                 // set head as None when the last column is appended
-                let curr = input.get_curr_mut();
-                *curr = None;
+                input.set_curr_entry(None);
             }
 
             Ok(input)
@@ -212,9 +211,9 @@ mod tests {
 
         let mut object_result = vec![];
         while let Some(Ok(res)) = result.next() {
-            let a_entry = res.get(Some(&TAG_A.into()));
+            let a_entry = res.get(Some(TAG_A));
             assert_eq!(a_entry, None);
-            match res.get(Some(&TAG_B.into())).unwrap().as_ref() {
+            match res.get(Some(TAG_B)).unwrap().as_ref() {
                 Entry::Element(RecordElement::OffGraph(CommonObject::Prop(val))) => {
                     object_result.push(val.clone());
                 }
@@ -270,8 +269,8 @@ mod tests {
         while let Some(Ok(res)) = result.next() {
             // head should be None
             assert_eq!(res.get(None), None);
-            let age_val = res.get(Some(&TAG_B.into())).unwrap();
-            let name_val = res.get(Some(&TAG_C.into())).unwrap();
+            let age_val = res.get(Some(TAG_B)).unwrap();
+            let name_val = res.get(Some(TAG_C)).unwrap();
             match (age_val.as_ref(), name_val.as_ref()) {
                 (
                     Entry::Element(RecordElement::OffGraph(CommonObject::Prop(age))),
@@ -306,8 +305,8 @@ mod tests {
 
         let mut object_result = vec![];
         while let Some(Ok(res)) = result.next() {
-            let age_val = res.get(Some(&TAG_B.into())).unwrap();
-            let name_val = res.get(Some(&TAG_C.into())).unwrap();
+            let age_val = res.get(Some(TAG_B)).unwrap();
+            let name_val = res.get(Some(TAG_C)).unwrap();
             match (age_val.as_ref(), name_val.as_ref()) {
                 (
                     Entry::Element(RecordElement::OffGraph(CommonObject::Prop(age))),
@@ -362,9 +361,9 @@ mod tests {
 
         let mut object_result = vec![];
         while let Some(Ok(res)) = result.next() {
-            let a_age_val = res.get(Some(&TAG_C.into())).unwrap();
-            let a_name_val = res.get(Some(&TAG_D.into())).unwrap();
-            let b_name_val = res.get(Some(&TAG_E.into())).unwrap();
+            let a_age_val = res.get(Some(TAG_C)).unwrap();
+            let a_name_val = res.get(Some(TAG_D)).unwrap();
+            let b_name_val = res.get(Some(TAG_E)).unwrap();
             match (a_age_val.as_ref(), a_name_val.as_ref(), b_name_val.as_ref()) {
                 (
                     Entry::Element(RecordElement::OffGraph(CommonObject::Prop(a_age))),
@@ -398,11 +397,11 @@ mod tests {
         let mut b_results = vec![];
         while let Some(Ok(res)) = result.next() {
             let v = res
-                .get(Some(&TAG_A.into()))
+                .get(Some(TAG_A))
                 .unwrap()
                 .as_graph_vertex()
                 .unwrap();
-            let b_entry = res.get(Some(&TAG_B.into())).unwrap().as_ref();
+            let b_entry = res.get(Some(TAG_B)).unwrap().as_ref();
             match b_entry {
                 Entry::Element(RecordElement::OffGraph(CommonObject::Prop(val))) => {
                     a_results.push(v.id());
@@ -436,8 +435,8 @@ mod tests {
         let mut result = project_test(init_source(), project_opr_pb);
         let mut object_result = vec![];
         while let Some(Ok(res)) = result.next() {
-            let age_val = res.get(Some(&TAG_B.into())).unwrap();
-            let name_val = res.get(Some(&TAG_C.into())).unwrap();
+            let age_val = res.get(Some(TAG_B)).unwrap();
+            let name_val = res.get(Some(TAG_C)).unwrap();
             match (age_val.as_ref(), name_val.as_ref()) {
                 (
                     Entry::Element(RecordElement::OffGraph(CommonObject::Prop(age))),
@@ -615,8 +614,8 @@ mod tests {
         let mut result = project_test(init_source_with_multi_tags(), project_opr_pb);
         let mut results = vec![];
         while let Some(Ok(res)) = result.next() {
-            let a_entry = res.get(Some(&TAG_C.into())).unwrap().as_ref();
-            let b_entry = res.get(Some(&TAG_D.into())).unwrap().as_ref();
+            let a_entry = res.get(Some(TAG_C)).unwrap().as_ref();
+            let b_entry = res.get(Some(TAG_D)).unwrap().as_ref();
             let v1 = a_entry.as_graph_vertex().unwrap();
             let v2 = b_entry.as_graph_vertex().unwrap();
             results.push(v1.id());

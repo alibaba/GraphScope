@@ -19,6 +19,7 @@ import com.alibaba.maxgraph.compiler.api.schema.GraphElement;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
 import com.alibaba.maxgraph.sdkcommon.common.DataLoadTarget;
 import com.alibaba.maxgraph.sdkcommon.schema.GraphSchemaMapper;
+import com.alibaba.maxgraph.sdkcommon.util.UuidUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -121,7 +122,8 @@ public class OfflineBuild {
         LazyOutputFormat.setOutputFormatClass(job, SstOutputFormat.class);
         FileInputFormat.addInputPath(job, new Path(inputPath));
         FileInputFormat.setInputDirRecursive(job, true);
-        Path outputDir = new Path(outputPath);
+        String uniquePath = UuidUtils.getBase64UUIDString();
+        Path outputDir = new Path(outputPath, uniquePath);
         FileOutputFormat.setOutputPath(job, outputDir);
         if (!job.waitForCompletion(true)) {
             System.exit(1);
@@ -134,6 +136,7 @@ public class OfflineBuild {
         outputMeta.put("schema", schemaJson);
         outputMeta.put("mappings", mappings);
         outputMeta.put("datapath", dataPath);
+        outputMeta.put("unique_path", uniquePath);
 
         FSDataOutputStream os = fs.create(new Path(outputDir, "META"));
         os.writeUTF(objectMapper.writeValueAsString(outputMeta));
@@ -161,7 +164,7 @@ public class OfflineBuild {
                 }
                 tableToTarget.put(tableId, builder.build());
             }
-            client.commitDataLoad(tableToTarget);
+            client.commitDataLoad(tableToTarget, uniquePath);
         }
     }
 }

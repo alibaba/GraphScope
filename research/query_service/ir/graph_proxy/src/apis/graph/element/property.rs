@@ -101,9 +101,23 @@ impl Decode for PropKey {
     }
 }
 
+pub enum PropertyValue<'a> {
+    Borrowed(BorrowObject<'a>),
+    Owned(Object),
+}
+
+impl<'a> PropertyValue<'a> {
+    pub fn try_to_owned(&self) -> Option<Object> {
+        match self {
+            PropertyValue::Borrowed(borrowed_obj) => borrowed_obj.try_to_owned(),
+            PropertyValue::Owned(obj) => Some(obj.clone()),
+        }
+    }
+}
+
 pub trait Details: std::fmt::Debug + Send + Sync + AsAny {
     /// Get a property with given key
-    fn get_property(&self, key: &NameOrId) -> Option<BorrowObject>;
+    fn get_property(&self, key: &NameOrId) -> Option<PropertyValue>;
 
     /// get_all_properties returns all properties. None means that we failed in getting the properties.
     /// Specifically, it returns all properties of Vertex/Edge saved in RUNTIME rather than STORAGE.
@@ -113,6 +127,9 @@ pub trait Details: std::fmt::Debug + Send + Sync + AsAny {
     /// (2) if some prop_keys are provided when querying the vertex/edge which indicates that only these properties are necessary,
     /// then we can only get all pre-specified properties of the vertex/edge.
     fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>>;
+
+    /// Insert a property with given property key and value
+    fn insert_property(&mut self, key: NameOrId, value: Object) -> Option<Object>;
 }
 
 #[derive(Clone)]
@@ -129,12 +146,18 @@ impl DynDetails {
 impl_as_any!(DynDetails);
 
 impl Details for DynDetails {
-    fn get_property(&self, key: &NameOrId) -> Option<BorrowObject> {
+    fn get_property(&self, key: &NameOrId) -> Option<PropertyValue> {
         self.inner.get_property(key)
     }
 
     fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {
         self.inner.get_all_properties()
+    }
+
+    fn insert_property(&mut self, key: NameOrId, value: Object) -> Option<Object> {
+        Arc::get_mut(&mut self.inner)
+            .map(|e| e.insert_property(key, value))
+            .unwrap_or(None)
     }
 }
 
@@ -218,13 +241,19 @@ impl DerefMut for DefaultDetails {
 }
 
 impl Details for DefaultDetails {
-    fn get_property(&self, key: &NameOrId) -> Option<BorrowObject> {
-        self.inner.get(key).map(|o| o.as_borrow())
+    fn get_property(&self, key: &NameOrId) -> Option<PropertyValue> {
+        self.inner
+            .get(key)
+            .map(|o| PropertyValue::Borrowed(o.as_borrow()))
     }
 
     fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {
         // it's actually unreachable!()
         Some(self.inner.clone())
+    }
+
+    fn insert_property(&mut self, key: NameOrId, value: Object) -> Option<Object> {
+        self.inner.insert(key, value)
     }
 }
 

@@ -68,6 +68,7 @@
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpclient</artifactId>
+      <!--OSS SDK requires httpclient version to be 4.4.1, related links: https://www.alibabacloud.com/help/zh/object-storage-service/latest/java-faq?spm=a2c63.p38356.0.0.69a63c6bXPt34F-->
       <version>4.4.1</version>
     </dependency>
     <dependency>

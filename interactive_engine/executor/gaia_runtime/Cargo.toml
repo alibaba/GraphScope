@@ -24,7 +24,7 @@ log4rs = "0.8.0"
 maxgraph-common = { path = "../../rust-common" }
 maxgraph-store = { path = "../store" }
 maxgraph-server = { path = "../server" }
-maxgraph-runtime = { path = "../runtime" }
+maxgraph-runtime = { path = "../runtime", features = ["with_native"] }
 protobuf = { version = "~2.0", features = ["with-bytes"] }
 rand = "0.7.3"
 regex = "1"
@@ -43,9 +43,11 @@ gaia_pegasus = { path = "../../../research/engine/pegasus/pegasus", package = "p
 pegasus_network = { path = "../../../research/engine/pegasus/network" }
 pegasus_server = { path = "../../../research/engine/pegasus/server" }
 runtime_integration =  { path = "../../../research/query_service/ir/integrated" }
+v6d_ffi = { path = "../../../research/query_service/ir/v6d_ffi", features = ["with_v6d"] }
 
 [dev-dependencies]
 env_logger = "0.6"
 
 [build-dependencies]
 cmake = "0.1"
+

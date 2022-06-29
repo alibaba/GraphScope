@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.alibaba.graphscope.gremlin.integration.graph;
 
 import org.apache.tinkerpop.gremlin.driver.Cluster;
@@ -38,11 +39,11 @@ public class RemoteGremlinConnection implements RemoteConnection {
     public static Cluster createCluster(String endpoint) throws Exception {
         String[] split = endpoint.split(":");
         MessageSerializer serializer = new GryoMessageSerializerV1d0();
+        // authentication is unnecessary in tests
         Cluster cluster =
                 Cluster.build()
                         .addContactPoint(split[0])
                         .port(Integer.valueOf(split[1]))
-                        .credentials("admin", "admin")
                         .serializer(serializer)
                         .create();
         return cluster;

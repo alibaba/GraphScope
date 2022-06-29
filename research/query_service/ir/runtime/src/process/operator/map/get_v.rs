@@ -16,6 +16,7 @@
 use std::convert::TryInto;
 
 use graph_proxy::apis::{DefaultDetails, DynDetails, Vertex};
+use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::algebra::get_v::VOpt;
 use ir_common::KeyId;
@@ -35,13 +36,14 @@ struct GetVertexOperator {
 impl MapFunction<Record, Record> for GetVertexOperator {
     fn exec(&self, mut input: Record) -> FnResult<Record> {
         let entry = input
-            .get(self.start_tag.as_ref())
+            .get(self.start_tag)
             .ok_or(FnExecError::get_tag_error("get tag failed in GetVertexOperator"))?;
         if let Some(e) = entry.as_graph_edge() {
             let (id, label) = match self.opt {
                 VOpt::Start => (e.src_id, e.get_src_label()),
                 VOpt::End => (e.dst_id, e.get_dst_label()),
                 VOpt::Other => (e.get_other_id(), e.get_other_label()),
+                VOpt::Both => unreachable!(),
             };
             let vertex =
                 Vertex::new(id, label.map(|l| l.clone()), DynDetails::new(DefaultDetails::default()));
@@ -73,6 +75,9 @@ impl MapFuncGen for algebra_pb::GetV {
             .map(|name_or_id| name_or_id.try_into())
             .transpose()?;
         let opt: VOpt = unsafe { ::std::mem::transmute(self.opt) };
+        if let VOpt::Both = opt {
+            Err(ParsePbError::ParseError("GetV with VOpt::Both is not a map op".to_string()))?
+        }
         let alias = self
             .alias
             .map(|name_or_id| name_or_id.try_into())

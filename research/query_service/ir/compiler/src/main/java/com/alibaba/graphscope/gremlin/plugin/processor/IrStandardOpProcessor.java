@@ -292,14 +292,14 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         // add sink operator
         InterOpCollection.process(opCollection);
 
-        IrPlan irPlan = new IrPlan(irMeta, opCollection);
+        long jobId = JOB_ID_COUNTER.incrementAndGet();
+        String jobName = "ir_plan_" + jobId;
+
+        IrPlan irPlan = new IrPlan(irMeta, opCollection, jobName);
         logger.info("{}", irPlan.getPlanAsJson());
 
         byte[] physicalPlanBytes = irPlan.toPhysicalBytes(configs);
         irPlan.close();
-
-        long jobId = JOB_ID_COUNTER.incrementAndGet();
-        String jobName = "ir_plan_" + jobId;
 
         PegasusClient.JobRequest request = PegasusClient.JobRequest.parseFrom(physicalPlanBytes);
         PegasusClient.JobConfig jobConfig =

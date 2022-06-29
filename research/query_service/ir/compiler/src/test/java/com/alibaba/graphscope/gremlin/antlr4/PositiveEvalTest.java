@@ -22,6 +22,7 @@ import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversalSour
 
 import org.apache.tinkerpop.gremlin.process.traversal.Order;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
+import org.apache.tinkerpop.gremlin.process.traversal.TextP;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
@@ -870,5 +871,29 @@ public class PositiveEvalTest {
         Traversal traversal = ((IrCustomizedTraversal) (g1.V().out("1..5"))).endV();
         EdgeVertexStep endVStep = (EdgeVertexStep) traversal.asAdmin().getEndStep();
         Assert.assertEquals(Direction.IN, endVStep.getDirection());
+    }
+
+    @Test
+    public void g_E_bothV_test() {
+        Assert.assertEquals(g.E().bothV(), eval("g.E().bothV()"));
+    }
+
+    @Test
+    public void g_E_subgraph_test() {
+        Assert.assertEquals(g.E().subgraph("graph_X"), eval("g.E().subgraph(\"graph_X\")"));
+    }
+
+    @Test
+    public void g_V_has_containing_test() {
+        Assert.assertEquals(
+                g.V().has("name", TextP.containing("marko")),
+                g.V().has("name", TextP.containing("marko")));
+    }
+
+    @Test
+    public void g_V_has_notContaining_test() {
+        Assert.assertEquals(
+                g.V().has("name", TextP.notContaining("marko")),
+                g.V().has("name", TextP.notContaining("marko")));
     }
 }
