@@ -15,11 +15,6 @@
 
 extern crate cmake;
 
-use std::env;
-use std::path::Path;
-
-use cmake::Config;
-
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     codegen_inplace()
 }
@@ -29,14 +24,14 @@ const NATIVE_DIR: &'static str = "src/native";
 
 #[cfg(feature = "with_v6d")]
 fn codegen_inplace() -> Result<(), Box<dyn std::error::Error>> {
-    let dst = Config::new(NATIVE_DIR)
+    let dst = cmake::Config::new(NATIVE_DIR)
         .build_target("v6d_native_store")
         .build();
 
     println!("cargo:rustc-link-search=/usr/local/lib");
     println!("cargo:rustc-link-search=/usr/local/lib64");
     println!("cargo:rustc-link-search=/opt/homebrew/lib");
-    match env::var("VINEYARD_ROOT_DIR") {
+    match std::env::var("VINEYARD_ROOT_DIR") {
         Ok(val) => {
             println!("cargo:rustc-link-search={}/lib", val);
             println!("cargo:rustc-link-search={}/lib64", val);
@@ -56,9 +51,6 @@ fn codegen_inplace() -> Result<(), Box<dyn std::error::Error>> {
 
     if cfg!(target_os = "linux") {
         println!("cargo:rustc-link-lib=mpi_cxx");
-        if Path::new("/usr/ali/alicpp/built/gcc-4.9.2").exists() {
-            println!("cargo:cfg=tunnel");
-        }
     } else if cfg!(target_os = "macos") {
     } else {
         unimplemented!()

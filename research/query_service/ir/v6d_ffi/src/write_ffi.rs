@@ -1,6 +1,6 @@
 use crate::read_ffi::{
-    FFIState, FfiEdgeId as EdgeId, FfiLabelId as LabelId, FfiVertexId as VertexId, PropertyId,
-    PropertyType, SchemaHandle, WriteNativeProperty,
+    FFIState, FfiLabelId as LabelId, FfiVertexId as VertexId, PropertyId, PropertyType, SchemaHandle,
+    WriteNativeProperty,
 };
 
 pub type GraphBuilder = *const ::libc::c_void;
