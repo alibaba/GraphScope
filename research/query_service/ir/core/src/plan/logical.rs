@@ -17,7 +17,6 @@ use std::cell::RefCell;
 use std::collections::{BTreeSet, HashMap, VecDeque};
 use std::convert::{TryFrom, TryInto};
 use std::fmt;
-use std::io;
 use std::rc::Rc;
 
 use ir_common::error::ParsePbError;
@@ -30,7 +29,6 @@ use vec_map::VecMap;
 use crate::error::{IrError, IrResult};
 use crate::plan::meta::{ColumnsOpt, PlanMeta, Schema, StoreMeta, TagId, INVALID_META_ID, STORE_META};
 use crate::plan::patmat::{MatchingStrategy, NaiveStrategy};
-use crate::JsonIO;
 
 // Note that protobuf only support signed integer, while we actually requires the nodes'
 // id being non-negative
@@ -598,20 +596,6 @@ impl LogicalPlan {
             }
             _ => None,
         }
-    }
-}
-
-impl JsonIO for LogicalPlan {
-    fn into_json<W: io::Write>(self, writer: W) -> io::Result<()> {
-        let plan_pb: pb::LogicalPlan = self.into();
-        serde_json::to_writer_pretty(writer, &plan_pb)?;
-
-        Ok(())
-    }
-
-    fn from_json<R: io::Read>(reader: R) -> io::Result<Self> {
-        let plan_pb = serde_json::from_reader::<_, pb::LogicalPlan>(reader)?;
-        Self::try_from(plan_pb).map_err(|_| io::Error::from(io::ErrorKind::InvalidData))
     }
 }
 
@@ -1344,6 +1328,7 @@ mod test {
 
     use super::*;
     use crate::plan::meta::Schema;
+    use crate::JsonIO;
 
     #[allow(dead_code)]
     fn query_params(
