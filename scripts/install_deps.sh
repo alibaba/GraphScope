@@ -510,7 +510,7 @@ install_fastFFI() {
 
   if [[ "${PLATFORM}" == *"Darwin"* ]]; then
       # fastFFI not compatible on mac m1.
-      mvn clean install -DskipTests -pl :ffi,annotation-processor -am
+      mvn clean install -DskipTests -pl :ffi,annotation-processor,llvm4jni-runtime -am --quiet
   else
     export PATH=${PATH}:${LLVM11_HOME}/bin
     mvn clean install -DskipTests
