@@ -14,10 +14,10 @@
     <module>assembly</module>
     <module>common</module>
     <module>data_load_tools</module>
-<!--    <module>executor</module>-->
+    <module>executor</module>
     <module>groot</module>
     <module>groot-server</module>
-<!--    <module>lgraph</module>-->
+    <module>lgraph</module>
     <module>sdk</module>
     <module>sdk-common</module>
     <module>tests</module>
