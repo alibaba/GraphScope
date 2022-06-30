@@ -142,58 +142,69 @@ impl Property {
             Property::Bytes(ref v) => {
                 let mut copy = vec![0; v.len()];
                 copy.clone_from_slice(v);
-                data.write_i32::<BigEndian>(copy.len() as i32).unwrap();
+                data.write_i32::<BigEndian>(copy.len() as i32)
+                    .unwrap();
                 data.extend(copy.iter());
             }
             Property::String(ref v) => {
                 let bytes = v.as_bytes();
                 let mut copy = vec![0; bytes.len()];
                 copy.clone_from_slice(bytes);
-                data.write_i32::<BigEndian>(copy.len() as i32).unwrap();
+                data.write_i32::<BigEndian>(copy.len() as i32)
+                    .unwrap();
                 data.extend(copy.iter());
             }
             Property::Date(ref v) => {
                 let bytes = v.as_bytes();
                 let mut copy = vec![0; bytes.len()];
                 copy.clone_from_slice(bytes);
-                data.write_i32::<BigEndian>(copy.len() as i32).unwrap();
+                data.write_i32::<BigEndian>(copy.len() as i32)
+                    .unwrap();
                 data.extend(copy.iter());
             }
             Property::ListInt(ref v) => {
-                data.write_i32::<BigEndian>(v.len() as i32).unwrap();
+                data.write_i32::<BigEndian>(v.len() as i32)
+                    .unwrap();
                 for x in v.iter() {
                     data.write_i32::<BigEndian>(*x).unwrap();
                 }
             }
             Property::ListLong(ref v) => {
-                data.write_i32::<BigEndian>(v.len() as i32).unwrap();
+                data.write_i32::<BigEndian>(v.len() as i32)
+                    .unwrap();
                 for x in v {
                     data.write_i64::<BigEndian>(*x).unwrap();
                 }
             }
             Property::ListFloat(ref v) => {
-                data.write_i32::<BigEndian>(v.len() as i32).unwrap();
+                data.write_i32::<BigEndian>(v.len() as i32)
+                    .unwrap();
                 for x in v {
                     data.write_f32::<BigEndian>(*x).unwrap();
                 }
             }
             Property::ListDouble(ref v) => {
-                data.write_i32::<BigEndian>(v.len() as i32).unwrap();
+                data.write_i32::<BigEndian>(v.len() as i32)
+                    .unwrap();
                 for x in v {
                     data.write_f64::<BigEndian>(*x).unwrap();
                 }
             }
             Property::ListString(ref v) => {
-                data.write_i32::<BigEndian>(v.len() as i32).unwrap();
+                data.write_i32::<BigEndian>(v.len() as i32)
+                    .unwrap();
                 for x in v {
-                    data.write_i32::<BigEndian>(x.len() as i32).unwrap();
+                    data.write_i32::<BigEndian>(x.len() as i32)
+                        .unwrap();
                     data.write(x.as_bytes()).unwrap();
                 }
             }
             Property::ListBytes(ref v) => {
-                data.write_i32::<BigEndian>(v.len() as i32).unwrap();
+                data.write_i32::<BigEndian>(v.len() as i32)
+                    .unwrap();
                 for x in v {
-                    data.write_i32::<BigEndian>(x.len() as i32).unwrap();
+                    data.write_i32::<BigEndian>(x.len() as i32)
+                        .unwrap();
                     data.write(x.as_slice()).unwrap();
                 }
             }
@@ -242,39 +253,45 @@ impl Property {
             Property::Date(ref v) => v.as_bytes().to_vec(),
             Property::Bytes(ref v) => v.clone(),
             Property::ListInt(ref v) => {
-                ret.write_i32::<BigEndian>(v.len() as i32).unwrap();
+                ret.write_i32::<BigEndian>(v.len() as i32)
+                    .unwrap();
                 for i in 0..v.len() {
                     ret.write_i32::<BigEndian>(v[i]).unwrap();
                 }
                 ret
             }
             Property::ListLong(ref v) => {
-                ret.write_i32::<BigEndian>(v.len() as i32).unwrap();
+                ret.write_i32::<BigEndian>(v.len() as i32)
+                    .unwrap();
                 for i in 0..v.len() {
                     ret.write_i64::<BigEndian>(v[i]).unwrap();
                 }
                 ret
             }
             Property::ListFloat(ref v) => {
-                ret.write_i32::<BigEndian>(v.len() as i32).unwrap();
+                ret.write_i32::<BigEndian>(v.len() as i32)
+                    .unwrap();
                 for i in 0..v.len() {
                     ret.write_f32::<BigEndian>(v[i]).unwrap();
                 }
                 ret
             }
             Property::ListDouble(ref v) => {
-                ret.write_i32::<BigEndian>(v.len() as i32).unwrap();
+                ret.write_i32::<BigEndian>(v.len() as i32)
+                    .unwrap();
                 for i in 0..v.len() {
                     ret.write_f64::<BigEndian>(v[i]).unwrap();
                 }
                 ret
             }
             Property::ListString(ref v) => {
-                ret.write_i32::<BigEndian>(v.len() as i32).unwrap();
+                ret.write_i32::<BigEndian>(v.len() as i32)
+                    .unwrap();
                 let mut end_off = 0;
                 for i in 0..v.len() {
                     end_off += v[i].len();
-                    ret.write_i32::<BigEndian>(end_off as i32).unwrap();
+                    ret.write_i32::<BigEndian>(end_off as i32)
+                        .unwrap();
                 }
                 for i in 0..v.len() {
                     ret.write(v[i].as_bytes()).unwrap();
@@ -282,11 +299,13 @@ impl Property {
                 ret
             }
             Property::ListBytes(ref v) => {
-                ret.write_i32::<BigEndian>(v.len() as i32).unwrap();
+                ret.write_i32::<BigEndian>(v.len() as i32)
+                    .unwrap();
                 let mut end_off = 0;
                 for i in 0..v.len() {
                     end_off += v[i].len();
-                    ret.write_i32::<BigEndian>(end_off as i32).unwrap();
+                    ret.write_i32::<BigEndian>(end_off as i32)
+                        .unwrap();
                 }
                 for i in 0..v.len() {
                     ret.write(v[i].as_slice()).unwrap();
@@ -364,6 +383,7 @@ impl Property {
         match self {
             &Property::ListFloat(_) | &Property::ListDouble(_) => true,
             _ => false,
+
         }
     }
 }
@@ -551,7 +571,12 @@ pub fn parse_property(data: &str, data_type: DataType) -> Property {
                 Property::ListInt(vec![])
             } else {
                 let items: Vec<&str> = data.split(",").collect();
-                Property::ListInt(items.iter().map(|x| x.parse().unwrap()).collect())
+                Property::ListInt(
+                    items
+                        .iter()
+                        .map(|x| x.parse().unwrap())
+                        .collect(),
+                )
             }
         }
         DataType::ListLong => {
@@ -559,7 +584,12 @@ pub fn parse_property(data: &str, data_type: DataType) -> Property {
                 Property::ListLong(vec![])
             } else {
                 let items: Vec<&str> = data.split(",").collect();
-                Property::ListLong(items.iter().map(|x| x.parse().unwrap()).collect())
+                Property::ListLong(
+                    items
+                        .iter()
+                        .map(|x| x.parse().unwrap())
+                        .collect(),
+                )
             }
         }
         DataType::ListFloat => {
@@ -567,7 +597,12 @@ pub fn parse_property(data: &str, data_type: DataType) -> Property {
                 Property::ListFloat(vec![])
             } else {
                 let items: Vec<&str> = data.split(",").collect();
-                Property::ListFloat(items.iter().map(|x| x.parse().unwrap()).collect())
+                Property::ListFloat(
+                    items
+                        .iter()
+                        .map(|x| x.parse().unwrap())
+                        .collect(),
+                )
             }
         }
         DataType::ListDouble => {
@@ -575,7 +610,12 @@ pub fn parse_property(data: &str, data_type: DataType) -> Property {
                 Property::ListDouble(vec![])
             } else {
                 let items: Vec<&str> = data.split(",").collect();
-                Property::ListDouble(items.iter().map(|x| x.parse().unwrap()).collect())
+                Property::ListDouble(
+                    items
+                        .iter()
+                        .map(|x| x.parse().unwrap())
+                        .collect(),
+                )
             }
         }
         DataType::ListString => {

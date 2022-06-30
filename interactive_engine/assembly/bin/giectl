@@ -182,6 +182,7 @@ start_executor() {
 #   schema_path: path of graph schema file
 #   server_id: global server id of executor
 #   executor_port
+#   executor_rpc_port
 #   frontend_port
 #   vineyard_ipc_socket
 ##########################
@@ -236,9 +237,9 @@ create_gremlin_instance_on_local() {
 #   pod_name_list:
 #   engine_container: container name of engine
 #   executor_port
+#   executor_rpc_port
 #   frontend_port
 #   coordinator_name: name of coordinator deployment object in k8s
-#   engine_name: name of engine deployment object in k8s
 ##########################
 create_gremlin_instance_on_k8s() {
   declare -r GRAPHSCOPE_RUNTIME=$1
@@ -253,11 +254,10 @@ create_gremlin_instance_on_k8s() {
   declare -r executor_rpc_port=$7
   declare -r frontend_port=$8
   declare -r coordinator_name=$9 # deployment name of coordinator
-  declare -r engine_name=$10  # deployment name of engines
 
   declare -r host_ip=$(hostname -i)
 
-  pod_ips=$(kubectl get pod -lapp=${engine_name} -o jsonpath='{.items[*].status.podIP}')
+  pod_ips=$(kubectl get pod -lapp.kubernetes.io/component=engine -o jsonpath='{.items[*].status.podIP}')
   pegasus_hosts=""
   for pod in ${pod_ips}; do
     pegasus_hosts="${pegasus_hosts},${pod}:${executor_rpc_port}"

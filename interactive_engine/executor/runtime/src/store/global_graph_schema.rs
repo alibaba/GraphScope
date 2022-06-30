@@ -1,5 +1,5 @@
-use maxgraph_store::db::api::{GraphDef, ValueType};
 use maxgraph_store::api::graph_schema::Schema;
+use maxgraph_store::db::api::{GraphDef, ValueType};
 use maxgraph_store::schema::prelude::DataType;
 use std::collections::HashMap;
 
@@ -14,10 +14,7 @@ impl GlobalGraphSchema {
         for (name, id) in &graph_def.property_name_to_id {
             id_to_prop_name.insert(*id as u32, name.clone());
         }
-        GlobalGraphSchema {
-            graph_def,
-            id_to_prop_name,
-        }
+        GlobalGraphSchema { graph_def, id_to_prop_name }
     }
 }
 
@@ -27,7 +24,10 @@ impl Schema for GlobalGraphSchema {
     }
 
     fn get_prop_type(&self, label: u32, prop_id: u32) -> Option<DataType> {
-        let type_def = self.graph_def.label_to_types.get(&(label as i32))?;
+        let type_def = self
+            .graph_def
+            .label_to_types
+            .get(&(label as i32))?;
         let prop_def = type_def.get_prop_def(prop_id as i32)?;
         match prop_def.r#type {
             ValueType::Bool => Some(DataType::Bool),
@@ -56,7 +56,10 @@ impl Schema for GlobalGraphSchema {
     }
 
     fn get_label_name(&self, label: u32) -> Option<String> {
-        let type_def = self.graph_def.label_to_types.get(&(label as i32))?;
+        let type_def = self
+            .graph_def
+            .label_to_types
+            .get(&(label as i32))?;
         Some(type_def.get_label())
     }
 

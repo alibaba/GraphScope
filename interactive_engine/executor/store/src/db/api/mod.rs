@@ -10,14 +10,14 @@ pub use self::schema::*;
 
 #[macro_use]
 pub mod error;
-pub mod property;
-mod schema;
+pub mod condition;
 mod config;
 pub mod multi_version_graph;
-pub mod partition_snapshot;
-pub mod types;
-pub mod condition;
 pub mod partition_graph;
+pub mod partition_snapshot;
+pub mod property;
+mod schema;
+pub mod types;
 
 pub type SnapshotId = i64;
 pub type VertexId = i64;
@@ -27,7 +27,7 @@ pub type BackupId = i32;
 pub type EdgeInnerId = i64;
 pub type SerialId = u32;
 pub type GraphResult<T> = Result<T, GraphError>;
-pub type Records<T> = Box<dyn Iterator<Item=GraphResult<T>> + Send>;
+pub type Records<T> = Box<dyn Iterator<Item = GraphResult<T>> + Send>;
 
 pub const MAX_SI: SnapshotId = SnapshotId::max_value() - 1;
 pub const INFINITE_SI: SnapshotId = SnapshotId::max_value();
@@ -42,11 +42,7 @@ pub struct EdgeId {
 
 impl EdgeId {
     pub fn new(src_id: VertexId, dst_id: VertexId, inner_id: EdgeInnerId) -> Self {
-        EdgeId {
-            src_id,
-            dst_id,
-            inner_id,
-        }
+        EdgeId { src_id, dst_id, inner_id }
     }
 
     pub fn from_proto(proto: &EdgeIdPb) -> Self {
@@ -76,11 +72,7 @@ pub struct EdgeKind {
 
 impl EdgeKind {
     pub fn new(edge_label_id: LabelId, src_vertex_label_id: LabelId, dst_vertex_label_id: LabelId) -> Self {
-        EdgeKind {
-            edge_label_id,
-            src_vertex_label_id,
-            dst_vertex_label_id,
-        }
+        EdgeKind { edge_label_id, src_vertex_label_id, dst_vertex_label_id }
     }
 
     pub fn get_edge_label_id(&self) -> LabelId {
@@ -94,21 +86,31 @@ impl EdgeKind {
     }
 
     pub fn from_proto(proto: &EdgeKindPb) -> Self {
-        Self::new(proto.get_edgeLabelId().get_id(), proto.get_srcVertexLabelId().get_id(), proto.get_dstVertexLabelId().get_id())
+        Self::new(
+            proto.get_edgeLabelId().get_id(),
+            proto.get_srcVertexLabelId().get_id(),
+            proto.get_dstVertexLabelId().get_id(),
+        )
     }
 
     pub fn to_proto(&self) -> EdgeKindPb {
         let mut pb = EdgeKindPb::new();
         pb.mut_edgeLabelId().set_id(self.edge_label_id);
-        pb.mut_srcVertexLabelId().set_id(self.src_vertex_label_id);
-        pb.mut_dstVertexLabelId().set_id(self.dst_vertex_label_id);
+        pb.mut_srcVertexLabelId()
+            .set_id(self.src_vertex_label_id);
+        pb.mut_dstVertexLabelId()
+            .set_id(self.dst_vertex_label_id);
         pb
     }
 }
 
 impl From<&EdgeKind> for EdgeKind {
     fn from(relation: &EdgeKind) -> Self {
-        EdgeKind::new(relation.get_edge_label_id() as LabelId, relation.get_src_vertex_label_id() as LabelId, relation.get_dst_vertex_label_id() as LabelId)
+        EdgeKind::new(
+            relation.get_edge_label_id() as LabelId,
+            relation.get_src_vertex_label_id() as LabelId,
+            relation.get_dst_vertex_label_id() as LabelId,
+        )
     }
 }
 
@@ -134,17 +136,11 @@ pub struct DataLoadTarget {
 
 impl DataLoadTarget {
     pub fn new(label_id: i32, src_label_id: i32, dst_label_id: i32) -> Self {
-        DataLoadTarget {
-            label_id,
-            src_label_id,
-            dst_label_id,
-        }
+        DataLoadTarget { label_id, src_label_id, dst_label_id }
     }
 
     pub fn from_proto(proto: &DataLoadTargetPb) -> Self {
-        Self::new(proto.get_labelId(),
-                  proto.get_srcLabelId(),
-                  proto.get_dstLabelId(), )
+        Self::new(proto.get_labelId(), proto.get_srcLabelId(), proto.get_dstLabelId())
     }
 
     pub fn to_proto(&self) -> DataLoadTargetPb {

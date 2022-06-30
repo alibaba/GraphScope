@@ -27,9 +27,7 @@ pub struct GraphConfigBuilder {
 
 impl GraphConfigBuilder {
     pub fn new() -> Self {
-        GraphConfigBuilder {
-            config: Default::default(),
-        }
+        GraphConfigBuilder { config: Default::default() }
     }
 
     pub fn set_storage_engine(&mut self, engine: &str) -> &mut Self {
@@ -38,7 +36,9 @@ impl GraphConfigBuilder {
     }
 
     pub fn add_storage_option(&mut self, key: &str, val: &str) -> &mut Self {
-        self.config.storage_options.insert(key.to_owned(), val.to_owned());
+        self.config
+            .storage_options
+            .insert(key.to_owned(), val.to_owned());
         self
     }
 

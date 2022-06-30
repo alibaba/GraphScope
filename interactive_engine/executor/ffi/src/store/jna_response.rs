@@ -1,8 +1,8 @@
-use std::os::raw::{c_char, c_void};
+use maxgraph_store::db::api::{GraphError, GraphErrorCode, GraphResult};
 use std::ffi::CString;
-use maxgraph_store::db::api::{GraphResult, GraphError, GraphErrorCode};
 use std::fmt;
 use std::fmt::Formatter;
+use std::os::raw::{c_char, c_void};
 
 #[repr(C)]
 #[allow(non_snake_case)]
@@ -16,13 +16,7 @@ pub struct JnaResponse {
 
 impl JnaResponse {
     pub fn default() -> Self {
-        JnaResponse {
-            success: 1,
-            hasDdl: 0,
-            errMsg: ::std::ptr::null(),
-            data: ::std::ptr::null(),
-            len: 0,
-        }
+        JnaResponse { success: 1, hasDdl: 0, errMsg: ::std::ptr::null(), data: ::std::ptr::null(), len: 0 }
     }
 
     #[inline]
@@ -41,11 +35,11 @@ impl JnaResponse {
     }
 
     pub fn success(&mut self, success: bool) {
-        self.success = if success {1} else {0};
+        self.success = if success { 1 } else { 0 };
     }
 
     pub fn has_ddl(&mut self, has_ddl: bool) {
-        self.hasDdl = if has_ddl {1} else {0};
+        self.hasDdl = if has_ddl { 1 } else { 0 };
     }
 
     pub fn err_msg(&mut self, err_msg: &str) {
@@ -68,7 +62,14 @@ impl JnaResponse {
 
 impl fmt::Display for JnaResponse {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "success: {}, ddl: {}, errmsg_isnull: {}, datalen: {}", self.success, self.hasDdl, self.errMsg.is_null(), self.len)
+        write!(
+            f,
+            "success: {}, ddl: {}, errmsg_isnull: {}, datalen: {}",
+            self.success,
+            self.hasDdl,
+            self.errMsg.is_null(),
+            self.len
+        )
     }
 }
 
@@ -87,4 +88,4 @@ impl Drop for JnaResponse {
 
 #[no_mangle]
 #[allow(non_snake_case)]
-pub extern fn dropJnaResponse(_: Box<JnaResponse>) {}
+pub extern "C" fn dropJnaResponse(_: Box<JnaResponse>) {}

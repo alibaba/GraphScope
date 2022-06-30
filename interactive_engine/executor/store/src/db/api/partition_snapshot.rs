@@ -13,9 +13,11 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::db::api::types::{RocksVertex, RocksEdge};
 use crate::db::api::condition::Condition;
-use crate::db::api::{VertexId, LabelId, PropertyId, GraphResult, EdgeId, Records, SerialId, SnapshotId, EdgeKind};
+use crate::db::api::types::{RocksEdge, RocksVertex};
+use crate::db::api::{
+    EdgeId, EdgeKind, GraphResult, LabelId, PropertyId, Records, SerialId, SnapshotId, VertexId,
+};
 
 /// Snapshot of a graph partition. All the interfaces should be thread-safe
 pub trait PartitionSnapshot {
@@ -28,10 +30,7 @@ pub trait PartitionSnapshot {
     /// If `label_id` is [`None`], all vertex labels will be searched and the
     /// first match vertex will be returned.
     fn get_vertex(
-        &self,
-        vertex_id: VertexId,
-        label_id: Option<LabelId>,
-        property_ids: Option<&Vec<PropertyId>>,
+        &self, vertex_id: VertexId, label_id: Option<LabelId>, property_ids: Option<&Vec<PropertyId>>,
     ) -> GraphResult<Option<Self::V>>;
 
     /// Returns the edge entity of given `edge_id`, properties are filtered
@@ -40,12 +39,8 @@ pub trait PartitionSnapshot {
     /// If `edge_relation` is [`None`], all edge relations will be searched and
     /// the first match edge will be returned.
     fn get_edge(
-        &self,
-        edge_id: EdgeId,
-        edge_relation: Option<&EdgeKind>,
-        property_ids: Option<&Vec<PropertyId>>,
+        &self, edge_id: EdgeId, edge_relation: Option<&EdgeKind>, property_ids: Option<&Vec<PropertyId>>,
     ) -> GraphResult<Option<Self::E>>;
-
 
     /// Returns all vertices, filtered by `label_id` and `condition`
     /// optionally.
@@ -53,9 +48,7 @@ pub trait PartitionSnapshot {
     /// Properties of the vertices are filtered by the `property_ids`
     /// optionally.
     fn scan_vertex(
-        &self,
-        label_id: Option<LabelId>,
-        condition: Option<&Condition>,
+        &self, label_id: Option<LabelId>, condition: Option<&Condition>,
         property_ids: Option<&Vec<PropertyId>>,
     ) -> GraphResult<Records<Self::V>>;
 
@@ -64,9 +57,7 @@ pub trait PartitionSnapshot {
     ///
     /// Properties of the edges are filtered by the `property_ids` optionally.
     fn scan_edge(
-        &self,
-        label_id: Option<LabelId>,
-        condition: Option<&Condition>,
+        &self, label_id: Option<LabelId>, condition: Option<&Condition>,
         property_ids: Option<&Vec<PropertyId>>,
     ) -> GraphResult<Records<Self::E>>;
 
@@ -75,10 +66,7 @@ pub trait PartitionSnapshot {
     ///
     /// Properties of the edges are filtered by the `property_ids` optionally.
     fn get_out_edges(
-        &self,
-        vertex_id: VertexId,
-        label_id: Option<LabelId>,
-        condition: Option<&Condition>,
+        &self, vertex_id: VertexId, label_id: Option<LabelId>, condition: Option<&Condition>,
         property_ids: Option<&Vec<PropertyId>>,
     ) -> GraphResult<Records<Self::E>>;
 
@@ -87,35 +75,21 @@ pub trait PartitionSnapshot {
     ///
     /// Properties of the edges are filtered by the `property_ids` optionally.
     fn get_in_edges(
-        &self,
-        vertex_id: VertexId,
-        label_id: Option<LabelId>,
-        condition: Option<&Condition>,
+        &self, vertex_id: VertexId, label_id: Option<LabelId>, condition: Option<&Condition>,
         property_ids: Option<&Vec<PropertyId>>,
     ) -> GraphResult<Records<Self::E>>;
 
     /// Returns the out-degree of vertex `vertex_id` in `label_id`
-    fn get_out_degree(
-        &self,
-        vertex_id: VertexId,
-        label_id: Option<LabelId>,
-    ) -> GraphResult<usize>;
+    fn get_out_degree(&self, vertex_id: VertexId, label_id: Option<LabelId>) -> GraphResult<usize>;
 
     /// Returns the in-degree of vertex `vertex_id` in `label_id`
-    fn get_in_degree(
-        &self,
-        vertex_id: VertexId,
-        label_id: Option<LabelId>,
-    ) -> GraphResult<usize>;
+    fn get_in_degree(&self, vertex_id: VertexId, label_id: Option<LabelId>) -> GraphResult<usize>;
 
     /// Returns the `k`th out edge of vertex `vertex_id` in `edge_relation`.
     ///
     /// Properties of the edge are filtered by the `property_ids` optionally.
     fn get_kth_out_edge(
-        &self,
-        vertex_id: VertexId,
-        edge_relation: &EdgeKind,
-        k: SerialId,
+        &self, vertex_id: VertexId, edge_relation: &EdgeKind, k: SerialId,
         property_ids: Option<&Vec<PropertyId>>,
     ) -> GraphResult<Option<Self::E>>;
 
@@ -123,10 +97,7 @@ pub trait PartitionSnapshot {
     ///
     /// Properties of the edge are filtered by the `property_ids` optionally.
     fn get_kth_in_edge(
-        &self,
-        vertex_id: VertexId,
-        edge_relation: &EdgeKind,
-        k: SerialId,
+        &self, vertex_id: VertexId, edge_relation: &EdgeKind, k: SerialId,
         property_ids: Option<&Vec<PropertyId>>,
     ) -> GraphResult<Option<Self::E>>;
 

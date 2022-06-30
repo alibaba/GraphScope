@@ -1,7 +1,7 @@
-use crate::db::common::bytes::util::{UnsafeBytesWriter, UnsafeBytesReader};
-use crate::db::common::bytes::transform;
-use crate::db::api::*;
 use super::table_manager::TableId;
+use crate::db::api::*;
+use crate::db::common::bytes::transform;
+use crate::db::common::bytes::util::{UnsafeBytesReader, UnsafeBytesWriter};
 
 pub fn vertex_key(table_id: TableId, id: VertexId, ts: SnapshotId) -> [u8; 24] {
     let mut ret = [0; 24];
@@ -49,16 +49,12 @@ pub fn edge_table_prefix(table_id: TableId, direction: EdgeDirection) -> i64 {
     }
 }
 
-pub fn edge_key(table_id: TableId, id: EdgeId, direction: EdgeDirection, ts: SnapshotId) -> [u8; 40]  {
+pub fn edge_key(table_id: TableId, id: EdgeId, direction: EdgeDirection, ts: SnapshotId) -> [u8; 40] {
     let mut ret = [0u8; 40];
     let mut writer = UnsafeBytesWriter::new(&mut ret);
     let (x, y, z, w) = match direction {
-        EdgeDirection::In => {
-            (table_id << 1 | 1, id.dst_id, id.src_id, id.inner_id)
-        },
-        EdgeDirection::Out => {
-            (table_id << 1, id.src_id, id.dst_id, id.inner_id)
-        }
+        EdgeDirection::In => (table_id << 1 | 1, id.dst_id, id.src_id, id.inner_id),
+        EdgeDirection::Out => (table_id << 1, id.src_id, id.dst_id, id.inner_id),
         _ => unreachable!(),
     };
     writer.write_i64(0, x.to_be());

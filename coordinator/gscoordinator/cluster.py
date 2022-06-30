@@ -367,7 +367,6 @@ class KubernetesClusterLauncher(Launcher):
             "12345",  # executor rpc port
             "8182",  # frontend port
             self._coordinator_name,
-            self._engine_name,
         ]
         logger.info("Create GIE instance with command: {0}".format(" ".join(cmd)))
         process = subprocess.Popen(

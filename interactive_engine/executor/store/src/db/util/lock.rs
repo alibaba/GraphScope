@@ -1,6 +1,6 @@
-use std::sync::{Mutex, MutexGuard};
 use crate::db::api::*;
 use std::ops::{Deref, DerefMut};
+use std::sync::{Mutex, MutexGuard};
 
 pub struct GraphMutexLock<T> {
     inner: Mutex<T>,
@@ -8,13 +8,12 @@ pub struct GraphMutexLock<T> {
 
 impl<T> GraphMutexLock<T> {
     pub fn new(t: T) -> Self {
-        GraphMutexLock {
-            inner: Mutex::new(t),
-        }
+        GraphMutexLock { inner: Mutex::new(t) }
     }
 
     pub fn lock(&self) -> GraphResult<GraphMutexLockGuard<T>> {
-        self.inner.lock()
+        self.inner
+            .lock()
             .map(|guard| GraphMutexLockGuard::new(guard))
             .map_err(|e| {
                 let msg = format!("{:?}", e);
@@ -29,9 +28,7 @@ pub struct GraphMutexLockGuard<'a, T> {
 
 impl<'a, T> GraphMutexLockGuard<'a, T> {
     fn new(guard: MutexGuard<'a, T>) -> Self {
-        GraphMutexLockGuard {
-            inner: guard,
-        }
+        GraphMutexLockGuard { inner: guard }
     }
 }
 

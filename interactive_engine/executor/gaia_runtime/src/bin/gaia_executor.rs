@@ -40,10 +40,26 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let parsed = dotproperties::parse_from_file(server_config_file).unwrap();
     let mapped: HashMap<_, _> = parsed.into_iter().collect();
     let rpc_port: u16 = mapped.get("rpc.port").unwrap().parse().unwrap();
-    let server_id: u64 = mapped.get("server.id").unwrap().parse().unwrap();
-    let server_size: usize = mapped.get("server.size").unwrap().parse().unwrap();
-    let hosts: Vec<&str> = mapped.get("pegasus.hosts").unwrap().split(",").collect();
-    let worker_thread_num: i32 = mapped.get("pegasus.worker.num").unwrap().parse().unwrap();
+    let server_id: u64 = mapped
+        .get("server.id")
+        .unwrap()
+        .parse()
+        .unwrap();
+    let server_size: usize = mapped
+        .get("server.size")
+        .unwrap()
+        .parse()
+        .unwrap();
+    let hosts: Vec<&str> = mapped
+        .get("pegasus.hosts")
+        .unwrap()
+        .split(",")
+        .collect();
+    let worker_thread_num: i32 = mapped
+        .get("pegasus.worker.num")
+        .unwrap()
+        .parse()
+        .unwrap();
     let vineyard_graph_id: i64 = mapped
         .get("graph.vineyard.object.id")
         .unwrap()
@@ -59,14 +75,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     let network_config = NetworkConfig::with(server_id, server_addrs);
     let server_config = Configuration::with(network_config);
-    let rpc_config = RPCServerConfig::new(Some(String::from("127.0.0.1")), Some(rpc_port));
+    let rpc_config = RPCServerConfig::new(Some(String::from("0.0.0.0")), Some(rpc_port));
 
     info!("server config {:?}", server_config);
     info!("rpc config {:?}", rpc_config);
-    info!(
-        "Start executor with vineyard graph object id {:?}",
-        vineyard_graph_id
-    );
+    info!("Start executor with vineyard graph object id {:?}", vineyard_graph_id);
 
     // TODO: remove the pre-partition logic on vineyard; Instead, vineyard can provide the true partition_nums;
     // we assume the truly partition numbers in vineyard is worker_thread_num for now.
@@ -137,10 +150,7 @@ fn get_partition_server_index_map(local_process_partition_list: Vec<u32>) -> Has
     for (server_index, partition_id) in process_partition_lists {
         partition_server_index_map.insert(partition_id, server_index);
     }
-    info!(
-        "partition_server_index_map {:?}",
-        partition_server_index_map
-    );
+    info!("partition_server_index_map {:?}", partition_server_index_map);
 
     partition_server_index_map
 }

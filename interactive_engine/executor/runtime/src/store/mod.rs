@@ -1,11 +1,11 @@
 use maxgraph_store::api::prelude::Property;
-use maxgraph_store::api::{Vertex, Edge};
+use maxgraph_store::api::{Edge, Vertex};
 use maxgraph_store::schema::PropId;
 
-use std::collections::HashMap;
 use alloc::vec::IntoIter;
 use itertools::Itertools;
 use serde::Serialize;
+use std::collections::HashMap;
 
 pub mod global_graph;
 pub mod global_graph_schema;
@@ -65,7 +65,11 @@ impl Vertex for LocalStoreVertex {
     }
 
     fn get_properties(&self) -> Self::PI {
-        self.prop_list.clone().into_iter().collect_vec().into_iter()
+        self.prop_list
+            .clone()
+            .into_iter()
+            .collect_vec()
+            .into_iter()
     }
 }
 
@@ -82,13 +86,7 @@ unsafe impl Send for LocalStoreEdge {}
 
 impl LocalStoreEdge {
     pub fn new(src: LocalStoreVertex, dst: LocalStoreVertex, label_id: u32, edge_id: i64) -> Self {
-        LocalStoreEdge {
-            src,
-            dst,
-            label_id,
-            edge_id,
-            prop_list: HashMap::new(),
-        }
+        LocalStoreEdge { src, dst, label_id, edge_id, prop_list: HashMap::new() }
     }
 
     pub fn add_property(&mut self, propid: PropId, propval: Property) {
@@ -132,6 +130,10 @@ impl Edge for LocalStoreEdge {
     }
 
     fn get_properties(&self) -> Self::PI {
-        self.prop_list.clone().into_iter().collect_vec().into_iter()
+        self.prop_list
+            .clone()
+            .into_iter()
+            .collect_vec()
+            .into_iter()
     }
 }
