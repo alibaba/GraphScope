@@ -14,3 +14,12 @@
 //! limitations under the License.
 //!
 
+#![allow(bare_trait_objects)]
+#[macro_use]
+extern crate log;
+extern crate dotproperties;
+extern crate log4rs;
+extern crate maxgraph_store;
+extern crate pegasus;
+extern crate pegasus_network;
+extern crate pegasus_server;
