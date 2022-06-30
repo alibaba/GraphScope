@@ -1,8 +1,6 @@
 use std::ffi::{CStr, CString};
 use std::sync::Arc;
 
-use byteorder::BigEndian;
-use byteorder::WriteBytesExt;
 use itertools::Itertools;
 use maxgraph_runtime::dataflow::message::primitive::Read;
 use maxgraph_runtime::dataflow::message::{PropertyEntity, ValuePayload};
@@ -184,8 +182,9 @@ extern "C" {
     fn v6d_free_property(p: *const NativeProperty);
 
     pub(crate) fn v6d_get_schema(graph: GraphHandle) -> SchemaHandle;
-    fn v6d_get_property_id(schema: SchemaHandle, name: *const ::libc::c_char, out: *mut PropertyId)
-        -> FFIState;
+    fn v6d_get_property_id(
+        schema: SchemaHandle, name: *const ::libc::c_char, out: *mut PropertyId,
+    ) -> FFIState;
     fn v6d_get_property_type(
         schema: SchemaHandle, label: LabelId, id: PropertyId, out: *mut PropertyType,
     ) -> FFIState;
@@ -193,7 +192,9 @@ extern "C" {
         schema: SchemaHandle, id: PropertyId, out: *const *const ::libc::c_char,
     ) -> FFIState;
     fn v6d_get_label_id(schema: SchemaHandle, name: *const ::libc::c_char, out: *mut LabelId) -> FFIState;
-    fn v6d_get_label_name(schema: SchemaHandle, label: LabelId, out: *const *const ::libc::c_char) -> FFIState;
+    fn v6d_get_label_name(
+        schema: SchemaHandle, label: LabelId, out: *const *const ::libc::c_char,
+    ) -> FFIState;
     fn v6d_free_schema(schema: SchemaHandle);
 
     fn v6d_free_string(s: *const ::libc::c_char);
@@ -441,7 +442,8 @@ impl NativeProperty {
                 let mut v: *const *const u8 = std::ptr::null();
                 let mut len: *const i32 = std::ptr::null();
                 let mut count = 0;
-                let res = unsafe { v6d_get_property_as_string_list(property, &mut v, &mut len, &mut count) };
+                let res =
+                    unsafe { v6d_get_property_as_string_list(property, &mut v, &mut len, &mut count) };
                 if res == STATE_SUCCESS {
                     let ret = unsafe { get_string_list_from_c_ptr(v, len, count) };
                     return ret.map(|x| Property::ListString(x));
@@ -557,45 +559,45 @@ impl WriteNativeProperty {
                     let u = PropertyUnion { d: v };
                     (PropertyType::Double, vec![], unsafe { u.l })
                 }
-                Property::Bytes(ref v) => {
+                Property::Bytes(ref _v) => {
                     let vecdata = property.to_vec();
                     let len = vecdata.len() as i64;
                     (PropertyType::Bytes, vecdata, len)
                 }
-                Property::String(ref v) => {
+                Property::String(ref _v) => {
                     let vecdata = property.to_vec();
                     let len = vecdata.len() as i64;
                     (PropertyType::String, vecdata, len)
                 }
-                Property::Date(v) => {
+                Property::Date(_v) => {
                     panic!("property is Date");
                 }
-                Property::ListInt(ref v) => {
+                Property::ListInt(ref _v) => {
                     let vecdata = property.to_vec();
                     let len = vecdata.len() as i64;
                     (PropertyType::IntList, vecdata, len)
                 }
-                Property::ListLong(ref v) => {
+                Property::ListLong(ref _v) => {
                     let vecdata = property.to_vec();
                     let len = vecdata.len() as i64;
                     (PropertyType::LongList, vecdata, len)
                 }
-                Property::ListFloat(ref v) => {
+                Property::ListFloat(ref _v) => {
                     let vecdata = property.to_vec();
                     let len = vecdata.len() as i64;
                     (PropertyType::FloatList, vecdata, len)
                 }
-                Property::ListDouble(ref v) => {
+                Property::ListDouble(ref _v) => {
                     let vecdata = property.to_vec();
                     let len = vecdata.len() as i64;
                     (PropertyType::DoubleList, vecdata, len)
                 }
-                Property::ListString(ref v) => {
+                Property::ListString(ref _v) => {
                     let vecdata = property.to_vec();
                     let len = vecdata.len() as i64;
                     (PropertyType::StringList, vecdata, len)
                 }
-                Property::ListBytes(v) => {
+                Property::ListBytes(_v) => {
                     panic!("property is ListBytes");
                 }
 
@@ -682,6 +684,7 @@ impl WriteNativeProperty {
         }
     }
 
+    #[allow(dead_code)]
     fn as_ptr(&self) -> *const Self {
         self as *const Self
     }
@@ -858,9 +861,9 @@ impl GlobalGraphQuery for FFIGraphStore {
     type EI = GlobalEdgeIter;
 
     fn get_out_vertex_ids(
-        &self, si: i64, src_ids: Vec<(PartitionId, Vec<VertexId>)>, edge_labels: &Vec<LabelId>,
-        condition: Option<&Condition>, dedup_prop_ids: Option<&Vec<u32>>, limit: usize,
-    ) -> Box<Iterator<Item = (i64, Self::VI)>> {
+        &self, _si: i64, src_ids: Vec<(PartitionId, Vec<VertexId>)>, edge_labels: &Vec<LabelId>,
+        _condition: Option<&Condition>, _dedup_prop_ids: Option<&Vec<u32>>, limit: usize,
+    ) -> Box<dyn Iterator<Item = (i64, Self::VI)>> {
         CommonEdgeQuery::new(self.graph, src_ids, edge_labels, limit as i64).run(
             |graph, partition_id, src_id, labels, label_count, limit| {
                 let iter = unsafe {
@@ -880,10 +883,10 @@ impl GlobalGraphQuery for FFIGraphStore {
     }
 
     fn get_out_edges(
-        &self, si: i64, src_ids: Vec<(PartitionId, Vec<VertexId>)>, edge_labels: &Vec<LabelId>,
-        condition: Option<&Condition>, dedup_prop_ids: Option<&Vec<u32>>,
-        output_prop_ids: Option<&Vec<u32>>, limit: usize,
-    ) -> Box<Iterator<Item = (VertexId, Self::EI)>> {
+        &self, _si: i64, src_ids: Vec<(PartitionId, Vec<VertexId>)>, edge_labels: &Vec<LabelId>,
+        _condition: Option<&Condition>, _dedup_prop_ids: Option<&Vec<u32>>,
+        _output_prop_ids: Option<&Vec<u32>>, limit: usize,
+    ) -> Box<dyn Iterator<Item = (VertexId, Self::EI)>> {
         CommonEdgeQuery::new(self.graph, src_ids, edge_labels, limit as i64).run(
             |graph, partition_id, src_id, labels, label_count, limit| {
                 let iter = unsafe {
@@ -903,9 +906,9 @@ impl GlobalGraphQuery for FFIGraphStore {
     }
 
     fn get_in_vertex_ids(
-        &self, si: i64, dst_ids: Vec<(PartitionId, Vec<VertexId>)>, edge_labels: &Vec<LabelId>,
-        condition: Option<&Condition>, dedup_prop_ids: Option<&Vec<u32>>, limit: usize,
-    ) -> Box<Iterator<Item = (i64, Self::VI)>> {
+        &self, _si: i64, dst_ids: Vec<(PartitionId, Vec<VertexId>)>, edge_labels: &Vec<LabelId>,
+        _condition: Option<&Condition>, _dedup_prop_ids: Option<&Vec<u32>>, limit: usize,
+    ) -> Box<dyn Iterator<Item = (i64, Self::VI)>> {
         CommonEdgeQuery::new(self.graph, dst_ids, edge_labels, limit as i64).run(
             |graph, partition_id, dst_id, labels, label_count, limit| {
                 let iter = unsafe {
@@ -925,10 +928,10 @@ impl GlobalGraphQuery for FFIGraphStore {
     }
 
     fn get_in_edges(
-        &self, si: i64, dst_ids: Vec<(PartitionId, Vec<VertexId>)>, edge_labels: &Vec<LabelId>,
-        condition: Option<&Condition>, dedup_prop_ids: Option<&Vec<u32>>,
-        output_prop_ids: Option<&Vec<u32>>, limit: usize,
-    ) -> Box<Iterator<Item = (VertexId, Self::EI)>> {
+        &self, _si: i64, dst_ids: Vec<(PartitionId, Vec<VertexId>)>, edge_labels: &Vec<LabelId>,
+        _condition: Option<&Condition>, _dedup_prop_ids: Option<&Vec<u32>>,
+        _output_prop_ids: Option<&Vec<u32>>, limit: usize,
+    ) -> Box<dyn Iterator<Item = (VertexId, Self::EI)>> {
         CommonEdgeQuery::new(self.graph, dst_ids, edge_labels, limit as i64).run(
             |graph, partition_id, dst_id, labels, label_count, limit| {
                 let iter = unsafe {
@@ -948,9 +951,9 @@ impl GlobalGraphQuery for FFIGraphStore {
     }
 
     fn count_out_edges(
-        &self, si: i64, src_ids: Vec<(PartitionId, Vec<VertexId>)>, edge_labels: &Vec<LabelId>,
-        condition: Option<&Condition>,
-    ) -> Box<Iterator<Item = (VertexId, usize)>> {
+        &self, _si: i64, src_ids: Vec<(PartitionId, Vec<VertexId>)>, edge_labels: &Vec<LabelId>,
+        _condition: Option<&Condition>,
+    ) -> Box<dyn Iterator<Item = (VertexId, usize)>> {
         CommonEdgeQuery::new(self.graph, src_ids, edge_labels, i64::max_value()).run(
             |graph, partition_id, src_id, labels, label_count, limit| {
                 let iter = unsafe {
@@ -969,9 +972,9 @@ impl GlobalGraphQuery for FFIGraphStore {
     }
 
     fn count_in_edges(
-        &self, si: i64, dst_ids: Vec<(PartitionId, Vec<VertexId>)>, edge_labels: &Vec<LabelId>,
-        condition: Option<&Condition>,
-    ) -> Box<Iterator<Item = (i64, usize)>> {
+        &self, _si: i64, dst_ids: Vec<(PartitionId, Vec<VertexId>)>, edge_labels: &Vec<LabelId>,
+        _condition: Option<&Condition>,
+    ) -> Box<dyn Iterator<Item = (i64, usize)>> {
         CommonEdgeQuery::new(self.graph, dst_ids, edge_labels, i64::max_value()).run(
             |graph, partition_id, dst_id, labels, label_count, limit| {
                 let iter = unsafe {
@@ -990,8 +993,8 @@ impl GlobalGraphQuery for FFIGraphStore {
     }
 
     fn get_vertex_properties(
-        &self, si: i64, ids: Vec<(PartitionId, Vec<(Option<LabelId>, Vec<VertexId>)>)>,
-        output_prop_ids: Option<&Vec<u32>>,
+        &self, _si: i64, ids: Vec<(PartitionId, Vec<(Option<LabelId>, Vec<VertexId>)>)>,
+        _output_prop_ids: Option<&Vec<u32>>,
     ) -> Self::VI {
         let graph = self.graph;
         let iter = ids
@@ -1028,14 +1031,15 @@ impl GlobalGraphQuery for FFIGraphStore {
     }
 
     fn get_edge_properties(
-        &self, si: i64, ids: Vec<(u32, Vec<(Option<u32>, Vec<i64>)>)>, output_prop_ids: Option<&Vec<u32>>,
+        &self, _si: i64, _ids: Vec<(u32, Vec<(Option<u32>, Vec<i64>)>)>,
+        _output_prop_ids: Option<&Vec<u32>>,
     ) -> Self::EI {
         unimplemented!()
     }
 
     fn get_all_vertices(
-        &self, si: i64, labels_ref: &Vec<LabelId>, condition: Option<&Condition>,
-        dedup_prop_ids: Option<&Vec<u32>>, output_prop_ids: Option<&Vec<u32>>, limit: usize,
+        &self, _si: i64, labels_ref: &Vec<LabelId>, _condition: Option<&Condition>,
+        _dedup_prop_ids: Option<&Vec<u32>>, _output_prop_ids: Option<&Vec<u32>>, limit: usize,
         partition_ids: &Vec<PartitionId>,
     ) -> Self::VI {
         let graph = self.graph;
@@ -1065,8 +1069,8 @@ impl GlobalGraphQuery for FFIGraphStore {
     }
 
     fn get_all_edges(
-        &self, si: i64, labels_ref: &Vec<LabelId>, condition: Option<&Condition>,
-        dedup_prop_ids: Option<&Vec<u32>>, output_prop_ids: Option<&Vec<u32>>, limit: usize,
+        &self, _si: i64, labels_ref: &Vec<LabelId>, _condition: Option<&Condition>,
+        _dedup_prop_ids: Option<&Vec<u32>>, _output_prop_ids: Option<&Vec<u32>>, limit: usize,
         partition_ids: &Vec<PartitionId>,
     ) -> Self::EI {
         let graph = self.graph;
@@ -1096,7 +1100,7 @@ impl GlobalGraphQuery for FFIGraphStore {
     }
 
     fn count_all_vertices(
-        &self, si: i64, labels_ref: &Vec<LabelId>, condition: Option<&Condition>,
+        &self, _si: i64, labels_ref: &Vec<LabelId>, _condition: Option<&Condition>,
         partition_ids: &Vec<PartitionId>,
     ) -> u64 {
         let mut count = 0;
@@ -1121,7 +1125,7 @@ impl GlobalGraphQuery for FFIGraphStore {
     }
 
     fn count_all_edges(
-        &self, si: i64, labels_ref: &Vec<u32>, condition: Option<&Condition>, partition_ids: &Vec<u32>,
+        &self, _si: i64, labels_ref: &Vec<u32>, _condition: Option<&Condition>, partition_ids: &Vec<u32>,
     ) -> u64 {
         let mut ret = 0;
         let labels: Vec<FfiLabelId> = labels_ref
@@ -1147,7 +1151,7 @@ impl GlobalGraphQuery for FFIGraphStore {
         unsafe { v6d_get_outer_id(self.graph, vertex_id) }
     }
 
-    fn get_schema(&self, si: i64) -> Option<Arc<Schema>> {
+    fn get_schema(&self, _si: i64) -> Option<Arc<dyn Schema>> {
         let schema = unsafe { v6d_get_schema(self.graph) };
         let ret = FFISchema::new(schema);
         Some(Arc::new(ret))
@@ -1163,7 +1167,7 @@ unsafe impl Sync for FFIGraphStore {}
 pub enum GlobalEdgeIter {
     Out(FFIOutEdgeIter),
     In(FFIInEdgeIter),
-    Common(Box<Iterator<Item = FFIEdge>>),
+    Common(Box<dyn Iterator<Item = FFIEdge>>),
 }
 
 impl Iterator for GlobalEdgeIter {
@@ -1211,7 +1215,7 @@ impl CommonEdgeQuery {
         F: 'static + Copy + Fn(GraphHandle, FFIPartitionId, VertexId, Vec<FfiLabelId>, i32, i64) -> T,
     >(
         self, process: F,
-    ) -> Box<Iterator<Item = (VertexId, T)>> {
+    ) -> Box<dyn Iterator<Item = (VertexId, T)>> {
         let graph = self.graph;
         let label_count = self.label_count;
         let limit = self.limit;
@@ -1238,7 +1242,7 @@ impl CommonEdgeQuery {
 }
 
 pub enum GlobalVertexIter {
-    Normal(Box<Iterator<Item = FFIVertex>>),
+    Normal(Box<dyn Iterator<Item = FFIVertex>>),
     Out(FFIGetOutVertexIdsIter),
     In(FFIGetInVertexIdsIter),
 }
@@ -1327,8 +1331,9 @@ impl Vertex for FFIVertex {
             return None;
         }
         let mut property = NativeProperty::default();
-        let state =
-            unsafe { v6d_get_vertex_property(self.graph, self.handle, prop_id as PropertyId, &mut property) };
+        let state = unsafe {
+            v6d_get_vertex_property(self.graph, self.handle, prop_id as PropertyId, &mut property)
+        };
         if state == STATE_SUCCESS {
             return property.to_property();
         }
@@ -1373,7 +1378,7 @@ impl Vertex for IdOnlyVertex {
         self.label
     }
 
-    fn get_property(&self, prop_id: u32) -> Option<Property> {
+    fn get_property(&self, _prop_id: u32) -> Option<Property> {
         None
     }
 
@@ -1435,7 +1440,8 @@ impl Iterator for FFIGetAllVerticesIter {
 
     fn next(&mut self) -> Option<Self::Item> {
         let mut vertex_handle = 0;
-        let state = unsafe { v6d_get_all_vertices_next(self.iter, &mut vertex_handle as *mut VertexHandle) };
+        let state =
+            unsafe { v6d_get_all_vertices_next(self.iter, &mut vertex_handle as *mut VertexHandle) };
         if state == STATE_SUCCESS {
             let v = FFIVertex::new(self.graph, vertex_handle);
             return Some(v);
@@ -1533,8 +1539,9 @@ impl Edge for FFIEdge {
 
     fn get_property(&self, prop_id: u32) -> Option<Property> {
         let mut property = NativeProperty::default();
-        let state =
-            unsafe { v6d_get_edge_property(self.graph, &self.handle, prop_id as PropertyId, &mut property) };
+        let state = unsafe {
+            v6d_get_edge_property(self.graph, &self.handle, prop_id as PropertyId, &mut property)
+        };
         if state == STATE_SUCCESS {
             return property.to_property();
         }
