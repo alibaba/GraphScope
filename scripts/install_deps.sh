@@ -738,11 +738,7 @@ install_dependencies() {
       brew install ${packages_to_install[*]} || true
     fi
 
-    if [[ "$(uname -m)" == "x86_64" ]]; then
-      declare -r homebrew_prefix="/usr/local"
-    else
-      declare -r homebrew_prefix="/opt/homebrew"
-    fi
+    declare -r homebrew_prefix=$(brew --prefix)
     export OPENSSL_ROOT_DIR=${homebrew_prefix}/opt/openssl
     export OPENSSL_LIBRARIES=${homebrew_prefix}/opt/openssl/lib
     export OPENSSL_SSL_LIBRARY=${homebrew_prefix}/opt/openssl/lib/libssl.dylib
