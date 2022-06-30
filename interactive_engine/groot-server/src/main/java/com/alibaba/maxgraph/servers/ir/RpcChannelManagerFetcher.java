@@ -29,8 +29,7 @@ public class RpcChannelManagerFetcher implements RpcChannelFetcher {
     private int nodeCount;
     private RoleType targetRole;
 
-    public RpcChannelManagerFetcher(
-            ChannelManager manager, int nodeCount, RoleType targetRole) {
+    public RpcChannelManagerFetcher(ChannelManager manager, int nodeCount, RoleType targetRole) {
         this.manager = manager;
         this.nodeCount = nodeCount;
         this.targetRole = targetRole;

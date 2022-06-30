@@ -110,8 +110,7 @@ public class MaxGraphNode {
 
         if (idx != that.idx) return false;
         if (port != that.port) return false;
-        if (!Objects.equals(roleName, that.roleName))
-            return false;
+        if (!Objects.equals(roleName, that.roleName)) return false;
         return Objects.equals(host, that.host);
     }
 }

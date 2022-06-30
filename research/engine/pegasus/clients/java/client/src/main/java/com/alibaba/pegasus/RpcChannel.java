@@ -43,6 +43,7 @@ public class RpcChannel {
     public void shutdown() throws InterruptedException {
         this.channel.shutdown().awaitTermination(5, TimeUnit.SECONDS);
     }
+
     public String toString() {
         return "RpcChannel: " + channel.authority();
     }

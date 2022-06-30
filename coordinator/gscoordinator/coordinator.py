@@ -843,9 +843,7 @@ class CoordinatorServiceServicer(
         object_id = op.attr[types_pb2.VINEYARD_ID].i
         # maxgraph endpoint pattern
         FRONTEND_PATTERN = re.compile("(?<=FRONTEND_ENDPOINT:).*$")
-        FRONTEND_EXTERNAL_PATTERN = re.compile(
-            "(?<=FRONTEND_EXTERNAL_ENDPOINT:).*$"
-        )
+        FRONTEND_EXTERNAL_PATTERN = re.compile("(?<=FRONTEND_EXTERNAL_ENDPOINT:).*$")
         # maxgraph endpoint
         maxgraph_endpoint = None
         # maxgraph external endpoint, for client and gremlin function test
@@ -859,9 +857,7 @@ class CoordinatorServiceServicer(
             return_code = proc.poll()
             if return_code == 0:
                 # match maxgraph endpoint and check for ready
-                maxgraph_endpoint = _match_frontend_endpoint(
-                    FRONTEND_PATTERN, outs
-                )
+                maxgraph_endpoint = _match_frontend_endpoint(FRONTEND_PATTERN, outs)
                 if check_gremlin_server_ready(maxgraph_endpoint):
                     logger.info(
                         "build maxgraph frontend %s for graph %ld",

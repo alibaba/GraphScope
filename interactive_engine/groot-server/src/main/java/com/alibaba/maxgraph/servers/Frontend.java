@@ -156,10 +156,7 @@ public class Frontend extends NodeBase {
         WrappedSchemaFetcher wrappedSchemaFetcher =
                 new WrappedSchemaFetcher(snapshotCache, metaService);
         ComputeServiceProducer serviceProducer = ServiceProducerFactory.getProducer(configs);
-        this.graphService =
-                serviceProducer.makeGraphService(
-                        wrappedSchemaFetcher,
-                        channelManager);
+        this.graphService = serviceProducer.makeGraphService(wrappedSchemaFetcher, channelManager);
     }
 
     private RpcServer buildServiceServer(Configs configs, BindableService... services) {

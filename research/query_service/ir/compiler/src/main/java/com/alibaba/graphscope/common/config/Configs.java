@@ -66,6 +66,7 @@ public class Configs {
     public String get(String name) {
         return this.properties.getProperty(name);
     }
+
     public String get(String name, String defaultValue) {
         return this.properties.getProperty(name, defaultValue);
     }
