@@ -19,20 +19,13 @@
         </dependency>
         <dependency>
             <groupId>com.alibaba.maxgraph</groupId>
-            <artifactId>maxgraph-frontendservice</artifactId>
+            <artifactId>maxgraph-common</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>com.alibaba.maxgraph</groupId>
-            <artifactId>groot-server</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.alibaba.maxgraph</groupId>
-            <artifactId>groot-server</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-            <scope>compile</scope>
+            <artifactId>maxgraph-sdk-common</artifactId>
+            <version>${project.parent.version}</version>
         </dependency>
     </dependencies>
 </project>

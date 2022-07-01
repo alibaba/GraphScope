@@ -22,7 +22,7 @@ curl -XPOST http://localhost:${_port} -d 'interactive = session.gremlin(graph)' 
 curl -XPOST http://localhost:${_port} -d 'interactive._graph_url[0]' --output /tmp/test_modern.log
 GAIA_PORT=$(awk -F'\/|:' '{print $5}' < /tmp/test_modern.log)
 cd ${base_dir}/.. &&  mvn clean install -DskipTests -Pjava-release
-cd ${base_dir} && mvn test -Dtest=com.alibaba.graphscope.ir.maxgraph.IrGremlinTest -Dgremlin.endpoint="localhost:${GAIA_PORT}"
+cd ${base_dir} && mvn test -Dtest=com.alibaba.graphscope.ir.maxgraph.IrGremlinTest -Dgremlin.endpoint="localhost:${GAIA_PORT}" -DfailIfNoTests=false
 exit_code=$?
 curl -XPOST http://localhost:${_port} -d 'session.close()'
 ps -ef | grep "python3 maxgraph_test_server.py ${_port}" | grep -v grep | awk '{print $2}' | xargs kill -9
