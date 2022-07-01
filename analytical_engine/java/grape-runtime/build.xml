@@ -24,9 +24,18 @@
       <os family="mac"/>
     </condition>
 
-    <exec executable="nproc" outputproperty="cores.count">
-      <arg value="--all"/>
+    <echo level="info" message="${os.name}"/>
+
+    <exec executable="nproc" outputproperty="cores.count" os="linux">
+        <arg value="--all"/>
     </exec>
+
+    <exec executable="sysctl" outputproperty="cores.count" os="Mac OS X">
+        <arg value="-n"/>
+        <arg value="hw.physicalcpu"/>
+    </exec>
+
+    <echo level="info" message="${cores.count}"/>
 
     <fail unless="platform" message="Not a supported platform."/>
 
