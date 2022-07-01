@@ -8,11 +8,11 @@ This project contains all `rust` modules of MaxGraph, including:
 This crate act as the parent of all the sub-crates. To compile all sub-crates, run:
 
 ```bash
-cargo build --all
+cargo build --workspace
 ```
 
 To test all sub-crates, run:
 
 ```bash
-cargo test --all
+cargo test --workspace
 ```
