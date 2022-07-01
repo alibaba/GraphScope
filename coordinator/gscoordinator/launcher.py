@@ -157,6 +157,13 @@ class LocalLauncher(Launcher):
         self._vineyardd_process = None
         # analytical engine
         self._analytical_engine_process = None
+
+        # interactive engine
+        # executor inter-processing port
+        # executor rpc port
+        # frontend port
+        self._interactive_port = 8233
+
         # learning instance processes
         self._learning_instance_processes = {}
 
@@ -236,16 +243,6 @@ class LocalLauncher(Launcher):
 
         object_id = config[types_pb2.VINEYARD_ID].i
         schema_path = config[types_pb2.SCHEMA_PATH].s.decode()
-        # engine params format:
-        #   k1:v1;k2:v2;k3:v3
-        engine_params = {}
-        if types_pb2.GIE_GREMLIN_ENGINE_PARAMS in config:
-            engine_params = json.loads(
-                config[types_pb2.GIE_GREMLIN_ENGINE_PARAMS].s.decode()
-            )
-        engine_params = [
-            "{}:{}".format(key, value) for key, value in engine_params.items()
-        ]
         env = os.environ.copy()
         if ".install_prefix" in INTERACTIVE_ENGINE_SCRIPT:
             env.update(
@@ -272,12 +269,13 @@ class LocalLauncher(Launcher):
             str(object_id),
             schema_path,
             "0",  # server id
-            "1234",  # executor port
-            "12345",  # executor rpc port
-            "8182",  # frontend port
+            str(self._interactive_port),  # executor port
+            str(self._interactive_port + 1),  # executor rpc port
+            str(self._interactive_port + 2),  # frontend port
             self.vineyard_socket,
         ]
         logger.info("Create GIE instance with command: %s", " ".join(cmd))
+        self._interactive_port += 3
         process = subprocess.Popen(
             cmd,
             start_new_session=True,

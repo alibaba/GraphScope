@@ -20,7 +20,6 @@ import com.alibaba.maxgraph.compiler.api.schema.SchemaFetcher;
 
 import org.apache.commons.lang3.tuple.Pair;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;

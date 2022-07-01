@@ -109,7 +109,7 @@ endif
 
 .PHONY: gie
 gie:
-	# coordinator/frontend/graphmanager
+	# frontend/executor
 	cd $(WORKING_DIR)/interactive_engine && \
 	mvn clean package -DskipTests -Pjava-release --quiet
 	# executor

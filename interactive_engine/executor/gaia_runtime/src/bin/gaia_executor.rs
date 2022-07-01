@@ -91,11 +91,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     info!("process_partition_list: {:?}", process_partition_list);
 
     pegasus::startup(server_config).unwrap();
-    let pegasus_worker_id = pegasus::get_current_worker();
-    let server_index = pegasus_worker_id.server_index;
-    let server_id = pegasus_worker_id.server_id;
-    let partition_server_index_map =
-        get_global_partition_server_mapping(server_index, process_partition_list);
+    std::thread::sleep(std::time::Duration::from_secs(3));
 
     let query_vineyard = QueryVineyard::new(
         Arc::new(ffi_store).clone(),
@@ -103,35 +99,25 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         partition_server_index_map,
     );
     let job_assembly = query_vineyard.initialize_job_assembly();
-    start_rpc_server(
-        pegasus::get_current_worker().server_id as u64,
-        rpc_config,
-        job_assembly,
-        GaiaServiceListener,
-    )
-    .await?;
+    start_rpc_server(server_id, rpc_config, job_assembly, GaiaServiceListener).await?;
     Ok(())
 }
 
-fn get_global_partition_server_mapping(
-    server_index: u32, local_process_partition_list: Vec<u32>,
-) -> HashMap<u32, u32> {
+fn get_global_partition_server_mapping(local_process_partition_list: Vec<u32>) -> HashMap<u32, u32> {
     // sync global mapping of server_index(process) -> partition_list via pegasus
     let mut conf = JobConf::new("get_partition_server_index_map");
     conf.reset_servers(ServerConf::All);
     let mut results = pegasus::run(conf, || {
         let local_process_partition_list = local_process_partition_list.clone();
         move |input, output| {
-            let local_process_partition_list = local_process_partition_list
-                .clone()
-                .into_iter()
-                .map(move |pid| (server_index, pid));
+            let local_process_partition_list = local_process_partition_list.clone();
+            let global_process_partition_list_mapping: HashMap<u32, Vec<u32>> = HashMap::new();
             input
                 .input_from(local_process_partition_list)?
-                .fold(HashMap::new(), || {
-                    |mut mapping, (server_index, partition_id)| {
+                .fold(global_process_partition_list_mapping, || {
+                    |mut mapping, partition_id| {
                         mapping
-                            .entry(server_index)
+                            .entry(pegasus::get_current_worker().server_index)
                             .or_insert_with(Vec::new)
                             .push(partition_id);
                         Ok(mapping)
@@ -154,13 +140,13 @@ fn get_global_partition_server_mapping(
     .expect("submitted job failure");
 
     let process_partition_lists = results.next().unwrap().unwrap();
-    let mut global_partition_server_mapping = HashMap::new();
+    let mut partition_server_index_map = HashMap::new();
     for (server_index, partition_id) in process_partition_lists {
-        global_partition_server_mapping.insert(partition_id, server_index);
+        partition_server_index_map.insert(partition_id, server_index);
     }
-    info!("partition_server_index_map {:?}", global_partition_server_mapping);
+    info!("partition_server_index_map {:?}", partition_server_index_map);
 
-    global_partition_server_mapping
+    partition_server_index_map
 }
 
 struct GaiaServiceListener;

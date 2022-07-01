@@ -250,6 +250,12 @@ class KubernetesClusterLauncher(Launcher):
 
         self._analytical_engine_process = None
 
+        # interactive engine
+        # executor inter-processing port
+        # executor rpc port
+        # frontend port
+        self._interactive_port = 8233
+
         # 8000 ~ 9000 is exposed
         self._learning_engine_ports_usage = 8000
         self._graphlearn_services = dict()
@@ -363,11 +369,12 @@ class KubernetesClusterLauncher(Launcher):
             schema_path,
             self.hosts,
             self._engine_container_name,
-            "1234",  # executor port
-            "12345",  # executor rpc port
-            "8182",  # frontend port
+            str(self._interactive_port),  # executor port
+            str(self._interactive_port + 1),  # executor rpc port
+            str(self._interactive_port + 2),  # frontend port
             self._coordinator_name,
         ]
+        self._interactive_port += 3
         logger.info("Create GIE instance with command: {0}".format(" ".join(cmd)))
         process = subprocess.Popen(
             cmd,
