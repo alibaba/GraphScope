@@ -148,9 +148,6 @@ jobs:
     runs-on: [self-hosted, "47.242.9.60"]
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     needs: [gremlin-test]
-    strategy:
-      matrix:
-        executor: [maxgraph]
     steps:
     - name: Clean Up
       run: |
@@ -196,7 +193,7 @@ jobs:
         helm dependency update
         # helm deployment and testing
         cd ${GITHUB_WORKSPACE}/charts
-        helm install ci --set image.tag=${SHORT_SHA},executor=${{ matrix.executor }} ./graphscope-store
+        helm install ci --set image.tag=${SHORT_SHA} ./graphscope-store
         helm test ci --timeout 5m0s
         # 1. get gss service endpoint
         export GRPC_PORT=$(kubectl get --namespace default -o jsonpath="{.spec.ports[0].nodePort}" services ci-graphscope-store-frontend)
@@ -228,7 +225,7 @@ jobs:
         # restart helm and run demo with the PersistentVolume
         helm uninstall ci
         cd ${GITHUB_WORKSPACE}/charts
-        helm install ci --set image.tag=${SHORT_SHA},executor=${{ matrix.executor }} ./graphscope-store
+        helm install ci --set image.tag=${SHORT_SHA} ./graphscope-store
         # helm test and python test on the restarted store
         export GRPC_PORT=$(kubectl get --namespace default -o jsonpath="{.spec.ports[0].nodePort}" services ci-graphscope-store-frontend)
         export GREMLIN_PORT=$(kubectl get --namespace default -o jsonpath="{.spec.ports[1].nodePort}" services ci-graphscope-store-frontend)

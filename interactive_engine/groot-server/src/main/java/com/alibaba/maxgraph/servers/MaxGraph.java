@@ -39,13 +39,8 @@ public class MaxGraph {
             }
         } else {
             String roleName = args[0];
-            if (roleName.equalsIgnoreCase("store-gaia")
-                    || roleName.equalsIgnoreCase("frontend-gaia")) {
-                conf =
-                        Configs.newBuilder(conf)
-                                .put(CommonConfig.ENGINE_TYPE.getKey(), "gaia")
-                                .build();
-            }
+            conf = Configs.newBuilder(conf).put(CommonConfig.ENGINE_TYPE.getKey(), "gaia").build();
+
             RoleType roleType = RoleType.fromName(roleName);
             switch (roleType) {
                 case FRONTEND:
