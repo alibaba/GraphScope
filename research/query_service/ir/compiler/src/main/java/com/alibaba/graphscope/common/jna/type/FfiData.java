@@ -32,10 +32,7 @@ public class FfiData extends Structure {
     public static class ByValue extends FfiData implements Structure.ByValue, Closeable {
         public byte[] getBytes() {
             if (buffer != null && len > 0) {
-                byte[] bytes = new byte[len];
-                for (int i = 0; i < len; ++i) {
-                    bytes[i] = buffer.getByte(i);
-                }
+                byte[] bytes = buffer.getByteArray(0, len);
                 return bytes;
             }
             return null;
