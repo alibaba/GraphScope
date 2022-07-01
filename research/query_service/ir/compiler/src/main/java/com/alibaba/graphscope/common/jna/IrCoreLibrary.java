@@ -34,7 +34,7 @@ public interface IrCoreLibrary extends Library {
 
     Pointer initLogicalPlan();
 
-    String printPlanAsJson(Pointer plan);
+    FfiError.ByValue printPlanAsJson(Pointer plan);
 
     void destroyLogicalPlan(Pointer plan);
 

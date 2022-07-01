@@ -615,10 +615,14 @@ public class IrPlan implements Closeable {
         return bytes;
     }
 
-    public String getPlanAsJson() {
+    public String getPlanAsJson() throws OpArgIllegalException {
         String json = "";
         if (ptrPlan != null) {
-            json = irCoreLib.printPlanAsJson(ptrPlan);
+            FfiError e = irCoreLib.printPlanAsJson(ptrPlan);
+            if (e.code != ResultCode.Success) {
+                throw new OpArgIllegalException(OpArgIllegalException.Cause.INVALID_TYPE, e.msg);
+            }
+            json = e.msg;
         }
         return json;
     }
