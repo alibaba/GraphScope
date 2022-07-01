@@ -116,9 +116,9 @@ gie:
 	cd $(WORKING_DIR)/interactive_engine/executor && \
 	rustup component add rustfmt && \
 	if [ x"release" = x"${BUILD_TYPE}" ]; then \
-		cargo build --all --release; \
+		cargo build --workspace --release; \
 	else \
-		cargo build --all; \
+		cargo build --workspace; \
 	fi
 	# install
 	mkdir -p $(WORKING_DIR)/.install_prefix && \
