@@ -35,21 +35,15 @@ import com.alibaba.graphscope.gremlin.Utils;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 
-import org.apache.commons.io.FileUtils;
 import org.javatuples.Pair;
 
 import java.io.Closeable;
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Function;
 
 // represent ir plan as a chain of operators
 public class IrPlan implements Closeable {
     private static IrCoreLibrary irCoreLib = IrCoreLibrary.INSTANCE;
-    // get tmp directory from system properties, which is accessible from common users
-    private static String JSON_PLAN_DIR = System.getProperty("java.io.tmpdir");
     private Pointer ptrPlan;
     private IrMeta meta;
     // to identify a unique json file which contains the logic plan from ir_core
@@ -621,19 +615,10 @@ public class IrPlan implements Closeable {
         return bytes;
     }
 
-    public String getPlanAsJson() throws IOException {
+    public String getPlanAsJson() {
         String json = "";
         if (ptrPlan != null) {
-            String fileName = JSON_PLAN_DIR + File.separator + planName + ".json";
-            File file = new File(fileName);
-            if (file.exists()) {
-                file.delete();
-            }
-            irCoreLib.writePlanToJson(ptrPlan, fileName);
-            json = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
-            if (file.exists()) {
-                file.delete();
-            }
+            json = irCoreLib.printPlanAsJson(ptrPlan);
         }
         return json;
     }
