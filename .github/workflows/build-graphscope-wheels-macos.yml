@@ -41,7 +41,7 @@ jobs:
         submodules: true
 
     - name: Setup tmate session
-      if: true
+      if: false
       uses: mxschmitt/action-tmate@v2
 
     - name: Install Dependencies
