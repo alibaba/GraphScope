@@ -95,7 +95,13 @@ impl WriteGraphProxy for VineyardGraphWriter {
         let label_id = self.encode_ffi_label(label)?;
         let native_properties = self.encode_details(properties)?;
         let state = unsafe {
-            v6d_add_vertex(self.graph, vertex_id, label_id, native_properties.len(), native_properties.as_ptr())
+            v6d_add_vertex(
+                self.graph,
+                vertex_id,
+                label_id,
+                native_properties.len(),
+                native_properties.as_ptr(),
+            )
         };
         check_ffi_state(state, "add_vertex")
     }
@@ -173,8 +179,9 @@ fn build_vineyard_schema(schema: &schema_pb::Schema) -> GraphProxyResult<SchemaH
             let prop_type = PropertyType::from_common_data_type(
                 common_pb::DataType::from_i32(column.data_type).unwrap(),
             );
-            let state =
-                unsafe { v6d_build_vertex_property(v_type_builder, prop_id, prop_name.as_ptr(), prop_type) };
+            let state = unsafe {
+                v6d_build_vertex_property(v_type_builder, prop_id, prop_name.as_ptr(), prop_type)
+            };
             check_ffi_state(state, "build_vertex_property() for vineyard")?;
 
             if column.is_primary_key {
