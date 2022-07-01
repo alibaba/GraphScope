@@ -620,7 +620,7 @@ public class IrPlan implements Closeable {
         if (ptrPlan != null) {
             FfiError e = irCoreLib.printPlanAsJson(ptrPlan);
             if (e.code != ResultCode.Success) {
-                throw new OpArgIllegalException(OpArgIllegalException.Cause.INVALID_TYPE, e.msg);
+                throw new InterOpIllegalArgException(InterOpBase.class, "printPlanAsJson", "code is " + e.code);
             }
             json = e.msg;
         }
