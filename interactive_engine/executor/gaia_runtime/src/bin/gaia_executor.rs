@@ -92,6 +92,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     pegasus::startup(server_config).unwrap();
     std::thread::sleep(std::time::Duration::from_secs(3));
+    let partition_server_index_map = get_partition_server_index_map(process_partition_list);
 
     let query_vineyard = QueryVineyard::new(
         Arc::new(ffi_store).clone(),
@@ -103,7 +104,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn get_global_partition_server_mapping(local_process_partition_list: Vec<u32>) -> HashMap<u32, u32> {
+fn get_partition_server_index_map(local_process_partition_list: Vec<u32>) -> HashMap<u32, u32> {
     // sync global mapping of server_index(process) -> partition_list via pegasus
     let mut conf = JobConf::new("get_partition_server_index_map");
     conf.reset_servers(ServerConf::All);
