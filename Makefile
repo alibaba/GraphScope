@@ -100,7 +100,7 @@ ifneq ($(INSTALL_PREFIX), /usr/local)
 endif
 ifeq (${ENABLE_JAVA_SDK}, ON)
 	cd $(WORKING_DIR)/analytical_engine/java && \
-	mvn clean install -DskipTests && \
+	mvn clean install -DskipTests --quiet && \
 	sudo cp ${WORKING_DIR}/analytical_engine/java/grape-runtime/target/native/libgrape-jni.so ${INSTALL_PREFIX}/lib/ && \
 	sudo cp ${WORKING_DIR}/analytical_engine/java/grape-runtime/target/grape-runtime-0.1-shaded.jar ${INSTALL_PREFIX}/lib/ && \
 	sudo mkdir -p ${INSTALL_PREFIX}/conf/ && \

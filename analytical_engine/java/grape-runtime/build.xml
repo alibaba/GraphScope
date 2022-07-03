@@ -26,11 +26,11 @@
 
     <echo level="info" message="${os.name}"/>
 
-    <exec executable="nproc" outputproperty="cores.count" os="Linux">
+    <exec executable="nproc" outputproperty="cores.count" osfamily="unix">
         <arg value="--all"/>
     </exec>
 
-    <exec executable="sysctl" outputproperty="cores.count" os="Mac OS X">
+    <exec executable="sysctl" outputproperty="cores.count" osfamily="mac">
         <arg value="-n"/>
         <arg value="hw.physicalcpu"/>
     </exec>
