@@ -26,7 +26,7 @@
 
     <echo level="info" message="${os.name}"/>
 
-    <exec executable="nproc" outputproperty="cores.count" os="linux">
+    <exec executable="nproc" outputproperty="cores.count" os="linux64">
         <arg value="--all"/>
     </exec>
 
