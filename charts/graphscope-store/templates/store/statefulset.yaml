@@ -90,7 +90,6 @@ spec:
               value: {{ .Values.javaOpts | quote }}
             - name: EXECUTOR
               value: "store-gaia"
-                
             - name: ROLE
               value: "store"
             - name: FRONTEND_COUNT

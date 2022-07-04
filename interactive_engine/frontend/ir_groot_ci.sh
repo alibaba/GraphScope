@@ -14,7 +14,7 @@ sleep 20
 
 # load data
 cd ${base_dir}/../sdk && mvn -Dtest=com.alibaba.graphscope.groot.sdk.DataLoadingTest test
-cd ${base_dir} && mvn test -Dtest=com.alibaba.graphscope.frontend.IrGremlinTest -Dgremlin.endpoint="localhost:12312" -DfailIfNoTests=false
+cd ${base_dir} && mvn test -Dtest=com.alibaba.graphscope.IrGremlinTest -Dgremlin.endpoint="localhost:12312"
 exit_code=$?
 ps -ef | grep "com.alibaba.maxgraph.servers.MaxNode" | grep -v grep | awk '{print $2}' | xargs kill -9
 
