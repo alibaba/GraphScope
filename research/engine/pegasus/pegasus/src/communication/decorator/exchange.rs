@@ -188,10 +188,13 @@ impl<D: Data> ExchangeByDataPush<D> {
             push_stat.push(pushes);
         }
 
-        let mut weight = DynPeers::empty();
-        for (i, p) in push_stat.iter().enumerate() {
-            if *p > 0 {
-                weight.add_source(i as u32);
+        let mut weight = DynPeers::all();
+        if self.scope_level != 0 {
+            weight = DynPeers::empty();
+            for (i, p) in push_stat.iter().enumerate() {
+                if *p > 0 {
+                    weight.add_source(i as u32);
+                }
             }
         }
 
@@ -202,6 +205,7 @@ impl<D: Data> ExchangeByDataPush<D> {
             weight,
             end.tag
         );
+
         let global_total_send = push_stat.iter().sum::<u64>();
         push_stat
             .into_iter()
@@ -547,6 +551,7 @@ impl<D: Data> BlockPush for ExchangeByDataPush<D> {
 pub struct ExchangeByBatchPush<D: Data> {
     pub ch_info: ChannelInfo,
     src: u32,
+    scope_level: u32,
     pushes: Vec<EventEmitPush<D>>,
     magic: Magic,
     route: BatchRoute<D>,
@@ -587,10 +592,13 @@ impl<D: Data> ExchangeByBatchPush<D> {
             push_stat.push(pushes);
         }
 
-        let mut weight = DynPeers::empty();
-        for (i, p) in push_stat.iter().enumerate() {
-            if *p > 0 {
-                weight.add_source(i as u32);
+        let mut weight = DynPeers::all();
+        if self.scope_level != 0 {
+            weight = DynPeers::empty();
+            for (i, p) in push_stat.iter().enumerate() {
+                if *p > 0 {
+                    weight.add_source(i as u32);
+                }
             }
         }
         trace_worker!(
@@ -663,6 +671,7 @@ impl<D: Data> ExchangeByBatchPush<D> {
         &mut self, target: usize, mut end: EndOfScope, mut batch: MicroBatch<D>,
     ) -> Result<(), IOError> {
         assert!(end.peers_contains(self.src));
+
         if end.peers().value() == 1 {
             // if only one peers, it must be this worker;
             if batch.get_seq() == 0 {
