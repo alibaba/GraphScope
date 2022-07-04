@@ -291,7 +291,6 @@ def test_modern_graph():
         for threads_per_worker in threads_per_worker_options:
             with vineyard.envvars(
                 {
-                    "USE_GAIA_ENGINE": "True",
                     "RUST_LOG": "debug",
                     "THREADS_PER_WORKER": "%d" % (threads_per_worker,),
                 }

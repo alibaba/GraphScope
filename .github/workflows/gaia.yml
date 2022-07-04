@@ -94,7 +94,6 @@ jobs:
     - name: Ir Integration Test on Vineyard Store
       run: |
         source ${HOME}/.bashrc
-        export USE_GAIA_ENGINE=true
         cd ${GITHUB_WORKSPACE}/interactive_engine/frontend
         ./kill.sh || true
         ./ir_vineyard_ci.sh
