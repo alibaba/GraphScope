@@ -13,6 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use gaia_runtime::error::{StartServerError, StartServerResult};
 use log::info;
 use maxgraph_store::api::graph_partition::GraphPartitionManager;
 use pegasus::api::{Fold, Sink};
@@ -33,44 +34,44 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let server_config_file = &args[2]; // executor.vineyard.properties
 
     // Init log4rs
-    log4rs::init_file(log_config_file, Default::default())
-        .unwrap_or_else(|_| panic!("init log4rs from {} failed", log_config_file));
+    log4rs::init_file(log_config_file, Default::default())?;
 
     // Parse properties, init ServerConfig and RPCServerConfig
-    let parsed = dotproperties::parse_from_file(server_config_file).unwrap();
-    let mapped: HashMap<_, _> = parsed.into_iter().collect();
-    let rpc_port: u16 = mapped.get("rpc.port").unwrap().parse().unwrap();
-    let server_id: u64 = mapped
+    let parsed = dotproperties::parse_from_file(server_config_file)
+        .map_err(|_| StartServerError::parse_error("parse_from_file failed"))?;
+    let config_map: HashMap<_, _> = parsed.into_iter().collect();
+    let rpc_port: u16 = config_map
+        .get("rpc.port")
+        .ok_or(StartServerError::empty_config_error("rpc.port"))?
+        .parse()?;
+    let server_id: u64 = config_map
         .get("server.id")
-        .unwrap()
-        .parse()
-        .unwrap();
-    let server_size: usize = mapped
+        .ok_or(StartServerError::empty_config_error("server.id"))?
+        .parse()?;
+    let server_size: usize = config_map
         .get("server.size")
-        .unwrap()
-        .parse()
-        .unwrap();
-    let hosts: Vec<&str> = mapped
+        .ok_or(StartServerError::empty_config_error("server.size"))?
+        .parse()?;
+    let hosts: Vec<&str> = config_map
         .get("pegasus.hosts")
-        .unwrap()
+        .ok_or(StartServerError::empty_config_error("pegasus.hosts"))?
         .split(",")
         .collect();
-    let worker_thread_num: i32 = mapped
+    let worker_thread_num: i32 = config_map
         .get("pegasus.worker.num")
-        .unwrap()
-        .parse()
-        .unwrap();
-    let vineyard_graph_id: i64 = mapped
+        .ok_or(StartServerError::empty_config_error("pegasus.worker.num"))?
+        .parse()?;
+    let vineyard_graph_id: i64 = config_map
         .get("graph.vineyard.object.id")
-        .unwrap()
-        .parse()
-        .unwrap();
+        .ok_or(StartServerError::empty_config_error("graph.vineyard.object.id"))?
+        .parse()?;
+
     assert_eq!(server_size, hosts.len());
 
     let mut server_addrs = Vec::with_capacity(server_size);
     for host in hosts {
         let ip_port: Vec<&str> = host.split(":").collect();
-        let server_addr = ServerAddr::new(ip_port[0].parse().unwrap(), ip_port[1].parse().unwrap());
+        let server_addr = ServerAddr::new(ip_port[0].parse()?, ip_port[1].parse()?);
         server_addrs.push(server_addr);
     }
     let network_config = NetworkConfig::with(server_id, server_addrs);
@@ -90,9 +91,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let process_partition_list = partition_manager.get_process_partition_list();
     info!("process_partition_list: {:?}", process_partition_list);
 
-    pegasus::startup(server_config).unwrap();
+    pegasus::startup(server_config)?;
     std::thread::sleep(std::time::Duration::from_secs(3));
-    let partition_server_index_map = get_partition_server_index_map(process_partition_list);
+    let partition_server_index_map = get_global_partition_server_mapping(process_partition_list)?;
 
     let query_vineyard = QueryVineyard::new(
         Arc::new(ffi_store).clone(),
@@ -104,18 +105,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn get_partition_server_index_map(local_process_partition_list: Vec<u32>) -> HashMap<u32, u32> {
+fn get_global_partition_server_mapping(
+    local_server_partition_list: Vec<u32>,
+) -> StartServerResult<HashMap<u32, u32>> {
     // sync global mapping of server_index(process) -> partition_list via pegasus
     let mut conf = JobConf::new("get_partition_server_index_map");
     conf.reset_servers(ServerConf::All);
     let mut results = pegasus::run(conf, || {
-        let local_process_partition_list = local_process_partition_list.clone();
+        let local_server_partition_list = local_server_partition_list.clone();
         move |input, output| {
-            let local_process_partition_list = local_process_partition_list.clone();
-            let global_process_partition_list_mapping: HashMap<u32, Vec<u32>> = HashMap::new();
+            let local_server_partition_list = local_server_partition_list.clone();
             input
-                .input_from(local_process_partition_list)?
-                .fold(global_process_partition_list_mapping, || {
+                .input_from(local_server_partition_list)?
+                .fold(HashMap::new(), || {
                     |mut mapping, partition_id| {
                         mapping
                             .entry(pegasus::get_current_worker().server_index)
@@ -125,29 +127,31 @@ fn get_partition_server_index_map(local_process_partition_list: Vec<u32>) -> Has
                     }
                 })?
                 .map(|mut mapping| {
-                    let mut vec = vec![];
+                    let mut server_partition_list = vec![];
                     for (server_index, workers) in mapping.drain() {
                         for worker in workers.into_iter() {
-                            vec.push((server_index, worker));
+                            server_partition_list.push((server_index, worker));
                         }
                     }
-                    Ok(vec)
+                    Ok(server_partition_list)
                 })?
                 .into_stream()?
                 .broadcast()
                 .sink_into(output)
         }
     })
-    .expect("submitted job failure");
+    .map_err(|e| StartServerError::other_error(&format!("build job failed: {:?}", e)))?;
 
-    let process_partition_lists = results.next().unwrap().unwrap();
-    let mut partition_server_index_map = HashMap::new();
-    for (server_index, partition_id) in process_partition_lists {
-        partition_server_index_map.insert(partition_id, server_index);
+    if let Some(Ok(server_partition_list)) = results.next() {
+        let mut partition_server_index_map = HashMap::new();
+        for (server_index, partition_id) in server_partition_list {
+            partition_server_index_map.insert(partition_id, server_index);
+        }
+        info!("partition_server_index_map {:?}", partition_server_index_map);
+        Ok(partition_server_index_map)
+    } else {
+        Err(StartServerError::other_error("pull result failed for server_partition_list"))
     }
-    info!("partition_server_index_map {:?}", partition_server_index_map);
-
-    partition_server_index_map
 }
 
 struct GaiaServiceListener;

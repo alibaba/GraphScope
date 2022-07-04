@@ -15,6 +15,9 @@
 //!
 
 #![allow(bare_trait_objects)]
+
+pub mod error;
+
 #[macro_use]
 extern crate log;
 extern crate dotproperties;
