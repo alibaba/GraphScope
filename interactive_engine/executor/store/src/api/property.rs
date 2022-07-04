@@ -1,12 +1,12 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //! http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,15 +14,16 @@
 //! limitations under the License.
 
 #![allow(dead_code)]
-use ::byteorder::{BigEndian, WriteBytesExt, ReadBytesExt};
+use ::byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
 use std::io::Cursor;
 use std::io::Read;
 use std::io::Write;
 
-use crate::schema::prelude::*;
 use crate::error::*;
+use crate::schema::prelude::*;
+use crate::unwrap_ok_or;
 
-#[derive(Clone, PartialEq, Debug, PartialOrd)]
+#[derive(Clone, PartialEq, Debug)]
 pub enum Property {
     Bool(bool),
     Char(u8),
@@ -42,6 +43,74 @@ pub enum Property {
     ListBytes(Vec<Vec<u8>>),
     Null,
     Unknown,
+}
+
+impl PartialOrd for Property {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        match (self, other) {
+            (Property::Bool(left), Property::Bool(right)) => left.partial_cmp(right),
+            (Property::Char(left), Property::Char(right)) => left.partial_cmp(right),
+            (Property::Short(left), Property::Short(right)) => left.partial_cmp(right),
+            (Property::Int(left), Property::Int(right)) => left.partial_cmp(right),
+            (Property::Long(left), Property::Long(right)) => left.partial_cmp(right),
+            (Property::Float(left), Property::Float(right)) => left.partial_cmp(right),
+            (Property::Double(left), Property::Double(right)) => left.partial_cmp(right),
+            // cmp between numbers, if types not match
+            // if both are integers, cast to long
+            // else cast to double
+            (Property::Short(_), _)
+            | (Property::Int(_), _)
+            | (Property::Long(_), _)
+            | (Property::Float(_), _)
+            | (Property::Double(_), _)
+            | (_, Property::Short(_))
+            | (_, Property::Int(_))
+            | (_, Property::Long(_))
+            | (_, Property::Float(_))
+            | (_, Property::Double(_)) => {
+                if self.is_float_type() || other.is_float_type() {
+                    let left = unwrap_ok_or!(self.get_double(), _, return None);
+                    let right = unwrap_ok_or!(other.get_double(), _, return None);
+                    left.partial_cmp(&right)
+                } else {
+                    let left = unwrap_ok_or!(self.get_long(), _, return None);
+                    let right = unwrap_ok_or!(other.get_long(), _, return None);
+                    left.partial_cmp(&right)
+                }
+            }
+            (Property::Bytes(left), Property::Bytes(right)) => left.partial_cmp(right),
+            (Property::String(left), Property::String(right)) => left.partial_cmp(right),
+            (Property::Date(left), Property::Date(right)) => left.partial_cmp(right),
+            (Property::ListInt(left), Property::ListInt(right)) => left.partial_cmp(right),
+            (Property::ListLong(left), Property::ListLong(right)) => left.partial_cmp(right),
+            (Property::ListFloat(left), Property::ListFloat(right)) => left.partial_cmp(right),
+            (Property::ListDouble(left), Property::ListDouble(right)) => left.partial_cmp(right),
+            // cmp number lists, same as above
+            (Property::ListInt(_), _)
+            | (Property::ListLong(_), _)
+            | (Property::ListFloat(_), _)
+            | (Property::ListDouble(_), _)
+            | (_, Property::ListInt(_))
+            | (_, Property::ListLong(_))
+            | (_, Property::ListFloat(_))
+            | (_, Property::ListDouble(_)) => {
+                if self.is_ele_float_type() || other.is_ele_float_type() {
+                    let left = unwrap_ok_or!(self.cast_double_list(), _, return None);
+                    let right = unwrap_ok_or!(other.cast_double_list(), _, return None);
+                    left.partial_cmp(&right)
+                } else {
+                    let left = unwrap_ok_or!(self.cast_long_list(), _, return None);
+                    let right = unwrap_ok_or!(other.cast_long_list(), _, return None);
+                    left.partial_cmp(&right)
+                }
+            }
+            (Property::ListString(left), Property::ListString(right)) => left.partial_cmp(right),
+            (Property::ListBytes(left), Property::ListBytes(right)) => left.partial_cmp(right),
+
+            (Property::Null, Property::Null) => Some(std::cmp::Ordering::Equal),
+            _ => None,
+        }
+    }
 }
 
 impl Property {
@@ -131,7 +200,7 @@ impl Property {
             Property::Null => {
                 panic!("property is null");
             }
-            _ => unimplemented!()
+            _ => unimplemented!(),
         };
         data
     }
@@ -142,7 +211,11 @@ impl Property {
         let mut ret = Vec::new();
         match *self {
             Property::Bool(ref v) => {
-                if *v { vec![1] } else { vec![0] }
+                if *v {
+                    vec![1]
+                } else {
+                    vec![0]
+                }
             }
             Property::Char(ref v) => vec![*v as u8],
             Property::Short(ref v) => {
@@ -223,7 +296,7 @@ impl Property {
             Property::Null => {
                 panic!("property is null");
             }
-            _ => unreachable!()
+            _ => unreachable!(),
         }
     }
 
@@ -262,7 +335,7 @@ impl Property {
                 let msg = format!("{:?} cannot transform to {:?}", self, data_type);
                 let err = graph_err!(GraphErrorCode::DataError, msg, transform, data_type);
                 Err(err)
-            },
+            }
         }
     }
 
@@ -276,7 +349,21 @@ impl Property {
             Property::Float(_) => *data_type == DataType::Float,
             Property::Double(_) => *data_type == DataType::Double,
             Property::String(_) => *data_type == DataType::String,
-            _ => unimplemented!()
+            _ => unimplemented!(),
+        }
+    }
+
+    fn is_float_type(&self) -> bool {
+        match self {
+            &Property::Float(_) | &Property::Double(_) => true,
+            _ => false,
+        }
+    }
+
+    fn is_ele_float_type(&self) -> bool {
+        match self {
+            &Property::ListFloat(_) | &Property::ListDouble(_) => true,
+            _ => false,
         }
     }
 }
@@ -287,7 +374,13 @@ fn long_to_data_type(x: i64, data_type: &DataType) -> GraphTraceResult<Vec<u8>> 
         DataType::Char => {
             if x > u8::max_value() as i64 || x < 0 {
                 let msg = format!("{} cannot be transformed to char", x);
-                let err = graph_err!(GraphErrorCode::DataError, msg, long_to_data_type, x, data_type);
+                let err = graph_err!(
+                    GraphErrorCode::DataError,
+                    msg,
+                    long_to_data_type,
+                    x,
+                    data_type
+                );
                 Err(err)
             } else {
                 Ok(Property::Char(x as u8).to_vec())
@@ -296,7 +389,13 @@ fn long_to_data_type(x: i64, data_type: &DataType) -> GraphTraceResult<Vec<u8>> 
         DataType::Short => {
             if x > i16::max_value() as i64 || x < i16::min_value() as i64 {
                 let msg = format!("{} cannot be transformed to short", x);
-                let err = graph_err!(GraphErrorCode::DataError, msg, long_to_data_type, x, data_type);
+                let err = graph_err!(
+                    GraphErrorCode::DataError,
+                    msg,
+                    long_to_data_type,
+                    x,
+                    data_type
+                );
                 Err(err)
             } else {
                 Ok(Property::Short(x as i16).to_vec())
@@ -305,18 +404,30 @@ fn long_to_data_type(x: i64, data_type: &DataType) -> GraphTraceResult<Vec<u8>> 
         DataType::Int => {
             if x > i32::max_value() as i64 || x < i32::min_value() as i64 {
                 let msg = format!("{} cannot be transformed to int", x);
-                let err = graph_err!(GraphErrorCode::DataError, msg, long_to_data_type, x, data_type);
+                let err = graph_err!(
+                    GraphErrorCode::DataError,
+                    msg,
+                    long_to_data_type,
+                    x,
+                    data_type
+                );
                 Err(err)
             } else {
                 Ok(Property::Int(x as i32).to_vec())
             }
-        },
+        }
         DataType::Long => Ok(Property::Long(x).to_vec()),
         DataType::Float => Ok(Property::Float(x as f32).to_vec()),
         DataType::Double => Ok(Property::Double(x as f64).to_vec()),
         _ => {
             let msg = format!("{} cannot be transformed to {:?}", x, data_type);
-            let err = graph_err!(GraphErrorCode::DataError, msg, long_to_data_type, x, data_type);
+            let err = graph_err!(
+                GraphErrorCode::DataError,
+                msg,
+                long_to_data_type,
+                x,
+                data_type
+            );
             Err(err)
         }
     }
@@ -328,7 +439,13 @@ fn double_to_data_type(x: f64, data_type: &DataType) -> GraphTraceResult<Vec<u8>
         DataType::Char => {
             if x > u8::max_value() as f64 || x < u8::min_value() as f64 {
                 let msg = format!("{} cannot be transformed to char", x);
-                let err = graph_err!(GraphErrorCode::DataError, msg, double_to_data_type, x, data_type);
+                let err = graph_err!(
+                    GraphErrorCode::DataError,
+                    msg,
+                    double_to_data_type,
+                    x,
+                    data_type
+                );
                 Err(err)
             } else {
                 Ok(Property::Char(x as u8).to_vec())
@@ -337,7 +454,13 @@ fn double_to_data_type(x: f64, data_type: &DataType) -> GraphTraceResult<Vec<u8>
         DataType::Short => {
             if x > i16::max_value() as f64 || x < i16::min_value() as f64 {
                 let msg = format!("{} cannot be transformed to short", x);
-                let err = graph_err!(GraphErrorCode::DataError, msg, double_to_data_type, x, data_type);
+                let err = graph_err!(
+                    GraphErrorCode::DataError,
+                    msg,
+                    double_to_data_type,
+                    x,
+                    data_type
+                );
                 Err(err)
             } else {
                 Ok(Property::Short(x as i16).to_vec())
@@ -346,16 +469,28 @@ fn double_to_data_type(x: f64, data_type: &DataType) -> GraphTraceResult<Vec<u8>
         DataType::Int => {
             if x > i32::max_value() as f64 || x < i32::min_value() as f64 {
                 let msg = format!("{} cannot be transformed to int", x);
-                let err = graph_err!(GraphErrorCode::DataError, msg, double_to_data_type, x, data_type);
+                let err = graph_err!(
+                    GraphErrorCode::DataError,
+                    msg,
+                    double_to_data_type,
+                    x,
+                    data_type
+                );
                 Err(err)
             } else {
                 Ok(Property::Int(x as i32).to_vec())
             }
-        },
+        }
         DataType::Long => {
             if x > i64::max_value() as f64 || x < i64::min_value() as f64 {
                 let msg = format!("{} cannot be transformed to long", x);
-                let err = graph_err!(GraphErrorCode::DataError, msg, double_to_data_type, x, data_type);
+                let err = graph_err!(
+                    GraphErrorCode::DataError,
+                    msg,
+                    double_to_data_type,
+                    x,
+                    data_type
+                );
                 Err(err)
             } else {
                 Ok(Property::Long(x as i64).to_vec())
@@ -365,7 +500,13 @@ fn double_to_data_type(x: f64, data_type: &DataType) -> GraphTraceResult<Vec<u8>
         DataType::Double => Ok(Property::Double(x).to_vec()),
         _ => {
             let msg = format!("{} cannot be transformed to {:?}", x, data_type);
-            let err = graph_err!(GraphErrorCode::DataError, msg, double_to_data_type, x, data_type);
+            let err = graph_err!(
+                GraphErrorCode::DataError,
+                msg,
+                double_to_data_type,
+                x,
+                data_type
+            );
             Err(err)
         }
     }
@@ -373,52 +514,38 @@ fn double_to_data_type(x: f64, data_type: &DataType) -> GraphTraceResult<Vec<u8>
 
 pub fn parse_property(data: &str, data_type: DataType) -> Property {
     match data_type {
-        DataType::Bool => {
-            match data {
-                "true" => Property::Bool(true),
-                "false" => Property::Bool(false),
-                _ => Property::Unknown,
-            }
-        }
-        DataType::Char => {
-            match data.len() {
-                1 => Property::Char(data.as_bytes()[0]),
-                _ => Property::Unknown,
-            }
-        }
-        DataType::Short => {
-            match data.parse::<i16>() {
-                Ok(x) => Property::Short(x),
-                _ => Property::Unknown,
-            }
-        }
-        DataType::Int => {
-            match data.parse::<i32>() {
-                Ok(x) => Property::Int(x),
-                _ => Property::Unknown,
-            }
-        }
-        DataType::Long => {
-            match data.parse::<i64>() {
-                Ok(x) => Property::Long(x),
-                _ => Property::Unknown,
-            }
-        }
-        DataType::Float => {
-            match data.parse::<f32>() {
-                Ok(x) => Property::Float(x),
-                _ => Property::Unknown,
-            }
-        }
-        DataType::Double => {
-            match data.parse::<f64>() {
-                Ok(x) => Property::Double(x),
-                _ => Property::Unknown,
-            }
-        }
-        DataType::String => { Property::String(data.to_owned()) }
-        DataType::Bytes => { Property::Bytes(Vec::from(data.to_owned().as_bytes())) }
-        DataType::Date => { Property::Date(data.to_owned()) }
+        DataType::Bool => match data {
+            "true" => Property::Bool(true),
+            "false" => Property::Bool(false),
+            _ => Property::Unknown,
+        },
+        DataType::Char => match data.len() {
+            1 => Property::Char(data.as_bytes()[0]),
+            _ => Property::Unknown,
+        },
+        DataType::Short => match data.parse::<i16>() {
+            Ok(x) => Property::Short(x),
+            _ => Property::Unknown,
+        },
+        DataType::Int => match data.parse::<i32>() {
+            Ok(x) => Property::Int(x),
+            _ => Property::Unknown,
+        },
+        DataType::Long => match data.parse::<i64>() {
+            Ok(x) => Property::Long(x),
+            _ => Property::Unknown,
+        },
+        DataType::Float => match data.parse::<f32>() {
+            Ok(x) => Property::Float(x),
+            _ => Property::Unknown,
+        },
+        DataType::Double => match data.parse::<f64>() {
+            Ok(x) => Property::Double(x),
+            _ => Property::Unknown,
+        },
+        DataType::String => Property::String(data.to_owned()),
+        DataType::Bytes => Property::Bytes(Vec::from(data.to_owned().as_bytes())),
+        DataType::Date => Property::Date(data.to_owned()),
         DataType::ListInt => {
             if data.len() == 0 {
                 Property::ListInt(vec![])
@@ -468,69 +595,85 @@ impl Property {
     /// get boolean value
     pub fn get_bool(&self) -> Result<bool, String> {
         match self {
-            &Property::Bool(b) => { Ok(b) }
-            _ => { Err(format!("get bool value fail from property=>{:?}", self)) }
+            &Property::Bool(b) => Ok(b),
+            _ => Err(format!("get bool value fail from property=>{:?}", self)),
         }
     }
 
     /// get int value
     pub fn get_int(&self) -> Result<i32, String> {
         match self {
-            &Property::Int(i) => { Ok(i) }
-            _ => { Err(format!("get int value fail from property=>{:?}", self)) }
+            &Property::Short(s) => Ok(s as i32),
+            &Property::Int(i) => Ok(i),
+            _ => Err(format!("get int value fail from property=>{:?}", self)),
         }
     }
 
     /// get long value
     pub fn get_long(&self) -> Result<i64, String> {
         match self {
-            &Property::Int(l) => { Ok(l as i64) }
-            &Property::Long(l) => { Ok(l) }
-            _ => { Err(format!("get long value fail from property=>{:?}", self)) }
+            &Property::Short(s) => Ok(s as i64),
+            &Property::Int(l) => Ok(l as i64),
+            &Property::Long(l) => Ok(l),
+            _ => Err(format!("get long value fail from property=>{:?}", self)),
         }
     }
 
     /// get float value
     pub fn get_float(&self) -> Result<f32, String> {
         match self {
-            &Property::Int(i) => { Ok(i as f32) }
-            &Property::Float(f) => { Ok(f) }
-            _ => { Err(format!("get float value fail from property=>{:?}", self)) }
+            &Property::Short(s) => Ok(s as f32),
+            &Property::Int(i) => Ok(i as f32),
+            &Property::Float(f) => Ok(f),
+            _ => Err(format!("get float value fail from property=>{:?}", self)),
         }
     }
 
     /// get double value
     pub fn get_double(&self) -> Result<f64, String> {
         match self {
-            &Property::Int(d) => { Ok(d as f64) }
-            &Property::Long(d) => { Ok(d as f64) }
-            &Property::Float(d) => { Ok(d as f64) }
-            &Property::Double(d) => { Ok(d) }
-            _ => { Err(format!("get double value fail from property=>{:?}", self)) }
+            &Property::Short(s) => Ok(s as f64),
+            &Property::Int(d) => Ok(d as f64),
+            &Property::Long(d) => Ok(d as f64),
+            &Property::Float(d) => Ok(d as f64),
+            &Property::Double(d) => Ok(d),
+            _ => Err(format!("get double value fail from property=>{:?}", self)),
         }
     }
 
     /// get string ref value
     pub fn get_string(&self) -> Result<&String, String> {
         match self {
-            &Property::String(ref s) => { Ok(s) }
-            _ => { Err(format!("get string ref value fail from property=>{:?}", self)) }
+            &Property::String(ref s) => Ok(s),
+            _ => Err(format!(
+                "get string ref value fail from property=>{:?}",
+                self
+            )),
         }
     }
 
     /// get bytes
     pub fn get_bytes(&self) -> Result<&Vec<u8>, String> {
         match self {
-            &Property::Bytes(ref bytes) => { Ok(bytes) }
-            _ => { Err(format!("get bytes fail from property=>{:?}", self)) }
+            &Property::Bytes(ref bytes) => Ok(bytes),
+            _ => Err(format!("get bytes fail from property=>{:?}", self)),
         }
     }
 
     /// get int list
     pub fn get_list(&self) -> Result<&Vec<i32>, String> {
         match self {
-            &Property::ListInt(ref lists) => { Ok(lists) }
-            _ => { Err(format!("get list fail from property=>{:?}", self)) }
+            &Property::ListInt(ref lists) => Ok(lists),
+            _ => Err(format!("get list fail from property=>{:?}", self)),
+        }
+    }
+
+    /// cast int/long list to long list
+    fn cast_long_list(&self) -> Result<Vec<i64>, String> {
+        match self {
+            Property::ListInt(list) => Ok(list.iter().map(|i| *i as i64).collect()),
+            Property::ListLong(list) => (Ok(list.clone())),
+            _ => Err(format!("get list fail from property=>{:?}", self)),
         }
     }
 
@@ -538,7 +681,7 @@ impl Property {
     pub fn get_long_list(&self) -> Result<&Vec<i64>, String> {
         match self {
             &Property::ListLong(ref list) => Ok(list),
-            _ => { Err(format!("get long list fail from property=>{:?}", self)) }
+            _ => Err(format!("get long list fail from property=>{:?}", self)),
         }
     }
 
@@ -546,35 +689,18 @@ impl Property {
     pub fn get_float_list(&self) -> Result<&Vec<f32>, String> {
         match self {
             &Property::ListFloat(ref list) => Ok(list),
-            _ => { Err(format!("get float list fail from property=>{:?}", self)) }
+            _ => Err(format!("get float list fail from property=>{:?}", self)),
         }
     }
 
-    pub fn take_double_list(&mut self) -> Result<Vec<f64>, String> {
+    /// cast int/long/float/double list to double list
+    pub fn cast_double_list(&self) -> Result<Vec<f64>, String> {
         match self {
-            Property::ListInt(l) => {
-                let mut list: Vec<f64> = Vec::with_capacity(l.len());
-                for i in l.iter() {
-                    list.push((i.clone()) as f64);
-                }
-                Ok(list)
-            }
-            Property::ListLong(l) => {
-                let mut list: Vec<f64> = Vec::with_capacity(l.len());
-                for i in l.iter() {
-                    list.push((i.clone()) as f64);
-                }
-                Ok(list)
-            }
-            Property::ListFloat(l) => {
-                let mut list: Vec<f64> = Vec::with_capacity(l.len());
-                for i in l.iter() {
-                    list.push((i.clone()) as f64);
-                }
-                Ok(list)
-            }
-            Property::ListDouble(list) => Ok(list.to_vec()),
-            _ => { Err(format!("get double list fail from property=>{:?}", self)) }
+            Property::ListInt(l) => Ok(l.iter().map(|i| *i as f64).collect()),
+            Property::ListLong(l) => Ok(l.iter().map(|i| *i as f64).collect()),
+            Property::ListFloat(l) => Ok(l.iter().map(|i| *i as f64).collect()),
+            Property::ListDouble(list) => Ok(list.to_owned()),
+            _ => Err(format!("get double list fail from property=>{:?}", self)),
         }
     }
 
@@ -582,7 +708,7 @@ impl Property {
     pub fn get_double_list(&self) -> Result<&Vec<f64>, String> {
         match self {
             &Property::ListDouble(ref list) => Ok(list),
-            _ => { Err(format!("get double list fail from property=>{:?}", self)) }
+            _ => Err(format!("get double list fail from property=>{:?}", self)),
         }
     }
 
@@ -590,14 +716,14 @@ impl Property {
     pub fn get_string_list(&self) -> Result<&Vec<String>, String> {
         match self {
             &Property::ListString(ref list) => Ok(list),
-            _ => { Err(format!("get string list fail from property=>{:?}", self)) }
+            _ => Err(format!("get string list fail from property=>{:?}", self)),
         }
     }
 
     pub fn get_bytes_list(&self) -> Result<&Vec<Vec<u8>>, String> {
         match self {
             &Property::ListBytes(ref list) => Ok(list),
-            _ => { Err(format!("get bytes list fail from property=>{:?}", self)) }
+            _ => Err(format!("get bytes list fail from property=>{:?}", self)),
         }
     }
 }
@@ -652,12 +778,16 @@ pub fn parse_proerty_as_string(data: Vec<u8>, data_type: &DataType) -> Option<St
             }
             Some(format!("{:?}", data))
         }
-        _ => { unimplemented!() }
+        _ => {
+            unimplemented!()
+        }
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use std::cmp::Ordering;
+
     use super::*;
 
     #[test]
@@ -697,15 +827,88 @@ mod tests {
     #[test]
     fn test_property_transform() {
         let val = 123;
-        let _properties = vec![Property::Int(val), Property::Double(val as f64), Property::Float(val as f32),
-                              Property::Short(val as i16), Property::Long(val as i64), Property::Char(val as u8)];
-        let _target = vec![(DataType::Float, Property::Float(val as f32)),
-                          (DataType::Double, Property::Double(val as f64)), (DataType::Int, Property::Int(val)),
-                          (DataType::Long, Property::Long(val as i64)), (DataType::Short, Property::Short(val as i16)),
-                          (DataType::Char, Property::Char(val as u8)), (DataType::Bool, Property::Bool(val != 0))];
+        let _properties = vec![
+            Property::Int(val),
+            Property::Double(val as f64),
+            Property::Float(val as f32),
+            Property::Short(val as i16),
+            Property::Long(val as i64),
+            Property::Char(val as u8),
+        ];
+        let _target = vec![
+            (DataType::Float, Property::Float(val as f32)),
+            (DataType::Double, Property::Double(val as f64)),
+            (DataType::Int, Property::Int(val)),
+            (DataType::Long, Property::Long(val as i64)),
+            (DataType::Short, Property::Short(val as i16)),
+            (DataType::Char, Property::Char(val as u8)),
+            (DataType::Bool, Property::Bool(val != 0)),
+        ];
 
         let p = Property::String("aaaa".to_owned());
         let t = DataType::Int;
         assert!(p.transform(&t).is_err());
+    }
+
+    #[test]
+    fn test_property_ord() {
+        // cmp numbers
+        let p1 = Property::Short(10);
+        let p2 = Property::Long(10);
+        assert_eq!(Ordering::Equal, p1.partial_cmp(&p2).expect("cmp failed"));
+
+        let p1 = Property::Short(10);
+        let p2 = Property::Long(5);
+        assert_eq!(Ordering::Greater, p1.partial_cmp(&p2).expect("cmp failed"));
+
+        let p1 = Property::Float(10.0);
+        let p2 = Property::Float(10.0);
+        assert_eq!(Ordering::Equal, p1.partial_cmp(&p2).expect("cmp failed"));
+
+        let p1 = Property::Float(10.0);
+        let p2 = Property::Short(5);
+        assert_eq!(Ordering::Greater, p1.partial_cmp(&p2).expect("cmp failed"));
+
+        let p1 = Property::Double(5.0);
+        let p2 = Property::Long(10);
+        assert_eq!(Ordering::Less, p1.partial_cmp(&p2).expect("cmp failed"));
+
+        let p1 = Property::Float(10.0);
+        let p2 = Property::Double(20.0);
+        assert_eq!(Ordering::Less, p1.partial_cmp(&p2).expect("cmp failed"));
+
+        // cmp objects
+        let p1 = Property::String("hello".to_owned());
+        let p2 = Property::String("hello".to_owned());
+        assert_eq!(Ordering::Equal, p1.partial_cmp(&p2).expect("cmp failed"));
+
+        let p1 = Property::String("hello".to_owned());
+        let p2 = Property::Bytes("hello".as_bytes().to_vec());
+        assert_eq!(None, p1.partial_cmp(&p2));
+
+        // cmp list
+        let p1 = Property::ListInt(vec![1, 2, 3, 4]);
+        let p2 = Property::ListInt(vec![1, 2, 3, 4]);
+        assert_eq!(Ordering::Equal, p1.partial_cmp(&p2).expect("cmp failed"));
+
+        let p1 = Property::ListInt(vec![1, 2, 3, 4]);
+        let p2 = Property::ListLong(vec![1, 2, 3, 4]);
+        assert_eq!(Ordering::Equal, p1.partial_cmp(&p2).expect("cmp failed"));
+
+        let p1 = Property::ListLong(vec![1, 2, 3, 4]);
+        let p2 = Property::ListInt(vec![1, 2, 3, 5]);
+        assert_eq!(Ordering::Less, p1.partial_cmp(&p2).expect("cmp failed"));
+
+        let p1 = Property::ListInt(vec![1, 2, 3, 4]);
+        let p2 = Property::ListFloat(vec![1.0, 2.0, 3.0, 4.0]);
+        assert_eq!(Ordering::Equal, p1.partial_cmp(&p2).expect("cmp failed"));
+
+        let p1 = Property::ListFloat(vec![1.0, 2.0, 3.0, 4.0]);
+        let p2 = Property::ListDouble(vec![1.0, 2.0, 3.0, 4.0]);
+        assert_eq!(Ordering::Equal, p1.partial_cmp(&p2).expect("cmp failed"));
+
+        let p1 = Property::ListInt(vec![1, 2, 3, 4]);
+        let p2 = Property::ListDouble(vec![0.5, 2.0, 3.0, 4.0]);
+        assert_eq!(Ordering::Greater, p1.partial_cmp(&p2).expect("cmp failed"));
     }
 }
