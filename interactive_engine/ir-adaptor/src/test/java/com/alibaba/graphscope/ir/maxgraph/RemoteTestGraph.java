@@ -572,10 +572,10 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
         method = "g_V_valueMap_selectXaX",
         reason = "unsupported")
-@Graph.OptOut(
-        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest",
-        method = "g_VX4X_bothE_hasXweight_lt_1X_otherV",
-        reason = "unsupported")
+//@Graph.OptOut(
+//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest",
+//        method = "g_VX4X_bothE_hasXweight_lt_1X_otherV",
+//        reason = "unsupported")
 @Graph.OptOut(
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest",
         method = "g_V_hasLabelXloopsX_bothEXselfX",
