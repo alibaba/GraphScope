@@ -16,11 +16,6 @@
   <dependencies>
     <dependency>
       <groupId>com.alibaba.maxgraph</groupId>
-      <artifactId>maxgraph-common</artifactId>
-      <version>${project.parent.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.alibaba.maxgraph</groupId>
       <artifactId>frontend</artifactId>
       <version>0.0.1-SNAPSHOT</version>
     </dependency>

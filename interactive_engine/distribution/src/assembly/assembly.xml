@@ -23,7 +23,7 @@
     <fileSet>
       <directory>${project.parent.basedir}/lgraph/build/install</directory>
       <excludes>
-        <exclude>${project.parent.basedir}/lgraph/build/install/lib/libmaxgraph_ffi*</exclude>
+        <exclude>lib/libmaxgraph_ffi*</exclude>
       </excludes>
       <outputDirectory>native</outputDirectory>
     </fileSet>
