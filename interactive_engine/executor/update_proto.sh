@@ -14,7 +14,7 @@
 # limitations under the License.
 
 echo "Deprecated!! "
-echo "Just run 'cargo build --all' which will generate proto files."
+echo "Just run 'cargo build --workspace' which will generate proto files."
 exit 1
 
 source_root="$(dirname "$0")"

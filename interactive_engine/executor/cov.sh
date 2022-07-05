@@ -144,7 +144,7 @@ install_kcov() {
 
 run() {
     rm -fr target/cov
-    RUSTFLAGS='-C link-dead-code' cargo test --all --no-run
+    RUSTFLAGS='-C link-dead-code' cargo test --workspace --no-run
     if [[ $? -ne 0 ]]; then
         echo "Compile failed"
         exit 1
