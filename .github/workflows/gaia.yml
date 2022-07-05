@@ -74,7 +74,7 @@ jobs:
       run: |
         source ${HOME}/.bashrc
         cd ${GITHUB_WORKSPACE}/interactive_engine
-        mvn clean install -DskipTests -Pv2 --quiet
+        mvn clean install -DskipTests -Pv2 -Drust.compile.mode=debug --quiet
 
     - name: Ir Unit Test
       run: |

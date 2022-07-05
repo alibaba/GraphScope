@@ -6,7 +6,23 @@ appenders:
     encoder:
       pattern: "{d(%Y-%m-%d %H:%M:%S.%f)} {h({l:<5})} (({f}:{L})) [{T}] {m}{n}"
 
+  file:
+    kind: rolling_file
+    append: true
+    path: "/var/log/graphscope/store/store-executor.log"
+    encoder:
+      pattern: "{d(%Y-%m-%d %H:%M:%S.%f)} {h({l:<5})} (({f}:{L})) [{T}] {m}{n}"
+    policy:
+      trigger:
+        kind: size
+        limit: 100mb
+      roller:
+        kind: fixed_window
+        pattern: "/var/log/graphscope/store/store-executor.log.{}"
+        count: 10
+
 root:
-  level: debug
+  level: info
   appenders:
-  - stdout
+    - file
+    - console

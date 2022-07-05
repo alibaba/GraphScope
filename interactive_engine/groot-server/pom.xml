@@ -40,6 +40,11 @@
       </exclusions>
     </dependency>
     <dependency>
+      <artifactId>ir-compiler</artifactId>
+      <groupId>com.alibaba.graphscope</groupId>
+      <version>1.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency>
@@ -185,11 +190,6 @@
     <dependency>
       <groupId>io.dropwizard.metrics</groupId>
       <artifactId>metrics-core</artifactId>
-    </dependency>
-    <dependency>
-      <artifactId>ir-compiler</artifactId>
-      <groupId>com.alibaba.graphscope</groupId>
-      <version>1.0-SNAPSHOT</version>
     </dependency>
   </dependencies>
 

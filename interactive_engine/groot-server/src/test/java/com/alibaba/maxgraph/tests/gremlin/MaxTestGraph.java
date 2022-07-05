@@ -28,7 +28,6 @@ import com.alibaba.maxgraph.sdkcommon.schema.GraphDef;
 import com.alibaba.maxgraph.servers.Frontend;
 import com.alibaba.maxgraph.servers.MaxNode;
 import com.alibaba.maxgraph.servers.NodeBase;
-import com.alibaba.maxgraph.tinkerpop.traversal.MaxGraphTraversalSource;
 
 import io.grpc.stub.StreamObserver;
 
@@ -634,8 +633,8 @@ public class MaxTestGraph implements Graph {
 
     @Override
     public GraphTraversalSource traversal() {
-        MaxGraphTraversalSource source =
-                AnonymousTraversalSource.traversal(MaxGraphTraversalSource.class)
+        GraphTraversalSource source =
+                AnonymousTraversalSource.traversal(GraphTraversalSource.class)
                         .withRemote(remoteConnection);
         source.getStrategies().removeStrategies(ProfileStrategy.class, FilterRankingStrategy.class);
         return source;
