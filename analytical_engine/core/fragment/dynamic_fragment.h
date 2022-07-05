@@ -255,7 +255,7 @@ class DynamicFragment
   using base_t::vm_ptr_;
   void Mutate(mutation_t& mutation) {
     vertex_t v;
-    if (mutation.vertices_to_remove.empty() &&
+    if (!mutation.vertices_to_remove.empty() &&
         static_cast<double>(mutation.vertices_to_remove.size()) /
                 static_cast<double>(this->GetVerticesNum()) <
             0.1) {
