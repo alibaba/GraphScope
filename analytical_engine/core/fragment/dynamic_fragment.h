@@ -34,6 +34,7 @@
 #include "grape/fragment/basic_fragment_mutator.h"
 #include "grape/fragment/csr_edgecut_fragment_base.h"
 #include "grape/graph/mutable_csr.h"
+#include "grape/graph/de_mutable_csr.h"
 #include "grape/utils/bitset.h"
 #include "grape/utils/vertex_set.h"
 #include "vineyard/graph/fragment/property_graph_types.h"
@@ -64,8 +65,10 @@ struct DynamicFragmentTraits {
       grape::FilterConstAdjList<vid_t, edata_t,
                                 std::function<bool(const nbr_t&)>>;
 
-  using csr_t = grape::MutableCSR<vid_t, nbr_t>;
-  using csr_builder_t = grape::MutableCSRBuilder<vid_t, nbr_t>;
+  // using csr_t = grape::MutableCSR<vid_t, nbr_t>;
+  // using csr_builder_t = grape::MutableCSRBuilder<vid_t, nbr_t>;
+  using csr_t = grape::DeMutableCSR<vid_t, nbr_t>;
+  using csr_builder_t = grape::DeMutableCSRBuilder<vid_t, nbr_t>;
   using mirror_vertices_t = std::vector<grape::Vertex<vid_t>>;
 };
 
@@ -171,7 +174,7 @@ class DynamicFragment
     initVertexMembersOfFragment();
     initOuterVerticesOfFragment();
 
-    buildCSR(this->InnerVertices(), edges, load_strategy_);
+    buildCSR(this->Vertices(), edges, load_strategy_);
 
     ivdata_.clear();
     ivdata_.resize(ivnum_, dynamic::Value(rapidjson::kObjectType));
@@ -498,48 +501,34 @@ class DynamicFragment
     copyVertices(source);
 
     // copy edges
-    ie_.reserve_vertices(ivnum_);
-    oe_.reserve_vertices(ivnum_);
+    ie_.add_vertices(ivnum_, ovnum_);
+    oe_.add_vertices(ivnum_, ovnum_);
     if (copy_type == "identical") {
-      std::vector<int> oe_degree_to_add(ivnum_, 0), ie_degree_to_add(ivnum_, 0);
-      for (vid_t i = 0; i < ivnum_; ++i) {
-        oe_degree_to_add[i] = source->oe_.degree(i);
-        ie_degree_to_add[i] = source->ie_.degree(i);
-      }
-      ie_.reserve_edges_dense(ie_degree_to_add);
-      oe_.reserve_edges_dense(oe_degree_to_add);
-      for (vid_t i = 0; i < ivnum_; ++i) {
+      for (vid_t i = 0; i < ivnum_ + ovnum_; ++i) {
         auto ie_begin = source->ie_.get_begin(i);
         auto ie_end = source->ie_.get_end(i);
         auto oe_begin = source->oe_.get_begin(i);
         auto oe_end = source->oe_.get_end(i);
-        for (auto iter = ie_begin; iter != ie_end; ++iter) {
-          ie_.put_edge(i, *iter);
-        }
-        for (auto iter = oe_begin; iter != oe_end; ++iter) {
-          oe_.put_edge(i, *iter);
-        }
+
+        std::vector<edge_t> ie_edges(ie_begin, ie_end);
+        std::vector<edge_t> oe_edges(oe_begin, oe_end);
+
+        ie_.add_forward_edges(ie_edges);
+        oe_.add_forward_edges(oe_edges);
       }
     } else if (copy_type == "reverse") {
       assert(directed_);
-      std::vector<int> oe_degree_to_add(ivnum_, 0), ie_degree_to_add(ivnum_, 0);
-      for (vid_t i = 0; i < ivnum_; ++i) {
-        oe_degree_to_add[i] = source->ie_.degree(i);
-        ie_degree_to_add[i] = source->oe_.degree(i);
-      }
-      ie_.reserve_edges_dense(ie_degree_to_add);
-      oe_.reserve_edges_dense(oe_degree_to_add);
-      for (vid_t i = 0; i < ivnum_; ++i) {
+      for (vid_t i = 0; i < ivnum_ + ovnum_; ++i) {
         auto ie_begin = source->ie_.get_begin(i);
         auto ie_end = source->ie_.get_end(i);
         auto oe_begin = source->oe_.get_begin(i);
         auto oe_end = source->oe_.get_end(i);
-        for (auto iter = oe_begin; iter != oe_end; ++iter) {
-          ie_.put_edge(i, *iter);
-        }
-        for (auto iter = ie_begin; iter != ie_end; ++iter) {
-          oe_.put_edge(i, *iter);
-        }
+
+        std::vector<edge_t> ie_edges(ie_begin, ie_end);
+        std::vector<edge_t> oe_edges(oe_begin, oe_end);
+
+        ie_.add_reversed_edges(ie_edges);
+        oe_.add_reversed_edges(oe_edges);
       }
     } else {
       LOG(ERROR) << "Unsupported copy type: " << copy_type;
