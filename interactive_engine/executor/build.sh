@@ -9,9 +9,9 @@ if [ "$SKIP" = "true" ]; then
 fi
 
 if [ "$MODE" = "debug" ]; then
-    ./exec.sh cargo build --all
+    ./exec.sh cargo build --workspace
 elif [ "$MODE" = "release" ]; then
-    ./exec.sh cargo build --all --release
+    ./exec.sh cargo build --workspace --release
 else
     exit 1
 fi

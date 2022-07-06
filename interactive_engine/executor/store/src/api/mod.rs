@@ -1,12 +1,12 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //! http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,18 +14,19 @@
 //! limitations under the License.
 
 mod condition;
-mod property;
-mod multi_version;
 mod elem;
 mod global_query;
 pub mod graph_partition;
-pub mod prelude;
 pub mod graph_schema;
+mod multi_version;
+pub mod prelude;
+mod property;
+mod unwrap_or;
 
-pub use self::elem::*;
-pub use self::multi_version::*;
-pub use self::global_query::*;
 pub use self::condition::*;
+pub use self::elem::*;
+pub use self::global_query::*;
+pub use self::multi_version::*;
 
 use crate::schema::prelude::*;
 use std::collections::HashMap;
@@ -38,8 +39,8 @@ pub type SnapshotId = i64;
 pub type SchemaVersion = i32;
 pub type PropId = u32;
 pub type EdgeIdTuple = (VertexId, i64, VertexId);
-pub type EdgeType = (LabelId,LabelId,LabelId);
-pub type PartitionVertexIds = (PartitionId,Vec<VertexId>);
+pub type EdgeType = (LabelId, LabelId, LabelId);
+pub type PartitionVertexIds = (PartitionId, Vec<VertexId>);
 pub type PartitionLabeledVertexIds = (PartitionId, Vec<(Option<LabelId>, Vec<VertexId>)>);
 
 pub static MAX_PARTITION_NUM: u32 = 4096;
@@ -119,10 +120,7 @@ pub struct VertexData<'a> {
 
 impl<'a> VertexData<'a> {
     pub fn new(id: VertexId, props: &'a HashMap<PropId, Vec<u8>>) -> Self {
-        VertexData {
-            id,
-            props,
-        }
+        VertexData { id, props }
     }
 }
 
@@ -134,7 +132,12 @@ pub struct EdgeData<'a> {
 }
 
 impl<'a> EdgeData<'a> {
-    pub fn new(src_id: VertexId, dst_id: VertexId, edge_id: EdgeId, props: &'a HashMap<PropId, Vec<u8>>) -> Self {
+    pub fn new(
+        src_id: VertexId,
+        dst_id: VertexId,
+        edge_id: EdgeId,
+        props: &'a HashMap<PropId, Vec<u8>>,
+    ) -> Self {
         EdgeData {
             src_id,
             dst_id,
