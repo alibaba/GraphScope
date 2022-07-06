@@ -13,17 +13,22 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 mod sink;
+#[cfg(feature = "with_v6d")]
 mod sink_vineyard;
 
+#[cfg(not(feature = "with_v6d"))]
+use graph_proxy::GraphProxyError;
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 
 use crate::error::FnGenResult;
 use crate::process::operator::sink::sink::{DefaultSinkOp, RecordSinkEncoder};
+#[cfg(feature = "with_v6d")]
 use crate::process::operator::sink::sink_vineyard::{GraphSinkEncoder, SinkVineyardOp};
 
 pub enum Sinker {
     DefaultSinker(RecordSinkEncoder),
+    #[cfg(feature = "with_v6d")]
     GraphSinker(GraphSinkEncoder),
 }
 
@@ -50,13 +55,19 @@ impl SinkGen for algebra_pb::logical_plan::Operator {
                                 };
                                 default_sink_op.gen_sink()
                             }
-                            algebra_pb::sink::sink_target::Inner::SinkVineyard(sink_vineyard) => {
-                                let sink_vineyard_op = SinkVineyardOp {
-                                    tags: sink.tags,
-                                    graph_name: sink_vineyard.graph_name,
-                                    graph_schema: sink_vineyard.graph_schema,
-                                };
-                                sink_vineyard_op.gen_sink()
+                            algebra_pb::sink::sink_target::Inner::SinkVineyard(_sink_vineyard) => {
+                                #[cfg(feature = "with_v6d")]
+                                {
+                                    let sink_vineyard_op = SinkVineyardOp {
+                                        tags: sink.tags,
+                                        graph_name: _sink_vineyard.graph_name,
+                                        graph_schema: _sink_vineyard.graph_schema,
+                                    };
+                                    sink_vineyard_op.gen_sink()
+                                }
+                                #[cfg(not(feature = "with_v6d"))]
+                                    Err(GraphProxyError::UnSupported(
+                                    "sink_target of Vineyard is not as a feature. Try \'cargo build --features with_v6d\'".to_string()))?
                             }
                         }
                     } else {

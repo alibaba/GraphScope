@@ -28,3 +28,4 @@ maxgraph-store = {path = "../../../../interactive_engine/executor/store"}
 [features]
 default = []
 proto_inplace = ["ir_common/proto_inplace", "pegasus_server/gcip"]
+with_v6d = ["runtime/with_v6d"]
