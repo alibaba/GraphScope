@@ -13,7 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use std::net::SocketAddr;
+use std::net::{SocketAddr, ToSocketAddrs};
 use std::path::Path;
 use std::time::Duration;
 
@@ -173,6 +173,26 @@ impl ServerAddr {
 
     pub fn get_port(&self) -> u16 {
         self.port
+    }
+
+    pub fn to_socket_addr(&self) -> Result<SocketAddr, NetError> {
+        let socket_addrs_iter = (self.ip.as_str(), self.port).to_socket_addrs()?;
+        let mut ipv4_addrs = vec![];
+        let mut ipv6_addrs = vec![];
+        for addr in socket_addrs_iter {
+            if let SocketAddr::V4(_) = addr {
+                ipv4_addrs.push(addr)
+            } else if let SocketAddr::V6(_) = addr {
+                ipv6_addrs.push(addr)
+            }
+        }
+        if ipv4_addrs.len() == 0 && ipv6_addrs.len() == 0 {
+            Err(NetError::HostParseError(format!("{}:{}", self.ip, self.port)))
+        } else if ipv4_addrs.len() == 0 {
+            Ok(ipv6_addrs[0])
+        } else {
+            Ok(ipv4_addrs[0])
+        }
     }
 }
 
@@ -358,8 +378,8 @@ impl NetworkConfig {
         let index = self.server_id as usize;
         assert!(index < self.servers_size);
         if let Some(ref servers) = self.servers {
-            if let Some(ref addr) = servers[index] {
-                Ok(SocketAddr::new(addr.ip.parse()?, addr.port))
+            if let Some(Some(addr)) = servers.get(index) {
+                addr.to_socket_addr()
             } else {
                 Err(NetError::InvalidConfig(Some("local server address not found".to_owned())))
             }
@@ -414,8 +434,7 @@ impl NetworkConfig {
             let mut servers = Vec::with_capacity(server_configs.len());
             for (id, p) in server_configs.iter().enumerate() {
                 if let Some(peer) = p {
-                    let ip = peer.ip.parse()?;
-                    let addr = SocketAddr::new(ip, peer.port);
+                    let addr = peer.to_socket_addr()?;
                     let server = Server { id: id as u64, addr };
                     servers.push(server);
                 } else {

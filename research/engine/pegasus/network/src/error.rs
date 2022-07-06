@@ -15,7 +15,7 @@
 
 use std::error::Error;
 use std::fmt::Display;
-use std::net::{AddrParseError, SocketAddr};
+use std::net::SocketAddr;
 
 #[derive(Debug)]
 pub enum NetError {
@@ -28,7 +28,7 @@ pub enum NetError {
     UnexpectedServer((u64, u64)),
     ServerNotFound(u64),
     ServerStarted(u64),
-    AddrParseError(AddrParseError),
+    HostParseError(String),
     HBAbnormal(SocketAddr),
     ChannelRxReset(u128),
 }
@@ -67,8 +67,8 @@ impl Display for NetError {
             NetError::ServerStarted(id) => {
                 write!(f, "server {} has already started; ", id)
             }
-            NetError::AddrParseError(err) => {
-                write!(f, "invalid address: {};", err)
+            NetError::HostParseError(host) => {
+                write!(f, "invalid host: {};", host)
             }
             NetError::HBAbnormal(id) => {
                 write!(f, "heartbeat from server {:?} lost;", id)
@@ -85,12 +85,6 @@ impl Error for NetError {}
 impl From<std::io::Error> for NetError {
     fn from(err: std::io::Error) -> Self {
         NetError::IOError(err)
-    }
-}
-
-impl From<AddrParseError> for NetError {
-    fn from(err: AddrParseError) -> Self {
-        NetError::AddrParseError(err)
     }
 }
 
