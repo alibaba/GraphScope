@@ -143,6 +143,7 @@ jobs:
     - name: Prepare Image
       run: |
         cd ${GITHUB_WORKSPACE}
+        ls artifacts
         sudo make graphscope-store-image
     - name: Python Test with Helm Deployment
       env:

@@ -80,7 +80,7 @@ dataset-image:
 graphscope-store-image:
 	docker pull ${REGISTRY}/$(DOCKER_ORG)/graphscope-vineyard:${VINEYARD_VERSION}
 	docker build --progress=$(BUILD_PROGRESS) \
-                 --build-arg profile=${PROFILE} \
+                 --build-arg profile=${PROFILE} CI=${CI} \
                  -t graphscope/graphscope-store:${SHORT_SHA} \
                  --network=host \
                  -f $(WORKING_DIR)/graphscope-store.Dockerfile ..
