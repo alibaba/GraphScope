@@ -347,15 +347,23 @@ class DynamicFragment
       vid_t new_ivnum = vm_ptr_->GetInnerVertexSize(fid_);
       vid_t new_ovnum = ovgid_.size();
       is_selfloops_.resize(new_ivnum);
-      ie_.reserve_vertices(new_ivnum);
-      oe_.reserve_vertices(new_ivnum);
-      this->ivnum_ = new_ivnum;
+      this->ivnum_ = new_ivnum;      
       if (ovnum_ != new_ovnum) {
         ovnum_ = new_ovnum;
         initOuterVerticesOfFragment();
       }
-      if (!edges_to_add.empty()) {
-        addEdges(edges_to_add);
+      ie_.add_vertices(new_ivnum - ivnum_, new_ovnum - ovnum_);
+      oe_.add_vertices(new_ivnum - ivnum_, new_ovnum - ovnum_);
+      if (this->directed_) {
+        ie_.add_reversed_edges(edges_to_add);
+        oe_.add_forward_edges(edges_to_add);
+      } else {
+        ie_.add_edges(edges_to_add);
+        oe_.add_edges(edges_to_add);
+      }
+      for (const auto &e : edges_to_add) {
+        if (e.src == e.dst)
+          is_selfloops_.set_bit(e.src);
       }
 
       this->inner_vertices_.SetRange(0, new_ivnum);
@@ -504,31 +512,54 @@ class DynamicFragment
     ie_.add_vertices(ivnum_, ovnum_);
     oe_.add_vertices(ivnum_, ovnum_);
     if (copy_type == "identical") {
-      for (vid_t i = 0; i < ivnum_ + ovnum_; ++i) {
+      auto add_edge_func = [&](vid_t i) {
         auto ie_begin = source->ie_.get_begin(i);
         auto ie_end = source->ie_.get_end(i);
-        auto oe_begin = source->oe_.get_begin(i);
-        auto oe_end = source->oe_.get_end(i);
-
         std::vector<edge_t> ie_edges(ie_begin, ie_end);
-        std::vector<edge_t> oe_edges(oe_begin, oe_end);
-
         ie_.add_forward_edges(ie_edges);
+      
+        auto oe_begin = source->oe_.get_begin(i);
+        auto oe_end = source->oe_.get_end(i);       
+        std::vector<edge_t> oe_edges(oe_begin, oe_end);     
         oe_.add_forward_edges(oe_edges);
+      };
+
+      // inner vertices
+      for (vid_t i = 0; i < ivnum_; ++i) {
+        add_edge_func(i);
+      }
+
+      // outer vertices
+      vid_t o_begin = id_parser_.max_local_id() - 1;
+      vid_t o_end   = o_begin - ovnum_;
+      for (vid_t i = o_begin; i > o_end; --i) {
+        add_edge_func(i);
       }
     } else if (copy_type == "reverse") {
       assert(directed_);
-      for (vid_t i = 0; i < ivnum_ + ovnum_; ++i) {
+
+      auto add_edge_func = [&](vid_t i) {
         auto ie_begin = source->ie_.get_begin(i);
         auto ie_end = source->ie_.get_end(i);
-        auto oe_begin = source->oe_.get_begin(i);
-        auto oe_end = source->oe_.get_end(i);
-
         std::vector<edge_t> ie_edges(ie_begin, ie_end);
-        std::vector<edge_t> oe_edges(oe_begin, oe_end);
-
         ie_.add_reversed_edges(ie_edges);
+      
+        auto oe_begin = source->oe_.get_begin(i);
+        auto oe_end = source->oe_.get_end(i);       
+        std::vector<edge_t> oe_edges(oe_begin, oe_end);     
         oe_.add_reversed_edges(oe_edges);
+      };
+
+      // inner vertices
+      for (vid_t i = 0; i < ivnum_; ++i) {
+        add_edge_func(i);
+      }
+
+      // outer vertices
+      vid_t o_begin = id_parser_.max_local_id() - 1;
+      vid_t o_end   = o_begin - ovnum_;
+      for (vid_t i = o_begin; i > o_end; --i) {
+        add_edge_func(i);
       }
     } else {
       LOG(ERROR) << "Unsupported copy type: " << copy_type;
@@ -544,21 +575,24 @@ class DynamicFragment
     load_strategy_ = grape::LoadStrategy::kBothOutIn;
     copyVertices(source);
 
-    ie_.reserve_vertices(ivnum_);
-    oe_.reserve_vertices(ivnum_);
-    std::vector<int> degree_to_add(ivnum_, 0);
-    for (vid_t i = 0; i < ivnum_; ++i) {
-      degree_to_add[i] = source->oe_.degree(i);
-    }
-    ie_.reserve_edges_dense(degree_to_add);
-    oe_.reserve_edges_dense(degree_to_add);
+    ie_.add_vertices(ivnum_, ovnum_);
+    oe_.add_vertices(ivnum_, ovnum_);
     for (vid_t i = 0; i < ivnum_; ++i) {
       auto begin = source->oe_.get_begin(i);
       auto end = source->oe_.get_end(i);
-      for (auto iter = begin; iter != end; ++iter) {
-        ie_.put_edge(i, *iter);
-        oe_.put_edge(i, *iter);
-      }
+      std::vector<edge_t> edges(begin, end);
+      ie_.add_forward_edges(edges);
+      oe_.add_forward_edges(edges);
+    }
+
+    vid_t o_begin = id_parser_.max_local_id() - 1;
+    vid_t o_end   = o_begin - ovnum_;
+    for (vid_t i = o_begin; i > o_end; --i) {
+      auto begin = source->oe_.get_begin(i);
+      auto end = source->oe_.get_end(i);
+      std::vector<edge_t> edges(begin, end);
+      ie_.add_forward_edges(edges);
+      oe_.add_forward_edges(edges);
     }
 
     this->schema_.CopyFrom(source->schema_);
@@ -856,6 +890,7 @@ class DynamicFragment
     }
   }
 
+#if 0
   void addEdges(std::vector<edge_t>& edges) {
     double rate = 0;
     if (directed_) {
@@ -1073,86 +1108,24 @@ class DynamicFragment
     }
     return ret;
   }
+  #endif
 
   void removeEdges(std::vector<std::pair<vid_t, vid_t>>& edges) {
-    if (load_strategy_ == grape::LoadStrategy::kBothOutIn) {
-      std::vector<bool> oe_modified(ivnum_, false), ie_modified(ivnum_, false);
-      for (auto& e : edges) {
-        if (!(Gid2Lid(e.first, e.first) && Gid2Lid(e.second, e.second))) {
-          continue;
-        }
-        if (e.first == e.second) {
-          this->is_selfloops_.reset_bit(e.first);
-        }
-        if (e.first < ivnum_) {
-          oe_modified[e.first] =
-              oe_.remove_with_tomb(e.first, e.second) || oe_modified[e.first];
-        }
-        if (e.second < ivnum_) {
-          ie_modified[e.second] =
-              ie_.remove_with_tomb(e.second, e.first) || ie_modified[e.second];
-        }
+    for (auto& e : edges) {
+      if (!(Gid2Lid(e.first, e.first) && Gid2Lid(e.second, e.second))) {
+        continue;
       }
-      for (vid_t i = 0; i < ivnum_; ++i) {
-        if (oe_modified[i]) {
-          oe_.remove_tombs(i);
-        }
-        if (ie_modified[i]) {
-          ie_.remove_tombs(i);
-        }
-      }
-    } else {
-      std::vector<bool> oe_modified(ivnum_, false);
-      for (auto& e : edges) {
-        if (!(Gid2Lid(e.first, e.first) && Gid2Lid(e.second, e.second))) {
-          continue;
-        }
-        if (e.first == e.second) {
-          this->is_selfloops_.reset_bit(e.first);
-        }
-        if (e.first < ivnum_) {
-          oe_modified[e.first] =
-              oe_.remove_with_tomb(e.first, e.second) || oe_modified[e.first];
-        }
-        if (e.second < ivnum_ && e.first != e.second) {
-          oe_modified[e.second] =
-              oe_.remove_with_tomb(e.second, e.first) || oe_modified[e.second];
-        }
-      }
-      for (vid_t i = 0; i < ivnum_; ++i) {
-        if (oe_modified[i]) {
-          oe_.remove_tombs(i);
-        }
+      if (e.first == e.second) {
+        this->is_selfloops_.reset_bit(e.first);
       }
     }
+    oe_.remove_edges(edges);
+    ie_.remove_reversed_edges(edges);
   }
 
   void updateEdges(std::vector<edge_t>& edges) {
-    if (load_strategy_ == grape::LoadStrategy::kBothOutIn) {
-      for (auto& e : edges) {
-        if (!(Gid2Lid(e.src, e.src) && Gid2Lid(e.dst, e.dst))) {
-          continue;
-        }
-        if (e.src < ivnum_) {
-          oe_.update(e.src, e.dst, e.edata);
-        }
-        if (e.dst < ivnum_) {
-          ie_.update(e.dst, e.src, e.edata);
-        }
-      }
-    } else {
-      for (auto& e : edges) {
-        if (!(Gid2Lid(e.src, e.src) && Gid2Lid(e.dst, e.dst))) {
-          continue;
-        }
-        if (e.src < ivnum_) {
-          oe_.update(e.src, e.dst, e.edata);
-        }
-        if (e.dst < ivnum_ && e.src != e.dst) {
-          oe_.update(e.dst, e.src, e.edata);
-        }
-      }
-    }
+    oe_.update_edges(edges);
+    ie_.update_reversed_edges(edges);
   }
 
   void copyVertices(std::shared_ptr<DynamicFragment>& source) {
@@ -1289,8 +1262,8 @@ class DynamicFragment
                         const std::vector<int>& oe_degree,
                         const std::vector<int>& ie_degree,
                         uint32_t thread_num) {
-    ie_.reserve_vertices(ivnum_);
-    oe_.reserve_vertices(ivnum_);
+    oe_.add_vertices(ivnum_, ovnum_);
+    ie_.add_vertices(ivnum_, ovnum_);
 
     // parse edges, global id to local id
     parallel_for(
