@@ -26,7 +26,7 @@ __all__ = ["avg_clustering", "clustering"]
 
 @project_to_simple
 @not_compatible_for("arrow_property", "dynamic_property")
-def clustering(graph, degree_threshold=1e9):
+def clustering(graph, degree_threshold=1000000000):
     """Local clustering coefficient of a node in a Graph is the fraction
     of pairs of the node’s neighbors that are adjacent to each other.
 
@@ -62,7 +62,7 @@ def clustering(graph, degree_threshold=1e9):
 
 @project_to_simple
 @not_compatible_for("arrow_property", "dynamic_property", "undirected")
-def avg_clustering(graph, degree_threshold=1e9):
+def avg_clustering(graph, degree_threshold=1000000000):
     """Compute the average clustering coefficient for the directed graph.
 
     Args:
