@@ -567,7 +567,9 @@ impl<D: Data> ExchangeByBatchPush<D> {
             BatchRoute::AllToOne(t) => CancelHandle::SC(SingleConsCancel::new(t)),
             BatchRoute::Dyn(_) => CancelHandle::MC(MultiConsCancelPtr::new(ch_info.scope_level, len)),
         };
-        ExchangeByBatchPush { ch_info, src, pushes, magic, route, cancel_handle }
+        let scope_level = ch_info.scope_level;
+
+        ExchangeByBatchPush { ch_info, src, scope_level, pushes, magic, route, cancel_handle }
     }
 
     pub(crate) fn update_cancel_handle(&mut self, cancel_handle: CancelHandle) {
