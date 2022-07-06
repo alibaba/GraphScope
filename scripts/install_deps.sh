@@ -355,7 +355,7 @@ check_dependencies() {
 
   # check c++ compiler
   if [[ "${PLATFORM}" == *"Darwin"* ]]; then
-    if [[ ! -z "$(brew info llvm 2>&1 | grep 'Not installed')" ]];then
+    if [ ! -d $(brew --prefix llvm) ]; then
         packages_to_install+=("llvm")
     fi
   else
