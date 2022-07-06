@@ -84,8 +84,6 @@ class Clustering
                 if (filterByDegree(frag, ctx, v)) {
                   return;
                 }
-                vid_t u_gid, v_gid;
-                auto& nbr_vec = ctx.complete_neighbor[v];
                 int degree = ctx.global_degree[v];
                 if (degree > 1) {
                   vid_t u_gid, v_gid;
@@ -180,7 +178,7 @@ class Clustering
               [this, &frag, &ctx](
                   int tid, vertex_t u,
                   const std::vector<std::pair<vid_t, uint32_t>>& msg) {
-                if (filterByDegree(frag, ctx, u)) {
+                if (frag.IsInnerVertex(u) && filterByDegree(frag, ctx, u)) {
                   return;
                 }
                 auto& nbr_vec = ctx.complete_neighbor[u];

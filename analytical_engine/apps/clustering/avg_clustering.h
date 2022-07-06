@@ -167,7 +167,7 @@ class AvgClustering
               [this, &frag, &ctx](
                   int tid, vertex_t u,
                   const std::vector<std::pair<vid_t, uint32_t>>& msg) {
-                if (filterByDegree(frag, ctx, u)) {
+                if (frag.IsInnerVertex(u) && filterByDegree(frag, ctx, u)) {
                   return;
                 }
                 auto& nbr_vec = ctx.complete_neighbor[u];
