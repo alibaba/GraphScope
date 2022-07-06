@@ -528,6 +528,10 @@ public class MaxTestGraph implements Graph {
         try {
             this.maxNode = new MaxNode(configs);
             this.maxNode.start();
+            // This is to ensure the frontend can communicate some RPC after start, to make the
+            // graphdef not null
+            // anymore, in snapshotCache.
+            Thread.sleep(3000);
             int port = GremlinConfig.GREMLIN_PORT.get(configs);
             this.cluster = createCluster("localhost", port);
             this.clientService =
@@ -625,7 +629,7 @@ public class MaxTestGraph implements Graph {
                 });
         try {
             String schemaString = future.get();
-            logger.info("load json schema: " + schemaString);
+            logger.info("loaded json schema");
         } catch (Exception e) {
             throw new MaxGraphException(e);
         }

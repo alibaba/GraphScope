@@ -184,7 +184,7 @@ def test_demo_with_default_session(ogbn_small_script):
     papers = interactive.execute(ogbn_small_script).one()
 
     sub_graph = interactive.subgraph(
-        "g.timeout(1000000).V().has('year', inside(2014, 2020)).outE('cites')"
+        "g.V().has('year', inside(2014, 2020)).outE('cites')"
     )
 
     simple_g = sub_graph.project(vertices={"paper": []}, edges={"cites": []})
