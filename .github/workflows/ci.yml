@@ -306,6 +306,10 @@ jobs:
 
           python3 -m pytest -s -v $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/tests/minitest
 
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: always()
+        
       - name: Upload GIE log
         if: always()
         uses: actions/upload-artifact@v2
@@ -692,6 +696,10 @@ jobs:
                           --cov=graphscope --cov-config=.coveragerc --cov-report=xml \
                           --cov-report=term --exitfirst -s -vvv --log-cli-level=INFO \
                           ./graphscope/tests/kubernetes
+
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: always()
 
       - name: Upload Coverage
         uses: codecov/codecov-action@v2

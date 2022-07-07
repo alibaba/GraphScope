@@ -278,6 +278,7 @@ def test_modern_graph():
 
         assert make_nodes_set(nodes) == make_nodes_set(subgraph_nodes)
         assert make_edges_set(edges) == make_edges_set(subgraph_edges)
+        session.close()
 
     num_workers_options = (
         1,

@@ -163,6 +163,8 @@ class LocalLauncher(Launcher):
         # executor rpc port
         # frontend port
         self._interactive_port = 8233
+        while not is_free_port(self._interactive_port):
+            self._interactive_port += 10
 
         # learning instance processes
         self._learning_instance_processes = {}

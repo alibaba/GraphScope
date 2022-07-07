@@ -132,9 +132,7 @@ jobs:
       env:
         CI: true
       run: |
-        cd ${GITHUB_WORKSPACE}
-        ls artifacts
-        sudo make graphscope-store-image
+        make graphscope-store-image
     - name: Python Test with Helm Deployment
       env:
         JAVA_HOME: /usr/lib/jvm/default-java
