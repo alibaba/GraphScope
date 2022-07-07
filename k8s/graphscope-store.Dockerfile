@@ -10,6 +10,8 @@ ENV profile=$profile
 COPY . /home/graphscope/gs
 COPY ./interactive_engine/deploy/docker/dockerfile/maven.settings.xml /home/graphscope/.m2/settings.xml
 
+USER graphscope
+
 RUN sudo chown -R $(id -u):$(id -g) /home/graphscope/gs /home/graphscope/.m2 && \
     cd /home/graphscope/gs && \
     if [ "${CI}" == "true" ]; then \
@@ -21,9 +23,10 @@ RUN sudo chown -R $(id -u):$(id -g) /home/graphscope/gs /home/graphscope/.m2 && 
         && cd /tmp/cppkafka && git submodule update --init \
         && cmake . && make -j && sudo make install \
         && echo "build with profile: $profile" \
+        && source ~/.cargo/env \
         && cd /home/graphscope/gs/interactive_engine \
         && mvn clean package -Pv2 -DskipTests --quiet -Drust.compile.mode="$profile" \
-        && mv /home/graphscope/gs/interactive_engine/distribution/target/maxgraph.tar.gz ./maxgraph.tar.gz; \
+        && mv /home/graphscope/gs/interactive_engine/distribution/target/maxgraph.tar.gz /home/graphscope/gs/maxgraph.tar.gz; \
     fi
 
 FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest

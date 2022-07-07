@@ -258,7 +258,6 @@ class TestBuiltInApp:
         ans = nx.builtin.triangles(self.p2p_undirected)
         self.assert_result_almost_equal(ans, self.p2p_triangles_ans)
 
-    @pytest.mark.skip(reason="TODO: sync with latest libgrape-lite")
     def test_average_clustering(self):
         ret = nx.builtin.average_clustering(self.p2p_undirected)
 

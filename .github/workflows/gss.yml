@@ -86,12 +86,6 @@ jobs:
 
         sccache --show-stats
 
-        cd ${GITHUB_WORKSPACE}
-        # maxgraph.tar.gz is for helm test
-        mv interactive_engine/distribution/target/maxgraph.tar.gz ./maxgraph.tar.gz
-        # graphscope_store_data_load.tar.gz is for release
-        mv interactive_engine/data_load_tools/target/data_load.tar.gz ./graphscope_store_data_load.tar.gz
-
     - name: Gremlin Test
       run: |
         cd interactive_engine/groot-server
@@ -102,16 +96,8 @@ jobs:
     - name: Upload tools for helm test to Artifact
       uses: actions/upload-artifact@v2
       with:
-        name: gss-${{ github.sha }}
-        path: maxgraph.tar.gz
-        retention-days: 5
-
-    - name: Upload Data Load to Artifact
-      uses: actions/upload-artifact@v2
-      with:
-        name: data_load-${{ github.sha }}
-        path: |
-          graphscope_store_data_load.tar.gz
+        name: maxgraph.tar.gz
+        path: interactive_engine/distribution/target/maxgraph.tar.gz
         retention-days: 5
 
   helm-test:
@@ -134,13 +120,17 @@ jobs:
 
     - uses: actions/download-artifact@v2
       with:
+        name: maxgraph.tar.gz
         path: artifacts
 
     - name: Set GITHUB_ENV
       run: |
         short_sha=$(git rev-parse --short HEAD)
         echo "SHORT_SHA=${short_sha}" >> $GITHUB_ENV
+
     - name: Prepare Image
+      env:
+        CI: true
       run: |
         cd ${GITHUB_WORKSPACE}
         ls artifacts
@@ -153,7 +143,7 @@ jobs:
         # maxgraph.tar.gz is needed for offline_load.sh
         # see .github/workflows/hadoop_scripts/offline_load.sh.template
         pushd artifacts
-        tar -zxf ./gss-${{ github.sha }}/maxgraph.tar.gz
+        tar -zxf ./maxgraph.tar.gz
         # download gstest
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
         # retag image for helm test
