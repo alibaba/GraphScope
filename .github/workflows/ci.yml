@@ -308,8 +308,8 @@ jobs:
 
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
-        if: always()
-        
+        if: false
+
       - name: Upload GIE log
         if: always()
         uses: actions/upload-artifact@v2
@@ -699,7 +699,7 @@ jobs:
 
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
-        if: always()
+        if: false
 
       - name: Upload Coverage
         uses: codecov/codecov-action@v2
