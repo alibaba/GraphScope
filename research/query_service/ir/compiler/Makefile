@@ -33,6 +33,7 @@ clean:
 
 test:
 	cd $(CUR_DIR)/../ && cargo test && \
+	cd $(CUR_DIR)/../ && cargo test --features with_v6d && \
 	cd $(CUR_DIR) && mvn test
 
 # start rpc server

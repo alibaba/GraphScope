@@ -26,12 +26,13 @@ __all__ = ["avg_clustering", "clustering"]
 
 @project_to_simple
 @not_compatible_for("arrow_property", "dynamic_property")
-def clustering(graph):
+def clustering(graph, degree_threshold=1000000000):
     """Local clustering coefficient of a node in a Graph is the fraction
     of pairs of the node’s neighbors that are adjacent to each other.
 
     Args:
         graph (:class:`graphscope.Graph`): A simple graph.
+        degree_threshold (int, optional): Filter super vertex which degree is greater than threshold. Default to 1e9.
 
     Returns:
         :class:`graphscope.framework.context.VertexDataContextDAGNode`:
@@ -50,19 +51,23 @@ def clustering(graph):
         >>> c = graphscope.clustering(pg)
         >>> sess.close()
     """
+    degree_threshold = int(degree_threshold)
     if graph.is_directed():
-        return AppAssets(algo="clustering", context="vertex_data")(graph)
+        return AppAssets(algo="clustering", context="vertex_data")(
+            graph, degree_threshold
+        )
     else:
-        return AppAssets(algo="lcc", context="vertex_data")(graph)
+        return AppAssets(algo="lcc", context="vertex_data")(graph, degree_threshold)
 
 
 @project_to_simple
 @not_compatible_for("arrow_property", "dynamic_property", "undirected")
-def avg_clustering(graph):
+def avg_clustering(graph, degree_threshold=1000000000):
     """Compute the average clustering coefficient for the directed graph.
 
     Args:
         graph (:class:`graphscope.Graph`): A simple graph.
+        degree_threshold (int, optional): Filter super vertex which degree is greater than threshold. Default to 1e9.
 
     Returns:
         r: float
@@ -82,4 +87,5 @@ def avg_clustering(graph):
         >>> print(c.to_numpy("r", axis=0)[0])
         >>> sess.close()
     """
-    return AppAssets(algo="avg_clustering", context="tensor")(graph)
+    degree_threshold = int(degree_threshold)
+    return AppAssets(algo="avg_clustering", context="tensor")(graph, degree_threshold)

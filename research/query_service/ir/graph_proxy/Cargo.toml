@@ -19,3 +19,4 @@ v6d_ffi = { path="../v6d_ffi" }
 [features]
 default = []
 proto_inplace = ["ir_common/proto_inplace"]
+with_v6d = ["v6d_ffi/with_v6d"]
