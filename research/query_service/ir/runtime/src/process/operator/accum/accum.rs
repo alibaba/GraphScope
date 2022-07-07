@@ -44,7 +44,7 @@ pub enum EntryAccumulator {
 
 #[derive(Debug, Clone)]
 pub struct RecordAccumulator {
-    accum_ops: Vec<(EntryAccumulator, TagKey, KeyId)>,
+    accum_ops: Vec<(EntryAccumulator, TagKey, Option<KeyId>)>,
 }
 
 impl Accumulator<Record, Record> for RecordAccumulator {
@@ -60,7 +60,7 @@ impl Accumulator<Record, Record> for RecordAccumulator {
         let mut record = Record::default();
         for (accumulator, _, alias) in self.accum_ops.iter_mut() {
             let entry = accumulator.finalize()?;
-            record.append(entry, Some(alias.clone()));
+            record.append(entry, alias.clone());
         }
         Ok(record)
     }
@@ -131,6 +131,7 @@ impl Accumulator<Entry, Entry> for EntryAccumulator {
 impl AccumFactoryGen for algebra_pb::GroupBy {
     fn gen_accum(self) -> FnGenResult<RecordAccumulator> {
         let mut accum_ops = Vec::with_capacity(self.functions.len());
+        let multi_accum_flag = if self.functions.len() > 1 { true } else { false };
         for agg_func in self.functions {
             let agg_kind: algebra_pb::group_by::agg_func::Aggregate =
                 unsafe { ::std::mem::transmute(agg_func.aggregate) };
@@ -145,14 +146,13 @@ impl AccumFactoryGen for algebra_pb::GroupBy {
                 .map(|v| TagKey::try_from(v.clone()))
                 .transpose()?
                 .unwrap_or(TagKey::default());
-            let alias = Some(
-                agg_func
-                    .alias
-                    .ok_or(ParsePbError::from("accum value alias is missing"))?
-                    .try_into()?,
-            );
-            // TODO: accum value alias in fold can be None;
-            let alias = alias.ok_or(ParsePbError::from("accum value alias cannot be None"))?;
+            let alias = agg_func
+                .alias
+                .map(|name_or_id| name_or_id.try_into())
+                .transpose()?;
+            if multi_accum_flag && alias.is_none() {
+                Err(ParsePbError::from("accum value alias is missing in MultiAccum"))?
+            }
             let entry_accumulator = match agg_kind {
                 Aggregate::Count => EntryAccumulator::ToCount(Count { value: 0, _ph: Default::default() }),
                 Aggregate::ToList => EntryAccumulator::ToList(ToList { inner: vec![] }),
@@ -267,7 +267,7 @@ impl Decode for RecordAccumulator {
         for _ in 0..len {
             let accumulator = <EntryAccumulator>::read_from(reader)?;
             let tag_key = <TagKey>::read_from(reader)?;
-            let alias = <KeyId>::read_from(reader)?;
+            let alias = <Option<KeyId>>::read_from(reader)?;
             accum_ops.push((accumulator, tag_key, alias));
         }
         Ok(RecordAccumulator { accum_ops })
@@ -333,6 +333,29 @@ mod tests {
         ]);
         if let Some(Ok(record)) = result.next() {
             if let Some(entry) = record.get(Some(TAG_A)) {
+                fold_result = entry.as_ref().clone();
+            }
+        }
+        assert_eq!(fold_result, expected_result);
+    }
+
+    // g.V().fold()
+    #[test]
+    fn fold_single_no_alias_test() {
+        let function = pb::group_by::AggFunc {
+            vars: vec![common_pb::Variable::from("@".to_string())],
+            aggregate: 5, // to_list
+            alias: None,
+        };
+        let fold_opr_pb = pb::GroupBy { mappings: vec![], functions: vec![function] };
+        let mut result = fold_test(init_source(), fold_opr_pb);
+        let mut fold_result = Entry::Collection(vec![]);
+        let expected_result = Entry::Collection(vec![
+            RecordElement::OnGraph(init_vertex1().into()),
+            RecordElement::OnGraph(init_vertex2().into()),
+        ]);
+        if let Some(Ok(record)) = result.next() {
+            if let Some(entry) = record.get(None) {
                 fold_result = entry.as_ref().clone();
             }
         }
