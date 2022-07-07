@@ -502,64 +502,58 @@ class DynamicFragment
     is_selfloops_.clear();
   }
 
-  void CopyFrom(std::shared_ptr<DynamicFragment> source,
+    void CopyFrom(std::shared_ptr<DynamicFragment> source,
                 const std::string& copy_type = "identical") {
     init(source->fid_, source->directed_);
     load_strategy_ = source->load_strategy_;
     copyVertices(source);
 
+    // both inner and outer vertices with the empty slots
+    auto vnum = id_parser_.max_local_id();
+
     // copy edges
     ie_.add_vertices(ivnum_, ovnum_);
     oe_.add_vertices(ivnum_, ovnum_);
     if (copy_type == "identical") {
-      auto add_edge_func = [&](vid_t i) {
+      std::vector<int> oe_degree_to_add(vnum, 0), ie_degree_to_add(vnum, 0);
+      for (vid_t i = 0; i < vnum; ++i) {
+        oe_degree_to_add[i] = source->oe_.degree(i);
+        ie_degree_to_add[i] = source->ie_.degree(i);
+      }
+      ie_.reserve_edges_dense(ie_degree_to_add);
+      oe_.reserve_edges_dense(oe_degree_to_add);
+      for (vid_t i = 0; i < vnum; ++i) {
         auto ie_begin = source->ie_.get_begin(i);
         auto ie_end = source->ie_.get_end(i);
-        std::vector<edge_t> ie_edges(ie_begin, ie_end);
-        ie_.add_forward_edges(ie_edges);
-      
         auto oe_begin = source->oe_.get_begin(i);
-        auto oe_end = source->oe_.get_end(i);       
-        std::vector<edge_t> oe_edges(oe_begin, oe_end);     
-        oe_.add_forward_edges(oe_edges);
-      };
-
-      // inner vertices
-      for (vid_t i = 0; i < ivnum_; ++i) {
-        add_edge_func(i);
-      }
-
-      // outer vertices
-      vid_t o_begin = id_parser_.max_local_id() - 1;
-      vid_t o_end   = o_begin - ovnum_;
-      for (vid_t i = o_begin; i > o_end; --i) {
-        add_edge_func(i);
+        auto oe_end = source->oe_.get_end(i);
+        for (auto iter = ie_begin; iter != ie_end; ++iter) {
+          ie_.put_edge(i, *iter);
+        }
+        for (auto iter = oe_begin; iter != oe_end; ++iter) {
+          oe_.put_edge(i, *iter);
+        }
       }
     } else if (copy_type == "reverse") {
       assert(directed_);
-
-      auto add_edge_func = [&](vid_t i) {
+      std::vector<int> oe_degree_to_add(vnum, 0), ie_degree_to_add(vnum, 0);
+      for (vid_t i = 0; i < vnum; ++i) {
+        oe_degree_to_add[i] = source->ie_.degree(i);
+        ie_degree_to_add[i] = source->oe_.degree(i);
+      }
+      ie_.reserve_edges_dense(ie_degree_to_add);
+      oe_.reserve_edges_dense(oe_degree_to_add);
+      for (vid_t i = 0; i < vnum; ++i) {
         auto ie_begin = source->ie_.get_begin(i);
         auto ie_end = source->ie_.get_end(i);
-        std::vector<edge_t> ie_edges(ie_begin, ie_end);
-        ie_.add_reversed_edges(ie_edges);
-      
         auto oe_begin = source->oe_.get_begin(i);
-        auto oe_end = source->oe_.get_end(i);       
-        std::vector<edge_t> oe_edges(oe_begin, oe_end);     
-        oe_.add_reversed_edges(oe_edges);
-      };
-
-      // inner vertices
-      for (vid_t i = 0; i < ivnum_; ++i) {
-        add_edge_func(i);
-      }
-
-      // outer vertices
-      vid_t o_begin = id_parser_.max_local_id() - 1;
-      vid_t o_end   = o_begin - ovnum_;
-      for (vid_t i = o_begin; i > o_end; --i) {
-        add_edge_func(i);
+        auto oe_end = source->oe_.get_end(i);
+        for (auto iter = oe_begin; iter != oe_end; ++iter) {
+          ie_.put_edge(i, *iter);
+        }
+        for (auto iter = ie_begin; iter != ie_end; ++iter) {
+          oe_.put_edge(i, *iter);
+        }
       }
     } else {
       LOG(ERROR) << "Unsupported copy type: " << copy_type;
@@ -577,22 +571,23 @@ class DynamicFragment
 
     ie_.add_vertices(ivnum_, ovnum_);
     oe_.add_vertices(ivnum_, ovnum_);
-    for (vid_t i = 0; i < ivnum_; ++i) {
-      auto begin = source->oe_.get_begin(i);
-      auto end = source->oe_.get_end(i);
-      std::vector<edge_t> edges(begin, end);
-      ie_.add_forward_edges(edges);
-      oe_.add_forward_edges(edges);
-    }
 
-    vid_t o_begin = id_parser_.max_local_id() - 1;
-    vid_t o_end   = o_begin - ovnum_;
-    for (vid_t i = o_begin; i > o_end; --i) {
+    // both inner and outer vertices with the empty slots
+    auto vnum = id_parser_.max_local_id();
+
+    std::vector<int> degree_to_add(vnum, 0);
+    for (vid_t i = 0; i < vnum; ++i) {
+      degree_to_add[i] = source->oe_.degree(i);
+    }
+    ie_.reserve_edges_dense(degree_to_add);
+    oe_.reserve_edges_dense(degree_to_add);
+    for (vid_t i = 0; i < vnum; ++i) {
       auto begin = source->oe_.get_begin(i);
       auto end = source->oe_.get_end(i);
-      std::vector<edge_t> edges(begin, end);
-      ie_.add_forward_edges(edges);
-      oe_.add_forward_edges(edges);
+      for (auto iter = begin; iter != end; ++iter) {
+        ie_.put_edge(i, *iter);
+        oe_.put_edge(i, *iter);
+      }
     }
 
     this->schema_.CopyFrom(source->schema_);
