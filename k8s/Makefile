@@ -30,7 +30,7 @@ else
 endif
 
 VERSION ?= latest
-VINEYARD_VERSION ?= v0.5.3
+VINEYARD_VERSION ?= v0.6.0
 PROFILE ?= release
 
 

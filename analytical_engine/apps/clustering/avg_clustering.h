@@ -71,7 +71,10 @@ class AvgClustering
           [&ctx](int tid, vertex_t u, int msg) { ctx.global_degree[u] = msg; });
 
       ForEach(inner_vertices.begin(), inner_vertices.end(),
-              [&frag, &ctx, &messages, &vertices](int tid, vertex_t v) {
+              [this, &frag, &ctx, &messages, &vertices](int tid, vertex_t v) {
+                if (filterByDegree(frag, ctx, v)) {
+                  return;
+                }
                 vid_t u_gid, v_gid;
                 auto& nbr_vec = ctx.complete_neighbor[v];
                 int degree = ctx.global_degree[v];
@@ -161,9 +164,12 @@ class AvgClustering
       messages
           .ParallelProcess<fragment_t, std::vector<std::pair<vid_t, uint32_t>>>(
               thread_num(), frag,
-              [&frag, &ctx](
+              [this, &frag, &ctx](
                   int tid, vertex_t u,
                   const std::vector<std::pair<vid_t, uint32_t>>& msg) {
+                if (frag.IsInnerVertex(u) && filterByDegree(frag, ctx, u)) {
+                  return;
+                }
                 auto& nbr_vec = ctx.complete_neighbor[u];
                 for (auto m : msg) {
                   auto gid = m.first;
@@ -238,6 +244,17 @@ class AvgClustering
         ctx.assign(ctx.total_clustering / frag.GetTotalVerticesNum());
       }
     }
+  }
+
+  bool filterByDegree(const fragment_t& frag, context_t& ctx, vertex_t v) {
+    int degree = frag.GetLocalOutDegree(v);
+    if (frag.directed()) {
+      degree += frag.GetLocalInDegree(v);
+    }
+    if (degree > ctx.degree_threshold) {
+      return true;
+    }
+    return false;
   }
 };
 }  // namespace gs
