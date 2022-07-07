@@ -507,4 +507,11 @@ mod test {
         assert_eq!(peers[1].id, 1);
         assert_eq!(peers[1].addr, "127.0.0.1:8081".parse().unwrap());
     }
+
+    #[test]
+    fn hostname_test() {
+        let server_addr = ServerAddr::new("localhost".to_string(), 1234);
+        let socker_addr = server_addr.to_socket_addr();
+        assert!(socker_addr.is_ok());
+    }
 }
