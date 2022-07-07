@@ -175,6 +175,7 @@ def test_multiple_session(ogbn_small_script):
     s1.close()
     s2.close()
 
+
 @pytest.mark.skip(reason="TODO: subgraph not ready")
 def test_demo_with_default_session(ogbn_small_script):
     graph = load_ogbn_mag()
