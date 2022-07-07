@@ -509,8 +509,9 @@ install_fastFFI() {
   git checkout a166c6287f2efb938c27fb01b3d499932d484f9c
 
   if [[ "${PLATFORM}" == *"Darwin"* ]]; then
-      # fastFFI not compatible on mac m1.
-      mvn clean install -DskipTests -pl :ffi,annotation-processor -am
+    # only install "ffi&annotation-processsor" on macOS, because
+    # llvm4jni not compatible for Apple M1 chip.
+    mvn clean install -DskipTests -pl :ffi,annotation-processor -am
   else
     export PATH=${PATH}:${LLVM11_HOME}/bin
     mvn clean install -DskipTests

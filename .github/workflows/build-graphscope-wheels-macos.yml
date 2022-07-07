@@ -50,7 +50,7 @@ jobs:
         # fixed protobuf version 3.17.3
         git checkout 2b411d925849478163647594b32fd237828cf720
         popd
-        ${GITHUB_WORKSPACE}/scripts/install_deps.sh --dev --vineyard_prefix /opt/vineyard --verbose
+        sudo -E ${GITHUB_WORKSPACE}/scripts/install_deps.sh --dev --vineyard_prefix /opt/vineyard --verbose
 
     - name: Build Server Wheel
       run: |
