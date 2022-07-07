@@ -30,6 +30,11 @@ from setuptools.command.develop import develop
 from setuptools.command.sdist import sdist
 from wheel.bdist_wheel import bdist_wheel
 
+# Enables --editable install with --user
+# https://github.com/pypa/pip/issues/7953
+import site
+site.ENABLE_USER_SITE = "--user" in sys.argv[1:]
+
 repo_root = os.path.dirname(os.path.abspath(__file__))
 
 
