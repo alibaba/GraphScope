@@ -9,4 +9,4 @@ appenders:
 root:
   level: info
   appenders:
-    - console
+    - stdout

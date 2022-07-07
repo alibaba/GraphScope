@@ -270,11 +270,13 @@ def test_modern_graph():
         logger.info("edges = %s", edges)
 
         g1 = interactive0.subgraph("g.E()")
+        interactive0.close()
         interactive1 = session.gremlin(g1)
         subgraph_nodes = interactive1.execute(vquery).all()
         subgraph_edges = interactive1.execute(equery).all()
         logger.info("subgraph nodes = %s", subgraph_nodes)
         logger.info("subgraph edges = %s", subgraph_edges)
+        interactive1.close()
 
         assert make_nodes_set(nodes) == make_nodes_set(subgraph_nodes)
         assert make_edges_set(edges) == make_edges_set(subgraph_edges)

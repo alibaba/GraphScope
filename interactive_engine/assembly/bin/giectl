@@ -257,7 +257,9 @@ create_gremlin_instance_on_k8s() {
 
   declare -r host_ip=$(hostname -i)
 
-  pod_ips=$(kubectl get pod -lapp.kubernetes.io/component=engine -o jsonpath='{.items[*].status.podIP}')
+  instance_id=${coordinator_name##*-}
+
+  pod_ips=$(kubectl get pod -lapp.kubernetes.io/component=engine,app.kubernetes.io/instance=${instance_id} -o jsonpath='{.items[*].status.podIP}')
   pegasus_hosts=""
   for pod in ${pod_ips}; do
     pegasus_hosts="${pegasus_hosts},${pod}:${executor_rpc_port}"
