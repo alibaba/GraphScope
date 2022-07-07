@@ -24,7 +24,7 @@ use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 
 use crate::error::{FnExecError, FnExecResult, FnGenError, FnGenResult};
 use crate::process::operator::accum::accumulator::{
-    Accumulator, Count, DistinctCount, Maximum, Minimum, ToList, ToSet,
+    Accumulator, Count, DataSum, DistinctCount, Maximum, Minimum, ToList, ToSet,
 };
 use crate::process::operator::accum::AccumFactoryGen;
 use crate::process::operator::TagKey;
@@ -39,6 +39,7 @@ pub enum EntryAccumulator {
     ToMax(Maximum<Entry>),
     ToSet(ToSet<Entry>),
     ToDistinctCount(DistinctCount<Entry>),
+    ToSum(DataSum<Entry>),
 }
 
 #[derive(Debug, Clone)]
@@ -74,6 +75,7 @@ impl Accumulator<Entry, Entry> for EntryAccumulator {
             EntryAccumulator::ToMax(max) => max.accum(next),
             EntryAccumulator::ToSet(set) => set.accum(next),
             EntryAccumulator::ToDistinctCount(distinct_count) => distinct_count.accum(next),
+            EntryAccumulator::ToSum(sum) => sum.accum(next),
         }
     }
 
@@ -119,6 +121,9 @@ impl Accumulator<Entry, Entry> for EntryAccumulator {
                 let cnt = distinct_count.finalize()?;
                 Ok(CommonObject::Count(cnt).into())
             }
+            EntryAccumulator::ToSum(sum) => sum
+                .finalize()?
+                .ok_or(FnExecError::accum_error("sum_entry is none")),
         }
     }
 }
@@ -157,6 +162,7 @@ impl AccumFactoryGen for algebra_pb::GroupBy {
                 Aggregate::CountDistinct => {
                     EntryAccumulator::ToDistinctCount(DistinctCount { inner: HashSet::new() })
                 }
+                Aggregate::Sum => EntryAccumulator::ToSum(DataSum { seed: None }),
                 _ => Err(FnGenError::unsupported_error(&format!(
                     "Unsupported aggregate kind {:?}",
                     agg_kind
@@ -196,6 +202,10 @@ impl Encode for EntryAccumulator {
                 writer.write_u8(5)?;
                 distinct_count.write_to(writer)?;
             }
+            EntryAccumulator::ToSum(sum) => {
+                writer.write_u8(6)?;
+                sum.write_to(writer)?;
+            }
         }
         Ok(())
     }
@@ -228,6 +238,10 @@ impl Decode for EntryAccumulator {
             5 => {
                 let distinct_count = <DistinctCount<Entry>>::read_from(reader)?;
                 Ok(EntryAccumulator::ToDistinctCount(distinct_count))
+            }
+            6 => {
+                let sum = <DataSum<Entry>>::read_from(reader)?;
+                Ok(EntryAccumulator::ToSum(sum))
             }
             _ => Err(std::io::Error::new(std::io::ErrorKind::Other, "unreachable")),
         }
@@ -501,5 +515,32 @@ mod tests {
             collection.sort_by(|v1, v2| v1.partial_cmp(&v2).unwrap_or(Ordering::Equal));
         }
         assert_eq!(fold_result, expected_result);
+    }
+
+    // g.V().values('age').sum().as("a")
+    #[test]
+    fn sum_test() {
+        let r1 = Record::new(CommonObject::Prop(object!(10)), None);
+        let r2 = Record::new(CommonObject::Prop(object!(20)), None);
+        let r3 = Record::new(CommonObject::Prop(object!(30)), None);
+        let function = pb::group_by::AggFunc {
+            vars: vec![common_pb::Variable::from("@".to_string())],
+            aggregate: 0, // sum
+            alias: Some(TAG_A.into()),
+        };
+        let fold_opr_pb = pb::GroupBy { mappings: vec![], functions: vec![function] };
+        let mut result = fold_test(vec![r1, r2, r3], fold_opr_pb);
+        let mut res = "".into();
+        if let Some(Ok(record)) = result.next() {
+            if let Some(entry) = record.get(Some(TAG_A)) {
+                res = match entry.as_ref() {
+                    Entry::Element(RecordElement::OffGraph(CommonObject::Prop(obj))) => obj.clone(),
+                    _ => {
+                        unreachable!()
+                    }
+                };
+            }
+        }
+        assert_eq!(res, object!(60));
     }
 }
