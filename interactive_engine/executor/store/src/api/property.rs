@@ -383,7 +383,6 @@ impl Property {
         match self {
             &Property::ListFloat(_) | &Property::ListDouble(_) => true,
             _ => false,
-
         }
     }
 }
@@ -394,13 +393,7 @@ fn long_to_data_type(x: i64, data_type: &DataType) -> GraphTraceResult<Vec<u8>> 
         DataType::Char => {
             if x > u8::max_value() as i64 || x < 0 {
                 let msg = format!("{} cannot be transformed to char", x);
-                let err = graph_err!(
-                    GraphErrorCode::DataError,
-                    msg,
-                    long_to_data_type,
-                    x,
-                    data_type
-                );
+                let err = graph_err!(GraphErrorCode::DataError, msg, long_to_data_type, x, data_type);
                 Err(err)
             } else {
                 Ok(Property::Char(x as u8).to_vec())
@@ -409,13 +402,7 @@ fn long_to_data_type(x: i64, data_type: &DataType) -> GraphTraceResult<Vec<u8>> 
         DataType::Short => {
             if x > i16::max_value() as i64 || x < i16::min_value() as i64 {
                 let msg = format!("{} cannot be transformed to short", x);
-                let err = graph_err!(
-                    GraphErrorCode::DataError,
-                    msg,
-                    long_to_data_type,
-                    x,
-                    data_type
-                );
+                let err = graph_err!(GraphErrorCode::DataError, msg, long_to_data_type, x, data_type);
                 Err(err)
             } else {
                 Ok(Property::Short(x as i16).to_vec())
@@ -424,13 +411,7 @@ fn long_to_data_type(x: i64, data_type: &DataType) -> GraphTraceResult<Vec<u8>> 
         DataType::Int => {
             if x > i32::max_value() as i64 || x < i32::min_value() as i64 {
                 let msg = format!("{} cannot be transformed to int", x);
-                let err = graph_err!(
-                    GraphErrorCode::DataError,
-                    msg,
-                    long_to_data_type,
-                    x,
-                    data_type
-                );
+                let err = graph_err!(GraphErrorCode::DataError, msg, long_to_data_type, x, data_type);
                 Err(err)
             } else {
                 Ok(Property::Int(x as i32).to_vec())
@@ -441,13 +422,7 @@ fn long_to_data_type(x: i64, data_type: &DataType) -> GraphTraceResult<Vec<u8>> 
         DataType::Double => Ok(Property::Double(x as f64).to_vec()),
         _ => {
             let msg = format!("{} cannot be transformed to {:?}", x, data_type);
-            let err = graph_err!(
-                GraphErrorCode::DataError,
-                msg,
-                long_to_data_type,
-                x,
-                data_type
-            );
+            let err = graph_err!(GraphErrorCode::DataError, msg, long_to_data_type, x, data_type);
             Err(err)
         }
     }
@@ -459,13 +434,7 @@ fn double_to_data_type(x: f64, data_type: &DataType) -> GraphTraceResult<Vec<u8>
         DataType::Char => {
             if x > u8::max_value() as f64 || x < u8::min_value() as f64 {
                 let msg = format!("{} cannot be transformed to char", x);
-                let err = graph_err!(
-                    GraphErrorCode::DataError,
-                    msg,
-                    double_to_data_type,
-                    x,
-                    data_type
-                );
+                let err = graph_err!(GraphErrorCode::DataError, msg, double_to_data_type, x, data_type);
                 Err(err)
             } else {
                 Ok(Property::Char(x as u8).to_vec())
@@ -474,13 +443,7 @@ fn double_to_data_type(x: f64, data_type: &DataType) -> GraphTraceResult<Vec<u8>
         DataType::Short => {
             if x > i16::max_value() as f64 || x < i16::min_value() as f64 {
                 let msg = format!("{} cannot be transformed to short", x);
-                let err = graph_err!(
-                    GraphErrorCode::DataError,
-                    msg,
-                    double_to_data_type,
-                    x,
-                    data_type
-                );
+                let err = graph_err!(GraphErrorCode::DataError, msg, double_to_data_type, x, data_type);
                 Err(err)
             } else {
                 Ok(Property::Short(x as i16).to_vec())
@@ -489,13 +452,7 @@ fn double_to_data_type(x: f64, data_type: &DataType) -> GraphTraceResult<Vec<u8>
         DataType::Int => {
             if x > i32::max_value() as f64 || x < i32::min_value() as f64 {
                 let msg = format!("{} cannot be transformed to int", x);
-                let err = graph_err!(
-                    GraphErrorCode::DataError,
-                    msg,
-                    double_to_data_type,
-                    x,
-                    data_type
-                );
+                let err = graph_err!(GraphErrorCode::DataError, msg, double_to_data_type, x, data_type);
                 Err(err)
             } else {
                 Ok(Property::Int(x as i32).to_vec())
@@ -504,13 +461,7 @@ fn double_to_data_type(x: f64, data_type: &DataType) -> GraphTraceResult<Vec<u8>
         DataType::Long => {
             if x > i64::max_value() as f64 || x < i64::min_value() as f64 {
                 let msg = format!("{} cannot be transformed to long", x);
-                let err = graph_err!(
-                    GraphErrorCode::DataError,
-                    msg,
-                    double_to_data_type,
-                    x,
-                    data_type
-                );
+                let err = graph_err!(GraphErrorCode::DataError, msg, double_to_data_type, x, data_type);
                 Err(err)
             } else {
                 Ok(Property::Long(x as i64).to_vec())
@@ -520,13 +471,7 @@ fn double_to_data_type(x: f64, data_type: &DataType) -> GraphTraceResult<Vec<u8>
         DataType::Double => Ok(Property::Double(x).to_vec()),
         _ => {
             let msg = format!("{} cannot be transformed to {:?}", x, data_type);
-            let err = graph_err!(
-                GraphErrorCode::DataError,
-                msg,
-                double_to_data_type,
-                x,
-                data_type
-            );
+            let err = graph_err!(GraphErrorCode::DataError, msg, double_to_data_type, x, data_type);
             Err(err)
         }
     }
@@ -685,10 +630,7 @@ impl Property {
     pub fn get_string(&self) -> Result<&String, String> {
         match self {
             &Property::String(ref s) => Ok(s),
-            _ => Err(format!(
-                "get string ref value fail from property=>{:?}",
-                self
-            )),
+            _ => Err(format!("get string ref value fail from property=>{:?}", self)),
         }
     }
 

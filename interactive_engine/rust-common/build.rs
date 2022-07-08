@@ -85,7 +85,6 @@ fn generate_build_info_env() {
 
 #[allow(unused_variables)]
 fn main() {
-    println!("cargo:rerun-if-env-changed={}", "RUST_PROTO");
     generate_build_info_env();
     generate_rust_protos();
 }

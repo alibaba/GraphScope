@@ -127,6 +127,5 @@ impl<'a> EdgeData<'a> {
         src_id: VertexId, dst_id: VertexId, edge_id: EdgeId, props: &'a HashMap<PropId, Vec<u8>>,
     ) -> Self {
         EdgeData { src_id, dst_id, edge_id, props }
-
     }
 }

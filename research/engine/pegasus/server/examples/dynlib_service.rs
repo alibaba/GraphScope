@@ -1,9 +1,9 @@
-use std::path::PathBuf;
 use pegasus::{Configuration, JobConf, ServerConf};
 use pegasus_server::job::{DynLibraryAssembly, JobDesc};
+use pegasus_server::rpc::RPCServerConfig;
+use std::path::PathBuf;
 use structopt::StructOpt;
 use tokio_stream::StreamExt;
-use pegasus_server::rpc::RPCServerConfig;
 
 #[derive(Debug, StructOpt)]
 #[structopt(name = "dynamic library service", about = "example of rpc service")]
@@ -17,7 +17,8 @@ struct Config {
 #[tokio::main]
 async fn main() {
     pegasus_common::logs::init_log();
-    let server_config = Configuration::parse(r#"
+    let server_config = Configuration::parse(
+        r#"
         max_pool_size = 8
         [network]
         server_id = 0
@@ -25,12 +26,17 @@ async fn main() {
         [[network.servers]]
         ip = '127.0.0.1'
         port = 8090
-    "#).unwrap();
+    "#,
+    )
+    .unwrap();
 
-    let rpc_config = RPCServerConfig::parse(r#"
+    let rpc_config = RPCServerConfig::parse(
+        r#"
         rpc_host = "127.0.0.1"
         rpc_port = 5007
-    "#).unwrap();
+    "#,
+    )
+    .unwrap();
 
     let config: Config = Config::from_args();
     if config.server {
@@ -53,12 +59,16 @@ async fn main() {
         path.push("debug");
         path.push("libdynexp.so");
 
-        client.add_library("libdynexp", path.as_path()).await.expect("add library failure");
+        client
+            .add_library("libdynexp", path.as_path())
+            .await
+            .expect("add library failure");
 
         let mut conf = JobConf::with_id(99, "dynlibexp", 1);
         conf.reset_servers(ServerConf::All);
         let mut job_desc = JobDesc::default();
-        job_desc.set_input(vec![8u8; 8])
+        job_desc
+            .set_input(vec![8u8; 8])
             .set_plan(b"build_job".to_vec())
             .set_resource(b"libdynexp".to_vec());
         let result = client.submit(conf, job_desc).await.unwrap();

@@ -48,7 +48,7 @@ impl Configuration {
     }
 
     pub fn with(network: NetworkConfig) -> Self {
-        Configuration {network: Some(network), max_pool_size: None }
+        Configuration { network: Some(network), max_pool_size: None }
     }
 
     pub fn server_id(&self) -> u64 {
