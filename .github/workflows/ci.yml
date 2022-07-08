@@ -168,20 +168,6 @@ jobs:
             exit -1
         fi
 
-    - name: Setup Rust
-      uses: actions-rs/toolchain@v1
-      with:
-          toolchain: stable
-          profile: minimal
-          components: rustfmt
-
-    - name: Rust Format Check
-      run: |
-        cd ${GITHUB_WORKSPACE}/interactive_engine/executor
-        cargo fmt -- --check
-        cd ${GITHUB_WORKSPACE}/research/engine/pegasus
-        cargo fmt -- --check
-
   build-wheels:
     # Require the user id of the self-hosted is 1001, which may need to be
     # configured manually when a new self-hosted runner is added.

@@ -66,11 +66,14 @@ jobs:
         source ${HOME}/.bashrc
         cd ${GITHUB_WORKSPACE}/research/query_service/ir/compiler
         make build
+        cargo fmt -- --check
 
     - name: Build Ir on Vineyard Store
       run: |
         source ${HOME}/.bashrc
         cd ${GITHUB_WORKSPACE} && make install
+        cd ${GITHUB_WORKSPACE}/interactive_engine/executor
+        cargo fmt -- --check
 
     - name: Build Ir on Groot Store
       run: |
