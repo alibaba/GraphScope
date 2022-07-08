@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::sync::Arc;
+
 use crate::db::api::condition::Condition;
 use crate::db::api::multi_version_graph::MultiVersionGraph;
 use crate::db::api::partition_graph::PartitionGraph;
@@ -19,7 +21,6 @@ use crate::db::api::partition_snapshot::PartitionSnapshot;
 use crate::db::api::{
     EdgeId, EdgeKind, GraphResult, LabelId, PropertyId, Records, SerialId, SnapshotId, VertexId,
 };
-use std::sync::Arc;
 
 pub struct WrapperPartitionGraph<G: MultiVersionGraph> {
     multi_version_graph: Arc<G>,

@@ -13,13 +13,14 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::collections::HashMap;
+use std::sync::Arc;
+
 use crate::api::prelude::Property;
 use crate::api::{
     Edge, GlobalGraphQuery, LabelId, PartitionId, PartitionLabeledVertexIds, PartitionVertexIds, PropId,
     SnapshotId, Vertex, VertexId,
 };
-use std::collections::HashMap;
-use std::sync::Arc;
 
 fn check_list_equal<T: PartialEq>(list1: &Vec<T>, list2: &Vec<T>) -> bool {
     if list1.len() == list2.len() {

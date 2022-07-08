@@ -13,6 +13,10 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::collections::HashMap;
+use std::net::SocketAddr;
+use std::sync::Arc;
+
 use gaia_runtime::error::{StartServerError, StartServerResult};
 use log::info;
 use maxgraph_store::api::graph_partition::GraphPartitionManager;
@@ -22,9 +26,6 @@ use pegasus_network::config::NetworkConfig;
 use pegasus_network::config::ServerAddr;
 use pegasus_server::rpc::{start_rpc_server, RPCServerConfig, ServiceStartListener};
 use runtime_integration::{InitializeJobAssembly, QueryVineyard};
-use std::collections::HashMap;
-use std::net::SocketAddr;
-use std::sync::Arc;
 use v6d_ffi::read_ffi::FFIGraphStore;
 
 #[tokio::main]

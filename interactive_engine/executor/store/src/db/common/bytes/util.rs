@@ -1,8 +1,10 @@
 #![allow(dead_code)]
+use std::marker::PhantomData;
+
+use protobuf::Message;
+
 use crate::db::api::GraphErrorCode::InvalidData;
 use crate::db::api::{GraphError, GraphResult};
-use protobuf::Message;
-use std::marker::PhantomData;
 
 /// This reader won't check whether the offset is overflow when read bytes.
 /// It's for performance purpose. Be careful to use it.

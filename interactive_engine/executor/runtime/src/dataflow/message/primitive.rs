@@ -13,15 +13,15 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use maxgraph_common::proto::message;
+use std::io::Cursor;
 
 use byteorder::BigEndian;
 use byteorder::ReadBytesExt;
 use byteorder::WriteBytesExt;
+use maxgraph_common::proto::message;
 use protobuf::well_known_types::BoolValue;
 use protobuf::Message;
 use protobuf::{parse_from_bytes, RepeatedField};
-use std::io::Cursor;
 
 pub trait Write {
     fn into_bytes(self) -> Vec<u8>;

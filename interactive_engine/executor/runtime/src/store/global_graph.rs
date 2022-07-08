@@ -13,6 +13,15 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::borrow::BorrowMut;
+use std::cell::{RefCell, RefMut};
+use std::collections::{HashMap, HashSet};
+use std::io::Write;
+use std::iter::FromIterator;
+use std::ops::Deref;
+use std::sync::Arc;
+use std::vec::IntoIter;
+
 use byteorder::{BigEndian, WriteBytesExt};
 use itertools::Itertools;
 use maxgraph_store::api::graph_partition::GraphPartitionManager;
@@ -33,14 +42,6 @@ use maxgraph_store::db::graph::entity::{RocksEdgeImpl, RocksVertexImpl};
 use maxgraph_store::db::graph::store::GraphStore;
 use maxgraph_store::db::graph::{get_vertex_id_by_primary_keys, hash64};
 use maxgraph_store::db::storage::RawBytes;
-use std::borrow::BorrowMut;
-use std::cell::{RefCell, RefMut};
-use std::collections::{HashMap, HashSet};
-use std::io::Write;
-use std::iter::FromIterator;
-use std::ops::Deref;
-use std::sync::Arc;
-use std::vec::IntoIter;
 use store::global_graph_schema::GlobalGraphSchema;
 use store::{LocalStoreEdge, LocalStoreVertex};
 

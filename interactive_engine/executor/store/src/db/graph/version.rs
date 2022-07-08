@@ -208,12 +208,13 @@ impl Default for Slot {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::db::util::time;
     use std::collections::HashSet;
     use std::sync::atomic::AtomicBool;
     use std::sync::Arc;
     use std::thread;
+
+    use super::*;
+    use crate::db::util::time;
 
     #[test]
     fn test_simple_version_manager() {

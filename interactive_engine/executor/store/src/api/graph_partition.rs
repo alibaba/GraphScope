@@ -13,9 +13,10 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::sync::Arc;
+
 use crate::api::property::Property;
 use crate::api::{Edge, LabelId, MVGraph, PartitionId, Vertex, VertexId};
-use std::sync::Arc;
 
 // Partition manager for graph query
 pub trait GraphPartitionManager: Send + Sync {

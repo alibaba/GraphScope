@@ -1,4 +1,11 @@
 #![allow(dead_code)]
+use std::collections::HashMap;
+use std::path::Path;
+use std::sync::atomic::{AtomicIsize, Ordering};
+use std::sync::Arc;
+
+use protobuf::Message;
+
 use super::bin::*;
 use super::codec::*;
 use super::meta::*;
@@ -14,11 +21,6 @@ use crate::db::graph::table_manager::Table;
 use crate::db::storage::rocksdb::RocksDB;
 use crate::db::storage::{ExternalStorage, ExternalStorageBackup, RawBytes};
 use crate::db::util::lock::GraphMutexLock;
-use protobuf::Message;
-use std::collections::HashMap;
-use std::path::Path;
-use std::sync::atomic::{AtomicIsize, Ordering};
-use std::sync::Arc;
 
 pub struct GraphStore {
     config: GraphConfig,

@@ -1,15 +1,15 @@
-use ::crossbeam_epoch as epoch;
-use ::crossbeam_epoch::{Atomic, Guard, Owned};
-
 use std::collections::HashMap;
+use std::fmt;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
+
+use ::crossbeam_epoch as epoch;
+use ::crossbeam_epoch::{Atomic, Guard, Owned};
 
 use super::version::*;
 use crate::db::api::*;
 use crate::db::common::bytes::util::{UnsafeBytesReader, UnsafeBytesWriter};
 use crate::db::util::lock::GraphMutexLock;
-use std::fmt;
 
 pub type CodecVersion = i32;
 

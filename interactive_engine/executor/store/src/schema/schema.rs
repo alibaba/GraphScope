@@ -14,16 +14,18 @@
 //! limitations under the License.
 
 #![allow(dead_code)]
-use super::data_type::DataType;
-use super::prop_def::PropDef;
-use super::type_def::*;
-use super::{LabelId, PropId, Schema};
-use maxgraph_common::proto::schema::*;
-use protobuf::Message;
 use std::cell::UnsafeCell;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::sync::Arc;
+
+use maxgraph_common::proto::schema::*;
+use protobuf::Message;
+
+use super::data_type::DataType;
+use super::prop_def::PropDef;
+use super::type_def::*;
+use super::{LabelId, PropId, Schema};
 
 #[derive(Debug, Default)]
 pub struct SchemaImpl {
@@ -175,11 +177,12 @@ impl<'a> From<&'a SchemaProto> for SchemaBuilder {
 
 #[cfg(test)]
 mod tests {
+    use std::sync::Arc;
+
     use super::super::prop_def::*;
     use super::super::relation::*;
     use super::super::schema::*;
     use super::super::test_util::*;
-    use std::sync::Arc;
 
     #[test]
     fn test_schema_from_proto() {

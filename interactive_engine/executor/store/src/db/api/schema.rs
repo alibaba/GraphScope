@@ -1,6 +1,8 @@
 #![allow(dead_code)]
 use std::collections::{HashMap, HashSet};
 
+use protobuf::{Message, ProtobufEnum};
+
 use super::error::*;
 use super::property::ValueType;
 use super::{GraphResult, PropertyId};
@@ -10,7 +12,6 @@ use crate::db::common::bytes::util::parse_pb;
 use crate::db::proto::model::{
     EdgeTableIdEntry, GraphDefPb, PropertyDefPb, TypeDefPb, TypeEnumPb, VertexTableIdEntry,
 };
-use protobuf::{Message, ProtobufEnum};
 
 #[derive(Default, Clone)]
 pub struct GraphDef {

@@ -1,12 +1,12 @@
 #![allow(dead_code)]
-use ::crossbeam_epoch as epoch;
-use ::crossbeam_epoch::{Atomic, Guard, Owned};
-
 use std::collections::hash_map::Values;
 use std::collections::HashMap;
 use std::ops::Deref;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
+
+use ::crossbeam_epoch as epoch;
+use ::crossbeam_epoch::{Atomic, Guard, Owned};
 
 use super::super::codec::*;
 use super::super::table_manager::Table;

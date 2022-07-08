@@ -23,13 +23,13 @@ pub mod prelude;
 mod property;
 mod unwrap_or;
 
+use std::collections::HashMap;
+
 pub use self::condition::*;
 pub use self::elem::*;
 pub use self::global_query::*;
 pub use self::multi_version::*;
-
 use crate::schema::prelude::*;
-use std::collections::HashMap;
 
 pub type VertexId = i64;
 pub type LabelId = u32;
@@ -127,6 +127,5 @@ impl<'a> EdgeData<'a> {
         src_id: VertexId, dst_id: VertexId, edge_id: EdgeId, props: &'a HashMap<PropId, Vec<u8>>,
     ) -> Self {
         EdgeData { src_id, dst_id, edge_id, props }
-
     }
 }

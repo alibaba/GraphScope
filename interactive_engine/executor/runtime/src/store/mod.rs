@@ -1,11 +1,11 @@
+use alloc::vec::IntoIter;
+use std::collections::HashMap;
+
+use itertools::Itertools;
 use maxgraph_store::api::prelude::Property;
 use maxgraph_store::api::{Edge, Vertex};
 use maxgraph_store::schema::PropId;
-
-use alloc::vec::IntoIter;
-use itertools::Itertools;
 use serde::Serialize;
-use std::collections::HashMap;
 
 pub mod global_graph;
 pub mod global_graph_schema;

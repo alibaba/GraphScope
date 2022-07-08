@@ -13,14 +13,16 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::cell::UnsafeCell;
+use std::collections::HashMap;
+use std::collections::HashSet;
+
+use maxgraph_common::proto as protos;
+
 use super::prop_def::*;
 use super::relation::Relation;
 use super::LabelId;
 use super::{DataType, PropId};
-use maxgraph_common::proto as protos;
-use std::cell::UnsafeCell;
-use std::collections::HashMap;
-use std::collections::HashSet;
 
 #[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Type {

@@ -1,6 +1,5 @@
-use crate::db::api::*;
-
 use super::util::{UnsafeBytesReader, UnsafeBytesWriter};
+use crate::db::api::*;
 
 pub fn i16_to_vec(x: i16) -> Vec<u8> {
     int_to_vec!(x, i16)

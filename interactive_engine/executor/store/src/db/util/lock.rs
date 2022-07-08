@@ -1,6 +1,7 @@
-use crate::db::api::*;
 use std::ops::{Deref, DerefMut};
 use std::sync::{Mutex, MutexGuard};
+
+use crate::db::api::*;
 
 pub struct GraphMutexLock<T> {
     inner: Mutex<T>,
@@ -48,9 +49,10 @@ impl<T> DerefMut for GraphMutexLockGuard<'_, T> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::sync::Arc;
     use std::thread;
+
+    use super::*;
 
     #[test]
     fn test_graph_mutex_lock() {
