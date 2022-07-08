@@ -181,8 +181,8 @@ jobs:
         cargo fmt --all -- --check
         cd ${GITHUB_WORKSPACE}/research/query_service/ir
         cargo fmt --all -- --check
-        cd ${GITHUB_WORKSPACE}/research/engine/pegasus
-        cargo fmt --all -- --check
+        # cd ${GITHUB_WORKSPACE}/research/engine/pegasus
+        # cargo fmt --all -- --check
 
   build-wheels:
     # Require the user id of the self-hosted is 1001, which may need to be
