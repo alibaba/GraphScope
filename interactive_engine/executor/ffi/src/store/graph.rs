@@ -1,18 +1,23 @@
 #![allow(non_snake_case)]
 
-use std::os::raw::{c_char, c_void};
-use std::ffi::CStr;
-use std::str;
-use maxgraph_store::db::api::{GraphConfigBuilder, SnapshotId, GraphResult, TypeDef, EdgeId, EdgeKind, DataLoadTarget};
-use maxgraph_store::db::api::PropertyMap;
-use maxgraph_store::db::proto::model::{OpTypePb, OperationBatchPb, OperationPb, DataOperationPb, VertexIdPb, LabelIdPb, EdgeIdPb, EdgeKindPb, TypeDefPb, DdlOperationPb, ConfigPb, CreateVertexTypePb, AddEdgeKindPb, EdgeLocationPb};
-use maxgraph_store::db::graph::store::GraphStore;
-use maxgraph_store::db::common::bytes::util::parse_pb;
-use std::sync::{Once, Arc};
 use crate::store::jna_response::JnaResponse;
-use maxgraph_store::db::wrapper::wrapper_partition_graph::WrapperPartitionGraph;
-use maxgraph_store::db::proto::common::{CommitDataLoadPb, PrepareDataLoadPb};
 use maxgraph_store::db::api::multi_version_graph::MultiVersionGraph;
+use maxgraph_store::db::api::PropertyMap;
+use maxgraph_store::db::api::{
+    DataLoadTarget, EdgeId, EdgeKind, GraphConfigBuilder, GraphResult, SnapshotId, TypeDef,
+};
+use maxgraph_store::db::common::bytes::util::parse_pb;
+use maxgraph_store::db::graph::store::GraphStore;
+use maxgraph_store::db::proto::common::{CommitDataLoadPb, PrepareDataLoadPb};
+use maxgraph_store::db::proto::model::{
+    AddEdgeKindPb, ConfigPb, CreateVertexTypePb, DataOperationPb, DdlOperationPb, EdgeIdPb, EdgeKindPb,
+    EdgeLocationPb, LabelIdPb, OpTypePb, OperationBatchPb, OperationPb, TypeDefPb, VertexIdPb,
+};
+use maxgraph_store::db::wrapper::wrapper_partition_graph::WrapperPartitionGraph;
+use std::ffi::CStr;
+use std::os::raw::{c_char, c_void};
+use std::str;
+use std::sync::{Arc, Once};
 
 pub type GraphHandle = *const c_void;
 pub type PartitionGraphHandle = *const c_void;
@@ -21,14 +26,14 @@ pub type FfiPartitionGraph = WrapperPartitionGraph<GraphStore>;
 static INIT: Once = Once::new();
 
 #[no_mangle]
-pub extern fn createWrapperPartitionGraph(handle: GraphHandle) -> PartitionGraphHandle {
+pub extern "C" fn createWrapperPartitionGraph(handle: GraphHandle) -> PartitionGraphHandle {
     let graph_store = unsafe { Arc::from_raw(handle as *const GraphStore) };
     let partition_graph = WrapperPartitionGraph::new(graph_store);
     Box::into_raw(Box::new(partition_graph)) as PartitionGraphHandle
 }
 
 #[no_mangle]
-pub extern fn deleteWrapperPartitionGraph(handle: PartitionGraphHandle) {
+pub extern "C" fn deleteWrapperPartitionGraph(handle: PartitionGraphHandle) {
     let ptr = handle as *mut FfiPartitionGraph;
     unsafe {
         Box::from_raw(ptr);
@@ -36,14 +41,15 @@ pub extern fn deleteWrapperPartitionGraph(handle: PartitionGraphHandle) {
 }
 
 #[no_mangle]
-pub extern fn openGraphStore(config_bytes: *const u8, len: usize) -> GraphHandle {
+pub extern "C" fn openGraphStore(config_bytes: *const u8, len: usize) -> GraphHandle {
     let buf = unsafe { ::std::slice::from_raw_parts(config_bytes, len) };
     let proto = parse_pb::<ConfigPb>(buf).expect("parse config pb failed");
     let mut config_builder = GraphConfigBuilder::new();
     config_builder.set_storage_engine("rocksdb");
     config_builder.set_storage_options(proto.get_configs().clone());
     let config = config_builder.build();
-    let path = config.get_storage_option("store.data.path")
+    let path = config
+        .get_storage_option("store.data.path")
         .expect("invalid config, missing store.data.path");
     INIT.call_once(|| {
         if let Some(config_file) = config.get_storage_option("log4rs.config") {
@@ -59,7 +65,7 @@ pub extern fn openGraphStore(config_bytes: *const u8, len: usize) -> GraphHandle
 }
 
 #[no_mangle]
-pub extern fn closeGraphStore(handle: GraphHandle) -> bool {
+pub extern "C" fn closeGraphStore(handle: GraphHandle) -> bool {
     let graph_store_ptr = handle as *mut GraphStore;
     unsafe {
         Box::from_raw(graph_store_ptr);
@@ -68,7 +74,7 @@ pub extern fn closeGraphStore(handle: GraphHandle) -> bool {
 }
 
 #[no_mangle]
-pub extern fn getGraphDefBlob(ptr: GraphHandle) -> Box<JnaResponse> {
+pub extern "C" fn getGraphDefBlob(ptr: GraphHandle) -> Box<JnaResponse> {
     unsafe {
         let graph_store_ptr = &*(ptr as *const GraphStore);
         match graph_store_ptr.get_graph_def_blob() {
@@ -90,15 +96,13 @@ pub extern fn getGraphDefBlob(ptr: GraphHandle) -> Box<JnaResponse> {
 }
 
 #[no_mangle]
-pub extern fn ingestData(ptr: GraphHandle, path: *const c_char) -> Box<JnaResponse> {
+pub extern "C" fn ingestData(ptr: GraphHandle, path: *const c_char) -> Box<JnaResponse> {
     unsafe {
         let graph_store_ptr = &*(ptr as *const GraphStore);
         let slice = CStr::from_ptr(path).to_bytes();
         let path_str = str::from_utf8(slice).unwrap();
         match graph_store_ptr.ingest(path_str) {
-            Ok(_) => {
-                JnaResponse::new_success()
-            }
+            Ok(_) => JnaResponse::new_success(),
             Err(e) => {
                 let msg = format!("{:?}", e);
                 JnaResponse::new_error(&msg)
@@ -108,7 +112,9 @@ pub extern fn ingestData(ptr: GraphHandle, path: *const c_char) -> Box<JnaRespon
 }
 
 #[no_mangle]
-pub extern fn writeBatch(ptr: GraphHandle, snapshot_id: i64, data: *const u8, len: usize) -> Box<JnaResponse> {
+pub extern "C" fn writeBatch(
+    ptr: GraphHandle, snapshot_id: i64, data: *const u8, len: usize,
+) -> Box<JnaResponse> {
     unsafe {
         let graph_store_ptr = &*(ptr as *const GraphStore);
         let buf = ::std::slice::from_raw_parts(data, len);
@@ -127,7 +133,9 @@ pub extern fn writeBatch(ptr: GraphHandle, snapshot_id: i64, data: *const u8, le
     }
 }
 
-fn do_write_batch<G: MultiVersionGraph>(graph: &G, snapshot_id: SnapshotId, buf: &[u8]) -> GraphResult<bool> {
+fn do_write_batch<G: MultiVersionGraph>(
+    graph: &G, snapshot_id: SnapshotId, buf: &[u8],
+) -> GraphResult<bool> {
     let proto = parse_pb::<OperationBatchPb>(buf)?;
     let mut has_ddl = false;
     let operations = proto.get_operations();
@@ -190,7 +198,9 @@ fn do_write_batch<G: MultiVersionGraph>(graph: &G, snapshot_id: SnapshotId, buf:
     Ok(has_ddl)
 }
 
-fn commit_data_load<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &OperationPb) -> GraphResult<bool> {
+fn commit_data_load<G: MultiVersionGraph>(
+    graph: &G, snapshot_id: i64, op: &OperationPb,
+) -> GraphResult<bool> {
     let ddl_operation_pb = parse_pb::<DdlOperationPb>(op.get_dataBytes())?;
     let schema_version = ddl_operation_pb.get_schemaVersion();
     let commit_data_load_pb = parse_pb::<CommitDataLoadPb>(ddl_operation_pb.get_ddlBlob())?;
@@ -202,7 +212,9 @@ fn commit_data_load<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &Oper
     graph.commit_data_load(snapshot_id, schema_version, &target, table_id, partition_id, unique_path)
 }
 
-fn prepare_data_load<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &OperationPb) -> GraphResult<bool> {
+fn prepare_data_load<G: MultiVersionGraph>(
+    graph: &G, snapshot_id: i64, op: &OperationPb,
+) -> GraphResult<bool> {
     let ddl_operation_pb = parse_pb::<DdlOperationPb>(op.get_dataBytes())?;
     let schema_version = ddl_operation_pb.get_schemaVersion();
     let prepare_data_load_pb = parse_pb::<PrepareDataLoadPb>(ddl_operation_pb.get_ddlBlob())?;
@@ -212,7 +224,9 @@ fn prepare_data_load<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &Ope
     graph.prepare_data_load(snapshot_id, schema_version, &target, table_id)
 }
 
-fn create_vertex_type<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &OperationPb) -> GraphResult<bool> {
+fn create_vertex_type<G: MultiVersionGraph>(
+    graph: &G, snapshot_id: i64, op: &OperationPb,
+) -> GraphResult<bool> {
     let ddl_operation_pb = parse_pb::<DdlOperationPb>(op.get_dataBytes())?;
     let schema_version = ddl_operation_pb.get_schemaVersion();
     let create_vertex_type_pb = parse_pb::<CreateVertexTypePb>(ddl_operation_pb.get_ddlBlob())?;
@@ -223,7 +237,9 @@ fn create_vertex_type<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &Op
     graph.create_vertex_type(snapshot_id, schema_version, label_id, &typedef, table_id)
 }
 
-fn drop_vertex_type<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &OperationPb) -> GraphResult<bool> {
+fn drop_vertex_type<G: MultiVersionGraph>(
+    graph: &G, snapshot_id: i64, op: &OperationPb,
+) -> GraphResult<bool> {
     let ddl_operation_pb = parse_pb::<DdlOperationPb>(op.get_dataBytes())?;
     let schema_version = ddl_operation_pb.get_schemaVersion();
     let label_id_pb = parse_pb::<LabelIdPb>(ddl_operation_pb.get_ddlBlob())?;
@@ -231,7 +247,9 @@ fn drop_vertex_type<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &Oper
     graph.drop_vertex_type(snapshot_id, schema_version, label_id)
 }
 
-fn create_edge_type<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &OperationPb) -> GraphResult<bool> {
+fn create_edge_type<G: MultiVersionGraph>(
+    graph: &G, snapshot_id: i64, op: &OperationPb,
+) -> GraphResult<bool> {
     let ddl_operation_pb = parse_pb::<DdlOperationPb>(op.get_dataBytes())?;
     let schema_version = ddl_operation_pb.get_schemaVersion();
     let typedef_pb = parse_pb::<TypeDefPb>(ddl_operation_pb.get_ddlBlob())?;
@@ -240,7 +258,9 @@ fn create_edge_type<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &Oper
     graph.create_edge_type(snapshot_id, schema_version, label_id, &typedef)
 }
 
-fn drop_edge_type<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &OperationPb) -> GraphResult<bool> {
+fn drop_edge_type<G: MultiVersionGraph>(
+    graph: &G, snapshot_id: i64, op: &OperationPb,
+) -> GraphResult<bool> {
     let ddl_operation_pb = parse_pb::<DdlOperationPb>(op.get_dataBytes())?;
     let schema_version = ddl_operation_pb.get_schemaVersion();
     let label_id_pb = parse_pb::<LabelIdPb>(ddl_operation_pb.get_ddlBlob())?;
@@ -258,7 +278,9 @@ fn add_edge_kind<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &Operati
     graph.add_edge_kind(snapshot_id, schema_version, &edge_kind, table_id)
 }
 
-fn remove_edge_kind<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &OperationPb) -> GraphResult<bool> {
+fn remove_edge_kind<G: MultiVersionGraph>(
+    graph: &G, snapshot_id: i64, op: &OperationPb,
+) -> GraphResult<bool> {
     let ddl_operation_pb = parse_pb::<DdlOperationPb>(op.get_dataBytes())?;
     let schema_version = ddl_operation_pb.get_schemaVersion();
     let edge_kind_pb = parse_pb::<EdgeKindPb>(ddl_operation_pb.get_ddlBlob())?;
@@ -266,7 +288,9 @@ fn remove_edge_kind<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &Oper
     graph.remove_edge_kind(snapshot_id, schema_version, &edge_kind)
 }
 
-fn overwrite_vertex<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &OperationPb) -> GraphResult<()> {
+fn overwrite_vertex<G: MultiVersionGraph>(
+    graph: &G, snapshot_id: i64, op: &OperationPb,
+) -> GraphResult<()> {
     let data_operation_pb = parse_pb::<DataOperationPb>(op.get_dataBytes())?;
 
     let vertex_id_pb = parse_pb::<VertexIdPb>(data_operation_pb.get_keyBlob())?;
@@ -314,7 +338,13 @@ fn overwrite_edge<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &Operat
     let edge_kind_pb = edge_location_pb.get_edgeKind();
     let edge_kind = EdgeKind::from_proto(edge_kind_pb);
     let property_map = <dyn PropertyMap>::from_proto(data_operation_pb.get_props());
-    graph.insert_overwrite_edge(snapshot_id, edge_id, &edge_kind, edge_location_pb.get_forward(), &property_map)
+    graph.insert_overwrite_edge(
+        snapshot_id,
+        edge_id,
+        &edge_kind,
+        edge_location_pb.get_forward(),
+        &property_map,
+    )
 }
 
 fn update_edge<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &OperationPb) -> GraphResult<()> {
@@ -327,7 +357,13 @@ fn update_edge<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &Operation
     let edge_kind_pb = edge_location_pb.get_edgeKind();
     let edge_kind = EdgeKind::from_proto(edge_kind_pb);
     let property_map = <dyn PropertyMap>::from_proto(data_operation_pb.get_props());
-    graph.insert_update_edge(snapshot_id, edge_id, &edge_kind, edge_location_pb.get_forward(), &property_map)
+    graph.insert_update_edge(
+        snapshot_id,
+        edge_id,
+        &edge_kind,
+        edge_location_pb.get_forward(),
+        &property_map,
+    )
 }
 
 fn delete_edge<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &OperationPb) -> GraphResult<()> {
@@ -343,13 +379,11 @@ fn delete_edge<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &Operation
 }
 
 #[no_mangle]
-pub extern fn garbageCollectSnapshot(ptr: GraphHandle, snapshot_id: i64) -> Box<JnaResponse> {
+pub extern "C" fn garbageCollectSnapshot(ptr: GraphHandle, snapshot_id: i64) -> Box<JnaResponse> {
     unsafe {
         let graph_store_ptr = &*(ptr as *const GraphStore);
         match graph_store_ptr.gc(snapshot_id) {
-            Ok(_) => {
-                JnaResponse::new_success()
-            }
+            Ok(_) => JnaResponse::new_success(),
             Err(e) => {
                 let msg = format!("{:?}", e);
                 JnaResponse::new_error(&msg)

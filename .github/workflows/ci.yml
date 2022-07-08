@@ -35,7 +35,7 @@ on:
       - '!**.rst'
 
 concurrency:
-  group: ${{ github.repository }}-${{ github.head_ref || github.sha }}-${{ github.workflow }}
+  group: ${{ github.repository }}-${{ github.event.number || github.head_ref || github.sha }}-${{ github.workflow }}
   cancel-in-progress: true
 
 env:
@@ -142,7 +142,7 @@ jobs:
             echo "|"
             echo "| Run: "
             echo "|"
-            echo '|    java -jar google-java-format-1.13.0-all-deps.jar --aosp --skip-javadoc-formatting -i $(git ls-files *.java)'
+            echo '|    java -jar google-java-format-1.13.0-all-deps.jar --aosp --skip-javadoc-formatting -i $(git ls-files **/*.java)'
             echo "|"
             echo "| to fix this error."
             echo "|"
@@ -305,6 +305,10 @@ jobs:
           git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
 
           python3 -m pytest -s -v $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/tests/minitest
+
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: false
 
       - name: Upload GIE log
         if: always()
@@ -611,8 +615,10 @@ jobs:
           export PYTHONPATH=${GITHUB_WORKSPACE}/python:${PYTHONPATH}
           cd ${GITHUB_WORKSPACE}/interactive_engine && mvn clean install --quiet -DskipTests -Pjava-release
           cd ${GITHUB_WORKSPACE}/interactive_engine/tests
-          ./function_test.sh 8111 1 graphscope/graphscope:${SHORT_SHA}
-          ./function_test.sh 8112 2 graphscope/graphscope:${SHORT_SHA}
+          # TODO: Skip the tests as some cases are not supported yet.
+          # issue: https://github.com/alibaba/GraphScope/issues/1802
+          # ./function_test.sh 8111 1 graphscope/graphscope:${SHORT_SHA}
+          # ./function_test.sh 8112 2 graphscope/graphscope:${SHORT_SHA}
 
   k8s-test:
     runs-on: [self-hosted, ubuntu2004]
@@ -690,6 +696,10 @@ jobs:
                           --cov=graphscope --cov-config=.coveragerc --cov-report=xml \
                           --cov-report=term --exitfirst -s -vvv --log-cli-level=INFO \
                           ./graphscope/tests/kubernetes
+
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: false
 
       - name: Upload Coverage
         uses: codecov/codecov-action@v2

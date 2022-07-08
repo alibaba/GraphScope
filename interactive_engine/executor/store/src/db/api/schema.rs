@@ -1,14 +1,16 @@
 #![allow(dead_code)]
 use std::collections::{HashMap, HashSet};
 
-use crate::db::common::bytes::util::parse_pb;
-use crate::db::api::property::Value;
-use super::{GraphResult, PropertyId};
-use super::property::ValueType;
 use super::error::*;
-use crate::db::proto::model::{TypeDefPb, PropertyDefPb, GraphDefPb, TypeEnumPb, VertexTableIdEntry, EdgeTableIdEntry};
-use protobuf::{ProtobufEnum, Message};
-use crate::db::api::{LabelId, EdgeKind};
+use super::property::ValueType;
+use super::{GraphResult, PropertyId};
+use crate::db::api::property::Value;
+use crate::db::api::{EdgeKind, LabelId};
+use crate::db::common::bytes::util::parse_pb;
+use crate::db::proto::model::{
+    EdgeTableIdEntry, GraphDefPb, PropertyDefPb, TypeDefPb, TypeEnumPb, VertexTableIdEntry,
+};
+use protobuf::{Message, ProtobufEnum};
 
 #[derive(Default, Clone)]
 pub struct GraphDef {
@@ -24,15 +26,10 @@ pub struct GraphDef {
 }
 
 impl GraphDef {
-    pub fn new(version: i64,
-               label_to_types: HashMap<LabelId, TypeDef>,
-               edge_kinds: HashSet<EdgeKind>,
-               property_name_to_id: HashMap<String, i32>,
-               label_idx: i32,
-               property_idx: i32,
-               vertex_table_ids: HashMap<LabelId, i64>,
-               edge_table_ids: HashMap<EdgeKind, i64>,
-               table_idx: i64
+    pub fn new(
+        version: i64, label_to_types: HashMap<LabelId, TypeDef>, edge_kinds: HashSet<EdgeKind>,
+        property_name_to_id: HashMap<String, i32>, label_idx: i32, property_idx: i32,
+        vertex_table_ids: HashMap<LabelId, i64>, edge_table_ids: HashMap<EdgeKind, i64>, table_idx: i64,
     ) -> Self {
         GraphDef {
             version,
@@ -56,7 +53,8 @@ impl GraphDef {
             if property.id > self.property_idx {
                 self.property_idx = property.id
             }
-            self.property_name_to_id.insert(property.name.clone(), property.id);
+            self.property_name_to_id
+                .insert(property.name.clone(), property.id);
         }
         self.label_to_types.insert(label, type_def);
         Ok(())
@@ -74,9 +72,8 @@ impl GraphDef {
                     current_property_names.insert(&p.name);
                 }
             }
-            self.property_name_to_id.retain(|k, _v| {
-                current_property_names.contains(k)
-            });
+            self.property_name_to_id
+                .retain(|k, _v| current_property_names.contains(k));
             self.vertex_table_ids.remove(label_id);
         }
     }
@@ -130,13 +127,17 @@ impl GraphDef {
             pb.mut_edgeKinds().push(edge_kind.to_proto());
         }
         for (name, id) in &self.property_name_to_id {
-            pb.mut_propertyNameToId().insert(name.clone(), *id);
+            pb.mut_propertyNameToId()
+                .insert(name.clone(), *id);
         }
         for (label_id, table_id) in &self.vertex_table_ids {
             let mut vertex_table_id_entry = VertexTableIdEntry::new();
-            vertex_table_id_entry.mut_labelId().set_id(*label_id);
+            vertex_table_id_entry
+                .mut_labelId()
+                .set_id(*label_id);
             vertex_table_id_entry.set_tableId(*table_id);
-            pb.mut_vertexTableIds().push(vertex_table_id_entry);
+            pb.mut_vertexTableIds()
+                .push(vertex_table_id_entry);
         }
         for (edge_kind, table_id) in &self.edge_table_ids {
             let mut edge_table_id_entry = EdgeTableIdEntry::new();
@@ -163,7 +164,7 @@ impl TypeDef {
         self.version
     }
 
-    pub fn get_prop_defs(&self) -> impl Iterator<Item=&PropDef> {
+    pub fn get_prop_defs(&self) -> impl Iterator<Item = &PropDef> {
         self.properties.values()
     }
 
@@ -198,7 +199,9 @@ impl TypeDef {
         typedef_pb.set_label(self.label.clone());
         typedef_pb.mut_labelId().set_id(self.label_id);
         for property_def in self.properties.values() {
-            typedef_pb.mut_props().push(property_def.to_proto()?);
+            typedef_pb
+                .mut_props()
+                .push(property_def.to_proto()?);
         }
         typedef_pb.set_typeEnum(self.type_enum);
         Ok(typedef_pb)
@@ -216,27 +219,36 @@ impl TypeDef {
             Err(e) => {
                 let msg = format!("{:?}", e);
                 Err(gen_graph_err!(GraphErrorCode::InvalidData, msg, to_bytes))
-            },
+            }
         }
     }
 
-    fn new(version: i32, label: String, label_id: LabelId, properties: HashMap<PropertyId, PropDef>, type_enum: TypeEnumPb) -> Self {
-        TypeDef {
-            version,
-            label,
-            label_id,
-            properties,
-            type_enum,
-        }
+    fn new(
+        version: i32, label: String, label_id: LabelId, properties: HashMap<PropertyId, PropDef>,
+        type_enum: TypeEnumPb,
+    ) -> Self {
+        TypeDef { version, label, label_id, properties, type_enum }
     }
 
     #[cfg(test)]
     pub fn new_test() -> Self {
         let mut builder = TypeDefBuilder::new();
-        let types = vec![ValueType::Bool, ValueType::Char, ValueType::Short,
-                         ValueType::Int, ValueType::Long, ValueType::Float, ValueType::Double,
-                         ValueType::String, ValueType::Bytes, ValueType::IntList, ValueType::LongList,
-                         ValueType::FloatList, ValueType::DoubleList, ValueType::StringList];
+        let types = vec![
+            ValueType::Bool,
+            ValueType::Char,
+            ValueType::Short,
+            ValueType::Int,
+            ValueType::Long,
+            ValueType::Float,
+            ValueType::Double,
+            ValueType::String,
+            ValueType::Bytes,
+            ValueType::IntList,
+            ValueType::LongList,
+            ValueType::FloatList,
+            ValueType::DoubleList,
+            ValueType::StringList,
+        ];
         for i in 0..types.len() {
             let id = i as PropertyId + 112;
             let inner_id = id * 2 + 123;
@@ -253,13 +265,16 @@ pub struct TypeDefBuilder {
 
 impl TypeDefBuilder {
     pub fn new() -> Self {
-        TypeDefBuilder {
-            type_def: TypeDef::default(),
-        }
+        TypeDefBuilder { type_def: TypeDef::default() }
     }
 
-    pub fn add_property(&mut self, id: PropertyId, inner_id: PropertyId, name: String, r#type: ValueType, default_value: Option<Value>, pk: bool, comment: String) -> &mut Self {
-        self.type_def.properties.insert(id, PropDef::new(id, inner_id, name, r#type, default_value, pk, comment));
+    pub fn add_property(
+        &mut self, id: PropertyId, inner_id: PropertyId, name: String, r#type: ValueType,
+        default_value: Option<Value>, pk: bool, comment: String,
+    ) -> &mut Self {
+        self.type_def
+            .properties
+            .insert(id, PropDef::new(id, inner_id, name, r#type, default_value, pk, comment));
         self
     }
 
@@ -299,21 +314,16 @@ pub struct PropDef {
 }
 
 impl PropDef {
-    fn new(id: PropertyId, inner_id: PropertyId, name: String, r#type: ValueType, default_value: Option<Value>, pk: bool, comment: String) -> Self {
+    fn new(
+        id: PropertyId, inner_id: PropertyId, name: String, r#type: ValueType,
+        default_value: Option<Value>, pk: bool, comment: String,
+    ) -> Self {
         if let Some(ref v) = default_value {
             if !v.is_type(r#type) {
                 panic!("{:?} is not {:?}", v, r#type);
             }
         }
-        PropDef {
-            id,
-            inner_id,
-            name,
-            r#type,
-            default_value,
-            pk,
-            comment,
-        }
+        PropDef { id, inner_id, name, r#type, default_value, pk, comment }
     }
 
     fn from_proto(proto: &PropertyDefPb) -> GraphResult<Self> {
@@ -359,8 +369,13 @@ mod tests {
         for t in ValueType::all_value_types() {
             let prop_id = 11223;
             let inner_id = 3345;
-            let prop_def = PropDef::new(prop_id, inner_id, "prop".to_string(),t, None, false, "comment".to_string());
-            let bytes = prop_def.to_proto().unwrap().write_to_bytes().unwrap();
+            let prop_def =
+                PropDef::new(prop_id, inner_id, "prop".to_string(), t, None, false, "comment".to_string());
+            let bytes = prop_def
+                .to_proto()
+                .unwrap()
+                .write_to_bytes()
+                .unwrap();
             let prop_def2 = PropDef::from_bytes(&bytes).unwrap();
             assert_eq!(prop_def, prop_def2);
         }

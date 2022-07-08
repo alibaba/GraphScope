@@ -1,12 +1,12 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //! http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -57,17 +57,15 @@ impl DataType {
             8 => DataType::String,
             9 => DataType::Date,
             10 => DataType::Set,
-            11 => {
-                match expression.to_lowercase().as_str() {
-                    "int" => DataType::ListInt,
-                    "long" => DataType::ListLong,
-                    "float" => DataType::ListFloat,
-                    "double" => DataType::ListDouble,
-                    "string" => DataType::ListString,
-                    "bytes" => DataType::ListBytes,
-                    _ => DataType::Unknown,
-                }
-            }
+            11 => match expression.to_lowercase().as_str() {
+                "int" => DataType::ListInt,
+                "long" => DataType::ListLong,
+                "float" => DataType::ListFloat,
+                "double" => DataType::ListDouble,
+                "string" => DataType::ListString,
+                "bytes" => DataType::ListBytes,
+                _ => DataType::Unknown,
+            },
             12 => DataType::ListLong,
             13 => DataType::ListFloat,
             14 => DataType::ListDouble,
@@ -83,16 +81,19 @@ impl DataType {
             DataType::Short => 2,
             DataType::Int | DataType::Float => 4,
             DataType::Long | DataType::Double => 8,
-            _ => unimplemented!()
+            _ => unimplemented!(),
         }
     }
 
     pub fn is_fixed_len(&self) -> bool {
         match *self {
-            DataType::Bool | DataType::Char |
-            DataType::Short | DataType::Int |
-            DataType::Long | DataType::Float |
-            DataType::Double => true,
+            DataType::Bool
+            | DataType::Char
+            | DataType::Short
+            | DataType::Int
+            | DataType::Long
+            | DataType::Float
+            | DataType::Double => true,
             _ => false,
         }
     }
@@ -121,8 +122,7 @@ pub fn parse_str_to_data_type(value: &str) -> Result<DataType, String> {
                     DataType::Double => Ok(DataType::ListDouble),
                     DataType::String => Ok(DataType::ListString),
                     DataType::Bytes => Ok(DataType::ListBytes),
-                    _ => Err(format!("data type {} not support yet", v))
-
+                    _ => Err(format!("data type {} not support yet", v)),
                 }
             } else if v.starts_with("s<") {
                 //todo
@@ -133,7 +133,7 @@ pub fn parse_str_to_data_type(value: &str) -> Result<DataType, String> {
             } else {
                 Err(format!("unknown data type {}", v))
             }
-        },
+        }
     }
 }
 
@@ -168,7 +168,7 @@ impl<'a> From<&'a str> for DataType {
                 } else {
                     DataType::Unknown
                 }
-            },
+            }
         }
     }
 }

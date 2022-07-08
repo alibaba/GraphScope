@@ -1,12 +1,12 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //! http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,16 +14,16 @@
 //! limitations under the License.
 
 #![allow(dead_code)]
-use super::{Schema, LabelId, PropId};
 use super::data_type::DataType;
-use std::collections::HashMap;
-use std::sync::Arc;
-use super::type_def::*;
 use super::prop_def::PropDef;
+use super::type_def::*;
+use super::{LabelId, PropId, Schema};
 use maxgraph_common::proto::schema::*;
-use std::cell::UnsafeCell;
-use std::collections::HashSet;
 use protobuf::Message;
+use std::cell::UnsafeCell;
+use std::collections::HashMap;
+use std::collections::HashSet;
+use std::sync::Arc;
 
 #[derive(Debug, Default)]
 pub struct SchemaImpl {
@@ -51,16 +51,16 @@ impl Schema for SchemaImpl {
 
     #[inline]
     fn get_prop_types(&self, prop_id: PropId) -> Option<Vec<&DataType>> {
-        self.props.get(&prop_id).map(|x| {
-            x.iter().map(|p| p.get_data_type()).collect()
-        })
+        self.props
+            .get(&prop_id)
+            .map(|x| x.iter().map(|p| p.get_data_type()).collect())
     }
 
     #[inline]
     fn get_prop_name(&self, prop_id: PropId) -> Option<&str> {
-        self.props.get(&prop_id).map(|x| {
-            x.iter().next().unwrap().get_name()
-        })
+        self.props
+            .get(&prop_id)
+            .map(|x| x.iter().next().unwrap().get_name())
     }
 
     #[inline]
@@ -107,11 +107,16 @@ impl SchemaImpl {
     #[inline]
     fn add_type_def(&mut self, type_def: TypeDef) {
         for (gid, p) in type_def.get_props() {
-            self.prop_name_mapping.insert(p.get_name().to_owned(), *gid);
-            self.props.entry(*gid).or_insert_with(|| HashSet::new()).insert(p.clone());
+            self.prop_name_mapping
+                .insert(p.get_name().to_owned(), *gid);
+            self.props
+                .entry(*gid)
+                .or_insert_with(|| HashSet::new())
+                .insert(p.clone());
         }
         let label = type_def.get_label();
-        self.label_name_mapping.insert(type_def.get_name().to_owned(), label);
+        self.label_name_mapping
+            .insert(type_def.get_name().to_owned(), label);
         self.types.insert(label, type_def);
     }
 }
@@ -148,9 +153,7 @@ impl SchemaBuilder {
 
     #[inline]
     fn get_inner(&self) -> &mut SchemaImpl {
-        unsafe {
-            &mut *self.inner.get()
-        }
+        unsafe { &mut *self.inner.get() }
     }
 
     pub fn new() -> Self {
@@ -172,10 +175,10 @@ impl<'a> From<&'a SchemaProto> for SchemaBuilder {
 
 #[cfg(test)]
 mod tests {
-    use super::super::test_util::*;
-    use super::super::schema::*;
-    use super::super::relation::*;
     use super::super::prop_def::*;
+    use super::super::relation::*;
+    use super::super::schema::*;
+    use super::super::test_util::*;
     use std::sync::Arc;
 
     #[test]

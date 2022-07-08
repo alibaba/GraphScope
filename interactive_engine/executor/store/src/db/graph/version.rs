@@ -1,9 +1,9 @@
-use std::sync::atomic::{AtomicUsize, AtomicIsize, Ordering};
 use std::mem::MaybeUninit;
+use std::sync::atomic::{AtomicIsize, AtomicUsize, Ordering};
 
 use crate::db::api::*;
-use crate::db::util::lock::GraphMutexLock;
 use crate::db::common::concurrency::volatile::Volatile;
+use crate::db::util::lock::GraphMutexLock;
 
 const MAX_SIZE: usize = 128;
 const SIZE_MASK: usize = MAX_SIZE - 1;
@@ -100,7 +100,8 @@ impl VersionManager {
             let cur_si = self.slots[idx].get_si();
             let _data = self.slots[idx].get_data();
             if cur_si == 0 {
-                let msg = format!("A bug found! Something wrong with the VersionManager. Maybe thread unsafe");
+                let msg =
+                    format!("A bug found! Something wrong with the VersionManager. Maybe thread unsafe");
                 let err = gen_graph_err!(GraphErrorCode::GraphStoreBug, msg, gc, si);
                 return Err(err);
             }
@@ -141,7 +142,8 @@ impl VersionManager {
             let idx = (tail - 1) & SIZE_MASK;
             let last_si = self.slots[idx].get_si();
             if last_si >= si {
-                let msg = format!("version {} is less equal than last version {}, it's invalid", si, last_si);
+                let msg =
+                    format!("version {} is less equal than last version {}, it's invalid", si, last_si);
                 let err = gen_graph_err!(GraphErrorCode::InvalidOperation, msg, do_add_data, si, data);
                 return Err(err);
             }
@@ -170,10 +172,7 @@ pub struct Version {
 
 impl Version {
     fn new(si: SnapshotId, data: i64) -> Self {
-        Version {
-            start_si: si,
-            data,
-        }
+        Version { start_si: si, data }
     }
 }
 
@@ -196,27 +195,25 @@ impl Slot {
     }
 
     pub fn set_data(&self, data: i64) {
-        self.data.store(data as isize, Ordering::Relaxed);
+        self.data
+            .store(data as isize, Ordering::Relaxed);
     }
 }
 
 impl Default for Slot {
     fn default() -> Self {
-        Slot {
-            si: Volatile::new(EMPTY_SI),
-            data: AtomicIsize::new(TOMBSTONE as isize),
-        }
+        Slot { si: Volatile::new(EMPTY_SI), data: AtomicIsize::new(TOMBSTONE as isize) }
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::db::util::time;
+    use std::collections::HashSet;
+    use std::sync::atomic::AtomicBool;
     use std::sync::Arc;
     use std::thread;
-    use std::sync::atomic::AtomicBool;
-    use std::collections::HashSet;
-    use crate::db::util::time;
 
     #[test]
     fn test_simple_version_manager() {
@@ -260,14 +257,14 @@ mod tests {
         }
         assert!(manager.add(10000, 10000).is_err());
         manager.gc(10).unwrap();
-        for i in MAX_SIZE+1..MAX_SIZE+10 {
+        for i in MAX_SIZE + 1..MAX_SIZE + 10 {
             manager.add(i as SnapshotId, i as i64).unwrap();
         }
         assert!(manager.add(10000, 10000).is_err());
         for i in 1..10 {
             assert!(manager.get(i).is_none());
         }
-        for i in 10..MAX_SIZE+10 {
+        for i in 10..MAX_SIZE + 10 {
             assert_eq!(manager.get(i as SnapshotId).unwrap(), Version::new(i as SnapshotId, i as i64));
         }
         assert_eq!(manager.size(), MAX_SIZE);
@@ -309,7 +306,7 @@ mod tests {
                             tmp = si;
                         }
                     }
-                    assert!(tmp>=last_si);
+                    assert!(tmp >= last_si);
                     last_si = tmp;
                 }
             });
@@ -350,7 +347,10 @@ mod tests {
         }
         gc.join().unwrap();
         assert_eq!(manager.size(), 1);
-        assert_eq!(manager.get(MAX_SIZE as SnapshotId).unwrap(), Version::new(MAX_SIZE as SnapshotId, MAX_SIZE as i64));
+        assert_eq!(
+            manager.get(MAX_SIZE as SnapshotId).unwrap(),
+            Version::new(MAX_SIZE as SnapshotId, MAX_SIZE as i64)
+        );
     }
 
     #[test]
@@ -390,4 +390,3 @@ mod tests {
         assert!(manager.add(10, TOMBSTONE).is_err());
     }
 }
-

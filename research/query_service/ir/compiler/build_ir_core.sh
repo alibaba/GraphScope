@@ -1,5 +1,4 @@
 #!/bin/bash
-
 cd ../core
 
 if $(! command -v cargo &> /dev/null)

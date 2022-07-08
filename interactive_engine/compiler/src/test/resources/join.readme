@@ -1,4 +1,0 @@
-1. JOIN_RIGHT_ZERO_JOIN    左流跟右流按照右流的key进行join，join上输出右流数据，join不上输出0数据
-2. JOIN_DIRECT_FILTER   左流跟右流按照右流的key进行join，join上则输出左流数据，join不上直接过滤
-3. JOIN_DIRECT_FILTER_NEGATE 左流跟右流按照右流的key进行join，join上则过滤，join不上输出左流数据
-4. JOIN_RIGHT_VALUE_KEY 左流跟右流按照右流的key进行join，将右流的value作为左流的key，输出左流

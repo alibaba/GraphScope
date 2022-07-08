@@ -37,7 +37,7 @@ commonLabels: {}
 
 ## Configure which executor (maxgraph or gaia) to use for store and frontend
 ##
-executor: "maxgraph"
+executor: "gaia"
 
 ## Configure GraphScope Components with a custom my.cnf file
 ##

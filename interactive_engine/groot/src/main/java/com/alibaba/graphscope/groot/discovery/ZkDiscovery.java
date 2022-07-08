@@ -22,10 +22,7 @@ import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.state.ConnectionState;
 import org.apache.curator.utils.ZKPaths;
-import org.apache.curator.x.discovery.ServiceCache;
-import org.apache.curator.x.discovery.ServiceDiscovery;
-import org.apache.curator.x.discovery.ServiceDiscoveryBuilder;
-import org.apache.curator.x.discovery.ServiceInstance;
+import org.apache.curator.x.discovery.*;
 import org.apache.curator.x.discovery.details.JsonInstanceSerializer;
 import org.apache.curator.x.discovery.details.ServiceCacheListener;
 import org.slf4j.Logger;
@@ -92,6 +89,7 @@ public class ZkDiscovery implements NodeDiscovery {
                             .build();
             JsonInstanceSerializer<MaxGraphNode> serializer =
                     new JsonInstanceSerializer<>(MaxGraphNode.class);
+
             this.serviceDiscovery =
                     ServiceDiscoveryBuilder.builder(MaxGraphNode.class)
                             .client(curator)
@@ -165,11 +163,11 @@ public class ZkDiscovery implements NodeDiscovery {
                     newRoleNodes.put(maxGraphNode.getIdx(), maxGraphNode);
                 }
 
-                Map<RoleType, Map<Integer, MaxGraphNode>> curentNodesCopy =
+                Map<RoleType, Map<Integer, MaxGraphNode>> currentNodesCopy =
                         new HashMap<>(currentNodesRef.get());
                 Map<Integer, MaxGraphNode> currentRoleNodes =
-                        curentNodesCopy.put(roleType, newRoleNodes);
-                currentNodesRef.set(curentNodesCopy);
+                        currentNodesCopy.put(roleType, newRoleNodes);
+                currentNodesRef.set(currentNodesCopy);
 
                 if (currentRoleNodes != null && !currentRoleNodes.isEmpty()) {
                     Map<Integer, MaxGraphNode> removed = new HashMap<>();

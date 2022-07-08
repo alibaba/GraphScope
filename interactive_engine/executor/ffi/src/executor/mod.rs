@@ -15,4 +15,3 @@
 //!
 
 mod gaia;
-mod pegasus;

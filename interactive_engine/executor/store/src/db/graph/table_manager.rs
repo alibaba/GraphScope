@@ -2,7 +2,7 @@
 use crate::db::api::*;
 
 use super::version::*;
-use crate::db::common::bytes::util::{UnsafeBytesWriter, UnsafeBytesReader};
+use crate::db::common::bytes::util::{UnsafeBytesReader, UnsafeBytesWriter};
 
 pub type TableId = i64;
 
@@ -14,15 +14,13 @@ pub struct TableManager {
 
 impl TableManager {
     pub fn new() -> Self {
-        TableManager {
-            versions: VersionManager::new(),
-        }
+        TableManager { versions: VersionManager::new() }
     }
 
     pub fn get(&self, si: SnapshotId) -> Option<Table> {
-        self.versions.get(si).map(|v| {
-            Table::new(v.start_si, v.data)
-        })
+        self.versions
+            .get(si)
+            .map(|v| Table::new(v.start_si, v.data))
     }
 
     pub fn add(&self, si: SnapshotId, table_id: TableId) -> GraphResult<()> {
@@ -50,10 +48,7 @@ pub struct Table {
 
 impl Table {
     pub fn new(si: SnapshotId, id: TableId) -> Self {
-        Table {
-            id,
-            start_si: si,
-        }
+        Table { id, start_si: si }
     }
 
     pub fn to_bytes(&self) -> Vec<u8> {
@@ -65,7 +60,7 @@ impl Table {
                 writer.write_i64(4, self.id.to_be());
                 writer.write_i64(12, self.start_si.to_be());
                 buf
-            },
+            }
             _ => unreachable!(),
         }
     }
@@ -89,7 +84,7 @@ impl Table {
                 let msg = format!("invalid bytes");
                 let err = gen_graph_err!(GraphErrorCode::InvalidData, msg, from_bytes);
                 Err(err)
-            },
+            }
             x => {
                 let msg = format!("unknown encoding version {}", x);
                 let err = gen_graph_err!(GraphErrorCode::InvalidData, msg, from_bytes);
@@ -106,11 +101,11 @@ impl Table {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::sync::{Arc};
-    use std::thread;
-    use std::sync::atomic::{AtomicBool, Ordering};
-    use std::collections::HashSet;
     use crate::db::util::time;
+    use std::collections::HashSet;
+    use std::sync::atomic::{AtomicBool, Ordering};
+    use std::sync::Arc;
+    use std::thread;
     const MAX_SIZE: usize = 128;
 
     #[test]
@@ -151,18 +146,22 @@ mod tests {
     fn test_table_manager_size_limit() {
         let manager = TableManager::new();
         for i in 1..=MAX_SIZE {
-            manager.add(i as SnapshotId, i as TableId).unwrap();
+            manager
+                .add(i as SnapshotId, i as TableId)
+                .unwrap();
         }
         assert!(manager.add(10000, 10000).is_err());
         manager.gc(10).unwrap();
-        for i in MAX_SIZE+1..MAX_SIZE+10 {
-            manager.add(i as SnapshotId, i as TableId).unwrap();
+        for i in MAX_SIZE + 1..MAX_SIZE + 10 {
+            manager
+                .add(i as SnapshotId, i as TableId)
+                .unwrap();
         }
         assert!(manager.add(10000, 10000).is_err());
         for i in 1..10 {
             assert!(manager.get(i).is_none());
         }
-        for i in 10..MAX_SIZE+10 {
+        for i in 10..MAX_SIZE + 10 {
             assert_eq!(manager.get(i as SnapshotId).unwrap(), Table::new(i as SnapshotId, i as TableId));
         }
         assert_eq!(manager.size(), MAX_SIZE);
@@ -204,7 +203,7 @@ mod tests {
                             tmp = si;
                         }
                     }
-                    assert!(tmp>=last_si);
+                    assert!(tmp >= last_si);
                     last_si = tmp;
                 }
             });
@@ -245,7 +244,10 @@ mod tests {
         }
         gc.join().unwrap();
         assert_eq!(manager.size(), 1);
-        assert_eq!(manager.get(MAX_SIZE as SnapshotId).unwrap(), Table::new(MAX_SIZE as SnapshotId, MAX_SIZE as TableId));
+        assert_eq!(
+            manager.get(MAX_SIZE as SnapshotId).unwrap(),
+            Table::new(MAX_SIZE as SnapshotId, MAX_SIZE as TableId)
+        );
     }
 
     #[test]
@@ -282,7 +284,7 @@ mod tests {
     #[test]
     fn test_table_encoding() {
         let table = Table::new(1, 2);
-        let bytes =table.to_bytes();
+        let bytes = table.to_bytes();
         let table2 = Table::from_bytes(&bytes).unwrap();
         assert_eq!(table, table2);
     }

@@ -6,5 +6,6 @@ fn main() {
         &[proto_root.to_owned() + "/sdk/model.proto", proto_root.to_owned() + "/sdk/common.proto"],
         &[proto_root],
         "./src/db/proto",
-    ).expect("Failed to compile gRPC definitions!");
+    )
+    .expect("Failed to compile gRPC definitions!");
 }

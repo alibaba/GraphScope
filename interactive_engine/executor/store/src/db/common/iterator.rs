@@ -1,20 +1,24 @@
-
-
-pub struct IteratorList<T, I> where T: Iterator<Item=I> {
+pub struct IteratorList<T, I>
+where
+    T: Iterator<Item = I>,
+{
     iters: Vec<T>,
     curr_iter: Option<T>,
 }
 
-impl<T, I> IteratorList<T, I> where T: Iterator<Item=I> {
+impl<T, I> IteratorList<T, I>
+where
+    T: Iterator<Item = I>,
+{
     pub fn new(iters: Vec<T>) -> Self {
-        IteratorList {
-            iters,
-            curr_iter: None,
-        }
+        IteratorList { iters, curr_iter: None }
     }
 }
 
-impl<T, I> Iterator for IteratorList<T, I> where T: Iterator<Item=I> {
+impl<T, I> Iterator for IteratorList<T, I>
+where
+    T: Iterator<Item = I>,
+{
     type Item = I;
 
     fn next(&mut self) -> Option<<Self as Iterator>::Item> {
