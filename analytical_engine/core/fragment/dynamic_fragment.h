@@ -530,7 +530,7 @@ class DynamicFragment
       ie_.reserve_edges_dense(inner_ie_degree_to_add, outer_ie_degree_to_add);
       for (vid_t i = 0; i < vnum; ++i) {
         if (i == ivnum_) {
-          i = vnum - ovnum_;  // skip to outer vertices
+          i = outerVertexIndexToLid(ovnum_ - 1);  // skip to outer vertices
         }
 
         auto ie_begin = source->ie_.get_begin(i);
@@ -567,7 +567,7 @@ class DynamicFragment
       
       for (vid_t i = 0; i < vnum; ++i) {
         if (i == ivnum_) {
-          i = vnum - ovnum_;  // skip to outer vertices
+          i = outerVertexIndexToLid(ovnum_ - 1);  // skip to outer vertices
         }
 
         auto ie_begin = source->ie_.get_begin(i);
@@ -616,7 +616,7 @@ class DynamicFragment
     oe_.reserve_edges_dense(inner_degree_to_add, outer_degree_to_add);
     for (vid_t i = 0; i < vnum; ++i) {
       if (i == ivnum_) {
-        i = vnum - ovnum_;  // skip to outer vertices
+        i = outerVertexIndexToLid(ovnum_ - 1);  // skip to outer vertices
       }
 
       auto begin = source->oe_.get_begin(i);
