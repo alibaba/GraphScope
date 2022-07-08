@@ -17,6 +17,7 @@
 #
 
 import os
+import site
 import subprocess
 import sys
 from distutils.cmd import Command
@@ -29,6 +30,10 @@ from setuptools.command.build_py import build_py
 from setuptools.command.develop import develop
 from setuptools.command.sdist import sdist
 from wheel.bdist_wheel import bdist_wheel
+
+# Enables --editable install with --user
+# https://github.com/pypa/pip/issues/7953
+site.ENABLE_USER_SITE = "--user" in sys.argv[1:]
 
 repo_root = os.path.dirname(os.path.abspath(__file__))
 
