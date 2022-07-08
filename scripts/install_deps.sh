@@ -14,8 +14,8 @@ readonly GREEN="\033[0;32m"
 readonly NC="\033[0m" # No Color
 
 readonly GRAPE_BRANCH="master" # libgrape-lite branch
-readonly V6D_VERSION="0.5.3"  # vineyard version
-readonly V6D_BRANCH="v0.5.3" # vineyard branch
+readonly V6D_VERSION="0.6.0"  # vineyard version
+readonly V6D_BRANCH="v0.6.0" # vineyard branch
 
 readonly OUTPUT_ENV_FILE="${HOME}/.graphscope_env"
 IS_IN_WSL=false && [[ ! -z "${IS_WSL}" || ! -z "${WSL_DISTRO_NAME}" ]] && IS_IN_WSL=true
@@ -355,7 +355,7 @@ check_dependencies() {
 
   # check c++ compiler
   if [[ "${PLATFORM}" == *"Darwin"* ]]; then
-    if [[ ! -z "$(brew info llvm 2>&1 | grep 'Not installed')" ]];then
+    if [ ! -d $(brew --prefix llvm) ]; then
         packages_to_install+=("llvm")
     fi
   else
@@ -541,7 +541,7 @@ install_dependencies() {
     if [[ "${packages_to_install[*]}" =~ "rust" ]]; then
       # packages_to_install contains rust
       log "Installing rust."
-      curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.61.0
+      curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.60.0
       # remove rust from packages_to_install
       packages_to_install=("${packages_to_install[@]/rust}")
     fi
@@ -614,7 +614,7 @@ install_dependencies() {
     if [[ "${packages_to_install[*]}" =~ "rust" ]]; then
       # packages_to_install contains rust
       log "Installing rust."
-      curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.61.0
+      curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.60.0
       # remove rust from packages_to_install
       packages_to_install=("${packages_to_install[@]/rust}")
     fi
@@ -688,7 +688,7 @@ install_dependencies() {
     if [[ "${packages_to_install[*]}" =~ "rust" ]]; then
       # packages_to_install contains rust
       log "Installing rust."
-      curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.61.0
+      curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.60.0
       # remove rust from packages_to_install
       packages_to_install=("${packages_to_install[@]/rust}")
     fi

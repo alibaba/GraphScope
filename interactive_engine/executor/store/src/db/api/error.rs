@@ -9,11 +9,7 @@ pub struct ErrorWithBackTrace {
 
 impl ErrorWithBackTrace {
     pub fn new(err_code: GraphErrorCode, msg: String) -> Self {
-        ErrorWithBackTrace {
-            err_code,
-            msg,
-            backtrace: Vec::new(),
-        }
+        ErrorWithBackTrace { err_code, msg, backtrace: Vec::new() }
     }
 
     pub fn add_backtrace(&mut self, function: String, code_info: String) {
@@ -36,11 +32,7 @@ pub enum GraphError {
 
 impl GraphError {
     pub fn new(err_code: GraphErrorCode, msg: String) -> Self {
-        let inner = ErrorWithBackTrace {
-            err_code,
-            msg,
-            backtrace: Vec::new(),
-        };
+        let inner = ErrorWithBackTrace { err_code, msg, backtrace: Vec::new() };
         GraphError::WithBackTrace(inner)
     }
 
@@ -48,7 +40,7 @@ impl GraphError {
         match self {
             GraphError::WithBackTrace(inner) => {
                 inner.add_backtrace(function, code_info);
-            },
+            }
             _ => {
                 unimplemented!()
             }
@@ -57,9 +49,7 @@ impl GraphError {
 
     pub fn get_error_code(&self) -> GraphErrorCode {
         match self {
-            GraphError::WithBackTrace(inner) => {
-                inner.get_error_code()
-            },
+            GraphError::WithBackTrace(inner) => inner.get_error_code(),
             _ => {
                 unimplemented!()
             }
@@ -82,7 +72,7 @@ impl Debug for GraphError {
             GraphError::Internal(s) | GraphError::Rocksdb(s) | GraphError::InvalidArgument(s) => {
                 write!(f, "{}", s)
             }
-            GraphError::TooManyVersions(limit) => write!(f, "version count exceed limit {}", limit)
+            GraphError::TooManyVersions(limit) => write!(f, "version count exceed limit {}", limit),
         }
     }
 }
@@ -122,7 +112,6 @@ pub enum GraphErrorCode {
     // engine error
     EngineError,
 }
-
 
 macro_rules! func_signature {
     ($func:tt, $($x:tt),*) => {

@@ -1,8 +1,8 @@
 #![allow(dead_code)]
-use std::marker::PhantomData;
-use protobuf::Message;
-use crate::db::api::{GraphResult, GraphError};
 use crate::db::api::GraphErrorCode::InvalidData;
+use crate::db::api::{GraphError, GraphResult};
+use protobuf::Message;
+use std::marker::PhantomData;
 
 /// This reader won't check whether the offset is overflow when read bytes.
 /// It's for performance purpose. Be careful to use it.
@@ -14,31 +14,44 @@ pub struct UnsafeBytesReader<'a> {
 
 impl<'a> UnsafeBytesReader<'a> {
     pub fn new(buf: &[u8]) -> Self {
-        UnsafeBytesReader {
-            buf: buf.as_ptr(),
-            _phantom: Default::default(),
-        }
+        UnsafeBytesReader { buf: buf.as_ptr(), _phantom: Default::default() }
     }
 
-    pub fn read_u8(&self, offset: usize) -> u8 { unsafe_read_func!(self, u8, offset) }
-    pub fn read_u16(&self, offset: usize) -> u16 { unsafe_read_func!(self, u16, offset) }
-    pub fn read_u32(&self, offset: usize) -> u32 { unsafe_read_func!(self, u32, offset) }
-    pub fn read_u64(&self, offset: usize) -> u64 { unsafe_read_func!(self, u64, offset) }
-    pub fn read_i8(&self, offset: usize) -> i8 { unsafe_read_func!(self, i8, offset) }
-    pub fn read_i16(&self, offset: usize) -> i16 { unsafe_read_func!(self, i16, offset) }
-    pub fn read_i32(&self, offset: usize) -> i32 { unsafe_read_func!(self, i32, offset) }
-    pub fn read_i64(&self, offset: usize) -> i64 { unsafe_read_func!(self, i64, offset) }
-    pub fn read_f32(&self, offset: usize) -> f32 { unsafe_read_func!(self, f32, offset) }
-    pub fn read_f64(&self, offset: usize) -> f64 { unsafe_read_func!(self, f64, offset) }
+    pub fn read_u8(&self, offset: usize) -> u8 {
+        unsafe_read_func!(self, u8, offset)
+    }
+    pub fn read_u16(&self, offset: usize) -> u16 {
+        unsafe_read_func!(self, u16, offset)
+    }
+    pub fn read_u32(&self, offset: usize) -> u32 {
+        unsafe_read_func!(self, u32, offset)
+    }
+    pub fn read_u64(&self, offset: usize) -> u64 {
+        unsafe_read_func!(self, u64, offset)
+    }
+    pub fn read_i8(&self, offset: usize) -> i8 {
+        unsafe_read_func!(self, i8, offset)
+    }
+    pub fn read_i16(&self, offset: usize) -> i16 {
+        unsafe_read_func!(self, i16, offset)
+    }
+    pub fn read_i32(&self, offset: usize) -> i32 {
+        unsafe_read_func!(self, i32, offset)
+    }
+    pub fn read_i64(&self, offset: usize) -> i64 {
+        unsafe_read_func!(self, i64, offset)
+    }
+    pub fn read_f32(&self, offset: usize) -> f32 {
+        unsafe_read_func!(self, f32, offset)
+    }
+    pub fn read_f64(&self, offset: usize) -> f64 {
+        unsafe_read_func!(self, f64, offset)
+    }
     pub fn read_ref<T>(&self, offset: usize) -> &'a T {
-        unsafe {
-            &*(self.buf.offset(offset as isize) as *const T)
-        }
+        unsafe { &*(self.buf.offset(offset as isize) as *const T) }
     }
     pub fn read_bytes(&self, offset: usize, len: usize) -> &'a [u8] {
-        unsafe {
-            ::std::slice::from_raw_parts(self.buf.offset(offset as isize), len)
-        }
+        unsafe { ::std::slice::from_raw_parts(self.buf.offset(offset as isize), len) }
     }
 }
 
@@ -50,20 +63,38 @@ pub struct UnsafeBytesWriter {
 
 impl UnsafeBytesWriter {
     pub fn new(buf: &mut [u8]) -> Self {
-        UnsafeBytesWriter {
-            buf: buf.as_ptr(),
-        }
+        UnsafeBytesWriter { buf: buf.as_ptr() }
     }
-    pub fn write_u8(&mut self, offset: usize, data: u8) { unsafe_write_func!(self, u8, offset, data) }
-    pub fn write_u16(&mut self, offset: usize, data: u16) { unsafe_write_func!(self, u16, offset, data) }
-    pub fn write_u32(&mut self, offset: usize, data: u32) { unsafe_write_func!(self, u32, offset, data) }
-    pub fn write_u64(&mut self, offset: usize, data: u64) { unsafe_write_func!(self, u64, offset, data) }
-    pub fn write_i8(&mut self, offset: usize, data: i8) { unsafe_write_func!(self, i8, offset, data) }
-    pub fn write_i16(&mut self, offset: usize, data: i16) { unsafe_write_func!(self, i16, offset, data) }
-    pub fn write_i32(&mut self, offset: usize, data: i32) { unsafe_write_func!(self, i32, offset, data) }
-    pub fn write_i64(&mut self, offset: usize, data: i64) { unsafe_write_func!(self, i64, offset, data) }
-    pub fn write_f32(&mut self, offset: usize, data: f32) { unsafe_write_func!(self, f32, offset, data) }
-    pub fn write_f64(&mut self, offset: usize, data: f64) { unsafe_write_func!(self, f64, offset, data) }
+    pub fn write_u8(&mut self, offset: usize, data: u8) {
+        unsafe_write_func!(self, u8, offset, data)
+    }
+    pub fn write_u16(&mut self, offset: usize, data: u16) {
+        unsafe_write_func!(self, u16, offset, data)
+    }
+    pub fn write_u32(&mut self, offset: usize, data: u32) {
+        unsafe_write_func!(self, u32, offset, data)
+    }
+    pub fn write_u64(&mut self, offset: usize, data: u64) {
+        unsafe_write_func!(self, u64, offset, data)
+    }
+    pub fn write_i8(&mut self, offset: usize, data: i8) {
+        unsafe_write_func!(self, i8, offset, data)
+    }
+    pub fn write_i16(&mut self, offset: usize, data: i16) {
+        unsafe_write_func!(self, i16, offset, data)
+    }
+    pub fn write_i32(&mut self, offset: usize, data: i32) {
+        unsafe_write_func!(self, i32, offset, data)
+    }
+    pub fn write_i64(&mut self, offset: usize, data: i64) {
+        unsafe_write_func!(self, i64, offset, data)
+    }
+    pub fn write_f32(&mut self, offset: usize, data: f32) {
+        unsafe_write_func!(self, f32, offset, data)
+    }
+    pub fn write_f64(&mut self, offset: usize, data: f64) {
+        unsafe_write_func!(self, f64, offset, data)
+    }
     pub fn write_bytes(&mut self, offset: usize, data: &[u8]) {
         unsafe {
             let src = data.as_ptr();
@@ -74,8 +105,7 @@ impl UnsafeBytesWriter {
 }
 
 pub fn parse_pb<M: Message>(buf: &[u8]) -> GraphResult<M> {
-    protobuf::parse_from_bytes::<M>(buf)
-        .map_err(|e| GraphError::new(InvalidData, format!("{:?}", e)))
+    protobuf::parse_from_bytes::<M>(buf).map_err(|e| GraphError::new(InvalidData, format!("{:?}", e)))
 }
 
 #[cfg(test)]

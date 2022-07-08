@@ -1,1 +1,0 @@
-g.V().has('person','id',$personId).out('knows').as('p').in('hasCreator').has('creationDate',lte($maxDate)).order().by('creationDate',decr).by('id',incr).limit(20).as('m').select('p', 'm')

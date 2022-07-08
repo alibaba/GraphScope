@@ -1,42 +1,14 @@
-//
-//! Copyright 2020 Alibaba Group Holding Limited.
-//! 
-//! Licensed under the Apache License, Version 2.0 (the "License");
-//! you may not use this file except in compliance with the License.
-//! You may obtain a copy of the License at
-//! 
-//!     http://www.apache.org/licenses/LICENSE-2.0
-//! 
-//! Unless required by applicable law or agreed to in writing, software
-//! distributed under the License is distributed on an "AS IS" BASIS,
-//! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//! See the License for the specific language governing permissions and
-//! limitations under the License.
-
 use maxgraph_store::api::prelude::Property;
-use maxgraph_store::api::{Vertex, Edge};
+use maxgraph_store::api::{Edge, Vertex};
 use maxgraph_store::schema::PropId;
 
-use std::collections::HashMap;
 use alloc::vec::IntoIter;
 use itertools::Itertools;
 use serde::Serialize;
+use std::collections::HashMap;
 
-pub mod store_service;
-pub mod store_client;
-pub mod store_cache;
-pub mod store_delegate;
-pub mod utils;
-pub mod remote_store_service;
-pub mod remote_store_client;
-pub mod task_partition_manager;
-pub mod ffi;
-pub mod global_store;
-pub mod global_schema;
-pub mod graph_builder_ffi;
-mod test_global_store;
-mod test_ffi_store;
-pub mod groot;
+pub mod global_graph;
+pub mod global_graph_schema;
 
 pub enum StoreOperatorType {
     VERTEXOUT,
@@ -93,7 +65,11 @@ impl Vertex for LocalStoreVertex {
     }
 
     fn get_properties(&self) -> Self::PI {
-        self.prop_list.clone().into_iter().collect_vec().into_iter()
+        self.prop_list
+            .clone()
+            .into_iter()
+            .collect_vec()
+            .into_iter()
     }
 }
 
@@ -110,13 +86,7 @@ unsafe impl Send for LocalStoreEdge {}
 
 impl LocalStoreEdge {
     pub fn new(src: LocalStoreVertex, dst: LocalStoreVertex, label_id: u32, edge_id: i64) -> Self {
-        LocalStoreEdge {
-            src,
-            dst,
-            label_id,
-            edge_id,
-            prop_list: HashMap::new(),
-        }
+        LocalStoreEdge { src, dst, label_id, edge_id, prop_list: HashMap::new() }
     }
 
     pub fn add_property(&mut self, propid: PropId, propval: Property) {
@@ -160,6 +130,10 @@ impl Edge for LocalStoreEdge {
     }
 
     fn get_properties(&self) -> Self::PI {
-        self.prop_list.clone().into_iter().collect_vec().into_iter()
+        self.prop_list
+            .clone()
+            .into_iter()
+            .collect_vec()
+            .into_iter()
     }
 }

@@ -14,7 +14,7 @@
 //! limitations under the License.
 
 use std::collections::HashMap;
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
 
 use graph_proxy::{create_gs_store, VineyardMultiPartition};
 use maxgraph_store::api::graph_partition::GraphPartitionManager;
@@ -26,9 +26,7 @@ use crate::InitializeJobAssembly;
 pub struct QueryVineyard<V, VI, E, EI> {
     graph_query: Arc<dyn GlobalGraphQuery<V = V, VI = VI, E = E, EI = EI>>,
     graph_partitioner: Arc<dyn GraphPartitionManager>,
-    partition_worker_mapping: Arc<RwLock<Option<HashMap<u32, u32>>>>,
-    worker_partition_list_mapping: Arc<RwLock<Option<HashMap<u32, Vec<u32>>>>>,
-    num_servers: usize,
+    partition_server_index_mapping: HashMap<u32, u32>,
 }
 
 #[allow(dead_code)]
@@ -36,16 +34,9 @@ impl<V, VI, E, EI> QueryVineyard<V, VI, E, EI> {
     pub fn new(
         graph_query: Arc<dyn GlobalGraphQuery<V = V, VI = VI, E = E, EI = EI>>,
         graph_partitioner: Arc<dyn GraphPartitionManager>,
-        partition_worker_mapping: Arc<RwLock<Option<HashMap<u32, u32>>>>,
-        worker_partition_list_mapping: Arc<RwLock<Option<HashMap<u32, Vec<u32>>>>>, num_servers: usize,
+        partition_server_index_mapping: HashMap<u32, u32>,
     ) -> Self {
-        QueryVineyard {
-            graph_query,
-            graph_partitioner,
-            partition_worker_mapping,
-            worker_partition_list_mapping,
-            num_servers,
-        }
+        QueryVineyard { graph_query, graph_partitioner, partition_server_index_mapping }
     }
 }
 
@@ -61,9 +52,7 @@ where
         create_gs_store(self.graph_query.clone(), self.graph_partitioner.clone());
         let partitioner = VineyardMultiPartition::new(
             self.graph_partitioner.clone(),
-            self.partition_worker_mapping.clone(),
-            self.worker_partition_list_mapping.clone(),
-            self.num_servers,
+            self.partition_server_index_mapping.clone(),
         );
         IRJobAssembly::new(partitioner)
     }

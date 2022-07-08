@@ -47,6 +47,10 @@ impl Configuration {
         Configuration { network: None, max_pool_size: None }
     }
 
+    pub fn with(network: NetworkConfig) -> Self {
+        Configuration {network: Some(network), max_pool_size: None }
+    }
+
     pub fn server_id(&self) -> u64 {
         if let Some(net_conf) = self.network.as_ref() {
             net_conf.server_id

@@ -581,7 +581,9 @@ def transitivity(G):
 def average_clustering(G, nodes=None, weight=None, count_zeros=True):
     @project_to_simple
     def _average_clustering(G):
-        ctx = AppAssets(algo="avg_clustering", context="tensor")(G)
+        ctx = AppAssets(algo="avg_clustering", context="tensor")(
+            G, degree_threshold=1000000000
+        )
         return ctx.to_numpy("r")[0]
 
     if weight is not None:

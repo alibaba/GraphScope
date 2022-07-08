@@ -1,4 +1,4 @@
-use crate::db::api::{GraphResult, BackupId};
+use crate::db::api::{BackupId, GraphResult};
 
 pub mod rocksdb;
 use self::rocksdb::RocksDBIter;
@@ -14,7 +14,7 @@ pub trait ExternalStorage: Send + Sync {
     fn delete_range(&self, start: &[u8], end: &[u8]) -> GraphResult<()>;
     fn load(&self, files: &[&str]) -> GraphResult<()>;
     fn open_backup_engine(&self, backup_path: &str) -> GraphResult<Box<dyn ExternalStorageBackup>>;
-    fn new_scan(&self, prefix: &[u8]) -> GraphResult<Box<dyn Iterator<Item=KvPair> + Send>>;
+    fn new_scan(&self, prefix: &[u8]) -> GraphResult<Box<dyn Iterator<Item = KvPair> + Send>>;
 }
 
 pub trait ExternalStorageBackup {
@@ -58,17 +58,11 @@ pub struct RawBytes {
 
 impl RawBytes {
     pub fn new(slice: &[u8]) -> Self {
-        RawBytes {
-            ptr: slice.as_ptr(),
-            len: slice.len(),
-        }
+        RawBytes { ptr: slice.as_ptr(), len: slice.len() }
     }
 
     pub fn empty() -> Self {
-        RawBytes {
-            ptr: null(),
-            len: 0,
-        }
+        RawBytes { ptr: null(), len: 0 }
     }
 
     pub unsafe fn to_slice(&self) -> &[u8] {
@@ -81,9 +75,9 @@ impl<'a> Iterator for StorageIter<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         match self {
-            StorageIter::RocksDB(ref mut iter) => iter.next().map(|(k, v)| {
-                (RawBytes::new(k), RawBytes::new(v))
-            }),
+            StorageIter::RocksDB(ref mut iter) => iter
+                .next()
+                .map(|(k, v)| (RawBytes::new(k), RawBytes::new(v))),
         }
     }
 }

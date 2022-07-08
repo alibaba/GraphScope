@@ -28,6 +28,11 @@
       <artifactId>data_load_tools</artifactId>
       <version>${project.parent.version}</version>
     </dependency>
+    <dependency>
+      <groupId>com.alibaba.maxgraph</groupId>
+      <artifactId>c-end-lgraph</artifactId>
+      <version>${project.parent.version}</version>
+    </dependency>
   </dependencies>
 
   <profiles>
@@ -64,6 +69,4 @@
       </build>
     </profile>
   </profiles>
-
-
 </project>

@@ -1,6 +1,6 @@
-use crate::db::api::*;
-use super::super::table_manager::{Table};
+use super::super::table_manager::Table;
 use super::super::types::*;
+use crate::db::api::*;
 
 pub trait TableInfoTest {
     fn get_table(&self, si: SnapshotId) -> Option<Table>;
@@ -19,7 +19,7 @@ pub trait TableInfoTest {
         }
         for i in 1..si_list.len() {
             if si_list[i] == -1 {
-                si_list[i] = si_list[i-1];
+                si_list[i] = si_list[i - 1];
             }
         }
 
@@ -43,9 +43,7 @@ pub struct VertexInfoTest {
 
 impl VertexInfoTest {
     pub fn new(info: VertexTypeInfoRef) -> Self {
-        VertexInfoTest {
-            info,
-        }
+        VertexInfoTest { info }
     }
 }
 
@@ -61,9 +59,7 @@ pub struct EdgeTypeInfoTest {
 
 impl EdgeTypeInfoTest {
     pub fn new(info: EdgeKindInfoRef) -> Self {
-        EdgeTypeInfoTest {
-            info,
-        }
+        EdgeTypeInfoTest { info }
     }
 }
 

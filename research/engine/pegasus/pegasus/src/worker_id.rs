@@ -180,30 +180,30 @@ macro_rules! inspect_worker {
 #[macro_export]
 macro_rules! info_worker {
     ($arg0:expr) => (
-        inspect_worker!(log::Level::Info, $arg0);
+        inspect_worker!(log::Level::Info, $arg0)
     );
     ($arg0: expr, $($arg:tt)*) => (
-        inspect_worker!(log::Level::Info, $arg0, $($arg)*);
+        inspect_worker!(log::Level::Info, $arg0, $($arg)*)
     )
 }
 
 #[macro_export]
 macro_rules! debug_worker {
     ($arg0:expr) => (
-        inspect_worker!(log::Level::Debug, $arg0);
+        inspect_worker!(log::Level::Debug, $arg0)
     );
     ($arg0: expr, $($arg:tt)*) => (
-        inspect_worker!(log::Level::Debug, $arg0, $($arg)*);
+        inspect_worker!(log::Level::Debug, $arg0, $($arg)*)
     )
 }
 
 #[macro_export]
 macro_rules! trace_worker {
     ($arg0:expr) => (
-        inspect_worker!(log::Level::Trace, $arg0);
+        inspect_worker!(log::Level::Trace, $arg0)
     );
     ($arg0: expr, $($arg:tt)*) => (
-        inspect_worker!(log::Level::Trace, $arg0, $($arg)*);
+        inspect_worker!(log::Level::Trace, $arg0, $($arg)*)
     )
 }
 
@@ -243,19 +243,19 @@ macro_rules! inspect_worker_error {
 #[macro_export]
 macro_rules! error_worker {
     ($arg0:expr) => (
-        inspect_worker!(log::Level::Error, $arg0);
+        inspect_worker!(log::Level::Error, $arg0)
     );
     ($arg0: expr, $($arg:tt)*) => (
-        inspect_worker_error!(log::Level::Error, $arg0, $($arg)*);
+        inspect_worker_error!(log::Level::Error, $arg0, $($arg)*)
     )
 }
 
 #[macro_export]
 macro_rules! warn_worker {
     ($arg0:expr) => (
-        inspect_worker!(log::Level::Warn, $arg0);
+        inspect_worker!(log::Level::Warn, $arg0)
     );
     ($arg0: expr, $($arg:tt)*) => (
-        inspect_worker_error!(log::Level::Warn, $arg0, $($arg)*);
+        inspect_worker_error!(log::Level::Warn, $arg0, $($arg)*)
     )
 }

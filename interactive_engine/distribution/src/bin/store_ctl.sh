@@ -19,7 +19,6 @@ cat <<END
   Commands:
 
     max_node_gaia                       start max_node of gaia
-    max_node_maxgraph                   start max_node of maxgraph
     maxgraph                            start maxgraph with v2
     load_tools                          start load_tools of maxgraph
 END
@@ -139,7 +138,6 @@ while test $# -ne 0; do
   case $arg in
     -h|--help) usage; exit ;;
     max_node_gaia) max_node "gaia" "$@"; exit;;
-    max_node_maxgraph) max_node "maxgraph" "$@"; exit;;
     maxgraph) maxgraph "$@"; exit;;
     load_tools) load_tools "$@"; exit;;
     *)

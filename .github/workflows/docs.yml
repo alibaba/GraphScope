@@ -74,7 +74,7 @@ jobs:
             echo "|"
             echo "| Run: "
             echo "|"
-            echo '|    java -jar google-java-format-1.13.0-all-deps.jar --aosp --skip-javadoc-formatting -i $(git ls-files *.java)'
+            echo '|    java -jar google-java-format-1.13.0-all-deps.jar --aosp --skip-javadoc-formatting -i $(git ls-files **/*.java)'
             echo "|"
             echo "| to fix this error."
             echo "|"

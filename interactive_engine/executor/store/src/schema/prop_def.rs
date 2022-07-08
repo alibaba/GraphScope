@@ -1,12 +1,12 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //! http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,8 +15,8 @@
 
 use super::data_type::DataType;
 use super::PropId;
-use std::cell::UnsafeCell;
 use maxgraph_common::proto::schema::*;
+use std::cell::UnsafeCell;
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Hash)]
 pub struct PropDef {
@@ -28,18 +28,10 @@ pub struct PropDef {
 }
 
 impl PropDef {
-    pub fn build_def(prop_id: PropId,
-                     name: String,
-                     data_type: DataType,
-                     comment: String,
-                     default_value: Option<Vec<u8>>) -> Self {
-        PropDef {
-            prop_id,
-            name,
-            data_type,
-            comment,
-            default_value
-        }
+    pub fn build_def(
+        prop_id: PropId, name: String, data_type: DataType, comment: String, default_value: Option<Vec<u8>>,
+    ) -> Self {
+        PropDef { prop_id, name, data_type, comment, default_value }
     }
 
     #[inline]
@@ -141,9 +133,7 @@ impl PropDefBuilder {
 
     #[inline]
     fn get_inner(&self) -> &mut PropDef {
-        unsafe {
-            &mut *self.inner.get()
-        }
+        unsafe { &mut *self.inner.get() }
     }
 }
 
@@ -163,8 +153,8 @@ impl<'a> From<&'a PropertyDefProto> for PropDef {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use super::super::test_util::*;
+    use super::*;
 
     #[test]
     fn test_prop_def_from_proto() {

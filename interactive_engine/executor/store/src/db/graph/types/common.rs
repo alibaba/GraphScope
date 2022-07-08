@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
-use crate::db::common::concurrency::volatile::Volatile;
-use crate::db::api::{SnapshotId, GraphResult};
 use super::super::codec::*;
 use super::super::table_manager::*;
+use crate::db::api::{GraphResult, SnapshotId};
+use crate::db::common::concurrency::volatile::Volatile;
 
 pub const INFINITE_SI: SnapshotId = SnapshotId::max_value();
 
@@ -22,10 +22,7 @@ impl TypeCommon {
     }
 
     pub fn init_with_codec_manager(codec_manager: Arc<CodecManager>) -> Self {
-        TypeCommon {
-            table_manager: Arc::new(TableManager::new()),
-            codec_manager,
-        }
+        TypeCommon { table_manager: Arc::new(TableManager::new()), codec_manager }
     }
 
     pub fn get_decoder(&self, si: SnapshotId, version: CodecVersion) -> GraphResult<Decoder> {
@@ -62,10 +59,7 @@ pub struct LifeTime {
 #[allow(dead_code)]
 impl LifeTime {
     pub fn new(start_si: SnapshotId) -> Self {
-        LifeTime {
-            start_si: Volatile::new(start_si),
-            end_si: Volatile::new(INFINITE_SI),
-        }
+        LifeTime { start_si: Volatile::new(start_si), end_si: Volatile::new(INFINITE_SI) }
     }
 
     pub fn is_alive_at(&self, si: SnapshotId) -> bool {

@@ -15,8 +15,6 @@
         <exclude>org.codehaus.groovy:groovy-sql</exclude>
         <exclude>org.hamcrest:hamcrest-all</exclude>
         <exclude>com.carrotsearch:junit-benchmarks</exclude>
-        <exclude>com.alibaba.maxgraph:maxgraph-coordinator</exclude>
-        <exclude>com.alibaba.maxgraph:maxgraph-frontendservice</exclude>
       </excludes>
     </dependencySet>
   </dependencySets>
@@ -39,21 +37,7 @@
       </includes>
     </fileSet>
     <fileSet>
-      <directory>${project.basedir}/../coordinator/target</directory>
-      <outputDirectory>/</outputDirectory>
-      <includes>
-        <include>maxgraph*.jar</include>
-      </includes>
-    </fileSet>
-    <fileSet>
-      <directory>${project.basedir}/../frontendservice/target</directory>
-      <outputDirectory>/</outputDirectory>
-      <includes>
-        <include>maxgraph*.jar</include>
-      </includes>
-    </fileSet>
-    <fileSet>
-      <directory>${project.basedir}/../ir-adaptor/target</directory>
+      <directory>${project.basedir}/../frontend/target</directory>
       <outputDirectory>/</outputDirectory>
       <includes>
         <include>ir*.jar</include>
