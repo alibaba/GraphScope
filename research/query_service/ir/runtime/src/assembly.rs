@@ -482,13 +482,12 @@ impl JobAssembly for IRJobAssembly {
             let stream = self.install(source, &task.plan)?;
             let sink = decode::<server_pb::Sink>(&plan.resource)?;
             let ec = self.udf_gen.gen_sink(&sink.resource)?;
-            if let Sinker::DefaultSinker(default_sinker) = ec {
-                stream
+            match ec {
+                Sinker::DefaultSinker(default_sinker) => stream
                     .map(move |record| default_sinker.exec(record))?
-                    .sink_into(output)
-            } else {
+                    .sink_into(output),
                 #[cfg(feature = "with_v6d")]
-                if let Sinker::GraphSinker(graph_sinker) = ec {
+                Sinker::GraphSinker(graph_sinker) => {
                     return stream
                         .fold_partition(graph_sinker, || {
                             |mut accumulator, next| {
@@ -499,9 +498,8 @@ impl JobAssembly for IRJobAssembly {
                         .map(|mut accumulator| Ok(accumulator.finalize()?))?
                         .into_stream()?
                         .map(|_r| Ok(vec![]))?
-                        .sink_into(output);
+                        .sink_into(output)
                 }
-                Err("SinkType UnKnown")?
             }
         })
     }
