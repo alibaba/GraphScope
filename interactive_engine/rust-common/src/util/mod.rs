@@ -35,7 +35,6 @@ pub use self::build_info::*;
 
 pub mod hash;
 pub mod id_util;
-pub mod zk;
 pub mod monitor;
 
 pub mod partition;

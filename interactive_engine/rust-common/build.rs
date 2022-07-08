@@ -49,7 +49,7 @@ fn generate_rust_protos() {
             files.push(p);
         }
     });
-    protoc_grpcio::compile_grpc_protos(files.as_slice(), &[proto_root], "./src/proto")
+    protoc_grpcio::compile_grpc_protos(files.as_slice(), &[proto_root], "./src/proto", None)
         .expect("protoc/grpc compile failed");
 }
 
@@ -85,6 +85,7 @@ fn generate_build_info_env() {
 
 #[allow(unused_variables)]
 fn main() {
+    println!("cargo:rerun-if-env-changed={}", "RUST_PROTO");
     generate_build_info_env();
     generate_rust_protos();
 }
