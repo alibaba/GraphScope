@@ -24,7 +24,7 @@ use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 
 use crate::error::{FnExecError, FnExecResult, FnGenError, FnGenResult};
 use crate::process::operator::accum::accumulator::{
-    Accumulator, Count, DataSum, DistinctCount, Maximum, Minimum, ToList, ToSet,
+    Accumulator, Count, DistinctCount, Maximum, Minimum, Sum, ToList, ToSet,
 };
 use crate::process::operator::accum::AccumFactoryGen;
 use crate::process::operator::TagKey;
@@ -39,7 +39,7 @@ pub enum EntryAccumulator {
     ToMax(Maximum<Entry>),
     ToSet(ToSet<Entry>),
     ToDistinctCount(DistinctCount<Entry>),
-    ToSum(DataSum<Entry>),
+    ToSum(Sum<Entry>),
 }
 
 #[derive(Debug, Clone)]
@@ -162,7 +162,7 @@ impl AccumFactoryGen for algebra_pb::GroupBy {
                 Aggregate::CountDistinct => {
                     EntryAccumulator::ToDistinctCount(DistinctCount { inner: HashSet::new() })
                 }
-                Aggregate::Sum => EntryAccumulator::ToSum(DataSum { seed: None }),
+                Aggregate::Sum => EntryAccumulator::ToSum(Sum { seed: None }),
                 _ => Err(FnGenError::unsupported_error(&format!(
                     "Unsupported aggregate kind {:?}",
                     agg_kind
@@ -240,7 +240,7 @@ impl Decode for EntryAccumulator {
                 Ok(EntryAccumulator::ToDistinctCount(distinct_count))
             }
             6 => {
-                let sum = <DataSum<Entry>>::read_from(reader)?;
+                let sum = <Sum<Entry>>::read_from(reader)?;
                 Ok(EntryAccumulator::ToSum(sum))
             }
             _ => Err(std::io::Error::new(std::io::ErrorKind::Other, "unreachable")),
