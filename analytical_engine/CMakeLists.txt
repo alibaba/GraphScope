@@ -17,11 +17,6 @@ option(ENABLE_JAVA_SDK "Build with support for java sdk" ON)
 execute_process(COMMAND uname -m OUTPUT_VARIABLE SYSTEM_PROCESSOR)
 string(REGEX REPLACE "\n$" "" SYSTEM_PROCESSOR "${SYSTEM_PROCESSOR}")
 
-# if (CMAKE_HOST_SYSTEM_NAME MATCHES "Darwin")
-#     set(SYSTEM_PROCESSOR "arm64")
-#     set(CMAKE_OSX_ARCHITECTURES "arm64")
-# endif()
-
 if (ENABLE_JAVA_SDK)
     #check whether we are using clang.
     if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
