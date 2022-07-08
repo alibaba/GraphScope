@@ -13,10 +13,11 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use serde_json;
-use serde_json::Value;
 use std::collections::HashMap;
 use std::env;
+
+use serde_json;
+use serde_json::Value;
 use structopt::StructOpt;
 
 pub const VINEYARD_GRAPH: &str = "vineyard";

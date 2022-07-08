@@ -1,6 +1,7 @@
 #![allow(dead_code)]
-use crate::db::api::*;
 use std::collections::HashMap;
+
+use crate::db::api::*;
 
 pub fn gen_vertex_properties(
     si: SnapshotId, label: LabelId, id: VertexId, type_def: &TypeDef,

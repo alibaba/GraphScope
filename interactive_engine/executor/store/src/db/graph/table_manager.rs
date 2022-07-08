@@ -1,7 +1,6 @@
 #![allow(dead_code)]
-use crate::db::api::*;
-
 use super::version::*;
+use crate::db::api::*;
 use crate::db::common::bytes::util::{UnsafeBytesReader, UnsafeBytesWriter};
 
 pub type TableId = i64;
@@ -100,12 +99,13 @@ impl Table {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::db::util::time;
     use std::collections::HashSet;
     use std::sync::atomic::{AtomicBool, Ordering};
     use std::sync::Arc;
     use std::thread;
+
+    use super::*;
+    use crate::db::util::time;
     const MAX_SIZE: usize = 128;
 
     #[test]

@@ -13,8 +13,9 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use super::LabelId;
 use maxgraph_common::proto::schema::*;
+
+use super::LabelId;
 
 #[derive(Debug, Eq, PartialEq, Hash, Default, Clone)]
 pub struct Relation {

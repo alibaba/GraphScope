@@ -1,7 +1,8 @@
+use std::collections::HashMap;
+
 use super::types;
 use crate::db::api::multi_version_graph::MultiVersionGraph;
 use crate::db::api::*;
-use std::collections::HashMap;
 
 pub fn test_si_guard<G: MultiVersionGraph>(graph: G) {
     let mut schema_version = 1;

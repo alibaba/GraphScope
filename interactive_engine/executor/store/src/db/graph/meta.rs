@@ -1,19 +1,19 @@
+use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
-use crate::db::api::*;
-use crate::db::common::bytes::transform;
-use crate::db::common::str::parse_str;
-use crate::db::storage::ExternalStorage;
+use protobuf::Message;
 
 use super::table_manager::*;
 use super::types::*;
 use crate::db::api::GraphErrorCode::InvalidData;
+use crate::db::api::*;
+use crate::db::common::bytes::transform;
 use crate::db::common::bytes::util::parse_pb;
+use crate::db::common::str::parse_str;
 use crate::db::proto::common::DataLoadTargetPb;
 use crate::db::proto::model::EdgeKindPb;
+use crate::db::storage::ExternalStorage;
 use crate::db::util::lock::GraphMutexLock;
-use protobuf::Message;
-use std::collections::{HashMap, HashSet};
 
 const META_TABLE_ID: TableId = i64::min_value();
 
@@ -785,12 +785,13 @@ fn get_items<I: ItemCommon>(store: &dyn ExternalStorage) -> GraphResult<Vec<I>> 
 
 #[cfg(test)]
 mod tests {
+    use std::collections::{HashMap, HashSet};
+
     use super::*;
     use crate::db::graph::tests::types;
     use crate::db::graph::tests::types::TableInfoTest;
     use crate::db::storage::rocksdb::RocksDB;
     use crate::db::util::fs;
-    use std::collections::{HashMap, HashSet};
 
     #[test]
     fn test_meta_item() {

@@ -5,7 +5,15 @@ This project contains all `rust` modules of MaxGraph, including:
 - Runtime
 - Id Service
 
-This crate act as the parent of all the sub-crates. To compile all sub-crates, run:
+This crate act as the parent of all the sub-crates. 
+
+To format all sub-crates, run:
+
+```bash
+cargo +nightly fmt
+```
+
+To compile all sub-crates, run:
 
 ```bash
 cargo build --workspace

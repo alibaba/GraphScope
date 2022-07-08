@@ -16,22 +16,21 @@
 pub mod primitive;
 pub mod subgraph;
 
-use maxgraph_common::proto::message::*;
-use maxgraph_common::util::hash::murmur_hash64;
-use maxgraph_store::api::prelude::{Edge, Property, Vertex};
-
-use dataflow::message::primitive::Read;
-use dataflow::message::primitive::Write;
+use std::collections::HashMap;
+use std::sync::Arc;
 
 use abomonation_derive::Abomonation;
+use dataflow::message::primitive::Read;
+use dataflow::message::primitive::Write;
 use itertools::Itertools;
 use log::error;
+use maxgraph_common::proto::message::*;
+use maxgraph_common::util::hash::murmur_hash64;
 use maxgraph_store::api::graph_partition::GraphPartitionManager;
+use maxgraph_store::api::prelude::{Edge, Property, Vertex};
 use protobuf::Message;
 use protobuf::{parse_from_bytes, RepeatedField};
 use rand::{thread_rng, Rng};
-use std::collections::HashMap;
-use std::sync::Arc;
 
 #[inline]
 pub fn build_empty_router() -> impl Fn(&i64) -> i32 + 'static {

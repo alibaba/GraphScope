@@ -1,8 +1,10 @@
-use crate::db::api::{LabelId, VertexId};
-use byteorder::{BigEndian, WriteBytesExt};
 use std::cell::RefCell;
 use std::io::Write;
 use std::ops::Deref;
+
+use byteorder::{BigEndian, WriteBytesExt};
+
+use crate::db::api::{LabelId, VertexId};
 
 #[cfg(test)]
 mod bench;
@@ -86,12 +88,14 @@ pub fn hash64_with_seed(data: &[u8], length: usize, seed: u32) -> i64 {
 
 #[cfg(test)]
 mod test {
-    use crate::db::graph::get_vertex_id_by_primary_keys;
-    use byteorder::{BigEndian, WriteBytesExt};
     use std::cell::RefCell;
     use std::io::Write;
     use std::ops::Sub;
     use std::time::Instant;
+
+    use byteorder::{BigEndian, WriteBytesExt};
+
+    use crate::db::graph::get_vertex_id_by_primary_keys;
 
     thread_local! {
         static FIELD_BUF: RefCell<Vec<u8>> = RefCell::new(Vec::with_capacity(64 << 10));

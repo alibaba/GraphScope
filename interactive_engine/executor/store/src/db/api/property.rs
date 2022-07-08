@@ -1,6 +1,9 @@
 #![allow(dead_code)]
+use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::marker::PhantomData;
+
+use protobuf::ProtobufEnum;
 
 use super::error::*;
 use super::GraphResult;
@@ -10,8 +13,6 @@ use crate::db::common::bytes::util::{UnsafeBytesReader, UnsafeBytesWriter};
 use crate::db::common::numeric::*;
 use crate::db::proto::common::DataTypePb;
 use crate::db::proto::model::PropertyValuePb;
-use protobuf::ProtobufEnum;
-use std::cmp::Ordering;
 
 pub trait PropertyMap {
     fn get(&self, prop_id: PropertyId) -> Option<ValueRef>;
@@ -1087,8 +1088,9 @@ impl<'a> std::fmt::Debug for StrArray<'a> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::fmt::Debug;
+
+    use super::*;
 
     macro_rules! normal_test {
         ($input:expr, $data_ty:tt, $func:tt) => {{

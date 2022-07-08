@@ -1,10 +1,11 @@
+use ::rand::prelude::*;
+
 use self::benchmark::*;
 use super::data;
 use super::types;
 use super::util::*;
 use crate::db::api::multi_version_graph::MultiVersionGraph;
 use crate::db::api::*;
-use ::rand::prelude::*;
 
 pub fn bench_insert_vertex<G: MultiVersionGraph>(graph: G) {
     let benchmark = InsertVertexBenchmark::new(graph);
@@ -17,8 +18,9 @@ pub fn bench_insert_edge<G: MultiVersionGraph>(graph: G) {
 }
 
 mod benchmark {
-    use super::*;
     use std::collections::HashMap;
+
+    use super::*;
 
     pub struct InsertVertexBenchmark<G: MultiVersionGraph> {
         graph: G,

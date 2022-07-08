@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use crate::db::api::{EdgeDirection, GraphResult, Records, SnapshotId, VertexId};
 use crate::db::graph::bin::{
     edge_prefix, edge_table_prefix_key, parse_edge_key, parse_vertex_key, vertex_table_prefix_key,
@@ -6,7 +8,6 @@ use crate::db::graph::codec::get_codec_version;
 use crate::db::graph::entity::{RocksEdgeImpl, RocksVertexImpl};
 use crate::db::graph::types::{EdgeInfo, EdgeKindInfo, VertexTypeInfo};
 use crate::db::storage::ExternalStorage;
-use std::sync::Arc;
 
 pub struct VertexTypeScan {
     storage: Arc<dyn ExternalStorage>,

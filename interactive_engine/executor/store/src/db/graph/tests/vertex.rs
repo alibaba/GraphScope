@@ -477,9 +477,10 @@ mod tester {
 }
 
 mod common {
-    use super::*;
     use std::collections::HashSet;
     use std::iter::FromIterator;
+
+    use super::*;
 
     pub struct VertexDataGen {
         id_count_per_label: usize,

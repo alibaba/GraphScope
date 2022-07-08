@@ -13,11 +13,12 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::collections::HashMap;
+use std::sync::Arc;
+
 use super::prelude::*;
 use super::{Edge, EdgeId, LabelId, SnapshotId, Vertex, VertexId};
 use crate::schema::prelude::*;
-use std::collections::HashMap;
-use std::sync::Arc;
 
 pub trait MVGraphQuery: Send + Sync {
     type V: Vertex;

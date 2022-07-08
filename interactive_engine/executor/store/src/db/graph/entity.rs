@@ -1,10 +1,11 @@
+use std::fmt::{Debug, Formatter};
+
 use crate::api::{Edge, Vertex};
 use crate::db::api::types::{Property, PropertyReader, PropertyValue, RocksEdge, RocksVertex};
 use crate::db::api::{EdgeId, EdgeKind, GraphResult, LabelId, PropertyId, VertexId};
 use crate::db::graph::codec::{Decoder, IterDecoder};
 use crate::db::storage::RawBytes;
 use crate::schema::PropId;
-use std::fmt::{Debug, Formatter};
 
 pub struct PropertyImpl {
     property_id: PropertyId,

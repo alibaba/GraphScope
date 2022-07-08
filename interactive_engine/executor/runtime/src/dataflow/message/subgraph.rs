@@ -13,10 +13,11 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use dataflow::message::{ExtraEdgeEntity, PropertyEntity};
 use std::cell::{RefCell, UnsafeCell};
 use std::collections::HashMap;
 use std::rc::Rc;
+
+use dataflow::message::{ExtraEdgeEntity, PropertyEntity};
 
 /// graph store all in memory
 #[derive(Clone, Debug)]

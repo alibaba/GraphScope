@@ -14,14 +14,16 @@
 //! limitations under the License.
 
 #![cfg(test)]
+use std::sync::Arc;
+
+use maxgraph_common::proto::schema::*;
+
 use super::data_type::*;
 use super::prop_def::*;
 use super::relation::*;
 use super::schema::*;
 use super::type_def::*;
 use super::{LabelId, PropId, Schema};
-use maxgraph_common::proto::schema::*;
-use std::sync::Arc;
 
 pub fn create_prop_def_proto(
     prop_id: PropId, name: &str, data_type: DataType, comment: &str,

@@ -13,8 +13,9 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::db::api::{EdgeId, EdgeKind, GraphResult, LabelId, PropertyId, ValueRef, ValueType, VertexId};
 use std::fmt::Debug;
+
+use crate::db::api::{EdgeId, EdgeKind, GraphResult, LabelId, PropertyId, ValueRef, ValueType, VertexId};
 
 #[repr(C)]
 #[allow(dead_code)]

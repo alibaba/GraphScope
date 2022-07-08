@@ -1,8 +1,7 @@
-use crate::db::api::*;
-
 use super::helper::GraphTestHelper;
 use super::types;
 use crate::db::api::multi_version_graph::MultiVersionGraph;
+use crate::db::api::*;
 
 pub fn test_get_edge<G: MultiVersionGraph>(graph: G) {
     let tester = tester::GetEdgeTester::new(graph);
@@ -854,10 +853,11 @@ mod tester {
 }
 
 mod common {
-    use super::*;
-    use crate::db::api::multi_version_graph::MultiVersionGraph;
     use std::collections::{HashMap, HashSet};
     use std::iter::FromIterator;
+
+    use super::*;
+    use crate::db::api::multi_version_graph::MultiVersionGraph;
 
     pub struct EdgeDataInsertHelper<'a, 'b, G: MultiVersionGraph> {
         helper: &'a mut GraphTestHelper<'b, G>,

@@ -1,12 +1,11 @@
 #![allow(dead_code)]
 
-use crate::db::proto::common::DataLoadTargetPb;
-use crate::db::proto::model::{EdgeIdPb, EdgeKindPb};
-
 pub use self::config::*;
 pub use self::error::*;
 pub use self::property::*;
 pub use self::schema::*;
+use crate::db::proto::common::DataLoadTargetPb;
+use crate::db::proto::model::{EdgeIdPb, EdgeKindPb};
 
 #[macro_use]
 pub mod error;

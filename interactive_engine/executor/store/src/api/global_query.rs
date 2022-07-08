@@ -13,13 +13,14 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::sync::Arc;
+
 use super::graph_schema::Schema;
 use super::prelude::Condition;
 use super::{
     Edge, LabelId, PartitionId, PartitionLabeledVertexIds, PartitionVertexIds, PropId, SnapshotId, Vertex,
     VertexId,
 };
-use std::sync::Arc;
 
 pub trait GlobalGraphQuery: Send + Sync {
     type V: Vertex;

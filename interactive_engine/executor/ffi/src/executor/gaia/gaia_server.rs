@@ -14,6 +14,11 @@
 //! limitations under the License.
 //!
 
+use std::net::SocketAddr;
+use std::sync::{Arc, Mutex};
+use std::thread;
+use std::time::Duration;
+
 use gaia_pegasus::Configuration as GaiaConfig;
 use maxgraph_runtime::store::global_graph::GlobalGraph;
 use maxgraph_store::api::PartitionId;
@@ -23,10 +28,6 @@ use pegasus_network::config::{NetworkConfig, ServerAddr};
 use pegasus_network::SimpleServerDetector;
 use pegasus_server::rpc::{start_all, RPCServerConfig, ServiceStartListener};
 use runtime_integration::{InitializeJobAssembly, QueryGrootGraph};
-use std::net::SocketAddr;
-use std::sync::{Arc, Mutex};
-use std::thread;
-use std::time::Duration;
 use tokio::runtime::Runtime;
 
 pub struct GaiaServer {

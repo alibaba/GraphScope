@@ -1,7 +1,8 @@
+use std::collections::HashMap;
+
 use maxgraph_store::api::graph_schema::Schema;
 use maxgraph_store::db::api::{GraphDef, ValueType};
 use maxgraph_store::schema::prelude::DataType;
-use std::collections::HashMap;
 
 pub struct GlobalGraphSchema {
     graph_def: GraphDef,

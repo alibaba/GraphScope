@@ -1,8 +1,9 @@
 use crate::db::api::{BackupId, GraphResult};
 
 pub mod rocksdb;
-use self::rocksdb::RocksDBIter;
 use std::ptr::null;
+
+use self::rocksdb::RocksDBIter;
 
 pub trait ExternalStorage: Send + Sync {
     fn get(&self, key: &[u8]) -> GraphResult<Option<StorageRes>>;

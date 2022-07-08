@@ -21,9 +21,10 @@ mod schema;
 mod test_util;
 mod type_def;
 
+use std::fmt::Debug;
+
 use self::data_type::DataType;
 use self::type_def::TypeDef;
-use std::fmt::Debug;
 
 pub type LabelId = u32;
 pub type PropId = u32;

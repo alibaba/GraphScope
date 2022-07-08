@@ -13,10 +13,12 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::cell::UnsafeCell;
+
+use maxgraph_common::proto::schema::*;
+
 use super::data_type::DataType;
 use super::PropId;
-use maxgraph_common::proto::schema::*;
-use std::cell::UnsafeCell;
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Hash)]
 pub struct PropDef {

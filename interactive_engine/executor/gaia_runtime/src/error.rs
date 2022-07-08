@@ -13,8 +13,9 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use pegasus::StartupError;
 use std::error::Error;
+
+use pegasus::StartupError;
 
 pub type StartServerResult<T> = Result<T, StartServerError>;
 

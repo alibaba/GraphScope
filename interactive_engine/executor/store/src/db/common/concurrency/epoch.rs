@@ -1,6 +1,7 @@
 #![allow(dead_code)]
-use ::crossbeam_epoch::Guard;
 use std::ops::Deref;
+
+use ::crossbeam_epoch::Guard;
 
 pub struct EpochGuard<T> {
     guard: Guard,

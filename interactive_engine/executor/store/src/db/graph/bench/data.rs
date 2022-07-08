@@ -1,5 +1,6 @@
-use crate::db::api::*;
 use std::collections::HashMap;
+
+use crate::db::api::*;
 
 pub fn gen_properties(type_def: &TypeDef) -> HashMap<PropertyId, Value> {
     let mut ret = HashMap::new();
