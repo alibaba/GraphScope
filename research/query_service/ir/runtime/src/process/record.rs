@@ -39,9 +39,6 @@ pub enum CommonObject {
     Prop(Object),
     /// count
     Count(u64),
-    /// aggregate of sum/max/min/avg
-    // TODO: remove Agg
-    Agg(Object),
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, PartialOrd)]
@@ -295,7 +292,6 @@ impl Element for RecordElement {
                 CommonObject::None => 0,
                 CommonObject::Prop(obj) => obj.len(),
                 CommonObject::Count(_) => 1,
-                CommonObject::Agg(obj) => obj.len(),
             },
         }
     }
@@ -305,7 +301,7 @@ impl Element for RecordElement {
             RecordElement::OnGraph(graph_obj) => graph_obj.as_borrow_object(),
             RecordElement::OffGraph(obj_element) => match obj_element {
                 CommonObject::None => BorrowObject::None,
-                CommonObject::Prop(obj) | CommonObject::Agg(obj) => obj.as_borrow(),
+                CommonObject::Prop(obj) => obj.as_borrow(),
                 CommonObject::Count(cnt) => (*cnt).into(),
             },
         }
@@ -411,10 +407,6 @@ impl Encode for CommonObject {
                 writer.write_u8(2)?;
                 writer.write_u64(*cnt)?;
             }
-            CommonObject::Agg(agg) => {
-                writer.write_u8(3)?;
-                agg.write_to(writer)?;
-            }
         }
         Ok(())
     }
@@ -432,10 +424,6 @@ impl Decode for CommonObject {
             2 => {
                 let cnt = <u64>::read_from(reader)?;
                 Ok(CommonObject::Count(cnt))
-            }
-            3 => {
-                let object = <Object>::read_from(reader)?;
-                Ok(CommonObject::Agg(object))
             }
             _ => Err(std::io::Error::new(std::io::ErrorKind::Other, "unreachable")),
         }
