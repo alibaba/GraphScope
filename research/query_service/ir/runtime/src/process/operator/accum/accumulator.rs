@@ -252,17 +252,17 @@ impl<D: Decode> Decode for Minimum<D> {
 }
 
 #[derive(Clone)]
-pub struct DataSum<D> {
+pub struct Sum<D> {
     pub seed: Option<D>,
 }
 
-impl<D: Debug> Debug for DataSum<D> {
+impl<D: Debug> Debug for Sum<D> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "sum={:?}", self.seed)
     }
 }
 
-impl<D: Send + Debug + Add<Output = D> + 'static> Accumulator<D, Option<D>> for DataSum<D> {
+impl<D: Send + Debug + Add<Output = D> + 'static> Accumulator<D, Option<D>> for Sum<D> {
     fn accum(&mut self, next: D) -> FnExecResult<()> {
         if let Some(seed) = self.seed.take() {
             self.seed = Some(seed.add(next));
@@ -277,17 +277,17 @@ impl<D: Send + Debug + Add<Output = D> + 'static> Accumulator<D, Option<D>> for 
     }
 }
 
-impl<D: Encode> Encode for DataSum<D> {
+impl<D: Encode> Encode for Sum<D> {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
         self.seed.write_to(writer)?;
         Ok(())
     }
 }
 
-impl<D: Decode> Decode for DataSum<D> {
+impl<D: Decode> Decode for Sum<D> {
     fn read_from<R: ReadExt>(reader: &mut R) -> io::Result<Self> {
         let seed = <Option<D>>::read_from(reader)?;
-        Ok(DataSum { seed })
+        Ok(Sum { seed })
     }
 }
 
