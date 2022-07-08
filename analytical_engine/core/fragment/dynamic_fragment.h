@@ -33,7 +33,6 @@
 
 #include "grape/fragment/basic_fragment_mutator.h"
 #include "grape/fragment/csr_edgecut_fragment_base.h"
-#include "grape/graph/mutable_csr.h"
 #include "grape/graph/de_mutable_csr.h"
 #include "grape/utils/bitset.h"
 #include "grape/utils/vertex_set.h"
@@ -201,7 +200,10 @@ class DynamicFragment
   void Init(fid_t fid, bool directed,
             std::vector<std::vector<internal_vertex_t>>& vertices,
             std::vector<std::vector<edge_t>>& edges,
-            std::vector<int>& oe_degree, std::vector<int>& ie_degree,
+            std::vector<int>& inner_oe_degree,
+            std::vector<int>& outer_oe_degree,
+            std::vector<int>& inner_ie_degree,
+            std::vector<int>& outer_ie_degree,
             uint32_t thread_num) {
     init(fid, directed);
     load_strategy_ = directed ? grape::LoadStrategy::kBothOutIn
@@ -233,7 +235,10 @@ class DynamicFragment
     initVertexMembersOfFragment();
     initOuterVerticesOfFragment();
 
-    buildCSRParallel(edges, oe_degree, ie_degree, thread_num);
+    buildCSRParallel(edges, 
+                     inner_oe_degree, outer_oe_degree, 
+                     inner_ie_degree, outer_ie_degree,
+                     thread_num);
 
     ivdata_.clear();
     ivdata_.resize(ivnum_);
@@ -347,23 +352,15 @@ class DynamicFragment
       vid_t new_ivnum = vm_ptr_->GetInnerVertexSize(fid_);
       vid_t new_ovnum = ovgid_.size();
       is_selfloops_.resize(new_ivnum);
+      ie_.add_vertices(new_ivnum - ivnum_, new_ovnum - ovnum_);
+      oe_.add_vertices(new_ivnum - ivnum_, new_ovnum - ovnum_);
       this->ivnum_ = new_ivnum;      
       if (ovnum_ != new_ovnum) {
         ovnum_ = new_ovnum;
         initOuterVerticesOfFragment();
       }
-      ie_.add_vertices(new_ivnum - ivnum_, new_ovnum - ovnum_);
-      oe_.add_vertices(new_ivnum - ivnum_, new_ovnum - ovnum_);
-      if (this->directed_) {
-        ie_.add_reversed_edges(edges_to_add);
-        oe_.add_forward_edges(edges_to_add);
-      } else {
-        ie_.add_edges(edges_to_add);
-        oe_.add_edges(edges_to_add);
-      }
-      for (const auto &e : edges_to_add) {
-        if (e.src == e.dst)
-          is_selfloops_.set_bit(e.src);
+      if (!edges_to_add.empty()) {
+        addEdges(edges_to_add);
       }
 
       this->inner_vertices_.SetRange(0, new_ivnum);
@@ -502,27 +499,40 @@ class DynamicFragment
     is_selfloops_.clear();
   }
 
-    void CopyFrom(std::shared_ptr<DynamicFragment> source,
+  void CopyFrom(std::shared_ptr<DynamicFragment> source,
                 const std::string& copy_type = "identical") {
     init(source->fid_, source->directed_);
     load_strategy_ = source->load_strategy_;
     copyVertices(source);
 
-    // both inner and outer vertices with the empty slots
-    auto vnum = id_parser_.max_local_id();
-
     // copy edges
+    auto vnum = id_parser_.max_local_id();
     ie_.add_vertices(ivnum_, ovnum_);
     oe_.add_vertices(ivnum_, ovnum_);
     if (copy_type == "identical") {
-      std::vector<int> oe_degree_to_add(vnum, 0), ie_degree_to_add(vnum, 0);
-      for (vid_t i = 0; i < vnum; ++i) {
-        oe_degree_to_add[i] = source->oe_.degree(i);
-        ie_degree_to_add[i] = source->ie_.degree(i);
+      std::vector<int> inner_oe_degree_to_add(ivnum_, 0),
+                       inner_ie_degree_to_add(ivnum_, 0),
+                       outer_oe_degree_to_add(ovnum_, 0),
+                       outer_ie_degree_to_add(ovnum_, 0);
+      for (vid_t i = 0; i < ivnum_; ++i) {
+        inner_oe_degree_to_add[i] = source->oe_.degree(i);
+        inner_ie_degree_to_add[i] = source->ie_.degree(i);
       }
-      ie_.reserve_edges_dense(ie_degree_to_add);
-      oe_.reserve_edges_dense(oe_degree_to_add);
+
+      for (vid_t i = 0; i < ovnum_; ++i) {
+        outer_oe_degree_to_add[i] = 
+            source->oe_.degree(outerVertexIndexToLid(i));
+        outer_ie_degree_to_add[i] =
+            source->ie_.degree(outerVertexIndexToLid(i));
+      }
+
+      oe_.reserve_edges_dense(inner_oe_degree_to_add, outer_oe_degree_to_add);
+      ie_.reserve_edges_dense(inner_ie_degree_to_add, outer_ie_degree_to_add);
       for (vid_t i = 0; i < vnum; ++i) {
+        if (i == ivnum_) {
+          i = vnum - ovnum_;  // skip to outer vertices
+        }
+
         auto ie_begin = source->ie_.get_begin(i);
         auto ie_end = source->ie_.get_end(i);
         auto oe_begin = source->oe_.get_begin(i);
@@ -536,14 +546,30 @@ class DynamicFragment
       }
     } else if (copy_type == "reverse") {
       assert(directed_);
-      std::vector<int> oe_degree_to_add(vnum, 0), ie_degree_to_add(vnum, 0);
-      for (vid_t i = 0; i < vnum; ++i) {
-        oe_degree_to_add[i] = source->ie_.degree(i);
-        ie_degree_to_add[i] = source->oe_.degree(i);
+      std::vector<int> inner_oe_degree_to_add(ivnum_, 0),
+                       inner_ie_degree_to_add(ivnum_, 0),
+                       outer_oe_degree_to_add(ovnum_, 0),
+                       outer_ie_degree_to_add(ovnum_, 0);
+      for (vid_t i = 0; i < ivnum_; ++i) {
+        inner_oe_degree_to_add[i] = source->ie_.degree(i);
+        inner_ie_degree_to_add[i] = source->oe_.degree(i);
       }
-      ie_.reserve_edges_dense(ie_degree_to_add);
-      oe_.reserve_edges_dense(oe_degree_to_add);
+
+      for (vid_t i = 0; i < ovnum_; ++i) {
+        outer_oe_degree_to_add[i] = 
+            source->ie_.degree(outerVertexIndexToLid(i));
+        outer_ie_degree_to_add[i] =
+            source->oe_.degree(outerVertexIndexToLid(i));
+      }
+
+      oe_.reserve_edges_dense(inner_oe_degree_to_add, outer_oe_degree_to_add);
+      ie_.reserve_edges_dense(inner_ie_degree_to_add, outer_ie_degree_to_add);      
+      
       for (vid_t i = 0; i < vnum; ++i) {
+        if (i == ivnum_) {
+          i = vnum - ovnum_;  // skip to outer vertices
+        }
+
         auto ie_begin = source->ie_.get_begin(i);
         auto ie_end = source->ie_.get_end(i);
         auto oe_begin = source->oe_.get_begin(i);
@@ -575,13 +601,24 @@ class DynamicFragment
     // both inner and outer vertices with the empty slots
     auto vnum = id_parser_.max_local_id();
 
-    std::vector<int> degree_to_add(vnum, 0);
-    for (vid_t i = 0; i < vnum; ++i) {
-      degree_to_add[i] = source->oe_.degree(i);
+    std::vector<int> inner_degree_to_add(ivnum_, 0),
+                     outer_degree_to_add(ovnum_, 0);
+    for (vid_t i = 0; i < ivnum_; ++i) {
+      inner_degree_to_add[i] = source->oe_.degree(i);
     }
-    ie_.reserve_edges_dense(degree_to_add);
-    oe_.reserve_edges_dense(degree_to_add);
+
+    for (vid_t i = 0; i < ovnum_; ++i) {
+      outer_degree_to_add[i] = 
+          source->oe_.degree(outerVertexIndexToLid(i));
+    }
+
+    ie_.reserve_edges_dense(inner_degree_to_add, outer_degree_to_add);
+    oe_.reserve_edges_dense(inner_degree_to_add, outer_degree_to_add);
     for (vid_t i = 0; i < vnum; ++i) {
+      if (i == ivnum_) {
+        i = vnum - ovnum_;  // skip to outer vertices
+      }
+
       auto begin = source->oe_.get_begin(i);
       auto end = source->oe_.get_end(i);
       for (auto iter = begin; iter != end; ++iter) {
@@ -885,7 +922,6 @@ class DynamicFragment
     }
   }
 
-#if 0
   void addEdges(std::vector<edge_t>& edges) {
     double rate = 0;
     if (directed_) {
@@ -906,72 +942,99 @@ class DynamicFragment
   void addEdgesDense(std::vector<edge_t>& edges) {
     static constexpr vid_t invalid_vid = std::numeric_limits<vid_t>::max();
     if (load_strategy_ == grape::LoadStrategy::kBothOutIn) {
-      std::vector<int> oe_degree_to_add(ivnum_, 0), ie_degree_to_add(ivnum_, 0);
+      std::vector<int> inner_oe_degree_to_add(ivnum_, 0),     
+                       inner_ie_degree_to_add(ivnum_, 0),
+                       outer_oe_degree_to_add(ovnum_, 0),     
+                       outer_ie_degree_to_add(ovnum_, 0);
       // reserve edges
       for (auto& e : edges) {
         if (e.src == invalid_vid) {
           continue;
         }
         if (e.src < ivnum_) {
-          ++oe_degree_to_add[e.src];
+          ++inner_oe_degree_to_add[e.src];
+        } else {
+          ++outer_oe_degree_to_add[outerVertexLidToIndex(e.src)];
         }
         if (e.dst < ivnum_) {
-          ++ie_degree_to_add[e.dst];
+          ++inner_ie_degree_to_add[e.dst];
+        } else {
+          ++outer_ie_degree_to_add[outerVertexLidToIndex(e.dst)];
         }
       }
-      oe_.reserve_edges_dense(oe_degree_to_add);
-      ie_.reserve_edges_dense(ie_degree_to_add);
+      oe_.reserve_edges_dense(inner_oe_degree_to_add, outer_oe_degree_to_add);
+      ie_.reserve_edges_dense(inner_ie_degree_to_add, outer_ie_degree_to_add);
 
       // add edges
-      std::fill(oe_degree_to_add.begin(), oe_degree_to_add.end(), 0);
-      std::fill(ie_degree_to_add.begin(), ie_degree_to_add.end(), 0);
+      std::fill(inner_oe_degree_to_add.begin(), 
+                inner_oe_degree_to_add.end(), 0);
+      std::fill(outer_oe_degree_to_add.begin(), 
+                outer_oe_degree_to_add.end(), 0);
+      std::fill(inner_ie_degree_to_add.begin(), 
+                inner_ie_degree_to_add.end(), 0);
+      std::fill(outer_ie_degree_to_add.begin(),       
+                outer_ie_degree_to_add.end(), 0);
       for (auto& e : edges) {
         if (e.src == invalid_vid) {
           continue;
         }
         if (updateOrAddEdgeOutIn(e)) {
           if (e.src < ivnum_) {
-            ++oe_degree_to_add[e.src];
+            ++inner_oe_degree_to_add[e.src];
+          } else {
+            ++outer_oe_degree_to_add[outerVertexLidToIndex(e.src)];
           }
           if (e.dst < ivnum_) {
-            ++ie_degree_to_add[e.dst];
+            ++inner_ie_degree_to_add[e.dst];
+          } else {
+            ++outer_ie_degree_to_add[outerVertexLidToIndex(e.dst)];
           }
         }
       }
-      oe_.sort_neighbors_dense(oe_degree_to_add);
-      ie_.sort_neighbors_dense(ie_degree_to_add);
+      oe_.sort_neighbors_dense(inner_oe_degree_to_add, outer_oe_degree_to_add);
+      ie_.sort_neighbors_dense(inner_ie_degree_to_add, outer_ie_degree_to_add);
     } else {
-      std::vector<int> oe_degree_to_add(ivnum_, 0);
+      std::vector<int> inner_oe_degree_to_add(ivnum_, 0),
+                       outer_oe_degree_to_add(ovnum_, 0);
       // reserve edges
       for (auto& e : edges) {
         if (e.src == invalid_vid) {
           continue;
         }
         if (e.src < ivnum_) {
-          ++oe_degree_to_add[e.src];
+          ++inner_oe_degree_to_add[e.src];
+        } else {
+          ++outer_oe_degree_to_add[outerVertexLidToIndex(e.src)];
         }
         if (e.dst < ivnum_) {
-          ++oe_degree_to_add[e.dst];
+          ++inner_oe_degree_to_add[e.dst];
+        } else {
+          ++outer_oe_degree_to_add[outerVertexLidToIndex(e.dst)];
         }
       }
-      oe_.reserve_edges_dense(oe_degree_to_add);
+      oe_.reserve_edges_dense(inner_oe_degree_to_add, outer_oe_degree_to_add);
 
       // add edges
-      std::fill(oe_degree_to_add.begin(), oe_degree_to_add.end(), 0);
+      std::fill(inner_oe_degree_to_add.begin(), inner_oe_degree_to_add.end(), 0);
+      std::fill(outer_oe_degree_to_add.begin(), outer_oe_degree_to_add.end(), 0);
       for (auto& e : edges) {
         if (e.src == invalid_vid) {
           continue;
         }
         if (updateOrAddEdgeOut(e)) {
           if (e.src < ivnum_) {
-            ++oe_degree_to_add[e.src];
+            ++inner_oe_degree_to_add[e.src];
+          } else {
+            ++outer_oe_degree_to_add[outerVertexLidToIndex(e.src)];
           }
           if (e.dst < ivnum_ && e.src != e.dst) {
-            ++oe_degree_to_add[e.dst];
+            ++inner_oe_degree_to_add[e.dst];
+          } else {
+            ++outer_oe_degree_to_add[outerVertexLidToIndex(e.dst)];
           }
         }
       }
-      oe_.sort_neighbors_dense(oe_degree_to_add);
+      oe_.sort_neighbors_dense(inner_oe_degree_to_add, outer_oe_degree_to_add);
     }
   }
 
@@ -1103,7 +1166,6 @@ class DynamicFragment
     }
     return ret;
   }
-  #endif
 
   void removeEdges(std::vector<std::pair<vid_t, vid_t>>& edges) {
     for (auto& e : edges) {
@@ -1254,8 +1316,10 @@ class DynamicFragment
   }
 
   void buildCSRParallel(std::vector<std::vector<edge_t>>& edges,
-                        const std::vector<int>& oe_degree,
-                        const std::vector<int>& ie_degree,
+                        const std::vector<int>& inner_oe_degree,
+                        const std::vector<int>& outer_oe_degree,
+                        const std::vector<int>& inner_ie_degree,
+                        const std::vector<int>& outer_ie_degree,
                         uint32_t thread_num) {
     oe_.add_vertices(ivnum_, ovnum_);
     ie_.add_vertices(ivnum_, ovnum_);
@@ -1279,12 +1343,17 @@ class DynamicFragment
         thread_num, 1);
 
     // insert the edges
-    insertEdgesParallel(edges, oe_degree, ie_degree, thread_num);
+    insertEdgesParallel(edges, 
+                        inner_oe_degree, outer_oe_degree,
+                        inner_ie_degree, outer_ie_degree,
+                        thread_num);
   }
 
   void insertEdgesParallel(std::vector<std::vector<edge_t>>& edges,
-                           const std::vector<int>& oe_degree,
-                           const std::vector<int>& ie_degree,
+                           const std::vector<int>& inner_oe_degree,
+                           const std::vector<int>& outer_oe_degree,
+                           const std::vector<int>& inner_ie_degree,
+                           const std::vector<int>& outer_ie_degree,
                            uint32_t thread_num) {
     auto insert_edges_out_in = [&](uint32_t tid, std::vector<edge_t>& es) {
       dynamic::Value tmp_data;  // avoid to use default allocator on parallel
@@ -1312,9 +1381,9 @@ class DynamicFragment
       }
     };
 
-    oe_.reserve_edges_dense(oe_degree);
+    oe_.reserve_edges_dense(inner_oe_degree, outer_oe_degree);
     if (load_strategy_ == grape::LoadStrategy::kBothOutIn) {
-      ie_.reserve_edges_dense(ie_degree);
+      ie_.reserve_edges_dense(inner_ie_degree, outer_ie_degree);
       parallel_for(edges.begin(), edges.end(), insert_edges_out_in, thread_num,
                    1);
       // The incoming edges may not store in the same thread vector,
@@ -1327,11 +1396,11 @@ class DynamicFragment
           }
         }
       }
-      ie_.sort_neighbors_dense(ie_degree);
+      ie_.sort_neighbors_dense(inner_ie_degree, outer_ie_degree);
     } else {
       parallel_for(edges.begin(), edges.end(), insert_edges_out, thread_num, 1);
     }
-    oe_.sort_neighbors_dense(oe_degree);
+    oe_.sort_neighbors_dense(inner_oe_degree, outer_oe_degree);
   }
 
   void initSchema() {
