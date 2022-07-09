@@ -111,6 +111,7 @@ graphscope-darwin-py3:
 	sudo rm -fr /tmp/v6d /tmp/libgrape-lite
 	# build graphscope
 	cd $(WORKING_DIR)/../ && \
+		python3 -m pip install --upgrade setuptools && \
 		make install && \
 		python3 $(WORKING_DIR)/precompile.py
 	# build and delocate wheel
