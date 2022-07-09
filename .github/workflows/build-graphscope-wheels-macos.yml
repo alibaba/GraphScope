@@ -52,6 +52,10 @@ jobs:
         popd
         ${GITHUB_WORKSPACE}/scripts/install_deps.sh --dev --vineyard_prefix /opt/vineyard --verbose
 
+    - name: Setup tmate session
+      if: true
+      uses: mxschmitt/action-tmate@v2
+
     - name: Build Server Wheel
       run: |
         # source environment variable
