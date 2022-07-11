@@ -89,9 +89,7 @@ jobs:
     - name: Gremlin Test
       run: |
         cd interactive_engine/groot-server
-        # TODO: GAIA doesn't pass some tests.
-        # https://github.com/alibaba/GraphScope/issues/1804
-        # mvn test -Pgremlin-test
+        mvn test -Pgremlin-test
 
     - name: Upload tools for helm test to Artifact
       uses: actions/upload-artifact@v2
