@@ -91,8 +91,8 @@ impl<L: Data + HasKey, R: Data + HasKey> Helper<L, R> {
 fn insert_and_query<'a, L: Data + HasKey, R: Data + HasKey<Target = L::Target>>(
     map1: &mut JoinMap<L>, map2: &'a mut JoinMap<R>, data: &L, need_insert: bool,
 ) -> Option<&'a Vec<R>>
-    where
-        L::Target: Clone + Send,
+where
+    L::Target: Clone + Send,
 {
     let k = data.get_key();
     let entry1 = map1
@@ -125,7 +125,13 @@ fn try_outer_join_output<L: Data + HasKey, R: Data + HasKey>(
             // The case of left/full outer join, which must output a <L, None> for any left item
             // that has not been matched (`entry.indicator = false`)
             for entry in map.values().filter(|entry| !entry.indicator) {
-                session.give_iterator(entry.data.clone().into_iter().map(|l|(Some(l),None)))?;
+                session.give_iterator(
+                    entry
+                        .data
+                        .clone()
+                        .into_iter()
+                        .map(|l| (Some(l), None)),
+                )?;
             }
         }
     }
@@ -134,7 +140,13 @@ fn try_outer_join_output<L: Data + HasKey, R: Data + HasKey>(
             // The case of right/full outer join, which must output a <None, R> for any right item
             // that has not been matched (`entry.indicator = false`)
             for entry in map.values().filter(|entry| !entry.indicator) {
-                session.give_iterator(entry.data.clone().into_iter().map(|r|(None,Some(r))))?;
+                session.give_iterator(
+                    entry
+                        .data
+                        .clone()
+                        .into_iter()
+                        .map(|r| (None, Some(r))),
+                )?;
             }
         }
     }
@@ -166,8 +178,8 @@ fn try_semi_join_output<L: Data + HasKey, R: Data + HasKey>(
 fn internal_inner_join<L: Data + HasKey, R: Data + HasKey<Target = L::Target>>(
     this: Stream<L>, other: Stream<R>,
 ) -> Result<Stream<(L, R)>, BuildJobError>
-    where
-        L::Target: Clone + Send,
+where
+    L::Target: Clone + Send,
 {
     this.partition_by_key()
         .binary("inner_join", other, |info| {
@@ -178,7 +190,11 @@ fn internal_inner_join<L: Data + HasKey, R: Data + HasKey<Target = L::Target>>(
                     let (mut l_map, mut r_map, _, need_insert) = helper.get_maps_mut(&dataset.tag);
                     for l in dataset.drain() {
                         if let Some(arr) = insert_and_query(&mut l_map, &mut r_map, &l, need_insert) {
-                            session.give_iterator(arr.clone().into_iter().map(move|r|(l.clone(),r)))?;
+                            session.give_iterator(
+                                arr.clone()
+                                    .into_iter()
+                                    .map(move |r| (l.clone(), r)),
+                            )?;
                         }
                     }
                     if dataset.is_last() {
@@ -191,7 +207,11 @@ fn internal_inner_join<L: Data + HasKey, R: Data + HasKey<Target = L::Target>>(
                     let (mut l_map, mut r_map, need_insert, _) = helper.get_maps_mut(&dataset.tag);
                     for r in dataset.drain() {
                         if let Some(arr) = insert_and_query(&mut r_map, &mut l_map, &r, need_insert) {
-                            session.give_iterator(arr.clone().into_iter().map(move|l|(l,r.clone())))?;
+                            session.give_iterator(
+                                arr.clone()
+                                    .into_iter()
+                                    .map(move |l| (l, r.clone())),
+                            )?;
                         }
                     }
                     if dataset.is_last() {
@@ -206,8 +226,8 @@ fn internal_inner_join<L: Data + HasKey, R: Data + HasKey<Target = L::Target>>(
 fn internal_outer_join<L: Data + HasKey, R: Data + HasKey<Target = L::Target>>(
     this: Stream<L>, other: Stream<R>, join_type: JoinType,
 ) -> Result<Stream<(Option<L>, Option<R>)>, BuildJobError>
-    where
-        L::Target: Clone + Send,
+where
+    L::Target: Clone + Send,
 {
     let (output_left, output_right) = match join_type {
         JoinType::LeftOuter => (true, false),
@@ -224,9 +244,13 @@ fn internal_outer_join<L: Data + HasKey, R: Data + HasKey<Target = L::Target>>(
                     let (mut l_map, mut r_map, _, need_insert) = helper.get_maps_mut(&dataset.tag);
                     for l in dataset.drain() {
                         if let Some(arr) =
-                        insert_and_query(&mut l_map, &mut r_map, &l, output_left || need_insert)
+                            insert_and_query(&mut l_map, &mut r_map, &l, output_left || need_insert)
                         {
-                            session.give_iterator(arr.clone().into_iter().map(move|r|(Some(l.clone()),Some(r))))?;
+                            session.give_iterator(
+                                arr.clone()
+                                    .into_iter()
+                                    .map(move |r| (Some(l.clone()), Some(r))),
+                            )?;
                         }
                     }
                     if dataset.is_last() {
@@ -246,9 +270,13 @@ fn internal_outer_join<L: Data + HasKey, R: Data + HasKey<Target = L::Target>>(
                     let (mut l_map, mut r_map, need_insert, _) = helper.get_maps_mut(&dataset.tag);
                     for r in dataset.drain() {
                         if let Some(arr) =
-                        insert_and_query(&mut r_map, &mut l_map, &r, output_right || need_insert)
+                            insert_and_query(&mut r_map, &mut l_map, &r, output_right || need_insert)
                         {
-                            session.give_iterator(arr.clone().into_iter().map(move|l|(Some(l),Some(r.clone()))))?;
+                            session.give_iterator(
+                                arr.clone()
+                                    .into_iter()
+                                    .map(move |l| (Some(l), Some(r.clone()))),
+                            )?;
                         }
                     }
                     if dataset.is_last() {
@@ -271,8 +299,8 @@ fn internal_outer_join<L: Data + HasKey, R: Data + HasKey<Target = L::Target>>(
 fn internal_semi_join<L: Data + HasKey, R: Data + HasKey<Target = L::Target>>(
     this: Stream<L>, other: Stream<R>, join_type: JoinType,
 ) -> Result<Stream<L>, BuildJobError>
-    where
-        L::Target: Clone + Send,
+where
+    L::Target: Clone + Send,
 {
     let is_anti = match join_type {
         JoinType::Semi => false,

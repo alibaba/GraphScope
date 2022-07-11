@@ -18,7 +18,6 @@ use crate::errors::BuildJobError;
 use crate::stream::Stream;
 use crate::Data;
 
-
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum EmitKind {
     Before,

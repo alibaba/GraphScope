@@ -137,17 +137,13 @@ pub fn guard(worker_id: WorkerId) -> CurWorkerGuard {
 
 #[inline]
 pub fn set_current_worker(worker_id: Option<WorkerId>) {
-    CURRENT_WORKER.with(|w| {
-        w.set(worker_id)
-    })
+    CURRENT_WORKER.with(|w| w.set(worker_id))
 }
 
 #[inline]
 pub fn get_current_worker() -> WorkerId {
     CURRENT_WORKER
-        .with(|w| {
-            w.get()
-        })
+        .with(|w| w.get())
         .expect("current worker lost;")
 }
 

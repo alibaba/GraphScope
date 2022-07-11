@@ -3,12 +3,12 @@ use crate::api::notification::{Cancel, End};
 use crate::api::IterCondition;
 use crate::communication::input::{new_input_session, InputProxy};
 use crate::communication::output::{new_output, OutputProxy};
+use crate::data::MicroBatch;
 use crate::errors::JobExecError;
 use crate::operator::{Notifiable, OperatorCore};
 use crate::progress::EndOfScope;
 use crate::tag::tools::map::TidyTagMap;
 use crate::Data;
-use crate::data::MicroBatch;
 
 struct IterateState {
     iterating: bool,
@@ -86,12 +86,12 @@ impl<D: Data> OperatorCore for SwitchOperator<D> {
                             if self.emit_kind == Some(EmitKind::Before) {
                                 match enter.give(data.clone()) {
                                     Err(e) => {
-                                        if e.is_would_block()  {
+                                        if e.is_would_block() {
                                             leave.give(data)?;
                                         }
                                         Err(e)
-                                    },
-                                    Ok(()) => leave.give(data)
+                                    }
+                                    Ok(()) => leave.give(data),
                                 }?;
                             } else {
                                 enter.give(data)?;
@@ -112,8 +112,8 @@ impl<D: Data> OperatorCore for SwitchOperator<D> {
                                     leave.push_batch(re)?;
                                 }
                                 Err(e)
-                            },
-                            Ok(()) => leave.push_batch(re)
+                            }
+                            Ok(()) => leave.push_batch(re),
                         }?;
                     } else {
                         enter.push_batch(re)?;
@@ -187,8 +187,8 @@ impl<D: Data> OperatorCore for SwitchOperator<D> {
                                             leave.give(data)?;
                                         }
                                         Err(e)
-                                    },
-                                    Ok(()) => leave.give(data)
+                                    }
+                                    Ok(()) => leave.give(data),
                                 }?;
                             } else {
                                 enter.give(data)?;
@@ -210,8 +210,8 @@ impl<D: Data> OperatorCore for SwitchOperator<D> {
                                     leave.push_batch(re)?;
                                 }
                                 Err(e)
-                            },
-                            Ok(()) => leave.push_batch(re)
+                            }
+                            Ok(()) => leave.push_batch(re),
                         }?;
                     } else {
                         enter.push_batch(re)?;
@@ -227,7 +227,6 @@ impl<D: Data> OperatorCore for SwitchOperator<D> {
                     }
                     enter.notify_end(end)?;
                 }
-
             }
 
             Ok(())

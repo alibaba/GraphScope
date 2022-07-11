@@ -14,27 +14,18 @@
 //! limitations under the License.
 
 #![allow(bare_trait_objects)]
-#![allow(unused_imports)]
-#![allow(unused_variables)]
-#![allow(unused_assignments)]
-#![allow(dead_code)]
 extern crate bincode;
 extern crate byteorder;
 extern crate itertools;
-#[allow(unused_imports)]
-#[macro_use]
-extern crate lazy_static;
 #[macro_use]
 extern crate log;
 extern crate log4rs;
 #[macro_use]
 extern crate maxgraph_common;
-extern crate lru_time_cache;
 extern crate maxgraph_store;
 extern crate protobuf;
 extern crate regex;
 extern crate serde;
-extern crate structopt;
 #[macro_use]
 extern crate serde_derive;
 extern crate abomonation;
