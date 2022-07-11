@@ -186,6 +186,8 @@ impl ServerAddr {
                 ipv6_addrs.push(addr)
             }
         }
+        // ipv4 has higher priority than ipv6
+        // if no ipv4 and ipv6 matches, return error
         if ipv4_addrs.len() == 0 && ipv6_addrs.len() == 0 {
             Err(NetError::HostParseError(format!("{}:{}", self.hostname, self.port)))
         } else if ipv4_addrs.len() == 0 {
@@ -451,6 +453,7 @@ impl NetworkConfig {
     }
 
     pub fn get_server_addrs(&self) -> Result<Vec<ServerAddr>, NetError> {
+        // pick self.servers field and reorganize it for the requirement of ServerDetect trait
         if let Some(server_addr_candies) = self.servers.as_ref() {
             let mut server_addrs = Vec::with_capacity(server_addr_candies.len());
             for (id, server_addr_candi) in server_addr_candies.iter().enumerate() {
@@ -529,8 +532,10 @@ mod test {
 
     #[test]
     fn hostname_test() {
-        let server_addr = ServerAddr::new("localhost".to_string(), 1234);
-        let socker_addr = server_addr.to_socket_addr();
-        assert!(socker_addr.is_ok());
+        let server_addr_with_hostname = ServerAddr::new("localhost".to_string(), 1234);
+        let socker_addr_with_hostname = server_addr_with_hostname.to_socket_addr().unwrap();
+        let server_addr_with_ip = ServerAddr::new("127.0.0.1".to_string(), 1234);
+        let socker_addr_with_ip = server_addr_with_ip.to_socket_addr().unwrap();
+        assert_eq!(socker_addr_with_hostname, socker_addr_with_ip);
     }
 }

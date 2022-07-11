@@ -68,15 +68,21 @@ impl ServerDetect for Vec<Server> {
 
 impl ServerDetect for Vec<ServerAddr> {
     fn fetch(&self) -> Vec<Server> {
+        // Servers to return
         let mut servers = Vec::with_capacity(self.len());
+        // check whether each server's ip is found or not
         let mut servers_found_status = vec![false; self.len()];
+        // maximum number of hostname resolutions that can be tried
         let max_try_time = self.len() * 2;
+        // number of hostname resolutions that have been tried
         let mut times = 0;
         while servers.len() < self.len() && times < max_try_time {
             for (id, server_addr) in self.iter().enumerate() {
+                // the server's ip has been resolved
                 if servers_found_status[id] {
                     continue;
                 }
+                // add resolved server to target server vec
                 if let Ok(socket_addr) = server_addr.to_socket_addr() {
                     servers_found_status[id] = true;
                     let server = Server { id: id as u64, addr: socket_addr };
@@ -84,7 +90,10 @@ impl ServerDetect for Vec<ServerAddr> {
                 }
             }
             times += 1;
-            sleep(Duration::from_secs(1));
+            // sleep for dns server's update
+            if servers.len() < self.len() {
+                sleep(Duration::from_secs(1));
+            }
         }
         servers
     }
