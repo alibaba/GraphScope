@@ -66,6 +66,7 @@ jobs:
         source ${HOME}/.bashrc
         cd ${GITHUB_WORKSPACE}/research/query_service/ir/compiler
         make build
+        cd ${GITHUB_WORKSPACE}/research/query_service/ir/compiler
         cargo fmt -- --check
 
     - name: Build Ir on Vineyard Store
