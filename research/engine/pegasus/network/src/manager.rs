@@ -72,11 +72,7 @@ impl ServerDetect for Vec<ServerAddr> {
         let mut servers = Vec::with_capacity(self.len());
         // check whether each server's ip is found or not
         let mut servers_found_status = vec![false; self.len()];
-        // maximum number of hostname resolutions that can be tried
-        let max_try_time = self.len() * 2;
-        // number of hostname resolutions that have been tried
-        let mut times = 0;
-        while servers.len() < self.len() && times < max_try_time {
+        while servers.len() < self.len() {
             for (id, server_addr) in self.iter().enumerate() {
                 // the server's ip has been resolved
                 if servers_found_status[id] {
@@ -87,9 +83,10 @@ impl ServerDetect for Vec<ServerAddr> {
                     servers_found_status[id] = true;
                     let server = Server { id: id as u64, addr: socket_addr };
                     servers.push(server);
+                } else {
+                    error!("Fail to resolve hostname: {}", server_addr.get_hostname());
                 }
             }
-            times += 1;
             // sleep for dns server's update
             if servers.len() < self.len() {
                 sleep(Duration::from_secs(1));
