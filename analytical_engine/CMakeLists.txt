@@ -11,21 +11,17 @@ project(analytical_engine LANGUAGES C CXX VERSION ${GRAPHSCOPE_ANALYTICAL_VERSIO
 
 option(NETWORKX "networkx on?" ON)
 option(BUILD_TESTS "Build unit test" ON)
-option(ENABLE_JAVA_SDK "Build with support for java sdk" OFF)
+option(ENABLE_JAVA_SDK "Build with support for java sdk" ON)
 
 # Get system processor
 execute_process(COMMAND uname -m OUTPUT_VARIABLE SYSTEM_PROCESSOR)
 string(REGEX REPLACE "\n$" "" SYSTEM_PROCESSOR "${SYSTEM_PROCESSOR}")
 
-if (APPLE AND ENABLE_JAVA_SDK)
-    message(FATAL_ERROR "Java SDK is currently not supported on macos.")
-endif()
-
 if (ENABLE_JAVA_SDK)
     #check whether we are using clang.
     if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
         message(STATUS "Using Clang compiler: ${CMAKE_CXX_COMPILER}")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto -fforce-emit-vtables")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fforce-emit-vtables -flto")
     else()
         message(WARNING "Compiling with ENABLE_JAVA_SDK ON expects a minimum Clang-11 compiler, "
                         "current compiler is ${CMAKE_CXX_COMPILER}. The build process will continue, "
@@ -282,7 +278,7 @@ if (BUILD_TESTS)
         target_include_directories(run_java_app PRIVATE core utils apps)
         target_compile_definitions(run_java_app PUBLIC ENABLE_JAVA_SDK)
         target_link_libraries(run_java_app gs_proto ${GFLAGS_LIBRARIES} ${MPI_CXX_LIBRARIES} ${JNI_LIBRARIES} ${Boost_LIBRARIES}
-                                       ${CMAKE_DL_LIBS} ${GLOG_LIBRARIES} ${VINEYARD_LIBRARIES})
+                                       ${CMAKE_DL_LIBS} ${VINEYARD_LIBRARIES})
 
         #java app benchmark
         add_executable(property_graph_java_app_benchmarks benchmarks/property_graph_java_app_benchmarks.cc core/java/javasdk.cc core/object/dynamic.cc)
@@ -391,6 +387,8 @@ macro(install_gsa_headers header_target)
             FILES_MATCHING                      # install only matched files
             PATTERN "*.h"                       # select header files
             PATTERN "*.hpp"                     # select C++ template header files
+            PATTERN "*javasdk.cc"               # javasdk.cc is needed to compile graph frame
+            PATTERN "*dynamic.cc"               # dynamic.cc is needed to compile graph frame
             )
 endmacro()
 

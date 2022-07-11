@@ -374,7 +374,7 @@ class JavaContextBase : public grape::ContextBase {
                "/usr/local/lib:/opt/graphscope/lib:%s", jar_name.c_str());
     }
 
-    return std::move(std::string(user_class_path));
+    return std::string(user_class_path);
   }
   // user library name should be absolute
   std::string parseParamsAndSetupJVMEnv(const std::string& params,

@@ -13,15 +13,25 @@ option(ENABLE_PREGEL_COMBINE "Whether enable combinator in pregel app." False)
 option(NETWORKX "networkx on?" ON)
 option(ENABLE_JAVA_SDK "Build with support for java sdk" OFF)
 
+execute_process(COMMAND uname -m OUTPUT_VARIABLE SYSTEM_PROCESSOR)
+string(REGEX REPLACE "\n$" "" SYSTEM_PROCESSOR "${SYSTEM_PROCESSOR}")
+
+if (SYSTEM_PROCESSOR MATCHES "arm64")
+    set(CMAKE_OSX_ARCHITECTURES "arm64")
+endif()
+
 if (ENABLE_JAVA_SDK)
     #check whether we are using clang.
     if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
         message(STATUS "Using Clang compiler: ${CMAKE_CXX_COMPILER}")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto -fforce-emit-vtables")
-        message(STATUS "Try to find ld.lld under same directory..")
-        get_filename_component(COMPILER_DIR ${CMAKE_CXX_COMPILER} DIRECTORY)
-        message(STATUS "Obtain directory: ${COMPILER_DIR}")
-        set(CMAKE_JNI_LINKER_FLAGS "-fuse-ld=${COMPILER_DIR}/ld.lld -Xlinker -mllvm=-lto-embed-bitcode")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fforce-emit-vtables")    
+        if (NOT APPLE)
+            message(STATUS "Try to find ld.lld under same directory..")
+            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto")
+            get_filename_component(COMPILER_DIR ${CMAKE_CXX_COMPILER} DIRECTORY)
+            message(STATUS "Obtain directory: ${COMPILER_DIR}")
+            set(CMAKE_JNI_LINKER_FLAGS "-fuse-ld=${COMPILER_DIR}/ld.lld -Xlinker -mllvm=-lto-embed-bitcode")
+        endif()
     else()
          message(WARNING "Compiling with ENABLE_JAVA_SDK ON expects a minimum Clang-11 compiler, "
                          "current compiler is ${CMAKE_CXX_COMPILER}. The build process will continue, "
@@ -200,6 +210,12 @@ find_package(OpenMP QUIET)
 set(ANALYTICAL_ENGINE_FRAME_DIR "${ANALYTICAL_ENGINE_HOME}/include/graphscope/frame")
 set(FRAME_NAME $_frame_name)
 
+# set javasdk.cc--------------------------------------------------------------
+set(ANALYTICAL_JAVASDK_CC "${ANALYTICAL_ENGINE_HOME}/include/graphscope/core/java/javasdk.cc")
+# set dynamic.cc
+set(DYNAMIC_CC "${ANALYTICAL_ENGINE_HOME}/include/graphscope/core/object/dynamic.cc")
+
+
 # find Glog---------------------------------------------------------------------
 if(GRAPHSCOPE_ANALYTICAL_HOME)
     include("${ANALYTICAL_ENGINE_HOME}/${CMAKE_INSTALL_LIBDIR}/cmake/graphscope-analytical/cmake/FindGlog.cmake")
@@ -333,7 +349,11 @@ elseif (JAVA_PIE_APP)
         message(STATUS "Skip llvm4jni bitcode gen since lib is not compiled with clang or run-llvm4jni.sh not found")
     endif()
 elseif (PROPERTY_GRAPH_FRAME)
-    add_library(${FRAME_NAME} SHARED ${ANALYTICAL_ENGINE_FRAME_DIR}/property_graph_frame.cc)
+    set(SOURCES ${ANALYTICAL_ENGINE_FRAME_DIR}/property_graph_frame.cc ${DYNAMIC_CC})
+    if (ENABLE_JAVA_SDK)
+        set(SOURCES ${SOURCES} ${ANALYTICAL_JAVASDK_CC})
+    endif()
+    add_library(${FRAME_NAME} SHARED ${SOURCES})
     target_compile_definitions(${FRAME_NAME} PRIVATE _GRAPH_TYPE=$_graph_type)
     if (ENABLE_JAVA_SDK)
         target_compile_definitions(${FRAME_NAME} PRIVATE ENABLE_JAVA_SDK)

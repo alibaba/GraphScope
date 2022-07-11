@@ -21,8 +21,6 @@ namespace gs {
 
 static constexpr const char* GRAPHSCOPE_CLASS_LOADER =
     "com/alibaba/graphscope/runtime/GraphScopeClassLoader";
-static constexpr const char* GIRAPH_COMPUTATION_FACTORY =
-    "com/alibaba/graphscope/factory/GiraphComputationFactory";
 static JavaVM* _jvm = NULL;
 // gs_class_loader_clz is the class in grape-runtime, providing basic
 // utilities for creating class loader and load classes with this
