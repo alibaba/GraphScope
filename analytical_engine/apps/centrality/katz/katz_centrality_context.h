@@ -33,7 +33,8 @@ class KatzCentralityContext : public grape::VertexDataContext<FRAG_T, double> {
         x(this->data()) {}
 
   void Init(grape::ParallelMessageManager& messages, double alpha, double beta,
-            double tolerance, int max_round, bool normalized) {
+            double tolerance, int max_round, bool normalized,
+            int degree_threshold = std::numeric_limits<int>::max()) {
     auto& frag = this->fragment();
     auto vertices = frag.Vertices();
 
@@ -45,6 +46,7 @@ class KatzCentralityContext : public grape::VertexDataContext<FRAG_T, double> {
     this->tolerance = tolerance;
     this->max_round = max_round;
     this->normalized = normalized;
+    this->degree_threshold = degree_threshold;
     curr_round = 0;
   }
 
@@ -66,6 +68,7 @@ class KatzCentralityContext : public grape::VertexDataContext<FRAG_T, double> {
   double global_sum;
   int max_round;
   bool normalized;
+  int degree_threshold;
   int curr_round;
 };
 }  // namespace gs

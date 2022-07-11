@@ -7,9 +7,7 @@ pub struct Timer {
 
 impl Timer {
     pub fn new() -> Self {
-        Timer {
-            timer: Instant::now(),
-        }
+        Timer { timer: Instant::now() }
     }
 
     pub fn elapsed_ms(&self) -> f64 {

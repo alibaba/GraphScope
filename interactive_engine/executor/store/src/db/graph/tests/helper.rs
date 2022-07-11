@@ -1,9 +1,10 @@
 #![allow(dead_code)]
-use crate::db::api::*;
 use std::collections::{HashMap, HashSet};
+
 use super::data;
 use crate::db::api::multi_version_graph::MultiVersionGraph;
-use crate::db::api::types::{RocksVertex, Property, PropertyValue, RocksEdge};
+use crate::db::api::types::{Property, PropertyValue, RocksEdge, RocksVertex};
+use crate::db::api::*;
 
 pub struct GraphTestHelper<'a, G: MultiVersionGraph> {
     graph: &'a G,
@@ -26,57 +27,96 @@ impl<'a, G: MultiVersionGraph> GraphTestHelper<'a, G> {
         }
     }
 
-    pub fn insert_vertex(&mut self, si: SnapshotId, label: LabelId, list: Vec<VertexId>) -> GraphResult<()> {
+    pub fn insert_vertex(
+        &mut self, si: SnapshotId, label: LabelId, list: Vec<VertexId>,
+    ) -> GraphResult<()> {
         self.check_and_update_si(si)?;
-        let type_def = self.vertex_type_manager.get_type_def(si, label).unwrap();
+        let type_def = self
+            .vertex_type_manager
+            .get_type_def(si, label)
+            .unwrap();
         for id in list {
             let properties = data::gen_vertex_properties(si, label, id, type_def);
-            self.graph.insert_overwrite_vertex(si, id, label, &properties)?;
-            self.vertex_data.insert(si, id, label, properties);
+            self.graph
+                .insert_overwrite_vertex(si, id, label, &properties)?;
+            self.vertex_data
+                .insert(si, id, label, properties);
         }
         Ok(())
     }
 
-    pub fn update_vertex(&mut self, si: SnapshotId, label: LabelId, list: Vec<VertexId>) -> GraphResult<()> {
+    pub fn update_vertex(
+        &mut self, si: SnapshotId, label: LabelId, list: Vec<VertexId>,
+    ) -> GraphResult<()> {
         self.check_and_update_si(si)?;
-        let type_def = self.vertex_type_manager.get_type_def(si, label).unwrap();
+        let type_def = self
+            .vertex_type_manager
+            .get_type_def(si, label)
+            .unwrap();
         for id in list {
             let properties = data::gen_vertex_update_properties(si, label, id, type_def);
-            self.graph.insert_update_vertex(si, id, label, &properties)?;
-            self.vertex_data.update(si, id, label, properties);
+            self.graph
+                .insert_update_vertex(si, id, label, &properties)?;
+            self.vertex_data
+                .update(si, id, label, properties);
         }
         Ok(())
     }
 
-    pub fn insert_edge<I: Iterator<Item=EdgeId>>(&mut self, si: SnapshotId, edge_kind: &EdgeKind, list: I) -> GraphResult<()> {
+    pub fn insert_edge<I: Iterator<Item = EdgeId>>(
+        &mut self, si: SnapshotId, edge_kind: &EdgeKind, list: I,
+    ) -> GraphResult<()> {
         self.check_and_update_si(si)?;
-        assert!(self.edge_type_manager.edge_type_alive_at(si, edge_kind));
-        let type_def = self.edge_type_manager.get_type_def(si, edge_kind.edge_label_id).unwrap();
+        assert!(self
+            .edge_type_manager
+            .edge_type_alive_at(si, edge_kind));
+        let type_def = self
+            .edge_type_manager
+            .get_type_def(si, edge_kind.edge_label_id)
+            .unwrap();
         for id in list {
             let properties = data::gen_edge_properties(si, edge_kind, &id, type_def);
-            self.graph.insert_overwrite_edge(si, id, edge_kind, true, &properties)?;
-            self.graph.insert_overwrite_edge(si, id, edge_kind, false, &properties)?;
-            self.edge_data.insert(si, id, edge_kind, properties);
+            self.graph
+                .insert_overwrite_edge(si, id, edge_kind, true, &properties)?;
+            self.graph
+                .insert_overwrite_edge(si, id, edge_kind, false, &properties)?;
+            self.edge_data
+                .insert(si, id, edge_kind, properties);
         }
         Ok(())
     }
 
-    pub fn update_edge<I: Iterator<Item=EdgeId>>(&mut self, si: SnapshotId, edge_kind: &EdgeKind, list: I) -> GraphResult<()> {
+    pub fn update_edge<I: Iterator<Item = EdgeId>>(
+        &mut self, si: SnapshotId, edge_kind: &EdgeKind, list: I,
+    ) -> GraphResult<()> {
         self.check_and_update_si(si)?;
-        assert!(self.edge_type_manager.edge_type_alive_at(si, edge_kind));
-        let type_def = self.edge_type_manager.get_type_def(si, edge_kind.edge_label_id).unwrap();
+        assert!(self
+            .edge_type_manager
+            .edge_type_alive_at(si, edge_kind));
+        let type_def = self
+            .edge_type_manager
+            .get_type_def(si, edge_kind.edge_label_id)
+            .unwrap();
         for id in list {
             let properties = data::gen_edge_update_properties(si, edge_kind, &id, &type_def);
-            self.graph.insert_update_edge(si, id, edge_kind,  true, &properties)?;
-            self.graph.insert_update_edge(si, id, edge_kind,  false, &properties)?;
-            self.edge_data.update(si, id, edge_kind, properties);
+            self.graph
+                .insert_update_edge(si, id, edge_kind, true, &properties)?;
+            self.graph
+                .insert_update_edge(si, id, edge_kind, false, &properties)?;
+            self.edge_data
+                .update(si, id, edge_kind, properties);
         }
         Ok(())
     }
 
-    pub fn delete_vertex(&mut self, si: SnapshotId, label: LabelId, list: Vec<VertexId>) -> GraphResult<()> {
+    pub fn delete_vertex(
+        &mut self, si: SnapshotId, label: LabelId, list: Vec<VertexId>,
+    ) -> GraphResult<()> {
         self.check_and_update_si(si)?;
-        assert!(self.vertex_type_manager.get_type_def(si, label).is_some());
+        assert!(self
+            .vertex_type_manager
+            .get_type_def(si, label)
+            .is_some());
         for id in list {
             self.vertex_data.delete(si, id, label);
             self.graph.delete_vertex(si, id, label)?;
@@ -84,58 +124,86 @@ impl<'a, G: MultiVersionGraph> GraphTestHelper<'a, G> {
         Ok(())
     }
 
-    pub fn delete_edge(&mut self, si: SnapshotId, edge_kind: &EdgeKind, list: Vec<EdgeId>) -> GraphResult<()> {
+    pub fn delete_edge(
+        &mut self, si: SnapshotId, edge_kind: &EdgeKind, list: Vec<EdgeId>,
+    ) -> GraphResult<()> {
         self.check_and_update_si(si)?;
-        assert!(self.edge_type_manager.edge_type_alive_at(si, edge_kind));
+        assert!(self
+            .edge_type_manager
+            .edge_type_alive_at(si, edge_kind));
         for id in list {
             self.edge_data.delete(si, id, edge_kind);
-            self.graph.delete_edge(si, id, edge_kind, true)?;
-            self.graph.delete_edge(si, id, edge_kind, false)?;
+            self.graph
+                .delete_edge(si, id, edge_kind, true)?;
+            self.graph
+                .delete_edge(si, id, edge_kind, false)?;
         }
         Ok(())
     }
 
-    pub fn create_vertex_type(&mut self, si: SnapshotId, schema_version: i64, label: LabelId, type_def: TypeDef) -> GraphResult<()> {
+    pub fn create_vertex_type(
+        &mut self, si: SnapshotId, schema_version: i64, label: LabelId, type_def: TypeDef,
+    ) -> GraphResult<()> {
         self.check_and_update_si(si)?;
-        self.graph.create_vertex_type(si, schema_version, label, &type_def, schema_version)?;
-        self.vertex_type_manager.create(si, label, type_def.clone());
+        self.graph
+            .create_vertex_type(si, schema_version, label, &type_def, schema_version)?;
+        self.vertex_type_manager
+            .create(si, label, type_def.clone());
         Ok(())
     }
 
-    pub fn drop_vertex_type(&mut self, si: SnapshotId, schema_version: i64, label: LabelId) -> GraphResult<()> {
+    pub fn drop_vertex_type(
+        &mut self, si: SnapshotId, schema_version: i64, label: LabelId,
+    ) -> GraphResult<()> {
         self.check_and_update_si(si)?;
         self.vertex_data.drop(si, label);
-        self.graph.drop_vertex_type(si, schema_version, label)?;
+        self.graph
+            .drop_vertex_type(si, schema_version, label)?;
         self.vertex_type_manager.drop(si, label);
         Ok(())
     }
 
-    pub fn create_edge_type(&mut self, si: SnapshotId, schema_version: i64, label: LabelId, type_def: TypeDef) -> GraphResult<()> {
+    pub fn create_edge_type(
+        &mut self, si: SnapshotId, schema_version: i64, label: LabelId, type_def: TypeDef,
+    ) -> GraphResult<()> {
         self.check_and_update_si(si)?;
-        self.graph.create_edge_type(si, schema_version, label, &type_def)?;
-        self.edge_type_manager.create_edge(si, label, type_def);
+        self.graph
+            .create_edge_type(si, schema_version, label, &type_def)?;
+        self.edge_type_manager
+            .create_edge(si, label, type_def);
         Ok(())
     }
 
-    pub fn drop_edge_type(&mut self, si: SnapshotId, schema_version: i64, label: LabelId) -> GraphResult<()> {
+    pub fn drop_edge_type(
+        &mut self, si: SnapshotId, schema_version: i64, label: LabelId,
+    ) -> GraphResult<()> {
         self.check_and_update_si(si)?;
-        self.graph.drop_edge_type(si, schema_version, label)?;
+        self.graph
+            .drop_edge_type(si, schema_version, label)?;
         self.edge_type_manager.drop_edge(si, label);
         self.edge_data.drop_edge(si, label);
         Ok(())
     }
 
-    pub fn add_edge_kind(&mut self, si: SnapshotId, schema_version: i64, edge_kind: &EdgeKind) -> GraphResult<()> {
+    pub fn add_edge_kind(
+        &mut self, si: SnapshotId, schema_version: i64, edge_kind: &EdgeKind,
+    ) -> GraphResult<()> {
         self.check_and_update_si(si)?;
-        self.graph.add_edge_kind(si, schema_version, edge_kind, schema_version)?;
-        self.edge_type_manager.add_edge_kind(si, edge_kind);
+        self.graph
+            .add_edge_kind(si, schema_version, edge_kind, schema_version)?;
+        self.edge_type_manager
+            .add_edge_kind(si, edge_kind);
         Ok(())
     }
 
-    pub fn remove_edge_kind(&mut self, si: SnapshotId, schema_version: i64, edge_kind: &EdgeKind) -> GraphResult<()> {
+    pub fn remove_edge_kind(
+        &mut self, si: SnapshotId, schema_version: i64, edge_kind: &EdgeKind,
+    ) -> GraphResult<()> {
         self.check_and_update_si(si)?;
-        self.graph.remove_edge_kind(si, schema_version, edge_kind)?;
-        self.edge_type_manager.remove_edge_kind(si, edge_kind);
+        self.graph
+            .remove_edge_kind(si, schema_version, edge_kind)?;
+        self.edge_type_manager
+            .remove_edge_kind(si, edge_kind);
         self.edge_data.remove_edge_kind(si, edge_kind);
         Ok(())
     }
@@ -143,9 +211,17 @@ impl<'a, G: MultiVersionGraph> GraphTestHelper<'a, G> {
     pub fn check_get_vertex(&self, si: SnapshotId, label: LabelId, ids: &Vec<VertexId>) {
         for id in ids {
             let ans = self.vertex_data.get(si, *id, label).unwrap();
-            let v = self.graph.get_vertex(si, *id, Some(label), None).unwrap().unwrap();
+            let v = self
+                .graph
+                .get_vertex(si, *id, Some(label), None)
+                .unwrap()
+                .unwrap();
             check_vertex(&v, &ans);
-            let v = self.graph.get_vertex(si, *id, None, None).unwrap().unwrap();
+            let v = self
+                .graph
+                .get_vertex(si, *id, None, None)
+                .unwrap()
+                .unwrap();
             check_vertex(&v, &ans);
         }
     }
@@ -153,21 +229,39 @@ impl<'a, G: MultiVersionGraph> GraphTestHelper<'a, G> {
     pub fn check_get_vertex_none(&self, si: SnapshotId, label: LabelId, ids: &Vec<VertexId>) {
         for id in ids {
             assert!(self.vertex_data.get(si, *id, label).is_none());
-            assert!(self.graph.get_vertex(si, *id, Some(label), None).unwrap().is_none());
-            assert!(self.graph.get_vertex(si, *id, None, None).unwrap().is_none());
+            assert!(self
+                .graph
+                .get_vertex(si, *id, Some(label), None)
+                .unwrap()
+                .is_none());
+            assert!(self
+                .graph
+                .get_vertex(si, *id, None, None)
+                .unwrap()
+                .is_none());
         }
     }
 
     pub fn check_get_vertex_err(&self, si: SnapshotId, label: LabelId, ids: &Vec<VertexId>) {
         for id in ids {
-            assert!(self.graph.get_vertex(si, *id, Some(label), None).is_err());
-            assert!(self.graph.get_vertex(si, *id, None, None).unwrap().is_none());
+            assert!(self
+                .graph
+                .get_vertex(si, *id, Some(label), None)
+                .is_err());
+            assert!(self
+                .graph
+                .get_vertex(si, *id, None, None)
+                .unwrap()
+                .is_none());
         }
     }
 
     pub fn check_query_vertices(&self, si: SnapshotId, label: Option<LabelId>, mut ids: HashSet<VertexId>) {
         let mut ans = self.vertex_data.scan(si, label);
-        let mut iter = self.graph.scan_vertex(si, label, None, None).unwrap();
+        let mut iter = self
+            .graph
+            .scan_vertex(si, label, None, None)
+            .unwrap();
         while let Some(v) = iter.next() {
             let v = v.unwrap();
             assert!(ids.remove(&v.get_vertex_id()));
@@ -179,63 +273,128 @@ impl<'a, G: MultiVersionGraph> GraphTestHelper<'a, G> {
     }
 
     pub fn check_query_vertices_empty(&self, si: SnapshotId, label: LabelId) {
-        assert!(self.graph.scan_vertex(si, Some(label), None, None).unwrap().next().is_none());
+        assert!(self
+            .graph
+            .scan_vertex(si, Some(label), None, None)
+            .unwrap()
+            .next()
+            .is_none());
     }
 
-    pub fn check_get_edge<'b, I: Iterator<Item=&'b EdgeId>>(&self, si: SnapshotId, edge_kind: &EdgeKind, ids: I) {
+    pub fn check_get_edge<'b, I: Iterator<Item = &'b EdgeId>>(
+        &self, si: SnapshotId, edge_kind: &EdgeKind, ids: I,
+    ) {
         for id in ids {
-            let ans = self.edge_data.get(si, *id, edge_kind).expect(format!("{:?} not found in helper", id).as_str());
-            let e = self.graph.get_edge(si, *id, Some(edge_kind), None).unwrap().unwrap();
+            let ans = self
+                .edge_data
+                .get(si, *id, edge_kind)
+                .expect(format!("{:?} not found in helper", id).as_str());
+            let e = self
+                .graph
+                .get_edge(si, *id, Some(edge_kind), None)
+                .unwrap()
+                .unwrap();
             check_edge(&e, &ans);
-            let e = self.graph.get_edge(si, *id, None, None).unwrap().unwrap();
+            let e = self
+                .graph
+                .get_edge(si, *id, None, None)
+                .unwrap()
+                .unwrap();
             check_edge(&e, &ans);
         }
     }
 
-    pub fn check_get_edge_none<'b, I: Iterator<Item=&'b EdgeId>>(&self, si: SnapshotId, edge_kind: &EdgeKind, ids: I) {
+    pub fn check_get_edge_none<'b, I: Iterator<Item = &'b EdgeId>>(
+        &self, si: SnapshotId, edge_kind: &EdgeKind, ids: I,
+    ) {
         for id in ids {
             assert!(self.edge_data.get(si, *id, edge_kind).is_none());
-            assert!(self.graph.get_edge(si, *id, Some(edge_kind), None).unwrap().is_none());
-            assert!(self.graph.get_edge(si, *id, None, None).unwrap().is_none());
+            assert!(self
+                .graph
+                .get_edge(si, *id, Some(edge_kind), None)
+                .unwrap()
+                .is_none());
+            assert!(self
+                .graph
+                .get_edge(si, *id, None, None)
+                .unwrap()
+                .is_none());
         }
     }
 
-    pub fn check_get_edge_err<'b, I: Iterator<Item=&'b EdgeId>>(&self, si: SnapshotId, edge_kind: &EdgeKind, ids: I) {
+    pub fn check_get_edge_err<'b, I: Iterator<Item = &'b EdgeId>>(
+        &self, si: SnapshotId, edge_kind: &EdgeKind, ids: I,
+    ) {
         for id in ids {
-            assert!(self.graph.get_edge(si, *id, Some(edge_kind), None).is_err());
-            assert!(self.graph.get_edge(si, *id, None, None).unwrap().is_none());
+            assert!(self
+                .graph
+                .get_edge(si, *id, Some(edge_kind), None)
+                .is_err());
+            assert!(self
+                .graph
+                .get_edge(si, *id, None, None)
+                .unwrap()
+                .is_none());
         }
     }
 
     /// `ids`: user's answer
     pub fn check_query_edges(&self, si: SnapshotId, label: Option<LabelId>, ids: HashSet<EdgeId>) {
         let ans = self.edge_data.scan(si, label);
-        let iter = self.graph.scan_edge(si, label, None, None).unwrap();
+        let iter = self
+            .graph
+            .scan_edge(si, label, None, None)
+            .unwrap();
         check_edge_iter(iter, ans, ids);
     }
 
     pub fn check_query_edges_empty(&self, si: SnapshotId, label: Option<LabelId>) {
-        assert!(self.graph.scan_edge(si, label, None, None).unwrap().next().is_none());
+        assert!(self
+            .graph
+            .scan_edge(si, label, None, None)
+            .unwrap()
+            .next()
+            .is_none());
     }
 
-    pub fn check_get_out_edges(&self, si: SnapshotId, src_id: VertexId, label: Option<LabelId>, ids: HashSet<EdgeId>) {
+    pub fn check_get_out_edges(
+        &self, si: SnapshotId, src_id: VertexId, label: Option<LabelId>, ids: HashSet<EdgeId>,
+    ) {
         let ans = self.edge_data.get_out_edges(si, src_id, label);
-        let iter = self.graph.get_out_edges(si, src_id, label, None, None).unwrap();
+        let iter = self
+            .graph
+            .get_out_edges(si, src_id, label, None, None)
+            .unwrap();
         check_edge_iter(iter, ans, ids);
     }
 
     pub fn check_get_out_edges_empty(&self, si: SnapshotId, src_id: VertexId, label: Option<LabelId>) {
-        assert!(self.graph.get_out_edges(si, src_id, label, None, None).unwrap().next().is_none());
+        assert!(self
+            .graph
+            .get_out_edges(si, src_id, label, None, None)
+            .unwrap()
+            .next()
+            .is_none());
     }
 
-    pub fn check_get_in_edges(&self, si: SnapshotId, dst_id: VertexId, label: Option<LabelId>, ids: HashSet<EdgeId>) {
+    pub fn check_get_in_edges(
+        &self, si: SnapshotId, dst_id: VertexId, label: Option<LabelId>, ids: HashSet<EdgeId>,
+    ) {
         let ans = self.edge_data.get_in_edges(si, dst_id, label);
-        let iter = self.graph.get_in_edges(si, dst_id, label, None, None).unwrap();
+        let iter = self
+            .graph
+            .get_in_edges(si, dst_id, label, None, None)
+            .unwrap();
         check_edge_iter(iter, ans, ids);
     }
 
     pub fn check_get_in_edges_empty(&self, si: SnapshotId, dst_id: VertexId, label: Option<LabelId>) {
-        assert!(self.graph.get_in_edges(si, dst_id, label, None, None).unwrap().next().is_none());
+        assert!(self
+            .graph
+            .get_in_edges(si, dst_id, label, None, None)
+            .unwrap()
+            .next()
+            .is_none());
     }
 
     fn check_and_update_si(&mut self, si: SnapshotId) -> GraphResult<()> {
@@ -255,17 +414,21 @@ struct VertexTypeManager {
 
 impl VertexTypeManager {
     fn new() -> Self {
-        VertexTypeManager {
-            map: HashMap::new(),
-        }
+        VertexTypeManager { map: HashMap::new() }
     }
 
     fn create(&mut self, si: SnapshotId, label: LabelId, type_def: TypeDef) {
-        self.map.entry(label).or_insert_with(|| TypeInfoList::new()).add(si, type_def);
+        self.map
+            .entry(label)
+            .or_insert_with(|| TypeInfoList::new())
+            .add(si, type_def);
     }
 
     fn drop(&mut self, si: SnapshotId, label: LabelId) {
-        self.map.entry(label).or_insert_with(|| TypeInfoList::new()).drop(si);
+        self.map
+            .entry(label)
+            .or_insert_with(|| TypeInfoList::new())
+            .drop(si);
     }
 
     fn get_type_def(&self, si: SnapshotId, label: LabelId) -> Option<&TypeDef> {
@@ -280,10 +443,7 @@ struct EdgeTypeManager {
 
 impl EdgeTypeManager {
     fn new() -> Self {
-        EdgeTypeManager {
-            map: HashMap::new(),
-            type_map: HashMap::new(),
-        }
+        EdgeTypeManager { map: HashMap::new(), type_map: HashMap::new() }
     }
 
     fn get_type_def(&self, si: SnapshotId, label: LabelId) -> Option<&TypeDef> {
@@ -298,25 +458,40 @@ impl EdgeTypeManager {
         if !self.edge_alive_at(si, edge_kind.edge_label_id) {
             return false;
         }
-        self.type_map.get(&edge_kind.edge_label_id).unwrap().is_alive_at(si, edge_kind)
+        self.type_map
+            .get(&edge_kind.edge_label_id)
+            .unwrap()
+            .is_alive_at(si, edge_kind)
     }
 
     fn create_edge(&mut self, si: SnapshotId, label: LabelId, type_def: TypeDef) {
-        self.map.entry(label).or_insert_with(|| TypeInfoList::new()).add(si, type_def);
+        self.map
+            .entry(label)
+            .or_insert_with(|| TypeInfoList::new())
+            .add(si, type_def);
         self.type_map.insert(label, EdgeTypeMap::new());
     }
 
     fn add_edge_kind(&mut self, si: SnapshotId, edge_kind: &EdgeKind) {
         assert!(self.edge_alive_at(si, edge_kind.edge_label_id));
-        self.type_map.get_mut(&edge_kind.edge_label_id).unwrap().add(si, edge_kind);
+        self.type_map
+            .get_mut(&edge_kind.edge_label_id)
+            .unwrap()
+            .add(si, edge_kind);
     }
 
     fn drop_edge(&mut self, si: SnapshotId, label: LabelId) {
-        self.map.entry(label).or_insert_with(|| TypeInfoList::new()).drop(si);
+        self.map
+            .entry(label)
+            .or_insert_with(|| TypeInfoList::new())
+            .drop(si);
     }
 
     fn remove_edge_kind(&mut self, si: SnapshotId, edge_kind: &EdgeKind) {
-        self.type_map.entry(edge_kind.edge_label_id).or_insert_with(|| EdgeTypeMap::new()).remove(si, edge_kind);
+        self.type_map
+            .entry(edge_kind.edge_label_id)
+            .or_insert_with(|| EdgeTypeMap::new())
+            .remove(si, edge_kind);
     }
 }
 
@@ -326,9 +501,7 @@ struct TypeInfoList {
 
 impl TypeInfoList {
     fn new() -> Self {
-        TypeInfoList {
-            list: Vec::new(),
-        }
+        TypeInfoList { list: Vec::new() }
     }
 
     fn add(&mut self, si: SnapshotId, type_def: TypeDef) {
@@ -380,17 +553,21 @@ struct EdgeTypeMap {
 
 impl EdgeTypeMap {
     fn new() -> Self {
-        EdgeTypeMap {
-            map: HashMap::new(),
-        }
+        EdgeTypeMap { map: HashMap::new() }
     }
 
     fn add(&mut self, si: SnapshotId, edge_kind: &EdgeKind) {
-        self.map.entry(edge_kind.clone()).or_insert_with(|| EdgeTypeInfo::new(edge_kind.clone())).add(si);
+        self.map
+            .entry(edge_kind.clone())
+            .or_insert_with(|| EdgeTypeInfo::new(edge_kind.clone()))
+            .add(si);
     }
 
     fn remove(&mut self, si: SnapshotId, edge_kind: &EdgeKind) {
-        self.map.entry(edge_kind.clone()).or_insert_with(|| EdgeTypeInfo::new(edge_kind.clone())).remove(si);
+        self.map
+            .entry(edge_kind.clone())
+            .or_insert_with(|| EdgeTypeInfo::new(edge_kind.clone()))
+            .remove(si);
     }
 
     fn is_alive_at(&self, si: SnapshotId, edge_kind: &EdgeKind) -> bool {
@@ -405,10 +582,7 @@ struct EdgeTypeInfo {
 
 impl EdgeTypeInfo {
     fn new(edge_kind: EdgeKind) -> Self {
-        EdgeTypeInfo {
-            edge_kind,
-            versions: Vec::new(),
-        }
+        EdgeTypeInfo { edge_kind, versions: Vec::new() }
     }
 
     fn add(&mut self, si: SnapshotId) {
@@ -426,12 +600,12 @@ impl EdgeTypeInfo {
 
     fn remove(&mut self, si: SnapshotId) {
         if self.versions.len() == 0 || si > self.versions.last().unwrap().get_si() {
-            self.versions.push(EdgeTypeVersionInfo::Tombstone(si));
+            self.versions
+                .push(EdgeTypeVersionInfo::Tombstone(si));
             return;
         }
         panic!("invalid si");
     }
-
 
     fn is_alive_at(&self, si: SnapshotId) -> bool {
         for v in self.versions.iter().rev() {
@@ -470,23 +644,34 @@ struct VertexDataManager {
 
 impl VertexDataManager {
     fn new() -> Self {
-        VertexDataManager {
-            map: HashMap::new(),
-        }
+        VertexDataManager { map: HashMap::new() }
     }
 
-    fn insert(&mut self, si: SnapshotId, id: VertexId, label: LabelId, properties: HashMap<PropertyId, Value>) {
-        let data = self.map.entry(label).or_insert_with(|| VertexDataMap::new(label));
+    fn insert(
+        &mut self, si: SnapshotId, id: VertexId, label: LabelId, properties: HashMap<PropertyId, Value>,
+    ) {
+        let data = self
+            .map
+            .entry(label)
+            .or_insert_with(|| VertexDataMap::new(label));
         data.insert(si, id, properties);
     }
 
-    fn update(&mut self, si: SnapshotId, id: VertexId, label: LabelId, properties: HashMap<PropertyId, Value>) {
-        let data = self.map.entry(label).or_insert_with(|| VertexDataMap::new(label));
+    fn update(
+        &mut self, si: SnapshotId, id: VertexId, label: LabelId, properties: HashMap<PropertyId, Value>,
+    ) {
+        let data = self
+            .map
+            .entry(label)
+            .or_insert_with(|| VertexDataMap::new(label));
         data.update(si, id, properties);
     }
 
     fn delete(&mut self, si: SnapshotId, id: VertexId, label: LabelId) {
-        let data = self.map.entry(label).or_insert_with(|| VertexDataMap::new(label));
+        let data = self
+            .map
+            .entry(label)
+            .or_insert_with(|| VertexDataMap::new(label));
         data.delete(si, id);
     }
 
@@ -495,7 +680,8 @@ impl VertexDataManager {
     }
 
     fn scan(&self, si: SnapshotId, label: Option<LabelId>) -> HashMap<VertexId, VertexDataRef> {
-        self.map.iter()
+        self.map
+            .iter()
             .filter(|(l, _)| label.is_none() || **l == label.unwrap())
             .flat_map(|(_, data)| data.scan(si))
             .collect()
@@ -516,38 +702,46 @@ struct VertexDataMap {
 
 impl VertexDataMap {
     fn new(label: LabelId) -> Self {
-        VertexDataMap {
-            label,
-            map: HashMap::new(),
-            drop_at: INFINITE_SI,
-        }
+        VertexDataMap { label, map: HashMap::new(), drop_at: INFINITE_SI }
     }
 
     fn insert(&mut self, si: SnapshotId, id: VertexId, properties: Props) {
-        let list = self.map.entry(id).or_insert_with(|| DataList::new());
+        let list = self
+            .map
+            .entry(id)
+            .or_insert_with(|| DataList::new());
         list.insert(si, properties);
     }
 
     fn delete(&mut self, si: SnapshotId, id: VertexId) {
-        let list = self.map.entry(id).or_insert_with(|| DataList::new());
+        let list = self
+            .map
+            .entry(id)
+            .or_insert_with(|| DataList::new());
         list.delete(si);
     }
 
     fn update(&mut self, si: SnapshotId, id: VertexId, properties: Props) {
-        let list = self.map.entry(id).or_insert_with(|| DataList::new());
+        let list = self
+            .map
+            .entry(id)
+            .or_insert_with(|| DataList::new());
         list.update(si, properties);
     }
 
     fn get(&self, si: SnapshotId, id: VertexId) -> Option<VertexDataRef> {
         let list = self.map.get(&id)?;
-        list.get(si).map(|data| VertexDataRef::new(self.label, data))
+        list.get(si)
+            .map(|data| VertexDataRef::new(self.label, data))
     }
 
-    fn scan<'a>(&'a self, si: SnapshotId) -> Box<dyn Iterator<Item=(VertexId, VertexDataRef)> + 'a> {
+    fn scan<'a>(&'a self, si: SnapshotId) -> Box<dyn Iterator<Item = (VertexId, VertexDataRef)> + 'a> {
         if si >= self.drop_at {
             return Box::new(vec![].into_iter());
         }
-        let ret = self.map.iter()
+        let ret = self
+            .map
+            .iter()
             .map(move |(id, data)| (*id, data.get(si)))
             .filter(|(_id, data)| data.is_some())
             .map(move |(id, data)| (id, VertexDataRef::new(self.label, data.unwrap())));
@@ -562,10 +756,7 @@ struct VertexDataRef<'a> {
 
 impl<'a> VertexDataRef<'a> {
     fn new(label: LabelId, properties: &'a Props) -> Self {
-        VertexDataRef {
-            label,
-            properties,
-        }
+        VertexDataRef { label, properties }
     }
 }
 
@@ -594,25 +785,26 @@ struct EdgeDataManager {
 
 impl EdgeDataManager {
     fn new() -> Self {
-        EdgeDataManager {
-            map: HashMap::new(),
-        }
+        EdgeDataManager { map: HashMap::new() }
     }
 
     fn insert(&mut self, si: SnapshotId, id: EdgeId, edge_kind: &EdgeKind, properties: Props) {
-        self.map.entry(edge_kind.clone())
+        self.map
+            .entry(edge_kind.clone())
             .or_insert_with(|| EdgeDataMap::new(edge_kind.clone()))
             .insert(si, id, properties);
     }
 
     fn update(&mut self, si: SnapshotId, id: EdgeId, edge_kind: &EdgeKind, properties: Props) {
-        self.map.entry(edge_kind.clone())
+        self.map
+            .entry(edge_kind.clone())
             .or_insert_with(|| EdgeDataMap::new(edge_kind.clone()))
             .update(si, id, properties);
     }
 
     fn delete(&mut self, si: SnapshotId, id: EdgeId, edge_kind: &EdgeKind) {
-        self.map.entry(edge_kind.clone())
+        self.map
+            .entry(edge_kind.clone())
             .or_insert_with(|| EdgeDataMap::new(edge_kind.clone()))
             .delete(si, id);
     }
@@ -622,28 +814,36 @@ impl EdgeDataManager {
     }
 
     fn scan(&self, si: SnapshotId, label: Option<LabelId>) -> HashMap<EdgeId, EdgeDataRef> {
-        self.map.iter()
+        self.map
+            .iter()
             .filter(|(edge_kind, _)| label.is_none() || edge_kind.edge_label_id == label.unwrap())
             .flat_map(|(_, datas)| datas.scan(si))
             .collect()
     }
 
-    fn get_out_edges(&self, si: SnapshotId, src_id: VertexId, label: Option<LabelId>) -> HashMap<EdgeId, EdgeDataRef> {
-        self.map.iter()
+    fn get_out_edges(
+        &self, si: SnapshotId, src_id: VertexId, label: Option<LabelId>,
+    ) -> HashMap<EdgeId, EdgeDataRef> {
+        self.map
+            .iter()
             .filter(|(edge_kind, _)| label.is_none() || edge_kind.edge_label_id == label.unwrap())
             .flat_map(|(_, data)| data.get_out_edges(si, src_id))
             .collect()
     }
 
-    fn get_in_edges(&self, si: SnapshotId, dst_id: VertexId, label: Option<LabelId>) -> HashMap<EdgeId, EdgeDataRef> {
-        self.map.iter()
+    fn get_in_edges(
+        &self, si: SnapshotId, dst_id: VertexId, label: Option<LabelId>,
+    ) -> HashMap<EdgeId, EdgeDataRef> {
+        self.map
+            .iter()
             .filter(|(edge_kind, _)| label.is_none() || edge_kind.edge_label_id == label.unwrap())
             .flat_map(|(_, data)| data.get_in_edges(si, dst_id))
             .collect()
     }
 
     fn drop_edge(&mut self, si: SnapshotId, label: LabelId) {
-        self.map.iter_mut()
+        self.map
+            .iter_mut()
             .filter(|(t, _)| t.edge_label_id == label)
             .for_each(|(_, map)| map.drop_at = si);
     }
@@ -661,48 +861,62 @@ struct EdgeDataMap {
 
 impl EdgeDataMap {
     fn new(edge_kind: EdgeKind) -> Self {
-        EdgeDataMap {
-            edge_kind,
-            map: HashMap::new(),
-            drop_at: INFINITE_SI,
-        }
+        EdgeDataMap { edge_kind, map: HashMap::new(), drop_at: INFINITE_SI }
     }
 
     fn insert(&mut self, si: SnapshotId, id: EdgeId, properties: Props) {
-        self.map.entry(id).or_insert_with(|| DataList::new()).insert(si, properties);
+        self.map
+            .entry(id)
+            .or_insert_with(|| DataList::new())
+            .insert(si, properties);
     }
 
     fn update(&mut self, si: SnapshotId, id: EdgeId, properties: Props) {
-        self.map.entry(id).or_insert_with(|| DataList::new()).update(si, properties);
+        self.map
+            .entry(id)
+            .or_insert_with(|| DataList::new())
+            .update(si, properties);
     }
 
     fn delete(&mut self, si: SnapshotId, id: EdgeId) {
-        self.map.entry(id).or_insert_with(|| DataList::new()).delete(si);
+        self.map
+            .entry(id)
+            .or_insert_with(|| DataList::new())
+            .delete(si);
     }
 
     fn get(&self, si: SnapshotId, id: EdgeId) -> Option<EdgeDataRef> {
         if si >= self.drop_at {
             return None;
         }
-        self.map.get(&id)?.get(si).map(|properties| EdgeDataRef::new(&self.edge_kind, properties))
+        self.map
+            .get(&id)?
+            .get(si)
+            .map(|properties| EdgeDataRef::new(&self.edge_kind, properties))
     }
 
-    fn scan<'a>(&'a self, si: SnapshotId) -> Box<dyn Iterator<Item=(EdgeId, EdgeDataRef)> + 'a> {
+    fn scan<'a>(&'a self, si: SnapshotId) -> Box<dyn Iterator<Item = (EdgeId, EdgeDataRef)> + 'a> {
         if si >= self.drop_at {
             return Box::new(vec![].into_iter());
         }
-        let ret = self.map.iter()
+        let ret = self
+            .map
+            .iter()
             .map(move |(id, data)| (*id, data.get(si)))
             .filter(|(_, data)| data.is_some())
             .map(move |(id, data)| (id, EdgeDataRef::new(&self.edge_kind, data.unwrap())));
         Box::new(ret)
     }
 
-    fn get_out_edges<'a>(&'a self, si: SnapshotId, src_id: VertexId) -> Box<dyn Iterator<Item=(EdgeId, EdgeDataRef)> + 'a> {
+    fn get_out_edges<'a>(
+        &'a self, si: SnapshotId, src_id: VertexId,
+    ) -> Box<dyn Iterator<Item = (EdgeId, EdgeDataRef)> + 'a> {
         if si >= self.drop_at {
             return Box::new(vec![].into_iter());
         }
-        let ret = self.map.iter()
+        let ret = self
+            .map
+            .iter()
             .filter(move |(id, _)| id.src_id == src_id)
             .map(move |(id, data)| (*id, data.get(si)))
             .filter(|(_, data)| data.is_some())
@@ -710,11 +924,15 @@ impl EdgeDataMap {
         Box::new(ret)
     }
 
-    fn get_in_edges<'a>(&'a self, si: SnapshotId, dst_id: VertexId) -> Box<dyn Iterator<Item=(EdgeId, EdgeDataRef)> + 'a> {
+    fn get_in_edges<'a>(
+        &'a self, si: SnapshotId, dst_id: VertexId,
+    ) -> Box<dyn Iterator<Item = (EdgeId, EdgeDataRef)> + 'a> {
         if si >= self.drop_at {
             return Box::new(vec![].into_iter());
         }
-        let ret = self.map.iter()
+        let ret = self
+            .map
+            .iter()
             .filter(move |(id, _)| id.dst_id == dst_id)
             .map(move |(id, data)| (*id, data.get(si)))
             .filter(|(_, data)| data.is_some())
@@ -730,10 +948,7 @@ struct EdgeDataRef<'a> {
 
 impl<'a> EdgeDataRef<'a> {
     fn new(edge_kind: &'a EdgeKind, properties: &'a Props) -> Self {
-        EdgeDataRef {
-            edge_kind,
-            properties,
-        }
+        EdgeDataRef { edge_kind, properties }
     }
 }
 
@@ -756,7 +971,9 @@ fn check_edge<E: RocksEdge>(e: &E, ans: &EdgeDataRef) {
     assert_eq!(set.len(), ans.properties.len());
 }
 
-fn check_edge_iter<E: RocksEdge>(mut iter: Records<E>, mut ans: HashMap<EdgeId, EdgeDataRef>, mut ids: HashSet<EdgeId>) {
+fn check_edge_iter<E: RocksEdge>(
+    mut iter: Records<E>, mut ans: HashMap<EdgeId, EdgeDataRef>, mut ids: HashSet<EdgeId>,
+) {
     while let Some(edge) = iter.next() {
         let e = edge.unwrap();
         assert!(ids.remove(e.get_edge_id()), "find an edge not in user's answer, this edge is {:?}", e);
@@ -773,9 +990,7 @@ struct DataList {
 
 impl DataList {
     fn new() -> Self {
-        DataList {
-            list: Vec::new(),
-        }
+        DataList { list: Vec::new() }
     }
 
     fn insert(&mut self, si: SnapshotId, properties: Props) {
@@ -827,7 +1042,6 @@ impl DataList {
         }
         None
     }
-
 }
 
 enum Data {

@@ -89,11 +89,7 @@ spec:
             - name: MAXGRAPH_JAVA_OPTS
               value: {{ .Values.javaOpts | quote }}
             - name: EXECUTOR
-              value: {{ if eq .Values.executor "gaia" -}}
-                     "store-gaia"
-                     {{- else -}}
-                     "store"
-                     {{- end }}
+              value: "store-gaia"
             - name: ROLE
               value: "store"
             - name: FRONTEND_COUNT

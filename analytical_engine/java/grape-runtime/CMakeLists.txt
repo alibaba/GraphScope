@@ -14,6 +14,24 @@
 cmake_minimum_required(VERSION 3.1)
 project(GRAPE-JNI)
 
+execute_process(COMMAND uname -m OUTPUT_VARIABLE SYSTEM_PROCESSOR)
+string(REGEX REPLACE "\n$" "" SYSTEM_PROCESSOR "${SYSTEM_PROCESSOR}")
+
+if (APPLE)
+    if (POLICY CMP0056)
+        cmake_policy(SET CMP0056 NEW)
+    endif ()
+    if (SYSTEM_PROCESSOR MATCHES "arm64")
+    	message(STATUS "Building on arch arm64")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L/opt/homebrew/lib")
+        set(CMAKE_OSX_ARCHITECTURES "arm64")
+        set(CMAKE_HOST_SYSTEM_PROCESSOR "arm64")
+    else()
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L/usr/local/lib")
+    endif()
+endif ()
+
+
 #Check compiler is clang or gnu
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     message(STATUS "Using Clang compiler: ${CMAKE_CXX_COMPILER}")
@@ -21,7 +39,10 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     message(STATUS "Try to find ld.lld under same directory..")
     get_filename_component(COMPILER_DIR ${CMAKE_CXX_COMPILER} DIRECTORY)
     message(STATUS "Obtain directory: ${COMPILER_DIR}")
-    set(CMAKE_JNI_LINKER_FLAGS "-fuse-ld=${COMPILER_DIR}/ld.lld -Xlinker -mllvm=-lto-embed-bitcode")
+    if (NOT APPLE)
+        #ld.lld can't work on mac.
+        set(CMAKE_JNI_LINKER_FLAGS "-fuse-ld=${COMPILER_DIR}/ld.lld -Xlinker -mllvm=-lto-embed-bitcode")
+    endif()
 else()
     message(STATUS "Using a non-clang compiler will lose performance evaluation provided by LLVM4JNI. Clang-11 compiler is recommended")
     message(STATUS "Your compiler is ${CMAKE_CXX_COMPILER}")
@@ -50,8 +71,6 @@ include_directories(${VINEYARD_INCLUDE_DIRS})
 find_package(graphscope-analytical)
 include_directories(SYSTEM ${GRAPHSCOPE_ANALYTICAL_INCLUDE_DIRS})
 include_directories(SYSTEM ${GRAPHSCOPE_ANALYTICAL_INCLUDE_DIRS}/proto)
-
-find_package(Threads REQUIRED)
 
 add_library(grape-jni SHARED ${SOURCES})
 target_compile_definitions(grape-jni PUBLIC ENABLE_JAVA_SDK)

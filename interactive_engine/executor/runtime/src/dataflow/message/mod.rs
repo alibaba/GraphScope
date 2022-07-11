@@ -1,12 +1,12 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //!     http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,22 +16,29 @@
 pub mod primitive;
 pub mod subgraph;
 
-use maxgraph_store::api::prelude::{Vertex, Edge, Property};
-use maxgraph_common::proto::message::*;
-use maxgraph_common::util::hash::murmur_hash64;
-
-use dataflow::message::primitive::Write;
-use dataflow::message::primitive::Read;
-
-use abomonation_derive::Abomonation;
-use protobuf::{RepeatedField, parse_from_bytes};
-use protobuf::Message;
-use itertools::Itertools;
-use rand::{thread_rng, Rng};
-use maxgraph_store::api::graph_partition::GraphPartitionManager;
 use std::collections::HashMap;
 use std::sync::Arc;
-use execution::build_empty_router;
+
+use abomonation_derive::Abomonation;
+use dataflow::message::primitive::Read;
+use dataflow::message::primitive::Write;
+use itertools::Itertools;
+use log::error;
+use maxgraph_common::proto::message::*;
+use maxgraph_common::util::hash::murmur_hash64;
+use maxgraph_store::api::graph_partition::GraphPartitionManager;
+use maxgraph_store::api::prelude::{Edge, Property, Vertex};
+use protobuf::Message;
+use protobuf::{parse_from_bytes, RepeatedField};
+use rand::{thread_rng, Rng};
+
+#[inline]
+pub fn build_empty_router() -> impl Fn(&i64) -> i32 + 'static {
+    move |_| {
+        // info!("generate store id with 0");
+        0
+    }
+}
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, Abomonation)]
 pub enum RawMessageType {
@@ -63,7 +70,10 @@ impl RawMessageType {
         }
     }
 
-    pub fn to_proto<PR>(&self, process_route: Option<&PR>) -> MessageType where PR: Fn(&i64) -> i32 + 'static {
+    pub fn to_proto<PR>(&self, process_route: Option<&PR>) -> MessageType
+    where
+        PR: Fn(&i64) -> i32 + 'static,
+    {
         match self {
             RawMessageType::VERTEX => MessageType::MSG_VERTEX_TYPE,
             RawMessageType::EDGE => MessageType::MSG_EDGE_TYPE,
@@ -107,13 +117,15 @@ impl RawMessage {
     }
 
     pub fn from_edge<E: Edge>(e: E, is_out: bool, fetch_prop_flag: bool) -> Self {
-        let mut message = RawMessage::from_edge_id(e.get_edge_id(),
-                                                   e.get_label_id() as i32,
-                                                   is_out,
-                                                   e.get_src_id(),
-                                                   e.get_src_label_id() as i32,
-                                                   e.get_dst_id(),
-                                                   e.get_dst_label_id() as i32);
+        let mut message = RawMessage::from_edge_id(
+            e.get_edge_id(),
+            e.get_label_id() as i32,
+            is_out,
+            e.get_src_id(),
+            e.get_src_label_id() as i32,
+            e.get_dst_id(),
+            e.get_dst_label_id() as i32,
+        );
         if fetch_prop_flag {
             let mut prop_list = vec![];
             for (prop_id, prop_val) in e.get_properties() {
@@ -128,13 +140,10 @@ impl RawMessage {
         message
     }
 
-    pub fn from_edge_id(id: i64,
-                        label_id: i32,
-                        is_out: bool,
-                        src_id: i64,
-                        src_label_id: i32,
-                        dst_id: i64,
-                        dst_label_id: i32) -> Self {
+    pub fn from_edge_id(
+        id: i64, label_id: i32, is_out: bool, src_id: i64, src_label_id: i32, dst_id: i64,
+        dst_label_id: i32,
+    ) -> Self {
         let mut message = RawMessage::new(RawMessageType::EDGE);
         message.set_id(IdMessage::new(label_id, id));
         message.set_edge(ExtraEdgeEntity {
@@ -154,45 +163,38 @@ impl RawMessage {
     }
 
     pub fn from_prop_type(prop: Property, propid: i32) -> Self {
-        let mut message = RawMessage::from_value_type(ValuePayload::from_native(prop).0, RawMessageType::PROP);
-        message.set_id(IdMessage {
-            label_id: 1,
-            id: propid as i64,
-        });
+        let mut message =
+            RawMessage::from_value_type(ValuePayload::from_native(prop).0, RawMessageType::PROP);
+        message.set_id(IdMessage { label_id: 1, id: propid as i64 });
         message
     }
 
     pub fn from_vertex_prop_type(prop: Property, propid: i32) -> Self {
-        let mut message = RawMessage::from_value_type(ValuePayload::from_native(prop).0, RawMessageType::PROP);
-        message.set_id(IdMessage {
-            label_id: 0,
-            id: propid as i64,
-        });
+        let mut message =
+            RawMessage::from_value_type(ValuePayload::from_native(prop).0, RawMessageType::PROP);
+        message.set_id(IdMessage { label_id: 0, id: propid as i64 });
         message
     }
 
     pub fn from_prop_entity(prop: PropertyEntity) -> Self {
         let mut message = RawMessage::new(RawMessageType::PROP);
-        message.set_id(IdMessage {
-            label_id: 1,
-            id: prop.prop_id as i64,
-        });
+        message.set_id(IdMessage { label_id: 1, id: prop.prop_id as i64 });
         message.set_value(prop.value);
         message
     }
 
     pub fn from_vertex_prop_entity(prop: PropertyEntity) -> Self {
         let mut message = RawMessage::new(RawMessageType::PROP);
-        message.set_id(IdMessage {
-            label_id: 0,
-            id: prop.prop_id as i64,
-        });
+        message.set_id(IdMessage { label_id: 0, id: prop.prop_id as i64 });
         message.set_value(prop.value);
         message
     }
 
     pub fn from_error(error: ErrorCode, str_val: String) -> Self {
-        RawMessage::from_value_type(ValuePayload::String(format!("error[{:?}] message[{:?}]", error, str_val)), RawMessageType::ERROR)
+        RawMessage::from_value_type(
+            ValuePayload::String(format!("error[{:?}] message[{:?}]", error, str_val)),
+            RawMessageType::ERROR,
+        )
     }
 
     pub fn from_value(value: ValuePayload) -> Self {
@@ -219,10 +221,10 @@ impl RawMessage {
     }
 
     pub fn from_path_entry(label_list: Option<Vec<i32>>, message: RawMessage) -> Self {
-        RawMessage::from_value_type(ValuePayload::PathEntry(Box::new(ExtraPathEntity {
-            label_list,
-            message,
-        })), RawMessageType::PATHENTRY)
+        RawMessage::from_value_type(
+            ValuePayload::PathEntry(Box::new(ExtraPathEntity { label_list, message })),
+            RawMessageType::PATHENTRY,
+        )
     }
 
     pub fn from_raw_base_data_entity(raw_base: &mut RawBaseDataEntity) -> Self {
@@ -249,10 +251,7 @@ impl RawMessage {
         let message_type = RawMessageType::from_proto(message_proto.get_message_type());
         let mut message = RawMessage::new(message_type);
         if message_proto.get_id() != 0 || message_proto.get_type_id() != 0 {
-            message.set_id(IdMessage {
-                label_id: message_proto.get_type_id(),
-                id: message_proto.get_id(),
-            });
+            message.set_id(IdMessage { label_id: message_proto.get_type_id(), id: message_proto.get_id() });
         }
         message.set_bulk_value(message_proto.get_bulk());
         if message_proto.has_extra() {
@@ -276,13 +275,19 @@ impl RawMessage {
                     if extra_proto.has_extra_value_prop() {
                         let value_prop = extra_proto.get_extra_value_prop();
                         if value_prop.has_value_entity() {
-                            Some(PropertyValueEntity::VALUE(ValuePayload::from_proto(value_prop.get_value_entity(), message_type)))
+                            Some(PropertyValueEntity::VALUE(ValuePayload::from_proto(
+                                value_prop.get_value_entity(),
+                                message_type,
+                            )))
                         } else {
                             let mut prop_list = Vec::new();
                             for prop_proto in value_prop.get_prop_list() {
                                 prop_list.push(PropertyEntity {
                                     prop_id: prop_proto.get_prop_id(),
-                                    value: ValuePayload::from_proto(prop_proto.get_prop_value(), RawMessageType::VALUE),
+                                    value: ValuePayload::from_proto(
+                                        prop_proto.get_prop_value(),
+                                        RawMessageType::VALUE,
+                                    ),
                                 });
                             }
                             Some(PropertyValueEntity::PROPLIST(prop_list))
@@ -383,10 +388,20 @@ impl RawMessage {
         let empty_fn = build_empty_router();
         if let Some(ref mut extra) = self.extra {
             if let Some(ref mut extend) = extra.extra_extend {
-                extend.extra_key = Some(extra_key.to_proto(Some(&empty_fn)).write_to_bytes().unwrap());
+                extend.extra_key = Some(
+                    extra_key
+                        .to_proto(Some(&empty_fn))
+                        .write_to_bytes()
+                        .unwrap(),
+                );
             } else {
                 extra.extra_extend = Some(ExtraExtendEntity {
-                    extra_key: Some(extra_key.to_proto(Some(&empty_fn)).write_to_bytes().unwrap()),
+                    extra_key: Some(
+                        extra_key
+                            .to_proto(Some(&empty_fn))
+                            .write_to_bytes()
+                            .unwrap(),
+                    ),
                     label_list: None,
                     path_list: None,
                 });
@@ -396,7 +411,12 @@ impl RawMessage {
                 edge_entity: None,
                 prop_value: None,
                 extra_extend: Some(ExtraExtendEntity {
-                    extra_key: Some(extra_key.to_proto(Some(&empty_fn)).write_to_bytes().unwrap()),
+                    extra_key: Some(
+                        extra_key
+                            .to_proto(Some(&empty_fn))
+                            .write_to_bytes()
+                            .unwrap(),
+                    ),
                     label_list: None,
                     path_list: None,
                 }),
@@ -427,11 +447,8 @@ impl RawMessage {
             if let Some(ref mut extend) = extra.extra_extend {
                 extend.extra_key = Some(key);
             } else {
-                extra.extra_extend = Some(ExtraExtendEntity {
-                    extra_key: Some(key),
-                    label_list: None,
-                    path_list: None,
-                });
+                extra.extra_extend =
+                    Some(ExtraExtendEntity { extra_key: Some(key), label_list: None, path_list: None });
             }
         } else {
             self.extra = Some(ExtraMessage {
@@ -466,11 +483,8 @@ impl RawMessage {
         if let Some(ref mut extra) = self.extra {
             extra.edge_entity = Some(edge);
         } else {
-            self.extra = Some(ExtraMessage {
-                edge_entity: Some(edge),
-                prop_value: None,
-                extra_extend: None,
-            });
+            self.extra =
+                Some(ExtraMessage { edge_entity: Some(edge), prop_value: None, extra_extend: None });
         }
     }
 
@@ -478,11 +492,8 @@ impl RawMessage {
         if let Some(ref mut extra) = self.extra {
             extra.prop_value = Some(prop);
         } else {
-            self.extra = Some(ExtraMessage {
-                edge_entity: None,
-                prop_value: Some(prop),
-                extra_extend: None,
-            });
+            self.extra =
+                Some(ExtraMessage { edge_entity: None, prop_value: Some(prop), extra_extend: None });
         }
     }
 
@@ -554,30 +565,25 @@ impl RawMessage {
         if let Some(ref mut extra) = self.extra {
             if let Some(ref mut extend) = extra.extra_extend {
                 if let Some(ref mut path_list) = extend.path_list {
-                    add_path_list_bulk(path_list,
-                                       ExtraPathEntity {
-                                           label_list,
-                                           message: value,
-                                       },
-                                       self.bulk);
+                    add_path_list_bulk(
+                        path_list,
+                        ExtraPathEntity { label_list, message: value },
+                        self.bulk,
+                    );
                 } else {
                     extend.path_list = Some(build_path_list_bulk(
-                        ExtraPathEntity {
-                            label_list,
-                            message: value,
-                        },
-                        self.bulk));
+                        ExtraPathEntity { label_list, message: value },
+                        self.bulk,
+                    ));
                 }
             } else {
                 extra.extra_extend = Some(ExtraExtendEntity {
                     extra_key: None,
                     label_list: None,
                     path_list: Some(build_path_list_bulk(
-                        ExtraPathEntity {
-                            label_list,
-                            message: value,
-                        },
-                        self.bulk)),
+                        ExtraPathEntity { label_list, message: value },
+                        self.bulk,
+                    )),
                 });
             }
         } else {
@@ -588,11 +594,9 @@ impl RawMessage {
                     extra_key: None,
                     label_list: None,
                     path_list: Some(build_path_list_bulk(
-                        ExtraPathEntity {
-                            label_list,
-                            message: value,
-                        },
-                        self.bulk)),
+                        ExtraPathEntity { label_list, message: value },
+                        self.bulk,
+                    )),
                 }),
             });
         }
@@ -602,26 +606,14 @@ impl RawMessage {
         if let Some(ref mut extra) = self.extra {
             if let Some(ref mut extend) = extra.extra_extend {
                 if let Some(ref mut label_list) = extend.label_list {
-                    label_list.push(
-                        ExtraLabelEntity {
-                            label_id,
-                            message: value,
-                        });
+                    label_list.push(ExtraLabelEntity { label_id, message: value });
                 } else {
-                    extend.label_list = Some(vec![
-                        ExtraLabelEntity {
-                            label_id,
-                            message: value,
-                        }]);
+                    extend.label_list = Some(vec![ExtraLabelEntity { label_id, message: value }]);
                 }
             } else {
                 extra.extra_extend = Some(ExtraExtendEntity {
                     extra_key: None,
-                    label_list: Some(vec![
-                        ExtraLabelEntity {
-                            label_id,
-                            message: value,
-                        }]),
+                    label_list: Some(vec![ExtraLabelEntity { label_id, message: value }]),
                     path_list: None,
                 });
             }
@@ -631,11 +623,7 @@ impl RawMessage {
                 prop_value: None,
                 extra_extend: Some(ExtraExtendEntity {
                     extra_key: None,
-                    label_list: Some(vec![
-                        ExtraLabelEntity {
-                            label_id,
-                            message: value,
-                        }]),
+                    label_list: Some(vec![ExtraLabelEntity { label_id, message: value }]),
                     path_list: None,
                 }),
             });
@@ -813,9 +801,7 @@ impl RawMessage {
             if let Some(ref mut extend) = extra.extra_extend {
                 if let Some(ref mut label_list) = extend.label_list {
                     for i in 0..label_list.len() {
-                        let curr_label_id = {
-                            label_list.get(i).unwrap().label_id
-                        };
+                        let curr_label_id = { label_list.get(i).unwrap().label_id };
                         if curr_label_id == label_id {
                             return Some(label_list.remove(i));
                         }
@@ -926,11 +912,8 @@ impl RawMessage {
         if let Some(ref mut extra) = self.extra {
             extra.extra_extend = Some(extend);
         } else {
-            self.extra = Some(ExtraMessage {
-                edge_entity: None,
-                prop_value: None,
-                extra_extend: Some(extend),
-            });
+            self.extra =
+                Some(ExtraMessage { edge_entity: None, prop_value: None, extra_extend: Some(extend) });
         }
     }
 
@@ -952,27 +935,18 @@ impl RawMessage {
                 extra.extra_extend = Some(extend);
             }
         } else {
-            self.extra = Some(ExtraMessage {
-                edge_entity: None,
-                prop_value: None,
-                extra_extend: Some(extend),
-            });
+            self.extra =
+                Some(ExtraMessage { edge_entity: None, prop_value: None, extra_extend: Some(extend) });
         }
     }
 
     pub fn add_native_property(&mut self, propid: i32, prop: Property) {
-        let prop_entity = PropertyEntity {
-            prop_id: propid,
-            value: ValuePayload::from_native(prop).0,
-        };
+        let prop_entity = PropertyEntity { prop_id: propid, value: ValuePayload::from_native(prop).0 };
         self.add_property_entity(prop_entity);
     }
 
     pub fn add_property_value(&mut self, propid: i32, value: ValuePayload) {
-        let prop_entity = PropertyEntity {
-            prop_id: propid,
-            value,
-        };
+        let prop_entity = PropertyEntity { prop_id: propid, value };
         self.add_property_entity(prop_entity);
     }
 
@@ -1019,10 +993,7 @@ impl RawMessage {
     pub fn build_message_value(&self) -> RawMessage {
         let mut value = RawMessage::new(self.message_type);
         if let Some(ref id) = self.id {
-            value.set_id(IdMessage {
-                label_id: id.label_id,
-                id: id.id,
-            });
+            value.set_id(IdMessage { label_id: id.label_id, id: id.id });
         }
         if let Some(proplist) = self.get_prop_list() {
             value.set_proplist(proplist.to_vec());
@@ -1061,12 +1032,19 @@ impl RawMessage {
         if self.bulk > bulk_value {
             self.bulk = bulk_value;
             if let Some(mut path_list) = self.take_path_list() {
-                self.set_extend_path_list(path_list.drain(0..bulk_value as usize).collect());
+                self.set_extend_path_list(
+                    path_list
+                        .drain(0..bulk_value as usize)
+                        .collect(),
+                );
             }
         }
     }
 
-    pub fn to_proto<PR>(&self, process_route: Option<&PR>) -> RawMessageProto where PR: Fn(&i64) -> i32 + 'static {
+    pub fn to_proto<PR>(&self, process_route: Option<&PR>) -> RawMessageProto
+    where
+        PR: Fn(&i64) -> i32 + 'static,
+    {
         let mut proto = RawMessageProto::new();
         proto.set_message_type(self.message_type.to_proto(process_route));
         if self.message_type == RawMessageType::VERTEX {
@@ -1098,7 +1076,12 @@ impl RawMessage {
                         prop_value_proto.set_value_entity(v.to_proto(process_route));
                     }
                     PropertyValueEntity::PROPLIST(proplist) => {
-                        prop_value_proto.set_prop_list(RepeatedField::from_vec(proplist.iter().map(move |v| v.to_proto(process_route)).collect_vec()));
+                        prop_value_proto.set_prop_list(RepeatedField::from_vec(
+                            proplist
+                                .iter()
+                                .map(move |v| v.to_proto(process_route))
+                                .collect_vec(),
+                        ));
                     }
                 }
                 extra_proto.set_extra_value_prop(prop_value_proto);
@@ -1106,17 +1089,28 @@ impl RawMessage {
             if let Some(ref extra_extend) = extra.extra_extend {
                 let mut path_label_proto = ExtraPathLabelEntityProto::new();
                 if let Some(ref label_list) = extra_extend.label_list {
-                    path_label_proto.set_label_list(RepeatedField::from_vec(label_list.iter().map(move |v| v.to_proto(process_route)).collect_vec()));
+                    path_label_proto.set_label_list(RepeatedField::from_vec(
+                        label_list
+                            .iter()
+                            .map(move |v| v.to_proto(process_route))
+                            .collect_vec(),
+                    ));
                 }
                 if let Some(ref path_list) = extra_extend.path_list {
-                    path_label_proto.set_path_list(RepeatedField::from_vec(path_list.iter()
-                        .map(move |v| {
-                            let mut path_entity_list = PathEntityListProto::new();
-                            path_entity_list.set_path_val_list(RepeatedField::from_vec(v.iter().map(|vv|
-                                vv.to_proto(process_route)).collect_vec()));
-                            path_entity_list
-                        })
-                        .collect_vec()));
+                    path_label_proto.set_path_list(RepeatedField::from_vec(
+                        path_list
+                            .iter()
+                            .map(move |v| {
+                                let mut path_entity_list = PathEntityListProto::new();
+                                path_entity_list.set_path_val_list(RepeatedField::from_vec(
+                                    v.iter()
+                                        .map(|vv| vv.to_proto(process_route))
+                                        .collect_vec(),
+                                ));
+                                path_entity_list
+                            })
+                            .collect_vec(),
+                    ));
                 }
                 extra_proto.set_extra_path_label(path_label_proto);
 
@@ -1132,7 +1126,9 @@ impl RawMessage {
     }
 }
 
-fn parse_label_list_proto(label_list_proto: &mut RepeatedField<LabelEntityProto>) -> Option<Vec<ExtraLabelEntity>> {
+fn parse_label_list_proto(
+    label_list_proto: &mut RepeatedField<LabelEntityProto>,
+) -> Option<Vec<ExtraLabelEntity>> {
     let mut label_list = vec![];
     for label_proto in label_list_proto.iter_mut() {
         label_list.push(ExtraLabelEntity {
@@ -1147,7 +1143,9 @@ fn parse_label_list_proto(label_list_proto: &mut RepeatedField<LabelEntityProto>
     return Some(label_list);
 }
 
-fn parse_path_list_proto(path_list_proto: &mut RepeatedField<PathEntityListProto>) -> Option<Vec<Vec<ExtraPathEntity>>> {
+fn parse_path_list_proto(
+    path_list_proto: &mut RepeatedField<PathEntityListProto>,
+) -> Option<Vec<Vec<ExtraPathEntity>>> {
     let path_list = vec![];
     for path_proto_list in path_list_proto.iter_mut() {
         let mut path_value_list = vec![];
@@ -1161,10 +1159,7 @@ fn parse_path_list_proto(path_list_proto: &mut RepeatedField<PathEntityListProto
                     Some(curr_label_list)
                 }
             };
-            path_value_list.push(ExtraPathEntity {
-                label_list,
-                message,
-            });
+            path_value_list.push(ExtraPathEntity { label_list, message });
         }
     }
     if path_list.is_empty() {
@@ -1181,9 +1176,15 @@ fn add_path_list_bulk(path_list: &mut Vec<Vec<ExtraPathEntity>>, path_entity: Ex
             path_list.push(vec![]);
         }
         for i in 0..bulk - 1 {
-            path_list.get_mut(i as usize).unwrap().push(path_entity.clone());
+            path_list
+                .get_mut(i as usize)
+                .unwrap()
+                .push(path_entity.clone());
         }
-        path_list.get_mut((bulk - 1) as usize).unwrap().push(path_entity);
+        path_list
+            .get_mut((bulk - 1) as usize)
+            .unwrap()
+            .push(path_entity);
     }
 }
 
@@ -1227,26 +1228,11 @@ pub struct ExtraEdgeEntity {
 
 impl ExtraEdgeEntity {
     pub fn new() -> Self {
-        ExtraEdgeEntity {
-            src_label: 0,
-            src_id: 0,
-            dst_label: 0,
-            dst_id: 0,
-            is_out: false,
-        }
+        ExtraEdgeEntity { src_label: 0, src_id: 0, dst_label: 0, dst_id: 0, is_out: false }
     }
 
-    pub fn from_vertex(src_id: i64,
-                       src_label: i32,
-                       dst_id: i64,
-                       dst_label: i32) -> Self {
-        ExtraEdgeEntity {
-            src_label,
-            src_id,
-            dst_label,
-            dst_id,
-            is_out: true,
-        }
+    pub fn from_vertex(src_id: i64, src_label: i32, dst_id: i64, dst_label: i32) -> Self {
+        ExtraEdgeEntity { src_label, src_id, dst_label, dst_id, is_out: true }
     }
 
     pub fn set_src_label(&mut self, src_label: i32) {
@@ -1304,10 +1290,7 @@ pub struct PropertyEntity {
 
 impl PropertyEntity {
     pub fn new(prop_id: i32, value: ValuePayload) -> Self {
-        PropertyEntity {
-            prop_id,
-            value,
-        }
+        PropertyEntity { prop_id, value }
     }
 
     pub fn get_propid(&self) -> i32 {
@@ -1322,7 +1305,10 @@ impl PropertyEntity {
         self.value
     }
 
-    pub fn to_proto<PR>(&self, process_route: Option<&PR>) -> PropertyEntityProto where PR: Fn(&i64) -> i32 + 'static {
+    pub fn to_proto<PR>(&self, process_route: Option<&PR>) -> PropertyEntityProto
+    where
+        PR: Fn(&i64) -> i32 + 'static,
+    {
         let mut prop_proto = PropertyEntityProto::new();
         prop_proto.set_prop_id(self.prop_id);
         prop_proto.set_prop_value(self.value.to_proto(process_route));
@@ -1367,171 +1353,182 @@ impl ValuePayload {
             Property::String(v) => (ValuePayload::String(v), RawMessageType::VALUE),
             Property::Date(v) => (ValuePayload::Date(v), RawMessageType::VALUE),
             Property::ListInt(v) => {
-                let list = v.into_iter()
-                    .map(move |v| RawMessage::from_value(ValuePayload::Int(v))).collect_vec();
+                let list = v
+                    .into_iter()
+                    .map(move |v| RawMessage::from_value(ValuePayload::Int(v)))
+                    .collect_vec();
                 (ValuePayload::List(list), RawMessageType::LIST)
             }
             Property::ListLong(v) => {
-                let list = v.into_iter()
-                    .map(move |v| RawMessage::from_value(ValuePayload::Long(v))).collect_vec();
+                let list = v
+                    .into_iter()
+                    .map(move |v| RawMessage::from_value(ValuePayload::Long(v)))
+                    .collect_vec();
                 (ValuePayload::List(list), RawMessageType::LIST)
             }
             Property::ListString(v) => {
-                let list = v.into_iter()
-                    .map(move |v| RawMessage::from_value(ValuePayload::String(v))).collect_vec();
+                let list = v
+                    .into_iter()
+                    .map(move |v| RawMessage::from_value(ValuePayload::String(v)))
+                    .collect_vec();
                 (ValuePayload::List(list), RawMessageType::LIST)
             }
             Property::ListFloat(v) => {
-                let list = v.into_iter()
-                    .map(move |v| RawMessage::from_value(ValuePayload::Float(v.into_bytes()))).collect_vec();
+                let list = v
+                    .into_iter()
+                    .map(move |v| RawMessage::from_value(ValuePayload::Float(v.into_bytes())))
+                    .collect_vec();
                 (ValuePayload::List(list), RawMessageType::LIST)
             }
             Property::ListDouble(v) => {
-                let list = v.into_iter()
-                    .map(move |v| RawMessage::from_value(ValuePayload::Double(v.into_bytes()))).collect_vec();
+                let list = v
+                    .into_iter()
+                    .map(move |v| RawMessage::from_value(ValuePayload::Double(v.into_bytes())))
+                    .collect_vec();
                 (ValuePayload::List(list), RawMessageType::LIST)
             }
             Property::ListBytes(v) => {
-                let list = v.into_iter()
-                    .map(move |v| RawMessage::from_value(ValuePayload::Bytes(v))).collect_vec();
+                let list = v
+                    .into_iter()
+                    .map(move |v| RawMessage::from_value(ValuePayload::Bytes(v)))
+                    .collect_vec();
                 (ValuePayload::List(list), RawMessageType::LIST)
             }
             _ => (ValuePayload::Bytes(vec![]), RawMessageType::ERROR),
         }
     }
 
-
     /// get boolean value
     pub fn get_bool(&self) -> Result<bool, String> {
         match self {
-            &ValuePayload::Bool(b) => { Ok(b) }
-            _ => { Err(format!("get bool value fail from property=>{:?}", self)) }
+            &ValuePayload::Bool(b) => Ok(b),
+            _ => Err(format!("get bool value fail from property=>{:?}", self)),
         }
     }
 
     /// get char value
     pub fn get_char(&self) -> Result<u8, String> {
         match self {
-            &ValuePayload::Char(c) => { Ok(c) }
-            _ => { Err(format!("get char value fail from property=>{:?}", self)) }
+            &ValuePayload::Char(c) => Ok(c),
+            _ => Err(format!("get char value fail from property=>{:?}", self)),
         }
     }
 
     /// get short value
     pub fn get_short(&self) -> Result<i16, String> {
         match self {
-            &ValuePayload::Short(c) => { Ok(c) }
-            _ => { Err(format!("get short value fail from property=>{:?}", self)) }
+            &ValuePayload::Short(c) => Ok(c),
+            _ => Err(format!("get short value fail from property=>{:?}", self)),
         }
     }
 
     /// get int value
     pub fn get_int(&self) -> Result<i32, String> {
         match self {
-            &ValuePayload::Int(i) => { Ok(i) }
-            _ => { Err(format!("get int value fail from property=>{:?}", self)) }
+            &ValuePayload::Int(i) => Ok(i),
+            _ => Err(format!("get int value fail from property=>{:?}", self)),
         }
     }
 
     /// get long value
     pub fn get_long(&self) -> Result<i64, String> {
         match self {
-            &ValuePayload::Int(l) => { Ok(l as i64) }
-            &ValuePayload::Long(l) => { Ok(l) }
-            _ => { Err(format!("get long value fail from property=>{:?}", self)) }
+            &ValuePayload::Int(l) => Ok(l as i64),
+            &ValuePayload::Long(l) => Ok(l),
+            _ => Err(format!("get long value fail from property=>{:?}", self)),
         }
     }
 
     /// get float value
     pub fn get_float(&self) -> Result<f32, String> {
         match self {
-            &ValuePayload::Int(i) => { Ok(i as f32) }
-            &ValuePayload::Float(ref f) => { Ok(f32::parse_bytes(f)) }
-            _ => { Err(format!("get float value fail from property=>{:?}", self)) }
+            &ValuePayload::Int(i) => Ok(i as f32),
+            &ValuePayload::Float(ref f) => Ok(f32::parse_bytes(f)),
+            _ => Err(format!("get float value fail from property=>{:?}", self)),
         }
     }
 
     /// get double value
     pub fn get_double(&self) -> Result<f64, String> {
         match self {
-            &ValuePayload::Int(d) => { Ok(d as f64) }
-            &ValuePayload::Long(d) => { Ok(d as f64) }
-            &ValuePayload::Float(ref d) => { Ok(f32::parse_bytes(d) as f64) }
-            &ValuePayload::Double(ref d) => { Ok(f64::parse_bytes(d)) }
-            _ => { Err(format!("get double value fail from property=>{:?}", self)) }
+            &ValuePayload::Int(d) => Ok(d as f64),
+            &ValuePayload::Long(d) => Ok(d as f64),
+            &ValuePayload::Float(ref d) => Ok(f32::parse_bytes(d) as f64),
+            &ValuePayload::Double(ref d) => Ok(f64::parse_bytes(d)),
+            _ => Err(format!("get double value fail from property=>{:?}", self)),
         }
     }
 
     /// get string ref value
     pub fn get_string(&self) -> Result<&String, String> {
         match self {
-            &ValuePayload::String(ref s) => { Ok(s) }
-            &ValuePayload::Date(ref s) => { Ok(s) }
-            _ => { Err(format!("get string ref value fail from property=>{:?}", self)) }
+            &ValuePayload::String(ref s) => Ok(s),
+            &ValuePayload::Date(ref s) => Ok(s),
+            _ => Err(format!("get string ref value fail from property=>{:?}", self)),
         }
     }
 
     /// get bytes
     pub fn get_bytes(&self) -> Result<&Vec<u8>, String> {
         match self {
-            &ValuePayload::Bytes(ref bytes) => { Ok(bytes) }
-            _ => { Err(format!("get bytes fail from property=>{:?}", self)) }
+            &ValuePayload::Bytes(ref bytes) => Ok(bytes),
+            _ => Err(format!("get bytes fail from property=>{:?}", self)),
         }
     }
 
     pub fn get_list(&self) -> Result<&Vec<RawMessage>, String> {
         match self {
-            &ValuePayload::List(ref list) => { Ok(list) }
-            _ => { Err(format!("get list fail from property=>{:?}", self)) }
+            &ValuePayload::List(ref list) => Ok(list),
+            _ => Err(format!("get list fail from property=>{:?}", self)),
         }
     }
 
     pub fn take_list(self) -> Result<Vec<RawMessage>, String> {
         match self {
-            ValuePayload::List(list) => { Ok(list) }
-            _ => { Err(format!("get list fail from property=>{:?}", self)) }
+            ValuePayload::List(list) => Ok(list),
+            _ => Err(format!("get list fail from property=>{:?}", self)),
         }
     }
 
     pub fn take_list_long(self) -> Result<Vec<i64>, String> {
         match self {
-            ValuePayload::ListLong(list) => { Ok(list) }
-            _ => { Err(format!("get long list fail=>{:?}", self)) }
+            ValuePayload::ListLong(list) => Ok(list),
+            _ => Err(format!("get long list fail=>{:?}", self)),
         }
     }
 
     pub fn get_map(&self) -> Result<&Vec<ExtraEntryEntity>, String> {
         match self {
-            &ValuePayload::Map(ref map) => { Ok(map) }
-            _ => { Err(format!("get map fail from property=>{:?}", self)) }
+            &ValuePayload::Map(ref map) => Ok(map),
+            _ => Err(format!("get map fail from property=>{:?}", self)),
         }
     }
 
     pub fn take_map(self) -> Result<Vec<ExtraEntryEntity>, String> {
         match self {
-            ValuePayload::Map(map) => { Ok(map) }
-            _ => { Err(format!("get map fail from property=>{:?}", self)) }
+            ValuePayload::Map(map) => Ok(map),
+            _ => Err(format!("get map fail from property=>{:?}", self)),
         }
     }
 
     pub fn get_entry(&self) -> Result<&ExtraEntryEntity, String> {
         match self {
             &ValuePayload::Entry(ref entry) => Ok(entry),
-            _ => Err(format!("get entry fail from property=>{:?}", self))
+            _ => Err(format!("get entry fail from property=>{:?}", self)),
         }
     }
 
     pub fn take_entry(self) -> Result<ExtraEntryEntity, String> {
         match self {
             ValuePayload::Entry(entry) => Ok(entry),
-            _ => Err(format!("get entry fail from property=>{:?}", self))
+            _ => Err(format!("get entry fail from property=>{:?}", self)),
         }
     }
 
     pub fn take_path_entry(self) -> Result<Box<ExtraPathEntity>, String> {
         match self {
             ValuePayload::PathEntry(entry) => Ok(entry),
-            _ => Err(format!("get path entry fail from property=>{:?}", self))
+            _ => Err(format!("get path entry fail from property=>{:?}", self)),
         }
     }
 
@@ -1558,51 +1555,58 @@ impl ValuePayload {
             VariantType::VT_DOUBLE => {
                 return ValuePayload::Double(value_proto.get_payload().to_vec());
             }
-            VariantType::VT_BINARY => {
-                match message_type {
-                    RawMessageType::LIST => {
-                        let mut value_list = Vec::new();
-                        let mut list_proto = parse_from_bytes::<ListProto>(value_proto.get_payload()).expect("parse map proto");
-                        for mut value_proto in list_proto.take_value().into_iter() {
-                            value_list.push(RawMessage::from_proto(&mut value_proto));
-                        }
-                        return ValuePayload::List(value_list);
+            VariantType::VT_BINARY => match message_type {
+                RawMessageType::LIST => {
+                    let mut value_list = Vec::new();
+                    let mut list_proto =
+                        parse_from_bytes::<ListProto>(value_proto.get_payload()).expect("parse map proto");
+                    for mut value_proto in list_proto.take_value().into_iter() {
+                        value_list.push(RawMessage::from_proto(&mut value_proto));
                     }
-                    RawMessageType::MAP => {
-                        let mut map_value_list = Vec::new();
-                        let mut map_proto = parse_from_bytes::<MapProto>(value_proto.get_payload()).expect("parse map proto");
-                        for mut entry_proto in map_proto.take_entry_list().into_iter() {
-                            map_value_list.push(ExtraEntryEntity::new(RawMessage::from_proto(entry_proto.mut_key()),
-                                                                      RawMessage::from_proto(entry_proto.mut_value())));
-                        }
-                        return ValuePayload::Map(map_value_list);
-                    }
-                    RawMessageType::ENTRY => {
-                        let mut entry_proto = parse_from_bytes::<EntryProto>(value_proto.get_payload()).expect("parse entry proto");
-                        let entry_entity = ExtraEntryEntity::new(RawMessage::from_proto(entry_proto.mut_key()),
-                                                                 RawMessage::from_proto(entry_proto.mut_value()));
-                        return ValuePayload::Entry(entry_entity);
-                    }
-                    RawMessageType::PATHENTRY => {
-                        let mut path_entry_proto = parse_from_bytes::<PathEntityProto>(value_proto.get_payload()).expect("parse path entry proto");
-                        let label_id_list = path_entry_proto.get_label_list().to_vec();
-                        let path_entry = ExtraPathEntity {
-                            label_list: {
-                                if label_id_list.is_empty() {
-                                    None
-                                } else {
-                                    Some(label_id_list)
-                                }
-                            },
-                            message: RawMessage::from_proto(path_entry_proto.mut_message()),
-                        };
-                        return ValuePayload::PathEntry(Box::new(path_entry));
-                    }
-                    _ => {
-                        return ValuePayload::Bytes(value_proto.get_payload().to_vec());
-                    }
+                    return ValuePayload::List(value_list);
                 }
-            }
+                RawMessageType::MAP => {
+                    let mut map_value_list = Vec::new();
+                    let mut map_proto =
+                        parse_from_bytes::<MapProto>(value_proto.get_payload()).expect("parse map proto");
+                    for mut entry_proto in map_proto.take_entry_list().into_iter() {
+                        map_value_list.push(ExtraEntryEntity::new(
+                            RawMessage::from_proto(entry_proto.mut_key()),
+                            RawMessage::from_proto(entry_proto.mut_value()),
+                        ));
+                    }
+                    return ValuePayload::Map(map_value_list);
+                }
+                RawMessageType::ENTRY => {
+                    let mut entry_proto = parse_from_bytes::<EntryProto>(value_proto.get_payload())
+                        .expect("parse entry proto");
+                    let entry_entity = ExtraEntryEntity::new(
+                        RawMessage::from_proto(entry_proto.mut_key()),
+                        RawMessage::from_proto(entry_proto.mut_value()),
+                    );
+                    return ValuePayload::Entry(entry_entity);
+                }
+                RawMessageType::PATHENTRY => {
+                    let mut path_entry_proto =
+                        parse_from_bytes::<PathEntityProto>(value_proto.get_payload())
+                            .expect("parse path entry proto");
+                    let label_id_list = path_entry_proto.get_label_list().to_vec();
+                    let path_entry = ExtraPathEntity {
+                        label_list: {
+                            if label_id_list.is_empty() {
+                                None
+                            } else {
+                                Some(label_id_list)
+                            }
+                        },
+                        message: RawMessage::from_proto(path_entry_proto.mut_message()),
+                    };
+                    return ValuePayload::PathEntry(Box::new(path_entry));
+                }
+                _ => {
+                    return ValuePayload::Bytes(value_proto.get_payload().to_vec());
+                }
+            },
             VariantType::VT_STRING => {
                 return ValuePayload::String(String::parse_bytes(value_proto.get_payload()));
             }
@@ -1616,7 +1620,10 @@ impl ValuePayload {
         }
     }
 
-    pub fn to_proto<PR>(&self, process_route: Option<&PR>) -> ValueEntityProto where PR: Fn(&i64) -> i32 + 'static {
+    pub fn to_proto<PR>(&self, process_route: Option<&PR>) -> ValueEntityProto
+    where
+        PR: Fn(&i64) -> i32 + 'static,
+    {
         let mut value_proto = ValueEntityProto::new();
         match self {
             ValuePayload::Bool(v) => {
@@ -1662,7 +1669,9 @@ impl ValuePayload {
             ValuePayload::List(v) => {
                 let mut list_proto = ListProto::new();
                 for m in v {
-                    list_proto.mut_value().push(m.to_proto(process_route));
+                    list_proto
+                        .mut_value()
+                        .push(m.to_proto(process_route));
                 }
                 value_proto.set_value_type(VariantType::VT_BINARY);
                 value_proto.set_payload(list_proto.write_to_bytes().unwrap());
@@ -1670,18 +1679,28 @@ impl ValuePayload {
             ValuePayload::Map(v) => {
                 let mut map_proto = MapProto::new();
                 for m in v {
-                    map_proto.mut_entry_list().push(m.to_proto(process_route));
+                    map_proto
+                        .mut_entry_list()
+                        .push(m.to_proto(process_route));
                 }
                 value_proto.set_value_type(VariantType::VT_BINARY);
                 value_proto.set_payload(map_proto.write_to_bytes().unwrap());
             }
             ValuePayload::Entry(v) => {
                 value_proto.set_value_type(VariantType::VT_BINARY);
-                value_proto.set_payload(v.to_proto(process_route).write_to_bytes().unwrap());
+                value_proto.set_payload(
+                    v.to_proto(process_route)
+                        .write_to_bytes()
+                        .unwrap(),
+                );
             }
             ValuePayload::PathEntry(v) => {
                 value_proto.set_value_type(VariantType::VT_BINARY);
-                value_proto.set_payload(v.to_proto(process_route).write_to_bytes().unwrap());
+                value_proto.set_payload(
+                    v.to_proto(process_route)
+                        .write_to_bytes()
+                        .unwrap(),
+                );
             }
             _ => {
                 error!("cant support to proto");
@@ -1699,10 +1718,7 @@ pub struct ExtraEntryEntity {
 
 impl ExtraEntryEntity {
     pub fn new(key: RawMessage, value: RawMessage) -> Self {
-        ExtraEntryEntity {
-            key: Box::new(key),
-            value: Box::new(value),
-        }
+        ExtraEntryEntity { key: Box::new(key), value: Box::new(value) }
     }
 
     pub fn get_key(&self) -> &Box<RawMessage> {
@@ -1721,7 +1737,10 @@ impl ExtraEntryEntity {
         &self.value
     }
 
-    pub fn to_proto<PR>(&self, process_route: Option<&PR>) -> EntryProto where PR: Fn(&i64) -> i32 + 'static {
+    pub fn to_proto<PR>(&self, process_route: Option<&PR>) -> EntryProto
+    where
+        PR: Fn(&i64) -> i32 + 'static,
+    {
         let mut entry = EntryProto::new();
         entry.set_key(self.key.to_proto(process_route));
         entry.set_value(self.value.to_proto(process_route));
@@ -1758,27 +1777,25 @@ impl ExtraKeyEntity {
                 0
             }
         };
-        ExtraKeyEntity {
-            rand_key: rand_key,
-            message,
-        }
+        ExtraKeyEntity { rand_key: rand_key, message }
     }
 
     pub fn from_payload(payload: &Vec<u8>) -> Self {
-        let mut extra_proto = parse_from_bytes::<ExtraKeyEntityProto>(payload).expect("parse extra key proto");
+        let mut extra_proto =
+            parse_from_bytes::<ExtraKeyEntityProto>(payload).expect("parse extra key proto");
         let rand_key = extra_proto.get_key_rand();
         let key_message = RawMessage::from_proto(extra_proto.mut_message());
-        ExtraKeyEntity {
-            rand_key,
-            message: key_message,
-        }
+        ExtraKeyEntity { rand_key, message: key_message }
     }
 
     pub fn take_message(self) -> RawMessage {
         self.message
     }
 
-    pub fn to_proto<PR>(&self, process_route: Option<&PR>) -> ExtraKeyEntityProto where PR: Fn(&i64) -> i32 + 'static {
+    pub fn to_proto<PR>(&self, process_route: Option<&PR>) -> ExtraKeyEntityProto
+    where
+        PR: Fn(&i64) -> i32 + 'static,
+    {
         let mut extra_key_entity = ExtraKeyEntityProto::new();
         extra_key_entity.set_key_rand(self.rand_key);
         extra_key_entity.set_message(self.message.to_proto(process_route));
@@ -1802,7 +1819,10 @@ impl ExtraLabelEntity {
         self.message
     }
 
-    pub fn to_proto<PR>(&self, process_route: Option<&PR>) -> LabelEntityProto where PR: Fn(&i64) -> i32 + 'static {
+    pub fn to_proto<PR>(&self, process_route: Option<&PR>) -> LabelEntityProto
+    where
+        PR: Fn(&i64) -> i32 + 'static,
+    {
         let mut label_proto = LabelEntityProto::new();
         label_proto.set_label_id(self.label_id);
         label_proto.set_message(self.message.to_proto(process_route));
@@ -1830,7 +1850,10 @@ impl ExtraPathEntity {
         &self.message
     }
 
-    pub fn to_proto<PR>(&self, process_route: Option<&PR>) -> PathEntityProto where PR: Fn(&i64) -> i32 + 'static {
+    pub fn to_proto<PR>(&self, process_route: Option<&PR>) -> PathEntityProto
+    where
+        PR: Fn(&i64) -> i32 + 'static,
+    {
         let mut path_proto = PathEntityProto::new();
         if let Some(ref labels) = self.label_list {
             path_proto.set_label_list(labels.to_vec());
@@ -1853,7 +1876,14 @@ pub struct RawBaseDataEntity {
 
 impl RawBaseDataEntity {
     pub fn new(message_type: RawMessageType) -> Self {
-        RawBaseDataEntity { message_type, id: None, edge_entity: None, prop_value: None, extra_key: None, label_list: None }
+        RawBaseDataEntity {
+            message_type,
+            id: None,
+            edge_entity: None,
+            prop_value: None,
+            extra_key: None,
+            label_list: None,
+        }
     }
 
     pub fn from_message(message: &mut RawMessage) -> Self {

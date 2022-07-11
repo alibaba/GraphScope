@@ -2,9 +2,8 @@
 
 use std::fs;
 use std::fs::File;
-use std::path::{Path, PathBuf};
 use std::io::{Error, Read};
-
+use std::path::{Path, PathBuf};
 
 #[inline]
 pub fn rm<P: AsRef<Path>>(path: P) -> Result<(), String> {
@@ -16,7 +15,10 @@ pub fn ls<P: AsRef<Path>>(path: P) -> Result<Vec<String>, String> {
     let paths = fs::read_dir(path).map_err(|e| format!("{:?}", e))?;
     for path in paths {
         let path_buf = path.map_err(|e| format!("{:?}", e))?.path();
-        let filename = path_buf.to_str().ok_or_else(|| format!("error"))?.to_owned();
+        let filename = path_buf
+            .to_str()
+            .ok_or_else(|| format!("error"))?
+            .to_owned();
         ret.push(filename);
     }
     Ok(ret)
@@ -30,8 +32,7 @@ pub fn mkdir<P: AsRef<Path>>(path: P) -> Result<(), Error> {
 #[inline]
 pub fn rmr<P: AsRef<Path>>(path: P) -> Result<(), String> {
     if exists(path.as_ref()) {
-        fs::remove_dir_all(path.as_ref())
-            .map_err(|e| format!("rm -r {:?} failed, {:?}", path.as_ref(), e))
+        fs::remove_dir_all(path.as_ref()).map_err(|e| format!("rm -r {:?} failed, {:?}", path.as_ref(), e))
     } else {
         Ok(())
     }
@@ -39,15 +40,18 @@ pub fn rmr<P: AsRef<Path>>(path: P) -> Result<(), String> {
 
 #[inline]
 pub fn file_name(path: &str) -> Result<&str, String> {
-    let name = Path::new(path).file_name().ok_or_else(|| format!("{} get filename failed", path))?;
-    name.to_str().ok_or_else(|| format!("{:?} to str failed", name))
+    let name = Path::new(path)
+        .file_name()
+        .ok_or_else(|| format!("{} get filename failed", path))?;
+    name.to_str()
+        .ok_or_else(|| format!("{:?} to str failed", name))
 }
 
 #[inline]
 pub fn file_size(path: &str) -> Result<usize, String> {
-    fs::metadata(path).map(|meta| {
-        meta.len() as usize
-    }).map_err(|e| format!("get metadata of {} failed, {:?}", path, e))
+    fs::metadata(path)
+        .map(|meta| meta.len() as usize)
+        .map_err(|e| format!("get metadata of {} failed, {:?}", path, e))
 }
 
 #[inline]
@@ -87,12 +91,12 @@ pub fn mv<P1: AsRef<Path>, P2: AsRef<Path>>(path1: P1, path2: P2) -> Result<(), 
 }
 
 pub fn load_file<P: AsRef<Path>>(path: P) -> Result<String, String> {
-    File::open(&path).and_then(|mut f| {
-        let mut s = String::new();
-        f.read_to_string(&mut s).map(|_| s)
-    }).map_err(|e| {
-        format!("read file {:?} failed because {:?}", path.as_ref(), e)
-    })
+    File::open(&path)
+        .and_then(|mut f| {
+            let mut s = String::new();
+            f.read_to_string(&mut s).map(|_| s)
+        })
+        .map_err(|e| format!("read file {:?} failed because {:?}", path.as_ref(), e))
 }
 
 #[cfg(test)]
@@ -123,11 +127,7 @@ mod tests {
         assert!(files.contains(&test_path2));
         assert!(files.contains(&test_path3));
 
-
         rmr(test_dir).unwrap();
         assert!(!exists(test_dir));
-
     }
-
-
 }

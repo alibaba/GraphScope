@@ -5,9 +5,7 @@ pub struct Volatile<T> {
 
 impl<T> Volatile<T> {
     pub fn new(data: T) -> Self {
-        Volatile {
-            data,
-        }
+        Volatile { data }
     }
 }
 

@@ -71,6 +71,11 @@ public class Configs {
         return builder.build();
     }
 
+    @Override
+    public String toString() {
+        return properties.toString();
+    }
+
     public Properties getInnerProperties() {
         return this.properties;
     }

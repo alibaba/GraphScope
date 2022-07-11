@@ -14,10 +14,11 @@
 //! limitations under the License.
 
 #![allow(dead_code)]
-use ::byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
 use std::io::Cursor;
 use std::io::Read;
 use std::io::Write;
+
+use ::byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
 
 use crate::error::*;
 use crate::schema::prelude::*;
@@ -142,58 +143,69 @@ impl Property {
             Property::Bytes(ref v) => {
                 let mut copy = vec![0; v.len()];
                 copy.clone_from_slice(v);
-                data.write_i32::<BigEndian>(copy.len() as i32).unwrap();
+                data.write_i32::<BigEndian>(copy.len() as i32)
+                    .unwrap();
                 data.extend(copy.iter());
             }
             Property::String(ref v) => {
                 let bytes = v.as_bytes();
                 let mut copy = vec![0; bytes.len()];
                 copy.clone_from_slice(bytes);
-                data.write_i32::<BigEndian>(copy.len() as i32).unwrap();
+                data.write_i32::<BigEndian>(copy.len() as i32)
+                    .unwrap();
                 data.extend(copy.iter());
             }
             Property::Date(ref v) => {
                 let bytes = v.as_bytes();
                 let mut copy = vec![0; bytes.len()];
                 copy.clone_from_slice(bytes);
-                data.write_i32::<BigEndian>(copy.len() as i32).unwrap();
+                data.write_i32::<BigEndian>(copy.len() as i32)
+                    .unwrap();
                 data.extend(copy.iter());
             }
             Property::ListInt(ref v) => {
-                data.write_i32::<BigEndian>(v.len() as i32).unwrap();
+                data.write_i32::<BigEndian>(v.len() as i32)
+                    .unwrap();
                 for x in v.iter() {
                     data.write_i32::<BigEndian>(*x).unwrap();
                 }
             }
             Property::ListLong(ref v) => {
-                data.write_i32::<BigEndian>(v.len() as i32).unwrap();
+                data.write_i32::<BigEndian>(v.len() as i32)
+                    .unwrap();
                 for x in v {
                     data.write_i64::<BigEndian>(*x).unwrap();
                 }
             }
             Property::ListFloat(ref v) => {
-                data.write_i32::<BigEndian>(v.len() as i32).unwrap();
+                data.write_i32::<BigEndian>(v.len() as i32)
+                    .unwrap();
                 for x in v {
                     data.write_f32::<BigEndian>(*x).unwrap();
                 }
             }
             Property::ListDouble(ref v) => {
-                data.write_i32::<BigEndian>(v.len() as i32).unwrap();
+                data.write_i32::<BigEndian>(v.len() as i32)
+                    .unwrap();
                 for x in v {
                     data.write_f64::<BigEndian>(*x).unwrap();
                 }
             }
             Property::ListString(ref v) => {
-                data.write_i32::<BigEndian>(v.len() as i32).unwrap();
+                data.write_i32::<BigEndian>(v.len() as i32)
+                    .unwrap();
                 for x in v {
-                    data.write_i32::<BigEndian>(x.len() as i32).unwrap();
+                    data.write_i32::<BigEndian>(x.len() as i32)
+                        .unwrap();
                     data.write(x.as_bytes()).unwrap();
                 }
             }
             Property::ListBytes(ref v) => {
-                data.write_i32::<BigEndian>(v.len() as i32).unwrap();
+                data.write_i32::<BigEndian>(v.len() as i32)
+                    .unwrap();
                 for x in v {
-                    data.write_i32::<BigEndian>(x.len() as i32).unwrap();
+                    data.write_i32::<BigEndian>(x.len() as i32)
+                        .unwrap();
                     data.write(x.as_slice()).unwrap();
                 }
             }
@@ -242,39 +254,45 @@ impl Property {
             Property::Date(ref v) => v.as_bytes().to_vec(),
             Property::Bytes(ref v) => v.clone(),
             Property::ListInt(ref v) => {
-                ret.write_i32::<BigEndian>(v.len() as i32).unwrap();
+                ret.write_i32::<BigEndian>(v.len() as i32)
+                    .unwrap();
                 for i in 0..v.len() {
                     ret.write_i32::<BigEndian>(v[i]).unwrap();
                 }
                 ret
             }
             Property::ListLong(ref v) => {
-                ret.write_i32::<BigEndian>(v.len() as i32).unwrap();
+                ret.write_i32::<BigEndian>(v.len() as i32)
+                    .unwrap();
                 for i in 0..v.len() {
                     ret.write_i64::<BigEndian>(v[i]).unwrap();
                 }
                 ret
             }
             Property::ListFloat(ref v) => {
-                ret.write_i32::<BigEndian>(v.len() as i32).unwrap();
+                ret.write_i32::<BigEndian>(v.len() as i32)
+                    .unwrap();
                 for i in 0..v.len() {
                     ret.write_f32::<BigEndian>(v[i]).unwrap();
                 }
                 ret
             }
             Property::ListDouble(ref v) => {
-                ret.write_i32::<BigEndian>(v.len() as i32).unwrap();
+                ret.write_i32::<BigEndian>(v.len() as i32)
+                    .unwrap();
                 for i in 0..v.len() {
                     ret.write_f64::<BigEndian>(v[i]).unwrap();
                 }
                 ret
             }
             Property::ListString(ref v) => {
-                ret.write_i32::<BigEndian>(v.len() as i32).unwrap();
+                ret.write_i32::<BigEndian>(v.len() as i32)
+                    .unwrap();
                 let mut end_off = 0;
                 for i in 0..v.len() {
                     end_off += v[i].len();
-                    ret.write_i32::<BigEndian>(end_off as i32).unwrap();
+                    ret.write_i32::<BigEndian>(end_off as i32)
+                        .unwrap();
                 }
                 for i in 0..v.len() {
                     ret.write(v[i].as_bytes()).unwrap();
@@ -282,11 +300,13 @@ impl Property {
                 ret
             }
             Property::ListBytes(ref v) => {
-                ret.write_i32::<BigEndian>(v.len() as i32).unwrap();
+                ret.write_i32::<BigEndian>(v.len() as i32)
+                    .unwrap();
                 let mut end_off = 0;
                 for i in 0..v.len() {
                     end_off += v[i].len();
-                    ret.write_i32::<BigEndian>(end_off as i32).unwrap();
+                    ret.write_i32::<BigEndian>(end_off as i32)
+                        .unwrap();
                 }
                 for i in 0..v.len() {
                     ret.write(v[i].as_slice()).unwrap();
@@ -374,13 +394,7 @@ fn long_to_data_type(x: i64, data_type: &DataType) -> GraphTraceResult<Vec<u8>> 
         DataType::Char => {
             if x > u8::max_value() as i64 || x < 0 {
                 let msg = format!("{} cannot be transformed to char", x);
-                let err = graph_err!(
-                    GraphErrorCode::DataError,
-                    msg,
-                    long_to_data_type,
-                    x,
-                    data_type
-                );
+                let err = graph_err!(GraphErrorCode::DataError, msg, long_to_data_type, x, data_type);
                 Err(err)
             } else {
                 Ok(Property::Char(x as u8).to_vec())
@@ -389,13 +403,7 @@ fn long_to_data_type(x: i64, data_type: &DataType) -> GraphTraceResult<Vec<u8>> 
         DataType::Short => {
             if x > i16::max_value() as i64 || x < i16::min_value() as i64 {
                 let msg = format!("{} cannot be transformed to short", x);
-                let err = graph_err!(
-                    GraphErrorCode::DataError,
-                    msg,
-                    long_to_data_type,
-                    x,
-                    data_type
-                );
+                let err = graph_err!(GraphErrorCode::DataError, msg, long_to_data_type, x, data_type);
                 Err(err)
             } else {
                 Ok(Property::Short(x as i16).to_vec())
@@ -404,13 +412,7 @@ fn long_to_data_type(x: i64, data_type: &DataType) -> GraphTraceResult<Vec<u8>> 
         DataType::Int => {
             if x > i32::max_value() as i64 || x < i32::min_value() as i64 {
                 let msg = format!("{} cannot be transformed to int", x);
-                let err = graph_err!(
-                    GraphErrorCode::DataError,
-                    msg,
-                    long_to_data_type,
-                    x,
-                    data_type
-                );
+                let err = graph_err!(GraphErrorCode::DataError, msg, long_to_data_type, x, data_type);
                 Err(err)
             } else {
                 Ok(Property::Int(x as i32).to_vec())
@@ -421,13 +423,7 @@ fn long_to_data_type(x: i64, data_type: &DataType) -> GraphTraceResult<Vec<u8>> 
         DataType::Double => Ok(Property::Double(x as f64).to_vec()),
         _ => {
             let msg = format!("{} cannot be transformed to {:?}", x, data_type);
-            let err = graph_err!(
-                GraphErrorCode::DataError,
-                msg,
-                long_to_data_type,
-                x,
-                data_type
-            );
+            let err = graph_err!(GraphErrorCode::DataError, msg, long_to_data_type, x, data_type);
             Err(err)
         }
     }
@@ -439,13 +435,7 @@ fn double_to_data_type(x: f64, data_type: &DataType) -> GraphTraceResult<Vec<u8>
         DataType::Char => {
             if x > u8::max_value() as f64 || x < u8::min_value() as f64 {
                 let msg = format!("{} cannot be transformed to char", x);
-                let err = graph_err!(
-                    GraphErrorCode::DataError,
-                    msg,
-                    double_to_data_type,
-                    x,
-                    data_type
-                );
+                let err = graph_err!(GraphErrorCode::DataError, msg, double_to_data_type, x, data_type);
                 Err(err)
             } else {
                 Ok(Property::Char(x as u8).to_vec())
@@ -454,13 +444,7 @@ fn double_to_data_type(x: f64, data_type: &DataType) -> GraphTraceResult<Vec<u8>
         DataType::Short => {
             if x > i16::max_value() as f64 || x < i16::min_value() as f64 {
                 let msg = format!("{} cannot be transformed to short", x);
-                let err = graph_err!(
-                    GraphErrorCode::DataError,
-                    msg,
-                    double_to_data_type,
-                    x,
-                    data_type
-                );
+                let err = graph_err!(GraphErrorCode::DataError, msg, double_to_data_type, x, data_type);
                 Err(err)
             } else {
                 Ok(Property::Short(x as i16).to_vec())
@@ -469,13 +453,7 @@ fn double_to_data_type(x: f64, data_type: &DataType) -> GraphTraceResult<Vec<u8>
         DataType::Int => {
             if x > i32::max_value() as f64 || x < i32::min_value() as f64 {
                 let msg = format!("{} cannot be transformed to int", x);
-                let err = graph_err!(
-                    GraphErrorCode::DataError,
-                    msg,
-                    double_to_data_type,
-                    x,
-                    data_type
-                );
+                let err = graph_err!(GraphErrorCode::DataError, msg, double_to_data_type, x, data_type);
                 Err(err)
             } else {
                 Ok(Property::Int(x as i32).to_vec())
@@ -484,13 +462,7 @@ fn double_to_data_type(x: f64, data_type: &DataType) -> GraphTraceResult<Vec<u8>
         DataType::Long => {
             if x > i64::max_value() as f64 || x < i64::min_value() as f64 {
                 let msg = format!("{} cannot be transformed to long", x);
-                let err = graph_err!(
-                    GraphErrorCode::DataError,
-                    msg,
-                    double_to_data_type,
-                    x,
-                    data_type
-                );
+                let err = graph_err!(GraphErrorCode::DataError, msg, double_to_data_type, x, data_type);
                 Err(err)
             } else {
                 Ok(Property::Long(x as i64).to_vec())
@@ -500,13 +472,7 @@ fn double_to_data_type(x: f64, data_type: &DataType) -> GraphTraceResult<Vec<u8>
         DataType::Double => Ok(Property::Double(x).to_vec()),
         _ => {
             let msg = format!("{} cannot be transformed to {:?}", x, data_type);
-            let err = graph_err!(
-                GraphErrorCode::DataError,
-                msg,
-                double_to_data_type,
-                x,
-                data_type
-            );
+            let err = graph_err!(GraphErrorCode::DataError, msg, double_to_data_type, x, data_type);
             Err(err)
         }
     }
@@ -551,7 +517,12 @@ pub fn parse_property(data: &str, data_type: DataType) -> Property {
                 Property::ListInt(vec![])
             } else {
                 let items: Vec<&str> = data.split(",").collect();
-                Property::ListInt(items.iter().map(|x| x.parse().unwrap()).collect())
+                Property::ListInt(
+                    items
+                        .iter()
+                        .map(|x| x.parse().unwrap())
+                        .collect(),
+                )
             }
         }
         DataType::ListLong => {
@@ -559,7 +530,12 @@ pub fn parse_property(data: &str, data_type: DataType) -> Property {
                 Property::ListLong(vec![])
             } else {
                 let items: Vec<&str> = data.split(",").collect();
-                Property::ListLong(items.iter().map(|x| x.parse().unwrap()).collect())
+                Property::ListLong(
+                    items
+                        .iter()
+                        .map(|x| x.parse().unwrap())
+                        .collect(),
+                )
             }
         }
         DataType::ListFloat => {
@@ -567,7 +543,12 @@ pub fn parse_property(data: &str, data_type: DataType) -> Property {
                 Property::ListFloat(vec![])
             } else {
                 let items: Vec<&str> = data.split(",").collect();
-                Property::ListFloat(items.iter().map(|x| x.parse().unwrap()).collect())
+                Property::ListFloat(
+                    items
+                        .iter()
+                        .map(|x| x.parse().unwrap())
+                        .collect(),
+                )
             }
         }
         DataType::ListDouble => {
@@ -575,7 +556,12 @@ pub fn parse_property(data: &str, data_type: DataType) -> Property {
                 Property::ListDouble(vec![])
             } else {
                 let items: Vec<&str> = data.split(",").collect();
-                Property::ListDouble(items.iter().map(|x| x.parse().unwrap()).collect())
+                Property::ListDouble(
+                    items
+                        .iter()
+                        .map(|x| x.parse().unwrap())
+                        .collect(),
+                )
             }
         }
         DataType::ListString => {
@@ -645,10 +631,7 @@ impl Property {
     pub fn get_string(&self) -> Result<&String, String> {
         match self {
             &Property::String(ref s) => Ok(s),
-            _ => Err(format!(
-                "get string ref value fail from property=>{:?}",
-                self
-            )),
+            _ => Err(format!("get string ref value fail from property=>{:?}", self)),
         }
     }
 

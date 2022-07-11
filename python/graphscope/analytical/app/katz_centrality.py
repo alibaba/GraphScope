@@ -33,6 +33,7 @@ def katz_centrality(
     tolerance=1e-06,
     max_round=100,
     normalized=True,
+    degree_threshold=1e9,
 ):
     """Compute the Katz centrality.
 
@@ -46,7 +47,7 @@ def katz_centrality(
         tolerance (float, optional): Error tolerance. Defaults to 1e-06.
         max_round (int, optional): Maximun number of rounds. Defaults to 100.
         normalized (bool, optional): Whether to normalize result values. Defaults to True.
-
+        degree_threshold (int, optional): Filter super vertex which degree is greater than threshold. Default to 1e9.
     Returns:
         :class:`graphscope.framework.context.VertexDataContextDAGNode`:
             A context with each vertex assigned with the computed katz_centrality, evaluated in eager mode.
@@ -69,11 +70,7 @@ def katz_centrality(
     tolerance = float(tolerance)
     max_round = int(max_round)
     normalized = bool(normalized)
+    degree_threshold = int(degree_threshold)
     return AppAssets(algo="katz_centrality", context="vertex_data")(
-        graph,
-        alpha,
-        beta,
-        tolerance,
-        max_round,
-        normalized,
+        graph, alpha, beta, tolerance, max_round, normalized, degree_threshold
     )

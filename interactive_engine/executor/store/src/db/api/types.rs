@@ -13,8 +13,9 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::db::api::{GraphResult, VertexId, LabelId, EdgeId, PropertyId, ValueRef, ValueType, EdgeKind};
 use std::fmt::Debug;
+
+use crate::db::api::{EdgeId, EdgeKind, GraphResult, LabelId, PropertyId, ValueRef, ValueType, VertexId};
 
 #[repr(C)]
 #[allow(dead_code)]
@@ -66,12 +67,42 @@ impl From<ValueRef<'_>> for PropertyValue {
             ValueType::Double => PropertyValue::Double(value_ref.get_double().unwrap()),
             ValueType::String => PropertyValue::String(String::from(value_ref.get_str().unwrap())),
             ValueType::Bytes => PropertyValue::Bytes(Vec::from(value_ref.get_bytes().unwrap())),
-            ValueType::IntList => PropertyValue::IntList(value_ref.get_int_list().unwrap().iter().collect()),
-            ValueType::LongList => PropertyValue::LongList(value_ref.get_long_list().unwrap().iter().collect()),
-            ValueType::FloatList => PropertyValue::FloatList(value_ref.get_float_list().unwrap().iter().collect()),
-            ValueType::DoubleList => PropertyValue::DoubleList(value_ref.get_double_list().unwrap().iter().collect()),
-            ValueType::StringList => PropertyValue::StringList(value_ref.get_str_list().unwrap().iter()
-                .map(String::from).collect()),
+            ValueType::IntList => PropertyValue::IntList(
+                value_ref
+                    .get_int_list()
+                    .unwrap()
+                    .iter()
+                    .collect(),
+            ),
+            ValueType::LongList => PropertyValue::LongList(
+                value_ref
+                    .get_long_list()
+                    .unwrap()
+                    .iter()
+                    .collect(),
+            ),
+            ValueType::FloatList => PropertyValue::FloatList(
+                value_ref
+                    .get_float_list()
+                    .unwrap()
+                    .iter()
+                    .collect(),
+            ),
+            ValueType::DoubleList => PropertyValue::DoubleList(
+                value_ref
+                    .get_double_list()
+                    .unwrap()
+                    .iter()
+                    .collect(),
+            ),
+            ValueType::StringList => PropertyValue::StringList(
+                value_ref
+                    .get_str_list()
+                    .unwrap()
+                    .iter()
+                    .map(String::from)
+                    .collect(),
+            ),
         }
     }
 }
@@ -83,7 +114,7 @@ pub trait Property {
 
 pub trait PropertyReader {
     type P: Property;
-    type PropertyIterator: Iterator<Item=GraphResult<Self::P>>;
+    type PropertyIterator: Iterator<Item = GraphResult<Self::P>>;
 
     fn get_property(&self, property_id: PropertyId) -> Option<Self::P>;
     fn get_property_iterator(&self) -> Self::PropertyIterator;

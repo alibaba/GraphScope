@@ -10,7 +10,7 @@ ingestor.node.count=2
 coordinator.node.count=1
 ingestor.queue.count=2
 partition.count=8
-engine.type=maxgraph
+engine.type=gaia
 discovery.mode=zookeeper
 
 ## Ingestor Config

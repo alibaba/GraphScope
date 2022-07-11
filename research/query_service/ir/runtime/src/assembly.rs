@@ -486,18 +486,20 @@ impl JobAssembly for IRJobAssembly {
                 Sinker::DefaultSinker(default_sinker) => stream
                     .map(move |record| default_sinker.exec(record))?
                     .sink_into(output),
-                Sinker::GraphSinker(graph_sinker) => stream
-                    .fold_partition(graph_sinker, || {
-                        |mut accumulator, next| {
-                            accumulator.accum(next)?;
-                            Ok(accumulator)
-                        }
-                    })?
-                    .map(|mut accumulator| Ok(accumulator.finalize()?))?
-                    .into_stream()?
-                    // TODO: confirm with compiler
-                    .map(|_r| Ok(vec![]))?
-                    .sink_into(output),
+                #[cfg(feature = "with_v6d")]
+                Sinker::GraphSinker(graph_sinker) => {
+                    return stream
+                        .fold_partition(graph_sinker, || {
+                            |mut accumulator, next| {
+                                accumulator.accum(next)?;
+                                Ok(accumulator)
+                            }
+                        })?
+                        .map(|mut accumulator| Ok(accumulator.finalize()?))?
+                        .into_stream()?
+                        .map(|_r| Ok(vec![]))?
+                        .sink_into(output)
+                }
             }
         })
     }

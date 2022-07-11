@@ -49,7 +49,7 @@ fn generate_rust_protos() {
             files.push(p);
         }
     });
-    protoc_grpcio::compile_grpc_protos(files.as_slice(), &[proto_root], "./src/proto")
+    protoc_grpcio::compile_grpc_protos(files.as_slice(), &[proto_root], "./src/proto", None)
         .expect("protoc/grpc compile failed");
 }
 

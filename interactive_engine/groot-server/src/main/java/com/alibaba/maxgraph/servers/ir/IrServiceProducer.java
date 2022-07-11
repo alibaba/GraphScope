@@ -22,10 +22,7 @@ import com.alibaba.graphscope.common.store.IrMetaFetcher;
 import com.alibaba.graphscope.gremlin.integration.result.TestGraphFactory;
 import com.alibaba.graphscope.gremlin.service.IrGremlinServer;
 import com.alibaba.graphscope.groot.discovery.DiscoveryFactory;
-import com.alibaba.graphscope.groot.discovery.NodeDiscovery;
 import com.alibaba.graphscope.groot.frontend.SnapshotUpdateCommitter;
-import com.alibaba.graphscope.groot.frontend.WriteSessionGenerator;
-import com.alibaba.graphscope.groot.frontend.write.GraphWriter;
 import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.rpc.ChannelManager;
 import com.alibaba.graphscope.groot.store.StoreService;
@@ -46,17 +43,6 @@ public class IrServiceProducer implements ComputeServiceProducer {
 
     public IrServiceProducer(Configs configs) {
         this.configs = configs;
-    }
-
-    @Override
-    public AbstractService makeGraphService(
-            SchemaFetcher schemaFetcher,
-            ChannelManager channelManager,
-            NodeDiscovery discovery,
-            GraphWriter graphWriter,
-            WriteSessionGenerator writeSessionGenerator,
-            MetaService metaService) {
-        return makeGraphService(schemaFetcher, channelManager);
     }
 
     @Override

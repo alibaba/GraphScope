@@ -1565,11 +1565,11 @@ mod test {
         plan_meta.refer_to_nodes(0, vec![0]);
 
         let meta = StoreMeta {
-            schema: Some(Schema::from((
+            schema: Some(Schema::new(
                 vec![("person".to_string(), 0), ("software".to_string(), 1)],
                 vec![("knows".to_string(), 0), ("creates".to_string(), 1)],
                 vec![("id".to_string(), 0), ("name".to_string(), 1), ("age".to_string(), 2)],
-            ))),
+            )),
         };
 
         let mut expression = str_to_expr_pb("@.~label == \"person\"".to_string()).unwrap();
@@ -1720,11 +1720,11 @@ mod test {
         plan_meta.refer_to_nodes(0, vec![0]);
 
         let meta = StoreMeta {
-            schema: Some(Schema::from((
+            schema: Some(Schema::new(
                 vec![("person".to_string(), 0), ("software".to_string(), 1)],
                 vec![("knows".to_string(), 0), ("creates".to_string(), 1)],
                 vec![("id".to_string(), 0), ("name".to_string(), 1), ("age".to_string(), 2)],
-            ))),
+            )),
         };
 
         let mut scan = pb::Scan {

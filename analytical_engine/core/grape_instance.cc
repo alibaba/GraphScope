@@ -381,12 +381,12 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::modifyEdges(
   graph_info.set_property_schema_json(
       dynamic::Stringify(fragment->GetSchema()));
   graph_def.mutable_extension()->PackFrom(graph_info);
+  return graph_def;
 #else
   RETURN_GS_ERROR(vineyard::ErrorCode::kUnimplementedMethod,
                   "GraphScope is built with NETWORKX=OFF, please recompile it "
                   "with NETWORKX=ON");
 #endif  // NETWORKX
-  return graph_def;
 }
 
 bl::result<std::shared_ptr<grape::InArchive>> GrapeInstance::contextToNumpy(

@@ -31,6 +31,7 @@ public class FileDiscovery implements NodeDiscovery {
 
     public FileDiscovery(Configs configs) {
         this.configs = configs;
+        // Store related nodes
         int storeCount = CommonConfig.STORE_NODE_COUNT.get(this.configs);
         String storeNamePrefix = DiscoveryConfig.DNS_NAME_PREFIX_STORE.get(this.configs);
         int port = CommonConfig.RPC_PORT.get(this.configs);
@@ -74,18 +75,21 @@ public class FileDiscovery implements NodeDiscovery {
                         gaiaEnginePort);
         this.allNodes.put(RoleType.GAIA_ENGINE, gaiaEngineNodes);
 
+        // Frontend nodes
         int frontendCount = CommonConfig.FRONTEND_NODE_COUNT.get(this.configs);
         String frontendNamePrefix = DiscoveryConfig.DNS_NAME_PREFIX_FRONTEND.get(this.configs);
         Map<Integer, MaxGraphNode> frontendNodes =
                 makeRoleNodes(frontendCount, frontendNamePrefix, RoleType.FRONTEND.getName(), port);
         this.allNodes.put(RoleType.FRONTEND, frontendNodes);
 
+        // Ingestor nodes
         int ingestorCount = CommonConfig.INGESTOR_NODE_COUNT.get(this.configs);
         String ingestorNamePrefix = DiscoveryConfig.DNS_NAME_PREFIX_INGESTOR.get(this.configs);
         Map<Integer, MaxGraphNode> ingestorNodes =
                 makeRoleNodes(ingestorCount, ingestorNamePrefix, RoleType.INGESTOR.getName(), port);
         this.allNodes.put(RoleType.INGESTOR, ingestorNodes);
 
+        // Coordinator nodes
         int coordinatorCount = CommonConfig.COORDINATOR_NODE_COUNT.get(this.configs);
         String coordinatorNamePrefix =
                 DiscoveryConfig.DNS_NAME_PREFIX_COORDINATOR.get(this.configs);
@@ -106,12 +110,11 @@ public class FileDiscovery implements NodeDiscovery {
     }
 
     private Map<Integer, MaxGraphNode> makeRoleNodes(
-            int storeCount, String namePrefix, String role, int port) {
+            int nodeCount, String namePrefix, String role, int port) {
         Map<Integer, MaxGraphNode> nodes = new HashMap<>();
-        for (int i = 0; i < storeCount; i++) {
-            nodes.put(
-                    i,
-                    new MaxGraphNode(role, i, namePrefix.replace("{}", String.valueOf(i)), port));
+        for (int i = 0; i < nodeCount; i++) {
+            String host = namePrefix.replace("{}", String.valueOf(i));
+            nodes.put(i, new MaxGraphNode(role, i, host, port));
         }
         return nodes;
     }

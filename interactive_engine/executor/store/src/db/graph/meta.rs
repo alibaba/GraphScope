@@ -1,19 +1,19 @@
-use std::sync::{Arc};
+use std::collections::{HashMap, HashSet};
+use std::sync::Arc;
 
-use crate::db::api::*;
-use crate::db::storage::ExternalStorage;
-use crate::db::common::bytes::transform;
-use crate::db::common::str::parse_str;
+use protobuf::Message;
 
 use super::table_manager::*;
 use super::types::*;
-use protobuf::Message;
 use crate::db::api::GraphErrorCode::InvalidData;
-use crate::db::util::lock::GraphMutexLock;
+use crate::db::api::*;
+use crate::db::common::bytes::transform;
 use crate::db::common::bytes::util::parse_pb;
-use crate::db::proto::model::EdgeKindPb;
-use std::collections::{HashMap, HashSet};
+use crate::db::common::str::parse_str;
 use crate::db::proto::common::DataLoadTargetPb;
+use crate::db::proto::model::EdgeKindPb;
+use crate::db::storage::ExternalStorage;
+use crate::db::util::lock::GraphMutexLock;
 
 const META_TABLE_ID: TableId = i64::min_value();
 
@@ -24,10 +24,7 @@ pub struct Meta {
 
 impl Meta {
     pub fn new(store: Arc<dyn ExternalStorage>) -> Self {
-        Meta {
-            store,
-            graph_def_lock: GraphMutexLock::new(GraphDef::default()),
-        }
+        Meta { store, graph_def_lock: GraphMutexLock::new(GraphDef::default()) }
     }
 
     pub fn get_graph_def(&self) -> &GraphMutexLock<GraphDef> {
@@ -52,21 +49,53 @@ impl Meta {
         let mut all: Vec<MetaItem> = Vec::new();
         let store_ref = self.store.as_ref();
         let create_vertex_items = res_unwrap!(get_items::<CreateVertexTypeItem>(store_ref), recover)?;
-        all.extend(create_vertex_items.into_iter().map(|i| MetaItem::CreateVertexType(i)));
+        all.extend(
+            create_vertex_items
+                .into_iter()
+                .map(|i| MetaItem::CreateVertexType(i)),
+        );
         let create_edge_items = res_unwrap!(get_items::<CreateEdgeTypeItem>(store_ref), recover)?;
-        all.extend(create_edge_items.into_iter().map(|i| MetaItem::CreateEdgeType(i)));
+        all.extend(
+            create_edge_items
+                .into_iter()
+                .map(|i| MetaItem::CreateEdgeType(i)),
+        );
         let add_edge_kind_items = res_unwrap!(get_items::<AddEdgeKindItem>(store_ref), recover)?;
-        all.extend(add_edge_kind_items.into_iter().map(|i| MetaItem::AddEdgeKind(i)));
+        all.extend(
+            add_edge_kind_items
+                .into_iter()
+                .map(|i| MetaItem::AddEdgeKind(i)),
+        );
         let drop_vertex_items = res_unwrap!(get_items::<DropVertexTypeItem>(store_ref), recover)?;
-        all.extend(drop_vertex_items.into_iter().map(|i| MetaItem::DropVertexType(i)));
+        all.extend(
+            drop_vertex_items
+                .into_iter()
+                .map(|i| MetaItem::DropVertexType(i)),
+        );
         let drop_edge_items = res_unwrap!(get_items::<DropEdgeTypeItem>(store_ref), recover)?;
-        all.extend(drop_edge_items.into_iter().map(|i| MetaItem::DropEdgeType(i)));
+        all.extend(
+            drop_edge_items
+                .into_iter()
+                .map(|i| MetaItem::DropEdgeType(i)),
+        );
         let remove_edge_kind_items = res_unwrap!(get_items::<RemoveEdgeKindItem>(store_ref), recover)?;
-        all.extend(remove_edge_kind_items.into_iter().map(|i| MetaItem::RemoveEdgeKind(i)));
+        all.extend(
+            remove_edge_kind_items
+                .into_iter()
+                .map(|i| MetaItem::RemoveEdgeKind(i)),
+        );
         let prepare_data_load_items = res_unwrap!(get_items::<PrepareDataLoadItem>(store_ref), recover)?;
-        all.extend(prepare_data_load_items.into_iter().map(|i| MetaItem::PrepareDataLoad(i)));
+        all.extend(
+            prepare_data_load_items
+                .into_iter()
+                .map(|i| MetaItem::PrepareDataLoad(i)),
+        );
         let commit_data_load_items = res_unwrap!(get_items::<CommitDataLoadItem>(store_ref), recover)?;
-        all.extend(commit_data_load_items.into_iter().map(|i| MetaItem::CommitDataLoad(i)));
+        all.extend(
+            commit_data_load_items
+                .into_iter()
+                .map(|i| MetaItem::CommitDataLoad(i)),
+        );
         all.sort_by(|a, b| {
             let s1 = a.get_schema_version();
             let s2 = b.get_schema_version();
@@ -82,7 +111,10 @@ impl Meta {
                     let mut graph_def = self.graph_def_lock.lock()?;
                     let current_label_idx = graph_def.get_label_idx();
                     if current_label_idx >= label_id {
-                        let msg = format!("current label idx {}, create label id {}", current_label_idx, label_id);
+                        let msg = format!(
+                            "current label idx {}, create label id {}",
+                            current_label_idx, label_id
+                        );
                         return Err(GraphError::new(GraphErrorCode::InvalidOperation, msg));
                     }
                     graph_def.add_type(label_id, x.type_def.clone())?;
@@ -91,9 +123,9 @@ impl Meta {
                     graph_def.set_table_idx(x.table_id);
                     graph_def.increase_version();
                     vertex_manager_builder.create(x.si, x.label_id, &x.type_def)?;
-                    vertex_manager_builder.get_info(x.si, x.label_id).and_then(|info| {
-                        info.online_table(Table::new(x.si, x.table_id))
-                    })?;
+                    vertex_manager_builder
+                        .get_info(x.si, x.label_id)
+                        .and_then(|info| info.online_table(Table::new(x.si, x.table_id)))?;
                 }
                 MetaItem::DropVertexType(x) => {
                     vertex_manager_builder.drop(x.si, x.label_id)?;
@@ -106,7 +138,10 @@ impl Meta {
                     let mut graph_def = self.graph_def_lock.lock()?;
                     let current_label_idx = graph_def.get_label_idx();
                     if current_label_idx >= label_id {
-                        let msg = format!("current label idx {}, create label id {}", current_label_idx, label_id);
+                        let msg = format!(
+                            "current label idx {}, create label id {}",
+                            current_label_idx, label_id
+                        );
                         return Err(GraphError::new(GraphErrorCode::InvalidOperation, msg));
                     }
                     graph_def.add_type(label_id, x.type_def.clone())?;
@@ -116,7 +151,11 @@ impl Meta {
                 }
                 MetaItem::AddEdgeKind(x) => {
                     edge_manager_builder.add_edge_kind(x.si, &x.edge_kind)?;
-                    edge_manager_builder.add_edge_table(x.si, &x.edge_kind, Table::new(x.si, x.table_id))?;
+                    edge_manager_builder.add_edge_table(
+                        x.si,
+                        &x.edge_kind,
+                        Table::new(x.si, x.table_id),
+                    )?;
                     let mut graph_def = self.graph_def_lock.lock()?;
                     graph_def.add_edge_kind(x.edge_kind.clone());
                     graph_def.put_edge_table_id(x.edge_kind.clone(), x.table_id);
@@ -138,7 +177,8 @@ impl Meta {
                 MetaItem::PrepareDataLoad(x) => {
                     let mut graph_def = self.graph_def_lock.lock()?;
                     if x.target.src_label_id > 0 {
-                        let edge_kind = EdgeKind::new(x.target.label_id, x.target.src_label_id, x.target.dst_label_id);
+                        let edge_kind =
+                            EdgeKind::new(x.target.label_id, x.target.src_label_id, x.target.dst_label_id);
                         graph_def.put_edge_table_id(edge_kind, x.table_id);
                     } else {
                         graph_def.put_vertex_table_id(x.target.label_id, x.table_id);
@@ -150,12 +190,17 @@ impl Meta {
                     let mut graph_def = self.graph_def_lock.lock()?;
                     graph_def.increase_version();
                     if x.target.src_label_id > 0 {
-                        let edge_kind = EdgeKind::new(x.target.label_id, x.target.src_label_id, x.target.dst_label_id);
-                        edge_manager_builder.add_edge_table(x.si, &edge_kind, Table::new(x.si, x.table_id))?;
+                        let edge_kind =
+                            EdgeKind::new(x.target.label_id, x.target.src_label_id, x.target.dst_label_id);
+                        edge_manager_builder.add_edge_table(
+                            x.si,
+                            &edge_kind,
+                            Table::new(x.si, x.table_id),
+                        )?;
                     } else {
-                        vertex_manager_builder.get_info(x.si, x.target.label_id).and_then(|info| {
-                            info.online_table(Table::new(x.si, x.table_id))
-                        })?;
+                        vertex_manager_builder
+                            .get_info(x.si, x.target.label_id)
+                            .and_then(|info| info.online_table(Table::new(x.si, x.table_id)))?;
                     }
                 }
             }
@@ -179,8 +224,9 @@ impl Meta {
         unimplemented!()
     }
 
-    pub fn prepare_data_load(&self, si: SnapshotId, schema_version: i64, target: &DataLoadTarget,
-                             table_id: i64) -> GraphResult<()> {
+    pub fn prepare_data_load(
+        &self, si: SnapshotId, schema_version: i64, target: &DataLoadTarget, table_id: i64,
+    ) -> GraphResult<()> {
         self.check_version(schema_version)?;
         let item = PrepareDataLoadItem::new(si, schema_version, target.clone(), table_id);
         self.write_item(item)?;
@@ -200,8 +246,9 @@ impl Meta {
         Ok(())
     }
 
-    pub fn commit_data_load(&self, si: SnapshotId, schema_version: i64, target: &DataLoadTarget,
-                            table_id: i64) -> GraphResult<()> {
+    pub fn commit_data_load(
+        &self, si: SnapshotId, schema_version: i64, target: &DataLoadTarget, table_id: i64,
+    ) -> GraphResult<()> {
         self.check_version(schema_version)?;
         let item = CommitDataLoadItem::new(si, schema_version, target.clone(), table_id);
         self.write_item(item)?;
@@ -212,7 +259,9 @@ impl Meta {
         Ok(())
     }
 
-    pub fn create_vertex_type(&self, si: SnapshotId, schema_version: i64, label_id: LabelId, type_def: &TypeDef, table_id: i64) -> GraphResult<Table> {
+    pub fn create_vertex_type(
+        &self, si: SnapshotId, schema_version: i64, label_id: LabelId, type_def: &TypeDef, table_id: i64,
+    ) -> GraphResult<Table> {
         self.check_version(schema_version)?;
         let item = CreateVertexTypeItem::new(si, schema_version, label_id, table_id, type_def.clone());
         self.write_item(item)?;
@@ -232,7 +281,9 @@ impl Meta {
         Ok(Table::new(si, table_id))
     }
 
-    pub fn drop_vertex_type(&self, si: SnapshotId, schema_version: i64, label_id: LabelId) -> GraphResult<()> {
+    pub fn drop_vertex_type(
+        &self, si: SnapshotId, schema_version: i64, label_id: LabelId,
+    ) -> GraphResult<()> {
         self.check_version(schema_version)?;
         let item = DropVertexTypeItem::new(si, schema_version, label_id);
         self.write_item(item)?;
@@ -244,7 +295,9 @@ impl Meta {
         Ok(())
     }
 
-    pub fn create_edge_type(&self, si: SnapshotId, schema_version: i64, label_id: LabelId, type_def: &TypeDef) -> GraphResult<()> {
+    pub fn create_edge_type(
+        &self, si: SnapshotId, schema_version: i64, label_id: LabelId, type_def: &TypeDef,
+    ) -> GraphResult<()> {
         self.check_version(schema_version)?;
         let item = CreateEdgeTypeItem::new(si, schema_version, label_id, type_def.clone());
         self.write_item(item)?;
@@ -262,7 +315,9 @@ impl Meta {
         Ok(())
     }
 
-    pub fn add_edge_kind(&self, si: SnapshotId, schema_version: i64, edge_kind: &EdgeKind, table_id: i64) -> GraphResult<Table> {
+    pub fn add_edge_kind(
+        &self, si: SnapshotId, schema_version: i64, edge_kind: &EdgeKind, table_id: i64,
+    ) -> GraphResult<Table> {
         self.check_version(schema_version)?;
         let item = AddEdgeKindItem::new(si, schema_version, table_id, edge_kind.clone());
         self.write_item(item)?;
@@ -276,7 +331,9 @@ impl Meta {
         Ok(Table::new(si, table_id))
     }
 
-    pub fn drop_edge_type(&self, si: SnapshotId, schema_version: i64, label_id: LabelId) -> GraphResult<()> {
+    pub fn drop_edge_type(
+        &self, si: SnapshotId, schema_version: i64, label_id: LabelId,
+    ) -> GraphResult<()> {
         self.check_version(schema_version)?;
         let item = DropEdgeTypeItem::new(si, schema_version, label_id);
         self.write_item(item)?;
@@ -288,7 +345,9 @@ impl Meta {
         Ok(())
     }
 
-    pub fn remove_edge_kind(&self, si: SnapshotId, schema_version: i64, edge_kind: &EdgeKind) -> GraphResult<()> {
+    pub fn remove_edge_kind(
+        &self, si: SnapshotId, schema_version: i64, edge_kind: &EdgeKind,
+    ) -> GraphResult<()> {
         self.check_version(schema_version)?;
         let item = RemoveEdgeKindItem::new(si, schema_version, edge_kind.clone());
         self.write_item(item)?;
@@ -346,7 +405,6 @@ trait ItemCommon: Sized {
     fn to_kv(&self) -> GraphResult<(Vec<u8>, Vec<u8>)>;
 }
 
-
 #[derive(PartialEq, Debug)]
 enum MetaItem {
     CreateVertexType(CreateVertexTypeItem),
@@ -373,7 +431,6 @@ impl MetaItem {
         }
     }
 }
-
 
 fn common_parse_key<'a>(k: &'a [u8], prefix: &str, size: usize) -> GraphResult<Vec<&'a str>> {
     if transform::bytes_to_i64(&k[0..8])?.to_be() != META_TABLE_ID {
@@ -410,12 +467,7 @@ struct PrepareDataLoadItem {
 
 impl PrepareDataLoadItem {
     fn new(si: SnapshotId, schema_version: i64, target: DataLoadTarget, table_id: TableId) -> Self {
-        PrepareDataLoadItem {
-            si,
-            schema_version,
-            target,
-            table_id,
-        }
+        PrepareDataLoadItem { si, schema_version, target, table_id }
     }
 }
 
@@ -439,7 +491,8 @@ impl ItemCommon for PrepareDataLoadItem {
     fn to_kv(&self) -> GraphResult<(Vec<u8>, Vec<u8>)> {
         let key = format!("{}#{}#{}#{}", Self::prefix(), self.si, self.schema_version, self.table_id);
         let target_pb = self.target.to_proto();
-        let bytes = target_pb.write_to_bytes()
+        let bytes = target_pb
+            .write_to_bytes()
             .map_err(|e| GraphError::new(InvalidData, format!("{:?}", e)))?;
         Ok((meta_key(&key), bytes))
     }
@@ -455,12 +508,7 @@ struct CommitDataLoadItem {
 
 impl CommitDataLoadItem {
     fn new(si: SnapshotId, schema_version: i64, target: DataLoadTarget, table_id: TableId) -> Self {
-        CommitDataLoadItem {
-            si,
-            schema_version,
-            target,
-            table_id,
-        }
+        CommitDataLoadItem { si, schema_version, target, table_id }
     }
 }
 
@@ -484,7 +532,8 @@ impl ItemCommon for CommitDataLoadItem {
     fn to_kv(&self) -> GraphResult<(Vec<u8>, Vec<u8>)> {
         let key = format!("{}#{}#{}#{}", Self::prefix(), self.si, self.schema_version, self.table_id);
         let target_pb = self.target.to_proto();
-        let bytes = target_pb.write_to_bytes()
+        let bytes = target_pb
+            .write_to_bytes()
             .map_err(|e| GraphError::new(InvalidData, format!("{:?}", e)))?;
         Ok((meta_key(&key), bytes))
     }
@@ -500,14 +549,10 @@ struct CreateVertexTypeItem {
 }
 
 impl CreateVertexTypeItem {
-    fn new(si: SnapshotId, schema_version: i64, label_id: LabelId, table_id: TableId, type_def: TypeDef) -> Self {
-        CreateVertexTypeItem {
-            si,
-            schema_version,
-            label_id,
-            table_id,
-            type_def,
-        }
+    fn new(
+        si: SnapshotId, schema_version: i64, label_id: LabelId, table_id: TableId, type_def: TypeDef,
+    ) -> Self {
+        CreateVertexTypeItem { si, schema_version, label_id, table_id, type_def }
     }
 }
 
@@ -528,9 +573,17 @@ impl ItemCommon for CreateVertexTypeItem {
     }
 
     fn to_kv(&self) -> GraphResult<(Vec<u8>, Vec<u8>)> {
-        let key = format!("{}#{}#{}#{}#{}", Self::prefix(), self.label_id, self.si, self.schema_version, self.table_id);
+        let key = format!(
+            "{}#{}#{}#{}#{}",
+            Self::prefix(),
+            self.label_id,
+            self.si,
+            self.schema_version,
+            self.table_id
+        );
         let typedef_pb = self.type_def.to_proto()?;
-        let bytes = typedef_pb.write_to_bytes()
+        let bytes = typedef_pb
+            .write_to_bytes()
             .map_err(|e| GraphError::new(InvalidData, format!("{:?}", e)))?;
         Ok((meta_key(&key), bytes))
     }
@@ -545,11 +598,7 @@ struct DropVertexTypeItem {
 
 impl DropVertexTypeItem {
     fn new(si: SnapshotId, schema_version: i64, label_id: LabelId) -> Self {
-        DropVertexTypeItem {
-            si,
-            schema_version,
-            label_id,
-        }
+        DropVertexTypeItem { si, schema_version, label_id }
     }
 }
 
@@ -583,12 +632,7 @@ struct CreateEdgeTypeItem {
 
 impl CreateEdgeTypeItem {
     fn new(si: SnapshotId, schema_version: i64, label_id: LabelId, type_def: TypeDef) -> Self {
-        CreateEdgeTypeItem {
-            si,
-            schema_version,
-            label_id,
-            type_def,
-        }
+        CreateEdgeTypeItem { si, schema_version, label_id, type_def }
     }
 }
 
@@ -622,12 +666,7 @@ struct AddEdgeKindItem {
 
 impl AddEdgeKindItem {
     fn new(si: SnapshotId, schema_version: i64, table_id: TableId, edge_kind: EdgeKind) -> Self {
-        AddEdgeKindItem {
-            si,
-            schema_version,
-            table_id,
-            edge_kind,
-        }
+        AddEdgeKindItem { si, schema_version, table_id, edge_kind }
     }
 }
 
@@ -649,7 +688,10 @@ impl ItemCommon for AddEdgeKindItem {
 
     fn to_kv(&self) -> GraphResult<(Vec<u8>, Vec<u8>)> {
         let key = format!("{}#{}#{}#{}", Self::prefix(), self.si, self.schema_version, self.table_id);
-        let bytes = self.edge_kind.to_proto().write_to_bytes()
+        let bytes = self
+            .edge_kind
+            .to_proto()
+            .write_to_bytes()
             .map_err(|e| GraphError::new(InvalidData, format!("{:?}", e)))?;
         Ok((meta_key(&key), bytes))
     }
@@ -664,11 +706,7 @@ struct DropEdgeTypeItem {
 
 impl DropEdgeTypeItem {
     fn new(si: SnapshotId, schema_version: i64, label_id: LabelId) -> Self {
-        DropEdgeTypeItem {
-            si,
-            schema_version,
-            label_id,
-        }
+        DropEdgeTypeItem { si, schema_version, label_id }
     }
 }
 
@@ -701,11 +739,7 @@ struct RemoveEdgeKindItem {
 
 impl RemoveEdgeKindItem {
     fn new(si: SnapshotId, schema_version: i64, edge_kind: EdgeKind) -> Self {
-        RemoveEdgeKindItem {
-            si,
-            schema_version,
-            edge_kind,
-        }
+        RemoveEdgeKindItem { si, schema_version, edge_kind }
     }
 }
 
@@ -726,7 +760,10 @@ impl ItemCommon for RemoveEdgeKindItem {
 
     fn to_kv(&self) -> GraphResult<(Vec<u8>, Vec<u8>)> {
         let key = format!("{}#{}#{}", Self::prefix(), self.si, self.schema_version);
-        let bytes = self.edge_kind.to_proto().write_to_bytes()
+        let bytes = self
+            .edge_kind
+            .to_proto()
+            .write_to_bytes()
             .map_err(|e| GraphError::new(InvalidData, format!("{:?}", e)))?;
         Ok((meta_key(&key), bytes))
     }
@@ -748,11 +785,12 @@ fn get_items<I: ItemCommon>(store: &dyn ExternalStorage) -> GraphResult<Vec<I>> 
 
 #[cfg(test)]
 mod tests {
+    use std::collections::{HashMap, HashSet};
+
     use super::*;
-    use std::collections::{HashSet, HashMap};
-    use crate::db::storage::rocksdb::RocksDB;
     use crate::db::graph::tests::types;
     use crate::db::graph::tests::types::TableInfoTest;
+    use crate::db::storage::rocksdb::RocksDB;
     use crate::db::util::fs;
 
     #[test]
@@ -801,7 +839,9 @@ mod tests {
             let mut label_to_vertex_table = HashMap::new();
             for label in 1..=10 {
                 let type_def = types::create_test_type_def(label);
-                let table = meta.create_vertex_type(10, schema_version, label, &type_def, schema_version).unwrap();
+                let table = meta
+                    .create_vertex_type(10, schema_version, label, &type_def, schema_version)
+                    .unwrap();
                 label_to_vertex_table.insert(label, table);
                 schema_version += 1;
             }
@@ -809,10 +849,13 @@ mod tests {
             let mut label_to_edge_table = HashMap::new();
             for label in 11..=20 {
                 let type_def = types::create_test_type_def(label);
-                meta.create_edge_type(10, schema_version, label, &type_def).unwrap();
+                meta.create_edge_type(10, schema_version, label, &type_def)
+                    .unwrap();
                 schema_version += 1;
                 for edge_kind in gen_edge_kinds(label) {
-                    let table = meta.add_edge_kind(10, schema_version, &edge_kind, schema_version).unwrap();
+                    let table = meta
+                        .add_edge_kind(10, schema_version, &edge_kind, schema_version)
+                        .unwrap();
                     label_to_edge_table.insert(edge_kind, table);
                     schema_version += 1;
                 }
@@ -869,7 +912,12 @@ mod tests {
         while let Some(ei) = iter.next() {
             assert!(set.remove(ei.get_type()));
             let mut tables = Vec::new();
-            tables.push(label_to_table.get(ei.get_type()).unwrap().clone());
+            tables.push(
+                label_to_table
+                    .get(ei.get_type())
+                    .unwrap()
+                    .clone(),
+            );
             types::EdgeTypeInfoTest::new(ei).test(tables);
         }
         assert!(set.is_empty());

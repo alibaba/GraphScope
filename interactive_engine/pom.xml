@@ -13,22 +13,18 @@
   <modules>
     <module>assembly</module>
     <module>common</module>
-    <module>compiler</module>
-    <module>coordinator</module>
     <module>data_load_tools</module>
     <module>executor</module>
-    <module>frontendservice</module>
     <module>groot</module>
     <module>groot-server</module>
     <module>lgraph</module>
     <module>sdk</module>
     <module>sdk-common</module>
     <module>tests</module>
-    <module>benchmark</module>
     <module>distribution</module>
     <module>../research/engine/pegasus/clients/java/client</module>
     <module>../research/query_service/ir/compiler</module>
-    <module>ir-adaptor</module>
+    <module>frontend</module>
   </modules>
 
   <properties>
@@ -75,27 +71,7 @@
       </dependency>
       <dependency>
         <groupId>com.alibaba.maxgraph</groupId>
-        <artifactId>maxgraph-compiler</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.alibaba.maxgraph</groupId>
-        <artifactId>maxgraph-frontendservice</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.alibaba.maxgraph</groupId>
-        <artifactId>maxgraph-coordinator</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.alibaba.maxgraph</groupId>
         <artifactId>maxgraph-sdk-common</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.alibaba.maxgraph</groupId>
-        <artifactId>maxgraph-tools</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
@@ -276,13 +252,6 @@
         <scope>test</scope>
       </dependency>
 
-      <!--<dependency>-->
-      <!--<groupId>mysql</groupId>-->
-      <!--<artifactId>mysql-connector-java</artifactId>-->
-      <!--<version>6.0.6</version>-->
-      <!--<scope>test</scope>-->
-      <!--</dependency>-->
-
       <dependency>
         <groupId>org.testng</groupId>
         <artifactId>testng</artifactId>
@@ -338,12 +307,6 @@
         <version>${junit.jupiter.version}</version>
         <scope>test</scope>
       </dependency>
-      <!--            <dependency>-->
-      <!--                <groupId>org.mockito</groupId>-->
-      <!--                <artifactId>mockito-all</artifactId>-->
-      <!--                <version>1.9.5</version>-->
-      <!--                <scope>test</scope>-->
-      <!--            </dependency>-->
       <dependency>
         <groupId>org.mockito</groupId>
         <artifactId>mockito-core</artifactId>

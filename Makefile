@@ -14,7 +14,7 @@ NETWORKX                    ?= ON
 BUILD_TEST                  ?= OFF
 
 # build java sdk option
-ENABLE_JAVA_SDK             ?= OFF
+ENABLE_JAVA_SDK             ?= ON
 
 .PHONY: all
 all: graphscope
@@ -101,7 +101,7 @@ endif
 ifeq (${ENABLE_JAVA_SDK}, ON)
 	cd $(WORKING_DIR)/analytical_engine/java && \
 	mvn clean install -DskipTests --quiet && \
-	sudo cp ${WORKING_DIR}/analytical_engine/java/grape-runtime/target/native/libgrape-jni.so ${INSTALL_PREFIX}/lib/ && \
+	sudo cp ${WORKING_DIR}/analytical_engine/java/grape-runtime/target/native/libgrape-jni.* ${INSTALL_PREFIX}/lib/ && \
 	sudo cp ${WORKING_DIR}/analytical_engine/java/grape-runtime/target/grape-runtime-0.1-shaded.jar ${INSTALL_PREFIX}/lib/ && \
 	sudo mkdir -p ${INSTALL_PREFIX}/conf/ && \
 	sudo cp ${WORKING_DIR}/analytical_engine/java/grape_jvm_opts ${INSTALL_PREFIX}/conf/
@@ -109,7 +109,7 @@ endif
 
 .PHONY: gie
 gie:
-	# coordinator/frontend/graphmanager
+	# frontend/executor
 	cd $(WORKING_DIR)/interactive_engine && \
 	mvn clean package -DskipTests -Pjava-release --quiet
 	# executor
@@ -123,7 +123,6 @@ gie:
 	# install
 	mkdir -p $(WORKING_DIR)/.install_prefix && \
 	tar -xf $(WORKING_DIR)/interactive_engine/assembly/target/maxgraph-assembly-0.0.1-SNAPSHOT.tar.gz --strip-components 1 -C $(WORKING_DIR)/.install_prefix && \
-	cp $(WORKING_DIR)/interactive_engine/executor/target/$(BUILD_TYPE)/executor $(WORKING_DIR)/.install_prefix/bin/executor && \
 	cp $(WORKING_DIR)/interactive_engine/executor/target/$(BUILD_TYPE)/gaia_executor $(WORKING_DIR)/.install_prefix/bin/gaia_executor && \
 	sudo cp -r $(WORKING_DIR)/.install_prefix/* $(INSTALL_PREFIX) && \
 	rm -fr $(WORKING_DIR)/.install_prefix

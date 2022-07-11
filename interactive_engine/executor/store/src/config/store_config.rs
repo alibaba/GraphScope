@@ -1,23 +1,24 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //! http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use structopt::StructOpt;
-use std::env;
-use serde_json::Value;
-use serde_json;
 use std::collections::HashMap;
+use std::env;
+
+use serde_json;
+use serde_json::Value;
+use structopt::StructOpt;
 
 pub const VINEYARD_GRAPH: &str = "vineyard";
 
@@ -66,7 +67,6 @@ pub struct StoreConfig {
     /// the interval of heartbeat
     #[structopt(long = "hb-interval-ms", default_value = "5000")]
     pub hb_interval_ms: u64,
-
 
     /// thread count of realtime insert
     #[structopt(long = "insert-thread-count", default_value = "1")]
@@ -118,29 +118,29 @@ pub struct StoreConfig {
     #[structopt(long = "hdfs-default-fs", default_value = "hdfs://")]
     pub hdfs_default_fs: String,
 
-    #[structopt(long = "timely-prepare-dir", default_value="prepare_query_info")]
-    pub timely_prepare_dir : String,
+    #[structopt(long = "timely-prepare-dir", default_value = "prepare_query_info")]
+    pub timely_prepare_dir: String,
 
-    #[structopt(long = "replica-count", default_value="1")]
-    pub replica_count : u32,
+    #[structopt(long = "replica-count", default_value = "1")]
+    pub replica_count: u32,
 
-    #[structopt(long = "realtime-write-buffer-size", default_value="1024")]
-    pub realtime_write_buffer_size : u32,
+    #[structopt(long = "realtime-write-buffer-size", default_value = "1024")]
+    pub realtime_write_buffer_size: u32,
 
-    #[structopt(long = "realtime-write-ingest-count", default_value="1")]
-    pub realtime_write_ingest_count : u32,
+    #[structopt(long = "realtime-write-ingest-count", default_value = "1")]
+    pub realtime_write_ingest_count: u32,
 
-    #[structopt(long = "realtime-write-buffer-mb", default_value="16")]
-    pub realtime_write_buffer_mb : u64,
+    #[structopt(long = "realtime-write-buffer-mb", default_value = "16")]
+    pub realtime_write_buffer_mb: u64,
 
-    #[structopt(long = "realtime-write-queue-count", default_value="128")]
-    pub realtime_write_queue_count : u32,
+    #[structopt(long = "realtime-write-queue-count", default_value = "128")]
+    pub realtime_write_queue_count: u32,
 
-    #[structopt(long = "realtime-precommit-buffer-size", default_value="8388608")]
-    pub realtime_precommit_buffer_size : u32,
+    #[structopt(long = "realtime-precommit-buffer-size", default_value = "8388608")]
+    pub realtime_precommit_buffer_size: u32,
 
-    #[structopt(long = "instance.unique.id", default_value="INSTANCE_ID")]
-    pub instance_id : String,
+    #[structopt(long = "instance.unique.id", default_value = "INSTANCE_ID")]
+    pub instance_id: String,
 
     #[structopt(long = "engine-name", default_value = "timely")]
     pub engine_name: String,
@@ -148,7 +148,7 @@ pub struct StoreConfig {
     #[structopt(long = "pegasus-thread-pool-size", default_value = "24")]
     pub pegasus_thread_pool_size: u32,
 
-    #[structopt(long = "graph-type", default_value="vineyard")]
+    #[structopt(long = "graph-type", default_value = "vineyard")]
     pub graph_type: String,
 
     #[structopt(long = "graph-vineyard-object-id", default_value = "0")]
@@ -171,8 +171,7 @@ impl StoreConfig {
         };
         if let Ok(env) = env::var("YARN_WORKER_ENV") {
             info!("$YARN_WORKER_ENV={}", env);
-            let json: Value = serde_json::from_str(env.as_str())
-                .expect("parse $YARN_WORKER_ENV error");
+            let json: Value = serde_json::from_str(env.as_str()).expect("parse $YARN_WORKER_ENV error");
             if let Some(x) = json["resource.executor.heapmem.mb"].as_str() {
                 store_config.total_memory_mb = x.parse().unwrap();
             } else {
@@ -230,7 +229,8 @@ impl StoreConfig {
 
             if let Some(x) = json["resource.ingestnode.count"].as_str() {
                 store_config.realtime_write_ingest_count = x.parse().unwrap();
-                store_config.realtime_write_queue_count = store_config.realtime_write_ingest_count / store_config.replica_count;
+                store_config.realtime_write_queue_count =
+                    store_config.realtime_write_ingest_count / store_config.replica_count;
             } else {
                 warn!("resource.ingestnode.count not found in YARN_WORKER_ENV");
             }
@@ -260,7 +260,6 @@ impl StoreConfig {
             } else {
                 warn!("zookeeper.auth.password not found in YARN_WORKER_ENV");
             }
-
         } else {
             warn!("environment variable $YARN_WORKER_ENV not found");
         }
@@ -290,21 +289,61 @@ impl StoreConfig {
         let mut args = Vec::new();
         args.push("executor".to_owned());
         args.push("--worker-id".to_owned());
-        args.push(store_options.get("node.idx").unwrap().to_owned());
+        args.push(
+            store_options
+                .get("node.idx")
+                .unwrap()
+                .to_owned(),
+        );
         args.push("--graph-name".to_owned());
-        args.push(store_options.get("graph.name").unwrap().to_owned());
+        args.push(
+            store_options
+                .get("graph.name")
+                .unwrap()
+                .to_owned(),
+        );
         args.push("--partition-num".to_owned());
-        args.push(store_options.get("partition.count").unwrap().to_owned());
+        args.push(
+            store_options
+                .get("partition.count")
+                .unwrap()
+                .to_owned(),
+        );
         args.push("--graph-port".to_owned());
-        args.push(store_options.get("graph.port").unwrap().to_owned());
+        args.push(
+            store_options
+                .get("graph.port")
+                .unwrap()
+                .to_owned(),
+        );
         args.push("--query-port".to_owned());
-        args.push(store_options.get("query.port").unwrap().to_owned());
+        args.push(
+            store_options
+                .get("query.port")
+                .unwrap()
+                .to_owned(),
+        );
         args.push("--engine-port".to_owned());
-        args.push(store_options.get("engine.port").unwrap().to_owned());
+        args.push(
+            store_options
+                .get("engine.port")
+                .unwrap()
+                .to_owned(),
+        );
         args.push("--timely-worker-per-process".to_owned());
-        args.push(store_options.get("worker.per.process").unwrap().to_owned());
+        args.push(
+            store_options
+                .get("worker.per.process")
+                .unwrap()
+                .to_owned(),
+        );
         args.push("--worker-num".to_owned());
-        args.push(store_options.get("worker.num").unwrap().to_owned());
+        args.push(
+            store_options
+                .get("worker.num")
+                .unwrap()
+                .to_owned(),
+        );
         StoreConfig::from_iter(args.into_iter())
     }
 
@@ -320,7 +359,10 @@ impl StoreConfig {
                 } else {
                     flag = true;
                 }
-                let p = format!("{}/{}_{}/{}_{}", disk, self.graph_name, self.instance_id, self.worker_id, self.alive_id);
+                let p = format!(
+                    "{}/{}_{}/{}_{}",
+                    disk, self.graph_name, self.instance_id, self.worker_id, self.alive_id
+                );
                 new_path += &p;
             }
         }
