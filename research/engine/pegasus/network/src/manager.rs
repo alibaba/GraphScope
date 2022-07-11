@@ -15,8 +15,10 @@
 
 use std::net::{SocketAddr, ToSocketAddrs};
 use std::sync::{Arc, Mutex};
+use std::thread::sleep;
+use std::time::Duration;
 
-use crate::config::ConnectionParams;
+use crate::config::{ConnectionParams, ServerAddr};
 use crate::{NetError, Server};
 
 pub trait ServerDetect: Send {
@@ -61,6 +63,30 @@ impl ServerManager {
 impl ServerDetect for Vec<Server> {
     fn fetch(&self) -> Vec<Server> {
         self.clone()
+    }
+}
+
+impl ServerDetect for Vec<ServerAddr> {
+    fn fetch(&self) -> Vec<Server> {
+        let mut servers = Vec::with_capacity(self.len());
+        let mut servers_found_status = vec![false; self.len()];
+        let max_try_time = self.len() * 2;
+        let mut times = 0;
+        while servers.len() < self.len() && times < max_try_time {
+            for (id, server_addr) in self.iter().enumerate() {
+                if servers_found_status[id] {
+                    continue;
+                }
+                if let Ok(socket_addr) = server_addr.to_socket_addr() {
+                    servers_found_status[id] = true;
+                    let server = Server { id: id as u64, addr: socket_addr };
+                    servers.push(server);
+                }
+            }
+            times += 1;
+            sleep(Duration::from_secs(1));
+        }
+        servers
     }
 }
 

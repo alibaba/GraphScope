@@ -156,19 +156,19 @@ pub struct NetworkConfig {
     servers: Option<Vec<Option<ServerAddr>>>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct ServerAddr {
-    ip: String,
+    hostname: String,
     port: u16,
 }
 
 impl ServerAddr {
-    pub fn new(ip: String, port: u16) -> Self {
-        ServerAddr { ip, port }
+    pub fn new(hostname: String, port: u16) -> Self {
+        ServerAddr { hostname, port }
     }
 
-    pub fn get_ip(&self) -> &str {
-        &self.ip
+    pub fn get_hostname(&self) -> &str {
+        &self.hostname
     }
 
     pub fn get_port(&self) -> u16 {
@@ -176,7 +176,7 @@ impl ServerAddr {
     }
 
     pub fn to_socket_addr(&self) -> Result<SocketAddr, NetError> {
-        let socket_addrs_iter = (self.ip.as_str(), self.port).to_socket_addrs()?;
+        let socket_addrs_iter = (self.hostname.as_str(), self.port).to_socket_addrs()?;
         let mut ipv4_addrs = vec![];
         let mut ipv6_addrs = vec![];
         for addr in socket_addrs_iter {
@@ -187,7 +187,7 @@ impl ServerAddr {
             }
         }
         if ipv4_addrs.len() == 0 && ipv6_addrs.len() == 0 {
-            Err(NetError::HostParseError(format!("{}:{}", self.ip, self.port)))
+            Err(NetError::HostParseError(format!("{}:{}", self.hostname, self.port)))
         } else if ipv4_addrs.len() == 0 {
             Ok(ipv6_addrs[0])
         } else {
@@ -450,6 +450,25 @@ impl NetworkConfig {
         }
     }
 
+    pub fn get_server_addrs(&self) -> Result<Vec<ServerAddr>, NetError> {
+        if let Some(server_addr_candies) = self.servers.as_ref() {
+            let mut server_addrs = Vec::with_capacity(server_addr_candies.len());
+            for (id, server_addr_candi) in server_addr_candies.iter().enumerate() {
+                if let Some(server_addr) = server_addr_candi {
+                    server_addrs.push(server_addr.clone());
+                } else {
+                    return Err(NetError::InvalidConfig(Some(format!(
+                        "address of server {} not found",
+                        id
+                    )))); 
+                }
+            }
+            Ok(server_addrs)
+        } else {
+            Ok(vec![])
+        }
+    }
+
     pub fn get_server_addr(&self, server_id: u64) -> Option<&ServerAddr> {
         if let Some(servers) = self.servers.as_ref() {
             if server_id >= servers.len() as u64 {
@@ -478,11 +497,11 @@ mod test {
             write_timeout_ms = 8
 
             [[servers]]
-            ip = '127.0.0.1'
+            hostname = '127.0.0.1'
             port = 8080
 
             [[servers]]
-            ip = '127.0.0.1'
+            hostname = '127.0.0.1'
             port = 8081
         "#;
 

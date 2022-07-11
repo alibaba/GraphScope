@@ -84,7 +84,7 @@ async fn main() {
             if let Some(net_conf) = server_config.network_config() {
                 if let Some(addr) = net_conf
                     .get_server_addr(0)
-                    .map(|s| s.get_ip().to_owned())
+                    .map(|s| s.get_hostname().to_owned())
                 {
                     host = addr;
                 }
@@ -112,7 +112,7 @@ async fn main() {
                 let addr = net_conf
                     .get_server_addr(i as u64)
                     .expect("server not found");
-                let host = addr.get_ip().to_owned();
+                let host = addr.get_hostname().to_owned();
                 info!("connect to server[{}]({}:{})", i, host, port);
                 client
                     .connect(i as u64, format!("http://{}:{}", host, port))
