@@ -22,7 +22,7 @@ use crate::Data;
 /// user-defined function (udf) to produce a new data to the output stream.
 ///
 /// [`Unary`]: crate::api::primitive::unary::Unary
-pub trait Map<I: Data> {
+pub trait Map<I: Data>: MapWithName<I> {
     /// Apply the user-defined function `func`, that mutates each data of type `I` of the
     /// input stream, and produce the data of type `O` to the output stream.
     ///
@@ -50,7 +50,11 @@ pub trait Map<I: Data> {
     fn map<O, F>(self, func: F) -> Result<Stream<O>, BuildJobError>
     where
         O: Data,
-        F: Fn(I) -> FnResult<O> + Send + 'static;
+        F: Fn(I) -> FnResult<O> + Send + 'static,
+        Self: Sized,
+    {
+        self.map_with_name("", func)
+    }
 
     /// Similar to [`map`], this function mutates the input data of the type `I` into
     /// the output data of the type `O`. The difference is, [`map`] must produce an output
@@ -94,7 +98,11 @@ pub trait Map<I: Data> {
     fn filter_map<O, F>(self, func: F) -> Result<Stream<O>, BuildJobError>
     where
         O: Data,
-        F: Fn(I) -> FnResult<Option<O>> + Send + 'static;
+        F: Fn(I) -> FnResult<Option<O>> + Send + 'static,
+        Self: Sized,
+    {
+        self.filter_map_with_name("", func)
+    }
 
     /// This function can produce zero, one and more than one output data items for each input
     /// item, in which the udf function allows the user to specify the output data as an iterator.
@@ -133,6 +141,29 @@ pub trait Map<I: Data> {
     ///     assert_eq!(expected, [1, 1, 2, 3, 3, 4, 5, 5, 7]);
     /// ```
     fn flat_map<O, R, F>(self, func: F) -> Result<Stream<O>, BuildJobError>
+    where
+        O: Data,
+        R: Iterator<Item = O> + Send + 'static,
+        F: Fn(I) -> FnResult<R> + Send + 'static,
+        Self: Sized,
+    {
+        self.flat_map_with_name("", func)
+    }
+}
+
+/// Map interfaces with extra specified name
+pub trait MapWithName<I: Data> {
+    fn map_with_name<O, F>(self, name: &str, func: F) -> Result<Stream<O>, BuildJobError>
+    where
+        O: Data,
+        F: Fn(I) -> FnResult<O> + Send + 'static;
+
+    fn filter_map_with_name<O, F>(self, name: &str, func: F) -> Result<Stream<O>, BuildJobError>
+    where
+        O: Data,
+        F: Fn(I) -> FnResult<Option<O>> + Send + 'static;
+
+    fn flat_map_with_name<O, R, F>(self, name: &str, func: F) -> Result<Stream<O>, BuildJobError>
     where
         O: Data,
         R: Iterator<Item = O> + Send + 'static,

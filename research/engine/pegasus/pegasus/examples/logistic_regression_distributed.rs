@@ -2,7 +2,7 @@ use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
 
 use pegasus::api::{Iteration, Map, Reduce, Sink};
-use pegasus::resource::{DefaultParResource, DistributedParResource};
+use pegasus::resource::DistributedParResource;
 use pegasus::{Configuration, JobConf, ServerConf};
 use structopt::StructOpt;
 
