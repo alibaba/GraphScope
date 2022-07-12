@@ -27,7 +27,6 @@ use crate::data::MicroBatch;
 use crate::data_plane::Push;
 use crate::errors::IOError;
 use crate::graph::Port;
-use crate::progress::DynPeers;
 use crate::tag::tools::map::TidyTagMap;
 use crate::{Data, Tag};
 
@@ -188,12 +187,12 @@ impl<D: Data> Push<MicroBatch<D>> for PerChannelPush<D> {
             if let Some(end) = batch.take_end() {
                 if self.delta.scope_level_delta() > 0 {
                     // enter / to-child
-                    let mut end_cp = end.clone();
+                    let end_cp = end.clone();
                     batch.set_end(end);
                     batch.set_tag(tag);
                     trace_worker!("channel[{}] pushed end of scope{:?};", self.ch_info.id.index, batch.tag);
                     self.push.push(batch)?;
-                    end_cp.update_peers(DynPeers::all());
+                    // end_cp.update_peers(DynPeers::all());
                     let last = MicroBatch::last(self.src, end_cp);
                     trace_worker!("channel[{}] pushed end of scope{:?};", self.ch_info.id.index, last.tag);
                     self.push.push(last)

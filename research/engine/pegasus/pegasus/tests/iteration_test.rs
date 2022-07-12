@@ -13,7 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 //
-use pegasus::api::{CorrelatedSubTask, Count, EmitKind, IterCondition, Iteration, Map, Reduce, Sink};
+use pegasus::api::{CorrelatedSubTask, Count, EmitKind, Fold, IterCondition, Iteration, Map, Reduce, Sink};
 use pegasus::JobConf;
 
 #[test]
@@ -562,4 +562,28 @@ fn modern_graph_iter_times2_and_times2() {
     }
     expected.sort();
     assert_eq!(results, expected)
+}
+
+#[test]
+fn fold_x_unfold_x_x_filter_map_x_empty_iterate_test() {
+    let mut conf = JobConf::new("fold_x_unfold_x_x_filter_map_x_empty_iterate_test");
+    conf.set_workers(3);
+    let mut result = pegasus::run(conf, || {
+        move |input, output| {
+            let stream = input.input_from(vec![0i64])?;
+            stream
+                .fold(0, || |collect, _| Ok(collect))?
+                .unfold(|source| Ok(Some(source).into_iter()))?
+                .filter_map(move |source| if source > 0 { Ok(Some(source)) } else { Ok(None) })? // all data will be filtered here
+                .iterate_emit_until(IterCondition::max_iters(64), EmitKind::After, move |start| {
+                    start.map(|count| Ok(count + 1))
+                })?
+                .sink_into(output)
+        }
+    })
+    .expect("submit job failure");
+
+    while let Some(v) = result.next() {
+        println!("get {}", v.unwrap());
+    }
 }
