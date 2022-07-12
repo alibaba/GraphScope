@@ -1,16 +1,16 @@
 #![allow(dead_code)]
-use ::crossbeam_epoch as epoch;
-use ::crossbeam_epoch::{Atomic, Owned, Guard, Shared};
-
-use std::collections::HashMap;
 use std::collections::hash_map::Values;
-use std::sync::Arc;
+use std::collections::HashMap;
 use std::sync::atomic::Ordering;
+use std::sync::Arc;
 
-use crate::db::api::*;
-use super::super::table_manager::*;
+use ::crossbeam_epoch as epoch;
+use ::crossbeam_epoch::{Atomic, Guard, Owned, Shared};
+
 use super::super::codec::*;
+use super::super::table_manager::*;
 use super::common::*;
+use crate::db::api::*;
 
 pub struct VertexTypeInfo {
     label: LabelId,
@@ -57,11 +57,7 @@ impl VertexTypeInfo {
     }
 
     fn new(si: SnapshotId, label: LabelId) -> Self {
-        VertexTypeInfo {
-            label,
-            lifetime: LifeTime::new(si),
-            info: TypeCommon::new(),
-        }
+        VertexTypeInfo { label, lifetime: LifeTime::new(si), info: TypeCommon::new() }
     }
 }
 
@@ -92,10 +88,7 @@ impl VertexTypeInfoRef {
     }
 
     fn new(info: &'static VertexTypeInfo, guard: Guard) -> Self {
-        VertexTypeInfoRef {
-            info,
-            _guard: guard,
-        }
+        VertexTypeInfoRef { info, _guard: guard }
     }
 }
 
@@ -126,25 +119,19 @@ impl VertexTypeInfoIter {
     }
 
     fn new(si: SnapshotId, values: Values<'static, LabelId, Arc<VertexTypeInfo>>, guard: Guard) -> Self {
-        VertexTypeInfoIter {
-            si,
-            inner: values,
-            _guard: guard,
-        }
+        VertexTypeInfoIter { si, inner: values, _guard: guard }
     }
 }
 
 type VertexMap = HashMap<LabelId, Arc<VertexTypeInfo>>;
 
 pub struct VertexTypeManager {
-    map: Atomic<VertexMap>
+    map: Atomic<VertexMap>,
 }
 
 impl VertexTypeManager {
     pub fn new() -> Self {
-        VertexTypeManager {
-            map: Atomic::new(VertexMap::new()),
-        }
+        VertexTypeManager { map: Atomic::new(VertexMap::new()) }
     }
 
     pub fn contains_type(&self, _si: SnapshotId, label: LabelId) -> bool {
@@ -153,7 +140,9 @@ impl VertexTypeManager {
         map.contains_key(&label)
     }
 
-    pub fn create_type(&self, si: SnapshotId, label: LabelId, codec: Codec, table0: Table) -> GraphResult<()> {
+    pub fn create_type(
+        &self, si: SnapshotId, label: LabelId, codec: Codec, table0: Table,
+    ) -> GraphResult<()> {
         assert_eq!(si, table0.start_si, "type start si must be equal to table0.start_si");
         unsafe {
             let guard = epoch::pin();
@@ -169,7 +158,8 @@ impl VertexTypeManager {
             res_unwrap!(info.online_table(table0), create_type)?;
             let mut map_clone = map_ref.clone();
             map_clone.insert(label, Arc::new(info));
-            self.map.store(Owned::new(map_clone), Ordering::Relaxed);
+            self.map
+                .store(Owned::new(map_clone), Ordering::Relaxed);
             guard.defer_destroy(map);
             Ok(())
         }
@@ -242,7 +232,8 @@ impl VertexTypeManager {
                 for label in b {
                     map_clone.remove(&label);
                 }
-                self.map.store(Owned::new(map_clone), Ordering::Relaxed);
+                self.map
+                    .store(Owned::new(map_clone), Ordering::Relaxed);
                 guard.defer_destroy(map);
             }
             Ok(table_ids)
@@ -250,9 +241,7 @@ impl VertexTypeManager {
     }
 
     fn get_map(&self, guard: &Guard) -> &'static VertexMap {
-        unsafe {
-            &*self.map.load(Ordering::Relaxed, guard).as_raw()
-        }
+        unsafe { &*self.map.load(Ordering::Relaxed, guard).as_raw() }
     }
 
     fn get_shared_map<'g>(&self, guard: &'g Guard) -> Shared<'g, VertexMap> {
@@ -266,9 +255,7 @@ pub struct VertexTypeManagerBuilder {
 
 impl VertexTypeManagerBuilder {
     pub fn new() -> Self {
-        VertexTypeManagerBuilder {
-            map: VertexMap::new(),
-        }
+        VertexTypeManagerBuilder { map: VertexMap::new() }
     }
 
     pub fn create(&mut self, si: SnapshotId, label: LabelId, type_def: &TypeDef) -> GraphResult<()> {
@@ -291,7 +278,7 @@ impl VertexTypeManagerBuilder {
             return Ok(());
         }
         let msg = format!("vertex#{} not found", label);
-        let err = gen_graph_err!(GraphErrorCode::TypeNotFound, msg ,drop, si, label);
+        let err = gen_graph_err!(GraphErrorCode::TypeNotFound, msg, drop, si, label);
         Err(err)
     }
 
@@ -307,11 +294,8 @@ impl VertexTypeManagerBuilder {
     }
 
     pub fn build(self) -> VertexTypeManager {
-        VertexTypeManager {
-            map: Atomic::new(self.map),
-        }
+        VertexTypeManager { map: Atomic::new(self.map) }
     }
-
 }
 
 #[cfg(test)]
@@ -348,4 +332,3 @@ mod tests {
         assert_eq!(table, table2);
     }
 }
-

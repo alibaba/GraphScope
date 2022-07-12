@@ -1,10 +1,11 @@
 use ::rand::prelude::*;
-use crate::db::api::*;
-use super::types;
-use super::data;
-use super::util::*;
+
 use self::benchmark::*;
+use super::data;
+use super::types;
+use super::util::*;
 use crate::db::api::multi_version_graph::MultiVersionGraph;
+use crate::db::api::*;
 
 pub fn bench_insert_vertex<G: MultiVersionGraph>(graph: G) {
     let benchmark = InsertVertexBenchmark::new(graph);
@@ -17,8 +18,9 @@ pub fn bench_insert_edge<G: MultiVersionGraph>(graph: G) {
 }
 
 mod benchmark {
-    use super::*;
     use std::collections::HashMap;
+
+    use super::*;
 
     pub struct InsertVertexBenchmark<G: MultiVersionGraph> {
         graph: G,
@@ -26,9 +28,7 @@ mod benchmark {
 
     impl<G: MultiVersionGraph> InsertVertexBenchmark<G> {
         pub fn new(graph: G) -> Self {
-            InsertVertexBenchmark {
-                graph,
-            }
+            InsertVertexBenchmark { graph }
         }
 
         pub fn execute(&self) {
@@ -46,9 +46,11 @@ mod benchmark {
             // length from 128B to 4KB
             for value_len in 7..=12 {
                 let label = value_len as LabelId;
-                self.graph.create_vertex_type(1, schema_version, label, &type_def, schema_version).unwrap();
+                self.graph
+                    .create_vertex_type(1, schema_version, label, &type_def, schema_version)
+                    .unwrap();
                 schema_version += 1;
-                let len = 1<<value_len;
+                let len = 1 << value_len;
                 let properties = data::gen_one_string_properties(&type_def, len);
 
                 let test_count = 100000;
@@ -66,7 +68,9 @@ mod benchmark {
             for r#type in vec![ValueType::Int, ValueType::Long, ValueType::Float, ValueType::Double] {
                 label += 1;
                 let type_def = types::create_one_property_type_def(r#type);
-                self.graph.create_vertex_type(1, schema_version, label, &type_def, schema_version).unwrap();
+                self.graph
+                    .create_vertex_type(1, schema_version, label, &type_def, schema_version)
+                    .unwrap();
                 schema_version += 1;
                 let properties = data::gen_properties(&type_def);
 
@@ -85,7 +89,9 @@ mod benchmark {
             for count in vec![5, 10, 20, 50, 100, 200] {
                 label += 1;
                 let type_def = types::multi_numeric_properties_type_def(count);
-                self.graph.create_vertex_type(1, schema_version, label, &type_def, schema_version).unwrap();
+                self.graph
+                    .create_vertex_type(1, schema_version, label, &type_def, schema_version)
+                    .unwrap();
                 schema_version += 1;
                 let properties = data::gen_properties(&type_def);
 
@@ -104,7 +110,9 @@ mod benchmark {
             for count in vec![5, 10, 20, 50, 100, 200] {
                 label += 1;
                 let type_def = types::multi_string_properties_type_def(count);
-                self.graph.create_vertex_type(1, schema_version, label, &type_def, schema_version).unwrap();
+                self.graph
+                    .create_vertex_type(1, schema_version, label, &type_def, schema_version)
+                    .unwrap();
                 schema_version += 1;
                 let properties = data::gen_properties(&type_def);
 
@@ -119,13 +127,17 @@ mod benchmark {
             // warmup
             for _ in 0..test_count {
                 let id = random();
-                self.graph.insert_overwrite_vertex(1, id, label, properties).unwrap();
+                self.graph
+                    .insert_overwrite_vertex(1, id, label, properties)
+                    .unwrap();
             }
 
             let timer = Timer::new();
             for _ in 0..test_count {
                 let id = random();
-                self.graph.insert_overwrite_vertex(1, id, label, properties).unwrap();
+                self.graph
+                    .insert_overwrite_vertex(1, id, label, properties)
+                    .unwrap();
             }
             let cost = timer.elapsed_secs();
             test_count as f64 / cost
@@ -138,9 +150,7 @@ mod benchmark {
 
     impl<G: MultiVersionGraph> InsertEdgeBenchmark<G> {
         pub fn new(graph: G) -> Self {
-            InsertEdgeBenchmark {
-                graph,
-            }
+            InsertEdgeBenchmark { graph }
         }
 
         pub fn execute(&self) {
@@ -158,13 +168,17 @@ mod benchmark {
             let mut schema_version = 1;
             for value_len in 7..=12 {
                 let label = value_len as LabelId;
-                let edge_type = EdgeKind::new(label, label+1, label+2);
-                self.graph.create_edge_type(1, schema_version, label, &type_def).unwrap();
+                let edge_type = EdgeKind::new(label, label + 1, label + 2);
+                self.graph
+                    .create_edge_type(1, schema_version, label, &type_def)
+                    .unwrap();
                 schema_version += 1;
-                self.graph.add_edge_kind(1, schema_version, &edge_type, schema_version).unwrap();
+                self.graph
+                    .add_edge_kind(1, schema_version, &edge_type, schema_version)
+                    .unwrap();
                 schema_version += 1;
 
-                let len = 1<<value_len;
+                let len = 1 << value_len;
                 let properties = data::gen_one_string_properties(&type_def, len);
 
                 let test_count = 100000;
@@ -182,10 +196,14 @@ mod benchmark {
             for r#type in vec![ValueType::Int, ValueType::Long, ValueType::Float, ValueType::Double] {
                 label += 1;
                 let type_def = types::create_one_property_type_def(r#type);
-                let edge_type = EdgeKind::new(label, label+1, label+2);
-                self.graph.create_edge_type(1, schema_version, label, &type_def).unwrap();
+                let edge_type = EdgeKind::new(label, label + 1, label + 2);
+                self.graph
+                    .create_edge_type(1, schema_version, label, &type_def)
+                    .unwrap();
                 schema_version += 1;
-                self.graph.add_edge_kind(1, schema_version, &edge_type, schema_version).unwrap();
+                self.graph
+                    .add_edge_kind(1, schema_version, &edge_type, schema_version)
+                    .unwrap();
                 schema_version += 1;
                 let properties = data::gen_properties(&type_def);
 
@@ -204,10 +222,14 @@ mod benchmark {
             for count in vec![5, 10, 20, 50, 100, 200] {
                 label += 1;
                 let type_def = types::multi_numeric_properties_type_def(count);
-                let edge_type = EdgeKind::new(label, label+1, label+2);
-                self.graph.create_edge_type(1, schema_version, label, &type_def).unwrap();
+                let edge_type = EdgeKind::new(label, label + 1, label + 2);
+                self.graph
+                    .create_edge_type(1, schema_version, label, &type_def)
+                    .unwrap();
                 schema_version += 1;
-                self.graph.add_edge_kind(1, schema_version, &edge_type, schema_version).unwrap();
+                self.graph
+                    .add_edge_kind(1, schema_version, &edge_type, schema_version)
+                    .unwrap();
                 schema_version += 1;
                 let properties = data::gen_properties(&type_def);
 
@@ -226,10 +248,14 @@ mod benchmark {
             for count in vec![5, 10, 20, 50, 100, 200] {
                 label += 1;
                 let type_def = types::multi_string_properties_type_def(count);
-                let edge_type = EdgeKind::new(label, label+1, label+2);
-                self.graph.create_edge_type(1,  schema_version, label, &type_def).unwrap();
+                let edge_type = EdgeKind::new(label, label + 1, label + 2);
+                self.graph
+                    .create_edge_type(1, schema_version, label, &type_def)
+                    .unwrap();
                 schema_version += 1;
-                self.graph.add_edge_kind(1, schema_version,  &edge_type, schema_version).unwrap();
+                self.graph
+                    .add_edge_kind(1, schema_version, &edge_type, schema_version)
+                    .unwrap();
                 schema_version += 1;
                 let properties = data::gen_properties(&type_def);
 
@@ -240,7 +266,9 @@ mod benchmark {
             println!("========================================");
         }
 
-        fn bench(&self, edge_type: &EdgeKind, properties: &HashMap<PropertyId, Value>, test_count: usize) -> f64 {
+        fn bench(
+            &self, edge_type: &EdgeKind, properties: &HashMap<PropertyId, Value>, test_count: usize,
+        ) -> f64 {
             // warmup
             self.insert(edge_type, properties, test_count);
 
@@ -250,7 +278,9 @@ mod benchmark {
             test_count as f64 / cost
         }
 
-        fn insert(&self, edge_type: &EdgeKind, properties: &HashMap<PropertyId, Value>, mut test_count: usize) {
+        fn insert(
+            &self, edge_type: &EdgeKind, properties: &HashMap<PropertyId, Value>, mut test_count: usize,
+        ) {
             let mut inner_id = 0;
             while test_count > 0 {
                 let src_id = random();
@@ -258,14 +288,15 @@ mod benchmark {
                 if count > test_count as i64 {
                     count = test_count as i64;
                 }
-                for dst_id in src_id+1..=src_id+count {
+                for dst_id in src_id + 1..=src_id + count {
                     inner_id += 1;
                     let id = EdgeId::new(src_id, dst_id, inner_id);
-                    self.graph.insert_overwrite_edge(1, id, edge_type, true, properties).unwrap();
+                    self.graph
+                        .insert_overwrite_edge(1, id, edge_type, true, properties)
+                        .unwrap();
                 }
                 test_count -= count as usize;
             }
         }
     }
 }
-

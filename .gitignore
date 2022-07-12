@@ -77,3 +77,4 @@ coordinator/graphlearn*
 # Lock files
 Chart.lock
 **/Cargo.lock
+package.lock

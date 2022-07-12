@@ -32,6 +32,7 @@ endif
 VERSION ?= latest
 VINEYARD_VERSION ?= v0.6.0
 PROFILE ?= release
+CI ?= false
 
 
 BUILD_PROGRESS  	= auto
@@ -81,6 +82,7 @@ graphscope-store-image:
 	docker pull ${REGISTRY}/$(DOCKER_ORG)/graphscope-vineyard:${VINEYARD_VERSION}
 	docker build --progress=$(BUILD_PROGRESS) \
                  --build-arg profile=${PROFILE} \
+				 --build-arg CI=${CI} \
                  -t graphscope/graphscope-store:${SHORT_SHA} \
                  --network=host \
                  -f $(WORKING_DIR)/graphscope-store.Dockerfile ..
@@ -109,14 +111,14 @@ graphscope-darwin-py3:
 	sudo rm -fr /tmp/v6d /tmp/libgrape-lite
 	# build graphscope
 	cd $(WORKING_DIR)/../ && \
+		python3 -m pip install --upgrade setuptools && \
 		make install && \
 		python3 $(WORKING_DIR)/precompile.py
 	# build and delocate wheel
 	cd $(WORKING_DIR)/../coordinator && \
 		export WITH_EXTRA_DATA=ON && \
 		rm -fr build dist/*.whl || true && \
-		sudo strip -s $(WORKING_DIR)/../analytical_engine/exported_symbols_osx.lds /opt/graphscope/bin/grape_engine && \
-		sudo strip /opt/graphscope/bin/executor && \
+		sudo strip -s $(WORKING_DIR)/../analytical_engine/exported_symbols_osx.lds /opt/graphscope/bin/grape_engine || true && \
 		sudo strip /opt/graphscope/bin/gaia_executor && \
 		export DYLD_LIBRARY_PATH=/usr/local/lib:$$DYLD_LIBRARY_PATH && \
 		package_name=gs-include python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
@@ -142,7 +144,6 @@ graphscope-manylinux2014-py3-nodocker:
 	cd $(WORKING_DIR)/../coordinator && \
 	rm -fr build dist/*.whl && \
 	sudo strip /opt/graphscope/bin/grape_engine && \
-	sudo strip /opt/graphscope/bin/executor && \
 	sudo strip /opt/graphscope/bin/gaia_executor && \
 	sudo strip /opt/graphscope/lib/*.so && \
 	strip /tmp/gs/builtin/*/*.so && \

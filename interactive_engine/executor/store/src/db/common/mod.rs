@@ -1,6 +1,6 @@
 pub mod bytes;
-pub mod numeric;
 pub mod concurrency;
+pub mod iterator;
+pub mod numeric;
 pub mod str;
 pub mod unsafe_util;
-pub mod iterator;

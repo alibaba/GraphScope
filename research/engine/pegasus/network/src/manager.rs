@@ -84,7 +84,7 @@ impl ServerDetect for Vec<ServerAddr> {
                     let server = Server { id: id as u64, addr: socket_addr };
                     servers.push(server);
                 } else {
-                    error!("Fail to resolve hostname: {}", server_addr.get_hostname());
+                    warn!("Fail to resolve hostname: {}", server_addr.get_hostname());
                 }
             }
             // sleep for dns server's update

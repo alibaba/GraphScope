@@ -26,13 +26,12 @@ import java.util.List;
 
 public class RpcChannelManagerFetcher implements RpcChannelFetcher {
     private ChannelManager manager;
-    private int pegasusServerNum;
+    private int nodeCount;
     private RoleType targetRole;
 
-    public RpcChannelManagerFetcher(
-            ChannelManager manager, int pegasusServerNum, RoleType targetRole) {
+    public RpcChannelManagerFetcher(ChannelManager manager, int nodeCount, RoleType targetRole) {
         this.manager = manager;
-        this.pegasusServerNum = pegasusServerNum;
+        this.nodeCount = nodeCount;
         this.targetRole = targetRole;
         this.manager.registerRole(this.targetRole);
     }
@@ -40,7 +39,7 @@ public class RpcChannelManagerFetcher implements RpcChannelFetcher {
     @Override
     public List<RpcChannel> fetch() {
         List<RpcChannel> channels = new ArrayList<>();
-        for (int i = 0; i < pegasusServerNum; ++i) {
+        for (int i = 0; i < nodeCount; ++i) {
             channels.add(new RpcChannel(manager.getChannel(this.targetRole, i)));
         }
         return channels;

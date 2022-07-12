@@ -1,12 +1,12 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //! http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -31,11 +31,11 @@ pub struct AndCondition {
 
 impl AndCondition {
     pub fn new(conditions: Vec<Condition>) -> Self {
-        let sub_conditions = conditions.into_iter()
-            .map(|c| Box::new(c)).collect();
-        AndCondition {
-            sub_conditions,
-        }
+        let sub_conditions = conditions
+            .into_iter()
+            .map(|c| Box::new(c))
+            .collect();
+        AndCondition { sub_conditions }
     }
 }
 
@@ -46,11 +46,11 @@ pub struct OrCondition {
 
 impl OrCondition {
     pub fn new(condition: Vec<Condition>) -> Self {
-        let sub_conditions = condition.into_iter()
-            .map(|c| Box::new(c)).collect();
-        OrCondition {
-            sub_conditions,
-        }
+        let sub_conditions = condition
+            .into_iter()
+            .map(|c| Box::new(c))
+            .collect();
+        OrCondition { sub_conditions }
     }
 }
 
@@ -61,9 +61,7 @@ pub struct NotCondition {
 
 impl NotCondition {
     pub fn new(condition: Condition) -> Self {
-        NotCondition {
-            sub_condition: Box::new(condition),
-        }
+        NotCondition { sub_condition: Box::new(condition) }
     }
 }
 
@@ -76,11 +74,7 @@ pub struct CmpCondition {
 
 impl CmpCondition {
     pub fn new(key: PropId, op: CmpOp, value: Property) -> Self {
-        CmpCondition {
-            key,
-            op,
-            value,
-        }
+        CmpCondition { key, op, value }
     }
 }
 
@@ -99,9 +93,7 @@ pub struct ConditionBuilder {
 
 impl ConditionBuilder {
     pub fn new() -> Self {
-        ConditionBuilder {
-            condition: None,
-        }
+        ConditionBuilder { condition: None }
     }
 
     pub fn and(&mut self, condition: Condition) -> &mut Self {
@@ -162,6 +154,7 @@ fn test_condition() {
         .and(Condition::Cmp(CmpCondition::new(1, CmpOp::GreaterEqual, Property::Int(2))))
         .and(Condition::Cmp(CmpCondition::new(1, CmpOp::LessEqual, Property::Int(10))))
         .or(Condition::Cmp(CmpCondition::new(2, CmpOp::Equal, Property::String("xxx".to_owned()))))
-        .build().unwrap();
+        .build()
+        .unwrap();
     println!("{:?}", condition);
 }

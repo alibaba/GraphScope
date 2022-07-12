@@ -1,8 +1,7 @@
-use crate::db::api::*;
-
 use super::helper::GraphTestHelper;
 use super::types;
 use crate::db::api::multi_version_graph::MultiVersionGraph;
+use crate::db::api::*;
 
 pub fn test_get_edge<G: MultiVersionGraph>(graph: G) {
     let tester = tester::GetEdgeTester::new(graph);
@@ -40,8 +39,8 @@ pub fn test_remove_edge_kind<G: MultiVersionGraph>(graph: G) {
 }
 
 mod tester {
-    use super::*;
     use super::common::*;
+    use super::*;
     use crate::db::api::multi_version_graph::MultiVersionGraph;
 
     pub struct QueryEdgesTester<G: MultiVersionGraph> {
@@ -50,9 +49,7 @@ mod tester {
 
     impl<G: MultiVersionGraph> QueryEdgesTester<G> {
         pub fn new(graph: G) -> Self {
-            QueryEdgesTester {
-                graph,
-            }
+            QueryEdgesTester { graph }
         }
 
         pub fn execute(&self) {
@@ -60,7 +57,9 @@ mod tester {
             let data_gen = EdgeDataGen::default();
             let label1 = 1;
 
-            helper.create_edge_type(10, 10, label1, types::create_test_type_def(label1)).unwrap();
+            helper
+                .create_edge_type(10, 10, label1, types::create_test_type_def(label1))
+                .unwrap();
             let label1_edge_kinds = data_gen.edge_kinds(label1);
             assert_eq!(label1_edge_kinds.len(), 3);
             let mut insert_helper = EdgeDataInsertHelper::new(&mut helper, &data_gen);
@@ -70,7 +69,9 @@ mod tester {
             std::mem::drop(insert_helper);
 
             let label2 = 2;
-            helper.create_edge_type(20, 20, label2, types::create_test_type_def(label2)).unwrap();
+            helper
+                .create_edge_type(20, 20, label2, types::create_test_type_def(label2))
+                .unwrap();
             let label2_edge_kinds = data_gen.edge_kinds(label2);
             assert_eq!(label2_edge_kinds.len(), 3);
             let mut insert_helper = EdgeDataInsertHelper::new(&mut helper, &data_gen);
@@ -94,10 +95,22 @@ mod tester {
                         check_helper.check_query_edges(si, Some(label1), &vec![]);
                     } else if si < 16 {
                         check_helper.check_query_edges(si, None, &vec![label1_edge_kinds[0].clone()]);
-                        check_helper.check_query_edges(si, Some(label1), &vec![label1_edge_kinds[0].clone()]);
+                        check_helper.check_query_edges(
+                            si,
+                            Some(label1),
+                            &vec![label1_edge_kinds[0].clone()],
+                        );
                     } else if si < 19 {
-                        check_helper.check_query_edges(si, None, &vec![label1_edge_kinds[0].clone(), label1_edge_kinds[1].clone()]);
-                        check_helper.check_query_edges(si, Some(label1), &vec![label1_edge_kinds[0].clone(), label1_edge_kinds[1].clone()]);
+                        check_helper.check_query_edges(
+                            si,
+                            None,
+                            &vec![label1_edge_kinds[0].clone(), label1_edge_kinds[1].clone()],
+                        );
+                        check_helper.check_query_edges(
+                            si,
+                            Some(label1),
+                            &vec![label1_edge_kinds[0].clone(), label1_edge_kinds[1].clone()],
+                        );
                     } else {
                         check_helper.check_query_edges(si, None, &label1_edge_kinds);
                         check_helper.check_query_edges(si, Some(label1), &label1_edge_kinds);
@@ -108,12 +121,20 @@ mod tester {
                         check_helper.check_query_edges(si, Some(label2), &vec![]);
                         check_helper.check_query_edges(si, None, &label1_edge_kinds);
                     } else if si < 26 {
-                        check_helper.check_query_edges(si, Some(label2), &vec![label2_edge_kinds[0].clone()]);
+                        check_helper.check_query_edges(
+                            si,
+                            Some(label2),
+                            &vec![label2_edge_kinds[0].clone()],
+                        );
                         let mut edge_kinds = label1_edge_kinds.clone();
                         edge_kinds.push(label2_edge_kinds[0].clone());
                         check_helper.check_query_edges(si, None, &edge_kinds);
                     } else if si < 29 {
-                        check_helper.check_query_edges(si, Some(label2), &vec![label2_edge_kinds[0].clone(), label2_edge_kinds[1].clone()]);
+                        check_helper.check_query_edges(
+                            si,
+                            Some(label2),
+                            &vec![label2_edge_kinds[0].clone(), label2_edge_kinds[1].clone()],
+                        );
                         let mut edge_kinds = label1_edge_kinds.clone();
                         edge_kinds.push(label2_edge_kinds[0].clone());
                         edge_kinds.push(label2_edge_kinds[1].clone());
@@ -136,9 +157,7 @@ mod tester {
 
     impl<G: MultiVersionGraph> GetInOutEdgesTester<G> {
         pub fn new(graph: G) -> Self {
-            GetInOutEdgesTester {
-                graph,
-            }
+            GetInOutEdgesTester { graph }
         }
 
         pub fn execute(&self) {
@@ -146,7 +165,9 @@ mod tester {
             let data_gen = EdgeDataGen::default();
 
             let label1 = 1;
-            helper.create_edge_type(10, 10, label1, types::create_test_type_def(label1)).unwrap();
+            helper
+                .create_edge_type(10, 10, label1, types::create_test_type_def(label1))
+                .unwrap();
             let label1_edge_kinds = data_gen.edge_kinds(label1);
             assert_eq!(label1_edge_kinds.len(), 3);
             let mut insert_helper = EdgeDataInsertHelper::new(&mut helper, &data_gen);
@@ -156,7 +177,9 @@ mod tester {
             std::mem::drop(insert_helper);
 
             let label2 = 2;
-            helper.create_edge_type(20, 20, label2, types::create_test_type_def(label2)).unwrap();
+            helper
+                .create_edge_type(20, 20, label2, types::create_test_type_def(label2))
+                .unwrap();
             let label2_edge_kinds = data_gen.edge_kinds(label2);
             assert_eq!(label2_edge_kinds.len(), 3);
             let mut insert_helper = EdgeDataInsertHelper::new(&mut helper, &data_gen);
@@ -165,7 +188,7 @@ mod tester {
             insert_helper.init_data_of_edge_kinds(29, vec![label2_edge_kinds[2].clone()]);
             std::mem::drop(insert_helper);
 
-            let check_helper =  EdgeCheckHelper::new(&helper, &data_gen);
+            let check_helper = EdgeCheckHelper::new(&helper, &data_gen);
             for si in (1..10).step_by(3) {
                 check_helper.check_get_out_edges_empty(si, Some(label1));
                 check_helper.check_get_in_edges_empty(si, Some(label1));
@@ -233,7 +256,8 @@ mod tester {
                         check_helper.check_get_out_edges(si, None, &exists);
                         check_helper.check_get_in_edges(si, None, &exists);
                     } else if si < 29 {
-                        let label2_exists = vec![label2_edge_kinds[0].clone(), label2_edge_kinds[1].clone()];
+                        let label2_exists =
+                            vec![label2_edge_kinds[0].clone(), label2_edge_kinds[1].clone()];
                         let mut exists = Vec::new();
                         exists.extend_from_slice(&label1_edge_kinds);
                         exists.extend_from_slice(&label2_exists[..]);
@@ -265,9 +289,7 @@ mod tester {
 
     impl<G: MultiVersionGraph> UpdateEdgeTester<G> {
         pub fn new(graph: G) -> Self {
-            UpdateEdgeTester {
-                graph,
-            }
+            UpdateEdgeTester { graph }
         }
 
         pub fn execute(&self) {
@@ -278,49 +300,137 @@ mod tester {
             let si = 10;
             let mut schema_version = 1;
 
-            helper.create_edge_type(si, schema_version, label1, types::create_full_type_def(label1)).unwrap();
+            helper
+                .create_edge_type(si, schema_version, label1, types::create_full_type_def(label1))
+                .unwrap();
             schema_version += 1;
             let label1_edge_kinds = data_gen.edge_kinds(label1);
             assert_eq!(label1_edge_kinds.len(), 3);
             for edge_kind in &label1_edge_kinds {
-                helper.add_edge_kind(si, schema_version, edge_kind).unwrap();
+                helper
+                    .add_edge_kind(si, schema_version, edge_kind)
+                    .unwrap();
                 schema_version += 1;
                 let ids = data_gen.edge_ids(edge_kind);
-                helper.insert_edge(si, edge_kind, ids.into_iter()).unwrap();
+                helper
+                    .insert_edge(si, edge_kind, ids.into_iter())
+                    .unwrap();
             }
-            helper.update_edge(13, &label1_edge_kinds[0], data_gen.edge_ids(&label1_edge_kinds[0]).into_iter()).unwrap();
-            helper.update_edge(16, &label1_edge_kinds[1], data_gen.edge_ids(&label1_edge_kinds[1]).into_iter()).unwrap();
-            helper.update_edge(19, &label1_edge_kinds[2], data_gen.edge_ids(&label1_edge_kinds[2]).into_iter()).unwrap();
+            helper
+                .update_edge(
+                    13,
+                    &label1_edge_kinds[0],
+                    data_gen
+                        .edge_ids(&label1_edge_kinds[0])
+                        .into_iter(),
+                )
+                .unwrap();
+            helper
+                .update_edge(
+                    16,
+                    &label1_edge_kinds[1],
+                    data_gen
+                        .edge_ids(&label1_edge_kinds[1])
+                        .into_iter(),
+                )
+                .unwrap();
+            helper
+                .update_edge(
+                    19,
+                    &label1_edge_kinds[2],
+                    data_gen
+                        .edge_ids(&label1_edge_kinds[2])
+                        .into_iter(),
+                )
+                .unwrap();
 
             let label2 = 2;
             let si = 20;
-            helper.create_edge_type(si, schema_version, label2, types::create_full_type_def(label2)).unwrap();
+            helper
+                .create_edge_type(si, schema_version, label2, types::create_full_type_def(label2))
+                .unwrap();
             schema_version += 1;
             let label2_edge_kinds = data_gen.edge_kinds(label2);
             assert_eq!(label2_edge_kinds.len(), 3);
             for edge_kind in &label2_edge_kinds {
-                helper.add_edge_kind(si, schema_version, edge_kind).unwrap();
+                helper
+                    .add_edge_kind(si, schema_version, edge_kind)
+                    .unwrap();
                 schema_version += 1;
                 let ids = data_gen.edge_ids(edge_kind);
-                helper.insert_edge(si, edge_kind, ids.into_iter()).unwrap();
+                helper
+                    .insert_edge(si, edge_kind, ids.into_iter())
+                    .unwrap();
             }
-            helper.update_edge(23, &label2_edge_kinds[0], data_gen.edge_ids(&label2_edge_kinds[0]).into_iter()).unwrap();
-            helper.update_edge(26, &label2_edge_kinds[1], data_gen.edge_ids(&label2_edge_kinds[1]).into_iter()).unwrap();
-            helper.update_edge(29, &label2_edge_kinds[2], data_gen.edge_ids(&label2_edge_kinds[2]).into_iter()).unwrap();
+            helper
+                .update_edge(
+                    23,
+                    &label2_edge_kinds[0],
+                    data_gen
+                        .edge_ids(&label2_edge_kinds[0])
+                        .into_iter(),
+                )
+                .unwrap();
+            helper
+                .update_edge(
+                    26,
+                    &label2_edge_kinds[1],
+                    data_gen
+                        .edge_ids(&label2_edge_kinds[1])
+                        .into_iter(),
+                )
+                .unwrap();
+            helper
+                .update_edge(
+                    29,
+                    &label2_edge_kinds[2],
+                    data_gen
+                        .edge_ids(&label2_edge_kinds[2])
+                        .into_iter(),
+                )
+                .unwrap();
 
             let label3 = 3;
             let si = 30;
-            helper.create_edge_type(si, schema_version, label3, types::create_full_type_def(label3)).unwrap();
+            helper
+                .create_edge_type(si, schema_version, label3, types::create_full_type_def(label3))
+                .unwrap();
             schema_version += 1;
             let label3_edge_kinds = data_gen.edge_kinds(label3);
             for edge_kind in &label3_edge_kinds {
-                helper.add_edge_kind(si, schema_version, edge_kind).unwrap();
+                helper
+                    .add_edge_kind(si, schema_version, edge_kind)
+                    .unwrap();
                 schema_version += 1;
             }
             assert_eq!(label3_edge_kinds.len(), 3);
-            helper.update_edge(33, &label3_edge_kinds[0], data_gen.edge_ids(&label3_edge_kinds[0]).into_iter()).unwrap();
-            helper.update_edge(36, &label3_edge_kinds[1], data_gen.edge_ids(&label3_edge_kinds[1]).into_iter()).unwrap();
-            helper.update_edge(39, &label3_edge_kinds[2], data_gen.edge_ids(&label3_edge_kinds[2]).into_iter()).unwrap();
+            helper
+                .update_edge(
+                    33,
+                    &label3_edge_kinds[0],
+                    data_gen
+                        .edge_ids(&label3_edge_kinds[0])
+                        .into_iter(),
+                )
+                .unwrap();
+            helper
+                .update_edge(
+                    36,
+                    &label3_edge_kinds[1],
+                    data_gen
+                        .edge_ids(&label3_edge_kinds[1])
+                        .into_iter(),
+                )
+                .unwrap();
+            helper
+                .update_edge(
+                    39,
+                    &label3_edge_kinds[2],
+                    data_gen
+                        .edge_ids(&label3_edge_kinds[2])
+                        .into_iter(),
+                )
+                .unwrap();
 
             let check_helper = EdgeCheckHelper::new(&helper, &data_gen);
             for si in (1..10).step_by(3) {
@@ -364,9 +474,7 @@ mod tester {
 
     impl<G: MultiVersionGraph> DeleteEdgeTester<G> {
         pub fn new(graph: G) -> Self {
-            DeleteEdgeTester {
-                graph,
-            }
+            DeleteEdgeTester { graph }
         }
 
         pub fn execute(&self) {
@@ -378,18 +486,30 @@ mod tester {
             insert_helper.init_data_of_label(10, label1);
             std::mem::drop(insert_helper);
             let label1_edge_kinds = data_gen.edge_kinds(label1);
-            helper.delete_edge(13, &label1_edge_kinds[0], data_gen.delete_edge_ids(&label1_edge_kinds[0])).unwrap();
-            helper.delete_edge(16, &label1_edge_kinds[1], data_gen.delete_edge_ids(&label1_edge_kinds[1])).unwrap();
-            helper.delete_edge(19, &label1_edge_kinds[2], data_gen.delete_edge_ids(&label1_edge_kinds[2])).unwrap();
+            helper
+                .delete_edge(13, &label1_edge_kinds[0], data_gen.delete_edge_ids(&label1_edge_kinds[0]))
+                .unwrap();
+            helper
+                .delete_edge(16, &label1_edge_kinds[1], data_gen.delete_edge_ids(&label1_edge_kinds[1]))
+                .unwrap();
+            helper
+                .delete_edge(19, &label1_edge_kinds[2], data_gen.delete_edge_ids(&label1_edge_kinds[2]))
+                .unwrap();
 
             let label2 = 2;
             let mut insert_helper = EdgeDataInsertHelper::new(&mut helper, &data_gen);
             insert_helper.init_data_of_label(20, label2);
             std::mem::drop(insert_helper);
             let label2_edge_kinds = data_gen.edge_kinds(label2);
-            helper.delete_edge(23, &label2_edge_kinds[0], data_gen.delete_edge_ids(&label2_edge_kinds[0])).unwrap();
-            helper.delete_edge(26, &label2_edge_kinds[1], data_gen.delete_edge_ids(&label2_edge_kinds[1])).unwrap();
-            helper.delete_edge(29, &label2_edge_kinds[2], data_gen.delete_edge_ids(&label2_edge_kinds[2])).unwrap();
+            helper
+                .delete_edge(23, &label2_edge_kinds[0], data_gen.delete_edge_ids(&label2_edge_kinds[0]))
+                .unwrap();
+            helper
+                .delete_edge(26, &label2_edge_kinds[1], data_gen.delete_edge_ids(&label2_edge_kinds[1]))
+                .unwrap();
+            helper
+                .delete_edge(29, &label2_edge_kinds[2], data_gen.delete_edge_ids(&label2_edge_kinds[2]))
+                .unwrap();
 
             let check_helper = EdgeCheckHelper::new(&helper, &data_gen);
             for si in (1..10).step_by(3) {
@@ -409,15 +529,49 @@ mod tester {
                         data_gen.all_delete_edge_ids(&label1_edge_kinds)
                     };
                     check_helper.check_get_edge_of_labels_with_deletion(si, &[label1], deleted_ids.clone());
-                    check_helper.check_query_edges_with_deletion(si, Some(label1), &label1_edge_kinds, deleted_ids.clone());
-                    check_helper.check_get_out_edges_with_deletion(si, Some(label1), &label1_edge_kinds, deleted_ids.clone());
-                    check_helper.check_get_in_edges_with_deletion(si, Some(label1), &label1_edge_kinds, deleted_ids.clone());
-                    check_helper.check_query_edges_with_deletion(si, None, &label1_edge_kinds, deleted_ids.clone());
-                    check_helper.check_get_out_edges_with_deletion(si, None, &label1_edge_kinds, deleted_ids.clone());
-                    check_helper.check_get_in_edges_with_deletion(si, None, &label1_edge_kinds, deleted_ids.clone());
+                    check_helper.check_query_edges_with_deletion(
+                        si,
+                        Some(label1),
+                        &label1_edge_kinds,
+                        deleted_ids.clone(),
+                    );
+                    check_helper.check_get_out_edges_with_deletion(
+                        si,
+                        Some(label1),
+                        &label1_edge_kinds,
+                        deleted_ids.clone(),
+                    );
+                    check_helper.check_get_in_edges_with_deletion(
+                        si,
+                        Some(label1),
+                        &label1_edge_kinds,
+                        deleted_ids.clone(),
+                    );
+                    check_helper.check_query_edges_with_deletion(
+                        si,
+                        None,
+                        &label1_edge_kinds,
+                        deleted_ids.clone(),
+                    );
+                    check_helper.check_get_out_edges_with_deletion(
+                        si,
+                        None,
+                        &label1_edge_kinds,
+                        deleted_ids.clone(),
+                    );
+                    check_helper.check_get_in_edges_with_deletion(
+                        si,
+                        None,
+                        &label1_edge_kinds,
+                        deleted_ids.clone(),
+                    );
                 } else {
                     let label1_deleted_ids = data_gen.all_delete_edge_ids(&label1_edge_kinds);
-                    check_helper.check_all_data_of_label_with_deletion(si, label1, label1_deleted_ids.clone());
+                    check_helper.check_all_data_of_label_with_deletion(
+                        si,
+                        label1,
+                        label1_deleted_ids.clone(),
+                    );
                     let mut deleted_ids = if si < 23 {
                         vec![]
                     } else if si < 26 {
@@ -428,16 +582,46 @@ mod tester {
                         data_gen.all_delete_edge_ids(&label2_edge_kinds)
                     };
                     check_helper.check_get_edge_of_labels_with_deletion(si, &[label2], deleted_ids.clone());
-                    check_helper.check_query_edges_with_deletion(si, Some(label2), &label2_edge_kinds, deleted_ids.clone());
-                    check_helper.check_get_out_edges_with_deletion(si, Some(label2), &label2_edge_kinds, deleted_ids.clone());
-                    check_helper.check_get_in_edges_with_deletion(si, Some(label2), &label2_edge_kinds, deleted_ids.clone());
+                    check_helper.check_query_edges_with_deletion(
+                        si,
+                        Some(label2),
+                        &label2_edge_kinds,
+                        deleted_ids.clone(),
+                    );
+                    check_helper.check_get_out_edges_with_deletion(
+                        si,
+                        Some(label2),
+                        &label2_edge_kinds,
+                        deleted_ids.clone(),
+                    );
+                    check_helper.check_get_in_edges_with_deletion(
+                        si,
+                        Some(label2),
+                        &label2_edge_kinds,
+                        deleted_ids.clone(),
+                    );
                     deleted_ids.extend_from_slice(&label1_deleted_ids);
                     let mut edge_kinds = Vec::new();
                     edge_kinds.extend_from_slice(&label1_edge_kinds);
                     edge_kinds.extend_from_slice(&label2_edge_kinds);
-                    check_helper.check_query_edges_with_deletion(si, None, &edge_kinds, deleted_ids.clone());
-                    check_helper.check_get_out_edges_with_deletion(si, None, &edge_kinds, deleted_ids.clone());
-                    check_helper.check_get_in_edges_with_deletion(si, None, &edge_kinds, deleted_ids.clone());
+                    check_helper.check_query_edges_with_deletion(
+                        si,
+                        None,
+                        &edge_kinds,
+                        deleted_ids.clone(),
+                    );
+                    check_helper.check_get_out_edges_with_deletion(
+                        si,
+                        None,
+                        &edge_kinds,
+                        deleted_ids.clone(),
+                    );
+                    check_helper.check_get_in_edges_with_deletion(
+                        si,
+                        None,
+                        &edge_kinds,
+                        deleted_ids.clone(),
+                    );
                 }
                 println!("check si#{} success", si);
             }
@@ -450,9 +634,7 @@ mod tester {
 
     impl<G: MultiVersionGraph> GetEdgeTester<G> {
         pub fn new(graph: G) -> Self {
-            GetEdgeTester {
-                graph,
-            }
+            GetEdgeTester { graph }
         }
 
         pub fn execute(&self) {
@@ -493,9 +675,7 @@ mod tester {
 
     impl<G: MultiVersionGraph> DropEdgeTester<G> {
         pub fn new(graph: G) -> Self {
-            DropEdgeTester {
-                graph,
-            }
+            DropEdgeTester { graph }
         }
 
         pub fn execute(&self) {
@@ -506,12 +686,18 @@ mod tester {
             let si = 10;
             let mut schema_version = 1;
 
-            helper.create_edge_type(si, schema_version, label1, types::create_test_type_def(label1)).unwrap();
+            helper
+                .create_edge_type(si, schema_version, label1, types::create_test_type_def(label1))
+                .unwrap();
             schema_version += 1;
             for edge_kind in data_gen.edge_kinds(label1) {
-                helper.add_edge_kind(si, schema_version, &edge_kind).unwrap();
+                helper
+                    .add_edge_kind(si, schema_version, &edge_kind)
+                    .unwrap();
                 schema_version += 1;
-                helper.insert_edge(si, &edge_kind, data_gen.edge_ids(&edge_kind).into_iter()).unwrap();
+                helper
+                    .insert_edge(si, &edge_kind, data_gen.edge_ids(&edge_kind).into_iter())
+                    .unwrap();
             }
             println!("insert data of label1 success");
             let check_helper = EdgeCheckHelper::new(&helper, &data_gen);
@@ -523,12 +709,18 @@ mod tester {
 
             let label2 = 2;
             let si = 20;
-            helper.create_edge_type(si, schema_version, label2, types::create_test_type_def(label2)).unwrap();
+            helper
+                .create_edge_type(si, schema_version, label2, types::create_test_type_def(label2))
+                .unwrap();
             schema_version += 1;
             for edge_kind in data_gen.edge_kinds(label2) {
-                helper.add_edge_kind(si, schema_version, &edge_kind).unwrap();
+                helper
+                    .add_edge_kind(si, schema_version, &edge_kind)
+                    .unwrap();
                 schema_version += 1;
-                helper.insert_edge(si, &edge_kind, data_gen.edge_ids(&edge_kind).into_iter()).unwrap();
+                helper
+                    .insert_edge(si, &edge_kind, data_gen.edge_ids(&edge_kind).into_iter())
+                    .unwrap();
             }
             println!("insert data of label1 success");
             let check_helper = EdgeCheckHelper::new(&helper, &data_gen);
@@ -538,7 +730,9 @@ mod tester {
             std::mem::drop(check_helper);
             println!("check data of label1 and label2 success");
 
-            helper.drop_edge_type(25, schema_version, label1).unwrap();
+            helper
+                .drop_edge_type(25, schema_version, label1)
+                .unwrap();
 
             let check_helper = EdgeCheckHelper::new(&helper, &data_gen);
             for si in 10..30 {
@@ -565,9 +759,7 @@ mod tester {
 
     impl<G: MultiVersionGraph> RemoveEdgeKindTester<G> {
         pub fn new(graph: G) -> Self {
-            RemoveEdgeKindTester {
-                graph,
-            }
+            RemoveEdgeKindTester { graph }
         }
 
         pub fn execute(&self) {
@@ -576,12 +768,18 @@ mod tester {
             let si = 10;
             let label1 = 1;
             let mut schema_version = 1;
-            helper.create_edge_type(si, schema_version, label1, types::create_test_type_def(label1)).unwrap();
+            helper
+                .create_edge_type(si, schema_version, label1, types::create_test_type_def(label1))
+                .unwrap();
             schema_version += 1;
             for edge_kind in data_gen.edge_kinds(label1) {
-                helper.add_edge_kind(si, schema_version, &edge_kind).unwrap();
+                helper
+                    .add_edge_kind(si, schema_version, &edge_kind)
+                    .unwrap();
                 schema_version += 1;
-                helper.insert_edge(si, &edge_kind, data_gen.edge_ids(&edge_kind).into_iter()).unwrap();
+                helper
+                    .insert_edge(si, &edge_kind, data_gen.edge_ids(&edge_kind).into_iter())
+                    .unwrap();
             }
             println!("init data of label#{} success", label1);
             let check_helper = EdgeCheckHelper::new(&helper, &data_gen);
@@ -593,12 +791,18 @@ mod tester {
 
             let si = 20;
             let label2 = 2;
-            helper.create_edge_type(si, schema_version, label2, types::create_test_type_def(label2)).unwrap();
+            helper
+                .create_edge_type(si, schema_version, label2, types::create_test_type_def(label2))
+                .unwrap();
             schema_version += 1;
             for edge_kind in data_gen.edge_kinds(label2) {
-                helper.add_edge_kind(si, schema_version, &edge_kind).unwrap();
+                helper
+                    .add_edge_kind(si, schema_version, &edge_kind)
+                    .unwrap();
                 schema_version += 1;
-                helper.insert_edge(si, &edge_kind, data_gen.edge_ids(&edge_kind).into_iter()).unwrap();
+                helper
+                    .insert_edge(si, &edge_kind, data_gen.edge_ids(&edge_kind).into_iter())
+                    .unwrap();
             }
             println!("init data of label#{} success", label2);
             let check_helper = EdgeCheckHelper::new(&helper, &data_gen);
@@ -612,9 +816,13 @@ mod tester {
             let mut label2_edge_kinds = data_gen.edge_kinds(label2);
             let label1_removed_edge_kind = label1_edge_kinds.pop().unwrap();
             let label2_removed_edge_kind = label2_edge_kinds.pop().unwrap();
-            helper.remove_edge_kind(25, schema_version, &label1_removed_edge_kind).unwrap();
+            helper
+                .remove_edge_kind(25, schema_version, &label1_removed_edge_kind)
+                .unwrap();
             schema_version += 1;
-            helper.remove_edge_kind(25, schema_version, &label2_removed_edge_kind).unwrap();
+            helper
+                .remove_edge_kind(25, schema_version, &label2_removed_edge_kind)
+                .unwrap();
             println!("remove edge type success");
 
             let check_helper = EdgeCheckHelper::new(&helper, &data_gen);
@@ -645,9 +853,10 @@ mod tester {
 }
 
 mod common {
-    use super::*;
-    use std::collections::{HashSet, HashMap};
+    use std::collections::{HashMap, HashSet};
     use std::iter::FromIterator;
+
+    use super::*;
     use crate::db::api::multi_version_graph::MultiVersionGraph;
 
     pub struct EdgeDataInsertHelper<'a, 'b, G: MultiVersionGraph> {
@@ -657,29 +866,36 @@ mod common {
 
     impl<'a, 'b, G: MultiVersionGraph> EdgeDataInsertHelper<'a, 'b, G> {
         pub fn new(helper: &'a mut GraphTestHelper<'b, G>, data_gen: &'a EdgeDataGen) -> Self {
-            EdgeDataInsertHelper {
-                helper,
-                data_gen,
-            }
+            EdgeDataInsertHelper { helper, data_gen }
         }
 
         pub fn init_data_of_label(&mut self, si: SnapshotId, label: LabelId) {
             let mut schema_version = si;
-            self.helper.create_edge_type(si, schema_version, label, types::create_test_type_def(label)).unwrap();
+            self.helper
+                .create_edge_type(si, schema_version, label, types::create_test_type_def(label))
+                .unwrap();
             schema_version += 1;
             for edge_kind in self.data_gen.edge_kinds(label) {
-                self.helper.add_edge_kind(si, schema_version, &edge_kind).unwrap();
+                self.helper
+                    .add_edge_kind(si, schema_version, &edge_kind)
+                    .unwrap();
                 schema_version += 1;
-                self.helper.insert_edge(si, &edge_kind, self.data_gen.edge_ids(&edge_kind).into_iter()).unwrap();
+                self.helper
+                    .insert_edge(si, &edge_kind, self.data_gen.edge_ids(&edge_kind).into_iter())
+                    .unwrap();
             }
         }
 
         pub fn init_data_of_edge_kinds(&mut self, si: SnapshotId, edge_kinds: Vec<EdgeKind>) {
             let schema_version = si;
             for edge_kind in edge_kinds {
-                self.helper.add_edge_kind(si, schema_version, &edge_kind).unwrap();
+                self.helper
+                    .add_edge_kind(si, schema_version, &edge_kind)
+                    .unwrap();
                 let ids = self.data_gen.edge_ids(&edge_kind).into_iter();
-                self.helper.insert_edge(si, &edge_kind, ids).unwrap();
+                self.helper
+                    .insert_edge(si, &edge_kind, ids)
+                    .unwrap();
             }
         }
     }
@@ -730,20 +946,24 @@ mod common {
         }
 
         pub fn delete_edge_ids(&self, edge_kind: &EdgeKind) -> Vec<EdgeId> {
-            self.edge_ids(edge_kind).into_iter()
-                .filter(|id| (id.src_id+id.dst_id+id.inner_id) % 2 == 0)
+            self.edge_ids(edge_kind)
+                .into_iter()
+                .filter(|id| (id.src_id + id.dst_id + id.inner_id) % 2 == 0)
                 .collect()
         }
 
         pub fn all_delete_edge_ids(&self, edge_kinds: &[EdgeKind]) -> Vec<EdgeId> {
-            edge_kinds.iter().flat_map(|edge_kind| self.edge_ids(edge_kind).into_iter())
-                .filter(|id| (id.src_id+id.dst_id+id.inner_id) % 2 == 0)
+            edge_kinds
+                .iter()
+                .flat_map(|edge_kind| self.edge_ids(edge_kind).into_iter())
+                .filter(|id| (id.src_id + id.dst_id + id.inner_id) % 2 == 0)
                 .collect()
         }
 
         pub fn not_exist_edge_ids(&self, edge_kind: &EdgeKind) -> Vec<EdgeId> {
             let mut ret = self.edge_ids(edge_kind);
-            ret.iter_mut().for_each(|id| id.inner_id = -id.inner_id);
+            ret.iter_mut()
+                .for_each(|id| id.inner_id = -id.inner_id);
             ret
         }
 
@@ -771,17 +991,23 @@ mod common {
             for label in labels {
                 for edge_kind in self.edge_kinds(label) {
                     for edge_id in self.edge_ids(&edge_kind) {
-                        ret.entry(edge_id.src_id).or_insert_with(|| HashSet::new()).insert(edge_id);
+                        ret.entry(edge_id.src_id)
+                            .or_insert_with(|| HashSet::new())
+                            .insert(edge_id);
                     }
                 }
             }
             ret
         }
 
-        pub fn all_out_edges_of_types(&self, edge_kinds: &Vec<EdgeKind>) -> HashMap<VertexId, HashSet<EdgeId>> {
+        pub fn all_out_edges_of_types(
+            &self, edge_kinds: &Vec<EdgeKind>,
+        ) -> HashMap<VertexId, HashSet<EdgeId>> {
             let mut ret = HashMap::new();
             for edge_id in self.all_edge_ids_of_types(edge_kinds) {
-                ret.entry(edge_id.src_id).or_insert_with(|| HashSet::new()).insert(edge_id);
+                ret.entry(edge_id.src_id)
+                    .or_insert_with(|| HashSet::new())
+                    .insert(edge_id);
             }
             ret
         }
@@ -791,17 +1017,23 @@ mod common {
             for label in labels {
                 for edge_kind in self.edge_kinds(label) {
                     for edge_id in self.edge_ids(&edge_kind) {
-                        ret.entry(edge_id.dst_id).or_insert_with(|| HashSet::new()).insert(edge_id);
+                        ret.entry(edge_id.dst_id)
+                            .or_insert_with(|| HashSet::new())
+                            .insert(edge_id);
                     }
                 }
             }
             ret
         }
 
-        pub fn all_in_edges_of_types(&self, edge_kinds: &Vec<EdgeKind>) -> HashMap<VertexId, HashSet<EdgeId>> {
+        pub fn all_in_edges_of_types(
+            &self, edge_kinds: &Vec<EdgeKind>,
+        ) -> HashMap<VertexId, HashSet<EdgeId>> {
             let mut ret = HashMap::new();
             for edge_id in self.all_edge_ids_of_types(edge_kinds) {
-                ret.entry(edge_id.dst_id).or_insert_with(|| HashSet::new()).insert(edge_id);
+                ret.entry(edge_id.dst_id)
+                    .or_insert_with(|| HashSet::new())
+                    .insert(edge_id);
             }
             ret
         }
@@ -814,10 +1046,7 @@ mod common {
 
     impl<'a, G: MultiVersionGraph> EdgeCheckHelper<'a, G> {
         pub fn new(helper: &'a GraphTestHelper<'a, G>, data_gen: &'a EdgeDataGen) -> Self {
-            EdgeCheckHelper {
-                helper,
-                data_gen,
-            }
+            EdgeCheckHelper { helper, data_gen }
         }
 
         pub fn check_all_data_err_of_labels(&self, si: SnapshotId, labels: Vec<LabelId>) {
@@ -837,7 +1066,9 @@ mod common {
             self.check_get_edge_none_of_label(si, label);
         }
 
-        pub fn check_all_data_of_label_with_deletion(&self, si: SnapshotId, label: LabelId, deleted_ids: Vec<EdgeId>) {
+        pub fn check_all_data_of_label_with_deletion(
+            &self, si: SnapshotId, label: LabelId, deleted_ids: Vec<EdgeId>,
+        ) {
             let edge_kinds = self.data_gen.edge_kinds(label);
             self.check_get_out_edges_with_deletion(si, Some(label), &edge_kinds, deleted_ids.clone());
             self.check_get_in_edges_with_deletion(si, Some(label), &edge_kinds, deleted_ids.clone());
@@ -862,7 +1093,9 @@ mod common {
             self.check_get_edge_of_labels_with_deletion(si, labels, vec![]);
         }
 
-        pub fn check_get_edge_of_labels_with_deletion(&self, si: SnapshotId, labels: &[LabelId], deleted_ids: Vec<EdgeId>) {
+        pub fn check_get_edge_of_labels_with_deletion(
+            &self, si: SnapshotId, labels: &[LabelId], deleted_ids: Vec<EdgeId>,
+        ) {
             for label in labels {
                 let edge_kinds = self.data_gen.edge_kinds(*label);
                 self.check_get_edge_of_edge_kinds_with_deletion(si, &edge_kinds, deleted_ids.clone());
@@ -887,12 +1120,15 @@ mod common {
             self.check_get_edge_of_edge_kinds_with_deletion(si, edge_kinds, vec![]);
         }
 
-        pub fn check_get_edge_of_edge_kinds_with_deletion(&self, si: SnapshotId, edge_kinds: &Vec<EdgeKind>, deleted_ids: Vec<EdgeId>) {
+        pub fn check_get_edge_of_edge_kinds_with_deletion(
+            &self, si: SnapshotId, edge_kinds: &Vec<EdgeKind>, deleted_ids: Vec<EdgeId>,
+        ) {
             let deleted = HashSet::from_iter(deleted_ids);
             for edge_kind in edge_kinds {
                 let ids = self.data_gen.edge_ids(edge_kind);
                 let set: HashSet<EdgeId> = HashSet::from_iter(ids);
-                self.helper.check_get_edge(si, &edge_kind, set.difference(&deleted));
+                self.helper
+                    .check_get_edge(si, &edge_kind, set.difference(&deleted));
             }
         }
 
@@ -904,76 +1140,137 @@ mod common {
         pub fn check_get_edge_none_of_edge_kinds(&self, si: SnapshotId, edge_kinds: &[EdgeKind]) {
             for edge_kind in edge_kinds {
                 let ids = self.data_gen.edge_ids(edge_kind);
-                self.helper.check_get_edge_none(si, edge_kind, ids.iter());
+                self.helper
+                    .check_get_edge_none(si, edge_kind, ids.iter());
             }
         }
 
         pub fn check_get_edge_err_of_edge_kinds(&self, si: SnapshotId, edge_kinds: &Vec<EdgeKind>) {
             for edge_kind in edge_kinds {
                 let ids = self.data_gen.edge_ids(edge_kind);
-                self.helper.check_get_edge_err(si, &edge_kind, ids.iter());
+                self.helper
+                    .check_get_edge_err(si, &edge_kind, ids.iter());
             }
         }
 
         pub fn check_get_not_exist_edge_of_edge_kinds(&self, si: SnapshotId, edge_kinds: &Vec<EdgeKind>) {
             for edge_kind in edge_kinds {
                 let ids = self.data_gen.not_exist_edge_ids(edge_kind);
-                self.helper.check_get_edge_none(si, edge_kind, ids.iter());
+                self.helper
+                    .check_get_edge_none(si, edge_kind, ids.iter());
             }
         }
 
-        pub fn check_get_out_edges(&self, si: SnapshotId, label: Option<LabelId>, edge_kinds: &Vec<EdgeKind>) {
-            assert!(label.is_none() || edge_kinds.iter().all(|t| t.edge_label_id == label.unwrap()));
-            for (src_id, ids) in self.data_gen.all_out_edges_of_types(&edge_kinds) {
-                self.helper.check_get_out_edges(si, src_id, label, ids);
+        pub fn check_get_out_edges(
+            &self, si: SnapshotId, label: Option<LabelId>, edge_kinds: &Vec<EdgeKind>,
+        ) {
+            assert!(
+                label.is_none()
+                    || edge_kinds
+                        .iter()
+                        .all(|t| t.edge_label_id == label.unwrap())
+            );
+            for (src_id, ids) in self
+                .data_gen
+                .all_out_edges_of_types(&edge_kinds)
+            {
+                self.helper
+                    .check_get_out_edges(si, src_id, label, ids);
             }
         }
 
-        pub fn check_get_out_edges_with_deletion(&self, si: SnapshotId, label: Option<LabelId>, edge_kinds: &Vec<EdgeKind>, deleted_ids: Vec<EdgeId>) {
-            assert!(label.is_none() || edge_kinds.iter().all(|t| t.edge_label_id == label.unwrap()));
+        pub fn check_get_out_edges_with_deletion(
+            &self, si: SnapshotId, label: Option<LabelId>, edge_kinds: &Vec<EdgeKind>,
+            deleted_ids: Vec<EdgeId>,
+        ) {
+            assert!(
+                label.is_none()
+                    || edge_kinds
+                        .iter()
+                        .all(|t| t.edge_label_id == label.unwrap())
+            );
             let deleted: HashSet<EdgeId> = HashSet::from_iter(deleted_ids);
-            for (src_id, ids) in self.data_gen.all_out_edges_of_types(&edge_kinds) {
+            for (src_id, ids) in self
+                .data_gen
+                .all_out_edges_of_types(&edge_kinds)
+            {
                 let ids = ids.difference(&deleted).map(|id| *id).collect();
-                self.helper.check_get_out_edges(si, src_id, label, ids);
+                self.helper
+                    .check_get_out_edges(si, src_id, label, ids);
             }
         }
 
-        pub fn check_get_out_edges_none(&self, si: SnapshotId, label: Option<LabelId>, edge_kinds: &Vec<EdgeKind>) {
-            assert!(label.is_none() || edge_kinds.iter().all(|t| t.edge_label_id == label.unwrap()));
-            for (src_id, _) in self.data_gen.all_out_edges_of_types(&edge_kinds) {
-                self.helper.check_get_out_edges(si, src_id, label, HashSet::new());
+        pub fn check_get_out_edges_none(
+            &self, si: SnapshotId, label: Option<LabelId>, edge_kinds: &Vec<EdgeKind>,
+        ) {
+            assert!(
+                label.is_none()
+                    || edge_kinds
+                        .iter()
+                        .all(|t| t.edge_label_id == label.unwrap())
+            );
+            for (src_id, _) in self
+                .data_gen
+                .all_out_edges_of_types(&edge_kinds)
+            {
+                self.helper
+                    .check_get_out_edges(si, src_id, label, HashSet::new());
             }
         }
 
         pub fn check_get_out_edges_empty(&self, si: SnapshotId, label: Option<LabelId>) {
-            for (src_id, _) in self.data_gen.all_out_edges(vec![label.unwrap()]) {
-                self.helper.check_get_out_edges_empty(si, src_id, label);
+            for (src_id, _) in self
+                .data_gen
+                .all_out_edges(vec![label.unwrap()])
+            {
+                self.helper
+                    .check_get_out_edges_empty(si, src_id, label);
             }
         }
 
-        pub fn check_get_in_edges(&self, si: SnapshotId, label: Option<LabelId>, edge_kinds: &Vec<EdgeKind>) {
+        pub fn check_get_in_edges(
+            &self, si: SnapshotId, label: Option<LabelId>, edge_kinds: &Vec<EdgeKind>,
+        ) {
             self.check_get_in_edges_with_deletion(si, label, edge_kinds, vec![]);
         }
 
-        pub fn check_get_in_edges_with_deletion(&self, si: SnapshotId, label: Option<LabelId>, edge_kinds: &Vec<EdgeKind>, delete_ids: Vec<EdgeId>) {
-            assert!(label.is_none() || edge_kinds.iter().all(|t| t.edge_label_id == label.unwrap()));
+        pub fn check_get_in_edges_with_deletion(
+            &self, si: SnapshotId, label: Option<LabelId>, edge_kinds: &Vec<EdgeKind>,
+            delete_ids: Vec<EdgeId>,
+        ) {
+            assert!(
+                label.is_none()
+                    || edge_kinds
+                        .iter()
+                        .all(|t| t.edge_label_id == label.unwrap())
+            );
             let deleted = HashSet::from_iter(delete_ids);
             for (dst_id, ids) in self.data_gen.all_in_edges_of_types(&edge_kinds) {
                 let ids = ids.difference(&deleted).map(|id| *id).collect();
-                self.helper.check_get_in_edges(si, dst_id, label, ids);
+                self.helper
+                    .check_get_in_edges(si, dst_id, label, ids);
             }
         }
 
-        pub fn check_get_in_edges_none(&self, si: SnapshotId, label: Option<LabelId>, edge_kinds: &Vec<EdgeKind>) {
-            assert!(label.is_none() || edge_kinds.iter().all(|t| t.edge_label_id == label.unwrap()));
+        pub fn check_get_in_edges_none(
+            &self, si: SnapshotId, label: Option<LabelId>, edge_kinds: &Vec<EdgeKind>,
+        ) {
+            assert!(
+                label.is_none()
+                    || edge_kinds
+                        .iter()
+                        .all(|t| t.edge_label_id == label.unwrap())
+            );
             for (dst_id, _) in self.data_gen.all_in_edges_of_types(&edge_kinds) {
-                self.helper.check_get_in_edges(si, dst_id, label, HashSet::new());
+                self.helper
+                    .check_get_in_edges(si, dst_id, label, HashSet::new());
             }
         }
 
         pub fn check_get_in_edges_empty(&self, si: SnapshotId, label: Option<LabelId>) {
             for (dst_id, _) in self.data_gen.all_in_edges(vec![label.unwrap()]) {
-                self.helper.check_get_in_edges_empty(si, dst_id, label);
+                self.helper
+                    .check_get_in_edges_empty(si, dst_id, label);
             }
         }
 
@@ -982,14 +1279,26 @@ mod common {
         }
 
         pub fn check_query_edges_none(&self, si: SnapshotId, label: Option<LabelId>) {
-            self.helper.check_query_edges(si, label, HashSet::new());
+            self.helper
+                .check_query_edges(si, label, HashSet::new());
         }
 
-        pub fn check_query_edges_with_deletion(&self, si: SnapshotId, label: Option<LabelId>, edge_kinds: &Vec<EdgeKind>, deleted_ids: Vec<EdgeId>) {
-            assert!(label.is_none() || edge_kinds.iter().all(|t| t.edge_label_id == label.unwrap()));
+        pub fn check_query_edges_with_deletion(
+            &self, si: SnapshotId, label: Option<LabelId>, edge_kinds: &Vec<EdgeKind>,
+            deleted_ids: Vec<EdgeId>,
+        ) {
+            assert!(
+                label.is_none()
+                    || edge_kinds
+                        .iter()
+                        .all(|t| t.edge_label_id == label.unwrap())
+            );
             let ids = self.data_gen.all_edge_ids_of_types(edge_kinds);
             let deletion = HashSet::from_iter(deleted_ids);
-            let ids = ids.difference(&deletion).map(|id| *id).collect();
+            let ids = ids
+                .difference(&deletion)
+                .map(|id| *id)
+                .collect();
             self.helper.check_query_edges(si, label, ids);
         }
 
@@ -1004,7 +1313,8 @@ mod common {
                 self.check_get_out_edges(si, Some(label), &edge_kinds);
                 self.check_get_in_edges(si, Some(label), &edge_kinds);
             }
-            let all_edge_kinds = map.values()
+            let all_edge_kinds = map
+                .values()
                 .flat_map(|v| v.iter())
                 .map(|t| t.clone())
                 .collect();
@@ -1016,7 +1326,9 @@ mod common {
         fn group_edge_kinds(&self, edge_kinds: &Vec<EdgeKind>) -> HashMap<LabelId, Vec<EdgeKind>> {
             let mut ret = HashMap::new();
             for edge_kind in edge_kinds {
-                ret.entry(edge_kind.edge_label_id).or_insert_with(|| Vec::new()).push(edge_kind.clone());
+                ret.entry(edge_kind.edge_label_id)
+                    .or_insert_with(|| Vec::new())
+                    .push(edge_kind.clone());
             }
             ret
         }

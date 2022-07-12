@@ -14,92 +14,61 @@
 //! limitations under the License.
 
 use crate::db::api::condition::Condition;
-use crate::db::api::{SnapshotId, VertexId, LabelId, GraphResult, EdgeId, EdgeKind, Records, SerialId, TypeDef, PropertyMap, DataLoadTarget, PropertyId, BackupId};
-use crate::db::api::types::{RocksVertex, RocksEdge};
+use crate::db::api::types::{RocksEdge, RocksVertex};
+use crate::db::api::{
+    BackupId, DataLoadTarget, EdgeId, EdgeKind, GraphResult, LabelId, PropertyId, PropertyMap, Records,
+    SerialId, SnapshotId, TypeDef, VertexId,
+};
 
 pub trait MultiVersionGraph {
     type V: RocksVertex;
     type E: RocksEdge;
 
     fn get_vertex(
-        &self,
-        snapshot_id: SnapshotId,
-        vertex_id: VertexId,
-        label_id: Option<LabelId>,
+        &self, snapshot_id: SnapshotId, vertex_id: VertexId, label_id: Option<LabelId>,
         property_ids: Option<&Vec<PropertyId>>,
     ) -> GraphResult<Option<Self::V>>;
 
     fn get_edge(
-        &self,
-        snapshot_id: SnapshotId,
-        edge_id: EdgeId,
-        edge_relation: Option<&EdgeKind>,
+        &self, snapshot_id: SnapshotId, edge_id: EdgeId, edge_relation: Option<&EdgeKind>,
         property_ids: Option<&Vec<PropertyId>>,
     ) -> GraphResult<Option<Self::E>>;
 
     fn scan_vertex(
-        &self,
-        snapshot_id: SnapshotId,
-        label_id: Option<LabelId>,
-        condition: Option<&Condition>,
+        &self, snapshot_id: SnapshotId, label_id: Option<LabelId>, condition: Option<&Condition>,
         property_ids: Option<&Vec<PropertyId>>,
     ) -> GraphResult<Records<Self::V>>;
 
     fn scan_edge(
-        &self,
-        snapshot_id: SnapshotId,
-        label_id: Option<LabelId>,
-        condition: Option<&Condition>,
+        &self, snapshot_id: SnapshotId, label_id: Option<LabelId>, condition: Option<&Condition>,
         property_ids: Option<&Vec<PropertyId>>,
     ) -> GraphResult<Records<Self::E>>;
 
     fn get_out_edges(
-        &self,
-        snapshot_id: SnapshotId,
-        vertex_id: VertexId,
-        label_id: Option<LabelId>,
-        condition: Option<&Condition>,
-        property_ids: Option<&Vec<PropertyId>>,
+        &self, snapshot_id: SnapshotId, vertex_id: VertexId, label_id: Option<LabelId>,
+        condition: Option<&Condition>, property_ids: Option<&Vec<PropertyId>>,
     ) -> GraphResult<Records<Self::E>>;
 
     fn get_in_edges(
-        &self,
-        snapshot_id: SnapshotId,
-        vertex_id: VertexId,
-        label_id: Option<LabelId>,
-        condition: Option<&Condition>,
-        property_ids: Option<&Vec<PropertyId>>,
+        &self, snapshot_id: SnapshotId, vertex_id: VertexId, label_id: Option<LabelId>,
+        condition: Option<&Condition>, property_ids: Option<&Vec<PropertyId>>,
     ) -> GraphResult<Records<Self::E>>;
 
     fn get_out_degree(
-        &self,
-        snapshot_id: SnapshotId,
-        vertex_id: VertexId,
-        label_id: Option<LabelId>,
+        &self, snapshot_id: SnapshotId, vertex_id: VertexId, label_id: Option<LabelId>,
     ) -> GraphResult<usize>;
 
     fn get_in_degree(
-        &self,
-        snapshot_id: SnapshotId,
-        vertex_id: VertexId,
-        label_id: Option<LabelId>,
+        &self, snapshot_id: SnapshotId, vertex_id: VertexId, label_id: Option<LabelId>,
     ) -> GraphResult<usize>;
 
     fn get_kth_out_edge(
-        &self,
-        snapshot_id: SnapshotId,
-        vertex_id: VertexId,
-        edge_relation: &EdgeKind,
-        k: SerialId,
+        &self, snapshot_id: SnapshotId, vertex_id: VertexId, edge_relation: &EdgeKind, k: SerialId,
         property_ids: Option<&Vec<PropertyId>>,
     ) -> GraphResult<Option<Self::E>>;
 
     fn get_kth_in_edge(
-        &self,
-        snapshot_id: SnapshotId,
-        vertex_id: VertexId,
-        edge_relation: &EdgeKind,
-        k: SerialId,
+        &self, snapshot_id: SnapshotId, vertex_id: VertexId, edge_relation: &EdgeKind, k: SerialId,
         property_ids: Option<&Vec<PropertyId>>,
     ) -> GraphResult<Option<Self::E>>;
 
@@ -108,21 +77,27 @@ pub trait MultiVersionGraph {
     /// If vertex type already exists, `si` is smaller than last operation, get lock error, storage error
     /// or other errors, `GraphError` will be returned.
     /// Returns true if schema_version changed, false otherwise.
-    fn create_vertex_type(&self, si: SnapshotId, schema_version: i64, label: LabelId, type_def: &TypeDef, table_id: i64) -> GraphResult<bool>;
+    fn create_vertex_type(
+        &self, si: SnapshotId, schema_version: i64, label: LabelId, type_def: &TypeDef, table_id: i64,
+    ) -> GraphResult<bool>;
 
     /// Create a new edge type with `label` and `type_def` at `si` and `schema_version`. This interface is thread safe.
     ///
     /// If edge type already exists, `si` is smaller than last operation, get lock error, storage error
     /// or other errors, `GraphError` will be returned.
     /// Returns true if schema_version changed, false otherwise.
-    fn create_edge_type(&self, si: SnapshotId, schema_version: i64, label: LabelId, type_def: &TypeDef) -> GraphResult<bool>;
+    fn create_edge_type(
+        &self, si: SnapshotId, schema_version: i64, label: LabelId, type_def: &TypeDef,
+    ) -> GraphResult<bool>;
 
     /// Add a new edge kind of `kind` to edge type with `kind.label` at `si` and `schema_version`. This interface is thread safe.
     ///
     /// If edge type with `kind.label` not exists, edge kind `kind` already exists, `si` is smaller
     /// than last operation, get lock error, storage error or other errors, `GraphError` will be returned.
     /// Returns true if schema_version changed, false otherwise.
-    fn add_edge_kind(&self, si: SnapshotId, schema_version: i64, kind: &EdgeKind, table_id: i64) -> GraphResult<bool>;
+    fn add_edge_kind(
+        &self, si: SnapshotId, schema_version: i64, kind: &EdgeKind, table_id: i64,
+    ) -> GraphResult<bool>;
 
     /// Drop a vertex type of `label` at `si` and `schema_version`.  This interface is thread safe.
     ///
@@ -130,7 +105,8 @@ pub trait MultiVersionGraph {
     /// `GraphError` will be returned.
     ///
     /// Returns true if schema_version changed, false otherwise.
-    fn drop_vertex_type(&self, si: SnapshotId, schema_version: i64, label_id: LabelId) -> GraphResult<bool>;
+    fn drop_vertex_type(&self, si: SnapshotId, schema_version: i64, label_id: LabelId)
+        -> GraphResult<bool>;
 
     /// Drop an edge type of `label` as well as all edge kinds of `label` at `si` and `schema_version`.  This interface is thread safe.
     ///
@@ -146,7 +122,9 @@ pub trait MultiVersionGraph {
     /// `GraphError` will be returned.
     ///
     /// Returns true if schema_version changed, false otherwise.
-    fn remove_edge_kind(&self, si: SnapshotId, schema_version: i64, edge_kind: &EdgeKind) -> GraphResult<bool>;
+    fn remove_edge_kind(
+        &self, si: SnapshotId, schema_version: i64, edge_kind: &EdgeKind,
+    ) -> GraphResult<bool>;
 
     /// realtime write interfaces
     /// These realtime write interfaces should be thread safe and user should ensure all data are in
@@ -159,7 +137,9 @@ pub trait MultiVersionGraph {
     ///
     /// If vertex type of `label` not found, storage error, encoding error, meta error or other errors,
     /// `GraphError` will be returned.
-    fn insert_overwrite_vertex(&self, si: SnapshotId, id: VertexId, label: LabelId, properties: &dyn PropertyMap) -> GraphResult<()>;
+    fn insert_overwrite_vertex(
+        &self, si: SnapshotId, id: VertexId, label: LabelId, properties: &dyn PropertyMap,
+    ) -> GraphResult<()>;
 
     /// Insert or update a vertex with `id` and `label` at `si`. If the vertex already exists, merge its
     /// properties with the provided `properties` and create a new version of this vertex. Otherwise
@@ -167,7 +147,9 @@ pub trait MultiVersionGraph {
     ///
     /// If vertex type of `label` not found, storage error, encoding error, meta error or other errors,
     /// `GraphError` will be returned.
-    fn insert_update_vertex(&self, si: SnapshotId, id: VertexId, label: LabelId, properties: &dyn PropertyMap) -> GraphResult<()>;
+    fn insert_update_vertex(
+        &self, si: SnapshotId, id: VertexId, label: LabelId, properties: &dyn PropertyMap,
+    ) -> GraphResult<()>;
 
     /// Delete a vertex with `id` and `label` at `si`. The existence will not be checked. This interface is thread safe.
     ///
@@ -179,7 +161,10 @@ pub trait MultiVersionGraph {
     ///
     /// If edge kind of `edge_kind` not found, storage error, encoding error, meta error or other errors,
     /// `GraphError` will be returned.
-    fn insert_overwrite_edge(&self, si: SnapshotId, id: EdgeId, edge_kind: &EdgeKind, forward: bool, properties: &dyn PropertyMap) -> GraphResult<()>;
+    fn insert_overwrite_edge(
+        &self, si: SnapshotId, id: EdgeId, edge_kind: &EdgeKind, forward: bool,
+        properties: &dyn PropertyMap,
+    ) -> GraphResult<()>;
 
     /// Insert or update an edge with `id` and `edge_kind` at `si`. If the edge already exists, merge its
     /// properties with the provided `properties` and create a new version of this edge. Otherwise
@@ -187,12 +172,17 @@ pub trait MultiVersionGraph {
     ///
     /// If edge kind of `edge_kind` not found, storage error, encoding error, meta error or other errors,
     /// `GraphError` will be returned.
-    fn insert_update_edge(&self, si: SnapshotId, id: EdgeId, edge_kind: &EdgeKind, forward: bool, properties: &dyn PropertyMap) -> GraphResult<()>;
+    fn insert_update_edge(
+        &self, si: SnapshotId, id: EdgeId, edge_kind: &EdgeKind, forward: bool,
+        properties: &dyn PropertyMap,
+    ) -> GraphResult<()>;
 
     /// Delete an edge with `id` and `edge_kind` at `si`. The existence will not be checked. This interface is thread safe.
     ///
     /// If edge kind of `edge_kind` not found, storage error or other errors, `GraphError` will be returned.
-    fn delete_edge(&self, si: SnapshotId, id: EdgeId, edge_kind: &EdgeKind, forward: bool) -> GraphResult<()>;
+    fn delete_edge(
+        &self, si: SnapshotId, id: EdgeId, edge_kind: &EdgeKind, forward: bool,
+    ) -> GraphResult<()>;
 
     /// garbage collection at `si`
     fn gc(&self, si: SnapshotId) -> GraphResult<()>;
@@ -201,9 +191,14 @@ pub trait MultiVersionGraph {
     fn get_graph_def_blob(&self) -> GraphResult<Vec<u8>>;
 
     /// prepare data load
-    fn prepare_data_load(&self, si: SnapshotId, schema_version: i64, target: &DataLoadTarget, table_id: i64) -> GraphResult<bool>;
+    fn prepare_data_load(
+        &self, si: SnapshotId, schema_version: i64, target: &DataLoadTarget, table_id: i64,
+    ) -> GraphResult<bool>;
 
-    fn commit_data_load(&self, si: SnapshotId, schema_version: i64, target: &DataLoadTarget, table_id: i64, partition_id: i32, unique_path: &str) -> GraphResult<bool>;
+    fn commit_data_load(
+        &self, si: SnapshotId, schema_version: i64, target: &DataLoadTarget, table_id: i64,
+        partition_id: i32, unique_path: &str,
+    ) -> GraphResult<bool>;
 
     /// Open a backup engine of graph storage that implements GraphBackup trait.
     fn open_backup_engine(&self, backup_path: &str) -> GraphResult<Box<dyn GraphBackup>>;

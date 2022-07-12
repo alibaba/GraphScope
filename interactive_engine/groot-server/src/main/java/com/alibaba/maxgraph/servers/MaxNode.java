@@ -198,6 +198,7 @@ public class MaxNode extends NodeBase {
     public static void main(String[] args) throws Exception {
         String configFile = System.getProperty("config.file");
         Configs conf = new Configs(configFile);
+        conf = Configs.newBuilder(conf).put(CommonConfig.ENGINE_TYPE.getKey(), "gaia").build();
         MaxNode maxNode = new MaxNode(conf);
         NodeLauncher nodeLauncher = new NodeLauncher(maxNode);
         nodeLauncher.start();

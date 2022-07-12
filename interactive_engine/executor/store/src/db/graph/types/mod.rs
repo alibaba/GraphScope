@@ -1,6 +1,6 @@
 mod common;
-pub mod vertex;
 pub mod edge;
+pub mod vertex;
 
-pub use self::vertex::*;
 pub use self::edge::*;
+pub use self::vertex::*;

@@ -1,42 +1,49 @@
-use crate::db::api::{LabelId, VertexId};
-use std::cell::{RefCell};
-use byteorder::{BigEndian, WriteBytesExt};
+use std::cell::RefCell;
 use std::io::Write;
 use std::ops::Deref;
 
-pub mod codec;
-mod table_manager;
-mod version;
-pub mod types;
-pub mod bin;
-mod property;
-mod meta;
-pub mod store;
-#[cfg(test)]
-mod tests;
+use byteorder::{BigEndian, WriteBytesExt};
+
+use crate::db::api::{LabelId, VertexId};
+
 #[cfg(test)]
 mod bench;
+pub mod bin;
+pub mod codec;
 pub mod entity;
 pub mod iter;
+mod meta;
+mod property;
+pub mod store;
+mod table_manager;
+#[cfg(test)]
+mod tests;
+pub mod types;
+mod version;
 
 thread_local! {
     static BUFFER: RefCell<Vec<u8>> = RefCell::new(Vec::with_capacity(64 << 10));
 }
 
-pub fn get_vertex_id_by_primary_keys<'a, T: Deref<Target=Vec<u8>>>(label_id: LabelId, pks: impl Iterator<Item=T>) -> VertexId{
+pub fn get_vertex_id_by_primary_keys<'a, T: Deref<Target = Vec<u8>>>(
+    label_id: LabelId, pks: impl Iterator<Item = T>,
+) -> VertexId {
     BUFFER.with(|bytes| {
         let mut bytes = bytes.borrow_mut();
         bytes.clear();
-        bytes.write_i32::<BigEndian>(label_id as i32).unwrap();
+        bytes
+            .write_i32::<BigEndian>(label_id as i32)
+            .unwrap();
         for pk in pks {
             let pk = pk.as_slice();
-            bytes.write_i32::<BigEndian>(pk.len() as i32).unwrap();
+            bytes
+                .write_i32::<BigEndian>(pk.len() as i32)
+                .unwrap();
             bytes.write(pk).unwrap();
         }
         hash64(bytes.as_slice(), bytes.len())
     })
 }
-
 
 pub fn hash64(data: &[u8], length: usize) -> i64 {
     let seed = 0xc70f6907;
@@ -64,7 +71,7 @@ pub fn hash64_with_seed(data: &[u8], length: usize, seed: u32) -> i64 {
         h ^= k;
         h = h.wrapping_mul(m);
     }
-    let tmp =  length % 8;
+    let tmp = length % 8;
     if tmp > 0 {
         for i in (1..=tmp).rev() {
             let o = i - 1;
@@ -81,11 +88,13 @@ pub fn hash64_with_seed(data: &[u8], length: usize, seed: u32) -> i64 {
 
 #[cfg(test)]
 mod test {
-    use byteorder::{WriteBytesExt, BigEndian};
+    use std::cell::RefCell;
     use std::io::Write;
-    use std::time::Instant;
     use std::ops::Sub;
-    use std::cell::{RefCell};
+    use std::time::Instant;
+
+    use byteorder::{BigEndian, WriteBytesExt};
+
     use crate::db::graph::get_vertex_id_by_primary_keys;
 
     thread_local! {
@@ -147,7 +156,12 @@ mod test {
         let p = [Property::ListInt(Vec::from([400, 500, 600, 700]))];
         assert_eq!(-6843607735995935492_i64, get_vertex_id_by_pk_property(1, &p));
 
-        let p = [Property::ListLong(Vec::from([111111111111_i64, 222222222222_i64, 333333333333_i64, 444444444444_i64]))];
+        let p = [Property::ListLong(Vec::from([
+            111111111111_i64,
+            222222222222_i64,
+            333333333333_i64,
+            444444444444_i64,
+        ]))];
         assert_eq!(7595853299324856776_i64, get_vertex_id_by_pk_property(1, &p));
 
         let p = [Property::ListFloat(Vec::from([1.234567_f32, 12.34567_f32, 123.4567_f32, 1234.567_f32]))];
@@ -200,49 +214,57 @@ mod test {
                         data.extend(v.as_bytes());
                     }
                     Property::ListInt(v) => {
-                        data.write_i32::<BigEndian>(v.len() as i32).unwrap();
+                        data.write_i32::<BigEndian>(v.len() as i32)
+                            .unwrap();
                         for i in v {
                             data.write_i32::<BigEndian>(*i).unwrap();
                         }
                     }
                     Property::ListLong(v) => {
-                        data.write_i32::<BigEndian>(v.len() as i32).unwrap();
+                        data.write_i32::<BigEndian>(v.len() as i32)
+                            .unwrap();
                         for i in v {
                             data.write_i64::<BigEndian>(*i).unwrap();
                         }
                     }
                     Property::ListFloat(v) => {
-                        data.write_i32::<BigEndian>(v.len() as i32).unwrap();
+                        data.write_i32::<BigEndian>(v.len() as i32)
+                            .unwrap();
                         for i in v {
                             data.write_f32::<BigEndian>(*i).unwrap();
                         }
                     }
                     Property::ListDouble(v) => {
-                        data.write_i32::<BigEndian>(v.len() as i32).unwrap();
+                        data.write_i32::<BigEndian>(v.len() as i32)
+                            .unwrap();
                         for i in v {
                             data.write_f64::<BigEndian>(*i).unwrap();
                         }
                     }
                     Property::ListString(v) => {
-                        data.write_i32::<BigEndian>(v.len() as i32).unwrap();
+                        data.write_i32::<BigEndian>(v.len() as i32)
+                            .unwrap();
                         let mut offset = 0;
                         let mut bytes_vec = Vec::with_capacity(v.len());
                         for i in v {
                             let b = i.as_bytes();
                             bytes_vec.push(b);
                             offset += b.len();
-                            data.write_i32::<BigEndian>(offset as i32).unwrap();
+                            data.write_i32::<BigEndian>(offset as i32)
+                                .unwrap();
                         }
                         for b in bytes_vec {
                             data.write(b).unwrap();
                         }
                     }
                     Property::ListBytes(v) => {
-                        data.write_i32::<BigEndian>(v.len() as i32).unwrap();
+                        data.write_i32::<BigEndian>(v.len() as i32)
+                            .unwrap();
                         let mut offset = 0;
                         for i in v {
                             offset += i.len();
-                            data.write_i32::<BigEndian>(offset as i32).unwrap();
+                            data.write_i32::<BigEndian>(offset as i32)
+                                .unwrap();
                         }
                         for i in v {
                             data.write(i.as_slice()).unwrap();
@@ -276,10 +298,11 @@ mod test {
                 let n = t.elapsed();
                 let cost = n.sub(c).as_nanos();
                 c = n;
-                println!("total {}, cost {}, interval_speed {}",
-                         i,
-                         cost / 1000000,
-                         1000000000 * interval as u128 / cost
+                println!(
+                    "total {}, cost {}, interval_speed {}",
+                    i,
+                    cost / 1000000,
+                    1000000000 * interval as u128 / cost
                 );
             }
         }

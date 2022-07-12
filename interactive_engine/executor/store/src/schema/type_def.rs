@@ -1,26 +1,28 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //! http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use std::collections::HashMap;
-use super::{PropId, DataType};
 use std::cell::UnsafeCell;
-use maxgraph_common::proto as protos;
+use std::collections::HashMap;
 use std::collections::HashSet;
-use super::relation::Relation;
+
+use maxgraph_common::proto as protos;
+
 use super::prop_def::*;
+use super::relation::Relation;
 use super::LabelId;
+use super::{DataType, PropId};
 
 #[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Type {
@@ -69,16 +71,11 @@ pub struct TypeDef {
 }
 
 impl TypeDef {
-    pub fn build_def(name: String,
-                     label: LabelId,
-                     data_type: Type,
-                     prop_name_mapping: HashMap<String, PropId>,
-                     props: HashMap<PropId, PropDef>,
-                     is_dimension_type: bool,
-                     comment: String,
-                     version: u32,
-                     relations: HashSet<Relation>,
-                     type_option: TypeOption, ) -> Self {
+    pub fn build_def(
+        name: String, label: LabelId, data_type: Type, prop_name_mapping: HashMap<String, PropId>,
+        props: HashMap<PropId, PropDef>, is_dimension_type: bool, comment: String, version: u32,
+        relations: HashSet<Relation>, type_option: TypeOption,
+    ) -> Self {
         TypeDef {
             name,
             label,
@@ -115,7 +112,9 @@ impl TypeDef {
 
     #[inline]
     pub fn get_prop_type(&self, prop_id: PropId) -> Option<&DataType> {
-        self.props.get(&prop_id).map(|x| x.get_data_type())
+        self.props
+            .get(&prop_id)
+            .map(|x| x.get_data_type())
     }
 
     #[inline]
@@ -134,7 +133,7 @@ impl TypeDef {
     }
 
     #[inline]
-    pub fn get_props(&self) -> impl Iterator<Item=(&PropId, &PropDef)> {
+    pub fn get_props(&self) -> impl Iterator<Item = (&PropId, &PropDef)> {
         self.props.iter()
     }
 
@@ -162,7 +161,9 @@ impl TypeDef {
             proto.relationShip.push(r.to_proto());
         }
         for (gid, p) in self.props.iter() {
-            proto.gidToPid.insert(*gid as i32, p.get_prop_id() as i32);
+            proto
+                .gidToPid
+                .insert(*gid as i32, p.get_prop_id() as i32);
             proto.property.push(p.to_proto());
         }
         proto.set_field_type(self.data_type.to_proto());
@@ -178,17 +179,13 @@ pub struct TypeOption {
 
 impl<'a> From<&'a protos::schema::TypeOptionProto> for TypeOption {
     fn from(proto: &'a protos::schema::TypeOptionProto) -> Self {
-        TypeOption {
-            storage_engine: StorageEngine::from(&proto.get_storageEngine()),
-        }
+        TypeOption { storage_engine: StorageEngine::from(&proto.get_storageEngine()) }
     }
 }
 
 impl TypeOption {
     pub fn new(storage_engine: StorageEngine) -> Self {
-        TypeOption {
-            storage_engine,
-        }
+        TypeOption { storage_engine }
     }
 
     fn to_proto(&self) -> protos::schema::TypeOptionProto {
@@ -291,7 +288,9 @@ impl TypeDefBuilder {
     pub fn add_prop(mut self, global_prop_id: PropId, prop_def: PropDef) -> Self {
         {
             let inner = self.get_inner();
-            inner.prop_name_mapping.insert(prop_def.get_name().to_owned(), global_prop_id);
+            inner
+                .prop_name_mapping
+                .insert(prop_def.get_name().to_owned(), global_prop_id);
             inner.props.insert(global_prop_id, prop_def);
         }
         self
@@ -303,9 +302,17 @@ impl TypeDefBuilder {
             let mut prop_id = 0;
             for (p, t) in props {
                 prop_id += 1;
-                inner.prop_name_mapping.insert(p.to_owned(), prop_id);
-                inner.props.insert(prop_id, PropDefBuilder::new()
-                    .name(p).prop_id(prop_id).data_type(t).build());
+                inner
+                    .prop_name_mapping
+                    .insert(p.to_owned(), prop_id);
+                inner.props.insert(
+                    prop_id,
+                    PropDefBuilder::new()
+                        .name(p)
+                        .prop_id(prop_id)
+                        .data_type(t)
+                        .build(),
+                );
             }
         }
         self
@@ -327,9 +334,7 @@ impl TypeDefBuilder {
 
     #[inline]
     fn get_inner(&self) -> &mut TypeDef {
-        unsafe {
-            &mut *self.inner.get()
-        }
+        unsafe { &mut *self.inner.get() }
     }
 }
 
@@ -355,7 +360,9 @@ impl<'a> From<&'a protos::schema::TypeDefProto> for TypeDef {
 
         for p in proto.get_property() {
             let prop_def = PropDef::from(p);
-            let global_prop_id = pid_to_gid.get(&(prop_def.get_prop_id() as i32)).expect("pid to gid not found");
+            let global_prop_id = pid_to_gid
+                .get(&(prop_def.get_prop_id() as i32))
+                .expect("pid to gid not found");
             builder = builder.add_prop(*global_prop_id as u32, prop_def);
         }
 
@@ -365,8 +372,8 @@ impl<'a> From<&'a protos::schema::TypeDefProto> for TypeDef {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use super::super::test_util::*;
+    use super::*;
 
     #[test]
     fn test_type_from_proto() {

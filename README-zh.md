@@ -98,7 +98,7 @@ papers = interactive.execute("g.V().has('author', 'id', 2).out('writes').where(_
 
 ```python
 # extract a subgraph of publication within a time range
-sub_graph = interactive.subgraph("g.V().has('year', inside(2014, 2020)).outE('cites')")
+sub_graph = interactive.subgraph("g.V().has('year', gte(2014).and(lte(2020))).outE('cites')")
 
 # project the projected graph to simple graph.
 simple_g = sub_graph.project(vertices={"paper": []}, edges={"cites": []})

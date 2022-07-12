@@ -196,7 +196,8 @@ class AppInvoker {
   static bl::result<nullptr_t> Query(std::shared_ptr<worker_t> worker,
                                      const rpc::QueryArgs& query_args) {
     constexpr std::size_t args_num = ArgsNum<context_init_func_t>::value - 1;
-    CHECK_OR_RAISE(args_num == query_args.args_size());
+    // There maybe default argument
+    CHECK_OR_RAISE(args_num >= query_args.args_size());
     query_impl(worker, query_args, std::make_index_sequence<args_num>());
     return nullptr;
   }

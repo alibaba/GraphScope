@@ -1,16 +1,15 @@
-use ::crossbeam_epoch as epoch;
-use ::crossbeam_epoch::{Atomic, Owned, Guard};
-
+use std::collections::HashMap;
+use std::fmt;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
-use std::collections::HashMap;
 
+use ::crossbeam_epoch as epoch;
+use ::crossbeam_epoch::{Atomic, Guard, Owned};
+
+use super::version::*;
 use crate::db::api::*;
 use crate::db::common::bytes::util::{UnsafeBytesReader, UnsafeBytesWriter};
 use crate::db::util::lock::GraphMutexLock;
-use super::version::*;
-use std::fmt;
-
 
 pub type CodecVersion = i32;
 
@@ -120,11 +119,7 @@ impl fmt::Debug for Decoder {
 
 impl Decoder {
     fn new(target: &'static Codec, src: &'static Codec, guard: Guard) -> Self {
-        Decoder {
-            target,
-            src,
-            _guard: guard,
-        }
+        Decoder { target, src, _guard: guard }
     }
 
     pub fn decode_properties<'a>(&self, data: &'a [u8]) -> IterDecoder<'a> {
@@ -166,7 +161,9 @@ impl Decoder {
         }
     }
 
-    fn decode_fixed_len_property_at<'a>(&self, reader: &UnsafeBytesReader<'a>, idx: usize) -> Option<ValueRef<'a>> {
+    fn decode_fixed_len_property_at<'a>(
+        &self, reader: &UnsafeBytesReader<'a>, idx: usize,
+    ) -> Option<ValueRef<'a>> {
         let info = &self.src.props[idx];
         let offset = self.src.offsets[idx];
         let bytes = match info.r#type {
@@ -180,7 +177,9 @@ impl Decoder {
         Some(ret)
     }
 
-    fn decode_var_len_property_at<'a>(&self, reader: &UnsafeBytesReader<'a>, idx: usize) -> Option<ValueRef<'a>> {
+    fn decode_var_len_property_at<'a>(
+        &self, reader: &UnsafeBytesReader<'a>, idx: usize,
+    ) -> Option<ValueRef<'a>> {
         let info = &self.src.props[idx];
         let offset = self.src.offsets[idx];
         let end_off = bytes_to_len(reader.read_bytes(offset, 3));
@@ -209,12 +208,7 @@ impl Decoder {
 
 impl Clone for Decoder {
     fn clone(&self) -> Self {
-        Decoder {
-            target: self.target,
-            src: self.src,
-            _guard: epoch::pin(),
-        }
-
+        Decoder { target: self.target, src: self.src, _guard: epoch::pin() }
     }
 }
 
@@ -229,20 +223,12 @@ pub struct IterDecoder<'a> {
 impl<'a> IterDecoder<'a> {
     pub fn new(decoder: Decoder, data: &'a [u8]) -> Self {
         let reader = UnsafeBytesReader::new(data);
-        IterDecoder {
-            decoder,
-            reader,
-            cur: 0,
-        }
+        IterDecoder { decoder, reader, cur: 0 }
     }
 
     pub fn next(&mut self) -> Option<(PropertyId, ValueRef<'a>)> {
         while self.cur < self.decoder.target.props.len() {
-            let ret = if self.decoder.fast_mode() {
-                self.fast_path()
-            } else {
-                self.slow_path()
-            };
+            let ret = if self.decoder.fast_mode() { self.fast_path() } else { self.slow_path() };
             self.cur += 1;
             if ret.is_some() {
                 return ret;
@@ -252,7 +238,9 @@ impl<'a> IterDecoder<'a> {
     }
 
     fn fast_path(&self) -> Option<(PropertyId, ValueRef<'a>)> {
-        let v = self.decoder.decode_property_at(&self.reader, self.cur)?;
+        let v = self
+            .decoder
+            .decode_property_at(&self.reader, self.cur)?;
         let prop_id = self.decoder.target.props[self.cur].prop_id;
         Some((prop_id, v))
     }
@@ -261,8 +249,14 @@ impl<'a> IterDecoder<'a> {
         let info = &self.decoder.target.props[self.cur];
         let prop_id = info.prop_id;
         let internal_id = info.inner_id;
-        let idx = *self.decoder.src.inner_id_map.get(&internal_id)?;
-        let v = self.decoder.decode_property_at(&self.reader, idx)?;
+        let idx = *self
+            .decoder
+            .src
+            .inner_id_map
+            .get(&internal_id)?;
+        let v = self
+            .decoder
+            .decode_property_at(&self.reader, idx)?;
         Some((prop_id, v))
     }
 }
@@ -282,10 +276,7 @@ impl fmt::Debug for Encoder {
 
 impl Encoder {
     pub fn new(codec: &'static Codec, guard: Guard) -> Self {
-        Encoder {
-            codec,
-            _guard: guard,
-        }
+        Encoder { codec, _guard: guard }
     }
 
     pub fn encode(&self, props: &dyn PropertyMap, buf: &mut Vec<u8>) -> GraphResult<()> {
@@ -295,7 +286,9 @@ impl Encoder {
         if buf.capacity() < size {
             buf.reserve(size - buf.capacity());
         }
-        unsafe { buf.set_len(size); }
+        unsafe {
+            buf.set_len(size);
+        }
         let mut writer = UnsafeBytesWriter::new(buf);
         writer.write_i32(0, self.codec.version.to_be());
         let mut null_byte = 0;
@@ -305,7 +298,9 @@ impl Encoder {
         Ok(())
     }
 
-    fn encode_fix_len_properties(&self, writer: &mut UnsafeBytesWriter, props: &dyn PropertyMap, null_byte: &mut u8) -> GraphResult<()> {
+    fn encode_fix_len_properties(
+        &self, writer: &mut UnsafeBytesWriter, props: &dyn PropertyMap, null_byte: &mut u8,
+    ) -> GraphResult<()> {
         for idx in 0..self.codec.fixed_len_prop_count {
             let info = &self.codec.props[idx];
             if let Some(data) = props.get(info.prop_id) {
@@ -324,7 +319,9 @@ impl Encoder {
         Ok(())
     }
 
-    fn encode_var_len_properties(&self, writer: &mut UnsafeBytesWriter, props: &dyn PropertyMap, null_byte: &mut u8) -> GraphResult<()> {
+    fn encode_var_len_properties(
+        &self, writer: &mut UnsafeBytesWriter, props: &dyn PropertyMap, null_byte: &mut u8,
+    ) -> GraphResult<()> {
         let mut end_off = 0;
         let mut null_written = false;
         for idx in self.codec.fixed_len_prop_count..self.codec.props.len() {
@@ -352,13 +349,16 @@ impl Encoder {
             }
         }
         if !null_written && self.codec.props.len() > 0 {
-            let null_offset = std::mem::size_of_val(&self.codec.version) + ((self.codec.props.len() - 1) / 8);
+            let null_offset =
+                std::mem::size_of_val(&self.codec.version) + ((self.codec.props.len() - 1) / 8);
             writer.write_u8(null_offset, *null_byte);
         }
         Ok(())
     }
 
-    fn write_fix_len_property(&self, writer: &mut UnsafeBytesWriter, idx: usize, data: ValueRef) -> GraphResult<()> {
+    fn write_fix_len_property(
+        &self, writer: &mut UnsafeBytesWriter, idx: usize, data: ValueRef,
+    ) -> GraphResult<()> {
         let info = &self.codec.props[idx];
         let offset = self.codec.offsets[idx];
 
@@ -408,13 +408,10 @@ struct PropInfo {
 
 impl PropInfo {
     #[cfg(test)]
-    fn new(prop_id: PropertyId, inner_id: PropertyId, r#type: ValueType, default_value: Option<Value>) -> Self {
-        PropInfo {
-            prop_id,
-            inner_id,
-            r#type,
-            default_value: default_value.map(|v| v.into_vec()),
-        }
+    fn new(
+        prop_id: PropertyId, inner_id: PropertyId, r#type: ValueType, default_value: Option<Value>,
+    ) -> Self {
+        PropInfo { prop_id, inner_id, r#type, default_value: default_value.map(|v| v.into_vec()) }
     }
 }
 
@@ -424,7 +421,11 @@ impl From<&'_ PropDef> for PropInfo {
             prop_id: prop_def.id,
             inner_id: prop_def.inner_id,
             r#type: prop_def.r#type,
-            default_value: prop_def.default_value.clone().map(|v| v.into_vec()).clone(),
+            default_value: prop_def
+                .default_value
+                .clone()
+                .map(|v| v.into_vec())
+                .clone(),
         }
     }
 }
@@ -490,7 +491,7 @@ fn check_var_len_prop(r#type: ValueType, data: &[u8]) -> GraphResult<()> {
             //todo
             return Ok(());
         }
-        _ => unreachable!()
+        _ => unreachable!(),
     }
     let msg = format!("invalid {:?} data, length is not right", r#type);
     let err = gen_graph_err!(GraphErrorCode::InvalidData, msg);
@@ -532,7 +533,8 @@ impl CodecManager {
         let map = self.get_map(&guard);
         let mut map_clone = map.clone();
         map_clone.insert(version, codec);
-        self.codec_map.store(Owned::new(map_clone), Ordering::Relaxed);
+        self.codec_map
+            .store(Owned::new(map_clone), Ordering::Relaxed);
         self.versions.add(si, version as i64).unwrap();
         *max_version = version;
         Ok(())
@@ -543,9 +545,7 @@ impl CodecManager {
             let version = v.data as CodecVersion;
             let guard = epoch::pin();
             let map = self.get_map(&guard);
-            return get_codec(map, version).map(|codec| {
-                Encoder::new(codec, guard)
-            });
+            return get_codec(map, version).map(|codec| Encoder::new(codec, guard));
         }
         let msg = format!("codec not found at si#{}", si);
         let err = gen_graph_err!(GraphErrorCode::MetaNotFound, msg, get_encoder, si);
@@ -573,7 +573,8 @@ impl CodecManager {
         let map = self.get_map(&guard);
         let mut map_clone = map.clone();
         if map_clone.remove(&version).is_some() {
-            self.codec_map.store(Owned::new(map_clone), Ordering::Relaxed);
+            self.codec_map
+                .store(Owned::new(map_clone), Ordering::Relaxed);
         }
         Ok(())
     }
@@ -584,17 +585,22 @@ impl CodecManager {
     }
 
     fn get_map(&self, guard: &Guard) -> &'static CodecMap {
-        unsafe { &*self.codec_map.load(Ordering::Relaxed, &guard).as_raw() }
+        unsafe {
+            &*self
+                .codec_map
+                .load(Ordering::Relaxed, &guard)
+                .as_raw()
+        }
     }
 }
 
 fn get_codec(map: &CodecMap, version: CodecVersion) -> GraphResult<&Codec> {
-    map.get(&version).map(|codec| {
-        codec.as_ref()
-    }).ok_or_else(|| {
-        let msg = format!("codec of version#{} not found", version);
-        gen_graph_err!(GraphErrorCode::MetaNotFound, msg, get_encoder, version)
-    })
+    map.get(&version)
+        .map(|codec| codec.as_ref())
+        .ok_or_else(|| {
+            let msg = format!("codec of version#{} not found", version);
+            gen_graph_err!(GraphErrorCode::MetaNotFound, msg, get_encoder, version)
+        })
 }
 
 #[cfg(test)]
@@ -618,22 +624,25 @@ mod tests {
     fn check_codec(codec: &Codec) {
         assert_eq!(codec.fixed_len_prop_count, 7);
         assert_eq!(codec.var_len_prop_start_offset, 4 + 2 + 49);
-        assert_eq!(codec.props, vec![
-            PropInfo::new(3, 3, ValueType::Char, None),
-            PropInfo::new(4, 4, ValueType::Int, None),
-            PropInfo::new(5, 5, ValueType::Short, None),
-            PropInfo::new(6, 6, ValueType::Bool, None),
-            PropInfo::new(7, 7, ValueType::Long, None),
-            PropInfo::new(8, 8, ValueType::Float, None),
-            PropInfo::new(9, 9, ValueType::Double, None),
-            PropInfo::new(1, 1, ValueType::String, None),
-            PropInfo::new(2, 2, ValueType::Bytes, None),
-            PropInfo::new(10, 10, ValueType::IntList, None),
-            PropInfo::new(11, 11, ValueType::DoubleList, None),
-            PropInfo::new(12, 12, ValueType::FloatList, None),
-            PropInfo::new(13, 13, ValueType::StringList, None),
-            PropInfo::new(14, 14, ValueType::LongList, None),
-        ]);
+        assert_eq!(
+            codec.props,
+            vec![
+                PropInfo::new(3, 3, ValueType::Char, None),
+                PropInfo::new(4, 4, ValueType::Int, None),
+                PropInfo::new(5, 5, ValueType::Short, None),
+                PropInfo::new(6, 6, ValueType::Bool, None),
+                PropInfo::new(7, 7, ValueType::Long, None),
+                PropInfo::new(8, 8, ValueType::Float, None),
+                PropInfo::new(9, 9, ValueType::Double, None),
+                PropInfo::new(1, 1, ValueType::String, None),
+                PropInfo::new(2, 2, ValueType::Bytes, None),
+                PropInfo::new(10, 10, ValueType::IntList, None),
+                PropInfo::new(11, 11, ValueType::DoubleList, None),
+                PropInfo::new(12, 12, ValueType::FloatList, None),
+                PropInfo::new(13, 13, ValueType::StringList, None),
+                PropInfo::new(14, 14, ValueType::LongList, None),
+            ]
+        );
         assert_eq!(codec.inner_id_map.len(), 14);
         assert_eq!(*codec.inner_id_map.get(&3).unwrap(), 0);
         assert_eq!(*codec.inner_id_map.get(&4).unwrap(), 1);
@@ -702,9 +711,11 @@ mod tests {
         let _data: Vec<(PropertyId, Value)> = test_data().into_iter().collect();
 
         #[allow(dead_code)]
-        fn dfs(prop_list: &Vec<(PropertyId, Value)>, cur: usize, map: &mut HashMap<PropertyId, Value>, encoder: &Encoder) {
+        fn dfs(
+            prop_list: &Vec<(PropertyId, Value)>, cur: usize, map: &mut HashMap<PropertyId, Value>,
+            encoder: &Encoder,
+        ) {
             if cur == prop_list.len() {
-
                 return;
             }
 
@@ -719,9 +730,7 @@ mod tests {
         fn check(encoder: &Encoder, _decoder: &Decoder, map: &HashMap<PropertyId, Value>) {
             let mut buf = Vec::new();
             encoder.encode(map, &mut buf).unwrap();
-
         }
-
     }
 
     #[test]
@@ -792,11 +801,11 @@ mod tests {
         map.insert(7, Value::long(4));
         map.insert(8, Value::float(5.0));
         map.insert(9, Value::double(6.0));
-        map.insert(10, Value::int_list(&[7,1,1]));
+        map.insert(10, Value::int_list(&[7, 1, 1]));
         map.insert(11, Value::double_list(&[8.1, 1.1, 1.1]));
         map.insert(12, Value::float_list(&[9.1, 1.1, 1.1]));
         map.insert(13, Value::string_list(&["1".to_owned(), "2".to_owned(), "3".to_owned()]));
-        map.insert(14, Value::long_list(&[10,1,1]));
+        map.insert(14, Value::long_list(&[10, 1, 1]));
         map
     }
 
@@ -811,11 +820,11 @@ mod tests {
         map.insert(7, Value::long(644588766664));
         map.insert(8, Value::float(1.23));
         map.insert(9, Value::double(3.56342));
-        map.insert(10, Value::int_list(&[1,2,3,4,5]));
+        map.insert(10, Value::int_list(&[1, 2, 3, 4, 5]));
         map.insert(11, Value::double_list(&[1.1, 2.2, 3.3, 4.4]));
         map.insert(12, Value::float_list(&[1.2, 2.3, 3.4]));
         map.insert(13, Value::string_list(&["aaa".to_owned(), "bbb".to_owned(), "ccc".to_owned()]));
-        map.insert(14, Value::long_list(&[5,6,67,7,8,8,8,34]));
+        map.insert(14, Value::long_list(&[5, 6, 67, 7, 8, 8, 8, 34]));
         map
     }
 
@@ -823,7 +832,15 @@ mod tests {
         let mut builder = TypeDefBuilder::new();
         builder.version(10);
         for (prop_id, inner_id, r#type) in test_prop_list() {
-            builder.add_property(prop_id, inner_id, prop_id.to_string(), r#type, None, false, "cmt".to_string());
+            builder.add_property(
+                prop_id,
+                inner_id,
+                prop_id.to_string(),
+                r#type,
+                None,
+                false,
+                "cmt".to_string(),
+            );
         }
         let type_def = builder.build();
         Codec::from(&type_def)
@@ -835,7 +852,15 @@ mod tests {
         let default_value = default_value();
         for (prop_id, inner_id, r#type) in test_prop_list() {
             let value = default_value.get(&prop_id).unwrap().clone();
-            builder.add_property(prop_id, inner_id, prop_id.to_string(), r#type, Some(value), false, "cmt".to_string());
+            builder.add_property(
+                prop_id,
+                inner_id,
+                prop_id.to_string(),
+                r#type,
+                Some(value),
+                false,
+                "cmt".to_string(),
+            );
         }
         let type_def = builder.build();
         Codec::from(&type_def)

@@ -23,13 +23,13 @@ pub mod prelude;
 mod property;
 mod unwrap_or;
 
+use std::collections::HashMap;
+
 pub use self::condition::*;
 pub use self::elem::*;
 pub use self::global_query::*;
 pub use self::multi_version::*;
-
 use crate::schema::prelude::*;
-use std::collections::HashMap;
 
 pub type VertexId = i64;
 pub type LabelId = u32;
@@ -56,11 +56,7 @@ pub struct PartitionKey {
 #[allow(dead_code)]
 impl PartitionKey {
     pub fn new(partition_id: u32, graph_name: String, label: String) -> Self {
-        PartitionKey {
-            partition_id,
-            graph_name,
-            label,
-        }
+        PartitionKey { partition_id, graph_name, label }
     }
 }
 
@@ -91,12 +87,7 @@ pub struct TypePartition {
 
 impl TypePartition {
     pub fn vertex(label: LabelId, partition_id: PartitionId) -> Self {
-        TypePartition {
-            label,
-            src_label: 0,
-            dst_label: 0,
-            partition_id,
-        }
+        TypePartition { label, src_label: 0, dst_label: 0, partition_id }
     }
 
     pub fn edge(relation: Relation, partition_id: PartitionId) -> Self {
@@ -133,16 +124,8 @@ pub struct EdgeData<'a> {
 
 impl<'a> EdgeData<'a> {
     pub fn new(
-        src_id: VertexId,
-        dst_id: VertexId,
-        edge_id: EdgeId,
-        props: &'a HashMap<PropId, Vec<u8>>,
+        src_id: VertexId, dst_id: VertexId, edge_id: EdgeId, props: &'a HashMap<PropId, Vec<u8>>,
     ) -> Self {
-        EdgeData {
-            src_id,
-            dst_id,
-            edge_id,
-            props,
-        }
+        EdgeData { src_id, dst_id, edge_id, props }
     }
 }

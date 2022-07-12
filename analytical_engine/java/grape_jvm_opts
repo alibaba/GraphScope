@@ -28,12 +28,22 @@ else
     class_path=${GRAPHSCOPE_HOME}/lib/grape-runtime-0.1-shaded.jar:
 fi
 
+jvm_version=$(${JAVA_HOME}/bin/javac -version 2>&1 | awk -F ' ' '{print $2}' | awk -F '.' '{print $1}')
+if  [[ "${jvm_version}" == *"11"* ]];then
+    _JVM_OPTS="-Xlog:gc*"
+    _JVM_OPTS=${_JVM_OPTS}" --illegal-access=warn"
+else 
+    _JVM_OPTS="-XX:+PrintGCDateStamps"
+    _JVM_OPTS=${_JVM_OPTS}" -XX:+PrintGCDetails"
+fi
+
 export GRAPE_JVM_OPTS="-Dcom.alibaba.fastffi.rvBuffer=2147483648 -XX:+StartAttachListener -XX:+PreserveFramePointer \
--XX:+UseParallelGC -XX:+UseParallelOldGC -XX:+PrintGCDetails -XX:+PrintGCDateStamps \
+-XX:+UseParallelGC -XX:+UseParallelOldGC \
 -XX:+UnlockDiagnosticVMOptions -XX:LoopUnrollLimit=1 \
 -XX:CompileCommandFile=${GRAPHSCOPE_HOME}/conf/compile-commands.txt \
 -Djava.library.path=${GRAPHSCOPE_HOME}/lib \
--Djava.class.path=${class_path}"
+-Djava.class.path=${class_path} \
+${_JVM_OPTS}"
 
 #-XX:+TraceClassLoading \
 #-XX:+PrintInlining \
