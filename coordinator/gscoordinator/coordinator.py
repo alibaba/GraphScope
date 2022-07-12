@@ -99,6 +99,11 @@ from gscoordinator.utils import str2bool
 from gscoordinator.utils import to_maxgraph_schema
 from gscoordinator.version import __version__
 
+
+from gscoordinator.monitor_utils import Monitor
+
+
+
 # endpoint of prelaunch analytical engine
 GS_DEBUG_ENDPOINT = os.environ.get("GS_DEBUG_ENDPOINT", "")
 
@@ -256,6 +261,7 @@ class CoordinatorServiceServicer(
         logger.addHandler(stdout_handler)
         logger.addHandler(stderr_handler)
 
+    @Monitor.connectSession
     def ConnectSession(self, request, context):
         for result in self.ConnectSessionWrapped(request, context):
             return result
@@ -357,6 +363,7 @@ class CoordinatorServiceServicer(
 
     HeartBeatWrapped = catch_unknown_errors(message_pb2.HeartBeatResponse())(_HeartBeat)
 
+    @Monitor.runOnAnalyticalEngine
     def run_on_analytical_engine(  # noqa: C901
         self,
         dag_def: op_def_pb2.DagDef,
@@ -599,10 +606,18 @@ class CoordinatorServiceServicer(
             for response in self.RunStepWrapped(request_iterator, context):
                 yield response
 
+    #TODO: monitor runstep
     def _RunStep(self, request_iterator, context):
         # split dag
         dag_manager = DAGManager(request_iterator)
         loader_op_bodies = {}
+
+        # session_id = ""
+        # father_op_key = ""
+        # if dag_manager._req_head:
+        #     session_id = dag_manager._req_head.head.session_id
+            # father_op_key = dag_manager._req_head.head.dag_def.op.key
+            # print(dag_manager._req_head.head.dag_def.op[0])
 
         # response list for stream
         responses = []
@@ -616,9 +631,11 @@ class CoordinatorServiceServicer(
             error_code = error_codes_pb2.COORDINATOR_INTERNAL_ERROR
             head = None
             bodies = None
+
             try:
                 # run on analytical engine
                 if run_dag_on == GSEngine.analytical_engine:
+                    # Monitor.analyticalJobCounter.labels(session_id).inc()
                     # need dag_bodies to load graph from pandas/numpy
                     error_code = error_codes_pb2.ANALYTICAL_ENGINE_INTERNAL_ERROR
                     head, bodies = self.run_on_analytical_engine(
@@ -626,10 +643,12 @@ class CoordinatorServiceServicer(
                     )
                 # run on interactive engine
                 elif run_dag_on == GSEngine.interactive_engine:
+                    # Monitor.interactiveJobCounter.labels(session_id).inc()
                     error_code = error_codes_pb2.INTERACTIVE_ENGINE_INTERNAL_ERROR
                     head, bodies = self.run_on_interactive_engine(dag)
                 # run on learning engine
                 elif run_dag_on == GSEngine.learning_engine:
+                    # Monitor.learningJobCounter.labels(session_id).inc()
                     error_code = error_codes_pb2.LEARNING_ENGINE_INTERNAL_ERROR
                     head, bodies = self.run_on_learning_engine(dag)
                 # run on coordinator
@@ -800,6 +819,7 @@ class CoordinatorServiceServicer(
 
     AddLibWrapped = catch_unknown_errors(message_pb2.AddLibResponse())(_AddLib)
 
+    @Monitor.closeSession
     def CloseSession(self, request, context):
         for result in self.CloseSessionWrapped(request, context):
             return result
@@ -1715,6 +1735,7 @@ def launch_graphscope():
     logger.info("Coordinator server listen at 0.0.0.0:%d", args.port)
 
     server.start()
+    Monitor.startServer()
 
     # handle SIGTERM signal
     def terminate(signum, frame):
