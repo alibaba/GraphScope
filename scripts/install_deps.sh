@@ -185,7 +185,6 @@ init_basic_packages() {
       git
       rapidjson-dev
       libmsgpack-dev
-      golang-go
     )
   elif [[ "${PLATFORM}" == *"CentOS"* ]]; then
     BASIC_PACKGES_TO_INSTALL=(
@@ -224,7 +223,6 @@ init_basic_packages() {
       curl
       rapidjson-devel
       msgpack-devel
-      golang
     )
   else
     BASIC_PACKGES_TO_INSTALL=(
@@ -244,7 +242,6 @@ init_basic_packages() {
       libomp
       rapidjson
       msgpack-cxx
-      go
     )
   fi
   readonly BASIC_PACKGES_TO_INSTALL
@@ -393,7 +390,6 @@ write_envs_config() {
         echo "export JAVA_HOME=\$(/usr/libexec/java_home -v11)"
       fi
       echo "export PATH=\$HOME/.cargo/bin:\${JAVA_HOME}/bin:/usr/local/go/bin:\$PATH"
-      echo "export PATH=\$(go env GOPATH)/bin:\$PATH"
       echo "export OPENSSL_ROOT_DIR=${homebrew_prefix}/opt/openssl"
       echo "export OPENSSL_LIBRARIES=${homebrew_prefix}/opt/openssl/lib"
       echo "export OPENSSL_SSL_LIBRARY=${homebrew_prefix}/opt/openssl/lib/libssl.dylib"
@@ -405,8 +401,7 @@ write_envs_config() {
       if [ -z "${JAVA_HOME}" ]; then
         echo "export JAVA_HOME=/usr/lib/jvm/default-java"
       fi
-      echo "export PATH=\${JAVA_HOME}/bin:\$HOME/.cargo/bin:/usr/local/go/bin:\$PATH"
-      echo "export PATH=\$(go env GOPATH)/bin:\$PATH"
+      echo "export PATH=\${JAVA_HOME}/bin:\$HOME/.cargo/bin:\$PATH"
       echo "export LLVM11_HOME=${homebrew_prefix}/opt/llvm/"
     } >> ${OUTPUT_ENV_FILE}
   else
@@ -415,8 +410,7 @@ write_envs_config() {
       if [ -z "${JAVA_HOME}" ]; then
         echo "export JAVA_HOME=/usr/lib/jvm/java"
       fi
-      echo "export PATH=\${JAVA_HOME}/bin:\$HOME/.cargo/bin:\$PATH:/usr/local/go/bin"
-      echo "export PATH=\$(go env GOPATH)/bin:\$PATH"
+      echo "export PATH=\${JAVA_HOME}/bin:\$HOME/.cargo/bin:\$PATH"
       echo "export LLVM11_HOME=${homebrew_prefix}/opt/llvm/"
     } >> ${OUTPUT_ENV_FILE}
   fi
@@ -750,10 +744,6 @@ install_dependencies() {
     export CPPFLAGS=-I${homebrew_prefix}/opt/llvm/include
     export LLVM11_HOME=${homebrew_prefix}/opt/llvm/
   fi
-
-  log "Installing zetcd."
-  GO111MODULE="auto" go get github.com/etcd-io/zetcd/cmd/zetcd
-  sudo cp ${HOME}/go/bin/zetcd /usr/local/bin/zetcd
 
   log "Installing python packages for vineyard codegen."
   pip3 install -U pip --user

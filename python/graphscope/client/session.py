@@ -537,9 +537,6 @@ class Session(object):
                 - show_log: Deprecated.
                     Move this param as a global configuration.Set via `graphscope.set_option(show_log=True)`
 
-                - k8s_vineyard_shared_mem: Deprecated.
-                    Please use vineyard_shared_mem instead.
-
             reconnect (bool, optional): When connecting to a pre-launched GraphScope cluster with :code:`addr`,
                 the connect request would be rejected with there is still an existing session connected. There
                 are cases where the session still exists and user's client has lost connection with the backend,
@@ -550,13 +547,6 @@ class Session(object):
                 to ensure there's no such an active client actually.
 
                 Defaults to :code:`False`.
-                - k8s_gie_graph_manager_image: Deprecated.
-                - k8s_gie_graph_manager_cpu: Deprecated.
-                - k8s_gie_graph_manager_mem: Deprecated.
-
-                - k8s_zookeeper_image: Deprecated.
-                - k8s_zookeeper_cpu: Deprecated.
-                - k8s_zookeeper_mem: Deprecated.
 
         Raises:
             TypeError: If the given argument combination is invalid and cannot be used to create
@@ -607,13 +597,6 @@ class Session(object):
         self._deprecated_params = (
             "show_log",
             "log_level",
-            "k8s_vineyard_shared_mem",
-            "k8s_gie_graph_manager_image",
-            "k8s_gie_graph_manager_cpu",
-            "k8s_gie_graph_manager_mem",
-            "k8s_zookeeper_image",
-            "k8s_zookeeper_cpu",
-            "k8s_zookeeper_mem",
         )
         saved_locals = locals()
         for param in self._accessable_params:

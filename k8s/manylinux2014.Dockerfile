@@ -246,14 +246,6 @@ RUN mkdir -p /tmp/maven /usr/share/maven/ref \
     && ln -s /usr/share/maven/bin/mvn /usr/bin/mvn \
     && export LD_LIBRARY_PATH=$(echo "$LD_LIBRARY_PATH" | sed "s/::/:/g")
 
-# go, zetcd
-RUN cd /tmp && \
-    wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz && \
-    tar -C /usr/local -xzf go1.15.5.linux-amd64.tar.gz && \
-    export PATH=${PATH}::/usr/local/go/bin && \
-    go get github.com/etcd-io/zetcd/cmd/zetcd && \
-    cp $(go env GOPATH)/bin/zetcd /usr/local/bin/zetcd
-
 # patchelf
 RUN cd /tmp && \
     git clone --depth=1 https://github.com/NixOS/patchelf.git && \

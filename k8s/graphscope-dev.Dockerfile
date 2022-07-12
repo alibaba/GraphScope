@@ -59,7 +59,6 @@ ARG profile=release
 # install vineyard into /usr/local
 COPY --from=builder /opt/vineyard/ /usr/local/
 COPY --from=builder /opt/graphscope /opt/graphscope
-COPY --from=builder /usr/local/bin/zetcd /opt/graphscope/bin/zetcd
 COPY --from=builder /home/graphscope/gs/k8s/precompile.py /tmp/precompile.py
 COPY --from=builder /home/graphscope/gs/k8s/kube_ssh /opt/graphscope/bin/kube_ssh
 COPY --from=builder /home/graphscope/gs/interactive_engine/executor/target/$profile/gaia_executor /opt/graphscope/bin/gaia_executor
