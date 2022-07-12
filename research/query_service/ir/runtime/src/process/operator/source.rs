@@ -46,42 +46,38 @@ pub struct SourceOperator {
 
 impl SourceOperator {
     pub fn new(
-        source_pb: &mut algebra_pb::logical_plan::Operator, job_workers: usize, worker_index: u32,
+        opr: algebra_pb::logical_plan::operator::Opr, job_workers: usize, worker_index: u32,
         partitioner: Arc<dyn Partitioner>,
     ) -> ParsePbResult<Self> {
-        if let Some(opr) = source_pb.opr.take() {
-            match opr {
-                algebra_pb::logical_plan::operator::Opr::Scan(scan) => {
-                    if let Some(index_predicate) = &scan.idx_predicate {
-                        let ip = index_predicate.clone();
-                        let ip2 = index_predicate.clone();
-                        let mut source_op = SourceOperator::try_from(scan)?;
-                        let global_ids: Vec<ID> = <Vec<i64>>::try_from(ip)?
-                            .into_iter()
-                            .map(|i| i as ID)
-                            .collect();
-                        if !global_ids.is_empty() {
-                            // query by global_ids
-                            source_op.set_src(global_ids, job_workers, partitioner)?;
-                            debug!("Runtime source op of indexed scan of global ids {:?}", source_op);
-                        } else {
-                            // query by indexed_scan
-                            let primary_key_values = <Vec<(NameOrId, Object)>>::try_from(ip2)?;
-                            source_op.primary_key_values = Some(PKV::from(primary_key_values));
-                            debug!("Runtime source op of indexed scan {:?}", source_op);
-                        }
-                        Ok(source_op)
+        match opr {
+            algebra_pb::logical_plan::operator::Opr::Scan(scan) => {
+                if let Some(index_predicate) = &scan.idx_predicate {
+                    let ip = index_predicate.clone();
+                    let ip2 = index_predicate.clone();
+                    let mut source_op = SourceOperator::try_from(scan)?;
+                    let global_ids: Vec<ID> = <Vec<i64>>::try_from(ip)?
+                        .into_iter()
+                        .map(|i| i as ID)
+                        .collect();
+                    if !global_ids.is_empty() {
+                        // query by global_ids
+                        source_op.set_src(global_ids, job_workers, partitioner)?;
+                        debug!("Runtime source op of indexed scan of global ids {:?}", source_op);
                     } else {
-                        let mut source_op = SourceOperator::try_from(scan)?;
-                        source_op.set_partitions(job_workers, worker_index, partitioner)?;
-                        debug!("Runtime source op of scan {:?}", source_op);
-                        Ok(source_op)
+                        // query by indexed_scan
+                        let primary_key_values = <Vec<(NameOrId, Object)>>::try_from(ip2)?;
+                        source_op.primary_key_values = Some(PKV::from(primary_key_values));
+                        debug!("Runtime source op of indexed scan {:?}", source_op);
                     }
+                    Ok(source_op)
+                } else {
+                    let mut source_op = SourceOperator::try_from(scan)?;
+                    source_op.set_partitions(job_workers, worker_index, partitioner)?;
+                    debug!("Runtime source op of scan {:?}", source_op);
+                    Ok(source_op)
                 }
-                _ => Err(ParsePbError::Unsupported("unsupported source op in pb_request".to_string()))?,
             }
-        } else {
-            Err(ParsePbError::EmptyFieldError("Empty source op in pb_request".to_string()))?
+            _ => Err(ParsePbError::from("algebra_pb op is not a source"))?,
         }
     }
 

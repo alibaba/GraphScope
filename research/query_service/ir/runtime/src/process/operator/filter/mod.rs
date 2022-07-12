@@ -25,15 +25,11 @@ pub trait FilterFuncGen {
     fn gen_filter(self) -> FnGenResult<Box<dyn FilterFunction<Record>>>;
 }
 
-impl FilterFuncGen for algebra_pb::logical_plan::Operator {
+impl FilterFuncGen for algebra_pb::logical_plan::operator::Opr {
     fn gen_filter(self) -> FnGenResult<Box<dyn FilterFunction<Record>>> {
-        if let Some(opr) = self.opr {
-            match opr {
-                algebra_pb::logical_plan::operator::Opr::Select(select) => select.gen_filter(),
-                _ => Err(ParsePbError::from("algebra_pb op is not a filter"))?,
-            }
-        } else {
-            Err(ParsePbError::EmptyFieldError("algebra op is empty".to_string()))?
+        match self {
+            algebra_pb::logical_plan::operator::Opr::Select(select) => select.gen_filter(),
+            _ => Err(ParsePbError::from("algebra_pb op is not a filter"))?,
         }
     }
 }
