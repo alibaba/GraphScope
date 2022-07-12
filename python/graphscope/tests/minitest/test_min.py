@@ -176,7 +176,6 @@ def test_multiple_session(ogbn_small_script):
     s2.close()
 
 
-@pytest.mark.skip(reason="TODO: subgraph not ready")
 def test_demo_with_default_session(ogbn_small_script):
     graph = load_ogbn_mag()
 
@@ -185,7 +184,7 @@ def test_demo_with_default_session(ogbn_small_script):
     papers = interactive.execute(ogbn_small_script).one()
 
     sub_graph = interactive.subgraph(
-        "g.V().has('year', inside(2014, 2020)).outE('cites')"
+        "g.V().has('year', gt(2014).and(lt(2020))).outE('cites')"
     )
 
     simple_g = sub_graph.project(vertices={"paper": []}, edges={"cites": []})
