@@ -74,7 +74,6 @@ def _get_extra_data():
     #   1) /opt/graphscope
     #   2) headers of arrow/glog/gflags/google/openmpi/vineyard
     #   3) openmpi
-    #   4) zetcd
     #   5) /tmp/gs/builtin
     # into site-packages/graphscope.runtime
     #
@@ -125,7 +124,6 @@ def _get_extra_data():
             "/opt/graphscope/conf/": os.path.join(RUNTIME_ROOT, "conf"),
             "/opt/graphscope/lib64/": os.path.join(RUNTIME_ROOT, "lib64"),
             "/opt/graphscope/*.jar": os.path.join(RUNTIME_ROOT),
-            "/usr/local/bin/zetcd": os.path.join(RUNTIME_ROOT, "bin"),
         }
     elif name == "gs-include":
         data = {

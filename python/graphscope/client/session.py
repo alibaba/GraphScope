@@ -554,10 +554,6 @@ class Session(object):
                 - k8s_gie_graph_manager_cpu: Deprecated.
                 - k8s_gie_graph_manager_mem: Deprecated.
 
-                - k8s_zookeeper_image: Deprecated.
-                - k8s_zookeeper_cpu: Deprecated.
-                - k8s_zookeeper_mem: Deprecated.
-
         Raises:
             TypeError: If the given argument combination is invalid and cannot be used to create
                 a GraphScope session.
@@ -611,9 +607,6 @@ class Session(object):
             "k8s_gie_graph_manager_image",
             "k8s_gie_graph_manager_cpu",
             "k8s_gie_graph_manager_mem",
-            "k8s_zookeeper_image",
-            "k8s_zookeeper_cpu",
-            "k8s_zookeeper_mem",
         )
         saved_locals = locals()
         for param in self._accessable_params:
