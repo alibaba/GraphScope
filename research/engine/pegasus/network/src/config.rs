@@ -13,7 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use std::net::SocketAddr;
+use std::net::{SocketAddr, ToSocketAddrs};
 use std::path::Path;
 use std::time::Duration;
 
@@ -156,23 +156,45 @@ pub struct NetworkConfig {
     servers: Option<Vec<Option<ServerAddr>>>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct ServerAddr {
-    ip: String,
+    hostname: String,
     port: u16,
 }
 
 impl ServerAddr {
-    pub fn new(ip: String, port: u16) -> Self {
-        ServerAddr { ip, port }
+    pub fn new(hostname: String, port: u16) -> Self {
+        ServerAddr { hostname, port }
     }
 
-    pub fn get_ip(&self) -> &str {
-        &self.ip
+    pub fn get_hostname(&self) -> &str {
+        &self.hostname
     }
 
     pub fn get_port(&self) -> u16 {
         self.port
+    }
+
+    pub fn to_socket_addr(&self) -> Result<SocketAddr, NetError> {
+        let socket_addrs_iter = (self.hostname.as_str(), self.port).to_socket_addrs()?;
+        let mut ipv4_addrs = vec![];
+        let mut ipv6_addrs = vec![];
+        for addr in socket_addrs_iter {
+            if let SocketAddr::V4(_) = addr {
+                ipv4_addrs.push(addr)
+            } else if let SocketAddr::V6(_) = addr {
+                ipv6_addrs.push(addr)
+            }
+        }
+        // ipv4 has higher priority than ipv6
+        // if no ipv4 and ipv6 matches, return error
+        if ipv4_addrs.len() == 0 && ipv6_addrs.len() == 0 {
+            Err(NetError::HostParseError(format!("{}:{}", self.hostname, self.port)))
+        } else if ipv4_addrs.len() == 0 {
+            Ok(ipv6_addrs[0])
+        } else {
+            Ok(ipv4_addrs[0])
+        }
     }
 }
 
@@ -358,8 +380,8 @@ impl NetworkConfig {
         let index = self.server_id as usize;
         assert!(index < self.servers_size);
         if let Some(ref servers) = self.servers {
-            if let Some(ref addr) = servers[index] {
-                Ok(SocketAddr::new(addr.ip.parse()?, addr.port))
+            if let Some(Some(addr)) = servers.get(index) {
+                addr.to_socket_addr()
             } else {
                 Err(NetError::InvalidConfig(Some("local server address not found".to_owned())))
             }
@@ -414,8 +436,7 @@ impl NetworkConfig {
             let mut servers = Vec::with_capacity(server_configs.len());
             for (id, p) in server_configs.iter().enumerate() {
                 if let Some(peer) = p {
-                    let ip = peer.ip.parse()?;
-                    let addr = SocketAddr::new(ip, peer.port);
+                    let addr = peer.to_socket_addr()?;
                     let server = Server { id: id as u64, addr };
                     servers.push(server);
                 } else {
@@ -428,6 +449,26 @@ impl NetworkConfig {
             Ok(Some(servers))
         } else {
             Ok(None)
+        }
+    }
+
+    pub fn get_server_addrs(&self) -> Result<Vec<ServerAddr>, NetError> {
+        // pick self.servers field and reorganize it for the requirement of ServerDetect trait
+        if let Some(server_addr_candies) = self.servers.as_ref() {
+            let mut server_addrs = Vec::with_capacity(server_addr_candies.len());
+            for (id, server_addr_candi) in server_addr_candies.iter().enumerate() {
+                if let Some(server_addr) = server_addr_candi {
+                    server_addrs.push(server_addr.clone());
+                } else {
+                    return Err(NetError::InvalidConfig(Some(format!(
+                        "address of server {} not found",
+                        id
+                    )))); 
+                }
+            }
+            Ok(server_addrs)
+        } else {
+            Ok(vec![])
         }
     }
 
@@ -459,11 +500,11 @@ mod test {
             write_timeout_ms = 8
 
             [[servers]]
-            ip = '127.0.0.1'
+            hostname = '127.0.0.1'
             port = 8080
 
             [[servers]]
-            ip = '127.0.0.1'
+            hostname = '127.0.0.1'
             port = 8081
         "#;
 
@@ -487,5 +528,14 @@ mod test {
         assert_eq!(peers[0].addr, "127.0.0.1:8080".parse().unwrap());
         assert_eq!(peers[1].id, 1);
         assert_eq!(peers[1].addr, "127.0.0.1:8081".parse().unwrap());
+    }
+
+    #[test]
+    fn hostname_test() {
+        let server_addr_with_hostname = ServerAddr::new("localhost".to_string(), 1234);
+        let socker_addr_with_hostname = server_addr_with_hostname.to_socket_addr().unwrap();
+        let server_addr_with_ip = ServerAddr::new("127.0.0.1".to_string(), 1234);
+        let socker_addr_with_ip = server_addr_with_ip.to_socket_addr().unwrap();
+        assert_eq!(socker_addr_with_hostname, socker_addr_with_ip);
     }
 }

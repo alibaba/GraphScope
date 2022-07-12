@@ -31,6 +31,7 @@ use pegasus::api::function::FnResult;
 use pegasus::api::FromStream;
 use pegasus::result::{FromStreamExt, ResultSink};
 use pegasus::{Configuration, JobConf, ServerConf};
+use pegasus_network::config::ServerAddr;
 use pegasus_network::ServerDetect;
 use serde::Deserialize;
 use tokio::sync::mpsc::UnboundedSender;
@@ -298,11 +299,13 @@ impl<S: pb::job_service_server::JobService> RPCJobServer<S> {
 
         let service = builder.add_service(pb::job_service_server::JobServiceServer::new(service));
 
-        let host = rpc_config
+        let rpc_host = rpc_config
             .rpc_host
             .clone()
             .unwrap_or("0.0.0.0".to_owned());
-        let addr = SocketAddr::new(host.parse()?, rpc_config.rpc_port.unwrap_or(0));
+        let rpc_port = rpc_config.rpc_port.unwrap_or(0);
+        let rpc_server_addr = ServerAddr::new(rpc_host, rpc_port);
+        let addr = rpc_server_addr.to_socket_addr()?;
         let ka = rpc_config
             .tcp_keep_alive_ms
             .map(|d| Duration::from_millis(d));
