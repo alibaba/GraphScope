@@ -618,6 +618,10 @@ jobs:
           ./function_test.sh 8111 1 graphscope/graphscope:${SHORT_SHA}
           ./function_test.sh 8112 2 graphscope/graphscope:${SHORT_SHA}
 
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: always()
+
   k8s-test:
     runs-on: [self-hosted, ubuntu2004]
     if: ${{ github.repository == 'alibaba/GraphScope' }}
