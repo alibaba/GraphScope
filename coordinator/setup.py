@@ -74,7 +74,7 @@ def _get_extra_data():
     #   1) /opt/graphscope
     #   2) headers of arrow/glog/gflags/google/openmpi/vineyard
     #   3) openmpi
-    #   5) /tmp/gs/builtin
+    #   4) /tmp/gs/builtin
     # into site-packages/graphscope.runtime
     #
     #  For shrink the package size less than "100M", we split graphscope into
