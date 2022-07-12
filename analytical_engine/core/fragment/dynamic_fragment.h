@@ -507,6 +507,8 @@ class DynamicFragment
 
     // copy edges
     auto vnum = id_parser_.max_local_id();
+    ie_.init_head_and_tail(0, vnum);
+    oe_.init_head_and_tail(0, vnum);
     ie_.add_vertices(ivnum_, ovnum_);
     oe_.add_vertices(ivnum_, ovnum_);
     if (copy_type == "identical") {
@@ -528,11 +530,21 @@ class DynamicFragment
 
       oe_.reserve_edges_dense(inner_oe_degree_to_add, outer_oe_degree_to_add);
       ie_.reserve_edges_dense(inner_ie_degree_to_add, outer_ie_degree_to_add);
-      for (vid_t i = 0; i < vnum; ++i) {
-        if (i == ivnum_) {
-          i = outerVertexIndexToLid(ovnum_ - 1);  // skip to outer vertices
-        }
 
+      for (vid_t i = 0; i < ivnum_; ++i) {
+        auto ie_begin = source->ie_.get_begin(i);
+        auto ie_end = source->ie_.get_end(i);
+        auto oe_begin = source->oe_.get_begin(i);
+        auto oe_end = source->oe_.get_end(i);
+        for (auto iter = ie_begin; iter != ie_end; ++iter) {
+          ie_.put_edge(i, *iter);
+        }
+        for (auto iter = oe_begin; iter != oe_end; ++iter) {
+          oe_.put_edge(i, *iter);
+        }
+      }
+
+      for (vid_t i = outerVertexIndexToLid(ovnum_ - 1); i < vnum; ++i) {
         auto ie_begin = source->ie_.get_begin(i);
         auto ie_end = source->ie_.get_end(i);
         auto oe_begin = source->oe_.get_begin(i);
@@ -565,11 +577,20 @@ class DynamicFragment
       oe_.reserve_edges_dense(inner_oe_degree_to_add, outer_oe_degree_to_add);
       ie_.reserve_edges_dense(inner_ie_degree_to_add, outer_ie_degree_to_add);      
       
-      for (vid_t i = 0; i < vnum; ++i) {
-        if (i == ivnum_) {
-          i = outerVertexIndexToLid(ovnum_ - 1);  // skip to outer vertices
+      for (vid_t i = 0; i < ivnum_; ++i) {
+        auto ie_begin = source->ie_.get_begin(i);
+        auto ie_end = source->ie_.get_end(i);
+        auto oe_begin = source->oe_.get_begin(i);
+        auto oe_end = source->oe_.get_end(i);
+        for (auto iter = oe_begin; iter != oe_end; ++iter) {
+          ie_.put_edge(i, *iter);
         }
+        for (auto iter = ie_begin; iter != ie_end; ++iter) {
+          oe_.put_edge(i, *iter);
+        }
+      }
 
+      for (vid_t i = outerVertexIndexToLid(ovnum_ - 1); i < vnum; ++i) {
         auto ie_begin = source->ie_.get_begin(i);
         auto ie_end = source->ie_.get_end(i);
         auto oe_begin = source->oe_.get_begin(i);
@@ -595,11 +616,12 @@ class DynamicFragment
     load_strategy_ = grape::LoadStrategy::kBothOutIn;
     copyVertices(source);
 
-    ie_.add_vertices(ivnum_, ovnum_);
-    oe_.add_vertices(ivnum_, ovnum_);
-
     // both inner and outer vertices with the empty slots
     auto vnum = id_parser_.max_local_id();
+    ie_.init_head_and_tail(0, vnum);
+    oe_.init_head_and_tail(0, vnum);
+    ie_.add_vertices(ivnum_, ovnum_);
+    oe_.add_vertices(ivnum_, ovnum_);
 
     std::vector<int> inner_degree_to_add(ivnum_, 0),
                      outer_degree_to_add(ovnum_, 0);
@@ -614,11 +636,17 @@ class DynamicFragment
 
     ie_.reserve_edges_dense(inner_degree_to_add, outer_degree_to_add);
     oe_.reserve_edges_dense(inner_degree_to_add, outer_degree_to_add);
-    for (vid_t i = 0; i < vnum; ++i) {
-      if (i == ivnum_) {
-        i = outerVertexIndexToLid(ovnum_ - 1);  // skip to outer vertices
-      }
 
+    for (vid_t i = 0; i < ivnum_; ++i) {
+      auto begin = source->oe_.get_begin(i);
+      auto end = source->oe_.get_end(i);
+      for (auto iter = begin; iter != end; ++iter) {
+        ie_.put_edge(i, *iter);
+        oe_.put_edge(i, *iter);
+      }
+    }
+
+    for (vid_t i = outerVertexIndexToLid(ovnum_ - 1); i < vnum; ++i) {
       auto begin = source->oe_.get_begin(i);
       auto end = source->oe_.get_end(i);
       for (auto iter = begin; iter != end; ++iter) {
@@ -1321,6 +1349,9 @@ class DynamicFragment
                         const std::vector<int>& inner_ie_degree,
                         const std::vector<int>& outer_ie_degree,
                         uint32_t thread_num) {
+    auto vnum = id_parser_.max_local_id();
+    ie_.init_head_and_tail(0, vnum);
+    oe_.init_head_and_tail(0, vnum);
     oe_.add_vertices(ivnum_, ovnum_);
     ie_.add_vertices(ivnum_, ovnum_);
 
