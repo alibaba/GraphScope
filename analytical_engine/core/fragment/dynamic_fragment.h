@@ -322,14 +322,45 @@ class DynamicFragment
       }
     }
     if (!mutation.edges_to_remove.empty()) {
+      for (auto &e : mutation.edges_to_remove) {
+        if (IsInnerVertexGid(e.first)) {
+          e.first = id_parser_.get_local_id(e.first);
+        } else {
+          e.first = parseOuterVertexGid(e.first);
+        }
+        if (IsInnerVertexGid(e.second)) {
+          e.second = id_parser_.get_local_id(e.second);
+        } else {
+          e.second = parseOuterVertexGid(e.second);
+        }
+      }
       removeEdges(mutation.edges_to_remove);
     }
     if (!mutation.edges_to_update.empty()) {
+      for (auto &e : mutation.edges_to_update) {
+        if (IsInnerVertexGid(e.src)) {
+          e.src = id_parser_.get_local_id(e.src);
+        } else {
+          e.src = parseOuterVertexGid(e.src);
+        }
+        if (IsInnerVertexGid(e.dst)) {
+          e.dst = id_parser_.get_local_id(e.dst);
+        } else {
+          e.dst = parseOuterVertexGid(e.dst);
+        }
+      }
       updateEdges(mutation.edges_to_update);
     }
-    {
+    {   
       auto& edges_to_add = mutation.edges_to_add;
+      for (auto &e : edges_to_add) {
+          VLOG(1) << "First Add edge [" << e.src << ", " << e.dst << "]";
+      }
+
       static constexpr vid_t invalid_vid = std::numeric_limits<vid_t>::max();
+      vid_t old_ovnum = ovgid_.size(); 
+
+      // parseOrAddOuterVertexGid will update ovnum_
       for (auto& e : edges_to_add) {
         if (IsInnerVertexGid(e.src)) {
           e.src = id_parser_.get_local_id(e.src);
@@ -351,12 +382,12 @@ class DynamicFragment
       }
       vid_t new_ivnum = vm_ptr_->GetInnerVertexSize(fid_);
       vid_t new_ovnum = ovgid_.size();
+      assert(new_ovnum == ovnum_);
       is_selfloops_.resize(new_ivnum);
-      ie_.add_vertices(new_ivnum - ivnum_, new_ovnum - ovnum_);
-      oe_.add_vertices(new_ivnum - ivnum_, new_ovnum - ovnum_);
+      ie_.add_vertices(new_ivnum - ivnum_, new_ovnum - old_ovnum);
+      oe_.add_vertices(new_ivnum - ivnum_, new_ovnum - old_ovnum);
       this->ivnum_ = new_ivnum;      
-      if (ovnum_ != new_ovnum) {
-        ovnum_ = new_ovnum;
+      if (old_ovnum != new_ovnum) {
         initOuterVerticesOfFragment();
       }
       if (!edges_to_add.empty()) {
@@ -521,7 +552,7 @@ class DynamicFragment
         inner_ie_degree_to_add[i] = source->ie_.degree(i);
       }
 
-      for (vid_t i = 0; i < ovnum_; ++i) {
+     for (vid_t i = 0; i < ovnum_; ++i) {
         outer_oe_degree_to_add[i] = 
             source->oe_.degree(outerVertexIndexToLid(i));
         outer_ie_degree_to_add[i] =
@@ -938,6 +969,16 @@ class DynamicFragment
     }
   }
 
+  vid_t parseOuterVertexGid(vid_t gid) {
+    auto iter = ovg2i_.find(gid);
+    if (iter != ovg2i_.end()) {
+      return iter->second;
+    } else {
+      assert(false);
+      return (-1);
+    }
+  }
+
   void initOuterVerticesOfFragment() {
     outer_vertices_of_frag_.resize(fnum_);
     for (auto& vec : outer_vertices_of_frag_) {
@@ -1029,6 +1070,7 @@ class DynamicFragment
         if (e.src == invalid_vid) {
           continue;
         }
+        assert(!(e.src >= ivnum_ && e.dst >= ivnum_));
         if (e.src < ivnum_) {
           ++inner_oe_degree_to_add[e.src];
         } else {
@@ -1057,7 +1099,7 @@ class DynamicFragment
           }
           if (e.dst < ivnum_ && e.src != e.dst) {
             ++inner_oe_degree_to_add[e.dst];
-          } else {
+          } else if (e.src != e.dst) {
             ++outer_oe_degree_to_add[outerVertexLidToIndex(e.dst)];
           }
         }
@@ -1075,12 +1117,8 @@ class DynamicFragment
         if (e.src == invalid_vid) {
           continue;
         }
-        if (e.src < ivnum_) {
-          ++oe_degree_to_add[e.src];
-        }
-        if (e.dst < ivnum_) {
-          ++ie_degree_to_add[e.dst];
-        }
+        ++oe_degree_to_add[e.src];
+        ++ie_degree_to_add[e.dst];
       }
       oe_.reserve_edges_sparse(oe_degree_to_add);
       ie_.reserve_edges_sparse(ie_degree_to_add);
@@ -1093,12 +1131,8 @@ class DynamicFragment
           continue;
         }
         if (updateOrAddEdgeOutIn(e)) {
-          if (e.src < ivnum_) {
-            ++oe_degree_to_add[e.src];
-          }
-          if (e.dst < ivnum_) {
-            ++ie_degree_to_add[e.dst];
-          }
+          ++oe_degree_to_add[e.src];
+          ++ie_degree_to_add[e.dst];
         }
       }
       oe_.sort_neighbors_sparse(oe_degree_to_add);
@@ -1110,12 +1144,8 @@ class DynamicFragment
         if (e.src == invalid_vid) {
           continue;
         }
-        if (e.src < ivnum_) {
-          ++oe_degree_to_add[e.src];
-        }
-        if (e.dst < ivnum_) {
-          ++oe_degree_to_add[e.dst];
-        }
+        ++oe_degree_to_add[e.src];
+        ++oe_degree_to_add[e.dst];
       }
       oe_.reserve_edges_sparse(oe_degree_to_add);
 
@@ -1126,10 +1156,8 @@ class DynamicFragment
           continue;
         }
         if (updateOrAddEdgeOut(e)) {
-          if (e.src < ivnum_) {
-            ++oe_degree_to_add[e.src];
-          }
-          if (e.dst < ivnum_ && e.src != e.dst) {
+          ++oe_degree_to_add[e.src];
+          if (e.src != e.dst) {
             ++oe_degree_to_add[e.dst];
           }
         }
@@ -1141,7 +1169,8 @@ class DynamicFragment
   // Return true if add a new edge, otherwise false.
   bool updateOrAddEdgeOut(const edge_t& e) {
     bool ret = false;  // assume it just update existed edge.
-    if (e.src < ivnum_) {
+    // if (e.src < ivnum_) 
+    {
       auto iter = oe_.find(e.src, e.dst);
       if (iter == oe_.get_end(e.src)) {
         oe_.put_edge(e.src, nbr_t(e.dst, e.edata));
@@ -1155,7 +1184,8 @@ class DynamicFragment
       }
     }
 
-    if (e.dst < ivnum_) {
+    // if (e.dst < ivnum_) 
+    {
       auto iter = oe_.find(e.dst, e.src);
       if (iter == oe_.get_end(e.dst)) {
         oe_.put_edge(e.dst, nbr_t(e.src, e.edata));
@@ -1170,7 +1200,8 @@ class DynamicFragment
   // Return true if add a new edge, otherwise false.
   bool updateOrAddEdgeOutIn(const edge_t& e) {
     bool ret = false;  // assume it just update existed edge.
-    if (e.src < ivnum_) {
+    // if (e.src < ivnum_) 
+    {
       auto iter = oe_.find(e.src, e.dst);
       if (iter == oe_.get_end(e.src)) {
         oe_.put_edge(e.src, nbr_t(e.dst, e.edata));
@@ -1183,7 +1214,8 @@ class DynamicFragment
       }
     }
 
-    if (e.dst < ivnum_) {
+    // if (e.dst < ivnum_) 
+    {
       auto iter = ie_.find(e.dst, e.src);
       if (iter == ie_.get_end(e.dst)) {
         ie_.put_edge(e.dst, nbr_t(e.src, e.edata));
@@ -1206,6 +1238,10 @@ class DynamicFragment
     }
     oe_.remove_edges(edges);
     ie_.remove_reversed_edges(edges);
+
+    if (!directed_) {
+      oe_.remove_reversed_edges(edges);
+    }
   }
 
   void updateEdges(std::vector<edge_t>& edges) {
@@ -1623,7 +1659,7 @@ class DynamicFragmentMutator {
       } else if (modify_type == rpc::NX_UPDATE_EDGES) {
         if (src_fid == fid || dst_fid == fid) {
           mutation.edges_to_update.emplace_back(src_gid, dst_gid,
-                                                std::move(e_data));
+                                                std::move(e_data));                             
         }
       }
     }
