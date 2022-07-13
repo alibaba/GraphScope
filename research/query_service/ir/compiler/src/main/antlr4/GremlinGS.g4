@@ -262,11 +262,13 @@ traversalMethod_group_keyby
 // group().by(...).by(fold().as("value"))
 // group().by(...).by(count())
 // group().by(...).by(count().as("value"))
+// group().by(...).by(sum()/min()/max()/mean()/fold())
+// group().by(...).by(select("a").count()/sum()/min()/max()/mean()/fold())
 // group().by(...).by(dedup().count())
 // group().by(...).by(dedup().fold())
 traversalMethod_group_valueby
     : 'by' LPAREN RPAREN
-    | 'by' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_aggregate_func (DOT traversalMethod_as)? RPAREN
+    | 'by' LPAREN (ANON_TRAVERSAL_ROOT DOT)? (traversalMethod_select DOT)? traversalMethod_aggregate_func (DOT traversalMethod_as)? RPAREN
     | 'by' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_dedup DOT traversalMethod_count (DOT traversalMethod_as)? RPAREN
     | 'by' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_dedup DOT traversalMethod_fold (DOT traversalMethod_as)? RPAREN
     ;
