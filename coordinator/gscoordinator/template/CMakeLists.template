@@ -211,10 +211,17 @@ set(ANALYTICAL_ENGINE_FRAME_DIR "${ANALYTICAL_ENGINE_HOME}/include/graphscope/fr
 set(FRAME_NAME $_frame_name)
 
 # set javasdk.cc--------------------------------------------------------------
-set(ANALYTICAL_JAVASDK_CC "${ANALYTICAL_ENGINE_HOME}/include/graphscope/core/java/javasdk.cc")
+if(EXISTS "${ANALYTICAL_ENGINE_HOME}/core/java/javasdk.cc")
+    set(ANALYTICAL_JAVASDK_CC "${ANALYTICAL_ENGINE_HOME}/core/java/javasdk.cc")
+else()
+    set(ANALYTICAL_JAVASDK_CC "${ANALYTICAL_ENGINE_HOME}/include/graphscope/core/java/javasdk.cc")
+endif()
 # set dynamic.cc
-set(DYNAMIC_CC "${ANALYTICAL_ENGINE_HOME}/include/graphscope/core/object/dynamic.cc")
-
+if(EXISTS "${ANALYTICAL_ENGINE_HOME}/core/object/dynamic.cc")
+    set(DYNAMIC_CC "${ANALYTICAL_ENGINE_HOME}/core/object/dynamic.cc")
+else()
+    set(DYNAMIC_CC "${ANALYTICAL_ENGINE_HOME}/include/graphscope/core/object/dynamic.cc")
+endif()
 
 # find Glog---------------------------------------------------------------------
 if(GRAPHSCOPE_ANALYTICAL_HOME)
