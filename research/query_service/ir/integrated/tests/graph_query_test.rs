@@ -121,7 +121,7 @@ mod test {
 
         let mut job_builder = JobBuilder::default();
         job_builder.add_source(source_opr_bytes);
-        job_builder.map(project_opr_bytes);
+        job_builder.filter_map(project_opr_bytes);
         job_builder.sink(sink_opr_bytes);
         job_builder.build().unwrap()
     }
@@ -161,7 +161,7 @@ mod test {
         job_builder.add_source(source_opr_bytes);
         job_builder.repartition(shuffle_opr_bytes);
         job_builder.flat_map(expand_opr_bytes);
-        job_builder.map(project_opr_bytes);
+        job_builder.filter_map(project_opr_bytes);
         job_builder.sink(sink_opr_bytes);
         job_builder.build().unwrap()
     }
