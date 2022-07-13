@@ -116,7 +116,12 @@ OuterId v6d_get_outer_id(GraphHandle graph, Vertex v) {
   OuterId ret;
   auto casted_graph = static_cast<htap_impl::GraphHandleImpl*>(graph);
   if (casted_graph->use_int64_oid) {
-    ret = casted_graph->vertex_map->GetOid((htap_impl::VID_TYPE)v, ret);
+    if (casted_graph->vertex_map->GetOid((htap_impl::VID_TYPE)v, ret)) {
+      return ret;
+    } else {
+      LOG(INFO) << "Unable to find the gid for vertex " << v;
+      return -1; // NOT FOUND
+    }
   } else {
     LOG(FATAL) << "get_outer_id is not supported on string fragment";
   }
