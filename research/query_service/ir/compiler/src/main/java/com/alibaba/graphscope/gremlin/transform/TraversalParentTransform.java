@@ -20,11 +20,18 @@ import com.alibaba.graphscope.common.exception.OpArgIllegalException;
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.intermediate.operator.InterOpBase;
 import com.alibaba.graphscope.common.intermediate.operator.ProjectOp;
+import com.alibaba.graphscope.common.jna.type.FfiAggOpt;
+import com.alibaba.graphscope.common.jna.type.FfiAlias;
 import com.alibaba.graphscope.common.jna.type.FfiVariable;
+import com.alibaba.graphscope.gremlin.transform.alias.AliasArg;
+import com.alibaba.graphscope.gremlin.transform.alias.AliasManager;
+import com.alibaba.graphscope.gremlin.transform.alias.AliasPrefixType;
 
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
+import org.apache.tinkerpop.gremlin.process.traversal.lambda.IdentityTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.step.TraversalParent;
+import org.apache.tinkerpop.gremlin.process.traversal.step.filter.DedupGlobalStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.WhereTraversalStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.*;
 import org.javatuples.Pair;
@@ -41,11 +48,8 @@ public interface TraversalParentTransform extends Function<TraversalParent, List
         int size = exprArg.size();
         // the followings are considered as expressions instead of apply
         if (size <= 1) {
-            if (exprArg.isIdentityTraversal()) { // by()
+            if (exprArg.isEmpty()) { // by()
                 return (new ExprResult(true)).addTagExpr("", "@");
-            } else if (exprArg.getPropertyKeyOpt().isPresent()) { // by('name')
-                String property = exprArg.getPropertyKeyOpt().get();
-                return (new ExprResult(true)).addTagExpr("", "@." + property);
             } else {
                 Step step = exprArg.getStartStep();
                 if (step instanceof PropertyMapStep) { // valueMap(..)
@@ -112,6 +116,36 @@ public interface TraversalParentTransform extends Function<TraversalParent, List
                     String mapExpr = (String) pairs.get(0).getValue0();
                     String mapKey = mapExpr.substring(1);
                     return (new ExprResult(true)).addTagExpr(mapKey, mapExpr);
+                } else if (step instanceof DedupGlobalStep) {
+                    // support the pattern of dedup by variables, i.e. dedup().by("name") or
+                    // dedup("a").by("name")
+                    ExprResult exprRes = new ExprResult();
+                    boolean isExprPattern = true;
+
+                    DedupGlobalStep dedupStep = (DedupGlobalStep) step;
+                    List<Traversal.Admin> traversals = dedupStep.getLocalChildren();
+                    // get dedupTraversal nested in by() from dedup step
+                    Traversal.Admin dedupTraversal =
+                            traversals.isEmpty() ? new IdentityTraversal() : traversals.get(0);
+                    // check whether the dedupTraversal can be represented as a expression or a
+                    // apply
+                    // return string if it is a expression, i.e. dedup().by("name") or
+                    // dedup("a").by("name")
+                    // return null if it is a apply, i.e. dedup().by(out().count())
+                    Optional<String> exprOpt =
+                            getSubTraversalAsExpr(new ExprArg(dedupTraversal)).getSingleExpr();
+                    // get dedup keys from dedup step, i.e dedup("a") -> ["a"], dedup("a", "b") ->
+                    // ["a", "b"]
+                    Set<String> dedupKeys = dedupStep.getScopeKeys();
+                    for (String key : dedupKeys) {
+                        if (exprOpt.isPresent()) { // dedup().by("name") or dedup("a").by("name")
+                            String expr = exprOpt.get().replace("@", "@" + key);
+                            exprRes.addTagExpr(key, expr);
+                        } else { // dedup().by(out().count())
+                            isExprPattern = false;
+                        }
+                    }
+                    return exprRes.setExprPattern(isExprPattern);
                 } else {
                     return new ExprResult(false);
                 }
@@ -122,7 +156,8 @@ public interface TraversalParentTransform extends Function<TraversalParent, List
             if ((startStep instanceof SelectOneStep || startStep instanceof TraversalMapStep)
                     && (endStep instanceof PropertiesStep || endStep instanceof PropertyMapStep)) {
                 Optional<String> propertyExpr =
-                        getSubTraversalAsExpr((new ExprArg()).addStep(endStep)).getSingleExpr();
+                        getSubTraversalAsExpr((new ExprArg(Collections.singletonList(endStep))))
+                                .getSingleExpr();
                 if (!propertyExpr.isPresent()) {
                     return new ExprResult(false);
                 }
@@ -194,5 +229,38 @@ public interface TraversalParentTransform extends Function<TraversalParent, List
                     OpArgIllegalException.Cause.INVALID_TYPE,
                     "cannot get project traversals from " + parent.getClass());
         }
+    }
+
+    // get FfiAggOpt according to the step type and get the alias which will be attached to the
+    // aggregated value
+    // alias is generated by AliasManager in an automatic way or is given by the query
+    default Pair<FfiAggOpt, FfiAlias.ByValue> getAggFnWithAlias(Step step, int stepIdx) {
+        FfiAlias.ByValue alias =
+                AliasManager.getFfiAlias(new AliasArg(AliasPrefixType.GROUP_VALUES, stepIdx));
+        FfiAggOpt aggOpt;
+        if (step instanceof CountGlobalStep) {
+            aggOpt = FfiAggOpt.Count;
+        } else if (step instanceof FoldStep) {
+            aggOpt = FfiAggOpt.ToList;
+        } else if (step instanceof SumGlobalStep) {
+            aggOpt = FfiAggOpt.Sum;
+        } else if (step instanceof MinGlobalStep) {
+            aggOpt = FfiAggOpt.Min;
+        } else if (step instanceof MaxGlobalStep) {
+            aggOpt = FfiAggOpt.Max;
+        } else if (step instanceof MeanGlobalStep) {
+            aggOpt = FfiAggOpt.Avg;
+        } else {
+            throw new OpArgIllegalException(
+                    OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
+                    "invalid aggFn " + step.getClass());
+        }
+        // group().by(..).by(count().as("a")), "a" is the query given alias of group value
+        Set<String> labels = step.getLabels();
+        if (labels != null && !labels.isEmpty()) {
+            String label = labels.iterator().next();
+            alias = ArgUtils.asFfiAlias(label, true);
+        }
+        return Pair.with(aggOpt, alias);
     }
 }

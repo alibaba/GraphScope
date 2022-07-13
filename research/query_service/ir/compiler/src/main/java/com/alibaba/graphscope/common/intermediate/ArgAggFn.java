@@ -40,6 +40,7 @@ public class ArgAggFn {
         this.vars.add(var);
     }
 
+    // empty list means by head
     public List<FfiVariable.ByValue> getVars() {
         return vars;
     }

@@ -48,8 +48,8 @@ public enum GremlinResultParserFactory implements GremlinResultParser {
     SINGLE_VALUE {
         @Override
         public Object parseFrom(IrResult.Results results) {
-            IrResult.Element element = ParserUtils.getHeadEntry(results).getElement();
-            return ParserUtils.parseElement(element);
+            IrResult.Entry entry = ParserUtils.getHeadEntry(results);
+            return ParserUtils.parseEntry(entry);
         }
     },
     PROJECT_VALUE {
@@ -154,7 +154,7 @@ public enum GremlinResultParserFactory implements GremlinResultParser {
     },
     GROUP {
         @Override
-        public Map parseFrom(IrResult.Results results) {
+        public Object parseFrom(IrResult.Results results) {
             IrResult.Record record = results.getRecord();
             Object key = null;
             Object value = null;
@@ -165,31 +165,23 @@ public enum GremlinResultParserFactory implements GremlinResultParser {
                             "column key in group should be ItemCase.NAME");
                 }
                 String alias = columnName.getName();
-                Object parseEntry = parseGroupEntry(column.getEntry());
-                if (parseEntry instanceof EmptyValue) {
-                    continue;
-                }
+                Object parseEntry = ParserUtils.parseEntry(column.getEntry());
+                if (parseEntry instanceof EmptyValue) continue;
                 if (AliasManager.isGroupKeysPrefix(alias)) {
                     key = parseEntry;
                 } else {
                     value = parseEntry;
                 }
             }
-            // key or value can be null
+            // if value is null then ignore, i.e.
+            // g.V().values("age").group() => {35=[35], 27=[27], 32=[32], 29=[29]}
+            if (value == null) return EmptyValue.INSTANCE;
+            // if key is null then output null key with the corresponding value, i.e.
+            // g.V().group().by("age") => {29=[v[1]], null=[v[72057594037927939],
+            // v[72057594037927941]], 27=[v[2]], 32=[v[4]], 35=[v[6]]}
             Map data = new HashMap();
             data.put(key, value);
             return data;
-        }
-
-        private Object parseGroupEntry(IrResult.Entry entry) {
-            switch (entry.getInnerCase()) {
-                case ELEMENT:
-                    return ParserUtils.parseElement(entry.getElement());
-                case COLLECTION:
-                    return ParserUtils.parseCollection(entry.getCollection());
-                default:
-                    throw new GremlinResultParserException(entry.getInnerCase() + " is invalid");
-            }
         }
     },
     UNION {

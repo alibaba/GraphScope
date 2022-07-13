@@ -31,10 +31,7 @@ import com.alibaba.graphscope.gremlin.transform.alias.AliasPrefixType;
 import org.apache.tinkerpop.gremlin.process.traversal.*;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.IdentityTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.step.TraversalParent;
-import org.apache.tinkerpop.gremlin.process.traversal.step.filter.NotStep;
-import org.apache.tinkerpop.gremlin.process.traversal.step.filter.TraversalFilterStep;
-import org.apache.tinkerpop.gremlin.process.traversal.step.filter.WherePredicateStep;
-import org.apache.tinkerpop.gremlin.process.traversal.step.filter.WhereTraversalStep;
+import org.apache.tinkerpop.gremlin.process.traversal.step.filter.*;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.*;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.EmptyStep;
 import org.apache.tinkerpop.gremlin.process.traversal.util.ConnectiveP;
@@ -63,7 +60,9 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
             int stepIdx =
                     TraversalHelper.stepIndex(parent.asStep(), parent.asStep().getTraversal());
             int subId = 0;
-            ExprResult exprRes = getSubTraversalAsExpr((new ExprArg()).addStep(parent.asStep()));
+            ExprResult exprRes =
+                    getSubTraversalAsExpr(
+                            (new ExprArg(Collections.singletonList(parent.asStep()))));
             for (Map.Entry<String, Traversal.Admin> entry : byTraversals.entrySet()) {
                 String k = entry.getKey();
                 Traversal.Admin v = entry.getValue();
@@ -281,14 +280,13 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
 
         public List<ArgAggFn> getGroupValueAsAggFn(TraversalParent parent) {
             Traversal.Admin admin = getValueTraversal(parent);
-            FfiAggOpt aggOpt;
             int stepIdx =
                     TraversalHelper.stepIndex(parent.asStep(), parent.asStep().getTraversal());
-            FfiAlias.ByValue alias =
-                    AliasManager.getFfiAlias(new AliasArg(AliasPrefixType.GROUP_VALUES, stepIdx));
-            String notice =
-                    "supported pattern is [group().by(..).by(count())] or"
-                            + " [group().by(..).by(fold())]";
+
+            FfiAggOpt aggOpt;
+            FfiAlias.ByValue alias;
+            List<FfiVariable.ByValue> aggVars = new ArrayList<>();
+
             if (admin == null
                     || admin instanceof IdentityTraversal
                     || admin.getSteps().size() == 2
@@ -296,26 +294,49 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
                             && admin.getEndStep()
                                     instanceof FoldStep) { // group, // group().by(..).by()
                 aggOpt = FfiAggOpt.ToList;
-            } else if (admin.getSteps().size() == 1) {
-                if (admin.getStartStep() instanceof CountGlobalStep) { // group().by(..).by(count())
-                    aggOpt = FfiAggOpt.Count;
-                } else if (admin.getStartStep() instanceof FoldStep) { // group().by(..).by(fold())
-                    aggOpt = FfiAggOpt.ToList;
-                } else {
-                    throw new OpArgIllegalException(
-                            OpArgIllegalException.Cause.UNSUPPORTED_TYPE, notice);
-                }
-                // group().by(..).by(count().as("a")), "a" is the query given alias of group value
-                Set<String> labels = admin.getStartStep().getLabels();
-                if (labels != null && !labels.isEmpty()) {
-                    String label = labels.iterator().next();
-                    alias = ArgUtils.asFfiAlias(label, true);
-                }
+                alias =
+                        AliasManager.getFfiAlias(
+                                new AliasArg(AliasPrefixType.GROUP_VALUES, stepIdx));
             } else {
-                throw new OpArgIllegalException(
-                        OpArgIllegalException.Cause.UNSUPPORTED_TYPE, notice);
+                Step endStep = admin.getEndStep();
+
+                Pair<FfiAggOpt, FfiAlias.ByValue> aggFnWithAlias =
+                        getAggFnWithAlias(admin.getEndStep(), stepIdx);
+                aggOpt = aggFnWithAlias.getValue0();
+                alias = aggFnWithAlias.getValue1();
+                // handle with CountDistinct and ToSet
+                // specifically, variables from dedup will be treated as variables of aggregate
+                // functions
+                // i.e. group..by(dedup("a").by("name").count()) -> AggFn { FfiVariable<"a", "name">
+                // , CountDistinct }
+                if (endStep instanceof CountGlobalStep
+                        && endStep.getPreviousStep() instanceof DedupGlobalStep) {
+                    aggOpt = FfiAggOpt.CountDistinct; // group().by(..).by(dedup().count())
+
+                } else if (endStep instanceof FoldStep
+                        && endStep.getPreviousStep() instanceof DedupGlobalStep) {
+                    aggOpt = FfiAggOpt.ToSet; // group().by(dedup().fold())
+                }
+
+                if (admin.getSteps().size() > 1) {
+                    // generate variables of the aggregate function
+                    ExprArg exprArg =
+                            new ExprArg(admin.getSteps().subList(0, admin.getSteps().size() - 1));
+                    ExprResult exprRes = getSubTraversalAsExpr(exprArg);
+                    if (exprRes
+                            .isExprPattern()) { // group().by(..).by(select("a").by("name").count())
+                        // or group().by(dedup("a").by("name").count())
+                        exprRes.getExprs().forEach(expr -> aggVars.add(getExpressionAsVar(expr)));
+                    } else { // group().by(..).by(out().count())
+                        throw new OpArgIllegalException(
+                                OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
+                                "segment apply is unsupported");
+                    }
+                }
             }
-            return Collections.singletonList(new ArgAggFn(aggOpt, alias));
+            ArgAggFn aggFn = new ArgAggFn(aggOpt, alias);
+            aggVars.forEach(var -> aggFn.addVar(var));
+            return Collections.singletonList(aggFn);
         }
 
         // TraversalMapStep(identity)

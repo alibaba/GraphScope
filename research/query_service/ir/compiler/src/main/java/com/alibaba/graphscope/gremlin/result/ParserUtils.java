@@ -154,4 +154,21 @@ public class ParserUtils {
                 return "";
         }
     }
+
+    public static Object parseEntry(IrResult.Entry entry) {
+        switch (entry.getInnerCase()) {
+            case ELEMENT:
+                return ParserUtils.parseElement(entry.getElement());
+            case COLLECTION:
+                List elements = ParserUtils.parseCollection(entry.getCollection());
+                List notNull =
+                        (List)
+                                elements.stream()
+                                        .filter(k -> !(k instanceof EmptyValue))
+                                        .collect(Collectors.toList());
+                return notNull.isEmpty() ? EmptyValue.INSTANCE : notNull;
+            default:
+                throw new GremlinResultParserException("invalid " + entry.getInnerCase().name());
+        }
+    }
 }

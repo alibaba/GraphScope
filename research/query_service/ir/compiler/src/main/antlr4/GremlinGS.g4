@@ -68,7 +68,6 @@ traversalMethod
     | traversalMethod_group   // group()
     | traversalMethod_groupCount // groupCount()
     | traversalMethod_values    // values()
-    | traversalMethod_count // count()
     | traversalMethod_is    // is()
     | traversalMethod_where // where()
     | traversalMethod_inV   // inV()
@@ -81,6 +80,7 @@ traversalMethod
     | traversalMethod_match // match()
     | traversalMethod_subgraph // subgraph()
     | traversalMethod_bothV // bothV()
+    | traversalMethod_aggregate_func
     ;
 
 traversalSourceSpawnMethod_V
@@ -262,14 +262,22 @@ traversalMethod_group_keyby
 // group().by(...).by(fold().as("value"))
 // group().by(...).by(count())
 // group().by(...).by(count().as("value"))
+// group().by(...).by(dedup().count())
+// group().by(...).by(dedup().fold())
 traversalMethod_group_valueby
     : 'by' LPAREN RPAREN
     | 'by' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_aggregate_func (DOT traversalMethod_as)? RPAREN
+    | 'by' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_dedup DOT traversalMethod_count (DOT traversalMethod_as)? RPAREN
+    | 'by' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_dedup DOT traversalMethod_fold (DOT traversalMethod_as)? RPAREN
     ;
 
 traversalMethod_aggregate_func
     : traversalMethod_count
     | traversalMethod_fold
+    | traversalMethod_sum
+    | traversalMethod_min
+    | traversalMethod_max
+    | traversalMethod_mean
     ;
 
 // count in global scope
@@ -286,6 +294,26 @@ traversalMethod_values
 // fold()
 traversalMethod_fold
 	: 'fold' LPAREN RPAREN
+	;
+
+// sum in global scope
+traversalMethod_sum
+	: 'sum' LPAREN RPAREN
+	;
+
+// min in global scope
+traversalMethod_min
+	: 'min' LPAREN RPAREN
+	;
+
+// max in global scope
+traversalMethod_max
+	: 'max' LPAREN RPAREN
+	;
+
+// mean in global scope
+traversalMethod_mean
+	: 'mean' LPAREN RPAREN
 	;
 
 // is(27)

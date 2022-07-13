@@ -39,7 +39,7 @@ public class ValueMapTest {
     public void g_V_valueMap_test() {
         Traversal traversal = g.V().valueMap();
         Step valueMapStep = traversal.asAdmin().getEndStep();
-        ProjectOp op = (ProjectOp) StepTransformFactory.VALUE_MAP_STEP.apply(valueMapStep);
+        ProjectOp op = (ProjectOp) StepTransformFactory.VALUES_STEP.apply(valueMapStep);
 
         List<Pair> exprWithAlias = (List<Pair>) op.getExprWithAlias().get().applyArg();
         Assert.assertEquals("@.~all", exprWithAlias.get(0).getValue0());
@@ -50,7 +50,7 @@ public class ValueMapTest {
     public void g_V_valueMap_strs_test() {
         Traversal traversal = g.V().valueMap("name", "id");
         Step valueMapStep = traversal.asAdmin().getEndStep();
-        ProjectOp op = (ProjectOp) StepTransformFactory.VALUE_MAP_STEP.apply(valueMapStep);
+        ProjectOp op = (ProjectOp) StepTransformFactory.VALUES_STEP.apply(valueMapStep);
 
         List<Pair> exprWithAlias = (List<Pair>) op.getExprWithAlias().get().applyArg();
         Assert.assertEquals("{@.name, @.id}", exprWithAlias.get(0).getValue0());

@@ -887,13 +887,80 @@ public class PositiveEvalTest {
     public void g_V_has_containing_test() {
         Assert.assertEquals(
                 g.V().has("name", TextP.containing("marko")),
-                g.V().has("name", TextP.containing("marko")));
+                eval("g.V().has(\"name\", TextP.containing(\"marko\"))"));
     }
 
     @Test
     public void g_V_has_notContaining_test() {
         Assert.assertEquals(
                 g.V().has("name", TextP.notContaining("marko")),
-                g.V().has("name", TextP.notContaining("marko")));
+                eval("g.V().has(\"name\", TextP.notContaining(\"marko\"))"));
+    }
+
+    @Test
+    public void g_V_values_sum_test() {
+        Assert.assertEquals(g.V().values("age").sum(), eval("g.V().values(\"age\").sum()"));
+    }
+
+    @Test
+    public void g_V_values_min_test() {
+        Assert.assertEquals(g.V().values("age").min(), eval("g.V().values(\"age\").min()"));
+    }
+
+    @Test
+    public void g_V_values_max_test() {
+        Assert.assertEquals(g.V().values("age").max(), eval("g.V().values(\"age\").max()"));
+    }
+
+    @Test
+    public void g_V_values_mean_test() {
+        Assert.assertEquals(g.V().values("age").mean(), eval("g.V().values(\"age\").mean()"));
+    }
+
+    @Test
+    public void g_V_values_fold_test() {
+        Assert.assertEquals(g.V().values("age").fold(), eval("g.V().values(\"age\").fold()"));
+    }
+
+    @Test
+    public void g_V_values_group_by_by_sum_test() {
+        Assert.assertEquals(
+                g.V().values("age").group().by().by(__.sum()),
+                eval("g.V().values(\"age\").group().by().by(__.sum())"));
+    }
+
+    @Test
+    public void g_V_values_group_by_by_sum_as_test() {
+        Assert.assertEquals(
+                g.V().values("age").group().by().by(__.sum().as("a")),
+                eval("g.V().values(\"age\").group().by().by(__.sum().as(\"a\"))"));
+    }
+
+    @Test
+    public void g_V_values_group_by_by_dedup_count_test() {
+        Assert.assertEquals(
+                g.V().values("age").group().by().by(__.dedup().count()),
+                eval("g.V().values(\"age\").group().by().by(__.dedup().count())"));
+    }
+
+    @Test
+    public void g_V_values_group_by_by_dedup_count_as_test() {
+        Assert.assertEquals(
+                g.V().values("age").group().by().by(__.dedup().count().as("a")),
+                eval("g.V().values(\"age\").group().by().by(__.dedup().count().as(\"a\"))"));
+    }
+
+    @Test
+    public void g_V_values_group_by_by_dedup_fold_test() {
+        Assert.assertEquals(
+                g.V().values("age").group().by().by(__.dedup().fold()),
+                eval("g.V().values(\"age\").group().by().by(__.dedup().fold())"));
+    }
+
+    @Test
+    public void g_V_values_group_by_by_dedup_fold_as_test() {
+        Assert.assertEquals(
+                g.V().values("age").group().by().by(__.dedup().fold().as("a")),
+                eval("g.V().values(\"age\").group().by().by(__.dedup().fold().as(\"a\"))"));
     }
 }

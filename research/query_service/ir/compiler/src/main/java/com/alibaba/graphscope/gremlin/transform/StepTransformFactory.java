@@ -176,34 +176,13 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
             return op;
         }
     },
-    VALUE_MAP_STEP {
-        @Override
-        public InterOpBase apply(Step step) {
-            PropertyMapStep valueMapStep = (PropertyMapStep) step;
-            ProjectOp op = new ProjectOp();
-            String expr =
-                    TraversalParentTransformFactory.PROJECT_BY_STEP
-                            .getSubTraversalAsExpr((new ExprArg()).addStep(valueMapStep))
-                            .getSingleExpr()
-                            .get();
-            op.setExprWithAlias(
-                    new OpArg<>(
-                            expr,
-                            (String expr1) -> {
-                                FfiAlias.ByValue alias = ArgUtils.asFfiNoneAlias();
-                                return Arrays.asList(Pair.with(expr1, alias));
-                            }));
-            return op;
-        }
-    },
     VALUES_STEP {
         @Override
         public InterOpBase apply(Step step) {
-            PropertiesStep valuesStep = (PropertiesStep) step;
             ProjectOp op = new ProjectOp();
             String expr =
                     TraversalParentTransformFactory.PROJECT_BY_STEP
-                            .getSubTraversalAsExpr((new ExprArg()).addStep(valuesStep))
+                            .getSubTraversalAsExpr((new ExprArg(Collections.singletonList(step))))
                             .getSingleExpr()
                             .get();
             op.setExprWithAlias(
@@ -260,28 +239,18 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
             return tagTraversals;
         }
     },
-    COUNT_STEP {
+    AGGREGATE_STEP {
+        // count/sum/min/max/fold/mean(avg)
         @Override
         public InterOpBase apply(Step step) {
-            CountGlobalStep countStep = (CountGlobalStep) step;
+            int stepIdx = TraversalHelper.stepIndex(step, step.getTraversal());
             GroupOp op = new GroupOp();
             op.setGroupByKeys(new OpArg(Collections.emptyList()));
-            op.setGroupByValues(new OpArg(getCountAgg(countStep)));
+            Pair<FfiAggOpt, FfiAlias.ByValue> aggWithAlias =
+                    TraversalParentTransformFactory.GROUP_BY_STEP.getAggFnWithAlias(step, stepIdx);
+            ArgAggFn aggFn = new ArgAggFn(aggWithAlias.getValue0(), aggWithAlias.getValue1());
+            op.setGroupByValues(new OpArg(Collections.singletonList(aggFn)));
             return op;
-        }
-
-        private List<ArgAggFn> getCountAgg(CountGlobalStep step1) {
-            int stepIdx = TraversalHelper.stepIndex(step1, step1.getTraversal());
-            FfiAlias.ByValue valueAlias =
-                    AliasManager.getFfiAlias(new AliasArg(AliasPrefixType.GROUP_VALUES, stepIdx));
-            // count().as("a"), "a" is the alias of group value
-            if (!step1.getLabels().isEmpty()) {
-                String label = (String) step1.getLabels().iterator().next();
-                valueAlias = ArgUtils.asFfiAlias(label, true);
-                step1.removeLabel(label);
-            }
-            ArgAggFn countAgg = new ArgAggFn(FfiAggOpt.Count, valueAlias);
-            return Collections.singletonList(countAgg);
         }
     },
     PATH_EXPAND_STEP {
@@ -570,7 +539,6 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
                     || step instanceof HasStep; // permit has() nested in match step
         }
     },
-
     EXPR_STEP {
         @Override
         public InterOpBase apply(Step step) {
