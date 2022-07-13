@@ -1234,6 +1234,7 @@ mod groupby {
         Avg = 7,
     }
 
+    /*
     #[repr(C)]
     pub struct FfiAggFn {
         vars: *const FfiVariable,
@@ -1270,11 +1271,12 @@ mod groupby {
     }
 
     #[no_mangle]
-    pub extern "C" fn add_agg_value(agg_fn: &mut FfiAggFn, agg_var: FfiVariable) {
+    pub extern "C" fn add_agg_value(agg_fn: *const FfiAggFn, agg_var: FfiVariable) {
         let mut vars = unsafe { Box::from_raw(agg_fn.vars as *mut Vec<FfiVariable>) };
         vars.push(agg_var);
         std::mem::forget(vars);
     }
+     */
 
     /// Add the key (and its alias if any) according to which the grouping is conducted
     #[no_mangle]
@@ -1290,8 +1292,10 @@ mod groupby {
             group
                 .mappings
                 .push(pb::group_by::KeyAlias { key: key_pb.ok(), alias: alias_pb.unwrap() });
-        } else {
+        } else if key_pb.is_err() {
             result = key_pb.err().unwrap();
+        } else {
+            result = alias_pb.err().unwrap();
         }
         std::mem::forget(group);
 
@@ -1300,15 +1304,24 @@ mod groupby {
 
     /// Add the aggregate function for each group.
     #[no_mangle]
-    pub extern "C" fn add_groupby_agg_fn(ptr_groupby: *const c_void, agg_fn: FfiAggFn) -> FfiResult {
+    pub extern "C" fn add_groupby_agg_fn(
+        ptr_groupby: *const c_void, agg_val: FfiVariable, agg_opt: FfiAggOpt, alias: FfiAlias,
+    ) -> FfiResult {
         let mut result = FfiResult::success();
         let mut group = unsafe { Box::from_raw(ptr_groupby as *mut pb::GroupBy) };
-        let agg_fn_pb = agg_fn.try_into();
-        match agg_fn_pb {
-            Ok(f) => {
-                group.as_mut().functions.push(f);
-            }
-            Err(e) => result = e,
+        let val_pb = agg_val.try_into();
+        let aggregate = unsafe { std::mem::transmute::<FfiAggOpt, i32>(agg_opt) };
+        let alias_pb = alias.try_into();
+        if val_pb.is_ok() && alias_pb.is_ok() {
+            group.functions.push(pb::group_by::AggFunc {
+                vars: vec![val_pb.unwrap()],
+                aggregate,
+                alias: alias_pb.unwrap(),
+            });
+        } else if val_pb.is_err() {
+            result = val_pb.err().unwrap();
+        } else {
+            result = alias_pb.err().unwrap();
         }
         std::mem::forget(group);
 
