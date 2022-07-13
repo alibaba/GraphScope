@@ -36,7 +36,7 @@ use ir_common::generated::common as common_pb;
 use ir_common::{KeyId, NameOrId};
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 
-use crate::error::FnExecError;
+use crate::error::{FnExecError, FnExecResult};
 use crate::process::record::{CommonObject, Entry, Record, RecordElement};
 
 #[derive(Clone, Debug, Default)]
@@ -47,39 +47,33 @@ pub struct TagKey {
 
 impl TagKey {
     /// This is for key generation, which generate the key of the input Record according to the tag_key field
-    pub fn get_arc_entry(&self, input: &Record) -> Result<Arc<Entry>, FnExecError> {
-        let entry = input
-            .get(self.tag)
-            .ok_or(FnExecError::get_tag_error(&format!(
-                "Get tag {:?} failed since it refers to an empty entry",
-                self.tag
-            )))?
-            .clone();
-        if let Some(prop_key) = self.key.as_ref() {
-            let prop = self.get_key(entry, prop_key)?;
-            Ok(Arc::new(prop))
+    pub fn get_arc_entry(&self, input: &Record) -> FnExecResult<Arc<Entry>> {
+        if let Some(entry) = input.get(self.tag) {
+            if let Some(prop_key) = self.key.as_ref() {
+                let prop = self.get_key(entry, prop_key)?;
+                Ok(Arc::new(prop))
+            } else {
+                Ok(entry.clone())
+            }
         } else {
-            Ok(entry)
+            Ok(Arc::new((CommonObject::None).into()))
         }
     }
 
     /// This is for accum, which get the entry of the input Record according to the tag_key field
-    pub fn get_entry(&self, input: &Record) -> Result<Entry, FnExecError> {
-        let entry = input
-            .get(self.tag)
-            .ok_or(FnExecError::get_tag_error(&format!(
-                "Get tag {:?} failed since it refers to an empty entry",
-                self.tag
-            )))?
-            .clone();
-        if let Some(prop_key) = self.key.as_ref() {
-            Ok(self.get_key(entry, prop_key)?)
+    pub fn get_entry(&self, input: &Record) -> FnExecResult<Entry> {
+        if let Some(entry) = input.get(self.tag) {
+            if let Some(prop_key) = self.key.as_ref() {
+                Ok(self.get_key(entry, prop_key)?)
+            } else {
+                Ok(entry.as_ref().clone())
+            }
         } else {
-            Ok(entry.as_ref().clone())
+            Ok((CommonObject::None).into())
         }
     }
 
-    fn get_key(&self, entry: Arc<Entry>, prop_key: &PropKey) -> Result<Entry, FnExecError> {
+    fn get_key(&self, entry: &Arc<Entry>, prop_key: &PropKey) -> FnExecResult<Entry> {
         if let Entry::Element(RecordElement::OnGraph(element)) = entry.as_ref() {
             let prop_obj = match prop_key {
                 PropKey::Id => element.id().into(),
@@ -95,7 +89,7 @@ impl TagKey {
                 PropKey::All => {
                     let details = element
                         .details()
-                        .ok_or(FnExecError::get_tag_error(
+                        .ok_or(FnExecError::unexpected_data_error(
                             "Get key failed since get details from a graph element failed",
                         ))?;
 
@@ -118,15 +112,13 @@ impl TagKey {
                 PropKey::Key(key) => {
                     let details = element
                         .details()
-                        .ok_or(FnExecError::get_tag_error(
+                        .ok_or(FnExecError::unexpected_data_error(
                             "Get key failed since get details from a graph element failed",
                         ))?;
                     if let Some(properties) = details.get_property(key) {
                         properties
                             .try_to_owned()
-                            .ok_or(FnExecError::UnExpectedData(
-                                "unable to own the `BorrowObject`".to_string(),
-                            ))?
+                            .ok_or(FnExecError::unexpected_data_error("unable to own the `BorrowObject`"))?
                     } else {
                         Object::None
                     }
@@ -138,7 +130,7 @@ impl TagKey {
                 _ => Ok(CommonObject::Prop(prop_obj).into()),
             }
         } else {
-            Err(FnExecError::get_tag_error(
+            Err(FnExecError::unexpected_data_error(
                 "Get key failed when attempt to get prop_key from a non-graph element",
             ))
         }

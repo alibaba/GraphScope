@@ -22,13 +22,16 @@ use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::common as common_pb;
 use ir_common::KeyId;
-use pegasus::api::function::{FnResult, MapFunction};
+use pegasus::api::function::{FilterMapFunction, FnResult};
 
-use crate::error::{FnExecError, FnGenResult};
-use crate::process::operator::map::MapFuncGen;
+use crate::error::{FnExecResult, FnGenResult};
+use crate::process::operator::map::FilterMapFuncGen;
 use crate::process::operator::TagKey;
 use crate::process::record::{CommonObject, Entry, Record, RecordElement};
 
+/// Project entries with specified tags or further their properties.
+/// Notice that when projecting a single column, if the result is a None-Entry,
+/// Caused by either the given `tag` or the required properties do not exist, the record will be filtered.
 #[derive(Debug)]
 struct ProjectOperator {
     is_append: bool,
@@ -41,12 +44,17 @@ pub enum Projector {
     GraphElementProjector(TagKey),
 }
 
-fn exec_projector(input: &Record, projector: &Projector) -> FnResult<Arc<Entry>> {
+// TODO:
+// 1. Currently, the behavior of filtering none-entry is identical to e.g., `g.V().values('name')`,
+//    but differs to `g.V().valueMap('name')`, which will output the none-entry.
+//    To support both cases, we may further need a flag to identify whether to filter or not.
+//    BTW, if it is necessary to output none-entry,
+//    we may need to further distinguish the cases of none-exist tags (filtering case) and none-exist properties (output none-entry).
+// 2. When projecting multiple columns, even all projected columns are none-entry, the record won't be filtered for now.
+fn exec_projector(input: &Record, projector: &Projector) -> FnExecResult<Arc<Entry>> {
     let entry = match projector {
         Projector::ExprProjector(evaluator) => {
-            let projected_result = evaluator
-                .eval::<RecordElement, Record>(Some(&input))
-                .map_err(|e| FnExecError::from(e))?;
+            let projected_result = evaluator.eval::<RecordElement, Record>(Some(&input))?;
             Arc::new(
                 match projected_result {
                     Object::None => CommonObject::None,
@@ -60,13 +68,18 @@ fn exec_projector(input: &Record, projector: &Projector) -> FnResult<Arc<Entry>>
     Ok(entry)
 }
 
-impl MapFunction<Record, Record> for ProjectOperator {
-    fn exec(&self, mut input: Record) -> FnResult<Record> {
+impl FilterMapFunction<Record, Record> for ProjectOperator {
+    fn exec(&self, mut input: Record) -> FnResult<Option<Record>> {
         if self.is_append {
             if self.projected_columns.len() == 1 {
                 let (projector, alias) = self.projected_columns.get(0).unwrap();
                 let entry = exec_projector(&input, &projector)?;
-                input.append_arc_entry(entry, alias.clone());
+                if entry.is_none() {
+                    Ok(None)
+                } else {
+                    input.append_arc_entry(entry, alias.clone());
+                    Ok(Some(input))
+                }
             } else {
                 for (projector, alias) in self.projected_columns.iter() {
                     let entry = exec_projector(&input, projector)?;
@@ -78,15 +91,19 @@ impl MapFunction<Record, Record> for ProjectOperator {
                 }
                 // set head as None when the last column is appended
                 input.set_curr_entry(None);
+                Ok(Some(input))
             }
-
-            Ok(input)
         } else {
             let mut new_record = Record::default();
             if self.projected_columns.len() == 1 {
                 let (projector, alias) = self.projected_columns.get(0).unwrap();
                 let entry = exec_projector(&input, &projector)?;
-                new_record.append_arc_entry(entry, alias.clone());
+                if entry.is_none() {
+                    Ok(None)
+                } else {
+                    new_record.append_arc_entry(entry, alias.clone());
+                    Ok(Some(new_record))
+                }
             } else {
                 for (projector, alias) in self.projected_columns.iter() {
                     let entry = exec_projector(&input, &projector)?;
@@ -96,14 +113,14 @@ impl MapFunction<Record, Record> for ProjectOperator {
                         columns.insert(*alias as usize, entry);
                     }
                 }
+                Ok(Some(new_record))
             }
-            Ok(new_record)
         }
     }
 }
 
-impl MapFuncGen for algebra_pb::Project {
-    fn gen_map(self) -> FnGenResult<Box<dyn MapFunction<Record, Record>>> {
+impl FilterMapFuncGen for algebra_pb::Project {
+    fn gen_filter_map(self) -> FnGenResult<Box<dyn FilterMapFunction<Record, Record>>> {
         let mut projected_columns = Vec::with_capacity(self.mappings.len());
         for expr_alias in self.mappings.into_iter() {
             let alias = expr_alias
@@ -149,7 +166,7 @@ mod tests {
     use pegasus::result::ResultStream;
     use pegasus::JobConf;
 
-    use crate::process::operator::map::MapFuncGen;
+    use crate::process::operator::map::FilterMapFuncGen;
     use crate::process::operator::tests::{
         init_source, init_source_with_multi_tags, init_source_with_tag, init_vertex1, init_vertex2,
         to_expr_var_pb, to_expr_vars_pb, TAG_A, TAG_B, TAG_C, TAG_D, TAG_E,
@@ -163,8 +180,8 @@ mod tests {
             let project_opr_pb = project_opr_pb.clone();
             |input, output| {
                 let mut stream = input.input_from(source.into_iter())?;
-                let project_func = project_opr_pb.gen_map().unwrap();
-                stream = stream.map(move |i| project_func.exec(i))?;
+                let project_func = project_opr_pb.gen_filter_map().unwrap();
+                stream = stream.filter_map(move |i| project_func.exec(i))?;
                 stream.sink_into(output)
             }
         })
@@ -458,7 +475,7 @@ mod tests {
             mappings: vec![pb::project::ExprAlias { expr: None, alias: None }],
             is_append: false,
         };
-        let project_func = project_opr_pb.gen_map();
+        let project_func = project_opr_pb.gen_filter_map();
         if let Err(_) = project_func {
             assert!(true)
         }
@@ -474,7 +491,7 @@ mod tests {
             }],
             is_append: true,
         };
-        let project_func = project_opr_pb.gen_map();
+        let project_func = project_opr_pb.gen_filter_map();
         if let Err(_) = project_func {
             assert!(true)
         }

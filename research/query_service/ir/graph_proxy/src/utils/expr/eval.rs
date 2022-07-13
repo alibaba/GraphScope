@@ -72,6 +72,12 @@ impl ToString for InnerOpr {
     }
 }
 
+impl ToString for Operand {
+    fn to_string(&self) -> String {
+        format!("{:?}", self)
+    }
+}
+
 /// A string representation of `InnerOpr`
 #[derive(Debug, Clone, PartialEq)]
 pub struct OperatorDesc(String);
@@ -85,6 +91,18 @@ impl From<InnerOpr> for OperatorDesc {
 impl From<&InnerOpr> for OperatorDesc {
     fn from(inner: &InnerOpr) -> Self {
         Self(inner.to_string())
+    }
+}
+
+impl From<Operand> for OperatorDesc {
+    fn from(opr: Operand) -> Self {
+        Self(opr.to_string())
+    }
+}
+
+impl From<&Operand> for OperatorDesc {
+    fn from(opr: &Operand) -> Self {
+        Self(opr.to_string())
     }
 }
 
@@ -420,13 +438,15 @@ impl Evaluate for Operand {
                                 PropKey::Id => {
                                     result = element
                                         .as_graph_element()
-                                        .map(|g| g.id().into())
-                                        .unwrap_or(Object::None)
+                                        .ok_or(ExprEvalError::UnexpectedDataType(self.into()))?
+                                        .id()
+                                        .into()
                                 }
                                 PropKey::Label => {
                                     result = element
                                         .as_graph_element()
-                                        .and_then(|g| g.label())
+                                        .ok_or(ExprEvalError::UnexpectedDataType(self.into()))?
+                                        .label()
                                         .map(|label| match label {
                                             NameOrId::Str(str) => str.clone().into(),
                                             NameOrId::Id(id) => (*id).into(),
@@ -435,31 +455,31 @@ impl Evaluate for Operand {
                                 }
                                 PropKey::Len => result = element.len().into(),
                                 PropKey::All => {
-                                    if let Some(details) = element.details() {
-                                        result = details
-                                            .get_all_properties()
-                                            .map(|obj| {
-                                                obj.into_iter()
-                                                    .map(|(key, value)| {
-                                                        let obj_key: Object = match key {
-                                                            NameOrId::Str(str) => str.into(),
-                                                            NameOrId::Id(id) => id.into(),
-                                                        };
-                                                        (obj_key, value)
-                                                    })
-                                                    .collect::<Vec<(Object, Object)>>()
-                                                    .into()
-                                            })
-                                            .unwrap_or(Object::None)
-                                    }
+                                    result = element
+                                        .details()
+                                        .ok_or(ExprEvalError::UnexpectedDataType(self.into()))?
+                                        .get_all_properties()
+                                        .map(|obj| {
+                                            obj.into_iter()
+                                                .map(|(key, value)| {
+                                                    let obj_key: Object = match key {
+                                                        NameOrId::Str(str) => str.into(),
+                                                        NameOrId::Id(id) => id.into(),
+                                                    };
+                                                    (obj_key, value)
+                                                })
+                                                .collect::<Vec<(Object, Object)>>()
+                                                .into()
+                                        })
+                                        .unwrap_or(Object::None)
                                 }
                                 PropKey::Key(key) => {
-                                    if let Some(details) = element.details() {
-                                        result = details
-                                            .get_property(key)
-                                            .and_then(|obj| obj.try_to_owned())
-                                            .into();
-                                    }
+                                    result = element
+                                        .details()
+                                        .ok_or(ExprEvalError::UnexpectedDataType(self.into()))?
+                                        .get_property(key)
+                                        .and_then(|obj| obj.try_to_owned())
+                                        .into();
                                 }
                             }
                         } else {
@@ -797,19 +817,21 @@ mod tests {
                 .collect(),
             ),
             Object::KV(
-                vec![(
-                    object!(vec![object!(0), object!("~all")]),
-                    Object::KV(
-                        vec![
-                            (object!("age"), object!(31)),
-                            (object!("name"), object!("John")),
-                            (object!("birthday"), object!(19900416)),
-                            (object!("hobbies"), object!(vec!["football", "guitar"])),
-                        ]
-                        .into_iter()
-                        .collect(),
+                vec![
+                    (
+                        object!(vec![object!(0), object!("~all")]),
+                        Object::KV(
+                            vec![
+                                (object!("age"), object!(31)),
+                                (object!("name"), object!("John")),
+                                (object!("birthday"), object!(19900416)),
+                                (object!("hobbies"), object!(vec!["football", "guitar"])),
+                            ]
+                            .into_iter()
+                            .collect(),
+                        ),
                     ),
-                )]
+                ]
                 .into_iter()
                 .collect(),
             ),

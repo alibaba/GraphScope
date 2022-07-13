@@ -32,9 +32,6 @@ pub trait MapFuncGen {
 impl MapFuncGen for algebra_pb::logical_plan::operator::Opr {
     fn gen_map(self) -> FnGenResult<Box<dyn MapFunction<Record, Record>>> {
         match self {
-            algebra_pb::logical_plan::operator::Opr::Project(project) => project.gen_map(),
-            algebra_pb::logical_plan::operator::Opr::Vertex(get_vertex) => get_vertex.gen_map(),
-            algebra_pb::logical_plan::operator::Opr::PathStart(path_start) => path_start.gen_map(),
             algebra_pb::logical_plan::operator::Opr::PathEnd(path_end) => path_end.gen_map(),
             _ => Err(ParsePbError::from("algebra_pb op is not a map"))?,
         }
@@ -48,7 +45,11 @@ pub trait FilterMapFuncGen {
 impl FilterMapFuncGen for algebra_pb::logical_plan::operator::Opr {
     fn gen_filter_map(self) -> FnGenResult<Box<dyn FilterMapFunction<Record, Record>>> {
         match self {
+            algebra_pb::logical_plan::operator::Opr::Vertex(get_vertex) => get_vertex.gen_filter_map(),
+            algebra_pb::logical_plan::operator::Opr::PathStart(path_start) => path_start.gen_filter_map(),
+            algebra_pb::logical_plan::operator::Opr::Project(project) => project.gen_filter_map(),
             algebra_pb::logical_plan::operator::Opr::Auxilia(auxilia) => auxilia.gen_filter_map(),
+
             _ => Err(ParsePbError::from("algebra_pb op is not a map"))?,
         }
     }

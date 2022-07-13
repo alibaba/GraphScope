@@ -36,60 +36,61 @@ struct AuxiliaOperator {
 
 impl FilterMapFunction<Record, Record> for AuxiliaOperator {
     fn exec(&self, mut input: Record) -> FnResult<Option<Record>> {
-        let entry = input
-            .get(self.tag)
-            .ok_or(FnExecError::get_tag_error("get current entry failed in AuxiliaOperator"))?
-            .clone();
-        // Make sure there is anything to query with
-        // Note that we need to guarantee the requested column if it has any alias,
-        // e.g., for g.V().out().as("a").has("name", "marko"), we should compile as:
-        // g.V().out().auxilia(as("a"))... where we give alias in auxilia,
-        //     then we set tag=None and alias="a" in auxilia
-        // TODO: it seems that we do not really care about getting head from curr or "a", we only need to save the updated entry with expected alias "a"
-        if self.query_params.is_queryable() {
-            // If queryable, then turn into graph element and do the query
-            let graph = get_graph().ok_or(FnExecError::NullGraphError)?;
-            let new_entry: Option<Entry> = if let Some(v) = entry.as_graph_vertex() {
-                let mut result_iter = graph.get_vertex(&[v.id()], &self.query_params)?;
-                result_iter.next().map(|mut vertex| {
-                    if let Some(details) = v.details() {
-                        if let Some(properties) = details.get_all_properties() {
-                            for (key, val) in properties {
-                                vertex
-                                    .get_details_mut()
-                                    .insert_property(key, val);
+        if let Some(entry) = input.get(self.tag) {
+            let entry = entry.clone();
+            // Make sure there is anything to query with
+            // Note that we need to guarantee the requested column if it has any alias,
+            // e.g., for g.V().out().as("a").has("name", "marko"), we should compile as:
+            // g.V().out().auxilia(as("a"))... where we give alias in auxilia,
+            //     then we set tag=None and alias="a" in auxilia
+            // TODO: it seems that we do not really care about getting head from curr or "a", we only need to save the updated entry with expected alias "a"
+            if self.query_params.is_queryable() {
+                // If queryable, then turn into graph element and do the query
+                let graph = get_graph().ok_or(FnExecError::NullGraphError)?;
+                let new_entry: Option<Entry> = if let Some(v) = entry.as_graph_vertex() {
+                    let mut result_iter = graph.get_vertex(&[v.id()], &self.query_params)?;
+                    result_iter.next().map(|mut vertex| {
+                        if let Some(details) = v.details() {
+                            if let Some(properties) = details.get_all_properties() {
+                                for (key, val) in properties {
+                                    vertex
+                                        .get_details_mut()
+                                        .insert_property(key, val);
+                                }
                             }
                         }
-                    }
-                    vertex.into()
-                })
-            } else if let Some(e) = entry.as_graph_edge() {
-                let mut result_iter = graph.get_edge(&[e.id()], &self.query_params)?;
-                result_iter.next().map(|mut edge| {
-                    if let Some(details) = e.details() {
-                        if let Some(properties) = details.get_all_properties() {
-                            for (key, val) in properties {
-                                edge.get_details_mut().insert_property(key, val);
+                        vertex.into()
+                    })
+                } else if let Some(e) = entry.as_graph_edge() {
+                    let mut result_iter = graph.get_edge(&[e.id()], &self.query_params)?;
+                    result_iter.next().map(|mut edge| {
+                        if let Some(details) = e.details() {
+                            if let Some(properties) = details.get_all_properties() {
+                                for (key, val) in properties {
+                                    edge.get_details_mut().insert_property(key, val);
+                                }
                             }
                         }
-                    }
-                    edge.into()
-                })
+                        edge.into()
+                    })
+                } else {
+                    Err(FnExecError::unexpected_data_error("should be vertex or edge in AuxiliaOperator"))?
+                };
+                if new_entry.is_some() {
+                    input.append(new_entry.unwrap(), self.alias.clone());
+                } else {
+                    return Ok(None);
+                }
             } else {
-                Err(FnExecError::unexpected_data_error("should be vertex or edge in AuxiliaOperator"))?
-            };
-            if new_entry.is_some() {
-                input.append(new_entry.unwrap(), self.alias.clone());
-            } else {
-                return Ok(None);
+                if self.alias.is_some() {
+                    input.append_arc_entry(entry, self.alias.clone());
+                }
             }
-        } else {
-            if self.alias.is_some() {
-                input.append_arc_entry(entry, self.alias.clone());
-            }
-        }
 
-        Ok(Some(input))
+            Ok(Some(input))
+        } else {
+            Ok(None)
+        }
     }
 }
 

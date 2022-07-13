@@ -42,6 +42,9 @@ pub enum EntryAccumulator {
     ToSum(Sum<Entry>),
 }
 
+/// Accumulator for Record, including multiple accumulators for entries(columns) in Record.
+/// Notice that if the entry is a None-Entry (i.e., CommonObject::None), it won't be accumulated.
+// TODO: if the none-entry counts, we may further need a flag to identify.
 #[derive(Debug, Clone)]
 pub struct RecordAccumulator {
     accum_ops: Vec<(EntryAccumulator, TagKey, Option<KeyId>)>,
@@ -68,14 +71,19 @@ impl Accumulator<Record, Record> for RecordAccumulator {
 
 impl Accumulator<Entry, Entry> for EntryAccumulator {
     fn accum(&mut self, next: Entry) -> FnExecResult<()> {
-        match self {
-            EntryAccumulator::ToCount(count) => count.accum(()),
-            EntryAccumulator::ToList(list) => list.accum(next),
-            EntryAccumulator::ToMin(min) => min.accum(next),
-            EntryAccumulator::ToMax(max) => max.accum(next),
-            EntryAccumulator::ToSet(set) => set.accum(next),
-            EntryAccumulator::ToDistinctCount(distinct_count) => distinct_count.accum(next),
-            EntryAccumulator::ToSum(sum) => sum.accum(next),
+        // ignore non-exist tag/label/property values;
+        if !next.is_none() {
+            match self {
+                EntryAccumulator::ToCount(count) => count.accum(()),
+                EntryAccumulator::ToList(list) => list.accum(next),
+                EntryAccumulator::ToMin(min) => min.accum(next),
+                EntryAccumulator::ToMax(max) => max.accum(next),
+                EntryAccumulator::ToSet(set) => set.accum(next),
+                EntryAccumulator::ToDistinctCount(distinct_count) => distinct_count.accum(next),
+                EntryAccumulator::ToSum(sum) => sum.accum(next),
+            }
+        } else {
+            Ok(())
         }
     }
 

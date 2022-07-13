@@ -33,7 +33,10 @@ use vec_map::VecMap;
 
 #[derive(Debug, Clone, Hash, PartialEq, PartialOrd)]
 pub enum CommonObject {
-    // TODO: common-used object elements
+    /// a None value used when:
+    /// 1) project a non-exist tag of the record;
+    /// 2) project a non-exist label/property of the record of graph_element;
+    /// 3) the property value returned from store is Object::None (TODO: may need to distinguish this case)
     None,
     /// projected property
     Prop(Object),
@@ -123,6 +126,13 @@ impl Entry {
         match self {
             Entry::Element(record_element) => record_element.as_mut_graph_path(),
             _ => None,
+        }
+    }
+
+    pub fn is_none(&self) -> bool {
+        match self {
+            Entry::Element(RecordElement::OffGraph(CommonObject::None)) => true,
+            _ => false,
         }
     }
 }
