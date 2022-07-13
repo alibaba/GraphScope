@@ -13,13 +13,15 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 use crate::api::function::FnResult;
+use crate::api::Map;
 use crate::api::Unary;
-use crate::api::{Map, MapWithName};
 use crate::errors::BuildJobError;
 use crate::stream::Stream;
 use crate::Data;
 
-fn get_name(base: &str, extra: &str) -> String {
+/// A private function of getting a `Map` operator's name as a base name given by the system
+/// plus an extra name given by the user
+fn _get_name(base: &str, extra: &str) -> String {
     if extra.is_empty() {
         base.to_string()
     } else {
@@ -27,15 +29,13 @@ fn get_name(base: &str, extra: &str) -> String {
     }
 }
 
-impl<I: Data> Map<I> for Stream<I> {}
-
-impl<I: Data> MapWithName<I> for Stream<I> {
+impl<I: Data> Map<I> for Stream<I> {
     fn map_with_name<O, F>(self, name: &str, func: F) -> Result<Stream<O>, BuildJobError>
     where
         O: Data,
         F: Fn(I) -> FnResult<O> + Send + 'static,
     {
-        self.unary(&get_name("map", name), |_info| {
+        self.unary(&_get_name("map", name), |_info| {
             move |input, output| {
                 input.for_each_batch(|batch| {
                     if !batch.is_empty() {
@@ -56,7 +56,7 @@ impl<I: Data> MapWithName<I> for Stream<I> {
         O: Data,
         F: Fn(I) -> FnResult<Option<O>> + Send + 'static,
     {
-        self.unary(&get_name("filter_map", name), |_info| {
+        self.unary(&_get_name("filter_map", name), |_info| {
             move |input, output| {
                 input.for_each_batch(|batch| {
                     if !batch.is_empty() {
@@ -79,7 +79,7 @@ impl<I: Data> MapWithName<I> for Stream<I> {
         R: Iterator<Item = O> + Send + 'static,
         F: Fn(I) -> FnResult<R> + Send + 'static,
     {
-        self.unary(&get_name("flat_map", name), |info| {
+        self.unary(&_get_name("flat_map", name), |info| {
             let index = info.index;
             move |input, output| {
                 input.for_each_batch(|dataset| {

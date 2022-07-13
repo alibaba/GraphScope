@@ -24,7 +24,7 @@ use ir_common::generated::common as common_pb;
 use pegasus::api::function::*;
 use pegasus::api::{
     Collect, CorrelatedSubTask, Count, Dedup, EmitKind, Filter, Fold, FoldByKey, HasAny, IterCondition,
-    Iteration, Join, KeyBy, Limit, Map, MapWithName, Merge, PartitionByKey, Sink, SortBy, SortLimitBy,
+    Iteration, Join, KeyBy, Limit, Map, Merge, PartitionByKey, Sink, SortBy, SortLimitBy,
 };
 use pegasus::codec::{Decode, Encode};
 use pegasus::stream::Stream;

@@ -22,7 +22,7 @@ use crate::Data;
 /// user-defined function (udf) to produce a new data to the output stream.
 ///
 /// [`Unary`]: crate::api::primitive::unary::Unary
-pub trait Map<I: Data>: MapWithName<I> {
+pub trait Map<I: Data> {
     /// Apply the user-defined function `func`, that mutates each data of type `I` of the
     /// input stream, and produce the data of type `O` to the output stream.
     ///
@@ -55,6 +55,11 @@ pub trait Map<I: Data>: MapWithName<I> {
     {
         self.map_with_name("", func)
     }
+
+    fn map_with_name<O, F>(self, name: &str, func: F) -> Result<Stream<O>, BuildJobError>
+    where
+        O: Data,
+        F: Fn(I) -> FnResult<O> + Send + 'static;
 
     /// Similar to [`map`], this function mutates the input data of the type `I` into
     /// the output data of the type `O`. The difference is, [`map`] must produce an output
@@ -104,6 +109,11 @@ pub trait Map<I: Data>: MapWithName<I> {
         self.filter_map_with_name("", func)
     }
 
+    fn filter_map_with_name<O, F>(self, name: &str, func: F) -> Result<Stream<O>, BuildJobError>
+    where
+        O: Data,
+        F: Fn(I) -> FnResult<Option<O>> + Send + 'static;
+
     /// This function can produce zero, one and more than one output data items for each input
     /// item, in which the udf function allows the user to specify the output data as an iterator.
     ///
@@ -149,19 +159,6 @@ pub trait Map<I: Data>: MapWithName<I> {
     {
         self.flat_map_with_name("", func)
     }
-}
-
-/// Map interfaces with extra specified name
-pub trait MapWithName<I: Data> {
-    fn map_with_name<O, F>(self, name: &str, func: F) -> Result<Stream<O>, BuildJobError>
-    where
-        O: Data,
-        F: Fn(I) -> FnResult<O> + Send + 'static;
-
-    fn filter_map_with_name<O, F>(self, name: &str, func: F) -> Result<Stream<O>, BuildJobError>
-    where
-        O: Data,
-        F: Fn(I) -> FnResult<Option<O>> + Send + 'static;
 
     fn flat_map_with_name<O, R, F>(self, name: &str, func: F) -> Result<Stream<O>, BuildJobError>
     where
