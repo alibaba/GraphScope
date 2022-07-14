@@ -51,6 +51,7 @@ pub enum Projector {
 //    BTW, if it is necessary to output none-entry,
 //    we may need to further distinguish the cases of none-exist tags (filtering case) and none-exist properties (output none-entry).
 // 2. When projecting multiple columns, even all projected columns are none-entry, the record won't be filtered for now.
+//    This seems ambiguous. But multi-column project always appears in the end of the query. Can modify this logic if necessary.
 fn exec_projector(input: &Record, projector: &Projector) -> FnExecResult<Arc<Entry>> {
     let entry = match projector {
         Projector::ExprProjector(evaluator) => {
@@ -640,5 +641,140 @@ mod tests {
         }
         let expected_results = vec![1, 2];
         assert_eq!(results, expected_results);
+    }
+
+    // g.V().select('a')
+    #[test]
+    fn project_none_exist_tag_test() {
+        let project_opr_pb = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: Some(to_expr_var_pb(Some(TAG_A.into()), None)),
+                alias: None,
+            }],
+            is_append: true,
+        };
+        let mut result = project_test(init_source(), project_opr_pb);
+        let mut result_cnt = 0;
+        while let Some(Ok(_res)) = result.next() {
+            result_cnt += 1;
+        }
+        assert_eq!(result_cnt, 0);
+    }
+
+    // g.V().as('a').select('a').by('test')
+    #[test]
+    fn project_none_exist_prop_test() {
+        let project_opr_pb = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: Some(to_expr_var_pb(Some(TAG_A.into()), Some("test".into()))),
+                alias: None,
+            }],
+            is_append: true,
+        };
+        let mut result = project_test(init_source_with_tag(), project_opr_pb);
+        let mut result_cnt = 0;
+        while let Some(Ok(_res)) = result.next() {
+            result_cnt += 1;
+        }
+        assert_eq!(result_cnt, 0);
+    }
+
+    // g.V().select("a","b")
+    #[test]
+    fn project_multi_none_exist_tag_test() {
+        let project_opr_pb = pb::Project {
+            mappings: vec![
+                pb::project::ExprAlias {
+                    expr: Some(to_expr_var_pb(Some(TAG_A.into()), None)),
+                    alias: Some(TAG_C.into()),
+                },
+                pb::project::ExprAlias {
+                    expr: Some(to_expr_var_pb(Some(TAG_B.into()), None)),
+                    alias: Some(TAG_D.into()),
+                },
+            ],
+            is_append: false,
+        };
+        let mut result = project_test(init_source(), project_opr_pb);
+        let mut result_cnt = 0;
+        while let Some(Ok(res)) = result.next() {
+            result_cnt += 1;
+            // head should be None
+            assert_eq!(res.get(None), None);
+            let c_val = res.get(Some(TAG_C)).unwrap();
+            let d_val = res.get(Some(TAG_D)).unwrap();
+            match (c_val.as_ref(), d_val.as_ref()) {
+                (
+                    Entry::Element(RecordElement::OffGraph(CommonObject::None)),
+                    Entry::Element(RecordElement::OffGraph(CommonObject::None)),
+                ) => {
+                    assert!(true)
+                }
+                _ => {
+                    assert!(false)
+                }
+            }
+        }
+        assert_eq!(result_cnt, 2);
+    }
+
+    // g.V().as("a").select("a").by(valueMap("test1", "test2"))
+    #[test]
+    fn project_multi_none_exist_props_test() {
+        let project_opr_pb = pb::Project {
+            mappings: vec![
+                pb::project::ExprAlias {
+                    expr: Some(to_expr_var_pb(Some(TAG_A.into()), Some("test1".into()))),
+                    alias: Some(TAG_C.into()),
+                },
+                pb::project::ExprAlias {
+                    expr: Some(to_expr_var_pb(Some(TAG_A.into()), Some("test2".into()))),
+                    alias: Some(TAG_D.into()),
+                },
+            ],
+            is_append: false,
+        };
+        let mut result = project_test(init_source_with_tag(), project_opr_pb);
+        let mut result_cnt = 0;
+        while let Some(Ok(res)) = result.next() {
+            result_cnt += 1;
+            // head should be None
+            assert_eq!(res.get(None), None);
+            let c_val = res.get(Some(TAG_C)).unwrap();
+            let d_val = res.get(Some(TAG_D)).unwrap();
+            match (c_val.as_ref(), d_val.as_ref()) {
+                (
+                    Entry::Element(RecordElement::OffGraph(CommonObject::None)),
+                    Entry::Element(RecordElement::OffGraph(CommonObject::None)),
+                ) => {
+                    assert!(true)
+                }
+                _ => {
+                    assert!(false)
+                }
+            }
+        }
+        assert_eq!(result_cnt, 2);
+    }
+
+    // g.V().values('id').as('a').select('a').by('id'), throw an unexpected data type error
+    #[test]
+    fn project_error_test() {
+        let common_obj1 = CommonObject::Prop(object!(1));
+        let common_obj2 = CommonObject::Prop(object!(2));
+        let r1 = Record::new(common_obj1, Some(TAG_A.into()));
+        let r2 = Record::new(common_obj2, Some(TAG_A.into()));
+        let source = vec![r1, r2];
+        let project_opr_pb = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: Some(to_expr_var_pb(Some(TAG_A.into()), Some("id".into()))),
+                alias: None,
+            }],
+            is_append: true,
+        };
+        let mut result = project_test(source, project_opr_pb);
+        if let Some(Err(_res)) = result.next() {
+            assert!(true)
+        }
     }
 }
