@@ -7,7 +7,12 @@
             "mappings": [],
             "functions": [
               {
-                "vars": [],
+                "vars": [
+                  {
+                    "tag": null,
+                    "property": null
+                  }
+                ],
                 "aggregate": 3,
                 "alias": {
                   "item": {

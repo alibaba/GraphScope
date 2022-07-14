@@ -34,7 +34,7 @@
 //! # int main(int argc, char** argv) {
 //! #    const void* ptr_plan = init_logical_plan();
 //! #    const void* ptr_project = init_project_operator();
-//! #    add_project_mapping(ptr_project, "@name", int_as_name_or_id(0));
+//! #    add_project_expr_alias(ptr_project, "@name", int_as_name_or_id(0));
 //! #    int opr_id = 0;
 //! #    append_project_operator(ptr_plan, ptr_project, 0, &opr_id);
 //! #    cout << "the id is: " << opr_id << endl;
@@ -44,7 +44,7 @@
 //! #    append_select_operator(ptr_plan, ptr_select, opr_id, &opr_id);
 //! #    cout << "the id is: " << opr_id << endl;
 //!
-//! #    write_plan_to_json(ptr_plan, "./plan.json");
+//! #    print_plan_as_json(ptr_plan);
 //! #    destroy_logical_plan(ptr_plan);
 //! # }
 //!
@@ -101,18 +101,17 @@ pub enum ResultCode {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct FfiError {
+pub struct FfiResult {
     code: ResultCode,
     msg: *const c_char,
 }
 
-impl FfiError {
+impl FfiResult {
     pub fn new(code: ResultCode, msg: String) -> Self {
         let result = string_to_cstr(msg);
-        if let Ok(msg) = result {
-            Self { code, msg }
-        } else {
-            result.err().unwrap()
+        match result {
+            Ok(msg) => Self { code, msg },
+            Err(e) => e,
         }
     }
 
@@ -121,51 +120,51 @@ impl FfiError {
     }
 }
 
-impl std::fmt::Display for FfiError {
+impl std::fmt::Display for FfiResult {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        f.debug_struct("FfiError")
+        f.debug_struct("FfiResult")
             .field("code", &self.code)
             .field("msg", &cstr_to_string(self.msg))
             .finish()
     }
 }
 
-impl std::error::Error for FfiError {}
+impl std::error::Error for FfiResult {}
 
-impl From<IrError> for FfiError {
+impl From<IrError> for FfiResult {
     fn from(err: IrError) -> Self {
         match err {
             IrError::TableNotExist(t) => {
-                FfiError::new(ResultCode::TableNotExistError, format!("table {:?} does not exist", t))
+                FfiResult::new(ResultCode::TableNotExistError, format!("table {:?} does not exist", t))
             }
             IrError::ColumnNotExist(col) => {
-                FfiError::new(ResultCode::ColumnNotExistError, format!("column {:?} does not exist", col))
+                FfiResult::new(ResultCode::ColumnNotExistError, format!("column {:?} does not exist", col))
             }
-            IrError::ParentNodeNotExist(p) => FfiError::new(
+            IrError::ParentNodeNotExist(p) => FfiResult::new(
                 ResultCode::ParentNotFoundError,
                 format!("parent node {:?} does not exist", p),
             ),
-            IrError::TagNotExist(t) => FfiError::new(
+            IrError::TagNotExist(t) => FfiResult::new(
                 ResultCode::TagNotExistError,
                 format!("the queried tag {:?} is not specified", t),
             ),
-            IrError::ParsePbError(err) => FfiError::new(ResultCode::ParsePbError, err.to_string()),
-            IrError::ParseExprError(err) => FfiError::new(ResultCode::ParseExprError, err.to_string()),
-            IrError::InvalidPattern(s) => FfiError::new(ResultCode::Others, s),
-            IrError::PbEncodeError(err) => FfiError::new(ResultCode::Others, err.to_string()),
+            IrError::ParsePbError(err) => FfiResult::new(ResultCode::ParsePbError, err.to_string()),
+            IrError::ParseExprError(err) => FfiResult::new(ResultCode::ParseExprError, err.to_string()),
+            IrError::InvalidPattern(s) => FfiResult::new(ResultCode::Others, s),
+            IrError::PbEncodeError(err) => FfiResult::new(ResultCode::Others, err.to_string()),
             IrError::MissingData(d) => {
-                FfiError::new(ResultCode::MissingDataError, format!("required data {:?} is missing", d))
+                FfiResult::new(ResultCode::MissingDataError, format!("required data {:?} is missing", d))
             }
-            IrError::InvalidRange(l, u) => FfiError::new(
+            IrError::InvalidRange(l, u) => FfiResult::new(
                 ResultCode::InvalidRangeError,
                 format!("the range ({:?}, {:?}) is invalid", l, u),
             ),
-            IrError::Unsupported(err) => FfiError::new(ResultCode::UnSupported, err.to_string()),
+            IrError::Unsupported(err) => FfiResult::new(ResultCode::UnSupported, err.to_string()),
         }
     }
 }
 
-impl From<BuildJobError> for FfiError {
+impl From<BuildJobError> for FfiResult {
     fn from(err: BuildJobError) -> Self {
         Self::new(ResultCode::BuildJobError, err.to_string())
     }
@@ -174,11 +173,11 @@ impl From<BuildJobError> for FfiError {
 #[repr(C)]
 pub struct FfiData {
     /// The pointer to the raw data returned from Ffi functions
-    ptr: *mut u8,
+    ptr: *mut c_void,
     /// The length of the data (in bytes) allocated for `Self::ptr`
     len: usize,
     /// To recode any error captured from building logical/physical plan
-    error: FfiError,
+    error: FfiResult,
 }
 
 impl From<IrError> for FfiData {
@@ -193,19 +192,19 @@ impl From<BuildJobError> for FfiData {
     }
 }
 
-impl From<FfiError> for FfiData {
-    fn from(error: FfiError) -> Self {
+impl From<FfiResult> for FfiData {
+    fn from(error: FfiResult) -> Self {
         FfiData { ptr: std::ptr::null_mut(), len: 0, error }
     }
 }
 
-pub(crate) fn cstr_to_string(cstr: *const c_char) -> Result<String, FfiError> {
+pub(crate) fn cstr_to_string(cstr: *const c_char) -> Result<String, FfiResult> {
     if !cstr.is_null() {
         let str_result = unsafe { CStr::from_ptr(cstr) }.to_str();
         if let Ok(str) = str_result {
             Ok(str.to_string())
         } else {
-            Err(FfiError::new(
+            Err(FfiResult::new(
                 ResultCode::CStringError,
                 "error parsing C string into Rust string".to_string(),
             ))
@@ -215,7 +214,7 @@ pub(crate) fn cstr_to_string(cstr: *const c_char) -> Result<String, FfiError> {
     }
 }
 
-pub(crate) fn string_to_cstr(str: String) -> Result<*const c_char, FfiError> {
+pub(crate) fn string_to_cstr(str: String) -> Result<*const c_char, FfiResult> {
     let str_result = std::ffi::CString::new(str);
     if let Ok(str) = str_result {
         let str_ptr = str.as_ptr();
@@ -224,17 +223,18 @@ pub(crate) fn string_to_cstr(str: String) -> Result<*const c_char, FfiError> {
 
         Ok(str_ptr)
     } else {
-        Err(FfiError::new(ResultCode::CStringError, "error parsing Rust string into C string".to_string()))
+        Err(FfiResult::new(ResultCode::CStringError, "error parsing Rust string into C string".to_string()))
     }
 }
 
-pub(crate) fn cstr_to_expr_pb(cstr: *const c_char) -> Result<common_pb::Expression, FfiError> {
+pub(crate) fn cstr_to_expr_pb(cstr: *const c_char) -> Result<common_pb::Expression, FfiResult> {
     let str = cstr_to_string(cstr);
-    if str.is_err() {
-        Err(str.err().unwrap())
-    } else {
-        let expr = str_to_expr_pb(str.unwrap()).map_err(|err| IrError::from(err))?;
-        Ok(expr)
+    match str {
+        Ok(s) => {
+            let expr = str_to_expr_pb(s).map_err(|err| IrError::from(err))?;
+            Ok(expr)
+        }
+        Err(e) => Err(e),
     }
 }
 
@@ -266,9 +266,9 @@ impl Default for FfiNameOrId {
 }
 
 impl TryFrom<FfiNameOrId> for Option<common_pb::NameOrId> {
-    type Error = FfiError;
+    type Error = FfiResult;
 
-    fn try_from(ffi: FfiNameOrId) -> Result<Self, FfiError> {
+    fn try_from(ffi: FfiNameOrId) -> Result<Self, FfiResult> {
         match &ffi.opt {
             FfiNameIdOpt::None => Ok(None),
             FfiNameIdOpt::Name => Ok(Some(common_pb::NameOrId {
@@ -282,9 +282,9 @@ impl TryFrom<FfiNameOrId> for Option<common_pb::NameOrId> {
 }
 
 impl TryFrom<FfiNameOrId> for common_pb::NameOrIdKey {
-    type Error = FfiError;
+    type Error = FfiResult;
 
-    fn try_from(ffi: FfiNameOrId) -> Result<Self, FfiError> {
+    fn try_from(ffi: FfiNameOrId) -> Result<Self, FfiResult> {
         match &ffi.opt {
             FfiNameIdOpt::None => Ok(common_pb::NameOrIdKey { key: None }),
             FfiNameIdOpt::Name => Ok(common_pb::NameOrIdKey {
@@ -323,9 +323,9 @@ pub struct FfiProperty {
 }
 
 impl TryFrom<FfiProperty> for Option<common_pb::Property> {
-    type Error = FfiError;
+    type Error = FfiResult;
 
-    fn try_from(ffi: FfiProperty) -> Result<Self, FfiError> {
+    fn try_from(ffi: FfiProperty) -> Result<Self, FfiResult> {
         let result = match &ffi.opt {
             FfiPropertyOpt::None => None,
             FfiPropertyOpt::Id => {
@@ -358,7 +358,7 @@ pub struct FfiVariable {
 }
 
 impl TryFrom<FfiVariable> for common_pb::Variable {
-    type Error = FfiError;
+    type Error = FfiResult;
 
     fn try_from(ffi: FfiVariable) -> Result<Self, Self::Error> {
         let (tag, property) = (ffi.tag.try_into()?, ffi.property.try_into()?);
@@ -374,7 +374,7 @@ pub struct FfiAlias {
 }
 
 impl TryFrom<FfiAlias> for Option<common_pb::NameOrId> {
-    type Error = FfiError;
+    type Error = FfiResult;
 
     fn try_from(ffi: FfiAlias) -> Result<Self, Self::Error> {
         Self::try_from(ffi.alias)
@@ -503,7 +503,7 @@ impl Default for FfiConst {
 }
 
 impl TryFrom<FfiConst> for common_pb::Value {
-    type Error = FfiError;
+    type Error = FfiResult;
 
     fn try_from(ffi: FfiConst) -> Result<Self, Self::Error> {
         match &ffi.data_type {
@@ -513,14 +513,13 @@ impl TryFrom<FfiConst> for common_pb::Value {
             FfiDataType::F64 => Ok(common_pb::Value::from(ffi.float64)),
             FfiDataType::Str => {
                 let str = cstr_to_string(ffi.cstr);
-                if str.is_ok() {
-                    Ok(common_pb::Value::from(str.unwrap()))
-                } else {
-                    Err(str.err().unwrap())
+                match str {
+                    Ok(s) => Ok(common_pb::Value::from(s)),
+                    Err(e) => Err(e),
                 }
             }
             // TODO(longbin) add support for other type
-            _ => Err(FfiError::new(
+            _ => Err(FfiResult::new(
                 ResultCode::UnknownTypeError,
                 format!("unknown data type {:?}", ffi.data_type),
             )),
@@ -570,14 +569,15 @@ pub extern "C" fn cstr_as_const(cstr: *const c_char) -> FfiConst {
 
 /// Set schema via a json-formatted cstring.
 #[no_mangle]
-pub extern "C" fn set_schema(cstr_json: *const c_char) -> FfiError {
+pub extern "C" fn set_schema(cstr_json: *const c_char) -> FfiResult {
     let result = cstr_to_string(cstr_json);
-    if let Ok(json) = result {
-        set_schema_from_json(json.as_bytes());
+    match result {
+        Ok(json) => {
+            set_schema_from_json(json.as_bytes());
 
-        FfiError::success()
-    } else {
-        result.err().unwrap()
+            FfiResult::success()
+        }
+        Err(e) => e,
     }
 }
 
@@ -599,71 +599,48 @@ impl From<FfiKeyType> for KeyType {
     }
 }
 
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub struct FfiKeyResult {
-    key_name: *const c_char,
-    error: FfiError,
-}
-
-impl From<FfiError> for FfiKeyResult {
-    fn from(error: FfiError) -> Self {
-        FfiKeyResult { key_name: std::ptr::null::<c_char>(), error }
-    }
-}
-
-/// To release a FfiKeyResult
-#[no_mangle]
-pub extern "C" fn destroy_ffi_key_result(data: FfiKeyResult) {
-    if !data.key_name.is_null() {
-        let _ = unsafe { std::ffi::CString::from_raw(data.key_name as *mut c_char) };
-    }
-    if !data.error.msg.is_null() {
-        let _ = unsafe { std::ffi::CString::from_raw(data.error.msg as *mut c_char) };
-    }
-}
-
 /// Query prop_name by given prop_id
 #[no_mangle]
-pub extern "C" fn get_key_name(key_id: i32, key_type: FfiKeyType) -> FfiKeyResult {
+pub extern "C" fn get_key_name(key_id: i32, key_type: FfiKeyType) -> FfiResult {
     use super::meta::STORE_META;
     if let Ok(meta) = STORE_META.read() {
         if let Some(schema) = &meta.schema {
             let key_name = match key_type {
-                FfiKeyType::Entity => schema.get_entity_name(key_id).ok_or(
-                    FfiError::new(
+                FfiKeyType::Entity => schema
+                    .get_entity_name(key_id)
+                    .ok_or(FfiResult::new(
                         ResultCode::TableNotExistError,
                         format!("entity label_id {:?} is not found", key_id),
-                    )
-                    .into(),
-                ),
-                FfiKeyType::Relation => schema.get_relation_name(key_id).ok_or(
-                    FfiError::new(
+                    )),
+                FfiKeyType::Relation => schema
+                    .get_relation_name(key_id)
+                    .ok_or(FfiResult::new(
                         ResultCode::TableNotExistError,
                         format!("relation label_id {:?} is not found", key_id),
-                    )
-                    .into(),
-                ),
-                FfiKeyType::Column => schema.get_column_name(key_id).ok_or(
-                    FfiError::new(
+                    )),
+                FfiKeyType::Column => schema
+                    .get_column_name(key_id)
+                    .ok_or(FfiResult::new(
                         ResultCode::ColumnNotExistError,
                         format!("prop_id {:?} is not found", key_id),
-                    )
-                    .into(),
-                ),
+                    )),
             };
+
             match key_name {
-                Ok(key_name) => FfiKeyResult {
-                    key_name: string_to_cstr(key_name.to_string()).unwrap(),
-                    error: FfiError::success(),
-                },
+                Ok(key_name) => {
+                    let key_name_cstr = string_to_cstr(key_name.clone());
+                    match key_name_cstr {
+                        Ok(msg) => FfiResult { code: ResultCode::Success, msg },
+                        Err(e) => e,
+                    }
+                }
                 Err(e) => e,
             }
         } else {
-            FfiError::new(ResultCode::Others, "error getting schema from store meta".to_string()).into()
+            FfiResult::new(ResultCode::Others, "error getting schema from store meta".to_string())
         }
     } else {
-        FfiError::new(ResultCode::Others, "error reading store meta".to_string()).into()
+        FfiResult::new(ResultCode::Others, "error reading store meta".to_string())
     }
 }
 
@@ -706,20 +683,25 @@ pub extern "C" fn build_physical_plan(
     let mut plan_meta = plan.meta.clone();
     let mut builder = JobBuilder::default();
     let build_result = plan.add_job_builder(&mut builder, &mut plan_meta);
-    let result = if build_result.is_ok() {
-        let req_result = builder.build();
-        if let Ok(req) = req_result {
-            let mut req_bytes = req.encode_to_vec().into_boxed_slice();
-            let data =
-                FfiData { ptr: req_bytes.as_mut_ptr(), len: req_bytes.len(), error: FfiError::success() };
-            std::mem::forget(req_bytes);
+    let result = match build_result {
+        Ok(_) => {
+            let req_result = builder.build();
+            match req_result {
+                Ok(req) => {
+                    let mut req_bytes = req.encode_to_vec().into_boxed_slice();
+                    let data = FfiData {
+                        ptr: req_bytes.as_mut_ptr() as *mut c_void,
+                        len: req_bytes.len(),
+                        error: FfiResult::success(),
+                    };
+                    std::mem::forget(req_bytes);
 
-            data
-        } else {
-            req_result.err().unwrap().into()
+                    data
+                }
+                Err(e) => e.into(),
+            }
         }
-    } else {
-        build_result.err().unwrap().into()
+        Err(e) => e.into(),
     };
 
     std::mem::forget(plan);
@@ -729,7 +711,7 @@ pub extern "C" fn build_physical_plan(
 
 fn append_operator(
     ptr_plan: *const c_void, operator: pb::logical_plan::Operator, parent_ids: Vec<i32>, id: *mut i32,
-) -> FfiError {
+) -> FfiResult {
     let mut plan = unsafe { Box::from_raw(ptr_plan as *mut LogicalPlan) };
     let result = plan.append_operator_as_node(
         operator,
@@ -738,80 +720,80 @@ fn append_operator(
             .filter_map(|x| if x >= 0 { Some(x as NodeId) } else { None })
             .collect(),
     );
-    if result.is_err() {
-        std::mem::forget(plan);
-        result.err().unwrap().into()
-    } else {
-        // Do not let rust drop the pointer before explicitly calling `destroy_logical_plan`
-        std::mem::forget(plan);
-        unsafe { *id = result.unwrap() as i32 };
-        FfiError::success()
+    std::mem::forget(plan);
+    match result {
+        Ok(i) => {
+            unsafe { *id = i as i32 };
+            FfiResult::success()
+        }
+        Err(e) => e.into(),
     }
 }
 
 #[no_mangle]
-pub extern "C" fn print_plan_as_json(ptr_plan: *const c_void) -> FfiError {
+pub extern "C" fn print_plan_as_json(ptr_plan: *const c_void) -> FfiResult {
     let box_plan = unsafe { Box::from_raw(ptr_plan as *mut LogicalPlan) };
     let pb_plan: pb::LogicalPlan = box_plan.as_ref().clone().into();
-    let mut result = FfiError::success();
+    let mut result = FfiResult::success();
     let json_result = serde_json::to_string_pretty(&pb_plan);
-    if json_result.is_err() {
-        result = FfiError::new(ResultCode::Others, json_result.err().unwrap().to_string());
-    } else {
-        let cstr_result = string_to_cstr(json_result.unwrap());
-        if cstr_result.is_err() {
-            result = cstr_result.err().unwrap().into();
-        } else {
-            result.msg = cstr_result.unwrap();
+    match json_result {
+        Ok(json) => {
+            let cstr_result = string_to_cstr(json);
+            match cstr_result {
+                Ok(cstr) => result.msg = cstr,
+                Err(e) => result = e,
+            }
         }
+        Err(e) => result = FfiResult::new(ResultCode::Others, e.to_string()),
     }
     std::mem::forget(box_plan);
 
     result
 }
 
-/// Define the target operator/parameter while setting certain parameters
+/// Internal options for some private functions
 #[allow(dead_code)]
 #[derive(PartialEq, Copy, Clone)]
-enum Target {
-    Select,
-    Scan,
-    GetV,
-    EdgeExpand,
-    PathExpand,
-    Limit,
-    As,
-    OrderBy,
-    Apply,
-    Sink,
-    Params,
+#[repr(i32)]
+enum InnerOpt {
+    Select = 0,
+    Scan = 1,
+    GetV = 2,
+    EdgeExpand = 3,
+    PathExpand = 4,
+    Limit = 5,
+    As = 6,
+    OrderBy = 7,
+    Apply = 8,
+    Sink = 9,
+    Params = 10,
 }
 
 /// Set the size range limitation for certain operators
-fn set_range(ptr: *const c_void, lower: i32, upper: i32, target: Target) -> FfiError {
+fn set_range(ptr: *const c_void, lower: i32, upper: i32, opt: InnerOpt) -> FfiResult {
     if lower < 0 || upper < 0 || upper < lower {
-        FfiError::new(
+        FfiResult::new(
             ResultCode::InvalidRangeError,
             format!("the range ({:?}, {:?}) is invalid", lower, upper),
         )
     } else {
-        match target {
-            Target::Limit => {
+        match opt {
+            InnerOpt::Limit => {
                 let mut limit = unsafe { Box::from_raw(ptr as *mut pb::Limit) };
                 limit.range = Some(pb::Range { lower, upper });
                 std::mem::forget(limit);
             }
-            Target::OrderBy => {
+            InnerOpt::OrderBy => {
                 let mut orderby = unsafe { Box::from_raw(ptr as *mut pb::OrderBy) };
                 orderby.limit = Some(pb::Range { lower, upper });
                 std::mem::forget(orderby);
             }
-            Target::Params => {
+            InnerOpt::Params => {
                 let mut params = unsafe { Box::from_raw(ptr as *mut pb::QueryParams) };
                 params.limit = Some(pb::Range { lower, upper });
                 std::mem::forget(params);
             }
-            Target::PathExpand => {
+            InnerOpt::PathExpand => {
                 let mut pathxpd = unsafe { Box::from_raw(ptr as *mut pb::PathExpand) };
                 pathxpd.hop_range = Some(pb::Range { lower, upper });
                 std::mem::forget(pathxpd);
@@ -819,99 +801,101 @@ fn set_range(ptr: *const c_void, lower: i32, upper: i32, target: Target) -> FfiE
             _ => unreachable!(),
         }
 
-        FfiError::success()
+        FfiResult::success()
     }
 }
 
-fn set_alias(ptr: *const c_void, alias: FfiAlias, target: Target) -> FfiError {
+fn set_alias(ptr: *const c_void, alias: FfiAlias, opt: InnerOpt) -> FfiResult {
     let alias_pb = alias.try_into();
-    if alias_pb.is_ok() {
-        match target {
-            Target::Scan => {
-                let mut scan = unsafe { Box::from_raw(ptr as *mut pb::Scan) };
-                scan.alias = alias_pb.unwrap();
-                std::mem::forget(scan);
+    match alias_pb {
+        Ok(pb) => {
+            match opt {
+                InnerOpt::Scan => {
+                    let mut scan = unsafe { Box::from_raw(ptr as *mut pb::Scan) };
+                    scan.alias = pb;
+                    std::mem::forget(scan);
+                }
+                InnerOpt::EdgeExpand => {
+                    let mut edgexpd = unsafe { Box::from_raw(ptr as *mut pb::EdgeExpand) };
+                    edgexpd.alias = pb;
+                    std::mem::forget(edgexpd);
+                }
+                InnerOpt::PathExpand => {
+                    let mut pathxpd = unsafe { Box::from_raw(ptr as *mut pb::PathExpand) };
+                    pathxpd.alias = pb;
+                    std::mem::forget(pathxpd);
+                }
+                InnerOpt::GetV => {
+                    let mut getv = unsafe { Box::from_raw(ptr as *mut pb::GetV) };
+                    getv.alias = pb;
+                    std::mem::forget(getv);
+                }
+                InnerOpt::Apply => {
+                    let mut apply = unsafe { Box::from_raw(ptr as *mut pb::Apply) };
+                    apply.alias = pb;
+                    std::mem::forget(apply);
+                }
+                InnerOpt::As => {
+                    let mut as_opr = unsafe { Box::from_raw(ptr as *mut pb::As) };
+                    as_opr.alias = pb;
+                    std::mem::forget(as_opr);
+                }
+                _ => unreachable!(),
             }
-            Target::EdgeExpand => {
-                let mut edgexpd = unsafe { Box::from_raw(ptr as *mut pb::EdgeExpand) };
-                edgexpd.alias = alias_pb.unwrap();
-                std::mem::forget(edgexpd);
-            }
-            Target::PathExpand => {
-                let mut pathxpd = unsafe { Box::from_raw(ptr as *mut pb::PathExpand) };
-                pathxpd.alias = alias_pb.unwrap();
-                std::mem::forget(pathxpd);
-            }
-            Target::GetV => {
-                let mut getv = unsafe { Box::from_raw(ptr as *mut pb::GetV) };
-                getv.alias = alias_pb.unwrap();
-                std::mem::forget(getv);
-            }
-            Target::Apply => {
-                let mut apply = unsafe { Box::from_raw(ptr as *mut pb::Apply) };
-                apply.alias = alias_pb.unwrap();
-                std::mem::forget(apply);
-            }
-            Target::As => {
-                let mut as_opr = unsafe { Box::from_raw(ptr as *mut pb::As) };
-                as_opr.alias = alias_pb.unwrap();
-                std::mem::forget(as_opr);
-            }
-            _ => unreachable!(),
+            FfiResult::success()
         }
-        FfiError::success()
-    } else {
-        alias_pb.err().unwrap()
+        Err(e) => e,
     }
 }
 
 /// To set an operator's predicate.
-fn set_predicate(ptr: *const c_void, cstr_predicate: *const c_char, target: Target) -> FfiError {
+fn set_predicate(ptr: *const c_void, cstr_predicate: *const c_char, opt: InnerOpt) -> FfiResult {
     let predicate_pb = cstr_to_expr_pb(cstr_predicate);
     if predicate_pb.is_ok() {
-        match target {
-            Target::Select => {
+        match opt {
+            InnerOpt::Select => {
                 let mut select = unsafe { Box::from_raw(ptr as *mut pb::Select) };
                 select.predicate = predicate_pb.ok();
                 std::mem::forget(select);
             }
-            Target::Params => {
+            InnerOpt::Params => {
                 let mut params = unsafe { Box::from_raw(ptr as *mut pb::QueryParams) };
                 params.predicate = predicate_pb.ok();
                 std::mem::forget(params);
             }
             _ => unreachable!(),
         }
-        FfiError::success()
+        FfiResult::success()
     } else {
         predicate_pb.err().unwrap()
     }
 }
 
-fn set_tag(ptr: *const c_void, tag: FfiNameOrId, target: Target) -> FfiError {
-    let pb = tag.try_into();
-    if pb.is_ok() {
-        match target {
-            Target::EdgeExpand => {
-                let mut expand = unsafe { Box::from_raw(ptr as *mut pb::EdgeExpand) };
-                expand.v_tag = pb.unwrap();
-                std::mem::forget(expand);
+fn set_tag(ptr: *const c_void, tag: FfiNameOrId, opt: InnerOpt) -> FfiResult {
+    let pb_result = tag.try_into();
+    match pb_result {
+        Ok(pb) => {
+            match opt {
+                InnerOpt::EdgeExpand => {
+                    let mut expand = unsafe { Box::from_raw(ptr as *mut pb::EdgeExpand) };
+                    expand.v_tag = pb;
+                    std::mem::forget(expand);
+                }
+                InnerOpt::GetV => {
+                    let mut getv = unsafe { Box::from_raw(ptr as *mut pb::GetV) };
+                    getv.tag = pb;
+                    std::mem::forget(getv);
+                }
+                InnerOpt::PathExpand => {
+                    let mut pathxpd = unsafe { Box::from_raw(ptr as *mut pb::PathExpand) };
+                    pathxpd.start_tag = pb;
+                    std::mem::forget(pathxpd);
+                }
+                _ => unreachable!(),
             }
-            Target::GetV => {
-                let mut getv = unsafe { Box::from_raw(ptr as *mut pb::GetV) };
-                getv.tag = pb.unwrap();
-                std::mem::forget(getv);
-            }
-            Target::PathExpand => {
-                let mut pathxpd = unsafe { Box::from_raw(ptr as *mut pb::PathExpand) };
-                pathxpd.start_tag = pb.unwrap();
-                std::mem::forget(pathxpd);
-            }
-            _ => unreachable!(),
+            FfiResult::success()
         }
-        FfiError::success()
-    } else {
-        pb.err().unwrap()
+        Err(e) => e,
     }
 }
 
@@ -936,77 +920,82 @@ mod params {
     }
 
     #[no_mangle]
-    pub extern "C" fn add_params_table(ptr_params: *const c_void, table: FfiNameOrId) -> FfiError {
+    pub extern "C" fn add_params_table(ptr_params: *const c_void, table: FfiNameOrId) -> FfiResult {
         let mut params = unsafe { Box::from_raw(ptr_params as *mut pb::QueryParams) };
-        let pb = table.try_into();
-        if pb.is_ok() {
-            if let Some(table) = pb.unwrap() {
-                params.tables.push(table)
-            }
-            std::mem::forget(params);
+        let pb_result = table.try_into();
+        match pb_result {
+            Ok(pb) => {
+                if let Some(table) = pb {
+                    params.tables.push(table)
+                }
+                std::mem::forget(params);
 
-            FfiError::success()
-        } else {
-            pb.err().unwrap()
+                FfiResult::success()
+            }
+            Err(e) => e,
         }
     }
 
     #[no_mangle]
-    pub extern "C" fn add_params_column(ptr_params: *const c_void, col: FfiNameOrId) -> FfiError {
+    pub extern "C" fn add_params_column(ptr_params: *const c_void, col: FfiNameOrId) -> FfiResult {
         let mut params = unsafe { Box::from_raw(ptr_params as *mut pb::QueryParams) };
-        let pb = col.try_into();
-        if pb.is_ok() {
-            if let Some(col) = pb.unwrap() {
-                params.columns.push(col)
-            }
-            std::mem::forget(params);
+        let pb_result = col.try_into();
+        match pb_result {
+            Ok(pb) => {
+                if let Some(col) = pb {
+                    params.columns.push(col)
+                }
+                std::mem::forget(params);
 
-            FfiError::success()
-        } else {
-            pb.err().unwrap()
+                FfiResult::success()
+            }
+            Err(e) => e,
         }
     }
 
     #[no_mangle]
-    pub extern "C" fn set_params_range(ptr_params: *const c_void, lower: i32, upper: i32) -> FfiError {
-        set_range(ptr_params, lower, upper, Target::Params)
+    pub extern "C" fn set_params_range(ptr_params: *const c_void, lower: i32, upper: i32) -> FfiResult {
+        set_range(ptr_params, lower, upper, InnerOpt::Params)
     }
 
     #[no_mangle]
     pub extern "C" fn set_params_predicate(
         ptr_params: *const c_void, cstr_pred: *const c_char,
-    ) -> FfiError {
-        set_predicate(ptr_params, cstr_pred, Target::Params)
+    ) -> FfiResult {
+        set_predicate(ptr_params, cstr_pred, InnerOpt::Params)
     }
 
     /// Set getting all columns
     #[no_mangle]
-    pub extern "C" fn set_params_is_all_columns(ptr_params: *const c_void) -> FfiError {
+    pub extern "C" fn set_params_is_all_columns(ptr_params: *const c_void) -> FfiResult {
         let mut params = unsafe { Box::from_raw(ptr_params as *mut pb::QueryParams) };
         params.is_all_columns = true;
         std::mem::forget(params);
 
-        FfiError::success()
+        FfiResult::success()
     }
 
     /// Add extra parameters
     #[no_mangle]
     pub extern "C" fn add_params_extra(
         ptr_params: *const c_void, c_key: *const c_char, c_val: *const c_char,
-    ) -> FfiError {
+    ) -> FfiResult {
+        let mut result = FfiResult::success();
         let mut params = unsafe { Box::from_raw(ptr_params as *mut pb::QueryParams) };
         let key = cstr_to_string(c_key);
         if key.is_err() {
-            return key.err().unwrap();
+            result = key.err().unwrap();
+        } else {
+            let val = cstr_to_string(c_val);
+            if val.is_err() {
+                result = val.err().unwrap();
+            } else {
+                params.extra.insert(key.unwrap(), val.unwrap());
+            }
         }
-        let val = cstr_to_string(c_val);
-        if val.is_err() {
-            return val.err().unwrap();
-        }
-        params.extra.insert(key.unwrap(), val.unwrap());
         std::mem::forget(params);
 
-        FfiError::success()
+        result
     }
 }
 
@@ -1024,8 +1013,8 @@ mod project {
     #[no_mangle]
     pub extern "C" fn add_project_expr_alias(
         ptr_project: *const c_void, cstr_expr: *const c_char, alias: FfiAlias,
-    ) -> FfiError {
-        let mut result = FfiError::success();
+    ) -> FfiResult {
+        let mut result = FfiResult::success();
         let mut project = unsafe { Box::from_raw(ptr_project as *mut pb::Project) };
         let expr_pb = cstr_to_expr_pb(cstr_expr);
         let alias_pb = Option::<common_pb::NameOrId>::try_from(alias);
@@ -1057,14 +1046,14 @@ mod project {
     /// Otherwise, user can manually call [`destroy_project_operator()`] to release the pointer.
     ///
     /// # Return
-    /// * Returning [`FfiError`] to capture any error.
+    /// * Returning [`FfiResult`] to capture any error.
     ///
     /// **Note**: All following `append_xx_operator()` apis have the same usage as this one.
     ///
     #[no_mangle]
     pub extern "C" fn append_project_operator(
         ptr_plan: *const c_void, ptr_project: *const c_void, parent_id: i32, id: *mut i32,
-    ) -> FfiError {
+    ) -> FfiResult {
         let project = unsafe { Box::from_raw(ptr_project as *mut pb::Project) };
         append_operator(ptr_plan, project.as_ref().clone().into(), vec![parent_id], id)
     }
@@ -1089,15 +1078,15 @@ mod select {
     #[no_mangle]
     pub extern "C" fn set_select_predicate(
         ptr_select: *const c_void, cstr_predicate: *const c_char,
-    ) -> FfiError {
-        set_predicate(ptr_select, cstr_predicate, Target::Select)
+    ) -> FfiResult {
+        set_predicate(ptr_select, cstr_predicate, InnerOpt::Select)
     }
 
     /// Append a select operator to the logical plan
     #[no_mangle]
     pub extern "C" fn append_select_operator(
         ptr_plan: *const c_void, ptr_select: *const c_void, parent_id: i32, id: *mut i32,
-    ) -> FfiError {
+    ) -> FfiResult {
         let select = unsafe { Box::from_raw(ptr_select as *mut pb::Select) };
         append_operator(ptr_plan, select.as_ref().clone().into(), vec![parent_id], id)
     }
@@ -1145,8 +1134,8 @@ mod join {
     #[no_mangle]
     pub extern "C" fn add_join_key_pair(
         ptr_join: *const c_void, left_key: FfiVariable, right_key: FfiVariable,
-    ) -> FfiError {
-        let mut result = FfiError::success();
+    ) -> FfiResult {
+        let mut result = FfiResult::success();
         let mut join = unsafe { Box::from_raw(ptr_join as *mut pb::Join) };
         let left_key_pb = left_key.try_into();
         let right_key_pb = right_key.try_into();
@@ -1168,9 +1157,9 @@ mod join {
     #[no_mangle]
     pub extern "C" fn append_join_operator(
         ptr_plan: *const c_void, ptr_join: *const c_void, parent_left: i32, parent_right: i32, id: *mut i32,
-    ) -> FfiError {
+    ) -> FfiResult {
         if parent_left < 0 || parent_right < 0 {
-            FfiError::new(
+            FfiResult::new(
                 ResultCode::NegativeIndexError,
                 format!("invalid left parent {:?}, or right {:?}", parent_left, parent_right),
             )
@@ -1198,19 +1187,19 @@ mod union {
 
     /// Add the subtask parent id to Union
     #[no_mangle]
-    pub extern "C" fn add_union_parent(ptr_union: *const c_void, parent_id: i32) -> FfiError {
+    pub extern "C" fn add_union_parent(ptr_union: *const c_void, parent_id: i32) -> FfiResult {
         let mut union = unsafe { Box::from_raw(ptr_union as *mut pb::Union) };
         union.parents.push(parent_id);
         std::mem::forget(union);
 
-        FfiError::success()
+        FfiResult::success()
     }
 
     /// Append a Union operator to the logical plan
     #[no_mangle]
     pub extern "C" fn append_union_operator(
         ptr_plan: *const c_void, ptr_union: *const c_void, id: *mut i32,
-    ) -> FfiError {
+    ) -> FfiResult {
         let union_opr = unsafe { Box::from_raw(ptr_union as *mut pb::Union) };
         append_operator(ptr_plan, union_opr.as_ref().clone().into(), union_opr.parents, id)
     }
@@ -1245,6 +1234,7 @@ mod groupby {
         Avg = 7,
     }
 
+    /*
     #[repr(C)]
     pub struct FfiAggFn {
         vars: *const FfiVariable,
@@ -1253,7 +1243,7 @@ mod groupby {
     }
 
     impl TryFrom<FfiAggFn> for pb::group_by::AggFunc {
-        type Error = FfiError;
+        type Error = FfiResult;
 
         fn try_from(value: FfiAggFn) -> Result<Self, Self::Error> {
             let mut agg_fn_pb = pb::group_by::AggFunc {
@@ -1281,18 +1271,19 @@ mod groupby {
     }
 
     #[no_mangle]
-    pub extern "C" fn add_agg_value(agg_fn: &mut FfiAggFn, agg_var: FfiVariable) {
+    pub extern "C" fn add_agg_value(agg_fn: *const FfiAggFn, agg_var: FfiVariable) {
         let mut vars = unsafe { Box::from_raw(agg_fn.vars as *mut Vec<FfiVariable>) };
         vars.push(agg_var);
         std::mem::forget(vars);
     }
+     */
 
     /// Add the key (and its alias if any) according to which the grouping is conducted
     #[no_mangle]
     pub extern "C" fn add_groupby_key_alias(
         ptr_groupby: *const c_void, key: FfiVariable, alias: FfiAlias,
-    ) -> FfiError {
-        let mut result = FfiError::success();
+    ) -> FfiResult {
+        let mut result = FfiResult::success();
         let mut group = unsafe { Box::from_raw(ptr_groupby as *mut pb::GroupBy) };
         let key_pb = key.try_into();
         let alias_pb = alias.try_into();
@@ -1301,8 +1292,10 @@ mod groupby {
             group
                 .mappings
                 .push(pb::group_by::KeyAlias { key: key_pb.ok(), alias: alias_pb.unwrap() });
-        } else {
+        } else if key_pb.is_err() {
             result = key_pb.err().unwrap();
+        } else {
+            result = alias_pb.err().unwrap();
         }
         std::mem::forget(group);
 
@@ -1311,18 +1304,24 @@ mod groupby {
 
     /// Add the aggregate function for each group.
     #[no_mangle]
-    pub extern "C" fn add_groupby_agg_fn(ptr_groupby: *const c_void, agg_fn: FfiAggFn) -> FfiError {
-        let mut result = FfiError::success();
+    pub extern "C" fn add_groupby_agg_fn(
+        ptr_groupby: *const c_void, agg_val: FfiVariable, agg_opt: FfiAggOpt, alias: FfiAlias,
+    ) -> FfiResult {
+        let mut result = FfiResult::success();
         let mut group = unsafe { Box::from_raw(ptr_groupby as *mut pb::GroupBy) };
-        let agg_fn_pb = agg_fn.try_into();
-
-        if agg_fn_pb.is_ok() {
-            group
-                .as_mut()
-                .functions
-                .push(agg_fn_pb.unwrap());
+        let val_pb = agg_val.try_into();
+        let aggregate = unsafe { std::mem::transmute::<FfiAggOpt, i32>(agg_opt) };
+        let alias_pb = alias.try_into();
+        if val_pb.is_ok() && alias_pb.is_ok() {
+            group.functions.push(pb::group_by::AggFunc {
+                vars: vec![val_pb.unwrap()],
+                aggregate,
+                alias: alias_pb.unwrap(),
+            });
+        } else if val_pb.is_err() {
+            result = val_pb.err().unwrap();
         } else {
-            result = agg_fn_pb.err().unwrap();
+            result = alias_pb.err().unwrap();
         }
         std::mem::forget(group);
 
@@ -1333,7 +1332,7 @@ mod groupby {
     #[no_mangle]
     pub extern "C" fn append_groupby_operator(
         ptr_plan: *const c_void, ptr_groupby: *const c_void, parent: i32, id: *mut i32,
-    ) -> FfiError {
+    ) -> FfiResult {
         let group = unsafe { Box::from_raw(ptr_groupby as *mut pb::GroupBy) };
         append_operator(ptr_plan, group.as_ref().clone().into(), vec![parent], id)
     }
@@ -1367,8 +1366,8 @@ mod orderby {
     #[no_mangle]
     pub extern "C" fn add_orderby_pair(
         ptr_orderby: *const c_void, var: FfiVariable, order_opt: FfiOrderOpt,
-    ) -> FfiError {
-        let mut result = FfiError::success();
+    ) -> FfiResult {
+        let mut result = FfiResult::success();
         let mut orderby = unsafe { Box::from_raw(ptr_orderby as *mut pb::OrderBy) };
         let key_result = var.try_into();
         if key_result.is_ok() {
@@ -1390,15 +1389,15 @@ mod orderby {
 
     /// Set the size limit of the orderby operator, which will turn it into topk
     #[no_mangle]
-    pub extern "C" fn set_orderby_limit(ptr_orderby: *const c_void, lower: i32, upper: i32) -> FfiError {
-        set_range(ptr_orderby, lower, upper, Target::OrderBy)
+    pub extern "C" fn set_orderby_limit(ptr_orderby: *const c_void, lower: i32, upper: i32) -> FfiResult {
+        set_range(ptr_orderby, lower, upper, InnerOpt::OrderBy)
     }
 
     /// Append an orderby operator to the logical plan
     #[no_mangle]
     pub extern "C" fn append_orderby_operator(
         ptr_plan: *const c_void, ptr_orderby: *const c_void, parent: i32, id: *mut i32,
-    ) -> FfiError {
+    ) -> FfiResult {
         let orderby = unsafe { Box::from_raw(ptr_orderby as *mut pb::OrderBy) };
         append_operator(ptr_plan, orderby.as_ref().clone().into(), vec![parent], id)
     }
@@ -1421,14 +1420,13 @@ mod dedup {
 
     /// Add a key for de-duplicating.
     #[no_mangle]
-    pub extern "C" fn add_dedup_key(ptr_dedup: *const c_void, var: FfiVariable) -> FfiError {
-        let mut result = FfiError::success();
+    pub extern "C" fn add_dedup_key(ptr_dedup: *const c_void, var: FfiVariable) -> FfiResult {
+        let mut result = FfiResult::success();
         let mut dedup = unsafe { Box::from_raw(ptr_dedup as *mut pb::Dedup) };
         let key_result = var.try_into();
-        if key_result.is_ok() {
-            dedup.keys.push(key_result.unwrap());
-        } else {
-            result = key_result.err().unwrap();
+        match key_result {
+            Ok(key) => dedup.keys.push(key),
+            Err(e) => result = e,
         }
         std::mem::forget(dedup);
 
@@ -1439,7 +1437,7 @@ mod dedup {
     #[no_mangle]
     pub extern "C" fn append_dedup_operator(
         ptr_plan: *const c_void, ptr_dedup: *const c_void, parent: i32, id: *mut i32,
-    ) -> FfiError {
+    ) -> FfiResult {
         let dedup = unsafe { Box::from_raw(ptr_dedup as *mut pb::Dedup) };
         append_operator(ptr_plan, dedup.as_ref().clone().into(), vec![parent], id)
     }
@@ -1466,8 +1464,8 @@ mod unfold {
     #[no_mangle]
     pub extern "C" fn set_unfold_pair(
         ptr_unfold: *const c_void, tag: FfiNameOrId, alias: FfiNameOrId,
-    ) -> FfiError {
-        let mut result = FfiError::success();
+    ) -> FfiResult {
+        let mut result = FfiResult::success();
         let mut unfold = unsafe { Box::from_raw(ptr_unfold as *mut pb::Unfold) };
         let tag_result = tag.try_into();
         let alias_result = alias.try_into();
@@ -1488,7 +1486,7 @@ mod unfold {
     #[no_mangle]
     pub extern "C" fn append_unfold_operator(
         ptr_plan: *const c_void, ptr_unfold: *const c_void, parent: i32, id: *mut i32,
-    ) -> FfiError {
+    ) -> FfiResult {
         let unfold = unsafe { Box::from_raw(ptr_unfold as *mut pb::Unfold) };
         append_operator(ptr_plan, unfold.as_ref().clone().into(), vec![parent], id)
     }
@@ -1539,88 +1537,95 @@ mod scan {
 
     fn parse_equiv_predicate(
         key: FfiProperty, value: FfiConst,
-    ) -> Result<pb::index_predicate::Triplet, FfiError> {
+    ) -> Result<pb::index_predicate::Triplet, FfiResult> {
         Ok(pb::index_predicate::Triplet { key: key.try_into()?, value: Some(value.try_into()?), cmp: None })
     }
 
     #[no_mangle]
     pub extern "C" fn and_equiv_predicate(
         ptr_predicate: *const c_void, key: FfiProperty, value: FfiConst,
-    ) -> FfiError {
+    ) -> FfiResult {
         let equiv_pred_result = parse_equiv_predicate(key, value);
-        if let Ok(equiv_pred) = equiv_pred_result {
-            let mut predicate = unsafe { Box::from_raw(ptr_predicate as *mut pb::IndexPredicate) };
-            if predicate.or_predicates.is_empty() {
-                predicate
-                    .or_predicates
-                    .push(pb::index_predicate::AndPredicate { predicates: vec![equiv_pred] });
-            } else {
-                predicate
-                    .or_predicates
-                    .last_mut()
-                    .unwrap()
-                    .predicates
-                    .push(equiv_pred)
-            }
-            std::mem::forget(predicate);
+        match equiv_pred_result {
+            Ok(equiv_pred) => {
+                let mut predicate = unsafe { Box::from_raw(ptr_predicate as *mut pb::IndexPredicate) };
+                if predicate.or_predicates.is_empty() {
+                    predicate
+                        .or_predicates
+                        .push(pb::index_predicate::AndPredicate { predicates: vec![equiv_pred] });
+                } else {
+                    predicate
+                        .or_predicates
+                        .last_mut()
+                        .unwrap()
+                        .predicates
+                        .push(equiv_pred)
+                }
+                std::mem::forget(predicate);
 
-            FfiError::success()
-        } else {
-            equiv_pred_result.err().unwrap()
+                FfiResult::success()
+            }
+            Err(e) => e,
         }
     }
 
     #[no_mangle]
     pub extern "C" fn or_equiv_predicate(
         ptr_predicate: *const c_void, key: FfiProperty, value: FfiConst,
-    ) -> FfiError {
+    ) -> FfiResult {
         let equiv_pred_result = parse_equiv_predicate(key, value);
-        if let Ok(equiv_pred) = equiv_pred_result {
-            let mut predicate = unsafe { Box::from_raw(ptr_predicate as *mut pb::IndexPredicate) };
-            predicate
-                .or_predicates
-                .push(pb::index_predicate::AndPredicate { predicates: vec![equiv_pred] });
-            std::mem::forget(predicate);
+        match equiv_pred_result {
+            Ok(equiv_pred) => {
+                let mut predicate = unsafe { Box::from_raw(ptr_predicate as *mut pb::IndexPredicate) };
+                predicate
+                    .or_predicates
+                    .push(pb::index_predicate::AndPredicate { predicates: vec![equiv_pred] });
+                std::mem::forget(predicate);
 
-            FfiError::success()
-        } else {
-            equiv_pred_result.err().unwrap()
+                FfiResult::success()
+            }
+            Err(e) => e,
         }
     }
 
     #[no_mangle]
     pub extern "C" fn add_scan_index_predicate(
         ptr_scan: *const c_void, ptr_predicate: *const c_void,
-    ) -> FfiError {
+    ) -> FfiResult {
         let mut scan = unsafe { Box::from_raw(ptr_scan as *mut pb::Scan) };
         let predicate = unsafe { Box::from_raw(ptr_predicate as *mut pb::IndexPredicate) };
         scan.idx_predicate = Some(predicate.as_ref().clone());
         std::mem::forget(scan);
 
-        FfiError::success()
+        FfiResult::success()
     }
 
     #[no_mangle]
-    pub extern "C" fn set_scan_params(ptr_scan: *const c_void, ptr_params: *const c_void) -> FfiError {
+    pub extern "C" fn set_scan_params(ptr_scan: *const c_void, ptr_params: *const c_void) -> FfiResult {
+        let mut result = FfiResult::success();
         let mut scan = unsafe { Box::from_raw(ptr_scan as *mut pb::Scan) };
-        let mut params = unsafe { Box::from_raw(ptr_params as *mut pb::QueryParams) };
-        std::mem::swap(scan.params.as_mut().unwrap(), params.as_mut());
+        let mut new_params = unsafe { Box::from_raw(ptr_params as *mut pb::QueryParams) };
+        if let Some(old_params) = scan.params.as_mut() {
+            std::mem::swap(old_params, new_params.as_mut());
+        } else {
+            result = FfiResult::new(ResultCode::MissingDataError, "pb::Scan::params".to_string());
+        }
         std::mem::forget(scan);
 
-        FfiError::success()
+        result
     }
 
     /// Set an alias for the data if it is a vertex/edge
     #[no_mangle]
-    pub extern "C" fn set_scan_alias(ptr_scan: *const c_void, alias: FfiAlias) -> FfiError {
-        set_alias(ptr_scan, alias, Target::Scan)
+    pub extern "C" fn set_scan_alias(ptr_scan: *const c_void, alias: FfiAlias) -> FfiResult {
+        set_alias(ptr_scan, alias, InnerOpt::Scan)
     }
 
     /// Append a scan operator to the logical plan
     #[no_mangle]
     pub extern "C" fn append_scan_operator(
         ptr_plan: *const c_void, ptr_scan: *const c_void, parent: i32, id: *mut i32,
-    ) -> FfiError {
+    ) -> FfiResult {
         let scan = unsafe { Box::from_raw(ptr_scan as *mut pb::Scan) };
         append_operator(ptr_plan, scan.as_ref().clone().into(), vec![parent], id)
     }
@@ -1641,15 +1646,15 @@ mod limit {
     }
 
     #[no_mangle]
-    pub extern "C" fn set_limit_range(ptr_limit: *const c_void, lower: i32, upper: i32) -> FfiError {
-        set_range(ptr_limit, lower, upper, Target::Limit)
+    pub extern "C" fn set_limit_range(ptr_limit: *const c_void, lower: i32, upper: i32) -> FfiResult {
+        set_range(ptr_limit, lower, upper, InnerOpt::Limit)
     }
 
     /// Append an indexed scan operator to the logical plan
     #[no_mangle]
     pub extern "C" fn append_limit_operator(
         ptr_plan: *const c_void, ptr_limit: *const c_void, parent: i32, id: *mut i32,
-    ) -> FfiError {
+    ) -> FfiResult {
         let limit = unsafe { Box::from_raw(ptr_limit as *mut pb::Limit) };
         append_operator(ptr_plan, limit.as_ref().clone().into(), vec![parent], id)
     }
@@ -1673,15 +1678,15 @@ mod as_opr {
 
     /// Set the alias of the entity to As
     #[no_mangle]
-    pub extern "C" fn set_as_alias(ptr_as: *const c_void, alias: FfiAlias) -> FfiError {
-        set_alias(ptr_as, alias, Target::As)
+    pub extern "C" fn set_as_alias(ptr_as: *const c_void, alias: FfiAlias) -> FfiResult {
+        set_alias(ptr_as, alias, InnerOpt::As)
     }
 
     /// Append an As operator to the logical plan
     #[no_mangle]
     pub extern "C" fn append_as_operator(
         ptr_plan: *const c_void, ptr_as: *const c_void, parent: i32, id: *mut i32,
-    ) -> FfiError {
+    ) -> FfiResult {
         let as_opr = unsafe { Box::from_raw(ptr_as as *mut pb::As) };
         append_operator(ptr_plan, as_opr.as_ref().clone().into(), vec![parent], id)
     }
@@ -1728,15 +1733,16 @@ mod sink {
 
     /// Add the tag of column to output to Sink
     #[no_mangle]
-    pub extern "C" fn add_sink_column(ptr_sink: *const c_void, ffi_tag: FfiNameOrId) -> FfiError {
-        let mut result = FfiError::success();
+    pub extern "C" fn add_sink_column(ptr_sink: *const c_void, ffi_tag: FfiNameOrId) -> FfiResult {
+        let mut result = FfiResult::success();
         let tag_pb = ffi_tag.try_into();
-        if tag_pb.is_ok() {
-            let mut sink = unsafe { Box::from_raw(ptr_sink as *mut pb::Sink) };
-            sink.tags.push(tag_pb.unwrap());
-            std::mem::forget(sink);
-        } else {
-            result = tag_pb.err().unwrap();
+        match tag_pb {
+            Ok(tag) => {
+                let mut sink = unsafe { Box::from_raw(ptr_sink as *mut pb::Sink) };
+                sink.tags.push(tag);
+                std::mem::forget(sink);
+            }
+            Err(e) => result = e,
         }
 
         result
@@ -1746,7 +1752,7 @@ mod sink {
     #[no_mangle]
     pub extern "C" fn append_sink_operator(
         ptr_plan: *const c_void, ptr_sink: *const c_void, parent: i32, id: *mut i32,
-    ) -> FfiError {
+    ) -> FfiResult {
         let sink_opr = unsafe { Box::from_raw(ptr_sink as *mut pb::Sink) };
         append_operator(ptr_plan, sink_opr.as_ref().clone().into(), vec![parent], id)
     }
@@ -1795,33 +1801,38 @@ mod graph {
 
     /// Set the start-vertex's tag to conduct this expansion
     #[no_mangle]
-    pub extern "C" fn set_edgexpd_vtag(ptr_edgexpd: *const c_void, v_tag: FfiNameOrId) -> FfiError {
-        set_tag(ptr_edgexpd, v_tag, Target::EdgeExpand)
+    pub extern "C" fn set_edgexpd_vtag(ptr_edgexpd: *const c_void, v_tag: FfiNameOrId) -> FfiResult {
+        set_tag(ptr_edgexpd, v_tag, InnerOpt::EdgeExpand)
     }
 
     #[no_mangle]
     pub extern "C" fn set_edgexpd_params(
         ptr_edgexpd: *const c_void, ptr_params: *const c_void,
-    ) -> FfiError {
+    ) -> FfiResult {
+        let mut result = FfiResult::success();
         let mut edgexpd = unsafe { Box::from_raw(ptr_edgexpd as *mut pb::EdgeExpand) };
-        let mut params = unsafe { Box::from_raw(ptr_params as *mut pb::QueryParams) };
-        std::mem::swap(edgexpd.params.as_mut().unwrap(), params.as_mut());
+        let mut new_params = unsafe { Box::from_raw(ptr_params as *mut pb::QueryParams) };
+        if let Some(old_params) = edgexpd.params.as_mut() {
+            std::mem::swap(old_params, new_params.as_mut());
+        } else {
+            result = FfiResult::new(ResultCode::MissingDataError, "pb::EdgeExpand::Params".to_string());
+        }
         std::mem::forget(edgexpd);
 
-        FfiError::success()
+        result
     }
 
     /// Set edge alias of this edge expansion
     #[no_mangle]
-    pub extern "C" fn set_edgexpd_alias(ptr_edgexpd: *const c_void, alias: FfiAlias) -> FfiError {
-        set_alias(ptr_edgexpd, alias, Target::EdgeExpand)
+    pub extern "C" fn set_edgexpd_alias(ptr_edgexpd: *const c_void, alias: FfiAlias) -> FfiResult {
+        set_alias(ptr_edgexpd, alias, InnerOpt::EdgeExpand)
     }
 
     /// Append an edge expand operator to the logical plan
     #[no_mangle]
     pub extern "C" fn append_edgexpd_operator(
         ptr_plan: *const c_void, ptr_edgexpd: *const c_void, parent: i32, id: *mut i32,
-    ) -> FfiError {
+    ) -> FfiResult {
         let edgexpd = unsafe { Box::from_raw(ptr_edgexpd as *mut pb::EdgeExpand) };
         append_operator(ptr_plan, edgexpd.as_ref().clone().into(), vec![parent], id)
     }
@@ -1861,31 +1872,36 @@ mod graph {
 
     /// Set the tag of edge/path to get the vertex
     #[no_mangle]
-    pub extern "C" fn set_getv_tag(ptr_getv: *const c_void, tag: FfiNameOrId) -> FfiError {
-        set_tag(ptr_getv, tag, Target::GetV)
+    pub extern "C" fn set_getv_tag(ptr_getv: *const c_void, tag: FfiNameOrId) -> FfiResult {
+        set_tag(ptr_getv, tag, InnerOpt::GetV)
     }
 
     #[no_mangle]
-    pub extern "C" fn set_getv_params(ptr_getv: *const c_void, ptr_params: *const c_void) -> FfiError {
+    pub extern "C" fn set_getv_params(ptr_getv: *const c_void, ptr_params: *const c_void) -> FfiResult {
+        let mut result = FfiResult::success();
         let mut getv = unsafe { Box::from_raw(ptr_getv as *mut pb::GetV) };
-        let mut params = unsafe { Box::from_raw(ptr_params as *mut pb::QueryParams) };
-        std::mem::swap(getv.params.as_mut().unwrap(), params.as_mut());
+        let mut new_params = unsafe { Box::from_raw(ptr_params as *mut pb::QueryParams) };
+        if let Some(old_params) = getv.params.as_mut() {
+            std::mem::swap(old_params, new_params.as_mut());
+        } else {
+            result = FfiResult::new(ResultCode::MissingDataError, "pb::GetV::Params".to_string());
+        }
         std::mem::forget(getv);
 
-        FfiError::success()
+        result
     }
 
     /// Set vertex alias of this getting vertex
     #[no_mangle]
-    pub extern "C" fn set_getv_alias(ptr_getv: *const c_void, alias: FfiAlias) -> FfiError {
-        set_alias(ptr_getv, alias, Target::GetV)
+    pub extern "C" fn set_getv_alias(ptr_getv: *const c_void, alias: FfiAlias) -> FfiResult {
+        set_alias(ptr_getv, alias, InnerOpt::GetV)
     }
 
     /// Append the operator to the logical plan
     #[no_mangle]
     pub extern "C" fn append_getv_operator(
         ptr_plan: *const c_void, ptr_getv: *const c_void, parent: i32, id: *mut i32,
-    ) -> FfiError {
+    ) -> FfiResult {
         let getv = unsafe { Box::from_raw(ptr_getv as *mut pb::GetV) };
         append_operator(ptr_plan, getv.as_ref().clone().into(), vec![parent], id)
     }
@@ -1914,27 +1930,27 @@ mod graph {
 
     /// Set path alias of this path expansion
     #[no_mangle]
-    pub extern "C" fn set_pathxpd_tag(ptr_pathxpd: *const c_void, tag: FfiNameOrId) -> FfiError {
-        set_tag(ptr_pathxpd, tag, Target::PathExpand)
+    pub extern "C" fn set_pathxpd_tag(ptr_pathxpd: *const c_void, tag: FfiNameOrId) -> FfiResult {
+        set_tag(ptr_pathxpd, tag, InnerOpt::PathExpand)
     }
 
     /// Set path alias of this path expansion
     #[no_mangle]
-    pub extern "C" fn set_pathxpd_alias(ptr_pathxpd: *const c_void, alias: FfiAlias) -> FfiError {
-        set_alias(ptr_pathxpd, alias, Target::PathExpand)
+    pub extern "C" fn set_pathxpd_alias(ptr_pathxpd: *const c_void, alias: FfiAlias) -> FfiResult {
+        set_alias(ptr_pathxpd, alias, InnerOpt::PathExpand)
     }
 
     /// Set the hop-range limitation of expanding path
     #[no_mangle]
-    pub extern "C" fn set_pathxpd_hops(ptr_pathxpd: *const c_void, lower: i32, upper: i32) -> FfiError {
-        set_range(ptr_pathxpd, lower, upper, Target::PathExpand)
+    pub extern "C" fn set_pathxpd_hops(ptr_pathxpd: *const c_void, lower: i32, upper: i32) -> FfiResult {
+        set_range(ptr_pathxpd, lower, upper, InnerOpt::PathExpand)
     }
 
     /// Append an path-expand operator to the logical plan
     #[no_mangle]
     pub extern "C" fn append_pathxpd_operator(
         ptr_plan: *const c_void, ptr_pathxpd: *const c_void, parent: i32, id: *mut i32,
-    ) -> FfiError {
+    ) -> FfiResult {
         let pathxpd = unsafe { Box::from_raw(ptr_pathxpd as *mut pb::PathExpand) };
         append_operator(ptr_plan, pathxpd.as_ref().clone().into(), vec![parent], id)
     }
@@ -1954,7 +1970,7 @@ mod graph {
     #[no_mangle]
     pub extern "C" fn add_pattern_sentence(
         ptr_pattern: *const c_void, ptr_sentence: *const c_void,
-    ) -> FfiError {
+    ) -> FfiResult {
         let mut pattern = unsafe { Box::from_raw(ptr_pattern as *mut pb::Pattern) };
         let sentence = unsafe { Box::from_raw(ptr_sentence as *mut pb::pattern::Sentence) };
         pattern
@@ -1962,7 +1978,7 @@ mod graph {
             .push(sentence.as_ref().clone());
         std::mem::forget(pattern);
 
-        FfiError::success()
+        FfiResult::success()
     }
 
     #[no_mangle]
@@ -1977,31 +1993,32 @@ mod graph {
         Box::into_raw(sentence) as *const c_void
     }
 
-    fn set_sentence_tag(ptr_sentence: *const c_void, tag: FfiNameOrId, is_start: bool) -> FfiError {
+    fn set_sentence_tag(ptr_sentence: *const c_void, tag: FfiNameOrId, is_start: bool) -> FfiResult {
         let mut sentence = unsafe { Box::from_raw(ptr_sentence as *mut pb::pattern::Sentence) };
-        let pb = tag.try_into();
-        let result_code = if pb.is_ok() {
-            if is_start {
-                sentence.start = pb.unwrap();
-            } else {
-                sentence.end = pb.unwrap();
+        let pb_result = tag.try_into();
+        let result = match pb_result {
+            Ok(pb) => {
+                if is_start {
+                    sentence.start = pb;
+                } else {
+                    sentence.end = pb;
+                }
+                FfiResult::success()
             }
-            FfiError::success()
-        } else {
-            pb.err().unwrap()
+            Err(e) => e,
         };
         std::mem::forget(sentence);
 
-        result_code
+        result
     }
 
     #[no_mangle]
-    pub extern "C" fn set_sentence_start(ptr_sentence: *const c_void, tag: FfiNameOrId) -> FfiError {
+    pub extern "C" fn set_sentence_start(ptr_sentence: *const c_void, tag: FfiNameOrId) -> FfiResult {
         set_sentence_tag(ptr_sentence, tag, true)
     }
 
     #[no_mangle]
-    pub extern "C" fn set_sentence_end(ptr_sentence: *const c_void, tag: FfiNameOrId) -> FfiError {
+    pub extern "C" fn set_sentence_end(ptr_sentence: *const c_void, tag: FfiNameOrId) -> FfiResult {
         set_sentence_tag(ptr_sentence, tag, false)
     }
 
@@ -2018,7 +2035,7 @@ mod graph {
     #[no_mangle]
     pub extern "C" fn add_sentence_binder(
         ptr_sentence: *const c_void, ptr: *const c_void, binder: FfiBinderOpt,
-    ) -> FfiError {
+    ) -> FfiResult {
         let mut sentence = unsafe { Box::from_raw(ptr_sentence as *mut pb::pattern::Sentence) };
         match binder {
             FfiBinderOpt::Edge => {
@@ -2048,14 +2065,14 @@ mod graph {
         }
         std::mem::forget(sentence);
 
-        FfiError::success()
+        FfiResult::success()
     }
 
     /// Append a pattern operator to the logical plan
     #[no_mangle]
     pub extern "C" fn append_pattern_operator(
         ptr_plan: *const c_void, ptr_pattern: *const c_void, parent: i32, id: *mut i32,
-    ) -> FfiError {
+    ) -> FfiResult {
         let pattern = unsafe { Box::from_raw(ptr_pattern as *mut pb::Pattern) };
         append_operator(ptr_plan, pattern.as_ref().clone().into(), vec![parent], id)
     }
@@ -2086,25 +2103,25 @@ mod subtask {
     }
 
     #[no_mangle]
-    pub extern "C" fn add_apply_tag(ptr_apply: *const c_void, ffi_tag: FfiNameOrId) -> FfiError {
-        let mut result = FfiError::success();
-        let tag_pb: Result<Option<common_pb::NameOrId>, FfiError> = ffi_tag.try_into();
-        if tag_pb.is_ok() {
-            if let Some(tag) = tag_pb.unwrap() {
+    pub extern "C" fn add_apply_tag(ptr_apply: *const c_void, ffi_tag: FfiNameOrId) -> FfiResult {
+        let mut result = FfiResult::success();
+        let tag_pb: Result<Option<common_pb::NameOrId>, FfiResult> = ffi_tag.try_into();
+        match tag_pb {
+            Ok(Some(tag)) => {
                 let mut apply = unsafe { Box::from_raw(ptr_apply as *mut pb::Apply) };
                 apply.tags.push(tag);
                 std::mem::forget(apply);
             }
-        } else {
-            result = tag_pb.err().unwrap();
+            Ok(None) => { /* do nothing */ }
+            Err(e) => result = e,
         }
 
         result
     }
 
     #[no_mangle]
-    pub extern "C" fn set_apply_alias(ptr_apply: *const c_void, alias: FfiAlias) -> FfiError {
-        set_alias(ptr_apply, alias, Target::Apply)
+    pub extern "C" fn set_apply_alias(ptr_apply: *const c_void, alias: FfiAlias) -> FfiResult {
+        set_alias(ptr_apply, alias, InnerOpt::Apply)
     }
 
     /// Append an apply operator to the logical plan.
@@ -2113,7 +2130,7 @@ mod subtask {
     #[no_mangle]
     pub extern "C" fn append_apply_operator(
         ptr_plan: *const c_void, ptr_apply: *const c_void, parent: i32, id: *mut i32,
-    ) -> FfiError {
+    ) -> FfiResult {
         let apply = unsafe { Box::from_raw(ptr_apply as *mut pb::Apply) };
         append_operator(ptr_plan, apply.as_ref().clone().into(), vec![parent], id)
     }
@@ -2135,17 +2152,17 @@ mod subtask {
 
     /// To add the key for grouping on which the segment apply can be conducted.
     #[no_mangle]
-    pub extern "C" fn add_segapply_key(ptr_segapply: *const c_void, ffi_key: FfiNameOrId) -> FfiError {
-        let mut result = FfiError::success();
-        let key_pb: Result<Option<common_pb::NameOrId>, FfiError> = ffi_key.try_into();
-        if key_pb.is_ok() {
-            if let Some(key) = key_pb.unwrap() {
+    pub extern "C" fn add_segapply_key(ptr_segapply: *const c_void, ffi_key: FfiNameOrId) -> FfiResult {
+        let mut result = FfiResult::success();
+        let key_pb: Result<Option<common_pb::NameOrId>, FfiResult> = ffi_key.try_into();
+        match key_pb {
+            Ok(Some(key)) => {
                 let mut segapply = unsafe { Box::from_raw(ptr_segapply as *mut pb::SegmentApply) };
                 segapply.keys.push(key);
                 std::mem::forget(segapply);
             }
-        } else {
-            result = key_pb.err().unwrap();
+            Ok(None) => {}
+            Err(e) => result = e,
         }
 
         result
@@ -2156,9 +2173,9 @@ mod subtask {
     #[no_mangle]
     pub extern "C" fn append_segapply_operator(
         ptr_plan: *const c_void, ptr_segapply: *const c_void, parent: i32, id: *mut i32,
-    ) -> FfiError {
+    ) -> FfiResult {
         if parent < 0 {
-            FfiError::new(ResultCode::NegativeIndexError, format!("invalid parent id {:?}", parent))
+            FfiResult::new(ResultCode::NegativeIndexError, format!("invalid parent id {:?}", parent))
         } else {
             let segapply = unsafe { Box::from_raw(ptr_segapply as *mut pb::SegmentApply) };
             append_operator(ptr_plan, segapply.as_ref().clone().into(), vec![parent], id)
