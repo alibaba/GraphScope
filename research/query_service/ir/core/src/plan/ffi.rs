@@ -173,7 +173,7 @@ impl From<BuildJobError> for FfiResult {
 #[repr(C)]
 pub struct FfiData {
     /// The pointer to the raw data returned from Ffi functions
-    ptr: *mut u8,
+    ptr: *mut c_void,
     /// The length of the data (in bytes) allocated for `Self::ptr`
     len: usize,
     /// To recode any error captured from building logical/physical plan
@@ -690,7 +690,7 @@ pub extern "C" fn build_physical_plan(
                 Ok(req) => {
                     let mut req_bytes = req.encode_to_vec().into_boxed_slice();
                     let data = FfiData {
-                        ptr: req_bytes.as_mut_ptr(),
+                        ptr: req_bytes.as_mut_ptr() as *mut c_void,
                         len: req_bytes.len(),
                         error: FfiResult::success(),
                     };
