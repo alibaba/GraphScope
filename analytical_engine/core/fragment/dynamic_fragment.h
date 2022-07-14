@@ -353,10 +353,6 @@ class DynamicFragment
     }
     {   
       auto& edges_to_add = mutation.edges_to_add;
-      for (auto &e : edges_to_add) {
-          VLOG(1) << "First Add edge [" << e.src << ", " << e.dst << "]";
-      }
-
       static constexpr vid_t invalid_vid = std::numeric_limits<vid_t>::max();
       vid_t old_ovnum = ovgid_.size(); 
 
@@ -696,9 +692,28 @@ class DynamicFragment
     load_strategy_ = grape::LoadStrategy::kOnlyOut;
     copyVertices(source);
 
+    // both inner and outer vertices with the empty slots
+    // only use oe_ in the undirected graph
+    auto vnum = id_parser_.max_local_id();
+    oe_.init_head_and_tail(0, vnum);
+    oe_.add_vertices(ivnum_, ovnum_);
+
     mutation_t mutation;
     vid_t gid;
     for (auto& v : source->InnerVertices()) {
+      gid = Vertex2Gid(v);
+      for (const auto& e : source->GetOutgoingAdjList(v)) {
+        mutation.edges_to_add.emplace_back(gid, Vertex2Gid(e.neighbor), e.data);
+      }
+      for (const auto& e : source->GetIncomingAdjList(v)) {
+        if (IsOuterVertex(e.neighbor)) {
+          mutation.edges_to_add.emplace_back(gid, Vertex2Gid(e.neighbor),
+                                             e.data);
+        }
+      }
+    }
+
+    for (auto& v : source->OuterVertices()) {
       gid = Vertex2Gid(v);
       for (const auto& e : source->GetOutgoingAdjList(v)) {
         mutation.edges_to_add.emplace_back(gid, Vertex2Gid(e.neighbor), e.data);
@@ -1169,7 +1184,7 @@ class DynamicFragment
   // Return true if add a new edge, otherwise false.
   bool updateOrAddEdgeOut(const edge_t& e) {
     bool ret = false;  // assume it just update existed edge.
-    // if (e.src < ivnum_) 
+
     {
       auto iter = oe_.find(e.src, e.dst);
       if (iter == oe_.get_end(e.src)) {
@@ -1184,7 +1199,6 @@ class DynamicFragment
       }
     }
 
-    // if (e.dst < ivnum_) 
     {
       auto iter = oe_.find(e.dst, e.src);
       if (iter == oe_.get_end(e.dst)) {
@@ -1200,7 +1214,7 @@ class DynamicFragment
   // Return true if add a new edge, otherwise false.
   bool updateOrAddEdgeOutIn(const edge_t& e) {
     bool ret = false;  // assume it just update existed edge.
-    // if (e.src < ivnum_) 
+
     {
       auto iter = oe_.find(e.src, e.dst);
       if (iter == oe_.get_end(e.src)) {
@@ -1214,7 +1228,6 @@ class DynamicFragment
       }
     }
 
-    // if (e.dst < ivnum_) 
     {
       auto iter = ie_.find(e.dst, e.src);
       if (iter == ie_.get_end(e.dst)) {
