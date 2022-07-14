@@ -214,14 +214,6 @@ public interface TraversalParentTransform extends Function<TraversalParent, List
             aggOpt = FfiAggOpt.Count;
         } else if (step instanceof FoldStep) {
             aggOpt = FfiAggOpt.ToList;
-        } else if (step instanceof SumGlobalStep) {
-            aggOpt = FfiAggOpt.Sum;
-        } else if (step instanceof MinGlobalStep) {
-            aggOpt = FfiAggOpt.Min;
-        } else if (step instanceof MaxGlobalStep) {
-            aggOpt = FfiAggOpt.Max;
-        } else if (step instanceof MeanGlobalStep) {
-            aggOpt = FfiAggOpt.Avg;
         } else {
             throw new OpArgIllegalException(
                     OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
