@@ -130,9 +130,10 @@ impl TagKey {
                 _ => Ok(CommonObject::Prop(prop_obj).into()),
             }
         } else {
-            Err(FnExecError::unexpected_data_error(
-                "Get key failed when attempt to get prop_key from a non-graph element",
-            ))
+            Err(FnExecError::unexpected_data_error(&format!(
+                "Get key failed when attempt to get prop_key from a non-graph element {:?}",
+                entry
+            )))
         }
     }
 }
