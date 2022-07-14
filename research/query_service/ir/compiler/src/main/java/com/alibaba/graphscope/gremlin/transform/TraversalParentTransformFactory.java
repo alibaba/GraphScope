@@ -281,11 +281,9 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
 
         public List<ArgAggFn> getGroupValueAsAggFn(TraversalParent parent) {
             Traversal.Admin admin = getValueTraversal(parent);
-            FfiAggOpt aggOpt;
+            ArgAggFn aggFn;
             int stepIdx =
                     TraversalHelper.stepIndex(parent.asStep(), parent.asStep().getTraversal());
-            FfiAlias.ByValue alias =
-                    AliasManager.getFfiAlias(new AliasArg(AliasPrefixType.GROUP_VALUES, stepIdx));
             String notice =
                     "supported pattern is [group().by(..).by(count())] or"
                             + " [group().by(..).by(fold())]";
@@ -295,27 +293,18 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
                             && isMapIdentity(admin.getStartStep())
                             && admin.getEndStep()
                                     instanceof FoldStep) { // group, // group().by(..).by()
-                aggOpt = FfiAggOpt.ToList;
+                FfiAlias.ByValue defaultAlias =
+                        AliasManager.getFfiAlias(
+                                new AliasArg(AliasPrefixType.GROUP_VALUES, stepIdx));
+                FfiVariable.ByValue defaultVar = ArgUtils.asFfiNoneVar();
+                aggFn = new ArgAggFn(FfiAggOpt.ToList, defaultAlias, defaultVar);
             } else if (admin.getSteps().size() == 1) {
-                if (admin.getStartStep() instanceof CountGlobalStep) { // group().by(..).by(count())
-                    aggOpt = FfiAggOpt.Count;
-                } else if (admin.getStartStep() instanceof FoldStep) { // group().by(..).by(fold())
-                    aggOpt = FfiAggOpt.ToList;
-                } else {
-                    throw new OpArgIllegalException(
-                            OpArgIllegalException.Cause.UNSUPPORTED_TYPE, notice);
-                }
-                // group().by(..).by(count().as("a")), "a" is the query given alias of group value
-                Set<String> labels = admin.getStartStep().getLabels();
-                if (labels != null && !labels.isEmpty()) {
-                    String label = labels.iterator().next();
-                    alias = ArgUtils.asFfiAlias(label, true);
-                }
+                aggFn = getAggFn(admin.getEndStep(), stepIdx);
             } else {
                 throw new OpArgIllegalException(
                         OpArgIllegalException.Cause.UNSUPPORTED_TYPE, notice);
             }
-            return Collections.singletonList(new ArgAggFn(aggOpt, alias));
+            return Collections.singletonList(aggFn);
         }
 
         // TraversalMapStep(identity)

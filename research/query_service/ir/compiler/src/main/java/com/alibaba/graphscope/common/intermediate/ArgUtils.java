@@ -89,12 +89,6 @@ public class ArgUtils {
         return ffiAlias;
     }
 
-    public static FfiAggFn.ByValue asFfiAggFn(ArgAggFn aggFn) {
-        FfiAggFn.ByValue ffiAggFn = irCoreLib.initAggFn(aggFn.getAggregate(), aggFn.getAlias());
-        // todo: add var
-        return ffiAggFn;
-    }
-
     public static String propertyName(FfiProperty.ByValue property) {
         switch (property.opt) {
             case None:

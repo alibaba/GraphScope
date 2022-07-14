@@ -272,15 +272,8 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
 
         private List<ArgAggFn> getCountAgg(CountGlobalStep step1) {
             int stepIdx = TraversalHelper.stepIndex(step1, step1.getTraversal());
-            FfiAlias.ByValue valueAlias =
-                    AliasManager.getFfiAlias(new AliasArg(AliasPrefixType.GROUP_VALUES, stepIdx));
-            // count().as("a"), "a" is the alias of group value
-            if (!step1.getLabels().isEmpty()) {
-                String label = (String) step1.getLabels().iterator().next();
-                valueAlias = ArgUtils.asFfiAlias(label, true);
-                step1.removeLabel(label);
-            }
-            ArgAggFn countAgg = new ArgAggFn(FfiAggOpt.Count, valueAlias);
+            ArgAggFn countAgg =
+                    TraversalParentTransformFactory.GROUP_BY_STEP.getAggFn(step1, stepIdx);
             return Collections.singletonList(countAgg);
         }
     },
