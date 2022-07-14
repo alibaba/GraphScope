@@ -19,13 +19,23 @@ use crate::errors::BuildJobError;
 use crate::stream::Stream;
 use crate::Data;
 
+/// A private function of getting a `Map` operator's name as a base name given by the system
+/// plus an extra name given by the user
+fn _get_name(base: &str, extra: &str) -> String {
+    if extra.is_empty() {
+        base.to_string()
+    } else {
+        format!("{:?} [{:?}]", base, extra)
+    }
+}
+
 impl<I: Data> Map<I> for Stream<I> {
-    fn map<O, F>(self, func: F) -> Result<Stream<O>, BuildJobError>
+    fn map_with_name<O, F>(self, name: &str, func: F) -> Result<Stream<O>, BuildJobError>
     where
         O: Data,
         F: Fn(I) -> FnResult<O> + Send + 'static,
     {
-        self.unary("map", |_info| {
+        self.unary(&_get_name("map", name), |_info| {
             move |input, output| {
                 input.for_each_batch(|batch| {
                     if !batch.is_empty() {
@@ -41,12 +51,12 @@ impl<I: Data> Map<I> for Stream<I> {
         })
     }
 
-    fn filter_map<O, F>(self, func: F) -> Result<Stream<O>, BuildJobError>
+    fn filter_map_with_name<O, F>(self, name: &str, func: F) -> Result<Stream<O>, BuildJobError>
     where
         O: Data,
         F: Fn(I) -> FnResult<Option<O>> + Send + 'static,
     {
-        self.unary("filter_map", |_info| {
+        self.unary(&_get_name("filter_map", name), |_info| {
             move |input, output| {
                 input.for_each_batch(|batch| {
                     if !batch.is_empty() {
@@ -63,13 +73,13 @@ impl<I: Data> Map<I> for Stream<I> {
         })
     }
 
-    fn flat_map<O, R, F>(self, func: F) -> Result<Stream<O>, BuildJobError>
+    fn flat_map_with_name<O, R, F>(self, name: &str, func: F) -> Result<Stream<O>, BuildJobError>
     where
         O: Data,
         R: Iterator<Item = O> + Send + 'static,
         F: Fn(I) -> FnResult<R> + Send + 'static,
     {
-        self.unary("flat_map", |info| {
+        self.unary(&_get_name("flat_map", name), |info| {
             let index = info.index;
             move |input, output| {
                 input.for_each_batch(|dataset| {

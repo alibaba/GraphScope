@@ -25,18 +25,14 @@ pub trait RecordLeftJoinGen {
     fn gen_subtask(self) -> FnGenResult<Box<dyn ApplyGen<Record, Vec<Record>, Option<Record>>>>;
 }
 
-impl RecordLeftJoinGen for algebra_pb::logical_plan::Operator {
+impl RecordLeftJoinGen for algebra_pb::logical_plan::operator::Opr {
     fn gen_subtask(self) -> FnGenResult<Box<dyn ApplyGen<Record, Vec<Record>, Option<Record>>>> {
-        if let Some(opr) = self.opr {
-            match opr {
-                algebra_pb::logical_plan::operator::Opr::Apply(apply) => Ok(Box::new(apply)),
-                algebra_pb::logical_plan::operator::Opr::SegApply(_seg_apply) => {
-                    Err(FnGenError::unsupported_error("SegApply is not supported yet"))?
-                }
-                _ => Err(ParsePbError::from("algebra_pb op is not a subtask").into()),
+        match self {
+            algebra_pb::logical_plan::operator::Opr::Apply(apply) => Ok(Box::new(apply)),
+            algebra_pb::logical_plan::operator::Opr::SegApply(_seg_apply) => {
+                Err(FnGenError::unsupported_error("SegApply is not supported yet"))?
             }
-        } else {
-            Err(ParsePbError::EmptyFieldError("algebra op is empty".to_string()))?
+            _ => Err(ParsePbError::from("algebra_pb op is not a subtask").into()),
         }
     }
 }

@@ -456,7 +456,7 @@ mod test {
         // build two channels for each worker
         let mut threads = vec![];
         let mut index = 0;
-        let mut start_index = 2;
+        let start_index = 2;
         for server in server_list {
             threads.push(std::thread::spawn(move || {
                 pegasus_network::start_up(
@@ -562,7 +562,7 @@ mod test {
         // build two channels for each worker
         let mut threads = vec![];
         let mut index = 0;
-        let mut start_index = 4;
+        let start_index = 4;
         for server in server_list {
             threads.push(std::thread::spawn(move || {
                 pegasus_network::start_up(
