@@ -14,7 +14,7 @@
 //! limitations under the License.
 //
 
-use pegasus::api::{Collect, CorrelatedSubTask, Count, Filter, FoldByKey, KeyBy, Map, Sink};
+use pegasus::api::{Collect, CorrelatedSubTask, Count, Filter, Fold, FoldByKey, KeyBy, Map, Sink};
 use pegasus::JobConf;
 
 #[test]
@@ -192,4 +192,36 @@ fn fold_by_key_test() {
     assert_eq!(*cnt_2, (0..num * 2).filter(|x| x % 4 == 2).count() as u32);
     let cnt_3 = groups.get(&3).unwrap();
     assert_eq!(*cnt_3, (0..num * 2).filter(|x| x % 4 == 3).count() as u32);
+}
+
+#[test]
+fn fold_partition_test() {
+    let mut conf = JobConf::new("fold_partition_test");
+    conf.set_workers(2);
+    let mut result = pegasus::run(conf, || {
+        let index = pegasus::get_current_worker().index;
+        let src = if index == 0 { vec![1, 2, 3] } else { vec![] };
+        move |input, output| {
+            input
+                .input_from(src)?
+                .repartition(|_| Ok(0))
+                .fold_partition(10, || {
+                    |mut sum, i| {
+                        sum += i;
+                        Ok(sum)
+                    }
+                })?
+                .sink_into(output)
+        }
+    })
+    .expect("submit job failure:");
+    let mut count = 0;
+    let mut partition_result = vec![];
+    while let Some(Ok(res)) = result.next() {
+        partition_result.push(res);
+        count += 1;
+    }
+    partition_result.sort();
+    assert_eq!(count, 2);
+    assert_eq!(partition_result, vec![10, 16])
 }

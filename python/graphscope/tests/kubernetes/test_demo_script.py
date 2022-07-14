@@ -168,8 +168,6 @@ def test_demo_on_hdfs(gs_session_distributed):
     )
 
 
-# TODO: Remove skip when subgraph is ready
-@pytest.mark.skip(reason="Subgraph will fail on multiple workers. Issue: #1803")
 def test_demo_distribute(gs_session_distributed, data_dir, modern_graph_data_dir):
     graph = load_ldbc(gs_session_distributed, data_dir)
 
