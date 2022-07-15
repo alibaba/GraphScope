@@ -923,6 +923,13 @@ public class PositiveEvalTest {
     }
 
     @Test
+    public void g_V_group_by_by_str_test() {
+        Assert.assertEquals(
+                g.V().values("age").group().by().by("name"),
+                eval("g.V().values(\"age\").group().by().by(\"name\")"));
+    }
+
+    @Test
     public void g_V_values_group_by_by_sum_test() {
         Assert.assertEquals(
                 g.V().values("age").group().by().by(__.sum()),
@@ -930,37 +937,44 @@ public class PositiveEvalTest {
     }
 
     @Test
-    public void g_V_values_group_by_by_sum_as_test() {
+    public void g_V_group_by_by_dedup_count_test() {
         Assert.assertEquals(
-                g.V().values("age").group().by().by(__.sum().as("a")),
-                eval("g.V().values(\"age\").group().by().by(__.sum().as(\"a\"))"));
+                g.V().group().by().by(__.dedup().count()),
+                eval("g.V().group().by().by(__.dedup().count())"));
     }
 
     @Test
-    public void g_V_values_group_by_by_dedup_count_test() {
+    public void g_V_group_by_by_dedup_fold_test() {
         Assert.assertEquals(
-                g.V().values("age").group().by().by(__.dedup().count()),
-                eval("g.V().values(\"age\").group().by().by(__.dedup().count())"));
+                g.V().group().by().by(__.dedup().fold()),
+                eval("g.V().group().by().by(__.dedup().fold())"));
     }
 
     @Test
-    public void g_V_values_group_by_by_dedup_count_as_test() {
+    public void g_V_group_by_by_values_count_test() {
         Assert.assertEquals(
-                g.V().values("age").group().by().by(__.dedup().count().as("a")),
-                eval("g.V().values(\"age\").group().by().by(__.dedup().count().as(\"a\"))"));
+                g.V().group().by().by(__.values("name").count()),
+                eval("g.V().group().by().by(__.values(\"name\").count())"));
     }
 
     @Test
-    public void g_V_values_group_by_by_dedup_fold_test() {
+    public void g_V_as_group_by_by_select_tag_count_test() {
         Assert.assertEquals(
-                g.V().values("age").group().by().by(__.dedup().fold()),
-                eval("g.V().values(\"age\").group().by().by(__.dedup().fold())"));
+                g.V().as("a").group().by().by(__.select("a").count()),
+                eval("g.V().as(\"a\").group().by().by(__.select(\"a\").count())"));
     }
 
     @Test
-    public void g_V_values_group_by_by_dedup_fold_as_test() {
+    public void g_V_as_group_by_by_select_tag_by_count_test() {
         Assert.assertEquals(
-                g.V().values("age").group().by().by(__.dedup().fold().as("a")),
-                eval("g.V().values(\"age\").group().by().by(__.dedup().fold().as(\"a\"))"));
+                g.V().as("a").group().by().by(__.select("a").by("name").count()),
+                eval("g.V().as(\"a\").group().by().by(__.select(\"a\").by(\"name\").count())"));
+    }
+
+    @Test
+    public void g_V_as_group_by_by_select_tag_values_count_test() {
+        Assert.assertEquals(
+                g.V().as("a").group().by().by(__.select("a").values("name").count()),
+                eval("g.V().as(\"a\").group().by().by(__.select(\"a\").values(\"name\").count())"));
     }
 }

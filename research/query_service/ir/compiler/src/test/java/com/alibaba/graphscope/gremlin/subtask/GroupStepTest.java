@@ -300,7 +300,27 @@ public class GroupStepTest {
                 groupOp.getGroupByValues().get().applyArg());
     }
 
-    // group().by().by(sum()) -> AggFn { FfiVariable<head>, FfiAggOpt.Sum }
+    // group().by().by("name") -> AggFn { FfiVariable<@.name>, FfiAggOpt.ToList }
+    @Test
+    public void g_V_group_by_by_str_test() {
+        Traversal traversal = g.V().group().by().by("name");
+        GroupOp op = (GroupOp) getApplyWithGroup(traversal).get(0);
+
+        Pair<FfiVariable.ByValue, FfiAlias.ByValue> expectedKey =
+                Pair.with(ArgUtils.asFfiNoneVar(), ArgUtils.asFfiAlias("~keys_1_0", false));
+        ArgAggFn expectedValue =
+                new ArgAggFn(
+                        FfiAggOpt.ToList,
+                        ArgUtils.asFfiAlias("~values_1_0", false),
+                        ArgUtils.asFfiVar("", "name"));
+
+        Assert.assertEquals(
+                Collections.singletonList(expectedKey), op.getGroupByKeys().get().applyArg());
+        Assert.assertEquals(
+                Collections.singletonList(expectedValue), op.getGroupByValues().get().applyArg());
+    }
+
+    // group().by().by(sum()) -> AggFn { FfiVariable<@>, FfiAggOpt.Sum }
     @Test
     public void g_V_values_group_by_by_sum_test() {
         Traversal traversal = g.V().values("age").group().by().by(__.sum());
@@ -317,16 +337,16 @@ public class GroupStepTest {
                 Collections.singletonList(expectedValue), op.getGroupByValues().get().applyArg());
     }
 
-    // group().by().by(dedup().count()) -> AggFn { FfiVariable<head>, FfiAggOpt.CountDistinct }
+    // group().by().by(dedup().count()) -> AggFn { FfiVariable<@>, FfiAggOpt.CountDistinct }
     @Test
-    public void g_V_values_group_by_by_dedup_count_test() {
-        Traversal traversal = g.V().values("age").group().by().by(__.dedup().count());
+    public void g_V_group_by_by_dedup_count_test() {
+        Traversal traversal = g.V().group().by().by(__.dedup().count());
         GroupOp op = (GroupOp) getApplyWithGroup(traversal).get(0);
 
         Pair<FfiVariable.ByValue, FfiAlias.ByValue> expectedKey =
-                Pair.with(ArgUtils.asFfiNoneVar(), ArgUtils.asFfiAlias("~keys_2_0", false));
+                Pair.with(ArgUtils.asFfiNoneVar(), ArgUtils.asFfiAlias("~keys_1_0", false));
         ArgAggFn expectedValue =
-                new ArgAggFn(FfiAggOpt.CountDistinct, ArgUtils.asFfiAlias("~values_2_0", false));
+                new ArgAggFn(FfiAggOpt.CountDistinct, ArgUtils.asFfiAlias("~values_1_0", false));
 
         Assert.assertEquals(
                 Collections.singletonList(expectedKey), op.getGroupByKeys().get().applyArg());
@@ -334,16 +354,16 @@ public class GroupStepTest {
                 Collections.singletonList(expectedValue), op.getGroupByValues().get().applyArg());
     }
 
-    // group().by().by(dedup().fold()) -> AggFn { FfiVariable<head>, FfiAggOpt.ToSet }
+    // group().by().by(dedup().fold()) -> AggFn { FfiVariable<@>, FfiAggOpt.ToSet }
     @Test
-    public void g_V_values_group_by_by_dedup_fold_test() {
-        Traversal traversal = g.V().values("age").group().by().by(__.dedup().fold());
+    public void g_V_group_by_by_dedup_fold_test() {
+        Traversal traversal = g.V().group().by().by(__.dedup().fold());
         GroupOp op = (GroupOp) getApplyWithGroup(traversal).get(0);
 
         Pair<FfiVariable.ByValue, FfiAlias.ByValue> expectedKey =
-                Pair.with(ArgUtils.asFfiNoneVar(), ArgUtils.asFfiAlias("~keys_2_0", false));
+                Pair.with(ArgUtils.asFfiNoneVar(), ArgUtils.asFfiAlias("~keys_1_0", false));
         ArgAggFn expectedValue =
-                new ArgAggFn(FfiAggOpt.ToSet, ArgUtils.asFfiAlias("~values_2_0", false));
+                new ArgAggFn(FfiAggOpt.ToSet, ArgUtils.asFfiAlias("~values_1_0", false));
 
         Assert.assertEquals(
                 Collections.singletonList(expectedKey), op.getGroupByKeys().get().applyArg());
@@ -351,7 +371,7 @@ public class GroupStepTest {
                 Collections.singletonList(expectedValue), op.getGroupByValues().get().applyArg());
     }
 
-    // group().by().by(values("age").count()) -> AggFn { FfiVariable<"", "age">, FfiAggOpt.Count }
+    // group().by().by(values("age").count()) -> AggFn { FfiVariable<@.age>, FfiAggOpt.Count }
     @Test
     public void g_V_group_by_by_values_count_test() {
         Traversal traversal = g.V().group().by().by(__.values("age").count());
@@ -371,7 +391,7 @@ public class GroupStepTest {
                 Collections.singletonList(expectedValue), op.getGroupByValues().get().applyArg());
     }
 
-    // group().by().by(select("a").count()) -> AggFn { FfiVariable<"a", "">, FfiAggOpt.Count }
+    // group().by().by(select("a").count()) -> AggFn { FfiVariable<@a>, FfiAggOpt.Count }
     @Test
     public void g_V_as_group_by_by_select_count_test() {
         Traversal traversal = g.V().as("a").group().by().by(__.select("a").count());
@@ -391,11 +411,32 @@ public class GroupStepTest {
                 Collections.singletonList(expectedValue), op.getGroupByValues().get().applyArg());
     }
 
-    // group().by().by(select("a").by("age").count()) -> AggFn { FfiVariable<"a", "age">,
+    // group().by().by(select("a").by("age").count()) -> AggFn { FfiVariable<@a.age>,
     // FfiAggOpt.Count }
     @Test
-    public void g_V_as_group_by_by_select_value_count_test() {
+    public void g_V_as_group_by_by_select_by_count_test() {
         Traversal traversal = g.V().as("a").group().by().by(__.select("a").by("age").count());
+        GroupOp op = (GroupOp) getApplyWithGroup(traversal).get(0);
+
+        Pair<FfiVariable.ByValue, FfiAlias.ByValue> expectedKey =
+                Pair.with(ArgUtils.asFfiNoneVar(), ArgUtils.asFfiAlias("~keys_1_0", false));
+        ArgAggFn expectedValue =
+                new ArgAggFn(
+                        FfiAggOpt.Count,
+                        ArgUtils.asFfiAlias("~values_1_0", false),
+                        ArgUtils.asFfiVar("a", "age"));
+
+        Assert.assertEquals(
+                Collections.singletonList(expectedKey), op.getGroupByKeys().get().applyArg());
+        Assert.assertEquals(
+                Collections.singletonList(expectedValue), op.getGroupByValues().get().applyArg());
+    }
+
+    // group().by().by(select("a").by("age").count()) -> AggFn { FfiVariable<@a.age>,
+    // FfiAggOpt.Count }
+    @Test
+    public void g_V_as_group_by_by_select_values_count_test() {
+        Traversal traversal = g.V().as("a").group().by().by(__.select("a").values("age").count());
         GroupOp op = (GroupOp) getApplyWithGroup(traversal).get(0);
 
         Pair<FfiVariable.ByValue, FfiAlias.ByValue> expectedKey =

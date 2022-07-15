@@ -39,6 +39,8 @@ import org.apache.tinkerpop.gremlin.process.traversal.Pop;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.ColumnTraversal;
+import org.apache.tinkerpop.gremlin.process.traversal.lambda.IdentityTraversal;
+import org.apache.tinkerpop.gremlin.process.traversal.lambda.ValueTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.step.TraversalParent;
 import org.apache.tinkerpop.gremlin.process.traversal.step.branch.UnionStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.*;
@@ -347,31 +349,54 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
         @Override
         public InterOpBase apply(Step step) {
             TraversalMapStep mapStep = (TraversalMapStep) step;
-            List<Traversal.Admin> mapTraversals = mapStep.getLocalChildren();
-            if (mapTraversals.size() != 1 || !(mapTraversals.get(0) instanceof ColumnTraversal)) {
+            Traversal.Admin mapTraversal =
+                    mapStep.getLocalChildren().size() > 0
+                            ? (Traversal.Admin) mapStep.getLocalChildren().get(0)
+                            : null;
+            // handle special cases, i.e.
+            // group().by().by() -> value_by: TraversalMap(identity) + fold(),
+            // group().by().by('name') -> value_by: TraversalMap(value('name')) + fold()
+            if (mapTraversal == null
+                    || mapTraversal instanceof IdentityTraversal
+                    || mapTraversal instanceof ValueTraversal) {
+                // by head
+                String defaultExpr = "@";
+                FfiAlias.ByValue defaultAlias = ArgUtils.asFfiNoneAlias();
+                if (mapTraversal instanceof ValueTraversal) {
+                    defaultExpr = "@." + ((ValueTraversal) mapTraversal).getPropertyKey();
+                }
+                ProjectOp op = new ProjectOp();
+                op.setExprWithAlias(
+                        new OpArg(Collections.singletonList(Pair.with(defaultExpr, defaultAlias))));
+                return op;
+            } else if (mapTraversal instanceof ColumnTraversal) {
+                Column column = ((ColumnTraversal) mapTraversal).getColumn();
+                switch (column) {
+                    case keys:
+                        String key = getMapKey(mapStep);
+                        SelectOneStep keySelect =
+                                new SelectOneStep(step.getTraversal(), Pop.last, key);
+                        TraversalHelper.copyLabels(mapStep, keySelect, false);
+                        return TraversalParentTransformFactory.PROJECT_BY_STEP
+                                .apply(keySelect)
+                                .get(0);
+                    case values:
+                        String value = getMapValue(mapStep);
+                        SelectOneStep valueSelect =
+                                new SelectOneStep(step.getTraversal(), Pop.last, value);
+                        TraversalHelper.copyLabels(mapStep, valueSelect, false);
+                        return TraversalParentTransformFactory.PROJECT_BY_STEP
+                                .apply(valueSelect)
+                                .get(0);
+                    default:
+                        throw new OpArgIllegalException(
+                                OpArgIllegalException.Cause.INVALID_TYPE,
+                                column.name() + " is invalid");
+                }
+            } else {
                 throw new OpArgIllegalException(
-                        OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
-                        "only support select(keys/values)");
-            }
-            Column column = ((ColumnTraversal) mapTraversals.get(0)).getColumn();
-            switch (column) {
-                case keys:
-                    String key = getMapKey(mapStep);
-                    SelectOneStep keySelect = new SelectOneStep(step.getTraversal(), Pop.last, key);
-                    TraversalHelper.copyLabels(mapStep, keySelect, false);
-                    return TraversalParentTransformFactory.PROJECT_BY_STEP.apply(keySelect).get(0);
-                case values:
-                    String value = getMapValue(mapStep);
-                    SelectOneStep valueSelect =
-                            new SelectOneStep(step.getTraversal(), Pop.last, value);
-                    TraversalHelper.copyLabels(mapStep, valueSelect, false);
-                    return TraversalParentTransformFactory.PROJECT_BY_STEP
-                            .apply(valueSelect)
-                            .get(0);
-                default:
-                    throw new OpArgIllegalException(
-                            OpArgIllegalException.Cause.INVALID_TYPE,
-                            column.name() + " is invalid");
+                        OpArgIllegalException.Cause.INVALID_TYPE,
+                        "invalid map type " + mapTraversal.getClass());
             }
         }
 

@@ -457,6 +457,9 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
             GremlinGSParser.TraversalMethod_group_valuebyContext ctx) {
         int childCount = ctx.getChildCount();
         if (childCount == 3) return graphTraversal.by();
+        if (ctx.stringLiteral() != null) {
+            return graphTraversal.by(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()));
+        }
         TraversalMethodVisitor nestedVisitor =
                 new TraversalMethodVisitor(
                         gvisitor, GremlinAntlrToJava.getTraversalSupplier().get());
@@ -471,6 +474,12 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
                         nestedVisitor.visitTraversalMethod_fold(ctx.traversalMethod_fold());
             }
         } else if (ctx.traversalMethod_aggregate_func() != null) {
+            if (ctx.traversalMethod_select() != null) {
+                nestedVisitor.visitTraversalMethod_select(ctx.traversalMethod_select());
+            }
+            if (ctx.traversalMethod_values() != null) {
+                nestedVisitor.visitTraversalMethod_values(ctx.traversalMethod_values());
+            }
             nestedTraversal =
                     nestedVisitor.visitTraversalMethod_aggregate_func(
                             ctx.traversalMethod_aggregate_func());

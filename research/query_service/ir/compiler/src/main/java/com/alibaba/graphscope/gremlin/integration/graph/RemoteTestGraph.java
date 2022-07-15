@@ -386,10 +386,10 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
 // @Graph.OptOut(test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.OrderTest",
 //        method = "g_V_order_byXname_incrX_name",
 //        reason = "unsupported")
-@Graph.OptOut(
-        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.OrderTest",
-        method = "g_V_order_byXoutE_count_descX",
-        reason = "unsupported")
+// @Graph.OptOut(
+//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.OrderTest",
+//        method = "g_V_order_byXoutE_count_descX",
+//        reason = "unsupported")
 @Graph.OptOut(
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.OrderTest",
         method = "g_V_order_byXname_a1_b1X_byXname_b2_a2X_name",
@@ -657,12 +657,11 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.GroupTest",
         method = "g_V_group_byXlabelX_byXbothE_groupXaX_byXlabelX_byXweight_sumX_weight_sumX",
         reason = "unsupported")
-// @Graph.OptOut(
-//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.GroupTest",
-//        method =
-//
-// "g_V_hasLabelXpersonX_asXpX_outXcreatedX_group_byXnameX_byXselectXpX_valuesXageX_sumX",
-//        reason = "unsupported")
+@Graph.OptOut(
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.GroupTest",
+        method =
+                "g_V_hasLabelXpersonX_asXpX_outXcreatedX_group_byXnameX_byXselectXpX_valuesXageX_sumX",
+        reason = "unsupported")
 @Graph.OptOut(
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.GroupTest",
         method =
@@ -672,10 +671,10 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.GroupTest",
         method = "g_V_hasXlangX_groupXaX_byXlangX_byXnameX_out_capXaX",
         reason = "unsupported")
-@Graph.OptOut(
-        test = "org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.GroupTest",
-        method = "g_V_group_byXoutE_countX_byXnameX",
-        reason = "unsupported")
+// @Graph.OptOut(
+//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.GroupTest",
+//        method = "g_V_group_byXoutE_countX_byXnameX",
+//        reason = "unsupported")
 @Graph.OptOut(
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.GroupTest",
         method = "g_V_groupXaX_byXlabelX_byXoutE_weight_sumX_capXaX",
@@ -690,10 +689,10 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
         method =
                 "g_V_unionXrepeatXoutX_timesX2X_groupCountXmX_byXlangXX__repeatXinX_timesX2X_groupCountXmX_byXnameXX_capXmX",
         reason = "unsupported")
-@Graph.OptOut(
-        test = "org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.GroupCountTest",
-        method = "g_V_groupCount_byXbothE_countX",
-        reason = "unsupported")
+// @Graph.OptOut(
+//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.GroupCountTest",
+//        method = "g_V_groupCount_byXbothE_countX",
+//        reason = "unsupported")
 @Graph.OptOut(
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.GroupCountTest",
         method = "g_V_repeatXout_groupCountXaX_byXnameXX_timesX2X_capXaX",

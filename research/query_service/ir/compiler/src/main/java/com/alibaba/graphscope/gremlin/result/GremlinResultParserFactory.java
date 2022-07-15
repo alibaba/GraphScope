@@ -61,6 +61,7 @@ public enum GremlinResultParserFactory implements GremlinResultParser {
         // {name, "josh"}
         @Override
         public Object parseFrom(IrResult.Results results) {
+            logger.debug("{}", results);
             IrResult.Record record = results.getRecord();
             logger.debug("{}", record);
             Map<String, Object> projectResult = new HashMap<>();
@@ -68,10 +69,9 @@ public enum GremlinResultParserFactory implements GremlinResultParser {
                     .forEach(
                             column -> {
                                 String tag = getColumnKeyAsResultKey(column.getNameOrId());
-                                Object parseElement =
-                                        ParserUtils.parseElement(column.getEntry().getElement());
-                                if (parseElement instanceof Map) {
-                                    Map projectTags = (Map) parseElement;
+                                Object parseEntry = ParserUtils.parseEntry(column.getEntry());
+                                if (parseEntry instanceof Map) {
+                                    Map projectTags = (Map) parseEntry;
                                     // return empty Map if none properties
                                     Map tagEntry =
                                             (Map)
@@ -107,8 +107,8 @@ public enum GremlinResultParserFactory implements GremlinResultParser {
                                                 }
                                             });
                                 } else {
-                                    if (!(parseElement instanceof EmptyValue)) {
-                                        projectResult.put(tag, parseElement);
+                                    if (!(parseEntry instanceof EmptyValue)) {
+                                        projectResult.put(tag, parseEntry);
                                     }
                                 }
                             });
@@ -155,6 +155,7 @@ public enum GremlinResultParserFactory implements GremlinResultParser {
     GROUP {
         @Override
         public Object parseFrom(IrResult.Results results) {
+            logger.debug("{}", results);
             IrResult.Record record = results.getRecord();
             Object key = null;
             Object value = null;

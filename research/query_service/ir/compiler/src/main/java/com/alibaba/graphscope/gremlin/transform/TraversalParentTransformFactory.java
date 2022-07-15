@@ -29,7 +29,6 @@ import com.alibaba.graphscope.gremlin.transform.alias.AliasManager;
 import com.alibaba.graphscope.gremlin.transform.alias.AliasPrefixType;
 
 import org.apache.tinkerpop.gremlin.process.traversal.*;
-import org.apache.tinkerpop.gremlin.process.traversal.lambda.IdentityTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.step.TraversalParent;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.*;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.*;
@@ -283,71 +282,47 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
             ArgAggFn aggFn;
             int stepIdx =
                     TraversalHelper.stepIndex(parent.asStep(), parent.asStep().getTraversal());
-            if (admin == null
-                    || admin instanceof IdentityTraversal
-                    || admin.getSteps().size() == 2
-                            && isMapIdentity(admin.getStartStep())
-                            && admin.getEndStep()
-                                    instanceof FoldStep) { // group, // group().by(..).by()
-                FfiAlias.ByValue defaultAlias =
-                        AliasManager.getFfiAlias(
-                                new AliasArg(AliasPrefixType.GROUP_VALUES, stepIdx));
-                FfiVariable.ByValue defaultVar = ArgUtils.asFfiNoneVar();
-                aggFn = new ArgAggFn(FfiAggOpt.ToList, defaultAlias, defaultVar);
-            } else {
-                Step endStep = admin.getEndStep();
-                aggFn = getAggFn(endStep, stepIdx);
-                // handle with CountDistinct and ToSet
-                // specifically, variables from dedup will be treated as variables of aggregate
-                // functions
-                // i.e. group..by(dedup("a").by("name").count()) -> AggFn { FfiVariable<"a", "name">
-                // , CountDistinct }
-                if (endStep instanceof CountGlobalStep
-                        && endStep.getPreviousStep() instanceof DedupGlobalStep) {
-                    aggFn.setAggregate(
-                            FfiAggOpt.CountDistinct); // group().by(..).by(dedup().count())
+            Step endStep;
+            if (admin == null || (endStep = admin.getEndStep()) == null) {
+                throw new OpArgIllegalException(
+                        OpArgIllegalException.Cause.INVALID_TYPE,
+                        "default is [FoldStep], null end step is invalid");
+            }
+            aggFn = getAggFn(endStep, stepIdx);
+            // handle with CountDistinct and ToSet
+            // specifically, variables from dedup will be treated as variables of aggregate
+            // functions
+            // i.e. group..by(dedup("a").by("name").count()) -> AggFn { FfiVariable<@a.name>
+            // , CountDistinct }
+            if (endStep instanceof CountGlobalStep
+                    && endStep.getPreviousStep() instanceof DedupGlobalStep) {
+                aggFn.setAggregate(FfiAggOpt.CountDistinct); // group().by(..).by(dedup().count())
 
-                } else if (endStep instanceof FoldStep
-                        && endStep.getPreviousStep() instanceof DedupGlobalStep) {
-                    aggFn.setAggregate(FfiAggOpt.ToSet); // group().by(dedup().fold())
-                }
-
-                if (admin.getSteps().size() > 1) {
-                    // generate variables of the aggregate function
-                    ExprArg exprArg =
-                            new ExprArg(admin.getSteps().subList(0, admin.getSteps().size() - 1));
-                    ExprResult exprRes = getSubTraversalAsExpr(exprArg);
-                    if (exprRes
-                            .isExprPattern()) { // group().by(..).by(select("a").by("name").count())
-                        // or group().by(dedup("a").by("name").count())
-                        Optional<String> singleExpr = exprRes.getSingleExpr();
-                        if (!singleExpr.isPresent()) {
-                            throw new OpArgIllegalException(
-                                    OpArgIllegalException.Cause.INVALID_TYPE,
-                                    "aggregate value should exist");
-                        }
-                        aggFn.setVar(getExpressionAsVar(singleExpr.get()));
-                    } else { // group().by(..).by(out().count())
+            } else if (endStep instanceof FoldStep
+                    && endStep.getPreviousStep() instanceof DedupGlobalStep) {
+                aggFn.setAggregate(FfiAggOpt.ToSet); // group().by(dedup().fold())
+            }
+            if (admin.getSteps().size() > 1) {
+                // generate variables of the aggregate function
+                ExprArg exprArg =
+                        new ExprArg(admin.getSteps().subList(0, admin.getSteps().size() - 1));
+                ExprResult exprRes = getSubTraversalAsExpr(exprArg);
+                if (exprRes.isExprPattern()) { // group().by(..).by(select("a").by("name").count())
+                    // or group().by(dedup("a").by("name").count())
+                    Optional<String> singleExpr = exprRes.getSingleExpr();
+                    if (!singleExpr.isPresent()) {
                         throw new OpArgIllegalException(
-                                OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
-                                "segment apply is unsupported");
+                                OpArgIllegalException.Cause.INVALID_TYPE,
+                                "aggregate value should exist");
                     }
+                    aggFn.setVar(getExpressionAsVar(singleExpr.get()));
+                } else { // group().by(..).by(out().count())
+                    throw new OpArgIllegalException(
+                            OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
+                            "segment apply is unsupported");
                 }
             }
             return Collections.singletonList(aggFn);
-        }
-
-        // TraversalMapStep(identity)
-        private boolean isMapIdentity(Step step) {
-            if (!(step instanceof TraversalMapStep)) {
-                return false;
-            }
-            TraversalMapStep mapStep = (TraversalMapStep) step;
-            Traversal.Admin mapTraversal =
-                    mapStep.getLocalChildren().size() > 0
-                            ? (Traversal.Admin) mapStep.getLocalChildren().get(0)
-                            : null;
-            return mapTraversal != null && mapTraversal instanceof IdentityTraversal;
         }
     },
     WHERE_BY_STEP {
