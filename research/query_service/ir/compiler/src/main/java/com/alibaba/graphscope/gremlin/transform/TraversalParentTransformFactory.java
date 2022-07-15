@@ -283,9 +283,6 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
             ArgAggFn aggFn;
             int stepIdx =
                     TraversalHelper.stepIndex(parent.asStep(), parent.asStep().getTraversal());
-            String notice =
-                    "supported pattern is [group().by(..).by(count())] or"
-                            + " [group().by(..).by(fold())]";
             if (admin == null
                     || admin instanceof IdentityTraversal
                     || admin.getSteps().size() == 2
@@ -297,7 +294,7 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
                                 new AliasArg(AliasPrefixType.GROUP_VALUES, stepIdx));
                 FfiVariable.ByValue defaultVar = ArgUtils.asFfiNoneVar();
                 aggFn = new ArgAggFn(FfiAggOpt.ToList, defaultAlias, defaultVar);
-            } else if (admin.getSteps().size() == 1) {
+            } else {
                 Step endStep = admin.getEndStep();
                 aggFn = getAggFn(endStep, stepIdx);
                 // handle with CountDistinct and ToSet
@@ -336,9 +333,6 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
                                 "segment apply is unsupported");
                     }
                 }
-            } else {
-                throw new OpArgIllegalException(
-                        OpArgIllegalException.Cause.UNSUPPORTED_TYPE, notice);
             }
             return Collections.singletonList(aggFn);
         }

@@ -360,9 +360,10 @@ public class GroupStepTest {
         Pair<FfiVariable.ByValue, FfiAlias.ByValue> expectedKey =
                 Pair.with(ArgUtils.asFfiNoneVar(), ArgUtils.asFfiAlias("~keys_1_0", false));
         ArgAggFn expectedValue =
-                new ArgAggFn(FfiAggOpt.Count, ArgUtils.asFfiAlias("~values_1_0", false));
-        FfiVariable.ByValue expectedVar = ArgUtils.asFfiVar("", "age");
-        expectedValue.addVar(expectedVar);
+                new ArgAggFn(
+                        FfiAggOpt.Count,
+                        ArgUtils.asFfiAlias("~values_1_0", false),
+                        ArgUtils.asFfiVar("", "age"));
 
         Assert.assertEquals(
                 Collections.singletonList(expectedKey), op.getGroupByKeys().get().applyArg());
@@ -379,9 +380,10 @@ public class GroupStepTest {
         Pair<FfiVariable.ByValue, FfiAlias.ByValue> expectedKey =
                 Pair.with(ArgUtils.asFfiNoneVar(), ArgUtils.asFfiAlias("~keys_1_0", false));
         ArgAggFn expectedValue =
-                new ArgAggFn(FfiAggOpt.Count, ArgUtils.asFfiAlias("~values_1_0", false));
-        FfiVariable.ByValue expectedVar = ArgUtils.asFfiVar("a", "");
-        expectedValue.addVar(expectedVar);
+                new ArgAggFn(
+                        FfiAggOpt.Count,
+                        ArgUtils.asFfiAlias("~values_1_0", false),
+                        ArgUtils.asFfiVar("a", ""));
 
         Assert.assertEquals(
                 Collections.singletonList(expectedKey), op.getGroupByKeys().get().applyArg());
@@ -399,9 +401,10 @@ public class GroupStepTest {
         Pair<FfiVariable.ByValue, FfiAlias.ByValue> expectedKey =
                 Pair.with(ArgUtils.asFfiNoneVar(), ArgUtils.asFfiAlias("~keys_1_0", false));
         ArgAggFn expectedValue =
-                new ArgAggFn(FfiAggOpt.Count, ArgUtils.asFfiAlias("~values_1_0", false));
-        FfiVariable.ByValue expectedVar = ArgUtils.asFfiVar("a", "age");
-        expectedValue.addVar(expectedVar);
+                new ArgAggFn(
+                        FfiAggOpt.Count,
+                        ArgUtils.asFfiAlias("~values_1_0", false),
+                        ArgUtils.asFfiVar("a", "age"));
 
         Assert.assertEquals(
                 Collections.singletonList(expectedKey), op.getGroupByKeys().get().applyArg());
