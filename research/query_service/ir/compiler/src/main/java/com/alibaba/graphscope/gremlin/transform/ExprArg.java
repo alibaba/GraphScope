@@ -29,10 +29,14 @@ import java.util.List;
 
 public class ExprArg {
     // store all steps of the traversal given by arg
-    private List<Step> stepsInTraversal;
+    private List<Step> stepsInTraversal = new ArrayList<>();
 
+    // judge whether the traversal is expression or apply, i.e
+    // IdentityTraversal -> "@" is a expression pattern,
+    // ValueTraversal("name") -> "@.name" is a expression pattern,
+    // other common traversal type containing list of steps need judge further by
+    // TraversalParentTransform
     public ExprArg(Traversal.Admin traversal) {
-        stepsInTraversal = new ArrayList<>();
         if (traversal == null || traversal instanceof IdentityTraversal) {
             // do nothing
         } else if (traversal instanceof ValueTraversal) {
@@ -46,6 +50,10 @@ public class ExprArg {
         }
     }
 
+    // provide a more flexible constructor to judge whether list of steps is expression or apply,
+    // i.e
+    // group().by().by(values("name").count) need aggregate by [values("name").count()],
+    // [values] is extracted from the list and passed as the argument of the function
     public ExprArg(List<Step> steps) {
         stepsInTraversal = steps;
     }
