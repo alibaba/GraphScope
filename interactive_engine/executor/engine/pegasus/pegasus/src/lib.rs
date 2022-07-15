@@ -73,6 +73,7 @@ use crate::worker_id::WorkerIdIter;
 lazy_static! {
     static ref SERVER_ID: Mutex<Option<u64>> = Mutex::new(None);
     static ref SERVERS: RwLock<Vec<u64>> = RwLock::new(vec![]);
+    pub static ref PROFILE_FLAG: bool = configure_with_default!(bool, "PROFILE_FLAG", false);
 }
 
 thread_local! {

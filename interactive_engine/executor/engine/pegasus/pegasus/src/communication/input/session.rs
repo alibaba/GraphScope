@@ -19,6 +19,7 @@ use crate::communication::input::input::InputBlockGuard;
 use crate::communication::input::InputHandle;
 use crate::data::MicroBatch;
 use crate::errors::{ErrorKind, JobExecError};
+use crate::PROFILE_FLAG;
 use crate::{Data, Tag};
 
 pub struct InputSession<'a, D: Data> {
@@ -54,19 +55,16 @@ impl<'a, D: Data> InputSession<'a, D> {
             } else {
                 if let Some(mut batch) = self.input.next()? {
                     let is_last = batch.is_last();
-                    if log_enabled!(log::Level::Trace) {
+                    let log_level = if *PROFILE_FLAG { log::Level::Info } else { log::Level::Trace };
+                    if log_enabled!(log_level) {
                         if !batch.is_empty() {
                             if is_last {
-                                trace_worker!(
-                                    "handle last batch of {:?}, len = {}",
-                                    batch.tag,
-                                    batch.len()
-                                );
+                                info_worker!("handle last batch of {:?}, len = {}", batch.tag, batch.len());
                             } else {
-                                trace_worker!("handle batch of {:?}, len = {}", batch.tag, batch.len());
+                                info_worker!("handle batch of {:?}, len = {}", batch.tag, batch.len());
                             }
                         } else if is_last {
-                            trace_worker!("handle end of {:?}", batch.tag);
+                            info_worker!("handle end of {:?}", batch.tag);
                         }
                     }
                     match func(&mut batch) {
@@ -107,15 +105,16 @@ impl<'a, D: Data> InputSession<'a, D> {
     {
         while let Some(mut batch) = self.input.next_of(tag)? {
             let is_last = batch.is_last();
-            if log_enabled!(log::Level::Trace) {
+            let log_level = if *PROFILE_FLAG { log::Level::Info } else { log::Level::Trace };
+            if log_enabled!(log_level) {
                 if !batch.is_empty() {
                     if is_last {
-                        trace_worker!("handle last batch of {:?}, len = {}", batch.tag, batch.len());
+                        info_worker!("handle last batch of {:?}, len = {}", batch.tag, batch.len());
                     } else {
-                        trace_worker!("handle batch of {:?}, len = {}", batch.tag, batch.len());
+                        info_worker!("handle batch of {:?}, len = {}", batch.tag, batch.len());
                     }
                 } else if is_last {
-                    trace_worker!("handle end of {:?}", batch.tag);
+                    info_worker!("handle end of {:?}", batch.tag);
                 }
             }
             match (*func)(&mut batch) {

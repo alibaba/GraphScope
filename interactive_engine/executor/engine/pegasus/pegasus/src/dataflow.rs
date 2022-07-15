@@ -157,7 +157,7 @@ impl DataflowBuilder {
 
         writeln!(plan_desc, "==========================================").ok();
         if report {
-            info!("crate job[{}] with configuration : {:?}", self.config.job_id, self.config);
+            info!("create job[{}] with configuration : {:?}", self.config.job_id, self.config);
             info!("{}", plan_desc);
             let dot_g = DotGraph::new(self.config.job_name.clone(), self.config.job_id, op_names, edges);
             if let Ok(mut f) = File::create(format!("{}_{}.dot", self.config.job_name, self.config.job_id))

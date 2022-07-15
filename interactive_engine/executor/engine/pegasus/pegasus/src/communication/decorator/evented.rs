@@ -20,6 +20,7 @@ use crate::event::emitter::EventEmitter;
 use crate::event::{Event, EventKind};
 use crate::progress::{DynPeers, EndOfScope, EndSyncSignal};
 use crate::tag::tools::map::TidyTagMap;
+use crate::PROFILE_FLAG;
 use crate::{Data, Tag};
 
 #[allow(dead_code)]
@@ -158,6 +159,23 @@ impl<D: Data> Push<MicroBatch<D>> for EventEmitPush<D> {
             *total += len;
             batch.set_seq(*seq as u64);
             *seq += 1;
+        }
+        if *PROFILE_FLAG {
+            if !self.inner.is_local() {
+                info_worker!(
+                    "EventEmitPush Remote: output[{:?}] push batch of {:?} to channel[{}] to worker {}, len = {}",
+                    self.ch_info.source_port,
+                    batch.tag,
+                    self.ch_info.id.index,
+                    self.target_worker, len)
+            } else {
+                info_worker!(
+                    "EventEmitPush Local: output[{:?}] push batch of {:?} to channel[{}] to worker {}, len = {}",
+                    self.ch_info.source_port,
+                    batch.tag,
+                    self.ch_info.id.index,
+                    self.target_worker, len)
+            }
         }
         self.inner.push(batch)
     }

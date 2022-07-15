@@ -33,6 +33,7 @@ use crate::progress::EndOfScope;
 use crate::schedule::state::inbound::InputEndNotify;
 use crate::schedule::state::outbound::OutputCancelState;
 use crate::tag::tools::map::TidyTagMap;
+use crate::PROFILE_FLAG;
 use crate::{Data, Tag};
 
 pub trait Notifiable: Send + 'static {
@@ -319,7 +320,11 @@ impl Operator {
     #[inline]
     pub fn fire(&mut self) -> Result<(), JobExecError> {
         let _f = Finally::new(self.exec_st.clone());
-        debug_worker!("fire operator {:?}", self.info);
+        if *PROFILE_FLAG {
+            info_worker!("fire operator {:?}", self.info);
+        } else {
+            debug_worker!("fire operator {:?}", self.info);
+        }
         self.fire_times += 1;
 
         let mut result = self.fire_inner();
@@ -329,7 +334,7 @@ impl Operator {
             } else {
                 result = Err(err);
             }
-        };
+        }
 
         for (port, input) in self.inputs.iter().enumerate() {
             while let Some(end) = input.extract_end() {
@@ -341,7 +346,11 @@ impl Operator {
         for output in self.outputs.iter() {
             output.flush()?;
         }
-        debug_worker!("after fire operator {:?}", self.info);
+        if *PROFILE_FLAG {
+            info_worker!("after fire operator {:?}", self.info);
+        } else {
+            debug_worker!("after fire operator {:?}", self.info);
+        }
         result
     }
 
@@ -366,13 +375,23 @@ impl Operator {
                 warn_worker!("close operator {:?}'s output failure, caused by {}", self.info, err);
             }
         }
-        debug_worker!(
-            "operator {:?}\tfinished, used {:.2}ms, fired {} times, avg fire use {}us",
-            self.info,
-            self.exec_st.get() as f64 / 1000.0,
-            self.fire_times,
-            self.exec_st.get() / self.fire_times
-        );
+        if *PROFILE_FLAG {
+            info_worker!(
+                "operator finished {:?}, fired {} times, avg fire use {}us, time_cost={:.2}ms",
+                self.info,
+                self.fire_times,
+                self.exec_st.get() / self.fire_times,
+                self.exec_st.get() as f64 / 1000.0,
+            );
+        } else {
+            debug_worker!(
+                "operator {:?}\tfinished, used {:.2}ms, fired {} times, avg fire use {}us",
+                self.info,
+                self.exec_st.get() as f64 / 1000.0,
+                self.fire_times,
+                self.exec_st.get() / self.fire_times
+            );
+        }
     }
 
     fn fire_inner(&mut self) -> Result<(), JobExecError> {
