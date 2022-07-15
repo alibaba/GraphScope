@@ -82,7 +82,7 @@ public class GraphStepTest {
         Step graphStep = traversal.asAdmin().getStartStep();
         ScanFusionOp op = (ScanFusionOp) StepTransformFactory.SCAN_FUSION_STEP.apply(graphStep);
         String expr = op.getParams().get().getPredicate().get();
-        Assert.assertEquals("@.name && @.name == \"marko\"", expr);
+        Assert.assertEquals("@.name == \"marko\"", expr);
     }
 
     @Test
