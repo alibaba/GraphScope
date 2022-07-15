@@ -113,25 +113,30 @@ fn get_global_partition_server_mapping(
     let mut conf = JobConf::new("get_partition_server_index_map");
     conf.reset_servers(ServerConf::All);
     let mut results = pegasus::run(conf, || {
-        let local_server_partition_list = local_server_partition_list.clone();
+        let server_index = pegasus::get_current_worker().server_index;
+        let local_server_partition_list: Vec<(u32, u32)> = local_server_partition_list
+            .clone()
+            .into_iter()
+            .map(|pid| (server_index, pid))
+            .collect();
         move |input, output| {
             let local_server_partition_list = local_server_partition_list.clone();
             input
                 .input_from(local_server_partition_list)?
                 .fold(HashMap::new(), || {
-                    |mut mapping, partition_id| {
+                    |mut mapping, server_partition_id| {
                         mapping
-                            .entry(pegasus::get_current_worker().server_index)
+                            .entry(server_partition_id.0)
                             .or_insert_with(Vec::new)
-                            .push(partition_id);
+                            .push(server_partition_id.1);
                         Ok(mapping)
                     }
                 })?
                 .map(|mut mapping| {
                     let mut server_partition_list = vec![];
-                    for (server_index, workers) in mapping.drain() {
-                        for worker in workers.into_iter() {
-                            server_partition_list.push((server_index, worker));
+                    for (server_index, partition_list) in mapping.drain() {
+                        for pid in partition_list.into_iter() {
+                            server_partition_list.push((server_index, pid));
                         }
                     }
                     Ok(server_partition_list)

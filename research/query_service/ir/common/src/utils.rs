@@ -21,6 +21,7 @@ use dyn_type::{Object, Primitives};
 
 use crate::error::ParsePbError;
 use crate::generated::algebra as pb;
+use crate::generated::algebra::logical_plan::operator::Opr;
 use crate::generated::common as common_pb;
 use crate::NameOrId;
 
@@ -567,6 +568,35 @@ impl From<Object> for common_pb::Value {
         };
 
         common_pb::Value { item: Some(item) }
+    }
+}
+
+impl pb::logical_plan::operator::Opr {
+    pub fn get_name(&self) -> String {
+        let name = match self {
+            Opr::Project(_) => "Project",
+            Opr::Select(_) => "Select",
+            Opr::Join(_) => "Join",
+            Opr::Union(_) => "Union",
+            Opr::GroupBy(_) => "GroupBy",
+            Opr::OrderBy(_) => "OrderBy",
+            Opr::Dedup(_) => "Dedup",
+            Opr::Unfold(_) => "Unfold",
+            Opr::Apply(_) => "Apply",
+            Opr::SegApply(_) => "SegApply",
+            Opr::Scan(_) => "Scan",
+            Opr::Limit(_) => "Limit",
+            Opr::Auxilia(_) => "Auxilia",
+            Opr::As(_) => "As",
+            Opr::Sink(_) => "Sink",
+            Opr::Vertex(_) => "GetV",
+            Opr::Edge(_) => "EdgeExpand",
+            Opr::Path(_) => "PathExpand",
+            Opr::PathStart(_) => "PathStart",
+            Opr::PathEnd(_) => "PathEnd",
+            Opr::Pattern(_) => "Pattern",
+        };
+        name.to_string()
     }
 }
 

@@ -31,30 +31,20 @@ pub trait FoldFactoryGen {
     fn gen_fold(self) -> FnGenResult<Box<dyn FoldGen<u64, Record>>>;
 }
 
-impl GroupFunctionGen for algebra_pb::logical_plan::Operator {
+impl GroupFunctionGen for algebra_pb::logical_plan::operator::Opr {
     fn gen_group(self) -> FnGenResult<Box<dyn GroupGen<Record, RecordKey, Record>>> {
-        if let Some(opr) = self.opr {
-            match opr {
-                algebra_pb::logical_plan::operator::Opr::GroupBy(group) => Ok(Box::new(group)),
-                _ => Err(ParsePbError::from("algebra_pb op is not a group op").into()),
-            }
-        } else {
-            Err(ParsePbError::from("algebra op is empty").into())
+        match self {
+            algebra_pb::logical_plan::operator::Opr::GroupBy(group) => Ok(Box::new(group)),
+            _ => Err(ParsePbError::from("algebra_pb op is not a group op").into()),
         }
     }
 }
 
-impl FoldFactoryGen for algebra_pb::logical_plan::Operator {
+impl FoldFactoryGen for algebra_pb::logical_plan::operator::Opr {
     fn gen_fold(self) -> FnGenResult<Box<dyn FoldGen<u64, Record>>> {
-        if let Some(opr) = self.opr {
-            match opr {
-                algebra_pb::logical_plan::operator::Opr::GroupBy(non_key_group) => {
-                    Ok(Box::new(non_key_group))
-                }
-                _ => Err(ParsePbError::from("algebra_pb op is not a fold op").into()),
-            }
-        } else {
-            Err(ParsePbError::from("algebra op is empty").into())
+        match self {
+            algebra_pb::logical_plan::operator::Opr::GroupBy(non_key_group) => Ok(Box::new(non_key_group)),
+            _ => Err(ParsePbError::from("algebra_pb op is not a fold op").into()),
         }
     }
 }

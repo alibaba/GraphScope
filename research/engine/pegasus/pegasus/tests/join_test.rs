@@ -110,7 +110,6 @@ fn join_test_with_same_key() {
     let mut conf = JobConf::new("inner_join");
     conf.set_workers(1);
     let mut result = pegasus::run(conf, || {
-        let id = pegasus::get_current_worker().index;
         move |input, output| {
             let (src1, src2) = input.input_from(0..1000 as i32)?.copied()?;
             src1.key_by(|x| Ok((1 as i32, x)))?
@@ -126,7 +125,7 @@ fn join_test_with_same_key() {
     })
     .expect("run job failure;");
 
-    let mut result = result.next().unwrap().unwrap();
+    let result = result.next().unwrap().unwrap();
     assert_eq!(result.len(), 1000 * 1000);
 }
 /*

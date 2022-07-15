@@ -5,10 +5,10 @@ use crate::{BuildJobError, Data};
 
 mod feedback;
 mod switch;
-use crate::api::iteration::EmitKind;
 use feedback::FeedbackOperator;
 use switch::SwitchOperator;
 
+use crate::api::iteration::EmitKind;
 use crate::macros::map::FnResult;
 
 impl<D: Data> Iteration<D> for Stream<D> {

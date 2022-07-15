@@ -50,6 +50,15 @@ pub trait Map<I: Data> {
     fn map<O, F>(self, func: F) -> Result<Stream<O>, BuildJobError>
     where
         O: Data,
+        F: Fn(I) -> FnResult<O> + Send + 'static,
+        Self: Sized,
+    {
+        self.map_with_name("", func)
+    }
+
+    fn map_with_name<O, F>(self, name: &str, func: F) -> Result<Stream<O>, BuildJobError>
+    where
+        O: Data,
         F: Fn(I) -> FnResult<O> + Send + 'static;
 
     /// Similar to [`map`], this function mutates the input data of the type `I` into
@@ -94,6 +103,15 @@ pub trait Map<I: Data> {
     fn filter_map<O, F>(self, func: F) -> Result<Stream<O>, BuildJobError>
     where
         O: Data,
+        F: Fn(I) -> FnResult<Option<O>> + Send + 'static,
+        Self: Sized,
+    {
+        self.filter_map_with_name("", func)
+    }
+
+    fn filter_map_with_name<O, F>(self, name: &str, func: F) -> Result<Stream<O>, BuildJobError>
+    where
+        O: Data,
         F: Fn(I) -> FnResult<Option<O>> + Send + 'static;
 
     /// This function can produce zero, one and more than one output data items for each input
@@ -133,6 +151,16 @@ pub trait Map<I: Data> {
     ///     assert_eq!(expected, [1, 1, 2, 3, 3, 4, 5, 5, 7]);
     /// ```
     fn flat_map<O, R, F>(self, func: F) -> Result<Stream<O>, BuildJobError>
+    where
+        O: Data,
+        R: Iterator<Item = O> + Send + 'static,
+        F: Fn(I) -> FnResult<R> + Send + 'static,
+        Self: Sized,
+    {
+        self.flat_map_with_name("", func)
+    }
+
+    fn flat_map_with_name<O, R, F>(self, name: &str, func: F) -> Result<Stream<O>, BuildJobError>
     where
         O: Data,
         R: Iterator<Item = O> + Send + 'static,

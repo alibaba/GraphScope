@@ -400,7 +400,7 @@ int v6d_build_vertex_primary_keys(VertexTypeBuilder vertex, size_t key_count,
   auto entry_ptr = static_cast<entry_t *>(vertex);
   std::vector<std::string> names(key_count);
   for (size_t i = 0; i < key_count; ++i) {
-    names.emplace_back(key_name_list[i]);
+    names[i] = key_name_list[i];
   }
   entry_ptr->AddPrimaryKeys(key_count, names);
   return 0;

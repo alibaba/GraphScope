@@ -139,13 +139,13 @@ public class ParserUtils {
                 return key.getName();
             case ID:
                 {
-                    FfiKeyResult result = irCoreLib.getKeyName(key.getId(), type);
-                    if (result.error == null || result.error.code != ResultCode.Success) {
+                    FfiResult.ByValue result = irCoreLib.getKeyName(key.getId(), type);
+                    if (result.code != ResultCode.Success) {
                         String errorMsg =
-                                (result.error == null) ? "error code is null" : result.error.msg;
+                                "code is " + result.code.name() + ", msg is " + result.msg;
                         throw new GremlinResultParserException("getKeyName fail " + errorMsg);
                     }
-                    return result.keyName;
+                    return result.msg;
                 }
             default:
                 // throw new GremlinResultParserException("key type " + key.getItemCase().name() + "

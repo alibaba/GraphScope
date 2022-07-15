@@ -47,5 +47,5 @@ public class FfiData extends Structure {
 
     public Pointer buffer;
     public int len;
-    public FfiError.ByValue error;
+    public FfiResult.ByValue error;
 }

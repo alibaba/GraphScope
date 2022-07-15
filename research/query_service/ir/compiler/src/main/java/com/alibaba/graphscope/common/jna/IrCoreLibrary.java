@@ -34,7 +34,7 @@ public interface IrCoreLibrary extends Library {
 
     Pointer initLogicalPlan();
 
-    FfiError.ByValue printPlanAsJson(Pointer plan);
+    FfiResult.ByValue printPlanAsJson(Pointer plan);
 
     void destroyLogicalPlan(Pointer plan);
 
@@ -42,141 +42,142 @@ public interface IrCoreLibrary extends Library {
 
     Pointer initScanOperator(FfiScanOpt opt);
 
-    FfiError.ByValue appendScanOperator(
+    FfiResult.ByValue appendScanOperator(
             Pointer plan, Pointer scan, int parent, IntByReference oprIdx);
 
     // set primary index
     Pointer initIndexPredicate();
 
-    FfiError.ByValue andEquivPredicate(
+    FfiResult.ByValue andEquivPredicate(
             Pointer predicate, FfiProperty.ByValue key, FfiConst.ByValue value);
 
-    FfiError.ByValue orEquivPredicate(
+    FfiResult.ByValue orEquivPredicate(
             Pointer predicate, FfiProperty.ByValue key, FfiConst.ByValue value);
 
-    FfiError.ByValue addScanIndexPredicate(Pointer scan, Pointer predicate);
+    FfiResult.ByValue addScanIndexPredicate(Pointer scan, Pointer predicate);
 
-    FfiError.ByValue setScanParams(Pointer scan, Pointer params);
+    FfiResult.ByValue setScanParams(Pointer scan, Pointer params);
 
-    FfiError.ByValue setScanAlias(Pointer scan, FfiAlias.ByValue alias);
+    FfiResult.ByValue setScanAlias(Pointer scan, FfiAlias.ByValue alias);
 
     Pointer initEdgexpdOperator(boolean isEdge, FfiDirection direction);
 
-    FfiError.ByValue appendEdgexpdOperator(
+    FfiResult.ByValue appendEdgexpdOperator(
             Pointer plan, Pointer edgeXpd, int parent, IntByReference oprIdx);
 
-    FfiError.ByValue setEdgexpdParams(Pointer edgeXpd, Pointer params);
+    FfiResult.ByValue setEdgexpdParams(Pointer edgeXpd, Pointer params);
 
-    FfiError.ByValue setEdgexpdAlias(Pointer edgeXpd, FfiAlias.ByValue alias);
+    FfiResult.ByValue setEdgexpdAlias(Pointer edgeXpd, FfiAlias.ByValue alias);
 
     Pointer initLimitOperator();
 
-    FfiError.ByValue setLimitRange(Pointer limit, int lower, int upper);
+    FfiResult.ByValue setLimitRange(Pointer limit, int lower, int upper);
 
-    FfiError.ByValue appendLimitOperator(
+    FfiResult.ByValue appendLimitOperator(
             Pointer plan, Pointer limit, int parent, IntByReference oprIdx);
 
     Pointer initSelectOperator();
 
-    FfiError.ByValue setSelectPredicate(Pointer select, String predicate);
+    FfiResult.ByValue setSelectPredicate(Pointer select, String predicate);
 
-    FfiError.ByValue appendSelectOperator(
+    FfiResult.ByValue appendSelectOperator(
             Pointer plan, Pointer select, int parent, IntByReference oprIdx);
 
     Pointer initOrderbyOperator();
 
-    FfiError.ByValue addOrderbyPair(
+    FfiResult.ByValue addOrderbyPair(
             Pointer orderBy, FfiVariable.ByValue variable, FfiOrderOpt orderOpt);
 
-    FfiError.ByValue setOrderbyLimit(Pointer orderBy, int lower, int upper);
+    FfiResult.ByValue setOrderbyLimit(Pointer orderBy, int lower, int upper);
 
-    FfiError.ByValue appendOrderbyOperator(
+    FfiResult.ByValue appendOrderbyOperator(
             Pointer plan, Pointer orderBy, int parent, IntByReference oprIdx);
 
     Pointer initProjectOperator(boolean isAppend);
 
-    FfiError.ByValue addProjectExprAlias(Pointer project, String expr, FfiAlias.ByValue alias);
+    FfiResult.ByValue addProjectExprAlias(Pointer project, String expr, FfiAlias.ByValue alias);
 
-    FfiError.ByValue appendProjectOperator(
+    FfiResult.ByValue appendProjectOperator(
             Pointer plan, Pointer project, int parent, IntByReference oprIdx);
 
     /// To initialize an As operator
     Pointer initAsOperator();
 
     /// Set the alias of the entity to As
-    FfiError.ByValue setAsAlias(Pointer as, FfiAlias.ByValue alias);
+    FfiResult.ByValue setAsAlias(Pointer as, FfiAlias.ByValue alias);
 
     /// Append an As operator to the logical plan
-    FfiError.ByValue appendAsOperator(Pointer plan, Pointer as, int parent, IntByReference oprIdx);
+    FfiResult.ByValue appendAsOperator(Pointer plan, Pointer as, int parent, IntByReference oprIdx);
 
     Pointer initGroupbyOperator();
 
-    FfiError.ByValue addGroupbyKeyAlias(
+    FfiResult.ByValue addGroupbyKeyAlias(
             Pointer groupBy, FfiVariable.ByValue key, FfiAlias.ByValue alias);
 
-    FfiError.ByValue addGroupbyAggFn(Pointer groupBy, FfiAggFn.ByValue aggFn);
+    FfiResult.ByValue addGroupbyAggFn(
+            Pointer group, FfiVariable.ByValue aggVal, FfiAggOpt aggOpt, FfiAlias.ByValue alias);
 
-    FfiError.ByValue appendGroupbyOperator(
+    FfiResult.ByValue appendGroupbyOperator(
             Pointer plan, Pointer groupBy, int parent, IntByReference oprIdx);
 
     Pointer initDedupOperator();
 
-    FfiError.ByValue addDedupKey(Pointer dedup, FfiVariable.ByValue var);
+    FfiResult.ByValue addDedupKey(Pointer dedup, FfiVariable.ByValue var);
 
-    FfiError.ByValue appendDedupOperator(
+    FfiResult.ByValue appendDedupOperator(
             Pointer plan, Pointer dedup, int parent, IntByReference oprIdx);
 
     Pointer initSinkOperator();
 
-    FfiError.ByValue addSinkColumn(Pointer sink, FfiNameOrId.ByValue column);
+    FfiResult.ByValue addSinkColumn(Pointer sink, FfiNameOrId.ByValue column);
 
-    FfiError.ByValue appendSinkOperator(
+    FfiResult.ByValue appendSinkOperator(
             Pointer plan, Pointer sink, int parent, IntByReference oprIdx);
 
     Pointer initGetvOperator(FfiVOpt vOpt);
 
-    FfiError.ByValue setGetvAlias(Pointer getV, FfiAlias.ByValue alias);
+    FfiResult.ByValue setGetvAlias(Pointer getV, FfiAlias.ByValue alias);
 
-    FfiError.ByValue appendGetvOperator(
+    FfiResult.ByValue appendGetvOperator(
             Pointer plan, Pointer getV, int parent, IntByReference oprIdx);
 
-    FfiError.ByValue setGetvParams(Pointer getV, Pointer params);
+    FfiResult.ByValue setGetvParams(Pointer getV, Pointer params);
 
     Pointer initApplyOperator(int subtaskRoot, FfiJoinKind joinKind);
 
-    FfiError.ByValue setApplyAlias(Pointer apply, FfiAlias.ByValue alias);
+    FfiResult.ByValue setApplyAlias(Pointer apply, FfiAlias.ByValue alias);
 
-    FfiError.ByValue appendApplyOperator(
+    FfiResult.ByValue appendApplyOperator(
             Pointer plan, Pointer apply, int parent, IntByReference oprIdx);
 
     Pointer initPathxpdOperator(Pointer expand, boolean isWholePath);
 
-    FfiError.ByValue setPathxpdAlias(Pointer pathXpd, FfiAlias.ByValue alias);
+    FfiResult.ByValue setPathxpdAlias(Pointer pathXpd, FfiAlias.ByValue alias);
 
-    FfiError.ByValue setPathxpdHops(Pointer pathXpd, int lower, int upper);
+    FfiResult.ByValue setPathxpdHops(Pointer pathXpd, int lower, int upper);
 
-    FfiError.ByValue appendPathxpdOperator(
+    FfiResult.ByValue appendPathxpdOperator(
             Pointer plan, Pointer pathXpd, int parent, IntByReference oprIdx);
 
     Pointer initUnionOperator();
 
-    FfiError.ByValue addUnionParent(Pointer union, int subRootId);
+    FfiResult.ByValue addUnionParent(Pointer union, int subRootId);
 
-    FfiError.ByValue appendUnionOperator(Pointer plan, Pointer union, IntByReference oprIdx);
+    FfiResult.ByValue appendUnionOperator(Pointer plan, Pointer union, IntByReference oprIdx);
 
     Pointer initPatternOperator();
 
     Pointer initPatternSentence(FfiJoinKind joinKind);
 
-    FfiError.ByValue setSentenceStart(Pointer sentence, FfiNameOrId.ByValue tag);
+    FfiResult.ByValue setSentenceStart(Pointer sentence, FfiNameOrId.ByValue tag);
 
-    FfiError.ByValue setSentenceEnd(Pointer sentence, FfiNameOrId.ByValue tag);
+    FfiResult.ByValue setSentenceEnd(Pointer sentence, FfiNameOrId.ByValue tag);
 
-    FfiError.ByValue addSentenceBinder(Pointer sentence, Pointer binder, FfiBinderOpt opt);
+    FfiResult.ByValue addSentenceBinder(Pointer sentence, Pointer binder, FfiBinderOpt opt);
 
-    FfiError.ByValue addPatternSentence(Pointer pattern, Pointer sentence);
+    FfiResult.ByValue addPatternSentence(Pointer pattern, Pointer sentence);
 
-    FfiError.ByValue appendPatternOperator(
+    FfiResult.ByValue appendPatternOperator(
             Pointer plan, Pointer pattern, int parent, IntByReference oprIdx);
 
     FfiNameOrId.ByValue noneNameOrId();
@@ -207,27 +208,25 @@ public interface IrCoreLibrary extends Library {
 
     FfiVariable.ByValue asNoneVar();
 
-    FfiAggFn.ByValue initAggFn(FfiAggOpt aggregate, FfiAlias.ByValue alias);
-
     void destroyFfiData(FfiData.ByValue value);
 
-    FfiError.ByValue setSchema(String schemaJson);
+    FfiResult.ByValue setSchema(String schemaJson);
 
     Pointer initQueryParams();
 
-    FfiError.ByValue addParamsTable(Pointer params, FfiNameOrId.ByValue table);
+    FfiResult.ByValue addParamsTable(Pointer params, FfiNameOrId.ByValue table);
 
-    FfiError.ByValue addParamsColumn(Pointer params, FfiNameOrId.ByValue column);
+    FfiResult.ByValue addParamsColumn(Pointer params, FfiNameOrId.ByValue column);
 
-    FfiError.ByValue setParamsRange(Pointer params, int lower, int upper);
+    FfiResult.ByValue setParamsRange(Pointer params, int lower, int upper);
 
-    FfiError.ByValue setParamsPredicate(Pointer params, String predicate);
+    FfiResult.ByValue setParamsPredicate(Pointer params, String predicate);
 
-    FfiError.ByValue setParamsIsAllColumns(Pointer params);
+    FfiResult.ByValue setParamsIsAllColumns(Pointer params);
 
-    FfiKeyResult.ByValue getKeyName(int keyId, FfiKeyType keyType);
+    FfiResult.ByValue getKeyName(int keyId, FfiKeyType keyType);
 
-    FfiError.ByValue addParamsExtra(Pointer params, String key, String value);
+    FfiResult.ByValue addParamsExtra(Pointer params, String key, String value);
 
     Pointer initSinkGraphOperator(String graphName);
 }

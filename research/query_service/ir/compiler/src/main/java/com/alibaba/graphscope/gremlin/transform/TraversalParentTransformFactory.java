@@ -280,30 +280,26 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
 
         public List<ArgAggFn> getGroupValueAsAggFn(TraversalParent parent) {
             Traversal.Admin admin = getValueTraversal(parent);
+            ArgAggFn aggFn;
             int stepIdx =
                     TraversalHelper.stepIndex(parent.asStep(), parent.asStep().getTraversal());
-
-            FfiAggOpt aggOpt;
-            FfiAlias.ByValue alias;
-            List<FfiVariable.ByValue> aggVars = new ArrayList<>();
-
+            String notice =
+                    "supported pattern is [group().by(..).by(count())] or"
+                            + " [group().by(..).by(fold())]";
             if (admin == null
                     || admin instanceof IdentityTraversal
                     || admin.getSteps().size() == 2
                             && isMapIdentity(admin.getStartStep())
                             && admin.getEndStep()
                                     instanceof FoldStep) { // group, // group().by(..).by()
-                aggOpt = FfiAggOpt.ToList;
-                alias =
+                FfiAlias.ByValue defaultAlias =
                         AliasManager.getFfiAlias(
                                 new AliasArg(AliasPrefixType.GROUP_VALUES, stepIdx));
-            } else {
+                FfiVariable.ByValue defaultVar = ArgUtils.asFfiNoneVar();
+                aggFn = new ArgAggFn(FfiAggOpt.ToList, defaultAlias, defaultVar);
+            } else if (admin.getSteps().size() == 1) {
                 Step endStep = admin.getEndStep();
-
-                Pair<FfiAggOpt, FfiAlias.ByValue> aggFnWithAlias =
-                        getAggFnWithAlias(admin.getEndStep(), stepIdx);
-                aggOpt = aggFnWithAlias.getValue0();
-                alias = aggFnWithAlias.getValue1();
+                aggFn = getAggFn(endStep, stepIdx);
                 // handle with CountDistinct and ToSet
                 // specifically, variables from dedup will be treated as variables of aggregate
                 // functions
@@ -311,11 +307,12 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
                 // , CountDistinct }
                 if (endStep instanceof CountGlobalStep
                         && endStep.getPreviousStep() instanceof DedupGlobalStep) {
-                    aggOpt = FfiAggOpt.CountDistinct; // group().by(..).by(dedup().count())
+                    aggFn.setAggregate(
+                            FfiAggOpt.CountDistinct); // group().by(..).by(dedup().count())
 
                 } else if (endStep instanceof FoldStep
                         && endStep.getPreviousStep() instanceof DedupGlobalStep) {
-                    aggOpt = FfiAggOpt.ToSet; // group().by(dedup().fold())
+                    aggFn.setAggregate(FfiAggOpt.ToSet); // group().by(dedup().fold())
                 }
 
                 if (admin.getSteps().size() > 1) {
@@ -326,16 +323,23 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
                     if (exprRes
                             .isExprPattern()) { // group().by(..).by(select("a").by("name").count())
                         // or group().by(dedup("a").by("name").count())
-                        exprRes.getExprs().forEach(expr -> aggVars.add(getExpressionAsVar(expr)));
+                        Optional<String> singleExpr = exprRes.getSingleExpr();
+                        if (!singleExpr.isPresent()) {
+                            throw new OpArgIllegalException(
+                                    OpArgIllegalException.Cause.INVALID_TYPE,
+                                    "aggregate value should exist");
+                        }
+                        aggFn.setVar(getExpressionAsVar(singleExpr.get()));
                     } else { // group().by(..).by(out().count())
                         throw new OpArgIllegalException(
                                 OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
                                 "segment apply is unsupported");
                     }
                 }
+            } else {
+                throw new OpArgIllegalException(
+                        OpArgIllegalException.Cause.UNSUPPORTED_TYPE, notice);
             }
-            ArgAggFn aggFn = new ArgAggFn(aggOpt, alias);
-            aggVars.forEach(var -> aggFn.addVar(var));
             return Collections.singletonList(aggFn);
         }
 
