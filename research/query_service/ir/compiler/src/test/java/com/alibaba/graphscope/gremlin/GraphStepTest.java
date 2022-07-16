@@ -101,6 +101,23 @@ public class GraphStepTest {
         Assert.assertEquals(expected, op.getAlias().get().applyArg());
     }
 
+    // to check the query `g.V().has("person", "name", "marko")` in ci tests
+    @Test
+    public void g_V_label_property_test() {
+        Traversal traversal = g.V().has("person", "name", "marko");
+        IrStandardOpProcessor.applyStrategies(traversal);
+        Step graphStep = traversal.asAdmin().getStartStep();
+        ScanFusionOp op = (ScanFusionOp) StepTransformFactory.SCAN_FUSION_STEP.apply(graphStep);
+        // predicate is "@.name == \"marko\""
+        String expr = op.getParams().get().getPredicate().get();
+        Assert.assertEquals("@.name == \"marko\"", expr);
+        // table is "person"
+        FfiNameOrId.ByValue table = op.getParams().get().getTables().get(0);
+        Assert.assertEquals(ArgUtils.asFfiTag("person"), table);
+        // index_predicate is null
+        Assert.assertEquals(false, op.getIds().isPresent());
+    }
+
     private InterOpBase generateInterOpFromBuilder(Traversal traversal, int idx) {
         return (new InterOpCollectionBuilder(traversal)).build().unmodifiableCollection().get(idx);
     }
