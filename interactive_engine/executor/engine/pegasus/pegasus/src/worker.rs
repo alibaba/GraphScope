@@ -35,6 +35,7 @@ use crate::progress::EndOfScope;
 use crate::resource::{KeyedResources, ResourceMap};
 use crate::result::ResultSink;
 use crate::schedule::Schedule;
+use crate::PROFILE_FLAG;
 use crate::{Data, JobConf, Tag, WorkerId};
 
 pub struct Worker<D: Data, T: Debug + Send + 'static> {
@@ -219,12 +220,21 @@ impl<D: Data, T: Debug + Send + 'static> Task for Worker<D, T> {
         match self.task.execute() {
             Ok(state) => {
                 if TaskState::Finished == state {
-                    info_worker!(
-                        "job({}) '{}' finished, used {:?};",
-                        self.id.job_id,
-                        self.conf.job_name,
-                        self.start.elapsed()
-                    )
+                    if *PROFILE_FLAG {
+                        info_worker!(
+                            "job({}) '{}' finished, used {:?} ms;",
+                            self.id.job_id,
+                            self.conf.job_name,
+                            self.start.elapsed().as_millis()
+                        )
+                    } else {
+                        info_worker!(
+                            "job({}) '{}' finished, used {:?};",
+                            self.id.job_id,
+                            self.conf.job_name,
+                            self.start.elapsed()
+                        )
+                    }
                 }
                 state
             }

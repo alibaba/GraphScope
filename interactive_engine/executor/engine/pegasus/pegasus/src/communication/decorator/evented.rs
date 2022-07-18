@@ -163,15 +163,17 @@ impl<D: Data> Push<MicroBatch<D>> for EventEmitPush<D> {
         if *PROFILE_FLAG {
             if !self.inner.is_local() {
                 info_worker!(
-                    "EventEmitPush Remote: output[{:?}] push batch of {:?} to channel[{}] to worker {}, len = {}",
+                    "push batches remote: output[{:?}_{:?}] push batch of {:?} to channel[{}] to worker {}, len = {}",
                     self.ch_info.source_port,
+                    self.ch_info.target_port,
                     batch.tag,
                     self.ch_info.id.index,
                     self.target_worker, len)
             } else {
                 info_worker!(
-                    "EventEmitPush Local: output[{:?}] push batch of {:?} to channel[{}] to worker {}, len = {}",
+                    "push batches local: output[{:?}_{:?}] push batch of {:?} to channel[{}] to worker {}, len = {}",
                     self.ch_info.source_port,
+                    self.ch_info.target_port,
                     batch.tag,
                     self.ch_info.id.index,
                     self.target_worker, len)

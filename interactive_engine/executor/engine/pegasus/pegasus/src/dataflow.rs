@@ -30,6 +30,7 @@ use crate::event::emitter::EventEmitter;
 use crate::graph::{Dependency, DotGraph, Edge, Port};
 use crate::operator::{GeneralOperator, NotifiableOperator, Operator, OperatorBuilder, OperatorCore};
 use crate::schedule::Schedule;
+use crate::PROFILE_FLAG;
 use crate::{Data, JobConf, Tag, WorkerId};
 
 pub struct DataflowBuilder {
@@ -116,7 +117,7 @@ impl DataflowBuilder {
         if report {
             writeln!(plan_desc, "\n============ Build Dataflow ==============").ok();
             writeln!(plan_desc, "Peers:\t{}", self.worker_id.total_peers()).ok();
-            writeln!(plan_desc, "{}", "Operators: ").ok();
+            writeln!(plan_desc, "{}", "Operators:\t").ok();
         }
 
         let mut builds = self.operators.replace(vec![]);
@@ -149,8 +150,11 @@ impl DataflowBuilder {
         }
         let edges = self.edges.replace(vec![]);
         if report {
-            writeln!(plan_desc, "Channels ").ok();
+            writeln!(plan_desc, "Channels:\t").ok();
             for e in edges.iter() {
+                if *PROFILE_FLAG {
+                    info_worker!("job edges: {:?}", e);
+                }
                 writeln!(plan_desc, "\t{:?}", e).ok();
             }
         }
