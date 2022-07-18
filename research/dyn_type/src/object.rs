@@ -1251,6 +1251,12 @@ impl From<String> for Object {
     }
 }
 
+impl From<Primitives> for Object {
+    fn from(v: Primitives) -> Self {
+        Object::Primitive(v)
+    }
+}
+
 impl<T: Into<Object>> From<Vec<T>> for Object {
     fn from(vec: Vec<T>) -> Self {
         Object::Vector(
