@@ -27,21 +27,17 @@ pub trait FlatMapFuncGen {
         self,
     ) -> FnGenResult<Box<dyn FlatMapFunction<Record, Record, Target = DynIter<Record>>>>;
 }
-impl FlatMapFuncGen for algebra_pb::logical_plan::Operator {
+impl FlatMapFuncGen for algebra_pb::logical_plan::operator::Opr {
     fn gen_flat_map(
         self,
     ) -> FnGenResult<Box<dyn FlatMapFunction<Record, Record, Target = DynIter<Record>>>> {
-        if let Some(opr) = self.opr {
-            match opr {
-                algebra_pb::logical_plan::operator::Opr::Edge(edge_expand) => edge_expand.gen_flat_map(),
-                algebra_pb::logical_plan::operator::Opr::Vertex(get_vertex) => get_vertex.gen_flat_map(),
-                algebra_pb::logical_plan::operator::Opr::Unfold(_unfold) => {
-                    Err(FnGenError::unsupported_error("unfold is not supported yet"))
-                }
-                _ => Err(ParsePbError::from("algebra_pb op is not a flatmap"))?,
+        match self {
+            algebra_pb::logical_plan::operator::Opr::Edge(edge_expand) => edge_expand.gen_flat_map(),
+            algebra_pb::logical_plan::operator::Opr::Vertex(get_vertex) => get_vertex.gen_flat_map(),
+            algebra_pb::logical_plan::operator::Opr::Unfold(_unfold) => {
+                Err(FnGenError::unsupported_error("unfold is not supported yet"))
             }
-        } else {
-            Err(ParsePbError::EmptyFieldError("algebra op is empty".to_string()))?
+            _ => Err(ParsePbError::from("algebra_pb op is not a flatmap"))?,
         }
     }
 }

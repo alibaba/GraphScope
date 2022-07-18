@@ -77,7 +77,7 @@ impl RecordSinkEncoder {
             }
             RecordElement::OffGraph(o) => match o {
                 CommonObject::None => Some(result_pb::element::Inner::Object(Object::None.into())),
-                CommonObject::Prop(obj) | CommonObject::Agg(obj) => {
+                CommonObject::Prop(obj) => {
                     let obj_pb = self.object_to_pb(obj.clone());
                     Some(result_pb::element::Inner::Object(obj_pb))
                 }

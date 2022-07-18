@@ -20,6 +20,29 @@ GraphScope is a unified distributed graph computing platform that provides a one
 
 Visit our website at [graphscope.io](https://graphscope.io) to learn more.
 
+## Table of Contents
+
+- [Getting Started](#getting-started)
+  - [Installation for Standalone Mode](#installation-for-standalone-mode)
+- [Demo: Node Classification on Citation Network](#demo-node-classification-on-citation-network)
+  - [Loading a graph](#loading-a-graph)
+  - [Interactive query](#interactive-query)
+  - [Graph analytics](#graph-analytics)
+  - [Graph neural networks (GNNs)](#graph-neural-networks-gnns)
+- [Graph Processing on Kubernetes](#processing-large-graph-on-kubernetes-cluster)
+  - [Creating a session](#creating-a-session)
+  - [Loading graphs and graph computation](#loading-a-graph-and-processing-computation-tasks)
+  - [Closing the session](#closing-the-session)
+- [Development](#development)
+  - [Building from source](#building-on-local)
+  - [Building Docker images](#building-docker-images)
+  - [Building the client library](#building-client-library)
+  - [Testing](#testing)
+- [Documentation](#documentation)
+- [License](#license)
+- [Publications](#publications)
+- [Joining our Community!](#contributing)
+
 ## Getting Started
 
 We provide a [Playground](https://try.graphscope.app) with a managed JupyterLab. [Try GraphScope](https://try.graphscope.app) straight away in your browser!
@@ -96,7 +119,7 @@ Please note that many algorithms may only work on *homogeneous* graphs, and ther
 
 ```python
 # extract a subgraph of publication within a time range
-sub_graph = interactive.subgraph("g.V().has('year', inside(2014, 2020)).outE('cites')")
+sub_graph = interactive.subgraph("g.V().has('year', gte(2014).and(lte(2020))).outE('cites')")
 
 # project the projected graph to simple graph.
 simple_g = sub_graph.project(vertices={"paper": []}, edges={"cites": []})
@@ -210,7 +233,7 @@ train(config, lg)
 A python script with the entire process is availabe [here](https://colab.research.google.com/github/alibaba/GraphScope/blob/main/tutorials/1_node_classification_on_citation.ipynb), you may try it out by yourself. 
 
 
-### Processing Large Graph on Kubernetes Cluster
+## Processing Large Graph on Kubernetes Cluster
 
 GraphScope is designed for processing large graphs, which are usually hard to fit in the memory of a single machine.
 With [Vineyard](https://github.com/v6d-io/v6d) as the distributed in-memory data manager, GraphScope supports run on a cluster managed by Kubernetes(k8s).

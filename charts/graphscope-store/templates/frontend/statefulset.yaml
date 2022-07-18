@@ -91,11 +91,7 @@ spec:
             - name: ROLE
               value: "frontend"
             - name: EXECUTOR
-              value: {{ if eq .Values.executor "gaia" -}}
-                     "frontend-gaia"
-                     {{- else -}}
-                     "frontend"
-                     {{- end }}
+              value: "frontend-gaia"
             - name: FRONTEND_COUNT
               value: {{ .Values.frontend.replicaCount | quote }}
             - name: INGESTOR_COUNT

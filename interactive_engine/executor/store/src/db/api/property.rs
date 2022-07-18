@@ -1,17 +1,18 @@
 #![allow(dead_code)]
+use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::marker::PhantomData;
 
-use std::cmp::Ordering;
-use crate::db::common::bytes::transform;
-use crate::db::common::bytes::util::{UnsafeBytesWriter, UnsafeBytesReader};
-use crate::db::common::numeric::*;
-use crate::db::api::PropertyId;
-use super::GraphResult;
-use super::error::*;
 use protobuf::ProtobufEnum;
-use crate::db::proto::model::PropertyValuePb;
+
+use super::error::*;
+use super::GraphResult;
+use crate::db::api::PropertyId;
+use crate::db::common::bytes::transform;
+use crate::db::common::bytes::util::{UnsafeBytesReader, UnsafeBytesWriter};
+use crate::db::common::numeric::*;
 use crate::db::proto::common::DataTypePb;
+use crate::db::proto::model::PropertyValuePb;
 
 pub trait PropertyMap {
     fn get(&self, prop_id: PropertyId) -> Option<ValueRef>;
@@ -50,10 +51,22 @@ pub enum ValueType {
 impl ValueType {
     #[cfg(test)]
     pub fn all_value_types() -> Vec<ValueType> {
-        vec![ValueType::Bool, ValueType::Char, ValueType::Short,
-             ValueType::Int, ValueType::Long, ValueType::Float, ValueType::Double,
-             ValueType::String, ValueType::Bytes, ValueType::IntList, ValueType::LongList,
-             ValueType::FloatList, ValueType::DoubleList, ValueType::StringList]
+        vec![
+            ValueType::Bool,
+            ValueType::Char,
+            ValueType::Short,
+            ValueType::Int,
+            ValueType::Long,
+            ValueType::Float,
+            ValueType::Double,
+            ValueType::String,
+            ValueType::Bytes,
+            ValueType::IntList,
+            ValueType::LongList,
+            ValueType::FloatList,
+            ValueType::DoubleList,
+            ValueType::StringList,
+        ]
     }
 
     #[cfg(test)]
@@ -92,17 +105,20 @@ impl ValueType {
                 let msg = format!("invalid input");
                 let err = gen_graph_err!(GraphErrorCode::InvalidData, msg, to_proto, v);
                 Err(err)
-            },
-            Some(pb) => {
-                Ok(pb)
-            },
+            }
+            Some(pb) => Ok(pb),
         }
     }
 
     pub fn has_fixed_length(&self) -> bool {
         match *self {
-            ValueType::Bool | ValueType::Char | ValueType::Short | ValueType::Int |
-            ValueType::Long | ValueType::Float | ValueType::Double => true,
+            ValueType::Bool
+            | ValueType::Char
+            | ValueType::Short
+            | ValueType::Int
+            | ValueType::Long
+            | ValueType::Float
+            | ValueType::Double => true,
             _ => false,
         }
     }
@@ -127,10 +143,7 @@ pub struct ValueRef<'a> {
 
 impl<'a> ValueRef<'a> {
     pub(crate) fn new(r#type: ValueType, data: &'a [u8]) -> Self {
-        ValueRef {
-            r#type,
-            data,
-        }
+        ValueRef { r#type, data }
     }
 
     pub fn get_type(&self) -> &ValueType {
@@ -145,7 +158,6 @@ impl<'a> ValueRef<'a> {
         let res = self.check_type_match(ValueType::Bool);
         res_unwrap!(res, get_bool)?;
         Ok(get_bool(self.data))
-
     }
 
     pub fn get_char(&self) -> GraphResult<u8> {
@@ -187,9 +199,8 @@ impl<'a> ValueRef<'a> {
     pub fn get_str(&self) -> GraphResult<&str> {
         let res = self.check_type_match(ValueType::String);
         res_unwrap!(res, get_str)?;
-        ::std::str::from_utf8(self.data).map_err(|e| {
-            gen_graph_err!(GraphErrorCode::Utf8Error, e.to_string(), get_str)
-        })
+        ::std::str::from_utf8(self.data)
+            .map_err(|e| gen_graph_err!(GraphErrorCode::Utf8Error, e.to_string(), get_str))
     }
 
     pub fn get_bytes(&self) -> GraphResult<&[u8]> {
@@ -199,35 +210,40 @@ impl<'a> ValueRef<'a> {
     }
 
     pub fn get_int_list(&self) -> GraphResult<NumericArray<i32>> {
-        let res = self.check_type_match(ValueType::IntList)
+        let res = self
+            .check_type_match(ValueType::IntList)
             .and_then(|_| self.check_numeric_array(ValueType::IntList));
         let reader = res_unwrap!(res, get_int_list)?;
         Ok(NumericArray::new(reader))
     }
 
     pub fn get_long_list(&self) -> GraphResult<NumericArray<i64>> {
-        let res = self.check_type_match(ValueType::LongList)
+        let res = self
+            .check_type_match(ValueType::LongList)
             .and_then(|_| self.check_numeric_array(ValueType::LongList));
         let reader = res_unwrap!(res, get_long_list)?;
         Ok(NumericArray::new(reader))
     }
 
     pub fn get_float_list(&self) -> GraphResult<NumericArray<f32>> {
-        let res = self.check_type_match(ValueType::FloatList)
+        let res = self
+            .check_type_match(ValueType::FloatList)
             .and_then(|_| self.check_numeric_array(ValueType::FloatList));
         let reader = res_unwrap!(res, get_float_list)?;
         Ok(NumericArray::new(reader))
     }
 
     pub fn get_double_list(&self) -> GraphResult<NumericArray<f64>> {
-        let res = self.check_type_match(ValueType::DoubleList)
+        let res = self
+            .check_type_match(ValueType::DoubleList)
             .and_then(|_| self.check_numeric_array(ValueType::DoubleList));
         let reader = res_unwrap!(res, get_double_list)?;
         Ok(NumericArray::new(reader))
     }
 
     pub fn get_str_list(&self) -> GraphResult<StrArray> {
-        let res = self.check_type_match(ValueType::StringList)
+        let res = self
+            .check_type_match(ValueType::StringList)
             .and_then(|_| self.weak_check_str_list());
         let reader = res_unwrap!(res, get_str_list)?;
         Ok(StrArray::new(reader))
@@ -256,7 +272,7 @@ impl<'a> ValueRef<'a> {
                 } else {
                     Some(0.0)
                 }
-            },
+            }
             ValueType::Char => Some(get_char(self.data) as f64),
             ValueType::Short => Some(get_short(self.data) as f64),
             ValueType::Int => Some(get_int(self.data) as f64),
@@ -322,12 +338,14 @@ impl std::fmt::Debug for ValueRef<'_> {
                 } else {
                     Err(std::fmt::Error::default())
                 }
-            },
+            }
             ValueType::Bytes => write!(f, "Bytes({:?})", self.get_bytes().unwrap()),
             ValueType::IntList => write!(f, "IntArray({:?})", self.get_int_list().unwrap()),
             ValueType::LongList => write!(f, "LongArray({:?})", self.get_long_list().unwrap()),
             ValueType::FloatList => write!(f, "FloatArray({:?})", self.get_float_list().unwrap()),
-            ValueType::DoubleList => write!(f, "DoubleArray({:?})", self.get_double_list().unwrap()),
+            ValueType::DoubleList => {
+                write!(f, "DoubleArray({:?})", self.get_double_list().unwrap())
+            }
             ValueType::StringList => write!(f, "StringArray({:?})", self.get_str_list().unwrap()),
         }
     }
@@ -336,25 +354,30 @@ impl std::fmt::Debug for ValueRef<'_> {
 impl PartialEq for ValueRef<'_> {
     fn eq(&self, other: &Self) -> bool {
         match self.r#type {
-            ValueType::Bool | ValueType::Char | ValueType::Short |
-            ValueType::Int | ValueType::Long => {
+            ValueType::Bool | ValueType::Char | ValueType::Short | ValueType::Int | ValueType::Long => {
                 match other.r#type {
-                    ValueType::Bool | ValueType::Char | ValueType::Short |
-                    ValueType::Int | ValueType::Long => self.to_long().unwrap() == other.to_long().unwrap(),
-                    ValueType::Float | ValueType::Double => self.to_double().unwrap() == other.to_double().unwrap(),
+                    ValueType::Bool
+                    | ValueType::Char
+                    | ValueType::Short
+                    | ValueType::Int
+                    | ValueType::Long => self.to_long().unwrap() == other.to_long().unwrap(),
+                    ValueType::Float | ValueType::Double => {
+                        self.to_double().unwrap() == other.to_double().unwrap()
+                    }
                     _ => false,
                 }
+            }
+            ValueType::Float | ValueType::Double => match other.r#type {
+                ValueType::Bool
+                | ValueType::Char
+                | ValueType::Short
+                | ValueType::Int
+                | ValueType::Long
+                | ValueType::Float
+                | ValueType::Double => self.to_double().unwrap() == other.to_double().unwrap(),
+                _ => false,
             },
-            ValueType::Float | ValueType::Double => {
-                match other.r#type {
-                    ValueType::Bool | ValueType::Char | ValueType::Short | ValueType::Int |
-                    ValueType::Long | ValueType::Float | ValueType::Double => self.to_double().unwrap() == other.to_double().unwrap(),
-                    _ => false,
-                }
-            },
-            _ => {
-                self.r#type == other.r#type && self.data == other.data
-            },
+            _ => self.r#type == other.r#type && self.data == other.data,
         }
     }
 }
@@ -362,21 +385,36 @@ impl PartialEq for ValueRef<'_> {
 impl PartialOrd for ValueRef<'_> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         match self.r#type {
-            ValueType::Bool | ValueType::Char | ValueType::Short |
-            ValueType::Int | ValueType::Long => {
+            ValueType::Bool | ValueType::Char | ValueType::Short | ValueType::Int | ValueType::Long => {
                 match other.r#type {
-                    ValueType::Bool | ValueType::Char | ValueType::Short |
-                    ValueType::Int | ValueType::Long => Some(self.to_long().unwrap().cmp(&other.to_long().unwrap())),
-                    ValueType::Float | ValueType::Double => self.to_double().unwrap().partial_cmp(&other.to_double().unwrap()),
+                    ValueType::Bool
+                    | ValueType::Char
+                    | ValueType::Short
+                    | ValueType::Int
+                    | ValueType::Long => Some(
+                        self.to_long()
+                            .unwrap()
+                            .cmp(&other.to_long().unwrap()),
+                    ),
+                    ValueType::Float | ValueType::Double => self
+                        .to_double()
+                        .unwrap()
+                        .partial_cmp(&other.to_double().unwrap()),
                     _ => None,
                 }
-            },
-            ValueType::Float | ValueType::Double => {
-                match other.r#type {
-                    ValueType::Bool | ValueType::Char | ValueType::Short | ValueType::Int |
-                    ValueType::Long | ValueType::Float | ValueType::Double => self.to_double().unwrap().partial_cmp(&other.to_double().unwrap()),
-                    _ => None,
-                }
+            }
+            ValueType::Float | ValueType::Double => match other.r#type {
+                ValueType::Bool
+                | ValueType::Char
+                | ValueType::Short
+                | ValueType::Int
+                | ValueType::Long
+                | ValueType::Float
+                | ValueType::Double => self
+                    .to_double()
+                    .unwrap()
+                    .partial_cmp(&other.to_double().unwrap()),
+                _ => None,
             },
             _ => {
                 if self.r#type == other.r#type {
@@ -523,28 +561,25 @@ pub struct Value {
 }
 
 macro_rules! gen_array {
-    ($arr:ident, $ty:ty, $func:tt) => {
-        {
-            let size = ::std::mem::size_of::<$ty>();
-            let total_len = $arr.len() * size + 4;
-            let mut data = Vec::with_capacity(total_len);
-            unsafe { data.set_len(total_len); }
-            let mut writer = UnsafeBytesWriter::new(&mut data);
-            writer.write_i32(0, ($arr.len() as i32).to_be());
-            for i in 0..$arr.len() {
-                writer.$func(4 + size * i, $arr[i].to_big_endian());
-            }
-            data
+    ($arr:ident, $ty:ty, $func:tt) => {{
+        let size = ::std::mem::size_of::<$ty>();
+        let total_len = $arr.len() * size + 4;
+        let mut data = Vec::with_capacity(total_len);
+        unsafe {
+            data.set_len(total_len);
         }
-    };
+        let mut writer = UnsafeBytesWriter::new(&mut data);
+        writer.write_i32(0, ($arr.len() as i32).to_be());
+        for i in 0..$arr.len() {
+            writer.$func(4 + size * i, $arr[i].to_big_endian());
+        }
+        data
+    }};
 }
 
 impl Value {
     pub(crate) fn new(r#type: ValueType, data: Vec<u8>) -> Self {
-        Value {
-            r#type,
-            data,
-        }
+        Value { r#type, data }
     }
 
     pub fn from_proto(pb: &PropertyValuePb) -> GraphResult<Self> {
@@ -632,7 +667,9 @@ impl Value {
             size += s.len();
         }
         let mut data = Vec::with_capacity(size);
-        unsafe { data.set_len(size); }
+        unsafe {
+            data.set_len(size);
+        }
         let mut writer = UnsafeBytesWriter::new(&mut data);
         writer.write_i32(0, (v.len() as i32).to_be());
         let mut off = 0;
@@ -839,11 +876,7 @@ impl<'a, T> NumericArray<'a, T> {
 impl<'a, T: ToBigEndian> NumericArray<'a, T> {
     fn new(reader: UnsafeBytesReader<'a>) -> Self {
         let len = reader.read_i32(0).to_be() as usize;
-        NumericArray {
-            reader,
-            len,
-            _phantom: Default::default(),
-        }
+        NumericArray { reader, len, _phantom: Default::default() }
     }
 
     pub fn get(&self, idx: usize) -> Option<T> {
@@ -871,8 +904,14 @@ impl<'a, T: ToBigEndian + std::fmt::Debug> std::fmt::Debug for NumericArray<'a, 
             }
             write!(f, "]")
         } else {
-            write!(f, "[{:?}, {:?}, {:?}, ..., {:?}]", self.get(0).unwrap(), self.get(1).unwrap(),
-            self.get(2).unwrap(), self.get(self.len - 1).unwrap())
+            write!(
+                f,
+                "[{:?}, {:?}, {:?}, ..., {:?}]",
+                self.get(0).unwrap(),
+                self.get(1).unwrap(),
+                self.get(2).unwrap(),
+                self.get(self.len - 1).unwrap()
+            )
         }
     }
 }
@@ -884,10 +923,7 @@ pub struct NumericArrayIter<'a, T> {
 
 impl<'a, T> NumericArrayIter<'a, T> {
     fn new(array: &'a NumericArray<'a, T>) -> Self {
-        NumericArrayIter {
-            array,
-            cur: 0,
-        }
+        NumericArrayIter { array, cur: 0 }
     }
 }
 
@@ -944,20 +980,14 @@ pub struct StrArray<'a> {
 impl<'a> StrArray<'a> {
     fn new(reader: UnsafeBytesReader<'a>) -> Self {
         let len = reader.read_i32(0).to_be() as usize;
-        StrArray {
-            reader,
-            len,
-        }
+        StrArray { reader, len }
     }
 
     pub fn get(&self, idx: usize) -> Option<&str> {
         if idx < self.len {
             let str_start_off = 4 + 4 * self.len;
-            let start_off = if idx == 0 {
-                0
-            } else {
-                self.reader.read_i32(4 + (idx - 1) * 4).to_be() as usize
-            };
+            let start_off =
+                if idx == 0 { 0 } else { self.reader.read_i32(4 + (idx - 1) * 4).to_be() as usize };
             let end_off = self.reader.read_i32(4 + idx * 4).to_be() as usize;
             let len = end_off - start_off;
             let offset = str_start_off + start_off;
@@ -984,10 +1014,7 @@ pub struct StrArrayIter<'a> {
 
 impl<'a> StrArrayIter<'a> {
     pub fn new(array: &'a StrArray<'a>) -> Self {
-        StrArrayIter {
-            array,
-            cur: 0,
-        }
+        StrArrayIter { array, cur: 0 }
     }
 }
 
@@ -1047,32 +1074,37 @@ impl<'a> std::fmt::Debug for StrArray<'a> {
             }
             write!(f, "]")
         } else {
-            write!(f, "[{:?}, {:?}, {:?}, ..., {:?}]", self.get(0).unwrap(), self.get(1).unwrap(), self.get(2).unwrap(), self.get(self.len - 1).unwrap())
+            write!(
+                f,
+                "[{:?}, {:?}, {:?}, ..., {:?}]",
+                self.get(0).unwrap(),
+                self.get(1).unwrap(),
+                self.get(2).unwrap(),
+                self.get(self.len - 1).unwrap()
+            )
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::fmt::Debug;
 
+    use super::*;
 
     macro_rules! normal_test {
-        ($input:expr, $data_ty:tt, $func:tt) => {
-            {
-                for x in $input {
-                    let v = Value::$data_ty(x);
-                    assert_eq!(v.$func().unwrap(), x);
-                    assert_eq!(v.as_ref().$func().unwrap(), x);
-                    assert!(v.get_int_list().is_err());
-                    assert!(v.get_long_list().is_err());
-                    assert!(v.get_float_list().is_err());
-                    assert!(v.get_double_list().is_err());
-                    assert!(v.get_str_list().is_err());
-                }
+        ($input:expr, $data_ty:tt, $func:tt) => {{
+            for x in $input {
+                let v = Value::$data_ty(x);
+                assert_eq!(v.$func().unwrap(), x);
+                assert_eq!(v.as_ref().$func().unwrap(), x);
+                assert!(v.get_int_list().is_err());
+                assert!(v.get_long_list().is_err());
+                assert!(v.get_float_list().is_err());
+                assert!(v.get_double_list().is_err());
+                assert!(v.get_str_list().is_err());
             }
-        };
+        }};
     }
 
     #[test]
@@ -1103,27 +1135,25 @@ mod tests {
     }
 
     macro_rules! array_test {
-        ($input:expr, $arr_ty:tt, $func:tt) => {
-            {
-                for x in $input {
-                    let v = Value::$arr_ty(&x);
-                    let array = v.$func().unwrap();
-                    check_numeric_array(array, &x);
-                    let tmp = v.as_ref();
-                    let array = tmp.$func().unwrap();
-                    check_numeric_array(array, &x);
-                    assert!(v.get_bool().is_err());
-                    assert!(v.get_char().is_err());
-                    assert!(v.get_short().is_err());
-                    assert!(v.get_int().is_err());
-                    assert!(v.get_long().is_err());
-                    assert!(v.get_float().is_err());
-                    assert!(v.get_double().is_err());
-                    assert!(v.get_str().is_err());
-                    assert!(v.get_str_list().is_err());
-                }
+        ($input:expr, $arr_ty:tt, $func:tt) => {{
+            for x in $input {
+                let v = Value::$arr_ty(&x);
+                let array = v.$func().unwrap();
+                check_numeric_array(array, &x);
+                let tmp = v.as_ref();
+                let array = tmp.$func().unwrap();
+                check_numeric_array(array, &x);
+                assert!(v.get_bool().is_err());
+                assert!(v.get_char().is_err());
+                assert!(v.get_short().is_err());
+                assert!(v.get_int().is_err());
+                assert!(v.get_long().is_err());
+                assert!(v.get_float().is_err());
+                assert!(v.get_double().is_err());
+                assert!(v.get_str().is_err());
+                assert!(v.get_str_list().is_err());
             }
-        };
+        }};
     }
 
     #[test]
@@ -1131,17 +1161,26 @@ mod tests {
         let input = vec![vec![1, 2, 3], vec![-1, 323, 2321], vec![1], vec![-12]];
         array_test!(input, int_list, get_int_list);
 
-        let input = vec![vec![1, 222222, 322], vec![-11231, 32123121313, 2321], vec![13211], vec![-1131232]];
+        let input =
+            vec![vec![1, 222222, 322], vec![-11231, 32123121313, 2321], vec![13211], vec![-1131232]];
         array_test!(input, long_list, get_long_list);
 
-        let input = vec![vec![1.12, 2.223, 3.453], vec![-1.23, 323.3343, 2321.343], vec![1.0], vec![-12.3333]];
+        let input =
+            vec![vec![1.12, 2.223, 3.453], vec![-1.23, 323.3343, 2321.343], vec![1.0], vec![-12.3333]];
         array_test!(input, float_list, get_float_list);
 
-        let input = vec![vec![1.12111121321, 2.2123213123, 3.4513213],
-                         vec![-1.212313, 323.33412313, 2321.3412313], vec![131231.0], vec![-112312312.3333]];
+        let input = vec![
+            vec![1.12111121321, 2.2123213123, 3.4513213],
+            vec![-1.212313, 323.33412313, 2321.3412313],
+            vec![131231.0],
+            vec![-112312312.3333],
+        ];
         array_test!(input, double_list, get_double_list);
 
-        let input = vec![vec!["aaa".to_owned(), "bbb".to_owned(), "ccc".to_owned()], vec!["fadas".to_owned(), "dds.,,".to_owned()]];
+        let input = vec![
+            vec!["aaa".to_owned(), "bbb".to_owned(), "ccc".to_owned()],
+            vec!["fadas".to_owned(), "dds.,,".to_owned()],
+        ];
         for x in input {
             let v = Value::string_list(&x);
             let array = v.get_str_list().unwrap();
@@ -1154,16 +1193,32 @@ mod tests {
 
     #[test]
     fn value_partial_cmp_test() {
-        let small = vec![Value::bool(false), Value::char(0), Value::short(0), Value::int(0), Value::long(0), Value::float(0.0), Value::double(0.0)];
-        let big = vec![Value::bool(true), Value::char(10), Value::short(12), Value::int(123), Value::long(1234), Value::float(12345.1), Value::double(123456.1)];
+        let small = vec![
+            Value::bool(false),
+            Value::char(0),
+            Value::short(0),
+            Value::int(0),
+            Value::long(0),
+            Value::float(0.0),
+            Value::double(0.0),
+        ];
+        let big = vec![
+            Value::bool(true),
+            Value::char(10),
+            Value::short(12),
+            Value::int(123),
+            Value::long(1234),
+            Value::float(12345.1),
+            Value::double(123456.1),
+        ];
         for i in 0..small.len() {
-            for j in i+1..small.len() {
+            for j in i + 1..small.len() {
                 assert_eq!(small[i], small[j]);
             }
             for j in 0..big.len() {
                 assert!(small[i] < big[j]);
             }
-            for j in i+1..big.len() {
+            for j in i + 1..big.len() {
                 assert!(big[i] < big[j]);
             }
         }
@@ -1171,7 +1226,7 @@ mod tests {
         let data = vec!["aaa", "bbb", "ccc", "ddd", "esdada", "fff"];
         for i in 0..data.len() {
             assert_eq!(Value::string(data[i]), Value::string(data[i]));
-            for j in i+1..data.len() {
+            for j in i + 1..data.len() {
                 assert!(Value::string(data[i]) < Value::string(data[j]));
             }
         }
@@ -1179,7 +1234,7 @@ mod tests {
         let data = vec![b"aaa", b"bbb", b"ccc", b"ddd", b"eee", b"fff"];
         for i in 0..data.len() {
             assert_eq!(Value::bytes(data[i]), Value::bytes(data[i]));
-            for j in i+1..data.len() {
+            for j in i + 1..data.len() {
                 assert!(Value::bytes(data[i]) < Value::bytes(data[j]));
             }
         }
@@ -1213,5 +1268,4 @@ mod tests {
             idx += 1;
         }
     }
-
 }

@@ -16,8 +16,10 @@
 use std::sync::Arc;
 
 use graph_proxy::apis::Partitioner;
+use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::algebra::join::JoinKind;
+use ir_common::generated::algebra::logical_plan::operator::Opr as AlgebraOpr;
 use ir_common::generated::common as common_pb;
 use pegasus::api::function::*;
 use pegasus::api::{
@@ -73,16 +75,15 @@ impl FnGenerator {
         FnGenerator { partitioner }
     }
 
-    fn gen_source(&self, res: &BinaryResource) -> FnGenResult<DynIter<Record>> {
-        let mut step = decode::<algebra_pb::logical_plan::Operator>(res)?;
+    fn gen_source(&self, opr: AlgebraOpr) -> FnGenResult<DynIter<Record>> {
         let worker_id = pegasus::get_current_worker();
-        let step = SourceOperator::new(
-            &mut step,
+        let source_opr = SourceOperator::new(
+            opr,
             worker_id.local_peers as usize,
             worker_id.index,
             self.partitioner.clone(),
         )?;
-        Ok(step.gen_source(worker_id.index as usize)?)
+        Ok(source_opr.gen_source(worker_id.index as usize)?)
     }
 
     fn gen_shuffle(&self, res: &BinaryResource) -> FnGenResult<RecordShuffle> {
@@ -93,65 +94,61 @@ impl FnGenerator {
         Ok(Box::new(record_router))
     }
 
-    fn gen_map(&self, res: &BinaryResource) -> FnGenResult<RecordMap> {
-        let step = decode::<algebra_pb::logical_plan::Operator>(res)?;
-        Ok(step.gen_map()?)
+    fn gen_map(&self, opr: AlgebraOpr) -> FnGenResult<RecordMap> {
+        Ok(opr.gen_map()?)
     }
 
-    fn gen_filter_map(&self, res: &BinaryResource) -> FnGenResult<RecordFilterMap> {
-        let step = decode::<algebra_pb::logical_plan::Operator>(res)?;
-        Ok(step.gen_filter_map()?)
+    fn gen_filter_map(&self, opr: AlgebraOpr) -> FnGenResult<RecordFilterMap> {
+        Ok(opr.gen_filter_map()?)
     }
 
-    fn gen_flat_map(&self, res: &BinaryResource) -> FnGenResult<RecordFlatMap> {
-        let step = decode::<algebra_pb::logical_plan::Operator>(res)?;
-        Ok(step.gen_flat_map()?)
+    fn gen_flat_map(&self, opr: AlgebraOpr) -> FnGenResult<RecordFlatMap> {
+        Ok(opr.gen_flat_map()?)
     }
 
-    fn gen_filter(&self, res: &BinaryResource) -> FnGenResult<RecordFilter> {
-        let step = decode::<algebra_pb::logical_plan::Operator>(res)?;
-        Ok(step.gen_filter()?)
+    fn gen_filter(&self, opr: AlgebraOpr) -> FnGenResult<RecordFilter> {
+        Ok(opr.gen_filter()?)
     }
 
-    fn gen_cmp(&self, res: &BinaryResource) -> FnGenResult<RecordCompare> {
-        let step = decode::<algebra_pb::logical_plan::Operator>(res)?;
-        Ok(step.gen_cmp()?)
+    fn gen_cmp(&self, opr: AlgebraOpr) -> FnGenResult<RecordCompare> {
+        Ok(opr.gen_cmp()?)
     }
 
-    fn gen_group(&self, res: &BinaryResource) -> FnGenResult<RecordGroup> {
-        let step = decode::<algebra_pb::logical_plan::Operator>(res)?;
-        Ok(step.gen_group()?)
+    fn gen_group(&self, opr: AlgebraOpr) -> FnGenResult<RecordGroup> {
+        Ok(opr.gen_group()?)
     }
 
-    fn gen_fold(&self, res: &BinaryResource) -> FnGenResult<RecordFold> {
-        let step = decode::<algebra_pb::logical_plan::Operator>(res)?;
-        Ok(step.gen_fold()?)
+    fn gen_fold(&self, opr: AlgebraOpr) -> FnGenResult<RecordFold> {
+        Ok(opr.gen_fold()?)
     }
 
-    fn gen_subtask(&self, res: &BinaryResource) -> FnGenResult<RecordLeftJoin> {
-        let step = decode::<algebra_pb::logical_plan::Operator>(res)?;
-        Ok(step.gen_subtask()?)
+    fn gen_subtask(&self, opr: AlgebraOpr) -> FnGenResult<RecordLeftJoin> {
+        Ok(opr.gen_subtask()?)
     }
 
-    fn gen_join(&self, res: &BinaryResource) -> FnGenResult<RecordJoin> {
-        let step = decode::<algebra_pb::logical_plan::Operator>(res)?;
-        Ok(step.gen_join()?)
+    fn gen_join(&self, opr: AlgebraOpr) -> FnGenResult<RecordJoin> {
+        Ok(opr.gen_join()?)
     }
 
-    fn gen_key(&self, res: &BinaryResource) -> FnGenResult<RecordKeySelector> {
-        let step = decode::<algebra_pb::logical_plan::Operator>(res)?;
-        Ok(step.gen_key()?)
+    fn gen_key(&self, opr: AlgebraOpr) -> FnGenResult<RecordKeySelector> {
+        Ok(opr.gen_key()?)
     }
 
-    fn gen_sink(&self, res: &BinaryResource) -> FnGenResult<Sinker> {
-        let step = decode::<algebra_pb::logical_plan::Operator>(res)?;
-        Ok(step.gen_sink()?)
+    fn gen_sink(&self, opr: AlgebraOpr) -> FnGenResult<Sinker> {
+        Ok(opr.gen_sink()?)
     }
 }
 
 impl IRJobAssembly {
     pub fn new<D: Partitioner>(partitioner: D) -> Self {
         IRJobAssembly { udf_gen: FnGenerator::new(Arc::new(partitioner)) }
+    }
+
+    fn parse(&self, res: &BinaryResource) -> FnGenResult<AlgebraOpr> {
+        let mut opr = decode::<algebra_pb::logical_plan::Operator>(res)?;
+        opr.opr
+            .take()
+            .ok_or(ParsePbError::EmptyFieldError("algebra op is empty".to_string()).into())
     }
 
     fn install(
@@ -172,28 +169,34 @@ impl IRJobAssembly {
                         None => {}
                     },
                     server_pb::operator_def::OpKind::Map(map) => {
-                        let func = self.udf_gen.gen_map(&map.resource)?;
-                        stream = stream.map(move |input| func.exec(input))?;
+                        let opr = self.parse(&map.resource)?;
+                        let name = opr.get_name();
+                        let func = self.udf_gen.gen_map(opr)?;
+                        stream = stream.map_with_name(&name, move |input| func.exec(input))?;
                     }
                     server_pb::operator_def::OpKind::FilterMap(filter_map) => {
-                        let func = self
-                            .udf_gen
-                            .gen_filter_map(&filter_map.resource)?;
-                        stream = stream.filter_map(move |input| func.exec(input))?;
+                        let opr = self.parse(&filter_map.resource)?;
+                        let name = opr.get_name();
+                        let func = self.udf_gen.gen_filter_map(opr)?;
+                        stream = stream.filter_map_with_name(&name, move |input| func.exec(input))?;
                     }
                     server_pb::operator_def::OpKind::FlatMap(flat_map) => {
-                        let func = self.udf_gen.gen_flat_map(&flat_map.resource)?;
-                        stream = stream.flat_map(move |input| func.exec(input))?;
+                        let opr = self.parse(&flat_map.resource)?;
+                        let name = opr.get_name();
+                        let func = self.udf_gen.gen_flat_map(opr)?;
+                        stream = stream.flat_map_with_name(&name, move |input| func.exec(input))?;
                     }
                     server_pb::operator_def::OpKind::Filter(filter) => {
-                        let func = self.udf_gen.gen_filter(&filter.resource)?;
+                        let opr = self.parse(&filter.resource)?;
+                        let func = self.udf_gen.gen_filter(opr)?;
                         stream = stream.filter(move |input| func.test(input))?;
                     }
                     server_pb::operator_def::OpKind::Limit(n) => {
                         stream = stream.limit(n.limit)?;
                     }
                     server_pb::operator_def::OpKind::Sort(sort) => {
-                        let cmp = self.udf_gen.gen_cmp(&sort.compare)?;
+                        let opr = self.parse(&sort.compare)?;
+                        let cmp = self.udf_gen.gen_cmp(opr)?;
                         if sort.limit > 0 {
                             stream =
                                 stream.sort_limit_by(sort.limit as u32, move |a, b| cmp.compare(a, b))?;
@@ -202,7 +205,8 @@ impl IRJobAssembly {
                         }
                     }
                     server_pb::operator_def::OpKind::Fold(fold) => {
-                        let fold = self.udf_gen.gen_fold(&fold.resource)?;
+                        let opr = self.parse(&fold.resource)?;
+                        let fold = self.udf_gen.gen_fold(opr)?;
                         if let server_pb::AccumKind::Cnt = fold.get_accum_kind() {
                             let fold_map = fold.gen_fold_map()?;
                             stream = stream
@@ -223,7 +227,8 @@ impl IRJobAssembly {
                         }
                     }
                     server_pb::operator_def::OpKind::Group(group) => {
-                        let group = self.udf_gen.gen_group(&group.resource)?;
+                        let opr = self.parse(&group.resource)?;
+                        let group = self.udf_gen.gen_group(opr)?;
                         let group_key = group.gen_group_key()?;
                         let group_accum = group.gen_group_accum()?;
                         let group_map = group.gen_group_map()?;
@@ -248,7 +253,8 @@ impl IRJobAssembly {
                     }
 
                     server_pb::operator_def::OpKind::Dedup(dedup) => {
-                        let selector = self.udf_gen.gen_key(&dedup.resource)?;
+                        let opr = self.parse(&dedup.resource)?;
+                        let selector = self.udf_gen.gen_key(opr)?;
                         stream = stream
                             .key_by(move |record| selector.get_kv(record))?
                             .dedup()?
@@ -269,9 +275,9 @@ impl IRJobAssembly {
                         let until = if let Some(condition) = iter
                             .until
                             .as_ref()
-                            .and_then(|f| Some(f.resource.as_ref()))
+                            .and_then(|f| Some(self.parse(&f.resource)))
                         {
-                            let cond = self.udf_gen.gen_filter(condition)?;
+                            let cond = self.udf_gen.gen_filter(condition?)?;
                             let mut until = IterCondition::new();
                             until.until(move |input| cond.test(input));
                             until.max_iters = iter.max_iters;
@@ -290,9 +296,9 @@ impl IRJobAssembly {
                         let until = if let Some(condition) = iter_emit
                             .until
                             .as_ref()
-                            .and_then(|f| Some(f.resource.as_ref()))
+                            .and_then(|f| Some(self.parse(&f.resource)))
                         {
-                            let cond = self.udf_gen.gen_filter(condition)?;
+                            let cond = self.udf_gen.gen_filter(condition?)?;
                             let mut until = IterCondition::new();
                             until.until(move |input| cond.test(input));
                             until.max_iters = iter_emit.max_iters;
@@ -309,13 +315,13 @@ impl IRJobAssembly {
                         }
                     }
                     server_pb::operator_def::OpKind::Apply(sub) => {
-                        let apply_gen = self.udf_gen.gen_subtask(
-                            sub.join
+                        let opr = self.parse(
+                            &sub.join
                                 .as_ref()
                                 .ok_or("should have subtask_kind")?
-                                .resource
-                                .as_ref(),
+                                .resource,
                         )?;
+                        let apply_gen = self.udf_gen.gen_subtask(opr)?;
                         let join_kind = apply_gen.get_join_kind();
                         let join_func = apply_gen.gen_left_join_func()?;
                         let sub_task = sub
@@ -373,7 +379,8 @@ impl IRJobAssembly {
                         Err(BuildJobError::Unsupported("SegApply is not supported yet".to_string()))?
                     }
                     server_pb::operator_def::OpKind::Join(join) => {
-                        let joiner = self.udf_gen.gen_join(&join.resource)?;
+                        let opr = self.parse(&join.resource)?;
+                        let joiner = self.udf_gen.gen_join(opr)?;
                         let left_key_selector = joiner.gen_left_kv_fn()?;
                         let right_key_selector = joiner.gen_right_kv_fn()?;
                         let join_kind = joiner.get_join_kind();
@@ -464,10 +471,10 @@ impl IRJobAssembly {
 impl JobAssembly for IRJobAssembly {
     fn assemble(&self, plan: &JobDesc, worker: &mut Worker<Vec<u8>, Vec<u8>>) -> Result<(), BuildJobError> {
         worker.dataflow(move |input, output| {
-            let source_op = decode::<server_pb::Source>(&plan.input)?;
+            let source = decode::<server_pb::Source>(&plan.input)?;
             let source_iter = self
                 .udf_gen
-                .gen_source(source_op.resource.as_ref())?;
+                .gen_source(self.parse(&source.resource)?)?;
             let source = input
                 .input_from(source_iter.map(|record| {
                     let mut buf: Vec<u8> = vec![];
@@ -480,24 +487,29 @@ impl JobAssembly for IRJobAssembly {
                 })?;
             let task = decode::<server_pb::TaskPlan>(&plan.plan)?;
             let stream = self.install(source, &task.plan)?;
+
             let sink = decode::<server_pb::Sink>(&plan.resource)?;
-            let ec = self.udf_gen.gen_sink(&sink.resource)?;
+            let ec = self
+                .udf_gen
+                .gen_sink(self.parse(&sink.resource)?)?;
             match ec {
                 Sinker::DefaultSinker(default_sinker) => stream
                     .map(move |record| default_sinker.exec(record))?
                     .sink_into(output),
-                Sinker::GraphSinker(graph_sinker) => stream
-                    .fold_partition(graph_sinker, || {
-                        |mut accumulator, next| {
-                            accumulator.accum(next)?;
-                            Ok(accumulator)
-                        }
-                    })?
-                    .map(|mut accumulator| Ok(accumulator.finalize()?))?
-                    .into_stream()?
-                    // TODO: confirm with compiler
-                    .map(|_r| Ok(vec![]))?
-                    .sink_into(output),
+                #[cfg(feature = "with_v6d")]
+                Sinker::GraphSinker(graph_sinker) => {
+                    return stream
+                        .fold_partition(graph_sinker, || {
+                            |mut accumulator, next| {
+                                accumulator.accum(next)?;
+                                Ok(accumulator)
+                            }
+                        })?
+                        .map(|mut accumulator| Ok(accumulator.finalize()?))?
+                        .into_stream()?
+                        .map(|_r| Ok(vec![]))?
+                        .sink_into(output)
+                }
             }
         })
     }

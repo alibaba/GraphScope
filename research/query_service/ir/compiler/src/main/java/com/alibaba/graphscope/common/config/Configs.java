@@ -27,6 +27,10 @@ import java.util.Properties;
 public class Configs {
     private Properties properties;
 
+    public Configs(String file) throws IOException {
+        this(file, FileLoadType.RELATIVE_PATH);
+    }
+
     public Configs(String file, FileLoadType loadType) throws IOException, NotImplementedException {
         properties = new Properties();
         switch (loadType) {
@@ -59,7 +63,16 @@ public class Configs {
         }
     }
 
+    public String get(String name) {
+        return this.properties.getProperty(name);
+    }
+
     public String get(String name, String defaultValue) {
         return this.properties.getProperty(name, defaultValue);
+    }
+
+    @Override
+    public String toString() {
+        return this.properties.toString();
     }
 }

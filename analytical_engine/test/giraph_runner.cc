@@ -101,7 +101,7 @@ std::string flags2JsonStr() {
 
   std::stringstream ss;
   boost::property_tree::json_parser::write_json(ss, pt);
-  return std::move(ss.str());
+  return ss.str();
 }
 
 int main(int argc, char* argv[]) {

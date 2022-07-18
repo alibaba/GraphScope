@@ -26,15 +26,11 @@ pub trait JoinFunctionGen {
     fn gen_join(self) -> FnGenResult<Box<dyn JoinKeyGen<Record, RecordKey, Record>>>;
 }
 
-impl JoinFunctionGen for algebra_pb::logical_plan::Operator {
+impl JoinFunctionGen for algebra_pb::logical_plan::operator::Opr {
     fn gen_join(self) -> FnGenResult<Box<dyn JoinKeyGen<Record, RecordKey, Record>>> {
-        if let Some(opr) = self.opr {
-            match opr {
-                algebra_pb::logical_plan::operator::Opr::Join(join) => Ok(Box::new(join)),
-                _ => Err(ParsePbError::from("algebra_pb op is not a keyed op"))?,
-            }
-        } else {
-            Err(ParsePbError::EmptyFieldError("algebra op is empty".to_string()))?
+        match self {
+            algebra_pb::logical_plan::operator::Opr::Join(join) => Ok(Box::new(join)),
+            _ => Err(ParsePbError::from("algebra_pb op is not a keyed op"))?,
         }
     }
 }

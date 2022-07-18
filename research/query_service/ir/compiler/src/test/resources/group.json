@@ -19,7 +19,12 @@
             ],
             "functions": [
               {
-                "vars": [],
+                "vars": [
+                  {
+                    "tag": null,
+                    "property": null
+                  }
+                ],
                 "aggregate": 5,
                 "alias": {
                   "item": {

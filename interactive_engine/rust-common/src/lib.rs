@@ -26,9 +26,7 @@ extern crate serde_derive;
 extern crate serde_value;
 extern crate regex;
 extern crate byteorder;
-extern crate futures;
 extern crate grpcio;
-extern crate zookeeper;
-
+extern crate futures;
 pub mod util;
 pub mod proto;

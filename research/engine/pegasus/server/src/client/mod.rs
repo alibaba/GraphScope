@@ -1,12 +1,12 @@
-use std::cell::RefCell;
-use std::fmt::{Debug, Display, Formatter};
-use std::io::Read;
-use std::pin::Pin;
-use std::task::{Context, Poll};
-use std::path::Path;
 use futures::stream::{BoxStream, SelectAll};
 use futures::{Stream, StreamExt};
 use pegasus::{JobConf, ServerConf};
+use std::cell::RefCell;
+use std::fmt::{Debug, Display, Formatter};
+use std::io::Read;
+use std::path::Path;
+use std::pin::Pin;
+use std::task::{Context, Poll};
 
 use crate::job::JobDesc;
 use crate::pb::job_config::Servers;
@@ -56,7 +56,6 @@ impl RPCJobClient {
     }
 
     pub async fn add_library<P: AsRef<Path>>(&mut self, name: &str, path: P) -> Result<(), JobError> {
-
         if self.conns.len() == 0 {
             return Ok(());
         }
@@ -70,7 +69,8 @@ impl RPCJobClient {
                         let mut tasks = Vec::new();
                         for conn in self.conns.iter() {
                             if let Some(client) = conn {
-                                let res = BinaryResource { name: name.to_string(), resource: buffer.clone() };
+                                let res =
+                                    BinaryResource { name: name.to_string(), resource: buffer.clone() };
                                 tasks.push(async move {
                                     let mut client = client.borrow_mut();
                                     client.add_library(res.clone()).await
@@ -93,15 +93,11 @@ impl RPCJobClient {
                             }
                         }
                         Ok(())
-                    },
-                    Err(e) => {
-                        Err(JobError::InvalidConfig(format!("read lib fail {}", e)))
                     }
+                    Err(e) => Err(JobError::InvalidConfig(format!("read lib fail {}", e))),
                 }
-            },
-            Err(e) => {
-                Err(JobError::InvalidConfig(format!("open lib file failure: {}", e)))
             }
+            Err(e) => Err(JobError::InvalidConfig(format!("open lib file failure: {}", e))),
         }
     }
 

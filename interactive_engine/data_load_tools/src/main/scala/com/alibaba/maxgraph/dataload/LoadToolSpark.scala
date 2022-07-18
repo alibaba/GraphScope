@@ -15,8 +15,6 @@ package com.alibaba.maxgraph.dataload
 
 import org.apache.spark.sql.SparkSession
 
-import java.io.IOException
-
 object LoadToolSpark {
 
   def main(args: Array[String]) {

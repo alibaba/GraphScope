@@ -27,19 +27,15 @@ pub trait KeyFunctionGen {
     fn gen_key(self) -> FnGenResult<Box<dyn KeyFunction<Record, RecordKey, Record>>>;
 }
 
-impl KeyFunctionGen for algebra_pb::logical_plan::Operator {
+impl KeyFunctionGen for algebra_pb::logical_plan::operator::Opr {
     fn gen_key(self) -> FnGenResult<Box<dyn KeyFunction<Record, RecordKey, Record>>> {
-        if let Some(opr) = self.opr {
-            match opr {
-                algebra_pb::logical_plan::operator::Opr::GroupBy(group) => group.gen_key(),
-                algebra_pb::logical_plan::operator::Opr::Dedup(dedup) => dedup.gen_key(),
-                algebra_pb::logical_plan::operator::Opr::SegApply(_seg_apply) => {
-                    Err(FnGenError::unsupported_error("SegApply is not supported yet"))?
-                }
-                _ => Err(ParsePbError::from("algebra_pb op is not a keyed op"))?,
+        match self {
+            algebra_pb::logical_plan::operator::Opr::GroupBy(group) => group.gen_key(),
+            algebra_pb::logical_plan::operator::Opr::Dedup(dedup) => dedup.gen_key(),
+            algebra_pb::logical_plan::operator::Opr::SegApply(_seg_apply) => {
+                Err(FnGenError::unsupported_error("SegApply is not supported yet"))?
             }
-        } else {
-            Err(ParsePbError::EmptyFieldError("algebra op is empty".to_string()))?
+            _ => Err(ParsePbError::from("algebra_pb op is not a keyed op"))?,
         }
     }
 }

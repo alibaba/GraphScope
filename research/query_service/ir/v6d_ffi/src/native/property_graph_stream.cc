@@ -23,6 +23,8 @@ namespace vineyard {
 
 namespace htap {
 
+constexpr int64_t kDefaultBufferSize = 1024 * 128;
+
 namespace detail {
 
 std::shared_ptr<arrow::DataType> PropertyTypeToDataType(
@@ -142,8 +144,8 @@ void PropertyTableAppender::Apply(
 #endif
     if (prop_ids.find(properties[i].id) != prop_ids.end()) {
 #ifndef NDEBUG
-      LOG(WARNING) << "detect duplicate vertex property id, ignored: "
-                   << properties[i].id;
+      LOG(INFO) << "detect duplicate vertex property id, ignored: "
+                << properties[i].id;
 #endif
       continue;
     }
@@ -162,7 +164,7 @@ void PropertyTableAppender::Apply(
     // fill a null value for missing values to make sure columns
     // has the same length before being finalized.
     if (processed.find(i) == processed.end()) {
-      builder->GetField(i)->AppendNull();
+      CHECK_ARROW_ERROR(builder->GetField(i)->AppendNull());
     }
   }
   if (builder->GetField(0)->length() == builder->initial_capacity()) {
@@ -187,8 +189,8 @@ void PropertyTableAppender::Apply(
 #endif
     if (prop_ids.find(properties[i].id) != prop_ids.end()) {
 #ifndef NDEBUG
-      LOG(WARNING) << "detect duplicate edge property id, ignored: "
-                   << properties[i].id;
+      LOG(INFO) << "detect duplicate edge property id, ignored: "
+                << properties[i].id;
 #endif
       continue;
     }
@@ -209,7 +211,7 @@ void PropertyTableAppender::Apply(
     // fill a null value for missing values to make sure columns
     // has the same length before being finalized.
     if (processed.find(i) == processed.end()) {
-      builder->GetField(i)->AppendNull();
+      CHECK_ARROW_ERROR(builder->GetField(i)->AppendNull());
     }
   }
   if (builder->GetField(0)->length() == builder->initial_capacity()) {
@@ -321,7 +323,7 @@ int PropertyGraphOutStream::AddEdge(VertexId src_id,
 
     std::unique_ptr<arrow::RecordBatchBuilder> builder = nullptr;
     CHECK_ARROW_ERROR(arrow::RecordBatchBuilder::Make(
-        schema, arrow::default_memory_pool(), 10240, &builder));
+        schema, arrow::default_memory_pool(), kDefaultBufferSize, &builder));
     edge_builders_[label][src_dst_key].reset(builder.release());
   }
   auto &builder = edge_builders_[label][src_dst_key];
@@ -401,13 +403,13 @@ void PropertyGraphOutStream::initialTables() {
       LOG(INFO) << "vertex prop id mapping: entry.label = " << entry.label
                 << ", entry.id = " << entry.id
                 << ", mapping prop " << entry.props_[idx].id
+                << "(" << entry.props_[idx].name << ")"
                 << " to " << (1 + idx);
 #endif
       vertex_property_id_mapping_[entry.id].emplace(entry.props_[idx].id,
                                                     1 + idx);
       if (!entry.primary_keys.empty()) {
-        if (entry.primary_keys[0] == entry.label) {
-          LOG(INFO) << "Found primary key column in props: " << entry.label;
+        if (entry.primary_keys[0] == entry.props_[idx].name) {
           vertex_primary_key_column_[entry.id] = 1 + idx;
         }
       }
@@ -423,7 +425,7 @@ void PropertyGraphOutStream::initialTables() {
 
     std::unique_ptr<arrow::RecordBatchBuilder> builder = nullptr;
     CHECK_ARROW_ERROR(arrow::RecordBatchBuilder::Make(
-        schema, arrow::default_memory_pool(), 10240, &builder));
+        schema, arrow::default_memory_pool(), kDefaultBufferSize, &builder));
     vertex_builders_.emplace(entry.id, std::move(builder));
     vertex_schemas_.emplace(entry.id, schema);
     vertex_appenders_.emplace(
@@ -476,7 +478,7 @@ void PropertyGraphOutStream::initialTables() {
 
         std::unique_ptr<arrow::RecordBatchBuilder> builder = nullptr;
         CHECK_ARROW_ERROR(arrow::RecordBatchBuilder::Make(
-            subschema, arrow::default_memory_pool(), 10240, &builder));
+            subschema, arrow::default_memory_pool(), kDefaultBufferSize, &builder));
         edge_builders_[entry.id][src_dst_key].reset(builder.release());
       }
     }
@@ -503,6 +505,7 @@ void PropertyGraphOutStream::buildTableChunk(
   }
 
 #ifndef NDEBUG
+  LOG(INFO) << "chunk schema: batch is (" << batch->num_rows() << ", " << batch->num_columns() << ")";
   LOG(INFO) << "chunk schema: batch is " << batch->schema()->ToString();
 #endif
   auto status = output_stream->WriteBatch(batch);
@@ -569,7 +572,7 @@ int PropertyGraphOutStream::FinishAllEdges() {
   if (!edge_stream_->IsOpen()) {
     VINEYARD_CHECK_OK(this->Open(edge_stream_));
   }
-  LOG(INFO) << "finishing vertex stream: " << ObjectIDToString(vertex_stream_->id());
+  LOG(INFO) << "finishing edge stream: " << ObjectIDToString(vertex_stream_->id());
   VINEYARD_CHECK_OK(edge_stream_->Finish());
   edge_finished_ = true;
 

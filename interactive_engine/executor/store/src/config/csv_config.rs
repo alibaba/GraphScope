@@ -1,27 +1,28 @@
 //
 //! Copyright 2020 Alibaba Group Holding Limited.
-//! 
+//!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
 //! You may obtain a copy of the License at
-//! 
+//!
 //! http://www.apache.org/licenses/LICENSE-2.0
-//! 
+//!
 //! Unless required by applicable law or agreed to in writing, software
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::schema::prelude::*;
-use std::path::Path;
 use std::fs::File;
 use std::io::prelude::*;
-use serde_json;
-use serde_json::{Value, Error};
-use crate::api::prelude::*;
+use std::path::Path;
 use std::sync::Arc;
 
+use serde_json;
+use serde_json::{Error, Value};
+
+use crate::api::prelude::*;
+use crate::schema::prelude::*;
 
 #[derive(Debug, Default)]
 pub struct CSVLoadConfig {
@@ -49,20 +50,28 @@ impl CSVLoadConfig {
         if let Some(type_id) = schema.get_label_id(label.as_str()) {
             ret.label = type_id;
         } else {
-            return Err(ConfigParseError::from(format!(r#"label "{}" not found in schema: {:?}"#, label, schema)));
+            return Err(ConfigParseError::from(format!(
+                r#"label "{}" not found in schema: {:?}"#,
+                label, schema
+            )));
         }
 
-        ret.separator = json.get("separator").map_or(",", |s| {
-            s.as_str().unwrap_or(",")
-        }).to_owned();
+        ret.separator = json
+            .get("separator")
+            .map_or(",", |s| s.as_str().unwrap_or(","))
+            .to_owned();
 
         if let Some(properties) = json["properties"].as_array() {
             for v in properties.iter() {
                 let prop_name = get_string_value(v, "propertyName")?;
-                if let Some (prop_id) = schema.get_prop_id(prop_name.as_str()) {
+                if let Some(prop_id) = schema.get_prop_id(prop_name.as_str()) {
                     let data_type = get_string_value(v, "dataType")?;
                     let index = get_string_value(v, "index")?.parse::<usize>()?;
-                    ret.properties.push((index, prop_id, parse_str_to_data_type(data_type.to_lowercase().as_str())?));
+                    ret.properties.push((
+                        index,
+                        prop_id,
+                        parse_str_to_data_type(data_type.to_lowercase().as_str())?,
+                    ));
                 } else {
                     return Err(ConfigParseError::from(format!(r#""{}" not found in schema"#, prop_name)));
                 }
@@ -70,11 +79,17 @@ impl CSVLoadConfig {
             let t = get_string_value(&json, "type")?.to_lowercase();
             if t.as_str() == "edge" {
                 let src_label = get_string_value(&json, "srcLabel")?;
-                ret.src_label = Some(schema.get_label_id(src_label.as_str())
-                    .ok_or(format!("{} not found", src_label))?);
+                ret.src_label = Some(
+                    schema
+                        .get_label_id(src_label.as_str())
+                        .ok_or(format!("{} not found", src_label))?,
+                );
                 let dst_label = get_string_value(&json, "dstLabel")?;
-                ret.dst_label = Some(schema.get_label_id(dst_label.as_str())
-                    .ok_or(format!("{} not found", dst_label))?);
+                ret.dst_label = Some(
+                    schema
+                        .get_label_id(dst_label.as_str())
+                        .ok_or(format!("{} not found", dst_label))?,
+                );
             }
         } else {
             return Err(ConfigParseError::from(r#""properties" not found in config"#));
@@ -107,9 +122,7 @@ pub struct ConfigParseError {
 
 impl From<String> for ConfigParseError {
     fn from(err_msg: String) -> Self {
-        ConfigParseError {
-            err_msg,
-        }
+        ConfigParseError { err_msg }
     }
 }
 
@@ -121,9 +134,7 @@ impl ToString for ConfigParseError {
 
 impl<'a> From<&'a str> for ConfigParseError {
     fn from(err_msg: &str) -> Self {
-        ConfigParseError {
-            err_msg: err_msg.to_owned()
-        }
+        ConfigParseError { err_msg: err_msg.to_owned() }
     }
 }
 

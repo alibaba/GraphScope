@@ -14,7 +14,7 @@
 //! limitations under the License.
 
 pub use concise::*;
-pub use iteration::{IterCondition, Iteration, EmitKind};
+pub use iteration::{EmitKind, IterCondition, Iteration};
 pub use primitive::binary::Binary;
 pub use primitive::branch::Branch;
 pub use primitive::sink::{FromStream, Sink};

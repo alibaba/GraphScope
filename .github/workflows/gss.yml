@@ -30,7 +30,7 @@ on:
       - '!charts/graphscope-store/**.md'
 
 concurrency:
-  group: ${{ github.repository }}-${{ github.head_ref || github.sha }}-${{ github.workflow }}
+  group: ${{ github.repository }}-${{ github.event.number || github.head_ref || github.sha }}-${{ github.workflow }}
   cancel-in-progress: true
 
 env:
@@ -67,10 +67,6 @@ jobs:
         # install rdkafka
         sudo yum install -y librdkafka-devel
 
-        export SCCACHE_DIR=~/.cache/sccache
-        export RUSTC_WRAPPER=/usr/local/bin/sccache
-        sccache --start-server
-
         # install cppkafka
         git clone -b 0.4.0 --single-branch --depth=1 \
             https://github.com/mfontanini/cppkafka.git /tmp/cppkafka && \
@@ -79,50 +75,16 @@ jobs:
           cmake .. && make -j && sudo make install && \
           rm -fr /tmp/cppkafka
 
-    - name: Install latest libgrape-lite and vineyard
-      if: false
-      run: |
-        source ~/.bashrc
-
-        git clone --single-branch --depth=1 https://github.com/alibaba/libgrape-lite.git /tmp/libgrape-lite
-        pushd /tmp/libgrape-lite
-        mkdir -p build && cd build
-        cmake .. -DCMAKE_INSTALL_PREFIX=/opt/vineyard
-        make -j$(nproc)
-        sudo make install
-        popd
-        rm -fr /tmp/libgrape-lite
-
-        git clone --single-branch --depth=1 https://github.com/v6d-io/v6d.git /tmp/v6d
-        pushd /tmp/v6d
-        git submodule update --init
-        mkdir -p build && cd build
-        cmake .. -DCMAKE_INSTALL_PREFIX=/opt/vineyard \
-                 -DUSE_EXTERNAL_ETCD_LIBS=OFF \
-                 -DBUILD_SHARED_LIBS=ON \
-                 -DBUILD_VINEYARD_TESTS=OFF
-        make -j$(nproc)
-        sudo make install
-        popd
-
-        rm -fr /tmp/v6d
-
-        # copy to /usr/local, keep the same logic as gsvineyard.Dockerfile
-        sudo cp -r /opt/vineyard/* /usr/local/
-
     - name: Build GraphScope Store
       run: |
         source ${HOME}/.bashrc
+        export SCCACHE_DIR=~/.cache/sccache
+        export RUSTC_WRAPPER=/usr/local/bin/sccache
+        sccache --start-server
         cd ${GITHUB_WORKSPACE}/interactive_engine
-        for i in {1..3}; do mvn clean install -Pv2 -Drust.compile.mode=debug -DskipTests --quiet && break || sleep 60; done
+        mvn clean install -Pv2 -Drust.compile.mode=debug -DskipTests --quiet
 
         sccache --show-stats
-
-        cd ${GITHUB_WORKSPACE}
-        # maxgraph.tar.gz is for helm test
-        mv interactive_engine/distribution/target/maxgraph.tar.gz ./maxgraph.tar.gz
-        # graphscope_store_data_load.tar.gz is for release
-        mv interactive_engine/data_load_tools/target/data_load.tar.gz ./graphscope_store_data_load.tar.gz
 
     - name: Gremlin Test
       run: |
@@ -132,25 +94,14 @@ jobs:
     - name: Upload tools for helm test to Artifact
       uses: actions/upload-artifact@v2
       with:
-        name: gss-${{ github.sha }}
-        path: maxgraph.tar.gz
-        retention-days: 5
-
-    - name: Upload Data Load to Artifact
-      uses: actions/upload-artifact@v2
-      with:
-        name: data_load-${{ github.sha }}
-        path: |
-          graphscope_store_data_load.tar.gz
+        name: maxgraph.tar.gz
+        path: interactive_engine/distribution/target/maxgraph.tar.gz
         retention-days: 5
 
   helm-test:
     runs-on: [self-hosted, "47.242.9.60"]
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     needs: [gremlin-test]
-    strategy:
-      matrix:
-        executor: [maxgraph]
     steps:
     - name: Clean Up
       run: |
@@ -167,16 +118,19 @@ jobs:
 
     - uses: actions/download-artifact@v2
       with:
+        name: maxgraph.tar.gz
         path: artifacts
 
     - name: Set GITHUB_ENV
       run: |
         short_sha=$(git rev-parse --short HEAD)
         echo "SHORT_SHA=${short_sha}" >> $GITHUB_ENV
+
     - name: Prepare Image
+      env:
+        CI: true
       run: |
-        cd ${GITHUB_WORKSPACE}
-        sudo make graphscope-store-image
+        make graphscope-store-image
     - name: Python Test with Helm Deployment
       env:
         JAVA_HOME: /usr/lib/jvm/default-java
@@ -185,7 +139,7 @@ jobs:
         # maxgraph.tar.gz is needed for offline_load.sh
         # see .github/workflows/hadoop_scripts/offline_load.sh.template
         pushd artifacts
-        tar -zxf ./gss-${{ github.sha }}/maxgraph.tar.gz
+        tar -zxf ./maxgraph.tar.gz
         # download gstest
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
         # retag image for helm test
@@ -196,7 +150,7 @@ jobs:
         helm dependency update
         # helm deployment and testing
         cd ${GITHUB_WORKSPACE}/charts
-        helm install ci --set image.tag=${SHORT_SHA},executor=${{ matrix.executor }} ./graphscope-store
+        helm install ci --set image.tag=${SHORT_SHA} ./graphscope-store
         helm test ci --timeout 5m0s
         # 1. get gss service endpoint
         export GRPC_PORT=$(kubectl get --namespace default -o jsonpath="{.spec.ports[0].nodePort}" services ci-graphscope-store-frontend)
@@ -228,7 +182,7 @@ jobs:
         # restart helm and run demo with the PersistentVolume
         helm uninstall ci
         cd ${GITHUB_WORKSPACE}/charts
-        helm install ci --set image.tag=${SHORT_SHA},executor=${{ matrix.executor }} ./graphscope-store
+        helm install ci --set image.tag=${SHORT_SHA} ./graphscope-store
         # helm test and python test on the restarted store
         export GRPC_PORT=$(kubectl get --namespace default -o jsonpath="{.spec.ports[0].nodePort}" services ci-graphscope-store-frontend)
         export GREMLIN_PORT=$(kubectl get --namespace default -o jsonpath="{.spec.ports[1].nodePort}" services ci-graphscope-store-frontend)

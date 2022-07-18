@@ -42,8 +42,12 @@ impl<D: Data> Fold<D> for Stream<D> {
                             let mut session = output.new_session(&batch.tag)?;
                             session.give_last(Single(accum), end)?;
                         } else {
+                            // decide if it need to output a default value when upstream is empty;
+                            // but only one default value should be output;
                             let worker = crate::worker_id::get_current_worker().index;
-                            if end.contains_source(worker) {
+                            if (end.tag.is_root() && worker == 0)
+                                || (!end.tag.is_root() && end.contains_source(worker))
+                            {
                                 let mut session = output.new_session(&batch.tag)?;
                                 session.give_last(Single(init.clone()), end)?
                             } else {
@@ -85,7 +89,7 @@ impl<D: Data> Fold<D> for Stream<D> {
                             session.give_last(Single(accum), end)?;
                         } else {
                             let worker = crate::worker_id::get_current_worker().index;
-                            if end.contains_source(worker) {
+                            if end.tag.is_root() || (!end.tag.is_root() && end.contains_source(worker)) {
                                 let mut session = output.new_session(&batch.tag)?;
                                 session.give_last(Single(init.clone()), end)?
                             } else {

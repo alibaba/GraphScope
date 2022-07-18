@@ -14,8 +14,8 @@ readonly GREEN="\033[0;32m"
 readonly NC="\033[0m" # No Color
 
 readonly GRAPE_BRANCH="master" # libgrape-lite branch
-readonly V6D_VERSION="0.5.3"  # vineyard version
-readonly V6D_BRANCH="v0.5.3" # vineyard branch
+readonly V6D_VERSION="0.6.0"  # vineyard version
+readonly V6D_BRANCH="v0.6.0" # vineyard branch
 
 readonly OUTPUT_ENV_FILE="${HOME}/.graphscope_env"
 IS_IN_WSL=false && [[ ! -z "${IS_WSL}" || ! -z "${WSL_DISTRO_NAME}" ]] && IS_IN_WSL=true
@@ -185,7 +185,6 @@ init_basic_packages() {
       git
       rapidjson-dev
       libmsgpack-dev
-      golang-go
     )
   elif [[ "${PLATFORM}" == *"CentOS"* ]]; then
     BASIC_PACKGES_TO_INSTALL=(
@@ -224,7 +223,6 @@ init_basic_packages() {
       curl
       rapidjson-devel
       msgpack-devel
-      golang
     )
   else
     BASIC_PACKGES_TO_INSTALL=(
@@ -244,7 +242,6 @@ init_basic_packages() {
       libomp
       rapidjson
       msgpack-cxx
-      go
     )
   fi
   readonly BASIC_PACKGES_TO_INSTALL
@@ -393,7 +390,6 @@ write_envs_config() {
         echo "export JAVA_HOME=\$(/usr/libexec/java_home -v11)"
       fi
       echo "export PATH=\$HOME/.cargo/bin:\${JAVA_HOME}/bin:/usr/local/go/bin:\$PATH"
-      echo "export PATH=\$(go env GOPATH)/bin:\$PATH"
       echo "export OPENSSL_ROOT_DIR=${homebrew_prefix}/opt/openssl"
       echo "export OPENSSL_LIBRARIES=${homebrew_prefix}/opt/openssl/lib"
       echo "export OPENSSL_SSL_LIBRARY=${homebrew_prefix}/opt/openssl/lib/libssl.dylib"
@@ -405,8 +401,8 @@ write_envs_config() {
       if [ -z "${JAVA_HOME}" ]; then
         echo "export JAVA_HOME=/usr/lib/jvm/default-java"
       fi
-      echo "export PATH=\${JAVA_HOME}/bin:\$HOME/.cargo/bin:/usr/local/go/bin:\$PATH"
-      echo "export PATH=\$(go env GOPATH)/bin:\$PATH"
+      echo "export PATH=\${JAVA_HOME}/bin:\$HOME/.cargo/bin:\$PATH"
+      echo "export LLVM11_HOME=${homebrew_prefix}/opt/llvm/"
     } >> ${OUTPUT_ENV_FILE}
   else
     {
@@ -414,8 +410,8 @@ write_envs_config() {
       if [ -z "${JAVA_HOME}" ]; then
         echo "export JAVA_HOME=/usr/lib/jvm/java"
       fi
-      echo "export PATH=\${JAVA_HOME}/bin:\$HOME/.cargo/bin:\$PATH:/usr/local/go/bin"
-      echo "export PATH=\$(go env GOPATH)/bin:\$PATH"
+      echo "export PATH=\${JAVA_HOME}/bin:\$HOME/.cargo/bin:\$PATH"
+      echo "export LLVM11_HOME=${homebrew_prefix}/opt/llvm/"
     } >> ${OUTPUT_ENV_FILE}
   fi
 }
@@ -483,6 +479,43 @@ install_vineyard() {
   rm -fr /tmp/v6d
 }
 
+
+##########################
+# Install fastFFI.
+# Globals:
+#   PLATFORM
+# Arguments:
+#   None
+# Outputs:
+#   output log to stdout, output error to stderr.
+##########################
+install_fastFFI() {
+  log "Building and installing fastFFI."
+
+  pushd /opt/
+  if [[ -d /opt/fastFFI ]]; then
+    log "Found /opt/fastFFI exists, remove it."
+    sudo rm -fr /opt/fastFFI
+  fi
+  sudo git clone https://github.com/alibaba/fastFFI.git 
+  sudo chown -R $(id -u):$(id -g) /opt/fastFFI
+  pushd fastFFI
+  git checkout a166c6287f2efb938c27fb01b3d499932d484f9c
+
+  if [[ "${PLATFORM}" == *"Darwin"* ]]; then
+    # only install "ffi&annotation-processsor" on macOS, because
+    # llvm4jni not compatible for Apple M1 chip.
+    mvn clean install -DskipTests -pl :ffi,annotation-processor,llvm4jni-runtime -am --quiet
+    sudo -E mvn clean install -DskipTests -pl :ffi,annotation-processor,llvm4jni-runtime -am --quiet
+  else
+    export PATH=${PATH}:${LLVM11_HOME}/bin
+    mvn clean install -DskipTests
+    sudo -E mvn clean install -DskipTests
+  fi
+  popd
+  popd
+}
+
 ##########################
 # Install cppkafka.
 # Globals:
@@ -541,7 +574,7 @@ install_dependencies() {
     if [[ "${packages_to_install[*]}" =~ "rust" ]]; then
       # packages_to_install contains rust
       log "Installing rust."
-      curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.61.0
+      curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.60.0
       # remove rust from packages_to_install
       packages_to_install=("${packages_to_install[@]/rust}")
     fi
@@ -614,7 +647,7 @@ install_dependencies() {
     if [[ "${packages_to_install[*]}" =~ "rust" ]]; then
       # packages_to_install contains rust
       log "Installing rust."
-      curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.61.0
+      curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.60.0
       # remove rust from packages_to_install
       packages_to_install=("${packages_to_install[@]/rust}")
     fi
@@ -677,10 +710,8 @@ install_dependencies() {
     if [[ ${CN_MIRROR} == true && "${packages_to_install[*]}" =~ "openjdk@11" ]]; then
       # packages_to_install contains jdk
       log "Installing openjdk11."
-      wget -c https://graphscope.oss-cn-beijing.aliyuncs.com/dependencies/OpenJDK11U-jdk_x64_mac_hotspot_11.0.13_8.tar.gz \
-        -P /tmp
-      sudo tar xf /tmp/OpenJDK11U-jdk_x64_mac_hotspot_11.0.13_8.tar.gz -C /Library/Java/JavaVirtualMachines/
-      rm -fr /tmp/OpenJDK11U-jdk_x64_mac_hotspot_11.0.13_8.tar.gz
+      # we need arm64-base jvm, install from brew.
+      brew install --ignore-dependencies openjdk@11
       # remove jdk from packages_to_install
       packages_to_install=("${packages_to_install[@]/openjdk@11}")
     fi
@@ -688,7 +719,7 @@ install_dependencies() {
     if [[ "${packages_to_install[*]}" =~ "rust" ]]; then
       # packages_to_install contains rust
       log "Installing rust."
-      curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.61.0
+      curl -sf -L https://static.rust-lang.org/rustup.sh | sh -s -- -y --profile minimal --default-toolchain 1.60.0
       # remove rust from packages_to_install
       packages_to_install=("${packages_to_install[@]/rust}")
     fi
@@ -704,22 +735,15 @@ install_dependencies() {
       brew install ${packages_to_install[*]} || true
     fi
 
-    if [[ "$(uname -m)" == "x86_64" ]]; then
-      declare -r homebrew_prefix="/usr/local"
-    else
-      declare -r homebrew_prefix="/opt/homebrew"
-    fi
+    declare -r homebrew_prefix=$(brew --prefix)
     export OPENSSL_ROOT_DIR=${homebrew_prefix}/opt/openssl
     export OPENSSL_LIBRARIES=${homebrew_prefix}/opt/openssl/lib
     export OPENSSL_SSL_LIBRARY=${homebrew_prefix}/opt/openssl/lib/libssl.dylib
     export CC=${homebrew_prefix}/opt/llvm/bin/clang
     export CXX=${homebrew_prefix}/opt/llvm/bin/clang++
     export CPPFLAGS=-I${homebrew_prefix}/opt/llvm/include
+    export LLVM11_HOME=${homebrew_prefix}/opt/llvm/
   fi
-
-  log "Installing zetcd."
-  GO111MODULE="auto" go get github.com/etcd-io/zetcd/cmd/zetcd
-  sudo cp ${HOME}/go/bin/zetcd /usr/local/bin/zetcd
 
   log "Installing python packages for vineyard codegen."
   pip3 install -U pip --user
@@ -730,6 +754,8 @@ install_dependencies() {
   install_vineyard
 
   install_cppkafka
+
+  install_fastFFI
 
   log "Output environments config file ${OUTPUT_ENV_FILE}"
   write_envs_config

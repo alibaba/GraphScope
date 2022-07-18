@@ -3,12 +3,12 @@ use crate::api::notification::{Cancel, End};
 use crate::api::IterCondition;
 use crate::communication::input::{new_input_session, InputProxy};
 use crate::communication::output::{new_output, OutputProxy};
+use crate::data::MicroBatch;
 use crate::errors::JobExecError;
 use crate::operator::{Notifiable, OperatorCore};
 use crate::progress::EndOfScope;
 use crate::tag::tools::map::TidyTagMap;
 use crate::Data;
-use crate::data::MicroBatch;
 
 struct IterateState {
     iterating: bool,
@@ -86,12 +86,12 @@ impl<D: Data> OperatorCore for SwitchOperator<D> {
                             if self.emit_kind == Some(EmitKind::Before) {
                                 match enter.give(data.clone()) {
                                     Err(e) => {
-                                        if e.is_would_block()  {
+                                        if e.is_would_block() {
                                             leave.give(data)?;
                                         }
                                         Err(e)
-                                    },
-                                    Ok(()) => leave.give(data)
+                                    }
+                                    Ok(()) => leave.give(data),
                                 }?;
                             } else {
                                 enter.give(data)?;
@@ -112,8 +112,8 @@ impl<D: Data> OperatorCore for SwitchOperator<D> {
                                     leave.push_batch(re)?;
                                 }
                                 Err(e)
-                            },
-                            Ok(()) => leave.push_batch(re)
+                            }
+                            Ok(()) => leave.push_batch(re),
                         }?;
                     } else {
                         enter.push_batch(re)?;
@@ -152,6 +152,7 @@ impl<D: Data> OperatorCore for SwitchOperator<D> {
                             enter.notify_end(end)?;
                         } else {
                             warn_worker!("{:?} not end while {:?} leave iteration;", p, batch.tag);
+                            self.iterate_states.insert(p, state);
                         }
                     } else {
                         error_worker!("iteration for {:?} not found;", p);
@@ -187,8 +188,8 @@ impl<D: Data> OperatorCore for SwitchOperator<D> {
                                             leave.give(data)?;
                                         }
                                         Err(e)
-                                    },
-                                    Ok(()) => leave.give(data)
+                                    }
+                                    Ok(()) => leave.give(data),
                                 }?;
                             } else {
                                 enter.give(data)?;
@@ -210,8 +211,8 @@ impl<D: Data> OperatorCore for SwitchOperator<D> {
                                     leave.push_batch(re)?;
                                 }
                                 Err(e)
-                            },
-                            Ok(()) => leave.push_batch(re)
+                            }
+                            Ok(()) => leave.push_batch(re),
                         }?;
                     } else {
                         enter.push_batch(re)?;
@@ -227,7 +228,6 @@ impl<D: Data> OperatorCore for SwitchOperator<D> {
                     }
                     enter.notify_end(end)?;
                 }
-
             }
 
             Ok(())
@@ -242,9 +242,31 @@ impl<D: Data> Notifiable for SwitchOperator<D> {
             // the main input;
             trace_worker!("iteration: switch on notify end of {:?};", n.tag());
             if level == self.scope_level - 1 {
-                if let Some(state) = self.iterate_states.get_mut(n.tag()) {
-                    trace_worker!("iteration: switch stash end of {:?}", n.tag());
-                    state.set_end(n.take());
+                if let Some(mut state) = self.iterate_states.remove(n.tag()) {
+                    if state.iterating {
+                        let tag = n.tag().clone();
+                        trace_worker!("iteration: switch stash end of {:?}", tag);
+                        state.set_end(n.take());
+                        self.iterate_states.insert(tag, state);
+                    } else {
+                        if !n.tag().is_root() {
+                            outputs[0].notify_end(n.end.clone())?;
+                        }
+                        outputs[1].notify_end(n.take())?;
+
+                        if self.iterate_states.is_empty() {
+                            trace_worker!("detect no scope in iteration;");
+                            let len = self.parent_parent_scope_ends.len();
+                            for i in (0..len).rev() {
+                                for end in self.parent_parent_scope_ends[i].drain(..) {
+                                    if !end.tag.is_root() {
+                                        outputs[0].notify_end(end.clone())?;
+                                    }
+                                    outputs[1].notify_end(end)?;
+                                }
+                            }
+                        }
+                    }
                 } else {
                     panic!("iteration of {:?} not found;", n.tag())
                 }

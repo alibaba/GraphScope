@@ -20,15 +20,9 @@ RUN apt update -y && apt install -y \
 
 # rust
 RUN cd /tmp && \
-  wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz && \
-  tar -C /usr/local -xzf go1.15.5.linux-amd64.tar.gz && \
   curl -sf -L https://static.rust-lang.org/rustup.sh | \
       sh -s -- -y --profile minimal --default-toolchain 1.48.0 && \
   echo "source ~/.cargo/env" >> ~/.bashrc
-
-# zetcd
-RUN export PATH=/usr/local/go/bin:${PATH} && go get github.com/etcd-io/zetcd/cmd/zetcd && \
- cp /root/go/bin/zetcd /usr/local/bin/zetcd
 
 # apache arrow 3.0.0
 RUN wget https://apache.jfrog.io/artifactory/arrow/$(lsb_release --id --short | tr 'A-Z' 'a-z')/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb && \
@@ -37,14 +31,6 @@ RUN wget https://apache.jfrog.io/artifactory/arrow/$(lsb_release --id --short | 
     apt install -y libarrow-dev=3.0.0-1 libarrow-python-dev=3.0.0-1 && \
     rm ./apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
 
-# zookeeper
-RUN wget https://archive.apache.org/dist/zookeeper/zookeeper-3.4.14/zookeeper-3.4.14.tar.gz && \
-    tar xf zookeeper-3.4.14.tar.gz -C /usr/local/ && \
-    cd /usr/local && ln -s zookeeper-3.4.14 zookeeper && \
-    mkdir -p /usr/local/zookeeper/data && \
-    mkdir -p /usr/local/zookeeper/logs && \
-    cp /usr/local/zookeeper/conf/zoo_sample.cfg /usr/local/zookeeper/conf/zoo.cfg
-
 # pip dependencies
 RUN pip3 install -U pip && \
   pip3 --no-cache-dir install auditwheel daemons grpcio-tools gremlinpython hdfs3 fsspec oss2 s3fs ipython kubernetes \
@@ -52,7 +38,7 @@ RUN pip3 install -U pip && \
   pip3 --no-cache-dir install Cython --pre -U
 
 ENV JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
-ENV PATH=${JAVA_HOME}/bin:${PATH}:/usr/local/go/bin:/usr/local/zookeeper/bin
+ENV PATH=${JAVA_HOME}/bin:${PATH}
 ENV LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
 
 # for programming output

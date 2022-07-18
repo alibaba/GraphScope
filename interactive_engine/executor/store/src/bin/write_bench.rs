@@ -1,14 +1,15 @@
-use maxgraph_common::util::{fs, Timer};
-use maxgraph_store::db::api::{GraphConfigBuilder, TypeDefBuilder, ValueType, Value};
-use maxgraph_store::db::graph::store::GraphStore;
-use maxgraph_store::db::api::multi_version_graph::MultiVersionGraph;
-use std::collections::HashMap;
-use std::hash::{Hash, Hasher};
 use std::collections::hash_map::DefaultHasher;
+use std::collections::HashMap;
 use std::env;
-use std::sync::atomic::{AtomicU64, Ordering, AtomicI64};
+use std::hash::{Hash, Hasher};
+use std::sync::atomic::{AtomicI64, AtomicU64, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
+
+use maxgraph_common::util::{fs, Timer};
+use maxgraph_store::db::api::multi_version_graph::MultiVersionGraph;
+use maxgraph_store::db::api::{GraphConfigBuilder, TypeDefBuilder, Value, ValueType};
+use maxgraph_store::db::graph::store::GraphStore;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -21,7 +22,10 @@ fn main() {
     let background_job = &args[6];
     let thread_count = &args[7];
 
-    println!("write_buffer_mb {}, compaction_style {}, background_job {}, thread_count {}", write_buffer_mb, compaction_style, background_job, thread_count);
+    println!(
+        "write_buffer_mb {}, compaction_style {}, background_job {}, thread_count {}",
+        write_buffer_mb, compaction_style, background_job, thread_count
+    );
     let path = format!("write_bench_data_dir");
     fs::rmr(&path).unwrap();
     let mut builder = GraphConfigBuilder::new();
@@ -40,10 +44,20 @@ fn main() {
     let mut type_def_builer = TypeDefBuilder::new();
     type_def_builer.version(1);
     type_def_builer.add_property(1, 1, "id".to_string(), ValueType::Long, None, true, "id".to_string());
-    type_def_builer.add_property(2, 2, "name".to_string(), ValueType::String, None, false, "name".to_string());
+    type_def_builer.add_property(
+        2,
+        2,
+        "name".to_string(),
+        ValueType::String,
+        None,
+        false,
+        "name".to_string(),
+    );
     let type_def = type_def_builer.build();
     let label_id = 1;
-    store.create_vertex_type(1, 1, label_id, &type_def, 1).unwrap();
+    store
+        .create_vertex_type(1, 1, label_id, &type_def, 1)
+        .unwrap();
     println!("schema created");
     let str_len = 100;
     let timer = Timer::new();
@@ -71,7 +85,9 @@ fn main() {
                 let mut hasher = DefaultHasher::new();
                 vertex_id.hash(&mut hasher);
                 let hash_id = hasher.finish();
-                store.insert_overwrite_vertex(snapshot_id, hash_id as i64, label_id, &properties).unwrap();
+                store
+                    .insert_overwrite_vertex(snapshot_id, hash_id as i64, label_id, &properties)
+                    .unwrap();
                 idx += 1;
                 counter.fetch_add(1, Ordering::Relaxed);
             }
@@ -79,18 +95,16 @@ fn main() {
         handles.push(handle);
     }
     println!("{}\t{}\t{}", "time(sec)", "speed(record/s)", "total");
-    std::thread::spawn(move || {
-        loop {
-            std::thread::sleep(Duration::from_secs(3));
-            let total_write = total_count.load(Ordering::Relaxed);
-            let write_count = total_write - tmp_count;
-            let total_time = timer.elasped_secs();
-            let t = total_time - tmp_time;
-            println!("{:.0}\t{:.2}\t{:.0}", total_time, write_count as f64 / t, total_write);
-            tmp_count = total_write;
-            tmp_time = total_time;
-            snapshot_idx.fetch_add(1, Ordering::SeqCst);
-        }
+    std::thread::spawn(move || loop {
+        std::thread::sleep(Duration::from_secs(3));
+        let total_write = total_count.load(Ordering::Relaxed);
+        let write_count = total_write - tmp_count;
+        let total_time = timer.elasped_secs();
+        let t = total_time - tmp_time;
+        println!("{:.0}\t{:.2}\t{:.0}", total_time, write_count as f64 / t, total_write);
+        tmp_count = total_write;
+        tmp_time = total_time;
+        snapshot_idx.fetch_add(1, Ordering::SeqCst);
     });
     for handle in handles {
         handle.join().unwrap();

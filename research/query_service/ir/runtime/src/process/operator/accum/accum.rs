@@ -24,7 +24,7 @@ use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 
 use crate::error::{FnExecError, FnExecResult, FnGenError, FnGenResult};
 use crate::process::operator::accum::accumulator::{
-    Accumulator, Count, DistinctCount, Maximum, Minimum, ToList, ToSet,
+    Accumulator, Count, DistinctCount, Maximum, Minimum, Sum, ToList, ToSet,
 };
 use crate::process::operator::accum::AccumFactoryGen;
 use crate::process::operator::TagKey;
@@ -39,11 +39,12 @@ pub enum EntryAccumulator {
     ToMax(Maximum<Entry>),
     ToSet(ToSet<Entry>),
     ToDistinctCount(DistinctCount<Entry>),
+    ToSum(Sum<Entry>),
 }
 
 #[derive(Debug, Clone)]
 pub struct RecordAccumulator {
-    accum_ops: Vec<(EntryAccumulator, TagKey, KeyId)>,
+    accum_ops: Vec<(EntryAccumulator, TagKey, Option<KeyId>)>,
 }
 
 impl Accumulator<Record, Record> for RecordAccumulator {
@@ -59,7 +60,7 @@ impl Accumulator<Record, Record> for RecordAccumulator {
         let mut record = Record::default();
         for (accumulator, _, alias) in self.accum_ops.iter_mut() {
             let entry = accumulator.finalize()?;
-            record.append(entry, Some(alias.clone()));
+            record.append(entry, alias.clone());
         }
         Ok(record)
     }
@@ -74,6 +75,7 @@ impl Accumulator<Entry, Entry> for EntryAccumulator {
             EntryAccumulator::ToMax(max) => max.accum(next),
             EntryAccumulator::ToSet(set) => set.accum(next),
             EntryAccumulator::ToDistinctCount(distinct_count) => distinct_count.accum(next),
+            EntryAccumulator::ToSum(sum) => sum.accum(next),
         }
     }
 
@@ -119,6 +121,9 @@ impl Accumulator<Entry, Entry> for EntryAccumulator {
                 let cnt = distinct_count.finalize()?;
                 Ok(CommonObject::Count(cnt).into())
             }
+            EntryAccumulator::ToSum(sum) => sum
+                .finalize()?
+                .ok_or(FnExecError::accum_error("sum_entry is none")),
         }
     }
 }
@@ -126,6 +131,7 @@ impl Accumulator<Entry, Entry> for EntryAccumulator {
 impl AccumFactoryGen for algebra_pb::GroupBy {
     fn gen_accum(self) -> FnGenResult<RecordAccumulator> {
         let mut accum_ops = Vec::with_capacity(self.functions.len());
+        let multi_accum_flag = if self.functions.len() > 1 { true } else { false };
         for agg_func in self.functions {
             let agg_kind: algebra_pb::group_by::agg_func::Aggregate =
                 unsafe { ::std::mem::transmute(agg_func.aggregate) };
@@ -140,14 +146,13 @@ impl AccumFactoryGen for algebra_pb::GroupBy {
                 .map(|v| TagKey::try_from(v.clone()))
                 .transpose()?
                 .unwrap_or(TagKey::default());
-            let alias = Some(
-                agg_func
-                    .alias
-                    .ok_or(ParsePbError::from("accum value alias is missing"))?
-                    .try_into()?,
-            );
-            // TODO: accum value alias in fold can be None;
-            let alias = alias.ok_or(ParsePbError::from("accum value alias cannot be None"))?;
+            let alias = agg_func
+                .alias
+                .map(|name_or_id| name_or_id.try_into())
+                .transpose()?;
+            if multi_accum_flag && alias.is_none() {
+                Err(ParsePbError::from("accum value alias is missing in MultiAccum"))?
+            }
             let entry_accumulator = match agg_kind {
                 Aggregate::Count => EntryAccumulator::ToCount(Count { value: 0, _ph: Default::default() }),
                 Aggregate::ToList => EntryAccumulator::ToList(ToList { inner: vec![] }),
@@ -157,6 +162,7 @@ impl AccumFactoryGen for algebra_pb::GroupBy {
                 Aggregate::CountDistinct => {
                     EntryAccumulator::ToDistinctCount(DistinctCount { inner: HashSet::new() })
                 }
+                Aggregate::Sum => EntryAccumulator::ToSum(Sum { seed: None }),
                 _ => Err(FnGenError::unsupported_error(&format!(
                     "Unsupported aggregate kind {:?}",
                     agg_kind
@@ -196,6 +202,10 @@ impl Encode for EntryAccumulator {
                 writer.write_u8(5)?;
                 distinct_count.write_to(writer)?;
             }
+            EntryAccumulator::ToSum(sum) => {
+                writer.write_u8(6)?;
+                sum.write_to(writer)?;
+            }
         }
         Ok(())
     }
@@ -229,6 +239,10 @@ impl Decode for EntryAccumulator {
                 let distinct_count = <DistinctCount<Entry>>::read_from(reader)?;
                 Ok(EntryAccumulator::ToDistinctCount(distinct_count))
             }
+            6 => {
+                let sum = <Sum<Entry>>::read_from(reader)?;
+                Ok(EntryAccumulator::ToSum(sum))
+            }
             _ => Err(std::io::Error::new(std::io::ErrorKind::Other, "unreachable")),
         }
     }
@@ -253,7 +267,7 @@ impl Decode for RecordAccumulator {
         for _ in 0..len {
             let accumulator = <EntryAccumulator>::read_from(reader)?;
             let tag_key = <TagKey>::read_from(reader)?;
-            let alias = <KeyId>::read_from(reader)?;
+            let alias = <Option<KeyId>>::read_from(reader)?;
             accum_ops.push((accumulator, tag_key, alias));
         }
         Ok(RecordAccumulator { accum_ops })
@@ -319,6 +333,29 @@ mod tests {
         ]);
         if let Some(Ok(record)) = result.next() {
             if let Some(entry) = record.get(Some(TAG_A)) {
+                fold_result = entry.as_ref().clone();
+            }
+        }
+        assert_eq!(fold_result, expected_result);
+    }
+
+    // g.V().fold()
+    #[test]
+    fn fold_single_no_alias_test() {
+        let function = pb::group_by::AggFunc {
+            vars: vec![common_pb::Variable::from("@".to_string())],
+            aggregate: 5, // to_list
+            alias: None,
+        };
+        let fold_opr_pb = pb::GroupBy { mappings: vec![], functions: vec![function] };
+        let mut result = fold_test(init_source(), fold_opr_pb);
+        let mut fold_result = Entry::Collection(vec![]);
+        let expected_result = Entry::Collection(vec![
+            RecordElement::OnGraph(init_vertex1().into()),
+            RecordElement::OnGraph(init_vertex2().into()),
+        ]);
+        if let Some(Ok(record)) = result.next() {
+            if let Some(entry) = record.get(None) {
                 fold_result = entry.as_ref().clone();
             }
         }
@@ -501,5 +538,32 @@ mod tests {
             collection.sort_by(|v1, v2| v1.partial_cmp(&v2).unwrap_or(Ordering::Equal));
         }
         assert_eq!(fold_result, expected_result);
+    }
+
+    // g.V().values('age').sum().as("a")
+    #[test]
+    fn sum_test() {
+        let r1 = Record::new(CommonObject::Prop(object!(10)), None);
+        let r2 = Record::new(CommonObject::Prop(object!(20)), None);
+        let r3 = Record::new(CommonObject::Prop(object!(30)), None);
+        let function = pb::group_by::AggFunc {
+            vars: vec![common_pb::Variable::from("@".to_string())],
+            aggregate: 0, // sum
+            alias: Some(TAG_A.into()),
+        };
+        let fold_opr_pb = pb::GroupBy { mappings: vec![], functions: vec![function] };
+        let mut result = fold_test(vec![r1, r2, r3], fold_opr_pb);
+        let mut res = "".into();
+        if let Some(Ok(record)) = result.next() {
+            if let Some(entry) = record.get(Some(TAG_A)) {
+                res = match entry.as_ref() {
+                    Entry::Element(RecordElement::OffGraph(CommonObject::Prop(obj))) => obj.clone(),
+                    _ => {
+                        unreachable!()
+                    }
+                };
+            }
+        }
+        assert_eq!(res, object!(60));
     }
 }

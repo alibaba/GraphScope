@@ -7,6 +7,7 @@ on:
       - main
     paths:
       - 'research/**'
+      - 'interactive_engine/**'
       - '.github/workflows/gaia.yml'
       - '!research/**.md'
   pull_request:
@@ -14,6 +15,7 @@ on:
       - main
     paths:
       - 'research/**'
+      - 'interactive_engine/**'
       - '.github/workflows/gaia.yml'
       - '!research/**.md'
 
@@ -69,12 +71,14 @@ jobs:
       run: |
         source ${HOME}/.bashrc
         cd ${GITHUB_WORKSPACE} && make install
+        cd ${GITHUB_WORKSPACE}/interactive_engine/executor
+        cargo fmt -- --check
 
     - name: Build Ir on Groot Store
       run: |
         source ${HOME}/.bashrc
         cd ${GITHUB_WORKSPACE}/interactive_engine
-        mvn clean install -DskipTests -Pv2 --quiet
+        mvn clean install -DskipTests -Pv2 -Drust.compile.mode=debug --quiet
 
     - name: Ir Unit Test
       run: |
@@ -85,19 +89,6 @@ jobs:
       run: |
         source ${HOME}/.bashrc
         cd ${GITHUB_WORKSPACE}/research/query_service/ir/compiler && ./ir_exprimental_ci.sh
-
-    - name: Ir Integration Test on Groot Store
-      run: |
-        source ${HOME}/.bashrc
-        cd ${GITHUB_WORKSPACE}/interactive_engine/ir-adaptor && ./ir_groot_ci.sh
-
-    - name: Ir Integration Test on Vineyard Store
-      run: |
-        source ${HOME}/.bashrc
-        export USE_GAIA_ENGINE=true
-        cd ${GITHUB_WORKSPACE}/interactive_engine/ir-adaptor
-        ./kill.sh || true
-        ./ir_vineyard_ci.sh
 
     - name: Upload GIE log
       if: always()

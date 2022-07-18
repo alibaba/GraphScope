@@ -1,9 +1,10 @@
+use std::fmt::{Debug, Formatter};
+
+use crate::api::{Edge, Vertex};
+use crate::db::api::types::{Property, PropertyReader, PropertyValue, RocksEdge, RocksVertex};
+use crate::db::api::{EdgeId, EdgeKind, GraphResult, LabelId, PropertyId, VertexId};
 use crate::db::graph::codec::{Decoder, IterDecoder};
 use crate::db::storage::RawBytes;
-use crate::db::api::{GraphResult, VertexId, LabelId, EdgeId, EdgeKind, PropertyId};
-use crate::db::api::types::{PropertyReader, PropertyValue, Property, RocksVertex, RocksEdge};
-use std::fmt::{Debug, Formatter};
-use crate::api::{Vertex, Edge};
 use crate::schema::PropId;
 
 pub struct PropertyImpl {
@@ -53,10 +54,7 @@ impl<'a> Iterator for PropertiesIter<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         self.decode_iter.next().map(|(prop_id, v)| {
-            Ok(PropertyImpl {
-                property_id: prop_id as PropertyId,
-                property_value: v.into(),
-            })
+            Ok(PropertyImpl { property_id: prop_id as PropertyId, property_value: v.into() })
         })
     }
 }
@@ -69,14 +67,16 @@ pub struct RocksVertexImpl {
 }
 
 impl RocksVertexImpl {
-    pub fn new(vertex_id: VertexId, label_id: LabelId, decoder: Option<Decoder>, raw_bytes: RawBytes) -> Self {
+    pub fn new(
+        vertex_id: VertexId, label_id: LabelId, decoder: Option<Decoder>, raw_bytes: RawBytes,
+    ) -> Self {
         RocksVertexImpl { vertex_id, label_id, decoder, raw_bytes }
     }
 }
 
 impl PropertyReader for RocksVertexImpl {
     type P = PropertyImpl;
-    type PropertyIterator = Box<dyn Iterator<Item=GraphResult<Self::P>>>;
+    type PropertyIterator = Box<dyn Iterator<Item = GraphResult<Self::P>>>;
 
     fn get_property(&self, property_id: PropertyId) -> Option<Self::P> {
         match &self.decoder {
@@ -84,25 +84,18 @@ impl PropertyReader for RocksVertexImpl {
             Some(decoder) => {
                 let bytes = unsafe { self.raw_bytes.to_slice() };
                 let value_ref = decoder.decode_property(bytes, property_id as i32);
-                value_ref.map(|v| {
-                    PropertyImpl {
-                        property_id,
-                        property_value: v.into(),
-                    }
-                })
+                value_ref.map(|v| PropertyImpl { property_id, property_value: v.into() })
             }
         }
     }
 
-    fn get_property_iterator(&self) -> Box<dyn Iterator<Item=GraphResult<Self::P>>> {
+    fn get_property_iterator(&self) -> Box<dyn Iterator<Item = GraphResult<Self::P>>> {
         match &self.decoder {
             None => Box::new(::std::iter::empty()),
             Some(decoder) => {
                 let bytes = unsafe { std::mem::transmute(self.raw_bytes.to_slice()) };
                 let decode_iter = decoder.decode_properties(bytes);
-                Box::new(PropertiesIter {
-                    decode_iter
-                })
+                Box::new(PropertiesIter { decode_iter })
             }
         }
     }
@@ -136,7 +129,7 @@ unsafe impl Send for RocksVertexImpl {}
 unsafe impl Sync for RocksVertexImpl {}
 
 impl Vertex for RocksVertexImpl {
-    type PI = Box<dyn Iterator<Item=(PropId, crate::api::prelude::Property)>>;
+    type PI = Box<dyn Iterator<Item = (PropId, crate::api::prelude::Property)>>;
 
     fn get_id(&self) -> crate::api::VertexId {
         self.vertex_id
@@ -154,10 +147,9 @@ impl Vertex for RocksVertexImpl {
                 let bytes = unsafe { self.raw_bytes.to_slice() };
                 let value_ref = decoder.decode_property(bytes, property_id);
                 value_ref.map(|v| {
-                    PropertyImpl {
-                        property_id,
-                        property_value: v.into(),
-                    }.parse_to_property().1
+                    PropertyImpl { property_id, property_value: v.into() }
+                        .parse_to_property()
+                        .1
                 })
             }
         }
@@ -169,9 +161,7 @@ impl Vertex for RocksVertexImpl {
             Some(decoder) => {
                 let bytes = unsafe { std::mem::transmute(self.raw_bytes.to_slice()) };
                 let decode_iter = decoder.decode_properties(bytes);
-                Box::new(PropertiesIter {
-                    decode_iter
-                }.map(|p| p.unwrap().parse_to_property()))
+                Box::new(PropertiesIter { decode_iter }.map(|p| p.unwrap().parse_to_property()))
             }
         }
     }
@@ -185,14 +175,16 @@ pub struct RocksEdgeImpl {
 }
 
 impl RocksEdgeImpl {
-    pub fn new(edge_id: EdgeId, edge_relation: EdgeKind, decoder: Option<Decoder>, raw_bytes: RawBytes) -> Self {
+    pub fn new(
+        edge_id: EdgeId, edge_relation: EdgeKind, decoder: Option<Decoder>, raw_bytes: RawBytes,
+    ) -> Self {
         RocksEdgeImpl { edge_id, edge_relation, decoder, raw_bytes }
     }
 }
 
 impl PropertyReader for RocksEdgeImpl {
     type P = PropertyImpl;
-    type PropertyIterator = Box<dyn Iterator<Item=GraphResult<Self::P>>>;
+    type PropertyIterator = Box<dyn Iterator<Item = GraphResult<Self::P>>>;
 
     fn get_property(&self, property_id: PropertyId) -> Option<Self::P> {
         match &self.decoder {
@@ -200,25 +192,18 @@ impl PropertyReader for RocksEdgeImpl {
             Some(decoder) => {
                 let bytes = unsafe { self.raw_bytes.to_slice() };
                 let value_ref = decoder.decode_property(bytes, property_id as i32);
-                value_ref.map(|v| {
-                    PropertyImpl {
-                        property_id,
-                        property_value: v.into(),
-                    }
-                })
+                value_ref.map(|v| PropertyImpl { property_id, property_value: v.into() })
             }
         }
     }
 
-    fn get_property_iterator(&self) -> Box<dyn Iterator<Item=GraphResult<Self::P>>> {
+    fn get_property_iterator(&self) -> Box<dyn Iterator<Item = GraphResult<Self::P>>> {
         match &self.decoder {
             None => Box::new(::std::iter::empty()),
             Some(decoder) => {
                 let bytes = unsafe { std::mem::transmute(self.raw_bytes.to_slice()) };
                 let decode_iter = decoder.decode_properties(bytes);
-                Box::new(PropertiesIter {
-                    decode_iter
-                })
+                Box::new(PropertiesIter { decode_iter })
             }
         }
     }
@@ -252,7 +237,7 @@ unsafe impl Send for RocksEdgeImpl {}
 unsafe impl Sync for RocksEdgeImpl {}
 
 impl Edge for RocksEdgeImpl {
-    type PI = Box<dyn Iterator<Item=(PropId, crate::api::prelude::Property)>>;
+    type PI = Box<dyn Iterator<Item = (PropId, crate::api::prelude::Property)>>;
 
     fn get_label_id(&self) -> crate::api::LabelId {
         self.edge_relation.edge_label_id as crate::api::LabelId
@@ -286,10 +271,9 @@ impl Edge for RocksEdgeImpl {
                 let bytes = unsafe { self.raw_bytes.to_slice() };
                 let value_ref = decoder.decode_property(bytes, property_id);
                 value_ref.map(|v| {
-                    PropertyImpl {
-                        property_id,
-                        property_value: v.into(),
-                    }.parse_to_property().1
+                    PropertyImpl { property_id, property_value: v.into() }
+                        .parse_to_property()
+                        .1
                 })
             }
         }
@@ -301,9 +285,7 @@ impl Edge for RocksEdgeImpl {
             Some(decoder) => {
                 let bytes = unsafe { std::mem::transmute(self.raw_bytes.to_slice()) };
                 let decode_iter = decoder.decode_properties(bytes);
-                Box::new(PropertiesIter {
-                    decode_iter
-                }.map(|p| p.unwrap().parse_to_property()))
+                Box::new(PropertiesIter { decode_iter }.map(|p| p.unwrap().parse_to_property()))
             }
         }
     }

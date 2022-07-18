@@ -52,4 +52,3 @@ impl PropertyMap for HashMap<PropertyId, ValueRef<'_>> {
         self.clone()
     }
 }
-

@@ -65,7 +65,7 @@ public class CommonConfig {
      *
      * @return The engine type
      */
-    public static final Config<String> ENGINE_TYPE = Config.stringConfig("engine.type", "maxgraph");
+    public static final Config<String> ENGINE_TYPE = Config.stringConfig("engine.type", "gaia");
 
     public static final Config<String> LOG4RS_CONFIG = Config.stringConfig("log4rs.config", "");
 
