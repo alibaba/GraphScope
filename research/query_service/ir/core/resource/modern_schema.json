@@ -12,7 +12,7 @@
             "name": "name"
           },
           "data_type": 4,
-          "is_primary_key": true
+          "is_primary_key": false
         },
         {
           "key": {
@@ -36,7 +36,7 @@
             "name": "name"
           },
           "data_type": 4,
-          "is_primary_key": true
+          "is_primary_key": false
         },
         {
           "key": {

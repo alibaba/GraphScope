@@ -1803,7 +1803,7 @@ mod test {
         plan_meta.refer_to_nodes(0, vec![0]);
         let meta = StoreMeta {
             schema: Some(
-                Schema::from_json(std::fs::File::open("resource/modern_schema.json").unwrap()).unwrap(),
+                Schema::from_json(std::fs::File::open("resource/modern_schema_pk.json").unwrap()).unwrap(),
             ),
         };
         let mut scan = pb::Scan {
