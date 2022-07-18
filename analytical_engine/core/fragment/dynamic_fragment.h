@@ -322,18 +322,6 @@ class DynamicFragment
       }
     }
     if (!mutation.edges_to_remove.empty()) {
-      for (auto &e : mutation.edges_to_remove) {
-        if (IsInnerVertexGid(e.first)) {
-          e.first = id_parser_.get_local_id(e.first);
-        } else {
-          e.first = parseOuterVertexGid(e.first);
-        }
-        if (IsInnerVertexGid(e.second)) {
-          e.second = id_parser_.get_local_id(e.second);
-        } else {
-          e.second = parseOuterVertexGid(e.second);
-        }
-      }
       removeEdges(mutation.edges_to_remove);
     }
     if (!mutation.edges_to_update.empty()) {
