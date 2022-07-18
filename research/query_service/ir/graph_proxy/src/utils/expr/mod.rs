@@ -42,6 +42,8 @@ pub enum ExprEvalError {
     UnmatchedOperator(OperatorDesc),
     /// Meant to evaluate a variable, but the data type is unexpected (e.g., not a graph-element)
     UnexpectedDataType(OperatorDesc),
+    /// Get ``None` from `Context`
+    GetNoneFromContext,
     /// Unsupported
     Unsupported(String),
     /// Other unknown errors that is converted from a error description
@@ -63,6 +65,7 @@ impl Display for ExprEvalError {
             UnexpectedDataType(opr) => {
                 write!(f, "meant to evaluate a variable, but with unexpected data type: {:?}", opr)
             }
+            GetNoneFromContext => write!(f, "get `None` from `Context`"),
             Unsupported(e) => write!(f, "unsupported: {}", e),
             OtherErr(e) => write!(f, "parse error {}", e),
         }

@@ -955,8 +955,6 @@ macro_rules! partial_cmp {
             $crate::$ty::Vector(v1) => {
                 if let $crate::$ty::Vector(v2) = $other {
                     v1.partial_cmp(v2)
-                } else if let $crate::$ty::None = $other {
-                    Some(Ordering::Greater)
                 } else {
                     None
                 }
@@ -964,17 +962,8 @@ macro_rules! partial_cmp {
             $crate::$ty::KV(kv1) => {
                 if let $crate::$ty::KV(kv2) = $other {
                     kv1.partial_cmp(kv2)
-                } else if let $crate::$ty::None = $other {
-                    Some(Ordering::Greater)
                 } else {
                     None
-                }
-            }
-            $crate::$ty::None => {
-                if let $crate::$ty::None = $other {
-                    Some(Ordering::Equal)
-                } else {
-                    Some(Ordering::Less)
                 }
             }
             _ => None,
@@ -983,11 +972,16 @@ macro_rules! partial_cmp {
 }
 
 macro_rules! cmp {
-    ($self:expr, $other:expr) => {
+    ($self:expr, $other:expr, $ty:ident) => {
         if let Some(ord) = $self.partial_cmp($other) {
             ord
         } else {
-            Ordering::Less
+            match ($self, $other) {
+                ($crate::$ty::None, $crate::$ty::None) => Ordering::Equal,
+                ($crate::$ty::None, _) => Ordering::Less,
+                (_, $crate::$ty::None) => Ordering::Greater,
+                (_, _) => Ordering::Less,
+            }
         }
     };
 }
@@ -1000,7 +994,7 @@ impl PartialOrd for Object {
 
 impl Ord for Object {
     fn cmp(&self, other: &Self) -> Ordering {
-        cmp!(self, other)
+        cmp!(self, other, Object)
     }
 }
 
@@ -1020,7 +1014,7 @@ impl<'a> PartialOrd for BorrowObject<'a> {
 
 impl<'a> Ord for BorrowObject<'a> {
     fn cmp(&self, other: &Self) -> Ordering {
-        cmp!(self, other)
+        cmp!(self, other, BorrowObject)
     }
 }
 
@@ -1093,15 +1087,6 @@ impl Hash for Object {
 impl<'a> Hash for BorrowObject<'a> {
     fn hash<H: Hasher>(&self, state: &mut H) {
         hash!(self, state, BorrowObject)
-    }
-}
-
-impl From<Option<Object>> for Object {
-    fn from(obj_opt: Option<Object>) -> Self {
-        match obj_opt {
-            Some(obj) => obj,
-            None => Object::None,
-        }
     }
 }
 

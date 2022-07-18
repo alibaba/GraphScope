@@ -326,10 +326,20 @@ impl Evaluate for Evaluator {
     }
 }
 
+fn get_object(obj_result: ExprEvalResult<Object>) -> ExprEvalResult<Object> {
+    match obj_result {
+        Ok(obj) => Ok(obj),
+        Err(err) => match err {
+            // Capture a special error case that returns `Object::None`
+            ExprEvalError::GetNoneFromContext => Ok(Object::None),
+            _ => Err(err),
+        },
+    }
+}
+
 impl EvalPred for Evaluator {
     fn eval_bool<E: Element, C: Context<E>>(&self, context: Option<&C>) -> ExprEvalResult<bool> {
-        let object = self.eval(context)?;
-        object.eval_bool(context)
+        get_object(self.eval(context))?.eval_bool(context)
     }
 }
 
@@ -431,63 +441,64 @@ impl Evaluate for Operand {
             Self::Const(obj) => Ok(obj.clone()),
             Self::Var { tag, prop_key } => {
                 if let Some(ctxt) = context {
-                    let mut result = Object::None;
                     if let Some(element) = ctxt.get(tag.as_ref()) {
-                        if let Some(property) = prop_key {
+                        let result = if let Some(property) = prop_key {
                             match property {
-                                PropKey::Id => {
-                                    result = element
-                                        .as_graph_element()
-                                        .ok_or(ExprEvalError::UnexpectedDataType(self.into()))?
-                                        .id()
-                                        .into()
-                                }
-                                PropKey::Label => {
-                                    result = element
-                                        .as_graph_element()
-                                        .ok_or(ExprEvalError::UnexpectedDataType(self.into()))?
-                                        .label()
-                                        .map(|label| match label {
-                                            NameOrId::Str(str) => str.clone().into(),
-                                            NameOrId::Id(id) => (*id).into(),
-                                        })
-                                        .unwrap_or(Object::None)
-                                }
-                                PropKey::Len => result = element.len().into(),
-                                PropKey::All => {
-                                    result = element
-                                        .details()
-                                        .ok_or(ExprEvalError::UnexpectedDataType(self.into()))?
-                                        .get_all_properties()
-                                        .map(|obj| {
-                                            obj.into_iter()
-                                                .map(|(key, value)| {
-                                                    let obj_key: Object = match key {
-                                                        NameOrId::Str(str) => str.into(),
-                                                        NameOrId::Id(id) => id.into(),
-                                                    };
-                                                    (obj_key, value)
-                                                })
-                                                .collect::<Vec<(Object, Object)>>()
-                                                .into()
-                                        })
-                                        .unwrap_or(Object::None)
-                                }
-                                PropKey::Key(key) => {
-                                    result = element
-                                        .details()
-                                        .ok_or(ExprEvalError::UnexpectedDataType(self.into()))?
-                                        .get_property(key)
-                                        .and_then(|obj| obj.try_to_owned())
-                                        .into();
-                                }
+                                PropKey::Id => element
+                                    .as_graph_element()
+                                    .ok_or(ExprEvalError::UnexpectedDataType(self.into()))?
+                                    .id()
+                                    .into(),
+                                PropKey::Label => element
+                                    .as_graph_element()
+                                    .ok_or(ExprEvalError::UnexpectedDataType(self.into()))?
+                                    .label()
+                                    .map(|label| match label {
+                                        NameOrId::Str(str) => str.clone().into(),
+                                        NameOrId::Id(id) => (*id).into(),
+                                    })
+                                    .ok_or(ExprEvalError::GetNoneFromContext)?,
+                                PropKey::Len => element.len().into(),
+                                PropKey::All => element
+                                    .details()
+                                    .ok_or(ExprEvalError::UnexpectedDataType(self.into()))?
+                                    .get_all_properties()
+                                    .map(|obj| {
+                                        obj.into_iter()
+                                            .map(|(key, value)| {
+                                                let obj_key: Object = match key {
+                                                    NameOrId::Str(str) => str.into(),
+                                                    NameOrId::Id(id) => id.into(),
+                                                };
+                                                (obj_key, value)
+                                            })
+                                            .collect::<Vec<(Object, Object)>>()
+                                            .into()
+                                    })
+                                    .ok_or(ExprEvalError::GetNoneFromContext)?,
+                                PropKey::Key(key) => element
+                                    .details()
+                                    .ok_or(ExprEvalError::UnexpectedDataType(self.into()))?
+                                    .get_property(key)
+                                    .ok_or(ExprEvalError::GetNoneFromContext)?
+                                    .try_to_owned()
+                                    .ok_or(ExprEvalError::OtherErr(
+                                        "cannot get `Object` from `BorrowObject`".to_string(),
+                                    ))?,
                             }
                         } else {
-                            result = element.as_borrow_object().try_to_owned().into();
-                        }
-                    };
+                            element
+                                .as_borrow_object()
+                                .try_to_owned()
+                                .ok_or(ExprEvalError::OtherErr(
+                                    "cannot get `Object` from `BorrowObject`".to_string(),
+                                ))?
+                        };
 
-                    Ok(result)
+                        Ok(result)
+                    } else {
+                        Err(ExprEvalError::GetNoneFromContext)
+                    }
                 } else {
                     Err(ExprEvalError::MissingContext(InnerOpr::Operand(self.clone()).into()))
                 }
@@ -495,7 +506,7 @@ impl Evaluate for Operand {
             Self::Vars(vars) => {
                 let mut vec = Vec::with_capacity(vars.len());
                 for var in vars {
-                    vec.push(var.eval(context)?);
+                    vec.push(get_object(var.eval(context))?);
                 }
                 Ok(Object::Vector(vec))
             }
@@ -530,7 +541,7 @@ impl Evaluate for Operand {
                             "evaluating `valueMap` on non-vars is not supported.".to_string(),
                         )),
                     }?;
-                    map.insert(obj_key, var.eval(context)?);
+                    map.insert(obj_key, get_object(var.eval(context))?);
                 }
                 Ok(Object::KV(map))
             }
@@ -817,21 +828,19 @@ mod tests {
                 .collect(),
             ),
             Object::KV(
-                vec![
-                    (
-                        object!(vec![object!(0), object!("~all")]),
-                        Object::KV(
-                            vec![
-                                (object!("age"), object!(31)),
-                                (object!("name"), object!("John")),
-                                (object!("birthday"), object!(19900416)),
-                                (object!("hobbies"), object!(vec!["football", "guitar"])),
-                            ]
-                            .into_iter()
-                            .collect(),
-                        ),
+                vec![(
+                    object!(vec![object!(0), object!("~all")]),
+                    Object::KV(
+                        vec![
+                            (object!("age"), object!(31)),
+                            (object!("name"), object!("John")),
+                            (object!("birthday"), object!(19900416)),
+                            (object!("hobbies"), object!(vec!["football", "guitar"])),
+                        ]
+                        .into_iter()
+                        .collect(),
                     ),
-                ]
+                )]
                 .into_iter()
                 .collect(),
             ),
@@ -845,8 +854,17 @@ mod tests {
 
     #[test]
     fn test_eval_errors() {
-        let cases: Vec<&str> =
-            vec!["@2", "+", "1 + ", "1 1", "1 1 2", "1 1 + 2", "1 + @1.age * 1 1 - 1 - 5"];
+        let cases: Vec<&str> = vec![
+            "@2",
+            "+",
+            "1 + ",
+            "1 1",
+            "1 1 2",
+            "1 1 + 2",
+            "1 + @1.age * 1 1 - 1 - 5",
+            "@2",
+            "@0.not_exist",
+        ];
         let ctxt = prepare_context();
 
         let expected: Vec<ExprEvalError> = vec![
@@ -861,6 +879,8 @@ mod tests {
             ExprEvalError::OtherErr("invalid expression".to_string()),
             ExprEvalError::OtherErr("invalid expression".to_string()),
             ExprEvalError::OtherErr("invalid expression".to_string()),
+            ExprEvalError::GetNoneFromContext,
+            ExprEvalError::GetNoneFromContext,
         ];
 
         let mut is_context = false;
