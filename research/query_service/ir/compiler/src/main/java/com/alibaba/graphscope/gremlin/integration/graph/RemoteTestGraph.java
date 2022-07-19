@@ -842,10 +842,10 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
         method =
                 "g_V_asXaX_repeatXbothX_timesX3X_emit_name_asXbX_group_byXselectXaXX_byXselectXbX_dedup_order_foldX_selectXvaluesX_unfold_dedup",
         reason = "unsupported")
-@Graph.OptOut(
-        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.DedupTest",
-        method = "g_V_both_both_dedup_byXlabelX",
-        reason = "unsupported")
+// @Graph.OptOut(
+//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.DedupTest",
+//        method = "g_V_both_both_dedup_byXlabelX",
+//        reason = "unsupported")
 @Graph.OptOut(
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.DedupTest",
         method = "g_V_both_hasXlabel_softwareX_dedup_byXlangX_name",
@@ -862,14 +862,14 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.DedupTest",
         method = "g_V_asXaX_outXcreatedX_asXbX_inXcreatedX_asXcX_dedupXa_bX_path",
         reason = "unsupported")
-@Graph.OptOut(
-        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.DedupTest",
-        method = "g_V_both_both_dedup_byXoutE_countX_name",
-        reason = "unsupported")
-@Graph.OptOut(
-        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.DedupTest",
-        method = "g_V_asXaX_both_asXbX_dedupXa_bX_byXlabelX_selectXa_bX",
-        reason = "unsupported")
+// @Graph.OptOut(
+//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.DedupTest",
+//        method = "g_V_both_both_dedup_byXoutE_countX_name",
+//        reason = "unsupported")
+// @Graph.OptOut(
+//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.DedupTest",
+//        method = "g_V_asXaX_both_asXbX_dedupXa_bX_byXlabelX_selectXa_bX",
+//        reason = "unsupported")
 @Graph.OptOut(
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.DedupTest",
         method =
@@ -1420,26 +1420,22 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
         method = "g_V_matchXa__a_both_b__b_both_cX_dedupXa_bX",
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.MatchTest",
         reason = "unsupported")
-@Graph.OptOut(
-        method = "g_V_matchXa__a_both_b__b_both_cX_dedupXa_bX",
-        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.MatchTest",
-        reason = "unsupported")
-@Graph.OptOut(
-        method = "g_V_matchXa_both_b__b_both_cX_dedupXa_bX_byXlabelX",
-        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.MatchTest",
-        reason = "unsupported")
+// @Graph.OptOut(
+//        method = "g_V_matchXa_both_b__b_both_cX_dedupXa_bX_byXlabelX",
+//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.MatchTest",
+//        reason = "unsupported")
 @Graph.OptOut(
         method = "g_V_matchXd_0knows_a__d_hasXname_vadasX__a_knows_b__b_created_cX",
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.MatchTest",
         reason = "unsupported")
-@Graph.OptOut(
-        method = "g_V_matchXa_out_bX_selectXb_idX",
-        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.MatchTest",
-        reason = "unsupported")
-@Graph.OptOut(
-        method = "g_V_matchXa_knows_b__b_created_c__a_created_cX_dedupXa_b_cX_selectXaX_byXnameX",
-        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.MatchTest",
-        reason = "unsupported")
+// @Graph.OptOut(
+//        method = "g_V_matchXa_out_bX_selectXb_idX",
+//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.MatchTest",
+//        reason = "unsupported")
+// @Graph.OptOut(
+//        method = "g_V_matchXa_knows_b__b_created_c__a_created_cX_dedupXa_b_cX_selectXaX_byXnameX",
+//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.MatchTest",
+//        reason = "unsupported")
 
 // need grateful graph
 @Graph.OptOut(

@@ -197,50 +197,6 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
             return op;
         }
     },
-    DEDUP_STEP {
-        @Override
-        public InterOpBase apply(Step step) {
-            DedupGlobalStep dedupStep = (DedupGlobalStep) step;
-            Map<String, Traversal.Admin> tagTraversals = getDedupTagTraversal(dedupStep);
-            DedupOp op = new DedupOp();
-            op.setDedupKeys(
-                    new OpArg<>(
-                            tagTraversals,
-                            (Map<String, Traversal.Admin> map) -> {
-                                if (tagTraversals.isEmpty()) { // only support dedup()
-                                    return Collections.singletonList(ArgUtils.asFfiNoneVar());
-                                } else {
-                                    throw new OpArgIllegalException(
-                                            OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
-                                            "supported pattern is [dedup()]");
-                                }
-                            }));
-            return op;
-        }
-
-        // dedup("a").by("name"): a -> "name"
-        private Map<String, Traversal.Admin> getDedupTagTraversal(DedupGlobalStep step) {
-            Set<String> dedupTags = step.getScopeKeys();
-            List<Traversal.Admin> dedupTraversals = step.getLocalChildren();
-            Map<String, Traversal.Admin> tagTraversals = new HashMap<>();
-            if (dedupTags.isEmpty() && dedupTraversals.isEmpty()) {
-                return tagTraversals;
-            }
-            if (dedupTags.isEmpty()) {
-                dedupTags = new HashSet<>();
-                // set as head
-                dedupTags.add("");
-            }
-            dedupTags.forEach(
-                    k -> {
-                        Traversal.Admin dedupTraversal =
-                                dedupTraversals.isEmpty() ? null : dedupTraversals.get(0);
-                        tagTraversals.put(k, dedupTraversal);
-                    });
-            tagTraversals.entrySet().removeIf(e -> e.getKey().equals("") && e.getValue() == null);
-            return tagTraversals;
-        }
-    },
     AGGREGATE_STEP {
         // count/sum/min/max/fold/mean(avg)
         @Override

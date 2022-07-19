@@ -221,11 +221,13 @@ traversalMethod_select
 // by("name")
 // by(valueMap())
 // by(out().count())
+// by(T.label/T.id)
 traversalMethod_selectby
     : 'by' LPAREN RPAREN
     | 'by' LPAREN stringLiteral RPAREN
     | 'by' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_valueMap RPAREN
     | 'by' LPAREN nestedTraversal RPAREN
+    | 'by' LPAREN traversalToken RPAREN
     ;
 
 traversalMethod_selectby_list
@@ -233,9 +235,31 @@ traversalMethod_selectby_list
     ;
 
 // dedup in global scope
+// dedup()
+// dedup().by('name')
+// dedup().by(T.label/T.id)
+// dedup('a')
+// dedup('a').by('name')
+// dedup('a', 'b')
+// dedup('a', 'b').by('name')
+// multiple by traversals is unsupported in standard gremlin, i.e. dedup().by(..).by(..)
 traversalMethod_dedup
-	: 'dedup' LPAREN RPAREN
+	: 'dedup' LPAREN stringLiteralList RPAREN (DOT traversalMethod_dedupby)?
 	;
+
+// by('name')
+// by(values('name')), by(out().count())
+// by(T.label/T.id)
+traversalMethod_dedupby
+    : 'by' LPAREN stringLiteral RPAREN
+    | 'by' LPAREN nestedTraversal RPAREN
+    | 'by' LPAREN traversalToken RPAREN
+    ;
+
+traversalToken
+    : 'id' | 'T.id'
+    | 'label' | 'T.label'
+    ;
 
 traversalMethod_group
 	: 'group' LPAREN RPAREN (DOT traversalMethod_group_keyby)?
