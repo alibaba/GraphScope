@@ -71,8 +71,8 @@ public class MaxTestGraphProvider extends AbstractGraphProvider implements AutoC
     @Override
     public void loadGraphData(
             Graph graph, LoadGraphWith loadGraphWith, Class testClass, String testName) {
-        LoadGraphWith.GraphData graphData =
-                null == loadGraphWith ? LoadGraphWith.GraphData.CLASSIC : loadGraphWith.value();
+        // other graph data is unsupported for ir on groot
+        LoadGraphWith.GraphData graphData = LoadGraphWith.GraphData.MODERN;
         if (loadedGraphs.contains(graphData)) return;
         try {
             ((MaxTestGraph) graph).loadSchema(graphData);
