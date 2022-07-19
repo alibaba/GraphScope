@@ -116,6 +116,14 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
     }
 
     @Override
+    public Traversal visitTraversalMethod_hasNot(
+            GremlinGSParser.TraversalMethod_hasNotContext ctx) {
+        P neqAny = P.neq(AnyValue.INSTANCE);
+        return graphTraversal.has(
+                GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()), neqAny);
+    }
+
+    @Override
     public Traversal visitTraversalMethod_is(GremlinGSParser.TraversalMethod_isContext ctx) {
         if (ctx.genericLiteral() != null) {
             return graphTraversal.is(
@@ -600,20 +608,6 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
         } else {
             throw new UnsupportedEvalException(
                     ctx.getClass(), "supported pattern is [union(__.out(), ...)]");
-        }
-    }
-
-    @Override
-    public Traversal visitTraversalMethod_range(GremlinGSParser.TraversalMethod_rangeContext ctx) {
-        if (ctx.integerLiteral() != null && ctx.integerLiteral().size() == 2) {
-            Object lower =
-                    GenericLiteralVisitor.getInstance().visitIntegerLiteral(ctx.integerLiteral(0));
-            Object upper =
-                    GenericLiteralVisitor.getInstance().visitIntegerLiteral(ctx.integerLiteral(1));
-            return graphTraversal.range(((Number) lower).longValue(), ((Number) upper).longValue());
-        } else {
-            throw new UnsupportedEvalException(
-                    ctx.getClass(), "supported pattern is [range(1, 2)]");
         }
     }
 

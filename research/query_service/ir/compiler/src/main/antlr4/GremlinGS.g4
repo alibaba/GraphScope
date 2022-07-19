@@ -77,10 +77,10 @@ traversalMethod
     | traversalMethod_otherV  // otherV()
     | traversalMethod_not  // not()
     | traversalMethod_union // union()
-    | traversalMethod_range // range()
     | traversalMethod_match // match()
     | traversalMethod_subgraph // subgraph()
     | traversalMethod_bothV // bothV()
+    | traversalMethod_hasNot // hasNot()
     ;
 
 traversalSourceSpawnMethod_V
@@ -115,6 +115,11 @@ traversalMethod_has
     | 'has' LPAREN stringLiteral COMMA stringLiteral COMMA genericLiteral RPAREN
     | 'has' LPAREN stringLiteral COMMA stringLiteral COMMA traversalPredicate RPAREN
     | 'has' LPAREN stringLiteral RPAREN
+    ;
+
+// hasNot("age")
+traversalMethod_hasNot
+    : 'hasNot' LPAREN stringLiteral RPAREN
     ;
 
 // out('str1', ...)
@@ -336,10 +341,6 @@ traversalMethod_union
 
 nestedTraversalExpr
     : nestedTraversal (COMMA nestedTraversal)*
-    ;
-
-traversalMethod_range
-    : 'range' LPAREN integerLiteral COMMA integerLiteral RPAREN
     ;
 
 traversalMethod_match
