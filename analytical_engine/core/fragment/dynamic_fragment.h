@@ -427,8 +427,9 @@ class DynamicFragment
   }
 
   inline size_t GetEdgeNum() const override {
-    return this->directed_ ? ie_.edge_num() + oe_.edge_num()
-                           : oe_.edge_num() + is_selfloops_.count();
+    size_t res = this->directed_ ? oe_.head_edge_num() + ie_.head_edge_num()
+                                 : oe_.head_edge_num() + is_selfloops_.count();
+    return res;
   }
 
   using base_t::InnerVertices;
@@ -661,15 +662,6 @@ class DynamicFragment
       }
     }
 
-    for (vid_t i = outerVertexIndexToLid(ovnum_ - 1); i < vnum; ++i) {
-      auto begin = source->oe_.get_begin(i);
-      auto end = source->oe_.get_end(i);
-      for (auto iter = begin; iter != end; ++iter) {
-        ie_.put_edge(i, *iter);
-        oe_.put_edge(i, *iter);
-      }
-    }
-
     this->schema_.CopyFrom(source->schema_);
   }
 
@@ -689,19 +681,6 @@ class DynamicFragment
     mutation_t mutation;
     vid_t gid;
     for (auto& v : source->InnerVertices()) {
-      gid = Vertex2Gid(v);
-      for (const auto& e : source->GetOutgoingAdjList(v)) {
-        mutation.edges_to_add.emplace_back(gid, Vertex2Gid(e.neighbor), e.data);
-      }
-      for (const auto& e : source->GetIncomingAdjList(v)) {
-        if (IsOuterVertex(e.neighbor)) {
-          mutation.edges_to_add.emplace_back(gid, Vertex2Gid(e.neighbor),
-                                             e.data);
-        }
-      }
-    }
-
-    for (auto& v : source->OuterVertices()) {
       gid = Vertex2Gid(v);
       for (const auto& e : source->GetOutgoingAdjList(v)) {
         mutation.edges_to_add.emplace_back(gid, Vertex2Gid(e.neighbor), e.data);
