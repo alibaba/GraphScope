@@ -1247,7 +1247,11 @@ class DynamicFragment
 
   void updateEdges(std::vector<edge_t>& edges) {
     oe_.update_edges(edges);
-    ie_.update_reversed_edges(edges);
+    if (directed_) {
+      ie_.update_reversed_edges(edges);
+    } else {
+      oe_.update_reversed_edges(edges);
+    }
   }
 
   void copyVertices(std::shared_ptr<DynamicFragment>& source) {
