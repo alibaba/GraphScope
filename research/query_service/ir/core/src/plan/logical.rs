@@ -730,11 +730,8 @@ fn get_column_id_from_pb(schema: &Schema, name: &common_pb::NameOrId) -> Option<
 fn preprocess_var(
     var: &mut common_pb::Variable, meta: &StoreMeta, plan_meta: &mut PlanMeta, is_predicate: bool,
 ) -> IrResult<()> {
-    let tag = if let Some(tag) = var.tag.as_mut() {
-        Some(get_or_set_tag_id(tag, true, plan_meta)?)
-    } else {
-        None
-    };
+    let tag =
+        if let Some(tag) = var.tag.as_mut() { Some(get_or_set_tag_id(tag, plan_meta)?) } else { None };
     let mut node_meta = plan_meta.curr_node_meta_mut();
     if let Some(property) = var.property.as_mut() {
         if let Some(key) = property.item.as_mut() {
@@ -895,18 +892,13 @@ fn preprocess_params(
     Ok(())
 }
 
-fn get_or_set_tag_id(
-    tag_pb: &mut common_pb::NameOrId, should_exist: bool, plan_meta: &mut PlanMeta,
-) -> IrResult<TagId> {
+fn get_or_set_tag_id(tag_pb: &mut common_pb::NameOrId, plan_meta: &mut PlanMeta) -> IrResult<TagId> {
     use common_pb::name_or_id::Item;
     if let Some(tag_item) = tag_pb.item.as_mut() {
-        let (is_exist, tag_id) = match tag_item {
+        let (_, tag_id) = match tag_item {
             Item::Name(tag) => plan_meta.get_or_set_tag_id(tag),
             Item::Id(id) => (true, *id as TagId),
         };
-        if should_exist && !is_exist {
-            return Err(IrError::TagNotExist((tag_id as i32).into()));
-        }
         *tag_pb = (tag_id as i32).into();
 
         Ok(tag_id)
@@ -948,7 +940,7 @@ impl AsLogical for pb::Project {
         let len = self.mappings.len();
         for mapping in self.mappings.iter_mut() {
             if let Some(alias) = mapping.alias.as_mut() {
-                let tag_id = get_or_set_tag_id(alias, false, plan_meta)?;
+                let tag_id = get_or_set_tag_id(alias, plan_meta)?;
                 plan_meta.insert_tag_nodes(tag_id, vec![plan_meta.get_curr_node()]);
             }
             if let Some(expr) = &mut mapping.expr {
@@ -960,15 +952,14 @@ impl AsLogical for pb::Project {
                         expr.operators.get_mut(0).unwrap()
                     {
                         if let Some(tag) = var.tag.as_mut() {
-                            let tag_id = get_or_set_tag_id(tag, true, plan_meta)?;
+                            let tag_id = get_or_set_tag_id(tag, plan_meta)?;
                             if var.property.is_none() {
                                 let nodes = plan_meta.get_tag_nodes(tag_id).to_vec();
-                                if nodes.is_empty() {
-                                    return Err(IrError::TagNotExist((tag_id as i32).into()));
+                                if !nodes.is_empty() {
+                                    // the case of `project("@a")`, must refer to the nodes referred by the tag,
+                                    plan_meta.refer_to_nodes(curr_node, nodes);
+                                    is_project_as_head = true;
                                 }
-                                // the case of `project("@a")`, must refer to the nodes referred by the tag,
-                                plan_meta.refer_to_nodes(curr_node, nodes);
-                                is_project_as_head = true;
                             }
                         }
                     }
@@ -1003,7 +994,7 @@ impl AsLogical for pb::Scan {
         let curr_node = plan_meta.get_curr_node();
         plan_meta.refer_to_nodes(curr_node, vec![curr_node]);
         if let Some(alias) = self.alias.as_mut() {
-            let tag_id = get_or_set_tag_id(alias, false, plan_meta)?;
+            let tag_id = get_or_set_tag_id(alias, plan_meta)?;
             plan_meta.insert_tag_nodes(tag_id, vec![plan_meta.get_curr_node()]);
         }
         if let Some(params) = self.params.as_mut() {
@@ -1045,7 +1036,7 @@ impl AsLogical for pb::EdgeExpand {
             preprocess_params(params, meta, plan_meta)?;
         }
         if let Some(alias) = self.alias.as_mut() {
-            let tag_id = get_or_set_tag_id(alias, false, plan_meta)?;
+            let tag_id = get_or_set_tag_id(alias, plan_meta)?;
             plan_meta.insert_tag_nodes(tag_id, vec![plan_meta.get_curr_node()]);
         }
 
@@ -1065,7 +1056,7 @@ impl AsLogical for pb::PathExpand {
             base.preprocess(meta, plan_meta)?;
         }
         if let Some(alias) = self.alias.as_mut() {
-            let tag_id = get_or_set_tag_id(alias, false, plan_meta)?;
+            let tag_id = get_or_set_tag_id(alias, plan_meta)?;
             plan_meta.insert_tag_nodes(tag_id, vec![plan_meta.get_curr_node()]);
         }
         // PathExpand would never require adding columns
@@ -1085,7 +1076,7 @@ impl AsLogical for pb::GetV {
             preprocess_params(params, meta, plan_meta)?;
         }
         if let Some(alias) = self.alias.as_mut() {
-            let tag_id = get_or_set_tag_id(alias, false, plan_meta)?;
+            let tag_id = get_or_set_tag_id(alias, plan_meta)?;
             plan_meta.insert_tag_nodes(tag_id, vec![plan_meta.get_curr_node()]);
         }
 
@@ -1113,21 +1104,17 @@ impl AsLogical for pb::GroupBy {
                 preprocess_var(key, meta, plan_meta, false)?;
                 let mut tag_id = 0;
                 if let Some(alias) = mapping.alias.as_mut() {
-                    tag_id = get_or_set_tag_id(alias, false, plan_meta)?;
+                    tag_id = get_or_set_tag_id(alias, plan_meta)?;
                 }
                 // TODO() check the logic again
                 if key.property.is_none() {
                     let node_ids = if let Some(tag_pb) = key.tag.as_mut() {
-                        let tag_id = get_or_set_tag_id(tag_pb, false, plan_meta)?;
-                        let nodes = plan_meta.get_tag_nodes(tag_id);
-                        if nodes.is_empty() {
-                            return Err(IrError::TagNotExist((tag_id as i32).into()));
-                        }
-                        nodes.to_vec()
+                        let tag_id = get_or_set_tag_id(tag_pb, plan_meta)?;
+                        plan_meta.get_tag_nodes(tag_id).to_vec()
                     } else {
                         plan_meta.get_curr_referred_nodes().to_vec()
                     };
-                    if mapping.alias.is_some() {
+                    if mapping.alias.is_some() && !node_ids.is_empty() {
                         plan_meta.insert_tag_nodes(tag_id, node_ids);
                     }
                 }
@@ -1138,7 +1125,7 @@ impl AsLogical for pb::GroupBy {
                 preprocess_var(var, meta, plan_meta, false)?;
             }
             if let Some(alias) = agg_fn.alias.as_mut() {
-                let tag_id = get_or_set_tag_id(alias, false, plan_meta)?;
+                let tag_id = get_or_set_tag_id(alias, plan_meta)?;
                 plan_meta.insert_tag_nodes(tag_id, vec![plan_meta.get_curr_node()]);
             }
         }
@@ -1205,7 +1192,7 @@ impl AsLogical for pb::Limit {
 impl AsLogical for pb::As {
     fn preprocess(&mut self, _meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
         if let Some(alias) = self.alias.as_mut() {
-            let tag_id = get_or_set_tag_id(alias, false, plan_meta)?;
+            let tag_id = get_or_set_tag_id(alias, plan_meta)?;
             plan_meta.insert_tag_nodes(tag_id, plan_meta.get_curr_referred_nodes().to_vec());
         }
         Ok(())
@@ -1231,7 +1218,7 @@ impl AsLogical for pb::Sink {
     fn preprocess(&mut self, _meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
         for tag_key in self.tags.iter_mut() {
             if let Some(tag) = tag_key.key.as_mut() {
-                get_or_set_tag_id(tag, true, plan_meta)?;
+                get_or_set_tag_id(tag, plan_meta)?;
             }
         }
         Ok(())
@@ -1245,7 +1232,7 @@ impl AsLogical for pb::Apply {
             plan_meta.refer_to_nodes(curr_node, vec![curr_node]);
         }
         if let Some(alias) = self.alias.as_mut() {
-            let tag_id = get_or_set_tag_id(alias, false, plan_meta)?;
+            let tag_id = get_or_set_tag_id(alias, plan_meta)?;
             plan_meta.insert_tag_nodes(tag_id, vec![plan_meta.get_curr_node()]);
         }
         Ok(())
@@ -1256,7 +1243,7 @@ impl AsLogical for pb::Pattern {
     fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
         for sentence in self.sentences.iter_mut() {
             if let Some(alias) = sentence.start.as_mut() {
-                let tag_id = get_or_set_tag_id(alias, false, plan_meta)?;
+                let tag_id = get_or_set_tag_id(alias, plan_meta)?;
                 if plan_meta.has_tag(tag_id) {
                     return Err(IrError::InvalidPattern(format!(
                         "`pb::Pattern` cannot reference existing tag: {:?}",
@@ -1269,7 +1256,7 @@ impl AsLogical for pb::Pattern {
                 ));
             }
             if let Some(alias) = sentence.end.as_mut() {
-                let tag_id = get_or_set_tag_id(alias, false, plan_meta)?;
+                let tag_id = get_or_set_tag_id(alias, plan_meta)?;
                 if plan_meta.has_tag(tag_id) {
                     return Err(IrError::InvalidPattern(format!(
                         "`pb::Pattern` cannot reference existing tag: {:?}",
@@ -1803,7 +1790,7 @@ mod test {
         plan_meta.refer_to_nodes(0, vec![0]);
         let meta = StoreMeta {
             schema: Some(
-                Schema::from_json(std::fs::File::open("resource/modern_schema.json").unwrap()).unwrap(),
+                Schema::from_json(std::fs::File::open("resource/modern_schema_pk.json").unwrap()).unwrap(),
             ),
         };
         let mut scan = pb::Scan {
@@ -2558,11 +2545,10 @@ mod test {
             }],
             is_append: false,
         };
+        // visiting a non-existing tag does not return error
         let result = plan.append_operator_as_node(project.into(), vec![0]);
-        match result.err() {
-            Some(IrError::TagNotExist(_)) => {}
-            _ => panic!("should produce `IrError::TagNotExist`"),
-        }
+        println!("{:?}", result);
+        assert!(result.is_ok());
     }
 
     #[test]

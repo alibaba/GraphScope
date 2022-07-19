@@ -38,7 +38,7 @@ public class HasStepTest {
         Traversal traversal = g.V().has("name", "marko");
         Step hasStep = traversal.asAdmin().getEndStep();
         SelectOp op = (SelectOp) StepTransformFactory.HAS_STEP.apply(hasStep);
-        Assert.assertEquals("@.name && @.name == \"marko\"", op.getPredicate().get().applyArg());
+        Assert.assertEquals("@.name == \"marko\"", op.getPredicate().get().applyArg());
     }
 
     @Test
@@ -46,7 +46,7 @@ public class HasStepTest {
         Traversal traversal = g.V().has("name", P.eq("marko"));
         Step hasStep = traversal.asAdmin().getEndStep();
         SelectOp op = (SelectOp) StepTransformFactory.HAS_STEP.apply(hasStep);
-        Assert.assertEquals("@.name && @.name == \"marko\"", op.getPredicate().get().applyArg());
+        Assert.assertEquals("@.name == \"marko\"", op.getPredicate().get().applyArg());
     }
 
     @Test
@@ -54,7 +54,7 @@ public class HasStepTest {
         Traversal traversal = g.V().has("name", P.neq("marko"));
         Step hasStep = traversal.asAdmin().getEndStep();
         SelectOp op = (SelectOp) StepTransformFactory.HAS_STEP.apply(hasStep);
-        Assert.assertEquals("@.name && @.name != \"marko\"", op.getPredicate().get().applyArg());
+        Assert.assertEquals("@.name != \"marko\"", op.getPredicate().get().applyArg());
     }
 
     @Test
@@ -62,7 +62,7 @@ public class HasStepTest {
         Traversal traversal = g.V().has("age", P.lt(10));
         Step hasStep = traversal.asAdmin().getEndStep();
         SelectOp op = (SelectOp) StepTransformFactory.HAS_STEP.apply(hasStep);
-        Assert.assertEquals("@.age && @.age < 10", op.getPredicate().get().applyArg());
+        Assert.assertEquals("@.age < 10", op.getPredicate().get().applyArg());
     }
 
     @Test
@@ -70,7 +70,7 @@ public class HasStepTest {
         Traversal traversal = g.V().has("age", P.lte(10));
         Step hasStep = traversal.asAdmin().getEndStep();
         SelectOp op = (SelectOp) StepTransformFactory.HAS_STEP.apply(hasStep);
-        Assert.assertEquals("@.age && @.age <= 10", op.getPredicate().get().applyArg());
+        Assert.assertEquals("@.age <= 10", op.getPredicate().get().applyArg());
     }
 
     @Test
@@ -78,7 +78,7 @@ public class HasStepTest {
         Traversal traversal = g.V().has("age", P.gt(10));
         Step hasStep = traversal.asAdmin().getEndStep();
         SelectOp op = (SelectOp) StepTransformFactory.HAS_STEP.apply(hasStep);
-        Assert.assertEquals("@.age && @.age > 10", op.getPredicate().get().applyArg());
+        Assert.assertEquals("@.age > 10", op.getPredicate().get().applyArg());
     }
 
     @Test
@@ -86,7 +86,7 @@ public class HasStepTest {
         Traversal traversal = g.V().has("age", P.gte(10));
         Step hasStep = traversal.asAdmin().getEndStep();
         SelectOp op = (SelectOp) StepTransformFactory.HAS_STEP.apply(hasStep);
-        Assert.assertEquals("@.age && @.age >= 10", op.getPredicate().get().applyArg());
+        Assert.assertEquals("@.age >= 10", op.getPredicate().get().applyArg());
     }
 
     @Test
@@ -94,7 +94,7 @@ public class HasStepTest {
         Traversal traversal = g.V().has("age", P.within(10));
         Step hasStep = traversal.asAdmin().getEndStep();
         SelectOp op = (SelectOp) StepTransformFactory.HAS_STEP.apply(hasStep);
-        Assert.assertEquals("@.age && @.age within [10]", op.getPredicate().get().applyArg());
+        Assert.assertEquals("@.age within [10]", op.getPredicate().get().applyArg());
     }
 
     @Test
@@ -102,7 +102,7 @@ public class HasStepTest {
         Traversal traversal = g.V().has("age", P.within(10, 11));
         Step hasStep = traversal.asAdmin().getEndStep();
         SelectOp op = (SelectOp) StepTransformFactory.HAS_STEP.apply(hasStep);
-        Assert.assertEquals("@.age && @.age within [10, 11]", op.getPredicate().get().applyArg());
+        Assert.assertEquals("@.age within [10, 11]", op.getPredicate().get().applyArg());
     }
 
     @Test
@@ -110,7 +110,7 @@ public class HasStepTest {
         Traversal traversal = g.V().has("age", P.without(10));
         Step hasStep = traversal.asAdmin().getEndStep();
         SelectOp op = (SelectOp) StepTransformFactory.HAS_STEP.apply(hasStep);
-        Assert.assertEquals("@.age && @.age without [10]", op.getPredicate().get().applyArg());
+        Assert.assertEquals("@.age without [10]", op.getPredicate().get().applyArg());
     }
 
     @Test
@@ -118,7 +118,7 @@ public class HasStepTest {
         Traversal traversal = g.V().has("age", P.without(10, 11));
         Step hasStep = traversal.asAdmin().getEndStep();
         SelectOp op = (SelectOp) StepTransformFactory.HAS_STEP.apply(hasStep);
-        Assert.assertEquals("@.age && @.age without [10, 11]", op.getPredicate().get().applyArg());
+        Assert.assertEquals("@.age without [10, 11]", op.getPredicate().get().applyArg());
     }
 
     @Test
@@ -127,8 +127,7 @@ public class HasStepTest {
         Step hasStep = traversal.asAdmin().getEndStep();
         SelectOp op = (SelectOp) StepTransformFactory.HAS_STEP.apply(hasStep);
         Assert.assertEquals(
-                "@.name && @.name within [\"marko\", \"josh\"]",
-                op.getPredicate().get().applyArg());
+                "@.name within [\"marko\", \"josh\"]", op.getPredicate().get().applyArg());
     }
 
     @Test
@@ -137,8 +136,7 @@ public class HasStepTest {
         Step hasStep = traversal.asAdmin().getEndStep();
         SelectOp op = (SelectOp) StepTransformFactory.HAS_STEP.apply(hasStep);
         Assert.assertEquals(
-                "@.name && @.name without [\"marko\", \"josh\"]",
-                op.getPredicate().get().applyArg());
+                "@.name without [\"marko\", \"josh\"]", op.getPredicate().get().applyArg());
     }
 
     @Test
@@ -146,8 +144,7 @@ public class HasStepTest {
         Traversal traversal = g.V().has("age", P.gt(27).and(P.lt(32)));
         Step hasStep = traversal.asAdmin().getEndStep();
         SelectOp op = (SelectOp) StepTransformFactory.HAS_STEP.apply(hasStep);
-        Assert.assertEquals(
-                "@.age && @.age > 27 && (@.age && @.age < 32)", op.getPredicate().get().applyArg());
+        Assert.assertEquals("@.age > 27 && (@.age < 32)", op.getPredicate().get().applyArg());
     }
 
     @Test
@@ -155,8 +152,7 @@ public class HasStepTest {
         Traversal traversal = g.V().has("age", P.lt(27).or(P.gt(32)));
         Step hasStep = traversal.asAdmin().getEndStep();
         SelectOp op = (SelectOp) StepTransformFactory.HAS_STEP.apply(hasStep);
-        Assert.assertEquals(
-                "@.age && @.age < 27 || (@.age && @.age > 32)", op.getPredicate().get().applyArg());
+        Assert.assertEquals("@.age < 27 || (@.age > 32)", op.getPredicate().get().applyArg());
     }
 
     @Test
@@ -181,8 +177,7 @@ public class HasStepTest {
         Step hasStep = traversal.asAdmin().getEndStep();
         SelectOp op = (SelectOp) StepTransformFactory.HAS_STEP.apply(hasStep);
         Assert.assertEquals(
-                "@.name && @.name == \"marko\" && (@.id && @.id == 1)",
-                op.getPredicate().get().applyArg());
+                "@.name == \"marko\" && (@.id == 1)", op.getPredicate().get().applyArg());
     }
 
     @Test
@@ -190,8 +185,7 @@ public class HasStepTest {
         Traversal traversal = g.V().has("name", TextP.containing("marko"));
         Step hasStep = traversal.asAdmin().getEndStep();
         SelectOp op = (SelectOp) StepTransformFactory.HAS_STEP.apply(hasStep);
-        Assert.assertEquals(
-                "@.name && \"marko\" within @.name", op.getPredicate().get().applyArg());
+        Assert.assertEquals("\"marko\" within @.name", op.getPredicate().get().applyArg());
     }
 
     @Test
@@ -199,7 +193,6 @@ public class HasStepTest {
         Traversal traversal = g.V().has("name", TextP.notContaining("marko"));
         Step hasStep = traversal.asAdmin().getEndStep();
         SelectOp op = (SelectOp) StepTransformFactory.HAS_STEP.apply(hasStep);
-        Assert.assertEquals(
-                "@.name && \"marko\" without @.name", op.getPredicate().get().applyArg());
+        Assert.assertEquals("\"marko\" without @.name", op.getPredicate().get().applyArg());
     }
 }

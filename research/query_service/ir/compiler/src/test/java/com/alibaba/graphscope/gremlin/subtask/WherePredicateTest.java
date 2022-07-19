@@ -75,8 +75,7 @@ public class WherePredicateTest {
         Traversal traversal = g.V().as("a").out().where(P.eq("a")).by("age");
         SelectOp selectOp = (SelectOp) getApplyWithSelect(traversal).get(0);
 
-        Assert.assertEquals(
-                "@.age && @a.age && @.age == @a.age", selectOp.getPredicate().get().applyArg());
+        Assert.assertEquals("@.age == @a.age", selectOp.getPredicate().get().applyArg());
     }
 
     @Test
@@ -84,8 +83,7 @@ public class WherePredicateTest {
         Traversal traversal = g.V().as("a").out().where(P.eq("a")).by(__.values("age"));
         SelectOp selectOp = (SelectOp) getApplyWithSelect(traversal).get(0);
 
-        Assert.assertEquals(
-                "@.age && @a.age && @.age == @a.age", selectOp.getPredicate().get().applyArg());
+        Assert.assertEquals("@.age == @a.age", selectOp.getPredicate().get().applyArg());
     }
 
     @Test
@@ -93,8 +91,7 @@ public class WherePredicateTest {
         Traversal traversal = g.V().as("a").out().as("b").where("a", P.eq("b")).by("id").by("age");
         SelectOp selectOp = (SelectOp) getApplyWithSelect(traversal).get(0);
 
-        Assert.assertEquals(
-                "@a.id && @b.age && @a.id == @b.age", selectOp.getPredicate().get().applyArg());
+        Assert.assertEquals("@a.id == @b.age", selectOp.getPredicate().get().applyArg());
     }
 
     @Test
@@ -112,8 +109,7 @@ public class WherePredicateTest {
         SelectOp selectOp = (SelectOp) getApplyWithSelect(traversal).get(0);
 
         Assert.assertEquals(
-                "@a.id && @b.age && @a.id == @b.age || (@a.id && @c.id && @a.id == @c.id)",
-                selectOp.getPredicate().get().applyArg());
+                "@a.id == @b.age || (@a.id == @c.id)", selectOp.getPredicate().get().applyArg());
     }
 
     @Test

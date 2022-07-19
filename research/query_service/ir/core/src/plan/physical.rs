@@ -79,7 +79,11 @@ fn simple_add_job_builder<M: Message>(
 
 impl AsPhysical for pb::Project {
     fn add_job_builder(&self, builder: &mut JobBuilder, _plan_meta: &mut PlanMeta) -> IrResult<()> {
-        simple_add_job_builder(builder, &pb::logical_plan::Operator::from(self.clone()), SimpleOpr::Map)
+        simple_add_job_builder(
+            builder,
+            &pb::logical_plan::Operator::from(self.clone()),
+            SimpleOpr::FilterMap,
+        )
     }
 }
 
@@ -228,7 +232,7 @@ impl AsPhysical for pb::PathExpand {
                     simple_add_job_builder(
                         builder,
                         &pb::logical_plan::Operator::from(path_start),
-                        SimpleOpr::Map,
+                        SimpleOpr::FilterMap,
                     )?;
                     let is_partition = plan_meta.is_partition();
                     for _ in 0..(range.lower - 1) {
@@ -330,7 +334,7 @@ impl AsPhysical for pb::GetV {
             _ => simple_add_job_builder(
                 builder,
                 &pb::logical_plan::Operator::from(self.clone()),
-                SimpleOpr::Map,
+                SimpleOpr::FilterMap,
             )?,
         }
         if is_adding_auxilia {
@@ -918,7 +922,7 @@ mod test {
             })
             .encode_to_vec(),
         );
-        expected_builder.map(
+        expected_builder.filter_map(
             pb::logical_plan::Operator::from(build_project("{@0.name, @0.id, @0.age}")).encode_to_vec(),
         );
         expected_builder.sink(vec![]);
@@ -945,7 +949,7 @@ mod test {
             })
             .encode_to_vec(),
         );
-        expected_builder.map(
+        expected_builder.filter_map(
             pb::logical_plan::Operator::from(build_project("{@0.name, @0.id, @0.age}")).encode_to_vec(),
         );
         expected_builder.sink(vec![]);
@@ -975,7 +979,7 @@ mod test {
         expected_builder.flat_map(
             pb::logical_plan::Operator::from(build_edgexpd(false, vec![], Some(0.into()))).encode_to_vec(),
         );
-        expected_builder.map(pb::logical_plan::Operator::from(build_project("@0")).encode_to_vec());
+        expected_builder.filter_map(pb::logical_plan::Operator::from(build_project("@0")).encode_to_vec());
         expected_builder.sink(vec![]);
 
         assert_eq!(job_builder, expected_builder);
@@ -1014,7 +1018,7 @@ mod test {
         expected_builder
             .filter_map(pb::logical_plan::Operator::from(build_auxilia("@.age == 27")).encode_to_vec());
         expected_builder
-            .map(pb::logical_plan::Operator::from(build_project("{@.name, @.id}")).encode_to_vec());
+            .filter_map(pb::logical_plan::Operator::from(build_project("{@.name, @.id}")).encode_to_vec());
         expected_builder.sink(vec![]);
 
         assert_eq!(job_builder, expected_builder);
@@ -1041,7 +1045,7 @@ mod test {
         expected_builder.add_source(pb::logical_plan::Operator::from(build_scan(vec![])).encode_to_vec());
         expected_builder
             .flat_map(pb::logical_plan::Operator::from(build_edgexpd(true, vec![], None)).encode_to_vec());
-        expected_builder.map(pb::logical_plan::Operator::from(build_getv(None)).encode_to_vec());
+        expected_builder.filter_map(pb::logical_plan::Operator::from(build_getv(None)).encode_to_vec());
         expected_builder.filter_map(
             pb::logical_plan::Operator::from(pb::Auxilia {
                 tag: None,
@@ -1050,7 +1054,7 @@ mod test {
             })
             .encode_to_vec(),
         );
-        expected_builder.map(
+        expected_builder.filter_map(
             pb::logical_plan::Operator::from(build_project("{@0.name, @0.id, @0.age}")).encode_to_vec(),
         );
         expected_builder.sink(vec![]);
@@ -1068,7 +1072,7 @@ mod test {
         expected_builder.repartition(vec![]);
         expected_builder
             .flat_map(pb::logical_plan::Operator::from(build_edgexpd(true, vec![], None)).encode_to_vec());
-        expected_builder.map(pb::logical_plan::Operator::from(build_getv(None)).encode_to_vec());
+        expected_builder.filter_map(pb::logical_plan::Operator::from(build_getv(None)).encode_to_vec());
         expected_builder.repartition(vec![]);
         expected_builder.filter_map(
             pb::logical_plan::Operator::from(pb::Auxilia {
@@ -1078,7 +1082,7 @@ mod test {
             })
             .encode_to_vec(),
         );
-        expected_builder.map(
+        expected_builder.filter_map(
             pb::logical_plan::Operator::from(build_project("{@0.name, @0.id, @0.age}")).encode_to_vec(),
         );
         expected_builder.sink(vec![]);
@@ -1122,7 +1126,7 @@ mod test {
         expected_builder.add_source(pb::logical_plan::Operator::from(build_scan(vec![])).encode_to_vec());
         expected_builder
             .flat_map(pb::logical_plan::Operator::from(build_edgexpd(true, vec![], None)).encode_to_vec());
-        expected_builder.map(pb::logical_plan::Operator::from(build_getv(None)).encode_to_vec());
+        expected_builder.filter_map(pb::logical_plan::Operator::from(build_getv(None)).encode_to_vec());
         expected_builder.filter_map(
             pb::logical_plan::Operator::from(pb::Auxilia {
                 tag: None,
@@ -1228,7 +1232,7 @@ mod test {
 
         let mut expected_builder = JobBuilder::default();
         expected_builder.add_source(source_opr.encode_to_vec());
-        expected_builder.map(project_opr.encode_to_vec());
+        expected_builder.filter_map(project_opr.encode_to_vec());
         assert_eq!(builder, expected_builder);
     }
 
@@ -1275,7 +1279,7 @@ mod test {
 
         let mut expected_builder = JobBuilder::default();
         expected_builder.add_source(source_opr.encode_to_vec());
-        expected_builder.map(path_start_opr.encode_to_vec());
+        expected_builder.filter_map(path_start_opr.encode_to_vec());
         expected_builder.iterate_emit(3, |plan| {
             plan.flat_map(expand_opr.clone().encode_to_vec());
         });
@@ -1293,7 +1297,7 @@ mod test {
 
         let mut expected_builder = JobBuilder::default();
         expected_builder.add_source(source_opr.encode_to_vec());
-        expected_builder.map(path_start_opr.encode_to_vec());
+        expected_builder.filter_map(path_start_opr.encode_to_vec());
         expected_builder.iterate_emit(3, |plan| {
             plan.repartition(vec![])
                 .flat_map(expand_opr.clone().encode_to_vec());
@@ -1345,7 +1349,7 @@ mod test {
 
         let mut expected_builder = JobBuilder::default();
         expected_builder.add_source(source_opr.encode_to_vec());
-        expected_builder.map(path_start_opr.encode_to_vec());
+        expected_builder.filter_map(path_start_opr.encode_to_vec());
         expected_builder.repartition(vec![]);
         expected_builder.flat_map(expand_opr.clone().encode_to_vec());
         expected_builder.repartition(vec![]);
@@ -1480,7 +1484,7 @@ mod test {
             },
             apply.encode_to_vec(),
         );
-        expected_builder.map(project.encode_to_vec());
+        expected_builder.filter_map(project.encode_to_vec());
         expected_builder.sink(vec![]);
 
         assert_eq!(expected_builder, builder);
