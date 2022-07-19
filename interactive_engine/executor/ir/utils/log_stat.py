@@ -44,6 +44,40 @@ def parse_args():
     return args
 
 
+def draw_time_cost_graph(graph_name, worker_operator_time_cost, job_edge_desc, total_timecost):
+    # draw the time cost graph (of each worker)
+    worker_cost_dot = Digraph(graph_name)
+    # draw nodes of time cost graph
+    for op in worker_operator_time_cost:
+        op_index = op.split("_")[-1].split("]")[0]
+        percentage = float(worker_operator_time_cost[op][0:len(worker_operator_time_cost[op])-2])/float(total_timecost)
+        worker_cost_dot.node(op_index, label=f'{op}: {worker_operator_time_cost[op]}, {format(percentage,".2%")}')
+    # draw edges of time cost graph
+    for edge in job_edge_desc:
+        edge_src_index = edge.split(".")[0].split("(")[-1]
+        edge_dst_index = edge.split(".")[1].split("(")[-1]
+        worker_cost_dot.edge(edge_src_index,edge_dst_index)
+    worker_cost_dot.render(view=False)
+
+
+def draw_communication_cost_graph(graph_name, job_operators, job_edges):
+    # draw the communication cost graph (of each job)
+    job_comm_dot = Digraph(graph_name)
+    # draw nodes of communication cost graph
+    for op in job_operators:
+        op_index = op.split("_")[-1].split("]")[0]
+        job_comm_dot.node(op_index, label=f'{op}: {job_operators[op]}')
+    # draw edges of communication cost graph
+    job_edge_list = defaultdict(list)
+    for edge in job_edges:
+        edge_src_index = edge.split(".")[0].split("(")[-1]
+        edge_dst_index = edge.split(".")[1].split("(")[-1]
+        job_edge_list[edge_src_index,edge_dst_index].append((edge,job_edges[edge]))
+    for edge in job_edge_list:
+        job_comm_dot.edge(edge[0], edge[1], label=f'{job_edge_list[edge]}')
+    job_comm_dot.render(view=False)
+
+
 def main(args):
     job_ids = [i for i in args.job_id.split(",")]
     for job_id in job_ids:
@@ -97,7 +131,7 @@ def main(args):
                             worker_operators[operator] = 0
                     if worker_handle_flag in line and "len" in line:
                         len_str = line[line.index(worker_handle_flag) + len(worker_handle_flag):]
-                        operator_len = int(len_str.split("=")[-1])
+                        operator_len += int(len_str.split("=")[-1])
                     if worker_after_fire_flag in line:
                         operator = (line[line.index(worker_after_fire_flag) + len(worker_after_fire_flag):]).replace("\n", '')
                         worker_operators[operator] += operator_len
@@ -116,23 +150,10 @@ def main(args):
                         print(job_finished.group())
 
 
-            print("operators: ", dict(worker_operators))
-            print("worker_edges: ", dict(worker_edges))
-            print("operator time cost: ", dict(worker_operator_time_cost))
-
-            # draw the time cost table (of each worker)
-            worker_cost_dot = Digraph(f'job_{job_id}_{worker_id}_cost', filename=f'job_{job_id}_{worker_id}_cost.gv')
-            # draw nodes of time cost table
-            for op in worker_operator_time_cost:
-                op_index = op.split("_")[-1].split("]")[0]
-                percentage = float(worker_operator_time_cost[op][0:len(worker_operator_time_cost[op])-2])/float(total_timecost)
-                worker_cost_dot.node(op_index, label=f'{op}: {worker_operator_time_cost[op]}, {format(percentage,".2%")}')
-            # draw edges of time cost table
-            for edge in job_edge_desc:
-                edge_src_index = edge.split(".")[0].split("(")[-1]
-                edge_dst_index = edge.split(".")[1].split("(")[-1]
-                worker_cost_dot.edge(edge_src_index,edge_dst_index)
-            worker_cost_dot.view()
+            print("=========== operator intermediate batches ===========\n", dict(worker_operators))
+            print("=============== operator push batches ===============\n", dict(worker_edges))
+            print("================= operator time cost ================\n", dict(worker_operator_time_cost))
+            draw_time_cost_graph(f'job_{job_id}_{worker_id}_cost', worker_operator_time_cost, job_edge_desc, total_timecost)
 
             # accum process batches of each operator for job
             for op in worker_operators:
@@ -148,21 +169,7 @@ def main(args):
                 job_edges[edge] += worker_edges[edge]
 
         # draw the communication cost table (of each job)
-        job_comm_dot = Digraph(f'job_{job_id}_comm', filename=f'job_{job_id}_comm.gv')
-        for op in job_operators:
-            op_index = op.split("_")[-1].split("]")[0]
-            job_comm_dot.node(op_index, label=f'{op}: {job_operators[op]}')
-
-        job_edge_list = defaultdict(list)
-        for edge in job_edges:
-            edge_src_index = edge.split(".")[0].split("(")[-1]
-            edge_dst_index = edge.split(".")[1].split("(")[-1]
-            job_edge_list[edge_src_index,edge_dst_index].append((edge,job_edges[edge]))
-
-        for edge in job_edge_list:
-            job_comm_dot.edge(edge[0], edge[1], label=f'{job_edge_list[edge]}')
-
-        job_comm_dot.view()
+        draw_communication_cost_graph(f'job_{job_id}_comm',job_operators,job_edges)
 
 if __name__ == '__main__':
     args = parse_args()
