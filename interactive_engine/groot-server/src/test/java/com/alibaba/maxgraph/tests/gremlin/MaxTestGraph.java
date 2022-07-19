@@ -1214,11 +1214,11 @@ import java.util.Map;
 @Graph.OptOut(
         method = "g_VX1X_outXknowsX_outEXcreatedX_rangeX0_1X_inV",
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.RangeTest",
-        reason = "will be supported")
+        reason = "range is unsupported, use limit instead")
 @Graph.OptOut(
         method = "g_VX1X_outXknowsX_outXcreatedX_rangeX0_1X",
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.RangeTest",
-        reason = "will be supported")
+        reason = "range is unsupported, use limit instead")
 // @Graph.OptOut(method="g_VX1X_asXaX_outXcreatedX_inXcreatedX_whereXeqXaXX_name" ,
 // test="org.apache.tinkerpop.gremlin.process.traversal.step.filter.WhereTest", reason = "will be
 // supported")
