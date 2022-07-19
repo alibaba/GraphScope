@@ -36,29 +36,30 @@ impl FlatMapFunction<Record, Record> for GetBothVOperator {
     type Target = DynIter<Record>;
 
     fn exec(&self, input: Record) -> FnResult<Self::Target> {
-        let entry = input
-            .get(self.start_tag)
-            .ok_or(FnExecError::get_tag_error("get tag failed in GetVertexOperator"))?;
-        if let Some(e) = entry.as_graph_edge() {
-            let src_vertex = Vertex::new(
-                e.src_id,
-                e.get_src_label().map(|l| l.clone()),
-                DynDetails::new(DefaultDetails::default()),
-            );
-            let dst_vertex = Vertex::new(
-                e.dst_id,
-                e.get_dst_label().map(|l| l.clone()),
-                DynDetails::new(DefaultDetails::default()),
-            );
-            Ok(Box::new(RecordExpandIter::new(
-                input,
-                self.alias.as_ref(),
-                Box::new(vec![src_vertex, dst_vertex].into_iter()),
-            )))
+        if let Some(entry) = input.get(self.start_tag) {
+            if let Some(e) = entry.as_graph_edge() {
+                let src_vertex = Vertex::new(
+                    e.src_id,
+                    e.get_src_label().map(|l| l.clone()),
+                    DynDetails::new(DefaultDetails::default()),
+                );
+                let dst_vertex = Vertex::new(
+                    e.dst_id,
+                    e.get_dst_label().map(|l| l.clone()),
+                    DynDetails::new(DefaultDetails::default()),
+                );
+                Ok(Box::new(RecordExpandIter::new(
+                    input,
+                    self.alias.as_ref(),
+                    Box::new(vec![src_vertex, dst_vertex].into_iter()),
+                )))
+            } else {
+                Err(FnExecError::unexpected_data_error(
+                    "Can only apply `GetV` with BothV opt (`Auxilia` instead) on an edge entry",
+                ))?
+            }
         } else {
-            Err(FnExecError::unexpected_data_error(
-                "Can only apply `GetV` with BothV opt (`Auxilia` instead) on an edge entry",
-            ))?
+            Ok(Box::new(vec![].into_iter()))
         }
     }
 }
