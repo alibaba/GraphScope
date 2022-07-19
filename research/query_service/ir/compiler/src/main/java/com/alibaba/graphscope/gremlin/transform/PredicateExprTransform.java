@@ -55,10 +55,21 @@ public interface PredicateExprTransform extends Function<Step, String> {
             }
         } else {
             Object predicateValue = predicate.getValue();
-            if (predicateValue instanceof AnyValue) {
-                expr = getExprIfPropertyExist(subject);
+            BiPredicate biPredicate = predicate.getBiPredicate();
+            if (predicateValue instanceof AnyValue) { // has("age") or hasNot("age")
+                // @.age
+                String propertyExist = subject;
+                if (biPredicate == Compare.eq) { // has("age")
+                    expr = propertyExist;
+                } else if (biPredicate == Compare.neq) { // hasNot("age")
+                    expr = "!" + propertyExist;
+                } else {
+                    throw new OpArgIllegalException(
+                            OpArgIllegalException.Cause.INVALID_TYPE,
+                            "property type is invalid in checking property existence, "
+                                    + biPredicate.toString());
+                }
             } else {
-                BiPredicate biPredicate = predicate.getBiPredicate();
                 // format as (subject predicate value), i.e "@a.name within [...]"
                 Function<Triple, String> defaultFormat =
                         (Triple t) ->
