@@ -36,8 +36,6 @@ public class MaxTestGraphProvider extends AbstractGraphProvider implements AutoC
     private MaxTestGraph graph;
     private String storeDataPath;
 
-    private Set<LoadGraphWith.GraphData> loadedGraphs = new HashSet<>();
-
     @Override
     public Map<String, Object> getBaseConfiguration(
             String graphName,
@@ -73,11 +71,13 @@ public class MaxTestGraphProvider extends AbstractGraphProvider implements AutoC
             Graph graph, LoadGraphWith loadGraphWith, Class testClass, String testName) {
         LoadGraphWith.GraphData graphData =
                 null == loadGraphWith ? LoadGraphWith.GraphData.CLASSIC : loadGraphWith.value();
-        if (loadedGraphs.contains(graphData)) return;
+        if ((new File(this.storeDataPath)).exists()) {
+            logger.debug("{}", "data has existed, skip ddl");
+            return;
+        }
         try {
             ((MaxTestGraph) graph).loadSchema(graphData);
             ((MaxTestGraph) graph).loadData(graphData);
-            loadedGraphs.add(graphData);
         } catch (URISyntaxException | IOException e) {
             logger.error("load schema failed", e);
             throw new MaxGraphException(e);
