@@ -27,7 +27,7 @@ struct Config {
 
 struct EchoJobParser;
 
-impl JobAssembly<Vec<u8>, Vec<u8>> for EchoJobParser {
+impl JobAssembly<Vec<u8>> for EchoJobParser {
     fn assemble(&self, job: &JobDesc, worker: &mut Worker<Vec<u8>, Vec<u8>>) -> Result<(), BuildJobError> {
         worker.dataflow(|input, output| {
             input

@@ -22,7 +22,7 @@ pub async fn start<I: Data, P>(
     rpc_config: RPCServerConfig, server_config: pegasus::Configuration, assemble: P,
 ) -> Result<(), Box<dyn std::error::Error>>
 where
-    P: JobAssembly<I, Vec<u8>>,
+    P: JobAssembly<I>,
 {
     let detect = if let Some(net_conf) = server_config.network_config() {
         net_conf.get_servers()?.unwrap_or(vec![])

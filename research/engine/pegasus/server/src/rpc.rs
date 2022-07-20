@@ -104,7 +104,7 @@ impl Drop for RpcSink {
 
 #[derive(Clone)]
 pub struct JobServiceImpl<I> {
-    inner: Arc<dyn JobAssembly<I, Vec<u8>>>,
+    inner: Arc<dyn JobAssembly<I>>,
     report: bool,
 }
 
@@ -232,7 +232,7 @@ pub async fn start_all<I: Data, P, D, E>(
     mut listener: E,
 ) -> Result<(), Box<dyn std::error::Error>>
 where
-    P: JobAssembly<I, Vec<u8>>,
+    P: JobAssembly<I>,
     D: ServerDetect + 'static,
     E: ServiceStartListener,
 {
@@ -249,7 +249,7 @@ pub async fn start_rpc_server<I: Data, P, E>(
     server_id: u64, rpc_config: RPCServerConfig, assemble: P, listener: E,
 ) -> Result<(), Box<dyn std::error::Error>>
 where
-    P: JobAssembly<I, Vec<u8>>,
+    P: JobAssembly<I>,
     E: ServiceStartListener,
 {
     let service = JobServiceImpl { inner: Arc::new(assemble), report: true };

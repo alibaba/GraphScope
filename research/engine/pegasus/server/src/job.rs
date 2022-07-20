@@ -1,6 +1,5 @@
 use libloading::{Library, Symbol};
 use pegasus::{BuildJobError, Data, Worker};
-use std::fmt::Debug;
 
 #[derive(Default)]
 pub struct JobDesc {
@@ -26,13 +25,13 @@ impl JobDesc {
     }
 }
 
-pub trait JobAssembly<I: Data, O: Debug + Send + 'static>: Send + Sync + 'static {
-    fn assemble(&self, job: &JobDesc, worker: &mut Worker<I, O>) -> Result<(), BuildJobError>;
+pub trait JobAssembly<I: Data>: Send + Sync + 'static {
+    fn assemble(&self, job: &JobDesc, worker: &mut Worker<I, Vec<u8>>) -> Result<(), BuildJobError>;
 }
 
 pub struct DynLibraryAssembly;
 
-impl JobAssembly<Vec<u8>, Vec<u8>> for DynLibraryAssembly {
+impl JobAssembly<Vec<u8>> for DynLibraryAssembly {
     fn assemble(&self, job: &JobDesc, worker: &mut Worker<Vec<u8>, Vec<u8>>) -> Result<(), BuildJobError> {
         if let Ok(resource) = String::from_utf8(job.resource.clone()) {
             if let Some(lib) = pegasus::resource::get_global_resource::<Library>(&resource) {

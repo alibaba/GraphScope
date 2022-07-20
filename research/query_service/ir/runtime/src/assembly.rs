@@ -467,7 +467,7 @@ impl IRJobAssembly {
     }
 }
 
-impl JobAssembly<Record, Vec<u8>> for IRJobAssembly {
+impl JobAssembly<Record> for IRJobAssembly {
     fn assemble(&self, plan: &JobDesc, worker: &mut Worker<Record, Vec<u8>>) -> Result<(), BuildJobError> {
         worker.dataflow(move |input, output| {
             let source = decode::<server_pb::Source>(&plan.input)?;
