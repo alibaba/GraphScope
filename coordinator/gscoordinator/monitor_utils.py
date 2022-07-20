@@ -17,17 +17,16 @@
 #
 
 """Monitor coordinator by prometheus"""
-from tracemalloc import start
 from prometheus_client import start_http_server
-from prometheus_client import Enum
 from prometheus_client import Summary
 from prometheus_client import Counter
-
+from prometheus_client import Gauge
+import prometheus_client
 import functools
 import timeit
 
 
-op_names = {
+op_name_dict = {
     0: "CREATE_GRAPH",
     1: "BIND_APP",
     2: "CREATE_APP",
@@ -54,7 +53,7 @@ op_names = {
     23: "UNLOAD_CONTEXT",
     31: "CREATE_INTERACTIVE_QUERY",
     32: "SUBGRAPH",
-    33: "GREMLIN_QUERY",
+    33: "GREMLIN_QUERYutil",
     34: "FETCH_GREMLIN_RESULT",
     35: "CLOSE_INTERACTIVE_QUERY",
     41: "CREATE_LEARNING_INSTANCE",
@@ -77,34 +76,32 @@ op_names = {
     90: "GET_ENGINE_CONFIG"
 }
 
+prometheus_client.REGISTRY.unregister(prometheus_client.PROCESS_COLLECTOR)
+prometheus_client.REGISTRY.unregister(prometheus_client.PLATFORM_COLLECTOR)
+prometheus_client.REGISTRY.unregister(prometheus_client.GC_COLLECTOR)
+
 
 class Monitor:
-    # startServer = start_http_server
-    sessionStates = Enum("session_state", "The session's state: contected or closed", ["id"], states=["contected", "closed"])
+    sessionState = Gauge("session_state", "The session's state: 1 contected or 0 closed")
 
-    analyticalJobTotal = Counter("analytical_task_total", "The analytical engine's counter", [
-                                   "session_id", "op_name"])
-    analyticalMessageCounter = Counter("analytical_task_message_counter",
-                                       "The analytical engine's message counter", ["session_id", "op_key", "op_name"])
-    analyticalTimeConsume = Summary("analytical_task_time_consume", "The analytical task's time summary", [
-                                    "session_id", "op_name"])
+    analyticalRequestCounter = Counter("analytical_request", "Count requests of analytical requests")
+    # Guage or Summary?
+    #  A same op on different graphs is very different, so we use "Gauge" to monitor the instant processing time but not using "Summary" or "Histogram".
+    analyticalRequestGauge = Gauge("analytical_request_time", "The analytical opration task time", ["op_name"])
 
-    interactiveJobTotal = Counter("interactive_task_total", "The interactive engine's counter", ["session_id"])
-    interactiveMessageCounter = Counter("interactive_task_message_counter",
-                                        "The interactive engine's message counter", ["session_id", "op_key", "op_name"])
-    interactiveTimeConsume = Summary("interactive_task_time_consume", "The interactive task's time summary", [
-                                     "session_id", "op_name"])
+    interactiveRequestCounter = Counter("interactive_request", "Count requests of interactive requests")
+    interactiveRequestGauge = Gauge("interactive_request_time", "The interactive opration task time", ["op_name"])
 
-    learningJobTotal = Counter("learning_task_total", "The learning engine's counter", ["session_id"])
-    learningMessageCounter = Counter("learning_engine_message_counter", "The learning engine's message counter", [
-                                     "session_id", "op_name"])
-    learningTimeConsume = Summary("learning_task_time_consume", "The learning engine's time summary", [
-                                  "session_id","op_name"])
+
+    # learningJobTotal = Counter("learning_task_total", "The learning engine's counter", ["session_id"])
+    # learningMessageCounter = Counter("learning_engine_message_counter", "The learning engine's message counter", [
+    #                                  "session_id", "op_name"])
+    # learningTimeConsume = Summary("learning_task_time_consume", "The learning engine's time summary", [
+    #                               "session_id","op_name"])
 
     @classmethod
-    def startServer(cls, addr="0.0.0.0:9968"):
-        addr, port = addr.split(":")
-        start_http_server(port=int(port), addr=addr)
+    def startServer(cls, port=9968 ,addr="0.0.0.0"):
+        start_http_server(port=port, addr=addr)
 
     @classmethod
     def connectSession(cls, func):
@@ -112,7 +109,7 @@ class Monitor:
         def connectSessionWarp(*args, **kwargs):
             result = func(*args, **kwargs)
             if result and result.session_id:
-                cls.sessionStates.labels(result.session_id).state("contected")
+                cls.sessionState.set(1)
             return result
         return connectSessionWarp
 
@@ -121,34 +118,69 @@ class Monitor:
         @functools.wraps(func)
         def closeSessionWrap(instance, request, context):
             if request and request.session_id:
-                cls.sessionStates.labels(request.session_id).state("closed")
+                cls.sessionState.set(0)
             return func(instance, request, context)
         return closeSessionWrap
 
+    @classmethod
+    def cleanup(cls, func):
+        @functools.wraps(func)
+        def cleanupWrap(instance, *args, **kwargs):
+            func(instance, *args, **kwargs)
+            cls.sessionState.set(0)
+            return
+        return cleanupWrap
 
-    # TODO: 有待修改
-    # run_on_analytical_engine 可以一次传递多个请求
-    # 目前该装饰器只处理了第一个请求的key，把第一个请求当作所有请求
-    # 有待考证
     @classmethod
     def runOnAnalyticalEngine(cls, func):
         @functools.wraps(func)
         def runOnAnalyticalEngineWarp(instance, dag_def, dag_bodies, loader_op_bodies):
-            session_id,_,op_name = instance._session_id, dag_def.op[0].key, dag_def.op[0].op
+            cls.analyticalRequestCounter.inc()
+            session_id,ops = instance._session_id, dag_def.op
             if not session_id:
                 session_id = ""
-            # if not op_key:
-            #     op_key = ""
-            if op_name == None or op_name not in op_names:
-                op_name = ""
-            else:
-                op_name = op_names[op_name]
-
-            cls.analyticalJobTotal.labels(session_id,op_name).inc()
+            
             start_time = timeit.default_timer()
             res = func(instance, dag_def, dag_bodies, loader_op_bodies)
             end_time = timeit.default_timer()
-            cls.analyticalTimeConsume.labels(
-                session_id, op_name).observe(end_time - start_time)
+            
+            if not ops:
+                op_name = ""
+            elif len(ops) > 1:
+                op_name = "multi_op"
+            else:
+                if not ops[0].op or not ops[0].op in op_name_dict:
+                    op_name = ""
+                else:
+                    op_name = op_name_dict[ops[0].op]
+
+            cls.analyticalRequestGauge.labels(op_name).set(end_time - start_time)
             return res
         return runOnAnalyticalEngineWarp
+        
+    @classmethod
+    def runOnInteractiveEngine(cls, func):
+        @functools.wraps(func)
+        def runOnInteractiveEngineWarp(instance, dag_def):
+            cls.interactiveRequestCounter.inc()
+            session_id,ops = instance._session_id, dag_def.op
+            if not session_id:
+                session_id = ""
+            
+            start_time = timeit.default_timer()
+            res = func(instance, dag_def)
+            end_time = timeit.default_timer()
+            
+            if not ops:
+                op_name = ""
+            elif len(ops) > 1:
+                op_name = "multi_op"
+            else:
+                if not ops[0].op or not ops[0].op in op_name_dict:
+                    op_name = ""
+                else:
+                    op_name = op_name_dict[ops[0].op]
+
+            cls.interactiveRequestGauge.labels(op_name).set(end_time - start_time)
+            return res
+        return runOnInteractiveEngineWarp

@@ -20,6 +20,7 @@
 
 import argparse
 import atexit
+from cgi import print_arguments
 import datetime
 import functools
 import json
@@ -261,11 +262,11 @@ class CoordinatorServiceServicer(
         logger.addHandler(stdout_handler)
         logger.addHandler(stderr_handler)
 
-    @Monitor.connectSession
     def ConnectSession(self, request, context):
         for result in self.ConnectSessionWrapped(request, context):
             return result
 
+    @Monitor.connectSession
     def _ConnectSession(self, request, context):
         # A session is already connected.
         if self._request:
@@ -505,6 +506,8 @@ class CoordinatorServiceServicer(
                 self._object_manager.pop(op.attr[types_pb2.APP_NAME].s.decode())
         return response_head, response_bodies
 
+    
+    @Monitor.runOnInteractiveEngine
     def run_on_interactive_engine(self, dag_def: op_def_pb2.DagDef):
         response_head = message_pb2.RunStepResponse(
             head=message_pb2.RunStepResponseHead()
@@ -606,18 +609,10 @@ class CoordinatorServiceServicer(
             for response in self.RunStepWrapped(request_iterator, context):
                 yield response
 
-    #TODO: monitor runstep
     def _RunStep(self, request_iterator, context):
         # split dag
         dag_manager = DAGManager(request_iterator)
         loader_op_bodies = {}
-
-        # session_id = ""
-        # father_op_key = ""
-        # if dag_manager._req_head:
-        #     session_id = dag_manager._req_head.head.session_id
-            # father_op_key = dag_manager._req_head.head.dag_def.op.key
-            # print(dag_manager._req_head.head.dag_def.op[0])
 
         # response list for stream
         responses = []
@@ -635,7 +630,6 @@ class CoordinatorServiceServicer(
             try:
                 # run on analytical engine
                 if run_dag_on == GSEngine.analytical_engine:
-                    # Monitor.analyticalJobCounter.labels(session_id).inc()
                     # need dag_bodies to load graph from pandas/numpy
                     error_code = error_codes_pb2.ANALYTICAL_ENGINE_INTERNAL_ERROR
                     head, bodies = self.run_on_analytical_engine(
@@ -643,12 +637,10 @@ class CoordinatorServiceServicer(
                     )
                 # run on interactive engine
                 elif run_dag_on == GSEngine.interactive_engine:
-                    # Monitor.interactiveJobCounter.labels(session_id).inc()
                     error_code = error_codes_pb2.INTERACTIVE_ENGINE_INTERNAL_ERROR
                     head, bodies = self.run_on_interactive_engine(dag)
                 # run on learning engine
                 elif run_dag_on == GSEngine.learning_engine:
-                    # Monitor.learningJobCounter.labels(session_id).inc()
                     error_code = error_codes_pb2.LEARNING_ENGINE_INTERNAL_ERROR
                     head, bodies = self.run_on_learning_engine(dag)
                 # run on coordinator
@@ -819,11 +811,11 @@ class CoordinatorServiceServicer(
 
     AddLibWrapped = catch_unknown_errors(message_pb2.AddLibResponse())(_AddLib)
 
-    @Monitor.closeSession
     def CloseSession(self, request, context):
         for result in self.CloseSessionWrapped(request, context):
             return result
 
+    @Monitor.closeSession
     def _CloseSession(self, request, context):
         """
         Disconnect session, note that it doesn't clean up any resources.
@@ -1291,6 +1283,7 @@ class CoordinatorServiceServicer(
             key=op.key,
         )
 
+    @Monitor.cleanup
     def _cleanup(self, cleanup_instance=True, is_dangling=False):
         # clean up session resources.
         for key in self._object_manager.keys():
@@ -1656,6 +1649,26 @@ def parse_sys_args():
         default="registry.cn-hongkong.aliyuncs.com/graphscope/dataset:{__version__}",
         help="Docker image to mount the dataset bucket",
     )
+    parser.add_argument(
+        "--monitor",
+        type=str2bool,
+        nargs="?",
+        const=True,
+        default=False,
+        help="Enable monitor or not.",
+    )
+    parser.add_argument(
+        "--monitor_port",
+        type=int,
+        default=9968,
+        help="Coordinator service port.",
+    )
+    parser.add_argument(
+        "--monitor_host",
+        type=str,
+        default="0.0.0.0",
+        help="list of comma seperated hostnames of graphscope engine workers.",
+    )
     return parser.parse_args()
 
 
@@ -1735,8 +1748,10 @@ def launch_graphscope():
     logger.info("Coordinator server listen at 0.0.0.0:%d", args.port)
 
     server.start()
-    Monitor.startServer()
-
+    if args.monitor:
+        Monitor.startServer(args.monitor_port, args.monitor_host)
+        logger.info("Coordinator monitor server listen at %s:%d", args.monitor_host, args.monitor_port)
+        
     # handle SIGTERM signal
     def terminate(signum, frame):
         coordinator_service_servicer._cleanup()

@@ -63,6 +63,8 @@ class StdStreamWrapper(ObjectWrapper):
         line = self._filter_progress(line)
         if line is None:
             return
+        # with open("/tmp/coordinator_stdstream.log", "a") as f:
+        #     f.write(line)
         self._stream_backup.write(line)
         self._stream_backup.flush()
         line = line.encode("utf-8", "ignore").decode("utf-8")
