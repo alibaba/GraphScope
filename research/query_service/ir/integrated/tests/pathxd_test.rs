@@ -54,7 +54,7 @@ mod test {
 
         let mut job_builder = JobBuilder::default();
         job_builder.add_source(source_opr.encode_to_vec());
-        job_builder.map(path_start_opr.encode_to_vec());
+        job_builder.filter_map(path_start_opr.encode_to_vec());
         job_builder.iterate_emit(2, |plan| {
             plan.repartition(shuffle_opr.clone().encode_to_vec());
             plan.flat_map(expand_opr.clone().encode_to_vec());
@@ -91,7 +91,7 @@ mod test {
 
         let mut job_builder = JobBuilder::default();
         job_builder.add_source(source_opr.encode_to_vec());
-        job_builder.map(path_start_opr.encode_to_vec());
+        job_builder.filter_map(path_start_opr.encode_to_vec());
         job_builder.repartition(shuffle_opr.clone().encode_to_vec());
         job_builder.flat_map(expand_opr.clone().encode_to_vec());
         job_builder.iterate_emit(1, |plan| {

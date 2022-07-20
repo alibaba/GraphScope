@@ -34,6 +34,9 @@ public class MaxTestGraphProvider extends AbstractGraphProvider implements AutoC
     private static final Logger logger = LoggerFactory.getLogger(MaxTestGraphProvider.class);
 
     private MaxTestGraph graph;
+    private String storeDataPath;
+
+    private Set<LoadGraphWith.GraphData> loadedGraphs = new HashSet<>();
 
     @Override
     public Map<String, Object> getBaseConfiguration(
@@ -51,37 +54,36 @@ public class MaxTestGraphProvider extends AbstractGraphProvider implements AutoC
             throw new RuntimeException(e);
         }
         properties.put(Graph.GRAPH, MaxTestGraph.class.getName());
-        properties.put(
-                StoreConfig.STORE_DATA_PATH.getKey(),
-                makeTestDirectory(graphName, test, testMethodName));
+        if (this.storeDataPath == null) {
+            this.storeDataPath = makeTestDirectory(graphName, test, testMethodName);
+        }
+        properties.put(StoreConfig.STORE_DATA_PATH.getKey(), this.storeDataPath);
         return (Map) properties;
     }
 
     @Override
     public void clear(Graph graph, Configuration configuration) throws Exception {
         if (graph != null) {
-            graph.close();
             this.graph = (MaxTestGraph) graph;
         }
-        deleteDirectory(new File(configuration.getString(StoreConfig.STORE_DATA_PATH.getKey())));
     }
 
     @Override
     public void loadGraphData(
             Graph graph, LoadGraphWith loadGraphWith, Class testClass, String testName) {
+        // other graph data excluding modern is unsupported for ir on groot
+        LoadGraphWith.GraphData graphData = LoadGraphWith.GraphData.MODERN;
+        if (loadedGraphs.contains(graphData)) return;
         try {
-            ((MaxTestGraph) graph)
-                    .loadSchema(
-                            null == loadGraphWith
-                                    ? LoadGraphWith.GraphData.CLASSIC
-                                    : loadGraphWith.value());
+            ((MaxTestGraph) graph).loadSchema(graphData);
+            ((MaxTestGraph) graph).loadData(graphData);
+            loadedGraphs.add(graphData);
         } catch (URISyntaxException | IOException e) {
             logger.error("load schema failed", e);
             throw new MaxGraphException(e);
+        } catch (InterruptedException e) {
+            logger.error("load data failed", e);
         }
-        super.loadGraphData(graph, loadGraphWith, testClass, testName);
-        logger.info("vertex value map list: " + graph.traversal().V().valueMap().toList());
-        logger.info("edge value map list: " + graph.traversal().E().valueMap().toList());
     }
 
     @Override
@@ -91,6 +93,11 @@ public class MaxTestGraphProvider extends AbstractGraphProvider implements AutoC
 
     @Override
     public void close() throws Exception {
-        this.graph.getMaxNode().close();
+        if (this.graph != null) {
+            this.graph.getMaxNode().close();
+        }
+        if (this.storeDataPath != null) {
+            deleteDirectory(new File(this.storeDataPath));
+        }
     }
 }

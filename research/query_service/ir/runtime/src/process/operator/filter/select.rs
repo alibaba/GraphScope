@@ -123,6 +123,89 @@ mod tests {
         assert_eq!(count, 1);
     }
 
+    // g.V().has("code11")
+    #[test]
+    fn select_property_none_exist_test() {
+        let select_opr_pb = pb::Select { predicate: Some(str_to_expr_pb("@.code11".to_string()).unwrap()) };
+        let mut result = select_test(init_source(), select_opr_pb);
+        let mut count = 0;
+        while let Some(res) = result.next() {
+            match res {
+                Ok(_) => {
+                    count += 1;
+                }
+                Err(_) => {
+                    assert!(false)
+                }
+            }
+        }
+
+        assert_eq!(count, 0);
+    }
+
+    // g.V().has("code11").or(has("code"))
+    #[test]
+    fn select_property_none_exist_or_exist_test() {
+        let select_opr_pb =
+            pb::Select { predicate: Some(str_to_expr_pb("@.code11||@.code".to_string()).unwrap()) };
+        let mut result = select_test(init_source(), select_opr_pb);
+        let mut count = 0;
+        while let Some(res) = result.next() {
+            match res {
+                Ok(_) => {
+                    count += 1;
+                }
+                Err(_) => {
+                    assert!(false)
+                }
+            }
+        }
+
+        assert_eq!(count, 1);
+    }
+
+    // g.V().has("code11").and(has("age",27))
+    #[test]
+    fn select_property_none_exist_and_predicate_test() {
+        let select_opr_pb =
+            pb::Select { predicate: Some(str_to_expr_pb("@.code11&&@.age==27".to_string()).unwrap()) };
+        let mut result = select_test(init_source(), select_opr_pb);
+        let mut count = 0;
+        while let Some(res) = result.next() {
+            match res {
+                Ok(_) => {
+                    count += 1;
+                }
+                Err(_) => {
+                    assert!(false)
+                }
+            }
+        }
+
+        assert_eq!(count, 0);
+    }
+
+    // g.V().has("code11").or(has("age",27))
+    #[test]
+    fn select_property_none_exist_or_predicate_test() {
+        let select_opr_pb =
+            pb::Select { predicate: Some(str_to_expr_pb("@.code11||@.age==27".to_string()).unwrap()) };
+        let mut result = select_test(init_source(), select_opr_pb);
+        let mut count = 0;
+        while let Some(res) = result.next() {
+            match res {
+                Ok(_) => {
+                    count += 1;
+                }
+                Err(_) => {
+                    assert!(false)
+                }
+            }
+        }
+
+        assert_eq!(count, 1);
+    }
+
     // g.V().has("id",gt(1))
     #[test]
     fn select_gt_test() {

@@ -253,12 +253,12 @@ impl EvalPred for Object {
 }
 
 impl EvalPred for Operand {
-    fn eval_bool<E: Element, C: Context<E>>(&self, context_: Option<&C>) -> ExprEvalResult<bool> {
+    fn eval_bool<E: Element, C: Context<E>>(&self, _context: Option<&C>) -> ExprEvalResult<bool> {
         match self {
-            Operand::Const(c) => c.eval_bool(context_),
+            Operand::Const(c) => c.eval_bool(_context),
             Operand::Var { tag, prop_key } => {
                 let mut result = false;
-                if let Some(context) = context_ {
+                if let Some(context) = _context {
                     if let Some(elem) = context.get(tag.as_ref()) {
                         if let Some(key) = prop_key {
                             match key {
@@ -302,7 +302,7 @@ impl EvalPred for Operand {
             }
             Operand::Vars(vars) | Operand::VarMap(vars) => {
                 for var in vars {
-                    if !var.eval_bool(context_)? {
+                    if !var.eval_bool(_context)? {
                         return Ok(false);
                     }
                 }
@@ -490,9 +490,16 @@ pub enum PEvaluator {
 
 impl EvalPred for PEvaluator {
     fn eval_bool<E: Element, C: Context<E>>(&self, context: Option<&C>) -> ExprEvalResult<bool> {
-        match self {
+        let result = match self {
             PEvaluator::Predicates(pred) => pred.eval_bool(context),
             PEvaluator::General(eval) => eval.eval_bool(context),
+        };
+        match result {
+            Ok(b) => Ok(b),
+            Err(err) => match err {
+                ExprEvalError::GetNoneFromContext => Ok(false),
+                _ => Err(err),
+            },
         }
     }
 }
@@ -856,6 +863,20 @@ mod tests {
         .unwrap();
         let p_eval = PEvaluator::try_from(expr).unwrap();
         assert!(p_eval
+            .eval_bool::<_, Vertices>(Some(&context))
+            .unwrap());
+
+        // 2 does not present
+        let expr = str_to_expr_pb("@2.age == 13".to_string()).unwrap();
+        let p_eval = PEvaluator::try_from(expr).unwrap();
+        assert!(!p_eval
+            .eval_bool::<_, Vertices>(Some(&context))
+            .unwrap());
+
+        // 1.none_exist does not present
+        let expr = str_to_expr_pb("@1.none_exist > 20".to_string()).unwrap();
+        let p_eval = PEvaluator::try_from(expr).unwrap();
+        assert!(!p_eval
             .eval_bool::<_, Vertices>(Some(&context))
             .unwrap());
     }

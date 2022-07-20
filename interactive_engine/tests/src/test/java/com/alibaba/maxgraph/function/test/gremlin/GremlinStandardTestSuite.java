@@ -28,27 +28,10 @@ import org.apache.tinkerpop.gremlin.AbstractGremlinSuite;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalEngine;
 import org.apache.tinkerpop.gremlin.process.traversal.step.branch.RepeatTest;
 import org.apache.tinkerpop.gremlin.process.traversal.step.branch.UnionTest;
-import org.apache.tinkerpop.gremlin.process.traversal.step.filter.AndTest;
-import org.apache.tinkerpop.gremlin.process.traversal.step.filter.CyclicPathTest;
-import org.apache.tinkerpop.gremlin.process.traversal.step.filter.DedupTest;
-import org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest;
-import org.apache.tinkerpop.gremlin.process.traversal.step.filter.IsTest;
-import org.apache.tinkerpop.gremlin.process.traversal.step.filter.RangeTest;
-import org.apache.tinkerpop.gremlin.process.traversal.step.filter.SimplePathTest;
-import org.apache.tinkerpop.gremlin.process.traversal.step.filter.WhereTest;
-import org.apache.tinkerpop.gremlin.process.traversal.step.map.ConstantTest;
-import org.apache.tinkerpop.gremlin.process.traversal.step.map.CountTest;
-import org.apache.tinkerpop.gremlin.process.traversal.step.map.FlatMapTest;
-import org.apache.tinkerpop.gremlin.process.traversal.step.map.FoldTest;
-import org.apache.tinkerpop.gremlin.process.traversal.step.map.MaxTest;
-import org.apache.tinkerpop.gremlin.process.traversal.step.map.MinTest;
-import org.apache.tinkerpop.gremlin.process.traversal.step.map.OrderTest;
-import org.apache.tinkerpop.gremlin.process.traversal.step.map.PathTest;
-import org.apache.tinkerpop.gremlin.process.traversal.step.map.PropertiesTest;
-import org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest;
-import org.apache.tinkerpop.gremlin.process.traversal.step.map.SumTest;
-import org.apache.tinkerpop.gremlin.process.traversal.step.map.ValueMapTest;
-import org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest;
+import org.apache.tinkerpop.gremlin.process.traversal.step.filter.*;
+import org.apache.tinkerpop.gremlin.process.traversal.step.map.*;
+import org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.GroupCountTest;
+import org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.GroupTest;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.RunnerBuilder;
 
@@ -58,14 +41,14 @@ public class GremlinStandardTestSuite extends AbstractGremlinSuite {
      */
     private static final Class<?>[] allTests =
             new Class<?>[] {
-                // Branch
+                // branch
                 RepeatTest.Traversals.class,
                 UnionTest.Traversals.class,
 
                 // filter
-                AndTest.Traversals.class,
                 CyclicPathTest.Traversals.class,
                 DedupTest.Traversals.class,
+                FilterTest.Traversals.class,
                 HasTest.Traversals.class,
                 IsTest.Traversals.class,
                 RangeTest.Traversals.class,
@@ -73,19 +56,20 @@ public class GremlinStandardTestSuite extends AbstractGremlinSuite {
                 WhereTest.Traversals.class,
 
                 // map
-                ConstantTest.Traversals.class,
-                CountTest.Traversals.class,
-                FlatMapTest.Traversals.class,
-                FoldTest.Traversals.class,
-                MaxTest.Traversals.class,
-                MinTest.Traversals.class,
-                SumTest.Traversals.class,
+                org.apache.tinkerpop.gremlin.process.traversal.step.map.CountTest.Traversals.class,
+                GraphTest.Traversals.class,
                 OrderTest.Traversals.class,
                 PathTest.Traversals.class,
                 PropertiesTest.Traversals.class,
                 SelectTest.Traversals.class,
                 VertexTest.Traversals.class,
+                UnfoldTest.Traversals.class,
                 ValueMapTest.Traversals.class,
+                GroupTest.Traversals.class,
+                GroupCountTest.Traversals.class,
+
+                // match
+                MatchTest.CountMatchTraversals.class,
             };
 
     /**
@@ -93,34 +77,35 @@ public class GremlinStandardTestSuite extends AbstractGremlinSuite {
      */
     private static final Class<?>[] testsToEnforce =
             new Class<?>[] {
-                // Repeat
-                RepeatTest.class,
-                UnionTest.class,
+                // branch
+                RepeatTest.Traversals.class,
+                UnionTest.Traversals.class,
 
                 // filter
-                AndTest.class,
-                CyclicPathTest.class,
-                DedupTest.class,
-                HasTest.class,
-                IsTest.class,
-                RangeTest.class,
-                SimplePathTest.class,
-                WhereTest.class,
+                CyclicPathTest.Traversals.class,
+                DedupTest.Traversals.class,
+                FilterTest.Traversals.class,
+                HasTest.Traversals.class,
+                IsTest.Traversals.class,
+                RangeTest.Traversals.class,
+                SimplePathTest.Traversals.class,
+                WhereTest.Traversals.class,
 
                 // map
-                ConstantTest.class,
-                CountTest.class,
-                FlatMapTest.class,
-                FoldTest.class,
-                MaxTest.class,
-                MinTest.class,
-                SumTest.class,
-                OrderTest.class,
-                PathTest.class,
-                PropertiesTest.class,
-                SelectTest.class,
-                VertexTest.class,
-                ValueMapTest.class,
+                org.apache.tinkerpop.gremlin.process.traversal.step.map.CountTest.Traversals.class,
+                GraphTest.Traversals.class,
+                OrderTest.Traversals.class,
+                PathTest.Traversals.class,
+                PropertiesTest.Traversals.class,
+                SelectTest.Traversals.class,
+                VertexTest.Traversals.class,
+                UnfoldTest.Traversals.class,
+                ValueMapTest.Traversals.class,
+                GroupTest.Traversals.class,
+                GroupCountTest.Traversals.class,
+
+                // match
+                MatchTest.CountMatchTraversals.class,
             };
 
     /**
