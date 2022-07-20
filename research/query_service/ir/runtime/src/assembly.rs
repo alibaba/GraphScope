@@ -26,7 +26,6 @@ use pegasus::api::{
     Collect, CorrelatedSubTask, Count, Dedup, EmitKind, Filter, Fold, FoldByKey, HasAny, IterCondition,
     Iteration, Join, KeyBy, Limit, Map, Merge, PartitionByKey, Sink, SortBy, SortLimitBy,
 };
-use pegasus::codec::{Decode, Encode};
 use pegasus::stream::Stream;
 use pegasus::{BuildJobError, Worker};
 use pegasus_server::job::{JobAssembly, JobDesc};
@@ -468,23 +467,14 @@ impl IRJobAssembly {
     }
 }
 
-impl JobAssembly for IRJobAssembly {
-    fn assemble(&self, plan: &JobDesc, worker: &mut Worker<Vec<u8>, Vec<u8>>) -> Result<(), BuildJobError> {
+impl JobAssembly<Record> for IRJobAssembly {
+    fn assemble(&self, plan: &JobDesc, worker: &mut Worker<Record, Vec<u8>>) -> Result<(), BuildJobError> {
         worker.dataflow(move |input, output| {
             let source = decode::<server_pb::Source>(&plan.input)?;
             let source_iter = self
                 .udf_gen
                 .gen_source(self.parse(&source.resource)?)?;
-            let source = input
-                .input_from(source_iter.map(|record| {
-                    let mut buf: Vec<u8> = vec![];
-                    record.write_to(&mut buf).unwrap();
-                    buf
-                }))?
-                .map(|buf| {
-                    let record = Record::read_from(&mut buf.as_slice()).unwrap();
-                    Ok(record)
-                })?;
+            let source = input.input_from(source_iter)?;
             let task = decode::<server_pb::TaskPlan>(&plan.plan)?;
             let stream = self.install(source, &task.plan)?;
 
