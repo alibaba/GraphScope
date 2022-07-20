@@ -79,7 +79,7 @@ class Clustering
           thread_num(), frag,
           [&ctx](int tid, vertex_t u, int msg) { ctx.global_degree[u] = msg; });
 
-      ForEach(inner_vertices.begin(), inner_vertices.end(),
+      ForEach(inner_vertices
               [this, &frag, &ctx, &messages, &vertices](int tid, vertex_t v) {
                 if (filterByDegree(frag, ctx, v)) {
                   return;
@@ -92,18 +92,17 @@ class Clustering
                   std::vector<std::pair<vid_t, uint32_t>> msg_vec;
                   msg_vec.reserve(degree);
 
-                  typename FRAG_T::template vertex_array_t<uint32_t> is_rec;
-                  is_rec.Init(vertices, 0);
+                  std::unordered_map<vid_t, uint32_t> is_rec;
                   auto es = frag.GetOutgoingAdjList(v);
                   for (auto& e : es) {
                     auto u = e.get_neighbor();
-                    is_rec[u]++;
+                    is_rec[u.GetValue()]++;
                   }
                   es = frag.GetIncomingAdjList(v);
                   for (auto& e : es) {
                     auto u = e.get_neighbor();
-                    is_rec[u]++;
-                    if (is_rec[u] == 2) {
+                    is_rec[u.GetValue()]++;
+                    if (is_rec[u.GetValue()] == 2) {
                       ctx.rec_degree[v]++;
                     }
                   }
@@ -114,7 +113,7 @@ class Clustering
                     if (ctx.global_degree[u] < ctx.global_degree[v]) {
                       std::pair<vid_t, uint32_t> msg;
                       msg.first = frag.Vertex2Gid(u);
-                      if (is_rec[u] == 2) {
+                      if (is_rec[u.GetValue()] == 2) {
                         msg.second = 2;
                       } else {
                         msg.second = 1;
@@ -127,7 +126,7 @@ class Clustering
                       if (v_gid > u_gid) {
                         std::pair<vid_t, uint32_t> msg;
                         msg.first = frag.Vertex2Gid(u);
-                        if (is_rec[u] == 2) {
+                        if (is_rec[u.GetValue()] == 2) {
                           msg.second = 2;
                         } else {
                           msg.second = 1;
@@ -144,7 +143,7 @@ class Clustering
                     if (ctx.global_degree[u] < ctx.global_degree[v]) {
                       std::pair<vid_t, uint32_t> msg;
                       msg.first = frag.Vertex2Gid(u);
-                      if (is_rec[u] == 1) {
+                      if (is_rec[u.GetValue()] == 1) {
                         msg.second = 1;
                         msg_vec.push_back(msg);
                         nbr_vec.push_back(std::make_pair(u, 1));
@@ -155,7 +154,7 @@ class Clustering
                       if (v_gid > u_gid) {
                         std::pair<vid_t, uint32_t> msg;
                         msg.first = frag.Vertex2Gid(u);
-                        if (is_rec[u] == 1) {
+                        if (is_rec[u.GetValue()] == 1) {
                           msg.second = 1;
                           msg_vec.push_back(msg);
                           nbr_vec.push_back(std::make_pair(u, 1));
