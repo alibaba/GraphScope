@@ -139,7 +139,6 @@ impl SourceOperator {
                         }
                     }
                 } else if let Some(ref indexed_values) = self.primary_key_values {
-                    // parallel indexed scan
                     if self.query_params.labels.len() != 1 {
                         Err(FnGenError::unsupported_error("indexed_scan with empty/multiple labels"))?
                     }
