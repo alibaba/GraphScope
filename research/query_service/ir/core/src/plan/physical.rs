@@ -245,7 +245,7 @@ impl AsPhysical for pb::PathExpand {
                         pb::logical_plan::Operator::from(base.clone())
                             .add_job_builder(builder, plan_meta)?;
                     }
-                    let mut times = range.upper - range.lower - 1;
+                    let times = range.upper - range.lower - 1;
                     if times > 0 {
                         builder.iterate_emit(emit_kind, times as u32, move |plan| {
                             if is_partition {
@@ -1275,7 +1275,8 @@ mod test {
         let mut expected_builder = JobBuilder::default();
         expected_builder.add_source(source_opr.encode_to_vec());
         expected_builder.filter_map(path_start_opr.encode_to_vec());
-        expected_builder.iterate_emit(3, |plan| {
+        expected_builder.flat_map(expand_opr.clone().encode_to_vec());
+        expected_builder.iterate_emit(server_pb::iteration_emit::EmitKind::EmitBefore, 2, |plan| {
             plan.flat_map(expand_opr.clone().encode_to_vec());
         });
         expected_builder.map(path_end_opr.encode_to_vec());
@@ -1293,7 +1294,9 @@ mod test {
         let mut expected_builder = JobBuilder::default();
         expected_builder.add_source(source_opr.encode_to_vec());
         expected_builder.filter_map(path_start_opr.encode_to_vec());
-        expected_builder.iterate_emit(3, |plan| {
+        expected_builder.repartition(vec![]);
+        expected_builder.flat_map(expand_opr.clone().encode_to_vec());
+        expected_builder.iterate_emit(server_pb::iteration_emit::EmitKind::EmitBefore, 2, |plan| {
             plan.repartition(vec![])
                 .flat_map(expand_opr.clone().encode_to_vec());
         });
