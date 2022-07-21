@@ -79,8 +79,8 @@ class Clustering
           thread_num(), frag,
           [&ctx](int tid, vertex_t u, int msg) { ctx.global_degree[u] = msg; });
 
-      ForEach(inner_vertices, [this, &frag, &ctx, &messages, &vertices](
-                                  int tid, vertex_t v) {
+      ForEach(inner_vertices, [this, &frag, &ctx, &messages](int tid,
+                                                             vertex_t v) {
         if (filterByDegree(frag, ctx, v)) {
           return;
         }
