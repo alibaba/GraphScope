@@ -22,6 +22,8 @@ use std::sync::Arc;
 use std::time::Instant;
 use structopt::StructOpt;
 
+use rand::Rng;
+
 /// This query begin from a set of sampling vertices (number specified by `source`)
 /// and do i-hop search before enter subtask (specified by `i`),
 /// and then count j-hop neighbors for each vertex using apply method (specified by `j`).
@@ -88,7 +90,7 @@ fn main() {
     // config job;
     let mut conf = JobConf::new("correlated_k_hop");
     conf.set_workers(config.partitions);
-    conf.scope_capacity = config.concurrent;
+    // conf.scope_capacity = config.concurrent;
     conf.batch_capacity = config.batch_width;
 
     if config.servers.is_some() {
@@ -120,7 +122,12 @@ fn main() {
                 if let Some(degree) = degree {
                     stream = stream.flat_map(move |_id| {
                         Ok(graph_clone
-                            .sample_neighbors(degree as usize)
+                            .get_neighbors(_id)
+                            .filter(move |_v| {
+                                let mut rng = rand::thread_rng();
+                                rng.gen_bool(degree as f64)
+                            })
+                            // .sample_neighbors(degree as usize)
                             .into_iter())
                     })?;
                 } else {

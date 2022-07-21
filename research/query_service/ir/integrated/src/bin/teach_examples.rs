@@ -72,13 +72,13 @@ fn main() {
 fn _teach_example1(conf: JobConf) -> Result<ResultStream<u64>, JobSubmitError> {
     pegasus::run(conf, move || {
         move |input, output| {
-            input
+            let mut stream = input
                 .input_from(
                     GRAPH
                         .get_all_vertices(None)
                         .map(|v| (v.get_id() as u64)),
-                )?
-                .sink_into(output)
+                )?;
+            stream.sink_into(output)
         }
     })
 }
