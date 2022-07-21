@@ -54,15 +54,14 @@ class Clustering
 
     messages.InitChannels(thread_num());
     ctx.stage = 0;
-    ForEach(inner_vertices.begin(), inner_vertices.end(),
-            [&messages, &frag, &ctx](int tid, vertex_t v) {
-              ctx.global_degree[v] =
-                  frag.GetLocalOutDegree(v) + frag.GetLocalInDegree(v);
-              if (ctx.global_degree[v] > 1) {
-                messages.SendMsgThroughEdges<fragment_t, int>(
-                    frag, v, ctx.global_degree[v], tid);
-              }
-            });
+    ForEach(inner_vertices, [&messages, &frag, &ctx](int tid, vertex_t v) {
+      ctx.global_degree[v] =
+          frag.GetLocalOutDegree(v) + frag.GetLocalInDegree(v);
+      if (ctx.global_degree[v] > 1) {
+        messages.SendMsgThroughEdges<fragment_t, int>(
+            frag, v, ctx.global_degree[v], tid);
+      }
+    });
     messages.ForceContinue();
   }
 
@@ -227,13 +226,12 @@ class Clustering
           },
           [](int tid) {});
 
-      ForEach(outer_vertices.begin(), outer_vertices.end(),
-              [&messages, &frag, &ctx](int tid, vertex_t v) {
-                if (ctx.tricnt[v] != 0) {
-                  messages.SyncStateOnOuterVertex<fragment_t, int>(
-                      frag, v, ctx.tricnt[v], tid);
-                }
-              });
+      ForEach(outer_vertices, [&messages, &frag, &ctx](int tid, vertex_t v) {
+        if (ctx.tricnt[v] != 0) {
+          messages.SyncStateOnOuterVertex<fragment_t, int>(frag, v,
+                                                           ctx.tricnt[v], tid);
+        }
+      });
       messages.ForceContinue();
     } else if (ctx.stage == 2) {
       ctx.stage = 3;
