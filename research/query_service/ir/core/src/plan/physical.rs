@@ -220,8 +220,9 @@ impl AsPhysical for pb::EdgeExpand {
 
 impl AsPhysical for pb::PathExpand {
     fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
+        // [range.lower, range.upper)
         if let Some(range) = &self.hop_range {
-            if range.upper <= range.lower || range.lower <= 0 || range.upper <= 0 {
+            if range.upper <= range.lower || range.lower < 0 || range.upper <= 0 {
                 Err(IrError::InvalidRange(range.lower, range.upper))
             } else {
                 if let Some(base) = &self.base {
@@ -235,7 +236,8 @@ impl AsPhysical for pb::PathExpand {
                         SimpleOpr::FilterMap,
                     )?;
                     let is_partition = plan_meta.is_partition();
-                    for _ in 0..(range.lower - 1) {
+                    let emit_kind = server_pb::iteration_emit::EmitKind::EmitBefore;
+                    for _ in 0..range.lower {
                         if is_partition {
                             let key_pb = common_pb::NameOrIdKey { key: None };
                             builder.repartition(key_pb.encode_to_vec());
@@ -243,16 +245,9 @@ impl AsPhysical for pb::PathExpand {
                         pb::logical_plan::Operator::from(base.clone())
                             .add_job_builder(builder, plan_meta)?;
                     }
-                    let times = range.upper - range.lower;
-                    if times == 1 {
-                        if is_partition {
-                            let key_pb = common_pb::NameOrIdKey { key: None };
-                            builder.repartition(key_pb.encode_to_vec());
-                        }
-                        pb::logical_plan::Operator::from(base.clone())
-                            .add_job_builder(builder, plan_meta)?;
-                    } else if times > 1 {
-                        builder.iterate_emit(times as u32, move |plan| {
+                    let mut times = range.upper - range.lower - 1;
+                    if times > 0 {
+                        builder.iterate_emit(emit_kind, times as u32, move |plan| {
                             if is_partition {
                                 let key_pb = common_pb::NameOrIdKey { key: None };
                                 plan.repartition(key_pb.encode_to_vec());
