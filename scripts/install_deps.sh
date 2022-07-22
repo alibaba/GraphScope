@@ -506,11 +506,9 @@ install_fastFFI() {
     # only install "ffi&annotation-processsor" on macOS, because
     # llvm4jni not compatible for Apple M1 chip.
     mvn clean install -DskipTests -pl :ffi,annotation-processor,llvm4jni-runtime -am --quiet
-    sudo -E mvn clean install -DskipTests -pl :ffi,annotation-processor,llvm4jni-runtime -am --quiet
   else
     export PATH=${PATH}:${LLVM11_HOME}/bin
     mvn clean install -DskipTests
-    sudo -E mvn clean install -DskipTests
   fi
   popd
   popd
