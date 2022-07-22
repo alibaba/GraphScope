@@ -143,17 +143,8 @@ class Monitor:
             start_time = timeit.default_timer()
             res = func(instance, dag_def, dag_bodies, loader_op_bodies)
             end_time = timeit.default_timer()
-            
-            if not ops:
-                op_name = ""
-            elif len(ops) > 1:
-                op_name = "multi_op"
-            else:
-                if not ops[0].op or not ops[0].op in op_name_dict:
-                    op_name = ""
-                else:
-                    op_name = op_name_dict[ops[0].op]
 
+            op_name = cls.__get_op_name(ops)
             cls.analyticalRequestGauge.labels(op_name).set(end_time - start_time)
             return res
         return runOnAnalyticalEngineWarp
@@ -171,16 +162,18 @@ class Monitor:
             res = func(instance, dag_def)
             end_time = timeit.default_timer()
             
-            if not ops:
-                op_name = ""
-            elif len(ops) > 1:
-                op_name = "multi_op"
-            else:
-                if not ops[0].op or not ops[0].op in op_name_dict:
-                    op_name = ""
-                else:
-                    op_name = op_name_dict[ops[0].op]
 
+            op_name = cls.__get_op_name(ops)
             cls.interactiveRequestGauge.labels(op_name).set(end_time - start_time)
             return res
         return runOnInteractiveEngineWarp
+
+    @classmethod
+    def __get_op_name(cls, ops):
+        op_name = ""
+        if len(ops) > 1:
+            op_name = "multi_op"
+        if len(ops) == 1:
+            if ops[0].op and ops[0].op in op_name_dict:
+                op_name = op_name_dict[ops[0].op]
+        return op_name
