@@ -1,0 +1,50 @@
+name: GraphScope Script CI
+
+on:
+  # Trigger the workflow on push or pull request,
+  # but only for the main branch
+  push:
+    branches:
+      - main
+    paths:
+      - 'script/**'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'script/**'
+
+concurrency:
+  group: ${{ github.repository }}-${{ github.event.number || github.head_ref || github.sha }}-${{ github.workflow }}
+  cancel-in-progress: true
+
+jobs:
+  test-script-on-ubuntu:
+    runs-on: ubuntu-20.04
+    if: ${{ github.repository == 'alibaba/GraphScope' }}
+    container:
+      image: ubuntu:20.04
+      options:
+        --shm-size 4096m
+    steps:
+    - uses: actions/checkout@v2.3.2
+
+    - name: Test install_deps.sh
+      run: |
+        cd ${GITHUB_WORKSPACE}
+        ./script/install_deps.sh --dev --verbose
+
+  test-script-on-centos:
+    runs-on: ubuntu-20.04
+    if: ${{ github.repository == 'alibaba/GraphScope' }}
+    container:
+      image: centos:8
+      options:
+        --shm-size 4096m
+    steps:
+    - uses: actions/checkout@v2.3.2
+
+    - name: Test install_deps.sh
+      run: |
+        cd ${GITHUB_WORKSPACE}
+        ./script/install_deps.sh --dev --verbose
