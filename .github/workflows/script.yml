@@ -32,7 +32,7 @@ jobs:
     - name: Test install_deps.sh
       run: |
         cd ${GITHUB_WORKSPACE}
-        ./script/install_deps.sh --dev --verbose
+        ./scripts/install_deps.sh --dev --verbose
 
   test-script-on-centos:
     runs-on: ubuntu-20.04
@@ -47,4 +47,4 @@ jobs:
     - name: Test install_deps.sh
       run: |
         cd ${GITHUB_WORKSPACE}
-        ./script/install_deps.sh --dev --verbose
+        ./scripts/install_deps.sh --dev --verbose
