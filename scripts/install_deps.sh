@@ -492,12 +492,15 @@ install_vineyard() {
 ##########################
 install_fastFFI() {
   log "Building and installing fastFFI."
-  if [[ -d /opt/fastFFI ]]; then
+  if [[ -d /opt/fastFFI && -d ${HOME}/.m2/repository/com/alibaba/fastffi ]]; then
     log "fastFFI already installed, skip."
     return 0
   fi
 
   get_os_version
+  if [[ -d /opt/fastFFI ]]; then
+    sudo rm -fr /opt/fastFFI
+  fi
   sudo git clone https://github.com/alibaba/fastFFI.git /opt/fastFFI
   sudo chown -R $(id -u):$(id -g) /opt/fastFFI
   pushd /opt/fastFFI
@@ -518,8 +521,7 @@ install_fastFFI() {
     mvn clean install -DskipTests --quiet
   else
     sudo dnf install -y llvm lld clang
-    export LLVM11_HOME=/usr/lib/llvm-11
-    export PATH=${LLVM11_HOME}/bin:${PATH}
+    export LLVM11_HOME=/usr/include/llvm
     mvn clean install -DskipTests --quiet
   fi
 
