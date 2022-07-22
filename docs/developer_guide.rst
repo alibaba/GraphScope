@@ -27,7 +27,7 @@ make their changes to the code and build GraphScope with command:
     sudo docker run --shm-size 10240m -it registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:latest /bin/bash
 
     git clone https://github.com/alibaba/GraphScope.git
-    
+
     # download dataset for test
     git clone https://github.com/GraphScope/gstest.git
 
@@ -59,7 +59,7 @@ make their changes to the code and build with command to build graphscope image:
     make graphscope-dev-image
 
 This command triggers the building process. It will build the current source code in a container with
-image `graphscope-vineyard`, and copy built binaries into a new image based from `graphscope-runtime`. 
+image `graphscope-vineyard`, and copy built binaries into a new image based from `graphscope-runtime`.
 The generated releasing image is tagged as ``graphscope/graphscope:SHORTSHA``
 
 GraphScope python client is separate with the engines image. If you are developing python client and
@@ -79,6 +79,69 @@ To test the newly built binaries, manually open a session and assigned your imag
     import graphscope
 
     sess = graphscope.session(k8s_gs_image='graphscope/graphscope:SHORTSHA')
+
+    # ...
+
+
+Building and Testing GraphScope on local
+---------------------------------------------------
+
+To build graphscope Python package and the engine binaries, some dependencies and build tools need to be installed.
+
+To make life easier, we provide a script to install the dependencies and build tools.
+the script is supported on the following 64-bit systems:
+
+- Ubuntu 18.04 or later
+- CentOS 8 or later
+- macOS 11.2.1 (Big Sur) or later, with both Intel chip and Apple M1 chip
+
+The script would install following dependencies or tools which needed by GraphScope building:
+- C++ compiler (gcc or llvm)
+- cmake (>=3.1)
+- java sdk (>=8)
+- maven
+- boost (>=1.66)
+- apache-arrow
+- rust (> 1.52.0)
+- etcd
+- openmpi
+- protobuf
+- grpc
+- libgrape-lite (the core of analytical engine)
+- vineyard
+- fastFFI (for grape-jdk)
+
+First, you need to ``git clone`` the latest version of code from our `repo <https://github.com/alibaba/GraphScope>`_
+and run the command:
+
+.. code:: bash
+    cd GraphScope
+    ./scripts/install_deps.sh --dev
+
+    # With argument --cn to speed up the download if you are in China.
+    ./scripts/install_deps.sh --dev --cn
+
+
+
+Then you can build GraphScope with pre-configured `make` commands.
+
+```bash
+# to make graphscope whole package, including python package + engine binaries.
+make graphscope
+
+# or make the engine components
+# make gie
+# make gae
+# make gle
+```
+
+To test the newly built binaries, manually open a session:
+
+.. code:: python
+
+    import graphscope
+
+    sess = graphscope.session(cluster_type="hosts")
 
     # ...
 
@@ -135,6 +198,8 @@ Build GraphScope Client Wheels for specified python version.
 
 Note that if you want to build wheel packages for different Python versions, you may need to install multiple
 version of Python using `conda <https://docs.conda.io/en/latest/>`_ or `pyenv <https://github.com/pyenv/pyenv>`_.
+
+
 
 
 Code Format
