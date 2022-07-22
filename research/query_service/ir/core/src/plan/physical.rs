@@ -1360,6 +1360,77 @@ mod test {
     }
 
     #[test]
+    fn path_expand_range_from_zero_as_physical() {
+        let source_opr = pb::logical_plan::Operator::from(pb::Scan {
+            scan_opt: 0,
+            alias: None,
+            params: Some(query_params(vec!["person".into()], vec![])),
+            idx_predicate: None,
+        });
+
+        let edge_expand = pb::EdgeExpand {
+            v_tag: None,
+            direction: 0,
+            params: Some(query_params(vec!["knows".into()], vec![])),
+            is_edge: false,
+            alias: None,
+        };
+
+        let expand_opr = pb::logical_plan::Operator::from(edge_expand.clone());
+        let path_start_opr =
+            pb::logical_plan::Operator::from(pb::PathStart { start_tag: None, is_whole_path: false });
+        let path_opr = pb::logical_plan::Operator::from(pb::PathExpand {
+            base: Some(edge_expand.clone()),
+            start_tag: None,
+            is_whole_path: false,
+            alias: None,
+            hop_range: Some(pb::Range { lower: 0, upper: 4 }),
+        });
+        let path_end_opr = pb::logical_plan::Operator::from(pb::PathEnd { alias: None });
+
+        let mut logical_plan = LogicalPlan::with_root(Node::new(0, source_opr.clone()));
+        logical_plan
+            .append_operator_as_node(path_opr.clone(), vec![0])
+            .unwrap(); // node 1
+
+        // Case without partition
+        let mut builder = JobBuilder::default();
+        let mut plan_meta = PlanMeta::default();
+        logical_plan
+            .add_job_builder(&mut builder, &mut plan_meta)
+            .unwrap();
+
+        let mut expected_builder = JobBuilder::default();
+        expected_builder.add_source(source_opr.encode_to_vec());
+        expected_builder.filter_map(path_start_opr.encode_to_vec());
+        expected_builder.iterate_emit(server_pb::iteration_emit::EmitKind::EmitBefore, 3, |plan| {
+            plan.flat_map(expand_opr.clone().encode_to_vec());
+        });
+        expected_builder.map(path_end_opr.encode_to_vec());
+
+        assert_eq!(builder, expected_builder);
+
+        // Case with partition
+        let mut builder = JobBuilder::default();
+        let mut plan_meta = PlanMeta::default();
+        plan_meta = plan_meta.with_partition();
+        logical_plan
+            .add_job_builder(&mut builder, &mut plan_meta)
+            .unwrap();
+
+        let mut expected_builder = JobBuilder::default();
+        expected_builder.add_source(source_opr.encode_to_vec());
+        expected_builder.filter_map(path_start_opr.encode_to_vec());
+        expected_builder.iterate_emit(server_pb::iteration_emit::EmitKind::EmitBefore, 3, |plan| {
+            plan.repartition(vec![])
+                .flat_map(expand_opr.clone().encode_to_vec());
+        });
+        expected_builder.map(path_end_opr.encode_to_vec());
+
+        assert_eq!(builder, expected_builder);
+    }
+
+    #[test]
     fn orderby_as_physical() {
         let source_opr = pb::logical_plan::Operator::from(pb::Scan {
             scan_opt: 0,
