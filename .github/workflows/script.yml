@@ -31,6 +31,7 @@ jobs:
 
     - name: Test install_deps.sh
       run: |
+        sudo apt install -y sudo
         cd ${GITHUB_WORKSPACE}
         ./scripts/install_deps.sh --dev --verbose
 
@@ -46,5 +47,8 @@ jobs:
 
     - name: Test install_deps.sh
       run: |
+        sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
+        sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
+        sudo dnf install -y sudo
         cd ${GITHUB_WORKSPACE}
         ./scripts/install_deps.sh --dev --verbose
