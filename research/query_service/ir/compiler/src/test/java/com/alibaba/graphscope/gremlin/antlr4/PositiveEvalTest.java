@@ -25,7 +25,6 @@ import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.TextP;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
-import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.NotStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.EdgeVertexStep;
 import org.apache.tinkerpop.gremlin.structure.Direction;
@@ -887,13 +886,13 @@ public class PositiveEvalTest {
     public void g_V_has_containing_test() {
         Assert.assertEquals(
                 g.V().has("name", TextP.containing("marko")),
-                g.V().has("name", TextP.containing("marko")));
+                eval("g.V().has(\"name\", TextP.containing(\"marko\"))"));
     }
 
     @Test
     public void g_V_has_notContaining_test() {
         Assert.assertEquals(
                 g.V().has("name", TextP.notContaining("marko")),
-                g.V().has("name", TextP.notContaining("marko")));
+                eval("g.V().has(\"name\", TextP.notContaining(\"marko\"))"));
     }
 }
