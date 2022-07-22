@@ -31,7 +31,7 @@ jobs:
 
     - name: Test install_deps.sh
       run: |
-        apt install -y sudo
+        apt update -y && apt install -y sudo
         cd ${GITHUB_WORKSPACE}
         ./scripts/install_deps.sh --dev --verbose
 
