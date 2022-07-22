@@ -11,7 +11,7 @@ project(analytical_engine LANGUAGES C CXX VERSION ${GRAPHSCOPE_ANALYTICAL_VERSIO
 
 option(NETWORKX "networkx on?" ON)
 option(BUILD_TESTS "Build unit test" ON)
-option(ENABLE_JAVA_SDK "Build with support for java sdk" ON)
+option(ENABLE_JAVA_SDK "Build with support for java sdk" OFF)
 
 # Get system processor
 execute_process(COMMAND uname -m OUTPUT_VARIABLE SYSTEM_PROCESSOR)
@@ -285,7 +285,7 @@ if (BUILD_TESTS)
         target_include_directories(property_graph_java_app_benchmarks PRIVATE core utils apps)
         target_compile_definitions(property_graph_java_app_benchmarks PUBLIC ENABLE_JAVA_SDK)
         target_link_libraries(property_graph_java_app_benchmarks gs_proto ${JNI_LIBRARIES} ${Boost_LIBRARIES} ${CMAKE_DL_LIBS}  ${VINEYARD_LIBRARIES})
-        
+
         # giraph runner
         add_executable(giraph_runner test/giraph_runner.cc core/java/javasdk.cc)
         target_include_directories(giraph_runner PRIVATE core utils apps)
