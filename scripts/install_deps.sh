@@ -492,15 +492,15 @@ install_vineyard() {
 ##########################
 install_fastFFI() {
   log "Building and installing fastFFI."
-
-  pushd /opt/
   if [[ -d /opt/fastFFI ]]; then
-    log "Found /opt/fastFFI exists, remove it."
-    sudo rm -fr /opt/fastFFI
+    log "fastFFI already installed, skip."
+    return 0
   fi
-  sudo git clone https://github.com/alibaba/fastFFI.git
+
+  get_os_version
+  sudo git clone https://github.com/alibaba/fastFFI.git /opt/fastFFI
   sudo chown -R $(id -u):$(id -g) /opt/fastFFI
-  pushd fastFFI
+  pushd /opt/fastFFI
   git checkout a166c6287f2efb938c27fb01b3d499932d484f9c
 
   if [[ "${PLATFORM}" == *"Darwin"* ]]; then
@@ -511,7 +511,7 @@ install_fastFFI() {
     # llvm4jni not compatible for Apple M1 chip.
     mvn clean install -DskipTests -pl :ffi,annotation-processor,llvm4jni-runtime -am --quiet
   elif [[ "${PLATFORM}" == *"Ubuntu"* ]]; then
-    sudo apt update
+    sudo apt update -y
     sudo apt-get install -y llvm-11-dev lld-11 clang-11
     export LLVM11_HOME=/usr/lib/llvm-11
     export PATH=${LLVM11_HOME}/bin:${PATH}
@@ -519,10 +519,14 @@ install_fastFFI() {
   else
     sudo dnf install -y llvm lld clang
     export LLVM11_HOME=/usr/lib/llvm-11
-    export PATH=${PATH}:${LLVM11_HOME}/bin
+    export PATH=${LLVM11_HOME}/bin:${PATH}
     mvn clean install -DskipTests --quiet
   fi
-  popd
+
+  {
+    echo "export LLVM11_HOME=${LLVM11_HOME}"
+  } >> ${OUTPUT_ENV_FILE}
+
   popd
 }
 
