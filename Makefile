@@ -80,7 +80,7 @@ gae:
 	mkdir -p $(WORKING_DIR)/analytical_engine/build
 	cd $(WORKING_DIR)/analytical_engine/build && \
 	cmake -DCMAKE_INSTALL_PREFIX=$(INSTALL_PREFIX) -DNETWORKX=$(NETWORKX) -DBUILD_TESTS=${BUILD_TEST} -DENABLE_JAVA_SDK=${ENABLE_JAVA_SDK} .. && \
-	make -j`nproc` && \
+	make -j2 && \
 	sudo make install && \
 	sudo cp -r $(WORKING_DIR)/k8s/kube_ssh $(INSTALL_PREFIX)/bin/
 ifneq ($(INSTALL_PREFIX), /usr/local)
