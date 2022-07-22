@@ -1031,7 +1031,7 @@ while test $# -ne 0; do
     --verbose)        VERBOSE=true; readonly VERBOSE; ;;
     --cn)             CN_MIRROR=true; readonly CN_MIRROR; ;;
     --dev) install_deps_dev "$@"; exit;;
-    --grape-jdk) install_fastFFI "$@"; exit;;
+    --grape_jdk) install_fastFFI "$@"; exit;;
     --k8s) install_deps_k8s "$@"; exit;;
     *)
       echo "unrecognized option '${arg}'"
