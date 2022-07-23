@@ -33,6 +33,7 @@ jobs:
       run: |
         echo "Asia/HongKong" | tee /etc/timezone
         apt update -y && apt install -y sudo
+        DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y install tzdata
         cd ${GITHUB_WORKSPACE}
         ./scripts/install_deps.sh --dev --verbose
 
