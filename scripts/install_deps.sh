@@ -708,6 +708,8 @@ install_dependencies() {
     popd
     rm -fr /tmp/grpc
 
+    sudo ldconfig
+
   elif [[ "${PLATFORM}" == *"Darwin"* ]]; then
     if [[ ${CN_MIRROR} == true ]]; then
       # set brew to tsinghua mirror
