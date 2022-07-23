@@ -35,7 +35,7 @@ jobs:
         apt update -y && apt install -y sudo
         DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y install tzdata
         cd ${GITHUB_WORKSPACE}
-        ./scripts/install_deps.sh --dev --verbose
+        ./scripts/install_deps.sh --dev --grape_jdk --verbose
 
   test-script-on-centos:
     runs-on: ubuntu-20.04
@@ -53,4 +53,4 @@ jobs:
         sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
         dnf install -y sudo
         cd ${GITHUB_WORKSPACE}
-        ./scripts/install_deps.sh --dev --verbose
+        ./scripts/install_deps.sh --dev --grape_jdk --verbose
