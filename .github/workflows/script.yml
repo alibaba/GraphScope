@@ -31,6 +31,7 @@ jobs:
 
     - name: Test install_deps.sh
       run: |
+        echo "Asia/HongKong" | tee /etc/timezone
         apt update -y && apt install -y sudo
         cd ${GITHUB_WORKSPACE}
         ./scripts/install_deps.sh --dev --verbose
