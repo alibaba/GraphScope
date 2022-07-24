@@ -708,7 +708,7 @@ install_dependencies() {
     popd
     rm -fr /tmp/grpc
 
-    sudo ldconfig
+    export LD_LIBRARY_PATH=/usr/local/lib
 
   elif [[ "${PLATFORM}" == *"Darwin"* ]]; then
     if [[ ${CN_MIRROR} == true ]]; then
@@ -956,12 +956,12 @@ install_deps_dev() {
   $ source ${OUTPUT_ENV_FILE}
   $ make graphscope\n
   to build and develop GraphScope."
-  if [[ ${JAVA_SDK} == true ]]; then
+  if [[ ${GRAPE_JDK} == true ]]; then
     install_fastFFI
   else
     succ_msg=${succ_msg}"\n
     Note: For simplify, The script is not install grape-jdk dependency by default. If you want to use grape jdk, use command:\n
-    $ ./install_deps.sh --grape-jdk
+    $ ./install_deps.sh --grape_jdk
     to install grape-jdk dependency."
   fi
   succ "${succ_msg}"
