@@ -156,6 +156,7 @@
     <span class="n">tolerance</span><span class="o">=</span><span class="mf">1e-06</span><span class="p">,</span>
     <span class="n">max_round</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
     <span class="n">normalized</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">degree_threshold</span><span class="o">=</span><span class="mf">1e9</span><span class="p">,</span>
 <span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Compute the Katz centrality.</span>
 
@@ -169,7 +170,7 @@
 <span class="sd">        tolerance (float, optional): Error tolerance. Defaults to 1e-06.</span>
 <span class="sd">        max_round (int, optional): Maximun number of rounds. Defaults to 100.</span>
 <span class="sd">        normalized (bool, optional): Whether to normalize result values. Defaults to True.</span>
-
+<span class="sd">        degree_threshold (int, optional): Filter super vertex which degree is greater than threshold. Default to 1e9.</span>
 <span class="sd">    Returns:</span>
 <span class="sd">        :class:`graphscope.framework.context.VertexDataContextDAGNode`:</span>
 <span class="sd">            A context with each vertex assigned with the computed katz_centrality, evaluated in eager mode.</span>
@@ -192,13 +193,9 @@
     <span class="n">tolerance</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">tolerance</span><span class="p">)</span>
     <span class="n">max_round</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">max_round</span><span class="p">)</span>
     <span class="n">normalized</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">normalized</span><span class="p">)</span>
+    <span class="n">degree_threshold</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">degree_threshold</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">AppAssets</span><span class="p">(</span><span class="n">algo</span><span class="o">=</span><span class="s2">&quot;katz_centrality&quot;</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="s2">&quot;vertex_data&quot;</span><span class="p">)(</span>
-        <span class="n">graph</span><span class="p">,</span>
-        <span class="n">alpha</span><span class="p">,</span>
-        <span class="n">beta</span><span class="p">,</span>
-        <span class="n">tolerance</span><span class="p">,</span>
-        <span class="n">max_round</span><span class="p">,</span>
-        <span class="n">normalized</span><span class="p">,</span>
+        <span class="n">graph</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">tolerance</span><span class="p">,</span> <span class="n">max_round</span><span class="p">,</span> <span class="n">normalized</span><span class="p">,</span> <span class="n">degree_threshold</span>
     <span class="p">)</span></div>
 </pre></div>
 
@@ -254,6 +251,16 @@
             
               
                 <dd><a href="../../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.15.0/index.html">v0.15.0</a></dd>
               
             
 

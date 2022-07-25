@@ -259,7 +259,7 @@ GraphScope 内建了一组预置常用算法，方便用户可以轻松分析图
 <p>下面我们首先通过在特定周期内从全图中提取论文（背后基于 Gremlin！）来导出一个子图，然后运行 k-core 分解和三角形计数以生成每个论文节点的结构特征。</p>
 <p>需要注意的是，由于许多算法可能仅适用于同构图（只有一类点和一类边而不区分标签），因此，要在属性图上使用这些算法，我们首先需要将其投影到一个简单的同构图中。</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># exact a subgraph of publication within a time range</span>
-<span class="n">sub_graph</span> <span class="o">=</span> <span class="n">interactive</span><span class="o">.</span><span class="n">subgraph</span><span class="p">(</span><span class="s2">&quot;g.V().has(&#39;year&#39;, inside(2014, 2020)).outE(&#39;cites&#39;)&quot;</span><span class="p">)</span>
+<span class="n">sub_graph</span> <span class="o">=</span> <span class="n">interactive</span><span class="o">.</span><span class="n">subgraph</span><span class="p">(</span><span class="s2">&quot;g.V().has(&#39;year&#39;, gte(2014).and(lte(2020))).outE(&#39;cites&#39;)&quot;</span><span class="p">)</span>
 
 <span class="c1"># project the projected graph to simple graph.</span>
 <span class="n">simple_g</span> <span class="o">=</span> <span class="n">sub_graph</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;paper&quot;</span><span class="p">:</span> <span class="p">[]},</span> <span class="n">edges</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;cites&quot;</span><span class="p">:</span> <span class="p">[]})</span>
@@ -417,6 +417,16 @@ GraphScope 内建了一组预置常用算法，方便用户可以轻松分析图
             
               
                 <dd><a href="../../zh/index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.15.0/zh/index.html">v0.15.0</a></dd>
               
             
 

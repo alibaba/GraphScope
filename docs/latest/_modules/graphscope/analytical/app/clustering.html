@@ -149,12 +149,13 @@
 
 <div class="viewcode-block" id="clustering"><a class="viewcode-back" href="../../../../reference/app.html#graphscope.clustering">[docs]</a><span class="nd">@project_to_simple</span>
 <span class="nd">@not_compatible_for</span><span class="p">(</span><span class="s2">&quot;arrow_property&quot;</span><span class="p">,</span> <span class="s2">&quot;dynamic_property&quot;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">clustering</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">clustering</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">degree_threshold</span><span class="o">=</span><span class="mi">1000000000</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Local clustering coefficient of a node in a Graph is the fraction</span>
 <span class="sd">    of pairs of the node’s neighbors that are adjacent to each other.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        graph (:class:`graphscope.Graph`): A simple graph.</span>
+<span class="sd">        degree_threshold (int, optional): Filter super vertex which degree is greater than threshold. Default to 1e9.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        :class:`graphscope.framework.context.VertexDataContextDAGNode`:</span>
@@ -173,19 +174,23 @@
 <span class="sd">        &gt;&gt;&gt; c = graphscope.clustering(pg)</span>
 <span class="sd">        &gt;&gt;&gt; sess.close()</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">degree_threshold</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">degree_threshold</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">graph</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
-        <span class="k">return</span> <span class="n">AppAssets</span><span class="p">(</span><span class="n">algo</span><span class="o">=</span><span class="s2">&quot;clustering&quot;</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="s2">&quot;vertex_data&quot;</span><span class="p">)(</span><span class="n">graph</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">AppAssets</span><span class="p">(</span><span class="n">algo</span><span class="o">=</span><span class="s2">&quot;clustering&quot;</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="s2">&quot;vertex_data&quot;</span><span class="p">)(</span>
+            <span class="n">graph</span><span class="p">,</span> <span class="n">degree_threshold</span>
+        <span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">AppAssets</span><span class="p">(</span><span class="n">algo</span><span class="o">=</span><span class="s2">&quot;lcc&quot;</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="s2">&quot;vertex_data&quot;</span><span class="p">)(</span><span class="n">graph</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">AppAssets</span><span class="p">(</span><span class="n">algo</span><span class="o">=</span><span class="s2">&quot;lcc&quot;</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="s2">&quot;vertex_data&quot;</span><span class="p">)(</span><span class="n">graph</span><span class="p">,</span> <span class="n">degree_threshold</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="avg_clustering"><a class="viewcode-back" href="../../../../reference/app.html#graphscope.avg_clustering">[docs]</a><span class="nd">@project_to_simple</span>
 <span class="nd">@not_compatible_for</span><span class="p">(</span><span class="s2">&quot;arrow_property&quot;</span><span class="p">,</span> <span class="s2">&quot;dynamic_property&quot;</span><span class="p">,</span> <span class="s2">&quot;undirected&quot;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">avg_clustering</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">avg_clustering</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">degree_threshold</span><span class="o">=</span><span class="mi">1000000000</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Compute the average clustering coefficient for the directed graph.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        graph (:class:`graphscope.Graph`): A simple graph.</span>
+<span class="sd">        degree_threshold (int, optional): Filter super vertex which degree is greater than threshold. Default to 1e9.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        r: float</span>
@@ -205,7 +210,8 @@
 <span class="sd">        &gt;&gt;&gt; print(c.to_numpy(&quot;r&quot;, axis=0)[0])</span>
 <span class="sd">        &gt;&gt;&gt; sess.close()</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">AppAssets</span><span class="p">(</span><span class="n">algo</span><span class="o">=</span><span class="s2">&quot;avg_clustering&quot;</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="s2">&quot;tensor&quot;</span><span class="p">)(</span><span class="n">graph</span><span class="p">)</span></div>
+    <span class="n">degree_threshold</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">degree_threshold</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">AppAssets</span><span class="p">(</span><span class="n">algo</span><span class="o">=</span><span class="s2">&quot;avg_clustering&quot;</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="s2">&quot;tensor&quot;</span><span class="p">)(</span><span class="n">graph</span><span class="p">,</span> <span class="n">degree_threshold</span><span class="p">)</span></div>
 </pre></div>
 
            </div>
@@ -260,6 +266,16 @@
             
               
                 <dd><a href="../../../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../../v0.15.0/index.html">v0.15.0</a></dd>
               
             
 
