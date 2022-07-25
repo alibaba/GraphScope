@@ -142,7 +142,7 @@ class AWSLauncher(Launcher):
             default="1.18",
         )
         config["instance_type"] = click.prompt(
-            "Worker node instance type, defalut", default="t4g.large"
+            "Worker node instance type, defalut", default="t2.micro"
         )
         config["node_num"] = click.prompt(
             "Worker node num, default", type=int, default=4
@@ -160,6 +160,7 @@ class AWSLauncher(Launcher):
 
         click.echo("Creating cluster (ETA ~10 minutes)...")
         # Creating Kubernetes cluster.
+        """
         self._eks.create_cluster(
             name=cluster_name,
             version=k8s_version,
@@ -178,6 +179,7 @@ class AWSLauncher(Launcher):
         except Exception as e:
             click.echo("Error: %s, gave up waiting for cluster to create." % str(e))
             sys.exit(1)
+        """
         click.echo("Cluster active.")
 
         # write kube config file
@@ -321,7 +323,7 @@ class AWSLauncher(Launcher):
             # Create key pair
             self._ec2.create_key_pair(KeyName=keypair_name)
 
-            # Create stack
+            print(cluster_name, vpc_id, vpc_sg, vpc_subnet_ids, keypair_name)
             response = self._cf.create_stack(
                 StackName=workers_name,
                 TemplateURL=self.workers_template,
@@ -341,8 +343,12 @@ class AWSLauncher(Launcher):
                         "ParameterValue": str(1),
                     },
                     {
-                        "ParameterKey": "NodeAutoScalingGroupMaxSize",
+                        "ParameterKey": "NodeAutoScalingGroupDesiredCapacity",
                         "ParameterValue": str(node_num),
+                    },
+                    {
+                        "ParameterKey": "NodeAutoScalingGroupMaxSize",
+                        "ParameterValue": str(node_num + 1),
                     },
                     {
                         "ParameterKey": "NodeInstanceType",
@@ -419,7 +425,7 @@ class AWSLauncher(Launcher):
             )
         except subprocess.CalledProcessError as e:
             click.echo("Error: %s" % e.stderr)
-            sys.exits(1)
+            sys.exit(1)
 
         click.echo("kube config generated. Try:")
         click.echo("  kubectl --kubeconfig=%s get nodes" % self._output_path)
@@ -686,14 +692,14 @@ class AliyunLauncher(Launcher):
 @click.command()
 @click.option(
     "-t",
-    "--type",
-    "type",
+    "--cluster_type",
+    "cluster_type",
     type=click.Choice(["aws", "aliyun"], case_sensitive=False),
     help="Cloud type to launch cluster.",
     required=True,
 )
-@click.option("--id", help="The access_key_id of cloud.", required=True)
-@click.option("--secret", help="The access_key_secret of cloud.", required=True)
+@click.option("--access_key_id", help="The access_key_id of cloud.", required=True)
+@click.option("--secret_access_key", help="The access_key_secret of cloud.", required=True)
 @click.option("--region", help="The region id.", required=True)
 @click.option(
     "--output",
