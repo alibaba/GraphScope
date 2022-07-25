@@ -14,6 +14,8 @@
 # during deployment, you'll want to make sure you don't have something
 # broken.
 #
+# reference: https://github.com/cybermaggedon/aws-eks-deployment/blob/master/deploy-k8s
+#
 
 
 import json
@@ -160,7 +162,6 @@ class AWSLauncher(Launcher):
 
         click.echo("Creating cluster (ETA ~10 minutes)...")
         # Creating Kubernetes cluster.
-        """
         self._eks.create_cluster(
             name=cluster_name,
             version=k8s_version,
@@ -179,7 +180,6 @@ class AWSLauncher(Launcher):
         except Exception as e:
             click.echo("Error: %s, gave up waiting for cluster to create." % str(e))
             sys.exit(1)
-        """
         click.echo("Cluster active.")
 
         # write kube config file
