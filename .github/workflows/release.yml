@@ -2,8 +2,6 @@ name: Cut Release
 
 on:
   push:
-    tags:
-      - 'v*'
 
 env:
   DOCKER_URL: registry.cn-hongkong.aliyuncs.com
