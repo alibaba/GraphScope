@@ -539,11 +539,14 @@ evaluated in eager mode.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.avg_clustering">
-<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">avg_clustering</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/clustering.html#avg_clustering"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.avg_clustering" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">avg_clustering</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">degree_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000000000</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/clustering.html#avg_clustering"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.avg_clustering" title="Permalink to this definition"></a></dt>
 <dd><p>Compute the average clustering coefficient for the directed graph.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.Graph</span></code>) – A simple graph.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.Graph</span></code>) – A simple graph.</p></li>
+<li><p><strong>degree_threshold</strong> (<em>int</em><em>, </em><em>optional</em>) – Filter super vertex which degree is greater than threshold. Default to 1e9.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><dl class="simple">
@@ -572,12 +575,15 @@ evaluated in eager mode.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.clustering">
-<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">clustering</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/clustering.html#clustering"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.clustering" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">clustering</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">degree_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000000000</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/clustering.html#clustering"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.clustering" title="Permalink to this definition"></a></dt>
 <dd><p>Local clustering coefficient of a node in a Graph is the fraction
 of pairs of the node’s neighbors that are adjacent to each other.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.Graph</span></code>) – A simple graph.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.Graph</span></code>) – A simple graph.</p></li>
+<li><p><strong>degree_threshold</strong> (<em>int</em><em>, </em><em>optional</em>) – Filter super vertex which degree is greater than threshold. Default to 1e9.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>A context with each vertex assigned the computed clustering value, will be evaluated in eager mode.</p>
@@ -745,7 +751,7 @@ all vertices of degree less than <cite>k</cite> have been removed.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.katz_centrality">
-<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">katz_centrality</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_round</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalized</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/katz_centrality.html#katz_centrality"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.katz_centrality" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">katz_centrality</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_round</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalized</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">degree_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000000000.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/katz_centrality.html#katz_centrality"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.katz_centrality" title="Permalink to this definition"></a></dt>
 <dd><p>Compute the Katz centrality.</p>
 <p>See more details for Katz centrality here:
 <a class="reference external" href="https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.centrality.katz_centrality_numpy.html">https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.centrality.katz_centrality_numpy.html</a></p>
@@ -758,6 +764,7 @@ all vertices of degree less than <cite>k</cite> have been removed.</p>
 <li><p><strong>tolerance</strong> (<em>float</em><em>, </em><em>optional</em>) – Error tolerance. Defaults to 1e-06.</p></li>
 <li><p><strong>max_round</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximun number of rounds. Defaults to 100.</p></li>
 <li><p><strong>normalized</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to normalize result values. Defaults to True.</p></li>
+<li><p><strong>degree_threshold</strong> (<em>int</em><em>, </em><em>optional</em>) – Filter super vertex which degree is greater than threshold. Default to 1e9.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -941,6 +948,16 @@ an InvalidArgumentError.</p>
             
               
                 <dd><a href="../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.15.0/index.html">v0.15.0</a></dd>
               
             
 

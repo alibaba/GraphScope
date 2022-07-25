@@ -660,9 +660,6 @@
 <span class="sd">                - show_log: Deprecated.</span>
 <span class="sd">                    Move this param as a global configuration.Set via `graphscope.set_option(show_log=True)`</span>
 
-<span class="sd">                - k8s_vineyard_shared_mem: Deprecated.</span>
-<span class="sd">                    Please use vineyard_shared_mem instead.</span>
-
 <span class="sd">            reconnect (bool, optional): When connecting to a pre-launched GraphScope cluster with :code:`addr`,</span>
 <span class="sd">                the connect request would be rejected with there is still an existing session connected. There</span>
 <span class="sd">                are cases where the session still exists and user&#39;s client has lost connection with the backend,</span>
@@ -673,13 +670,6 @@
 <span class="sd">                to ensure there&#39;s no such an active client actually.</span>
 
 <span class="sd">                Defaults to :code:`False`.</span>
-<span class="sd">                - k8s_gie_graph_manager_image: Deprecated.</span>
-<span class="sd">                - k8s_gie_graph_manager_cpu: Deprecated.</span>
-<span class="sd">                - k8s_gie_graph_manager_mem: Deprecated.</span>
-
-<span class="sd">                - k8s_zookeeper_image: Deprecated.</span>
-<span class="sd">                - k8s_zookeeper_cpu: Deprecated.</span>
-<span class="sd">                - k8s_zookeeper_mem: Deprecated.</span>
 
 <span class="sd">        Raises:</span>
 <span class="sd">            TypeError: If the given argument combination is invalid and cannot be used to create</span>
@@ -730,13 +720,6 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_deprecated_params</span> <span class="o">=</span> <span class="p">(</span>
             <span class="s2">&quot;show_log&quot;</span><span class="p">,</span>
             <span class="s2">&quot;log_level&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;k8s_vineyard_shared_mem&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;k8s_gie_graph_manager_image&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;k8s_gie_graph_manager_cpu&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;k8s_gie_graph_manager_mem&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;k8s_zookeeper_image&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;k8s_zookeeper_cpu&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;k8s_zookeeper_mem&quot;</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">saved_locals</span> <span class="o">=</span> <span class="nb">locals</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_accessable_params</span><span class="p">:</span>
@@ -1749,6 +1732,16 @@
             
               
                 <dd><a href="../../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.15.0/index.html">v0.15.0</a></dd>
               
             
 
