@@ -497,7 +497,9 @@ install_fastFFI() {
     return 0
   fi
 
-  get_os_version
+  if [ -z "${PLATFORM}" ]; then
+    get_os_version
+  fi
   if [[ -d /opt/fastFFI ]]; then
     sudo rm -fr /opt/fastFFI
   fi
