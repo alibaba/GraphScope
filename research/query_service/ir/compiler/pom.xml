@@ -116,6 +116,7 @@
                     <filesets>
                         <fileset>
                             <directory>src/main/generated</directory>
+                            <directory>../target</directory>
                             <followSymlinks>false</followSymlinks>
                         </fileset>
                     </filesets>
