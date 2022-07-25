@@ -2,8 +2,11 @@
 # dependencies for graphscope's wheel package.
 # This will produce an arm image.
 # The FROM image is a pre-built arm base image.
+# And the pre-built graphscope-runtime and graphscope-vineyard are available in
+# registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:arm64
+# registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:arm64
 
-FROM registry.cn-hongkong.aliyuncs.com/graphscope/manylinux2014:2021-10-14-14ac00e-arm
+FROM registry.cn-hongkong.aliyuncs.com/graphscope/manylinux2014:2021-10-14-14ac00e-arm64
 
 RUN curl https://mirrors.aliyun.com/repo/Centos-7.repo | sed -e "s/centos/centos-altarch/g" > /etc/yum.repos.d/CentOS-Base.repo
 
