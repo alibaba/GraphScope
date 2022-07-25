@@ -29,8 +29,10 @@ import click
 import yaml
 
 try:
+    import botocore
     import boto3
 except ImportError:
+    botocore = None
     boto3 = None
 
 try:
@@ -321,9 +323,12 @@ class AWSLauncher(Launcher):
             click.echo("Creating workers stack...")
             keypair_name = cluster_name + "-keypair"
             # Create key pair
-            self._ec2.create_key_pair(KeyName=keypair_name)
+            try:
+                self._ec2.create_key_pair(KeyName=keypair_name)
+            except botocore.exceptions.ClientError as e:
+                if "InvalidKeyPair.Duplicate" not in e.args[0]:
+                    raise botocore.exceptions.ClientError from e
 
-            print(cluster_name, vpc_id, vpc_sg, vpc_subnet_ids, keypair_name)
             response = self._cf.create_stack(
                 StackName=workers_name,
                 TemplateURL=self.workers_template,
@@ -700,7 +705,7 @@ class AliyunLauncher(Launcher):
 )
 @click.option("--access_key_id", help="The access_key_id of cloud.", required=True)
 @click.option("--secret_access_key", help="The access_key_secret of cloud.", required=True)
-@click.option("--region", help="The region id.", required=True)
+@click.option("--region", help="The region code of cloud.", required=True)
 @click.option(
     "--output",
     help="The kube config file output path.",
