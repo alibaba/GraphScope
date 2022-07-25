@@ -17,7 +17,7 @@ lru_time_cache = "0.8.0"
 dotproperties = "0.1.0"
 tokio = { version = "1.0", features = ["macros", "sync"] }
 
-maxgraph-store = { path = "../store" }
+global_query = { path = "../global_query" }
 pegasus = { path = "../../../research/engine/pegasus/pegasus", package = "pegasus" }
 pegasus_network = { path = "../../../research/engine/pegasus/network" }
 pegasus_server = { path = "../../../research/engine/pegasus/server" }

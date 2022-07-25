@@ -1,7 +1,6 @@
 [workspace]
 
 members = [
-    "runtime",
     "global_query",
     "store",
     "ffi",

@@ -12,7 +12,7 @@ dyn_type = { path = "../../../dyn_type" }
 libc = "0.2"
 byteorder = "1.3.1"
 itertools = "0.7.8"
-maxgraph-store = {path = "../../../../interactive_engine/executor/store"}
+global_query = {path = "../../../../interactive_engine/executor/global_query"}
 
 [build-dependencies]
 cmake = "0.1"

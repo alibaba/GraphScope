@@ -13,11 +13,14 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-mod apis;
-mod store_impl;
-
-pub use apis::global_query::GlobalGraphQuery;
-pub use apis::graph_partition::GraphPartitionManager;
-
 extern crate alloc;
 extern crate maxgraph_store;
+
+pub mod apis;
+pub mod store_impl;
+
+pub use apis::global_query::{GlobalGraphQuery, PartitionLabeledVertexIds, PartitionVertexIds};
+pub use apis::graph_partition::GraphPartitionManager;
+pub use apis::graph_schema::Schema;
+pub use maxgraph_store::api as store_api;
+pub use store_impl::groot::global_graph::GlobalGraph;

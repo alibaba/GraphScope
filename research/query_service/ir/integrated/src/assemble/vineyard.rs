@@ -16,9 +16,9 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
+use global_query::store_api::{Edge, Vertex};
+use global_query::{GlobalGraphQuery, GraphPartitionManager};
 use graph_proxy::{create_gs_store, VineyardMultiPartition};
-use maxgraph_store::api::graph_partition::GraphPartitionManager;
-use maxgraph_store::api::{Edge, GlobalGraphQuery, Vertex};
 use runtime::IRJobAssembly;
 
 use crate::InitializeJobAssembly;

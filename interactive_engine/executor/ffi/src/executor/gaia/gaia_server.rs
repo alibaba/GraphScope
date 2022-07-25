@@ -20,7 +20,7 @@ use std::thread;
 use std::time::Duration;
 
 use gaia_pegasus::Configuration as GaiaConfig;
-use maxgraph_runtime::store::global_graph::GlobalGraph;
+use global_query::GlobalGraph;
 use maxgraph_store::api::PartitionId;
 use maxgraph_store::db::api::{GraphConfig, GraphResult};
 use maxgraph_store::db::graph::store::GraphStore;

@@ -828,19 +828,21 @@ mod tests {
                 .collect(),
             ),
             Object::KV(
-                vec![(
-                    object!(vec![object!(0), object!("~all")]),
-                    Object::KV(
-                        vec![
-                            (object!("age"), object!(31)),
-                            (object!("name"), object!("John")),
-                            (object!("birthday"), object!(19900416)),
-                            (object!("hobbies"), object!(vec!["football", "guitar"])),
-                        ]
-                        .into_iter()
-                        .collect(),
+                vec![
+                    (
+                        object!(vec![object!(0), object!("~all")]),
+                        Object::KV(
+                            vec![
+                                (object!("age"), object!(31)),
+                                (object!("name"), object!("John")),
+                                (object!("birthday"), object!(19900416)),
+                                (object!("hobbies"), object!(vec!["football", "guitar"])),
+                            ]
+                            .into_iter()
+                            .collect(),
+                        ),
                     ),
-                )]
+                ]
                 .into_iter()
                 .collect(),
             ),

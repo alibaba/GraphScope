@@ -18,8 +18,8 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 
 use gaia_runtime::error::{StartServerError, StartServerResult};
+use global_query::GraphPartitionManager;
 use log::info;
-use maxgraph_store::api::graph_partition::GraphPartitionManager;
 use pegasus::api::{Fold, Sink};
 use pegasus::{Configuration, JobConf, ServerConf};
 use pegasus_network::config::NetworkConfig;

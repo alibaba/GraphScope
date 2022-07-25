@@ -19,14 +19,15 @@ use std::sync::atomic::{AtomicPtr, Ordering};
 use std::sync::Arc;
 
 use dyn_type::{Object, Primitives};
+use global_query::store_api::prelude::Property;
+use global_query::store_api::{Edge as StoreEdge, LabelId, PartitionId, Vertex as StoreVertex, VertexId};
+use global_query::store_api::{PropId, SnapshotId};
+use global_query::{
+    GlobalGraphQuery, GraphPartitionManager, PartitionLabeledVertexIds, PartitionVertexIds,
+};
 use graph_store::utils::IterList;
 use ir_common::{KeyId, NameOrId};
 use ir_common::{NameOrId as Label, OneOrMany};
-use maxgraph_store::api::graph_partition::GraphPartitionManager;
-use maxgraph_store::api::prelude::Property;
-use maxgraph_store::api::*;
-use maxgraph_store::api::{Edge as StoreEdge, Vertex as StoreVertex};
-use maxgraph_store::api::{PropId, SnapshotId};
 use pegasus_common::downcast::*;
 
 use crate::apis::graph::PKV;

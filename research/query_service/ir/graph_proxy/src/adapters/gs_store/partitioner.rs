@@ -16,8 +16,8 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use maxgraph_store::api::graph_partition::GraphPartitionManager;
-use maxgraph_store::api::{PartitionId, VertexId};
+use global_query::store_api::{PartitionId, VertexId};
+use global_query::GraphPartitionManager;
 
 use crate::apis::{Partitioner, ID};
 use crate::{GraphProxyError, GraphProxyResult};

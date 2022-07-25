@@ -1,5 +1,5 @@
 extern crate gaia_pegasus;
-extern crate maxgraph_runtime;
+extern crate global_query;
 extern crate maxgraph_store;
 #[macro_use]
 extern crate log;
