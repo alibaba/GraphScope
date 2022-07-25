@@ -17,7 +17,6 @@ lru_time_cache = "0.8.0"
 dotproperties = "0.1.0"
 tokio = { version = "1.0", features = ["macros", "sync"] }
 
-maxgraph-runtime = { path = "../runtime" }
 maxgraph-store = { path = "../store" }
 pegasus = { path = "../../../research/engine/pegasus/pegasus", package = "pegasus" }
 pegasus_network = { path = "../../../research/engine/pegasus/network" }
