@@ -53,47 +53,49 @@ int main(int argc, char **argv) {
   }
 
   grape::InitMPIComm();
-  grape::CommSpec comm_spec;
-  comm_spec.Init(MPI_COMM_WORLD);
 
-  vineyard::Client& client = vineyard::Client::Default();
-
-  MPI_Barrier(comm_spec.comm());
-  vineyard::ObjectID fragment_group_id;
   {
-    auto loader = std::make_unique<vineyard::ArrowFragmentLoader<
-        vineyard::property_graph_types::OID_TYPE,
-        vineyard::property_graph_types::VID_TYPE>>(client, comm_spec, efiles,
-                                                   vfiles, directed != 0);
+    grape::CommSpec comm_spec;
+    comm_spec.Init(MPI_COMM_WORLD);
 
-    fragment_group_id = boost::leaf::try_handle_all(
-        [&]() { return loader->LoadFragmentAsFragmentGroup(); },
-        [](const boost::leaf::error_info &unmatched) {
-          LOG(FATAL) << "Unmatched error " << unmatched;
-          return 0;
-        });
+    vineyard::Client& client = vineyard::Client::Default();
+
+    MPI_Barrier(comm_spec.comm());
+    vineyard::ObjectID fragment_group_id;
+    {
+      auto loader = std::make_unique<vineyard::ArrowFragmentLoader<
+          vineyard::property_graph_types::OID_TYPE,
+          vineyard::property_graph_types::VID_TYPE>>(client, comm_spec, efiles,
+                                                     vfiles, directed != 0);
+
+      fragment_group_id = boost::leaf::try_handle_all(
+          [&]() { return loader->LoadFragmentAsFragmentGroup(); },
+          [](const boost::leaf::error_info &unmatched) {
+            LOG(FATAL) << "Unmatched error " << unmatched;
+            return 0;
+          });
+    }
+
+    LOG(INFO) << "[fragment group id]: " << fragment_group_id;
+
+    std::shared_ptr<vineyard::ArrowFragmentGroup> fg =
+        std::dynamic_pointer_cast<vineyard::ArrowFragmentGroup>(
+            client.GetObject(fragment_group_id));
+
+    for (const auto &pair : fg->Fragments()) {
+      LOG(INFO) << "[frag-" << pair.first << "]: " << pair.second;
+    }
+
+    vineyard::htap_impl::GraphHandleImpl *handle = new vineyard::htap_impl::GraphHandleImpl();
+    vineyard::htap_impl::get_graph_handle(fragment_group_id, 1, handle);
+    auto schema = handle->schema;
+    if (comm_spec.worker_id() == 0) {
+      LOG(INFO) << "schema = " << schema->ToJSONString();
+    }
+    schema->DumpToFile("/tmp/" + std::to_string(fragment_group_id) + ".json");
+
+    MPI_Barrier(comm_spec.comm());
   }
-
-  LOG(INFO) << "[fragment group id]: " << fragment_group_id;
-
-  std::shared_ptr<vineyard::ArrowFragmentGroup> fg =
-      std::dynamic_pointer_cast<vineyard::ArrowFragmentGroup>(
-          client.GetObject(fragment_group_id));
-
-  for (const auto &pair : fg->Fragments()) {
-    LOG(INFO) << "[frag-" << pair.first << "]: " << pair.second;
-  }
-
-  vineyard::htap_impl::GraphHandleImpl *handle = new vineyard::htap_impl::GraphHandleImpl();
-  vineyard::htap_impl::get_graph_handle(fragment_group_id, 1, handle);
-  auto schema = handle->schema;
-  if (comm_spec.worker_id() == 0) {
-    LOG(INFO) << "schema = " << schema->ToJSONString();
-  }
-  schema->DumpToFile("/tmp/" + std::to_string(fragment_group_id) + ".json");
-
-  MPI_Barrier(comm_spec.comm());
-
   grape::FinalizeMPIComm();
 
   return 0;
