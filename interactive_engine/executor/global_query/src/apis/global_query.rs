@@ -13,14 +13,12 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use crate::apis::graph_schema::Schema;
+use maxgraph_store::api::{Condition, Edge, LabelId, PartitionId, PropId, SnapshotId, Vertex, VertexId};
 use std::sync::Arc;
 
-use super::graph_schema::Schema;
-use super::prelude::Condition;
-use super::{
-    Edge, LabelId, PartitionId, PartitionLabeledVertexIds, PartitionVertexIds, PropId, SnapshotId, Vertex,
-    VertexId,
-};
+pub type PartitionVertexIds = (PartitionId, Vec<VertexId>);
+pub type PartitionLabeledVertexIds = (PartitionId, Vec<(Option<LabelId>, Vec<VertexId>)>);
 
 pub trait GlobalGraphQuery: Send + Sync {
     type V: Vertex;

@@ -2,6 +2,7 @@
 
 members = [
     "runtime",
+    "global_query",
     "store",
     "ffi",
     "gaia_runtime"

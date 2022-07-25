@@ -13,8 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use super::{LabelId, PropId};
-use crate::schema::prelude::DataType;
+use maxgraph_store::api::{DataType, LabelId, PropId};
 
 pub trait Schema: Send + Sync {
     fn get_prop_id(&self, name: &str) -> Option<PropId>;

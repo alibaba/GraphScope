@@ -21,7 +21,6 @@ pub mod db;
 #[allow(dead_code)]
 #[allow(unused_variables)]
 pub mod schema;
-pub mod test;
 
 #[macro_use]
 extern crate log;

@@ -15,9 +15,6 @@
 
 mod condition;
 mod elem;
-mod global_query;
-pub mod graph_partition;
-pub mod graph_schema;
 mod multi_version;
 pub mod prelude;
 mod property;
@@ -27,9 +24,8 @@ use std::collections::HashMap;
 
 pub use self::condition::*;
 pub use self::elem::*;
-pub use self::global_query::*;
 pub use self::multi_version::*;
-use crate::schema::prelude::*;
+pub use crate::schema::prelude::*;
 
 pub type VertexId = i64;
 pub type LabelId = u32;
@@ -37,11 +33,8 @@ pub type PartitionId = u32;
 pub type EdgeId = i64;
 pub type SnapshotId = i64;
 pub type SchemaVersion = i32;
-pub type PropId = u32;
 pub type EdgeIdTuple = (VertexId, i64, VertexId);
 pub type EdgeType = (LabelId, LabelId, LabelId);
-pub type PartitionVertexIds = (PartitionId, Vec<VertexId>);
-pub type PartitionLabeledVertexIds = (PartitionId, Vec<(Option<LabelId>, Vec<VertexId>)>);
 
 pub static MAX_PARTITION_NUM: u32 = 4096;
 pub const MAX_SNAPSHOT_ID: SnapshotId = SnapshotId::max_value() - 1;

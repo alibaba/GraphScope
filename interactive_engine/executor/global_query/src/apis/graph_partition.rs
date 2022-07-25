@@ -13,10 +13,18 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-pub use super::condition::*;
-pub use super::elem::{Edge, Vertex};
-pub use super::multi_version::{GraphLoader, GraphUpdate, MVGraph, MVGraphQuery, DDL};
-pub use super::property::*;
-pub use super::{EdgeData, VertexData, MAX_PARTITION_NUM, MAX_SNAPSHOT_ID};
-pub use super::{EdgeId, EdgeIdTuple, LabelId, PartitionId, SchemaVersion, SnapshotId, VertexId};
-pub use super::{PartitionKey, TableInfo, TypePartition};
+use std::sync::Arc;
+
+use maxgraph_store::api::prelude::Property;
+use maxgraph_store::api::{LabelId, PartitionId, VertexId};
+
+// Partition manager for graph query
+pub trait GraphPartitionManager: Send + Sync {
+    fn get_partition_id(&self, vid: VertexId) -> i32;
+    fn get_server_id(&self, pid: PartitionId) -> Option<u32>;
+    fn get_process_partition_list(&self) -> Vec<PartitionId>;
+    fn get_vertex_id_by_primary_key(
+        &self, label_id: LabelId, key: &String,
+    ) -> Option<(PartitionId, VertexId)>;
+    fn get_vertex_id_by_primary_keys(&self, label_id: LabelId, pks: &[Property]) -> Option<VertexId>;
+}
