@@ -141,12 +141,7 @@ where
                 .partition_manager
                 .get_vertex_id_by_primary_keys(store_label_id, store_indexed_values.as_ref())
             {
-                // TODO: confirm if this should be lazy details?
-                Ok(Some(Vertex::new(
-                    vid as ID,
-                    Some(label_id.clone()),
-                    DynDetails::new(DefaultDetails::default()),
-                )))
+                Ok(Some(Vertex::new(vid as ID, Some(label_id.clone()), DynDetails::empty())))
             } else {
                 Ok(None)
             }
@@ -289,7 +284,7 @@ where
                 }
             };
             let iters = iter.map(|(_src, vi)| vi).collect();
-            let iter_list = IterList::new(iters).map(move |v| to_runtime_vertex(v, Some(vec![])));
+            let iter_list = IterList::new(iters).map(move |v| to_empty_vertex(&v));
             Ok(filter_limit!(iter_list, filter, None))
         });
         Ok(stmt)
@@ -392,19 +387,15 @@ where
 {
     let id = v.get_id() as ID;
     let label = encode_runtime_v_label(&v);
-    let details = if let Some(prop_keys) = prop_keys {
-        if prop_keys.is_empty() {
-            // Some(vec![]) means we do not need any property
-            // TODO: use EmptyDetails
-            DynDetails::new(DefaultDetails::default())
-        } else {
-            DynDetails::new(LazyVertexDetails::new(v, Some(prop_keys)))
-        }
-    } else {
-        // None means we need all properties,
-        DynDetails::new(LazyVertexDetails::new(v, None))
-    };
-    Vertex::new(id, Some(label), details)
+    let details = LazyVertexDetails::new(v, prop_keys);
+    Vertex::new(id, Some(label), DynDetails::new(details))
+}
+
+#[inline]
+fn to_empty_vertex<V: StoreVertex>(v: &V) -> Vertex {
+    let id = v.get_id() as ID;
+    let label = encode_runtime_v_label(v);
+    Vertex::new(id, Some(label), DynDetails::empty())
 }
 
 #[inline]
@@ -506,6 +497,7 @@ impl<V> Details for LazyVertexDetails<V>
 where
     V: StoreVertex + 'static,
 {
+    // TODO: consider the situation when push `props` down to groot
     fn get_property(&self, key: &NameOrId) -> Option<PropertyValue> {
         if let NameOrId::Id(key) = key {
             if let Some(ptr) = self.get_vertex_ptr() {
@@ -592,6 +584,7 @@ where
     }
 }
 
+// TODO: make this identical in GAIA and GlobalGraphQuery
 /// in graphscope store, Option<Vec<PropId>>: None means we need all properties,
 /// and Some means we need given properties (and Some(vec![]) means we do not need any property)
 /// while in ir, None means we do not need any properties,

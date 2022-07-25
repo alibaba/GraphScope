@@ -141,6 +141,10 @@ impl DynDetails {
     pub fn new<P: Details + 'static>(p: P) -> Self {
         DynDetails { inner: Arc::new(p) }
     }
+
+    pub fn empty() -> Self {
+        DynDetails { inner: Arc::new(EmptyDetails {}) }
+    }
 }
 
 impl_as_any!(DynDetails);
@@ -179,10 +183,18 @@ impl Encode for DynDetails {
             // hint to be as DefaultDetails
             writer.write_u8(1)?;
             default.write_to(writer)?;
+        } else if let Some(empty) = self
+            .inner
+            .as_any_ref()
+            .downcast_ref::<EmptyDetails>()
+        {
+            // hint to be as EmptyDetails
+            writer.write_u8(2)?;
+            empty.write_to(writer)?;
         } else {
             // TODO(yyy): handle other kinds of details
             // for Lazy details, we write id, label, and required properties
-            writer.write_u8(2)?;
+            writer.write_u8(3)?;
             let all_props = self.get_all_properties();
             if let Some(all_props) = all_props {
                 writer.write_u64(all_props.len() as u64)?;
@@ -201,9 +213,12 @@ impl Encode for DynDetails {
 impl Decode for DynDetails {
     fn read_from<R: ReadExt>(reader: &mut R) -> io::Result<Self> {
         let kind = <u8>::read_from(reader)?;
-        if kind == 1 || kind == 2 {
+        if kind == 1 || kind == 3 {
             // For either DefaultDetails or LazyDetails, we decoded as DefaultDetails
             let details = <DefaultDetails>::read_from(reader)?;
+            Ok(DynDetails::new(details))
+        } else if kind == 2 {
+            let details = <EmptyDetails>::read_from(reader)?;
             Ok(DynDetails::new(details))
         } else {
             Err(io::Error::from(io::ErrorKind::Other))
@@ -278,5 +293,42 @@ impl Decode for DefaultDetails {
             map.insert(k, v);
         }
         Ok(DefaultDetails { inner: map })
+    }
+}
+
+#[allow(dead_code)]
+#[derive(Clone, Debug, Default)]
+pub struct EmptyDetails {}
+
+impl_as_any!(EmptyDetails);
+
+impl Details for EmptyDetails {
+    fn get_property(&self, _key: &NameOrId) -> Option<PropertyValue> {
+        None
+    }
+
+    fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {
+        None
+    }
+
+    fn insert_property(&mut self, _key: NameOrId, _value: Object) -> Option<Object> {
+        // Won't insert_property() for EmptyDetails for now:
+        // insert_property() only used to update a vertex which already have some properties, to append more props;
+        // this won't happen on a vertex with EmptyDetails.
+        // Still, be careful if insert_property() on EmptyDetails.
+        warn!("Cannot insert property in EmptyDetails of ({:?},{:?})", _key, _value);
+        None
+    }
+}
+
+impl Encode for EmptyDetails {
+    fn write_to<W: WriteExt>(&self, _writer: &mut W) -> io::Result<()> {
+        Ok(())
+    }
+}
+
+impl Decode for EmptyDetails {
+    fn read_from<R: ReadExt>(_reader: &mut R) -> io::Result<Self> {
+        Ok(EmptyDetails::default())
     }
 }

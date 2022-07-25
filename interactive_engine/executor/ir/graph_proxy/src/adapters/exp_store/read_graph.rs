@@ -34,8 +34,8 @@ use pegasus_common::impl_as_any;
 
 use crate::apis::graph::PKV;
 use crate::apis::{
-    from_fn, register_graph, DefaultDetails, Details, Direction, DynDetails, Edge, PropertyValue,
-    QueryParams, ReadGraph, Statement, Vertex, ID,
+    from_fn, register_graph, Details, Direction, DynDetails, Edge, PropertyValue, QueryParams, ReadGraph,
+    Statement, Vertex, ID,
 };
 use crate::errors::{GraphProxyError, GraphProxyResult};
 use crate::{filter_limit, limit_n};
@@ -308,7 +308,7 @@ impl ReadGraph for ExpStore {
                 Direction::In => graph.get_in_vertices(v as DefaultId, edge_label_ids.as_ref()),
                 Direction::Both => graph.get_both_vertices(v as DefaultId, edge_label_ids.as_ref()),
             }
-            .map(move |v| to_runtime_vertex(v, None));
+            .map(move |v| to_empty_vertex(v));
             Ok(filter_limit!(iter, filter, limit))
         });
         Ok(stmt)
@@ -354,13 +354,15 @@ fn to_runtime_vertex(v: LocalVertex<'static, DefaultId>, prop_keys: Option<Vec<N
     // For vertices, we query properties via vid
     let id = v.get_id() as ID;
     let label = encode_runtime_v_label(&v);
-    let details = if let Some(prop_keys) = prop_keys {
-        DynDetails::new(LazyVertexDetails::new(v, prop_keys))
-    } else {
-        // None indicates we do not need any property
-        DynDetails::new(DefaultDetails::default())
-    };
-    Vertex::new(id, Some(label), details)
+    let details = LazyVertexDetails::new(v, prop_keys);
+    Vertex::new(id, Some(label), DynDetails::new(details))
+}
+
+#[inline]
+fn to_empty_vertex(v: LocalVertex<'static, DefaultId>) -> Vertex {
+    let id = v.get_id() as ID;
+    let label = encode_runtime_v_label(&v);
+    Vertex::new(id, Some(label), DynDetails::empty())
 }
 
 #[inline]
@@ -399,14 +401,15 @@ struct LazyVertexDetails {
     // prop_keys specify the properties we would save for later queries after shuffle,
     // excluding the ones used only when local property fetching.
     // Specifically, Some(vec![]) indicates we need all properties
-    prop_keys: Vec<NameOrId>,
+    // and None indicates we do not need any property
+    prop_keys: Option<Vec<NameOrId>>,
     inner: AtomicPtr<LocalVertex<'static, DefaultId>>,
 }
 
 impl_as_any!(LazyVertexDetails);
 
 impl LazyVertexDetails {
-    pub fn new(v: LocalVertex<'static, DefaultId>, prop_keys: Vec<NameOrId>) -> Self {
+    pub fn new(v: LocalVertex<'static, DefaultId>, prop_keys: Option<Vec<NameOrId>>) -> Self {
         let ptr = Box::into_raw(Box::new(v));
         LazyVertexDetails { prop_keys, inner: AtomicPtr::new(ptr) }
     }
@@ -450,39 +453,44 @@ impl Details for LazyVertexDetails {
 
     fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {
         let mut all_props = HashMap::new();
-        // the case of get_all_properties from vertex;
-        if self.prop_keys.is_empty() {
-            if let Some(ptr) = self.get_vertex_ptr() {
-                unsafe {
-                    if let Some(prop_key_vals) = (*ptr).clone_all_properties() {
-                        all_props = prop_key_vals
-                            .into_iter()
-                            .map(|(prop_key, prop_val)| (prop_key.into(), prop_val as Object))
-                            .collect();
-                    } else {
-                        return None;
+        if let Some(prop_keys) = self.prop_keys.as_ref() {
+            // the case of get_all_properties from vertex;
+            if prop_keys.is_empty() {
+                if let Some(ptr) = self.get_vertex_ptr() {
+                    unsafe {
+                        if let Some(prop_key_vals) = (*ptr).clone_all_properties() {
+                            all_props = prop_key_vals
+                                .into_iter()
+                                .map(|(prop_key, prop_val)| (prop_key.into(), prop_val as Object))
+                                .collect();
+                        } else {
+                            return None;
+                        }
                     }
+                } else {
+                    return None;
                 }
             } else {
-                return None;
-            }
-        } else {
-            // the case of get_all_properties with prop_keys pre-specified
-            for key in self.prop_keys.iter() {
-                if let Some(prop) = self.get_property(&key) {
-                    all_props.insert(key.clone(), prop.try_to_owned().unwrap());
-                } else {
-                    all_props.insert(key.clone(), Object::None);
+                // the case of get_all_properties with prop_keys pre-specified
+                for key in prop_keys.iter() {
+                    if let Some(prop) = self.get_property(&key) {
+                        all_props.insert(key.clone(), prop.try_to_owned().unwrap());
+                    } else {
+                        all_props.insert(key.clone(), Object::None);
+                    }
                 }
             }
         }
-
         Some(all_props)
     }
 
     fn insert_property(&mut self, key: NameOrId, _value: Object) -> Option<Object> {
-        if !self.prop_keys.is_empty() {
-            self.prop_keys.push(key);
+        if let Some(prop_keys) = self.prop_keys.as_mut() {
+            if !prop_keys.is_empty() {
+                prop_keys.push(key);
+            }
+        } else {
+            self.prop_keys = Some(vec![key]);
         }
         None
     }
