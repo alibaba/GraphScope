@@ -1,27 +1,27 @@
-# the graphscope-manylinux2010 image is based on manylinux2010, including all necessary
+# the graphscope-manylinux2014 image is based on manylinux2014, including all necessary
 # dependencies for graphscope's wheel package.
+# This will produce an arm image.
+# The FROM image is a pre-built arm base image.
 
-FROM registry.cn-hongkong.aliyuncs.com/graphscope/manylinux2014:2021-10-14-14ac00e
+FROM registry.cn-hongkong.aliyuncs.com/graphscope/manylinux2014:2021-10-14-14ac00e-arm
+
+RUN curl https://mirrors.aliyun.com/repo/Centos-7.repo | sed -e "s/centos/centos-altarch/g" > /etc/yum.repos.d/CentOS-Base.repo
 
 # yum install dependencies
-RUN yum install -y autoconf m4 git krb5-devel perl-IPC-Cmd rapidjson-devel \
+RUN yum makecache && yum install epel-release -y && \
+    yum install -y cmake autoconf m4 git krb5-devel perl-IPC-Cmd rapidjson-devel \
         libcurl-devel libevent-devel libgsasl-devel libunwind-devel \
         libuuid-devel libxml2-devel libzip libzip-devel minizip minizip-devel \
         make net-tools rsync telnet unzip vim wget which zip bind-utils sudo \
         msgpack-devel && \
     yum clean all && \
-    rm -fr /var/cache/yum && \
-    cd /tmp && \
-    wget -q https://github.com/Kitware/CMake/releases/download/v3.19.1/cmake-3.19.1-Linux-x86_64.sh && \
-    bash cmake-3.19.1-Linux-x86_64.sh --prefix=/usr --skip-license && \
-    cd /tmp && \
-    rm -rf /tmp/cmake-3.19.1-Linux-x86_64.sh
+    rm -fr /var/cache/yum
 
 ENV LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib:/usr/local/lib64
 ENV PATH=${PATH}:/usr/local/bin
 
 # install clang-11 with gold optimizer plugin, depends on header include/plugin-api.h
-RUN ln -s /opt/rh/devtoolset-10/root/lib/gcc/x86_64-redhat-linux/10 /usr/lib/gcc/x86_64-redhat-linux/10 && \
+RUN ln -s /opt/rh/devtoolset-10/root/lib/gcc/aarch64-redhat-linux/10 /usr/lib/gcc/aarch64-redhat-linux/10 && \
     cd /tmp && \
     mkdir -p binutils/include && \
     cd binutils/include && \
@@ -159,7 +159,7 @@ RUN cd /tmp && \
     tar zxvf protobuf-all-3.13.0.tar.gz && \
     cd protobuf-3.13.0 && \
     ./configure --enable-shared --disable-static && \
-    make -j && \
+    make -j4 && \
     make install && \
     ldconfig && \
     cd /tmp && \
@@ -188,7 +188,7 @@ RUN cd /tmp && \
         -DgRPC_SSL_PROVIDER=package \
         -DOPENSSL_ROOT_DIR=/usr/local \
         -DCMAKE_CXX_FLAGS="-fpermissive" && \
-    make -j && \
+    make -j4 && \
     make install && \
     cd /tmp && \
     rm -fr /tmp/grpc
@@ -204,18 +204,6 @@ RUN cd /tmp && \
     cp -rs /opt/openmpi/* /usr/local/ && \
     cd /tmp && \
     rm -fr /tmp/openmpi-4.0.5 /tmp/openmpi-4.0.5.tar.gz
-
-# install hdfs runtime library
-RUN cd /tmp && \
-    git clone https://github.com/7br/libhdfs3-downstream.git && \
-    cd libhdfs3-downstream/libhdfs3 && \
-    mkdir -p /tmp/libhdfs3-downstream/libhdfs3/build && \
-    cd /tmp/libhdfs3-downstream/libhdfs3/build && \
-    cmake .. -DBUILD_SHARED_LIBS=ON \
-             -DBUILD_HDFS3_TESTS=OFF && \
-    make install -j && \
-    cd /tmp && \
-    rm -rf /tmp/libhdfs3-downstream
 
 # GIE RUNTIME
 
@@ -295,5 +283,4 @@ ENV LLVM_CONFIG_PATH=/opt/llvm11/bin/llvm-config
 RUN curl -sf -L https://static.rust-lang.org/rustup.sh | \
         sh -s -- -y --profile minimal --default-toolchain stable && \
     echo "source ~/.cargo/env" >> ~/.bashrc && \
-    source /home/graphscope/.cargo/env && \
-    rustup component add rustfmt
+    source /home/graphscope/.cargo/env
