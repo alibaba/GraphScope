@@ -140,8 +140,8 @@ class AWSLauncher(Launcher):
         config["cluster_name"] = click.prompt("The name of cluster to create")
         config["k8s_version"] = click.prompt(
             "k8s version",
-            type=click.Choice(["1.15", "1.16", "1.17", "1.18", "1.19"]),
-            default="1.18",
+            type=click.Choice(["1.19", "1.20", "1.21", "1.22"]),
+            default="1.21",
         )
         config["instance_type"] = click.prompt(
             "Worker node instance type, defalut", default="t2.micro"
