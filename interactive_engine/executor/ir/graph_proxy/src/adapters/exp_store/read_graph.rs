@@ -34,8 +34,8 @@ use pegasus_common::impl_as_any;
 
 use crate::apis::graph::PKV;
 use crate::apis::{
-    from_fn, register_graph, Details, Direction, DynDetails, Edge, PropertyValue, QueryParams, ReadGraph,
-    Statement, Vertex, ID,
+    from_fn, register_graph, DefaultDetails, Details, Direction, DynDetails, Edge, PropertyValue,
+    QueryParams, ReadGraph, Statement, Vertex, ID,
 };
 use crate::errors::{GraphProxyError, GraphProxyResult};
 use crate::{filter_limit, limit_n};
@@ -231,12 +231,11 @@ impl ReadGraph for ExpStore {
         // Besides, we guarantee only one worker (on each server) is going to scan (with params.partitions.is_some())
         if params.partitions.is_some() {
             let label_ids = encode_storage_vertex_label(&params.labels);
-            let store = self.store;
             let props = params.columns.clone();
             let result = self
                 .store
                 .get_all_vertices(label_ids.as_ref())
-                .map(move |v| to_runtime_vertex(v, store, props.clone()));
+                .map(move |v| to_runtime_vertex(v, props.clone()));
 
             Ok(filter_limit!(result, params.filter, params.limit))
         } else {
@@ -274,7 +273,7 @@ impl ReadGraph for ExpStore {
         let mut result = Vec::with_capacity(ids.len());
         for id in ids {
             if let Some(local_vertex) = self.store.get_vertex(*id as DefaultId) {
-                let v = to_runtime_vertex(local_vertex, self.store, params.columns.clone());
+                let v = to_runtime_vertex(local_vertex, params.columns.clone());
                 result.push(v);
             }
         }
@@ -309,7 +308,7 @@ impl ReadGraph for ExpStore {
                 Direction::In => graph.get_in_vertices(v as DefaultId, edge_label_ids.as_ref()),
                 Direction::Both => graph.get_both_vertices(v as DefaultId, edge_label_ids.as_ref()),
             }
-            .map(move |v| to_runtime_vertex(v, graph, None));
+            .map(move |v| to_runtime_vertex(v, None));
             Ok(filter_limit!(iter, filter, limit))
         });
         Ok(stmt)
@@ -351,14 +350,17 @@ pub fn create_exp_store() {
 }
 
 #[inline]
-fn to_runtime_vertex(
-    v: LocalVertex<DefaultId>, store: &'static LargeGraphDB<DefaultId, InternalId>,
-    prop_keys: Option<Vec<NameOrId>>,
-) -> Vertex {
+fn to_runtime_vertex(v: LocalVertex<'static, DefaultId>, prop_keys: Option<Vec<NameOrId>>) -> Vertex {
     // For vertices, we query properties via vid
+    let id = v.get_id() as ID;
     let label = encode_runtime_v_label(&v);
-    let details = LazyVertexDetails::new(v.get_id(), prop_keys, store);
-    Vertex::new(v.get_id() as ID, Some(label), DynDetails::new(details))
+    let details = if let Some(prop_keys) = prop_keys {
+        DynDetails::new(LazyVertexDetails::new(v, prop_keys))
+    } else {
+        // None indicates we do not need any property
+        DynDetails::new(DefaultDetails::default())
+    };
+    Vertex::new(id, Some(label), details)
 }
 
 #[inline]
@@ -394,46 +396,25 @@ fn to_runtime_edge(
 /// That is, the required properties will not be materialized until LazyVertexDetails need to be shuffled.
 #[allow(dead_code)]
 struct LazyVertexDetails {
-    pub id: DefaultId,
     // prop_keys specify the properties we would save for later queries after shuffle,
     // excluding the ones used only when local property fetching.
     // Specifically, Some(vec![]) indicates we need all properties
-    // and None indicates we do not need any property,
-    prop_keys: Option<Vec<NameOrId>>,
+    prop_keys: Vec<NameOrId>,
     inner: AtomicPtr<LocalVertex<'static, DefaultId>>,
-    store: &'static LargeGraphDB<DefaultId, InternalId>,
 }
 
 impl_as_any!(LazyVertexDetails);
 
 impl LazyVertexDetails {
-    pub fn new(
-        id: DefaultId, prop_keys: Option<Vec<NameOrId>>,
-        store: &'static LargeGraphDB<DefaultId, InternalId>,
-    ) -> Self {
-        LazyVertexDetails { id, prop_keys, inner: AtomicPtr::default(), store }
+    pub fn new(v: LocalVertex<'static, DefaultId>, prop_keys: Vec<NameOrId>) -> Self {
+        let ptr = Box::into_raw(Box::new(v));
+        LazyVertexDetails { prop_keys, inner: AtomicPtr::new(ptr) }
     }
 
     fn get_vertex_ptr(&self) -> Option<*mut LocalVertex<'static, DefaultId>> {
-        let mut ptr = self.inner.load(Ordering::SeqCst);
+        let ptr = self.inner.load(Ordering::SeqCst);
         if ptr.is_null() {
-            if let Some(v) = self.store.get_vertex(self.id) {
-                let v = Box::new(v);
-                let new_ptr = Box::into_raw(v);
-                let swapped = self.inner.swap(new_ptr, Ordering::SeqCst);
-                if swapped.is_null() {
-                    ptr = new_ptr;
-                } else {
-                    unsafe {
-                        std::ptr::drop_in_place(new_ptr);
-                    }
-                    ptr = swapped
-                };
-                Some(ptr)
-            } else {
-                info!("Have not found vertex {:?} in exp_store", self.id);
-                None
-            }
+            None
         } else {
             Some(ptr)
         }
@@ -443,7 +424,6 @@ impl LazyVertexDetails {
 impl fmt::Debug for LazyVertexDetails {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("LazyVertexDetails")
-            .field("id", &self.id)
             .field("properties", &self.prop_keys)
             .field("inner", &self.inner)
             .finish()
@@ -470,42 +450,39 @@ impl Details for LazyVertexDetails {
 
     fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {
         let mut all_props = HashMap::new();
-        if let Some(prop_keys) = self.prop_keys.as_ref() {
-            // the case of get_all_properties from vertex;
-            if prop_keys.is_empty() {
-                if let Some(ptr) = self.get_vertex_ptr() {
-                    unsafe {
-                        if let Some(prop_key_vals) = (*ptr).clone_all_properties() {
-                            all_props = prop_key_vals
-                                .into_iter()
-                                .map(|(prop_key, prop_val)| (prop_key.into(), prop_val as Object))
-                                .collect();
-                        } else {
-                            return None;
-                        }
+        // the case of get_all_properties from vertex;
+        if self.prop_keys.is_empty() {
+            if let Some(ptr) = self.get_vertex_ptr() {
+                unsafe {
+                    if let Some(prop_key_vals) = (*ptr).clone_all_properties() {
+                        all_props = prop_key_vals
+                            .into_iter()
+                            .map(|(prop_key, prop_val)| (prop_key.into(), prop_val as Object))
+                            .collect();
+                    } else {
+                        return None;
                     }
-                } else {
-                    return None;
                 }
             } else {
-                // the case of get_all_properties with prop_keys pre-specified
-                for key in prop_keys.iter() {
-                    if let Some(prop) = self.get_property(&key) {
-                        all_props.insert(key.clone(), prop.try_to_owned().unwrap());
-                    } else {
-                        all_props.insert(key.clone(), Object::None);
-                    }
+                return None;
+            }
+        } else {
+            // the case of get_all_properties with prop_keys pre-specified
+            for key in self.prop_keys.iter() {
+                if let Some(prop) = self.get_property(&key) {
+                    all_props.insert(key.clone(), prop.try_to_owned().unwrap());
+                } else {
+                    all_props.insert(key.clone(), Object::None);
                 }
             }
         }
+
         Some(all_props)
     }
 
     fn insert_property(&mut self, key: NameOrId, _value: Object) -> Option<Object> {
-        if let Some(prop_keys) = self.prop_keys.as_mut() {
-            prop_keys.push(key);
-        } else {
-            self.prop_keys = Some(vec![key]);
+        if !self.prop_keys.is_empty() {
+            self.prop_keys.push(key);
         }
         None
     }
