@@ -305,8 +305,12 @@ impl IRJobAssembly {
                         } else {
                             IterCondition::max_iters(iter_emit.max_iters)
                         };
+                        let emit_kind = match unsafe { std::mem::transmute(iter_emit.emit_kind) } {
+                            server_pb::iteration_emit::EmitKind::EmitBefore => EmitKind::Before,
+                            server_pb::iteration_emit::EmitKind::EmitAfter => EmitKind::After,
+                        };
                         if let Some(ref iter_body) = iter_emit.body {
-                            stream = stream.iterate_emit_until(until, EmitKind::After, |start| {
+                            stream = stream.iterate_emit_until(until, emit_kind, |start| {
                                 self.install(start, &iter_body.plan[..])
                             })?;
                         } else {

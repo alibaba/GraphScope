@@ -108,9 +108,14 @@ message Iteration {
 }
 
 message IterationEmit {
+  enum EmitKind {
+    EMIT_BEFORE = 0;
+    EMIT_AFTER = 1;
+  }
   uint32 max_iters = 1;
   Filter until    = 2;
   TaskPlan body   = 3;
+  EmitKind emit_kind = 4;
 }
 
 message Apply {
