@@ -961,6 +961,9 @@ install_deps_dev() {
   if [[ ${GRAPE_JDK} == true ]]; then
     install_fastFFI
   else
+    {
+      echo "export ENABLE_JAVA_SDK=OFF"
+    } >> ${OUTPUT_ENV_FILE}
     succ_msg=${succ_msg}"\n
     Note: For simplify, The script is not install grape-jdk dependency by default. If you want to use grape jdk, use command:\n
     $ ./install_deps.sh --grape_jdk
