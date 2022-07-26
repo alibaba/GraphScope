@@ -1,0 +1,192 @@
+name: Build GraphScope Wheels on MacOS
+
+on:
+  workflow_dispatch:
+  schedule:
+    # The notifications for scheduled workflows are sent to the user who
+    # last modified the cron syntax in the workflow file.
+    # Trigger the workflow at 03:00(CST) every day.
+    - cron:  '00 19 * * *'
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build-wheels:
+    if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope')
+    runs-on: macos-10.15
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+
+    - name: Setup tmate session
+      if: false
+      uses: mxschmitt/action-tmate@v2
+
+    - name: Install Dependencies
+      run: |
+        pushd $(brew --repo homebrew/core)
+        # fixed protobuf version 3.17.3
+        git checkout 2b411d925849478163647594b32fd237828cf720
+        popd
+        ${GITHUB_WORKSPACE}/scripts/install_deps.sh --dev --vineyard_prefix /opt/vineyard --verbose
+
+    - name: Build Server Wheel
+      run: |
+        # source environment variable
+        source ~/.graphscope_env
+        echo ${CC}
+
+        # build graphscope server wheel
+        cd ${GITHUB_WORKSPACE}/k8s
+        sudo -E make graphscope-py3-package
+
+        # package
+        cd ${GITHUB_WORKSPACE}
+        tar -zcf graphscope.tar.gz coordinator/dist/wheelhouse/*.whl
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: wheel-macos-${{ github.sha }}
+        path: graphscope.tar.gz
+        retention-days: 5
+
+  build-client-wheels:
+    if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope')
+    runs-on: macos-10.15
+    strategy:
+      matrix:
+        python-version: ['3.7', '3.8', '3.9']
+
+    steps:
+    - uses: actions/checkout@v2.3.2
+      with:
+        submodules: true
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install Dependencies
+      run: |
+        pushd $(brew --repo homebrew/core)
+        # fixed protobuf version 3.17.3
+        git checkout 2b411d925849478163647594b32fd237828cf720
+        popd
+        ${GITHUB_WORKSPACE}/scripts/install_deps.sh --dev --verbose
+
+    - name: Build Client Wheels
+      run: |
+        python3 -c "import sys; print(sys.version)"
+        source ~/.graphscope_env
+
+        # build graphscope client wheel
+        cd ${GITHUB_WORKSPACE}/k8s
+        make graphscope-client-py3-package
+
+        # package
+        cd ${GITHUB_WORKSPACE}
+        tar -zcf client.tar.gz python/dist/
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: wheel-macos-${{ github.sha }}-${{ matrix.python-version }}
+        path: client.tar.gz
+        retention-days: 5
+
+  # Action gh-action-pypi-publish not support non-linux os.
+  publish-wheels:
+    if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope' }}
+    runs-on: ubuntu-20.04
+    needs: [build-wheels, build-client-wheels]
+    strategy:
+      matrix:
+        python-version: ['3.7', '3.8', '3.9']
+
+    steps:
+    - uses: actions/download-artifact@v2
+      with:
+        path: artifacts
+
+    - name: Prepare Wheels
+      env:
+        PYTHON: ${{ matrix.python-version }}
+      run: |
+        # move wheels into one floder to upload to PyPI
+        mkdir ${GITHUB_WORKSPACE}/upload_pypi
+
+        cd ${GITHUB_WORKSPACE}/artifacts
+        tar -zxf ./wheel-macos-${{ github.sha }}-${{ matrix.python-version }}/client.tar.gz
+        mv ${GITHUB_WORKSPACE}/artifacts/python/dist/wheelhouse/*.whl ${GITHUB_WORKSPACE}/upload_pypi/
+
+        if [ "$PYTHON" == "3.7" ]; then
+          tar -zxf ./wheel-macos-${{ github.sha }}/graphscope.tar.gz
+          mv ${GITHUB_WORKSPACE}/artifacts/coordinator/dist/wheelhouse/*.whl ${GITHUB_WORKSPACE}/upload_pypi/
+        fi
+
+    # We do this, since failures on test.pypi aren't that bad
+    - name: Publish to Test PyPI
+      # the limit of graphscope package in test.pypi is still 100MB, which is not enough.
+      if: false
+      uses: pypa/gh-action-pypi-publish@v1.4.2
+      with:
+        user: __token__
+        password: ${{ secrets.TEST_PYPI_PASSWORD }}
+        repository_url: https://test.pypi.org/legacy/
+        packages_dir: upload_pypi/
+
+    - name: Publish distribution to PyPI
+      uses: pypa/gh-action-pypi-publish@v1.4.2
+      with:
+        user: __token__
+        password: ${{ secrets.PYPI_PASSWORD }}
+        packages_dir: upload_pypi/
+
+  python-test:
+    if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
+    runs-on: macos-10.15
+    needs: [build-wheels, build-client-wheels]
+    strategy:
+      matrix:
+        python-version: ['3.7', '3.8', '3.9']
+
+    steps:
+    - uses: actions/download-artifact@v2
+      with:
+        path: artifacts
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Prepare Environment
+      run: |
+        cd ${GITHUB_WORKSPACE}/artifacts
+        # install graphscope-client
+        tar -zxf ./wheel-macos-${{ github.sha }}-${{ matrix.python-version }}/client.tar.gz
+        pushd python/dist/wheelhouse
+        for f in * ; do python3 -m pip install $f --user || true; done
+        popd
+        # install graphscope
+        tar -zxf ./wheel-macos-${{ github.sha }}/graphscope.tar.gz
+        pushd coordinator/dist/wheelhouse
+        python3 -m pip install ./*.whl --user
+        popd
+
+        # install tensorflow
+        python3 -m pip install pytest "tensorflow<=2.5.2" --user
+
+    - name: Run Minimum Test
+      env:
+        GS_TEST_DIR: ${{ github.workspace }}/gstest
+      run: |
+        export JAVA_HOME=$(/usr/libexec/java_home -v11)
+        export PATH=$JAVA_HOME/bin:$HOME/.local/bin:$PATH
+        python3 -c "import sys; print(sys.version)"
+        git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
+        python3 -m pytest -s -v $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/tests/minitest

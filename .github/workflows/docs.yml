@@ -1,0 +1,172 @@
+name: Docs
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v2
+      with:
+        submodules: true
+        fetch-depth: 0
+
+    - name: Setup Java11
+      uses: actions/setup-java@v2
+      with:
+         distribution: 'zulu'
+         java-version: '11'
+
+    - name: Cpp Format and Lint Check
+      run: |
+        # install clang-format
+        sudo curl -L https://github.com/muttleyxd/clang-tools-static-binaries/releases/download/master-22538c65/clang-format-8_linux-amd64 --output /usr/bin/clang-format
+        sudo chmod +x /usr/bin/clang-format
+
+        # run format
+        cd analytical_engine/
+        find ./apps ./benchmarks ./core ./frame ./misc ./test  -name "*.h" | xargs clang-format -i --style=file
+        find ./apps ./benchmarks ./core ./frame ./misc ./test  -name "*.cc" | xargs clang-format -i --style=file
+
+        # validate format
+        function prepend() { while read line; do echo "${1}${line}"; done; }
+
+        GIT_DIFF=$(git diff --ignore-submodules)
+        if [[ -n $GIT_DIFF ]]; then
+            echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+            echo "| clang-format failures found!"
+            echo "|"
+            echo "$GIT_DIFF" | prepend "| "
+            echo "|"
+            echo "| Run: "
+            echo "|"
+            echo "|    make gsa_clformat"
+            echo "|"
+            echo "| to fix this error."
+            echo "|"
+            echo "| Ensure you are working with clang-format-8, which can be obtained from"
+            echo "|"
+            echo "|    https://github.com/muttleyxd/clang-tools-static-binaries/releases"
+            echo "|"
+            echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+            exit -1
+        fi
+
+    - name: Java Format and Lint Check
+      run: |
+        wget https://github.com/google/google-java-format/releases/download/v1.13.0/google-java-format-1.13.0-all-deps.jar
+
+        files_to_format=$(git ls-files *.java)
+
+        # run formatter in-place
+        java -jar ${GITHUB_WORKSPACE}/google-java-format-1.13.0-all-deps.jar --aosp --skip-javadoc-formatting -i $files_to_format
+
+        # validate format
+        function prepend() { while read line; do echo "${1}${line}"; done; }
+
+        GIT_DIFF=$(git diff --ignore-submodules)
+        if [[ -n $GIT_DIFF ]]; then
+            echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+            echo "| google-java-format failures found!"
+            echo "|"
+            echo "$GIT_DIFF" | prepend "| "
+            echo "|"
+            echo "| Run: "
+            echo "|"
+            echo '|    java -jar google-java-format-1.13.0-all-deps.jar --aosp --skip-javadoc-formatting -i $(git ls-files **/*.java)'
+            echo "|"
+            echo "| to fix this error."
+            echo "|"
+            echo "| Ensure you are working with google-java-format-1.13.0, which can be obtained from"
+            echo "|"
+            echo "|    https://github.com/google/google-java-format/releases/download/v1.13.0/google-java-format-1.13.0-all-deps.jar"
+            echo "|"
+            echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+            exit -1
+        fi
+
+    - name: Python Format and Lint Check
+      run: |
+        echo "Checking formatting for $GITHUB_REPOSITORY"
+        pip3 install -r coordinator/requirements-dev.txt
+        pushd python
+        python3 -m isort --check --diff .
+        python3 -m black --check --diff .
+        python3 -m flake8 .
+        popd
+        pushd coordinator
+        python3 -m isort --check --diff .
+        python3 -m black --check --diff .
+        python3 -m flake8 .
+
+    - name: Generate Docs
+      shell: bash
+      run: |
+        # Install pip dependencies, build builtin gar, and generate proto stuffs.
+        sudo apt update
+        sudo apt install -y doxygen
+
+        # Install fastffi for Java sdk compilation
+        cd /tmp/
+        git clone https://github.com/alibaba/fastFFI.git
+        cd fastFFI
+        git checkout a166c6287f2efb938c27fb01b3d499932d484f9c
+        export PATH=${PATH}:${LLVM11_HOME}/bin
+        mvn clean install -DskipTests -Dmaven.antrun.skip=true --quiet
+
+        # generate a taged version
+        cd ${GITHUB_WORKSPACE}
+        make graphscope-docs
+
+        # generate a stable version
+        tag=$(git describe --exact-match --tags HEAD 2>/dev/null || true)
+        if [ ! -z "tag" ];
+        then
+          export TAG_VER=stable
+          make graphscope-docs
+        fi
+
+    - name: Upload Docs
+      if: ${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') }}
+      shell: bash
+      run: |
+        shopt -s extglob
+        rm google-java-format-1.13.0-all-deps.jar || true
+
+        git config user.email github-actions@github.com
+        git config user.name github-actions
+
+        tag=$(git describe --exact-match --tags HEAD 2>/dev/null || true)
+
+        git fetch origin gh-pages --no-recurse-submodules
+        git checkout gh-pages
+
+        cd docs/
+        rm -rf !(_build|latest|stable|v*)
+
+        if [ -d "_build/latest" ];
+        then
+            rm -rf latest
+            cp -R _build/latest/html ./latest
+        else
+            rm -rf latest
+            cp -R _build/${tag}/html ./latest
+
+            rm -rf ${tag}
+            cp -R _build/${tag}/html ./${tag}
+        fi
+
+        if [ -d "_build/stable" ];
+        then
+            cp -R _build/stable/html/* ./
+        fi
+
+        rm -rf _build/
+        rm -rf ../learning_engine/ || true
+        rm -rf ../python || true
+
+        git add -A
+        git commit --amend --no-edit -m "Generate latest docs on CI, from commit ${{ github.sha }}." --author "github-actions <github-actions@github.com>" -s --date="$(date -R)"
+        git push -f origin gh-pages
+
