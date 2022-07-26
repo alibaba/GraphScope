@@ -20,7 +20,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[cfg(feature = "with_v6d")]
-const NATIVE_DIR: &'static str = "native";
+const NATIVE_DIR: &'static str = "src/store_impl/v6d/native";
 
 #[cfg(feature = "with_v6d")]
 fn codegen_inplace() -> Result<(), Box<dyn std::error::Error>> {
