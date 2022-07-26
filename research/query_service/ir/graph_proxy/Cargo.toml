@@ -14,9 +14,8 @@ dyn_type = { path = "../../../dyn_type" }
 ir_common = {path = "../common"}
 pegasus = { path = "../../../engine/pegasus/pegasus" }
 pegasus_common = { path = "../../../engine/pegasus/common" }
-v6d_ffi = { path="../v6d_ffi" }
 
 [features]
 default = []
 proto_inplace = ["ir_common/proto_inplace"]
-with_v6d = ["v6d_ffi/with_v6d"]
+with_v6d = ["global_query/with_v6d"]

@@ -1,4 +1,4 @@
-use crate::read_ffi::{
+use crate::store_impl::v6d::read_ffi::{
     FFIState, FfiLabelId as LabelId, FfiVertexId as VertexId, PropertyId, PropertyType, SchemaHandle,
     WriteNativeProperty,
 };

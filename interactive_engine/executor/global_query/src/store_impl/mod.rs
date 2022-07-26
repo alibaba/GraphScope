@@ -14,3 +14,4 @@
 //! limitations under the License.
 
 pub mod groot;
+pub mod v6d;

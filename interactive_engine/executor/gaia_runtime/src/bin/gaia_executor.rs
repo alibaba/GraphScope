@@ -18,7 +18,7 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 
 use gaia_runtime::error::{StartServerError, StartServerResult};
-use global_query::GraphPartitionManager;
+use global_query::{FFIGraphStore, GraphPartitionManager};
 use log::info;
 use pegasus::api::{Fold, Sink};
 use pegasus::{Configuration, JobConf, ServerConf};
@@ -26,7 +26,6 @@ use pegasus_network::config::NetworkConfig;
 use pegasus_network::config::ServerAddr;
 use pegasus_server::rpc::{start_rpc_server, RPCServerConfig, ServiceStartListener};
 use runtime_integration::{InitializeJobAssembly, QueryVineyard};
-use v6d_ffi::read_ffi::FFIGraphStore;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {

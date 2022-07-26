@@ -1,7 +1,7 @@
 use std::ffi::{CStr, CString};
 use std::sync::Arc;
 
-use global_query::store_api::*;
+use crate::store_api::*;
 use itertools::Itertools;
 pub type GraphId = i64;
 type GetVertexIterator = *const ::libc::c_void;
@@ -15,11 +15,11 @@ type InEdgeIterator = *const ::libc::c_void;
 type GetAllEdgesIterator = *const ::libc::c_void;
 
 // these are for path directly to GAIA
+use crate::store_api::prelude::Property;
+use crate::{GlobalGraphQuery, GraphPartitionManager, Schema};
 use dyn_type::object::Primitives;
 use dyn_type::object::RawType;
 use dyn_type::Object;
-use global_query::store_api::prelude::Property;
-use global_query::{GlobalGraphQuery, GraphPartitionManager, Schema};
 use ir_common::generated::common as common_pb;
 use ir_common::KeyId;
 
