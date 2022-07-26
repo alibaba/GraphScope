@@ -14,7 +14,6 @@ env:
 
 jobs:
   release-gss-image:
-    # See issue: https://github.com/alibaba/GraphScope/issues/1645
     if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope' }}
     runs-on: ubuntu-20.04
     steps:
