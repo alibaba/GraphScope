@@ -3,8 +3,8 @@
 members = [
     "global_query",
     "store",
-    "ffi",
-    "gaia_runtime"
+    "integrated_groot",
+    "integrated_v6d"
 ]
 
 [profile.release]
