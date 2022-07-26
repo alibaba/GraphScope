@@ -2373,7 +2373,7 @@ mod test {
 
     #[test]
     fn column_maintain_groupby_case2() {
-        // groupBy contains tagging a keys that is further a vertex
+        // groupBy contains tagging a key that is further a vertex
         let mut plan = LogicalPlan::default();
         // g.V().groupCount().select(values)
 
@@ -2408,6 +2408,62 @@ mod test {
         let project = pb::Project {
             mappings: vec![pb::project::ExprAlias {
                 expr: str_to_expr_pb("@~values_2_0".to_string()).ok(),
+                alias: None,
+            }],
+            is_append: true,
+        };
+        plan.append_operator_as_node(project.into(), vec![1])
+            .unwrap();
+    }
+
+    #[test]
+    fn column_maintain_groupby_case3() {
+        // groupBy contains tagging a value
+        let mut plan = LogicalPlan::default();
+        // g.V().group().by(values('name').as('a')).select('a')
+        // g.V()
+        let scan = pb::Scan {
+            scan_opt: 0,
+            alias: None,
+            params: Some(query_params(vec![], vec![])),
+            idx_predicate: None,
+        };
+        plan.append_operator_as_node(scan.into(), vec![])
+            .unwrap();
+        assert_eq!(plan.meta.get_curr_referred_nodes(), &vec![0]);
+
+        let group = pb::GroupBy {
+            mappings: vec![pb::group_by::KeyAlias {
+                key: Some(common_pb::Variable {
+                    tag: None,
+                    property: Some(common_pb::Property {
+                        item: Some(common_pb::property::Item::Key("name".into())),
+                    }),
+                }),
+                alias: Some("a".into()),
+            }],
+            functions: vec![pb::group_by::AggFunc {
+                vars: vec![],
+                aggregate: 5,
+                alias: Some("~values_0_1".into()),
+            }],
+        };
+        plan.append_operator_as_node(group.into(), vec![0])
+            .unwrap();
+        let keys_tag_id = plan.meta.get_tag_id("a").unwrap();
+        assert_eq!(plan.meta.get_tag_nodes(keys_tag_id), &vec![1]);
+        assert_eq!(plan.meta.get_curr_referred_nodes(), &vec![0]);
+        assert_eq!(
+            plan.meta
+                .get_nodes_meta(&[0])
+                .unwrap()
+                .get_columns(),
+            vec!["name".into()]
+        );
+
+        let project = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: str_to_expr_pb("@a".to_string()).ok(),
                 alias: None,
             }],
             is_append: true,
