@@ -1233,12 +1233,14 @@ impl AsLogical for pb::Sink {
 impl AsLogical for pb::Apply {
     fn preprocess(&mut self, _meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
         let curr_node = plan_meta.get_curr_node();
-        if self.join_kind != 4 && self.join_kind != 5 {
-            plan_meta.refer_to_nodes(curr_node, vec![curr_node]);
-        }
         if let Some(alias) = self.alias.as_mut() {
             let tag_id = get_or_set_tag_id(alias, plan_meta)?;
             plan_meta.set_tag_nodes(tag_id, vec![plan_meta.get_curr_node()]);
+        } else {
+            if self.join_kind != 4 && self.join_kind != 5 {
+                // if not semi_join, not anti_join or the alias has not been set
+                plan_meta.refer_to_nodes(curr_node, vec![curr_node]);
+            }
         }
         Ok(())
     }
@@ -2526,9 +2528,37 @@ mod test {
         };
         plan.append_operator_as_node(apply.into(), vec![0])
             .unwrap();
-        assert_eq!(plan.meta.get_curr_referred_nodes(), &vec![3]);
+        // do not change the head of current node, given that alias is given
+        assert_eq!(plan.meta.get_curr_referred_nodes(), &vec![0]);
         // the tag "~apply" maps to id 1
         assert_eq!(plan.meta.get_tag_nodes(1), &vec![3]);
+
+        let group = pb::GroupBy {
+            mappings: vec![pb::group_by::KeyAlias {
+                key: Some(common_pb::Variable { tag: Some("~apply".into()), property: None }),
+                alias: Some("~apply".into()),
+            }],
+            functions: vec![pb::group_by::AggFunc {
+                vars: vec![common_pb::Variable {
+                    tag: None,
+                    property: Some(common_pb::Property {
+                        item: Some(common_pb::property::Item::Key("name".into())),
+                    }),
+                }],
+                aggregate: 5,
+                alias: Some("~values_0_1".into()),
+            }],
+        };
+        plan.append_operator_as_node(group.into(), vec![3])
+            .unwrap();
+        assert_eq!(plan.meta.get_curr_referred_nodes(), &vec![0]);
+        assert_eq!(
+            plan.meta
+                .get_node_meta(0)
+                .unwrap()
+                .get_columns(),
+            vec!["name".into()]
+        )
     }
 
     #[test]
