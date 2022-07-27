@@ -14,22 +14,17 @@ else
     SUFFIX="so"
 fi
 
-for dir in `ls -F | grep "/$"`; do
-  cd $dir;
+cd assembly;
+if [ "$MODE" = "debug" ]; then
+  ../exec.sh cargo build --workspace
+elif [ "$MODE" = "release" ]; then
+  ../exec.sh cargo build --workspace --release
+else
+  exit 1
+fi
 
-  if [ "$MODE" = "debug" ]; then
-    ../exec.sh cargo build --workspace
-  elif [ "$MODE" = "release" ]; then
-    ../exec.sh cargo build --workspace --release
-  else
-    exit 1
-  fi
+rm -rf $(pwd)/target/${MODE}/build
+rm -rf $(pwd)/target/${MODE}/deps
 
-  rm -rf $(pwd)/target/${MODE}/build
-  rm -rf $(pwd)/target/${MODE}/deps
-
-  strip $(pwd)/target/${MODE}/libmaxgraph_ffi.${SUFFIX}
-  ln -sf $(pwd)/target/${MODE}/libmaxgraph_ffi.${SUFFIX} ./target/libmaxgraph_ffi.${SUFFIX}
-
-  cd ..;
-done
+strip $(pwd)/target/${MODE}/libmaxgraph_ffi.${SUFFIX}
+ln -sf $(pwd)/target/${MODE}/libmaxgraph_ffi.${SUFFIX} ./target/libmaxgraph_ffi.${SUFFIX}
