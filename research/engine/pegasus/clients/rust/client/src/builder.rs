@@ -145,7 +145,9 @@ impl Plan {
         self
     }
 
-    pub fn iterate_emit<F>(&mut self, times: u32, mut func: F) -> &mut Self
+    pub fn iterate_emit<F>(
+        &mut self, emit_kind: pb::iteration_emit::EmitKind, times: u32, mut func: F,
+    ) -> &mut Self
     where
         F: FnMut(&mut Plan),
     {
@@ -155,6 +157,7 @@ impl Plan {
             max_iters: times,
             until: None,
             body: Some(pb::TaskPlan { plan: sub_plan.take() }),
+            emit_kind: unsafe { std::mem::transmute(emit_kind) },
         };
         let op = pb::OperatorDef { op_kind: Some(pb::operator_def::OpKind::IterateEmit(iteration_emit)) };
         self.plan.push(op);
@@ -178,7 +181,9 @@ impl Plan {
         self
     }
 
-    pub fn iterate_emit_until<F>(&mut self, times: u32, until: BinaryResource, mut func: F) -> &mut Self
+    pub fn iterate_emit_until<F>(
+        &mut self, emit_kind: pb::iteration_emit::EmitKind, times: u32, until: BinaryResource, mut func: F,
+    ) -> &mut Self
     where
         F: FnMut(&mut Plan),
     {
@@ -189,6 +194,7 @@ impl Plan {
             max_iters: times,
             until: Some(filter),
             body: Some(pb::TaskPlan { plan: sub_plan.take() }),
+            emit_kind: unsafe { std::mem::transmute(emit_kind) },
         };
         let op = pb::OperatorDef { op_kind: Some(pb::operator_def::OpKind::IterateEmit(iteration_emit)) };
         self.plan.push(op);
@@ -469,14 +475,16 @@ impl JobBuilder {
         FL: FnMut(&mut Plan),
         FR: FnMut(&mut Plan),
     {
-        self.plan.join_func(join_kind, left_task, right_task, res);
+        self.plan
+            .join_func(join_kind, left_task, right_task, res);
         self
     }
 
     pub fn join(
         &mut self, join_kind: pb::join::JoinKind, left_plan: Plan, right_plan: Plan, res: BinaryResource,
     ) -> &mut Self {
-        self.plan.join(join_kind, left_plan, right_plan, res);
+        self.plan
+            .join(join_kind, left_plan, right_plan, res);
         self
     }
 
@@ -585,7 +593,9 @@ mod test {
             .map(vec![3u8; 32])
             .limit(1)
             .iterate(3, |start| {
-                start.repartition(vec![4u8; 32]).map(vec![5u8; 32]);
+                start
+                    .repartition(vec![4u8; 32])
+                    .map(vec![5u8; 32]);
             })
             .sink(vec![6u8; 32]);
         let plan_len = builder.plan.len();

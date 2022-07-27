@@ -63,31 +63,8 @@ if(BUILD_SHARED_LIBS)
     install_vineyard_target(v6d_native_store)
 endif()
 
-option(BUILD_NATIVE_STORE_TEST "Build native store unittest" OFF)
-
-if (BUILD_NATIVE_STORE_TEST)
-    if(${CMAKE_VERSION} VERSION_LESS "3.14")
-        message(SEND_ERROR
-                "Building global store ffi unittest requires minimum cmake version 3.14. "
-                "The current cmake version is detected as ${CMAKE_VERSION}, and "
-                "global store ffi unittest is not built as a result.")
-    else()
-        include(FetchContent)
-        FetchContent_Declare(
-                googletest
-                GIT_REPOSITORY https://github.com/google/googletest.git
-                GIT_TAG        703bd9caab50b139428cea1aaff9974ebee5742e # release-1.10.0
-        )
-        FetchContent_MakeAvailable(googletest)
-        enable_testing()
-        find_package(Boost REQUIRED COMPONENTS system filesystem)
-
-        add_executable(vineyard_store_test test/vineyard_store_test_main.cc test/vineyard_store_test_main.cc test/vineyard_store_test_env.h test/vineyard_store_test_env.cc test/global_store_ffi_test.cc test/graph_schema_test.cc)
-        target_include_directories(vineyard_store_test
-                PUBLIC ${Boost_INCLUDE_DIRS}
-                PRIVATE ${VINEYARD_INCLUDE_DIRS})
-        target_link_libraries(vineyard_store_test gtest gmock v6d_native_store Boost::system Boost::filesystem ${VINEYARD_LIBRARIES})
-    endif()
-endif()
-
+add_executable(vineyard_htap_loader htap_loader.cc)
+target_include_directories(vineyard_htap_loader PRIVATE ${VINEYARD_INCLUDE_DIRS})
+target_link_libraries(vineyard_htap_loader v6d_native_store ${VINEYARD_LIBRARIES} Threads::Threads)
+install_vineyard_target(vineyard_htap_loader)
 

@@ -41,10 +41,10 @@ jobs:
 
         cd ${GITHUB_WORKSPACE}/k8s
         # build graphscope wheels
-        sudo -E make graphscope-py3-package
+        sudo -E -u graphscope make graphscope-py3-package
 
         # build client wheels
-        sudo -E make graphscope-client-py3-package
+        sudo -E -u graphscope make graphscope-client-py3-package
 
         # package
         cd ${GITHUB_WORKSPACE}

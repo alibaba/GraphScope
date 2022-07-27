@@ -657,11 +657,8 @@ impl PlanMeta {
 }
 
 impl PlanMeta {
-    pub fn insert_tag_nodes(&mut self, tag: TagId, nodes: Vec<NodeId>) {
-        self.tag_nodes
-            .entry(tag)
-            .or_default()
-            .extend(nodes.into_iter());
+    pub fn set_tag_nodes(&mut self, tag: TagId, nodes: Vec<NodeId>) {
+        *self.tag_nodes.entry(tag).or_default() = nodes;
     }
 
     pub fn get_tag_nodes(&self, tag: TagId) -> &[NodeId] {

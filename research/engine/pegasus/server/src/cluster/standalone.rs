@@ -2,6 +2,7 @@ use std::net::SocketAddr;
 
 use crate::job::JobAssembly;
 use crate::rpc::{RPCServerConfig, ServiceStartListener};
+use pegasus::Data;
 
 struct StandaloneServiceListener;
 
@@ -17,11 +18,11 @@ impl ServiceStartListener for StandaloneServiceListener {
     }
 }
 
-pub async fn start<P>(
+pub async fn start<I: Data, P>(
     rpc_config: RPCServerConfig, server_config: pegasus::Configuration, assemble: P,
 ) -> Result<(), Box<dyn std::error::Error>>
 where
-    P: JobAssembly,
+    P: JobAssembly<I>,
 {
     let detect = if let Some(net_conf) = server_config.network_config() {
         net_conf.get_servers()?.unwrap_or(vec![])
