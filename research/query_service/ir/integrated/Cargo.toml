@@ -23,7 +23,7 @@ runtime = {path="../runtime"}
 graph_proxy = {path = "../graph_proxy"}
 graph_store = {path = "../../../graph_store"}
 dyn_type = {path = "../../../dyn_type"}
-global_query = {path = "../../../../interactive_engine/executor/global_query"}
+global_query = {path = "../../../../interactive_engine/executor/store/global_query"}
 
 [features]
 default = []

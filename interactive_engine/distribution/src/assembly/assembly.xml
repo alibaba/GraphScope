@@ -7,7 +7,7 @@
   </formats>
   <fileSets>
     <fileSet>
-      <directory>${project.parent.basedir}/executor/target</directory>
+      <directory>${project.parent.basedir}/executor/assembly/target</directory>
       <includes>
         <include>libmaxgraph_ffi*</include>
       </includes>

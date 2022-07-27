@@ -1,10 +1,8 @@
 [workspace]
 
 members = [
-    "global_query",
-    "store",
-    "integrated_groot",
-    "integrated_v6d"
+    "groot",
+    "v6d"
 ]
 
 [profile.release]
