@@ -39,13 +39,10 @@ public class DataBuildMapperOdps extends MapperBase {
 
     private GraphSchema graphSchema;
     private DataEncoder dataEncoder;
-    private String separator;
     private Map<String, ColumnMappingInfo> fileToColumnMappingInfo;
 
     private ObjectMapper objectMapper;
     private boolean ldbcCustomize;
-    private boolean skipHeader;
-
     private Record outKey;
     private Record outVal;
 
@@ -55,7 +52,6 @@ public class DataBuildMapperOdps extends MapperBase {
         this.outVal = context.createMapOutputValueRecord();
 
         this.objectMapper = new ObjectMapper();
-        this.separator = context.getJobConf().get(OfflineBuildOdps.SEPARATOR);
         String schemaJson = context.getJobConf().get(OfflineBuildOdps.SCHEMA_JSON);
         this.graphSchema = GraphSchemaMapper.parseFromJson(schemaJson).toGraphSchema();
         this.dataEncoder = new DataEncoder(this.graphSchema);
@@ -65,17 +61,15 @@ public class DataBuildMapperOdps extends MapperBase {
                         columnMappingsJson, new TypeReference<Map<String, ColumnMappingInfo>>() {});
         this.ldbcCustomize =
                 context.getJobConf().getBoolean(OfflineBuildOdps.LDBC_CUSTOMIZE, false);
-        this.skipHeader = context.getJobConf().getBoolean(OfflineBuildOdps.SKIP_HEADER, true);
         DST_FMT.setTimeZone(TimeZone.getTimeZone("GMT+00:00"));
     }
 
     @Override
     public void map(long recordNum, Record record, TaskContext context) throws IOException {
-
         String tableName = context.getInputTableInfo().getTableName();
         ColumnMappingInfo columnMappingInfo = this.fileToColumnMappingInfo.get(tableName);
         if (columnMappingInfo == null) {
-            System.out.println("ignore [" + tableName + "]");
+            System.out.println("Mapper: ignore [" + tableName + "]");
             return;
         }
 
@@ -176,7 +170,7 @@ public class DataBuildMapperOdps extends MapperBase {
                         switch (name) {
                             case "creationDate":
                             case "joinDate":
-                                val = converteDate(val);
+                                val = convertDate(val);
                                 break;
                             case "birthday":
                                 val = val.replace("-", "");
@@ -191,7 +185,7 @@ public class DataBuildMapperOdps extends MapperBase {
         return operationProperties;
     }
 
-    public static String converteDate(String input) {
+    public static String convertDate(String input) {
         try {
             return DST_FMT.format(SRC_FMT.parse(input));
         } catch (ParseException e) {

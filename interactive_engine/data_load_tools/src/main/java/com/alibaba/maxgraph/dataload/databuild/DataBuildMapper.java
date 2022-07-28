@@ -79,7 +79,7 @@ public class DataBuildMapper extends Mapper<LongWritable, Text, BytesWritable, B
         String fileName = fullPath.substring(fullPath.lastIndexOf('/') + 1);
         ColumnMappingInfo columnMappingInfo = this.fileToColumnMappingInfo.get(fileName);
         if (columnMappingInfo == null) {
-            logger.warn("ignore [" + fileName + "]");
+            logger.warn("Mapper: ignore [" + fileName + "]");
             return;
         }
 
@@ -175,7 +175,7 @@ public class DataBuildMapper extends Mapper<LongWritable, Text, BytesWritable, B
                         switch (name) {
                             case "creationDate":
                             case "joinDate":
-                                val = converteDate(val);
+                                val = convertDate(val);
                                 break;
                             case "birthday":
                                 val = val.replace("-", "");
@@ -188,7 +188,7 @@ public class DataBuildMapper extends Mapper<LongWritable, Text, BytesWritable, B
         return operationProperties;
     }
 
-    public static String converteDate(String input) {
+    public static String convertDate(String input) {
         try {
             return DST_FMT.format(SRC_FMT.parse(input));
         } catch (ParseException e) {
