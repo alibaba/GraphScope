@@ -4,14 +4,14 @@ version = "0.1.0"
 edition = "2018"
 
 [dependencies]
-dyn_type = {path = "../../../dyn_type"}
+dyn_type = {path = "../../common/dyn_type"}
 indexmap = "1.7.0"
 ir_common = {path = "../common"}
 lazy_static = "1.3.0"
 log = "0.4"
-pegasus_common = { path = "../../../engine/pegasus/common" }
-pegasus = { path = "../../../engine/pegasus/pegasus" }
-pegasus_server = { path = "../../../engine/pegasus/server" }
+pegasus_common = { path = "../../engine/pegasus/common" }
+pegasus = { path = "../../engine/pegasus/pegasus" }
+pegasus_server = { path = "../../engine/pegasus/server" }
 graph_proxy = { path="../graph_proxy" }
 prost = "0.9"
 vec_map = "0.8.2"
