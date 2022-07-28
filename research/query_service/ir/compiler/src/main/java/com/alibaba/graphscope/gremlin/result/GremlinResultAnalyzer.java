@@ -43,7 +43,12 @@ public class GremlinResultAnalyzer {
                     || Utils.equalClass(step, EdgeOtherVertexStep.class)
                     || Utils.equalClass(step, PathExpandStep.class)) {
                 parserType = GremlinResultParserFactory.GRAPH_ELEMENT;
-            } else if (Utils.equalClass(step, CountGlobalStep.class)) {
+            } else if (Utils.equalClass(step, CountGlobalStep.class)
+                    || Utils.equalClass(step, SumGlobalStep.class)
+                    || Utils.equalClass(step, MinGlobalStep.class)
+                    || Utils.equalClass(step, MaxGlobalStep.class)
+                    || Utils.equalClass(step, MeanGlobalStep.class)
+                    || Utils.equalClass(step, FoldStep.class)) {
                 parserType = GremlinResultParserFactory.SINGLE_VALUE;
             } else if (Utils.equalClass(step, SelectOneStep.class)
                     || Utils.equalClass(step, SelectStep.class)
