@@ -68,7 +68,7 @@ class Dag(object):
         return dag_def
 
     def to_json(self):
-        return dict({k: op.to_json() for k, op in self._ops_by_key})
+        return dict({k: op.to_json() for k, op in self._ops_by_key.items()})
 
     def extract_subdag_for(self, ops):
         """Extract all nodes included the path that can reach the target ops."""
