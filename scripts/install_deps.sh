@@ -64,7 +64,7 @@ cat <<END
     --verbose            Print the debug logging information
     --k8s                Install the dependencies for running GraphScope on k8s locally
     --dev                Install the dependencies for build GraphScope on local
-    --grape_jdk          Install the dependecies for GraphScope grape jdk on local
+    --grape-jdk          Install the dependecies for GraphScope grape jdk on local
     --cn                 Use tsinghua mirror for brew when install dependencies on macOS
 END
 }
@@ -933,7 +933,7 @@ install_deps_dev() {
       --verbose)         VERBOSE=true; readonly VERBOSE; ;;
       --cn)              CN_MIRROR=true; readonly CN_MIRROR; ;;
       --vineyard_prefix) DEPS_PREFIX=$1; readonly DEPS_PREFIX; shift ;;
-      --grape_jdk)       GRAPE_JDK=true; readonly GRAPE_JDK; ;;
+      --grape-jdk)       GRAPE_JDK=true; readonly GRAPE_JDK; ;;
       *)
         echo "unrecognized option '${arg}'"
         usage; exit;;
@@ -1035,7 +1035,7 @@ while test $# -ne 0; do
     --verbose)        VERBOSE=true; readonly VERBOSE; ;;
     --cn)             CN_MIRROR=true; readonly CN_MIRROR; ;;
     --dev) install_deps_dev "$@"; exit;;
-    --grape_jdk) install_fastFFI "$@"; exit;;
+    --grape-jdk) install_fastFFI "$@"; exit;;
     --k8s) install_deps_k8s "$@"; exit;;
     *)
       echo "unrecognized option '${arg}'"
