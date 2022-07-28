@@ -68,7 +68,6 @@ traversalMethod
     | traversalMethod_group   // group()
     | traversalMethod_groupCount // groupCount()
     | traversalMethod_values    // values()
-    | traversalMethod_count // count()
     | traversalMethod_is    // is()
     | traversalMethod_where // where()
     | traversalMethod_inV   // inV()
@@ -80,6 +79,7 @@ traversalMethod
     | traversalMethod_match // match()
     | traversalMethod_subgraph // subgraph()
     | traversalMethod_bothV // bothV()
+    | traversalMethod_aggregate_func
     | traversalMethod_hasNot // hasNot()
     ;
 
@@ -267,14 +267,28 @@ traversalMethod_group_keyby
 // group().by(...).by(fold().as("value"))
 // group().by(...).by(count())
 // group().by(...).by(count().as("value"))
+// group().by(...).by("name") = group().by(...).by(values("name").fold())
+// group().by(...).by(sum()/min()/max()/mean()/fold())
+// group().by(...).by(select("a").count()/sum()/min()/max()/mean()/fold())
+// group().by(...).by(select("a").by("name").count()/sum()/min()/max()/mean()/fold())
+// group().by(...).by(select("a").values("name").count()/sum()/min()/max()/mean()/fold())
+// group().by(...).by(dedup().count()) = countDistinct
+// group().by(...).by(dedup().fold()) = toSet
 traversalMethod_group_valueby
     : 'by' LPAREN RPAREN
-    | 'by' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_aggregate_func (DOT traversalMethod_as)? RPAREN
+    | 'by' LPAREN stringLiteral RPAREN
+    | 'by' LPAREN (ANON_TRAVERSAL_ROOT DOT)? (traversalMethod_select DOT)? (traversalMethod_values DOT)? traversalMethod_aggregate_func (DOT traversalMethod_as)? RPAREN
+    | 'by' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_dedup DOT traversalMethod_count (DOT traversalMethod_as)? RPAREN
+    | 'by' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_dedup DOT traversalMethod_fold (DOT traversalMethod_as)? RPAREN
     ;
 
 traversalMethod_aggregate_func
     : traversalMethod_count
     | traversalMethod_fold
+    | traversalMethod_sum
+    | traversalMethod_min
+    | traversalMethod_max
+    | traversalMethod_mean
     ;
 
 // count in global scope
@@ -291,6 +305,26 @@ traversalMethod_values
 // fold()
 traversalMethod_fold
 	: 'fold' LPAREN RPAREN
+	;
+
+// sum in global scope
+traversalMethod_sum
+	: 'sum' LPAREN RPAREN
+	;
+
+// min in global scope
+traversalMethod_min
+	: 'min' LPAREN RPAREN
+	;
+
+// max in global scope
+traversalMethod_max
+	: 'max' LPAREN RPAREN
+	;
+
+// mean in global scope
+traversalMethod_mean
+	: 'mean' LPAREN RPAREN
 	;
 
 // is(27)

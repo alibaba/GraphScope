@@ -32,7 +32,7 @@ import org.junit.Test;
 
 import java.util.Collections;
 
-public class CountStepTest {
+public class AggregateStepTest {
     private Graph graph = TinkerFactory.createModern();
     private GraphTraversalSource g = graph.traversal();
 
@@ -40,7 +40,7 @@ public class CountStepTest {
     public void g_V_count_test() {
         Traversal traversal = g.V().count();
         Step step = traversal.asAdmin().getEndStep();
-        GroupOp op = (GroupOp) StepTransformFactory.COUNT_STEP.apply(step);
+        GroupOp op = (GroupOp) StepTransformFactory.AGGREGATE_STEP.apply(step);
 
         Assert.assertEquals(Collections.emptyList(), op.getGroupByKeys().get().applyArg());
         ArgAggFn expectedValue =
@@ -53,10 +53,24 @@ public class CountStepTest {
     public void g_V_count_as_test() {
         Traversal traversal = g.V().count().as("a");
         Step step = traversal.asAdmin().getEndStep();
-        GroupOp op = (GroupOp) StepTransformFactory.COUNT_STEP.apply(step);
+        GroupOp op = (GroupOp) StepTransformFactory.AGGREGATE_STEP.apply(step);
 
         Assert.assertEquals(Collections.emptyList(), op.getGroupByKeys().get().applyArg());
         ArgAggFn expectedValue = new ArgAggFn(FfiAggOpt.Count, ArgUtils.asFfiAlias("a", true));
+        Assert.assertEquals(
+                Collections.singletonList(expectedValue), op.getGroupByValues().get().applyArg());
+    }
+
+    // the same with min/max/mean/fold
+    @Test
+    public void g_V_values_sum_test() {
+        Traversal traversal = g.V().values("age").sum();
+        Step step = traversal.asAdmin().getEndStep();
+        GroupOp op = (GroupOp) StepTransformFactory.AGGREGATE_STEP.apply(step);
+
+        Assert.assertEquals(Collections.emptyList(), op.getGroupByKeys().get().applyArg());
+        ArgAggFn expectedValue =
+                new ArgAggFn(FfiAggOpt.Sum, ArgUtils.asFfiAlias("~values_2_0", false));
         Assert.assertEquals(
                 Collections.singletonList(expectedValue), op.getGroupByValues().get().applyArg());
     }

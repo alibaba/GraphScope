@@ -65,13 +65,17 @@ public class InterOpCollectionBuilder {
                 opList.add(StepTransformFactory.HAS_STEP.apply(step));
             } else if (Utils.equalClass(step, RangeGlobalStep.class)) {
                 opList.add(StepTransformFactory.LIMIT_STEP.apply(step));
-            } else if (Utils.equalClass(step, PropertyMapStep.class)) {
-                opList.add(StepTransformFactory.VALUE_MAP_STEP.apply(step));
             } else if (Utils.equalClass(step, DedupGlobalStep.class)) {
                 opList.add(StepTransformFactory.DEDUP_STEP.apply(step));
-            } else if (Utils.equalClass(step, CountGlobalStep.class)) {
-                opList.add(StepTransformFactory.COUNT_STEP.apply(step));
-            } else if (Utils.equalClass(step, PropertiesStep.class)) {
+            } else if (Utils.equalClass(step, CountGlobalStep.class)
+                    || Utils.equalClass(step, SumGlobalStep.class)
+                    || Utils.equalClass(step, MaxGlobalStep.class)
+                    || Utils.equalClass(step, MinGlobalStep.class)
+                    || Utils.equalClass(step, FoldStep.class)
+                    || Utils.equalClass(step, MeanGlobalStep.class)) {
+                opList.add(StepTransformFactory.AGGREGATE_STEP.apply(step));
+            } else if (Utils.equalClass(step, PropertiesStep.class)
+                    || Utils.equalClass(step, PropertyMapStep.class)) {
                 opList.add(StepTransformFactory.VALUES_STEP.apply(step));
             } else if (Utils.equalClass(step, IsStep.class)) {
                 opList.add(StepTransformFactory.IS_STEP.apply(step));
