@@ -6,18 +6,14 @@ on:
     branches:
       - main
     paths:
-      - 'research/**'
       - 'interactive_engine/**'
       - '.github/workflows/gaia.yml'
-      - '!research/**.md'
   pull_request:
     branches:
       - main
     paths:
-      - 'research/**'
       - 'interactive_engine/**'
       - '.github/workflows/gaia.yml'
-      - '!research/**.md'
 
 jobs:
   gaia-test:
@@ -64,7 +60,7 @@ jobs:
     - name: Build Ir on Experimental Store
       run: |
         source ${HOME}/.bashrc
-        cd ${GITHUB_WORKSPACE}/research/query_service/ir/compiler
+        cd ${GITHUB_WORKSPACE}/interactive_engine/executor/ir/compiler
         make build
 
     - name: Build Ir on Vineyard Store
@@ -83,12 +79,12 @@ jobs:
     - name: Ir Unit Test
       run: |
         source ${HOME}/.bashrc
-        cd ${GITHUB_WORKSPACE}/research/query_service/ir/compiler && make test
+        cd ${GITHUB_WORKSPACE}/interactive_engine/executor/ir/compiler && make test
 
     - name: Ir Integration Test on Experimental Store
       run: |
         source ${HOME}/.bashrc
-        cd ${GITHUB_WORKSPACE}/research/query_service/ir/compiler && ./ir_exprimental_ci.sh
+        cd ${GITHUB_WORKSPACE}/interactive_engine/executor/ir/compiler && ./ir_exprimental_ci.sh
 
     - name: Upload GIE log
       if: always()

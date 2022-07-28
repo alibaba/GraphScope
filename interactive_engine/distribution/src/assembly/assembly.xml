@@ -14,7 +14,7 @@
       <outputDirectory>native</outputDirectory>
     </fileSet>
     <fileSet>
-      <directory>${project.parent.basedir}/../research/query_service/ir/target/release</directory>
+      <directory>${project.parent.basedir}/executor/ir/target/release</directory>
       <includes>
         <include>libir_core*</include>
       </includes>

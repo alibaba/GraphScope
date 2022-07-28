@@ -23,7 +23,7 @@
     <module>tests</module>
     <module>distribution</module>
     <module>executor/engine/pegasus/clients/java/client</module>
-    <module>../research/query_service/ir/compiler</module>
+    <module>executor/ir/compiler</module>
     <module>frontend</module>
   </modules>
 
