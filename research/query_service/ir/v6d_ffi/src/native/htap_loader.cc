@@ -21,6 +21,8 @@
 #include "glog/logging.h"
 
 #include "vineyard/client/client.h"
+#include "vineyard/common/util/functions.h"
+#include "vineyard/common/util/json.h"
 
 #include "vineyard/graph/fragment/arrow_fragment.h"
 #include "vineyard/graph/fragment/arrow_fragment_group.h"
@@ -28,28 +30,104 @@
 
 #include "htap_ds_impl.h"
 
+struct htap_loader_options {
+  int edge_label_num;
+  int vertex_label_num;
+  std::vector<std::string> efiles;
+  std::vector<std::string> vfiles;
+  int directed;
+  int generate_eid;
+};
+
+namespace detail {
+bool parse_options_from_args(struct htap_loader_options &options, int current_index, int argc, char **argv) {
+  options.edge_label_num = atoi(argv[current_index++]);
+  for (int i = 0; i < options.edge_label_num; ++i) {
+    options.efiles.push_back(argv[current_index++]);
+  }
+
+  options.vertex_label_num = atoi(argv[current_index++]);
+  for (int i = 0; i < options.vertex_label_num; ++i) {
+    options.vfiles.push_back(argv[current_index++]);
+  }
+
+  if (argc > current_index) {
+    options.directed = atoi(argv[current_index++]);
+  }
+  if (argc > current_index) {
+    options.generate_eid = atoi(argv[current_index++]);
+  }
+  return true;
+}
+
+bool parse_options_from_config_json(struct htap_loader_options &options, std::string const &config_json) {
+  std::ifstream config_file(config_json);
+  std::string config_json_content((std::istreambuf_iterator<char>(config_file)),
+                                    std::istreambuf_iterator<char>());
+  vineyard::json config = vineyard::json::parse(config_json_content);
+  if (config.contains("vertices")) {
+    for (auto const &item: config["vertices"]) {
+      auto vfile = vineyard::ExpandEnvironmentVariables(item["data_path"].get<std::string>())
+                 + "#label=" + item["label"].get<std::string>();
+      if (item.contains("options")) {
+        vfile += "#" + item["options"].get<std::string>();
+      }
+      options.vfiles.push_back(vfile);
+    }
+    options.vertex_label_num = options.vfiles.size();
+  }
+  if (config.contains("edges")) {
+    for (auto const &item: config["edges"]) {
+      auto efile = vineyard::ExpandEnvironmentVariables(item["data_path"].get<std::string>())
+                 + "#label=" + item["label"].get<std::string>()
+                 + "#src_label=" + item["src_label"].get<std::string>()
+                 + "#dst_label=" + item["dst_label"].get<std::string>();
+      if (item.contains("options")) {
+        efile += "#" + item["options"].get<std::string>();
+      }
+      options.efiles.push_back(efile);
+    }
+  }
+  if (config.contains("directed")) {
+    if (config["directed"].is_boolean()) {
+      options.directed = config["directed"].get<bool>();
+    } else if (config["directed"].is_number_integer()) {
+      options.directed = config["directed"].get<int>();
+    } else {
+      options.directed = config["directed"].get<std::string>() == "true";
+    }
+  }
+  if (config.contains("generate_eid")) {
+    if (config["generate_eid"].is_boolean()) {
+      options.generate_eid = config["generate_eid"].get<bool>();
+    } else if (config["generate_eid"].is_number_integer()) {
+      options.generate_eid = config["generate_eid"].get<int>();
+    } else {
+      options.generate_eid = config["generate_eid"].get<std::string>() == "true";
+    }
+  }
+  return true;
+}
+
+}
+
 int main(int argc, char **argv) {
-  if (argc < 6) {
-    printf("usage: ./htap_loader <e_label_num> <efiles...> "
-           "<v_label_num> <vfiles...> [directed]\n");
+  if (argc < 3) {
+    printf("usage: ./vineyard_htap_loader <e_label_num> <efiles...> <v_label_num> <vfiles...> [directed] [generate_eid]\n"
+           "\n"
+           "   or: ./vineyard_htap_loader --config <config.json>"
+           "\n\n");
     return 1;
   }
-  int index = 1;
-  int edge_label_num = atoi(argv[index++]);
-  std::vector<std::string> efiles;
-  for (int i = 0; i < edge_label_num; ++i) {
-    efiles.push_back(argv[index++]);
-  }
-
-  int vertex_label_num = atoi(argv[index++]);
-  std::vector<std::string> vfiles;
-  for (int i = 0; i < vertex_label_num; ++i) {
-    vfiles.push_back(argv[index++]);
-  }
-
-  int directed = 1;
-  if (argc > index) {
-    directed = atoi(argv[index]);
+  struct htap_loader_options options;
+  if ((std::string(argv[1]) == "--config") || (std::string(argv[1]) == "-config" )) {
+    if (!detail::parse_options_from_config_json(options, argv[2])) {
+      exit(-1);
+    }
+  } else {
+    if (!detail::parse_options_from_args(options, 1, argc, argv)) {
+      exit(-1);
+    }
   }
 
   grape::InitMPIComm();
@@ -65,8 +143,9 @@ int main(int argc, char **argv) {
     {
       auto loader = std::make_unique<vineyard::ArrowFragmentLoader<
           vineyard::property_graph_types::OID_TYPE,
-          vineyard::property_graph_types::VID_TYPE>>(client, comm_spec, efiles,
-                                                     vfiles, directed != 0);
+          vineyard::property_graph_types::VID_TYPE>>(
+            client, comm_spec, options.efiles, options.vfiles,
+            options.directed != 0, options.generate_eid != 0);
 
       fragment_group_id = boost::leaf::try_handle_all(
           [&]() { return loader->LoadFragmentAsFragmentGroup(); },
@@ -93,6 +172,9 @@ int main(int argc, char **argv) {
       LOG(INFO) << "schema = " << schema->ToJSONString();
     }
     schema->DumpToFile("/tmp/" + std::to_string(fragment_group_id) + ".json");
+    LOG(INFO) << "The schema json has been dumped to '"
+              << ("/tmp/" + std::to_string(fragment_group_id) + ".json")
+              << "'";
 
     MPI_Barrier(comm_spec.comm());
   }
