@@ -965,8 +965,8 @@ install_deps_dev() {
       echo "export ENABLE_JAVA_SDK=OFF"
     } >> ${OUTPUT_ENV_FILE}
     succ_msg=${succ_msg}"\n
-    Note: For simplify, The script is not install grape-jdk dependency by default. If you want to use grape jdk, use command:\n
-    $ ./install_deps.sh --grape_jdk
+    Note: For simplify, The script doesn't install grape-jdk dependency by default. If you want to use grape jdk, use command:\n
+    $ ./install_deps.sh --grape-jdk
     to install grape-jdk dependency."
   fi
   succ "${succ_msg}"

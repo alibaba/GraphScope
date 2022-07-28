@@ -122,8 +122,8 @@ and run the command:
     ./scripts/install_deps.sh --dev --cn
 
 
-The `install_deps.sh` did not install the grape-jdk dependency `fastFFI` by default.
-If you do not care about `grape jdk <https://github.com/alibaba/GraphScope/blob/main/analytical_engine/java/README.md>`,
+The `install_deps.sh` does not install the grape-jdk dependency `fastFFI` by default.
+If you don't care about `grape jdk <https://github.com/alibaba/GraphScope/blob/main/analytical_engine/java/README.md>`,
 you can ignore this phase. But if you want to use the grape jdk of GraphScope,
 you need to run the command after install the default dependencies.
 
