@@ -18,10 +18,10 @@ use std::convert::TryInto;
 use graph_proxy::apis::GraphPath;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::KeyId;
-use pegasus::api::function::{FnResult, MapFunction};
+use pegasus::api::function::{FilterMapFunction, FnResult};
 
 use crate::error::{FnExecError, FnGenResult};
-use crate::process::operator::map::MapFuncGen;
+use crate::process::operator::map::FilterMapFuncGen;
 use crate::process::record::Record;
 
 #[derive(Debug)]
@@ -30,22 +30,25 @@ struct PathStartOperator {
     is_whole_path: bool,
 }
 
-impl MapFunction<Record, Record> for PathStartOperator {
-    fn exec(&self, mut input: Record) -> FnResult<Record> {
-        let entry = input
-            .get(self.start_tag.clone())
-            .ok_or(FnExecError::get_tag_error("get tag failed in PathStartOperator"))?;
-        let v = entry
-            .as_graph_vertex()
-            .ok_or(FnExecError::unexpected_data_error("tag does not refer to a graph vertex element"))?;
-        let graph_path = GraphPath::new(v.clone(), self.is_whole_path);
-        input.append(graph_path, None);
-        Ok(input)
+impl FilterMapFunction<Record, Record> for PathStartOperator {
+    fn exec(&self, mut input: Record) -> FnResult<Option<Record>> {
+        if let Some(entry) = input.get(self.start_tag) {
+            let v = entry
+                .as_graph_vertex()
+                .ok_or(FnExecError::unexpected_data_error(
+                    "tag does not refer to a graph vertex element",
+                ))?;
+            let graph_path = GraphPath::new(v.clone(), self.is_whole_path);
+            input.append(graph_path, None);
+            Ok(Some(input))
+        } else {
+            Ok(None)
+        }
     }
 }
 
-impl MapFuncGen for algebra_pb::PathStart {
-    fn gen_map(self) -> FnGenResult<Box<dyn MapFunction<Record, Record>>> {
+impl FilterMapFuncGen for algebra_pb::PathStart {
+    fn gen_filter_map(self) -> FnGenResult<Box<dyn FilterMapFunction<Record, Record>>> {
         let start_tag = self
             .start_tag
             .map(|tag| tag.try_into())

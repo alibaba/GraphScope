@@ -518,6 +518,7 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
                     || step instanceof HasStep; // permit has() nested in match step
         }
     },
+
     EXPR_STEP {
         @Override
         public InterOpBase apply(Step step) {

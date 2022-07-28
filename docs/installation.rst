@@ -10,7 +10,7 @@ GraphScope is tested and supported on the following 64-bit systems:
 - macOS 11.2.1 (Big Sur) or later, with both Intel chip and Apple M1 chip
 
 
-Instal GraphScope locally without Kubernetes
+Install GraphScope locally without Kubernetes
 --------------------------------------------
 
 GraphScope is distributed as a `python package <https://pypi.org/project/graphscope>`_ and can be easily installed with `pip <https://pip.pypa.io/en/stable/>`_.

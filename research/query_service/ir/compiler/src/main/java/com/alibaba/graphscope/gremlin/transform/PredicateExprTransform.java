@@ -17,7 +17,6 @@
 package com.alibaba.graphscope.gremlin.transform;
 
 import com.alibaba.graphscope.common.exception.OpArgIllegalException;
-import com.alibaba.graphscope.common.jna.type.FfiVariable;
 import com.alibaba.graphscope.gremlin.antlr4.AnyValue;
 
 import org.apache.commons.lang3.tuple.Triple;
@@ -56,10 +55,21 @@ public interface PredicateExprTransform extends Function<Step, String> {
             }
         } else {
             Object predicateValue = predicate.getValue();
-            if (predicateValue instanceof AnyValue) {
-                expr = getExprIfPropertyExist(subject);
+            BiPredicate biPredicate = predicate.getBiPredicate();
+            if (predicateValue instanceof AnyValue) { // has("age") or hasNot("age")
+                // @.age
+                String propertyExist = subject;
+                if (biPredicate == Compare.eq) { // has("age")
+                    expr = propertyExist;
+                } else if (biPredicate == Compare.neq) { // hasNot("age")
+                    expr = "!" + propertyExist;
+                } else {
+                    throw new OpArgIllegalException(
+                            OpArgIllegalException.Cause.INVALID_TYPE,
+                            "property type is invalid in checking property existence, "
+                                    + biPredicate.toString());
+                }
             } else {
-                BiPredicate biPredicate = predicate.getBiPredicate();
                 // format as (subject predicate value), i.e "@a.name within [...]"
                 Function<Triple, String> defaultFormat =
                         (Triple t) ->
@@ -158,19 +168,6 @@ public interface PredicateExprTransform extends Function<Step, String> {
 
     default String getPredicateExpr(
             String subject, String predicate, Object value, Function<Triple, String> format) {
-        String subjectKeyExist = getExprIfPropertyExist(subject);
-        String valueKeyExist = "";
-        if (value instanceof FfiVariable.ByValue) {
-            valueKeyExist = getExprIfPropertyExist(value.toString());
-        }
-        String predicateExpr = format.apply(Triple.of(subject, predicate, value));
-        StringBuilder builder = new StringBuilder(predicateExpr);
-        if (!valueKeyExist.isEmpty()) {
-            builder.insert(0, String.format("%s && ", valueKeyExist));
-        }
-        if (!subjectKeyExist.isEmpty()) {
-            builder.insert(0, String.format("%s && ", subjectKeyExist));
-        }
-        return builder.toString();
+        return format.apply(Triple.of(subject, predicate, value));
     }
 }

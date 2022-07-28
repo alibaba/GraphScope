@@ -37,44 +37,45 @@ impl<E: Into<GraphObject> + 'static> FlatMapFunction<Record, Record> for EdgeExp
     type Target = DynIter<Record>;
 
     fn exec(&self, input: Record) -> FnResult<Self::Target> {
-        let entry = input
-            .get(self.start_v_tag)
-            .ok_or(FnExecError::get_tag_error("get start_v failed"))?;
-        if let Some(v) = entry.as_graph_vertex() {
-            let id = v.id();
-            let iter = self.stmt.exec(id)?;
-            if self.getv_flag {
-                let neighbors_iter = iter.map(|e| match e.into() {
-                    GraphObject::E(e) => Vertex::new(
-                        e.get_other_id(),
-                        e.get_other_label().cloned(),
-                        DynDetails::new(DefaultDetails::default()),
-                    ),
-                    _ => {
-                        unreachable!()
-                    }
-                });
-                Ok(Box::new(RecordExpandIter::new(
-                    input,
-                    self.edge_or_end_v_tag.as_ref(),
-                    Box::new(neighbors_iter),
-                )))
+        if let Some(entry) = input.get(self.start_v_tag) {
+            if let Some(v) = entry.as_graph_vertex() {
+                let id = v.id();
+                let iter = self.stmt.exec(id)?;
+                if self.getv_flag {
+                    let neighbors_iter = iter.map(|e| match e.into() {
+                        GraphObject::E(e) => Vertex::new(
+                            e.get_other_id(),
+                            e.get_other_label().cloned(),
+                            DynDetails::new(DefaultDetails::default()),
+                        ),
+                        _ => {
+                            unreachable!()
+                        }
+                    });
+                    Ok(Box::new(RecordExpandIter::new(
+                        input,
+                        self.edge_or_end_v_tag.as_ref(),
+                        Box::new(neighbors_iter),
+                    )))
+                } else {
+                    Ok(Box::new(RecordExpandIter::new(input, self.edge_or_end_v_tag.as_ref(), iter)))
+                }
+            } else if let Some(graph_path) = entry.as_graph_path() {
+                let path_end = graph_path
+                    .get_path_end()
+                    .ok_or(FnExecError::unexpected_data_error("Get path_end failed in path expand"))?;
+                let id = path_end.id();
+                let iter = self.stmt.exec(id)?;
+                let curr_path = graph_path.clone();
+                Ok(Box::new(RecordPathExpandIter::new(input, curr_path, iter)))
             } else {
-                Ok(Box::new(RecordExpandIter::new(input, self.edge_or_end_v_tag.as_ref(), iter)))
+                Err(FnExecError::unexpected_data_error(&format!(
+                    "Cannot Expand from current entry {:?}",
+                    entry
+                )))?
             }
-        } else if let Some(graph_path) = entry.as_graph_path() {
-            let path_end = graph_path
-                .get_path_end()
-                .ok_or(FnExecError::unexpected_data_error("Get path_end failed in path expand"))?;
-            let id = path_end.id();
-            let iter = self.stmt.exec(id)?;
-            let curr_path = graph_path.clone();
-            Ok(Box::new(RecordPathExpandIter::new(input, curr_path, iter)))
         } else {
-            Err(FnExecError::unexpected_data_error(&format!(
-                "Cannot Expand from current entry {:?}",
-                entry
-            )))?
+            Ok(Box::new(vec![].into_iter()))
         }
     }
 }

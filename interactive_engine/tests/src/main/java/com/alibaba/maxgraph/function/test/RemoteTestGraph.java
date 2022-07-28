@@ -54,10 +54,10 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
         method = "g_V_hasIdXwithoutXemptyXX_count",
         reason = "unsupported")
-@Graph.OptOut(
-        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
-        method = "g_V_hasNotXageX_name",
-        reason = "unsupported")
+// @Graph.OptOut(
+//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
+//        method = "g_V_hasNotXageX_name",
+//        reason = "unsupported")
 // @Graph.OptOut(
 //        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
 //        method = "g_V_hasXname_containingXarkXX",
@@ -1191,12 +1191,14 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
 // @Graph.OptOut(method="g_VX1X_out_limitX2X" ,
 // test="org.apache.tinkerpop.gremlin.process.traversal.step.filter.RangeTest", reason = "will be
 // supported")
-// @Graph.OptOut(method="g_VX1X_outXknowsX_outEXcreatedX_rangeX0_1X_inV" ,
-// test="org.apache.tinkerpop.gremlin.process.traversal.step.filter.RangeTest", reason = "will be
-// supported")
-// @Graph.OptOut(method="g_VX1X_outXknowsX_outXcreatedX_rangeX0_1X" ,
-// test="org.apache.tinkerpop.gremlin.process.traversal.step.filter.RangeTest", reason = "will be
-// supported")
+@Graph.OptOut(
+        method = "g_VX1X_outXknowsX_outEXcreatedX_rangeX0_1X_inV",
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.RangeTest",
+        reason = "range is unsupported, use limit instead")
+@Graph.OptOut(
+        method = "g_VX1X_outXknowsX_outXcreatedX_rangeX0_1X",
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.RangeTest",
+        reason = "range is unsupported, use limit instead")
 // @Graph.OptOut(method="g_VX1X_asXaX_outXcreatedX_inXcreatedX_whereXeqXaXX_name" ,
 // test="org.apache.tinkerpop.gremlin.process.traversal.step.filter.WhereTest", reason = "will be
 // supported")

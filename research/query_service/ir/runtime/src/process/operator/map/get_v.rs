@@ -20,10 +20,10 @@ use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::algebra::get_v::VOpt;
 use ir_common::KeyId;
-use pegasus::api::function::{FnResult, MapFunction};
+use pegasus::api::function::{FilterMapFunction, FnResult};
 
 use crate::error::{FnExecError, FnGenResult};
-use crate::process::operator::map::MapFuncGen;
+use crate::process::operator::map::FilterMapFuncGen;
 use crate::process::record::Record;
 
 #[derive(Debug)]
@@ -33,43 +33,46 @@ struct GetVertexOperator {
     alias: Option<KeyId>,
 }
 
-impl MapFunction<Record, Record> for GetVertexOperator {
-    fn exec(&self, mut input: Record) -> FnResult<Record> {
-        let entry = input
-            .get(self.start_tag)
-            .ok_or(FnExecError::get_tag_error("get tag failed in GetVertexOperator"))?;
-        if let Some(e) = entry.as_graph_edge() {
-            let (id, label) = match self.opt {
-                VOpt::Start => (e.src_id, e.get_src_label()),
-                VOpt::End => (e.dst_id, e.get_dst_label()),
-                VOpt::Other => (e.get_other_id(), e.get_other_label()),
-                VOpt::Both => unreachable!(),
-            };
-            let vertex =
-                Vertex::new(id, label.map(|l| l.clone()), DynDetails::new(DefaultDetails::default()));
-            input.append(vertex, self.alias.clone());
-            Ok(input)
-        } else if let Some(graph_path) = entry.as_graph_path() {
-            if let VOpt::End = self.opt {
-                let path_end = graph_path
-                    .get_path_end()
-                    .ok_or(FnExecError::unexpected_data_error("Get path_end failed in path expand"))?
-                    .clone();
-                input.append(path_end, self.alias.clone());
-                Ok(input)
+impl FilterMapFunction<Record, Record> for GetVertexOperator {
+    fn exec(&self, mut input: Record) -> FnResult<Option<Record>> {
+        if let Some(entry) = input.get(self.start_tag) {
+            if let Some(e) = entry.as_graph_edge() {
+                let (id, label) = match self.opt {
+                    VOpt::Start => (e.src_id, e.get_src_label()),
+                    VOpt::End => (e.dst_id, e.get_dst_label()),
+                    VOpt::Other => (e.get_other_id(), e.get_other_label()),
+                    VOpt::Both => unreachable!(),
+                };
+                let vertex =
+                    Vertex::new(id, label.map(|l| l.clone()), DynDetails::new(DefaultDetails::default()));
+                input.append(vertex, self.alias.clone());
+                Ok(Some(input))
+            } else if let Some(graph_path) = entry.as_graph_path() {
+                if let VOpt::End = self.opt {
+                    let path_end = graph_path
+                        .get_path_end()
+                        .ok_or(FnExecError::unexpected_data_error("Get path_end failed in path expand"))?
+                        .clone();
+                    input.append(path_end, self.alias.clone());
+                    Ok(Some(input))
+                } else {
+                    Err(FnExecError::unsupported_error(
+                        "Only support `GetV` with VOpt::End on a path entry",
+                    ))?
+                }
             } else {
-                Err(FnExecError::unsupported_error("Only support `GetV` with VOpt::End on a path entry"))?
+                Err(FnExecError::unexpected_data_error(
+                    "Can only apply `GetV` (`Auxilia` instead) on an edge or path entry",
+                ))?
             }
         } else {
-            Err(FnExecError::unexpected_data_error(
-                "Can only apply `GetV` (`Auxilia` instead) on an edge or path entry",
-            ))?
+            Ok(None)
         }
     }
 }
 
-impl MapFuncGen for algebra_pb::GetV {
-    fn gen_map(self) -> FnGenResult<Box<dyn MapFunction<Record, Record>>> {
+impl FilterMapFuncGen for algebra_pb::GetV {
+    fn gen_filter_map(self) -> FnGenResult<Box<dyn FilterMapFunction<Record, Record>>> {
         let start_tag = self
             .tag
             .map(|name_or_id| name_or_id.try_into())

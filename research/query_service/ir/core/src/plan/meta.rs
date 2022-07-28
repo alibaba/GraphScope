@@ -657,11 +657,8 @@ impl PlanMeta {
 }
 
 impl PlanMeta {
-    pub fn insert_tag_nodes(&mut self, tag: TagId, nodes: Vec<NodeId>) {
-        self.tag_nodes
-            .entry(tag)
-            .or_default()
-            .extend(nodes.into_iter());
+    pub fn set_tag_nodes(&mut self, tag: TagId, nodes: Vec<NodeId>) {
+        *self.tag_nodes.entry(tag).or_default() = nodes;
     }
 
     pub fn get_tag_nodes(&self, tag: TagId) -> &[NodeId] {
@@ -801,7 +798,7 @@ impl PlanMeta {
             if let Some(nodes) = self.tag_nodes.get(&tag).cloned() {
                 Ok(self.get_or_insert_nodes_meta(&nodes))
             } else {
-                Err(IrError::TagNotExist((tag as KeyId).into()))
+                Ok(self.get_or_insert_nodes_meta(&[]))
             }
         } else {
             let ref_curr_nodes = self.get_curr_referred_nodes().to_vec();

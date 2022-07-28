@@ -40,6 +40,10 @@ pub enum ExprEvalError {
     NoneOperand(OperatorDesc),
     /// Meant to evaluate a certain operator, but obtain a different one
     UnmatchedOperator(OperatorDesc),
+    /// Meant to evaluate a variable, but the data type is unexpected (e.g., not a graph-element)
+    UnexpectedDataType(OperatorDesc),
+    /// Get ``None` from `Context`
+    GetNoneFromContext,
     /// Unsupported
     Unsupported(String),
     /// Other unknown errors that is converted from a error description
@@ -56,8 +60,12 @@ impl Display for ExprEvalError {
             EmptyExpression => write!(f, "try to evaluate an empty expression"),
             NoneOperand(opr) => write!(f, "try to evaluate {:?} but obtain `None` value", opr),
             UnmatchedOperator(opr) => {
-                write!(f, "meant to evaluate a certain operator, but obtain a different one： {:?}", opr)
+                write!(f, "meant to evaluate a certain operator, but obtain a different one: {:?}", opr)
             }
+            UnexpectedDataType(opr) => {
+                write!(f, "meant to evaluate a variable, but with unexpected data type: {:?}", opr)
+            }
+            GetNoneFromContext => write!(f, "get `None` from `Context`"),
             Unsupported(e) => write!(f, "unsupported: {}", e),
             OtherErr(e) => write!(f, "parse error {}", e),
         }
