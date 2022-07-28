@@ -895,4 +895,12 @@ public class PositiveEvalTest {
                 g.V().has("name", TextP.notContaining("marko")),
                 eval("g.V().has(\"name\", TextP.notContaining(\"marko\"))"));
     }
+
+    // g.V().as("a").select("a").by(out("1..2").endV().count())
+    @Test
+    public void g_V_as_select_a_by_out_1_2_endV_count_test() {
+        Assert.assertEquals(
+                g.V().as("a").select("a").by(__.out(__.range(1, 2)).endV().count()),
+                eval("g.V().as(\"a\").select(\"a\").by(out(\"1..2\").endV().count())"));
+    }
 }

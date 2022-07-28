@@ -21,11 +21,11 @@ import com.alibaba.graphscope.common.intermediate.operator.ApplyOp;
 import com.alibaba.graphscope.common.intermediate.operator.InterOpBase;
 import com.alibaba.graphscope.common.intermediate.operator.SelectOp;
 import com.alibaba.graphscope.common.jna.type.FfiJoinKind;
+import com.alibaba.graphscope.gremlin.antlr4.__;
 import com.alibaba.graphscope.gremlin.transform.TraversalParentTransformFactory;
 
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
-import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
 import org.apache.tinkerpop.gremlin.process.traversal.step.TraversalParent;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;

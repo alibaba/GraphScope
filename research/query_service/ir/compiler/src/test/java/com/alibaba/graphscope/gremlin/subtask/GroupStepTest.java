@@ -26,9 +26,9 @@ import com.alibaba.graphscope.common.jna.type.FfiAggOpt;
 import com.alibaba.graphscope.common.jna.type.FfiAlias;
 import com.alibaba.graphscope.common.jna.type.FfiJoinKind;
 import com.alibaba.graphscope.common.jna.type.FfiVariable;
+import com.alibaba.graphscope.gremlin.antlr4.__;
 import com.alibaba.graphscope.gremlin.transform.TraversalParentTransformFactory;
 
-import org.apache.tinkerpop.gremlin.groovy.jsr223.dsl.credential.__;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.process.traversal.step.TraversalParent;

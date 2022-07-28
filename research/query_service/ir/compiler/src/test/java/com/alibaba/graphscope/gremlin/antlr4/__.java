@@ -1,5 +1,8 @@
 package com.alibaba.graphscope.gremlin.antlr4;
 
+import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversal;
+
+import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.structure.*;
 
@@ -36,6 +39,15 @@ public class __ {
         return start().out(edgeLabels);
     }
 
+    public static IrCustomizedTraversal<?, ?> out(Traversal rangeTraversal, String... labels) {
+        return (IrCustomizedTraversal<?, ?>)
+                ((IrCustomizedTraversal) start()).out(rangeTraversal, labels);
+    }
+
+    public static GraphTraversal<?, ?> endV() {
+        return ((IrCustomizedTraversal) start()).endV();
+    }
+
     public static <A> GraphTraversal<?, Long> count() {
         return start().count();
     }
@@ -50,5 +62,13 @@ public class __ {
 
     public static <A, B> GraphTraversal<?, B> select(final String selectKey) {
         return start().select(selectKey);
+    }
+
+    public static <A> GraphTraversal<?, ?> where(Traversal<?, ?> whereTraversal) {
+        return start().where(whereTraversal);
+    }
+
+    public static <A> GraphTraversal<?, ?> not(Traversal<?, ?> notTraversal) {
+        return start().not(notTraversal);
     }
 }
