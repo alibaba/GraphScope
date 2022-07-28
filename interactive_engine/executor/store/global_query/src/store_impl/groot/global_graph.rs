@@ -18,11 +18,6 @@ use std::collections::HashMap;
 use std::io::Write;
 use std::sync::Arc;
 
-use crate::apis::global_query::GlobalGraphQuery;
-use crate::apis::global_query::{PartitionLabeledVertexIds, PartitionVertexIds};
-use crate::apis::graph_partition::GraphPartitionManager;
-use crate::apis::graph_schema::Schema;
-use crate::store_impl::groot::global_graph_schema::GlobalGraphSchema;
 use byteorder::{BigEndian, WriteBytesExt};
 use itertools::Itertools;
 use maxgraph_store::api::prelude::Property;
@@ -34,6 +29,12 @@ use maxgraph_store::db::graph::entity::{RocksEdgeImpl, RocksVertexImpl};
 use maxgraph_store::db::graph::get_vertex_id_by_primary_keys;
 use maxgraph_store::db::graph::store::GraphStore;
 use maxgraph_store::db::storage::RawBytes;
+
+use crate::apis::global_query::GlobalGraphQuery;
+use crate::apis::global_query::{PartitionLabeledVertexIds, PartitionVertexIds};
+use crate::apis::graph_partition::GraphPartitionManager;
+use crate::apis::graph_schema::Schema;
+use crate::store_impl::groot::global_graph_schema::GlobalGraphSchema;
 
 pub struct GlobalGraph {
     graph_partitions: Arc<HashMap<PartitionId, Arc<GraphStore>>>,
@@ -119,22 +120,20 @@ impl GlobalGraphQuery for GlobalGraph {
                 for vertex_id in vertex_ids {
                     let mut vertex_out_edges: Records<RocksEdgeImpl> = Box::new(::std::iter::empty());
                     if edge_labels.is_empty() {
-                        vertex_out_edges = Box::new(
-                            vertex_out_edges.chain(
+                        vertex_out_edges =
+                            Box::new(vertex_out_edges.chain(
                                 store
                                     .get_out_edges(si, vertex_id, None, None, None)
                                     .unwrap(),
-                            ),
-                        )
+                            ))
                     } else {
                         for edge_label in edge_labels {
-                            vertex_out_edges = Box::new(
-                                vertex_out_edges.chain(
+                            vertex_out_edges =
+                                Box::new(vertex_out_edges.chain(
                                     store
                                         .get_out_edges(si, vertex_id, Some(*edge_label as i32), None, None)
                                         .unwrap(),
-                                ),
-                            )
+                                ))
                         }
                     }
                     res.push((
@@ -179,22 +178,20 @@ impl GlobalGraphQuery for GlobalGraph {
                 for vertex_id in vertex_ids {
                     let mut vertex_in_edges: Records<RocksEdgeImpl> = Box::new(::std::iter::empty());
                     if edge_labels.is_empty() {
-                        vertex_in_edges = Box::new(
-                            vertex_in_edges.chain(
+                        vertex_in_edges =
+                            Box::new(vertex_in_edges.chain(
                                 store
                                     .get_in_edges(si, vertex_id, None, None, None)
                                     .unwrap(),
-                            ),
-                        )
+                            ))
                     } else {
                         for edge_label in edge_labels {
-                            vertex_in_edges = Box::new(
-                                vertex_in_edges.chain(
+                            vertex_in_edges =
+                                Box::new(vertex_in_edges.chain(
                                     store
                                         .get_in_edges(si, vertex_id, Some(*edge_label as i32), None, None)
                                         .unwrap(),
-                                ),
-                            )
+                                ))
                         }
                     }
                     res.push((
@@ -282,26 +279,24 @@ impl GlobalGraphQuery for GlobalGraph {
         for pid in partitions {
             if let Some(partition) = self.graph_partitions.get(&pid) {
                 if labels.is_empty() {
-                    res = Box::new(
-                        res.chain(
+                    res =
+                        Box::new(res.chain(
                             partition
                                 .scan_vertex(si, None, condition, output_property_ids)
                                 .unwrap()
                                 .take(Self::get_limit(limit))
                                 .map(|v| v.unwrap()),
-                        ),
-                    )
+                        ))
                 } else {
                     for label in labels {
-                        res = Box::new(
-                            res.chain(
+                        res =
+                            Box::new(res.chain(
                                 partition
                                     .scan_vertex(si, Some(*label as i32), condition, output_property_ids)
                                     .unwrap()
                                     .take(Self::get_limit(limit))
                                     .map(|v| v.unwrap()),
-                            ),
-                        )
+                            ))
                     }
                 }
             }
@@ -328,26 +323,24 @@ impl GlobalGraphQuery for GlobalGraph {
         for pid in partitions {
             if let Some(partition) = self.graph_partitions.get(&pid) {
                 if labels.is_empty() {
-                    res = Box::new(
-                        res.chain(
+                    res =
+                        Box::new(res.chain(
                             partition
                                 .scan_edge(si, None, condition, output_property_ids)
                                 .unwrap()
                                 .take(Self::get_limit(limit))
                                 .map(|e| e.unwrap()),
-                        ),
-                    )
+                        ))
                 } else {
                     for label in labels {
-                        res = Box::new(
-                            res.chain(
+                        res =
+                            Box::new(res.chain(
                                 partition
                                     .scan_edge(si, Some(*label as i32), condition, output_property_ids)
                                     .unwrap()
                                     .take(Self::get_limit(limit))
                                     .map(|e| e.unwrap()),
-                            ),
-                        )
+                            ))
                     }
                 }
             }

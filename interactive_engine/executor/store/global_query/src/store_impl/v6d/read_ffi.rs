@@ -1,8 +1,9 @@
 use std::ffi::{CStr, CString};
 use std::sync::Arc;
 
-use crate::store_api::*;
 use itertools::Itertools;
+
+use crate::store_api::*;
 pub type GraphId = i64;
 type GetVertexIterator = *const ::libc::c_void;
 type GetAllVerticesIterator = *const ::libc::c_void;
@@ -15,13 +16,14 @@ type InEdgeIterator = *const ::libc::c_void;
 type GetAllEdgesIterator = *const ::libc::c_void;
 
 // these are for path directly to GAIA
-use crate::store_api::prelude::Property;
-use crate::{GlobalGraphQuery, GraphPartitionManager, Schema};
 use dyn_type::object::Primitives;
 use dyn_type::object::RawType;
 use dyn_type::Object;
 use ir_common::generated::common as common_pb;
 use ir_common::KeyId;
+
+use crate::store_api::prelude::Property;
+use crate::{GlobalGraphQuery, GraphPartitionManager, Schema};
 
 pub type FfiVertexId = u64;
 pub type FfiEdgeId = u64;

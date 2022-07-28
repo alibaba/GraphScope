@@ -16,9 +16,10 @@
 
 use std::collections::HashMap;
 
-use crate::apis::graph_schema::Schema;
 use maxgraph_store::api::DataType;
 use maxgraph_store::db::api::{GraphDef, ValueType};
+
+use crate::apis::graph_schema::Schema;
 
 pub struct GlobalGraphSchema {
     graph_def: GraphDef,

@@ -13,11 +13,13 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::{de_dyn_obj, Object, Primitives};
-use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
 use std::any::TypeId;
 use std::collections::BTreeMap;
 use std::io;
+
+use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
+
+use crate::{de_dyn_obj, Object, Primitives};
 
 impl Encode for Primitives {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
@@ -116,9 +118,7 @@ impl Encode for Object {
                 bytes.write_to(writer)?;
                 Ok(())
             }
-            Object::None => {
-                writer.write_u8(6)
-            }
+            Object::None => writer.write_u8(6),
         }
     }
 }
@@ -166,9 +166,7 @@ impl Decode for Object {
                 let obj = de_dyn_obj(&t, &mut bytes_reader)?;
                 Ok(Object::DynOwned(obj))
             }
-            6 => {
-                Ok(Object::None)
-            }
+            6 => Ok(Object::None),
             _ => Err(io::Error::new(io::ErrorKind::Other, "not supported")),
         }
     }
