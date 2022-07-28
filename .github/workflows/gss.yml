@@ -86,9 +86,9 @@ jobs:
 
         sccache --show-stats
 
-   # - name: Gremlin Test
-   #   run: |
-        # cd interactive_engine/groot-server
+    - name: Gremlin Test
+      run: |
+         cd interactive_engine/groot-server
         # TODO: add gremlin-test back when fixed. issue #1898
         # mvn test -Pgremlin-test
 
