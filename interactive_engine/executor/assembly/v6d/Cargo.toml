@@ -19,7 +19,7 @@ tokio = { version = "1.0", features = ["macros", "sync"] }
 
 global_query = { path = "../../store/global_query" , features = ["with_v6d"] }
 pegasus = { path = "../../../../research/engine/pegasus/pegasus", package = "pegasus" }
-pegasus_network = { path = "../../../../research/engine/pegasus/network" }
-pegasus_server = { path = "../../../../research/engine/pegasus/server" }
+pegasus_network = { path = "../../engine/pegasus/network" }
+pegasus_server = { path = "../../engine/pegasus/server" }
 runtime_integration =  { path = "../../../../research/query_service/ir/integrated", features = ["with_v6d"] }
 
