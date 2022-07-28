@@ -255,6 +255,9 @@ impl Deref for NeighborsBackend {
 
     fn deref(&self) -> &Self::Target {
         let ptr = self.mmap.as_ptr() as *const u64;
-        unsafe { std::slice::from_raw_parts(ptr, self.len) }
+        unsafe {
+            let start = ptr.add(1);
+            std::slice::from_raw_parts(start, self.len)
+        }
     }
 }

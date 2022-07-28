@@ -97,11 +97,15 @@ fn main() {
         conf.reset_servers(ServerConf::All);
     }
 
-    let src = if let Some(ref source_file) = config.source_path {
-        get_source(source_file)
-    } else {
-        graph.sample_vertices(config.source as usize, 0.1)
-    };
+    // let src = if let Some(ref source_file) = config.source_path {
+    //     get_source(source_file)
+    // } else {
+    //     graph.sample_vertices(config.source as usize, 0.1)
+    // };
+
+    let mut src = Vec::new();
+    src.push(1);
+
     let inner_hop = config.inner_hop;
     let outer_hop = config.outer_hop;
     let degree = config.degree;
