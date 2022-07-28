@@ -86,10 +86,11 @@ jobs:
 
         sccache --show-stats
 
-    - name: Gremlin Test
-      run: |
-        cd interactive_engine/groot-server
-        mvn test -Pgremlin-test
+   # - name: Gremlin Test
+   #   run: |
+        # cd interactive_engine/groot-server
+        # TODO: add gremlin-test back when fixed. issue #1898
+        # mvn test -Pgremlin-test
 
     - name: Upload tools for helm test to Artifact
       uses: actions/upload-artifact@v2
