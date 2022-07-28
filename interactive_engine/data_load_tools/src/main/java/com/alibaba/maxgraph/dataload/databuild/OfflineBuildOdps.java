@@ -85,6 +85,8 @@ public class OfflineBuildOdps {
         String ossBucketName = properties.getProperty(OSS_BUCKET_NAME);
         String ossObjectName = properties.getProperty(OSS_OBJECT_NAME);
 
+        // The table format is `project.table` or `table`;
+        // For partitioned table, the format is `project.table|p1=1/p2=2` or `table|p1=1/p2=2`
         String columnMappingConfigStr = properties.getProperty(COLUMN_MAPPING_CONFIG);
         String graphEndpoint = properties.getProperty(GRAPH_ENDPOINT);
         String username = properties.getProperty(USER_NAME);
