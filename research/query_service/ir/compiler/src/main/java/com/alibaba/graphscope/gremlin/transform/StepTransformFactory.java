@@ -39,6 +39,8 @@ import org.apache.tinkerpop.gremlin.process.traversal.Pop;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.ColumnTraversal;
+import org.apache.tinkerpop.gremlin.process.traversal.lambda.IdentityTraversal;
+import org.apache.tinkerpop.gremlin.process.traversal.lambda.ValueTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.step.TraversalParent;
 import org.apache.tinkerpop.gremlin.process.traversal.step.branch.UnionStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.*;
@@ -176,34 +178,13 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
             return op;
         }
     },
-    VALUE_MAP_STEP {
-        @Override
-        public InterOpBase apply(Step step) {
-            PropertyMapStep valueMapStep = (PropertyMapStep) step;
-            ProjectOp op = new ProjectOp();
-            String expr =
-                    TraversalParentTransformFactory.PROJECT_BY_STEP
-                            .getSubTraversalAsExpr((new ExprArg()).addStep(valueMapStep))
-                            .getSingleExpr()
-                            .get();
-            op.setExprWithAlias(
-                    new OpArg<>(
-                            expr,
-                            (String expr1) -> {
-                                FfiAlias.ByValue alias = ArgUtils.asFfiNoneAlias();
-                                return Arrays.asList(Pair.with(expr1, alias));
-                            }));
-            return op;
-        }
-    },
     VALUES_STEP {
         @Override
         public InterOpBase apply(Step step) {
-            PropertiesStep valuesStep = (PropertiesStep) step;
             ProjectOp op = new ProjectOp();
             String expr =
                     TraversalParentTransformFactory.PROJECT_BY_STEP
-                            .getSubTraversalAsExpr((new ExprArg()).addStep(valuesStep))
+                            .getSubTraversalAsExpr((new ExprArg(Collections.singletonList(step))))
                             .getSingleExpr()
                             .get();
             op.setExprWithAlias(
@@ -216,59 +197,15 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
             return op;
         }
     },
-    DEDUP_STEP {
+    AGGREGATE_STEP {
+        // count/sum/min/max/fold/mean(avg)
         @Override
         public InterOpBase apply(Step step) {
-            DedupGlobalStep dedupStep = (DedupGlobalStep) step;
-            Map<String, Traversal.Admin> tagTraversals = getDedupTagTraversal(dedupStep);
-            DedupOp op = new DedupOp();
-            op.setDedupKeys(
-                    new OpArg<>(
-                            tagTraversals,
-                            (Map<String, Traversal.Admin> map) -> {
-                                if (tagTraversals.isEmpty()) { // only support dedup()
-                                    return Collections.singletonList(ArgUtils.asFfiNoneVar());
-                                } else {
-                                    throw new OpArgIllegalException(
-                                            OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
-                                            "supported pattern is [dedup()]");
-                                }
-                            }));
-            return op;
-        }
-
-        // dedup("a").by("name"): a -> "name"
-        private Map<String, Traversal.Admin> getDedupTagTraversal(DedupGlobalStep step) {
-            Set<String> dedupTags = step.getScopeKeys();
-            List<Traversal.Admin> dedupTraversals = step.getLocalChildren();
-            Map<String, Traversal.Admin> tagTraversals = new HashMap<>();
-            if (dedupTags.isEmpty() && dedupTraversals.isEmpty()) {
-                return tagTraversals;
-            }
-            if (dedupTags.isEmpty()) {
-                dedupTags = new HashSet<>();
-                // set as head
-                dedupTags.add("");
-            }
-            dedupTags.forEach(
-                    k -> {
-                        Traversal.Admin dedupTraversal =
-                                dedupTraversals.isEmpty() ? null : dedupTraversals.get(0);
-                        tagTraversals.put(k, dedupTraversal);
-                    });
-            tagTraversals.entrySet().removeIf(e -> e.getKey().equals("") && e.getValue() == null);
-            return tagTraversals;
-        }
-    },
-    COUNT_STEP {
-        @Override
-        public InterOpBase apply(Step step) {
+            int stepIdx = TraversalHelper.stepIndex(step, step.getTraversal());
             GroupOp op = new GroupOp();
             op.setGroupByKeys(new OpArg(Collections.emptyList()));
-            int stepIdx = TraversalHelper.stepIndex(step, step.getTraversal());
-            ArgAggFn countAgg =
-                    TraversalParentTransformFactory.GROUP_BY_STEP.getAggFn(step, stepIdx);
-            op.setGroupByValues(new OpArg(Collections.singletonList(countAgg)));
+            ArgAggFn aggFn = TraversalParentTransformFactory.GROUP_BY_STEP.getAggFn(step, stepIdx);
+            op.setGroupByValues(new OpArg(Collections.singletonList(aggFn)));
             return op;
         }
     },
@@ -368,31 +305,54 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
         @Override
         public InterOpBase apply(Step step) {
             TraversalMapStep mapStep = (TraversalMapStep) step;
-            List<Traversal.Admin> mapTraversals = mapStep.getLocalChildren();
-            if (mapTraversals.size() != 1 || !(mapTraversals.get(0) instanceof ColumnTraversal)) {
+            Traversal.Admin mapTraversal =
+                    mapStep.getLocalChildren().size() > 0
+                            ? (Traversal.Admin) mapStep.getLocalChildren().get(0)
+                            : null;
+            // handle special cases, i.e.
+            // group().by().by() -> value_by: TraversalMap(identity) + fold(),
+            // group().by().by('name') -> value_by: TraversalMap(value('name')) + fold()
+            if (mapTraversal == null
+                    || mapTraversal instanceof IdentityTraversal
+                    || mapTraversal instanceof ValueTraversal) {
+                // by head
+                String defaultExpr = "@";
+                FfiAlias.ByValue defaultAlias = ArgUtils.asFfiNoneAlias();
+                if (mapTraversal instanceof ValueTraversal) {
+                    defaultExpr = "@." + ((ValueTraversal) mapTraversal).getPropertyKey();
+                }
+                ProjectOp op = new ProjectOp();
+                op.setExprWithAlias(
+                        new OpArg(Collections.singletonList(Pair.with(defaultExpr, defaultAlias))));
+                return op;
+            } else if (mapTraversal instanceof ColumnTraversal) {
+                Column column = ((ColumnTraversal) mapTraversal).getColumn();
+                switch (column) {
+                    case keys:
+                        String key = getMapKey(mapStep);
+                        SelectOneStep keySelect =
+                                new SelectOneStep(step.getTraversal(), Pop.last, key);
+                        TraversalHelper.copyLabels(mapStep, keySelect, false);
+                        return TraversalParentTransformFactory.PROJECT_BY_STEP
+                                .apply(keySelect)
+                                .get(0);
+                    case values:
+                        String value = getMapValue(mapStep);
+                        SelectOneStep valueSelect =
+                                new SelectOneStep(step.getTraversal(), Pop.last, value);
+                        TraversalHelper.copyLabels(mapStep, valueSelect, false);
+                        return TraversalParentTransformFactory.PROJECT_BY_STEP
+                                .apply(valueSelect)
+                                .get(0);
+                    default:
+                        throw new OpArgIllegalException(
+                                OpArgIllegalException.Cause.INVALID_TYPE,
+                                column.name() + " is invalid");
+                }
+            } else {
                 throw new OpArgIllegalException(
-                        OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
-                        "only support select(keys/values)");
-            }
-            Column column = ((ColumnTraversal) mapTraversals.get(0)).getColumn();
-            switch (column) {
-                case keys:
-                    String key = getMapKey(mapStep);
-                    SelectOneStep keySelect = new SelectOneStep(step.getTraversal(), Pop.last, key);
-                    TraversalHelper.copyLabels(mapStep, keySelect, false);
-                    return TraversalParentTransformFactory.PROJECT_BY_STEP.apply(keySelect).get(0);
-                case values:
-                    String value = getMapValue(mapStep);
-                    SelectOneStep valueSelect =
-                            new SelectOneStep(step.getTraversal(), Pop.last, value);
-                    TraversalHelper.copyLabels(mapStep, valueSelect, false);
-                    return TraversalParentTransformFactory.PROJECT_BY_STEP
-                            .apply(valueSelect)
-                            .get(0);
-                default:
-                    throw new OpArgIllegalException(
-                            OpArgIllegalException.Cause.INVALID_TYPE,
-                            column.name() + " is invalid");
+                        OpArgIllegalException.Cause.INVALID_TYPE,
+                        "invalid map type " + mapTraversal.getClass());
             }
         }
 

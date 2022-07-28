@@ -29,9 +29,11 @@ import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.process.traversal.step.ByModulating;
+import org.apache.tinkerpop.gremlin.process.traversal.step.filter.DedupGlobalStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.RangeGlobalStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.OrderGlobalStep;
 import org.apache.tinkerpop.gremlin.structure.Column;
+import org.apache.tinkerpop.gremlin.structure.T;
 
 public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal> {
     final GraphTraversal graphTraversal;
@@ -312,6 +314,11 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
                 } else if (byChildCount == 4
                         && byCtx.stringLiteral() != null) { // select(..).by('name')
                     step.modulateBy(GenericLiteralVisitor.getStringLiteral(byCtx.stringLiteral()));
+                } else if (byChildCount == 4
+                        && byCtx.traversalToken() != null) { // select(..).by(T.label/T.id)
+                    step.modulateBy(
+                            TraversalEnumParser.parseTraversalEnumFromContext(
+                                    T.class, byCtx.traversalToken()));
                 } else if (byCtx.traversalMethod_valueMap()
                         != null) { // select(..).by(valueMap('name'))
                     TraversalMethodVisitor nestedVisitor =
@@ -464,34 +471,41 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
     public Traversal visitTraversalMethod_group_valueby(
             GremlinGSParser.TraversalMethod_group_valuebyContext ctx) {
         int childCount = ctx.getChildCount();
-        if (childCount == 3) {
-            return graphTraversal.by();
-        } else if (childCount == 4 && ctx.traversalMethod_aggregate_func() != null) {
-            TraversalMethodVisitor nestedVisitor =
-                    new TraversalMethodVisitor(
-                            gvisitor, GremlinAntlrToJava.getTraversalSupplier().get());
-            Traversal nestedTraversal =
-                    nestedVisitor.visitTraversalMethod_aggregate_func(
-                            ctx.traversalMethod_aggregate_func());
-            return graphTraversal.by(nestedTraversal);
-        } else if (childCount >= 6 && ctx.traversalMethod_aggregate_func() != null) {
-            TraversalMethodVisitor nestedVisitor =
-                    new TraversalMethodVisitor(
-                            gvisitor, GremlinAntlrToJava.getTraversalSupplier().get());
-            Traversal nestedTraversal =
-                    nestedVisitor.visitTraversalMethod_aggregate_func(
-                            ctx.traversalMethod_aggregate_func());
-            if (ctx.traversalMethod_as() != null) {
-                nestedTraversal = nestedVisitor.visitTraversalMethod_as(ctx.traversalMethod_as());
-            }
-            return graphTraversal.by(nestedTraversal);
-        } else {
-            throw new UnsupportedEvalException(
-                    ctx.getClass(),
-                    "supported pattern is [group().by(..).by(count())] or"
-                        + " [group().by(..).by(fold())] or [group().by(..).by(count().as('..'))] or"
-                        + " [group().by(..).by(fold().as('..'))]");
+        if (childCount == 3) return graphTraversal.by();
+        if (ctx.stringLiteral() != null) {
+            return graphTraversal.by(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()));
         }
+        TraversalMethodVisitor nestedVisitor =
+                new TraversalMethodVisitor(
+                        gvisitor, GremlinAntlrToJava.getTraversalSupplier().get());
+        Traversal nestedTraversal = null;
+        if (ctx.traversalMethod_dedup() != null) {
+            nestedTraversal = nestedVisitor.visitTraversalMethod_dedup(ctx.traversalMethod_dedup());
+            if (ctx.traversalMethod_count() != null) {
+                nestedTraversal =
+                        nestedVisitor.visitTraversalMethod_count(ctx.traversalMethod_count());
+            } else if (ctx.traversalMethod_fold() != null) {
+                nestedTraversal =
+                        nestedVisitor.visitTraversalMethod_fold(ctx.traversalMethod_fold());
+            }
+        } else if (ctx.traversalMethod_aggregate_func() != null) {
+            if (ctx.traversalMethod_select() != null) {
+                nestedVisitor.visitTraversalMethod_select(ctx.traversalMethod_select());
+            }
+            if (ctx.traversalMethod_values() != null) {
+                nestedVisitor.visitTraversalMethod_values(ctx.traversalMethod_values());
+            }
+            nestedTraversal =
+                    nestedVisitor.visitTraversalMethod_aggregate_func(
+                            ctx.traversalMethod_aggregate_func());
+        }
+        if (ctx.traversalMethod_as() != null) {
+            nestedTraversal = nestedVisitor.visitTraversalMethod_as(ctx.traversalMethod_as());
+        }
+        if (nestedTraversal == null) {
+            throw new UnsupportedEvalException(ctx.getClass(), "aggregate function should exist");
+        }
+        return graphTraversal.by(nestedTraversal);
     }
 
     @Override
@@ -501,10 +515,39 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
             return visitTraversalMethod_count(ctx.traversalMethod_count());
         } else if (ctx.traversalMethod_fold() != null) {
             return visitTraversalMethod_fold(ctx.traversalMethod_fold());
+        } else if (ctx.traversalMethod_sum() != null) {
+            return visitTraversalMethod_sum(ctx.traversalMethod_sum());
+        } else if (ctx.traversalMethod_min() != null) {
+            return visitTraversalMethod_min(ctx.traversalMethod_min());
+        } else if (ctx.traversalMethod_max() != null) {
+            return visitTraversalMethod_max(ctx.traversalMethod_max());
+        } else if (ctx.traversalMethod_mean() != null) {
+            return visitTraversalMethod_mean(ctx.traversalMethod_mean());
         } else {
             throw new UnsupportedEvalException(
-                    ctx.getClass(), "supported pattern is [count()] or [fold()]");
+                    ctx.getClass(),
+                    "supported aggregation functions are count/sum/min/max/mean/fold");
         }
+    }
+
+    @Override
+    public Traversal visitTraversalMethod_sum(GremlinGSParser.TraversalMethod_sumContext ctx) {
+        return graphTraversal.sum();
+    }
+
+    @Override
+    public Traversal visitTraversalMethod_min(GremlinGSParser.TraversalMethod_minContext ctx) {
+        return graphTraversal.min();
+    }
+
+    @Override
+    public Traversal visitTraversalMethod_max(GremlinGSParser.TraversalMethod_maxContext ctx) {
+        return graphTraversal.max();
+    }
+
+    @Override
+    public Traversal visitTraversalMethod_mean(GremlinGSParser.TraversalMethod_meanContext ctx) {
+        return graphTraversal.mean();
     }
 
     @Override
@@ -529,7 +572,22 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
 
     @Override
     public Traversal visitTraversalMethod_dedup(GremlinGSParser.TraversalMethod_dedupContext ctx) {
-        return graphTraversal.dedup();
+        graphTraversal.dedup(GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList()));
+        DedupGlobalStep dedup = (DedupGlobalStep) graphTraversal.asAdmin().getEndStep();
+        if (ctx.traversalMethod_dedupby() != null) {
+            GremlinGSParser.TraversalMethod_dedupbyContext byCtx = ctx.traversalMethod_dedupby();
+            if (byCtx.stringLiteral() != null) {
+                dedup.modulateBy(GenericLiteralVisitor.getStringLiteral(byCtx.stringLiteral()));
+            } else if (byCtx.traversalToken() != null) {
+                dedup.modulateBy(
+                        TraversalEnumParser.parseTraversalEnumFromContext(
+                                T.class, byCtx.traversalToken()));
+            } else if (byCtx.nestedTraversal() != null) {
+                Traversal nested = visitNestedTraversal(byCtx.nestedTraversal());
+                dedup.modulateBy(nested.asAdmin());
+            }
+        }
+        return graphTraversal;
     }
 
     @Override

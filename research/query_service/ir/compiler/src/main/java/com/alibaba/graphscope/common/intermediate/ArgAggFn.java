@@ -52,6 +52,14 @@ public class ArgAggFn {
         return alias;
     }
 
+    public void setVar(FfiVariable.ByValue var) {
+        this.var = var;
+    }
+
+    public void setAggregate(FfiAggOpt aggregate) {
+        this.aggregate = aggregate;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

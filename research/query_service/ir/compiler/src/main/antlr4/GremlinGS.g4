@@ -68,7 +68,6 @@ traversalMethod
     | traversalMethod_group   // group()
     | traversalMethod_groupCount // groupCount()
     | traversalMethod_values    // values()
-    | traversalMethod_count // count()
     | traversalMethod_is    // is()
     | traversalMethod_where // where()
     | traversalMethod_inV   // inV()
@@ -80,6 +79,7 @@ traversalMethod
     | traversalMethod_match // match()
     | traversalMethod_subgraph // subgraph()
     | traversalMethod_bothV // bothV()
+    | traversalMethod_aggregate_func
     | traversalMethod_hasNot // hasNot()
     ;
 
@@ -226,11 +226,13 @@ traversalMethod_select
 // by("name")
 // by(valueMap())
 // by(out().count())
+// by(T.label/T.id)
 traversalMethod_selectby
     : 'by' LPAREN RPAREN
     | 'by' LPAREN stringLiteral RPAREN
     | 'by' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_valueMap RPAREN
     | 'by' LPAREN nestedTraversal RPAREN
+    | 'by' LPAREN traversalToken RPAREN
     ;
 
 traversalMethod_selectby_list
@@ -238,9 +240,31 @@ traversalMethod_selectby_list
     ;
 
 // dedup in global scope
+// dedup()
+// dedup().by('name')
+// dedup().by(T.label/T.id)
+// dedup('a')
+// dedup('a').by('name')
+// dedup('a', 'b')
+// dedup('a', 'b').by('name')
+// multiple by traversals is unsupported in standard gremlin, i.e. dedup().by(..).by(..)
 traversalMethod_dedup
-	: 'dedup' LPAREN RPAREN
+	: 'dedup' LPAREN stringLiteralList RPAREN (DOT traversalMethod_dedupby)?
 	;
+
+// by('name')
+// by(values('name')), by(out().count())
+// by(T.label/T.id)
+traversalMethod_dedupby
+    : 'by' LPAREN stringLiteral RPAREN
+    | 'by' LPAREN nestedTraversal RPAREN
+    | 'by' LPAREN traversalToken RPAREN
+    ;
+
+traversalToken
+    : 'id' | 'T.id'
+    | 'label' | 'T.label'
+    ;
 
 traversalMethod_group
 	: 'group' LPAREN RPAREN (DOT traversalMethod_group_keyby)?
@@ -267,14 +291,28 @@ traversalMethod_group_keyby
 // group().by(...).by(fold().as("value"))
 // group().by(...).by(count())
 // group().by(...).by(count().as("value"))
+// group().by(...).by("name") = group().by(...).by(values("name").fold())
+// group().by(...).by(sum()/min()/max()/mean()/fold())
+// group().by(...).by(select("a").count()/sum()/min()/max()/mean()/fold())
+// group().by(...).by(select("a").by("name").count()/sum()/min()/max()/mean()/fold())
+// group().by(...).by(select("a").values("name").count()/sum()/min()/max()/mean()/fold())
+// group().by(...).by(dedup().count()) = countDistinct
+// group().by(...).by(dedup().fold()) = toSet
 traversalMethod_group_valueby
     : 'by' LPAREN RPAREN
-    | 'by' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_aggregate_func (DOT traversalMethod_as)? RPAREN
+    | 'by' LPAREN stringLiteral RPAREN
+    | 'by' LPAREN (ANON_TRAVERSAL_ROOT DOT)? (traversalMethod_select DOT)? (traversalMethod_values DOT)? traversalMethod_aggregate_func (DOT traversalMethod_as)? RPAREN
+    | 'by' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_dedup DOT traversalMethod_count (DOT traversalMethod_as)? RPAREN
+    | 'by' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_dedup DOT traversalMethod_fold (DOT traversalMethod_as)? RPAREN
     ;
 
 traversalMethod_aggregate_func
     : traversalMethod_count
     | traversalMethod_fold
+    | traversalMethod_sum
+    | traversalMethod_min
+    | traversalMethod_max
+    | traversalMethod_mean
     ;
 
 // count in global scope
@@ -291,6 +329,26 @@ traversalMethod_values
 // fold()
 traversalMethod_fold
 	: 'fold' LPAREN RPAREN
+	;
+
+// sum in global scope
+traversalMethod_sum
+	: 'sum' LPAREN RPAREN
+	;
+
+// min in global scope
+traversalMethod_min
+	: 'min' LPAREN RPAREN
+	;
+
+// max in global scope
+traversalMethod_max
+	: 'max' LPAREN RPAREN
+	;
+
+// mean in global scope
+traversalMethod_mean
+	: 'mean' LPAREN RPAREN
 	;
 
 // is(27)

@@ -19,47 +19,54 @@ package com.alibaba.graphscope.gremlin.transform;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.IdentityTraversal;
+import org.apache.tinkerpop.gremlin.process.traversal.lambda.TokenTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.ValueTraversal;
+import org.apache.tinkerpop.gremlin.process.traversal.step.map.PropertiesStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.EmptyStep;
+import org.apache.tinkerpop.gremlin.structure.PropertyType;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 public class ExprArg {
     // store all steps of the traversal given by arg
-    private List<Step> stepsInTraversal;
-    // judge whether the traversal is instance of IdentityTraversal, i.e. by()
-    private boolean isIdentityTraversal;
-    // judge whether the traversal is instance of ValueTraversal, i.e. by('name'),
-    // a property name is present if it is
-    private Optional<String> propertyKeyOpt;
+    private List<Step> stepsInTraversal = new ArrayList<>();
 
-    public ExprArg() {
-        isIdentityTraversal = false;
-        propertyKeyOpt = Optional.empty();
-        stepsInTraversal = new ArrayList<>();
-    }
-
+    // judge whether the traversal is expression or apply, i.e
+    // IdentityTraversal -> "@" is a expression pattern,
+    // ValueTraversal("name") -> "@.name" is a expression pattern,
+    // other common traversal type containing list of steps need judge further by
+    // TraversalParentTransform
     public ExprArg(Traversal.Admin traversal) {
-        this();
-        if (traversal == null || traversal instanceof IdentityTraversal) {
-            isIdentityTraversal = true;
-        } else if (traversal instanceof ValueTraversal) {
-            propertyKeyOpt = Optional.of(((ValueTraversal) traversal).getPropertyKey());
+        if (traversal == null || traversal instanceof IdentityTraversal) { // by()
+            // do nothing
+        } else if (traversal instanceof ValueTraversal) { // by('name')
+            stepsInTraversal.add(
+                    new PropertiesStep(
+                            traversal,
+                            PropertyType.VALUE,
+                            ((ValueTraversal) traversal).getPropertyKey()));
+        } else if (traversal instanceof TokenTraversal) { // by(T.id/T.label)
+            stepsInTraversal.add(
+                    new PropertiesStep(
+                            traversal,
+                            PropertyType.VALUE,
+                            ((TokenTraversal) traversal).getToken().getAccessor()));
         } else {
-            traversal
-                    .asAdmin()
-                    .getSteps()
-                    .forEach(
-                            k -> {
-                                stepsInTraversal.add((Step) k);
-                            });
+            traversal.getSteps().forEach(k -> stepsInTraversal.add((Step) k));
         }
     }
 
-    public boolean isIdentityTraversal() {
-        return isIdentityTraversal;
+    // provide a more flexible constructor to judge whether list of steps is expression or apply,
+    // i.e
+    // group().by().by(values("name").count) need aggregate by [values("name").count()],
+    // [values] is extracted from the list and passed as the argument of the function
+    public ExprArg(List<Step> steps) {
+        stepsInTraversal = steps;
+    }
+
+    public boolean isEmpty() {
+        return stepsInTraversal.isEmpty();
     }
 
     public int size() {
@@ -72,14 +79,5 @@ public class ExprArg {
 
     public Step getEndStep() {
         return stepsInTraversal.isEmpty() ? EmptyStep.instance() : stepsInTraversal.get(size() - 1);
-    }
-
-    public Optional<String> getPropertyKeyOpt() {
-        return propertyKeyOpt;
-    }
-
-    public ExprArg addStep(Step step) {
-        this.stepsInTraversal.add(step);
-        return this;
     }
 }

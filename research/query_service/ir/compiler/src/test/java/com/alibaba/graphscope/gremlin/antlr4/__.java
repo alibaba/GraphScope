@@ -71,4 +71,12 @@ public class __ {
     public static <A> GraphTraversal<?, ?> not(Traversal<?, ?> notTraversal) {
         return start().not(notTraversal);
     }
+
+    public static <A> GraphTraversal<?, ?>  dedup(String... dedupLabels) {
+        return start().dedup(dedupLabels);
+    }
+
+    public static <A> GraphTraversal<?, ?> sum() {
+        return start().sum();
+    }
 }

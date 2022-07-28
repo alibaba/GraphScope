@@ -14,6 +14,8 @@
 # during deployment, you'll want to make sure you don't have something
 # broken.
 #
+# reference: https://github.com/cybermaggedon/aws-eks-deployment/blob/master/deploy-k8s
+#
 
 
 import json
@@ -27,8 +29,10 @@ import click
 import yaml
 
 try:
+    import botocore
     import boto3
 except ImportError:
+    botocore = None
     boto3 = None
 
 try:
@@ -138,11 +142,11 @@ class AWSLauncher(Launcher):
         config["cluster_name"] = click.prompt("The name of cluster to create")
         config["k8s_version"] = click.prompt(
             "k8s version",
-            type=click.Choice(["1.15", "1.16", "1.17", "1.18", "1.19"]),
-            default="1.18",
+            type=click.Choice(["1.19", "1.20", "1.21", "1.22"]),
+            default="1.21",
         )
         config["instance_type"] = click.prompt(
-            "Worker node instance type, defalut", default="t4g.large"
+            "Worker node instance type, defalut", default="t2.micro"
         )
         config["node_num"] = click.prompt(
             "Worker node num, default", type=int, default=4
@@ -319,9 +323,12 @@ class AWSLauncher(Launcher):
             click.echo("Creating workers stack...")
             keypair_name = cluster_name + "-keypair"
             # Create key pair
-            self._ec2.create_key_pair(KeyName=keypair_name)
+            try:
+                self._ec2.create_key_pair(KeyName=keypair_name)
+            except botocore.exceptions.ClientError as e:
+                if "InvalidKeyPair.Duplicate" not in e.args[0]:
+                    raise botocore.exceptions.ClientError from e
 
-            # Create stack
             response = self._cf.create_stack(
                 StackName=workers_name,
                 TemplateURL=self.workers_template,
@@ -341,8 +348,12 @@ class AWSLauncher(Launcher):
                         "ParameterValue": str(1),
                     },
                     {
-                        "ParameterKey": "NodeAutoScalingGroupMaxSize",
+                        "ParameterKey": "NodeAutoScalingGroupDesiredCapacity",
                         "ParameterValue": str(node_num),
+                    },
+                    {
+                        "ParameterKey": "NodeAutoScalingGroupMaxSize",
+                        "ParameterValue": str(node_num + 1),
                     },
                     {
                         "ParameterKey": "NodeInstanceType",
@@ -419,7 +430,7 @@ class AWSLauncher(Launcher):
             )
         except subprocess.CalledProcessError as e:
             click.echo("Error: %s" % e.stderr)
-            sys.exits(1)
+            sys.exit(1)
 
         click.echo("kube config generated. Try:")
         click.echo("  kubectl --kubeconfig=%s get nodes" % self._output_path)
@@ -686,15 +697,15 @@ class AliyunLauncher(Launcher):
 @click.command()
 @click.option(
     "-t",
-    "--type",
-    "type",
+    "--cluster_type",
+    "cluster_type",
     type=click.Choice(["aws", "aliyun"], case_sensitive=False),
     help="Cloud type to launch cluster.",
     required=True,
 )
-@click.option("--id", help="The access_key_id of cloud.", required=True)
-@click.option("--secret", help="The access_key_secret of cloud.", required=True)
-@click.option("--region", help="The region id.", required=True)
+@click.option("--access_key_id", help="The access_key_id of cloud.", required=True)
+@click.option("--secret_access_key", help="The access_key_secret of cloud.", required=True)
+@click.option("--region", help="The region code of cloud.", required=True)
 @click.option(
     "--output",
     help="The kube config file output path.",
