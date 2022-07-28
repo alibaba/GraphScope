@@ -30,6 +30,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.step.filter.NotStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.EdgeVertexStep;
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.apache.tinkerpop.gremlin.structure.Graph;
+import org.apache.tinkerpop.gremlin.structure.T;
 import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
 import org.junit.Assert;
 import org.junit.Before;
@@ -976,5 +977,59 @@ public class PositiveEvalTest {
         Assert.assertEquals(
                 g.V().as("a").group().by().by(__.select("a").values("name").count()),
                 eval("g.V().as(\"a\").group().by().by(__.select(\"a\").values(\"name\").count())"));
+    }
+
+    @Test
+    public void g_V_dedup_by_name_test() {
+        Assert.assertEquals(g.V().dedup().by("name"), eval("g.V().dedup().by(\"name\")"));
+    }
+
+    @Test
+    public void g_V_dedup_by_values_test() {
+        Assert.assertEquals(
+                g.V().dedup().by(__.values("name")), eval("g.V().dedup().by(__.values(\"name\"))"));
+    }
+
+    @Test
+    public void g_V_dedup_by_out_count_test() {
+        Assert.assertEquals(
+                g.V().dedup().by(__.out().count()), eval("g.V().dedup().by(__.out().count())"));
+    }
+
+    @Test
+    public void g_V_as_dedup_a_by_name_test() {
+        Assert.assertEquals(
+                g.V().as("a").dedup("a").by("name"),
+                eval("g.V().as(\"a\").dedup(\"a\").by(\"name\")"));
+    }
+
+    @Test
+    public void g_V_as_dedup_a_b_by_name_test() {
+        Assert.assertEquals(
+                g.V().as("a").out().as("b").dedup("a", "b").by("name"),
+                eval("g.V().as(\"a\").out().as(\"b\").dedup(\"a\", \"b\").by(\"name\")"));
+    }
+
+    @Test
+    public void g_V_dedup_by_label_test() {
+        Assert.assertEquals(g.V().dedup().by(T.label), eval("g.V().dedup().by(T.label)"));
+    }
+
+    @Test
+    public void g_V_dedup_by_id_test() {
+        Assert.assertEquals(g.V().dedup().by(T.id), eval("g.V().dedup().by(T.id)"));
+    }
+
+    @Test
+    public void g_V_as_select_by_label_test() {
+        Assert.assertEquals(
+                g.V().as("a").select("a").by(T.label),
+                eval("g.V().as(\"a\").select(\"a\").by(T.label)"));
+    }
+
+    @Test
+    public void g_V_as_select_by_id_test() {
+        Assert.assertEquals(
+                g.V().as("a").select("a").by(T.id), eval("g.V().as(\"a\").select(\"a\").by(T.id)"));
     }
 }

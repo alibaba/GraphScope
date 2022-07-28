@@ -65,8 +65,6 @@ public class InterOpCollectionBuilder {
                 opList.add(StepTransformFactory.HAS_STEP.apply(step));
             } else if (Utils.equalClass(step, RangeGlobalStep.class)) {
                 opList.add(StepTransformFactory.LIMIT_STEP.apply(step));
-            } else if (Utils.equalClass(step, DedupGlobalStep.class)) {
-                opList.add(StepTransformFactory.DEDUP_STEP.apply(step));
             } else if (Utils.equalClass(step, CountGlobalStep.class)
                     || Utils.equalClass(step, SumGlobalStep.class)
                     || Utils.equalClass(step, MaxGlobalStep.class)
@@ -101,6 +99,9 @@ public class InterOpCollectionBuilder {
                 opList.addAll(
                         TraversalParentTransformFactory.PROJECT_BY_STEP.apply(
                                 (TraversalParent) step));
+            } else if (Utils.equalClass(step, DedupGlobalStep.class)) {
+                opList.addAll(
+                        TraversalParentTransformFactory.DEDUP_STEP.apply((TraversalParent) step));
             } else if (Utils.equalClass(step, OrderGlobalStep.class)) {
                 opList.addAll(
                         TraversalParentTransformFactory.ORDER_BY_STEP.apply(
