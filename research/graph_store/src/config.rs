@@ -13,19 +13,21 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::fs::File;
+use std::path::{Path, PathBuf};
+use std::sync::Arc;
+use std::time::Instant;
+
+use petgraph::graph::{DiGraph, IndexType};
+use serde::de::DeserializeOwned;
+use serde::Serialize;
+
 use crate::common::{Label, LabelId};
 use crate::error::{GDBError, GDBResult};
 use crate::graph_db_impl::{IndexData, LargeGraphDB, MutableGraphDB};
 use crate::io::import;
 use crate::schema::LDBCGraphSchema;
 use crate::table::PropertyTableTrait;
-use petgraph::graph::{DiGraph, IndexType};
-use serde::de::DeserializeOwned;
-use serde::Serialize;
-use std::fs::File;
-use std::path::{Path, PathBuf};
-use std::sync::Arc;
-use std::time::Instant;
 
 pub trait JsonConf<T: Serialize + DeserializeOwned = Self>: Serialize {
     fn from_json_file<P: AsRef<Path>>(path: P) -> std::io::Result<T> {
@@ -211,8 +213,7 @@ impl GraphDBConfig {
                     }
                 } else {
                     // Means there are more than one partitions
-                    partition_dir =
-                        root_dir.join(format!("{}{}", PARTITION_PREFIX, self.partition));
+                    partition_dir = root_dir.join(format!("{}{}", PARTITION_PREFIX, self.partition));
                     // set which_part back to -1 and use self.partition as the partition id
                     which_part = self.partition;
                     break;
@@ -229,8 +230,7 @@ impl GraphDBConfig {
             std::thread::spawn(move || import::<DiGraph<Label, LabelId, I>, _>(&file_graph_struct));
         let v_prop_handle = std::thread::spawn(move || N::import(&file_node_ppt_data));
         let e_prop_handle = std::thread::spawn(move || E::import(&file_edge_ppt_data));
-        let index_handle =
-            std::thread::spawn(move || import::<IndexData<G, I>, _>(&file_index_data));
+        let index_handle = std::thread::spawn(move || import::<IndexData<G, I>, _>(&file_index_data));
 
         let graph = graph_handle.join()??;
         let vertex_prop_table = v_prop_handle.join()??;

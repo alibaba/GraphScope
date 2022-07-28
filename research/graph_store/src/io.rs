@@ -13,12 +13,13 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use bincode::Result as BincodeResult;
-use bincode::{deserialize_from, serialize_into};
-use serde::{de, ser};
 use std::fs::File;
 use std::io::{BufReader, BufWriter};
 use std::path::Path;
+
+use bincode::Result as BincodeResult;
+use bincode::{deserialize_from, serialize_into};
+use serde::{de, ser};
 
 #[inline(always)]
 pub fn export<T, P>(obj: &T, path: P) -> BincodeResult<()>

@@ -15,14 +15,16 @@
 
 extern crate chrono;
 
+use std::fmt::Debug;
+use std::str::FromStr;
+
+use chrono::offset::{TimeZone, Utc};
+
 use self::chrono::Datelike;
 use crate::common::{DefaultId, Label, LabelId};
 use crate::error::{GDBError, GDBResult};
 use crate::schema::*;
 use crate::table::Row;
-use chrono::offset::{TimeZone, Utc};
-use std::fmt::Debug;
-use std::str::FromStr;
 
 /// The supported data type of this graph database
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Serialize, Deserialize)]
@@ -69,11 +71,10 @@ impl<'a> From<&'a str> for DataType {
 ///     * succeed: the parsed data of type `T` succeed
 ///     * parsing error: `GDBError::ParseError`
 ///     * empty iterator: `GDBError::OutOfBoundError`
-fn _parse_one_item_to<'a, T: FromStr, Iter: Iterator<Item = &'a str>>(
-    iter: &mut Iter,
-) -> GDBResult<T> {
+fn _parse_one_item_to<'a, T: FromStr, Iter: Iterator<Item = &'a str>>(iter: &mut Iter) -> GDBResult<T> {
     if let Some(item) = iter.next() {
-        item.parse::<T>().map_err(|_| GDBError::ParseError)
+        item.parse::<T>()
+            .map_err(|_| GDBError::ParseError)
     } else {
         Err(GDBError::OutOfBoundError)
     }

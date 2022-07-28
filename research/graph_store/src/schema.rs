@@ -13,15 +13,17 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::common::LabelId;
-use crate::config::JsonConf;
-use crate::parser::DataType;
-use itertools::Itertools;
 use std::collections::{HashMap, HashSet};
 use std::fmt::Debug;
 use std::fs::File;
 use std::hash::Hash;
 use std::path::Path;
+
+use itertools::Itertools;
+
+use crate::common::LabelId;
+use crate::config::JsonConf;
+use crate::parser::DataType;
 
 /// The id field in a vertex file
 pub const ID_FIELD: &'static str = "id";
@@ -49,14 +51,11 @@ pub trait Schema {
     fn get_edge_header(&self, edge_type_id: LabelId) -> Option<&[(String, DataType)]>;
 
     /// Get the schema for the certain type of vertex if any.
-    fn get_vertex_schema(
-        &self, vertex_type_id: LabelId,
-    ) -> Option<&HashMap<String, (DataType, usize)>>;
+    fn get_vertex_schema(&self, vertex_type_id: LabelId) -> Option<&HashMap<String, (DataType, usize)>>;
 
     /// Get the schema for the certain
     /// type of edge if any.
-    fn get_edge_schema(&self, edge_type_id: LabelId)
-        -> Option<&HashMap<String, (DataType, usize)>>;
+    fn get_edge_schema(&self, edge_type_id: LabelId) -> Option<&HashMap<String, (DataType, usize)>>;
 
     /// Get a certain vertex type's id if any
     fn get_vertex_label_id(&self, vertex_type: &str) -> Option<LabelId>;
@@ -112,7 +111,10 @@ impl LDBCGraphSchema {
             for (index, (name, dt)) in vec_trimmed.iter().enumerate() {
                 *value.get_mut(name).unwrap() = (dt.clone(), index);
             }
-            *self.edge_prop_vec.entry(*key).or_insert_with(Vec::new) = vec_trimmed;
+            *self
+                .edge_prop_vec
+                .entry(*key)
+                .or_insert_with(Vec::new) = vec_trimmed;
         }
     }
 
@@ -120,21 +122,12 @@ impl LDBCGraphSchema {
     /// while giving the `full_edge_type` that is "<src_vertex_label>_<edge_label>_<dst_vertex_label>"
     pub fn get_edge_label_tuple(&self, full_edge_type: &str) -> Option<EdgeLabelTuple> {
         let mut parts = full_edge_type.split("_");
-        let src_label_id = if let Some(src_label) = parts.next() {
-            self.get_vertex_label_id(src_label)
-        } else {
-            None
-        };
-        let edge_label_id = if let Some(edge_label) = parts.next() {
-            self.get_edge_label_id(edge_label)
-        } else {
-            None
-        };
-        let dst_label_id = if let Some(dst_label) = parts.next() {
-            self.get_vertex_label_id(dst_label)
-        } else {
-            None
-        };
+        let src_label_id =
+            if let Some(src_label) = parts.next() { self.get_vertex_label_id(src_label) } else { None };
+        let edge_label_id =
+            if let Some(edge_label) = parts.next() { self.get_edge_label_id(edge_label) } else { None };
+        let dst_label_id =
+            if let Some(dst_label) = parts.next() { self.get_vertex_label_id(dst_label) } else { None };
 
         if src_label_id.is_some() && edge_label_id.is_some() && dst_label_id.is_some() {
             Some(EdgeLabelTuple {
@@ -168,7 +161,12 @@ impl PartialEq for LDBCGraphSchema {
                 .vertex_prop_meta
                 .iter()
                 .sorted_by(|e1, e2| e1.0.cmp(e2.0))
-                .zip(other.vertex_prop_meta.iter().sorted_by(|e1, e2| e1.0.cmp(e2.0)))
+                .zip(
+                    other
+                        .vertex_prop_meta
+                        .iter()
+                        .sorted_by(|e1, e2| e1.0.cmp(e2.0)),
+                )
             {
                 is_eq = k1 == k2 && is_map_eq(v1, v2);
                 if !is_eq {
@@ -180,7 +178,12 @@ impl PartialEq for LDBCGraphSchema {
                 .edge_prop_meta
                 .iter()
                 .sorted_by(|e1, e2| e1.0.cmp(e2.0))
-                .zip(other.edge_prop_meta.iter().sorted_by(|e1, e2| e1.0.cmp(e2.0)))
+                .zip(
+                    other
+                        .edge_prop_meta
+                        .iter()
+                        .sorted_by(|e1, e2| e1.0.cmp(e2.0)),
+                )
             {
                 is_eq = k1 == k2 && is_map_eq(v1, v2);
                 if !is_eq {
@@ -204,13 +207,20 @@ struct LDBCGraphSchemaJson {
 impl<'a> From<&'a LDBCGraphSchema> for LDBCGraphSchemaJson {
     fn from(schema: &'a LDBCGraphSchema) -> Self {
         let vertex_type_map = schema.vertex_type_to_id.clone();
-        let edge_type_map: HashMap<String, LabelId> =
-            schema.edge_type_to_id.iter().map(|(name, id)| (name.clone(), *id)).collect();
+        let edge_type_map: HashMap<String, LabelId> = schema
+            .edge_type_to_id
+            .iter()
+            .map(|(name, id)| (name.clone(), *id))
+            .collect();
 
-        let vertex_type_map_rev: HashMap<LabelId, String> =
-            vertex_type_map.iter().map(|(name, id)| (*id, name.clone())).collect();
-        let edge_type_map_rev: HashMap<LabelId, String> =
-            edge_type_map.iter().map(|(name, id)| (*id, name.clone())).collect();
+        let vertex_type_map_rev: HashMap<LabelId, String> = vertex_type_map
+            .iter()
+            .map(|(name, id)| (*id, name.clone()))
+            .collect();
+        let edge_type_map_rev: HashMap<LabelId, String> = edge_type_map
+            .iter()
+            .map(|(name, id)| (*id, name.clone()))
+            .collect();
 
         let mut vertex_prop =
             HashMap::<String, Vec<(String, DataType)>>::with_capacity(schema.vertex_prop_vec.len());
@@ -232,8 +242,11 @@ impl<'a> From<&'a LDBCGraphSchema> for LDBCGraphSchemaJson {
 impl<'a> From<&'a LDBCGraphSchemaJson> for LDBCGraphSchema {
     fn from(schema_json: &'a LDBCGraphSchemaJson) -> Self {
         let vertex_type_to_id = schema_json.vertex_type_map.clone();
-        let edge_type_to_id: HashMap<String, LabelId> =
-            schema_json.edge_type_map.iter().map(|(name, id)| (name.clone(), *id)).collect();
+        let edge_type_to_id: HashMap<String, LabelId> = schema_json
+            .edge_type_map
+            .iter()
+            .map(|(name, id)| (name.clone(), *id))
+            .collect();
         let mut vertex_prop_meta: HashMap<LabelId, HashMap<String, (DataType, usize)>> =
             HashMap::with_capacity(schema_json.vertex_prop.len());
         let mut vertex_prop_vec: HashMap<LabelId, Vec<(String, DataType)>> =
@@ -245,8 +258,12 @@ impl<'a> From<&'a LDBCGraphSchemaJson> for LDBCGraphSchema {
 
         for (key, value) in &schema_json.vertex_prop {
             let label_id = vertex_type_to_id[key];
-            let vertex_map = vertex_prop_meta.entry(label_id).or_insert_with(HashMap::new);
-            let vertex_vec = vertex_prop_vec.entry(label_id).or_insert_with(Vec::new);
+            let vertex_map = vertex_prop_meta
+                .entry(label_id)
+                .or_insert_with(HashMap::new);
+            let vertex_vec = vertex_prop_vec
+                .entry(label_id)
+                .or_insert_with(Vec::new);
 
             for (index, (name, dt)) in value.iter().enumerate() {
                 vertex_map.insert(name.clone(), (dt.clone(), index));
@@ -256,8 +273,12 @@ impl<'a> From<&'a LDBCGraphSchemaJson> for LDBCGraphSchema {
 
         for (key, value) in &schema_json.edge_prop {
             let label_id = edge_type_to_id[key];
-            let edge_map = edge_prop_meta.entry(label_id).or_insert_with(HashMap::new);
-            let edge_vec = edge_prop_vec.entry(label_id).or_insert_with(Vec::new);
+            let edge_map = edge_prop_meta
+                .entry(label_id)
+                .or_insert_with(HashMap::new);
+            let edge_vec = edge_prop_vec
+                .entry(label_id)
+                .or_insert_with(Vec::new);
 
             for (index, (name, dt)) in value.iter().enumerate() {
                 edge_map.insert(name.clone(), (dt.clone(), index));
@@ -278,21 +299,21 @@ impl<'a> From<&'a LDBCGraphSchemaJson> for LDBCGraphSchema {
 
 impl Schema for LDBCGraphSchema {
     fn get_vertex_header(&self, vertex_type_id: LabelId) -> Option<&[(String, DataType)]> {
-        self.vertex_prop_vec.get(&vertex_type_id).map(|vec| vec.as_slice())
+        self.vertex_prop_vec
+            .get(&vertex_type_id)
+            .map(|vec| vec.as_slice())
     }
     fn get_edge_header(&self, edge_type_id: LabelId) -> Option<&[(String, DataType)]> {
-        self.edge_prop_vec.get(&edge_type_id).map(|vec| vec.as_slice())
+        self.edge_prop_vec
+            .get(&edge_type_id)
+            .map(|vec| vec.as_slice())
     }
 
-    fn get_vertex_schema(
-        &self, vertex_type_id: LabelId,
-    ) -> Option<&HashMap<String, (DataType, usize)>> {
+    fn get_vertex_schema(&self, vertex_type_id: LabelId) -> Option<&HashMap<String, (DataType, usize)>> {
         self.vertex_prop_meta.get(&vertex_type_id)
     }
 
-    fn get_edge_schema(
-        &self, edge_type_id: LabelId,
-    ) -> Option<&HashMap<String, (DataType, usize)>> {
+    fn get_edge_schema(&self, edge_type_id: LabelId) -> Option<&HashMap<String, (DataType, usize)>> {
         self.edge_prop_meta.get(&edge_type_id)
     }
 
@@ -310,8 +331,8 @@ impl JsonConf<LDBCGraphSchemaJson> for LDBCGraphSchemaJson {}
 impl JsonConf<LDBCGraphSchema> for LDBCGraphSchema {
     fn from_json_file<P: AsRef<Path>>(path: P) -> std::io::Result<Self> {
         let file = File::open(path)?;
-        let schema_json = serde_json::from_reader::<File, LDBCGraphSchemaJson>(file)
-            .map_err(std::io::Error::from)?;
+        let schema_json =
+            serde_json::from_reader::<File, LDBCGraphSchemaJson>(file).map_err(std::io::Error::from)?;
         Ok(LDBCGraphSchema::from(&schema_json))
     }
 
@@ -339,10 +360,11 @@ mod test {
 
     #[test]
     fn test_trim_schema() {
-        let mut schema =
-            LDBCGraphSchema::from_json_file("data/schema.json").expect("Get schema error");
+        let mut schema = LDBCGraphSchema::from_json_file("data/schema.json").expect("Get schema error");
 
-        let vertex_label = schema.get_vertex_label_id("ORGANISATION").unwrap();
+        let vertex_label = schema
+            .get_vertex_label_id("ORGANISATION")
+            .unwrap();
         let org_header = schema.get_vertex_header(vertex_label).unwrap();
         assert_eq!(
             org_header,
@@ -365,8 +387,12 @@ mod test {
 
         assert!(is_map_eq(org_schema, &expected_org_schema));
 
-        let label_tuple = schema.get_edge_label_tuple("PERSON_KNOWS_PERSON").unwrap();
-        let knows_header = schema.get_edge_header(label_tuple.edge_label).unwrap();
+        let label_tuple = schema
+            .get_edge_label_tuple("PERSON_KNOWS_PERSON")
+            .unwrap();
+        let knows_header = schema
+            .get_edge_header(label_tuple.edge_label)
+            .unwrap();
         assert_eq!(
             knows_header,
             &[
@@ -375,7 +401,9 @@ mod test {
                 ("creationDate".to_string(), DataType::Date),
             ]
         );
-        let knows_schema = schema.get_edge_schema(label_tuple.edge_label).unwrap();
+        let knows_schema = schema
+            .get_edge_schema(label_tuple.edge_label)
+            .unwrap();
         let expected_knows_schema: HashMap<String, (DataType, usize)> = vec![
             ("start_id".to_string(), (DataType::ID, 0)),
             ("end_id".to_string(), (DataType::ID, 1)),
@@ -388,7 +416,9 @@ mod test {
         // after trimming the schema
         schema.trim();
 
-        let vertex_label = schema.get_vertex_label_id("ORGANISATION").unwrap();
+        let vertex_label = schema
+            .get_vertex_label_id("ORGANISATION")
+            .unwrap();
         let org_header = schema.get_vertex_header(vertex_label).unwrap();
         assert_eq!(
             org_header,
@@ -409,12 +439,20 @@ mod test {
 
         assert!(is_map_eq(org_schema, &expected_org_schema));
 
-        let label_tuple = schema.get_edge_label_tuple("PERSON_KNOWS_PERSON").unwrap();
-        let knows_header = schema.get_edge_header(label_tuple.edge_label).unwrap();
+        let label_tuple = schema
+            .get_edge_label_tuple("PERSON_KNOWS_PERSON")
+            .unwrap();
+        let knows_header = schema
+            .get_edge_header(label_tuple.edge_label)
+            .unwrap();
         assert_eq!(knows_header, &[("creationDate".to_string(), DataType::Date),]);
-        let knows_schema = schema.get_edge_schema(label_tuple.edge_label).unwrap();
+        let knows_schema = schema
+            .get_edge_schema(label_tuple.edge_label)
+            .unwrap();
         let expected_knows_schema: HashMap<String, (DataType, usize)> =
-            vec![("creationDate".to_string(), (DataType::Date, 0))].into_iter().collect();
+            vec![("creationDate".to_string(), (DataType::Date, 0))]
+                .into_iter()
+                .collect();
 
         assert!(is_map_eq(knows_schema, &expected_knows_schema));
     }

@@ -13,10 +13,11 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use dyn_type::CastError;
 use std::any::Any;
 use std::io::Error;
 use std::num::{ParseFloatError, ParseIntError};
+
+use dyn_type::CastError;
 
 pub type GDBResult<T> = Result<T, GDBError>;
 

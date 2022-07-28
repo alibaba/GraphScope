@@ -15,8 +15,9 @@
 
 #[cfg(test)]
 mod tests {
-    use dyn_type::{object, BorrowObject, Object, Primitives};
     use std::cmp::Ordering;
+
+    use dyn_type::{object, BorrowObject, Object, Primitives};
 
     #[test]
     fn test_as_primitive() {

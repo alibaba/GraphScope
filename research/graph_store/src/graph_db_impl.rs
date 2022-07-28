@@ -13,6 +13,16 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::collections::HashMap;
+use std::fs::create_dir_all;
+use std::path::PathBuf;
+use std::sync::Arc;
+
+use petgraph::graph::{edge_index, EdgeReference, IndexType};
+use petgraph::prelude::*;
+use serde::de::DeserializeOwned;
+use serde::Serialize;
+
 use super::graph_db::*;
 use crate::common::*;
 use crate::config::{
@@ -23,14 +33,6 @@ use crate::io::export;
 use crate::schema::{LDBCGraphSchema, Schema};
 use crate::table::*;
 use crate::utils::{Iter, IterList};
-use petgraph::graph::{edge_index, EdgeReference, IndexType};
-use petgraph::prelude::*;
-use serde::de::DeserializeOwned;
-use serde::Serialize;
-use std::collections::HashMap;
-use std::fs::create_dir_all;
-use std::path::PathBuf;
-use std::sync::Arc;
 
 /// To record the indexing data of this partition of graph. Each vertex has both a globally
 /// unique identifier, as well as a local id (index) generated while adding this vertex to the
@@ -76,11 +78,9 @@ where
         &mut self, global_id: G, label: Label, internal_id: NodeIndex<I>, is_corner: bool,
     ) -> bool {
         let existed = if !is_corner {
-            let max_label_id = if label[1] != INVALID_LABEL_ID {
-                std::cmp::max(label[0], label[1])
-            } else {
-                label[0]
-            } as usize;
+            let max_label_id =
+                if label[1] != INVALID_LABEL_ID { std::cmp::max(label[0], label[1]) } else { label[0] }
+                    as usize;
             // only a non-corner vertex will be inserted in the labelled vectors.
             while max_label_id >= self.label_indices.len() {
                 self.label_indices.push(vec![]);
@@ -91,9 +91,13 @@ where
                 self.label_indices[label[1] as usize].push(internal_id);
             }
 
-            self.global_id_to_index.insert(global_id, internal_id).is_some()
+            self.global_id_to_index
+                .insert(global_id, internal_id)
+                .is_some()
         } else {
-            self.corner_global_id_to_index.insert(global_id, internal_id).is_some()
+            self.corner_global_id_to_index
+                .insert(global_id, internal_id)
+                .is_some()
         };
 
         while internal_id.index() >= self.index_to_global_id.len() {
@@ -111,7 +115,9 @@ where
         if local_id.is_some() {
             local_id.cloned()
         } else {
-            self.corner_global_id_to_index.get(&global_id).cloned()
+            self.corner_global_id_to_index
+                .get(&global_id)
+                .cloned()
         }
     }
 
@@ -126,7 +132,9 @@ where
 
     /// Get global id from a given internal id
     fn get_global_id(&self, internal_id: NodeIndex<I>) -> Option<G> {
-        self.index_to_global_id.get(internal_id.index()).cloned()
+        self.index_to_global_id
+            .get(internal_id.index())
+            .cloned()
     }
 
     fn shrink_to_fit(&mut self) {
@@ -189,9 +197,7 @@ where
     E: PropertyTableTrait + Sync,
 {
     // Below are some private helper functions
-    fn index_to_local_vertex(
-        &self, index: NodeIndex<I>, with_property: bool,
-    ) -> Option<LocalVertex<G>> {
+    fn index_to_local_vertex(&self, index: NodeIndex<I>, with_property: bool) -> Option<LocalVertex<G>> {
         if let Some(global_id) = self.index_data.get_global_id(index) {
             let label = self.graph.node_weight(index).cloned().unwrap();
             if with_property {
@@ -238,7 +244,9 @@ where
     /// Verify if a vertex of given `index` is local to this partition
     fn _is_vertex_local(&self, index: NodeIndex<I>) -> bool {
         if let Some(gid) = self.index_data.get_global_id(index) {
-            self.index_data.global_id_to_index.contains_key(&gid)
+            self.index_data
+                .global_id_to_index
+                .contains_key(&gid)
         } else {
             false
         }
@@ -264,9 +272,11 @@ where
                     })
                     .map(move |edge| {
                         if dir == Direction::Outgoing {
-                            self.index_to_local_vertex(edge.target(), false).unwrap()
+                            self.index_to_local_vertex(edge.target(), false)
+                                .unwrap()
                         } else {
-                            self.index_to_local_vertex(edge.source(), false).unwrap()
+                            self.index_to_local_vertex(edge.source(), false)
+                                .unwrap()
                         }
                     }),
             )
@@ -286,14 +296,14 @@ where
             Iter::from_iter(
                 self.graph
                     .edges_directed(index.unwrap(), dir)
-                    .filter(move |edge| {
-                        edge_labels.contains(self.graph.edge_weight(edge.id()).unwrap())
-                    })
+                    .filter(move |edge| edge_labels.contains(self.graph.edge_weight(edge.id()).unwrap()))
                     .map(move |edge| {
                         if dir == Direction::Outgoing {
-                            self.index_to_local_vertex(edge.target(), false).unwrap()
+                            self.index_to_local_vertex(edge.target(), false)
+                                .unwrap()
                         } else {
-                            self.index_to_local_vertex(edge.source(), false).unwrap()
+                            self.index_to_local_vertex(edge.source(), false)
+                                .unwrap()
                         }
                     }),
             )
@@ -321,7 +331,8 @@ where
                         if dir == Direction::Outgoing {
                             self.edge_ref_to_local_edge(edge, true).unwrap()
                         } else {
-                            self.edge_ref_to_local_edge(edge, false).unwrap()
+                            self.edge_ref_to_local_edge(edge, false)
+                                .unwrap()
                         }
                     }),
             )
@@ -338,14 +349,13 @@ where
             Iter::from_iter(
                 self.graph
                     .edges_directed(index.unwrap(), dir)
-                    .filter(move |edge| {
-                        edge_labels.contains(self.graph.edge_weight(edge.id()).unwrap())
-                    })
+                    .filter(move |edge| edge_labels.contains(self.graph.edge_weight(edge.id()).unwrap()))
                     .map(move |edge| {
                         if dir == Direction::Outgoing {
                             self.edge_ref_to_local_edge(edge, true).unwrap()
                         } else {
-                            self.edge_ref_to_local_edge(edge, false).unwrap()
+                            self.edge_ref_to_local_edge(edge, false)
+                                .unwrap()
                         }
                     }),
             )
@@ -359,7 +369,10 @@ where
             let iter = self
                 .index_data
                 .get_indices_of_label(label as LabelId)
-                .map(move |internal_id| self.index_to_local_vertex(internal_id, true).unwrap());
+                .map(move |internal_id| {
+                    self.index_to_local_vertex(internal_id, true)
+                        .unwrap()
+                });
             Iter::from_iter(iter)
         } else {
             // return all vertices
@@ -367,7 +380,10 @@ where
                 .graph
                 .node_indices()
                 .filter(move |internal_id| self._is_vertex_local(*internal_id))
-                .map(move |internal_id| self.index_to_local_vertex(internal_id, true).unwrap());
+                .map(move |internal_id| {
+                    self.index_to_local_vertex(internal_id, true)
+                        .unwrap()
+                });
 
             Iter::from_iter(iter)
         }
@@ -379,7 +395,10 @@ where
             let result_iter_of_label = self
                 .index_data
                 .get_indices_of_label(label as LabelId)
-                .map(move |internal_id| self.index_to_local_vertex(internal_id, true).unwrap());
+                .map(move |internal_id| {
+                    self.index_to_local_vertex(internal_id, true)
+                        .unwrap()
+                });
             result_iter.push(result_iter_of_label);
         }
 
@@ -426,7 +445,9 @@ where
     /// Get incoming degree of a vertex
     pub fn in_degree(&self, global_id: G) -> usize {
         if let Some(id) = self.index_data.get_internal_id(global_id) {
-            self.graph.neighbors_directed(id, Direction::Incoming).count()
+            self.graph
+                .neighbors_directed(id, Direction::Incoming)
+                .count()
         } else {
             0
         }
@@ -435,7 +456,9 @@ where
     /// Get outgoing degree of a vertex
     pub fn out_degree(&self, global_id: G) -> usize {
         if let Some(id) = self.index_data.get_internal_id(global_id) {
-            self.graph.neighbors_directed(id, Direction::Outgoing).count()
+            self.graph
+                .neighbors_directed(id, Direction::Outgoing)
+                .count()
         } else {
             0
         }
@@ -452,7 +475,9 @@ where
 
     /// Verify if a vertex of given `global_id` is local to this partition
     pub fn is_vertex_local(&self, global_id: G) -> bool {
-        self.index_data.global_id_to_index.contains_key(&global_id)
+        self.index_data
+            .global_id_to_index
+            .contains_key(&global_id)
     }
 
     /// Print the statistics for debugging
@@ -498,10 +523,14 @@ where
     E: PropertyTableTrait,
 {
     fn get_all_vertex_property(&self, internal_id: &NodeIndex<I>) -> Option<RowRef> {
-        self.vertex_prop_table.get_row(internal_id.index()).ok()
+        self.vertex_prop_table
+            .get_row(internal_id.index())
+            .ok()
     }
     fn get_all_edge_property(&self, internal_id: &EdgeIndex<I>) -> Option<RowRef> {
-        self.edge_prop_table.get_row(internal_id.index()).ok()
+        self.edge_prop_table
+            .get_row(internal_id.index())
+            .ok()
     }
 }
 
@@ -599,7 +628,11 @@ where
         let mut count = 0;
         if let Some(labels) = _labels {
             for &label in labels {
-                if let Some(ids) = self.index_data.label_indices.get(label as usize) {
+                if let Some(ids) = self
+                    .index_data
+                    .label_indices
+                    .get(label as usize)
+                {
                     count += ids.len();
                 }
             }
@@ -611,8 +644,10 @@ where
     }
 
     fn count_all_edges(&self, _labels: Option<&Vec<LabelId>>) -> usize {
-        let edge_iter =
-            self.graph.edge_references().filter(|edge| self._is_vertex_local(edge.source()));
+        let edge_iter = self
+            .graph
+            .edge_references()
+            .filter(|edge| self._is_vertex_local(edge.source()));
 
         if let Some(labels) = _labels {
             edge_iter
@@ -673,7 +708,11 @@ where
     /// with a `false` indicator. Otherwise, return the newly assigned internal id of the vertex,
     /// with a `true` indicator
     fn add_vertex_internal(&mut self, global_id: G, label: Label) -> (bool, NodeIndex<I>) {
-        if let Some(existed_vertex) = self.index_data.global_id_to_index.get(&global_id) {
+        if let Some(existed_vertex) = self
+            .index_data
+            .global_id_to_index
+            .get(&global_id)
+        {
             // update a more fine-grained label
             if label[1] != INVALID_LABEL_ID {
                 if let Some(w) = self.graph.node_weight_mut(*existed_vertex) {
@@ -684,7 +723,8 @@ where
             (false, existed_vertex.clone())
         } else {
             let index = self.graph.add_node(label);
-            self.index_data.add_vertex(global_id, label, index, false);
+            self.index_data
+                .add_vertex(global_id, label, index, false);
 
             (true, index)
         }
@@ -693,15 +733,18 @@ where
     /// Similar to `Self::add_vertex_internal`, but adding a corner vertex.
     /// Unlike `Self::add_vertex_internal`:
     ///     ** Will not update a corner vertex's label if it already presents **.
-    fn add_corner_vertex_internal(
-        &mut self, global_id: G, label_id: LabelId,
-    ) -> (bool, NodeIndex<I>) {
-        if let Some(existed_vertex) = self.index_data.corner_global_id_to_index.get(&global_id) {
+    fn add_corner_vertex_internal(&mut self, global_id: G, label_id: LabelId) -> (bool, NodeIndex<I>) {
+        if let Some(existed_vertex) = self
+            .index_data
+            .corner_global_id_to_index
+            .get(&global_id)
+        {
             return (false, existed_vertex.clone());
         }
         let label = [label_id, INVALID_LABEL_ID];
         let index = self.graph.add_node(label);
-        self.index_data.add_vertex(global_id, label, index, true);
+        self.index_data
+            .add_vertex(global_id, label, index, true);
 
         (true, index)
     }
@@ -718,7 +761,10 @@ where
         if _src_index.is_some() && _dst_index.is_some() {
             let src_index = _src_index.unwrap();
             let dst_index = _dst_index.unwrap();
-            Some(self.graph.add_edge(src_index, dst_index, label_id))
+            Some(
+                self.graph
+                    .add_edge(src_index, dst_index, label_id),
+            )
         } else {
             None
         }
@@ -726,7 +772,9 @@ where
 
     /// Verify if a vertex of given `global_id` is local to this partition
     pub fn is_vertex_local(&self, global_id: G) -> bool {
-        self.index_data.global_id_to_index.contains_key(&global_id)
+        self.index_data
+            .global_id_to_index
+            .contains_key(&global_id)
     }
 
     pub fn shrink_to_fit(&mut self) {
@@ -765,14 +813,18 @@ where
     /// Export this object to bin files
     pub fn export(&self) -> GDBResult<()> {
         info!("Partition {:?} writing binary file...", self.partition);
-        let partition_dir =
-            self.root_dir.join(DIR_BINARY_DATA).join(format!("partition_{}", self.partition));
+        let partition_dir = self
+            .root_dir
+            .join(DIR_BINARY_DATA)
+            .join(format!("partition_{}", self.partition));
 
         create_dir_all(&partition_dir)?;
 
         export(&self.graph, &partition_dir.join(FILE_GRAPH_STRUCT))?;
-        self.vertex_prop_table.export(&partition_dir.join(FILE_NODE_PPT_DATA))?;
-        self.edge_prop_table.export(&partition_dir.join(FILE_EDGE_PPT_DATA))?;
+        self.vertex_prop_table
+            .export(&partition_dir.join(FILE_NODE_PPT_DATA))?;
+        self.edge_prop_table
+            .export(&partition_dir.join(FILE_EDGE_PPT_DATA))?;
         export(&self.index_data, &partition_dir.join(FILE_INDEX_DATA))?;
 
         Ok(())
@@ -791,28 +843,30 @@ where
     }
 
     fn add_corner_vertex(&mut self, global_id: G, label_id: LabelId) -> bool {
-        self.add_corner_vertex_internal(global_id, label_id).0
+        self.add_corner_vertex_internal(global_id, label_id)
+            .0
     }
 
-    fn add_or_update_vertex_properties(
-        &mut self, global_id: G, properties: Row,
-    ) -> GDBResult<Option<Row>> {
+    fn add_or_update_vertex_properties(&mut self, global_id: G, properties: Row) -> GDBResult<Option<Row>> {
         if let Some(internal_id) = self.index_data.get_internal_id(global_id) {
-            self.vertex_prop_table.insert(internal_id.index(), properties)
+            self.vertex_prop_table
+                .insert(internal_id.index(), properties)
         } else {
             Err(GDBError::VertexNotFoundError)
         }
     }
 
     fn add_edge(&mut self, global_src_id: G, global_dst_id: G, label_id: LabelId) -> bool {
-        self.add_edge_internal(global_src_id, global_dst_id, label_id).is_some()
+        self.add_edge_internal(global_src_id, global_dst_id, label_id)
+            .is_some()
     }
 
     fn add_edge_with_properties(
         &mut self, global_src_id: G, global_dst_id: G, label_id: LabelId, properties: Row,
     ) -> GDBResult<Option<Row>> {
         if let Some(edge_id) = self.add_edge_internal(global_src_id, global_dst_id, label_id) {
-            self.edge_prop_table.insert(edge_id.index(), properties)
+            self.edge_prop_table
+                .insert(edge_id.index(), properties)
         } else {
             GDBResult::Err(GDBError::EdgeNotFoundError)
         }
@@ -834,7 +888,8 @@ where
             }
         }
 
-        self.vertex_prop_table.insert_batches(properties.into_iter())?;
+        self.vertex_prop_table
+            .insert_batches(properties.into_iter())?;
 
         Ok(count)
     }
@@ -854,7 +909,9 @@ where
             }
         }
 
-        let _ = self.edge_prop_table.insert_batches(properties.into_iter())?;
+        let _ = self
+            .edge_prop_table
+            .insert_batches(properties.into_iter())?;
 
         Ok(count)
     }
@@ -863,13 +920,14 @@ where
 #[cfg(test)]
 mod test {
 
+    use std::path::Path;
+
     use super::*;
     use crate::config::{GraphDBConfig, JsonConf};
     use crate::ldbc::*;
     use crate::parser::DataType;
     use crate::schema::ID_FIELD;
     use crate::table::ItemType;
-    use std::path::Path;
 
     // person ids
     static PIDS: [DefaultId; 9] = [
@@ -899,8 +957,10 @@ mod test {
     #[test]
     fn test_graph_store_update() {
         let root_dir = "data/small_data";
-        let mut graphdb: MutableGraphDB<DefaultId, InternalId> =
-            GraphDBConfig::default().root_dir(root_dir).number_vertex_labels(20).new();
+        let mut graphdb: MutableGraphDB<DefaultId, InternalId> = GraphDBConfig::default()
+            .root_dir(root_dir)
+            .number_vertex_labels(20)
+            .new();
         assert!(graphdb.add_vertex(PIDS[0], [1, INVALID_LABEL_ID]));
         // Cannot re-add a vertex
         assert!(!graphdb.add_vertex(PIDS[0], [1, INVALID_LABEL_ID]));
@@ -911,10 +971,15 @@ mod test {
         let new_prop = Row::from(vec![object!(16), object!("Steve")]);
 
         // Update the vertex's properties
-        assert!(graphdb.add_or_update_vertex_properties(PIDS[0], prop.clone()).unwrap().is_none());
+        assert!(graphdb
+            .add_or_update_vertex_properties(PIDS[0], prop.clone())
+            .unwrap()
+            .is_none());
 
         // The vertex PIDS[1] does no exist, can not update
-        assert!(graphdb.add_or_update_vertex_properties(PIDS[1], prop.clone()).is_err());
+        assert!(graphdb
+            .add_or_update_vertex_properties(PIDS[1], prop.clone())
+            .is_err());
 
         // Add vertex PIDS[1]
         assert!(graphdb
@@ -946,26 +1011,39 @@ mod test {
             .is_none());
 
         // PIDS[3] does not exist, thus return error.
-        assert!(graphdb.add_edge_with_properties(PIDS[0], PIDS[3], 12, edge_prop.clone()).is_err());
+        assert!(graphdb
+            .add_edge_with_properties(PIDS[0], PIDS[3], 12, edge_prop.clone())
+            .is_err());
 
-        let schema =
-            LDBCGraphSchema::from_json_file("data/schema.json").expect("Get Schema error!");
+        let schema = LDBCGraphSchema::from_json_file("data/schema.json").expect("Get Schema error!");
 
         let graph = graphdb.into_graph(schema);
 
         assert_eq!(
             vec![prop.clone().get(0), prop.clone().get(1)],
             vec![
-                graph.get_vertex(PIDS[0]).unwrap().get_property(ID_FIELD),
-                graph.get_vertex(PIDS[0]).unwrap().get_property("firstName"),
+                graph
+                    .get_vertex(PIDS[0])
+                    .unwrap()
+                    .get_property(ID_FIELD),
+                graph
+                    .get_vertex(PIDS[0])
+                    .unwrap()
+                    .get_property("firstName"),
             ]
         );
 
         assert_eq!(
             vec![new_prop.clone().get(0), new_prop.clone().get(1)],
             vec![
-                graph.get_vertex(PIDS[1]).unwrap().get_property(ID_FIELD),
-                graph.get_vertex(PIDS[1]).unwrap().get_property("firstName"),
+                graph
+                    .get_vertex(PIDS[1])
+                    .unwrap()
+                    .get_property(ID_FIELD),
+                graph
+                    .get_vertex(PIDS[1])
+                    .unwrap()
+                    .get_property("firstName"),
             ]
         );
 
@@ -983,8 +1061,7 @@ mod test {
         let data_dir = "data/small_data";
         let root_dir = "data/small_data";
         let schema_file = "data/schema.json";
-        let mut loader =
-            GraphLoader::<DefaultId, u32>::new(data_dir, root_dir, schema_file, 20, 0, 1);
+        let mut loader = GraphLoader::<DefaultId, u32>::new(data_dir, root_dir, schema_file, 20, 0, 1);
         // load whole graph
         loader.load().expect("Load graph error!");
         let graphdb = loader.into_graph();
@@ -1067,10 +1144,7 @@ mod test {
             .map(|item| (item.get_id(), item.get_label()[0]))
             .collect();
         out_vertices_knows.sort();
-        assert_eq!(
-            vec![(PIDS[3], 1), (PIDS[6], 1), (PIDS[7], 1), (PIDS[8], 1)],
-            out_vertices_knows
-        );
+        assert_eq!(vec![(PIDS[3], 1), (PIDS[6], 1), (PIDS[7], 1), (PIDS[8], 1)], out_vertices_knows);
 
         // test get_in_edges..
         let in_edge_neighbor: Vec<(DefaultId, Option<ItemType>)> = graphdb
@@ -1078,7 +1152,8 @@ mod test {
             .map(move |item| {
                 (
                     item.get_src_id(),
-                    item.get_property("creationDate").map(|obj| obj.try_to_owned().unwrap()),
+                    item.get_property("creationDate")
+                        .map(|obj| obj.try_to_owned().unwrap()),
                 )
             })
             .collect();
@@ -1092,7 +1167,8 @@ mod test {
             .map(move |item| {
                 (
                     item.get_src_id(),
-                    item.get_property("creationDate").map(|obj| obj.try_to_owned().unwrap()),
+                    item.get_property("creationDate")
+                        .map(|obj| obj.try_to_owned().unwrap()),
                 )
             })
             .collect();
@@ -1104,7 +1180,8 @@ mod test {
             .map(move |item| {
                 (
                     item.get_dst_id(),
-                    item.get_property("creationDate").map(|obj| obj.try_to_owned().unwrap()),
+                    item.get_property("creationDate")
+                        .map(|obj| obj.try_to_owned().unwrap()),
                 )
             })
             .collect();
@@ -1185,18 +1262,30 @@ mod test {
         let expected_results: Vec<&str> = record.split('|').collect();
 
         let mut index = 0;
-        for (name, dt) in graph.get_schema().get_vertex_header(vertex.get_label()[0]).unwrap() {
+        for (name, dt) in graph
+            .get_schema()
+            .get_vertex_header(vertex.get_label()[0])
+            .unwrap()
+        {
             if name != "~LABEL" {
                 // does not store LABEL as properties
                 match dt {
                     DataType::String => {
                         assert_eq!(
-                            vertex.get_property(name).unwrap().as_str().unwrap(),
+                            vertex
+                                .get_property(name)
+                                .unwrap()
+                                .as_str()
+                                .unwrap(),
                             expected_results[index]
                         )
                     }
                     _ => assert_eq!(
-                        vertex.get_property(name).unwrap().as_u64().unwrap(),
+                        vertex
+                            .get_property(name)
+                            .unwrap()
+                            .as_u64()
+                            .unwrap(),
                         expected_results[index].parse::<u64>().unwrap()
                     ),
                 }
@@ -1210,8 +1299,7 @@ mod test {
         let data_dir = "data/large_data";
         let root_dir = "data/large_data";
         let schema_file = "data/schema.json";
-        let mut loader =
-            GraphLoader::<DefaultId, u32>::new(data_dir, root_dir, schema_file, 20, 0, 1);
+        let mut loader = GraphLoader::<DefaultId, u32>::new(data_dir, root_dir, schema_file, 20, 0, 1);
         // load whole graph
         loader.load().expect("Load graph error!");
         let graphdb = loader.into_graph();

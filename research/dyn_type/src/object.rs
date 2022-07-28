@@ -13,9 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::{try_downcast, try_downcast_ref, CastError, DynType};
 use core::any::TypeId;
-use itertools::Itertools;
 use std::any::Any;
 use std::borrow::Cow;
 use std::cmp::Ordering;
@@ -24,6 +22,10 @@ use std::convert::TryFrom;
 use std::fmt::Debug;
 use std::hash::{Hash, Hasher};
 use std::ops::Deref;
+
+use itertools::Itertools;
+
+use crate::{try_downcast, try_downcast_ref, CastError, DynType};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum RawType {
@@ -939,9 +941,9 @@ macro_rules! partial_cmp {
                     Some(Ordering::Greater)
                 } else {
                     $other
-                    .as_primitive()
-                    .map(|o| p.partial_cmp(&o))
-                    .unwrap_or(None)
+                        .as_primitive()
+                        .map(|o| p.partial_cmp(&o))
+                        .unwrap_or(None)
                 }
             }
             $crate::$ty::Blob(v) => $other

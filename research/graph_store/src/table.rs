@@ -13,15 +13,17 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::error::{GDBError, GDBResult};
+use std::collections::HashMap;
+use std::path::Path;
+
 use dyn_type::{BorrowObject, Object};
 use pegasus_common::codec::{Decode, Encode};
 use pegasus_common::io::{ReadExt, WriteExt};
 use serde::de::Error as DeError;
 use serde::ser::Error as SerError;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use std::collections::HashMap;
-use std::path::Path;
+
+use crate::error::{GDBError, GDBResult};
 
 /// A generic datatype for each item in a row
 pub type ItemType = Object;
@@ -195,9 +197,7 @@ pub trait PropertyTableTrait {
 
     /// Batch inserting a certain number of items
     /// Return the number of data that is successfully inserted
-    fn insert_batches<Iter: Iterator<Item = (usize, Row)>>(
-        &mut self, iter: Iter,
-    ) -> GDBResult<usize> {
+    fn insert_batches<Iter: Iterator<Item = (usize, Row)>>(&mut self, iter: Iter) -> GDBResult<usize> {
         let mut count = 0;
         for item in iter {
             if self.insert(item.0, item.1)?.is_none() {
@@ -340,11 +340,15 @@ impl PropertyTableTrait for SingleValueTable {
         let mut _ret_val = None;
         let item = row.get(0).unwrap();
         if let Ok(number) = item.as_u64() {
-            _ret_val =
-                self.property.insert(index, SimpleType::Integer(number)).map(|num| Row::from(num));
+            _ret_val = self
+                .property
+                .insert(index, SimpleType::Integer(number))
+                .map(|num| Row::from(num));
         } else if let Ok(number) = item.as_f64() {
-            _ret_val =
-                self.property.insert(index, SimpleType::Double(number)).map(|num| Row::from(num));
+            _ret_val = self
+                .property
+                .insert(index, SimpleType::Double(number))
+                .map(|num| Row::from(num));
         } else {
             return GDBResult::Err(GDBError::ParseError);
         }
@@ -379,11 +383,17 @@ mod test {
         assert_eq!(table.len(), 0);
         assert_eq!(table.get_row(0).unwrap(), RowRef::None);
 
-        assert!(table.insert(0, Row::default()).unwrap().is_none());
+        assert!(table
+            .insert(0, Row::default())
+            .unwrap()
+            .is_none());
         assert_eq!(table.len(), 1);
         assert_eq!(table.get_row(0).unwrap(), RowRef::Ref(&Row::default()));
 
-        assert!(table.insert(2, Row::from("abc".to_string())).unwrap().is_none());
+        assert!(table
+            .insert(2, Row::from("abc".to_string()))
+            .unwrap()
+            .is_none());
         assert_eq!(table.len(), 3);
         assert_eq!(table.get_row(1).unwrap(), RowRef::Ref(&Row::default()));
         assert_eq!(table.get_row(2).unwrap(), RowRef::Ref(&Row::from("abc".to_string())));
@@ -398,11 +408,17 @@ mod test {
         assert_eq!(table.len(), 0);
         assert_eq!(table.get_row(0).unwrap(), RowRef::None);
 
-        assert!(table.insert(0, Row::default()).unwrap().is_none());
+        assert!(table
+            .insert(0, Row::default())
+            .unwrap()
+            .is_none());
         assert_eq!(table.len(), 1);
         assert_eq!(table.get_row(0).unwrap(), RowRef::Ref(&Row::default()));
 
-        assert!(table.insert(2, Row::from("abc".to_string())).unwrap().is_none());
+        assert!(table
+            .insert(2, Row::from("abc".to_string()))
+            .unwrap()
+            .is_none());
         assert_eq!(table.len(), 2);
 
         assert_eq!(table.get_row(2).unwrap(), RowRef::Ref(&Row::from("abc".to_string())));

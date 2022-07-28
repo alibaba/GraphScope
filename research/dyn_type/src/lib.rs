@@ -27,13 +27,14 @@ pub mod macros;
 pub mod serde;
 pub mod serde_dyn;
 
+use std::any::{Any, TypeId};
+use std::fmt::Debug;
+use std::io;
+
 use dyn_clonable::*;
 pub use error::CastError;
 pub use object::{BorrowObject, Object, OwnedOrRef, Primitives};
 pub use serde_dyn::{de_dyn_obj, register_type};
-use std::any::{Any, TypeId};
-use std::fmt::Debug;
-use std::io;
 
 #[clonable]
 pub trait DynType: Any + Send + Sync + Clone + Debug {
