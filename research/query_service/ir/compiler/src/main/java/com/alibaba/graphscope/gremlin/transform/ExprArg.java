@@ -19,6 +19,7 @@ package com.alibaba.graphscope.gremlin.transform;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.IdentityTraversal;
+import org.apache.tinkerpop.gremlin.process.traversal.lambda.TokenTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.ValueTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.PropertiesStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.EmptyStep;
@@ -37,14 +38,20 @@ public class ExprArg {
     // other common traversal type containing list of steps need judge further by
     // TraversalParentTransform
     public ExprArg(Traversal.Admin traversal) {
-        if (traversal == null || traversal instanceof IdentityTraversal) {
+        if (traversal == null || traversal instanceof IdentityTraversal) { // by()
             // do nothing
-        } else if (traversal instanceof ValueTraversal) {
+        } else if (traversal instanceof ValueTraversal) { // by('name')
             stepsInTraversal.add(
                     new PropertiesStep(
                             traversal,
                             PropertyType.VALUE,
                             ((ValueTraversal) traversal).getPropertyKey()));
+        } else if (traversal instanceof TokenTraversal) { // by(T.id/T.label)
+            stepsInTraversal.add(
+                    new PropertiesStep(
+                            traversal,
+                            PropertyType.VALUE,
+                            ((TokenTraversal) traversal).getToken().getAccessor()));
         } else {
             traversal.getSteps().forEach(k -> stepsInTraversal.add((Step) k));
         }

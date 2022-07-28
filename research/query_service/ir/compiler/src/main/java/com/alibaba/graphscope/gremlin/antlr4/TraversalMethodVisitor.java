@@ -29,9 +29,11 @@ import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.process.traversal.step.ByModulating;
+import org.apache.tinkerpop.gremlin.process.traversal.step.filter.DedupGlobalStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.RangeGlobalStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.OrderGlobalStep;
 import org.apache.tinkerpop.gremlin.structure.Column;
+import org.apache.tinkerpop.gremlin.structure.T;
 
 public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal> {
     final GraphTraversal graphTraversal;
@@ -312,6 +314,11 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
                 } else if (byChildCount == 4
                         && byCtx.stringLiteral() != null) { // select(..).by('name')
                     step.modulateBy(GenericLiteralVisitor.getStringLiteral(byCtx.stringLiteral()));
+                } else if (byChildCount == 4
+                        && byCtx.traversalToken() != null) { // select(..).by(T.label/T.id)
+                    step.modulateBy(
+                            TraversalEnumParser.parseTraversalEnumFromContext(
+                                    T.class, byCtx.traversalToken()));
                 } else if (byCtx.traversalMethod_valueMap()
                         != null) { // select(..).by(valueMap('name'))
                     TraversalMethodVisitor nestedVisitor =
@@ -565,7 +572,22 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
 
     @Override
     public Traversal visitTraversalMethod_dedup(GremlinGSParser.TraversalMethod_dedupContext ctx) {
-        return graphTraversal.dedup();
+        graphTraversal.dedup(GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList()));
+        DedupGlobalStep dedup = (DedupGlobalStep) graphTraversal.asAdmin().getEndStep();
+        if (ctx.traversalMethod_dedupby() != null) {
+            GremlinGSParser.TraversalMethod_dedupbyContext byCtx = ctx.traversalMethod_dedupby();
+            if (byCtx.stringLiteral() != null) {
+                dedup.modulateBy(GenericLiteralVisitor.getStringLiteral(byCtx.stringLiteral()));
+            } else if (byCtx.traversalToken() != null) {
+                dedup.modulateBy(
+                        TraversalEnumParser.parseTraversalEnumFromContext(
+                                T.class, byCtx.traversalToken()));
+            } else if (byCtx.nestedTraversal() != null) {
+                Traversal nested = visitNestedTraversal(byCtx.nestedTraversal());
+                dedup.modulateBy(nested.asAdmin());
+            }
+        }
+        return graphTraversal;
     }
 
     @Override

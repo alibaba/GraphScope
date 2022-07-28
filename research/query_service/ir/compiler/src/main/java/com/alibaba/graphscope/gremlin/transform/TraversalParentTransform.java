@@ -135,20 +135,19 @@ public interface TraversalParentTransform extends Function<TraversalParent, List
                     // return null if it is a apply, i.e. dedup().by(out().count())
                     Optional<String> exprOpt =
                             getSubTraversalAsExpr(new ExprArg(dedupTraversal)).getSingleExpr();
-                    // get dedup keys from dedup step, i.e dedup("a") -> ["a"], dedup("a", "b") ->
+                    // get dedup keys from dedup step, i.e dedup() -> [""], dedup("a") -> ["a"],
+                    // dedup("a", "b") ->
                     // ["a", "b"]
-                    Set<String> dedupKeys = dedupStep.getScopeKeys();
-                    if (dedupKeys.isEmpty()) { // dedup() -> FfiVariable<head>
-                        exprRes.addTagExpr("", "@");
-                    } else {
-                        for (String key : dedupKeys) {
-                            if (exprOpt
-                                    .isPresent()) { // dedup().by("name") or dedup("a").by("name")
-                                String expr = exprOpt.get().replace("@", "@" + key);
-                                exprRes.addTagExpr(key, expr);
-                            } else { // dedup().by(out().count())
-                                isExprPattern = false;
-                            }
+                    Set<String> dedupKeys =
+                            dedupStep.getScopeKeys().isEmpty()
+                                    ? Collections.singleton("")
+                                    : dedupStep.getScopeKeys();
+                    for (String key : dedupKeys) {
+                        if (exprOpt.isPresent()) { // dedup().by("name") or dedup("a").by("name")
+                            String expr = exprOpt.get().replace("@", "@" + key);
+                            exprRes.addTagExpr(key, expr);
+                        } else { // dedup().by(out().count())
+                            isExprPattern = false;
                         }
                     }
                     return exprRes.setExprPattern(isExprPattern);

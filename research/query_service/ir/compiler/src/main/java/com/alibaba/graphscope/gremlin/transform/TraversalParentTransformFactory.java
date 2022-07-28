@@ -28,7 +28,9 @@ import com.alibaba.graphscope.gremlin.transform.alias.AliasArg;
 import com.alibaba.graphscope.gremlin.transform.alias.AliasManager;
 import com.alibaba.graphscope.gremlin.transform.alias.AliasPrefixType;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.tinkerpop.gremlin.process.traversal.*;
+import org.apache.tinkerpop.gremlin.process.traversal.lambda.IdentityTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.step.TraversalParent;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.*;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.*;
@@ -105,6 +107,62 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
             ProjectOp op = new ProjectOp();
             op.setExprWithAlias(new OpArg(projectExprWithAlias));
             interOpList.add(op);
+            return interOpList;
+        }
+    },
+    DEDUP_STEP {
+        @Override
+        public List<InterOpBase> apply(TraversalParent parent) {
+            DedupGlobalStep dedupStep = (DedupGlobalStep) parent;
+            List<InterOpBase> interOpList = new ArrayList<>();
+            List<FfiVariable.ByValue> dedupVars = new ArrayList<>();
+            int stepIdx =
+                    TraversalHelper.stepIndex(parent.asStep(), parent.asStep().getTraversal());
+            int subId = 0;
+            ExprResult exprRes =
+                    getSubTraversalAsExpr(
+                            (new ExprArg(Collections.singletonList(parent.asStep()))));
+            Set<String> keys =
+                    dedupStep.getScopeKeys().isEmpty()
+                            ? Collections.singleton("")
+                            : dedupStep.getScopeKeys();
+            Traversal.Admin byTraversal =
+                    dedupStep.getLocalChildren().isEmpty()
+                            ? new IdentityTraversal()
+                            : (Traversal.Admin) dedupStep.getLocalChildren().get(0);
+            for (String k : keys) {
+                Optional<String> exprOpt = exprRes.getTagExpr(k);
+                String expr;
+                if (exprOpt.isPresent()) { // dedup() or dedup().by('name') or dedup('a').by('name')
+                    expr = exprOpt.get();
+                } else { // dedup(..).by(out().count())
+                    ApplyOp applyOp = new ApplyOp();
+                    applyOp.setJoinKind(new OpArg(FfiJoinKind.Inner));
+                    Traversal copy = GremlinAntlrToJava.getTraversalSupplier().get();
+                    // put select("") in apply
+                    if (!StringUtils.isEmpty(k)) { // dedup('a').by(out().count())
+                        copy.asAdmin().addStep(new SelectOneStep(copy.asAdmin(), Pop.last, k));
+                    }
+                    // copy steps in by(..) to apply
+                    byTraversal.getSteps().forEach(s -> copy.asAdmin().addStep((Step) s));
+                    applyOp.setSubOpCollection(
+                            new OpArg<>(
+                                    copy,
+                                    (Traversal traversal) ->
+                                            (new InterOpCollectionBuilder(traversal)).build()));
+                    FfiAlias.ByValue applyAlias =
+                            AliasManager.getFfiAlias(
+                                    new AliasArg(AliasPrefixType.DEFAULT, stepIdx, subId));
+                    applyOp.setAlias(new OpArg(applyAlias));
+                    interOpList.add(applyOp);
+                    String applyAliasName = applyAlias.alias.name;
+                    expr = "@" + applyAliasName;
+                }
+                dedupVars.add(getExpressionAsVar(expr));
+            }
+            DedupOp dedupOp = new DedupOp();
+            dedupOp.setDedupKeys(new OpArg(dedupVars));
+            interOpList.add(dedupOp);
             return interOpList;
         }
     },
