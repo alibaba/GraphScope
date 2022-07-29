@@ -1,7 +1,8 @@
+use std::path::PathBuf;
+
 use pegasus::{Configuration, JobConf, ServerConf};
 use pegasus_server::job::{DynLibraryAssembly, JobDesc};
 use pegasus_server::rpc::RPCServerConfig;
-use std::path::PathBuf;
 use structopt::StructOpt;
 use tokio_stream::StreamExt;
 

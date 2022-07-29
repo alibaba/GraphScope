@@ -1,12 +1,13 @@
-use futures::stream::{BoxStream, SelectAll};
-use futures::{Stream, StreamExt};
-use pegasus::{JobConf, ServerConf};
 use std::cell::RefCell;
 use std::fmt::{Debug, Display, Formatter};
 use std::io::Read;
 use std::path::Path;
 use std::pin::Pin;
 use std::task::{Context, Poll};
+
+use futures::stream::{BoxStream, SelectAll};
+use futures::{Stream, StreamExt};
+use pegasus::{JobConf, ServerConf};
 
 use crate::job::JobDesc;
 use crate::pb::job_config::Servers;

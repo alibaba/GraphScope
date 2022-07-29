@@ -463,7 +463,7 @@ impl NetworkConfig {
                     return Err(NetError::InvalidConfig(Some(format!(
                         "address of server {} not found",
                         id
-                    )))); 
+                    ))));
                 }
             }
             Ok(server_addrs)
@@ -533,7 +533,9 @@ mod test {
     #[test]
     fn hostname_test() {
         let server_addr_with_hostname = ServerAddr::new("localhost".to_string(), 1234);
-        let socker_addr_with_hostname = server_addr_with_hostname.to_socket_addr().unwrap();
+        let socker_addr_with_hostname = server_addr_with_hostname
+            .to_socket_addr()
+            .unwrap();
         let server_addr_with_ip = ServerAddr::new("127.0.0.1".to_string(), 1234);
         let socker_addr_with_ip = server_addr_with_ip.to_socket_addr().unwrap();
         assert_eq!(socker_addr_with_hostname, socker_addr_with_ip);

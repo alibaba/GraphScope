@@ -1,8 +1,9 @@
 use std::net::SocketAddr;
 
+use pegasus::Data;
+
 use crate::job::JobAssembly;
 use crate::rpc::{RPCServerConfig, ServiceStartListener};
-use pegasus::Data;
 
 struct StandaloneServiceListener;
 
