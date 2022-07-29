@@ -40,6 +40,11 @@ jobs:
           ~/.cache/sccache
         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
+    - name: Rust Format Check
+      run: |
+        source ${HOME}/.bashrc
+        cd ${GITHUB_WORKSPACE}/interactive_engine/executor && ./check_format.sh
+
     - name: Install Dependencies
       run: |
         # install rdkafka
@@ -67,8 +72,6 @@ jobs:
       run: |
         source ${HOME}/.bashrc
         cd ${GITHUB_WORKSPACE} && make install
-      # cd ${GITHUB_WORKSPACE}/interactive_engine/executor
-      # cargo fmt -- --check
 
     - name: Build Ir on Groot Store
       run: |
@@ -87,9 +90,9 @@ jobs:
         cd ${GITHUB_WORKSPACE}/interactive_engine/executor/common/dyn_type && cargo test
 
     - name: Store Unit Test
-        run: |
-          source ${HOME}/.bashrc
-          cd ${GITHUB_WORKSPACE}/interactive_engine/executor/store/exp_store && cargo test
+      run: |
+        source ${HOME}/.bashrc
+        cd ${GITHUB_WORKSPACE}/interactive_engine/executor/store/exp_store && cargo test
         # TODO: fix ut in groot
         # cd ${GITHUB_WORKSPACE}/interactive_engine/executor/store/groot && cargo test
         # TODO: add ut in global_query

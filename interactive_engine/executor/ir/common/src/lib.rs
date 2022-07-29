@@ -33,6 +33,7 @@ pub use utils::*;
 #[macro_use]
 extern crate serde;
 
+#[rustfmt::skip]
 #[cfg(feature = "proto_inplace")]
 pub mod generated {
     #[path = "algebra.rs"]
