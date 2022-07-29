@@ -68,17 +68,6 @@ jobs:
         cd ${GITHUB_WORKSPACE}/interactive_engine/executor/ir/compiler
         make build
 
-    - name: Build Ir on Vineyard Store
-      run: |
-        source ${HOME}/.bashrc
-        cd ${GITHUB_WORKSPACE} && make install
-
-    - name: Build Ir on Groot Store
-      run: |
-        source ${HOME}/.bashrc
-        cd ${GITHUB_WORKSPACE}/interactive_engine
-        mvn clean install -DskipTests -Pv2 -Drust.compile.mode=release --quiet
-
     - name: Ir Unit Test
       run: |
         source ${HOME}/.bashrc
